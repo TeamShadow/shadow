@@ -1,0 +1,135 @@
+/**
+ * JavaCC file
+ */
+ 
+options {
+  JDK_VERSION = "1.5";
+}
+PARSER_BEGIN(ShadowParser)
+package parser;
+
+public class ShadowParser {
+	
+	public static void main(String args[]) throws ParseException {
+		
+    	ShadowParser parser = new ShadowParser(System.in);
+
+		System.out.println("Reading from standard input...");
+
+		try {
+			parser.TranslationUnit();
+			System.out.println("GOOD PARSE");
+		} catch (ParseException e) {
+			System.out.println("BAD PARSE");
+			System.out.println(e.getMessage());
+		} catch (Error e) {
+			System.out.println("Oops.");
+			System.out.println(e.getMessage());
+		}
+	}
+}
+PARSER_END(ShadowParser)
+
+SKIP : {
+		" "
+	|	"\r"
+	|	"\t"
+	|	"\n"
+	|  <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+	|  <"/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/">
+}
+
+TOKEN : {	// operators
+		< PLUS: "+" >
+	|	< MINUS: "-" >
+	|	< MULTIPLY: "*" >
+	|	< DIVIDE: "/" >
+}
+
+TOKEN : {	// literals
+	   < INTEGER_LITERAL: <DECIMAL_LITERAL> | <HEX_LITERAL> >
+	|  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])*>
+	|  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+>
+	|  < FLOATING_POINT_LITERAL: (["0"-"9"])+ "." (["0"-"9"])+ >
+	|  < CHARACTER_LITERAL: "\'" (~["\'","\\","\n","\r"] | "\\" (["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])? | ["0"-"3"] ["0"-"7"] ["0"-"7"])) "\'">
+	|  < STRING_LITERAL: "\"" ( ~["\"","\\","\n","\r"] | "\\" ( ["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])?  | ["0"-"3"] ["0"-"7"] ["0"-"7"] | ( ["\n","\r"] | "\r\n")))* "\"">
+}
+
+TOKEN : {	// identifiers
+		<IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>){127}>
+	|	<#LETTER: ["A"-"Z","_","a"-"z"]>
+	|	<#DIGIT: ["0"-"9"]>
+}
+
+/**
+ * Key words below
+ */
+TOKEN : { 	// primative types
+		< BOOL: "bool" >
+	|	< BYTE: "byte" >
+	|	< UBYTE: "ubyte" >				
+	|	< SHORT: "short" > 
+	|	< USHORT: "ushort" > 
+	|	< INT: "int"> 
+	|	< UINT: "uint"> 
+	|	< LONG: "long"> 
+	|	< ULONG: "ulong"> 
+	|	< FLOAT: "float" >
+	|	< CODE: "code" >
+}
+
+TOKEN : {	// control flow keywords				
+		<IF: "if"> 
+	|	<ELSE: "else"> 
+	|	<FOR: "for"> 
+	|	<FOREACH: "foreach"> 
+	|	<WHILE: "while"> 
+	|	<DO: "do">
+	|	<CONTINUE: "continue">
+	|	<BREAK: "break"> 
+	|	<SWITCH: "switch"> 
+	|	<CASE: "case"> 
+	|	<DFLT: "default"> 
+	|	<RETURN: "return"> 
+}
+
+TOKEN : {	// data types
+		< CLASS: "class" >
+	|	< TUPLE: "tuple" >
+	|	< INTERFACE: "interface" >
+	|	< ERROR: "error" >
+	|	< EXCEPTION: "exception" >
+}
+
+TOKEN : {	// inheritance
+		< EXTENDS: "extends" >
+	|	< IMPLEMENTS: "implements" >
+}
+
+TOKEN: {	// exceptions
+		< THROW: "throw" >
+	|	< THROWS: "throws" >
+	|	< RETHROW: "rethrow" >
+	|	< TRY: "try" >
+	|	< CATCH: "catch" >
+}
+
+TOKEN : {	// memory management
+		< NEW: "new" >
+	|	< DELETE: "delete" >
+//	|	< DELETEFROM: "delete from" >
+}
+
+void TranslationUnit() : { }
+{
+	( Constant() )+
+}
+
+void Constant() : { }
+{
+		< INTEGER_LITERAL >
+	|	< FLOATING_POINT_LITERAL >
+	|	< CHARACTER_LITERAL >
+	|	< STRING_LITERAL >
+}
+
