@@ -17,8 +17,11 @@ public class ShadowParser {
 		System.out.println("Reading from standard input...");
 
 		try {
-			parser.TranslationUnit();
+			SimpleNode n = parser.TranslationUnit();
+
+			n.dump("");
 			System.out.println("GOOD PARSE");
+			
 		} catch (ParseException e) {
 			System.out.println("BAD PARSE");
 			System.out.println(e.getMessage());
@@ -53,12 +56,6 @@ TOKEN : {	// literals
 	|  < FLOATING_POINT_LITERAL: (["0"-"9"])+ "." (["0"-"9"])+ >
 	|  < CHARACTER_LITERAL: "\'" (~["\'","\\","\n","\r"] | "\\" (["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])? | ["0"-"3"] ["0"-"7"] ["0"-"7"])) "\'">
 	|  < STRING_LITERAL: "\"" ( ~["\"","\\","\n","\r"] | "\\" ( ["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])?  | ["0"-"3"] ["0"-"7"] ["0"-"7"] | ( ["\n","\r"] | "\r\n")))* "\"">
-}
-
-TOKEN : {	// identifiers
-		<IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>){127}>
-	|	<#LETTER: ["A"-"Z","_","a"-"z"]>
-	|	<#DIGIT: ["0"-"9"]>
 }
 
 /**
@@ -120,9 +117,17 @@ TOKEN : {	// memory management
 //	|	< DELETEFROM: "delete from" >
 }
 
-void TranslationUnit() : { }
-{
-	( Constant() )+
+/**
+ * These are our identifiers. They must be below everything else
+ */
+TOKEN : {	// identifiers
+		<IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>)* >
+	|	<#LETTER: ["A"-"Z","_","a"-"z"]>
+	|	<#DIGIT: ["0"-"9"]>
+}
+
+
+TOKEN : {	< ASSIGNMENT: "=" >
 }
 
 void Constant() : { }
@@ -131,5 +136,30 @@ void Constant() : { }
 	|	< FLOATING_POINT_LITERAL >
 	|	< CHARACTER_LITERAL >
 	|	< STRING_LITERAL >
+}
+
+void BuiltInType() : { } {		< BOOL >
+	|	< BYTE >
+	|	< UBYTE >				
+	|	< SHORT > 
+	|	< USHORT > 
+	|	< INT > 
+	|	< UINT > 
+	|	< LONG > 
+	|	< ULONG > 
+	|	< FLOAT >
+	|	< CODE >
+}
+
+void Identifier() : { }
+{
+	< IDENTIFIER >
+}
+
+SimpleNode TranslationUnit() : { }
+{
+	BuiltInType() Identifier() "=" Constant() ";"
+	{		return jjtn000;
+	}
 }
 
