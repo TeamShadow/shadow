@@ -6,8 +6,8 @@ package shadow;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-import shadow.parser.ParseException;
-import shadow.parser.ShadowParser;
+import shadow.parser.javacc.ParseException;
+import shadow.parser.javacc.ShadowParser;
 
 /**
  * @author wspeirs
