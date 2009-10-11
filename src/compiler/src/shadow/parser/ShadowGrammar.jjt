@@ -16,7 +16,7 @@ public class ShadowParser {
 
 	public static void main(String args[]) throws ParseException {
 		try {
-			String fileName = "class_test.shadow";
+			String fileName = "tests/full_input_test.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
