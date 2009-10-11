@@ -16,10 +16,11 @@ public class ShadowParser {
 
 	public static void main(String args[]) throws ParseException {
 		try {
-			FileInputStream fis = new FileInputStream("test_input.shadow");
+			String fileName = "class_test.shadow";
+            FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
-			System.out.println("Reading from standard input...");
+			System.out.println("Reading file: " + fileName);
 
 //			SimpleNode n = parser.TranslationUnit();
 			parser.TranslationUnit();
@@ -139,7 +140,6 @@ TOKEN : {	// identifiers
 	|	<#DIGIT: ["0"-"9"]>
 }
 
-
 void Literal() : { }
 {
 		< INTEGER_LITERAL >
@@ -168,6 +168,131 @@ void TypeId() : { }
 	BuiltInType()
 }
 
+/**
+ * Expression tree
+ */
+void ExpressionStatement() : {}
+{
+    [ Expression() ] ";"
+}
+
+void Expression() : {}
+{
+    AssignmentExpression() ( "," AssignmentExpression() )*
+}
+
+void AssignmentExpression() : {}
+{
+      LOOKAHEAD(UnaryExpression() AssignmentOperator()) UnaryExpression() AssignmentOperator() AssignmentExpression() |
+      LOOKAHEAD(3) ConditionalExpression()
+}
+
+void AssignmentOperator() : {}
+{
+    ( "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | "&=" | "^=" | "|=" )
+}
+
+void ConditionalExpression() : {}
+{
+    LogicalORExpression() [ "?" Expression() ":" ConditionalExpression() ]
+}
+
+void ConstantExpression() : {}
+{
+    ConditionalExpression()
+}
+
+void LogicalORExpression() : {}
+{
+    LogicalANDExpression() [ "||" LogicalORExpression() ]
+}
+
+void LogicalANDExpression() : {}
+{
+    InclusiveORExpression() [ "&&" LogicalANDExpression() ]
+}
+
+void InclusiveORExpression() : {}
+{
+    ExclusiveORExpression() [ "|" InclusiveORExpression() ]
+}
+
+void ExclusiveORExpression() : {}
+{
+    ANDExpression() [ "^" ExclusiveORExpression() ]
+}
+
+void ANDExpression() : {}
+{
+    EqualityExpression() [ "&" ANDExpression() ]
+}
+
+void EqualityExpression() : {}
+{
+    RelationalExpression() [ ( "==" | "!=" ) EqualityExpression() ]
+}
+
+void RelationalExpression() : {}
+{
+    ShiftExpression() [ ( "<" | ">" | "<=" | ">=" ) RelationalExpression() ]
+}
+
+void ShiftExpression() : {}
+{
+    AdditiveExpression() [ ( "<<" | ">>" ) ShiftExpression() ]
+}
+
+void AdditiveExpression() : {}
+{
+    MultiplicativeExpression() [ ( "+" | "-" ) AdditiveExpression() ]
+}
+
+void MultiplicativeExpression() : {}
+{
+    CastExpression() [ ( "*" | "/" | "%" ) MultiplicativeExpression() ]
+}
+
+void CastExpression() : {}
+{
+    ( LOOKAHEAD("(" TypeId() ")" CastExpression() ) "(" TypeId() ")" CastExpression()
+        | UnaryExpression() )
+}
+
+void UnaryExpression() : {}
+{
+    ( LOOKAHEAD(3) PostfixExpression()
+        | "++" UnaryExpression()
+        | "--" UnaryExpression()
+        | UnaryOperator() CastExpression() )
+}
+
+void UnaryOperator() : {}
+{
+    ( "&" | "*" | "+" | "-" | "~" | "!" )
+}
+
+void PostfixExpression() : {}
+{
+    PrimaryExpression() (  "[" Expression() "]"
+                         | "(" [ LOOKAHEAD(ArgumentExpressionList() ) ArgumentExpressionList() ] ")"
+                         | "." <IDENTIFIER>
+                         | "++"
+                         | "--" )*
+}
+
+void PrimaryExpression() : {}
+{
+    ( <IDENTIFIER> | Literal() | "(" Expression() ")" )
+}
+
+void ArgumentExpressionList() : {}
+{
+    AssignmentExpression() ( "," AssignmentExpression() )*
+}
+
+/**
+ * High-level object definitions
+ */
 void Visibility() : { }
 {
 		< PUBLIC >
@@ -177,7 +302,8 @@ void Visibility() : { }
 
 void IdentifierDeclaration() : { }
 {
-	< IDENTIFIER > [ "=" ( Literal() | < IDENTIFIER > ) ]
+    < IDENTIFIER > [ "=" ( Literal() | < IDENTIFIER > ) ]
+//    AssignmentExpression()
 }
 
 void IdentifierDeclarationList() : { }
@@ -198,7 +324,7 @@ void ParameterList() : { }
 void MethodDeclaration() : { }
 {
 	( TypeId() | < VOID >	) < IDENTIFIER > "(" [ ParameterList() ] ")" "{"
-		( VariableDeclaration()	)*
+		( VariableDeclaration()	| ExpressionStatement() )*
 	"}"
 }
 
