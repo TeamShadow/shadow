@@ -227,10 +227,30 @@ void TupleDefinition() : { }
 	"}"
 }
 
+void ExceptionDefinition() : { }
+{
+	< EXCEPTION > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] "{"
+	
+	( Visibility() ( LOOKAHEAD(3) VariableDeclaration()
+					| MethodDeclaration() ) )+
+    	
+	"}"
+}
+
+void ErrorDefinition() : { }
+{
+	< ERROR > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] "{"
+	
+	( Visibility() ( LOOKAHEAD(3) VariableDeclaration()
+					| MethodDeclaration() ) )+
+    	
+	"}"
+}
+
 
 void TranslationUnit() : { }
 {
-	( TupleDefinition() )*
+	( TupleDefinition() | ExceptionDefinition() | ErrorDefinition() )*
 	ClassDefinition()
 }
 

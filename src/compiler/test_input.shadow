@@ -1,50 +1,127 @@
+//
+// This is our test outter tuple
+//
 tuple blah {
-int a;
-short a, b, c;
-int a = 3;
-int a = 3, b = 2, c = "asl";
-int a = 3, b, c = "8";
-int a = 3, b, c = x, d, e = "something";
+    int a;
+    short a, b, c;
+    int a = 3;
+    int a = 3, b = 2, c = "asl";
+    int a = 3, b, c = "8";
+    int a = 3, b, c = x, d, e = "something";
 }
 
+/**
+ * This is our test error
+ */
+error test_error {
+    public int a;
+    protected short a, b, c;
+    private int a = 3;
+    private int a = 3, b = 2, c = "asl";
+    private int a = 3, b, c = "8";
+    private int a = 3, b, c = x, d, e = "something";
+    
+    public int foo() { }
+    
+    public void blah(int a, code a) { }
+    
+    public int blah( ) {
+        int a;
+        short a, b, c;
+        int a = 3;
+        int a = 3, b = 2, c = "asl";
+        int a = 3, b, c = "8";
+        int a = 3, b, c = x, d, e = "something";
+    }
+    
+    public int blah(int a, short b) {
+        int a;
+        short a, b, c;
+        int a = 3;
+        int a = 3, b = 2, c = "asl";
+        int a = 3, b, c = "8";
+        int a = 3, b, c = x, d, e = "something";
+    }
+}
+
+/**
+ * This is our test exception
+ */
+exception test_error {
+    public int a;
+    protected short a, b, c;
+    private int a = 3;
+    private int a = 3, b = 2, c = "asl";
+    private int a = 3, b, c = "8";
+    private int a = 3, b, c = x, d, e = "something";
+    
+    public int foo() { }
+    
+    public void blah(int a, code a) { }
+    
+    public int blah( ) {
+        int a;
+        short a, b, c;
+        int a = 3;
+        int a = 3, b = 2, c = "asl";
+        int a = 3, b, c = "8";
+        int a = 3, b, c = x, d, e = "something";
+    }
+    
+    public int blah(int a, short b) {
+        int a;
+        short a, b, c;
+        int a = 3;
+        int a = 3, b = 2, c = "asl";
+        int a = 3, b, c = "8";
+        int a = 3, b, c = x, d, e = "something";
+    }
+}
+
+/**
+ * This is our test class
+ */
 class test  {
 
-public int a;
-protected short a, b, c;
-private int a = 3;
-private int a = 3, b = 2, c = "asl";
-private int a = 3, b, c = "8";
-private int a = 3, b, c = x, d, e = "something";
+    public int a;
+    protected short a, b, c;
+    private int a = 3;
+    private int a = 3, b = 2, c = "asl";
+    private int a = 3, b, c = "8";
+    private int a = 3, b, c = x, d, e = "something";
 
-private tuple blah {
-int a;
-short a, b, c;
-int a = 3;
-int a = 3, b = 2, c = "asl";
-int a = 3, b, c = "8";
-int a = 3, b, c = x, d, e = "something";
-}
+    //
+    // Test inner tuple
+    //
+    private tuple blah {
+        int a;
+        short a, b, c;
+        int a = 3;
+        int a = 3, b = 2, c = "asl";
+        int a = 3, b, c = "8";
+        int a = 3, b, c = x, d, e = "something";
+    }
 
-public int foo() { }
+    public int foo() { }
+    
+    public void blah(int a, code a) { }
+    
+    public int blah( ) {
+        int a;
+        short a, b, c;
+        int a = 3;
+        int a = 3, b = 2, c = "asl";
+        int a = 3, b, c = "8";
+        int a = 3, b, c = x, d, e = "something";
+    }
+    
+    public int blah(int a, short b) {
+        int a;
+        short a, b, c;
+        int a = 3;
+        int a = 3, b = 2, c = "asl";
+        int a = 3, b, c = "8";
+        int a = 3, b, c = x, d, e = "something";
+    }
 
-public void blah(int a, code a) { }
-
-public int blah( ) {
-int a;
-short a, b, c;
-int a = 3;
-int a = 3, b = 2, c = "asl";
-int a = 3, b, c = "8";
-int a = 3, b, c = x, d, e = "something";
-}
-
-public int blah(int a, short b) {
-int a;
-short a, b, c;
-int a = 3;
-int a = 3, b = 2, c = "asl";
-int a = 3, b, c = "8";
-int a = 3, b, c = x, d, e = "something";
-}
-
-}
+} // OK
