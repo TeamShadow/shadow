@@ -211,7 +211,18 @@ void ClassDefinition() : { }
 {
 	< CLASS > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] [ ImplementsList() ] "{"
 	
-	( Visibility() ( LOOKAHEAD(3) VariableDeclaration() | MethodDeclaration() ) )*
+	( Visibility() ( LOOKAHEAD(3) VariableDeclaration()
+					| MethodDeclaration()
+					| TupleDefinition() ) )*
+    	
+	"}"
+}
+
+void TupleDefinition() : { }
+{
+	< TUPLE > <IDENTIFIER > "{"
+	
+	( VariableDeclaration() )+
     	
 	"}"
 }
@@ -219,6 +230,7 @@ void ClassDefinition() : { }
 
 void TranslationUnit() : { }
 {
+	( TupleDefinition() )*
 	ClassDefinition()
 }
 

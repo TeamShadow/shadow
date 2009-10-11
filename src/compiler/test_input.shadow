@@ -1,3 +1,12 @@
+tuple blah {
+int a;
+short a, b, c;
+int a = 3;
+int a = 3, b = 2, c = "asl";
+int a = 3, b, c = "8";
+int a = 3, b, c = x, d, e = "something";
+}
+
 class test  {
 
 public int a;
@@ -6,6 +15,15 @@ private int a = 3;
 private int a = 3, b = 2, c = "asl";
 private int a = 3, b, c = "8";
 private int a = 3, b, c = x, d, e = "something";
+
+private tuple blah {
+int a;
+short a, b, c;
+int a = 3;
+int a = 3, b = 2, c = "asl";
+int a = 3, b, c = "8";
+int a = 3, b, c = x, d, e = "something";
+}
 
 public int foo() { }
 
