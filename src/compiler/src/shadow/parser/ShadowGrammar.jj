@@ -8,18 +8,23 @@ options {
 PARSER_BEGIN(ShadowParser)
 package shadow.parser;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.*;
+
 public class ShadowParser {
-	
+
 	public static void main(String args[]) throws ParseException {
-		
-    	ShadowParser parser = new ShadowParser(System.in);
-
-		System.out.println("Reading from standard input...");
-
 		try {
-			SimpleNode n = parser.TranslationUnit();
+			FileInputStream fis = new FileInputStream("test_input.shadow");
+	    	ShadowParser parser = new ShadowParser(fis);
+	
+			System.out.println("Reading from standard input...");
 
-			n.dump("");
+//			SimpleNode n = parser.TranslationUnit();
+			parser.TranslationUnit();
+
+//			n.dump("");
 			System.out.println("GOOD PARSE");
 			
 		} catch (ParseException e) {
@@ -27,6 +32,8 @@ public class ShadowParser {
 			System.out.println(e.getMessage());
 		} catch (Error e) {
 			System.out.println("Oops.");
+			System.out.println(e.getMessage());
+		} catch(FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
 	}
@@ -73,6 +80,7 @@ TOKEN : { 	// primative types
 	|	< ULONG: "ulong"> 
 	|	< FLOAT: "float" >
 	|	< CODE: "code" >
+	|	< VOID: "void" >
 }
 
 TOKEN : {	// control flow keywords				
@@ -117,6 +125,11 @@ TOKEN : {	// memory management
 //	|	< DELETEFROM: "delete from" >
 }
 
+TOKEN : {	// visibility
+		< PUBLIC: "public" >
+	|	< PROTECTED: "protected" >
+	|	< PRIVATE: "private" >
+}	 
 /**
  * These are our identifiers. They must be below everything else
  */
@@ -127,10 +140,7 @@ TOKEN : {	// identifiers
 }
 
 
-TOKEN : {	< ASSIGNMENT: "=" >
-}
-
-void Constant() : { }
+void Literal() : { }
 {
 		< INTEGER_LITERAL >
 	|	< FLOATING_POINT_LITERAL >
@@ -138,7 +148,8 @@ void Constant() : { }
 	|	< STRING_LITERAL >
 }
 
-void BuiltInType() : { } {		< BOOL >
+void BuiltInType() : { } {
+		< BOOL >
 	|	< BYTE >
 	|	< UBYTE >				
 	|	< SHORT > 
@@ -151,15 +162,63 @@ void BuiltInType() : { } {		< BOOL >
 	|	< CODE >
 }
 
-void Identifier() : { }
+void TypeId() : { }
 {
-	< IDENTIFIER >
+	// we'll need to add something to check for types we know about later
+	BuiltInType()
 }
 
-SimpleNode TranslationUnit() : { }
+void Visibility() : { }
 {
-	BuiltInType() Identifier() "=" Constant() ";"
-	{		return jjtn000;
-	}
+		< PUBLIC >
+	|	< PROTECTED >
+	|	< PRIVATE >
+}
+
+void IdentifierDeclaration() : { }
+{
+	< IDENTIFIER > [ "=" ( Literal() | < IDENTIFIER > ) ]
+}
+
+void IdentifierDeclarationList() : { }
+{
+	IdentifierDeclaration() ( "," IdentifierDeclaration())*
+}
+
+void VariableDeclaration() : { }
+{
+	TypeId() IdentifierDeclarationList() ";"
+}
+
+void ParameterList() : { }
+{
+	TypeId() < IDENTIFIER > [ "," TypeId() < IDENTIFIER > ]		
+}
+
+void MethodDeclaration() : { }
+{
+	( TypeId() | < VOID >	) < IDENTIFIER > "(" [ ParameterList() ] ")" "{"
+		( VariableDeclaration()	)*
+	"}"
+}
+
+void ImplementsList() : { }
+{
+	< IMPLEMENTS > <IDENTIFIER > ( "," < IDENTIFIER >	)*
+}
+
+void ClassDefinition() : { }
+{
+	< CLASS > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] [ ImplementsList() ] "{"
+	
+	( Visibility() ( LOOKAHEAD(3) VariableDeclaration() | MethodDeclaration() ) )*
+    	
+	"}"
+}
+
+
+void TranslationUnit() : { }
+{
+	ClassDefinition()
 }
 
