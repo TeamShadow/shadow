@@ -274,9 +274,7 @@ void PostfixExpression() : {}
 {
     PrimaryExpression() (  "[" Expression() "]"
                          | "(" [ LOOKAHEAD(ArgumentExpressionList() ) ArgumentExpressionList() ] ")"
-                         | "." <IDENTIFIER>
-                         | "++"
-                         | "--" )*
+                         | "." <IDENTIFIER> )*
 }
 
 void PrimaryExpression() : {}
