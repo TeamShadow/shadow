@@ -2,12 +2,28 @@
 // This is our test outter tuple
 //
 tuple blah {
+    // generic vars
     int a;
     short a, b, c;
     int a = 3;
     int a = 3, b = 2, c = "asl";
     int a = 3, b, c = "8";
     int a = 3, b, c = x, d, e = "something";
+    
+    // arrays
+    int[] a;
+    int[] a = new int;
+    int[] a = new int[30];
+    
+    // casting
+    int a = (float)b;
+    
+    // object creation
+/*
+    Bob b = new Bob();
+    Bob b = new Bob(a, b, c);
+    Bob b = new Bob(1, "blah", a);
+*/
 }
 
 /**

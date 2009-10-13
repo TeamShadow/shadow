@@ -16,7 +16,8 @@ public class ShadowParser {
 
 	public static void main(String args[]) throws ParseException {
 		try {
-			String fileName = "tests/full_input_test.shadow";
+            String fileName = "tests/full_input_test.shadow";
+//            String fileName = "tests/class_test.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
@@ -196,11 +197,6 @@ void ConditionalExpression() : {}
     LogicalORExpression() [ "?" Expression() ":" ConditionalExpression() ]
 }
 
-void ConstantExpression() : {}
-{
-    ConditionalExpression()
-}
-
 void LogicalORExpression() : {}
 {
     LogicalANDExpression() [ "||" LogicalORExpression() ]
@@ -301,8 +297,7 @@ void Visibility() : { }
 
 void IdentifierDeclaration() : { }
 {
-    < IDENTIFIER > [ "=" ( Literal() | < IDENTIFIER > ) ]
-//    AssignmentExpression()
+    < IDENTIFIER > [ AssignmentOperator() ( ConditionalExpression() | < NEW > TypeId() [ "[" ConditionalExpression() "]" ] ) ]
 }
 
 void IdentifierDeclarationList() : { }
@@ -312,7 +307,7 @@ void IdentifierDeclarationList() : { }
 
 void VariableDeclaration() : { }
 {
-	TypeId() IdentifierDeclarationList() ";"
+	TypeId() [ "[]" ] IdentifierDeclarationList() ";"
 }
 
 void ParameterList() : { }
@@ -336,7 +331,7 @@ void ClassDefinition() : { }
 {
 	< CLASS > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] [ ImplementsList() ] "{"
 	
-	( Visibility() ( LOOKAHEAD(3) VariableDeclaration()
+	( Visibility() ( LOOKAHEAD(4) VariableDeclaration()
 					| MethodDeclaration()
 					| TupleDefinition() ) )*
     	
