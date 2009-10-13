@@ -247,6 +247,10 @@ void MultiplicativeExpression() : {}
     CastExpression() [ ( "*" | "/" | "%" ) MultiplicativeExpression() ]
 }
 
+//
+// got this from the web... I think it's wrong, at least in Shadow.
+// why the UnaryExpression? Why the CastExpression(), shouldn't that be a ConditionalExpression()?
+//
 void CastExpression() : {}
 {
     ( LOOKAHEAD("(" TypeId() ")" CastExpression() ) "(" TypeId() ")" CastExpression()
@@ -295,9 +299,15 @@ void Visibility() : { }
 	|	< PRIVATE >
 }
 
+void NewObject() : { }
+{
+    < NEW > TypeId() ( "[" ConditionalExpression() "]" | "(" [ ArgumentExpressionList() ] ")" )
+}
+
 void IdentifierDeclaration() : { }
 {
-    < IDENTIFIER > [ AssignmentOperator() ( ConditionalExpression() | < NEW > TypeId() [ "[" ConditionalExpression() "]" ] ) ]
+	// I didn't use a CastExpression() here, because it doesn't work. I think it's wrong, see above
+    < IDENTIFIER > [ AssignmentOperator() [ "(" TypeId() ")" ] ( ConditionalExpression() | NewObject() ) ]
 }
 
 void IdentifierDeclarationList() : { }

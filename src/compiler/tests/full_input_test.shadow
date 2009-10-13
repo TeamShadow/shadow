@@ -12,18 +12,19 @@ tuple blah {
     
     // arrays
     int[] a;
-    int[] a = new int;
     int[] a = new int[30];
     
+    // object creation
+    int b = new int();
+    int b = new int(a, b, c);
+    int b = new int(1, "blah", a);
+    int b = new int(1 < 1);
+    int b = new int(a < ~a);
+
     // casting
     int a = (float)b;
-    
-    // object creation
-/*
-    Bob b = new Bob();
-    Bob b = new Bob(a, b, c);
-    Bob b = new Bob(1, "blah", a);
-*/
+    int a = (float)b + c + 3;
+    int a = (float)new int(3);
 }
 
 /**
@@ -48,6 +49,13 @@ error test_error {
         int a = 3, b = 2, c = "asl";
         int a = 3, b, c = "8";
         int a = 3, b, c = x, d, e = "something";
+        
+        a = a + b;
+        a = "blah" + a;
+        a += a;
+        a -= a;
+        a++;
+        ++a;
     }
     
     public int blah(int a, short b) {
