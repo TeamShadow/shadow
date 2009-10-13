@@ -189,7 +189,8 @@ void AssignmentExpression() : {}
 
 void AssignmentOperator() : {}
 {
-    ( "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | "&=" | "^=" | "|=" )
+    ( "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | "&=" | "^=" | "|=" | "#=" )
+    
 }
 
 void ConditionalExpression() : {}
