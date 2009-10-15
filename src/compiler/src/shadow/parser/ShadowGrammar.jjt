@@ -16,8 +16,8 @@ public class ShadowParser {
 
 	public static void main(String args[]) throws ParseException {
 		try {
-            String fileName = "tests/full_input_test.shadow";
-//            String fileName = "tests/class_test.shadow";
+//            String fileName = "tests/full_input_test.shadow";
+            String fileName = "tests/class_test.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
@@ -143,7 +143,9 @@ TOKEN : {	// identifiers
 void Literal() : { }
 {
 		< INTEGER_LITERAL >
+	|	LOOKAHEAD(2) "-" < INTEGER_LITERAL >
 	|	< FLOATING_POINT_LITERAL >
+	|	"-" < FLOATING_POINT_LITERAL >
 	|	< CHARACTER_LITERAL >
 	|	< STRING_LITERAL >
 }
@@ -183,8 +185,8 @@ void Expression() : {}
 
 void AssignmentExpression() : {}
 {
-      LOOKAHEAD(UnaryExpression() AssignmentOperator()) UnaryExpression() AssignmentOperator() AssignmentExpression() |
-      LOOKAHEAD(3) ConditionalExpression()
+        LOOKAHEAD(AssignmentOperator()) AssignmentOperator() AssignmentExpression()
+      | LOOKAHEAD(3) ConditionalExpression()
 }
 
 void AssignmentOperator() : {}
@@ -261,14 +263,15 @@ void CastExpression() : {}
 void UnaryExpression() : {}
 {
     ( LOOKAHEAD(3) PostfixExpression()
-        | "++" UnaryExpression()
-        | "--" UnaryExpression()
+// we decided to remove prefix operators from our lang :-)
+//        | "++" UnaryExpression()
+//        | "--" UnaryExpression()
         | UnaryOperator() CastExpression() )
 }
 
 void UnaryOperator() : {}
 {
-    ( "&" | "*" | "+" | "-" | "~" | "!" )
+    ( "&" | "*" | "~" | "!" )
 }
 
 void PostfixExpression() : {}
@@ -306,7 +309,8 @@ void NewObject() : { }
 void IdentifierDeclaration() : { }
 {
 	// I didn't use a CastExpression() here, because it doesn't work. I think it's wrong, see above
-    < IDENTIFIER > [ AssignmentOperator() [ "(" TypeId() ")" ] ( ConditionalExpression() | NewObject() ) ]
+//    < IDENTIFIER > [ AssignmentOperator() [ "(" TypeId() ")" ] ( ConditionalExpression() | NewObject() ) ]
+    < IDENTIFIER > [ AssignmentOperator() ( CastExpression() | NewObject() ) ]
 }
 
 void IdentifierDeclarationList() : { }
