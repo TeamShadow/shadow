@@ -1,0 +1,14 @@
+
+class blah {
+    public void blah() {
+        int a = ~a;
+        
+        int a = (a + b[a+b] * -7);
+        
+        int a = new int(2 + a[98] - b + ~c );
+        int a = (float) new int();    
+        
+        a = new float(3);
+        a = 1;
+    }
+}

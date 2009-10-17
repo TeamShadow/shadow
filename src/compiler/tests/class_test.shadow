@@ -2,14 +2,14 @@
 class foo {
 
     public void bar() {
-/*        int a = 3;
+        int a = 3;
         int b = 4;
         
-        int c;  // we cannot do int c = a + a here :-(
+        int c = a + a;
         
         c = a + b;
-*/
-    int a = -1;
+
+        int a = -1;
     }
 
 }

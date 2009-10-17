@@ -14,10 +14,13 @@ import java.util.*;
 
 public class ShadowParser {
 
+    private boolean debug = true;
+    
 	public static void main(String args[]) throws ParseException {
 		try {
-//            String fileName = "tests/full_input_test.shadow";
-            String fileName = "tests/class_test.shadow";
+            String fileName = "tests/full_input_test.shadow";
+//            String fileName = "tests/class_test.shadow";
+//            String fileName = "tests/expressions.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
@@ -38,6 +41,11 @@ public class ShadowParser {
 			System.out.println(e.getMessage());
 		}
 	}
+
+    public void debugPrint(String str) {
+        if(debug)
+            System.out.println(str);
+    }
 }
 PARSER_END(ShadowParser)
 
@@ -48,13 +56,6 @@ SKIP : {
 	|	"\n"
 	|  <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
 	|  <"/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/">
-}
-
-TOKEN : {	// operators
-		< PLUS: "+" >
-	|	< MINUS: "-" >
-	|	< MULTIPLY: "*" >
-	|	< DIVIDE: "/" >
 }
 
 TOKEN : {	// literals
@@ -120,6 +121,10 @@ TOKEN: {	// exceptions
 	|	< CATCH: "catch" >
 }
 
+TOKEN : {    < THIS: "this" >
+  |	< SUPER: "super" >
+}
+
 TOKEN : {	// memory management
 		< NEW: "new" >
 	|	< DELETE: "delete" >
@@ -143,9 +148,7 @@ TOKEN : {	// identifiers
 void Literal() : { }
 {
 		< INTEGER_LITERAL >
-	|	LOOKAHEAD(2) "-" < INTEGER_LITERAL >
 	|	< FLOATING_POINT_LITERAL >
-	|	"-" < FLOATING_POINT_LITERAL >
 	|	< CHARACTER_LITERAL >
 	|	< STRING_LITERAL >
 }
@@ -166,8 +169,13 @@ void BuiltInType() : { } {
 
 void TypeId() : { }
 {
-	// we'll need to add something to check for types we know about later
-	BuiltInType()
+    // we'll need to add something to check for types we know about later
+    BuiltInType()
+}
+
+void Dims() : { }
+{
+    "[]" [ Dims() ]
 }
 
 /**
@@ -178,15 +186,24 @@ void ExpressionStatement() : {}
     [ Expression() ] ";"
 }
 
-void Expression() : {}
+void Expression() : { debugPrint("EXPRESSION"); }
 {
     AssignmentExpression() ( "," AssignmentExpression() )*
 }
 
-void AssignmentExpression() : {}
+void AssignmentExpression() : { debugPrint("ASSIGNMENT EXPRESSION"); }
 {
-        LOOKAHEAD(AssignmentOperator()) AssignmentOperator() AssignmentExpression()
-      | LOOKAHEAD(3) ConditionalExpression()
+    LOOKAHEAD(2) Assignment() | ConditionalExpression()
+}
+
+void LeftHandSide() : {}
+{
+    < IDENTIFIER > [ "[" ConditionalExpression() "]" ] ( "." DataMemberArrayAccess() )*
+}
+
+void Assignment() : {}
+{
+      LeftHandSide() AssignmentOperator() AssignmentExpression()
 }
 
 void AssignmentOperator() : {}
@@ -195,7 +212,7 @@ void AssignmentOperator() : {}
     
 }
 
-void ConditionalExpression() : {}
+void ConditionalExpression() : { debugPrint("CONDITIONAL EXPRESSION"); }
 {
     LogicalORExpression() [ "?" Expression() ":" ConditionalExpression() ]
 }
@@ -237,6 +254,7 @@ void RelationalExpression() : {}
 
 void ShiftExpression() : {}
 {
+	// we could add <<< and >>> which would be rotate 
     AdditiveExpression() [ ( "<<" | ">>" ) ShiftExpression() ]
 }
 
@@ -247,48 +265,67 @@ void AdditiveExpression() : {}
 
 void MultiplicativeExpression() : {}
 {
-    CastExpression() [ ( "*" | "/" | "%" ) MultiplicativeExpression() ]
-}
-
-//
-// got this from the web... I think it's wrong, at least in Shadow.
-// why the UnaryExpression? Why the CastExpression(), shouldn't that be a ConditionalExpression()?
-//
-void CastExpression() : {}
-{
-    ( LOOKAHEAD("(" TypeId() ")" CastExpression() ) "(" TypeId() ")" CastExpression()
-        | UnaryExpression() )
+    UnaryExpression() [ ( "*" | "/" | "%" ) MultiplicativeExpression() ]
 }
 
 void UnaryExpression() : {}
 {
-    ( LOOKAHEAD(3) PostfixExpression()
-// we decided to remove prefix operators from our lang :-)
-//        | "++" UnaryExpression()
-//        | "--" UnaryExpression()
-        | UnaryOperator() CastExpression() )
+    "+" UnaryExpression() | "-" UnaryExpression() | UnaryNotPlusMinusExpression()
 }
 
-void UnaryOperator() : {}
+void UnaryNotPlusMinusExpression() : {}
 {
-    ( "&" | "*" | "~" | "!" )
+    LOOKAHEAD(2) PostfixExpression() | "!" UnaryExpression() | "~" UnaryExpression() | CastExpression()
+}
+
+void CastExpression() : {}
+{
+    "(" TypeId() [ Dims() ] ")" UnaryExpression() 
 }
 
 void PostfixExpression() : {}
 {
-    PrimaryExpression() (  "[" Expression() "]"
-                         | "(" [ LOOKAHEAD(ArgumentExpressionList() ) ArgumentExpressionList() ] ")"
-                         | "." <IDENTIFIER> )*
+    LOOKAHEAD(2) PrimaryExpression() | <IDENTIFIER>
 }
 
 void PrimaryExpression() : {}
 {
-    ( <IDENTIFIER> | Literal() | "(" Expression() ")" )
+//    LOOKAHEAD(3) ArrayCreationExpression() | PrimaryNoNewArrayExpression()
+    PrimaryNoNewArrayExpression()
 }
 
-void ArgumentExpressionList() : {}
+void PrimaryNoNewArrayExpression() : {}
 {
-    AssignmentExpression() ( "," AssignmentExpression() )*
+      Literal()
+    | < THIS >
+    | "(" Expression() ")"
+    | < NEW > TypeId() ( "(" [ ArgumentList() ] ")" | "[" Expression() "]" [ Dims() ] ) 
+    | ( DataMemberAccessList() )+
+}
+
+void ArrayCreationExpression() : {}
+{
+    < NEW > TypeId() "[" Expression() "]" [ Dims() ]
+}
+
+void DataMemberArrayAccess() : { debugPrint("DATA MEMBER ACCESS"); }
+{
+    < IDENTIFIER > [ "[" ConditionalExpression() "]" ]
+}
+
+void MethodInvocation() : {}
+{
+    < IDENTIFIER > [ "(" [ ArgumentList() ] ")" ]
+}
+
+void DataMemberAccessList() : {}
+{
+    LOOKAHEAD(2) DataMemberArrayAccess() | MethodInvocation()  ( "." ( LOOKAHEAD(2) DataMemberArrayAccess() | MethodInvocation() ) )*
+}
+
+void ArgumentList() : {}
+{
+    ConditionalExpression() ( "," ConditionalExpression() )*
 }
 
 /**
@@ -301,6 +338,7 @@ void Visibility() : { }
 	|	< PRIVATE >
 }
 
+/*
 void NewObject() : { }
 {
     < NEW > TypeId() ( "[" ConditionalExpression() "]" | "(" [ ArgumentExpressionList() ] ")" )
@@ -309,19 +347,20 @@ void NewObject() : { }
 void IdentifierDeclaration() : { }
 {
 	// I didn't use a CastExpression() here, because it doesn't work. I think it's wrong, see above
-//    < IDENTIFIER > [ AssignmentOperator() [ "(" TypeId() ")" ] ( ConditionalExpression() | NewObject() ) ]
-    < IDENTIFIER > [ AssignmentOperator() ( CastExpression() | NewObject() ) ]
+    < IDENTIFIER > [ AssignmentOperator() ( ConditionalExpression() | NewObject() ) ]
 }
 
 void IdentifierDeclarationList() : { }
 {
 	IdentifierDeclaration() ( "," IdentifierDeclaration())*
 }
+*/
 
-void VariableDeclaration() : { }
+void VariableDeclaration() : { debugPrint("VAR DEC"); }
 {
-	TypeId() [ "[]" ] IdentifierDeclarationList() ";"
+	TypeId() [ Dims() ] Expression() ";" // ( "," AssignmentExpression() )* ";"
 }
+
 
 void ParameterList() : { }
 {
@@ -331,7 +370,7 @@ void ParameterList() : { }
 void MethodDeclaration() : { }
 {
 	( TypeId() | < VOID >	) < IDENTIFIER > "(" [ ParameterList() ] ")" "{"
-		( VariableDeclaration()	| ExpressionStatement() )*
+		( ExpressionStatement() | VariableDeclaration() )*
 	"}"
 }
 
