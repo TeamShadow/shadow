@@ -14,13 +14,13 @@ import java.util.*;
 
 public class ShadowParser {
 
-    private boolean debug = false;
+    private boolean debug = true;
     
 	public static void main(String args[]) throws ParseException {
 		try {
 //            String fileName = "tests/full_input_test.shadow";
-            String fileName = "tests/class_test.shadow";
-//            String fileName = "tests/expressions.shadow";
+//            String fileName = "tests/class_test.shadow";
+            String fileName = "tests/expressions.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
@@ -318,7 +318,7 @@ void ArrayCreationExpression() : { debugPrint("ARRAY CREATION"); }
 
 void DataMemberArrayAccess() : { debugPrint("DATA MEMBER ARRAY ACCESS"); }
 {
-    < IDENTIFIER > { debugPrint("\tIDENTIFIER"); } [ "[" ConditionalExpression() "]" ]
+    < IDENTIFIER > { debugPrint("\tIDENTIFIER"); } (  "[" ConditionalExpression() "]" )*
 }
 
 void MethodInvocation() : { debugPrint("METHOD INVOCATION"); }
