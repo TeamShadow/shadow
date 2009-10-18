@@ -22,9 +22,9 @@ tuple blah {
     int b = new int(a < ~a);
 
     // casting
-    int a = (float)b;
-    int a = (float)b + c + 3;
-    int a = (float)new int(3);
+    int a = cast<float>(b);
+    int a = cast<float>(b + c + 3);
+    int a = cast<float>(new int(3));
 }
 
 /**
@@ -54,7 +54,6 @@ error test_error {
         a = "blah" + a;
         a += a;
         a -= a;
-        ++a;
     }
     
     public int blah(int a, short b) {

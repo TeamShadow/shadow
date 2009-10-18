@@ -14,13 +14,13 @@ import java.util.*;
 
 public class ShadowParser {
 
-    private boolean debug = true;
+    private boolean debug = false;
     
 	public static void main(String args[]) throws ParseException {
 		try {
 //            String fileName = "tests/full_input_test.shadow";
-//            String fileName = "tests/class_test.shadow";
-            String fileName = "tests/expressions.shadow";
+            String fileName = "tests/class_test.shadow";
+//            String fileName = "tests/expressions.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
@@ -145,7 +145,7 @@ TOKEN : {   // misc
  * These are our identifiers. They must be below everything else
  */
 TOKEN : {	// identifiers
-		<IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>)* > { System.out.println("IDENTIFIER"); }
+		<IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>)* >
 	|	<#LETTER: ["A"-"Z","_","a"-"z"]>
 	|	<#DIGIT: ["0"-"9"]>
 }
@@ -288,7 +288,7 @@ void UnaryNotPlusMinusExpression() : { debugPrint("UNARY NOT +- EXPRESSION"); }
 
 void CastExpression() : { debugPrint("CAST EXPRESSION"); }
 {
-    < CAST > "<" TypeId() [ Dims() ] ">" "(" UnaryExpression() ")" 
+    < CAST > "<" TypeId() [ Dims() ] ">" "(" ConditionalExpression() ")" 
 }
 
 /*
