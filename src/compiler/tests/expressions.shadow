@@ -1,14 +1,31 @@
 
 class blah {
     public void blah() {
+
         int a = ~a;
+        int a = 7;
+        int a = (7 + b);
         
         int a = (a + b[a+b] * -7);
         
         int a = new int(2 + a[98] - b + ~c );
-        int a = (float) new int();    
+        int a = cast<float>( new int());    
         
-        a = new float(3);
-        a = 1;
+        a = cast<int>( new float(3));
+        a = (  cast<int>(1) + cast<float>(3.0) );
+        
+        a = "bob" > "blah" ? 7 : cast<float>(8);
+        
+        int[] a;
+        int[] a = new int[2+3];
+        
+//        a[7];
+        a[7] = a[8];
+        
+        int a, b, c;
+        
+        int a=7, b, c = 5;
+        
+        a[a=7] = 8;
     }
 }

@@ -18,9 +18,9 @@ public class ShadowParser {
     
 	public static void main(String args[]) throws ParseException {
 		try {
-            String fileName = "tests/full_input_test.shadow";
+//            String fileName = "tests/full_input_test.shadow";
 //            String fileName = "tests/class_test.shadow";
-//            String fileName = "tests/expressions.shadow";
+            String fileName = "tests/expressions.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
@@ -44,7 +44,7 @@ public class ShadowParser {
 
     public void debugPrint(String str) {
         if(debug)
-            System.out.println(str);
+            System.out.println(str + ": " + token);
     }
 }
 PARSER_END(ShadowParser)
@@ -135,21 +135,26 @@ TOKEN : {	// visibility
 		< PUBLIC: "public" >
 	|	< PROTECTED: "protected" >
 	|	< PRIVATE: "private" >
-}	 
+}
+
+TOKEN : {   // misc
+        < CAST: "cast" >
+}
+	 
 /**
  * These are our identifiers. They must be below everything else
  */
 TOKEN : {	// identifiers
-		<IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>)* >
+		<IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>)* > { System.out.println("IDENTIFIER"); }
 	|	<#LETTER: ["A"-"Z","_","a"-"z"]>
 	|	<#DIGIT: ["0"-"9"]>
 }
 
-void Literal() : { }
+void Literal() : { debugPrint("LITERAL"); }
 {
 		< INTEGER_LITERAL >
 	|	< FLOATING_POINT_LITERAL >
-	|	< CHARACTER_LITERAL >
+	|	< CHARACTER_LITERAL > { debugPrint("CHARACTER LITERAL"); }
 	|	< STRING_LITERAL >
 }
 
@@ -181,32 +186,35 @@ void Dims() : { }
 /**
  * Expression tree
  */
-void ExpressionStatement() : {}
+void ExpressionStatement() : { debugPrint("EXPRESSION STATEMENT"); }
 {
     [ Expression() ] ";"
 }
 
 void Expression() : { debugPrint("EXPRESSION"); }
 {
-    AssignmentExpression() ( "," AssignmentExpression() )*
+    AssignmentExpression() //( "," AssignmentExpression() )*
 }
 
 void AssignmentExpression() : { debugPrint("ASSIGNMENT EXPRESSION"); }
 {
-    LOOKAHEAD(2) Assignment() | ConditionalExpression()
+//    LOOKAHEAD(3) ConditionalExpression() | Assignment()
+    Assignment()
 }
 
-void LeftHandSide() : {}
+void Assignment() : { debugPrint("ASSIGNMENT"); }
 {
-    < IDENTIFIER > [ "[" ConditionalExpression() "]" ] ( "." DataMemberArrayAccess() )*
+//      ( LeftHandSide() AssignmentOperator() )+ ConditionalExpression()
+      LeftHandSide() AssignmentOperator() ConditionalExpression()
 }
 
-void Assignment() : {}
+void LeftHandSide() : { debugPrint("LEFT HAND SIDE"); }
 {
-      LeftHandSide() AssignmentOperator() AssignmentExpression()
+//    < IDENTIFIER > [ "[" ConditionalExpression() "]" ] ( "." DataMemberArrayAccess() )*
+    DataMemberArrayAccess() ( "." DataMemberArrayAccess() )*
 }
 
-void AssignmentOperator() : {}
+void AssignmentOperator() : { debugPrint("ASSIGNMENT OPERATOR"); }
 {
     ( "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | "&=" | "^=" | "|=" | "#=" )
     
@@ -214,7 +222,7 @@ void AssignmentOperator() : {}
 
 void ConditionalExpression() : { debugPrint("CONDITIONAL EXPRESSION"); }
 {
-    LogicalORExpression() [ "?" Expression() ":" ConditionalExpression() ]
+    LogicalORExpression() [ "?" ConditionalExpression() ":" ConditionalExpression() ]
 }
 
 void LogicalORExpression() : {}
@@ -268,57 +276,57 @@ void MultiplicativeExpression() : {}
     UnaryExpression() [ ( "*" | "/" | "%" ) MultiplicativeExpression() ]
 }
 
-void UnaryExpression() : {}
+void UnaryExpression() : { debugPrint("UNARY EXPRESSION"); }
 {
     "+" UnaryExpression() | "-" UnaryExpression() | UnaryNotPlusMinusExpression()
 }
 
-void UnaryNotPlusMinusExpression() : {}
+void UnaryNotPlusMinusExpression() : { debugPrint("UNARY NOT +- EXPRESSION"); }
 {
-    LOOKAHEAD(2) PostfixExpression() | "!" UnaryExpression() | "~" UnaryExpression() | CastExpression()
+    PrimaryExpression() | "!" UnaryExpression() | "~" UnaryExpression() | CastExpression()
 }
 
-void CastExpression() : {}
+void CastExpression() : { debugPrint("CAST EXPRESSION"); }
 {
-    "(" TypeId() [ Dims() ] ")" UnaryExpression() 
+    < CAST > "<" TypeId() [ Dims() ] ">" "(" UnaryExpression() ")" 
 }
 
-void PostfixExpression() : {}
+/*
+void PostfixExpression() : { debugPrint("POSTFIX EXPRESSION"); }
 {
-    LOOKAHEAD(2) PrimaryExpression() | <IDENTIFIER>
+    LOOKAHEAD(PrimaryExpression()) PrimaryExpression() | <IDENTIFIER>
+}
+*/
+
+void PrimaryExpression() : { debugPrint("PRIMARY EXPRESSION"); }
+{
+    LOOKAHEAD(3) ArrayCreationExpression() | PrimaryNoNewArrayExpression()
 }
 
-void PrimaryExpression() : {}
+void PrimaryNoNewArrayExpression() : { debugPrint("PRIMARY NO NEW ARRAY"); }
 {
-//    LOOKAHEAD(3) ArrayCreationExpression() | PrimaryNoNewArrayExpression()
-    PrimaryNoNewArrayExpression()
-}
-
-void PrimaryNoNewArrayExpression() : {}
-{
-      Literal()
+      Literal() { debugPrint("PRIMARY -> LITERAL"); }
     | < THIS >
-    | "(" Expression() ")"
-    | < NEW > TypeId() ( "(" [ ArgumentList() ] ")" | "[" Expression() "]" [ Dims() ] ) 
-    | ( DataMemberAccessList() )+
+    | "(" ConditionalExpression() ")" { debugPrint("PRIMARY -> EXPRESSION"); }    | < NEW > TypeId() ( "(" [ ArgumentList() ] ")" | "[" ConditionalExpression() "]" [ Dims() ] ) 
+    | ( DataMemberAccessList() )+ { debugPrint("PRIMARY -> DATA MEMBER ACCESS LIST"); }
 }
 
-void ArrayCreationExpression() : {}
+void ArrayCreationExpression() : { debugPrint("ARRAY CREATION"); }
 {
-    < NEW > TypeId() "[" Expression() "]" [ Dims() ]
+    < NEW > TypeId() "[" ConditionalExpression() "]" [ Dims() ]
 }
 
-void DataMemberArrayAccess() : { debugPrint("DATA MEMBER ACCESS"); }
+void DataMemberArrayAccess() : { debugPrint("DATA MEMBER ARRAY ACCESS"); }
 {
-    < IDENTIFIER > [ "[" ConditionalExpression() "]" ]
+    < IDENTIFIER > { debugPrint("\tIDENTIFIER"); } [ "[" ConditionalExpression() "]" ]
 }
 
-void MethodInvocation() : {}
+void MethodInvocation() : { debugPrint("METHOD INVOCATION"); }
 {
     < IDENTIFIER > [ "(" [ ArgumentList() ] ")" ]
 }
 
-void DataMemberAccessList() : {}
+void DataMemberAccessList() : { debugPrint("DATA MEMBER ACCESS LIST"); }
 {
     LOOKAHEAD(2) DataMemberArrayAccess() | MethodInvocation()  ( "." ( LOOKAHEAD(2) DataMemberArrayAccess() | MethodInvocation() ) )*
 }
@@ -338,29 +346,15 @@ void Visibility() : { }
 	|	< PRIVATE >
 }
 
-/*
-void NewObject() : { }
+void ExpressionList() : { debugPrint("EXPRESSION LIST"); }
 {
-    < NEW > TypeId() ( "[" ConditionalExpression() "]" | "(" [ ArgumentExpressionList() ] ")" )
+    ( LOOKAHEAD(3) Expression() | ConditionalExpression() ) ( "," ( LOOKAHEAD(3) Expression() | ConditionalExpression() ) )* 
 }
-
-void IdentifierDeclaration() : { }
-{
-	// I didn't use a CastExpression() here, because it doesn't work. I think it's wrong, see above
-    < IDENTIFIER > [ AssignmentOperator() ( ConditionalExpression() | NewObject() ) ]
-}
-
-void IdentifierDeclarationList() : { }
-{
-	IdentifierDeclaration() ( "," IdentifierDeclaration())*
-}
-*/
 
 void VariableDeclaration() : { debugPrint("VAR DEC"); }
 {
-	TypeId() [ Dims() ] Expression() ";" // ( "," AssignmentExpression() )* ";"
+	TypeId() [ Dims() ] ExpressionList() ";"
 }
-
 
 void ParameterList() : { }
 {
@@ -369,7 +363,7 @@ void ParameterList() : { }
 
 void MethodDeclaration() : { }
 {
-	( TypeId() | < VOID >	) < IDENTIFIER > "(" [ ParameterList() ] ")" "{"
+	( TypeId() | < VOID > ) < IDENTIFIER > "(" [ ParameterList() ] ")" "{"
 		( ExpressionStatement() | VariableDeclaration() )*
 	"}"
 }
