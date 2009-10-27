@@ -38,9 +38,9 @@ error test_error {
     private int a = 3, b, c = "8";
     private int a = 3, b, c = x, d, e = "something";
     
-    public int foo() { }
-    
     public void blah(int a, code a) { }
+    
+    public int foo(void) { a=3; }
     
     public int blah( ) {
         int a;

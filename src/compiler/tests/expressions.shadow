@@ -2,6 +2,8 @@
 class blah {
     public void blah() {
 
+        int a = blah(a);
+        
         int a = ~a;
         int a = 7;
         int a = (7 + b);
