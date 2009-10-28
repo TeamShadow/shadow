@@ -210,8 +210,8 @@ void Assignment() : { debugPrint("ASSIGNMENT"); }
 
 void LeftHandSide() : { debugPrint("LEFT HAND SIDE"); }
 {
-//    < IDENTIFIER > [ "[" ConditionalExpression() "]" ] ( "." DataMemberArrayAccess() )*
-    DataMemberArrayAccess() ( "." DataMemberArrayAccess() )*
+//    < IDENTIFIER > [ "[" ConditionalExpression() "]" ] ( "." ArrayAccess() )*
+    ArrayAccess() ( "." ArrayAccess() )*
 }
 
 void AssignmentOperator() : { debugPrint("ASSIGNMENT OPERATOR"); }
@@ -308,7 +308,17 @@ void PrimaryNoNewArrayExpression() : { debugPrint("PRIMARY NO NEW ARRAY"); }
       Literal() { debugPrint("PRIMARY -> LITERAL"); }
     | < THIS >
     | "(" ConditionalExpression() ")" { debugPrint("PRIMARY -> EXPRESSION"); }    | < NEW > TypeId() ( "(" [ ArgumentList() ] ")" | "[" ConditionalExpression() "]" [ Dims() ] ) 
-    | ( DataMemberAccessList() )+ { debugPrint("PRIMARY -> DATA MEMBER ACCESS LIST"); }
+    | VariableExpression()  { debugPrint("PRIMARY -> DATA MEMBER ACCESS LIST"); }
+}
+
+void VariableExpression() : { debugPrint("VALUE EXPRESSION"); }
+{
+	LOOKAHEAD(3) MethodInvocation() ( LOOKAHEAD(2) DereferenceExpression() )*
+	|  < IDENTIFIER > ( LOOKAHEAD(2) DereferenceExpression() )*	 	}
+
+void DereferenceExpression() : { debugPrint("VALUE EXPRESSION"); }
+{
+	"."	VariableExpression() | "[" ConditionalExpression() "]"
 }
 
 void ArrayCreationExpression() : { debugPrint("ARRAY CREATION"); }
@@ -316,7 +326,7 @@ void ArrayCreationExpression() : { debugPrint("ARRAY CREATION"); }
     < NEW > TypeId() "[" ConditionalExpression() "]" [ Dims() ]
 }
 
-void DataMemberArrayAccess() : { debugPrint("DATA MEMBER ARRAY ACCESS"); }
+void ArrayAccess() : { debugPrint("DATA MEMBER ARRAY ACCESS"); }
 {
     < IDENTIFIER > { debugPrint("\tIDENTIFIER"); } (  "[" ConditionalExpression() "]" )*
 }
@@ -326,11 +336,13 @@ void MethodInvocation() : { debugPrint("METHOD INVOCATION"); }
     < IDENTIFIER > [ "(" [ ArgumentList() ] ")" ]
 }
 
-void DataMemberAccessList() : { debugPrint("DATA MEMBER ACCESS LIST"); }
+/*
+void MemberAccess() : { debugPrint("DATA MEMBER ACCESS LIST"); }
 {
-    LOOKAHEAD(2) DataMemberArrayAccess() | MethodInvocation()  ( "." ( LOOKAHEAD(2) DataMemberArrayAccess() | MethodInvocation() ) )*
+    
+ ( LOOKAHEAD(2) MethodInvocation() | ArrayAccess()) LOOKAHEAD(2) ( (    "." MethodInvocation() )| ArrayAccess()  )*
 }
-
+*/
 void ArgumentList() : {}
 {
     ConditionalExpression() ( "," ConditionalExpression() )*
