@@ -10,7 +10,7 @@ tuple blah {
     int a = 3, b, c = "8";
     int a = 3, b, c = x, d, e = "something";
     
-    // arrays
+    // arrays 
     int[] a;
     int[] a = new int[30];
     
