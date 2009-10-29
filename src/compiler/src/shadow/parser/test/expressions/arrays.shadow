@@ -1,0 +1,66 @@
+
+class Test {
+    // create a single array
+    public int[] a;
+    public int[] a = new int[3];
+    public int[] a = blah;
+    public int[] a = blah[1];
+    public int[] a = blah[1][3];
+    public int[] a = blah.blah;
+    public int[] a = blah.blah[5];
+    public int[] a = blah.blah(5,"test");
+    
+    // create a double array
+    public int[][] a;
+    public int[][] a = new int[3][4];
+    public int[][] a = blah;
+    public int[][] a = blah[1];
+    public int[][] a = blah[1][3];
+    public int[][] a = blah.blah[5];
+    public int[][] a = blah.blah(5,"test");
+    
+    public void blah() {
+        // test the same but in a method
+
+        public int[] a;
+        public int[] a = new int[3];
+        public int[] a = blah;
+        public int[] a = blah[1];
+        public int[] a = blah[1][3];
+        public int[] a = blah.blah;
+        public int[] a = blah.blah[5];
+        public int[] a = blah.blah(5,"test");
+        
+        // create a double array
+        public int[][] a;
+        public int[][] a = new int[3][4];
+        public int[][] a = blah;
+        public int[][] a = blah[1];
+        public int[][] a = blah[1][3];
+        public int[][] a = blah.blah[5];
+        public int[][] a = blah.blah(5,"test");
+             
+        // test some other array expressions
+        a = 3;
+        a = a[8];
+        a = a[7].blah;
+        a = a[7].blah[2];
+        a = a[7].blah[2][4];
+        a = a[7].blah(2,3);
+        
+        a[7] = 3;
+        a[7] = a[8];
+        a[7] = a[7].blah;
+        a[7] = a[7].blah[2];
+        a[7] = a[7].blah[2][4];
+        a[7] = a[7].blah(2,3);
+        
+        a[7][8] = 3;
+        a[7][8] = a[8];
+        a[7][8] = a[7].blah;
+        a[7][8] = a[7].blah[2];
+        a[7][8] = a[7].blah[2][4];
+        a[7][8] = a[7].blah(2,3);
+        
+   }
+}
