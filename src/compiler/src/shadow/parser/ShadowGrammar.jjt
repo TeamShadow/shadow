@@ -333,7 +333,7 @@ void ArrayAccess() : { debugPrint("DATA MEMBER ARRAY ACCESS"); }
 
 void MethodInvocation() : { debugPrint("METHOD INVOCATION"); }
 {
-    < IDENTIFIER > [ "(" [ ArgumentList() ] ")" ]
+    < IDENTIFIER > "(" [ ArgumentList() ] ")"
 }
 
 /*
@@ -370,12 +370,12 @@ void VariableDeclaration() : { debugPrint("VAR DEC"); }
 
 void ParameterList() : { }
 {
-	TypeId() < IDENTIFIER > [ "," TypeId() < IDENTIFIER > ]		
+	(  TypeId() < IDENTIFIER >	( "," TypeId() < IDENTIFIER > )* | < VOID > )
 }
 
-void MethodDeclaration() : { }
+void MethodDeclaration() : { debugPrint("EXPRESSION LIST"); }
 {
-	( TypeId() | < VOID > ) < IDENTIFIER > "(" [ ParameterList() ] ")" "{"
+	( TypeId() | < VOID > ) < IDENTIFIER > "("  [ ParameterList() ]  ")" "{"
 		( ExpressionStatement() | VariableDeclaration() )*
 	"}"
 }
@@ -389,8 +389,7 @@ void ClassDefinition() : { }
 {
 	< CLASS > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] [ ImplementsList() ] "{"
 	
-	( Visibility() ( LOOKAHEAD(4) VariableDeclaration()
-					| MethodDeclaration()
+	( Visibility() ( LOOKAHEAD(4) MethodDeclaration() | VariableDeclaration()
 					| TupleDefinition() ) )*
     	
 	"}"
@@ -400,7 +399,7 @@ void TupleDefinition() : { }
 {
 	< TUPLE > <IDENTIFIER > "{"
 	
-	( VariableDeclaration() )+
+	( VariableDeclaration() )*
     	
 	"}"
 }
@@ -409,8 +408,7 @@ void ExceptionDefinition() : { }
 {
 	< EXCEPTION > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] "{"
 	
-	( Visibility() ( LOOKAHEAD(3) VariableDeclaration()
-					| MethodDeclaration() ) )+
+	( Visibility() ( LOOKAHEAD(3) MethodDeclaration() | VariableDeclaration() ) )*
     	
 	"}"
 }
@@ -419,8 +417,7 @@ void ErrorDefinition() : { }
 {
 	< ERROR > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] "{"
 	
-	( Visibility() ( LOOKAHEAD(3) VariableDeclaration()
-					| MethodDeclaration() ) )+
+	( Visibility() ( LOOKAHEAD(3) MethodDeclaration() | VariableDeclaration() ) )*
     	
 	"}"
 }
