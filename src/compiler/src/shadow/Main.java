@@ -26,7 +26,7 @@ public class Main {
 			ShadowParser parser = new ShadowParser(sourceStream);
 			
 			// parse the translation unit
-			parser.TranslationUnit();
+			parser.CompilationUnit();
 		} catch(FileNotFoundException fnfe) {
 			System.err.println("Source file (" + args[0] + ") not found: " + fnfe.getLocalizedMessage());
 		} catch(ParseException pe) {

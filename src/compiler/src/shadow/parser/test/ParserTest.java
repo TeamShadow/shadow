@@ -82,12 +82,12 @@ public final class ParserTest {
           FileInputStream fis = new FileInputStream(sourceFile);
           ShadowParser parser = new ShadowParser(fis);
           
-          if(debug)
-        	  parser.enableDebug();
+//          if(debug)
+//        	  parser.enableDebug();
 
           System.err.println("Parse Testing File: " + sourceFile.getCanonicalPath());
 
-          SimpleNode n = parser.TranslationUnit();
+          SimpleNode n = parser.CompilationUnit();
 
           if(dump)
         	  n.dump("");
