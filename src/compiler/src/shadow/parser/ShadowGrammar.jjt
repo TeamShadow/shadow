@@ -25,11 +25,6 @@ options {
   JAVA_UNICODE_ESCAPE = true;
   ERROR_REPORTING = false;
   STATIC = false;
-  
-  MULTI = true;
-  VISITOR = true;
-  NODE_USES_PARSER = true;
-  NODE_PACKAGE="shadow.parser.javacc";
 }
 
 PARSER_BEGIN(ShadowParser)
@@ -37,8 +32,6 @@ package shadow.parser.javacc;
 
 import java.io.*;
 import shadow.parser.GTToken;
-import shadow.parser.*;
-public class JavaParser {
 
 /**
  * Grammar to parse Shadow
@@ -141,81 +134,25 @@ public class ShadowParser
   public static void main(String args[]) {
     try {
         String fileName = "tests/java_test.java";
-        FileInputStream fis = new FileInputStream(fileName);    	
+        FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
-		SimpleNode n = parser.CompilationUnit();
+        SimpleNode n = parser.CompilationUnit();
 
-		n.dump("");
+        n.dump("");
 
-		System.out.println("GOOD PARSE");
+        System.out.println("GOOD PARSE");
 
     } catch (ParseException e) {
-    	System.out.println("BAD PARSE");
-		System.out.println(e.getMessage());
-    } catch (Error e) {        System.out.println("Ooops");
+        System.out.println("BAD PARSE");
+        System.out.println(e.getMessage());
+    } catch (Error e) {
+        System.out.println("Ooops");
         System.out.println(e.getMessage());
     } catch (FileNotFoundException e) {
         System.out.println(e.getMessage());
-    }    	
+    }       
   }
-
-  }
-
-  private void checkForBadVariableArgumentsUsage() throws ParseException {
-    if (!isJDK15) {
-      throw new ParseException("Can't use variable arguments (varargs) when running in JDK 1.4 mode!");
-    }
-  }
-
-  private void checkForBadJDK15ForLoopSyntaxArgumentsUsage() throws ParseException {
-    if (!isJDK15) {
-      throw new ParseException("Can't use JDK 1.5 for loop syntax when running in JDK 1.4 mode!");
-    }
-  }
-
-  private void checkForBadEnumUsage(String in, String usage) throws ParseException {
-    if (isJDK15 && in.equals("enum")) {
-      throw new ParseException("Can't use 'enum' as " + usage + " when running in JDK 1.5 mode!");
-    }
-  }
-
-  private void checkForBadHexFloatingPointLiteral() throws ParseException {
-    if (!isJDK15) {
-      throw new ParseException("ERROR: Can't use hexadecimal floating point literals in pre-JDK 1.5 target");
-    }
-  }
-
-  // This is a semantic LOOKAHEAD to determine if we're dealing with an assert
-  // Note that this can't be replaced with a syntactic lookahead
-  // since "assert" isn't a string literal token
-  private boolean isNextTokenAnAssert() {
-    boolean res = getToken(1).image.equals("assert");
-    if (res && isJDK13 && getToken(2).image.equals("(")) {
-     res = false;
-    }
-    return res;
-  }
-
-  private boolean isPrecededByComment(Token tok) {
-      boolean res = false;
-      while (!res && tok.specialToken != null) {
-          tok = tok.specialToken;
-          res = tok.kind == SINGLE_LINE_COMMENT ||
-                tok.kind == FORMAL_COMMENT ||
-                tok.kind == MULTI_LINE_COMMENT;
-      }
-      return res;
-  }
-
-  public Map<Integer, String> getExcludeMap() {
-    return token_source.getExcludeMap();
-  }
-
-  public void setExcludeMarker(String marker) {
-    token_source.setExcludeMarker(marker);
-  }
-
 
 }
 
@@ -515,7 +452,8 @@ SimpleNode CompilationUnit():
   ( TypeDeclaration() )*
   <EOF>
 
-  {  	return jjtn000;
+  {
+    return jjtn000;
   }
 }
 
@@ -828,7 +766,6 @@ void ClassOrInterfaceType():
   <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
   ( LOOKAHEAD(2) "." <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
 }
-}
 
 void TypeArguments():
 {}
@@ -892,45 +829,11 @@ void Name():
   ( LOOKAHEAD(2) "." <IDENTIFIER>
   )*
 }
-{
- (
-  LOOKAHEAD(2)
-  (
-   "public" { modifiers |= AccessNode.PUBLIC; }
-  | "static" { modifiers |= AccessNode.STATIC; }
-  | "protected" { modifiers |= AccessNode.PROTECTED; }
-  | "private" { modifiers |= AccessNode.PRIVATE; }
-  | "final" { modifiers |= AccessNode.FINAL; }
-  | "abstract" { modifiers |= AccessNode.ABSTRACT; }
-  | "synchronized" { modifiers |= AccessNode.SYNCHRONIZED; }
-  | "native" { modifiers |= AccessNode.NATIVE; }
-  | "transient" { modifiers |= AccessNode.TRANSIENT; }
-  | "volatile" { modifiers |= AccessNode.VOLATILE; }
-  | "strictfp" { modifiers |= AccessNode.STRICTFP; }
-  | Annotation()
-  )
- )*
- {
-    return modifiers;
- }
-}
 
 void NameList():
 {}
 {
   Name() ( "," Name() )*
-}
-{
-  ";"
-|
-  modifiers = Modifiers()
-  (
-     ClassOrInterfaceDeclaration(modifiers)
-   |
-     EnumDeclaration(modifiers)
-   |
-     AnnotationTypeDeclaration(modifiers)
-  )
 }
 
 
@@ -956,16 +859,11 @@ void Expression():
     AssignmentOperator() Expression()
   ]
 }
-{
 
 void AssignmentOperator():
 {}
 {
   "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | ">>>=" | "&=" | "^=" | "|="
-}
-{
-   "extends" ClassOrInterfaceType()
-   ( "," ClassOrInterfaceType() { extendsMoreThanOne = true; } )*
 }
 
 void ConditionalExpression():
@@ -978,19 +876,6 @@ void ConditionalOrExpression():
 {}
 {
   ConditionalAndExpression() ( "||" ConditionalAndExpression() )*
-}
-{
-  t = <IDENTIFIER> {
-    if (!t.image.equals("enum")) {
-      throw new ParseException("ERROR: expecting enum");
-    }
-    if (!this.isJDK15) {
-      throw new ParseException("ERROR: Can't use enum as a keyword in pre-JDK 1.5 target");
-    }
-  }
-  t=<IDENTIFIER> {jjtThis.setImage(t.image);}
-  [ ImplementsList() ]
-  EnumBody()
 }
 
 void ConditionalAndExpression():
@@ -1033,18 +918,6 @@ void RelationalExpression():
 {}
 {
   ShiftExpression() ( ( "<" | ">" | "<=" | ">=" ) ShiftExpression() )*
-}
-{ LOOKAHEAD(["static"] "{" ) Initializer()
-|  modifiers = Modifiers()
-  ( LOOKAHEAD(3) ClassOrInterfaceDeclaration(modifiers)
-    | LOOKAHEAD(3) EnumDeclaration(modifiers)
-    | LOOKAHEAD( [ TypeParameters() ] <IDENTIFIER> "(" ) ConstructorDeclaration(modifiers)
-    | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) )  FieldDeclaration(modifiers)
-    | MethodDeclaration(modifiers)
-    | AnnotationTypeDeclaration(modifiers)
-  )
-|
-  ";"
 }
 
 void ShiftExpression():
@@ -1128,12 +1001,6 @@ void CastExpression():
   "(" Type() ")" UnaryExpression()
 |
   "(" Type() ")" UnaryExpressionNotPlusMinus()
-}
-{
-  t=<IDENTIFIER> {s.append(t.image);}
-  [ LOOKAHEAD(2) TypeArguments() ]
-  ( LOOKAHEAD(2) "." t=<IDENTIFIER> {s.append('.').append(t.image);} [ LOOKAHEAD(2) TypeArguments() ] )*
-  {jjtThis.setImage(s.toString());}
 }
 
 void PrimaryExpression():
