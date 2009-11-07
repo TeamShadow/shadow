@@ -10,7 +10,7 @@ class Test {
     public int[] a = blah.blah[5];
     public int[] a = blah.blah(5,"test");
     
-    // create a double array
+    // create a float array
     public int[][] a;
     public int[][] a = new int[3][4];
     public int[][] a = blah;
@@ -31,7 +31,7 @@ class Test {
         public int[] a = blah.blah[5];
         public int[] a = blah.blah(5,"test");
         
-        // create a double array
+        // create a float array
         public int[][] a;
         public int[][] a = new int[3][4];
         public int[][] a = blah;

@@ -14,7 +14,7 @@ import java.util.*;
 
 public class ShadowParser {
 
-    private boolean debug = true;
+    private boolean debug = false;
     
 	public static void main(String args[]) throws ParseException {
 		try {
@@ -23,6 +23,8 @@ public class ShadowParser {
 //            String fileName = "tests/expressions.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
+
+	    	parser.enableDebug();
 	
 			System.out.println("Reading file: " + fileName);
 
@@ -40,6 +42,9 @@ public class ShadowParser {
 		} catch(FileNotFoundException e) {
 			System.out.println(e.getMessage());
 		}
+	}
+
+	public void enableDebug() {		debug = true;
 	}
 
     public void debugPrint(String str) {
@@ -370,7 +375,7 @@ void VariableDeclaration() : { debugPrint("VAR DEC"); }
 
 void ParameterList() : { }
 {
-	(  TypeId() < IDENTIFIER >	( "," TypeId() < IDENTIFIER > )* )
+	(  TypeId() [ Dims() ] < IDENTIFIER >	( "," TypeId() [ Dims() ] < IDENTIFIER > )* )
 }
 
 void LabeledFunctionSignature() : { }
@@ -380,12 +385,12 @@ void LabeledFunctionSignature() : { }
 
 void TypeList() : { }
 {
-    (  TypeId() ( "," TypeId() )* )
+    (  TypeId() [ Dims() ] ( "," TypeId() [ Dims() ])* )
 }
 
 void FunctionSignature() : { }
 {
-    "("  [ TypeList() ]  ")" "= >" "(" [ TypeList() ]  ")" 
+    "("  [ TypeList() ]  ")" "=>" "(" [ TypeList() ]  ")" 
 }
 
 void MethodDeclaration() : { debugPrint("METHOD DECLARATION"); }

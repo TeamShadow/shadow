@@ -70,6 +70,8 @@ public final class ParserTest {
         try {
           FileInputStream fis = new FileInputStream(sourceFile);
           ShadowParser parser = new ShadowParser(fis);
+          
+          parser.enableDebug();
 
           System.err.println("Parse Testing File: " + sourceFile.getCanonicalPath());
 
