@@ -18,9 +18,9 @@ public class ShadowParser {
     
 	public static void main(String args[]) throws ParseException {
 		try {
-//            String fileName = "tests/full_input_test.shadow";
+            String fileName = "tests/full_input_test.shadow";
 //            String fileName = "tests/class_test.shadow";
-            String fileName = "tests/expressions.shadow";
+//            String fileName = "tests/expressions.shadow";
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 	
@@ -82,7 +82,6 @@ TOKEN : { 	// primative types
 	|	< ULONG: "ulong"> 
 	|	< FLOAT: "float" >
 	|	< CODE: "code" >
-	|	< VOID: "void" >
 }
 
 TOKEN : {	// control flow keywords				
@@ -175,7 +174,8 @@ void BuiltInType() : { } {
 void TypeId() : { }
 {
     // we'll need to add something to check for types we know about later
-    BuiltInType()
+        BuiltInType()
+    |   FunctionSignature()
 }
 
 void Dims() : { }
@@ -370,13 +370,28 @@ void VariableDeclaration() : { debugPrint("VAR DEC"); }
 
 void ParameterList() : { }
 {
-	(  TypeId() < IDENTIFIER >	( "," TypeId() < IDENTIFIER > )* | < VOID > )
+	(  TypeId() < IDENTIFIER >	( "," TypeId() < IDENTIFIER > )* )
 }
 
-void MethodDeclaration() : { debugPrint("EXPRESSION LIST"); }
+void LabeledFunctionSignature() : { }
 {
-	( TypeId() | < VOID > ) < IDENTIFIER > "("  [ ParameterList() ]  ")" "{"
-		( ExpressionStatement() | VariableDeclaration() )*
+    "("  [ ParameterList() ]  ")" "=>" "(" [ TypeList() ]  ")" 
+}
+
+void TypeList() : { }
+{
+    (  TypeId() ( "," TypeId() )* )
+}
+
+void FunctionSignature() : { }
+{
+    "("  [ TypeList() ]  ")" "= >" "(" [ TypeList() ]  ")" 
+}
+
+void MethodDeclaration() : { debugPrint("METHOD DECLARATION"); }
+{
+	< IDENTIFIER > LabeledFunctionSignature() "{"
+		( ExpressionStatement() | VariableDeclaration() )+
 	"}"
 }
 
@@ -389,7 +404,7 @@ void ClassDefinition() : { }
 {
 	< CLASS > <IDENTIFIER > [ < EXTENDS > <IDENTIFIER > ] [ ImplementsList() ] "{"
 	
-	( Visibility() ( LOOKAHEAD(4) MethodDeclaration() | VariableDeclaration()
+	( Visibility() ( MethodDeclaration() | VariableDeclaration()
 					| TupleDefinition() ) )*
     	
 	"}"

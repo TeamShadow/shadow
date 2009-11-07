@@ -1,14 +1,15 @@
 
 class blah {
-    public void blah() {
+    public blah() => () {
 
-        int a = blah(a);
-        
-        int a = ~a;
         int a = 7;
         int a = (7 + b);
         
         int a = (a + b[a+b] * -7);
+
+        int a = blah(a);
+        
+        int a = ~a;
         
         int a = new int(2 + a[98] - b + ~c );
         int a = cast<float>( new int());    

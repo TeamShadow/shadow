@@ -38,11 +38,11 @@ error test_error {
     private int a = 3, b, c = "8";
     private int a = 3, b, c = x, d, e = "something";
     
-    public void blah(int a, code a, float a){ }
+    public blah(int a, code a, float a) => () { ; }
     
-    public int foo(void) { a=3; }
+    public foo() => () { a=3; }
     
-    public int blah( ) {
+    public blah( ) => (  ) {
         int a;
         short a, b, c;
         int a = 3;
@@ -56,7 +56,7 @@ error test_error {
         a -= a;
     }
     
-    public int blah(int a, short b) {
+    public blah(int a, short b) => (int) {
         int a;
         short a, b, c;
         int a = 3;
@@ -77,11 +77,11 @@ exception test_error {
     private int a = 3, b, c = "8";
     private int a = 3, b, c = x, d, e = "something";
     
-    public int foo() { }
+    public foo() => (int) { ; }
     
-    public void blah(int a, code a) { }
+    public blah(int a, code a) => () { ; }
     
-    public int blah( ) {
+    public blah( ) => (int) {
         int a;
         short a, b, c;
         int a = 3;
@@ -90,7 +90,7 @@ exception test_error {
         int a = 3, b, c = x, d, e = "something";
     }
     
-    public int blah(int a, short b) {
+    public blah(int a, short b)=>(int) {
         int a;
         short a, b, c;
         int a = 3;
@@ -124,11 +124,11 @@ class test  {
         int a = 3, b, c = x, d, e = "something";
     }
 
-    public int foo() { }
+    public foo()=>(int) { ; }
     
-    public void blah(int a, code a) { }
+    public blah(int a, code a) => () { ; }
     
-    public int blah( ) {
+    public blah( ) => (int) {
         int a;
         short a, b, c;
         int a = 3;
@@ -137,7 +137,7 @@ class test  {
         int a = 3, b, c = x, d, e = "something";
     }
     
-    public int blah(int a, short b) {
+    public blah(int a, short b) => (int) {
         int a;
         short a, b, c;
         int a = 3;
