@@ -19,12 +19,15 @@ import shadow.parser.javacc.SimpleNode;
  */
 public final class ParserTest {
 
+	boolean dump = true;
+	boolean debug = true;
+	
 	/**
 	 * Tests all of the parse test files.
 	 * @param args
 	 */
-	public static void main(String[] args) throws IOException {
-		ParserTest pt = new ParserTest();
+	public static void main(String[] args) throws IOException, ParseException {
+		ParserTest pt = new ParserTest(false, false);
 		
 		// no args, we test everything
 		if(args.length == 0)
@@ -36,15 +39,23 @@ public final class ParserTest {
 		}	
 	}
 	
+	public ParserTest() {
+	}
+	
+	public ParserTest(boolean debug, boolean dump) {
+		this.debug = debug;
+		this.dump = dump;
+	}
+	
 	/**
 	 * Test everything under this cur directory
 	 * @throws IOException
 	 */
-	private void testAll() throws IOException {
+	private void testAll() throws IOException, ParseException {
 		testAll(new File("./src/shadow/parser/test"));
 	}
 	
-	private void testAll(File testDirs) throws IOException {
+	private void testAll(File testDirs) throws IOException, ParseException {
 	    ArrayList<File> fileList = new ArrayList<File>();
 	    
 	    // we now have a list of all files
@@ -66,23 +77,27 @@ public final class ParserTest {
 		}
 	}
 	
-	private void runTest(File sourceFile) {
+	private void runTest(File sourceFile) throws ParseException {
         try {
           FileInputStream fis = new FileInputStream(sourceFile);
           ShadowParser parser = new ShadowParser(fis);
           
-          parser.enableDebug();
+          if(debug)
+        	  parser.enableDebug();
 
           System.err.println("Parse Testing File: " + sourceFile.getCanonicalPath());
 
           SimpleNode n = parser.TranslationUnit();
 
-          n.dump("");
+          if(dump)
+        	  n.dump("");
+          
           System.err.println("GOOD PARSE");
 
           } catch (ParseException e) {
-              System.err.println("BAD PARSE");
+              System.err.println("BAD PARSE IN " + sourceFile.getName());
               System.err.println(e.getMessage());
+              throw e;
           } catch (Error e) {
               System.err.println("Oops.");
               System.err.println(e.getMessage());
