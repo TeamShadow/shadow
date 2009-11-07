@@ -24,13 +24,14 @@ public class ShadowParser {
             FileInputStream fis = new FileInputStream(fileName);
 	    	ShadowParser parser = new ShadowParser(fis);
 
-	    	parser.enableDebug();
+//	    	parser.enableDebug();
 	
 			System.out.println("Reading file: " + fileName);
 
 			SimpleNode n = parser.TranslationUnit();
 
-			n.dump("");
+//			n.dump("");
+
 			System.out.println("GOOD PARSE");
 			
 		} catch (ParseException e) {
@@ -93,7 +94,8 @@ TOKEN : {	// control flow keywords
 		<IF: "if"> 
 	|	<ELSE: "else"> 
 	|	<FOR: "for"> 
-	|	<FOREACH: "foreach"> 
+    |   <FOREACH: "foreach"> 
+    |   <IN: "in"> 
 	|	<WHILE: "while"> 
 	|	<DO: "do">
 	|	<CONTINUE: "continue">
@@ -354,6 +356,61 @@ void ArgumentList() : {}
 }
 
 /**
+ * Statements
+ */
+void Statement() : {}
+{
+        LOOKAHEAD(2) LabeledStatement()
+    |   ExpressionStatement()
+//    |   CompoundStatement()
+    |   SelectionStatement()
+    |   IterationStatement()
+    |   JumpStatement()
+}
+
+void LabeledStatement() : {}
+{
+        <CASE> ConditionalExpression() ":" Statement()
+    |   <DFLT> ":" Statement()
+}
+
+/*
+void CompoundStatement() : {}
+{
+    "{" [ LOOKAHEAD(DeclarationList()) DeclarationList() ]
+        [ StatementList() ]
+    "}"
+}
+*/
+
+void StatementList() : {}
+{
+    (Statement())+
+}
+
+void SelectionStatement() : {}
+{
+        <IF> "(" Expression() ")" Statement() [ LOOKAHEAD(2) <ELSE> Statement() ]
+    |   <SWITCH> "(" Expression() ")" Statement()
+}
+
+void IterationStatement() : {}
+{
+        <WHILE> "(" Expression() ")" Statement()
+    |   <DO> Statement() <WHILE> "(" Expression() ")" ";"
+    |   <FOR> "(" [ Expression() ] ";" [ Expression() ] ";" [ Expression() ] ")" Statement()
+    |   <FOREACH> "(" TypeId() <IDENTIFIER> <IN> <IDENTIFIER> ")" Statement()
+}
+
+void JumpStatement() : {}
+{
+        <CONTINUE> ";"
+    |   <BREAK> ";"
+    |   <RETURN> [ Expression() ] ";"
+}
+
+
+/**
  * High-level object definitions
  */
 void Visibility() : { }
@@ -396,7 +453,7 @@ void FunctionSignature() : { }
 void MethodDeclaration() : { debugPrint("METHOD DECLARATION"); }
 {
 	< IDENTIFIER > LabeledFunctionSignature() "{"
-		( ExpressionStatement() | VariableDeclaration() )+
+		( Statement() | VariableDeclaration() )+
 	"}"
 }
 
