@@ -11,6 +11,10 @@ class blah {
         
         int a = ~a;
         
+        int a = cast<int>b;
+        
+        int a = new int(2 + a[98] - b + ~c );
+//        int a = new int(2 + a[98] - b + ~c );
 //        int a = new int(2 + a[98] - b + ~c );
 //        int a = cast<float>( new int());    
         
@@ -30,6 +34,5 @@ class blah {
         int a=7, b, c = 5;
         
         a[7][8] = b[5][6][7];
-
     }
 }

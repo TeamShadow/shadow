@@ -225,6 +225,7 @@ TOKEN :
 | < BYTE: "byte" >
 | < CASE: "case" >
 | < CATCH: "catch" >
+| < CAST: "cast" >
 | < CODE: "code" >
 | < CONSTRUCTOR: "constructor" >
 | < CLASS: "class" >
@@ -970,7 +971,7 @@ void UnaryExpressionNotPlusMinus():
 {
   ( "~" | "!" ) UnaryExpression()
 |
-  LOOKAHEAD( CastLookahead() )
+  //LOOKAHEAD( CastLookahead() )
   CastExpression()
 | PrimaryExpression()
 }
@@ -978,25 +979,15 @@ void UnaryExpressionNotPlusMinus():
 // This production is to determine lookahead only.  The LOOKAHEAD specifications
 // below are not used, but they are there just to indicate that we know about
 // this.
-void CastLookahead():
-{ debugPrint("CAST LOOKAHEAD"); }
-{
-  LOOKAHEAD(2)
-  "(" PrimitiveType()
-|
-  LOOKAHEAD("(" Type() "[")
-  "(" Type() "[" "]"
-|
-  "(" Type() ")" ( "~" | "!" | "(" | <IDENTIFIER> | "this" | "super" | "new" | Literal() )
-}
+//void CastLookahead()://{ debugPrint("CAST LOOKAHEAD"); }//{//  LOOKAHEAD(2)//  "(" PrimitiveType()//|//  LOOKAHEAD("(" Type() "[")//  "(" Type() "[" "]"//|//  "(" Type() ")" ( "~" | "!" | "(" | <IDENTIFIER> | "this" | "super" | "new" | Literal() )//}
 
 void CastExpression():
 { debugPrint("CAST EXPRESSION"); }
 {
-  LOOKAHEAD("(" PrimitiveType())
-  "(" Type() ")" UnaryExpression()
+  LOOKAHEAD("cast" "<" PrimitiveType())
+  "cast" "<" Type() ">" UnaryExpression()
 |
-  "(" Type() ")" UnaryExpressionNotPlusMinus()
+  "cast" "<" Type() ">" UnaryExpressionNotPlusMinus()
 }
 
 void PrimaryExpression():
