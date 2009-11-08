@@ -225,18 +225,21 @@ TOKEN :
 | < BREAK: "break" >
 | < BYTE: "byte" >
 | < CASE: "case" >
-| < CATCH: "catch" >
 | < CAST: "cast" >
-| < CODE: "code" >
-| < CONSTRUCTOR: "constructor" >
+| < CATCH: "catch" >
 | < CLASS: "class" >
+| < CODE: "code" >
 | < CONST: "const" >
+| < CONSTRUCTOR: "constructor" >
 | < CONTINUE: "continue" >
 | < _DEFAULT: "default" >
+| < DELETE: "delete" >
+| < DESTRUCTOR: "destructor" >
 | < DO: "do" >
 | < DOUBLE: "double" >
 | < ELSE: "else" >
 | < ENUM: "enum" >
+| < ERROR: "error" >
 | < EXCEPTION: "exception" >
 | < EXTENDS: "extends" >
 | < FALSE: "false" >
@@ -249,8 +252,8 @@ TOKEN :
 | < IF: "if" >
 | < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
-| < INSTANCEOF: "instanceof" >
 | < IN: "in" >
+| < INSTANCEOF: "instanceof" >
 | < INT: "int" >
 | < INTERFACE: "interface" >
 | < LONG: "long" >
@@ -275,7 +278,6 @@ TOKEN :
 | < TRUE: "true" >
 | < TRY: "try" >
 | < VIEW: "view" >
-| < VOID: "void" >
 | < VOLATILE: "volatile" >
 | < WHILE: "while" >
 }
