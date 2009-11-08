@@ -142,7 +142,7 @@ public class ShadowParser
   public static void main(String args[]) {
     try {
 //        String fileName = "tests/expressions.shadow";
-        String fileName = "src/shadow/parser/test/expressions/method_decs.shadow";
+        String fileName = "src/shadow/parser/test/expressions/foreachloops.shadow";
         FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
@@ -243,11 +243,13 @@ TOKEN :
 | < FINALLY: "finally" >
 | < FLOAT: "float" >
 | < FOR: "for" >
+| < FOREACH: "foreach" >
 | < GOTO: "goto" >
 | < IF: "if" >
 | < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
 | < INSTANCEOF: "instanceof" >
+| < IN: "in" >
 | < INT: "int" >
 | < INTERFACE: "interface" >
 | < LONG: "long" >
@@ -1091,38 +1093,23 @@ void ArrayDimsAndInits():
 void Statement():
 { debugPrint("STATMENT"); }
 {
-  LOOKAHEAD(2)
-  LabeledStatement()
-|
-  AssertStatement()
-|
-  Block()
-|
-  EmptyStatement()
-|
-  StatementExpression() ";"
-|
-  SwitchStatement()
-|
-  IfStatement()
-|
-  WhileStatement()
-|
-  DoStatement()
-|
-  ForStatement()
-|
-  BreakStatement()
-|
-  ContinueStatement()
-|
-  ReturnStatement()
-|
-  ThrowStatement()
-|
-  SynchronizedStatement()
-|
-  TryStatement()
+  LOOKAHEAD(2) LabeledStatement()
+| AssertStatement()
+| Block()
+| EmptyStatement()
+| StatementExpression() ";"
+| SwitchStatement()
+| IfStatement()
+| WhileStatement()
+| DoStatement()
+| ForStatement()
+| ForeachStatement()
+| BreakStatement()
+| ContinueStatement()
+| ReturnStatement()
+| ThrowStatement()
+| SynchronizedStatement()
+| TryStatement()
 }
 
 void AssertStatement():
@@ -1216,19 +1203,17 @@ void DoStatement():
   "do" Statement() "while" "(" Expression() ")" ";"
 }
 
+void ForeachStatement():
+{ debugPrint("FOREACH STATEMENT"); }
+{
+  "foreach" "(" Type() <IDENTIFIER> "in" Expression() ")" Statement()
+}
+
+
 void ForStatement():
 { debugPrint("FOR STATEMENT"); }
 {
-  "for" "("
-
-  (
-      LOOKAHEAD(Type() <IDENTIFIER> ":")
-      Type() <IDENTIFIER> ":" Expression() 
-    |
-     [ ForInit() ] ";" [ Expression() ] ";" [ ForUpdate() ]
-  )
-
-  ")" Statement()
+  "for" "(" [ ForInit() ] ";" [ Expression() ] ";" [ ForUpdate() ] ")" Statement()
 }
 
 void ForInit():

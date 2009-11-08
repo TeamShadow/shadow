@@ -7,10 +7,8 @@
 
 - Remove do { } while() loops (Barry) ???
 
-- Add function types to the Type() production (Bill)
 - Add the #= <<<= >>>= <<< >>> operators to the language
   - NOTE: <<< and >>> will have to use the GT stuff... however that works?
-- Add the foreach statement
 - Add the weak keyword
 - Add the view structure
 - Add error
