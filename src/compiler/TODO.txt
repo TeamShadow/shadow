@@ -6,7 +6,7 @@
 *****************************************************************************
 
 - Remove do { } while() loops (Barry) ???
-- Added function types to the Type() production
+- Add function types to the Type() production (Bill)
 - Add the #= <<<= >>>= <<< >>> operators to the language
   - NOTE: <<< and >>> will have to use the GT stuff... however that works?
 - Add the foreach statement
