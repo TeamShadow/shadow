@@ -12,12 +12,12 @@ class blah {
         int a = ~a;
         
         int a = new int(2 + a[98] - b + ~c );
-        int a = cast<float>( new int());    
+//        int a = cast<float>( new int());    
         
-        a = cast<int>( new float(3));
-        a = (  cast<int>(1) + cast<float>(3.0) );
+//        a = cast<int>( new float(3));
+//        a = (  cast<int>(1) + cast<float>(3.0) );
         
-        a = "bob" > "blah" ? 7 : cast<float>(8);
+//        a = "bob" > "blah" ? 7 : cast<float>(8);
         
         int[] a;
         int[] a = new int[2+3];

@@ -142,7 +142,7 @@ public class ShadowParser
    	
   public static void main(String args[]) {
     try {
-        String fileName = "tests/java_test.java";
+        String fileName = "tests/expressions.shadow";
         FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
@@ -1126,10 +1126,11 @@ void ArgumentList():
 void AllocationExpression():
 { debugPrint("ALLOCATION EXPRESSION"); }
 {
-  LOOKAHEAD(2)
-  "new" PrimitiveType() ArrayDimsAndInits()
-|
-  "new" ClassOrInterfaceType() [ TypeArguments() ]
+//  LOOKAHEAD(2)
+//  "new" PrimitiveType() ArrayDimsAndInits()
+//|
+//  "new" ClassOrInterfaceType() [ TypeArguments() ]
+  "new" PrimitiveType() [ TypeArguments() ]
     (
       ArrayDimsAndInits()
     |
