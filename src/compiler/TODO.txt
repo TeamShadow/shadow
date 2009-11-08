@@ -12,3 +12,4 @@
 - Add the foreach statement
 - Add the weak keyword
 - Add the view structure
+- Add sequences (need a better name?), i.e. x,y,z = 3, z, 4;
