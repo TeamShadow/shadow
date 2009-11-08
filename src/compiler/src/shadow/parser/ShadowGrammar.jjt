@@ -124,6 +124,8 @@ public class ShadowParser
      }
    }
 
+     private boolean debug = false;
+
    public ShadowParser(String fileName)
    {
       this(System.in);
@@ -131,12 +133,21 @@ public class ShadowParser
       catch(Exception e) { e.printStackTrace(); }
    }
 
+    public void enableDebug() {
+        debug = true;
+    }
+   	public void debugPrint(String str) {        if(debug)
+            System.out.println(str + ": " + token);
+    }
+   	
   public static void main(String args[]) {
     try {
         String fileName = "tests/java_test.java";
         FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
+        parser.enableDebug();
+
         SimpleNode n = parser.CompilationUnit();
 
         n.dump("");
@@ -215,7 +226,7 @@ TOKEN :
 | < BYTE: "byte" >
 | < CASE: "case" >
 | < CATCH: "catch" >
-| < CHAR: "char" >
+| < CODE: "code" >
 | < CLASS: "class" >
 | < CONST: "const" >
 | < CONTINUE: "continue" >
@@ -478,6 +489,7 @@ void ImportDeclaration():
 int Modifiers():
 {
    int modifiers = 0;
+   debugPrint("MODIFIERS");
 }
 {
  (
@@ -520,6 +532,8 @@ int Modifiers():
 void TypeDeclaration():
 {
    int modifiers;
+   debugPrint("TYPE DECLARATION");
+   
 }
 {
   ";"
@@ -538,6 +552,7 @@ void TypeDeclaration():
 void ClassOrInterfaceDeclaration(int modifiers):
 {
    boolean isInterface = false;
+   debugPrint("CLASS OR INTERFACE DECLARARTION");
 }
 {
   ( "class" | "interface" { isInterface = true; } )
@@ -551,6 +566,7 @@ void ClassOrInterfaceDeclaration(int modifiers):
 void ExtendsList(boolean isInterface):
 {
    boolean extendsMoreThanOne = false;
+   debugPrint("EXTENDS LIST");
 }
 {
    "extends" ClassOrInterfaceType()
@@ -562,7 +578,7 @@ void ExtendsList(boolean isInterface):
 }
 
 void ImplementsList(boolean isInterface):
-{}
+{ debugPrint("IMPLEMENTS"); }
 {
    "implements" ClassOrInterfaceType()
    ( "," ClassOrInterfaceType() )*
@@ -573,7 +589,7 @@ void ImplementsList(boolean isInterface):
 }
 
 void EnumDeclaration(int modifiers):
-{}
+{ debugPrint("ENUM DECLARATION"); }
 {
   "enum" <IDENTIFIER>
   [ ImplementsList(false) ]
@@ -581,7 +597,7 @@ void EnumDeclaration(int modifiers):
 }
 
 void EnumBody():
-{}
+{ debugPrint("ENUM BODY"); }
 {
    "{"
    EnumConstant() ( "," EnumConstant() )*
@@ -590,31 +606,31 @@ void EnumBody():
 }
 
 void EnumConstant():
-{}
+{ debugPrint("ENUM CONSTANT"); }
 {
   <IDENTIFIER> [ Arguments() ] [ ClassOrInterfaceBody(false) ]
 }
 
 void TypeParameters():
-{}
+{ debugPrint("TYPE PARAMETERS"); }
 {
    "<" TypeParameter() ( "," TypeParameter() )* ">"
 }
 
 void TypeParameter():
-{}
+{ debugPrint("TYPE PARAMETER"); }
 {
    <IDENTIFIER> [ TypeBound() ]
 }
 
 void TypeBound():
-{}
+{ debugPrint("TYPE BOUND"); }
 {
    "extends" ClassOrInterfaceType() ( "&" ClassOrInterfaceType() )*
 }
 
 void ClassOrInterfaceBody(boolean isInterface):
-{}
+{ debugPrint("CLASS OR INTERFACE BODY"); }
 {
   "{" ( ClassOrInterfaceBodyDeclaration(isInterface) )* "}"
 }
@@ -623,6 +639,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 {
    boolean isNestedInterface = false;
    int modifiers;
+   debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {
   LOOKAHEAD(2)
@@ -652,26 +669,26 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 }
 
 void FieldDeclaration(int modifiers):
-{}
+{ debugPrint("FIELD DECLARATION"); }
 {
   // Modifiers are already matched in the caller
   Type() VariableDeclarator() ( "," VariableDeclarator() )* ";"
 }
 
 void VariableDeclarator():
-{}
+{ debugPrint("VARIABLE DECLARATOR"); }
 {
   VariableDeclaratorId() [ "=" VariableInitializer() ]
 }
 
 void VariableDeclaratorId():
-{}
+{ debugPrint("VARIABLE DECLARATOR ID"); }
 {
   <IDENTIFIER> ( "[" "]" )*
 }
 
 void VariableInitializer():
-{}
+{ debugPrint("VARIABLE INITIALIZER"); }
 {
   ArrayInitializer()
 |
@@ -679,41 +696,42 @@ void VariableInitializer():
 }
 
 void ArrayInitializer():
-{}
+{ debugPrint("ARRAY INITILIALIZER"); }
 {
   "{" [ VariableInitializer() ( LOOKAHEAD(2) "," VariableInitializer() )* ] [ "," ] "}"
 }
 
 void MethodDeclaration(int modifiers):
-{}
+{ debugPrint("METHOD DECLARATION"); }
 {
   // Modifiers already matched in the caller!
   [ TypeParameters() ]
-  ResultType()
+//  ResultType()
   MethodDeclarator() [ "throws" NameList() ]
   ( Block() | ";" )
 }
 
 void MethodDeclarator():
-{}
+{ debugPrint("METHOD DECLARATOR"); }
 {
-  <IDENTIFIER> FormalParameters() ( "[" "]" )*
+//  <IDENTIFIER> FormalParameters() ( "[" "]" )*
+  <IDENTIFIER> FormalParameters() "=>" "(" Type() ( "," Type() )* ")"
 }
 
 void FormalParameters():
-{}
+{ debugPrint("FORMAL PARAMETERS"); }
 {
   "(" [ FormalParameter() ( "," FormalParameter() )* ] ")"
 }
 
 void FormalParameter():
-{}
+{ debugPrint("FORMAL PARAMETER"); }
 {
-  [ "final" ] Type() [ "..." ] VariableDeclaratorId()
+  [ "final" ] Type() VariableDeclaratorId()
 }
 
 void ConstructorDeclaration():
-{}
+{ debugPrint("CONTRUCTOR DECLARATION"); }
 {
   [ TypeParameters() ]
   // Modifiers matched in the caller
@@ -725,7 +743,7 @@ void ConstructorDeclaration():
 }
 
 void ExplicitConstructorInvocation():
-{}
+{ debugPrint("EXPLICIT CONTRUCTOR INVOCATION"); }
 {
   LOOKAHEAD("this" Arguments() ";")
   "this" Arguments() ";"
@@ -734,7 +752,7 @@ void ExplicitConstructorInvocation():
 }
 
 void Initializer():
-{}
+{ debugPrint("INITIALIZER"); }
 {
   [ "static" ] Block()
 }
@@ -745,36 +763,41 @@ void Initializer():
  */
 
 void Type():
-{}
+{ debugPrint("TYPE"); }
 {
    LOOKAHEAD(2) ReferenceType()
- |
-   PrimitiveType()
+    |   PrimitiveType()
+//    |	FunctionType()
 }
 
 void ReferenceType():
-{}
+{ debugPrint("REFERENCE TYPE"); }
 {
    PrimitiveType() ( LOOKAHEAD(2) "[" "]" )+
   |
    ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" "]" )*
 }
 
+void FunctionType():
+{ debugPrint("FUNCTION TYPE"); }
+{	"(" Type() ( "," Type() )* ")" "=>" "(" Type() ( "," Type() )* ")"
+}
+
 void ClassOrInterfaceType():
-{}
+{ debugPrint("CLASS OR INTERFACE TYPE"); }
 {
   <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
   ( LOOKAHEAD(2) "." <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
 }
 
 void TypeArguments():
-{}
+{ debugPrint("TYPE ARGUMENTS"); }
 {
    "<" TypeArgument() ( "," TypeArgument() )* ">"
 }
 
 void TypeArgument():
-{}
+{ debugPrint("TYPE ARGUMENT"); }
 {
    ReferenceType()
  |
@@ -782,7 +805,7 @@ void TypeArgument():
 }
 
 void WildcardBounds():
-{}
+{ debugPrint("WILDCARD BOUNDS"); }
 {
    "extends" ReferenceType()
  |
@@ -791,11 +814,11 @@ void WildcardBounds():
 
 
 void PrimitiveType():
-{}
+{ debugPrint("PRIMITIVE TYPE"); }
 {
   "boolean"
 |
-  "char"
+  "code"
 |
   "byte"
 |
@@ -811,7 +834,7 @@ void PrimitiveType():
 }
 
 void ResultType():
-{}
+{ debugPrint("RESULT TYPE"); }
 {
   "void"
 |
@@ -823,7 +846,7 @@ void Name():
  * A lookahead of 2 is required below since "Name" can be followed
  * by a ".*" when used in the context of an "ImportDeclaration".
  */
-{}
+{ debugPrint("NAME"); }
 {
   <IDENTIFIER>
   ( LOOKAHEAD(2) "." <IDENTIFIER>
@@ -831,7 +854,7 @@ void Name():
 }
 
 void NameList():
-{}
+{ debugPrint("NAME LIST"); }
 {
   Name() ( "," Name() )*
 }
@@ -851,7 +874,7 @@ void Expression():
  * a primary expression.  Consider adding a semantic predicate to work
  * around this.
  */
-{}
+{ debugPrint("EXPRESSION"); }
 {
   ConditionalExpression()
   [
@@ -861,7 +884,7 @@ void Expression():
 }
 
 void AssignmentOperator():
-{}
+{ debugPrint("ASSIGNMENT OPERATOR"); }
 {
   "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | ">>>=" | "&=" | "^=" | "|="
 }
@@ -963,7 +986,7 @@ void PreDecrementExpression():
 }
 
 void UnaryExpressionNotPlusMinus():
-{}
+{ debugPrint("UNARY EXPRESSION NOT PLUS MINUS"); }
 {
   ( "~" | "!" ) UnaryExpression()
 |
@@ -977,7 +1000,7 @@ void UnaryExpressionNotPlusMinus():
 // below are not used, but they are there just to indicate that we know about
 // this.
 void CastLookahead():
-{}
+{ debugPrint("CAST LOOKAHEAD"); }
 {
   LOOKAHEAD(2)
   "(" PrimitiveType()
@@ -989,13 +1012,13 @@ void CastLookahead():
 }
 
 void PostfixExpression():
-{}
+{ debugPrint("POSTFIX EXPRESSION"); }
 {
   PrimaryExpression() [ "++" | "--" ]
 }
 
 void CastExpression():
-{}
+{ debugPrint("CAST EXPRESSION"); }
 {
   LOOKAHEAD("(" PrimitiveType())
   "(" Type() ")" UnaryExpression()
@@ -1004,19 +1027,19 @@ void CastExpression():
 }
 
 void PrimaryExpression():
-{}
+{ debugPrint("PRIMARY EXPRESSION"); }
 {
   PrimaryPrefix() ( LOOKAHEAD(2) PrimarySuffix() )*
 }
 
 void MemberSelector():
-{}
+{ debugPrint("MEMBER SELECTOR"); }
 {
   "." TypeArguments() <IDENTIFIER>
 }
 
 void PrimaryPrefix():
-{}
+{ debugPrint("PRIMARY PREFIX"); }
 {
   Literal()
 |
@@ -1035,7 +1058,7 @@ void PrimaryPrefix():
 }
 
 void PrimarySuffix():
-{}
+{ debugPrint("PRIMARY SUFFIX"); }
 {
   LOOKAHEAD(2)
   "." "this"
@@ -1054,7 +1077,7 @@ void PrimarySuffix():
 }
 
 void Literal():
-{}
+{ debugPrint("LITERAL"); }
 {
   <INTEGER_LITERAL>
 |
@@ -1070,7 +1093,7 @@ void Literal():
 }
 
 void BooleanLiteral():
-{}
+{ debugPrint("BOOLEAN LITERAL"); }
 {
   "true"
 |
@@ -1078,25 +1101,25 @@ void BooleanLiteral():
 }
 
 void NullLiteral():
-{}
+{ debugPrint("NULL LITERAL"); }
 {
   "null"
 }
 
 void Arguments():
-{}
+{ debugPrint("ARGUMENTS"); }
 {
   "(" [ ArgumentList() ] ")"
 }
 
 void ArgumentList():
-{}
+{ debugPrint("ARGUMENT LIST"); }
 {
   Expression() ( "," Expression() )*
 }
 
 void AllocationExpression():
-{}
+{ debugPrint("ALLOCATION EXPRESSION"); }
 {
   LOOKAHEAD(2)
   "new" PrimitiveType() ArrayDimsAndInits()
@@ -1114,7 +1137,7 @@ void AllocationExpression():
  * if there is an expression between the "[...]".
  */
 void ArrayDimsAndInits():
-{}
+{ debugPrint("ARRAY DIMS AND INITS"); }
 {
   LOOKAHEAD(2)
   ( LOOKAHEAD(2) "[" Expression() "]" )+ ( LOOKAHEAD(2) "[" "]" )*
@@ -1128,7 +1151,7 @@ void ArrayDimsAndInits():
  */
 
 void Statement():
-{}
+{ debugPrint("STATMENT"); }
 {
   LOOKAHEAD(2)
   LabeledStatement()
@@ -1165,7 +1188,7 @@ void Statement():
 }
 
 void AssertStatement():
-{}
+{ debugPrint("ASSERT STATEMENT"); }
 {
   "assert" Expression() [ ":" Expression() ] ";"
 }
@@ -1177,13 +1200,13 @@ void LabeledStatement():
 }
 
 void Block():
-{}
+{ debugPrint("BLOCK"); }
 {
   "{" ( BlockStatement() )* "}"
 }
 
 void BlockStatement():
-{}
+{ debugPrint("BLOCK STATEMENT"); }
 {
   LOOKAHEAD([ "final" ] Type() <IDENTIFIER>)
   LocalVariableDeclaration() ";"
@@ -1194,7 +1217,7 @@ void BlockStatement():
 }
 
 void LocalVariableDeclaration():
-{}
+{ debugPrint("LOCAL VARIABLE DECLARATION"); }
 {
   [ "final" ] Type() VariableDeclarator() ( "," VariableDeclarator() )*
 }
@@ -1211,7 +1234,7 @@ void StatementExpression():
  * Java expansions for StatementExpression.  This expansion does not
  * use PostfixExpression for performance reasons.
  */
-{}
+{ debugPrint("STATEMENT EXPRESSION"); }
 {
   PreIncrementExpression()
 |
@@ -1228,7 +1251,7 @@ void StatementExpression():
 }
 
 void SwitchStatement():
-{}
+{ debugPrint("SWITCH STATEMENT"); }
 {
   "switch" "(" Expression() ")" "{"
     ( SwitchLabel() ( BlockStatement() )* )*
@@ -1249,25 +1272,25 @@ void IfStatement():
  * else's to the innermost if statement.  The LOOKAHEAD specification
  * is to tell JavaCC that we know what we are doing.
  */
-{}
+{ debugPrint("IF STATEMENT"); }
 {
   "if" "(" Expression() ")" Statement() [ LOOKAHEAD(1) "else" Statement() ]
 }
 
 void WhileStatement():
-{}
+{ debugPrint("WHILE STATEMENT"); }
 {
   "while" "(" Expression() ")" Statement()
 }
 
 void DoStatement():
-{}
+{ debugPrint("DO STATEMENT"); }
 {
   "do" Statement() "while" "(" Expression() ")" ";"
 }
 
 void ForStatement():
-{}
+{ debugPrint("FOR STATEMENT"); }
 {
   "for" "("
 
@@ -1282,7 +1305,7 @@ void ForStatement():
 }
 
 void ForInit():
-{}
+{ debugPrint("FOR INIT"); }
 {
   LOOKAHEAD( [ "final" ] Type() <IDENTIFIER> )
   LocalVariableDeclaration()
@@ -1291,37 +1314,37 @@ void ForInit():
 }
 
 void StatementExpressionList():
-{}
+{ debugPrint("STATEMENT EXPRESSION LIST"); }
 {
   StatementExpression() ( "," StatementExpression() )*
 }
 
 void ForUpdate():
-{}
+{ debugPrint("FOR UPDATE"); }
 {
   StatementExpressionList()
 }
 
 void BreakStatement():
-{}
+{ debugPrint("BREAK STATEMENT"); }
 {
   "break" [ <IDENTIFIER> ] ";"
 }
 
 void ContinueStatement():
-{}
+{ debugPrint("CONTINUE STATEMENT"); }
 {
   "continue" [ <IDENTIFIER> ] ";"
 }
 
 void ReturnStatement():
-{}
+{ debugPrint("RETURN STATEMENT"); }
 {
   "return" [ Expression() ] ";"
 }
 
 void ThrowStatement():
-{}
+{ debugPrint("THROW STATEMENT"); }
 {
   "throw" Expression() ";"
 }
@@ -1337,7 +1360,7 @@ void TryStatement():
  * Semantic check required here to make sure that at least one
  * finally/catch is present.
  */
-{}
+{ debugPrint("TRY STATEMENT"); }
 {
   "try" Block()
   ( "catch" "(" FormalParameter() ")" Block() )*
@@ -1349,7 +1372,7 @@ void TryStatement():
  */
 
 void RUNSIGNEDSHIFT():
-{}
+{ debugPrint("RIGHT UNSIGNED SHIFT"); }
 {
   ( LOOKAHEAD({ getToken(1).kind == GT &&
                 ((GTToken)getToken(1)).realKind == RUNSIGNEDSHIFT} )
@@ -1358,7 +1381,7 @@ void RUNSIGNEDSHIFT():
 }
 
 void RSIGNEDSHIFT():
-{}
+{ debugPrint("RIGHT SIGNED SHIFT"); }
 {
   ( LOOKAHEAD({ getToken(1).kind == GT &&
                 ((GTToken)getToken(1)).realKind == RSIGNEDSHIFT} )
@@ -1399,19 +1422,19 @@ void SingleMemberAnnotation():
 }
 
 void MemberValuePairs():
-{}
+{ debugPrint("MEMBER VALUE PAIRS"); }
 {
    MemberValuePair() ( "," MemberValuePair() )*
 }
 
 void MemberValuePair():
-{}
+{ debugPrint("MEMBER VALUE PAIR"); }
 {
     <IDENTIFIER> "=" MemberValue()
 }
 
 void MemberValue():
-{}
+{ debugPrint("MEMBER VALUE"); }
 {
    Annotation()
  |
@@ -1421,7 +1444,7 @@ void MemberValue():
 }
 
 void  MemberValueArrayInitializer():
-{}
+{ debugPrint("MEMBER VALUE ARRAY INITIALIZER"); }
 {
   "{" MemberValue() ( LOOKAHEAD(2) "," MemberValue() )* [ "," ] "}"
 }
@@ -1430,13 +1453,13 @@ void  MemberValueArrayInitializer():
 /* Annotation Types. */
 
 void AnnotationTypeDeclaration(int modifiers):
-{}
+{ debugPrint("ANNOTATION TYPE DECLARATION"); }
 {
   "@" "interface" <IDENTIFIER> AnnotationTypeBody()
 }
 
 void AnnotationTypeBody():
-{}
+{ debugPrint("ANNOTATION TYPE BODY"); }
 {
   "{" ( AnnotationTypeMemberDeclaration() )* "}"
 }
@@ -1444,6 +1467,7 @@ void AnnotationTypeBody():
 void AnnotationTypeMemberDeclaration():
 {
    int modifiers;
+   debugPrint("ANNOTATION TYPE MEMBER DECLARATION"); 
 }
 {
  modifiers = Modifiers()
@@ -1464,7 +1488,7 @@ void AnnotationTypeMemberDeclaration():
 }
 
 void DefaultValue():
-{}
+{ debugPrint("DEFAULT VALUE"); }
 {
   "default" MemberValue()
 }
