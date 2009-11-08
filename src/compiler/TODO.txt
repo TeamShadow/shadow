@@ -10,6 +10,5 @@
 - Add the #= <<<= >>>= <<< >>> operators to the language
   - NOTE: <<< and >>> will have to use the GT stuff... however that works?
 - Add the weak keyword
-- Add the view structure
-- Add error
+- Add error: no methods allowed
 - Add sequences (need a better name?), i.e. x,y,z = 3, z, 4;

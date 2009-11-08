@@ -142,7 +142,7 @@ public class ShadowParser
   public static void main(String args[]) {
     try {
 //        String fileName = "tests/expressions.shadow";
-        String fileName = "src/shadow/parser/test/expressions/foreachloops.shadow";
+        String fileName = "src/shadow/parser/test/declarations/view.shadow";
         FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
@@ -237,6 +237,7 @@ TOKEN :
 | < DOUBLE: "double" >
 | < ELSE: "else" >
 | < ENUM: "enum" >
+| < EXCEPTION: "exception" >
 | < EXTENDS: "extends" >
 | < FALSE: "false" >
 | < FINAL: "final" >
@@ -273,6 +274,7 @@ TOKEN :
 | < TRANSIENT: "transient" >
 | < TRUE: "true" >
 | < TRY: "try" >
+| < VIEW: "view" >
 | < VOID: "void" >
 | < VOLATILE: "volatile" >
 | < WHILE: "while" >
@@ -467,9 +469,7 @@ SimpleNode CompilationUnit():
   ( TypeDeclaration() )*
   <EOF>
 
-  {
-    return jjtn000;
-  }
+  { return jjtn000; }
 }
 
 void PackageDeclaration():
@@ -530,15 +530,21 @@ void TypeDeclaration():
 }
 {
   ";"
-|
-  modifiers = Modifiers()
-  (
-     ClassOrInterfaceDeclaration(modifiers)
-   |
-     EnumDeclaration(modifiers)
-   |
-     AnnotationTypeDeclaration(modifiers)
-  )
+| modifiers = Modifiers()
+ (   ClassOrInterfaceDeclaration(modifiers)
+   | EnumDeclaration(modifiers)
+   | AnnotationTypeDeclaration(modifiers)
+ )
+| ViewDeclaration()
+}
+
+void ViewDeclaration():
+{ debugPrint("VIEW DECLARATION"); }
+{
+	"view" <IDENTIFIER>	"{"
+        ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) <IDENTIFIER> ";"
+        ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) <IDENTIFIER> ";" )*
+    "}"
 }
 
 
@@ -548,7 +554,7 @@ void ClassOrInterfaceDeclaration(int modifiers):
    debugPrint("CLASS OR INTERFACE DECLARARTION");
 }
 {
-  ( "class" | "interface" { isInterface = true; } )
+  ( "class" | "exception" | "interface" { isInterface = true; } )
   <IDENTIFIER>
   [ TypeParameters() ]
   [ ExtendsList(isInterface) ]
@@ -635,30 +641,17 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
    debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {
-  LOOKAHEAD(2)
-  Initializer()
-  {
-     if (isInterface)
-        throw new ParseException("An interface cannot have initializers");
-  }
-|
-  modifiers = Modifiers() // Just get all the modifiers out of the way. If you want to do
+  LOOKAHEAD(2) Initializer() { if (isInterface) throw new ParseException("An interface cannot have initializers"); }
+| modifiers = Modifiers() // Just get all the modifiers out of the way. If you want to do
               // more checks, pass the modifiers down to the member
-  (
-      ClassOrInterfaceDeclaration(modifiers)
-    |
-      EnumDeclaration(modifiers)
-    |
-      LOOKAHEAD( [ TypeParameters() ] "constructor" "(" )
-      ConstructorDeclaration()
-    |
-      LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) )
-      FieldDeclaration(modifiers)
-    |
-      MethodDeclaration(modifiers)
+  (  ClassOrInterfaceDeclaration(modifiers)
+    | EnumDeclaration(modifiers)
+    | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration()
+    | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifiers)
+    | MethodDeclaration(modifiers)
   )
-|
-  ";"
+| ViewDeclaration()
+| ";"
 }
 
 void FieldDeclaration(int modifiers):
@@ -759,6 +752,7 @@ void Type():
 { debugPrint("TYPE"); }
 {
    LOOKAHEAD(2) ReferenceType()
+    |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
     |   PrimitiveType()
     |	FunctionType()
 }
@@ -766,14 +760,20 @@ void Type():
 void ReferenceType():
 { debugPrint("REFERENCE TYPE"); }
 {
-   PrimitiveType() ( LOOKAHEAD(2) "[" "]" )+
-  |
-   ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" "]" )*
+    PrimitiveType() ( LOOKAHEAD(2) "[" "]" )+
+  | ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" "]" )*
+}
+
+void StaticArrayType():
+{ debugPrint("STATIC ARRAY TYPE"); }
+{
+    PrimitiveType() "[" <INTEGER_LITERAL> "]"
 }
 
 void FunctionType():
 { debugPrint("FUNCTION TYPE"); }
-{	"(" [ Type() ( "," Type() )* ] ")" "=>" "(" [ Type() ( "," Type() )* ] ")"
+{
+    "(" [ Type() ( "," Type() )* ] ")" "=>" "(" [ Type() ( "," Type() )* ] ")"
 }
 
 void ClassOrInterfaceType():
@@ -838,9 +838,7 @@ void Name():
  */
 { debugPrint("NAME"); }
 {
-  <IDENTIFIER>
-  ( LOOKAHEAD(2) "." <IDENTIFIER>
-  )*
+  <IDENTIFIER> ( LOOKAHEAD(2) "." <IDENTIFIER> )*
 }
 
 void NameList():
@@ -1079,10 +1077,8 @@ void AllocationExpression():
 void ArrayDimsAndInits():
 { debugPrint("ARRAY DIMS AND INITS"); }
 {
-  LOOKAHEAD(2)
-  ( LOOKAHEAD(2) "[" Expression() "]" )+ ( LOOKAHEAD(2) "[" "]" )*
-|
-  ( "[" "]" )+ ArrayInitializer()
+  LOOKAHEAD(2)( LOOKAHEAD(2) "[" Expression() "]" )+ ( LOOKAHEAD(2) "[" "]" )*
+| ( "[" "]" )+ ArrayInitializer()
 }
 
 
