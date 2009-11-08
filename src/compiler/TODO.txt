@@ -1,0 +1,12 @@
+*****************************************************************************
+*** THIS IS A LIST OF THINGS THAT NEED TO BE DONE                         ***
+*** PUT YOUR NAME NEXT TO SOMETHING IF YOU'RE WORKING ON IT               ***
+*** DELETE THE LINE FROM THE LIST IF IT'S DONE AND WORKING                ***
+*** NOTHING IS DONE UNTIL YOU'VE ALSO CREATED A REGRESSION TEST FOR IT!!! ***
+*****************************************************************************
+
+- Remove do { } while() loops (Barry) ???
+- Added function types to the Type() production
+- Add the #= <<<= >>>= <<< >>> operators to the language
+  - NOTE: <<< and >>> will have to use the GT stuff... however that works?
+- Add the foreach statement
