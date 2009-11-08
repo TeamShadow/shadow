@@ -227,6 +227,7 @@ TOKEN :
 | < CASE: "case" >
 | < CATCH: "catch" >
 | < CODE: "code" >
+| < CONSTRUCTOR: "constructor" >
 | < CLASS: "class" >
 | < CONST: "const" >
 | < CONTINUE: "continue" >
@@ -656,7 +657,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
     |
       EnumDeclaration(modifiers)
     |
-      LOOKAHEAD( [ TypeParameters() ] <IDENTIFIER> "(" )
+      LOOKAHEAD( [ TypeParameters() ] "constructor" "(" )
       ConstructorDeclaration()
     |
       LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) )
@@ -715,7 +716,7 @@ void MethodDeclarator():
 { debugPrint("METHOD DECLARATOR"); }
 {
 //  <IDENTIFIER> FormalParameters() ( "[" "]" )*
-  <IDENTIFIER> FormalParameters() "=>" "(" Type() ( "," Type() )* ")"
+  <IDENTIFIER> FormalParameters() "=>" "(" [ ResultTypes() ] ")"
 }
 
 void FormalParameters():
@@ -735,7 +736,7 @@ void ConstructorDeclaration():
 {
   [ TypeParameters() ]
   // Modifiers matched in the caller
-  <IDENTIFIER> FormalParameters() [ "throws" NameList() ]
+  "constructor" FormalParameters() [ "throws" NameList() ]
   "{"
     [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
     ( BlockStatement() )*
@@ -836,9 +837,13 @@ void PrimitiveType():
 void ResultType():
 { debugPrint("RESULT TYPE"); }
 {
-  "void"
-|
   Type()
+}
+
+void ResultTypes():
+{ debugPrint("RESULT TYPES"); }
+{
+  ResultType() ( "," ResultType() )*
 }
 
 void Name():
