@@ -141,7 +141,8 @@ public class ShadowParser
    	
   public static void main(String args[]) {
     try {
-        String fileName = "tests/expressions.shadow";
+//        String fileName = "tests/expressions.shadow";
+        String fileName = "src/shadow/parser/test/expressions/method_decs.shadow";
         FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
@@ -496,29 +497,18 @@ int Modifiers():
  (
   LOOKAHEAD(2)
   (
-   "public" { modifiers |= ModifierSet.PUBLIC; }
-  |
-   "static" { modifiers |= ModifierSet.STATIC; }
-  |
-   "protected" { modifiers |= ModifierSet.PROTECTED; }
-  |
-   "private" { modifiers |= ModifierSet.PRIVATE; }
-  |
-   "final" { modifiers |= ModifierSet.FINAL; }
-  |
-   "abstract" { modifiers |= ModifierSet.ABSTRACT; }
-  |
-   "synchronized" { modifiers |= ModifierSet.SYNCHRONIZED; }
-  |
-   "native" { modifiers |= ModifierSet.NATIVE; }
-  |
-   "transient" { modifiers |= ModifierSet.TRANSIENT; }
-  |
-   "volatile" { modifiers |= ModifierSet.VOLATILE; }
-  |
-   "strictfp" { modifiers |= ModifierSet.STRICTFP; }
-  |
-   Annotation()
+    "public" { modifiers |= ModifierSet.PUBLIC; }
+  | "static" { modifiers |= ModifierSet.STATIC; }
+  | "protected" { modifiers |= ModifierSet.PROTECTED; }
+  | "private" { modifiers |= ModifierSet.PRIVATE; }
+  | "final" { modifiers |= ModifierSet.FINAL; }
+  | "abstract" { modifiers |= ModifierSet.ABSTRACT; }
+  | "synchronized" { modifiers |= ModifierSet.SYNCHRONIZED; }
+  | "native" { modifiers |= ModifierSet.NATIVE; }
+  | "transient" { modifiers |= ModifierSet.TRANSIENT; }
+  | "volatile" { modifiers |= ModifierSet.VOLATILE; }
+  | "strictfp" { modifiers |= ModifierSet.STRICTFP; }
+  | Annotation()
   )
  )*
 
@@ -768,7 +758,7 @@ void Type():
 {
    LOOKAHEAD(2) ReferenceType()
     |   PrimitiveType()
-//    |	FunctionType()
+    |	FunctionType()
 }
 
 void ReferenceType():
@@ -781,7 +771,7 @@ void ReferenceType():
 
 void FunctionType():
 { debugPrint("FUNCTION TYPE"); }
-{	"(" Type() ( "," Type() )* ")" "=>" "(" Type() ( "," Type() )* ")"
+{	"(" [ Type() ( "," Type() )* ] ")" "=>" "(" [ Type() ( "," Type() )* ] ")"
 }
 
 void ClassOrInterfaceType():
@@ -1006,38 +996,23 @@ void PrimaryPrefix():
 { debugPrint("PRIMARY PREFIX"); }
 {
   Literal()
-|
-  "this"
-|
-  "super" "." <IDENTIFIER>
-|
-  "(" Expression() ")"
-|
-  AllocationExpression()
-|
-  LOOKAHEAD( ResultType() "." "class" )
-  ResultType() "." "class"
-|
-  Name()
+| "this"
+| "super" "." <IDENTIFIER>
+| LOOKAHEAD( "(" Expression() ")" ) "(" Expression() ")"
+| AllocationExpression()
+| LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
+| Name()
 }
 
 void PrimarySuffix():
 { debugPrint("PRIMARY SUFFIX"); }
 {
-  LOOKAHEAD(2)
-  "." "this"
-|
-  LOOKAHEAD(2)
-  "." AllocationExpression()
-|
-  LOOKAHEAD(3)
-  MemberSelector()
-|
-  "[" Expression() "]"
-|
-  "." <IDENTIFIER>
-|
-  Arguments()
+  LOOKAHEAD(2) "." "this"
+| LOOKAHEAD(2) "." AllocationExpression()
+| LOOKAHEAD(3) MemberSelector()
+| "[" Expression() "]"
+| "." <IDENTIFIER>
+| Arguments()
 }
 
 void Literal():
