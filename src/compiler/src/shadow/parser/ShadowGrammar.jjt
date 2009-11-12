@@ -141,8 +141,8 @@ public class ShadowParser
    	
   public static void main(String args[]) {
     try {
-//        String fileName = "tests/expressions.shadow";
-        String fileName = "src/shadow/parser/test/declarations/view.shadow";
+        String fileName = "tests/class_test.shadow";
+//        String fileName = "src/shadow/parser/test/statements/for.shadow";
         FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
@@ -670,17 +670,21 @@ void VariableDeclarator():
 }
 
 void VariableDeclaratorId():
-{ debugPrint("VARIABLE DECLARATOR ID"); }
 {
-  <IDENTIFIER> ( "[" "]" )*
+    debugPrint("VARIABLE DECLARATOR ID");
+    Token t;
+}
+{
+  t = <IDENTIFIER> ( "[" "]" )*
+
+  {	jjtn000.jjtSetValue(t.image); }
 }
 
 void VariableInitializer():
 { debugPrint("VARIABLE INITIALIZER"); }
 {
   ArrayInitializer()
-|
-  Expression()
+| Expression()
 }
 
 void ArrayInitializer():
@@ -1018,27 +1022,32 @@ void PrimarySuffix():
 }
 
 void Literal():
-{ debugPrint("LITERAL"); }
 {
-  <INTEGER_LITERAL>
-|
-  <FLOATING_POINT_LITERAL>
-|
-  <CHARACTER_LITERAL>
-|
-  <STRING_LITERAL>
-|
-  BooleanLiteral()
-|
-  NullLiteral()
+	debugPrint("LITERAL");
+	Token t = null;
+	String s = null;
+}
+{
+  t = <INTEGER_LITERAL>
+| t = <FLOATING_POINT_LITERAL>
+| t = <CHARACTER_LITERAL>
+| t = <STRING_LITERAL>
+| s = BooleanLiteral()
+| NullLiteral()
+
+{
+	if(t != null)
+        jjtn000.jjtSetValue(t.image);
+    else
+        jjtn000.jjtSetValue(s);
+}
 }
 
-void BooleanLiteral():
+String BooleanLiteral():
 { debugPrint("BOOLEAN LITERAL"); }
 {
-  "true"
-|
-  "false"
+  "true" { return "true"; }
+| "false"  { return "false"; }
 }
 
 void NullLiteral():
@@ -1067,8 +1076,7 @@ void AllocationExpression():
 | "new" ClassOrInterfaceType() [ TypeArguments() ]
     (
       ArrayDimsAndInits()
-    |
-      Arguments() [ ClassOrInterfaceBody(false) ]
+    | Arguments() [ ClassOrInterfaceBody(false) ]
     )
 }
 
@@ -1208,7 +1216,7 @@ void ForeachStatement():
 }
 
 
-void ForStatement():
+void ForStatement() :
 { debugPrint("FOR STATEMENT"); }
 {
   "for" "(" [ ForInit() ] ";" [ Expression() ] ";" [ ForUpdate() ] ")" Statement()
@@ -1383,15 +1391,11 @@ void AnnotationTypeMemberDeclaration():
  modifiers = Modifiers()
  (
    LOOKAHEAD(Type() <IDENTIFIER> "(")
-   Type() <IDENTIFIER> "(" ")" [ DefaultValue() ] ";"
-  |
-   ClassOrInterfaceDeclaration(modifiers)
-  |
-   EnumDeclaration(modifiers)
-  |
-   AnnotationTypeDeclaration(modifiers)
-  |
-   FieldDeclaration(modifiers)
+    Type() <IDENTIFIER> "(" ")" [ DefaultValue() ] ";"
+  | ClassOrInterfaceDeclaration(modifiers)
+  | EnumDeclaration(modifiers)
+  | AnnotationTypeDeclaration(modifiers)
+  | FieldDeclaration(modifiers)
  )
  |
    ( ";" )
