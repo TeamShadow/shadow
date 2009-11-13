@@ -9,9 +9,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import shadow.parser.javacc.ASTBase;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowParser;
-import shadow.parser.javacc.SimpleNode;
 
 /**
  * @author wspeirs
@@ -87,7 +87,7 @@ public final class ParserTest {
 
           System.err.println("Parse Testing File: " + sourceFile.getCanonicalPath());
 
-          SimpleNode n = parser.CompilationUnit();
+          ASTBase n = parser.CompilationUnit();
 
           if(dump)
         	  n.dump("");

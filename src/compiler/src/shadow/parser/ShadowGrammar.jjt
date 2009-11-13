@@ -31,6 +31,7 @@ package shadow.parser.javacc;
 
 import java.io.*;
 import shadow.parser.GTToken;
+import shadow.parser.ast.*;
 
 /**
  * Grammar to parse Shadow
@@ -148,7 +149,7 @@ public class ShadowParser
         
         parser.enableDebug();
 
-        SimpleNode n = parser.CompilationUnit();
+        ASTCompilationUnit n = parser.CompilationUnit();
 
         n.dump("");
 
@@ -463,7 +464,7 @@ TOKEN :
  * Program structuring syntax follows.
  */
 
-SimpleNode CompilationUnit():
+ASTCompilationUnit CompilationUnit() #CompilationUnit :
 {}
 {
   [ PackageDeclaration() ]
@@ -471,7 +472,7 @@ SimpleNode CompilationUnit():
   ( TypeDeclaration() )*
   <EOF>
 
-  { return jjtn000; }
+  { return jjtThis; }
 }
 
 void PackageDeclaration():
@@ -672,12 +673,9 @@ void VariableDeclarator():
 void VariableDeclaratorId():
 {
     debugPrint("VARIABLE DECLARATOR ID");
-    Token t;
 }
 {
-  t = <IDENTIFIER> ( "[" "]" )*
-
-  {	jjtn000.jjtSetValue(t.image); }
+  <IDENTIFIER> ( "[" "]" )*
 }
 
 void VariableInitializer():
@@ -799,16 +797,14 @@ void TypeArgument():
 { debugPrint("TYPE ARGUMENT"); }
 {
    ReferenceType()
- |
-   "?" [ WildcardBounds() ]
+ | "?" [ WildcardBounds() ]
 }
 
 void WildcardBounds():
 { debugPrint("WILDCARD BOUNDS"); }
 {
    "extends" ReferenceType()
- |
-   "super" ReferenceType()
+ | "super" ReferenceType()
 }
 
 
@@ -1021,33 +1017,26 @@ void PrimarySuffix():
 | Arguments()
 }
 
-void Literal():
+void Literal() :
 {
 	debugPrint("LITERAL");
-	Token t = null;
-	String s = null;
+	Token t;
 }
 {
   t = <INTEGER_LITERAL>
 | t = <FLOATING_POINT_LITERAL>
 | t = <CHARACTER_LITERAL>
 | t = <STRING_LITERAL>
-| s = BooleanLiteral()
+| BooleanLiteral()
 | NullLiteral()
 
-{
-	if(t != null)
-        jjtn000.jjtSetValue(t.image);
-    else
-        jjtn000.jjtSetValue(s);
-}
 }
 
-String BooleanLiteral():
+void BooleanLiteral() #BooleanLiteral :
 { debugPrint("BOOLEAN LITERAL"); }
 {
-  "true" { return "true"; }
-| "false"  { return "false"; }
+  "true" { jjtThis.setTrue(); }
+| "false"
 }
 
 void NullLiteral():
