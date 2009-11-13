@@ -142,12 +142,12 @@ public class ShadowParser
    	
   public static void main(String args[]) {
     try {
-        String fileName = "tests/class_test.shadow";
-//        String fileName = "src/shadow/parser/test/statements/for.shadow";
+//        String fileName = "tests/class_test.shadow";
+        String fileName = "src/shadow/parser/test/statements/for.shadow";
         FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
-        parser.enableDebug();
+//        parser.enableDebug();
 
         ASTCompilationUnit n = parser.CompilationUnit();
 

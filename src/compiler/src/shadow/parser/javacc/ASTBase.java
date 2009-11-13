@@ -10,11 +10,13 @@ public abstract class ASTBase implements Node {
     
     public ASTBase(int id) {
     	this.id = id;
+    	image = this.getClass().getSimpleName();
     }
     
     public ASTBase(ShadowParser sp, int id) {
     	this.id = id;
     	parser = sp;
+    	image = this.getClass().getSimpleName();
     }
     
 	@Override
@@ -66,7 +68,7 @@ public abstract class ASTBase implements Node {
 	}
 
     public void dump(String prefix) {
-        System.out.println(prefix + (image == null ? "" : ":" + image));
+        System.out.println(prefix + (image == null ? "" : image));
         dumpChildren(prefix);
     }
 

@@ -13,6 +13,4 @@ public class ASTCompilationUnit extends ASTBase {
     public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
     	return visitor.visit(this, data);
     }
-
-
 }
