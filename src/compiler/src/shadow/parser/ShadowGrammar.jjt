@@ -31,7 +31,6 @@ package shadow.parser.javacc;
 
 import java.io.*;
 import shadow.parser.GTToken;
-import shadow.parser.ast.*;
 
 /**
  * Grammar to parse Shadow
