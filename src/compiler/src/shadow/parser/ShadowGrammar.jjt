@@ -722,7 +722,7 @@ void MethodDeclarator():
 }
 {
 //  <IDENTIFIER> FormalParameters() ( "[" "]" )*
-  t = <IDENTIFIER> FormalParameters() "=>" "(" [ ResultTypes() ] ")"
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); } FormalParameters() "=>" "(" [ ResultTypes() ] ")"
 }
 
 void FormalParameters():
@@ -803,11 +803,13 @@ void FunctionType():
 void ClassOrInterfaceType():
 {
 	debugPrint("CLASS OR INTERFACE TYPE");
-	Token t1, t2;
+	StringBuffer sb = new StringBuffer();
+	Token t;
 }
 {
-  t1 = <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
-  ( LOOKAHEAD(2) "." t2 = <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
+  t = <IDENTIFIER> { sb.append(t.image); }[ LOOKAHEAD(2) TypeArguments() ]
+  ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } [ LOOKAHEAD(2) TypeArguments() ] )*
+  { jjtThis.setImage(sb.toString()); }
 }
 
 void TypeArguments():
@@ -863,10 +865,12 @@ void Name():
  */
 {
 	debugPrint("NAME");
-	Token t1, t2;
+	StringBuffer sb = new StringBuffer();
+	Token t;
 }
 {
-  t1 = <IDENTIFIER> ( LOOKAHEAD(2) "." t2 = <IDENTIFIER> )*
+  t = <IDENTIFIER> { sb.append(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
+  { jjtThis.setImage(sb.toString()); }
 }
 
 void NameList():
@@ -1020,7 +1024,7 @@ void MemberSelector():
 	Token t;
 }
 {
-  "." TypeArguments() t = <IDENTIFIER>
+  "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); }
 }
 
 void PrimaryPrefix():
@@ -1031,7 +1035,7 @@ void PrimaryPrefix():
 {
   Literal()
 | "this"
-| "super" "." t = <IDENTIFIER>
+| "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
 | LOOKAHEAD( "(" Expression() ")" ) "(" Expression() ")"
 | AllocationExpression()
 | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
@@ -1048,7 +1052,7 @@ void PrimarySuffix():
 | LOOKAHEAD(2) "." AllocationExpression()
 | LOOKAHEAD(3) MemberSelector()
 | "[" Expression() "]"
-| "." t = <IDENTIFIER>
+| "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
 | Arguments()
 }
 
@@ -1153,7 +1157,7 @@ void LabeledStatement():
 	Token t;
 }
 {
-  t = <IDENTIFIER> ":" Statement()
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); } ":" Statement()
 }
 
 void Block():
@@ -1163,9 +1167,12 @@ void Block():
 }
 
 void BlockStatement():
-{ debugPrint("BLOCK STATEMENT"); }
 {
-  LOOKAHEAD([ "final" ] Type() <IDENTIFIER>)
+    debugPrint("BLOCK STATEMENT");
+    Token t;
+}
+{
+  LOOKAHEAD([ "final" ] Type() t = <IDENTIFIER> { jjtThis.setImage(t.image); })
   LocalVariableDeclaration() ";"
 |
   Statement()
@@ -1241,7 +1248,7 @@ void ForeachStatement():
 	Token t;
 }
 {
-  "foreach" "(" Type() t = <IDENTIFIER> "in" Expression() ")" Statement()
+  "foreach" "(" Type() t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" Expression() ")" Statement()
 }
 
 
@@ -1257,7 +1264,7 @@ void ForInit():
 	Token t;
 }
 {
-  LOOKAHEAD( [ "final" ] Type() t = <IDENTIFIER> )
+  LOOKAHEAD( [ "final" ] Type() t = <IDENTIFIER> { jjtThis.setImage(t.image); } )
   LocalVariableDeclaration()
 |
   StatementExpressionList()
@@ -1341,7 +1348,7 @@ void RSIGNEDSHIFT():
 
 /* Annotation syntax follows. */
 
-void Annotation():
+void Annotation() #void:
 {}
 {
    LOOKAHEAD( "@" Name() "(" ( <IDENTIFIER> "=" | ")" ))
@@ -1353,19 +1360,19 @@ void Annotation():
    MarkerAnnotation()
 }
 
-void NormalAnnotation():
+void NormalAnnotation() #void:
 {}
 {
    "@" Name() "(" [ MemberValuePairs() ] ")"
 }
 
-void MarkerAnnotation():
+void MarkerAnnotation() #void:
 {}
 {
   "@" Name()
 }
 
-void SingleMemberAnnotation():
+void SingleMemberAnnotation() #void:
 {}
 {
   "@" Name() "(" MemberValue() ")"
@@ -1383,7 +1390,7 @@ void MemberValuePair():
 	Token t;
 }
 {
-    t = <IDENTIFIER> "=" MemberValue()
+    t = <IDENTIFIER> { jjtThis.setImage(t.image); } "=" MemberValue()
 }
 
 void MemberValue():
@@ -1405,19 +1412,19 @@ void  MemberValueArrayInitializer():
 
 /* Annotation Types. */
 
-void AnnotationTypeDeclaration(int modifiers):
+void AnnotationTypeDeclaration(int modifiers) #void:
 { debugPrint("ANNOTATION TYPE DECLARATION"); }
 {
   "@" "interface" <IDENTIFIER> AnnotationTypeBody()
 }
 
-void AnnotationTypeBody():
+void AnnotationTypeBody() #void:
 { debugPrint("ANNOTATION TYPE BODY"); }
 {
   "{" ( AnnotationTypeMemberDeclaration() )* "}"
 }
 
-void AnnotationTypeMemberDeclaration():
+void AnnotationTypeMemberDeclaration() #void:
 {
    int modifiers;
    debugPrint("ANNOTATION TYPE MEMBER DECLARATION"); 
