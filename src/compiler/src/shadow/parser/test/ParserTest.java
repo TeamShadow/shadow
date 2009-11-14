@@ -87,12 +87,17 @@ public final class ParserTest {
 
           System.err.println("Parse Testing File: " + sourceFile.getCanonicalPath());
 
+          long startTime = System.currentTimeMillis();
+
           ASTCompilationUnit n = parser.CompilationUnit();
+
+          long stopTime = System.currentTimeMillis();
+          long runTime = stopTime - startTime;
 
           if(dump)
         	  n.dump("");
           
-          System.err.println("GOOD PARSE");
+          System.err.println("GOOD PARSE: " + runTime + "ms");
 
           } catch (ParseException e) {
               System.err.println("BAD PARSE IN " + sourceFile.getName());
