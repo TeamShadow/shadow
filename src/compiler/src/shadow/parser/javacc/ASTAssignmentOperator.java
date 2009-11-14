@@ -18,5 +18,28 @@ class ASTAssignmentOperator extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
     return visitor.visit(this, data);
   }
+  
+  public enum AssignmentType {
+	  EQUAL,
+	  PLUSASSIGN,
+	  MINUSASSIGN,
+	  STARASSIGN,
+	  SLASHASSIGN,
+	  ANDASSIGN,
+	  ORASSIGN,
+	  XORASSIGN,
+	  REMASSIGN,
+	  REFASSIGN,
+	  LEFTSHIFTASSIGN,
+	  RIGHTSHIFTASSIGN,
+	  RIGHTROTATEASSIGN,
+	  LEFTROTATEASSIGN
+  }
+  
+  protected AssignmentType type;
+  
+  public void setAssignmentType(AssignmentType type) {
+	this.type = type;  
+  }
 }
 /* JavaCC - OriginalChecksum=92708bdf2f854aa06c093a0c5cea3295 (do not edit this line) */

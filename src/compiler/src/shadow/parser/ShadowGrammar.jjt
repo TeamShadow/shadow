@@ -431,6 +431,7 @@ TOKEN :
 | < ORASSIGN: "|=" >
 | < XORASSIGN: "^=" >
 | < REMASSIGN: "%=" >
+| < REFASSIGN: "#=" >
 | < LEFTSHIFTASSIGN: "<<=" >
 | < RIGHTSHIFTASSIGN: ">>=" >
 | < RIGHTROTATEASSIGN: ">>>=" >
@@ -905,7 +906,20 @@ void Expression():
 void AssignmentOperator():
 { debugPrint("ASSIGNMENT OPERATOR"); }
 {
-  "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | ">>>=" | "<<<=" | "&=" | "^=" | "|="
+    "="    { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.EQUAL); }
+  | "#="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.REFASSIGN); }
+  | "*="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.STARASSIGN); }
+  | "/="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.SLASHASSIGN); }
+  | "%="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.REMASSIGN); }
+  | "+="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.PLUSASSIGN); }
+  | "-="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MINUSASSIGN); }
+  | "<<="  { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTSHIFTASSIGN); }
+  | ">>="  { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHTSHIFTASSIGN); }
+  | ">>>=" { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHTROTATEASSIGN); }
+  | "<<<=" { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTROTATEASSIGN); }
+  | "&="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.ANDASSIGN); }
+  | "^="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.XORASSIGN); }
+  | "|="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.ORASSIGN); }
 }
 
 void ConditionalExpression():
