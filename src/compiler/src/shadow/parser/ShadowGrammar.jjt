@@ -123,7 +123,7 @@ public class ShadowParser
      }
    }
 
-     private boolean debug = false;
+   private boolean debug = false;
 
    public ShadowParser(String fileName)
    {
@@ -517,6 +517,7 @@ int Modifiers():
  )*
 
  {
+ 	jjtThis.setModifiers(modifiers);
     return modifiers;
  }
 }
@@ -560,6 +561,7 @@ void ClassOrInterfaceDeclaration(int modifiers):
    Token t;
 }
 {
+  { jjtThis.setModifiers(modifiers); }
   ( "class" | "exception" | "interface" { isInterface = true; } )
   t = <IDENTIFIER> { jjtThis.setImage(t.image); }
   [ TypeParameters() ]
@@ -599,6 +601,7 @@ void EnumDeclaration(int modifiers):
     Token t;
 }
 {
+{ jjtThis.setModifiers(modifiers); }
   "enum" t = <IDENTIFIER> { jjtThis.setImage(t.image); }
   [ ImplementsList(false) ]
   EnumBody()
@@ -652,19 +655,20 @@ void ClassOrInterfaceBody(boolean isInterface):
 void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 {
    boolean isNestedInterface = false;
-   int modifiers;
+   int modifier;
    Token t;
    debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {
   LOOKAHEAD(2) Initializer() { if (isInterface) throw new ParseException("An interface cannot have initializers"); }
-| modifiers = Modifiers() // Just get all the modifiers out of the way. If you want to do
-              // more checks, pass the modifiers down to the member
-  (  ClassOrInterfaceDeclaration(modifiers)
-    | EnumDeclaration(modifiers)
+// Just get all the modifiers out of the way. If you want to do
+// more checks, pass the modifiers down to the member  
+| modifier = Modifiers()
+  (  ClassOrInterfaceDeclaration(modifier)
+    | EnumDeclaration(modifier)
     | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration()
-    | LOOKAHEAD( Type() t = <IDENTIFIER>  { jjtThis.setImage(t.image); } ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifiers)
-    | MethodDeclaration(modifiers)
+    | LOOKAHEAD( Type() t = <IDENTIFIER>  { jjtThis.setImage(t.image); } ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
+    | MethodDeclaration(modifier)
   )
 | ViewDeclaration()
 | ";"
@@ -673,7 +677,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 void FieldDeclaration(int modifiers):
 { debugPrint("FIELD DECLARATION"); }
 {
-  // Modifiers are already matched in the caller
+  { jjtThis.setModifiers(modifiers); }
   Type() VariableDeclarator() ( "," VariableDeclarator() )* ";"
 }
 
@@ -708,9 +712,8 @@ void ArrayInitializer():
 void MethodDeclaration(int modifiers):
 { debugPrint("METHOD DECLARATION"); }
 {
-  // Modifiers already matched in the caller!
+  { jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
-//  ResultType()
   MethodDeclarator() [ "throws" NameList() ]
   ( Block() | ";" )
 }
@@ -721,7 +724,6 @@ void MethodDeclarator():
 	Token t;
 }
 {
-//  <IDENTIFIER> FormalParameters() ( "[" "]" )*
   t = <IDENTIFIER> { jjtThis.setImage(t.image); } FormalParameters() "=>" "(" [ ResultTypes() ] ")"
 }
 
@@ -1062,10 +1064,10 @@ void Literal() :
 	Token t;
 }
 {
-  t = <INTEGER_LITERAL>
-| t = <FLOATING_POINT_LITERAL>
-| t = <CHARACTER_LITERAL>
-| t = <STRING_LITERAL>
+  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); }
+| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); }
+| t = <CHARACTER_LITERAL> { jjtThis.setImage(t.image); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); }
 | BooleanLiteral()
 | NullLiteral()
 

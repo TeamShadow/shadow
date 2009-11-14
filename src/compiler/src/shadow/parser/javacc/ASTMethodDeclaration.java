@@ -18,5 +18,11 @@ class ASTMethodDeclaration extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
     return visitor.visit(this, data);
   }
+  
+  int modifiers;
+  
+  public void setModifiers(int modifiers) {
+	  this.modifiers = modifiers;
+  }
 }
 /* JavaCC - OriginalChecksum=1c1cdb2a47b8a755137e9b35efca7f37 (do not edit this line) */

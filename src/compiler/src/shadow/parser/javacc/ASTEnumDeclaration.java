@@ -18,5 +18,11 @@ class ASTEnumDeclaration extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
     return visitor.visit(this, data);
   }
+  
+  int modifiers;
+  
+  public void setModifiers(int modifiers) {
+	  this.modifiers = modifiers;
+  }
 }
 /* JavaCC - OriginalChecksum=4c9b7b9fb2fd7448f52bd14b4e141511 (do not edit this line) */

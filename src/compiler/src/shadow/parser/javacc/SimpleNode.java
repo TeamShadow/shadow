@@ -10,14 +10,14 @@ public class SimpleNode implements Node {
     
     public SimpleNode(int id) {
     	this.id = id;
-    	image = this.getClass().getSimpleName();
+    	image = null;
     	line = column = -1;
     }
     
     public SimpleNode(ShadowParser sp, int id) {
     	this.id = id;
     	parser = sp;
-    	image = this.getClass().getSimpleName();
+    	image = null;
     	line = sp.token.beginLine;
     	column = sp.token.beginColumn;
     }
@@ -75,7 +75,11 @@ public class SimpleNode implements Node {
 	}
 
     public void dump(String prefix) {
-        System.out.println(prefix + (image == null ? "" : image));
+    	String className = this.getClass().getSimpleName();
+    	if(image == null)
+    		System.out.println(prefix + className);
+    	else
+    		System.out.println(prefix + className + ": " + image);
         dumpChildren(prefix);
     }
 

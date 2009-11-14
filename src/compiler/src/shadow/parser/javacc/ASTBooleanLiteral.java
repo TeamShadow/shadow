@@ -16,6 +16,13 @@ public class ASTBooleanLiteral extends SimpleNode {
     	return visitor.visit(this, data);
     }
 
+    public void dump(String prefix) {
+    	if(isTrue())
+    		System.out.println(prefix + "ASTBooleanLiteral: true");
+    	else
+    		System.out.println(prefix + "ASTBooleanLiteral: false");
+        dumpChildren(prefix);
+    }
 
 	public void setTrue() {
 		isTrue = true;

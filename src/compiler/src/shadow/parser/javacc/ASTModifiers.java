@@ -18,5 +18,32 @@ class ASTModifiers extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
     return visitor.visit(this, data);
   }
+  
+  int modifiers = 0;
+  
+  public void setModifiers(int modifiers) {
+	  this.modifiers = modifiers;
+  }
+  
+  public void dump(String prefix) {
+	  System.out.print(prefix + "ASTModifiers: ");
+	  ShadowParser.ModifierSet ms = new ShadowParser.ModifierSet();
+	  	  
+	  if(ms.isAbstract(modifiers)) System.out.print("abstract ");
+	  if(ms.isFinal(modifiers)) System.out.print("final ");
+	  if(ms.isNative(modifiers)) System.out.print("native ");
+	  if(ms.isPrivate(modifiers)) System.out.print("private ");
+	  if(ms.isProtected(modifiers)) System.out.print("protected ");
+	  if(ms.isPublic(modifiers)) System.out.print("public ");
+	  if(ms.isStatic(modifiers)) System.out.print("static ");
+	  if(ms.isStrictfp(modifiers)) System.out.print("strictfp ");
+	  if(ms.isSynchronized(modifiers)) System.out.print("synchronized ");
+	  if(ms.isTransient(modifiers)) System.out.print("transient ");
+	  if(ms.isVolatile(modifiers)) System.out.print("volatile ");
+	  if(modifiers == 0) System.out.print("none");
+
+	  System.out.println();
+	  dumpChildren(prefix);
+  }
 }
 /* JavaCC - OriginalChecksum=48a1e9a20c9e4e1426715db818f4bb4a (do not edit this line) */

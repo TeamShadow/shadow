@@ -18,5 +18,11 @@ class ASTFieldDeclaration extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
     return visitor.visit(this, data);
   }
+  
+  int modifiers;
+  
+  public void setModifiers(int modifiers) {
+	  this.modifiers = modifiers;
+  }
 }
 /* JavaCC - OriginalChecksum=33f2b23a6d70867145086595ac6920fb (do not edit this line) */

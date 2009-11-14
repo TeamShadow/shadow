@@ -18,5 +18,11 @@ class ASTNullLiteral extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
     return visitor.visit(this, data);
   }
+  
+  public void dump(String prefix) {
+	System.out.println(prefix + "ASTNullLiteral: null");
+	dumpChildren(prefix);
+  }
+
 }
 /* JavaCC - OriginalChecksum=42dd46adc904b5375853fe5a3b87d6fa (do not edit this line) */
