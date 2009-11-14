@@ -6,9 +6,9 @@ package shadow;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-import shadow.parser.javacc.ASTBase;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowParser;
+import shadow.parser.javacc.SimpleNode;
 
 /**
  * @author wspeirs
@@ -27,7 +27,7 @@ public class Main {
 			ShadowParser parser = new ShadowParser(sourceStream);
 			
 			// parse the translation unit
-			ASTBase n = parser.CompilationUnit();
+			SimpleNode n = parser.CompilationUnit();
 			
 			n.dump("");
 			System.out.println("GOOD PARSE");

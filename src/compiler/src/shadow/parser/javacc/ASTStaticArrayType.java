@@ -1,6 +1,6 @@
 package shadow.parser.javacc;
 
-public class ASTStaticArrayType extends ASTBase {
+public class ASTStaticArrayType extends SimpleNode {
 
 	protected int arraySize;
 	

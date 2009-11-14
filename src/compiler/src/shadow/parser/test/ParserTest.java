@@ -9,7 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import shadow.parser.javacc.ASTBase;
+import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowParser;
 
@@ -87,7 +87,7 @@ public final class ParserTest {
 
           System.err.println("Parse Testing File: " + sourceFile.getCanonicalPath());
 
-          ASTBase n = parser.CompilationUnit();
+          ASTCompilationUnit n = parser.CompilationUnit();
 
           if(dump)
         	  n.dump("");

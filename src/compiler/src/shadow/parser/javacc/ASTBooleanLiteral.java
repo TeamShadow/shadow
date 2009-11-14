@@ -1,7 +1,7 @@
 package shadow.parser.javacc;
 
 
-public class ASTBooleanLiteral extends ASTBase {
+public class ASTBooleanLiteral extends SimpleNode {
 	private boolean isTrue = false;
 	
 	public ASTBooleanLiteral(int i) {

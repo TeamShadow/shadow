@@ -1,6 +1,6 @@
 package shadow.parser.javacc;
 
-public class ASTCompilationUnit extends ASTBase {
+public class ASTCompilationUnit extends SimpleNode {
 
 	public ASTCompilationUnit(int id) {
 		super(id);
