@@ -7,8 +7,7 @@
 
 - Remove do { } while() loops (Barry) ???
 
-- Add the #= <<<= >>>= <<< >>> operators to the language
-  - NOTE: <<< and >>> will have to use the GT stuff... however that works?
+- Add the #= operator to the language
 - Add the weak keyword
 - Add error: no methods allowed
 - Add sequences (need a better name?), i.e. x,y,z = 3, z, 4;

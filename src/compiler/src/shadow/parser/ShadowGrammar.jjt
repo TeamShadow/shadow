@@ -421,7 +421,8 @@ TOKEN :
 | < BIT_OR: "|" >
 | < XOR: "^" >
 | < REM: "%" >
-| < LSHIFT: "<<" >
+| < LEFTSHIFT: "<<" >
+| < LEFTROTATE: "<<<" >
 | < PLUSASSIGN: "+=" >
 | < MINUSASSIGN: "-=" >
 | < STARASSIGN: "*=" >
@@ -430,25 +431,26 @@ TOKEN :
 | < ORASSIGN: "|=" >
 | < XORASSIGN: "^=" >
 | < REMASSIGN: "%=" >
-| < LSHIFTASSIGN: "<<=" >
-| < RSIGNEDSHIFTASSIGN: ">>=" >
-| < RUNSIGNEDSHIFTASSIGN: ">>>=" >
+| < LEFTSHIFTASSIGN: "<<=" >
+| < RIGHTSHIFTASSIGN: ">>=" >
+| < RIGHTROTATEASSIGN: ">>>=" >
+| < LEFTROTATEASSIGN: "<<<=" >
 | < ELLIPSIS: "..." >
 }
 
 /* >'s need special attention due to generics syntax. */
 TOKEN :
 {
-  < RUNSIGNEDSHIFT: ">>>" >
+  < RIGHTROTATE: ">>>" >
   {
      matchedToken.kind = GT;
-     ((GTToken)matchedToken).realKind = RUNSIGNEDSHIFT;
+     ((GTToken)matchedToken).realKind = RIGHTROTATE;
      input_stream.backup(2);
   }
-| < RSIGNEDSHIFT: ">>" >
+| < RIGHTSHIFT: ">>" >
   { 
      matchedToken.kind = GT;
-     ((GTToken)matchedToken).realKind = RSIGNEDSHIFT;
+     ((GTToken)matchedToken).realKind = RIGHTSHIFT;
      input_stream.backup(1);
   }
 | < GT: ">" >
@@ -656,7 +658,6 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 {
    boolean isNestedInterface = false;
    int modifier;
-   Token t;
    debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {
@@ -667,7 +668,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
   (  ClassOrInterfaceDeclaration(modifier)
     | EnumDeclaration(modifier)
     | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration()
-    | LOOKAHEAD( Type() t = <IDENTIFIER>  { jjtThis.setImage(t.image); } ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
+    | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
     | MethodDeclaration(modifier)
   )
 | ViewDeclaration()
@@ -898,17 +899,13 @@ void Expression():
  */
 { debugPrint("EXPRESSION"); }
 {
-  ConditionalExpression()
-  [
-    LOOKAHEAD(2)
-    AssignmentOperator() Expression()
-  ]
+  ConditionalExpression() [ LOOKAHEAD(2) AssignmentOperator() Expression() ]
 }
 
 void AssignmentOperator():
 { debugPrint("ASSIGNMENT OPERATOR"); }
 {
-  "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | ">>>=" | "&=" | "^=" | "|="
+  "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | ">>>=" | "<<<=" | "&=" | "^=" | "|="
 }
 
 void ConditionalExpression():
@@ -968,7 +965,13 @@ void RelationalExpression():
 void ShiftExpression():
 {}
 {
-  AdditiveExpression() ( ( "<<" | RSIGNEDSHIFT() | RUNSIGNEDSHIFT() ) AdditiveExpression() )*
+  RotateExpression() ( ( "<<" | RIGHTSHIFT() ) RotateExpression() )*
+}
+
+void RotateExpression():
+{}
+{
+  AdditiveExpression() ( ( "<<<" | RIGHTROTATE() ) AdditiveExpression() )*
 }
 
 void AdditiveExpression():
@@ -1171,15 +1174,11 @@ void Block():
 void BlockStatement():
 {
     debugPrint("BLOCK STATEMENT");
-    Token t;
 }
 {
-  LOOKAHEAD([ "final" ] Type() t = <IDENTIFIER> { jjtThis.setImage(t.image); })
-  LocalVariableDeclaration() ";"
-|
-  Statement()
-|
-  ClassOrInterfaceDeclaration(0)
+  LOOKAHEAD([ "final" ] Type() <IDENTIFIER> ) LocalVariableDeclaration() ";"
+| Statement()
+| ClassOrInterfaceDeclaration(0)
 }
 
 void LocalVariableDeclaration():
@@ -1266,10 +1265,8 @@ void ForInit():
 	Token t;
 }
 {
-  LOOKAHEAD( [ "final" ] Type() t = <IDENTIFIER> { jjtThis.setImage(t.image); } )
-  LocalVariableDeclaration()
-|
-  StatementExpressionList()
+  LOOKAHEAD( [ "final" ] Type() <IDENTIFIER> ) LocalVariableDeclaration()
+| StatementExpressionList()
 }
 
 void StatementExpressionList():
@@ -1330,22 +1327,16 @@ void TryStatement():
  * type declaration syntax with generics clean
  */
 
-void RUNSIGNEDSHIFT():
-{ debugPrint("RIGHT UNSIGNED SHIFT"); }
+void RIGHTROTATE():
+{ debugPrint("RIGHT ROTATE"); }
 {
-  ( LOOKAHEAD({ getToken(1).kind == GT &&
-                ((GTToken)getToken(1)).realKind == RUNSIGNEDSHIFT} )
-   ">" ">" ">"
-  )
+  ( LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTROTATE} ) ">" ">" ">" )
 }
 
-void RSIGNEDSHIFT():
-{ debugPrint("RIGHT SIGNED SHIFT"); }
+void RIGHTSHIFT():
+{ debugPrint("RIGHT SHIFT"); }
 {
-  ( LOOKAHEAD({ getToken(1).kind == GT &&
-                ((GTToken)getToken(1)).realKind == RSIGNEDSHIFT} )
-  ">" ">"
-  )
+  ( LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTSHIFT} ) ">" ">" )
 }
 
 /* Annotation syntax follows. */
