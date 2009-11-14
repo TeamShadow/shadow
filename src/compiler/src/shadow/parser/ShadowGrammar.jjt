@@ -541,11 +541,14 @@ void TypeDeclaration():
 }
 
 void ViewDeclaration():
-{ debugPrint("VIEW DECLARATION"); }
 {
-	"view" <IDENTIFIER>	"{"
-        ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) <IDENTIFIER> ";"
-        ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) <IDENTIFIER> ";" )*
+	debugPrint("VIEW DECLARATION");
+	Token t1, t2, t3;
+}
+{
+	"view" t1 = <IDENTIFIER>	"{"
+        ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) t2 = <IDENTIFIER> ";"
+        ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) t3 = <IDENTIFIER> ";" )*
     "}"
 }
 
@@ -554,10 +557,11 @@ void ClassOrInterfaceDeclaration(int modifiers):
 {
    boolean isInterface = false;
    debugPrint("CLASS OR INTERFACE DECLARARTION");
+   Token t;
 }
 {
   ( "class" | "exception" | "interface" { isInterface = true; } )
-  <IDENTIFIER>
+  t = <IDENTIFIER>
   [ TypeParameters() ]
   [ ExtendsList(isInterface) ]
   [ ImplementsList(isInterface) ]
@@ -607,9 +611,12 @@ void EnumBody():
 }
 
 void EnumConstant():
-{ debugPrint("ENUM CONSTANT"); }
 {
-  <IDENTIFIER> [ Arguments() ] [ ClassOrInterfaceBody(false) ]
+	debugPrint("ENUM CONSTANT");
+	Token t;
+}
+{
+  t = <IDENTIFIER> [ Arguments() ] [ ClassOrInterfaceBody(false) ]
 }
 
 void TypeParameters():
@@ -619,9 +626,12 @@ void TypeParameters():
 }
 
 void TypeParameter():
-{ debugPrint("TYPE PARAMETER"); }
 {
-   <IDENTIFIER> [ TypeBound() ]
+	debugPrint("TYPE PARAMETER");
+	Token t;
+}
+{
+   t = <IDENTIFIER> [ TypeBound() ]
 }
 
 void TypeBound():
@@ -672,9 +682,10 @@ void VariableDeclarator():
 void VariableDeclaratorId():
 {
     debugPrint("VARIABLE DECLARATOR ID");
+    Token t;
 }
 {
-  <IDENTIFIER> ( "[" "]" )*
+  t = <IDENTIFIER> ( "[" "]" )*
 }
 
 void VariableInitializer():
@@ -701,10 +712,13 @@ void MethodDeclaration(int modifiers):
 }
 
 void MethodDeclarator():
-{ debugPrint("METHOD DECLARATOR"); }
+{
+	debugPrint("METHOD DECLARATOR");
+	Token t;
+}
 {
 //  <IDENTIFIER> FormalParameters() ( "[" "]" )*
-  <IDENTIFIER> FormalParameters() "=>" "(" [ ResultTypes() ] ")"
+  t = <IDENTIFIER> FormalParameters() "=>" "(" [ ResultTypes() ] ")"
 }
 
 void FormalParameters():
@@ -767,10 +781,13 @@ void ReferenceType():
   | ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" "]" )*
 }
 
-void StaticArrayType():
-{ debugPrint("STATIC ARRAY TYPE"); }
+void StaticArrayType() #StaticArrayType :
 {
-    PrimitiveType() "[" <INTEGER_LITERAL> "]"
+	debugPrint("STATIC ARRAY TYPE");
+	Token t;
+}
+{
+    PrimitiveType() "[" t = <INTEGER_LITERAL> "]" { jjtThis.setArraySize(t.image); }
 }
 
 void FunctionType():
@@ -780,10 +797,13 @@ void FunctionType():
 }
 
 void ClassOrInterfaceType():
-{ debugPrint("CLASS OR INTERFACE TYPE"); }
 {
-  <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
-  ( LOOKAHEAD(2) "." <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
+	debugPrint("CLASS OR INTERFACE TYPE");
+	Token t1, t2;
+}
+{
+  t1 = <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
+  ( LOOKAHEAD(2) "." t2 = <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ] )*
 }
 
 void TypeArguments():
@@ -837,9 +857,12 @@ void Name():
  * A lookahead of 2 is required below since "Name" can be followed
  * by a ".*" when used in the context of an "ImportDeclaration".
  */
-{ debugPrint("NAME"); }
 {
-  <IDENTIFIER> ( LOOKAHEAD(2) "." <IDENTIFIER> )*
+	debugPrint("NAME");
+	Token t1, t2;
+}
+{
+  t1 = <IDENTIFIER> ( LOOKAHEAD(2) "." t2 = <IDENTIFIER> )*
 }
 
 void NameList():
@@ -988,17 +1011,23 @@ void PrimaryExpression():
 }
 
 void MemberSelector():
-{ debugPrint("MEMBER SELECTOR"); }
 {
-  "." TypeArguments() <IDENTIFIER>
+	debugPrint("MEMBER SELECTOR");
+	Token t;
+}
+{
+  "." TypeArguments() t = <IDENTIFIER>
 }
 
 void PrimaryPrefix():
-{ debugPrint("PRIMARY PREFIX"); }
+{
+	debugPrint("PRIMARY PREFIX");
+	Token t;
+}
 {
   Literal()
 | "this"
-| "super" "." <IDENTIFIER>
+| "super" "." t = <IDENTIFIER>
 | LOOKAHEAD( "(" Expression() ")" ) "(" Expression() ")"
 | AllocationExpression()
 | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
@@ -1006,13 +1035,16 @@ void PrimaryPrefix():
 }
 
 void PrimarySuffix():
-{ debugPrint("PRIMARY SUFFIX"); }
+{
+	debugPrint("PRIMARY SUFFIX");
+	Token t;
+}
 {
   LOOKAHEAD(2) "." "this"
 | LOOKAHEAD(2) "." AllocationExpression()
 | LOOKAHEAD(3) MemberSelector()
 | "[" Expression() "]"
-| "." <IDENTIFIER>
+| "." t = <IDENTIFIER>
 | Arguments()
 }
 
@@ -1113,9 +1145,11 @@ void AssertStatement():
 }
 
 void LabeledStatement():
-{}
 {
-  <IDENTIFIER> ":" Statement()
+	Token t;
+}
+{
+  t = <IDENTIFIER> ":" Statement()
 }
 
 void Block():
@@ -1198,9 +1232,12 @@ void DoStatement():
 }
 
 void ForeachStatement():
-{ debugPrint("FOREACH STATEMENT"); }
 {
-  "foreach" "(" Type() <IDENTIFIER> "in" Expression() ")" Statement()
+	debugPrint("FOREACH STATEMENT");
+	Token t;
+}
+{
+  "foreach" "(" Type() t = <IDENTIFIER> "in" Expression() ")" Statement()
 }
 
 
@@ -1211,9 +1248,12 @@ void ForStatement() :
 }
 
 void ForInit():
-{ debugPrint("FOR INIT"); }
 {
-  LOOKAHEAD( [ "final" ] Type() <IDENTIFIER> )
+	debugPrint("FOR INIT");
+	Token t;
+}
+{
+  LOOKAHEAD( [ "final" ] Type() t = <IDENTIFIER> )
   LocalVariableDeclaration()
 |
   StatementExpressionList()
@@ -1234,13 +1274,13 @@ void ForUpdate():
 void BreakStatement():
 { debugPrint("BREAK STATEMENT"); }
 {
-  "break" [ <IDENTIFIER> ] ";"
+  "break" ";"
 }
 
 void ContinueStatement():
 { debugPrint("CONTINUE STATEMENT"); }
 {
-  "continue" [ <IDENTIFIER> ] ";"
+  "continue" ";"
 }
 
 void ReturnStatement():
@@ -1334,9 +1374,12 @@ void MemberValuePairs():
 }
 
 void MemberValuePair():
-{ debugPrint("MEMBER VALUE PAIR"); }
 {
-    <IDENTIFIER> "=" MemberValue()
+	debugPrint("MEMBER VALUE PAIR");
+	Token t;
+}
+{
+    t = <IDENTIFIER> "=" MemberValue()
 }
 
 void MemberValue():
