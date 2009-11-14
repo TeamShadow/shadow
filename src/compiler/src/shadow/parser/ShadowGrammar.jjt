@@ -540,20 +540,20 @@ void TypeDeclaration():
 | ViewDeclaration()
 }
 
-void ViewDeclaration():
+void ViewDeclaration() #ViewDeclaration :
 {
 	debugPrint("VIEW DECLARATION");
-	Token t1, t2, t3;
+	Token t;
 }
 {
-	"view" t1 = <IDENTIFIER>	"{"
-        ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) t2 = <IDENTIFIER> ";"
-        ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) t3 = <IDENTIFIER> ";" )*
+	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); }	"{"
+        ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";"
+        ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";" )*
     "}"
 }
 
 
-void ClassOrInterfaceDeclaration(int modifiers):
+void ClassOrInterfaceDeclaration(int modifiers) #ClassOrInterfaceDeclaration :
 {
    boolean isInterface = false;
    debugPrint("CLASS OR INTERFACE DECLARARTION");
@@ -561,7 +561,7 @@ void ClassOrInterfaceDeclaration(int modifiers):
 }
 {
   ( "class" | "exception" | "interface" { isInterface = true; } )
-  t = <IDENTIFIER>
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); }
   [ TypeParameters() ]
   [ ExtendsList(isInterface) ]
   [ ImplementsList(isInterface) ]
@@ -593,10 +593,13 @@ void ImplementsList(boolean isInterface):
    }
 }
 
-void EnumDeclaration(int modifiers):
-{ debugPrint("ENUM DECLARATION"); }
+void EnumDeclaration(int modifiers) #EnumDeclaration:
 {
-  "enum" <IDENTIFIER>
+    debugPrint("ENUM DECLARATION");
+    Token t;
+}
+{
+  "enum" t = <IDENTIFIER> { jjtThis.setImage(t.image); }
   [ ImplementsList(false) ]
   EnumBody()
 }
