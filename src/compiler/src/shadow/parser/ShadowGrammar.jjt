@@ -840,14 +840,14 @@ void WildcardBounds():
 void PrimitiveType():
 { debugPrint("PRIMITIVE TYPE"); }
 {
-  "boolean"
-| "code"
-| "byte"
-| "short"
-| "int"
-| "long"
-| "float"
-| "double"
+  "boolean" { jjtThis.setImage("boolean"); }
+| "code"    { jjtThis.setImage("code"); }
+| "byte"    { jjtThis.setImage("byte"); }
+| "short"   { jjtThis.setImage("short"); }
+| "int"     { jjtThis.setImage("int"); }
+| "long"    { jjtThis.setImage("long"); }
+| "float"   { jjtThis.setImage("float"); }
+| "double"  { jjtThis.setImage("double"); }
 }
 
 void ResultType():
