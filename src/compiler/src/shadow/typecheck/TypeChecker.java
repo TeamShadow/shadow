@@ -5,9 +5,9 @@ import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
-import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTVariableDeclaratorId;
@@ -35,10 +35,10 @@ public class TypeChecker extends AbstractASTVisitor {
 	        
 	        walker.walk(node);
 	        
-	        System.out.println("GOOD PARSE");
+	        System.out.println("GOOD TYPE CHECK");
 
 	    } catch (ParseException e) {
-	        System.out.println("BAD PARSE");
+	        System.out.println("BAD TYPE CHECK");
 	        System.out.println(e.getMessage());
 	    } catch (ShadowException se) {
 	    	System.out.println("BAD TYPE CHECK");
@@ -61,7 +61,7 @@ public class TypeChecker extends AbstractASTVisitor {
 		symbolTable.add(new HashMap<String, String>());
 	}
 
-	public Object visit(ASTMethodDeclaration node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTBlock node, Object secondVisit) throws ShadowException {
 		// we have a new scope, so we need a new HashMap in the linked list
 		if((Boolean)secondVisit)
 			symbolTable.removeFirst();

@@ -6,5 +6,11 @@ class foo {
         int a = 1;
         int b = a;
         int c = a + b;
+        
+        if(true) {
+            int a;
+            int b = c + 1;
+        }
+        
     }
 }
