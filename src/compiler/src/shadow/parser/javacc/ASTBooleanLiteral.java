@@ -12,7 +12,7 @@ public class ASTBooleanLiteral extends SimpleNode {
 		super(p, i);
 	}
 	
-    public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
+    public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
     	return visitor.visit(this, data);
     }
 

@@ -15,7 +15,7 @@ class ASTInclusiveOrExpression extends SimpleNode {
 
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Object data) {
+  public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
     return visitor.visit(this, data);
   }
 }
