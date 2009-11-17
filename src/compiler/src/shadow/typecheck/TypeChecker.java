@@ -6,10 +6,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import shadow.parser.javacc.ASTBlock;
+import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimitiveType;
+import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTVariableDeclaratorId;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -55,6 +58,7 @@ public class TypeChecker extends AbstractASTVisitor {
 	protected String curSymbol = null;
 	protected String curType = null;
 	protected Node curRoot = null;
+	protected LinkedList<String> children = null;
 	
 	public TypeChecker() {
 		symbolTable = new LinkedList<HashMap<String, String>>();
@@ -114,26 +118,83 @@ public class TypeChecker extends AbstractASTVisitor {
 		
 		// reset our vars
 		curSymbol = null;
-		curType = null;
 		
 		return false;
 	}
 	
 	public Object visit(ASTName node, Object data) throws ShadowException {
-		boolean found = false;
+		String type = getType(node.getImage());
 		
-		// look-up the symbol in the table
-		for(HashMap<String, String> map:symbolTable) {
-			if(map.containsKey(node.getImage())) {
-				found = true;
-				break;
-			}
-		}
-		
-		if(!found)
+		if(type == null)
 			throw new ShadowException("Undefined symbol: " + node.getImage());
 		
+		// check if someone is looking for children
+		if(children != null)
+			children.add(getType(node.getImage()));
+		
 		return false;
+	}
+	
+	public Object visit(ASTLiteral node, Object data) throws ShadowException {
+		// check if someone is looking for children
+		if(children != null)
+			children.add(node.getType().getTypeName());
+		
+		return false;
+	}
+	
+	public Object visit(ASTRelationalExpression node, Object secondVisit) throws ShadowException {
+		if(!(Boolean)secondVisit) {
+			if(node.jjtGetNumChildren() == 1)
+				return false;	// we don't need to do any of this
+			children = new LinkedList<String>();	// create our children list
+		} else {
+			checkChildrenTypes();	// make sure all the children are the same type
+			children = null;	// reset
+		}
+		return true;
+	}
+	
+	public Object visit(ASTEqualityExpression node, Object secondVisit) throws ShadowException {
+		if(!(Boolean)secondVisit) {
+			if(node.jjtGetNumChildren() == 1)
+				return false;	// we don't need to do any of this
+			children = new LinkedList<String>();	// create our children list
+		} else {
+			checkChildrenTypes();	// make sure all the children are the same type
+			children = null;		// reset
+		}
+		return true;
+	}
+	
+	/**
+	 * Goes through all of the children and ensure they are of the same type.
+	 * @throws ShadowException If one of the children's types does not match
+	 */
+	protected void checkChildrenTypes() throws ShadowException {
+		// go through all the names and make sure they're the same type
+		String firstType = children.get(0);
+		
+		for(int i=0; i < children.size(); ++i) {
+			if(!firstType.equals(children.get(i)))
+				throw new ShadowException("Type mismatch: " + firstType + " != " + children.get(i));
+		}
+	}
+	
+	/**
+	 * Walks through all the symbol tables looking for the first occurrence of this symbol
+	 * TODO: We'll need to add proper scoping not just first symbol to this
+	 * @param symbol The symbol to lookup
+	 * @return The type or null if not found
+	 */
+	public String getType(String symbol) {
+		// go through all the symbols looking for this one
+		for(HashMap<String, String> map:symbolTable) {
+			if(map.containsKey(symbol))
+				return map.get(symbol);
+		}
+		
+		return null;
 	}
 	
 }

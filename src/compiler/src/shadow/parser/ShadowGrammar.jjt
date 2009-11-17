@@ -307,7 +307,7 @@ TOKEN :
 |
   < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
 |
-  < CHARACTER_LITERAL:
+  < CODE_LITERAL:
       "'"
       (   (~["'","\\","\n","\r"])
         | ("\\"
@@ -971,19 +971,19 @@ void InstanceOfExpression():
 }
 
 void RelationalExpression():
-{}
+{ debugPrint("RELATIONAL EXPRESSION"); }
 {
   ShiftExpression() ( ( "<" | ">" | "<=" | ">=" ) ShiftExpression() )*
 }
 
 void ShiftExpression():
-{}
+{ debugPrint("SHIFT EXPRESSION"); }
 {
   RotateExpression() ( ( "<<" | RIGHTSHIFT() ) RotateExpression() )*
 }
 
 void RotateExpression():
-{}
+{ debugPrint("ROTATE EXPRESSION"); }
 {
   AdditiveExpression() ( ( "<<<" | RIGHTROTATE() ) AdditiveExpression() )*
 }
@@ -1081,12 +1081,12 @@ void Literal() :
 	Token t;
 }
 {
-  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); }
-| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); }
-| t = <CHARACTER_LITERAL> { jjtThis.setImage(t.image); }
-| t = <STRING_LITERAL> { jjtThis.setImage(t.image); }
-| BooleanLiteral()
-| NullLiteral()
+  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(ASTLiteral.LiteralType.INTEGER); }
+| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(ASTLiteral.LiteralType.FLOAT); }
+| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(ASTLiteral.LiteralType.CODE); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(ASTLiteral.LiteralType.STRING); }
+| BooleanLiteral() { jjtThis.setType(ASTLiteral.LiteralType.BOOLEAN); }
+| NullLiteral() { jjtThis.setType(ASTLiteral.LiteralType.NULL); }
 
 }
 

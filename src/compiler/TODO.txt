@@ -5,8 +5,18 @@
 *** NOTHING IS DONE UNTIL YOU'VE ALSO CREATED A REGRESSION TEST FOR IT!!! ***
 *****************************************************************************
 
-- Remove do { } while() loops (Barry) ???
+=> PARSING <=
+- FIX: There is an issue with the GT token stuff. The following doesn't parse: if(a > b)
 
 - Add the weak keyword
 - Add error: no methods allowed
 - Add sequences (need a better name?), i.e. x,y,z = 3, z, 4;
+
+=> TYPE CHECKING <=
+- Add checking for assignments
+- Add checking for operators: + - etc
+- Add checking for method calls
+- Include checking with literals for all of the above
+- Add subtyping rules
+
+- Improve scoping so that we don't just return the first symbol we actually get the correct one

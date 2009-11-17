@@ -18,5 +18,26 @@ class ASTLiteral extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
     return visitor.visit(this, data);
   }
+  
+  public enum LiteralType {
+	  INTEGER { public String getTypeName() { return "int"; } },
+	  FLOAT { public String getTypeName() { return "float"; } },
+	  CODE { public String getTypeName() { return "code"; } },
+	  STRING { public String getTypeName() { return "string"; } },
+	  BOOLEAN { public String getTypeName() { return "boolean"; } },
+	  NULL { public String getTypeName() { return "null"; } };
+	  
+	  public abstract String getTypeName();
+  }
+  
+  protected LiteralType type;
+  
+  public void setType(LiteralType type) {
+	  this.type = type;
+  }
+  
+  public LiteralType getType() {
+	  return type;
+  }
 }
 /* JavaCC - OriginalChecksum=e6f81fb816260e4c3f2f8b9ad1bc1340 (do not edit this line) */
