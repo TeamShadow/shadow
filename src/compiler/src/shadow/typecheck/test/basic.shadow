@@ -1,14 +1,8 @@
 
 class foo {
     public int a;
+    public float b;
+    public string c;
+    public code d;
     
-    public bar() => () {
-        int a = 1;
-        double b = 2;
-        
-        if(a == b) {
-            ;
-        }
-        
-    }
 }
