@@ -41,7 +41,7 @@ public class TypeChecker extends AbstractASTVisitor {
 	        System.out.println("GOOD TYPE CHECK");
 
 	    } catch (ParseException e) {
-	        System.out.println("BAD TYPE CHECK");
+	        System.out.println("BAD PARSE");
 	        System.out.println(e.getMessage());
 	    } catch (ShadowException se) {
 	    	System.out.println("BAD TYPE CHECK");
