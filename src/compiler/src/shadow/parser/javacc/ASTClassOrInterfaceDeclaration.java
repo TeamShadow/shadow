@@ -24,5 +24,9 @@ class ASTClassOrInterfaceDeclaration extends SimpleNode {
   public void setModifiers(int modifiers) {
 	  this.modifiers = modifiers;
   }
+  
+  public int getModifiers() {
+	  return this.modifiers;
+  }
 }
 /* JavaCC - OriginalChecksum=2cf34475db707e32cc511aa02d222848 (do not edit this line) */

@@ -24,5 +24,9 @@ class ASTFieldDeclaration extends SimpleNode {
   public void setModifiers(int modifiers) {
 	  this.modifiers = modifiers;
   }
+  
+  public int getModifiers() {
+	  return this.modifiers;
+  }
 }
 /* JavaCC - OriginalChecksum=33f2b23a6d70867145086595ac6920fb (do not edit this line) */
