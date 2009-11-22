@@ -27,7 +27,7 @@ public final class ParserTest {
 	 * @param args
 	 */
 	public static void main(String[] args) throws IOException, ParseException {
-		ParserTest pt = new ParserTest(false, false);
+		ParserTest pt = new ParserTest(false, true);
 		
 		// no args, we test everything
 		if(args.length == 0)
@@ -106,6 +106,7 @@ public final class ParserTest {
           } catch (Error e) {
               System.err.println("Oops.");
               System.err.println(e.getMessage());
+              e.printStackTrace(System.err);
           } catch(FileNotFoundException e) {
               System.err.println(e.getMessage());
           } catch(IOException e) {

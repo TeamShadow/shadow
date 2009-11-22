@@ -1346,13 +1346,14 @@ void TryStatement():
 void RIGHTROTATE():
 { debugPrint("RIGHT ROTATE"); }
 {
-  ( LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTROTATE} ) ">" ">" ">" )
+  ( LOOKAHEAD({ getToken(1).kind == GT && getToken(2).kind == GT && getToken(3).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTROTATE} ) ">" ">" ">" )
 }
+
 
 void RIGHTSHIFT():
 { debugPrint("RIGHT SHIFT"); }
 {
-  ( LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTSHIFT} ) ">" ">" )
+  ( LOOKAHEAD({ getToken(1).kind == GT && getToken(2).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTSHIFT} ) ">" ">" )
 }
 
 /* Annotation syntax follows. */
