@@ -3,6 +3,14 @@ class foo {
     public int a;
     public float b;
     public string c;
+    
+    public blah() => () {
+        int g;
+        
+        if(1 < 2 && 1 < 2 || 2 == 3 == 4)
+            ;
+    }
+
     public code d, e, f;
     
 }

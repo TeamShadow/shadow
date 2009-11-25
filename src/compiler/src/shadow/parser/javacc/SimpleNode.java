@@ -96,6 +96,14 @@ public class SimpleNode implements Node {
 	public void setColumn(int column) {
 		this.column = column;
 	}
+	
+	public String getType() {
+		return type;
+	}
+	
+	public void setType(String type) {
+		this.type = type;
+	}
 
     public void dump(String prefix) {
     	String className = this.getClass().getSimpleName();

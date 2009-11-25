@@ -29,9 +29,6 @@ public class TypeChecker extends AbstractASTVisitor {
 	        ShadowParser parser = new ShadowParser(fis);
 	        TypeChecker tc = new TypeChecker();
 	        ASTWalker walker = new ASTWalker(tc);
-	        
-//	        parser.enableDebug();
-
 	        SimpleNode node = parser.CompilationUnit();
 	        
 	        node.dump("");
@@ -55,10 +52,7 @@ public class TypeChecker extends AbstractASTVisitor {
 	}
 	
 	protected LinkedList<HashMap<String, String>> symbolTable;
-	protected String curSymbol = null;
-	protected String curType = null;
 	protected Node curRoot = null;
-	protected LinkedList<String> children = null;
 	
 	public TypeChecker() {
 		symbolTable = new LinkedList<HashMap<String, String>>();
@@ -75,112 +69,79 @@ public class TypeChecker extends AbstractASTVisitor {
 		return true;
 	}
 	
-	public Object visit(ASTFieldDeclaration node, Object secondVisit) throws ShadowException {		
-		if((Boolean)secondVisit)
-			curRoot = null;
-		else
-			curRoot = node;
-		return true;
-	}
-	
-	public Object visit(ASTLocalVariableDeclaration node, Object secondVisit) throws ShadowException {		
-		if((Boolean)secondVisit)
-			curRoot = null;
-		else
-			curRoot = node;
-		return true;
-	}
-	
-	public Object visit(ASTPrimitiveType node, Object data) throws ShadowException {
+	public void addVarDec(SimpleNode node) throws ShadowException {
+		// a field dec has a type followed by 1 or more idents
+		String type = node.jjtGetChild(0).getImage();
 		
-		if(curRoot != null)
-			curType = node.getImage();	// get the type
+		// go through inserting all the idents
+		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
+			String symbol = node.jjtGetChild(i).getImage();
+			
+			// make sure we don't already have this symbol
+			if(symbolTable.getFirst().containsKey(symbol))
+				throw new ShadowException("Multiply defined symbol");
+			
+			System.out.println("ADDING: " + type + " " + symbol);
+			symbolTable.getFirst().put(symbol, type);
+		}
+	}
+	
+	public Object visit(ASTFieldDeclaration node, Object secondVisit) throws ShadowException {
+		addVarDec(node);
+		
 		return false;
 	}
-	
-	public Object visit(ASTVariableDeclaratorId node, Object data) throws ShadowException {
-		if(curRoot == null)
-				return false;
-		
-		curSymbol = node.getImage();	// get the symbol
-		
-		// make sure we don't already have this symbol
-		if(symbolTable.getFirst().containsKey(curSymbol))
-			throw new ShadowException("Multiply defined symbol");
-		
-		if(curType == null)
-			throw new ShadowException("We have a symbol but no type for it");
-		
-		// insert our symbols
-		symbolTable.getFirst().put(curSymbol, curType);
-		
-		System.out.println("ADDED: " + curType + " " + curSymbol);
-		
-		// reset our vars
-		curSymbol = null;
+
+	public Object visit(ASTLocalVariableDeclaration node, Object secondVisit) throws ShadowException {		
+		addVarDec(node);
 		
 		return false;
 	}
 	
 	public Object visit(ASTName node, Object data) throws ShadowException {
-		String type = getType(node.getImage());
-		
-		if(type == null)
-			throw new ShadowException("Undefined symbol: " + node.getImage());
-		
-		// check if someone is looking for children
-		if(children != null)
-			children.add(getType(node.getImage()));
-		
-		return false;
-	}
-	
-	public Object visit(ASTLiteral node, Object data) throws ShadowException {
-		// check if someone is looking for children
-		if(children != null)
-			children.add(node.getType().getTypeName());
 		
 		return false;
 	}
 	
 	public Object visit(ASTRelationalExpression node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit) {
-			if(node.jjtGetNumChildren() == 1)
-				return false;	// we don't need to do any of this
-			children = new LinkedList<String>();	// create our children list
-		} else {
-			checkChildrenTypes();	// make sure all the children are the same type
-			children = null;	// reset
+		if(node.jjtGetNumChildren() != 2) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
 		}
-		return true;
+		
+		// get the two types
+		String t1 = node.jjtGetChild(0).getType();
+		String t2 = node.jjtGetChild(1).getType();
+		
+		// TODO: Add in all the types that we can compare here
+		if(!t1.equals("int") && !t1.equals("double") && !t1.equals("float"))
+			throw new ShadowException("INCORRECT TYPE: " + t1 + " used in relation");
+		
+		if(!t2.equals("int") && !t2.equals("double") && !t2.equals("float"))
+			throw new ShadowException("INCORRECT TYPE: " + t2 + " used in relation");
+		
+		node.setType("Boolean");	// relations are always booleans
+		
+		return false;
 	}
 	
 	public Object visit(ASTEqualityExpression node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit) {
-			if(node.jjtGetNumChildren() == 1)
-				return false;	// we don't need to do any of this
-			children = new LinkedList<String>();	// create our children list
-		} else {
-			checkChildrenTypes();	// make sure all the children are the same type
-			children = null;		// reset
+		if(node.jjtGetNumChildren() != 2) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
 		}
-		return true;
-	}
-	
-	/**
-	 * Goes through all of the children and ensure they are of the same type.
-	 * @throws ShadowException If one of the children's types does not match
-	 */
-	protected void checkChildrenTypes() throws ShadowException {
-		// go through all the names and make sure they're the same type
-		String firstType = children.get(0);
 		
-		for(int i=0; i < children.size(); ++i) {
-			if(!firstType.equals(children.get(i)))
-				throw new ShadowException("Type mismatch: " + firstType + " != " + children.get(i));
-		}
+		// get the two types
+		String t1 = node.jjtGetChild(0).getType();
+		String t2 = node.jjtGetChild(1).getType();
+		
+		// TODO: Add in subtyping
+		if(!t1.equals(t2))
+			throw new ShadowException("TYPE MISMATCH: " + t1 + " and " + t2 + " are not comparable");
+		
+		node.setType("Boolean");	// relations are always booleans
+		
+		return false;
 	}
-	
+
 	/**
 	 * Walks through all the symbol tables looking for the first occurrence of this symbol
 	 * TODO: We'll need to add proper scoping not just first symbol to this

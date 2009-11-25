@@ -141,8 +141,8 @@ public class ShadowParser
    	
   public static void main(String args[]) {
     try {
-//        String fileName = "tests/class_test.shadow";
-        String fileName = "src/shadow/parser/test/statements/for.shadow";
+        String fileName = "src/shadow/typecheck/test/basic.shadow";
+//        String fileName = "src/shadow/parser/test/statements/for.shadow";
         FileInputStream fis = new FileInputStream(fileName);        
         ShadowParser parser = new ShadowParser(fis);
         
@@ -481,6 +481,7 @@ ASTCompilationUnit CompilationUnit():
 		ASTFlattener f = new ASTFlattener(jjtThis);
 		
 		return (ASTCompilationUnit)f.flatten();
+//        return jjtThis;
 	}
 }
 
@@ -1090,12 +1091,12 @@ void Literal() :
 	Token t;
 }
 {
-  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(ASTLiteral.LiteralType.INTEGER); }
-| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(ASTLiteral.LiteralType.FLOAT); }
-| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(ASTLiteral.LiteralType.CODE); }
-| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(ASTLiteral.LiteralType.STRING); }
-| BooleanLiteral() { jjtThis.setType(ASTLiteral.LiteralType.BOOLEAN); }
-| NullLiteral() { jjtThis.setType(ASTLiteral.LiteralType.NULL); }
+  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("int"); }
+| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("float"); }
+| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("code"); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("String"); }
+| BooleanLiteral() { jjtThis.setType("Boolean"); }
+| NullLiteral()
 
 }
 

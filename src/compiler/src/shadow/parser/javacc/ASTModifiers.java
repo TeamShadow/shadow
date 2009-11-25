@@ -26,7 +26,7 @@ class ASTModifiers extends SimpleNode {
   }
   
   public void dump(String prefix) {
-	  System.out.print(prefix + "ASTModifiers: ");
+	  System.out.print(prefix + "ASTModifiers(" + line + ":" + column + "): ");
 	  ShadowParser.ModifierSet ms = new ShadowParser.ModifierSet();
 	  	  
 	  if(ms.isAbstract(modifiers)) System.out.print("abstract ");
