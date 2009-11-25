@@ -150,7 +150,6 @@ public class ShadowParser
 
         ASTCompilationUnit n = parser.CompilationUnit();
 
-
         n.dump("");
 
         System.out.println("GOOD PARSE");

@@ -28,8 +28,7 @@ public class ASTFlattener implements ShadowParserVisitor {
 		for(int i=0; i < numChildren; ++i) {
 			flatten((SimpleNode)node.jjtGetChild(i));
 		}
-		
-		// visit the node again after the children
+
 		node.jjtAccept(this, null);
 	}
 	
@@ -38,7 +37,7 @@ public class ASTFlattener implements ShadowParserVisitor {
 		Node myParent = node.jjtGetParent();
 		
 		// if we only have one child we can be removed
-		if(node.jjtGetNumChildren() == 1 && myParent != null) {
+		if(myParent != null && node.jjtGetNumChildren() == 1 && myParent.jjtGetNumChildren() == 1) {
 			// set my child's parent to my parent
 			node.jjtGetChild(0).jjtSetParent(node.jjtGetParent());
 			

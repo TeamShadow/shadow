@@ -1,16 +1,22 @@
 
 class foo {
-    public int a;
+    public int a = 1, y, z = 2;
+    public blah x;
     public float b;
-    public string c;
-    
+    public String c = "hello";
+/*    
     public blah() => () {
         int g;
         
-        if(1 < 2 && 1 < 2 || 2 == 3 == 4)
+        if(1 < 2 and 1 < 2 or 2 == 3)
             ;
     }
-
-    public code d, e, f;
     
+    private foo(int a) => (int) {
+        return 5;
+    }
+
+ */ 
+     public code d, e, f;
+  
 }
