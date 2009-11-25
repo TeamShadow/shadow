@@ -33,6 +33,10 @@ public class SimpleNode implements Node {
 		}
 		children[i] = n;
 	}
+	
+	public void jjtSwapChild(Node n, int i) {
+		children[i] = n;
+	}
 
     public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
     	return visitor.visit(this, data);
