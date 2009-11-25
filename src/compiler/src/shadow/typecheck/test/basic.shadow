@@ -3,6 +3,6 @@ class foo {
     public int a;
     public float b;
     public string c;
-    public code d;
+    public code d, e, f;
     
 }
