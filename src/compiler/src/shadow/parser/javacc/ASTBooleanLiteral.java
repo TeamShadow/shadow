@@ -18,9 +18,9 @@ public class ASTBooleanLiteral extends SimpleNode {
 
     public void dump(String prefix) {
     	if(isTrue())
-    		System.out.println(prefix + "ASTBooleanLiteral: true");
+    		System.out.println(prefix + "ASTBooleanLiteral" + "(" + line + ":" + column + "): true");
     	else
-    		System.out.println(prefix + "ASTBooleanLiteral: false");
+    		System.out.println(prefix + "ASTBooleanLiteral" + "(" + line + ":" + column + "): false");
         dumpChildren(prefix);
     }
 

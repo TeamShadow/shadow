@@ -5,8 +5,11 @@ public class SimpleNode implements Node {
     protected Node[] children;
     protected int id;
     protected ShadowParser parser;
+    
     protected String image;
     protected int line, column;
+    
+    protected String type;	// used by the type checker
     
     public SimpleNode(int id) {
     	this.id = id;
@@ -78,12 +81,28 @@ public class SimpleNode implements Node {
 		this.image = image;
 	}
 
+	public int getLine() {
+		return line;
+	}
+	
+	public void setLine(int line) {
+		this.line = line;
+	}
+	
+	public int getColumn() {
+		return column;
+	}
+
+	public void setColumn(int column) {
+		this.column = column;
+	}
+
     public void dump(String prefix) {
     	String className = this.getClass().getSimpleName();
     	if(image == null)
-    		System.out.println(prefix + className);
+    		System.out.println(prefix + className + "(" + line + ":" + column + ")");
     	else
-    		System.out.println(prefix + className + ": " + image);
+    		System.out.println(prefix + className + "(" + line + ":" + column + "): " + image);
         dumpChildren(prefix);
     }
 
