@@ -1,0 +1,11 @@
+class foo {
+    public blah() => () {
+    
+        int a;
+        int b;
+        float c;
+        
+        if(a < b and c < b);
+    
+    }
+}

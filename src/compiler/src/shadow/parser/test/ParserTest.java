@@ -27,7 +27,7 @@ public final class ParserTest {
 	 * @param args
 	 */
 	public static void main(String[] args) throws IOException, ParseException {
-		ParserTest pt = new ParserTest(false, true);
+		ParserTest pt = new ParserTest(false, false);
 		
 		// no args, we test everything
 		if(args.length == 0)
@@ -40,6 +40,8 @@ public final class ParserTest {
 	}
 	
 	public ParserTest() {
+		this.debug = false;
+		this.dump = false;
 	}
 	
 	public ParserTest(boolean debug, boolean dump) {
@@ -82,8 +84,8 @@ public final class ParserTest {
           FileInputStream fis = new FileInputStream(sourceFile);
           ShadowParser parser = new ShadowParser(fis);
           
-//          if(debug)
-//        	  parser.enableDebug();
+          if(debug)
+        	  parser.enableDebug();
 
           System.err.println("Parse Testing File: " + sourceFile.getCanonicalPath());
 

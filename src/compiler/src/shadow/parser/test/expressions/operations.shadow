@@ -1,7 +1,7 @@
 class Test {
     public blah() => () {
-		a >>> b;
-/*		int a;
+/*		a >>> b;
+		int a;
 		int b;
 		
 		a = a + b;
@@ -22,7 +22,8 @@ class Test {
 		a = a >>> b;        
         a >>>= b;        
         a = a <<< b;
-        a <<<= b; */
+        a <<<= b;
+*/
         
       }
 }

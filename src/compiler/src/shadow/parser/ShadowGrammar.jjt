@@ -222,6 +222,7 @@ MORE :
 TOKEN :
 {
   < ABSTRACT: "abstract" >
+| < AND: "and" >
 | < ASSERT: "assert" >
 | < BOOLEAN: "boolean" >
 | < BREAK: "break" >
@@ -262,6 +263,7 @@ TOKEN :
 | < NATIVE: "native" >
 | < NEW: "new" >
 | < NULL: "null" >
+| < OR: "or" >
 | < PACKAGE: "package">
 | < PRIVATE: "private" >
 | < PROTECTED: "protected" >
@@ -940,13 +942,13 @@ void ConditionalExpression():
 void ConditionalOrExpression():
 {}
 {
-  ConditionalAndExpression() ( "||" ConditionalAndExpression() )*
+  ConditionalAndExpression() ( "or" ConditionalAndExpression() )*
 }
 
 void ConditionalAndExpression():
 {}
 {
-  InclusiveOrExpression() ( "&&" InclusiveOrExpression() )*
+  InclusiveOrExpression() ( "and" InclusiveOrExpression() )*
 }
 
 void InclusiveOrExpression():
