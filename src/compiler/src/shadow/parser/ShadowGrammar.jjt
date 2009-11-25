@@ -150,9 +150,6 @@ public class ShadowParser
 
         ASTCompilationUnit n = parser.CompilationUnit();
 
-        ASTFlattener f = new ASTFlattener(n);
-
-        n = (ASTCompilationUnit)f.flatten();
 
         n.dump("");
 
@@ -480,7 +477,11 @@ ASTCompilationUnit CompilationUnit():
   ( TypeDeclaration() )*
   <EOF>
 
-  { return jjtThis; }
+	{
+		ASTFlattener f = new ASTFlattener(jjtThis);
+		
+		return (ASTCompilationUnit)f.flatten();
+	}
 }
 
 void PackageDeclaration():
