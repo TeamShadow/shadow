@@ -242,9 +242,16 @@ public class ASTFlattener implements ShadowParserVisitor {
 			throws ShadowException {
 		return visit((SimpleNode)node, data);	}
 
-	@Override
+	/*	@Override
 	public Object visit(ASTResultType node, Object data) throws ShadowException {
 		return visit((SimpleNode)node, data);	}
+*/
+
+	// this was being removed when we only had 1 ret type making it very difficult to type-check
+	@Override
+	public Object visit(ASTResultType node, Object data) throws ShadowException {
+		return null;
+	}
 
 	@Override
 	public Object visit(ASTResultTypes node, Object data)

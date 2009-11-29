@@ -1,6 +1,7 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import shadow.parser.javacc.ASTBlock;
@@ -12,7 +13,7 @@ import shadow.parser.javacc.ShadowException;
 
 public class ClassChecker extends BaseChecker {
 
-	public ClassChecker(LinkedList<HashMap<String, String>> symbolTable, HashMap<String, MethodSignature> methodTable) {
+	public ClassChecker(LinkedList<HashMap<String, String>> symbolTable, HashSet<MethodSignature> methodTable) {
 		super(symbolTable, methodTable);
 	}
 

@@ -24,5 +24,9 @@ class ASTMethodDeclaration extends SimpleNode {
   public void setModifiers(int modifiers) {
 	  this.modifiers = modifiers;
   }
+  
+  public int getModifiers() {
+	  return modifiers;
+  }
 }
 /* JavaCC - OriginalChecksum=1c1cdb2a47b8a755137e9b35efca7f37 (do not edit this line) */

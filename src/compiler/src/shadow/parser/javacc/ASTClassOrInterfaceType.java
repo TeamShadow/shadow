@@ -13,6 +13,10 @@ class ASTClassOrInterfaceType extends SimpleNode {
     super(p, id);
   }
 
+	public void setImage(String image) {
+		this.image = image;
+		this.type = image;
+	}
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {

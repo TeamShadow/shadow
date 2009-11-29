@@ -1,10 +1,10 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import shadow.parser.javacc.ASTAdditiveExpression;
-import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -13,9 +13,9 @@ import shadow.typecheck.ASTWalker.WalkType;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 	LinkedList<HashMap<String, String>> symbolTable;
-	HashMap<String, MethodSignature> methodTable;
+	HashSet<MethodSignature> methodTable;
 
-	public BaseChecker(LinkedList<HashMap<String, String>> symbolTable, HashMap<String, MethodSignature> methodTable) {
+	public BaseChecker(LinkedList<HashMap<String, String>> symbolTable, HashSet<MethodSignature> methodTable) {
 		this.symbolTable = symbolTable;
 		this.methodTable = methodTable;
 	}
@@ -82,7 +82,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		for(int i=1; i < numChildren; ++i) {
 			if(!type.equals(node.jjtGetChild(i).getType()))
-					throw new ShadowException("TYPE MISMATCH");
+					throw new ShadowException("TYPE MISMATCH: " + node.jjtGetChild(i).getLine() + ":" + node.jjtGetChild(i).getColumn());
 		}
 		
 		return type;
