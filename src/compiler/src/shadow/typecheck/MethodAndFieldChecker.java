@@ -18,9 +18,10 @@ public class MethodAndFieldChecker extends BaseChecker {
 	 * Type checks a field declaration.
 	 */
 	public Object visit(ASTFieldDeclaration node, Object secondVisit) throws ShadowException {
-		addVarDec(node);
+		if((Boolean)secondVisit)
+			addVarDec(node);
 		
-		return WalkType.PRE_CHILDREN;	// don't need to come back here
+		return WalkType.POST_CHILDREN;	// type check the children first
 	}
 
 	public Object visit(ASTMethodDeclaration node, Object secondVisit) throws ShadowException {		

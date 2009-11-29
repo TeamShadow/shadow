@@ -3,9 +3,13 @@ package shadow.typecheck;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import shadow.parser.javacc.ASTAdditiveExpression;
+import shadow.parser.javacc.ASTLiteral;
+import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.ASTWalker.WalkType;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 	LinkedList<HashMap<String, String>> symbolTable;
@@ -62,4 +66,41 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		return null;
 	}
+	
+	/**
+	 * Checks all the children to make sure they're the same type, then returns that type.
+	 * @param node The node who's children we want to check.
+	 * @return The type of this node.
+	 */
+	protected String checkChildren(SimpleNode node) throws ShadowException {
+		int numChildren = node.jjtGetNumChildren();
+		
+		if(numChildren == 0)
+			return null;
+		
+		String type = node.jjtGetChild(0).getType();
+		
+		for(int i=1; i < numChildren; ++i) {
+			if(!type.equals(node.jjtGetChild(i).getType()))
+					throw new ShadowException("TYPE MISMATCH");
+		}
+		
+		return type;
+	}
+
+	public Object visit(ASTMultiplicativeExpression node, Object secondVisit) throws ShadowException {
+		if((Boolean)secondVisit)
+			node.setType(checkChildren(node));	// make sure all children are the same & set this type
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTAdditiveExpression node, Object secondVisit) throws ShadowException {
+		if((Boolean)secondVisit)
+			node.setType(checkChildren(node));	// make sure all children are the same & set this type
+		
+		return WalkType.POST_CHILDREN;
+	}
+
+
 }

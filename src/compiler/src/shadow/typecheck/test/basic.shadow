@@ -2,7 +2,7 @@
 class foo {
     public int a = 1, y, z = 2;
     public blah x;
-    public float b;
+    public float b = 0.2 + 0.3 + 0.5;
     public String c = "hello";
 /*    
     public blah() => () {
