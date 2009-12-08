@@ -255,7 +255,7 @@ TOKEN :
 | < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
 | < IN: "in" >
-| < INSTANCEOF: "instanceof" >
+| < IS: "is" >
 | < INT: "int" >
 | < INTERFACE: "interface" >
 | < LONG: "long" >
@@ -935,7 +935,7 @@ void AssignmentOperator():
 void ConditionalExpression():
 {}
 {
-  ConditionalOrExpression() [ "?" Expression() ":" Expression() ]
+  ConditionalOrExpression() [ "?" ConditionalExpression() ":" ConditionalExpression() ]
 }
 
 void ConditionalOrExpression():
@@ -971,13 +971,13 @@ void AndExpression():
 void EqualityExpression():
 {}
 {
-  InstanceOfExpression() ( ( "==" | "!=" ) InstanceOfExpression() )*
+  IsExpression() ( ( "==" | "!=" ) IsExpression() )*
 }
 
-void InstanceOfExpression():
+void IsExpression():
 {}
 {
-  RelationalExpression() [ "instanceof" Type() ]
+  RelationalExpression() [ "is" Type() ]
 }
 
 void RelationalExpression():
@@ -1066,7 +1066,7 @@ void PrimaryPrefix():
   Literal()
 | "this"
 | "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
-| LOOKAHEAD( "(" Expression() ")" ) "(" Expression() ")"
+| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | AllocationExpression()
 | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
 | Name()
@@ -1123,7 +1123,7 @@ void Arguments():
 void ArgumentList():
 { debugPrint("ARGUMENT LIST"); }
 {
-  Expression() ( "," Expression() )*
+  ConditionalExpression() ( "," ConditionalExpression() )*
 }
 
 void AllocationExpression():
@@ -1145,7 +1145,7 @@ void AllocationExpression():
 void ArrayDimsAndInits():
 { debugPrint("ARRAY DIMS AND INITS"); }
 {
-  LOOKAHEAD(2)( LOOKAHEAD(2) "[" Expression() "]" )+ ( LOOKAHEAD(2) "[" "]" )*
+  LOOKAHEAD(2)( LOOKAHEAD(2) "[" ConditionalExpression() "]" )+ ( LOOKAHEAD(2) "[" "]" )*
 | ( "[" "]" )+ ArrayInitializer()
 }
 
@@ -1179,7 +1179,7 @@ void Statement():
 void AssertStatement():
 { debugPrint("ASSERT STATEMENT"); }
 {
-  "assert" Expression() [ ":" Expression() ] ";"
+  "assert" ConditionalExpression() [ ":" ConditionalExpression() ] ";"
 }
 
 void LabeledStatement():
@@ -1232,7 +1232,7 @@ void StatementExpression():
 void SwitchStatement():
 { debugPrint("SWITCH STATEMENT"); }
 {
-  "switch" "(" Expression() ")" "{"
+  "switch" "(" ConditionalExpression() ")" "{"
     ( SwitchLabel() ( BlockStatement() )* )*
   "}"
 }
@@ -1240,7 +1240,7 @@ void SwitchStatement():
 void SwitchLabel():
 {}
 {
-  "case" Expression() ":"
+  "case" ConditionalExpression() ":"
 |
   "default" ":"
 }
@@ -1253,19 +1253,19 @@ void IfStatement():
  */
 { debugPrint("IF STATEMENT"); }
 {
-  "if" "(" Expression() ")" Statement() [ LOOKAHEAD(1) "else" Statement() ]
+  "if" "(" ConditionalExpression() ")" Statement() [ LOOKAHEAD(1) "else" Statement() ]
 }
 
 void WhileStatement():
 { debugPrint("WHILE STATEMENT"); }
 {
-  "while" "(" Expression() ")" Statement()
+  "while" "(" ConditionalExpression() ")" Statement()
 }
 
 void DoStatement():
 { debugPrint("DO STATEMENT"); }
 {
-  "do" Statement() "while" "(" Expression() ")" ";"
+  "do" Statement() "while" "(" ConditionalExpression() ")" ";"
 }
 
 void ForeachStatement():
@@ -1274,14 +1274,14 @@ void ForeachStatement():
 	Token t;
 }
 {
-  "foreach" "(" Type() t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" Expression() ")" Statement()
+  "foreach" "(" Type() t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression() ")" Statement()
 }
 
 
 void ForStatement() :
 { debugPrint("FOR STATEMENT"); }
 {
-  "for" "(" [ ForInit() ] ";" [ Expression() ] ";" [ ForUpdate() ] ")" Statement()
+  "for" "(" [ ForInit() ] ";" [ ConditionalExpression() ] ";" [ ForUpdate() ] ")" Statement()
 }
 
 void ForInit():
@@ -1321,19 +1321,19 @@ void ContinueStatement():
 void ReturnStatement():
 { debugPrint("RETURN STATEMENT"); }
 {
-  "return" [ Expression() ] ";"
+  "return" [ ConditionalExpression() ] ";"
 }
 
 void ThrowStatement():
 { debugPrint("THROW STATEMENT"); }
 {
-  "throw" Expression() ";"
+  "throw" ConditionalExpression() ";"
 }
 
 void SynchronizedStatement():
 {}
 {
-  "synchronized" "(" Expression() ")" Block()
+  "synchronized" "(" ConditionalExpression() ")" Block()
 }
 
 void TryStatement():

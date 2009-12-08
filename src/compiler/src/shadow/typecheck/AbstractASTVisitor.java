@@ -309,7 +309,7 @@ public abstract class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTInstanceOfExpression node, Object data)
+	public Object visit(ASTIsExpression node, Object data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
