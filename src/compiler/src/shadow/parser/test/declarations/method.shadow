@@ -4,7 +4,7 @@
 class Test {
     public blah() => () { ; }   // basic void
 
-    public blah(int a) a => () { ; }   // built-in to void
+    public blah(int a) => () { ; }   // built-in to void
     public blah(code a) => () { ; }   // built-in to void
     public blah(float a) => () { ; }   // built-in to void
 
