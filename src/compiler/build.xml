@@ -4,7 +4,7 @@
               To include a user specific buildfile here, simply create one in the same
               directory with the processing instruction <?eclipse.ant.import?>
               as the first entry and export the buildfile again. -->
-<project basedir="." default="all" name="shadow_compiler">
+<project basedir="." default="build" name="shadow_compiler">
     <property environment="env"/>
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.6"/>
@@ -21,11 +21,12 @@
     </target>
     
 	<target name="clean">
-        <delete dir="bin"/>
+        <delete dir="bin" failonerror="false"/>
+		<delete file="src/shadow/parser/javacc/ShadowGrammar.jj" failonerror="false"/>
     </target>
     
 	<target depends="clean" name="cleanall">
-		<delete file="ShadowCompiler.jar"/>
+		<delete file="ShadowCompiler.jar" failonerror="false"/>
 	</target>
 	
 	<!-- This is the default target that does EVERYTHING -->
@@ -49,6 +50,8 @@
 	<!-- Build the project -->
 	<target depends="init" name="build">
         <echo message="${ant.project.name}: ${ant.file}"/>
+		<jjtree target="src/shadow/parser/ShadowGrammar.jjt" outputdirectory="src/shadow/parser/javacc" javacchome="/usr/share/java"/>
+		<javacc target="src/shadow/parser/javacc/ShadowGrammar.jj" outputdirectory="src/shadow/parser/javacc" javacchome="/usr/share/java"/>
         <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
             <src path="src"/>
             <classpath refid="shadow_compiler.classpath"/>

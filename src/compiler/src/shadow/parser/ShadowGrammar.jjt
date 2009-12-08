@@ -28,7 +28,7 @@ options {
   MULTI=true;
   VISITOR=true;
   VISITOR_EXCEPTION="ShadowException";
-  JJTREE_OUTPUT_DIRECTORY="javacc";
+  JJTREE_OUTPUT_DIRECTORY="src/shadow/parser/javacc";
 }
 
 PARSER_BEGIN(ShadowParser)
