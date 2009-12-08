@@ -87,7 +87,15 @@ public final class ParserTest {
           if(debug)
         	  parser.enableDebug();
 
-          System.err.print("Parse Testing File: " + sourceFile.getCanonicalPath() + "\t");
+          int fileLength = sourceFile.getPath().length();
+          
+          System.err.print("Parse Test: " + sourceFile.getPath());
+          
+          // poor mans pretty printer
+          while((60 - fileLength) > 0) {
+        	  System.err.print(" ");
+        	  fileLength++;
+          }
 
           long startTime = System.currentTimeMillis();
 

@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright © 2002 Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
  * California 95054, U.S.A. All rights reserved.  Sun Microsystems, Inc. has
  * intellectual property rights relating to technology embodied in the product
@@ -21,9 +21,14 @@
  */
 
 options {
-  JAVA_UNICODE_ESCAPE = true;
-  ERROR_REPORTING = false;
-  STATIC = false;
+  CACHE_TOKENS=true;
+  JAVA_UNICODE_ESCAPE=true;
+  STATIC=false;
+  NODE_USES_PARSER=true;
+  MULTI=true;
+  VISITOR=true;
+  VISITOR_EXCEPTION="ShadowException";
+  JJTREE_OUTPUT_DIRECTORY="javacc";
 }
 
 PARSER_BEGIN(ShadowParser)
