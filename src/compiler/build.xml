@@ -43,10 +43,6 @@
 		</jar>
 	</target>
 	
-	<!-- Run all tests -->
-	<target depends="build,ParserTest,TypeCheckerTest" name="test-all"/>
-		
-
 	<!-- Build the project -->
 	<target depends="init" name="build">
         <echo message="${ant.project.name}: ${ant.file}"/>
@@ -58,8 +54,15 @@
         </javac>
     </target>
 
-	<!-- Tests the parser -->
-	<target name="ParserTest">
+    <!-- Tests everything -->
+    <target name="test-all" depends="build">
+        <java classname="shadow.test.AllTests" failonerror="true" fork="yes" taskname="Test">
+            <classpath refid="shadow_compiler.classpath"/>
+        </java>
+    </target>
+    
+    <!-- Tests the parser -->
+    <target name="ParserTest">
         <java classname="shadow.parser.test.ParserTest" failonerror="true" fork="yes" taskname="Test">
             <classpath refid="shadow_compiler.classpath"/>
         </java>

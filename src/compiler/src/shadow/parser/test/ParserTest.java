@@ -64,7 +64,7 @@ public final class ParserTest extends BaseTest {
           if(dump)
         	  n.dump("");
           
-          printResult(sourceFile.getPath(), "GOOD PARSE", runTime);
+          printResult(sourceFile.getPath(), "PASS", runTime);
 
           } catch (ParseException e) {
               System.err.println("BAD PARSE IN " + sourceFile.getName());

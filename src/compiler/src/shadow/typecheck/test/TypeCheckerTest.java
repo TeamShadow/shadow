@@ -55,7 +55,7 @@ public class TypeCheckerTest extends BaseTest {
 	        long stopTime = System.currentTimeMillis();
 	        long runTime = stopTime - startTime;
 
-	        printResult(sourceFile.getPath(), "GOOD TYPE CHECK", runTime);
+	        printResult(sourceFile.getPath(), "PASS", runTime);
 
 	    } catch (ParseException e) {
 	        System.out.println("BAD PARSE");

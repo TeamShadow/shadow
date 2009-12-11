@@ -9,6 +9,7 @@ import shadow.parser.javacc.ParseException;
 public abstract class BaseTest {
 	protected String baseDir = null;
 	private String testName = null;
+	private static final int screeWidth = 70;
 
 	public BaseTest(String baseDir) {
 		this.baseDir = baseDir;
@@ -59,14 +60,14 @@ public abstract class BaseTest {
 	 * @param time The time, in ms, it took
 	 */
 	protected void printResult(String fileName, String result, long time) {
-        int fileLength = fileName.length();
+        int prefixLength = fileName.length() + testName.length();
 		
-        System.out.print(testName + "\t" + fileName);
+        System.out.print(testName + "  " + fileName);
         
         // poor mans pretty printer
-        while((60 - fileLength) > 0) {
+        while((screeWidth - prefixLength) > 0) {
       	  System.out.print(" ");
-      	  fileLength++;
+      	prefixLength++;
         }
 
         System.out.println(result + " " + time + "ms");
