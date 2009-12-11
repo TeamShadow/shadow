@@ -12,12 +12,13 @@ import java.util.ArrayList;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowParser;
+import shadow.test.BaseTest;
 
 /**
  * @author wspeirs
  *
  */
-public final class ParserTest {
+public final class ParserTest extends BaseTest {
 
 	boolean dump = true;
 	boolean debug = true;
@@ -39,63 +40,19 @@ public final class ParserTest {
 		}	
 	}
 	
-	public ParserTest() {
-		this.debug = false;
-		this.dump = false;
-	}
-	
 	public ParserTest(boolean debug, boolean dump) {
+		super("./src/shadow/parser/test");
 		this.debug = debug;
 		this.dump = dump;
 	}
 	
-	/**
-	 * Test everything under this cur directory
-	 * @throws IOException
-	 */
-	private void testAll() throws IOException, ParseException {
-		testAll(new File("./src/shadow/parser/test"));
-	}
-	
-	private void testAll(File testDirs) throws IOException, ParseException {
-	    ArrayList<File> fileList = new ArrayList<File>();
-	    
-	    // we now have a list of all files
-	    visitDirectory(testDirs, fileList);
-	    
-	    for(File f:fileList) {
-	    	runTest(f);
-	    }
-	}
-	
-	private void visitDirectory(File f, ArrayList<File> fileList) throws IOException {
-		File[] files = f.listFiles();
-		
-		for(File cf:files) {
-			if(cf.isDirectory())
-				visitDirectory(cf, fileList);	// recurse
-			else if(cf.getCanonicalPath().endsWith(".shadow"))
-				fileList.add(cf);
-		}
-	}
-	
-	private void runTest(File sourceFile) throws ParseException {
+	protected void runTest(File sourceFile) throws ParseException {
         try {
           FileInputStream fis = new FileInputStream(sourceFile);
           ShadowParser parser = new ShadowParser(fis);
           
           if(debug)
         	  parser.enableDebug();
-
-          int fileLength = sourceFile.getPath().length();
-          
-          System.err.print("Parse Test: " + sourceFile.getPath());
-          
-          // poor mans pretty printer
-          while((60 - fileLength) > 0) {
-        	  System.err.print(" ");
-        	  fileLength++;
-          }
 
           long startTime = System.currentTimeMillis();
 
@@ -107,7 +64,7 @@ public final class ParserTest {
           if(dump)
         	  n.dump("");
           
-          System.err.println("GOOD PARSE: " + runTime + "ms");
+          printResult(sourceFile.getPath(), "GOOD PARSE", runTime);
 
           } catch (ParseException e) {
               System.err.println("BAD PARSE IN " + sourceFile.getName());

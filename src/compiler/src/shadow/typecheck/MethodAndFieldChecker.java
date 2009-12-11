@@ -64,7 +64,7 @@ public class MethodAndFieldChecker extends BaseChecker {
 			throw new ShadowException("MULTIPLY DEFINED METHODS: " + methodDec.getLine() + ":" + methodDec.getColumn());
 		
 		methodTable.add(signature);
-		System.out.println("ADDED METHOD: " + signature.getSymbol());
+//		System.out.println("ADDED METHOD: " + signature.getSymbol());
 		
 		return WalkType.NO_CHILDREN;	// don't want to type-check the whole method now
 	}

@@ -9,7 +9,7 @@ class foo {
         ;
     }
     
-    public blah(int a, float b, blah a) => (int, float, code) {
+    public blah(int a, float b, bool c) => (int, float, code) {
         return 5;
     }
 

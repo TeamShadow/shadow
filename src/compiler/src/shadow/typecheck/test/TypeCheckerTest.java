@@ -1,33 +1,61 @@
 package shadow.typecheck.test;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
+import shadow.parser.test.ParserTest;
+import shadow.test.BaseTest;
 import shadow.typecheck.TypeChecker;
 
-public class TypeCheckerTest {
-
+public class TypeCheckerTest extends BaseTest {
+	private boolean dump;
+	
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException, ParseException {
+		TypeCheckerTest tct = new TypeCheckerTest(false);
+		
+		// no args, we test everything
+		if(args.length == 0)
+			tct.testAll();
+		else {
+			for(String arg:args) {
+				tct.testAll(new File(arg));
+			}
+		}	
+	}
+	
+	public TypeCheckerTest(boolean dump) {
+		super("./src/shadow/typecheck/test");
+		this.dump = dump;
+	}
+	
+	protected void runTest(File sourceFile) throws ParseException {
 	    try {
-	        String fileName = "src/shadow/typecheck/test/basic.shadow";
-	        FileInputStream fis = new FileInputStream(fileName);        
+	        FileInputStream fis = new FileInputStream(sourceFile);        
 	        ShadowParser parser = new ShadowParser(fis);
 	        TypeChecker tc = new TypeChecker();
 	        SimpleNode node = parser.CompilationUnit();
 	        
-	        node.dump("");
+	        if(dump)
+	        	node.dump("");
 	        
+	        long startTime = System.currentTimeMillis();
+
 	        // type check the tree
 	        tc.typeCheck(node);
 	        
-	        System.out.println("GOOD TYPE CHECK");
+	        long stopTime = System.currentTimeMillis();
+	        long runTime = stopTime - startTime;
+
+	        printResult(sourceFile.getPath(), "GOOD TYPE CHECK", runTime);
 
 	    } catch (ParseException e) {
 	        System.out.println("BAD PARSE");
