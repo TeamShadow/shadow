@@ -691,6 +691,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
   (  ClassOrInterfaceDeclaration(modifier)
     | EnumDeclaration(modifier)
     | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration()
+    | LOOKAHEAD( [ TypeParameters() ] "destructor" ) DestructorDeclaration()
     | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
     | MethodDeclaration(modifier)
   )
@@ -769,6 +770,18 @@ void ConstructorDeclaration():
   [ TypeParameters() ]
   // Modifiers matched in the caller
   "constructor" FormalParameters() [ "throws" NameList() ]
+  "{"
+    [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
+    ( BlockStatement() )*
+  "}"
+}
+
+void DestructorDeclaration():
+{ debugPrint("CONTRUCTOR DECLARATION"); }
+{
+  [ TypeParameters() ]
+  // Modifiers matched in the caller
+  "destructor" [ "throws" NameList() ]
   "{"
     [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
     ( BlockStatement() )*

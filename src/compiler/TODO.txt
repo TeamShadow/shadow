@@ -6,10 +6,9 @@
 *****************************************************************************
 
 => PARSING <=
-- Add error: no methods allowed (what does this mean?)
+- Add error: no methods allowed (what does this mean? Errors are like exceptions except uncatchable and cannot have methods, right?)
 - Add sequences (need a better name?), e.g. x,y,z = 3, z, 4;
 - Add continguously allocated multidimensional arrays (int [,,] x = new int[3,4], a la C#)
-- Add destructor declarations
 
 => TYPE CHECKING <=
 - Add checking for assignments

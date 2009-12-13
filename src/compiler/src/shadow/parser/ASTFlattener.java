@@ -189,6 +189,11 @@ public class ASTFlattener implements ShadowParserVisitor {
 		return visit((SimpleNode)node, data);	}
 
 	@Override
+	public Object visit(ASTDestructorDeclaration node, Object data)
+			throws ShadowException {
+		return visit((SimpleNode)node, data);	}
+
+	@Override
 	public Object visit(ASTExplicitConstructorInvocation node, Object data)
 			throws ShadowException {
 		return visit((SimpleNode)node, data);	}
