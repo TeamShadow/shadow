@@ -6,5 +6,11 @@ class Test {
         if(a == b);        
         
         if( a > b );
+        
+        if( a < b and c < d )
+        	x = 10;
+        	
+        if( a < b or !(c < d) )
+        	x = 10;
     }
 }

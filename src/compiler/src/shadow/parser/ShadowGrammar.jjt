@@ -48,17 +48,18 @@ public class ShadowParser
    static public final class ModifierSet
    {
      /* Definitions of the bits in the modifiers field.  */
+     /* Unused Java modifiers are commented out until modifiers are finalized */ 
      public static final int PUBLIC = 0x0001;
      public static final int PROTECTED = 0x0002;
      public static final int PRIVATE = 0x0004;
      public static final int ABSTRACT = 0x0008;
      public static final int STATIC = 0x0010;
      public static final int FINAL = 0x0020;
-     public static final int SYNCHRONIZED = 0x0040;
-     public static final int NATIVE = 0x0080;
-     public static final int TRANSIENT = 0x0100;
-     public static final int VOLATILE = 0x0200;
-     public static final int STRICTFP = 0x0400;
+     //public static final int SYNCHRONIZED = 0x0040;
+     //public static final int NATIVE = 0x0080;
+     //public static final int TRANSIENT = 0x0100;
+     //public static final int VOLATILE = 0x0200;
+     //public static final int STRICTFP = 0x0400;
      public static final int WEAK = 0x0800;
 
      /** A set of accessors that indicate whether the specified modifier
@@ -93,21 +94,23 @@ public class ShadowParser
      {
        return (modifiers & FINAL) != 0;
      }
-
+  /* 
      public boolean isNative(int modifiers)
      {
        return (modifiers & NATIVE) != 0;
      }
 
-     public boolean isStrictfp(int modifiers)
+	  public boolean isStrictfp(int modifiers)
      {
        return (modifiers & STRICTFP) != 0;
-     }
+     } 
 
      public boolean isSynchronized(int modifiers)
      {
        return (modifiers & SYNCHRONIZED) != 0;
      }
+
+     
 
      public boolean isTransient(int modifiers)
       {
@@ -118,7 +121,7 @@ public class ShadowParser
      {
        return (modifiers & VOLATILE) != 0;
      }
-
+*/
 
       public boolean isWeak(int modifiers)
      {
@@ -261,7 +264,7 @@ TOKEN :
 | < FLOAT: "float" >
 | < FOR: "for" >
 | < FOREACH: "foreach" >
-| < GOTO: "goto" >
+//| < GOTO: "goto" >
 | < IF: "if" >
 | < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
@@ -281,7 +284,7 @@ TOKEN :
 | < RETURN: "return" >
 | < SHORT: "short" >
 | < STATIC: "static" >
-| < STRICTFP: "strictfp" >
+//| < STRICTFP: "strictfp" >
 | < STRING: "string" >
 | < SUPER: "super" >
 | < SWITCH: "switch" >
@@ -289,11 +292,15 @@ TOKEN :
 | < THIS: "this" >
 | < THROW: "throw" >
 | < THROWS: "throws" >
-| < TRANSIENT: "transient" >
+//| < TRANSIENT: "transient" >
 | < TRUE: "true" >
 | < TRY: "try" >
+| < UBYTE: "ubyte" >
+| < UINT: "uint" >
+| < ULONG: "ulong" >
+| < USHORT: "ushort" >
 | < VIEW: "view" >
-| < VOLATILE: "volatile" >
+//| < VOLATILE: "volatile" >
 | < WEAK: "weak" >
 | < WHILE: "while" >
 }
@@ -425,10 +432,10 @@ TOKEN :
 | < LE: "<=" >
 | < GE: ">=" >
 | < NE: "!=" >
-| < SC_OR: "||" >
-| < SC_AND: "&&" >
-| < INCR: "++" >
-| < DECR: "--" >
+//| < SC_OR: "||" >
+//| < SC_AND: "&&" >
+//| < INCR: "++" >
+//| < DECR: "--" >
 | < PLUS: "+" >
 | < MINUS: "-" >
 | < STAR: "*" >
@@ -452,7 +459,7 @@ TOKEN :
 | < RIGHTSHIFTASSIGN: ">>=" >
 | < RIGHTROTATEASSIGN: ">>>=" >
 | < LEFTROTATEASSIGN: "<<<=" >
-| < ELLIPSIS: "..." >
+//| < ELLIPSIS: "..." >
 }
 
 /* >'s need special attention due to generics syntax. */
@@ -531,11 +538,11 @@ int Modifiers():
   | "private" { modifiers |= ModifierSet.PRIVATE; }
   | "final" { modifiers |= ModifierSet.FINAL; }
   | "abstract" { modifiers |= ModifierSet.ABSTRACT; }
-  | "synchronized" { modifiers |= ModifierSet.SYNCHRONIZED; }
-  | "native" { modifiers |= ModifierSet.NATIVE; }
-  | "transient" { modifiers |= ModifierSet.TRANSIENT; }
-  | "volatile" { modifiers |= ModifierSet.VOLATILE; }
-  | "strictfp" { modifiers |= ModifierSet.STRICTFP; }
+//  | "synchronized" { modifiers |= ModifierSet.SYNCHRONIZED; }
+//  | "native" { modifiers |= ModifierSet.NATIVE; }
+//  | "transient" { modifiers |= ModifierSet.TRANSIENT; }
+//  | "volatile" { modifiers |= ModifierSet.VOLATILE; }
+//  | "strictfp" { modifiers |= ModifierSet.STRICTFP; }
   | "weak" { modifiers |= ModifierSet.WEAK; }
   | Annotation()
   )
@@ -820,8 +827,8 @@ void Type():
 void ReferenceType():
 { debugPrint("REFERENCE TYPE"); }
 {
-    PrimitiveType() ( LOOKAHEAD(2) "[" "]" )+
-  | ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" "]" )*
+    PrimitiveType() ( LOOKAHEAD(2) "[" ( "," )* "]" )+
+  | ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" ( "," )* "]" )*
 }
 
 void StaticArrayType():
@@ -884,6 +891,10 @@ void PrimitiveType():
 | "float"   { jjtThis.setImage("float"); }
 | "double"  { jjtThis.setImage("double"); }
 | "string"  { jjtThis.setImage("string"); }
+| "ubyte"  { jjtThis.setImage("ubyte"); }
+| "uint"  { jjtThis.setImage("uint"); }
+| "ulong"  { jjtThis.setImage("ulong"); }
+| "ushort"  { jjtThis.setImage("ushort"); }
 }
 
 void ResultType():
@@ -1016,13 +1027,13 @@ void RelationalExpression():
 void ShiftExpression():
 { debugPrint("SHIFT EXPRESSION"); }
 {
-  RotateExpression() ( ( "<<" | RIGHTSHIFT() ) RotateExpression() )*
+  RotateExpression() ( ( "<<" | RightShift() ) RotateExpression() )*
 }
 
 void RotateExpression():
 { debugPrint("ROTATE EXPRESSION"); }
 {
-  AdditiveExpression() ( ( "<<<" | RIGHTROTATE() ) AdditiveExpression() )*
+  AdditiveExpression() ( ( "<<<" | RightRotate() ) AdditiveExpression() )*
 }
 
 void AdditiveExpression():
@@ -1074,6 +1085,11 @@ void PrimaryExpression():
   PrimaryPrefix() ( LOOKAHEAD(2) PrimarySuffix() )*
 }
 
+void Sequence():
+{ debugPrint("SEQUENCE"); }
+{	"(" PrimaryExpression() ("," PrimaryExpression() )* ")"
+}
+
 void MemberSelector():
 {
 	debugPrint("MEMBER SELECTOR");
@@ -1107,7 +1123,7 @@ void PrimarySuffix():
   LOOKAHEAD(2) "." "this"
 | LOOKAHEAD(2) "." AllocationExpression()
 | LOOKAHEAD(3) MemberSelector()
-| "[" Expression() "]"
+| "[" ConditionalExpression() ("," ConditionalExpression())* "]"
 | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
 | Arguments()
 }
@@ -1119,10 +1135,10 @@ void Literal() :
 }
 {
   t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("int"); }
-| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("float"); }
+| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("double"); }
 | t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("code"); }
-| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("String"); }
-| BooleanLiteral() { jjtThis.setType("Boolean"); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("string"); }
+| BooleanLiteral() { jjtThis.setType("boolean"); }
 | NullLiteral()
 
 }
@@ -1171,8 +1187,8 @@ void AllocationExpression():
 void ArrayDimsAndInits():
 { debugPrint("ARRAY DIMS AND INITS"); }
 {
-  LOOKAHEAD(2)( LOOKAHEAD(2) "[" ConditionalExpression() "]" )+ ( LOOKAHEAD(2) "[" "]" )*
-| ( "[" "]" )+ ArrayInitializer()
+  LOOKAHEAD(2)( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() )* "]" )+ ( LOOKAHEAD(2) "[" (",")* "]" )*
+| ( "[" (",")* "]" )+ ArrayInitializer()
 }
 
 
@@ -1247,12 +1263,13 @@ void EmptyStatement():
 void StatementExpression():
 /*
  * The last expansion of this production accepts more than the legal
- * Java expansions for StatementExpression.  This expansion does not
+ * Shadow expansions for StatementExpression.  This expansion does not
  * use PostfixExpression for performance reasons.
  */
 { debugPrint("STATEMENT EXPRESSION"); }
 {
-  PrimaryExpression() [ AssignmentOperator() Expression() ]
+  	  LOOKAHEAD( Sequence() ) Sequence() "=" PrimaryExpression()
+	| PrimaryExpression() [ AssignmentOperator() Expression() ]
 }
 
 void SwitchStatement():
@@ -1378,14 +1395,14 @@ void TryStatement():
  * type declaration syntax with generics clean
  */
 
-void RIGHTROTATE():
+void RightRotate():
 { debugPrint("RIGHT ROTATE"); }
 {
   ( LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTROTATE} ) ">" ">" ">" )
 }
 
 
-void RIGHTSHIFT():
+void RightShift():
 { debugPrint("RIGHT SHIFT"); }
 {
   ( LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTSHIFT} ) ">" ">" )

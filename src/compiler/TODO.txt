@@ -6,11 +6,9 @@
 *****************************************************************************
 
 => PARSING <=
-- Add error: no methods allowed (what does this mean? Errors are like exceptions except uncatchable and cannot have methods, right?)
-- Add sequences (need a better name?), e.g. x,y,z = 3, z, 4;
-- Add contiguously allocated multidimensional arrays (int [,,] x = new int[3,4], a la C#)
-- Add unsigned stuff
-- Clean unused Java keywords and symbols
+- Add error (Errors are like exceptions except uncatchable and cannot have public methods)
+- Should string be listed as a primitive type when its semantics will always be reference style?
+- Check literals to see if they can be divided into double and float, int and long, etc.
 
 => TYPE CHECKING <=
 - Add checking for assignments

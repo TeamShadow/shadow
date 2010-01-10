@@ -530,12 +530,12 @@ public class ASTFlattener implements ShadowParserVisitor {
 		return visit((SimpleNode)node, data);	}
 
 	@Override
-	public Object visit(ASTRIGHTROTATE node, Object data)
+	public Object visit(ASTRightRotate node, Object data)
 			throws ShadowException {
 		return visit((SimpleNode)node, data);	}
 
 	@Override
-	public Object visit(ASTRIGHTSHIFT node, Object data) throws ShadowException {
+	public Object visit(ASTRightShift node, Object data) throws ShadowException {
 		return visit((SimpleNode)node, data);	}
 
 	@Override
@@ -560,6 +560,11 @@ public class ASTFlattener implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTDefaultValue node, Object data)
+			throws ShadowException {
+		return visit((SimpleNode)node, data);	}
+	
+	@Override
+	public Object visit(ASTSequence node, Object data)
 			throws ShadowException {
 		return visit((SimpleNode)node, data);	}
 

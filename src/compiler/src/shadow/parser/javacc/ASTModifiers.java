@@ -31,15 +31,15 @@ class ASTModifiers extends SimpleNode {
 	  	  
 	  if(ms.isAbstract(modifiers)) System.out.print("abstract ");
 	  if(ms.isFinal(modifiers)) System.out.print("final ");
-	  if(ms.isNative(modifiers)) System.out.print("native ");
+	  //if(ms.isNative(modifiers)) System.out.print("native ");
 	  if(ms.isPrivate(modifiers)) System.out.print("private ");
 	  if(ms.isProtected(modifiers)) System.out.print("protected ");
 	  if(ms.isPublic(modifiers)) System.out.print("public ");
 	  if(ms.isStatic(modifiers)) System.out.print("static ");
-	  if(ms.isStrictfp(modifiers)) System.out.print("strictfp ");
-	  if(ms.isSynchronized(modifiers)) System.out.print("synchronized ");
-	  if(ms.isTransient(modifiers)) System.out.print("transient ");
-	  if(ms.isVolatile(modifiers)) System.out.print("volatile ");
+	  //if(ms.isStrictfp(modifiers)) System.out.print("strictfp ");
+	  //if(ms.isSynchronized(modifiers)) System.out.print("synchronized ");
+	  //if(ms.isTransient(modifiers)) System.out.print("transient ");
+	  //if(ms.isVolatile(modifiers)) System.out.print("volatile ");
 	  if(modifiers == 0) System.out.print("none");
 
 	  System.out.println();

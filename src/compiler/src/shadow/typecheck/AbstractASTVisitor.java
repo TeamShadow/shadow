@@ -573,13 +573,13 @@ public abstract class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTRIGHTROTATE node, Object data)
+	public Object visit(ASTRightRotate node, Object data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTRIGHTSHIFT node, Object data) throws ShadowException {
+	public Object visit(ASTRightShift node, Object data) throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
@@ -609,6 +609,12 @@ public abstract class AbstractASTVisitor implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTDefaultValue node, Object data)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTSequence node, Object data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}

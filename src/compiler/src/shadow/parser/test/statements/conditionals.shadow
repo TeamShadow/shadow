@@ -1,4 +1,4 @@
-class foo {
+class Foo {
     public blah() => () {
     
         int a;
