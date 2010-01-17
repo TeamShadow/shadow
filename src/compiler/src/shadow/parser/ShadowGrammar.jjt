@@ -285,7 +285,7 @@ TOKEN :
 | < SHORT: "short" >
 | < STATIC: "static" >
 //| < STRICTFP: "strictfp" >
-| < STRING: "string" >
+| < STRING: "String" >
 | < SUPER: "super" >
 | < SWITCH: "switch" >
 | < SYNCHRONIZED: "synchronized" >
@@ -1364,7 +1364,10 @@ void ContinueStatement():
 void ReturnStatement():
 { debugPrint("RETURN STATEMENT"); }
 {
-  "return" [ ConditionalExpression() ] ";"
+  "return"  ( ";"
+  | LOOKAHEAD(3) ConditionalExpression() ";"
+  | "(" ConditionalExpression() ( "," ConditionalExpression() )* ")" ";"
+  )
 }
 
 void ThrowStatement():
