@@ -123,7 +123,7 @@ public class ShadowParser
      }
 */
 
-      public boolean isWeak(int modifiers)
+     public boolean isWeak(int modifiers)
      {
        return (modifiers & WEAK) != 0;
      }
@@ -890,7 +890,7 @@ void PrimitiveType():
 | "long"    { jjtThis.setImage("long"); }
 | "float"   { jjtThis.setImage("float"); }
 | "double"  { jjtThis.setImage("double"); }
-| "string"  { jjtThis.setImage("string"); }
+| "String"  { jjtThis.setImage("String"); }
 | "ubyte"  { jjtThis.setImage("ubyte"); }
 | "uint"  { jjtThis.setImage("uint"); }
 | "ulong"  { jjtThis.setImage("ulong"); }
@@ -1135,9 +1135,9 @@ void Literal() :
 }
 {
   t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("int"); }
-| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("double"); }
+| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("float"); }
 | t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("code"); }
-| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("string"); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("String"); }
 | BooleanLiteral() { jjtThis.setType("boolean"); }
 | NullLiteral()
 

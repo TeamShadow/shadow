@@ -5,12 +5,26 @@
 *** NOTHING IS DONE UNTIL YOU'VE ALSO CREATED A REGRESSION TEST FOR IT!!! ***
 *****************************************************************************
 
+=> General <=
+- *Need a better/good way to report errors*
+- Command-line args for each stage of the compile
+- Better over-all compiler interface/Main method
+
 => PARSING <=
 - Add error (Errors are like exceptions except uncatchable and cannot have public methods)
-- Should string be listed as a primitive type when its semantics will always be reference style?
 - Check literals to see if they can be divided into double and float, int and long, etc.
+  - So this is an issue for now with type-checking because we don't have promotion from float -> double
+    I don't think -- without a ton of effort that isn't worth it -- that we can determine that 1 is a ubyte but 2^20 must be an in
+    So I think we should make these things whatever the architecture provides. So for 64-bit it's a long and double(??) and for 32-bit it's an int and float
+    We could also make everything an int & float unless you specify a l/L or d/D after the literal... I like this idea
+- Should string be listed as a primitive type when its semantics will always be reference style?
+
 
 => TYPE CHECKING <=
+** CURRENT STATUS **
+- We need to do type-checking in 2 passes: 1) methods & fields, 2) inside the methods
+- Currently gathers all methods & fields and complains if there is an issue
+** TO DO **
 - Add checking for assignments
 - Add checking for operators: + - etc
 - Add checking for method calls

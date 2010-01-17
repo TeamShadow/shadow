@@ -26,10 +26,13 @@ public class MethodAndFieldChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;	// type check the children first
 	}
 
+	/**
+	 * Type checks a method declaration.
+	 */
 	public Object visit(ASTMethodDeclaration node, Object secondVisit) throws ShadowException {		
 		Node methodDec = node.jjtGetChild(0);
 		Node params = methodDec.jjtGetChild(0);
-		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers());
+		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers(), node.getLine());
 		
 		HashSet<String> paramNames = new HashSet<String>();
 		
@@ -60,8 +63,18 @@ public class MethodAndFieldChecker extends BaseChecker {
 			}
 		}
 		
-		if(methodTable.contains(signature))
-			throw new ShadowException("MULTIPLY DEFINED METHODS: " + methodDec.getLine() + ":" + methodDec.getColumn());
+		if(methodTable.contains(signature)) {
+			// walk through the table and find the other signature
+			MethodSignature firstMethod = null;
+			for(MethodSignature ms:methodTable) {
+				if(ms.equals(signature)) {
+					firstMethod = ms;
+					break;
+				}
+			}
+			
+			throw new ShadowException("MULTIPLY DEFINED METHODS, FIRST DECLARED ON LINE: " + firstMethod.getLineNumber() + " SECOND HERE: " + methodDec.getLine() + ":" + methodDec.getColumn());
+		}
 		
 		methodTable.add(signature);
 //		System.out.println("ADDED METHOD: " + signature.getSymbol());

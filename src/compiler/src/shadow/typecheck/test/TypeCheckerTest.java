@@ -9,7 +9,6 @@ import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
-import shadow.parser.test.ParserTest;
 import shadow.test.BaseTest;
 import shadow.typecheck.TypeChecker;
 
@@ -20,7 +19,7 @@ public class TypeCheckerTest extends BaseTest {
 	 * @param args
 	 */
 	public static void main(String[] args) throws IOException, ParseException {
-		TypeCheckerTest tct = new TypeCheckerTest(false);
+		TypeCheckerTest tct = new TypeCheckerTest(true);
 		
 		// no args, we test everything
 		if(args.length == 0)

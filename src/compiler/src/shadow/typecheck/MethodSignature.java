@@ -7,12 +7,14 @@ public class MethodSignature {
 	protected LinkedList<String> returns;
 	protected int modifiers;
 	protected String symbol;
+	protected int line;	/** the line where it's declared */
 	
-	public MethodSignature(String symbol, int modifiers) {
+	public MethodSignature(String symbol, int modifiers, int line) {
 		parameters = new LinkedList<String>();
 		returns = new LinkedList<String>();
 		this.modifiers = modifiers;
 		this.symbol = symbol;
+		this.line = line;
 	}
 	
 	public void addParameter(String param) {
@@ -29,6 +31,10 @@ public class MethodSignature {
 	
 	public String getSymbol() {
 		return symbol;
+	}
+	
+	public int getLineNumber() {
+		return line;
 	}
 	
 	/**

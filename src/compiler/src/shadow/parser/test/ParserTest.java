@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ParseException;
@@ -76,8 +75,6 @@ public final class ParserTest extends BaseTest {
               e.printStackTrace(System.err);
           } catch(FileNotFoundException e) {
               System.err.println(e.getMessage());
-          } catch(IOException e) {
-        	  System.err.println(e.getMessage());
           }
 	}
 }
