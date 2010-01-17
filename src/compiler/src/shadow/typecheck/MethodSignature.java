@@ -1,24 +1,33 @@
 package shadow.typecheck;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 public class MethodSignature {
-	protected LinkedList<String> parameters;
+	protected LinkedHashMap<String, String> parameters;
 	protected LinkedList<String> returns;
 	protected int modifiers;
 	protected String symbol;
 	protected int line;	/** the line where it's declared */
 	
 	public MethodSignature(String symbol, int modifiers, int line) {
-		parameters = new LinkedList<String>();
+		parameters = new LinkedHashMap<String, String>();
 		returns = new LinkedList<String>();
 		this.modifiers = modifiers;
 		this.symbol = symbol;
 		this.line = line;
 	}
 	
-	public void addParameter(String param) {
-		parameters.add(param);
+	public void addParameter(String name, String type) {
+		parameters.put(name, type);
+	}
+	
+	public String getParameterType(String paramName) {
+		return parameters.get(paramName);
+	}
+	
+	public boolean containsParam(String paramName) {
+		return parameters.containsKey(paramName);
 	}
 	
 	public void addReturn(String ret) {

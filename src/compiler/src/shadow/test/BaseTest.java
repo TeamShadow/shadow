@@ -32,6 +32,12 @@ public abstract class BaseTest {
 	protected void testAll(File testDirs) throws IOException, ParseException {
 	    ArrayList<File> fileList = new ArrayList<File>();
 	    
+	    // it's only 1 file
+	    if(testDirs.isFile()) {
+	    	runTest(testDirs);
+	    	return;
+	    }
+	    
 	    // we now have a list of all files
 	    visitDirectory(testDirs, fileList);
 	    

@@ -2,7 +2,6 @@ package shadow.typecheck;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
@@ -11,9 +10,12 @@ import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.ASTWalker.WalkType;
 
 public class MethodAndFieldChecker extends BaseChecker {
-
-	public MethodAndFieldChecker(LinkedList<HashMap<String, String>> symbolTable, HashSet<MethodSignature> methodTable) {
-		super(symbolTable, methodTable);
+	protected HashMap<String, String> fieldTable;
+	protected HashMap<String, MethodSignature> methodTable;
+	
+	public MethodAndFieldChecker(HashMap<String, String> fieldTable, HashMap<String, MethodSignature> methodTable) {
+		this.fieldTable = fieldTable;
+		this.methodTable = methodTable;
 	}
 
 	/**
@@ -21,7 +23,7 @@ public class MethodAndFieldChecker extends BaseChecker {
 	 */
 	public Object visit(ASTFieldDeclaration node, Object secondVisit) throws ShadowException {
 		if((Boolean)secondVisit)
-			addVarDec(node);
+			addVarDec(node, fieldTable);
 		
 		return WalkType.POST_CHILDREN;	// type check the children first
 	}
@@ -34,24 +36,19 @@ public class MethodAndFieldChecker extends BaseChecker {
 		Node params = methodDec.jjtGetChild(0);
 		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers(), node.getLine());
 		
-		HashSet<String> paramNames = new HashSet<String>();
-		
 		// go through all the formal parameters
 		for(int i=0; i < params.jjtGetNumChildren(); ++i) {
 			Node param = params.jjtGetChild(i);
-			
-			// add the parameter type to the signature
-			signature.addParameter(param.jjtGetChild(0).jjtGetChild(0).getType());
 			
 			// get the name of the parameter
 			String paramSymbol = param.jjtGetChild(1).getImage();
 			
 			// check if it's already in the set of parameter names
-			if(paramNames.contains(paramSymbol))
+			if(signature.containsParam(paramSymbol))
 				throw new ShadowException("MULTIPLY DEFINED PARAMETER NAMES: " + param.jjtGetChild(1).getLine() + ":" + param.jjtGetChild(1).getColumn());
 			
-			// add the name to the set
-			paramNames.add(paramSymbol);
+			// add the parameter type to the signature
+			signature.addParameter(paramSymbol, param.jjtGetChild(0).jjtGetChild(0).getType());
 		}
 		
 		// check to see if we have a return type
@@ -63,10 +60,10 @@ public class MethodAndFieldChecker extends BaseChecker {
 			}
 		}
 		
-		if(methodTable.contains(signature)) {
+		if(methodTable.containsValue(signature)) {
 			// walk through the table and find the other signature
 			MethodSignature firstMethod = null;
-			for(MethodSignature ms:methodTable) {
+			for(MethodSignature ms:methodTable.values()) {
 				if(ms.equals(signature)) {
 					firstMethod = ms;
 					break;
@@ -76,7 +73,7 @@ public class MethodAndFieldChecker extends BaseChecker {
 			throw new ShadowException("MULTIPLY DEFINED METHODS, FIRST DECLARED ON LINE: " + firstMethod.getLineNumber() + " SECOND HERE: " + methodDec.getLine() + ":" + methodDec.getColumn());
 		}
 		
-		methodTable.add(signature);
+		methodTable.put(methodDec.getImage(), signature);
 //		System.out.println("ADDED METHOD: " + signature.getSymbol());
 		
 		return WalkType.NO_CHILDREN;	// don't want to type-check the whole method now

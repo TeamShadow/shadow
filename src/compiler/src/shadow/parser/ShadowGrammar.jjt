@@ -1106,7 +1106,7 @@ void PrimaryPrefix():
 }
 {
   Literal()
-| "this"
+| "this" { jjtThis.setImage("this"); }
 | "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | AllocationExpression()
@@ -1462,10 +1462,8 @@ void MemberValue():
 { debugPrint("MEMBER VALUE"); }
 {
    Annotation()
- |
-   MemberValueArrayInitializer()
- |
-   ConditionalExpression()
+ | MemberValueArrayInitializer()
+ | ConditionalExpression()
 }
 
 void  MemberValueArrayInitializer():

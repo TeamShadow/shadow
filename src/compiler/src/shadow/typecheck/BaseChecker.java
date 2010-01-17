@@ -12,12 +12,8 @@ import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.ASTWalker.WalkType;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
-	LinkedList<HashMap<String, String>> symbolTable;
-	HashSet<MethodSignature> methodTable;
 
-	public BaseChecker(LinkedList<HashMap<String, String>> symbolTable, HashSet<MethodSignature> methodTable) {
-		this.symbolTable = symbolTable;
-		this.methodTable = methodTable;
+	public BaseChecker() {
 	}
 	
 	/**
@@ -25,7 +21,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param node The node containing the declaration to add.
 	 * @throws ShadowException
 	 */
-	public void addVarDec(SimpleNode node) throws ShadowException {
+	public void addVarDec(SimpleNode node, HashMap<String, String> symbolTable) throws ShadowException {
 		// a field dec has a type followed by 1 or more idents
 		String type = node.jjtGetChild(0).jjtGetChild(0).getImage();
 		
@@ -35,11 +31,11 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			String symbol = varDecl.jjtGetChild(0).getImage();
 			
 			// make sure we don't already have this symbol
-			if(symbolTable.getFirst().containsKey(symbol))
+			if(symbolTable.containsKey(symbol))
 				throw new ShadowException("Multiply defined symbol");
 			
 			System.out.println("ADDING: " + type + " " + symbol);
-			symbolTable.getFirst().put(symbol, type);
+			symbolTable.put(symbol, type);
 			
 			// see if we have an assignment
 			if(varDecl.jjtGetNumChildren() == 2) {
@@ -57,7 +53,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param symbol The symbol to lookup
 	 * @return The type or null if not found
 	 */
-	public String getType(String symbol) {
+	static public String getType(String symbol, LinkedList<HashMap<String, String>> symbolTable) {
 		// go through all the symbols looking for this one
 		for(HashMap<String, String> map:symbolTable) {
 			if(map.containsKey(symbol))

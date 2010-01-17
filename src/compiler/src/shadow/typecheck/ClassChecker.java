@@ -1,20 +1,30 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTEqualityExpression;
+import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
+import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.ASTWalker.WalkType;
 
 public class ClassChecker extends BaseChecker {
+	protected LinkedList<HashMap<String, String>> symbolTable;
+	protected HashMap<String, String> fieldTable;
+	protected HashMap<String, MethodSignature> methodTable;
+	
+	protected MethodSignature curMethod;
 
-	public ClassChecker(LinkedList<HashMap<String, String>> symbolTable, HashSet<MethodSignature> methodTable) {
-		super(symbolTable, methodTable);
+	public ClassChecker(LinkedList<HashMap<String, String>> symbolTable, HashMap<String, String> fieldTable, HashMap<String, MethodSignature> methodTable) {
+		this.symbolTable = symbolTable;
+		this.fieldTable = fieldTable;
+		this.methodTable = methodTable;
+		curMethod = null;
 	}
 
 	public Object visit(ASTBlock node, Object secondVisit) throws ShadowException {
@@ -24,20 +34,52 @@ public class ClassChecker extends BaseChecker {
 		else
 			symbolTable.addFirst(new HashMap<String, String>());
 		
-		return true;
+		return WalkType.POST_CHILDREN;
 	}
 	
-	
+	/**
+	 * No need to type-check fields
+	 */
+	public Object visit(ASTFieldDeclaration node, Object secondVisit) throws ShadowException {
+		return WalkType.NO_CHILDREN;	// we've already checked these
+	}
+
+	public Object visit(ASTMethodDeclarator node, Object secondVisit) throws ShadowException {
+		String methodName = node.getImage();
+		
+		curMethod = methodTable.get(methodName);
+		
+		return WalkType.PRE_CHILDREN;	// don't need to come back here
+	}
 
 	public Object visit(ASTLocalVariableDeclaration node, Object secondVisit) throws ShadowException {		
-		addVarDec(node);
+		addVarDec(node, symbolTable.getFirst());
 		
-		return false;
+		return WalkType.PRE_CHILDREN;
 	}
 	
 	public Object visit(ASTName node, Object data) throws ShadowException {
+		String name = node.getImage();
 		
-		return false;
+		// see if the name is in the current scope
+		if(!symbolTable.getFirst().containsKey(name)) {
+			// now check the parameters of the method
+			if(!curMethod.containsParam(name)) {
+				// check to see if it's a field
+				if(!fieldTable.containsKey(name))
+					throw new ShadowException("UNDECLARED VARIABLE: " + name + " at " + node.getLine() + ":" + node.getColumn());
+				
+				// set the type of the node
+				node.setType(fieldTable.get(name));
+			} else {
+				node.setType(curMethod.getParameterType(name));
+			}
+		} else {
+			// otherwise, set the type
+			node.setType(symbolTable.getFirst().get(name));
+		}
+		
+		return WalkType.PRE_CHILDREN;
 	}
 	
 	public Object visit(ASTRelationalExpression node, Object secondVisit) throws ShadowException {
@@ -58,7 +100,7 @@ public class ClassChecker extends BaseChecker {
 		
 		node.setType("Boolean");	// relations are always booleans
 		
-		return false;
+		return WalkType.PRE_CHILDREN;
 	}
 	
 	public Object visit(ASTEqualityExpression node, Object secondVisit) throws ShadowException {
@@ -76,6 +118,6 @@ public class ClassChecker extends BaseChecker {
 		
 		node.setType("Boolean");	// relations are always booleans
 		
-		return false;
+		return WalkType.PRE_CHILDREN;
 	}
 }

@@ -2,6 +2,12 @@ package shadow.parser;
 
 import shadow.parser.javacc.*;
 
+/**
+ * This class removes unneeded nodes from the AST. However, it probably removes too much!
+ * 
+ * -> To keep a node in the tree, simply return null for that node <-
+ * @author wspeirs
+ */
 public class ASTFlattener implements ShadowParserVisitor {
 	public SimpleNode root;
 
@@ -512,7 +518,9 @@ public class ASTFlattener implements ShadowParserVisitor {
 	@Override
 	public Object visit(ASTReturnStatement node, Object data)
 			throws ShadowException {
-		return visit((SimpleNode)node, data);	}
+//		return visit((SimpleNode)node, data);
+		return null;
+	}
 
 	@Override
 	public Object visit(ASTThrowStatement node, Object data)
