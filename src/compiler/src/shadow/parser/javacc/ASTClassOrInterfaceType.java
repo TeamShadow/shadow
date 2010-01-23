@@ -17,7 +17,6 @@ class ASTClassOrInterfaceType extends SimpleNode {
 
 	public void setImage(String image) {
 		this.image = image;
-		this.type = new Type(image);
 	}
 
   /** Accept the visitor. **/

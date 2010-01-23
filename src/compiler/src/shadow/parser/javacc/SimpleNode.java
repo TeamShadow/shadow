@@ -17,6 +17,7 @@ public class SimpleNode implements Node {
     	this.id = id;
     	image = null;
     	line = column = -1;
+    	type = null;
     }
     
     public SimpleNode(ShadowParser sp, int id) {
@@ -25,6 +26,7 @@ public class SimpleNode implements Node {
     	image = null;
     	line = sp.token.beginLine;
     	column = sp.token.beginColumn;
+    	type = null;
     }
     
 	@Override
