@@ -1,5 +1,7 @@
 package shadow.parser.javacc;
 
+import shadow.typecheck.Type;
+
 public class SimpleNode implements Node {
     protected Node parent;
     protected Node[] children;
@@ -9,7 +11,7 @@ public class SimpleNode implements Node {
     protected String image;
     protected int line, column;
     
-    protected String type;	// used by the type checker
+    protected Type type;	// used by the type checker
     
     public SimpleNode(int id) {
     	this.id = id;
@@ -97,11 +99,11 @@ public class SimpleNode implements Node {
 		this.column = column;
 	}
 	
-	public String getType() {
+	public Type getType() {
 		return type;
 	}
 	
-	public void setType(String type) {
+	public void setType(Type type) {
 		this.type = type;
 	}
 

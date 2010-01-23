@@ -10,6 +10,9 @@
 - Command-line args for each stage of the compile
 - Better over-all compiler interface/Main method
 
+=> Barry <=
+- Check the equals & hashCode methods I've created for MethodSignature & Type
+
 => PARSING <=
 - Add error (Errors are like exceptions except uncatchable and cannot have public methods)
 - Check literals to see if they can be divided into double and float, int and long, etc.
@@ -18,6 +21,7 @@
     So I think we should make these things whatever the architecture provides. So for 64-bit it's a long and double(??) and for 32-bit it's an int and float
     We could also make everything an int & float unless you specify a l/L or d/D after the literal... I like this idea
 - Should string be listed as a primitive type when its semantics will always be reference style?
+- Should we add modifiers to views ??
 
 
 => TYPE CHECKING <=

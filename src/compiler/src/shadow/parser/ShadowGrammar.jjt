@@ -35,6 +35,10 @@ package shadow.parser.javacc;
 
 import java.io.*;
 import shadow.parser.*;
+import shadow.AST.ASTFlattener;
+import shadow.AST.ASTWalker;
+import shadow.typecheck.Type;
+
 
 /**
  * Grammar to parse Shadow
@@ -498,10 +502,12 @@ ASTCompilationUnit CompilationUnit():
   <EOF>
 
 	{
-		ASTFlattener f = new ASTFlattener(jjtThis);
-		
-		return (ASTCompilationUnit)f.flatten();
-//        return jjtThis;
+		ASTFlattener f = new ASTFlattener();
+        ASTWalker walker = new ASTWalker(f);
+
+        walker.walk(jjtThis);
+        		
+        return jjtThis;
 	}
 }
 
@@ -579,7 +585,7 @@ void ViewDeclaration():
 	Token t;
 }
 {
-	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); }	"{"
+	"view" t = <IDENTIFIER> { jjtThis.setType(new Type(t.image)); }	"{"
         ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";"
         ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";" )*
     "}"
@@ -595,7 +601,7 @@ void ClassOrInterfaceDeclaration(int modifiers):
 {
   { jjtThis.setModifiers(modifiers); }
   ( "class" | "exception" | "interface" { isInterface = true; } )
-  t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+  t = <IDENTIFIER> { jjtThis.setType(new Type(t.image, modifiers)); }
   [ TypeParameters() ]
   [ ExtendsList(isInterface) ]
   [ ImplementsList(isInterface) ]
@@ -634,7 +640,7 @@ void EnumDeclaration(int modifiers):
 }
 {
 { jjtThis.setModifiers(modifiers); }
-  "enum" t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+  "enum" t = <IDENTIFIER> { jjtThis.setType(new Type(t.image, modifiers)); }
   [ ImplementsList(false) ]
   EnumBody()
 }
@@ -882,19 +888,19 @@ void WildcardBounds():
 void PrimitiveType():
 { debugPrint("PRIMITIVE TYPE"); }
 {
-  "boolean" { jjtThis.setImage("boolean"); }
-| "code"    { jjtThis.setImage("code"); }
-| "byte"    { jjtThis.setImage("byte"); }
-| "short"   { jjtThis.setImage("short"); }
-| "int"     { jjtThis.setImage("int"); }
-| "long"    { jjtThis.setImage("long"); }
-| "float"   { jjtThis.setImage("float"); }
-| "double"  { jjtThis.setImage("double"); }
-| "String"  { jjtThis.setImage("String"); }
-| "ubyte"  { jjtThis.setImage("ubyte"); }
-| "uint"  { jjtThis.setImage("uint"); }
-| "ulong"  { jjtThis.setImage("ulong"); }
-| "ushort"  { jjtThis.setImage("ushort"); }
+  "boolean" { jjtThis.setType(new Type("boolean")); }
+| "code"    { jjtThis.setType(new Type("code")); }
+| "byte"    { jjtThis.setType(new Type("byte")); }
+| "short"   { jjtThis.setType(new Type("short")); }
+| "int"     { jjtThis.setType(new Type("int")); }
+| "long"    { jjtThis.setType(new Type("long")); }
+| "float"   { jjtThis.setType(new Type("float")); }
+| "double"  { jjtThis.setType(new Type("double")); }
+| "String"  { jjtThis.setType(new Type("String")); }
+| "ubyte"   { jjtThis.setType(new Type("ubyte")); }
+| "uint"    { jjtThis.setType(new Type("uint")); }
+| "ulong"   { jjtThis.setType(new Type("ulong")); }
+| "ushort"  { jjtThis.setType(new Type("ushort")); }
 }
 
 void ResultType():
@@ -1134,11 +1140,11 @@ void Literal() :
 	Token t;
 }
 {
-  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("int"); }
-| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("float"); }
-| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("code"); }
-| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType("String"); }
-| BooleanLiteral() { jjtThis.setType("boolean"); }
+  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(new Type("int")); }
+| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(new Type("float")); }
+| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(new Type("code")); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(new Type("String")); }
+| BooleanLiteral() { jjtThis.setType(new Type("boolean")); }
 | NullLiteral()
 
 }

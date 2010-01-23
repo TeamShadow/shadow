@@ -1,19 +1,16 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
-import java.util.HashSet;
 
-import shadow.parser.javacc.ASTFieldDeclaration;
-import shadow.parser.javacc.ASTMethodDeclaration;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.ASTWalker.WalkType;
+import shadow.AST.ASTUtils;
+import shadow.AST.ASTWalker.WalkType;
+import shadow.parser.javacc.*;
 
 public class MethodAndFieldChecker extends BaseChecker {
-	protected HashMap<String, String> fieldTable;
+	protected HashMap<String, Type> fieldTable;
 	protected HashMap<String, MethodSignature> methodTable;
 	
-	public MethodAndFieldChecker(HashMap<String, String> fieldTable, HashMap<String, MethodSignature> methodTable) {
+	public MethodAndFieldChecker(HashMap<String, Type> fieldTable, HashMap<String, MethodSignature> methodTable) {
 		this.fieldTable = fieldTable;
 		this.methodTable = methodTable;
 	}
@@ -47,17 +44,28 @@ public class MethodAndFieldChecker extends BaseChecker {
 			if(signature.containsParam(paramSymbol))
 				throw new ShadowException("MULTIPLY DEFINED PARAMETER NAMES: " + param.jjtGetChild(1).getLine() + ":" + param.jjtGetChild(1).getColumn());
 			
+			// get the type of the parameter
+			Node typeNode = param.jjtGetChild(0).jjtGetChild(0);
+			
+			// we need to check if we have a ClassOrInterfaceType here that has . in it
+			// if this is a primative type, the type will already be set
+			if(typeNode.getType() == null) {
+				if(typeNode.getImage().contains("."))
+					throw new ShadowException("INVALID TYPE: " + ASTUtils.getSymLineCol(typeNode));
+				else
+					typeNode.setType(new Type(typeNode.getImage()));
+			}
+
 			// add the parameter type to the signature
-			signature.addParameter(paramSymbol, param.jjtGetChild(0).jjtGetChild(0).getType());
+			signature.addParameter(paramSymbol, typeNode.getType());
 		}
 		
 		// check to see if we have a return type
 		if(methodDec.jjtGetNumChildren() == 2) {
 			Node retTypes = methodDec.jjtGetChild(1);
 			
-			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i) {
-				signature.addReturn(retTypes.jjtGetChild(i).jjtGetChild(0).getType());
-			}
+			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i)
+				signature.addReturn(retTypes.jjtGetChild(i).jjtGetChild(0).jjtGetChild(0).getType());
 		}
 		
 		if(methodTable.containsValue(signature)) {

@@ -3,6 +3,8 @@ package shadow.TAC;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
+import shadow.AST.ASTWalker;
+import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTPrimitiveType;
@@ -11,8 +13,6 @@ import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.ASTWalker;
-import shadow.typecheck.AbstractASTVisitor;
 
 public class TACBuilder extends AbstractASTVisitor {
 

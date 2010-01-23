@@ -1,4 +1,4 @@
-package shadow.typecheck;
+package shadow.AST;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;

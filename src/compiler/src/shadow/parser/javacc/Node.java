@@ -2,6 +2,8 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.Type;
+
 /* All AST nodes must implement this interface.  It provides basic
    machinery for constructing the parent and child relationships
    between nodes. */
@@ -48,9 +50,9 @@ interface Node {
 	
 	public void setColumn(int column);
 
-	public String getType();
+	public Type getType();
 	
-	public void setType(String type);
+	public void setType(Type type);
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException;

@@ -3,6 +3,7 @@ package shadow.typecheck;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
@@ -11,16 +12,15 @@ import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.ASTWalker.WalkType;
 
 public class ClassChecker extends BaseChecker {
-	protected LinkedList<HashMap<String, String>> symbolTable;
-	protected HashMap<String, String> fieldTable;
+	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
+	protected HashMap<String, Type> fieldTable; /** Hash of symbols and types */
 	protected HashMap<String, MethodSignature> methodTable;
 	
 	protected MethodSignature curMethod;
 
-	public ClassChecker(LinkedList<HashMap<String, String>> symbolTable, HashMap<String, String> fieldTable, HashMap<String, MethodSignature> methodTable) {
+	public ClassChecker(LinkedList<HashMap<String, Type>> symbolTable, HashMap<String, Type> fieldTable, HashMap<String, MethodSignature> methodTable) {
 		this.symbolTable = symbolTable;
 		this.fieldTable = fieldTable;
 		this.methodTable = methodTable;
@@ -32,7 +32,7 @@ public class ClassChecker extends BaseChecker {
 		if((Boolean)secondVisit)
 			symbolTable.removeFirst();
 		else
-			symbolTable.addFirst(new HashMap<String, String>());
+			symbolTable.addFirst(new HashMap<String, Type>());
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -88,8 +88,8 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		// get the two types
-		String t1 = node.jjtGetChild(0).getType();
-		String t2 = node.jjtGetChild(1).getType();
+		Type t1 = node.jjtGetChild(0).getType();
+		Type t2 = node.jjtGetChild(1).getType();
 		
 		// TODO: Add in all the types that we can compare here
 		if(!t1.equals("int") && !t1.equals("double") && !t1.equals("float"))
@@ -98,7 +98,7 @@ public class ClassChecker extends BaseChecker {
 		if(!t2.equals("int") && !t2.equals("double") && !t2.equals("float"))
 			throw new ShadowException("INCORRECT TYPE: " + t2 + " used in relation");
 		
-		node.setType("Boolean");	// relations are always booleans
+		node.setType(new Type("Boolean"));	// relations are always booleans
 		
 		return WalkType.PRE_CHILDREN;
 	}
@@ -109,14 +109,14 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		// get the two types
-		String t1 = node.jjtGetChild(0).getType();
-		String t2 = node.jjtGetChild(1).getType();
+		Type t1 = node.jjtGetChild(0).getType();
+		Type t2 = node.jjtGetChild(1).getType();
 		
 		// TODO: Add in subtyping
 		if(!t1.equals(t2))
 			throw new ShadowException("TYPE MISMATCH: " + t1 + " and " + t2 + " are not comparable");
 		
-		node.setType("Boolean");	// relations are always booleans
+		node.setType(new Type("Boolean"));	// relations are always booleans
 		
 		return WalkType.PRE_CHILDREN;
 	}

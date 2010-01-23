@@ -2,6 +2,8 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.Type;
+
 public
 @SuppressWarnings("all")
 class ASTClassOrInterfaceType extends SimpleNode {
@@ -15,7 +17,7 @@ class ASTClassOrInterfaceType extends SimpleNode {
 
 	public void setImage(String image) {
 		this.image = image;
-		this.type = image;
+		this.type = new Type(image);
 	}
 
   /** Accept the visitor. **/

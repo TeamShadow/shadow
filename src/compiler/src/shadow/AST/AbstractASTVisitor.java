@@ -1,7 +1,7 @@
-package shadow.typecheck;
+package shadow.AST;
 
+import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.*;
-import shadow.typecheck.ASTWalker.WalkType;
 
 public abstract class AbstractASTVisitor implements ShadowParserVisitor {
 

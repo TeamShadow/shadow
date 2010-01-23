@@ -1,15 +1,16 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 
+import shadow.AST.ASTUtils;
+import shadow.AST.AbstractASTVisitor;
+import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.ASTWalker.WalkType;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 
@@ -21,9 +22,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param node The node containing the declaration to add.
 	 * @throws ShadowException
 	 */
-	public void addVarDec(SimpleNode node, HashMap<String, String> symbolTable) throws ShadowException {
+	public void addVarDec(SimpleNode node, HashMap<String, Type> symbolTable) throws ShadowException {
 		// a field dec has a type followed by 1 or more idents
-		String type = node.jjtGetChild(0).jjtGetChild(0).getImage();
+		Type type = node.jjtGetChild(0).jjtGetChild(0).getType();
 		
 		// go through inserting all the idents
 		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
@@ -32,14 +33,14 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			
 			// make sure we don't already have this symbol
 			if(symbolTable.containsKey(symbol))
-				throw new ShadowException("Multiply defined symbol");
+				throw new ShadowException("Multiply defined symbol: " + ASTUtils.getSymLineCol(varDecl.jjtGetChild(0)));
 			
 			System.out.println("ADDING: " + type + " " + symbol);
 			symbolTable.put(symbol, type);
 			
 			// see if we have an assignment
 			if(varDecl.jjtGetNumChildren() == 2) {
-				String assignType = varDecl.jjtGetChild(1).jjtGetChild(0).getType();
+				Type assignType = varDecl.jjtGetChild(1).jjtGetChild(0).getType();
 				
 				if(!assignType.equals(type))
 					throw new ShadowException("TYPE MISMATCH: Assigning " + assignType + " to " + type);
@@ -68,13 +69,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param node The node who's children we want to check.
 	 * @return The type of this node.
 	 */
-	protected String checkChildren(SimpleNode node) throws ShadowException {
+	protected Type checkChildren(SimpleNode node) throws ShadowException {
 		int numChildren = node.jjtGetNumChildren();
 		
 		if(numChildren == 0)
 			return null;
 		
-		String type = node.jjtGetChild(0).getType();
+		Type type = node.jjtGetChild(0).getType();
 		
 		for(int i=1; i < numChildren; ++i) {
 			if(!type.equals(node.jjtGetChild(i).getType()))

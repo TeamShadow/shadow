@@ -2,6 +2,8 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.Type;
+
 public
 @SuppressWarnings("all")
 class ASTPrimitiveType extends SimpleNode {
@@ -15,9 +17,17 @@ class ASTPrimitiveType extends SimpleNode {
 
 	public void setImage(String image) {
 		this.image = image;
-		this.type = image;
+		this.type = new Type(image);
 	}
 
+    public void dump(String prefix) {
+    	String className = this.getClass().getSimpleName();
+    	if(type == null)
+    		System.out.println(prefix + className + "(" + line + ":" + column + ")");
+    	else
+    		System.out.println(prefix + className + "(" + line + ":" + column + "): " + type.getTypeName());
+        dumpChildren(prefix);
+    }
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {

@@ -1,28 +1,29 @@
 package shadow.typecheck;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 public class MethodSignature {
-	protected LinkedHashMap<String, String> parameters;
-	protected LinkedList<String> returns;
+	protected LinkedHashMap<String, Type> parameters; /** symbols & types for each parameter */
+	protected LinkedList<Type> returns; /** List of return types */
 	protected int modifiers;
 	protected String symbol;
 	protected int line;	/** the line where it's declared */
 	
 	public MethodSignature(String symbol, int modifiers, int line) {
-		parameters = new LinkedHashMap<String, String>();
-		returns = new LinkedList<String>();
+		parameters = new LinkedHashMap<String, Type>();
+		returns = new LinkedList<Type>();
 		this.modifiers = modifiers;
 		this.symbol = symbol;
 		this.line = line;
 	}
 	
-	public void addParameter(String name, String type) {
+	public void addParameter(String name, Type type) {
 		parameters.put(name, type);
 	}
 	
-	public String getParameterType(String paramName) {
+	public Type getParameterType(String paramName) {
 		return parameters.get(paramName);
 	}
 	
@@ -30,7 +31,7 @@ public class MethodSignature {
 		return parameters.containsKey(paramName);
 	}
 	
-	public void addReturn(String ret) {
+	public void addReturn(Type ret) {
 		returns.add(ret);
 	}
 	
@@ -62,17 +63,18 @@ public class MethodSignature {
 		if(parameters.size() != ms.parameters.size() || returns.size() != ms.returns.size())
 			return false;
 
-		// check the parameters
-		for(int i=0; i < parameters.size(); ++i) {
-			if(!parameters.get(i).equals(ms.parameters.get(i)))
+		// check the parameters, we care about types only
+		Iterator<Type> it1 = parameters.values().iterator();
+		Iterator<Type> it2 = ms.parameters.values().iterator();
+		
+		while(it1.hasNext()) {
+			if(!it1.next().equals(it2.next()))
 				return false;
 		}
 		
 		// check the returns
-		for(int i=0; i < returns.size(); ++i) {
-			if(!returns.get(i).equals(ms.returns.get(i)))
-				return false;
-		}
+		if(!returns.equals(ms.returns))
+			return false;
 		
 		// if we made it to here, they are equal
 		return true;
