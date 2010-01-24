@@ -35,6 +35,8 @@
 - Include checking with literals for all of the above
 - Add subtyping rules
 
+- Add list of all types.  After the first pass, add in links to parent classes (and enclosing classes?).  Assigning the type for a variable declaration should *always* be a lookup and never and construction.  
+
 - Improve scoping so that we don't just return the first symbol we actually get the correct one
 
 Add visitor methods in ClassChecker for:
@@ -95,12 +97,7 @@ Bill do these:
   ASTExclusiveOrExpression
   ASTAndExpression
   ASTIsExpression
-  ASTShiftExpression
-  ASTRotateExpression
-  ASTAdditiveExpression
-  ASTMultiplicativeExpression
-  ASTUnaryExpression
-  ASTUnaryExpressionNotPlusMinus
+
   ASTCastExpression
   ASTPrimaryExpression
   ASTSequence

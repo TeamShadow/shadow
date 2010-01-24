@@ -3,8 +3,7 @@ class Foo {
 
     public long a;
 
-    public blah(int a, int b) => (int) {
-        
+    public blah(int a, float b) => (int) {
         return a + b;
     }
 }

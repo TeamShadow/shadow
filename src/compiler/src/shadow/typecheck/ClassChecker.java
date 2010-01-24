@@ -89,7 +89,7 @@ public class ClassChecker extends BaseChecker {
 		
 		// TODO: Add in all the types that we can compare here
 		if( !t2.isSubtype(t1) )
-			throw new ShadowException("incompatible types\nfound   : " + t2 + "\nrequired:  " + t1);
+			throw new ShadowException("TYPE MISMATCH\nfound   : " + t2 + "\nrequired:  " + t1);
 				
 		node.setType(t1);
 		
@@ -117,6 +117,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.PRE_CHILDREN;
 	}
 	
+	
 	public Object visit(ASTEqualityExpression node, Object secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 2) {
 			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
@@ -134,4 +135,101 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.PRE_CHILDREN;
 	}
+	
+	public Object visitBitwise(SimpleNode node ) throws ShadowException {	
+		if(node.jjtGetNumChildren() != 2) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		}
+		
+		// get the two types
+		Type t1 = node.jjtGetChild(0).getType();
+		Type t2 = node.jjtGetChild(1).getType();
+				
+		if(!t1.isIntegral() )
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nintegral type required for bitwise operations");
+		
+		if(!t2.isIntegral() )
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nintegral type required for bitwise operations");
+		
+		node.setType(t1);	// assume that result has the same type as the first argument
+		
+		return WalkType.PRE_CHILDREN;
+	}
+	
+	public Object visit(ASTShiftExpression node, Object secondVisit) throws ShadowException {
+		return visitBitwise( node );
+	}
+	
+	public Object visit(ASTRotateExpression node, Object secondVisit) throws ShadowException {
+		return visitBitwise( node );
+	}
+	
+	public Object visitArithmetic(SimpleNode node) throws ShadowException {
+		if(node.jjtGetNumChildren() != 2) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		}
+		
+		// get the two types
+		Type t1 = node.jjtGetChild(0).getType();
+		Type t2 = node.jjtGetChild(1).getType();
+				
+		if(!t1.isNumerical())
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nnumerical type required for arithmetic operations");
+		
+		if(!t2.isNumerical())
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nnumerical type required for arithmetic operations");
+		
+		if(!t1.equals(t2))
+			throw new ShadowException("TYPE MISMATCH\nfound   : " + t1 + " does not match " + t2 + " (strict typing)");
+		
+		node.setType(t1); // for now assume that result has the same type as the first argument
+		
+		return WalkType.PRE_CHILDREN;
+	}
+	
+	public Object visit(ASTAdditiveExpression node, Object secondVisit) throws ShadowException {
+		return visitArithmetic( node );
+	}
+	
+	public Object visit(ASTMultiplicativeExpression node, Object secondVisit) throws ShadowException {
+		return visitArithmetic( node );
+	}
+		
+	public Object visit(ASTUnaryExpression node, Object secondVisit) throws ShadowException {
+		if(node.jjtGetNumChildren() != 1) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		}
+				
+		Type t = node.jjtGetChild(0).getType();
+		
+		if( node.getImage().startsWith("+") || node.getImage().startsWith("-") )
+			if(!t.isNumerical())
+				throw new ShadowException("INCORRECT TYPE\nfound   : " + t + "\nnumerical type required for arithmetic operations");
+		
+		node.setType(t);
+		
+		return WalkType.PRE_CHILDREN;
+	}
+		
+	public Object visit(ASTUnaryExpressionNotPlusMinus node, Object secondVisit) throws ShadowException {
+		if(node.jjtGetNumChildren() != 1) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		}
+				
+		Type t = node.jjtGetChild(0).getType();
+		
+		if( node.getImage().startsWith("~") )
+			if(!t.isIntegral())
+				throw new ShadowException("INCORRECT TYPE\nfound   : " + t + "\nintegral type required for bitwise operations");
+		
+		if( node.getImage().startsWith("!") )
+			if(!t.equals(Type.BOOLEAN))
+				throw new ShadowException("INCORRECT TYPE\nfound   : " + t + "\nboolean type required for logical operations");
+		
+		node.setType(t);
+		
+		return WalkType.PRE_CHILDREN;
+	}
+	
+		
 }

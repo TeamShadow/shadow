@@ -1140,13 +1140,13 @@ void Literal() :
 	Token t;
 }
 {
-  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(new Type("int")); }
-| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(new Type("float")); }
-| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(new Type("code")); }
-| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(new Type("String")); }
-| BooleanLiteral() { jjtThis.setType(new Type("boolean")); }
-| NullLiteral()
-
+  //what about longs, shorts, floats, unsigned versions etc.?
+  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
+| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.DOUBLE); }
+| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.CODE); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.STRING); }
+| BooleanLiteral() { jjtThis.setType(Type.BOOLEAN); }
+| NullLiteral() { jjtThis.setType(Type.NULL); }
 }
 
 void BooleanLiteral():

@@ -3,8 +3,10 @@ package shadow.typecheck;
 public class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string the represents the type */
-	protected final int modifiers;
-	protected final Type parent;
+	protected final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
+	protected final Type enclosing; //outer class
+	protected Type parent;  //super type
+	
 	
 	public static final Type OBJECT = new Type( "Object", 0, null ); 
 	public static final Type BOOLEAN = new Type( "boolean" );
@@ -27,14 +29,20 @@ public class Type {
 	}
 	
 	public Type(String typeName, int modifiers) {
-		this( typeName, modifiers, OBJECT );
+		this( typeName, modifiers, null );
 	}
 	
-	public Type(String typeName, int modifiers, Type parent ) {
+	public Type(String typeName, int modifiers, Type enclosing ) {
+		this( typeName, modifiers, enclosing, OBJECT );
+	}	
+	
+	public Type(String typeName, int modifiers, Type enclosing, Type parent ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
+		this.enclosing = enclosing;
 		this.parent = parent;
 	}
+	
 	
 	public String getTypeName() {
 		return typeName;
@@ -52,6 +60,11 @@ public class Type {
 		return parent;
 	}
 	
+	public void setParent(Type parent) {
+		this.parent = parent;
+	}
+
+	
 	/**
 	 * Need to override equals as we're doing special things
 	 * @param ms The method signature to compare to
@@ -61,26 +74,28 @@ public class Type {
 		Type t = (Type)o;
 		
 		// if either type is null or the type names are the same, then we're good
-		return typeName.equals(NULL.typeName) || t.typeName.equals(NULL.typeName) || typeName.equals(t.typeName);
+		return  typeName.equals(t.typeName);
 	}
 	
 	
-	public boolean isSubtype(Object o) {				
+	public boolean isSubtype(Type t) {				
 		//
 		// Put in sub-typing logic here
 		//
-		
-		return equals( o );
+	
+		//null is the subtype of everything
+		return equals(NULL) || equals( t );
 	}
 	
 	
 	
-	// TODO: Will this work?
-	// Sure... we don't even have to have a hashCode for the type since it is the value, not the key
+	// TODO: Will this work? 
 	public int hashCode() {
 		return typeName.hashCode();
 	}
 	
+	
+	//for math
 	public boolean isNumerical()
 	{
 		return
@@ -96,6 +111,22 @@ public class Type {
 		this.equals(ULONG) ||
 		this.equals(USHORT);
 	}
+	
+	//for cases where integers are required (bitwise operations, array bounds, switch statements, etc.)
+	public boolean isIntegral()
+	{
+		return
+		this.equals(BYTE) ||
+		this.equals(CODE) ||	
+		this.equals(SHORT) ||
+		this.equals(INT) ||
+		this.equals(LONG) ||	  
+		this.equals(UBYTE) ||
+		this.equals(UINT) ||
+		this.equals(ULONG) ||
+		this.equals(USHORT);
+	}
+	
 	
 	public boolean isBuiltIn()
 	{
