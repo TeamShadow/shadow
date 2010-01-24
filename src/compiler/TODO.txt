@@ -36,3 +36,112 @@
 - Add subtyping rules
 
 - Improve scoping so that we don't just return the first symbol we actually get the correct one
+
+Add visitor methods in ClassChecker for:
+
+Bill do these:
+
+  ASTCompilationUnit
+  ASTPackageDeclaration
+  ASTImportDeclaration
+  ASTModifiers
+  ASTTypeDeclaration
+  ASTViewDeclaration
+  ASTClassOrInterfaceDeclaration
+  ASTExtendsList
+  ASTImplementsList
+  ASTEnumDeclaration
+  ASTEnumBody
+  ASTEnumConstant
+  ASTTypeParameters
+  ASTTypeParameter
+  ASTTypeBound
+  ASTClassOrInterfaceBody
+  ASTClassOrInterfaceBodyDeclaration
+  ASTFieldDeclaration
+  ASTVariableDeclarator
+  ASTVariableDeclaratorId
+  ASTVariableInitializer
+  ASTArrayInitializer
+  ASTMethodDeclaration
+  ASTMethodDeclarator
+  ASTFormalParameters
+  ASTFormalParameter
+  ASTConstructorDeclaration
+  ASTDestructorDeclaration
+  ASTExplicitConstructorInvocation
+  ASTInitializer
+  ASTType
+  ASTReferenceType
+  ASTStaticArrayType
+  ASTFunctionType
+  ASTClassOrInterfaceType
+  ASTTypeArguments
+  ASTTypeArgument
+  ASTWildcardBounds
+  ASTPrimitiveType
+  ASTResultType
+  ASTResultTypes
+  ASTName
+  ASTNameList
+  
+  Barry do these:
+  
+  ASTExpression
+  ASTConditionalExpression
+  ASTConditionalOrExpression
+  ASTConditionalAndExpression
+  ASTInclusiveOrExpression
+  ASTExclusiveOrExpression
+  ASTAndExpression
+  ASTIsExpression
+  ASTShiftExpression
+  ASTRotateExpression
+  ASTAdditiveExpression
+  ASTMultiplicativeExpression
+  ASTUnaryExpression
+  ASTUnaryExpressionNotPlusMinus
+  ASTCastExpression
+  ASTPrimaryExpression
+  ASTSequence
+  ASTMemberSelector
+  ASTPrimaryPrefix
+  ASTPrimarySuffix
+  ASTLiteral
+  ASTBooleanLiteral
+  ASTNullLiteral
+  ASTArguments
+  ASTArgumentList
+  ASTAllocationExpression
+  ASTArrayDimsAndInits
+  ASTStatement
+  ASTAssertStatement
+  ASTLabeledStatement
+  ASTBlock
+  ASTBlockStatement
+  ASTLocalVariableDeclaration
+  ASTEmptyStatement
+  ASTStatementExpression
+  ASTSwitchStatement
+  ASTSwitchLabel
+  ASTIfStatement
+  ASTWhileStatement
+  ASTDoStatement
+  ASTForeachStatement
+  ASTForStatement
+  ASTForInit
+  ASTStatementExpressionList
+  ASTForUpdate
+  ASTBreakStatement
+  ASTContinueStatement
+  ASTReturnStatement
+  ASTThrowStatement
+  ASTSynchronizedStatement
+  ASTTryStatement
+  ASTRightRotate
+  ASTRightShift
+  ASTMemberValuePairs
+  ASTMemberValuePair
+  ASTMemberValue
+  ASTMemberValueArrayInitializer
+  ASTDefaultValue

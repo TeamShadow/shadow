@@ -4,14 +4,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import shadow.AST.ASTWalker.WalkType;
-import shadow.parser.javacc.ASTBlock;
-import shadow.parser.javacc.ASTEqualityExpression;
-import shadow.parser.javacc.ASTFieldDeclaration;
-import shadow.parser.javacc.ASTLocalVariableDeclaration;
-import shadow.parser.javacc.ASTMethodDeclarator;
-import shadow.parser.javacc.ASTName;
-import shadow.parser.javacc.ASTRelationalExpression;
-import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.*;
+
+
+//no automatic promotion for bitwise operators
 
 public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
@@ -82,6 +78,24 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.PRE_CHILDREN;
 	}
 	
+	public Object visit(ASTAssignmentOperator node, Object secondVisit) throws ShadowException {
+		if(node.jjtGetNumChildren() != 2) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		}
+		
+		// get the two types
+		Type t1 = node.jjtGetChild(0).getType();
+		Type t2 = node.jjtGetChild(1).getType();
+		
+		// TODO: Add in all the types that we can compare here
+		if( !t2.isSubtype(t1) )
+			throw new ShadowException("incompatible types\nfound   : " + t2 + "\nrequired:  " + t1);
+				
+		node.setType(t1);
+		
+		return WalkType.PRE_CHILDREN;
+	}
+	
 	public Object visit(ASTRelationalExpression node, Object secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 2) {
 			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
@@ -92,13 +106,13 @@ public class ClassChecker extends BaseChecker {
 		Type t2 = node.jjtGetChild(1).getType();
 		
 		// TODO: Add in all the types that we can compare here
-		if(!t1.equals("int") && !t1.equals("double") && !t1.equals("float"))
+		if( !t1.isNumerical() )
 			throw new ShadowException("INCORRECT TYPE: " + t1 + " used in relation");
 		
-		if(!t2.equals("int") && !t2.equals("double") && !t2.equals("float"))
+		if( !t2.isNumerical() )
 			throw new ShadowException("INCORRECT TYPE: " + t2 + " used in relation");
 		
-		node.setType(new Type("Boolean"));	// relations are always booleans
+		node.setType(Type.BOOLEAN);	// relations are always booleans
 		
 		return WalkType.PRE_CHILDREN;
 	}
@@ -113,10 +127,10 @@ public class ClassChecker extends BaseChecker {
 		Type t2 = node.jjtGetChild(1).getType();
 		
 		// TODO: Add in subtyping
-		if(!t1.equals(t2))
+		if(!t1.isSubtype(t2) && !t2.isSubtype(t1))  //works either way
 			throw new ShadowException("TYPE MISMATCH: " + t1 + " and " + t2 + " are not comparable");
 		
-		node.setType(new Type("Boolean"));	// relations are always booleans
+		node.setType(Type.BOOLEAN);	// relations are always booleans
 		
 		return WalkType.PRE_CHILDREN;
 	}

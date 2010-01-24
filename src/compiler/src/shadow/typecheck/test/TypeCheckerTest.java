@@ -65,6 +65,7 @@ public class TypeCheckerTest extends BaseTest {
 	    } catch (Error e) {
 	        System.out.println("Ooops");
 	        System.out.println(e.getMessage());
+	        e.printStackTrace();
 	    } catch (FileNotFoundException e) {
 	        System.out.println(e.getMessage());
 	    }       

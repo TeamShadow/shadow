@@ -1,5 +1,5 @@
 
-class foo {
+class Foo {
 
     public long a;
 
