@@ -1,5 +1,7 @@
 package shadow.typecheck;
 
+import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -14,7 +16,70 @@ import shadow.parser.javacc.SimpleNode;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 
+	protected ArrayList<String> errorList;
+	
+	// these are constants for our error messages to keep things consistent
+	public static enum Error {
+		INVL_TYP		{ String getStr() { return "INVALID TYPE"; } },
+		MULT_SYM		{ String getStr() { return "MULTIPLY DEFINED SYMBOL"; } },
+		MULT_MTH		{ String getStr() { return "MULTIPLY DEFINED METHODS"; } },
+		UNDEC_VAR		{ String getStr() { return "UNDECLARED VARIABLE"; } },
+		TYPE_MIS		{ String getStr() { return "TYPE MISMATCH"; } };
+		
+		abstract String getStr();
+	}
+	
 	public BaseChecker() {
+		errorList = new ArrayList<String>();
+	}
+	
+	/**
+	 * Adds an error message to the list errors we keep until the end.
+	 * @param node The node where the error occurred. This will be printed in the standard format.
+	 * @param msg The message to communicate to the user.
+	 */
+	protected void addError(Node node, String msg) {
+		errorList.add("[" + ASTUtils.getLineCol(node) + "] : " + msg);
+	}
+	
+	/**
+	 * Adds an error messages to the list of errors.
+	 * @param node The node where the error occurred. This will be printed in standard format.
+	 * @param type One of the pre-defined types of errors.
+	 * @param msg The message associated with the error.
+	 */
+	protected void addError(Node node, Error type, String msg) {
+		errorList.add("[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": " + msg);
+	}
+	
+	/**
+	 * Adds an error messages to the list of errors.
+	 * @param node The node where the error occurred. This will be printed in standard format.
+	 * @param type One of the pre-defined types of errors.
+	 */
+	protected void addError(Node node, Error type) {
+		errorList.add("[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": ");
+	}
+	
+	/**
+	 * Print out the list of errors to standard error.
+	 */
+	public void printErrors() {
+		printErrors(System.err);
+	}
+	
+	/**
+	 * Print out the list of errors to the given stream.
+	 * @param stream The stream to print the errors to.
+	 */
+	public void printErrors(PrintStream stream) {
+		for(String msg:errorList) {
+			stream.println(msg);
+		}
+	}
+	
+	public int getErrorCount() {
+		return errorList.size();
 	}
 	
 	/**
@@ -32,8 +97,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			String symbol = varDecl.jjtGetChild(0).getImage();
 			
 			// make sure we don't already have this symbol
-			if(symbolTable.containsKey(symbol))
-				throw new ShadowException("Multiply defined symbol: " + ASTUtils.getSymLineCol(varDecl.jjtGetChild(0)));
+			if(symbolTable.containsKey(symbol)) {
+				addError(varDecl.jjtGetChild(0), Error.MULT_SYM, varDecl.jjtGetChild(0).getImage());
+				return;
+			}
 			
 			System.out.println("ADDING: " + type + " " + symbol);
 			symbolTable.put(symbol, type);
@@ -42,8 +109,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			if(varDecl.jjtGetNumChildren() == 2) {
 				Type assignType = varDecl.jjtGetChild(1).jjtGetChild(0).getType();
 				
-				if(!assignType.equals(type))
-					throw new ShadowException("TYPE MISMATCH: Assigning " + assignType + " to " + type);
+				if(!assignType.equals(type)) {
+					addError(varDecl.jjtGetChild(1).jjtGetChild(0), Error.TYPE_MIS, "Assigning " + assignType + " to " + type);
+					return;
+				}
 			}
 		}
 	}
@@ -78,8 +147,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		Type type = node.jjtGetChild(0).getType();
 		
 		for(int i=1; i < numChildren; ++i) {
-			if(!type.equals(node.jjtGetChild(i).getType()))
-					throw new ShadowException("TYPE MISMATCH: " + node.jjtGetChild(i).getLine() + ":" + node.jjtGetChild(i).getColumn());
+			if(!type.equals(node.jjtGetChild(i).getType())) {
+				addError(node.jjtGetChild(i), Error.TYPE_MIS);
+				return null;
+			}
 		}
 		
 		return type;

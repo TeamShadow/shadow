@@ -62,8 +62,10 @@ public class ClassChecker extends BaseChecker {
 			// now check the parameters of the method
 			if(!curMethod.containsParam(name)) {
 				// check to see if it's a field
-				if(!fieldTable.containsKey(name))
-					throw new ShadowException("UNDECLARED VARIABLE: " + name + " at " + node.getLine() + ":" + node.getColumn());
+				if(!fieldTable.containsKey(name)) {
+					addError(node, Error.UNDEC_VAR, name);
+					return WalkType.NO_CHILDREN;
+				}
 				
 				// set the type of the node
 				node.setType(fieldTable.get(name));
@@ -80,7 +82,8 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTAssignmentOperator node, Object secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 2) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 		
 		// get the two types
@@ -88,8 +91,10 @@ public class ClassChecker extends BaseChecker {
 		Type t2 = node.jjtGetChild(1).getType();
 		
 		// TODO: Add in all the types that we can compare here
-		if( !t2.isSubtype(t1) )
-			throw new ShadowException("TYPE MISMATCH\nfound   : " + t2 + "\nrequired:  " + t1);
+		if( !t2.isSubtype(t1) ) {
+			addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
+			return WalkType.NO_CHILDREN;
+		}
 				
 		node.setType(t1);
 		
@@ -98,7 +103,8 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTRelationalExpression node, Object secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 2) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 		
 		// get the two types
@@ -106,11 +112,15 @@ public class ClassChecker extends BaseChecker {
 		Type t2 = node.jjtGetChild(1).getType();
 		
 		// TODO: Add in all the types that we can compare here
-		if( !t1.isNumerical() )
-			throw new ShadowException("INCORRECT TYPE: " + t1 + " used in relation");
+		if( !t1.isNumerical() ) {
+			addError(node.jjtGetChild(0), Error.INVL_TYP, t1 + " used in relation");
+			return WalkType.NO_CHILDREN;
+		}
 		
-		if( !t2.isNumerical() )
-			throw new ShadowException("INCORRECT TYPE: " + t2 + " used in relation");
+		if( !t2.isNumerical() ) {
+			addError(node.jjtGetChild(1), Error.INVL_TYP, t2 + " used in relation");
+			return WalkType.NO_CHILDREN;
+		}
 		
 		node.setType(Type.BOOLEAN);	// relations are always booleans
 		
@@ -120,7 +130,8 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTEqualityExpression node, Object secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 2) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 		
 		// get the two types
@@ -128,8 +139,10 @@ public class ClassChecker extends BaseChecker {
 		Type t2 = node.jjtGetChild(1).getType();
 		
 		// TODO: Add in subtyping
-		if(!t1.isSubtype(t2) && !t2.isSubtype(t1))  //works either way
-			throw new ShadowException("TYPE MISMATCH: " + t1 + " and " + t2 + " are not comparable");
+		if(!t1.isSubtype(t2) && !t2.isSubtype(t1)) {  //works either way
+			addError(node.jjtGetChild(0), Error.TYPE_MIS, t1 + " and " + t2 + " are not comparable");
+			return WalkType.NO_CHILDREN;
+		}
 		
 		node.setType(Type.BOOLEAN);	// relations are always booleans
 		
@@ -140,7 +153,8 @@ public class ClassChecker extends BaseChecker {
 		Type t1, t2;
 		
 		if(node.jjtGetNumChildren() > 3) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 		
 		t1 = node.jjtGetChild(0).getType();
@@ -151,11 +165,15 @@ public class ClassChecker extends BaseChecker {
 		else
 			t2 = node.jjtGetChild(2).getType();
 				
-		if(!t1.isIntegral() )
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nintegral type required for shift and rotate operations");
+		if(!t1.isIntegral() ) {
+			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t1 + ", but integral type required for shift and rotate operations");
+			return WalkType.NO_CHILDREN;
+		}
 		
-		if(!t2.isIntegral() )
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nintegral type required for shift and rotate operations");
+		if(!t2.isIntegral() ) {
+			addError(node.jjtGetChild(2), Error.INVL_TYP, "Found type " + t2 + ", but integral type required for shift and rotate operations");
+			return WalkType.NO_CHILDREN;
+		}
 		
 		node.setType(t1);	// assume that result has the same type as the first argument
 		
@@ -172,21 +190,28 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visitArithmetic(SimpleNode node) throws ShadowException {
 		if(node.jjtGetNumChildren() != 2) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 		
 		// get the two types
 		Type t1 = node.jjtGetChild(0).getType();
 		Type t2 = node.jjtGetChild(1).getType();
 				
-		if(!t1.isNumerical())
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nnumerical type required for arithmetic operations");
+		if(!t1.isNumerical()) {
+			addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but numerical type required for arithmetic operations");
+			return WalkType.NO_CHILDREN;
+		}
 		
-		if(!t2.isNumerical())
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nnumerical type required for arithmetic operations");
+		if(!t2.isNumerical()) {
+			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but numerical type required for arithmetic operations");
+			return WalkType.NO_CHILDREN;
+		}
 		
-		if(!t1.equals(t2))
-			throw new ShadowException("TYPE MISMATCH\nfound   : " + t1 + " does not match " + t2 + " (strict typing)");
+		if(!t1.equals(t2)) {
+			addError(node, Error.TYPE_MIS, "Type " + t1 + " does not match " + t2 + " (strict typing)");
+			return WalkType.NO_CHILDREN;
+		}
 		
 		node.setType(t1); // for now assume that result has the same type as the first argument
 		
@@ -203,14 +228,17 @@ public class ClassChecker extends BaseChecker {
 		
 	public Object visit(ASTUnaryExpression node, Object secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 1) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 				
 		Type t = node.jjtGetChild(0).getType();
 		
 		if( node.getImage().startsWith("+") || node.getImage().startsWith("-") )
-			if(!t.isNumerical())
-				throw new ShadowException("INCORRECT TYPE\nfound   : " + t + "\nnumerical type required for arithmetic operations");
+			if(!t.isNumerical()) {
+				addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
+				return WalkType.NO_CHILDREN;
+			}
 		
 		node.setType(t);
 		
@@ -219,18 +247,23 @@ public class ClassChecker extends BaseChecker {
 		
 	public Object visit(ASTUnaryExpressionNotPlusMinus node, Object secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 1) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 				
 		Type t = node.jjtGetChild(0).getType();
 		
 		if( node.getImage().startsWith("~") )
-			if(!t.isIntegral())
-				throw new ShadowException("INCORRECT TYPE\nfound   : " + t + "\nintegral type required for bitwise operations");
+			if(!t.isIntegral()) {
+				addError(node, Error.INVL_TYP, "Found type " + t + ", but integral type required for bitwise operations");
+				return WalkType.NO_CHILDREN;
+			}
 		
 		if( node.getImage().startsWith("!") )
-			if(!t.equals(Type.BOOLEAN))
-				throw new ShadowException("INCORRECT TYPE\nfound   : " + t + "\nboolean type required for logical operations");
+			if(!t.equals(Type.BOOLEAN)) {
+				addError(node, Error.INVL_TYP, "Found type " + t + ", but boolean type required for logical operations");
+				return WalkType.NO_CHILDREN;
+			}
 		
 		node.setType(t);
 		
@@ -248,18 +281,24 @@ public class ClassChecker extends BaseChecker {
 			Type t2 = node.jjtGetChild(1).getType();
 			Type t3 = node.jjtGetChild(2).getType();
 			
-			if( !t1.equals(Type.BOOLEAN) )				
-					throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nboolean type required for conditional operations");
+			if( !t1.equals(Type.BOOLEAN) ) {			
+				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type" + t1 + ", but boolean type required for conditional operations");
+				return WalkType.NO_CHILDREN;
+			}
 			
 			if( t2.isSubtype(t3) )
 				node.setType(t3);
 			else if( t3.isSubtype(t2) )
 				node.setType(t2);
-			else
-				throw new ShadowException("TYPE MISMATCH\nfound   : " + t2 + " must match " + t3 + " in ternary operator");			
+			else {
+				addError(node, Error.TYPE_MIS, "Type " + t2 + " must match " + t3 + " in ternary operator");
+				return WalkType.NO_CHILDREN;
+			}
 		}
-		else
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		else {
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
+		}
 		
 		
 		return WalkType.PRE_CHILDREN;
@@ -267,18 +306,23 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visitConditional(SimpleNode node ) throws ShadowException {	
 		if(node.jjtGetNumChildren() != 2) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 		
 		// get the two types
 		Type t1 = node.jjtGetChild(0).getType();
 		Type t2 = node.jjtGetChild(1).getType();
 				
-		if(!t1.equals(Type.BOOLEAN) )
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nboolean type required for conditional operations");
+		if(!t1.equals(Type.BOOLEAN) ) {
+			addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but boolean type required for conditional operations");
+			return WalkType.NO_CHILDREN;
+		}
 		
-		if(!t2.equals(Type.BOOLEAN) )
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nboolean type required for conditional operations");		
+		if(!t2.equals(Type.BOOLEAN) ) {
+			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but boolean type required for conditional operations");
+			return WalkType.NO_CHILDREN;
+		}
 		
 		node.setType(Type.BOOLEAN);
 		
@@ -299,21 +343,28 @@ public class ClassChecker extends BaseChecker {
 
 	public Object visitBitwise(SimpleNode node ) throws ShadowException {	
 		if(node.jjtGetNumChildren() != 2) {
-			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			return WalkType.NO_CHILDREN;
 		}
 		
 		// get the two types
 		Type t1 = node.jjtGetChild(0).getType();
 		Type t2 = node.jjtGetChild(1).getType();
 		
-		if(!t1.isIntegral() )
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nintegral type required for shift and rotate operations");
+		if(!t1.isIntegral() ) {
+			addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but integral type required for shift and rotate operations");
+			return WalkType.NO_CHILDREN;
+		}
 		
-		if(!t2.isIntegral() )
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nintegral type required for shift and rotate operations");
+		if(!t2.isIntegral() ) {
+			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but integral type required for shift and rotate operations");
+			return WalkType.NO_CHILDREN;
+		}
 	
-		if(!t1.equals(t2))
-			throw new ShadowException("TYPE MISMATCH\nfound   : " + t1 + " does not match " + t2 + " (strict typing)");
+		if(!t1.equals(t2)) {
+			addError(node, Error.TYPE_MIS, "Type " + t1 + " does not match " + t2 + " (strict typing)");
+			return WalkType.NO_CHILDREN;
+		}
 		
 		node.setType(t1);	// for assume that result has the same type as the first argument				
 		

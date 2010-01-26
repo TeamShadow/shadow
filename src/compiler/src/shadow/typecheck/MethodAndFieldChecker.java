@@ -41,8 +41,10 @@ public class MethodAndFieldChecker extends BaseChecker {
 			String paramSymbol = param.jjtGetChild(1).getImage();
 			
 			// check if it's already in the set of parameter names
-			if(signature.containsParam(paramSymbol))
-				throw new ShadowException("MULTIPLY DEFINED PARAMETER NAMES: " + param.jjtGetChild(1).getLine() + ":" + param.jjtGetChild(1).getColumn());
+			if(signature.containsParam(paramSymbol)) {
+				addError(param.jjtGetChild(1), Error.MULT_SYM, "In parameter names");
+				return WalkType.NO_CHILDREN;	// we're done with this node
+			}
 			
 			// get the type of the parameter
 			Node typeNode = param.jjtGetChild(0).jjtGetChild(0);
@@ -50,8 +52,10 @@ public class MethodAndFieldChecker extends BaseChecker {
 			// we need to check if we have a ClassOrInterfaceType here that has . in it
 			// if this is a primative type, the type will already be set
 			if(typeNode.getType() == null) {
-				if(typeNode.getImage().contains("."))
-					throw new ShadowException("INVALID TYPE: " + ASTUtils.getSymLineCol(typeNode));
+				if(typeNode.getImage().contains(".")) {
+					addError(typeNode, Error.INVL_TYP, typeNode.getImage());
+					return WalkType.NO_CHILDREN;
+				}
 				else
 					typeNode.setType(new Type(typeNode.getImage()));
 			}
@@ -78,7 +82,8 @@ public class MethodAndFieldChecker extends BaseChecker {
 				}
 			}
 			
-			throw new ShadowException("MULTIPLY DEFINED METHODS, FIRST DECLARED ON LINE: " + firstMethod.getLineNumber() + " SECOND HERE: " + methodDec.getLine() + ":" + methodDec.getColumn());
+			addError(methodDec, Error.MULT_MTH, "First declared on line " + firstMethod.getLineNumber());
+			return WalkType.NO_CHILDREN;
 		}
 		
 		methodTable.put(methodDec.getImage(), signature);

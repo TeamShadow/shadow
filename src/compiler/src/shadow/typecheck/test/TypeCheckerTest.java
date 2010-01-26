@@ -49,12 +49,15 @@ public class TypeCheckerTest extends BaseTest {
 	        long startTime = System.currentTimeMillis();
 
 	        // type check the tree
-	        tc.typeCheck(node);
+	        boolean result = tc.typeCheck(node);
 	        
 	        long stopTime = System.currentTimeMillis();
 	        long runTime = stopTime - startTime;
 
-	        printResult(sourceFile.getPath(), "PASS", runTime);
+	        if(result)
+	        	printResult(sourceFile.getPath(), "PASS", runTime);
+	        else
+	        	printResult(sourceFile.getPath(), "FAIL", runTime);
 
 	    } catch (ParseException e) {
 	        System.out.println("BAD PARSE");

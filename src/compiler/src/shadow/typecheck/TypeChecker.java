@@ -22,20 +22,42 @@ public class TypeChecker extends AbstractASTVisitor {
 		fieldTable = new HashMap<String, Type>();
 	}
 	
-	public void typeCheck(Node node) throws ShadowException {
-		ASTWalker walker = new ASTWalker(new MethodAndFieldChecker(fieldTable, methodTable));
+	/**
+	 * Given the root node of an AST, type-checks the AST.
+	 * @param node The root node of the AST
+	 * @return True of the type-check is OK, false otherwise (errors are printed)
+	 * @throws ShadowException
+	 */
+	public boolean typeCheck(Node node) throws ShadowException {
+		MethodAndFieldChecker mfc = new MethodAndFieldChecker(fieldTable, methodTable);
+		ASTWalker walker = new ASTWalker(mfc);
 		
 		// walk the tree looking for methods & fields first
 		walker.walk(node);
 		
 		System.out.println("METHOD & FIELD DONE");
 		
-//		walker = new ASTWalker(new ClassChecker(symbolTable, fieldTable, methodTable));
+		// see how many errors we found
+		if(mfc.getErrorCount() > 0) {
+			mfc.printErrors();
+			return false;
+		}
+		
+		ClassChecker cc = new ClassChecker(symbolTable, fieldTable, methodTable);
+//		walker = new ASTWalker(cc);
 		
 		// now go through and check the whole class
 		// we could have the method checker above provide a list of method nodes
 		// to check so we don't have to walk the whole tree 
 //		walker.walk(node);
+		// see how many errors we found
+
+		if(cc.getErrorCount() > 0) {
+			cc.printErrors();
+			return false;
+		}
+		
+		return true;
 	}
 	
 
