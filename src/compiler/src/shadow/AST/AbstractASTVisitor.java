@@ -283,6 +283,12 @@ public abstract class AbstractASTVisitor implements ShadowParserVisitor {
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
+	
+	@Override
+	public Object visit(ASTConditionalExclusiveOrExpression node, Object data)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
 
 	@Override
 	public Object visit(ASTConditionalAndExpression node, Object data)
@@ -291,19 +297,19 @@ public abstract class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTInclusiveOrExpression node, Object data)
+	public Object visit(ASTBitwiseOrExpression node, Object data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTExclusiveOrExpression node, Object data)
+	public Object visit(ASTBitwiseExclusiveOrExpression node, Object data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTAndExpression node, Object data)
+	public Object visit(ASTBitwiseAndExpression node, Object data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}

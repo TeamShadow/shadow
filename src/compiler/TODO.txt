@@ -90,15 +90,8 @@ Bill do these:
   Barry do these:
   
   ASTExpression
-  ASTConditionalExpression
-  ASTConditionalOrExpression
-  ASTConditionalAndExpression
-  ASTInclusiveOrExpression
-  ASTExclusiveOrExpression
-  ASTAndExpression
-  ASTIsExpression
-
-  ASTCastExpression
+  ASTIsExpression	//needs richer type information
+  ASTCastExpression //needs richer type information
   ASTPrimaryExpression
   ASTSequence
   ASTMemberSelector
@@ -135,8 +128,6 @@ Bill do these:
   ASTThrowStatement
   ASTSynchronizedStatement
   ASTTryStatement
-  ASTRightRotate
-  ASTRightShift
   ASTMemberValuePairs
   ASTMemberValuePair
   ASTMemberValue

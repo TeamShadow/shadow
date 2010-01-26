@@ -2,7 +2,7 @@ class Foo {
 
     //public Blah t;
     public int a = 1, y, z = 2;
-    public float b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
+    public double b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
     public String c = "hello" + "world";
 
     public blah(int a, float b, blah c) => (int, float, blah) {

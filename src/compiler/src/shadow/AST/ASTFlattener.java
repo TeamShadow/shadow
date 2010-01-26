@@ -48,14 +48,16 @@ public class ASTFlattener extends AbstractASTVisitor {
 	public Object visit(ASTConditionalExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 
 	public Object visit(ASTConditionalOrExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	
+	public Object visit(ASTConditionalExclusiveOrExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 
 	public Object visit(ASTConditionalAndExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 
-	public Object visit(ASTInclusiveOrExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTBitwiseOrExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 
-	public Object visit(ASTExclusiveOrExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTBitwiseExclusiveOrExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 
-	public Object visit(ASTAndExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTBitwiseAndExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 
 	public Object visit(ASTEqualityExpression node, Object data) throws ShadowException { removeNode((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 

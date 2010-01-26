@@ -81,7 +81,8 @@ public class MethodSignature {
 	}
 	
 	// TODO: This is terrible... but not sure how to do a better job
-	public int hashCode() {
-		return 0;
-	}
+	// Use the default (based on virtual address) before doing that
+	//public int hashCode() {
+//		return 0;
+	//}
 }

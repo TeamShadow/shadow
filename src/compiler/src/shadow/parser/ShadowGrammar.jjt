@@ -307,6 +307,7 @@ TOKEN :
 //| < VOLATILE: "volatile" >
 | < WEAK: "weak" >
 | < WHILE: "while" >
+| < XOR: "xor" >
 }
 
 /* LITERALS */
@@ -446,7 +447,7 @@ TOKEN :
 | < SLASH: "/" >
 | < BIT_AND: "&" >
 | < BIT_OR: "|" >
-| < XOR: "^" >
+| < BIT_XOR: "^" >
 | < REM: "%" >
 | < LEFTSHIFT: "<<" >
 | < LEFTROTATE: "<<<" >
@@ -984,28 +985,35 @@ void ConditionalExpression():
 void ConditionalOrExpression():
 {}
 {
-  ConditionalAndExpression() ( "or" ConditionalAndExpression() )*
+  ConditionalExclusiveOrExpression() ( "or" ConditionalExclusiveOrExpression() )*
+}
+
+
+void ConditionalExclusiveOrExpression():
+{}
+{
+  ConditionalAndExpression() ( "xor" ConditionalAndExpression() )*
 }
 
 void ConditionalAndExpression():
 {}
 {
-  InclusiveOrExpression() ( "and" InclusiveOrExpression() )*
+  BitwiseOrExpression() ( "and" BitwiseOrExpression() )*
 }
 
-void InclusiveOrExpression():
+void BitwiseOrExpression():
 {}
 {
-  ExclusiveOrExpression() ( "|" ExclusiveOrExpression() )*
+  BitwiseExclusiveOrExpression() ( "|" BitwiseExclusiveOrExpression() )*
 }
 
-void ExclusiveOrExpression():
+void BitwiseExclusiveOrExpression():
 {}
 {
-  AndExpression() ( "^" AndExpression() )*
+  BitwiseAndExpression() ( "^" BitwiseAndExpression() )*
 }
 
-void AndExpression():
+void BitwiseAndExpression():
 {}
 {
   EqualityExpression() ( "&" EqualityExpression() )*

@@ -136,20 +136,26 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.PRE_CHILDREN;
 	}
 	
-	public Object visitBitwise(SimpleNode node ) throws ShadowException {	
-		if(node.jjtGetNumChildren() != 2) {
+	public Object visitShiftRotate(SimpleNode node ) throws ShadowException {	
+		Type t1, t2;
+		
+		if(node.jjtGetNumChildren() > 3) {
 			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
 		}
 		
-		// get the two types
-		Type t1 = node.jjtGetChild(0).getType();
-		Type t2 = node.jjtGetChild(1).getType();
+		t1 = node.jjtGetChild(0).getType();
+		
+		//strange hack because RightRotate() and RightShift() have their own productions
+		if(node.jjtGetNumChildren()  == 2 )			
+			t2 = node.jjtGetChild(1).getType();
+		else
+			t2 = node.jjtGetChild(2).getType();
 				
 		if(!t1.isIntegral() )
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nintegral type required for bitwise operations");
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nintegral type required for shift and rotate operations");
 		
 		if(!t2.isIntegral() )
-			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nintegral type required for bitwise operations");
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nintegral type required for shift and rotate operations");
 		
 		node.setType(t1);	// assume that result has the same type as the first argument
 		
@@ -157,11 +163,11 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTShiftExpression node, Object secondVisit) throws ShadowException {
-		return visitBitwise( node );
+		return visitShiftRotate( node );
 	}
 	
 	public Object visit(ASTRotateExpression node, Object secondVisit) throws ShadowException {
-		return visitBitwise( node );
+		return visitShiftRotate( node );
 	}
 	
 	public Object visitArithmetic(SimpleNode node) throws ShadowException {
@@ -231,5 +237,100 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.PRE_CHILDREN;
 	}
 	
+	
+	public Object visit(ASTConditionalExpression node, Object secondVisit) throws ShadowException {
+		if(node.jjtGetNumChildren() == 1) {
+			Type t = node.jjtGetChild(0).getType();
+			node.setType(t);
+		}
+		else if(node.jjtGetNumChildren() == 3) {			
+			Type t1 = node.jjtGetChild(0).getType();
+			Type t2 = node.jjtGetChild(1).getType();
+			Type t3 = node.jjtGetChild(2).getType();
+			
+			if( !t1.equals(Type.BOOLEAN) )				
+					throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nboolean type required for conditional operations");
+			
+			if( t2.isSubtype(t3) )
+				node.setType(t3);
+			else if( t3.isSubtype(t2) )
+				node.setType(t2);
+			else
+				throw new ShadowException("TYPE MISMATCH\nfound   : " + t2 + " must match " + t3 + " in ternary operator");			
+		}
+		else
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		
+		
+		return WalkType.PRE_CHILDREN;
+	}
+	
+	public Object visitConditional(SimpleNode node ) throws ShadowException {	
+		if(node.jjtGetNumChildren() != 2) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		}
+		
+		// get the two types
+		Type t1 = node.jjtGetChild(0).getType();
+		Type t2 = node.jjtGetChild(1).getType();
+				
+		if(!t1.equals(Type.BOOLEAN) )
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nboolean type required for conditional operations");
+		
+		if(!t2.equals(Type.BOOLEAN) )
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nboolean type required for conditional operations");		
+		
+		node.setType(Type.BOOLEAN);
+		
+		return WalkType.PRE_CHILDREN;
+	}
+	
+	public Object visit(ASTConditionalOrExpression node, Object secondVisit) throws ShadowException {
+		return visitConditional( node );
+	}
+	
+	public Object visit(ASTConditionalExclusiveOrExpression node, Object secondVisit) throws ShadowException {
+		return visitConditional( node );
+	}
+	
+	public Object visit(ASTConditionalAndExpression node, Object secondVisit) throws ShadowException {
+		return visitConditional( node );
+	}	
+
+	public Object visitBitwise(SimpleNode node ) throws ShadowException {	
+		if(node.jjtGetNumChildren() != 2) {
+			throw new ShadowException("TYPE MISMATCH: too many arguments at " + node.getLine() + ":" + node.getColumn());
+		}
+		
+		// get the two types
+		Type t1 = node.jjtGetChild(0).getType();
+		Type t2 = node.jjtGetChild(1).getType();
+		
+		if(!t1.isIntegral() )
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t1 + "\nintegral type required for shift and rotate operations");
+		
+		if(!t2.isIntegral() )
+			throw new ShadowException("INCORRECT TYPE\nfound   : " + t2 + "\nintegral type required for shift and rotate operations");
+	
+		if(!t1.equals(t2))
+			throw new ShadowException("TYPE MISMATCH\nfound   : " + t1 + " does not match " + t2 + " (strict typing)");
+		
+		node.setType(t1);	// for assume that result has the same type as the first argument				
+		
+		return WalkType.PRE_CHILDREN;
+	}
+	
+	public Object visit(ASTBitwiseOrExpression node, Object secondVisit) throws ShadowException {
+		return visitConditional( node );
+	}	
+	
+	public Object visit(ASTBitwiseExclusiveOrExpression node, Object secondVisit) throws ShadowException {
+		return visitConditional( node );
+	}	
+	
+	public Object visit(ASTBitwiseAndExpression node, Object secondVisit) throws ShadowException {
+		return visitConditional( node );
+	}	
+
 		
 }
