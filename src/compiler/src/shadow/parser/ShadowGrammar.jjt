@@ -602,7 +602,7 @@ void ClassOrInterfaceDeclaration(int modifiers):
 {
   { jjtThis.setModifiers(modifiers); }
   ( "class" | "exception" | "interface" { isInterface = true; } )
-  t = <IDENTIFIER> { jjtThis.setType(new Type(t.image, modifiers)); }
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   [ ExtendsList(isInterface) ]
   [ ImplementsList(isInterface) ]

@@ -24,6 +24,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		MULT_SYM		{ String getStr() { return "MULTIPLY DEFINED SYMBOL"; } },
 		MULT_MTH		{ String getStr() { return "MULTIPLY DEFINED METHODS"; } },
 		UNDEC_VAR		{ String getStr() { return "UNDECLARED VARIABLE"; } },
+		UNDEF_TYP		{ String getStr() { return "UNDEFINDED TYPE"; } },
 		TYPE_MIS		{ String getStr() { return "TYPE MISMATCH"; } };
 		
 		abstract String getStr();

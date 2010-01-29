@@ -85,4 +85,21 @@ public class MethodSignature {
 	//public int hashCode() {
 //		return 0;
 	//}
+	
+	public String toString() {
+		StringBuilder sb = new StringBuilder(symbol + "(");
+		
+		for(Type p:parameters.values())
+			sb.append(p.typeName + ", ");
+
+		sb.setCharAt(sb.length()-2, ')');
+		sb.append("=> (");
+		
+		for(Type r:returns)
+			sb.append(r.typeName + ", ");
+		
+		sb.setCharAt(sb.length()-2, ')');
+		
+		return sb.toString();
+	}
 }

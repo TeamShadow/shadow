@@ -78,7 +78,11 @@ public class SimpleNode implements Node {
 	}
 	
 	public String getImage() {
-		return image;
+		if(image == null) {
+			return type.getTypeName();
+		} else {
+			return image;
+		}
 	}
 	
 	public void setImage(String image) {

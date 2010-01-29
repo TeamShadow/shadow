@@ -4,24 +4,51 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import shadow.AST.ASTWalker.WalkType;
-import shadow.parser.javacc.*;
+import shadow.parser.javacc.ASTAdditiveExpression;
+import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.parser.javacc.ASTBitwiseAndExpression;
+import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
+import shadow.parser.javacc.ASTBitwiseOrExpression;
+import shadow.parser.javacc.ASTBlock;
+import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
+import shadow.parser.javacc.ASTConditionalAndExpression;
+import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
+import shadow.parser.javacc.ASTConditionalExpression;
+import shadow.parser.javacc.ASTConditionalOrExpression;
+import shadow.parser.javacc.ASTEqualityExpression;
+import shadow.parser.javacc.ASTLocalVariableDeclaration;
+import shadow.parser.javacc.ASTMethodDeclarator;
+import shadow.parser.javacc.ASTMultiplicativeExpression;
+import shadow.parser.javacc.ASTName;
+import shadow.parser.javacc.ASTRelationalExpression;
+import shadow.parser.javacc.ASTRotateExpression;
+import shadow.parser.javacc.ASTShiftExpression;
+import shadow.parser.javacc.ASTUnaryExpression;
+import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
+import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.SimpleNode;
 
 
 //no automatic promotion for bitwise operators
 
 public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected HashMap<String, Type> fieldTable; /** Hash of symbols and types */
-	protected HashMap<String, MethodSignature> methodTable;
-	
+	protected Type curType; // TODO: This would need to be a stack if we have inner classes, right?
 	protected MethodSignature curMethod;
-
-	public ClassChecker(LinkedList<HashMap<String, Type>> symbolTable, HashMap<String, Type> fieldTable, HashMap<String, MethodSignature> methodTable) {
-		this.symbolTable = symbolTable;
-		this.fieldTable = fieldTable;
-		this.methodTable = methodTable;
-		curMethod = null;
+	protected HashMap<String, Type> typeTable; 
+	
+	public ClassChecker(HashMap<String, Type> typeTable) {
+		this.typeTable = typeTable;
+		symbolTable = new LinkedList<HashMap<String, Type>>();
 	}
+	
+	public Object visit(ASTClassOrInterfaceDeclaration node, Object secondVisit) throws ShadowException {
+		// set the current type
+		curType = typeTable.get(node.getImage());
+
+		return WalkType.PRE_CHILDREN;
+	}
+
 
 	public Object visit(ASTBlock node, Object secondVisit) throws ShadowException {
 		// we have a new scope, so we need a new HashMap in the linked list
@@ -33,51 +60,57 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	/**
-	 * No need to type-check fields
-	 */
-	public Object visit(ASTFieldDeclaration node, Object secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN;	// we've already checked these
-	}
-
 	public Object visit(ASTMethodDeclarator node, Object secondVisit) throws ShadowException {
 		String methodName = node.getImage();
 		
-		curMethod = methodTable.get(methodName);
+		curMethod = curType.getMethod(methodName);
 		
 		return WalkType.PRE_CHILDREN;	// don't need to come back here
 	}
 
 	public Object visit(ASTLocalVariableDeclaration node, Object secondVisit) throws ShadowException {		
-		addVarDec(node, symbolTable.getFirst());
+
+		// TODO: implement...
 		
 		return WalkType.PRE_CHILDREN;
 	}
 	
+	/**
+	 * TODO: DOUBLE CHECK THIS... I'M NOT REALLY SURE WHAT TO DO HERE
+	 */
 	public Object visit(ASTName node, Object data) throws ShadowException {
 		String name = node.getImage();
+		Type nameType = null;
 		
-		// see if the name is in the current scope
-		if(!symbolTable.getFirst().containsKey(name)) {
-			// now check the parameters of the method
-			if(!curMethod.containsParam(name)) {
-				// check to see if it's a field
-				if(!fieldTable.containsKey(name)) {
-					addError(node, Error.UNDEC_VAR, name);
-					return WalkType.NO_CHILDREN;
-				}
-				
-				// set the type of the node
-				node.setType(fieldTable.get(name));
-			} else {
-				node.setType(curMethod.getParameterType(name));
+		// go through the scopes trying to find the name
+		for(HashMap<String, Type> curSymTable:symbolTable) {
+			if(curSymTable.containsKey(name)) {
+				nameType = curSymTable.get(name);
+				break;
 			}
-		} else {
-			// otherwise, set the type
-			node.setType(symbolTable.getFirst().get(name));
 		}
 		
-		return WalkType.PRE_CHILDREN;
+		// found it in the scopes
+		if(nameType != null) {
+			node.setType(nameType);
+			return WalkType.PRE_CHILDREN;
+		}
+			
+		// now check the parameters of the method
+		if(curMethod.containsParam(name)) {
+			node.setType(curMethod.getParameterType(name));
+			return WalkType.PRE_CHILDREN;
+		}
+			
+		// check to see if it's a field
+		if(curType.containsField(name)) {
+			node.setType(curType.getField(name));
+			return WalkType.PRE_CHILDREN;
+		}
+		
+		// by the time we get here, we haven't found this name anywhere
+		addError(node, Error.UNDEC_VAR, name);
+		return WalkType.NO_CHILDREN;
 	}
 	
 	public Object visit(ASTAssignmentOperator node, Object secondVisit) throws ShadowException {

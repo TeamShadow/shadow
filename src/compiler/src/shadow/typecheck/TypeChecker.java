@@ -10,16 +10,10 @@ import shadow.parser.javacc.ShadowException;
 
 public class TypeChecker extends AbstractASTVisitor {
 
-	protected LinkedList<HashMap<String, Type>> symbolTable;
-	protected HashMap<String, Type> fieldTable;
-	protected HashMap<String, MethodSignature> methodTable;
+	protected HashMap<String, Type> typeTable; /** Holds all of the types we know about */
 	
 	public TypeChecker() {
-		symbolTable = new LinkedList<HashMap<String, Type>>();
-		symbolTable.add(new HashMap<String, Type>());
-		
-		methodTable = new HashMap<String, MethodSignature>();
-		fieldTable = new HashMap<String, Type>();
+		typeTable = new HashMap<String, Type>();
 	}
 	
 	/**
@@ -29,21 +23,25 @@ public class TypeChecker extends AbstractASTVisitor {
 	 * @throws ShadowException
 	 */
 	public boolean typeCheck(Node node) throws ShadowException {
-		MethodAndFieldChecker mfc = new MethodAndFieldChecker(fieldTable, methodTable);
-		ASTWalker walker = new ASTWalker(mfc);
+		TypeBuilder tb = new TypeBuilder(typeTable);
+		ASTWalker walker = new ASTWalker(tb);
 		
-		// walk the tree looking for methods & fields first
+		//
+		// Here is where we'd walk the import statements, and make the types for those files
+		//
+		
+		// walk the tree building types
 		walker.walk(node);
 		
-		System.out.println("METHOD & FIELD DONE");
+		System.out.println("TYPE BUILDING DONE");
 		
 		// see how many errors we found
-		if(mfc.getErrorCount() > 0) {
-			mfc.printErrors();
+		if(tb.getErrorCount() > 0) {
+			tb.printErrors();
 			return false;
 		}
 		
-		ClassChecker cc = new ClassChecker(symbolTable, fieldTable, methodTable);
+		ClassChecker cc = new ClassChecker(typeTable);
 //		walker = new ASTWalker(cc);
 		
 		// now go through and check the whole class
