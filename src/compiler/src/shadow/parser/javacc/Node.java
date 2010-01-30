@@ -2,7 +2,7 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import shadow.typecheck.Type;
+import shadow.typecheck.type.Type;
 
 /* All AST nodes must implement this interface.  It provides basic
    machinery for constructing the parent and child relationships

@@ -5,13 +5,16 @@ import java.util.HashMap;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.Type;
 
 public class TypeBuilder extends BaseChecker {
 	protected HashMap<String, Type> typeTable;
-	protected Type curType;
+	protected ClassInterfaceBaseType curType;
 	
 	
 	public TypeBuilder(HashMap<String, Type> typeTable) {
@@ -43,7 +46,7 @@ public class TypeBuilder extends BaseChecker {
 		//
 		
 		// For now we punt and assume everything is a class
-		curType = new Type(node.getImage(), node.getModifiers());
+		curType = new ClassInterfaceBaseType(node.getImage(), node.getModifiers());
 		
 		// insert our new type into the table
 		typeTable.put(node.getImage(), curType);
@@ -105,16 +108,23 @@ public class TypeBuilder extends BaseChecker {
 			
 			// get the type of the parameter
 			Node typeNode = param.jjtGetChild(0).jjtGetChild(0);
-			Type paramType = typeTable.get(typeNode.getImage());
 			
-			// make sure this type is in the type table
-			if(paramType == null) {
-				addError(typeNode, Error.UNDEF_TYP, typeNode.getImage());
-				return WalkType.NO_CHILDREN;
+			if(typeNode instanceof ASTFunctionType) {
+				//
+				// TODO: Add implementation
+				//
+			} else {	// regular parameter
+				Type paramType = typeTable.get(typeNode.getImage());
+				
+				// make sure this type is in the type table
+				if(paramType == null) {
+					addError(typeNode, Error.UNDEF_TYP, typeNode.getImage());
+					return WalkType.NO_CHILDREN;
+				}
+				
+				// add the parameter type to the signature
+				signature.addParameter(paramSymbol, paramType);
 			}
-			
-			// add the parameter type to the signature
-			signature.addParameter(paramSymbol, paramType);
 		}
 		
 		// check to see if we have return types

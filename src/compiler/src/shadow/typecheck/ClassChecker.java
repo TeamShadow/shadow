@@ -27,13 +27,15 @@ import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.Type;
 
 
 //no automatic promotion for bitwise operators
 
 public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected Type curType; // TODO: This would need to be a stack if we have inner classes, right?
+	protected ClassInterfaceBaseType curType; 
 	protected MethodSignature curMethod;
 	protected HashMap<String, Type> typeTable; 
 	
@@ -43,10 +45,12 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Object secondVisit) throws ShadowException {
-		// set the current type
-		curType = typeTable.get(node.getImage());
+		if(!(Boolean)secondVisit) // set the current type
+			curType = (ClassInterfaceBaseType)typeTable.get(node.getImage());
+		else // set back when returning from an inner class
+			curType = (ClassInterfaceBaseType)curType.getParent();
 
-		return WalkType.PRE_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 
 

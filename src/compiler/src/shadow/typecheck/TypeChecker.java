@@ -7,6 +7,7 @@ import shadow.AST.ASTWalker;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.type.Type;
 
 public class TypeChecker extends AbstractASTVisitor {
 

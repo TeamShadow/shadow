@@ -37,7 +37,7 @@ import java.io.*;
 import shadow.parser.*;
 import shadow.AST.ASTFlattener;
 import shadow.AST.ASTWalker;
-import shadow.typecheck.Type;
+import shadow.typecheck.type.Type;
 
 
 /**
@@ -848,9 +848,11 @@ void StaticArrayType():
 }
 
 void FunctionType():
-{ debugPrint("FUNCTION TYPE"); }
 {
-    "(" [ Type() ( "," Type() )* ] ")" "=>" "(" [ Type() ( "," Type() )* ] ")"
+	debugPrint("FUNCTION TYPE");
+}
+{
+    "(" [ Type() ( "," Type() )* ] ")" "=>" "(" [ ResultTypes() ] ")"
 }
 
 void ClassOrInterfaceType():

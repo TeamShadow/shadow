@@ -4,39 +4,34 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
+import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.Type;
+
 public class MethodSignature {
-	protected LinkedHashMap<String, Type> parameters; /** symbols & types for each parameter */
-	protected LinkedList<Type> returns; /** List of return types */
-	protected int modifiers;
-	protected String symbol;
 	protected int line;	/** the line where it's declared */
+	protected MethodType type;
+	protected String symbol;
 	
 	public MethodSignature(String symbol, int modifiers, int line) {
-		parameters = new LinkedHashMap<String, Type>();
-		returns = new LinkedList<Type>();
-		this.modifiers = modifiers;
-		this.symbol = symbol;
+		type = new MethodType(null, modifiers);
 		this.line = line;
+		this.symbol = symbol;
 	}
 	
 	public void addParameter(String name, Type type) {
-		parameters.put(name, type);
+		this.type.addParameter(name, type);
 	}
 	
 	public Type getParameterType(String paramName) {
-		return parameters.get(paramName);
+		return type.getParameterType(paramName);
 	}
 	
 	public boolean containsParam(String paramName) {
-		return parameters.containsKey(paramName);
+		return type.containsParam(paramName);
 	}
 	
 	public void addReturn(Type ret) {
-		returns.add(ret);
-	}
-	
-	public void setModifiers(int modifiers) {
-		this.modifiers = modifiers;
+		type.addReturn(ret);
 	}
 	
 	public String getSymbol() {
@@ -46,60 +41,14 @@ public class MethodSignature {
 	public int getLineNumber() {
 		return line;
 	}
-	
-	/**
-	 * Need to override equals as we're doing special things
-	 * @param ms The method signature to compare to
-	 * @return True if the methods can co-exist, False otherwise
-	 */
+
 	public boolean equals(Object o) {
 		MethodSignature ms = (MethodSignature)o;
 		
-		// if the symbols are different, then the signatures are different
-		if(!symbol.equals(ms.symbol))
-			return false;
-		
-		// if they don't have the same number of params or returns, then different
-		if(parameters.size() != ms.parameters.size() || returns.size() != ms.returns.size())
-			return false;
-
-		// check the parameters, we care about types only
-		Iterator<Type> it1 = parameters.values().iterator();
-		Iterator<Type> it2 = ms.parameters.values().iterator();
-		
-		while(it1.hasNext()) {
-			if(!it1.next().equals(it2.next()))
-				return false;
-		}
-		
-		// check the returns
-		if(!returns.equals(ms.returns))
-			return false;
-		
-		// if we made it to here, they are equal
-		return true;
+		return ms.symbol.equals(symbol) && ms.type.equals(type);
 	}
-	
-	// TODO: This is terrible... but not sure how to do a better job
-	// Use the default (based on virtual address) before doing that
-	//public int hashCode() {
-//		return 0;
-	//}
-	
-	public String toString() {
-		StringBuilder sb = new StringBuilder(symbol + "(");
-		
-		for(Type p:parameters.values())
-			sb.append(p.typeName + ", ");
 
-		sb.setCharAt(sb.length()-2, ')');
-		sb.append("=> (");
-		
-		for(Type r:returns)
-			sb.append(r.typeName + ", ");
-		
-		sb.setCharAt(sb.length()-2, ')');
-		
-		return sb.toString();
+	public String toString() {
+		return symbol + " " + type.toString();
 	}
 }

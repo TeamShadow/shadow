@@ -1,6 +1,6 @@
 package shadow.parser.javacc;
 
-import shadow.typecheck.Type;
+import shadow.typecheck.type.Type;
 
 public class SimpleNode implements Node {
     protected Node parent;
