@@ -10,6 +10,7 @@ import java.io.IOException;
 
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ParseException;
+import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.test.BaseTest;
 
@@ -26,7 +27,7 @@ public final class ParserTest extends BaseTest {
 	 * Tests all of the parse test files.
 	 * @param args
 	 */
-	public static void main(String[] args) throws IOException, ParseException {
+	public static void main(String[] args) throws IOException, ShadowException {
 		ParserTest pt = new ParserTest(false, false);
 		
 		// no args, we test everything
@@ -39,13 +40,13 @@ public final class ParserTest extends BaseTest {
 		}	
 	}
 	
-	public ParserTest(boolean debug, boolean dump) {
+	public ParserTest(boolean dump, boolean debug) {
 		super("./src/shadow/parser/test");
 		this.debug = debug;
 		this.dump = dump;
 	}
 	
-	protected void runTest(File sourceFile) throws ParseException {
+	protected void runTest(File sourceFile) throws ShadowException {
         try {
           FileInputStream fis = new FileInputStream(sourceFile);
           ShadowParser parser = new ShadowParser(fis);
@@ -68,13 +69,15 @@ public final class ParserTest extends BaseTest {
           } catch (ParseException e) {
               System.err.println("BAD PARSE IN " + sourceFile.getName());
               System.err.println(e.getMessage());
-              throw e;
+              throw new ShadowException(e.getMessage());
           } catch (Error e) {
               System.err.println("Oops.");
               System.err.println(e.getMessage());
               e.printStackTrace(System.err);
+              throw new ShadowException(e.getMessage());
           } catch(FileNotFoundException e) {
               System.err.println(e.getMessage());
+              throw new ShadowException(e.getMessage());
           }
 	}
 }

@@ -14,12 +14,13 @@ import shadow.typecheck.TypeChecker;
 
 public class TypeCheckerTest extends BaseTest {
 	private boolean dump;
+	private boolean debug;
 	
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) throws IOException, ParseException {
-		TypeCheckerTest tct = new TypeCheckerTest(true);
+	public static void main(String[] args) throws IOException, ShadowException {
+		TypeCheckerTest tct = new TypeCheckerTest(true, true);
 		
 		// no args, we test everything
 		if(args.length == 0)
@@ -31,16 +32,17 @@ public class TypeCheckerTest extends BaseTest {
 		}	
 	}
 	
-	public TypeCheckerTest(boolean dump) {
+	public TypeCheckerTest(boolean dump, boolean debug) {
 		super("./src/shadow/typecheck/test");
 		this.dump = dump;
+		this.debug = debug;
 	}
 	
-	protected void runTest(File sourceFile) throws ParseException {
+	protected void runTest(File sourceFile) throws ShadowException {
 	    try {
 	        FileInputStream fis = new FileInputStream(sourceFile);        
 	        ShadowParser parser = new ShadowParser(fis);
-	        TypeChecker tc = new TypeChecker();
+	        TypeChecker tc = new TypeChecker(debug);
 	        SimpleNode node = parser.CompilationUnit();
 	        
 	        if(dump)
@@ -56,21 +58,27 @@ public class TypeCheckerTest extends BaseTest {
 
 	        if(result)
 	        	printResult(sourceFile.getPath(), "PASS", runTime);
-	        else
+	        else {
 	        	printResult(sourceFile.getPath(), "FAIL", runTime);
+	        	throw new ShadowException("");
+	        }
 
 	    } catch (ParseException e) {
 	        System.out.println("BAD PARSE");
 	        System.out.println(e.getMessage());
+	        throw new ShadowException(e.getMessage());
 	    } catch (ShadowException se) {
 	    	System.out.println("BAD TYPE CHECK");
 	    	System.out.println(se.getMessage());
+	        throw se;
 	    } catch (Error e) {
 	        System.out.println("Ooops");
 	        System.out.println(e.getMessage());
 	        e.printStackTrace();
+	        throw new ShadowException(e.getMessage());
 	    } catch (FileNotFoundException e) {
 	        System.out.println(e.getMessage());
+	        throw new ShadowException(e.getMessage());
 	    }       
 	}
 	

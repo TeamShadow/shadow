@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import shadow.parser.javacc.ParseException;
+import shadow.parser.javacc.ShadowException;
 
 public abstract class BaseTest {
 	protected String baseDir = null;
@@ -25,11 +26,11 @@ public abstract class BaseTest {
 	 * Test everything under this cur directory
 	 * @throws IOException
 	 */
-	protected void testAll() throws IOException, ParseException {
+	protected void testAll() throws IOException, ShadowException {
 		testAll(new File(baseDir));
 	}
 	
-	protected void testAll(File testDirs) throws IOException, ParseException {
+	protected void testAll(File testDirs) throws IOException, ShadowException {
 	    ArrayList<File> fileList = new ArrayList<File>();
 	    
 	    // it's only 1 file
@@ -57,7 +58,7 @@ public abstract class BaseTest {
 		}
 	}
 	
-	protected abstract void runTest(File sourceFile) throws ParseException;
+	protected abstract void runTest(File sourceFile) throws ShadowException;
 	
 	/**
 	 * Given a file, a result, and the time of the test, pretty prints it
