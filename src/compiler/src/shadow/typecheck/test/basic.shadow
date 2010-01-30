@@ -1,9 +1,7 @@
 
 class Foo {
 
-    public long a;
-
-    public blah(int a, float b) => (int) {
+    public blah(int a, int b) => (int) {
         return a + b;
     }
 }

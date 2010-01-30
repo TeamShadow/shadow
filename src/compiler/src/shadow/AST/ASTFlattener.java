@@ -73,7 +73,6 @@ public class ASTFlattener extends AbstractASTVisitor {
 	//
 	public Object visit(ASTPrimaryPrefix node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTReferenceType node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTEqualityExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTIsExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTRelationalExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTPrimaryExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
@@ -98,5 +97,6 @@ public class ASTFlattener extends AbstractASTVisitor {
 	public Object visit(ASTUnaryExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTUnaryExpressionNotPlusMinus node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTCastExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTEqualityExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	
 }

@@ -9,7 +9,7 @@ public class Type {
 	protected final Type enclosing; //outer class
 	protected Type parent;  //super type
 
-	public static final Type OBJECT = new Type( "Object", 0, null ); 
+	public static final Type OBJECT = new ClassType( "Object", 0, null ); 
 	public static final Type BOOLEAN = new Type( "boolean" );
 	public static final Type BYTE = new Type( "byte" );
 	public static final Type CODE = new Type( "code" );	
@@ -85,6 +85,9 @@ public class Type {
 		return typeName.hashCode();
 	}
 	
+	public boolean isString() {
+		return this.equals(STRING);
+	}
 	
 	//for math
 	public boolean isNumerical()

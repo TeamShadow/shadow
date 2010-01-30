@@ -17,7 +17,8 @@ public class TypeBuilder extends BaseChecker {
 	protected ClassInterfaceBaseType curType;
 	
 	
-	public TypeBuilder(HashMap<String, Type> typeTable) {
+	public TypeBuilder(HashMap<String, Type> typeTable, boolean debug) {
+		super(debug);
 		this.typeTable = typeTable;
 		
 		// put all of our built-in types into the TypeTable
@@ -77,7 +78,7 @@ public class TypeBuilder extends BaseChecker {
 				return WalkType.NO_CHILDREN;
 			}
 			
-			System.out.println("ADDING: " + type + " " + symbol);
+			DEBUG("ADDING: " + type + " " + symbol);
 			
 			curType.addField(symbol, type);
 		}
@@ -156,7 +157,7 @@ public class TypeBuilder extends BaseChecker {
 			return WalkType.NO_CHILDREN;
 		}
 		
-		System.out.println("ADDED METHOD: " + signature.toString());
+		DEBUG("ADDED METHOD: " + signature.toString());
 
 		// add the method to the current type
 		curType.addMethod(methodDec.getImage(), signature);

@@ -12,9 +12,11 @@ import shadow.typecheck.type.Type;
 public class TypeChecker extends AbstractASTVisitor {
 
 	protected HashMap<String, Type> typeTable; /** Holds all of the types we know about */
+	protected boolean debug;
 	
-	public TypeChecker() {
+	public TypeChecker(boolean debug) {
 		typeTable = new HashMap<String, Type>();
+		this.debug = debug;
 	}
 	
 	/**
@@ -24,7 +26,7 @@ public class TypeChecker extends AbstractASTVisitor {
 	 * @throws ShadowException
 	 */
 	public boolean typeCheck(Node node) throws ShadowException {
-		TypeBuilder tb = new TypeBuilder(typeTable);
+		TypeBuilder tb = new TypeBuilder(typeTable, debug);
 		ASTWalker walker = new ASTWalker(tb);
 		
 		//
@@ -34,25 +36,24 @@ public class TypeChecker extends AbstractASTVisitor {
 		// walk the tree building types
 		walker.walk(node);
 		
-		System.out.println("TYPE BUILDING DONE");
+		if(debug)
+			System.out.println("DEBUG: TYPE BUILDING DONE");
 		
 		// see how many errors we found
 		if(tb.getErrorCount() > 0) {
-			tb.printErrors();
+			tb.printErrors(System.out);
 			return false;
 		}
 		
-		ClassChecker cc = new ClassChecker(typeTable);
-//		walker = new ASTWalker(cc);
+		ClassChecker cc = new ClassChecker(typeTable, debug);
+		walker = new ASTWalker(cc);
 		
 		// now go through and check the whole class
-		// we could have the method checker above provide a list of method nodes
-		// to check so we don't have to walk the whole tree 
-//		walker.walk(node);
-		// see how many errors we found
+		walker.walk(node);
 
+		// see how many errors we found
 		if(cc.getErrorCount() > 0) {
-			cc.printErrors();
+			cc.printErrors(System.out);
 			return false;
 		}
 		

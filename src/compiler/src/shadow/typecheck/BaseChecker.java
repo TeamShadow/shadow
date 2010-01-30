@@ -17,6 +17,7 @@ import shadow.parser.javacc.SimpleNode;
 public abstract class BaseChecker extends AbstractASTVisitor {
 
 	protected ArrayList<String> errorList;
+	protected boolean debug;
 	
 	// these are constants for our error messages to keep things consistent
 	public static enum Error {
@@ -30,8 +31,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		abstract String getStr();
 	}
 	
-	public BaseChecker() {
+	public BaseChecker(boolean debug) {
 		errorList = new ArrayList<String>();
+		this.debug = debug;
+	}
+	
+	protected String getFileAndLine(int depth) {
+		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+		
+		return stack[depth].getFileName() + ":" + stack[depth].getLineNumber() + " ";
 	}
 	
 	/**
@@ -40,7 +48,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param msg The message to communicate to the user.
 	 */
 	protected void addError(Node node, String msg) {
-		errorList.add("[" + ASTUtils.getLineCol(node) + "] : " + msg);
+		String error = "[" + ASTUtils.getLineCol(node) + "] : " + msg;
+		
+		if(debug)
+			errorList.add(getFileAndLine(3) + error);
+		else
+			errorList.add(error);
 	}
 	
 	/**
@@ -50,7 +63,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param msg The message associated with the error.
 	 */
 	protected void addError(Node node, Error type, String msg) {
-		errorList.add("[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": " + msg);
+		String error = "[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": " + msg; 
+		
+		if(debug)
+			errorList.add(getFileAndLine(3) + error);
+		else
+			errorList.add(error);
 	}
 	
 	/**
@@ -59,7 +77,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param type One of the pre-defined types of errors.
 	 */
 	protected void addError(Node node, Error type) {
-		errorList.add("[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": ");
+		String error = "[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": "; 
+		
+		if(debug)
+			errorList.add(getFileAndLine(3) + error);
+		else
+			errorList.add(error);
 	}
 	
 	/**
@@ -81,5 +104,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	public int getErrorCount() {
 		return errorList.size();
+	}
+	
+	public void DEBUG(String msg) {
+		if(debug)
+			System.out.println("DEBUG: " + getFileAndLine(3) + msg);
+	}
+	
+	public void DEBUG(Node node) {
+		if(debug)
+			System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node));
 	}
 }

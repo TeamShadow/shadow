@@ -20,6 +20,7 @@ import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
+import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTShiftExpression;
@@ -35,20 +36,23 @@ import shadow.typecheck.type.Type;
 
 public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected ClassInterfaceBaseType curType; 
+	protected ClassInterfaceBaseType curClass; 
 	protected MethodSignature curMethod;
 	protected HashMap<String, Type> typeTable; 
 	
-	public ClassChecker(HashMap<String, Type> typeTable) {
+	public ClassChecker(HashMap<String, Type> typeTable, boolean debug) {
+		super(debug);
 		this.typeTable = typeTable;
 		symbolTable = new LinkedList<HashMap<String, Type>>();
 	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Object secondVisit) throws ShadowException {
 		if(!(Boolean)secondVisit) // set the current type
-			curType = (ClassInterfaceBaseType)typeTable.get(node.getImage());
-		else // set back when returning from an inner class
-			curType = (ClassInterfaceBaseType)curType.getParent();
+			curClass = (ClassInterfaceBaseType)typeTable.get(node.getImage());
+		else { // set back when returning from an inner class
+			DEBUG("PARENT: " + curClass.getParent().getTypeName());
+			curClass = (ClassInterfaceBaseType)curClass.getParent();
+		}
 
 		return WalkType.POST_CHILDREN;
 	}
@@ -67,7 +71,7 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTMethodDeclarator node, Object secondVisit) throws ShadowException {
 		String methodName = node.getImage();
 		
-		curMethod = curType.getMethod(methodName);
+		curMethod = curClass.getMethod(methodName);
 		
 		return WalkType.PRE_CHILDREN;	// don't need to come back here
 	}
@@ -107,14 +111,21 @@ public class ClassChecker extends BaseChecker {
 		}
 			
 		// check to see if it's a field
-		if(curType.containsField(name)) {
-			node.setType(curType.getField(name));
+		if(curClass.containsField(name)) {
+			node.setType(curClass.getField(name));
 			return WalkType.PRE_CHILDREN;
 		}
 		
 		// by the time we get here, we haven't found this name anywhere
 		addError(node, Error.UNDEC_VAR, name);
 		return WalkType.NO_CHILDREN;
+	}
+	
+	public Object visit(ASTPrimaryExpression node, Object secondVisit) throws ShadowException {
+		if((Boolean)secondVisit)
+			node.setType(node.jjtGetChild(0).getType());
+		
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTAssignmentOperator node, Object secondVisit) throws ShadowException {
@@ -186,7 +197,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.PRE_CHILDREN;
 	}
 	
-	public Object visitShiftRotate(SimpleNode node ) throws ShadowException {	
+	public Object visitShiftRotate(SimpleNode node ) throws ShadowException {
 		Type t1, t2;
 		
 		if(node.jjtGetNumChildren() > 3) {
@@ -218,18 +229,27 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTShiftExpression node, Object secondVisit) throws ShadowException {
+		if(!(Boolean)secondVisit)
+			return WalkType.POST_CHILDREN;
+
 		return visitShiftRotate( node );
 	}
 	
 	public Object visit(ASTRotateExpression node, Object secondVisit) throws ShadowException {
+		if(!(Boolean)secondVisit)
+			return WalkType.POST_CHILDREN;
+
 		return visitShiftRotate( node );
 	}
 	
 	public Object visitArithmetic(SimpleNode node) throws ShadowException {
+		// THIS IS WRONG... YOU CAN HAVE MULTIPLE NODES
+		/*
 		if(node.jjtGetNumChildren() != 2) {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
 		}
+		*/
 		
 		// get the two types
 		Type t1 = node.jjtGetChild(0).getType();
@@ -252,14 +272,29 @@ public class ClassChecker extends BaseChecker {
 		
 		node.setType(t1); // for now assume that result has the same type as the first argument
 		
-		return WalkType.PRE_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTAdditiveExpression node, Object secondVisit) throws ShadowException {
-		return visitArithmetic( node );
+		if(!(Boolean)secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Type t1 = node.jjtGetChild(0).getType();
+		Type t2 = node.jjtGetChild(1).getType();
+
+		// see if we're dealing with strings or not
+		if(t1.isString() && t2.isString()) {
+			node.setType(t1);
+			return WalkType.POST_CHILDREN;
+		}
+		else	// normal numeric addition
+			return visitArithmetic( node );
 	}
 	
 	public Object visit(ASTMultiplicativeExpression node, Object secondVisit) throws ShadowException {
+		if(!(Boolean)secondVisit)
+			return WalkType.POST_CHILDREN;
+
 		return visitArithmetic( node );
 	}
 		

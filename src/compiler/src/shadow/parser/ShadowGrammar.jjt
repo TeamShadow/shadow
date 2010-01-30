@@ -154,7 +154,7 @@ public class ShadowParser
         debug = true;
     }
    	public void debugPrint(String str) {        if(debug)
-            System.out.println(str + ": " + token);
+            System.out.println("DEBUG: " + str + ": " + token);
     }
    	
   public static void main(String args[]) {
