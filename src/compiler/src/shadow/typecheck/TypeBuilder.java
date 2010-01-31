@@ -7,9 +7,11 @@ import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTMethodDeclaration;
+import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
 public class TypeBuilder extends BaseChecker {
@@ -111,9 +113,7 @@ public class TypeBuilder extends BaseChecker {
 			Node typeNode = param.jjtGetChild(0).jjtGetChild(0);
 			
 			if(typeNode instanceof ASTFunctionType) {
-				//
-				// TODO: Add implementation
-				//
+				signature.addParameter(paramSymbol, createMethodType((ASTFunctionType)typeNode));
 			} else {	// regular parameter
 				Type paramType = typeTable.get(typeNode.getImage());
 				
@@ -133,17 +133,23 @@ public class TypeBuilder extends BaseChecker {
 			Node retTypes = methodDec.jjtGetChild(1);
 			
 			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i) {
-				String retTypeName = retTypes.jjtGetChild(i).jjtGetChild(0).jjtGetChild(0).getImage();
-				Type retType = typeTable.get(retTypeName);
-
-				// make sure the return type is in the type table
-				if(retType == null) {
-					addError(retTypes.jjtGetChild(i).jjtGetChild(0).jjtGetChild(0), Error.UNDEF_TYP, retTypeName);
-					return WalkType.NO_CHILDREN;
-				}
+				Node retNode = retTypes.jjtGetChild(i).jjtGetChild(0).jjtGetChild(0);
 				
-				// add the return type to our signature
-				signature.addReturn(retType);
+				if(retNode instanceof ASTFunctionType) {
+					signature.addReturn(createMethodType((ASTFunctionType)retNode));
+				} else {
+					String retTypeName = retNode.getImage();
+					Type retType = typeTable.get(retTypeName);
+
+					// make sure the return type is in the type table
+					if(retType == null) {
+						addError(retNode, Error.UNDEF_TYP, retTypeName);
+						return WalkType.NO_CHILDREN;
+					}
+					
+					// add the return type to our signature
+					signature.addReturn(retType);
+				}
 			}
 		}
 		
@@ -163,5 +169,64 @@ public class TypeBuilder extends BaseChecker {
 		curType.addMethod(methodDec.getImage(), signature);
 		
 		return WalkType.NO_CHILDREN;	// don't want to type-check the whole method now
+	}
+	
+	/**
+	 * Given an ASTFunctionType node recursively builds the corresponding MethodType type.
+	 * @param node
+	 * @return
+	 */
+	public MethodType createMethodType(ASTFunctionType node) {
+		MethodType ret = new MethodType(null); // it has no name
+		
+		// add all the parameters to this method
+		int i;
+		for(i=0; i < node.jjtGetNumChildren(); ++i) {
+			Node curNode = node.jjtGetChild(i).jjtGetChild(0);
+			
+			// check to see if we've moved on to the result types
+			if(curNode instanceof ASTResultType)
+				break;
+			
+			// need to recursively call this
+			else if(curNode instanceof ASTFunctionType)
+				ret.addParameter(createMethodType((ASTFunctionType)curNode));
+			
+			
+			else {
+				Type type = typeTable.get(curNode.getImage());
+				
+				if(type == null) {
+					addError(curNode, Error.UNDEF_TYP, curNode.getImage());
+					return ret;	// just return whatever, we should prob throw here
+				}
+				
+				ret.addParameter(type);	// add the type as the parameter
+			}
+		}
+		
+		// check to see if we have result types
+		if(i < node.jjtGetNumChildren()) {
+			Node resNode = node.jjtGetChild(i);
+			
+			for(int r=0; r < resNode.jjtGetNumChildren(); ++r) {
+				Node curNode = resNode.jjtGetChild(r).jjtGetChild(0).jjtGetChild(0);
+				
+				if(curNode instanceof ASTFunctionType) {
+					ret.addReturn(createMethodType((ASTFunctionType)curNode));
+				} else {
+					Type type = typeTable.get(curNode.getImage());
+					
+					if(type == null) {
+						addError(curNode.jjtGetChild(0), Error.UNDEF_TYP, curNode.jjtGetChild(0).getImage());
+						return ret;	// just return whatever, we should prob throw here
+					}
+					
+					ret.addReturn(type);
+				}
+			}
+		}
+		
+		return ret;
 	}
 }

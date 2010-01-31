@@ -115,4 +115,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		if(debug)
 			System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node));
 	}
+	
+	public void DEBUG(Node node, String msg) {
+		if(debug)
+			System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node) + " " + msg);
+	}
 }

@@ -1,7 +1,11 @@
 
 class Foo {
 
-    public blah(int a, int b) => (int) {
-        return a + b;
-    }
+    public blah((()=>()) => () f) => () { ; }
+    public blah((()=>()) => (()=>()) f) => () { ; }
+    public blah((()=>()) => (()=>()) f) => (()=>()) { ; }
+    
+    public blah(((int)=>(int)) => () f) => () { ; }
+    public blah(((int)=>(int)) => ((int)=>(int)) f) => () { ; }
+    public blah(((int)=>(int)) => ((int)=>(int)) f) => ((int)=>(int)) { ; }
 }

@@ -84,23 +84,34 @@ public class MethodType extends Type {
 	public String toString() {
 		StringBuilder sb = new StringBuilder("(");
 		
-		for(Type p:paramTypes)
-			sb.append(p.typeName + ", ");
+		for(Type p:paramTypes) {
+			if(p.typeName == null) // method type
+				sb.append(p.toString());
+			else
+				sb.append(p.typeName);
+			
+			sb.append(",");
+		}
 
 		if(paramTypes.size() == 0)
 			sb.append(" ) => (");
 		else {
-			sb.setCharAt(sb.length()-2, ')');
+			sb.setCharAt(sb.lastIndexOf(","), ')');
 			sb.append(" => (");
 		}
 		
-		for(Type r:returns)
-			sb.append(r.typeName + ", ");
+		for(Type r:returns) {
+			if(r.typeName == null)
+				sb.append(r.toString());
+			else
+				sb.append(r.typeName);
+			sb.append(",");
+		}
 
 		if(returns.size() == 0)
 			sb.append(" )");
 		else
-			sb.setCharAt(sb.length()-2, ')');
+			sb.setCharAt(sb.lastIndexOf(","), ')');
 		
 		return sb.toString();
 	}

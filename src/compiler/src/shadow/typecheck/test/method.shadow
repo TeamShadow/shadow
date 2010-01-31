@@ -2,7 +2,6 @@
  * This class tests a bunch of different method declarations
  */
 class Test {
-/*
     public blah() => () { ; }   // basic void
 
     public blah(int a) => () { ; }   // built-in to void
@@ -27,11 +26,8 @@ class Test {
     public blah() => (int[]) { ; }
     public blah() => (int[], float[]) { ; }
     public blah() => (int[], int[]) { ; }
-*/
 
-    public blah((int) => (int) f) => ( ) { ; }
-
-/*    // functions
+    // functions
     public blah(() => () f) => () { ; }
     public blah(int a, () => () f) => () { ; }
     public blah(() => () f, int a) => () { ; }
@@ -41,7 +37,7 @@ class Test {
     public blah((int) => (int) f) => () { ; }
     public blah(int a, (int) => (int) f) => () { ; }
     public blah((int) => (int) f, int a) => () { ; }
-    public blah(int a, (int) => (int) f, int a) => () { ; }
+    public blah(int a, (int) => (int) f, int b) => () { ; }
     
     public blah() => (() => ()) { ; }
     public blah() => (int, () => ()) { ; }
@@ -55,21 +51,21 @@ class Test {
     public blah() => (int, (int) => (int), int) { ; }
     
     public blah(() => () f) => (() => ()) { ; }
-    public blah(int a, () => () f, int a) => (() => ()) { ; }
+    public blah(int a, () => () f, int b) => (() => ()) { ; }
     public blah(() => () f) => (int, () => (), int) { ; }
-    public blah(int a, () => () f, int a) => (int, () => (), int) { ; }
+    public blah(int a, () => () f, int b) => (int, () => (), int) { ; }
     
     public blah((int) => (int) f) => ((int) => (int)) { ; }
-    public blah(int a, (int) => (int) f, int a) => (int, (int) => (int), int) { ; }
+    public blah(int a, (int) => (int) f, int b) => (int, (int) => (int), int) { ; }
     
     // multiple functions
-    public blah(() => () f, () => () f) => () { ; }
-    public blah(() => () f, () => () f) => (() => ()) { ; }
-    public blah(() => () f, () => () f) => (() => (), () => ()) { ; }
+    public blah(() => () f1, () => () f2) => () { ; }
+    public blah(() => () f1, () => () f2) => (() => ()) { ; }
+    public blah(() => () f1, () => () f2) => (() => (), () => ()) { ; }
     
-    public blah((int) => (int) f, (int) => (int) f) => () { ; }
-    public blah((int) => (int) f, (int) => (int) f) => ((int) => (int)) { ; }
-    public blah((int) => (int) f, (int) => (int) f) => ((int) => (int), (int) => (int)) { ; }
+    public blah((int) => (int) f1, (int) => (int) f2) => () { ; }
+    public blah((int) => (int) f1, (int) => (int) f2) => ((int) => (int)) { ; }
+    public blah((int) => (int) f1, (int) => (int) f2) => ((int) => (int), (int) => (int)) { ; }
     
     // functions inside of functions
     public blah((()=>()) => () f) => () { ; }
@@ -79,7 +75,7 @@ class Test {
     public blah(((int)=>(int)) => () f) => () { ; }
     public blah(((int)=>(int)) => ((int)=>(int)) f) => () { ; }
     public blah(((int)=>(int)) => ((int)=>(int)) f) => ((int)=>(int)) { ; }
-*/
+
 }
 
 
