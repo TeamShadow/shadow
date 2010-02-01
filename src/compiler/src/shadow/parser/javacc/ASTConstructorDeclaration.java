@@ -13,6 +13,15 @@ class ASTConstructorDeclaration extends SimpleNode {
     super(p, id);
   }
 
+  int modifiers;
+  
+  public int getModifiers() {
+	  return modifiers;
+  }
+  
+  public void setModifiers(int modifiers) {
+	  this.modifiers = modifiers;
+  }
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {

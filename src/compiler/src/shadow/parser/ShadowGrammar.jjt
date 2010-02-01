@@ -704,8 +704,8 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 | modifier = Modifiers()
   (  ClassOrInterfaceDeclaration(modifier)
     | EnumDeclaration(modifier)
-    | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration()
-    | LOOKAHEAD( [ TypeParameters() ] "destructor" ) DestructorDeclaration()
+    | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration(modifier)
+    | LOOKAHEAD( [ TypeParameters() ] "destructor" ) DestructorDeclaration(modifier)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
     | MethodDeclaration(modifier)
   )
@@ -778,9 +778,10 @@ void FormalParameter():
   [ "final" ] Type() VariableDeclaratorId()
 }
 
-void ConstructorDeclaration():
+void ConstructorDeclaration(int modifiers):
 { debugPrint("CONTRUCTOR DECLARATION"); }
 {
+  { jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   // Modifiers matched in the caller
   "constructor" FormalParameters() [ "throws" NameList() ]
@@ -790,9 +791,10 @@ void ConstructorDeclaration():
   "}"
 }
 
-void DestructorDeclaration():
+void DestructorDeclaration(int modifiers):
 { debugPrint("CONTRUCTOR DECLARATION"); }
 {
+  { jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   // Modifiers matched in the caller
   "destructor" [ "throws" NameList() ]

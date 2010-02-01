@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
+import shadow.parser.javacc.ASTConstructorDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTMethodDeclaration;
@@ -93,40 +94,11 @@ public class TypeBuilder extends BaseChecker {
 	 */
 	public Object visit(ASTMethodDeclaration node, Object secondVisit) throws ShadowException {		
 		Node methodDec = node.jjtGetChild(0);
-		Node params = methodDec.jjtGetChild(0);
 		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers(), node.getLine());
 		
-		// go through all the formal parameters
-		for(int i=0; i < params.jjtGetNumChildren(); ++i) {
-			Node param = params.jjtGetChild(i);
-			
-			// get the name of the parameter
-			String paramSymbol = param.jjtGetChild(1).getImage();
-			
-			// check if it's already in the set of parameter names
-			if(signature.containsParam(paramSymbol)) {
-				addError(param.jjtGetChild(1), Error.MULT_SYM, "In parameter names");
-				return WalkType.NO_CHILDREN;	// we're done with this node
-			}
-			
-			// get the type of the parameter
-			Node typeNode = param.jjtGetChild(0).jjtGetChild(0);
-			
-			if(typeNode instanceof ASTFunctionType) {
-				signature.addParameter(paramSymbol, createMethodType((ASTFunctionType)typeNode));
-			} else {	// regular parameter
-				Type paramType = typeTable.get(typeNode.getImage());
-				
-				// make sure this type is in the type table
-				if(paramType == null) {
-					addError(typeNode, Error.UNDEF_TYP, typeNode.getImage());
-					return WalkType.NO_CHILDREN;
-				}
-				
-				// add the parameter type to the signature
-				signature.addParameter(paramSymbol, paramType);
-			}
-		}
+		// check the parameters
+		if(!visitParameters(methodDec.jjtGetChild(0), signature))
+			return WalkType.NO_CHILDREN;
 		
 		// check to see if we have return types
 		if(methodDec.jjtGetNumChildren() == 2) {
@@ -169,6 +141,49 @@ public class TypeBuilder extends BaseChecker {
 		curType.addMethod(methodDec.getImage(), signature);
 		
 		return WalkType.NO_CHILDREN;	// don't want to type-check the whole method now
+	}
+	
+	public Object visit(ASTConstructorDeclaration node, Object secondVisit) throws ShadowException {		
+		MethodSignature signature = new MethodSignature("constructor", node.getModifiers(), node.getLine());
+		visitParameters(node.jjtGetChild(0), signature);
+		
+		return WalkType.NO_CHILDREN;
+	}
+	
+	public boolean visitParameters(Node params, MethodSignature signature) {
+		// go through all the formal parameters
+		for(int i=0; i < params.jjtGetNumChildren(); ++i) {
+			Node param = params.jjtGetChild(i);
+			
+			// get the name of the parameter
+			String paramSymbol = param.jjtGetChild(1).getImage();
+			
+			// check if it's already in the set of parameter names
+			if(signature.containsParam(paramSymbol)) {
+				addError(param.jjtGetChild(1), Error.MULT_SYM, "In parameter names");
+				return false;	// we're done with this node
+			}
+			
+			// get the type of the parameter
+			Node typeNode = param.jjtGetChild(0).jjtGetChild(0);
+			
+			if(typeNode instanceof ASTFunctionType) {
+				signature.addParameter(paramSymbol, createMethodType((ASTFunctionType)typeNode));
+			} else {	// regular parameter
+				Type paramType = typeTable.get(typeNode.getImage());
+				
+				// make sure this type is in the type table
+				if(paramType == null) {
+					addError(typeNode, Error.UNDEF_TYP, typeNode.getImage());
+					return false;
+				}
+				
+				// add the parameter type to the signature
+				signature.addParameter(paramSymbol, paramType);
+			}
+		}
+		
+		return true;
 	}
 	
 	/**

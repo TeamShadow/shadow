@@ -12,7 +12,16 @@ class ASTDestructorDeclaration extends SimpleNode {
   public ASTDestructorDeclaration(ShadowParser p, int id) {
     super(p, id);
   }
-
+  
+  int modifiers;
+  
+  public int getModifiers() {
+	  return modifiers;
+  }
+  
+  public void setModifiers(int modifiers) {
+	  this.modifiers = modifiers;
+  }
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
