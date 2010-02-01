@@ -362,16 +362,19 @@ public class ClassChecker extends BaseChecker {
 		}
 				
 		Type t = node.jjtGetChild(0).getType();
+		String symbol = node.getImage();
 		
-		if( node.getImage().startsWith("+") || node.getImage().startsWith("-") )
-			if(!t.isNumerical()) {
+		if((symbol.startsWith("+") || symbol.startsWith("-")) && !t.isNumerical()) {
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
 				return WalkType.NO_CHILDREN;
-			}
+		}
 		
-		node.setType(t);
+		if(symbol.startsWith("-"))
+			node.setType(Type.makeSigned(t));
+		else
+			node.setType(t);
 		
-		return WalkType.PRE_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 		
 	public Object visit(ASTUnaryExpressionNotPlusMinus node, Object secondVisit) throws ShadowException {
@@ -382,17 +385,15 @@ public class ClassChecker extends BaseChecker {
 				
 		Type t = node.jjtGetChild(0).getType();
 		
-		if( node.getImage().startsWith("~") )
-			if(!t.isIntegral()) {
+		if(node.getImage().startsWith("~") && !t.isIntegral()) {
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but integral type required for bitwise operations");
 				return WalkType.NO_CHILDREN;
-			}
+		}
 		
-		if( node.getImage().startsWith("!") )
-			if(!t.equals(Type.BOOLEAN)) {
+		if(node.getImage().startsWith("!") && !t.equals(Type.BOOLEAN)) {
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but boolean type required for logical operations");
 				return WalkType.NO_CHILDREN;
-			}
+		}
 		
 		node.setType(t);
 		
@@ -430,7 +431,7 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		
-		return WalkType.PRE_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visitConditional(SimpleNode node ) throws ShadowException {	
@@ -455,7 +456,7 @@ public class ClassChecker extends BaseChecker {
 		
 		node.setType(Type.BOOLEAN);
 		
-		return WalkType.PRE_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTConditionalOrExpression node, Object secondVisit) throws ShadowException {
@@ -497,7 +498,7 @@ public class ClassChecker extends BaseChecker {
 		
 		node.setType(t1);	// for assume that result has the same type as the first argument				
 		
-		return WalkType.PRE_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTBitwiseOrExpression node, Object secondVisit) throws ShadowException {

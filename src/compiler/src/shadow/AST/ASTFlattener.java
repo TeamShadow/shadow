@@ -50,6 +50,9 @@ public class ASTFlattener extends AbstractASTVisitor {
 	 * @throws ShadowException
 	 */
 	protected void removeNode1P1C(SimpleNode node) throws ShadowException {
+		if(!node.isImageNull())	// if we have an image, don't want to remove
+			return;
+		
 		Node myParent = node.jjtGetParent();
 		
 		// if I'm my parent's only child, and I have only 1 child, then remove
@@ -63,6 +66,9 @@ public class ASTFlattener extends AbstractASTVisitor {
 	 * @throws ShadowException
 	 */
 	protected void removeNode1C(SimpleNode node) throws ShadowException {
+		if(!node.isImageNull())	// if we have an image, don't want to remove
+			return;
+		
 		if(node.jjtGetNumChildren() == 1)
 			removeNode(node);
 	}

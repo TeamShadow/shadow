@@ -47,27 +47,30 @@ Add visitor methods in ClassChecker for:
 *       Otherwise, we won't have type info for lower nodes yet.         *
 *************************************************************************
 
-Bill do these:
-
-   * I don't think we need to type-check these in any way *
+* I don't think we need to type-check these in any way *
   ASTCompilationUnit
   ASTPackageDeclaration
   ASTImportDeclaration
   ASTClassOrInterfaceBody
   ASTClassOrInterfaceBodyDeclaration
   ASTModifiers
+  ASTContinueStatement
   
-  * Version 2 *
+* Version 2 *
   ASTViewDeclaration
   ASTStaticArrayType
+  ASTAssertStatement
+  ASTEnumDeclaration
+  ASTEnumBody
+  ASTEnumConstant
   
+
+Bill do these:
+
   ASTTypeDeclaration
   DONE - ASTClassOrInterfaceDeclaration
   DONE - ASTExtendsList
   DONE - ASTImplementsList
-  ASTEnumDeclaration
-  ASTEnumBody
-  ASTEnumConstant
   ASTTypeParameters
   ASTTypeParameter
   ASTTypeBound
@@ -98,8 +101,20 @@ Bill do these:
   ASTNameList
   ASTPrimaryExpression
   
-  Barry do these:
   
+Barry do these:
+  
+  DONE - ASTAdditiveExpression
+  DONE - ASTMultiplicativeExpression
+  DONE - ASTUnaryExpression
+  DONE - ASTUnaryExpressionNotPlusMinus
+  DONE - ASTConditionalExpression
+  DONE - ASTConditionalOrExpression
+  DONE - ASTConditionalExclusiveOrExpression
+  DONE - ASTConditionalAndExpression
+  DONE - ASTBitwiseOrExpression
+  DONE - ASTBitwiseExclusiveOrExpression
+  DONE - ASTBitwiseAndExpression
   ASTExpression
   ASTIsExpression	//needs richer type information
   ASTCastExpression //needs richer type information
@@ -115,9 +130,8 @@ Bill do these:
   ASTAllocationExpression
   ASTArrayDimsAndInits
   ASTStatement
-  ASTAssertStatement
   ASTLabeledStatement
-  ASTBlock
+  DONE? - ASTBlock
   ASTBlockStatement
   ASTLocalVariableDeclaration
   ASTEmptyStatement
@@ -133,7 +147,6 @@ Bill do these:
   ASTStatementExpressionList
   ASTForUpdate
   ASTBreakStatement
-  ASTContinueStatement
   ASTReturnStatement
   ASTThrowStatement
   ASTSynchronizedStatement

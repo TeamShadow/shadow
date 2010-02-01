@@ -89,12 +89,33 @@ public class Type {
 		return this.equals(STRING);
 	}
 	
+	/**
+	 * Given an unsigned type, returns the signed version or the same type otherwise.
+	 * @param type The type to convert.
+	 * @return The signed version of the type.
+	 */
+	public static Type makeSigned(Type type) {
+		if(type.equals(UBYTE))
+			return BYTE;
+		
+		if(type.equals(USHORT))
+			return SHORT;
+		
+		if(type.equals(UINT))
+			return INT;
+		
+		if(type.equals(ULONG))
+			return LONG;
+		
+		return type;
+	}
+	
 	//for math
 	public boolean isNumerical()
 	{
 		return
 		this.equals(BYTE) ||
-		this.equals(CODE) ||	
+		this.equals(CODE) ||	// ??? REALLY ???	
 		this.equals(SHORT) ||
 		this.equals(INT) ||
 		this.equals(LONG) ||	  

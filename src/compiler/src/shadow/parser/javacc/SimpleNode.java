@@ -85,6 +85,10 @@ public class SimpleNode implements Node {
 		}
 	}
 	
+	public boolean isImageNull() {
+		return image == null;
+	}
+	
 	public void setImage(String image) {
 		this.image = image;
 	}

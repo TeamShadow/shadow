@@ -1055,26 +1055,26 @@ void RotateExpression():
 void AdditiveExpression():
 {}
 {
-  MultiplicativeExpression() ( ( "+" | "-" ) MultiplicativeExpression() )*
+  MultiplicativeExpression() ( ( "+" { jjtThis.setImage("+"); } | "-" { jjtThis.setImage("-"); } ) MultiplicativeExpression() )*
 }
 
 void MultiplicativeExpression():
 {}
 {
-  UnaryExpression() ( ( "*" | "/" | "%" ) UnaryExpression() )*
+  UnaryExpression() ( ( "*" { jjtThis.setImage("*"); } | "/" { jjtThis.setImage("/"); } | "%" { jjtThis.setImage("%"); } ) UnaryExpression() )*
 }
 
 void UnaryExpression():
 {}
 {
-  ( "+" | "-" ) UnaryExpression()
+  ( "+" { jjtThis.setImage("+"); } | "-" { jjtThis.setImage("-"); } ) UnaryExpression()
 | UnaryExpressionNotPlusMinus()
 }
 
 void UnaryExpressionNotPlusMinus():
 { debugPrint("UNARY EXPRESSION NOT PLUS MINUS"); }
 {
-  ( "~" | "!" ) UnaryExpression()
+  ( "~" { jjtThis.setImage("~"); } | "!" { jjtThis.setImage("!"); } ) UnaryExpression()
 |
   //LOOKAHEAD( CastLookahead() )
   CastExpression()
