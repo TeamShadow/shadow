@@ -29,4 +29,8 @@ public class ClassType extends ClassInterfaceBaseType {
 	public ClassType getExtendType() {
 		return extendType;
 	}
+	
+	public void addImplementType(InterfaceType implementType) {
+		this.implementTypes.add(implementType);
+	}
 }

@@ -1,4 +1,2 @@
 
-interface Foo extends Blah, Blah2 {
-
-}
+class Bill implements Blah, Blah2 { } 

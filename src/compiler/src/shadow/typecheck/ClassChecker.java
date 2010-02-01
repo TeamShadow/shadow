@@ -17,6 +17,7 @@ import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExtendsList;
+import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -77,7 +78,7 @@ public class ClassChecker extends BaseChecker {
 			
 			((ClassType)curClass).setExtendType((ClassType)type);
 		} else { // interface
-			for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+			for(int i=0; i < numChildren; ++i) {
 				Type type = typeTable.get(node.jjtGetChild(i).getImage());
 				
 				if(type == null) {
@@ -90,6 +91,25 @@ public class ClassChecker extends BaseChecker {
 				
 				((InterfaceType)curClass).addExtendType((InterfaceType)type);
 			}
+		}
+			
+		return WalkType.PRE_CHILDREN;
+	}
+	
+	public Object visit(ASTImplementsList node, Object secondVisit) throws ShadowException {
+		
+		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+			Type type = typeTable.get(node.jjtGetChild(0).getImage());
+			
+			if(type == null) {
+				addError(node.jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).getImage());
+				return WalkType.PRE_CHILDREN;
+			} else if(!(type instanceof InterfaceType)) {
+				addError(node.jjtGetChild(0), Error.TYPE_MIS, node.jjtGetChild(0).getImage() + " is not an interface");
+				return WalkType.PRE_CHILDREN;
+			}
+			
+			((ClassType)curClass).addImplementType((InterfaceType)type);
 		}
 			
 		return WalkType.PRE_CHILDREN;

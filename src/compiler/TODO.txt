@@ -49,23 +49,28 @@ Add visitor methods in ClassChecker for:
 
 Bill do these:
 
+   * I don't think we need to type-check these in any way *
   ASTCompilationUnit
   ASTPackageDeclaration
   ASTImportDeclaration
+  ASTClassOrInterfaceBody
+  ASTClassOrInterfaceBodyDeclaration
   ASTModifiers
-  ASTTypeDeclaration
+  
+  * Version 2 *
   ASTViewDeclaration
+  ASTStaticArrayType
+  
+  ASTTypeDeclaration
   DONE - ASTClassOrInterfaceDeclaration
   DONE - ASTExtendsList
-  ASTImplementsList
+  DONE - ASTImplementsList
   ASTEnumDeclaration
   ASTEnumBody
   ASTEnumConstant
   ASTTypeParameters
   ASTTypeParameter
   ASTTypeBound
-  ASTClassOrInterfaceBody
-  ASTClassOrInterfaceBodyDeclaration
   ASTFieldDeclaration
   ASTVariableDeclarator
   ASTVariableDeclaratorId
@@ -81,7 +86,6 @@ Bill do these:
   ASTInitializer
   ASTType
   ASTReferenceType
-  ASTStaticArrayType
   ASTFunctionType
   ASTClassOrInterfaceType
   ASTTypeArguments
