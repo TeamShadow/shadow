@@ -30,6 +30,7 @@ import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
+import shadow.parser.javacc.Node;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
@@ -134,10 +135,33 @@ public class ClassChecker extends BaseChecker {
 	}
 
 	public Object visit(ASTLocalVariableDeclaration node, Object secondVisit) throws ShadowException {		
+		if(!(Boolean)secondVisit)
+			return WalkType.POST_CHILDREN;
 
-		// TODO: implement...
-		
-		return WalkType.PRE_CHILDREN;
+		String typeName = node.jjtGetChild(0).jjtGetChild(0).getImage();
+		Type type = typeTable.get(typeName);
+
+		if(type == null) {
+			addError(node.jjtGetChild(0).jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
+			return WalkType.NO_CHILDREN;
+		}
+
+		// go through the rest adding vars
+		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
+			Node curNode = node.jjtGetChild(i).jjtGetChild(0);
+			String varName = curNode.getImage();
+
+			DEBUG("VAR: " + varName + " FOUND: " + symbolTable.get(0).get(varName));
+
+			if(symbolTable.get(0).get(varName) != null) {
+				addError(curNode, Error.MULT_SYM, varName);
+				continue;
+			}
+
+			symbolTable.get(0).put(varName, type);
+		}
+
+		return WalkType.POST_CHILDREN;
 	}
 	
 	/**

@@ -74,13 +74,14 @@ Bill do these:
   ASTTypeParameters
   ASTTypeParameter
   ASTTypeBound
-  ASTFieldDeclaration
+  ASTFieldDeclaration  -- ?? don't think we need to do anything more
+  ASTMethodDeclaration -- ?? don't think we need to do anything more
+  ASTMethodDeclarator  -- ?? don't think we need to do anything more
+  ASTLocalVariableDeclaration
   ASTVariableDeclarator
   ASTVariableDeclaratorId
   ASTVariableInitializer
   ASTArrayInitializer
-  ASTMethodDeclaration
-  ASTMethodDeclarator
   ASTFormalParameters
   ASTFormalParameter
   ASTConstructorDeclaration
@@ -98,7 +99,7 @@ Bill do these:
   ASTResultType
   ASTResultTypes
   ASTName
-  ASTNameList
+  ASTNameList -- ?? don't think we need to type-check this
   ASTPrimaryExpression
   
   
@@ -133,7 +134,6 @@ Barry do these:
   ASTLabeledStatement
   DONE? - ASTBlock
   ASTBlockStatement
-  ASTLocalVariableDeclaration
   ASTEmptyStatement
   ASTStatementExpression
   ASTSwitchStatement

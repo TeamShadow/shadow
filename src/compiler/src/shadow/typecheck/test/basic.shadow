@@ -1,7 +1,8 @@
 
 class Bill {
 
-    public destructor {
-    
-    }
+	public blah() => (Bill) {
+		int a;
+		int b, c;
+	}
 } 
