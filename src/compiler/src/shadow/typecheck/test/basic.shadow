@@ -1,11 +1,4 @@
 
-class Foo {
+interface Foo extends Blah, Blah2 {
 
-    public blah((()=>()) => () f) => () { ; }
-    public blah((()=>()) => (()=>()) f) => () { ; }
-    public blah((()=>()) => (()=>()) f) => (()=>()) { ; }
-    
-    public blah(((int)=>(int)) => () f) => () { ; }
-    public blah(((int)=>(int)) => ((int)=>(int)) f) => () { ; }
-    public blah(((int)=>(int)) => ((int)=>(int)) f) => ((int)=>(int)) { ; }
 }

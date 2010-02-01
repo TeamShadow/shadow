@@ -50,6 +50,9 @@ public abstract class BaseTest {
 	protected void visitDirectory(File f, ArrayList<File> fileList) throws IOException {
 		File[] files = f.listFiles();
 		
+		if(files == null)
+			throw new IOException("No files found: " + f.getAbsolutePath());
+		
 		for(File cf:files) {
 			if(cf.isDirectory())
 				visitDirectory(cf, fileList);	// recurse

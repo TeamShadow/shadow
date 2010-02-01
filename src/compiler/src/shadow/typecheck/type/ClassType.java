@@ -22,4 +22,11 @@ public class ClassType extends ClassInterfaceBaseType {
 		super(typeName, modifiers, enclosing, parent);
 	}
 
+	public void setExtendType(ClassType extendType) {
+		this.extendType = extendType;
+	}
+	
+	public ClassType getExtendType() {
+		return extendType;
+	}
 }

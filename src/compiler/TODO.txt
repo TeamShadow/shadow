@@ -55,8 +55,8 @@ Bill do these:
   ASTModifiers
   ASTTypeDeclaration
   ASTViewDeclaration
-  ASTClassOrInterfaceDeclaration
-  ASTExtendsList
+  DONE - ASTClassOrInterfaceDeclaration
+  DONE - ASTExtendsList
   ASTImplementsList
   ASTEnumDeclaration
   ASTEnumBody

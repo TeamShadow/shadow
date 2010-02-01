@@ -16,6 +16,7 @@ import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTEqualityExpression;
+import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -29,6 +30,8 @@ import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.Type;
 
 
@@ -57,7 +60,41 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 
-
+	public Object visit(ASTExtendsList node, Object secondVisit) throws ShadowException {
+		
+		int numChildren = node.jjtGetNumChildren();
+		
+		if(numChildren == 1) { // class
+			Type type = typeTable.get(node.jjtGetChild(0).getImage());
+			
+			if(type == null) {
+				addError(node.jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).getImage());
+				return WalkType.PRE_CHILDREN;
+			} else if(!(type instanceof ClassType)) {
+				addError(node.jjtGetChild(0), Error.TYPE_MIS, node.jjtGetChild(0).getImage() + " is not a class");
+				return WalkType.PRE_CHILDREN;
+			}
+			
+			((ClassType)curClass).setExtendType((ClassType)type);
+		} else { // interface
+			for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+				Type type = typeTable.get(node.jjtGetChild(i).getImage());
+				
+				if(type == null) {
+					addError(node.jjtGetChild(i), Error.UNDEF_TYP, node.jjtGetChild(i).getImage());
+					return WalkType.PRE_CHILDREN;
+				} else if(!(type instanceof InterfaceType)) {
+					addError(node.jjtGetChild(i), Error.TYPE_MIS, node.jjtGetChild(i).getImage() + " is not an interface");
+					return WalkType.PRE_CHILDREN;
+				}
+				
+				((InterfaceType)curClass).addExtendType((InterfaceType)type);
+			}
+		}
+			
+		return WalkType.PRE_CHILDREN;
+	}
+	
 	public Object visit(ASTBlock node, Object secondVisit) throws ShadowException {
 		// we have a new scope, so we need a new HashMap in the linked list
 		if((Boolean)secondVisit)

@@ -3,7 +3,7 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 
 public class InterfaceType extends ClassInterfaceBaseType {
-	protected ArrayList<ClassType> extendType;
+	protected ArrayList<InterfaceType> extendType;
 
 	public InterfaceType(String typeName) {
 		super(typeName);
@@ -21,4 +21,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		super(typeName, modifiers, enclosing, parent);
 	}
 
+	public void addExtendType(InterfaceType extendType) {
+		this.extendType.add(extendType);
+	}
 }
