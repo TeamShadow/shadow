@@ -146,7 +146,12 @@ public class TypeBuilder extends BaseChecker {
 	public Object visit(ASTConstructorDeclaration node, Object secondVisit) throws ShadowException {		
 		MethodSignature signature = new MethodSignature("constructor", node.getModifiers(), node.getLine());
 		visitParameters(node.jjtGetChild(0), signature);
-		
+
+		DEBUG("ADDED METHOD: " + signature.toString());
+
+		// add the method to the current type
+		curType.addMethod("constructor", signature);
+
 		return WalkType.NO_CHILDREN;
 	}
 	
