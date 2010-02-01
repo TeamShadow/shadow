@@ -1,7 +1,7 @@
 
 class Bill {
 
-    public constructor(int a, () => () f) {
+    public destructor {
     
     }
 } 

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTConstructorDeclaration;
+import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTMethodDeclaration;
@@ -151,6 +152,17 @@ public class TypeBuilder extends BaseChecker {
 
 		// add the method to the current type
 		curType.addMethod("constructor", signature);
+
+		return WalkType.NO_CHILDREN;
+	}
+	
+	public Object visit(ASTDestructorDeclaration node, Object secondVisit) throws ShadowException {		
+		MethodSignature signature = new MethodSignature("destructor", node.getModifiers(), node.getLine());
+
+		DEBUG("ADDED METHOD: " + signature.toString());
+
+		// add the method to the current type
+		curType.addMethod("destructor", signature);
 
 		return WalkType.NO_CHILDREN;
 	}
