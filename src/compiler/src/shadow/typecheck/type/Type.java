@@ -8,6 +8,7 @@ public class Type {
 	protected final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
 	protected final Type enclosing; //outer class
 	protected Type parent;  //super type
+	protected String packageName; //package
 
 	public static final Type OBJECT = new ClassType( "Object", 0, null ); 
 	public static final Type BOOLEAN = new Type( "boolean" );
