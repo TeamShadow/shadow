@@ -9,6 +9,7 @@ public class Type {
 	protected final Type enclosing; //outer class
 	protected Type parent;  //super type
 	protected String packageName; //package
+	
 
 	public static final Type OBJECT = new ClassType( "Object", 0, null ); 
 	public static final Type BOOLEAN = new Type( "boolean" );
