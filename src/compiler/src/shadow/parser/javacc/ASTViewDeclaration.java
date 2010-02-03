@@ -18,5 +18,15 @@ class ASTViewDeclaration extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
     return visitor.visit(this, data);
   }
+  
+  private int modifiers;
+  
+  public void setModifiers(int modifiers) {
+	  this.modifiers = modifiers;
+  }
+  
+  public int getModifiers() {
+	  return this.modifiers;
+  }
 }
 /* JavaCC - OriginalChecksum=2e8a6a7ac62762bc3e25bf5d36b7216e (do not edit this line) */

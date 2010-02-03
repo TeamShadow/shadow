@@ -15,7 +15,8 @@ public class TypeChecker extends AbstractASTVisitor {
 	protected boolean debug;
 	
 	public TypeChecker(boolean debug) {
-		typeTable = new HashMap<String, Type>();
+		//typeTable = new HashMap<String, Type>();
+		//instantiate with TypeCollector
 		this.debug = debug;
 	}
 	
@@ -26,12 +27,18 @@ public class TypeChecker extends AbstractASTVisitor {
 	 * @throws ShadowException
 	 */
 	public boolean typeCheck(Node node) throws ShadowException {
-		TypeBuilder tb = new TypeBuilder(typeTable, debug);
-		ASTWalker walker = new ASTWalker(tb);
+
+		// Here is where we'd walk the import statements, and collect the types for those files
+		// Right now we are only collecting the types from the current file
+		TypeCollector collector = new TypeCollector();
+		ASTWalker walker = new ASTWalker( collector );
 		
-		//
-		// Here is where we'd walk the import statements, and make the types for those files
-		//
+		typeTable = collector.produceTypeTable();		
+		
+		
+		TypeBuilder tb = new TypeBuilder(typeTable, debug);
+		walker = new ASTWalker(tb);
+		
 		
 		// walk the tree building types
 		walker.walk(node);

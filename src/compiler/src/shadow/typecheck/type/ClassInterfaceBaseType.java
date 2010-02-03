@@ -3,33 +3,33 @@ package shadow.typecheck.type;
 import java.util.HashMap;
 
 import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.Type.Kind;
 
 public class ClassInterfaceBaseType extends Type {
 	protected HashMap<String, Type> fieldTable;
 	protected HashMap<String, MethodSignature> methodTable;
-
+	
 	public ClassInterfaceBaseType(String typeName) {
-		super(typeName, 0);
-		fieldTable = new HashMap<String, Type>();
-		methodTable = new HashMap<String, MethodSignature>();
+		this( typeName, 0 );
 	}
-
+	
 	public ClassInterfaceBaseType(String typeName, int modifiers) {
-		super(typeName, modifiers, null);
+		this( typeName, modifiers, null );
+	}
+	
+	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer ) {
+		this( typeName, modifiers, outer, Kind.CLASS );
+	}	
+	
+	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer, Kind kind ) {
+		this( typeName, modifiers, outer, kind, OBJECT );
+	}
+	
+	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer, Kind kind, Type parent ) {
+		super( typeName, modifiers, outer, kind, parent );
 		fieldTable = new HashMap<String, Type>();
 		methodTable = new HashMap<String, MethodSignature>();
-	}
-
-	public ClassInterfaceBaseType(String typeName, int modifiers, Type enclosing) {
-		super(typeName, modifiers, enclosing, null);
-		fieldTable = new HashMap<String, Type>();
-		methodTable = new HashMap<String, MethodSignature>();
-	}
-
-	public ClassInterfaceBaseType(String typeName, int modifiers, Type enclosing,Type parent) {
-		super(typeName, modifiers, enclosing, parent);
-		this.fieldTable = new HashMap<String, Type>();
-		this.methodTable = new HashMap<String, MethodSignature>();
+		
 	}
 
 	public boolean containsField(String fieldName) {

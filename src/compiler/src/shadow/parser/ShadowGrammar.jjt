@@ -577,16 +577,16 @@ void TypeDeclaration():
    | EnumDeclaration(modifiers)
    | AnnotationTypeDeclaration(modifiers)
  )
-| ViewDeclaration()
+| modifiers = Modifiers() ViewDeclaration(modifiers)
 }
 
-void ViewDeclaration():
+void ViewDeclaration(int modifiers):
 {
 	debugPrint("VIEW DECLARATION");
 	Token t;
 }
 {
-	"view" t = <IDENTIFIER> { jjtThis.setType(new Type(t.image)); }	"{"
+	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }	"{"
         ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";"
         ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";" )*
     "}"
@@ -601,7 +601,9 @@ void ClassOrInterfaceDeclaration(int modifiers):
 }
 {
   { jjtThis.setModifiers(modifiers); }
-  ( "class" | "exception" | "interface" { isInterface = true; } )
+  ( "class" { jjtThis.setKind(Type.Kind.CLASS);} 	| "exception" { jjtThis.setKind(Type.Kind.EXCEPTION);}
+ 	| "error" { jjtThis.setKind(Type.Kind.ERROR);}
+ 	| "interface" { jjtThis.setKind(Type.Kind.INTERFACE); isInterface = true; } )
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   [ ExtendsList(isInterface) ]
@@ -641,7 +643,7 @@ void EnumDeclaration(int modifiers):
 }
 {
 { jjtThis.setModifiers(modifiers); }
-  "enum" t = <IDENTIFIER> { jjtThis.setType(new Type(t.image, modifiers)); }
+  "enum" t = <IDENTIFIER> { jjtThis.setImage(t.image);  }
   [ ImplementsList(false) ]
   EnumBody()
 }
@@ -709,7 +711,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
     | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
     | MethodDeclaration(modifier)
   )
-| ViewDeclaration()
+| modifier = Modifiers() ViewDeclaration(modifier)
 | ";"
 }
 
@@ -893,19 +895,19 @@ void WildcardBounds():
 void PrimitiveType():
 { debugPrint("PRIMITIVE TYPE"); }
 {
-  "boolean" { jjtThis.setType(new Type("boolean")); }
-| "code"    { jjtThis.setType(new Type("code")); }
-| "byte"    { jjtThis.setType(new Type("byte")); }
-| "short"   { jjtThis.setType(new Type("short")); }
-| "int"     { jjtThis.setType(new Type("int")); }
-| "long"    { jjtThis.setType(new Type("long")); }
-| "float"   { jjtThis.setType(new Type("float")); }
-| "double"  { jjtThis.setType(new Type("double")); }
-| "String"  { jjtThis.setType(new Type("String")); }
-| "ubyte"   { jjtThis.setType(new Type("ubyte")); }
-| "uint"    { jjtThis.setType(new Type("uint")); }
-| "ulong"   { jjtThis.setType(new Type("ulong")); }
-| "ushort"  { jjtThis.setType(new Type("ushort")); }
+  "boolean" { jjtThis.setType(Type.BOOLEAN); }
+| "code"    { jjtThis.setType(Type.CODE); }
+| "byte"    { jjtThis.setType(Type.BYTE); }
+| "short"   { jjtThis.setType(Type.SHORT); }
+| "int"     { jjtThis.setType(Type.INT); }
+| "long"    { jjtThis.setType(Type.LONG); }
+| "float"   { jjtThis.setType(Type.FLOAT); }
+| "double"  { jjtThis.setType(Type.DOUBLE); }
+| "String"  { jjtThis.setType(Type.STRING); }
+| "ubyte"   { jjtThis.setType(Type.UBYTE); }
+| "uint"    { jjtThis.setType(Type.UINT); }
+| "ulong"   { jjtThis.setType(Type.ULONG); }
+| "ushort"  { jjtThis.setType(Type.USHORT); }
 }
 
 void ResultType():

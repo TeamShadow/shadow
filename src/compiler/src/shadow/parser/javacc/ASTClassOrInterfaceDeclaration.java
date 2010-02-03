@@ -2,9 +2,11 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.type.*;
+
 public
 @SuppressWarnings("all")
-class ASTClassOrInterfaceDeclaration extends SimpleNode {
+class ASTClassOrInterfaceDeclaration extends SimpleNode {	
   public ASTClassOrInterfaceDeclaration(int id) {
     super(id);
   }
@@ -19,7 +21,7 @@ class ASTClassOrInterfaceDeclaration extends SimpleNode {
     return visitor.visit(this, data);
   }
   
-  int modifiers;
+  private int modifiers;
   
   public void setModifiers(int modifiers) {
 	  this.modifiers = modifiers;
@@ -28,5 +30,18 @@ class ASTClassOrInterfaceDeclaration extends SimpleNode {
   public int getModifiers() {
 	  return this.modifiers;
   }
+  
+	private Type.Kind kind;
+	
+	public void setKind(Type.Kind kind ) {
+		  this.kind = kind;
+	  }
+	  
+	  public Type.Kind getKind() {
+		  return this.kind;
+	  }
+	
+	
+  
 }
 /* JavaCC - OriginalChecksum=2cf34475db707e32cc511aa02d222848 (do not edit this line) */

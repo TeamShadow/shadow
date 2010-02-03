@@ -1,25 +1,33 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.Type.Kind;
 
 public class ClassType extends ClassInterfaceBaseType {
 	protected ClassType extendType;
 	protected ArrayList<InterfaceType> implementTypes;
 	
 	public ClassType(String typeName) {
-		super(typeName);
+		this( typeName, 0 );
 	}
-
+	
 	public ClassType(String typeName, int modifiers) {
-		super(typeName, modifiers);
+		this( typeName, modifiers, null );
 	}
-
-	public ClassType(String typeName, int modifiers, Type enclosing) {
-		super(typeName, modifiers, enclosing);
+	
+	public ClassType(String typeName, int modifiers, Type outer ) {
+		this( typeName, modifiers, outer, Kind.CLASS );
+	}	
+	
+	public ClassType(String typeName, int modifiers, Type outer, Kind kind ) {
+		this( typeName, modifiers, outer, kind, OBJECT );
 	}
-
-	public ClassType(String typeName, int modifiers, Type enclosing, Type parent) {
-		super(typeName, modifiers, enclosing, parent);
+	
+	public ClassType(String typeName, int modifiers, Type outer, Kind kind, Type parent ) {
+		super( typeName, modifiers, outer, kind, parent );
 	}
 
 	public void setExtendType(ClassType extendType) {

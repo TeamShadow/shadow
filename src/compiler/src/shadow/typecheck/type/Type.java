@@ -6,9 +6,12 @@ public class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string the represents the type */
 	protected final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
-	protected final Type enclosing; //outer class
+	protected final Type outer; //outer class
 	protected Type parent;  //super type
 	protected String packageName; //package
+	protected Kind kind;
+	
+	public static enum Kind { CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD,  VIEW};
 	
 
 	public static final Type OBJECT = new ClassType( "Object", 0, null ); 
@@ -35,15 +38,20 @@ public class Type {
 		this( typeName, modifiers, null );
 	}
 	
-	public Type(String typeName, int modifiers, Type enclosing ) {
-		this( typeName, modifiers, enclosing, OBJECT );
+	public Type(String typeName, int modifiers, Type outer ) {
+		this( typeName, modifiers, outer, Kind.CLASS );
 	}	
 	
-	public Type(String typeName, int modifiers, Type enclosing, Type parent ) {
+	public Type(String typeName, int modifiers, Type outer, Kind kind ) {
+		this( typeName, modifiers, outer, kind, OBJECT );
+	}
+	
+	public Type(String typeName, int modifiers, Type outer, Kind kind, Type parent ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
-		this.enclosing = enclosing;
+		this.outer = outer;
 		this.parent = parent;
+		this.kind = kind;
 	}
 	
 	public String getTypeName() {
@@ -90,6 +98,20 @@ public class Type {
 	public boolean isString() {
 		return this.equals(STRING);
 	}
+	
+	public Type getOuter()
+	{
+		return outer;
+	}
+	
+	public void setKind(Kind kind ) {
+		  this.kind = kind;
+	  }
+	  
+	  public Kind getKind() {
+		  return this.kind;
+	  }
+	
 	
 	/**
 	 * Given an unsigned type, returns the signed version or the same type otherwise.

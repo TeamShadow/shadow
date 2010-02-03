@@ -24,24 +24,7 @@ public class TypeBuilder extends BaseChecker {
 	public TypeBuilder(HashMap<String, Type> typeTable, boolean debug) {
 		super(debug);
 		this.typeTable = typeTable;
-		
-		// put all of our built-in types into the TypeTable
-		typeTable.put(Type.OBJECT.getTypeName(),	Type.OBJECT);
-		typeTable.put(Type.BOOLEAN.getTypeName(),	Type.BOOLEAN);
-		typeTable.put(Type.BYTE.getTypeName(),		Type.BYTE);
-		typeTable.put(Type.CODE.getTypeName(),		Type.CODE);
-		typeTable.put(Type.SHORT.getTypeName(),		Type.SHORT);
-		typeTable.put(Type.INT.getTypeName(),		Type.INT);
-		typeTable.put(Type.LONG.getTypeName(),		Type.LONG);
-		typeTable.put(Type.FLOAT.getTypeName(),		Type.FLOAT);
-		typeTable.put(Type.DOUBLE.getTypeName(),	Type.DOUBLE);
-		typeTable.put(Type.STRING.getTypeName(),	Type.STRING);
-		typeTable.put(Type.UBYTE.getTypeName(),		Type.UBYTE);
-		typeTable.put(Type.UINT.getTypeName(),		Type.UINT);
-		typeTable.put(Type.ULONG.getTypeName(),		Type.ULONG);
-		typeTable.put(Type.USHORT.getTypeName(),	Type.USHORT);
-		typeTable.put(Type.NULL.getTypeName(),		Type.NULL);
-	}
+		}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Object secondVisit) throws ShadowException {
 		
