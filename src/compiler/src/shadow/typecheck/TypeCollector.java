@@ -1,21 +1,31 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import shadow.AST.AbstractASTVisitor;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTEnumDeclaration;
+import shadow.parser.javacc.ASTExtendsList;
+import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.EnumType;
+import shadow.typecheck.type.ErrorType;
+import shadow.typecheck.type.ExceptionType;
+import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Type.Kind;
 
 public class TypeCollector extends AbstractASTVisitor
 {
 	protected HashMap<String,Type> typeTable  = new HashMap<String, Type>();
-	protected HashMap<Type,String> parentTable = new HashMap<Type,String>();
+	protected HashMap<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();
+	protected HashMap<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
 	protected Type currentClass = null;
 	protected String currentName = "";
 	
@@ -43,7 +53,40 @@ public class TypeCollector extends AbstractASTVisitor
 	public HashMap<String,Type> produceTypeTable()
 	{
 		//this is supposed to find the parents for everything
-		//thought it was going to be easy, but interfaces can have multiple parents, etc.
+		List<String> list;
+		for( Type type : typeTable.values() )
+		{			
+			if( type instanceof ClassType ) //includes error, exception, and enum (for now)
+			{
+				ClassType classType = (ClassType)type;
+				if( extendsTable.containsKey(type))
+				{
+					list = extendsTable.get(type);
+					//more sophisticated lookup taking naming into account may be required
+					classType.setExtendType((ClassType)typeTable.get(list.get(0)));
+				}
+				
+				if( implementsTable.containsKey(type))
+				{
+					list = implementsTable.get(type);
+					//more sophisticated lookup taking naming into account may be required
+					for( String name : list )
+						classType.addImplementType((InterfaceType)typeTable.get(name));
+				}				
+			}
+			else if( type instanceof InterfaceType ) 
+			{
+				InterfaceType interfaceType = (InterfaceType)type;
+				if( extendsTable.containsKey(type))
+				{
+					list = extendsTable.get(type);
+					//more sophisticated lookup taking naming into account may be required
+					for( String name : list )
+						interfaceType.addExtendType((InterfaceType)typeTable.get(name));
+				}				
+			}
+		}		
+		
 		return typeTable;		
 	}
 
@@ -59,29 +102,78 @@ public class TypeCollector extends AbstractASTVisitor
 	
 
 	
-	public void enterType( SimpleNode node, int modifiers, Kind kind )
-	{
-		
+	private void enterType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException
+	{		 
 		if( !currentName.isEmpty() )
 			currentName += ".";
 		
 		currentName += node.getImage();	
-		if( typeTable.containsKey(currentName) )
-		{
+		if( typeTable.containsKey(currentName) )		
 			//change this to standard typechecker errors as soon as we figure out which class to put those in
-			System.err.println("Whoa, shit!  You've already added " + currentName + " to the type table!" );
-			System.exit(-666);
-		}
+			throw new ShadowException("Whoa, shit!  You've already added " + currentName + " to the type table!" );
 		else
 		{
 			
-			Type type = new Type(currentName, modifiers, currentClass, kind );
+			Type type = null;
+			
+			switch( kind )
+			{
+			case CLASS:
+				type = new ClassType(currentName, modifiers, currentClass );
+				break;
+			case ENUM:
+				//enum may need some fine tuning
+				type = new EnumType(currentName, modifiers, currentClass );
+				break;
+			case ERROR:
+				type = new ErrorType(currentName, modifiers, currentClass );
+				break;
+			case EXCEPTION:
+				type = new ExceptionType(currentName, modifiers, currentClass );
+				break;
+			case INTERFACE:
+				type = new InterfaceType(currentName, modifiers, currentClass );
+				break;			
+			case VIEW:
+				//add support for views eventually
+				break;
+			default:
+				throw new ShadowException("Unsupported type!" );
+			}
+			
 			typeTable.put( currentName, type  );
+			
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				if( node.jjtGetChild(i).getClass() == ASTExtendsList.class )
+					addExtends( (ASTExtendsList)node.jjtGetChild(i), type );
+				else if( node.jjtGetChild(i).getClass() == ASTImplementsList.class )
+					addImplements( (ASTImplementsList)node.jjtGetChild(i), type );
+			
 			currentClass = type;
 		}
 	}
 	
-	public void exitType( SimpleNode node )
+	private void addExtends( ASTExtendsList node, Type type )
+	{
+		List<String> list = new LinkedList<String>();
+		
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			list.add( node.jjtGetChild(i).getImage() );
+		
+		extendsTable.put(type, list);
+	}
+	
+	public void addImplements( ASTImplementsList node, Type type )
+	{
+		List<String> list = new LinkedList<String>();
+		
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			list.add( node.jjtGetChild(i).getImage() );
+		
+		implementsTable.put(type, list);
+	}
+	
+	private void exitType( SimpleNode node )
 	{
 		//	remove innermost class
 		int index = currentName.lastIndexOf('.'); 
@@ -90,8 +182,7 @@ public class TypeCollector extends AbstractASTVisitor
 		else
 			currentName = currentName.substring(0, index);
 		
-		currentClass = currentClass.getOuter();
-		
+		currentClass = currentClass.getOuter();		
 	}
 	
 	public Object visit(ASTEnumDeclaration node, Object secondVisit) throws ShadowException {
