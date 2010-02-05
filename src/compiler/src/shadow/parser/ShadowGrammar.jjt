@@ -529,11 +529,11 @@ void TypeDeclaration():
 {
   ";"
 | modifiers = Modifiers()
- (   ClassOrInterfaceDeclaration(modifiers)
-   | EnumDeclaration(modifiers)
-   | AnnotationTypeDeclaration(modifiers)
- )
-| modifiers = Modifiers() ViewDeclaration(modifiers)
+  ( ClassOrInterfaceDeclaration(modifiers)
+  | EnumDeclaration(modifiers)
+  | AnnotationTypeDeclaration(modifiers)
+  | ViewDeclaration(modifiers)
+  )
 }
 
 void ViewDeclaration(int modifiers):
@@ -673,8 +673,8 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
     | LOOKAHEAD( [ TypeParameters() ] "destructor" ) DestructorDeclaration(modifier)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
     | MethodDeclaration(modifier)
+    | ViewDeclaration(modifier)
   )
-| modifier = Modifiers() ViewDeclaration(modifier)
 | ";"
 }
 
