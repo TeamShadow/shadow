@@ -53,92 +53,43 @@ public class ShadowParser
    {
      /* Definitions of the bits in the modifiers field.  */
      /* Unused Java modifiers are commented out until modifiers are finalized */ 
-     public static final int PUBLIC = 0x0001;
-     public static final int PROTECTED = 0x0002;
-     public static final int PRIVATE = 0x0004;
-     public static final int ABSTRACT = 0x0008;
-     public static final int STATIC = 0x0010;
-     public static final int FINAL = 0x0020;
+     public static final int PUBLIC         = 0x0001;
+     public static final int PROTECTED      = 0x0002;
+     public static final int PRIVATE        = 0x0004;
+     public static final int ABSTRACT       = 0x0008;
+     public static final int STATIC         = 0x0010;
+     public static final int FINAL          = 0x0020;
      //public static final int SYNCHRONIZED = 0x0040;
-     //public static final int NATIVE = 0x0080;
-     //public static final int TRANSIENT = 0x0100;
-     //public static final int VOLATILE = 0x0200;
-     //public static final int STRICTFP = 0x0400;
-     public static final int WEAK = 0x0800;
+     //public static final int NATIVE       = 0x0080;
+     //public static final int TRANSIENT    = 0x0100;
+     //public static final int VOLATILE     = 0x0200;
+     //public static final int STRICTFP     = 0x0400;
+     public static final int WEAK           = 0x0800;
+     public static final int CONST          = 0x1000;
 
      /** A set of accessors that indicate whether the specified modifier
          is in the set. */
 
-     public boolean isPublic(int modifiers)
-     {
-       return (modifiers & PUBLIC) != 0;
-     }
+     public boolean isPublic(int modifiers) { return (modifiers & PUBLIC) != 0; }
+     public boolean isProtected(int modifiers) { return (modifiers & PROTECTED) != 0; }
+     public boolean isPrivate(int modifiers) { return (modifiers & PRIVATE) != 0; }
+     public boolean isStatic(int modifiers) { return (modifiers & STATIC) != 0; }
+     public boolean isAbstract(int modifiers) { return (modifiers & ABSTRACT) != 0; }
+     public boolean isFinal(int modifiers) { return (modifiers & FINAL) != 0; }
 
-     public boolean isProtected(int modifiers)
-     {
-       return (modifiers & PROTECTED) != 0;
-     }
-
-     public boolean isPrivate(int modifiers)
-     {
-       return (modifiers & PRIVATE) != 0;
-     }
-
-     public boolean isStatic(int modifiers)
-     {
-       return (modifiers & STATIC) != 0;
-     }
-
-     public boolean isAbstract(int modifiers)
-     {
-       return (modifiers & ABSTRACT) != 0;
-     }
-
-     public boolean isFinal(int modifiers)
-     {
-       return (modifiers & FINAL) != 0;
-     }
-  /* 
-     public boolean isNative(int modifiers)
-     {
-       return (modifiers & NATIVE) != 0;
-     }
-
-	  public boolean isStrictfp(int modifiers)
-     {
-       return (modifiers & STRICTFP) != 0;
-     } 
-
-     public boolean isSynchronized(int modifiers)
-     {
-       return (modifiers & SYNCHRONIZED) != 0;
-     }
-
-     
-
-     public boolean isTransient(int modifiers)
-      {
-       return (modifiers & TRANSIENT) != 0;
-     }
-
-     public boolean isVolatile(int modifiers)
-     {
-       return (modifiers & VOLATILE) != 0;
-     }
+  /* public boolean isNative(int modifiers) { return (modifiers & NATIVE) != 0; }
+     public boolean isStrictfp(int modifiers) { return (modifiers & STRICTFP) != 0; } 
+     public boolean isSynchronized(int modifiers) { return (modifiers & SYNCHRONIZED) != 0; }
+     public boolean isTransient(int modifiers) { return (modifiers & TRANSIENT) != 0; }
+     public boolean isVolatile(int modifiers) { return (modifiers & VOLATILE) != 0; }
 */
-
-     public boolean isWeak(int modifiers)
-     {
-       return (modifiers & WEAK) != 0;
-     }
+     public boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
+     public boolean isConst(int modifiers) { return (modifiers & CONST) != 0; } 
 
      /**
       * Removes the given modifier.
       */
-     static int removeModifier(int modifiers, int mod)
-     {
-        return modifiers & ~mod;
-     }
+     static int removeModifier(int modifiers, int mod) { return modifiers & ~mod; }
    }
 
    private boolean debug = false;
@@ -269,6 +220,7 @@ TOKEN :
 | < FOR: "for" >
 | < FOREACH: "foreach" >
 //| < GOTO: "goto" >
+| < GET: "get" >
 | < IF: "if" >
 | < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
@@ -286,6 +238,7 @@ TOKEN :
 | < PROTECTED: "protected" >
 | < PUBLIC: "public" >
 | < RETURN: "return" >
+| < SET: "set" >
 | < SHORT: "short" >
 | < STATIC: "static" >
 //| < STRICTFP: "strictfp" >
@@ -360,6 +313,8 @@ TOKEN :
       )*
       "\""
   >
+|	
+  < VERSION_LITERAL:  (["0"-"9"])+ "." (["0"-"9"])+ "." (["0"-"9"])+ >
 }
 
 /* IDENTIFIERS */
@@ -370,7 +325,7 @@ TOKEN :
 |
   < #LETTER:
       [
-       "\u0024",
+//       "\u0024",  // this is the $, but I want to use that for versions
        "\u0041"-"\u005a",
        "\u005f",
        "\u0061"-"\u007a",
@@ -464,6 +419,7 @@ TOKEN :
 | < RIGHTSHIFTASSIGN: ">>=" >
 | < RIGHTROTATEASSIGN: ">>>=" >
 | < LEFTROTATEASSIGN: "<<<=" >
+| < VERSION: "$" >
 //| < ELLIPSIS: "..." >
 }
 
@@ -551,7 +507,7 @@ int Modifiers():
 //  | "volatile" { modifiers |= ModifierSet.VOLATILE; }
 //  | "strictfp" { modifiers |= ModifierSet.STRICTFP; }
   | "weak" { modifiers |= ModifierSet.WEAK; }
-  | Annotation()
+  |	"const"{ modifiers |= ModifierSet.CONST; }  | Annotation()
   )
  )*
 
@@ -605,6 +561,7 @@ void ClassOrInterfaceDeclaration(int modifiers):
  	| "error" { jjtThis.setKind(Type.Kind.ERROR);}
  	| "interface" { jjtThis.setKind(Type.Kind.INTERFACE); isInterface = true; } )
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
+  [ Version() ]
   [ TypeParameters() ]
   [ ExtendsList(isInterface) ]
   [ ImplementsList(isInterface) ]
@@ -634,6 +591,12 @@ void ImplementsList(boolean isInterface):
       if (isInterface)
          throw new ParseException("An interface cannot implement other interfaces");
    }
+}
+
+void Version():
+{ debugPrint("VERSION"); }
+{
+   "$" < VERSION_LITERAL >
 }
 
 void EnumDeclaration(int modifiers):
