@@ -16,6 +16,7 @@ import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTEqualityExpression;
+import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -31,6 +32,7 @@ import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
@@ -126,8 +128,13 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTBlock node, Object secondVisit) throws ShadowException {
 		// we have a new scope, so we need a new HashMap in the linked list
-		if((Boolean)secondVisit)
+		if((Boolean)secondVisit) {
+			System.out.println("\nSYMBOL TABLE:");
+			for(String s:symbolTable.getFirst().keySet())
+				System.out.println(s + ": " + symbolTable.getFirst().get(s));
+			
 			symbolTable.removeFirst();
+		}
 		else
 			symbolTable.addFirst(new HashMap<String, Type>());
 		
@@ -146,10 +153,7 @@ public class ClassChecker extends BaseChecker {
 		if(!(Boolean)secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		// I'm about 90% sure we've already checked the type and don't need to do this
-//		String typeName = node.jjtGetChild(0).jjtGetChild(0).getImage();
-//		Type type = typeTable.get(typeName);
-		
+		// 	get the var's type
 		Type type = node.jjtGetChild(0).getType();
 
 		if(type == null) {
@@ -157,61 +161,58 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.NO_CHILDREN;
 		}
 
-		// go through the rest adding vars
+		// go through and add the vars
 		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
-			Node curNode = node.jjtGetChild(i).jjtGetChild(0);
-			String varName = curNode.getImage();
+			Node curNode = node.jjtGetChild(i);
+			String varName = curNode.jjtGetChild(0).getImage();
 
-			DEBUG("VAR: " + varName + " FOUND: " + symbolTable.get(0).get(varName));
-
-			if(symbolTable.get(0).get(varName) != null) {
+			if(symbolTable.getFirst().get(varName) != null) {
 				addError(curNode, Error.MULT_SYM, varName);
 				continue;
 			}
 			
-			symbolTable.get(0).put(varName, type);
+			// check to see if we have any kind of init here
+			if(curNode.jjtGetNumChildren() == 2) {
+				Type initType = curNode.jjtGetChild(1).getType();
+				DEBUG("INIT TYPE: " + initType);
+				if(!initType.isSubtype(type)) {
+					addError(curNode.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
+					continue;
+				}
+			}
+			
+			// add the symbol to the table
+			symbolTable.getFirst().put(varName, type);
 		}
 
 		return WalkType.POST_CHILDREN;
 	}
 
-	public Object visit(ASTVariableInitializer node, Object secondVisit) throws ShadowException {		
-		return WalkType.POST_CHILDREN;
-	}
-	
 	
 	/**
 	 * TODO: DOUBLE CHECK THIS... I'M NOT REALLY SURE WHAT TO DO HERE
 	 */
 	public Object visit(ASTName node, Object data) throws ShadowException {
-		Type type = typeTable.get(node.getImage());
-		
-		if(type == null) {
-			addError(node, Error.UNDEF_TYP, node.getImage());
-			return WalkType.NO_CHILDREN;
+		String name = node.getImage();
+ 		Type type = typeTable.get(name);
+
+		// first we check to see if this names a type
+		if(type != null) {
+			node.setType(type);
+			return WalkType.PRE_CHILDREN;
 		}
 		
-		node.setType(type);
-		
-		return WalkType.PRE_CHILDREN;
-/*
- * What I have below is a good lookup if you're given a variable name.
- * However, ASTName is only for types... :-(
- 
-		String name = node.getImage();
- 		Type nameType = null;
-		
-		// go through the scopes trying to find the name
+		// now go through the scopes trying to find the variable
 		for(HashMap<String, Type> curSymTable:symbolTable) {
 			if(curSymTable.containsKey(name)) {
-				nameType = curSymTable.get(name);
+				type = curSymTable.get(name);
 				break;
 			}
 		}
 		
 		// found it in the scopes
-		if(nameType != null) {
-			node.setType(nameType);
+		if(type != null) {
+			node.setType(type);
 			return WalkType.PRE_CHILDREN;
 		}
 			
@@ -231,7 +232,6 @@ public class ClassChecker extends BaseChecker {
 		addError(node, Error.UNDEC_VAR, name);
 
 		return WalkType.NO_CHILDREN;
-*/
 	}
 	
 	public Object visit(ASTPrimaryExpression node, Object secondVisit) throws ShadowException {
@@ -242,27 +242,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTAssignmentOperator node, Object secondVisit) throws ShadowException {
-/*
-		This is wrong...
-		 if(node.jjtGetNumChildren() != 2) {
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
-		}
-*/
-		
-		// get the two types
-		Type t1 = node.jjtGetChild(0).getType();
-		Type t2 = node.jjtGetChild(1).getType();
-		
-		// TODO: Add in all the types that we can compare here
-		if( !t2.isSubtype(t1) ) {
-			addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
-			return WalkType.NO_CHILDREN;
-		}
-				
-		node.setType(t1);
-		
-		return WalkType.PRE_CHILDREN;
+		return WalkType.PRE_CHILDREN;	// I don't think we do anything here
 	}
 	
 	public Object visit(ASTRelationalExpression node, Object secondVisit) throws ShadowException {
@@ -572,10 +552,47 @@ public class ClassChecker extends BaseChecker {
 		return visitConditional( node );
 	}	
 
-	public Object visit(ASTType node, Object secondVisit) throws ShadowException {
-		return pushUpType(node, secondVisit);
+	public Object visit(ASTExpression node, Object secondVisit) throws ShadowException {
+		if(!(Boolean)secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		// if we only have 1 child, we just get the type from that child
+		if(node.jjtGetNumChildren() == 1)
+			pushUpType(node, secondVisit);
+		
+		// we have 3 children so it's an assignment
+		if(node.jjtGetNumChildren() == 3) {
+			// get the two types, we have to go up to the parent to get them
+			Type t1 = node.jjtGetChild(0).getType();
+			ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
+			Type t2 = node.jjtGetChild(2).getType();
+			
+			// SHOULD DO SOMETHING WITH THIS!!!
+			AssignmentType assType = op.getAssignmentType();
+			
+			DEBUG(node.jjtGetChild(0), "T1: " + t1);
+			DEBUG(node.jjtGetChild(2), "T2: " + t2);
+			
+			// TODO: Add in all the types that we can compare here
+			if( !t2.isSubtype(t1) ) {
+				addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
+				return WalkType.NO_CHILDREN;
+			}
+					
+			node.setType(t1);	// set this node's type
+		}
+		
+		else {
+			// something went terribly wrong here... should NEVER get to this state or parser is broken
+			throw new ShadowException("Wrong number of args to an assignment!!!");
+		}
+
+		return WalkType.POST_CHILDREN;
 	}
-	
+
+	//
+	// Everything below here are just visitors to push up the type
+	//
 	private Object pushUpType(Node node, Object secondVisit, int child) {
 		if(!(Boolean)secondVisit)
 			return WalkType.POST_CHILDREN;
@@ -589,4 +606,7 @@ public class ClassChecker extends BaseChecker {
 	private Object pushUpType(Node node, Object secondVisit) {
 		return pushUpType(node, secondVisit, 0);
 	}
+
+	public Object visit(ASTType node, Object secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTVariableInitializer node, Object secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 }

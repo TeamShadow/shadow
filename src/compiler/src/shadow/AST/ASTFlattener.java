@@ -55,6 +55,12 @@ public class ASTFlattener extends AbstractASTVisitor {
 		
 		Node myParent = node.jjtGetParent();
 		
+		if(node instanceof ASTIsExpression) {
+			((SimpleNode)myParent).dump("");
+			System.out.println("PARENT: " + myParent.jjtGetNumChildren());
+			System.out.println("ME: " + node.jjtGetNumChildren());
+		}
+		
 		// if I'm my parent's only child, and I have only 1 child, then remove
 		if(myParent != null && myParent.jjtGetNumChildren() == 1 && node.jjtGetNumChildren() == 1)
 			removeNode(node);
@@ -77,11 +83,7 @@ public class ASTFlattener extends AbstractASTVisitor {
 	//
 	// These are nodes we want to remove IFF parent has 1 child and it has 1 child
 	//
-	public Object visit(ASTPrimaryPrefix node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTReferenceType node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTIsExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTRelationalExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTPrimaryExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTStatementExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTStatementExpressionList node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 
@@ -104,5 +106,9 @@ public class ASTFlattener extends AbstractASTVisitor {
 	public Object visit(ASTUnaryExpressionNotPlusMinus node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTCastExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTEqualityExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTIsExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTRelationalExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTPrimaryExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTPrimaryPrefix node, Object data) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	
 }

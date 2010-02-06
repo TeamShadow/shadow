@@ -41,5 +41,9 @@ class ASTAssignmentOperator extends SimpleNode {
   public void setAssignmentType(AssignmentType type) {
 	this.type = type;  
   }
+  
+  public AssignmentType getAssignmentType() {
+	  return this.type;
+  }
 }
 /* JavaCC - OriginalChecksum=92708bdf2f854aa06c093a0c5cea3295 (do not edit this line) */

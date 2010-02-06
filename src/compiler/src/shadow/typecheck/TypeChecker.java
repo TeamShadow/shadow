@@ -30,16 +30,15 @@ public class TypeChecker extends AbstractASTVisitor {
 
 		// Here is where we'd walk the import statements, and collect the types for those files
 		// Right now we are only collecting the types from the current file
+		
 		TypeCollector collector = new TypeCollector(debug);
 		ASTWalker walker = new ASTWalker( collector );		
 		walker.walk(node);
 		
-		typeTable = collector.produceTypeTable();		
-		
+		typeTable = collector.produceTypeTable();
 		
 		TypeBuilder tb = new TypeBuilder(typeTable, debug);
 		walker = new ASTWalker(tb);
-		
 		
 		// walk the tree building types
 		walker.walk(node);
@@ -47,6 +46,11 @@ public class TypeChecker extends AbstractASTVisitor {
 		if(debug)
 			System.out.println("DEBUG: TYPE BUILDING DONE");
 		
+		// print out the type table as it stands now
+/*		System.out.println("TYPE TABLE:");
+		for(String tn:typeTable.keySet())
+			System.out.println(tn + ": " + typeTable.get(tn));
+*/		
 		// see how many errors we found
 		if(tb.getErrorCount() > 0) {
 			tb.printErrors(System.out);

@@ -1,8 +1,18 @@
 
 class Bill {
 
-	public blah() => (Bill) {
-		int a;
-		int b, c;
+	public blah() => () {
+/*	   final Object a;
+	   Object b = new Bill();
+	   Bill c;
+	   
+	   a = cast<Object>(b);
+	   c = cast<Bill>(b);
+*/
+//        int a = b = 0, b = blah.something.method(), c = 1;
+
+//        int a;
+                
+//        a = doSomething(b);
 	}
 } 

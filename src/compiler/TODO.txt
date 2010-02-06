@@ -80,10 +80,10 @@ Bill do these:
   ASTFieldDeclaration  -- ?? don't think we need to do anything more
   ASTMethodDeclaration -- ?? don't think we need to do anything more
   ASTMethodDeclarator  -- ?? don't think we need to do anything more
-  ASTLocalVariableDeclaration
-  ASTVariableDeclarator
-  ASTVariableDeclaratorId
-  ASTVariableInitializer
+  DONE - ASTLocalVariableDeclaration
+  ASTVariableDeclarator -- ?? don't need anything here
+  ASTVariableDeclaratorId -- just a place-holder for the var name, no type-checking needed
+  DONE - ASTVariableInitializer
   ASTArrayInitializer
   ASTFormalParameters
   ASTFormalParameter
@@ -119,7 +119,7 @@ Barry do these:
   DONE - ASTBitwiseOrExpression
   DONE - ASTBitwiseExclusiveOrExpression
   DONE - ASTBitwiseAndExpression
-  ASTExpression
+  DONE - ASTExpression - Still needs to handle the different assignment types, maybe?
   ASTIsExpression	//needs richer type information
   ASTCastExpression //needs richer type information
   ASTSequence
