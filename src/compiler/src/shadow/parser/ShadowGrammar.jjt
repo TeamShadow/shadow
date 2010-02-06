@@ -477,7 +477,7 @@ void PackageDeclaration():
 void ImportDeclaration():
 {}
 {
-  "import" [ "static" ] Name() [ "." "*" ] ";"
+  "import" [ "static" ] Name() [ ("." "*") | ("$" [">" | "<"] < VERSION_LITERAL >) ] ";"
 }
 
 /*
@@ -1054,12 +1054,13 @@ void UnaryExpressionNotPlusMinus():
 //void CastLookahead()://{ debugPrint("CAST LOOKAHEAD"); }//{//  LOOKAHEAD(2)//  "(" PrimitiveType()//|//  LOOKAHEAD("(" Type() "[")//  "(" Type() "[" "]"//|//  "(" Type() ")" ( "~" | "!" | "(" | <IDENTIFIER> | "this" | "super" | "new" | Literal() )//}
 
 void CastExpression():
-{ debugPrint("CAST EXPRESSION"); }
 {
-  LOOKAHEAD("cast" "<" PrimitiveType())
-  "cast" "<" Type() ">" UnaryExpression()
-|
-  "cast" "<" Type() ">" UnaryExpressionNotPlusMinus()
+    debugPrint("CAST EXPRESSION");
+    jjtThis.setImage("cast< >");   
+}
+{
+  LOOKAHEAD("cast" "<" PrimitiveType()) "cast" "<" Type() ">" UnaryExpression()
+| "cast" "<" Type() ">" UnaryExpressionNotPlusMinus()
 }
 
 void PrimaryExpression():
@@ -1155,8 +1156,8 @@ void AllocationExpression():
 { debugPrint("ALLOCATION EXPRESSION"); }
 {
   LOOKAHEAD(2)
-  "new" PrimitiveType() ArrayDimsAndInits()
-| "new" ClassOrInterfaceType() [ TypeArguments() ]
+  "new" { jjtThis.setImage("new"); } PrimitiveType() ArrayDimsAndInits()
+| "new" { jjtThis.setImage("new"); } ClassOrInterfaceType() [ TypeArguments() ]
     (
       ArrayDimsAndInits()
     | Arguments() [ ClassOrInterfaceBody(false) ]
