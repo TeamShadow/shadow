@@ -83,32 +83,32 @@ public class ASTFlattener extends AbstractASTVisitor {
 	//
 	// These are nodes we want to remove IFF parent has 1 child and it has 1 child
 	//
-	public Object visit(ASTReferenceType node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTStatementExpression node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTStatementExpressionList node, Object data) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException { removeNode1P1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTStatementExpressionList node, Boolean secondVisit) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 
 	//
 	// These are nodes we want to remove IF it has 1 child
 	//
-	public Object visit(ASTExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTConditionalExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTConditionalOrExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTConditionalExclusiveOrExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTConditionalAndExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTBitwiseOrExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTBitwiseExclusiveOrExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTBitwiseAndExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTShiftExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTRotateExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTAdditiveExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTMultiplicativeExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTUnaryExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTUnaryExpressionNotPlusMinus node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTCastExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTEqualityExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTIsExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTRelationalExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTPrimaryExpression node, Object data) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTPrimaryPrefix node, Object data) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTBitwiseExclusiveOrExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTBitwiseAndExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTRotateExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTCastExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTIsExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	
 }

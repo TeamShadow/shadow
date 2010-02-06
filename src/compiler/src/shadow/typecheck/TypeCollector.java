@@ -91,9 +91,9 @@ public class TypeCollector extends BaseChecker
 		return typeTable;		
 	}
 
-	public Object visit(ASTClassOrInterfaceDeclaration node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
 		
-		if( (Boolean)secondVisit )		
+		if( secondVisit )		
 			exitType( node );		
 		else
 			enterType( node, node.getModifiers(), node.getKind() );
@@ -186,9 +186,9 @@ public class TypeCollector extends BaseChecker
 		currentClass = currentClass.getOuter();
 	}
 	
-	public Object visit(ASTEnumDeclaration node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {
 		
-		if( (Boolean)secondVisit )		
+		if( secondVisit )		
 			exitType( node );		
 		else
 			enterType( node, node.getModifiers(), Type.Kind.ENUM );
@@ -196,8 +196,8 @@ public class TypeCollector extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTViewDeclaration node, Object secondVisit) throws ShadowException {
-		if( (Boolean)secondVisit )		
+	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )		
 			exitType( node );		
 		else
 			enterType( node, node.getModifiers(), Type.Kind.VIEW );

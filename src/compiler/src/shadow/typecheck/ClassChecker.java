@@ -52,8 +52,8 @@ public class ClassChecker extends BaseChecker {
 		symbolTable = new LinkedList<HashMap<String, Type>>();
 	}
 	
-	public Object visit(ASTClassOrInterfaceDeclaration node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit) {// set the current type
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit) {// set the current type
 			if( curClass == null )
 				curClass = (ClassInterfaceBaseType)typeTable.get(node.getImage());
 			else
@@ -67,7 +67,7 @@ public class ClassChecker extends BaseChecker {
 	}
 
 	/*  //all of this is taken care of in the TypeCollector 
-	public Object visit(ASTExtendsList node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException {
 		
 		if(!node.isInterface()) { // class
 			Type type = typeTable.get(node.jjtGetChild(0).getImage());
@@ -106,7 +106,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
-	public Object visit(ASTImplementsList node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTImplementsList node, Boolean secondVisit) throws ShadowException {
 		
 		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
 			Type type = typeTable.get(node.jjtGetChild(0).getImage());
@@ -126,9 +126,9 @@ public class ClassChecker extends BaseChecker {
 	}
 	*/
 	
-	public Object visit(ASTBlock node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
 		// we have a new scope, so we need a new HashMap in the linked list
-		if((Boolean)secondVisit) {
+		if(secondVisit) {
 			System.out.println("\nSYMBOL TABLE:");
 			for(String s:symbolTable.getFirst().keySet())
 				System.out.println(s + ": " + symbolTable.getFirst().get(s));
@@ -141,7 +141,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTMethodDeclarator node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
 		String methodName = node.getImage();
 		
 		curMethod = curClass.getMethod(methodName);
@@ -149,8 +149,8 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.PRE_CHILDREN;	// don't need to come back here
 	}
 
-	public Object visit(ASTLocalVariableDeclaration node, Object secondVisit) throws ShadowException {		
-		if(!(Boolean)secondVisit)
+	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {		
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
 		// 	get the var's type
@@ -174,7 +174,7 @@ public class ClassChecker extends BaseChecker {
 			// check to see if we have any kind of init here
 			if(curNode.jjtGetNumChildren() == 2) {
 				Type initType = curNode.jjtGetChild(1).getType();
-				DEBUG("INIT TYPE: " + initType);
+
 				if(!initType.isSubtype(type)) {
 					addError(curNode.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
 					continue;
@@ -192,10 +192,10 @@ public class ClassChecker extends BaseChecker {
 	/**
 	 * TODO: DOUBLE CHECK THIS... I'M NOT REALLY SURE WHAT TO DO HERE
 	 */
-	public Object visit(ASTName node, Object data) throws ShadowException {
+	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException {
 		String name = node.getImage();
  		Type type = typeTable.get(name);
-
+ 		
 		// first we check to see if this names a type
 		if(type != null) {
 			node.setType(type);
@@ -230,22 +230,23 @@ public class ClassChecker extends BaseChecker {
 		
 		// by the time we get here, we haven't found this name anywhere
 		addError(node, Error.UNDEC_VAR, name);
+		DEBUG(node, "DIDN'T FIND");
 
 		return WalkType.NO_CHILDREN;
 	}
 	
-	public Object visit(ASTPrimaryExpression node, Object secondVisit) throws ShadowException {
-		if((Boolean)secondVisit)
+	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException {
+		if(secondVisit)
 			node.setType(node.jjtGetChild(0).getType());
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTAssignmentOperator node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTAssignmentOperator node, Boolean secondVisit) throws ShadowException {
 		return WalkType.PRE_CHILDREN;	// I don't think we do anything here
 	}
 	
-	public Object visit(ASTRelationalExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 2) {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
@@ -272,7 +273,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
-	public Object visit(ASTEqualityExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 2) {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
@@ -324,29 +325,21 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.PRE_CHILDREN;
 	}
 	
-	public Object visit(ASTShiftExpression node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit)
+	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
 		return visitShiftRotate( node );
 	}
 	
-	public Object visit(ASTRotateExpression node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit)
+	public Object visit(ASTRotateExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
 		return visitShiftRotate( node );
 	}
 	
 	public Object visitArithmetic(SimpleNode node) throws ShadowException {
-		// THIS IS WRONG... YOU CAN HAVE MULTIPLE NODES
-		/*
-		if(node.jjtGetNumChildren() != 2) {
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
-		}
-		*/
-		
 		// get the two types
 		Type t1 = node.jjtGetChild(0).getType();
 		Type t2 = node.jjtGetChild(1).getType();
@@ -371,8 +364,8 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTAdditiveExpression node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit)
+	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
 		Type t1 = node.jjtGetChild(0).getType();
@@ -387,14 +380,14 @@ public class ClassChecker extends BaseChecker {
 			return visitArithmetic( node );
 	}
 	
-	public Object visit(ASTMultiplicativeExpression node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit)
+	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
 		return visitArithmetic( node );
 	}
 		
-	public Object visit(ASTUnaryExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 1) {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
@@ -416,7 +409,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 		
-	public Object visit(ASTUnaryExpressionNotPlusMinus node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() != 1) {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
@@ -440,7 +433,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
-	public Object visit(ASTConditionalExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException {
 		if(node.jjtGetNumChildren() == 1) {
 			Type t = node.jjtGetChild(0).getType();
 			node.setType(t);
@@ -498,15 +491,15 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTConditionalOrExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException {
 		return visitConditional( node );
 	}
 	
-	public Object visit(ASTConditionalExclusiveOrExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
 		return visitConditional( node );
 	}
 	
-	public Object visit(ASTConditionalAndExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit) throws ShadowException {
 		return visitConditional( node );
 	}	
 
@@ -540,20 +533,20 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTBitwiseOrExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit) throws ShadowException {
 		return visitConditional( node );
 	}	
 	
-	public Object visit(ASTBitwiseExclusiveOrExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTBitwiseExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
 		return visitConditional( node );
 	}	
 	
-	public Object visit(ASTBitwiseAndExpression node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTBitwiseAndExpression node, Boolean secondVisit) throws ShadowException {
 		return visitConditional( node );
 	}	
 
-	public Object visit(ASTExpression node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit)
+	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
 		// if we only have 1 child, we just get the type from that child
@@ -593,8 +586,8 @@ public class ClassChecker extends BaseChecker {
 	//
 	// Everything below here are just visitors to push up the type
 	//
-	private Object pushUpType(Node node, Object secondVisit, int child) {
-		if(!(Boolean)secondVisit)
+	private Object pushUpType(Node node, Boolean secondVisit, int child) {
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
 		// simply push the type up the tree
@@ -603,10 +596,10 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 
-	private Object pushUpType(Node node, Object secondVisit) {
+	private Object pushUpType(Node node, Boolean secondVisit) {
 		return pushUpType(node, secondVisit, 0);
 	}
 
-	public Object visit(ASTType node, Object secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
-	public Object visit(ASTVariableInitializer node, Object secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 }

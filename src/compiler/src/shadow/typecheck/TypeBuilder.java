@@ -26,7 +26,7 @@ public class TypeBuilder extends BaseChecker {
 		this.typeTable = typeTable;
 		}
 	
-	public Object visit(ASTClassOrInterfaceDeclaration node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
 		
 		//
 		// TODO: Fix this as it could be a class, exception or interface
@@ -34,7 +34,7 @@ public class TypeBuilder extends BaseChecker {
 		//
 		
 		// For now we punt and assume everything is a class
-		if( (Boolean)secondVisit )		
+		if( secondVisit )		
 			curType = (ClassInterfaceBaseType)curType.getOuter();
 		else
 		{			
@@ -54,7 +54,7 @@ public class TypeBuilder extends BaseChecker {
 	/**
 	 * Add the field declarations.
 	 */
-	public Object visit(ASTFieldDeclaration node, Object secondVisit) throws ShadowException {
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
 		// a field dec has a type followed by 1 or more idents
 		Type type = typeTable.get(node.jjtGetChild(0).jjtGetChild(0).getImage());
 		
@@ -85,7 +85,7 @@ public class TypeBuilder extends BaseChecker {
 	/**
 	 * Adds a method to the current type.
 	 */
-	public Object visit(ASTMethodDeclaration node, Object secondVisit) throws ShadowException {		
+	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {		
 		Node methodDec = node.jjtGetChild(0);
 		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers(), node.getLine());
 		
@@ -136,7 +136,7 @@ public class TypeBuilder extends BaseChecker {
 		return WalkType.NO_CHILDREN;	// don't want to type-check the whole method now
 	}
 	
-	public Object visit(ASTConstructorDeclaration node, Object secondVisit) throws ShadowException {		
+	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
 		MethodSignature signature = new MethodSignature("constructor", node.getModifiers(), node.getLine());
 		visitParameters(node.jjtGetChild(0), signature);
 
@@ -148,7 +148,7 @@ public class TypeBuilder extends BaseChecker {
 		return WalkType.NO_CHILDREN;
 	}
 	
-	public Object visit(ASTDestructorDeclaration node, Object secondVisit) throws ShadowException {		
+	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {		
 		MethodSignature signature = new MethodSignature("destructor", node.getModifiers(), node.getLine());
 
 		DEBUG("ADDED METHOD: " + signature.toString());

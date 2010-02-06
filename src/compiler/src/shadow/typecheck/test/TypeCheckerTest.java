@@ -40,6 +40,7 @@ public class TypeCheckerTest extends BaseTest {
 	
 	protected void runTest(File sourceFile) throws ShadowException {
 	    try {
+	    	System.out.println("CHECKING: " + sourceFile.getPath());
 	        FileInputStream fis = new FileInputStream(sourceFile);        
 	        ShadowParser parser = new ShadowParser(fis);
 	        TypeChecker tc = new TypeChecker(debug);
