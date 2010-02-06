@@ -23,13 +23,9 @@ public class ClassType extends ClassInterfaceBaseType {
 	}	
 	
 	public ClassType(String typeName, int modifiers, Type outer, Kind kind ) {
-		this( typeName, modifiers, outer, kind, OBJECT );
-	}
+		super( typeName, modifiers, outer, kind);
+	}	
 	
-	public ClassType(String typeName, int modifiers, Type outer, Kind kind, Type parent ) {
-		super( typeName, modifiers, outer, kind, parent );
-	}
-
 	public void setExtendType(ClassType extendType) {
 		this.extendType = extendType;
 	}

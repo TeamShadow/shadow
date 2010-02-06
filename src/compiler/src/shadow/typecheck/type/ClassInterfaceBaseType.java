@@ -8,6 +8,7 @@ import shadow.typecheck.type.Type.Kind;
 public class ClassInterfaceBaseType extends Type {
 	protected HashMap<String, Type> fieldTable;
 	protected HashMap<String, MethodSignature> methodTable;
+	protected String packageName; //package
 	
 	public ClassInterfaceBaseType(String typeName) {
 		this( typeName, 0 );
@@ -22,16 +23,11 @@ public class ClassInterfaceBaseType extends Type {
 	}	
 	
 	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer, Kind kind ) {
-		this( typeName, modifiers, outer, kind, OBJECT );
-	}
-	
-	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer, Kind kind, Type parent ) {
-		super( typeName, modifiers, outer, kind, parent );
+		super( typeName, modifiers, outer, kind );
 		fieldTable = new HashMap<String, Type>();
 		methodTable = new HashMap<String, MethodSignature>();
-		
-	}
-
+	}	
+	
 	public boolean containsField(String fieldName) {
 		return fieldTable.containsKey(fieldName);
 	}

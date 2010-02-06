@@ -18,7 +18,7 @@ import shadow.typecheck.type.Type;
 
 public class TypeBuilder extends BaseChecker {
 	protected HashMap<String, Type> typeTable;
-	protected ClassInterfaceBaseType curType;
+	protected ClassInterfaceBaseType curType = null;
 	
 	
 	public TypeBuilder(HashMap<String, Type> typeTable, boolean debug) {
@@ -34,12 +34,21 @@ public class TypeBuilder extends BaseChecker {
 		//
 		
 		// For now we punt and assume everything is a class
-		curType = new ClassInterfaceBaseType(node.getImage(), node.getModifiers());
+		if( (Boolean)secondVisit )		
+			curType = (ClassInterfaceBaseType)curType.getOuter();
+		else
+		{			
+			if( curType == null )		
+				curType = (ClassInterfaceBaseType)typeTable.get(node.getImage());
+			else
+				curType = (ClassInterfaceBaseType)typeTable.get(curType + "." + node.getImage());
+		}
+			
 		
 		// insert our new type into the table
-		typeTable.put(node.getImage(), curType);
+		//typeTable.put(node.getImage(), curType);
 		
-		return WalkType.PRE_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 
 	/**

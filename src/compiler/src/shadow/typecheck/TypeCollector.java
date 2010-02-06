@@ -21,7 +21,7 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Type.Kind;
 
-public class TypeCollector extends AbstractASTVisitor
+public class TypeCollector extends BaseChecker
 {
 	protected HashMap<String,Type> typeTable  = new HashMap<String, Type>();
 	protected HashMap<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();
@@ -30,8 +30,9 @@ public class TypeCollector extends AbstractASTVisitor
 	protected String currentName = "";
 	
 	
-	public TypeCollector()
-	{			
+	public TypeCollector(boolean debug)
+	{		
+		super(debug);
 		// put all of our built-in types into the TypeTable
 		typeTable.put(Type.OBJECT.getTypeName(),	Type.OBJECT);
 		typeTable.put(Type.BOOLEAN.getTypeName(),	Type.BOOLEAN);

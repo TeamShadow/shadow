@@ -573,7 +573,7 @@ void ExtendsList(boolean isInterface):
    boolean extendsMoreThanOne = false;
    debugPrint("EXTENDS LIST");
 }
-{
+{ 
    "extends" ClassOrInterfaceType()
    ( "," ClassOrInterfaceType() { extendsMoreThanOne = true; } )*
    {

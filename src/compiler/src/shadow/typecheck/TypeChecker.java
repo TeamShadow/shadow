@@ -30,7 +30,7 @@ public class TypeChecker extends AbstractASTVisitor {
 
 		// Here is where we'd walk the import statements, and collect the types for those files
 		// Right now we are only collecting the types from the current file
-		TypeCollector collector = new TypeCollector();
+		TypeCollector collector = new TypeCollector(debug);
 		ASTWalker walker = new ASTWalker( collector );		
 		walker.walk(node);
 		

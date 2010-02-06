@@ -18,13 +18,9 @@ public class InterfaceType extends ClassInterfaceBaseType {
 	public InterfaceType(String typeName, int modifiers, Type outer ) {
 		this( typeName, modifiers, outer, Kind.INTERFACE );
 	}	
-	
+		
 	public InterfaceType(String typeName, int modifiers, Type outer, Kind kind ) {
-		this( typeName, modifiers, outer, kind, OBJECT );
-	}
-	
-	public InterfaceType(String typeName, int modifiers, Type outer, Kind kind, Type parent ) {
-		super( typeName, modifiers, outer, kind, parent );
+		super( typeName, modifiers, outer, kind );
 	}
 
 	public void addExtendType(InterfaceType extendType) {

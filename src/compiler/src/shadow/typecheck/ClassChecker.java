@@ -41,7 +41,7 @@ import shadow.typecheck.type.Type;
 
 public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected ClassInterfaceBaseType curClass; 
+	protected ClassInterfaceBaseType curClass = null; 
 	protected MethodSignature curMethod;
 	protected HashMap<String, Type> typeTable; 
 	
@@ -52,21 +52,23 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Object secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit) // set the current type
-			curClass = (ClassInterfaceBaseType)typeTable.get(node.getImage());
-		else { // set back when returning from an inner class
-			DEBUG("PARENT: " + curClass.getParent().getTypeName());
-			curClass = (ClassInterfaceBaseType)curClass.getParent();
+		if(!(Boolean)secondVisit) {// set the current type
+			if( curClass == null )
+				curClass = (ClassInterfaceBaseType)typeTable.get(node.getImage());
+			else
+				curClass = (ClassInterfaceBaseType)typeTable.get(curClass + "." + node.getImage());			
 		}
+		else // set back when returning from an inner class			
+			curClass = (ClassInterfaceBaseType)curClass.getOuter();
+		
 
 		return WalkType.POST_CHILDREN;
 	}
 
+	/*  //all of this is taken care of in the TypeCollector 
 	public Object visit(ASTExtendsList node, Object secondVisit) throws ShadowException {
 		
-		int numChildren = node.jjtGetNumChildren();
-		
-		if(numChildren == 1) { // class
+		if(!node.isInterface()) { // class
 			Type type = typeTable.get(node.jjtGetChild(0).getImage());
 			
 			if(type == null) {
@@ -79,6 +81,8 @@ public class ClassChecker extends BaseChecker {
 			
 			((ClassType)curClass).setExtendType((ClassType)type);
 		} else { // interface
+			
+			int numChildren = node.jjtGetNumChildren();
 			for(int i=0; i < numChildren; ++i) {
 				Type type = typeTable.get(node.jjtGetChild(i).getImage());
 				
@@ -96,6 +100,7 @@ public class ClassChecker extends BaseChecker {
 			
 		return WalkType.PRE_CHILDREN;
 	}
+	
 	
 	public Object visit(ASTImplementsList node, Object secondVisit) throws ShadowException {
 		
@@ -115,6 +120,7 @@ public class ClassChecker extends BaseChecker {
 			
 		return WalkType.PRE_CHILDREN;
 	}
+	*/
 	
 	public Object visit(ASTBlock node, Object secondVisit) throws ShadowException {
 		// we have a new scope, so we need a new HashMap in the linked list
@@ -394,7 +400,7 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		if(symbol.startsWith("-"))
-			node.setType(Type.makeSigned(t));
+			node.setType(Type.makeSigned((ClassType)t));
 		else
 			node.setType(t);
 		

@@ -6,29 +6,27 @@ public class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string the represents the type */
 	protected final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
-	protected final Type outer; //outer class
-	protected Type parent;  //super type
-	protected String packageName; //package
+	protected final Type outer; //outer class	
 	protected Kind kind;
 	
 	public static enum Kind { CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD,  VIEW};
 	
-
-	public static final Type OBJECT = new ClassType( "Object", 0, null ); 
-	public static final Type BOOLEAN = new Type( "boolean" );
-	public static final Type BYTE = new Type( "byte" );
-	public static final Type CODE = new Type( "code" );	
-	public static final Type SHORT = new Type( "short" );
-	public static final Type INT = new Type( "int" );
-	public static final Type LONG = new Type( "long" );	  
-	public static final Type FLOAT = new Type( "float" );
-	public static final Type DOUBLE = new Type( "double" );
-	public static final Type STRING = new Type( "String" );
-	public static final Type UBYTE = new Type( "ubyte" );
-	public static final Type UINT = new Type( "uint" );
-	public static final Type ULONG = new Type( "ulong" );
-	public static final Type USHORT = new Type( "ushort" );
-	public static final Type NULL = new Type( "null", 0, null );
+	public static final ClassType OBJECT = new ClassType( "Object", 0, null ); 
+	public static final ClassType BOOLEAN = new ClassType( "boolean" );
+	public static final ClassType BYTE = new ClassType( "byte" );
+	public static final ClassType CODE = new ClassType( "code" );	
+	public static final ClassType SHORT = new ClassType( "short" );
+	public static final ClassType INT = new ClassType( "int" );
+	public static final ClassType LONG = new ClassType( "long" );	  
+	public static final ClassType FLOAT = new ClassType( "float" );
+	public static final ClassType DOUBLE = new ClassType( "double" );
+	public static final ClassType STRING = new ClassType( "String" );
+	public static final ClassType UBYTE = new ClassType( "ubyte" );
+	public static final ClassType UINT = new ClassType( "uint" );
+	public static final ClassType ULONG = new ClassType( "ulong" );
+	public static final ClassType USHORT = new ClassType( "ushort" );
+	
+	public static final Type NULL = new Type( "null" );
 	
 	public Type(String typeName) {
 		this( typeName, 0 );
@@ -43,14 +41,9 @@ public class Type {
 	}	
 	
 	public Type(String typeName, int modifiers, Type outer, Kind kind ) {
-		this( typeName, modifiers, outer, kind, OBJECT );
-	}
-	
-	public Type(String typeName, int modifiers, Type outer, Kind kind, Type parent ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
-		this.outer = outer;
-		this.parent = parent;
+		this.outer = outer;		
 		this.kind = kind;
 	}
 	
@@ -65,19 +58,10 @@ public class Type {
 	public String toString() {
 		return typeName;
 	}
-	
-	public Type getParent() {
-		return parent;
-	}
-	
-	public void setParent(Type parent) {
-		this.parent = parent;
-	}
 
 	public boolean equals(Object o) {
 		Type t = (Type)o;
-		
-		// if either type is null or the type names are the same, then we're good
+
 		return  typeName.equals(t.typeName);
 	}
 	
@@ -96,7 +80,7 @@ public class Type {
 	}
 	
 	public boolean isString() {
-		return this.equals(STRING);
+		return this.equals(ClassType.STRING);
 	}
 	
 	public Type getOuter()
@@ -118,7 +102,7 @@ public class Type {
 	 * @param type The type to convert.
 	 * @return The signed version of the type.
 	 */
-	public static Type makeSigned(Type type) {
+	public static ClassType makeSigned(ClassType type) {
 		if(type.equals(UBYTE))
 			return BYTE;
 		
