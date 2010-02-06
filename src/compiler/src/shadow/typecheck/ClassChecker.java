@@ -16,8 +16,6 @@ import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTEqualityExpression;
-import shadow.parser.javacc.ASTExtendsList;
-import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -26,14 +24,15 @@ import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTShiftExpression;
+import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
+import shadow.parser.javacc.ASTVariableInitializer;
+import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
-import shadow.parser.javacc.Node;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.Type;
 
 
@@ -78,6 +77,9 @@ public class ClassChecker extends BaseChecker {
 				addError(node.jjtGetChild(0), Error.TYPE_MIS, node.jjtGetChild(0).getImage() + " is not a class");
 				return WalkType.PRE_CHILDREN;
 			}
+			
+			DEBUG("CUR CLASS: " + curClass.getTypeName() + " " + curClass.getClass().getCanonicalName());
+			DEBUG("EXTEND CLASS: " + type.getTypeName() + " " + type.getClass().getCanonicalName());
 			
 			((ClassType)curClass).setExtendType((ClassType)type);
 		} else { // interface
@@ -144,8 +146,11 @@ public class ClassChecker extends BaseChecker {
 		if(!(Boolean)secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		String typeName = node.jjtGetChild(0).jjtGetChild(0).getImage();
-		Type type = typeTable.get(typeName);
+		// I'm about 90% sure we've already checked the type and don't need to do this
+//		String typeName = node.jjtGetChild(0).jjtGetChild(0).getImage();
+//		Type type = typeTable.get(typeName);
+		
+		Type type = node.jjtGetChild(0).getType();
 
 		if(type == null) {
 			addError(node.jjtGetChild(0).jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
@@ -163,19 +168,38 @@ public class ClassChecker extends BaseChecker {
 				addError(curNode, Error.MULT_SYM, varName);
 				continue;
 			}
-
+			
 			symbolTable.get(0).put(varName, type);
 		}
 
 		return WalkType.POST_CHILDREN;
 	}
+
+	public Object visit(ASTVariableInitializer node, Object secondVisit) throws ShadowException {		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	
 	/**
 	 * TODO: DOUBLE CHECK THIS... I'M NOT REALLY SURE WHAT TO DO HERE
 	 */
 	public Object visit(ASTName node, Object data) throws ShadowException {
+		Type type = typeTable.get(node.getImage());
+		
+		if(type == null) {
+			addError(node, Error.UNDEF_TYP, node.getImage());
+			return WalkType.NO_CHILDREN;
+		}
+		
+		node.setType(type);
+		
+		return WalkType.PRE_CHILDREN;
+/*
+ * What I have below is a good lookup if you're given a variable name.
+ * However, ASTName is only for types... :-(
+ 
 		String name = node.getImage();
-		Type nameType = null;
+ 		Type nameType = null;
 		
 		// go through the scopes trying to find the name
 		for(HashMap<String, Type> curSymTable:symbolTable) {
@@ -205,7 +229,9 @@ public class ClassChecker extends BaseChecker {
 		
 		// by the time we get here, we haven't found this name anywhere
 		addError(node, Error.UNDEC_VAR, name);
+
 		return WalkType.NO_CHILDREN;
+*/
 	}
 	
 	public Object visit(ASTPrimaryExpression node, Object secondVisit) throws ShadowException {
@@ -216,10 +242,13 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTAssignmentOperator node, Object secondVisit) throws ShadowException {
-		if(node.jjtGetNumChildren() != 2) {
+/*
+		This is wrong...
+		 if(node.jjtGetNumChildren() != 2) {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
 		}
+*/
 		
 		// get the two types
 		Type t1 = node.jjtGetChild(0).getType();
@@ -543,5 +572,21 @@ public class ClassChecker extends BaseChecker {
 		return visitConditional( node );
 	}	
 
+	public Object visit(ASTType node, Object secondVisit) throws ShadowException {
+		return pushUpType(node, secondVisit);
+	}
+	
+	private Object pushUpType(Node node, Object secondVisit, int child) {
+		if(!(Boolean)secondVisit)
+			return WalkType.POST_CHILDREN;
 		
+		// simply push the type up the tree
+		node.setType(node.jjtGetChild(child).getType());
+		
+		return WalkType.POST_CHILDREN;
+	}
+
+	private Object pushUpType(Node node, Object secondVisit) {
+		return pushUpType(node, secondVisit, 0);
+	}
 }
