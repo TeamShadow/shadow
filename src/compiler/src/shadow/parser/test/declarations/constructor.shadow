@@ -1,3 +1,5 @@
+exception BlahException { }
+
 class Blah {
     public constructor() { ; }
     public constructor(int a) { ; }
