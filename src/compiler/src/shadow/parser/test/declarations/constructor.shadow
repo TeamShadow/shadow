@@ -1,7 +1,7 @@
 exception BlahException { }
 
 class Blah {
-    public constructor() { ; }
+    public constructor() { a = 1; }
     public constructor(int a) { ; }
     public constructor(int a, int b) { ; }
 
