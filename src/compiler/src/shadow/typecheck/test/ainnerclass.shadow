@@ -1,9 +1,0 @@
-class Outer {
-
-	private class Inner 
-	{}
-	
-	private class Second extends Outer.Inner
-	{}
-
-}
