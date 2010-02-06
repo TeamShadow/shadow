@@ -183,7 +183,7 @@ public class TypeCollector extends BaseChecker
 		else
 			currentName = currentName.substring(0, index);
 		
-		currentClass = currentClass.getOuter();		
+		currentClass = currentClass.getOuter();
 	}
 	
 	public Object visit(ASTEnumDeclaration node, Object secondVisit) throws ShadowException {
