@@ -2,21 +2,20 @@ package shadow.typecheck;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import shadow.AST.ASTWalker;
-import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.Type;
 
-public class TypeChecker extends AbstractASTVisitor {
+public class TypeChecker {
 
-	protected HashMap<String, Type> typeTable; /** Holds all of the types we know about */
+
 	protected boolean debug;
 	
-	public TypeChecker(boolean debug) {
-		//typeTable = new HashMap<String, Type>();
-		//instantiate with TypeCollector
+	public TypeChecker(boolean debug) {	
 		this.debug = debug;
 	}
 	
@@ -30,15 +29,24 @@ public class TypeChecker extends AbstractASTVisitor {
 
 		// Here is where we'd walk the import statements, and collect the types for those files
 		// Right now we are only collecting the types from the current file
-		
+	 
+		 
 		TypeCollector collector = new TypeCollector(debug);
 		ASTWalker walker = new ASTWalker( collector );		
 		walker.walk(node);
+				
+		collector.linkTypeTable();
+		Map<String, Type> typeTable = collector.getTypeTable();
+		List<String> importList = collector.getImportList();
 		
-		typeTable = collector.produceTypeTable();
+		// see how many errors we found
+		if(collector.getErrorCount() > 0) {
+			collector.printErrors(System.out);
+			return false;
+		}
 		
-		TypeBuilder tb = new TypeBuilder(typeTable, debug);
-		walker = new ASTWalker(tb);
+		TypeBuilder builder = new TypeBuilder(debug, typeTable, importList );
+		walker = new ASTWalker(builder);
 		
 		// walk the tree building types
 		walker.walk(node);
@@ -52,20 +60,20 @@ public class TypeChecker extends AbstractASTVisitor {
 			System.out.println(tn + ": " + typeTable.get(tn));
 */		
 		// see how many errors we found
-		if(tb.getErrorCount() > 0) {
-			tb.printErrors(System.out);
+		if(builder.getErrorCount() > 0) {
+			builder.printErrors(System.out);
 			return false;
 		}
 		
-		ClassChecker cc = new ClassChecker(typeTable, debug);
-		walker = new ASTWalker(cc);
+		ClassChecker checker = new ClassChecker(debug, typeTable, importList );
+		walker = new ASTWalker(checker);
 		
 		// now go through and check the whole class
 		walker.walk(node);
 
 		// see how many errors we found
-		if(cc.getErrorCount() > 0) {
-			cc.printErrors(System.out);
+		if(checker.getErrorCount() > 0) {
+			checker.printErrors(System.out);
 			return false;
 		}
 		

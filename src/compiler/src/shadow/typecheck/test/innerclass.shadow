@@ -5,5 +5,8 @@ class Outer {
 	
 	private class Second extends Outer.Inner
 	{}
+	
+	private class Third extends Inner
+	{}
 
 }

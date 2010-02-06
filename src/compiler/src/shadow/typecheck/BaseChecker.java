@@ -2,22 +2,21 @@ package shadow.typecheck;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import shadow.AST.ASTUtils;
 import shadow.AST.AbstractASTVisitor;
-import shadow.AST.ASTWalker.WalkType;
-import shadow.parser.javacc.ASTAdditiveExpression;
-import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.Type;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 
 	protected ArrayList<String> errorList;
-	protected boolean debug;
+	private Map<String, Type> typeTable; /** Holds all of the types we know about */
+	protected List<String> importList; /** Holds all of the types we know about */
+	protected Type currentType = null;
+	protected boolean debug;	
 	
 	// these are constants for our error messages to keep things consistent
 	public static enum Error {
@@ -25,15 +24,32 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		MULT_SYM		{ String getStr() { return "MULTIPLY DEFINED SYMBOL"; } },
 		MULT_MTH		{ String getStr() { return "MULTIPLY DEFINED METHODS"; } },
 		UNDEC_VAR		{ String getStr() { return "UNDECLARED VARIABLE"; } },
-		UNDEF_TYP		{ String getStr() { return "UNDEFINDED TYPE"; } },
+		UNDEF_TYP		{ String getStr() { return "UNDEFINED TYPE"; } },
 		TYPE_MIS		{ String getStr() { return "TYPE MISMATCH"; } };
 		
 		abstract String getStr();
 	}
 	
-	public BaseChecker(boolean debug) {
+	public final Map<String, Type> getTypeTable()
+	{
+		return typeTable;
+	}
+	
+	public void addType( String name, Type type  )
+	{
+		typeTable.put(name, type);		
+	}
+	
+	public final List<String> getImportList()
+	{
+		return importList;
+	}
+	
+	public BaseChecker(boolean debug, Map<String, Type> typeTable, List<String> importList  ) {
 		errorList = new ArrayList<String>();
 		this.debug = debug;
+		this.typeTable = typeTable;
+		this.importList = importList;
 	}
 	
 	protected String getFileAndLine(int depth) {
@@ -100,6 +116,30 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		for(String msg:errorList) {
 			stream.println(msg);
 		}
+	}
+	
+	
+	public final Type lookupType( String name )
+	{
+				return lookupType( name, currentType );
+	}
+	
+	public final Type lookupType( String name, Type outerClass )
+	{	
+		if( outerClass == null )
+		{
+			//check imports here, eventually
+			return typeTable.get( name );
+		}
+		else
+		{
+			Type type = typeTable.get( outerClass + "." + name);
+			if( type != null )
+				return type;
+			else
+				//recursive calls
+				return lookupType( name, outerClass.getOuter() );
+		}	 
 	}
 	
 	public int getErrorCount() {

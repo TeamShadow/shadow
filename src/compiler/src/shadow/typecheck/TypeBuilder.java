@@ -1,6 +1,9 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
@@ -16,18 +19,13 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
-public class TypeBuilder extends BaseChecker {
-	protected HashMap<String, Type> typeTable;
-	protected ClassInterfaceBaseType curType = null;
+public class TypeBuilder extends BaseChecker {	
 	
-	
-	public TypeBuilder(HashMap<String, Type> typeTable, boolean debug) {
-		super(debug);
-		this.typeTable = typeTable;
-		}
+	public TypeBuilder(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
+		super(debug, typeTable, importList);
+	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
-		
 		//
 		// TODO: Fix this as it could be a class, exception or interface
 		//       We'll also need to add that to Type so it knows what it is
@@ -35,18 +33,12 @@ public class TypeBuilder extends BaseChecker {
 		
 		// For now we punt and assume everything is a class
 		if( secondVisit )		
-			curType = (ClassInterfaceBaseType)curType.getOuter();
-		else
-		{			
-			if( curType == null )		
-				curType = (ClassInterfaceBaseType)typeTable.get(node.getImage());
-			else
-				curType = (ClassInterfaceBaseType)typeTable.get(curType + "." + node.getImage());
-		}
-			
+			currentType = (ClassInterfaceBaseType)currentType.getOuter();
+		else					
+			currentType = (ClassInterfaceBaseType)lookupType(node.getImage());
 		
 		// insert our new type into the table
-		//typeTable.put(node.getImage(), curType);
+		//typeTable.put(node.getImage(), currentType);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -56,7 +48,7 @@ public class TypeBuilder extends BaseChecker {
 	 */
 	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
 		// a field dec has a type followed by 1 or more idents
-		Type type = typeTable.get(node.jjtGetChild(0).jjtGetChild(0).getImage());
+		Type type = lookupType(node.jjtGetChild(0).jjtGetChild(0).getImage());
 		
 		// make sure we have this type
 		if(type == null) {
@@ -64,20 +56,30 @@ public class TypeBuilder extends BaseChecker {
 			return WalkType.NO_CHILDREN;
 		}
 		
-		// go through inserting all the idents
-		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
-			String symbol = node.jjtGetChild(i).jjtGetChild(0).getImage();
-			
-			// make sure we don't already have this symbol
-			if(curType.containsField(symbol)) {
-				addError(node.jjtGetChild(i).jjtGetChild(0), Error.MULT_SYM, symbol);
-				return WalkType.NO_CHILDREN;
+		if( currentType instanceof ClassInterfaceBaseType )
+		{
+			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+			// go through inserting all the idents
+			for(int i=1; i < node.jjtGetNumChildren(); ++i) {
+				String symbol = node.jjtGetChild(i).jjtGetChild(0).getImage();
+				
+				// make sure we don't already have this symbol
+				if(currentClass.containsField(symbol)) {
+					addError(node.jjtGetChild(i).jjtGetChild(0), Error.MULT_SYM, symbol);
+					return WalkType.NO_CHILDREN;
+				}
+				
+				DEBUG("ADDING: " + type + " " + symbol);
+				
+				currentClass.addField(symbol, type);
 			}
-			
-			DEBUG("ADDING: " + type + " " + symbol);
-			
-			curType.addField(symbol, type);
 		}
+		else
+		{
+			addError(node, "Cannot add field to a structure that is not a class, interface, error, enum, or exception");
+			return WalkType.NO_CHILDREN;
+		}
+			
 		
 		return WalkType.NO_CHILDREN;	// only need the symbols, no type-checking yet
 	}
@@ -104,7 +106,7 @@ public class TypeBuilder extends BaseChecker {
 					signature.addReturn(createMethodType((ASTFunctionType)retNode));
 				} else {
 					String retTypeName = retNode.getImage();
-					Type retType = typeTable.get(retTypeName);
+					Type retType = lookupType(retTypeName);
 
 					// make sure the return type is in the type table
 					if(retType == null) {
@@ -118,20 +120,29 @@ public class TypeBuilder extends BaseChecker {
 			}
 		}
 		
-		// make sure we don't already have this method
-		if(curType.containsMethod(signature)) {
+		if( currentType instanceof ClassInterfaceBaseType )
+		{
+			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType; 
+			// make sure we don't already have this method
+			if(currentClass.containsMethod(signature)) {
+				
+				// get the first signature
+				MethodSignature firstMethod = currentClass.getMethodSignature(signature);
+				
+				addError(methodDec, Error.MULT_MTH, "First declared on line " + firstMethod.getLineNumber());
+				return WalkType.NO_CHILDREN;
+			}
 			
-			// get the first signature
-			MethodSignature firstMethod = curType.getMethodSignature(signature);
-			
-			addError(methodDec, Error.MULT_MTH, "First declared on line " + firstMethod.getLineNumber());
+			DEBUG("ADDED METHOD: " + signature.toString());
+	
+			// add the method to the current type
+			currentClass.addMethod(methodDec.getImage(), signature);
+		}
+		else
+		{
+			addError(node, "Cannot add method to a structure that is not a class, interface, error, enum, or exception");
 			return WalkType.NO_CHILDREN;
 		}
-		
-		DEBUG("ADDED METHOD: " + signature.toString());
-
-		// add the method to the current type
-		curType.addMethod(methodDec.getImage(), signature);
 		
 		return WalkType.NO_CHILDREN;	// don't want to type-check the whole method now
 	}
@@ -143,7 +154,8 @@ public class TypeBuilder extends BaseChecker {
 		DEBUG("ADDED METHOD: " + signature.toString());
 
 		// add the method to the current type
-		curType.addMethod("constructor", signature);
+		ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+		currentClass.addMethod("constructor", signature);
 
 		return WalkType.NO_CHILDREN;
 	}
@@ -154,7 +166,8 @@ public class TypeBuilder extends BaseChecker {
 		DEBUG("ADDED METHOD: " + signature.toString());
 
 		// add the method to the current type
-		curType.addMethod("destructor", signature);
+		ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+		currentClass.addMethod("destructor", signature);
 
 		return WalkType.NO_CHILDREN;
 	}
@@ -179,7 +192,7 @@ public class TypeBuilder extends BaseChecker {
 			if(typeNode instanceof ASTFunctionType) {
 				signature.addParameter(paramSymbol, createMethodType((ASTFunctionType)typeNode));
 			} else {	// regular parameter
-				Type paramType = typeTable.get(typeNode.getImage());
+				Type paramType = lookupType(typeNode.getImage());
 				
 				// make sure this type is in the type table
 				if(paramType == null) {
@@ -218,7 +231,7 @@ public class TypeBuilder extends BaseChecker {
 			
 			
 			else {
-				Type type = typeTable.get(curNode.getImage());
+				Type type = lookupType(curNode.getImage());
 				
 				if(type == null) {
 					addError(curNode, Error.UNDEF_TYP, curNode.getImage());
@@ -239,7 +252,7 @@ public class TypeBuilder extends BaseChecker {
 				if(curNode instanceof ASTFunctionType) {
 					ret.addReturn(createMethodType((ASTFunctionType)curNode));
 				} else {
-					Type type = typeTable.get(curNode.getImage());
+					Type type = lookupType(curNode.getImage());
 					
 					if(type == null) {
 						addError(curNode.jjtGetChild(0), Error.UNDEF_TYP, curNode.jjtGetChild(0).getImage());

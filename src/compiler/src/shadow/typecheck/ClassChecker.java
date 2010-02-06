@@ -2,6 +2,8 @@ package shadow.typecheck;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTAdditiveExpression;
@@ -42,25 +44,22 @@ import shadow.typecheck.type.Type;
 
 public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected ClassInterfaceBaseType curClass = null; 
-	protected MethodSignature curMethod;
-	protected HashMap<String, Type> typeTable; 
+	protected MethodSignature curMethod;	
 	
-	public ClassChecker(HashMap<String, Type> typeTable, boolean debug) {
-		super(debug);
-		this.typeTable = typeTable;
+	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
+		super(debug, typeTable, importList);		
 		symbolTable = new LinkedList<HashMap<String, Type>>();
 	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit) {// set the current type
-			if( curClass == null )
-				curClass = (ClassInterfaceBaseType)typeTable.get(node.getImage());
+			if( currentType == null )
+				currentType = (ClassInterfaceBaseType)lookupType(node.getImage());
 			else
-				curClass = (ClassInterfaceBaseType)typeTable.get(curClass + "." + node.getImage());			
+				currentType = (ClassInterfaceBaseType)lookupType(currentType + "." + node.getImage());			
 		}
 		else // set back when returning from an inner class			
-			curClass = (ClassInterfaceBaseType)curClass.getOuter();
+			currentType = (ClassInterfaceBaseType)currentType.getOuter();
 		
 
 		return WalkType.POST_CHILDREN;
@@ -80,10 +79,10 @@ public class ClassChecker extends BaseChecker {
 				return WalkType.PRE_CHILDREN;
 			}
 			
-			DEBUG("CUR CLASS: " + curClass.getTypeName() + " " + curClass.getClass().getCanonicalName());
+			DEBUG("CUR CLASS: " + currentType.getTypeName() + " " + currentType.getClass().getCanonicalName());
 			DEBUG("EXTEND CLASS: " + type.getTypeName() + " " + type.getClass().getCanonicalName());
 			
-			((ClassType)curClass).setExtendType((ClassType)type);
+			((ClassType)currentType).setExtendType((ClassType)type);
 		} else { // interface
 			
 			int numChildren = node.jjtGetNumChildren();
@@ -98,7 +97,7 @@ public class ClassChecker extends BaseChecker {
 					return WalkType.PRE_CHILDREN;
 				}
 				
-				((InterfaceType)curClass).addExtendType((InterfaceType)type);
+				((InterfaceType)currentType).addExtendType((InterfaceType)type);
 			}
 		}
 			
@@ -119,7 +118,7 @@ public class ClassChecker extends BaseChecker {
 				return WalkType.PRE_CHILDREN;
 			}
 			
-			((ClassType)curClass).addImplementType((InterfaceType)type);
+			((ClassType)currentType).addImplementType((InterfaceType)type);
 		}
 			
 		return WalkType.PRE_CHILDREN;
@@ -144,7 +143,14 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
 		String methodName = node.getImage();
 		
-		curMethod = curClass.getMethod(methodName);
+		if( currentType instanceof ClassInterfaceBaseType )
+		{
+			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+			curMethod = currentClass.getMethod(methodName);
+		}
+		else
+			addError(node, "Method declarations only allowed in class, interface, enum, error, and exception types");
+			
 		
 		return WalkType.PRE_CHILDREN;	// don't need to come back here
 	}
@@ -194,8 +200,8 @@ public class ClassChecker extends BaseChecker {
 	 */
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException {
 		String name = node.getImage();
- 		Type type = typeTable.get(name);
- 		
+ 		Type type = lookupType(name);
+
 		// first we check to see if this names a type
 		if(type != null) {
 			node.setType(type);
@@ -223,10 +229,15 @@ public class ClassChecker extends BaseChecker {
 		}
 			
 		// check to see if it's a field
-		if(curClass.containsField(name)) {
-			node.setType(curClass.getField(name));
-			return WalkType.PRE_CHILDREN;
+		if( currentType instanceof ClassInterfaceBaseType )
+		{
+			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+			if(currentClass.containsField(name)) {
+				node.setType(currentClass.getField(name));
+				return WalkType.PRE_CHILDREN;
+			}
 		}
+		
 		
 		// by the time we get here, we haven't found this name anywhere
 		addError(node, Error.UNDEC_VAR, name);
@@ -365,7 +376,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
+		if(!(Boolean)secondVisit)
 			return WalkType.POST_CHILDREN;
 		
 		Type t1 = node.jjtGetChild(0).getType();
@@ -381,7 +392,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
+		if(!(Boolean)secondVisit)
 			return WalkType.POST_CHILDREN;
 
 		return visitArithmetic( node );
@@ -586,6 +597,7 @@ public class ClassChecker extends BaseChecker {
 	//
 	// Everything below here are just visitors to push up the type
 	//
+
 	private Object pushUpType(Node node, Boolean secondVisit, int child) {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
