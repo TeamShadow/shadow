@@ -15,8 +15,8 @@ class ASTUnaryExpression extends SimpleNode {
 
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
-    return visitor.visit(this, data);
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
+    return visitor.visit(this, secondVisit);
   }
 }
 /* JavaCC - OriginalChecksum=54af06457344272ea48083b366191325 (do not edit this line) */

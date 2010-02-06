@@ -15,8 +15,8 @@ class ASTStatementExpressionList extends SimpleNode {
 
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
-    return visitor.visit(this, data);
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
+    return visitor.visit(this, secondVisit);
   }
 }
 /* JavaCC - OriginalChecksum=b9906cf969c1d85c128ec16c3b00a7ba (do not edit this line) */

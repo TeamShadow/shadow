@@ -15,8 +15,8 @@ class ASTThrowStatement extends SimpleNode {
 
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
-    return visitor.visit(this, data);
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
+    return visitor.visit(this, secondVisit);
   }
 }
 /* JavaCC - OriginalChecksum=421ecf696fbce2437ab25b4636e0a35f (do not edit this line) */

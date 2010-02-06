@@ -15,8 +15,8 @@ class ASTLocalVariableDeclaration extends SimpleNode {
 
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
-    return visitor.visit(this, data);
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
+    return visitor.visit(this, secondVisit);
   }
 }
 /* JavaCC - OriginalChecksum=3d136cc82466ead418cf1f681ca9746f (do not edit this line) */

@@ -13,7 +13,7 @@ public class ASTStaticArrayType extends SimpleNode {
 	}
 
 	@Override
-	public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
+	public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
 		return null;
 	}
 	

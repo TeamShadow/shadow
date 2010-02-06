@@ -15,8 +15,8 @@ class ASTTypeArgument extends SimpleNode {
 
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
-    return visitor.visit(this, data);
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
+    return visitor.visit(this, secondVisit);
   }
 }
 /* JavaCC - OriginalChecksum=96655b3d861c8af0412ae9f7929a03a4 (do not edit this line) */

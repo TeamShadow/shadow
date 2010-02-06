@@ -28,6 +28,7 @@ options {
   MULTI=true;
   VISITOR=true;
   VISITOR_EXCEPTION="ShadowException";
+  VISITOR_DATA_TYPE="Boolean";
 }
 
 PARSER_BEGIN(ShadowParser)

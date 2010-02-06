@@ -55,6 +55,6 @@ interface Node {
 	public void setType(Type type);
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException;
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException;
 }
 /* JavaCC - OriginalChecksum=477229613677e4513ff761a31677b937 (do not edit this line) */

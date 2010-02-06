@@ -20,8 +20,8 @@ class ASTClassOrInterfaceType extends SimpleNode {
 	}
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
-    return visitor.visit(this, data);
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
+    return visitor.visit(this, secondVisit);
   }
 }
 /* JavaCC - OriginalChecksum=30f1aa6f9a646cb6d09daa9dbef3db5c (do not edit this line) */

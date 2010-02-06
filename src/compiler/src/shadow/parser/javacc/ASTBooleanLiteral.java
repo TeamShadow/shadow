@@ -12,8 +12,8 @@ public class ASTBooleanLiteral extends SimpleNode {
 		super(p, i);
 	}
 	
-    public Object jjtAccept(ShadowParserVisitor visitor, Object data) throws ShadowException {
-    	return visitor.visit(this, data);
+    public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
+    	return visitor.visit(this, secondVisit);
     }
 
     public void dump(String prefix) {

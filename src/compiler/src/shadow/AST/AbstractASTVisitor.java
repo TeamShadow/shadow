@@ -6,627 +6,627 @@ import shadow.parser.javacc.*;
 public abstract class AbstractASTVisitor implements ShadowParserVisitor {
 
 	@Override
-	public Object visit(SimpleNode node, Object data) throws ShadowException {
+	public Object visit(SimpleNode node, Boolean secondVisit) throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTCompilationUnit node, Object data)
+	public Object visit(ASTCompilationUnit node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTPackageDeclaration node, Object data)
+	public Object visit(ASTPackageDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTImportDeclaration node, Object data)
+	public Object visit(ASTImportDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTModifiers node, Object data) throws ShadowException {
+	public Object visit(ASTModifiers node, Boolean secondVisit) throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTTypeDeclaration node, Object data)
+	public Object visit(ASTTypeDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTViewDeclaration node, Object data)
+	public Object visit(ASTViewDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTClassOrInterfaceDeclaration node, Object data)
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTExtendsList node, Object data)
+	public Object visit(ASTExtendsList node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTImplementsList node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-	
-	@Override
-	public Object visit(ASTVersion node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTEnumDeclaration node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTEnumBody node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTEnumConstant node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTTypeParameters node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTTypeParameter node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTTypeBound node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTClassOrInterfaceBody node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTClassOrInterfaceBodyDeclaration node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTFieldDeclaration node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTVariableDeclarator node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTVariableDeclaratorId node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTVariableInitializer node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTArrayInitializer node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMethodDeclaration node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMethodDeclarator node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTFormalParameters node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTFormalParameter node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTConstructorDeclaration node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTDestructorDeclaration node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTExplicitConstructorInvocation node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTInitializer node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTType node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTReferenceType node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTStaticArrayType node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTFunctionType node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTClassOrInterfaceType node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTTypeArguments node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTTypeArgument node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTWildcardBounds node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTPrimitiveType node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTResultType node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTResultTypes node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTName node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTNameList node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTExpression node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTAssignmentOperator node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTConditionalExpression node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTConditionalOrExpression node, Object data)
+	public Object visit(ASTImplementsList node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 	
 	@Override
-	public Object visit(ASTConditionalExclusiveOrExpression node, Object data)
+	public Object visit(ASTVersion node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTConditionalAndExpression node, Object data)
+	public Object visit(ASTEnumDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTBitwiseOrExpression node, Object data)
+	public Object visit(ASTEnumBody node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTEnumConstant node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTBitwiseExclusiveOrExpression node, Object data)
+	public Object visit(ASTTypeParameters node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTBitwiseAndExpression node, Object data)
+	public Object visit(ASTTypeParameter node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTEqualityExpression node, Object data)
+	public Object visit(ASTTypeBound node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTIsExpression node, Object data)
+	public Object visit(ASTClassOrInterfaceBodyDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTRelationalExpression node, Object data)
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTShiftExpression node, Object data)
+	public Object visit(ASTVariableDeclarator node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTRotateExpression node, Object data)
+	public Object visit(ASTVariableDeclaratorId node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTAdditiveExpression node, Object data)
+	public Object visit(ASTVariableInitializer node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTMultiplicativeExpression node, Object data)
+	public Object visit(ASTArrayInitializer node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTUnaryExpression node, Object data)
+	public Object visit(ASTMethodDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTUnaryExpressionNotPlusMinus node, Object data)
+	public Object visit(ASTMethodDeclarator node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTCastExpression node, Object data)
+	public Object visit(ASTFormalParameters node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTPrimaryExpression node, Object data)
+	public Object visit(ASTFormalParameter node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTMemberSelector node, Object data)
+	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTPrimaryPrefix node, Object data)
+	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTPrimarySuffix node, Object data)
+	public Object visit(ASTExplicitConstructorInvocation node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTLiteral node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTBooleanLiteral node, Object data)
+	public Object visit(ASTInitializer node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTNullLiteral node, Object data)
+	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTReferenceType node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTArguments node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTArgumentList node, Object data)
+	public Object visit(ASTStaticArrayType node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTAllocationExpression node, Object data)
+	public Object visit(ASTFunctionType node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTArrayDimsAndInits node, Object data)
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTStatement node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTAssertStatement node, Object data)
+	public Object visit(ASTTypeArguments node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTLabeledStatement node, Object data)
+	public Object visit(ASTTypeArgument node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTBlock node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTBlockStatement node, Object data)
+	public Object visit(ASTWildcardBounds node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTLocalVariableDeclaration node, Object data)
+	public Object visit(ASTPrimitiveType node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTEmptyStatement node, Object data)
+	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTResultTypes node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTStatementExpression node, Object data)
+	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTNameList node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTAssignmentOperator node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTSwitchStatement node, Object data)
+	public Object visit(ASTConditionalExpression node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTSwitchLabel node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTIfStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTWhileStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTDoStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTForeachStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTForStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTForInit node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTStatementExpressionList node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTForUpdate node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTBreakStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTContinueStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTReturnStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTThrowStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTSynchronizedStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTTryStatement node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTRightRotate node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTRightShift node, Object data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMemberValuePairs node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMemberValuePair node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMemberValue node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMemberValueArrayInitializer node, Object data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTDefaultValue node, Object data)
+	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 	
 	@Override
-	public Object visit(ASTSequence node, Object data)
+	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTBitwiseExclusiveOrExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTBitwiseAndExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTEqualityExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTIsExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTRelationalExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTShiftExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTRotateExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTAdditiveExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTUnaryExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTCastExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTPrimaryExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTMemberSelector node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTPrimarySuffix node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTBooleanLiteral node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTNullLiteral node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTArguments node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTArgumentList node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTAllocationExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTArrayDimsAndInits node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTStatement node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTAssertStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTLabeledStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTBlockStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTEmptyStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTStatementExpression node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTSwitchStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTSwitchLabel node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTIfStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTWhileStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTDoStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTForeachStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTForStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTForInit node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTStatementExpressionList node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTForUpdate node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTBreakStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTContinueStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTReturnStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTThrowStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTSynchronizedStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTTryStatement node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTRightRotate node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTRightShift node, Boolean secondVisit) throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTMemberValuePairs node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTMemberValuePair node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTMemberValue node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTMemberValueArrayInitializer node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTDefaultValue node, Boolean secondVisit)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTSequence node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
