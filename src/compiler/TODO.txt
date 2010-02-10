@@ -66,60 +66,60 @@ Add visitor methods in ClassChecker for:
   ASTEnumDeclaration
   ASTEnumBody
   ASTEnumConstant
+  ASTTypeParameters
+  ASTTypeParameter
+  ASTTypeBound
+  ASTTypeArguments
+  ASTTypeArgument
   
 
 Bill do these:
 
   ASTTypeDeclaration
-  DONE - ASTClassOrInterfaceDeclaration
-  DONE - ASTExtendsList
-  DONE - ASTImplementsList
-  ASTTypeParameters
-  ASTTypeParameter
-  ASTTypeBound
-  ASTFieldDeclaration  -- ?? don't think we need to do anything more
-  ASTMethodDeclaration -- ?? don't think we need to do anything more
-  ASTMethodDeclarator  -- ?? don't think we need to do anything more
-  DONE - ASTLocalVariableDeclaration
-  ASTVariableDeclarator -- ?? don't need anything here
-  ASTVariableDeclaratorId -- just a place-holder for the var name, no type-checking needed
-  DONE - ASTVariableInitializer
+DONE - ASTClassOrInterfaceDeclaration
+DONE - ASTExtendsList
+DONE - ASTImplementsList
+DONE - ASTFieldDeclaration
+DONE - ASTMethodDeclaration
+DONE - ASTMethodDeclarator
+DONE - ASTConstructorDeclaration
+DONE - ASTDestructorDeclaration
+DONE - ASTLocalVariableDeclaration
+DONE - ASTVariableDeclarator
+DONE - ASTVariableDeclaratorId -- just a place-holder for the var name, no type-checking needed
+DONE - ASTVariableInitializer
   ASTArrayInitializer
   ASTFormalParameters
   ASTFormalParameter
-  ASTConstructorDeclaration
-  ASTDestructorDeclaration
   ASTExplicitConstructorInvocation
   ASTInitializer
-  ASTType
+DONE - ASTType
   ASTReferenceType
-  ASTFunctionType
+DONE - ASTFunctionType
   ASTClassOrInterfaceType
-  ASTTypeArguments
-  ASTTypeArgument
   ASTWildcardBounds
-  ASTPrimitiveType
+DONE - ASTPrimitiveType
   ASTResultType
   ASTResultTypes
-  ASTName
+DONE - ASTName
   ASTNameList -- ?? don't think we need to type-check this
   ASTPrimaryExpression
   
   
 Barry do these:
   
-  DONE - ASTAdditiveExpression
-  DONE - ASTMultiplicativeExpression
-  DONE - ASTUnaryExpression
-  DONE - ASTUnaryExpressionNotPlusMinus
-  DONE - ASTConditionalExpression
-  DONE - ASTConditionalOrExpression
-  DONE - ASTConditionalExclusiveOrExpression
-  DONE - ASTConditionalAndExpression
-  DONE - ASTBitwiseOrExpression
-  DONE - ASTBitwiseExclusiveOrExpression
-  DONE - ASTBitwiseAndExpression
-  DONE - ASTExpression - Still needs to handle the different assignment types, maybe?
+DONE - ASTAdditiveExpression
+DONE - ASTMultiplicativeExpression
+DONE - ASTUnaryExpression
+DONE - ASTUnaryExpressionNotPlusMinus
+DONE - ASTConditionalExpression
+DONE - ASTConditionalOrExpression
+DONE - ASTConditionalExclusiveOrExpression
+DONE - ASTConditionalAndExpression
+DONE - ASTBitwiseOrExpression
+DONE - ASTBitwiseExclusiveOrExpression
+DONE - ASTBitwiseAndExpression
+DONE - ASTExpression - Still needs to handle the different assignment types, maybe?
   ASTIsExpression	//needs richer type information
   ASTCastExpression //needs richer type information
   ASTSequence
@@ -135,7 +135,7 @@ Barry do these:
   ASTArrayDimsAndInits
   ASTStatement
   ASTLabeledStatement
-  DONE? - ASTBlock
+DONE? - ASTBlock
   ASTBlockStatement
   ASTEmptyStatement
   ASTStatementExpression

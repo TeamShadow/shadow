@@ -747,7 +747,7 @@ void FormalParameter():
 void ConstructorDeclaration(int modifiers):
 { debugPrint("CONTRUCTOR DECLARATION"); }
 {
-  { jjtThis.setModifiers(modifiers); }
+  { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }
   [ TypeParameters() ]
   // Modifiers matched in the caller
   "constructor" FormalParameters() [ "throws" NameList() ]
@@ -760,7 +760,7 @@ void ConstructorDeclaration(int modifiers):
 void DestructorDeclaration(int modifiers):
 { debugPrint("CONTRUCTOR DECLARATION"); }
 {
-  { jjtThis.setModifiers(modifiers); }
+  { jjtThis.setModifiers(modifiers); jjtThis.setImage("destructor"); }
   [ TypeParameters() ]
   // Modifiers matched in the caller
   "destructor" [ "throws" NameList() ]

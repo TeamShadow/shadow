@@ -15,8 +15,10 @@ class Blah {
         // multiple assigns
         int m = a = b = c = d;
         int n = e = f = g + h;
-
-        // arrays
-//        int[] a;
+    }
+    
+    public arrays() => () {
+        int[] a;
+    
     }
 }

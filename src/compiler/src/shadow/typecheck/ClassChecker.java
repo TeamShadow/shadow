@@ -17,8 +17,11 @@ import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
+import shadow.parser.javacc.ASTConstructorDeclaration;
+import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
+import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -30,6 +33,7 @@ import shadow.parser.javacc.ASTShiftExpression;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
+import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -125,7 +129,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	*/
 	
-	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
+	private void createScope(Boolean secondVisit) {
 		// we have a new scope, so we need a new HashMap in the linked list
 		if(secondVisit) {
 			System.out.println("\nSYMBOL TABLE:");
@@ -136,23 +140,45 @@ public class ClassChecker extends BaseChecker {
 		}
 		else
 			symbolTable.addFirst(new HashMap<String, Type>());
-		
+	}
+	
+	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
+		createScope(secondVisit);
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
+		updateCurMethod(node);
+		return WalkType.PRE_CHILDREN;	// don't need to come back here
+	}
+	
+	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			updateCurMethod(node);
+		
+		createScope(secondVisit); // constructors don't have Block()s so new scope needed
+	
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			updateCurMethod(node);
+		
+		createScope(secondVisit); // destructors don't have Block()s so new scope needed
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	private void updateCurMethod(SimpleNode node) {
 		String methodName = node.getImage();
 		
-		if( currentType instanceof ClassInterfaceBaseType )
-		{
+		if( currentType instanceof ClassInterfaceBaseType ) {
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
 			curMethod = currentClass.getMethod(methodName);
 		}
 		else
 			addError(node, "Method declarations only allowed in class, interface, enum, error, and exception types");
-			
-		
-		return WalkType.PRE_CHILDREN;	// don't need to come back here
 	}
 
 	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {		
@@ -180,6 +206,10 @@ public class ClassChecker extends BaseChecker {
 			// check to see if we have any kind of init here
 			if(curNode.jjtGetNumChildren() == 2) {
 				Type initType = curNode.jjtGetChild(1).getType();
+				
+				// we had an error below
+				if(initType == null)
+					continue;
 
 				if(!initType.isSubtype(type)) {
 					addError(curNode.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
@@ -194,6 +224,31 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {		
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Type type = node.getType();	// this is set in the TypeBuilder
+		
+		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
+			Node curVarDec = node.jjtGetChild(i);
+			
+			if(curVarDec.jjtGetNumChildren() == 2) {
+				Node curVarInit = curVarDec.jjtGetChild(1);
+				Type initType = curVarInit.getType();
+				
+				// we had an error below us
+				if(initType == null)
+					continue;
+				
+				if(!initType.isSubtype(type))
+					addError(curVarInit, Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
+			}
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	
 	/**
 	 * TODO: DOUBLE CHECK THIS... I'M NOT REALLY SURE WHAT TO DO HERE
@@ -223,7 +278,7 @@ public class ClassChecker extends BaseChecker {
 		}
 			
 		// now check the parameters of the method
-		if(curMethod.containsParam(name)) {
+		if(curMethod != null && curMethod.containsParam(name)) {
 			node.setType(curMethod.getParameterType(name));
 			return WalkType.PRE_CHILDREN;
 		}
@@ -577,6 +632,10 @@ public class ClassChecker extends BaseChecker {
 			DEBUG(node.jjtGetChild(0), "T1: " + t1);
 			DEBUG(node.jjtGetChild(2), "T2: " + t2);
 			
+			// we had an error some other place as one of the types is unknown
+			if(t1 == null || t2 == null)
+				return WalkType.NO_CHILDREN;
+			
 			// TODO: Add in all the types that we can compare here
 			if( !t2.isSubtype(t1) ) {
 				addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
@@ -614,4 +673,5 @@ public class ClassChecker extends BaseChecker {
 
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 }

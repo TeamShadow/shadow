@@ -56,6 +56,8 @@ public class TypeBuilder extends BaseChecker {
 			return WalkType.NO_CHILDREN;
 		}
 		
+		node.setType(type);	// set this node's type
+		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
@@ -80,7 +82,6 @@ public class TypeBuilder extends BaseChecker {
 			return WalkType.NO_CHILDREN;
 		}
 			
-		
 		return WalkType.NO_CHILDREN;	// only need the symbols, no type-checking yet
 	}
 
