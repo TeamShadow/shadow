@@ -1,15 +1,15 @@
 package shadow.typecheck.type;
 
-import java.util.HashMap;
 
 public class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string the represents the type */
-	protected final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
-	protected final Type outer; //outer class	
-	protected Kind kind;
+	private final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
+	private final Type outer; //outer class	
+	private Kind kind;
+	private int arrayDimension;
 	
-	public static enum Kind { CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD,  VIEW};
+	public static enum Kind { CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, VIEW};
 	
 	public static final ClassType OBJECT = new ClassType( "Object", 0, null ); 
 	public static final ClassType BOOLEAN = new ClassType( "boolean" );
@@ -43,8 +43,9 @@ public class Type {
 	public Type(String typeName, int modifiers, Type outer, Kind kind ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
-		this.outer = outer;		
+		this.outer = outer;
 		this.kind = kind;
+		this.arrayDimension = 0;
 	}
 	
 	public String getTypeName() {
@@ -56,7 +57,29 @@ public class Type {
 	}
 	
 	public String toString() {
-		return typeName;
+		if(arrayDimension == 0)
+			return typeName;
+		
+		StringBuilder sb = new StringBuilder(typeName + "[");
+		
+		for(int i=1; i < arrayDimension; ++i)
+			sb.append(",");
+		
+		sb.append("]");
+		
+		return sb.toString();
+	}
+	
+	public int getArrayDimension() {
+		return arrayDimension;
+	}
+	
+	public void setArrayDimension(int dimension) {
+		arrayDimension = dimension;
+	}
+	
+	public boolean isArray() {
+		return arrayDimension == 0;
 	}
 
 	public boolean equals(Object o) {

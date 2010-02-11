@@ -13,6 +13,7 @@ import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
+import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -27,6 +28,7 @@ import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
+import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTRotateExpression;
@@ -121,7 +123,41 @@ public class ClassChecker extends BaseChecker {
 		else
 			addError(node, "Method declarations only allowed in class, interface, enum, error, and exception types");
 	}
+	
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
 
+		String typeName = node.getImage();
+		Type type = lookupType(typeName);
+		
+		if(type == null) {
+			addError(node, Error.UNDEF_TYP, typeName);
+			return WalkType.NO_CHILDREN;
+		}
+		
+		node.setType(type);
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		//
+		// TODO: This needs to be fixed
+		//
+		Type type = node.jjtGetChild(0).getType();
+		Type myType = new Type(type.getTypeName(), type.getModifiers(), type.getOuter(), type.getKind());
+		
+		myType.setArrayDimension(node.getArrayDimension());
+		
+		node.setType(myType);
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
@@ -130,7 +166,7 @@ public class ClassChecker extends BaseChecker {
 		Type type = node.jjtGetChild(0).getType();
 
 		if(type == null) {
-			addError(node.jjtGetChild(0).jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
+			addError(node.jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
 			return WalkType.NO_CHILDREN;
 		}
 

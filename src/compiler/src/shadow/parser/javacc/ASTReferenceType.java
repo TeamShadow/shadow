@@ -18,5 +18,28 @@ class ASTReferenceType extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
   }
+  
+  private int arrayDimension = 0;
+  
+  public int getArrayDimension() {
+	  return arrayDimension;
+  }
+  
+  public void setArrayDimension(int dimension) {
+	  arrayDimension = dimension;
+  }
+  
+  public void incrementDimension() {
+	  arrayDimension++;
+  }
+  
+  public void dump(String prefix) {
+  	String className = this.getClass().getSimpleName();
+	
+  	System.out.println(prefix + className + "(" + line + ":" + column + "): " + arrayDimension);
+    
+	dumpChildren(prefix);
+  }
+
 }
 /* JavaCC - OriginalChecksum=7da70a4b1bb235d4c492e29ec9ef71d4 (do not edit this line) */

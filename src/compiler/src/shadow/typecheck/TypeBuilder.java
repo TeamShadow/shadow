@@ -1,7 +1,5 @@
 package shadow.typecheck;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +10,7 @@ import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTMethodDeclaration;
+import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -48,7 +47,12 @@ public class TypeBuilder extends BaseChecker {
 	 */
 	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
 		// a field dec has a type followed by 1 or more idents
-		Type type = lookupType(node.jjtGetChild(0).jjtGetChild(0).getImage());
+		Node typeNode = node.jjtGetChild(0).jjtGetChild(0);
+		
+		if(typeNode instanceof ASTReferenceType)
+			typeNode = typeNode.jjtGetChild(0);
+		
+		Type type = lookupType(typeNode.getImage());
 		
 		// make sure we have this type
 		if(type == null) {
@@ -102,6 +106,10 @@ public class TypeBuilder extends BaseChecker {
 			
 			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i) {
 				Node retNode = retTypes.jjtGetChild(i).jjtGetChild(0).jjtGetChild(0);
+				
+				// we could be pointing at a reference type
+				if(retNode instanceof ASTReferenceType)
+					retNode = retNode.jjtGetChild(0);
 				
 				if(retNode instanceof ASTFunctionType) {
 					signature.addReturn(createMethodType((ASTFunctionType)retNode));
@@ -189,6 +197,10 @@ public class TypeBuilder extends BaseChecker {
 			
 			// get the type of the parameter
 			Node typeNode = param.jjtGetChild(0).jjtGetChild(0);
+			
+			// we might be pointing to a reference type and need to move on to a primitive type
+			if(typeNode instanceof ASTReferenceType)
+				typeNode = typeNode.jjtGetChild(0);
 			
 			if(typeNode instanceof ASTFunctionType) {
 				signature.addParameter(paramSymbol, createMethodType((ASTFunctionType)typeNode));

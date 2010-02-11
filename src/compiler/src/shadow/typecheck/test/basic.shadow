@@ -1,25 +1,8 @@
 
 class Bill {
 
-    public int a;
-    public int b = a = 9;
-    
-    public constructor() {
-        int a;
-    }
-    
-    public destructor {
-        int b;
-    }
-    
 	public blah() => () {
-/*	   final Object a;
-	   Object b = new Bill();
-	   Bill c;
-	   
-	   a = cast<Object>(b);
-	   c = cast<Bill>(b);
-*/
-        int a = b = 0, b = 2, c = 1;
+	   int[] a;
+	   int b;
 	}
 } 

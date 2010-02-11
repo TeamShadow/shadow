@@ -62,14 +62,14 @@
     </target>
     
     <!-- Tests the parser -->
-    <target name="test-parser">
+    <target name="test-parser" depends="build">
         <java classname="shadow.parser.test.ParserTest" failonerror="true" fork="yes" taskname="Test">
             <classpath refid="shadow_compiler.classpath"/>
         </java>
     </target>
     
 	<!-- Test the type checker -->
-    <target name="test-typechecker">
+    <target name="test-typechecker" depends="build">
         <java classname="shadow.typecheck.test.TypeCheckerTest" failonerror="true" fork="yes" taskname="Test">
             <classpath refid="shadow_compiler.classpath"/>
         </java>

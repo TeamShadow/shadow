@@ -802,8 +802,8 @@ void Type():
 void ReferenceType():
 { debugPrint("REFERENCE TYPE"); }
 {
-    PrimitiveType() ( LOOKAHEAD(2) "[" ( "," )* "]" )+
-  | ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" ( "," )* "]" )*
+    PrimitiveType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimension(); } )* { jjtThis.incrementDimension(); } "]" )+
+  | ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimension(); } )* { jjtThis.incrementDimension(); } "]" )*
 }
 
 void StaticArrayType():

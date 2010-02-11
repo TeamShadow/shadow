@@ -83,7 +83,7 @@ public class ASTFlattener extends AbstractASTVisitor {
 	//
 	// These are nodes we want to remove IFF parent has 1 child and it has 1 child
 	//
-	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException { removeNode1P1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+//	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException { removeNode1P1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTStatementExpressionList node, Boolean secondVisit) throws ShadowException { removeNode1P1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 
