@@ -9,7 +9,7 @@ public class Type {
 	private Kind kind;
 	private int arrayDimension;
 	
-	public static enum Kind { CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, VIEW};
+	public static enum Kind { ARRAY, CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, VIEW};
 	
 	public static final ClassType OBJECT = new ClassType( "Object", 0, null ); 
 	public static final ClassType BOOLEAN = new ClassType( "boolean" );

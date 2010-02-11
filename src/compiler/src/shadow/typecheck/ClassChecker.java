@@ -42,6 +42,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
@@ -149,11 +150,14 @@ public class ClassChecker extends BaseChecker {
 		// TODO: This needs to be fixed
 		//
 		Type type = node.jjtGetChild(0).getType();
-		Type myType = new Type(type.getTypeName(), type.getModifiers(), type.getOuter(), type.getKind());
+		//Type myType = new Type(type.getTypeName(), type.getModifiers(), type.getOuter(), type.getKind());
 		
-		myType.setArrayDimension(node.getArrayDimension());
+		List<Integer> dimensions = node.getArrayDimensions();
 		
-		node.setType(myType);
+		if( dimensions.size() == 0 )
+			node.setType(type);
+		else
+			node.setType(new ArrayType(type, dimensions));
 		
 		return WalkType.POST_CHILDREN;
 	}

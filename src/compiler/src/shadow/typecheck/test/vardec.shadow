@@ -19,6 +19,7 @@ class Blah {
     
     public arrays() => () {
         int[] a;
+        int[,,,][][,][] b;
     
     }
 }

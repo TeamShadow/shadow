@@ -2,15 +2,18 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public
 @SuppressWarnings("all")
 class ASTReferenceType extends SimpleNode {
   public ASTReferenceType(int id) {
-    super(id);
+    super(id);    
   }
 
   public ASTReferenceType(ShadowParser p, int id) {
-    super(p, id);
+    super(p, id);    
   }
 
 
@@ -19,24 +22,30 @@ class ASTReferenceType extends SimpleNode {
     return visitor.visit(this, secondVisit);
   }
   
-  private int arrayDimension = 0;
+  private List<Integer> arrayDimensions = new LinkedList<Integer>();
+  private int currentDimensions = 1;
   
-  public int getArrayDimension() {
-	  return arrayDimension;
+  public List<Integer> getArrayDimensions() {
+	  return arrayDimensions;
   }
   
-  public void setArrayDimension(int dimension) {
+  /*public void setArrayDimension(int dimension) {
 	  arrayDimension = dimension;
+  }*/
+  
+  public void incrementDimensions() {
+	  currentDimensions++;  
   }
   
-  public void incrementDimension() {
-	  arrayDimension++;
+  public void pushDimensions() {
+	  arrayDimensions.add(currentDimensions);
+	  currentDimensions = 1;
   }
   
   public void dump(String prefix) {
   	String className = this.getClass().getSimpleName();
 	
-  	System.out.println(prefix + className + "(" + line + ":" + column + "): " + arrayDimension);
+  	System.out.println(prefix + className + "(" + line + ":" + column + "): " + arrayDimensions);
     
 	dumpChildren(prefix);
   }
