@@ -28,6 +28,7 @@ import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTRelationalExpression;
+import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTShiftExpression;
 import shadow.parser.javacc.ASTType;
@@ -68,66 +69,6 @@ public class ClassChecker extends BaseChecker {
 
 		return WalkType.POST_CHILDREN;
 	}
-
-	/*  //all of this is taken care of in the TypeCollector 
-	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException {
-		
-		if(!node.isInterface()) { // class
-			Type type = typeTable.get(node.jjtGetChild(0).getImage());
-			
-			if(type == null) {
-				addError(node.jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).getImage());
-				return WalkType.PRE_CHILDREN;
-			} else if(!(type instanceof ClassType)) {
-				addError(node.jjtGetChild(0), Error.TYPE_MIS, node.jjtGetChild(0).getImage() + " is not a class");
-				return WalkType.PRE_CHILDREN;
-			}
-			
-			DEBUG("CUR CLASS: " + currentType.getTypeName() + " " + currentType.getClass().getCanonicalName());
-			DEBUG("EXTEND CLASS: " + type.getTypeName() + " " + type.getClass().getCanonicalName());
-			
-			((ClassType)currentType).setExtendType((ClassType)type);
-		} else { // interface
-			
-			int numChildren = node.jjtGetNumChildren();
-			for(int i=0; i < numChildren; ++i) {
-				Type type = typeTable.get(node.jjtGetChild(i).getImage());
-				
-				if(type == null) {
-					addError(node.jjtGetChild(i), Error.UNDEF_TYP, node.jjtGetChild(i).getImage());
-					return WalkType.PRE_CHILDREN;
-				} else if(!(type instanceof InterfaceType)) {
-					addError(node.jjtGetChild(i), Error.TYPE_MIS, node.jjtGetChild(i).getImage() + " is not an interface");
-					return WalkType.PRE_CHILDREN;
-				}
-				
-				((InterfaceType)currentType).addExtendType((InterfaceType)type);
-			}
-		}
-			
-		return WalkType.PRE_CHILDREN;
-	}
-	
-	
-	public Object visit(ASTImplementsList node, Boolean secondVisit) throws ShadowException {
-		
-		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
-			Type type = typeTable.get(node.jjtGetChild(0).getImage());
-			
-			if(type == null) {
-				addError(node.jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).getImage());
-				return WalkType.PRE_CHILDREN;
-			} else if(!(type instanceof InterfaceType)) {
-				addError(node.jjtGetChild(0), Error.TYPE_MIS, node.jjtGetChild(0).getImage() + " is not an interface");
-				return WalkType.PRE_CHILDREN;
-			}
-			
-			((ClassType)currentType).addImplementType((InterfaceType)type);
-		}
-			
-		return WalkType.PRE_CHILDREN;
-	}
-	*/
 	
 	private void createScope(Boolean secondVisit) {
 		// we have a new scope, so we need a new HashMap in the linked list
@@ -299,13 +240,6 @@ public class ClassChecker extends BaseChecker {
 		DEBUG(node, "DIDN'T FIND");
 
 		return WalkType.NO_CHILDREN;
-	}
-	
-	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException {
-		if(secondVisit)
-			node.setType(node.jjtGetChild(0).getType());
-		
-		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTAssignmentOperator node, Boolean secondVisit) throws ShadowException {
@@ -674,4 +608,6 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 }

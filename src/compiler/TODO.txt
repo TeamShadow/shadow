@@ -92,18 +92,18 @@ DONE - ASTVariableInitializer
   ASTFormalParameters
   ASTFormalParameter
   ASTExplicitConstructorInvocation
-  ASTInitializer
+  ASTInitializer -- do we even want these??
 DONE - ASTType
-  ASTReferenceType
+  ASTReferenceType -- these should always get flattened, I can't seem to create one in the parse tree
 DONE - ASTFunctionType
   ASTClassOrInterfaceType
   ASTWildcardBounds
 DONE - ASTPrimitiveType
-  ASTResultType
-  ASTResultTypes
+  ASTResultType -- I think we can remove this from the grammar... it's just Type()
+DONE - ASTResultTypes
 DONE - ASTName
   ASTNameList -- ?? don't think we need to type-check this
-  ASTPrimaryExpression
+DONE - ASTPrimaryExpression
   
   
 Barry do these:
