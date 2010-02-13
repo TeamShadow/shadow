@@ -2,6 +2,11 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import shadow.typecheck.type.Type;
+
 public
 @SuppressWarnings("all")
 class ASTArgumentList extends SimpleNode {
@@ -17,6 +22,18 @@ class ASTArgumentList extends SimpleNode {
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
+  }
+  
+  private List<Type> typeList = new LinkedList<Type>();
+  
+  public void addType(Type type)
+  {
+	  typeList.add(type);	  
+  }
+  
+  public List<Type> getTypeList()
+  {
+	  return typeList;
   }
 }
 /* JavaCC - OriginalChecksum=1e324a5955f80a2956933f53354cb166 (do not edit this line) */

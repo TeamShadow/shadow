@@ -2,6 +2,9 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public
 @SuppressWarnings("all")
 class ASTArrayDimsAndInits extends SimpleNode {
@@ -18,5 +21,31 @@ class ASTArrayDimsAndInits extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
   }
+  
+  
+  private List<Integer> arrayDimensions = new LinkedList<Integer>();
+  private int currentDimensions = 1;
+  
+  public List<Integer> getArrayDimensions() {
+	  return arrayDimensions;
+  }
+
+  public void incrementDimensions() {
+	  currentDimensions++;  
+  }
+  
+  public void pushDimensions() {
+	  arrayDimensions.add(currentDimensions);
+	  currentDimensions = 1;
+  }
+  
+  public void dump(String prefix) {
+  	String className = this.getClass().getSimpleName();
+	
+  	System.out.println(prefix + className + "(" + line + ":" + column + "): " + arrayDimensions);
+    
+	dumpChildren(prefix);
+  }
+
 }
 /* JavaCC - OriginalChecksum=375c68cd738c848913bc777d02615d4f (do not edit this line) */

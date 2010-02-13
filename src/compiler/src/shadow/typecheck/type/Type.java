@@ -26,6 +26,10 @@ public class Type {
 	public static final ClassType ULONG = new ClassType( "ulong" );
 	public static final ClassType USHORT = new ClassType( "ushort" );
 	
+	public static final EnumType ENUM = new EnumType( "Enum", 0, null, OBJECT );
+	public static final ErrorType ERROR = new ErrorType( "Error", 0, null, null );	
+	public static final ExceptionType EXCEPTION = new ExceptionType( "Exception", 0, null, null );
+	
 	public static final Type NULL = new Type( "null" );
 	
 	public Type(String typeName) {
@@ -83,18 +87,73 @@ public class Type {
 	}
 
 	public boolean equals(Object o) {
-		Type t = (Type)o;
-
-		return  typeName.equals(t.typeName);
+		if( o instanceof Type )
+		{
+			Type t = (Type)o;
+	
+			return  typeName.equals(NULL.typeName) || typeName.equals(t.typeName);
+		}
+		else
+			return false;
 	}
 	
 	public boolean isSubtype(Type t) {				
-		//
-		// Put in sub-typing logic here
-		//
-	
-		//null is the subtype of everything
-		return equals(NULL) || equals( t );
+
+		// This subtyping code does not handle generics	
+		
+		if( equals(t) )
+			return true;
+		
+		switch( kind  )
+		{
+		case ARRAY:			
+			if( t.equals(OBJECT) )
+				return true;
+			if( t.getKind() == Kind.ARRAY )
+			{
+				ArrayType type = (ArrayType)this;
+				ArrayType other = (ArrayType)this;
+				if( type.getArrayDimension() == other.getArrayDimension() )
+					return type.getBaseType().isSubtype(other.getBaseType());
+				else
+					return false;
+			}
+			else
+				return false;			
+		case CLASS:
+			if( t.getKind() == Kind.CLASS )			
+				return ((ClassType)this).isDescendentOf(t);
+			else if( t.getKind() == Kind.INTERFACE )
+				return ((ClassType)this).isImplementerOf(t);
+			else
+				return false;
+		case ENUM:
+			if( t.equals(OBJECT) || t.equals(ENUM) )
+				return true;			
+			else if( t.getKind() == Kind.INTERFACE )
+				return ((EnumType)this).isImplementerOf(t);
+			else
+				return false;
+		case ERROR:
+			if( t.getKind() == Kind.ERROR )			
+				return ((ErrorType)this).isDescendentOf(t);
+			else
+				return false;			
+		case EXCEPTION:
+			if( t.getKind() == Kind.EXCEPTION )			
+				return ((ExceptionType)this).isDescendentOf(t);
+			else
+				return false;
+		case INTERFACE:
+			if( t.getKind() == Kind.INTERFACE )			
+				return ((ExceptionType)this).isDescendentOf(t);
+			else
+				return false;			
+		case METHOD:
+		case VIEW:
+		default:
+			return false;		
+		}
 	}
 	
 	// TODO: Will this work? 
@@ -103,7 +162,7 @@ public class Type {
 	}
 	
 	public boolean isString() {
-		return this.equals(ClassType.STRING);
+		return this.equals(Type.STRING);
 	}
 	
 	public Type getOuter()
@@ -190,7 +249,11 @@ public class Type {
 		this.equals(UBYTE) ||
 		this.equals(UINT) ||
 		this.equals(ULONG) ||
-		this.equals(USHORT);
+		this.equals(USHORT) ||
+		
+		this.equals(ENUM) ||
+		this.equals(ERROR) ||
+		this.equals(EXCEPTION);
 	}
 	
 	public boolean isPrimitive()

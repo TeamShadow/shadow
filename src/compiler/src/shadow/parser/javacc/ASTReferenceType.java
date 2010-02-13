@@ -28,11 +28,7 @@ class ASTReferenceType extends SimpleNode {
   public List<Integer> getArrayDimensions() {
 	  return arrayDimensions;
   }
-  
-  /*public void setArrayDimension(int dimension) {
-	  arrayDimension = dimension;
-  }*/
-  
+
   public void incrementDimensions() {
 	  currentDimensions++;  
   }

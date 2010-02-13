@@ -1,12 +1,14 @@
 package shadow.typecheck.type;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import shadow.typecheck.MethodSignature;
 
-public class ClassInterfaceBaseType extends Type {
+public abstract class ClassInterfaceBaseType extends Type {
 	protected HashMap<String, Type> fieldTable;
-	protected HashMap<String, MethodSignature> methodTable;
+	protected HashMap<String, List<MethodSignature> > methodTable;
 	protected String packageName; //package
 	
 	public ClassInterfaceBaseType(String typeName) {
@@ -24,7 +26,7 @@ public class ClassInterfaceBaseType extends Type {
 	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer, Kind kind ) {
 		super( typeName, modifiers, outer, kind );
 		fieldTable = new HashMap<String, Type>();
-		methodTable = new HashMap<String, MethodSignature>();
+		methodTable = new HashMap<String, List<MethodSignature>>();
 	}	
 	
 	public boolean containsField(String fieldName) {
@@ -40,14 +42,28 @@ public class ClassInterfaceBaseType extends Type {
 	}
 	
 	public boolean containsMethod(MethodSignature signature) {
-		return methodTable.containsValue(signature);
+		List<MethodSignature> list = methodTable.get(signature.getSymbol());
+		
+		if( list != null )
+			for(MethodSignature existing : list )
+				if( existing.equals(signature))
+					return true;
+		
+		return false;
 	}
 	
 	public void addMethod(String name, MethodSignature signature) {
-		methodTable.put(name, signature);
+		if( methodTable.containsKey(name) )		
+			methodTable.get(name).add(signature);
+		else
+		{
+			List<MethodSignature> list = new LinkedList<MethodSignature>();
+			list.add(signature);
+			methodTable.put(name, list);
+		}
 	}
 	
-	public MethodSignature getMethod(String methodName) {
+	public List<MethodSignature> getMethods(String methodName) {
 		return methodTable.get(methodName);
 	}
 	
@@ -59,7 +75,7 @@ public class ClassInterfaceBaseType extends Type {
 	public MethodSignature getMethodSignature(MethodSignature signature) {
 		MethodSignature ret = null;
 		
-		for(MethodSignature ms:methodTable.values()) {
+		for(MethodSignature ms : methodTable.get(signature.getSymbol())) {
 			if(ms.equals(signature)) {
 				ret = ms;
 				break;

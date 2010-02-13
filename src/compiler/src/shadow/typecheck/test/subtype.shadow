@@ -1,0 +1,23 @@
+class Outer {
+
+	public method () => ()
+	{
+		BaseClass a;
+		a = new BaseClass();
+		a = new Subclass1();		
+		a = new Subclass2();
+		
+		Subclass1 s;
+		//s = a; //uncomment this line to see type hierarchies enforced
+	}
+
+	private class BaseClass
+	{}
+	
+	private class Subclass1 extends Outer.BaseClass
+	{}
+	
+	private class Subclass2 extends BaseClass
+	{}
+
+}

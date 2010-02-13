@@ -49,6 +49,10 @@ public class TypeCollector extends BaseChecker
 		addType(Type.ULONG.getTypeName(),		Type.ULONG);
 		addType(Type.USHORT.getTypeName(),	Type.USHORT);
 		addType(Type.NULL.getTypeName(),		Type.NULL);	
+		
+		addType(Type.ENUM.getTypeName(), Type.ENUM);
+		addType(Type.ERROR.getTypeName(), Type.ENUM);	
+		addType(Type.EXCEPTION.getTypeName(), Type.ENUM);
 	}
 	
 	public void linkTypeTable()
@@ -59,31 +63,40 @@ public class TypeCollector extends BaseChecker
 		{	
 			if( type instanceof ClassType ) //includes error, exception, and enum (for now)
 			{
-				ClassType classType = (ClassType)type;
-				if( extendsTable.containsKey(type))
+				if( !type.isBuiltIn() )
 				{
-					list = extendsTable.get(type);
-					ClassType parent = (ClassType)lookupType(list.get(0), classType.getOuter());
-					if( parent == null )
-						addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot extend undefined class " + list.get(0));
-					else
-						classType.setExtendType(parent);
-				}
-				else
-					classType.setExtendType(Type.OBJECT);
-				
-				if( implementsTable.containsKey(type))
-				{
-					list = implementsTable.get(type);			
-					for( String name : list )
+					ClassType classType = (ClassType)type;
+					if( extendsTable.containsKey(type))
 					{
-						InterfaceType _interface = (InterfaceType)lookupType(name, classType.getOuter());
-						if( _interface == null )
-							addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot implement undefined interface " + name);
-						else							
-							classType.addImplementType(_interface);
+						list = extendsTable.get(type);
+						ClassType parent = (ClassType)lookupType(list.get(0), classType.getOuter());
+						if( parent == null )
+							addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot extend undefined class " + list.get(0));
+						else
+							classType.setExtendType(parent);
 					}
-				}				
+					else if( type.getKind() == Kind.CLASS )
+						classType.setExtendType(Type.OBJECT);
+					else if( type.getKind() == Kind.ENUM )
+						classType.setExtendType(Type.ENUM);
+					else if( type.getKind() == Kind.ERROR )
+						classType.setExtendType(Type.ERROR);
+					else if( type.getKind() == Kind.EXCEPTION )
+						classType.setExtendType(Type.EXCEPTION);
+					
+					if( implementsTable.containsKey(type))
+					{
+						list = implementsTable.get(type);			
+						for( String name : list )
+						{
+							InterfaceType _interface = (InterfaceType)lookupType(name, classType.getOuter());
+							if( _interface == null )
+								addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot implement undefined interface " + name);
+							else							
+								classType.addImplementType(_interface);
+						}
+					}
+				}
 			}
 			else if( type instanceof InterfaceType ) 
 			{

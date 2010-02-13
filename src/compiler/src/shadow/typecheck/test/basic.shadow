@@ -1,4 +1,8 @@
-
 class Bill {
-    public blah(int a) => ( float, (int, int) => (int) ) { }
+
+    public blah(int a) => ( float, (int, int) => (int) ) {
+    Bill b;
+    b = new Bill();
+    
+     }
 } 

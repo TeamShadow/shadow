@@ -90,7 +90,10 @@ DONE - ASTPrimitiveType
 DONE - ASTResultTypes
 DONE - ASTName
   ASTNameList -- ?? don't think we need to type-check this
-DONE - ASTPrimaryExpression
+DONE - ASTPrimaryExpression (NOT DONE!)
+
+Barry doesn't think these need to be typechecked:
+  ASTArrayDimsAndInits
   
   
 Barry do these:
@@ -116,16 +119,16 @@ DONE - ASTExpression - Still needs to handle the different assignment types, may
   ASTLiteral
   ASTBooleanLiteral
   ASTNullLiteral
-  ASTArguments
-  ASTArgumentList
-  ASTAllocationExpression
-  ASTArrayDimsAndInits
+DONE - ASTArguments
+DONE - ASTArgumentList
+DONE - ASTAllocationExpression
+
   ASTStatement
   ASTLabeledStatement
 DONE? - ASTBlock
   ASTBlockStatement
   ASTEmptyStatement
-  ASTStatementExpression
+DONE - ASTStatementExpression
   ASTSwitchStatement
   ASTSwitchLabel
   ASTIfStatement

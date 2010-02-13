@@ -2,11 +2,12 @@ package shadow.typecheck.type;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 public class MethodType extends Type {
-	protected ArrayList<String> paramNames;
-	protected ArrayList<Type> paramTypes;
-	protected LinkedList<Type> returns; /** List of return types */
+	protected List<String> paramNames;
+	protected List<Type> paramTypes;
+	protected List<Type> returns; /** List of return types */
 
 	public MethodType(String typeName) {
 		super(typeName);
@@ -21,6 +22,32 @@ public class MethodType extends Type {
 		paramTypes = new ArrayList<Type>();
 		returns = new LinkedList<Type>();
 	}
+	
+	public boolean matches( List<Type> argumentTypes )
+	{
+		if( paramTypes.size() != argumentTypes.size() )
+			return false;
+		
+		for( int i = 0; i < paramTypes.size(); i++ )
+			if( !argumentTypes.get(i).equals(paramTypes.get(i)))
+				return false;
+		
+		return true;
+	}
+	
+	public boolean canAccept( List<Type> argumentTypes )
+	{
+		if( paramTypes.size() != argumentTypes.size() )
+			return false;
+		
+		for( int i = 0; i < paramTypes.size(); i++ )
+			if( !argumentTypes.get(i).isSubtype(paramTypes.get(i)))
+				return false;
+		
+		return true;
+	}
+	
+	
 	
 	public void addParameter(String name, Type type) {
 		paramNames.add(name);
@@ -60,24 +87,29 @@ public class MethodType extends Type {
 	 * @return True if the methods can co-exist, False otherwise
 	 */
 	public boolean equals(Object o) {
-		MethodType mt = (MethodType)o;
-		
-		// if they don't have the same number of params or returns, then different
-		if(paramNames.size() != mt.paramNames.size() || returns.size() != mt.returns.size())
-			return false;
-
-		// check the parameters, we care about types only
-		for(int i=0; i < paramTypes.size(); ++i) {
-			if(!paramTypes.get(i).equals(mt.paramTypes.get(i)))
+		if( o instanceof MethodType )
+		{		
+			MethodType mt = (MethodType)o;
+			
+			// if they don't have the same number of params or returns, then different
+			if(paramNames.size() != mt.paramNames.size() || returns.size() != mt.returns.size())
 				return false;
+	
+			// check the parameters, we care about types only
+			for(int i=0; i < paramTypes.size(); ++i) {
+				if(!paramTypes.get(i).equals(mt.paramTypes.get(i)))
+					return false;
+			}
+			
+			// check the returns
+			if(!returns.equals(mt.returns))
+				return false;
+			
+			// if we made it to here, they are equal
+			return true;
 		}
-		
-		// check the returns
-		if(!returns.equals(mt.returns))
+		else
 			return false;
-		
-		// if we made it to here, they are equal
-		return true;
 	}
 
 	public String toString() {

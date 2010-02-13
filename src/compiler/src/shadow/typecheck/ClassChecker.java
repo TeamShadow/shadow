@@ -7,12 +7,17 @@ import java.util.Map;
 
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTAdditiveExpression;
+import shadow.parser.javacc.ASTAllocationExpression;
+import shadow.parser.javacc.ASTArgumentList;
+import shadow.parser.javacc.ASTArguments;
+import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
+import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -27,11 +32,15 @@ import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
+import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTRotateExpression;
+import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTShiftExpression;
+import shadow.parser.javacc.ASTStatementExpression;
+import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTVariableInitializer;
@@ -42,6 +51,8 @@ import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
 
@@ -49,7 +60,7 @@ import shadow.typecheck.type.Type;
 
 public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected MethodSignature curMethod;	
+	protected MethodType curMethod;	
 	
 	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
 		super(debug, typeTable, importList);		
@@ -89,13 +100,13 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
-		updateCurMethod(node);
+		updateCurMethod((MethodType)node.getType());
 		return WalkType.PRE_CHILDREN;	// don't need to come back here
 	}
 	
 	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
-			updateCurMethod(node);
+			updateCurMethod((MethodType)node.getType());
 		
 		createScope(secondVisit); // constructors don't have Block()s so new scope needed
 	
@@ -104,22 +115,24 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
-			updateCurMethod(node);
+			updateCurMethod(null);  //no params in destructor
 		
 		createScope(secondVisit); // destructors don't have Block()s so new scope needed
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private void updateCurMethod(SimpleNode node) {
-		String methodName = node.getImage();
+	private void updateCurMethod(MethodType method) {
+		/*String methodName = node.getImage();
 		
 		if( currentType instanceof ClassInterfaceBaseType ) {
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
 			curMethod = currentClass.getMethod(methodName);
 		}
-		else
+		else		
 			addError(node, "Method declarations only allowed in class, interface, enum, error, and exception types");
+		*/
+		curMethod = method;
 	}
 	
 	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {
@@ -580,8 +593,8 @@ public class ClassChecker extends BaseChecker {
 			AssignmentType assType = op.getAssignmentType();
 			
 			// we had an error some other place as one of the types is unknown
-			if(t1 == null || t2 == null)
-				return WalkType.NO_CHILDREN;
+			//if(t1 == null || t2 == null)
+			//		return WalkType.NO_CHILDREN;
 			
 			// TODO: Add in all the types that we can compare here
 			if( !t2.isSubtype(t1) ) {
@@ -599,11 +612,137 @@ public class ClassChecker extends BaseChecker {
 
 		return WalkType.POST_CHILDREN;
 	}
+	
+	public Object visit(ASTAllocationExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Node child = node.jjtGetChild(0);
+		
+		if( child instanceof ASTPrimitiveType ) //array allocation
+		{
+			//array dims and inits
+			List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(1))).getArrayDimensions();
+			node.setType(new ArrayType(child.getType(), dimensions));			 
+		}		
+		else if( child instanceof ASTClassOrInterfaceType ) //object allocation 
+		{
+			int counter = 1;
+			
+			if( node.jjtGetChild(counter) instanceof ASTTypeArguments )
+			{
+				//for now
+				addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
+				counter++;				
+			}
+			
+			if( node.jjtGetChild(counter) instanceof ASTArrayDimsAndInits)
+			{
+				//array dims and inits
+				List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
+				node.setType(new ArrayType(child.getType(), dimensions));
+			}
+			else if( node.jjtGetChild(counter) instanceof ASTArguments )
+			{
+				if( child.getType() instanceof InterfaceType )
+					addError(child, Error.INVL_TYP, "Interfaces cannot be instantiated");
+				else 
+				{
+					ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
+					List<Type> typeList = ((ASTArguments)(node.jjtGetChild(counter))).getTypeList();
+					List<MethodSignature> candidateConstructors = type.getMethods("constructor");
+					
+					List<MethodSignature> acceptableConstructors = new LinkedList<MethodSignature>();
+					for( MethodSignature signature : candidateConstructors )
+					{
+						if( signature.matches( typeList ))
+						{
+							node.setType(child.getType());
+							return WalkType.POST_CHILDREN;
+						}						
+						else if( signature.canAccept(typeList))
+							acceptableConstructors.add(signature);
+					}
+					
+					if( acceptableConstructors.size() == 0 )
+						addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+					else if( acceptableConstructors.size() > 1 )
+						addError(child, Error.TYPE_MIS, "Ambiguous constructor call with signature " + typeList);
+					else
+						node.setType(child.getType());
+				}				
+			}
+		} 
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	public Object visit(ASTArgumentList node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			node.addType(node.jjtGetChild(i).getType());
+		
+		return WalkType.POST_CHILDREN;		
+	}
+	
+	public Object visit(ASTArguments node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		if( node.jjtGetNumChildren() == 0 )
+			node.setTypeList(new LinkedList<Type>());
+		else
+			node.setTypeList(((ASTArgumentList)(node.jjtGetChild(0))).getTypeList());
+		
+		return WalkType.POST_CHILDREN; 
+	}
+	
+	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Node child = node.jjtGetChild(0);
+		
+		if( child instanceof ASTSequence )
+		{
+			addError(child, Error.TYPE_MIS, "We do not handle sequences yet"); //fix this eventually
+		}
+		else //primary expression
+		{
+			if( node.jjtGetNumChildren() == 3 ) //only need to proceed if there is assignment
+			{
+				ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
+				Type t1 = child.getType();
+				Type t2 = node.jjtGetChild(2).getType();
+				
+				// SHOULD DO SOMETHING WITH THIS!!!
+				AssignmentType assType = op.getAssignmentType();
+						
+				// TODO: Add in all the types that we can compare here
+				if( !t2.isSubtype(t1) ) {
+					addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
+					return WalkType.NO_CHILDREN;
+				}
+				
+				//node.setType(t1);	no need to set a statement's type
+			}
+		}
+		
+		return WalkType.POST_CHILDREN;	
+	}
+	 
+		
 
 	//
 	// Everything below here are just visitors to push up the type
 	//
 	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+
+	//	NO NO NO, there can be more stuff in primary expression, no time to fix it now, though
 	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	
 }

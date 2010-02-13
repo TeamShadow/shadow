@@ -1,5 +1,7 @@
 package shadow.typecheck;
 
+import java.util.List;
+
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
@@ -37,6 +39,16 @@ public class MethodSignature {
 	public int getLineNumber() {
 		return line;
 	}
+	
+	public boolean matches( List<Type> argumentTypes )
+	{
+		return type.matches(argumentTypes);		
+	}
+	
+	public boolean canAccept( List<Type> argumentTypes )
+	{
+		return type.canAccept(argumentTypes);		
+	}	
 
 	public boolean equals(Object o) {
 		MethodSignature ms = (MethodSignature)o;
@@ -46,5 +58,10 @@ public class MethodSignature {
 
 	public String toString() {
 		return symbol + " " + type.toString();
+	}
+	
+	public MethodType getMethodType()
+	{
+		return type;
 	}
 }

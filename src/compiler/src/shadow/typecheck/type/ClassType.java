@@ -30,6 +30,30 @@ public class ClassType extends ClassInterfaceBaseType {
 		return extendType;
 	}
 	
+	public boolean isDescendentOf(Type type)
+	{
+		ClassType parent = extendType;
+		while( parent != null )
+		{
+			if( parent.equals(type))
+				return true;
+			parent = parent.getExtendType();			
+		}
+		return false;
+	}
+	
+	public boolean isImplementerOf(Type type)
+	{	
+		ClassType current = this;
+		while( current != null )
+		{
+			if( current.implementTypes.contains(type) )
+				return true;
+			current = current.getExtendType();			
+		}
+		return false;
+	}
+	
 	public void addImplementType(InterfaceType implementType) {
 		this.implementTypes.add(implementType);
 	}

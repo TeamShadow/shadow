@@ -553,19 +553,20 @@ void ViewDeclaration(int modifiers):
 void ClassOrInterfaceDeclaration(int modifiers):
 {
    boolean isInterface = false;
+   boolean isErrorOrException = false;
    debugPrint("CLASS OR INTERFACE DECLARARTION");
    Token t;
 }
 {
   { jjtThis.setModifiers(modifiers); }
-  ( "class" { jjtThis.setKind(Type.Kind.CLASS);} 	| "exception" { jjtThis.setKind(Type.Kind.EXCEPTION);}
- 	| "error" { jjtThis.setKind(Type.Kind.ERROR);}
+  ( "class" { jjtThis.setKind(Type.Kind.CLASS);} 	| "exception" { jjtThis.setKind(Type.Kind.EXCEPTION); isErrorOrException = true; }
+ 	| "error" { jjtThis.setKind(Type.Kind.ERROR); isErrorOrException = true; }
  	| "interface" { jjtThis.setKind(Type.Kind.INTERFACE); isInterface = true; } )
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ Version() ]
   [ TypeParameters() ]
   [ ExtendsList(isInterface) ]
-  [ ImplementsList(isInterface) ]
+  [ ImplementsList(isInterface, isErrorOrException) ]
   ClassOrInterfaceBody(isInterface)
 }
 
@@ -583,7 +584,7 @@ void ExtendsList(boolean isInterface):
    }
 }
 
-void ImplementsList(boolean isInterface):
+void ImplementsList(boolean isInterface, boolean isErrorOrException):
 { debugPrint("IMPLEMENTS"); }
 {
    "implements" ClassOrInterfaceType()
@@ -591,6 +592,8 @@ void ImplementsList(boolean isInterface):
    {
       if (isInterface)
          throw new ParseException("An interface cannot implement other interfaces");
+      if( isErrorOrException )
+      	throw new ParseException("An error or exception cannot implement interfaces");
    }
 }
 
@@ -608,7 +611,7 @@ void EnumDeclaration(int modifiers):
 {
 { jjtThis.setModifiers(modifiers); }
   "enum" t = <IDENTIFIER> { jjtThis.setImage(t.image);  }
-  [ ImplementsList(false) ]
+  [ ImplementsList(false,false) ]
   EnumBody()
 }
 
@@ -1161,7 +1164,7 @@ void AllocationExpression():
 | "new" { jjtThis.setImage("new"); } ClassOrInterfaceType() [ TypeArguments() ]
     (
       ArrayDimsAndInits()
-    | Arguments() [ ClassOrInterfaceBody(false) ]
+    | Arguments() /* No anonymous classes in Shadow [ ClassOrInterfaceBody(false)  ] */
     )
 }
 
@@ -1172,8 +1175,8 @@ void AllocationExpression():
 void ArrayDimsAndInits():
 { debugPrint("ARRAY DIMS AND INITS"); }
 {
-  LOOKAHEAD(2)( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() )* "]" )+ ( LOOKAHEAD(2) "[" (",")* "]" )*
-| ( "[" (",")* "]" )+ ArrayInitializer()
+  LOOKAHEAD(2)( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions();} )* { jjtThis.pushDimensions();}  "]" )+ ( LOOKAHEAD(2) "[" (",")* "]" )*
+| ( "[" (","{ jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+ ArrayInitializer()
 }
 
 

@@ -21,6 +21,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
@@ -34,13 +35,24 @@ public class FieldAndMethodChecker extends BaseChecker {
 		//
 		// TODO: Fix this as it could be a class, exception or interface
 		//       We'll also need to add that to Type so it knows what it is
-		//
-		
-		// For now we punt and assume everything is a class
+		//		
+
 		if( secondVisit )		
+		{
+			if( currentType instanceof ClassType ) //may need to add a default constructor
+			{
+				ClassType classType = (ClassType)currentType;
+				if( classType.getMethods("constructor") ==  null )
+					classType.addMethod("constructor", new MethodSignature("constructor", 0, -1)); //negative indicates "magically created"
+			}
+			
 			currentType = (ClassInterfaceBaseType)currentType.getOuter();
-		else					
+		}
+		else
+		{
 			currentType = (ClassInterfaceBaseType)lookupType(node.getImage());
+			node.setType(currentType);
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -160,6 +172,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 			}
 		}
 		
+		node.setType(signature.getMethodType());
+		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType; 
@@ -192,10 +206,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		MethodSignature signature = new MethodSignature("constructor", node.getModifiers(), node.getLine());
+		MethodSignature signature = new MethodSignature("constructor", node.getModifiers(), node.getLine());		
 		visitParameters(node.jjtGetChild(0), signature);
 
 		DEBUG("ADDED METHOD: " + signature.toString());
+		
+		node.setType(signature.getMethodType());
 
 		// add the method to the current type
 		ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
