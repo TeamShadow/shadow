@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 
 public abstract class BaseTest {

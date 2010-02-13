@@ -2,8 +2,6 @@ package shadow.typecheck.type;
 
 import java.util.ArrayList;
 
-import shadow.typecheck.type.Type.Kind;
-
 public class InterfaceType extends ClassInterfaceBaseType {
 	protected ArrayList<InterfaceType> extendType;
 

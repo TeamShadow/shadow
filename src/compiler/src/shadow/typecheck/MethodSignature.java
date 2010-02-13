@@ -1,9 +1,5 @@
 package shadow.typecheck;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 

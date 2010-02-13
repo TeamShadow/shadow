@@ -7,6 +7,7 @@ import java.util.Map;
 
 import shadow.AST.ASTUtils;
 import shadow.AST.AbstractASTVisitor;
+import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.type.Type;
 
@@ -58,6 +59,20 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return stack[depth].getFileName() + ":" + stack[depth].getLineNumber() + " ";
 	}
 	
+	protected Object pushUpType(Node node, Boolean secondVisit, int child) {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		// simply push the type up the tree
+		node.setType(node.jjtGetChild(child).getType());
+		
+		return WalkType.POST_CHILDREN;
+	}
+
+	protected Object pushUpType(Node node, Boolean secondVisit) {
+		return pushUpType(node, secondVisit, 0);
+	}
+
 	/**
 	 * Adds an error message to the list errors we keep until the end.
 	 * @param node The node where the error occurred. This will be printed in the standard format.

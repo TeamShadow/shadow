@@ -13,7 +13,6 @@ import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
-import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -33,10 +32,8 @@ import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTShiftExpression;
-import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
-import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -125,32 +122,11 @@ public class ClassChecker extends BaseChecker {
 			addError(node, "Method declarations only allowed in class, interface, enum, error, and exception types");
 	}
 	
-	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-
-		String typeName = node.getImage();
-		Type type = lookupType(typeName);
-		
-		if(type == null) {
-			addError(node, Error.UNDEF_TYP, typeName);
-			return WalkType.NO_CHILDREN;
-		}
-		
-		node.setType(type);
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
 	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		//
-		// TODO: This needs to be fixed
-		//
 		Type type = node.jjtGetChild(0).getType();
-		//Type myType = new Type(type.getTypeName(), type.getModifiers(), type.getOuter(), type.getKind());
 		
 		List<Integer> dimensions = node.getArrayDimensions();
 		
@@ -168,7 +144,7 @@ public class ClassChecker extends BaseChecker {
 
 		// 	get the var's type
 		Type type = node.jjtGetChild(0).getType();
-
+		
 		if(type == null) {
 			addError(node.jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
 			return WalkType.NO_CHILDREN;
@@ -209,7 +185,7 @@ public class ClassChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		Type type = node.getType();	// this is set in the TypeBuilder
+		Type type = node.getType();	// this is set in the FieldAndMethodChecker
 		
 		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
 			Node curVarDec = node.jjtGetChild(i);
@@ -277,7 +253,7 @@ public class ClassChecker extends BaseChecker {
 		
 		// by the time we get here, we haven't found this name anywhere
 		addError(node, Error.UNDEC_VAR, name);
-		DEBUG(node, "DIDN'T FIND");
+		DEBUG(node, "DIDN'T FIND: " + name);
 
 		return WalkType.NO_CHILDREN;
 	}
@@ -410,7 +386,7 @@ public class ClassChecker extends BaseChecker {
 		
 		Type t1 = node.jjtGetChild(0).getType();
 		Type t2 = node.jjtGetChild(1).getType();
-
+		
 		// see if we're dealing with strings or not
 		if(t1.isString() && t2.isString()) {
 			node.setType(t1);
@@ -603,9 +579,6 @@ public class ClassChecker extends BaseChecker {
 			// SHOULD DO SOMETHING WITH THIS!!!
 			AssignmentType assType = op.getAssignmentType();
 			
-			DEBUG(node.jjtGetChild(0), "T1: " + t1);
-			DEBUG(node.jjtGetChild(2), "T2: " + t2);
-			
 			// we had an error some other place as one of the types is unknown
 			if(t1 == null || t2 == null)
 				return WalkType.NO_CHILDREN;
@@ -630,24 +603,7 @@ public class ClassChecker extends BaseChecker {
 	//
 	// Everything below here are just visitors to push up the type
 	//
-
-	private Object pushUpType(Node node, Boolean secondVisit, int child) {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		// simply push the type up the tree
-		node.setType(node.jjtGetChild(child).getType());
-		
-		return WalkType.POST_CHILDREN;
-	}
-
-	private Object pushUpType(Node node, Boolean secondVisit) {
-		return pushUpType(node, secondVisit, 0);
-	}
-
-	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
-	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
-	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 }

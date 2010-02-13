@@ -1,6 +1,5 @@
 package shadow.typecheck.type;
 
-import shadow.typecheck.type.Type.Kind;
 
 public class EnumType extends ClassType
 {

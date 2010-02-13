@@ -29,20 +29,7 @@
 
 
 => TYPE CHECKING <=
-** CURRENT STATUS **
-- We need to do type-checking in 2 passes: 1) methods & fields, 2) inside the methods
-- Currently gathers all methods & fields and complains if there is an issue
 ** TO DO **
-- Add checking for assignments
-- Add checking for operators: + - etc
-- Add checking for method calls
-- Include checking with literals for all of the above
-- Add subtyping rules
-
-- Add list of all types.  After the first pass, add in links to parent classes (and enclosing classes?).  Assigning the type for a variable declaration should *always* be a lookup and never and construction.  
-
-- Improve scoping so that we don't just return the first symbol we actually get the correct one
-
 Add visitor methods in ClassChecker for:
 
 *************************************************************************

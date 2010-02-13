@@ -3,7 +3,6 @@ package shadow.typecheck.type;
 import java.util.HashMap;
 
 import shadow.typecheck.MethodSignature;
-import shadow.typecheck.type.Type.Kind;
 
 public class ClassInterfaceBaseType extends Type {
 	protected HashMap<String, Type> fieldTable;

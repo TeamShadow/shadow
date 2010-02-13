@@ -1,7 +1,5 @@
 package shadow.typecheck;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +43,7 @@ public class TypeChecker {
 			return false;
 		}
 		
-		TypeBuilder builder = new TypeBuilder(debug, typeTable, importList );
+		FieldAndMethodChecker builder = new FieldAndMethodChecker(debug, typeTable, importList );
 		walker = new ASTWalker(builder);
 		
 		// walk the tree building types

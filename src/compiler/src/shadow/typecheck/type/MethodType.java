@@ -1,7 +1,6 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 public class MethodType extends Type {

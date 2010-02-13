@@ -5,6 +5,7 @@ import java.util.Map;
 
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
+import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTConstructorDeclaration;
 import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
@@ -12,15 +13,20 @@ import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
+import shadow.parser.javacc.ASTResultTypes;
+import shadow.parser.javacc.ASTType;
+import shadow.parser.javacc.ASTVariableDeclarator;
+import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
-public class TypeBuilder extends BaseChecker {	
+public class FieldAndMethodChecker extends BaseChecker {	
 	
-	public TypeBuilder(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
+	public FieldAndMethodChecker(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
 		super(debug, typeTable, importList);
 	}
 	
@@ -36,9 +42,6 @@ public class TypeBuilder extends BaseChecker {
 		else					
 			currentType = (ClassInterfaceBaseType)lookupType(node.getImage());
 		
-		// insert our new type into the table
-		//typeTable.put(node.getImage(), currentType);
-		
 		return WalkType.POST_CHILDREN;
 	}
 
@@ -46,13 +49,13 @@ public class TypeBuilder extends BaseChecker {
 	 * Add the field declarations.
 	 */
 	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
 		// a field dec has a type followed by 1 or more idents
-		Node typeNode = node.jjtGetChild(0).jjtGetChild(0);
+		Type type = node.jjtGetChild(0).getType();
 		
-		if(typeNode instanceof ASTReferenceType)
-			typeNode = typeNode.jjtGetChild(0);
-		
-		Type type = lookupType(typeNode.getImage());
+		DEBUG(node.jjtGetChild(0), "TYPE: " + type);
 		
 		// make sure we have this type
 		if(type == null) {
@@ -65,6 +68,7 @@ public class TypeBuilder extends BaseChecker {
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+			
 			// go through inserting all the idents
 			for(int i=1; i < node.jjtGetNumChildren(); ++i) {
 				String symbol = node.jjtGetChild(i).jjtGetChild(0).getImage();
@@ -86,13 +90,49 @@ public class TypeBuilder extends BaseChecker {
 			return WalkType.NO_CHILDREN;
 		}
 			
-		return WalkType.NO_CHILDREN;	// only need the symbols, no type-checking yet
+		return WalkType.POST_CHILDREN;
 	}
+	
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Type type = node.jjtGetChild(0).getType();
+		
+		List<Integer> dimensions = node.getArrayDimensions();
+		
+		if( dimensions.size() == 0 )
+			node.setType(type);
+		else
+			node.setType(new ArrayType(type, dimensions));
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
 
+		String typeName = node.getImage();
+		Type type = lookupType(typeName);
+		
+		if(type == null) {
+			addError(node, Error.UNDEF_TYP, typeName);
+			return WalkType.NO_CHILDREN;
+		}
+		
+		node.setType(type);
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	/**
 	 * Adds a method to the current type.
 	 */
-	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {		
+	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
 		Node methodDec = node.jjtGetChild(0);
 		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers(), node.getLine());
 		
@@ -105,27 +145,18 @@ public class TypeBuilder extends BaseChecker {
 			Node retTypes = methodDec.jjtGetChild(1);
 			
 			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i) {
-				Node retNode = retTypes.jjtGetChild(i).jjtGetChild(0).jjtGetChild(0);
+				Type type = retTypes.jjtGetChild(i).getType();
 				
-				// we could be pointing at a reference type
-				if(retNode instanceof ASTReferenceType)
-					retNode = retNode.jjtGetChild(0);
+				DEBUG("TYPE: " + type);
 				
-				if(retNode instanceof ASTFunctionType) {
-					signature.addReturn(createMethodType((ASTFunctionType)retNode));
-				} else {
-					String retTypeName = retNode.getImage();
-					Type retType = lookupType(retTypeName);
-
-					// make sure the return type is in the type table
-					if(retType == null) {
-						addError(retNode, Error.UNDEF_TYP, retTypeName);
-						return WalkType.NO_CHILDREN;
-					}
-					
-					// add the return type to our signature
-					signature.addReturn(retType);
+				// make sure the return type is in the type table
+				if(type == null) {
+					addError(retTypes.jjtGetChild(i), Error.UNDEF_TYP);
+					return WalkType.NO_CHILDREN;
 				}
+					
+				// add the return type to our signature
+				signature.addReturn(type);
 			}
 		}
 		
@@ -153,10 +184,14 @@ public class TypeBuilder extends BaseChecker {
 			return WalkType.NO_CHILDREN;
 		}
 		
-		return WalkType.NO_CHILDREN;	// don't want to type-check the whole method now
+		return WalkType.POST_CHILDREN;
 	}
 	
+	
 	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
 		MethodSignature signature = new MethodSignature("constructor", node.getModifiers(), node.getLine());
 		visitParameters(node.jjtGetChild(0), signature);
 
@@ -166,10 +201,13 @@ public class TypeBuilder extends BaseChecker {
 		ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
 		currentClass.addMethod("constructor", signature);
 
-		return WalkType.NO_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {		
+	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
 		MethodSignature signature = new MethodSignature("destructor", node.getModifiers(), node.getLine());
 
 		DEBUG("ADDED METHOD: " + signature.toString());
@@ -178,7 +216,7 @@ public class TypeBuilder extends BaseChecker {
 		ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
 		currentClass.addMethod("destructor", signature);
 
-		return WalkType.NO_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public boolean visitParameters(Node params, MethodSignature signature) {
@@ -196,26 +234,16 @@ public class TypeBuilder extends BaseChecker {
 			}
 			
 			// get the type of the parameter
-			Node typeNode = param.jjtGetChild(0).jjtGetChild(0);
+			Type type = param.jjtGetChild(0).getType();
 			
-			// we might be pointing to a reference type and need to move on to a primitive type
-			if(typeNode instanceof ASTReferenceType)
-				typeNode = typeNode.jjtGetChild(0);
-			
-			if(typeNode instanceof ASTFunctionType) {
-				signature.addParameter(paramSymbol, createMethodType((ASTFunctionType)typeNode));
-			} else {	// regular parameter
-				Type paramType = lookupType(typeNode.getImage());
-				
-				// make sure this type is in the type table
-				if(paramType == null) {
-					addError(typeNode, Error.UNDEF_TYP, typeNode.getImage());
-					return false;
-				}
-				
-				// add the parameter type to the signature
-				signature.addParameter(paramSymbol, paramType);
+			// make sure this type is in the type table
+			if(type == null) {
+				addError(param.jjtGetChild(0), Error.UNDEF_TYP);
+				return false;
 			}
+				
+			// add the parameter type to the signature
+			signature.addParameter(paramSymbol, type);
 		}
 		
 		return true;
@@ -226,33 +254,28 @@ public class TypeBuilder extends BaseChecker {
 	 * @param node
 	 * @return
 	 */
-	public MethodType createMethodType(ASTFunctionType node) {
+	public Object visit(ASTFunctionType node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
 		MethodType ret = new MethodType(null); // it has no name
 		
 		// add all the parameters to this method
 		int i;
 		for(i=0; i < node.jjtGetNumChildren(); ++i) {
-			Node curNode = node.jjtGetChild(i).jjtGetChild(0);
+			Node curNode = node.jjtGetChild(i);
+			Type type = curNode.getType();
 			
 			// check to see if we've moved on to the result types
-			if(curNode instanceof ASTResultType)
+			if(curNode instanceof ASTResultTypes)
 				break;
 			
-			// need to recursively call this
-			else if(curNode instanceof ASTFunctionType)
-				ret.addParameter(createMethodType((ASTFunctionType)curNode));
-			
-			
-			else {
-				Type type = lookupType(curNode.getImage());
-				
-				if(type == null) {
-					addError(curNode, Error.UNDEF_TYP, curNode.getImage());
-					return ret;	// just return whatever, we should prob throw here
-				}
-				
-				ret.addParameter(type);	// add the type as the parameter
+			if(type == null) {
+				addError(curNode, Error.UNDEF_TYP, curNode.getImage());
+				return ret;	// just return whatever, we should prob throw here
 			}
+				
+			ret.addParameter(type);	// add the type as the parameter
 		}
 		
 		// check to see if we have result types
@@ -260,23 +283,28 @@ public class TypeBuilder extends BaseChecker {
 			Node resNode = node.jjtGetChild(i);
 			
 			for(int r=0; r < resNode.jjtGetNumChildren(); ++r) {
-				Node curNode = resNode.jjtGetChild(r).jjtGetChild(0).jjtGetChild(0);
+				Node curNode = resNode.jjtGetChild(r);
+				Type type = resNode.jjtGetChild(r).getType();
 				
-				if(curNode instanceof ASTFunctionType) {
-					ret.addReturn(createMethodType((ASTFunctionType)curNode));
-				} else {
-					Type type = lookupType(curNode.getImage());
-					
-					if(type == null) {
-						addError(curNode.jjtGetChild(0), Error.UNDEF_TYP, curNode.jjtGetChild(0).getImage());
-						return ret;	// just return whatever, we should prob throw here
-					}
-					
-					ret.addReturn(type);
+				if(type == null) {
+					addError(curNode.jjtGetChild(0), Error.UNDEF_TYP, curNode.jjtGetChild(0).getImage());
+					return ret;	// just return whatever, we should prob throw here
 				}
+					
+				ret.addReturn(type);
 			}
 		}
 		
-		return ret;
+		node.setType(ret);
+		
+		return WalkType.POST_CHILDREN;
 	}
+	
+	//
+	// Everything below here are just visitors to push up the type
+	//
+	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 }

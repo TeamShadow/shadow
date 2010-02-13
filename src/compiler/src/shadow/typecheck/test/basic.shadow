@@ -1,8 +1,4 @@
 
 class Bill {
-
-	public blah() => () {
-	   int[] a;
-	   int b;
-	}
+    public blah(int a) => ( float, (int, int) => (int) ) { }
 } 

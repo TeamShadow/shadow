@@ -1,10 +1,6 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-
-import shadow.typecheck.MethodSignature;
-import shadow.typecheck.type.Type.Kind;
 
 public class ClassType extends ClassInterfaceBaseType {
 	protected ClassType extendType;
