@@ -87,7 +87,7 @@ public class MethodType extends Type {
 	 * @return True if the methods can co-exist, False otherwise
 	 */
 	public boolean equals(Object o) {
-		if( o instanceof MethodType )
+		if( o != null && o instanceof MethodType )
 		{		
 			MethodType mt = (MethodType)o;
 			

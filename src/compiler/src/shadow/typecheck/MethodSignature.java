@@ -51,9 +51,14 @@ public class MethodSignature {
 	}	
 
 	public boolean equals(Object o) {
-		MethodSignature ms = (MethodSignature)o;
-		
-		return ms.symbol.equals(symbol) && ms.type.equals(type);
+		if( o != null && o instanceof MethodSignature )
+		{
+			MethodSignature ms = (MethodSignature)o;
+			
+			return ms.symbol.equals(symbol) && ms.type.equals(type);
+		}
+		else
+			return false;
 	}
 
 	public String toString() {

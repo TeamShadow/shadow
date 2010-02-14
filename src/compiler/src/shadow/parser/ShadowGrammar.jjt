@@ -268,10 +268,52 @@ TOKEN :
 
 TOKEN :
 {
-  < INTEGER_LITERAL:
-        <DECIMAL_LITERAL> (["l","L"])?
-      | <HEX_LITERAL> (["l","L"])?
-      | <OCTAL_LITERAL> (["l","L"])?
+   < BYTE_LITERAL: //can't end with b or B because of hex digits
+        <DECIMAL_LITERAL> ["y","Y"]
+      | <HEX_LITERAL> ["y","Y"]
+      | <OCTAL_LITERAL> ["y","Y"]
+  >
+|
+  < UBYTE_LITERAL: //can't end with b or B because of hex digits
+        <DECIMAL_LITERAL> ["u","U"]["y","Y"]
+      | <HEX_LITERAL> ["u","U"]["y","Y"]
+      | <OCTAL_LITERAL> ["u","U"]["y","Y"]
+  >
+|   
+  < SHORT_LITERAL:
+        <DECIMAL_LITERAL> ["s","S"]
+      | <HEX_LITERAL> ["s","S"]
+      | <OCTAL_LITERAL> ["s","S"]
+  >  
+|   
+  < USHORT_LITERAL:
+        <DECIMAL_LITERAL> ["u","U"]["s","S"]
+      | <HEX_LITERAL> ["u","U"]["s","S"]
+      | <OCTAL_LITERAL> ["u","U"]["s","S"]
+  >  
+|   
+  < INT_LITERAL:
+        <DECIMAL_LITERAL> (["i","I"])?
+      | <HEX_LITERAL> (["i","I"])?
+      | <OCTAL_LITERAL> (["i","I"])?
+  >
+| 
+  < UINT_LITERAL:
+        <DECIMAL_LITERAL> ["u","U"](["i","I"])?
+      | <HEX_LITERAL> ["u","U"](["i","I"])?
+      | <OCTAL_LITERAL> ["u","U"](["i","I"])?
+  >  
+|
+  < LONG_LITERAL:
+        <DECIMAL_LITERAL> ["l","L"]
+      | <HEX_LITERAL> ["l","L"]
+      | <OCTAL_LITERAL> ["l","L"]
+  >
+|
+  < ULONG_LITERAL:
+        <DECIMAL_LITERAL> ["u","U"]["l","L"]
+      | <HEX_LITERAL> ["u","U"]["l","L"]
+      | <OCTAL_LITERAL> ["u","U"]["l","L"]
   >
 |
   < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
@@ -280,11 +322,18 @@ TOKEN :
 |
   < #OCTAL_LITERAL: "0" (["0"-"7"])* >
 |
-  < FLOATING_POINT_LITERAL:
-        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])?
-      | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])?
-      | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])?
-      | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]
+  < FLOAT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? ["f","F"]
+      | "." (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
+      | (["0"-"9"])+ <EXPONENT> ["f","F"]
+      | (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
+  >
+|
+  < DOUBLE_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["d","D"]
   >
 |
   < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
@@ -815,8 +864,10 @@ void StaticArrayType():
 	Token t;
 }
 {
-    PrimitiveType() "[" t = <INTEGER_LITERAL> "]" { jjtThis.setArraySize(t.image); }
+    PrimitiveType() "[" IntegerLiteral() "]"
 }
+
+
 
 void FunctionType():
 {
@@ -1102,6 +1153,8 @@ void PrimaryPrefix():
 | Name()
 }
 
+
+
 void PrimarySuffix():
 {
 	debugPrint("PRIMARY SUFFIX");
@@ -1122,13 +1175,49 @@ void Literal() :
 	Token t;
 }
 {
+  t = <BYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.BYTE); }
+| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.CODE); }
+| t = <SHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.SHORT); }
+| t = <INT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
+| t = <LONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.LONG); }
+| t = <FLOAT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.FLOAT); }
+| t = <DOUBLE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.DOUBLE); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.STRING); }
+| t = <UBYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.UBYTE); }
+| t = <USHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.USHORT); }
+| t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.UINT); }
+| t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.ULONG); }
+| BooleanLiteral() { jjtThis.setType(Type.BOOLEAN); }
+| NullLiteral() { jjtThis.setType(Type.NULL); }
+  
   //what about longs, shorts, floats, unsigned versions etc.?
+ /* OLD:
   t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
 | t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.DOUBLE); }
 | t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.CODE); }
 | t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.STRING); }
 | BooleanLiteral() { jjtThis.setType(Type.BOOLEAN); }
 | NullLiteral() { jjtThis.setType(Type.NULL); }
+*/
+}
+
+
+void IntegerLiteral(): //useful for static arrays, etc.
+{
+	debugPrint("INTEGER LITERAL");
+	Token t;
+}
+{
+     (
+		  t = <BYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.BYTE); }
+		| t = <UBYTE_LITERAL > { jjtThis.setImage(t.image); jjtThis.setType(Type.UBYTE); }
+		| t = <SHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.SHORT); }
+		| t = <USHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.USHORT); }
+		| t = <INT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
+		| t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.UINT); }
+		| t = <LONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.LONG); }
+		| t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.ULONG); }
+	)
 }
 
 void BooleanLiteral():
@@ -1233,7 +1322,7 @@ void BlockStatement():
 {
   LOOKAHEAD([ "final" ] Type() <IDENTIFIER> ) LocalVariableDeclaration() ";"
 | Statement()
-| ClassOrInterfaceDeclaration(0)
+//| ClassOrInterfaceDeclaration(0)  No local classes in Shadow
 }
 
 void LocalVariableDeclaration():

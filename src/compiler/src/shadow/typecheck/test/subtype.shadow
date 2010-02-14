@@ -7,8 +7,13 @@ class Outer {
 		a = new Subclass1();		
 		a = new Subclass2();
 		
+		int b = 2s;
+		short c = 4y;
+		
+		
 		Subclass1 s;
 		//s = a; //uncomment this line to see type hierarchies enforced
+		//c = 5; //uncomment this line to see type hierarchies enforced
 	}
 
 	private class BaseClass

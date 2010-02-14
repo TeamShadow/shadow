@@ -8,25 +8,12 @@
 => General <=
 - *Need a better/good way to report errors*
 - ** Col & line numbers are "wrong" for multiple AST nodes **
-- Command-line args for each stage of the compile
+- Command-line args for each stage of the compiler
 - Better over-all compiler interface/Main method
 
-=> Barry <=
-- Check the equals & hashCode methods I've created for MethodSignature & Type
-
 => PARSING <=
-- Add errors and exceptions to parsing
-- Check literals to see if they can be divided into double and float, int and long, etc.
-  - So this is an issue for now with type-checking because we don't have promotion from float -> double
-    I don't think -- without a ton of effort that isn't worth it -- that we can determine that 1 is a ubyte but 2^20 must be an in
-    So I think we should make these things whatever the architecture provides. So for 64-bit it's a long and double(??) and for 32-bit it's an int and float
-    We could also make everything an int & float unless you specify a l/L or d/D after the literal... I like this idea    
-    - Yuck.  That means the same code means different things.  Almost as bad as int being 64 bits one place and 32 bits another.  
-    - Also, to be compatible with C++ and Java, 4 is an int and 3.6 is a double.  Those are the defaults.  Longs and floats have to be separately marked: 4L and 3.6f.
-    It's sensible: Normal size int unless you need more space, precision on your floating-point values unless you are trying to save space.  Remember, in binary, 0.1 is a repeating decimal...
 - Should string be listed as a primitive type when its semantics will always be reference style?
 - Should we add modifiers to views ??  - Probably not?
-
 
 => TYPE CHECKING <=
 ** TO DO **
@@ -94,10 +81,15 @@ DONE - ASTPrimaryExpression (NOT DONE!)
 
 Barry doesn't think these need to be typechecked:
   ASTArrayDimsAndInits
-  
-  
-Barry do these:
-  
+  ASTEmptyStatement
+  ASTLiteral
+  ASTIntegerLiteral
+  ASTBooleanLiteral
+  ASTNullLiteral
+  ASTBlockStatement
+  ASTStatement
+      
+Barry do these:  
 DONE - ASTAdditiveExpression
 DONE - ASTMultiplicativeExpression
 DONE - ASTUnaryExpression
@@ -110,24 +102,18 @@ DONE - ASTBitwiseOrExpression
 DONE - ASTBitwiseExclusiveOrExpression
 DONE - ASTBitwiseAndExpression
 DONE - ASTExpression - Still needs to handle the different assignment types, maybe?
-  ASTIsExpression	//needs richer type information
-  ASTCastExpression //needs richer type information
+DONE - ASTIsExpression
+  ASTCastExpression
   ASTSequence
   ASTMemberSelector
   ASTPrimaryPrefix
   ASTPrimarySuffix
-  ASTLiteral
-  ASTBooleanLiteral
-  ASTNullLiteral
 DONE - ASTArguments
 DONE - ASTArgumentList
 DONE - ASTAllocationExpression
-
-  ASTStatement
   ASTLabeledStatement
-DONE? - ASTBlock
-  ASTBlockStatement
-  ASTEmptyStatement
+DONE - ASTBlock
+
 DONE - ASTStatementExpression
   ASTSwitchStatement
   ASTSwitchLabel

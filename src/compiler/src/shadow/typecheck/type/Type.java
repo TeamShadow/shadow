@@ -87,10 +87,10 @@ public class Type {
 	}
 
 	public boolean equals(Object o) {
-		if( o instanceof Type )
+		if( o != null && o instanceof Type )
 		{
 			Type t = (Type)o;
-	
+			//null matches everything... could this ever be a problem?
 			return  typeName.equals(NULL.typeName) || typeName.equals(t.typeName);
 		}
 		else
@@ -121,7 +121,9 @@ public class Type {
 			else
 				return false;			
 		case CLASS:
-			if( t.getKind() == Kind.CLASS )			
+			if( t.isNumerical() && this.isNumerical() )
+				return isNumericalSubtype(t);
+			else if( t.getKind() == Kind.CLASS )			
 				return ((ClassType)this).isDescendentOf(t);
 			else if( t.getKind() == Kind.INTERFACE )
 				return ((ClassType)this).isImplementerOf(t);
@@ -156,7 +158,52 @@ public class Type {
 		}
 	}
 	
-	// TODO: Will this work? 
+	protected boolean isNumericalSubtype(Type t)
+	{
+		if( this.equals(BYTE) )
+		{
+			return t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+		}
+		else if( this.equals(CODE) )
+		{
+			return t.equals(UINT) || t.equals(LONG) || t.equals(ULONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+		}
+		else if( this.equals(SHORT) )
+		{
+			return t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+		}
+		else if( this.equals(INT) )
+		{
+			return t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+		}
+		else if( this.equals(LONG))
+		{
+			return t.equals(FLOAT) || t.equals(DOUBLE);
+		}
+		else if( this.equals(FLOAT))
+		{
+			return t.equals(DOUBLE);
+		}
+		else if( this.equals(UBYTE))
+		{
+			return t.equals(USHORT) || t.equals(UINT) || t.equals(ULONG)  || t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+		}		
+		else if( this.equals(UINT))
+		{
+			return t.equals(ULONG) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+		}
+		else if( this.equals(ULONG) )
+		{
+			return t.equals(FLOAT) || t.equals(DOUBLE);
+		}
+		else if( this.equals(USHORT) )
+		{
+			return t.equals(UINT) || t.equals(ULONG)  || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+		}
+		else		
+			return false;
+	}
+		
 	public int hashCode() {
 		return typeName.hashCode();
 	}

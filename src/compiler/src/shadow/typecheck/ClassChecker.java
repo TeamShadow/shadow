@@ -27,6 +27,7 @@ import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -733,6 +734,31 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;	
 	}
+
+	
+	public Object visit(ASTIsExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		//RelationalExpression() [ "is" Type() ]
+		
+		if( node.jjtGetNumChildren() == 1 )
+			pushUpType(node, secondVisit);
+		else
+		{
+			Type t1 = node.jjtGetChild(0).getType();
+			Type t2 = node.jjtGetChild(1).getType();
+			
+			if( t1.isSubtype(t2) || t2.isSubtype(t1) )
+				node.setType(Type.BOOLEAN);
+			else
+				addError(node, Error.TYPE_MIS, "Type " + t1 + " uncomparable with type " + t2);
+		}			
+
+		return WalkType.POST_CHILDREN;
+	}
+
+
 	 
 		
 
