@@ -24,9 +24,12 @@ import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTConstructorDeclaration;
 import shadow.parser.javacc.ASTDestructorDeclaration;
+import shadow.parser.javacc.ASTDoStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTForeachStatement;
+import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
@@ -45,6 +48,7 @@ import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTVariableInitializer;
+import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
@@ -277,51 +281,57 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException {
-		if(node.jjtGetNumChildren() != 2) {
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
+		if( !secondVisit )
+			return WalkType.POST_CHILDREN;
+		
+		if(node.jjtGetNumChildren() != 2)
+			addError(node, Error.TYPE_MIS, "Too many arguments");			
+		else
+		{		
+			// get the two types
+			Type t1 = node.jjtGetChild(0).getType();
+			Type t2 = node.jjtGetChild(1).getType();
+			
+			// TODO: Add in all the types that we can compare here
+			if( !t1.isNumerical() ) {
+				addError(node.jjtGetChild(0), Error.INVL_TYP, t1 + " used in relation");
+				return WalkType.NO_CHILDREN;
+			}
+			
+			if( !t2.isNumerical() ) {
+				addError(node.jjtGetChild(1), Error.INVL_TYP, t2 + " used in relation");
+				return WalkType.NO_CHILDREN;
+			}
+			
+			node.setType(Type.BOOLEAN);	// relations are always booleans
 		}
-		
-		// get the two types
-		Type t1 = node.jjtGetChild(0).getType();
-		Type t2 = node.jjtGetChild(1).getType();
-		
-		// TODO: Add in all the types that we can compare here
-		if( !t1.isNumerical() ) {
-			addError(node.jjtGetChild(0), Error.INVL_TYP, t1 + " used in relation");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		if( !t2.isNumerical() ) {
-			addError(node.jjtGetChild(1), Error.INVL_TYP, t2 + " used in relation");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		node.setType(Type.BOOLEAN);	// relations are always booleans
 		
 		return WalkType.PRE_CHILDREN;
 	}
 	
 	
 	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException {
-		if(node.jjtGetNumChildren() != 2) {
+		if( !secondVisit )
+			return WalkType.POST_CHILDREN;
+		
+		if(node.jjtGetNumChildren() != 2)
 			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
+		else
+		{			
+			// get the two types
+			Type t1 = node.jjtGetChild(0).getType();
+			Type t2 = node.jjtGetChild(1).getType();
+			
+			// TODO: Add in subtyping
+			if(!t1.isSubtype(t2) && !t2.isSubtype(t1)) {  //works either way
+				addError(node.jjtGetChild(0), Error.TYPE_MIS, t1 + " and " + t2 + " are not comparable");
+				return WalkType.NO_CHILDREN;
+			}
+			
+			node.setType(Type.BOOLEAN);	// relations are always booleans
 		}
-		
-		// get the two types
-		Type t1 = node.jjtGetChild(0).getType();
-		Type t2 = node.jjtGetChild(1).getType();
-		
-		// TODO: Add in subtyping
-		if(!t1.isSubtype(t2) && !t2.isSubtype(t1)) {  //works either way
-			addError(node.jjtGetChild(0), Error.TYPE_MIS, t1 + " and " + t2 + " are not comparable");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		node.setType(Type.BOOLEAN);	// relations are always booleans
-		
-		return WalkType.PRE_CHILDREN;
+			
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visitShiftRotate(SimpleNode node ) throws ShadowException {
@@ -758,6 +768,63 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 
+	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Type t = node.jjtGetChild(0).getType(); 
+		
+		if( !t.equals( Type.BOOLEAN ) )
+			addError(node, Error.TYPE_MIS, "conditional of if statement must be boolean, found: " + t);
+				
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTWhileStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Type t = node.jjtGetChild(0).getType(); 
+		
+		if( !t.equals( Type.BOOLEAN ) )
+			addError(node, Error.TYPE_MIS, "conditional of while statement must be boolean, found: " + t);
+				
+		return WalkType.POST_CHILDREN;
+	}
+
+	public Object visit(ASTDoStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Type t = node.jjtGetChild(1).getType(); //second child, not first like if and while 
+		
+		if( !t.equals( Type.BOOLEAN ) )
+			addError(node, Error.TYPE_MIS, "conditional of do statement must be boolean, found: " + t);
+				
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	public Object visit(ASTForeachStatement node, Boolean secondVisit) throws ShadowException {
+		createScope(secondVisit); //for variables declared in header, right?  Pretty sure that works
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+				
+		Type t1 = node.jjtGetChild(0).getType(); //Type declaration
+		Type t2 = node.jjtGetChild(1).getType(); //Collection
+		
+		if( t2.getKind() == Type.Kind.ARRAY )
+		{
+			ArrayType array = (ArrayType)t2;
+			if( !array.getBaseType().isSubtype(t1) )
+				addError(node, Error.TYPE_MIS, "incompatible foreach variable, found: " + t1 + " expected: " + array.getBaseType());
+		}
+		else
+			addError(node, Error.TYPE_MIS, "foreach loop only works on arrays in this typechecker build, found: " + t2);
+			
+				
+		return WalkType.POST_CHILDREN;
+	}
 
 	 
 		

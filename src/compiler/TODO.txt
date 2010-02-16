@@ -117,10 +117,10 @@ DONE - ASTBlock
 DONE - ASTStatementExpression
   ASTSwitchStatement
   ASTSwitchLabel
-  ASTIfStatement
-  ASTWhileStatement
-  ASTDoStatement
-  ASTForeachStatement
+DONE - ASTIfStatement
+DONE - ASTWhileStatement
+DONE - ASTDoStatement
+DONE - ASTForeachStatement
   ASTForStatement
   ASTForInit
   ASTStatementExpressionList
