@@ -2,11 +2,11 @@ class Blah {
     public test() => () {
         for(int i=0; i < x; i += 1) { ; }
         for(; i < x; i += 1) { ; }
-        for(int i=0; ; i += 1) { ; }
+        for(int i=0; true; i += 1) { ; }
         for(int i=0; i < x; ) { ; }
 
         for(i=0; i < x; i += 1) { ; }
-        for(i=0; ; i += 1) { ; }
+        for(i=0; true; i += 1) { ; }
         for(i=0; i < x; ) { ; }
         
         for(i=0; true; i += 1) { ; }

@@ -121,10 +121,10 @@ DONE - ASTIfStatement
 DONE - ASTWhileStatement
 DONE - ASTDoStatement
 DONE - ASTForeachStatement
-  ASTForStatement
-  ASTForInit
+DONE - ASTForStatement
+DONE - ASTForInit
+DONE - ASTForUpdate - nothing to do here
   ASTStatementExpressionList
-  ASTForUpdate
   ASTBreakStatement
   ASTReturnStatement
   ASTThrowStatement

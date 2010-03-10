@@ -1401,7 +1401,7 @@ void ForeachStatement():
 void ForStatement() :
 { debugPrint("FOR STATEMENT"); }
 {
-  "for" "(" [ ForInit() ] ";" [ ConditionalExpression() ] ";" [ ForUpdate() ] ")" Statement()
+  "for" "(" [ ForInit() ] ";" ConditionalExpression() ";" [ ForUpdate() ] ")" Statement()
 }
 
 void ForInit():

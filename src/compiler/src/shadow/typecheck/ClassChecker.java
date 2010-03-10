@@ -28,6 +28,8 @@ import shadow.parser.javacc.ASTDoStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTForInit;
+import shadow.parser.javacc.ASTForStatement;
 import shadow.parser.javacc.ASTForeachStatement;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
@@ -594,7 +596,7 @@ public class ClassChecker extends BaseChecker {
 			pushUpType(node, secondVisit);
 		
 		// we have 3 children so it's an assignment
-		if(node.jjtGetNumChildren() == 3) {
+		else if(node.jjtGetNumChildren() == 3) {
 			// get the two types, we have to go up to the parent to get them
 			Type t1 = node.jjtGetChild(0).getType();
 			ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
@@ -618,7 +620,7 @@ public class ClassChecker extends BaseChecker {
 		
 		else {
 			// something went terribly wrong here... should NEVER get to this state or parser is broken
-			throw new ShadowException("Wrong number of args to an assignment!!!");
+			throw new ShadowException("Wrong number of args to an assignment!!!" + node.getLine() + node.jjtGetNumChildren());
 		}
 
 		return WalkType.POST_CHILDREN;
@@ -813,6 +815,9 @@ public class ClassChecker extends BaseChecker {
 		Type t1 = node.jjtGetChild(0).getType(); //Type declaration
 		Type t2 = node.jjtGetChild(1).getType(); //Collection
 		
+		//
+		// TODO: Eventually we'll want the notion of a collection and need to check that here
+		//
 		if( t2.getKind() == Type.Kind.ARRAY )
 		{
 			ArrayType array = (ArrayType)t2;
@@ -826,8 +831,33 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 
-	 
+	public Object visit(ASTForStatement node, Boolean secondVisit) throws ShadowException {
+		boolean hasInit = false;
 		
+		if(node.jjtGetChild(0) instanceof ASTForInit) {
+			createScope(secondVisit);	// only need the scope if we've created new vars
+			hasInit = true;
+		}
+		
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		// the conditional type might come first or second depending upon if there is an init or not
+		Type conditionalType = null;
+		
+		if(hasInit)
+			conditionalType = node.jjtGetChild(1).getType();
+			
+		else
+			conditionalType = node.jjtGetChild(0).getType();
+		
+		DEBUG("TYPE: " + conditionalType);
+		
+		if(conditionalType == null || !conditionalType.equals( Type.BOOLEAN ) )
+			addError(node, Error.TYPE_MIS, "conditional of for statement must be boolean, found: " + conditionalType);
+		
+		return WalkType.POST_CHILDREN;
+	}		
 
 	//
 	// Everything below here are just visitors to push up the type
@@ -835,7 +865,7 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 
-	//	NO NO NO, there can be more stuff in primary expression, no time to fix it now, though
+	//	TODO: NO NO NO, there can be more stuff in primary expression, no time to fix it now, though
 	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	
 }
