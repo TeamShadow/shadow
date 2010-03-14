@@ -9,16 +9,16 @@ public class ArrayType extends Type
 	
 	private static String makeName(Type baseType, List<Integer> arrayDimensions)
 	{
-		String name = baseType.getTypeName();
+		StringBuilder name = new StringBuilder(baseType.getTypeName());
 		for( int i : arrayDimensions )
 		{		
-			name += "[";
+			name.append("[");
 			for( int j = 1; j < i; j++ ) //no extra comma for 1 dimension
-				name += ",";
-			name += "]";				
+				name.append(",");
+			name.append("]");				
 		}
 		
-		return name;		
+		return name.toString();		
 	}
 	
 	public int getDimensions()

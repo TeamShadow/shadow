@@ -98,8 +98,15 @@ public class ShadowParser
    public ShadowParser(String fileName)
    {
       this(System.in);
-      try { ReInit(new FileInputStream(new File(fileName))); }
-      catch(Exception e) { e.printStackTrace(); }
+      FileInputStream fis = null;
+      
+      try {
+      	fis = new FileInputStream(new File(fileName));
+        ReInit(fis);
+      } catch(Exception e) {
+        e.printStackTrace();
+      } finally {      	try { fis.close(); }
+      	catch(Exception e) { ; }      }
    }
 
     public void enableDebug() {

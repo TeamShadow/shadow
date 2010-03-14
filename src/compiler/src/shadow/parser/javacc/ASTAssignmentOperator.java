@@ -36,14 +36,14 @@ class ASTAssignmentOperator extends SimpleNode {
 	  LEFTROTATEASSIGN
   }
   
-  protected AssignmentType type;
+  protected AssignmentType assType;
   
   public void setAssignmentType(AssignmentType type) {
-	this.type = type;  
+	this.assType = type;  
   }
   
   public AssignmentType getAssignmentType() {
-	  return this.type;
+	  return this.assType;
   }
 }
 /* JavaCC - OriginalChecksum=92708bdf2f854aa06c093a0c5cea3295 (do not edit this line) */
