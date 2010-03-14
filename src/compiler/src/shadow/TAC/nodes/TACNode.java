@@ -1,4 +1,4 @@
-package shadow.TAC;
+package shadow.TAC.nodes;
 
 public abstract class TACNode {
 	protected String name;

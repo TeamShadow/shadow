@@ -16,4 +16,23 @@ public class ASTUtils {
 	static public String getSymLineCol(Node node) {
 		return node.getImage() + " " + getLineCol(node);
 	}
+	
+	public static String getFileAndLine(int depth) {
+		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+		
+		return stack[depth].getFileName() + ":" + stack[depth].getLineNumber() + " ";
+	}
+	
+	public static void DEBUG(String msg) {
+		System.out.println("DEBUG: " + getFileAndLine(3) + msg);
+	}
+	
+	public static void DEBUG(Node node) {
+		System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node));
+	}
+	
+	public static void DEBUG(Node node, String msg) {
+		System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node) + " " + msg);
+	}
+
 }

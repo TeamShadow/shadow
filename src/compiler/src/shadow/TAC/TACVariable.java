@@ -1,27 +1,32 @@
 package shadow.TAC;
 
-public class TACVariable extends TACNode {
-	protected int modifiers;	// won't always be used
-	protected String type;	// for now, change later...
+import shadow.typecheck.type.Type;
+
+public class TACVariable {
+	private Type type;
+	private String symbol;
+	private int size;	/** The size of the var in memory in bytes */
+	private boolean isRef;
 	
-	public TACVariable(String name, TACNode parent) {
-		super(name, parent);
-		modifiers = 0;
+	public TACVariable(String symbol, Type type) {
+		this.type = type;
+		this.symbol = symbol;
+		
+		if(type.isPrimitive()) {
+			isRef = false;
+			
+			// TODO: Figure out the size of this variable on disk
+			if(type == Type.BOOLEAN || type == Type.BYTE) size = 1;
+			else if(type == Type.CODE || type == Type.INT) size = 4;
+			else if(type == Type.DOUBLE || type == Type.LONG) size = 8;
+		}
 	}
 	
 	public String toString() {
-		return super.toString() + " " + type; 
+		return symbol + " " + type; 
 	}
 	
-	public void setModifiers(int modifiers) {
-		this.modifiers = modifiers;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public void setType(String type){
-		this.type = type;
+	public int getSize() {
+		return size;
 	}
 }

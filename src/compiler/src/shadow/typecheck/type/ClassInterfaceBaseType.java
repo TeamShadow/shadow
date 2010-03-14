@@ -3,6 +3,7 @@ package shadow.typecheck.type;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import shadow.typecheck.MethodSignature;
 
@@ -39,6 +40,10 @@ public abstract class ClassInterfaceBaseType extends Type {
 	
 	public Type getField(String fieldName) {
 		return fieldTable.get(fieldName);
+	}
+	
+	public Map<String, Type> getFields() {
+		return fieldTable;
 	}
 	
 	public boolean containsMethod(MethodSignature signature) {

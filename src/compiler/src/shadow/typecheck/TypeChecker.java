@@ -10,7 +10,6 @@ import shadow.typecheck.type.Type;
 
 public class TypeChecker {
 
-
 	protected boolean debug;
 	
 	public TypeChecker(boolean debug) {	

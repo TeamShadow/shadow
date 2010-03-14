@@ -3,6 +3,7 @@ package shadow.typecheck;
 import java.util.List;
 import java.util.Map;
 
+import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -67,8 +68,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 		// a field dec has a type followed by 1 or more idents
 		Type type = node.jjtGetChild(0).getType();
 		
-		DEBUG(node.jjtGetChild(0), "TYPE: " + type);
-		
 		// make sure we have this type
 		if(type == null) {
 			addError(node.jjtGetChild(0).jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
@@ -90,8 +89,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 					addError(node.jjtGetChild(i).jjtGetChild(0), Error.MULT_SYM, symbol);
 					return WalkType.NO_CHILDREN;
 				}
-				
-				DEBUG("ADDING: " + type + " " + symbol);
 				
 				currentClass.addField(symbol, type);
 			}
@@ -159,8 +156,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i) {
 				Type type = retTypes.jjtGetChild(i).getType();
 				
-				DEBUG("TYPE: " + type);
-				
 				// make sure the return type is in the type table
 				if(type == null) {
 					addError(retTypes.jjtGetChild(i), Error.UNDEF_TYP);
@@ -187,8 +182,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 				return WalkType.NO_CHILDREN;
 			}
 			
-			DEBUG("ADDED METHOD: " + signature.toString());
-	
 			// add the method to the current type
 			currentClass.addMethod(methodDec.getImage(), signature);
 		}
@@ -209,7 +202,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		MethodSignature signature = new MethodSignature("constructor", node.getModifiers(), node.getLine());		
 		visitParameters(node.jjtGetChild(0), signature);
 
-		DEBUG("ADDED METHOD: " + signature.toString());
+		ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());
 		
 		node.setType(signature.getMethodType());
 
@@ -226,7 +219,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 		MethodSignature signature = new MethodSignature("destructor", node.getModifiers(), node.getLine());
 
-		DEBUG("ADDED METHOD: " + signature.toString());
+		ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());
 
 		// add the method to the current type
 		ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;

@@ -2,6 +2,8 @@ package shadow.TAC;
 
 import java.util.LinkedList;
 
+import shadow.TAC.nodes.TACNode;
+
 public class TACMethod extends TACNode {
 	
 	protected LinkedList<TACNode> body;

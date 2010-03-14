@@ -2,30 +2,26 @@ package shadow.TAC;
 
 import java.util.LinkedList;
 
-public class TACClass extends TACNode {
+public class TACClass {
 
-	protected int modifier;
-	protected LinkedList<TACVariable> members;
-	protected LinkedList<TACMethod> methods;
-	protected LinkedList<TACClass> classes;
+	private LinkedList<TACVariable> fields;
+	private LinkedList<TACMethod> methods;
+	private LinkedList<TACClass> classes;	// do we even want these here?
+	private String className;
 	
-	public TACClass(String name, TACNode parent) {
-		super(name, parent);
-		members = new LinkedList<TACVariable>();
+	public TACClass(String name) {
+		fields = new LinkedList<TACVariable>();
 		methods = new LinkedList<TACMethod>();
 		classes = new LinkedList<TACClass>();
+		className = name;
 	}
 	
-	public void setModifier(int modifier) {
-		this.modifier = modifier;
+	public void addField(TACVariable var) {
+		fields.add(var);
 	}
 	
-	public void addMember(TACVariable var) {
-		members.add(var);
-	}
-	
-	public LinkedList<TACVariable> getMembers() {
-		return members;
+	public LinkedList<TACVariable> getFields() {
+		return fields;
 	}
 	
 	public void addMethod(TACMethod method) {
@@ -42,5 +38,9 @@ public class TACClass extends TACNode {
 	
 	public LinkedList<TACClass> getClasses() {
 		return classes;
+	}
+	
+	public String getName() {
+		return className;
 	}
 }

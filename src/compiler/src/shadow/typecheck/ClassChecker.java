@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocationExpression;
@@ -273,7 +274,7 @@ public class ClassChecker extends BaseChecker {
 		
 		// by the time we get here, we haven't found this name anywhere
 		addError(node, Error.UNDEC_VAR, name);
-		DEBUG(node, "DIDN'T FIND: " + name);
+		ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);
 
 		return WalkType.NO_CHILDREN;
 	}
@@ -851,7 +852,7 @@ public class ClassChecker extends BaseChecker {
 		else
 			conditionalType = node.jjtGetChild(0).getType();
 		
-		DEBUG("TYPE: " + conditionalType);
+		ASTUtils.DEBUG("TYPE: " + conditionalType);
 		
 		if(conditionalType == null || !conditionalType.equals( Type.BOOLEAN ) )
 			addError(node, Error.TYPE_MIS, "conditional of for statement must be boolean, found: " + conditionalType);

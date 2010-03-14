@@ -53,12 +53,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		this.importList = importList;
 	}
 	
-	protected String getFileAndLine(int depth) {
-		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-		
-		return stack[depth].getFileName() + ":" + stack[depth].getLineNumber() + " ";
-	}
-	
 	protected Object pushUpType(Node node, Boolean secondVisit, int child) {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
@@ -82,7 +76,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		String error = "[" + ASTUtils.getLineCol(node) + "] : " + msg;
 		
 		if(debug)
-			errorList.add(getFileAndLine(3) + error);
+			errorList.add(ASTUtils.getFileAndLine(3) + error);
 		else
 			errorList.add(error);
 	}
@@ -97,7 +91,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		String error = "[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": " + msg; 
 		
 		if(debug)
-			errorList.add(getFileAndLine(3) + error);
+			errorList.add(ASTUtils.getFileAndLine(3) + error);
 		else
 			errorList.add(error);
 	}
@@ -111,7 +105,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		String error = "[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": "; 
 		
 		if(debug)
-			errorList.add(getFileAndLine(3) + error);
+			errorList.add(ASTUtils.getFileAndLine(3) + error);
 		else
 			errorList.add(error);
 	}
@@ -159,20 +153,5 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	public int getErrorCount() {
 		return errorList.size();
-	}
-	
-	public void DEBUG(String msg) {
-		if(debug)
-			System.out.println("DEBUG: " + getFileAndLine(3) + msg);
-	}
-	
-	public void DEBUG(Node node) {
-		if(debug)
-			System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node));
-	}
-	
-	public void DEBUG(Node node, String msg) {
-		if(debug)
-			System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node) + " " + msg);
 	}
 }
