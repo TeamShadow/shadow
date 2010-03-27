@@ -68,6 +68,10 @@ public abstract class ClassInterfaceBaseType extends Type {
 		}
 	}
 	
+	public Map<String, List<MethodSignature>> getMethodMap() {
+		return methodTable;
+	}
+	
 	public List<MethodSignature> getMethods(String methodName) {
 		return methodTable.get(methodName);
 	}

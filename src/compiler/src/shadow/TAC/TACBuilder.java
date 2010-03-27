@@ -1,6 +1,7 @@
 package shadow.TAC;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import shadow.AST.ASTUtils;
@@ -10,6 +11,7 @@ import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.MethodSignature;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
@@ -41,6 +43,13 @@ public class TACBuilder extends AbstractASTVisitor {
 		// go through and make all of the fields
 		for(Map.Entry<String, Type> f:fields.entrySet())
 			curClass.addField(new TACVariable(f.getKey(), f.getValue()));
+		
+		// go through and add all the methods
+		for(Map.Entry<String, List<MethodSignature>> m:type.getMethodMap().entrySet()) {
+			for(MethodSignature ms:m.getValue()) {
+				curClass.addMethod(new TACMethod(m.getKey(), ms));
+			}
+		}
 		
 		classes.add(curClass);
 		

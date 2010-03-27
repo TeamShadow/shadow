@@ -12,7 +12,6 @@ import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
 import shadow.test.BaseTest;
 import shadow.typecheck.TypeChecker;
-import shadow.typecheck.test.TypeCheckerTest;
 
 public class TACTest extends BaseTest {
 	private boolean dump;
