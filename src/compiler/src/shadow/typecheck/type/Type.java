@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import shadow.parser.javacc.Node;
+
 
 public class Type {
 	//types should not change after construction
@@ -8,6 +10,7 @@ public class Type {
 	private final Type outer; //outer class	
 	private Kind kind;
 	private int arrayDimension;
+	private Node astNode;	/** This is to link back to the AST, usually not used */
 	
 	public static enum Kind { ARRAY, CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, VIEW};
 	
@@ -58,6 +61,14 @@ public class Type {
 	
 	public int getModifiers() {
 		return modifiers;
+	}
+	
+	public void setASTNode(Node node) {
+		this.astNode = node;
+	}
+	
+	public Node getASTNode() {
+		return astNode;
 	}
 	
 	public String toString() {

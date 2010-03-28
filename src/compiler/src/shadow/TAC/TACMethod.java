@@ -1,23 +1,23 @@
 package shadow.TAC;
 
-import java.util.LinkedList;
-
 import shadow.TAC.nodes.TACNode;
+import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.MethodSignature;
-import shadow.typecheck.type.Type;
 
 public class TACMethod {
 	
-	private LinkedList<TACNode> body;
+	private TACNode root;
 	private String name;
 	
-	public TACMethod(String name, MethodSignature signature, Type type) {
+	public TACMethod(String name, MethodSignature signature) throws ShadowException {
 		this.name = name;
-		body = new LinkedList<TACNode>();
-	}
-	
-	public void addNode(TACNode node) {
-		body.add(node);
+		
+		// we walk the AST converting to TAC during construction
+		AST2TAC a2t = new AST2TAC(signature.getASTNode());
+		
+		a2t.convert();
+		
+		root = a2t.getTACRoot();
 	}
 	
 }

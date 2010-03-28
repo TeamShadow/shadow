@@ -2,6 +2,7 @@ package shadow.typecheck;
 
 import java.util.List;
 
+import shadow.parser.javacc.Node;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
@@ -9,6 +10,7 @@ public class MethodSignature {
 	protected int line;	/** the line where it's declared */
 	protected MethodType type;
 	protected String symbol;
+	private Node node;	/** The AST node that corresponds to the branch of the tree for this method */
 	
 	public MethodSignature(String symbol, int modifiers, int line) {
 		type = new MethodType(null, modifiers);
@@ -40,6 +42,14 @@ public class MethodSignature {
 		return line;
 	}
 	
+	public void setASTNode(Node node) {
+		this.node = node;
+	}
+	
+	public Node getASTNode() {
+		return node;
+	}
+	
 	public boolean matches( List<Type> argumentTypes )
 	{
 		return type.matches(argumentTypes);		
@@ -65,8 +75,11 @@ public class MethodSignature {
 		return symbol + " " + type.toString();
 	}
 	
-	public MethodType getMethodType()
-	{
+	public String getMangledName() {
+		return symbol + "_" + type.getMangledName();
+	}
+	
+	public MethodType getMethodType() {
 		return type;
 	}
 }

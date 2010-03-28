@@ -47,8 +47,6 @@ public class MethodType extends Type {
 		return true;
 	}
 	
-	
-	
 	public void addParameter(String name, Type type) {
 		paramNames.add(name);
 		paramTypes.add(type);
@@ -143,6 +141,24 @@ public class MethodType extends Type {
 			sb.append(" )");
 		else
 			sb.setCharAt(sb.lastIndexOf(","), ')');
+		
+		return sb.toString();
+	}
+	
+	public String getMangledName() {
+		StringBuilder sb = new StringBuilder();
+		
+		for(Type p:paramTypes) {
+			sb.append(p.getTypeName());
+			sb.append("_");
+		}
+		
+		sb.append("_R_");
+		
+		for(Type r:returns) {
+			sb.append(r.getTypeName());
+			sb.append("_");
+		}
 		
 		return sb.toString();
 	}

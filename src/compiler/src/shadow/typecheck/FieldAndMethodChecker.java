@@ -43,6 +43,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			if( currentType instanceof ClassType ) //may need to add a default constructor
 			{
 				ClassType classType = (ClassType)currentType;
+				
 				if( classType.getMethods("constructor") ==  null )
 					classType.addMethod("constructor", new MethodSignature("constructor", 0, -1)); //negative indicates "magically created"
 			}
@@ -74,7 +75,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 			return WalkType.NO_CHILDREN;
 		}
 		
-		node.setType(type);	// set this node's type
+		node.setType(type);		// set the type to the node
+		type.setASTNode(node);	// set the node to the type
 		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
@@ -144,6 +146,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 		Node methodDec = node.jjtGetChild(0);
 		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers(), node.getLine());
+		
+		signature.setASTNode(node);	// set the node for this method
 		
 		// check the parameters
 		if(!visitParameters(methodDec.jjtGetChild(0), signature))
