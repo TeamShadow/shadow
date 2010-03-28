@@ -8,6 +8,7 @@ import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker;
 import shadow.AST.AbstractASTVisitor;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -38,6 +39,8 @@ public class TACBuilder extends AbstractASTVisitor {
 		TACClass curClass = new TACClass(node.getImage());	// the symbol is prob stored elsewhere in a complete form
 		ClassType type = (ClassType)node.getType();
 		Map<String, Type> fields = type.getFields();
+		TACNode initEntry = null;
+		TACNode initExit = null;
 		
 		// go through and make all of the fields
 		for(Map.Entry<String, Type> f:fields.entrySet()) {
@@ -48,14 +51,21 @@ public class TACBuilder extends AbstractASTVisitor {
 			
 			a2t.convert();
 			
-			// then need to fit this into other stuff... not really sure here
+			if(initEntry == null) {
+				initEntry = a2t.getEntry();
+			} else { // we already have an init, so add this to the end
+				initExit.setNext(a2t.getEntry());
+			}
+			
+			// update the exit node
+			initExit = a2t.getExit();
 		}
 		
 		// go through and add all the methods
 		for(Map.Entry<String, List<MethodSignature>> m:type.getMethodMap().entrySet()) {
 			for(MethodSignature ms:m.getValue()) {
 				// the constructor here actually converts from AST -> TAC
-				curClass.addMethod(new TACMethod(ms.getMangledName(), ms));
+				curClass.addMethod(new TACMethod(ms.getMangledName(), ms.getASTNode()));
 			}
 		}
 		
@@ -63,7 +73,10 @@ public class TACBuilder extends AbstractASTVisitor {
 		
 		ASTUtils.DEBUG("Added new class");
 		
-		return WalkType.PRE_CHILDREN;	// it would be nice to say NO_CHILDREN here, but we have to deal with inner classes
+		//
+		// it would be nice to say NO_CHILDREN here, but we have to deal with inner classes
+		//
+		return WalkType.PRE_CHILDREN;
 	}
 
 

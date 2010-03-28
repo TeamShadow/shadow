@@ -26,7 +26,11 @@ public class AST2TAC {
 		walker.walk(astRoot);
 	}
 	
-	public TACNode getTACRoot() {
-		return astWalker.getTACRoot();
+	public TACNode getEntry() {
+		return astWalker.getEntry();
+	}
+	
+	public TACNode getExit() {
+		return astWalker.getExit();
 	}
 }
