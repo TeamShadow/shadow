@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.LinkedList;
 
 import shadow.TAC.TACBuilder;
+import shadow.TAC.TACClass;
+import shadow.TAC.TACVariable;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
@@ -34,7 +37,7 @@ public class TACTest extends BaseTest {
 	}
 	
 	public TACTest(boolean dump, boolean debug) {
-		super("./src/shadow/typecheck/test");	// change this maybe?
+		super("./src/shadow/TAC/test");	// change this maybe?
 		this.dump = dump;
 		this.debug = debug;
 	}
@@ -65,6 +68,14 @@ public class TACTest extends BaseTest {
 
 	        long stopTime = System.currentTimeMillis();
 	        long runTime = stopTime - startTime;
+	        
+	        if(dump) {
+	        	LinkedList<TACClass> classes = tacBuilder.getClasses();
+	        	
+	        	for(TACClass c:classes) {
+	        		c.dump();
+	        	}
+	        }
 
 	    } catch (ParseException e) {
 	        System.out.println("BAD PARSE");

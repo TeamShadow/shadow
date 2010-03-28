@@ -43,9 +43,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 			if( currentType instanceof ClassType ) //may need to add a default constructor
 			{
 				ClassType classType = (ClassType)currentType;
-				
-				if( classType.getMethods("constructor") ==  null )
-					classType.addMethod("constructor", new MethodSignature("constructor", 0, -1)); //negative indicates "magically created"
+	
+				//
+				// We don't want to do this here... we'll do it in the TAC code
+				//
+//				if( classType.getMethods("constructor") ==  null )
+//					classType.addMethod("constructor", new MethodSignature("constructor", 0, -1)); //negative indicates "magically created"
 			}
 			
 			currentType = (ClassInterfaceBaseType)currentType.getOuter();

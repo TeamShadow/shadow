@@ -4,10 +4,21 @@ import java.util.LinkedList;
 
 public class TACBranch extends TACNode {
 
-	protected TACNode trueEntry, trueExit;
-	protected TACNode falseEntry, falseExit;
+	protected TACNode trueEntry;
+	protected TACNode falseEntry;
+	protected TACNode exit;
 	
 	public TACBranch(TACNode parent) {
 		super("", parent);
+	}
+	
+	public void dump(String prefix) {
+		System.out.println(prefix + "T: " + trueEntry);
+		trueEntry.next.dump(prefix + "   ");
+		
+		System.out.println(prefix + "F: " + falseEntry);
+		falseEntry.next.dump(prefix + "   ");
+		
+		exit.dump(prefix);
 	}
 }

@@ -36,4 +36,10 @@ public abstract class TACNode {
 	public String toString() {
 		return this.getClass().getSimpleName() + ": " + name;
 	}
+	
+	public void dump(String prefix) {
+		System.out.println(prefix + this);
+		if(next != null && !(next instanceof TACJoin))
+			next.dump(prefix);
+	}
 }

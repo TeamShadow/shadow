@@ -3,6 +3,7 @@ package shadow.TAC;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.AST.ASTUtils;
 
 public class TACMethod {
 	private TACNode entry;
@@ -14,6 +15,8 @@ public class TACMethod {
 		
 		// we walk the AST converting to TAC during construction
 		AST2TAC a2t = new AST2TAC(astRoot);
+		
+		ASTUtils.DEBUG(astRoot);
 		
 		a2t.convert();
 		

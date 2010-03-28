@@ -1,0 +1,4 @@
+class Bill {
+	public int a = 0;
+
+} 

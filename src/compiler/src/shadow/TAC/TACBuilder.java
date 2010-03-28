@@ -44,6 +44,7 @@ public class TACBuilder extends AbstractASTVisitor {
 		
 		// go through and make all of the fields
 		for(Map.Entry<String, Type> f:fields.entrySet()) {
+			ASTUtils.DEBUG("FIELD: " + f.getKey());
 			curClass.addField(new TACVariable(f.getKey(), f.getValue()));
 			
 			// we need to create an init method for any fields
@@ -63,6 +64,8 @@ public class TACBuilder extends AbstractASTVisitor {
 		
 		// go through and add all the methods
 		for(Map.Entry<String, List<MethodSignature>> m:type.getMethodMap().entrySet()) {
+			ASTUtils.DEBUG("METHOD: " + m.getKey());
+			
 			for(MethodSignature ms:m.getValue()) {
 				// the constructor here actually converts from AST -> TAC
 				curClass.addMethod(new TACMethod(ms.getMangledName(), ms.getASTNode()));

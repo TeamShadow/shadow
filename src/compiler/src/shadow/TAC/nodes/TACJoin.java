@@ -8,5 +8,8 @@ public class TACJoin extends TACNode {
 		this.trueExit = trueExit;
 		this.falseExit = falseExit;
 	}
-
+	
+	public void dump(String prefix) {
+		
+	}
 }
