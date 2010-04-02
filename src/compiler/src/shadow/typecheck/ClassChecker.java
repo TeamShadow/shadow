@@ -659,41 +659,52 @@ public class ClassChecker extends BaseChecker {
 			
 			else if( node.jjtGetChild(counter) instanceof ASTArguments )
 			{
-				if( child.getType() instanceof InterfaceType )
+				if( child.getType() instanceof InterfaceType ) {
 					addError(child, Error.INVL_TYP, "Interfaces cannot be instantiated");
-				else 
-				{
-					ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
-					List<Type> typeList = ((ASTArguments)(node.jjtGetChild(counter))).getTypeList();
-					List<MethodSignature> candidateConstructors = type.getMethods("constructor");
-					
-					//
-					// we don't have implicit constructors built into the AST
-					//
-					if(typeList.size() == 0 && candidateConstructors == null) {
-						node.setType(child.getType());
-						return WalkType.POST_CHILDREN;	// ugly
-					}
-					
+					return WalkType.POST_CHILDREN;
+				}
+				
+				ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
+				List<Type> typeList = ((ASTArguments)(node.jjtGetChild(counter))).getTypeList();
+				List<MethodSignature> candidateConstructors = type.getMethods("constructor");
+				
+				// we don't have implicit constructors, so need to check if the default constructor is OK
+				if(typeList.size() == 0 && candidateConstructors == null) {
+					node.setType(child.getType());
+					return WalkType.POST_CHILDREN;
+				}
+				
+				// we have no constructors, but they are calling with params
+				else if(typeList.size() > 0 && candidateConstructors == null){
+					addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+					return WalkType.POST_CHILDREN;
+				}
+
+				else {
+					// by the time we get here, we have a constructor list
 					List<MethodSignature> acceptableConstructors = new LinkedList<MethodSignature>();
-					for( MethodSignature signature : candidateConstructors )
-					{
-						if( signature.matches( typeList ))
-						{
+					
+					for( MethodSignature signature : candidateConstructors ) {
+						if( signature.matches( typeList )) {
 							node.setType(child.getType());
 							return WalkType.POST_CHILDREN;
-						}						
-						else if( signature.canAccept(typeList))
+						} else if( signature.canAccept(typeList))
 							acceptableConstructors.add(signature);
 					}
 					
+					//
+					// TODO: There is a case we're missing here
+					// typeList.size == 0 but we have constructors... is there ALWAYS a default constructor????
+					//
 					if( acceptableConstructors.size() == 0 )
 						addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+					
 					else if( acceptableConstructors.size() > 1 )
 						addError(child, Error.TYPE_MIS, "Ambiguous constructor call with signature " + typeList);
+					
 					else
 						node.setType(child.getType());
-				}				
+				}
 			}
 		} 
 		
