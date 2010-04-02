@@ -656,6 +656,7 @@ public class ClassChecker extends BaseChecker {
 				List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
 				node.setType(new ArrayType(child.getType(), dimensions));
 			}
+			
 			else if( node.jjtGetChild(counter) instanceof ASTArguments )
 			{
 				if( child.getType() instanceof InterfaceType )
@@ -665,6 +666,14 @@ public class ClassChecker extends BaseChecker {
 					ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
 					List<Type> typeList = ((ASTArguments)(node.jjtGetChild(counter))).getTypeList();
 					List<MethodSignature> candidateConstructors = type.getMethods("constructor");
+					
+					//
+					// we don't have implicit constructors built into the AST
+					//
+					if(typeList.size() == 0 && candidateConstructors == null) {
+						node.setType(child.getType());
+						return WalkType.POST_CHILDREN;	// ugly
+					}
 					
 					List<MethodSignature> acceptableConstructors = new LinkedList<MethodSignature>();
 					for( MethodSignature signature : candidateConstructors )
