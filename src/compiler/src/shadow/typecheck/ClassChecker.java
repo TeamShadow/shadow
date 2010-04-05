@@ -692,15 +692,15 @@ public class ClassChecker extends BaseChecker {
 							acceptableConstructors.add(signature);
 					}
 					
-					//
-					// TODO: There is a case we're missing here
-					// typeList.size == 0 but we have constructors... is there ALWAYS a default constructor????
-					//
-					if( acceptableConstructors.size() == 0 )
+					if( acceptableConstructors.size() == 0 ) {
 						addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+						node.setType(child.getType());	// 100% fake the type so we can continue
+					}
 					
-					else if( acceptableConstructors.size() > 1 )
+					else if( acceptableConstructors.size() > 1 ) {
 						addError(child, Error.TYPE_MIS, "Ambiguous constructor call with signature " + typeList);
+						node.setType(child.getType());	// 100% fake the type so we can continue
+					}
 					
 					else
 						node.setType(child.getType());
@@ -754,7 +754,9 @@ public class ClassChecker extends BaseChecker {
 				
 				// SHOULD DO SOMETHING WITH THIS!!!
 				AssignmentType assType = op.getAssignmentType();
-						
+				
+				ASTUtils.DEBUG(node, "T2: " + t2);
+				
 				// TODO: Add in all the types that we can compare here
 				if( !t2.isSubtype(t1) ) {
 					addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");

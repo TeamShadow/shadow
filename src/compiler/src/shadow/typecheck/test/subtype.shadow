@@ -15,7 +15,7 @@ class Outer {
 		//s = a; //uncomment this line to see type hierarchies enforced
 		//c = 5; //uncomment this line to see type hierarchies enforced
 	}
-
+    
 	private class BaseClass
 	{}
 	

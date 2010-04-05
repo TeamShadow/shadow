@@ -1,6 +1,12 @@
 class Bill {
 
     public blah() => () {
-        for( ; true;);
+        Bob b;
+        
+        b = new Bob(2);
+    }
+    
+    private class Bob {
+        public constructor(int a) { }
     }
 } 
