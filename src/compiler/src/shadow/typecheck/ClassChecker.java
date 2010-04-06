@@ -386,19 +386,26 @@ public class ClassChecker extends BaseChecker {
 		// get the two types
 		Type t1 = node.jjtGetChild(0).getType();
 		Type t2 = node.jjtGetChild(1).getType();
+		
+		//
+		// TODO: There can be MORE than 2 types!!!!
+		//
 				
 		if(!t1.isNumerical()) {
 			addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but numerical type required for arithmetic operations");
+			node.setType(t1);	// 100% fake this so we can keep moving
 			return WalkType.NO_CHILDREN;
 		}
 		
 		if(!t2.isNumerical()) {
 			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but numerical type required for arithmetic operations");
+			node.setType(t1);	// 100% fake this so we can keep moving
 			return WalkType.NO_CHILDREN;
 		}
 		
 		if(!t1.equals(t2)) {
 			addError(node, Error.TYPE_MIS, "Type " + t1 + " does not match " + t2 + " (strict typing)");
+			node.setType(t1);	// 100% fake this so we can keep moving
 			return WalkType.NO_CHILDREN;
 		}
 		
@@ -755,15 +762,13 @@ public class ClassChecker extends BaseChecker {
 				// SHOULD DO SOMETHING WITH THIS!!!
 				AssignmentType assType = op.getAssignmentType();
 				
-				ASTUtils.DEBUG(node, "T2: " + t2);
-				
 				// TODO: Add in all the types that we can compare here
 				if( !t2.isSubtype(t1) ) {
 					addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
 					return WalkType.NO_CHILDREN;
 				}
 				
-				//node.setType(t1);	no need to set a statement's type
+				//node.setType(t1);	// no need to set a statement's type
 			}
 		}
 		
