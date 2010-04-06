@@ -3,10 +3,12 @@ package shadow.TAC;
 
 import shadow.AST.AbstractASTVisitor;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTLiteral;
+import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.Node;
@@ -23,8 +25,6 @@ public class AST2TACWalker extends AbstractASTVisitor {
 	 * This class does all of the heavy lifting in converting from AST -> TAC.
 	 */
 	public AST2TACWalker() {
-		// setup with a no-op as it's easier to use setNode
-		entryNode = exitNode = new TACNode("NO-OP", null);
 	}
 	
 	public TACNode getEntry() {
@@ -33,6 +33,26 @@ public class AST2TACWalker extends AbstractASTVisitor {
 	
 	public TACNode getExit() {
 		return exitNode;
+	}
+
+	private void linkToEnd(TACNode node) {
+		if(entryNode == null) { // we don't have a tree yet
+			entryNode = node;
+		} else {
+			exitNode.insertAfter(node);
+		}
+
+		exitNode = node;
+	}
+
+	private void linkToStart(TACNode node) {
+		if(entryNode == null) { // we don't have a tree yet
+			exitNode = node;
+		} else {
+			entryNode.insertBefore(node);
+		}
+		
+		entryNode = node;
 	}
 	
 	/**
@@ -58,22 +78,31 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		TACBinaryOperation newNode = new TACBinaryOperation(target, op1, op2, TACOperation.ADDITION); 
 		
 		// link in the node
-		exitNode.setNext(newNode);
-		exitNode = newNode;
+		linkToEnd(newNode);
 		
 		for(int i=2; i < node.jjtGetNumChildren(); ++i) {
 			astOp2 = node.jjtGetChild(i);
 
 			op1 = new TACVariable(curTemp, astOp2.getType());	// not sure about the type
-			op2 = new TACVariable(astOp2.getImage(), astOp2.getType(), astOp2 instanceof ASTLiteral);
+
+			if(astOp2 instanceof ASTLiteral || astOp2 instanceof ASTName) {
+				op2 = new TACVariable(astOp2.getImage(), astOp2.getType(), astOp2 instanceof ASTLiteral);
+			} else { // we have a more complex expression
+				AST2TAC a2t = new AST2TAC(astOp2);
+				TACAssign tempNode = (TACAssign)a2t.convert();
+
+				// this needs to come before us, as it needs be calculated before us
+				linkToStart(tempNode);
+
+				op2 = tempNode.getTarget();
+			}
 			
 			curTemp = getTempSymbol();
 			target = new TACVariable(curTemp, node.getType());
 			
 			newNode = new TACBinaryOperation(target, op1, op2, TACOperation.ADDITION);
-			
-			exitNode.setNext(newNode);
-			exitNode = newNode;
+		
+			linkToEnd(newNode);	
 		}
 		
 		return WalkType.POST_CHILDREN; // ???

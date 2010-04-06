@@ -25,12 +25,31 @@ public class TACNode {
 	}
 	
 	/**
-	 * This sets BOTH in the node's parent and this.next
+	 * Inserts a node after this node
 	 * @param node The node to link onto the end of this node
 	 */
-	public void setNext(TACNode node) {
+	public void insertAfter(TACNode node) {
 		node.parent = this;
+		node.next = this.next;
+
+		if(this.next != null)
+			this.next.parent = node;
+
 		this.next = node;
+	}
+
+	/**
+	 * Inserts a node before this node
+	 * @param node The node to link onto the end of this node
+	 */
+	public void insertBefore(TACNode node) {
+		node.parent = this.parent;
+		node.next = this;
+
+		if(this.parent != null)
+			this.parent.next = node;
+
+		this.parent = node;
 	}
 	
 	public String toString() {

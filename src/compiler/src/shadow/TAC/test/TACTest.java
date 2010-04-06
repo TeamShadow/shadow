@@ -57,6 +57,9 @@ public class TACTest extends BaseTest {
 	        long startTime = System.currentTimeMillis();
 
 	        // type check the tree
+
+		System.out.println();
+		System.out.println("* TYPE CHECKER STAGE *");
 	        boolean result = tc.typeCheck(node);
 	        
 	        if(!result) {
@@ -64,6 +67,8 @@ public class TACTest extends BaseTest {
 	        	throw new ShadowException("");
 	        }
 	        
+		System.out.println();
+		System.out.println("* TAC STAGE *");
 	        tacBuilder.build(node);
 
 	        long stopTime = System.currentTimeMillis();

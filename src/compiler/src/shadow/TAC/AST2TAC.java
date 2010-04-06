@@ -18,12 +18,16 @@ public class AST2TAC {
 	
 	/**
 	 * Actually walks the tree and does the conversion
+	 *
+	 * @return The entry of the newly created tree
 	 */
-	public void convert() throws ShadowException {
+	public TACNode convert() throws ShadowException {
 		astWalker = new AST2TACWalker();
 		ASTWalker walker = new ASTWalker(astWalker);
 		
 		walker.walk(astRoot);
+
+		return astWalker.getEntry();
 	}
 	
 	public TACNode getEntry() {

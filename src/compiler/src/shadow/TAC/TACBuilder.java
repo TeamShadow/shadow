@@ -55,7 +55,7 @@ public class TACBuilder extends AbstractASTVisitor {
 			if(initEntry == null) {
 				initEntry = a2t.getEntry();
 			} else { // we already have an init, so add this to the end
-				initExit.setNext(a2t.getEntry());
+				initExit.insertAfter(a2t.getEntry());
 			}
 			
 			// update the exit node
