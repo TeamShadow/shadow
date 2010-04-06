@@ -7,6 +7,12 @@ public class TACVariable {
 	private String symbol;
 	private int size;	/** The size of the var in memory in bytes */
 	private boolean isRef;
+	private boolean isLiteral;	/** symbol holds the value of the literal */
+	
+	public TACVariable(String symbol, Type type, boolean isLiteral) {
+		this(symbol, type);
+		this.isLiteral = isLiteral;
+	}
 	
 	public TACVariable(String symbol, Type type) {
 		this.type = type;
@@ -23,7 +29,7 @@ public class TACVariable {
 	}
 	
 	public String toString() {
-		return symbol + " " + type; 
+		return symbol + "(" + type + ")"; 
 	}
 	
 	public int getSize() {

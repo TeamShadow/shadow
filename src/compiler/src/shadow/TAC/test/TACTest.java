@@ -77,6 +77,8 @@ public class TACTest extends BaseTest {
 	        	}
 	        }
 
+	        System.out.println("PASSED TAC: " + runTime + "ms");
+	        
 	    } catch (ParseException e) {
 	        System.out.println("BAD PARSE");
 	        System.out.println(e.getMessage());

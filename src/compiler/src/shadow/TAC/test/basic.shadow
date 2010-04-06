@@ -1,4 +1,18 @@
 class Bill {
-	public int a = 0;
+	
+    public blah() => () {
+        int a,b;
+        
+        a = 1 + 2 + 3 + 4;
+        
+//        a = 1 + 2 + b * (a * 3);
+        
+/*
+        t1 = a * 3;
+        t2 = b * t1;
+        t3 = 1 + 2;
+        t4 = t3 + t2;
+*/        
+    }
 
 } 

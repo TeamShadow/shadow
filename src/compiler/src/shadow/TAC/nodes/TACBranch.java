@@ -9,7 +9,7 @@ public class TACBranch extends TACNode {
 	protected TACNode exit;
 	
 	public TACBranch(TACNode parent) {
-		super("", parent);
+		super("BRANCH", parent);
 	}
 	
 	public void dump(String prefix) {

@@ -1,6 +1,6 @@
 package shadow.TAC.nodes;
 
-public abstract class TACNode {
+public class TACNode {
 	protected String name;
 	protected TACNode parent;
 	protected TACNode next;
