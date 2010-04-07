@@ -19,9 +19,17 @@ public class TACNode {
 	public TACNode getParent() {
 		return this.parent;
 	}
+
+	public void setParent(TACNode node) {
+		this.parent = node;
+	}
 	
 	public TACNode getNext() {
 		return this.next;
+	}
+
+	public void setNext(TACNode node) {
+		this.next = node;
 	}
 	
 	/**

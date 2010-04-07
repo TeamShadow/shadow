@@ -35,6 +35,10 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		return exitNode;
 	}
 
+	/**
+	 * Links a single node to the end of this tree.
+	 * @param node The node to link to the end of the tree.
+	 */
 	private void linkToEnd(TACNode node) {
 		if(entryNode == null) { // we don't have a tree yet
 			entryNode = node;
@@ -43,6 +47,22 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		}
 
 		exitNode = node;
+	}
+
+	/**
+	 * Links an entire tree to the end of this tree.
+	 * @param entry The start of the tree to link to the end.
+	 * @param exit The end of the tree to link to the end.
+	 */
+	private void linkToEnd(TACNode entry, TACNode exit) {
+		if(entryNode == null) {
+			entryNode = entry;
+		} else {
+			entry.setParent(exitNode);
+			exitNode.setNext(entry);
+		}
+
+		exitNode = exit;
 	}
 
 	private void linkToStart(TACNode node) {
@@ -92,7 +112,7 @@ public class AST2TACWalker extends AbstractASTVisitor {
 				TACAssign tempNode = (TACAssign)a2t.convert();
 
 				// this needs to come before us, as it needs be calculated before us
-				linkToStart(tempNode);
+				linkToEnd(a2t.getEntry(), a2t.getExit());
 
 				op2 = tempNode.getTarget();
 			}
