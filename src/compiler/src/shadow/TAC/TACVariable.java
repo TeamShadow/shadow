@@ -29,7 +29,7 @@ public class TACVariable {
 	}
 	
 	public String toString() {
-		return symbol + "(" + type + ")"; 
+		return symbol + "(" + type + (isLiteral ? " literal" : "") + (isRef ? " ref" : "") + ")"; 
 	}
 	
 	public int getSize() {

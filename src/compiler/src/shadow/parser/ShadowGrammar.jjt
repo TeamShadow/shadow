@@ -1081,16 +1081,26 @@ void RotateExpression():
   AdditiveExpression() ( ( "<<<" | RightRotate() ) AdditiveExpression() )*
 }
 
+//
+// There is a parsing issue here when we have expressions like 1 + 2 - 3 + 4
+// This will come back as everything being +
+// So as a complete hack I'm creating a string of symbols for each pair of expressions
+//
 void AdditiveExpression():
 {}
 {
-  MultiplicativeExpression() ( ( "+" { jjtThis.setImage("+"); } | "-" { jjtThis.setImage("-"); } ) MultiplicativeExpression() )*
+  MultiplicativeExpression()
+  ( ( "+" { jjtThis.setImage(jjtThis.getImage() + "+"); } |
+      "-" { jjtThis.setImage(jjtThis.getImage() + "-"); } ) MultiplicativeExpression() )*
 }
 
 void MultiplicativeExpression():
 {}
 {
-  UnaryExpression() ( ( "*" { jjtThis.setImage("*"); } | "/" { jjtThis.setImage("/"); } | "%" { jjtThis.setImage("%"); } ) UnaryExpression() )*
+  UnaryExpression()
+  ( ( "*" { jjtThis.setImage(jjtThis.getImage() + "*"); } |
+      "/" { jjtThis.setImage(jjtThis.getImage() + "/"); } |
+      "%" { jjtThis.setImage(jjtThis.getImage() + "%"); } ) UnaryExpression() )*
 }
 
 void UnaryExpression():

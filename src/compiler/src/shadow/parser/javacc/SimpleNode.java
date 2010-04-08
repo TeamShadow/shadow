@@ -15,7 +15,7 @@ public class SimpleNode implements Node {
     
     public SimpleNode(int id) {
     	this.id = id;
-    	image = null;
+    	image = "";
     	line = column = -1;
     	type = null;
     }
@@ -23,7 +23,7 @@ public class SimpleNode implements Node {
     public SimpleNode(ShadowParser sp, int id) {
     	this.id = id;
     	parser = sp;
-    	image = null;
+    	image = "";
     	line = sp.token.beginLine;
     	column = sp.token.beginColumn;
     	type = null;
@@ -86,7 +86,7 @@ public class SimpleNode implements Node {
 	}
 	
 	public boolean isImageNull() {
-		return image == null;
+		return image == null || image.length() == 0;
 	}
 	
 	public void setImage(String image) {
@@ -119,7 +119,7 @@ public class SimpleNode implements Node {
 
     public void dump(String prefix) {
     	String className = this.getClass().getSimpleName();
-    	if(image == null)
+    	if(image == null || image.length() == 0)
     		System.out.println(prefix + className + "(" + line + ":" + column + ")");
     	else
     		System.out.println(prefix + className + "(" + line + ":" + column + "): " + image);

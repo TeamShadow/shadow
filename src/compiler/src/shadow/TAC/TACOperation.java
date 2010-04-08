@@ -4,5 +4,6 @@ public enum TACOperation {
 	ADDITION,
 	SUBTRACTION,
 	MULTIPLICATION,
-	DIVISION
+	DIVISION,
+	MOD
 }

@@ -8,9 +8,8 @@ import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTLiteral;
+import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
-import shadow.parser.javacc.ASTSequence;
-import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 
@@ -84,59 +83,89 @@ public class AST2TACWalker extends AbstractASTVisitor {
 	}
 
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
+		visitArithmetic(node, TACOperation.ADDITION);
+		return WalkType.NO_CHILDREN;
+	}
+	
+	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
+		visitArithmetic(node, TACOperation.MULTIPLICATION);
+		return WalkType.NO_CHILDREN;
+	}
+	
+	/**
+	 * Given an AST node, creates the corresponding TACVariable including recursing down the AST if needed.
+	 * @param node The node to convert to a TACVariable.
+	 * @return A new TACVariable which might have been a recursive call which is linked into the TAC tree
+	 * @throws ShadowException
+	 */
+	private TACVariable createTACVariable(Node node) throws ShadowException {
+		if(node instanceof ASTLiteral || node instanceof ASTName) {
+			return new TACVariable(node.getImage(), node.getType(), node instanceof ASTLiteral);
+		} else {
+			AST2TAC a2t = new AST2TAC(node);
+			TACAssign tempNode = (TACAssign)a2t.convert();
+
+			// this needs to come before us, as it needs be calculated before us
+			linkToEnd(a2t.getEntry(), a2t.getExit());
+
+			return tempNode.getTarget();
+		}
+	}
+	
+	private static TACOperation symbol2Operation(char symbol) {
+		switch(symbol) {
+		case '+':
+			return TACOperation.ADDITION;
+		case '-':
+			return TACOperation.SUBTRACTION;
+		case '*':
+			return TACOperation.MULTIPLICATION;
+		case '/':
+			return TACOperation.DIVISION;
+		case '%':
+			return TACOperation.MOD;
+		}
 		
+		return null;
+	}
+	
+	/**
+	 * Given an AST node that is the start of any binary operation, will create the appropriate TAC tree.
+	 * @param node The AST root node of the binary operation
+	 * @param operation The operation of that AST node
+	 * @throws ShadowException
+	 */
+	public void visitArithmetic(Node node, TACOperation operation) throws ShadowException {
+		String operators = node.getImage();
 		Node astOp1 = node.jjtGetChild(0);
 		Node astOp2 = node.jjtGetChild(1);
-
+		
 		String curTemp = getTempSymbol();
 		TACVariable target = new TACVariable(curTemp, node.getType());
-		TACVariable op1 = new TACVariable(astOp1.getImage(), astOp1.getType(), astOp1 instanceof ASTLiteral);
-		TACVariable op2 = new TACVariable(astOp2.getImage(), astOp2.getType(), astOp2 instanceof ASTLiteral);
 		
-		TACBinaryOperation newNode = new TACBinaryOperation(target, op1, op2, TACOperation.ADDITION); 
+		// get the first two TACVariables
+		TACVariable op1 = createTACVariable(astOp1);
+		TACVariable op2 = createTACVariable(astOp2);
+		
+		TACBinaryOperation newNode = new TACBinaryOperation(target, op1, op2, operation); 
 		
 		// link in the node
 		linkToEnd(newNode);
 		
+		// now we only process a single var at a time, combining with the previous temp
 		for(int i=2; i < node.jjtGetNumChildren(); ++i) {
 			astOp2 = node.jjtGetChild(i);
 
 			op1 = new TACVariable(curTemp, astOp2.getType());	// not sure about the type
-
-			if(astOp2 instanceof ASTLiteral || astOp2 instanceof ASTName) {
-				op2 = new TACVariable(astOp2.getImage(), astOp2.getType(), astOp2 instanceof ASTLiteral);
-			} else { // we have a more complex expression
-				AST2TAC a2t = new AST2TAC(astOp2);
-				TACAssign tempNode = (TACAssign)a2t.convert();
-
-				// this needs to come before us, as it needs be calculated before us
-				linkToEnd(a2t.getEntry(), a2t.getExit());
-
-				op2 = tempNode.getTarget();
-			}
+			op2 = createTACVariable(astOp2);
 			
 			curTemp = getTempSymbol();
 			target = new TACVariable(curTemp, node.getType());
 			
-			newNode = new TACBinaryOperation(target, op1, op2, TACOperation.ADDITION);
+			newNode = new TACBinaryOperation(target, op1, op2, symbol2Operation(operators.charAt(i-1)));
 		
 			linkToEnd(newNode);	
 		}
-		
-		return WalkType.POST_CHILDREN; // ???
 	}
 	
-	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
-		Node child = node.jjtGetChild(0);
-		
-		if( child instanceof ASTSequence ) {
-			return WalkType.POST_CHILDREN; // we don't handle this yet
-		} else { //primary expression
-			
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
 }

@@ -57,9 +57,8 @@ public class TACTest extends BaseTest {
 	        long startTime = System.currentTimeMillis();
 
 	        // type check the tree
-
-		System.out.println();
-		System.out.println("* TYPE CHECKER STAGE *");
+        	System.out.println();
+        	System.out.println("* TYPE CHECK STAGE * ");
 	        boolean result = tc.typeCheck(node);
 	        
 	        if(!result) {
@@ -75,6 +74,9 @@ public class TACTest extends BaseTest {
 	        long runTime = stopTime - startTime;
 	        
 	        if(dump) {
+	        	System.out.println();
+	        	System.out.println("* TAC STAGE * ");
+	        	
 	        	LinkedList<TACClass> classes = tacBuilder.getClasses();
 	        	
 	        	for(TACClass c:classes) {
