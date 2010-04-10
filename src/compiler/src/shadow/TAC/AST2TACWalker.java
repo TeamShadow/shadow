@@ -187,39 +187,51 @@ public class AST2TACWalker extends AbstractASTVisitor {
 			// this needs to come before us, as it needs be calculated before us
 			linkToEnd(a2t.getEntry(), a2t.getExit());
 			
-			TACAssign assign = null;
+			TACNode assign = null;
 			TACVariable lhs = new TACVariable(varNode.getImage(), varNode.getType(), false);
 			TACVariable rhs = ((TACAssign)a2t.getExit()).getTarget();
 
 			switch(assignNode.getAssignmentType()) {
 				case ANDASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.AND);
 					break;
 				case EQUAL:
 					assign = new TACAssign(lhs, rhs);
 					break;
 				case LEFTROTATEASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.LROTATE);
 					break;
 				case LEFTSHIFTASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.LSHIFT);
 					break;
 				case MINUSASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.SUBTRACTION);
 					break;
 				case ORASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.OR);
 					break;
 				case PLUSASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.ADDITION);
 					break;
 				case REFASSIGN:
 					break;
-				case REMASSIGN:
+				case MODASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.MOD);
 					break;
 				case RIGHTROTATEASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.RROTATE);
 					break;
 				case RIGHTSHIFTASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.RSHIFT);
 					break;
 				case SLASHASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.DIVISION);
 					break;
 				case STARASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.MULTIPLICATION);
 					break;
 				case XORASSIGN:
+					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.XOR);
 					break;
 			}
 

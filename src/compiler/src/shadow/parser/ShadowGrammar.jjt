@@ -995,7 +995,7 @@ void AssignmentOperator():
   | "#="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.REFASSIGN); }
   | "*="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.STARASSIGN); }
   | "/="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.SLASHASSIGN); }
-  | "%="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.REMASSIGN); }
+  | "%="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MODASSIGN); }
   | "+="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.PLUSASSIGN); }
   | "-="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MINUSASSIGN); }
   | "<<="  { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTSHIFTASSIGN); }

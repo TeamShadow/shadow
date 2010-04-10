@@ -3,7 +3,7 @@ class Bill {
     public blah() => () {
         int a,b;
         
-        a = 1 + 2 - b * (a * 3 / 4);
+        a ^= 1 + 2 - b * (a * 3 / 4);
         
 /*
         t1 = a * 3;

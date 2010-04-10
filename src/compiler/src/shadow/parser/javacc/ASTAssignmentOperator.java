@@ -28,7 +28,7 @@ class ASTAssignmentOperator extends SimpleNode {
 	  ANDASSIGN,
 	  ORASSIGN,
 	  XORASSIGN,
-	  REMASSIGN,
+	  MODASSIGN,
 	  REFASSIGN,
 	  LEFTSHIFTASSIGN,
 	  RIGHTSHIFTASSIGN,

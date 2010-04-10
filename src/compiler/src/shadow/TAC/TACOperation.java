@@ -5,5 +5,12 @@ public enum TACOperation {
 	SUBTRACTION,
 	MULTIPLICATION,
 	DIVISION,
-	MOD
+	MOD,
+	OR,
+	AND,
+	XOR,
+	RSHIFT,
+	RROTATE,
+	LSHIFT,
+	LROTATE
 }
