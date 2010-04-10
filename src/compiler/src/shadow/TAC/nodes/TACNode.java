@@ -61,12 +61,18 @@ public class TACNode {
 	}
 	
 	public String toString() {
-		return this.getClass().getSimpleName() + ": " + name;
+		return name;
 	}
 	
 	public void dump(String prefix) {
 		System.out.println(prefix + this);
-		if(next != null && !(next instanceof TACJoin))
+		
+		if(next == null)
+			return;
+		
+		if(!(next instanceof TACJoin))
 			next.dump(prefix);
+		else if(next.next != null)
+			next.next.dump(prefix);
 	}
 }

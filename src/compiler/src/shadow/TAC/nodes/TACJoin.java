@@ -10,6 +10,9 @@ public class TACJoin extends TACNode {
 	}
 	
 	public void dump(String prefix) {
-		
+		System.out.println(prefix + "*JOIN*");
+
+		if(next != null)
+			next.dump(prefix);
 	}
 }

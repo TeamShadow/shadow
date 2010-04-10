@@ -1,16 +1,23 @@
 class Bill {
 	
     public blah() => () {
-        int a,b;
+        int a;
         
-        a ^= 1 + 2 - b * (a * 3 / 4);
+        a ^= 1;
         
-/*
-        t1 = a * 3;
-        t2 = b * t1;
-        t3 = 1 + 2;
-        t4 = t3 + t2;
-*/        
+        if(true) {
+            a |= 3 + 5 * 7;
+        } else {
+            a &= 3 / 5 - 7;
+            
+            if(false)
+                a += 4;
+            else
+                a -= 10;
+        }
+
+        a %= 2;
+        
     }
 
 } 

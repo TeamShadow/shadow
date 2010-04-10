@@ -5,9 +5,12 @@ import shadow.AST.AbstractASTVisitor;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
+import shadow.TAC.nodes.TACBranch;
+import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
@@ -15,7 +18,6 @@ import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.type.Type;
 
 public class AST2TACWalker extends AbstractASTVisitor {
 	private TACNode entryNode;	/** The first node in the tree */
@@ -97,12 +99,12 @@ public class AST2TACWalker extends AbstractASTVisitor {
 			return new TACVariable(node.getImage(), node.getType(), node instanceof ASTLiteral);
 		} else {
 			AST2TAC a2t = new AST2TAC(node);
-			TACAssign tempNode = (TACAssign)a2t.convert();
+			a2t.convert();
 
 			// this needs to come before us, as it needs be calculated before us
 			linkToEnd(a2t.getEntry(), a2t.getExit());
 
-			return tempNode.getTarget();
+			return ((TACAssign)a2t.getExit()).getTarget();
 		}
 	}
 	
@@ -129,7 +131,7 @@ public class AST2TACWalker extends AbstractASTVisitor {
 	 * @param operation The operation of that AST node
 	 * @throws ShadowException
 	 */
-	public void visitArithmetic(Node node, TACOperation operation) throws ShadowException {
+	public void visitArithmetic(Node node) throws ShadowException {
 		String operators = node.getImage();
 		Node astOp1 = node.jjtGetChild(0);
 		Node astOp2 = node.jjtGetChild(1);
@@ -141,7 +143,7 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		TACVariable op1 = createTACVariable(astOp1);
 		TACVariable op2 = createTACVariable(astOp2);
 		
-		TACBinaryOperation newNode = new TACBinaryOperation(target, op1, op2, operation); 
+		TACBinaryOperation newNode = new TACBinaryOperation(target, op1, op2, symbol2Operation(operators.charAt(0))); 
 		
 		// link in the node
 		linkToEnd(newNode);
@@ -163,14 +165,23 @@ public class AST2TACWalker extends AbstractASTVisitor {
 	}
 	
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
-		visitArithmetic(node, TACOperation.ADDITION);
+		visitArithmetic(node);
 		return WalkType.NO_CHILDREN;
 	}
 	
 	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
-		visitArithmetic(node, TACOperation.MULTIPLICATION);
+		visitArithmetic(node);
 		return WalkType.NO_CHILDREN;
 	}
+	
+/*	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {
+		TACVariable literal = new TACVariable(node.getImage(), node.getType(), true);
+		
+		linkToEnd(literal);
+		
+		return WalkType.NO_CHILDREN;
+	}
+*/
 	
 	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
 		Node varNode = node.jjtGetChild(0);
@@ -181,16 +192,10 @@ public class AST2TACWalker extends AbstractASTVisitor {
 			ASTAssignmentOperator assignNode = (ASTAssignmentOperator)node.jjtGetChild(1);
 			Node rhsNode = node.jjtGetChild(2);
 			
-			AST2TAC a2t = new AST2TAC(rhsNode);
-			a2t.convert();
-
-			// this needs to come before us, as it needs be calculated before us
-			linkToEnd(a2t.getEntry(), a2t.getExit());
-			
 			TACNode assign = null;
 			TACVariable lhs = new TACVariable(varNode.getImage(), varNode.getType(), false);
-			TACVariable rhs = ((TACAssign)a2t.getExit()).getTarget();
-
+			TACVariable rhs = createTACVariable(rhsNode);
+			
 			switch(assignNode.getAssignmentType()) {
 				case ANDASSIGN:
 					assign = new TACBinaryOperation(lhs, lhs, rhs, TACOperation.AND);
@@ -241,4 +246,30 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		return WalkType.NO_CHILDREN;
 	}
 
+	
+	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException {
+
+		// we will need to change this to handle more complex conditionals
+		// but for now it seems to work
+		TACVariable conditional = createTACVariable(node.jjtGetChild(0));
+		
+		AST2TAC a2t = new AST2TAC(node.jjtGetChild(1));
+		a2t.convert();
+		
+		TACNode trueEntry = a2t.getEntry();
+		TACNode trueExit = a2t.getExit();
+
+		a2t = new AST2TAC(node.jjtGetChild(2));
+		a2t.convert();
+		
+		TACNode falseEntry = a2t.getEntry();
+		TACNode falseExit = a2t.getExit();
+		
+		TACJoin join = new TACJoin(trueExit, falseExit);
+		TACBranch branch = new TACBranch(trueEntry, falseEntry, join, conditional);
+		
+		linkToEnd(branch, join);
+		
+		return WalkType.NO_CHILDREN;
+	}
 }
