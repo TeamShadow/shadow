@@ -7,11 +7,15 @@ import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.ASTAdditiveExpression;
+import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
+import shadow.parser.javacc.ASTSequence;
+import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.type.Type;
 
 public class AST2TACWalker extends AbstractASTVisitor {
 	private TACNode entryNode;	/** The first node in the tree */
@@ -82,16 +86,6 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		return "temp_" + tempCounter++;
 	}
 
-	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
-		visitArithmetic(node, TACOperation.ADDITION);
-		return WalkType.NO_CHILDREN;
-	}
-	
-	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
-		visitArithmetic(node, TACOperation.MULTIPLICATION);
-		return WalkType.NO_CHILDREN;
-	}
-	
 	/**
 	 * Given an AST node, creates the corresponding TACVariable including recursing down the AST if needed.
 	 * @param node The node to convert to a TACVariable.
@@ -168,4 +162,71 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		}
 	}
 	
+	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
+		visitArithmetic(node, TACOperation.ADDITION);
+		return WalkType.NO_CHILDREN;
+	}
+	
+	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
+		visitArithmetic(node, TACOperation.MULTIPLICATION);
+		return WalkType.NO_CHILDREN;
+	}
+	
+	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
+		Node varNode = node.jjtGetChild(0);
+		
+		if(varNode instanceof ASTSequence) {
+			return WalkType.NO_CHILDREN;	// TODO: Implement this
+		} else if(node.jjtGetNumChildren() == 3) { // assignment statement
+			ASTAssignmentOperator assignNode = (ASTAssignmentOperator)node.jjtGetChild(1);
+			Node rhsNode = node.jjtGetChild(2);
+			
+			AST2TAC a2t = new AST2TAC(rhsNode);
+			a2t.convert();
+
+			// this needs to come before us, as it needs be calculated before us
+			linkToEnd(a2t.getEntry(), a2t.getExit());
+			
+			TACAssign assign = null;
+			TACVariable lhs = new TACVariable(varNode.getImage(), varNode.getType(), false);
+			TACVariable rhs = ((TACAssign)a2t.getExit()).getTarget();
+
+			switch(assignNode.getAssignmentType()) {
+				case ANDASSIGN:
+					break;
+				case EQUAL:
+					assign = new TACAssign(lhs, rhs);
+					break;
+				case LEFTROTATEASSIGN:
+					break;
+				case LEFTSHIFTASSIGN:
+					break;
+				case MINUSASSIGN:
+					break;
+				case ORASSIGN:
+					break;
+				case PLUSASSIGN:
+					break;
+				case REFASSIGN:
+					break;
+				case REMASSIGN:
+					break;
+				case RIGHTROTATEASSIGN:
+					break;
+				case RIGHTSHIFTASSIGN:
+					break;
+				case SLASHASSIGN:
+					break;
+				case STARASSIGN:
+					break;
+				case XORASSIGN:
+					break;
+			}
+
+			linkToEnd(assign);	// link the final assign to the end
+		}
+		
+		return WalkType.NO_CHILDREN;
+	}
+
 }

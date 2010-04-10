@@ -7,8 +7,10 @@ public class TACAssign extends TACNode {
 	private TACVariable target;
 	private TACVariable operand1;	/** target = operand1; */
 	
-	public TACAssign(TACNode parent) {
-		super("ASSIGN", parent);
+	public TACAssign(TACVariable lhs, TACVariable rhs) {
+		super("ASSIGN", null);
+		target = lhs;
+		operand1 = rhs;
 	}
 	
 	protected TACAssign(String name, TACNode parent) {
