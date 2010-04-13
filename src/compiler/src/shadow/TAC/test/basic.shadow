@@ -1,22 +1,11 @@
 class Bill {
 	
     public blah() => () {
-        int a;
+        int a = 1, b = 1;
         
-        a ^= 1;
-        
-        if(true) {
-            a |= 3 + 5 * 7;
-        } else {
-            a &= 3 / 5 - 7;
-            
-            if(false)
-                a += 4;
-            else
-                a -= 10;
-        }
-
-        a %= 2;
+	while(a == b or a > b) {
+		a += 1;
+	}
         
     }
 
