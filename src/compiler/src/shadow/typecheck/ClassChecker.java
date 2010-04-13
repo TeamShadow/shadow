@@ -287,10 +287,11 @@ public class ClassChecker extends BaseChecker {
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
 		
-		if(node.jjtGetNumChildren() != 2)
-			addError(node, Error.TYPE_MIS, "Too many arguments");			
-		else
-		{		
+		if(node.jjtGetNumChildren() != 2) {
+			addError(node, Error.TYPE_MIS, "Too many arguments");
+			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
+			return WalkType.NO_CHILDREN;
+		} else {		
 			// get the two types
 			Type t1 = node.jjtGetChild(0).getType();
 			Type t2 = node.jjtGetChild(1).getType();
@@ -298,11 +299,13 @@ public class ClassChecker extends BaseChecker {
 			// TODO: Add in all the types that we can compare here
 			if( !t1.isNumerical() ) {
 				addError(node.jjtGetChild(0), Error.INVL_TYP, t1 + " used in relation");
+				node.setType(Type.BOOLEAN);	// 100% fake to keep things going
 				return WalkType.NO_CHILDREN;
 			}
 			
 			if( !t2.isNumerical() ) {
 				addError(node.jjtGetChild(1), Error.INVL_TYP, t2 + " used in relation");
+				node.setType(Type.BOOLEAN);	// 100% fake to keep things going
 				return WalkType.NO_CHILDREN;
 			}
 			
@@ -317,10 +320,11 @@ public class ClassChecker extends BaseChecker {
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
 		
-		if(node.jjtGetNumChildren() != 2)
+		if(node.jjtGetNumChildren() != 2) {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
-		else
-		{			
+			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
+			return WalkType.NO_CHILDREN;
+		} else {			
 			// get the two types
 			Type t1 = node.jjtGetChild(0).getType();
 			Type t2 = node.jjtGetChild(1).getType();
@@ -328,6 +332,7 @@ public class ClassChecker extends BaseChecker {
 			// TODO: Add in subtyping
 			if(!t1.isSubtype(t2) && !t2.isSubtype(t1)) {  //works either way
 				addError(node.jjtGetChild(0), Error.TYPE_MIS, t1 + " and " + t2 + " are not comparable");
+				node.setType(Type.BOOLEAN);	// 100% fake to keep things going
 				return WalkType.NO_CHILDREN;
 			}
 			
@@ -519,20 +524,23 @@ public class ClassChecker extends BaseChecker {
 	public Object visitConditional(SimpleNode node ) throws ShadowException {	
 		if(node.jjtGetNumChildren() != 2) {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
+			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
 			return WalkType.NO_CHILDREN;
 		}
 		
 		// get the two types
 		Type t1 = node.jjtGetChild(0).getType();
 		Type t2 = node.jjtGetChild(1).getType();
-				
+		
 		if(!t1.equals(Type.BOOLEAN) ) {
 			addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but boolean type required for conditional operations");
+			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
 			return WalkType.NO_CHILDREN;
 		}
 		
 		if(!t2.equals(Type.BOOLEAN) ) {
 			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but boolean type required for conditional operations");
+			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
 			return WalkType.NO_CHILDREN;
 		}
 		
@@ -542,14 +550,23 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+
 		return visitConditional( node );
 	}
 	
 	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+
 		return visitConditional( node );
 	}
 	
 	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+
 		return visitConditional( node );
 	}	
 
