@@ -6,8 +6,8 @@ public enum TACOperation {
 	MULTIPLICATION,
 	DIVISION,
 	MOD,
-	OR,
-	AND,
+	OR,		/** bit-wise */
+	AND,	/** bit-wise */
 	XOR,
 	RSHIFT,
 	RROTATE,
