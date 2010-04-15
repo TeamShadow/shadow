@@ -7,6 +7,8 @@ import java.util.Map;
 
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.parser.javacc.ASTSwitchStatement;
+import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocationExpression;
 import shadow.parser.javacc.ASTArgumentList;
@@ -100,6 +102,34 @@ public class ClassChecker extends BaseChecker {
 		}
 		else
 			symbolTable.addFirst(new HashMap<String, Type>());
+	}
+	
+	public Object visit(ASTSwitchStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		Type type = node.jjtGetChild(0).getType();
+		if(!type.isIntegral() && !type.isString())//TODO allow enum types
+			addError(node,Error.INVL_TYP, "Found type " + type + ", but integral or string type required for switch.");
+		for(int i=1;i<node.jjtGetNumChildren();++i) {
+			Node childNode = node.jjtGetChild(i);
+			if(childNode.getClass() == ASTSwitchLabel.class) {
+				if(childNode.getType() != null){ //default label should have null type 
+					if(!childNode.getType().isSubtype(type)) {
+						addError(childNode,Error.TYPE_MIS,"Label type " + childNode.getType() + " does not match switch type " + type + ".");
+					}
+				}
+			}
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTSwitchLabel node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		if(node.jjtGetNumChildren() == 1)
+			node.setType(node.jjtGetChild(0).getType());
+
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
@@ -602,15 +632,15 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit) throws ShadowException {
-		return visitConditional( node );
+		return visitBitwise( node );
 	}	
 	
 	public Object visit(ASTBitwiseExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
-		return visitConditional( node );
+		return visitBitwise( node );
 	}	
 	
 	public Object visit(ASTBitwiseAndExpression node, Boolean secondVisit) throws ShadowException {
-		return visitConditional( node );
+		return visitBitwise( node );
 	}	
 
 	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
