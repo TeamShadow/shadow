@@ -1053,7 +1053,7 @@ void BitwiseAndExpression():
 void EqualityExpression():
 {}
 {
-  IsExpression() ( ( "==" | "!=" ) IsExpression() )*
+  IsExpression() ( ( "==" { jjtThis.setImage("=="); } | "!=" { jjtThis.setImage("!="); } ) IsExpression() )*
 }
 
 void IsExpression():
@@ -1065,7 +1065,10 @@ void IsExpression():
 void RelationalExpression():
 { debugPrint("RELATIONAL EXPRESSION"); }
 {
-  ShiftExpression() ( ( "<" | ">" | "<=" | ">=" ) ShiftExpression() )*
+  ShiftExpression() ( ( "<" { jjtThis.setImage("<"); } |
+                        ">" { jjtThis.setImage(">"); } |
+                        "<=" { jjtThis.setImage("<="); } |
+                        ">="  { jjtThis.setImage(">="); }) ShiftExpression() )*
 }
 
 
