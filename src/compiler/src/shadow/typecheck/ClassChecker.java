@@ -175,7 +175,7 @@ public class ClassChecker extends BaseChecker {
 		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
 			Node curNode = node.jjtGetChild(i);
 			String varName = curNode.jjtGetChild(0).getImage();
-
+			
 			if(symbolTable.getFirst().get(varName) != null) {
 				addError(curNode, Error.MULT_SYM, varName);
 				continue;
@@ -191,6 +191,7 @@ public class ClassChecker extends BaseChecker {
 
 				if(!initType.isSubtype(type)) {
 					addError(curNode.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
+					symbolTable.getFirst().put(varName, type); // 100% fake so we can continue later
 					continue;
 				}
 			}
