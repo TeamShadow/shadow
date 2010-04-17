@@ -6,6 +6,7 @@ import shadow.TAC.nodes.TACBranch;
 import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
+import shadow.TAC.nodes.TACNodeInterface;
 import shadow.TAC.nodes.TACUnaryOperation;
 
 public class TACGraphVizVisitor extends AbstractTACVisitor {
@@ -28,19 +29,11 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 	}
 	
 	public void visit(TACAssign node) {
-		if(node.getNext() != null) {
-			System.out.print("\"" + node + "\"");
-			System.out.print(" -> ");
-			System.out.println("\"" + node.getNext() + "\"");
-		}
+		printNode(node, true);
 	}
 	
 	public void visit(TACBinaryOperation node) {
-		if(node.getNext() != null) {
-			System.out.print("\"" + node + "\"");
-			System.out.print(" -> ");
-			System.out.println("\"" + node.getNext() + "\"");
-		}
+		printNode(node, true);
 	}
 	
 	public void visit(TACBranch node) {
@@ -48,37 +41,49 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 		
 		System.out.print("\"" + branch + "\"");
 		System.out.print(" -> ");
-		System.out.print("\"" + branch.getTrueEntry() + "\"");
+		System.out.print("\"" + branch.getTrueEntry().getNext() + "\"");
 		System.out.println(" [ label = \"T\" ]; ");
 		
 		
 		System.out.print("\"" + branch + "\"");
 		System.out.print(" -> ");
-		System.out.print("\"" + branch.getFalseEntry() + "\"");
+		System.out.print("\"" + branch.getFalseEntry().getNext() + "\"");
 		System.out.println(" [ label = \"F\" ]; ");
 	}
 	
 	public void visit(TACJoin node) {
-		if(node.getNext() != null) {
-			System.out.print("\"" + node + "\"");
-			System.out.print(" -> ");
-			System.out.println("\"" + node.getNext() + "\"");
-		}
+		printNode(node, true);
 	}
 	
 	public void visit(TACNoOp node) {
-		if(node.getNext() != null) {
-			System.out.print("\"" + node + "\"");
+/*		if(node.getNext() != null) {
+			System.out.print("\"" + node.getParent() + "\"");
 			System.out.print(" -> ");
 			System.out.println("\"" + node.getNext() + "\"");
 		}
+*/
 	}
 
 	public void visit(TACUnaryOperation node) {
+		printNode(node, true);
+	}
+	
+	private void printNode(TACNode node, boolean newline) {
 		if(node.getNext() != null) {
 			System.out.print("\"" + node + "\"");
 			System.out.print(" -> ");
-			System.out.println("\"" + node.getNext() + "\"");
+			
+			TACNode next = null;
+			
+			if(node.getNext() instanceof TACNoOp)
+				next = node.getNext().getNext();
+			else
+				next = node.getNext();
+
+			if(newline)
+				System.out.println("\"" + next + "\"");
+			else
+				System.out.print("\"" + next + "\"");
 		}
 	}
 

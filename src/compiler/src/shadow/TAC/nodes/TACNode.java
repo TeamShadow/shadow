@@ -4,7 +4,7 @@ import java.util.LinkedList;
 
 import shadow.TAC.AbstractTACVisitor;
 
-public abstract class TACNode implements TACInterface {
+public abstract class TACNode implements TACNodeInterface {
 	private static int labelCounter = 0;
 	protected String name;
 	protected TACNode parent;

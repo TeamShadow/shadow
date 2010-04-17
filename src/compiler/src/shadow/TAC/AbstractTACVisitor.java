@@ -3,7 +3,7 @@ package shadow.TAC;
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
-import shadow.TAC.nodes.TACInterface;
+import shadow.TAC.nodes.TACNodeInterface;
 import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
@@ -20,7 +20,7 @@ public abstract class AbstractTACVisitor {
 		return root;
 	}
 	
-	public void visit(TACInterface node) {
+	public void visit(TACNodeInterface node) {
 		node.accept(this);
 	}
 	

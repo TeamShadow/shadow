@@ -1,17 +1,17 @@
 class Bill {
 	
     public blah() => () {
-//        boolean a, b, c;
         int x, y, z;
         
         if(x > y or z > y) { x = 1; }
-//        else if(y == x) { y = 1; }
+        else if(y == x) { y = 1; }
         
         
         z = 1;
         y = 2;
         
-//        if(a or b and c) { ; }
+        if(x > y and z < y or z > y) { x += 2; }
+        else { y += 1; }
 
 /*        else if(b > a) { ; }
                 

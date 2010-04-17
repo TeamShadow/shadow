@@ -4,7 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 import shadow.TAC.nodes.TACBranch;
-import shadow.TAC.nodes.TACInterface;
+import shadow.TAC.nodes.TACNodeInterface;
 import shadow.TAC.nodes.TACNode;
 
 /**
@@ -15,12 +15,12 @@ public class TACWalker {
 
 	private AbstractTACVisitor visitor;
 	private LinkedList<TACNode> nodes;
-	private LinkedHashSet<TACInterface> sortedNodes;
+	private LinkedHashSet<TACNodeInterface> sortedNodes;
 	
 	public TACWalker(AbstractTACVisitor visitor) {
 		this.visitor = visitor;
 		this.nodes = visitor.getRoot().getNodes();
-		this.sortedNodes = new LinkedHashSet<TACInterface>();
+		this.sortedNodes = new LinkedHashSet<TACNodeInterface>();
 	}
 	
 	public void walk() {
@@ -29,7 +29,7 @@ public class TACWalker {
 		
 		visitor.start();
 		
-		for(TACInterface node:sortedNodes) {
+		for(TACNodeInterface node:sortedNodes) {
 			visitor.visit(node);
 		}
 		

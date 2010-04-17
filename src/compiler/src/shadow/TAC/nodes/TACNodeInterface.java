@@ -2,6 +2,6 @@ package shadow.TAC.nodes;
 
 import shadow.TAC.AbstractTACVisitor;
 
-public interface TACInterface {
+public interface TACNodeInterface {
 	public void accept(AbstractTACVisitor visitor);
 }
