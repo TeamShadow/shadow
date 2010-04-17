@@ -16,6 +16,7 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 	
 	public void start() {
 		System.out.println("digraph CFG {");
+		System.out.println("node [shape=box];");
 	}
 	
 	public void end() {
