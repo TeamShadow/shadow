@@ -8,6 +8,7 @@ class Walnut {
 	int c;
 	switch(a) {
 		case 1l: b=1; break;
+		
 		case 2s:
 			switch(s) {
 				case "foo":

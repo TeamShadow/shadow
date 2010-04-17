@@ -1,6 +1,6 @@
 package shadow.TAC.nodes;
 
-public class TACNode {
+public abstract class TACNode {
 	protected String name;
 	protected TACNode parent;
 	protected TACNode next;
@@ -70,9 +70,10 @@ public class TACNode {
 		if(next == null)
 			return;
 		
-		if(!(next instanceof TACJoin))
-			next.dump(prefix);
-		else if(next.next != null)
-			next.next.dump(prefix);
+		if(next instanceof TACJoin) {
+			return;
+		}
+		
+		next.dump(prefix);
 	}
 }

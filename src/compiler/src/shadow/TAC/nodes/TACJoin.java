@@ -7,12 +7,29 @@ public class TACJoin extends TACNode {
 		super("JOIN", null);
 		this.trueExit = trueExit;
 		this.falseExit = falseExit;
+		
+		trueExit.next = this;
+		falseExit.next = this;
 	}
 	
 	public void dump(String prefix) {
-		System.out.println(prefix + "*JOIN*");
+		System.out.println(prefix + " *JOIN*");
+		
+		if(next == null)
+			return;
+		
+		if(next instanceof TACJoin) {
+			return;
+		}
+		
+		next.dump(prefix);
+	}
 
-		if(next != null)
-			next.dump(prefix);
+	public TACNode getTrueExit() {
+		return trueExit;
+	}
+	
+	public TACNode getFalseExit() {
+		return falseExit;
 	}
 }
