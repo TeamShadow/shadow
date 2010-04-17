@@ -1,5 +1,6 @@
 package shadow.TAC.nodes;
 
+import shadow.TAC.AbstractTACVisitor;
 import shadow.TAC.TACComparison;
 import shadow.TAC.TACVariable;
 
@@ -17,7 +18,7 @@ public class TACBranch extends TACNode {
 	}
 	
 	public TACBranch(TACVariable lhs, TACVariable rhs, TACComparison comparison, TACNode trueEntry, TACNode falseEntry) {
-		super("BRANCH", null);
+		super("", null);
 		
 		this.lhs = lhs;
 		this.rhs = rhs;
@@ -25,6 +26,10 @@ public class TACBranch extends TACNode {
 		this.trueEntry = trueEntry;
 		this.falseEntry = falseEntry;
 		this.join = null;
+	}
+
+	public void accept(AbstractTACVisitor visitor) {
+		visitor.visit(this);
 	}
 	
 	public void setJoin(TACJoin join) {
@@ -49,6 +54,10 @@ public class TACBranch extends TACNode {
 	
 	public TACNode getFalseEntry() {
 		return falseEntry;
+	}
+	
+	public String toString() {
+		return super.toString() + lhs + " " + comparision + " " + rhs;	
 	}
 	
 	public void dump(String prefix) {

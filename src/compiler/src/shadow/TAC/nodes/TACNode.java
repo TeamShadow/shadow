@@ -1,19 +1,35 @@
 package shadow.TAC.nodes;
 
-public abstract class TACNode {
+import java.util.LinkedList;
+
+import shadow.TAC.AbstractTACVisitor;
+
+public abstract class TACNode implements TACInterface {
+	private static int labelCounter = 0;
 	protected String name;
 	protected TACNode parent;
 	protected TACNode next;
 	
+	private static LinkedList<TACNode> allNodes = new LinkedList<TACNode>();
+	
 	public TACNode(String name, TACNode parent) {
-		this.name = name;
+		this.name = "label_" + labelCounter++ + ": " + name;
 		this.parent = parent;
 		this.next = null;
+		this.allNodes.add(this);
 	}
 	
 	public TACNode(String name, TACNode parent, TACNode next) {
 		this(name, parent);
 		this.next = next;
+	}
+	
+	public void accept(AbstractTACVisitor visitor) {
+		visitor.visit(this);
+	}
+	
+	public LinkedList<TACNode> getNodes() {
+		return allNodes;
 	}
 	
 	public TACNode getParent() {

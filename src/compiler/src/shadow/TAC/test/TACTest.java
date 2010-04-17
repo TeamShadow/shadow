@@ -8,7 +8,9 @@ import java.util.LinkedList;
 
 import shadow.TAC.TACBuilder;
 import shadow.TAC.TACClass;
-import shadow.TAC.TACVariable;
+import shadow.TAC.TACGraphVizVisitor;
+import shadow.TAC.TACMethod;
+import shadow.TAC.TACWalker;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
@@ -80,7 +82,14 @@ public class TACTest extends BaseTest {
 	        	LinkedList<TACClass> classes = tacBuilder.getClasses();
 	        	
 	        	for(TACClass c:classes) {
-	        		c.dump();
+	        		// c.dump();
+	        		
+	        		for(TACMethod m:c.getMethods()) {
+	        			TACGraphVizVisitor visitor = new TACGraphVizVisitor(m.getEntry());
+	        			TACWalker walker = new TACWalker(visitor);
+	        			
+	        			walker.walk();
+	        		}
 	        	}
 	        }
 

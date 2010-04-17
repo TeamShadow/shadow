@@ -1,5 +1,6 @@
 package shadow.TAC.nodes;
 
+import shadow.TAC.AbstractTACVisitor;
 import shadow.TAC.TACVariable;
 
 public class TACAssign extends TACNode {
@@ -8,7 +9,7 @@ public class TACAssign extends TACNode {
 	private TACVariable operand1;	/** target = operand1; */
 	
 	public TACAssign(TACVariable lhs, TACVariable rhs) {
-		super("ASSIGN", null);
+		super("", null);
 		target = lhs;
 		operand1 = rhs;
 	}
@@ -17,8 +18,12 @@ public class TACAssign extends TACNode {
 		super(name, parent);
 	}
 	
+	public void accept(AbstractTACVisitor visitor) {
+		visitor.visit(this);
+	}
+	
 	public String toString() {
-		return super.toString() + ": " + target + " = " + operand1; 
+		return name  + target + " = " + operand1; 
 	}
 
 	public void setTarget(TACVariable target) {

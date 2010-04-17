@@ -1,5 +1,7 @@
 package shadow.TAC.nodes;
 
+import shadow.TAC.AbstractTACVisitor;
+
 public class TACJoin extends TACNode {
 	private TACNode trueExit, falseExit;
 	
@@ -10,6 +12,10 @@ public class TACJoin extends TACNode {
 		
 		trueExit.next = this;
 		falseExit.next = this;
+	}
+	
+	public void accept(AbstractTACVisitor visitor) {
+		visitor.visit(this);
 	}
 	
 	public void dump(String prefix) {
