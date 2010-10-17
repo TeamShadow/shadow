@@ -43,5 +43,38 @@ public class ASTWalker {
 		if(wt == WalkType.POST_CHILDREN)
 			node.jjtAccept(visitor, true);
 	}
+	
+	/**
+	 * Given a node, calls accept on that node before calling accept on its children
+	 * @param node
+	 * @throws ShadowException
+	 */
+	public void preorderWalk(Node node) throws ShadowException {
+		// call accept on the node indicating it's the pre-visit
+		node.jjtAccept(visitor, false);
+		
+		// go through the children in order
+		int numChildren = node.jjtGetNumChildren();
+		
+		for(int i=0; i < numChildren; ++i) {
+			walk(node.jjtGetChild(i));
+		}
+	}
+
+	/**
+	 * Given a node, calls accept on that node's children before calling accept on the node.
+	 * @param node
+	 * @throws ShadowException
+	 */
+	public void postorderWalk(Node node) throws ShadowException {
+		// go through the children in order
+		int numChildren = node.jjtGetNumChildren();
+		
+		for(int i=0; i < numChildren; ++i) {
+			walk(node.jjtGetChild(i));
+		}
+
+		node.jjtAccept(visitor, true);
+	}
 
 }

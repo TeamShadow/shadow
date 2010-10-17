@@ -66,7 +66,7 @@ public class TypeChecker {
 		walker = new ASTWalker(checker);
 		
 		// now go through and check the whole class
-		walker.walk(node);
+		walker.postorderWalk(node);	// visit each node after its children
 
 		// see how many errors we found
 		if(checker.getErrorCount() > 0) {
