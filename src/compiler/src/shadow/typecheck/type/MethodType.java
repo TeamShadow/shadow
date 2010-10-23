@@ -9,15 +9,12 @@ public class MethodType extends Type {
 	protected List<Type> paramTypes;
 	protected List<Type> returns; /** List of return types */
 
-	public MethodType(String typeName) {
-		super(typeName);
-		paramNames = new ArrayList<String>();
-		paramTypes = new ArrayList<Type>();
-		returns = new LinkedList<Type>();
+	public MethodType() {
+		this(0);
 	}
 
-	public MethodType(String typeName, int modifiers) {
-		super(typeName, modifiers);
+	public MethodType(int modifiers) {
+		super(null, modifiers, null, Kind.METHOD);
 		paramNames = new ArrayList<String>();
 		paramTypes = new ArrayList<Type>();
 		returns = new LinkedList<Type>();
@@ -34,6 +31,33 @@ public class MethodType extends Type {
 		
 		return true;
 	}
+	
+	public boolean returns( List<Type> returnTypes )
+	{
+		if( returns.size() != returnTypes.size() )
+			return false;
+		
+		for( int i = 0; i < returns.size(); i++ )
+			if( !returns.get(i).equals(returnTypes.get(i)))
+				return false;
+		
+		return true;
+	}
+
+
+	//this method is used to see if particular return values inside the method can be given back as return values
+	public boolean canReturn( List<Type> returnTypes )
+	{
+		if( returns.size() != returnTypes.size() )
+			return false;
+		
+		for( int i = 0; i < returns.size(); i++ )
+			if( !returnTypes.get(i).isSubtype(returns.get(i)))
+				return false;
+		
+		return true;
+	}	
+		
 	
 	public boolean canAccept( List<Type> argumentTypes )
 	{
@@ -77,6 +101,11 @@ public class MethodType extends Type {
 	
 	public void addReturn(Type ret) {
 		returns.add(ret);
+	}
+	
+	public List<Type> getReturnTypes()
+	{
+		return returns;
 	}
 	
 	/**

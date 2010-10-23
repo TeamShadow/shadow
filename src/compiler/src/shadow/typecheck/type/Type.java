@@ -12,7 +12,7 @@ public class Type {
 	private int arrayDimension;
 	private Node astNode;	/** This is to link back to the AST, usually not used */
 	
-	public static enum Kind { ARRAY, CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, VIEW};
+	public static enum Kind { ARRAY, CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, SEQUENCE, VIEW};
 	
 	public static final ClassType OBJECT = new ClassType( "Object", 0, null ); 
 	public static final ClassType BOOLEAN = new ClassType( "boolean" );
@@ -163,6 +163,7 @@ public class Type {
 			else
 				return false;			
 		case METHOD:
+		case SEQUENCE:
 		case VIEW:
 		default:
 			return false;		

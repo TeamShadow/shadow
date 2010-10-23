@@ -274,7 +274,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		MethodType ret = new MethodType(null); // it has no name
+		MethodType ret = new MethodType(); // it has no name
 		
 		// add all the parameters to this method
 		int i;

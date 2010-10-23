@@ -104,7 +104,7 @@ DONE - ASTBitwiseAndExpression
 DONE - ASTExpression - Still needs to handle the different assignment types, maybe?
 DONE - ASTIsExpression
 DONE - ASTCastExpression
-  ASTSequence
+DONE - ASTSequence
   ASTMemberSelector
   ASTPrimaryPrefix
   ASTPrimarySuffix
@@ -126,7 +126,7 @@ DONE - ASTForInit
 DONE - ASTForUpdate - nothing to do here
 DONE -  ASTStatementExpressionList - nothing to do here
 DONE -  ASTBreakStatement - nothing to do here
-DONE -  ASTReturnStatement - nothing to do here
+DONE -  ASTReturnStatement
   ASTThrowStatement
 DONE -  ASTSynchronizedStatement - nothing to do here
 DONE -  ASTTryStatement - nothing to do here

@@ -7,19 +7,18 @@ import java.util.Map;
 
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
-import shadow.parser.javacc.ASTCastExpression;
-import shadow.parser.javacc.ASTSwitchStatement;
-import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocationExpression;
 import shadow.parser.javacc.ASTArgumentList;
 import shadow.parser.javacc.ASTArguments;
 import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
+import shadow.parser.javacc.ASTCastExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTConditionalAndExpression;
@@ -38,7 +37,7 @@ import shadow.parser.javacc.ASTForeachStatement;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
-import shadow.parser.javacc.ASTMethodDeclarator;
+import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
@@ -46,10 +45,13 @@ import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultTypes;
+import shadow.parser.javacc.ASTReturnStatement;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTShiftExpression;
 import shadow.parser.javacc.ASTStatementExpression;
+import shadow.parser.javacc.ASTSwitchLabel;
+import shadow.parser.javacc.ASTSwitchStatement;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
@@ -58,12 +60,12 @@ import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 
@@ -138,7 +140,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
 		updateCurMethod((MethodType)node.getType());
 		return WalkType.PRE_CHILDREN;	// don't need to come back here
 	}
@@ -293,12 +295,23 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.PRE_CHILDREN;
 		}
 			
-		// check to see if it's a field
+		// check to see if it's a field or a method
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
 			if(currentClass.containsField(name)) {
 				node.setType(currentClass.getField(name));
+				return WalkType.PRE_CHILDREN;
+			}
+			
+			//okay, this is going to be tricky
+			//eventually, we need to overload based on types
+			List<MethodSignature> methods = currentClass.getMethods(name);
+			
+			//for now, take the first method
+			if( methods.size() > 0 )
+			{
+				node.setType(methods.get(0).getMethodType());
 				return WalkType.PRE_CHILDREN;
 			}
 		}
@@ -798,7 +811,20 @@ public class ClassChecker extends BaseChecker {
 		
 		if( child instanceof ASTSequence )
 		{
-			addError(child, Error.TYPE_MIS, "We do not handle sequences yet"); //fix this eventually
+			//don't we need to pass sequence information down to the method so that we can overload based on return type?			
+			
+			SequenceType sequence = (SequenceType)child.getType();
+			Type t2 = node.jjtGetChild(1).getType();
+			
+			if( t2 instanceof MethodType )
+			{
+				MethodType methodType = (MethodType)t2;
+				
+				if( !sequence.canAccept( methodType.getReturnTypes() ) )
+					addError(child, Error.TYPE_MIS, "Method with signature " + methodType + " cannot return " + sequence);
+			}
+			else
+				addError(child, Error.TYPE_MIS, "Only methods can be assigned to sequences");
 		}
 		else //primary expression
 		{
@@ -811,8 +837,18 @@ public class ClassChecker extends BaseChecker {
 				// SHOULD DO SOMETHING WITH THIS!!!
 				AssignmentType assType = op.getAssignmentType();
 				
-				// TODO: Add in all the types that we can compare here
-				if( !t2.isSubtype(t1) ) {
+				if( t2 instanceof MethodType ) //could this be done with a more complex subtype relationship below?
+				{
+					MethodType methodType = (MethodType)t2;
+					List<Type> type = new LinkedList<Type>();
+					type.add(t1);
+					if( !methodType.canReturn( type ) )
+					{
+						addError(node.jjtGetChild(0), Error.TYPE_MIS, "Method with signature " + methodType + " cannot return " + t1);
+						return WalkType.NO_CHILDREN;
+					}					
+				}
+				else if( !t2.isSubtype(t1) ) {
 					addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
 					return WalkType.NO_CHILDREN;
 				}
@@ -867,6 +903,27 @@ public class ClassChecker extends BaseChecker {
 
 		return WalkType.POST_CHILDREN;
 	}
+	
+	public Object visit(ASTSequence node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;		
+		
+		if( node.jjtGetNumChildren() == 1 ) //maybe, or should it be treated like a sequence with one thing in it?
+			pushUpType(node, secondVisit);
+		else
+		{
+			SequenceType sequence = new SequenceType();
+			
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				sequence.addType(node.jjtGetChild(i).getType());
+			
+			node.setType( sequence );
+		}			
+
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
 
 	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
@@ -955,12 +1012,55 @@ public class ClassChecker extends BaseChecker {
 			addError(node, Error.TYPE_MIS, "conditional of for statement must be boolean, found: " + conditionalType);
 		
 		return WalkType.POST_CHILDREN;
-	}		
+	}	
+	
+	
+	public Object visit(ASTReturnStatement node, Boolean secondVisit) throws ShadowException 
+	{		
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+	
+		//make sure matches method return types
+		List<Type> types = new LinkedList<Type>();
+		
+		String returnTypes = "(";
+		
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+		{
+			returnTypes += node.jjtGetChild(i).getType();
+			if( i < node.jjtGetNumChildren() - 1  )
+				returnTypes += ",";
+				
+			types.add( node.jjtGetChild(i).getType()  );
+		}
+		
+		returnTypes += ")";
+		
+		if( !curMethod.canReturn(types))
+		{
+			addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " cannot return " + returnTypes);
+			return WalkType.NO_CHILDREN;
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	/*//Push up is wrong, the children of ResultTypes are many, we can't just push one up 
+	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException 
+	{ return pushUpType(node, secondVisit); 
+	
+	}
+	
+	*/
+	
+	
 
 	//
 	// Everything below here are just visitors to push up the type
 	//
-	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 
 	//	TODO: NO NO NO, there can be more stuff in primary expression, no time to fix it now, though

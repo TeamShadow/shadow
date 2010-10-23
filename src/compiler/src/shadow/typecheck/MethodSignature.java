@@ -13,7 +13,7 @@ public class MethodSignature {
 	private Node node;	/** The AST node that corresponds to the branch of the tree for this method */
 	
 	public MethodSignature(String symbol, int modifiers, int line) {
-		type = new MethodType(null, modifiers);
+		type = new MethodType(modifiers);
 		this.line = line;
 		this.symbol = symbol;
 	}

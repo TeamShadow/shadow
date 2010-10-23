@@ -22,6 +22,9 @@ public class TypeCheckerTest extends BaseTest {
 	public static void main(String[] args) throws IOException, ShadowException {
 		TypeCheckerTest tct = new TypeCheckerTest(true, true);
 		
+		args = new String[1];
+		args[0] = "./src/shadow/typecheck/test/methodcall.shadow";
+		
 		// no args, we test everything
 		if(args.length == 0)
 			tct.testAll();
