@@ -6,12 +6,12 @@ class Foo {
     public String c = "hello" + "world";
     public boolean x = true;
 
-    public blah(int a, float b, Foo c) => (int, float, Foo) {
+    public blah(int a, float b, Foo c) => (int, double, Foo) {
         return (5, 3.0, new Foo());
     }
     
     public blah(float a, float z, Foo c) => (int, float, Foo) {
-        return (5, 3.0, new Foo());
+        return (5, 3.0f, new Foo());
     }
 
     public code d, e, f;
