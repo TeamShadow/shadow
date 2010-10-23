@@ -7,6 +7,7 @@ import java.util.Map;
 
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.parser.javacc.ASTCastExpression;
 import shadow.parser.javacc.ASTSwitchStatement;
 import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTAdditiveExpression;
@@ -841,6 +842,27 @@ public class ClassChecker extends BaseChecker {
 				node.setType(Type.BOOLEAN);
 			else
 				addError(node, Error.TYPE_MIS, "Type " + t1 + " uncomparable with type " + t2);
+		}			
+
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTCastExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		
+		if( node.jjtGetNumChildren() == 1 )
+			pushUpType(node, secondVisit);
+		else
+		{
+			Type t1 = node.jjtGetChild(0).getType();  //type
+			Type t2 = node.jjtGetChild(1).getType();  //expression
+			
+			if( t1.isSubtype(t2) || t2.isSubtype(t1) )
+				node.setType(t1);
+			else
+				addError(node, Error.TYPE_MIS, "Type " + t2 + " cannot be cast to " + t1);
 		}			
 
 		return WalkType.POST_CHILDREN;

@@ -103,7 +103,7 @@ DONE - ASTBitwiseExclusiveOrExpression
 DONE - ASTBitwiseAndExpression
 DONE - ASTExpression - Still needs to handle the different assignment types, maybe?
 DONE - ASTIsExpression
-  ASTCastExpression
+DONE - ASTCastExpression
   ASTSequence
   ASTMemberSelector
   ASTPrimaryPrefix
@@ -124,12 +124,14 @@ DONE - ASTForeachStatement
 DONE - ASTForStatement
 DONE - ASTForInit
 DONE - ASTForUpdate - nothing to do here
-  ASTStatementExpressionList
-  ASTBreakStatement
-  ASTReturnStatement
+DONE -  ASTStatementExpressionList - nothing to do here
+DONE -  ASTBreakStatement - nothing to do here
+DONE -  ASTReturnStatement - nothing to do here
   ASTThrowStatement
-  ASTSynchronizedStatement
-  ASTTryStatement
+DONE -  ASTSynchronizedStatement - nothing to do here
+DONE -  ASTTryStatement - nothing to do here
+
+Annotation stuff: (ignore for now)
   ASTMemberValuePairs
   ASTMemberValuePair
   ASTMemberValue
