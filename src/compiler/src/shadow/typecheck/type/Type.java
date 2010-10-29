@@ -9,10 +9,10 @@ public class Type {
 	private final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
 	private final Type outer; //outer class	
 	private Kind kind;
-	private int arrayDimension;
+	//private int arrayDimension; //array dimensions handled in ArrayType
 	private Node astNode;	/** This is to link back to the AST, usually not used */
 	
-	public static enum Kind { ARRAY, CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, SEQUENCE, VIEW};
+	public static enum Kind { ARRAY, CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, SEQUENCE, UNBOUND_METHOD, VIEW};
 	
 	public static final ClassType OBJECT = new ClassType( "Object", 0, null ); 
 	public static final ClassType BOOLEAN = new ClassType( "boolean" );
@@ -28,6 +28,7 @@ public class Type {
 	public static final ClassType UINT = new ClassType( "uint" );
 	public static final ClassType ULONG = new ClassType( "ulong" );
 	public static final ClassType USHORT = new ClassType( "ushort" );
+	public static final ClassType CLASS = new ClassType( "Class" );  //meta class for holding .class variables
 	
 	public static final EnumType ENUM = new EnumType( "Enum", 0, null, OBJECT );
 	public static final ErrorType ERROR = new ErrorType( "Error", 0, null, null );	
@@ -52,7 +53,7 @@ public class Type {
 		this.modifiers = modifiers;
 		this.outer = outer;
 		this.kind = kind;
-		this.arrayDimension = 0;
+		//this.arrayDimension = 0;
 	}
 	
 	public String getTypeName() {
@@ -72,9 +73,9 @@ public class Type {
 	}
 	
 	public String toString() {
-		if(arrayDimension == 0)
+//		if(arrayDimension == 0)
 			return typeName;
-		
+	/*	
 		StringBuilder sb = new StringBuilder(typeName + "[");
 		
 		for(int i=1; i < arrayDimension; ++i)
@@ -83,8 +84,10 @@ public class Type {
 		sb.append("]");
 		
 		return sb.toString();
+		*/
 	}
 	
+	/*
 	public int getArrayDimension() {
 		return arrayDimension;
 	}
@@ -96,6 +99,7 @@ public class Type {
 	public boolean isArray() {
 		return arrayDimension == 0;
 	}
+	*/
 
 	public boolean equals(Object o) {
 		if( o != null && o instanceof Type )
@@ -124,7 +128,7 @@ public class Type {
 			{
 				ArrayType type = (ArrayType)this;
 				ArrayType other = (ArrayType)this;
-				if( type.getArrayDimension() == other.getArrayDimension() )
+				if( type.getDimensions() == other.getDimensions() )
 					return type.getBaseType().isSubtype(other.getBaseType());
 				else
 					return false;

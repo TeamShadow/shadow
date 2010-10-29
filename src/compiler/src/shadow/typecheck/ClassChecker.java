@@ -37,14 +37,17 @@ import shadow.parser.javacc.ASTForeachStatement;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
+import shadow.parser.javacc.ASTMemberSelector;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
+import shadow.parser.javacc.ASTPrimaryPrefix;
+import shadow.parser.javacc.ASTPrimarySuffix;
 import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
-import shadow.parser.javacc.ASTResultTypes;
+import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTReturnStatement;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTSequence;
@@ -52,6 +55,7 @@ import shadow.parser.javacc.ASTShiftExpression;
 import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTSwitchStatement;
+import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
@@ -67,17 +71,20 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.UnboundMethodType;
 
 
 //no automatic promotion for bitwise operators
 
 public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected MethodType curMethod;	
+	protected MethodType curMethod;
+	protected LinkedList<Type> curPrefix; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	
 	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
 		super(debug, typeTable, importList);		
 		symbolTable = new LinkedList<HashMap<String, Type>>();
+		curPrefix = new LinkedList<Type>();
 	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
@@ -302,16 +309,15 @@ public class ClassChecker extends BaseChecker {
 			if(currentClass.containsField(name)) {
 				node.setType(currentClass.getField(name));
 				return WalkType.PRE_CHILDREN;
-			}
-			
-			//okay, this is going to be tricky
-			//eventually, we need to overload based on types
+			}			
+		
 			List<MethodSignature> methods = currentClass.getMethods(name);
 			
-			//for now, take the first method
-			if( methods.size() > 0 )
+			//unbound method (it gets bound when you supply args
+			if( methods != null && methods.size() > 0 )
 			{
-				node.setType(methods.get(0).getMethodType());
+				node.setType( new UnboundMethodType( name, currentClass ) );
+				//node.setType(methods.get(0).getMethodType());
 				return WalkType.PRE_CHILDREN;
 			}
 		}
@@ -488,7 +494,11 @@ public class ClassChecker extends BaseChecker {
 	}
 		
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException {
-		if(node.jjtGetNumChildren() != 1) {
+		if(!(Boolean)secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		if(node.jjtGetNumChildren() != 1)
+		{
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
 		}
@@ -700,6 +710,8 @@ public class ClassChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
+		//check curPrefix at some point
+		
 		Node child = node.jjtGetChild(0);
 		
 		if( child instanceof ASTPrimitiveType ) //array allocation
@@ -810,21 +822,19 @@ public class ClassChecker extends BaseChecker {
 		Node child = node.jjtGetChild(0);
 		
 		if( child instanceof ASTSequence )
-		{
-			//don't we need to pass sequence information down to the method so that we can overload based on return type?			
-			
+		{	
 			SequenceType sequence = (SequenceType)child.getType();
 			Type t2 = node.jjtGetChild(1).getType();
 			
-			if( t2 instanceof MethodType )
+			if( t2 instanceof SequenceType ) //from method call
 			{
-				MethodType methodType = (MethodType)t2;
+				SequenceType sequenceType = (SequenceType)t2;
 				
-				if( !sequence.canAccept( methodType.getReturnTypes() ) )
-					addError(child, Error.TYPE_MIS, "Method with signature " + methodType + " cannot return " + sequence);
+				if( !sequence.canAccept( sequenceType.getTypes() ) )
+					addError(child, Error.TYPE_MIS, "Sequence " + sequenceType + " does not match " + sequence);
 			}
 			else
-				addError(child, Error.TYPE_MIS, "Only methods can be assigned to sequences");
+				addError(child, Error.TYPE_MIS, "Only method return values can be assigned to sequences");
 		}
 		else //primary expression
 		{
@@ -833,6 +843,12 @@ public class ClassChecker extends BaseChecker {
 				ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
 				Type t1 = child.getType();
 				Type t2 = node.jjtGetChild(2).getType();
+				
+				if( t2 == null )
+				{
+					addError(child, Error.TYPE_MIS, "Null type on RHS of " + t1);
+					return WalkType.NO_CHILDREN;
+				}
 				
 				// SHOULD DO SOMETHING WITH THIS!!!
 				AssignmentType assType = op.getAssignmentType();
@@ -1044,8 +1060,268 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		return WalkType.POST_CHILDREN;
+	}	
+	
+	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException 
+	{
+		if(!secondVisit)
+		{
+			curPrefix.addFirst(null);
+			return WalkType.POST_CHILDREN;
+		}
+		
+		
+		if( node.jjtGetNumChildren() > 1 ) 	//has suffixes, pull type from last suffix
+			node.setType(node.jjtGetChild(node.jjtGetNumChildren() - 1).getType());
+		else								//just prefix
+			node.setType(node.jjtGetChild(0).getType());	
+		
+		curPrefix.removeFirst();  //pop prefix type off stack
+		
+		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException 
+	{
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		int children = node.jjtGetNumChildren();
+		
+		if(  children == 0 )
+		{
+			if( node.getImage().equals("this") )
+			{	
+				if( currentType instanceof InterfaceType )
+					addError(node, Error.INVL_TYP, "\"this\" reference invalid for interfaces");
+				else
+					node.setType(currentType);
+			}
+			else //super case
+			{
+				if( currentType instanceof InterfaceType )
+					addError(node, Error.INVL_TYP, "\"super\" reference invalid for interfaces"); //may need other cases
+				else if( currentType instanceof ClassType )
+				{
+					ClassType parentType = ((ClassType)currentType).getExtendType();
+					
+					if( parentType.containsField(node.getImage() ))					
+						node.setType(parentType.getField(node.getImage()));
+					else
+					{
+						List<MethodSignature> methods = parentType.getMethods(node.getImage());
+						
+						//unbound method (it gets bound when you supply args
+						if( methods != null && methods.size() > 0 )
+							node.setType( new UnboundMethodType( node.getImage(), parentType ) );						
+						else
+							addError(node, Error.UNDEC_VAR, "Member " + node.getImage() + " not found");						
+					}	
+				}				
+			}
+		}
+		else if( children == 1 )
+		{
+			Node child = node.jjtGetChild(0); 
+			
+			if( child instanceof ASTResultType ) //ResultType() "." "class"
+			{
+				if( child.getType() instanceof ClassType )
+					node.setType( Type.CLASS );
+			}
+			else
+				node.setType( child.getType() ); 	//literal, conditionalexpression, allocation expression, name
+													//ack, methods will be a problem
+		}
+		
+		curPrefix.set(0, node.getType()); //so that the suffix can figure out where it's at
+		
+		/*
+		  Literal()
+		  | "this" { jjtThis.setImage("this"); }
+		  | "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+		  | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
+		  | AllocationExpression()
+		  | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
+		  | Name()
+		*/
+
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException 
+	{
+		/*
+		  LOOKAHEAD(2) "." "this"
+		  | LOOKAHEAD(2) "." AllocationExpression()
+		  | LOOKAHEAD(3) MemberSelector()
+		  | "[" ConditionalExpression() ("," ConditionalExpression())* "]"
+		  | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+		  | Arguments()
+		  }		
+		*/	
+				
+		Type prefix = curPrefix.getFirst();
+		
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		int children = node.jjtGetNumChildren();
+		
+		if(  children == 0 )
+		{
+			if( node.getImage().equals("this") )
+			{	
+				node.setType(prefix);
+			}
+			else 
+			{
+				if( prefix instanceof ClassInterfaceBaseType )
+				{
+					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefix;
+					if( currentClass.containsField(node.getImage() ) )
+					{
+						node.setType( currentClass.getField(node.getImage()));
+					}
+					else
+					{
+						List<MethodSignature> methods = currentClass.getMethods(node.getImage());
+						
+						//unbound method (it gets bound when you supply args
+						if( methods != null && methods.size() > 0 )
+							node.setType( new UnboundMethodType( node.getImage(), currentClass ) );						
+						else
+							addError(node, Error.UNDEC_VAR, "Member " + node.getImage() + " not found");
+					}
+					
+				}
+				else
+					addError(node, Error.INVL_TYP, prefix + " not valid class or interface"); //may need other cases
+			}
+		}
+		else // >= 1
+		{
+			Node child = node.jjtGetChild(0); 
+			
+			if( child instanceof ASTAllocationExpression ) //"." AllocationExpression()
+			{
+				ASTAllocationExpression allocation = (ASTAllocationExpression)child;
+				
+				if( prefix instanceof ClassInterfaceBaseType )
+				{
+					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefix;
+					if( currentClass.containsInnerClass(allocation.getType().getTypeName()) )
+						node.setType(currentClass.getInnerClass(allocation.getType().getTypeName()));
+					else
+						addError(node, Error.UNDEF_TYP, "Inner class " + allocation.getType().getTypeName() + " not found");
+				}
+				else
+					addError(node, Error.INVL_TYP, prefix + " not valid class or interface");
+			}
+			else if( child instanceof ASTMemberSelector )
+			{
+				addError(node, Error.INVL_TYP, "Generics are not yet handled");				
+			}
+			else if( child instanceof ASTConditionalExpression ) //array index
+			{
+				if( prefix instanceof ArrayType )
+				{
+					ArrayType arrayType = (ArrayType)prefix;
+					
+					for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+					{
+						Type childType = node.jjtGetChild(0).getType();
+						
+						if( !childType.isIntegral() )
+							addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
+					}
+					
+					if( node.jjtGetNumChildren() == arrayType.getDimensions() )
+						node.setType( arrayType.getBaseType() );
+					else
+						addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
+				}
+				else
+					addError(node, Error.INVL_TYP, "Cannot subscript into non-array type " + prefix);
+				
+			}
+			else if( child instanceof ASTArguments ) //method call
+			{
+				if( prefix instanceof UnboundMethodType )
+				{
+					UnboundMethodType unboundMethod = (UnboundMethodType)prefix; 
+					List<Type> typeList = ((ASTArguments)child).getTypeList();
+					ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();					
+					List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
+					List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
+					
+					boolean perfectMatch = false;
+					
+					for( MethodSignature signature : methods ) 
+					{
+						if( signature.matches( typeList ))
+						{
+							List<Type> returnTypes = signature.getMethodType().getReturnTypes();
+							if( returnTypes.size() == 1 )
+								node.setType(returnTypes.get(0));
+							else
+							{
+								SequenceType sequenceType = new SequenceType();
+								for( Type type : returnTypes )
+									sequenceType.addType(type);
+								node.setType( sequenceType );
+							}
+							perfectMatch = true;
+						}
+						else if( signature.canAccept(typeList))
+							acceptableMethods.add(signature);
+					}
+					
+					if( !perfectMatch )
+					{
+						if( acceptableMethods.size() == 0 )					
+							addError(child, Error.TYPE_MIS, "No method found with signature " + typeList);
+						else if( acceptableMethods.size() > 1 )
+							addError(child, Error.TYPE_MIS, "Ambiguous method call with signature " + typeList);
+						else
+						{
+							List<Type> returnTypes = acceptableMethods.get(0).getMethodType().getReturnTypes();
+							if( returnTypes.size() == 1 )
+								node.setType(returnTypes.get(0));
+							else
+							{
+								SequenceType sequenceType = new SequenceType();
+								for( Type type : returnTypes )
+									sequenceType.addType(type);
+								node.setType( sequenceType );
+							}							
+						}
+					}					
+				}
+				
+			}
+		}
+		
+		curPrefix.set(0, node.getType()); //so that a future suffix can figure out where it's at
+		
+		/*	
+		  | LOOKAHEAD(2) "." AllocationExpression()
+		  | LOOKAHEAD(3) MemberSelector()
+		  | "[" ConditionalExpression() ("," ConditionalExpression())* "]"		  
+		  | Arguments()
+		  }		
+		*/
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+
+	
+	
+
 	
 	/*//Push up is wrong, the children of ResultTypes are many, we can't just push one up 
 	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException 
@@ -1056,14 +1332,16 @@ public class ClassChecker extends BaseChecker {
 	*/
 	
 	
+	
+	
 
 	//
 	// Everything below here are just visitors to push up the type
 	//
-	
+	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 
-	//	TODO: NO NO NO, there can be more stuff in primary expression, no time to fix it now, though
-	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	
 	
 }

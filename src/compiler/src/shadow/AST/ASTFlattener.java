@@ -91,7 +91,7 @@ public class ASTFlattener extends AbstractASTVisitor {
 	// These are nodes we want to remove IF it has 1 child
 	//
 	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	//public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
@@ -108,7 +108,7 @@ public class ASTFlattener extends AbstractASTVisitor {
 	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTIsExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
 	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
-	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
+	//public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node);	return WalkType.PRE_CHILDREN; }
+	//public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException { removeNode1C((SimpleNode)node); return WalkType.PRE_CHILDREN; }
 	
 }

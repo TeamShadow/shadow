@@ -7,11 +7,13 @@ public class ArrayType extends Type
 	private int dimensions;
 	private Type baseType;
 	
-	private static String makeName(Type baseType, List<Integer> arrayDimensions)
+	private static String makeName(Type baseType, List<Integer> arrayDimensions, int index )
 	{
 		StringBuilder name = new StringBuilder(baseType.getTypeName());
-		for( int i : arrayDimensions )
+		int i;
+		for( ; index < arrayDimensions.size(); index++ )
 		{		
+			i = arrayDimensions.get(index);
 			name.append("[");
 			for( int j = 1; j < i; j++ ) //no extra comma for 1 dimension
 				name.append(",");
@@ -31,14 +33,17 @@ public class ArrayType extends Type
 		return baseType;
 	}
 	
-	public ArrayType(Type baseType, List<Integer> arrayDimensions) {
-		super( makeName(baseType, arrayDimensions), baseType.getModifiers(), baseType.getOuter(), Kind.ARRAY );
-		dimensions = arrayDimensions.get(0);
-		arrayDimensions.remove(0);
-		if( arrayDimensions.size() == 0 )
+	public ArrayType(Type baseType, List<Integer> arrayDimensions ) {
+		this( baseType, arrayDimensions, 0 );
+	}	
+	
+	public ArrayType(Type baseType, List<Integer> arrayDimensions, int index ) {
+		super( makeName(baseType, arrayDimensions, index), baseType.getModifiers(), baseType.getOuter(), Kind.ARRAY );
+		dimensions = arrayDimensions.get(index);		
+		if( arrayDimensions.size() == index + 1 )
 			this.baseType = baseType;
 		else
-			this.baseType = new ArrayType( baseType, arrayDimensions );
+			this.baseType = new ArrayType( baseType, arrayDimensions, index + 1);
 	}	
 
 }

@@ -10,6 +10,7 @@ import shadow.typecheck.MethodSignature;
 public abstract class ClassInterfaceBaseType extends Type {
 	protected HashMap<String, Type> fieldTable;
 	protected HashMap<String, List<MethodSignature> > methodTable;
+	protected HashMap<String, Type> innerClasses;
 	protected String packageName; //package
 	
 	public ClassInterfaceBaseType(String typeName) {
@@ -28,10 +29,25 @@ public abstract class ClassInterfaceBaseType extends Type {
 		super( typeName, modifiers, outer, kind );
 		fieldTable = new HashMap<String, Type>();
 		methodTable = new HashMap<String, List<MethodSignature>>();
+		innerClasses = new HashMap<String, Type>();
+		
+		if( outer != null && outer instanceof ClassInterfaceBaseType)
+		{
+			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)outer;
+			outerClass.innerClasses.put(typeName, this);
+		}
 	}	
 	
 	public boolean containsField(String fieldName) {
 		return fieldTable.containsKey(fieldName);
+	}
+	
+	public boolean containsInnerClass(String className) {
+		return innerClasses.containsKey(className);
+	}
+	
+	public Type getInnerClass(String className) {
+		return innerClasses.get(className);
 	}
 	
 	public void addField(String fieldName, Type type) {

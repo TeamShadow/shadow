@@ -23,7 +23,7 @@ public class TypeCheckerTest extends BaseTest {
 		TypeCheckerTest tct = new TypeCheckerTest(true, true);
 		
 		//args = new String[1];
-		//args[0] = "./src/shadow/typecheck/test/methodcall.shadow";
+		//args[0] = "./src/shadow/typecheck/test/switch.shadow";
 		
 		// no args, we test everything
 		if(args.length == 0)
@@ -76,7 +76,7 @@ public class TypeCheckerTest extends BaseTest {
 	    	System.out.println(se.getMessage());
 	        throw se;
 	    } catch (Error e) {
-	        System.out.println("Ooops");
+	        System.out.println("Oops");
 	        System.out.println(e.getMessage());
 	        e.printStackTrace(System.out);
 	        throw new ShadowException(e.getMessage());

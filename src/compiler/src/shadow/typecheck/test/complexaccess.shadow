@@ -1,0 +1,26 @@
+class Outer {
+
+	private class Inner 
+	{
+		public jam(int a) => (int) {
+	        return 4;
+	    }
+	}
+	
+	private stuff() => (Inner)
+	{
+		return new Inner();	
+	}
+	    
+    public static main() => ()
+    {
+    	int c;   	
+    	
+    	
+    	Outer[] first = new Outer[100];
+    	first[0] = new Outer();
+    	
+    	c = first[0].stuff().jam(10);
+    }
+
+}

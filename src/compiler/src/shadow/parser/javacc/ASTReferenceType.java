@@ -10,11 +10,15 @@ public
 class ASTReferenceType extends SimpleNode {
   public ASTReferenceType(int id) {
     super(id);    
+ //   allReferences.add(this);
   }
 
   public ASTReferenceType(ShadowParser p, int id) {
-    super(p, id);    
+    super(p, id);  
+  //  allReferences.add(this);
   }
+  
+ // public static List<ASTReferenceType> allReferences = new LinkedList<ASTReferenceType>();
 
 
   /** Accept the visitor. **/
