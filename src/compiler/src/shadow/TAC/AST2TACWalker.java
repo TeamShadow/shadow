@@ -1,8 +1,8 @@
 
 package shadow.TAC;
 
-import shadow.AST.AbstractASTVisitor;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.AST.AbstractASTVisitor;
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
@@ -12,6 +12,7 @@ import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTConditionalAndExpression;
+import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTLiteral;
@@ -206,6 +207,8 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		} else if(node.jjtGetNumChildren() == 3) { // assignment statement
 			ASTAssignmentOperator assignNode = (ASTAssignmentOperator)node.jjtGetChild(1);
 			Node rhsNode = node.jjtGetChild(2);
+			if( rhsNode instanceof ASTConditionalExpression )
+				rhsNode = flatten( rhsNode );
 			
 			TACNode assign = null;
 			TACVariable lhs = new TACVariable(varNode.getImage(), varNode.getType(), false);
@@ -260,10 +263,18 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		
 		return WalkType.NO_CHILDREN;
 	}
+	
+	public static Node flatten( Node node ) //used for conditional statements, etc.
+	{
+		while( node.jjtGetNumChildren() == 1) //may want to make this smarter
+			node = node.jjtGetChild(0);
+		
+		return node;
+	}
 
 	
 	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException {
-		ConditionalBranch branch = visitComparison((SimpleNode)node.jjtGetChild(0));
+		ConditionalBranch branch = visitComparison((SimpleNode)flatten(node.jjtGetChild(0)));
 		TACJoin join = null;
 		
 		AST2TAC a2t = new AST2TAC(node.jjtGetChild(1));
