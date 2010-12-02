@@ -16,10 +16,10 @@ public class AllTests {
 		// add any new tests here
 		ParserTest pt = new ParserTest(false, true);	// dump = false, debug = true
 		TypeCheckerTest tct = new TypeCheckerTest(false, true); // dump = false, debug = true
-		TACTest tact = new TACTest(true, true); // dump = false, debug = true
+		//TACTest tact = new TACTest(true, true); // dump = false, debug = true
 
 		pt.testAll();
 		tct.testAll();
-		tact.testAll();
+		//tact.testAll();
 	}
 }

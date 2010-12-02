@@ -516,11 +516,12 @@ ASTCompilationUnit CompilationUnit():
   <EOF>
 
 	{
+	  /* turn off flattening
 		ASTFlattener f = new ASTFlattener();
         ASTWalker walker = new ASTWalker(f);
 
         walker.walk(jjtThis);
-        		
+        */		
         return jjtThis;
 	}
 }
@@ -731,7 +732,8 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
     | EnumDeclaration(modifier)
     | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration(modifier)
     | LOOKAHEAD( [ TypeParameters() ] "destructor" ) DestructorDeclaration(modifier)
-    | LOOKAHEAD( Type() <IDENTIFIER> ( "[" "]" )* ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
+    | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
+    //removed ( "[" "]" ) * because Shadow only allows square brackets on the LEFT of identifiers in declarations 
     | MethodDeclaration(modifier)
     | ViewDeclaration(modifier)
   )
@@ -757,7 +759,8 @@ void VariableDeclaratorId():
     Token t;
 }
 {
-  t = <IDENTIFIER> { jjtThis.setImage(t.image); } ( "[" "]" )*
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+  //( "[" "]" )*  Not in Shadow!
 }
 
 void VariableInitializer():

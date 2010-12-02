@@ -49,6 +49,8 @@ import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTReturnStatement;
+import shadow.parser.javacc.ASTRightRotate;
+import shadow.parser.javacc.ASTRightShift;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTShiftExpression;
@@ -313,7 +315,7 @@ public class ClassChecker extends BaseChecker {
 		
 			List<MethodSignature> methods = currentClass.getMethods(name);
 			
-			//unbound method (it gets bound when you supply args
+			//unbound method (it gets bound when you supply args)
 			if( methods != null && methods.size() > 0 )
 			{
 				node.setType( new UnboundMethodType( name, currentClass ) );
@@ -331,184 +333,160 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTAssignmentOperator node, Boolean secondVisit) throws ShadowException {
-		return WalkType.PRE_CHILDREN;	// I don't think we do anything here
+		return WalkType.NO_CHILDREN;	// I don't think we do anything here
 	}
 	
 	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
-			return WalkType.POST_CHILDREN;
-		
-		if(node.jjtGetNumChildren() != 2) {
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-			return WalkType.NO_CHILDREN;
-		} else {		
-			// get the two types
-			Type t1 = node.jjtGetChild(0).getType();
-			Type t2 = node.jjtGetChild(1).getType();
+			return WalkType.POST_CHILDREN;		
+
+		Type result = node.jjtGetChild(0).getType();
+					
+		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
+		{
+			Type current = node.jjtGetChild(i).getType(); 
+			if( !result.isNumerical() || !current.isNumerical() )
+			{
+				addError(node, Error.INVL_TYP, "Relational operator not defined on types " + result + " and " + current);
+				return WalkType.POST_CHILDREN;
+			}	
 			
-			// TODO: Add in all the types that we can compare here
-			if( !t1.isNumerical() ) {
-				addError(node.jjtGetChild(0), Error.INVL_TYP, t1 + " used in relation");
-				node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-				return WalkType.NO_CHILDREN;
-			}
-			
-			if( !t2.isNumerical() ) {
-				addError(node.jjtGetChild(1), Error.INVL_TYP, t2 + " used in relation");
-				node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-				return WalkType.NO_CHILDREN;
-			}
-			
-			node.setType(Type.BOOLEAN);	// relations are always booleans
+			result = Type.BOOLEAN;  //boolean after one comparison				
 		}
 		
-		return WalkType.PRE_CHILDREN;
+		node.setType(result); //propagates type up if only one child
+	
+		
+		return WalkType.POST_CHILDREN;	
 	}
 	
 	
 	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
-		
-		if(node.jjtGetNumChildren() != 2) {
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-			return WalkType.NO_CHILDREN;
-		} else {			
-			// get the two types
-			Type t1 = node.jjtGetChild(0).getType();
-			Type t2 = node.jjtGetChild(1).getType();
+
+		Type result = node.jjtGetChild(0).getType();
+					
+		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
+		{
+			Type current = node.jjtGetChild(i).getType(); 
+			if( !result.isSubtype(current) && !current.isSubtype(result) )
+			{
+				addError(node, Error.INVL_TYP, "Equality operator not defined on types " + result + " and " + current);
+				return WalkType.POST_CHILDREN;
+			}	
 			
-			// TODO: Add in subtyping
-			if(!t1.isSubtype(t2) && !t2.isSubtype(t1)) {  //works either way
-				addError(node.jjtGetChild(0), Error.TYPE_MIS, t1 + " and " + t2 + " are not comparable");
-				node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-				return WalkType.NO_CHILDREN;
-			}
-			
-			node.setType(Type.BOOLEAN);	// relations are always booleans
+			result = Type.BOOLEAN;  //boolean after one comparison				
 		}
+		
+		node.setType(result); //propagates type up if only one child
 			
-		return WalkType.POST_CHILDREN;
+		
+		return WalkType.POST_CHILDREN;		
 	}
 	
-	public Object visitShiftRotate(SimpleNode node ) throws ShadowException {
-		Type t1, t2;
-		
-		if(node.jjtGetNumChildren() > 3) {
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		t1 = node.jjtGetChild(0).getType();
-		
-		//strange hack because RightRotate() and RightShift() have their own productions
-		if(node.jjtGetNumChildren()  == 2 )			
-			t2 = node.jjtGetChild(1).getType();
-		else
-			t2 = node.jjtGetChild(2).getType();
+	public void visitShiftRotate( SimpleNode node ) throws ShadowException
+	{			
+		Type result = node.jjtGetChild(0).getType();
+			
+		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one, short => int => long is possible
+		{
+			Node child = node.jjtGetChild(i); 
+			if( !(child  instanceof ASTRightShift) && !(child instanceof ASTRightRotate)  ) //RightRotate() and RightShift() have their own productions
+			{					
+				Type current = child.getType();										
 				
-		if(!t1.isIntegral() ) {
-			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t1 + ", but integral type required for shift and rotate operations");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		if(!t2.isIntegral() ) {
-			addError(node.jjtGetChild(2), Error.INVL_TYP, "Found type " + t2 + ", but integral type required for shift and rotate operations");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		node.setType(t1);	// assume that result has the same type as the first argument
-		
-		return WalkType.PRE_CHILDREN;
+				if( current.isIntegral() && result.isIntegral() )
+				{							
+					if( result.isSubtype( current ))  //upgrades type to broader type (e.g. int goes to long)
+						result = current;
+				}
+				else		
+				{
+					addError(child, Error.INVL_TYP, "Shift and rotate operations not defined on types " + result + " and " + current);
+					return;
+				}
+			}				
+		}				
+		node.setType(result); //propagates type up if only one child	
 	}
 	
 	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		return visitShiftRotate( node );
+		visitShiftRotate( node );
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTRotateExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		return visitShiftRotate( node );
-	}
-	
-	public Object visitArithmetic(SimpleNode node) throws ShadowException {
-		// get the two types
-		Type t1 = node.jjtGetChild(0).getType();
-		Type t2 = node.jjtGetChild(1).getType();
-		
-		//
-		// TODO: There can be MORE than 2 types!!!!
-		//
-				
-		if(!t1.isNumerical()) {
-			addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but numerical type required for arithmetic operations");
-			node.setType(t1);	// 100% fake this so we can keep moving
-			return WalkType.NO_CHILDREN;
-		}
-		
-		if(!t2.isNumerical()) {
-			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but numerical type required for arithmetic operations");
-			node.setType(t1);	// 100% fake this so we can keep moving
-			return WalkType.NO_CHILDREN;
-		}
-		
-		if(!t1.equals(t2)) {
-			addError(node, Error.TYPE_MIS, "Type " + t1 + " does not match " + t2 + " (strict typing)");
-			node.setType(t1);	// 100% fake this so we can keep moving
-			return WalkType.NO_CHILDREN;
-		}
-		
-		node.setType(t1); // for now assume that result has the same type as the first argument
-		
+		visitShiftRotate( node );
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		Type t1 = node.jjtGetChild(0).getType();
-		Type t2 = node.jjtGetChild(1).getType();
-		
-		// see if we're dealing with strings or not
-		if(t1.isString() && t2.isString()) {
-			node.setType(t1);
-			return WalkType.POST_CHILDREN;
+	public void visitArithmetic(SimpleNode node) throws ShadowException 
+	{
+		Type result = node.jjtGetChild(0).getType();			
+	
+		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
+		{
+			Type current = node.jjtGetChild(i).getType();
+			
+			if( result.isString() || current.isString() )
+			{
+				if( node.getImage().charAt(i - 1) != '+' )
+				{
+					addError(node.jjtGetChild(0), Error.INVL_TYP, "Cannot apply operator " + node.getImage().charAt(i - 1) + " to String type");
+					return;
+				}
+				else
+					result = Type.STRING;
+			}
+			else if( result.isNumerical() && current.isNumerical() )
+			{
+				if( result.isSubtype( current ))  //upgrades type to broader type (e.g. int goes to double)
+					result = current;
+			}
+			else		
+			{
+				addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot apply arithmetic operations to " + result + " and " + current);
+				return;						
+			}				
 		}
-		else	// normal numeric addition
-			return visitArithmetic( node );
+			
+		node.setType(result); //propagates type up if only one child
+	}
+	
+	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;		
+	
+		visitArithmetic( node );		
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit)
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		return visitArithmetic( node );
+		visitArithmetic( node );
+		return WalkType.POST_CHILDREN;
 	}
 		
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException {
-		if(!(Boolean)secondVisit)
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
-		
-		if(node.jjtGetNumChildren() != 1)
-		{
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
-		}
 				
 		Type t = node.jjtGetChild(0).getType();
 		String symbol = node.getImage();
 		
-		if((symbol.startsWith("+") || symbol.startsWith("-")) && !t.isNumerical()) {
-				addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
-				return WalkType.NO_CHILDREN;
+		if( (symbol.equals("-") || symbol.equals("+")) && !t.isNumerical()) 
+		{
+			addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
+			return WalkType.POST_CHILDREN;
 		}
 		
 		if(symbol.startsWith("-"))
@@ -520,33 +498,34 @@ public class ClassChecker extends BaseChecker {
 	}
 		
 	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException {
-		if(node.jjtGetNumChildren() != 1) {
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
-		}
-				
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
 		Type t = node.jjtGetChild(0).getType();
 		
 		if(node.getImage().startsWith("~") && !t.isIntegral()) {
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but integral type required for bitwise operations");
-				return WalkType.NO_CHILDREN;
+				return WalkType.POST_CHILDREN;
 		}
 		
 		if(node.getImage().startsWith("!") && !t.equals(Type.BOOLEAN)) {
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but boolean type required for logical operations");
-				return WalkType.NO_CHILDREN;
+				return WalkType.POST_CHILDREN;
 		}
 		
 		node.setType(t);
 		
-		return WalkType.PRE_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 	
 	
 	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException {
-		if(node.jjtGetNumChildren() == 1) {
-			Type t = node.jjtGetChild(0).getType();
-			node.setType(t);
+		if( !secondVisit )
+			return WalkType.POST_CHILDREN;
+		
+		if(node.jjtGetNumChildren() == 1) 
+		{			
+			node.setType(node.jjtGetChild(0).getType()); //propagate type up
 		}
 		else if(node.jjtGetNumChildren() == 3) {			
 			Type t1 = node.jjtGetChild(0).getType();
@@ -570,101 +549,118 @@ public class ClassChecker extends BaseChecker {
 		else {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
-		}
-		
+		}		
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visitConditional(SimpleNode node ) throws ShadowException {	
-		if(node.jjtGetNumChildren() != 2) {
+	public void visitConditional(SimpleNode node ) throws ShadowException {
+		if(node.jjtGetNumChildren() == 1) {
+			node.setType( node.jjtGetChild(0).getType() ); //propagate type up
+		}
+		else if(node.jjtGetNumChildren() == 2) {
+			
+			// get the two types
+			Type t1 = node.jjtGetChild(0).getType();
+			Type t2 = node.jjtGetChild(1).getType();
+			
+			if(!t1.equals(Type.BOOLEAN) ) {
+				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but boolean type required for conditional operations");
+				//node.setType(Type.BOOLEAN);	// 100% fake to keep things going
+				return;
+			}
+			
+			if(!t2.equals(Type.BOOLEAN) ) {
+				addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but boolean type required for conditional operations");
+				//node.setType(Type.BOOLEAN);	// 100% fake to keep things going
+				return;
+			}
+			
+			node.setType(Type.BOOLEAN);			
+		}
+		else
+		{
 			addError(node, Error.TYPE_MIS, "Too many arguments");
-			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-			return WalkType.NO_CHILDREN;
+			//node.setType(Type.BOOLEAN);	// 100% fake to keep things going
 		}
-		
-		// get the two types
-		Type t1 = node.jjtGetChild(0).getType();
-		Type t2 = node.jjtGetChild(1).getType();
-		
-		if(!t1.equals(Type.BOOLEAN) ) {
-			addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but boolean type required for conditional operations");
-			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-			return WalkType.NO_CHILDREN;
-		}
-		
-		if(!t2.equals(Type.BOOLEAN) ) {
-			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but boolean type required for conditional operations");
-			node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-			return WalkType.NO_CHILDREN;
-		}
-		
-		node.setType(Type.BOOLEAN);
-		
-		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		return visitConditional( node );
+		visitConditional( node );
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		return visitConditional( node );
+		visitConditional( node );
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		return visitConditional( node );
+		visitConditional( node );
+		return WalkType.POST_CHILDREN;
 	}	
 
-	public Object visitBitwise(SimpleNode node ) throws ShadowException {	
-		if(node.jjtGetNumChildren() != 2) {
+	public void visitBitwise(SimpleNode node ) throws ShadowException {
+		if(node.jjtGetNumChildren() == 1) {
+			node.setType( node.jjtGetChild(0).getType() ); //propagate type up
+		}
+		else if(node.jjtGetNumChildren() == 2) {
+			// get the two types
+			Type t1 = node.jjtGetChild(0).getType();
+			Type t2 = node.jjtGetChild(1).getType();
+			
+			if(!t1.isIntegral() ) {
+				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but integral type required for shift and rotate operations");
+				return;
+			}
+			
+			if(!t2.isIntegral() ) {
+				addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but integral type required for shift and rotate operations");
+				return;
+			}
+		
+			if(!t1.equals(t2)) {
+				addError(node, Error.TYPE_MIS, "Type " + t1 + " does not match " + t2 + " (strict typing)");
+				return;
+			}
+			
+			node.setType(t1);	// for assume that result has the same type as the first argument						
+		}	
+		else
 			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		// get the two types
-		Type t1 = node.jjtGetChild(0).getType();
-		Type t2 = node.jjtGetChild(1).getType();
-		
-		if(!t1.isIntegral() ) {
-			addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but integral type required for shift and rotate operations");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		if(!t2.isIntegral() ) {
-			addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but integral type required for shift and rotate operations");
-			return WalkType.NO_CHILDREN;
-		}
-	
-		if(!t1.equals(t2)) {
-			addError(node, Error.TYPE_MIS, "Type " + t1 + " does not match " + t2 + " (strict typing)");
-			return WalkType.NO_CHILDREN;
-		}
-		
-		node.setType(t1);	// for assume that result has the same type as the first argument				
-		
-		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit) throws ShadowException {
-		return visitBitwise( node );
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+				
+		visitBitwise( node );
+		return WalkType.POST_CHILDREN;
 	}	
 	
 	public Object visit(ASTBitwiseExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
-		return visitBitwise( node );
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+				
+		visitBitwise( node );
+		return WalkType.POST_CHILDREN;
 	}	
 	
 	public Object visit(ASTBitwiseAndExpression node, Boolean secondVisit) throws ShadowException {
-		return visitBitwise( node );
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+				
+		visitBitwise( node );
+		return WalkType.POST_CHILDREN;
 	}	
 
 	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
@@ -868,8 +864,6 @@ public class ClassChecker extends BaseChecker {
 					addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
 					return WalkType.NO_CHILDREN;
 				}
-				
-				//node.setType(t1);	// no need to set a statement's type
 			}
 		}
 		
@@ -1339,7 +1333,9 @@ public class ClassChecker extends BaseChecker {
 	// Everything below here are just visitors to push up the type
 	//
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
-	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
+		return pushUpType(node, secondVisit); 
+	}
 	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 
 	
