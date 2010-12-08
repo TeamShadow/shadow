@@ -110,7 +110,7 @@ public class SimpleNode implements Node {
 	}
 	
 	public Type getType() {
-		return type;
+		return type;		
 	}
 	
 	public void setType(Type type) {

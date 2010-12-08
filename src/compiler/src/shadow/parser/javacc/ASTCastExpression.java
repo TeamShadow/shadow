@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTCastExpression extends SimpleNode {
+class ASTCastExpression extends ModifiedNode {
   public ASTCastExpression(int id) {
     super(id);
   }

@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTConditionalExpression extends SimpleNode {
+class ASTConditionalExpression extends ModifiedNode {
   public ASTConditionalExpression(int id) {
     super(id);
   }

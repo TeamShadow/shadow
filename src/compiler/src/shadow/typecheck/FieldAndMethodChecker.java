@@ -79,7 +79,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 		}
 		
 		node.setType(type);		// set the type to the node
-		type.setASTNode(node);	// set the node to the type
+		
+		//type.setASTNode(node);	// set the node to the type  //NO! Set the node to the field, not the type
 		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
@@ -87,15 +88,16 @@ public class FieldAndMethodChecker extends BaseChecker {
 			
 			// go through inserting all the idents
 			for(int i=1; i < node.jjtGetNumChildren(); ++i) {
-				String symbol = node.jjtGetChild(i).jjtGetChild(0).getImage();
+				Node child = node.jjtGetChild(i);
+				String symbol = child.jjtGetChild(0).getImage();
 				
 				// make sure we don't already have this symbol
 				if(currentClass.containsField(symbol)) {
-					addError(node.jjtGetChild(i).jjtGetChild(0), Error.MULT_SYM, symbol);
+					addError(child.jjtGetChild(0), Error.MULT_SYM, symbol);
 					return WalkType.NO_CHILDREN;
 				}
 				
-				currentClass.addField(symbol, type);
+				currentClass.addField(symbol, child);
 			}
 		}
 		else

@@ -38,17 +38,17 @@ public class TACBuilder extends AbstractASTVisitor {
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
 		TACClass curClass = new TACClass(node.getImage());	// the symbol is prob stored elsewhere in a complete form
 		ClassType type = (ClassType)node.getType();
-		Map<String, Type> fields = type.getFields();
+		Map<String, Node> fields = type.getFields();
 		TACNode initEntry = null;
 		TACNode initExit = null;
 		
 		// go through and make all of the fields
-		for(Map.Entry<String, Type> f:fields.entrySet()) {
+		for(Map.Entry<String, Node> f:fields.entrySet()) {
 			ASTUtils.DEBUG("FIELD: " + f.getKey());
-			curClass.addField(new TACVariable(f.getKey(), f.getValue()));
+			curClass.addField(new TACVariable(f.getKey(), f.getValue().getType()));
 			
 			// we need to create an init method for any fields
-			AST2TAC a2t = new AST2TAC(f.getValue().getASTNode());
+			AST2TAC a2t = new AST2TAC(f.getValue() );
 			
 			a2t.convert();
 			

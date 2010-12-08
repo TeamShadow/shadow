@@ -309,7 +309,7 @@ public class ClassChecker extends BaseChecker {
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
 			if(currentClass.containsField(name)) {
-				node.setType(currentClass.getField(name));
+				node.setType(currentClass.getField(name).getType());
 				return WalkType.PRE_CHILDREN;
 			}			
 		
@@ -1100,7 +1100,7 @@ public class ClassChecker extends BaseChecker {
 					ClassType parentType = ((ClassType)currentType).getExtendType();
 					
 					if( parentType.containsField(node.getImage() ))					
-						node.setType(parentType.getField(node.getImage()));
+						node.setType(parentType.getField(node.getImage()).getType());
 					else
 					{
 						List<MethodSignature> methods = parentType.getMethods(node.getImage());
@@ -1177,7 +1177,7 @@ public class ClassChecker extends BaseChecker {
 					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefix;
 					if( currentClass.containsField(node.getImage() ) )
 					{
-						node.setType( currentClass.getField(node.getImage()));
+						node.setType( currentClass.getField(node.getImage()).getType());
 					}
 					else
 					{

@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTLiteral extends SimpleNode {
+class ASTLiteral extends ModifiedNode {
   public ASTLiteral(int id) {
     super(id);
   }

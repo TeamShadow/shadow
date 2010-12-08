@@ -66,7 +66,28 @@ public class ShadowParser
      //public static final int VOLATILE     = 0x0200;
      //public static final int STRICTFP     = 0x0400;
      public static final int WEAK           = 0x0800;
-     public static final int CONST          = 0x1000;
+     public static final int IMMUTABLE        = 0x1000;
+
+
+     /* Type Modifiers:
+     	public		(only for inner classes)
+     	private		(only for inner classes)
+     	protected 	(only for inner classes)
+		final 		(can't be extended)
+		abstract		
+		immutable	(final, abstract, and immutable are mutually exclusive)
+     */
+
+
+     /* Declaration Modifiers:
+		public		(only for members)
+     	private		(only for members)
+     	protected 	(only for members)		
+		final 		(can't be changed)
+		static
+		weak		(reference will not stop GC)		
+     */
+     
 
      /** A set of accessors that indicate whether the specified modifier
          is in the set. */
@@ -85,7 +106,7 @@ public class ShadowParser
      public boolean isVolatile(int modifiers) { return (modifiers & VOLATILE) != 0; }
 */
      public boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
-     public boolean isConst(int modifiers) { return (modifiers & CONST) != 0; } 
+     public boolean isImmutable(int modifiers) { return (modifiers & IMMUTABLE) != 0; } 
 
      /**
       * Removes the given modifier.
@@ -208,7 +229,6 @@ TOKEN :
 | < CATCH: "catch" >
 | < CLASS: "class" >
 | < CODE: "code" >
-| < CONST: "const" >
 | < CONSTRUCTOR: "constructor" >
 | < CONTINUE: "continue" >
 | < _DEFAULT: "default" >
@@ -230,6 +250,7 @@ TOKEN :
 //| < GOTO: "goto" >
 | < GET: "get" >
 | < IF: "if" >
+| < IMMUTABLE: "immutable" >
 | < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
 | < IN: "in" >
@@ -565,7 +586,7 @@ int Modifiers():
 //  | "volatile" { modifiers |= ModifierSet.VOLATILE; }
 //  | "strictfp" { modifiers |= ModifierSet.STRICTFP; }
   | "weak" { modifiers |= ModifierSet.WEAK; }
-  |	"const"{ modifiers |= ModifierSet.CONST; }  | Annotation()
+  |	"immutable"{ modifiers |= ModifierSet.IMMUTABLE; }  | Annotation()
   )
  )*
 

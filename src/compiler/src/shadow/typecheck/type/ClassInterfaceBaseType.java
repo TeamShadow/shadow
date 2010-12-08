@@ -5,10 +5,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import shadow.parser.javacc.Node;
 import shadow.typecheck.MethodSignature;
 
 public abstract class ClassInterfaceBaseType extends Type {
-	protected HashMap<String, Type> fieldTable;
+	protected HashMap<String, Node> fieldTable;
 	protected HashMap<String, List<MethodSignature> > methodTable;
 	protected HashMap<String, Type> innerClasses;
 	protected String packageName; //package
@@ -27,7 +28,7 @@ public abstract class ClassInterfaceBaseType extends Type {
 	
 	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer, Kind kind ) {
 		super( typeName, modifiers, outer, kind );
-		fieldTable = new HashMap<String, Type>();
+		fieldTable = new HashMap<String, Node>();
 		methodTable = new HashMap<String, List<MethodSignature>>();
 		innerClasses = new HashMap<String, Type>();
 		
@@ -50,15 +51,15 @@ public abstract class ClassInterfaceBaseType extends Type {
 		return innerClasses.get(className);
 	}
 	
-	public void addField(String fieldName, Type type) {
-		fieldTable.put(fieldName, type);
+	public void addField(String fieldName, Node node) {
+		fieldTable.put(fieldName, node);
 	}
 	
-	public Type getField(String fieldName) {
+	public Node getField(String fieldName) {
 		return fieldTable.get(fieldName);
 	}
 	
-	public Map<String, Type> getFields() {
+	public Map<String, Node> getFields() {
 		return fieldTable;
 	}
 	

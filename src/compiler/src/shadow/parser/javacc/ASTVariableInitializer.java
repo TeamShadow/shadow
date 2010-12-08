@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTVariableInitializer extends SimpleNode {
+class ASTVariableInitializer extends ModifiedNode {
   public ASTVariableInitializer(int id) {
     super(id);
   }

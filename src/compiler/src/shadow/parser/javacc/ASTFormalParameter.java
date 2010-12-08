@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTFormalParameter extends SimpleNode {
+class ASTFormalParameter extends ModifiedNode {
   public ASTFormalParameter(int id) {
     super(id);
   }

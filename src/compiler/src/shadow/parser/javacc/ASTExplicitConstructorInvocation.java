@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTExplicitConstructorInvocation extends SimpleNode {
+class ASTExplicitConstructorInvocation extends ModifiedNode {
   public ASTExplicitConstructorInvocation(int id) {
     super(id);
   }

@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTIntegerLiteral extends SimpleNode {
+class ASTIntegerLiteral extends ModifiedNode {
   public ASTIntegerLiteral(int id) {
     super(id);
   }

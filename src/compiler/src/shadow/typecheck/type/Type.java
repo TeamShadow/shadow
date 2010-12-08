@@ -1,16 +1,14 @@
 package shadow.typecheck.type;
 
-import shadow.parser.javacc.Node;
 
 
 public class Type {
 	//types should not change after construction
-	protected final String typeName;	/** A string the represents the type */
+	protected final String typeName;	/** A string that represents the type */
 	private final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
 	private final Type outer; //outer class	
-	private Kind kind;
-	//private int arrayDimension; //array dimensions handled in ArrayType
-	private Node astNode;	/** This is to link back to the AST, usually not used */
+	private final Kind kind;
+	//private Node astNode;	/** This is to link back to the AST, usually not used */
 	
 	public static enum Kind { ARRAY, CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, SEQUENCE, UNBOUND_METHOD, VIEW};
 	
@@ -28,6 +26,7 @@ public class Type {
 	public static final ClassType UINT = new ClassType( "uint" );
 	public static final ClassType ULONG = new ClassType( "ulong" );
 	public static final ClassType USHORT = new ClassType( "ushort" );
+	
 	public static final ClassType CLASS = new ClassType( "Class" );  //meta class for holding .class variables
 	
 	public static final EnumType ENUM = new EnumType( "Enum", 0, null, OBJECT );
@@ -63,7 +62,8 @@ public class Type {
 	public int getModifiers() {
 		return modifiers;
 	}
-	
+
+	/*
 	public void setASTNode(Node node) {
 		this.astNode = node;
 	}
@@ -71,6 +71,7 @@ public class Type {
 	public Node getASTNode() {
 		return astNode;
 	}
+	*/
 	
 	public String toString() {
 //		if(arrayDimension == 0)
@@ -233,14 +234,16 @@ public class Type {
 		return outer;
 	}
 	
+	/*
 	public void setKind(Kind kind ) {
 		  this.kind = kind;
 	  }
-	  
+	  	*/
+	
 	  public Kind getKind() {
 		  return this.kind;
 	  }
-	
+
 	
 	/**
 	 * Given an unsigned type, returns the signed version or the same type otherwise.
@@ -266,18 +269,7 @@ public class Type {
 	//for math
 	public boolean isNumerical()
 	{
-		return
-		this.equals(BYTE) ||
-		this.equals(CODE) ||	// ??? REALLY ???	
-		this.equals(SHORT) ||
-		this.equals(INT) ||
-		this.equals(LONG) ||	  
-		this.equals(FLOAT) ||
-		this.equals(DOUBLE) ||		
-		this.equals(UBYTE) ||
-		this.equals(UINT) ||
-		this.equals(ULONG) ||
-		this.equals(USHORT);
+		return isPrimitive() && !this.equals(BOOLEAN); //includes CODE, is that right?
 	}
 	
 	//for cases where integers are required (bitwise operations, array bounds, switch statements, etc.)
@@ -299,21 +291,10 @@ public class Type {
 	public boolean isBuiltIn()
 	{
 		return
-		this.equals(OBJECT) ||
-		this.equals(BOOLEAN) ||
-		this.equals(BYTE) ||
-		this.equals(CODE) ||	
-		this.equals(SHORT) ||
-		this.equals(INT) ||
-		this.equals(LONG) ||	  
-		this.equals(FLOAT) ||
-		this.equals(DOUBLE) ||
-		this.equals(STRING) ||
-		this.equals(UBYTE) ||
-		this.equals(UINT) ||
-		this.equals(ULONG) ||
-		this.equals(USHORT) ||
-		
+		isPrimitive() ||
+		this.equals(CLASS) ||
+		this.equals(OBJECT) ||		
+		this.equals(STRING) ||		
 		this.equals(ENUM) ||
 		this.equals(ERROR) ||
 		this.equals(EXCEPTION);
@@ -322,6 +303,7 @@ public class Type {
 	public boolean isPrimitive()
 	{
 		return
+		this.equals(BOOLEAN) ||
 		this.equals(BYTE) ||
 		this.equals(CODE) ||	
 		this.equals(SHORT) ||

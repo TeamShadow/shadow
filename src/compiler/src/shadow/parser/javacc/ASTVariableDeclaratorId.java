@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTVariableDeclaratorId extends SimpleNode {
+class ASTVariableDeclaratorId extends ModifiedNode {
   public ASTVariableDeclaratorId(int id) {
     super(id);
   }
