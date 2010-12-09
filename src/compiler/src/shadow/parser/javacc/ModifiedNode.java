@@ -27,6 +27,11 @@ public class ModifiedNode extends SimpleNode
 		this.modifiers = modifiers;
 	}	
 	
+	public void addModifier( int mod )
+	{
+		modifiers |= mod;
+	}
+	
 	public void setEnclosingType(Type type)
 	{
 		enclosingType = type;

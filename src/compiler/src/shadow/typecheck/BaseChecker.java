@@ -6,8 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import shadow.AST.ASTUtils;
-import shadow.AST.AbstractASTVisitor;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.AST.AbstractASTVisitor;
+import shadow.parser.javacc.ModifiedNode;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.type.Type;
 
@@ -66,6 +67,36 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected Object pushUpType(Node node, Boolean secondVisit) {
 		return pushUpType(node, secondVisit, 0);
 	}
+	
+	protected Object pushUpType(ModifiedNode node, Boolean secondVisit) {
+		return pushUpType(node, secondVisit, 0);
+	}
+	
+	protected Object pushUpType(ModifiedNode node, Boolean secondVisit, int child) {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		// simply push the type up the tree
+		Node childNode = node.jjtGetChild(child); 
+		node.setType(childNode.getType());
+		if( childNode instanceof ModifiedNode )
+			node.setModifiers( ((ModifiedNode)childNode).getModifiers());
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	protected void pushUpModifiers( ModifiedNode node ) //only pushes up modifiers if there is a single child
+	{
+		if( node.jjtGetNumChildren() == 1 )
+		{
+			Node child = node.jjtGetChild(0);
+			if( child instanceof ModifiedNode )			
+				node.setModifiers( ((ModifiedNode)child).getModifiers()  );
+		}
+	}
+	
+	
+	
 
 	/**
 	 * Adds an error message to the list errors we keep until the end.

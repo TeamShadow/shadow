@@ -63,8 +63,10 @@ import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
+import shadow.parser.javacc.ModifiedNode;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
@@ -341,6 +343,7 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;		
 
 		Type result = node.jjtGetChild(0).getType();
+		node.addModifier( ModifierSet.UNASSIGNABLE );
 					
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
 		{
@@ -351,10 +354,12 @@ public class ClassChecker extends BaseChecker {
 				return WalkType.POST_CHILDREN;
 			}	
 			
-			result = Type.BOOLEAN;  //boolean after one comparison				
+			result = Type.BOOLEAN;  //boolean after one comparison
+		
 		}
 		
 		node.setType(result); //propagates type up if only one child
+		pushUpModifiers(node); //can overwrite UNASSIGNABLE
 	
 		
 		return WalkType.POST_CHILDREN;	
@@ -366,6 +371,7 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 
 		Type result = node.jjtGetChild(0).getType();
+		node.addModifier( ModifierSet.UNASSIGNABLE );
 					
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
 		{
@@ -376,22 +382,25 @@ public class ClassChecker extends BaseChecker {
 				return WalkType.POST_CHILDREN;
 			}	
 			
-			result = Type.BOOLEAN;  //boolean after one comparison				
+			result = Type.BOOLEAN;  //boolean after one comparison			
 		}
 		
 		node.setType(result); //propagates type up if only one child
+		pushUpModifiers(node); //can overwrite UNASSIGNABLE
 			
 		
 		return WalkType.POST_CHILDREN;		
 	}
 	
-	public void visitShiftRotate( SimpleNode node ) throws ShadowException
+	public void visitShiftRotate( ModifiedNode node ) throws ShadowException
 	{			
 		Type result = node.jjtGetChild(0).getType();
+		node.addModifier(ModifierSet.UNASSIGNABLE);
 			
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one, short => int => long is possible
 		{
 			Node child = node.jjtGetChild(i); 
+	
 			if( !(child  instanceof ASTRightShift) && !(child instanceof ASTRightRotate)  ) //RightRotate() and RightShift() have their own productions
 			{					
 				Type current = child.getType();										
@@ -409,6 +418,7 @@ public class ClassChecker extends BaseChecker {
 			}				
 		}				
 		node.setType(result); //propagates type up if only one child	
+		pushUpModifiers(node);  //can overwrite UNASSIGNABLE
 	}
 	
 	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException {
@@ -427,13 +437,15 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public void visitArithmetic(SimpleNode node) throws ShadowException 
+	public void visitArithmetic(ModifiedNode node) throws ShadowException 
 	{
-		Type result = node.jjtGetChild(0).getType();			
+		Type result = node.jjtGetChild(0).getType();
+		node.addModifier(ModifierSet.UNASSIGNABLE);
 	
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
 		{
 			Type current = node.jjtGetChild(i).getType();
+		
 			
 			if( result.isString() || current.isString() )
 			{
@@ -458,6 +470,7 @@ public class ClassChecker extends BaseChecker {
 		}
 			
 		node.setType(result); //propagates type up if only one child
+		pushUpModifiers(node); //can overwrite UNASSIGNABLE
 	}
 	
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
@@ -483,11 +496,18 @@ public class ClassChecker extends BaseChecker {
 		Type t = node.jjtGetChild(0).getType();
 		String symbol = node.getImage();
 		
-		if( (symbol.equals("-") || symbol.equals("+")) && !t.isNumerical()) 
+		if( (symbol.equals("-") || symbol.equals("+")) ) 
 		{
-			addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
-			return WalkType.POST_CHILDREN;
+			if( !t.isNumerical() )
+			{
+				addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
+				return WalkType.POST_CHILDREN;
+			}
+			else
+				node.addModifier(ModifierSet.UNASSIGNABLE);
 		}
+		else
+			pushUpModifiers( node );
 		
 		if(symbol.startsWith("-"))
 			node.setType(Type.makeSigned((ClassType)t));
@@ -503,15 +523,28 @@ public class ClassChecker extends BaseChecker {
 		
 		Type t = node.jjtGetChild(0).getType();
 		
-		if(node.getImage().startsWith("~") && !t.isIntegral()) {
+		if(node.getImage().startsWith("~") )
+		{
+			if( !t.isIntegral() )
+			{
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but integral type required for bitwise operations");
 				return WalkType.POST_CHILDREN;
-		}
-		
-		if(node.getImage().startsWith("!") && !t.equals(Type.BOOLEAN)) {
+			}
+			else
+				node.addModifier(ModifierSet.UNASSIGNABLE);
+		}		
+		else if(node.getImage().startsWith("!") )
+		{
+			if( !t.equals(Type.BOOLEAN)) 
+			{
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but boolean type required for logical operations");
 				return WalkType.POST_CHILDREN;
+			}
+			else
+				node.addModifier(ModifierSet.UNASSIGNABLE);
 		}
+		else
+			pushUpModifiers( node );
 		
 		node.setType(t);
 		
@@ -526,6 +559,7 @@ public class ClassChecker extends BaseChecker {
 		if(node.jjtGetNumChildren() == 1) 
 		{			
 			node.setType(node.jjtGetChild(0).getType()); //propagate type up
+			pushUpModifiers( node );
 		}
 		else if(node.jjtGetNumChildren() == 3) {			
 			Type t1 = node.jjtGetChild(0).getType();
@@ -545,6 +579,8 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.TYPE_MIS, "Type " + t2 + " must match " + t3 + " in ternary operator");
 				return WalkType.NO_CHILDREN;
 			}
+			
+			node.addModifier(ModifierSet.UNASSIGNABLE);
 		}
 		else {
 			addError(node, Error.TYPE_MIS, "Too many arguments");
@@ -554,9 +590,10 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public void visitConditional(SimpleNode node ) throws ShadowException {
+	public void visitConditional(ModifiedNode node ) throws ShadowException {
 		if(node.jjtGetNumChildren() == 1) {
 			node.setType( node.jjtGetChild(0).getType() ); //propagate type up
+			pushUpModifiers( node );
 		}
 		else if(node.jjtGetNumChildren() == 2) {
 			
@@ -576,7 +613,8 @@ public class ClassChecker extends BaseChecker {
 				return;
 			}
 			
-			node.setType(Type.BOOLEAN);			
+			node.setType(Type.BOOLEAN);
+			node.addModifier(ModifierSet.UNASSIGNABLE);
 		}
 		else
 		{
@@ -609,9 +647,11 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}	
 
-	public void visitBitwise(SimpleNode node ) throws ShadowException {
+	//FIX THIS!  Bitwise operations can be over more than 2 operands
+	public void visitBitwise(ModifiedNode node ) throws ShadowException {
 		if(node.jjtGetNumChildren() == 1) {
 			node.setType( node.jjtGetChild(0).getType() ); //propagate type up
+			pushUpModifiers( node );
 		}
 		else if(node.jjtGetNumChildren() == 2) {
 			// get the two types
@@ -632,8 +672,9 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.TYPE_MIS, "Type " + t1 + " does not match " + t2 + " (strict typing)");
 				return;
 			}
-			
-			node.setType(t1);	// for assume that result has the same type as the first argument						
+								
+			node.setType(t1);	// assume that result has the same type as the first argument	
+			node.addModifier(ModifierSet.UNASSIGNABLE);
 		}	
 		else
 			addError(node, Error.TYPE_MIS, "Too many arguments");
@@ -669,14 +710,26 @@ public class ClassChecker extends BaseChecker {
 		
 		// if we only have 1 child, we just get the type from that child
 		if(node.jjtGetNumChildren() == 1)
-			pushUpType(node, secondVisit);
+			pushUpType(node, secondVisit); //takes care of modifiers
 		
 		// we have 3 children so it's an assignment
 		else if(node.jjtGetNumChildren() == 3) {
 			// get the two types, we have to go up to the parent to get them
-			Type t1 = node.jjtGetChild(0).getType();
+			Node child1 = node.jjtGetChild(0);
+			Type t1 = child1.getType();
+			if( child1 instanceof ModifiedNode  )
+			{
+				if( ModifierSet.isUnassignable( ((ModifiedNode)child1).getModifiers() ) )
+				{
+					addError(child1, Error.TYPE_MIS, child1 + "cannot be assigned a value");
+					return WalkType.NO_CHILDREN;
+				}
+			}			
+			
 			ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
-			Type t2 = node.jjtGetChild(2).getType();
+			
+			Node child2 = node.jjtGetChild(2);
+			Type t2 = child2.getType();
 			
 			// SHOULD DO SOMETHING WITH THIS!!!
 			AssignmentType assType = op.getAssignmentType();
@@ -687,11 +740,13 @@ public class ClassChecker extends BaseChecker {
 			
 			// TODO: Add in all the types that we can compare here
 			if( !t2.isSubtype(t1) ) {
-				addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
+				addError(child1, Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
 				return WalkType.NO_CHILDREN;
 			}
 					
 			node.setType(t1);	// set this node's type
+			if( child2 instanceof ModifiedNode )
+			node.setModifiers( ((ModifiedNode)child2).getModifiers() ); //is this meaningful?
 		}
 		
 		else {
@@ -714,7 +769,7 @@ public class ClassChecker extends BaseChecker {
 		{
 			//array dims and inits
 			List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(1))).getArrayDimensions();
-			node.setType(new ArrayType(child.getType(), dimensions));			 
+			node.setType(new ArrayType(child.getType(), dimensions));
 		}		
 		else if( child instanceof ASTClassOrInterfaceType ) //object allocation 
 		{
@@ -1089,7 +1144,10 @@ public class ClassChecker extends BaseChecker {
 				if( currentType instanceof InterfaceType )
 					addError(node, Error.INVL_TYP, "\"this\" reference invalid for interfaces");
 				else
+				{
 					node.setType(currentType);
+					node.addModifier(ModifierSet.UNASSIGNABLE);
+				}
 			}
 			else //super case
 			{
@@ -1124,8 +1182,10 @@ public class ClassChecker extends BaseChecker {
 					node.setType( Type.CLASS );
 			}
 			else
+			{
 				node.setType( child.getType() ); 	//literal, conditionalexpression, allocation expression, name
-													//ack, methods will be a problem
+				pushUpModifiers( node ); 			//ack, methods will be a problem
+			}
 		}
 		
 		curPrefix.set(0, node.getType()); //so that the suffix can figure out where it's at

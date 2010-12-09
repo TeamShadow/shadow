@@ -66,7 +66,8 @@ public class ShadowParser
      //public static final int VOLATILE     = 0x0200;
      //public static final int STRICTFP     = 0x0400;
      public static final int WEAK           = 0x0800;
-     public static final int IMMUTABLE        = 0x1000;
+     public static final int IMMUTABLE      = 0x1000;
+     public static final int UNASSIGNABLE   = 0x2000;
 
 
      /* Type Modifiers:
@@ -80,24 +81,25 @@ public class ShadowParser
 
 
      /* Declaration Modifiers:
-		public		(only for members)
-     	private		(only for members)
-     	protected 	(only for members)		
-		final 		(can't be changed)
+		public			(only for members)
+     	private			(only for members)
+     	protected 		(only for members)		
+		final 			(can't be changed)
 		static
-		weak		(reference will not stop GC)		
+		weak			(reference will not stop GC)
+		unnassignable 	(used for literals and all other non-Lvalues, similar to final, but kept separate for error message reasons)		
      */
      
 
      /** A set of accessors that indicate whether the specified modifier
          is in the set. */
 
-     public boolean isPublic(int modifiers) { return (modifiers & PUBLIC) != 0; }
-     public boolean isProtected(int modifiers) { return (modifiers & PROTECTED) != 0; }
-     public boolean isPrivate(int modifiers) { return (modifiers & PRIVATE) != 0; }
-     public boolean isStatic(int modifiers) { return (modifiers & STATIC) != 0; }
-     public boolean isAbstract(int modifiers) { return (modifiers & ABSTRACT) != 0; }
-     public boolean isFinal(int modifiers) { return (modifiers & FINAL) != 0; }
+     public static boolean isPublic(int modifiers) { return (modifiers & PUBLIC) != 0; }
+     public static boolean isProtected(int modifiers) { return (modifiers & PROTECTED) != 0; }
+     public static boolean isPrivate(int modifiers) { return (modifiers & PRIVATE) != 0; }
+     public static boolean isStatic(int modifiers) { return (modifiers & STATIC) != 0; }
+     public static boolean isAbstract(int modifiers) { return (modifiers & ABSTRACT) != 0; }
+     public static boolean isFinal(int modifiers) { return (modifiers & FINAL) != 0; }
 
   /* public boolean isNative(int modifiers) { return (modifiers & NATIVE) != 0; }
      public boolean isStrictfp(int modifiers) { return (modifiers & STRICTFP) != 0; } 
@@ -105,13 +107,15 @@ public class ShadowParser
      public boolean isTransient(int modifiers) { return (modifiers & TRANSIENT) != 0; }
      public boolean isVolatile(int modifiers) { return (modifiers & VOLATILE) != 0; }
 */
-     public boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
-     public boolean isImmutable(int modifiers) { return (modifiers & IMMUTABLE) != 0; } 
+     public static boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
+     public static boolean isImmutable(int modifiers) { return (modifiers & IMMUTABLE) != 0; }
+     public static boolean isUnassignable(int modifiers) { return (modifiers & UNASSIGNABLE) != 0; }
 
      /**
       * Removes the given modifier.
       */
-     static int removeModifier(int modifiers, int mod) { return modifiers & ~mod; }
+     public static int removeModifier(int modifiers, int mod) { return modifiers & ~mod; }
+      public static int addModifier(int modifiers, int mod) { return modifiers | mod; }
    }
 
    private boolean debug = false;
@@ -1219,6 +1223,8 @@ void Literal() :
 	Token t;
 }
 {
+	{ jjtThis.setModifiers(ModifierSet.UNASSIGNABLE); }
+  (    
   t = <BYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.BYTE); }
 | t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.CODE); }
 | t = <SHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.SHORT); }
@@ -1232,7 +1238,7 @@ void Literal() :
 | t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.UINT); }
 | t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.ULONG); }
 | BooleanLiteral() { jjtThis.setType(Type.BOOLEAN); }
-| NullLiteral() { jjtThis.setType(Type.NULL); }
+| NullLiteral() { jjtThis.setType(Type.NULL); }  )
   
   //what about longs, shorts, floats, unsigned versions etc.?
  /* OLD:

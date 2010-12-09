@@ -1,13 +1,14 @@
 class Value
 {
-
+    public static main() => ()
+    {
+       5 = 10;
+    } 
+    
     public static blah(int a) => (int)
     {
         return a + 5;
     }
         
-    public static main() => ()
-    {
-        blah(4) = 10;
-    }   
+  
 } 
