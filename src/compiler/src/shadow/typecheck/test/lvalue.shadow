@@ -1,0 +1,17 @@
+class Value
+{
+    public static main() => ()
+    {
+       int x = 10;
+       x = 5;
+       //5 = 10; //uncomment to see lvalue checking
+       
+       //blah( 6 ) = x; //uncomment to see lvalue checking
+    } 
+    
+    public static blah(int a) => (int)
+    {
+        return a + 5;
+    }      
+  
+} 

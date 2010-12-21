@@ -63,7 +63,6 @@ import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
-import shadow.parser.javacc.ModifiedNode;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
@@ -276,33 +275,41 @@ public class ClassChecker extends BaseChecker {
 	/**
 	 * TODO: DOUBLE CHECK THIS... I'M NOT REALLY SURE WHAT TO DO HERE
 	 */
-	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException 
+	{
 		String name = node.getImage();
  		Type type = lookupType(name);
 
 		// first we check to see if this names a type
-		if(type != null) {
+		if(type != null)
+		{
 			node.setType(type);
 			return WalkType.PRE_CHILDREN;
 		}
 		
 		// now go through the scopes trying to find the variable
-		for(HashMap<String, Type> curSymTable:symbolTable) {
-			if(curSymTable.containsKey(name)) {
+		for(HashMap<String, Type> curSymTable:symbolTable)
+		{
+			if(curSymTable.containsKey(name))
+			{
 				type = curSymTable.get(name);
 				break;
 			}
 		}
 		
 		// found it in the scopes
-		if(type != null) {
+		if( type != null ) 
+		{
 			node.setType(type);
+			node.addModifier(ModifierSet.ASSIGNABLE);
 			return WalkType.PRE_CHILDREN;
 		}
 			
 		// now check the parameters of the method
-		if(curMethod != null && curMethod.containsParam(name)) {
+		if(curMethod != null && curMethod.containsParam(name))
+		{
 			node.setType(curMethod.getParameterType(name));
+			node.addModifier(ModifierSet.ASSIGNABLE);
 			return WalkType.PRE_CHILDREN;
 		}
 			
@@ -310,8 +317,10 @@ public class ClassChecker extends BaseChecker {
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
-			if(currentClass.containsField(name)) {
+			if(currentClass.containsField(name))
+			{
 				node.setType(currentClass.getField(name).getType());
+				node.addModifier(ModifierSet.ASSIGNABLE);
 				return WalkType.PRE_CHILDREN;
 			}			
 		
@@ -343,7 +352,6 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;		
 
 		Type result = node.jjtGetChild(0).getType();
-		node.addModifier( ModifierSet.UNASSIGNABLE );
 					
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
 		{
@@ -359,7 +367,7 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		node.setType(result); //propagates type up if only one child
-		pushUpModifiers(node); //can overwrite UNASSIGNABLE
+		pushUpModifiers(node); //can make ASSIGNABLE (if only one child)
 	
 		
 		return WalkType.POST_CHILDREN;	
@@ -371,7 +379,6 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 
 		Type result = node.jjtGetChild(0).getType();
-		node.addModifier( ModifierSet.UNASSIGNABLE );
 					
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
 		{
@@ -386,16 +393,15 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		node.setType(result); //propagates type up if only one child
-		pushUpModifiers(node); //can overwrite UNASSIGNABLE
+		pushUpModifiers(node); //can overwrite ASSIGNABLE (if only one child)
 			
 		
 		return WalkType.POST_CHILDREN;		
 	}
 	
-	public void visitShiftRotate( ModifiedNode node ) throws ShadowException
+	public void visitShiftRotate( SimpleNode node ) throws ShadowException
 	{			
 		Type result = node.jjtGetChild(0).getType();
-		node.addModifier(ModifierSet.UNASSIGNABLE);
 			
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one, short => int => long is possible
 		{
@@ -418,7 +424,7 @@ public class ClassChecker extends BaseChecker {
 			}				
 		}				
 		node.setType(result); //propagates type up if only one child	
-		pushUpModifiers(node);  //can overwrite UNASSIGNABLE
+		pushUpModifiers(node);  //can add ASSIGNABLE (if only one child)
 	}
 	
 	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException {
@@ -437,10 +443,9 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public void visitArithmetic(ModifiedNode node) throws ShadowException 
+	public void visitArithmetic(SimpleNode node) throws ShadowException 
 	{
 		Type result = node.jjtGetChild(0).getType();
-		node.addModifier(ModifierSet.UNASSIGNABLE);
 	
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
 		{
@@ -470,7 +475,7 @@ public class ClassChecker extends BaseChecker {
 		}
 			
 		node.setType(result); //propagates type up if only one child
-		pushUpModifiers(node); //can overwrite UNASSIGNABLE
+		pushUpModifiers(node); //can add ASSIGNABLE (if only one child)
 	}
 	
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
@@ -503,8 +508,6 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
 				return WalkType.POST_CHILDREN;
 			}
-			else
-				node.addModifier(ModifierSet.UNASSIGNABLE);
 		}
 		else
 			pushUpModifiers( node );
@@ -530,8 +533,6 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but integral type required for bitwise operations");
 				return WalkType.POST_CHILDREN;
 			}
-			else
-				node.addModifier(ModifierSet.UNASSIGNABLE);
 		}		
 		else if(node.getImage().startsWith("!") )
 		{
@@ -540,11 +541,9 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but boolean type required for logical operations");
 				return WalkType.POST_CHILDREN;
 			}
-			else
-				node.addModifier(ModifierSet.UNASSIGNABLE);
 		}
 		else
-			pushUpModifiers( node );
+			pushUpModifiers( node ); //can add ASSIGNABLE (if only one child)
 		
 		node.setType(t);
 		
@@ -559,9 +558,10 @@ public class ClassChecker extends BaseChecker {
 		if(node.jjtGetNumChildren() == 1) 
 		{			
 			node.setType(node.jjtGetChild(0).getType()); //propagate type up
-			pushUpModifiers( node );
+			pushUpModifiers( node ); // can add ASSIGNABLE (if only one child)
 		}
-		else if(node.jjtGetNumChildren() == 3) {			
+		else if(node.jjtGetNumChildren() == 3)
+		{			
 			Type t1 = node.jjtGetChild(0).getType();
 			Type t2 = node.jjtGetChild(1).getType();
 			Type t3 = node.jjtGetChild(2).getType();
@@ -575,14 +575,14 @@ public class ClassChecker extends BaseChecker {
 				node.setType(t3);
 			else if( t3.isSubtype(t2) )
 				node.setType(t2);
-			else {
+			else 
+			{
 				addError(node, Error.TYPE_MIS, "Type " + t2 + " must match " + t3 + " in ternary operator");
 				return WalkType.NO_CHILDREN;
 			}
-			
-			node.addModifier(ModifierSet.UNASSIGNABLE);
 		}
-		else {
+		else
+		{
 			addError(node, Error.TYPE_MIS, "Too many arguments");
 			return WalkType.NO_CHILDREN;
 		}		
@@ -590,13 +590,14 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public void visitConditional(ModifiedNode node ) throws ShadowException {
-		if(node.jjtGetNumChildren() == 1) {
+	public void visitConditional(SimpleNode node ) throws ShadowException {
+		if(node.jjtGetNumChildren() == 1) 
+		{
 			node.setType( node.jjtGetChild(0).getType() ); //propagate type up
 			pushUpModifiers( node );
 		}
-		else if(node.jjtGetNumChildren() == 2) {
-			
+		else if(node.jjtGetNumChildren() == 2)
+		{			
 			// get the two types
 			Type t1 = node.jjtGetChild(0).getType();
 			Type t2 = node.jjtGetChild(1).getType();
@@ -614,13 +615,10 @@ public class ClassChecker extends BaseChecker {
 			}
 			
 			node.setType(Type.BOOLEAN);
-			node.addModifier(ModifierSet.UNASSIGNABLE);
 		}
 		else
-		{
 			addError(node, Error.TYPE_MIS, "Too many arguments");
-			//node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-		}
+			
 	}
 	
 	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException {
@@ -648,12 +646,14 @@ public class ClassChecker extends BaseChecker {
 	}	
 
 	//FIX THIS!  Bitwise operations can be over more than 2 operands
-	public void visitBitwise(ModifiedNode node ) throws ShadowException {
-		if(node.jjtGetNumChildren() == 1) {
+	public void visitBitwise(SimpleNode node ) throws ShadowException {
+		if(node.jjtGetNumChildren() == 1)
+		{
 			node.setType( node.jjtGetChild(0).getType() ); //propagate type up
 			pushUpModifiers( node );
 		}
-		else if(node.jjtGetNumChildren() == 2) {
+		else if(node.jjtGetNumChildren() == 2)
+		{
 			// get the two types
 			Type t1 = node.jjtGetChild(0).getType();
 			Type t2 = node.jjtGetChild(1).getType();
@@ -673,8 +673,7 @@ public class ClassChecker extends BaseChecker {
 				return;
 			}
 								
-			node.setType(t1);	// assume that result has the same type as the first argument	
-			node.addModifier(ModifierSet.UNASSIGNABLE);
+			node.setType(t1);	// assume that result has the same type as the first argument
 		}	
 		else
 			addError(node, Error.TYPE_MIS, "Too many arguments");
@@ -713,18 +712,16 @@ public class ClassChecker extends BaseChecker {
 			pushUpType(node, secondVisit); //takes care of modifiers
 		
 		// we have 3 children so it's an assignment
-		else if(node.jjtGetNumChildren() == 3) {
+		else if(node.jjtGetNumChildren() == 3) 
+		{
 			// get the two types, we have to go up to the parent to get them
 			Node child1 = node.jjtGetChild(0);
 			Type t1 = child1.getType();
-			if( child1 instanceof ModifiedNode  )
+			if( !ModifierSet.isAssignable( child1.getModifiers() ))
 			{
-				if( ModifierSet.isUnassignable( ((ModifiedNode)child1).getModifiers() ) )
-				{
-					addError(child1, Error.TYPE_MIS, child1 + "cannot be assigned a value");
-					return WalkType.NO_CHILDREN;
-				}
-			}			
+				addError(child1, Error.TYPE_MIS, "Cannot assign a value to expression: " + child1 );
+				return WalkType.NO_CHILDREN;
+			}
 			
 			ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
 			
@@ -739,17 +736,17 @@ public class ClassChecker extends BaseChecker {
 			//		return WalkType.NO_CHILDREN;
 			
 			// TODO: Add in all the types that we can compare here
-			if( !t2.isSubtype(t1) ) {
+			if( !t2.isSubtype(t1) )
+			{
 				addError(child1, Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
 				return WalkType.NO_CHILDREN;
 			}
 					
 			node.setType(t1);	// set this node's type
-			if( child2 instanceof ModifiedNode )
-			node.setModifiers( ((ModifiedNode)child2).getModifiers() ); //is this meaningful?
-		}
-		
-		else {
+			node.setModifiers( child2.getModifiers() ); //is this meaningful?
+		}		
+		else 
+		{
 			// something went terribly wrong here... should NEVER get to this state or parser is broken
 			throw new ShadowException("Wrong number of args to an assignment!!!" + node.getLine() + node.jjtGetNumChildren());
 		}
@@ -757,7 +754,8 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTAllocationExpression node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTAllocationExpression node, Boolean secondVisit) throws ShadowException 
+	{
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
@@ -874,14 +872,17 @@ public class ClassChecker extends BaseChecker {
 		
 		if( child instanceof ASTSequence )
 		{	
-			SequenceType sequence = (SequenceType)child.getType();
+			ASTSequence sequence = (ASTSequence)child;
+			SequenceType t1 = (SequenceType)(child.getType());
 			Type t2 = node.jjtGetChild(1).getType();
 			
-			if( t2 instanceof SequenceType ) //from method call
+			if( !sequence.isAssignable() )
+				addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);						
+			else if( t2 instanceof SequenceType ) //from method call
 			{
 				SequenceType sequenceType = (SequenceType)t2;
 				
-				if( !sequence.canAccept( sequenceType.getTypes() ) )
+				if( !t1.canAccept( sequenceType.getTypes() ) )
 					addError(child, Error.TYPE_MIS, "Sequence " + sequenceType + " does not match " + sequence);
 			}
 			else
@@ -895,30 +896,30 @@ public class ClassChecker extends BaseChecker {
 				Type t1 = child.getType();
 				Type t2 = node.jjtGetChild(2).getType();
 				
-				if( t2 == null )
+				if( ModifierSet.isAssignable(child.getModifiers()) )
 				{
-					addError(child, Error.TYPE_MIS, "Null type on RHS of " + t1);
-					return WalkType.NO_CHILDREN;
-				}
-				
-				// SHOULD DO SOMETHING WITH THIS!!!
-				AssignmentType assType = op.getAssignmentType();
-				
-				if( t2 instanceof MethodType ) //could this be done with a more complex subtype relationship below?
-				{
-					MethodType methodType = (MethodType)t2;
-					List<Type> type = new LinkedList<Type>();
-					type.add(t1);
-					if( !methodType.canReturn( type ) )
+					if( t2 == null )
 					{
-						addError(node.jjtGetChild(0), Error.TYPE_MIS, "Method with signature " + methodType + " cannot return " + t1);
-						return WalkType.NO_CHILDREN;
-					}					
+						addError(child, Error.TYPE_MIS, "Null type on RHS of " + t1);
+						return WalkType.POST_CHILDREN;
+					}
+					
+					// SHOULD DO SOMETHING WITH THIS!!!
+					AssignmentType assType = op.getAssignmentType();
+					
+					if( t2 instanceof MethodType ) //could this be done with a more complex subtype relationship below?
+					{
+						MethodType methodType = (MethodType)t2;
+						List<Type> type = new LinkedList<Type>();
+						type.add(t1);
+						if( !methodType.canReturn( type ) )
+							addError(child, Error.TYPE_MIS, "Method with signature " + methodType + " cannot return " + t1);
+					}
+					else if( !t2.isSubtype(t1) )
+						addError(child, Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
 				}
-				else if( !t2.isSubtype(t1) ) {
-					addError(node.jjtGetChild(0), Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
-					return WalkType.NO_CHILDREN;
-				}
+				else				
+					addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
 			}
 		}
 		
@@ -1121,9 +1122,15 @@ public class ClassChecker extends BaseChecker {
 		
 		
 		if( node.jjtGetNumChildren() > 1 ) 	//has suffixes, pull type from last suffix
+		{
 			node.setType(node.jjtGetChild(node.jjtGetNumChildren() - 1).getType());
+			node.setModifiers(node.jjtGetChild(node.jjtGetNumChildren() - 1).getModifiers());
+		}
 		else								//just prefix
-			node.setType(node.jjtGetChild(0).getType());	
+		{
+			node.setType(node.jjtGetChild(0).getType());
+			pushUpModifiers( node ); 			
+		}
 		
 		curPrefix.removeFirst();  //pop prefix type off stack
 		
@@ -1144,10 +1151,7 @@ public class ClassChecker extends BaseChecker {
 				if( currentType instanceof InterfaceType )
 					addError(node, Error.INVL_TYP, "\"this\" reference invalid for interfaces");
 				else
-				{
 					node.setType(currentType);
-					node.addModifier(ModifierSet.UNASSIGNABLE);
-				}
 			}
 			else //super case
 			{
@@ -1293,7 +1297,10 @@ public class ClassChecker extends BaseChecker {
 					}
 					
 					if( node.jjtGetNumChildren() == arrayType.getDimensions() )
+					{
 						node.setType( arrayType.getBaseType() );
+						node.addModifier(ModifierSet.ASSIGNABLE);
+					}
 					else
 						addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
 				}

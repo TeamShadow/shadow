@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTPrimarySuffix extends ModifiedNode {
+class ASTPrimarySuffix extends SimpleNode {
   public ASTPrimarySuffix(int id) {
     super(id);
   }

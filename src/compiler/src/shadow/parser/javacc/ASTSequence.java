@@ -2,9 +2,10 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.parser.javacc.ShadowParser.ModifierSet;
+
 public
-@SuppressWarnings("all")
-class ASTSequence extends ModifiedNode {
+class ASTSequence extends SimpleNode {
   public ASTSequence(int id) {
     super(id);
   }
@@ -12,11 +13,21 @@ class ASTSequence extends ModifiedNode {
   public ASTSequence(ShadowParser p, int id) {
     super(p, id);
   }
+  
+  public boolean isAssignable()
+  {
+	  for( int i = 0; i < jjtGetNumChildren(); i++ )
+		  if( !ModifierSet.isAssignable(jjtGetChild(i).getModifiers()) )
+				  return false;
+		  
+		  
+	  return true;
+  }
 
 
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
-    return visitor.visit(this, secondVisit);
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
+    return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=f6d670b3f97f96e16fcec32286dc568c (do not edit this line) */
+/* JavaCC - OriginalChecksum=414961a60ac37535dd79699b1fc4ebd7 (do not edit this line) */

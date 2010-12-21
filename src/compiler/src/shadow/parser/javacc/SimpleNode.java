@@ -11,13 +11,17 @@ public class SimpleNode implements Node {
     protected String image;
     protected int line, column;
     
-    protected Type type;	// used by the type checker
-    
-    public SimpleNode(int id) {
+    protected Type type;		// used by the type checker    
+    protected int modifiers; 	// used by the type checker
+	private Type enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)    
+
+	public SimpleNode(int id) {
     	this.id = id;
     	image = "";
     	line = column = -1;
     	type = null;
+    	modifiers = 0;
+    	enclosingType = null;
     }
     
     public SimpleNode(ShadowParser sp, int id) {
@@ -27,6 +31,8 @@ public class SimpleNode implements Node {
     	line = sp.token.beginLine;
     	column = sp.token.beginColumn;
     	type = null;
+    	modifiers = 0;
+    	enclosingType = null;
     }
     
 	@Override
@@ -135,5 +141,48 @@ public class SimpleNode implements Node {
                 }
             }
         }
-    }
+    }    
+    
+    public int getModifiers()
+	{
+		return modifiers;
+	}
+	
+	public void setModifiers( int modifiers )
+	{
+		this.modifiers = modifiers;
+	}	
+	
+	public void addModifier( int mod )
+	{
+		modifiers |= mod;
+	}
+	
+	public void removeModifier( int mod )
+	{
+		modifiers &= ~mod;
+	}
+	
+	public void setEnclosingType(Type type)
+	{
+		enclosingType = type;
+	}
+	
+	public Type getEnclosingType()
+	{
+		return enclosingType;
+	} 
+	
+	public String toString()
+	{
+		if( image.isEmpty() )
+		{
+			String output = "";
+			for( int i = 0; i < this.jjtGetNumChildren(); i++ )
+				output += jjtGetChild(i) + " ";
+			return output;			
+		}
+		else
+			return image;
+	}
 }

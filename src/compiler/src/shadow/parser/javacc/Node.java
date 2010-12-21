@@ -53,6 +53,14 @@ interface Node {
 	public Type getType();
 	
 	public void setType(Type type);
+	
+	
+	public int getModifiers();
+	public void setModifiers( int modifiers );
+	public void addModifier( int mod );
+	public void removeModifier( int mod );	
+	public void setEnclosingType(Type type);
+	public Type getEnclosingType();
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException;

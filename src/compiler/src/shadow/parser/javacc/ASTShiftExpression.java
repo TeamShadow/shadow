@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTShiftExpression extends ModifiedNode {
+class ASTShiftExpression extends SimpleNode {
   public ASTShiftExpression(int id) {
     super(id);
   }
