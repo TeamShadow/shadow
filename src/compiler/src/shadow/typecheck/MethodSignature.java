@@ -5,6 +5,7 @@ import java.util.List;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeWithModifiers;
 
 public class MethodSignature {
 	protected int line;	/** the line where it's declared */
@@ -18,11 +19,11 @@ public class MethodSignature {
 		this.symbol = symbol;
 	}
 	
-	public void addParameter(String name, Type type) {
+	public void addParameter(String name, TypeWithModifiers type) {
 		this.type.addParameter(name, type);
 	}
 	
-	public Type getParameterType(String paramName) {
+	public TypeWithModifiers getParameterType(String paramName) {
 		return type.getParameterType(paramName);
 	}
 	

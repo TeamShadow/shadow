@@ -22,14 +22,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	// these are constants for our error messages to keep things consistent
 	public static enum Error {
-		INVL_TYP		{ String getStr() { return "INVALID TYPE"; } },
-		MULT_SYM		{ String getStr() { return "MULTIPLY DEFINED SYMBOL"; } },
-		MULT_MTH		{ String getStr() { return "MULTIPLY DEFINED METHODS"; } },
-		UNDEC_VAR		{ String getStr() { return "UNDECLARED VARIABLE"; } },
-		UNDEF_TYP		{ String getStr() { return "UNDEFINED TYPE"; } },
-		TYPE_MIS		{ String getStr() { return "TYPE MISMATCH"; } };
+		INVL_TYP		{ public String toString()  { return "INVALID TYPE"; } },
+		MULT_SYM		{ public String toString()  { return "MULTIPLY DEFINED SYMBOL"; } },
+		MULT_MTH		{ public String toString()  { return "MULTIPLY DEFINED METHODS"; } },
+		UNDEC_VAR		{ public String toString()  { return "UNDECLARED VARIABLE"; } },
+		UNDEF_TYP		{ public String toString()  { return "UNDEFINED TYPE"; } },
+		TYPE_MIS		{ public String toString()  { return "TYPE MISMATCH"; } },
+		INVL_MOD		{ public String toString() { return "INVALID MODIFIER"; } };
 		
-		abstract String getStr();
+		//abstract String getStr();
 	}
 	
 	public final Map<String, Type> getTypeTable()
@@ -117,7 +118,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param msg The message associated with the error.
 	 */
 	protected void addError(Node node, Error type, String msg) {
-		String error = "[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": " + msg; 
+		String error = "[" + ASTUtils.getLineCol(node) + "] " + type + ": " + msg; 
 		
 		if(debug)
 			errorList.add(ASTUtils.getFileAndLine(3) + error);
@@ -131,7 +132,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param type One of the pre-defined types of errors.
 	 */
 	protected void addError(Node node, Error type) {
-		String error = "[" + ASTUtils.getLineCol(node) + "] " + type.getStr() + ": "; 
+		String error = "[" + ASTUtils.getLineCol(node) + "] " + type + ": "; 
 		
 		if(debug)
 			errorList.add(ASTUtils.getFileAndLine(3) + error);

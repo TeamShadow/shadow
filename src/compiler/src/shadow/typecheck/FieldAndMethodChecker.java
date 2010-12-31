@@ -20,11 +20,14 @@ import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.SimpleNode;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeWithModifiers;
 
 public class FieldAndMethodChecker extends BaseChecker {	
 	
@@ -61,6 +64,39 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 	}
+	
+	public boolean checkMemberModifiers( SimpleNode node, int modifiers )
+	{
+		int visibilityModifiers = 0;
+		
+		//modifiers are set, but we have to check them
+		if( ModifierSet.isPublic( modifiers ))
+			visibilityModifiers++;
+		if( ModifierSet.isPrivate( modifiers ))
+			visibilityModifiers++;
+		if( ModifierSet.isProtected( modifiers ))
+			visibilityModifiers++;
+		
+		if( visibilityModifiers > 1 )
+		{
+			addError(node, Error.INVL_MOD, "Only one public, private, or protected modifier can be used" );
+			return false;
+		}
+		else if( visibilityModifiers == 0 )
+		{			
+			addError(node, Error.INVL_MOD, "Every method and field must be specified as public, private, or protected" );
+			return false;
+		}
+		
+		if( ModifierSet.isWeak(modifiers) && node instanceof ASTMethodDeclaration )
+		{			
+			addError(node, Error.INVL_MOD, "Methods cannot be declared with the weak modifier" );
+			return false;
+		}
+		
+		
+		return true;
+	}
 
 	/**
 	 * Add the field declarations.
@@ -79,6 +115,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 		}
 		
 		node.setType(type);		// set the type to the node
+
+		if( !checkMemberModifiers( node, node.getModifiers() ))
+			return WalkType.NO_CHILDREN;
 		
 		//type.setASTNode(node);	// set the node to the type  //NO! Set the node to the field, not the type
 		
@@ -153,6 +192,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers(), node.getLine());
 		
 		signature.setASTNode(node);	// set the node for this method
+		
+		if( !checkMemberModifiers( node, node.getModifiers() ))
+			return WalkType.NO_CHILDREN;
 		
 		// check the parameters
 		if(!visitParameters(methodDec.jjtGetChild(0), signature))
@@ -253,6 +295,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			
 			// get the type of the parameter
 			Type type = param.jjtGetChild(0).getType();
+			int modifiers = param.getModifiers();
 			
 			// make sure this type is in the type table
 			if(type == null) {
@@ -261,7 +304,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			}
 				
 			// add the parameter type to the signature
-			signature.addParameter(paramSymbol, type);
+			signature.addParameter(paramSymbol, new TypeWithModifiers(type, modifiers));
 		}
 		
 		return true;
@@ -283,6 +326,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		for(i=0; i < node.jjtGetNumChildren(); ++i) {
 			Node curNode = node.jjtGetChild(i);
 			Type type = curNode.getType();
+			int modifiers = curNode.getModifiers();
 			
 			// check to see if we've moved on to the result types
 			if(curNode instanceof ASTResultTypes)
@@ -293,7 +337,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 				return ret;	// just return whatever, we should prob throw here
 			}
 				
-			ret.addParameter(type);	// add the type as the parameter
+			ret.addParameter(new TypeWithModifiers(type,modifiers));	// add the type as the parameter
 		}
 		
 		// check to see if we have result types

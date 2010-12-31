@@ -84,8 +84,8 @@ public class ShadowParser
 		public			(only for members)
      	private			(only for members)
      	protected 		(only for members)		
-		final 			(can't be changed)
-		static
+		static			(only for members)
+		final 			(can't be changed)		
 		weak			(reference will not stop GC)
 		unnassignable 	(used for literals and all other non-Lvalues, similar to final, but kept separate for error message reasons)		
      */
@@ -828,7 +828,7 @@ void FormalParameters():
 void FormalParameter():
 { debugPrint("FORMAL PARAMETER"); }
 {
-  [ "final" ] Type() VariableDeclaratorId()
+  [ "final" { jjtThis.addModifier(ModifierSet.FINAL); } ] Type() VariableDeclaratorId()
 }
 
 void ConstructorDeclaration(int modifiers):
@@ -1377,7 +1377,7 @@ void BlockStatement():
 void LocalVariableDeclaration():
 { debugPrint("LOCAL VARIABLE DECLARATION"); }
 {
-  [ "final" ] Type() VariableDeclarator() ( "," VariableDeclarator() )*
+  [ "final" { jjtThis.addModifier(ModifierSet.FINAL); } ] Type() VariableDeclarator() ( "," VariableDeclarator() )*
 }
 
 void EmptyStatement():

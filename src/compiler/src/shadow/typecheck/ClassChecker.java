@@ -13,7 +13,6 @@ import shadow.parser.javacc.ASTArgumentList;
 import shadow.parser.javacc.ASTArguments;
 import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
@@ -65,8 +64,9 @@ import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
@@ -74,19 +74,20 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeWithModifiers;
 import shadow.typecheck.type.UnboundMethodType;
 
 
 //no automatic promotion for bitwise operators
 
 public class ClassChecker extends BaseChecker {
-	protected LinkedList<HashMap<String, Type>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
+	protected LinkedList<HashMap<String, TypeWithModifiers>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected MethodType curMethod;
 	protected LinkedList<Type> curPrefix; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	
 	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
 		super(debug, typeTable, importList);		
-		symbolTable = new LinkedList<HashMap<String, Type>>();
+		symbolTable = new LinkedList<HashMap<String, TypeWithModifiers>>();
 		curPrefix = new LinkedList<Type>();
 	}
 	
@@ -109,12 +110,12 @@ public class ClassChecker extends BaseChecker {
 		if(secondVisit) {
 			System.out.println("\nSYMBOL TABLE:");
 			for(String s:symbolTable.getFirst().keySet())
-				System.out.println(s + ": " + symbolTable.getFirst().get(s));
+				System.out.println(s + ": " + symbolTable.getFirst().get(s).getType());
 			
 			symbolTable.removeFirst();
 		}
 		else
-			symbolTable.addFirst(new HashMap<String, Type>());
+			symbolTable.addFirst(new HashMap<String, TypeWithModifiers>());
 	}
 	
 	public Object visit(ASTSwitchStatement node, Boolean secondVisit) throws ShadowException {
@@ -234,13 +235,13 @@ public class ClassChecker extends BaseChecker {
 
 				if(!initType.isSubtype(type)) {
 					addError(curNode.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
-					symbolTable.getFirst().put(varName, type); // 100% fake so we can continue later
+					//symbolTable.getFirst().put(varName, type); // 100% fake so we can continue later
 					continue;
 				}
 			}
 			
 			// add the symbol to the table
-			symbolTable.getFirst().put(varName, type);
+			symbolTable.getFirst().put(varName, new TypeWithModifiers(type, node.getModifiers()));
 		}
 
 		return WalkType.POST_CHILDREN;
@@ -279,6 +280,7 @@ public class ClassChecker extends BaseChecker {
 	{
 		String name = node.getImage();
  		Type type = lookupType(name);
+ 		int modifiers = 0;
 
 		// first we check to see if this names a type
 		if(type != null)
@@ -288,11 +290,12 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		// now go through the scopes trying to find the variable
-		for(HashMap<String, Type> curSymTable:symbolTable)
+		for(HashMap<String, TypeWithModifiers> curSymTable:symbolTable)
 		{
 			if(curSymTable.containsKey(name))
 			{
-				type = curSymTable.get(name);
+				type = curSymTable.get(name).getType();
+				modifiers = curSymTable.get(name).getModifiers();
 				break;
 			}
 		}
@@ -301,6 +304,7 @@ public class ClassChecker extends BaseChecker {
 		if( type != null ) 
 		{
 			node.setType(type);
+			node.setModifiers(modifiers);
 			node.addModifier(ModifierSet.ASSIGNABLE);
 			return WalkType.PRE_CHILDREN;
 		}
@@ -308,7 +312,8 @@ public class ClassChecker extends BaseChecker {
 		// now check the parameters of the method
 		if(curMethod != null && curMethod.containsParam(name))
 		{
-			node.setType(curMethod.getParameterType(name));
+			node.setType(curMethod.getParameterType(name).getType());
+			node.setModifiers(curMethod.getParameterType(name).getModifiers());
 			node.addModifier(ModifierSet.ASSIGNABLE);
 			return WalkType.PRE_CHILDREN;
 		}
@@ -896,13 +901,17 @@ public class ClassChecker extends BaseChecker {
 				Type t1 = child.getType();
 				Type t2 = node.jjtGetChild(2).getType();
 				
-				if( ModifierSet.isAssignable(child.getModifiers()) )
+				if( !ModifierSet.isAssignable(child.getModifiers()) )
+					addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
+				else if( ModifierSet.isFinal(child.getModifiers()) )
+					addError(child, Error.INVL_TYP, "Cannot assign a value to variable marked final");
+				else					
 				{
-					if( t2 == null )
-					{
-						addError(child, Error.TYPE_MIS, "Null type on RHS of " + t1);
-						return WalkType.POST_CHILDREN;
-					}
+//					if( t2 == null )
+//					{
+//						addError(child, Error.TYPE_MIS, "Null type on RHS of " + t1);
+//						return WalkType.POST_CHILDREN;
+//					}
 					
 					// SHOULD DO SOMETHING WITH THIS!!!
 					AssignmentType assType = op.getAssignmentType();
@@ -917,9 +926,7 @@ public class ClassChecker extends BaseChecker {
 					}
 					else if( !t2.isSubtype(t1) )
 						addError(child, Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
-				}
-				else				
-					addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
+				}	
 			}
 		}
 		
