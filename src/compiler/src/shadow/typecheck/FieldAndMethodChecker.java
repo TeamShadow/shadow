@@ -115,6 +115,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		}
 		
 		node.setType(type);		// set the type to the node
+		node.setEnclosingType(currentType);
 
 		if( !checkMemberModifiers( node, node.getModifiers() ))
 			return WalkType.NO_CHILDREN;
@@ -128,6 +129,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 			// go through inserting all the idents
 			for(int i=1; i < node.jjtGetNumChildren(); ++i) {
 				Node child = node.jjtGetChild(i);
+				child.setType(type);
+				child.setModifiers(node.getModifiers());
 				String symbol = child.jjtGetChild(0).getImage();
 				
 				// make sure we don't already have this symbol
@@ -193,6 +196,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 		signature.setASTNode(node);	// set the node for this method
 		
+		
 		if( !checkMemberModifiers( node, node.getModifiers() ))
 			return WalkType.NO_CHILDREN;
 		
@@ -219,6 +223,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		}
 		
 		node.setType(signature.getMethodType());
+		node.setEnclosingType(currentType);
 		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{

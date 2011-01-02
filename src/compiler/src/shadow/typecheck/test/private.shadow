@@ -1,0 +1,21 @@
+class Outer
+{
+
+	private class Inner 
+	{
+		private int x = 5;
+	
+	}	
+	
+	private class Second extends Inner
+	{
+		public stuff() => ()
+		{
+			Outer outer = new Outer();
+			Inner inner = outer.new Inner(); 
+		}
+	
+	
+	}
+
+}

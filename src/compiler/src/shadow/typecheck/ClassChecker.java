@@ -322,13 +322,39 @@ public class ClassChecker extends BaseChecker {
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+			
 			if(currentClass.containsField(name))
 			{
 				node.setType(currentClass.getField(name).getType());
+				node.setModifiers(currentClass.getField(name).getModifiers());
 				node.addModifier(ModifierSet.ASSIGNABLE);
-				return WalkType.PRE_CHILDREN;
-			}			
-		
+				return WalkType.PRE_CHILDREN;			
+			}
+			
+			if( currentClass instanceof ClassType ) //check parents
+			{
+				ClassType parent = ((ClassType)currentClass).getExtendType();
+				
+				while( parent != null )
+				{				
+					if(parent.containsField(name))
+					{
+						Node field = parent.getField(name);
+						if( ModifierSet.isPrivate(field.getModifiers()))
+						{
+							addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());
+							return WalkType.PRE_CHILDREN;			
+						}
+						node.setType(parent.getField(name).getType());
+						node.setModifiers(parent.getField(name).getModifiers());
+						node.addModifier(ModifierSet.ASSIGNABLE);
+						return WalkType.PRE_CHILDREN;			
+					}
+					
+					parent = parent.getExtendType();
+				}
+			}
+			
 			List<MethodSignature> methods = currentClass.getMethods(name);
 			
 			//unbound method (it gets bound when you supply args)
@@ -1248,7 +1274,15 @@ public class ClassChecker extends BaseChecker {
 					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefix;
 					if( currentClass.containsField(node.getImage() ) )
 					{
-						node.setType( currentClass.getField(node.getImage()).getType());
+						Node field = currentClass.getField(node.getImage());
+						
+						if( fieldIsAccessible( field, currentType ))
+						{
+							node.setType( field.getType());
+							node.setModifiers(field.getModifiers());
+						}
+						else
+							addError(node, Error.INVL_MOD, "Field " + node.getImage() + " not accessible from current context");
 					}
 					else
 					{
@@ -1278,7 +1312,12 @@ public class ClassChecker extends BaseChecker {
 				{
 					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefix;
 					if( currentClass.containsInnerClass(allocation.getType().getTypeName()) )
-						node.setType(currentClass.getInnerClass(allocation.getType().getTypeName()));
+					{
+						if( classIsAccessible( allocation.getType(), currentType ))
+							node.setType(currentClass.getInnerClass(allocation.getType().getTypeName()));
+						else
+							addError(node, Error.INVL_MOD, "Class " + allocation.getType() + " not accessible from current context");
+					}
 					else
 						addError(node, Error.UNDEF_TYP, "Inner class " + allocation.getType().getTypeName() + " not found");
 				}
@@ -1342,6 +1381,9 @@ public class ClassChecker extends BaseChecker {
 								node.setType( sequenceType );
 							}
 							perfectMatch = true;
+							
+							if( !methodIsAccessible( signature, currentType  ))
+								addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");							
 						}
 						else if( signature.canAccept(typeList))
 							acceptableMethods.add(signature);
@@ -1355,7 +1397,8 @@ public class ClassChecker extends BaseChecker {
 							addError(child, Error.TYPE_MIS, "Ambiguous method call with signature " + typeList);
 						else
 						{
-							List<Type> returnTypes = acceptableMethods.get(0).getMethodType().getReturnTypes();
+							MethodSignature signature = acceptableMethods.get(0); 
+							List<Type> returnTypes = signature.getMethodType().getReturnTypes();
 							if( returnTypes.size() == 1 )
 								node.setType(returnTypes.get(0));
 							else
@@ -1365,6 +1408,10 @@ public class ClassChecker extends BaseChecker {
 									sequenceType.addType(type);
 								node.setType( sequenceType );
 							}							
+							
+							if( !methodIsAccessible( signature, currentType  ))
+								addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
+							
 						}
 					}					
 				}
@@ -1385,10 +1432,83 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
+	public static boolean fieldIsAccessible( Node node, Type type )
+	{
+		if( ModifierSet.isPublic(node.getModifiers()) || node.getEnclosingType() == type )
+			return true;		
+		
+		if( type instanceof ClassType )
+		{
+			ClassType parent = ((ClassType)type).getExtendType();
+			
+			while( parent != null )
+			{
+				if( node.getEnclosingType() == parent )
+				{
+					if( ModifierSet.isPrivate(node.getModifiers()))
+						return false;
+					else
+						return true;
+				}
+				
+				parent = parent.getExtendType();
+			}
+		}
+		
+		return false;
+	}
 
+	public static boolean classIsAccessible( Type classType, Type type )
+	{
+		if( ModifierSet.isPublic(classType.getModifiers()) || classType.getOuter() == type || classType.getOuter() == null )
+			return true;
+		
+		Type outer = type.getOuter();
+		
+		while( outer != null )
+		{
+			if( outer == classType.getOuter() )
+				return true;
+			
+			outer = outer.getOuter();		
+		}
+		
+		
+		if( type instanceof ClassType )
+		{
+			ClassType parent = ((ClassType)type).getExtendType();
+			
+			while( parent != null )
+			{
+				if( classType.getOuter() == parent )
+				{
+					if( ModifierSet.isPrivate(classType.getModifiers()))
+						return false;
+					else
+						return true;
+				}
+				
+				outer = parent.getOuter();
+				
+				while( outer != null )
+				{
+					if( outer == classType.getOuter() )
+						return true;
+					
+					outer = outer.getOuter();		
+				}
+				
+				parent = parent.getExtendType();
+			}
+		}
+		
+		return false;
+	}
 	
-	
+	public static boolean methodIsAccessible( MethodSignature signature, Type type )
+	{
+		return fieldIsAccessible(  signature.getASTNode(), type );
+	}
 
 	
 	/*//Push up is wrong, the children of ResultTypes are many, we can't just push one up 

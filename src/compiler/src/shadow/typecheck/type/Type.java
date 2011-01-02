@@ -5,7 +5,7 @@ package shadow.typecheck.type;
 public class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string that represents the type */
-	private final int modifiers; //do we need modifiers for types or just for references?  private inner classes, perhaps?
+	private final int modifiers;
 	private final Type outer; //outer class	
 	private final Kind kind;
 	//private Node astNode;	/** This is to link back to the AST, usually not used */
