@@ -12,6 +12,7 @@ import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTMethodDeclaration;
+import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
@@ -20,14 +21,12 @@ import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.SimpleNode;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeWithModifiers;
 
 public class FieldAndMethodChecker extends BaseChecker {	
 	
@@ -65,7 +64,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public boolean checkMemberModifiers( SimpleNode node, int modifiers )
+	public boolean checkMemberModifiers( Node node, int modifiers )
 	{
 		int visibilityModifiers = 0;
 		
@@ -134,7 +133,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 				String symbol = child.jjtGetChild(0).getImage();
 				
 				// make sure we don't already have this symbol
-				if(currentClass.containsField(symbol)) {
+				if(currentClass.containsField(symbol) || currentClass.getMethods(symbol) != null || currentClass.containsInnerClass(symbol) )
+				{
 					addError(child.jjtGetChild(0), Error.MULT_SYM, symbol);
 					return WalkType.NO_CHILDREN;
 				}
@@ -192,29 +192,57 @@ public class FieldAndMethodChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		
 		Node methodDec = node.jjtGetChild(0);
-		MethodSignature signature = new MethodSignature(methodDec.getImage(), node.getModifiers(), node.getLine());
 		
-		signature.setASTNode(node);	// set the node for this method
+		createMethod( methodDec, node  ); //different nodes used for modifiers and signature
 		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
 		
+		createMethod( node, node  ); //constructor uses the same node for modifiers and signature		
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		createMethod( node, node  ); //destructor uses the same node for modifiers and signature
+
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	
+	private boolean createMethod( Node declaration, Node node )
+	{
+		MethodSignature signature = new MethodSignature(declaration.getImage(), node.getModifiers(), node.getLine(), node);
+				
 		if( !checkMemberModifiers( node, node.getModifiers() ))
-			return WalkType.NO_CHILDREN;
+			return false;
 		
-		// check the parameters
-		if(!visitParameters(methodDec.jjtGetChild(0), signature))
-			return WalkType.NO_CHILDREN;
+		if( declaration instanceof ASTMethodDeclarator || declaration instanceof ASTConstructorDeclaration )			
+			// check the parameters
+			if(!visitParameters(declaration.jjtGetChild(0), signature))
+				return false;
 		
 		// check to see if we have return types
-		if(methodDec.jjtGetNumChildren() == 2) {
-			Node retTypes = methodDec.jjtGetChild(1);
+		if(declaration instanceof ASTMethodDeclarator && declaration.jjtGetNumChildren() == 2)
+		{
+			Node retTypes = declaration.jjtGetChild(1);
 			
 			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i) {
 				Type type = retTypes.jjtGetChild(i).getType();
 				
 				// make sure the return type is in the type table
-				if(type == null) {
+				if(type == null)
+				{
 					addError(retTypes.jjtGetChild(i), Error.UNDEF_TYP);
-					return WalkType.NO_CHILDREN;
+					return false;
 				}
 					
 				// add the return type to our signature
@@ -229,60 +257,42 @@ public class FieldAndMethodChecker extends BaseChecker {
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType; 
 			// make sure we don't already have this method
-			if(currentClass.containsMethod(signature)) {
-				
+			if( currentClass.containsMethod(signature) )
+			{				
 				// get the first signature
-				MethodSignature firstMethod = currentClass.getMethodSignature(signature);
-				
-				addError(methodDec, Error.MULT_MTH, "First declared on line " + firstMethod.getLineNumber());
-				return WalkType.NO_CHILDREN;
+				MethodSignature firstMethod = currentClass.getMethodSignature(signature);				
+				addError(declaration, Error.MULT_MTH, "First declared on line " + firstMethod.getLineNumber());
+				return false;
+			}
+			
+			if( currentClass.containsField(signature.getSymbol()) )
+			{
+				addError(declaration, Error.MULT_SYM, "First declared on line " + currentClass.getField(signature.getSymbol()).getLine() );
+				return false;				
+			}
+			
+			if( currentClass.containsInnerClass(signature.getSymbol() ) )
+			{
+				addError(declaration, Error.MULT_SYM );
+				return false;
 			}
 			
 			// add the method to the current type
-			currentClass.addMethod(methodDec.getImage(), signature);
+			currentClass.addMethod(declaration.getImage(), signature);
+			
+			ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());			
+			
+			return true;
 		}
 		else
 		{
 			addError(node, "Cannot add method to a structure that is not a class, interface, error, enum, or exception");
-			return WalkType.NO_CHILDREN;
+			return false;
 		}
-		
-		return WalkType.POST_CHILDREN;
 	}
 	
 	
-	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		MethodSignature signature = new MethodSignature("constructor", node.getModifiers(), node.getLine());		
-		visitParameters(node.jjtGetChild(0), signature);
-
-		ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());
-		
-		node.setType(signature.getMethodType());
-
-		// add the method to the current type
-		ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
-		currentClass.addMethod("constructor", signature);
-
-		return WalkType.POST_CHILDREN;
-	}
 	
-	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		MethodSignature signature = new MethodSignature("destructor", node.getModifiers(), node.getLine());
-
-		ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());
-
-		// add the method to the current type
-		ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
-		currentClass.addMethod("destructor", signature);
-
-		return WalkType.POST_CHILDREN;
-	}
 	
 	public boolean visitParameters(Node params, MethodSignature signature) {
 		// go through all the formal parameters
@@ -299,17 +309,17 @@ public class FieldAndMethodChecker extends BaseChecker {
 			}
 			
 			// get the type of the parameter
-			Type type = param.jjtGetChild(0).getType();
-			int modifiers = param.getModifiers();
+			param.setType(param.jjtGetChild(0).getType());
 			
 			// make sure this type is in the type table
-			if(type == null) {
+			if(param.getType() == null)
+			{
 				addError(param.jjtGetChild(0), Error.UNDEF_TYP);
 				return false;
 			}
 				
 			// add the parameter type to the signature
-			signature.addParameter(paramSymbol, new TypeWithModifiers(type, modifiers));
+			signature.addParameter(paramSymbol, param);
 		}
 		
 		return true;
@@ -330,19 +340,19 @@ public class FieldAndMethodChecker extends BaseChecker {
 		int i;
 		for(i=0; i < node.jjtGetNumChildren(); ++i) {
 			Node curNode = node.jjtGetChild(i);
-			Type type = curNode.getType();
-			int modifiers = curNode.getModifiers();
+			
+			
 			
 			// check to see if we've moved on to the result types
 			if(curNode instanceof ASTResultTypes)
 				break;
 			
-			if(type == null) {
+			if(curNode.getType() == null) {
 				addError(curNode, Error.UNDEF_TYP, curNode.getImage());
 				return ret;	// just return whatever, we should prob throw here
 			}
 				
-			ret.addParameter(new TypeWithModifiers(type,modifiers));	// add the type as the parameter
+			ret.addParameter(curNode);	// add the type as the parameter
 		}
 		
 		// check to see if we have result types

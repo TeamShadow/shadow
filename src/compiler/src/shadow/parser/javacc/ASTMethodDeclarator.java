@@ -17,6 +17,7 @@ class ASTMethodDeclarator extends SimpleNode {
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
-  }
+  } 
+ 
 }
 /* JavaCC - OriginalChecksum=03d79a6de6e2bf35dc9aa60fd9a1bbcd (do not edit this line) */

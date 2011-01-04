@@ -1,14 +1,13 @@
 exception BlahException { }
 
-class Blah {
+class Blah 
+{    
     public constructor() { ; }
     public constructor(int a) { ; }
     public constructor(int a, int b) { ; }
-
-    public constructor() throws BlahException{ ; }
-    public constructor(code a) throws BlahException{ ; }
+    
+    public constructor(code a) throws BlahException{ ; }   
     public constructor(String a, code b) throws BlahException{ ; }
 
-    public destructor { ; }
-    public destructor throws BlahException{ ; }
+    public destructor { ; }    
 }

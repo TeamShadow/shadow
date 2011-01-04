@@ -5,26 +5,27 @@ import java.util.List;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeWithModifiers;
 
 public class MethodSignature {
-	protected int line;	/** the line where it's declared */
-	protected MethodType type;
-	protected String symbol;
-	private Node node;	/** The AST node that corresponds to the branch of the tree for this method */
+	protected final int line;	/** the line where it's declared */
+	protected final MethodType type;
+	protected final String symbol;
+	private final Node node;	/** The AST node that corresponds to the branch of the tree for this method */
 	
-	public MethodSignature(String symbol, int modifiers, int line) {
+	public MethodSignature(String symbol, int modifiers, int line, Node node) {
 		type = new MethodType(modifiers);
 		this.line = line;
 		this.symbol = symbol;
+		this.node = node;
 	}
 	
-	public void addParameter(String name, TypeWithModifiers type) {
-		this.type.addParameter(name, type);
+	public void addParameter(String name, Node node) {
+		this.type.addParameter(name, node);
 	}
 	
-	public TypeWithModifiers getParameterType(String paramName) {
-		return type.getParameterType(paramName);
+	public Node getParameterType(String paramName) 
+	{
+		return type.getParameterType(paramName);		
 	}
 	
 	public boolean containsParam(String paramName) {
@@ -41,10 +42,6 @@ public class MethodSignature {
 	
 	public int getLineNumber() {
 		return line;
-	}
-	
-	public void setASTNode(Node node) {
-		this.node = node;
 	}
 	
 	public Node getASTNode() {

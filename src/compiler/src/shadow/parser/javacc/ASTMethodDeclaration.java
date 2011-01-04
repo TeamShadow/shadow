@@ -28,5 +28,11 @@ class ASTMethodDeclaration extends SimpleNode {
   public int getModifiers() {
 	  return modifiers;
   }
+  
+  public String toString()
+  {
+	  return jjtGetChild(0).toString() + type;	  
+  }
+  
 }
 /* JavaCC - OriginalChecksum=1c1cdb2a47b8a755137e9b35efca7f37 (do not edit this line) */

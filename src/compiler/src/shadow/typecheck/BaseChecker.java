@@ -77,10 +77,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		// simply push the type up the tree
-		Node childNode = node.jjtGetChild(child); 
-		node.setType(childNode.getType());
-		node.setModifiers( childNode.getModifiers());
+		if( node.jjtGetNumChildren() > child )
+		{			
+			// simply push the type up the tree
+			Node childNode = node.jjtGetChild(child); 
+			node.setType(childNode.getType());
+			node.setModifiers( childNode.getModifiers());
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}

@@ -1,0 +1,22 @@
+class Foo
+{
+    public Foo t;
+    public int a = 1, y, z = 2;
+    public double b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
+    public String c = "hello" + "world";
+    public static boolean thing1 = true;
+    public boolean thing2 = true;
+    
+    public static Foo thingy; 
+
+    public static blah(int a, float b, Foo c) => (int) {        
+        //this.a = 4; //uncomment to see static error
+        //super.a = 4; //uncomment to see static error
+        
+        Foo.thing1 = false;
+        //Foo.thing2 = false; //uncomment to see static error
+        
+        //return z; //uncomment (and comment next line) to see static error
+        return 5;        
+    }    
+}

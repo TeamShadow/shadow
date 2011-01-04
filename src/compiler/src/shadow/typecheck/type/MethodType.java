@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 
 public class MethodType extends Type {
 	protected List<String> paramNames;
-	protected List<TypeWithModifiers> paramTypes;
+	protected List<Node> paramTypes;
 	protected List<Type> returns; /** List of return types */
 
 	public MethodType() {
@@ -18,7 +19,7 @@ public class MethodType extends Type {
 	public MethodType(int modifiers) {
 		super(null, modifiers, null, Kind.METHOD);
 		paramNames = new ArrayList<String>();
-		paramTypes = new ArrayList<TypeWithModifiers>();
+		paramTypes = new ArrayList<Node>();
 		returns = new LinkedList<Type>();
 	}
 	
@@ -28,7 +29,7 @@ public class MethodType extends Type {
 			return false;
 		
 		for( int i = 0; i < paramTypes.size(); i++ )
-			if( !argumentTypes.get(i).equals(paramTypes.get(i)))
+			if( !argumentTypes.get(i).equals(paramTypes.get(i).getType()))
 				return false;
 		
 		return true;
@@ -73,17 +74,17 @@ public class MethodType extends Type {
 		return true;
 	}
 	
-	public void addParameter(String name, TypeWithModifiers type) {
+	public void addParameter(String name, Node node) {
 		paramNames.add(name);
-		paramTypes.add(type);
+		paramTypes.add(node);
 	}
 	
-	public void addParameter(TypeWithModifiers type) {
+	public void addParameter(Node node) {
 		paramNames.add(null); // have to add to keep in synch
-		paramTypes.add(type);
+		paramTypes.add(node);
 	}
 	
-	public TypeWithModifiers getParameterType(String paramName) {
+	public Node getParameterType(String paramName) {
 		for(int i=0; i < paramNames.size(); ++i) {
 			if(paramNames.get(i).equals(paramName))
 				return paramTypes.get(i);
@@ -125,11 +126,10 @@ public class MethodType extends Type {
 				return false;
 	
 			// check the parameters, we care about types only
-			for(int i=0; i < paramTypes.size(); ++i) {
-				if(!paramTypes.get(i).equals(mt.paramTypes.get(i)))
+			for(int i=0; i < paramTypes.size(); ++i)
+				if(!paramTypes.get(i).getType().equals(mt.paramTypes.get(i).getType()))
 					return false;
-			}
-			
+					
 			// check the returns
 			if(!returns.equals(mt.returns))
 				return false;
@@ -144,11 +144,11 @@ public class MethodType extends Type {
 	public String toString() {
 		StringBuilder sb = new StringBuilder("(");
 		
-		for(TypeWithModifiers type:paramTypes) {
+		for(Node node:paramTypes) {
 			
-			Type p = type.getType();
+			Type p = node.getType();
 			
-			if( ModifierSet.isFinal(type.getModifiers()))
+			if( ModifierSet.isFinal(node.getModifiers()))
 				sb.append("final ");
 			
 			if(p.typeName == null) // method type
@@ -185,8 +185,8 @@ public class MethodType extends Type {
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();
 		
-		for(TypeWithModifiers type:paramTypes) {
-			Type p = type.getType();
+		for(Node node:paramTypes) {
+			Type p = node.getType();
 			sb.append(p.getTypeName());
 			sb.append("_");
 		}

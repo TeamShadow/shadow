@@ -1,7 +1,12 @@
 class Outer {
 
+	private Inner i;
+
 	private class Inner 
-	{
+	{	
+	
+		public Outer o;
+	
 		public jam(int a) => (int) {
 	        return 4;
 	    }
@@ -21,6 +26,9 @@ class Outer {
     	first[0] = new Outer();
     	
     	c = first[0].stuff().jam(10);
+    	
+    	Outer outer = new Outer();
+    	
+    	outer.i.o.i.o.i = null;
     }
-
 }

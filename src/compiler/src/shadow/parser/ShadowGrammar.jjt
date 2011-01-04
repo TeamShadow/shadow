@@ -68,6 +68,7 @@ public class ShadowParser
      public static final int WEAK           = 0x0800;
      public static final int IMMUTABLE      = 0x1000;
      public static final int ASSIGNABLE   	= 0x2000;
+     public static final int TYPE_NAME   	= 0x4000;
 
 
      /* Type Modifiers:
@@ -87,7 +88,11 @@ public class ShadowParser
 		static			(only for members)
 		final 			(can't be changed)		
 		weak			(reference will not stop GC)
-		unnassignable 	(used for literals and all other non-Lvalues, similar to final, but kept separate for error message reasons)		
+     */
+
+     /* Hidden Modifiers: (used in the compiler internally, but cannot be marked by the user)
+		assignable 		(used to mark variables [lvalues])
+		type name		(used to distinguish between types and values/variables with that type, e.g. int vs. 5 or String vs. "figs")
      */
      
 
@@ -110,9 +115,10 @@ public class ShadowParser
      public static boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
      public static boolean isImmutable(int modifiers) { return (modifiers & IMMUTABLE) != 0; }
      public static boolean isAssignable(int modifiers) { return (modifiers & ASSIGNABLE) != 0; }
+     public static boolean isTypeName(int modifiers) { return (modifiers & TYPE_NAME) != 0; }
 
      /**
-      * Removes the given modifier.
+      * Changes the given modifier.
       */
      public static int removeModifier(int modifiers, int mod) { return modifiers & ~mod; }
      public static int addModifier(int modifiers, int mod) { return modifiers | mod; }
@@ -832,10 +838,10 @@ void FormalParameter():
 }
 
 void ConstructorDeclaration(int modifiers):
-{ debugPrint("CONTRUCTOR DECLARATION"); }
+{ debugPrint("CONSTRUCTOR DECLARATION"); }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }
-  [ TypeParameters() ]
+  //[ TypeParameters() ]
   // Modifiers matched in the caller
   "constructor" FormalParameters() [ "throws" NameList() ]
   "{"
@@ -845,14 +851,13 @@ void ConstructorDeclaration(int modifiers):
 }
 
 void DestructorDeclaration(int modifiers):
-{ debugPrint("CONTRUCTOR DECLARATION"); }
+{ debugPrint("DESTRUCTOR DECLARATION"); }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("destructor"); }
-  [ TypeParameters() ]
+  //[ TypeParameters() ]
   // Modifiers matched in the caller
-  "destructor" [ "throws" NameList() ]
-  "{"
-    [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
+  "destructor" //[ "throws" NameList() ] //no (checked) exceptions from destructors!
+  "{"    
     ( BlockStatement() )*
   "}"
 }
@@ -1221,6 +1226,7 @@ void Literal() :
 {
 	debugPrint("LITERAL");
 	Token t;
+	jjtThis.addModifier(ModifierSet.FINAL); 
 }
 {
   (    
@@ -1323,7 +1329,7 @@ void ArrayDimsAndInits():
  */
 
 void Statement():
-{ debugPrint("STATMENT"); }
+{ debugPrint("STATEMENT"); }
 {
   LOOKAHEAD(2) LabeledStatement()
 | AssertStatement()
@@ -1476,9 +1482,13 @@ void ForUpdate():
 }
 
 void BreakStatement():
-{ debugPrint("BREAK STATEMENT"); }
 {
-  "break" ";"
+	Token t;
+	debugPrint("BREAK STATEMENT");
+	jjtThis.setImage("");
+}
+{
+  "break" [t = <IDENTIFIER> { jjtThis.setImage(t.image); } ] ";"
 }
 
 void ContinueStatement():

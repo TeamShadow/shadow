@@ -9,6 +9,5 @@ class Blah {
     public constructor(code a) throws BlahException{ ; }
     public constructor(String a, code b) throws BlahException{ ; }
 
-    public destructor { ; }
-    public destructor throws BlahException{ ; }
+    public destructor { ; }    
 }
