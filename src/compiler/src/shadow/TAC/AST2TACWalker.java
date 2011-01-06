@@ -1,6 +1,7 @@
 
 package shadow.TAC;
 
+import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.TAC.nodes.TACAssign;
@@ -14,6 +15,7 @@ import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
+import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -92,7 +94,13 @@ public class AST2TACWalker extends AbstractASTVisitor {
 	static public String getTempSymbol() {
 		return "temp_" + tempCounter++;
 	}
-
+	
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
+		node.getType();
+		
+		return WalkType.NO_CHILDREN;
+	}
+	
 	/**
 	 * Given an AST node, creates the corresponding TACVariable including recursing down the AST if needed.
 	 * @param node The node to convert to a TACVariable.
@@ -100,6 +108,7 @@ public class AST2TACWalker extends AbstractASTVisitor {
 	 * @throws ShadowException
 	 */
 	private TACVariable createTACVariable(Node node) throws ShadowException {
+		ASTUtils.DEBUG(node, "CREATING VAR: " + node.getImage());
 		if(node instanceof ASTLiteral || node instanceof ASTName) {
 			return new TACVariable(node.getImage(), node.getType(), node instanceof ASTLiteral);
 		} else {
@@ -312,7 +321,7 @@ public class AST2TACWalker extends AbstractASTVisitor {
 		return WalkType.NO_CHILDREN;
 	}
 	
-	// if only we could return multiple things... wouldn't need this!
+	// if only we could return multiple things in Java... wouldn't need this!
 	private class ConditionalBranch {
 		public TACBranch entryNode;
 //		public TACNode entryNode;

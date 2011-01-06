@@ -10,6 +10,13 @@ public class TACMethod {
 	private TACNode exit;
 	private String name;
 	
+	
+	/**
+	 * Create a TACMethod given an AST node
+	 * @param name The name of the method
+	 * @param astRoot The AST node for the root of the method
+	 * @throws ShadowException
+	 */
 	public TACMethod(String name, Node astRoot) throws ShadowException {
 		this.name = name;
 		
@@ -22,6 +29,18 @@ public class TACMethod {
 		
 		entry = a2t.getEntry();
 		exit = a2t.getExit();
+	}
+	
+	/**
+	 * Create a TACMethod given an entry and exit for that method
+	 * @param name The name of the method
+	 * @param entry The entry into the method
+	 * @param exit The exit from the method
+	 */
+	public TACMethod(String name, TACNode entry, TACNode exit) {
+		this.name = name;
+		this.entry = entry;
+		this.exit = exit;
 	}
 	
 	public TACNode getEntry() {

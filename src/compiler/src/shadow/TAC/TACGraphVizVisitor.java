@@ -6,7 +6,6 @@ import shadow.TAC.nodes.TACBranch;
 import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
-import shadow.TAC.nodes.TACNodeInterface;
 import shadow.TAC.nodes.TACUnaryOperation;
 
 public class TACGraphVizVisitor extends AbstractTACVisitor {

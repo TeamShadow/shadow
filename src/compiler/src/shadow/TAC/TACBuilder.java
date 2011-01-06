@@ -44,11 +44,13 @@ public class TACBuilder extends AbstractASTVisitor {
 		
 		// go through and make all of the fields
 		for(Map.Entry<String, Node> f:fields.entrySet()) {
-			ASTUtils.DEBUG("FIELD: " + f.getKey());
+//			ASTUtils.DEBUG("FIELD: " + f.getKey());
 			curClass.addField(new TACVariable(f.getKey(), f.getValue().getType()));
 			
 			// we need to create an init method for any fields
 			AST2TAC a2t = new AST2TAC(f.getValue() );
+			
+//			ASTUtils.DEBUG(f.getValue().getASTNode());
 			
 			a2t.convert();
 			
@@ -61,6 +63,13 @@ public class TACBuilder extends AbstractASTVisitor {
 			// update the exit node
 			initExit = a2t.getExit();
 		}
+	
+		// these are NULL because AST -> TAC isn't done for fields :-(
+//		ASTUtils.DEBUG("INIT ENTRY: " + initEntry);
+//		ASTUtils.DEBUG("INIT EXIT: " + initExit);
+		
+		// create a method for initing the fields
+//		curClass.addMethod(new TACMethod(curClass.getName() + "_field_init_", initEntry, initExit));
 		
 		// go through and add all the methods
 		for(Map.Entry<String, List<MethodSignature>> m:type.getMethodMap().entrySet()) {
