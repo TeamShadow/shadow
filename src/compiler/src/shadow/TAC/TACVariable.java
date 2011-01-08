@@ -3,11 +3,24 @@ package shadow.TAC;
 import shadow.typecheck.type.Type;
 
 public class TACVariable {
-	private Type type;
-	private String symbol;
-	private int size;	/** The size of the var in memory in bytes */
-	private boolean isRef;
+	private Type type;		/** The type of the variable */
+	private String symbol;	/** The symbol of the variable */
+	private int size;		/** The size of the var in memory in bytes */
+	private boolean isRef;	/** Indicates if we have a reference or not */
 	private boolean isLiteral;	/** symbol holds the value of the literal */
+	
+	/**
+	 * Returns the default value of a given type.
+	 */
+	static public TACVariable getDefault(Type type) {
+		if(type.isPrimitive())
+			return new TACVariable("0", type, true);
+		else if(type.isString())
+			return new TACVariable("\"\"", type, true);
+		else
+			return new TACVariable("null", type, true);
+		
+	}
 	
 	public TACVariable(String symbol, Type type, boolean isLiteral) {
 		this(symbol, type);
@@ -17,6 +30,7 @@ public class TACVariable {
 	public TACVariable(String symbol, Type type) {
 		this.type = type;
 		this.symbol = symbol;
+		this.isLiteral = false;
 		
 		if(type.isPrimitive()) {
 			isRef = false;

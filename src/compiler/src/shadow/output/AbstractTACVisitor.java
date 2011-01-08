@@ -1,4 +1,4 @@
-package shadow.TAC;
+package shadow.output;
 
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;

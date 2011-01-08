@@ -1,4 +1,4 @@
-package shadow.TAC;
+package shadow.output.graphviz;
 
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
@@ -7,6 +7,7 @@ import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACUnaryOperation;
+import shadow.output.AbstractTACVisitor;
 
 public class TACGraphVizVisitor extends AbstractTACVisitor {
 

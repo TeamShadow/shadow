@@ -1,5 +1,6 @@
 package shadow.parser.javacc;
 
+import shadow.TAC.nodes.TACNode;
 import shadow.typecheck.type.Type;
 
 public class SimpleNode implements Node {
@@ -13,7 +14,10 @@ public class SimpleNode implements Node {
     
     protected Type type;		// used by the type checker    
     protected int modifiers; 	// used by the type checker
-	private Type enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)    
+	private Type enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
+	
+	private TACNode entryNode;	/** The entry node for the TAC path that includes this AST */
+	private TACNode exitNode;	/** The exit node for the TAC path that includes this AST */
 
 	public SimpleNode(int id) {
     	this.id = id;
@@ -173,6 +177,22 @@ public class SimpleNode implements Node {
 		return enclosingType;
 	} 
 	
+	public TACNode getEntryNode() {
+		return entryNode;
+	}
+
+	public void setEntryNode(TACNode entryNode) {
+		this.entryNode = entryNode;
+	}
+
+	public TACNode getExitNode() {
+		return exitNode;
+	}
+
+	public void setExitNode(TACNode exitNode) {
+		this.exitNode = exitNode;
+	}
+
 	public String toString()
 	{
 		if( image.isEmpty() )

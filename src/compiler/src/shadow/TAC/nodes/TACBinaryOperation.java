@@ -1,8 +1,7 @@
 package shadow.TAC.nodes;
 
-import shadow.TAC.AbstractTACVisitor;
-import shadow.TAC.TACOperation;
 import shadow.TAC.TACVariable;
+import shadow.output.AbstractTACVisitor;
 
 public class TACBinaryOperation extends TACAssign {
 

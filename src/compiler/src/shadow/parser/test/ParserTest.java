@@ -28,7 +28,8 @@ public final class ParserTest extends BaseTest {
 	 * @param args
 	 */
 	public static void main(String[] args) throws IOException, ShadowException {
-		ParserTest pt = new ParserTest(false, false);
+		ParserTest pt = new ParserTest(Boolean.getBoolean("DUMP"),
+								       Boolean.getBoolean("DEBUG"));
 		
 		// no args, we test everything
 		if(args.length == 0)

@@ -1,6 +1,6 @@
 package shadow.TAC.nodes;
 
-import shadow.TAC.AbstractTACVisitor;
+import shadow.output.AbstractTACVisitor;
 
 public class TACJoin extends TACNode {
 	private TACNode trueExit, falseExit;

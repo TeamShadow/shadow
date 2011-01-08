@@ -1,14 +1,15 @@
 class Bill {
 
+/*
     public int t;
     public int a = 1, y, z = 2;
     public double b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
     public String c = "hello" + "world";
     public boolean x = true;
+*/
     
     public test() => () {
-        z = y = 7;
-        y = z = 5;
+        int a = 1 + (2 + 3) + (4 + 5);
     }
 	
 /*    public blah() => () {
@@ -23,8 +24,7 @@ class Bill {
         
         if(x > y and z < y or z > y) { x += 2; }
         else { y += 1; }
-*/
-/*        else if(b > a) { ; }
+        else if(b > a) { ; }
                 
     	while(a == b or a > b) {
     		;
@@ -40,7 +40,5 @@ class Bill {
             default: break;
         }
 */
-
-//    }
 
 } 

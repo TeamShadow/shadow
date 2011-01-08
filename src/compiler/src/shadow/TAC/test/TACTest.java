@@ -8,9 +8,9 @@ import java.util.LinkedList;
 
 import shadow.TAC.TACBuilder;
 import shadow.TAC.TACClass;
-import shadow.TAC.TACGraphVizVisitor;
 import shadow.TAC.TACMethod;
-import shadow.TAC.TACWalker;
+import shadow.output.TACWalker;
+import shadow.output.graphviz.TACGraphVizVisitor;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
@@ -68,29 +68,20 @@ public class TACTest extends BaseTest {
 	        	throw new ShadowException("");
 	        }
 	        
-		System.out.println();
-		System.out.println("* TAC STAGE *");
+			System.out.println();
+			System.out.println("* TAC STAGE *");
 	        tacBuilder.build(node);
 
 	        long stopTime = System.currentTimeMillis();
 	        long runTime = stopTime - startTime;
-	        
-	        if(dump) {
-	        	System.out.println();
-	        	System.out.println("* TAC STAGE * ");
-	        	
-	        	LinkedList<TACClass> classes = tacBuilder.getClasses();
-	        	
-	        	for(TACClass c:classes) {
-	        		// c.dump();
-	        		
-	        		for(TACMethod m:c.getMethods()) {
-	        			TACGraphVizVisitor visitor = new TACGraphVizVisitor(m.getEntry());
-	        			TACWalker walker = new TACWalker(visitor);
-	        			
-	        			walker.walk();
-	        		}
-	        	}
+
+	        if(dump) {	// this means print the graphviz stuff
+	    		for(TACMethod m:tacBuilder.methods) {
+	    			TACGraphVizVisitor visitor = new TACGraphVizVisitor(m.getEntry());
+	    			TACWalker walker = new TACWalker(visitor);
+	    			
+	    			walker.walk();
+	    		}
 	        }
 
 	        System.out.println("PASSED TAC: " + runTime + "ms");

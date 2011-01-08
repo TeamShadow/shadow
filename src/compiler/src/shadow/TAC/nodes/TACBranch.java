@@ -1,8 +1,7 @@
 package shadow.TAC.nodes;
 
-import shadow.TAC.AbstractTACVisitor;
-import shadow.TAC.TACComparison;
 import shadow.TAC.TACVariable;
+import shadow.output.AbstractTACVisitor;
 
 public class TACBranch extends TACNode {
 

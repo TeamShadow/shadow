@@ -2,7 +2,7 @@ package shadow.TAC.nodes;
 
 import java.util.LinkedList;
 
-import shadow.TAC.AbstractTACVisitor;
+import shadow.output.AbstractTACVisitor;
 
 public abstract class TACNode implements TACNodeInterface {
 	private static int labelCounter = 0;
@@ -11,6 +11,37 @@ public abstract class TACNode implements TACNodeInterface {
 	protected TACNode next;
 	
 	private static LinkedList<TACNode> allNodes = new LinkedList<TACNode>();
+	
+	/**
+	 * These are the different types of operations that can be performed in a TAC(Unary|Binary)Operation
+	 */
+	public enum TACOperation {
+		ADDITION,
+		SUBTRACTION,
+		MULTIPLICATION,
+		DIVISION,
+		MOD,
+		OR,		/** bit-wise */
+		AND,	/** bit-wise */
+		XOR,
+		RSHIFT,
+		RROTATE,
+		LSHIFT,
+		LROTATE
+	}
+
+	/**
+	 * These are the various types of comparisons we find in a TACBranch
+	 */
+	public enum TACComparison {
+		GREATER,
+		GREATER_EQUAL,
+		LESS,
+		LESS_EQUAL,
+		EQUAL,
+		NOT_EQUAL
+	}
+
 	
 	public TACNode(String name, TACNode parent) {
 		this.name = "label_" + labelCounter++ + ": " + name;
