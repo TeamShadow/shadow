@@ -76,10 +76,10 @@
     </target>
     
     <!-- Test the three-address code builder -->
-    <!--target name="test-tac" depends="build">
+    <target name="test-tac" depends="build">
         <java classname="shadow.TAC.test.TACTest" failonerror="true" fork="yes" taskname="Test">
             <classpath refid="shadow_compiler.classpath"/>
         </java>
-    </target-->
+    </target>
     
 </project>

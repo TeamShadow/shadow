@@ -147,6 +147,14 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			return TACOperation.DIVISION;
 		case '%':
 			return TACOperation.MOD;
+		case 'r':
+			return TACOperation.RSHIFT;
+		case 'l':
+			return TACOperation.LSHIFT;
+		case 'R':
+			return TACOperation.RROTATE;
+		case 'L':
+			return TACOperation.LROTATE;
 		}
 		
 		return null;
@@ -173,6 +181,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		String operators = node.getImage();	// get the operators
 		SimpleNode astOp1 = (SimpleNode)node.jjtGetChild(0);
 		SimpleNode astOp2 = (SimpleNode)node.jjtGetChild(1);
+		
+		System.out.println("OPERATORS: " + operators);
 		
 		// link the first two operator's TAC paths into this one
 		TACNode op1ExitNode = astOp1.getExitNode();
@@ -379,13 +389,25 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 		
+		ASTUtils.DEBUG(node);
+
+		visitArithmetic(node);
+		
+		((SimpleNode)node).getEntryNode().dump("ADD");
+
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
+
+		ASTUtils.DEBUG(node);
+
+		visitArithmetic(node);
 		
+		((SimpleNode)node).getEntryNode().dump("ADD");
+
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -595,7 +617,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 
 		visitArithmetic(node);
 		
-		((SimpleNode)node).getEntryNode().dump("");
+		((SimpleNode)node).getEntryNode().dump("ADD");
 		
 		return WalkType.POST_CHILDREN;
 	}

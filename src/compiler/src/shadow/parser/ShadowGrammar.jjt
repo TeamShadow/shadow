@@ -1104,17 +1104,24 @@ void RelationalExpression():
                         ">="  { jjtThis.setImage(">="); }) ShiftExpression() )*
 }
 
-
+//
+// Since shift & rotate are not single characters (see TAC Symbole2Operator code)
+// we are using r & l for right & left shift and
+// R & L for right & left rotate
 void ShiftExpression():
 { debugPrint("SHIFT EXPRESSION"); }
 {
-  RotateExpression() ( ( "<<" | RightShift() ) RotateExpression() )*
+  RotateExpression()
+  ( ( "<<" { jjtThis.setImage(jjtThis.getImage() + "l"); } |
+      RightShift() { jjtThis.setImage(jjtThis.getImage() + "r"); } ) RotateExpression() )*
 }
 
 void RotateExpression():
 { debugPrint("ROTATE EXPRESSION"); }
 {
-  AdditiveExpression() ( ( "<<<" | RightRotate() ) AdditiveExpression() )*
+  AdditiveExpression()
+  ( ( "<<<" { jjtThis.setImage(jjtThis.getImage() + "L"); } |
+      RightRotate() { jjtThis.setImage(jjtThis.getImage() + "R"); } ) AdditiveExpression() )*
 }
 
 //
