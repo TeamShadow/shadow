@@ -9,7 +9,11 @@ class Bill {
 */
     
     public test() => () {
-        int a = 1 + (2 + 3) + (4 + 5);
+        int a = 1 + (2 + 3) + (5 * 8);
+        int b = 2;
+        
+        a = a + b;
+        b += a;
     }
 	
 /*    public blah() => () {

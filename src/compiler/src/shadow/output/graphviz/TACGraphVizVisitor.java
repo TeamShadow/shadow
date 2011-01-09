@@ -56,12 +56,7 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 	}
 	
 	public void visit(TACNoOp node) {
-/*		if(node.getNext() != null) {
-			System.out.print("\"" + node.getParent() + "\"");
-			System.out.print(" -> ");
-			System.out.println("\"" + node.getNext() + "\"");
-		}
-*/
+//		printNode(node, true);
 	}
 
 	public void visit(TACUnaryOperation node) {
@@ -73,13 +68,20 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 			System.out.print("\"" + node + "\"");
 			System.out.print(" -> ");
 			
-			TACNode next = null;
+			TACNode next = node.getNext();
+	
+			//
+			// This might have broken things with branching
+			//
+			while(next instanceof TACNoOp) {
+				next = next.getNext();
+			}
 			
-			if(node.getNext() instanceof TACNoOp)
+/*			if(node.getNext() instanceof TACNoOp)
 				next = node.getNext().getNext();
 			else
 				next = node.getNext();
-
+*/
 			if(newline)
 				System.out.println("\"" + next + "\"");
 			else
