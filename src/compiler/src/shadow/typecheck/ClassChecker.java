@@ -714,34 +714,26 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public void visitConditional(SimpleNode node ) throws ShadowException {
-		if(node.jjtGetNumChildren() == 1) 
-		{
-			node.setType( node.jjtGetChild(0).getType() ); //propagate type up
-			pushUpModifiers( node );
-		}
-		else if(node.jjtGetNumChildren() == 2)
-		{			
-			// get the two types
-			Type t1 = node.jjtGetChild(0).getType();
-			Type t2 = node.jjtGetChild(1).getType();
-			
-			if(!t1.equals(Type.BOOLEAN) ) {
-				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but boolean type required for conditional operations");
-				//node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-				return;
-			}
-			
-			if(!t2.equals(Type.BOOLEAN) ) {
-				addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but boolean type required for conditional operations");
-				//node.setType(Type.BOOLEAN);	// 100% fake to keep things going
-				return;
-			}
-			
-			node.setType(Type.BOOLEAN);
-		}
+		
+		if( node.jjtGetNumChildren() == 1 )
+			pushUpType(node, true); //includes modifier push up
 		else
-			addError(node, Error.TYPE_MIS, "Too many arguments");
+		{
+			Type result = null;
 			
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
+			{
+				result = node.jjtGetChild(i).getType();
+			
+				if( result != Type.BOOLEAN )
+				{
+					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + result + ", but boolean type required for conditional operations");			
+					return;						
+				}					
+			}
+			
+			node.setType(result);
+		}
 	}
 	
 	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException {
@@ -768,38 +760,36 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}	
 
-	//FIX THIS!  Bitwise operations can be over more than 2 operands
+
 	public void visitBitwise(SimpleNode node ) throws ShadowException {
-		if(node.jjtGetNumChildren() == 1)
-		{
-			node.setType( node.jjtGetChild(0).getType() ); //propagate type up
-			pushUpModifiers( node );
-		}
-		else if(node.jjtGetNumChildren() == 2)
-		{
-			// get the two types
-			Type t1 = node.jjtGetChild(0).getType();
-			Type t2 = node.jjtGetChild(1).getType();
-			
-			if(!t1.isIntegral() ) {
-				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + t1 + ", but integral type required for shift and rotate operations");
-				return;
-			}
-			
-			if(!t2.isIntegral() ) {
-				addError(node.jjtGetChild(1), Error.INVL_TYP, "Found type " + t2 + ", but integral type required for shift and rotate operations");
-				return;
-			}
-		
-			if(!t1.equals(t2)) {
-				addError(node, Error.TYPE_MIS, "Type " + t1 + " does not match " + t2 + " (strict typing)");
-				return;
-			}
-								
-			node.setType(t1);	// assume that result has the same type as the first argument
-		}	
+				
+		if( node.jjtGetNumChildren() == 1 )
+			pushUpType(node, true); //includes modifier push up
 		else
-			addError(node, Error.TYPE_MIS, "Too many arguments");
+		{
+			Type result = node.jjtGetChild(0).getType();
+			if( !result.isIntegral() )
+			{
+				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + result + ", but integral type required for shift and rotate operations");
+				return;
+			}
+			
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
+			{
+				Type current = node.jjtGetChild(i).getType();
+			
+				if( !current.isIntegral() )
+				{
+					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + current + ", but integral type required for shift and rotate operations");
+					return;
+				}
+				
+				if( current.isSubtype(result))
+					result = current;
+			}
+			
+			node.setType(result);
+		}
 	}
 	
 	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit) throws ShadowException {

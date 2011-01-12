@@ -1,9 +1,21 @@
 class Bill {
 
     public blah() => () {
+    
+      int a = 10;
+      int c = 5;
+        
+      if(a > c and c < a and a < c)
+    	a = 14;
+        
         Bob b;
+              
         
         b = new Bob(2);
+        
+
+        
+      
     }
     
     private class Bob {

@@ -12,6 +12,7 @@ class Bill {
         int a = 1 + (2 + 3) + (5 * 8);
         int b = 2;
         
+        if(a > b and b < a and a < b)        
         a = a + b;
         b += a;
     }

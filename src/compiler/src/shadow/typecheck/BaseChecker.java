@@ -55,6 +55,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		this.importList = importList;
 	}
 	
+	/*
 	protected Object pushUpType(Node node, Boolean secondVisit, int child) {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
@@ -67,7 +68,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 
 	protected Object pushUpType(Node node, Boolean secondVisit) {
 		return pushUpType(node, secondVisit, 0);
-	}
+	}*/
 	
 	protected Object pushUpType(SimpleNode node, Boolean secondVisit) {
 		return pushUpType(node, secondVisit, 0);
