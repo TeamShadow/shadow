@@ -1,15 +1,22 @@
 package shadow.parser.javacc;
 
+import shadow.AST.ASTUtils;
+import shadow.typecheck.type.Type;
+
 
 public class ASTBooleanLiteral extends SimpleNode {
 	private boolean isTrue = false;
 	
 	public ASTBooleanLiteral(int i) {
 		super(i);
+		this.setImage("false");
+		this.setType(Type.BOOLEAN);
 	}
 
 	public ASTBooleanLiteral(ShadowParser p, int i) {
 		super(p, i);
+		this.setImage("false");
+		this.setType(Type.BOOLEAN);
 	}
 	
     public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
@@ -26,6 +33,8 @@ public class ASTBooleanLiteral extends SimpleNode {
 
 	public void setTrue() {
 		isTrue = true;
+		this.setImage("true");
+		this.setType(Type.BOOLEAN);
 	}
 	
 	public Boolean isTrue() {

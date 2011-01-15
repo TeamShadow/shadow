@@ -22,6 +22,15 @@ public class TACVariable {
 		
 	}
 	
+	static public TACVariable getBooleanLiteral(boolean value) {
+		Type t = new Type("boolean");
+		
+		if(value)
+			return new TACVariable("true", t, true);
+		else
+			return new TACVariable("false", t, true);
+	}
+	
 	public TACVariable(String symbol, Type type, boolean isLiteral) {
 		this(symbol, type);
 		this.isLiteral = isLiteral;

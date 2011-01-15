@@ -9,12 +9,14 @@ class Bill {
 */
     
     public test() => () {
-        int a = 1 + (2 + 3) + (5 * 8);
-        int b = 2;
+        int a;
+        int b;
         
-        if(a > b and b < a and a < b)        
-        a = a + b;
-        b += a;
+        if(true and a > b) {
+            a = 0;
+        } else {
+            b = 0;
+        }
     }
 	
 /*    public blah() => () {

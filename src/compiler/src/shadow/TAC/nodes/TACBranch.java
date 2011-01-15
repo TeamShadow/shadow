@@ -70,6 +70,6 @@ public class TACBranch extends TACNode {
 		if(falseEntry != null)
 			falseEntry.dump(prefix + "        ");
 		
-		join.dump(prefix);
+		//join.dump(prefix);
 	}
 }

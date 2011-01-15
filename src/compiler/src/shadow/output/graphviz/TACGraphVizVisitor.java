@@ -38,16 +38,29 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 	
 	public void visit(TACBranch node) {
 		TACBranch branch = (TACBranch)node;
+		TACNode tmp = null;
 		
 		System.out.print("\"" + branch + "\"");
 		System.out.print(" -> ");
-		System.out.print("\"" + branch.getTrueEntry().getNext() + "\"");
+		
+		tmp = branch.getTrueEntry();
+		while(tmp instanceof TACNoOp) {
+			tmp = tmp.getNext();
+		}
+		
+		System.out.print("\"" + tmp + "\"");
 		System.out.println(" [ label = \"T\" ]; ");
 		
 		
 		System.out.print("\"" + branch + "\"");
 		System.out.print(" -> ");
-		System.out.print("\"" + branch.getFalseEntry().getNext() + "\"");
+
+		tmp = branch.getFalseEntry();
+		while(tmp instanceof TACNoOp) {
+			tmp = tmp.getNext();
+		}
+		
+		System.out.print("\"" + tmp + "\"");
 		System.out.println(" [ label = \"F\" ]; ");
 	}
 	

@@ -3,6 +3,7 @@ package shadow.TAC.nodes;
 import java.util.LinkedList;
 
 import shadow.output.AbstractTACVisitor;
+import shadow.parser.javacc.ShadowException;
 
 public abstract class TACNode implements TACNodeInterface {
 	private static int labelCounter = 0;
@@ -39,7 +40,8 @@ public abstract class TACNode implements TACNodeInterface {
 		LESS,
 		LESS_EQUAL,
 		EQUAL,
-		NOT_EQUAL
+		NOT_EQUAL,
+		IS
 	}
 
 	

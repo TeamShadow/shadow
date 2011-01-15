@@ -12,6 +12,7 @@ import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNode.TACComparison;
 import shadow.TAC.nodes.TACNode.TACOperation;
+import shadow.typecheck.type.Type;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
@@ -19,6 +20,7 @@ import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBlockStatement;
+import shadow.parser.javacc.ASTBooleanLiteral;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -27,6 +29,7 @@ import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameters;
+import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
@@ -34,6 +37,7 @@ import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
+import shadow.parser.javacc.ASTNullLiteral;
 import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimitiveType;
@@ -55,8 +59,6 @@ import shadow.parser.javacc.SimpleNode;
 
 public class ASTToTACVisitor extends AbstractASTVisitor {
 	private static int tempCounter = 0;	/** Counter for making temporary variables */
-//	private TACNode entryNode = null;
-//	private TACNode exitNode = null;
 	
 	/**
 	 * Walks a portion of an AST and creates a TAC tree.
@@ -64,36 +66,6 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 	 */
 	public ASTToTACVisitor() {
 	}
-	
-/*	public TACNode getEntry() {
-		return entryNode;
-	}
-	
-	public TACNode getExit() {
-		return exitNode;
-	}
-*/
-	
-/*	private void linkToStart(TACNode node) {
-		if(entryNode == null) { // we don't have a tree yet
-			exitNode = node;
-		} else {
-			entryNode.insertBefore(node);
-		}
-		
-		entryNode = node;
-	}
-	
-	private void linkToEnd(TACNode node) {
-		if(entryNode == null) { // we don't have a tree yet
-			entryNode = node;
-		} else {
-			exitNode.insertAfter(node);
-		}
-
-		exitNode = node;
-	}
-*/
 	
 	/**
 	 * Links a TAC path to the end of an AST Node's TAC
@@ -167,6 +139,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(symbol.equals("<=")) return TACComparison.LESS_EQUAL;
 		if(symbol.equals("==")) return TACComparison.EQUAL;
 		if(symbol.equals("!=")) return TACComparison.NOT_EQUAL;
+		if(symbol.equals("is")) return TACComparison.IS;
 		
 		return null;
 	}
@@ -230,84 +203,6 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return;	// nothing else to do here
 	}
 	
-/*	public static Node flatten( Node node ) //used for conditional statements, etc.
-	{
-		while( node.jjtGetNumChildren() == 1) //may want to make this smarter
-			node = node.jjtGetChild(0);
-		
-		return node;
-	}
-*/
-	// if only we could return multiple things in Java... wouldn't need this!
-	private class ConditionalBranch {
-		public TACBranch entryNode;
-//		public TACNode entryNode;
-		public TACNode trueExit;
-		public TACNode falseExit;
-	}
-	
-	public ConditionalBranch visitComparison(SimpleNode node) {
-		ConditionalBranch ret = new ConditionalBranch();
-		Node astLHS = node.jjtGetChild(0);
-		Node astRHS = node.jjtGetChild(1);
-		
-		//
-		// Need to somehow handle the case where someone has if(true)
-		//
-		
-		if(node instanceof ASTConditionalOrExpression) { // OR expression
-			ConditionalBranch lhsBranch = visitComparison((SimpleNode)astLHS);
-			ConditionalBranch rhsBranch = visitComparison((SimpleNode)astRHS);
-			TACJoin join = new TACJoin(lhsBranch.trueExit, rhsBranch.trueExit);
-			
-//			lhsBranch.trueExit.setNext(join);
-//			rhsBranch.trueExit.setNext(join);
-			
-			lhsBranch.falseExit.setNext(rhsBranch.entryNode);	// set the false path
-			rhsBranch.entryNode.setParent(lhsBranch.falseExit);	// set the parent link
-			
-			ret.entryNode = lhsBranch.entryNode;
-			ret.trueExit = join;
-			ret.falseExit = rhsBranch.falseExit;
-			
-			ret.entryNode.setJoin(join);
-			rhsBranch.entryNode.setJoin(join);
-			
-		} else if(node instanceof ASTConditionalAndExpression) { // AND expression
-			ConditionalBranch lhsBranch = visitComparison((SimpleNode)astLHS);
-			ConditionalBranch rhsBranch = visitComparison((SimpleNode)astRHS);
-			TACJoin join = new TACJoin(lhsBranch.falseExit, rhsBranch.falseExit);
-			
-//			lhsBranch.falseExit.setNext(join);
-//			rhsBranch.falseExit.setNext(join);
-
-			lhsBranch.trueExit.setNext(rhsBranch.entryNode);	// set the true path
-			rhsBranch.entryNode.setParent(lhsBranch.trueExit);	// set the parent link
-			
-			ret.entryNode = lhsBranch.entryNode;
-			ret.trueExit = rhsBranch.trueExit;
-			ret.falseExit = join;
-			
-			ret.entryNode.setJoin(join);
-			rhsBranch.entryNode.setJoin(join);
-			
-		} else { // standard comparision
-			TACVariable lhs = new TACVariable(astLHS.getImage(), astLHS.getType(), astLHS instanceof ASTLiteral);
-			TACVariable rhs = new TACVariable(astRHS.getImage(), astRHS.getType(), astRHS instanceof ASTLiteral);
-			
-			TACBranch branch = new TACBranch(lhs, rhs, symbol2Comparison(node.getImage()));
-
-			branch.setTrueEntry(new TACNoOp(null, branch));
-			branch.setFalseEntry(new TACNoOp(null, branch));
-			
-			ret.entryNode = branch;
-			ret.falseExit = branch.getFalseEntry();
-			ret.trueExit = branch.getTrueEntry();
-		}
-		
-		return ret;
-	}
-
 	/**
 	 * Used at the start of most visit methods to link in empty AST nodes.
 	 * @param node The node to check.
@@ -321,22 +216,96 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		return WalkType.PRE_CHILDREN;
 	}
+
+	/**
+	 * Visit a comparison node and create the appropriate assignment
+	 * @param node One of ASTEqualityExpression, ASTIsExpression, ASTRelationalExpression
+	 */
+	public void visitComparison(SimpleNode node) {
+		SimpleNode astVar1 = (SimpleNode)node.jjtGetChild(0);
+		SimpleNode astVar2 = (SimpleNode)node.jjtGetChild(1);
+		
+		// link the first two operator's TAC paths into this one
+		TACNode var1ExitNode = astVar1.getExitNode();
+		TACNode var2ExitNode = astVar2.getExitNode();
+		
+		linkToEnd(node, astVar1.getEntryNode(), var1ExitNode);
+		linkToEnd(node, astVar2.getEntryNode(), var2ExitNode);
+		
+		// get the first two TACVariables
+		TACVariable var1 = var1ExitNode instanceof TACAssign ? ((TACAssign)var1ExitNode).getTarget() : ((TACNoOp)var1ExitNode).getVariable();
+		TACVariable var2 = var2ExitNode instanceof TACAssign ? ((TACAssign)var2ExitNode).getTarget() : ((TACNoOp)var2ExitNode).getVariable();
+		
+		// construct the branch and link it in
+		TACBranch branch = new TACBranch(var1, var2, symbol2Comparison(node.getImage()));
+
+		// should have something here to allocate our new var
+		TACVariable ret = new TACVariable(getTempSymbol(), Type.BOOLEAN);
+		
+		// create the branches
+		TACAssign trueBranch = new TACAssign(ret, TACVariable.getBooleanLiteral(true));
+		TACAssign falseBranch = new TACAssign(ret, TACVariable.getBooleanLiteral(false));
+		
+		// link in the branches
+		branch.setTrueEntry(trueBranch);
+		trueBranch.setParent(branch);
+		branch.setFalseEntry(falseBranch);
+		falseBranch.setParent(branch);
+		
+		// create our join
+		TACJoin join = new TACJoin(trueBranch, falseBranch);
+		
+		// link in the join
+		trueBranch.setNext(join);
+		falseBranch.setNext(join);
+		
+		// create our NoOp to hold our var
+		TACNoOp noop = new TACNoOp(ret, join);
+		
+		join.setNext(noop);
+		
+		// link into the node
+		linkToEnd(node, branch, noop);
+	}
+	
+
 	
 	//
 	// Below here you'll find the various visit methods
 	//
-	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
+	
+	public void visitLiteral(SimpleNode node) {
 		TACVariable literal = new TACVariable(node.getImage(), node.getType(), true);
 		TACNoOp noop = new TACNoOp(literal, null, null);
-		
-		ASTUtils.DEBUG(node, noop.toString());
 		
 		// set the entry & exit to this node
 		((SimpleNode)node).setEntryNode(noop);
 		((SimpleNode)node).setExitNode(noop);
+	}
+	
+	public Object visit(ASTBooleanLiteral node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		visitLiteral(node);
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTNullLiteral node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		visitLiteral(node);
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		visitLiteral(node);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -354,8 +323,6 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		TACVariable variable = new TACVariable(node.getImage(), node.getType());
 		TACNoOp noop = new TACNoOp(variable, null, null);
-		
-		ASTUtils.DEBUG(node, noop.toString());
 		
 		// set the entry & exit to this node
 		((SimpleNode)node).setEntryNode(noop);
@@ -415,6 +382,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 		
+		visitComparison(node);
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -422,12 +391,16 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 		
+		visitComparison(node);
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
+		
+		visitComparison(node);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -456,10 +429,81 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
+
+		// create our current branch & join, to be made later
+		TACBranch curBranch = null;
+		TACJoin curJoin = null;
+		
+		// the entry into this TAC path
+		TACNode entryNode = null;
+		
+		// go through each var in the AND which will be NoOps of stuff further down the AST
+		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+			SimpleNode child = (SimpleNode)node.jjtGetChild(i);
+			TACVariable curVar = ((TACNoOp)child.getExitNode()).getVariable();
+			
+			// create the branch
+			TACBranch tmpBranch = new TACBranch(curVar, TACVariable.getBooleanLiteral(true), TACComparison.EQUAL);
+			
+			if(curBranch != null) {
+				// link in the child's TAC path
+				curBranch.setTrueEntry(child.getEntryNode());
+				child.getEntryNode().setParent(curBranch);
+				child.getExitNode().setNext(tmpBranch);
+				tmpBranch.setParent(child.getExitNode());
+			} else {
+				// link in the child's TAC path
+				entryNode = child.getEntryNode();
+				tmpBranch.setParent(child.getExitNode());
+				child.getExitNode().setNext(tmpBranch);
+			}
+			
+			curBranch = tmpBranch;
+			
+			if(curJoin != null) {
+				curBranch.setFalseEntry(curJoin);	// the false exit for the branch is really
+				curJoin.setTrueExit(curBranch);		// the true exit for the join... seems backwards, it's not
+				
+				// create the join and link it in
+				TACJoin tmpJoin = new TACJoin(null, curJoin);
+				curJoin.setNext(tmpJoin);
+				curJoin = tmpJoin;
+			} else {
+				// create the join
+				curJoin = new TACJoin(null, curBranch);
+				curBranch.setFalseEntry(curJoin);
+			}
+		}
+		
+		TACVariable tmpVar = new TACVariable(getTempSymbol(), Type.BOOLEAN);
+
+		// create the true and false assigns
+		TACAssign trueBranch = new TACAssign(tmpVar, TACVariable.getBooleanLiteral(true));
+		TACAssign falseBranch = new TACAssign(tmpVar, TACVariable.getBooleanLiteral(false));
+		
+		// link in the true branch
+		curBranch.setTrueEntry(trueBranch);
+		trueBranch.setParent(curBranch);
+		
+		// link in the false branch
+		curJoin = (TACJoin) curJoin.getFalseExit();	// need to link around the extra join
+		curJoin.setNext(falseBranch);
+		falseBranch.setParent(curJoin);
+		
+		// create a new join for the true & false branches, and link in
+		curJoin = new TACJoin(trueBranch, falseBranch);
+		trueBranch.setNext(curJoin);
+		falseBranch.setNext(curJoin);
+		
+		// create our NoOp to hold our variable
+		TACNoOp noop = new TACNoOp(tmpVar, curJoin);
+		curJoin.setNext(noop);
+		
+		linkToEnd(node, entryNode, noop);
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
+
 	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
@@ -576,7 +620,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			linkToEnd(node, blockStmt.getEntryNode(), blockStmt.getExitNode());
 		}
 		
-		((SimpleNode)node).getEntryNode().dump("BLOCK: ");
+//		((SimpleNode)node).getEntryNode().dump("BLOCK: ");
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -714,45 +758,55 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return WalkType.NO_CHILDREN;
 	}
 	
+	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		// get the conditional stuff
+		SimpleNode conditional = (SimpleNode)node.jjtGetChild(0);
+		TACNode conEntry = conditional.getEntryNode();
+		TACNode conExit = conditional.getExitNode();
+		TACVariable conVar = ((TACNoOp)conExit).getVariable();
+		
+		// get the stuff for the true branch
+		SimpleNode trueBranch = (SimpleNode)node.jjtGetChild(1);
+		TACNode trueEntry = trueBranch.getEntryNode();
+		TACNode trueExit = trueBranch.getExitNode();
+		
+		// create the branch
+		TACBranch branch = new TACBranch(conVar, TACVariable.getBooleanLiteral(true), TACComparison.EQUAL);
 
-	
-/*	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException {
-		ConditionalBranch branch = visitComparison((SimpleNode)flatten(node.jjtGetChild(0)));
-		TACJoin join = null;
+		// link the branch in
+		conExit.setNext(branch);
+		branch.setParent(conExit);
+		branch.setTrueEntry(trueEntry);
+		trueEntry.setParent(branch);
 		
-		ASTMethodToTAC a2t = new ASTMethodToTAC(node.jjtGetChild(1));
-		a2t.convert();
+		// create the join for this branch and link it in
+		TACJoin join = new TACJoin(trueExit, null);
+		trueExit.setNext(join);
 		
-		TACNode trueEntry = a2t.getEntry();
-		TACNode trueExit = a2t.getExit();
-		
-		branch.trueExit.insertAfter(trueEntry);
-
-		// only an if
 		if(node.jjtGetNumChildren() == 2) {
-			// create the join and we're done
-			join = new TACJoin(trueExit, branch.falseExit);
+			// just link the branch & join, no false path
+			join.setFalseExit(branch);
+			branch.setFalseEntry(join);
+		} else { // we have an else path
+			// get the stuff for the false branch
+			SimpleNode falseBranch = (SimpleNode)node.jjtGetChild(2);
+			TACNode falseEntry = falseBranch.getEntryNode();
+			TACNode falseExit = falseBranch.getExitNode();
 			
-//			if(branch.entryNode.getJoin() == null)
-				branch.entryNode.setJoin(join);
-			
-		} else { // we have an else branch too
-			a2t = new ASTMethodToTAC(node.jjtGetChild(2));
-			a2t.convert();
-			
-			TACNode falseEntry = a2t.getEntry();
-			TACNode falseExit = a2t.getExit();
-			
-			branch.falseExit.insertAfter(falseEntry);
-			
-			join = new TACJoin(trueExit, falseExit);
-			
-			branch.entryNode.setJoin(join);
+			// link in the branch & join
+			branch.setFalseEntry(falseEntry);
+			falseEntry.setParent(branch);
+			join.setFalseExit(falseExit);
+			falseExit.setNext(join);
 		}
 		
-		linkToEnd(node, branch.entryNode, join);
+		// link in the path
+		linkToEnd(node, conEntry, join);
 		
-		return WalkType.NO_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
-*/	
+	
 }
