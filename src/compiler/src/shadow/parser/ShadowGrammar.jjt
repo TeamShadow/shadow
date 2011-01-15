@@ -414,8 +414,7 @@ TOKEN :
   < #LETTER:
       [
 //       "\u0024",  // this is the $, but I want to use that for versions
-       "\u0041"-"\u005a",
-       "\u005f",
+       "\u0041"-"\u005a",       
        "\u0061"-"\u007a",
        "\u00c0"-"\u00d6",
        "\u00d8"-"\u00f6",
@@ -432,6 +431,7 @@ TOKEN :
   < #DIGIT:
       [
        "\u0030"-"\u0039",
+       "\u005f", //underscore
        "\u0660"-"\u0669",
        "\u06f0"-"\u06f9",
        "\u0966"-"\u096f",
@@ -739,7 +739,7 @@ void TypeParameter():
 void TypeBound():
 { debugPrint("TYPE BOUND"); }
 {
-   "extends" ClassOrInterfaceType() ( "&" ClassOrInterfaceType() )*
+   "extends" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
 }
 
 void ClassOrInterfaceBody(boolean isInterface):
@@ -762,7 +762,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
   (  ClassOrInterfaceDeclaration(modifier)
     | EnumDeclaration(modifier)
     | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration(modifier)
-    | LOOKAHEAD( [ TypeParameters() ] "destructor" ) DestructorDeclaration(modifier)
+    | LOOKAHEAD( "destructor" ) DestructorDeclaration(modifier)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
     //removed ( "[" "]" ) * because Shadow only allows square brackets on the LEFT of identifiers in declarations 
     | MethodDeclaration(modifier)
@@ -841,7 +841,7 @@ void ConstructorDeclaration(int modifiers):
 { debugPrint("CONSTRUCTOR DECLARATION"); }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }
-  //[ TypeParameters() ]
+  [ TypeParameters() ]
   // Modifiers matched in the caller
   "constructor" FormalParameters() [ "throws" NameList() ]
   "{"
