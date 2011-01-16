@@ -36,6 +36,8 @@ import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTForInit;
 import shadow.parser.javacc.ASTForStatement;
 import shadow.parser.javacc.ASTForeachStatement;
+import shadow.parser.javacc.ASTFormalParameter;
+import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLabeledStatement;
@@ -112,7 +114,8 @@ public class ClassChecker extends BaseChecker {
 	
 	private void createScope(Boolean secondVisit) {
 		// we have a new scope, so we need a new HashMap in the linked list
-		if(secondVisit) {
+		if(secondVisit)
+		{
 			System.out.println("\nSYMBOL TABLE:");
 			for(String s:symbolTable.getFirst().keySet())
 				System.out.println(s + ": " + symbolTable.getFirst().get(s).getType());
@@ -157,49 +160,81 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
+		return visitMethod( node, secondVisit );
+	}
+	
+	
+	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException
+	/* Note:  The ASTFormalParameters node can only be found in methods (including constructors)
+	 * However, the ASTFormalParameter node can also be found in a try-catch block
+	 * This is why we add parameters to the symbol table in ASTFormalParameters and not ASTFormalParameter
+	 */
+	{
 		if(!secondVisit)
-			updateCurMethod(node);
+			return WalkType.POST_CHILDREN;	
+	
+		for(int i = 0; i < node.jjtGetNumChildren(); ++i)
+		{
+			Node child = node.jjtGetChild(i);
+			String varName = child.jjtGetChild(1).getImage();
+			
+			addSymbol( varName, child );
+		}		
+
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public void addSymbol( String name, Node node )
+	{
+		if( findSymbol( name ) != null )
+			addError(node, Error.MULT_SYM, name);
+		else if( symbolTable.size() == 0 )
+			addError(node, Error.INVL_TYP, "No valid scope for variable declaration");
 		else
-			updateCurMethod(null);
+			symbolTable.getFirst().put(name, node);  //uses node for modifiers
+	}
+	
+	
+	public Node findSymbol( String name )
+	{
+		Node node = null;
+		for( HashMap<String,Node> map : symbolTable )
+			if( (node = map.get(name)) != null )
+				return node;
 		
-		//add in parameter declarations!!!!
+		return node;
+	}
+	
+	
+	public Object visitMethod( SimpleNode node, Boolean secondVisit  )
+	{
+		if(!secondVisit)
+			curMethod = node;
+		else
+			curMethod = null;
+		
+		createScope(secondVisit); 
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException
+	{
 		if(!secondVisit)
-			updateCurMethod(node);
-		else
-			updateCurMethod(null);
-		
-		createScope(secondVisit); // constructors don't have Block()s so new scope needed
-		
+			return WalkType.POST_CHILDREN;
+				
+		node.setType( node.jjtGetChild(0).getType() );		
+	
 		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {
+		return visitMethod( node, secondVisit );
 	}
 	
 	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			//updateCurMethod(null);  //no params in destructor
-			updateCurMethod(node);  //So what?  curMethod has many uses
-		else
-			updateCurMethod(null);			
-		
-		createScope(secondVisit); // destructors don't have Block()s so new scope needed			
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	private void updateCurMethod(Node method) 
-	{		
-		curMethod = method;
-		
-		/* //still trying to decide whether or not to keep the node or the type.... probably the node since it gives more information 
-		if( method != null && method.getType() != null && method.getType() instanceof MethodType )				
-			curMethod = (MethodType)method.getType();
-		else
-			curMethod = null;
-		*/
+		return visitMethod( node, secondVisit );
 	}
 	
 	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {
@@ -236,12 +271,7 @@ public class ClassChecker extends BaseChecker {
 			Node curNode = node.jjtGetChild(i);
 			String varName = curNode.jjtGetChild(0).getImage();
 			
-			if(symbolTable.getFirst().get(varName) != null)
-			{
-				addError(curNode, Error.MULT_SYM, varName);
-				type = Type.UNKNOWN; //overwrites old type, for error case
-			}
-			else if(curNode.jjtGetNumChildren() == 2) // check to see if we have any kind of init here
+			if(curNode.jjtGetNumChildren() == 2) // check to see if we have any kind of init here
 			{
 				Type initType = curNode.jjtGetChild(1).getType();
 				
@@ -253,10 +283,10 @@ public class ClassChecker extends BaseChecker {
 			}
 			
 			// add the symbol to the table
-			symbolTable.getFirst().put(varName, node);  //uses node for modifiers
+			addSymbol( varName, node);
 		}
 		
-		node.setType(type); //either declaration type or BAD  		
+		node.setType(type); //either declaration type or UNKNOWN  		
 
 		return WalkType.POST_CHILDREN;
 	}
@@ -366,21 +396,11 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		// now go through the scopes trying to find the variable
-		for(HashMap<String, Node> curSymTable:symbolTable)
+		Node declaration = findSymbol( name );				
+		if( declaration != null ) 
 		{
-			if(curSymTable.containsKey(name))
-			{
-				type = curSymTable.get(name).getType();
-				modifiers = curSymTable.get(name).getModifiers();
-				break;
-			}
-		}
-		
-		// found it in the scopes
-		if( type != null ) 
-		{
-			node.setType(type);
-			node.setModifiers(modifiers);
+			node.setType(declaration.getType());
+			node.setModifiers(declaration.getModifiers());
 			node.addModifier(ModifierSet.ASSIGNABLE);
 			return WalkType.PRE_CHILDREN;
 		}
@@ -1618,7 +1638,7 @@ public class ClassChecker extends BaseChecker {
 		if(!secondVisit)
 		{
 			String label = node.getImage();
-			if(symbolTable.getFirst().get(label) != null)
+			if(findSymbol(label) != null || labels.contains(label))
 				addError(node, Error.MULT_SYM, label);
 			else
 				labels.push(node);	

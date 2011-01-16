@@ -68,8 +68,8 @@ DONE - ASTVariableDeclarator
 DONE - ASTVariableDeclaratorId -- just a place-holder for the var name, no type-checking needed
 DONE - ASTVariableInitializer
   
-DONE - ASTFormalParameters (handled in method declaration)
-DONE - ASTFormalParameter (handled in method declaration)
+DONE - ASTFormalParameters (checked in field/method checker AND class checker)
+DONE - ASTFormalParameter (checked in field/method checker AND class checker)
   ASTExplicitConstructorInvocation
   ASTInitializer -- do we even want these??
 DONE - ASTType

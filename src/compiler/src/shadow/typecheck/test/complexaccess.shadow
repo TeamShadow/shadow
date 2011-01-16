@@ -19,8 +19,7 @@ class Outer {
 	    
     public static main() => ()
     {
-    	int c;   	
-    	
+    	int c;
     	
     	Outer[] first = new Outer[100];
     	first[0] = new Outer();

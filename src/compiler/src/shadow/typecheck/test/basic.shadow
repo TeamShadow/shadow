@@ -18,7 +18,7 @@ class Bill {
     
     private class Bob {
         public constructor(int a) {        
-         int a = 14;
+         int z = 14;
 
         
          }
