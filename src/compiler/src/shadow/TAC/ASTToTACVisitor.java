@@ -515,6 +515,77 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 		
+		// create our current branch & join, to be made later
+		TACBranch curBranch = null;
+		TACJoin curJoin = null;
+		
+		// the entry into this TAC path
+		TACNode entryNode = null;
+		
+		// go through each var in the AND which will be NoOps of stuff further down the AST
+		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+			SimpleNode child = (SimpleNode)node.jjtGetChild(i);
+			TACVariable curVar = ((TACNoOp)child.getExitNode()).getVariable();
+			
+			// create the branch
+			TACBranch tmpBranch = new TACBranch(curVar, TACVariable.getBooleanLiteral(true), TACComparison.EQUAL);
+			
+			if(curBranch != null) {
+				// link in the child's TAC path
+				curBranch.setFalseEntry(child.getEntryNode());
+				child.getEntryNode().setParent(curBranch);
+				child.getExitNode().setNext(tmpBranch);
+				tmpBranch.setParent(child.getExitNode());
+			} else {
+				// link in the child's TAC path
+				entryNode = child.getEntryNode();
+				tmpBranch.setParent(child.getExitNode());
+				child.getExitNode().setNext(tmpBranch);
+			}
+			
+			curBranch = tmpBranch;
+			
+			if(curJoin != null) {
+				curBranch.setTrueEntry(curJoin);	// the true exit for the branch is really
+				curJoin.setFalseExit(curBranch);	// the false exit for the join... seems backwards, it's not
+				
+				// create the join and link it in
+				TACJoin tmpJoin = new TACJoin(curJoin, null);
+				curJoin.setNext(tmpJoin);
+				curJoin = tmpJoin;
+			} else {
+				// create the join
+				curJoin = new TACJoin(curBranch, null);
+				curBranch.setTrueEntry(curJoin);
+			}
+		}
+		
+		TACVariable tmpVar = new TACVariable(getTempSymbol(), Type.BOOLEAN);
+
+		// create the true and false assigns
+		TACAssign trueBranch = new TACAssign(tmpVar, TACVariable.getBooleanLiteral(true));
+		TACAssign falseBranch = new TACAssign(tmpVar, TACVariable.getBooleanLiteral(false));
+		
+		// link in the true branch
+		curBranch.setFalseEntry(falseBranch);
+		falseBranch.setParent(curBranch);
+		
+		// link in the false branch
+		curJoin = (TACJoin) curJoin.getTrueExit();	// need to link around the extra join
+		curJoin.setNext(trueBranch);
+		trueBranch.setParent(curJoin);
+		
+		// create a new join for the true & false branches, and link in
+		curJoin = new TACJoin(trueBranch, falseBranch);
+		trueBranch.setNext(curJoin);
+		falseBranch.setNext(curJoin);
+		
+		// create our NoOp to hold our variable
+		TACNoOp noop = new TACNoOp(tmpVar, curJoin);
+		curJoin.setNext(noop);
+		
+		linkToEnd(node, entryNode, noop);
+		
 		return WalkType.POST_CHILDREN;
 	}
 	

@@ -9,13 +9,11 @@ class Bill {
 */
     
     public test() => () {
-        int a;
-        int b;
+        boolean a;
+        boolean b;
         
-        if(true and a > b) {
-            a = 0;
-        } else {
-            b = 0;
+        if(a or b or b) {
+            a = true;
         }
     }
 	
