@@ -12,13 +12,15 @@ class Bill {
               
         
         b = new Bob(2);
-        
 
-        
       
     }
     
     private class Bob {
-        public constructor(int a) { }
+        public constructor(int a) {        
+         int a = 14;
+
+        
+         }
     }
 } 

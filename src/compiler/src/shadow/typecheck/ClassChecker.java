@@ -162,6 +162,8 @@ public class ClassChecker extends BaseChecker {
 		else
 			updateCurMethod(null);
 		
+		//add in parameter declarations!!!!
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -229,36 +231,32 @@ public class ClassChecker extends BaseChecker {
 		}
 
 		// go through and add the vars
-		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
+		for(int i = 1; i < node.jjtGetNumChildren(); ++i)
+		{
 			Node curNode = node.jjtGetChild(i);
 			String varName = curNode.jjtGetChild(0).getImage();
 			
-			if(symbolTable.getFirst().get(varName) != null) {
+			if(symbolTable.getFirst().get(varName) != null)
+			{
 				addError(curNode, Error.MULT_SYM, varName);
-				continue;
+				type = Type.UNKNOWN; //overwrites old type, for error case
 			}
-			
-			// check to see if we have any kind of init here
-			if(curNode.jjtGetNumChildren() == 2)
+			else if(curNode.jjtGetNumChildren() == 2) // check to see if we have any kind of init here
 			{
 				Type initType = curNode.jjtGetChild(1).getType();
 				
-				// we had an error below
-				if(initType == null)
-					continue;
-
-				if(!initType.isSubtype(type)) {
+				if(!initType.isSubtype(type)) 
+				{
 					addError(curNode.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
-					//symbolTable.getFirst().put(varName, type); // 100% fake so we can continue later
-					continue;
+					type = Type.UNKNOWN; //overwrites old type, for error case
 				}
 			}
 			
-			node.setType(type);
-			
 			// add the symbol to the table
-			symbolTable.getFirst().put(varName, node);
+			symbolTable.getFirst().put(varName, node);  //uses node for modifiers
 		}
+		
+		node.setType(type); //either declaration type or BAD  		
 
 		return WalkType.POST_CHILDREN;
 	}
@@ -269,17 +267,15 @@ public class ClassChecker extends BaseChecker {
 		
 		Type type = node.getType();	// this is set in the FieldAndMethodChecker
 		
-		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
+		for(int i=1; i < node.jjtGetNumChildren(); ++i)
+		{
 			Node curVarDec = node.jjtGetChild(i);
 			
-			if(curVarDec.jjtGetNumChildren() == 2) {
+			if(curVarDec.jjtGetNumChildren() == 2) 
+			{
 				Node curVarInit = curVarDec.jjtGetChild(1);
-				Type initType = curVarInit.getType();
-				
-				// we had an error below us
-				if(initType == null)
-					continue;
-				
+				Type initType = curVarInit.getType();				
+		
 				if(!initType.isSubtype(type))
 					addError(curVarInit, Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
 			}
@@ -327,6 +323,7 @@ public class ClassChecker extends BaseChecker {
 		else
 			addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
 		
+		node.setType( Type.UNKNOWN ); //if got here, some error		
 		return false;
 	}
 	
@@ -428,14 +425,12 @@ public class ClassChecker extends BaseChecker {
 					if(parent.containsField(name))
 					{
 						Node field = parent.getField(name);
-						if( ModifierSet.isPrivate(field.getModifiers()))
-						{
-							addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());
-							return WalkType.PRE_CHILDREN;			
-						}
-						node.setType(parent.getField(name).getType());
-						node.setModifiers(parent.getField(name).getModifiers());
+						node.setType(field.getType());
+						node.setModifiers(field.getModifiers());
 						node.addModifier(ModifierSet.ASSIGNABLE);
+						
+						if( ModifierSet.isPrivate(field.getModifiers()))
+							addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
 						
 						if( ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
 							addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
@@ -452,15 +447,14 @@ public class ClassChecker extends BaseChecker {
 			//unbound method (it gets bound when you supply args)
 			if( methods != null && methods.size() > 0 )
 			{
-				node.setType( new UnboundMethodType( name, currentClass ) );
-				//node.setType(methods.get(0).getMethodType());
+				node.setType( new UnboundMethodType( name, currentClass ) );				
 				return WalkType.PRE_CHILDREN;
 			}
-		}
-		
+		}		
 		
 		// by the time we get here, we haven't found this name anywhere
 		addError(node, Error.UNDEC_VAR, name);
+		node.setType(Type.UNKNOWN);
 		ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);
 
 		return WalkType.NO_CHILDREN;
@@ -482,6 +476,7 @@ public class ClassChecker extends BaseChecker {
 			if( !result.isNumerical() || !current.isNumerical() )
 			{
 				addError(node, Error.INVL_TYP, "Relational operator not defined on types " + result + " and " + current);
+				node.setType(Type.UNKNOWN);
 				return WalkType.POST_CHILDREN;
 			}	
 			
@@ -490,8 +485,7 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		node.setType(result); //propagates type up if only one child
-		pushUpModifiers(node); //can make ASSIGNABLE (if only one child)
-	
+		pushUpModifiers(node); //can make ASSIGNABLE (if only one child)	
 		
 		return WalkType.POST_CHILDREN;	
 	}
@@ -509,6 +503,7 @@ public class ClassChecker extends BaseChecker {
 			if( !result.isSubtype(current) && !current.isSubtype(result) )
 			{
 				addError(node, Error.INVL_TYP, "Equality operator not defined on types " + result + " and " + current);
+				node.setType(Type.UNKNOWN);
 				return WalkType.POST_CHILDREN;
 			}	
 			
@@ -542,6 +537,7 @@ public class ClassChecker extends BaseChecker {
 				else		
 				{
 					addError(child, Error.INVL_TYP, "Shift and rotate operations not defined on types " + result + " and " + current);
+					node.setType(Type.UNKNOWN);
 					return;
 				}
 			}				
@@ -580,6 +576,7 @@ public class ClassChecker extends BaseChecker {
 				if( node.getImage().charAt(i - 1) != '+' )
 				{
 					addError(node.jjtGetChild(0), Error.INVL_TYP, "Cannot apply operator " + node.getImage().charAt(i - 1) + " to String type");
+					node.setType(Type.UNKNOWN);
 					return;
 				}
 				else
@@ -593,6 +590,7 @@ public class ClassChecker extends BaseChecker {
 			else		
 			{
 				addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot apply arithmetic operations to " + result + " and " + current);
+				node.setType(Type.UNKNOWN);
 				return;						
 			}				
 		}
@@ -629,6 +627,7 @@ public class ClassChecker extends BaseChecker {
 			if( !t.isNumerical() )
 			{
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
+				node.setType(Type.UNKNOWN);
 				return WalkType.POST_CHILDREN;
 			}
 		}
@@ -654,7 +653,7 @@ public class ClassChecker extends BaseChecker {
 			if( !t.isIntegral() )
 			{
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but integral type required for bitwise operations");
-				return WalkType.POST_CHILDREN;
+				t = Type.UNKNOWN;				
 			}
 		}		
 		else if(node.getImage().startsWith("!") )
@@ -662,14 +661,13 @@ public class ClassChecker extends BaseChecker {
 			if( !t.equals(Type.BOOLEAN)) 
 			{
 				addError(node, Error.INVL_TYP, "Found type " + t + ", but boolean type required for logical operations");
-				return WalkType.POST_CHILDREN;
+				t = Type.UNKNOWN;				
 			}
 		}
 		else
 			pushUpModifiers( node ); //can add ASSIGNABLE (if only one child)
 		
-		node.setType(t);
-		
+		node.setType(t);		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -678,36 +676,28 @@ public class ClassChecker extends BaseChecker {
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
 		
-		if(node.jjtGetNumChildren() == 1) 
-		{			
-			node.setType(node.jjtGetChild(0).getType()); //propagate type up
-			pushUpModifiers( node ); // can add ASSIGNABLE (if only one child)
-		}
+		if(node.jjtGetNumChildren() == 1)
+			pushUpType( node, secondVisit ); //propagate type and modifiers up
 		else if(node.jjtGetNumChildren() == 3)
 		{			
 			Type t1 = node.jjtGetChild(0).getType();
 			Type t2 = node.jjtGetChild(1).getType();
 			Type t3 = node.jjtGetChild(2).getType();
 			
-			if( !t1.equals(Type.BOOLEAN) ) {			
+			if( !t1.equals(Type.BOOLEAN) ) 
+			{			
 				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type" + t1 + ", but boolean type required for conditional operations");
-				return WalkType.NO_CHILDREN;
+				node.setType(Type.UNKNOWN);
 			}
-			
-			if( t2.isSubtype(t3) )
+			else if( t2.isSubtype(t3) )
 				node.setType(t3);
 			else if( t3.isSubtype(t2) )
 				node.setType(t2);
 			else 
 			{
 				addError(node, Error.TYPE_MIS, "Type " + t2 + " must match " + t3 + " in ternary operator");
-				return WalkType.NO_CHILDREN;
+				node.setType(Type.UNKNOWN);
 			}
-		}
-		else
-		{
-			addError(node, Error.TYPE_MIS, "Too many arguments");
-			return WalkType.NO_CHILDREN;
 		}		
 		
 		return WalkType.POST_CHILDREN;
@@ -728,7 +718,8 @@ public class ClassChecker extends BaseChecker {
 				if( result != Type.BOOLEAN )
 				{
 					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + result + ", but boolean type required for conditional operations");			
-					return;						
+					node.setType(Type.UNKNOWN);
+					return;
 				}					
 			}
 			
@@ -771,6 +762,7 @@ public class ClassChecker extends BaseChecker {
 			if( !result.isIntegral() )
 			{
 				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + result + ", but integral type required for shift and rotate operations");
+				node.setType(Type.UNKNOWN);
 				return;
 			}
 			
@@ -781,6 +773,7 @@ public class ClassChecker extends BaseChecker {
 				if( !current.isIntegral() )
 				{
 					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + current + ", but integral type required for shift and rotate operations");
+					node.setType(Type.UNKNOWN);
 					return;
 				}
 				
@@ -833,6 +826,7 @@ public class ClassChecker extends BaseChecker {
 			if( !ModifierSet.isAssignable( child1.getModifiers() ))
 			{
 				addError(child1, Error.TYPE_MIS, "Cannot assign a value to expression: " + child1 );
+				node.setType(Type.UNKNOWN);
 				return WalkType.NO_CHILDREN;
 			}
 			
@@ -842,26 +836,19 @@ public class ClassChecker extends BaseChecker {
 			Type t2 = child2.getType();
 			
 			// SHOULD DO SOMETHING WITH THIS!!!
-			AssignmentType assType = op.getAssignmentType();
-			
-			// we had an error some other place as one of the types is unknown
-			//if(t1 == null || t2 == null)
-			//		return WalkType.NO_CHILDREN;
+			AssignmentType assType = op.getAssignmentType();	
+
 			
 			// TODO: Add in all the types that we can compare here
 			if( !t2.isSubtype(t1) )
 			{
 				addError(child1, Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
+				node.setType(Type.UNKNOWN);
 				return WalkType.NO_CHILDREN;
 			}
 					
 			node.setType(t1);	// set this node's type
 			node.setModifiers( child2.getModifiers() ); //is this meaningful?
-		}		
-		else 
-		{
-			// something went terribly wrong here... should NEVER get to this state or parser is broken
-			throw new ShadowException("Wrong number of args to an assignment!!!" + node.getLine() + node.jjtGetNumChildren());
 		}
 
 		return WalkType.POST_CHILDREN;
@@ -872,8 +859,7 @@ public class ClassChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		//check curPrefix at some point
-		
+		//check curPrefix at some point		
 		Node child = node.jjtGetChild(0);
 		
 		if( child instanceof ASTPrimitiveType ) //array allocation
@@ -890,6 +876,7 @@ public class ClassChecker extends BaseChecker {
 			{
 				//for now
 				addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
+				node.setType(Type.UNKNOWN);
 				counter++;				
 			}
 			
@@ -902,8 +889,10 @@ public class ClassChecker extends BaseChecker {
 			
 			else if( node.jjtGetChild(counter) instanceof ASTArguments )
 			{
-				if( child.getType() instanceof InterfaceType ) {
+				if( child.getType() instanceof InterfaceType )
+				{
 					addError(child, Error.INVL_TYP, "Interfaces cannot be instantiated");
+					node.setType(Type.UNKNOWN);
 					return WalkType.POST_CHILDREN;
 				}
 				
@@ -912,39 +901,46 @@ public class ClassChecker extends BaseChecker {
 				List<MethodSignature> candidateConstructors = type.getMethods("constructor");
 				
 				// we don't have implicit constructors, so need to check if the default constructor is OK
-				if(typeList.size() == 0 && candidateConstructors == null) {
+				if(typeList.size() == 0 && candidateConstructors == null)
+				{
 					node.setType(child.getType());
 					return WalkType.POST_CHILDREN;
 				}
 				
 				// we have no constructors, but they are calling with params
-				else if(typeList.size() > 0 && candidateConstructors == null){
+				else if(typeList.size() > 0 && candidateConstructors == null)
+				{
 					addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+					node.setType(Type.UNKNOWN);
 					return WalkType.POST_CHILDREN;
 				}
 
-				else {
+				else
+				{
 					// by the time we get here, we have a constructor list
 					List<MethodSignature> acceptableConstructors = new LinkedList<MethodSignature>();
 					
-					for( MethodSignature signature : candidateConstructors ) {
-						if( signature.matches( typeList )) {
+					for( MethodSignature signature : candidateConstructors ) 
+					{
+						if( signature.matches( typeList )) 
+						{
 							node.setType(child.getType());
 							return WalkType.POST_CHILDREN;
-						} else if( signature.canAccept(typeList))
+						}
+						else if( signature.canAccept(typeList))
 							acceptableConstructors.add(signature);
 					}
 					
-					if( acceptableConstructors.size() == 0 ) {
+					if( acceptableConstructors.size() == 0 ) 
+					{
 						addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
-						node.setType(child.getType());	// 100% fake the type so we can continue
-					}
-					
-					else if( acceptableConstructors.size() > 1 ) {
+						node.setType(Type.UNKNOWN);
+					}					
+					else if( acceptableConstructors.size() > 1 )
+					{
 						addError(child, Error.TYPE_MIS, "Ambiguous constructor call with signature " + typeList);
-						node.setType(child.getType());	// 100% fake the type so we can continue
-					}
-					
+						node.setType(Type.UNKNOWN);
+					}					
 					else
 						node.setType(child.getType());
 				}
@@ -1015,12 +1011,6 @@ public class ClassChecker extends BaseChecker {
 					addError(child, Error.INVL_TYP, "Cannot assign a value to variable marked final");
 				else					
 				{
-//					if( t2 == null )
-//					{
-//						addError(child, Error.TYPE_MIS, "Null type on RHS of " + t1);
-//						return WalkType.POST_CHILDREN;
-//					}
-					
 					// SHOULD DO SOMETHING WITH THIS!!!
 					AssignmentType assType = op.getAssignmentType();
 					
@@ -1058,7 +1048,10 @@ public class ClassChecker extends BaseChecker {
 			if( t1.isSubtype(t2) || t2.isSubtype(t1) )
 				node.setType(Type.BOOLEAN);
 			else
+			{
 				addError(node, Error.TYPE_MIS, "Type " + t1 + " uncomparable with type " + t2);
+				node.setType(Type.UNKNOWN);
+			}
 		}			
 
 		return WalkType.POST_CHILDREN;
@@ -1079,7 +1072,10 @@ public class ClassChecker extends BaseChecker {
 			if( t1.isSubtype(t2) || t2.isSubtype(t1) )
 				node.setType(t1);
 			else
+			{
 				addError(node, Error.TYPE_MIS, "Type " + t2 + " cannot be cast to " + t1);
+				node.setType(Type.UNKNOWN);
+			}
 		}			
 
 		return WalkType.POST_CHILDREN;
@@ -1218,11 +1214,8 @@ public class ClassChecker extends BaseChecker {
 		
 		returnTypes += ")";
 		
-		if( !((MethodType)curMethod.getType()).canReturn(types))
-		{
+		if( !((MethodType)curMethod.getType()).canReturn(types))		
 			addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " cannot return " + returnTypes);
-			return WalkType.NO_CHILDREN;
-		}
 		
 		return WalkType.POST_CHILDREN;
 	}	
@@ -1264,24 +1257,35 @@ public class ClassChecker extends BaseChecker {
 			if( node.getImage().equals("this") )
 			{	
 				if( currentType instanceof InterfaceType )
+				{
 					addError(node, Error.INVL_TYP, "Reference this invalid for interfaces");
-				else if( curMethod != null && ModifierSet.isStatic(curMethod.getModifiers())  )
-					addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + curMethod);
+					node.setType(Type.UNKNOWN);
+				}
 				else
-					node.setType(currentType);
+				{				
+					node.setType(currentType);				
+				
+					if( curMethod != null && ModifierSet.isStatic(curMethod.getModifiers())  )					
+						addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + curMethod);
+				}					
 			}
 			else //super case
 			{
 				if( currentType instanceof InterfaceType )
+				{
 					addError(node, Error.INVL_TYP, "Reference super invalid for interfaces"); //may need other cases
-				else if( curMethod != null && ModifierSet.isStatic(curMethod.getModifiers())  )
-					addError(node, Error.INVL_MOD, "Cannot access non-static reference super from static method " + curMethod);
+					node.setType(Type.UNKNOWN);
+				}				
 				else if( currentType instanceof ClassType )
 				{
 					ClassType parentType = ((ClassType)currentType).getExtendType();
 					
-					if( parentType.containsField(node.getImage() ))					
+					if( parentType.containsField(node.getImage() ))
+					{
 						node.setType(parentType.getField(node.getImage()).getType());
+						if( curMethod != null && ModifierSet.isStatic(curMethod.getModifiers())  )
+							addError(node, Error.INVL_MOD, "Cannot access non-static reference super from static method " + curMethod);
+					}
 					else
 					{
 						List<MethodSignature> methods = parentType.getMethods(node.getImage());
@@ -1290,9 +1294,17 @@ public class ClassChecker extends BaseChecker {
 						if( methods != null && methods.size() > 0 )
 							node.setType( new UnboundMethodType( node.getImage(), parentType ) );						
 						else
-							addError(node, Error.UNDEC_VAR, "Member " + node.getImage() + " not found");						
+						{
+							addError(node, Error.UNDEC_VAR, "Member " + node.getImage() + " not found");
+							node.setType(Type.UNKNOWN);
+						}
 					}	
-				}				
+				}
+				else
+				{
+					addError(node, Error.INVL_TYP, "Reference super must be used inside of class, enum, error, or exception"); //will this ever happen?
+					node.setType(Type.UNKNOWN);
+				}
 			}
 		}
 		else if( children == 1 )
@@ -1303,11 +1315,16 @@ public class ClassChecker extends BaseChecker {
 			{
 				if( child.getType() instanceof ClassType )
 					node.setType( Type.CLASS );
+				else
+				{
+					addError(node, Error.INVL_TYP, ".class member only accessible on class, enum, error, or exception types"); //may need other cases
+					node.setType(Type.UNKNOWN);
+				}
 			}
 			else
 			{
 				node.setType( child.getType() ); 	//literal, conditionalexpression, allocation expression, name
-				pushUpModifiers( node ); 			//ack, methods will be a problem
+				pushUpModifiers( node ); 			
 			}
 		}
 		
@@ -1368,20 +1385,26 @@ public class ClassChecker extends BaseChecker {
 					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
 					if( currentClass.containsInnerClass(allocation.getType().getTypeName()) )
 					{
-						if( classIsAccessible( allocation.getType(), currentType ))
-							node.setType(currentClass.getInnerClass(allocation.getType().getTypeName()));
-						else
+						node.setType(currentClass.getInnerClass(allocation.getType().getTypeName()));
+						if( !classIsAccessible( allocation.getType(), currentType ))
 							addError(node, Error.INVL_MOD, "Class " + allocation.getType() + " not accessible from current context");
 					}
 					else
+					{
 						addError(node, Error.UNDEF_TYP, "Inner class " + allocation.getType().getTypeName() + " not found");
+						node.setType(Type.UNKNOWN);
+					}
 				}
 				else
+				{
 					addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
+					node.setType(Type.UNKNOWN);
+				}
 			}
 			else if( child instanceof ASTMemberSelector )
 			{
-				addError(node, Error.INVL_TYP, "Generics are not yet handled");				
+				addError(node, Error.INVL_TYP, "Generics are not yet handled");	
+				node.setType(Type.UNKNOWN);
 			}
 			else if( child instanceof ASTConditionalExpression ) //array index
 			{
@@ -1394,20 +1417,31 @@ public class ClassChecker extends BaseChecker {
 						Type childType = node.jjtGetChild(0).getType();
 						
 						if( !childType.isIntegral() )
+						{
 							addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
+							node.setType(Type.UNKNOWN);
+						}
 					}
 					
-					if( node.jjtGetNumChildren() == arrayType.getDimensions() )
+					if( node.getType() != Type.UNKNOWN )
 					{
-						node.setType( arrayType.getBaseType() );
-						node.addModifier(ModifierSet.ASSIGNABLE);
+						if( node.jjtGetNumChildren() == arrayType.getDimensions() )
+						{
+							node.setType( arrayType.getBaseType() );
+							node.addModifier(ModifierSet.ASSIGNABLE);
+						}
+						else
+						{
+							node.setType(Type.UNKNOWN);
+							addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
+						}
 					}
-					else
-						addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
 				}
 				else
+				{
+					node.setType(Type.UNKNOWN);
 					addError(node, Error.INVL_TYP, "Cannot subscript into non-array type " + prefixType);
-				
+				}
 			}
 			else if( child instanceof ASTArguments ) //method call
 			{
@@ -1439,8 +1473,6 @@ public class ClassChecker extends BaseChecker {
 							
 							if( !methodIsAccessible( signature, currentType  ))
 								addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
-							//else if( ModifierSet.isStatic(prefixNode.getModifiers()) && !ModifierSet.isStatic(signature.getASTNode().getModifiers())   )
-							//	addError(node, Error.INVL_MOD, "Cannot access non-static method " + signature + " from static member " + prefixNode);
 						}
 						else if( signature.canAccept(typeList))
 							acceptableMethods.add(signature);
@@ -1448,10 +1480,16 @@ public class ClassChecker extends BaseChecker {
 					
 					if( !perfectMatch )
 					{
-						if( acceptableMethods.size() == 0 )					
+						if( acceptableMethods.size() == 0 )	
+						{
+							node.setType(Type.UNKNOWN);						
 							addError(child, Error.TYPE_MIS, "No method found with signature " + typeList);
+						}
 						else if( acceptableMethods.size() > 1 )
+						{
+							node.setType(Type.UNKNOWN);						
 							addError(child, Error.TYPE_MIS, "Ambiguous method call with signature " + typeList);
+						}							
 						else
 						{
 							MethodSignature signature = acceptableMethods.get(0); 
@@ -1468,8 +1506,6 @@ public class ClassChecker extends BaseChecker {
 							
 							if( !methodIsAccessible( signature, currentType  ))
 								addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
-							//else if( ModifierSet.isStatic(prefixNode.getModifiers()) && !ModifierSet.isStatic(signature.getASTNode().getModifiers())   )
-							//	addError(node, Error.INVL_MOD, "Cannot access non-static method " + signature.getSymbol() + signature + " from static member " + prefixNode);							
 						}
 					}					
 				}
