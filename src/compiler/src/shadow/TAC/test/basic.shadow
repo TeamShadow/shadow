@@ -9,12 +9,10 @@ class Bill {
 */
     
     public test() => () {
-        boolean a;
-        boolean b;
+        long a;
+        int b;
         
-        if(a or b or b) {
-            a = true;
-        }
+        a = true ? a + b : b * a;
     }
 	
 /*    public blah() => () {

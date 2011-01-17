@@ -58,4 +58,8 @@ public class TACVariable {
 	public int getSize() {
 		return size;
 	}
+	
+	public Type getType() {
+		return type;
+	}
 }

@@ -593,6 +593,60 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 		
+		// if we got here, we have a: x ? y : z expression
+		
+		// get the conditional stuff
+		SimpleNode conditional = (SimpleNode)node.jjtGetChild(0);
+		TACNode conEntry = conditional.getEntryNode();
+		TACNode conExit = conditional.getExitNode();
+		TACVariable conVar = ((TACNoOp)conExit).getVariable();
+		
+		// get the stuff for the true branch
+		SimpleNode trueBranch = (SimpleNode)node.jjtGetChild(1);
+		TACNode trueEntry = trueBranch.getEntryNode();
+		TACNode trueExit = trueBranch.getExitNode();
+		TACVariable trueVar = trueExit instanceof TACAssign ? ((TACAssign)trueExit).getTarget() : ((TACNoOp)trueExit).getVariable();
+		
+		// get the stuff for the false branch
+		SimpleNode falseBranch = (SimpleNode)node.jjtGetChild(2);
+		TACNode falseEntry = falseBranch.getEntryNode();
+		TACNode falseExit = falseBranch.getExitNode();
+		TACVariable falseVar = falseExit instanceof TACAssign ? ((TACAssign)falseExit).getTarget() : ((TACNoOp)falseExit).getVariable();
+		
+		// create a temp var to hold the result
+		String resVarSymbol = getTempSymbol();
+
+		// create the branch & link it in
+		TACBranch branch = new TACBranch(conVar, TACVariable.getBooleanLiteral(true), TACComparison.EQUAL);
+		conExit.setNext(branch);
+		branch.setParent(conExit);
+		
+		// link in the true branch
+		branch.setTrueEntry(trueEntry);
+		trueEntry.setParent(branch);
+		TACAssign trueAssign = new TACAssign(new TACVariable(resVarSymbol, trueVar.getType()), trueVar);
+		trueExit.setNext(trueAssign);
+		trueAssign.setParent(trueExit);
+		
+		// link in the false branch
+		branch.setFalseEntry(falseEntry);
+		falseEntry.setParent(branch);
+		TACAssign falseAssign = new TACAssign(new TACVariable(resVarSymbol, falseVar.getType()), falseVar);
+		falseExit.setNext(falseAssign);
+		falseAssign.setParent(falseExit);
+		
+		// create the join for this branch and link it in
+		TACJoin join = new TACJoin(trueAssign, falseAssign);
+		trueAssign.setNext(join);
+		falseAssign.setNext(join);
+		
+		// not really sure which I should pick here
+		TACNoOp retVar = new TACNoOp(new TACVariable(resVarSymbol, trueVar.getType()), join);
+		join.setNext(retVar);
+		
+		// link in the path
+		linkToEnd(node, conEntry, retVar);
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
