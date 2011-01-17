@@ -9,5 +9,13 @@ class test {
         b += (3 + 4);
         c = a << 1 <<< b;
         c <<= a * b;
+        
+        a |= b;
+        a &= b;
+        a ^= b;
+        
+        b = b | a;
+        b = b & a;
+        b = b ^ a;
     }
 }

@@ -1068,19 +1068,19 @@ void ConditionalAndExpression():
 void BitwiseOrExpression():
 {}
 {
-  BitwiseExclusiveOrExpression() ( "|" BitwiseExclusiveOrExpression() )*
+  BitwiseExclusiveOrExpression() ( "|" { jjtThis.setImage(jjtThis.getImage() + "|"); } BitwiseExclusiveOrExpression() )*
 }
 
 void BitwiseExclusiveOrExpression():
 {}
 {
-  BitwiseAndExpression() ( "^" BitwiseAndExpression() )*
+  BitwiseAndExpression() ( "^" { jjtThis.setImage(jjtThis.getImage() + "^"); } BitwiseAndExpression() )*
 }
 
 void BitwiseAndExpression():
 {}
 {
-  EqualityExpression() ( "&" EqualityExpression() )*
+  EqualityExpression() ( "&" { jjtThis.setImage(jjtThis.getImage() + "&"); } EqualityExpression() )*
 }
 
 void EqualityExpression():

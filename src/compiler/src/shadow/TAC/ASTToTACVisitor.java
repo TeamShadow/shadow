@@ -119,6 +119,12 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			return TACOperation.DIVISION;
 		case '%':
 			return TACOperation.MOD;
+		case '|':
+			return TACOperation.OR;
+		case '&':
+			return TACOperation.AND;
+		case '^':
+			return TACOperation.XOR;
 		case 'r':
 			return TACOperation.RSHIFT;
 		case 'l':
@@ -409,6 +415,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 		
+		visitArithmetic(node);
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -416,12 +424,16 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 		
+		visitArithmetic(node);
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
+		
+		visitArithmetic(node);
 		
 		return WalkType.POST_CHILDREN;
 	}
