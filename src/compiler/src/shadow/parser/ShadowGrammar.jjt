@@ -166,7 +166,7 @@ public class ShadowParser
         System.out.println("BAD PARSE");
         System.out.println(e.getMessage());
     } catch (Error e) {
-        System.out.println("Ooops");
+        System.out.println("ERROR");
         System.out.println(e.getMessage());
     } catch (FileNotFoundException e) {
         System.out.println(e.getMessage());

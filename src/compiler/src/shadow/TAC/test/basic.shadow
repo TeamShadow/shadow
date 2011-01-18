@@ -4,11 +4,11 @@ class Bill {
     
     public test() => () {
         int a;
-        int b;
-        
-        a = a | b;
-        a = a & b;
-        a = a ^ b;
+        int b = 1;
+        int c = 2;
+
+        // multiple ANDs
+        if(a == 0 or b == 1) { a = 0; }
     }
 
 } 

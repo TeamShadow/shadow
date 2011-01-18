@@ -25,7 +25,7 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 	}
 	
 	public void visit(TACNode node) {
-		System.out.println("BLAH: " + node);
+		printNode(node, true);
 	}
 	
 	public void visit(TACAssign node) {

@@ -20,12 +20,16 @@ public abstract class AbstractTACVisitor {
 		return root;
 	}
 	
+	abstract public void start();
+	abstract public void end();
+	
 	public void visit(TACNodeInterface node) {
 		node.accept(this);
 	}
 	
-	abstract public void start();
-	abstract public void end();
+	public void visit(TACNode node) {
+		System.out.println(node);
+	}
 	
 	public void visit(TACAssign node) {
 		System.out.println(node);

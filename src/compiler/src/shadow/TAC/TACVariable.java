@@ -3,14 +3,17 @@ package shadow.TAC;
 import shadow.typecheck.type.Type;
 
 public class TACVariable {
-	private Type type;		/** The type of the variable */
-	private String symbol;	/** The symbol of the variable */
-	private int size;		/** The size of the var in memory in bytes */
-	private boolean isRef;	/** Indicates if we have a reference or not */
+	private Type type;			/** The type of the variable */
+	private String symbol;		/** The symbol of the variable */
+	private int size;			/** The size of the var in memory in bytes */
+	private boolean isRef;		/** Indicates if we have a reference or not */
 	private boolean isLiteral;	/** symbol holds the value of the literal */
+	private boolean isArray;	/** Indicates if this is an array */
 	
 	/**
 	 * Returns the default value of a given type.
+	 * @param type The type of TACVariable to return.
+	 * @return A TACVariable literal of that type with its default value.
 	 */
 	static public TACVariable getDefault(Type type) {
 		if(type.isPrimitive())
@@ -19,9 +22,13 @@ public class TACVariable {
 			return new TACVariable("\"\"", type, true);
 		else
 			return new TACVariable("null", type, true);
-		
 	}
 	
+	/**
+	 * Returns a boolean literal TACVariable.
+	 * @param value True or false.
+	 * @return TACVariable representing the literal.
+	 */
 	static public TACVariable getBooleanLiteral(boolean value) {
 		Type t = new Type("boolean");
 		
