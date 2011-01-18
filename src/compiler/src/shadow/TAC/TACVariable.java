@@ -1,5 +1,7 @@
 package shadow.TAC;
 
+import java.util.List;
+
 import shadow.typecheck.type.Type;
 
 public class TACVariable {
@@ -8,7 +10,7 @@ public class TACVariable {
 	private int size;			/** The size of the var in memory in bytes */
 	private boolean isRef;		/** Indicates if we have a reference or not */
 	private boolean isLiteral;	/** symbol holds the value of the literal */
-	private boolean isArray;	/** Indicates if this is an array */
+	private List<Integer> arrayDim;	/** Records the array dimension, null if not an array */
 	
 	/**
 	 * Returns the default value of a given type.
@@ -38,15 +40,11 @@ public class TACVariable {
 			return new TACVariable("false", t, true);
 	}
 	
-	public TACVariable(String symbol, Type type, boolean isLiteral) {
-		this(symbol, type);
-		this.isLiteral = isLiteral;
-	}
-	
 	public TACVariable(String symbol, Type type) {
 		this.type = type;
 		this.symbol = symbol;
 		this.isLiteral = false;
+		this.arrayDim = null;
 		
 		if(type.isPrimitive()) {
 			isRef = false;
@@ -58,8 +56,20 @@ public class TACVariable {
 		}
 	}
 	
+	public TACVariable(String symbol, Type type, boolean isLiteral) {
+		this(symbol, type);
+		this.isLiteral = isLiteral;
+		this.arrayDim = null;
+	}
+	
+	public TACVariable(String symbol, Type type, List<Integer> arrayDim) {
+		this(symbol, type);
+		this.isLiteral = false;
+		this.arrayDim = arrayDim;
+	}
+	
 	public String toString() {
-		return symbol + "(" + type + (isLiteral ? " literal" : "") + (isRef ? " ref" : "") + ")"; 
+		return symbol + "(" + type + (isLiteral ? " literal" : "") + (isRef ? " ref" : "") + (isArray() ? arrayDim : "") + ")"; 
 	}
 	
 	public int getSize() {
@@ -68,5 +78,13 @@ public class TACVariable {
 	
 	public Type getType() {
 		return type;
+	}
+	
+	/**
+	 * Returns true if this variable is an array.
+	 * @return
+	 */
+	public boolean isArray() {
+		return arrayDim != null;
 	}
 }

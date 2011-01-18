@@ -1,6 +1,8 @@
 
 package shadow.TAC;
 
+import java.util.List;
+
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
@@ -14,6 +16,8 @@ import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNode.TACComparison;
 import shadow.TAC.nodes.TACNode.TACOperation;
 import shadow.parser.javacc.ASTAdditiveExpression;
+import shadow.parser.javacc.ASTAllocationExpression;
+import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
@@ -21,6 +25,7 @@ import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBlockStatement;
 import shadow.parser.javacc.ASTBooleanLiteral;
+import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -325,6 +330,31 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTAllocationExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		SimpleNode typeNode = (SimpleNode)node.jjtGetChild(0);
+		
+		// we either have a primitive array or a class (possibly array)
+		if(typeNode instanceof ASTPrimitiveType) {
+			List<Integer> arrayDims = ((ASTArrayDimsAndInits)node.jjtGetChild(1)).getArrayDimensions();
+			
+			TACVariable var = new TACVariable("", typeNode.getType(), arrayDims);
+			TACAllocation alloc = new TACAllocation(var, null);
+			TACNoOp noop = new TACNoOp(var, alloc);
+			alloc.setNext(noop);
+			
+			linkToEnd(node, alloc, noop);
+		} else if(typeNode instanceof ASTClassOrInterfaceType) {
+			
+		} else {
+			throw new ShadowException("UNKNOWN TYPE");
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}

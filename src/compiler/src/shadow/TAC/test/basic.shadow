@@ -3,12 +3,7 @@ class Bill {
     static public int t;
     
     public test() => () {
-        int a;
-        int b = 1;
-        int c = 2;
-
-        // multiple ANDs
-        if(a == 0 or b == 1) { a = 0; }
+        int[] a = new int[3];
     }
 
 } 
