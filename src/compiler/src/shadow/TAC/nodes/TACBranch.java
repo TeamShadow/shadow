@@ -17,7 +17,7 @@ public class TACBranch extends TACNode {
 	}
 	
 	public TACBranch(TACVariable lhs, TACVariable rhs, TACComparison comparison, TACNode trueEntry, TACNode falseEntry) {
-		super("", null);
+		super("BRANCH: ", null);
 		
 		this.lhs = lhs;
 		this.rhs = rhs;

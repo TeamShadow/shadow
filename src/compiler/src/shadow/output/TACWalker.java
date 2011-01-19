@@ -4,8 +4,9 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 import shadow.TAC.nodes.TACBranch;
-import shadow.TAC.nodes.TACNodeInterface;
+import shadow.TAC.nodes.TACLoop;
 import shadow.TAC.nodes.TACNode;
+import shadow.TAC.nodes.TACNodeInterface;
 
 /**
  * Walks the TAC in a depth-first fashion.
@@ -47,6 +48,11 @@ public class TACWalker {
 			
 			visit(branch.getTrueEntry());
 			visit(branch.getFalseEntry());
+		} else if(node instanceof TACLoop) {
+			TACLoop loop = (TACLoop)node;
+			
+			visit(loop.getLoopNode());
+			visit(loop.getBreakNode());
 		} else if(node.getNext() != null) {
 			visit(node.getNext());
 		}

@@ -4,6 +4,7 @@ import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
 import shadow.TAC.nodes.TACJoin;
+import shadow.TAC.nodes.TACLoop;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACUnaryOperation;
@@ -62,6 +63,33 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 		
 		System.out.print("\"" + tmp + "\"");
 		System.out.println(" [ label = \"F\" ]; ");
+	}
+	
+	public void visit(TACLoop node) {
+		TACLoop branch = (TACLoop)node;
+		TACNode tmp = null;
+		
+		System.out.print("\"" + branch + "\"");
+		System.out.print(" -> ");
+		
+		tmp = branch.getLoopNode();
+		while(tmp instanceof TACNoOp) {
+			tmp = tmp.getNext();
+		}
+		
+		System.out.println("\"" + tmp + "\"");
+		
+		
+		System.out.print("\"" + branch + "\"");
+		System.out.print(" -> ");
+
+		tmp = branch.getBreakNode();
+		while(tmp instanceof TACNoOp) {
+			tmp = tmp.getNext();
+		}
+		
+		System.out.print("\"" + tmp + "\"");
+		System.out.println(" [ label = \"B\" ]; ");
 	}
 	
 	public void visit(TACJoin node) {

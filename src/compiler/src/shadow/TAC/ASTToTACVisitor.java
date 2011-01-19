@@ -11,6 +11,7 @@ import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
 import shadow.TAC.nodes.TACJoin;
+import shadow.TAC.nodes.TACLoop;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNode.TACComparison;
@@ -58,6 +59,7 @@ import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableDeclaratorId;
 import shadow.parser.javacc.ASTVariableInitializer;
+import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
@@ -824,7 +826,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			linkToEnd(node, blockStmt.getEntryNode(), blockStmt.getExitNode());
 		}
 		
-//		((SimpleNode)node).getEntryNode().dump("BLOCK: ");
+		((SimpleNode)node).getEntryNode().dump("BLOCK: ");
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -1010,6 +1012,43 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		// link in the path
 		linkToEnd(node, conEntry, join);
 		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTWhileStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		// get the conditional stuff
+		SimpleNode conditional = (SimpleNode)node.jjtGetChild(0);
+		TACNode conEntry = conditional.getEntryNode();
+		TACNode conExit = conditional.getExitNode();
+		TACVariable conVar = ((TACNoOp)conExit).getVariable();
+		
+		// link in the conditional
+		linkToEnd(node, conEntry, conExit);
+		
+		// get the stuff for the loop
+		SimpleNode loopBranch = (SimpleNode)node.jjtGetChild(1);
+		TACNode loopEntry = loopBranch.getEntryNode();
+		TACNode loopExit = loopBranch.getExitNode();
+		
+		// create the loop node
+		TACLoop loop = new TACLoop(conVar, TACComparison.EQUAL, TACVariable.getBooleanLiteral(true));
+		
+		// link in the entry and exit for the loop
+		loop.setLoopNode(loopEntry);
+		loopEntry.setParent(loop);
+		loopExit.setNext(loop);
+		
+		// we need a NoOp for the exit of our loop so it links in properly
+		TACNoOp noop = new TACNoOp(loop, null);
+		loop.setBreakNode(noop);
+		
+		loop.dump("LOOP: ");
+		
+		linkToEnd(node, loop, noop);
+
 		return WalkType.POST_CHILDREN;
 	}
 	
