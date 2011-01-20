@@ -34,6 +34,9 @@ import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTForInit;
+import shadow.parser.javacc.ASTForStatement;
+import shadow.parser.javacc.ASTForUpdate;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
@@ -53,6 +56,7 @@ import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTShiftExpression;
 import shadow.parser.javacc.ASTStatement;
 import shadow.parser.javacc.ASTStatementExpression;
+import shadow.parser.javacc.ASTStatementExpressionList;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
@@ -880,6 +884,13 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return WalkType.NO_CHILDREN;
 	}
 	
+	public Object visit(ASTStatementExpressionList node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		return WalkType.NO_CHILDREN;
+	}
+	
 	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
@@ -1052,4 +1063,85 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTForInit node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+
+		return WalkType.POST_CHILDREN;
+	}
+
+	public Object visit(ASTForUpdate node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+
+		return WalkType.POST_CHILDREN;
+	}
+
+	public Object visit(ASTForStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		// we can have a combination of: [init] conditional [update] body
+		
+		int curChild = 0;
+		
+		if(node.jjtGetChild(curChild) instanceof ASTForInit) {
+			SimpleNode initAst = (SimpleNode)node.jjtGetChild(curChild);
+			linkToEnd(node, initAst.getEntryNode(), initAst.getExitNode());
+			++curChild;
+		}
+		
+		// get the conditional stuff
+		SimpleNode conditional = (SimpleNode)node.jjtGetChild(curChild++);
+		TACNode conEntry = conditional.getEntryNode();
+		TACNode conExit = conditional.getExitNode();
+		TACVariable conVar = ((TACNoOp)conExit).getVariable();
+
+		// link in the conditional
+		linkToEnd(node, conEntry, conExit);
+		
+		// get the stuff for the loop, possibly linking in the update
+		SimpleNode loopBranch = null;
+		TACNode loopEntry = null;
+		TACNode loopExit = null;
+		
+		// check the type of node we have here
+		if(node.jjtGetChild(curChild) instanceof ASTForUpdate) {
+			SimpleNode update = (SimpleNode)node.jjtGetChild(curChild++);
+			TACNode upEntry = update.getEntryNode();
+			TACNode upExit = update.getExitNode();
+			
+			loopBranch = (SimpleNode)node.jjtGetChild(curChild);
+			loopEntry = loopBranch.getEntryNode();
+			loopExit = loopBranch.getExitNode();
+			
+			// add the update to the end
+			loopExit.setNext(upEntry);
+			upEntry.setParent(loopExit);
+			
+			loopExit = upExit;
+		} else {
+			loopBranch = (SimpleNode)node.jjtGetChild(curChild);
+			loopEntry = loopBranch.getEntryNode();
+			loopExit = loopBranch.getExitNode();
+		}
+		
+		// create the loop node
+		TACLoop loop = new TACLoop(conVar, TACComparison.EQUAL, TACVariable.getBooleanLiteral(true));
+		
+		// link in the entry and exit for the loop
+		loop.setLoopNode(loopEntry);
+		loopEntry.setParent(loop);
+		loopExit.setNext(conEntry);
+		
+		// we need a NoOp for the exit of our loop so it links in properly
+		TACNoOp noop = new TACNoOp(loop, null);
+		loop.setBreakNode(noop);
+		
+		loop.dump("LOOP: ");
+		
+		linkToEnd(node, loop, noop);
+
+		return WalkType.POST_CHILDREN;
+	}
 }

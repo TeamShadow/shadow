@@ -4,17 +4,13 @@ class Bill {
     
     public test() => () {
         int a;
-        int b;
-        
-        while(a < 1 and b > 1) {
-            a = 1;
-            a = 2;
-            a = 3;
+        int i;
+
+        for(int b,c,d ; i < 10; ) {
+            a = 0;
         }
-        
+                
         a = 0;
-        a = 1;
-        a = 2;
     }
 
 } 
