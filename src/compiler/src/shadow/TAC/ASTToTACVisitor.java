@@ -1039,7 +1039,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		// link in the entry and exit for the loop
 		loop.setLoopNode(loopEntry);
 		loopEntry.setParent(loop);
-		loopExit.setNext(loop);
+		loopExit.setNext(conEntry);
 		
 		// we need a NoOp for the exit of our loop so it links in properly
 		TACNoOp noop = new TACNoOp(loop, null);
