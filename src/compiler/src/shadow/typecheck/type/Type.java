@@ -10,7 +10,20 @@ public class Type {
 	private final Kind kind;
 	//private Node astNode;	/** This is to link back to the AST, usually not used */
 	
-	public static enum Kind { ARRAY, CLASS, ENUM, ERROR, EXCEPTION, INTERFACE, METHOD, SEQUENCE, UNBOUND_METHOD, VIEW, UNKNOWN};
+	// TODO: Provide documentation here
+	public static enum Kind {
+		ARRAY,
+		CLASS,
+		ENUM,
+		ERROR,
+		EXCEPTION,
+		INTERFACE,
+		METHOD,
+		SEQUENCE,
+		UNBOUND_METHOD,
+		VIEW,
+		UNKNOWN
+	};
 	
 	public static final ClassType OBJECT = new ClassType( "Object", 0, null ); 
 	public static final ClassType BOOLEAN = new ClassType( "boolean" );
