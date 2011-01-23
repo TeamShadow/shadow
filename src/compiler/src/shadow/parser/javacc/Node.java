@@ -49,6 +49,8 @@ interface Node {
 	public int getColumn();
 	
 	public void setColumn(int column);
+	
+	public String getLocation();
 
 	public Type getType();
 	

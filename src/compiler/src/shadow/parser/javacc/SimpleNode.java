@@ -119,6 +119,10 @@ public class SimpleNode implements Node {
 		this.column = column;
 	}
 	
+	public String getLocation() {
+		return "(" + getLine() + ":" + getColumn() + ")";
+	}
+	
 	public Type getType() {
 		return type;		
 	}
