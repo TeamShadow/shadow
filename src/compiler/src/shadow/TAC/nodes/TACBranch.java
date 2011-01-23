@@ -11,10 +11,15 @@ public class TACBranch extends TACNode {
 	protected TACVariable lhs;
 	protected TACVariable rhs;
 	protected TACComparison comparision;
-	protected TACJoin join;
+	protected TACJoin join;	/** This points to the join that will re-join the branch */
 	
 	public TACBranch(Node astNode, TACVariable lhs, TACVariable rhs, TACComparison comparison) {
 		this(astNode, lhs, rhs, comparison, null, null);
+	}
+
+	public TACBranch(Node astNode, TACVariable lhs, TACVariable rhs, TACComparison comparison, TACJoin join) {
+		this(astNode, lhs, rhs, comparison, null, null);
+		this.join = join;
 	}
 	
 	public TACBranch(Node astNode, TACVariable lhs, TACVariable rhs, TACComparison comparison, TACNode trueEntry, TACNode falseEntry) {

@@ -576,13 +576,16 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		// the entry into this TAC path
 		TACNode entryNode = null;
 		
+		// we need to create the final join so we can set the branches
+		TACJoin finalJoin = new TACJoin(node, null, null);
+		
 		// go through each var in the AND which will be NoOps of stuff further down the AST
 		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
 			SimpleNode child = (SimpleNode)node.jjtGetChild(i);
 			TACVariable curVar = ((TACNoOp)child.getExitNode()).getVariable();
 			
 			// create the branch
-			TACBranch tmpBranch = new TACBranch(node, curVar, TACVariable.getBooleanLiteral(true), TACComparison.EQUAL);
+			TACBranch tmpBranch = new TACBranch(node, curVar, TACVariable.getBooleanLiteral(true), TACComparison.EQUAL, finalJoin);
 			
 			if(curBranch != null) {
 				// link in the child's TAC path
@@ -634,14 +637,15 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		curJoin.setNext(falseBranch);
 		falseBranch.setParent(curJoin);
 		
-		// create a new join for the true & false branches, and link in
-		curJoin = new TACJoin(node, trueBranch, falseBranch);
-		trueBranch.setNext(curJoin);
-		falseBranch.setNext(curJoin);
+		// set the branches for the final join
+		finalJoin.setTrueExit(trueBranch);
+		finalJoin.setFalseExit(falseBranch);
+		trueBranch.setNext(finalJoin);
+		falseBranch.setNext(finalJoin);
 		
 		// create our NoOp to hold our variable
-		TACNoOp noop = new TACNoOp(node, tmpVar, curJoin, null);
-		curJoin.setNext(noop);
+		TACNoOp noop = new TACNoOp(node, tmpVar, finalJoin, null);
+		finalJoin.setNext(noop);
 		
 		// we start with tmpAlloc as it gets linked in above entryNode
 		linkToEnd(node, tmpAlloc, noop);
@@ -667,13 +671,16 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		// the entry into this TAC path
 		TACNode entryNode = null;
 		
+		// we need to create the final join so we can set the branches
+		TACJoin finalJoin = new TACJoin(node, null, null);
+		
 		// go through each var in the AND which will be NoOps of stuff further down the AST
 		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
 			SimpleNode child = (SimpleNode)node.jjtGetChild(i);
 			TACVariable curVar = ((TACNoOp)child.getExitNode()).getVariable();
 			
 			// create the branch
-			TACBranch tmpBranch = new TACBranch(node, curVar, TACVariable.getBooleanLiteral(true), TACComparison.EQUAL);
+			TACBranch tmpBranch = new TACBranch(node, curVar, TACVariable.getBooleanLiteral(true), TACComparison.EQUAL, finalJoin);
 			
 			if(curBranch != null) {
 				// link in the child's TAC path
@@ -725,14 +732,15 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		curJoin.setNext(trueBranch);
 		trueBranch.setParent(curJoin);
 		
-		// create a new join for the true & false branches, and link in
-		curJoin = new TACJoin(node, trueBranch, falseBranch);
-		trueBranch.setNext(curJoin);
-		falseBranch.setNext(curJoin);
+		// set the branches for the final join
+		finalJoin.setTrueExit(trueBranch);
+		finalJoin.setFalseExit(falseBranch);
+		trueBranch.setNext(finalJoin);
+		falseBranch.setNext(finalJoin);
 		
 		// create our NoOp to hold our variable
-		TACNoOp noop = new TACNoOp(node, tmpVar, curJoin, null);
-		curJoin.setNext(noop);
+		TACNoOp noop = new TACNoOp(node, tmpVar, finalJoin, null);
+		finalJoin.setNext(noop);
 		
 		// we start with tmpAlloc as it gets linked in above entryNode
 		linkToEnd(node, tmpAlloc, noop);
@@ -1104,6 +1112,9 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			join.setFalseExit(falseExit);
 			falseExit.setNext(join);
 		}
+		
+		// set the branch's join
+		branch.setJoin(join);
 		
 		// link in the path
 		linkToEnd(node, conEntry, join);
