@@ -63,6 +63,8 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 		
 		System.out.print("\"" + tmp + "\"");
 		System.out.println(" [ label = \"F\" ]; ");
+
+		System.out.println("\"" + branch + "\" -> \"" + branch.getJoin() + "\" [ style = \"dashed\" ];");
 	}
 	
 	public void visit(TACLoop node) {
