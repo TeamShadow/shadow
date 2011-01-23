@@ -2,6 +2,7 @@ package shadow.TAC.nodes;
 
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
+import shadow.parser.javacc.Node;
 
 public class TACBranch extends TACNode {
 
@@ -12,12 +13,12 @@ public class TACBranch extends TACNode {
 	protected TACComparison comparision;
 	protected TACJoin join;
 	
-	public TACBranch(TACVariable lhs, TACVariable rhs, TACComparison comparison) {
-		this(lhs, rhs, comparison, null, null);
+	public TACBranch(Node astNode, TACVariable lhs, TACVariable rhs, TACComparison comparison) {
+		this(astNode, lhs, rhs, comparison, null, null);
 	}
 	
-	public TACBranch(TACVariable lhs, TACVariable rhs, TACComparison comparison, TACNode trueEntry, TACNode falseEntry) {
-		super("BRANCH: ", null);
+	public TACBranch(Node astNode, TACVariable lhs, TACVariable rhs, TACComparison comparison, TACNode trueEntry, TACNode falseEntry) {
+		super(astNode, "BRANCH: ", null);
 		
 		this.lhs = lhs;
 		this.rhs = rhs;

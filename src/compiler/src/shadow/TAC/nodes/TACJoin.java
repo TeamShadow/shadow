@@ -1,12 +1,13 @@
 package shadow.TAC.nodes;
 
 import shadow.output.AbstractTACVisitor;
+import shadow.parser.javacc.Node;
 
 public class TACJoin extends TACNode {
 	private TACNode trueExit, falseExit;	/** The true & false exits, only works with simple branches */
 	
-	public TACJoin(TACNode trueExit, TACNode falseExit) {
-		super("JOIN", null);
+	public TACJoin(Node astNode, TACNode trueExit, TACNode falseExit) {
+		super(astNode, "JOIN", null);
 		this.trueExit = trueExit;
 		this.falseExit = falseExit;
 		

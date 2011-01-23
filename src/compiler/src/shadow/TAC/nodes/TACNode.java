@@ -3,13 +3,14 @@ package shadow.TAC.nodes;
 import java.util.LinkedList;
 
 import shadow.output.AbstractTACVisitor;
-import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.Node;
 
 public abstract class TACNode implements TACNodeInterface {
 	private static int labelCounter = 0;
 	protected String name;
 	protected TACNode parent;
 	protected TACNode next;
+	private Node astNode;	/** This is the AST node that caused the creation of the TAC node */
 	
 	private static LinkedList<TACNode> allNodes = new LinkedList<TACNode>();
 	
@@ -45,15 +46,16 @@ public abstract class TACNode implements TACNodeInterface {
 	}
 
 	
-	public TACNode(String name, TACNode parent) {
+	public TACNode(Node astNode, String name, TACNode parent) {
+		this.astNode = astNode;
 		this.name = "label_" + labelCounter++ + ": " + name;
 		this.parent = parent;
 		this.next = null;
 		this.allNodes.add(this);
 	}
 	
-	public TACNode(String name, TACNode parent, TACNode next) {
-		this(name, parent);
+	public TACNode(Node astNode, String name, TACNode parent, TACNode next) {
+		this(astNode, name, parent);
 		this.next = next;
 	}
 	

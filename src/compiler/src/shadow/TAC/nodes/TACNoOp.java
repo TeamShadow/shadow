@@ -2,6 +2,7 @@ package shadow.TAC.nodes;
 
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
+import shadow.parser.javacc.Node;
 
 /**
  * These are used as place holders for variables so we can bring them up the AST.
@@ -12,18 +13,13 @@ public class TACNoOp extends TACNode {
 	
 	private TACVariable variable;
 
-	public TACNoOp(TACVariable variable, TACNode parent, TACNode next) {
-		super("NO OP", parent, next);
+	public TACNoOp(Node astNode, TACVariable variable, TACNode parent, TACNode next) {
+		super(astNode, "NO OP", parent, next);
 		this.variable = variable;
 	}
 	
-	public TACNoOp(TACVariable variable, TACNode parent) {
-		super("NO OP", parent);
-		this.variable = variable;
-	}
-	
-	public TACNoOp(TACNode parent, TACNode next) {
-		this(null, parent, next);
+	public TACNoOp(Node astNode, TACNode parent, TACNode next) {
+		this(astNode, null, parent, next);
 	}
 	
 	public TACVariable getVariable() {

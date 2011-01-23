@@ -1,16 +1,25 @@
 class Bill {
 
-    static public int t;
-    
     public test() => () {
         int a;
-        int i;
-
-        for(int b,c,d ; i < 10; ) {
+        
+        if(true or false) {
+            a = 1;
+        } else {
             a = 0;
         }
-                
-        a = 0;
+            
+        //test();
+        //test2(1);
+        //this.test2();
+        //test3(a);        
     }
-
+    
+/*    public test2(int a) => () {
+    }
+    
+    public test3(int a) => () {
+        int b;
+    }
+*/
 } 

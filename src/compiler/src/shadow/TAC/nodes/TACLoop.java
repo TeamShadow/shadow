@@ -2,6 +2,7 @@ package shadow.TAC.nodes;
 
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
+import shadow.parser.javacc.Node;
 
 public class TACLoop extends TACNode {
 
@@ -12,8 +13,8 @@ public class TACLoop extends TACNode {
 	private TACNode loopNode;	/** The path that brings you back to this loop */
 	private TACNode breakNode;	/** The path that breaks you out of the loop */
 
-	public TACLoop(TACVariable lhs, TACComparison comparison, TACVariable rhs) {
-		super("LOOP: ", null);
+	public TACLoop(Node astNode, TACVariable lhs, TACComparison comparison, TACVariable rhs) {
+		super(astNode, "LOOP: ", null);
 		
 		this.lhs = lhs;
 		this.comparision = comparison;

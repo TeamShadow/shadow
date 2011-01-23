@@ -2,20 +2,21 @@ package shadow.TAC.nodes;
 
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
+import shadow.parser.javacc.Node;
 
 public class TACAssign extends TACNode {
 
 	private TACVariable target;
 	private TACVariable operand1;	/** target = operand1; */
 	
-	public TACAssign(TACVariable lhs, TACVariable rhs) {
-		super("", null);
+	public TACAssign(Node astNode, TACVariable lhs, TACVariable rhs) {
+		super(astNode, "", null);
 		target = lhs;
 		operand1 = rhs;
 	}
 	
-	protected TACAssign(String name, TACNode parent) {
-		super(name, parent);
+	protected TACAssign(Node astNode, String name, TACNode parent) {
+		super(astNode, name, parent);
 	}
 	
 	public void accept(AbstractTACVisitor visitor) {

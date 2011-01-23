@@ -2,6 +2,7 @@ package shadow.TAC.nodes;
 
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
+import shadow.parser.javacc.Node;
 
 public class TACBinaryOperation extends TACAssign {
 
@@ -9,8 +10,8 @@ public class TACBinaryOperation extends TACAssign {
 	private TACVariable operand2;
 	private TACOperation operation;
 	
-	public TACBinaryOperation(TACVariable target, TACVariable op1, TACVariable op2, TACOperation operation) {
-		super("", null);
+	public TACBinaryOperation(Node astNode, TACVariable target, TACVariable op1, TACVariable op2, TACOperation operation) {
+		super(astNode, "", null);
 		
 		setTarget(target);
 		setOperand1(op1);
