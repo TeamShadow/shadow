@@ -4,6 +4,7 @@
 package shadow.TAC.nodes;
 
 import shadow.TAC.TACVariable;
+import shadow.output.AbstractTACVisitor;
 import shadow.parser.javacc.Node;
 
 /**
@@ -26,6 +27,10 @@ public class TACAllocation extends TACNode {
 	public TACAllocation(Node astNode, TACVariable variable, TACNode parent, TACNode next) {
 		super(astNode, "allocate: ", parent, next);
 		this.variable = variable;
+	}
+
+	public void accept(AbstractTACVisitor visitor) {
+		visitor.visit(this);
 	}
 
 	public TACVariable getVariable() {

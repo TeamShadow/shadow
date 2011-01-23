@@ -83,6 +83,10 @@ public abstract class TACNode implements TACNodeInterface {
 		this.next = node;
 	}
 	
+	public Node getAstNode() {
+		return astNode;
+	}
+
 	/**
 	 * Inserts a node after this node
 	 * @param node The node to link onto the end of this node

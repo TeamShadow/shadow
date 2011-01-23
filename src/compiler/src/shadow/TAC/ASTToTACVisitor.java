@@ -187,8 +187,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		linkToEnd(node, astOp2.getEntryNode(), op2ExitNode);
 		
 		// get the first two TACVariables
-		TACVariable op1 = op1ExitNode instanceof TACAssign ? ((TACAssign)op1ExitNode).getTarget() : ((TACNoOp)op1ExitNode).getVariable();
-		TACVariable op2 = op2ExitNode instanceof TACAssign ? ((TACAssign)op2ExitNode).getTarget() : ((TACNoOp)op2ExitNode).getVariable();
+		TACVariable op1 = op1ExitNode instanceof TACAssign ? ((TACAssign)op1ExitNode).getLHS() : ((TACNoOp)op1ExitNode).getVariable();
+		TACVariable op2 = op2ExitNode instanceof TACAssign ? ((TACAssign)op2ExitNode).getLHS() : ((TACNoOp)op2ExitNode).getVariable();
 		
 		// create the target variable and link it in
 		TACVariable target = new TACVariable(getTempSymbol(), node.getType());
@@ -210,7 +210,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			linkToEnd(node, astOp2.getEntryNode(), op2ExitNode);
 
 			op1 = target;	// the target of the previous one
-			op2 = op2ExitNode instanceof TACAssign ? ((TACAssign)op2ExitNode).getTarget() : ((TACNoOp)op2ExitNode).getVariable();
+			op2 = op2ExitNode instanceof TACAssign ? ((TACAssign)op2ExitNode).getLHS() : ((TACNoOp)op2ExitNode).getVariable();
 			
 			// create a new target and link it in
 			target = new TACVariable(getTempSymbol(), node.getType());
@@ -257,8 +257,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		linkToEnd(node, astVar2.getEntryNode(), var2ExitNode);
 		
 		// get the first two TACVariables
-		TACVariable var1 = var1ExitNode instanceof TACAssign ? ((TACAssign)var1ExitNode).getTarget() : ((TACNoOp)var1ExitNode).getVariable();
-		TACVariable var2 = var2ExitNode instanceof TACAssign ? ((TACAssign)var2ExitNode).getTarget() : ((TACNoOp)var2ExitNode).getVariable();
+		TACVariable var1 = var1ExitNode instanceof TACAssign ? ((TACAssign)var1ExitNode).getLHS() : ((TACNoOp)var1ExitNode).getVariable();
+		TACVariable var2 = var2ExitNode instanceof TACAssign ? ((TACAssign)var2ExitNode).getLHS() : ((TACNoOp)var2ExitNode).getVariable();
 		
 		// allocate our return value
 		TACVariable ret = new TACVariable(getTempSymbol(), Type.BOOLEAN);
@@ -385,7 +385,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			SimpleNode astNode = (SimpleNode)node.jjtGetChild(i);
 			TACNode entry = astNode.getEntryNode();
 			TACNode exit = astNode.getExitNode();
-			TACVariable var = exit instanceof TACAssign ? ((TACAssign)exit).getTarget() : ((TACNoOp)exit).getVariable();
+			TACVariable var = exit instanceof TACAssign ? ((TACAssign)exit).getLHS() : ((TACNoOp)exit).getVariable();
 			
 			// add the variable to the method call
 			methodCall.addParameter(var);
@@ -764,13 +764,13 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		SimpleNode trueBranch = (SimpleNode)node.jjtGetChild(1);
 		TACNode trueEntry = trueBranch.getEntryNode();
 		TACNode trueExit = trueBranch.getExitNode();
-		TACVariable trueVar = trueExit instanceof TACAssign ? ((TACAssign)trueExit).getTarget() : ((TACNoOp)trueExit).getVariable();
+		TACVariable trueVar = trueExit instanceof TACAssign ? ((TACAssign)trueExit).getLHS() : ((TACNoOp)trueExit).getVariable();
 		
 		// get the stuff for the false branch
 		SimpleNode falseBranch = (SimpleNode)node.jjtGetChild(2);
 		TACNode falseEntry = falseBranch.getEntryNode();
 		TACNode falseExit = falseBranch.getExitNode();
-		TACVariable falseVar = falseExit instanceof TACAssign ? ((TACAssign)falseExit).getTarget() : ((TACNoOp)falseExit).getVariable();
+		TACVariable falseVar = falseExit instanceof TACAssign ? ((TACAssign)falseExit).getLHS() : ((TACNoOp)falseExit).getVariable();
 		
 		// create a temp var to hold the result
 		String resVarSymbol = getTempSymbol();
@@ -882,7 +882,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 				linkToEnd(node, entry, exit);
 				
 				if(exit instanceof TACAssign)
-					assign = new TACAssign(node, var, ((TACAssign)exit).getTarget());
+					assign = new TACAssign(node, var, ((TACAssign)exit).getLHS());
 				else
 					assign = new TACAssign(node, var, ((TACNoOp)exit).getVariable());
 			}
@@ -1005,8 +1005,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			linkToEnd(node, rhsNode.getEntryNode(), rhsExitNode);
 			
 			TACNode assign = null;
-			TACVariable lhs = lhsExitNode instanceof TACAssign ? ((TACAssign)lhsExitNode).getTarget() : ((TACNoOp)lhsExitNode).getVariable();
-			TACVariable rhs = rhsExitNode instanceof TACAssign ? ((TACAssign)rhsExitNode).getTarget() : ((TACNoOp)rhsExitNode).getVariable();
+			TACVariable lhs = lhsExitNode instanceof TACAssign ? ((TACAssign)lhsExitNode).getLHS() : ((TACNoOp)lhsExitNode).getVariable();
+			TACVariable rhs = rhsExitNode instanceof TACAssign ? ((TACAssign)rhsExitNode).getLHS() : ((TACNoOp)rhsExitNode).getVariable();
 			
 			switch(assignNode.getAssignmentType()) {
 				case ANDASSIGN:

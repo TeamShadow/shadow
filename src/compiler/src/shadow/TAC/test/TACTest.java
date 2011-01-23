@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.LinkedList;
 
 import shadow.TAC.TACBuilder;
-import shadow.TAC.TACClass;
 import shadow.TAC.TACMethod;
+import shadow.output.TACLinearWalker;
 import shadow.output.TACWalker;
+import shadow.output.C.TACCVisitor;
 import shadow.output.graphviz.TACGraphVizVisitor;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
@@ -81,6 +81,11 @@ public class TACTest extends BaseTest {
 	    			TACWalker walker = new TACWalker(visitor);
 	    			
 	    			walker.walk();
+	    			
+	    			TACCVisitor cVisitor = new TACCVisitor(m.getEntry());
+	    			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
+	    			
+	    			linearWalker.walk();
 	    		}
 	        }
 

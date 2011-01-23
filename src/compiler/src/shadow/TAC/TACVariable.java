@@ -80,6 +80,10 @@ public class TACVariable {
 		return type;
 	}
 	
+	public String getSymbol() {
+		return symbol;
+	}
+
 	/**
 	 * Returns true if this variable is an array.
 	 * @return

@@ -6,13 +6,13 @@ import shadow.parser.javacc.Node;
 
 public class TACAssign extends TACNode {
 
-	private TACVariable target;
-	private TACVariable operand1;	/** target = operand1; */
+	private TACVariable lhs;
+	private TACVariable rhs;	/** lhs = rhs; */
 	
 	public TACAssign(Node astNode, TACVariable lhs, TACVariable rhs) {
 		super(astNode, "", null);
-		target = lhs;
-		operand1 = rhs;
+		this.lhs = lhs;
+		this.rhs = rhs;
 	}
 	
 	protected TACAssign(Node astNode, String name, TACNode parent) {
@@ -24,19 +24,23 @@ public class TACAssign extends TACNode {
 	}
 	
 	public String toString() {
-		return name  + target + " = " + operand1; 
+		return name  + lhs + " = " + rhs; 
 	}
 
-	public void setTarget(TACVariable target) {
-		this.target = target;
+	public void setLHS(TACVariable lhs) {
+		this.lhs = lhs;
 	}
 
-	public TACVariable getTarget() {
-		return target;
+	public TACVariable getLHS() {
+		return lhs;
 	}
-	
-	public void setOperand1(TACVariable op1) {
-		this.operand1 = op1;
+
+	public void setRHS(TACVariable rhs) {
+		this.rhs = rhs;
+	}
+
+	public TACVariable getRHS() {
+		return rhs;
 	}
 	
 }

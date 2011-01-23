@@ -13,14 +13,22 @@ public class TACBinaryOperation extends TACAssign {
 	public TACBinaryOperation(Node astNode, TACVariable target, TACVariable op1, TACVariable op2, TACOperation operation) {
 		super(astNode, "", null);
 		
-		setTarget(target);
-		setOperand1(op1);
+		setLHS(target);
+		setRHS(op1);
 		this.operand2 = op2;
 		this.operation = operation;
 	}
 
 	public void accept(AbstractTACVisitor visitor) {
 		visitor.visit(this);
+	}
+
+	public TACVariable getOperand2() {
+		return operand2;
+	}
+
+	public TACOperation getOperation() {
+		return operation;
 	}
 
 	public String toString() {

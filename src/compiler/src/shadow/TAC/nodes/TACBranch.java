@@ -37,6 +37,18 @@ public class TACBranch extends TACNode {
 		visitor.visit(this);
 	}
 	
+	public TACVariable getLhs() {
+		return lhs;
+	}
+
+	public TACVariable getRhs() {
+		return rhs;
+	}
+
+	public TACComparison getComparision() {
+		return comparision;
+	}
+
 	public void setJoin(TACJoin join) {
 		this.join = join;
 	}
