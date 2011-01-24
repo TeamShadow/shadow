@@ -1,5 +1,6 @@
 package shadow.output;
 
+import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
@@ -33,6 +34,10 @@ public abstract class AbstractTACVisitor {
 	}
 	
 	public void visit(TACAssign node) {
+		System.out.println(node);
+	}
+	
+	public void visit(TACAllocation node) {
 		System.out.println(node);
 	}
 	
