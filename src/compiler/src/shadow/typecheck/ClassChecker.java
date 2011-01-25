@@ -1493,6 +1493,8 @@ public class ClassChecker extends BaseChecker {
 							
 							if( !methodIsAccessible( signature, currentType  ))
 								addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
+							else
+								prefixNode.setType(signature.getMethodType());
 						}
 						else if( signature.canAccept(typeList))
 							acceptableMethods.add(signature);
@@ -1526,6 +1528,8 @@ public class ClassChecker extends BaseChecker {
 							
 							if( !methodIsAccessible( signature, currentType  ))
 								addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
+							else
+								prefixNode.setType(signature.getMethodType());
 						}
 					}					
 				}
