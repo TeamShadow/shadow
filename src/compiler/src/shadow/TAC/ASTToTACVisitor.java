@@ -411,12 +411,14 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			List<Integer> arrayDims = ((ASTArrayDimsAndInits)node.jjtGetChild(1)).getArrayDimensions();
 			
 			TACVariable var = new TACVariable("", typeNode.getType(), arrayDims);
-			TACAllocation alloc = new TACAllocation(node, var, null);
+			TACAllocation alloc = new TACAllocation(node, var, null);	// we don't add this to the allocations list, only temps!
 			TACNoOp noop = new TACNoOp(node, var, alloc, null);
 			
-			allocations.add(alloc);
+			// link the nodes together
+			alloc.setNext(noop);
+			noop.setParent(alloc);
 			
-			linkToEnd(node, noop);
+			linkToEnd(node, alloc, noop);
 		} else if(typeNode instanceof ASTClassOrInterfaceType) {
 			
 		} else {
@@ -883,10 +885,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		for(int i=1; i < node.jjtGetNumChildren(); ++i) {
 			SimpleNode astVar = (SimpleNode)node.jjtGetChild(i);
 			TACVariable var = new TACVariable(astVar.jjtGetChild(0).getImage(), type.getType());
-			TACAllocation alloc = new TACAllocation(node, var);
+			TACAllocation alloc = new TACAllocation(node, var);	// we don't add this to the allocations list
 			TACAssign assign = null;
-			
-			allocations.add(alloc);
 			
 			if(astVar.jjtGetNumChildren() == 2)	{ // we have an initializer
 				TACNode entry = ((SimpleNode)astVar.jjtGetChild(1)).getEntryNode();
@@ -902,11 +902,11 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 				assign = new TACAssign(node, var, TACVariable.getDefault(type.getType()));
 			
 			// link the alloc & assign
-//			alloc.setNext(assign);
-//			assign.setParent(alloc);
+			alloc.setNext(assign);
+			assign.setParent(alloc);
 			
 			// link to the end
-			linkToEnd(node, assign);
+			linkToEnd(node, alloc, assign);
 		}
 		
 		TACNode entry = ((SimpleNode)node).getEntryNode();
