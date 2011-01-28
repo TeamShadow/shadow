@@ -1,6 +1,7 @@
 
 package shadow.TAC;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import shadow.AST.ASTUtils;
@@ -75,12 +76,14 @@ import shadow.typecheck.type.Type;
 
 public class ASTToTACVisitor extends AbstractASTVisitor {
 	private static int tempCounter = 0;	/** Counter for making temporary variables */
+	private ArrayList<TACAllocation> allocations; /** Need to track all allocations and make them at the top of the method */
 	
 	/**
 	 * Walks a portion of an AST and creates a TAC tree.
 	 * This class does all of the heavy lifting in converting from AST -> TAC.
 	 */
 	public ASTToTACVisitor() {
+		allocations = new ArrayList<TACAllocation>();
 	}
 	
 	/**
@@ -177,8 +180,6 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		SimpleNode astOp1 = (SimpleNode)node.jjtGetChild(0);
 		SimpleNode astOp2 = (SimpleNode)node.jjtGetChild(1);
 		
-		System.out.println("OPERATORS: " + operators);
-		
 		// link the first two operator's TAC paths into this one
 		TACNode op1ExitNode = astOp1.getExitNode();
 		TACNode op2ExitNode = astOp2.getExitNode();
@@ -193,7 +194,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		// create the target variable and link it in
 		TACVariable target = new TACVariable(getTempSymbol(), node.getType());
 		TACAllocation targetAlloc = new TACAllocation(node, target, op2ExitNode);
-		linkToEnd(node, targetAlloc);
+		allocations.add(targetAlloc);	// add the allocation to our list
 		
 		// create a binary operator with the first two children
 		TACBinaryOperation newNode = new TACBinaryOperation(node, target, op1, op2, symbol2Operation(operators.charAt(0)));
@@ -215,7 +216,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			// create a new target and link it in
 			target = new TACVariable(getTempSymbol(), node.getType());
 			targetAlloc = new TACAllocation(node, target, null);
-			linkToEnd(node, targetAlloc);
+			allocations.add(targetAlloc);	// add the allocation to our list
 
 			// create the operator and link it in
 			newNode = new TACBinaryOperation(node, target, op1, op2, symbol2Operation(operators.charAt(i-1)));
@@ -263,11 +264,11 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		// allocate our return value
 		TACVariable ret = new TACVariable(getTempSymbol(), Type.BOOLEAN);
 		TACAllocation alloc = new TACAllocation(node, ret);
+		allocations.add(alloc);	// add to our list of allocations
 
 		// construct the branch and link it in
 		TACBranch branch = new TACBranch(node, var1, var2, symbol2Comparison(node.getImage()));
 		alloc.setNext(branch);
-		branch.setParent(alloc);
 
 		// create the branches
 		TACAssign trueBranch = new TACAssign(node, ret, TACVariable.getBooleanLiteral(true));
@@ -292,9 +293,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		join.setNext(noop);
 		
 		// link into the node
-		linkToEnd(node, alloc, noop);
+		linkToEnd(node, branch, noop);
 	}
-	
 
 	
 	//
@@ -413,9 +413,10 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			TACVariable var = new TACVariable("", typeNode.getType(), arrayDims);
 			TACAllocation alloc = new TACAllocation(node, var, null);
 			TACNoOp noop = new TACNoOp(node, var, alloc, null);
-			alloc.setNext(noop);
 			
-			linkToEnd(node, alloc, noop);
+			allocations.add(alloc);
+			
+			linkToEnd(node, noop);
 		} else if(typeNode instanceof ASTClassOrInterfaceType) {
 			
 		} else {
@@ -621,8 +622,10 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		TACVariable tmpVar = new TACVariable(getTempSymbol(), Type.BOOLEAN);
 		TACAllocation tmpAlloc = new TACAllocation(node, tmpVar, null);
 		
-		entryNode.setParent(tmpAlloc);
-		tmpAlloc.setNext(entryNode);
+		allocations.add(tmpAlloc);
+		
+//		entryNode.setParent(tmpAlloc);
+//		tmpAlloc.setNext(entryNode);
 
 		// create the true and false assigns
 		TACAssign trueBranch = new TACAssign(node, tmpVar, TACVariable.getBooleanLiteral(true));
@@ -648,7 +651,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		finalJoin.setNext(noop);
 		
 		// we start with tmpAlloc as it gets linked in above entryNode
-		linkToEnd(node, tmpAlloc, noop);
+		linkToEnd(node, entryNode, noop);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -716,8 +719,10 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		TACVariable tmpVar = new TACVariable(getTempSymbol(), Type.BOOLEAN);
 		TACAllocation tmpAlloc = new TACAllocation(node, tmpVar, null);
 		
-		entryNode.setParent(tmpAlloc);
-		tmpAlloc.setNext(entryNode);
+		allocations.add(tmpAlloc);
+		
+//		entryNode.setParent(tmpAlloc);
+//		tmpAlloc.setNext(entryNode);
 
 		// create the true and false assigns
 		TACAssign trueBranch = new TACAssign(node, tmpVar, TACVariable.getBooleanLiteral(true));
@@ -743,7 +748,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		finalJoin.setNext(noop);
 		
 		// we start with tmpAlloc as it gets linked in above entryNode
-		linkToEnd(node, tmpAlloc, noop);
+		linkToEnd(node, entryNode, noop);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -785,11 +790,14 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		TACAllocation trueTmpAlloc = new TACAllocation(node, trueTmpVar);
 		TACAssign trueAssign = new TACAssign(node, trueTmpVar, trueVar);
 		
+		allocations.add(trueTmpAlloc);
+		
 		// link in the true branch
-		branch.setTrueEntry(trueTmpAlloc);
-		trueTmpAlloc.setParent(branch);
-		trueTmpAlloc.setNext(trueEntry);
-		trueEntry.setParent(trueTmpAlloc);
+//		branch.setTrueEntry(trueTmpAlloc);
+		branch.setTrueEntry(trueEntry);
+//		trueTmpAlloc.setParent(branch);
+//		trueTmpAlloc.setNext(trueEntry);
+		trueEntry.setParent(branch);
 		trueExit.setNext(trueAssign);
 		trueAssign.setParent(trueExit);
 		
@@ -798,12 +806,14 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		TACAllocation falseTmpAlloc = new TACAllocation(node, falseTmpVar);
 		TACAssign falseAssign = new TACAssign(node, falseTmpVar, falseVar);
 
+		allocations.add(falseTmpAlloc);
 		
 		// link in the false branch
-		branch.setFalseEntry(falseTmpAlloc);
-		falseTmpAlloc.setParent(branch);
-		falseTmpAlloc.setNext(falseEntry);
-		falseEntry.setParent(falseTmpAlloc);
+//		branch.setFalseEntry(falseTmpAlloc);
+		branch.setFalseEntry(falseEntry);
+//		falseTmpAlloc.setParent(branch);
+//		falseTmpAlloc.setNext(falseEntry);
+		falseEntry.setParent(branch);
 		falseExit.setNext(falseAssign);
 		falseAssign.setParent(falseExit);
 		
@@ -876,6 +886,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			TACAllocation alloc = new TACAllocation(node, var);
 			TACAssign assign = null;
 			
+			allocations.add(alloc);
+			
 			if(astVar.jjtGetNumChildren() == 2)	{ // we have an initializer
 				TACNode entry = ((SimpleNode)astVar.jjtGetChild(1)).getEntryNode();
 				TACNode exit = ((SimpleNode)astVar.jjtGetChild(1)).getExitNode();
@@ -890,11 +902,11 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 				assign = new TACAssign(node, var, TACVariable.getDefault(type.getType()));
 			
 			// link the alloc & assign
-			alloc.setNext(assign);
-			assign.setParent(alloc);
+//			alloc.setNext(assign);
+//			assign.setParent(alloc);
 			
 			// link to the end
-			linkToEnd(node, alloc, assign);
+			linkToEnd(node, assign);
 		}
 		
 		TACNode entry = ((SimpleNode)node).getEntryNode();
@@ -948,6 +960,10 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		// this first one will always be the block of the method
 		SimpleNode block = (SimpleNode)node.jjtGetChild(1);
+		
+		// link in the allocations for this method
+		for(int i=0; i < allocations.size(); ++i)
+			linkToEnd(node, allocations.get(i));
 		
 		// link in the block's TAC path as it is the method's path
 		linkToEnd(node, block.getEntryNode(), block.getExitNode());
