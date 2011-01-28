@@ -22,6 +22,8 @@ import shadow.output.AbstractTACLinearVisitor;
 public class TACCVisitor extends AbstractTACLinearVisitor {
 
 	private static int tabDepth = 0;
+	private static final int COMMENT_WIDTH = 40;
+	private static final int TAB_WIDTH = 5;
 
 	/**
 	 * @param root
@@ -30,11 +32,42 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		super(root);
 	}
 	
-	private void print(String str) {
-		for(int i=0; i < tabDepth; ++i)
-			System.out.print("\t");
-		System.out.println(str);
+	/**
+	 * Pretty print out the C code.
+	 * @param str The generated C code.
+	 * @param node The node that generated the code.
+	 */
+	private void print(String str, TACNode node) {
+		int lineLength = 0;
+		
+		// print out the tab depths
+		for(int i=0; i < tabDepth; ++i) {
+			for(int j=0; j < TAB_WIDTH; ++j)
+				System.out.print(" ");
+			lineLength += TAB_WIDTH;
+		}
+		
+		// print out the actual code
+		System.out.print(str);
+		lineLength += str.length();
+		
+		if(node != null) {
+			// print out enough spaces to allign everything
+			for(int i=0; i < (COMMENT_WIDTH - lineLength); ++i) {
+				System.out.print(" ");
+			}
+			
+			// print out the comment
+			System.out.println("/* " + node.getAstNode().getLocation() + " */");
+		} else {
+			System.out.println();
+		}
 	}
+	
+	private void print(String str) {
+		print(str, null);
+	}
+
 
 	@Override
 	public void start() {
@@ -51,7 +84,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	}
 
 	public void visit(TACNode node) {
-		print(node.toString() + "// NODE: " + node.getAstNode().getLocation());
+		print(node.toString(), node);
 	}
 	
 	/**
@@ -87,9 +120,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		sb.append(type2type(var.getType().toString()));
 		sb.append(" ");
 		sb.append(var.getSymbol());
-		sb.append("; /* ALLOC: " + node.getAstNode().getLocation() + " */");
+		sb.append(";");
 		
-		print(sb.toString());
+		print(sb.toString(), node);
 	}
 	
 	public void visit(TACAssign node) {
@@ -98,9 +131,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		sb.append(node.getLHS().getSymbol());
 		sb.append(" = ");
 		sb.append(lit2lit(node.getRHS().getSymbol()));
-		sb.append("; /* ASSIGN: " + node.getAstNode().getLocation() + " */");
+		sb.append(";");
 		
-		print(sb.toString());
+		print(sb.toString(), node);
 	}
 	
 	public void visit(TACBinaryOperation node) {
@@ -126,11 +159,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		}
 		
 		sb.append(node.getOperand2().getSymbol());
-		sb.append("; /* BIN OP: ");
-		sb.append(node.getAstNode().getLocation());
-		sb.append(" */");
+		sb.append(";");
 		
-		print(sb.toString());
+		print(sb.toString(), node);
 	}
 	
 	public void visit(TACBranch node) {
@@ -149,11 +180,10 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		}
 		
 		sb.append(lit2lit(node.getRhs().getSymbol()));
-		sb.append(" ) { /* BRANCH: " + node.getAstNode().getLocation());
-		sb.append(" */");
+		sb.append(" ) { ");
 		
 		print("");
-		print(sb.toString());
+		print(sb.toString(), node);
 		
 		++tabDepth;
 	}
@@ -173,7 +203,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	
 	public void visitJoin(TACJoin node) {
 		--tabDepth;
-		print("} /* JOIN: " + node.getAstNode().getLocation() + " */");
+		print("} ", node);
 	}
 	
 	public void visit(TACNoOp node) {
@@ -186,11 +216,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		sb.append(" = ");
 		sb.append(node.getOperation());
 		sb.append(node.getRHS());
-		sb.append("; /* ");
-		sb.append(node.getAstNode().getLocation());
-		sb.append(" */");
+		sb.append(";");
 		
-		print(sb.toString());
+		print(sb.toString(), node);
 	}
 
 }
