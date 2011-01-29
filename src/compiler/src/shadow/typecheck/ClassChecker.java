@@ -1000,22 +1000,33 @@ public class ClassChecker extends BaseChecker {
 		Node child = node.jjtGetChild(0);
 		
 		if( child instanceof ASTSequence )
-		{	
-			ASTSequence sequence = (ASTSequence)child;
-			SequenceType t1 = (SequenceType)(child.getType());
-			Type t2 = node.jjtGetChild(1).getType();
-			
-			if( !sequence.isAssignable() )
-				addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);						
-			else if( t2 instanceof SequenceType ) //from method call
-			{
-				SequenceType sequenceType = (SequenceType)t2;
+		{			
+			Node current = child;			
+		
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ )
+			{	
+				if( !(current instanceof ASTSequence) || !(((ASTSequence)current).isAssignable()) )
+				{
+					addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
+					break;
+				}
 				
-				if( !t1.canAccept( sequenceType.getTypes() ) )
-					addError(child, Error.TYPE_MIS, "Sequence " + sequenceType + " does not match " + sequence);
+				SequenceType currentType = (SequenceType)(current.getType());
+				Node next = node.jjtGetChild(i);
+				if( next.getType() instanceof SequenceType )
+				{
+					SequenceType nextType = (SequenceType)(next.getType());
+					if( currentType.canAccept( nextType.getTypes() ) )
+						current = next;
+					else
+					{
+						addError(current, Error.TYPE_MIS, "Sequence " + nextType + " does not match " + current);
+						break;
+					}	
+				}
+				else
+					addError(current, Error.TYPE_MIS, next.getType() + "must be of sequence type");
 			}
-			else
-				addError(child, Error.TYPE_MIS, "Only method return values can be assigned to sequences");
 		}
 		else //primary expression
 		{
