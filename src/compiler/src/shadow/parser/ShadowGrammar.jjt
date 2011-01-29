@@ -36,7 +36,6 @@ package shadow.parser.javacc;
 
 import java.io.*;
 import shadow.parser.*;
-import shadow.AST.ASTFlattener;
 import shadow.AST.ASTWalker;
 import shadow.typecheck.type.Type;
 
@@ -991,7 +990,7 @@ void Name():
 	Token t;
 }
 {
-  t = <IDENTIFIER> { sb.append(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
+  t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
   { jjtThis.setImage(sb.toString()); }
 }
 
@@ -1181,7 +1180,7 @@ void CastExpression():
 void PrimaryExpression():
 { debugPrint("PRIMARY EXPRESSION"); }
 {
-  PrimaryPrefix() ( LOOKAHEAD(2) PrimarySuffix() )*
+  PrimaryPrefix() ( LOOKAHEAD(2) PrimarySuffix() )* [ LOOKAHEAD(2) "." AllocationExpression() ]
 }
 
 void Sequence():
@@ -1189,13 +1188,11 @@ void Sequence():
 {	"(" ConditionalExpression() ("," ConditionalExpression() )* ")"
 }
 
-void MemberSelector():
-{
-	debugPrint("MEMBER SELECTOR");
+void MethodCall():
+{	debugPrint("METHOD CALL");
 	Token t;
 }
-{
-  "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+{    t = <IDENTIFIER> { jjtThis.setImage(t.image); } "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
 }
 
 void PrimaryPrefix():
@@ -1210,10 +1207,10 @@ void PrimaryPrefix():
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | AllocationExpression()
 | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
-| Name()
+//| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
+| LOOKAHEAD(2) MethodCall()
+| t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 }
-
-
 
 void PrimarySuffix():
 {
@@ -1221,12 +1218,11 @@ void PrimarySuffix():
 	Token t;
 }
 {
-  LOOKAHEAD(2) "." "this" { jjtThis.setImage("this"); }
-| LOOKAHEAD(2) "." AllocationExpression()
-| LOOKAHEAD(3) MemberSelector()
+  LOOKAHEAD(2) "." "this" { jjtThis.setImage("this"); } // when does this even happen?
 | "[" ConditionalExpression() ("," ConditionalExpression())* "]"
-| "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
-| Arguments()
+//| "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
+| LOOKAHEAD(3) "." MethodCall()
+| "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 }
 
 void Literal() :
