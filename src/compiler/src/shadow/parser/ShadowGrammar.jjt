@@ -1186,7 +1186,7 @@ void PrimaryExpression():
 
 void Sequence():
 { debugPrint("SEQUENCE"); }
-{	"(" PrimaryExpression() ("," PrimaryExpression() )* ")"
+{	"(" ConditionalExpression() ("," ConditionalExpression() )* ")"
 }
 
 void MemberSelector():
@@ -1407,7 +1407,10 @@ void StatementExpression():
  */
 { debugPrint("STATEMENT EXPRESSION"); }
 {
-  	  LOOKAHEAD( Sequence() ) Sequence() "=" PrimaryExpression()
+  	//Looks like hell, but sequence expansions are either:
+  	//Sequence() = Sequence() = ... = Sequence() = Sequence() or
+  	//Sequence() = Sequence() = ... = Sequence() = PrimaryExpression() [for method calls] 
+  	  LOOKAHEAD( Sequence() ) (LOOKAHEAD( Sequence() "=" ) Sequence() "=" )+ ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() )
 	| PrimaryExpression() [ AssignmentOperator() Expression() ]
 }
 
