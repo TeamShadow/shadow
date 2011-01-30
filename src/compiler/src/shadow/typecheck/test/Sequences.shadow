@@ -1,6 +1,7 @@
 class Sequences
 {   
-    public static jam(int a) => (int, double) {
+    public static jam(int a) => (int, double)
+    {
         return (4, 16.0);
     }
 

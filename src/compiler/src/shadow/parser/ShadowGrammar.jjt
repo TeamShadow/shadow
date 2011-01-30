@@ -1203,7 +1203,7 @@ void PrimaryPrefix():
 {
   Literal()
 | "this" { jjtThis.setImage("this"); }
-| "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+| "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | AllocationExpression()
 | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
