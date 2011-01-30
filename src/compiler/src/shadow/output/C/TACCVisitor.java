@@ -22,7 +22,7 @@ import shadow.output.AbstractTACLinearVisitor;
 public class TACCVisitor extends AbstractTACLinearVisitor {
 
 	private static int tabDepth = 0;
-	private static final int COMMENT_WIDTH = 40;
+	private static final int COMMENT_WIDTH = 35;
 	private static final int TAB_WIDTH = 5;
 
 	/**
