@@ -1,0 +1,25 @@
+class Sequences
+{   
+    public static jam(int a) => (int, double) {
+        return (4, 16.0);
+    }
+
+       
+    public static main() => ()
+    {    	
+    	double x,y;
+    	
+    	double a = 5.0;
+    	double b = 6;
+    	
+    	int u = 5;
+    	double v = 3;
+    	
+    	(x,y) = jam(15);
+    	
+    	( a, b ) = ( x, y );
+    	
+    	
+    	( a, b ) = ( u, v ) = jam( 10 );
+    }   
+} 

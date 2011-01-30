@@ -43,6 +43,7 @@ import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLabeledStatement;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMemberSelector;
+import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
@@ -356,6 +357,109 @@ public class ClassChecker extends BaseChecker {
 		node.setType( Type.UNKNOWN ); //if got here, some error		
 		return false;
 	}
+	
+	public boolean findNameInContext( Node node, String name, Type context, boolean directAccess  )
+	{		
+		if( !(context instanceof ClassInterfaceBaseType) )
+			return false; //deal with packages here eventually?
+		
+		ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)context;
+		
+		if(outerClass.containsField(name))
+		{
+			node.setType(outerClass.getField(name).getType());
+			node.setModifiers(outerClass.getField(name).getModifiers());
+			node.addModifier(ModifierSet.ASSIGNABLE);
+			
+			if( directAccess && ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
+				addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
+			
+			return true;			
+		}
+		
+		if( outerClass instanceof ClassType ) //check parents
+		{
+			ClassType parent = ((ClassType)outerClass).getExtendType();
+			
+			while( parent != null )
+			{				
+				if(parent.containsField(name))
+				{
+					Node field = parent.getField(name);
+					node.setType(field.getType());
+					node.setModifiers(field.getModifiers());
+					node.addModifier(ModifierSet.ASSIGNABLE);
+					
+					if( ModifierSet.isPrivate(field.getModifiers()))
+						addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
+					
+					if( directAccess && ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
+						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
+					
+					return true;			
+				}
+				
+				parent = parent.getExtendType();
+			}
+		}
+		
+		List<MethodSignature> methods = outerClass.getMethods(name);
+		
+		//unbound method (it gets bound when you supply args)
+		if( methods != null && methods.size() > 0 )
+		{
+			node.setType( new UnboundMethodType( name, outerClass ) );				
+			return true;
+		}		
+		
+		return false;
+	}
+	
+	
+	public boolean findName( Node node, String name ) 
+	{		
+ 		Type type = lookupType(name);
+ 		int modifiers = 0;
+
+ 	// first we check to see if this name is a type
+		if(type != null)
+		{	
+			node.setType(type);
+			node.setModifiers(type.getModifiers());
+			node.addModifier(ModifierSet.TYPE_NAME);
+			
+			return true;
+		}		
+	
+			// now go through the scopes trying to find the variable
+			Node declaration = findSymbol( name );				
+			if( declaration != null ) 
+			{
+				node.setType(declaration.getType());
+				node.setModifiers(declaration.getModifiers());
+				node.addModifier(ModifierSet.ASSIGNABLE);
+				return true;
+			}
+				
+			// now check the parameters of the method
+			MethodType methodType = null;
+			
+			if( curMethod != null  )
+				methodType = (MethodType)curMethod.getType();
+			
+			if(methodType != null && methodType.containsParam(name))
+			{	
+				node.setType(methodType.getParameterType(name).getType());
+				node.setModifiers(methodType.getParameterType(name).getModifiers());
+				node.addModifier(ModifierSet.ASSIGNABLE);
+				return true;
+			}
+				
+			// check to see if it's a field or a method			
+			return findNameInContext( node, name, currentType, true );
+	}
+	
+	
 	
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException 
 	{
@@ -1259,7 +1363,35 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		}
 		
-		
+		/*//perhaps this can all be dealt with in ASTAllocationExpression
+		Node lastChild = node.jjtGetChild(node.jjtGetNumChildren() - 1); 		
+		if( lastChild instanceof ASTAllocationExpression ) //"." AllocationExpression()
+		{
+			ASTAllocationExpression allocation = (ASTAllocationExpression)lastChild;
+			Type prefixType = curPrefix.getFirst().getType();
+			
+			if( prefixType instanceof ClassInterfaceBaseType )
+			{
+				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
+				if( currentClass.containsInnerClass(allocation.getType().getTypeName()) )
+				{
+					node.setType(currentClass.getInnerClass(allocation.getType().getTypeName()));
+					if( !classIsAccessible( allocation.getType(), currentType ))
+						addError(node, Error.INVL_MOD, "Class " + allocation.getType() + " not accessible from current context");
+				}
+				else
+				{
+					addError(node, Error.UNDEF_TYP, "Inner class " + allocation.getType().getTypeName() + " not found");
+					node.setType(Type.UNKNOWN);
+				}
+			}
+			else
+			{
+				addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
+				node.setType(Type.UNKNOWN);
+			}
+		}		
+		*/
 		if( node.jjtGetNumChildren() > 1 ) 	//has suffixes, pull type from last suffix
 		{
 			node.setType(node.jjtGetChild(node.jjtGetNumChildren() - 1).getType());
@@ -1300,41 +1432,33 @@ public class ClassChecker extends BaseChecker {
 						addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + curMethod);
 				}					
 			}
-			else //super case
+			else if( node.getImage().startsWith("super.")) //super case
 			{
-				if( currentType instanceof InterfaceType )
+				if( currentType instanceof ClassType )
 				{
-					addError(node, Error.INVL_TYP, "Reference super invalid for interfaces"); //may need other cases
-					node.setType(Type.UNKNOWN);
-				}				
-				else if( currentType instanceof ClassType )
-				{
-					ClassType parentType = ((ClassType)currentType).getExtendType();
+					String name = node.getImage().substring(6);  //removes "super."
 					
-					if( parentType.containsField(node.getImage() ))
+					if( !findNameInContext( node, name, ((ClassType)currentType).getExtendType(), true )) //automatically sets type if can
 					{
-						node.setType(parentType.getField(node.getImage()).getType());
-						if( curMethod != null && ModifierSet.isStatic(curMethod.getModifiers())  )
-							addError(node, Error.INVL_MOD, "Cannot access non-static reference super from static method " + curMethod);
+						addError(node, Error.UNDEC_VAR, name);
+						node.setType(Type.UNKNOWN);
+						ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);						
 					}
-					else
-					{
-						List<MethodSignature> methods = parentType.getMethods(node.getImage());
-						
-						//unbound method (it gets bound when you supply args
-						if( methods != null && methods.size() > 0 )
-							node.setType( new UnboundMethodType( node.getImage(), parentType ) );						
-						else
-						{
-							addError(node, Error.UNDEC_VAR, "Member " + node.getImage() + " not found");
-							node.setType(Type.UNKNOWN);
-						}
-					}	
 				}
 				else
 				{
 					addError(node, Error.INVL_TYP, "Reference super must be used inside of class, enum, error, or exception"); //will this ever happen?
 					node.setType(Type.UNKNOWN);
+				}
+			}
+			else //just a name
+			{
+				String name = node.getImage();
+				if( !findName( node, name )) //automatically sets type if can
+				{
+					addError(node, Error.UNDEC_VAR, name);
+					node.setType(Type.UNKNOWN);
+					ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);						
 				}
 			}
 		}
@@ -1352,16 +1476,25 @@ public class ClassChecker extends BaseChecker {
 					node.setType(Type.UNKNOWN);
 				}
 			}
+			else if( child instanceof ASTMethodCall && child.getType() != Type.UNKNOWN )
+			{
+				MethodType type = (MethodType)(child.getType());
+				List<Type> returnTypes = type.getReturnTypes();
+				if( returnTypes.size() == 1 )
+					node.setType( returnTypes.get(0));
+				else
+					node.setType( new SequenceType( returnTypes ));
+			}
 			else
 			{
-				node.setType( child.getType() ); 	//literal, conditionalexpression, allocation expression, name
+				node.setType( child.getType() ); 	//literal, conditionalexpression, allocation expression
 				pushUpModifiers( node ); 			
 			}
 		}
 		
 		curPrefix.set(0, node); //so that the suffix can figure out where it's at
 		
-		/*
+		/* OLD
 		  Literal()
 		  | "this" { jjtThis.setImage("this"); }
 		  | "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
@@ -1370,7 +1503,124 @@ public class ClassChecker extends BaseChecker {
 		  | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
 		  | Name()
 		*/
-
+		
+		
+		/* NEW
+		  Literal()
+			| "this" { jjtThis.setImage("this"); }
+			| "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+			| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
+			| AllocationExpression()
+			| LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
+			//| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
+			| LOOKAHEAD(2) MethodCall()
+			| t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+		 */
+				
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException 
+	{
+		//t = <IDENTIFIER> { jjtThis.setImage(t.image); } "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		String name = node.getImage();
+		Type context;
+		boolean directAccess;
+		
+		if( node.jjtGetParent() instanceof ASTPrimaryPrefix ) //not part of some chain of references
+		{
+			context = currentType;
+			directAccess = true;			
+		}
+		else //ASTPrimarySuffix: already in the middle of references
+		{
+			context = curPrefix.getFirst().getType();
+			directAccess = false;
+		}
+				
+		if( !findNameInContext( node, name, context, directAccess )) //automatically sets type if can
+		{
+			addError(node, Error.UNDEC_VAR, name);
+			node.setType(Type.UNKNOWN);
+			ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);						
+		}
+		else if( node.getType() instanceof UnboundMethodType )
+		{
+			UnboundMethodType unboundMethod = (UnboundMethodType)(node.getType());
+			List<Type> typeList = new LinkedList<Type>();
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				typeList.add(node.jjtGetChild(i).getType());
+			
+			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();					
+			List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
+			List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
+			
+			boolean perfectMatch = false;
+			
+			for( MethodSignature signature : methods ) 
+			{
+				if( signature.matches( typeList ))
+				{
+					List<Type> returnTypes = signature.getMethodType().getReturnTypes();
+					if( returnTypes.size() == 1 )
+						node.setType(returnTypes.get(0));
+					else
+					{
+						SequenceType sequenceType = new SequenceType();
+						for( Type type : returnTypes )
+							sequenceType.addType(type);
+						node.setType( sequenceType );
+					}
+					perfectMatch = true;
+					
+					if( !methodIsAccessible( signature, currentType  ))
+						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
+					else
+						node.setType(signature.getMethodType());
+				}
+				else if( signature.canAccept(typeList))
+					acceptableMethods.add(signature);
+			}
+			
+			if( !perfectMatch )
+			{
+				if( acceptableMethods.size() == 0 )	
+				{
+					node.setType(Type.UNKNOWN);						
+					addError(node, Error.TYPE_MIS, "No method found with signature " + typeList);
+				}
+				else if( acceptableMethods.size() > 1 )
+				{
+					node.setType(Type.UNKNOWN);						
+					addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + typeList);
+				}							
+				else
+				{
+					MethodSignature signature = acceptableMethods.get(0); 
+					List<Type> returnTypes = signature.getMethodType().getReturnTypes();
+					if( returnTypes.size() == 1 )
+						node.setType(returnTypes.get(0));
+					else
+					{
+						SequenceType sequenceType = new SequenceType( returnTypes );						
+						node.setType( sequenceType );
+					}							
+					
+					if( !methodIsAccessible( signature, currentType  ))
+						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
+					else
+						node.setType(signature.getMethodType());
+				}
+			}					
+		}
+		else
+		{									
+			addError(node, Error.TYPE_MIS, "Cannot apply arguments to non-method type " + node.getType());
+			node.setType(Type.UNKNOWN);			
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -1378,7 +1628,7 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException 
 	{
-		/*
+		/* OLD
 		  LOOKAHEAD(2) "." "this"
 		  | LOOKAHEAD(2) "." AllocationExpression()
 		  | LOOKAHEAD(3) MemberSelector()
@@ -1387,12 +1637,21 @@ public class ClassChecker extends BaseChecker {
 		  | Arguments()
 		  }		
 		*/	
-				
-		Node prefixNode = curPrefix.getFirst();
-		Type prefixType = prefixNode.getType();
+		
+		
+		/* NEW
+		   LOOKAHEAD(2) "." "this" { jjtThis.setImage("this"); } // when does this even happen?
+			| "[" ConditionalExpression() ("," ConditionalExpression())* "]"
+			//| "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
+			| LOOKAHEAD(3) "." MethodCall()
+			| "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+		 */
 		
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
+				
+		Node prefixNode = curPrefix.getFirst();
+		Type prefixType = prefixNode.getType();
 		
 		int children = node.jjtGetNumChildren();
 		
@@ -1407,37 +1666,13 @@ public class ClassChecker extends BaseChecker {
 		{
 			Node child = node.jjtGetChild(0); 
 			
-			if( child instanceof ASTAllocationExpression ) //"." AllocationExpression()
-			{
-				ASTAllocationExpression allocation = (ASTAllocationExpression)child;
-				
-				if( prefixType instanceof ClassInterfaceBaseType )
-				{
-					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
-					if( currentClass.containsInnerClass(allocation.getType().getTypeName()) )
-					{
-						node.setType(currentClass.getInnerClass(allocation.getType().getTypeName()));
-						if( !classIsAccessible( allocation.getType(), currentType ))
-							addError(node, Error.INVL_MOD, "Class " + allocation.getType() + " not accessible from current context");
-					}
-					else
-					{
-						addError(node, Error.UNDEF_TYP, "Inner class " + allocation.getType().getTypeName() + " not found");
-						node.setType(Type.UNKNOWN);
-					}
-				}
-				else
-				{
-					addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
-					node.setType(Type.UNKNOWN);
-				}
-			}
-			else if( child instanceof ASTMemberSelector )
+		
+			/*else if( child instanceof ASTMemberSelector )
 			{
 				addError(node, Error.INVL_TYP, "Generics are not yet handled");	
 				node.setType(Type.UNKNOWN);
-			}
-			else if( child instanceof ASTConditionalExpression ) //array index
+			}*/
+			if( child instanceof ASTConditionalExpression ) //array index
 			{
 				if( prefixType instanceof ArrayType )
 				{
@@ -1474,77 +1709,14 @@ public class ClassChecker extends BaseChecker {
 					addError(node, Error.INVL_TYP, "Cannot subscript into non-array type " + prefixType);
 				}
 			}
-			else if( child instanceof ASTArguments ) //method call
+			else //MethodCall
 			{
-				if( prefixType instanceof UnboundMethodType )
-				{
-					UnboundMethodType unboundMethod = (UnboundMethodType)prefixType; 
-					List<Type> typeList = ((ASTArguments)child).getTypeList();
-					ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();					
-					List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
-					List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
-					
-					boolean perfectMatch = false;
-					
-					for( MethodSignature signature : methods ) 
-					{
-						if( signature.matches( typeList ))
-						{
-							List<Type> returnTypes = signature.getMethodType().getReturnTypes();
-							if( returnTypes.size() == 1 )
-								node.setType(returnTypes.get(0));
-							else
-							{
-								SequenceType sequenceType = new SequenceType();
-								for( Type type : returnTypes )
-									sequenceType.addType(type);
-								node.setType( sequenceType );
-							}
-							perfectMatch = true;
-							
-							if( !methodIsAccessible( signature, currentType  ))
-								addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
-							else
-								prefixNode.setType(signature.getMethodType());
-						}
-						else if( signature.canAccept(typeList))
-							acceptableMethods.add(signature);
-					}
-					
-					if( !perfectMatch )
-					{
-						if( acceptableMethods.size() == 0 )	
-						{
-							node.setType(Type.UNKNOWN);						
-							addError(child, Error.TYPE_MIS, "No method found with signature " + typeList);
-						}
-						else if( acceptableMethods.size() > 1 )
-						{
-							node.setType(Type.UNKNOWN);						
-							addError(child, Error.TYPE_MIS, "Ambiguous method call with signature " + typeList);
-						}							
-						else
-						{
-							MethodSignature signature = acceptableMethods.get(0); 
-							List<Type> returnTypes = signature.getMethodType().getReturnTypes();
-							if( returnTypes.size() == 1 )
-								node.setType(returnTypes.get(0));
-							else
-							{
-								SequenceType sequenceType = new SequenceType();
-								for( Type type : returnTypes )
-									sequenceType.addType(type);
-								node.setType( sequenceType );
-							}							
-							
-							if( !methodIsAccessible( signature, currentType  ))
-								addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
-							else
-								prefixNode.setType(signature.getMethodType());
-						}
-					}					
-				}
-				
+				MethodType type = (MethodType)(child.getType());
+				List<Type> returnTypes = type.getReturnTypes();
+				if( returnTypes.size() == 1 )
+					node.setType( returnTypes.get(0));
+				else
+					node.setType( new SequenceType( returnTypes ));			
 			}
 		}
 		

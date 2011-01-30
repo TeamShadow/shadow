@@ -130,6 +130,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 				Node child = node.jjtGetChild(i);
 				child.setType(type);
 				child.setModifiers(node.getModifiers());
+				child.setEnclosingType(currentType);
 				String symbol = child.jjtGetChild(0).getImage();
 				
 				// make sure we don't already have this symbol

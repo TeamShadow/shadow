@@ -10,8 +10,13 @@ public class SequenceType extends Type
 	protected List<Type> types; /** List of return types */
 
 	public SequenceType() {		
+		this( new LinkedList<Type>()  );		
+	}
+
+	public SequenceType(List<Type> types)
+	{
 		super(null, 0, null, Kind.SEQUENCE);
-		types = new LinkedList<Type>();
+		this.types = types;
 	}
 
 	public void addType(Type type) {
