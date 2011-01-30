@@ -82,10 +82,11 @@ public class TACTest extends BaseTest {
 	    			
 	    			walker.walk();
 	    			
-	    			TACCVisitor cVisitor = new TACCVisitor(m.getEntry());
+/*	    			TACCVisitor cVisitor = new TACCVisitor(m.getEntry());
 	    			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
 	    			
 	    			linearWalker.walk();
+*/
 	    		}
 	        }
 
