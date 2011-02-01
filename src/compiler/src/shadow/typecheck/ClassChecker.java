@@ -1361,43 +1361,14 @@ public class ClassChecker extends BaseChecker {
 		{
 			curPrefix.addFirst(null);
 			return WalkType.POST_CHILDREN;
-		}
-		
-		/*//perhaps this can all be dealt with in ASTAllocationExpression
-		Node lastChild = node.jjtGetChild(node.jjtGetNumChildren() - 1); 		
-		if( lastChild instanceof ASTAllocationExpression ) //"." AllocationExpression()
-		{
-			ASTAllocationExpression allocation = (ASTAllocationExpression)lastChild;
-			Type prefixType = curPrefix.getFirst().getType();
-			
-			if( prefixType instanceof ClassInterfaceBaseType )
-			{
-				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
-				if( currentClass.containsInnerClass(allocation.getType().getTypeName()) )
-				{
-					node.setType(currentClass.getInnerClass(allocation.getType().getTypeName()));
-					if( !classIsAccessible( allocation.getType(), currentType ))
-						addError(node, Error.INVL_MOD, "Class " + allocation.getType() + " not accessible from current context");
-				}
-				else
-				{
-					addError(node, Error.UNDEF_TYP, "Inner class " + allocation.getType().getTypeName() + " not found");
-					node.setType(Type.UNKNOWN);
-				}
-			}
-			else
-			{
-				addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
-				node.setType(Type.UNKNOWN);
-			}
 		}		
-		*/
+		
 		if( node.jjtGetNumChildren() > 1 ) 	//has suffixes, pull type from last suffix
 		{
 			node.setType(node.jjtGetChild(node.jjtGetNumChildren() - 1).getType());
 			node.setModifiers(node.jjtGetChild(node.jjtGetNumChildren() - 1).getModifiers());
 		}
-		else								//just prefix
+		else								//allocation or just prefix
 		{
 			node.setType(node.jjtGetChild(0).getType());
 			pushUpModifiers( node ); 			
