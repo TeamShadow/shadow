@@ -14,7 +14,6 @@ import shadow.parser.javacc.ASTArguments;
 import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
@@ -42,7 +41,6 @@ import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLabeledStatement;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
-import shadow.parser.javacc.ASTMemberSelector;
 import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -100,7 +98,8 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit) {// set the current type
+		if(!secondVisit)
+		{// set the current type
 			if( currentType == null )
 				currentType = (ClassInterfaceBaseType)lookupType(node.getImage());
 			else
@@ -358,7 +357,7 @@ public class ClassChecker extends BaseChecker {
 		return false;
 	}
 	
-	public boolean findNameInContext( Node node, String name, Type context, boolean directAccess  )
+	public boolean findNameInContext( Node node, String name, Type context, boolean directAccess  ) //directAccess is true if there is no prefix and false if there is
 	{		
 		if( !(context instanceof ClassInterfaceBaseType) )
 			return false; //deal with packages here eventually?
@@ -419,7 +418,6 @@ public class ClassChecker extends BaseChecker {
 	public boolean findName( Node node, String name ) 
 	{		
  		Type type = lookupType(name);
- 		int modifiers = 0;
 
  	// first we check to see if this name is a type
 		if(type != null)
@@ -464,122 +462,20 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException 
 	{
 		String[] references = node.getImage().split("\\.");
-		String name = references[0];
- 		Type type = lookupType(name);
- 		int modifiers = 0;
-
-		// first we check to see if this name is a type
-		if(type != null)
-		{	
-			Type newType = type;
-			int i;
-			for( i = 1; (newType = lookupType(name)) != null && i < references.length; i++ )
-			{
-				name += "." + references[i];
-				type = newType;
-			}
-			
-			if( newType != null ) //pure type, no members reference in name
-			{
-				node.setType(newType);
-				node.setModifiers(newType.getModifiers());
-				node.addModifier(ModifierSet.TYPE_NAME);	
-			}
-			else
-			{
-				boolean first = true;
-				i--; //step back, because last thing we added made the name no longer a type
-				for( ; i < references.length && checkField( node, references[i], type, first ); i++ ) //moves through subsequent members
-				{
-					type = node.getType();
-					first = false;
-				}
-			}				
-			
-			return WalkType.PRE_CHILDREN;
+		
+		int i = 0;
+ 		
+		boolean found = findName( node, references[i] );  //find name for first part
+		
+		for( i = 1; i < references.length  && found; i++ )
+			found = findNameInContext( node, references[0], node.getType(), false );
+		
+		if( !found )
+		{ 
+			addError(node, Error.UNDEC_VAR, references[i]);
+			node.setType(Type.UNKNOWN);
+			ASTUtils.DEBUG(node, "DIDN'T FIND: " + references[i]);
 		}
-		
-		// now go through the scopes trying to find the variable
-		Node declaration = findSymbol( name );				
-		if( declaration != null ) 
-		{
-			node.setType(declaration.getType());
-			node.setModifiers(declaration.getModifiers());
-			node.addModifier(ModifierSet.ASSIGNABLE);
-			return WalkType.PRE_CHILDREN;
-		}
-			
-		// now check the parameters of the method
-		MethodType methodType = null;
-		
-		if( curMethod != null  )
-			methodType = (MethodType)curMethod.getType();
-		
-		if(methodType != null && methodType.containsParam(name))
-		{	
-			node.setType(methodType.getParameterType(name).getType());
-			node.setModifiers(methodType.getParameterType(name).getModifiers());
-			node.addModifier(ModifierSet.ASSIGNABLE);
-			return WalkType.PRE_CHILDREN;
-		}
-			
-		// check to see if it's a field or a method
-		if( currentType instanceof ClassInterfaceBaseType )
-		{
-			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
-			
-			if(currentClass.containsField(name))
-			{
-				node.setType(currentClass.getField(name).getType());
-				node.setModifiers(currentClass.getField(name).getModifiers());
-				node.addModifier(ModifierSet.ASSIGNABLE);
-				
-				if( ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
-					addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
-				
-				return WalkType.PRE_CHILDREN;			
-			}
-			
-			if( currentClass instanceof ClassType ) //check parents
-			{
-				ClassType parent = ((ClassType)currentClass).getExtendType();
-				
-				while( parent != null )
-				{				
-					if(parent.containsField(name))
-					{
-						Node field = parent.getField(name);
-						node.setType(field.getType());
-						node.setModifiers(field.getModifiers());
-						node.addModifier(ModifierSet.ASSIGNABLE);
-						
-						if( ModifierSet.isPrivate(field.getModifiers()))
-							addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
-						
-						if( ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
-							addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
-						
-						return WalkType.PRE_CHILDREN;			
-					}
-					
-					parent = parent.getExtendType();
-				}
-			}
-			
-			List<MethodSignature> methods = currentClass.getMethods(name);
-			
-			//unbound method (it gets bound when you supply args)
-			if( methods != null && methods.size() > 0 )
-			{
-				node.setType( new UnboundMethodType( name, currentClass ) );				
-				return WalkType.PRE_CHILDREN;
-			}
-		}		
-		
-		// by the time we get here, we haven't found this name anywhere
-		addError(node, Error.UNDEC_VAR, name);
-		node.setType(Type.UNKNOWN);
-		ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);
 
 		return WalkType.NO_CHILDREN;
 	}
@@ -743,14 +639,14 @@ public class ClassChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 				
-		Type t = node.jjtGetChild(0).getType();
+		Type type = node.jjtGetChild(0).getType();
 		String symbol = node.getImage();
 		
 		if( (symbol.equals("-") || symbol.equals("+")) ) 
 		{
-			if( !t.isNumerical() )
+			if( !type.isNumerical() )
 			{
-				addError(node, Error.INVL_TYP, "Found type " + t + ", but numerical type required for arithmetic operations");
+				addError(node, Error.INVL_TYP, "Found type " + type + ", but numerical type required for arithmetic operations");
 				node.setType(Type.UNKNOWN);
 				return WalkType.POST_CHILDREN;
 			}
@@ -759,9 +655,9 @@ public class ClassChecker extends BaseChecker {
 			pushUpModifiers( node );
 		
 		if(symbol.startsWith("-"))
-			node.setType(Type.makeSigned((ClassType)t));
+			node.setType(Type.makeSigned((ClassType)type));
 		else
-			node.setType(t);
+			node.setType(type);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -770,28 +666,28 @@ public class ClassChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		Type t = node.jjtGetChild(0).getType();
+		Type type = node.jjtGetChild(0).getType();
 		
 		if(node.getImage().startsWith("~") )
 		{
-			if( !t.isIntegral() )
+			if( !type.isIntegral() )
 			{
-				addError(node, Error.INVL_TYP, "Found type " + t + ", but integral type required for bitwise operations");
-				t = Type.UNKNOWN;				
+				addError(node, Error.INVL_TYP, "Found type " + type + ", but integral type required for bitwise operations");
+				type = Type.UNKNOWN;				
 			}
 		}		
 		else if(node.getImage().startsWith("!") )
 		{
-			if( !t.equals(Type.BOOLEAN)) 
+			if( !type.equals(Type.BOOLEAN)) 
 			{
-				addError(node, Error.INVL_TYP, "Found type " + t + ", but boolean type required for logical operations");
-				t = Type.UNKNOWN;				
+				addError(node, Error.INVL_TYP, "Found type " + type + ", but boolean type required for logical operations");
+				type = Type.UNKNOWN;				
 			}
 		}
 		else
 			pushUpModifiers( node ); //can add ASSIGNABLE (if only one child)
 		
-		node.setType(t);		
+		node.setType(type);		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -954,13 +850,14 @@ public class ClassChecker extends BaseChecker {
 				return WalkType.NO_CHILDREN;
 			}
 			
-			ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
+			//ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);  //leave it for the TAC?
 			
 			Node child2 = node.jjtGetChild(2);
 			Type t2 = child2.getType();
 			
 			// SHOULD DO SOMETHING WITH THIS!!!
-			AssignmentType assType = op.getAssignmentType();	
+			//AssignmentType assType = op.getAssignmentType(); //leave it for the TAC?
+			
 
 			
 			// TODO: Add in all the types that we can compare here
@@ -1103,7 +1000,9 @@ public class ClassChecker extends BaseChecker {
 		
 		Node child = node.jjtGetChild(0);
 		
-		if( child instanceof ASTSequence )
+		if( child instanceof ASTSequence && child.getType() instanceof SequenceType ) //second check used for sequences containing a single item
+																					  //(which are treated as sequences by the parser but should 
+																					  //be regarded as single values by the typechecker
 		{			
 			Node current = child;			
 		
@@ -1136,7 +1035,8 @@ public class ClassChecker extends BaseChecker {
 		{
 			if( node.jjtGetNumChildren() == 3 ) //only need to proceed if there is assignment
 			{
-				ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
+				//ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
+				//Leave it for the TAC?
 				Type t1 = child.getType();
 				Type t2 = node.jjtGetChild(2).getType();
 				
@@ -1147,7 +1047,8 @@ public class ClassChecker extends BaseChecker {
 				else					
 				{
 					// SHOULD DO SOMETHING WITH THIS!!!
-					AssignmentType assType = op.getAssignmentType();
+					//AssignmentType assType = op.getAssignmentType();
+					//Leave it for the TAC?
 					
 					if( t2 instanceof MethodType ) //could this be done with a more complex subtype relationship below?
 					{

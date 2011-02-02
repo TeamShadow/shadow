@@ -121,6 +121,12 @@ public class ShadowParser
       */
      public static int removeModifier(int modifiers, int mod) { return modifiers & ~mod; }
      public static int addModifier(int modifiers, int mod) { return modifiers | mod; }
+     public static boolean hasModifier( int modifiers, int mod ) { return (modifiers & mod) != 0;     }
+     public static int checkAndAdd( int modifiers, int mod ) throws ParseException
+     {
+       if( hasModifier( modifiers, mod ) ) throw new ParseException( "Repeated modifiers not allowed" );
+
+       return addModifier( modifiers, mod );     }
    }
 
    private boolean debug = false;
@@ -583,19 +589,19 @@ int Modifiers():
  (
   LOOKAHEAD(2)
   (
-    "public" { modifiers |= ModifierSet.PUBLIC; }
-  | "static" { modifiers |= ModifierSet.STATIC; }
-  | "protected" { modifiers |= ModifierSet.PROTECTED; }
-  | "private" { modifiers |= ModifierSet.PRIVATE; }
-  | "final" { modifiers |= ModifierSet.FINAL; }
-  | "abstract" { modifiers |= ModifierSet.ABSTRACT; }
+    "public" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PUBLIC); }
+  | "static" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.STATIC); }
+  | "protected" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PROTECTED); }
+  | "private" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PRIVATE); }
+  | "final" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.FINAL); }
+  | "abstract" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.ABSTRACT); }
 //  | "synchronized" { modifiers |= ModifierSet.SYNCHRONIZED; }
 //  | "native" { modifiers |= ModifierSet.NATIVE; }
 //  | "transient" { modifiers |= ModifierSet.TRANSIENT; }
 //  | "volatile" { modifiers |= ModifierSet.VOLATILE; }
 //  | "strictfp" { modifiers |= ModifierSet.STRICTFP; }
-  | "weak" { modifiers |= ModifierSet.WEAK; }
-  |	"immutable"{ modifiers |= ModifierSet.IMMUTABLE; }  | Annotation()
+  | "weak" { modifiers = ModifierSet.checkAndAdd( modifiers,  ModifierSet.WEAK); }
+  |	"immutable"{ modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.IMMUTABLE); }  | Annotation()
   )
  )*
 
@@ -630,9 +636,8 @@ void ViewDeclaration(int modifiers):
 	Token t;
 }
 {
-	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }	"{"
-        ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";"
-        ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";" )*
+	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }	"{"        
+        ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";" )+
     "}"
 }
 
