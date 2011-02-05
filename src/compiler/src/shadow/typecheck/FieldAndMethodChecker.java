@@ -281,7 +281,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			// add the method to the current type
 			currentClass.addMethod(declaration.getImage(), signature);
 			
-			ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());			
+//			ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());			
 			
 			return true;
 		}

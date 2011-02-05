@@ -25,9 +25,10 @@ public class TACBuilder extends AbstractASTVisitor {
 	// debug/hack for now
 	public LinkedList<TACMethod> methods;
 	
-	public TACBuilder() {
+	public TACBuilder(boolean debug) {
 		classes = new LinkedList<TACClass>();
 		methods = new LinkedList<TACMethod>();
+		this.debug = debug;
 	}
 	
 	public void build(Node node) throws ShadowException {
@@ -45,16 +46,20 @@ public class TACBuilder extends AbstractASTVisitor {
 
 		// go through the methods
 		for(Map.Entry<String, List<MethodSignature>> m:type.getMethodMap().entrySet()) {
-			ASTUtils.DEBUG("METHOD: " + m.getKey());
+			
+			if(debug)
+				ASTUtils.DEBUG("METHOD: " + m.getKey());
 			
 			for(MethodSignature ms:m.getValue()) {
-				ASTUtils.DEBUG(ms.getASTNode(), "ROOT NODE");
+				if(debug)
+					ASTUtils.DEBUG(ms.getASTNode(), "ROOT NODE");
 				
 				ASTMethodToTAC ast2TAC = new ASTMethodToTAC(ms.getASTNode());
 				
 				ast2TAC.convert();	// actually do the conversion
 				
-				ASTUtils.DEBUG(ms.getASTNode(), "ENTRY NODE: " + ((SimpleNode)ms.getASTNode()).getEntryNode());
+				if(debug)
+					ASTUtils.DEBUG(ms.getASTNode(), "ENTRY NODE: " + ((SimpleNode)ms.getASTNode()).getEntryNode());
 				
 				methods.add(new TACMethod(ms.getMangledName(), ms.getASTNode()));
 			}

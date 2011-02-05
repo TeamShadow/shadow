@@ -116,9 +116,10 @@ public class ClassChecker extends BaseChecker {
 		// we have a new scope, so we need a new HashMap in the linked list
 		if(secondVisit)
 		{
-			System.out.println("\nSYMBOL TABLE:");
+/*			System.out.println("\nSYMBOL TABLE:");
 			for(String s:symbolTable.getFirst().keySet())
 				System.out.println(s + ": " + symbolTable.getFirst().get(s).getType());
+*/				
 			
 			symbolTable.removeFirst();
 		}

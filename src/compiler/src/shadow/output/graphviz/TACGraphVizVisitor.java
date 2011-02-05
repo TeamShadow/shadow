@@ -1,5 +1,6 @@
 package shadow.output.graphviz;
 
+import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
@@ -30,6 +31,10 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 	}
 	
 	public void visit(TACAssign node) {
+		printNode(node, true);
+	}
+	
+	public void visit(TACAllocation node) {
 		printNode(node, true);
 	}
 	

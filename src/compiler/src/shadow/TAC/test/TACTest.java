@@ -50,7 +50,7 @@ public class TACTest extends BaseTest {
 	        FileInputStream fis = new FileInputStream(sourceFile);        
 	        ShadowParser parser = new ShadowParser(fis);
 	        TypeChecker tc = new TypeChecker(false);
-	        TACBuilder tacBuilder = new TACBuilder();
+	        TACBuilder tacBuilder = new TACBuilder(true);
 	        SimpleNode node = parser.CompilationUnit();
 	        
 	        if(dump)
@@ -82,11 +82,10 @@ public class TACTest extends BaseTest {
 	    			
 	    			walker.walk();
 	    			
-/*	    			TACCVisitor cVisitor = new TACCVisitor(m.getEntry());
+	    			TACCVisitor cVisitor = new TACCVisitor(m.getEntry());
 	    			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
 	    			
 	    			linearWalker.walk();
-*/
 	    		}
 	        }
 
