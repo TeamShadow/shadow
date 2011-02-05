@@ -5,6 +5,7 @@ import shadow.parser.javacc.Node;
 
 public class TACJoin extends TACNode {
 	private TACNode trueExit, falseExit;	/** The true & false exits, only works with simple branches */
+	private int count;
 	
 	public TACJoin(Node astNode, TACNode trueExit, TACNode falseExit) {
 		super(astNode, "JOIN", null);
@@ -18,6 +19,7 @@ public class TACJoin extends TACNode {
 			falseExit.next = this;
 		
 		parent = null;
+		count = 0;
 	}
 	
 	public void accept(AbstractTACVisitor visitor) {
@@ -51,5 +53,17 @@ public class TACJoin extends TACNode {
 
 	public void setFalseExit(TACNode falseExit) {
 		this.falseExit = falseExit;
+	}
+	
+	public void increaseCount() {
+		++count;
+	}
+	
+	public void decreaseCount() {
+		--count;
+	}
+	
+	public int getCount() {
+		return count;
 	}
 }

@@ -20,6 +20,7 @@ public class TACBranch extends TACNode {
 	public TACBranch(Node astNode, TACVariable lhs, TACVariable rhs, TACComparison comparison, TACJoin join) {
 		this(astNode, lhs, rhs, comparison, null, null);
 		this.join = join;
+		this.join.increaseCount();
 	}
 	
 	public TACBranch(Node astNode, TACVariable lhs, TACVariable rhs, TACComparison comparison, TACNode trueEntry, TACNode falseEntry) {
@@ -51,6 +52,7 @@ public class TACBranch extends TACNode {
 
 	public void setJoin(TACJoin join) {
 		this.join = join;
+		this.join.increaseCount();
 	}
 	
 	public TACJoin getJoin() {

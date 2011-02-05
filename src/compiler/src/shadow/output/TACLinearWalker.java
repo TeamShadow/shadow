@@ -40,12 +40,18 @@ public class TACLinearWalker {
 			
 			walk(((TACBranch) node).getTrueEntry(), realJoin);
 			visitor.visitJoin(realJoin);
-
-			visitor.visitElse();
-			walk(((TACBranch) node).getFalseEntry(), realJoin);
-			visitor.visitJoin(realJoin);
 			
-			walk(realJoin.getNext(), null);
+			TACNode falseEntry = ((TACBranch) node).getFalseEntry();
+
+			if(! (falseEntry instanceof TACJoin) ) {
+				visitor.visitElse();
+				walk(falseEntry, realJoin);
+				visitor.visitJoin(realJoin);
+			}
+
+			realJoin.decreaseCount();
+			if(realJoin.getCount() == 0)
+				walk(realJoin.getNext(), null);
 		} else {
 			visitor.visit(node);
 			TACNodeInterface next = ((TACNode)node).getNext();
