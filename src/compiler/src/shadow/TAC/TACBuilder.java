@@ -8,6 +8,7 @@ import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
+import shadow.TAC.nodes.TACAllocation;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -23,12 +24,8 @@ public class TACBuilder extends AbstractASTVisitor {
 	private boolean debug;
 	private LinkedList<TACClass> classes;
 	
-	// debug/hack for now
-	public LinkedList<TACMethod> methods;
-	
 	public TACBuilder(boolean debug) {
 		classes = new LinkedList<TACClass>();
-		methods = new LinkedList<TACMethod>();
 		this.debug = debug;
 	}
 	
@@ -44,31 +41,61 @@ public class TACBuilder extends AbstractASTVisitor {
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
 		ClassType type = (ClassType)node.getType();
-
+		
+		// create a new class
+		TACClass theClass = new TACClass(node.getImage()); 
+		
+		//
+		// TODO: Fix this for multiple fields declared at once: public int x,y;
+		//
+		
+		// go through the fields
+		for(Map.Entry<String, Node> field:type.getFields().entrySet()) {
+			SimpleNode astNode = (SimpleNode)field.getValue();
+			ASTToTAC ast2TAC = new ASTToTAC(astNode);
+			
+			ast2TAC.convert();	// actually do the conversion
+			
+			System.out.println("FIELD: ");
+			astNode.getEntryNode().dump("");
+			System.out.println("");
+			
+			// the entry node of the astNode should always be an allocation
+			theClass.addField(astNode.getEntryNode(), astNode.getExitNode());
+		}
+		
+		// generate the init method for the fields
+		theClass.generateInitMethod(node);
+		
 		// go through the methods
 		for(Map.Entry<String, List<MethodSignature>> m:type.getMethodMap().entrySet()) {
-			
 			if(debug)
 				ASTUtils.DEBUG("METHOD: " + m.getKey());
 			
 			for(MethodSignature ms:m.getValue()) {
+				SimpleNode astNode = (SimpleNode)ms.getASTNode();
+				
 				// there is nothing to build for native methods
-				if(ModifierSet.isNative(ms.getASTNode().getModifiers()))
+				if(ModifierSet.isNative(astNode.getModifiers()))
 					continue;
 				
 				if(debug)
-					ASTUtils.DEBUG(ms.getASTNode(), "ROOT NODE");
+					ASTUtils.DEBUG(astNode, "ROOT NODE");
 				
-				ASTMethodToTAC ast2TAC = new ASTMethodToTAC(ms.getASTNode());
+				ASTToTAC ast2TAC = new ASTToTAC(astNode);
 				
 				ast2TAC.convert();	// actually do the conversion
 				
 				if(debug)
-					ASTUtils.DEBUG(ms.getASTNode(), "ENTRY NODE: " + ((SimpleNode)ms.getASTNode()).getEntryNode());
+					ASTUtils.DEBUG(astNode, "ENTRY NODE: " + astNode.getEntryNode());
 				
-				methods.add(new TACMethod(ms.getMangledName(), ms.getASTNode()));
+				// add the method to the class
+				theClass.addMethod(new TACMethod(ms, astNode.getEntryNode(), astNode.getExitNode()));
 			}
 		}
+		
+		// add the class
+		classes.add(theClass);
 		
 		return WalkType.PRE_CHILDREN;
 	}

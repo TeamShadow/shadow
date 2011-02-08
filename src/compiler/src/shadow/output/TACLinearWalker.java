@@ -3,6 +3,8 @@
  */
 package shadow.output;
 
+import shadow.TAC.TACClass;
+import shadow.TAC.TACMethod;
 import shadow.TAC.nodes.TACBranch;
 import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACNode;
@@ -14,17 +16,32 @@ import shadow.TAC.nodes.TACNodeInterface;
  */
 public class TACLinearWalker {
 	private AbstractTACLinearVisitor visitor;
-	private TACNode rootNode;
 	
 	public TACLinearWalker(AbstractTACLinearVisitor visitor) {
 		this.visitor = visitor;
-		this.rootNode = visitor.getRoot();
 	}
 	
 	public void walk() {
-		visitor.start();
-		walk(rootNode, null);
-		visitor.end();
+		visitor.startFile();
+		
+		TACClass theClass = visitor.getTheClass();
+
+		visitor.startFields();
+
+		// walk through the fields first
+		for(TACNode[] field:theClass.getFields()) {
+			walk(field[0], null);
+		}
+
+		visitor.endFields();
+		
+		// walk through the methods
+		for(TACMethod method:theClass.getMethods()) {
+			visitor.startMethod(method);
+			walk(method.getEntry(), null);
+			visitor.endMethod(method);
+		}
+		visitor.endFile();
 	}
 	
 	private void walk(TACNodeInterface node, TACJoin join) {

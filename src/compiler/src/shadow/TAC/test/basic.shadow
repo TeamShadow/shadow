@@ -1,6 +1,10 @@
 class Bill {
 
+    private int a = 7;
+    private int b;
+
     public static main(String[] args) => () {
+        int x, y;
         printString("Hello World");
     }
     

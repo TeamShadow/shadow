@@ -3,6 +3,10 @@
  */
 package shadow.output.C;
 
+import java.util.List;
+
+import shadow.TAC.TACClass;
+import shadow.TAC.TACMethod;
 import shadow.TAC.TACVariable;
 import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACAssign;
@@ -15,6 +19,7 @@ import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACUnaryOperation;
 import shadow.output.AbstractTACLinearVisitor;
+import shadow.parser.javacc.Node;
 
 /**
  * @author wspeirs
@@ -29,8 +34,8 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	/**
 	 * @param root
 	 */
-	public TACCVisitor(TACNode root) {
-		super(root);
+	public TACCVisitor(TACClass theClass) {
+		super(theClass);
 	}
 	
 	/**
@@ -71,21 +76,72 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 
 
 	@Override
-	public void start() {
+	public void startFile() {
 		print("#include <stdio.h>");
 		print("");
-		print("int main(int argc, char **argv) {");
+	}
+
+	@Override
+	public void endFile() {
+	}
+
+	@Override
+	public void startFields() {
+		print("struct " + this.getTheClass().getName() + " {");
 		++tabDepth;
 	}
 
 	@Override
-	public void end() {
-		print("\n");
-		print("return 0;");
+	public void endFields() {
 		--tabDepth;
-		print("}");
+		print("};");
+		print("");
 	}
 
+	@Override
+	public void startMethod(TACMethod method) {
+		StringBuffer sb = new StringBuffer();
+		
+		// right now we punt on returning more than one thing
+		if(method.getReturnTypes().size() == 0) {
+			sb.append("void");
+		} else {
+			sb.append(type2type(method.getReturnTypes().get(0).getTypeName()));
+		}
+		
+		sb.append(" ");
+		sb.append(method.getName());
+		sb.append("(");
+		
+		List<String> paramNames = method.getParamNames();
+		List<Node> paramNodes = method.getParamNodes();
+		
+		for(int i=0; i < paramNames.size(); ++i) {
+			sb.append(type2type(paramNodes.get(i).getType().getTypeName()));
+			sb.append(" ");
+			sb.append(paramNames.get(i));
+			sb.append(", ");
+		}
+		
+		if(paramNames.size() == 0) {
+			sb.append(" void )");
+		} else {
+			sb.setCharAt(sb.length()-2, ')');
+		}
+		sb.append("{");
+		
+		print(sb.toString());
+		
+		++tabDepth;
+	}
+
+	@Override
+	public void endMethod(TACMethod method) {
+		--tabDepth;
+		print("}");
+		print("");
+	}
+	
 	public void visit(TACNode node) {
 		print(node.toString(), node);
 	}

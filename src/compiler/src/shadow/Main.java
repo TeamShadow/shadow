@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 import shadow.TAC.TACBuilder;
+import shadow.TAC.TACClass;
 import shadow.TAC.TACMethod;
 import shadow.output.TACLinearWalker;
 import shadow.output.C.TACCVisitor;
@@ -50,12 +51,12 @@ public class Main {
 	        // build the TAC
 	        tacBuilder.build(node);
 
-    		for(TACMethod m:tacBuilder.methods) {
-    			TACCVisitor cVisitor = new TACCVisitor(m.getEntry());
+	        for(TACClass c:tacBuilder.getClasses()) {
+    			TACCVisitor cVisitor = new TACCVisitor(c);
     			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
 			
     			linearWalker.walk();
-    		}
+	        }
     		
 	        long stopTime = System.currentTimeMillis();
 	        long runTime = stopTime - startTime;

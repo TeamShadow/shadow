@@ -7,14 +7,12 @@ import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
 public class MethodSignature {
-	protected final int line;	/** the line where it's declared */
 	protected final MethodType type;
 	protected final String symbol;
 	private final Node node;	/** The AST node that corresponds to the branch of the tree for this method */
 	
-	public MethodSignature(String symbol, int modifiers, int line, Node node) {
+	public MethodSignature(String symbol, int modifiers, Node node) {
 		type = new MethodType(modifiers);
-		this.line = line;
 		this.symbol = symbol;
 		this.node = node;
 	}
@@ -41,7 +39,7 @@ public class MethodSignature {
 	}
 	
 	public int getLineNumber() {
-		return line;
+		return node.getLine();
 	}
 	
 	public Node getASTNode() {

@@ -10,7 +10,7 @@ import shadow.parser.javacc.SimpleNode;
 /**
  * Converts the AST that describes an ASTMethodDeclaration into the associated TAC
  */
-public class ASTMethodToTAC {
+public class ASTToTAC {
 	private Node astRoot = null;	/** The root of the ASTMethodDeclaration AST */
 	private ASTToTACVisitor astVisitor = null;	/** The visitor that converts AST -> TAC */
 	private ASTWalker walker = null;	/** The walker for the AST */
@@ -19,7 +19,7 @@ public class ASTMethodToTAC {
 	 * Converts an AST to a TAC
 	 * @param node An ASTMethodDeclaration node of an AST to be converted
 	 */
-	public ASTMethodToTAC(Node node) {
+	public ASTToTAC(Node node) {
 		this.astRoot = node;
 		astVisitor = new ASTToTACVisitor();
 		walker = new ASTWalker(astVisitor);
@@ -30,9 +30,6 @@ public class ASTMethodToTAC {
 	 * Actually walks the tree and does the conversion
 	 */
 	public void convert() throws ShadowException {
-		if(!(astRoot instanceof ASTMethodDeclaration))
-			throw new ShadowException("ROOT NOT AN ASTMethodDeclaration: " + astRoot.getClass().getCanonicalName());
-		
 		walker.walk(astRoot);	// walk the AST converting to TAC
 	}
 	

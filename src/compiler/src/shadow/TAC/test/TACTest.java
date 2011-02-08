@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import shadow.TAC.TACBuilder;
+import shadow.TAC.TACClass;
 import shadow.TAC.TACMethod;
 import shadow.output.TACLinearWalker;
 import shadow.output.TACWalker;
@@ -75,18 +76,21 @@ public class TACTest extends BaseTest {
 	        long stopTime = System.currentTimeMillis();
 	        long runTime = stopTime - startTime;
 
-	        if(dump) {	// this means print the graphviz stuff
-	    		for(TACMethod m:tacBuilder.methods) {
-/*	    			TACGraphVizVisitor visitor = new TACGraphVizVisitor(m.getEntry());
+	        // get the classes from this file
+	        for(TACClass c:tacBuilder.getClasses()) {
+    			// generate the GraphVis if we have debug enabled
+    	        if(dump) {
+/*	    			TACGraphVizVisitor visitor = new TACGraphVizVisitor(c);
 	    			TACWalker walker = new TACWalker(visitor);
 	    			
 	    			walker.walk();
-*/	    			
-	    			TACCVisitor cVisitor = new TACCVisitor(m.getEntry());
-	    			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
-	    			
-	    			linearWalker.walk();
-	    		}
+*/	    		}
+	    	        
+    	        // generate and print the C code
+    			TACCVisitor cVisitor = new TACCVisitor(c);
+    			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
+    			
+    			linearWalker.walk();
 	        }
 
 	        System.out.println("PASSED TAC: " + runTime + "ms");

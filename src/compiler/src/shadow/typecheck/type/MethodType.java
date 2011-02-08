@@ -102,12 +102,19 @@ public class MethodType extends Type {
 		return false;
 	}
 	
+	public List<String> getParameterNames() {
+		return paramNames;
+	}
+	
+	public List<Node> getParameterNodes() {
+		return paramTypes;
+	}
+	
 	public void addReturn(Type ret) {
 		returns.add(ret);
 	}
 	
-	public List<Type> getReturnTypes()
-	{
+	public List<Type> getReturnTypes() {
 		return returns;
 	}
 	

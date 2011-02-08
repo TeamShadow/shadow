@@ -20,7 +20,7 @@ public class TACWalker {
 	
 	public TACWalker(AbstractTACVisitor visitor) {
 		this.visitor = visitor;
-		this.nodes = visitor.getRoot().getNodes();
+		this.nodes = null; // visitor.getRoot().getNodes();
 		this.sortedNodes = new LinkedHashSet<TACNodeInterface>();
 	}
 	
@@ -28,13 +28,13 @@ public class TACWalker {
 		for(TACNode node:nodes)
 			visit(node);
 		
-		visitor.start();
+		visitor.startFile();
 		
 		for(TACNodeInterface node:sortedNodes) {
 			visitor.visit(node);
 		}
 		
-		visitor.end();
+		visitor.endFile();
 	}
 	
 	private void visit(TACNode node) {

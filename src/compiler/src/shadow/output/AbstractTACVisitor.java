@@ -1,5 +1,7 @@
 package shadow.output;
 
+import shadow.TAC.TACClass;
+import shadow.TAC.TACMethod;
 import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
@@ -13,18 +15,24 @@ import shadow.TAC.nodes.TACNodeInterface;
 import shadow.TAC.nodes.TACUnaryOperation;
 
 public abstract class AbstractTACVisitor {
-	private TACNode root;
+	private TACClass theClass;
 	
-	public AbstractTACVisitor(TACNode root) {
-		this.root = root;
+	public AbstractTACVisitor(TACClass theClass) {
+		this.theClass = theClass;
 	}
 	
-	public TACNode getRoot() {
-		return root;
+	public TACClass getTheClass() {
+		return theClass;
 	}
 	
-	abstract public void start();
-	abstract public void end();
+	abstract public void startFile();
+	abstract public void endFile();
+	
+	abstract public void startFields();
+	abstract public void endFields();
+	
+	abstract public void startMethod(TACMethod method);
+	abstract public void endMethod(TACMethod method);
 	
 	public void visit(TACNodeInterface node) {
 		node.accept(this);

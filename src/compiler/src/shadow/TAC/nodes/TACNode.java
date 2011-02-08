@@ -120,6 +120,7 @@ public abstract class TACNode implements TACNodeInterface {
 	}
 	
 	public void dump(String prefix) {
+//		System.out.println(prefix + this.parent + " <- " + this + " -> " + this.next);
 		System.out.println(prefix + this);
 		
 		if(next == null)

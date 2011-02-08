@@ -1,27 +1,16 @@
 package shadow.TAC;
 
+import java.util.List;
+
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.Type;
 
 public class TACMethod {
 	private TACNode entry;
 	private TACNode exit;
-	private String name;
-	
-	
-	/**
-	 * Create a TACMethod given an AST node AFTER it has been walked!
-	 * @param name The name of the method
-	 * @param astRoot The AST node for the root of the method
-	 * @throws ShadowException
-	 */
-	public TACMethod(String name, Node astRoot) throws ShadowException {
-		this.name = name;
-		entry = ((SimpleNode)astRoot).getEntryNode();
-		exit = ((SimpleNode)astRoot).getExitNode();
-	}
+	private MethodSignature signature;
 	
 	/**
 	 * Create a TACMethod given an entry and exit for that method
@@ -29,8 +18,8 @@ public class TACMethod {
 	 * @param entry The entry into the method
 	 * @param exit The exit from the method
 	 */
-	public TACMethod(String name, TACNode entry, TACNode exit) {
-		this.name = name;
+	public TACMethod(MethodSignature signature, TACNode entry, TACNode exit) {
+		this.signature = signature;
 		this.entry = entry;
 		this.exit = exit;
 	}
@@ -44,6 +33,18 @@ public class TACMethod {
 	}
 	
 	public String getName() {
-		return name;
+		return signature.getMangledName();
+	}
+	
+	public List<String> getParamNames() {
+		return signature.getMethodType().getParameterNames();
+	}
+	
+	public List<Node> getParamNodes() {
+		return signature.getMethodType().getParameterNodes();
+	}
+	
+	public List<Type> getReturnTypes() {
+		return signature.getMethodType().getReturnTypes();
 	}
 }

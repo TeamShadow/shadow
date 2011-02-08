@@ -1,5 +1,7 @@
 package shadow.output.graphviz;
 
+import shadow.TAC.TACClass;
+import shadow.TAC.TACMethod;
 import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
@@ -13,19 +15,45 @@ import shadow.output.AbstractTACVisitor;
 
 public class TACGraphVizVisitor extends AbstractTACVisitor {
 
-	public TACGraphVizVisitor(TACNode root) {
-		super(root);
+	public TACGraphVizVisitor(TACClass theClass) {
+		super(theClass);
 	}
 	
-	public void start() {
+	@Override
+	public void startFile() {
 		System.out.println("digraph CFG {");
 		System.out.println("node [shape=box];");
 	}
-	
-	public void end() {
+
+	@Override
+	public void endFile() {
 		System.out.println("}");
 	}
-	
+
+	@Override
+	public void startFields() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void endFields() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void startMethod(TACMethod method) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void endMethod(TACMethod method) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	public void visit(TACNode node) {
 		printNode(node, true);
 	}

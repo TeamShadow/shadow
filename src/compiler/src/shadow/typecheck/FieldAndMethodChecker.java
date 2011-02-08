@@ -140,7 +140,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 					return WalkType.NO_CHILDREN;
 				}
 				
-				currentClass.addField(symbol, child);
+//				currentClass.addField(symbol, child);
+				currentClass.addField(symbol, node);
 			}
 		}
 		else
@@ -221,7 +222,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 	
 	private boolean createMethod( Node declaration, Node node )
 	{
-		MethodSignature signature = new MethodSignature(declaration.getImage(), node.getModifiers(), node.getLine(), node);
+		MethodSignature signature = new MethodSignature(declaration.getImage(), node.getModifiers(), node);
 				
 		if( !checkMemberModifiers( node, node.getModifiers() ))
 			return false;

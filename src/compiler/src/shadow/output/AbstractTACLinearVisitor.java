@@ -1,12 +1,12 @@
 package shadow.output;
 
+import shadow.TAC.TACClass;
 import shadow.TAC.nodes.TACJoin;
-import shadow.TAC.nodes.TACNode;
 
 public abstract class AbstractTACLinearVisitor extends AbstractTACVisitor {
 
-	public AbstractTACLinearVisitor(TACNode root) {
-		super(root);
+	public AbstractTACLinearVisitor(TACClass theClass) {
+		super(theClass);
 	}
 
 	/**
