@@ -56,10 +56,6 @@ public class TACBuilder extends AbstractASTVisitor {
 			
 			ast2TAC.convert();	// actually do the conversion
 			
-			System.out.println("FIELD: ");
-			astNode.getEntryNode().dump("");
-			System.out.println("");
-			
 			// the entry node of the astNode should always be an allocation
 			theClass.addField(astNode.getEntryNode(), astNode.getExitNode());
 		}

@@ -12,6 +12,7 @@ import shadow.TAC.nodes.TACMethodCall;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNodeInterface;
+import shadow.TAC.nodes.TACReturn;
 import shadow.TAC.nodes.TACUnaryOperation;
 
 public abstract class AbstractTACVisitor {
@@ -75,6 +76,10 @@ public abstract class AbstractTACVisitor {
 	}
 
 	public void visit(TACMethodCall node) {
+		System.out.println(node);
+	}
+
+	public void visit(TACReturn node) {
 		System.out.println(node);
 	}
 }

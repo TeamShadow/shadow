@@ -8,5 +8,9 @@ class Bill {
         printString("Hello World");
     }
     
+    public test(int a) => (int) {
+        return a;
+    }
+    
     public static native printString(String mgs) => ();
 } 

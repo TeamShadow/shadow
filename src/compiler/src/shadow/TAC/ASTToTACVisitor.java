@@ -18,6 +18,7 @@ import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNode.TACComparison;
 import shadow.TAC.nodes.TACNode.TACOperation;
+import shadow.TAC.nodes.TACReturn;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocationExpression;
 import shadow.parser.javacc.ASTArgumentList;
@@ -57,6 +58,7 @@ import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimarySuffix;
 import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTRelationalExpression;
+import shadow.parser.javacc.ASTReturnStatement;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTShiftExpression;
@@ -1143,7 +1145,26 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		visitArithmetic(node);
 		return WalkType.NO_CHILDREN;
 	}
-	
+
+	public Object visit(ASTReturnStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		SimpleNode astNode = (SimpleNode)node.jjtGetChild(0);
+		TACNode entryNode = astNode.getEntryNode();
+		TACNode exitNode = astNode.getExitNode();
+		
+		TACVariable retVar = exitNode instanceof TACAssign ? ((TACAssign)exitNode).getLHS() : ((TACNoOp)exitNode).getVariable();
+		
+		TACReturn ret = new TACReturn(node, retVar, exitNode);
+		exitNode.setNext(ret);
+		
+		// link in the TAC path
+		linkToEnd(node, entryNode, exitNode);
+		
+		return WalkType.NO_CHILDREN;
+	}
+
 	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;

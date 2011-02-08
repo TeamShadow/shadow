@@ -17,6 +17,7 @@ import shadow.TAC.nodes.TACLoop;
 import shadow.TAC.nodes.TACMethodCall;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
+import shadow.TAC.nodes.TACReturn;
 import shadow.TAC.nodes.TACUnaryOperation;
 import shadow.output.AbstractTACLinearVisitor;
 import shadow.parser.javacc.Node;
@@ -304,5 +305,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		}
 		
 		print(sb.toString(), node);
+	}
+	
+	public void visit(TACReturn node) {
+		print("return " + node.getReturn().getSymbol());
 	}
 }
