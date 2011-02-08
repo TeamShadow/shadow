@@ -60,6 +60,19 @@ public class MethodType extends Type {
 		
 		return true;
 	}	
+	
+	public boolean canReturn( Type type )
+	{		
+		if( returns.size() != 1 )
+			return false;
+		
+		return type.isSubtype(returns.get(0));
+	}
+	
+	public boolean returnsNothing()
+	{
+		return returns.size() == 0;
+	}
 		
 	
 	public boolean canAccept( List<Type> argumentTypes )

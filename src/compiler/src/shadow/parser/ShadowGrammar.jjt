@@ -1505,8 +1505,8 @@ void ReturnStatement():
 { debugPrint("RETURN STATEMENT"); }
 {
   "return"  ( ";"
-  | LOOKAHEAD(3) ConditionalExpression() ";"
-  | "(" ConditionalExpression() ( "," ConditionalExpression() )* ")" ";"
+  | LOOKAHEAD(Sequence()) Sequence() ";"
+  |  ConditionalExpression() ";"   
   )
 }
 

@@ -2,7 +2,7 @@ class Sequences
 {   
     public static jam(int a) => (int, double)
     {
-        return (4, 16.0);
+        return (a, 16.0);
     }
 
        

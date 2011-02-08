@@ -1236,23 +1236,29 @@ public class ClassChecker extends BaseChecker {
 		
 	
 		//make sure matches method return types
-		List<Type> types = new LinkedList<Type>();
 		
-		String returnTypes = "(";
 		
-		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+		if( node.jjtGetNumChildren() == 0 )
 		{
-			returnTypes += node.jjtGetChild(i).getType();
-			if( i < node.jjtGetNumChildren() - 1  )
-				returnTypes += ",";
-				
-			types.add( node.jjtGetChild(i).getType()  );
+			if( !((MethodType)curMethod.getType()).returnsNothing())		
+				addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " must return something");
 		}
-		
-		returnTypes += ")";
-		
-		if( !((MethodType)curMethod.getType()).canReturn(types))		
-			addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " cannot return " + returnTypes);
+		else
+		{	
+			Node child = node.jjtGetChild(0);
+			
+			if( child instanceof ASTSequence )
+			{
+				SequenceType type = (SequenceType)(child.getType());
+				if( !((MethodType)curMethod.getType()).canReturn(type.getTypes()))		
+					addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " cannot return " + type );
+			}
+			else
+			{				
+				if( !((MethodType)curMethod.getType()).canReturn(child.getType()))		
+					addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " cannot return " + child.getType() );				
+			}
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}	
