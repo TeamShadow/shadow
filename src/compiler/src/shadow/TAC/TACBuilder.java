@@ -11,6 +11,7 @@ import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.MethodSignature;
 import shadow.typecheck.type.ClassType;
@@ -51,6 +52,10 @@ public class TACBuilder extends AbstractASTVisitor {
 				ASTUtils.DEBUG("METHOD: " + m.getKey());
 			
 			for(MethodSignature ms:m.getValue()) {
+				// there is nothing to build for native methods
+				if(ModifierSet.isNative(ms.getASTNode().getModifiers()))
+					continue;
+				
 				if(debug)
 					ASTUtils.DEBUG(ms.getASTNode(), "ROOT NODE");
 				

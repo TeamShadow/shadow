@@ -6,6 +6,7 @@ import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
 import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACLoop;
+import shadow.TAC.nodes.TACMethodCall;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNodeInterface;
@@ -62,6 +63,10 @@ public abstract class AbstractTACVisitor {
 	}
 
 	public void visit(TACUnaryOperation node) {
+		System.out.println(node);
+	}
+
+	public void visit(TACMethodCall node) {
 		System.out.println(node);
 	}
 }

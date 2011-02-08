@@ -1,23 +1,8 @@
 class Bill {
 
-    public test() => () {
-        int a;
-        int b = 1;
-        int c = 2;
-
-        if(2 == a or b > 1 or c < 2) { a = 0; }
-
-        //test();
-        //test2(1);
-        //this.test2();
-        //test3(a);        
+    public static main(String[] args) => () {
+        printString("Hello World");
     }
     
-/*    public test2(int a) => () {
-    }
-    
-    public test3(int a) => () {
-        int b;
-    }
-*/
+    public static native printString(String mgs) => ();
 } 

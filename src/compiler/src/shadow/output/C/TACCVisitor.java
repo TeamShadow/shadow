@@ -10,6 +10,7 @@ import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
 import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACLoop;
+import shadow.TAC.nodes.TACMethodCall;
 import shadow.TAC.nodes.TACNoOp;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACUnaryOperation;
@@ -71,6 +72,8 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 
 	@Override
 	public void start() {
+		print("#include <stdio.h>");
+		print("");
 		print("int main(int argc, char **argv) {");
 		++tabDepth;
 	}
@@ -221,4 +224,29 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		print(sb.toString(), node);
 	}
 
+	public void visit(TACMethodCall node) {
+		StringBuilder sb = new StringBuilder();
+		
+		//
+		// TODO: Remove this hack!
+		//
+		if(node.getMethodName().equals("printString")) {
+			sb.append("printf(\"%s\", ");
+		} else {
+			sb.append(node.getMethodName());
+			sb.append("(");
+		}
+		
+		for(TACVariable param:node.getParameters()) {
+			sb.append(param.getSymbol());
+			sb.append(", ");
+		}
+		
+		if(node.getParamCount() != 0) {
+			sb.setCharAt(sb.length()-2, ')');
+			sb.setCharAt(sb.length()-1, ';');
+		}
+		
+		print(sb.toString(), node);
+	}
 }

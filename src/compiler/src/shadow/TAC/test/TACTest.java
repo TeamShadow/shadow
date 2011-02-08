@@ -77,11 +77,11 @@ public class TACTest extends BaseTest {
 
 	        if(dump) {	// this means print the graphviz stuff
 	    		for(TACMethod m:tacBuilder.methods) {
-	    			TACGraphVizVisitor visitor = new TACGraphVizVisitor(m.getEntry());
+/*	    			TACGraphVizVisitor visitor = new TACGraphVizVisitor(m.getEntry());
 	    			TACWalker walker = new TACWalker(visitor);
 	    			
 	    			walker.walk();
-	    			
+*/	    			
 	    			TACCVisitor cVisitor = new TACCVisitor(m.getEntry());
 	    			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
 	    			

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.TAC.nodes.TACAllocation;
@@ -47,6 +46,7 @@ import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
+import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -72,6 +72,7 @@ import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.Type;
 
@@ -336,6 +337,32 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			return WalkType.POST_CHILDREN;
 		
 		visitLiteral(node);
+		
+		return WalkType.POST_CHILDREN;
+	}
+
+	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		TACMethodCall call = new TACMethodCall(node);
+		
+		// we can have zero or more arguments/children
+		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+			SimpleNode astArgNode = (SimpleNode)node.jjtGetChild(i);
+			TACNode argEntryNode = astArgNode.getEntryNode(); 
+			TACNode argExitNode = astArgNode.getExitNode();
+			TACVariable arg = argExitNode instanceof TACAssign ? ((TACAssign)argExitNode).getLHS() : ((TACNoOp)argExitNode).getVariable();
+			
+			// add the arg to the method call
+			call.addParameter(arg);
+			
+			// link in the TAC path for the arg
+			linkToEnd(node, argEntryNode, argExitNode);
+		}
+		
+		// link in the method call
+		linkToEnd(node, call);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -735,15 +762,11 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		// link in the true branch
 		curJoin = (TACJoin) curJoin.getTrueExit();	// need to link around the extra join
-//		curJoin.setNext(trueBranch);
 		curJoin.setNext(finalJoin);
-//		trueBranch.setParent(curJoin);
 		
 		// set the branches for the final join
-//		finalJoin.setTrueExit(trueBranch);
 		finalJoin.setTrueExit(curJoin);
 		finalJoin.setFalseExit(falseBranch);
-//		trueBranch.setNext(finalJoin);
 		falseBranch.setNext(finalJoin);
 		
 		// create our NoOp to hold our variable
@@ -992,43 +1015,15 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		// this first one will always be the block of the method
-		SimpleNode block = (SimpleNode)node.jjtGetChild(1);
-		
-/*		ArrayList<TACAllocation> allocs = allocations.pop();
-		
-		// first link in the allocations on the top of the stack
-		if(allocs.size() != 0) {
-			int j = 0;
+		// make sure it's not native
+		if(!ModifierSet.isNative(node.getModifiers())) {
+			// this first one will always be the block of the method
+			SimpleNode block = (SimpleNode)node.jjtGetChild(1);
 			
-			ASTUtils.DEBUG(node, "IN HERE");
-
-			// link in the first allocation
-			linkToEnd(node, allocs.get(j));
-			
-			// link in the allocations for this method
-			for(++j; j < allocs.size(); ++j) {
-				TACNode alloc1 = allocs.get(j-1);
-				TACNode alloc2 = allocs.get(j);
-				
-				alloc1.setNext(alloc2);
-				alloc2.setParent(alloc1);
-				
-				linkToEnd(node, alloc2);
-			}
-			
-			// link the last one to the block nodes
-			TACNode lastAlloc = allocs.get(j-1);
-			
-			lastAlloc.setNext(block.getEntryNode());
-			block.getEntryNode().setParent(lastAlloc);
+			// link in the block's TAC path as it is the method's path
+			linkToEnd(node, block.getEntryNode(), block.getExitNode());
 		}
-*/
-		// link in the block's TAC path as it is the method's path
-		linkToEnd(node, block.getEntryNode(), block.getExitNode());
-
-//		ASTUtils.DEBUG("NEXT: " + node.getEntryNode());
-
+		
 		return WalkType.POST_CHILDREN;
 	}
 	

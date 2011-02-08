@@ -60,7 +60,7 @@ public class ShadowParser
      public static final int STATIC         = 0x0010;
      public static final int FINAL          = 0x0020;
      //public static final int SYNCHRONIZED = 0x0040;
-     //public static final int NATIVE       = 0x0080;
+     public static final int NATIVE       = 0x0080;
      //public static final int TRANSIENT    = 0x0100;
      //public static final int VOLATILE     = 0x0200;
      //public static final int STRICTFP     = 0x0400;
@@ -87,6 +87,7 @@ public class ShadowParser
 		static			(only for members)
 		final 			(can't be changed)		
 		weak			(reference will not stop GC)
+		native          (used to map in C functions)
      */
 
      /* Hidden Modifiers: (used in the compiler internally, but cannot be marked by the user)
@@ -104,9 +105,9 @@ public class ShadowParser
      public static boolean isStatic(int modifiers) { return (modifiers & STATIC) != 0; }
      public static boolean isAbstract(int modifiers) { return (modifiers & ABSTRACT) != 0; }
      public static boolean isFinal(int modifiers) { return (modifiers & FINAL) != 0; }
+     public static boolean isNative(int modifiers) { return (modifiers & NATIVE) != 0; }
 
-  /* public boolean isNative(int modifiers) { return (modifiers & NATIVE) != 0; }
-     public boolean isStrictfp(int modifiers) { return (modifiers & STRICTFP) != 0; } 
+/*   public boolean isStrictfp(int modifiers) { return (modifiers & STRICTFP) != 0; } 
      public boolean isSynchronized(int modifiers) { return (modifiers & SYNCHRONIZED) != 0; }
      public boolean isTransient(int modifiers) { return (modifiers & TRANSIENT) != 0; }
      public boolean isVolatile(int modifiers) { return (modifiers & VOLATILE) != 0; }
@@ -552,12 +553,6 @@ ASTCompilationUnit CompilationUnit():
   <EOF>
 
 	{
-	  /* turn off flattening
-		ASTFlattener f = new ASTFlattener();
-        ASTWalker walker = new ASTWalker(f);
-
-        walker.walk(jjtThis);
-        */		
         return jjtThis;
 	}
 }
@@ -596,7 +591,7 @@ int Modifiers():
   | "final" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.FINAL); }
   | "abstract" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.ABSTRACT); }
 //  | "synchronized" { modifiers |= ModifierSet.SYNCHRONIZED; }
-//  | "native" { modifiers |= ModifierSet.NATIVE; }
+  | "native" { modifiers |= ModifierSet.NATIVE; }
 //  | "transient" { modifiers |= ModifierSet.TRANSIENT; }
 //  | "volatile" { modifiers |= ModifierSet.VOLATILE; }
 //  | "strictfp" { modifiers |= ModifierSet.STRICTFP; }
