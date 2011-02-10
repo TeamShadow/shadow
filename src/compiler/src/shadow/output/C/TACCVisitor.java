@@ -30,7 +30,7 @@ import shadow.typecheck.type.Type;
 public class TACCVisitor extends AbstractTACLinearVisitor {
 
 	private static int tabDepth = 0;
-	private static final int COMMENT_WIDTH = 35;
+	private static final int COMMENT_WIDTH = 40;
 	private static final int TAB_WIDTH = 5;
 
 	/**
@@ -126,6 +126,8 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			
 			print(sb.toString());
 		}
+		
+		print("");
 	}
 
 	@Override
