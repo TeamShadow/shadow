@@ -3,6 +3,9 @@
  */
 package shadow.TAC.nodes;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
 import shadow.parser.javacc.Node;
@@ -13,17 +16,21 @@ import shadow.parser.javacc.Node;
  */
 public class TACReturn extends TACNode {
 	
-	private TACVariable returnVar;
+	private List<TACVariable> returnVar;
 
 	/**
 	 * @param astNode
 	 */
-	public TACReturn(Node astNode, TACVariable returnVar, TACNode parent) {
-		super(astNode, "RETURN", parent);
-		this.returnVar = returnVar;
+	public TACReturn(Node astNode) {
+		super(astNode, "RETURN", null);
+		this.returnVar = new LinkedList<TACVariable>();
+	}
+	
+	public void addReturn(TACVariable returnVar) {
+		this.returnVar.add(returnVar);
 	}
 
-	public TACVariable getReturn() {
+	public List<TACVariable> getReturns() {
 		return returnVar;
 	}
 

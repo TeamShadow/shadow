@@ -21,6 +21,7 @@ import shadow.TAC.nodes.TACReturn;
 import shadow.TAC.nodes.TACUnaryOperation;
 import shadow.output.AbstractTACLinearVisitor;
 import shadow.parser.javacc.Node;
+import shadow.typecheck.type.Type;
 
 /**
  * @author wspeirs
@@ -90,6 +91,41 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	public void startFields() {
 		print("struct " + this.getTheClass().getName() + " {");
 		++tabDepth;
+		
+		// we need to print function pointers for all of the methods
+		List<TACMethod> methods = this.getTheClass().getMethods();
+		
+		for(TACMethod method:methods) {
+			StringBuffer sb = new StringBuffer();
+			List<Type> retTypes = method.getReturnTypes();
+			List<Node> paramNodes = method.getParamNodes();
+			
+			// loop through the ret types
+			
+			if(retTypes.size() != 0)
+				sb.append(type2type(retTypes.get(0).getTypeName()));
+			else
+				sb.append("void");
+			
+			sb.append(" ");
+			sb.append("(*");
+			sb.append(method.getName());
+			sb.append(")(");
+
+			for(Node param:paramNodes) {
+				sb.append(type2type(param.getType().getTypeName()));
+				sb.append(", ");
+			}
+			
+			if(paramNodes.size() == 0) {
+				sb.append("void  ");
+			}
+			
+			sb.setCharAt(sb.length()-2, ')');
+			sb.setCharAt(sb.length()-1, ';');
+			
+			print(sb.toString());
+		}
 	}
 
 	@Override
@@ -125,7 +161,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		}
 		
 		if(paramNames.size() == 0) {
-			sb.append(" void )");
+			sb.append("void)");
 		} else {
 			sb.setCharAt(sb.length()-2, ')');
 		}
@@ -153,10 +189,12 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	 * @return
 	 */
 	private String type2type(String shadowType) {
-		if(shadowType.equals("boolean"))
-			return "int";
-		else
-			return shadowType;
+		String ret = shadowType.replace("[]", "*");
+		
+		ret = ret.replace("boolean", "int");
+		ret = ret.replace("String", "char");
+
+		return ret;
 	}
 	
 	/**
@@ -308,6 +346,6 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	}
 	
 	public void visit(TACReturn node) {
-		print("return " + node.getReturn().getSymbol());
+		print("return " + node.getReturns().get(0).getSymbol());
 	}
 }

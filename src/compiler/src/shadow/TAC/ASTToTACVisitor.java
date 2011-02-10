@@ -1150,17 +1150,30 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		SimpleNode astNode = (SimpleNode)node.jjtGetChild(0);
-		TACNode entryNode = astNode.getEntryNode();
-		TACNode exitNode = astNode.getExitNode();
+		SimpleNode astNode = null;
 		
-		TACVariable retVar = exitNode instanceof TACAssign ? ((TACAssign)exitNode).getLHS() : ((TACNoOp)exitNode).getVariable();
+		// make sure we're always pointing at a list of ConditionalExpressions
+		if(node.jjtGetChild(0) instanceof ASTSequence)
+			astNode = (SimpleNode)node.jjtGetChild(0);
+		else
+			astNode = (SimpleNode)node;
 		
-		TACReturn ret = new TACReturn(node, retVar, exitNode);
-		exitNode.setNext(ret);
+		TACReturn ret = new TACReturn(node);
 		
-		// link in the TAC path
-		linkToEnd(node, entryNode, exitNode);
+		for(int i=0; i < astNode.jjtGetNumChildren(); ++i) {
+			SimpleNode curNode = (SimpleNode)astNode.jjtGetChild(i);
+			TACNode entryNode = curNode.getEntryNode();
+			TACNode exitNode = curNode.getExitNode();
+			
+			TACVariable retVar = exitNode instanceof TACAssign ? ((TACAssign)exitNode).getLHS() : ((TACNoOp)exitNode).getVariable();
+			
+			ret.addReturn(retVar);
+			
+			// link in the TAC path
+			linkToEnd(node, entryNode, exitNode);
+		}
+		
+		
 		
 		return WalkType.NO_CHILDREN;
 	}
