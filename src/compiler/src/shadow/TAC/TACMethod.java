@@ -36,6 +36,10 @@ public class TACMethod {
 		return signature.getMangledName();
 	}
 	
+	public MethodSignature getSignature() {
+		return signature;
+	}
+
 	public List<String> getParamNames() {
 		return signature.getMethodType().getParameterNames();
 	}

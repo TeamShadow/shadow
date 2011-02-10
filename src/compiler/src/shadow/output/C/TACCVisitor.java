@@ -21,6 +21,7 @@ import shadow.TAC.nodes.TACReturn;
 import shadow.TAC.nodes.TACUnaryOperation;
 import shadow.output.AbstractTACLinearVisitor;
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.Type;
 
 /**
@@ -128,6 +129,10 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		}
 		
 		print("");
+		
+		// add in a var to keep track of the reference counts to this object
+		print("unsigned int __ref_count");
+		print("");
 	}
 
 	@Override
@@ -140,6 +145,12 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	@Override
 	public void startMethod(TACMethod method) {
 		StringBuffer sb = new StringBuffer();
+		
+		int modifiers = method.getSignature().getASTNode().getModifiers();
+		
+		// methods that are NOT static should be scoped to ONLY this file
+		if(!ModifierSet.isStatic(modifiers))
+			sb.append("static ");
 		
 		// right now we punt on returning more than one thing
 		if(method.getReturnTypes().size() == 0) {
