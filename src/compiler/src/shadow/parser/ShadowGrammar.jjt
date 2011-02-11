@@ -1278,9 +1278,10 @@ void IntegerLiteral(): //useful for static arrays, etc.
 
 void BooleanLiteral():
 { debugPrint("BOOLEAN LITERAL"); }
-{
+{    
   "true" { jjtThis.setTrue(); }
 | "false"
+ 
 }
 
 void NullLiteral():

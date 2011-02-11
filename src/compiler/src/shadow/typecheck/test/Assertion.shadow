@@ -1,0 +1,15 @@
+class Assertion
+{
+    public blah() => () 
+    {
+    	int x = 5;
+    
+    	assert false;
+    	assert true;
+    	
+    	assert ( x == 4 );
+    	assert true : "Sandwich";
+    	//assert true : blah(); //uncomment to see error
+    	//assert true : Assertion;//uncomment to see error      
+    }
+} 

@@ -13,6 +13,7 @@ import shadow.parser.javacc.ASTArgumentList;
 import shadow.parser.javacc.ASTArguments;
 import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTArrayInitializer;
+import shadow.parser.javacc.ASTAssertStatement;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
@@ -1754,6 +1755,34 @@ public class ClassChecker extends BaseChecker {
 		}
 			
 	
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTAssertStatement node, Boolean secondVisit) throws ShadowException 
+	{
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+	
+		Type assertType = node.jjtGetChild(0).getType();
+		
+		if( !assertType.equals(Type.BOOLEAN))
+			addError(node, Error.INVL_TYP, "Found type " + assertType + ", but boolean type required for assert condition");
+		
+		if( node.jjtGetNumChildren() > 1 )
+		{
+			Node child = node.jjtGetChild(1);
+			Type type = child.getType();
+			if( type == null )
+				addError(node, Error.INVL_TYP, "Value type required for assert information and no type found");
+			else if( type instanceof ClassInterfaceBaseType )
+			{
+				if( ModifierSet.isTypeName(child.getModifiers()) )
+					addError(node, Error.INVL_TYP, "Value type required for assert information but type name used");				
+			}
+			else if( !(type instanceof ArrayType) )
+				addError(node, Error.INVL_TYP, "Value type required for assert information and " + type + " found");			
+		}
+		
 		return WalkType.POST_CHILDREN;
 	}
 
