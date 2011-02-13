@@ -5,140 +5,44 @@
 *** NOTHING IS DONE UNTIL YOU'VE ALSO CREATED A REGRESSION TEST FOR IT!!! ***
 *****************************************************************************
 
+=> Ver 1 Features <=
+* These are the basic list of features we're going for with v1 *
+- Basic numeric & control flow stuff
+- Arrays w/checking of bounds
+- Null pointer checking
+- Inheritance & interface implementation (interfaces are type-check only, right?)
+- Exceptions
+- Native code blocks so we can generate a CLib
+- Explicit delete
+
+=> Ver 2 Features <=
+* This list is here to show explicitly what is NOT in v1 *
+- Uninit var warning
+- Garbage collection
+- Views
+- Lambdas (delegates)
+- Generics/templates
+
 => General <=
 - *Need a better/good way to report errors*
 - ** Col & line numbers are "wrong" for multiple AST nodes **
-- Command-line args for each stage of the compiler
-- Better over-all compiler interface/Main method
 
 => PARSING <=
 - Should string be listed as a primitive type when its semantics will always be reference style?
 - Should we add modifiers to views ??  - Probably not?
+Bill: Native blocks
 
-=> TYPE CHECKING <=
-** TO DO **
-Add visitor methods in ClassChecker for:
+=> TYPE CHECKING (Barry) <=
+- Add isField to ASTNodes that are field names 
+- Multiple files
+- Meta file serialization of type information
+- Make sure that fields are ONLY public or private
 
-*************************************************************************
-* NOTE: For most of these, we want to do our work on the second pass.   *
-*       Otherwise, we won't have type info for lower nodes yet.         *
-*************************************************************************
-
-* I don't think we need to type-check these in any way *
-  ASTCompilationUnit
-  ASTPackageDeclaration
-  ASTImportDeclaration
-  ASTClassOrInterfaceBody
-  ASTClassOrInterfaceBodyDeclaration
-  ASTModifiers
-  ASTContinueStatement
-  
-* Version 2 *
-  ASTViewDeclaration
-  ASTStaticArrayType
-  ASTAssertStatement
-  ASTEnumDeclaration
-  ASTEnumBody
-  ASTEnumConstant
- 
- * Generic stuff *
- 
-  ASTTypeParameters
-  ASTTypeParameter
-  ASTTypeBound
-  ASTTypeArguments
-  ASTTypeArgument
-  ASTWildcardBounds
-  ASTMemberSelector
-  
-
-Bill do these:
-
-  ASTTypeDeclaration
-DONE - ASTClassOrInterfaceDeclaration
-DONE - ASTExtendsList
-DONE - ASTImplementsList
-DONE - ASTFieldDeclaration
-DONE - ASTMethodDeclaration
-DONE - ASTMethodDeclarator
-DONE - ASTConstructorDeclaration
-DONE - ASTDestructorDeclaration
-DONE - ASTLocalVariableDeclaration
-DONE - ASTVariableDeclarator
-DONE - ASTVariableDeclaratorId -- just a place-holder for the var name, no type-checking needed
-DONE - ASTVariableInitializer
-  
-DONE - ASTFormalParameters (checked in field/method checker AND class checker)
-DONE - ASTFormalParameter (checked in field/method checker AND class checker)
-  ASTExplicitConstructorInvocation
-  ASTInitializer -- do we even want these??
-DONE - ASTType
-  ASTReferenceType -- these should always get flattened, I can't seem to create one in the parse tree
-DONE - ASTFunctionType
-DONE - ASTClassOrInterfaceType (I think)
-
-DONE - ASTPrimitiveType
-DONE - ASTResultType -- I think we can remove this from the grammar... it's just Type() (BJW: You might be right.  I worry that everything will collapse if we do, though.)
-DONE - ASTResultTypes
-DONE - ASTName
-DONE - ASTNameList (nothing needed to be done)
-DONE - ASTPrimaryExpression
-
-
-ASTArrayDimsAndInits -- needs to be finished
-ASTArrayInitializer -- needs to be finished
-      
-Barry do these:  
-DONE - ASTAdditiveExpression
-DONE - ASTMultiplicativeExpression
-DONE - ASTUnaryExpression
-DONE - ASTUnaryExpressionNotPlusMinus
-DONE - ASTConditionalExpression
-DONE - ASTConditionalOrExpression
-DONE - ASTConditionalExclusiveOrExpression
-DONE - ASTConditionalAndExpression
-DONE - ASTBitwiseOrExpression
-DONE - ASTBitwiseExclusiveOrExpression
-DONE - ASTBitwiseAndExpression
-DONE - ASTExpression - Still needs to handle the different assignment types, maybe?
-DONE - ASTIsExpression
-DONE - ASTCastExpression
-DONE - ASTSequence
-DONE - ASTEmptyStatement
-DONE - ASTLiteral
-DONE - ASTIntegerLiteral
-DONE - ASTBooleanLiteral
-DONE - ASTNullLiteral
-DONE - ASTBlockStatement
-DONE - ASTStatement
-DONE - ASTPrimaryPrefix (and, boy, was it painful)
-DONE - ASTPrimarySuffix
-DONE - ASTArguments
-DONE - ASTArgumentList
-DONE - ASTAllocationExpression
-DONE - ASTLabeledStatement
-DONE - ASTBlock
-
-DONE - ASTStatementExpression
-DONE - ASTSwitchStatement
-DONE - ASTSwitchLabel
-DONE - ASTIfStatement
-DONE - ASTWhileStatement
-DONE - ASTDoStatement
-DONE - ASTForeachStatement
-DONE - ASTForStatement
-DONE - ASTForInit
-DONE - ASTForUpdate - nothing to do here
-DONE - ASTStatementExpressionList - nothing to do here
-DONE - ASTBreakStatement
-DONE - ASTReturnStatement
-  ASTThrowStatement
-DONE -  ASTSynchronizedStatement - nothing to do here
-DONE -  ASTTryStatement - nothing to do here
-
-Annotation stuff: (ignore for now)
-  ASTMemberValuePairs
-  ASTMemberValuePair
-  ASTMemberValue
-  ASTMemberValueArrayInitializer
-  ASTDefaultValue
+=> TAC <=
+- All numeric and control flow stuff
+- Arrays w/checking of bounds
+- Null pointer checking
+- Inheritance & interface implementation (interfaces are type-check only, right?)
+- Exceptions
+- Native code blocks so we can generate a CLib
+- Explicit delete
