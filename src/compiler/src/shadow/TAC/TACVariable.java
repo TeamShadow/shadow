@@ -10,6 +10,7 @@ public class TACVariable {
 	private int size;			/** The size of the var in memory in bytes */
 	private boolean isRef;		/** Indicates if we have a reference or not */
 	private boolean isLiteral;	/** symbol holds the value of the literal */
+	private boolean isField;	/** Indicates if this variable is a field of the method or not */
 	private List<Integer> arrayDim;	/** Records the array dimension, null if not an array */
 	
 	/**
@@ -82,6 +83,14 @@ public class TACVariable {
 	
 	public String getSymbol() {
 		return symbol;
+	}
+
+	public boolean isField() {
+		return isField;
+	}
+
+	public void setField(boolean isField) {
+		this.isField = isField;
 	}
 
 	/**

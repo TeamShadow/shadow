@@ -295,7 +295,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		linkToEnd(node, branch, noop);
 	}
 	
-	public void visitVarDec(SimpleNode node) {
+	public void visitVarDec(SimpleNode node, boolean isField) {
 		SimpleNode type = (SimpleNode)node.jjtGetChild(0);
 		
 		// we have to keep a local list of assigns so we can add them to the end later
@@ -306,6 +306,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			TACVariable var = new TACVariable(astVar.jjtGetChild(0).getImage(), type.getType());
 			TACAllocation alloc = new TACAllocation(node, var);	// we don't add this to the global list
 			TACAssign assign = null;
+			
+			var.setField(isField);
 			
 			if(astVar.jjtGetNumChildren() == 2)	{ // we have an initializer
 				TACNode entry = ((SimpleNode)astVar.jjtGetChild(1)).getEntryNode();
@@ -340,7 +342,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		visitVarDec(node);
+		visitVarDec(node, true);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -939,7 +941,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 
-		visitVarDec(node);
+		visitVarDec(node, false);
 		
 		return WalkType.POST_CHILDREN;
 	}

@@ -97,6 +97,8 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		List<TACMethod> methods = this.getTheClass().getMethods();
 		
 		for(TACMethod method:methods) {
+			if(method.getName().startsWith("__init"))
+				continue;
 			StringBuffer sb = new StringBuffer();
 			List<Type> retTypes = method.getReturnTypes();
 			List<Node> paramNodes = method.getParamNodes();
@@ -165,7 +167,12 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		
 		List<String> paramNames = method.getParamNames();
 		List<Node> paramNodes = method.getParamNodes();
-		
+		String className = this.getTheClass().getName();
+
+		// first param is always a reference to the class, unless it's static
+		if(!ModifierSet.isStatic(modifiers))
+			sb.append("struct " + className + "* this, ");
+
 		for(int i=0; i < paramNames.size(); ++i) {
 			sb.append(type2type(paramNodes.get(i).getType().getTypeName()));
 			sb.append(" ");
@@ -173,11 +180,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			sb.append(", ");
 		}
 		
-		if(paramNames.size() == 0) {
-			sb.append("void)");
-		} else {
-			sb.setCharAt(sb.length()-2, ')');
-		}
+		sb.setCharAt(sb.length()-2, ')');
 		sb.append("{");
 		
 		print(sb.toString());
@@ -239,6 +242,8 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	public void visit(TACAssign node) {
 		StringBuilder sb = new StringBuilder();
 		
+		if(node.getLHS().isField())
+			sb.append("this->");
 		sb.append(node.getLHS().getSymbol());
 		sb.append(" = ");
 		sb.append(lit2lit(node.getRHS().getSymbol()));
@@ -250,6 +255,8 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	public void visit(TACBinaryOperation node) {
 		StringBuilder sb = new StringBuilder();
 		
+		if(node.getLHS().isField())
+			sb.append("this->");
 		sb.append(node.getLHS().getSymbol());
 		sb.append(" = ");
 		sb.append(node.getRHS().getSymbol());
@@ -278,7 +285,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	public void visit(TACBranch node) {
 		StringBuilder sb = new StringBuilder("if ( ");
 		
-		sb.append(lit2lit(node.getLhs().getSymbol()));
+		if(node.getLHS().isField())
+			sb.append("this->");
+		sb.append(lit2lit(node.getLHS().getSymbol()));
 		
 		switch(node.getComparision()) {
 		case EQUAL: sb.append(" == "); break;
@@ -290,7 +299,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		case NOT_EQUAL: sb.append(" != "); break;
 		}
 		
-		sb.append(lit2lit(node.getRhs().getSymbol()));
+		if(node.getRHS().isField())
+			sb.append("this->");
+		sb.append(lit2lit(node.getRHS().getSymbol()));
 		sb.append(" ) { ");
 		
 		print("");
@@ -323,10 +334,18 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	public void visit(TACUnaryOperation node) {
 		StringBuilder sb = new StringBuilder();
 		
+		if(node.getLHS().isField())
+			sb.append("this->");
 		sb.append(node.getLHS());
+		
 		sb.append(" = ");
+		
 		sb.append(node.getOperation());
+		
+		if(node.getRHS().isField())
+			sb.append("this->");
 		sb.append(node.getRHS());
+		
 		sb.append(";");
 		
 		print(sb.toString(), node);
@@ -346,6 +365,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		}
 		
 		for(TACVariable param:node.getParameters()) {
+
+			if(param.isField())
+				sb.append("this->");
 			sb.append(param.getSymbol());
 			sb.append(", ");
 		}
@@ -359,6 +381,12 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	}
 	
 	public void visit(TACReturn node) {
-		print("return " + node.getReturns().get(0).getSymbol());
+		StringBuffer sb = new StringBuffer();
+		
+		if(node.getReturns().get(0).isField())
+			sb.append("this->");
+		sb.append("return " + node.getReturns().get(0).getSymbol());
+		
+		print(sb.toString(), node);
 	}
 }

@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.MethodSignature;
 
 public class TACClass {

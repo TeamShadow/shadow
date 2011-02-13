@@ -9,6 +9,10 @@ class Bill {
     }
     
     public test(int a) => (int) {
+        int x = b;
+        
+        test(b);
+        
         return a;
     }
     

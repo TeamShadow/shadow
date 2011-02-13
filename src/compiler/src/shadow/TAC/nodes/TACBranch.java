@@ -38,11 +38,11 @@ public class TACBranch extends TACNode {
 		visitor.visit(this);
 	}
 	
-	public TACVariable getLhs() {
+	public TACVariable getLHS() {
 		return lhs;
 	}
 
-	public TACVariable getRhs() {
+	public TACVariable getRHS() {
 		return rhs;
 	}
 
