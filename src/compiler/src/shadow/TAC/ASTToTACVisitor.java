@@ -1042,11 +1042,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
 
-//		ASTUtils.DEBUG(node);
-
 		visitArithmetic(node);
-		
-		((SimpleNode)node).getEntryNode().dump("ADD");
 		
 		return WalkType.POST_CHILDREN;
 	}
