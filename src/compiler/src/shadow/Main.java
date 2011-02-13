@@ -100,7 +100,7 @@ public class Main {
 			        tacBuilder.build(node);
 	
 			        for(TACClass c:tacBuilder.getClasses()) {
-		    			TACCVisitor cVisitor = new TACCVisitor(c);
+		    			TACCVisitor cVisitor = new TACCVisitor(c, shadowFile);
 		    			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
 					
 		    			linearWalker.walk();
