@@ -11,6 +11,7 @@
     <property name="source" value="1.6"/>
     <path id="shadow_compiler.classpath">
         <pathelement location="bin"/>
+        <pathelement location="lib/commons-cli.jar"/>
     </path>
     
 	<target name="init">
