@@ -92,7 +92,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		cWriter.print("#include \"" + metaFileName + "\"");	// include the header
 		cWriter.print("");
 		
-		String metaShortName = metaFileName.substring(metaFileName.lastIndexOf(File.separatorChar)+1, metaFileName.length());
+		String metaShortName = metaFileName == null ? "" : metaFileName.substring(metaFileName.lastIndexOf(File.separatorChar)+1, metaFileName.length());
 		metaShortName = metaShortName.replace('.', '_');
 		
 		// write out the stuff for the meta file
