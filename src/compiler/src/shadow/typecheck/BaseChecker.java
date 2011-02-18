@@ -107,12 +107,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param msg The message to communicate to the user.
 	 */
 	protected void addError(Node node, String msg) {
-		String error = "[" + ASTUtils.getLineCol(node) + "] : " + msg;
-		
-		if(debug)
-			errorList.add(ASTUtils.getFileAndLine(3) + error);
-		else
-			errorList.add(error);
+		addError( node, null, msg );
 	}
 	
 	/**
@@ -122,7 +117,20 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param msg The message associated with the error.
 	 */
 	protected void addError(Node node, Error type, String msg) {
-		String error = "[" + ASTUtils.getLineCol(node) + "] " + type + ": " + msg; 
+		String error = "";
+		
+		if( node != null )
+		{
+			if( node.getFile() != null )
+				error += "(" + node.getFile().getName() + ")";
+			error += "[" + ASTUtils.getLineCol(node) + "] ";
+		}
+		
+		if( type != null )
+			error += type;
+		
+		if( msg != null && msg.length() > 0 )
+			error += ": " + msg; 
 		
 		if(debug)
 			errorList.add(ASTUtils.getFileAndLine(3) + error);
@@ -140,12 +148,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	protected void addError(Error type, String message) {
-		String error = "" + type + ": " + message; 
-		
-		if(debug)
-			errorList.add(ASTUtils.getFileAndLine(3) + error);
-		else
-			errorList.add(error);
+		addError( null, type, message );
 	}
 	
 	

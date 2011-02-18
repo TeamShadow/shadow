@@ -57,16 +57,26 @@ public class MethodSignature {
 		return type.canAccept(argumentTypes);		
 	}	
 
-	public boolean equals(Object o) {
+	public boolean equals(Object o)
+	{
 		if( o != null && o instanceof MethodSignature )
 		{
-			MethodSignature ms = (MethodSignature)o;
-			
+			MethodSignature ms = (MethodSignature)o;			
 			return ms.symbol.equals(symbol) && ms.type.equals(type);
 		}
 		else
 			return false;
 	}
+	
+	public boolean isIndistinguishable(MethodSignature signature )
+	//isIndistinguishable() differs from equals() in that differences in return types are ignored
+	{
+		if( signature != null && signature.symbol.equals(symbol) )			
+			return type.matchesParams(signature.type );		
+		else
+			return false;
+	}
+	
 
 	public String toString() {
 		return symbol + " " + type.toString();

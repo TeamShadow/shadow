@@ -67,12 +67,26 @@ public abstract class ClassInterfaceBaseType extends Type {
 		return fieldTable;
 	}
 	
-	public boolean containsMethod(MethodSignature signature) {
+	
+	public boolean containsMethod(MethodSignature signature)
+	{
 		List<MethodSignature> list = methodTable.get(signature.getSymbol());
 		
 		if( list != null )
 			for(MethodSignature existing : list )
 				if( existing.equals(signature))
+					return true;
+		
+		return false;
+	}	
+	
+	public boolean containsIndistinguishableMethod(MethodSignature signature) //not identical, but indistinguishable at call time
+	{
+		List<MethodSignature> list = methodTable.get(signature.getSymbol());
+		
+		if( list != null )
+			for(MethodSignature existing : list )
+				if( existing.isIndistinguishable(signature))
 					return true;
 		
 		return false;
@@ -97,22 +111,21 @@ public abstract class ClassInterfaceBaseType extends Type {
 		return methodTable.get(methodName);
 	}
 	
+		
 	/**
-	 * This function is really only used for error reporting as it finds a duplicate signature.
+	 * This function is only used for error reporting as it finds an indistinguishable signature.
 	 * @param signature
 	 * @return
 	 */
-	public MethodSignature getMethodSignature(MethodSignature signature) {
-		MethodSignature ret = null;
-		
-		for(MethodSignature ms : methodTable.get(signature.getSymbol())) {
-			if(ms.equals(signature)) {
-				ret = ms;
-				break;
-			}
+	public MethodSignature getIndistinguishableMethodSignature(MethodSignature signature)
+	{		
+		for(MethodSignature ms : methodTable.get(signature.getSymbol()))
+		{
+			if(ms.isIndistinguishable(signature))
+				return ms;			
 		}
 		
-		return ret;
+		return null;
 	}
 
 }

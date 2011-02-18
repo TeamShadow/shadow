@@ -199,7 +199,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
 			
 			// go through inserting all the idents
-			for(int i=1; i < node.jjtGetNumChildren(); ++i) {
+			for(int i=1; i < node.jjtGetNumChildren(); ++i)
+			{
 				Node child = node.jjtGetChild(i);
 				child.setType(type);
 				child.setModifiers(node.getModifiers());
@@ -211,9 +212,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 				{
 					addError(child.jjtGetChild(0), Error.MULT_SYM, symbol);
 					return WalkType.NO_CHILDREN;
-				}
-				
-//				currentClass.addField(symbol, child);
+				}			
+
 				currentClass.addField(symbol, node);
 			}
 		}
@@ -331,15 +331,17 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
-			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType; 
-			// make sure we don't already have this method
-			if( currentClass.containsMethod(signature) )
+			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+
+			// make sure we don't already have an indistinguishable method
+			if( currentClass.containsIndistinguishableMethod(signature) )
 			{				
 				// get the first signature
-				MethodSignature firstMethod = currentClass.getMethodSignature(signature);				
-				addError(declaration, Error.MULT_MTH, "First declared on line " + firstMethod.getLineNumber());
+				MethodSignature method = currentClass.getIndistinguishableMethodSignature(signature);				
+				addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getLineNumber());
 				return false;
-			}
+			}	
+			
 			
 			if( currentClass.containsField(signature.getSymbol()) )
 			{

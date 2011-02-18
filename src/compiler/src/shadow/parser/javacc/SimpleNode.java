@@ -215,4 +215,9 @@ public class SimpleNode implements Node {
 		else
 			return image;
 	}
+	
+	public File getFile()
+	{
+		return file;
+	}
 }

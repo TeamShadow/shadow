@@ -2,6 +2,8 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import java.io.File;
+
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -56,6 +58,8 @@ interface Node extends ModifiedType {
 	public Type getType();
 	
 	public void setType(Type type);
+	
+	public File getFile();
 	
 	
 	public int getModifiers();

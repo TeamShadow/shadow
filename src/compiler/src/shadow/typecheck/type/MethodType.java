@@ -139,26 +139,24 @@ public class MethodType extends Type {
 	public boolean equals(Object o) {
 		if( o != null && o instanceof MethodType )
 		{		
-			MethodType mt = (MethodType)o;
-			
-			// if they don't have the same number of params or returns, then different
-			if(paramNames.size() != mt.paramNames.size() || returns.size() != mt.returns.size())
-				return false;
-	
-			// check the parameters, we care about types only
-			for(int i=0; i < paramTypes.size(); ++i)
-				if(!paramTypes.get(i).getType().equals(mt.paramTypes.get(i).getType()))
-					return false;
-					
-			// check the returns
-			if(!returns.equals(mt.returns))
-				return false;
-			
-			// if we made it to here, they are equal
-			return true;
+			MethodType methodType = (MethodType)o;			
+			return matchesParams( methodType ) && returns.equals( methodType.returns );
 		}
 		else
 			return false;
+	}
+	
+	public boolean matchesParams( MethodType other )
+	{		
+		if( paramTypes.size() != other.paramTypes.size() )
+			return false;
+		
+		// check the parameters, we care about types only	
+		for(int i=0; i < paramTypes.size(); ++i)
+			if(!paramTypes.get(i).getType().equals(other.paramTypes.get(i).getType()))
+				return false;
+		
+		return true;		
 	}
 
 	public String toString() {
