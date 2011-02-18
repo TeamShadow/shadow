@@ -1,4 +1,4 @@
-class test {
+class Numeric {
 
     public test() => () {
         int a = 1 + 2 - 3 + 4;

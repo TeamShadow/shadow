@@ -1,4 +1,4 @@
-class Bill {
+class Basic {
 
     private int a = 7;
     private int b;

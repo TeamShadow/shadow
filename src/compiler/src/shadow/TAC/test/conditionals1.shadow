@@ -1,4 +1,4 @@
-class test {
+class Conditionals {
 
     public test() => () {
         int a;
