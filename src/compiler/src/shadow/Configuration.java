@@ -162,7 +162,10 @@ public class Configuration implements Iterator<File> {
 	 * @return
 	 */
 	public File current() {
-		return shadowFiles.get(currentShadowFile == 0 ? currentShadowFile : currentShadowFile - 1);
+		if(shadowFiles != null)
+			return shadowFiles.get(currentShadowFile == 0 ? currentShadowFile : currentShadowFile - 1);
+		else
+			return null;
 	}
 
 	/**
