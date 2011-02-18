@@ -23,6 +23,7 @@ import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.TypeChecker;
 
+
 /**
  * @author wspeirs
  *
@@ -64,10 +65,11 @@ public class Main {
 			System.exit(-1);
 		}
 			 
-		try {
-
+		try
+		{
 			// loop through the source files, compiling them
-			while(config.hasNext()) {
+			while(config.hasNext())
+			{
 				File shadowFile = config.next();
 				FileInputStream sourceStream = new FileInputStream(shadowFile);
 				ShadowParser parser = new ShadowParser(sourceStream);
@@ -82,7 +84,7 @@ public class Main {
 		        SimpleNode node = parser.CompilationUnit();
 		        
 		        // type check the AST
-		        boolean result = tc.typeCheck(node);
+		        boolean result = tc.typeCheck(node, shadowFile);
 		        
 		        if(!result) {
 		        	System.out.println(shadowFile.getPath() + "FAILED TO TYPE CHECK");
@@ -91,11 +93,14 @@ public class Main {
 		        }
 		        
 		        // we are only parsing & type checking
-		        if(config.isCheckOnly()) {
+		        if(config.isCheckOnly()) 
+		        {
 			        long stopTime = System.currentTimeMillis();
 
 			        System.err.println("FILE " + shadowFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
-		        } else {
+		        }
+		        else
+		        {
 			        // build the TAC
 			        tacBuilder.build(node);
 	
@@ -110,8 +115,7 @@ public class Main {
 	
 			        System.err.println("COMPILED " + shadowFile.getPath() + " in " + (stopTime - startTime) + "ms");
 		        }
-			}
-			
+			}			
 		} catch(FileNotFoundException fnfe) {
 			System.err.println("FILE " + config.current().getPath() + ") NOT FOUND: " + fnfe.getLocalizedMessage());
 			System.exit(-1);

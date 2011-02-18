@@ -378,6 +378,9 @@ public class ClassChecker extends BaseChecker {
 			return true;			
 		}
 		
+		
+		/*//made FieldAndMethodChecker add fields and methods from parent classes
+		
 		if( outerClass instanceof ClassType ) //check parents
 		{
 			ClassType parent = ((ClassType)outerClass).getExtendType();
@@ -403,9 +406,10 @@ public class ClassChecker extends BaseChecker {
 				parent = parent.getExtendType();
 			}
 		}
+		*/
 		
-		List<MethodSignature> methods = outerClass.getMethods(name);
-		
+		List<MethodSignature> methods = outerClass.getMethods(name);		
+
 		//unbound method (it gets bound when you supply args)
 		if( methods != null && methods.size() > 0 )
 		{

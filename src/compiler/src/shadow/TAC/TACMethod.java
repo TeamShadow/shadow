@@ -3,8 +3,8 @@ package shadow.TAC;
 import java.util.List;
 
 import shadow.TAC.nodes.TACNode;
-import shadow.parser.javacc.Node;
 import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACMethod {
@@ -44,8 +44,8 @@ public class TACMethod {
 		return signature.getMethodType().getParameterNames();
 	}
 	
-	public List<Node> getParamNodes() {
-		return signature.getMethodType().getParameterNodes();
+	public List<ModifiedType> getParamTypes() {
+		return signature.getMethodType().getParameterTypes();
 	}
 	
 	public List<Type> getReturnTypes() {

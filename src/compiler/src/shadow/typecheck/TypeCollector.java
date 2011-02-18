@@ -1,10 +1,16 @@
 package shadow.typecheck;
 
+
+import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
+import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTEnumDeclaration;
@@ -12,7 +18,9 @@ import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
@@ -28,6 +36,7 @@ public class TypeCollector extends BaseChecker
 	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors only
 	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();	
 	protected String currentName = "";
+	protected Map<File, Node> files = new HashMap<File, Node>();
 	
 	
 	public TypeCollector(boolean debug)
@@ -55,7 +64,125 @@ public class TypeCollector extends BaseChecker
 		addType(Type.EXCEPTION.getTypeName(), Type.ENUM);
 	}
 	
-	public void linkTypeTable()
+	
+	private void updateMissingTypes()
+	{
+		List<String> list;
+		
+		for( Type type : getTypeTable().values() ) //look through all types, updating their extends and implements
+		{	
+			TreeSet<String> missingTypes = new TreeSet<String>();
+			
+			if( type instanceof ClassType ) //includes error, exception, and enum (for now)
+			{				
+				if( !type.isBuiltIn() )
+				{
+					ClassType classType = (ClassType)type;
+					if( extendsTable.containsKey(type))
+					{
+						list = extendsTable.get(type);
+						ClassType parent = (ClassType)lookupType(list.get(0), classType.getOuter()); //only one thing in extends lists for classes
+						if( parent == null )						
+							missingTypes.add(list.get(0));
+						else							
+							classType.setExtendType(parent);
+					}
+					else if( type.getKind() == Kind.CLASS )
+						classType.setExtendType(Type.OBJECT);
+					else if( type.getKind() == Kind.ENUM )
+						classType.setExtendType(Type.ENUM);
+					else if( type.getKind() == Kind.ERROR )
+						classType.setExtendType(Type.ERROR);
+					else if( type.getKind() == Kind.EXCEPTION )
+						classType.setExtendType(Type.EXCEPTION);
+					
+					if( implementsTable.containsKey(type))
+					{
+						list = implementsTable.get(type);			
+						for( String name : list )
+						{
+							InterfaceType _interface = (InterfaceType)lookupType(name, classType.getOuter());
+							if( _interface == null )							
+								missingTypes.add(name);
+							else							
+								classType.addInterface(_interface);
+						}
+					}
+				}
+			}
+			else if( type instanceof InterfaceType ) 
+			{
+				InterfaceType interfaceType = (InterfaceType)type;
+				if( extendsTable.containsKey(type))
+				{
+					list = extendsTable.get(type);
+					for( String name : list )
+					{
+						InterfaceType _interface = (InterfaceType)lookupType(name, interfaceType.getOuter());
+						if( _interface == null )						
+							missingTypes.add(name);
+						else							
+							interfaceType.addExtendType(_interface);
+					}
+				}				
+			}
+			
+			if( missingTypes.size() > 0 )	
+				addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types " + missingTypes);			
+		}	
+	}
+	
+	
+	public void collectTypes(File input, Node node) throws FileNotFoundException, ParseException, ShadowException
+	//includes files in the same directory
+	{			
+		//Walk over file being checked
+		ASTWalker walker = new ASTWalker( this );		
+		walker.walk(node);
+		files.put( input, node );
+		
+		//TODO: Add imports eventually
+		
+		File[] fileList = input.getParentFile().listFiles( new FilenameFilter()
+				{
+					public boolean accept(File dir, String name)
+					{
+						return name.endsWith(".shadow");
+					}
+				}
+		);						
+		
+		
+		for( File other : fileList )
+		{			
+			if( !files.containsKey(other) ) //don't double add
+			{
+				ShadowParser parser = new ShadowParser(new FileInputStream(other));
+			    SimpleNode otherNode = parser.CompilationUnit();
+			    
+				TypeCollector collector = new TypeCollector(debug);
+				walker = new ASTWalker( collector );		
+				walker.walk(otherNode);							
+				
+				Map<String, Type> outsideTypes = collector.getTypeTable();
+				files.put(other, otherNode);
+				for( String outsideTypeName : outsideTypes.keySet() )
+				{	
+					if( !typeTable.containsKey(outsideTypeName))
+						typeTable.put(outsideTypeName, outsideTypes.get(outsideTypeName));				
+				}	
+			}
+		}	
+		
+		updateMissingTypes();					
+	}
+	
+	public Map<File, Node> getFiles()
+	{
+		return files;
+	}
+	
+/*	public void linkTypeTable()
 	{
 		//this is supposed to find the parents for everything
 		List<String> list;
@@ -69,7 +196,7 @@ public class TypeCollector extends BaseChecker
 					if( extendsTable.containsKey(type))
 					{
 						list = extendsTable.get(type);
-						ClassType parent = (ClassType)lookupType(list.get(0), classType.getOuter());
+						ClassType parent = (ClassType)lookupType(list.get(0), classType.getOuter()); //only one thing in extends lists for classes
 						if( parent == null )
 							addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot extend undefined class " + list.get(0));
 						else
@@ -116,7 +243,7 @@ public class TypeCollector extends BaseChecker
 			}
 		}	
 	}
-
+*/
 	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )		
@@ -202,14 +329,15 @@ public class TypeCollector extends BaseChecker
 	
 	private void exitType( SimpleNode node )
 	{
-		//	remove innermost class
+		//	remove innermost class		
 		int index = currentName.lastIndexOf('.'); 
 		if( index == -1 )
 			currentName = "";
 		else
 			currentName = currentName.substring(0, index);
 		
-		currentType = currentType.getOuter();
+		if( currentType != null )
+			currentType = currentType.getOuter();
 	}
 	
 

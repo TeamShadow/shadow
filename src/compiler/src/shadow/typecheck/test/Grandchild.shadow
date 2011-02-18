@@ -1,0 +1,7 @@
+class Grandchild extends Child
+{   
+    public extra(double x) => (double)
+    {    
+    	return x*2*method();
+    }
+} 

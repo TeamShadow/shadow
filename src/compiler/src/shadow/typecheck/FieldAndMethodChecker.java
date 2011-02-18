@@ -1,9 +1,12 @@
 package shadow.typecheck;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import shadow.AST.ASTUtils;
+import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -25,6 +28,7 @@ import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
@@ -33,6 +37,75 @@ public class FieldAndMethodChecker extends BaseChecker {
 	public FieldAndMethodChecker(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
 		super(debug, typeTable, importList);
 	}
+	
+	public void buildTypes( Map<File, Node> files ) throws ShadowException
+	{
+		ASTWalker walker = new ASTWalker(this);
+		
+		for( Node node : files.values() )
+			walker.walk(node);
+		
+		for( Type type : typeTable.values() ) 
+		{
+			if( type instanceof ClassType ) //adds all parent fields and methods and check for compliance with all interfaces
+			{
+				ClassType classType = (ClassType) type;
+				ClassType parent = classType.getExtendType();				
+				
+				while( parent != null && parent != classType )
+				{	
+					Map<String,Node> fields = parent.getFields();
+					
+					for( String name : fields.keySet() )
+					{
+						if( !classType.containsField(name) ) //add parent fields to current class if it doesn't have them already
+						{
+							Node node = fields.get(name);
+							if( !ModifierSet.isPrivate(node.getModifiers() ) ) //private fields aren't added
+								classType.addField(name, node);
+						}
+					}
+					
+					Map< String,List<MethodSignature> > methods = parent.getMethodMap();
+					
+					for( String name : methods.keySet() )
+					{
+						HashSet<MethodType> methodsInClass = new HashSet<MethodType>();
+						List<MethodSignature> signatures = classType.getMethods(name);
+						if( signatures != null )
+							for( MethodSignature signature : signatures  )
+								methodsInClass.add(signature.getMethodType());						
+						
+						signatures = methods.get(name);
+						if( signatures != null )
+							for( MethodSignature parentSignature : signatures ) //add parent methods to current class
+							{
+								MethodType parentMethod = parentSignature.getMethodType();
+								if( !methodsInClass.contains(parentMethod) && !ModifierSet.isPrivate(parentMethod.getModifiers()) )
+								//only if it doesn't have it already and it's not private
+								{
+									classType.addMethod(name, parentSignature);
+									methodsInClass.add(parentMethod); //to avoid double adds, but should be unnecessary
+								}
+							}
+					}
+					
+					parent = parent.getExtendType();
+				}
+				
+				if( parent == classType )				
+					addError(Error.INVL_TYP, "Circular type hierarchy for class " + type );
+				
+				//Meets all interface requirements?
+				for( InterfaceType _interface : classType.getInterfaces() )
+				{
+					if( !classType.satisfiesInterface(_interface) )
+						addError(Error.INVL_TYP, "Type" + classType + " does not implement inteface " + _interface );					
+				}
+			}
+		}		
+	}
+	
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
 		//
@@ -176,11 +249,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 		String typeName = node.getImage();
 		Type type = lookupType(typeName);
 		
-		if(type == null) {
+		if(type == null)
+		{
 			addError(node, Error.UNDEF_TYP, typeName);
-			return WalkType.NO_CHILDREN;
+			type = Type.UNKNOWN;
 		}
-		
+				
 		node.setType(type);
 		
 		return WalkType.POST_CHILDREN;

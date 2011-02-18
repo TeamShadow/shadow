@@ -1,4 +1,4 @@
-class Foo {
+class Final {
     
     public static main() => ()
     {	

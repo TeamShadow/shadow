@@ -62,7 +62,7 @@ public class TACTest extends BaseTest {
 	        // type check the tree
         	System.out.println();
         	System.out.println("* TYPE CHECK STAGE * ");
-	        boolean result = tc.typeCheck(node);
+	        boolean result = tc.typeCheck(node, sourceFile);
 	        
 	        if(!result) {
 	        	System.out.println(sourceFile.getPath() + "FAILED TO TYPE CHECK");

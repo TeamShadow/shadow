@@ -29,6 +29,7 @@ import shadow.output.AbstractTACLinearVisitor;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 /**
@@ -120,7 +121,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 				continue;
 			StringBuffer sb = new StringBuffer();
 			List<Type> retTypes = method.getReturnTypes();
-			List<Node> paramNodes = method.getParamNodes();
+			List<ModifiedType> paramTypes = method.getParamTypes();
 			
 			// loop through the ret types
 			
@@ -134,12 +135,12 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			sb.append(method.getName());
 			sb.append(")(");
 
-			for(Node param:paramNodes) {
+			for(ModifiedType param:paramTypes) {
 				sb.append(type2type(param.getType().getTypeName()));
 				sb.append(", ");
 			}
 			
-			if(paramNodes.size() == 0) {
+			if(paramTypes.size() == 0) {
 				sb.append("void  ");
 			}
 			
@@ -184,7 +185,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		sb.append("(");
 		
 		List<String> paramNames = method.getParamNames();
-		List<Node> paramNodes = method.getParamNodes();
+		List<ModifiedType> paramTypes = method.getParamTypes();
 		String className = this.getTheClass().getName();
 
 		// first param is always a reference to the class, unless it's static
@@ -192,7 +193,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			sb.append("struct " + className + "* this, ");
 
 		for(int i=0; i < paramNames.size(); ++i) {
-			sb.append(type2type(paramNodes.get(i).getType().getTypeName()));
+			sb.append(type2type(paramTypes.get(i).getType().getTypeName()));
 			sb.append(" ");
 			sb.append(paramNames.get(i));
 			sb.append(", ");

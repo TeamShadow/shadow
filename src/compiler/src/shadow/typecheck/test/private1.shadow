@@ -1,6 +1,5 @@
-class Outer
+class Private
 {
-
 	private class Inner 
 	{
 		private int x = 5;
@@ -11,7 +10,7 @@ class Outer
 	{
 		public stuff() => ()
 		{
-			Outer outer = new Outer();
+			Private outer = new Private();
 			Inner inner = outer.new Inner(); 
 		}
 	

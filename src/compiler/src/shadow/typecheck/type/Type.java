@@ -160,14 +160,14 @@ public class Type {
 			else if( t.getKind() == Kind.CLASS )			
 				return ((ClassType)this).isDescendentOf(t);
 			else if( t.getKind() == Kind.INTERFACE )
-				return ((ClassType)this).isImplementerOf(t);
+				return ((ClassType)this).hasInterface(t);
 			else
 				return false;
 		case ENUM:
 			if( t.equals(OBJECT) || t.equals(ENUM) )
 				return true;			
 			else if( t.getKind() == Kind.INTERFACE )
-				return ((EnumType)this).isImplementerOf(t);
+				return ((EnumType)this).hasInterface(t);
 			else
 				return false;
 		case ERROR:
@@ -240,7 +240,7 @@ public class Type {
 	}
 		
 	public int hashCode() {
-		return typeName.hashCode();
+		return toString().hashCode();
 	}
 	
 	public boolean isString() {

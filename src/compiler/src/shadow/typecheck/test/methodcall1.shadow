@@ -1,4 +1,4 @@
-class Bill {
+class MethodCall {
 
    
     public static jam(int a) => (int, double) {

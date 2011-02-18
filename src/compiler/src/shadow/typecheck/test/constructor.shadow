@@ -1,6 +1,6 @@
 exception BlahException { }
 
-class Blah 
+class Constructor
 {    
     public constructor() { ; }
     public constructor(int a) { ; }

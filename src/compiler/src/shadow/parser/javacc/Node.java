@@ -2,6 +2,7 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 /* All AST nodes must implement this interface.  It provides basic
@@ -10,7 +11,7 @@ import shadow.typecheck.type.Type;
 
 public
 @SuppressWarnings("all")
-interface Node {
+interface Node extends ModifiedType {
 
   /** This method is called after the node has been made the current
     node.  It indicates that child nodes can now be added to it. */

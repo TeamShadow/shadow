@@ -1,0 +1,18 @@
+class MethodAndField {
+
+    public MethodAndField t;
+    public int a = 1, y, z = 2;
+    public double b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
+    public String c = "hello" + "world";
+    public boolean x = true;
+
+    public blah(int a, float b, MethodAndField c) => (int, double, MethodAndField) {
+        return (5, 3.0, new MethodAndField());
+    }
+    
+    public blah(float a, float z, MethodAndField c) => (int, float, MethodAndField) {
+        return (5, 3.0f, new MethodAndField());
+    }
+
+    public code d, e, f;
+}

@@ -15,7 +15,7 @@ import shadow.typecheck.type.Type;
 public abstract class BaseChecker extends AbstractASTVisitor {
 
 	protected ArrayList<String> errorList;
-	private Map<String, Type> typeTable; /** Holds all of the types we know about */
+	protected Map<String, Type> typeTable; /** Holds all of the types we know about */
 	protected List<String> importList; /** Holds all of the types we know about */
 	protected Type currentType = null;
 	protected boolean debug;	
@@ -136,13 +136,18 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param type One of the pre-defined types of errors.
 	 */
 	protected void addError(Node node, Error type) {
-		String error = "[" + ASTUtils.getLineCol(node) + "] " + type + ": "; 
+		addError( node, type, "" );
+	}
+	
+	protected void addError(Error type, String message) {
+		String error = "" + type + ": " + message; 
 		
 		if(debug)
 			errorList.add(ASTUtils.getFileAndLine(3) + error);
 		else
 			errorList.add(error);
 	}
+	
 	
 	/**
 	 * Print out the list of errors to standard error.

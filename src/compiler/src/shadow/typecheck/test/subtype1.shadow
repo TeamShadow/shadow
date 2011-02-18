@@ -1,4 +1,4 @@
-class Outer {
+class Subtype {
 
 	public method () => ()
 	{
@@ -19,7 +19,7 @@ class Outer {
 	private class BaseClass
 	{}
 	
-	private class Subclass1 extends Outer.BaseClass
+	private class Subclass1 extends Subtype.BaseClass
 	{}
 	
 	private class Subclass2 extends BaseClass

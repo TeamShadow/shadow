@@ -1,11 +1,11 @@
-class Outer {
+class ComplexAccess {
 
 	private Inner i;
 
 	private class Inner 
 	{	
 	
-		public Outer o;
+		public ComplexAccess o;
 	
 		public jam(int a) => (int) {
 	        return 4;
@@ -21,12 +21,12 @@ class Outer {
     {
     	int c;
     	
-    	Outer[] first = new Outer[100];
-    	first[0] = new Outer();
+    	ComplexAccess[] first = new ComplexAccess[100];
+    	first[0] = new ComplexAccess();
     	
     	c = first[0].stuff().jam(10);
     	
-    	Outer outer = new Outer();
+    	ComplexAccess outer = new ComplexAccess();
     	
     	outer.i.o.i.o.i = null;
     }

@@ -59,6 +59,10 @@ public abstract class ClassInterfaceBaseType extends Type {
 		return fieldTable.get(fieldName);
 	}
 	
+	public ModifiedType getFieldType (String fieldName) {
+		return fieldTable.get(fieldName);
+	}
+	
 	public Map<String, Node> getFields() {
 		return fieldTable;
 	}

@@ -9,7 +9,7 @@ import shadow.parser.javacc.ShadowParser.ModifierSet;
 
 public class MethodType extends Type {
 	protected List<String> paramNames;
-	protected List<Node> paramTypes;
+	protected List<ModifiedType> paramTypes;
 	protected List<Type> returns; /** List of return types */
 
 	public MethodType() {
@@ -19,7 +19,7 @@ public class MethodType extends Type {
 	public MethodType(int modifiers) {
 		super(null, modifiers, null, Kind.METHOD);
 		paramNames = new ArrayList<String>();
-		paramTypes = new ArrayList<Node>();
+		paramTypes = new ArrayList<ModifiedType>();
 		returns = new LinkedList<Type>();
 	}
 	
@@ -97,7 +97,7 @@ public class MethodType extends Type {
 		paramTypes.add(node);
 	}
 	
-	public Node getParameterType(String paramName) {
+	public ModifiedType getParameterType(String paramName) {
 		for(int i=0; i < paramNames.size(); ++i) {
 			if(paramNames.get(i).equals(paramName))
 				return paramTypes.get(i);
@@ -119,7 +119,7 @@ public class MethodType extends Type {
 		return paramNames;
 	}
 	
-	public List<Node> getParameterNodes() {
+	public List<ModifiedType> getParameterTypes() {
 		return paramTypes;
 	}
 	
@@ -164,11 +164,11 @@ public class MethodType extends Type {
 	public String toString() {
 		StringBuilder sb = new StringBuilder("(");
 		
-		for(Node node:paramTypes) {
+		for(ModifiedType type:paramTypes) {
 			
-			Type p = node.getType();
+			Type p = type.getType();
 			
-			if( ModifierSet.isFinal(node.getModifiers()))
+			if( ModifierSet.isFinal(type.getModifiers()))
 				sb.append("final ");
 			
 			if(p.typeName == null) // method type
@@ -205,8 +205,8 @@ public class MethodType extends Type {
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();
 		
-		for(Node node:paramTypes) {
-			Type p = node.getType();
+		for(ModifiedType type:paramTypes) {
+			Type p = type.getType();
 			sb.append(p.getTypeName());
 			sb.append("_");
 		}

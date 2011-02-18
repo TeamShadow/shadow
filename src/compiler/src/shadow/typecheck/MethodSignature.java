@@ -4,6 +4,7 @@ import java.util.List;
 
 import shadow.parser.javacc.Node;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 public class MethodSignature {
@@ -21,7 +22,7 @@ public class MethodSignature {
 		this.type.addParameter(name, node);
 	}
 	
-	public Node getParameterType(String paramName) 
+	public ModifiedType getParameterType(String paramName) 
 	{
 		return type.getParameterType(paramName);		
 	}

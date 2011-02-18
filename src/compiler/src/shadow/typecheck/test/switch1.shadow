@@ -1,4 +1,4 @@
-class Walnut {
+class Switch {
 
    public nothing() => ()
    {

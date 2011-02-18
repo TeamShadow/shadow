@@ -1,4 +1,4 @@
-class Bill {
+class Basic {
 
     public blah() => () {
     

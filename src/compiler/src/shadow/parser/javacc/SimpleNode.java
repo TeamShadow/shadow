@@ -1,6 +1,7 @@
 package shadow.parser.javacc;
 
 import shadow.TAC.nodes.TACNode;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 public class SimpleNode implements Node {

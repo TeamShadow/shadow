@@ -55,7 +55,7 @@ public class TypeCheckerTest extends BaseTest {
 	        long startTime = System.currentTimeMillis();
 
 	        // type check the tree
-	        boolean result = tc.typeCheck(node);
+	        boolean result = tc.typeCheck(node, sourceFile);
 	        
 	        long stopTime = System.currentTimeMillis();
 	        long runTime = stopTime - startTime;

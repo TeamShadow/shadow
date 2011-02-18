@@ -1,4 +1,4 @@
-class Walnut {
+class ControlFlow {
 
    public nothing() => ()
    {

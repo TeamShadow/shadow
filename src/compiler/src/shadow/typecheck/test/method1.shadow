@@ -1,7 +1,7 @@
 /**
  * This class tests a bunch of different method declarations
  */
-class Test {
+class Method {
     public blah() => () { ; }   // basic void
 
     public blah(int a) => () { ; }   // built-in to void

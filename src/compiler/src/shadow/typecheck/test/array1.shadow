@@ -1,4 +1,4 @@
-class Foo {
+class Array {
     
     public static main() => ()
     {	
