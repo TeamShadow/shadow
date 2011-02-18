@@ -1,7 +1,9 @@
 package shadow.parser.javacc;
 
+import java.io.File;
+
+import shadow.Configuration;
 import shadow.TAC.nodes.TACNode;
-import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 public class SimpleNode implements Node {
@@ -11,6 +13,7 @@ public class SimpleNode implements Node {
     protected ShadowParser parser;
     
     protected String image;
+    protected File file;
     protected int line, column;
     
     protected Type type;		// used by the type checker    
@@ -23,6 +26,7 @@ public class SimpleNode implements Node {
 	public SimpleNode(int id) {
     	this.id = id;
     	image = "";
+    	file = Configuration.getInstance().current();
     	line = column = -1;
     	type = null;
     	modifiers = 0;
@@ -33,6 +37,7 @@ public class SimpleNode implements Node {
     	this.id = id;
     	parser = sp;
     	image = "";
+    	file = Configuration.getInstance().current();
     	line = sp.token.beginLine;
     	column = sp.token.beginColumn;
     	type = null;
