@@ -100,7 +100,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 				for( InterfaceType _interface : classType.getInterfaces() )
 				{
 					if( !classType.satisfiesInterface(_interface) )
-						addError(Error.INVL_TYP, "Type" + classType + " does not implement inteface " + _interface );					
+						addError(Error.INVL_TYP, "Type " + classType + " does not implement inteface " + _interface );					
 				}
 			}
 		}		

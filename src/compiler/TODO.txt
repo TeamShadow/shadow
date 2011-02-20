@@ -33,16 +33,16 @@
 Bill: Native blocks
 
 => TYPE CHECKING (Barry) <=
-- Add isField to ASTNodes that are field names 
+- Add isField to ASTNodes that are field names (DONE)
 - Multiple files
 - Meta file serialization of type information
-- Make sure that fields are ONLY public or private
+- Make sure that fields are ONLY public or private (DONE)
 
 => TAC <=
 - All numeric and control flow stuff
 - Arrays w/checking of bounds
 - Null pointer checking
-- Inheritance & interface implementation (interfaces are type-check only, right?)
+- Inheritance & interface implementation (interfaces are type-check only, right?) (BJW: Not entirely)
 - Exceptions
 - Native code blocks so we can generate a CLib
 - Explicit delete
