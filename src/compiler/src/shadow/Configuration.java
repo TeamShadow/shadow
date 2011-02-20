@@ -20,12 +20,16 @@ public class Configuration implements Iterator<File> {
 	private static final String IMPORTS 	= "I";
 	private static final String CONFIG_FILE = "C";
 	private static final String CHECK		= "c";
+	private static final String OS			= "os";
+	private static final String ARCH		= "arch";
 
 	private String mainClass = null;
 	private List<File> shadowFiles = null;
 	private int currentShadowFile = 0;
 	private List<File> importPaths = null;
 	private boolean checkOnly = false;
+	private int arch = 32;
+	private String os;
 	
 	private static Configuration config = new Configuration();
 	
@@ -49,6 +53,16 @@ public class Configuration implements Iterator<File> {
 	public void parse(CommandLine cmdLine) throws ShadowException {
 		// get the main class
 		mainClass = cmdLine.getOptionValue(MAIN_CLASS);
+		
+		if(cmdLine.hasOption(OS))
+			this.os = cmdLine.getOptionValue(OS);
+		else
+			this.os = System.getProperty("os.name").toString();
+		
+		if(cmdLine.hasOption(ARCH))
+			this.arch = Integer.parseInt(cmdLine.getOptionValue(ARCH));
+		else
+			this.arch = Integer.parseInt(System.getProperty("sun.arch.data.model"));
 		
 		// get the import paths
 		importPaths = new ArrayList<File>();
@@ -113,11 +127,27 @@ public class Configuration implements Iterator<File> {
 										  .withDescription("Parse and type-check the Shadow files")
 										  .create(CHECK);
 
+		// create the check option
+		@SuppressWarnings("static-access")
+		Option osOption = OptionBuilder.withLongOpt(OS)
+										   .hasArg()
+										  .withDescription("Target OS: Windows or Linux")
+										  .create();
+
+		// create the check option
+		@SuppressWarnings("static-access")
+		Option archOption = OptionBuilder.withLongOpt(ARCH)
+										   .hasArg()
+										  .withDescription("Target architecture: 32 or 64")
+										  .create();
+
 		// add all the options from above
 		options.addOption(mainClass);
 		options.addOption(importPaths);
 		options.addOption(configOption);
 		options.addOption(checkOption);
+		options.addOption(osOption);
+		options.addOption(archOption);
 
 		// add new simple options
 		options.addOption(new Option("h", "help", false, "Print this help message"));
@@ -127,6 +157,14 @@ public class Configuration implements Iterator<File> {
 
 	public String getMainClass() {
 		return mainClass;
+	}
+
+	public int getArch() {
+		return arch;
+	}
+
+	public String getOs() {
+		return os;
 	}
 
 	public List<File> getImportPaths() {
