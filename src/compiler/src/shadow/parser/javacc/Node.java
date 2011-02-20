@@ -68,6 +68,9 @@ interface Node extends ModifiedType {
 	public void removeModifier( int mod );	
 	public void setEnclosingType(Type type);
 	public Type getEnclosingType();
+	
+	
+	public boolean isField();
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException;

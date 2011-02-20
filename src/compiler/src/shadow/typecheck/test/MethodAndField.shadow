@@ -1,10 +1,10 @@
 class MethodAndField {
 
-    public MethodAndField t;
-    public int a = 1, y, z = 2;
-    public double b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
-    public String c = "hello" + "world";
-    public boolean x = true;
+    private MethodAndField t;
+    private int a = 1, y, z = 2;
+    private double b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
+    private String c = "hello" + "world";
+    private boolean x = true;
 
     public blah(int a, float b, MethodAndField c) => (int, double, MethodAndField) {
         return (5, 3.0, new MethodAndField());
@@ -14,5 +14,5 @@ class MethodAndField {
         return (5, 3.0f, new MethodAndField());
     }
 
-    public code d, e, f;
+    private code d, e, f;
 }

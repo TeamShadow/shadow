@@ -58,16 +58,13 @@ public class ShadowParser
      public static final int PRIVATE        = 0x0004;
      public static final int ABSTRACT       = 0x0008;
      public static final int STATIC         = 0x0010;
-     public static final int FINAL          = 0x0020;
-     //public static final int SYNCHRONIZED = 0x0040;
-     public static final int NATIVE       = 0x0080;
-     //public static final int TRANSIENT    = 0x0100;
-     //public static final int VOLATILE     = 0x0200;
-     //public static final int STRICTFP     = 0x0400;
-     public static final int WEAK           = 0x0800;
-     public static final int IMMUTABLE      = 0x1000;
-     public static final int ASSIGNABLE   	= 0x2000;
-     public static final int TYPE_NAME   	= 0x4000;
+     public static final int FINAL          = 0x0020;     
+     public static final int NATIVE       	= 0x0040;     
+     public static final int WEAK           = 0x0080;
+     public static final int IMMUTABLE      = 0x0100;
+     public static final int ASSIGNABLE   	= 0x0200;
+     public static final int TYPE_NAME   	= 0x0400;
+     public static final int FIELD		   	= 0x0800;
 
 
      /* Type Modifiers:
@@ -93,6 +90,7 @@ public class ShadowParser
      /* Hidden Modifiers: (used in the compiler internally, but cannot be marked by the user)
 		assignable 		(used to mark variables [lvalues])
 		type name		(used to distinguish between types and values/variables with that type, e.g. int vs. 5 or String vs. "figs")
+		field			(used to mark nodes that are fields, as opposed to local variables, to inform the TAC [methods are NOT marked as fields])
      */
      
 
@@ -107,15 +105,11 @@ public class ShadowParser
      public static boolean isFinal(int modifiers) { return (modifiers & FINAL) != 0; }
      public static boolean isNative(int modifiers) { return (modifiers & NATIVE) != 0; }
 
-/*   public boolean isStrictfp(int modifiers) { return (modifiers & STRICTFP) != 0; } 
-     public boolean isSynchronized(int modifiers) { return (modifiers & SYNCHRONIZED) != 0; }
-     public boolean isTransient(int modifiers) { return (modifiers & TRANSIENT) != 0; }
-     public boolean isVolatile(int modifiers) { return (modifiers & VOLATILE) != 0; }
-*/
      public static boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
      public static boolean isImmutable(int modifiers) { return (modifiers & IMMUTABLE) != 0; }
      public static boolean isAssignable(int modifiers) { return (modifiers & ASSIGNABLE) != 0; }
-     public static boolean isTypeName(int modifiers) { return (modifiers & TYPE_NAME) != 0; }
+     public static boolean isTypeName(int modifiers) { return (modifiers & TYPE_NAME) != 0; }   
+     public static boolean isField(int modifiers) { return (modifiers & FIELD) != 0; }     
 
      /**
       * Changes the given modifier.

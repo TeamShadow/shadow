@@ -137,9 +137,18 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	/**
+	 * Checks method and field modifiers to see if they are legal
+	 * 
+	 * @param node
+	 * @param modifiers
+	 * @return
+	 */
+	
 	public boolean checkMemberModifiers( Node node, int modifiers )
 	{
 		int visibilityModifiers = 0;
+		boolean success = true;
 		
 		//modifiers are set, but we have to check them
 		if( ModifierSet.isPublic( modifiers ))
@@ -152,22 +161,39 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if( visibilityModifiers > 1 )
 		{
 			addError(node, Error.INVL_MOD, "Only one public, private, or protected modifier can be used" );
-			return false;
-		}
-		else if( visibilityModifiers == 0 )
+			success = false;
+		}		
+		
+		if( node instanceof ASTMethodDeclaration ) //methods
+		{
+			if( visibilityModifiers == 0 )
+			{			
+				addError(node, Error.INVL_MOD, "Every method must be specified as public, private, or protected" );
+				success = false;
+			}
+			
+			if( ModifierSet.isWeak(modifiers) ) 
+			{			
+				addError(node, Error.INVL_MOD, "Methods cannot be declared with the weak modifier" );
+				success = false;
+			}
+		}		
+		else //fields
 		{			
-			addError(node, Error.INVL_MOD, "Every method and field must be specified as public, private, or protected" );
-			return false;
-		}
+			if( visibilityModifiers == 0 )
+			{			
+				addError(node, Error.INVL_MOD, "Every field must be specified as public or private" );
+				success = false;
+			}
+			
+			if( ModifierSet.isProtected(modifiers) ) 
+			{			
+				addError(node, Error.INVL_MOD, "Fields cannot be declared with the protected modifier" );
+				success = false;
+			}
+		}		
 		
-		if( ModifierSet.isWeak(modifiers) && node instanceof ASTMethodDeclaration )
-		{			
-			addError(node, Error.INVL_MOD, "Methods cannot be declared with the weak modifier" );
-			return false;
-		}
-		
-		
-		return true;
+		return success;
 	}
 
 	/**
@@ -192,7 +218,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if( !checkMemberModifiers( node, node.getModifiers() ))
 			return WalkType.NO_CHILDREN;
 		
-		//type.setASTNode(node);	// set the node to the type  //NO! Set the node to the field, not the type
+		node.addModifier(ModifierSet.FIELD);	
 		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{

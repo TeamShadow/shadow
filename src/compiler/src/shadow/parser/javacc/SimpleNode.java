@@ -4,6 +4,7 @@ import java.io.File;
 
 import shadow.Configuration;
 import shadow.TAC.nodes.TACNode;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.Type;
 
 public class SimpleNode implements Node {
@@ -186,6 +187,14 @@ public class SimpleNode implements Node {
 	{
 		return enclosingType;
 	} 
+	
+	
+	
+	public boolean isField()
+	{
+		return ModifierSet.isField(modifiers);
+	}
+	
 	
 	public TACNode getEntryNode() {
 		return entryNode;
