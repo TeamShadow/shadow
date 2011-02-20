@@ -5,13 +5,16 @@ class Basic {
 
     public static main(String[] args) => () {
         int x, y;
+        
         printString("Hello World");
     }
     
     public test(int a) => (int) {
         int x = b;
-        
-        test(b);
+
+        b = x;
+                
+        test(this.b);
         
         return a;
     }

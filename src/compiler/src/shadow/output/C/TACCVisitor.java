@@ -274,8 +274,13 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		if(node.getLHS().isField())
 			sb.append("this->");
 		sb.append(node.getLHS().getSymbol());
+		
 		sb.append(" = ");
+		
+		if(node.getRHS().isField())
+			sb.append("this->");
 		sb.append(lit2lit(node.getRHS().getSymbol()));
+		
 		sb.append(";");
 		
 		cWriter.print(sb.toString(), node);

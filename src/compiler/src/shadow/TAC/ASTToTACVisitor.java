@@ -415,6 +415,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		TACVariable variable = new TACVariable(node.getImage(), node.getType());
 		TACNoOp noop = new TACNoOp(node, variable, null, null);
+		
+		variable.setField(node.isField());
 
 		linkToEnd(node, noop);
 
@@ -427,6 +429,8 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		TACVariable variable = new TACVariable(node.getImage(), node.getType());
 		TACNoOp noop = new TACNoOp(node, variable, null, null);
+		
+		variable.setField(node.isField());
 
 		linkToEnd(node, noop);
 
@@ -504,12 +508,10 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		Type type = node.getType();
-
-//		ASTUtils.DEBUG(node, "NAME KIND: " + type.getKind());
-
 		TACVariable variable = new TACVariable(node.getImage(), node.getType());
 		TACNoOp noop = new TACNoOp(node, variable, null, null);
+		
+		variable.setField(node.isField());
 
 		linkToEnd(node, noop);
 		
