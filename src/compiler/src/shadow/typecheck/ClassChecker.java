@@ -1,5 +1,6 @@
 package shadow.typecheck;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -91,7 +92,7 @@ public class ClassChecker extends BaseChecker {
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
 	
 	
-	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
+	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<File> importList ) {
 		super(debug, typeTable, importList);		
 		symbolTable = new LinkedList<HashMap<String, Node>>();
 		curPrefix = new LinkedList<Node>();

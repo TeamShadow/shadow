@@ -1,13 +1,14 @@
 package shadow.typecheck;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import shadow.AST.ASTUtils;
-import shadow.AST.AbstractASTVisitor;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.Type;
@@ -16,7 +17,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 
 	protected ArrayList<String> errorList;
 	protected Map<String, Type> typeTable; /** Holds all of the types we know about */
-	protected List<String> importList; /** Holds all of the types we know about */
+	protected List<File> importList; /** Holds all of the imports we know about */
 	protected Type currentType = null;
 	protected boolean debug;	
 	
@@ -43,12 +44,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		typeTable.put(name, type);		
 	}
 	
-	public final List<String> getImportList()
+	public final List<File> getImportList()
 	{
 		return importList;
 	}
 	
-	public BaseChecker(boolean debug, Map<String, Type> typeTable, List<String> importList  ) {
+	public BaseChecker(boolean debug, Map<String, Type> typeTable, List<File> importList  ) {
 		errorList = new ArrayList<String>();
 		this.debug = debug;
 		this.typeTable = typeTable;

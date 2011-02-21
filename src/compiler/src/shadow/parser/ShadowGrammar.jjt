@@ -281,7 +281,6 @@ TOKEN :
 | < SHORT: "short" >
 | < STATIC: "static" >
 //| < STRICTFP: "strictfp" >
-| < STRING: "String" >
 | < SUPER: "super" >
 | < SWITCH: "switch" >
 | < SYNCHRONIZED: "synchronized" >
@@ -431,7 +430,7 @@ TOKEN :
   < #DIGIT:
       [
        "\u0030"-"\u0039",
-       "\u005f", //underscore
+       "\u005f", //underscore (not a legal way to start a variable in Shadow)
        "\u0660"-"\u0669",
        "\u06f0"-"\u06f9",
        "\u0966"-"\u096f",
@@ -480,10 +479,6 @@ TOKEN :
 | < LE: "<=" >
 | < GE: ">=" >
 | < NE: "!=" >
-//| < SC_OR: "||" >
-//| < SC_AND: "&&" >
-//| < INCR: "++" >
-//| < DECR: "--" >
 | < PLUS: "+" >
 | < MINUS: "-" >
 | < STAR: "*" >
@@ -560,7 +555,7 @@ void PackageDeclaration():
 void ImportDeclaration():
 {}
 {
-  "import" [ "static" ] Name() [ ("." "*") | ("$" [">" | "<"] < VERSION_LITERAL >) ] ";"
+  "import" [ "static" ] Name() [ ("." "*"  { jjtThis.setWildcard(true);  }  ) | ("$" [">" | "<"] < VERSION_LITERAL >) ] ";"
 }
 
 /*
@@ -584,11 +579,7 @@ int Modifiers():
   | "private" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PRIVATE); }
   | "final" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.FINAL); }
   | "abstract" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.ABSTRACT); }
-//  | "synchronized" { modifiers |= ModifierSet.SYNCHRONIZED; }
   | "native" { modifiers |= ModifierSet.NATIVE; }
-//  | "transient" { modifiers |= ModifierSet.TRANSIENT; }
-//  | "volatile" { modifiers |= ModifierSet.VOLATILE; }
-//  | "strictfp" { modifiers |= ModifierSet.STRICTFP; }
   | "weak" { modifiers = ModifierSet.checkAndAdd( modifiers,  ModifierSet.WEAK); }
   |	"immutable"{ modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.IMMUTABLE); }  | Annotation()
   )
@@ -846,8 +837,7 @@ void ConstructorDeclaration(int modifiers):
 void DestructorDeclaration(int modifiers):
 { debugPrint("DESTRUCTOR DECLARATION"); }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("destructor"); }
-  //[ TypeParameters() ]
+  { jjtThis.setModifiers(modifiers); jjtThis.setImage("destructor"); }  
   // Modifiers matched in the caller
   "destructor" //[ "throws" NameList() ] //no (checked) exceptions from destructors!
   "{"    

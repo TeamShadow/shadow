@@ -34,7 +34,7 @@ import shadow.typecheck.type.Type;
 
 public class FieldAndMethodChecker extends BaseChecker {	
 	
-	public FieldAndMethodChecker(boolean debug, Map<String, Type> typeTable, List<String> importList ) {
+	public FieldAndMethodChecker(boolean debug, Map<String, Type> typeTable, List<File> importList ) {
 		super(debug, typeTable, importList);
 	}
 	

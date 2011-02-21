@@ -1,21 +1,26 @@
 package shadow.typecheck;
 
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 
+import shadow.Configuration;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTEnumDeclaration;
 import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTImplementsList;
+import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -41,7 +46,7 @@ public class TypeCollector extends BaseChecker
 	
 	public TypeCollector(boolean debug)
 	{		
-		super(debug, new HashMap<String, Type>(), new LinkedList<String>() );
+		super(debug, new HashMap<String, Type>(), new LinkedList<File>() );
 		// put all of our built-in types into the TypeTable
 		addType(Type.OBJECT.getTypeName(),	Type.OBJECT);
 		addType(Type.BOOLEAN.getTypeName(),	Type.BOOLEAN);
@@ -358,6 +363,51 @@ public class TypeCollector extends BaseChecker
 			exitType( node );		
 		else
 			enterType( node, node.getModifiers(), Type.Kind.VIEW );
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	@Override
+	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )
+		{
+			Node name = node.jjtGetChild(0);
+			String path = name.getImage().replaceAll("\\.", File.pathSeparator);
+			List<File> importPaths = Configuration.getInstance().getImportPaths();
+			boolean success = false;
+			
+							
+			for( File importPath : importPaths )
+			{	
+				File fullPath = new File( importPath, path );
+				
+				if( node.isWildcard() )  //ends with .*, must include many files
+				{				
+					if( fullPath.isDirectory() )
+					{
+						File[] matchingFiles = fullPath.listFiles( new FilenameFilter(){							
+							@Override
+							public boolean accept(File dir, String name)
+							{
+								return name.endsWith(".shadow");
+							}    }   );
+						
+						importList.addAll( Arrays.asList( matchingFiles ) );
+						success = true;
+					}
+				}
+				else
+				{
+					if( fullPath.isFile() && (fullPath.getName().endsWith(".shadow") || fullPath.getName().endsWith(".meta") ))
+					{
+						importList.add(fullPath);
+						success = true;
+					}
+				}
+				
+			}
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}

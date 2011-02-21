@@ -4,7 +4,12 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTImportDeclaration extends SimpleNode {
+class ASTImportDeclaration extends SimpleNode 
+{
+
+	private boolean wildcard = false; 
+	
+	
   public ASTImportDeclaration(int id) {
     super(id);
   }
@@ -17,6 +22,17 @@ class ASTImportDeclaration extends SimpleNode {
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
+  }
+  
+  
+  public void setWildcard( boolean value )
+  {
+	  wildcard = value;
+  }
+  
+  public boolean isWildcard()
+  {
+	  return wildcard;
   }
 }
 /* JavaCC - OriginalChecksum=3f6a91a5536a57d7e634a9c1db57bdb0 (do not edit this line) */

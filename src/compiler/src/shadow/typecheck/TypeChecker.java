@@ -40,7 +40,8 @@ public class TypeChecker {
 				
 		//collector.addOutsideTypes(file);
 		Map<String, Type> typeTable = collector.getTypeTable();
-		List<String> importList = collector.getImportList();
+		List<File> importList = collector.getImportList();
+	
 		
 		// see how many errors we found
 		if(collector.getErrorCount() > 0)
