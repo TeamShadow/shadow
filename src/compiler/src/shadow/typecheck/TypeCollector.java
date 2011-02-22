@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -21,6 +20,7 @@ import shadow.parser.javacc.ASTEnumDeclaration;
 import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
+import shadow.parser.javacc.ASTPackageDeclaration;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -146,16 +146,19 @@ public class TypeCollector extends BaseChecker
 		walker.walk(node);
 		files.put( input, node );
 		
-		//TODO: Add imports eventually
+		//get import list
+		List<File> fileList = getImportList();
 		
-		File[] fileList = input.getParentFile().listFiles( new FilenameFilter()
+		//add files in directory
+		File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
 				{
 					public boolean accept(File dir, String name)
 					{
 						return name.endsWith(".shadow");
 					}
 				}
-		);						
+		);		
+		fileList.addAll(Arrays.asList(directoryFiles));
 		
 		
 		for( File other : fileList )
@@ -171,11 +174,18 @@ public class TypeCollector extends BaseChecker
 				
 				Map<String, Type> outsideTypes = collector.getTypeTable();
 				files.put(other, otherNode);
+												
 				for( String outsideTypeName : outsideTypes.keySet() )
 				{	
 					if( !typeTable.containsKey(outsideTypeName))
 						typeTable.put(outsideTypeName, outsideTypes.get(outsideTypeName));				
-				}	
+				}
+				
+				//add in the imports from the other file as long as they aren't in the list already
+				List<File> otherImports = collector.getImportList();
+				for( File otherImport : otherImports )
+					if( !fileList.contains(otherImport) )
+						fileList.add(otherImport);	
 			}
 		}	
 		
@@ -367,6 +377,18 @@ public class TypeCollector extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTPackageDeclaration node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			Node name = node.jjtGetChild(0);
+			currentName = name.getImage();		
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
 	
 	@Override
 	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
@@ -404,8 +426,7 @@ public class TypeCollector extends BaseChecker
 						importList.add(fullPath);
 						success = true;
 					}
-				}
-				
+				}				
 			}
 		}
 		
