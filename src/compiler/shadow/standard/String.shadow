@@ -1,0 +1,12 @@
+package shadow.standard;
+
+immutable class String
+{
+	private byte[] data;
+
+
+	public String toString()
+	{
+		return this;
+	}
+}
