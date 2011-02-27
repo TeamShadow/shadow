@@ -78,6 +78,7 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.UnboundMethodType;
@@ -92,8 +93,8 @@ public class ClassChecker extends BaseChecker {
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
 	
 	
-	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<File> importList ) {
-		super(debug, typeTable, importList);		
+	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<File> importList, PackageType packageTree ) {
+		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, Node>>();
 		curPrefix = new LinkedList<Node>();
 		labels = new LinkedList<Node>();
@@ -362,71 +363,64 @@ public class ClassChecker extends BaseChecker {
 	
 	public boolean findNameInContext( Node node, String name, Type context, boolean directAccess  ) //directAccess is true if there is no prefix and false if there is
 	{		
-		if( !(context instanceof ClassInterfaceBaseType) )
-			return false; //deal with packages here eventually?
-		
-		ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)context;
-		
-		if(outerClass.containsField(name))
+		if( context instanceof PackageType )
 		{
-			node.setType(outerClass.getField(name).getType());
-			node.setModifiers(outerClass.getField(name).getModifiers());
-			node.addModifier(ModifierSet.ASSIGNABLE);
 			
-			if( directAccess && ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
-				addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
 			
-			return true;			
 		}
-		
-		
-		/*//made FieldAndMethodChecker add fields and methods from parent classes
-		
-		if( outerClass instanceof ClassType ) //check parents
-		{
-			ClassType parent = ((ClassType)outerClass).getExtendType();
+		else if( context instanceof InterfaceType )
+		{			
+			InterfaceType interfaceType = (InterfaceType)context;
 			
-			while( parent != null )
-			{				
-				if(parent.containsField(name))
-				{
-					Node field = parent.getField(name);
-					node.setType(field.getType());
-					node.setModifiers(field.getModifiers());
-					node.addModifier(ModifierSet.ASSIGNABLE);
+			if( interfaceType.recursivelyContainsMethod( name ) )
+			{
+				node.setType( new UnboundMethodType( name, interfaceType ) );				
+				return true;
+			}			
+		}
+		else if( context instanceof ClassType )
+		{
+			ClassType classType = (ClassType)context;
 					
-					if( ModifierSet.isPrivate(field.getModifiers()))
-						addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
-					
-					if( directAccess && ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
-						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
-					
-					return true;			
-				}
+			if(classType.recursivelyContainsField(name))
+			{
+				Node field = classType.recursivelyGetField(name);
+				node.setType(field.getType());
+				node.setModifiers(field.getModifiers());
+				node.addModifier(ModifierSet.ASSIGNABLE);
 				
-				parent = parent.getExtendType();
+				if( ModifierSet.isPrivate(field.getModifiers()) && currentType != classType   )
+					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
+				
+				if( directAccess && ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
+					addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
+				
+				return true;			
+			}
+				
+			if( classType.recursivelyContainsMethod(name))
+			{
+				node.setType( new UnboundMethodType( name, classType ) );				
+				return true;
+			}
+			
+			if( classType.recursivelyContainsInnerClass(name))
+			{
+				Type innerClass = classType.recursivelyGetInnerClass(name);
+				node.setType(innerClass);
+				node.setModifiers(ModifierSet.TYPE_NAME);
+				return true;
 			}
 		}
-		*/
-		
-		List<MethodSignature> methods = outerClass.getMethods(name);		
 
-		//unbound method (it gets bound when you supply args)
-		if( methods != null && methods.size() > 0 )
-		{
-			node.setType( new UnboundMethodType( name, outerClass ) );				
-			return true;
-		}		
-		
 		return false;
 	}
 	
 	
 	public boolean findName( Node node, String name ) 
-	{		
+	{
+ 		// first we check to see if this name is a type
  		Type type = lookupType(name);
-
- 	// first we check to see if this name is a type
 		if(type != null)
 		{	
 			node.setType(type);
@@ -436,32 +430,32 @@ public class ClassChecker extends BaseChecker {
 			return true;
 		}		
 	
-			// now go through the scopes trying to find the variable
-			Node declaration = findSymbol( name );				
-			if( declaration != null ) 
-			{
-				node.setType(declaration.getType());
-				node.setModifiers(declaration.getModifiers());
-				node.addModifier(ModifierSet.ASSIGNABLE);
-				return true;
-			}
-				
-			// now check the parameters of the method
-			MethodType methodType = null;
+		// first go through the scopes trying to find the variable
+		Node declaration = findSymbol( name );				
+		if( declaration != null ) 
+		{
+			node.setType(declaration.getType());
+			node.setModifiers(declaration.getModifiers());
+			node.addModifier(ModifierSet.ASSIGNABLE);
+			return true;
+		}
 			
-			if( curMethod != null  )
-				methodType = (MethodType)curMethod.getType();
+		// now check the parameters of the method
+		MethodType methodType = null;
+		
+		if( curMethod != null  )
+			methodType = (MethodType)curMethod.getType();
+		
+		if(methodType != null && methodType.containsParam(name))
+		{	
+			node.setType(methodType.getParameterType(name).getType());
+			node.setModifiers(methodType.getParameterType(name).getModifiers());
+			node.addModifier(ModifierSet.ASSIGNABLE);
+			return true;
+		}
 			
-			if(methodType != null && methodType.containsParam(name))
-			{	
-				node.setType(methodType.getParameterType(name).getType());
-				node.setModifiers(methodType.getParameterType(name).getModifiers());
-				node.addModifier(ModifierSet.ASSIGNABLE);
-				return true;
-			}
-				
-			// check to see if it's a field or a method			
-			return findNameInContext( node, name, currentType, true );
+		// check to see if it's a field or a method			
+		return findNameInContext( node, name, currentType, true );
 	}
 	
 	

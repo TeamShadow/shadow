@@ -1,7 +1,6 @@
 package shadow.typecheck.type;
 
 
-
 public class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string that represents the type */
@@ -18,10 +17,11 @@ public class Type {
 		ERROR,
 		EXCEPTION,
 		INTERFACE,
-		METHOD,
+		METHOD,	
+		PACKAGE,
 		SEQUENCE,
 		UNBOUND_METHOD,
-		VIEW,
+		VIEW,		
 		UNKNOWN
 	};
 	
@@ -120,9 +120,8 @@ public class Type {
 	public boolean equals(Object o) {
 		if( o != null && o instanceof Type )
 		{
-			Type t = (Type)o;
-			//null matches everything... could this ever be a problem?
-			return  typeName.equals(NULL.typeName) || typeName.equals(t.typeName);
+			//null type matches everything, could this ever be a problem?
+			return this == Type.NULL || o == Type.NULL || o == this;
 		}
 		else
 			return false;

@@ -9,6 +9,7 @@ import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.Type;
 
 public class TypeChecker {
@@ -41,6 +42,7 @@ public class TypeChecker {
 		//collector.addOutsideTypes(file);
 		Map<String, Type> typeTable = collector.getTypeTable();
 		List<File> importList = collector.getImportList();
+		PackageType packageTree = collector.getPackageTree();		
 	
 		
 		// see how many errors we found
@@ -50,7 +52,7 @@ public class TypeChecker {
 			return false;
 		}
 		
-		FieldAndMethodChecker builder = new FieldAndMethodChecker(debug, typeTable, importList );
+		FieldAndMethodChecker builder = new FieldAndMethodChecker(debug, typeTable, importList, packageTree );
 		builder.buildTypes( collector.getFiles() );
 		 //walker = new ASTWalker(builder);
 		
@@ -71,7 +73,7 @@ public class TypeChecker {
 			return false;
 		}
 		
-		ClassChecker checker = new ClassChecker(debug, typeTable, importList );
+		ClassChecker checker = new ClassChecker(debug, typeTable, importList, packageTree );
 		ASTWalker walker = new ASTWalker(checker);
 		
 		// now go through and check the whole class

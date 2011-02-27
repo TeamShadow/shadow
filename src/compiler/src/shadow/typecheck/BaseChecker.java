@@ -11,6 +11,7 @@ import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.Type;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
@@ -18,6 +19,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected ArrayList<String> errorList;
 	protected Map<String, Type> typeTable; /** Holds all of the types we know about */
 	protected List<File> importList; /** Holds all of the imports we know about */
+	protected PackageType packageTree;
+	
+
+	/** Holds the package tree structure (for name lookups) */
 	protected Type currentType = null;
 	protected boolean debug;	
 	
@@ -49,11 +54,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return importList;
 	}
 	
-	public BaseChecker(boolean debug, Map<String, Type> typeTable, List<File> importList  ) {
+	public BaseChecker(boolean debug, Map<String, Type> typeTable, List<File> importList, PackageType packageTree  ) {
 		errorList = new ArrayList<String>();
 		this.debug = debug;
 		this.typeTable = typeTable;
 		this.importList = importList;
+		this.packageTree = packageTree;
 	}
 	
 	/*
@@ -173,7 +179,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	public final Type lookupType( String name )
 	{
-				return lookupType( name, currentType );
+		return lookupType( name, currentType );
 	}
 	
 	public final Type lookupType( String name, Type outerClass )
@@ -196,5 +202,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	public int getErrorCount() {
 		return errorList.size();
+	}
+	
+	public PackageType getPackageTree()
+	{
+		return packageTree;
 	}
 }

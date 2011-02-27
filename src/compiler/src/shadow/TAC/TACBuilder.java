@@ -71,6 +71,12 @@ public class TACBuilder extends AbstractASTVisitor {
 			for(MethodSignature ms:m.getValue()) {
 				SimpleNode astNode = (SimpleNode)ms.getASTNode();
 				
+				if( astNode == null )
+				{
+					System.out.println("Currently using a null AST node for automatically generated default constructors");
+					continue;
+				}
+				
 				// there is nothing to build for native methods
 				if(ModifierSet.isNative(astNode.getModifiers()))
 					continue;

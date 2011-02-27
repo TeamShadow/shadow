@@ -30,21 +30,118 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.Type;
 
-public class FieldAndMethodChecker extends BaseChecker {	
+public class FieldAndMethodChecker extends BaseChecker {
 	
-	public FieldAndMethodChecker(boolean debug, Map<String, Type> typeTable, List<File> importList ) {
-		super(debug, typeTable, importList);
+	public FieldAndMethodChecker(boolean debug, Map<String, Type> typeTable, List<File> importList, PackageType packageTree ) {
+		super(debug, typeTable, importList, packageTree );		
 	}
 	
 	public void buildTypes( Map<File, Node> files ) throws ShadowException
 	{
 		ASTWalker walker = new ASTWalker(this);
 		
+		//walk over all the files
 		for( Node node : files.values() )
 			walker.walk(node);
 		
+		//deal with class problems
+		for( Type type : typeTable.values() ) 
+		{
+			if( type instanceof ClassType )
+			{
+				ClassType classType = (ClassType)type;
+				//if no constructors, add the default one
+				classType.addMethod("constructor", new MethodSignature( "constructor", 0, null ) );
+				//note that the node is null for the default constructor, because nothing was made
+				
+				
+				
+				//check for circular class hierarchy				
+				ClassType parent = classType.getExtendType();
+				HashSet<ClassType> hierarchy = new HashSet<ClassType>();
+				hierarchy.add(classType);
+				
+				boolean circular = false;
+				
+				while( parent != null && !circular )
+				{
+					if( hierarchy.contains(parent) )	
+					{
+						addError(Error.INVL_TYP, "Circular type hierarchy for class " + type );
+						circular = true;
+					}
+					else
+						hierarchy.add(parent);
+					parent = parent.getExtendType();
+				}
+
+				if( !circular )
+				{
+					//check to see if all interfaces are satisfied
+					for( InterfaceType _interface : classType.getInterfaces() )
+					{
+						//check for circular interface issues first
+						if( _interface.isCircular() )
+							addError(Error.INVL_TYP, "Interface " + _interface + " has a circular extends hierarchy" );
+						else if( !classType.satisfiesInterface(_interface) )
+							addError(Error.INVL_TYP, "Type " + classType + " does not implement interface " + _interface );					
+					}
+										
+					/* Check overridden methods to make sure:
+					 * 1. All overrides match exactly  (if it matches everything but return type.... trouble!)
+					 * 2. No final or immutable methods have been overridden
+					 * 3. No changes from static to regular or vice versa
+					 * 4. No overridden methods have been narrowed in access 
+					 */			
+					parent = classType.getExtendType();
+					if( parent != null)
+					{
+						for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
+							for( MethodSignature signature : signatures )
+							{
+								if( parent.recursivelyContainsIndistinguishableMethod(signature) )
+								{
+									MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
+									Node parentNode = parentSignature.getASTNode();
+									Node node = signature.getASTNode();
+									int parentModifiers;
+									int modifiers;
+									
+									if( parentNode == null )
+										parentModifiers = 0;
+									else
+										parentModifiers = parentNode.getModifiers();
+									
+									if( node == null )
+										modifiers = 0;
+									else
+										modifiers = node.getModifiers();									
+									
+									if( !parentSignature.equals( signature ) )
+										addError( parentNode, "Overriding method " + signature + " differs only by return type from " + parentSignature );
+									else if( ModifierSet.isFinal(parentModifiers) || ModifierSet.isImmutable(parentModifiers) )
+										addError( parentNode, "Method " + signature + " cannot override  final or immutable methods" );
+									else if( ModifierSet.isStatic(parentModifiers) && !ModifierSet.isStatic(modifiers) )
+										addError( parentNode, "Non-static method " + signature + " cannot override static method " + parentSignature );
+									else if( !ModifierSet.isStatic(parentModifiers) && ModifierSet.isStatic(modifiers) )
+										addError( parentNode, "Static method " + signature + " cannot override non-static method " + parentSignature );
+									else if( ModifierSet.isPublic(parentModifiers) && (ModifierSet.isPrivate(modifiers) || ModifierSet.isProtected(modifiers)) )
+										addError( parentNode, "Overrding method " + signature + " cannot reduce visibility of public method " + parentSignature );
+									else if( ModifierSet.isProtected(parentModifiers) && ModifierSet.isPrivate(modifiers)  )
+										addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
+								}
+							}
+					}
+				}				
+			}
+		}
+		
+		
+		/*  Don't think this is right.  We shouldn't lump all the parent fields and methods into the class. 
+		 *  We can retrieve stuff when we need it and keep the class hierarchies unmixed. 
 		for( Type type : typeTable.values() ) 
 		{
 			if( type instanceof ClassType ) //adds all parent fields and methods and check for compliance with all interfaces
@@ -100,10 +197,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 				for( InterfaceType _interface : classType.getInterfaces() )
 				{
 					if( !classType.satisfiesInterface(_interface) )
-						addError(Error.INVL_TYP, "Type " + classType + " does not implement inteface " + _interface );					
+						addError(Error.INVL_TYP, "Type " + classType + " does not implement interface " + _interface );					
 				}
 			}
-		}		
+		}	
+		
+		*/
 	}
 	
 	
@@ -234,7 +333,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 				String symbol = child.jjtGetChild(0).getImage();
 				
 				// make sure we don't already have this symbol
-				if(currentClass.containsField(symbol) || currentClass.getMethods(symbol) != null || currentClass.containsInnerClass(symbol) )
+				if(currentClass.containsField(symbol) || currentClass.containsMethod(symbol) || currentClass.containsInnerClass(symbol) )
 				{
 					addError(child.jjtGetChild(0), Error.MULT_SYM, symbol);
 					return WalkType.NO_CHILDREN;
@@ -363,7 +462,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			if( currentClass.containsIndistinguishableMethod(signature) )
 			{				
 				// get the first signature
-				MethodSignature method = currentClass.getIndistinguishableMethodSignature(signature);				
+				MethodSignature method = currentClass.getIndistinguishableMethod(signature);				
 				addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getLineNumber());
 				return false;
 			}	

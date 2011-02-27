@@ -32,6 +32,7 @@ import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Type.Kind;
 
@@ -41,13 +42,14 @@ public class TypeCollector extends BaseChecker
 	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors only
 	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();	
 	protected String currentName = "";
-	protected Map<File, Node> files = new HashMap<File, Node>();
-	
+	protected Map<File, Node> files = new HashMap<File, Node>();	
 	
 	public TypeCollector(boolean debug)
 	{		
-		super(debug, new HashMap<String, Type>(), new LinkedList<File>() );
+		super(debug, new HashMap<String, Type>(), new LinkedList<File>(), new PackageType() );
 		// put all of our built-in types into the TypeTable
+		// change this step eventually to pull from the shadow.standard package
+		
 		addType(Type.OBJECT.getTypeName(),	Type.OBJECT);
 		addType(Type.BOOLEAN.getTypeName(),	Type.BOOLEAN);
 		addType(Type.BYTE.getTypeName(),		Type.BYTE);
@@ -146,10 +148,7 @@ public class TypeCollector extends BaseChecker
 		walker.walk(node);
 		files.put( input, node );
 		
-		//get import list
-		List<File> fileList = getImportList();
-		
-		//add files in directory
+		//add files in directory BEFORE imports
 		File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
 				{
 					public boolean accept(File dir, String name)
@@ -158,8 +157,11 @@ public class TypeCollector extends BaseChecker
 					}
 				}
 		);		
-		fileList.addAll(Arrays.asList(directoryFiles));
+		List<File> fileList  = Arrays.asList(directoryFiles);
 		
+		
+		//Add import list
+		fileList.addAll(getImportList());
 		
 		for( File other : fileList )
 		{			
@@ -174,7 +176,9 @@ public class TypeCollector extends BaseChecker
 				
 				Map<String, Type> outsideTypes = collector.getTypeTable();
 				files.put(other, otherNode);
-												
+				
+				
+				//by adding in order, we preserve proper name hiding (might happen if we have multiple class paths containing
 				for( String outsideTypeName : outsideTypes.keySet() )
 				{	
 					if( !typeTable.containsKey(outsideTypeName))
@@ -182,10 +186,13 @@ public class TypeCollector extends BaseChecker
 				}
 				
 				//add in the imports from the other file as long as they aren't in the list already
+				//NO!  This isn't C.  We only need imports for type information.  We don't need imports of imports for anything.				
+				/*
 				List<File> otherImports = collector.getImportList();
 				for( File otherImport : otherImports )
 					if( !fileList.contains(otherImport) )
-						fileList.add(otherImport);	
+						fileList.add(otherImport);
+				*/	
 			}
 		}	
 		
@@ -381,8 +388,9 @@ public class TypeCollector extends BaseChecker
 	{
 		if( secondVisit )
 		{
-			Node name = node.jjtGetChild(0);
-			currentName = name.getImage();		
+			Node name = node.jjtGetChild(0);			
+			currentName = name.getImage();	//name of all types start in this package
+			packageTree.addPackagePath(currentName);
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -397,8 +405,7 @@ public class TypeCollector extends BaseChecker
 			Node name = node.jjtGetChild(0);
 			String path = name.getImage().replaceAll("\\.", File.pathSeparator);
 			List<File> importPaths = Configuration.getInstance().getImportPaths();
-			boolean success = false;
-			
+			boolean success = false;			
 							
 			for( File importPath : importPaths )
 			{	
@@ -417,6 +424,7 @@ public class TypeCollector extends BaseChecker
 						
 						importList.addAll( Arrays.asList( matchingFiles ) );
 						success = true;
+						break;
 					}
 				}
 				else
@@ -425,12 +433,15 @@ public class TypeCollector extends BaseChecker
 					{
 						importList.add(fullPath);
 						success = true;
+						break;
 					}
-				}				
-			}
+				}
+			}			
+			
+			if( !success )
+				addError(node, "Import " + name.getImage() + " not found");
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
-
 }

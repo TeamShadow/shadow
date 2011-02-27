@@ -65,16 +65,26 @@ public abstract class ClassInterfaceBaseType extends Type {
 	
 	public Map<String, Node> getFields() {
 		return fieldTable;
+	}	
+	
+	public boolean containsMethod(String symbol)
+	{
+		return methodTable.get(symbol) != null;		
+	}	
+	
+	public boolean containsMethod(MethodSignature signature)
+	{
+		return containsMethod( signature, 0 );		
 	}
 	
 	
-	public boolean containsMethod(MethodSignature signature)
+	public boolean containsMethod(MethodSignature signature, int modifiers ) //must have certain modifiers (usually public)
 	{
 		List<MethodSignature> list = methodTable.get(signature.getSymbol());
 		
 		if( list != null )
 			for(MethodSignature existing : list )
-				if( existing.equals(signature))
+				if( existing.equals(signature) && (existing.getASTNode().getModifiers() & modifiers ) == modifiers ) 
 					return true;
 		
 		return false;
@@ -110,14 +120,13 @@ public abstract class ClassInterfaceBaseType extends Type {
 	public List<MethodSignature> getMethods(String methodName) {
 		return methodTable.get(methodName);
 	}
-	
 		
 	/**
 	 * This function is only used for error reporting as it finds an indistinguishable signature.
 	 * @param signature
 	 * @return
 	 */
-	public MethodSignature getIndistinguishableMethodSignature(MethodSignature signature)
+	public MethodSignature getIndistinguishableMethod(MethodSignature signature)
 	{		
 		for(MethodSignature ms : methodTable.get(signature.getSymbol()))
 		{
