@@ -11,6 +11,7 @@ import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACAssign;
 import shadow.TAC.nodes.TACBinaryOperation;
 import shadow.TAC.nodes.TACBranch;
+import shadow.TAC.nodes.TACCatch;
 import shadow.TAC.nodes.TACJoin;
 import shadow.TAC.nodes.TACLoop;
 import shadow.TAC.nodes.TACMethodCall;
@@ -19,6 +20,7 @@ import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNode.TACComparison;
 import shadow.TAC.nodes.TACNode.TACOperation;
 import shadow.TAC.nodes.TACReturn;
+import shadow.TAC.nodes.TACTry;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocationExpression;
 import shadow.parser.javacc.ASTArgumentList;
@@ -42,6 +44,7 @@ import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTForInit;
 import shadow.parser.javacc.ASTForStatement;
 import shadow.parser.javacc.ASTForUpdate;
+import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTIsExpression;
@@ -65,6 +68,7 @@ import shadow.parser.javacc.ASTShiftExpression;
 import shadow.parser.javacc.ASTStatement;
 import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.ASTStatementExpressionList;
+import shadow.parser.javacc.ASTTryStatement;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
@@ -1016,6 +1020,20 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		// simply a type followed by an ID
+		TACVariable var = new TACVariable(node.jjtGetChild(1).getImage(), node.jjtGetChild(0).getType());
+		TACNoOp noop = new TACNoOp(node, var, null, null);
+		
+		// link in the node
+		linkToEnd(node, noop);
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
@@ -1348,6 +1366,57 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		linkToEnd(node, loop, noop);
 
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTTryStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		// Block followed by zero or more FormalParameters followed by possibly one Block
+
+		SimpleNode tryBlock = (SimpleNode)node.jjtGetChild(0);
+
+		// create the try node and link it in
+		TACTry tryNode = new TACTry(node, null);
+		tryNode.setNext(tryBlock.getEntryNode());
+		tryBlock.getEntryNode().setParent(tryNode);
+
+		// link in the try block to this node
+		linkToEnd(node, tryNode, tryBlock.getExitNode());
+		
+		// go through all the possible catches
+		int i = 1;
+		for(; i < node.jjtGetNumChildren(); i += 2) {
+			// see if we have a finally
+			if(node.jjtGetChild(i) instanceof ASTBlock) {
+				TACNode curEntry = ((SimpleNode)node.jjtGetChild(i)).getEntryNode();
+				
+				// add this to our try block
+				tryNode.setFinallyNode(curEntry);
+				
+				// link it to the end
+				linkToEnd(node, curEntry);
+			}
+			
+			// curCatch only has a TACNoOp attached to entry & exit
+			SimpleNode curCatch = (SimpleNode)node.jjtGetChild(i);
+			SimpleNode curBlock = (SimpleNode)node.jjtGetChild(i+1);
+			
+			// create a catch block for it
+			TACCatch catchNode = new TACCatch(curCatch, ((SimpleNode)node).getExitNode(), curBlock.getEntryNode());
+			
+			// add the variable
+			TACVariable var = ((TACNoOp)curCatch.getEntryNode()).getVariable();
+			catchNode.setVariable(var);
+			
+			// add this to our try block
+			tryNode.addCatchNode(catchNode);
+
+			// link in this catch node
+			linkToEnd(node, catchNode);
+		}
+		
 		return WalkType.POST_CHILDREN;
 	}
 }

@@ -2,7 +2,6 @@ package shadow.TAC;
 
 import shadow.AST.ASTWalker;
 import shadow.TAC.nodes.TACNode;
-import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;

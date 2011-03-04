@@ -1,23 +1,16 @@
 class Basic {
 
-    private int a = 7;
-    private int b;
-
-    public static main(String[] args) => () {
-        int x, y;
-        
-        printString("Hello World");
+    public thrower() => () throws Basic {
+        throw new Basic();
     }
     
-    public test(int a) => (int) {
-        int x = b;
-
-        b = x;
-                
-        test(this.b);
-        
-        return a;
+    public test() => () {
+        try {
+            thrower();
+        } catch(Basic b) {
+            int i;
+            i += 2;
+        }
     }
     
-    public static native printString(String mgs) => ();
 } 
