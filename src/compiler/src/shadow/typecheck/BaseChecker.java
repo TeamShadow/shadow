@@ -3,6 +3,7 @@ package shadow.typecheck;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,15 +12,15 @@ import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.Type;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 
 	protected ArrayList<String> errorList;
-	protected Map<String, Type> typeTable; /** Holds all of the types we know about */
+	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
 	protected List<File> importList; /** Holds all of the imports we know about */
-	protected PackageType packageTree;
+	protected Package packageTree;	
+	protected Package currentPackage;
 	
 
 	/** Holds the package tree structure (for name lookups) */
@@ -39,14 +40,30 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		//abstract String getStr();
 	}
 	
-	public final Map<String, Type> getTypeTable()
+	public final HashMap<Package, HashMap<String, Type>> getTypeTable()
 	{
 		return typeTable;
 	}
 	
 	public void addType( String name, Type type  )
 	{
-		typeTable.put(name, type);		
+		addType( name, type, packageTree );
+	}
+	
+	public void addType( String name, Type type, Package p  )
+	{
+		//if( type.getOuter() == null ) //only outer classes are added to the packages, inner classes are accessible through outer
+			p.addType(type);
+		
+		HashMap<String, Type> types = typeTable.get( p );
+		
+		if( types == null )
+		{
+			types = new HashMap<String, Type>();
+			typeTable.put(p, types);
+		}
+		
+		types.put(name, type);		
 	}
 	
 	public final List<File> getImportList()
@@ -54,10 +71,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return importList;
 	}
 	
-	public BaseChecker(boolean debug, Map<String, Type> typeTable, List<File> importList, PackageType packageTree  ) {
+	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, Type>> hashMap, List<File> importList, Package packageTree  ) {
 		errorList = new ArrayList<String>();
 		this.debug = debug;
-		this.typeTable = typeTable;
+		this.typeTable = hashMap;
 		this.importList = importList;
 		this.packageTree = packageTree;
 	}
@@ -176,35 +193,100 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		}
 	}
 	
-	
-	public final Type lookupType( String name )
-	{
-		return lookupType( name, currentType );
-	}
-	
-	public final Type lookupType( String name, Type outerClass )
+	//outer class is just a guess, not a sure thing
+	//this method is used when starting from a specific point (as in when looking up extends lists), rather than from the current type
+	public final Type lookupTypeStartingAt( String name, Type outer )
 	{	
-		if( outerClass == null )
+		Type type = null;
+		
+		//try starting point
+		if( outer != null )
 		{
-			//check imports here, eventually
-			return typeTable.get( name );
-		}
-		else
-		{
-			Type type = typeTable.get( outerClass + "." + name);
+			type = lookupType( name, outer );
 			if( type != null )
 				return type;
+		
+			//walk up packages from there
+			Package p = outer.getPackage();		
+			while( p != null)
+			{
+				type = lookupType( name, p  );
+				if( type != null )
+					return type;			
+				
+				p = p.getParent();
+			}			
+		}
+		
+		//still not found, try all packages
+		for( Package _package : typeTable.keySet() )
+		{
+			type = lookupType( name, _package  );
+			if( type != null )
+				return type;			
+		}
+		
+		return null;	
+	}
+	
+	//nothing known, start with current class
+	public final Type lookupType( String name )
+	{
+		if( name.contains("@"))
+		{
+			int atSign = name.indexOf('@');
+			return lookupType( name.substring(0, atSign), name.substring(atSign + 1 ) );
+		}
+		else
+			return lookupTypeStartingAt( name, currentType );
+	}
+		
+	//outer class known, no need to look at packages
+	public final Type lookupType( String name, Type outerClass )
+	{	
+		Type type;
+		
+		Package p = outerClass.getPackage();
+		
+		if( p == null )
+			p = packageTree;
+		
+		Map<String, Type> types = typeTable.get(p);
+		
+		String prefix = outerClass.getTypeName();		
+		
+		while( !prefix.isEmpty())
+		{
+			if( types.containsKey(prefix + "." + name))
+				return types.get(prefix + "." + name);
+			
+			if( prefix.contains("."))
+				prefix = prefix.substring(0, prefix.lastIndexOf('.'));
 			else
-				//recursive calls
-				return lookupType( name, outerClass.getOuter() );
-		}	 
+				prefix = "";
+		}
+		
+		return types.get(name);
+	}
+	
+	//get type from specific package
+	public final Type lookupType( String name, Package p )
+	{			
+		return typeTable.get(p).get(name);
+	}
+	
+	public final Type lookupType( String packageName, String name )
+	{			
+		Package p = packageTree.getChild(packageName);
+		
+		return typeTable.get(p).get(name);
 	}
 	
 	public int getErrorCount() {
 		return errorList.size();
 	}
 	
-	public PackageType getPackageTree()
+	public Package getPackageTree()
 	{
 		return packageTree;
 	}

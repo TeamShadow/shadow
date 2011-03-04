@@ -136,5 +136,50 @@ public abstract class ClassInterfaceBaseType extends Type {
 		
 		return null;
 	}
-
+	
+	protected Type findType(String[] names, int i)
+	{
+		Type type;
+		for( String name : innerClasses.keySet() )
+		{
+			if( name.equals( names[i]) )
+			{
+				if( i == names.length - 1)
+					return innerClasses.get(name);
+				
+				type = innerClasses.get(name).findType(names, i + 1);
+				if( type != null )
+					return type;
+			}			
+		}
+		
+		for( String name : fieldTable.keySet() )
+		{
+			if( name.equals( names[i]) )
+			{
+				if( i == names.length - 1)
+					return fieldTable.get(name).getType();
+				
+				type = fieldTable.get(name).getType().findType(names, i + 1);
+				if( type != null )
+					return type;
+			}			
+		}
+		
+		for( String name : methodTable.keySet() )
+		{
+			if( name.equals( names[i]) )
+			{
+				UnboundMethodType methodType = new UnboundMethodType(name, this ); 
+				if( i == names.length - 1)
+					return methodType;
+				
+				type = methodType.findType(names, i + 1);
+				if( type != null )
+					return type;
+			}			
+		}
+		
+		return null;
+	}
 }

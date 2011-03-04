@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,12 +16,17 @@ import java.util.TreeSet;
 import shadow.Configuration;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
+import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTEnumDeclaration;
 import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
+import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPackageDeclaration;
+import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -32,7 +38,6 @@ import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Type.Kind;
 
@@ -42,11 +47,11 @@ public class TypeCollector extends BaseChecker
 	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors only
 	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();	
 	protected String currentName = "";
-	protected Map<File, Node> files = new HashMap<File, Node>();	
+	protected Map<File, Node> files = new HashMap<File, Node>();
 	
 	public TypeCollector(boolean debug)
 	{		
-		super(debug, new HashMap<String, Type>(), new LinkedList<File>(), new PackageType() );
+		super(debug, new HashMap< Package, HashMap<String, Type>>(), new LinkedList<File>(), new Package() );
 		// put all of our built-in types into the TypeTable
 		// change this step eventually to pull from the shadow.standard package
 		
@@ -76,67 +81,70 @@ public class TypeCollector extends BaseChecker
 	{
 		List<String> list;
 		
-		for( Type type : getTypeTable().values() ) //look through all types, updating their extends and implements
-		{	
-			TreeSet<String> missingTypes = new TreeSet<String>();
-			
-			if( type instanceof ClassType ) //includes error, exception, and enum (for now)
-			{				
-				if( !type.isBuiltIn() )
-				{
-					ClassType classType = (ClassType)type;
-					if( extendsTable.containsKey(type))
+		for( Package p : getTypeTable().keySet() )
+		{
+			for( Type type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
+			{	
+				TreeSet<String> missingTypes = new TreeSet<String>();
+				
+				if( type instanceof ClassType ) //includes error, exception, and enum (for now)
+				{				
+					if( !type.isBuiltIn() )
 					{
-						list = extendsTable.get(type);
-						ClassType parent = (ClassType)lookupType(list.get(0), classType.getOuter()); //only one thing in extends lists for classes
-						if( parent == null )						
-							missingTypes.add(list.get(0));
-						else							
-							classType.setExtendType(parent);
-					}
-					else if( type.getKind() == Kind.CLASS )
-						classType.setExtendType(Type.OBJECT);
-					else if( type.getKind() == Kind.ENUM )
-						classType.setExtendType(Type.ENUM);
-					else if( type.getKind() == Kind.ERROR )
-						classType.setExtendType(Type.ERROR);
-					else if( type.getKind() == Kind.EXCEPTION )
-						classType.setExtendType(Type.EXCEPTION);
-					
-					if( implementsTable.containsKey(type))
-					{
-						list = implementsTable.get(type);			
-						for( String name : list )
+						ClassType classType = (ClassType)type;
+						if( extendsTable.containsKey(type))
 						{
-							InterfaceType _interface = (InterfaceType)lookupType(name, classType.getOuter());
-							if( _interface == null )							
-								missingTypes.add(name);
+							list = extendsTable.get(type);
+							ClassType parent = (ClassType)lookupTypeStartingAt(list.get(0), classType.getOuter()); //only one thing in extends lists for classes
+							if( parent == null )						
+								missingTypes.add(list.get(0));
 							else							
-								classType.addInterface(_interface);
+								classType.setExtendType(parent);
+						}
+						else if( type.getKind() == Kind.CLASS )
+							classType.setExtendType(Type.OBJECT);
+						else if( type.getKind() == Kind.ENUM )
+							classType.setExtendType(Type.ENUM);
+						else if( type.getKind() == Kind.ERROR )
+							classType.setExtendType(Type.ERROR);
+						else if( type.getKind() == Kind.EXCEPTION )
+							classType.setExtendType(Type.EXCEPTION);
+						
+						if( implementsTable.containsKey(type))
+						{
+							list = implementsTable.get(type);			
+							for( String name : list )
+							{
+								InterfaceType _interface = (InterfaceType)lookupTypeStartingAt(name, classType.getOuter());
+								if( _interface == null )							
+									missingTypes.add(name);
+								else							
+									classType.addInterface(_interface);
+							}
 						}
 					}
 				}
-			}
-			else if( type instanceof InterfaceType ) 
-			{
-				InterfaceType interfaceType = (InterfaceType)type;
-				if( extendsTable.containsKey(type))
+				else if( type instanceof InterfaceType ) 
 				{
-					list = extendsTable.get(type);
-					for( String name : list )
+					InterfaceType interfaceType = (InterfaceType)type;
+					if( extendsTable.containsKey(type))
 					{
-						InterfaceType _interface = (InterfaceType)lookupType(name, interfaceType.getOuter());
-						if( _interface == null )						
-							missingTypes.add(name);
-						else							
-							interfaceType.addExtendType(_interface);
-					}
-				}				
+						list = extendsTable.get(type);
+						for( String name : list )
+						{
+							InterfaceType _interface = (InterfaceType)lookupTypeStartingAt(name, interfaceType.getOuter());
+							if( _interface == null )						
+								missingTypes.add(name);
+							else							
+								interfaceType.addExtendType(_interface);
+						}
+					}				
+				}
+				
+				if( missingTypes.size() > 0 )	
+					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types " + missingTypes);			
 			}
-			
-			if( missingTypes.size() > 0 )	
-				addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types " + missingTypes);			
-		}	
+		}
 	}
 	
 	
@@ -157,8 +165,8 @@ public class TypeCollector extends BaseChecker
 					}
 				}
 		);		
-		List<File> fileList  = Arrays.asList(directoryFiles);
-		
+		List<File> fileList = new ArrayList<File>();
+		fileList.addAll(Arrays.asList(directoryFiles));	
 		
 		//Add import list
 		fileList.addAll(getImportList());
@@ -174,15 +182,20 @@ public class TypeCollector extends BaseChecker
 				walker = new ASTWalker( collector );		
 				walker.walk(otherNode);							
 				
-				Map<String, Type> outsideTypes = collector.getTypeTable();
+				HashMap<Package, HashMap<String, Type>> outsideTypes = collector.getTypeTable();
 				files.put(other, otherNode);
 				
 				
-				//by adding in order, we preserve proper name hiding (might happen if we have multiple class paths containing
-				for( String outsideTypeName : outsideTypes.keySet() )
+				//by adding in order, we preserve proper name hiding (might happen?)
+				for( Package p : outsideTypes.keySet() )
 				{	
-					if( !typeTable.containsKey(outsideTypeName))
-						typeTable.put(outsideTypeName, outsideTypes.get(outsideTypeName));				
+					if( typeTable.containsKey(p))
+					{
+						HashMap<String,Type> packageTypes = typeTable.get(p);
+						packageTypes.putAll(outsideTypes.get(p));						
+					}
+					else
+						typeTable.put(p, outsideTypes.get(p));
 				}
 				
 				//add in the imports from the other file as long as they aren't in the list already
@@ -276,6 +289,32 @@ public class TypeCollector extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}	
 	
+	
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit )
+			currentType = node.getEnclosingType();
+		else
+			currentType = node.jjtGetParent().getType();
+			
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )
+		{
+			if( node.jjtGetNumChildren() > 0 ) 
+			{
+				Node child = node.jjtGetChild(0); 
+				if( child instanceof ASTUnqualifiedName )
+					node.setImage(child.getImage() + "@" + node.getImage());
+			}
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
 
 	
 	private void enterType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException
@@ -316,14 +355,13 @@ public class TypeCollector extends BaseChecker
 			}
 			
 			addType( currentName, type  );
+			node.setType(type);
 			
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				if( node.jjtGetChild(i).getClass() == ASTExtendsList.class )
 					addExtends( (ASTExtendsList)node.jjtGetChild(i), type );
 				else if( node.jjtGetChild(i).getClass() == ASTImplementsList.class )
 					addImplements( (ASTImplementsList)node.jjtGetChild(i), type );
-			
-			currentType = type;
 		}
 	}
 	
@@ -358,8 +396,8 @@ public class TypeCollector extends BaseChecker
 		else
 			currentName = currentName.substring(0, index);
 		
-		if( currentType != null )
-			currentType = currentType.getOuter();
+//		if( currentType != null )
+//			currentType = currentType.getOuter();
 	}
 	
 
@@ -389,8 +427,23 @@ public class TypeCollector extends BaseChecker
 		if( secondVisit )
 		{
 			Node name = node.jjtGetChild(0);			
-			currentName = name.getImage();	//name of all types start in this package
-			packageTree.addPackagePath(currentName);
+			currentName = name.getImage();	//name of all types start in this package			
+			currentPackage = packageTree.addPackagePath(currentName); 
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			if( node.jjtGetNumChildren() > 0 )
+			{
+				Node child = node.jjtGetChild(0);
+				node.setImage( child.getImage() + "@" + node.getImage() );
+			}
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -403,45 +456,98 @@ public class TypeCollector extends BaseChecker
 		if( secondVisit )
 		{
 			Node name = node.jjtGetChild(0);
-			String path = name.getImage().replaceAll("\\.", File.pathSeparator);
+			String separator = File.separator; //platform independence, we hope 
+			if( separator.equals("\\"))
+				separator = "\\\\";
+			String path = name.getImage().replaceAll("\\.", separator);
 			List<File> importPaths = Configuration.getInstance().getImportPaths();
 			boolean success = false;			
-							
-			for( File importPath : importPaths )
-			{	
-				File fullPath = new File( importPath, path );
 				
-				if( node.isWildcard() )  //ends with .*, must include many files
-				{				
-					if( fullPath.isDirectory() )
-					{
-						File[] matchingFiles = fullPath.listFiles( new FilenameFilter(){							
-							@Override
-							public boolean accept(File dir, String name)
-							{
-								return name.endsWith(".shadow");
-							}    }   );
-						
-						importList.addAll( Arrays.asList( matchingFiles ) );
-						success = true;
-						break;
-					}
-				}
-				else
-				{
-					if( fullPath.isFile() && (fullPath.getName().endsWith(".shadow") || fullPath.getName().endsWith(".meta") ))
-					{
-						importList.add(fullPath);
-						success = true;
-						break;
-					}
-				}
-			}			
 			
-			if( !success )
-				addError(node, "Import " + name.getImage() + " not found");
+			if( importPaths != null )
+			{
+				for( File importPath : importPaths )
+				{	
+					if( !path.contains("@"))  //no @, must be a whole package import
+					{		
+						File fullPath = new File( importPath, path );
+						if( fullPath.isDirectory() )
+						{
+							File[] matchingShadow = fullPath.listFiles( new FilenameFilter(){							
+								@Override
+								public boolean accept(File dir, String name)
+								{
+									return name.endsWith(".shadow");
+								}    }   );
+							
+	
+							File[] matchingMeta = fullPath.listFiles( new FilenameFilter(){							
+								@Override
+								public boolean accept(File dir, String name)
+								{
+									return name.endsWith(".meta");
+								}    }   );
+							
+							for( File file : matchingShadow )
+							{
+								String prefix = file.getName().substring(0, file.getName().lastIndexOf(".shadow"));
+								File metaVersion = new File( file.getParent(), prefix + ".meta"  );
+								if( metaVersion.exists() && metaVersion.lastModified() >= file.lastModified() )
+									importList.add(metaVersion);
+								else
+									importList.add(file);
+							}
+							
+							for( File file : matchingMeta )
+								if( !importList.contains(file))
+									importList.add(file);
+							
+							node.setPackage(packageTree.addPackagePath(path));
+							
+							success = true;						
+						}
+					}
+					else
+					{
+						String directory = path.substring(0, path.indexOf('@'));
+						path = path.replaceAll("@", separator);
+						File shadowVersion = new File( importPath, path + ".shadow" );
+						File metaVersion = new File( importPath, path + ".meta" );
+						if( shadowVersion.exists() )
+						{
+							if( metaVersion.exists() && metaVersion.lastModified() >= shadowVersion.lastModified() )												
+								importList.add(metaVersion);
+							else
+								importList.add(shadowVersion);	
+							
+							node.setPackage(packageTree.addPackagePath(directory));
+							success = true;						
+						}
+						else if( metaVersion.exists() )
+						{
+							importList.add(metaVersion);
+							node.setPackage(packageTree.addPackagePath(directory));
+							success = true;						
+						}
+					}
+					
+					if( success )
+						break;
+				}			
+				
+				if( !success )
+					addError(node, "Import " + name.getImage() + " not found");
+			}
 		}
 		
 		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+			currentPackage = packageTree;
+		
+		return WalkType.POST_CHILDREN;			
 	}
 }

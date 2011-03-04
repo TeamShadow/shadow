@@ -1,0 +1,9 @@
+import shadow.utility@Random;
+
+class Imports
+{
+	public static main(String[] args ) => ()
+	{
+		int a = 10;	
+	}
+}

@@ -2,6 +2,7 @@ package shadow.typecheck;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +10,6 @@ import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.Type;
 
 public class TypeChecker {
@@ -40,9 +40,9 @@ public class TypeChecker {
 		//walker.walk(node);
 				
 		//collector.addOutsideTypes(file);
-		Map<String, Type> typeTable = collector.getTypeTable();
+		HashMap<Package, HashMap<String, Type>> typeTable = collector.getTypeTable();
 		List<File> importList = collector.getImportList();
-		PackageType packageTree = collector.getPackageTree();		
+		Package packageTree = collector.getPackageTree();		
 	
 		
 		// see how many errors we found

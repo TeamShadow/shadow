@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import shadow.typecheck.Package;
+
 
 public class Type {
 	//types should not change after construction
@@ -7,7 +9,7 @@ public class Type {
 	private final int modifiers;
 	private final Type outer; //outer class	
 	private final Kind kind;
-	//private Node astNode;	/** This is to link back to the AST, usually not used */
+	private Package _package;
 	
 	// TODO: Provide documentation here
 	public static enum Kind {
@@ -17,8 +19,7 @@ public class Type {
 		ERROR,
 		EXCEPTION,
 		INTERFACE,
-		METHOD,	
-		PACKAGE,
+		METHOD,		
 		SEQUENCE,
 		UNBOUND_METHOD,
 		VIEW,		
@@ -63,61 +64,35 @@ public class Type {
 	}	
 	
 	public Type(String typeName, int modifiers, Type outer, Kind kind ) {
+		this( typeName, modifiers, outer, kind, (outer == null ? null : outer._package ) );
+	}
+	
+	public Type(String typeName, int modifiers, Type outer, Kind kind,  Package _package ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
 		this.outer = outer;
 		this.kind = kind;
-		//this.arrayDimension = 0;
+		this._package = _package;
 	}
 	
-	public String getTypeName() {
+	public String getTypeName() 
+	{
 		return typeName;
 	}
 	
-	public int getModifiers() {
+	public int getModifiers()
+	{
 		return modifiers;
 	}
 
-	/*
-	public void setASTNode(Node node) {
-		this.astNode = node;
-	}
 	
-	public Node getASTNode() {
-		return astNode;
-	}
-	*/
-	
-	public String toString() {
-//		if(arrayDimension == 0)
+	public String toString()
+	{
 			return typeName;
-	/*	
-		StringBuilder sb = new StringBuilder(typeName + "[");
-		
-		for(int i=1; i < arrayDimension; ++i)
-			sb.append(",");
-		
-		sb.append("]");
-		
-		return sb.toString();
-		*/
-	}
-	
-	/*
-	public int getArrayDimension() {
-		return arrayDimension;
-	}
-	
-	public void setArrayDimension(int dimension) {
-		arrayDimension = dimension;
-	}
-	
-	public boolean isArray() {
-		return arrayDimension == 0;
-	}
-	*/
+	}	
 
-	public boolean equals(Object o) {
+	public boolean equals(Object o)
+	{
 		if( o != null && o instanceof Type )
 		{
 			//null type matches everything, could this ever be a problem?
@@ -250,16 +225,11 @@ public class Type {
 	{
 		return outer;
 	}
-	
-	/*
-	public void setKind(Kind kind ) {
-		  this.kind = kind;
-	  }
-	  	*/
-	
-	  public Kind getKind() {
-		  return this.kind;
-	  }
+
+	public Kind getKind()
+	{
+	  return this.kind;
+	}
 
 	
 	/**
@@ -332,5 +302,17 @@ public class Type {
 		this.equals(UINT) ||
 		this.equals(ULONG) ||
 		this.equals(USHORT);
+	}
+
+	//searches for inner classes that follow the name list starting at index i in names
+	//overridden by ClassInterfaceBaseType
+	protected Type findType(String[] names, int i)
+	{
+		return null;
+	}
+	
+	public Package getPackage()
+	{
+		return _package;
 	}
 }

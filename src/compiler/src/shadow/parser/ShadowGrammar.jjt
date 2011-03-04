@@ -549,13 +549,13 @@ ASTCompilationUnit CompilationUnit():
 void PackageDeclaration():
 {}
 {
-  "package" Name() ";"
+  "package" UnqualifiedName() ";"
 }
 
 void ImportDeclaration():
 {}
 {
-  "import" [ "static" ] Name() [ ("." "*"  { jjtThis.setWildcard(true);  }  ) | ("$" [">" | "<"] < VERSION_LITERAL >) ] ";"
+  "import" /*[ "static" ]*/ Name() ["$" [">" | "<"] < VERSION_LITERAL >] ";"  //I don't think we allow static imports
 }
 
 /*
@@ -907,7 +907,7 @@ void ClassOrInterfaceType():
 	Token t;
 }
 {
-  t = <IDENTIFIER> { sb.append(t.image); }[ LOOKAHEAD(2) TypeArguments() ]
+   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@"  ] t = <IDENTIFIER> { sb.append(t.image); }[ LOOKAHEAD(2) TypeArguments() ]
   ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } [ LOOKAHEAD(2) TypeArguments() ] )*
   { jjtThis.setImage(sb.toString()); }
 }
@@ -944,7 +944,7 @@ void PrimitiveType():
 | "long"    { jjtThis.setType(Type.LONG); }
 | "float"   { jjtThis.setType(Type.FLOAT); }
 | "double"  { jjtThis.setType(Type.DOUBLE); }
-| "String"  { jjtThis.setType(Type.STRING); }
+/*| "String"  { jjtThis.setType(Type.STRING); }*/
 | "ubyte"   { jjtThis.setType(Type.UBYTE); }
 | "uint"    { jjtThis.setType(Type.UINT); }
 | "ulong"   { jjtThis.setType(Type.ULONG); }
@@ -974,9 +974,19 @@ void Name():
 	Token t;
 }
 {
-  t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
+  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
   { jjtThis.setImage(sb.toString()); }
 }
+
+void UnqualifiedName():
+{
+	debugPrint("UNQUALIFIED NAME");
+	StringBuffer sb = new StringBuffer();
+	Token t;
+}
+{
+  t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
+  { jjtThis.setImage(sb.toString()); }}
 
 void NameList():
 { debugPrint("NAME LIST"); }
@@ -1191,7 +1201,8 @@ void PrimaryPrefix():
 | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
 //| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(2) MethodCall()
-| t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+| [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+//| Name()
 }
 
 void PrimarySuffix():
@@ -1205,6 +1216,7 @@ void PrimarySuffix():
 //| "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(3) "." MethodCall()
 | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+//|  UnqualifiedName()
 }
 
 void Literal() :

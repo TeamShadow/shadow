@@ -24,6 +24,7 @@ import shadow.parser.javacc.ASTBreakStatement;
 import shadow.parser.javacc.ASTCastExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -40,6 +41,7 @@ import shadow.parser.javacc.ASTForeachStatement;
 import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTIfStatement;
+import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLabeledStatement;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
@@ -78,7 +80,6 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.UnboundMethodType;
@@ -93,7 +94,7 @@ public class ClassChecker extends BaseChecker {
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
 	
 	
-	public ClassChecker(boolean debug, Map<String, Type> typeTable, List<File> importList, PackageType packageTree ) {
+	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, Node>>();
 		curPrefix = new LinkedList<Node>();
@@ -101,16 +102,10 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-		{// set the current type
-			if( currentType == null )
-				currentType = (ClassInterfaceBaseType)lookupType(node.getImage());
-			else
-				currentType = (ClassInterfaceBaseType)lookupType(currentType + "." + node.getImage());			
-		}
+		if(!secondVisit)		
+			currentType = node.getType();
 		else // set back when returning from an inner class			
-			currentType = (ClassInterfaceBaseType)currentType.getOuter();
-		
+			currentType = (ClassInterfaceBaseType)currentType.getOuter();		
 
 		return WalkType.POST_CHILDREN;
 	}
@@ -348,7 +343,7 @@ public class ClassChecker extends BaseChecker {
 				if( methods != null && methods.size() > 0 )
 				{
 					node.setType( new UnboundMethodType( fieldName, currentClass ) );
-					return true;
+					return true;					
 				}
 				else
 					addError(node, Error.UNDEC_VAR, "Member " + fieldName + " not found");
@@ -361,14 +356,9 @@ public class ClassChecker extends BaseChecker {
 		return false;
 	}
 	
-	public boolean findNameInContext( Node node, String name, Type context, boolean directAccess  ) //directAccess is true if there is no prefix and false if there is
-	{		
-		if( context instanceof PackageType )
-		{
-			
-			
-		}
-		else if( context instanceof InterfaceType )
+	public boolean setTypeFromContext( Node node, String name, Type context, boolean directAccess  ) //directAccess is true if there is no prefix and false if there is
+	{
+		if( context instanceof InterfaceType )
 		{			
 			InterfaceType interfaceType = (InterfaceType)context;
 			
@@ -417,21 +407,20 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
-	public boolean findName( Node node, String name ) 
-	{
- 		// first we check to see if this name is a type
- 		Type type = lookupType(name);
+	public boolean setTypeFromName( Node node, String name ) 
+	{	
+		//is it a type?
+		Type type = lookupType( name );		
+				
 		if(type != null)
-		{	
+		{
 			node.setType(type);
-			node.setModifiers(type.getModifiers());
-			node.addModifier(ModifierSet.TYPE_NAME);
-			
 			return true;
-		}		
-	
-		// first go through the scopes trying to find the variable
-		Node declaration = findSymbol( name );				
+		}
+		
+		// next go through the scopes trying to find the variable
+		Node declaration = findSymbol( name );
+		
 		if( declaration != null ) 
 		{
 			node.setType(declaration.getType());
@@ -455,28 +444,27 @@ public class ClassChecker extends BaseChecker {
 		}
 			
 		// check to see if it's a field or a method			
-		return findNameInContext( node, name, currentType, true );
+		return setTypeFromContext( node, name, currentType, true );
 	}
 	
 	
 	
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException 
-	{
+	{			
 		String[] references = node.getImage().split("\\.");
-		
+								
 		int i = 0;
  		
-		boolean found = findName( node, references[i] );  //find name for first part
-		
-		for( i = 1; i < references.length  && found; i++ )
-			found = findNameInContext( node, references[0], node.getType(), false );
-		
-		if( !found )
+		Type type = lookupType( node.getImage() );
+				
+		if( type == null)
 		{ 
 			addError(node, Error.UNDEC_VAR, references[i]);
 			node.setType(Type.UNKNOWN);
 			ASTUtils.DEBUG(node, "DIDN'T FIND: " + references[i]);
 		}
+		else
+			node.setType(type);
 
 		return WalkType.NO_CHILDREN;
 	}
@@ -1317,7 +1305,7 @@ public class ClassChecker extends BaseChecker {
 				{
 					String name = node.getImage().substring(6);  //removes "super."
 					
-					if( !findNameInContext( node, name, ((ClassType)currentType).getExtendType(), true )) //automatically sets type if can
+					if( !setTypeFromContext( node, name, ((ClassType)currentType).getExtendType(), true )) //automatically sets type if can
 					{
 						addError(node, Error.UNDEC_VAR, name);
 						node.setType(Type.UNKNOWN);
@@ -1333,7 +1321,7 @@ public class ClassChecker extends BaseChecker {
 			else //just a name
 			{
 				String name = node.getImage();
-				if( !findName( node, name )) //automatically sets type if can
+				if( !setTypeFromName( node, name )) //automatically sets type if can
 				{
 					addError(node, Error.UNDEC_VAR, name);
 					node.setType(Type.UNKNOWN);
@@ -1420,7 +1408,7 @@ public class ClassChecker extends BaseChecker {
 			directAccess = false;
 		}
 				
-		if( !findNameInContext( node, name, context, directAccess )) //automatically sets type if can
+		if( !setTypeFromContext( node, name, context, directAccess )) //automatically sets type if can
 		{
 			addError(node, Error.UNDEC_VAR, name);
 			node.setType(Type.UNKNOWN);
@@ -1783,6 +1771,20 @@ public class ClassChecker extends BaseChecker {
 		}
 		
 		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
+		currentPackage = node.getPackage();		
+		return WalkType.NO_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+			currentPackage = packageTree;
+		
+		return WalkType.POST_CHILDREN;			
 	}
 
 	//

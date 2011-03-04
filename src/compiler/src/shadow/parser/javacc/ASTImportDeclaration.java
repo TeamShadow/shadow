@@ -2,15 +2,26 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.Package;
+
 public
 @SuppressWarnings("all")
 class ASTImportDeclaration extends SimpleNode 
 {
+	private Package _package;	
+	
+	
+  public Package getPackage()
+	{
+		return _package;
+	}
 
-	private boolean wildcard = false; 
-	
-	
-  public ASTImportDeclaration(int id) {
+	public void setPackage(Package _package)
+	{
+		this._package = _package;
+	}
+
+public ASTImportDeclaration(int id) {
     super(id);
   }
 
@@ -22,17 +33,7 @@ class ASTImportDeclaration extends SimpleNode
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
-  }
+  } 
   
-  
-  public void setWildcard( boolean value )
-  {
-	  wildcard = value;
-  }
-  
-  public boolean isWildcard()
-  {
-	  return wildcard;
-  }
-}
+ }
 /* JavaCC - OriginalChecksum=3f6a91a5536a57d7e634a9c1db57bdb0 (do not edit this line) */

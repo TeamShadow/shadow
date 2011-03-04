@@ -67,7 +67,7 @@ public class Configuration implements Iterator<File> {
 		// get the import paths
 		importPaths = new ArrayList<File>();
 		
-		if(cmdLine.hasOption("IMPORTS")) {
+		if(cmdLine.hasOption(IMPORTS)) {
 				for(String importPath:cmdLine.getOptionValues(IMPORTS))
 					importPaths.add(new File(importPath));
 		}

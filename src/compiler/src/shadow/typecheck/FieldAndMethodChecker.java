@@ -1,19 +1,25 @@
 package shadow.typecheck;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import shadow.Configuration;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConstructorDeclaration;
 import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFunctionType;
+import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTReferenceType;
@@ -30,12 +36,11 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.PackageType;
 import shadow.typecheck.type.Type;
 
 public class FieldAndMethodChecker extends BaseChecker {
 	
-	public FieldAndMethodChecker(boolean debug, Map<String, Type> typeTable, List<File> importList, PackageType packageTree ) {
+	public FieldAndMethodChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 	}
 	
@@ -48,94 +53,97 @@ public class FieldAndMethodChecker extends BaseChecker {
 			walker.walk(node);
 		
 		//deal with class problems
-		for( Type type : typeTable.values() ) 
+		for( Package p : typeTable.keySet() )
 		{
-			if( type instanceof ClassType )
+			for( Type type : typeTable.get(p).values() ) 
 			{
-				ClassType classType = (ClassType)type;
-				//if no constructors, add the default one
-				classType.addMethod("constructor", new MethodSignature( "constructor", 0, null ) );
-				//note that the node is null for the default constructor, because nothing was made
-				
-				
-				
-				//check for circular class hierarchy				
-				ClassType parent = classType.getExtendType();
-				HashSet<ClassType> hierarchy = new HashSet<ClassType>();
-				hierarchy.add(classType);
-				
-				boolean circular = false;
-				
-				while( parent != null && !circular )
+				if( type instanceof ClassType )
 				{
-					if( hierarchy.contains(parent) )	
+					ClassType classType = (ClassType)type;
+					//if no constructors, add the default one
+					classType.addMethod("constructor", new MethodSignature( "constructor", 0, null ) );
+					//note that the node is null for the default constructor, because nothing was made
+					
+					
+					
+					//check for circular class hierarchy				
+					ClassType parent = classType.getExtendType();
+					HashSet<ClassType> hierarchy = new HashSet<ClassType>();
+					hierarchy.add(classType);
+					
+					boolean circular = false;
+					
+					while( parent != null && !circular )
 					{
-						addError(Error.INVL_TYP, "Circular type hierarchy for class " + type );
-						circular = true;
+						if( hierarchy.contains(parent) )	
+						{
+							addError(Error.INVL_TYP, "Circular type hierarchy for class " + type );
+							circular = true;
+						}
+						else
+							hierarchy.add(parent);
+						parent = parent.getExtendType();
 					}
-					else
-						hierarchy.add(parent);
-					parent = parent.getExtendType();
-				}
-
-				if( !circular )
-				{
-					//check to see if all interfaces are satisfied
-					for( InterfaceType _interface : classType.getInterfaces() )
+	
+					if( !circular )
 					{
-						//check for circular interface issues first
-						if( _interface.isCircular() )
-							addError(Error.INVL_TYP, "Interface " + _interface + " has a circular extends hierarchy" );
-						else if( !classType.satisfiesInterface(_interface) )
-							addError(Error.INVL_TYP, "Type " + classType + " does not implement interface " + _interface );					
-					}
-										
-					/* Check overridden methods to make sure:
-					 * 1. All overrides match exactly  (if it matches everything but return type.... trouble!)
-					 * 2. No final or immutable methods have been overridden
-					 * 3. No changes from static to regular or vice versa
-					 * 4. No overridden methods have been narrowed in access 
-					 */			
-					parent = classType.getExtendType();
-					if( parent != null)
-					{
-						for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
-							for( MethodSignature signature : signatures )
-							{
-								if( parent.recursivelyContainsIndistinguishableMethod(signature) )
+						//check to see if all interfaces are satisfied
+						for( InterfaceType _interface : classType.getInterfaces() )
+						{
+							//check for circular interface issues first
+							if( _interface.isCircular() )
+								addError(Error.INVL_TYP, "Interface " + _interface + " has a circular extends hierarchy" );
+							else if( !classType.satisfiesInterface(_interface) )
+								addError(Error.INVL_TYP, "Type " + classType + " does not implement interface " + _interface );					
+						}
+											
+						/* Check overridden methods to make sure:
+						 * 1. All overrides match exactly  (if it matches everything but return type.... trouble!)
+						 * 2. No final or immutable methods have been overridden
+						 * 3. No changes from static to regular or vice versa
+						 * 4. No overridden methods have been narrowed in access 
+						 */			
+						parent = classType.getExtendType();
+						if( parent != null)
+						{
+							for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
+								for( MethodSignature signature : signatures )
 								{
-									MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
-									Node parentNode = parentSignature.getASTNode();
-									Node node = signature.getASTNode();
-									int parentModifiers;
-									int modifiers;
-									
-									if( parentNode == null )
-										parentModifiers = 0;
-									else
-										parentModifiers = parentNode.getModifiers();
-									
-									if( node == null )
-										modifiers = 0;
-									else
-										modifiers = node.getModifiers();									
-									
-									if( !parentSignature.equals( signature ) )
-										addError( parentNode, "Overriding method " + signature + " differs only by return type from " + parentSignature );
-									else if( ModifierSet.isFinal(parentModifiers) || ModifierSet.isImmutable(parentModifiers) )
-										addError( parentNode, "Method " + signature + " cannot override  final or immutable methods" );
-									else if( ModifierSet.isStatic(parentModifiers) && !ModifierSet.isStatic(modifiers) )
-										addError( parentNode, "Non-static method " + signature + " cannot override static method " + parentSignature );
-									else if( !ModifierSet.isStatic(parentModifiers) && ModifierSet.isStatic(modifiers) )
-										addError( parentNode, "Static method " + signature + " cannot override non-static method " + parentSignature );
-									else if( ModifierSet.isPublic(parentModifiers) && (ModifierSet.isPrivate(modifiers) || ModifierSet.isProtected(modifiers)) )
-										addError( parentNode, "Overrding method " + signature + " cannot reduce visibility of public method " + parentSignature );
-									else if( ModifierSet.isProtected(parentModifiers) && ModifierSet.isPrivate(modifiers)  )
-										addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
+									if( parent.recursivelyContainsIndistinguishableMethod(signature) )
+									{
+										MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
+										Node parentNode = parentSignature.getASTNode();
+										Node node = signature.getASTNode();
+										int parentModifiers;
+										int modifiers;
+										
+										if( parentNode == null )
+											parentModifiers = 0;
+										else
+											parentModifiers = parentNode.getModifiers();
+										
+										if( node == null )
+											modifiers = 0;
+										else
+											modifiers = node.getModifiers();									
+										
+										if( !parentSignature.equals( signature ) )
+											addError( parentNode, "Overriding method " + signature + " differs only by return type from " + parentSignature );
+										else if( ModifierSet.isFinal(parentModifiers) || ModifierSet.isImmutable(parentModifiers) )
+											addError( parentNode, "Method " + signature + " cannot override  final or immutable methods" );
+										else if( ModifierSet.isStatic(parentModifiers) && !ModifierSet.isStatic(modifiers) )
+											addError( parentNode, "Non-static method " + signature + " cannot override static method " + parentSignature );
+										else if( !ModifierSet.isStatic(parentModifiers) && ModifierSet.isStatic(modifiers) )
+											addError( parentNode, "Static method " + signature + " cannot override non-static method " + parentSignature );
+										else if( ModifierSet.isPublic(parentModifiers) && (ModifierSet.isPrivate(modifiers) || ModifierSet.isProtected(modifiers)) )
+											addError( parentNode, "Overrding method " + signature + " cannot reduce visibility of public method " + parentSignature );
+										else if( ModifierSet.isProtected(parentModifiers) && ModifierSet.isPrivate(modifiers)  )
+											addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
+									}
 								}
-							}
-					}
-				}				
+						}
+					}				
+				}
 			}
 		}
 		
@@ -206,35 +214,45 @@ public class FieldAndMethodChecker extends BaseChecker {
 	}
 	
 	
-	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
-		//
-		// TODO: Fix this as it could be a class, exception or interface
-		//       We'll also need to add that to Type so it knows what it is
-		//		
-
-		if( secondVisit )		
-		{
-			if( currentType instanceof ClassType ) //may need to add a default constructor
-			{
-				ClassType classType = (ClassType)currentType;
+//	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
+//		//
+//		// TODO: Fix this as it could be a class, exception or interface
+//		//       We'll also need to add that to Type so it knows what it is
+//		//		
+//
+//		if( secondVisit )		
+//		{
+//			if( currentType instanceof ClassType ) //may need to add a default constructor
+//			{
+//				ClassType classType = (ClassType)currentType;
+//	
+//				//
+//				// We don't want to do this here... we'll do it in the TAC code
+//				//
+////				if( classType.getMethods("constructor") ==  null )
+////					classType.addMethod("constructor", new MethodSignature("constructor", 0, -1)); //negative indicates "magically created"
+//			}
+//			
+//			currentType = (ClassInterfaceBaseType)currentType.getOuter();
+//		}
+//		else
+//		{
+//			currentType = node.getType();
+//		}
+//		
+//		return WalkType.POST_CHILDREN;
+//	}
 	
-				//
-				// We don't want to do this here... we'll do it in the TAC code
-				//
-//				if( classType.getMethods("constructor") ==  null )
-//					classType.addMethod("constructor", new MethodSignature("constructor", 0, -1)); //negative indicates "magically created"
-			}
-			
-			currentType = (ClassInterfaceBaseType)currentType.getOuter();
-		}
+	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit )
+			currentType = node.getEnclosingType();		
 		else
-		{
-			currentType = (ClassInterfaceBaseType)lookupType(node.getImage());
-			node.setType(currentType);
-		}
-		
+			currentType = node.jjtGetParent().getType();
+			
 		return WalkType.POST_CHILDREN;
 	}
+	
 	
 	/**
 	 * Checks method and field modifiers to see if they are legal
@@ -578,6 +596,20 @@ public class FieldAndMethodChecker extends BaseChecker {
 		node.setType(ret);
 		
 		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
+		currentPackage = node.getPackage();		
+		return WalkType.NO_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+			currentPackage = packageTree;
+		
+		return WalkType.POST_CHILDREN;			
 	}
 	
 	//
