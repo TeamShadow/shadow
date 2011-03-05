@@ -16,7 +16,7 @@ import shadow.typecheck.type.Type;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 
-	protected ArrayList<String> errorList;
+	protected ArrayList<String> errorList = new ArrayList<String>();;
 	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
 	protected List<File> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
@@ -45,25 +45,14 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return typeTable;
 	}
 	
-	public void addType( String name, Type type  )
+	public void addType( Type type  )
 	{
-		addType( name, type, packageTree );
+		addType( type, packageTree );
 	}
 	
-	public void addType( String name, Type type, Package p  )
+	public void addType( Type type, Package p  )
 	{
-		//if( type.getOuter() == null ) //only outer classes are added to the packages, inner classes are accessible through outer
-			p.addType(type);
-		
-		HashMap<String, Type> types = typeTable.get( p );
-		
-		if( types == null )
-		{
-			types = new HashMap<String, Type>();
-			typeTable.put(p, types);
-		}
-		
-		types.put(name, type);		
+		p.addType(type); //automatically adds to typeTable and sets type's package				
 	}
 	
 	public final List<File> getImportList()
@@ -72,7 +61,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, Type>> hashMap, List<File> importList, Package packageTree  ) {
-		errorList = new ArrayList<String>();
+		
 		this.debug = debug;
 		this.typeTable = hashMap;
 		this.importList = importList;
@@ -243,9 +232,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 	//outer class known, no need to look at packages
 	public final Type lookupType( String name, Type outerClass )
-	{	
-		Type type;
-		
+	{			
 		Package p = outerClass.getPackage();
 		
 		if( p == null )
@@ -271,13 +258,19 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	//get type from specific package
 	public final Type lookupType( String name, Package p )
-	{			
+	{		
 		return typeTable.get(p).get(name);
 	}
 	
 	public final Type lookupType( String packageName, String name )
 	{			
 		Package p = packageTree.getChild(packageName);
+		
+		if( p == null )
+		{
+			addError(Error.UNDEF_TYP, "Package " + packageName + " not defined");
+			return null;
+		}
 		
 		return typeTable.get(p).get(name);
 	}

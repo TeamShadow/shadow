@@ -1,18 +1,14 @@
 package shadow.typecheck;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import shadow.Configuration;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
-import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConstructorDeclaration;
@@ -246,9 +242,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
 	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
-			currentType = node.getEnclosingType();		
+			currentType = currentType.getOuter();		
 		else
-			currentType = node.jjtGetParent().getType();
+			currentType = node.jjtGetParent().getType(); //get type from declaration
 			
 		return WalkType.POST_CHILDREN;
 	}

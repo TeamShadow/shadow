@@ -1,30 +1,25 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
-
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.Type.Kind;
 
 public class Package
 {	
-	private HashMap<String, Package> children = new HashMap<String, Package>();
-	private HashMap<String, Type> types = new HashMap<String, Type>();
-	private String folderName;
-	private String fullName;
-	private Package parent;
+	private final HashMap<String, Package> children = new HashMap<String, Package>();
+	private final HashMap<String, Type> types = new HashMap<String, Type>();
+	private final String name;	
+	private final Package parent;
 	
-	//public static final Package DEFAULT_PACKAGE = new Package(); 
-
-	public Package()
+	public Package(HashMap<Package, HashMap<String, Type>> typeTable)
 	{
-		this("", "", null);
+		this("", null, typeTable );
 	}	
 
-	private Package(String fullName, String folderName,  Package parent )
+	private Package(String name, Package parent,  HashMap<Package, HashMap<String, Type>> typeTable)
 	{
-		this.fullName = fullName;	
-		this.folderName = folderName;
+		this.name = name;
 		this.parent = parent;
+		typeTable.put(this, types);
 	}	
 	
 	/**
@@ -33,13 +28,13 @@ public class Package
 	 * @param folder
 	 * @return
 	 */
-	public Package addPackage( String folder )
+	public Package addPackage( String name, HashMap<Package, HashMap<String, Type>> typeTable )
 	{				
-		if( children.containsKey(folder) )
-			return children.get(folder);
+		if( children.containsKey(name) )
+			return children.get(name);
 		
-		Package newPackage = new Package( fullName + "." + folder, folder, this );		
-		children.put(folder, newPackage);		
+		Package newPackage = new Package( name, this, typeTable );		
+		children.put(name, newPackage);		
 		
 		return newPackage;
 	}
@@ -49,37 +44,33 @@ public class Package
 	 * @param path
 	 * @return
 	 */
-	public Package addPackagePath( String path  )
+	public Package addFullyQualifiedPackage( String path, HashMap<Package, HashMap<String, Type>> typeTable  )
 	{
-		String[] folders = path.split("\\.");
-		
-		Package parent = this;
-		
-		for( int i = 0; i < folders.length; i++ )		
-			parent = parent.addPackage( folders[i] );
-		
-		return parent;		
+		if( path.length() > 0 )
+		{
+			String[] folders = path.split("\\.");
+			
+			Package parent = this;
+			
+			for( int i = 0; i < folders.length; i++ )		
+				parent = parent.addPackage( folders[i], typeTable );
+			
+			return parent;
+		}
+		else
+			return this;
 	}
 	
-	public boolean addType(Type type )
+	public void addType(Type type )
 	{		
 		types.put(type.getTypeName(), type);
-		
-		String[] path = type.getTypeName().split("\\.");
-		
-		Package parent = this;
-		
-		for( int i = 0; i < path.length - 1 && parent != null; i++ ) //last thing in path should be type name		
-			parent = parent.getChild( path[i] );
-		
-		if( parent == null ) //couldn't find package
-			return false;
-		
-		if( parent.getChild(path[path.length - 1]) != null ) //existing package already has type name
-			return false;
-					
-		parent.types.put(path[path.length - 1], type);
-		return true;
+		type.setPackage(this);
+	}
+	
+
+	public void addTypes(HashMap<String, Type> types) {
+		for( Type type : types.values() )
+			addType( type );
 	}
 	
 	
@@ -88,8 +79,16 @@ public class Package
 		return children;
 	}
 	
-	public String getFullName()
+	public String getFullyQualifiedName()
 	{
+		String fullName = name;
+		Package previous = parent;
+		while( previous != null && previous.getName().length() > 0 )
+		{
+			fullName = previous.getName() + "." + fullName;
+			previous = previous.getParent();
+		}		
+		
 		return fullName;
 	}
 	
@@ -98,9 +97,9 @@ public class Package
 		return parent;
 	}
 	
-	public String getFolderName()
+	public String getName()
 	{
-		return folderName;
+		return name;
 	}
 	
 	public boolean hasChild(String name)
@@ -143,83 +142,26 @@ public class Package
 		return types.get(name);
 	}
 
-	/*
-	public Type findType(String qualifiedName)
-	{
-		String[] names = qualifiedName.split("\\.");
-		
-		Type type = findType( names, 0 );
-		
-		
-		if( type != null )
-			return type;
-		
-		//if path is not fully qualified, we may have to skip past all package prefixes until we can start matching class names
-		return findTypeSkippingPackages( names );
+
+	@Override
+	public int hashCode() {		
+		return getFullyQualifiedName().hashCode();
+	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if( o instanceof Package )
+		{
+			Package p = (Package)o;
+			return getFullyQualifiedName().equals(p.getFullyQualifiedName());
+		}
+
+		return false;
 	}
 	
-	private Type findTypeSkippingPackages( String[] names )
-	{
-		Type type;
-		
-		//check types in package
-		for( String className : types.keySet()  )
-		{
-			if( className.equals(names[0]) )
-			{
-				if( 0 == names.length - 1 )
-					return types.get(className);
-				
-				type = types.get(className).findType(names, 1);
-				if( type != null )
-					return type;
-			}			
-		}
-		
-		for( Package _package : children.values() )
-		{	
-			type = _package.findTypeSkippingPackages(names);
-			if( type != null )
-					return type;					
-		}
-		
-		return null;
-	}
-	
-	protected Type findType(String[] names, int index )
-	{
-		Type type = null;		
-		
-		//check types in package
-		for( String className : types.keySet()  )
-		{
-			if( className.equals(names[index]) )
-			{
-				if( index == names.length - 1 )
-					return types.get(className);
-				
-				type = types.get(className).findType(names, index + 1);
-				if( type != null )
-					return type;
-			}			
-		}
-		
-		//check subpackages in package
-		for( String packageName : children.keySet()  )
-		{
-			if( packageName.equals(names[index]) )
-			{
-				if( index == names.length - 1 )
-					return children.get(packageName);
-				
-				type = children.get(packageName).findType(names, index + 1);
-				if( type != null )
-					return type;
-			}			
-		}
-		
-		return null;
-	}
-	
-	*/
+	@Override
+	public String toString() {
+		return getFullyQualifiedName();
+	}	
 }

@@ -65,7 +65,7 @@ public class TACTest extends BaseTest {
 	        boolean result = tc.typeCheck(node, sourceFile);
 	        
 	        if(!result) {
-	        	System.out.println(sourceFile.getPath() + "FAILED TO TYPE CHECK");
+	        	System.out.println(sourceFile.getPath() + " FAILED TO TYPE CHECK");
 	        	throw new ShadowException("");
 	        }
 	        

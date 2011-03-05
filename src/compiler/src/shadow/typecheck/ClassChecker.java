@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
@@ -22,7 +21,7 @@ import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBreakStatement;
 import shadow.parser.javacc.ASTCastExpression;
-import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
+import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConditionalAndExpression;
@@ -101,12 +100,13 @@ public class ClassChecker extends BaseChecker {
 		labels = new LinkedList<Node>();
 	}
 	
-	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)		
-			currentType = node.getType();
-		else // set back when returning from an inner class			
-			currentType = (ClassInterfaceBaseType)currentType.getOuter();		
-
+	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit )
+			currentType = currentType.getOuter();		
+		else
+			currentType = node.jjtGetParent().getType(); //get type from declaration
+			
 		return WalkType.POST_CHILDREN;
 	}
 	

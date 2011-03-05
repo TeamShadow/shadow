@@ -3,8 +3,7 @@ package shadow.typecheck;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.LinkedList;
 
 import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
@@ -33,17 +32,11 @@ public class TypeChecker {
 		// Here is where we'd walk the import statements, and collect the types for those files
 		// Right now we are only collecting the types from the current file
 	 
-		 
-		TypeCollector collector = new TypeCollector(debug);
-		collector.collectTypes( file, node );
-		//ASTWalker walker = new ASTWalker( collector );		
-		//walker.walk(node);
-				
-		//collector.addOutsideTypes(file);
-		HashMap<Package, HashMap<String, Type>> typeTable = collector.getTypeTable();
-		List<File> importList = collector.getImportList();
-		Package packageTree = collector.getPackageTree();		
-	
+		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
+		Package packageTree = new Package(typeTable);
+		LinkedList<File> importList = new LinkedList<File>();
+		TypeCollector collector = new TypeCollector(debug, typeTable, importList, packageTree);
+		collector.collectTypes( file, node );	
 		
 		// see how many errors we found
 		if(collector.getErrorCount() > 0)
@@ -54,21 +47,14 @@ public class TypeChecker {
 		
 		FieldAndMethodChecker builder = new FieldAndMethodChecker(debug, typeTable, importList, packageTree );
 		builder.buildTypes( collector.getFiles() );
-		 //walker = new ASTWalker(builder);
-		
-		// walk the tree building types
-		//walker.walk(node);
-		
+
 		if(debug)
 			System.out.println("DEBUG: TYPE BUILDING DONE");
 		
-		// print out the type table as it stands now
-/*		System.out.println("TYPE TABLE:");
-		for(String tn:typeTable.keySet())
-			System.out.println(tn + ": " + typeTable.get(tn));
-*/		
+	
 		// see how many errors we found
-		if(builder.getErrorCount() > 0) {
+		if(builder.getErrorCount() > 0)
+		{
 			builder.printErrors(System.out);
 			return false;
 		}

@@ -4,6 +4,15 @@ class Imports
 {
 	public static main(String[] args ) => ()
 	{
-		int a = 10;	
+		int a = 10;
+		
+		Random r = new Random();
+		
+		a += r.value;
+		
+		shadow.utility@Random v = new shadow.utility@Random();
+		
+		a *= v.value;
+					
 	}
 }

@@ -49,31 +49,31 @@ public class TypeCollector extends BaseChecker
 	protected String currentName = "";
 	protected Map<File, Node> files = new HashMap<File, Node>();
 	
-	public TypeCollector(boolean debug)
+	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, Type>> typeTable, LinkedList<File> importList, Package p )
 	{		
-		super(debug, new HashMap< Package, HashMap<String, Type>>(), new LinkedList<File>(), new Package() );
+		super(debug, typeTable, importList, p );
 		// put all of our built-in types into the TypeTable
 		// change this step eventually to pull from the shadow.standard package
 		
-		addType(Type.OBJECT.getTypeName(),	Type.OBJECT);
-		addType(Type.BOOLEAN.getTypeName(),	Type.BOOLEAN);
-		addType(Type.BYTE.getTypeName(),		Type.BYTE);
-		addType(Type.CODE.getTypeName(),		Type.CODE);
-		addType(Type.SHORT.getTypeName(),		Type.SHORT);
-		addType(Type.INT.getTypeName(),		Type.INT);
-		addType(Type.LONG.getTypeName(),		Type.LONG);
-		addType(Type.FLOAT.getTypeName(),		Type.FLOAT);
-		addType(Type.DOUBLE.getTypeName(),	Type.DOUBLE);
-		addType(Type.STRING.getTypeName(),	Type.STRING);
-		addType(Type.UBYTE.getTypeName(),		Type.UBYTE);
-		addType(Type.UINT.getTypeName(),		Type.UINT);
-		addType(Type.ULONG.getTypeName(),		Type.ULONG);
-		addType(Type.USHORT.getTypeName(),	Type.USHORT);
-		addType(Type.NULL.getTypeName(),		Type.NULL);	
+		addType(Type.OBJECT);
+		addType(Type.BOOLEAN);
+		addType(Type.BYTE);
+		addType(Type.CODE);
+		addType(Type.SHORT);
+		addType(Type.INT);
+		addType(Type.LONG);
+		addType(Type.FLOAT);
+		addType(Type.DOUBLE);
+		addType(Type.STRING);
+		addType(Type.UBYTE);
+		addType(Type.UINT);
+		addType(Type.ULONG);
+		addType(Type.USHORT);
+		addType(Type.NULL);	
 		
-		addType(Type.ENUM.getTypeName(), Type.ENUM);
-		addType(Type.ERROR.getTypeName(), Type.ENUM);	
-		addType(Type.EXCEPTION.getTypeName(), Type.ENUM);
+		addType(Type.ENUM);
+		addType(Type.ERROR);	
+		addType(Type.EXCEPTION);
 	}
 	
 	
@@ -178,34 +178,24 @@ public class TypeCollector extends BaseChecker
 				ShadowParser parser = new ShadowParser(new FileInputStream(other));
 			    SimpleNode otherNode = parser.CompilationUnit();
 			    
-				TypeCollector collector = new TypeCollector(debug);
+			    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
+				TypeCollector collector = new TypeCollector(debug, otherTypes, new LinkedList<File>(), new Package(otherTypes));
 				walker = new ASTWalker( collector );		
-				walker.walk(otherNode);							
+				walker.walk(otherNode);
+		
+				files.put(other, otherNode);				
 				
-				HashMap<Package, HashMap<String, Type>> outsideTypes = collector.getTypeTable();
-				files.put(other, otherNode);
-				
-				
-				//by adding in order, we preserve proper name hiding (might happen?)
-				for( Package p : outsideTypes.keySet() )
+				//copy other types into our package tree				
+				for( Package p : otherTypes.keySet() )
 				{	
-					if( typeTable.containsKey(p))
-					{
-						HashMap<String,Type> packageTypes = typeTable.get(p);
-						packageTypes.putAll(outsideTypes.get(p));						
-					}
-					else
-						typeTable.put(p, outsideTypes.get(p));
+					//if package already exists, it won't be recreated
+					Package newPackage = packageTree.addFullyQualifiedPackage(p.getFullyQualifiedName(), typeTable);
+					newPackage.addTypes( otherTypes.get(p) );
 				}
 				
-				//add in the imports from the other file as long as they aren't in the list already
-				//NO!  This isn't C.  We only need imports for type information.  We don't need imports of imports for anything.				
-				/*
-				List<File> otherImports = collector.getImportList();
-				for( File otherImport : otherImports )
-					if( !fileList.contains(otherImport) )
-						fileList.add(otherImport);
-				*/	
+				//copy any errors into our error list
+				if( collector.getErrorCount() > 0 )
+					errorList.addAll(collector.errorList);
 			}
 		}	
 		
@@ -281,20 +271,27 @@ public class TypeCollector extends BaseChecker
 */
 	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit )		
-			exitType( node );		
-		else
-			enterType( node, node.getModifiers(), node.getKind() );
+		if( !secondVisit )
+			createType( node, node.getModifiers(), node.getKind() );
 			
 		return WalkType.POST_CHILDREN;
 	}	
 	
 	
 	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit )
-			currentType = node.getEnclosingType();
-		else
+		if( secondVisit ) //leaving a type
+		{
+			currentType = currentType.getOuter();
+			if( currentType == null )
+				currentName = currentPackage.getFullyQualifiedName();
+			else
+				currentName = currentType.getTypeName();
+		}
+		else //entering a type
+		{					
 			currentType = node.jjtGetParent().getType();
+			currentName = currentType.getTypeName();				
+		}
 			
 		return WalkType.POST_CHILDREN;
 	}
@@ -317,14 +314,17 @@ public class TypeCollector extends BaseChecker
 	
 
 	
-	private void enterType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException
+	private void createType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException
 	{		 
-		if( !currentName.isEmpty() )
-			currentName += ".";
+		String typeName;
 		
-		currentName += node.getImage();	
-		if( lookupType(currentName) != null )
-			addError( node, Error.MULT_SYM, "Type " + currentName + " already defined" );
+		if( currentType == null )
+			typeName = currentName + node.getImage(); //package name is separate
+		else
+			typeName = currentName + "." + node.getImage();
+		
+		if( lookupType(typeName) != null )
+			addError( node, Error.MULT_SYM, "Type " + typeName + " already defined" );
 		else
 		{			
 			Type type = null;
@@ -332,20 +332,20 @@ public class TypeCollector extends BaseChecker
 			switch( kind )
 			{
 			case CLASS:
-				type = new ClassType(currentName, modifiers, currentType );
+				type = new ClassType(typeName, modifiers, currentType );
 				break;
 			case ENUM:
 				//enum may need some fine tuning
-				type = new EnumType(currentName, modifiers, currentType );
+				type = new EnumType(typeName, modifiers, currentType );
 				break;
 			case ERROR:
-				type = new ErrorType(currentName, modifiers, currentType );
+				type = new ErrorType(typeName, modifiers, currentType );
 				break;
 			case EXCEPTION:
-				type = new ExceptionType(currentName, modifiers, currentType );
+				type = new ExceptionType(typeName, modifiers, currentType );
 				break;
 			case INTERFACE:
-				type = new InterfaceType(currentName, modifiers, currentType );
+				type = new InterfaceType(typeName, modifiers, currentType );
 				break;			
 			case VIEW:
 				//add support for views eventually
@@ -354,7 +354,7 @@ public class TypeCollector extends BaseChecker
 				throw new ShadowException("Unsupported type!" );
 			}
 			
-			addType( currentName, type  );
+			addType( type, currentPackage );
 			node.setType(type);
 			
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
@@ -387,37 +387,20 @@ public class TypeCollector extends BaseChecker
 		nodeTable.put(type, node.jjtGetParent() );
 	}
 	
-	private void exitType( SimpleNode node )
-	{
-		//	remove innermost class		
-		int index = currentName.lastIndexOf('.'); 
-		if( index == -1 )
-			currentName = "";
-		else
-			currentName = currentName.substring(0, index);
-		
-//		if( currentType != null )
-//			currentType = currentType.getOuter();
-	}
-	
+
 
 	@Override
 	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit )		
-			exitType( node );		
-		else
-			enterType( node, node.getModifiers(), Type.Kind.ENUM );
+		if( !secondVisit )		
+			createType( node, node.getModifiers(), Type.Kind.ENUM );
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	@Override
 	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit )		
-
-			exitType( node );		
-		else
-			enterType( node, node.getModifiers(), Type.Kind.VIEW );
+		if( !secondVisit )		
+			createType( node, node.getModifiers(), Type.Kind.VIEW );
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -426,9 +409,8 @@ public class TypeCollector extends BaseChecker
 	{
 		if( secondVisit )
 		{
-			Node name = node.jjtGetChild(0);			
-			currentName = name.getImage();	//name of all types start in this package			
-			currentPackage = packageTree.addPackagePath(currentName); 
+			String name = node.jjtGetChild(0).getImage();									
+			currentPackage = packageTree.addFullyQualifiedPackage(name, typeTable);			
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -455,16 +437,15 @@ public class TypeCollector extends BaseChecker
 	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
 		if( secondVisit )
 		{
-			Node name = node.jjtGetChild(0);
+			String name = node.jjtGetChild(0).getImage();
 			String separator = File.separator; //platform independence, we hope 
 			if( separator.equals("\\"))
 				separator = "\\\\";
-			String path = name.getImage().replaceAll("\\.", separator);
+			String path = name.replaceAll("\\.", separator);
 			List<File> importPaths = Configuration.getInstance().getImportPaths();
-			boolean success = false;			
-				
+			boolean success = false;				
 			
-			if( importPaths != null )
+			if( importPaths != null && importPaths.size() > 0 )
 			{
 				for( File importPath : importPaths )
 				{	
@@ -502,14 +483,11 @@ public class TypeCollector extends BaseChecker
 								if( !importList.contains(file))
 									importList.add(file);
 							
-							node.setPackage(packageTree.addPackagePath(path));
-							
 							success = true;						
 						}
 					}
 					else
 					{
-						String directory = path.substring(0, path.indexOf('@'));
 						path = path.replaceAll("@", separator);
 						File shadowVersion = new File( importPath, path + ".shadow" );
 						File metaVersion = new File( importPath, path + ".meta" );
@@ -520,13 +498,11 @@ public class TypeCollector extends BaseChecker
 							else
 								importList.add(shadowVersion);	
 							
-							node.setPackage(packageTree.addPackagePath(directory));
 							success = true;						
 						}
 						else if( metaVersion.exists() )
 						{
-							importList.add(metaVersion);
-							node.setPackage(packageTree.addPackagePath(directory));
+							importList.add(metaVersion);							
 							success = true;						
 						}
 					}
@@ -536,8 +512,10 @@ public class TypeCollector extends BaseChecker
 				}			
 				
 				if( !success )
-					addError(node, "Import " + name.getImage() + " not found");
+					addError(node, "No file found for import " + name);
 			}
+			else
+				addError(node, "No import paths specified, cannot import " + name);						
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -546,7 +524,10 @@ public class TypeCollector extends BaseChecker
 	@Override
 	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
+		{
 			currentPackage = packageTree;
+			currentName = "";
+		}
 		
 		return WalkType.POST_CHILDREN;			
 	}

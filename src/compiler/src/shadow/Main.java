@@ -87,7 +87,7 @@ public class Main {
 		        boolean result = tc.typeCheck(node, shadowFile);
 		        
 		        if(!result) {
-		        	System.out.println(shadowFile.getPath() + "FAILED TO TYPE CHECK");
+		        	System.out.println(shadowFile.getPath() + " FAILED TO TYPE CHECK");
 		        	
 		        	System.exit(-1);	// we should figure out proper return codes for each stage the could fail
 		        }

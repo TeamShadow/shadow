@@ -88,7 +88,10 @@ public class Type {
 	
 	public String toString()
 	{
+		if( _package == null || _package.getFullyQualifiedName().length() == 0 )
 			return typeName;
+		else
+			return _package.getFullyQualifiedName() + "@" + typeName;			
 	}	
 
 	public boolean equals(Object o)
@@ -314,5 +317,10 @@ public class Type {
 	public Package getPackage()
 	{
 		return _package;
+	}
+	
+	public void setPackage(Package p)
+	{
+		_package = p;
 	}
 }
