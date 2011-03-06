@@ -36,9 +36,11 @@ while(my $line = <CONFIG>) {
 
 close(CONFIG);
 
+# clean-up some files from the last run
 system("rm build.log");
-
 system("rm build/*c build/*.meta") if($test_type ne 'compile');
+
+open(RESULTS, ">results.log") or die $!;
 
 foreach my $test (@tests) {
 	$test->{'config'} = ' -C ' . $test->{'config'} if($test->{'config'} ne '');
@@ -48,6 +50,12 @@ foreach my $test (@tests) {
 
 	print $cmd . "\n";
 
-	system("$cmd >> build.log");
+	my $res = system("$cmd 2>&1 | cat >> build.log");
+
+	if($res == $test->{'res'}) {
+		print RESULTS "PASS: " . $test->{'file'} . "\n";
+	} else {
+		print RESULTS "FAIL: " . $test->{'file'} . " EXPECTING " . $test->{'res'} . " GOT " . $res . "\n";
+	}
 }
 

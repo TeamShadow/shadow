@@ -1280,8 +1280,6 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		TACNoOp noop = new TACNoOp(node, loop, null);
 		loop.setBreakNode(noop);
 		
-		loop.dump("LOOP: ");
-		
 		linkToEnd(node, loop, noop);
 
 		return WalkType.POST_CHILDREN;
