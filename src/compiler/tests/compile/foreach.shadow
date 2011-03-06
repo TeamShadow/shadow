@@ -1,0 +1,13 @@
+class Blah {
+    public test() => () {
+        foreach(int i in int_list) { ; }
+        
+        // nested loops
+        foreach(int i in int_list) {
+            foreach(int i in int_list) {
+                foreach(int i in int_list) {
+                }
+            }
+        }
+    }
+}

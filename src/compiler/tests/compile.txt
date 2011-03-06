@@ -1,0 +1,16 @@
+# This file describes the shadow files to build (compile & code gen)
+# The fields are separated by ;
+# result; main_file; config; input (ignored); output (ignored); description
+
+0; arrays.shadow; ; ; ; Tests for arrays
+0; casting.shadow; ; ; ; Tests for casting
+0; operations.shadow; ; ; ; Tests for various operations
+0; for.shadow; ; ; ; Tests for 'for' loops
+0; foreach.shadow; ; ; ; Tests for 'foreach' loops
+0; methodcalls.shadow; ; ; ; Tests for method calls
+0; view.shadow; ; ; ; Tests for views
+0; conditionals.shadow; ; ; ; Tests for conditionals
+0; method.shadow; ; ; ; Tests for method declartaions
+0; constructor.shadow; ; ; ; Tests for constructors
+0; if.shadow; ; ; ; Tests for 'if' conditions
+0; member.shadow; ; ; ; Test for memeber access
