@@ -1,8 +1,0 @@
-
-class foo {
-
-    public bar() => () {
-        int a = 3;
-    }
-
-}
