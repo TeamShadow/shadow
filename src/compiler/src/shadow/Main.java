@@ -29,9 +29,19 @@ import shadow.typecheck.TypeChecker;
  *
  */
 public class Main {
+	
+	/*
+	 * These are the error codes returned by the compiler
+	 */
+	public static final int NO_ERROR		 =  0;
+	public static final int GENERAL_ERROR	 = -1;
+	public static final int PARSE_ERROR		 = -2;
+	public static final int TYPE_CHECK_ERROR = -3;
+	public static final int TAC_ERROR		 = -4;
 
 	/**
-	 * This is the starting point of the compiler
+	 * This is the starting point of the compiler.
+	 * 
 	 * @param args Command line arguments to control the compiler
 	 */
 	public static void main(String[] args) {
@@ -50,7 +60,7 @@ public class Main {
 				
 				helpFormatter.printHelp("shadow", options);
 				
-				System.exit(0);
+				System.exit(NO_ERROR);
 			}
 			
 			// parse out the command line
@@ -59,10 +69,10 @@ public class Main {
 		} catch (org.apache.commons.cli.ParseException e) {
 					System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
 					e.printStackTrace();
-					System.exit(-1);
+					System.exit(GENERAL_ERROR);
 		} catch (ShadowException e) {
 			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
-			System.exit(-1);
+			System.exit(GENERAL_ERROR);
 		}
 			 
 		try
@@ -76,7 +86,6 @@ public class Main {
 		        TypeChecker tc = new TypeChecker(false);
 		        TACBuilder tacBuilder = new TACBuilder(false);
 		        
-		        
 		        // get the start time for the compile
 		        long startTime = System.currentTimeMillis();
 
@@ -89,7 +98,7 @@ public class Main {
 		        if(!result) {
 		        	System.out.println(shadowFile.getPath() + " FAILED TO TYPE CHECK");
 		        	
-		        	System.exit(-1);	// we should figure out proper return codes for each stage the could fail
+		        	System.exit(-3);
 		        }
 		        
 		        // we are only parsing & type checking
@@ -118,14 +127,14 @@ public class Main {
 			}			
 		} catch(FileNotFoundException fnfe) {
 			System.err.println("FILE " + config.current().getPath() + ") NOT FOUND: " + fnfe.getLocalizedMessage());
-			System.exit(-1);
+			System.exit(GENERAL_ERROR);
 		} catch(ParseException pe) {
 			System.err.println("PARSE ERROR " + config.current().getPath() + ": " + pe.getLocalizedMessage());
-			System.exit(-1);
+			System.exit(PARSE_ERROR);
 		} catch (ShadowException e) {
 			System.err.println("ERROR ON FILE " + config.current().getPath() + ": " + e.getLocalizedMessage());
 			e.printStackTrace();
-			System.exit(-1);
+			System.exit(TYPE_CHECK_ERROR);
 		}
 	}
 	

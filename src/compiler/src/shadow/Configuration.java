@@ -23,7 +23,7 @@ public class Configuration implements Iterator<File> {
 	private static final String OS			= "os";
 	private static final String ARCH		= "arch";
 
-	private String mainClass = null;
+	private String mainClass = null; /** The file containing the class with the Main method */
 	private List<File> shadowFiles = null;
 	private int currentShadowFile = 0;
 	private List<File> importPaths = null;
@@ -84,6 +84,9 @@ public class Configuration implements Iterator<File> {
 		for(String shadowFile:cmdLine.getArgs()) {
 			shadowFiles.add(new File(shadowFile));
 		}
+		
+		if(shadowFiles.size() == 1)
+			mainClass = shadowFiles.get(0).getAbsolutePath();
 		
 		// perform the sanity checks here
 		if(!checkOnly && mainClass == null) {

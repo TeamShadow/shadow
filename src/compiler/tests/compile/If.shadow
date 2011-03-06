@@ -1,4 +1,4 @@
-class Test {
+class If {
     public blah() => () {
         int a;
         int b = 7;

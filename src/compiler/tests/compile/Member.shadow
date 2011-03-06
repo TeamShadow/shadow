@@ -1,7 +1,7 @@
 /**
  * This class tests a bunch of different member declarations
  */
-class Test {
+class Member {
 
 	//Public
     public int x;   	// basic int

@@ -1,4 +1,4 @@
-class Blah {
+class For {
     public test() => () {
         for(int i=0; i < x; i += 1) { ; }
         for(; i < x; i += 1) { ; }

@@ -1,0 +1,16 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef NUMERIC_META
+#define NUMERIC_META
+
+struct Numeric {
+     void (*test__R_)(void);
+     
+     unsigned int __ref_count
+     
+};
+
+void __init__R_(struct Numeric* this);
+
+void test__R_(struct Numeric* this);
+
+#endif

@@ -1,4 +1,4 @@
-class Blah {
+class MethodCalls {
     public test() => () {
 
 		int x = method();

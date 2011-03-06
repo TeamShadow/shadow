@@ -2,3 +2,7 @@
 # The fields are separated by ;
 # result; main_file; input (ignored); output (ignored); description
 
+0; Conditionals.shadow; ; ; ; Tests
+0; Loops.shadow; ; ; ; Tests
+0; Numeric.shadow; ; ; ; Tests
+

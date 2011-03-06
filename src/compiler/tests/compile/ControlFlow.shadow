@@ -1,0 +1,41 @@
+class ControlFlow {
+
+   public nothing() => ()
+   {
+   	int a;
+   	int[] b;
+   	
+    if( true )
+   	{
+   		a = 4;
+   	}
+   	
+   	if( a < 3 )
+   	{
+   		a = 10;
+   	}
+   	
+   	while( a < 10 )
+   		a += 2;
+   		
+   	do
+   	{
+   	 a *= 6;
+   	} while( a != 0 );
+   	
+   	foreach( int thing in b )
+   		a += 1; 	
+   
+    for(int i=0; i < 10; i += 1)
+        a -= 1;
+        
+         int sum = 0;
+    	
+		for( int i = 0; i < 100; i += 1 )
+			sum += i;
+			
+		for( int i = 0; i < 100; i += 1 )
+			sum += i;
+   
+   }
+} 

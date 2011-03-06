@@ -1,4 +1,4 @@
-class Blah {
+class Foreach {
     public test() => () {
         foreach(int i in int_list) { ; }
         

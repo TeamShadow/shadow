@@ -1,4 +1,4 @@
-class Test {
+class Casting {
     // casting for members
     public int a = cast<int>4;
     public int a = cast<int>(4);

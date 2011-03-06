@@ -36,13 +36,18 @@ while(my $line = <CONFIG>) {
 
 close(CONFIG);
 
+system("rm build.log");
+
+system("rm build/*c build/*.meta") if($test_type ne 'compile');
+
 foreach my $test (@tests) {
 	$test->{'config'} = ' -C ' . $test->{'config'} if($test->{'config'} ne '');
+	$test->{'config'} = ' --check ' . $test->{'config'} if($test_type eq 'compile'); # overload this a bit
 
-	my $cmd = "java -jar $COMPILER -M $test_type/" . $test->{'file'} . $test->{'config'};
+	my $cmd = "java -jar $COMPILER" . $test->{'config'} . " $test_type/" . $test->{'file'};
 
 	print $cmd . "\n";
 
-	system($cmd);
+	system("$cmd >> build.log");
 }
 

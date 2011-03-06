@@ -1,0 +1,52 @@
+class Conditionals {
+
+    public test() => () {
+        int a;
+        int b = 1;
+        int c = 2;
+
+        // literals
+        if(true) { a = 0; }
+        if(true and false) { a = 0; }
+        if(true or false) { a = 0; }
+        
+        // basic relations
+        if(a == 0) { a = 0; }
+        if(a < 0) { a = 0; }
+        if(a > 0) { a = 0; }
+        if(a <= 0) { a = 0; }
+        if(a >= 0) { a = 0; }
+        if(a != 0) { a = 0; }
+        if((2 + 3) == (a + b)) { a = 0; }
+        
+        // simple ANDs
+        if(a == 0 and b == 1) { a = 0; }
+        if(a > 0 and b < 1) { a = 0; }
+        if((2 + 3) == (a + b) and (a + b) > (1 + 2)) { a = 0; }
+
+        // multiple ANDs
+        if(2 == a and b > 1 and c < 2) { a = 0; }
+        if( (2 == a and b > 1 and c < 2) and (2 == a and b > 1 and c < 2) ) { a = 0; }
+
+        // simple ORs
+        if(a == 0 or b == 1) { a = 0; }
+        if(a > 0 or b < 1) { a = 0; }
+        if((2 + 3) == (a + b) or (a + b) > (1 + 2)) { a = 0; }
+
+        // multiple ORs
+        if(2 == a or b > 1 or c < 2) { a = 0; }
+        if( (2 == a or b > 1 or c < 2) or (2 == a or b > 1 or c < 2) ) { a = 0; }
+        
+        // simple in-line conditionals
+        a = true ? a : b;
+        a = b < 1 ? a : b;
+        a = a > 1 ? a : b;
+        a = a + b == b + a ? a : b;
+        
+        // more complex in-line conditionals
+        a = true or false ? a + b : b + a;
+        a = b < 1 and a > 1 ? (a + 1) * (b + 2) : b * a;
+        a = a > 1 or b < 1 ? a * b : a * b * a;
+        a = (a + b == b + a) and (a + b != b + a) ? (a + b) * (a + b) : (b + a) * (b + a);
+    }
+}

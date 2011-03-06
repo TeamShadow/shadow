@@ -1,0 +1,47 @@
+class Loops {
+
+    public test( ) => ( ) {
+        int a;
+        int b;
+        
+        // simple while loop
+        while(true) { a += 1; }
+        while(false) { a += 1; }
+        while(a > 1) { a += 1; }
+        while(a+1 > 1) { a += 1; }
+        while(a > b) { a += 1; }
+        while(a+1 > b+1) { a += 1; }
+
+        // complex conditionals
+        while(true and false) { a += 1; }
+        while(a > 1 and b > 1) { a += 1; }
+        while(a+1 > 1 or b+1 > 1) { a += 1; }
+        while(a > b or a < b) { a += 1; }
+        while(a+1 > b+1 and a+1 < b+1) { a += 1; }
+
+        // complex body
+        while(false) {
+            a = a * b;
+            b = b * b;
+            b += 7;
+        }
+       
+        while(a > 1) {
+            a += 1;
+            if(a > 1) { a += 1; }
+            else { b += 1; }
+            b += 1;
+        }
+
+        // loops inside of loops
+        while(a > 1) {
+            while(b > 1) {
+                b += 1;
+            }
+            a += 1;
+        }        
+
+        a = 1;  // so we have some place to go
+    }
+
+}

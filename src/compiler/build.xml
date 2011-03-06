@@ -41,8 +41,8 @@
                 		<attribute name="Main-Class" value="shadow.Main"/>
 	                	<attribute name="Class-Path" value="."/>
 			</manifest>
-			<fileset dir="/home/wspeirs/workspace/shadow_compiler/bin"/>
-			<zipfileset excludes="META-INF/*.SF" src="/home/wspeirs/workspace/shadow_compiler/lib/commons-cli.jar"/>
+			<fileset dir="bin"/>
+			<zipfileset excludes="META-INF/*.SF" src="lib/commons-cli.jar"/>
 		</jar>
 	</target>
 	

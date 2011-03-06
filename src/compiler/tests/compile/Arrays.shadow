@@ -1,5 +1,5 @@
 
-class Test {
+class Arrays {
     // create a single array
     public int[] a;
     public int[] a = new int[3];

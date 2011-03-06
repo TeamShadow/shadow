@@ -9,6 +9,6 @@ view Test2 {
     float[7] c;
 }
 
-class Blah {
+class View {
 view Test { int a; }
 }

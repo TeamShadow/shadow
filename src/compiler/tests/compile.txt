@@ -2,15 +2,39 @@
 # The fields are separated by ;
 # result; main_file; config; input (ignored); output (ignored); description
 
-0; arrays.shadow; ; ; ; Tests for arrays
-0; casting.shadow; ; ; ; Tests for casting
-0; operations.shadow; ; ; ; Tests for various operations
-0; for.shadow; ; ; ; Tests for 'for' loops
-0; foreach.shadow; ; ; ; Tests for 'foreach' loops
-0; methodcalls.shadow; ; ; ; Tests for method calls
-0; view.shadow; ; ; ; Tests for views
-0; conditionals.shadow; ; ; ; Tests for conditionals
-0; method.shadow; ; ; ; Tests for method declartaions
-0; constructor.shadow; ; ; ; Tests for constructors
-0; if.shadow; ; ; ; Tests for 'if' conditions
-0; member.shadow; ; ; ; Test for memeber access
+0; Array.shadow; ; ; ; Tests
+0; Arrays.shadow; ; ; ; Tests
+0; Assertion.shadow; ; ; ; Tests
+0; Basic.shadow; ; ; ; Tests
+0; Bill.shadow; ; ; ; Tests
+0; Casting.shadow; ; ; ; Tests
+0; Cast.shadow; ; ; ; Tests
+0; Child.shadow; ; ; ; Tests
+0; ComplexAccess.shadow; ; ; ; Tests
+0; Conditionals.shadow; ; ; ; Tests
+0; Constructor.shadow; ; ; ; Tests
+0; ControlFlow.shadow; ; ; ; Tests
+0; Final.shadow; ; ; ; Tests
+0; Foo.shadow; ; ; ; Tests
+0; Foreach.shadow; ; ; ; Tests
+0; For.shadow; ; ; ; Tests
+0; Grandchild.shadow; ; ; ; Tests
+0; If.shadow; ; ; ; Tests
+0; Imports.shadow; ; ; ; Tests
+0; InnerClass.shadow; ; ; ; Tests
+0; Interface.shadow; ; ; ; Tests
+0; LValue.shadow; ; ; ; Tests
+0; Member.shadow; ; ; ; Tests
+0; MethodAndField.shadow; ; ; ; Tests
+0; MethodCall.shadow; ; ; ; Tests
+0; MethodCalls.shadow; ; ; ; Tests
+0; Method.shadow; ; ; ; Tests
+0; Operations.shadow; ; ; ; Tests
+0; Parent.shadow; ; ; ; Tests
+0; Private.shadow; ; ; ; Tests
+0; Sequences.shadow; ; ; ; Tests
+0; Static.shadow; ; ; ; Tests
+0; Subtype.shadow; ; ; ; Tests
+0; Switch.shadow; ; ; ; Tests
+0; VariableDeclaration.shadow; ; ; ; Tests
+0; View.shadow; ; ; ; Tests
