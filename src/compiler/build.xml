@@ -35,12 +35,14 @@
 	
 	<!-- Compile everything into the compiler, excluding the test stuff -->
 	<target depends="build" name="jar">
-		<jar destfile="ShadowCompiler.jar" basedir="bin" excludes="**/test/**">
-			  <manifest>
-                <attribute name="Built-By" value="William R. Speirs and Barry Wittman"/>
-                <attribute name="Main-Class" value="shadow.Main"/>
-                <attribute name="Class-Path" value="."/>
-			  </manifest>
+		<jar destfile="ShadowCompiler.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+                		<attribute name="Built-By" value="William R. Speirs and Barry Wittman"/>
+                		<attribute name="Main-Class" value="shadow.Main"/>
+	                	<attribute name="Class-Path" value="."/>
+			</manifest>
+			<fileset dir="/home/wspeirs/workspace/shadow_compiler/bin"/>
+			<zipfileset excludes="META-INF/*.SF" src="/home/wspeirs/workspace/shadow_compiler/lib/commons-cli.jar"/>
 		</jar>
 	</target>
 	
