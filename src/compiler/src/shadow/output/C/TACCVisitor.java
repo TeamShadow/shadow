@@ -50,8 +50,8 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	 */
 	public TACCVisitor(TACClass theClass) {
 		super(theClass);
-		cWriter = new CPrettyPrinter(new PrintWriter(System.out));
-		metaWriter = new CPrettyPrinter(new PrintWriter(System.out));
+		cWriter = new CPrettyPrinter(new PrintWriter(System.out), "C: ");
+		metaWriter = new CPrettyPrinter(new PrintWriter(System.out), "M: ");
 	}
 	
 	public TACCVisitor(TACClass theClass, File shadowFile) throws ShadowException {

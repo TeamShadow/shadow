@@ -9,10 +9,17 @@ public class CPrettyPrinter {
 	private int COMMENT_WIDTH = 40;
 	private int TAB_WIDTH = 5;
 	
+	private String prefix = "";
+	
 	private PrintWriter writer;
 	
 	public CPrettyPrinter(PrintWriter writer) {
 		this.writer = writer;
+	}
+	
+	public CPrettyPrinter(PrintWriter writer, String prefix) {
+		this.writer = writer;
+		this.prefix = prefix;
 	}
 	
 	public CPrettyPrinter(PrintWriter writer, int commentWidth) {
@@ -33,6 +40,9 @@ public class CPrettyPrinter {
 	 */
 	public void print(String str, TACNode node) {
 		int lineLength = 0;
+		
+		// print out the prefix
+		writer.print(prefix);
 		
 		// print out the tab depths
 		for(int i=0; i < tabDepth; ++i) {
