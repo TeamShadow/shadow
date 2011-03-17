@@ -50,7 +50,11 @@ foreach my $test (@tests) {
 
 	print $cmd . "\n";
 
-	my $res = system("$cmd 2>&1 | cat >> build.log");
+	system("echo \"$cmd\" >> build.log");
+
+	my $res = system("/usr/bin/time -f \"res: %x, time: %es, avg mem: %Kk max mem: %Mk\" $cmd >> build.log 2>&1");
+	
+	system("echo \"\" >> build.log");
 
 	if($res == $test->{'res'}) {
 		print RESULTS "PASS: " . $test->{'file'} . "\n";
