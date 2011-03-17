@@ -8,6 +8,7 @@ import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 
@@ -16,9 +17,9 @@ public class TACClass {
 	private LinkedList<TACNode[]> fields;	/** Holds the entry & exit nodes for fields */
 	private LinkedList<TACMethod> methods;
 	private String className;
-	private ClassType type;
+	private ClassInterfaceBaseType type;
 	
-	public TACClass(String name, ClassType type) {
+	public TACClass(String name, ClassInterfaceBaseType type) {
 		this.fields = new LinkedList<TACNode[]>();
 		this.methods = new LinkedList<TACMethod>();
 		this.className = name;
@@ -88,18 +89,27 @@ public class TACClass {
 	}
 	
 	public String getExtendClassName() {
-		return type.getExtendType().getTypeName();
+		// TODO: still need to figure this out with interfaces & extending
+		
+		if(type.getExtendType() == null)
+			return null;
+		else
+			return type.getExtendType().getTypeName();
 	}
 	
 	public List<String> getImplementsClassNames() {
-		List<InterfaceType> interfaces = type.getInterfaces();
-		List<String> names = new ArrayList<String>(interfaces.size()); 
-		
-		for(InterfaceType it:interfaces) {
-			names.add(it.getTypeName());
+		if(type instanceof ClassType) {
+			List<InterfaceType> interfaces = ((ClassType) type).getInterfaces();
+			List<String> names = new ArrayList<String>(interfaces.size()); 
+			
+			for(InterfaceType it:interfaces) {
+				names.add(it.getTypeName());
+			}
+			
+			return names;
+		} else {
+			return new ArrayList<String>();
 		}
-		
-		return names;
 	}
 	
 	public void dump() {

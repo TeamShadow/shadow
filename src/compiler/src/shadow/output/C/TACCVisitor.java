@@ -162,8 +162,9 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		metaWriter.print("struct " + theClass.getName() + " {");
 		metaWriter.indent();
 		
-		// add the super class
-		metaWriter.print("struct " + theClass.getExtendClassName() + " __super;");
+		// add the super class (TODO: what do we do for interfaces???)
+		if(theClass.getExtendClassName() != null)
+			metaWriter.print("struct " + theClass.getExtendClassName() + " __super;");
 		
 		List<String> imps = theClass.getImplementsClassNames();
 		

@@ -9,8 +9,7 @@ import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.MethodSignature;
 
 public class ClassType extends ClassInterfaceBaseType {
-	protected ClassType extendType;
-	protected ArrayList<InterfaceType> implementTypes = new ArrayList<InterfaceType>();
+	private ArrayList<InterfaceType> implementTypes = new ArrayList<InterfaceType>();
 	
 	public ClassType(String typeName) {
 		this( typeName, 0 );
@@ -28,17 +27,9 @@ public class ClassType extends ClassInterfaceBaseType {
 		super( typeName, modifiers, outer, kind);
 	}	
 	
-	public void setExtendType(ClassType extendType) {
-		this.extendType = extendType;
-	}
-	
-	public ClassType getExtendType() {
-		return extendType;
-	}
-	
 	public boolean isDescendentOf(Type type)
 	{
-		ClassType parent = extendType;
+		ClassType parent = getExtendType();
 		while( parent != null )
 		{
 			if( parent.equals(type))
@@ -94,11 +85,11 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( containsMethod(signature, modifiers))
 			return true;
 
-		if( extendType == null )
+		if( getExtendType() == null )
 			return false;					
 		
 		//recursively check parents
-		return extendType.recursivelyContainsMethod(signature, modifiers );
+		return getExtendType().recursivelyContainsMethod(signature, modifiers );
 	}
 	
 	public MethodSignature recursivelyGetIndistinguishableMethod(MethodSignature signature)
@@ -107,11 +98,11 @@ public class ClassType extends ClassInterfaceBaseType {
 			return super.getIndistinguishableMethod(signature);
 		
 
-		if( extendType == null )
+		if( getExtendType() == null )
 			return null;
 
 		//recursively check parents
-		return extendType.recursivelyGetIndistinguishableMethod(signature);
+		return getExtendType().recursivelyGetIndistinguishableMethod(signature);
 	}
 	
 	public boolean recursivelyContainsIndistinguishableMethod(MethodSignature signature) //not identical, but indistinguishable at call time
@@ -120,8 +111,8 @@ public class ClassType extends ClassInterfaceBaseType {
 			return true;
 		
 		//recursively check parents
-		if( extendType != null )
-			return extendType.recursivelyContainsIndistinguishableMethod(signature);	
+		if( getExtendType() != null )
+			return getExtendType().recursivelyContainsIndistinguishableMethod(signature);	
 		
 		return false;
 	}
@@ -130,10 +121,10 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( containsField(fieldName) )
 			return true;
 		
-		if( extendType == null )
+		if( getExtendType() == null )
 			return false;
 		
-		return extendType.recursivelyContainsField(fieldName);
+		return getExtendType().recursivelyContainsField(fieldName);
 	}	
 	
 	public boolean recursivelyContainsMethod(String symbol)
@@ -141,10 +132,10 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( containsMethod(symbol) )
 			return true;
 		
-		if( extendType == null )
+		if( getExtendType() == null )
 			return false;
 		
-		return extendType.recursivelyContainsMethod(symbol);
+		return getExtendType().recursivelyContainsMethod(symbol);
 	}
 	
 	public boolean recursivelyContainsInnerClass(String className)
@@ -152,20 +143,20 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( containsInnerClass(className))
 			return true;
 		
-		if( extendType == null )
+		if( getExtendType() == null )
 			return false;		
 		
-		return extendType.recursivelyContainsInnerClass(className);
+		return getExtendType().recursivelyContainsInnerClass(className);
 	}
 	
 	public Type recursivelyGetInnerClass(String className) {
 		if( containsInnerClass(className) )
 			return getInnerClass(className);
 		
-		if( extendType == null )
+		if( getExtendType() == null )
 			return null;
 				
-		return extendType.recursivelyGetInnerClass(className);
+		return getExtendType().recursivelyGetInnerClass(className);
 	}
 
 	public Node recursivelyGetField(String fieldName)
@@ -173,10 +164,10 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( containsField(fieldName) )
 			return getField(fieldName);
 		
-		if( extendType == null )
+		if( getExtendType() == null )
 			return null;
 				
-		return extendType.recursivelyGetField(fieldName);
+		return getExtendType().recursivelyGetField(fieldName);
 	}
 	
 	public List<MethodSignature> getMethods(String methodName) {
@@ -194,8 +185,8 @@ public class ClassType extends ClassInterfaceBaseType {
 				if( !list.contains( signature ) )
 					list.add(signature);
 		
-		if( extendType != null )
-			return extendType.recursivelyGetMethods(methodName, list);
+		if( getExtendType() != null )
+			return getExtendType().recursivelyGetMethods(methodName, list);
 		else
 			return list;
 	}

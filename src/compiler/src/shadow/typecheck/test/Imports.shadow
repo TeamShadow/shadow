@@ -1,4 +1,4 @@
-import shadow.utility@Random;
+// import shadow.utility@Random;
 
 class Imports
 {
@@ -6,13 +6,13 @@ class Imports
 	{
 		int a = 10;
 		
-		Random r = new Random();
+//		Random r = new Random();
 		
-		a += r.value;
+//		a += r.value;
 		
-		shadow.utility@Random v = new shadow.utility@Random();
+//		shadow.utility@Random v = new shadow.utility@Random();
 		
-		a *= v.value;
+//		a *= v.value;
 					
 	}
 }

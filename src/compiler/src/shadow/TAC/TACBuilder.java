@@ -14,7 +14,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.MethodSignature;
-import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.ClassInterfaceBaseType;
 
 /*
  * This class is a total hack right now
@@ -39,7 +39,7 @@ public class TACBuilder extends AbstractASTVisitor {
 	}
 	
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
-		ClassType type = (ClassType)node.getType();
+		ClassInterfaceBaseType type = (ClassInterfaceBaseType)node.getType();
 		
 		// create a new class
 		TACClass theClass = new TACClass(node.getImage(), type); 

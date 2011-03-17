@@ -9,10 +9,11 @@ import shadow.parser.javacc.Node;
 import shadow.typecheck.MethodSignature;
 
 public abstract class ClassInterfaceBaseType extends Type {
-	protected HashMap<String, Node> fieldTable;
-	protected HashMap<String, List<MethodSignature> > methodTable;
-	protected HashMap<String, Type> innerClasses;
-	protected String packageName; //package
+	private ClassType extendType;
+	private HashMap<String, Node> fieldTable;
+	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private
+	private HashMap<String, Type> innerClasses;
+	private String packageName; //package
 	
 	public ClassInterfaceBaseType(String typeName) {
 		this( typeName, 0 );
@@ -38,6 +39,14 @@ public abstract class ClassInterfaceBaseType extends Type {
 			outerClass.innerClasses.put(typeName, this);
 		}
 	}	
+	
+	public void setExtendType(ClassType extendType) {
+		this.extendType = extendType;
+	}
+	
+	public ClassType getExtendType() {
+		return extendType;
+	}
 	
 	public boolean containsField(String fieldName) {
 		return fieldTable.containsKey(fieldName);
