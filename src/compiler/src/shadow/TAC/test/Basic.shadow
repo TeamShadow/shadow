@@ -1,4 +1,4 @@
-class Basic {
+class Basic extends Loops implements TestInterface {
 
     public thrower() => () throws Basic {
         throw new Basic();
