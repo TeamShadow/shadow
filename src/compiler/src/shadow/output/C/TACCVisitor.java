@@ -26,7 +26,6 @@ import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACReturn;
 import shadow.TAC.nodes.TACUnaryOperation;
 import shadow.output.AbstractTACLinearVisitor;
-import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.ModifiedType;
@@ -101,24 +100,18 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		metaWriter.print("#ifndef " + metaShortName.toUpperCase());
 		metaWriter.print("#define " + metaShortName.toUpperCase());
 		metaWriter.print("");
-	}
-
-	@Override
-	public void endFile() {
-		metaWriter.print("#endif");
-	}
-
-	@Override
-	public void startFields() {
-		metaWriter.print("struct " + this.getTheClass().getName() + " {");
+		
+		// create the method structure
+		metaWriter.print("struct " + this.getTheClass().getName() + "_methods {");
 		metaWriter.indent();
 		
-		// we need to print function pointers for all of the methods
 		List<TACMethod> methods = this.getTheClass().getMethods();
 		
 		for(TACMethod method:methods) {
+			// don't need the field init method included
 			if(method.getName().startsWith("__init"))
 				continue;
+			
 			StringBuffer sb = new StringBuffer();
 			List<Type> retTypes = method.getReturnTypes();
 			List<ModifiedType> paramTypes = method.getParamTypes();
@@ -149,12 +142,48 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			
 			metaWriter.print(sb.toString());
 		}
+
+		
+		metaWriter.outdent();
+		metaWriter.print("};");
+		metaWriter.print("");
+		
+	}
+
+	@Override
+	public void endFile() {
+		metaWriter.print("#endif");
+	}
+
+	@Override
+	public void startFields() {
+		TACClass theClass = this.getTheClass();
+		
+		metaWriter.print("struct " + theClass.getName() + " {");
+		metaWriter.indent();
+		
+		// add the super class
+		metaWriter.print("struct " + theClass.getExtendClassName() + " __super;");
+		
+		List<String> imps = theClass.getImplementsClassNames();
 		
 		metaWriter.print("");
+		metaWriter.print("/* Interfaces */");
+		
+		// add pointers to all the implementing classes
+		for(String s:imps) {
+			metaWriter.print("struct " + s + " *__" + s.toLowerCase() + ";");
+		}
+		
+		// add a pointer to the methods for this class
+		metaWriter.print("struct " + theClass.getName() + "_methods *__methods;");
 		
 		// add in a var to keep track of the reference counts to this object
-		metaWriter.print("unsigned int __ref_count");
 		metaWriter.print("");
+		metaWriter.print("unsigned int __ref_count;");	// we might want to move this to Object ONLY
+		metaWriter.print("");
+		
+		metaWriter.print("/* Fields */");
 		
 		curWriter = metaWriter;
 	}

@@ -8,7 +8,6 @@ import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
-import shadow.TAC.nodes.TACAllocation;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -43,7 +42,7 @@ public class TACBuilder extends AbstractASTVisitor {
 		ClassType type = (ClassType)node.getType();
 		
 		// create a new class
-		TACClass theClass = new TACClass(node.getImage()); 
+		TACClass theClass = new TACClass(node.getImage(), type); 
 		
 		//
 		// TODO: Fix this for multiple fields declared at once: public int x,y;

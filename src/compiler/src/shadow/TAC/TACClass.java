@@ -1,23 +1,28 @@
 package shadow.TAC;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.Node;
-import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InterfaceType;
 
 public class TACClass {
 
 	private LinkedList<TACNode[]> fields;	/** Holds the entry & exit nodes for fields */
 	private LinkedList<TACMethod> methods;
 	private String className;
+	private ClassType type;
 	
-	public TACClass(String name) {
-		fields = new LinkedList<TACNode[]>();
-		methods = new LinkedList<TACMethod>();
-		className = name;
+	public TACClass(String name, ClassType type) {
+		this.fields = new LinkedList<TACNode[]>();
+		this.methods = new LinkedList<TACMethod>();
+		this.className = name;
+		this.type = type;
 	}
 	
 	/**
@@ -80,6 +85,21 @@ public class TACClass {
 	
 	public String getName() {
 		return className;
+	}
+	
+	public String getExtendClassName() {
+		return type.getExtendType().getTypeName();
+	}
+	
+	public List<String> getImplementsClassNames() {
+		List<InterfaceType> interfaces = type.getInterfaces();
+		List<String> names = new ArrayList<String>(interfaces.size()); 
+		
+		for(InterfaceType it:interfaces) {
+			names.add(it.getTypeName());
+		}
+		
+		return names;
 	}
 	
 	public void dump() {
