@@ -2,6 +2,8 @@ class If {
     public blah() => () {
         int a;
         int b = 7;
+        int c, d;
+        int x;
 
         if(a == b);        
         
