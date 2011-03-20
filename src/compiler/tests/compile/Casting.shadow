@@ -12,7 +12,7 @@ class Casting {
     public code a = cast<code>(4);
     public byte a = cast<byte>(4);
     public boolean a = cast<boolean>(false);     
-    public Wombat a = cast<Wombat>(new Object());  
+//    public Wombat a = cast<Wombat>(new Object());  
     
     public () => () fun = cast<()=>()>blah;        
     
@@ -30,12 +30,11 @@ class Casting {
 	    code a = cast<code>(4);
 	    byte a = cast<byte>(4);
 	    boolean a = cast<boolean>(false);     
-	    Wombat a = cast<Wombat>(new Object());  
+//	    Wombat a = cast<Wombat>(new Object());  
 	    
 	    () => () fun = cast<()=>()>blah;        
 	    
 	    //crazy cast
-	        
         (int[][][], int, int ) => ( ()=>(int[][][])) b  = cast<(int[][][], int, int ) => ( ()=>(int[][][]))>(blah);        
    }
 }
