@@ -1,13 +1,17 @@
 class Foreach {
     public test() => () {
+    
+    	int[] int_list = new int[20];
+
         foreach(int i in int_list) { ; }
         
         // nested loops
         foreach(int i in int_list) {
-            foreach(int i in int_list) {
-                foreach(int i in int_list) {
+            foreach(int j in int_list) {
+                foreach(int k in int_list) {
                 }
             }
         }
     }
+
 }

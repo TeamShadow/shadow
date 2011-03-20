@@ -1,90 +1,59 @@
 
 class Arrays {
     // create a single array
-    public int[] a;
-    public int[] a = new int[3];
-    public int[] a = blah;
-    public int[] a = blah[1];
-    public int[] a = blah[1][3];
-    public int[] a = blah.blah;
-    public int[] a = blah.blah[5];
-    public int[] a = blah.blah(5,"test");
+    public int[] a1;
+    public int[] a2 = new int[3];
+    public int[] a3 = blah;
+    public int[] a4 = blah[1];
+    public int[] a5 = blah[1][3];
     
     // multidimensional arrays
-    public int[][] a;
-    public int[][] a = new int[3][4];
-    public int[][] a = blah;
-    public int[][] a = blah[1];
-    public int[][] a = blah[1][3];
-    public int[][] a = blah.blah[5];
-    public int[][] a = blah.blah(5,"test");
+    public int[][] b1;
+    public int[][] b2 = new int[3][4];
+    public int[][] b3 = blah;
+    public int[][] b4 = blah[1];
+    public int[][] b5 = blah[1][3];
     
     // contiguous arrays    
-    public int[,] a;
-    public int[,] a = new int[3,4];
-    public int[,] a = blah;
-    public int[,] a = blah[1];
-    public int[,] a = blah[1,3];
-    public int[,] a = blah.blah[5];
-    public int[,] a = blah.blah(5,"test");
+    public int[,] c1;
+    public int[,] c2 = new int[3,4];
+    public int[,] c3 = blah;
+    public int[,] c4 = blah[1];
+    public int[,] c5 = blah[1,3];
     
     public blah() => () {
         // test the same but in a method
-        int[] a;
-        int[] a = new int[3];
-        int[] a = blah;
-        int[] a = blah[1];
-        int[] a = blah[1][3];
-        int[] a = blah.blah;
-        int[] a = blah.blah[5];
-        int[] a = blah.blah(5,"test");
-        
-        // multidimensional arrays
-        int[][] a;
-        int[][] a = new int[3][4];
-        int[][] a = blah;
-        int[][] a = blah[1];
-        int[][] a = blah[1][3];
-        int[][] a = blah.blah[5];
-        int[][] a = blah.blah(5,"test");
-        
-        // contiguous arrays    
-    	int[,] a;
-	    int[,] a = new int[3,4];
-	    int[,] a = blah;
-	    int[,] a = blah[1];
-	    int[,] a = blah[1,3];
-	    int[,] a = blah.blah[5];
-	    int[,] a = blah.blah(5,"test");
+
+	    // create a single array
+	    public int[] a1;
+	    public int[] a2 = new int[3];
+	    public int[] a3 = blah;
+	    public int[] a4 = blah[1];
+	    public int[] a5 = blah[1][3];
+	    
+	    // multidimensional arrays
+	    public int[][] b1;
+	    public int[][] b2 = new int[3][4];
+	    public int[][] b3 = blah;
+	    public int[][] b4 = blah[1];
+	    public int[][] b5 = blah[1][3];
+	    
+	    // contiguous arrays    
+	    public int[,] c1;
+	    public int[,] c2 = new int[3,4];
+	    public int[,] c3 = blah;
+	    public int[,] c4 = blah[1];
+	    public int[,] c5 = blah[1,3];
              
         // test some other array expressions
-        a = 3;
-        a = a[8];
-        a = a[7].blah;
-        a = a[7].blah[2];
-        a = a[7].blah[2][4];
-        a = a[7].blah(2,3);
+        a1[7] = 3;
+        a1[7] = a1[8];
         
-        a[7] = 3;
-        a[7] = a[8];
-        a[7] = a[7].blah;
-        a[7] = a[7].blah[2];
-        a[7] = a[7].blah[2][4];
-        a[7] = a[7].blah(2,3);
+        b1[7][8] = 3;
+        b1[7][8] = a[8];
         
-        a[7][8] = 3;
-        a[7][8] = a[8];
-        a[7][8] = a[7].blah;
-        a[7][8] = a[7].blah[2];
-        a[7][8] = a[7].blah[2][4];
-        a[7][8] = a[7].blah(2,3); 
-        
-        a[7,8] = 3;
-        a[7,8] = a[8];
-        a[7,8] = a[7].blah;
-        a[7,8] = a[7].blah[2];
-        a[7,8] = a[7].blah[2][4];
-        a[7,8] = a[7].blah(2,3);
+        c1[7,8] = 3;
+        ac1[7,8] = a[8];
         
         a[2, 4, 6, x + 4, 13] = 15;
         a[4][2, x + 4, 13][7] = 15;

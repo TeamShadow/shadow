@@ -1,9 +1,12 @@
 class For {
     public test() => () {
-        for(int i=0; i < x; i += 1) { ; }
+    	int i;
+    	int x;
+    	
+        for(int j=0; j < x; j += 1) { ; }
         for(; i < x; i += 1) { ; }
-        for(int i=0; true; i += 1) { ; }
-        for(int i=0; i < x; ) { ; }
+        for(int j=0; true; j += 1) { ; }
+        for(int j=0; j < x; ) { ; }
 
         for(i=0; i < x; i += 1) { ; }
         for(i=0; true; i += 1) { ; }
@@ -15,8 +18,8 @@ class For {
 
         // nested loops
         for(int i=0; i < x; i += 2) {
-            for(int i=0; i < x; i += 2) {
-                for(int i=0; i < x; i +=2) {
+            for(int j=0; j < x; j += 2) {
+                for(int k=0; k < x; k +=2) {
                 }
             }
         }

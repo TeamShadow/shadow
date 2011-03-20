@@ -8,7 +8,7 @@ class Cast {
 		a = new Subclass2();
 		
 		int b = cast<int>(5.4);
-		//int x = cast<int>(a);  //uncomment to see incomparable types
+		int x = cast<int>(a);  //uncomment to see incomparable types
 			
 		
 		Subclass1 s;
