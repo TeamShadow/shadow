@@ -12,7 +12,7 @@ class Casting {
     public code h = cast<code>(4);
     public byte i = cast<byte>(4);
     public boolean j = cast<boolean>(false);     
-    public Wombat k = cast<Wombat>(new Object());  
+    public String k = cast<String>(new Object());  
     
     public () => () fun = cast<()=>()>blah;        
     
