@@ -64,6 +64,12 @@ public class Configuration implements Iterator<File> {
 			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG_FILE)));
 		}
 		
+		if(Boolean.getBoolean("DEBUG")) {
+			for(File i:importPaths) {
+				System.out.println("IMPORT: " + i.getAbsolutePath());
+			}
+		}
+		
 		// by the time we get here, all configs & parents have been parsed
 		// we let anything on the command line override the config files
 		
@@ -127,6 +133,9 @@ public class Configuration implements Iterator<File> {
 	private void parseConfigFile(File configFile) {
 		ConfigParser parser = new ConfigParser(this);
 		
+		if(Boolean.getBoolean("DEBUG"))
+			System.out.println("PARSING: " + configFile.getAbsolutePath());
+		
 		parser.parse(configFile);
 		
 		// see if we found a parent or not
@@ -135,7 +144,7 @@ public class Configuration implements Iterator<File> {
 			
 			// reset the parent
 			this.parentConfig = null;
-			
+
 			// parse the parent
 			parseConfigFile(parent);
 		}
@@ -224,11 +233,7 @@ public class Configuration implements Iterator<File> {
 			this.systemImportPath = new File(systemImportPath);
 	}
 
-	public String getParentConfig() {
-		return parentConfig;
-	}
-
-	public void setParentConfig(String parentConfig) {
+	public void setParent(String parentConfig) {
 		this.parentConfig = parentConfig;
 	}
 
