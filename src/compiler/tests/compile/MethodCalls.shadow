@@ -1,15 +1,30 @@
 class MethodCalls {
+
+
+	public method () => (int, int)
+	{
+		return (1,2);
+	}
+	
+	public method (int a) => (int)
+	{
+		return 1;
+	}
+	
+	public method (int a, int b) => (int)
+	{
+		return 1;
+	}
+
     public test() => () {
 
 		int x = method();
-		x = method();
+		int y = 5;
 		
 		x = method( 3 );
 		x = method( 3, 4 );
 		x = method( 3, 4 + y );
 		
 		(x, y) = method();
-		
-
     }
 }
