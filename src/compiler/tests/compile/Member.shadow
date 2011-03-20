@@ -4,50 +4,34 @@
 class Member {
 
 	//Public
-    public int x;   	// basic int
-    public double x;	// basic double
-    public float x;		// basic float
-    public code x;   	// basic code
-    public byte x;		// basic byte
-    public boolean x;	// basic boolean
-    public short x;		// basic short
-    public long x;		// basic short
-    public string x;    // basic string
-    public A x;			// basic object
+    public int a;   	// basic int
+    public double b;	// basic double
+    public float c;		// basic float
+    public code d;   	// basic code
+    public byte e;		// basic byte
+    public boolean f;	// basic boolean
+    public short g;		// basic short
+    public long h;		// basic short    
+    public Object i;			// basic object
     
 	//Private
-    private int x;   	// private int
-    private double x;	// private double
-    private float x;	// private float
-    private code x;   	// private code
-    private byte x;		// private byte
-    private boolean x;	// private boolean
-    private short x;	// private short
-    private long x;		// private short
-    private string x;   // private string
-    private A x;		// private object    
-    
-   	//Protected
-    protected int x;   	// protected int
-    protected double x;	// protected double
-    protected float x;	// protected float
-    protected code x;   // protected code
-    protected byte x;	// protected byte
-    protected boolean x;// protected boolean
-    protected short x;	// protected short
-    protected long x;	// protected short
-    protected string x; // protected string
-    protected A x;		// protected object
+    private int j;   	// private int
+    private double k;	// private double
+    private float l;	// private float
+    private code m;   	// private code
+    private byte n;		// private byte
+    private boolean o;	// private boolean
+    private short p;	// private short
+    private long q;		// private short    
+    private Object s;		// private object    
+
 
   	//Modifiers
-    public static int x;   		// static int
-    public final int x;   		// final int
-//    public synchronized int x;  // synchronized int
-//    public transient int x;   	// transient int
-//    public volatile int x;   	// volatile int
-//    public strictfp int x;   	// strictfp int
-    public weak int x;   		// weak int
+    public static int t;   		// static int
+    public final int u;   		// final int
+    public weak int v;   		// weak int
+    public weak int w;   		// immutable int
     
     //Crazy Test
-    private static final /*synchronized transient volatile strictfp*/ weak double x;
+    private static final weak double x;
 }
