@@ -17,23 +17,23 @@ public class Configuration implements Iterator<File> {
 	
 	// these are the single letter command line args
 	private static final String MAIN_CLASS	= "M";
-	private static final String IMPORTS 	= "I";
 	private static final String CONFIG_FILE = "C";
 	private static final String CHECK		= "c";
-	private static final String OS			= "os";
-	private static final String ARCH		= "arch";
 
+	private String parentConfig = null; /** The parent configuration from a config file */
 	private String mainClass = null; /** The file containing the class with the Main method */
 	private List<File> shadowFiles = null;
 	private int currentShadowFile = 0;
+	private File systemImportPath = null;	/** This is the import path for all the system files */
 	private List<File> importPaths = null;
 	private boolean checkOnly = false;
-	private int arch = 32;
-	private String os;
+	private int arch = -1;
+	private String os = null;
 	
 	private static Configuration config = new Configuration();
 	
-	public Configuration() {
+	private Configuration() {
+		this.importPaths = new ArrayList<File>();
 	}
 	
 	/**
@@ -50,34 +50,34 @@ public class Configuration implements Iterator<File> {
 	 * @throws ShadowException
 	 * @throws ParseException 
 	 */
-	public void parse(CommandLine cmdLine) throws ShadowException {
-		// get the main class
-		mainClass = cmdLine.getOptionValue(MAIN_CLASS);
+	public boolean parse(CommandLine cmdLine) throws ShadowException {
 		
-		if(cmdLine.hasOption(OS))
-			this.os = cmdLine.getOptionValue(OS);
-		else
-			this.os = System.getProperty("os.name").toString();
-		
-		if(cmdLine.hasOption(ARCH))
-			this.arch = Integer.parseInt(cmdLine.getOptionValue(ARCH));
-		else
-			this.arch = Integer.parseInt(System.getProperty("sun.arch.data.model"));
-		
-		// get the import paths
-		importPaths = new ArrayList<File>();
-		
-		if(cmdLine.hasOption(IMPORTS)) {
-				for(String importPath:cmdLine.getOptionValues(IMPORTS))
-					importPaths.add(new File(importPath));
+		// see if we have a config file or not
+		if(!cmdLine.hasOption(CONFIG_FILE)) {
+			// we just parse the built-in parent config file
+			// hoping everything else is set on the cmd line
+			ConfigParser systemParser = new ConfigParser(this);
+			
+			systemParser.parse(System.class.getResource("/system.xml"));
+		} else {
+			// this will recursively parse through the parents
+			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG_FILE)));
 		}
 		
-		//
-		// TODO: Get all of the configuration information from an XML config file
-		//
+		// by the time we get here, all configs & parents have been parsed
+		// we let anything on the command line override the config files
+		
+		// get the main class
+		if(cmdLine.hasOption(MAIN_CLASS))
+			mainClass = cmdLine.getOptionValue(MAIN_CLASS);
 		
 		// see if all we want is to check the file
 		checkOnly = cmdLine.hasOption(CHECK);
+		
+		//
+		// TODO: We should probably compile all the files in the local dir
+		//       if not specified on the command line
+		//
 		
 		// get all of the files to compile
 		shadowFiles = new ArrayList<File>();
@@ -85,12 +85,59 @@ public class Configuration implements Iterator<File> {
 			shadowFiles.add(new File(shadowFile));
 		}
 		
+		// set the main class if only one file is specified
 		if(shadowFiles.size() == 1)
 			mainClass = shadowFiles.get(0).getAbsolutePath();
 		
-		// perform the sanity checks here
+		//
+		// Sanity checks
+		//
+		if(shadowFiles.size() == 0) {
+			System.err.println("No source files specified to compile");
+			return false;
+		}
+		
 		if(!checkOnly && mainClass == null) {
-			throw new ShadowException("Compilation requested, but main class not specified.");
+			System.err.println("Did not specify a main class");
+			return false;
+		}
+		
+		if(arch == -1) {
+			System.err.println("Did not specify an architecture");
+			return false;
+		}
+		
+		if(os == null) {
+			System.err.println("Did not specify an OS");
+			return false;
+		}
+		
+		if(this.systemImportPath == null) {
+			System.err.println("No system import path specified");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Parse a config file, recursively parsing parents when found.
+	 * @param configFile The config file to parse
+	 */
+	private void parseConfigFile(File configFile) {
+		ConfigParser parser = new ConfigParser(this);
+		
+		parser.parse(configFile);
+		
+		// see if we found a parent or not
+		if(this.parentConfig != null) {
+			File parent = new File(parentConfig);
+			
+			// reset the parent
+			this.parentConfig = null;
+			
+			// parse the parent
+			parseConfigFile(parent);
 		}
 	}
 	
@@ -111,13 +158,6 @@ public class Configuration implements Iterator<File> {
 
 		// setup the configuration file option
 		@SuppressWarnings("static-access")
-		Option importPaths = OptionBuilder.withLongOpt("imports")
-										  .hasArgs()
-										  .withDescription("Comma seperated list of import paths")
-										  .create(IMPORTS);
-
-		// setup the configuration file option
-		@SuppressWarnings("static-access")
 		Option configOption = OptionBuilder.withLongOpt("config")
 										   .hasArg()
 										   .withArgName("configuration.xml")
@@ -130,27 +170,10 @@ public class Configuration implements Iterator<File> {
 										  .withDescription("Parse and type-check the Shadow files")
 										  .create(CHECK);
 
-		// create the check option
-		@SuppressWarnings("static-access")
-		Option osOption = OptionBuilder.withLongOpt(OS)
-										   .hasArg()
-										  .withDescription("Target OS: Windows or Linux")
-										  .create();
-
-		// create the check option
-		@SuppressWarnings("static-access")
-		Option archOption = OptionBuilder.withLongOpt(ARCH)
-										   .hasArg()
-										  .withDescription("Target architecture: 32 or 64")
-										  .create();
-
 		// add all the options from above
 		options.addOption(mainClass);
-		options.addOption(importPaths);
 		options.addOption(configOption);
 		options.addOption(checkOption);
-		options.addOption(osOption);
-		options.addOption(archOption);
 
 		// add new simple options
 		options.addOption(new Option("h", "help", false, "Print this help message"));
@@ -162,16 +185,51 @@ public class Configuration implements Iterator<File> {
 		return mainClass;
 	}
 
+	public void setMainClass(String mainClass) {
+		this.mainClass = mainClass;
+	}
+
 	public int getArch() {
 		return arch;
+	}
+
+	public void setArch(int arch) {
+		if(this.arch == -1)
+			this.arch = arch;
 	}
 
 	public String getOs() {
 		return os;
 	}
 
-	public List<File> getImportPaths() {
+	public void setOs(String os) {
+		if(this.os == null)
+			this.os = os;
+	}
+
+	public List<File> getImports() {
 		return importPaths;
+	}
+
+	public void addImport(String importPath) {
+		this.importPaths.add(new File(importPath));
+	}
+
+	public File getSystemImport() {
+		return systemImportPath;
+	}
+
+	public void setSystemImport(String systemImportPath) {
+		if(this.systemImportPath == null)
+			this.systemImportPath = new File(systemImportPath);
+	}
+
+	public String getParentConfig() {
+		return parentConfig;
+	}
+
+	public void setParentConfig(String parentConfig) {
+		this.parentConfig = parentConfig;
 	}
 
 	public boolean isCheckOnly() {

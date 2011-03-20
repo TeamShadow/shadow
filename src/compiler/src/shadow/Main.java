@@ -64,7 +64,8 @@ public class Main {
 			}
 			
 			// parse out the command line
-			config.parse(commandLine);
+			if(!config.parse(commandLine))
+				System.exit(GENERAL_ERROR);
 			
 		} catch (org.apache.commons.cli.ParseException e) {
 					System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());

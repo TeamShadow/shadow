@@ -442,7 +442,7 @@ public class TypeCollector extends BaseChecker
 			if( separator.equals("\\"))
 				separator = "\\\\";
 			String path = name.replaceAll("\\.", separator);
-			List<File> importPaths = Configuration.getInstance().getImportPaths();
+			List<File> importPaths = Configuration.getInstance().getImports();
 			boolean success = false;				
 			
 			if( importPaths != null && importPaths.size() > 0 )
