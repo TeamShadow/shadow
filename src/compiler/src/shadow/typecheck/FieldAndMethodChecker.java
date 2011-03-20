@@ -8,6 +8,7 @@ import java.util.Map;
 
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
@@ -431,6 +432,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
+		return WalkType.NO_CHILDREN;
+	}
 	
 	
 	private boolean createMethod( Node declaration, Node node )

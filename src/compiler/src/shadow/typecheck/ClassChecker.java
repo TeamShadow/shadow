@@ -74,6 +74,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
@@ -240,7 +241,9 @@ public class ClassChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		Type type = node.jjtGetChild(0).getType();
+		Node child =  node.jjtGetChild(0);
+		
+		Type type = child.getType();
 		
 		List<Integer> dimensions = node.getArrayDimensions();
 		
@@ -861,6 +864,27 @@ public class ClassChecker extends BaseChecker {
 			node.setModifiers( child2.getModifiers() ); //is this meaningful?
 		}
 
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
+		if( node.getType() != null ) //optimization if type already determined by FieldAndMethodChecker
+			return WalkType.NO_CHILDREN;		
+		
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+
+		String typeName = node.getImage();
+		Type type = lookupType(typeName);
+		
+		if(type == null)
+		{
+			addError(node, Error.UNDEF_TYP, typeName);
+			type = Type.UNKNOWN;
+		}
+				
+		node.setType(type);
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
