@@ -30,7 +30,7 @@ class Casting {
 	    code h = cast<code>(4);
 	    byte i = cast<byte>(4);
 	    boolean j = cast<boolean>(false);     
-	    Wombat k = cast<Wombat>(new Object());  
+	    String k = cast<String>(new Object());  
 	    
 	    () => () fun = cast<()=>()>blah;        
 	    
