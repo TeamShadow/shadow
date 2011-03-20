@@ -1,4 +1,6 @@
+//Views not supported yet
 
+/*
 view Test {
     int a;
     int b;
@@ -8,7 +10,7 @@ view Test2 {
     int[3] a;
     float[7] c;
 }
-
+*/
 class View {
-view Test { int a; }
+//view Test { int a; }
 }

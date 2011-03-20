@@ -347,9 +347,9 @@ public class TypeCollector extends BaseChecker
 			case INTERFACE:
 				type = new InterfaceType(typeName, modifiers, currentType );
 				break;			
+				
 			case VIEW:
-				//add support for views eventually
-				break;
+				//add support for views eventually			
 			default:
 				throw new ShadowException("Unsupported type!" );
 			}
