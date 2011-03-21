@@ -37,7 +37,7 @@ public class ArrayType extends Type
 		this( baseType, arrayDimensions, 0 );
 	}	
 	
-	public ArrayType(Type baseType, List<Integer> arrayDimensions, int index ) {
+	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index ) {
 		super( makeName(baseType, arrayDimensions, index), baseType.getModifiers(), baseType.getOuter(), Kind.ARRAY );
 		dimensions = arrayDimensions.get(index);		
 		if( arrayDimensions.size() == index + 1 )

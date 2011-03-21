@@ -26,22 +26,22 @@ public class Type {
 		UNKNOWN
 	};
 	
-	public static final ClassType OBJECT = new ClassType( "Object", 0, null ); 
-	public static final ClassType BOOLEAN = new ClassType( "boolean" );
-	public static final ClassType BYTE = new ClassType( "byte" );
-	public static final ClassType CODE = new ClassType( "code" );	
-	public static final ClassType SHORT = new ClassType( "short" );
-	public static final ClassType INT = new ClassType( "int" );
-	public static final ClassType LONG = new ClassType( "long" );	  
-	public static final ClassType FLOAT = new ClassType( "float" );
-	public static final ClassType DOUBLE = new ClassType( "double" );
-	public static final ClassType STRING = new ClassType( "String" );
-	public static final ClassType UBYTE = new ClassType( "ubyte" );
-	public static final ClassType UINT = new ClassType( "uint" );
-	public static final ClassType ULONG = new ClassType( "ulong" );
-	public static final ClassType USHORT = new ClassType( "ushort" );
+	public static final ClassType OBJECT = new ClassType( "Object" ); 
+	public static final ClassType BOOLEAN = new ClassType( "boolean", OBJECT );
+	public static final ClassType BYTE = new ClassType( "byte", OBJECT );
+	public static final ClassType CODE = new ClassType( "code", OBJECT );	
+	public static final ClassType SHORT = new ClassType( "short", OBJECT );
+	public static final ClassType INT = new ClassType( "int", OBJECT );
+	public static final ClassType LONG = new ClassType( "long", OBJECT );
+	public static final ClassType FLOAT = new ClassType( "float", OBJECT );
+	public static final ClassType DOUBLE = new ClassType( "double", OBJECT );
+	public static final ClassType STRING = new ClassType( "String", OBJECT );
+	public static final ClassType UBYTE = new ClassType( "ubyte", OBJECT );
+	public static final ClassType UINT = new ClassType( "uint", OBJECT );
+	public static final ClassType ULONG = new ClassType( "ulong", OBJECT );
+	public static final ClassType USHORT = new ClassType( "ushort", OBJECT );
 	
-	public static final ClassType CLASS = new ClassType( "Class" );  //meta class for holding .class variables
+	public static final ClassType CLASS = new ClassType( "Class", OBJECT ); //meta class for holding .class variables
 	
 	public static final EnumType ENUM = new EnumType( "Enum", 0, null, OBJECT );
 	public static final ErrorType ERROR = new ErrorType( "Error", 0, null, null );	
@@ -178,7 +178,7 @@ public class Type {
 		}
 		else if( this.equals(CODE) )
 		{
-			return t.equals(UINT) || t.equals(LONG) || t.equals(ULONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			return t.equals(INT) || t.equals(UINT) || t.equals(LONG) || t.equals(ULONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
 		else if( this.equals(SHORT) )
 		{

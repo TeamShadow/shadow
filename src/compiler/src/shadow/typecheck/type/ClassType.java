@@ -11,6 +11,12 @@ import shadow.typecheck.MethodSignature;
 public class ClassType extends ClassInterfaceBaseType {
 	private ArrayList<InterfaceType> implementTypes = new ArrayList<InterfaceType>();
 	
+	
+	public ClassType(String typeName, ClassType parent ) {
+		this( typeName, 0 );
+		setExtendType( parent );
+	}
+	
 	public ClassType(String typeName) {
 		this( typeName, 0 );
 	}

@@ -35,6 +35,18 @@ public class MethodType extends Type {
 		return true;
 	}
 	
+	public boolean matchesModifiedTypes( List<ModifiedType> argumentTypes )
+	{
+		if( paramTypes.size() != argumentTypes.size() )
+			return false;
+		
+		for( int i = 0; i < paramTypes.size(); i++ )
+			if( !argumentTypes.get(i).getType().equals(paramTypes.get(i).getType()) || argumentTypes.get(i).getModifiers() != paramTypes.get(i).getModifiers() )
+				return false;
+		
+		return true;
+	}
+	
 	public boolean returns( List<Type> returnTypes )
 	{
 		if( returns.size() != returnTypes.size() )
@@ -87,14 +99,14 @@ public class MethodType extends Type {
 		return true;
 	}
 	
-	public void addParameter(String name, Node node) {
+	public void addParameter(String name, ModifiedType type) {
 		paramNames.add(name);
-		paramTypes.add(node);
+		paramTypes.add(type);
 	}
 	
-	public void addParameter(Node node) {
+	public void addParameter(ModifiedType type) {
 		paramNames.add(null); // have to add to keep in synch
-		paramTypes.add(node);
+		paramTypes.add(type);
 	}
 	
 	public ModifiedType getParameterType(String paramName) {

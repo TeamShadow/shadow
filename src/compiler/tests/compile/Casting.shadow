@@ -4,7 +4,7 @@ class Casting {
     public int b = cast<int>(4);
     public int c = cast<int>b;
     public int d = cast<int>(b);
-    public int e = cast<int>(new int[3][4]);
+   // public int e = cast<int>(new int[3][4]);
 
 	//check all types
     public float f = cast<float>(4);
@@ -22,7 +22,7 @@ class Casting {
 	    int b = cast<int>(4);
 	    int c = cast<int>b;
 	    int d = cast<int>(b);
-	    int e = cast<int>(new int[3][4]);
+	    //int e = cast<int>(new int[3][4]);
 	
 		//check all types
 	    float f = cast<float>(4);
@@ -34,8 +34,7 @@ class Casting {
 	    
 	    () => () fun = cast<()=>()>blah;        
 	    
-	    //crazy cast
-	        
-        (int[][][], int, int ) => ( ()=>(int[][][])) b  = cast<(int[][][], int, int ) => ( ()=>(int[][][]))>(blah);        
+	    //crazy cast	        
+        //(int[][][], int, int ) => ( ()=>(int[][][])) b  = cast<(int[][][], int, int ) => ( ()=>(int[][][]))>(blah);        
    }
 }

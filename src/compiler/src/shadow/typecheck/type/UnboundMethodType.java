@@ -2,7 +2,7 @@ package shadow.typecheck.type;
 
 public class UnboundMethodType extends Type
 {
-	ClassInterfaceBaseType outer;
+	//ClassInterfaceBaseType outer;
 
 	public UnboundMethodType(String typeName, ClassInterfaceBaseType outer )
 	{

@@ -1,6 +1,7 @@
 package shadow.typecheck;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,6 +40,7 @@ import shadow.parser.javacc.ASTForStatement;
 import shadow.parser.javacc.ASTForeachStatement;
 import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
+import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTIsExpression;
@@ -55,6 +57,7 @@ import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultType;
+import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTReturnStatement;
 import shadow.parser.javacc.ASTRightRotate;
 import shadow.parser.javacc.ASTRightShift;
@@ -74,7 +77,6 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
@@ -385,8 +387,12 @@ public class ClassChecker extends BaseChecker {
 				if( ModifierSet.isPrivate(field.getModifiers()) && currentType != classType   )
 					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
 				
-				if( directAccess && ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
-					addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
+				
+				if( curMethod != null ) //curMethod is null for field initializations
+				{
+					if( directAccess && ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
+						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
+				}
 				
 				return true;			
 			}
@@ -1106,6 +1112,45 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTFunctionType node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		MethodType methodType = new MethodType();		
+		
+		int children = node.jjtGetNumChildren(); 
+		if( children > 0 ) //fill in parameters
+		{		
+			for( int i = 0; i < children - 1; i++ )
+				methodType.addParameter(node.jjtGetChild(i));
+			
+			Node last = node.jjtGetChild(children - 1); 
+			
+			if(  last instanceof ASTResultTypes ) //if last child is results, add those
+			{
+				ASTResultTypes results = (ASTResultTypes)last;
+				for( Type type : results.getTypes() )
+					methodType.addReturn(type);
+			}
+			else //otherwise everything was a parameter
+				methodType.addParameter(last);			
+		}
+		
+		node.setType(methodType);
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+	
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			node.addType(node.jjtGetChild(i).getType());
+
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTCastExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
@@ -1118,7 +1163,31 @@ public class ClassChecker extends BaseChecker {
 			Type t1 = node.jjtGetChild(0).getType();  //type
 			Type t2 = node.jjtGetChild(1).getType();  //expression
 			
-			if( t1.isSubtype(t2) || t2.isSubtype(t1) )
+			
+			if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) //casting methods
+			{
+				MethodType method = (MethodType)t1;
+				UnboundMethodType unboundMethod = (UnboundMethodType)t2;				
+				
+				boolean found = false;
+				
+								
+				ClassInterfaceBaseType outer = (ClassInterfaceBaseType)unboundMethod.getOuter();				
+				for( MethodSignature signature : outer.getMethods(unboundMethod.getTypeName()) )
+					if( signature.getMethodType().matchesModifiedTypes( method.getParameterTypes()) && signature.getMethodType().canReturn(method.getReturnTypes()))
+					{
+						node.setType(signature.getMethodType());
+						found = true;
+						break;
+					}
+					
+				if( !found )
+				{
+					addError(node, Error.TYPE_MIS, "Cannot cast: No method " + unboundMethod.getTypeName() + " matches signature " + method);
+					node.setType(Type.UNKNOWN);
+				}				
+			}			
+			else if( t1.isSubtype(t2) || t2.isSubtype(t1) )
 				node.setType(t1);
 			else
 			{
@@ -1765,6 +1834,52 @@ public class ClassChecker extends BaseChecker {
 			}
 		}
 			
+	
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTArrayInitializer node, Boolean secondVisit) throws ShadowException 
+	{		
+		if( secondVisit )
+		{
+			Node child = node.jjtGetChild(0);
+			Type result = child.getType();
+			
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
+			{
+				child = node.jjtGetChild(i);
+				Type type = child.getType();
+								
+				if( type.isSubtype(result) )					
+					result = type;				
+				else if( !result.isSubtype(type) ) //neither is subtype of other, panic!
+				{
+					addError(node, Error.INVL_TYP, "Types in array initializer list do not match");
+					result = Type.UNKNOWN;
+					break;
+				}
+			}
+			
+			if( result == Type.UNKNOWN )
+				node.setType(result);
+			else
+			{
+				ArrayList<Integer> dimensions = new ArrayList<Integer>();
+				Type baseType;
+				if( result instanceof ArrayType )
+				{
+					ArrayType arrayType = (ArrayType)result;
+					dimensions.add(arrayType.getDimensions() + 1 );
+					baseType = arrayType.getBaseType();
+				}
+				else
+				{
+					dimensions.add(1);
+					baseType = result;
+				}				
+				node.setType(new ArrayType( baseType, dimensions ));
+			}			
+		}		
 	
 		return WalkType.POST_CHILDREN;
 	}

@@ -2,9 +2,17 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import shadow.typecheck.type.Type;
+
 public
 @SuppressWarnings("all")
 class ASTResultTypes extends SimpleNode {
+	
+	private List<Type> types = new ArrayList<Type>(); 
+	
   public ASTResultTypes(int id) {
     super(id);
   }
@@ -12,6 +20,17 @@ class ASTResultTypes extends SimpleNode {
   public ASTResultTypes(ShadowParser p, int id) {
     super(p, id);
   }
+  
+  public void addType(Type type)
+  {
+	  types.add(type);
+  }
+  
+  public List<Type> getTypes()
+  {
+	  return types;
+  }
+  
 
 
   /** Accept the visitor. **/
