@@ -52,10 +52,10 @@ public class TypeCollector extends BaseChecker
 	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, Type>> typeTable, LinkedList<File> importList, Package p )
 	{		
 		super(debug, typeTable, importList, p );
-		// put all of our built-in types into the TypeTable
-		// change this step eventually to pull from the shadow.standard package
+		// put all of our built-in types into the TypeTable		
 		
-		addType(Type.OBJECT);
+		//addType(Type.OBJECT);
+		//addType(Type.STRING);
 		addType(Type.BOOLEAN);
 		addType(Type.BYTE);
 		addType(Type.CODE);
@@ -64,7 +64,7 @@ public class TypeCollector extends BaseChecker
 		addType(Type.LONG);
 		addType(Type.FLOAT);
 		addType(Type.DOUBLE);
-		addType(Type.STRING);
+	
 		addType(Type.UBYTE);
 		addType(Type.UINT);
 		addType(Type.ULONG);
@@ -88,10 +88,10 @@ public class TypeCollector extends BaseChecker
 				TreeSet<String> missingTypes = new TreeSet<String>();
 				
 				if( type instanceof ClassType ) //includes error, exception, and enum (for now)
-				{				
+				{		
+					ClassType classType = (ClassType)type;
 					if( !type.isBuiltIn() )
-					{
-						ClassType classType = (ClassType)type;
+					{						
 						if( extendsTable.containsKey(type))
 						{
 							list = extendsTable.get(type);
@@ -101,8 +101,8 @@ public class TypeCollector extends BaseChecker
 							else							
 								classType.setExtendType(parent);
 						}
-						else if( type.getKind() == Kind.CLASS )
-							classType.setExtendType(Type.OBJECT);
+						else if( type.getKind() == Kind.CLASS )													
+							classType.setExtendType(Type.OBJECT);						
 						else if( type.getKind() == Kind.ENUM )
 							classType.setExtendType(Type.ENUM);
 						else if( type.getKind() == Kind.ERROR )
@@ -122,6 +122,11 @@ public class TypeCollector extends BaseChecker
 									classType.addInterface(_interface);
 							}
 						}
+					}
+					else //built-in types
+					{
+						if( type != Type.OBJECT ) //special case to keep Object from being its own parent
+							classType.setExtendType(Type.OBJECT);						
 					}
 				}
 				else if( type instanceof InterfaceType ) 
@@ -167,6 +172,12 @@ public class TypeCollector extends BaseChecker
 		);		
 		List<File> fileList = new ArrayList<File>();
 		fileList.addAll(Arrays.asList(directoryFiles));	
+		
+		//Add standard imports
+		String path = Configuration.getInstance().getSystemImport() + File.separator + "shadow" + File.separator + "standard" ;
+		fileList.add(new File(path, "Object.shadow" ));
+		fileList.add(new File(path, "Class.shadow" ));
+		fileList.add(new File(path, "String.shadow" ));
 		
 		//Add import list
 		fileList.addAll(getImportList());
@@ -352,6 +363,17 @@ public class TypeCollector extends BaseChecker
 				//add support for views eventually			
 			default:
 				throw new ShadowException("Unsupported type!" );
+			}
+			
+			//Special case for system types
+			if( currentPackage.getFullyQualifiedName().equals("shadow.standard"))
+			{
+				if( typeName.equals("Object") )
+					Type.OBJECT = (ClassType) type;
+				else if( typeName.equals("Class"))
+					Type.CLASS  = (ClassType) type;
+				else if( typeName.equals("String"))
+					Type.STRING = (ClassType) type;
 			}
 			
 			addType( type, currentPackage );

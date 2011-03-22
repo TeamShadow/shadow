@@ -26,7 +26,10 @@ public class Type {
 		UNKNOWN
 	};
 	
-	public static final ClassType OBJECT = new ClassType( "Object" ); 
+	public static ClassType OBJECT = new ClassType( "Object" );
+	public static ClassType STRING = new ClassType( "String", OBJECT );
+	public static ClassType CLASS = new ClassType( "Class", OBJECT ); //meta class for holding .class variables
+	
 	public static final ClassType BOOLEAN = new ClassType( "boolean", OBJECT );
 	public static final ClassType BYTE = new ClassType( "byte", OBJECT );
 	public static final ClassType CODE = new ClassType( "code", OBJECT );	
@@ -35,13 +38,11 @@ public class Type {
 	public static final ClassType LONG = new ClassType( "long", OBJECT );
 	public static final ClassType FLOAT = new ClassType( "float", OBJECT );
 	public static final ClassType DOUBLE = new ClassType( "double", OBJECT );
-	public static final ClassType STRING = new ClassType( "String", OBJECT );
+	
 	public static final ClassType UBYTE = new ClassType( "ubyte", OBJECT );
 	public static final ClassType UINT = new ClassType( "uint", OBJECT );
 	public static final ClassType ULONG = new ClassType( "ulong", OBJECT );
 	public static final ClassType USHORT = new ClassType( "ushort", OBJECT );
-	
-	public static final ClassType CLASS = new ClassType( "Class", OBJECT ); //meta class for holding .class variables
 	
 	public static final EnumType ENUM = new EnumType( "Enum", 0, null, OBJECT );
 	public static final ErrorType ERROR = new ErrorType( "Error", 0, null, null );	

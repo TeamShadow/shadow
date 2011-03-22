@@ -5,7 +5,7 @@ immutable class String
 	private byte[] data;
 
 
-	public String toString()
+	public toString () => (String)
 	{
 		return this;
 	}

@@ -3,7 +3,8 @@ package shadow.standard;
 class Object
 {
 
-	public String toString() {
+	public toString() => (String)
+	{
 		return "Object";
 	}
 

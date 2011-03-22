@@ -28,10 +28,7 @@ public class TypeChecker {
 	 * @throws FileNotFoundException 
 	 */
 	public boolean typeCheck(Node node, File file) throws ShadowException, FileNotFoundException, ParseException
-	{
-		// Here is where we'd walk the import statements, and collect the types for those files
-		// Right now we are only collecting the types from the current file
-	 
+	{	 
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		Package packageTree = new Package(typeTable);
 		LinkedList<File> importList = new LinkedList<File>();
