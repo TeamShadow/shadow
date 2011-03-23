@@ -1,4 +1,4 @@
-class Basic extends Loops implements TestInterface {
+class Basic {
 
     private int a;
     private int b = 0;
