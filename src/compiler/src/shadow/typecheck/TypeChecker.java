@@ -2,6 +2,7 @@ package shadow.typecheck;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -25,9 +26,9 @@ public class TypeChecker {
 	 * @return True of the type-check is OK, false otherwise (errors are printed)
 	 * @throws ShadowException
 	 * @throws ParseException 
-	 * @throws FileNotFoundException 
+	 * @throws IOException 
 	 */
-	public boolean typeCheck(Node node, File file) throws ShadowException, FileNotFoundException, ParseException
+	public boolean typeCheck(Node node, File file) throws ShadowException, ParseException, IOException
 	{	 
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		Package packageTree = new Package(typeTable);

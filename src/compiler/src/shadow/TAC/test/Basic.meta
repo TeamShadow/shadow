@@ -1,0 +1,435 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef BASIC_META
+#define BASIC_META
+
+struct Basic_methods {
+     void (*thrower__R_)(void);
+     void (*test__R_)(void);
+};
+
+struct Basic {
+     struct Object __super;
+     
+     /* Interfaces */
+     struct Basic_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+     int b;                             /* (4:5) */
+     int a;                             /* (3:5) */
+};
+
+void __init__R_(struct Basic* this);
+
+void thrower__R_(struct Basic* this);
+
+void test__R_(struct Basic* this);
+
+#endif

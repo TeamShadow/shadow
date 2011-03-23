@@ -6,6 +6,7 @@ package shadow;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -134,6 +135,11 @@ public class Main {
 			System.exit(PARSE_ERROR);
 		} catch (ShadowException e) {
 			System.err.println("ERROR ON FILE " + config.current().getPath() + ": " + e.getLocalizedMessage());
+			e.printStackTrace();
+			System.exit(TYPE_CHECK_ERROR);
+		} catch (IOException e)
+		{
+			System.err.println("FILE DEPENDENCY ERROR " + config.current().getPath() + ": " + e.getLocalizedMessage());
 			e.printStackTrace();
 			System.exit(TYPE_CHECK_ERROR);
 		}

@@ -111,6 +111,10 @@ public class TACTest extends BaseTest {
 	    } catch (FileNotFoundException e) {
 	        System.out.println(e.getMessage());
 	        throw new ShadowException(e.getMessage());
-	    }       
+	    } catch (IOException e)
+		{
+	    	 System.out.println(e.getMessage());
+		     throw new ShadowException(e.getMessage());
+		}       
 	}
 }

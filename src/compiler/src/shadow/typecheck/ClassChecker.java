@@ -45,6 +45,7 @@ import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLabeledStatement;
+import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
@@ -1924,6 +1925,32 @@ public class ClassChecker extends BaseChecker {
 			currentPackage = packageTree;
 		
 		return WalkType.POST_CHILDREN;			
+	}
+	
+	@Override
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {
+		Type type = null;		
+		switch( node.getLiteral() )
+		{
+		case BYTE: 		type = Type.BYTE; break;
+		case CODE: 		type = Type.CODE; break;
+		case SHORT: 	type = Type.SHORT; break;
+		case INT: 		type = Type.INT; break;
+		case LONG:		type = Type.LONG; break;
+		case FLOAT: 	type = Type.FLOAT; break;
+		case DOUBLE: 	type = Type.DOUBLE; break;
+		case STRING:	type = Type.STRING; break;
+		case UBYTE: 	type = Type.UBYTE; break;
+		case USHORT: 	type = Type.USHORT; break;
+		case UINT: 		type = Type.UINT; break;
+		case ULONG: 	type = Type.ULONG; break;
+		case BOOLEAN: 	type = Type.BOOLEAN; break;
+		case NULL: 		type = Type.NULL; break;
+		}
+		
+		node.setType(type);
+		
+		return WalkType.NO_CHILDREN;			
 	}
 
 	//

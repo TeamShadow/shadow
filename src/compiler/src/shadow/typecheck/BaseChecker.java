@@ -46,12 +46,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	public void addType( Type type  )
-	{
+	{		
 		addType( type, packageTree );
 	}
 	
 	public void addType( Type type, Package p  )
 	{
+		BaseChecker b = this;
 		p.addType(type); //automatically adds to typeTable and sets type's package				
 	}
 	

@@ -1227,20 +1227,20 @@ void Literal() :
 }
 {
   (    
-  t = <BYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.BYTE); }
-| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.CODE); }
-| t = <SHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.SHORT); }
-| t = <INT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
-| t = <LONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.LONG); }
-| t = <FLOAT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.FLOAT); }
-| t = <DOUBLE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.DOUBLE); }
-| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.STRING); }
-| t = <UBYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.UBYTE); }
-| t = <USHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.USHORT); }
-| t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.UINT); }
-| t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.ULONG); }
-| BooleanLiteral() { jjtThis.setType(Type.BOOLEAN); }
-| NullLiteral() { jjtThis.setType(Type.NULL); }  )
+  t = <BYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.BYTE); }
+| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.CODE); }
+| t = <SHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.SHORT); }
+| t = <INT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.INT); }
+| t = <LONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.LONG); }
+| t = <FLOAT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.FLOAT); }
+| t = <DOUBLE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.DOUBLE); }
+| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.STRING); }
+| t = <UBYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UBYTE); }
+| t = <USHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.USHORT); }
+| t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UINT); }
+| t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.ULONG); }
+| BooleanLiteral() { jjtThis.setLiteral(Literal.BOOLEAN); }
+| NullLiteral() { jjtThis.setLiteral(Literal.NULL); }  )
   
   //what about longs, shorts, floats, unsigned versions etc.?
  /* OLD:
@@ -1261,14 +1261,14 @@ void IntegerLiteral(): //useful for static arrays, etc.
 }
 {
      (
-		  t = <BYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.BYTE); }
-		| t = <UBYTE_LITERAL > { jjtThis.setImage(t.image); jjtThis.setType(Type.UBYTE); }
-		| t = <SHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.SHORT); }
-		| t = <USHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.USHORT); }
-		| t = <INT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
-		| t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.UINT); }
-		| t = <LONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.LONG); }
-		| t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.ULONG); }
+		  t = <BYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.BYTE); }
+		| t = <UBYTE_LITERAL > { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UBYTE); }
+		| t = <SHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.SHORT); }
+		| t = <USHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.USHORT); }
+		| t = <INT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.INT); }
+		| t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UINT); }
+		| t = <LONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.LONG); }
+		| t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.ULONG); }
 	)
 }
 

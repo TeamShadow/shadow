@@ -1,0 +1,92 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef OBJECT_META
+#define OBJECT_META
+
+struct Object_methods {
+     char (*toString__R_String_)(void);
+};
+
+struct Object {
+     
+     /* Interfaces */
+     struct Object_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+};
+
+void __init__R_(struct Object* this);
+
+char toString__R_String_(struct Object* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef OBJECT_META
+#define OBJECT_META
+
+struct Object_methods {
+     char (*toString__R_String_)(void);
+};
+
+struct Object {
+     
+     /* Interfaces */
+     struct Object_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+};
+
+void __init__R_(struct Object* this);
+
+char toString__R_String_(struct Object* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef OBJECT_META
+#define OBJECT_META
+
+struct Object_methods {
+     char (*toString__R_String_)(void);
+};
+
+struct Object {
+     
+     /* Interfaces */
+     struct Object_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+};
+
+void __init__R_(struct Object* this);
+
+char toString__R_String_(struct Object* this);
+
+#endif
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef OBJECT_META
+#define OBJECT_META
+
+struct Object_methods {
+     char (*toString__R_String_)(void);
+};
+
+struct Object {
+     
+     /* Interfaces */
+     struct Object_methods *__methods;
+     
+     unsigned int __ref_count;
+     
+     /* Fields */
+};
+
+void __init__R_(struct Object* this);
+
+char toString__R_String_(struct Object* this);
+
+#endif

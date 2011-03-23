@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -153,13 +154,13 @@ public class TypeCollector extends BaseChecker
 	}
 	
 	
-	public void collectTypes(File input, Node node) throws FileNotFoundException, ParseException, ShadowException
+	public void collectTypes(File input, Node node) throws ParseException, ShadowException, IOException
 	//includes files in the same directory
 	{			
 		//Walk over file being checked
 		ASTWalker walker = new ASTWalker( this );		
 		walker.walk(node);
-		files.put( input, node );
+		files.put( input.getCanonicalFile(), node );
 		
 		//add files in directory BEFORE imports
 		File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
@@ -183,10 +184,12 @@ public class TypeCollector extends BaseChecker
 		fileList.addAll(getImportList());
 		
 		for( File other : fileList )
-		{			
-			if( !files.containsKey(other) ) //don't double add
+		{		
+			File canonicalFile = other.getCanonicalFile();
+			
+			if( !files.containsKey(canonicalFile) ) //don't double add
 			{
-				ShadowParser parser = new ShadowParser(new FileInputStream(other));
+				ShadowParser parser = new ShadowParser(new FileInputStream(canonicalFile));
 			    SimpleNode otherNode = parser.CompilationUnit();
 			    
 			    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
@@ -194,7 +197,7 @@ public class TypeCollector extends BaseChecker
 				walker = new ASTWalker( collector );		
 				walker.walk(otherNode);
 		
-				files.put(other, otherNode);				
+				files.put(canonicalFile, otherNode);				
 				
 				//copy other types into our package tree				
 				for( Package p : otherTypes.keySet() )

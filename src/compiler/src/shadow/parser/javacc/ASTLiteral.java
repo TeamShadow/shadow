@@ -5,6 +5,9 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTLiteral extends SimpleNode {
+	
+	private Literal literal;
+	
   public ASTLiteral(int id) {
     super(id);
   }
@@ -17,6 +20,17 @@ class ASTLiteral extends SimpleNode {
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
+  }
+  
+  
+  public void setLiteral(Literal literal)
+  {
+	  this.literal = literal;
+  }
+  
+  public Literal getLiteral()
+  {
+	  return literal;
   }
 }
 /* JavaCC - OriginalChecksum=e6f81fb816260e4c3f2f8b9ad1bc1340 (do not edit this line) */
