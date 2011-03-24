@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <shadow arch="64" os="Linux">
-  <system_import>.</system_import>
+  <system_import>/usr/lib/shadow</system_import>
 </shadow>

@@ -8,14 +8,12 @@ elementFormDefault="qualified">
 
     <xs:element name="system_import" type="xs:string" />
     <xs:element name="import" type="xs:string" />
-    <xs:element name="main" type="xs:string" />
 
     <xs:element name="shadow">
         <xs:complexType>
         	<xs:sequence>
         		<xs:element ref="system_import" minOccurs="0" maxOccurs="1" />
         		<xs:element ref="import" minOccurs="0" maxOccurs="unbounded" />
-        		<xs:element ref="main" minOccurs="1" maxOccurs="1"></xs:element>
         	</xs:sequence>
         	<xs:attribute name="arch" type="xs:int" use="optional"/>
         	<xs:attribute name="os" type="xs:string" use="optional"/>

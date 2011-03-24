@@ -1,6 +1,7 @@
 package shadow;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,9 +17,9 @@ import shadow.parser.javacc.ShadowException;
 public class Configuration implements Iterator<File> {
 	
 	// these are the single letter command line args
-	private static final String MAIN_CLASS	= "M";
 	private static final String CONFIG_FILE = "C";
-	private static final String CHECK		= "c";
+	private static final String CHECK		= "check";
+	private static final String COMPILE		= "compile";
 
 	private String parentConfig = null; /** The parent configuration from a config file */
 	private String mainClass = null; /** The file containing the class with the Main method */
@@ -26,7 +27,8 @@ public class Configuration implements Iterator<File> {
 	private int currentShadowFile = 0;
 	private File systemImportPath = null;	/** This is the import path for all the system files */
 	private List<File> importPaths = null;
-	private boolean checkOnly = false;
+	private boolean checkOnly = false;		/** Run only parser & type-checker */
+	private boolean compileOnly = false;	/** Only compile the files on the command line */
 	private int arch = -1;
 	private String os = null;
 	
@@ -52,38 +54,36 @@ public class Configuration implements Iterator<File> {
 	 */
 	public boolean parse(CommandLine cmdLine) throws ShadowException {
 		
-		// see if we have a config file or not
-		if(!cmdLine.hasOption(CONFIG_FILE)) {
-			// we just parse the built-in parent config file
-			// hoping everything else is set on the cmd line
-			ConfigParser systemParser = new ConfigParser(this);
-			
-			systemParser.parse(System.class.getResource("/system.xml"));
-		} else {
-			// this will recursively parse through the parents
+		if(cmdLine.hasOption(CONFIG_FILE)){
+			// parse the config file on the command line if we have it
 			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG_FILE)));
+		} else if(System.getenv("SHADOW_SYSTEM_CONFIG") != null){
+			// use the system config from the environment
+			parseConfigFile(new File(System.getenv("SHADOW_SYSTEM_CONFIG")));
+		} else {
+			// parse the correct built-in configuration file
+			if(System.getProperty("os.name").startsWith("Windows"))
+				parseConfigFile(System.class.getResource("/windows_system.xml"));
+			else
+				parseConfigFile(System.class.getResource("/linux_system.xml"));
 		}
-		
+
+		// print the import paths if we're debugging
 		if(Boolean.getBoolean("DEBUG")) {
 			for(File i:importPaths) {
 				System.out.println("IMPORT: " + i.getAbsolutePath());
 			}
 		}
-		
-		// by the time we get here, all configs & parents have been parsed
-		// we let anything on the command line override the config files
-		
-		// get the main class
-		if(cmdLine.hasOption(MAIN_CLASS))
-			mainClass = cmdLine.getOptionValue(MAIN_CLASS);
+
+		//
+		// By the time we get here, all configs & parents have been parsed
+		//
 		
 		// see if all we want is to check the file
 		checkOnly = cmdLine.hasOption(CHECK);
 		
-		//
-		// TODO: We should probably compile all the files in the local dir
-		//       if not specified on the command line
-		//
+		// see if we're only compiling files
+		compileOnly = cmdLine.hasOption(COMPILE);
 		
 		// get all of the files to compile
 		shadowFiles = new ArrayList<File>();
@@ -91,18 +91,24 @@ public class Configuration implements Iterator<File> {
 			shadowFiles.add(new File(shadowFile));
 		}
 		
-		// set the main class if only one file is specified
-		if(shadowFiles.size() == 1)
-			mainClass = shadowFiles.get(0).getAbsolutePath();
+		// make sure they're not specifying too many files on the command line
+		if(!compileOnly && shadowFiles.size() > 1) {
+			System.err.println("Only one file  with a main method should be specified on the command line.");
+			return false;
+		}
 		
-		//
-		// Sanity checks
-		//
 		if(shadowFiles.size() == 0) {
 			System.err.println("No source files specified to compile");
 			return false;
 		}
 		
+		// set the main class if we're not only compiling
+		if(!compileOnly)
+			mainClass = shadowFiles.get(0).getAbsolutePath();
+		
+		//
+		// Sanity checks
+		//
 		if(!checkOnly && mainClass == null) {
 			System.err.println("Did not specify a main class");
 			return false;
@@ -130,13 +136,20 @@ public class Configuration implements Iterator<File> {
 	 * Parse a config file, recursively parsing parents when found.
 	 * @param configFile The config file to parse
 	 */
-	private void parseConfigFile(File configFile) {
+	private <T>void parseConfigFile(T configFile) {
 		ConfigParser parser = new ConfigParser(this);
 		
-		if(Boolean.getBoolean("DEBUG"))
-			System.out.println("PARSING: " + configFile.getAbsolutePath());
-		
-		parser.parse(configFile);
+		if(configFile instanceof File) {
+			if(Boolean.getBoolean("DEBUG"))
+				System.out.println("PARSING: " + ((File)configFile).getAbsolutePath());
+			
+			parser.parse((File)configFile);
+		} else {
+			if(Boolean.getBoolean("DEBUG"))
+				System.out.println("PARSING: " + ((URL)configFile));
+			
+			parser.parse((URL)configFile);
+		}
 		
 		// see if we found a parent or not
 		if(this.parentConfig != null) {
@@ -159,30 +172,29 @@ public class Configuration implements Iterator<File> {
 
 		// setup the configuration file option
 		@SuppressWarnings("static-access")
-		Option mainClass = OptionBuilder.withLongOpt("mainclass")
-										.hasArg()
-										.withArgName("package.class")
-										.withDescription("The class which contains the main method")
-										.create(MAIN_CLASS);
-
-		// setup the configuration file option
-		@SuppressWarnings("static-access")
 		Option configOption = OptionBuilder.withLongOpt("config")
 										   .hasArg()
-										   .withArgName("configuration.xml")
-										   .withDescription("Configuration file")
+										   .withArgName("config.xml")
+										   .withDescription("Configuration file\ndefault is shadow_config.xml")
 										   .create(CONFIG_FILE);
 
 		// create the check option
 		@SuppressWarnings("static-access")
-		Option checkOption = OptionBuilder.withLongOpt("check")
+		Option checkOption = OptionBuilder.withLongOpt(CHECK)
 										  .withDescription("Parse and type-check the Shadow files")
-										  .create(CHECK);
+										  .create();
+
+		// create the compile option
+		@SuppressWarnings("static-access")
+		Option compileOption = OptionBuilder.withLongOpt(COMPILE)
+										    .withDescription("Compile Shadow files")
+										    .hasArg()
+										    .create();
 
 		// add all the options from above
-		options.addOption(mainClass);
 		options.addOption(configOption);
 		options.addOption(checkOption);
+		options.addOption(compileOption);
 
 		// add new simple options
 		options.addOption(new Option("h", "help", false, "Print this help message"));
