@@ -1,3 +1,4 @@
-<shadow parent="../src/system.xml">
+<shadow parent="../src/linux_system.xml">
+	<system_import>../</system_import>
 	<import>../</import>
 </shadow>
