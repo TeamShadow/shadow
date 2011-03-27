@@ -6,6 +6,8 @@ use Cwd 'abs_path';
 
 my $CWD = dirname(abs_path($0)) . "/";
 
+chdir($CWD);
+
 my $test_type = $ARGV[0];
 my $test_file = $CWD . $test_type . ".txt";
 
