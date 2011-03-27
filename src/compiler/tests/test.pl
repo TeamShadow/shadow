@@ -1,19 +1,22 @@
 #!/usr/bin/perl
 
 use strict;
+use File::Basename;
+use Cwd 'abs_path';
+
+my $CWD = dirname(abs_path($0)) . "/";
 
 my $test_type = $ARGV[0];
+my $test_file = $CWD . $test_type . ".txt";
 
 die "Must specify (compile|build|run) on the cmd line\n" if(!$test_type);
 
-my $COMPILER = '../ShadowCompiler.jar';
-
-$COMPILER = $ARGV[1] if($ARGV[1]);
+my $COMPILER = $CWD . '../ShadowCompiler.jar';
 
 die "Cannot find compiler: $COMPILER\n" if(! (-e $COMPILER) );
 
 # open the config file
-open(CONFIG, $test_type . ".txt") or die "Cannot open file $test_type.txt\n$!";
+open(CONFIG, $test_file) or die "Cannot open file $test_file\n$!";
 
 my @tests = ();
 
@@ -38,25 +41,27 @@ while(my $line = <CONFIG>) {
 
 close(CONFIG);
 
-# clean-up some files from the last run
-system("rm build.log");
-system("rm build/*c build/*.meta") if($test_type ne 'compile');
+my $build_log = $CWD . 'build.log';
 
-open(RESULTS, ">results.log") or die $!;
+# clean-up some files from the last run
+system("rm $build_log");
+system("rm $CWD" . 'build/*c ' . $CWD . 'build/*.meta') if($test_type ne 'compile');
+
+open(RESULTS, ">$CWD" . 'results.log') or die $!;
 
 foreach my $test (@tests) {
-	$test->{'config'} = ' -C ' . $test->{'config'} if($test->{'config'} ne '');
+	$test->{'config'} = ' -C ' . "$CWD" . $test->{'config'} if($test->{'config'} ne '');
 	$test->{'config'} = ' --check ' . $test->{'config'} if($test_type eq 'compile'); # overload this a bit
 
-	my $cmd = "java -jar $COMPILER" . $test->{'config'} . " $test_type/" . $test->{'file'};
+	my $cmd = "java -jar $COMPILER" . $test->{'config'} . " $CWD$test_type/" . $test->{'file'};
 
 	print $cmd . "\n";
 
-	system("echo \"$cmd\" >> build.log");
+	system("echo \"$cmd\" >> $build_log");
 
-	my $res = system("/usr/bin/time -f \"res: %x, time: %es, avg mem: %Kk max mem: %Mk\" $cmd >> build.log 2>&1");
+	my $res = system("/usr/bin/time -f \"res: %x, time: %es, avg mem: %Kk max mem: %Mk\" $cmd >> $build_log 2>&1");
 	
-	system("echo \"\" >> build.log");
+	system("echo \"\" >> $build_log");
 
 	if($res == $test->{'res'}) {
 		print RESULTS "PASS: " . $test->{'file'} . "\n";
