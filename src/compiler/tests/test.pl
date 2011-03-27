@@ -49,6 +49,8 @@ my $build_log = $CWD . 'build.log';
 system("rm $build_log");
 system("rm $CWD" . 'build/*c ' . $CWD . 'build/*.meta') if($test_type ne 'compile');
 
+my $script_ret = 0;
+
 open(RESULTS, ">$CWD" . 'results.log') or die $!;
 
 foreach my $test (@tests) {
@@ -69,6 +71,10 @@ foreach my $test (@tests) {
 		print RESULTS "PASS: " . $test->{'file'} . "\n";
 	} else {
 		print RESULTS "FAIL: " . $test->{'file'} . " EXPECTING " . $test->{'res'} . " GOT " . $res . "\n";
+		$script_ret = 1;
 	}
 }
 
+close(RESULTS);
+
+exit($script_ret);
