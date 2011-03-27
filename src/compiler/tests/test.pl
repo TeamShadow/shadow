@@ -8,7 +8,9 @@ die "Must specify (compile|build|run) on the cmd line\n" if(!$test_type);
 
 my $COMPILER = '../ShadowCompiler.jar';
 
-die "Cannot find compiler\n" if(! (-e $COMPILER) );
+$COMPILER = $ARGV[1] if($ARGV[1]);
+
+die "Cannot find compiler: $COMPILER\n" if(! (-e $COMPILER) );
 
 # open the config file
 open(CONFIG, $test_type . ".txt") or die "Cannot open file $test_type.txt\n$!";
