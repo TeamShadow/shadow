@@ -1,0 +1,63 @@
+class Collections
+{
+
+	/**
+		Sort array of Comparable types	
+	*/
+	public static sort<T is Comparable<T> >( T[] array ) => ()
+	{
+		sort( array, T.compare );
+	}
+	
+	
+	/**
+		Sort array with comparator function	
+	*/
+	public static sort<T>( T[] array, (T,T)=>(int) compare ) => ()
+	{
+		quicksort( array, 0, array.length - 1 );
+	}
+	
+	
+	/**
+		Private recursive quicksort used for sorting arrays	
+	*/	
+	
+	private static quicksort<T>( T[] array, int left, int right, (T,T)=>(int) compare )
+	{
+		if( right > left )
+		{
+			// pick middle value as pivot value, avoids worst case for sorted lists
+			// perhaps median of 3 eventually?
+			int pivot = partition( array, left, right, (left + right) / 2, compare );
+			quicksort( array, left, pivot - 1 );
+			quicksort( array, pivot + 1, right );		
+		}	
+	}
+	
+	/**
+		Private partition helper method for quicksort	
+	*/
+	
+	private static partition<T>( T[] array, int left, int right, int pivot, (T,T)=>(int) compare )
+	{			
+			T pivotValue = array[pivot];	//save pivot
+			array[pivot] = array[right];	//put rightmost where pivot was
+			
+			// move smaller values to the left
+			for( int i = left; i < right; i += 1 )
+			{
+				if( compare( array[i], pivotValue ) < 0 )
+				{
+					T temp = array[i];
+					array[i] = array[left];
+					array[left] = temp;
+					left += 1;				
+				}			
+			}
+						
+			array[right] = array[left];		//make space for pivot
+			array[left] = pivotValue;		//put pivot in proper location
+			return left;					//return pivot location
+	}	
+}
