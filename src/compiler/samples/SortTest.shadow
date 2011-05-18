@@ -6,7 +6,7 @@ class SortTest
 		
 		Collections.sort( values ); //generic method called using type inference
 		
-		for( int number in values )
+		foreach( int number in values )
 			Console.print( number # " " ); //# used for String concatenate, just for fun (I think + is stupid)
 			
 		Console.printLine();		
@@ -15,7 +15,7 @@ class SortTest
 		
 		Collections.sort( values, reverse );  //could have defined closure right here, but ugly
 		
-		for( int number in values )
+		foreach( int number in values )
 			Console.print( number # " " ); //should print in descending order
 	}
 }
