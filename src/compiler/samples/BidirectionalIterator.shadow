@@ -1,0 +1,5 @@
+interface BidirectionalIterator<T> extends Iterator<T>
+{	
+	immutable getPrevious() => (Iterator<T>);
+	immutable hasPrevious() => (boolean);  
+}

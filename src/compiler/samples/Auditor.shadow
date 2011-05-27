@@ -1,0 +1,4 @@
+interface Auditor<T> extends Iterator<T>
+{
+	setValue(T value) => ();
+}

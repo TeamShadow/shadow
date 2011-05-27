@@ -1,0 +1,4 @@
+interface Iterable<T>
+{
+	getIterator() => (Iterator<T>); 
+}

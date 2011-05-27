@@ -1,0 +1,7 @@
+interface List<T> extends AuditableCollection<T>
+{
+	error IndexOutOfBoundsError;
+
+	immutable get( int index ) => (T) throws IndexOutOfBoundsError;
+	set( int index, T value, ) => () throws IndexOutOfBoundsError;
+}
