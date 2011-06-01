@@ -11,7 +11,7 @@ Features We Must Have
 
 Features We Want
 ===========================================
-Contracts (see Spec#)
+Contracts (see Spec# http://research.microsoft.com/en-us/um/people/leino/papers/krml196.pdf)
 
 
 
