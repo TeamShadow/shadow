@@ -2,5 +2,5 @@ interface Iterator<T>
 {
 	immutable getValue() => (T);
 	immutable getNext() => (Iterator<T>);
-	immutable hasNext() => (boolean); 
+	immutable isValid() => (boolean); 
 }

@@ -23,19 +23,14 @@ class LinkedList<T> implements List<T>
 			return next;
 		}
 		
-		public immutable hasNext() => (boolean)
+		public immutable isValid() => (boolean)
 		{
-			return (next != tail);
+			return (this != tail && this != head);
 		} 
 		
 		public immutable getPrevious() => (Node<T>)
 		{
-			return 
-		} 	
-		
-		public immutable hasPrevious() => (boolean)
-		{
-			return (previous != head);
+			return previous;
 		}
 		
 		public setValue(T value) => ()

@@ -723,7 +723,7 @@ void TypeParameter():
 void TypeBound():
 { debugPrint("TYPE BOUND"); }
 {
-   "extends" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
+   "is" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
 }
 
 void ClassOrInterfaceBody(boolean isInterface):

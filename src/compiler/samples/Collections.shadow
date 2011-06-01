@@ -1,5 +1,42 @@
 class Collections
 {
+	public static map<T, U is Collection<T> >( U<T> collection, (T)=>(T) transform ) => (U<T>)
+	{
+		T[] array = new T[collection.getSize()];
+		
+		int i = 0;		
+		foreach( T value in collection )
+		{
+			array[i] = transform( value );
+			i += 1;			
+		}
+		
+		return new U<T>( array );
+	}
+	
+	public static reduce<T>( Collection<T> collection, (T,T)=>(T) combine, T initial ) => (T)
+	{
+		T total = initial;		
+				
+		foreach( T value in collection )
+		{
+			total = combine(total, value);			
+		}
+		
+		return total;
+	}
+	
+	public static transform<T>( AuditableCollection<T> collection, (T)=>(T) transform  )
+	{
+		Auditor<T> auditor = collection.getAuditor();
+		
+		while( auditor.isValid() )
+		{
+			auditor.setValue( transform( auditor.getValue() ) );
+			auditor = auditor.getNext();	
+		}
+	}	
+
 
 	/**
 		Sort array of Comparable types	
