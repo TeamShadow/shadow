@@ -14,9 +14,9 @@ class Collections
 		return new U<T>( array );
 	}
 	
-	public static reduce<T>( Collection<T> collection, (T,T)=>(T) combine, T initial ) => (T)
+	public static reduce<T>( Collection<T> collection, (U,T)=>(U) combine, U initial ) => (U)
 	{
-		T total = initial;		
+		U total = initial;		
 				
 		foreach( T value in collection )
 		{
