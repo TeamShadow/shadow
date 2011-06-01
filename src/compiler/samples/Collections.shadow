@@ -1,8 +1,8 @@
 class Collections
 {
-	public static map<T, U is Collection<T> >( U<T> collection, (T)=>(T) transform ) => (U<T>)
+	public static map<T, U is Collection, V>( U<T> collection, (T)=>(V) transform ) => (U<V>)
 	{
-		T[] array = new T[collection.getSize()];
+		V[] array = new V[collection.getSize()];
 		
 		int i = 0;		
 		foreach( T value in collection )
@@ -11,7 +11,7 @@ class Collections
 			i += 1;			
 		}
 		
-		return new U<T>( array );
+		return new U<V>( array );
 	}
 	
 	public static reduce<T>( Collection<T> collection, (U,T)=>(U) combine, U initial ) => (U)
