@@ -1,0 +1,20 @@
+Bill
+==============
+Make up toy classes (return lambdas, etc.)
+Sequences (manipulation and whatnot)
+Merging of arrays
+Copying of arrays
+(Array manipulation)
+
+Barry
+==============
+String
+Collections
+Linked List
+Iterable
+Array
+Array List
+Map
+OrderedMap
+Set
+
