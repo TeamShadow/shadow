@@ -1,0 +1,52 @@
+class Array<T> implements Iterable<T>, Sortable<T>
+{
+	public constant int size;
+	
+	public constructor( int size )
+	{
+		this.size = size;
+	}	
+	
+	public getSize() => (int)
+	{
+		return size;
+	}
+	
+	private class ArrayIterator<T> implements BidirectionalIterator<T>
+	{
+		private int index = 0;
+	
+		immutable getValue() => (T)
+		{
+			return Array<T>.this[index];
+		}
+		
+		immutable getNext() => (ArrayIterator<T>)
+		{
+			ArrayIterator<T> next = new ArrayIterator<T>();
+			next.index = index + 1;
+		}
+		
+		immutable getPrevious() => (ArrayIterator<T>)
+		{
+			ArrayIterator<T> next = new ArrayIterator<T>();
+			next.index = index - 1;
+		}
+		
+		immutable isValid() => (boolean)
+		{
+			return index >= 0 && index < data.length;		
+		}
+	}
+	
+	public getIterator() => (BidirectionalIterator<T>)
+	{
+		return new ArrayIterator<T>();
+	}
+	
+	public sort( (T,T)=>(int) compare ) => ()
+	{
+		Collections.sort( this, compare );
+	}
+	
+}

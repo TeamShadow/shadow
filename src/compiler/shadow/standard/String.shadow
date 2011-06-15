@@ -1,12 +1,44 @@
 package shadow.standard;
 
-immutable class String
+immutable final class String implements Parsable<String>, Collection<code>
 {
-	private byte[] data;
-
+	private ubyte[] data;
+	private boolean ascii;
+		
+	public constructor( code[] codes )
+	{
+		
+	}
+	
+	public constructor( ubyte[] bytes )
+	{
+		boolean isValid = false;
+		data = new ubyte[bytes.size];
+		(isValid, isAscii) = checkAndCopy( data, bytes );
+		
+		if( !isValid )
+	
+	}
+	
+	public constructor( String other )
+	{
+		
+		
+	}
+	
+	private constructor( 
+	
+	
+	
+	public static parse<T is String>(String value)
+	{
+		return value;
+	}
 
 	public toString () => (String)
 	{
 		return this;
 	}
+	
+	public 
 }

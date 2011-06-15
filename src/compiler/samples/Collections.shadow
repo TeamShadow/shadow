@@ -35,8 +35,28 @@ class Collections
 			auditor.setValue( transform( auditor.getValue() ) );
 			auditor = auditor.getNext();	
 		}
-	}	
-
+	}
+	
+	public static sort<U is MutableCollection, T is Comparable<T> >( U<T> collection ) => ()
+	{
+		sort( collection, T.compare );
+	}
+	
+	public static sort<U is MutableCollection, T>( U<T> collection, (T,T)=>(int) compare ) => ()
+	{
+		if( U is Sortable )
+		{
+			Sortable<T> sortable = cast<Sortable<T>>( collection );
+			sortable.sort( compare );
+		}
+		else //maybe add more optimizations later?  Test empirically?
+		{
+			T[] array = collection.toArray();
+			array.sort( compare );
+			collection.clear();
+			collection.addAll( array ); 					
+		}	 	
+	}
 
 	/**
 		Sort array of Comparable types	
@@ -52,7 +72,7 @@ class Collections
 	*/
 	public static sort<T>( T[] array, (T,T)=>(int) compare ) => ()
 	{
-		quicksort( array, 0, array.length - 1 );
+		quicksort( array, 0, array.length - 1, compare );
 	}
 	
 	
@@ -67,8 +87,8 @@ class Collections
 			// pick middle value as pivot value, avoids worst case for sorted lists
 			// perhaps median of 3 eventually?
 			int pivot = partition( array, left, right, (left + right) / 2, compare );
-			quicksort( array, left, pivot - 1 );
-			quicksort( array, pivot + 1, right );		
+			quicksort( array, left, pivot - 1, compare );
+			quicksort( array, pivot + 1, right, compare );		
 		}	
 	}
 	
