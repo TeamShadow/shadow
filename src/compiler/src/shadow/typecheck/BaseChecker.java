@@ -1,15 +1,14 @@
 package shadow.typecheck;
 
 import java.io.File;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
+import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
@@ -19,7 +18,7 @@ import shadow.typecheck.type.Type;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 	
-	private static final Log logger = LogFactory.getLog(BaseChecker.class);
+	private static final Log logger = Loggers.TYPE_CHECKER;
 
 	protected ArrayList<String> errorList = new ArrayList<String>();;
 	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */

@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
+import shadow.Loggers;
 import shadow.Main;
 
 public class TypeCheckerTest {
@@ -29,7 +30,8 @@ public class TypeCheckerTest {
 		}
 
 		// set the levels of our loggers
-		Logger.getLogger("shadow").setLevel(Level.DEBUG);
+		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
+		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.DEBUG);
 	}
 	
 	@Test public void testArray() throws Exception {
