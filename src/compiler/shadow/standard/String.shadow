@@ -1,6 +1,6 @@
 package shadow.standard;
 
-immutable final class String implements Parsable<String>, Collection<code>
+immutable final class String //implements Parsable<String>, Collection<code>
 {
 	private ubyte[] data;
 	private boolean ascii;
@@ -26,9 +26,6 @@ immutable final class String implements Parsable<String>, Collection<code>
 		
 	}
 	
-	private constructor( 
-	
-	
 	
 	public static parse<T is String>(String value)
 	{
@@ -39,6 +36,4 @@ immutable final class String implements Parsable<String>, Collection<code>
 	{
 		return this;
 	}
-	
-	public 
 }
