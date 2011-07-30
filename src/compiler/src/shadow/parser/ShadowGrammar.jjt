@@ -16,6 +16,8 @@ import java.io.*;
 import shadow.parser.*;
 import shadow.AST.ASTWalker;
 import shadow.typecheck.type.Type;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 /**
@@ -102,7 +104,7 @@ public class ShadowParser
        return addModifier( modifiers, mod );     }
    }
 
-   private boolean debug = false;
+   private static final Log logger = LogFactory.getLog("shadow-parser");
 
    public ShadowParser(String fileName)
    {
@@ -113,45 +115,14 @@ public class ShadowParser
       	fis = new FileInputStream(new File(fileName));
         ReInit(fis);
       } catch(Exception e) {
-        e.printStackTrace();
+        logger.error("Error reading file: " + fileName, e);
       } finally {      	try { fis.close(); }
       	catch(Exception e) { ; }      }
    }
 
-    public void enableDebug() {
-        debug = true;
-    }
-   	public void debugPrint(String str) {        if(debug)
-            System.out.println("DEBUG: " + str + ": " + token);
+   	public void debugPrint(String str) {        logger.debug(str + ": " + token);
     }
    	
-  public static void main(String args[]) {
-    try {
-        String fileName = "src/shadow/typecheck/test/basic.shadow";
-//        String fileName = "src/shadow/parser/test/statements/for.shadow";
-        FileInputStream fis = new FileInputStream(fileName);        
-        ShadowParser parser = new ShadowParser(fis);
-        
-//        parser.enableDebug();
-
-        ASTCompilationUnit n = parser.CompilationUnit();
-
-        n.dump("");
-
-        System.out.println("GOOD PARSE");
-
-    } catch (ParseException e) {
-        System.out.println("BAD PARSE");
-        System.out.println(e.getMessage());
-    } catch (Error e) {
-        System.out.println("ERROR");
-        System.out.println(e.getMessage());
-    } catch (FileNotFoundException e) {
-        System.out.println(e.getMessage());
-    } catch (Exception e) {
-    	e.printStackTrace();    }      
-  }
-
 }
 
 PARSER_END(ShadowParser)

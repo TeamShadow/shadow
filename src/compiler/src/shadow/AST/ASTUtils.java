@@ -1,5 +1,8 @@
 package shadow.AST;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import shadow.parser.javacc.Node;
 
 /**
@@ -8,6 +11,8 @@ import shadow.parser.javacc.Node;
  *
  */
 public class ASTUtils {
+	
+	private static final Log logger = LogFactory.getLog("shadow");
 
 	static public String getLineCol(Node node) {
 		return node.getLine() + ":" + node.getColumn();
@@ -17,22 +22,16 @@ public class ASTUtils {
 		return node.getImage() + " " + getLineCol(node);
 	}
 	
-	public static String getFileAndLine(int depth) {
-		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-		
-		return stack[depth].getFileName() + ":" + stack[depth].getLineNumber() + " ";
-	}
-	
 	public static void DEBUG(String msg) {
-		System.out.println("DEBUG: " + getFileAndLine(3) + msg);
+		logger.debug(msg);
 	}
 	
 	public static void DEBUG(Node node) {
-		System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node));
+		logger.debug(node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node));
 	}
 	
 	public static void DEBUG(Node node, String msg) {
-		System.out.println("DEBUG: " + getFileAndLine(3) + node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node) + " " + msg);
+		logger.debug(node.getClass().getSimpleName() + " @ " + ASTUtils.getLineCol(node) + " " + msg);
 	}
 
 }

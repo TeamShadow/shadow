@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
@@ -15,6 +18,8 @@ import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.Type;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
+	
+	private static final Log logger = LogFactory.getLog(BaseChecker.class);
 
 	protected ArrayList<String> errorList = new ArrayList<String>();;
 	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
@@ -40,24 +45,19 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		//abstract String getStr();
 	}
 	
-	public final HashMap<Package, HashMap<String, Type>> getTypeTable()
-	{
+	public final HashMap<Package, HashMap<String, Type>> getTypeTable() {
 		return typeTable;
 	}
 	
-	public void addType( Type type  )
-	{		
+	public void addType( Type type  ) {		
 		addType( type, packageTree );
 	}
 	
-	public void addType( Type type, Package p  )
-	{
-		BaseChecker b = this;
+	public void addType( Type type, Package p  ) {
 		p.addType(type); //automatically adds to typeTable and sets type's package				
 	}
 	
-	public final List<File> getImportList()
-	{
+	public final List<File> getImportList() {
 		return importList;
 	}
 	
@@ -146,10 +146,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		if( msg != null && msg.length() > 0 )
 			error += ": " + msg; 
 		
-		if(debug)
-			errorList.add(ASTUtils.getFileAndLine(3) + error);
-		else
-			errorList.add(error);
+		errorList.add(error);
 	}
 	
 	/**
@@ -167,19 +164,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	
 	/**
-	 * Print out the list of errors to standard error.
-	 */
-	public void printErrors() {
-		printErrors(System.err);
-	}
-	
-	/**
 	 * Print out the list of errors to the given stream.
 	 * @param stream The stream to print the errors to.
 	 */
 	public void printErrors(PrintStream stream) {
 		for(String msg:errorList) {
-			stream.println(msg);
+			logger.error(msg);
 		}
 	}
 	

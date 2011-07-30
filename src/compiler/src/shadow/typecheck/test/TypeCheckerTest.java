@@ -4,6 +4,8 @@ import static junit.framework.Assert.assertEquals;
 
 import java.util.ArrayList;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,6 +27,9 @@ public class TypeCheckerTest {
 		} else {
 			args.add("src/test_linux_config.xml");
 		}
+
+		// set the levels of our loggers
+		Logger.getLogger("shadow").setLevel(Level.DEBUG);
 	}
 	
 	@Test public void testArray() throws Exception {

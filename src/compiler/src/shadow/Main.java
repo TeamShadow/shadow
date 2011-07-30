@@ -13,6 +13,8 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import shadow.TAC.TACBuilder;
 import shadow.TAC.TACClass;
@@ -39,6 +41,8 @@ public class Main {
 	public static final int PARSE_ERROR		 = -2;
 	public static final int TYPE_CHECK_ERROR = -3;
 	public static final int TAC_ERROR		 = -4;
+	
+	private static final Log logger = LogFactory.getLog("shadow");
 
 	/**
 	 * This is the starting point of the compiler.
@@ -76,8 +80,10 @@ public class Main {
 			}
 			
 			// parse out the command line
-			if(!config.parse(commandLine))
+			if(!config.parse(commandLine)) {
+				logger.debug("Command line parse error");
 				return GENERAL_ERROR;
+			}
 			
 		} catch (org.apache.commons.cli.ParseException e) {
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
@@ -99,6 +105,8 @@ public class Main {
 		        TypeChecker tc = new TypeChecker(false);
 		        TACBuilder tacBuilder = new TACBuilder(false);
 		        
+		        logger.info("Compiling " + shadowFile.getName());
+		        
 		        // get the start time for the compile
 		        long startTime = System.currentTimeMillis();
 
@@ -109,7 +117,7 @@ public class Main {
 		        boolean result = tc.typeCheck(node, shadowFile);
 		        
 		        if(!result) {
-		        	System.out.println(shadowFile.getPath() + " FAILED TO TYPE CHECK");
+		        	logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");
 		        	
 		        	return TYPE_CHECK_ERROR;
 		        }
