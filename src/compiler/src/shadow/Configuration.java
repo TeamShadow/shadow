@@ -53,6 +53,7 @@ public class Configuration implements Iterator<File> {
 	 * @throws ParseException 
 	 */
 	public boolean parse(CommandLine cmdLine) throws ShadowException {
+		this.reset();	// resetting the counter in case we parse multiple times
 		
 		if(cmdLine.hasOption(CONFIG_FILE)){
 			// parse the config file on the command line if we have it
