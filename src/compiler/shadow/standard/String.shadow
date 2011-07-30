@@ -2,6 +2,7 @@ package shadow.standard;
 
 immutable final class String //implements Parsable<String>, Collection<code>
 {
+/*
 	private ubyte[] data;
 	private boolean ascii;
 		
@@ -36,4 +37,5 @@ immutable final class String //implements Parsable<String>, Collection<code>
 	{
 		return this;
 	}
+	*/
 }
