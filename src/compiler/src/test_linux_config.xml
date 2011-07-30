@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<shadow parent="src/system.xml">
+<shadow arch="64" os="Linux">
+  <system_import>.</system_import>
   <import>.</import>
 </shadow>

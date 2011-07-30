@@ -46,7 +46,18 @@ public class Main {
 	 * @param args Command line arguments to control the compiler
 	 */
 	public static void main(String[] args) {
+		int ret = test(args);
 		
+		if(ret != NO_ERROR)
+			System.exit(ret);
+	}
+	
+	/**
+	 * Used for unit tests, provides a return value.
+	 * @param args
+	 * @return
+	 */
+	public static int test(String[] args) {
 		Configuration config = Configuration.getInstance();
 
 		try {
@@ -61,7 +72,7 @@ public class Main {
 				
 				helpFormatter.printHelp("shadow", options);
 				
-				System.exit(NO_ERROR);
+				return NO_ERROR;
 			}
 			
 			// parse out the command line
@@ -69,12 +80,12 @@ public class Main {
 				System.exit(GENERAL_ERROR);
 			
 		} catch (org.apache.commons.cli.ParseException e) {
-					System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
-					e.printStackTrace();
-					System.exit(GENERAL_ERROR);
+			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
+			e.printStackTrace();
+			return GENERAL_ERROR;
 		} catch (ShadowException e) {
 			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
-			System.exit(GENERAL_ERROR);
+			return GENERAL_ERROR;
 		}
 			 
 		try
@@ -100,7 +111,7 @@ public class Main {
 		        if(!result) {
 		        	System.out.println(shadowFile.getPath() + " FAILED TO TYPE CHECK");
 		        	
-		        	System.exit(-3);
+		        	return TYPE_CHECK_ERROR;
 		        }
 		        
 		        // we are only parsing & type checking
@@ -129,20 +140,21 @@ public class Main {
 			}			
 		} catch(FileNotFoundException fnfe) {
 			System.err.println("FILE " + config.current().getPath() + ") NOT FOUND: " + fnfe.getLocalizedMessage());
-			System.exit(GENERAL_ERROR);
+			return GENERAL_ERROR;
 		} catch(ParseException pe) {
 			System.err.println("PARSE ERROR " + config.current().getPath() + ": " + pe.getLocalizedMessage());
-			System.exit(PARSE_ERROR);
+			return PARSE_ERROR;
 		} catch (ShadowException e) {
 			System.err.println("ERROR ON FILE " + config.current().getPath() + ": " + e.getLocalizedMessage());
 			e.printStackTrace();
-			System.exit(TYPE_CHECK_ERROR);
-		} catch (IOException e)
-		{
+			return TYPE_CHECK_ERROR;
+		} catch (IOException e)	{
 			System.err.println("FILE DEPENDENCY ERROR " + config.current().getPath() + ": " + e.getLocalizedMessage());
 			e.printStackTrace();
-			System.exit(TYPE_CHECK_ERROR);
+			return TYPE_CHECK_ERROR;
 		}
+		
+		return NO_ERROR;
 	}
 	
 }
