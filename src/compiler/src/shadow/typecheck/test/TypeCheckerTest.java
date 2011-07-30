@@ -1,93 +1,205 @@
 package shadow.typecheck.test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import static junit.framework.Assert.assertEquals;
 
-import shadow.parser.javacc.ParseException;
-import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowParser;
-import shadow.parser.javacc.SimpleNode;
-import shadow.test.BaseTest;
-import shadow.typecheck.TypeChecker;
+import java.util.ArrayList;
 
-public class TypeCheckerTest extends BaseTest {
-	private boolean dump;
-	private boolean debug;
+import org.junit.Before;
+import org.junit.Test;
+
+import shadow.Main;
+
+public class TypeCheckerTest {
 	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws IOException, ShadowException {
-		TypeCheckerTest tct = new TypeCheckerTest(true, true);
+	private ArrayList<String> args = new ArrayList<String>();
+
+	@Before
+	public void setUp() throws Exception {
+		args.add("--check");
+		args.add("--config");
 		
-		//args = new String[1];
-		//args[0] = "./src/shadow/typecheck/test/switch.shadow";
+		String osName = System.getProperty("os.name");
 		
-		// no args, we test everything
-		if(args.length == 0)
-			tct.testAll();
-		else {
-			for(String arg:args) {
-				tct.testAll(new File(arg));
-			}
-		}	
+		if(osName.startsWith("Windows")) {
+			args.add("src/test_windows_config.xml");
+		} else {
+			args.add("src/test_linux_config.xml");
+		}
 	}
 	
-	public TypeCheckerTest(boolean dump, boolean debug) {
-		super("./src/shadow/typecheck/test");
-		this.dump = dump;
-		this.debug = debug;
+	@Test public void testArray() throws Exception {
+		args.add("tests/compile/Array.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
-	
-	protected void runTest(File sourceFile) throws ShadowException {
-	    try {
-	    	System.out.println("CHECKING: " + sourceFile.getPath());
-	        FileInputStream fis = new FileInputStream(sourceFile);        
-	        ShadowParser parser = new ShadowParser(fis);
-	        TypeChecker tc = new TypeChecker(debug);
-	        SimpleNode node = parser.CompilationUnit();
-	        
-	        if(dump)
-	        	node.dump("");
-	        
-	        long startTime = System.currentTimeMillis();
 
-	        // type check the tree
-	        boolean result = tc.typeCheck(node, sourceFile);
-	        
-	        long stopTime = System.currentTimeMillis();
-	        long runTime = stopTime - startTime;
-
-	        if(result)
-	        	printResult(sourceFile.getPath(), "PASS", runTime);
-	        else {
-	        	printResult(sourceFile.getPath(), "FAIL", runTime);
-	        	throw new ShadowException("");
-	        }
-
-	    } catch (ParseException e) {
-	        System.out.println("BAD PARSE");
-	        System.out.println(e.getMessage());
-	        throw new ShadowException(e.getMessage());
-	    } catch (ShadowException se) {
-	    	System.out.println("BAD TYPE CHECK");
-	    	System.out.println(se.getMessage());
-	        throw se;
-	    } catch (Error e) {
-	        System.out.println("Oops");
-	        System.out.println(e.getMessage());
-	        e.printStackTrace(System.out);
-	        throw new ShadowException(e.getMessage());
-	    } catch (FileNotFoundException e) {
-	        System.out.println(e.getMessage());
-	        throw new ShadowException(e.getMessage());
-	    } catch (IOException e)
-		{
-	    	System.out.println(e.getMessage());
-	        throw new ShadowException(e.getMessage());
-		}       
+	@Test public void testArrays() throws Exception {
+		args.add("tests/compile/Arrays.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
-	
+
+	@Test public void testAssertion() throws Exception {
+		args.add("tests/compile/Assertion.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testBasic() throws Exception {
+		args.add("tests/compile/Basic.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testBill() throws Exception {
+		args.add("tests/compile/Bill.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testCast() throws Exception {
+		args.add("tests/compile/Cast.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testCasting() throws Exception {
+		args.add("tests/compile/Casting.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testChild() throws Exception {
+		args.add("tests/compile/Child.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testComplexAccess() throws Exception {
+		args.add("tests/compile/ComplexAccess.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testConditionals() throws Exception {
+		args.add("tests/compile/Conditionals.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testConstructor() throws Exception {
+		args.add("tests/compile/Constructor.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testControlFlow() throws Exception {
+		args.add("tests/compile/ControlFlow.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testFinal() throws Exception {
+		args.add("tests/compile/Final.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testFoo() throws Exception {
+		args.add("tests/compile/Foo.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testFor() throws Exception {
+		args.add("tests/compile/For.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testForeach() throws Exception {
+		args.add("tests/compile/Foreach.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testGrandchild() throws Exception {
+		args.add("tests/compile/Grandchild.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testIf() throws Exception {
+		args.add("tests/compile/If.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testImports() throws Exception {
+		args.add("tests/compile/Imports.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testInnerClass() throws Exception {
+		args.add("tests/compile/InnerClass.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testInterface() throws Exception {
+		args.add("tests/compile/Interface.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testLValue() throws Exception {
+		args.add("tests/compile/LValue.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testMember() throws Exception {
+		args.add("tests/compile/Member.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testMethod() throws Exception {
+		args.add("tests/compile/Method.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testMethodAndField() throws Exception {
+		args.add("tests/compile/MethodAndField.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testMethodCall() throws Exception {
+		args.add("tests/compile/MethodCall.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testOperations() throws Exception {
+		args.add("tests/compile/Operations.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testParent() throws Exception {
+		args.add("tests/compile/Parent.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testPrivate() throws Exception {
+		args.add("tests/compile/Private.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testSequences() throws Exception {
+		args.add("tests/compile/Sequences.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testStatic() throws Exception {
+		args.add("tests/compile/Static.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testSubtype() throws Exception {
+		args.add("tests/compile/Subtype.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testSwitch() throws Exception {
+		args.add("tests/compile/Switch.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testVariableDeclaration() throws Exception {
+		args.add("tests/compile/VariableDeclaration.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testView() throws Exception {
+		args.add("tests/compile/View.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
 }
