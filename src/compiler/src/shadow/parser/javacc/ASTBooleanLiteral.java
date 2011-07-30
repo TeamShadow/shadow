@@ -1,10 +1,13 @@
 package shadow.parser.javacc;
 
-import shadow.AST.ASTUtils;
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.typecheck.type.Type;
 
 
 public class ASTBooleanLiteral extends SimpleNode {
+	private static final Log logger = Loggers.TYPE_CHECKER;
 	private boolean isTrue = false;
 	
 	public ASTBooleanLiteral(int i) {
@@ -25,9 +28,9 @@ public class ASTBooleanLiteral extends SimpleNode {
 
     public void dump(String prefix) {
     	if(isTrue())
-    		System.out.println(prefix + "ASTBooleanLiteral" + "(" + line + ":" + column + "): true");
+    		logger.debug(prefix + "ASTBooleanLiteral" + "(" + line + ":" + column + "): true");
     	else
-    		System.out.println(prefix + "ASTBooleanLiteral" + "(" + line + ":" + column + "): false");
+    		logger.debug(prefix + "ASTBooleanLiteral" + "(" + line + ":" + column + "): false");
         dumpChildren(prefix);
     }
 

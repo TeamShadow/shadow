@@ -17,8 +17,7 @@ import shadow.parser.*;
 import shadow.AST.ASTWalker;
 import shadow.typecheck.type.Type;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import shadow.Loggers;
 
 /**
  * Grammar to parse Shadow
@@ -104,7 +103,7 @@ public class ShadowParser
        return addModifier( modifiers, mod );     }
    }
 
-   private static final Log logger = LogFactory.getLog("shadow-parser");
+   private static final Log logger = Loggers.PARSER;
 
    public ShadowParser(String fileName)
    {

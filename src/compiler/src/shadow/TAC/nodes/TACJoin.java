@@ -1,9 +1,14 @@
 package shadow.TAC.nodes;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.output.AbstractTACVisitor;
 import shadow.parser.javacc.Node;
 
 public class TACJoin extends TACNode {
+	private static final Log logger = Loggers.TAC;
+	
 	private TACNode trueExit, falseExit;	/** The true & false exits, only works with simple branches */
 	private int count;
 	
@@ -27,7 +32,7 @@ public class TACJoin extends TACNode {
 	}
 	
 	public void dump(String prefix) {
-		System.out.println(prefix + " *JOIN*");
+		logger.debug(prefix + " *JOIN*");
 		
 		if(next == null)
 			return;

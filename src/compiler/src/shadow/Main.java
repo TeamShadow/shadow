@@ -14,7 +14,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import shadow.TAC.TACBuilder;
 import shadow.TAC.TACClass;
@@ -42,7 +41,7 @@ public class Main {
 	public static final int TYPE_CHECK_ERROR = -3;
 	public static final int TAC_ERROR		 = -4;
 	
-	private static final Log logger = LogFactory.getLog("shadow");
+	private static final Log logger = Loggers.SHADOW;
 
 	/**
 	 * This is the starting point of the compiler.

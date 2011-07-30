@@ -1,5 +1,8 @@
 package shadow.output;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.TAC.TACClass;
 import shadow.TAC.TACMethod;
 import shadow.TAC.nodes.TACAllocation;
@@ -16,6 +19,8 @@ import shadow.TAC.nodes.TACReturn;
 import shadow.TAC.nodes.TACUnaryOperation;
 
 public abstract class AbstractTACVisitor {
+	private static final Log logger = Loggers.TAC;
+	
 	private TACClass theClass;
 	
 	public AbstractTACVisitor(TACClass theClass) {
@@ -40,46 +45,46 @@ public abstract class AbstractTACVisitor {
 	}
 	
 	public void visit(TACNode node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 	
 	public void visit(TACAssign node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 	
 	public void visit(TACAllocation node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 	
 	public void visit(TACBinaryOperation node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 	
 	public void visit(TACBranch node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 	
 	public void visit(TACLoop node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 	
 	public void visit(TACJoin node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 	
 	public void visit(TACNoOp node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 
 	public void visit(TACUnaryOperation node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 
 	public void visit(TACMethodCall node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 
 	public void visit(TACReturn node) {
-		System.out.println(node);
+		logger.debug(node);
 	}
 }

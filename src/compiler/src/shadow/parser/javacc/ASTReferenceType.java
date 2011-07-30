@@ -5,9 +5,15 @@ package shadow.parser.javacc;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
+
 public
 @SuppressWarnings("all")
 class ASTReferenceType extends SimpleNode {
+  private static final Log logger = Loggers.TYPE_CHECKER;
+  
   public ASTReferenceType(int id) {
     super(id);    
  //   allReferences.add(this);
@@ -45,7 +51,7 @@ class ASTReferenceType extends SimpleNode {
   public void dump(String prefix) {
   	String className = this.getClass().getSimpleName();
 	
-  	System.out.println(prefix + className + "(" + line + ":" + column + "): " + arrayDimensions);
+  	logger.debug(prefix + className + "(" + line + ":" + column + "): " + arrayDimensions);
     
 	dumpChildren(prefix);
   }

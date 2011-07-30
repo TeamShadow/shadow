@@ -2,12 +2,17 @@ package shadow.parser.javacc;
 
 import java.io.File;
 
+import org.apache.commons.logging.Log;
+
 import shadow.Configuration;
+import shadow.Loggers;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.Type;
 
 public class SimpleNode implements Node {
+	private static final Log logger = Loggers.TYPE_CHECKER;
+	
     protected Node parent;
     protected Node[] children;
     protected int id;
@@ -141,9 +146,9 @@ public class SimpleNode implements Node {
     public void dump(String prefix) {
     	String className = this.getClass().getSimpleName();
     	if(image == null || image.length() == 0)
-    		System.out.println(prefix + className + "(" + line + ":" + column + ")");
+    		logger.debug(prefix + className + "(" + line + ":" + column + ")");
     	else
-    		System.out.println(prefix + className + "(" + line + ":" + column + "): " + image);
+    		logger.debug(prefix + className + "(" + line + ":" + column + "): " + image);
         dumpChildren(prefix);
     }
 

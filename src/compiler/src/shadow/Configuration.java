@@ -11,10 +11,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.logging.Log;
 
 import shadow.parser.javacc.ShadowException;
 
 public class Configuration implements Iterator<File> {
+	
+	private Log logger = Loggers.SHADOW;
 	
 	// these are the single letter command line args
 	private static final String CONFIG_FILE = "C";
@@ -70,9 +73,9 @@ public class Configuration implements Iterator<File> {
 		}
 
 		// print the import paths if we're debugging
-		if(Boolean.getBoolean("DEBUG")) {
+		if(logger.isDebugEnabled()) {
 			for(File i:importPaths) {
-				System.out.println("IMPORT: " + i.getAbsolutePath());
+				logger.debug("IMPORT: " + i.getAbsolutePath());
 			}
 		}
 
@@ -141,13 +144,10 @@ public class Configuration implements Iterator<File> {
 		ConfigParser parser = new ConfigParser(this);
 		
 		if(configFile instanceof File) {
-			if(Boolean.getBoolean("DEBUG"))
-				System.out.println("PARSING: " + ((File)configFile).getAbsolutePath());
-			
+			logger.debug("PARSING: " + ((File)configFile).getAbsolutePath());
 			parser.parse((File)configFile);
 		} else {
-			if(Boolean.getBoolean("DEBUG"))
-				System.out.println("PARSING: " + ((URL)configFile));
+			logger.debug("PARSING: " + ((URL)configFile));
 			
 			parser.parse((URL)configFile);
 		}

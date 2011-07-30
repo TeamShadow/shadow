@@ -1,8 +1,8 @@
 package shadow.AST;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
+import shadow.Loggers;
 import shadow.parser.javacc.Node;
 
 /**
@@ -12,7 +12,7 @@ import shadow.parser.javacc.Node;
  */
 public class ASTUtils {
 	
-	private static final Log logger = LogFactory.getLog("shadow");
+	private static final Log logger = Loggers.TYPE_CHECKER;
 
 	static public String getLineCol(Node node) {
 		return node.getLine() + ":" + node.getColumn();

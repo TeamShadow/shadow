@@ -2,10 +2,15 @@ package shadow.TAC.nodes;
 
 import java.util.LinkedList;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.output.AbstractTACVisitor;
 import shadow.parser.javacc.Node;
 
 public abstract class TACNode implements TACNodeInterface {
+	private static final Log logger = Loggers.TAC;
+	
 	private static int labelCounter = 0;
 	protected String name;
 	protected TACNode parent;
@@ -51,7 +56,7 @@ public abstract class TACNode implements TACNodeInterface {
 		this.name = "label_" + labelCounter++ + ": " + name;
 		this.parent = parent;
 		this.next = null;
-		this.allNodes.add(this);
+		TACNode.allNodes.add(this);
 	}
 	
 	public TACNode(Node astNode, String name, TACNode parent, TACNode next) {
@@ -120,8 +125,8 @@ public abstract class TACNode implements TACNodeInterface {
 	}
 	
 	public void dump(String prefix) {
-//		System.out.println(prefix + this.parent + " <- " + this + " -> " + this.next);
-		System.out.println(prefix + this);
+//		logger.debug(prefix + this.parent + " <- " + this + " -> " + this.next);
+		logger.debug(prefix + this);
 		
 		if(next == null)
 			return;

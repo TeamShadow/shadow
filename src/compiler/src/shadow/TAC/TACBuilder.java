@@ -4,6 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
@@ -20,6 +23,8 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
  * This class is a total hack right now
  */
 public class TACBuilder extends AbstractASTVisitor {
+	private static final Log logger = Loggers.TAC;
+	
 	private boolean debug;
 	private LinkedList<TACClass> classes;
 	
@@ -72,7 +77,7 @@ public class TACBuilder extends AbstractASTVisitor {
 				
 				if( astNode == null )
 				{
-					System.out.println("Currently using a null AST node for automatically generated default constructors");
+					logger.debug("Currently using a null AST node for automatically generated default constructors");
 					continue;
 				}
 				

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.TAC.nodes.TACAllocation;
 import shadow.TAC.nodes.TACNode;
 import shadow.parser.javacc.Node;
@@ -13,6 +16,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 
 public class TACClass {
+	private static final Log logger = Loggers.TAC;
 
 	private LinkedList<TACNode[]> fields;	/** Holds the entry & exit nodes for fields */
 	private LinkedList<TACMethod> methods;
@@ -113,10 +117,10 @@ public class TACClass {
 	}
 	
 	public void dump() {
-		System.out.println("CLASS: " + className);
+		logger.debug("CLASS: " + className);
 		
 		for(TACMethod m:methods) {
-			System.out.println("METHOD: " + m.getName());
+			logger.debug("METHOD: " + m.getName());
 			m.getEntry().dump(" ");
 		}
 	}

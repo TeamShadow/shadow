@@ -2,9 +2,15 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
+
 public
 @SuppressWarnings("all")
 class ASTModifiers extends SimpleNode {
+  private static final Log logger = Loggers.TYPE_CHECKER;
+  
   public ASTModifiers(int id) {
     super(id);
   }
@@ -26,23 +32,24 @@ class ASTModifiers extends SimpleNode {
   }
   
   public void dump(String prefix) {
-	  System.out.print(prefix + "ASTModifiers(" + line + ":" + column + "): ");
+	  StringBuilder sb = new StringBuilder(prefix + "ASTModifiers(" + line + ":" + column + "): ");
+	  
 	  ShadowParser.ModifierSet ms = new ShadowParser.ModifierSet();
 	  	  
-	  if(ms.isAbstract(modifiers)) System.out.print("abstract ");
-	  if(ms.isFinal(modifiers)) System.out.print("final ");
-	  //if(ms.isNative(modifiers)) System.out.print("native ");
-	  if(ms.isPrivate(modifiers)) System.out.print("private ");
-	  if(ms.isProtected(modifiers)) System.out.print("protected ");
-	  if(ms.isPublic(modifiers)) System.out.print("public ");
-	  if(ms.isStatic(modifiers)) System.out.print("static ");
-	  //if(ms.isStrictfp(modifiers)) System.out.print("strictfp ");
-	  //if(ms.isSynchronized(modifiers)) System.out.print("synchronized ");
-	  //if(ms.isTransient(modifiers)) System.out.print("transient ");
-	  //if(ms.isVolatile(modifiers)) System.out.print("volatile ");
-	  if(modifiers == 0) System.out.print("none");
+	  if(ms.isAbstract(modifiers)) sb.append("abstract ");
+	  if(ms.isFinal(modifiers)) sb.append("final ");
+	  //if(ms.isNative(modifiers)) sb.append("native ");
+	  if(ms.isPrivate(modifiers)) sb.append("private ");
+	  if(ms.isProtected(modifiers)) sb.append("protected ");
+	  if(ms.isPublic(modifiers)) sb.append("public ");
+	  if(ms.isStatic(modifiers)) sb.append("static ");
+	  //if(ms.isStrictfp(modifiers)) sb.append("strictfp ");
+	  //if(ms.isSynchronized(modifiers)) sb.append("synchronized ");
+	  //if(ms.isTransient(modifiers)) sb.append("transient ");
+	  //if(ms.isVolatile(modifiers)) sb.append("volatile ");
+	  if(modifiers == 0) sb.append("none");
 
-	  System.out.println();
+	  logger.debug(sb.toString());
 	  dumpChildren(prefix);
   }
 }

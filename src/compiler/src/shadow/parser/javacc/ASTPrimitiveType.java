@@ -2,11 +2,16 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.typecheck.type.Type;
 
 public
 @SuppressWarnings("all")
 class ASTPrimitiveType extends SimpleNode {
+  private static final Log logger = Loggers.TYPE_CHECKER;
+  
   public ASTPrimitiveType(int id) {
     super(id);
   }
@@ -23,9 +28,9 @@ class ASTPrimitiveType extends SimpleNode {
     public void dump(String prefix) {
     	String className = this.getClass().getSimpleName();
     	if(type == null)
-    		System.out.println(prefix + className + "(" + line + ":" + column + ")");
+    		logger.debug(prefix + className + "(" + line + ":" + column + ")");
     	else
-    		System.out.println(prefix + className + "(" + line + ":" + column + "): " + type.getTypeName());
+    		logger.debug(prefix + className + "(" + line + ":" + column + "): " + type.getTypeName());
         dumpChildren(prefix);
     }
 

@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -12,7 +15,8 @@ import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.Type;
 
 public class TypeChecker {
-
+	private static final Log logger = Loggers.TYPE_CHECKER;
+	
 	protected boolean debug;
 	
 	public TypeChecker(boolean debug) {	
@@ -38,21 +42,20 @@ public class TypeChecker {
 		// see how many errors we found
 		if(collector.getErrorCount() > 0)
 		{
-			collector.printErrors(System.out);
+			collector.printErrors();
 			return false;
 		}
 		
 		FieldAndMethodChecker builder = new FieldAndMethodChecker(debug, typeTable, importList, packageTree );
 		builder.buildTypes( collector.getFiles() );
 
-		if(debug)
-			System.out.println("DEBUG: TYPE BUILDING DONE");
+		logger.debug("TYPE BUILDING DONE");
 		
 	
 		// see how many errors we found
 		if(builder.getErrorCount() > 0)
 		{
-			builder.printErrors(System.out);
+			builder.printErrors();
 			return false;
 		}
 		
@@ -64,7 +67,7 @@ public class TypeChecker {
 
 		// see how many errors we found
 		if(checker.getErrorCount() > 0) {
-			checker.printErrors(System.out);
+			checker.printErrors();
 			return false;
 		}
 		

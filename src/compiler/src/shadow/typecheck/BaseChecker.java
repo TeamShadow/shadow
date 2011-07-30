@@ -167,7 +167,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * Print out the list of errors to the given stream.
 	 * @param stream The stream to print the errors to.
 	 */
-	public void printErrors(PrintStream stream) {
+	public void printErrors() {
 		for(String msg:errorList) {
 			logger.error(msg);
 		}

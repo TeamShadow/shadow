@@ -1,10 +1,14 @@
 package shadow.TAC.nodes;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
 import shadow.parser.javacc.Node;
 
 public class TACLoop extends TACNode {
+	private static final Log logger = Loggers.TAC;
 
 	private TACVariable lhs;
 	private TACVariable rhs;
@@ -46,18 +50,18 @@ public class TACLoop extends TACNode {
 	}
 
 	public void dump(String prefix) {
-		System.out.println(prefix + "LOOP: " + lhs + " " + comparision + " " + rhs);
+		logger.debug(prefix + "LOOP: " + lhs + " " + comparision + " " + rhs);
 		
-		System.out.println(prefix + "  BODY: ");
+		logger.debug(prefix + "  BODY: ");
 		TACNode node = loopNode;
 		
 		// the best we can do here
 		while(node != null && node != this) {
-			System.out.println(prefix + "        " + node);
+			logger.debug(prefix + "        " + node);
 			node = node.getNext();
 		}
 		
-		System.out.println(prefix + " BREAK: ");
+		logger.debug(prefix + " BREAK: ");
 		if(breakNode != null)
 			breakNode.dump(prefix + "        ");
 	}

@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTAdditiveExpression;
@@ -91,6 +94,8 @@ import shadow.typecheck.type.UnboundMethodType;
 //no automatic promotion for bitwise operators
 
 public class ClassChecker extends BaseChecker {
+	private static final Log logger = Loggers.TYPE_CHECKER;
+	
 	protected LinkedList<HashMap<String, Node>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected Node curMethod = null;   /** Current method (only a single reference needed since Shadow does not allow methods to be defined inside of methods) */
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
@@ -118,9 +123,9 @@ public class ClassChecker extends BaseChecker {
 		// we have a new scope, so we need a new HashMap in the linked list
 		if(secondVisit)
 		{
-/*			System.out.println("\nSYMBOL TABLE:");
+/*			logger.debug("\nSYMBOL TABLE:");
 			for(String s:symbolTable.getFirst().keySet())
-				System.out.println(s + ": " + symbolTable.getFirst().get(s).getType());
+				logger.debug(s + ": " + symbolTable.getFirst().get(s).getType());
 */				
 			
 			symbolTable.removeFirst();

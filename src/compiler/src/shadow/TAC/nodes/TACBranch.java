@@ -1,10 +1,14 @@
 package shadow.TAC.nodes;
 
+import org.apache.commons.logging.Log;
+
+import shadow.Loggers;
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
 import shadow.parser.javacc.Node;
 
 public class TACBranch extends TACNode {
+	private static final Log logger = Loggers.TAC;
 
 	protected TACNode trueEntry;
 	protected TACNode falseEntry;
@@ -80,13 +84,13 @@ public class TACBranch extends TACNode {
 	}
 	
 	public void dump(String prefix) {
-		System.out.println(prefix + "BRANCH: " + lhs + " " + comparision + " " + rhs);
+		logger.debug(prefix + "BRANCH: " + lhs + " " + comparision + " " + rhs);
 		
-		System.out.println(prefix + "  TRUE: ");
+		logger.debug(prefix + "  TRUE: ");
 		if(trueEntry != null)
 			trueEntry.dump(prefix + "        ");
 		
-		System.out.println(prefix + " FALSE: ");
+		logger.debug(prefix + " FALSE: ");
 		if(falseEntry != null)
 			falseEntry.dump(prefix + "        ");
 		
