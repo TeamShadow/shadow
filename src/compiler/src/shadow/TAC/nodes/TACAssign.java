@@ -43,4 +43,7 @@ public class TACAssign extends TACNode {
 		return rhs;
 	}
 	
+	public TACVariable getVariable() {
+		return getLHS();
+	}
 }

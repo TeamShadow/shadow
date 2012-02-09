@@ -41,6 +41,15 @@ public class TACVariable {
 			return new TACVariable("false", t, true);
 	}
 	
+	/**
+	 * Returns an int literal TACVariable.
+	 * @param integral value.
+	 * @return TACVariable representing the literal.
+	 */
+	static public TACVariable getIntLiteral(int value) {
+		return new TACVariable(Integer.toString(value), new Type("int"), true);
+	}
+	
 	public TACVariable(String symbol, Type type) {
 		this.type = type;
 		this.symbol = symbol;
@@ -54,6 +63,10 @@ public class TACVariable {
 			if(type == Type.BOOLEAN || type == Type.BYTE) size = 1;
 			else if(type == Type.CODE || type == Type.INT) size = 4;
 			else if(type == Type.DOUBLE || type == Type.LONG) size = 8;
+		} else {
+			/* I'm just guessing here */
+			isRef = true;
+			size = 8;
 		}
 	}
 	
@@ -85,6 +98,10 @@ public class TACVariable {
 		return symbol;
 	}
 
+	/**
+	 * Returns true if this variable is a field.
+	 * @return
+	 */
 	public boolean isField() {
 		return isField;
 	}
@@ -94,10 +111,22 @@ public class TACVariable {
 	}
 
 	/**
+	 * Returns true if this variable is a reference.
+	 * @return
+	 */
+	public boolean isRef() {
+		return isRef;
+	}
+
+	/**
 	 * Returns true if this variable is an array.
 	 * @return
 	 */
 	public boolean isArray() {
 		return arrayDim != null;
+	}
+	
+	public List<Integer> getArrayDim() {
+		return arrayDim;
 	}
 }

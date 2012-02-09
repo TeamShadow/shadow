@@ -38,6 +38,8 @@ import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
+import shadow.parser.javacc.ASTConstructorDeclaration;
+import shadow.parser.javacc.ASTEmptyStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
@@ -80,6 +82,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
 public class ASTToTACVisitor extends AbstractASTVisitor {
@@ -392,13 +395,20 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			return WalkType.POST_CHILDREN;
 		
 		TACMethodCall call = new TACMethodCall(node);
+
+		for (Type retType : ((MethodType)node.getType()).getReturnTypes()) {
+			TACVariable retVar = new TACVariable(getTempSymbol(), retType);
+			TACAllocation allocate = new TACAllocation(node, retVar);
+			linkToEnd(node, allocate);
+			call.addReturn(retVar);
+		}
 		
 		// we can have zero or more arguments/children
 		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
 			SimpleNode astArgNode = (SimpleNode)node.jjtGetChild(i);
 			TACNode argEntryNode = astArgNode.getEntryNode(); 
 			TACNode argExitNode = astArgNode.getExitNode();
-			TACVariable arg = argExitNode instanceof TACAssign ? ((TACAssign)argExitNode).getLHS() : ((TACNoOp)argExitNode).getVariable();
+			TACVariable arg = argExitNode.getVariable();//argExitNode instanceof TACAssign ? ((TACAssign)argExitNode).getLHS() : ((TACNoOp)argExitNode).getVariable();
 			
 			// add the arg to the method call
 			call.addParameter(arg);
@@ -409,6 +419,9 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		// link in the method call
 		linkToEnd(node, call);
+		
+		if (call.getReturnCount() > 0)
+			linkToEnd(node, new TACNoOp(node, call.getReturn(0), call, null));
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -1057,6 +1070,26 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	@Override
+	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		// make sure it's not native
+		if(!ModifierSet.isNative(node.getModifiers()))
+		{
+			for (int i = 1; i < node.jjtGetNumChildren(); i++)
+			{
+				// this first one will always be the block of the method
+				SimpleNode block = (SimpleNode)node.jjtGetChild(i);
+				
+				// link in the block's TAC path as it is the method's path
+				linkToEnd(node, block.getEntryNode(), block.getExitNode());
+			}
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
 
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
@@ -1078,6 +1111,16 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 	public Object visit(ASTStatementExpressionList node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
+		
+		return WalkType.NO_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTEmptyStatement node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		linkToEnd(node, new TACNoOp(node, null, null));
 		
 		return WalkType.NO_CHILDREN;
 	}
@@ -1191,7 +1234,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			linkToEnd(node, entryNode, exitNode);
 		}
 		
-		
+		linkToEnd(node, ret);
 		
 		return WalkType.NO_CHILDREN;
 	}

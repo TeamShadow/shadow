@@ -1,0 +1,57 @@
+package youngjl;
+
+class HelloWorld
+{
+
+	public constructor()
+	{
+		Console.printLine("object Hello World initialized with no arguments.");
+	}
+
+	public constructor(int a)
+	{
+		Console.print("object Hello World initialized with one argument: ");
+		Console.print(a);
+		Console.printLine(".");
+	}
+
+	public constructor(int a, int b)
+	{
+		Console.print("object Hello World initialized with two arguments: ");
+		Console.print(a);
+		Console.print(" and ");
+		Console.print(b);
+		Console.printLine(".");
+	}
+
+	public static main( String[] args ) => ()
+	{
+		Console.printLine("Hello World!");
+		test(0u, 10u);
+		/*test(10, 9, 8 + 3);
+		new int[5][4][3,2][1,1][][];
+		new int[4][3][2][1][];
+		new int[1];
+		new int[1][];
+		new HelloWorld[1];
+		new HelloWorld[1][];
+		new HelloWorld(1, 2);
+		new HelloWorld(0);
+		new HelloWorld(0, 1);*/
+	}
+
+	public static test(uint start, uint end) => (int)
+	{
+		for (uint i = start; i <= end; i += 1u) {
+			Console.print(i);
+			Console.print(": ");
+			Console.printLine(factorial(i));
+		}
+	}
+	
+	public static factorial(uint a) => (uint) {
+		if (a == 1u or a == 0u) return 1u;
+		return factorial(a - 1u) * a;
+	}
+
+}

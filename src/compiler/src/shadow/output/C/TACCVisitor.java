@@ -43,7 +43,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	
 	private String cFileName = null;
 	private String metaFileName = null;
-
+	
 	/**
 	 * @param root
 	 */
@@ -72,7 +72,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			cWriter = new CPrettyPrinter(new PrintWriter(new FileOutputStream(cFile, false)));
 			
 			// open the meta file appending data always
-			metaWriter = new CPrettyPrinter(new PrintWriter(new FileWriter(metaFile, true)));
+			metaWriter = new CPrettyPrinter(new PrintWriter(new FileWriter(metaFile, /*true*/false)));
 			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -88,7 +88,6 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	public void startFile() {
 		// write out the stuff for the C file
 		cWriter.print("/* AUTO-GENERATED FILE, DO NOT EDIT! */");
-		cWriter.print("#include <stdio.h>");
 		cWriter.print("#include \"" + metaFileName + "\"");	// include the header
 		cWriter.print("");
 		
@@ -97,20 +96,23 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		
 		// write out the stuff for the meta file
 		metaWriter.print("/* AUTO-GENERATED FILE, DO NOT EDIT! */");
+		metaWriter.print("#include \"shadow.h\"");
 		metaWriter.print("#ifndef " + metaShortName.toUpperCase());
 		metaWriter.print("#define " + metaShortName.toUpperCase());
 		metaWriter.print("");
 		
 		// create the method structure
-		metaWriter.print("struct " + this.getTheClass().getName() + "_methods {");
+		metaWriter.print("struct " + type2type(this.getTheClass().getFullName(), true) + "_methods {");
 		metaWriter.indent();
 		
 		List<TACMethod> methods = this.getTheClass().getMethods();
-		
+		boolean foundConstructor = false;
 		for(TACMethod method:methods) {
 			// don't need the field init method included
-			if(method.getName().startsWith("__init"))
+			if(method.getName().equals("constructor")) {
+				foundConstructor = true;
 				continue;
+			}
 			
 			StringBuffer sb = new StringBuffer();
 			List<Type> retTypes = method.getReturnTypes();
@@ -152,6 +154,15 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 
 	@Override
 	public void endFile() {
+		/* Here's our main method */
+		cWriter.print("int main(int argc, char **argv) {"); // Eventually translate arguments
+		cWriter.indent();
+		cWriter.print("main_PString_A1(argv);"); // No need to translate right now
+		cWriter.print("return 0;");
+		cWriter.outdent();
+		cWriter.print("}");
+		cWriter.print("");
+
 		metaWriter.print("#endif");
 	}
 
@@ -159,12 +170,12 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	public void startFields() {
 		TACClass theClass = this.getTheClass();
 		
-		metaWriter.print("struct " + theClass.getName() + " {");
+		metaWriter.print("struct " + type2type(theClass.getFullName(), true) + " {");
 		metaWriter.indent();
 		
 		// add the super class (TODO: what do we do for interfaces???)
-		if(theClass.getExtendClassName() != null)
-			metaWriter.print("struct " + theClass.getExtendClassName() + " __super;");
+		/*if(theClass.getExtendClassName() != null)
+			metaWriter.print("struct " + theClass.getExtendClassName() + " __super;"); later*/
 		
 		List<String> imps = theClass.getImplementsClassNames();
 		
@@ -177,7 +188,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		}
 		
 		// add a pointer to the methods for this class
-		metaWriter.print("struct " + theClass.getName() + "_methods *__methods;");
+		metaWriter.print("struct " + type2type(theClass.getFullName(), true) + "_methods *__methods;");
 		
 		// add in a var to keep track of the reference counts to this object
 		metaWriter.print("");
@@ -207,20 +218,20 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		if(method.getReturnTypes().size() == 0) {
 			sb.append("void");
 		} else {
-			sb.append(type2type(method.getReturnTypes().get(0).getTypeName()));
+			sb.append(type2type(method.getReturnTypes().get(0).getMangledName()));
 		}
 		
-		sb.append(" ");
-		sb.append(method.getName());
-		sb.append("(");
+		sb.append(' ');
+		sb.append(method.getMangledName());
+		sb.append('(');
 		
 		List<String> paramNames = method.getParamNames();
 		List<ModifiedType> paramTypes = method.getParamTypes();
-		String className = this.getTheClass().getName();
+		String className = type2type(this.getTheClass().getFullName());
 
 		// first param is always a reference to the class, unless it's static
 		if(!ModifierSet.isStatic(modifiers))
-			sb.append("struct " + className + "* this, ");
+			sb.append("struct " + className + " this, ");
 
 		for(int i=0; i < paramNames.size(); ++i) {
 			sb.append(type2type(paramTypes.get(i).getType().getTypeName()));
@@ -229,11 +240,14 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			sb.append(", ");
 		}
 		
-		sb.setCharAt(sb.length()-2, ')');
+		if (paramNames.size() > 0 || !ModifierSet.isStatic(modifiers))
+			sb.setCharAt(sb.length()-2, ')');
+		else
+			sb.append(") ");
 		
 		// methods that are NOT static should be scoped to ONLY this file
-		if(!ModifierSet.isStatic(modifiers))
-			cWriter.print("static ");
+		/*if(!ModifierSet.isStatic(modifiers))
+			cWriter.print("static "); not sure what this does in c... I'll look it up later */
 		
 		// print to the C file
 		cWriter.print(sb.toString() + '{');
@@ -263,10 +277,29 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	 * @return
 	 */
 	private String type2type(String shadowType) {
-		String ret = shadowType.replace("[]", "*");
-		
+		return type2type(shadowType, false);
+	}
+	
+	/**
+	 * Converts a Shadow type to a C type.
+	 * @param shadowType
+	 * @return
+	 */
+	private String type2type(String shadowType, boolean declaration) {
+		String ret = shadowType.replaceAll("\\[,*\\]", "*");
+
 		ret = ret.replace("boolean", "int");
-		ret = ret.replace("String", "char");
+		ret = ret.replace("uint", "unsigned int");
+		ret = ret.replace("String", "char *");
+		if (ret.contains("@"))
+		{
+			ret = ret.replace("@", "_C");
+			ret = ret.replace('.', '_');
+			if (!declaration)
+			{
+				ret += '*';
+			}
+		}
 
 		return ret;
 	}
@@ -277,24 +310,42 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	 * @return
 	 */
 	private String lit2lit(String shadowLiteral) {
-		if(shadowLiteral.equals("true"))
+		if (shadowLiteral.equals("true"))
 			return "1";
-		else if(shadowLiteral.equals("false"))
+		else if (shadowLiteral.equals("false"))
 			return "0";
-		else
-			return shadowLiteral;
+		else if (shadowLiteral.equals("null"))
+			return "NULL";
+		if (shadowLiteral.endsWith("u"))
+			shadowLiteral = shadowLiteral.substring(0, shadowLiteral.length() - 1);
+		return shadowLiteral;
 	}
 	
 	public void visit(TACAllocation node) {
 		TACVariable var = node.getVariable();
 		StringBuilder sb = new StringBuilder();
-		
-		sb.append(type2type(var.getType().toString()));
-		sb.append(" ");
+
+		String type = type2type(var.getType().toString());
+		sb.append(type);
+		sb.append(' ');
 		sb.append(var.getSymbol());
-		sb.append(";");
+		sb.append(';');
 		
 		// print to the current writer as these can show up anywhere
+		curWriter.print(sb.toString(), node);
+
+		sb.setLength(0);
+		if (node.isOnHeap()) {
+			sb.append(var.getSymbol());
+			sb.append(" = (");
+			sb.append(type);
+			sb.append(")calloc(");
+			sb.append(node.getSize().getSymbol());
+			sb.append(", sizeof(");
+			sb.append(type);
+			sb.setLength(sb.length() - 1);
+			sb.append("));");
+		}
 		curWriter.print(sb.toString(), node);
 	}
 	
@@ -302,16 +353,16 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		StringBuilder sb = new StringBuilder();
 		
 		if(node.getLHS().isField())
-			sb.append("this->");
+			sb.append("(*this).");
 		sb.append(node.getLHS().getSymbol());
 		
 		sb.append(" = ");
 		
 		if(node.getRHS().isField())
-			sb.append("this->");
+			sb.append("(*this).");
 		sb.append(lit2lit(node.getRHS().getSymbol()));
 		
-		sb.append(";");
+		sb.append(';');
 		
 		cWriter.print(sb.toString(), node);
 	}
@@ -320,7 +371,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		StringBuilder sb = new StringBuilder();
 		
 		if(node.getLHS().isField())
-			sb.append("this->");
+			sb.append("(*this).");
 		sb.append(node.getLHS().getSymbol());
 		sb.append(" = ");
 		sb.append(node.getRHS().getSymbol());
@@ -350,37 +401,52 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		StringBuilder sb = new StringBuilder("if ( ");
 		
 		if(node.getLHS().isField())
-			sb.append("this->");
+			sb.append("(*this).");
 		sb.append(lit2lit(node.getLHS().getSymbol()));
 		
 		switch(node.getComparision()) {
-		case EQUAL: sb.append(" == "); break;
-		case GREATER: sb.append(" > "); break;
-		case GREATER_EQUAL: sb.append(" >= "); break;
-		case IS: sb.append(" ???? "); break;
-		case LESS: sb.append(" < "); break;
-		case LESS_EQUAL: sb.append(" <= "); break;
-		case NOT_EQUAL: sb.append(" != "); break;
+			case EQUAL: sb.append(" == "); break;
+			case GREATER: sb.append(" > "); break;
+			case GREATER_EQUAL: sb.append(" >= "); break;
+			case IS: sb.append(" ???? "); break;
+			case LESS: sb.append(" < "); break;
+			case LESS_EQUAL: sb.append(" <= "); break;
+			case NOT_EQUAL: sb.append(" != "); break;
 		}
 		
 		if(node.getRHS().isField())
-			sb.append("this->");
+			sb.append("(*this).");
 		sb.append(lit2lit(node.getRHS().getSymbol()));
 		sb.append(" ) { ");
 		
 		cWriter.print("");
 		cWriter.print(sb.toString(), node);
-		cWriter.outdent();
+		cWriter.indent();
 	}
 	
 	public void visitElse() {
-		cWriter.print("");
 		cWriter.print("else {");
-		cWriter.outdent();
+		cWriter.indent();
 	}
 	
 	public void visit(TACLoop node) {
-		// TODO: Implement
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("while ( ");
+		sb.append(lit2lit(node.getLHS().getSymbol()));
+		switch(node.getComparision()) {
+			case EQUAL: sb.append(" == "); break;
+			case GREATER: sb.append(" > "); break;
+			case GREATER_EQUAL: sb.append(" >= "); break;
+			case IS: sb.append(" ???? "); break;
+			case LESS: sb.append(" < "); break;
+			case LESS_EQUAL: sb.append(" <= "); break;
+			case NOT_EQUAL: sb.append(" != "); break;
+		}
+		sb.append(lit2lit(node.getRHS().getSymbol()));
+		sb.append(" ) {");
+		cWriter.print(sb.toString(), node);
+		cWriter.indent();
 	}
 	
 	public void visit(TACJoin node) {
@@ -398,7 +464,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		StringBuilder sb = new StringBuilder();
 		
 		if(node.getLHS().isField())
-			sb.append("this->");
+			sb.append("(*this).");
 		sb.append(node.getLHS());
 		
 		sb.append(" = ");
@@ -406,7 +472,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		sb.append(node.getOperation());
 		
 		if(node.getRHS().isField())
-			sb.append("this->");
+			sb.append("(*this)");
 		sb.append(node.getRHS());
 		
 		sb.append(";");
@@ -420,24 +486,54 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		//
 		// TODO: Remove this hack!
 		//
-		if(node.getMethodName().equals("printString")) {
+		/*if ( node.getMangledName().equals("print_PString") )
+		{
 			sb.append("printf(\"%s\", ");
-		} else {
-			sb.append(node.getMethodName());
-			sb.append("(");
 		}
+		else if ( node.getMangledName().equals("print_Pint") )
+		{
+			sb.append("printf(\"%d\", ");
+		}
+		else if ( node.getMangledName().equals("printLine") )
+		{
+			sb.append("printf(\"\\n\");");
+		}
+		else
+		{
+			sb.append(node.getMangledName());
+			sb.append('(');
+		} moved to shadow.h for now */
+		
+		if (node.hasReturn()) {
+			TACVariable ret = node.getReturn(0);
+			sb.append(ret.getSymbol());
+			sb.append(" = ");
+		}
+		
+		sb.append(node.getMangledName());
+		sb.append('(');
 		
 		for(TACVariable param:node.getParameters()) {
 
 			if(param.isField())
-				sb.append("this->");
+				sb.append("(*this).");
 			sb.append(param.getSymbol());
 			sb.append(", ");
 		}
+		for(int i = 1; i < node.getReturnCount(); i++) {
+			TACVariable ret = node.getReturn(i);
+			sb.append('&');
+			if(ret.isField())
+				sb.append("(*this).");
+			sb.append(ret.getSymbol());
+			sb.append(", ");
+		}
 		
-		if(node.getParamCount() != 0) {
+		if(node.getParamCount() > 0 || node.getReturnCount() > 1) {
 			sb.setCharAt(sb.length()-2, ')');
 			sb.setCharAt(sb.length()-1, ';');
+		} else {
+			sb.append(");");
 		}
 		
 		cWriter.print(sb.toString(), node);
@@ -447,8 +543,10 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		StringBuffer sb = new StringBuffer();
 		
 		if(node.getReturns().get(0).isField())
-			sb.append("this->");
-		sb.append("return " + node.getReturns().get(0).getSymbol());
+			sb.append("(*this)");
+		sb.append("return ");
+		sb.append(node.getReturns().get(0).getSymbol());
+		sb.append(';');
 		
 		cWriter.print(sb.toString(), node);
 	}

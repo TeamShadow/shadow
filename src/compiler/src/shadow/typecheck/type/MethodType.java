@@ -212,20 +212,19 @@ public class MethodType extends Type {
 		return sb.toString();
 	}
 	
+	@Override
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();
-		
+
 		for(ModifiedType type:paramTypes) {
+			sb.append("_P");
 			Type p = type.getType();
-			sb.append(p.getTypeName());
-			sb.append("_");
+			sb.append(p.getMangledName());
 		}
 		
-		sb.append("_R_");
-		
 		for(Type r:returns) {
-			sb.append(r.getTypeName());
-			sb.append("_");
+			sb.append("_R");
+			sb.append(r.getMangledName());
 		}
 		
 		return sb.toString();

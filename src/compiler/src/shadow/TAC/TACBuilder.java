@@ -64,15 +64,16 @@ public class TACBuilder extends AbstractASTVisitor {
 			theClass.addField(astNode.getEntryNode(), astNode.getExitNode());
 		}
 		
-		// generate the init method for the fields
-		theClass.generateInitMethod(node);
-		
+		boolean foundConstructor = false;
 		// go through the methods
 		for(Map.Entry<String, List<MethodSignature>> m:type.getMethodMap().entrySet()) {
 			if(debug)
 				ASTUtils.DEBUG("METHOD: " + m.getKey());
 			
 			for(MethodSignature ms:m.getValue()) {
+				if (ms.getSymbol().equals("constructor"))
+					foundConstructor = true;
+				
 				SimpleNode astNode = (SimpleNode)ms.getASTNode();
 				
 				if( astNode == null )
@@ -99,6 +100,10 @@ public class TACBuilder extends AbstractASTVisitor {
 				theClass.addMethod(new TACMethod(ms, astNode.getEntryNode(), astNode.getExitNode()));
 			}
 		}
+		
+		// generate the init method for the fields
+		if (!foundConstructor)
+			theClass.generateInitMethod(node);
 		
 		// add the class
 		classes.add(theClass);

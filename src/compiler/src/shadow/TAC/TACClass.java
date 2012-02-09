@@ -40,7 +40,7 @@ public class TACClass {
 		//
 		// This could all be cleaned up:
 		// - keep one list that only contains the allocations for the fields
-		// - have an entry & exit node for the __init method and simply link in the fields as they're added
+		// - have an entry & exit node for the constructor method and simply link in the fields as they're added
 		//
 		
 		// go through and link all of the field TAC paths together
@@ -66,7 +66,7 @@ public class TACClass {
 		}
 		
 		// create the method signature for this method
-		MethodSignature ms = new MethodSignature("__init", 0, node);
+		MethodSignature ms = new MethodSignature("constructor", 0, node);
 		
 		// add the init method
 		methods.add(new TACMethod(ms, entry, exit));
@@ -90,6 +90,10 @@ public class TACClass {
 	
 	public String getName() {
 		return className;
+	}
+	
+	public String getFullName() {
+		return type.getPackage().getName() + '@' + getName();
 	}
 	
 	public String getExtendClassName() {

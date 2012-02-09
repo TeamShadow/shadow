@@ -7,6 +7,7 @@ import shadow.TAC.TACClass;
 import shadow.TAC.TACMethod;
 import shadow.TAC.nodes.TACBranch;
 import shadow.TAC.nodes.TACJoin;
+import shadow.TAC.nodes.TACLoop;
 import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNodeInterface;
 
@@ -69,6 +70,13 @@ public class TACLinearWalker {
 			realJoin.decreaseCount();
 			if(realJoin.getCount() == 0)
 				walk(realJoin.getNext(), null);
+		} else if (node instanceof TACLoop) {
+			TACJoin realJoin = null;//((TACLoop) node).getJoin();
+
+			visitor.visit(node);
+			
+			walk(((TACLoop) node).getLoopNode(), realJoin);
+			visitor.visitJoin(realJoin);
 		} else {
 			visitor.visit(node);
 			TACNodeInterface next = ((TACNode)node).getNext();

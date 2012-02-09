@@ -12,7 +12,7 @@ public class TACLoop extends TACNode {
 
 	private TACVariable lhs;
 	private TACVariable rhs;
-	private TACComparison comparision;
+	private TACComparison comparison;
 	
 	private TACNode loopNode;	/** The path that brings you back to this loop */
 	private TACNode breakNode;	/** The path that breaks you out of the loop */
@@ -21,8 +21,20 @@ public class TACLoop extends TACNode {
 		super(astNode, "LOOP: ", null);
 		
 		this.lhs = lhs;
-		this.comparision = comparison;
+		this.comparison = comparison;
 		this.rhs = rhs;
+	}
+	
+	public TACVariable getLHS() {
+		return lhs;
+	}
+	
+	public TACComparison getComparision() {
+		return comparison;
+	}
+	
+	public TACVariable getRHS() {
+		return rhs;
 	}
 
 	public TACNode getLoopNode() {
@@ -46,11 +58,11 @@ public class TACLoop extends TACNode {
 	}
 	
 	public String toString() {
-		return super.toString() + lhs + " " + comparision + " " + rhs;	
+		return super.toString() + lhs + " " + comparison + " " + rhs;	
 	}
 
 	public void dump(String prefix) {
-		logger.debug(prefix + "LOOP: " + lhs + " " + comparision + " " + rhs);
+		logger.debug(prefix + "LOOP: " + lhs + " " + comparison + " " + rhs);
 		
 		logger.debug(prefix + "  BODY: ");
 		TACNode node = loopNode;

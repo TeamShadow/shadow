@@ -1,0 +1,16 @@
+class Console {
+
+	// Standard input
+	public static native print( String s ) => ();
+	public static native print( int i ) => ();
+	public static native print( uint i ) => ();
+	public static native printLine( String s ) => ();
+	public static native printLine( int i ) => ();
+	public static native printLine( uint i ) => ();
+	public static native printLine() => ();
+
+	// Standard output
+	public static native readInt() => ( int );
+	public static native readUInt() => ( uint );
+
+}

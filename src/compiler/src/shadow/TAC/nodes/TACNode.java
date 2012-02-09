@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import org.apache.commons.logging.Log;
 
 import shadow.Loggers;
+import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
 import shadow.parser.javacc.Node;
 
@@ -118,6 +119,10 @@ public abstract class TACNode implements TACNodeInterface {
 			this.parent.next = node;
 
 		this.parent = node;
+	}
+	
+	public TACVariable getVariable() {
+		throw new UnsupportedOperationException();
 	}
 	
 	public String toString() {

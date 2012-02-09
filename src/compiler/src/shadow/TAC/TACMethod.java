@@ -33,6 +33,10 @@ public class TACMethod {
 	}
 	
 	public String getName() {
+		return signature.getSymbol();
+	}
+	
+	public String getMangledName() {
 		return signature.getMangledName();
 	}
 	

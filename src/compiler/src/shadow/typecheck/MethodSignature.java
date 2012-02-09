@@ -83,7 +83,7 @@ public class MethodSignature {
 	}
 	
 	public String getMangledName() {
-		return symbol + "_" + type.getMangledName();
+		return symbol + type.getMangledName();
 	}
 	
 	public MethodType getMethodType() {

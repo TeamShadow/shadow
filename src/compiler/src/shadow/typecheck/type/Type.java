@@ -80,6 +80,11 @@ public class Type {
 	{
 		return typeName;
 	}
+
+	public String getMangledName()
+	{
+		return typeName;
+	}
 	
 	public int getModifiers()
 	{

@@ -28,9 +28,23 @@ public class ArrayType extends Type
 		return dimensions;
 	}
 	
+	public Type getSuperBaseType()
+	{
+		if (baseType instanceof ArrayType)
+			return ((ArrayType)baseType).getSuperBaseType();
+		
+		return baseType;
+	}
+	
 	public Type getBaseType()
 	{
 		return baseType;
+	}
+	
+	@Override
+	public String getMangledName()
+	{
+		return getBaseType().getMangledName() + "_A" + dimensions;
 	}
 	
 	public ArrayType(Type baseType, List<Integer> arrayDimensions ) {
