@@ -15,6 +15,7 @@ import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocationExpression;
 import shadow.parser.javacc.ASTArgumentList;
 import shadow.parser.javacc.ASTArguments;
+import shadow.parser.javacc.ASTArrayAllocation;
 import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
@@ -33,6 +34,7 @@ import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTConstructorDeclaration;
+import shadow.parser.javacc.ASTConstructorInvocation;
 import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTDoStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
@@ -57,7 +59,6 @@ import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimarySuffix;
-import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultType;
@@ -908,90 +909,10 @@ public class ClassChecker extends BaseChecker {
 		//check curPrefix at some point		
 		Node child = node.jjtGetChild(0);
 		
-		if( child instanceof ASTPrimitiveType ) //array allocation
-		{
-			//array dims and inits
-			List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(1))).getArrayDimensions();
-			node.setType(new ArrayType(child.getType(), dimensions));
-		}		
-		else if( child instanceof ASTClassOrInterfaceType ) //object allocation 
-		{
-			int counter = 1;
-			
-			if( node.jjtGetChild(counter) instanceof ASTTypeArguments )
-			{
-				//for now
-				addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
-				node.setType(Type.UNKNOWN);
-				counter++;				
-			}
-			
-			if( node.jjtGetChild(counter) instanceof ASTArrayDimsAndInits)
-			{
-				//array dims and inits
-				List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
-				node.setType(new ArrayType(child.getType(), dimensions));
-			}
-			
-			else if( node.jjtGetChild(counter) instanceof ASTArguments )
-			{
-				if( child.getType() instanceof InterfaceType )
-				{
-					addError(child, Error.INVL_TYP, "Interfaces cannot be instantiated");
-					node.setType(Type.UNKNOWN);
-					return WalkType.POST_CHILDREN;
-				}
-				
-				ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
-				List<Type> typeList = ((ASTArguments)(node.jjtGetChild(counter))).getTypeList();
-				List<MethodSignature> candidateConstructors = type.getMethods("constructor");
-				
-				// we don't have implicit constructors, so need to check if the default constructor is OK
-				if(typeList.size() == 0 && candidateConstructors == null)
-				{
-					node.setType(child.getType());
-					return WalkType.POST_CHILDREN;
-				}
-				
-				// we have no constructors, but they are calling with params
-				else if(typeList.size() > 0 && candidateConstructors == null)
-				{
-					addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
-					node.setType(Type.UNKNOWN);
-					return WalkType.POST_CHILDREN;
-				}
-
-				else
-				{
-					// by the time we get here, we have a constructor list
-					List<MethodSignature> acceptableConstructors = new LinkedList<MethodSignature>();
-					
-					for( MethodSignature signature : candidateConstructors ) 
-					{
-						if( signature.matches( typeList )) 
-						{
-							node.setType(child.getType());
-							return WalkType.POST_CHILDREN;
-						}
-						else if( signature.canAccept(typeList))
-							acceptableConstructors.add(signature);
-					}
-					
-					if( acceptableConstructors.size() == 0 ) 
-					{
-						addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
-						node.setType(Type.UNKNOWN);
-					}					
-					else if( acceptableConstructors.size() > 1 )
-					{
-						addError(child, Error.TYPE_MIS, "Ambiguous constructor call with signature " + typeList);
-						node.setType(Type.UNKNOWN);
-					}					
-					else
-						node.setType(child.getType());
-				}
-			}
-		} 
+		if( child instanceof ASTArrayAllocation ) //array allocation		
+			node.setType(child.getType());				
+		else //constructor invocation
+			node.setType(child.jjtGetChild(0).getType());  //set type of allocation expression to class type			
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -1958,6 +1879,117 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.NO_CHILDREN;			
 	}
 
+	@Override
+	public Object visit(ASTArrayAllocation node, Boolean secondVisit) throws ShadowException
+	{
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		//check curPrefix at some point		
+		Node child = node.jjtGetChild(0);
+		
+		int counter = 1;
+		
+		if( child instanceof ASTClassOrInterfaceType && node.jjtGetChild(counter) instanceof ASTTypeArguments ) //reference array might have type arguments
+		{
+			//for now
+			addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
+			node.setType(Type.UNKNOWN);
+			counter++;				
+		}
+			
+		//array dims and inits
+		List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
+		node.setType(new ArrayType(child.getType(), dimensions));
+		
+		return WalkType.POST_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTConstructorInvocation node, Boolean secondVisit)	throws ShadowException
+	{
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		//check curPrefix at some point		
+		Node child = node.jjtGetChild(0);
+						
+		int counter = 1;
+		
+		if( node.jjtGetChild(counter) instanceof ASTTypeArguments ) //may have type arguments
+		{
+			//for now
+			addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
+			node.setType(Type.UNKNOWN);
+			counter++;				
+		}
+
+		if( child.getType() instanceof InterfaceType )
+		{
+			addError(child, Error.INVL_TYP, "Interfaces cannot be instantiated");
+			node.setType(Type.UNKNOWN);
+			return WalkType.POST_CHILDREN;
+		}
+		
+		//examine argument list to find constructor		
+		ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
+		List<Type> typeList = ((ASTArguments)(node.jjtGetChild(counter))).getTypeList();
+		List<MethodSignature> candidateConstructors = type.getMethods("constructor");
+		
+		// we don't have implicit constructors, so need to check if the default constructor is OK
+		if(typeList.size() == 0 && candidateConstructors == null)
+		{
+			node.setType(child.getType());
+			return WalkType.POST_CHILDREN;
+		}		
+		// we have no constructors, but they are calling with params
+		else if(typeList.size() > 0 && candidateConstructors == null)
+		{
+			addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+			node.setType(Type.UNKNOWN);
+			return WalkType.POST_CHILDREN;
+		}
+		else
+		{
+			// by the time we get here, we have a constructor list
+			List<MethodSignature> acceptableConstructors = new LinkedList<MethodSignature>();
+			
+			for( MethodSignature signature : candidateConstructors ) 
+			{
+				if( signature.matches( typeList )) 
+				{
+					node.setType(child.getType());
+					return WalkType.POST_CHILDREN;
+				}
+				else if( signature.canAccept(typeList))
+					acceptableConstructors.add(signature);
+			}
+			
+			if( acceptableConstructors.size() == 0 ) 
+			{
+				addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+				node.setType(Type.UNKNOWN);
+			}					
+			else if( acceptableConstructors.size() > 1 )
+			{
+				addError(child, Error.TYPE_MIS, "Ambiguous constructor call with signature " + typeList);
+				node.setType(Type.UNKNOWN);
+			}					
+			else
+			{
+				MethodSignature signature = acceptableConstructors.get(0); 
+				
+				if( !methodIsAccessible( signature, currentType  ))
+					addError(node, Error.INVL_MOD, "Constructor " + signature + " not accessible from current context");
+				else
+					node.setType(signature.getMethodType());
+			}				
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+
 	//
 	// Everything below here are just visitors to push up the type
 	//
@@ -1966,7 +1998,5 @@ public class ClassChecker extends BaseChecker {
 		return pushUpType(node, secondVisit); 
 	}
 	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
-
-	
 	
 }

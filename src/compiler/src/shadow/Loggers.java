@@ -37,4 +37,19 @@ public class Loggers {
 			Logger.getLogger("shadow-output").setLevel(level);
 		}
 	}
+	
+	public static Level getLoggerLevel(Log logger) {
+		if(logger == SHADOW) {
+			return Logger.getLogger("shadow").getLevel();
+		} else if(logger == PARSER) {
+			return Logger.getLogger("shadow-parser").getLevel();
+		} else if(logger == TYPE_CHECKER) {
+			return Logger.getLogger("shadow-typechecker").getLevel();
+		} else if(logger == TAC) {
+			return Logger.getLogger("shadow-tac").getLevel();
+		} else if (logger == OUTPUT) {
+			return Logger.getLogger("shadow-output").getLevel();
+		} else
+			return null;
+	}
 }

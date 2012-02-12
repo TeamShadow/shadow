@@ -584,8 +584,8 @@ void ClassOrInterfaceDeclaration(int modifiers):
  	| "error" { jjtThis.setKind(Type.Kind.ERROR); isErrorOrException = true; }
  	| "interface" { jjtThis.setKind(Type.Kind.INTERFACE); isInterface = true; } )
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
-  [ Version() ]
   [ TypeParameters() ]
+  [ Version() ]
   [ ExtendsList(isInterface) ]
   [ ImplementsList(isInterface, isErrorOrException) ]
   ClassOrInterfaceBody(isInterface)
@@ -694,7 +694,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 | modifier = Modifiers()
   (  ClassOrInterfaceDeclaration(modifier)
     | EnumDeclaration(modifier)
-    | LOOKAHEAD( [ TypeParameters() ] "constructor" ) ConstructorDeclaration(modifier)
+    | LOOKAHEAD(  "constructor" [ TypeParameters() ] ) ConstructorDeclaration(modifier)
     | LOOKAHEAD( "destructor" ) DestructorDeclaration(modifier)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
     //removed ( "[" "]" ) * because Shadow only allows square brackets on the LEFT of identifiers in declarations 
@@ -743,8 +743,7 @@ void ArrayInitializer():
 void MethodDeclaration(int modifiers):
 { debugPrint("METHOD DECLARATION"); }
 {
-  { jjtThis.setModifiers(modifiers); }
-  [ TypeParameters() ]
+  { jjtThis.setModifiers(modifiers); }  
   MethodDeclarator() [ "throws" NameList() ]
   ( Block() | ";" )
 }
@@ -755,7 +754,7 @@ void MethodDeclarator():
 	Token t;
 }
 {
-  t = <IDENTIFIER> { jjtThis.setImage(t.image); } FormalParameters() "=>" "(" [ ResultTypes() ] ")"
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters() "=>" "(" [ ResultTypes() ] ")"
 }
 
 void FormalParameters():
@@ -773,10 +772,9 @@ void FormalParameter():
 void ConstructorDeclaration(int modifiers):
 { debugPrint("CONSTRUCTOR DECLARATION"); }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }
-  [ TypeParameters() ]
+  { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }  
   // Modifiers matched in the caller
-  "constructor" FormalParameters() [ "throws" NameList() ]
+  "constructor" [ TypeParameters() ] FormalParameters() [ "throws" NameList() ]
   "{"
     [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
     ( BlockStatement() )*
@@ -856,9 +854,16 @@ void ClassOrInterfaceType():
 	Token t;
 }
 {
-   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@"  ] t = <IDENTIFIER> { sb.append(t.image); }[ LOOKAHEAD(2) TypeArguments() ]
-  ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } [ LOOKAHEAD(2) TypeArguments() ] )*
-  { jjtThis.setImage(sb.toString()); }
+   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@"  ] ClassOrInterfaceTypeSuffix() (  LOOKAHEAD(2) "." ClassOrInterfaceTypeSuffix() )*
+}
+
+void ClassOrInterfaceTypeSuffix():
+{
+	debugPrint("CLASS OR INTERFACE TYPE SUFFIX");	
+	Token t;  }
+{
+   t = <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
+   { jjtThis.setImage(t.image); }  
 }
 
 void TypeArguments():
@@ -871,10 +876,10 @@ void TypeArgument():
 { debugPrint("TYPE ARGUMENT"); }
 {
    ReferenceType()
- | "?" [ WildcardBounds() ]
+// | "?" [ WildcardBounds() ]
 }
 
-void WildcardBounds():
+void WildcardBounds(): //like C#, no wildcard bounds
 { debugPrint("WILDCARD BOUNDS"); }
 {
    "extends" ReferenceType()
@@ -1250,14 +1255,25 @@ void ArgumentList():
 void AllocationExpression():
 { debugPrint("ALLOCATION EXPRESSION"); }
 {
-  LOOKAHEAD(2)
-  "new" { jjtThis.setImage("new"); } PrimitiveType() ArrayDimsAndInits()
-| "new" { jjtThis.setImage("new"); } ClassOrInterfaceType() [ TypeArguments() ]
-    (
-      ArrayDimsAndInits()
-    | Arguments() /* No anonymous classes in Shadow [ ClassOrInterfaceBody(false)  ] */
-    )
+  LOOKAHEAD(ArrayAllocation())
+  ArrayAllocation()
+| ConstructorInvocation()
 }
+
+void ArrayAllocation():
+{ debugPrint("ARRAY ALLOCATION"); }
+{  
+  "new" { jjtThis.setImage("new"); } ( PrimitiveType() | (ClassOrInterfaceType() [ TypeArguments() ])) ArrayDimsAndInits()
+}
+
+
+void ConstructorInvocation():
+{ debugPrint("CONSTRUCTOR INVOCATION"); }
+{
+ 	"new" { jjtThis.setImage("new"); } ClassOrInterfaceType() [ TypeArguments() ] Arguments()
+ 	/* No anonymous classes in Shadow [ ClassOrInterfaceBody(false)  ] */    
+}
+
 
 /*
  * The third LOOKAHEAD specification below is to parse to PrimarySuffix

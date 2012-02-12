@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import shadow.Loggers;
@@ -34,9 +35,17 @@ public class TypeCheckerTest {
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.DEBUG);
 	}
 	
-	@Test public void testArray() throws Exception {
-		args.add("tests/compile/Array.shadow");
+	 @Test public void testArray() throws Exception {
+		
+		Loggers.setAllToDebug();
+		/*Level level = Loggers.getLoggerLevel(Loggers.PARSER);
+		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.OFF);
+		Loggers.setLoggerToLevel(Loggers.PARSER, Level.DEBUG);*/	
+		args.add("shadow/standard/Parsable.shadow");
+		//args.add("tests/compile/Array.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		/*Loggers.setLoggerToLevel(Loggers.PARSER, level);
+		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.DEBUG);*/
 	}
 
 	@Test public void testArrays() throws Exception {
@@ -44,7 +53,7 @@ public class TypeCheckerTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testAssertion() throws Exception {
+	 @Test public void testAssertion() throws Exception {
 		args.add("tests/compile/Assertion.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
@@ -69,17 +78,17 @@ public class TypeCheckerTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testChild() throws Exception {
+		@Test public void testChild() throws Exception {
 		args.add("tests/compile/Child.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testComplexAccess() throws Exception {
+		@Test public void testComplexAccess() throws Exception {
 		args.add("tests/compile/ComplexAccess.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testConditionals() throws Exception {
+		@Test public void testConditionals() throws Exception {
 		args.add("tests/compile/Conditionals.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
@@ -89,32 +98,32 @@ public class TypeCheckerTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testControlFlow() throws Exception {
+		@Test public void testControlFlow() throws Exception {
 		args.add("tests/compile/ControlFlow.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testFinal() throws Exception {
+		@Test public void testFinal() throws Exception {
 		args.add("tests/compile/Final.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testFoo() throws Exception {
+		@Test public void testFoo() throws Exception {
 		args.add("tests/compile/Foo.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testFor() throws Exception {
+		@Test public void testFor() throws Exception {
 		args.add("tests/compile/For.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testForeach() throws Exception {
+		@Test public void testForeach() throws Exception {
 		args.add("tests/compile/Foreach.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testGrandchild() throws Exception {
+		@Test public void testGrandchild() throws Exception {
 		args.add("tests/compile/Grandchild.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}

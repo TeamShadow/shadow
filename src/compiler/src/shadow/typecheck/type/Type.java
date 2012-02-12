@@ -1,5 +1,8 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import shadow.typecheck.Package;
 
 
@@ -10,6 +13,7 @@ public class Type {
 	private final Type outer; //outer class	
 	private final Kind kind;
 	private Package _package;
+	private List<TypeParameter> parameters = new ArrayList<TypeParameter>();
 	
 	// TODO: Provide documentation here
 	public static enum Kind {
@@ -21,6 +25,7 @@ public class Type {
 		INTERFACE,
 		METHOD,		
 		SEQUENCE,
+		TYPE_PARAMETER,
 		UNBOUND_METHOD,
 		VIEW,		
 		UNKNOWN
@@ -329,4 +334,19 @@ public class Type {
 	{
 		_package = p;
 	}
+	
+	public List<TypeParameter> getParameters()
+	{
+		return parameters;
+	}
+	
+	public void setParameters(List<TypeParameter> parameters)
+	{
+		this.parameters = parameters;
+	}
+	
+	
+	
+	
+	
 }

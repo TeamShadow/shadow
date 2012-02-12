@@ -297,6 +297,7 @@ public class Configuration implements Iterator<File> {
 	 */
 	public void reset() {
 		currentShadowFile = 0;
+		importPaths.clear();
 	}
 
 }

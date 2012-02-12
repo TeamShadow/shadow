@@ -2,7 +2,7 @@
 /* JavaCCOptions:TOKEN_EXTENDS=,KEEP_LINE_COL=null,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import shadow.parser.GTToken;
+import shadow.parser.javacc.GTToken;
 
 /**
  * Describes the input token stream.

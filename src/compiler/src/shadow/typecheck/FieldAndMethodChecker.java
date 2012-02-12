@@ -470,7 +470,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 			}
 		}
 		
-		node.setType(signature.getMethodType());
+		MethodType methodType = signature.getMethodType();		
+		node.setType(methodType);
+		methodType.getOuter();
 		node.setEnclosingType(currentType);
 		
 		if( currentType instanceof ClassInterfaceBaseType )
@@ -562,8 +564,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 		int i;
 		for(i=0; i < node.jjtGetNumChildren(); ++i) {
 			Node curNode = node.jjtGetChild(i);
-			
-			
 			
 			// check to see if we've moved on to the result types
 			if(curNode instanceof ASTResultTypes)

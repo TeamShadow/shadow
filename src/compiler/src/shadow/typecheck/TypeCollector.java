@@ -3,7 +3,6 @@ package shadow.typecheck;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,6 +19,7 @@ import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTEnumDeclaration;
 import shadow.parser.javacc.ASTExtendsList;
@@ -27,6 +27,10 @@ import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPackageDeclaration;
+import shadow.parser.javacc.ASTTypeArgument;
+import shadow.parser.javacc.ASTTypeArguments;
+import shadow.parser.javacc.ASTTypeParameter;
+import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
@@ -41,12 +45,14 @@ import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Type.Kind;
+import shadow.typecheck.type.TypeParameterRepresentation;
 
 public class TypeCollector extends BaseChecker
 {	
 	protected Map<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();
 	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors only
-	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();	
+	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
+	protected Map<Type,List<TypeParameterRepresentation>> typeParameterTable = new HashMap<Type,List<TypeParameterRepresentation>>();
 	protected String currentName = "";
 	protected Map<File, Node> files = new HashMap<File, Node>();
 	
@@ -285,11 +291,34 @@ public class TypeCollector extends BaseChecker
 */
 	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if( !secondVisit )
+		if( secondVisit )
+			finalizeType( node );
+		else
 			createType( node, node.getModifiers(), node.getKind() );
 			
 		return WalkType.POST_CHILDREN;
-	}	
+	}
+	
+	@Override
+	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit )
+			finalizeType( node );
+		else
+			createType( node, node.getModifiers(), Type.Kind.ENUM );
+
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )
+			finalizeType( node );
+		else
+			createType( node, node.getModifiers(), Type.Kind.VIEW );
+		
+		return WalkType.POST_CHILDREN;
+	}
 	
 	
 	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
@@ -314,18 +343,75 @@ public class TypeCollector extends BaseChecker
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
 	{		
 		if( secondVisit )
+		{			
+			boolean dot = true;
+			Node child = node.jjtGetChild(0);
+			String name = child.getImage();
+			if( child instanceof ASTUnqualifiedName )
+			{
+				name += "@";
+				dot = false;
+			}
+			
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) 
+			{	
+				if( dot )
+					name += ".";
+				else
+					dot = true;
+				
+				child = node.jjtGetChild(i);
+				name += child.getImage();					
+			}
+			
+			node.setImage(name);
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )
 		{
 			if( node.jjtGetNumChildren() > 0 ) 
 			{
 				Node child = node.jjtGetChild(0); 
-				if( child instanceof ASTUnqualifiedName )
-					node.setImage(child.getImage() + "@" + node.getImage());
+				if( child instanceof ASTTypeArguments )
+				{
+					ASTTypeArguments arguments = (ASTTypeArguments)child;
+					node.setRepresentations(arguments.getRepresentations());
+				}
+			}
+		}
+		return WalkType.POST_CHILDREN;
+	}	
+	
+	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )
+		{
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) 
+			{
+				ASTTypeArgument child = (ASTTypeArgument)(node.jjtGetChild(i));
+				node.addRepresentation(child.getRepresentation());
 			}
 		}
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
+	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )
+		{
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) 
+			{
+				ASTTypeArgument child = (ASTTypeArgument)(node.jjtGetChild(i));
+				//TODO: fix this
+				//node.addRepresentation(child.getRepresentation());
+			}
+		}
+		return WalkType.POST_CHILDREN;
+	}
 
 	
 	private void createType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException
@@ -368,6 +454,8 @@ public class TypeCollector extends BaseChecker
 				throw new ShadowException("Unsupported type!" );
 			}
 			
+			
+			
 			//Special case for system types
 			if( currentPackage.getFullyQualifiedName().equals("shadow.standard"))
 			{
@@ -380,15 +468,48 @@ public class TypeCollector extends BaseChecker
 			}
 			
 			addType( type, currentPackage );
-			node.setType(type);
-			
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				if( node.jjtGetChild(i).getClass() == ASTExtendsList.class )
-					addExtends( (ASTExtendsList)node.jjtGetChild(i), type );
-				else if( node.jjtGetChild(i).getClass() == ASTImplementsList.class )
-					addImplements( (ASTImplementsList)node.jjtGetChild(i), type );
+			node.setType(type);			
 		}
 	}
+	
+	private void finalizeType( SimpleNode node )
+	{		
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ ) {
+			Node child = node.jjtGetChild(i); 
+			if( child.getClass() == ASTExtendsList.class )
+				addExtends( (ASTExtendsList)child, node.getType());
+			else if( child.getClass() == ASTImplementsList.class )
+				addImplements( (ASTImplementsList)child, node.getType() );
+			else if( child.getClass() == ASTTypeParameters.class )
+				addTypeParameters( (ASTTypeParameters)child, node.getType() );
+		}
+	}
+	
+	private void addTypeParameters( ASTTypeParameters node, Type type )
+	{
+		List<TypeParameterRepresentation> list = new LinkedList<TypeParameterRepresentation>();
+		
+		//TODO: Fix this to properly add type parameters
+		
+		
+		//typeParameterTable
+		
+		/*
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			list.add( node.jjtGetChild(i).getImage() );
+		
+		extendsTable.put(type, list);
+		*/
+		nodeTable.put(type, node.jjtGetParent() );
+	}
+	
+	private TypeParameterRepresentation constructTypeParameterRepresentation( ASTTypeParameter parameter )
+	{
+		//TODO: fix this
+		//TypeParameterRepresentation representation = new 
+		return null;		
+	}
+	
 	
 	private void addExtends( ASTExtendsList node, Type type )
 	{
@@ -411,24 +532,7 @@ public class TypeCollector extends BaseChecker
 		implementsTable.put(type, list);
 		nodeTable.put(type, node.jjtGetParent() );
 	}
-	
 
-
-	@Override
-	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )		
-			createType( node, node.getModifiers(), Type.Kind.ENUM );
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	@Override
-	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )		
-			createType( node, node.getModifiers(), Type.Kind.VIEW );
-		
-		return WalkType.POST_CHILDREN;
-	}
 	
 	public Object visit(ASTPackageDeclaration node, Boolean secondVisit) throws ShadowException
 	{
