@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- WARNING: Eclipse auto-generated file.
-              Any modifications will be overwritten.
-              To include a user specific buildfile here, simply create one in the same
-              directory with the processing instruction <?eclipse.ant.import?>
-              as the first entry and export the buildfile again. -->
 <project basedir="." default="build" name="shadow_compiler">
     <property environment="env"/>
     <property name="debuglevel" value="source,lines,vars"/>
@@ -16,6 +11,7 @@
 	<pathelement location="lib/commons-collections.jar"/>
 	<pathelement location="lib/commons-digester.jar"/>
         <pathelement location="lib/commons-logging.jar"/>
+        <pathelement location="lib/junit4.jar"/>
     </path>
     
 	<target name="init">
@@ -56,14 +52,19 @@
 	
 	<!-- Build the project -->
 	<target depends="init" name="build">
-        <echo message="${ant.project.name}: ${ant.file}"/>
+        	<echo message="${ant.project.name}: ${ant.file}"/>
 		<jjtree target="src/shadow/parser/ShadowGrammar.jjt" outputdirectory="src/shadow/parser/javacc" javacchome="/usr/share/java"/>
 		<javacc target="src/shadow/parser/javacc/ShadowGrammar.jj" outputdirectory="src/shadow/parser/javacc" javacchome="/usr/share/java"/>
-        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
-            <src path="src"/>
-            <classpath refid="shadow_compiler.classpath"/>
-        </javac>
-    </target>
+        	<javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            		<src path="src"/>
+            		<classpath refid="shadow_compiler.classpath"/>
+        	</javac>
+	</target>
+
+	<!-- Build the Javadocs -->
+	<target depends="init" name="docs">
+		<javadoc sourcepath="src/" destdir="docs" classpathref="shadow_compiler.classpath"/>
+	</target>
 
     <!-- Tests everything -->
     <target name="test-all" depends="build">
