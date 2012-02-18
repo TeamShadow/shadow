@@ -3,6 +3,7 @@ package shadow.typecheck;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected List<File> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
+	/** List of type parameter scopes with a hash of symbols & types for each scope */
+	protected LinkedList<HashMap<String, Node>> typeParameterTable = new LinkedList< HashMap<String, Node>>(); 
+	
 	
 
 	/** Holds the package tree structure (for name lookups) */
@@ -273,4 +277,33 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	{
 		return packageTree;
 	}
+	
+
+	protected void createTypeParameterScope(Boolean secondVisit) {
+		// we have a new scope, so we need a new HashMap in the linked list
+		if(secondVisit)
+			typeParameterTable.removeFirst();		
+		else
+			typeParameterTable.addFirst(new HashMap<String, Node>());
+	}
+	
+	protected void addTypeParameter( String name, Node node )
+	{
+		if( typeParameterTable.get(0).containsKey( name ) ) //we only look at current scope
+			addError(node, Error.MULT_SYM, name);
+		else if( typeParameterTable.size() == 0 )
+			addError(node, Error.INVL_TYP, "No valid scope for type parameter declaration");
+		else
+			typeParameterTable.getFirst().put(name, node);  //uses node for modifiers
+	}
+	
+	protected Type findTypeParameter( String name )
+	{
+		Node node = null;
+		for( HashMap<String,Node> map : typeParameterTable )
+			if( (node = map.get(name)) != null )
+				return node.getType();
+		
+		return null;
+	}	
 }

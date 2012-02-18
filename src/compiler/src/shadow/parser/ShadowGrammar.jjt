@@ -694,7 +694,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 | modifier = Modifiers()
   (  ClassOrInterfaceDeclaration(modifier)
     | EnumDeclaration(modifier)
-    | LOOKAHEAD(  "constructor" [ TypeParameters() ] ) ConstructorDeclaration(modifier)
+    | LOOKAHEAD(  "constructor" /*[ TypeParameters() ]*/ ) ConstructorDeclaration(modifier)
     | LOOKAHEAD( "destructor" ) DestructorDeclaration(modifier)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifier)
     //removed ( "[" "]" ) * because Shadow only allows square brackets on the LEFT of identifiers in declarations 
@@ -774,7 +774,7 @@ void ConstructorDeclaration(int modifiers):
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }  
   // Modifiers matched in the caller
-  "constructor" [ TypeParameters() ] FormalParameters() [ "throws" NameList() ]
+  "constructor" /*[ TypeParameters() ]*/ FormalParameters() [ "throws" NameList() ]
   "{"
     [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
     ( BlockStatement() )*
@@ -875,7 +875,7 @@ void TypeArguments():
 void TypeArgument():
 { debugPrint("TYPE ARGUMENT"); }
 {
-   ReferenceType()
+   ClassOrInterfaceType() //not reference type since an array can't be a type argument
 // | "?" [ WildcardBounds() ]
 }
 

@@ -1,0 +1,23 @@
+class Scope {
+
+	private int a;
+
+    public blah(int a) => () {
+        int a;
+        int b = 7;
+        int c, d;
+        int x;
+        
+        //int a; //uncomment to see multiply defined symbol
+
+        if(a == b);        
+        
+        if( a > b );
+        
+        if( a < b and c < d )
+        	x = 10;
+        	
+        if( a < b or !(c < d) )
+        	x = 10;
+    }
+}

@@ -3,6 +3,7 @@ package shadow.typecheck;
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
+import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConstructorDeclaration;
@@ -24,6 +26,9 @@ import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTType;
+import shadow.parser.javacc.ASTTypeBound;
+import shadow.parser.javacc.ASTTypeParameter;
+import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
@@ -35,12 +40,14 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public class FieldAndMethodChecker extends BaseChecker {
-	
+		
 	public FieldAndMethodChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 	}
+	
 	
 	public void buildTypes( Map<File, Node> files ) throws ShadowException
 	{
@@ -387,8 +394,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 
-		String typeName = node.getImage();
-		Type type = lookupType(typeName);
+		String typeName = node.getImage();		
+		
+		Type type = findTypeParameter(typeName); 
+				
+		if( type == null )
+			type = lookupType(typeName);
 		
 		if(type == null)
 		{
@@ -405,31 +416,24 @@ public class FieldAndMethodChecker extends BaseChecker {
 	 * Adds a method to the current type.
 	 */
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		Node methodDec = node.jjtGetChild(0);
-		
-		createMethod( methodDec, node  ); //different nodes used for modifiers and signature
-		
+		createTypeParameterScope( secondVisit );
+		if(secondVisit)
+		{		
+			Node methodDeclarator = node.jjtGetChild(0);		
+			createMethod( methodDeclarator, node  ); //different nodes used for modifiers and signature
+		}		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		createMethod( node, node  ); //constructor uses the same node for modifiers and signature		
-		
+		if(secondVisit)
+			createMethod( node, node  ); //constructor uses the same node for modifiers and signature
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		createMethod( node, node  ); //destructor uses the same node for modifiers and signature
-
+		if(secondVisit)
+			createMethod( node, node  ); //destructor uses the same node for modifiers and signature
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -445,15 +449,22 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if( !checkMemberModifiers( node, node.getModifiers() ))
 			return false;
 		
-		if( declaration instanceof ASTMethodDeclarator || declaration instanceof ASTConstructorDeclaration )			
+		boolean hasTypeParameters = declaration.jjtGetChild(0) instanceof ASTTypeParameters;
+		
+		if( declaration instanceof ASTMethodDeclarator || declaration instanceof ASTConstructorDeclaration )
+		{
+			int child = hasTypeParameters ? 1 : 0;						
+			
 			// check the parameters
-			if(!visitParameters(declaration.jjtGetChild(0), signature))
+			if(!visitParameters(declaration.jjtGetChild(child), signature))
 				return false;
+		}
 		
 		// check to see if we have return types
-		if(declaration instanceof ASTMethodDeclarator && declaration.jjtGetNumChildren() == 2)
+		int location = hasTypeParameters ? 2 : 1;	
+		if(declaration instanceof ASTMethodDeclarator && declaration.jjtGetNumChildren() > location )
 		{
-			Node retTypes = declaration.jjtGetChild(1);
+			Node retTypes = declaration.jjtGetChild(location);
 			
 			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i) {
 				Type type = retTypes.jjtGetChild(i).getType();
@@ -638,6 +649,40 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 		return WalkType.NO_CHILDREN;			
 	}
+	
+	@Override
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
+		createTypeParameterScope(secondVisit); //scope is created purely to hold type parameters	
+		return WalkType.POST_CHILDREN;			
+	}
+	
+	@Override
+	public Object visit(ASTTypeParameter node, Boolean secondVisit)	throws ShadowException
+	{
+		//type parameters occur only in class/interface declarations and method declarations
+		//in either case, a new scope is created that only holds type parameters
+		//(and perhaps method arguments)
+		TypeParameter typeParameter;
+		if( secondVisit )
+		{			
+			typeParameter = (TypeParameter)(node.getType());
+			if( node.jjtGetNumChildren() > 0 )
+			{
+				ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
+				for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
+					typeParameter.addBound(bound.jjtGetChild(i).getType());				
+			}
+		}
+		else
+		{
+			String symbol = node.getImage();
+			typeParameter = new TypeParameter(symbol);
+			addTypeParameter( symbol, node );
+			node.setType(typeParameter);
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
 	
 	//
 	// Everything below here are just visitors to push up the type

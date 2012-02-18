@@ -29,6 +29,7 @@ import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPackageDeclaration;
 import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
+import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
@@ -480,36 +481,97 @@ public class TypeCollector extends BaseChecker
 				addExtends( (ASTExtendsList)child, node.getType());
 			else if( child.getClass() == ASTImplementsList.class )
 				addImplements( (ASTImplementsList)child, node.getType() );
-			else if( child.getClass() == ASTTypeParameters.class )
-				addTypeParameters( (ASTTypeParameters)child, node.getType() );
+			//else if( child.getClass() == ASTTypeParameters.class )
+				//addTypeParameters( (ASTTypeParameters)child, node.getType() );
 		}
+		
+		nodeTable.put(node.getType(), node );
 	}
 	
+	
+	/*
 	private void addTypeParameters( ASTTypeParameters node, Type type )
 	{
 		List<TypeParameterRepresentation> list = new LinkedList<TypeParameterRepresentation>();
 		
-		//TODO: Fix this to properly add type parameters
-		
-		
-		//typeParameterTable
-		
-		/*
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			list.add( node.jjtGetChild(i).getImage() );
+		{
+			TypeParameterRepresentation representation = constructTypeParameterRepresentation( (ASTTypeParameter)(node.jjtGetChild(i)) );
+			list.add( representation );
+			node.addRepresentation(representation);
+		}
 		
-		extendsTable.put(type, list);
-		*/
-		nodeTable.put(type, node.jjtGetParent() );
+		typeParameterTable.put(type, list);
+		
 	}
+	*/
+	
+	public Object visit(ASTTypeParameter node, Boolean secondVisit) throws ShadowException
+	{
+		//t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ TypeBound() ]
+		if( secondVisit )
+		{
+			/*
+			TypeParameterRepresentation representation = new TypeParameterRepresentation( node.getImage() );
+			if( node.jjtGetNumChildren() > 0 )
+			{
+				ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));
+				representation.addBounds( bound.getRepresentations() );
+			}
+			
+			node.setRepresentation(representation);
+			*/
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTTypeBound node, Boolean secondVisit) throws ShadowException
+	{
+		//"is" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
+		if( secondVisit )
+		{
+			/*
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			{
+				ASTClassOrInterfaceType child = (ASTClassOrInterfaceType)(node.jjtGetChild(i)); 
+				TypeParameterRepresentation representation = new TypeParameterRepresentation( child.getImage() );
+								
+				node.addRepresentation(representation);
+			}
+			*/
+			//TODO: fix this!
+			//It can all be simplified by making a set of the classes needed
+			//Perhaps this should all be pushed back to the next phase of the type checker
+			
+			
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	/*
 	
 	private TypeParameterRepresentation constructTypeParameterRepresentation( ASTTypeParameter parameter )
 	{
-		//TODO: fix this
-		//TypeParameterRepresentation representation = new 
+		
+		// t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ TypeBound() ]
+
+		TypeParameterRepresentation representation = new TypeParameterRepresentation( parameter.getImage() );
+		if( parameter.jjtGetNumChildren() > 0 )
+			addBounds( representation, (ASTTypeBound)(parameter.jjtGetChild(0)) );
+		
 		return null;		
 	}
 	
+	private void addBounds( TypeParameterRepresentation representation, ASTTypeBound bound )
+	{
+		//"is" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
+		
+		//for( int i = 0; i < bound.jjtGetNumChildren(); i++ )
+		//probably won't need this
+	}
+	*/
 	
 	private void addExtends( ASTExtendsList node, Type type )
 	{
@@ -518,8 +580,7 @@ public class TypeCollector extends BaseChecker
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 			list.add( node.jjtGetChild(i).getImage() );
 		
-		extendsTable.put(type, list);
-		nodeTable.put(type, node.jjtGetParent() );
+		extendsTable.put(type, list);		
 	}
 	
 	public void addImplements( ASTImplementsList node, Type type )
@@ -529,8 +590,7 @@ public class TypeCollector extends BaseChecker
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 			list.add( node.jjtGetChild(i).getImage() );
 		
-		implementsTable.put(type, list);
-		nodeTable.put(type, node.jjtGetParent() );
+		implementsTable.put(type, list);		
 	}
 
 	

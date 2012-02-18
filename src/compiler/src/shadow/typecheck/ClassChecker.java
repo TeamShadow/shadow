@@ -27,6 +27,7 @@ import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBreakStatement;
 import shadow.parser.javacc.ASTCastExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
+import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConditionalAndExpression;
@@ -74,6 +75,8 @@ import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTSwitchStatement;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArguments;
+import shadow.parser.javacc.ASTTypeBound;
+import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTVariableInitializer;
@@ -89,6 +92,7 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
 
@@ -195,7 +199,7 @@ public class ClassChecker extends BaseChecker {
 	
 	public void addSymbol( String name, Node node )
 	{
-		if( findSymbol( name ) != null )
+		if( symbolTable.get(0).containsKey( name ) ) //we only look at current scope
 			addError(node, Error.MULT_SYM, name);
 		else if( symbolTable.size() == 0 )
 			addError(node, Error.INVL_TYP, "No valid scope for variable declaration");
@@ -1989,6 +1993,14 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 	}
+	
+	@Override
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit)	throws ShadowException
+	{
+		createScope(secondVisit); //scope is created purely to hold type parameters (other declarations are kept in the body scope)		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	
 
 	//

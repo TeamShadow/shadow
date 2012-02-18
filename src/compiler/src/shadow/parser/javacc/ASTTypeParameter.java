@@ -2,9 +2,39 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import java.util.ArrayList;
+import java.util.List;
+import shadow.typecheck.type.TypeParameter;
+import shadow.typecheck.type.TypeParameterRepresentation;
+
 public
 @SuppressWarnings("all")
 class ASTTypeParameter extends SimpleNode {
+	
+  private TypeParameter parameter;
+  private TypeParameterRepresentation representation;
+
+  public void setParameter(TypeParameter parameter)
+  {
+	  this.parameter = parameter;
+  }
+  
+  public TypeParameter getParameter()
+  {
+	  return parameter;
+  }
+  
+  
+  public void setRepresentation( TypeParameterRepresentation representation )
+  {
+	  this.representation = representation ;
+  }
+  
+  public TypeParameterRepresentation getRepresentation()
+  {
+	  return representation;
+  }  
+	
   public ASTTypeParameter(int id) {
     super(id);
   }

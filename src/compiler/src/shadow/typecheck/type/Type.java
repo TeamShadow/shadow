@@ -14,7 +14,9 @@ public class Type {
 	private final Kind kind;
 	private Package _package;
 	private List<TypeParameter> parameters = new ArrayList<TypeParameter>();
-	
+	private List<Type> arguments = new ArrayList<Type>();
+	private boolean parameterized;	
+		
 	// TODO: Provide documentation here
 	public static enum Kind {
 		ARRAY,
@@ -344,11 +346,15 @@ public class Type {
 		return parameters;
 	}
 	
-	public void setParameters(List<TypeParameter> parameters)
+	public void addParameter(TypeParameter parameter)
 	{
-		this.parameters = parameters;
-	}
+		parameters.add(parameter);
+	}	
 
+	public  List<Type> getArguments()
+	{
+		return arguments;
+	}
 	
 	public static void mangle(String name, StringBuilder sb)
 	{
@@ -367,6 +373,7 @@ public class Type {
 			}
 		}
 	}
+	
 	public static String unmangle(String name)
 	{
 		StringBuilder sb = new StringBuilder(name.length());
@@ -391,5 +398,20 @@ public class Type {
 		
 		return sb.toString();
 	}
+	public void setParameterized(boolean value)
+	{
+		parameterized = value;
+	}
+	
+	public boolean isParameterized()
+	{
+		return parameterized; 
+	}
+	
+
+	
+	
+	
+	
 	
 }

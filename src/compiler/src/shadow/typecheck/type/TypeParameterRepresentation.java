@@ -17,7 +17,7 @@ import shadow.typecheck.type.Type.Kind;
 public class TypeParameterRepresentation
 {
 	private String name;
-	private List<TypeParameterRepresentation> bounds = new ArrayList<TypeParameterRepresentation>();
+	private List<TypeParameterRepresentation> bounds;
 
 	public TypeParameterRepresentation(String name)
 	{
@@ -28,8 +28,8 @@ public class TypeParameterRepresentation
 		return name;
 	}	
 	
-	public void addBound(TypeParameterRepresentation bound) {
-		bounds.add(bound);
+	public void addBounds(List<TypeParameterRepresentation> bounds) {
+		this.bounds = bounds;
 	}
 	
 	public List<TypeParameterRepresentation> getBounds()
