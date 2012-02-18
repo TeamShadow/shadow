@@ -197,4 +197,13 @@ public class ClassType extends ClassInterfaceBaseType {
 			return list;
 	}
 	
+	@Override
+	public String getMangledName() {
+		StringBuilder sb = new StringBuilder();
+		if (!isPrimitive())
+			sb.append(getPackage().getMangledName()).append("_C");
+		mangle(getTypeName(), sb);
+		return sb.toString();
+	}
+	
 }

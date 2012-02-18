@@ -59,7 +59,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 				{
 					ClassType classType = (ClassType)type;
 					//if no constructors, add the default one
-					classType.addMethod("constructor", new MethodSignature( "constructor", 0, null ) );
+					classType.addMethod("constructor", new MethodSignature( classType, "constructor", 0, null ) );
 					//note that the node is null for the default constructor, because nothing was made
 					
 					
@@ -440,7 +440,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 	
 	private boolean createMethod( Node declaration, Node node )
 	{
-		MethodSignature signature = new MethodSignature(declaration.getImage(), node.getModifiers(), node);
+		MethodSignature signature = new MethodSignature( currentType, declaration.getImage(), node.getModifiers(), node);
 				
 		if( !checkMemberModifiers( node, node.getModifiers() ))
 			return false;

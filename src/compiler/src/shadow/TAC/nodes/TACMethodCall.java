@@ -6,6 +6,7 @@ import java.util.List;
 import shadow.TAC.TACVariable;
 import shadow.output.AbstractTACVisitor;
 import shadow.parser.javacc.Node;
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
 /**
@@ -27,6 +28,8 @@ public class TACMethodCall extends TACNode {
 
 	public TACMethodCall(Node astNode, String name, TACNode parent, TACNode next) {
 		super(astNode, "CALL", parent, next);
+		methodType = astNode.getType();
+		returns = new LinkedList<TACVariable>();
 		parameters = new LinkedList<TACVariable>();
 		methodName = name;
 	}
@@ -46,7 +49,7 @@ public class TACMethodCall extends TACNode {
 	public int getReturnCount() {
 		return returns.size();
 	}
-	
+
 	public TACVariable getReturn(int index) {
 		return returns.get(index);
 	}
@@ -55,8 +58,16 @@ public class TACMethodCall extends TACNode {
 		parameters.add(var);
 	}
 	
+	public int getParamCount() {
+		return parameters.size();
+	}
+	
 	public TACVariable getVariable() {
-		return returns.get(0);
+		return hasReturn() ? returns.get(0) : null;
+	}
+
+	public TACVariable getParameter(int index) {
+		return parameters.get(index);
 	}
 
 	public void setMethodName(String methodName) {
@@ -66,11 +77,12 @@ public class TACMethodCall extends TACNode {
 		return methodName;
 	}
 	public String getMangledName() {
-		return getMethodName() + getAstNode().getType().getMangledName();
+		return getMethodType().getOuter().getMangledName() +
+				"_M" + getMethodName() + getMethodType().getMangledName();
 	}
 	
-	public int getParamCount() {
-		return parameters.size();
+	public MethodType getMethodType() {
+		return (MethodType)getAstNode().getType();
 	}
 	
 	public TACVariable[] getParameters() {

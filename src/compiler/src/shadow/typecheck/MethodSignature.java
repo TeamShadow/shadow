@@ -12,8 +12,8 @@ public class MethodSignature {
 	protected final String symbol;
 	private final Node node;	/** The AST node that corresponds to the branch of the tree for this method */
 	
-	public MethodSignature(String symbol, int modifiers, Node node) {
-		type = new MethodType(modifiers);
+	public MethodSignature(Type enclosingType, String symbol, int modifiers, Node node) {
+		type = new MethodType(enclosingType, modifiers);
 		this.symbol = symbol;
 		this.node = node;
 	}
@@ -79,11 +79,11 @@ public class MethodSignature {
 	
 
 	public String toString() {
-		return symbol + " " + type.toString();
+		return symbol + ' ' + type.toString();
 	}
 	
 	public String getMangledName() {
-		return symbol + type.getMangledName();
+		return "_M" + symbol + type.getMangledName();
 	}
 	
 	public MethodType getMethodType() {

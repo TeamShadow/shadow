@@ -98,6 +98,10 @@ public class TACVariable {
 		return symbol;
 	}
 
+	public boolean isLiteral() {
+		return isLiteral;
+	}
+
 	/**
 	 * Returns true if this variable is a field.
 	 * @return

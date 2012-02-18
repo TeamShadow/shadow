@@ -622,18 +622,18 @@ public class TypeCollector extends BaseChecker
 						File metaVersion = new File( importPath, path + ".meta" );
 						if( shadowVersion.exists() )
 						{
-							if( metaVersion.exists() && metaVersion.lastModified() >= shadowVersion.lastModified() )												
-								importList.add(metaVersion);
-							else
+//							if( metaVersion.exists() && metaVersion.lastModified() >= shadowVersion.lastModified() )												
+//								importList.add(metaVersion);
+//							else
 								importList.add(shadowVersion);	
 							
 							success = true;						
 						}
-						else if( metaVersion.exists() )
-						{
-							importList.add(metaVersion);							
-							success = true;						
-						}
+//						else if( metaVersion.exists() )
+//						{
+//							importList.add(metaVersion);							
+//							success = true;						
+//						}
 					}
 					
 					if( success )

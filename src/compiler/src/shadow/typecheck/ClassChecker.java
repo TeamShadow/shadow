@@ -1427,12 +1427,12 @@ public class ClassChecker extends BaseChecker {
 			context = curPrefix.getFirst().getType();
 			directAccess = false;
 		}
-				
+		
 		if( !setTypeFromContext( node, name, context, directAccess )) //automatically sets type if can
 		{
 			addError(node, Error.UNDEC_VAR, name);
 			node.setType(Type.UNKNOWN);
-			ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);						
+			ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);
 		}
 		else if( node.getType() instanceof UnboundMethodType )
 		{
@@ -1441,7 +1441,7 @@ public class ClassChecker extends BaseChecker {
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				typeList.add(node.jjtGetChild(i).getType());
 			
-			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();					
+			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();
 			List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
 			List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
 			
@@ -1959,6 +1959,7 @@ public class ClassChecker extends BaseChecker {
 				if( signature.matches( typeList )) 
 				{
 					node.setType(child.getType());
+					node.setType(signature.getMethodType());
 					return WalkType.POST_CHILDREN;
 				}
 				else if( signature.canAccept(typeList))

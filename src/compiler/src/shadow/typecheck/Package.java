@@ -81,15 +81,22 @@ public class Package
 	
 	public String getFullyQualifiedName()
 	{
-		String fullName = name;
-		Package previous = parent;
-		while( previous != null && previous.getName().length() > 0 )
-		{
-			fullName = previous.getName() + "." + fullName;
-			previous = previous.getParent();
-		}		
+		if (parent == null || parent.getName().isEmpty())
+			return getName();
 		
-		return fullName;
+		return parent.getFullyQualifiedName() + '.' + getName();
+	}
+	
+	public String getMangledName()
+	{
+		StringBuilder sb = new StringBuilder();
+		
+		if (parent != null && !parent.getName().isEmpty())
+			sb.append(parent.getMangledName());
+		sb.append("_P");
+		Type.mangle(getName(), sb);
+		
+		return sb.toString();
 	}
 	
 	public Package getParent()

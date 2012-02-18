@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 
 public class MethodType extends Type {
@@ -13,11 +12,11 @@ public class MethodType extends Type {
 	protected List<Type> returns; /** List of return types */
 
 	public MethodType() {
-		this(0);
+		this(null, 0);
 	}
 
-	public MethodType(int modifiers) {
-		super(null, modifiers, null, Kind.METHOD);
+	public MethodType(Type outer, int modifiers) {
+		super(null, modifiers, outer, Kind.METHOD);
 		paramNames = new ArrayList<String>();
 		paramTypes = new ArrayList<ModifiedType>();
 		returns = new LinkedList<Type>();
@@ -216,16 +215,11 @@ public class MethodType extends Type {
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();
 
-		for(ModifiedType type:paramTypes) {
-			sb.append("_P");
-			Type p = type.getType();
-			sb.append(p.getMangledName());
-		}
+		for (ModifiedType type : paramTypes)
+			sb.append("_R").append(type.getType().getMangledName());
 		
-		for(Type r:returns) {
-			sb.append("_R");
-			sb.append(r.getMangledName());
-		}
+//		for (Type r : returns)
+//			sb.append("_R").append(r.getMangledName());
 		
 		return sb.toString();
 	}

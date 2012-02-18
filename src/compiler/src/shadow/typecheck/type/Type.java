@@ -91,6 +91,13 @@ public class Type {
 		return typeName;
 	}
 	
+	public String getFullName() {
+		if( _package == null || _package.getFullyQualifiedName().length() == 0 )
+			return typeName;
+		else
+			return _package.getFullyQualifiedName() + '@' + typeName;			
+	}
+	
 	public int getModifiers()
 	{
 		return modifiers;
@@ -99,10 +106,7 @@ public class Type {
 	
 	public String toString()
 	{
-		if( _package == null || _package.getFullyQualifiedName().length() == 0 )
-			return typeName;
-		else
-			return _package.getFullyQualifiedName() + "@" + typeName;			
+		return getFullName();		
 	}	
 
 	public boolean equals(Object o)
@@ -344,9 +348,48 @@ public class Type {
 	{
 		this.parameters = parameters;
 	}
+
 	
-	
-	
-	
+	public static void mangle(String name, StringBuilder sb)
+	{
+		for (int i = 0; i < name.length(); i++)
+		{
+			char c = name.charAt(i);
+			if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+				sb.append(c);
+			else if (c == '_')
+				sb.append("_S");
+			else
+			{
+				sb.append("_U");
+				for (int shift = 12; shift >= 0; shift -= 8)
+					sb.append(Character.forDigit((c >> shift) & 0xf, 16));
+			}
+		}
+	}
+	public static String unmangle(String name)
+	{
+		StringBuilder sb = new StringBuilder(name.length());
+		
+		for (int i = 0; i < name.length(); i++)
+		{
+			char c = name.charAt(i);
+			if (c == '_')
+			{
+				c = name.charAt(++i);
+				if (c == 'S')
+					c = '_';
+				else if (c == 'U')
+				{
+					c = (char)Integer.parseInt(name.substring(i, i + 4), 16);
+					i += 3;
+				} else
+					sb.append('_');
+			}
+			sb.append(c);
+		}
+		
+		return sb.toString();
+	}
 	
 }

@@ -6,7 +6,7 @@ import shadow.TAC.nodes.TACNode;
 
 public class CPrettyPrinter {
 	private int tabDepth = 0;
-	private int COMMENT_WIDTH = 40;
+	private int COMMENT_WIDTH = 80;
 	private int TAB_WIDTH = 5;
 	
 	private String prefix = "";
@@ -47,7 +47,7 @@ public class CPrettyPrinter {
 		// print out the tab depths
 		for(int i=0; i < tabDepth; ++i) {
 			for(int j=0; j < TAB_WIDTH; ++j)
-				writer.print(" ");
+				writer.print(' ');
 			lineLength += TAB_WIDTH;
 		}
 		
@@ -57,8 +57,9 @@ public class CPrettyPrinter {
 		
 		if(node != null) {
 			// print out enough spaces to align everything
+			writer.print(' ');
 			for(int i=0; i < (COMMENT_WIDTH - lineLength); ++i) {
-				writer.print(" ");
+				writer.print(' ');
 			}
 			
 			// print out the comment
