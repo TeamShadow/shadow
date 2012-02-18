@@ -112,6 +112,9 @@ public class Main {
 		        // parse the file
 		        SimpleNode node = parser.CompilationUnit();
 		        
+		        if(Loggers.TYPE_CHECKER.isTraceEnabled())
+		        	node.dump("");
+		        
 		        // type check the AST
 		        boolean result = tc.typeCheck(node, shadowFile);
 		        

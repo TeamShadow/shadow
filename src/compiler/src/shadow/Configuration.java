@@ -166,6 +166,11 @@ public class Configuration implements Iterator<File> {
 	
 	/**
 	 * Create an Options object to be used to parse the command line.
+	 * 
+	 * The options are:
+	 * --config Specifies the config.xml file to be used
+	 * --check Parses and type-checks the files
+	 * --compile Compiles the Shadow files
 	 * @return Return options used to parse the command line. 
 	 */
 	public static Options createCommandLineOptions() {

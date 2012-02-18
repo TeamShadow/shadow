@@ -32,7 +32,7 @@ public class TypeCheckerTest {
 
 		// set the levels of our loggers
 		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
-		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.DEBUG);
+		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.TRACE);
 	}
 	
 	 @Test public void testArray() throws Exception {
