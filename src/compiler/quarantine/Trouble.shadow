@@ -2,6 +2,6 @@ class Trouble {
 
 	public method () => ()
 	{
-		figface();
+		Subtype.figface();
 	}
 }
