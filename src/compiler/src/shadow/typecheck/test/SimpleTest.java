@@ -38,7 +38,7 @@ public class SimpleTest
 		
 		
 		//add desired files to list
-		args.add("quarantine/Parsable.shadow"); 		
+		args.add("quarantine/Trouble.shadow"); 		
 		//args.add("tests/compile/Scope.shadow");
 		int error = Main.test(args.toArray(new String[] { }));
 		System.out.println("Error code: " + error);

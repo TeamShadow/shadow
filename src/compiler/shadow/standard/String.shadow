@@ -31,11 +31,11 @@ immutable final class String //implements Parsable<String> //, Collection<code>
 	public static parse<String>(String value) => (String)
 	{
 		return value;
-	}
-
+	}	
+	*/
 	public toString () => (String)
 	{
 		return this;
 	}
-	*/
+
 }

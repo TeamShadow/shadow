@@ -18,3 +18,10 @@ Map
 OrderedMap
 Set
 
+Fix it so that it is impossible to add two classes with the same fully qualified path:
+
+package shadow.standard;
+class String {}
+
+package shadow.standard;
+class String {}

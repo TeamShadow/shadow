@@ -1,0 +1,9 @@
+package quarantine;
+
+class Test
+{
+	public toTest() => ( Test )
+	{
+		return this;
+	}
+}

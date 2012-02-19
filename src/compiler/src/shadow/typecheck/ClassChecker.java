@@ -1519,16 +1519,6 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException 
 	{
-		/* OLD
-		  LOOKAHEAD(2) "." "this"
-		  | LOOKAHEAD(2) "." AllocationExpression()
-		  | LOOKAHEAD(3) MemberSelector()
-		  | "[" ConditionalExpression() ("," ConditionalExpression())* "]"
-		  | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
-		  | Arguments()
-		  }		
-		*/	
-		
 		
 		/* NEW
 		   LOOKAHEAD(2) "." "this" { jjtThis.setImage("this"); } // when does this even happen?
@@ -1602,13 +1592,20 @@ public class ClassChecker extends BaseChecker {
 			}
 			else //MethodCall
 			{
-				MethodType type = (MethodType)(child.getType());
-				List<Type> returnTypes = type.getReturnTypes();
-				if( returnTypes.size() == 1 )
-					node.setType( returnTypes.get(0));
+				//can look like a method call but not have a real method connected to it
+				if( child.getType() instanceof MethodType )
+				{
+					MethodType type = (MethodType)(child.getType());
+					List<Type> returnTypes = type.getReturnTypes();
+					if( returnTypes.size() == 1 )
+						node.setType( returnTypes.get(0));
+					else
+						node.setType( new SequenceType( returnTypes ));
+				}
 				else
-					node.setType( new SequenceType( returnTypes ));			
+					node.setType(Type.UNKNOWN);
 			}
+			
 		}
 		
 		curPrefix.set(0, node); //so that a future suffix can figure out where it's at

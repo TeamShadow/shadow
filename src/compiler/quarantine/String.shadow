@@ -1,9 +1,0 @@
-package shadow.standard;
-
-class String
-{
-	public toString() => ( String )
-	{
-		return this;
-	}
-}
