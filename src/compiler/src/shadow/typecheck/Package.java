@@ -87,6 +87,14 @@ public class Package
 		return parent.getFullyQualifiedName() + '.' + getName();
 	}
 	
+	public String getPath()
+	{
+		if (parent == null || parent.getName().isEmpty())
+			return getName();
+		
+		return parent.getFullyQualifiedName() + '/' + getName();
+	}
+	
 	public String getMangledName()
 	{
 		StringBuilder sb = new StringBuilder();

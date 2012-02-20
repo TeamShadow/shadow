@@ -208,7 +208,7 @@ public class TypeCollector extends BaseChecker
 				
 				//copy other types into our package tree				
 				for( Package p : otherTypes.keySet() )
-				{	
+				{
 					//if package already exists, it won't be recreated
 					Package newPackage = packageTree.addFullyQualifiedPackage(p.getFullyQualifiedName(), typeTable);
 					newPackage.addTypes( otherTypes.get(p) );

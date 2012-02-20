@@ -65,7 +65,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, Type>> hashMap, List<File> importList, Package packageTree  ) {
-		
 		this.debug = debug;
 		this.typeTable = hashMap;
 		this.importList = importList;

@@ -21,8 +21,8 @@ public class TACVariable {
 	static public TACVariable getDefault(Type type) {
 		if(type.isPrimitive())
 			return new TACVariable("0", type, true);
-		else if(type.isString())
-			return new TACVariable("\"\"", type, true);
+//		else if(type.isString())
+//			return new TACVariable("\"\"", type, true);
 		else
 			return new TACVariable("null", type, true);
 	}

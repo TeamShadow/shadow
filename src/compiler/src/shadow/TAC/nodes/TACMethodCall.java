@@ -76,9 +76,14 @@ public class TACMethodCall extends TACNode {
 	public String getMethodName() {
 		return methodName;
 	}
+	public String getMangledMethodName() {
+		StringBuilder sb = new StringBuilder("_M");
+		Type.mangle(getMethodName(), sb);
+		return sb.toString();
+	}
 	public String getMangledName() {
 		return getMethodType().getOuter().getMangledName() +
-				"_M" + getMethodName() + getMethodType().getMangledName();
+				getMangledMethodName() + getMethodType().getMangledName();
 	}
 	
 	public MethodType getMethodType() {

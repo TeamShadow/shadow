@@ -11,13 +11,16 @@ import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
+import shadow.TAC.nodes.TACReturn;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
+import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.MethodSignature;
 import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.Type;
 
 /*
  * This class is a total hack right now

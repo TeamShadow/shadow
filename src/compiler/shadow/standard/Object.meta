@@ -2,91 +2,32 @@
 #ifndef OBJECT_META
 #define OBJECT_META
 
-struct Object_methods {
-     char (*toString__R_String_)(void);
-};
+#include "types.h"
+#include "stdlib.h"
+struct _Pshadow_Pstandard_CClass;
+struct _Pshadow_Pstandard_CString;
 
-struct Object {
-     
-     /* Interfaces */
-     struct Object_methods *__methods;
-     
-     unsigned int __ref_count;
-     
-     /* Fields */
-};
-
-void __init__R_(struct Object* this);
-
-char toString__R_String_(struct Object* this);
-
-#endif
-/* AUTO-GENERATED FILE, DO NOT EDIT! */
-#ifndef OBJECT_META
-#define OBJECT_META
-
-struct Object_methods {
-     char (*toString__R_String_)(void);
-};
-
-struct Object {
-     
-     /* Interfaces */
-     struct Object_methods *__methods;
-     
-     unsigned int __ref_count;
+struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CObject_Iclass;
+struct _Pshadow_Pstandard_CObject_Itable;
+struct _Pshadow_Pstandard_CObject_Itable _Pshadow_Pstandard_CObject_Imethods;
+struct _Pshadow_Pstandard_CObject {
+     struct _Pshadow_Pstandard_CObject_Itable *_Imethods;
      
      /* Fields */
 };
 
-void __init__R_(struct Object* this);
 
-char toString__R_String_(struct Object* this);
+struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject* this);
+struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject*);
+struct _Pshadow_Pstandard_CString* _Pshadow_Pstandard_CObject_MtoString(struct _Pshadow_Pstandard_CObject*);
+void _Pshadow_Pstandard_CObject_Mconstructor(struct _Pshadow_Pstandard_CObject*);
 
-#endif
-/* AUTO-GENERATED FILE, DO NOT EDIT! */
-#ifndef OBJECT_META
-#define OBJECT_META
-
-struct Object_methods {
-     char (*toString__R_String_)(void);
+struct _Pshadow_Pstandard_CObject_Itable {
+     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CObject*);
+     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
 };
 
-struct Object {
-     
-     /* Interfaces */
-     struct Object_methods *__methods;
-     
-     unsigned int __ref_count;
-     
-     /* Fields */
-};
-
-void __init__R_(struct Object* this);
-
-char toString__R_String_(struct Object* this);
-
-#endif
-/* AUTO-GENERATED FILE, DO NOT EDIT! */
-#ifndef OBJECT_META
-#define OBJECT_META
-
-struct Object_methods {
-     char (*toString__R_String_)(void);
-};
-
-struct Object {
-     
-     /* Interfaces */
-     struct Object_methods *__methods;
-     
-     unsigned int __ref_count;
-     
-     /* Fields */
-};
-
-void __init__R_(struct Object* this);
-
-char toString__R_String_(struct Object* this);
+#include "shadow/standard/Class.meta"
+#include "shadow/standard/String.meta"
 
 #endif

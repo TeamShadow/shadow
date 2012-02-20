@@ -66,7 +66,7 @@ public class TACClass {
 		}
 		
 		// create the method signature for this method
-		MethodSignature ms = new MethodSignature( type, "constructor", 0, node);
+		MethodSignature ms = new MethodSignature( type, "constructor", 0, node );
 		
 		// add the init method
 		methods.add(new TACMethod(ms, entry, exit));

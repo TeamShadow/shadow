@@ -100,6 +100,14 @@ public class Type {
 			return _package.getFullyQualifiedName() + '@' + typeName;			
 	}
 	
+	public String getPath()
+	{
+		if( _package == null || _package.getPath().length() == 0 )
+			return typeName;
+		else
+			return _package.getPath() + '/' + typeName;	
+	}
+	
 	public int getModifiers()
 	{
 		return modifiers;

@@ -1,0 +1,36 @@
+package shadow.io;
+
+class Console
+{
+	private constructor() {}
+
+	public static native print( boolean z ) => ();
+	public static native print( ubyte ub ) => ();
+	public static native print( byte b ) => ();
+	public static native print( ushort us ) => ();
+	public static native print( short s ) => ();
+	public static native print( uint ui ) => ();
+	public static native print( int i ) => ();
+	public static native print( ulong ul ) => ();
+	public static native print( long l ) => ();
+	public static native print( float f ) => ();
+	public static native print( double d ) => ();
+	public static native print( code c ) => ();
+	public static native print( String str ) => ();
+	public static native print( Object obj ) => ();
+	public static native printLine( boolean z ) => ();
+	public static native printLine( ubyte ub ) => ();
+	public static native printLine( byte b ) => ();
+	public static native printLine( ushort us ) => ();
+	public static native printLine( short s ) => ();
+	public static native printLine( uint ui ) => ();
+	public static native printLine( int i ) => ();
+	public static native printLine( ulong ul ) => ();
+	public static native printLine( long l ) => ();
+	public static native printLine( float f ) => ();
+	public static native printLine( double d ) => ();
+	public static native printLine( code c ) => ();
+	public static native printLine( String str ) => ();
+	public static native printLine( Object obj ) => ();
+	public static native printLine() => ();
+}

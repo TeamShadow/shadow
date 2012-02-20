@@ -2,10 +2,10 @@ package shadow.standard;
 
 immutable final class String //implements Parsable<String> //, Collection<code>
 {
-/*
+
 	private ubyte[] data;
 	private boolean ascii;
-		
+/*
 	public constructor( code[] codes )
 	{
 		

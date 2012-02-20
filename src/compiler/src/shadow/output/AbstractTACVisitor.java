@@ -17,6 +17,7 @@ import shadow.TAC.nodes.TACNode;
 import shadow.TAC.nodes.TACNodeInterface;
 import shadow.TAC.nodes.TACReturn;
 import shadow.TAC.nodes.TACUnaryOperation;
+import shadow.typecheck.type.ClassType;
 
 public abstract class AbstractTACVisitor {
 	private static final Log logger = Loggers.TAC;
@@ -29,6 +30,10 @@ public abstract class AbstractTACVisitor {
 	
 	public TACClass getTheClass() {
 		return theClass;
+	}
+	
+	public ClassType getClassType() {
+		return (ClassType)theClass.getType();
 	}
 	
 	abstract public void startFile();

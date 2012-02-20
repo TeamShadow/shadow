@@ -39,6 +39,12 @@ public class TACLinearWalker {
 		// walk through the methods
 		for(TACMethod method:theClass.getMethods()) {
 			visitor.startMethod(method);
+			if (method.getName().equals("constructor")) {
+				// walk through the fields at the beginning of every constructor (I think)
+				for(TACNode[] field:theClass.getFields()) {
+					walk(field[0], null);
+				}
+			}
 			walk(method.getEntry(), null);
 			visitor.endMethod(method);
 		}
@@ -77,6 +83,7 @@ public class TACLinearWalker {
 			
 			walk(((TACLoop) node).getLoopNode(), realJoin);
 			visitor.visitJoin(realJoin);
+			walk(((TACLoop) node).getBreakNode(), realJoin);
 		} else {
 			visitor.visit(node);
 			TACNodeInterface next = ((TACNode)node).getNext();

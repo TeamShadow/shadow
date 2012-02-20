@@ -434,6 +434,7 @@ public class ClassChecker extends BaseChecker {
 				
 		if(type != null)
 		{
+			((ClassType)currentType).addReferencedType(type);
 			node.setType(type);
 			return true;
 		}
@@ -899,6 +900,8 @@ public class ClassChecker extends BaseChecker {
 			addError(node, Error.UNDEF_TYP, typeName);
 			type = Type.UNKNOWN;
 		}
+		else if (currentType instanceof ClassType)
+			((ClassType)currentType).addReferencedType(type);
 				
 		node.setType(type);
 		

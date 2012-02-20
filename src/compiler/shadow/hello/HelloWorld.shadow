@@ -1,0 +1,75 @@
+package shadow.hello;
+
+import shadow.io@Console;
+
+class HelloWorld
+{
+	public uint times;
+	public String message;
+	public constructor()
+	{
+		times = 5ui;
+		message = "Hello World!";
+	}
+	public constructor(uint times)
+	{
+		this.times = times;
+		message = "Hello World!";
+	}
+	public constructor(String message)
+	{
+		times = 5ui;
+		this.message = message;
+	}
+	public constructor(uint times, String message)
+	{
+		this.times = times;
+		this.message = message;
+	}
+
+	public getTimes() => ( uint )
+	{
+		return times;
+	}
+	public getMessage() => ( String )
+	{
+		return message;
+	}
+
+	public doit() => ()
+	{
+		for (uint i = 0ui; i < times; i += 1ui)
+		{
+			Console.print(i + 1ui);
+			Console.print(": ");
+			Console.printLine(message);
+		}
+		Console.printLine();
+	}
+
+	public static main( String[] args ) => ()
+	{
+		HelloWorld hello1 = new HelloWorld();
+		HelloWorld hello2 = new HelloWorld(10ui);
+		HelloWorld hello3 = new HelloWorld("Five Times!");
+		HelloWorld hello4 = new HelloWorld(15ui, "Fifteen Times!");
+		hello1.doit();
+		hello2.doit();
+		hello3.doit();
+		hello4.doit();
+		Console.printLine(hello1);
+		Console.printLine(hello2);
+		Console.printLine(hello3);
+		Console.printLine(hello4);
+		Console.printLine();
+		Console.printLine(hello1.getMessage());
+		Console.printLine(hello2.getMessage());
+		Console.printLine(hello3.getMessage());
+		Console.printLine(hello4.getMessage());
+	}
+	
+	/*public toString() => ( String )
+	{
+		return message;
+	}*/
+}

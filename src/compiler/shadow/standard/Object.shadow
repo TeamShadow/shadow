@@ -3,9 +3,11 @@ package shadow.standard;
 class Object
 {
 
-	public toString() => (String)
+	public final native getClass() => ( Class );
+
+	public toString() => ( String )
 	{
-		return "Object";
+		return getClass().toString();
 	}
 
 }

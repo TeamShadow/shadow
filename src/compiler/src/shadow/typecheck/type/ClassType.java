@@ -1,8 +1,10 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
@@ -10,7 +12,7 @@ import shadow.typecheck.MethodSignature;
 
 public class ClassType extends ClassInterfaceBaseType {
 	private ArrayList<InterfaceType> implementTypes = new ArrayList<InterfaceType>();
-	
+	private Set<Type> referencedTypes = new HashSet<Type>();
 	
 	public ClassType(String typeName, ClassType parent ) {
 		this( typeName, 0 );
@@ -197,8 +199,67 @@ public class ClassType extends ClassInterfaceBaseType {
 			return list;
 	}
 	
+	public List<Node> getFieldList()
+	{
+		List<Node> fieldList = new ArrayList<Node>();
+		
+		recursivelyUpdateFieldList(fieldList);
+		
+		return fieldList;
+	}
+	public void recursivelyUpdateFieldList( List<Node> fieldList )
+	{
+		if ( getExtendType() != null )
+			getExtendType().recursivelyUpdateFieldList(fieldList);
+		
+		fieldList.addAll(getFields().values());
+	}
+	
+	public List<MethodSignature> getMethodList()
+	{
+		List<MethodSignature> methodsList = new ArrayList<MethodSignature>();
+		
+		recursivelyUpdateMethodList(methodsList);
+		
+		return methodsList;
+	}
+	public void recursivelyUpdateMethodList( List<MethodSignature> methodList )
+	{
+		if ( getExtendType() != null )
+			getExtendType().recursivelyUpdateMethodList(methodList);
+		
+		for ( List<MethodSignature> methods : methodTable.values() )
+		{
+			for ( MethodSignature method : methods )
+			{
+				boolean replaced = false;
+				for ( int i = 0; i < methodList.size() && !replaced; i++ )
+				{
+					if ( methodList.get(i).isIndistinguishable(method) )
+					{
+						methodList.set(i, method);
+						replaced = true;
+					}
+				}
+				if ( !replaced )
+					methodList.add(method);
+			}
+		}
+	}
+	
+	public void addReferencedType(Type type)
+	{
+		if (!equals(type) && !referencedTypes.contains(type) && !isDescendentOf(type))
+			referencedTypes.add(type);
+	}
+	public Set<Type> getReferenceTypes()
+	{
+		return referencedTypes;
+	}
+	
 	@Override
-	public String getMangledName() {
+	public String getMangledName()
+	{
 		StringBuilder sb = new StringBuilder();
 		if (!isPrimitive())
 			sb.append(getPackage().getMangledName()).append("_C");

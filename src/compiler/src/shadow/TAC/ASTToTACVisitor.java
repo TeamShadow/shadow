@@ -32,6 +32,8 @@ import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBlockStatement;
 import shadow.parser.javacc.ASTBooleanLiteral;
+import shadow.parser.javacc.ASTClassOrInterfaceBodyDeclaration;
+import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -403,7 +405,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			Node parent = call.getAstNode().jjtGetParent().jjtGetParent();
 			SimpleNode argNode;
 			TACVariable arg;
-			if (parent.jjtGetNumChildren() == 2) {
+			if ( node.jjtGetParent() != parent.jjtGetChild(0) ) {
 				argNode = (SimpleNode)parent.jjtGetChild(0);
 				arg = argNode.getExitNode().getVariable();
 			} else { // otherwise implicit this

@@ -66,11 +66,15 @@ public class FieldAndMethodChecker extends BaseChecker {
 				if( type instanceof ClassType )
 				{
 					ClassType classType = (ClassType)type;
-					//if no constructors, add the default one
-					classType.addMethod("constructor", new MethodSignature( classType, "constructor", 0, null ) );
-					//note that the node is null for the default constructor, because nothing was made
-					
-					
+					if (classType.getMethods("constructor").isEmpty())
+					{
+						//if no constructors, add the default one
+						ASTConstructorDeclaration constructorNode = new ASTConstructorDeclaration(-1);
+						constructorNode.setModifiers(ModifierSet.PUBLIC);
+						classType.addMethod("constructor", new MethodSignature( classType, "constructor", 0, constructorNode ) );
+						//note that the node is null for the default constructor, because nothing was made
+						// - in that case, modifiers ought to be moved to MethodSignature
+					}
 					
 					//check for circular class hierarchy				
 					ClassType parent = classType.getExtendType();
@@ -312,6 +316,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 			addError(node, Error.UNDEF_TYP, typeName);
 			type = Type.UNKNOWN;
 		}
+		else if (currentType instanceof ClassType)
+			((ClassType)currentType).addReferencedType(type);
 				
 		node.setType(type);
 		
