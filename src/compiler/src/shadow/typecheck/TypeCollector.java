@@ -400,6 +400,8 @@ public class TypeCollector extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+	
+	/*
 	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException
 	{		
 		if( secondVisit )
@@ -413,6 +415,7 @@ public class TypeCollector extends BaseChecker
 		}
 		return WalkType.POST_CHILDREN;
 	}
+	*/
 
 	
 	private void createType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException

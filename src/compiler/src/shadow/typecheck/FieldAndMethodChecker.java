@@ -3,7 +3,6 @@ package shadow.typecheck;
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +16,7 @@ import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConstructorDeclaration;
 import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTLiteral;
@@ -34,6 +34,7 @@ import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
+import shadow.parser.javacc.SignatureNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
@@ -151,102 +152,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 				}
 			}
 		}
-		
-		
-		/*  Don't think this is right.  We shouldn't lump all the parent fields and methods into the class. 
-		 *  We can retrieve stuff when we need it and keep the class hierarchies unmixed. 
-		for( Type type : typeTable.values() ) 
-		{
-			if( type instanceof ClassType ) //adds all parent fields and methods and check for compliance with all interfaces
-			{
-				ClassType classType = (ClassType) type;
-				ClassType parent = classType.getExtendType();				
-				
-				while( parent != null && parent != classType )
-				{	
-					Map<String,Node> fields = parent.getFields();
-					
-					for( String name : fields.keySet() )
-					{
-						if( !classType.containsField(name) ) //add parent fields to current class if it doesn't have them already
-						{
-							Node node = fields.get(name);
-							if( !ModifierSet.isPrivate(node.getModifiers() ) ) //private fields aren't added
-								classType.addField(name, node);
-						}
-					}
-					
-					Map< String,List<MethodSignature> > methods = parent.getMethodMap();
-					
-					for( String name : methods.keySet() )
-					{
-						HashSet<MethodType> methodsInClass = new HashSet<MethodType>();
-						List<MethodSignature> signatures = classType.getMethods(name);
-						if( signatures != null )
-							for( MethodSignature signature : signatures  )
-								methodsInClass.add(signature.getMethodType());						
-						
-						signatures = methods.get(name);
-						if( signatures != null )
-							for( MethodSignature parentSignature : signatures ) //add parent methods to current class
-							{
-								MethodType parentMethod = parentSignature.getMethodType();
-								if( !methodsInClass.contains(parentMethod) && !ModifierSet.isPrivate(parentMethod.getModifiers()) )
-								//only if it doesn't have it already and it's not private
-								{
-									classType.addMethod(name, parentSignature);
-									methodsInClass.add(parentMethod); //to avoid double adds, but should be unnecessary
-								}
-							}
-					}
-					
-					parent = parent.getExtendType();
-				}
-				
-				if( parent == classType )				
-					addError(Error.INVL_TYP, "Circular type hierarchy for class " + type );
-				
-				//Meets all interface requirements?
-				for( InterfaceType _interface : classType.getInterfaces() )
-				{
-					if( !classType.satisfiesInterface(_interface) )
-						addError(Error.INVL_TYP, "Type " + classType + " does not implement interface " + _interface );					
-				}
-			}
-		}	
-		
-		*/
 	}
-	
-	
-//	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
-//		//
-//		// TODO: Fix this as it could be a class, exception or interface
-//		//       We'll also need to add that to Type so it knows what it is
-//		//		
-//
-//		if( secondVisit )		
-//		{
-//			if( currentType instanceof ClassType ) //may need to add a default constructor
-//			{
-//				ClassType classType = (ClassType)currentType;
-//	
-//				//
-//				// We don't want to do this here... we'll do it in the TAC code
-//				//
-////				if( classType.getMethods("constructor") ==  null )
-////					classType.addMethod("constructor", new MethodSignature("constructor", 0, -1)); //negative indicates "magically created"
-//			}
-//			
-//			currentType = (ClassInterfaceBaseType)currentType.getOuter();
-//		}
-//		else
-//		{
-//			currentType = node.getType();
-//		}
-//		
-//		return WalkType.POST_CHILDREN;
-//	}
 	
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
 	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
@@ -417,23 +323,32 @@ public class FieldAndMethodChecker extends BaseChecker {
 	 */
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
 		createTypeParameterScope( secondVisit );
+		Node methodDeclarator = node.jjtGetChild(0);
 		if(secondVisit)
-		{		
-			Node methodDeclarator = node.jjtGetChild(0);		
-			createMethod( methodDeclarator, node  ); //different nodes used for modifiers and signature
-		}		
+			finalizeMethod( methodDeclarator, node );
+			//different nodes used for modifiers and signature		
+		else
+			//different nodes used for modifiers and signature
+			node.setMethodSignature(new MethodSignature( currentType, methodDeclarator.getImage(), node.getModifiers(), node));
+			
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if(secondVisit)
-			createMethod( node, node  ); //constructor uses the same node for modifiers and signature
+			finalizeMethod( node, node  ); 
+		else
+			//constructor uses the same node for modifiers and signature
+			node.setMethodSignature(new MethodSignature( currentType, node.getImage(), node.getModifiers(), node));
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
-			createMethod( node, node  ); //destructor uses the same node for modifiers and signature
+			finalizeMethod( node, node  ); 
+		else
+			//destructor uses the same node for modifiers and signature
+			node.setMethodSignature(new MethodSignature( currentType, node.getImage(), node.getModifiers(), node));
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -442,49 +357,14 @@ public class FieldAndMethodChecker extends BaseChecker {
 	}
 	
 	
-	private boolean createMethod( Node declaration, Node node )
-	{
-		MethodSignature signature = new MethodSignature( currentType, declaration.getImage(), node.getModifiers(), node);
-				
-		if( !checkMemberModifiers( node, node.getModifiers() ))
-			return false;
-		
-		boolean hasTypeParameters = declaration.jjtGetChild(0) instanceof ASTTypeParameters;
-		
-		if( declaration instanceof ASTMethodDeclarator || declaration instanceof ASTConstructorDeclaration )
-		{
-			int child = hasTypeParameters ? 1 : 0;						
-			
-			// check the parameters
-			if(!visitParameters(declaration.jjtGetChild(child), signature))
-				return false;
-		}
-		
-		// check to see if we have return types
-		int location = hasTypeParameters ? 2 : 1;	
-		if(declaration instanceof ASTMethodDeclarator && declaration.jjtGetNumChildren() > location )
-		{
-			Node retTypes = declaration.jjtGetChild(location);
-			
-			for(int i=0; i < retTypes.jjtGetNumChildren(); ++i) {
-				Type type = retTypes.jjtGetChild(i).getType();
-				
-				// make sure the return type is in the type table
-				if(type == null)
-				{
-					addError(retTypes.jjtGetChild(i), Error.UNDEF_TYP);
-					return false;
-				}
-					
-				// add the return type to our signature
-				signature.addReturn(type);
-			}
-		}
-		
+	private boolean finalizeMethod( Node declaration, SignatureNode node )
+	{	
+		MethodSignature signature = node.getMethodSignature();
 		MethodType methodType = signature.getMethodType();		
-		node.setType(methodType);
-		methodType.getOuter();
+		node.setType(methodType);		
 		node.setEnclosingType(currentType);
+		
+		checkMemberModifiers( node, node.getModifiers() );
 		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
@@ -526,39 +406,73 @@ public class FieldAndMethodChecker extends BaseChecker {
 		}
 	}
 	
-	
-	
-	
-	public boolean visitParameters(Node params, MethodSignature signature) {
-		// go through all the formal parameters
-		for(int i=0; i < params.jjtGetNumChildren(); ++i) {
-			Node param = params.jjtGetChild(i);
+	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException {
+		if(secondVisit)
+		{
 			
-			// get the name of the parameter
-			String paramSymbol = param.jjtGetChild(1).getImage();
-			
-			// check if it's already in the set of parameter names
-			if(signature.containsParam(paramSymbol)) {
-				addError(param.jjtGetChild(1), Error.MULT_SYM, "In parameter names");
-				return false;	// we're done with this node
-			}
-			
-			// get the type of the parameter
-			param.setType(param.jjtGetChild(0).getType());
-			
-			// make sure this type is in the type table
-			if(param.getType() == null)
+			Node parent = node.jjtGetParent();
+			if( parent instanceof ASTMethodDeclarator )
+			//ASTFunctionType adds result types differently
 			{
-				addError(param.jjtGetChild(0), Error.UNDEF_TYP);
-				return false;
+				parent = parent.jjtGetParent();
+				MethodSignature signature = ((SignatureNode)parent).getMethodSignature();				
+				for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+					Type type = node.jjtGetChild(i).getType();
+					
+					// make sure the return type is in the type table
+					if(type == null)					
+						addError(node.jjtGetChild(i), Error.UNDEF_TYP);
+					else						
+					// add the return type to our signature
+						signature.addReturn(type);
+				}
 			}
-				
-			// add the parameter type to the signature
-			signature.addParameter(paramSymbol, param);
 		}
 		
-		return true;
+		return WalkType.POST_CHILDREN;			
 	}
+	
+	
+	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException {
+		if(secondVisit)
+		{			
+			Node parent = node.jjtGetParent();			
+			if( parent instanceof ASTMethodDeclarator )
+				parent = parent.jjtGetParent();  //signature is kept in ASTMethodDeclaration
+			
+			MethodSignature signature = ((SignatureNode)parent).getMethodSignature();
+			
+			// go through all the formal parameters
+			for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+				Node parameter = node.jjtGetChild(i);
+				
+				// get the name of the parameter
+				String paramSymbol = parameter.jjtGetChild(1).getImage();
+				
+				// check if it's already in the set of parameter names
+				if(signature.containsParam(paramSymbol)) {
+					addError(parameter.jjtGetChild(1), Error.MULT_SYM, "In parameter names");
+					return false;	// we're done with this node
+				}
+				
+				// get the type of the parameter
+				parameter.setType(parameter.jjtGetChild(0).getType());
+				
+				// make sure this type is in the type table
+				if(parameter.getType() == null)
+				{
+					addError(parameter.jjtGetChild(0), Error.UNDEF_TYP);
+					return false;
+				}
+					
+				// add the parameter type to the signature
+				signature.addParameter(paramSymbol, parameter);
+			}	
+		}
+		
+		return WalkType.POST_CHILDREN;			
+	}	
+	
 	
 	/**
 	 * Given an ASTFunctionType node recursively builds the corresponding MethodType type.
@@ -654,6 +568,25 @@ public class FieldAndMethodChecker extends BaseChecker {
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {
 		createTypeParameterScope(secondVisit); //scope is created purely to hold type parameters	
 		return WalkType.POST_CHILDREN;			
+	}
+	
+	@Override
+	public Object visit(ASTTypeParameters node, Boolean secondVisit)	throws ShadowException
+	{
+		//type parameters occur only in class/interface declarations and method declarations		
+		if( secondVisit )
+		{				
+			Type parentType = node.jjtGetParent().getType();
+			
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			{
+				TypeParameter parameter = (TypeParameter)(node.jjtGetChild(i).getType());
+				parentType.addParameter(parameter);
+			}
+			
+			parentType.setParameterized(true);
+		}
+		return WalkType.POST_CHILDREN;
 	}
 	
 	@Override

@@ -2,9 +2,12 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.MethodSignature;
+
 public
 @SuppressWarnings("all")
-class ASTMethodDeclaration extends SimpleNode {
+class ASTMethodDeclaration extends SignatureNode {
+	
   public ASTMethodDeclaration(int id) {
     super(id);
   }
@@ -17,16 +20,6 @@ class ASTMethodDeclaration extends SimpleNode {
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
-  }
-  
-  int modifiers;
-  
-  public void setModifiers(int modifiers) {
-	  this.modifiers = modifiers;
-  }
-  
-  public int getModifiers() {
-	  return modifiers;
   }
   
   public String toString()

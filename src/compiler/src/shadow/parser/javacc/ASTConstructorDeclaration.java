@@ -2,25 +2,18 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.MethodSignature;
+
 public
 @SuppressWarnings("all")
-class ASTConstructorDeclaration extends SimpleNode {
+class ASTConstructorDeclaration extends SignatureNode {	
+	
   public ASTConstructorDeclaration(int id) {
     super(id);
   }
 
   public ASTConstructorDeclaration(ShadowParser p, int id) {
     super(p, id);
-  }
-
-  int modifiers;
-  
-  public int getModifiers() {
-	  return modifiers;
-  }
-  
-  public void setModifiers(int modifiers) {
-	  this.modifiers = modifiers;
   }
 
   /** Accept the visitor. **/
