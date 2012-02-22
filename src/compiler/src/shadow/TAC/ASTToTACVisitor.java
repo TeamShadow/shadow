@@ -2,7 +2,6 @@
 package shadow.TAC;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
 
 import shadow.AST.ASTWalker.WalkType;
@@ -32,8 +31,7 @@ import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBlockStatement;
 import shadow.parser.javacc.ASTBooleanLiteral;
-import shadow.parser.javacc.ASTClassOrInterfaceBodyDeclaration;
-import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTCastExpression;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -129,7 +127,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 	 * @return A new temporary symbol.
 	 */
 	static public String getTempSymbol() {
-		return "temp_" + tempCounter++;
+		return "_Itemp" + tempCounter++;
 	}
 	
 	private static TACOperation symbol2Operation(char symbol) {
@@ -438,7 +436,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		// link in the method call
 		linkToEnd(node, call);
 		
-		if (call.getReturnCount() > 0)
+		if (call.getReturnCount() == 1)
 			linkToEnd(node, new TACNoOp(node, call.getReturn(0), call, null));
 		
 		return WalkType.POST_CHILDREN;
@@ -664,6 +662,26 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTCastExpression node, Boolean secondVisit) throws ShadowException {
+		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+			return WalkType.POST_CHILDREN;
+		
+		SimpleNode src = (SimpleNode)node.jjtGetChild(1);
+		TACNode srcExit = src.getExitNode();
+		TACVariable srcVar = srcExit.getVariable();
+		linkToEnd(node, src.getEntryNode(), srcExit);
+		
+		TACVariable destVar = new TACVariable(getTempSymbol(), node.jjtGetChild(0).getType());
+		
+		TACAllocation allocDest = new TACAllocation(node, destVar);
+		allocations.peek().add(allocDest);
+		
+		TACAssign assign = new TACAssign(node, destVar, srcVar);
+		linkToEnd(node, assign);
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -1115,6 +1133,60 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
+/*	public Object visit(ASTSequence node, Boolean secondVisit) throws ShadowException {
+		// on the first visit we need to add another list to our allocation stack
+		if(!secondVisit) {
+//			allocations.push(new ArrayList<TACAllocation>());
+			return WalkType.POST_CHILDREN;
+		}
+		
+//		// first link in the allocations on the top of the stack
+//		ArrayList<TACAllocation> allocs = allocations.pop();
+//
+//		if(allocs.size() != 0) {
+//			int j = 0;
+//
+//			// link in the first allocation
+//			linkToEnd(node, allocs.get(j));
+//			
+//			// link in the allocations for this block
+//			for(++j; j < allocs.size(); ++j) {
+//				TACNode alloc1 = allocs.get(j-1);
+//				TACNode alloc2 = allocs.get(j);
+//				
+//				alloc1.setNext(alloc2);
+//				alloc2.setParent(alloc1);
+//				
+//				linkToEnd(node, alloc2);
+//			}
+//			
+//			// link the last one to the block nodes
+//			TACNode lastAlloc = allocs.get(j-1);
+//			SimpleNode blockStmt = (SimpleNode)node.jjtGetChild(0);
+//			
+//			lastAlloc.setNext(blockStmt.getEntryNode());
+//			blockStmt.getEntryNode().setParent(lastAlloc);
+//		}
+
+		// go through all the BlockStatements and link them in
+		for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+			SimpleNode blockStmt = (SimpleNode)node.jjtGetChild(i);
+			
+//			ASTUtils.DEBUG(blockStmt, "ENTRY: " + blockStmt.getEntryNode());
+			
+//			blockStmt.getEntryNode().dump("BLK STMT: ");
+			
+			// link in the actual statement
+			linkToEnd(node, blockStmt.getEntryNode(), blockStmt.getExitNode());
+			
+//			((SimpleNode)node).getEntryNode().dump("BLOCK: ");
+		}
+		
+//		((SimpleNode)node).getEntryNode().dump("BLOCK: ");
+		
+		return WalkType.POST_CHILDREN;
+	}*/
+	
 	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
 			return WalkType.POST_CHILDREN;
@@ -1222,7 +1294,26 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		
 		// this is prob wrong because we use the full AST now
 		if(lhsNode instanceof ASTSequence) {
-			return WalkType.NO_CHILDREN;	// TODO: Implement this
+			SimpleNode rhsNode = (SimpleNode)node.jjtGetChild(1);
+			TACMethodCall rhsExitNode = (TACMethodCall)rhsNode.getExitNode();
+			
+			for ( int i = 0; i < rhsExitNode.getReturnCount(); i++ )
+			{
+				SimpleNode lhsChildNode = (SimpleNode)lhsNode.jjtGetChild(i);
+			
+				// link in the LHS & RHS
+				TACNode lhsExitNode = lhsChildNode.getExitNode();
+			
+				linkToEnd(node, lhsChildNode.getEntryNode(), lhsExitNode);
+				if (i == 0)
+					linkToEnd(node, rhsNode.getEntryNode(), rhsExitNode); // link the method call in the middle
+			
+				TACVariable lhs = lhsExitNode.getVariable();
+				TACVariable rhs = rhsExitNode.getReturn(i);
+				TACNode assign = new TACAssign(node, lhs, rhs);
+				
+				linkToEnd(node, assign);	// link the next assign to the end
+			}
 		} else if(node.jjtGetNumChildren() == 3) { // assignment statement
 			ASTAssignmentOperator assignNode = (ASTAssignmentOperator)node.jjtGetChild(1);
 			SimpleNode rhsNode = (SimpleNode)node.jjtGetChild(2);

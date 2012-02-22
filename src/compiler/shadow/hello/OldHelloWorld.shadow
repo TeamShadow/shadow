@@ -1,6 +1,8 @@
-package youngjl;
+package shadow.hello;
 
-class HelloWorld
+import shadow.io@Console;
+
+class OldHelloWorld
 {
 
 	public constructor()
@@ -40,7 +42,7 @@ class HelloWorld
 		new HelloWorld(0, 1);*/
 	}
 
-	public static test(uint start, uint end) => (int)
+	public static test(uint start, uint end) => ()
 	{
 		for (uint i = start; i <= end; i += 1u) {
 			Console.print(i);

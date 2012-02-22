@@ -1,0 +1,11 @@
+class Cast
+{
+	public method() => ()
+	{
+		uint i = 0u;
+		int j = cast<int>(i);
+		int k = cast<int>(i + 0);
+		int l = cast<int>(0 + i); // this works
+		int m = 0 + i; // and so does this
+	}
+}

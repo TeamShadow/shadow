@@ -1,7 +1,0 @@
-class Trouble {
-
-	public method () => ()
-	{
-		Subtype.figface();
-	}
-}

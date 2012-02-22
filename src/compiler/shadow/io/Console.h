@@ -1,4 +1,5 @@
 #include "stdio.h"
+#include "string.h"
 
 void _Pshadow_Pio_CConsole_Mprint_Rboolean(boolean_t z) {
 	printf(z ? "true" : "false");
@@ -114,4 +115,88 @@ void _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject(struct _Pshado
 
 void _Pshadow_Pio_CConsole_MprintLine(void) {
 	printf("\n");
+}
+
+boolean_t _Pshadow_Pio_CConsole_MreadBoolean(void) {
+	boolean_t z;
+	scanf("%hhi", &z);
+	return z;
+}
+
+ubyte_t _Pshadow_Pio_CConsole_MreadUByte(void) {
+	ubyte_t ub;
+	scanf("%hhi", &ub);
+	return ub;
+}
+
+byte_t _Pshadow_Pio_CConsole_MreadByte(void) {
+	byte_t b;
+	scanf("%hhi", &b);
+	return b;
+}
+
+ushort_t _Pshadow_Pio_CConsole_MreadUShort(void) {
+	ushort_t us;
+	scanf("%hi", &us);
+	return us;
+}
+
+short_t _Pshadow_Pio_CConsole_MreadShort(void) {
+	short_t s;
+	scanf("%hi", &s);
+	return s;
+}
+
+uint_t _Pshadow_Pio_CConsole_MreadUInt(void) {
+	uint_t ui;
+	scanf("%i", &ui);
+	return ui;
+}
+
+int_t _Pshadow_Pio_CConsole_MreadInt(void) {
+	int_t i;
+	scanf("%i", &i);
+	return i;
+}
+
+ulong_t _Pshadow_Pio_CConsole_MreadULong(void) {
+	ulong_t ul;
+	scanf("%lli", &ul);
+	return ul;
+}
+
+long_t _Pshadow_Pio_CConsole_MreadLong(void) {
+	long_t l;
+	scanf("%lli", &l);
+	return l;
+}
+
+float_t _Pshadow_Pio_CConsole_MreadFloat(void) {
+	float_t f;
+	scanf("%f", &f);
+	return f;
+}
+
+double_t _Pshadow_Pio_CConsole_MreadDouble(void) {
+	double_t d;
+	scanf("%lg", &d);
+	return d;
+}
+
+code_t _Pshadow_Pio_CConsole_MreadCode(void) {
+	code_t c;
+	scanf("%lc", (wchar_t *)&c);
+	return c;
+}
+
+struct _Pshadow_Pstandard_CString* _Pshadow_Pio_CConsole_Mread(void) {
+	static char buffer[101];
+	static int length;
+	scanf("%100s%n", buffer, &length);
+	struct _Pshadow_Pstandard_CString *str = malloc(sizeof(struct _Pshadow_Pstandard_CString));
+	str->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
+	str->ascii = (boolean_t)0;
+	str->data = malloc(length + 1);
+	strcpy((char *)str->data, buffer);
+	return str;
 }

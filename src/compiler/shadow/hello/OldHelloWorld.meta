@@ -1,0 +1,47 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef OLDHELLOWORLD_META
+#define OLDHELLOWORLD_META
+
+#include "types.h"
+#include "stdlib.h"
+#include "shadow/standard/Object.meta"
+
+struct _Pshadow_Pio_CConsole;
+struct _Pshadow_Pstandard_CClass;
+struct _Pshadow_Pstandard_CString;
+
+struct _Pshadow_Pstandard_CClass _Pshadow_Phello_COldHelloWorld_Iclass;
+struct _Pshadow_Phello_COldHelloWorld_Itable;
+struct _Pshadow_Phello_COldHelloWorld_Itable _Pshadow_Phello_COldHelloWorld_Imethods;
+struct _Pshadow_Phello_COldHelloWorld {
+     struct _Pshadow_Phello_COldHelloWorld_Itable *_Imethods;
+     
+     /* Fields */
+};
+
+
+
+
+
+
+struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_COldHelloWorld_MgetClass(struct _Pshadow_Phello_COldHelloWorld* this);
+void _Pshadow_Phello_COldHelloWorld_Mtest_Ruint_Ruint(uint_t, uint_t);
+uint_t _Pshadow_Phello_COldHelloWorld_Mfactorial_Ruint(uint_t);
+void _Pshadow_Phello_COldHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString**);
+void _Pshadow_Phello_COldHelloWorld_Mconstructor(struct _Pshadow_Phello_COldHelloWorld*);
+void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint(struct _Pshadow_Phello_COldHelloWorld*, int_t);
+void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(struct _Pshadow_Phello_COldHelloWorld*, int_t, int_t);
+
+struct _Pshadow_Phello_COldHelloWorld_Itable {
+     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_COldHelloWorld*);
+     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+     void (*_Mtest_Ruint_Ruint)(uint_t, uint_t);
+     uint_t (*_Mfactorial_Ruint)(uint_t);
+     void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
+};
+
+#include "shadow/io/Console.meta"
+#include "shadow/standard/Class.meta"
+#include "shadow/standard/String.meta"
+
+#endif

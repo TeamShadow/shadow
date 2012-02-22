@@ -2,6 +2,7 @@ package shadow.io;
 
 class Console
 {
+
 	private constructor() {}
 
 	public static native print( boolean z ) => ();
@@ -18,6 +19,7 @@ class Console
 	public static native print( code c ) => ();
 	public static native print( String str ) => ();
 	public static native print( Object obj ) => ();
+
 	public static native printLine( boolean z ) => ();
 	public static native printLine( ubyte ub ) => ();
 	public static native printLine( byte b ) => ();
@@ -33,4 +35,19 @@ class Console
 	public static native printLine( String str ) => ();
 	public static native printLine( Object obj ) => ();
 	public static native printLine() => ();
+
+	public static native readBoolean() => ( boolean );
+	public static native readUByte() => ( ubyte );
+	public static native readByte() => ( byte );
+	public static native readUShort() => ( ushort );
+	public static native readShort() => ( short );
+	public static native readUInt() => ( uint );
+	public static native readInt() => ( int );
+	public static native readULong() => ( ulong );
+	public static native readLong() => ( long );
+	public static native readFloat() => ( float );
+	public static native readDouble() => ( double );
+	public static native readCode() => ( code );
+	public static native read() => ( String );
+
 }

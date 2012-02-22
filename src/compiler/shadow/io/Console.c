@@ -20,6 +20,9 @@ struct _Pshadow_Pstandard_CClass* _Pshadow_Pio_CConsole_MgetClass(struct _Pshado
 struct _Pshadow_Pio_CConsole_Itable _Pshadow_Pio_CConsole_Imethods = {
      _Pshadow_Pio_CConsole_MgetClass,
      _Pshadow_Pstandard_CObject_MtoString,
+     _Pshadow_Pio_CConsole_MreadInt,
+     _Pshadow_Pio_CConsole_MreadULong,
+     _Pshadow_Pio_CConsole_MreadLong,
      _Pshadow_Pio_CConsole_MprintLine_Rboolean,
      _Pshadow_Pio_CConsole_MprintLine_Rubyte,
      _Pshadow_Pio_CConsole_MprintLine_Rbyte,
@@ -35,6 +38,7 @@ struct _Pshadow_Pio_CConsole_Itable _Pshadow_Pio_CConsole_Imethods = {
      _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString,
      _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject,
      _Pshadow_Pio_CConsole_MprintLine,
+     _Pshadow_Pio_CConsole_MreadShort,
      _Pshadow_Pio_CConsole_Mprint_Rboolean,
      _Pshadow_Pio_CConsole_Mprint_Rubyte,
      _Pshadow_Pio_CConsole_Mprint_Rbyte,
@@ -49,6 +53,15 @@ struct _Pshadow_Pio_CConsole_Itable _Pshadow_Pio_CConsole_Imethods = {
      _Pshadow_Pio_CConsole_Mprint_Rcode,
      _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString,
      _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CObject,
+     _Pshadow_Pio_CConsole_MreadBoolean,
+     _Pshadow_Pio_CConsole_MreadDouble,
+     _Pshadow_Pio_CConsole_MreadUByte,
+     _Pshadow_Pio_CConsole_MreadUInt,
+     _Pshadow_Pio_CConsole_Mread,
+     _Pshadow_Pio_CConsole_MreadFloat,
+     _Pshadow_Pio_CConsole_MreadByte,
+     _Pshadow_Pio_CConsole_MreadCode,
+     _Pshadow_Pio_CConsole_MreadUShort,
 };
 
 #include "shadow/io/Console.h"

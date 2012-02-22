@@ -44,5 +44,5 @@ Bill: Native blocks
 - Null pointer checking
 - Inheritance & interface implementation (interfaces are type-check only, right?) (BJW: Not entirely)
 - Exceptions
-- Native code blocks so we can generate a CLib
+- Native code blocks so we can generate a CLib (DONE)
 - Explicit delete

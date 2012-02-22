@@ -208,6 +208,11 @@ public class TypeCheckerTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
+	@Test public void testTest() throws Exception {
+		args.add("tests/compile/Test.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
 	@Test public void testVariableDeclaration() throws Exception {
 		args.add("tests/compile/VariableDeclaration.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));

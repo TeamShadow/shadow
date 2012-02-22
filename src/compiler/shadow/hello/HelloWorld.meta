@@ -28,10 +28,14 @@ struct _Pshadow_Phello_CHelloWorld {
 
 
 
+
+
 struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_CHelloWorld_MgetClass(struct _Pshadow_Phello_CHelloWorld* this);
+uint_t _Pshadow_Phello_CHelloWorld_MgetBoth(struct _Pshadow_Phello_CHelloWorld*, struct _Pshadow_Pstandard_CString**);
 struct _Pshadow_Pstandard_CString* _Pshadow_Phello_CHelloWorld_MgetMessage(struct _Pshadow_Phello_CHelloWorld*);
 void _Pshadow_Phello_CHelloWorld_Mdoit(struct _Pshadow_Phello_CHelloWorld*);
 uint_t _Pshadow_Phello_CHelloWorld_MgetTimes(struct _Pshadow_Phello_CHelloWorld*);
+uint_t _Pshadow_Phello_CHelloWorld_Mfibonacci_Ruint_Ruint(uint_t, uint_t, uint_t*, uint_t*, uint_t*, uint_t*, uint_t*, uint_t*, uint_t*, uint_t*, struct _Pshadow_Pstandard_CString**, uint_t*, struct _Pshadow_Pstandard_CObject**);
 void _Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString**);
 void _Pshadow_Phello_CHelloWorld_Mconstructor(struct _Pshadow_Phello_CHelloWorld*);
 void _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint(struct _Pshadow_Phello_CHelloWorld*, uint_t);
@@ -41,9 +45,11 @@ void _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint_R_Pshadow_Pstandard_CString(
 struct _Pshadow_Phello_CHelloWorld_Itable {
      struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_CHelloWorld*);
      struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+     uint_t (*_MgetBoth)(struct _Pshadow_Phello_CHelloWorld*, struct _Pshadow_Pstandard_CString**);
      struct _Pshadow_Pstandard_CString* (*_MgetMessage)(struct _Pshadow_Phello_CHelloWorld*);
      void (*_Mdoit)(struct _Pshadow_Phello_CHelloWorld*);
      uint_t (*_MgetTimes)(struct _Pshadow_Phello_CHelloWorld*);
+     uint_t (*_Mfibonacci_Ruint_Ruint)(uint_t, uint_t, uint_t*, uint_t*, uint_t*, uint_t*, uint_t*, uint_t*, uint_t*, uint_t*, struct _Pshadow_Pstandard_CString**, uint_t*, struct _Pshadow_Pstandard_CObject**);
      void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
 };
 

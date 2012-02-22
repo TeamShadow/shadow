@@ -10,11 +10,11 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CObject_Iclass = {
 };
 
 struct _Pshadow_Pstandard_CString* _Pshadow_Pstandard_CObject_MtoString(struct _Pshadow_Pstandard_CObject* this) {
-     struct _Pshadow_Pstandard_CClass* temp_0;                                   /* (10:17) */
-     temp_0 = this->_Imethods->_MgetClass(this);                                 /* (10:17) */
-     struct _Pshadow_Pstandard_CString* temp_1;                                  /* (10:34) */
-     temp_1 = temp_0->_Imethods->_MtoString(temp_0);                             /* (10:34) */
-     return temp_1;                                                              /* (9:9) */
+     struct _Pshadow_Pstandard_CClass* _Itemp0;                                  /* (10:17) */
+     _Itemp0 = this->_Imethods->_MgetClass(this);                                /* (10:17) */
+     struct _Pshadow_Pstandard_CString* _Itemp1;                                 /* (10:34) */
+     _Itemp1 = _Itemp0->_Imethods->_MtoString(_Itemp0);                          /* (10:34) */
+     return _Itemp1;                                                             /* (9:9) */
 }
 
 void _Pshadow_Pstandard_CObject_Mconstructor(struct _Pshadow_Pstandard_CObject* this) {
