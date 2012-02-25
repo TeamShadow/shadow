@@ -1,8 +1,0 @@
-class Increment
-{
-	public method() => ()
-	{
-		int i = 0;
-		i++;
-	}
-}

@@ -75,10 +75,9 @@ import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTSwitchStatement;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArguments;
-import shadow.parser.javacc.ASTTypeBound;
-import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
+import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
@@ -92,7 +91,6 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
 
@@ -616,6 +614,12 @@ public class ClassChecker extends BaseChecker {
 			{
 				if( result.isSubtype( current ))  //upgrades type to broader type (e.g. int goes to double)
 					result = current;
+				else if( !current.isSubtype(result) )
+				{
+					addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot apply arithmetic operations to " + result + " and " + current);
+					node.setType(Type.UNKNOWN);
+					return;					
+				}					
 			}
 			else		
 			{
@@ -1121,6 +1125,9 @@ public class ClassChecker extends BaseChecker {
 					node.setType(Type.UNKNOWN);
 				}				
 			}			
+			else if( t1.isNumerical() && t2.isNumerical() ) //some numerical types (int and uint) are not superclasses or subclasses of each other
+															//for convenience, all numerical types should be castable
+				node.setType(t1);
 			else if( t1.isSubtype(t2) || t2.isSubtype(t1) )
 				node.setType(t1);
 			else
@@ -1306,6 +1313,7 @@ public class ClassChecker extends BaseChecker {
 	{
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
+	
 		
 		int children = node.jjtGetNumChildren();
 		
@@ -1378,6 +1386,17 @@ public class ClassChecker extends BaseChecker {
 					node.setType( returnTypes.get(0));
 				else
 					node.setType( new SequenceType( returnTypes ));
+			}
+			else if( child instanceof ASTUnqualifiedName )
+			{
+				node.setImage(child.getImage() + "@" + node.getImage());
+				String name = node.getImage();
+				if( !setTypeFromName( node, name )) //automatically sets type if can
+				{
+					addError(node, Error.UNDEC_VAR, name);
+					node.setType(Type.UNKNOWN);
+					ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);						
+				}
 			}
 			else
 			{

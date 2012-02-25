@@ -27,11 +27,11 @@ import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPackageDeclaration;
+import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
-import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
@@ -387,6 +387,26 @@ public class TypeCollector extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}	
 	
+	
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )
+		{
+			if( node.jjtGetNumChildren() > 0 ) 
+			{
+				Node child = node.jjtGetChild(0);				
+				//triggers an import
+				if( child instanceof ASTUnqualifiedName )
+				{
+					String name = child.getImage() + "@" +  node.getImage();
+					if( !addImport( name ) )
+						addError(node, "No file found for import " + name);
+				}
+			}
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
 	{		
 		if( secondVisit )
@@ -624,90 +644,97 @@ public class TypeCollector extends BaseChecker
 	}
 	
 	
+	public boolean addImport( String name )
+	{
+		String separator = File.separator; //platform independence, we hope 
+		if( separator.equals("\\"))
+			separator = "\\\\";
+		String path = name.replaceAll("\\.", separator);
+		List<File> importPaths = Configuration.getInstance().getImports();
+		boolean success = false;				
+		
+		if( importPaths != null && importPaths.size() > 0 )
+		{
+			for( File importPath : importPaths )
+			{	
+				if( !path.contains("@"))  //no @, must be a whole package import
+				{		
+					File fullPath = new File( importPath, path );
+					if( fullPath.isDirectory() )
+					{
+						File[] matchingShadow = fullPath.listFiles( new FilenameFilter(){							
+							@Override
+							public boolean accept(File dir, String name)
+							{
+								return name.endsWith(".shadow");
+							}    }   );
+						
+
+						File[] matchingMeta = fullPath.listFiles( new FilenameFilter(){							
+							@Override
+							public boolean accept(File dir, String name)
+							{
+								return name.endsWith(".meta");
+							}    }   );
+						
+						for( File file : matchingShadow )
+						{
+							String prefix = file.getName().substring(0, file.getName().lastIndexOf(".shadow"));
+							File metaVersion = new File( file.getParent(), prefix + ".meta"  );
+							if( metaVersion.exists() && metaVersion.lastModified() >= file.lastModified() )
+								importList.add(metaVersion);
+							else
+								importList.add(file);
+						}
+						
+						for( File file : matchingMeta )
+							if( !importList.contains(file))
+								importList.add(file);
+						
+						success = true;						
+					}
+				}
+				else
+				{
+					path = path.replaceAll("@", separator);
+					File shadowVersion = new File( importPath, path + ".shadow" );
+					File metaVersion = new File( importPath, path + ".meta" );
+					if( shadowVersion.exists() )
+					{
+//						if( metaVersion.exists() && metaVersion.lastModified() >= shadowVersion.lastModified() )												
+//							importList.add(metaVersion);
+//						else
+							importList.add(shadowVersion);	
+						
+						success = true;						
+					}
+//					else if( metaVersion.exists() )
+//					{
+//						importList.add(metaVersion);							
+//						success = true;						
+//					}
+				}
+				
+				if( success )
+					return true;
+			}	
+			
+		}
+		else
+			addError(Error.UNDEF_TYP, "No import paths specified, cannot import " + name);
+		
+		return false;
+	}
+	
+	
 	
 	@Override
 	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
 		if( secondVisit )
 		{
 			String name = node.jjtGetChild(0).getImage();
-			String separator = File.separator; //platform independence, we hope 
-			if( separator.equals("\\"))
-				separator = "\\\\";
-			String path = name.replaceAll("\\.", separator);
-			List<File> importPaths = Configuration.getInstance().getImports();
-			boolean success = false;				
-			
-			if( importPaths != null && importPaths.size() > 0 )
-			{
-				for( File importPath : importPaths )
-				{	
-					if( !path.contains("@"))  //no @, must be a whole package import
-					{		
-						File fullPath = new File( importPath, path );
-						if( fullPath.isDirectory() )
-						{
-							File[] matchingShadow = fullPath.listFiles( new FilenameFilter(){							
-								@Override
-								public boolean accept(File dir, String name)
-								{
-									return name.endsWith(".shadow");
-								}    }   );
-							
-	
-							File[] matchingMeta = fullPath.listFiles( new FilenameFilter(){							
-								@Override
-								public boolean accept(File dir, String name)
-								{
-									return name.endsWith(".meta");
-								}    }   );
-							
-							for( File file : matchingShadow )
-							{
-								String prefix = file.getName().substring(0, file.getName().lastIndexOf(".shadow"));
-								File metaVersion = new File( file.getParent(), prefix + ".meta"  );
-								if( metaVersion.exists() && metaVersion.lastModified() >= file.lastModified() )
-									importList.add(metaVersion);
-								else
-									importList.add(file);
-							}
-							
-							for( File file : matchingMeta )
-								if( !importList.contains(file))
-									importList.add(file);
-							
-							success = true;						
-						}
-					}
-					else
-					{
-						path = path.replaceAll("@", separator);
-						File shadowVersion = new File( importPath, path + ".shadow" );
-						File metaVersion = new File( importPath, path + ".meta" );
-						if( shadowVersion.exists() )
-						{
-//							if( metaVersion.exists() && metaVersion.lastModified() >= shadowVersion.lastModified() )												
-//								importList.add(metaVersion);
-//							else
-								importList.add(shadowVersion);	
-							
-							success = true;						
-						}
-//						else if( metaVersion.exists() )
-//						{
-//							importList.add(metaVersion);							
-//							success = true;						
-//						}
-					}
-					
-					if( success )
-						break;
-				}			
-				
-				if( !success )
-					addError(node, "No file found for import " + name);
-			}
-			else
-				addError(node, "No import paths specified, cannot import " + name);						
+			if( !addImport( name ) )
+				addError(node, "No file found for import " + name);		
 		}
 		
 		return WalkType.POST_CHILDREN;
