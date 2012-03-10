@@ -38,7 +38,7 @@ public class SimpleTest
 		
 		
 		//add desired files to list
-		args.add("quarantine/InlinePackageName.shadow"); 		
+		args.add("quarantine/Checking.shadow"); 		
 		int error = Main.test(args.toArray(new String[] { }));
 		System.out.println("Error code: " + error);
 	}

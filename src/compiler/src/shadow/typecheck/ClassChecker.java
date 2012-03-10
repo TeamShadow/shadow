@@ -55,6 +55,7 @@ import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
+import shadow.parser.javacc.ASTModifiers;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
@@ -232,8 +233,8 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException
 	{
 		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-				
+			return WalkType.POST_CHILDREN; 
+			
 		node.setType( node.jjtGetChild(0).getType() );		
 	
 		return WalkType.POST_CHILDREN;
@@ -269,6 +270,7 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
+		
 
 		// 	get the var's type
 		Type type = node.jjtGetChild(0).getType();

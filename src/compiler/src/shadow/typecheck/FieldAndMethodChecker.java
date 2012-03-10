@@ -22,6 +22,7 @@ import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
+import shadow.parser.javacc.ASTModifiers;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
@@ -207,6 +208,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 			if( ModifierSet.isWeak(modifiers) ) 
 			{			
 				addError(node, Error.INVL_MOD, "Methods cannot be declared with the weak modifier" );
+				success = false;
+			}
+			
+			if( ModifierSet.isNullable(modifiers) ) 
+			{			
+				addError(node, Error.INVL_MOD, "Methods cannot be declared with the nullable modifier" );
 				success = false;
 			}
 		}		
@@ -459,15 +466,17 @@ public class FieldAndMethodChecker extends BaseChecker {
 				if(signature.containsParam(paramSymbol)) {
 					addError(parameter.jjtGetChild(1), Error.MULT_SYM, "In parameter names");
 					return false;	// we're done with this node
-				}
+				}				
+				
+				Node child = parameter.jjtGetChild(0);			
 				
 				// get the type of the parameter
-				parameter.setType(parameter.jjtGetChild(0).getType());
+				parameter.setType(child.getType());
 				
 				// make sure this type is in the type table
 				if(parameter.getType() == null)
 				{
-					addError(parameter.jjtGetChild(0), Error.UNDEF_TYP);
+					addError(child, Error.UNDEF_TYP);
 					return false;
 				}
 					

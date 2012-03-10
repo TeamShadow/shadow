@@ -1,0 +1,14 @@
+class Checking
+{
+	public static danger(nullable String s) => (String)
+	{
+		check( s )
+		{
+			return s.toString();
+		}
+		recover
+		{
+			return "";		
+		}
+	}
+}
