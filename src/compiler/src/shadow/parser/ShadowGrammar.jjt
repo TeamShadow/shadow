@@ -1309,9 +1309,8 @@ void Literal() :
 | t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UINT); }
 | t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.ULONG); }
 | BooleanLiteral() { jjtThis.setLiteral(Literal.BOOLEAN); }
-| NullLiteral() { jjtThis.setLiteral(Literal.NULL); }  )
-  
-  //what about longs, shorts, floats, unsigned versions etc.?
+| NullLiteral() { jjtThis.setLiteral(Literal.NULL); jjtThis.addModifier(ModifierSet.NULLABLE); }  )
+
  /* OLD:
   t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
 | t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.DOUBLE); }
@@ -1480,8 +1479,7 @@ void EmptyStatement():
 void StatementExpression():
 /*
  * The last expansion of this production accepts more than the legal
- * Shadow expansions for StatementExpression.  This expansion does not
- * use PostfixExpression for performance reasons.
+ * Shadow expansions for StatementExpression.
  */
 { debugPrint("STATEMENT EXPRESSION"); }
 {
