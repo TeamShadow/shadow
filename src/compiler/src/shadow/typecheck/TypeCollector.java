@@ -345,27 +345,30 @@ public class TypeCollector extends BaseChecker
 	{		
 		if( secondVisit )
 		{			
-			boolean dot = true;
-			Node child = node.jjtGetChild(0);
-			String name = child.getImage();
-			if( child instanceof ASTUnqualifiedName )
+			if ( node.jjtGetNumChildren() > 0)
 			{
-				name += "@";
-				dot = false;
-			}
-			
-			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) 
-			{	
-				if( dot )
-					name += ".";
-				else
-					dot = true;
+				boolean dot = true;
+				Node child = node.jjtGetChild(0);
+				String name = child.getImage();
+				if( child instanceof ASTUnqualifiedName )
+				{
+					name += "@";
+					dot = false;
+				}
 				
-				child = node.jjtGetChild(i);
-				name += child.getImage();					
+				for( int i = 1; i < node.jjtGetNumChildren(); i++ ) 
+				{	
+					if( dot )
+						name += ".";
+					else
+						dot = true;
+					
+					child = node.jjtGetChild(i);
+					name += child.getImage();					
+				}
+				
+				node.setImage(name);
 			}
-			
-			node.setImage(name);
 		}
 		return WalkType.POST_CHILDREN;
 	}

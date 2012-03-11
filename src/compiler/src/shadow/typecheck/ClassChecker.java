@@ -3,6 +3,7 @@ package shadow.typecheck;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,6 +27,7 @@ import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBreakStatement;
 import shadow.parser.javacc.ASTCastExpression;
+import shadow.parser.javacc.ASTCheckStatement;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -55,7 +57,6 @@ import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
-import shadow.parser.javacc.ASTModifiers;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
@@ -65,7 +66,6 @@ import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
-import shadow.parser.javacc.ASTReturnStatement;
 import shadow.parser.javacc.ASTRightRotate;
 import shadow.parser.javacc.ASTRightShift;
 import shadow.parser.javacc.ASTRotateExpression;
@@ -74,6 +74,7 @@ import shadow.parser.javacc.ASTShiftExpression;
 import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTSwitchStatement;
+import shadow.parser.javacc.ASTTryStatement;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTUnaryExpression;
@@ -92,6 +93,7 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.Type.Kind;
 import shadow.typecheck.type.UnboundMethodType;
 
 
@@ -104,13 +106,14 @@ public class ClassChecker extends BaseChecker {
 	protected Node curMethod = null;   /** Current method (only a single reference needed since Shadow does not allow methods to be defined inside of methods) */
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
-	
+	protected LinkedList<HashSet<LinkedList<String>>> checkedVariables; /** List of scopes of nullable variable representations that have been checked */
 	
 	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, Node>>();
 		curPrefix = new LinkedList<Node>();
 		labels = new LinkedList<Node>();
+		checkedVariables = new LinkedList<HashSet<LinkedList<String>>>();
 	}
 	
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
@@ -1253,39 +1256,53 @@ public class ClassChecker extends BaseChecker {
 	}	
 	
 	
-	public Object visit(ASTReturnStatement node, Boolean secondVisit) throws ShadowException 
+	public Object visit(ASTTryStatement node, Boolean secondVisit) throws ShadowException 
 	{		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-	
-		//make sure matches method return types
-		
-		
-		if( node.jjtGetNumChildren() == 0 )
+		if(secondVisit)
 		{
-			if( !((MethodType)curMethod.getType()).returnsNothing())		
-				addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " must return something");
-		}
-		else
-		{	
-			Node child = node.jjtGetChild(0);
-			
-			if( child instanceof ASTSequence )
-			{
-				SequenceType type = (SequenceType)(child.getType());
-				if( !((MethodType)curMethod.getType()).canReturn(type.getTypes()))		
-					addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " cannot return " + type );
-			}
+			if( node.jjtGetNumChildren() < 2 )
+				addError( node, Error.TYPE_MIS, "try statement must have at least one catch or finally block" );
 			else
-			{				
-				if( !((MethodType)curMethod.getType()).canReturn(child.getType()))		
-					addError(node, Error.TYPE_MIS, "Method with signature " + curMethod + " cannot return " + child.getType() );				
-			}
-		}
+			{
+				int i = 1; //start at first catch or finally block
+				Node child;
+				List<Type> types = new LinkedList<Type>();
+				
+				while( i < node.jjtGetNumChildren() && ((child = node.jjtGetChild(i)) instanceof ASTFormalParameter)  )
+				{
+					//catch statement
+					Type type = child.getType();
+					if( type.getKind() == Kind.EXCEPTION )
+					{
+						for( Type existing : types )
+							if( type.isSubtype(existing))
+							{
+								addError( child, Error.TYPE_MIS, "unreachable catch: " + type );
+								break;
+							}						
+					}
+					else
+						addError( child, Error.TYPE_MIS, "found " + type + "but only exception types allowed for catch parameters");
+					
+					i += 2; //skip block after catch parameter
+				}
+				
+				//no checking necessary for finally 
+			}						
+		}	
 		
 		return WalkType.POST_CHILDREN;
-	}	
+	}
+	
+	public Object visit(ASTCheckStatement node, Boolean secondVisit) throws ShadowException 
+	{		
+		if(secondVisit)
+			checkedVariables.removeFirst();
+		else
+			checkedVariables.addFirst(new HashSet<LinkedList<String>>());			
+		
+		return WalkType.POST_CHILDREN;
+	}
 	
 	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException 
 	{
@@ -1304,6 +1321,71 @@ public class ClassChecker extends BaseChecker {
 		{
 			node.setType(node.jjtGetChild(0).getType());
 			pushUpModifiers( node ); 			
+		}
+		
+		if( node.jjtGetParent() instanceof ASTCheckStatement )
+		{
+			//add to checked variables scope
+			Type type = node.getType();
+			
+			if( ModifierSet.isNullable(node.getModifiers()) )
+			{
+				LinkedList<String> representation = new LinkedList<String>();
+				boolean legal = true;
+				
+				for( int i = 0; i < node.jjtGetNumChildren() && legal; i++ )
+				{
+					Node child = node.jjtGetChild(i);					
+					
+					if( child instanceof ASTAllocationExpression )
+					{
+						addError( child, Error.TYPE_MIS, "cannot use allocation expression in check parameter");
+						legal = false;
+					}
+					else if( child instanceof ASTPrimaryPrefix )
+					{
+						/*
+						   Literal()
+| "this" { jjtThis.setImage("this"); }
+| "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
+| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
+| LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
+| LOOKAHEAD(2) MethodCall()
+| [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+						 */
+						if( child.jjtGetNumChildren() == 0 ) //this or super.something or simple variable
+							representation.addLast(child.getImage());
+						else
+						{
+							Node grandchild = child.jjtGetChild(0);
+							if( grandchild instanceof ASTConditionalExpression )
+							{
+								addError( grandchild, Error.TYPE_MIS, "cannot put conditional expression in check parameter");
+								legal = false;								
+							}
+							else if( grandchild instanceof ASTResultType )
+							{
+								addError( grandchild, Error.TYPE_MIS, "cannot use .class expression in check parameter");
+								legal = false;								
+							}
+							else if( grandchild instanceof ASTMethodCall )
+							{
+								addError( grandchild, Error.TYPE_MIS, "cannot use method call in check parameter");
+								legal = false;
+							}
+							else if( grandchild instanceof ASTUnqualifiedName )
+							{
+								representation.addLast(grandchild.getImage() + "@");
+								representation.addLast(child.getImage());
+							}
+						}						
+					}
+					else //ASTPrimarySuffix
+					{
+						
+					}
+				}				
+			}
 		}
 		
 		curPrefix.removeFirst();  //pop prefix type off stack
