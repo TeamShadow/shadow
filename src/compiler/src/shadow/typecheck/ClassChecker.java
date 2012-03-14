@@ -27,7 +27,7 @@ import shadow.parser.javacc.ASTBitwiseOrExpression;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBreakStatement;
 import shadow.parser.javacc.ASTCastExpression;
-import shadow.parser.javacc.ASTCheckStatement;
+import shadow.parser.javacc.ASTCheckExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -106,14 +106,14 @@ public class ClassChecker extends BaseChecker {
 	protected Node curMethod = null;   /** Current method (only a single reference needed since Shadow does not allow methods to be defined inside of methods) */
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
-	protected LinkedList<HashSet<LinkedList<String>>> checkedVariables; /** List of scopes of nullable variable representations that have been checked */
+	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */
 	
 	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, Node>>();
 		curPrefix = new LinkedList<Node>();
-		labels = new LinkedList<Node>();
-		checkedVariables = new LinkedList<HashSet<LinkedList<String>>>();
+		labels = new LinkedList<Node>();	
+		tryBlocks = new LinkedList<ASTTryStatement>();
 	}
 	
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
@@ -1260,22 +1260,23 @@ public class ClassChecker extends BaseChecker {
 	{		
 		if(secondVisit)
 		{
-			if( node.jjtGetNumChildren() < 2 )
-				addError( node, Error.TYPE_MIS, "try statement must have at least one catch or finally block" );
+			if( node.getBlocks() == 0 )
+				addError( node, Error.TYPE_MIS, "try statement must have at least one catch, recover, or finally block" );
 			else
-			{
-				int i = 1; //start at first catch or finally block
+			{				
 				Node child;
 				List<Type> types = new LinkedList<Type>();
 				
-				while( i < node.jjtGetNumChildren() && ((child = node.jjtGetChild(i)) instanceof ASTFormalParameter)  )
+				for( int i = 0; i < node.getCatches(); i++ )				
 				{
 					//catch statement
+					child = node.jjtGetChild(2*i); //formal parameter
+					
 					Type type = child.getType();
 					if( type.getKind() == Kind.EXCEPTION )
 					{
 						for( Type existing : types )
-							if( type.isSubtype(existing))
+							if( type.isSubtype(existing) )
 							{
 								addError( child, Error.TYPE_MIS, "unreachable catch: " + type );
 								break;
@@ -1283,23 +1284,50 @@ public class ClassChecker extends BaseChecker {
 					}
 					else
 						addError( child, Error.TYPE_MIS, "found " + type + "but only exception types allowed for catch parameters");
-					
-					i += 2; //skip block after catch parameter
 				}
 				
+				//no checking necessary for recover
+				
 				//no checking necessary for finally 
+				
+				tryBlocks.removeFirst();
 			}						
 		}	
+		else
+			tryBlocks.addFirst(node);
+			
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTCheckStatement node, Boolean secondVisit) throws ShadowException 
-	{		
-		if(secondVisit)
-			checkedVariables.removeFirst();
+	public Object visit(ASTCheckExpression node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )
+		{
+			Node child = node.jjtGetChild(0);
+			
+			if( ModifierSet.isNullable(child.getModifiers()) )				
+				node.setModifiers( ModifierSet.removeModifier(child.getModifiers(), ModifierSet.NULLABLE  ));			
+			else
+				addError( node, Error.TYPE_MIS, "check expression can only be used on an expression with a nullable type");
+			
+			node.setType(child.getType());
+		}
 		else
-			checkedVariables.addFirst(new HashSet<LinkedList<String>>());			
+		{
+			boolean found = false;
+			for( ASTTryStatement statement : tryBlocks )
+			{
+				if( statement.hasRecover() )
+				{
+					found = true;
+					break;
+				}				
+			}
+			
+			if( !found )
+				addError( node, Error.TYPE_MIS, "check expression not inside of try statement with recover block");
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -1321,72 +1349,7 @@ public class ClassChecker extends BaseChecker {
 		{
 			node.setType(node.jjtGetChild(0).getType());
 			pushUpModifiers( node ); 			
-		}
-		
-		if( node.jjtGetParent() instanceof ASTCheckStatement )
-		{
-			//add to checked variables scope
-			Type type = node.getType();
-			
-			if( ModifierSet.isNullable(node.getModifiers()) )
-			{
-				LinkedList<String> representation = new LinkedList<String>();
-				boolean legal = true;
-				
-				for( int i = 0; i < node.jjtGetNumChildren() && legal; i++ )
-				{
-					Node child = node.jjtGetChild(i);					
-					
-					if( child instanceof ASTAllocationExpression )
-					{
-						addError( child, Error.TYPE_MIS, "cannot use allocation expression in check parameter");
-						legal = false;
-					}
-					else if( child instanceof ASTPrimaryPrefix )
-					{
-						/*
-						   Literal()
-| "this" { jjtThis.setImage("this"); }
-| "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
-| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
-| LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
-| LOOKAHEAD(2) MethodCall()
-| [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-						 */
-						if( child.jjtGetNumChildren() == 0 ) //this or super.something or simple variable
-							representation.addLast(child.getImage());
-						else
-						{
-							Node grandchild = child.jjtGetChild(0);
-							if( grandchild instanceof ASTConditionalExpression )
-							{
-								addError( grandchild, Error.TYPE_MIS, "cannot put conditional expression in check parameter");
-								legal = false;								
-							}
-							else if( grandchild instanceof ASTResultType )
-							{
-								addError( grandchild, Error.TYPE_MIS, "cannot use .class expression in check parameter");
-								legal = false;								
-							}
-							else if( grandchild instanceof ASTMethodCall )
-							{
-								addError( grandchild, Error.TYPE_MIS, "cannot use method call in check parameter");
-								legal = false;
-							}
-							else if( grandchild instanceof ASTUnqualifiedName )
-							{
-								representation.addLast(grandchild.getImage() + "@");
-								representation.addLast(child.getImage());
-							}
-						}						
-					}
-					else //ASTPrimarySuffix
-					{
-						
-					}
-				}				
-			}
-		}
+		}		
 		
 		curPrefix.removeFirst();  //pop prefix type off stack
 		
@@ -1484,7 +1447,7 @@ public class ClassChecker extends BaseChecker {
 			}
 			else
 			{
-				node.setType( child.getType() ); 	//literal, conditionalexpression, allocation expression
+				node.setType( child.getType() ); 	//literal, conditionalexpression, allocation expression, check expression
 				pushUpModifiers( node ); 			
 			}
 		}

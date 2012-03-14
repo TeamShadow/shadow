@@ -2,9 +2,11 @@ class Checking
 {
 	public static danger(nullable String s) => (String)
 	{
-		check( s )
+		try
 		{
-			return s.toString();
+			//return cast<String>(s).toString();
+		
+			return check(s).toString();
 		}
 		recover
 		{
