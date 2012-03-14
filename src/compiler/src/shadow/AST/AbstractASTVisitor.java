@@ -3,7 +3,7 @@ package shadow.AST;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.*;
 
-public abstract class AbstractASTVisitor implements ShadowParserVisitor {
+public class AbstractASTVisitor implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(SimpleNode node, Boolean secondVisit) throws ShadowException {
@@ -385,13 +385,12 @@ public abstract class AbstractASTVisitor implements ShadowParserVisitor {
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
-	
+
 	@Override
 	public Object visit(ASTCheckExpression node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
-
 
 	@Override
 	public Object visit(ASTPrimaryExpression node, Boolean secondVisit)

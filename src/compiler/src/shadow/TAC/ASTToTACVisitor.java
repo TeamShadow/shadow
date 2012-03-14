@@ -20,10 +20,13 @@ import shadow.TAC.nodes.TACNode.TACComparison;
 import shadow.TAC.nodes.TACNode.TACOperation;
 import shadow.TAC.nodes.TACReturn;
 import shadow.TAC.nodes.TACTry;
+import shadow.TAC.nodes.TACUnaryOperation;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocationExpression;
 import shadow.parser.javacc.ASTArgumentList;
 import shadow.parser.javacc.ASTArguments;
+import shadow.parser.javacc.ASTArrayAllocation;
+import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
@@ -81,6 +84,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
@@ -130,7 +134,20 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return "_Itemp" + tempCounter++;
 	}
 	
-	private static TACOperation symbol2Operation(char symbol) {
+	private static TACOperation symbolToUnaryOperation(char symbol) {
+		switch(symbol) {
+		case '+':
+			return TACOperation.PLUS;
+		case '-':
+			return TACOperation.MINUS;
+		case '~':
+			return TACOperation.COMPLEMENT;
+		}
+		
+		return null;
+	}
+	
+	private static TACOperation symbolToBinaryOperation(char symbol) {
 		switch(symbol) {
 		case '+':
 			return TACOperation.ADDITION;
@@ -201,7 +218,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		allocations.peek().add(targetAlloc);	// add the allocation to our list
 		
 		// create a binary operator with the first two children
-		TACBinaryOperation newNode = new TACBinaryOperation(node, target, op1, op2, symbol2Operation(operators.charAt(0)));
+		TACBinaryOperation newNode = new TACBinaryOperation(node, target, op1, op2, symbolToBinaryOperation(operators.charAt(0)));
 		
 		// link in the node, setting the node's entry & exit if needed
 		linkToEnd(node, newNode);
@@ -223,7 +240,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 			allocations.peek().add(targetAlloc);	// add the allocation to our list
 
 			// create the operator and link it in
-			newNode = new TACBinaryOperation(node, target, op1, op2, symbol2Operation(operators.charAt(i-1)));
+			newNode = new TACBinaryOperation(node, target, op1, op2, symbolToBinaryOperation(operators.charAt(i-1)));
 			linkToEnd(node, newNode);	
 		}
 	}
@@ -400,7 +417,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		}
 		
 		if (!ModifierSet.isStatic(node.getType().getModifiers())) {
-			Node parent = call.getAstNode().jjtGetParent().jjtGetParent();
+			SimpleNode parent = (SimpleNode)node.jjtGetParent().jjtGetParent();
 			SimpleNode argNode;
 			TACVariable arg;
 			if ( node.jjtGetParent() != parent.jjtGetChild(0) ) {
@@ -538,8 +555,90 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 	}
 	
 	@Override
-	public Object visit(ASTConstructorInvocation node, Boolean secondVisit)
-			throws ShadowException {
+	public Object visit(ASTArrayAllocation node, Boolean secondVisit) throws ShadowException {
+		if (!secondVisit)
+			return WalkType.POST_CHILDREN;
+
+		TACNode start = new TACNoOp(node, null, null);
+		TACNoOp end = new TACNoOp(node, null, null);
+		linkToEnd(node, start, end);
+		
+		int index = 0;
+		Node initNodes = node.jjtGetChild(1);
+		Type currentType = node.getType();
+		while (index < initNodes.jjtGetNumChildren() && currentType instanceof ArrayType) {
+			TACVariable sizeVar = new TACVariable(getTempSymbol(), Type.INT);
+			TACAllocation sizeVarAlloc = new TACAllocation(node, sizeVar, start);
+			start.setNext(sizeVarAlloc);
+			start = sizeVarAlloc;
+			
+			ArrayType type = (ArrayType)currentType;
+			
+			System.out.println(type);
+			for (int i = 0; i < type.getDimensions(); i++) {
+				SimpleNode currentNode = (SimpleNode)initNodes.jjtGetChild(index++);
+				start.setNext(currentNode.getEntryNode());
+				currentNode.getEntryNode().setParent(start);
+				if (i == 0) {
+					TACAssign assign = new TACAssign(currentNode, sizeVar, currentNode.getExitNode().getVariable());
+					assign.setParent(currentNode.getExitNode());
+					currentNode.getExitNode().setNext(assign);
+					start = assign;
+				} else {
+					TACBinaryOperation assign = new TACBinaryOperation(currentNode, sizeVar, sizeVar, currentNode.getExitNode().getVariable(),
+							TACOperation.MULTIPLICATION);
+					assign.setParent(currentNode.getExitNode());
+					currentNode.getExitNode().setNext(assign);
+					start = assign;
+				}
+			}
+
+			TACVariable var = new TACVariable(getTempSymbol(), type);
+			allocations.peek().add(new TACAllocation(node, var, sizeVar, null, null));
+			
+			TACVariable loopVar = new TACVariable(getTempSymbol(), Type.INT);
+			TACAllocation loopVarAlloc = new TACAllocation(node, loopVar, start, null);
+			start.setNext(loopVarAlloc);
+			start = loopVarAlloc;
+			
+			TACAssign loopVarAssign = new TACAssign(node, loopVar, TACVariable.getIntLiteral(0));
+			loopVarAssign.setParent(start);
+			start.setNext(loopVarAssign);
+			start = loopVarAssign;
+			
+			TACNoOp loopStart = new TACNoOp(node, null, null);
+			TACLoop loop = new TACLoop(node, loopVar, TACComparison.NOT_EQUAL, sizeVar);
+			loop.setLoopNode(loopStart);
+			loop.setBreakNode(end);
+			loop.setParent(start);
+			start.setNext(loop);
+			start = loopStart;
+			
+			end.setVariable(var);
+			TACNoOp noop = new TACNoOp(node, var, null, end);
+			end.setParent(noop);
+			end = noop;
+			
+			currentType = type.getBaseType();
+		}
+		start.setNext(end.getNext());
+		end.getNext().setParent(start);
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTArrayInitializer node, Boolean secondVisit) throws ShadowException {
+		if (!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTConstructorInvocation node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
@@ -652,18 +751,34 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
+	public Object visitUnaryExpression(SimpleNode node, Boolean secondVisit) {
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
+		
+		if (node.getImage().isEmpty())
+			return cleanupNode(node);
+		
+		SimpleNode child = (SimpleNode)node.jjtGetChild(0);
+		linkToEnd(node, child.getEntryNode(), child.getExitNode());
+		
+		TACVariable var = new TACVariable(getTempSymbol(), child.getType());
+		TACAllocation alloc = new TACAllocation(node, var);
+		allocations.peek().add(alloc);
+		
+		TACUnaryOperation unop = new TACUnaryOperation(node, var,
+				child.getExitNode().getVariable(),
+				symbolToUnaryOperation(node.getImage().charAt(0)));
+		linkToEnd(node, unop);
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException {
+		return visitUnaryExpression(node, secondVisit);
+	}
+	
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit || cleanupNode(node) == WalkType.POST_CHILDREN)
-			return WalkType.POST_CHILDREN;
-		
-		return WalkType.POST_CHILDREN;
+		return visitUnaryExpression(node, secondVisit);
 	}
 	
 	public Object visit(ASTCastExpression node, Boolean secondVisit) throws ShadowException {

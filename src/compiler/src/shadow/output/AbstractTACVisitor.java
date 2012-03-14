@@ -1,34 +1,35 @@
 package shadow.output;
 
-import org.apache.commons.logging.Log;
-
-import shadow.Loggers;
-import shadow.TAC.TACClass;
-import shadow.TAC.TACMethod;
-import shadow.TAC.nodes.TACAllocation;
-import shadow.TAC.nodes.TACAssign;
-import shadow.TAC.nodes.TACBinaryOperation;
-import shadow.TAC.nodes.TACBranch;
-import shadow.TAC.nodes.TACJoin;
-import shadow.TAC.nodes.TACLoop;
-import shadow.TAC.nodes.TACMethodCall;
-import shadow.TAC.nodes.TACNoOp;
-import shadow.TAC.nodes.TACNode;
-import shadow.TAC.nodes.TACNodeInterface;
-import shadow.TAC.nodes.TACReturn;
-import shadow.TAC.nodes.TACUnaryOperation;
+import shadow.tac.TACMethod;
+import shadow.tac.TACModule;
+import shadow.tac.nodes.TACAllocation;
+import shadow.tac.nodes.TACAssign;
+import shadow.tac.nodes.TACBinary;
+import shadow.tac.nodes.TACBranch;
+import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACComparison;
+import shadow.tac.nodes.TACLiteral;
+import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACPhi;
+import shadow.tac.nodes.TACPhiBranch;
+import shadow.tac.nodes.TACReference;
+import shadow.tac.nodes.TACReturn;
+import shadow.tac.nodes.TACSequence;
+import shadow.tac.nodes.TACUnary;
+import shadow.tac.nodes.TACVariable;
 import shadow.typecheck.type.ClassType;
 
 public abstract class AbstractTACVisitor {
-	private static final Log logger = Loggers.TAC;
+//	private static final Log logger = Loggers.TAC;
 	
-	private TACClass theClass;
+	private TACModule theClass;
 	
-	public AbstractTACVisitor(TACClass theClass) {
+	public AbstractTACVisitor(TACModule theClass) {
 		this.theClass = theClass;
 	}
 	
-	public TACClass getTheClass() {
+	public TACModule getTheClass() {
 		return theClass;
 	}
 	
@@ -45,19 +46,40 @@ public abstract class AbstractTACVisitor {
 	abstract public void startMethod(TACMethod method);
 	abstract public void endMethod(TACMethod method);
 	
-	public void visit(TACNodeInterface node) {
+	public void visit(TACNode node)
+	{
 		node.accept(this);
 	}
+
+	public abstract void visit(TACAllocation node);
+	public abstract void visit(TACAssign node);
+	public abstract void visit(TACBinary node);
+	public abstract void visit(TACBranch node);
+	public abstract void visit(TACCall node);
+	public abstract void visit(TACCast node);
+	public abstract void visit(TACComparison node);
+	public abstract void visit(TACLiteral node);
+	public abstract void visit(TACPhi node);
+	public abstract void visit(TACPhiBranch node);
+	public abstract void visit(TACReference node);
+	public abstract void visit(TACReturn node);
+	public abstract void visit(TACSequence node);
+	public abstract void visit(TACUnary node);
+	public abstract void visit(TACVariable node);
 	
-	public void visit(TACNode node) {
+	/*public void visit(TACAllocation node) {
+		logger.debug(node);
+	}
+
+	public void visit(TACOperator node) {
+		logger.debug(node);
+	}
+	
+	/*public void visit(TACNode node) {
 		logger.debug(node);
 	}
 	
 	public void visit(TACAssign node) {
-		logger.debug(node);
-	}
-	
-	public void visit(TACAllocation node) {
 		logger.debug(node);
 	}
 	
@@ -91,5 +113,5 @@ public abstract class AbstractTACVisitor {
 
 	public void visit(TACReturn node) {
 		logger.debug(node);
-	}
+	}*/
 }

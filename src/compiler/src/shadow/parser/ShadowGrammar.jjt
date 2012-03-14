@@ -105,7 +105,8 @@ public class ShadowParser
      {
        if( hasModifier( modifiers, mod ) ) throw new ParseException( "Repeated modifiers not allowed" );
 
-       return addModifier( modifiers, mod );     }
+       return addModifier( modifiers, mod );
+     }
    }
 
    private static final Log logger = Loggers.PARSER;
@@ -120,11 +121,14 @@ public class ShadowParser
         ReInit(fis);
       } catch(Exception e) {
         logger.error("Error reading file: " + fileName, e);
-      } finally {      	try { fis.close(); }
-      	catch(Exception e) { ; }      }
+      } finally {
+      	try { fis.close(); }
+      	catch(Exception e) { ; }
+      }
    }
 
-   	public void debugPrint(String str) {        logger.debug(str + ": " + token);
+   	public void debugPrint(String str) {
+        logger.debug(str + ": " + token);
     }
    	
 }
@@ -539,7 +543,8 @@ int Modifiers():
   |	"immutable"{ modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.IMMUTABLE); }
   | "native" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.NATIVE); }
   | "weak" { modifiers = ModifierSet.checkAndAdd( modifiers,  ModifierSet.WEAK); }
-  |	"nullable" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.NULLABLE); }    | Annotation()
+  |	"nullable" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.NULLABLE); }  
+  | Annotation()
   )
  )*
 
@@ -584,7 +589,8 @@ void ViewDeclaration(int modifiers):
 	
 }
 {
-	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }	"{"        
+	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }
+	"{"        
         ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";" )+
     "}"
 }
@@ -608,7 +614,8 @@ void ClassOrInterfaceDeclaration(int modifiers):
   	  	throw new ParseException("A class cannot be marked weak");
   	  if( ModifierSet.isNullable(modifiers) )
   	  	throw new ParseException("A class cannot be marked nullable");  	  
-  	} 	| "exception"
+  	}
+ 	| "exception"
  	{
  	  jjtThis.setKind(Type.Kind.EXCEPTION); isErrorOrException = true;
  	  if( ModifierSet.isAbstract(modifiers) ||
@@ -979,7 +986,8 @@ void ClassOrInterfaceType():
 void ClassOrInterfaceTypeSuffix():
 {
 	debugPrint("CLASS OR INTERFACE TYPE SUFFIX");	
-	Token t;  }
+	Token t;  
+}
 {
    t = <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
    { jjtThis.setImage(t.image); }  
@@ -1055,7 +1063,8 @@ void UnqualifiedName():
 }
 {
   t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
-  { jjtThis.setImage(sb.toString()); }}
+  { jjtThis.setImage(sb.toString()); }
+}
 
 void NameList():
 { debugPrint("NAME LIST"); }
@@ -1086,84 +1095,85 @@ void Expression():
 void AssignmentOperator():
 { debugPrint("ASSIGNMENT OPERATOR"); }
 {
-    "="    { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.EQUAL); }
-  | "#="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.REFASSIGN); }
-  | "*="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.STARASSIGN); }
-  | "/="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.SLASHASSIGN); }
-  | "%="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MODASSIGN); }
-  | "+="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.PLUSASSIGN); }
-  | "-="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MINUSASSIGN); }
-  | "<<="  { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTSHIFTASSIGN); }
-  | ">>="  { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHTSHIFTASSIGN); }
-  | ">>>=" { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHTROTATEASSIGN); }
-  | "<<<=" { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTROTATEASSIGN); }
-  | "&="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.ANDASSIGN); }
-  | "^="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.XORASSIGN); }
-  | "|="   { jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.ORASSIGN); }
+    "="    { jjtThis.setImage("="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.EQUAL); }
+  | "#="   { jjtThis.setImage("#="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.REFASSIGN); }
+  | "*="   { jjtThis.setImage("*="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.STARASSIGN); }
+  | "/="   { jjtThis.setImage("/="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.SLASHASSIGN); }
+  | "%="   { jjtThis.setImage("%="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MODASSIGN); }
+  | "+="   { jjtThis.setImage("+="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.PLUSASSIGN); }
+  | "-="   { jjtThis.setImage("-="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MINUSASSIGN); }
+  | "<<="  { jjtThis.setImage("l="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTSHIFTASSIGN); }
+  | ">>="  { jjtThis.setImage("r="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHTSHIFTASSIGN); }
+  | ">>>=" { jjtThis.setImage("L="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHTROTATEASSIGN); }
+  | "<<<=" { jjtThis.setImage("R="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTROTATEASSIGN); }
+  | "&="   { jjtThis.setImage("&="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.ANDASSIGN); }
+  | "^="   { jjtThis.setImage("^="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.XORASSIGN); }
+  | "|="   { jjtThis.setImage("|="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.ORASSIGN); }
 }
 
 void ConditionalExpression():
 {}
 {
-  ConditionalOrExpression() [ "?" ConditionalExpression() ":" ConditionalExpression() ]
+  ConditionalOrExpression() [ "?" { jjtThis.setImage("?:"); } ConditionalExpression() ":" ConditionalExpression() ]
 }
 
 void ConditionalOrExpression():
 {}
 {
-  ConditionalExclusiveOrExpression() ( "or" ConditionalExclusiveOrExpression() )*
+  ConditionalExclusiveOrExpression() ( "or" { jjtThis.addToImage('o'); } ConditionalExclusiveOrExpression() )*
 }
 
 
 void ConditionalExclusiveOrExpression():
 {}
 {
-  ConditionalAndExpression() ( "xor" ConditionalAndExpression() )*
+  ConditionalAndExpression() ( "xor" { jjtThis.addToImage('x'); } ConditionalAndExpression() )*
 }
 
 void ConditionalAndExpression():
 {}
 {
-  BitwiseOrExpression() ( "and" BitwiseOrExpression() )*
+  BitwiseOrExpression() ( "and" { jjtThis.addToImage('a'); } BitwiseOrExpression() )*
 }
 
 void BitwiseOrExpression():
 {}
 {
-  BitwiseExclusiveOrExpression() ( "|" { jjtThis.setImage(jjtThis.getImage() + "|"); } BitwiseExclusiveOrExpression() )*
+  BitwiseExclusiveOrExpression() ( "|" { jjtThis.addToImage('|'); } BitwiseExclusiveOrExpression() )*
 }
 
 void BitwiseExclusiveOrExpression():
 {}
 {
-  BitwiseAndExpression() ( "^" { jjtThis.setImage(jjtThis.getImage() + "^"); } BitwiseAndExpression() )*
+  BitwiseAndExpression() ( "^" { jjtThis.addToImage('^'); } BitwiseAndExpression() )*
 }
 
 void BitwiseAndExpression():
 {}
 {
-  EqualityExpression() ( "&" { jjtThis.setImage(jjtThis.getImage() + "&"); } EqualityExpression() )*
+  EqualityExpression() ( "&" { jjtThis.addToImage('&'); } EqualityExpression() )*
 }
 
 void EqualityExpression():
 {}
 {
-  IsExpression() ( ( "==" { jjtThis.setImage("=="); } | "!=" { jjtThis.setImage("!="); } ) IsExpression() )*
+  IsExpression() ( ( "==" { jjtThis.addToImage('='); } |
+                     "!=" { jjtThis.addToImage('!'); } ) IsExpression() )*
 }
 
 void IsExpression():
 {}
 {
-  RelationalExpression() [ "is" Type() ]
+  RelationalExpression() [ "is" { jjtThis.addToImage('i'); } Type() ]
 }
 
 void RelationalExpression():
 { debugPrint("RELATIONAL EXPRESSION"); }
 {
-  ShiftExpression() ( ( "<" { jjtThis.setImage("<"); } |
-                        ">" { jjtThis.setImage(">"); } |
-                        "<=" { jjtThis.setImage("<="); } |
-                        ">="  { jjtThis.setImage(">="); }) ShiftExpression() )*
+  ShiftExpression() ( ( "<" { jjtThis.addToImage('<'); } |
+                        ">" { jjtThis.addToImage('>'); } |
+                        "<=" { jjtThis.addToImage('{'); } |
+                        ">="  { jjtThis.addToImage('}'); }) ShiftExpression() )*
 }
 
 //
@@ -1174,16 +1184,16 @@ void ShiftExpression():
 { debugPrint("SHIFT EXPRESSION"); }
 {
   RotateExpression()
-  ( ( "<<" { jjtThis.setImage(jjtThis.getImage() + "l"); } |
-      RightShift() { jjtThis.setImage(jjtThis.getImage() + "r"); } ) RotateExpression() )*
+  ( ( "<<" { jjtThis.addToImage('l'); } |
+      RightShift() { jjtThis.addToImage('r'); } ) RotateExpression() )*
 }
 
 void RotateExpression():
 { debugPrint("ROTATE EXPRESSION"); }
 {
   AdditiveExpression()
-  ( ( "<<<" { jjtThis.setImage(jjtThis.getImage() + "L"); } |
-      RightRotate() { jjtThis.setImage(jjtThis.getImage() + "R"); } ) AdditiveExpression() )*
+  ( ( "<<<" { jjtThis.addToImage('L'); } |
+      RightRotate() { jjtThis.addToImage('R'); } ) AdditiveExpression() )*
 }
 
 //
@@ -1195,17 +1205,17 @@ void AdditiveExpression():
 {}
 {
   MultiplicativeExpression()
-  ( ( "+" { jjtThis.setImage(jjtThis.getImage() + "+"); } |
-      "-" { jjtThis.setImage(jjtThis.getImage() + "-"); } ) MultiplicativeExpression() )*
+  ( ( "+" { jjtThis.addToImage('+'); } |
+      "-" { jjtThis.addToImage('-'); } ) MultiplicativeExpression() )*
 }
 
 void MultiplicativeExpression():
 {}
 {
   UnaryExpression()
-  ( ( "*" { jjtThis.setImage(jjtThis.getImage() + "*"); } |
-      "/" { jjtThis.setImage(jjtThis.getImage() + "/"); } |
-      "%" { jjtThis.setImage(jjtThis.getImage() + "%"); } ) UnaryExpression() )*
+  ( ( "*" { jjtThis.addToImage('*'); } |
+      "/" { jjtThis.addToImage('/'); } |
+      "%" { jjtThis.addToImage('%'); } ) UnaryExpression() )*
 }
 
 void UnaryExpression():
@@ -1226,7 +1236,17 @@ void UnaryExpressionNotPlusMinus():
 // This production is to determine lookahead only.  The LOOKAHEAD specifications
 // below are not used, but they are there just to indicate that we know about
 // this.
-//void CastLookahead()://{ debugPrint("CAST LOOKAHEAD"); }//{//  LOOKAHEAD(2)//  "(" PrimitiveType()//|//  LOOKAHEAD("(" Type() "[")//  "(" Type() "[" "]"//|//  "(" Type() ")" ( "~" | "!" | "(" | <IDENTIFIER> | "this" | "super" | "new" | Literal() )//}
+//void CastLookahead():
+//{ debugPrint("CAST LOOKAHEAD"); }
+//{
+//  LOOKAHEAD(2)
+//  "(" PrimitiveType()
+//|
+//  LOOKAHEAD("(" Type() "[")
+//  "(" Type() "[" "]"
+//|
+//  "(" Type() ")" ( "~" | "!" | "(" | <IDENTIFIER> | "this" | "super" | "new" | Literal() )
+//}
 
 void CastExpression():
 {
@@ -1234,17 +1254,8 @@ void CastExpression():
     jjtThis.setImage("cast< >");   
 }
 {
- // LOOKAHEAD("cast" "<" PrimitiveType()) "cast" "<" PrimitiveType() ">" UnaryExpression() |
- "cast" "<" Type() ">" PrimaryExpression()
-}
-
-void CheckExpression():
-{
-    debugPrint("CHECK EXPRESSION");
-    jjtThis.setImage("check");   
-}
-{ 
- "check" "(" PrimaryExpression() ")"
+  LOOKAHEAD("cast" "<" PrimitiveType()) "cast" "<" Type() ">" UnaryExpression()
+| "cast" "<" Type() ">" UnaryExpressionNotPlusMinus()
 }
 
 void PrimaryExpression():
@@ -1256,14 +1267,17 @@ void PrimaryExpression():
 
 void Sequence():
 { debugPrint("SEQUENCE"); }
-{	"(" ConditionalExpression() ("," ConditionalExpression() )* ")"
+{
+	"(" ConditionalExpression() ("," ConditionalExpression() )* ")"
 }
 
 void MethodCall():
-{	debugPrint("METHOD CALL");
+{
+	debugPrint("METHOD CALL");
 	Token t;
 }
-{    t = <IDENTIFIER> { jjtThis.setImage(t.image); } "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+{
+    t = <IDENTIFIER> { jjtThis.setImage(t.image); } "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
 }
 
 void PrimaryPrefix():
@@ -1280,7 +1294,7 @@ void PrimaryPrefix():
 //| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(2) MethodCall()
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-| CheckExpression()
+//| Name()
 }
 
 void PrimarySuffix():
@@ -1294,6 +1308,7 @@ void PrimarySuffix():
 //| "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(3) "." MethodCall()
 | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+//|  UnqualifiedName()
 }
 
 void Literal() :
@@ -1434,6 +1449,7 @@ void Statement():
 | ThrowStatement()
 | SynchronizedStatement()
 | TryStatement()
+| CheckStatement()
 }
 
 void AssertStatement():
@@ -1493,8 +1509,9 @@ void StatementExpression():
   	//Looks like hell, but sequence expansions are either:
   	//Sequence() = Sequence() = ... = Sequence() = Sequence() or
   	//Sequence() = Sequence() = ... = Sequence() = PrimaryExpression() [for method calls] 
-  	  LOOKAHEAD( Sequence() ) (LOOKAHEAD( Sequence() "=" ) Sequence() "=" )+ ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() )
-	| PrimaryExpression() [ AssignmentOperator() Expression() ]
+  	  LOOKAHEAD( Sequence() ) (LOOKAHEAD( Sequence() "=" ) Sequence() "=" )+
+  	  ( LOOKAHEAD( Sequence() ) Sequence() | { jjtThis.setImage("="); } PrimaryExpression() )
+	| PrimaryExpression() [ AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
 }
 
 void SwitchStatement():
@@ -1593,7 +1610,8 @@ void ContinueStatement():
 void ReturnStatement():
 { debugPrint("RETURN STATEMENT"); }
 {
-  "return"  ( ";"
+  "return"
+  ( ";"
   | LOOKAHEAD(Sequence()) Sequence() ";"
   |  ConditionalExpression() ";"   
   )
@@ -1619,9 +1637,17 @@ void TryStatement():
 { debugPrint("TRY STATEMENT"); }
 {
   "try" Block()
-  ( "catch" "(" FormalParameter() ")" Block()  { jjtThis.addCatch(); } )*
-  [ "recover" Block() { jjtThis.addRecover(); }  ]
-  [ "finally" Block() { jjtThis.addFinally(); }]
+  ( "catch" "(" FormalParameter() ")" Block() )*
+  [ "finally" Block() ]
+}
+
+void CheckStatement():
+{ debugPrint("CHECK STATEMENT"); }
+{
+  "check" "(" PrimaryExpression() ("," PrimaryExpression() )* ")"
+  Block()
+  "recover"
+  Block()  
 }
 
 /* We use productions to match >>>, >> and > so that we can keep the

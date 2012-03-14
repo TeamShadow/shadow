@@ -3,10 +3,10 @@ package shadow.output;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
-import shadow.TAC.nodes.TACBranch;
-import shadow.TAC.nodes.TACLoop;
-import shadow.TAC.nodes.TACNode;
-import shadow.TAC.nodes.TACNodeInterface;
+import shadow.tac.nodes.TACBranch;
+import shadow.tac.nodes.TACLoop;
+import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACNodeInterface;
 
 /**
  * Walks the TAC in a depth-first fashion.

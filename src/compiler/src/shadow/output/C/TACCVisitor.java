@@ -11,31 +11,35 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.TreeSet;
 
-import shadow.TAC.TACClass;
-import shadow.TAC.TACMethod;
-import shadow.TAC.TACVariable;
-import shadow.TAC.nodes.TACAllocation;
-import shadow.TAC.nodes.TACAssign;
-import shadow.TAC.nodes.TACBinaryOperation;
-import shadow.TAC.nodes.TACBranch;
-import shadow.TAC.nodes.TACJoin;
-import shadow.TAC.nodes.TACLoop;
-import shadow.TAC.nodes.TACMethodCall;
-import shadow.TAC.nodes.TACNoOp;
-import shadow.TAC.nodes.TACNode;
-import shadow.TAC.nodes.TACReturn;
-import shadow.TAC.nodes.TACUnaryOperation;
 import shadow.output.AbstractTACLinearVisitor;
-import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.SimpleNode;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
+import shadow.tac.TACMethod;
+import shadow.tac.TACModule;
+import shadow.tac.nodes.TACAllocation;
+import shadow.tac.nodes.TACAssign;
+import shadow.tac.nodes.TACBinary;
+import shadow.tac.nodes.TACBranch;
+import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACComparison;
+import shadow.tac.nodes.TACLiteral;
+import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACPhi;
+import shadow.tac.nodes.TACPhiBranch;
+import shadow.tac.nodes.TACPrefixed;
+import shadow.tac.nodes.TACReference;
+import shadow.tac.nodes.TACReturn;
+import shadow.tac.nodes.TACSequence;
+import shadow.tac.nodes.TACUnary;
+import shadow.tac.nodes.TACVariable;
 import shadow.typecheck.MethodSignature;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -56,13 +60,13 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	/**
 	 * @param root
 	 */
-	public TACCVisitor(TACClass theClass) {
+	public TACCVisitor(TACModule theClass) {
 		super(theClass);
 		cWriter = new CPrettyPrinter(new PrintWriter(System.out), "C: ");
 		metaWriter = new CPrettyPrinter(new PrintWriter(System.out), "M: ");
 	}
 	
-	public TACCVisitor(TACClass theClass, File shadowFile) throws ShadowException {
+	public TACCVisitor(TACModule theClass, File shadowFile) throws ShadowException {
 		super(theClass);
 		try {
 			cFileName = shadowFile.getAbsolutePath().replace(".shadow", ".c");
@@ -316,6 +320,12 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		cWriter.print("}");
 		cWriter.print("");
 		
+		if ( foundNative )
+		{
+			cWriter.print("#include \"" + getClassType().getPath() + ".h\"");
+			cWriter.print("");
+		}
+		
 		cWriter.print("struct " + getTheClass().getMangledName() + "_Itable " + getTheClass().getMangledName() + "_Imethods = {");
 		cWriter.indent();
 		for ( MethodSignature method : getClassType().getMethodList() )
@@ -356,15 +366,15 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			/* Here's our main method */
 			cWriter.print("int main(int argc, char **argv) {");
 			cWriter.indent();
+//			cWriter.print("");
+//			cWriter.print("for (int i = 0; i < argc; i++) {");
+//			cWriter.indent();
+//			cWriter.outdent();
+//			cWriter.print("}");
 			cWriter.print(getTheClass().getType().getMangledName() + "_Mmain_R_Pshadow_Pstandard_CString_A1((struct _Pshadow_Pstandard_CString **)0);");
 			cWriter.print("return 0;");
 			cWriter.outdent();
 			cWriter.print("}");
-			cWriter.print("");
-		}
-		if ( foundNative )
-		{
-			cWriter.print("#include \"" + getClassType().getPath() + ".h\"");
 			cWriter.print("");
 		}
 
@@ -376,7 +386,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 
 	@Override
 	public void startFields() {
-		TACClass theClass = this.getTheClass();
+		TACModule theClass = this.getTheClass();
 		
 		metaWriter.print("struct " + theClass.getType().getMangledName() + " {");
 		metaWriter.indent();
@@ -481,6 +491,22 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		// print to the meta file
 //		sb.setCharAt(sb.length()-1, ';');
 //		metaWriter.print(sb.toString());
+		
+		TreeSet<String> vars = new TreeSet<String>(new Comparator<String>()
+			{
+				@Override
+				public int compare(String str1, String str2)
+				{
+					boolean str1IsTemp = str1.startsWith("_Itemp"), str2IsTemp = str2.startsWith("_Itemp");
+					if (str1IsTemp != str2IsTemp)
+						return str1IsTemp ? 1 : -1;
+					return str1IsTemp ? Integer.valueOf(str1.substring(6)).compareTo(Integer.valueOf(
+							str2.substring(6))) : str1.compareTo(str2);
+				}
+			});
+		vars.addAll(method.getAllocations().keySet());
+		for (String var : vars)
+			cWriter.print(typeToString(method.getAllocations().get(var)) + ' ' + var + ';');
 	}
 
 	@Override
@@ -492,17 +518,90 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		metaWriter.print("");
 	}
 	
-	public void visit(TACNode node) {
-		cWriter.print(node.toString(), node);
+	private char operatorToString(TACUnary.Operator operator)
+	{
+		return operator.getSymbol();
+	}
+	private String operatorToString(TACBinary.Operator operator)
+	{
+		switch (operator)
+		{
+			case ADD:
+				return " + ";
+			case SUBTRACT:
+				return " - ";
+			case MULTIPLY:
+				return " * ";
+			case DIVIDE:
+				return " / ";
+			case MODULUS:
+				return " % ";
+			
+			case LOGICAL_OR:
+				return " || ";
+			case LOGICAL_XOR:
+				return " != ";
+			case LOGICAL_AND:
+				return " && ";
+			
+			case BITWISE_OR:
+				return " | ";
+			case BITWISE_XOR:
+				return " ^ ";
+			case BITWISE_AND:
+				return " & ";
+			
+			case LEFT_SHIFT:
+				return " << ";
+			case RIGHT_SHIFT:
+				return " >> ";
+			
+			case LEFT_ROTATE:
+			case RIGHT_ROTATE:
+			default:
+				throw new UnsupportedOperationException();
+		}
+	}
+	private String operatorToString(TACComparison.Operator operator)
+	{
+		switch (operator)
+		{
+			case EQUAL:
+				return " == ";
+			case NOT_EQUAL:
+				return " != ";
+			
+			case LESS_THAN:
+				return " < ";
+			case LESS_THAN_OR_EQUAL:
+				return " <= ";
+			
+			case GREATER_THAN:
+				return " > ";
+			case GREATER_THAN_OR_EQUAL:
+				return " >= ";
+			
+			case IS:
+			default:
+				throw new UnsupportedOperationException();
+		}
 	}
 	
-	private String typeToString(Type type) {
+	/*public void visit(TACNode node) {
+		cWriter.print(node.toString()/*, node*//*);
+	}*/
+	
+	private static String typeToString(TACNode node)
+	{
+		return typeToString(node.getType());
+	}
+	private static String typeToString(Type type) {
 		if (type instanceof ArrayType)
 			return typeToString(((ArrayType)type).getBaseType()) + '*';
 		else
 		{
 			if (type.isPrimitive())
-				return type.getTypeName() + "_t";
+				return type.getTypeName() + "_shadow_t";
 			else
 			{
 				StringBuilder sb = new StringBuilder();
@@ -513,18 +612,236 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			}
 		}
 	}
-
-	private String varToString(TACVariable var) {
-		StringBuilder sb = new StringBuilder();
-
-		if (var.isField())
-			sb.append("this->");
-		if (var.isLiteral())
-			sb.append(lit2lit(var.getSymbol()));
+	
+	private String nodeToString(TACNode node)
+	{
+		if (node instanceof TACLiteral)
+			return nodeToString((TACLiteral)node);
+		if (node instanceof TACPrefixed)
+			return nodeToString((TACPrefixed)node);
+		return node.getSymbol();
+	}
+	
+	private String nodeToString(TACPrefixed node)
+	{
+		if (node instanceof TACCall)
+			return node.getSymbol();
+		if (node.isPrefixed())
+			return nodeToString(node.getPrefix()) + "->" + node.getSymbol();
+		return node.getSymbol();
+	}
+	
+	@Override
+	public void visit(TACNode node)
+	{
+		if (node.getLabel() != null)
+		{
+			curWriter.outdent();
+			 // TODO: to remove (void)0; move block variable declarations somewhere else.
+			curWriter.print(node.getLabel() + ": (void)0;");
+			curWriter.indent();
+		}
+		super.visit(node);
+	}
+	
+	@Override
+	public void visit(TACAllocation node)
+	{
+		if (node.isOnHeap()) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(nodeToString(node));
+			sb.append(" = "/*("*/);
+			/*sb.append(typeToString(var));*/
+			sb.append(/*")*/"calloc(");
+			if (node.getSize() == null)
+				sb.append('1');
+			else
+				sb.append(nodeToString(node.getSize()));
+			sb.append(", sizeof(struct ");
+			sb.append(node.getType().getMangledName());
+			sb.append("));");
+			curWriter.print(sb.toString(), node);
+		}
 		else
-			sb.append(var.getSymbol());
-		
-		return sb.toString();
+			curWriter.print(typeToString(node) + ' ' + nodeToString(node) + ';');
+		if (node.isArray())
+		{
+			throw new UnsupportedOperationException();
+		}
+	}
+	
+	@Override
+	public void visit(TACAssign node)
+	{
+		if (node.getFirstOperand() instanceof TACSequence)
+		{
+			TACSequence first = (TACSequence)node.getFirstOperand();
+			List<TACNode> firstNodes = first.getNodes();
+			if (node.getSecondOperand() instanceof TACSequence)
+			{
+				TACSequence second = (TACSequence)node.getSecondOperand();
+				for (int i = 0; i < firstNodes.size(); i++)
+					curWriter.print(nodeToString(firstNodes.get(i)) + " = " +
+							nodeToString(second.getNodes().get(i)) + ';');
+			}
+			else if (node.getSecondOperand() instanceof TACCall)
+			{
+				TACCall second = (TACCall)node.getSecondOperand();
+				for (int i = 0; i < firstNodes.size(); i++)
+					curWriter.print(nodeToString(firstNodes.get(i)) + " = " +
+							second.getSymbol(i) + ';');
+			}
+			else
+				throw new UnsupportedOperationException();
+		}
+		else
+			curWriter.print(nodeToString(node.getFirstOperand()) + " = " +
+					nodeToString(node.getSecondOperand()) + ';');
+	}
+	
+	@Override
+	public void visit(TACUnary node)
+	{
+		curWriter.print(nodeToString(node) + " = " + operatorToString(node.getOperator()) +
+				nodeToString(node.getOperand()) + ';');
+	}
+	
+	@Override
+	public void visit(TACBinary node)
+	{
+		curWriter.print(nodeToString(node) + " = " + nodeToString(node.getFirstOperand()) +
+				operatorToString(node.getOperator()) + nodeToString(node.getSecondOperand()) + ';');
+	}
+	
+	@Override
+	public void visit(TACComparison node)
+	{
+		curWriter.print(nodeToString(node) + " = " + nodeToString(node.getFirstOperand()) +
+				operatorToString(node.getOperator()) + nodeToString(node.getSecondOperand()) + ';');
+	}
+	
+	@Override
+	public void visit(TACBranch node)
+	{
+		if (node.isConditional())
+		{
+			curWriter.print("if ( " + nodeToString(node.getCondition()) + " )");
+			curWriter.indent();
+			curWriter.print("goto " + node.getTrueBranch().getLabel() + ';');
+			curWriter.outdent();
+			if (node.getFalseBranch() != null)
+			{
+				curWriter.print("else");
+				curWriter.indent();
+				curWriter.print("goto " + node.getFalseBranch().getLabel() + ';');
+				curWriter.outdent();	
+			}
+		}
+		else
+			curWriter.print("goto " + node.getBranch().getLabel() + ';');
+	}
+	
+	@Override
+	public void visit(TACCall node)
+	{
+		MethodSignature signature = node.getSignature();
+		StringBuilder sb = new StringBuilder();
+		if (node.getSymbolCount() != 0)
+			sb.append(nodeToString(node)).append(" = ");
+		boolean isStatic = ModifierSet.isStatic(signature.getMethodType().getModifiers());
+		if (!isStatic && !signature.getSymbol().equals("constructor"))
+			sb.append(nodeToString(node.getPrefix())).append("->_Imethods->");
+		else
+			sb.append(signature.getMethodType().getOuter().getMangledName());
+		sb.append(signature.getMangledName()).append('(');
+		if (!isStatic)
+			sb.append(nodeToString(node.getPrefix())).append(", ");
+		for (TACNode argNode : node.getParameters())
+			sb.append(nodeToString(argNode)).append(", ");
+		for (int i = 1; i < node.getSymbolCount(); i++)
+			sb.append('&').append(node.getSymbol(i)).append(", ");
+		if (isStatic && node.getParameters().getNodes().isEmpty() &&
+				node.getSymbolCount() <= 1)
+			sb.append(");");
+		else
+			sb.replace(sb.length() - 2, sb.length(), ");");
+		curWriter.print(sb.toString());
+	}
+	
+	@Override
+	public void visit(TACReturn node)
+	{
+		if (node.hasReturnValue())
+		{
+			List<TACNode> retValues = node.getReturnValue().getNodes();
+			for (int i = 1; i < retValues.size(); i++)
+				curWriter.print("*_Ireturn" + i + " = " + nodeToString(retValues.get(i)) + ';');
+			curWriter.print("return " + nodeToString(retValues.get(0)) + ';');
+		}
+		else
+			curWriter.print("return;");
+	}
+	
+	@Override
+	public void visit(TACCast node)
+	{
+		curWriter.print(nodeToString(node) + " = (" + typeToString(node) + ')' +
+				nodeToString(node.getOperand()) + ';');
+	}
+	
+	@Override
+	public void visit(TACLiteral node)
+	{
+	}
+	
+	@Override
+	public void visit(TACPhi node)
+	{
+	}
+	
+	@Override
+	public void visit(TACPhiBranch node)
+	{
+		curWriter.print(nodeToString(node.getPhi()) + " = " +
+				nodeToString(node.getValue()) + ';');
+		curWriter.print("goto " + node.getPhi().getLabel() + ';');
+	}
+	
+	@Override
+	public void visit(TACReference node)
+	{
+	}
+	
+	@Override
+	public void visit(TACVariable node)
+	{
+	}
+	
+	@Override
+	public void visit(TACSequence node)
+	{
+	}
+	
+//	private String varToString(TACValue var) {
+//		StringBuilder sb = new StringBuilder();
+//
+//		if (var.isField())
+//			sb.append("this->");
+//		if (var.isLiteral())
+//			sb.append(lit2lit(var.getSymbol()));
+//		else
+//			sb.append(var.getSymbol());
+//		
+//		return sb.toString();
+//	}
+
+	private String lit2lit(String shadowLiteral) {
+		return literalToString(shadowLiteral);
+	}
+	
+	private String nodeToString(TACLiteral node)
+	{
+		return literalToString(node.getSymbol());
 	}
 	
 	/**
@@ -532,271 +849,329 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 	 * @param shadowLiteral
 	 * @return
 	 */
-	private String lit2lit(String shadowLiteral) {
+	private String literalToString(String shadowLiteral) {
 		if (shadowLiteral.startsWith("\""))
 		{
 			String var = "_Istring" + stringAllocNumber++;
 			cWriter.print("static struct " + Type.STRING.getMangledName() + ' ' + var + " = {");
 			cWriter.indent();
 			cWriter.print('&' + Type.STRING.getMangledName() + "_Imethods,");
-			cWriter.print("(boolean_t)1, (ubyte_t *)" + shadowLiteral);
+			cWriter.print("(boolean_shadow_t)1, (ubyte_shadow_t *)" + shadowLiteral);
 			cWriter.outdent();
 			cWriter.print("};");
 			return '&' + var;
 		}
 		if (shadowLiteral.equals("true"))
-			return "1";
+			return "((boolean_shadow_t)1)";
 		else if (shadowLiteral.equals("false"))
-			return "0";
+			return "((boolean_shadow_t)0)";
 		else if (shadowLiteral.equals("null"))
 			return "((void *)0)";
 		if (shadowLiteral.endsWith("ub"))
-			shadowLiteral = "(ubyte_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2);
+			shadowLiteral = "((ubyte_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2) + ')';
 		else if (shadowLiteral.endsWith("b"))
-			shadowLiteral = "(byte_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1);
+			shadowLiteral = "((byte_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1) + ')';
 		if (shadowLiteral.endsWith("us"))
-			shadowLiteral = "(ushort_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2);
+			shadowLiteral = "((ushort_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2) + ')';
 		else if (shadowLiteral.endsWith("s"))
-			shadowLiteral = "(short_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1);
+			shadowLiteral = "((short_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1) + ')';
 		if (shadowLiteral.endsWith("ui"))
-			shadowLiteral = "(uint_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2);
+			shadowLiteral = "((uint_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2) + ')';
 		else if (shadowLiteral.endsWith("i"))
-			shadowLiteral = "(int_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1);
+			shadowLiteral = "((int_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1) + ')';
 		if (shadowLiteral.endsWith("ul"))
-			shadowLiteral = "(ulong_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2);
+			shadowLiteral = "((ulong_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2) + "ull)";
 		else if (shadowLiteral.endsWith("l"))
-			shadowLiteral = "(long_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1);
+			shadowLiteral = "((long_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1) + "ll)";
 		return shadowLiteral;
 	}
 	
-	public void visit(TACAllocation node) {
-		TACVariable var = node.getVariable();
-		
-		if (!var.isField() || curWriter == metaWriter)
-		{
-			StringBuilder sb = new StringBuilder();
-	
-			sb.append(typeToString(var.getType()));
-			sb.append(' ');
-			sb.append(var.getSymbol());
-			sb.append(';');
-			
-			// print to the current writer as these can show up anywhere
-			curWriter.print(sb.toString(), node);
-	
-			if (node.isOnHeap()) {
-				sb.setLength(0);
-				sb.append(varToString(var));
-				sb.append(" = "/*("*/);
-				/*sb.append(typeToString(var.getType()));*/
-				sb.append(/*")*/"calloc(");
-				sb.append(node.getSize().getSymbol());
-				sb.append(", sizeof(struct ");
-				sb.append(var.getType().getMangledName());
-				sb.append("));");
-				curWriter.print(sb.toString(), node);
-			}
-		}
-	}
-	
-	public void visit(TACAssign node) {
-		if (!node.getLHS().isField() || curWriter == cWriter)
-		{
-			StringBuilder sb = new StringBuilder();
-			
-			sb.append(varToString(node.getLHS()));
-			sb.append(" = ");
-			sb.append(varToString(node.getRHS()));
-			sb.append(';');
-			
-			cWriter.print(sb.toString(), node);
-		}
-	}
-	
-	public void visit(TACBinaryOperation node) {
-		StringBuilder sb = new StringBuilder();
-		
-		if(node.getLHS().isField())
-			sb.append("this->");
-		sb.append(varToString(node.getLHS()));
-		sb.append(" = ");
-		sb.append(varToString(node.getRHS()));
-		
-		switch(node.getOperation()) {
-		case ADDITION: sb.append(" + "); break;
-		case AND: sb.append(" & "); break;
-		case DIVISION: sb.append(" / "); break;
-		case LROTATE: sb.append(" SOME MACRO "); break;
-		case LSHIFT: sb.append(" << "); break;
-		case MOD: sb.append(" % "); break;
-		case MULTIPLICATION: sb.append(" * "); break;
-		case OR: sb.append(" | "); break;
-		case RROTATE: sb.append(" SOME MACRO "); break;
-		case RSHIFT: sb.append(">>"); break;
-		case SUBTRACTION: sb.append(" - "); break;
-		case XOR: sb.append("^"); break;
-		}
-		
-		sb.append(varToString(node.getOperand2()));
-		sb.append(';');
-		
-		cWriter.print(sb.toString(), node);
-	}
-	
-	public void visit(TACBranch node) {
-		StringBuilder sb = new StringBuilder("if ( ");
-		
-		sb.append(varToString(node.getLHS()));
-		switch(node.getComparision()) {
-			case EQUAL: sb.append(" == "); break;
-			case GREATER: sb.append(" > "); break;
-			case GREATER_EQUAL: sb.append(" >= "); break;
-			case IS: sb.append(" ???? "); break;
-			case LESS: sb.append(" < "); break;
-			case LESS_EQUAL: sb.append(" <= "); break;
-			case NOT_EQUAL: sb.append(" != "); break;
-		}
-		sb.append(varToString(node.getRHS()));
-		sb.append(" ) { ");
-		
-		cWriter.print("");
-		cWriter.print(sb.toString(), node);
-		cWriter.indent();
-	}
-	
-	public void visitElse() {
-		cWriter.print("else {");
-		cWriter.indent();
-	}
-	
-	public void visit(TACLoop node) {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("while ( ");
-		sb.append(varToString(node.getLHS()));
-		switch(node.getComparision()) {
-			case EQUAL: sb.append(" == "); break;
-			case GREATER: sb.append(" > "); break;
-			case GREATER_EQUAL: sb.append(" >= "); break;
-			case IS: sb.append(" ???? "); break;
-			case LESS: sb.append(" < "); break;
-			case LESS_EQUAL: sb.append(" <= "); break;
-			case NOT_EQUAL: sb.append(" != "); break;
-		}
-		sb.append(varToString(node.getRHS()));
-		sb.append(" ) {");
-		cWriter.print(sb.toString(), node);
-		cWriter.indent();
-	}
-	
-	public void visit(TACJoin node) {
-	}
-	
-	public void visitJoin(TACJoin node) {
-		cWriter.outdent();
-		cWriter.print("} ", node);
-	}
-	
-	public void visit(TACNoOp node) {
-	}
-
-	public void visit(TACUnaryOperation node) {
-		StringBuilder sb = new StringBuilder();
-		
-		if(node.getLHS().isField())
-			sb.append("this->");
-		sb.append(node.getLHS());
-		
-		sb.append(" = ");
-		
-		sb.append(node.getOperation());
-		
-		if(node.getRHS().isField())
-			sb.append("(*this)");
-		sb.append(node.getRHS());
-		
-		sb.append(";");
-		
-		cWriter.print(sb.toString(), node);
-	}
-
-	public void visit(TACMethodCall node) {
-		StringBuilder sb = new StringBuilder();
-		
-		/*if ( node.getMangledName().equals("print_PString") )
-		{
-			sb.append("printf(\"%s\", ");
-		}
-		else if ( node.getMangledName().equals("print_Pint") )
-		{
-			sb.append("printf(\"%d\", ");
-		}
-		else if ( node.getMangledName().equals("printLine") )
-		{
-			sb.append("printf(\"\\n\");");
-		}
-		else
-		{
-			sb.append(node.getMangledName());
-			sb.append('(');
-		} moved to shadow.h for now */
-		
-		if (node.hasReturn()) {
-			TACVariable ret = node.getReturn(0);
-			sb.append(ret.getSymbol());
-			sb.append(" = ");
-		}
-		
-		if (!ModifierSet.isStatic(node.getMethodType().getModifiers()) &&
-				!node.getMethodName().equals("constructor"))
-		{
-			sb.append(varToString(node.getParameter(0)));
-			sb.append("->_Imethods->");
-			sb.append(node.getMangledMethodName());
-		}
-		else
-			sb.append(node.getMangledName());
-		sb.append('(');
-		
-		/*for(TACVariable param:node.getParameters()) {
-
-			if(param.isField())
-				sb.append("this->");
-			
-			sb.append(param.getSymbol());
-			sb.append(", ");
-		}*/
-		int paramIndex = 0;
-		MethodType type = node.getMethodType();
-		for (int i = 0; i < node.getParamCount(); i++)
-		{
-			Type paramType;
-			if (i == 0 && !ModifierSet.isStatic(type.getModifiers()))
-				paramType = type.getOuter();
-			else
-				paramType = type.getParameterTypes().get(paramIndex++).getType();
-			TACVariable param = node.getParameter(i);
-			if (!paramType.equals(param.getType()))
-				sb.append('(').append(typeToString(paramType)).append(')');
-			sb.append(varToString(param)).append(", ");
-		}
-		for (int i = 1; i < node.getReturnCount(); i++)
-			sb.append('&' + varToString(node.getReturn(i)) + ", ");
-		
-		if(node.getParamCount() > 0 || node.getReturnCount() > 1)
-			sb.replace(sb.length() - 2, sb.length(), ");");
-		else
-			sb.append(");");
-		
-		cWriter.print(sb.toString(), node);
-	}
-	
-	public void visit(TACReturn node) {
-		List<TACVariable> retVars = node.getReturns();
-		
-		for ( int i = 1; i < retVars.size(); i++ )
-			cWriter.print("(*_Ireturn" + i + ") = " + varToString(retVars.get(i)) + ';', node);
-		
-		cWriter.print("return " + varToString(retVars.get(0)) + ';', node);
-	}
+//	@Override
+//	public void visit(TACAllocation node) {
+//		for (TACVariable var : node.getValue())
+//		{
+//			curWriter.print("" + var.getType() + ' ' + var.getSymbol() + ';');
+//		}
+//		
+//		/*if (!var.isField() || curWriter == metaWriter)
+//		{
+//			StringBuilder sb = new StringBuilder();
+//	
+//			sb.append(typeToString(var);
+//			sb.append(' ');
+//			sb.append(var.getSymbol());
+//			sb.append(';');
+//			
+//			// print to the current writer as these can show up anywhere
+//			curWriter.print(sb.toString(), node);
+//	
+//			if (node.isOnHeap()) {
+//				sb.setLength(0);
+//				sb.append(varToString(var));
+//				sb.append(" = "/*("*//*);
+//				/*sb.append(typeToString(var));*//*
+//				sb.append(/*")*//*"calloc(");
+//				sb.append(node.getSize().getSymbol());
+//				sb.append(", sizeof(struct ");
+//				sb.append(var.getType().getMangledName());
+//				sb.append("));");
+//				curWriter.print(sb.toString(), node);
+//			}
+//		}*/
+//	}
+//	
+//	@Override
+//	public void visit(TACOperator node)
+//	{
+//		if (node.isNoOp())
+//			return;
+//		List<TACVariable> value = node.getValue() == null ? null : node.getValue().getVariables(),
+//				op1 = node.getFirstOperand() == null ? null : node.getFirstOperand().getVariables(),
+//				op2 = node.getSecondOperand() == null ? null : node.getSecondOperand().getVariables();
+//		if (value != null)
+//			for (int i = 0; i < value.size(); i++)
+//			{
+//				StringBuilder sb = new StringBuilder(value.get(i).getSymbol());
+//				sb.append(" = ");
+//
+//				if (node.isAssign())
+//					sb.append(op1.get(i).getSymbol());
+//				if (node.isUnary())
+//				{
+//					switch (node.getOperator())
+//					{
+//						case NEGATE:
+//							sb.append('-');
+//							break;
+//						case LOGICAL_NOT:
+//							sb.append('!');
+//							break;
+//						case BITWISE_NOT:
+//							sb.append('~');
+//							break;
+//					}
+//					sb.append(op1.get(i).getSymbol());
+//				}
+//				else if (node.isBinary())
+//				{
+//					sb.append(op1.get(i).getSymbol()).append(' ');
+//					switch (node.getOperator())
+//					{
+//						case ADD:
+//							sb.append('+');
+//							break;
+//						case SUBTRACT:
+//							sb.append('-');
+//							break;
+//						case MULTIPLY:
+//							sb.append('*');
+//							break;
+//						case DIVIDE:
+//							sb.append('/');
+//							break;
+//					}
+//					sb.append(' ').append(op2.get(i).getSymbol());
+//				}
+//				sb.append(';');
+//				
+//				curWriter.print(sb.toString());
+//			}
+//	}
+//	
+//	public void visit(TACAssign node) {
+//		if (!node.getLHS().isField() || curWriter == cWriter)
+//		{
+//			StringBuilder sb = new StringBuilder();
+//			
+//			sb.append(varToString(node.getLHS()));
+//			sb.append(" = ");
+//			sb.append(varToString(node.getRHS()));
+//			sb.append(';');
+//			
+//			cWriter.print(sb.toString(), node);
+//		}
+//	}
+//	
+//	public void visit(TACBinary node) {
+//		StringBuilder sb = new StringBuilder();
+//		
+//		if(node.getLHS().isField())
+//			sb.append("this->");
+//		sb.append(varToString(node.getLHS()));
+//		sb.append(" = ");
+//		sb.append(varToString(node.getRHS()));
+//		
+//		switch(node.getOperator()) {
+//		case ADDITION: sb.append(" + "); break;
+//		case AND: sb.append(" & "); break;
+//		case DIVISION: sb.append(" / "); break;
+//		case LROTATE: sb.append(" SOME MACRO "); break;
+//		case LSHIFT: sb.append(" << "); break;
+//		case MOD: sb.append(" % "); break;
+//		case MULTIPLICATION: sb.append(" * "); break;
+//		case OR: sb.append(" | "); break;
+//		case RROTATE: sb.append(" SOME MACRO "); break;
+//		case RSHIFT: sb.append(">>"); break;
+//		case SUBTRACTION: sb.append(" - "); break;
+//		case XOR: sb.append("^"); break;
+//		}
+//		
+//		sb.append(varToString(node.getOperand2()));
+//		sb.append(';');
+//		
+//		cWriter.print(sb.toString(), node);
+//	}
+//	
+//	public void visit(TACBranch node) {
+//		StringBuilder sb = new StringBuilder("if ( ");
+//		
+//		sb.append(varToString(node.getLHS()));
+//		switch(node.getComparision()) {
+//			case EQUAL: sb.append(" == "); break;
+//			case GREATER: sb.append(" > "); break;
+//			case GREATER_EQUAL: sb.append(" >= "); break;
+//			case IS: sb.append(" ???? "); break;
+//			case LESS: sb.append(" < "); break;
+//			case LESS_EQUAL: sb.append(" <= "); break;
+//			case NOT_EQUAL: sb.append(" != "); break;
+//		}
+//		sb.append(varToString(node.getRHS()));
+//		sb.append(" ) { ");
+//		
+//		cWriter.print("");
+//		cWriter.print(sb.toString(), node);
+//		cWriter.indent();
+//	}
+//	
+//	public void visitElse() {
+//		cWriter.print("else {");
+//		cWriter.indent();
+//	}
+//	
+//	public void visit(TACLoop node) {
+//		StringBuilder sb = new StringBuilder();
+//		
+//		sb.append("while ( ");
+//		sb.append(varToString(node.getLHS()));
+//		switch(node.getComparision()) {
+//			case EQUAL: sb.append(" == "); break;
+//			case GREATER: sb.append(" > "); break;
+//			case GREATER_EQUAL: sb.append(" >= "); break;
+//			case IS: sb.append(" ???? "); break;
+//			case LESS: sb.append(" < "); break;
+//			case LESS_EQUAL: sb.append(" <= "); break;
+//			case NOT_EQUAL: sb.append(" != "); break;
+//		}
+//		sb.append(varToString(node.getRHS()));
+//		sb.append(" ) {");
+//		cWriter.print(sb.toString(), node);
+//		cWriter.indent();
+//	}
+//	
+//	public void visit(TACJoin node) {
+//	}
+//	
+//	public void visitJoin(TACJoin node) {
+//		cWriter.outdent();
+//		cWriter.print("} ", node);
+//	}
+//	
+//	public void visit(TACNoOp node) {
+//	}
+//
+//	public void visit(TACUnary node) {
+//		StringBuilder sb = new StringBuilder();
+//		
+//		sb.append(varToString(node.getLHS()));
+//		sb.append(" = ");
+//		switch(node.getOperator()) {
+//			case PLUS: sb.append('+'); break;
+//			case MINUS: sb.append('-'); break;
+//			case COMPLEMENT: sb.append('~'); break;
+//		}
+//		sb.append(varToString(node.getRHS()));
+//		sb.append(';');
+//		
+//		cWriter.print(sb.toString(), node);
+//	}
+//
+//	public void visit(TACMethodCall node) {
+//		StringBuilder sb = new StringBuilder();
+//		
+//		/*if ( node.getMangledName().equals("print_PString") )
+//		{
+//			sb.append("printf(\"%s\", ");
+//		}
+//		else if ( node.getMangledName().equals("print_Pint") )
+//		{
+//			sb.append("printf(\"%d\", ");
+//		}
+//		else if ( node.getMangledName().equals("printLine") )
+//		{
+//			sb.append("printf(\"\\n\");");
+//		}
+//		else
+//		{
+//			sb.append(node.getMangledName());
+//			sb.append('(');
+//		} moved to shadow.h for now */
+//		
+//		if (node.hasReturn()) {
+//			TACValue ret = node.getReturn(0);
+//			sb.append(ret.getSymbol());
+//			sb.append(" = ");
+//		}
+//		
+//		if (!ModifierSet.isStatic(node.getMethodType().getModifiers()) &&
+//				!node.getMethodName().equals("constructor"))
+//		{
+//			sb.append(varToString(node.getParameter(0)));
+//			sb.append("->_Imethods->");
+//			sb.append(node.getMangledMethodName());
+//		}
+//		else
+//			sb.append(node.getMangledName());
+//		sb.append('(');
+//		
+//		/*for(TACValue param:node.getParameters()) {
+//
+//			if(param.isField())
+//				sb.append("this->");
+//			
+//			sb.append(param.getSymbol());
+//			sb.append(", ");
+//		}*/
+//		int paramIndex = 0;
+//		MethodType type = node.getMethodType();
+//		for (int i = 0; i < node.getParamCount(); i++)
+//		{
+//			Type paramType;
+//			if (i == 0 && !ModifierSet.isStatic(type.getModifiers()))
+//				paramType = type.getOuter();
+//			else
+//				paramType = type.getParameterTypes().get(paramIndex++).getType();
+//			TACValue param = node.getParameter(i);
+//			if (!paramType.equals(param.getType()))
+//				sb.append('(').append(typeToString(paramType)).append(')');
+//			sb.append(varToString(param)).append(", ");
+//		}
+//		for (int i = 1; i < node.getReturnCount(); i++)
+//			sb.append('&' + varToString(node.getReturn(i)) + ", ");
+//		
+//		if(node.getParamCount() > 0 || node.getReturnCount() > 1)
+//			sb.replace(sb.length() - 2, sb.length(), ");");
+//		else
+//			sb.append(");");
+//		
+//		cWriter.print(sb.toString(), node);
+//	}
+//	
+//	public void visit(TACReturn node) {
+//		List<TACValue> retVars = node.getReturns();
+//		
+//		for ( int i = 1; i < retVars.size(); i++ )
+//			cWriter.print("(*_Ireturn" + i + ") = " + varToString(retVars.get(i)) + ';', node);
+//		
+//		cWriter.print("return " + varToString(retVars.get(0)) + ';', node);
+//	}
 }

@@ -11,7 +11,12 @@ public class MethodSignature {
 	protected final MethodType type;
 	protected final String symbol;
 	private final Node node;	/** The AST node that corresponds to the branch of the tree for this method */
-	
+
+	public MethodSignature(MethodType type, String symbol, Node node) {
+		this.type = type;
+		this.symbol = symbol;
+		this.node = node;
+	}
 	public MethodSignature(Type enclosingType, String symbol, int modifiers, Node node) {
 		type = new MethodType(enclosingType, modifiers);
 		this.symbol = symbol;

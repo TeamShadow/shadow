@@ -35,7 +35,10 @@ public abstract class TACNode implements TACNodeInterface {
 		RSHIFT,
 		RROTATE,
 		LSHIFT,
-		LROTATE
+		LROTATE,
+		PLUS,
+		MINUS,
+		COMPLEMENT
 	}
 
 	/**

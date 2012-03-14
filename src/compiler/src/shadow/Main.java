@@ -15,14 +15,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
 
-import shadow.TAC.TACBuilder;
-import shadow.TAC.TACClass;
 import shadow.output.TACLinearWalker;
+import shadow.output.C.TACCScanner;
 import shadow.output.C.TACCVisitor;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
+import shadow.tac.TACBuilder;
+import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
 
 
@@ -136,10 +137,15 @@ public class Main {
 			        // build the TAC
 			        tacBuilder.build(node);
 	
-			        for(TACClass c:tacBuilder.getClasses()) {
+			        for(TACModule c:tacBuilder.getClasses()) {
+			        	TACCScanner cScanner = new TACCScanner(c);
+			        	TACLinearWalker scanner = new TACLinearWalker(cScanner);
+			        	
+			        	scanner.walk();
+			        	
 		    			TACCVisitor cVisitor = new TACCVisitor(c, shadowFile);
 		    			TACLinearWalker linearWalker = new TACLinearWalker(cVisitor);
-					
+		    			
 		    			linearWalker.walk();
 			        }
 		    		

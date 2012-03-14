@@ -2,7 +2,7 @@ package shadow.output.C;
 
 import java.io.PrintWriter;
 
-import shadow.TAC.nodes.TACNode;
+import shadow.tac.nodes.TACNode;
 
 public class CPrettyPrinter {
 	private int tabDepth = 0;
@@ -55,7 +55,7 @@ public class CPrettyPrinter {
 		writer.print(str);
 		lineLength += str.length();
 		
-		if(node != null) {
+		/*if(node != null) {
 			// print out enough spaces to align everything
 			writer.print(' ');
 			for(int i=0; i < (COMMENT_WIDTH - lineLength); ++i) {
@@ -63,10 +63,10 @@ public class CPrettyPrinter {
 			}
 			
 			// print out the comment
-			writer.println("/* " + node.getAstNode().getLocation() + " */");
-		} else {
+			writer.println("/* " + node.getAstNode().getLocation() + " *//*");
+		} else {*/
 			writer.println();
-		}
+		/*}*/
 		
 		writer.flush();
 	}

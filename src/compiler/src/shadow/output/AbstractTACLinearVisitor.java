@@ -1,11 +1,11 @@
 package shadow.output;
 
-import shadow.TAC.TACClass;
-import shadow.TAC.nodes.TACJoin;
+import shadow.tac.TACModule;
+import shadow.tac.nodes.TACNode;
 
 public abstract class AbstractTACLinearVisitor extends AbstractTACVisitor {
 	
-	public AbstractTACLinearVisitor(TACClass theClass) {
+	public AbstractTACLinearVisitor(TACModule theClass) {
 		super(theClass);
 	}
 	
@@ -13,7 +13,7 @@ public abstract class AbstractTACLinearVisitor extends AbstractTACVisitor {
 	 * This is a special method called only when the FINAL join is visited.
 	 * @param join A TACJoin node.
 	 */
-	public void visitJoin(TACJoin join) {
+	public void visitJoin(TACNode join) {
 	}
 
 	/**

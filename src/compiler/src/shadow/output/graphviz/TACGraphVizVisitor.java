@@ -66,7 +66,7 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 		printNode(node, true);
 	}
 	
-	public void visit(TACBinaryOperation node) {
+	public void visit(TACBinary node) {
 		printNode(node, true);
 	}
 	
@@ -135,7 +135,7 @@ public class TACGraphVizVisitor extends AbstractTACVisitor {
 //		printNode(node, true);
 	}
 
-	public void visit(TACUnaryOperation node) {
+	public void visit(TACUnary node) {
 		printNode(node, true);
 	}
 	

@@ -117,7 +117,7 @@ public class Type {
 	public String toString()
 	{
 		return getFullName();		
-	}	
+	}
 
 	public boolean equals(Object o)
 	{
@@ -186,9 +186,13 @@ public class Type {
 			if( t.getKind() == Kind.INTERFACE )			
 				return ((ExceptionType)this).isDescendentOf(t);
 			else
-				return false;			
-		case METHOD:
+				return false;	
 		case SEQUENCE:
+			if ( t.getKind() == Kind.SEQUENCE )
+				return ((SequenceType)this).canAccept(((SequenceType)t).getTypes());
+			else
+				return false;
+		case METHOD:
 		case VIEW:
 		default:
 			return false;		

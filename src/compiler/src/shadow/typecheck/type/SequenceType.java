@@ -25,7 +25,7 @@ public class SequenceType extends Type
 	
 	public List<Type> getTypes()
 	{
-		return types;		
+		return types;
 	}
 	
 	public boolean canAccept( List<Type> inputTypes )
@@ -59,6 +59,16 @@ public class SequenceType extends Type
 			sb.setCharAt(sb.lastIndexOf(","), ')');
 		
 		return sb.toString();
+	}
+
+	public boolean equals(Object o)
+	{
+		if (o == Type.NULL)
+			return true;
+		if( o != null && o instanceof SequenceType )
+			return types.equals(((SequenceType)o).types);
+		else
+			return false;
 	}
 
 }

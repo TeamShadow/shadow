@@ -22,6 +22,9 @@ public class TACNoOp extends TACNode {
 		this(astNode, null, parent, next);
 	}
 	
+	public void setVariable(TACVariable var) {
+		variable = var;
+	}
 	public TACVariable getVariable() {
 		return variable;
 	}
