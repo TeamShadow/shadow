@@ -9,12 +9,14 @@ public class TACVariable extends TACPrefixed
 	private Type type;
 	public TACVariable(Type varType, String varSymbol, boolean isField)
 	{
+		field = isField;
 		type = varType;
 		setSymbol(varSymbol);
 	}
 	public TACVariable(TACNode prefix, Type varType, String varSymbol, boolean isField)
 	{
 		super(prefix);
+		field = isField;
 		type = varType;
 		setSymbol(varSymbol);
 	}
