@@ -1254,8 +1254,17 @@ void CastExpression():
     jjtThis.setImage("cast< >");   
 }
 {
-  LOOKAHEAD("cast" "<" PrimitiveType()) "cast" "<" Type() ">" UnaryExpression()
-| "cast" "<" Type() ">" UnaryExpressionNotPlusMinus()
+ // LOOKAHEAD("cast" "<" PrimitiveType()) "cast" "<" PrimitiveType() ">" UnaryExpression() |
+ "cast" "<" Type() ">" PrimaryExpression()
+}
+
+void CheckExpression():
+{
+    debugPrint("CHECK EXPRESSION");
+    jjtThis.setImage("check");   
+}
+{ 
+ "check" "(" PrimaryExpression() ")"
 }
 
 void PrimaryExpression():
@@ -1294,7 +1303,7 @@ void PrimaryPrefix():
 //| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(2) MethodCall()
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-//| Name()
+| CheckExpression()
 }
 
 void PrimarySuffix():
@@ -1308,7 +1317,6 @@ void PrimarySuffix():
 //| "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(3) "." MethodCall()
 | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-//|  UnqualifiedName()
 }
 
 void Literal() :
@@ -1449,7 +1457,6 @@ void Statement():
 | ThrowStatement()
 | SynchronizedStatement()
 | TryStatement()
-| CheckStatement()
 }
 
 void AssertStatement():
@@ -1637,17 +1644,9 @@ void TryStatement():
 { debugPrint("TRY STATEMENT"); }
 {
   "try" Block()
-  ( "catch" "(" FormalParameter() ")" Block() )*
-  [ "finally" Block() ]
-}
-
-void CheckStatement():
-{ debugPrint("CHECK STATEMENT"); }
-{
-  "check" "(" PrimaryExpression() ("," PrimaryExpression() )* ")"
-  Block()
-  "recover"
-  Block()  
+  ( "catch" "(" FormalParameter() ")" Block()  { jjtThis.addCatch(); } )*
+  [ "recover" Block() { jjtThis.addRecover(); }  ]
+  [ "finally" Block() { jjtThis.addFinally(); }]
 }
 
 /* We use productions to match >>>, >> and > so that we can keep the
