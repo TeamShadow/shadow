@@ -21,7 +21,7 @@ public class SimpleTest
 	public static void main(String[] unused)
 	{
 		ArrayList<String> args = new ArrayList<String>();
-		args.add("--check");
+//		args.add("--check");
 		args.add("--config");
 		
 		String osName = System.getProperty("os.name");
@@ -38,7 +38,8 @@ public class SimpleTest
 		
 		
 		//add desired files to list
-		args.add("quarantine/Checking.shadow"); 		
+		//args.add("--compile");
+		args.add("shadow/hello/HelloWorld.shadow"); 		
 		int error = Main.test(args.toArray(new String[] { }));
 		System.out.println("Error code: " + error);
 	}

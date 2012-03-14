@@ -286,22 +286,24 @@ public class ClassChecker extends BaseChecker {
 		// go through and add the vars
 		for(int i = 1; i < node.jjtGetNumChildren(); ++i)
 		{
-			Node curNode = node.jjtGetChild(i);
-			String varName = curNode.jjtGetChild(0).getImage();
+			Node child = node.jjtGetChild(i);
+			String varName = child.jjtGetChild(0).getImage();
 			
-			if(curNode.jjtGetNumChildren() == 2) // check to see if we have any kind of init here
+			if(child.jjtGetNumChildren() == 2) // check to see if we have any kind of init here
 			{
-				Type initType = curNode.jjtGetChild(1).getType();
+				Type initType = child.jjtGetChild(1).getType();
 				
 				if(!initType.isSubtype(type)) 
 				{
-					addError(curNode.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
+					addError(child.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
 					type = Type.UNKNOWN; //overwrites old type, for error case
 				}
 			}
 			
 			// add the symbol to the table
 			addSymbol( varName, node);
+			child.setType(type);
+			child.setModifiers(node.getModifiers());
 		}
 		
 		node.setType(type); //either declaration type or UNKNOWN  		
@@ -397,6 +399,7 @@ public class ClassChecker extends BaseChecker {
 				node.setType(field.getType());
 				node.setModifiers(field.getModifiers());
 				node.addModifier(ModifierSet.ASSIGNABLE);
+				node.addModifier(ModifierSet.FIELD);
 				
 				if( ModifierSet.isPrivate(field.getModifiers()) && currentType != classType   )
 					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
@@ -463,7 +466,7 @@ public class ClassChecker extends BaseChecker {
 		{	
 			node.setType(methodType.getParameterType(name).getType());
 			node.setModifiers(methodType.getParameterType(name).getModifiers());
-			node.addModifier(ModifierSet.ASSIGNABLE);
+			node.addModifier(ModifierSet.ASSIGNABLE);			
 			return true;
 		}
 			

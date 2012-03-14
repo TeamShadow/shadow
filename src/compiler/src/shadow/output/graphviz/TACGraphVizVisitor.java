@@ -2,16 +2,16 @@ package shadow.output.graphviz;
 
 import shadow.TAC.TACClass;
 import shadow.TAC.TACMethod;
-import shadow.TAC.nodes.TACAllocation;
-import shadow.TAC.nodes.TACAssign;
-import shadow.TAC.nodes.TACBinaryOperation;
-import shadow.TAC.nodes.TACBranch;
-import shadow.TAC.nodes.TACJoin;
-import shadow.TAC.nodes.TACLoop;
-import shadow.TAC.nodes.TACNoOp;
-import shadow.TAC.nodes.TACNode;
-import shadow.TAC.nodes.TACUnaryOperation;
 import shadow.output.AbstractTACVisitor;
+import shadow.tac.nodes.TACAllocation;
+import shadow.tac.nodes.TACAssign;
+import shadow.tac.nodes.TACBinaryOperation;
+import shadow.tac.nodes.TACBranch;
+import shadow.tac.nodes.TACJoin;
+import shadow.tac.nodes.TACLoop;
+import shadow.tac.nodes.TACNoOp;
+import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACUnaryOperation;
 
 public class TACGraphVizVisitor extends AbstractTACVisitor {
 

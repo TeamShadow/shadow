@@ -10,8 +10,8 @@ class HelloWorld
 	public String message;
 	public constructor()
 	{
-		this.times = 5ui;
-		this.message = "Hello World!";
+		times = 5ui;
+		message = "Hello World!";
 	}
 	public constructor(uint times)
 	{

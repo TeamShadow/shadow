@@ -194,7 +194,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 	{
 		if (secondVisit)
 		{
-			Type type = node.jjtGetParent().getType();
+			Type type = node.getType();
 			TACVariable var;
 			if (node.isField())
 			{
@@ -316,7 +316,7 @@ public class ASTToTACVisitor extends AbstractASTVisitor {
 				if (partNode instanceof TACPrefixed)
 				{
 					TACPrefixed prefixed = (TACPrefixed)partNode;
-					if (lastNode == null && prefixed.expectsPrefix())
+					if (prefixed.expectsPrefix())
 					{
 						TACVariable thisPrefix = new TACVariable(outerType, "this", false);
 						prefixed.setPrefix(thisPrefix);
