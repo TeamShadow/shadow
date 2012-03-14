@@ -4,21 +4,23 @@ import shadow.io@Console;
 
 class HelloWorld
 {
+	public Object o1, o2, o3, o4;
+	public byte a, b;
 	public uint times;
 	public String message;
 	public constructor()
 	{
-		times = 5ui;
-		message = "Hello World!";
+		this.times = 5ui;
+		this.message = "Hello World!";
 	}
 	public constructor(uint times)
 	{
 		this.times = times;
-		message = "Hello World!";
+		this.message = "Hello World!";
 	}
 	public constructor(String message)
 	{
-		times = 5ui;
+		this.times = 5ui;
 		this.message = message;
 	}
 	public constructor(uint times, String message)
@@ -29,24 +31,24 @@ class HelloWorld
 
 	public getTimes() => ( uint )
 	{
-		return times;
+		return this.times;
 	}
 	public getMessage() => ( String )
 	{
-		return message;
+		return this.message;
 	}
 	public getBoth() => ( uint, String )
 	{
-		return (times, message);
+		return (this.times, this.message);
 	}
 
 	public doit() => ()
 	{
-		for (uint i = 0ui; i < times; i += 1ui)
+		for (uint i = 0ui; i < this.times; i += 1ui)
 		{
 			Console.print(i + 1ui);
 			Console.print(": ");
-			Console.printLine(message);
+			Console.printLine(this.message);
 		}
 		Console.printLine();
 	}
@@ -65,9 +67,9 @@ class HelloWorld
 
 	public static main( String[] args ) => ()
 	{
-
+		
 		String name = "Fibonacci";
-		for ( uint start = 0ui; start <= 2ui; start += 1ui )
+		for ( uint start = 0ui, temp = 10000000ui; start <= 2ui; start += 1ui, temp -= 100ui )
 		{
 			if ( start == 2ui )
 				name = "Lucas";
@@ -115,6 +117,8 @@ class HelloWorld
 		}
 
  		HelloWorld hello1 = new HelloWorld();
+		hello1.times = 5ui;
+		hello1.message = "Hello World!";
  
  		uint defaultTimes;
  		String defaultMessage;
@@ -126,8 +130,14 @@ class HelloWorld
  		Console.printLine();
  
 		HelloWorld hello2 = new HelloWorld(10ui);
+		hello2.times = 10ui;
+		hello2.message = "Hello World!";
 		HelloWorld hello3 = new HelloWorld("Five Times!");
+		hello3.times = 5ui;
+		hello3.message = "Five Times!";
 		HelloWorld hello4 = new HelloWorld(15ui, "Fifteen Times!");
+		hello4.times = 15ui;
+		hello4.message = "Fifteen Times!";
 
 		hello1.doit();
 		hello2.doit();

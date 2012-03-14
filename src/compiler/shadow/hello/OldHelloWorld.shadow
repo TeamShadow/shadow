@@ -35,11 +35,12 @@ class OldHelloWorld
 		new int[4][3][2][1][];
 		new int[1];
 		new int[1][];
-		new HelloWorld[1];
-		new HelloWorld[1][];
-		new HelloWorld(1, 2);
-		new HelloWorld(0);
-		new HelloWorld(0, 1);*/
+		new OldHelloWorld[1];
+		new OldHelloWorld[1][];*/
+		new OldHelloWorld(1, 2);
+		new OldHelloWorld(0);
+		new OldHelloWorld(0, 1);
+		return;
 	}
 
 	public static test(uint start, uint end) => ()

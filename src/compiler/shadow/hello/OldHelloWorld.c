@@ -3,139 +3,130 @@
 
 static struct _Pshadow_Pstandard_CString _Istring0 = {
      &_Pshadow_Pstandard_CString_Imethods,
-     (boolean_t)1, (ubyte_t *)"shadow.hello@OldHelloWorld"
+     (boolean_shadow_t)1, (ubyte_shadow_t *)"shadow.hello@OldHelloWorld"
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Phello_COldHelloWorld_Iclass = {
      &_Pshadow_Pstandard_CClass_Imethods, &_Istring0
 };
 
-void _Pshadow_Phello_COldHelloWorld_Mtest_Ruint_Ruint(uint_t start, uint_t end) {
-     boolean_t _Itemp0;                                                          /* (47:36) */
-     uint_t i;                                                                   /* (47:21) */
-     i = start;                                                                  /* (47:21) */
-     
-     if ( i <= end ) {                                                           /* (47:36) */
-          _Itemp0 = 1;                                                           /* (47:36) */
-     }                                                                           /* (47:36) */
-     else {
-          _Itemp0 = 0;                                                           /* (47:36) */
-     }                                                                           /* (47:36) */
-     while ( _Itemp0 == 1 ) {                                                    /* (46:9) */
-          _Pshadow_Pio_CConsole_Mprint_Ruint(i);                                 /* (48:32) */
-          static struct _Pshadow_Pstandard_CString _Istring1 = {
-               &_Pshadow_Pstandard_CString_Imethods,
-               (boolean_t)1, (ubyte_t *)": "
-          };
-          _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring1);  /* (49:32) */
-          uint_t _Itemp1;                                                        /* (50:42) */
-          _Itemp1 = _Pshadow_Phello_COldHelloWorld_Mfactorial_Ruint(i);          /* (50:42) */
-          _Pshadow_Pio_CConsole_MprintLine_Ruint(_Itemp1);                       /* (50:32) */
-          i = i + 1u;                                                            /* (47:46) */
-          
-          if ( i <= end ) {                                                      /* (47:36) */
-               _Itemp0 = 1;                                                      /* (47:36) */
-          }                                                                      /* (47:36) */
-          else {
-               _Itemp0 = 0;                                                      /* (47:36) */
-          }                                                                      /* (47:36) */
-     } 
+void _Pshadow_Phello_COldHelloWorld_Mtest_Ruint_Ruint(uint_shadow_t start, uint_shadow_t end) {
+     uint_shadow_t _Itemp0;
+     uint_shadow_t _Itemp1;
+     boolean_shadow_t _Itemp2;
+     uint_shadow_t i;
+     i = start;
+     goto label0;
+label1: (void)0;
+     _Pshadow_Pio_CConsole_Mprint_Ruint(i);
+     static struct _Pshadow_Pstandard_CString _Istring1 = {
+          &_Pshadow_Pstandard_CString_Imethods,
+          (boolean_shadow_t)1, (ubyte_shadow_t *)": "
+     };
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring1);
+     _Itemp0 = _Pshadow_Phello_COldHelloWorld_Mfactorial_Ruint(i);
+     _Pshadow_Pio_CConsole_MprintLine_Ruint(_Itemp0);
+     _Itemp1 = i + 1u;
+     i = _Itemp1;
+     goto label0;
+label0: (void)0;
+     _Itemp2 = i <= end;
+     if ( _Itemp2 )
+          goto label1;
+     else
+          goto label2;
+label2: (void)0;
+     return;
 }
 
-uint_t _Pshadow_Phello_COldHelloWorld_Mfactorial_Ruint(uint_t a) {
-     boolean_t _Itemp2;                                                          /* (55:20) */
-     boolean_t _Itemp3;                                                          /* (55:29) */
-     boolean_t _Itemp4;                                                          /* (55:20) */
-     uint_t _Itemp5;                                                             /* (56:33) */
-     uint_t _Itemp7;                                                             /* (56:17) */
-     _Itemp4 = 1;                                                                /* (55:20) */
-     
-     if ( a == 1u ) {                                                            /* (55:20) */
-          _Itemp2 = 1;                                                           /* (55:20) */
-     }                                                                           /* (55:20) */
-     else {
-          _Itemp2 = 0;                                                           /* (55:20) */
-     }                                                                           /* (55:20) */
-     
-     if ( _Itemp2 == 1 ) {                                                       /* (55:20) */
-     }                                                                           /* (55:20) */
-     else {
-          
-          if ( a == 0u ) {                                                       /* (55:29) */
-               _Itemp3 = 1;                                                      /* (55:29) */
-          }                                                                      /* (55:29) */
-          else {
-               _Itemp3 = 0;                                                      /* (55:29) */
-          }                                                                      /* (55:29) */
-          
-          if ( _Itemp3 == 1 ) {                                                  /* (55:20) */
-          }                                                                      /* (55:20) */
-          else {
-               _Itemp4 = 0;                                                      /* (55:20) */
-          }                                                                      /* (55:20) */
-     }                                                                           /* (55:20) */
-     
-     if ( _Itemp4 == 1 ) {                                                       /* (54:51) */
-          return 1u;                                                             /* (55:39) */
-     }                                                                           /* (54:51) */
-     uint_t _Itemp6;                                                             /* (56:17) */
-     _Itemp5 = a - 1u;                                                           /* (56:33) */
-     _Itemp6 = _Pshadow_Phello_COldHelloWorld_Mfactorial_Ruint(_Itemp5);         /* (56:17) */
-     _Itemp7 = _Itemp6 * a;                                                      /* (56:17) */
-     return _Itemp7;                                                             /* (55:50) */
+uint_shadow_t _Pshadow_Phello_COldHelloWorld_Mfactorial_Ruint(uint_shadow_t a) {
+     boolean_shadow_t _Itemp0;
+     boolean_shadow_t _Itemp1;
+     boolean_shadow_t _Itemp2;
+     uint_shadow_t _Itemp3;
+     uint_shadow_t _Itemp4;
+     uint_shadow_t _Itemp5;
+     _Itemp0 = a == 1u;
+     _Itemp1 = a == 0u;
+     _Itemp2 = _Itemp0 || _Itemp1;
+     if ( _Itemp2 )
+          goto label0;
+     else
+          goto label1;
+label0: (void)0;
+     return 1u;
+     goto label1;
+label1: (void)0;
+     _Itemp3 = a - 1u;
+     _Itemp4 = _Pshadow_Phello_COldHelloWorld_Mfactorial_Ruint(_Itemp3);
+     _Itemp5 = _Itemp4 * a;
+     return _Itemp5;
 }
 
 void _Pshadow_Phello_COldHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString** args) {
+     struct _Pshadow_Phello_COldHelloWorld* _Itemp0;
+     struct _Pshadow_Phello_COldHelloWorld* _Itemp1;
+     struct _Pshadow_Phello_COldHelloWorld* _Itemp2;
      static struct _Pshadow_Pstandard_CString _Istring2 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"Hello World!"
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"Hello World!"
      };
-     _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring2);   /* (31:24) */
-     _Pshadow_Phello_COldHelloWorld_Mtest_Ruint_Ruint(0u, 10u);                  /* (31:50) */
+     _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring2);
+     _Pshadow_Phello_COldHelloWorld_Mtest_Ruint_Ruint(0u, 10u);
+     _Itemp0 = calloc(1, sizeof(struct _Pshadow_Phello_COldHelloWorld));
+     _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(_Itemp0, 1, 2);
+     _Itemp1 = calloc(1, sizeof(struct _Pshadow_Phello_COldHelloWorld));
+     _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint(_Itemp1, 0);
+     _Itemp2 = calloc(1, sizeof(struct _Pshadow_Phello_COldHelloWorld));
+     _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(_Itemp2, 0, 1);
+     return;
 }
 
 void _Pshadow_Phello_COldHelloWorld_Mconstructor(struct _Pshadow_Phello_COldHelloWorld* this) {
      this->_Imethods = &_Pshadow_Phello_COldHelloWorld_Imethods;
      static struct _Pshadow_Pstandard_CString _Istring3 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"object Hello World initialized with no arguments."
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"object Hello World initialized with no arguments."
      };
-     _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring3);   /* (10:24) */
+     _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring3);
+     return;
 }
 
-void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint(struct _Pshadow_Phello_COldHelloWorld* this, int_t a) {
+void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint(struct _Pshadow_Phello_COldHelloWorld* this, int_shadow_t a) {
      this->_Imethods = &_Pshadow_Phello_COldHelloWorld_Imethods;
      static struct _Pshadow_Pstandard_CString _Istring4 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"object Hello World initialized with one argument: "
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"object Hello World initialized with one argument: "
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring4);       /* (15:24) */
-     _Pshadow_Pio_CConsole_Mprint_Rint(a);                                       /* (16:24) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring4);
+     _Pshadow_Pio_CConsole_Mprint_Rint(a);
      static struct _Pshadow_Pstandard_CString _Istring5 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"."
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"."
      };
-     _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring5);   /* (17:24) */
+     _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring5);
+     return;
 }
 
-void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(struct _Pshadow_Phello_COldHelloWorld* this, int_t a, int_t b) {
+void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(struct _Pshadow_Phello_COldHelloWorld* this, int_shadow_t a, int_shadow_t b) {
      this->_Imethods = &_Pshadow_Phello_COldHelloWorld_Imethods;
      static struct _Pshadow_Pstandard_CString _Istring6 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"object Hello World initialized with two arguments: "
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"object Hello World initialized with two arguments: "
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring6);       /* (22:24) */
-     _Pshadow_Pio_CConsole_Mprint_Rint(a);                                       /* (23:24) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring6);
+     _Pshadow_Pio_CConsole_Mprint_Rint(a);
      static struct _Pshadow_Pstandard_CString _Istring7 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)" and "
+          (boolean_shadow_t)1, (ubyte_shadow_t *)" and "
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring7);       /* (24:24) */
-     _Pshadow_Pio_CConsole_Mprint_Rint(b);                                       /* (25:24) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring7);
+     _Pshadow_Pio_CConsole_Mprint_Rint(b);
      static struct _Pshadow_Pstandard_CString _Istring8 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"."
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"."
      };
-     _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring8);   /* (26:24) */
+     _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring8);
+     return;
 }
 
 struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_COldHelloWorld_MgetClass(struct _Pshadow_Phello_COldHelloWorld* this) {

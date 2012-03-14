@@ -11,6 +11,6 @@ class Class
 
 	public toString() => ( String )
 	{
-		return className;
+		return this.className;
 	}
 }

@@ -1,0 +1,19 @@
+class Basic {
+
+    private int a;
+    private int b = 0;
+
+    public thrower() => () throws Basic {
+        throw new Basic();
+    }
+    
+    public test() => () {
+        try {
+            thrower();
+        } catch(Basic b) {
+            int i;
+            i += 2;
+        }
+    }
+    
+} 

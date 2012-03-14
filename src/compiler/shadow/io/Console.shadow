@@ -3,7 +3,7 @@ package shadow.io;
 class Console
 {
 
-	private constructor() {}
+	private constructor() { }
 
 	public static native print( boolean z ) => ();
 	public static native print( ubyte ub ) => ();

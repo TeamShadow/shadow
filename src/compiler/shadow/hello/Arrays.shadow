@@ -1,0 +1,9 @@
+package shadow.hello;
+
+class Arrays {
+	public static main( String[] args ) => ()
+	{
+		boolean bool = 1 < 2;
+		//int[][,] a = new int[1][2,3];
+	}
+}

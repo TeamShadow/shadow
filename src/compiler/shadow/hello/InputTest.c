@@ -3,7 +3,7 @@
 
 static struct _Pshadow_Pstandard_CString _Istring0 = {
      &_Pshadow_Pstandard_CString_Imethods,
-     (boolean_t)1, (ubyte_t *)"shadow.hello@InputTest"
+     (boolean_shadow_t)1, (ubyte_shadow_t *)"shadow.hello@InputTest"
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CInputTest_Iclass = {
      &_Pshadow_Pstandard_CClass_Imethods, &_Istring0
@@ -11,96 +11,98 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CInputTest_Iclass = {
 
 void _Pshadow_Phello_CInputTest_Mconstructor(struct _Pshadow_Phello_CInputTest* this) {
      this->_Imethods = &_Pshadow_Phello_CInputTest_Imethods;
+     return;
 }
 
 void _Pshadow_Phello_CInputTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString** args) {
-     boolean_t _Itemp1;                                                          /* (14:20) */
-     boolean_t _Itemp2;                                                          /* (19:34) */
-     int_t _Itemp4;                                                              /* (25:37) */
-     int_t _Itemp5;                                                              /* (25:29) */
+     uint_shadow_t _Itemp0;
+     boolean_shadow_t _Itemp1;
+     int_shadow_t _Itemp2;
+     int_shadow_t _Itemp3;
+     int_shadow_t _Itemp4;
+     uint_shadow_t _Itemp5;
+     boolean_shadow_t _Itemp6;
+     double_shadow_t _Itemp7;
+     int_shadow_t _Itemp8;
+     double_shadow_t _Itemp9;
+     uint_shadow_t total;
+     int_shadow_t sum;
+     int_shadow_t product;
+     uint_shadow_t i;
+     double_shadow_t average;
      static struct _Pshadow_Pstandard_CString _Istring1 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"Enter a number: "
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"Enter a number: "
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring1);       /* (9:24) */
-     uint_t _Itemp0;                                                             /* (10:37) */
-     _Itemp0 = _Pshadow_Pio_CConsole_MreadUInt();                                /* (10:37) */
-     uint_t total;                                                               /* (9:50) */
-     total = _Itemp0;                                                            /* (9:50) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring1);
+     _Itemp0 = _Pshadow_Pio_CConsole_MreadUInt();
+     total = _Itemp0;
      static struct _Pshadow_Pstandard_CString _Istring2 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"Enter "
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"Enter "
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring2);       /* (11:24) */
-     _Pshadow_Pio_CConsole_Mprint_Ruint(total);                                  /* (12:24) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring2);
+     _Pshadow_Pio_CConsole_Mprint_Ruint(total);
      static struct _Pshadow_Pstandard_CString _Istring3 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)" number"
+          (boolean_shadow_t)1, (ubyte_shadow_t *)" number"
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring3);       /* (13:24) */
-     
-     if ( total != (uint_t)1 ) {                                                 /* (14:20) */
-          _Itemp1 = 1;                                                           /* (14:20) */
-     }                                                                           /* (14:20) */
-     else {
-          _Itemp1 = 0;                                                           /* (14:20) */
-     }                                                                           /* (14:20) */
-     
-     if ( _Itemp1 == 1 ) {                                                       /* (13:41) */
-          _Pshadow_Pio_CConsole_Mprint_Rcode('s');                               /* (15:32) */
-     }                                                                           /* (13:41) */
-     _Pshadow_Pio_CConsole_MprintLine_Rcode(':');                                /* (16:24) */
-     int_t sum;                                                                  /* (16:39) */
-     int_t product;                                                              /* (16:39) */
-     sum = 0;                                                                    /* (16:39) */
-     product = 1;                                                                /* (16:39) */
-     uint_t i;                                                                   /* (19:21) */
-     i = 0u;                                                                     /* (19:21) */
-     
-     if ( i < total ) {                                                          /* (19:34) */
-          _Itemp2 = 1;                                                           /* (19:34) */
-     }                                                                           /* (19:34) */
-     else {
-          _Itemp2 = 0;                                                           /* (19:34) */
-     }                                                                           /* (19:34) */
-     while ( _Itemp2 == 1 ) {                                                    /* (18:41) */
-          int_t _Itemp3;                                                         /* (21:43) */
-          _Itemp3 = _Pshadow_Pio_CConsole_MreadInt();                            /* (21:43) */
-          int_t next;                                                            /* (20:17) */
-          next = _Itemp3;                                                        /* (20:17) */
-          sum = sum + next;                                                      /* (21:53) */
-          product = product * next;                                              /* (22:36) */
-          i = i + 1u;                                                            /* (19:45) */
-          
-          if ( i < total ) {                                                     /* (19:34) */
-               _Itemp2 = 1;                                                      /* (19:34) */
-          }                                                                      /* (19:34) */
-          else {
-               _Itemp2 = 0;                                                      /* (19:34) */
-          }                                                                      /* (19:34) */
-     } 
-     _Itemp4 = 0 + total;                                                        /* (25:37) */
-     _Itemp5 = sum / _Itemp4;                                                    /* (25:29) */
-     int_t average;                                                              /* (24:17) */
-     average = _Itemp5;                                                          /* (24:17) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring3);
+     _Itemp1 = total != ((uint_shadow_t)1);
+     if ( _Itemp1 )
+          goto label0;
+     else
+          goto label1;
+label0: (void)0;
+     _Pshadow_Pio_CConsole_Mprint_Rcode('s');
+     goto label1;
+label1: (void)0;
+     _Pshadow_Pio_CConsole_MprintLine_Rcode(':');
+     sum = 0;
+     product = 1;
+     i = 0u;
+     goto label2;
+label3: (void)0;
+     int_shadow_t next;
+     _Itemp2 = _Pshadow_Pio_CConsole_MreadInt();
+     next = _Itemp2;
+     _Itemp3 = sum + next;
+     sum = _Itemp3;
+     _Itemp4 = product * next;
+     product = _Itemp4;
+     _Itemp5 = i + 1u;
+     i = _Itemp5;
+     goto label2;
+label2: (void)0;
+     _Itemp6 = i < total;
+     if ( _Itemp6 )
+          goto label3;
+     else
+          goto label4;
+label4: (void)0;
+     _Itemp7 = (double_shadow_t)sum;
+     _Itemp8 = (int_shadow_t)total;
+     _Itemp9 = _Itemp7 / _Itemp8;
+     average = _Itemp9;
      static struct _Pshadow_Pstandard_CString _Istring4 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"The sum is: "
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"The sum is: "
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring4);       /* (27:24) */
-     _Pshadow_Pio_CConsole_MprintLine_Rint(sum);                                 /* (28:24) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring4);
+     _Pshadow_Pio_CConsole_MprintLine_Rint(sum);
      static struct _Pshadow_Pstandard_CString _Istring5 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"The average is: "
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"The average is: "
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring5);       /* (29:24) */
-     _Pshadow_Pio_CConsole_MprintLine_Rint(average);                             /* (30:24) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring5);
+     _Pshadow_Pio_CConsole_MprintLine_Rdouble(average);
      static struct _Pshadow_Pstandard_CString _Istring6 = {
           &_Pshadow_Pstandard_CString_Imethods,
-          (boolean_t)1, (ubyte_t *)"The product is: "
+          (boolean_shadow_t)1, (ubyte_shadow_t *)"The product is: "
      };
-     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring6);       /* (31:24) */
-     _Pshadow_Pio_CConsole_MprintLine_Rint(product);                             /* (32:24) */
+     _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring6);
+     _Pshadow_Pio_CConsole_MprintLine_Rint(product);
+     return;
 }
 
 struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_CInputTest_MgetClass(struct _Pshadow_Phello_CInputTest* this) {

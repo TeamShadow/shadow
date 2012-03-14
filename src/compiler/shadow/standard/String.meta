@@ -15,8 +15,8 @@ struct _Pshadow_Pstandard_CString {
      struct _Pshadow_Pstandard_CString_Itable *_Imethods;
      
      /* Fields */
-     boolean_t ascii;                                                            /* (7:9) */
-     ubyte_t* data;                                                              /* (6:9) */
+     boolean_shadow_t ascii;
+     ubyte_shadow_t* data;
 };
 
 

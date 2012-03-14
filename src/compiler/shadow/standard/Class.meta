@@ -15,7 +15,7 @@ struct _Pshadow_Pstandard_CClass {
      struct _Pshadow_Pstandard_CClass_Itable *_Imethods;
      
      /* Fields */
-     struct _Pshadow_Pstandard_CString* className;                               /* (5:9) */
+     struct _Pshadow_Pstandard_CString* className;
 };
 
 

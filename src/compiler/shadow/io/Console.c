@@ -3,7 +3,7 @@
 
 static struct _Pshadow_Pstandard_CString _Istring0 = {
      &_Pshadow_Pstandard_CString_Imethods,
-     (boolean_t)1, (ubyte_t *)"shadow.io@Console"
+     (boolean_shadow_t)1, (ubyte_shadow_t *)"shadow.io@Console"
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Pio_CConsole_Iclass = {
      &_Pshadow_Pstandard_CClass_Imethods, &_Istring0
@@ -11,11 +11,14 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Pio_CConsole_Iclass = {
 
 void _Pshadow_Pio_CConsole_Mconstructor(struct _Pshadow_Pio_CConsole* this) {
      this->_Imethods = &_Pshadow_Pio_CConsole_Imethods;
+     return;
 }
 
 struct _Pshadow_Pstandard_CClass* _Pshadow_Pio_CConsole_MgetClass(struct _Pshadow_Pio_CConsole* this) {
      return &_Pshadow_Pio_CConsole_Iclass;
 }
+
+#include "shadow/io/Console.h"
 
 struct _Pshadow_Pio_CConsole_Itable _Pshadow_Pio_CConsole_Imethods = {
      _Pshadow_Pio_CConsole_MgetClass,
@@ -63,6 +66,4 @@ struct _Pshadow_Pio_CConsole_Itable _Pshadow_Pio_CConsole_Imethods = {
      _Pshadow_Pio_CConsole_MreadCode,
      _Pshadow_Pio_CConsole_MreadUShort,
 };
-
-#include "shadow/io/Console.h"
 

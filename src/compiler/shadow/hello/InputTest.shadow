@@ -22,7 +22,7 @@ class InputTest
 			sum += next;
 			product *= next;
 		}
-		int average = sum / (0 + total);
+		double average = cast<double>sum / cast<int>total;
 
 		Console.print("The sum is: ");
 		Console.printLine(sum);
