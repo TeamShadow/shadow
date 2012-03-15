@@ -3,38 +3,40 @@ package shadow.typecheck.type;
 import java.util.LinkedList;
 import java.util.List;
 
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.Type.Kind;
 
 public class SequenceType extends Type
 {	
-	protected List<Type> types; /** List of return types */
+	protected List<ModifiedType> types = new LinkedList<ModifiedType>(); /** List of return types */
 
 	public SequenceType() {		
-		this( new LinkedList<Type>()  );		
+		this( new LinkedList<ModifiedType>()  );		
 	}
 
-	public SequenceType(List<Type> types)
+	public SequenceType(List<ModifiedType> modifiedTypes)
 	{
 		super(null, 0, null, Kind.SEQUENCE);
-		this.types = types;
+		
+		types = modifiedTypes;
 	}
 
-	public void addType(Type type) {
+	public void addType(ModifiedType type) {
 		types.add(type);
 	}
 	
-	public List<Type> getTypes()
+	public List<ModifiedType> getTypes()
 	{
 		return types;
 	}
 	
-	public boolean canAccept( List<Type> inputTypes )
+	public boolean canAccept( List<ModifiedType> inputTypes )
 	{
 		if( types.size() != inputTypes.size() )
 			return false;
 		
 		for( int i = 0; i < types.size(); i++ )
-			if( !inputTypes.get(i).isSubtype(types.get(i)))
+			if( !inputTypes.get(i).getType().isSubtype(types.get(i).getType()) )
 				return false;
 		
 		return true;
@@ -44,11 +46,11 @@ public class SequenceType extends Type
 	public String toString() {
 		StringBuilder sb = new StringBuilder("(");
 		
-		for(Type p:types) {
-			if(p.typeName == null) // method type or sequence type
-				sb.append(p.toString());
+		for(ModifiedType p:types) {
+			if(p.getType().typeName == null) // method type or sequence type
+				sb.append(p.getType().toString());
 			else
-				sb.append(p.typeName);
+				sb.append(p.getType().typeName);
 			
 			sb.append(",");
 		}

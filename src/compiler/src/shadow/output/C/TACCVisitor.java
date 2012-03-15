@@ -223,13 +223,13 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 					foundMain = true;
 				
 				StringBuffer sb = new StringBuffer();
-				List<Type> retTypes = method.getMethodType().getReturnTypes();
+				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes();
 				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes();
 				
 				// loop through the ret types
 				
 				if(retTypes.size() != 0)
-					sb.append(typeToString(retTypes.get(0)));
+					sb.append(typeToString(retTypes.get(0).getType()));
 				else
 					sb.append("void");
 				
@@ -251,7 +251,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 					sb.append(typeToString(param.getType())).append(", ");
 				
 				for ( int i = 1; i < retTypes.size(); i++ )
-					sb.append(typeToString(retTypes.get(i))).append("*, ");
+					sb.append(typeToString(retTypes.get(i).getType())).append("*, ");
 				
 				if (paramTypes.size() == 0 && ModifierSet.isStatic(method.getASTNode().getModifiers()))
 					sb.append("void);");
@@ -270,13 +270,13 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 			if ( !method.getSymbol().equals("constructor") )
 			{
 				StringBuffer sb = new StringBuffer();
-				List<Type> retTypes = method.getMethodType().getReturnTypes();
+				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes();
 				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes();
 				
 				// loop through the ret types
 				
 				if(retTypes.size() != 0)
-					sb.append(typeToString(retTypes.get(0)));
+					sb.append(typeToString(retTypes.get(0).getType()));
 				else
 					sb.append("void");
 				
@@ -299,7 +299,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 					sb.append(typeToString(param.getType())).append(", ");
 				
 				for ( int i = 1; i < retTypes.size(); i++ )
-					sb.append(typeToString(retTypes.get(i))).append("*, ");
+					sb.append(typeToString(retTypes.get(i).getType())).append("*, ");
 				
 				if (paramTypes.size() == 0 && ModifierSet.isStatic(method.getASTNode().getModifiers()))
 					sb.append("void);");
@@ -436,13 +436,13 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 		
 		int modifiers = method.getSignature().getASTNode().getModifiers();
 		
-		List<Type> retTypes = method.getReturnTypes();
+		List<ModifiedType> retTypes = method.getReturnTypes();
 		
 		// right now we punt on returning more than one thing
 		if(retTypes.isEmpty())
 			sb.append("void");
 		else
-			sb.append(typeToString(method.getReturnTypes().get(0)));
+			sb.append(typeToString(method.getReturnTypes().get(0).getType()));
 		
 		sb.append(' ');
 		sb.append(getClassType().getMangledName());
@@ -466,7 +466,7 @@ public class TACCVisitor extends AbstractTACLinearVisitor {
 
 		for (int i = 1; i < retTypes.size(); i++)
 		{
-			sb.append(typeToString(retTypes.get(i)));
+			sb.append(typeToString(retTypes.get(i).getType()));
 			sb.append("* _Ireturn").append(i).append(", ");
 		}
 		

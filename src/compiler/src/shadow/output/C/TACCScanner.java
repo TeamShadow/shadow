@@ -22,6 +22,7 @@ import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariable;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACCScanner extends AbstractTACLinearVisitor
@@ -137,10 +138,10 @@ public class TACCScanner extends AbstractTACLinearVisitor
 		if (!node.getSignature().getMethodType().getReturnTypes().isEmpty() && node.getSymbol() == null)
 		{
 			int index = 0;
-			for (Type type : node.getSequenceType().getTypes())
+			for (ModifiedType type : node.getSequenceType().getTypes())
 			{
 				node.setSymbol(index, "_Itemp" + tempCounter++);
-				allocations.put(node.getSymbol(index++), type);
+				allocations.put(node.getSymbol(index++), type.getType());
 			}
 		}
 	}

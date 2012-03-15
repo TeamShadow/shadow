@@ -36,7 +36,7 @@ public class MethodSignature {
 		return type.containsParam(paramName);
 	}
 	
-	public void addReturn(Type ret) {
+	public void addReturn(ModifiedType ret) {
 		type.addReturn(ret);
 	}
 	

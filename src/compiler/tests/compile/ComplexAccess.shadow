@@ -28,6 +28,6 @@ class ComplexAccess {
     	
     	ComplexAccess outer = new ComplexAccess();
     	
-    	outer.i.o.i.o.i = null;
+    	outer.i.o.i.o.i = new Inner();
     }
 }

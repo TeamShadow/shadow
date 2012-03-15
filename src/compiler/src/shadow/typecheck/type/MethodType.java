@@ -9,7 +9,7 @@ import shadow.parser.javacc.ShadowParser.ModifierSet;
 public class MethodType extends Type {
 	protected List<String> paramNames;
 	protected List<ModifiedType> paramTypes;
-	protected List<Type> returns; /** List of return types */
+	protected List<ModifiedType> returns; /** List of return types */
 
 	public MethodType() {
 		this(null, 0);
@@ -19,7 +19,7 @@ public class MethodType extends Type {
 		super(null, modifiers, outer, Kind.METHOD);
 		paramNames = new ArrayList<String>();
 		paramTypes = new ArrayList<ModifiedType>();
-		returns = new LinkedList<Type>();
+		returns = new LinkedList<ModifiedType>();
 	}
 	
 	public boolean matches( List<Type> argumentTypes )
@@ -60,24 +60,24 @@ public class MethodType extends Type {
 
 
 	//this method is used to see if particular return values inside the method can be given back as return values
-	public boolean canReturn( List<Type> returnTypes )
+	public boolean canReturn( List<ModifiedType> returnTypes )
 	{
 		if( returns.size() != returnTypes.size() )
 			return false;
 		
 		for( int i = 0; i < returns.size(); i++ )
-			if( !returnTypes.get(i).isSubtype(returns.get(i)))
+			if( !returnTypes.get(i).getType().isSubtype(returns.get(i).getType()))
 				return false;
 		
 		return true;
 	}	
 	
-	public boolean canReturn( Type type )
+	public boolean canReturn( ModifiedType type )
 	{		
 		if( returns.size() != 1 )
 			return false;
 		
-		return type.isSubtype(returns.get(0));
+		return type.getType().isSubtype(returns.get(0).getType());
 	}
 	
 	public boolean returnsNothing()
@@ -134,11 +134,11 @@ public class MethodType extends Type {
 		return paramTypes;
 	}
 	
-	public void addReturn(Type ret) {
+	public void addReturn(ModifiedType ret) {
 		returns.add(ret);
 	}
 	
-	public List<Type> getReturnTypes() {
+	public List<ModifiedType> getReturnTypes() {
 		return returns;
 	}
 	
@@ -151,7 +151,7 @@ public class MethodType extends Type {
 		if( o != null && o instanceof MethodType )
 		{		
 			MethodType methodType = (MethodType)o;			
-			return matchesParams( methodType ) && returns.equals( methodType.returns );
+			return matchesParams( methodType ) && matchesReturns( methodType );
 		}
 		else
 			return false;
@@ -165,6 +165,19 @@ public class MethodType extends Type {
 		// check the parameters, we care about types only	
 		for(int i=0; i < paramTypes.size(); ++i)
 			if(!paramTypes.get(i).getType().equals(other.paramTypes.get(i).getType()))
+				return false;
+		
+		return true;		
+	}
+	
+	public boolean matchesReturns( MethodType other )
+	{		
+		if( returns.size() != other.returns.size() )
+			return false;
+		
+		// check the returns, we care about types only	
+		for(int i=0; i < returns.size(); ++i)
+			if(!returns.get(i).getType().equals(other.returns.get(i).getType()))
 				return false;
 		
 		return true;		
@@ -195,11 +208,11 @@ public class MethodType extends Type {
 			sb.append(" => (");
 		}
 		
-		for(Type r:returns) {
-			if(r.typeName == null)
-				sb.append(r.toString());
+		for(ModifiedType r:returns) {
+			if(r.getType().typeName == null)
+				sb.append(r.getType().toString());
 			else
-				sb.append(r.typeName);
+				sb.append(r.getType().typeName);
 			sb.append(",");
 		}
 

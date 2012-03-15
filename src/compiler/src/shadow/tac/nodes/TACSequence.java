@@ -20,13 +20,13 @@ public class TACSequence extends TACNode implements Iterable<TACNode>
 	{
 		type = new SequenceType();
 		for (TACNode node : nodeList)
-			type.addType(node.getType());
+			type.addType(node);
 		nodes = nodeList;
 	}
 	
 	public void addNode(TACNode node)
 	{
-		type.addType(node.getType());
+		type.addType(node);
 		nodes.add(node);
 	}
 	

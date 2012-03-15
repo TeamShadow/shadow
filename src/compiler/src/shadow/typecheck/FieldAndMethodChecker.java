@@ -147,7 +147,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 										else if( !ModifierSet.isStatic(parentModifiers) && ModifierSet.isStatic(modifiers) )
 											addError( parentNode, "Static method " + signature + " cannot override non-static method " + parentSignature );
 										else if( ModifierSet.isPublic(parentModifiers) && (ModifierSet.isPrivate(modifiers) || ModifierSet.isProtected(modifiers)) )
-											addError( parentNode, "Overrding method " + signature + " cannot reduce visibility of public method " + parentSignature );
+											addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
 										else if( ModifierSet.isProtected(parentModifiers) && ModifierSet.isPrivate(modifiers)  )
 											addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
 									}
@@ -437,7 +437,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 						addError(node.jjtGetChild(i), Error.UNDEF_TYP);
 					else						
 					// add the return type to our signature
-						signature.addReturn(type);
+						signature.addReturn(node.jjtGetChild(i));
 				}
 			}
 		}
@@ -523,14 +523,14 @@ public class FieldAndMethodChecker extends BaseChecker {
 			
 			for(int r=0; r < resNode.jjtGetNumChildren(); ++r) {
 				Node curNode = resNode.jjtGetChild(r);
-				Type type = resNode.jjtGetChild(r).getType();
+				Type type = curNode.getType();
 				
 				if(type == null) {
 					addError(curNode.jjtGetChild(0), Error.UNDEF_TYP, curNode.jjtGetChild(0).getImage());
 					return ret;	// just return whatever, we should prob throw here
 				}
 					
-				ret.addReturn(type);
+				ret.addReturn(curNode);
 			}
 		}
 		

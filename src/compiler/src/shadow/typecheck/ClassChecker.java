@@ -3,7 +3,6 @@ package shadow.typecheck;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -91,6 +90,7 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Type.Kind;
@@ -959,6 +959,31 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN; 
 	}
 	
+	private boolean isAssignable( SequenceType destination )
+	{
+		for( ModifiedType type : destination.getTypes() )
+			if( ModifierSet.isFinal(type.getModifiers()) )
+				return false;	
+		
+		return true;		
+	}
+	
+	private boolean matchesNullables( SequenceType left, SequenceType right )
+	{
+		
+		List<ModifiedType> leftTypes = left.getTypes();
+		List<ModifiedType> rightTypes = right.getTypes();
+		
+		if( leftTypes.size() != rightTypes.size() )
+			return false;		
+		
+		for( int i = 0; i < leftTypes.size(); i++ )
+			if( !ModifierSet.isNullable(leftTypes.get(i).getModifiers()) && ModifierSet.isNullable(rightTypes.get(i).getModifiers()) )
+				return false;		
+		
+		return true;		
+	}
+	
 	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
@@ -985,12 +1010,26 @@ public class ClassChecker extends BaseChecker {
 				{
 					SequenceType nextType = (SequenceType)(next.getType());
 					if( currentType.canAccept( nextType.getTypes() ) )
+					{
+						if( !isAssignable( currentType ) )
+						{
+							addError(current, Error.TYPE_MIS, "Sequence " + current + " has final values that cannot be assigned");
+							break;
+						}
+						
+						if( !matchesNullables(currentType, nextType ) )
+						{
+							addError(current, Error.TYPE_MIS, "Cannot store nullable values from " + next + " into non-nullable variables in " + current);
+							break;							
+						}
+						
 						current = next;
+					}
 					else
 					{
-						addError(current, Error.TYPE_MIS, "Sequence " + nextType + " does not match " + current);
+						addError(current, Error.TYPE_MIS, "Sequence " + nextType + " does not match " + currentType);
 						break;
-					}	
+					}
 				}
 				else
 					addError(current, Error.TYPE_MIS, next.getType() + "must be of sequence type");
@@ -1003,23 +1042,28 @@ public class ClassChecker extends BaseChecker {
 				//ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
 				//Leave it for the TAC?
 				Type t1 = child.getType();
-				Type t2 = node.jjtGetChild(2).getType();
+				Node right = node.jjtGetChild(2); 
+				Type t2 = right.getType();
 				
 				if( !ModifierSet.isAssignable(child.getModifiers()) )
 					addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
 				else if( ModifierSet.isFinal(child.getModifiers()) )
 					addError(child, Error.INVL_TYP, "Cannot assign a value to variable marked final");
+				else if( !ModifierSet.isNullable(child.getModifiers()) && ModifierSet.isNullable(right.getModifiers()) )
+					addError(child, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");
 				else					
 				{
 					// SHOULD DO SOMETHING WITH THIS!!!
 					//AssignmentType assType = op.getAssignmentType();
 					//Leave it for the TAC?
 					
+					//TODO: Fix methods so that they can return nullable values
+					
 					if( t2 instanceof MethodType ) //could this be done with a more complex subtype relationship below?
 					{
 						MethodType methodType = (MethodType)t2;
-						List<Type> type = new LinkedList<Type>();
-						type.add(t1);
+						List<ModifiedType> type = new LinkedList<ModifiedType>();
+						type.add(child);
 						if( !methodType.canReturn( type ) )
 							addError(child, Error.TYPE_MIS, "Method with signature " + methodType + " cannot return " + t1);
 					}
@@ -1075,7 +1119,7 @@ public class ClassChecker extends BaseChecker {
 			if(  last instanceof ASTResultTypes ) //if last child is results, add those
 			{
 				ASTResultTypes results = (ASTResultTypes)last;
-				for( Type type : results.getTypes() )
+				for( ModifiedType type : results.getTypes() )
 					methodType.addReturn(type);
 			}
 			else //otherwise everything was a parameter
@@ -1092,7 +1136,7 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 	
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			node.addType(node.jjtGetChild(i).getType());
+			node.addType(node.jjtGetChild(i));
 
 		return WalkType.POST_CHILDREN;
 	}
@@ -1159,7 +1203,7 @@ public class ClassChecker extends BaseChecker {
 			SequenceType sequence = new SequenceType();
 			
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				sequence.addType(node.jjtGetChild(i).getType());
+				sequence.addType(node.jjtGetChild(i));
 			
 			node.setType( sequence );
 		}			
@@ -1431,11 +1475,11 @@ public class ClassChecker extends BaseChecker {
 			else if( child instanceof ASTMethodCall && child.getType() != Type.UNKNOWN )
 			{
 				MethodType type = (MethodType)(child.getType());
-				List<Type> returnTypes = type.getReturnTypes();
+				List<ModifiedType> returnTypes = type.getReturnTypes();
 				if( returnTypes.size() == 1 )
-					node.setType( returnTypes.get(0));
+					node.setType( returnTypes.get(0).getType() );
 				else
-					node.setType( new SequenceType( returnTypes ));
+					node.setType( new SequenceType(returnTypes) );				
 			}
 			else if( child instanceof ASTUnqualifiedName )
 			{
@@ -1527,16 +1571,12 @@ public class ClassChecker extends BaseChecker {
 			{
 				if( signature.matches( typeList ))
 				{
-					List<Type> returnTypes = signature.getMethodType().getReturnTypes();
+					List<ModifiedType> returnTypes = signature.getMethodType().getReturnTypes();
 					if( returnTypes.size() == 1 )
-						node.setType(returnTypes.get(0));
-					else
-					{
-						SequenceType sequenceType = new SequenceType();
-						for( Type type : returnTypes )
-							sequenceType.addType(type);
-						node.setType( sequenceType );
-					}
+						node.setType(returnTypes.get(0).getType());
+					else										
+						node.setType( new SequenceType(returnTypes) );
+					
 					perfectMatch = true;
 					
 					if( !methodIsAccessible( signature, currentType  ))
@@ -1563,14 +1603,11 @@ public class ClassChecker extends BaseChecker {
 				else
 				{
 					MethodSignature signature = acceptableMethods.get(0); 
-					List<Type> returnTypes = signature.getMethodType().getReturnTypes();
+					List<ModifiedType> returnTypes = signature.getMethodType().getReturnTypes();
 					if( returnTypes.size() == 1 )
-						node.setType(returnTypes.get(0));
-					else
-					{
-						SequenceType sequenceType = new SequenceType( returnTypes );						
-						node.setType( sequenceType );
-					}							
+						node.setType(returnTypes.get(0).getType());
+					else				
+						node.setType( new SequenceType(returnTypes) );											
 					
 					if( !methodIsAccessible( signature, currentType  ))
 						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
@@ -1605,6 +1642,9 @@ public class ClassChecker extends BaseChecker {
 				
 		Node prefixNode = curPrefix.getFirst();
 		Type prefixType = prefixNode.getType();
+		
+		if( ModifierSet.isNullable(prefixNode.getModifiers()) )
+			addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
 		
 		int children = node.jjtGetNumChildren();
 		
@@ -1668,11 +1708,11 @@ public class ClassChecker extends BaseChecker {
 				if( child.getType() instanceof MethodType )
 				{
 					MethodType type = (MethodType)(child.getType());
-					List<Type> returnTypes = type.getReturnTypes();
+					List<ModifiedType> returnTypes = type.getReturnTypes();
 					if( returnTypes.size() == 1 )
-						node.setType( returnTypes.get(0));
+						node.setType( returnTypes.get(0).getType());
 					else
-						node.setType( new SequenceType( returnTypes ));
+						node.setType( new SequenceType(returnTypes) );				
 				}
 				else
 					node.setType(Type.UNKNOWN);

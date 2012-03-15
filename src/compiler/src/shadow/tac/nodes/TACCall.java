@@ -24,13 +24,13 @@ public class TACCall extends TACPrefixed
 		signature = methodSignature;
 		parameters = parameterValues;
 		List<ModifiedType> argumentTypes = methodSignature.getMethodType().getParameterTypes();
-		List<Type> parameterTypes = parameterValues.getType().getTypes();
+		List<ModifiedType> parameterTypes = parameterValues.getType().getTypes();
 		if (argumentTypes.size() != parameterTypes.size())
 			throw new IllegalArgumentException("Wrong number of arguments.");
 		for (int i = 0; i < argumentTypes.size(); i++)
 		{
 			Type expectedType = argumentTypes.get(i).getType(),
-					actualType = parameterTypes.get(i);
+					actualType = parameterTypes.get(i).getType();
 			if (!actualType.equals(expectedType))
 			{
 				if (actualType.isSubtype(expectedType));
@@ -55,11 +55,11 @@ public class TACCall extends TACPrefixed
 	}
 	@Override
 	public Type getType() {
-		List<Type> retTypes = signature.getMethodType().getReturnTypes();
+		List<ModifiedType> retTypes = signature.getMethodType().getReturnTypes();
 		if (retTypes.size() == 0)
 			return null;
 		if (retTypes.size() == 1)
-			return retTypes.get(0);
+			return retTypes.get(0).getType();
 		return getSequenceType();
 	}
 	public SequenceType getSequenceType()

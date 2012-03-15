@@ -1,9 +1,10 @@
 package shadow.tac.nodes;
 
 import shadow.output.AbstractTACVisitor;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
-public abstract class TACNode
+public abstract class TACNode implements ModifiedType
 {
 	public static class Dangling extends TACNode
 	{
@@ -62,6 +63,8 @@ public abstract class TACNode
 		{
 			delegate.accept(visitor);
 		}
+
+		
 	}
 	
 	protected TACNode()
@@ -122,6 +125,11 @@ public abstract class TACNode
 	public void setLabel(String label)
 	{
 		this.label = label;
+	}
+	
+	@Override
+	public int getModifiers() {			
+		return 0;
 	}
 	
 	public abstract Type getType();

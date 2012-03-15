@@ -5,13 +5,14 @@ package shadow.parser.javacc;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 public
 @SuppressWarnings("all")
 class ASTResultTypes extends SimpleNode {
 	
-	private List<Type> types = new ArrayList<Type>(); 
+	private List<ModifiedType> types = new ArrayList<ModifiedType>(); 
 	
   public ASTResultTypes(int id) {
     super(id);
@@ -21,12 +22,12 @@ class ASTResultTypes extends SimpleNode {
     super(p, id);
   }
   
-  public void addType(Type type)
+  public void addType(ModifiedType type)
   {
 	  types.add(type);
   }
   
-  public List<Type> getTypes()
+  public List<ModifiedType> getTypes()
   {
 	  return types;
   }

@@ -1037,7 +1037,7 @@ void PrimitiveType():
 void ResultType():
 { debugPrint("RESULT TYPE"); }
 {
-  Type()
+	["nullable" {jjtThis.setModifiers(ModifierSet.NULLABLE); }]  Type()
 }
 
 void ResultTypes():

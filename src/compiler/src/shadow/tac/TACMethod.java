@@ -37,7 +37,7 @@ public class TACMethod extends TACDeclaration
 		return sig.getMethodType().getParameterTypes();
 	}
 	
-	public List<Type> getReturnTypes()
+	public List<ModifiedType> getReturnTypes()
 	{
 		return sig.getMethodType().getReturnTypes();
 	}
