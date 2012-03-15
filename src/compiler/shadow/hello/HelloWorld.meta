@@ -18,13 +18,8 @@ struct _Pshadow_Phello_CHelloWorld {
      
      /* Fields */
      struct _Pshadow_Pstandard_CString* message;
-     struct _Pshadow_Pstandard_CObject* o1;
-     struct _Pshadow_Pstandard_CObject* o2;
-     struct _Pshadow_Pstandard_CObject* o3;
-     struct _Pshadow_Pstandard_CObject* o4;
-     byte_shadow_t a;
-     byte_shadow_t b;
      uint_shadow_t times;
+     struct _Pshadow_Phello_CHelloWorld* self;
 };
 
 

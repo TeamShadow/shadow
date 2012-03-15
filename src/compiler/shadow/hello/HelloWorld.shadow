@@ -4,42 +4,45 @@ import shadow.io@Console;
 
 class HelloWorld
 {
-	public Object o1, o2, o3, o4;
-	public byte a, b;
+	public HelloWorld self;
 	public uint times;
 	public String message;
 	public constructor()
 	{
+		self = this;
 		times = 5ui;
 		message = "Hello World!";
 	}
 	public constructor(uint times)
 	{
+		self = this;
 		this.times = times;
-		this.message = "Hello World!";
+		message = "Hello World!";
 	}
 	public constructor(String message)
 	{
-		this.times = 5ui;
+		self = this;
+		times = 5ui;
 		this.message = message;
 	}
 	public constructor(uint times, String message)
 	{
+		self = this;
 		this.times = times;
 		this.message = message;
 	}
 
 	public getTimes() => ( uint )
 	{
-		return this.times;
+		return times;
 	}
 	public getMessage() => ( String )
 	{
-		return this.message;
+		return self.message;
 	}
 	public getBoth() => ( uint, String )
 	{
-		return (this.times, this.message);
+		return (self.self.times, this.self.self.self.message);
 	}
 
 	public doit() => ()
@@ -125,29 +128,25 @@ class HelloWorld
  		(defaultTimes, defaultMessage) = hello1.getBoth();
  		Console.print("Default times: ");
  		Console.printLine(defaultTimes);
+ 		Console.printLine(hello1.times);
  		Console.print("Default message: ");
  		Console.printLine(defaultMessage);
+ 		Console.printLine(hello1.self.message);
  		Console.printLine();
  
 		HelloWorld hello2 = new HelloWorld(10ui);
-		hello2.times = 10ui;
-		hello2.message = "Hello World!";
 		HelloWorld hello3 = new HelloWorld("Five Times!");
-		hello3.times = 5ui;
-		hello3.message = "Five Times!";
 		HelloWorld hello4 = new HelloWorld(15ui, "Fifteen Times!");
-		hello4.times = 15ui;
-		hello4.message = "Fifteen Times!";
-
+		
 		hello1.doit();
-		hello2.doit();
-		hello3.doit();
-		hello4.doit();
+		hello2.self.doit();
+		hello3.self.self.doit();
+		hello4.self.self.self.doit();
 
 		Console.printLine(hello1);
-		Console.printLine(hello2);
-		Console.printLine(hello3);
-		Console.printLine(hello4);
+		Console.printLine(hello2.self);
+		Console.printLine(hello3.self.self);
+		Console.printLine(hello4.self.self.self);
 		Console.printLine();
 
 		Console.printLine(hello1.getMessage());

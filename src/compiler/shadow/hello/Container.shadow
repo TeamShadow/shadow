@@ -1,0 +1,28 @@
+package shadow.hello;
+
+class Container
+{
+	// Sorry for the horribly named variables
+	public Container c;
+	public HelloWorld hw;
+	public constructor()
+	{
+		c = null;
+		hw = null;
+	}
+	public constructor(Container o)
+	{
+		c = o;
+		hw = null;
+	}
+	public constructor(HelloWorld o)
+	{
+		c = null;
+		hw = o;
+	}
+	public constructor(Container o1, HelloWorld o2)
+	{
+		c = o1;
+		hw = o2;
+	}
+}
