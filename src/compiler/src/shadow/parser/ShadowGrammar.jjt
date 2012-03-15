@@ -868,6 +868,8 @@ void FormalParameter():
   ( "final" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.FINAL); } |
   "nullable" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.NULLABLE); })*
    Type() VariableDeclaratorId()
+   {
+     jjtThis.setModifiers(modifiers);   }
 }
 
 void ConstructorDeclaration(int modifiers):
@@ -1495,9 +1497,12 @@ void LocalVariableDeclaration():
   int modifiers = 0;
 }
 {
-  ( "final" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.FINAL); } |
+  ( "final" { modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.FINAL); } |
   "nullable" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.NULLABLE); })*
   ( Type() | "var" ) VariableDeclarator() ( "," VariableDeclarator() )*
+  {
+     jjtThis.setModifiers(modifiers);
+  }
 }
 
 void EmptyStatement():
