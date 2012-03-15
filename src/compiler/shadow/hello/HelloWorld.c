@@ -301,12 +301,12 @@ label4: (void)0;
      _Itemp17 = calloc(1, sizeof(struct _Pshadow_Phello_CHelloWorld));
      _Pshadow_Phello_CHelloWorld_Mconstructor(_Itemp17);
      hello1 = _Itemp17;
-     hello1->times = ((uint_shadow_t)5);
+     this->times = ((uint_shadow_t)5);
      static struct _Pshadow_Pstandard_CString _Istring16 = {
           &_Pshadow_Pstandard_CString_Imethods,
           (boolean_shadow_t)1, (ubyte_shadow_t *)"Hello World!"
      };
-     hello1->message = &_Istring16;
+     this->message = &_Istring16;
      defaultTimes = 0;
      defaultMessage = ((void *)0);
      _Itemp18 = this->_Imethods->_MgetBoth(this, &_Itemp19);
@@ -328,12 +328,12 @@ label4: (void)0;
      _Itemp20 = calloc(1, sizeof(struct _Pshadow_Phello_CHelloWorld));
      _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint(_Itemp20, ((uint_shadow_t)10));
      hello2 = _Itemp20;
-     hello2->times = ((uint_shadow_t)10);
+     this->times = ((uint_shadow_t)10);
      static struct _Pshadow_Pstandard_CString _Istring19 = {
           &_Pshadow_Pstandard_CString_Imethods,
           (boolean_shadow_t)1, (ubyte_shadow_t *)"Hello World!"
      };
-     hello2->message = &_Istring19;
+     this->message = &_Istring19;
      _Itemp21 = calloc(1, sizeof(struct _Pshadow_Phello_CHelloWorld));
      static struct _Pshadow_Pstandard_CString _Istring20 = {
           &_Pshadow_Pstandard_CString_Imethods,
@@ -341,12 +341,12 @@ label4: (void)0;
      };
      _Pshadow_Phello_CHelloWorld_Mconstructor_R_Pshadow_Pstandard_CString(_Itemp21, &_Istring20);
      hello3 = _Itemp21;
-     hello3->times = ((uint_shadow_t)5);
+     this->times = ((uint_shadow_t)5);
      static struct _Pshadow_Pstandard_CString _Istring21 = {
           &_Pshadow_Pstandard_CString_Imethods,
           (boolean_shadow_t)1, (ubyte_shadow_t *)"Five Times!"
      };
-     hello3->message = &_Istring21;
+     this->message = &_Istring21;
      _Itemp22 = calloc(1, sizeof(struct _Pshadow_Phello_CHelloWorld));
      static struct _Pshadow_Pstandard_CString _Istring22 = {
           &_Pshadow_Pstandard_CString_Imethods,
@@ -354,12 +354,12 @@ label4: (void)0;
      };
      _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint_R_Pshadow_Pstandard_CString(_Itemp22, ((uint_shadow_t)15), &_Istring22);
      hello4 = _Itemp22;
-     hello4->times = ((uint_shadow_t)15);
+     this->times = ((uint_shadow_t)15);
      static struct _Pshadow_Pstandard_CString _Istring23 = {
           &_Pshadow_Pstandard_CString_Imethods,
           (boolean_shadow_t)1, (ubyte_shadow_t *)"Fifteen Times!"
      };
-     hello4->message = &_Istring23;
+     this->message = &_Istring23;
      this->_Imethods->_Mdoit(this);
      this->_Imethods->_Mdoit(this);
      this->_Imethods->_Mdoit(this);
@@ -391,12 +391,12 @@ void _Pshadow_Phello_CHelloWorld_Mconstructor(struct _Pshadow_Phello_CHelloWorld
      this->a = 0;
      this->b = 0;
      this->times = 0;
-     times = ((uint_shadow_t)5);
+     this->times = ((uint_shadow_t)5);
      static struct _Pshadow_Pstandard_CString _Istring24 = {
           &_Pshadow_Pstandard_CString_Imethods,
           (boolean_shadow_t)1, (ubyte_shadow_t *)"Hello World!"
      };
-     message = &_Istring24;
+     this->message = &_Istring24;
      return;
 }
 
