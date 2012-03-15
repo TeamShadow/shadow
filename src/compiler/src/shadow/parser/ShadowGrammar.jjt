@@ -1522,7 +1522,7 @@ void StatementExpression():
   	//Sequence() = Sequence() = ... = Sequence() = Sequence() or
   	//Sequence() = Sequence() = ... = Sequence() = PrimaryExpression() [for method calls] 
   	  LOOKAHEAD( Sequence() ) (LOOKAHEAD( Sequence() "=" ) Sequence() "=" )+
-  	  ( LOOKAHEAD( Sequence() ) Sequence() | { jjtThis.setImage("="); } PrimaryExpression() )
+  	  ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() ) { jjtThis.setImage("="); }
 	| PrimaryExpression() [ AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
 }
 

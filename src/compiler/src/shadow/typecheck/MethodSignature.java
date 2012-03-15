@@ -40,6 +40,10 @@ public class MethodSignature {
 		type.addReturn(ret);
 	}
 	
+	public int getModifiers() {
+		return type.getModifiers();
+	}
+	
 	public String getSymbol() {
 		return symbol;
 	}
