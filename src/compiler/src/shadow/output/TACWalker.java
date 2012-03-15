@@ -3,10 +3,7 @@ package shadow.output;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
-import shadow.tac.nodes.TACBranch;
-import shadow.tac.nodes.TACLoop;
 import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACNodeInterface;
 
 /**
  * Walks the TAC in a depth-first fashion.
@@ -16,12 +13,12 @@ public class TACWalker {
 
 	private AbstractTACVisitor visitor;
 	private LinkedList<TACNode> nodes;
-	private LinkedHashSet<TACNodeInterface> sortedNodes;
+	private LinkedHashSet<TACNode> sortedNodes;
 	
 	public TACWalker(AbstractTACVisitor visitor) {
 		this.visitor = visitor;
 		this.nodes = null; // visitor.getRoot().getNodes();
-		this.sortedNodes = new LinkedHashSet<TACNodeInterface>();
+		this.sortedNodes = new LinkedHashSet<TACNode>();
 	}
 	
 	public void walk() {
@@ -30,7 +27,7 @@ public class TACWalker {
 		
 		visitor.startFile();
 		
-		for(TACNodeInterface node:sortedNodes) {
+		for(TACNode node:sortedNodes) {
 			visitor.visit(node);
 		}
 		
@@ -43,7 +40,7 @@ public class TACWalker {
 		
 		sortedNodes.add(node);
 		
-		if(node instanceof TACBranch) {
+		/*if(node instanceof TACBranch) {
 			TACBranch branch = (TACBranch)node;
 			
 			visit(branch.getTrueEntry());
@@ -53,7 +50,7 @@ public class TACWalker {
 			
 			visit(loop.getLoopNode());
 			visit(loop.getBreakNode());
-		} else if(node.getNext() != null) {
+		} else*/ if(node.getNext() != null) {
 			visit(node.getNext());
 		}
 	}
