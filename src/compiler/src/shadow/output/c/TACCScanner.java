@@ -13,10 +13,11 @@ import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
+import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
-import shadow.tac.nodes.TACPhiBranch;
+import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
@@ -34,17 +35,17 @@ public class TACCScanner extends AbstractTACVisitor
 
 	private int tempCounter, labelCounter;
 	private Map<String, Type> allocations;
-	public TACCScanner(TACModule theClass)
+	public TACCScanner(TACModule module)
 	{
-		super(theClass);
+		super(module);
 	}
 	private void allocate(TACNode node)
 	{
 		if (node.getSymbol() == null)
 		{
 			String symbol = "_Itemp" + tempCounter++;
-			node.setSymbol("_Itemp" + tempCounter++);
-			allocations.put(node.getSymbol(), node.getType());
+			node.setSymbol(symbol);
+			allocations.put(symbol, node.getType());
 		}
 	}
 
@@ -82,11 +83,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACAllocation node)
 	{
-		if (node.getSymbol() == null)
-		{
-			node.setSymbol("_Itemp" + tempCounter++);
-			allocations.put(node.getSymbol(), node.getType());
-		}
+		allocate(node);
 	}
 
 	@Override
@@ -102,56 +99,30 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACUnary node)
 	{
-		if (node.getSymbol() == null)
-		{
-			node.setSymbol("_Itemp" + tempCounter++);
-			allocations.put(node.getSymbol(), node.getType());
-		}
+		allocate(node);
 	}
 
 	@Override
 	public void visit(TACBinary node)
 	{
-		if (node.getSymbol() == null)
-		{
-			node.setSymbol("_Itemp" + tempCounter++);
-			allocations.put(node.getSymbol(), node.getType());
-		}
+		allocate(node);
 	}
 	@Override
 	public void visit(TACComparison node)
 	{
-		if (node.getSymbol() == null)
-		{
-			node.setSymbol("_Itemp" + tempCounter++);
-			allocations.put(node.getSymbol(), node.getType());
-		}
-	}
-
-	@Override
-	public void visit(TACBranch node)
-	{
-		TACNode trueBranch = node.getTrueBranch(),
-				falseBranch = node.getFalseBranch();
-		if (trueBranch != null)
-			if (trueBranch.getLabel() == null)
-				trueBranch.setLabel("label" + labelCounter++);
-		if (falseBranch != null)
-			if (falseBranch.getLabel() == null)
-				falseBranch.setLabel("label" + labelCounter++);
+		allocate(node);
 	}
 
 	@Override
 	public void visit(TACLabel node)
 	{
-		TACNode trueBranch = node.getTrueBranch(),
-				falseBranch = node.getFalseBranch();
-		if (trueBranch != null)
-			if (trueBranch.getLabel() == null)
-				trueBranch.setLabel("label" + labelCounter++);
-		if (falseBranch != null)
-			if (falseBranch.getLabel() == null)
-				falseBranch.setLabel("label" + labelCounter++);
+		if (node.getSymbol() == null)
+			node.setSymbol("label" + labelCounter++);
+	}
+
+	@Override
+	public void visit(TACBranch node)
+	{
 	}
 
 	@Override
@@ -171,11 +142,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACCast node)
 	{
-		if (node.getSymbol() == null)
-		{
-			node.setSymbol("_Itemp" + tempCounter++);
-			allocations.put(node.getSymbol(), node.getType());
-		}
+		allocate(node);
 	}
 
 	@Override
@@ -186,19 +153,12 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACPhi node)
 	{
-		if (node.getSymbol() == null)
-		{
-			node.setSymbol("_Itemp" + tempCounter++);
-			allocations.put(node.getSymbol(), node.getType());
-		}
+		allocate(node);
 	}
 
 	@Override
-	public void visit(TACPhiBranch node)
+	public void visit(TACBranchPhi node)
 	{
-		TACPhi phi = node.getPhi();
-		if (phi.getLabel() == null)
-			phi.setLabel("label" + labelCounter++);
 	}
 	
 	@Override

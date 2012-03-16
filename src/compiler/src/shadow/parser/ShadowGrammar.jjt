@@ -1091,7 +1091,7 @@ void Expression():
  */
 { debugPrint("EXPRESSION"); }
 {
-  ConditionalExpression() [ LOOKAHEAD(2) AssignmentOperator() Expression() ]
+  ConditionalExpression() [ LOOKAHEAD(2) AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
 }
 
 void AssignmentOperator():

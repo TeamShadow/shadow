@@ -3,12 +3,13 @@ package shadow.tac.nodes;
 import shadow.tac.AbstractTACVisitor;
 import shadow.typecheck.type.Type;
 
-public class TACPhiBranch extends TACNode
+public class TACBranchPhi extends TACBranch
 {
 	private TACNode value;
 	private TACPhi phi;
-	public TACPhiBranch(TACNode valueNode, TACPhi phiNode)
+	public TACBranchPhi(TACLabel labelNode, TACNode valueNode, TACPhi phiNode)
 	{
+		super(labelNode);
 		value = valueNode;
 		phi = phiNode;
 	}

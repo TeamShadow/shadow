@@ -11,7 +11,7 @@ import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
-import shadow.tac.nodes.TACPhiBranch;
+import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
@@ -60,7 +60,7 @@ public abstract class AbstractTACVisitor
 	public abstract void visit(TACLabel node);
 	public abstract void visit(TACLiteral node);
 	public abstract void visit(TACPhi node);
-	public abstract void visit(TACPhiBranch node);
+	public abstract void visit(TACBranchPhi node);
 	public abstract void visit(TACReference node);
 	public abstract void visit(TACReturn node);
 	public abstract void visit(TACSequence node);

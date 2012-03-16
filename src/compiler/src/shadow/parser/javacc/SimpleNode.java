@@ -6,7 +6,6 @@ import org.apache.commons.logging.Log;
 
 import shadow.Configuration;
 import shadow.Loggers;
-import shadow.tac.nodes.TACNode;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.Type;
 
@@ -25,9 +24,6 @@ public class SimpleNode implements Node {
     protected Type type;		// used by the type checker    
     protected int modifiers; 	// used by the type checker
 	private Type enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
-
-	private TACNode entryNode;	/** The entry node for the TAC path that includes this AST */
-	private TACNode exitNode;	/** The exit node for the TAC path that includes this AST */
 
 	public SimpleNode(int id) {
     	this.id = id;
@@ -202,55 +198,6 @@ public class SimpleNode implements Node {
 	public boolean isField()
 	{
 		return ModifierSet.isField(modifiers);
-	}
-
-	public void appendNode(SimpleNode node)
-	{
-		if (exitNode == null)
-		{
-			entryNode = node.entryNode;
-			exitNode = node.exitNode;
-		}
-		else
-		{
-			exitNode.append(node.entryNode);
-			exitNode = node.exitNode;
-		}
-	}
-	public void appendNode(TACNode node)
-	{
-		if (exitNode == null)
-			entryNode = exitNode = node;
-		else
-		{
-			exitNode.append(node);
-			exitNode = node;
-		}
-	}
-
-	public TACNode getNode()
-	{
-		return exitNode;
-	}
-	public void setNode(TACNode node)
-	{
-		exitNode = node;
-	}
-	
-	public TACNode getEntryNode() {
-		return entryNode;
-	}
-
-	public void setEntryNode(TACNode entryNode) {
-		this.entryNode = entryNode;
-	}
-
-	public TACNode getExitNode() {
-		return exitNode;
-	}
-
-	public void setExitNode(TACNode exitNode) {
-		this.exitNode = exitNode;
 	}
 
 	public String toString()

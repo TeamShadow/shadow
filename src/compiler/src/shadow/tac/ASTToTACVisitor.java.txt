@@ -64,7 +64,7 @@ import shadow.tac.nodes.TACComparison;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
-import shadow.tac.nodes.TACPhiBranch;
+import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACPrefixed;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
@@ -76,6 +76,7 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 
+@Deprecated
 public class ASTToTACVisitor extends AbstractTACVisitor {
 	private ClassInterfaceBaseType outerType;
 	private List<TACVariable> variables;
@@ -86,7 +87,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTBlock node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException
 	{
 		for (TACVariable var : variables.pop())
 			node.appendNode(new TACAllocation(var));
@@ -94,7 +95,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 			node.appendNode((SimpleNode)node.jjtGetChild(i));
 	}
 	
-	private void visitMethod(SimpleNode node, MethodSignature ms)
+	private Object visitMethod(SimpleNode node, MethodSignature ms)
 	{
 		TACMethod method = new TACMethod(ms);
 		for (int i = 1; i < node.jjtGetNumChildren(); i++)
@@ -104,7 +105,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTMethodDeclaration node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			visitMethod(node);
@@ -112,7 +113,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTConstructorDeclaration node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			visitMethod(node);
@@ -120,7 +121,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTDestructorDeclaration node, TACDeclaration[] children)
+	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		if (secondVisit)
 			visitMethod(node);
@@ -128,7 +129,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTFieldDeclaration node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -157,7 +158,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTLocalVariableDeclaration node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			for (int i = 1; i < node.jjtGetNumChildren(); i++)
@@ -176,7 +177,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTVariableDeclarator node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -209,7 +210,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			node.appendNode((SimpleNode)node.jjtGetChild(0));
@@ -217,7 +218,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTStatement node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTStatement node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			node.appendNode((SimpleNode)node.jjtGetChild(0));
@@ -225,7 +226,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTBlockStatement node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTBlockStatement node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			node.appendNode((SimpleNode)node.jjtGetChild(0));
@@ -233,7 +234,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTStatementExpressionList node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTStatementExpressionList node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			for (int i = 0; i < node.jjtGetNumChildren(); i++)
@@ -242,7 +243,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTStatementExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -282,7 +283,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTVariableInitializer node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			node.appendNode((SimpleNode)node.jjtGetChild(0));
@@ -290,7 +291,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTPrimaryExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTPrimaryExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -322,7 +323,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTConditionalExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -337,9 +338,9 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 				node.appendNode(conditionNode);
 				node.appendNode(new TACBranch(conditionNode.getNode(), trueNode.getEntryNode(), falseNode.getEntryNode()));
 				node.appendNode(trueNode);
-				node.appendNode(new TACPhiBranch(trueNode.getNode(), phi));
+				node.appendNode(new TACBranchPhi(trueNode.getNode(), phi));
 				node.appendNode(falseNode);
-				node.appendNode(new TACPhiBranch(falseNode.getNode(), phi));
+				node.appendNode(new TACBranchPhi(falseNode.getNode(), phi));
 				node.appendNode(phi);
 			}
 		}
@@ -347,7 +348,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTSequence node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTSequence node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -364,7 +365,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTIfStatement node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -390,7 +391,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public void visitLoop(SimpleNode node, SimpleNode conditionNode, SimpleNode bodyNode, boolean loopAtLeastOnce)
+	public Object visitLoop(SimpleNode node, SimpleNode conditionNode, SimpleNode bodyNode, boolean loopAtLeastOnce)
 	{
 		TACNode bodyTarget = bodyNode.getEntryNode(),
 				conditionTarget = conditionNode.getEntryNode(),
@@ -404,7 +405,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTWhileStatement node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTWhileStatement node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			visitLoop((SimpleNode)node, (SimpleNode)node.jjtGetChild(0),
@@ -413,7 +414,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTDoStatement node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTDoStatement node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			visitLoop((SimpleNode)node, (SimpleNode)node.jjtGetChild(1),
@@ -422,7 +423,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTForStatement node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTForStatement node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -448,7 +449,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTMethodCall node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -478,7 +479,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTReturnStatement node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTReturnStatement node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -495,7 +496,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTConstructorInvocation node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTConstructorInvocation node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -520,7 +521,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTAllocationExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTAllocationExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -530,7 +531,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTLiteral node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -543,7 +544,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTBooleanLiteral node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTBooleanLiteral node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -556,7 +557,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTNullLiteral node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTNullLiteral node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -569,7 +570,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTIntegerLiteral node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTIntegerLiteral node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -582,7 +583,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTCastExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTCastExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -594,7 +595,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTPrimaryPrefix node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -607,7 +608,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTPrimarySuffix node, TACDeclaration[] children)
+	public Object visit(ASTPrimarySuffix node, Boolean secondVisit)
 			throws ShadowException {
 		if (secondVisit)
 			if (node.isImageNull())
@@ -617,7 +618,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private void visit(SimpleNode node, TACUnary.Operator operation)
+	private Object visit(SimpleNode node, TACUnary.Operator operation)
 	{
 		SimpleNode operand = (SimpleNode)node.jjtGetChild(0);
 		node.appendNode(operand);
@@ -625,7 +626,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTUnaryExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -653,7 +654,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTUnaryExpressionNotPlusMinus node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 		{
@@ -680,7 +681,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private void visitBinary(SimpleNode node)
+	private Object visitBinary(SimpleNode node)
 	{
 		SimpleNode firstOperand = (SimpleNode)node.jjtGetChild(0);
 		TACNode firstNode = firstOperand.getNode();
@@ -696,7 +697,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTAdditiveExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -707,7 +708,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTMultiplicativeExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -718,7 +719,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTShiftExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -729,7 +730,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTRotateExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTRotateExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -740,7 +741,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTConditionalAndExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -751,7 +752,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTConditionalOrExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -762,7 +763,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTConditionalExclusiveOrExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -773,7 +774,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTBitwiseAndExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTBitwiseAndExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -784,7 +785,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTBitwiseOrExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -795,7 +796,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTBitwiseExclusiveOrExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTBitwiseExclusiveOrExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -805,7 +806,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private void visitComparison(SimpleNode node)
+	private Object visitComparison(SimpleNode node)
 	{
 		SimpleNode firstOperand = (SimpleNode)node.jjtGetChild(0);
 		TACNode firstNode = firstOperand.getNode();
@@ -821,7 +822,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTEqualityExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -832,7 +833,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTRelationalExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())
@@ -843,7 +844,7 @@ public class ASTToTACVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(ASTIsExpression node, TACDeclaration[] children) throws ShadowException
+	public Object visit(ASTIsExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
 			if (node.isImageNull())

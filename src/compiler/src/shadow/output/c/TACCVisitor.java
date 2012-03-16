@@ -27,7 +27,7 @@ import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
-import shadow.tac.nodes.TACPhiBranch;
+import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACPrefixed;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
@@ -796,7 +796,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACPhiBranch node)
+	public void visit(TACBranchPhi node)
 	{
 		curWriter.writeLine(nodeToString(node.getPhi()) + " = " +
 				nodeToString(node.getValue()) + ';');

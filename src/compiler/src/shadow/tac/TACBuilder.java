@@ -39,6 +39,8 @@ public class TACBuilder extends AbstractASTVisitor
 		// create a new class
 		TACModule module = new TACModule(type, node.getImage()); 
 		
+		converter.outerType = type;
+		
 		// go through the fields
 		for (Node field : type.getFields().values())
 		{

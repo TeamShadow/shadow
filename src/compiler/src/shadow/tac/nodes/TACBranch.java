@@ -5,22 +5,20 @@ import shadow.typecheck.type.Type;
 
 public class TACBranch extends TACNode
 {
-	private TACNode condition, trueBranch, falseBranch;
-	public TACBranch(TACNode branchNode)
+	private TACNode condition;
+	private TACLabel trueLabel, falseLabel;
+	public TACBranch(TACLabel branchNode)
 	{
-		trueBranch = branchNode;
-		branchNode.addTarget();
-		condition = falseBranch = null;
+		trueLabel = branchNode;
+		condition = falseLabel = null;
 	}
-	public TACBranch(TACNode conditionNode, TACNode trueBranchNode, TACNode falseBranchNode)
+	public TACBranch(TACNode conditionNode, TACLabel trueNode, TACLabel falseNode)
 	{
 		if (!conditionNode.getType().equals(Type.BOOLEAN))
 			throw new IllegalArgumentException("Condition must be of type boolean.");
 		condition = conditionNode;
-		trueBranch = trueBranchNode;
-		trueBranchNode.addTarget();
-		falseBranch = falseBranchNode;
-		falseBranchNode.addTarget();
+		trueLabel = trueNode;
+		falseLabel = falseNode;
 	}
 	
 	@Override
@@ -38,24 +36,26 @@ public class TACBranch extends TACNode
 	}
 	public TACNode getBranch()
 	{
-		return trueBranch;
+		return trueLabel;
 	}
 	public TACNode getTrueBranch()
 	{
-		return trueBranch;
+		return trueLabel;
 	}
 	public TACNode getFalseBranch()
 	{
-		return falseBranch;
+		return falseLabel;
 	}
 	
 	@Override
 	public String toString()
 	{
 		if (isConditional())
-			return "goto " + condition + " ? " + trueBranch.getLabel() + " : " + falseBranch.getLabel();
+			return "goto " + condition + " ? " +
+				trueLabel.getSymbol() + " : " +
+				falseLabel.getSymbol();
 		else
-			return "goto " + trueBranch.getLabel();
+			return "goto " + trueLabel.getSymbol();
 	}
 	
 	@Override
