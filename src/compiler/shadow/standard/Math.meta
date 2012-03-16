@@ -12,11 +12,11 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CMath_Iclass;
 struct _Pshadow_Pstandard_CMath_Itable;
 struct _Pshadow_Pstandard_CMath_Itable _Pshadow_Pstandard_CMath_Imethods;
 struct _Pshadow_Pstandard_CMath {
-     struct _Pshadow_Pstandard_CMath_Itable *_Imethods;
-     
-     /* Fields */
-     double_shadow_t E;
-     double_shadow_t PI;
+	struct _Pshadow_Pstandard_CMath_Itable *_Imethods;
+	
+	/* Fields */
+	double_shadow_t E;
+	double_shadow_t PI;
 };
 
 struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CMath_MgetClass(struct _Pshadow_Pstandard_CMath* this);
@@ -51,36 +51,36 @@ double_shadow_t _Pshadow_Pstandard_CMath_Macos_Rdouble(double_shadow_t);
 void _Pshadow_Pstandard_CMath_Mconstructor(struct _Pshadow_Pstandard_CMath*);
 
 struct _Pshadow_Pstandard_CMath_Itable {
-     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CMath*);
-     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-     double_shadow_t (*_Mln_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mcosh_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Matan_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Matan_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
-     int_shadow_t (*_Mpow_Rint_Ruint)(int_shadow_t, uint_shadow_t);
-     long_shadow_t (*_Mpow_Rlong_Ruint)(long_shadow_t, uint_shadow_t);
-     double_shadow_t (*_Mpow_Rdouble_Ruint)(double_shadow_t, uint_shadow_t);
-     double_shadow_t (*_Mpow_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
-     double_shadow_t (*_Masin_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mcos_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Msqrt_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mmod_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
-     int_shadow_t (*_Mdiv_Rint_Rint)(int_shadow_t, int_shadow_t, int_shadow_t*);
-     long_shadow_t (*_Mdiv_Rlong_Rlong)(long_shadow_t, long_shadow_t, long_shadow_t*);
-     double_shadow_t (*_Msinh_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mparts_Rdouble)(double_shadow_t, double_shadow_t*);
-     double_shadow_t (*_Mlog_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mlog_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
-     double_shadow_t (*_Mtanh_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mexp_Rdouble)(double_shadow_t);
-     uint_shadow_t (*_Mabs_Rint)(int_shadow_t);
-     ulong_shadow_t (*_Mabs_Rlong)(long_shadow_t);
-     double_shadow_t (*_Mabs_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mfloor_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mceiling_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Msin_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Mtan_Rdouble)(double_shadow_t);
-     double_shadow_t (*_Macos_Rdouble)(double_shadow_t);
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CMath*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	double_shadow_t (*_Mln_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mcosh_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Matan_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Matan_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
+	int_shadow_t (*_Mpow_Rint_Ruint)(int_shadow_t, uint_shadow_t);
+	long_shadow_t (*_Mpow_Rlong_Ruint)(long_shadow_t, uint_shadow_t);
+	double_shadow_t (*_Mpow_Rdouble_Ruint)(double_shadow_t, uint_shadow_t);
+	double_shadow_t (*_Mpow_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
+	double_shadow_t (*_Masin_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mcos_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Msqrt_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mmod_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
+	int_shadow_t (*_Mdiv_Rint_Rint)(int_shadow_t, int_shadow_t, int_shadow_t*);
+	long_shadow_t (*_Mdiv_Rlong_Rlong)(long_shadow_t, long_shadow_t, long_shadow_t*);
+	double_shadow_t (*_Msinh_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mparts_Rdouble)(double_shadow_t, double_shadow_t*);
+	double_shadow_t (*_Mlog_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mlog_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
+	double_shadow_t (*_Mtanh_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mexp_Rdouble)(double_shadow_t);
+	uint_shadow_t (*_Mabs_Rint)(int_shadow_t);
+	ulong_shadow_t (*_Mabs_Rlong)(long_shadow_t);
+	double_shadow_t (*_Mabs_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mfloor_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mceiling_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Msin_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Mtan_Rdouble)(double_shadow_t);
+	double_shadow_t (*_Macos_Rdouble)(double_shadow_t);
 };
 
 #include "shadow/standard/Class.meta"

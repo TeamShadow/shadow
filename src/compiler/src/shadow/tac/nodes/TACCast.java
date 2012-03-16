@@ -1,5 +1,7 @@
 package shadow.tac.nodes;
 
+import java.io.IOException;
+
 import shadow.tac.AbstractTACVisitor;
 import shadow.typecheck.type.Type;
 
@@ -30,7 +32,7 @@ public class TACCast extends TACNode
 	}
 	
 	@Override
-	public void accept(AbstractTACVisitor visitor)
+	public void accept(AbstractTACVisitor visitor) throws IOException
 	{
 		visitor.visit(this);
 	}

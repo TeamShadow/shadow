@@ -1,0 +1,33 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef NUMERIC_META
+#define NUMERIC_META
+
+#include "types.h"
+#include "stdlib.h"
+#include "shadow/standard/Object.meta"
+
+struct _Pshadow_Pstandard_CClass;
+
+struct _Pshadow_Pstandard_CClass _P_CNumeric_Iclass;
+struct _P_CNumeric_Itable;
+struct _P_CNumeric_Itable _P_CNumeric_Imethods;
+struct _P_CNumeric {
+	struct _P_CNumeric_Itable *_Imethods;
+	
+	/* Fields */
+};
+
+
+struct _Pshadow_Pstandard_CClass* _P_CNumeric_MgetClass(struct _P_CNumeric* this);
+void _P_CNumeric_Mtest(struct _P_CNumeric*);
+void _P_CNumeric_Mconstructor(struct _P_CNumeric*);
+
+struct _P_CNumeric_Itable {
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _P_CNumeric*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	void (*_Mtest)(struct _P_CNumeric*);
+};
+
+#include "shadow/standard/Class.meta"
+
+#endif

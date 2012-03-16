@@ -1,5 +1,7 @@
 package shadow.tac.nodes;
 
+import java.io.IOException;
+
 import shadow.tac.AbstractTACVisitor;
 
 public class TACUnary extends TACOperation
@@ -43,7 +45,7 @@ public class TACUnary extends TACOperation
 	}
 	
 	@Override
-	public void accept(AbstractTACVisitor visitor)
+	public void accept(AbstractTACVisitor visitor) throws IOException
 	{
 		visitor.visit(this);
 	}

@@ -11,9 +11,9 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CObject_Iclass;
 struct _Pshadow_Pstandard_CObject_Itable;
 struct _Pshadow_Pstandard_CObject_Itable _Pshadow_Pstandard_CObject_Imethods;
 struct _Pshadow_Pstandard_CObject {
-     struct _Pshadow_Pstandard_CObject_Itable *_Imethods;
-     
-     /* Fields */
+	struct _Pshadow_Pstandard_CObject_Itable *_Imethods;
+	
+	/* Fields */
 };
 
 
@@ -23,8 +23,8 @@ struct _Pshadow_Pstandard_CString* _Pshadow_Pstandard_CObject_MtoString(struct _
 void _Pshadow_Pstandard_CObject_Mconstructor(struct _Pshadow_Pstandard_CObject*);
 
 struct _Pshadow_Pstandard_CObject_Itable {
-     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CObject*);
-     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CObject*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
 };
 
 #include "shadow/standard/Class.meta"

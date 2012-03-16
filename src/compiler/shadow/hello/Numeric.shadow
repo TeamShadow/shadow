@@ -7,7 +7,7 @@ class Numeric {
         
         a += b;
         b += (3 + 4);
-        c = a << 1 <<< b;
+        c = a << 1 /*<*/<< b;
         c <<= a * b;
         
         a |= b;

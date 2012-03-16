@@ -12,11 +12,11 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CString_Iclass;
 struct _Pshadow_Pstandard_CString_Itable;
 struct _Pshadow_Pstandard_CString_Itable _Pshadow_Pstandard_CString_Imethods;
 struct _Pshadow_Pstandard_CString {
-     struct _Pshadow_Pstandard_CString_Itable *_Imethods;
-     
-     /* Fields */
-     boolean_shadow_t ascii;
-     ubyte_shadow_t* data;
+	struct _Pshadow_Pstandard_CString_Itable *_Imethods;
+	
+	/* Fields */
+	boolean_shadow_t ascii;
+	ubyte_shadow_t* data;
 };
 
 
@@ -25,8 +25,8 @@ struct _Pshadow_Pstandard_CString* _Pshadow_Pstandard_CString_MtoString(struct _
 void _Pshadow_Pstandard_CString_Mconstructor(struct _Pshadow_Pstandard_CString*);
 
 struct _Pshadow_Pstandard_CString_Itable {
-     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CString*);
-     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CString*);
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CString*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CString*);
 };
 
 #include "shadow/standard/Class.meta"

@@ -14,9 +14,9 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Phello_COldHelloWorld_Iclass;
 struct _Pshadow_Phello_COldHelloWorld_Itable;
 struct _Pshadow_Phello_COldHelloWorld_Itable _Pshadow_Phello_COldHelloWorld_Imethods;
 struct _Pshadow_Phello_COldHelloWorld {
-     struct _Pshadow_Phello_COldHelloWorld_Itable *_Imethods;
-     
-     /* Fields */
+	struct _Pshadow_Phello_COldHelloWorld_Itable *_Imethods;
+	
+	/* Fields */
 };
 
 
@@ -33,11 +33,11 @@ void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint(struct _Pshadow_Phello_COl
 void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(struct _Pshadow_Phello_COldHelloWorld*, int_shadow_t, int_shadow_t);
 
 struct _Pshadow_Phello_COldHelloWorld_Itable {
-     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_COldHelloWorld*);
-     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-     void (*_Mtest_Ruint_Ruint)(uint_shadow_t, uint_shadow_t);
-     uint_shadow_t (*_Mfactorial_Ruint)(uint_shadow_t);
-     void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_COldHelloWorld*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	void (*_Mtest_Ruint_Ruint)(uint_shadow_t, uint_shadow_t);
+	uint_shadow_t (*_Mfactorial_Ruint)(uint_shadow_t);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
 };
 
 #include "shadow/io/Console.meta"

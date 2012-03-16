@@ -72,7 +72,7 @@ class HelloWorld
 	{
 		
 		String name = "Fibonacci";
-		for ( uint start = 0ui, temp = 10000000ui; start <= 2ui; start += 1ui, temp -= 100ui )
+		for ( uint start = 0ui, temp = 10000000ui; start <= 2ui; start += 1ui, temp -= 10000ui, Console.printLine(temp) )
 		{
 			if ( start == 2ui )
 				name = "Lucas";
@@ -120,8 +120,6 @@ class HelloWorld
 		}
 
  		HelloWorld hello1 = new HelloWorld();
-		hello1.times = 5ui;
-		hello1.message = "Hello World!";
  
  		uint defaultTimes;
  		String defaultMessage;

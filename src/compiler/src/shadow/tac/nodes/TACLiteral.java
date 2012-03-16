@@ -1,5 +1,6 @@
 package shadow.tac.nodes;
 
+import java.io.IOException;
 import java.math.BigInteger;
 
 import shadow.tac.AbstractTACVisitor;
@@ -59,7 +60,7 @@ public class TACLiteral extends TACNode
 	}
 
 	@Override
-	public void accept(AbstractTACVisitor visitor)
+	public void accept(AbstractTACVisitor visitor) throws IOException
 	{
 		visitor.visit(this);
 	}

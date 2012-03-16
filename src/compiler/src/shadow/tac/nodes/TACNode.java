@@ -1,5 +1,7 @@
 package shadow.tac.nodes;
 
+import java.io.IOException;
+
 import shadow.tac.AbstractTACVisitor;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
@@ -41,5 +43,5 @@ public abstract class TACNode implements ModifiedType
 	}
 	
 	public abstract Type getType();
-	public abstract void accept(AbstractTACVisitor visitor);
+	public abstract void accept(AbstractTACVisitor visitor) throws IOException;
 }

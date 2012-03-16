@@ -1,5 +1,6 @@
 package shadow.tac.nodes;
 
+import java.io.IOException;
 import java.util.Collections;
 
 import shadow.tac.AbstractTACVisitor;
@@ -40,7 +41,7 @@ public class TACReturn extends TACNode
 	}
 	
 	@Override
-	public void accept(AbstractTACVisitor visitor)
+	public void accept(AbstractTACVisitor visitor) throws IOException
 	{
 		visitor.visit(this);
 	}

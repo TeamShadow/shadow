@@ -93,9 +93,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTMethodDeclarator node, TACData tac) throws ShadowException
 	{
-		tac.appendChildren();
-		if (!(tac.getNode() instanceof TACReturn))
-			tac.append(new TACReturn());
+		
 	}
 
 	@Override
@@ -119,6 +117,12 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	}
 
 	@Override
+	public void visit(ASTBlockStatement node, TACData tac) throws ShadowException
+	{
+		tac.appendChildren();
+	}
+
+	@Override
 	public void visit(ASTLocalVariableDeclaration node, TACData tac) throws ShadowException
 	{
 		tac.appendChildren();
@@ -127,19 +131,34 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTVariableDeclarator node, TACData tac) throws ShadowException
 	{
-		tac.appendChildren();
+		tac.appendChild(0);
 		TACNode value;
-		if (!tac.hasChild(2))
-			tac.append(value = getDefault(node.getType()));
+		if (!tac.hasChild(1))
+		{
+			value = getDefault(node.getType());
+			tac.append(value);
+		}
 		else
+		{
+			tac.appendChild(1);
 			value = tac.getChildNode(1);
+		}
 		tac.append(new TACAssign(tac.getChildNode(0), value));
 	}
 
 	@Override
 	public void visit(ASTVariableDeclaratorId node, TACData tac) throws ShadowException
 	{
-		tac.append(new TACVariable(node.jjtGetParent().getType(), node.getImage(), node.isField()));
+		TACVariable var = new TACVariable(node.jjtGetParent().getType(), node.getImage(), node.jjtGetParent().isField());
+		if (node.jjtGetParent().isField())
+		{
+			TACVariable implicitThis = new TACVariable(outerType, "this", false);
+			tac.append(implicitThis);
+			var.setPrefix(implicitThis);
+		}
+		else
+			tac.append(new TACAllocation(var));
+		tac.append(var);
 	}
 
 	@Override
@@ -152,6 +171,12 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	public void visit(ASTArrayInitializer node, TACData tac) throws ShadowException
 	{
 		
+	}
+
+	@Override
+	public void visit(ASTStatement node, TACData tac) throws ShadowException
+	{
+		tac.appendChildren();
 	}
 
 	@Override
@@ -186,6 +211,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 		tac.append(falseLabel);
 		tac.appendChild(2);
 		tac.append(new TACBranch(endLabel));
+		tac.append(endLabel);
 	}
 
 	@Override
@@ -208,7 +234,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 			tac.appendChild(condition++);
 		int body = condition + 1;
 		if (node.jjtGetChild(body) instanceof ASTForUpdate)
-			tac.appendChild(body++);
+			tac.getChild(++body).append(tac.getChild(body - 1));
 		visitLoop(node, tac, condition, body, false);
 	}
 
@@ -233,7 +259,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTStatementExpressionList node, TACData tac) throws ShadowException
 	{
-		
+		tac.appendChildren();
 	}
 
 	@Override
@@ -319,6 +345,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 			{
 				tac.appendChild(index);
 				result = new TACAssign(tac.getChildNode(index), result);
+				tac.append(result);
 			}
 		}
 		else
@@ -350,7 +377,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 			TACLabel trueLabel = new TACLabel("true"),
 					falseLabel = new TACLabel("false"),
 					endLabel = new TACLabel("end");
-			TACPhi phi = new TACPhi(node.getType(), trueLabel, falseLabel);
+			TACPhi phi = new TACPhi(node.getType(), tac.getChildNode(1), tac.getChildNode(2));
 			tac.appendChild(0);
 			tac.append(new TACBranch(tac.getChildNode(0), trueLabel, falseLabel));
 			tac.append(trueLabel);
@@ -385,19 +412,19 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTBitwiseOrExpression node, TACData tac) throws ShadowException
 	{
-		visitComparison(node, tac);
+		visitBinary(node, tac);
 	}
 
 	@Override
 	public void visit(ASTBitwiseExclusiveOrExpression node, TACData tac) throws ShadowException
 	{
-		visitComparison(node, tac);
+		visitBinary(node, tac);
 	}
 
 	@Override
 	public void visit(ASTBitwiseAndExpression node, TACData tac) throws ShadowException
 	{
-		visitComparison(node, tac);
+		visitBinary(node, tac);
 	}
 
 	@Override
@@ -421,7 +448,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTShiftExpression node, TACData tac) throws ShadowException
 	{
-		visitComparison(node, tac);
+		visitBinary(node, tac);
 	}
 
 	@Override
@@ -737,7 +764,10 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTLiteral node, TACData tac) throws ShadowException
 	{
-		tac.append(new TACLiteral(node.getType(), node.getImage()));
+		if (tac.hasChild(0))
+			tac.appendChildren();
+		else
+			tac.append(new TACLiteral(node.getType(), node.getImage()));
 	}
 
 	@Override
@@ -765,12 +795,6 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	}
 
 	@Override
-	public void visit(ASTStatement node, TACData tac) throws ShadowException
-	{
-		
-	}
-
-	@Override
 	public void visit(ASTAssertStatement node, TACData tac) throws ShadowException
 	{
 		
@@ -778,12 +802,6 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 
 	@Override
 	public void visit(ASTLabeledStatement node, TACData tac) throws ShadowException
-	{
-		
-	}
-
-	@Override
-	public void visit(ASTBlockStatement node, TACData tac) throws ShadowException
 	{
 		
 	}
@@ -881,8 +899,8 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 			for (int i = 0; i < node.getImage().length(); )
 			{
 				first = new TACBinary(first, TACBinary.Operator.parse(
-						node.getImage().charAt(i)), tac.getChildNode(i));
-				tac.appendChild(++i);
+						node.getImage().charAt(i)), tac.getChildNode(++i));
+				tac.appendChild(i);
 				tac.append(first);
 			}
 		}
@@ -899,8 +917,8 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 			for (int i = 0; i < node.getImage().length(); )
 			{
 				first = new TACComparison(first, TACComparison.Operator.parse(
-						node.getImage().charAt(i)), tac.getChildNode(i));
-				tac.appendChild(++i);
+						node.getImage().charAt(i)), tac.getChildNode(++i));
+				tac.appendChild(i);
 				tac.append(first);
 			}
 		}

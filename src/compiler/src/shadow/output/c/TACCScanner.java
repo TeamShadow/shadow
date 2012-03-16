@@ -1,5 +1,6 @@
 package shadow.output.c;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,7 +76,7 @@ public class TACCScanner extends AbstractTACVisitor
 	}
 	
 	@Override
-	public void visit(TACNode node)
+	public void visit(TACNode node) throws IOException
 	{
 		super.visit(node);
 	}
@@ -116,8 +117,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACLabel node)
 	{
-		if (node.getSymbol() == null)
-			node.setSymbol("label" + labelCounter++);
+		node.setSymbol("label" + labelCounter++);
 	}
 
 	@Override

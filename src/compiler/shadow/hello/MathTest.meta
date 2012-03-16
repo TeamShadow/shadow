@@ -15,9 +15,9 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CMathTest_Iclass;
 struct _Pshadow_Phello_CMathTest_Itable;
 struct _Pshadow_Phello_CMathTest_Itable _Pshadow_Phello_CMathTest_Imethods;
 struct _Pshadow_Phello_CMathTest {
-     struct _Pshadow_Phello_CMathTest_Itable *_Imethods;
-     
-     /* Fields */
+	struct _Pshadow_Phello_CMathTest_Itable *_Imethods;
+	
+	/* Fields */
 };
 
 
@@ -26,9 +26,9 @@ void _Pshadow_Phello_CMathTest_Mconstructor(struct _Pshadow_Phello_CMathTest*);
 void _Pshadow_Phello_CMathTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString**);
 
 struct _Pshadow_Phello_CMathTest_Itable {
-     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_CMathTest*);
-     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-     void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_CMathTest*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
 };
 
 #include "shadow/io/Console.meta"

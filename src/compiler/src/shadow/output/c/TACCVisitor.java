@@ -20,6 +20,7 @@ import shadow.tac.nodes.TACAllocation;
 import shadow.tac.nodes.TACAssign;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
+import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
@@ -27,7 +28,6 @@ import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
-import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACPrefixed;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
@@ -45,6 +45,7 @@ import shadow.typecheck.type.Type;
  *
  */
 public class TACCVisitor extends AbstractTACVisitor {
+	private int stringAllocNumber;
 	private TabbedLineWriter cWriter, metaWriter, curWriter;
 	private String cFileName, metaFileName;
 	
@@ -81,7 +82,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	
 
 	@Override
-	public void startFile() {
+	public void startFile() throws IOException {
 		// write out the stuff for the C file
 		cWriter.writeLine("/* AUTO-GENERATED FILE, DO NOT EDIT! */");
 		cWriter.writeLine("#include \"" + getType().getPath() + ".meta\"");	// include the header
@@ -107,7 +108,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		metaWriter.writeLine("#include \"types.h\"");
 		metaWriter.writeLine("#include \"stdlib.h\"");
 		
-		ClassType classType = (ClassType)getModule().getClassType();
+		ClassType classType = getType();
 		Type extendsType = classType.getExtendType();
 		if (extendsType != null)
 		{
@@ -115,8 +116,8 @@ public class TACCVisitor extends AbstractTACVisitor {
 			metaWriter.writeLine("");
 		}
 
-		getModule().getClassType().addReferencedType(Type.CLASS);
-		for (Type type : getModule().getClassType().getReferenceTypes())
+		getType().addReferencedType(Type.CLASS);
+		for (Type type : getType().getReferenceTypes())
 			metaWriter.writeLine("struct " + type.getMangledName() + ';');
 		metaWriter.writeLine("");
 		
@@ -187,7 +188,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 
 	@Override
-	public void endFile() {
+	public void endFile() throws IOException {
 
 		boolean /*foundConstructor = false,*/ foundMain = false, foundNative = false;
 		metaWriter.writeLine(typeToString(Type.CLASS) + ' ' + getType().getMangledName() + "_MgetClass(" + typeToString(getType()) + " this);");
@@ -248,7 +249,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		
 		metaWriter.writeLine("struct " + getModule().getMangledName() + "_Itable {");
 		metaWriter.indent();
-		for ( MethodSignature method : /*FIXME?*/((ClassType)getType()).getMethodList() )
+		for ( MethodSignature method : getType().getMethodList() )
 		{
 			if ( !method.getSymbol().equals("constructor") )
 			{
@@ -354,7 +355,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 //			cWriter.indent();
 //			cWriter.outdent();
 //			cWriter.writeLine("}");
-			cWriter.writeLine(getModule().getClassType().getMangledName() + "_Mmain_R_Pshadow_Pstandard_CString_A1((struct _Pshadow_Pstandard_CString **)0);");
+			cWriter.writeLine(getType().getMangledName() + "_Mmain_R_Pshadow_Pstandard_CString_A1((struct _Pshadow_Pstandard_CString **)0);");
 			cWriter.writeLine("return 0;");
 			cWriter.outdent();
 			cWriter.writeLine("}");
@@ -365,13 +366,16 @@ public class TACCVisitor extends AbstractTACVisitor {
 			metaWriter.writeLine("#include \"" + type.getPath() + ".meta\"");
 		metaWriter.writeLine("");
 		metaWriter.writeLine("#endif");
+		
+		metaWriter.close();
+		cWriter.close();
 	}
 
 	@Override
-	public void startFields() {
+	public void startFields() throws IOException {
 		TACModule theClass = this.getModule();
 		
-		metaWriter.writeLine("struct " + theClass.getClassType().getMangledName() + " {");
+		metaWriter.writeLine("struct " + getType().getMangledName() + " {");
 		metaWriter.indent();
 		
 //		ClassType type = (ClassType)theClass.getType();
@@ -406,7 +410,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 
 	@Override
-	public void endFields() {
+	public void endFields() throws IOException {
 		metaWriter.outdent();
 		metaWriter.writeLine("};");
 //		metaWriter.writeLine("");
@@ -414,7 +418,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 
 	@Override
-	public void startMethod(TACMethod method) {
+	public void startMethod(TACMethod method) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		
 		int modifiers = method.getSignature().getASTNode().getModifiers();
@@ -437,7 +441,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 
 		// first param is always a reference to the class, unless it's static
 		if(!ModifierSet.isStatic(modifiers))
-			sb.append(typeToString(getModule().getClassType())).append(" this, ");
+			sb.append(typeToString(getType())).append(" this, ");
 
 		for (int i = 0; i < paramNames.size(); i++)
 		{
@@ -493,7 +497,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 
 	@Override
-	public void endMethod(TACMethod method) {
+	public void endMethod(TACMethod method) throws IOException {
 		cWriter.outdent();
 		cWriter.writeLine("}");
 		cWriter.writeLine("");
@@ -596,7 +600,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		}
 	}
 	
-	private String nodeToString(TACNode node)
+	private String nodeToString(TACNode node) throws IOException
 	{
 		if (node instanceof TACLiteral)
 			return nodeToString((TACLiteral)node);
@@ -605,7 +609,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		return node.getSymbol();
 	}
 	
-	private String nodeToString(TACPrefixed node)
+	private String nodeToString(TACPrefixed node) throws IOException
 	{
 		if (node instanceof TACCall)
 			return node.getSymbol();
@@ -615,20 +619,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACNode node)
-	{
-		if (node.getLabel() != null)
-		{
-			curWriter.outdent();
-			 // TODO: to remove (void)0; move block variable declarations somewhere else.
-			curWriter.writeLine(node.getLabel() + ": (void)0;");
-			curWriter.indent();
-		}
-		super.visit(node);
-	}
-	
-	@Override
-	public void visit(TACAllocation node)
+	public void visit(TACAllocation node) throws IOException
 	{
 		if (node.isOnHeap()) {
 			StringBuilder sb = new StringBuilder();
@@ -643,7 +634,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 			sb.append(", sizeof(struct ");
 			sb.append(node.getType().getMangledName());
 			sb.append("));");
-			curWriter.writeLine(sb.toString(), node);
+			curWriter.writeLine(sb.toString());
 		}
 		else
 			curWriter.writeLine(typeToString(node) + ' ' + nodeToString(node) + ';');
@@ -654,7 +645,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACAssign node)
+	public void visit(TACAssign node) throws IOException
 	{
 		if (node.getFirstOperand() instanceof TACSequence)
 		{
@@ -683,62 +674,55 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACUnary node)
+	public void visit(TACUnary node) throws IOException
 	{
 		curWriter.writeLine(nodeToString(node) + " = " + operatorToString(node.getOperator()) +
 				nodeToString(node.getOperand()) + ';');
 	}
 	
 	@Override
-	public void visit(TACBinary node)
+	public void visit(TACBinary node) throws IOException
 	{
 		curWriter.writeLine(nodeToString(node) + " = " + nodeToString(node.getFirstOperand()) +
 				operatorToString(node.getOperator()) + nodeToString(node.getSecondOperand()) + ';');
 	}
 	
 	@Override
-	public void visit(TACComparison node)
+	public void visit(TACComparison node) throws IOException
 	{
 		curWriter.writeLine(nodeToString(node) + " = " + nodeToString(node.getFirstOperand()) +
 				operatorToString(node.getOperator()) + nodeToString(node.getSecondOperand()) + ';');
 	}
 	
 	@Override
-	public void visit(TACBranch node)
+	public void visit(TACBranch node) throws IOException
 	{
 		if (node.isConditional())
 		{
 			curWriter.writeLine("if ( " + nodeToString(node.getCondition()) + " )");
 			curWriter.indent();
-			curWriter.writeLine("goto " + node.getTrueBranch().getLabel() + ';');
+			curWriter.writeLine("goto " + nodeToString(node.getTrueBranch()) + ';');
 			curWriter.outdent();
 			if (node.getFalseBranch() != null)
 			{
 				curWriter.writeLine("else");
 				curWriter.indent();
-				curWriter.writeLine("goto " + node.getFalseBranch().getLabel() + ';');
+				curWriter.writeLine("goto " + nodeToString(node.getFalseBranch()) + ';');
 				curWriter.outdent();	
 			}
 		}
 		else
-			curWriter.writeLine("goto " + node.getBranch().getLabel() + ';');
+			curWriter.writeLine("goto " + nodeToString(node.getBranch()) + ';');
 	}
 
 	@Override
-	public void visit(TACLabel node)
+	public void visit(TACLabel node) throws IOException
 	{
-		TACNode trueBranch = node.getTrueBranch(),
-				falseBranch = node.getFalseBranch();
-		if (trueBranch != null)
-			if (trueBranch.getLabel() == null)
-				trueBranch.setLabel("label" + labelCounter++);
-		if (falseBranch != null)
-			if (falseBranch.getLabel() == null)
-				falseBranch.setLabel("label" + labelCounter++);
+		curWriter.writeLeftLine(nodeToString(node) + ':'/*FIXME: */ + " (void)0;");
 	}
 	
 	@Override
-	public void visit(TACCall node)
+	public void visit(TACCall node) throws IOException
 	{
 		MethodSignature signature = node.getSignature();
 		StringBuilder sb = new StringBuilder();
@@ -765,7 +749,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACReturn node)
+	public void visit(TACReturn node) throws IOException
 	{
 		if (node.hasReturnValue())
 		{
@@ -779,7 +763,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACCast node)
+	public void visit(TACCast node) throws IOException
 	{
 		curWriter.writeLine(nodeToString(node) + " = (" + typeToString(node) + ')' +
 				nodeToString(node.getOperand()) + ';');
@@ -796,11 +780,11 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACBranchPhi node)
+	public void visit(TACBranchPhi node) throws IOException
 	{
 		curWriter.writeLine(nodeToString(node.getPhi()) + " = " +
 				nodeToString(node.getValue()) + ';');
-		curWriter.writeLine("goto " + node.getPhi().getLabel() + ';');
+		curWriter.writeLine("goto " + nodeToString(node.getBranch()) + ';');
 	}
 	
 	@Override
@@ -831,11 +815,11 @@ public class TACCVisitor extends AbstractTACVisitor {
 //		return sb.toString();
 //	}
 
-	private String lit2lit(String shadowLiteral) {
+	private String lit2lit(String shadowLiteral) throws IOException {
 		return literalToString(shadowLiteral);
 	}
 	
-	private String nodeToString(TACLiteral node)
+	private String nodeToString(TACLiteral node) throws IOException
 	{
 		return literalToString(node.getSymbol());
 	}
@@ -845,7 +829,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	 * @param shadowLiteral
 	 * @return
 	 */
-	private String literalToString(String shadowLiteral) {
+	private String literalToString(String shadowLiteral) throws IOException {
 		if (shadowLiteral.startsWith("\""))
 		{
 			String var = "_Istring" + stringAllocNumber++;
