@@ -24,10 +24,14 @@ class ComplexAccess {
     	ComplexAccess[] first = new ComplexAccess[100];
     	first[0] = new ComplexAccess();
     	
-    	c = first[0].stuff().jam(10);
-    	
-    	ComplexAccess outer = new ComplexAccess();
-    	
-    	outer.i.o.i.o.i = new Inner();
+    	try
+    	{
+    		c = check(first[0]).stuff().jam(10);    	
+    		ComplexAccess outer = new ComplexAccess();    	
+    		//check(check(outer.i).o).i = new Inner();
+    		outer.i.o.i = new Inner();
+    	}
+    	recover
+    	{}
     }
 }

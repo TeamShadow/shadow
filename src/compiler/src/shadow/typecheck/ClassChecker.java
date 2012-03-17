@@ -79,6 +79,7 @@ import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTUnqualifiedName;
+import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
@@ -317,17 +318,22 @@ public class ClassChecker extends BaseChecker {
 		
 		Type type = node.getType();	// this is set in the FieldAndMethodChecker
 		
-		for(int i=1; i < node.jjtGetNumChildren(); ++i)
+		for(int i = 1; i < node.jjtGetNumChildren(); ++i)
 		{
-			Node curVarDec = node.jjtGetChild(i);
+			Node declaration = node.jjtGetChild(i);
 			
-			if(curVarDec.jjtGetNumChildren() == 2) 
+			if(declaration.jjtGetNumChildren() == 2) 
 			{
-				Node curVarInit = curVarDec.jjtGetChild(1);
-				Type initType = curVarInit.getType();				
+				Node initializer = declaration.jjtGetChild(1);
+				Type initializerType = initializer.getType();				
 		
-				if(!initType.isSubtype(type))
-					addError(curVarInit, Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
+				if(!initializerType.isSubtype(type))
+					addError(initializer, Error.TYPE_MIS, "Cannot assign " + initializerType + " to " + type);
+				else
+				{
+					Node id = declaration.jjtGetChild(0);
+					id.setType(type);					
+				}
 			}
 		}
 		
@@ -1688,6 +1694,11 @@ public class ClassChecker extends BaseChecker {
 						{
 							node.setType( arrayType.getBaseType() );
 							node.addModifier(ModifierSet.ASSIGNABLE);
+							
+							//primitive arrays are initialized to default values
+							//non-primitive array elements could be null
+							if( !arrayType.getBaseType().isPrimitive() )
+								node.addModifier(ModifierSet.NULLABLE);
 						}
 						else
 						{
@@ -2110,6 +2121,12 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )
+		{}
+		
+		return WalkType.POST_CHILDREN;
+	}
 	
 
 	//

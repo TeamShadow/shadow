@@ -776,8 +776,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
     | EnumDeclaration(modifiers)
     | LOOKAHEAD(  "constructor" /*[ TypeParameters() ]*/ ) ConstructorDeclaration(modifiers)
     | LOOKAHEAD( "destructor" ) DestructorDeclaration(modifiers)
-    | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifiers)
-    //removed ( "[" "]" ) * because Shadow only allows square brackets on the LEFT of identifiers in declarations 
+    | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifiers) 
     | MethodDeclaration(modifiers)
     | ViewDeclaration(modifiers)
   )
