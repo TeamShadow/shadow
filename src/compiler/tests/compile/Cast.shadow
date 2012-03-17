@@ -2,8 +2,7 @@ class Cast {
 
 	public method () => ()
 	{
-		BaseClass a;
-		a = new BaseClass();
+		BaseClass a = new BaseClass();
 		a = cast<BaseClass>(new Subclass1()); //typechecks but should fail at run time		
 		a = new Subclass2();
 		
@@ -11,8 +10,7 @@ class Cast {
 		// int x = cast<int>(a);  //uncomment to see incomparable types
 			
 		
-		Subclass1 s;
-		s = cast<Subclass1>(a);		
+		Subclass1 s = cast<Subclass1>(a);		
 	}
     
 	private class BaseClass

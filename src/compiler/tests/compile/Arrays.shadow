@@ -1,17 +1,17 @@
 
 class Arrays {
     // create a single array
-    public int[] a1;
+    nullable public int[] a1;
     public int[] a2 = new int[3];
     public int[] a3 = a2;
     
     // multidimensional arrays
-    public int[][] b1;
+    nullable public int[][] b1;
     public int[][] b2 = new int[3][4];
     public int[][] b3 = b2;
     
     // contiguous arrays    
-    public int[,] c1;
+    nullable public int[,] c1;
     public int[,] c2 = new int[3,4];
     public int[,] c3 = c2;
     
@@ -19,35 +19,37 @@ class Arrays {
         // test the same but in a method
 
 	    // create a single array
-	    int[] a1;
-	    int[] a2 = new int[3];
+	    nullable int[] a1;
+	    int[] a2 = new int[30];
 	    int[] a3 = a2;
 	    
 	    // multidimensional arrays
-	    int[][] b1;
+	    nullable int[][] b1;
 	    int[][] b2 = new int[3][4];
 	    int[][] b3 = b2;
 	    
 	    // contiguous arrays    
-	    int[,] c1;
-	    int[,] c2 = new int[3,4];
+	    nullable int[,] c1;
+	    int[,] c2 = new int[30,40];
 	    int[,] c3 = c2;
              
         // test some other array expressions
-        a1[7] = 3;
-        a1[7] = a1[8];
+        
+        
+        a2[7] = 3;
+        a2[7] = a3[8];
         
         try
         {        
-        	check(b1[7])[8] = 3;
-        	check(b1[7])[8] = a1[8];
+        	check(b2[7])[8] = 3;
+        	check(b2[7])[8] = a2[8];
         }
         recover
         {        
         }
         
-        c1[7,8] = 3;
-        c1[7,8] = a1[8];
+        c2[7,8] = 3;
+        c2[7,8] = a2[8];
         int x = 4;
         
         int [,,,,] m = new int[ 3, 5, 7, 10, 14];

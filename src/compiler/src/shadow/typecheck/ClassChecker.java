@@ -271,72 +271,95 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
+	private void processDeclaration( Node node )
+	{
+		boolean isLocal = (node instanceof ASTLocalVariableDeclaration );
 		
-
-		// 	get the var's type
-		Type type = node.jjtGetChild(0).getType();
+		Type type = null;
+		int start = 0;
+		boolean isAuto = false;
 		
-		if(type == null) {
-			addError(node.jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
-			return WalkType.NO_CHILDREN;
-		}
-
-		// go through and add the vars
-		for(int i = 1; i < node.jjtGetNumChildren(); ++i)
+		if( isLocal && !(node.jjtGetChild(start) instanceof ASTType) ) 
 		{
-			Node child = node.jjtGetChild(i);
-			String varName = child.jjtGetChild(0).getImage();
-			
-			if(child.jjtGetNumChildren() == 2) // check to see if we have any kind of init here
+			isAuto = true;
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 			{
-				Type initType = child.jjtGetChild(1).getType();
-				
-				if(!initType.isSubtype(type)) 
+				Node declaration = node.jjtGetChild(i);
+				if( declaration.jjtGetNumChildren() == 2 )
 				{
-					addError(child.jjtGetChild(1), Error.TYPE_MIS, "Cannot assign " + initType + " to " + type);
-					type = Type.UNKNOWN; //overwrites old type, for error case
+					type = declaration.jjtGetChild(1).getType();
+					break;
 				}
 			}
-			
-			// add the symbol to the table
-			addSymbol( varName, node);
-			child.setType(type);
-			child.setModifiers(node.getModifiers());
+		}
+		else
+		{
+			// get the variable type
+			type = node.jjtGetChild(start).getType();		
+			start++;
 		}
 		
-		node.setType(type); //either declaration type or UNKNOWN  		
+		if(type == null)
+		{
+			if( isAuto )
+				addError(node.jjtGetChild(start), Error.UNDEF_TYP, "Variable declared auto has no initializer to infer type from");
+			else
+				addError(node.jjtGetChild(start), Error.UNDEF_TYP, node.jjtGetChild(start).jjtGetChild(0).getImage());
+			return;
+		}
+		
+		// go through and add the variables
+		for(int i = start; i < node.jjtGetNumChildren(); ++i)
+		{
+			Node declaration = node.jjtGetChild(i);
+			Node identifier = declaration.jjtGetChild(0);
+			
+			if(declaration.jjtGetNumChildren() == 2) // check for initializer
+			{
+				Node initializer = declaration.jjtGetChild(1); 					
+				Type initializerType = initializer.getType();
+				
+				if(!initializerType.isSubtype(type)) 
+				{
+					addError(initializer, Error.TYPE_MIS, "Cannot assign " + initializerType + " to " + type);
+					type = Type.UNKNOWN; //overwrites old type, for error case
+				}
+				else
+				{
+					if( !ModifierSet.isNullable(node.getModifiers()) && ModifierSet.isNullable(initializer.getModifiers()))
+						addError(identifier, Error.TYPE_MIS, "Cannot assign a nullable value to non-nullable variable " + identifier.getImage() );
+				}
+			}
+			else
+			{
+				if( !ModifierSet.isNullable(node.getModifiers()) && !type.isPrimitive() )
+					addError(declaration, Error.TYPE_MIS, "Non-nullable variable " + declaration + "does not have initializer");		
+			}
+			
+			declaration.setType(type);
+			declaration.setModifiers(node.getModifiers());
+			identifier.setType(type);
+			identifier.setModifiers(node.getModifiers());
+			
+			if( isLocal ) // add the symbol to the scope table				
+				addSymbol( identifier.getImage(), node);
+		}
+			
+		node.setType(type); //either declaration type or UNKNOWN		
+	}
+	
+	
+	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {		
+		if(secondVisit)
+			processDeclaration( node );							  		
 
 		return WalkType.POST_CHILDREN;
 	}
 
 	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		Type type = node.getType();	// this is set in the FieldAndMethodChecker
-		
-		for(int i = 1; i < node.jjtGetNumChildren(); ++i)
-		{
-			Node declaration = node.jjtGetChild(i);
-			
-			if(declaration.jjtGetNumChildren() == 2) 
-			{
-				Node initializer = declaration.jjtGetChild(1);
-				Type initializerType = initializer.getType();				
-		
-				if(!initializerType.isSubtype(type))
-					addError(initializer, Error.TYPE_MIS, "Cannot assign " + initializerType + " to " + type);
-				else
-				{
-					Node id = declaration.jjtGetChild(0);
-					id.setType(type);					
-				}
-			}
-		}
-		
+		if(secondVisit)
+			processDeclaration( node );							  		
+
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -2120,14 +2143,7 @@ public class ClassChecker extends BaseChecker {
 		createScope(secondVisit); //scope is created purely to hold type parameters (other declarations are kept in the body scope)		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit )
-		{}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
+
 
 	//
 	// Everything below here are just visitors to push up the type

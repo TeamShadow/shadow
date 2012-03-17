@@ -3,7 +3,7 @@ class ControlFlow {
    public nothing() => ()
    {
    	int a;
-   	int[] b;
+   	int[] b = new int[100];
    	
     if( true )
    	{

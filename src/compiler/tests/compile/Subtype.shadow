@@ -2,8 +2,7 @@ class Subtype {
 
 	public method () => ()
 	{
-		BaseClass a;
-		a = new BaseClass();
+		BaseClass a = new BaseClass();
 		a = new Subclass1();		
 		a = new Subclass2();
 		
@@ -11,7 +10,7 @@ class Subtype {
 		short c = 4y;
 		
 		
-		Subclass1 s;
+		nullable Subclass1 s;
 		//s = a; //uncomment this line to see type hierarchies enforced
 		//c = 5; //uncomment this line to see type hierarchies enforced
 	}

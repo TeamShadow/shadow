@@ -1,11 +1,11 @@
 class ComplexAccess {
 
-	private Inner i;
+	private nullable Inner i;
 
 	private class Inner 
 	{	
 	
-		public ComplexAccess o;
+		public nullable ComplexAccess o;
 	
 		public jam(int a) => (int) {
 	        return 4;
@@ -28,8 +28,8 @@ class ComplexAccess {
     	{
     		c = check(first[0]).stuff().jam(10);    	
     		ComplexAccess outer = new ComplexAccess();    	
-    		//check(check(outer.i).o).i = new Inner();
-    		outer.i.o.i = new Inner();
+    		check(check(outer.i).o).i = new Inner();
+    		//outer.i.o.i = new Inner();
     	}
     	recover
     	{}

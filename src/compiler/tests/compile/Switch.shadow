@@ -2,7 +2,7 @@ class Switch {
 
    public nothing() => ()
    {
-   	String s;
+   	String s = "";
    	long a;
    	int b;
 	int c;

@@ -246,7 +246,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 		Type type = node.jjtGetChild(0).getType();
 		
 		// make sure we have this type
-		if(type == null) {
+		if(type == null)
+		{
 			addError(node.jjtGetChild(0).jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
 			return WalkType.NO_CHILDREN;
 		}

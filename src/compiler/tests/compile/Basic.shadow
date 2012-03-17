@@ -9,12 +9,7 @@ class Basic {
       if(a > c and c < a and a < c)
     	a = 14;
         
-        Bob b;
-              
-        
-        b = new Bob(2);
-
-      
+        Bob b = new Bob(2);      
     }
     
     private class Bob {

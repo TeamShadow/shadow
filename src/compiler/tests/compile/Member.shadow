@@ -12,7 +12,7 @@ class Member {
     public boolean f;	// basic boolean
     public short g;		// basic short
     public long h;		// basic short    
-    public Object i;			// basic object
+    public Object i = new Object();	// basic object
     
 	//Private
     private int j;   	// private int
@@ -23,7 +23,7 @@ class Member {
     private boolean o;	// private boolean
     private short p;	// private short
     private long q;		// private short    
-    private Object s;		// private object    
+    private Object s = new Object();		// private object    
 
 
   	//Modifiers
