@@ -1,0 +1,13 @@
+class Auto
+{
+
+	public static stuff() => ()
+	{
+		auto thing = "A string";
+		auto x = new Object();
+		auto a = 4, b = 5;
+		auto c = a + b;
+		
+		//auto d; //uncomment for error
+	}
+}
