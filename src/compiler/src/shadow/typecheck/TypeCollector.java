@@ -39,6 +39,7 @@ import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
@@ -109,7 +110,7 @@ public class TypeCollector extends BaseChecker
 							else							
 								classType.setExtendType(parent);
 						}
-						else if( type.getKind() == Kind.CLASS )													
+						else if( type.getKind() == Kind.CLASS || type.getKind() == Kind.ARRAY )													
 							classType.setExtendType(Type.OBJECT);						
 						else if( type.getKind() == Kind.ENUM )
 							classType.setExtendType(Type.ENUM);
@@ -455,9 +456,9 @@ public class TypeCollector extends BaseChecker
 		else
 		{			
 			Type type = null;
-			
+				
 			switch( kind )
-			{
+			{			
 			case CLASS:
 				type = new ClassType(typeName, modifiers, currentType );
 				break;
@@ -479,11 +480,9 @@ public class TypeCollector extends BaseChecker
 				//add support for views eventually			
 			default:
 				throw new ShadowException("Unsupported type!" );
-			}
+			}			
 			
-			
-			
-			//Special case for system types
+			//Special case for system types			
 			if( currentPackage.getFullyQualifiedName().equals("shadow.standard"))
 			{
 				if( typeName.equals("Object") )
@@ -492,6 +491,8 @@ public class TypeCollector extends BaseChecker
 					Type.CLASS  = (ClassType) type;
 				else if( typeName.equals("String"))
 					Type.STRING = (ClassType) type;
+				else if( typeName.equals("Array"))
+					Type.ARRAY = (ClassType) type;
 			}
 			
 			addType( type, currentPackage );

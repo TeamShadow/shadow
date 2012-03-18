@@ -2,7 +2,7 @@ package shadow.typecheck.type;
 
 import java.util.List;
 
-public class ArrayType extends Type
+public class ArrayType extends ClassType
 {	
 	private int dimensions;
 	private Type baseType;

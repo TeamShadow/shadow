@@ -424,10 +424,15 @@ public class ClassChecker extends BaseChecker {
 				node.setType( new UnboundMethodType( name, interfaceType ) );				
 				return true;
 			}			
-		}
-		else if( context instanceof ClassType )
+		}		
+		else if( context instanceof ClassType  )
 		{
-			ClassType classType = (ClassType)context;
+			ClassType classType;
+			
+			if( context instanceof ArrayType )
+				classType = Type.ARRAY;
+			else
+				classType = (ClassType)context;
 					
 			if(classType.recursivelyContainsField(name))
 			{
@@ -1683,7 +1688,7 @@ public class ClassChecker extends BaseChecker {
 			}*/
 			if( child instanceof ASTConditionalExpression ) //array index
 			{
-				if( prefixType instanceof ArrayType )
+				if( (prefixType instanceof ArrayType) )
 				{
 					ArrayType arrayType = (ArrayType)prefixType;
 					

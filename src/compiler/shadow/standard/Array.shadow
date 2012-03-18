@@ -1,20 +1,19 @@
 package shadow.standard;
 
-class Array
+// Do we want this?
+public /*native*/ abstract final class Array/*<T>*/
 {
-	private constructor() { }
-
-	public static getLength( Object array ) => ( int )
+	public getLength() => ( int )
 	{
-		return getLength( array, 0 );
+		return getLength(0);
 	}
-	public static getLength( Object array, int dimension ) => ( int )
+	public getLength( int dimension ) => ( int )
 	{
-		return getLengths( array )[ dimension ];
+		return getLengths()[ dimension ];
 	}
-	public static getDimensions( Object array ) => ( int )
+	public getDimensions() => ( int )
 	{
-		return getLength(getLengths( array ));
+		return getLengths().getLength();
 	}
-	public static native getLengths( Object array ) => ( int[] );
+	public abstract getLengths() => ( int[]/*<int>*/ );
 }

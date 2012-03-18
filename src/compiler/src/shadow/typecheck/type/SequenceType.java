@@ -111,7 +111,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		if (o == Type.NULL)
 			return true;
 		if( o != null && o instanceof SequenceType )
-			return types.equals(((SequenceType)o).types);
+			return matches((SequenceType)o);
 		else
 			return false;
 	}
@@ -122,7 +122,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			return false;
 		
 		for( int i = 0; i < types.size(); i++ )		
-			if( !inputTypes.get(i).getType().equals(getType(i)) || inputTypes.get(i).getModifiers() != getModifiers(i) )
+			if( !inputTypes.get(i).getType().equals(getType(i)) )
 				return false;
 		
 		return true;		

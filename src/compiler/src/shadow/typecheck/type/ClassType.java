@@ -68,8 +68,6 @@ public class ClassType extends ClassInterfaceBaseType {
 		return implementTypes;
 	}	
 	
-	
-	
 	public boolean satisfiesInterface( InterfaceType _interface  )
 	{
 		Map<String, List<MethodSignature> > methodMap =  _interface.getMethodMap();

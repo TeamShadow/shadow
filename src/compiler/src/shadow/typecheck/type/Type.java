@@ -33,9 +33,10 @@ public class Type {
 		UNKNOWN
 	};
 	
-	public static ClassType OBJECT = null;// new ClassType( "Object" );
-	public static ClassType STRING = null; //new ClassType( "String", OBJECT );
-	public static ClassType CLASS = null; //new ClassType( "Class", OBJECT ); //meta class for holding .class variables
+	public static ClassType OBJECT = null; 
+	public static ClassType STRING = null; 
+	public static ClassType CLASS = null;  // meta class for holding .class variables
+	public static ClassType ARRAY = null;  // class representation of all array types
 	
 	public static final ClassType BOOLEAN = new ClassType( "boolean", OBJECT );
 	public static final ClassType BYTE = new ClassType( "byte", OBJECT );
