@@ -155,7 +155,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACCall node)
 	{
-		if (!node.getSignature().getMethodType().getReturnTypes().isEmpty() && node.getSymbol() == null)
+		if (!node.getMethodType().getReturnTypes().isEmpty() && node.getSymbol() == null)
 		{
 			int index = 0;
 			for (ModifiedType type : node.getSequenceType().getTypes())
@@ -198,7 +198,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACVariable node)
 	{
-//		allocate(node);
+		allocate(node); // note that this is not an ssa variable (doesn't matter in c)
 		if (!node.expectsPrefix() &&
 				localRenames.containsKey(node.getSymbol()))
 			node.setSymbol(localRenames.get(node.getSymbol()));
@@ -212,6 +212,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACIndexed node)
 	{
+//		allocate(node);
 	}
 	
 	@Override

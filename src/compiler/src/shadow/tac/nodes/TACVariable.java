@@ -39,6 +39,11 @@ public class TACVariable extends TACPrefixed
 		return field;
 	}
 	@Override
+	public Type expectedPrefixType()
+	{
+		return null;
+	}
+	@Override
 	public Type getType()
 	{
 		return type;

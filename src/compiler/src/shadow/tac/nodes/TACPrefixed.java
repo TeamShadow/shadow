@@ -1,5 +1,7 @@
 package shadow.tac.nodes;
 
+import shadow.typecheck.type.Type;
+
 public abstract class TACPrefixed extends TACNode
 {
 	private TACNode prefix;
@@ -18,6 +20,7 @@ public abstract class TACPrefixed extends TACNode
 		prefix = prefixNode;
 	}
 	public abstract boolean expectsPrefix();
+	public abstract Type expectedPrefixType();
 	public boolean isPrefixed()
 	{
 		return prefix != null;

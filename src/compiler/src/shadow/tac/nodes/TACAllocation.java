@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import java.io.IOException;
+import java.util.List;
 
 import shadow.tac.AbstractTACVisitor;
 import shadow.typecheck.type.Type;
@@ -9,7 +10,18 @@ public class TACAllocation extends TACNode
 {
 	private boolean onHeap;
 	private Type type;
+	private int sizesIndex;
+	private List<TACNode> sizes;
 	private TACNode size;
+	public TACAllocation(Type varType, TACNode sizeNode, List<TACNode> sizeNodes, int sizesStart)
+	{
+		onHeap = true;
+		type = varType;
+		sizesIndex = sizesStart;
+		sizes = sizeNodes;
+		size = sizeNode;
+	}
+	
 	public TACAllocation(TACVariable var)
 	{
 		this(var.getType(), null, var.getSymbol(), false);
@@ -69,6 +81,10 @@ public class TACAllocation extends TACNode
 	public TACNode getSize()
 	{
 		return size;
+	}
+	public TACNode getSizes(int index)
+	{
+		return sizes.get(sizesIndex + index);
 	}
 	
 	@Override

@@ -4,9 +4,14 @@
 
 #include "types.h"
 #include "stdlib.h"
+#include "string.h"
 #include "shadow/standard/Object.meta"
 
+struct _IArray;
+
+struct _Pshadow_Pio_CConsole;
 struct _Pshadow_Pstandard_CClass;
+struct _Pshadow_Pstandard_CString;
 
 struct _Pshadow_Pstandard_CClass _P_CNumeric_Iclass;
 struct _P_CNumeric_Itable;
@@ -19,15 +24,17 @@ struct _P_CNumeric {
 
 
 struct _Pshadow_Pstandard_CClass* _P_CNumeric_MgetClass(struct _P_CNumeric* this);
-void _P_CNumeric_Mtest(struct _P_CNumeric*);
 void _P_CNumeric_Mconstructor(struct _P_CNumeric*);
+void _P_CNumeric_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray *);
 
 struct _P_CNumeric_Itable {
 	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _P_CNumeric*);
 	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-	void (*_Mtest)(struct _P_CNumeric*);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _IArray *);
 };
 
+#include "shadow/io/Console.meta"
 #include "shadow/standard/Class.meta"
+#include "shadow/standard/String.meta"
 
 #endif

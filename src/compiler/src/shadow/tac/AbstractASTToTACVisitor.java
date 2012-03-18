@@ -6,6 +6,9 @@ public abstract class AbstractASTToTACVisitor implements ShadowParserVisitor {
 	private TACData data;
 	public TACData walk(Node node) throws ShadowException
 	{
+		data = null;
+		if (isBlock(node))
+			visit(node);
 		TACData[] childrenData = new TACData[node.jjtGetNumChildren()];
 		for (int i = 0; i < childrenData.length; i++)
 			childrenData[i] = walk(node.jjtGetChild(i));
@@ -13,7 +16,10 @@ public abstract class AbstractASTToTACVisitor implements ShadowParserVisitor {
 		visit(node);
 		return data.isEmpty() ? null : data;
 	}
-
+	private boolean isBlock(Node node)
+	{
+		return node instanceof ASTTryStatement;
+	}
 
 	public abstract void visit(ASTCompilationUnit node, TACData tac) throws ShadowException;
 	public abstract void visit(ASTPackageDeclaration node, TACData tac) throws ShadowException;

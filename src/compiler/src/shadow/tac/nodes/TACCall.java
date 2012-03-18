@@ -3,28 +3,30 @@ package shadow.tac.nodes;
 import java.io.IOException;
 import java.util.List;
 
-import shadow.tac.AbstractTACVisitor;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
-import shadow.typecheck.MethodSignature;
+import shadow.tac.AbstractTACVisitor;
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public class TACCall extends TACPrefixed
 {
-	private MethodSignature signature;
+	private String name;
+	private MethodType type;
 	private TACSequence parameters;
 	private String[] returnSymbols;
-	public TACCall(MethodSignature methodSignature, TACSequence parameterValues)
+	public TACCall(String methodName, MethodType methodType, TACSequence parameterValues)
 	{
-		this(null, methodSignature, parameterValues);
+		this(null, methodName, methodType, parameterValues);
 	}
-	public TACCall(TACNode prefixNode, MethodSignature methodSignature, TACSequence parameterValues)
+	public TACCall(TACNode prefixNode, String methodName, MethodType methodType, TACSequence parameterValues)
 	{
 		super(prefixNode);
-		signature = methodSignature;
+		name = methodName;
+		type = methodType;
 		parameters = parameterValues;
-		List<ModifiedType> argumentTypes = methodSignature.getMethodType().getParameterTypes();
+		List<ModifiedType> argumentTypes = methodType.getParameterTypes();
 		List<ModifiedType> parameterTypes = parameterValues.getType().getTypes();
 		if (argumentTypes.size() != parameterTypes.size())
 			throw new IllegalArgumentException("Wrong number of arguments.");
@@ -42,7 +44,7 @@ public class TACCall extends TACPrefixed
 					throw new IllegalArgumentException("Invalid types passed to method call.");
 			}
 		}
-		int returnCount = signature.getMethodType().getReturnTypes().size();
+		int returnCount = type.getReturnTypes().size();
 		if (returnCount == 0)
 			returnSymbols = null;
 		else
@@ -52,11 +54,16 @@ public class TACCall extends TACPrefixed
 	@Override
 	public boolean expectsPrefix()
 	{
-		return !ModifierSet.isStatic(signature.getMethodType().getModifiers());
+		return !ModifierSet.isStatic(type.getModifiers());
+	}
+	@Override
+	public Type expectedPrefixType()
+	{
+		return type.getOuter();
 	}
 	@Override
 	public Type getType() {
-		List<ModifiedType> retTypes = signature.getMethodType().getReturnTypes();
+		List<ModifiedType> retTypes = type.getReturnTypes();
 		if (retTypes.size() == 0)
 			return null;
 		if (retTypes.size() == 1)
@@ -65,11 +72,15 @@ public class TACCall extends TACPrefixed
 	}
 	public SequenceType getSequenceType()
 	{
-		return new SequenceType(signature.getMethodType().getReturnTypes());
+		return new SequenceType(type.getReturnTypes());
 	}
-	public MethodSignature getSignature()
+	public String getMethodName()
 	{
-		return signature;
+		return name;
+	}
+	public MethodType getMethodType()
+	{
+		return type;
 	}
 	public TACSequence getParameters()
 	{
@@ -98,7 +109,7 @@ public class TACCall extends TACPrefixed
 	@Override
 	public String toString()
 	{
-		return signature.getSymbol() + parameters;
+		return name + parameters;
 	}
 	
 	@Override

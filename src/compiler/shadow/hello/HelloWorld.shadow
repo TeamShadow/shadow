@@ -4,9 +4,9 @@ import shadow.io@Console;
 
 class HelloWorld
 {
-	public HelloWorld self;
-	public uint times;
-	public String message;
+	public nullable HelloWorld self = null;
+	public uint times = 5ui;
+	public String message = "Hello World!";
 	public constructor()
 	{
 		self = this;
@@ -38,11 +38,32 @@ class HelloWorld
 	}
 	public getMessage() => ( String )
 	{
-		return self.message;
+		try
+		{
+			return check(self).message;
+		}
+		recover
+		{
+			Console.printLine("NullPointerException!");
+		}
+		return message;
 	}
 	public getBoth() => ( uint, String )
 	{
-		return (self.self.times, this.self.self.self.message);
+		try
+		{
+			return (check(check(self).self).times, check(check(check(this.self).self).self).message);
+		}
+		recover
+		{
+			Console.printLine("NullPointerException!");
+		}
+		return (times, message);
+	}
+	
+	public getSelfObject() => ( nullable Object )
+	{
+		return self;
 	}
 
 	public doit() => ()
@@ -70,88 +91,99 @@ class HelloWorld
 
 	public static main( String[] args ) => ()
 	{
-		
-		String name = "Fibonacci";
-		for ( uint start = 0ui, temp = 10000000ui; start <= 2ui; start += 1ui, temp -= 10000ui, Console.printLine(temp) )
+		try
 		{
-			if ( start == 2ui )
-				name = "Lucas";
-			Object last;
-			String test;
-			uint fib0, fib1, fib2, fib3, fib4, fib5, fib6, fib7, fib8, fib9;
-			(fib0, fib1, fib2, fib3, fib4, fib5, fib6, fib7, fib8, test, fib9, last) = fibonacci(start, 1ui);
-			Console.print(name);
-			Console.print(" 0: ");
-			Console.printLine(fib0);
-			Console.print(name);
-			Console.print(" 1: ");
-			Console.printLine(fib1);
-			Console.print(name);
-			Console.print(" 2: ");
-			Console.printLine(fib2);
-			Console.print(name);
-			Console.print(" 3: ");
-			Console.printLine(fib3);
-			Console.print(name);
-			Console.print(" 4: ");
-			Console.printLine(fib4);
-			Console.print(name);
-			Console.print(" 5: ");
-			Console.printLine(fib5);
-			Console.print(name);
-			Console.print(" 6: ");
-			Console.printLine(fib6);
-			Console.print(name);
-			Console.print(" 7: ");
-			Console.printLine(fib7);
-			Console.print(name);
-			Console.print(" 8: ");
-			Console.printLine(fib8);
-			Console.print(name);
-			Console.print(" 9: ");
-			Console.printLine(fib9);
-			Console.print(name);
-			Console.print(" 10: ");
-			Console.printLine(fib8 + fib9);
+			String name = "Fibonacci";
+			for ( uint start = 0ui, temp = 10000000ui; start <= 2ui; start += 1ui, temp -= 10000ui, Console.printLine(temp) )
+			{
+				if ( start == 2ui )
+					name = "Lucas";
+				nullable Object last;
+				nullable String test;
+				uint fib0, fib1, fib2, fib3, fib4, fib5, fib6, fib7, fib8, fib9;
+				(fib0, fib1, fib2, fib3, fib4, fib5, fib6, fib7, fib8, test, fib9, last) = fibonacci(start, 1ui);
+				Console.print(name);
+				Console.print(" 0: ");
+				Console.printLine(fib0);
+				Console.print(name);
+				Console.print(" 1: ");
+				Console.printLine(fib1);
+				Console.print(name);
+				Console.print(" 2: ");
+				Console.printLine(fib2);
+				Console.print(name);
+				Console.print(" 3: ");
+				Console.printLine(fib3);
+				Console.print(name);
+				Console.print(" 4: ");
+				Console.printLine(fib4);
+				Console.print(name);
+				Console.print(" 5: ");
+				Console.printLine(fib5);
+				Console.print(name);
+				Console.print(" 6: ");
+				Console.printLine(fib6);
+				Console.print(name);
+				Console.print(" 7: ");
+				Console.printLine(fib7);
+				Console.print(name);
+				Console.print(" 8: ");
+				Console.printLine(fib8);
+				Console.print(name);
+				Console.print(" 9: ");
+				Console.printLine(fib9);
+				Console.print(name);
+				Console.print(" 10: ");
+				Console.printLine(fib8 + fib9);
+				Console.printLine();
+				Console.printLine(test);
+				Console.printLine(last);
+				Console.printLine();
+			}
+	
+	 		HelloWorld hello1 = new HelloWorld();
+	 
+	 		uint defaultTimes = 0u;
+	 		String defaultMessage = "";
+	 		(defaultTimes, defaultMessage) = hello1.getBoth();
+	 		Console.print("Default times: ");
+	 		Console.printLine(defaultTimes);
+	 		Console.printLine(hello1.times);
+	 		Console.print("Default message: ");
+	 		Console.printLine(defaultMessage);
+	 		Console.printLine(check(hello1.self).message);
+	 		Console.printLine();
+	 
+			HelloWorld hello2 = new HelloWorld(10ui);
+			HelloWorld hello3 = new HelloWorld("Five Times!");
+			HelloWorld hello4 = new HelloWorld(15ui, "Fifteen Times!");
+			
+			hello1.doit();
+			check(hello2.self).doit();
+			check(check(hello3.self).self).doit();
+			check(check(check(hello4.self).self).self).doit();
+	
+			Console.printLine(hello1);
+			Console.printLine(check(hello2.self));
+			Console.printLine(check(check(hello3.self).self));
+			Console.printLine(check(check(check(hello4.self).self).self));
 			Console.printLine();
-			Console.printLine(test);
-			Console.printLine(last);
+	
+			Console.printLine(hello1.getMessage());
+			Console.printLine(hello2.getMessage());
+			Console.printLine(hello3.getMessage());
+			Console.printLine(hello4.getMessage());
+			Console.printLine();
+	
+			Console.printLine((cast<Object>hello1).toString());
+			Console.printLine(hello2.toString());
+			Console.printLine(check(hello3.self).toString());
+			Console.printLine(check(check(hello4.self).self).toString());
 			Console.printLine();
 		}
-
- 		HelloWorld hello1 = new HelloWorld();
- 
- 		uint defaultTimes;
- 		String defaultMessage;
- 		(defaultTimes, defaultMessage) = hello1.getBoth();
- 		Console.print("Default times: ");
- 		Console.printLine(defaultTimes);
- 		Console.printLine(hello1.times);
- 		Console.print("Default message: ");
- 		Console.printLine(defaultMessage);
- 		Console.printLine(hello1.self.message);
- 		Console.printLine();
- 
-		HelloWorld hello2 = new HelloWorld(10ui);
-		HelloWorld hello3 = new HelloWorld("Five Times!");
-		HelloWorld hello4 = new HelloWorld(15ui, "Fifteen Times!");
-		
-		hello1.doit();
-		hello2.self.doit();
-		hello3.self.self.doit();
-		hello4.self.self.self.doit();
-
-		Console.printLine(hello1);
-		Console.printLine(hello2.self);
-		Console.printLine(hello3.self.self);
-		Console.printLine(hello4.self.self.self);
-		Console.printLine();
-
-		Console.printLine(hello1.getMessage());
-		Console.printLine(hello2.getMessage());
-		Console.printLine(hello3.getMessage());
-		Console.printLine(hello4.getMessage());
-		Console.printLine();
-
+		recover
+		{
+			Console.printLine("NullPointerException!");
+		}
 	}
 }

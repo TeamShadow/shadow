@@ -1,0 +1,11 @@
+package shadow.hello;
+
+import shadow.standard@Array;
+
+class ArrayTest
+{
+	public static main( String[] args ) => ()
+	{
+		int[][] array = new int[1];
+	}
+}

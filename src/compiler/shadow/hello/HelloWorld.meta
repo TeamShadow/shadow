@@ -34,11 +34,13 @@ struct _Pshadow_Phello_CHelloWorld {
 
 
 
+
 struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_CHelloWorld_MgetClass(struct _Pshadow_Phello_CHelloWorld* this);
 uint_shadow_t _Pshadow_Phello_CHelloWorld_MgetBoth(struct _Pshadow_Phello_CHelloWorld*, struct _Pshadow_Pstandard_CString**);
 struct _Pshadow_Pstandard_CString* _Pshadow_Phello_CHelloWorld_MgetMessage(struct _Pshadow_Phello_CHelloWorld*);
 void _Pshadow_Phello_CHelloWorld_Mdoit(struct _Pshadow_Phello_CHelloWorld*);
 uint_shadow_t _Pshadow_Phello_CHelloWorld_MgetTimes(struct _Pshadow_Phello_CHelloWorld*);
+struct _Pshadow_Pstandard_CObject* _Pshadow_Phello_CHelloWorld_MgetSelfObject(struct _Pshadow_Phello_CHelloWorld*);
 uint_shadow_t _Pshadow_Phello_CHelloWorld_Mfibonacci_Ruint_Ruint(uint_shadow_t, uint_shadow_t, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, struct _Pshadow_Pstandard_CString**, uint_shadow_t*, struct _Pshadow_Pstandard_CObject**);
 void _Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray *);
 void _Pshadow_Phello_CHelloWorld_Mconstructor(struct _Pshadow_Phello_CHelloWorld*);
@@ -53,6 +55,7 @@ struct _Pshadow_Phello_CHelloWorld_Itable {
 	struct _Pshadow_Pstandard_CString* (*_MgetMessage)(struct _Pshadow_Phello_CHelloWorld*);
 	void (*_Mdoit)(struct _Pshadow_Phello_CHelloWorld*);
 	uint_shadow_t (*_MgetTimes)(struct _Pshadow_Phello_CHelloWorld*);
+	struct _Pshadow_Pstandard_CObject* (*_MgetSelfObject)(struct _Pshadow_Phello_CHelloWorld*);
 	uint_shadow_t (*_Mfibonacci_Ruint_Ruint)(uint_shadow_t, uint_shadow_t, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, struct _Pshadow_Pstandard_CString**, uint_shadow_t*, struct _Pshadow_Pstandard_CObject**);
 	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _IArray *);
 };

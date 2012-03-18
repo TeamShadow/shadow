@@ -24,6 +24,11 @@ public class TACGetLength extends TACPrefixed
 		return true;
 	}
 	@Override
+	public Type expectedPrefixType()
+	{
+		return null;
+	}
+	@Override
 	public Type getType()
 	{
 		return Type.INT;

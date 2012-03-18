@@ -86,11 +86,11 @@ void _Pshadow_Phello_COldHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct 
 	};
 	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring2);
 	_Pshadow_Phello_COldHelloWorld_Mtest_Ruint_Ruint(0u, 10u);
-	_Itemp0 = calloc(1, sizeof(struct _Pshadow_Phello_COldHelloWorld*));
+	_Itemp0 = malloc(sizeof(struct _Pshadow_Phello_COldHelloWorld));
 	_Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(_Itemp0, 1, 2);
-	_Itemp1 = calloc(1, sizeof(struct _Pshadow_Phello_COldHelloWorld*));
+	_Itemp1 = malloc(sizeof(struct _Pshadow_Phello_COldHelloWorld));
 	_Pshadow_Phello_COldHelloWorld_Mconstructor_Rint(_Itemp1, 0);
-	_Itemp2 = calloc(1, sizeof(struct _Pshadow_Phello_COldHelloWorld*));
+	_Itemp2 = malloc(sizeof(struct _Pshadow_Phello_COldHelloWorld));
 	_Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(_Itemp2, 0, 1);
 	return;
 }
@@ -169,18 +169,18 @@ struct _Pshadow_Phello_COldHelloWorld_Itable _Pshadow_Phello_COldHelloWorld_Imet
 
 int main(int argc, char **argv) {
 	int i, argsLength = argc - 1; ++argv;
-	struct _Pshadow_Pstandard_CString **args = (struct _Pshadow_Pstandard_CString **)calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));
+	struct _Pshadow_Pstandard_CString **args = calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));
 	for (i = 0; i < argsLength; ++i) {
-		struct _Pshadow_Pstandard_CString *arg = (struct _Pshadow_Pstandard_CString *)malloc(sizeof(struct _Pshadow_Pstandard_CString));
+		struct _Pshadow_Pstandard_CString *arg = malloc(sizeof(struct _Pshadow_Pstandard_CString));
 		arg->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
 		arg->ascii = ((boolean_shadow_t)1);
-		arg->data = (struct _IArray *)malloc(sizeof(struct _IArray));
+		arg->data = malloc(sizeof(struct _IArray));
 		arg->data->_Iarray = (void *)argv[i];
 		arg->data->_Idims = (int_shadow_t)1;
 		arg->data->_Ilengths[0] = strlen(argv[i]);
 		args[i] = arg;
 	}
-	struct _IArray *argsArray = (struct _IArray *)malloc(sizeof(struct _IArray));
+	struct _IArray *argsArray = malloc(sizeof(struct _IArray));
 	argsArray->_Iarray = (void *)args;
 	argsArray->_Idims = 1;
 	argsArray->_Ilengths[0] = argsLength;

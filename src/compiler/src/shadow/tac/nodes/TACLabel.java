@@ -18,6 +18,12 @@ public class TACLabel extends TACNode
 	{
 		return null;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return getSymbol() + ':';
+	}
 
 	@Override
 	public void accept(AbstractTACVisitor visitor) throws IOException

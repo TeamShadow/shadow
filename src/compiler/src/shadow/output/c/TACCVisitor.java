@@ -39,6 +39,7 @@ import shadow.tac.nodes.TACVariable;
 import shadow.typecheck.MethodSignature;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -364,20 +365,20 @@ public class TACCVisitor extends AbstractTACVisitor {
 			cWriter.writeLine("int main(int argc, char **argv) {");
 			cWriter.indent();
 			cWriter.writeLine("int i, argsLength = argc - 1; ++argv;");
-			cWriter.writeLine("struct _Pshadow_Pstandard_CString **args = (struct _Pshadow_Pstandard_CString **)calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));");
+			cWriter.writeLine("struct _Pshadow_Pstandard_CString **args = calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));");
 			cWriter.writeLine("for (i = 0; i < argsLength; ++i) {");
 			cWriter.indent();
-			cWriter.writeLine("struct _Pshadow_Pstandard_CString *arg = (struct _Pshadow_Pstandard_CString *)malloc(sizeof(struct _Pshadow_Pstandard_CString));");
+			cWriter.writeLine("struct _Pshadow_Pstandard_CString *arg = malloc(sizeof(struct _Pshadow_Pstandard_CString));");
 			cWriter.writeLine("arg->_Imethods = &_Pshadow_Pstandard_CString_Imethods;");
 			cWriter.writeLine("arg->ascii = ((boolean_shadow_t)1);");
-			cWriter.writeLine("arg->data = (struct _IArray *)malloc(sizeof(struct _IArray));");
+			cWriter.writeLine("arg->data = malloc(sizeof(struct _IArray));");
 			cWriter.writeLine("arg->data->_Iarray = (void *)argv[i];");
 			cWriter.writeLine("arg->data->_Idims = (int_shadow_t)1;");
 			cWriter.writeLine("arg->data->_Ilengths[0] = strlen(argv[i]);");
 			cWriter.writeLine("args[i] = arg;");
 			cWriter.outdent();
 			cWriter.writeLine('}');
-			cWriter.writeLine("struct _IArray *argsArray = (struct _IArray *)malloc(sizeof(struct _IArray));");
+			cWriter.writeLine("struct _IArray *argsArray = malloc(sizeof(struct _IArray));");
 			cWriter.writeLine("argsArray->_Iarray = (void *)args;");
 			cWriter.writeLine("argsArray->_Idims = 1;");
 			cWriter.writeLine("argsArray->_Ilengths[0] = argsLength;");
@@ -639,20 +640,37 @@ public class TACCVisitor extends AbstractTACVisitor {
 	
 	private String nodeToString(TACNode node) throws IOException
 	{
+		if (node instanceof TACReference)
+			return nodeToString((TACReference)node);
 		if (node instanceof TACLiteral)
 			return nodeToString((TACLiteral)node);
 		if (node instanceof TACGetLength)
 			return nodeToString((TACGetLength)node);
-		if (node instanceof TACIndexed)
-			return nodeToString((TACIndexed)node);
+//		if (node instanceof TACIndexed)
+//			return nodeToString((TACIndexed)node);
 		if (node instanceof TACPrefixed)
 			return nodeToString((TACPrefixed)node);
 		return node.getSymbol();
+	}
+	
+	private String nodeToString(TACReference node) throws IOException
+	{
+		return nodeToString(node.getReference());
 	}
 
 	private String nodeToString(TACGetLength node) throws IOException
 	{
 		return nodeToString(node.getPrefix()) + "->_Ilengths[" + node.getDimension() + ']';
+	}
+	private String nodeToString(TACPrefixed node) throws IOException
+	{
+		if (node instanceof TACIndexed)
+			return nodeToString((TACIndexed)node);
+		if (node instanceof TACCall)
+			return node.getSymbol();
+		if (node.isPrefixed())
+			return nodeToString(node.getPrefix()) + "->" + node.getSymbol();
+		return node.getSymbol();
 	}
 	private String nodeToString(TACIndexed node) throws IOException
 	{
@@ -660,34 +678,37 @@ public class TACCVisitor extends AbstractTACVisitor {
 				nodeToString(node.getIndex()) + ']';
 	}
 	
-	private String nodeToString(TACPrefixed node) throws IOException
-	{
-		if (node instanceof TACCall)
-			return node.getSymbol();
-		if (node.isPrefixed())
-			return nodeToString(node.getPrefix()) + "->" + node.getSymbol();
-		return node.getSymbol();
-	}
-	
 	@Override
 	public void visit(TACAllocation node) throws IOException
 	{
 		if (node.isOnHeap()) {
+			ArrayType arrayType = null;
+			int dims;
+			if (node.isArray())
+			{
+				arrayType = (ArrayType)node.getType();
+				dims = arrayType.getDimensions() - 1;
+			}
+			else
+				dims = 0;
 			StringBuilder sb = new StringBuilder();
 			sb.append(nodeToString(node));
-			sb.append(" = "/*("*/);
-			/*sb.append(typeToString(var));*/
-			sb.append(/*")*/"calloc(");
-			if (!node.isArray())
-				sb.append('1');
-			else
-				sb.append(nodeToString(node.getSize()));
-			sb.append(", sizeof(");
+			sb.append(" = ");
+			sb.append("malloc(sizeof(");
 			sb.append(typeToString(node, false));
-			if (node.getType() instanceof ArrayType)
-				sb.append(" + ").append(((ArrayType)node.getType()).getDimensions()).append(" * sizeof(").append(typeToString(Type.INT)).append(')');
-			sb.append("));");
+			sb.append(')');
+			if (dims != 0)
+				sb.append(" + ").append(dims).append(" * sizeof(").append(typeToString(Type.INT)).append(')');
+			sb.append(");");
 			curWriter.writeLine(sb.toString());
+			if (node.isArray())
+			{
+				curWriter.writeLine(nodeToString(node) + "->_Iarray = calloc(" + nodeToString(node.getSize()) +
+						", sizeof(" + typeToString(arrayType.getBaseType()) + "));");
+				curWriter.writeLine(nodeToString(node) + "->_Idims = " + (dims + 1) + ';');
+				for (int i = 0; i <= dims; i++)
+					curWriter.writeLine(nodeToString(node) + "->_Ilengths[" + i + "] = " + nodeToString(node.getSizes(i)) + ';');
+			}
 		}
 		else
 			curWriter.writeLine(typeToString(node) + ' ' + nodeToString(node) + ';');
@@ -773,16 +794,17 @@ public class TACCVisitor extends AbstractTACVisitor {
 	@Override
 	public void visit(TACCall node) throws IOException
 	{
-		MethodSignature signature = node.getSignature();
+		String name = node.getMethodName();
+		MethodType type = node.getMethodType();
 		StringBuilder sb = new StringBuilder();
 		if (node.getSymbolCount() != 0)
 			sb.append(nodeToString(node)).append(" = ");
-		boolean isStatic = ModifierSet.isStatic(signature.getMethodType().getModifiers());
-		if (!isStatic && !signature.getSymbol().equals("constructor"))
+		boolean isStatic = ModifierSet.isStatic(type.getModifiers());
+		if (!isStatic && !name.equals("constructor"))
 			sb.append(nodeToString(node.getPrefix())).append("->_Imethods->");
 		else
-			sb.append(signature.getMethodType().getOuter().getMangledName());
-		sb.append(signature.getMangledName()).append('(');
+			sb.append(type.getOuter().getMangledName());
+		sb.append("_M").append(name).append(type.getMangledName()).append('(');
 		if (!isStatic)
 			sb.append(nodeToString(node.getPrefix())).append(", ");
 		for (TACNode argNode : node.getParameters())
@@ -847,8 +869,10 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACIndexed node)
+	public void visit(TACIndexed node) throws IOException
 	{
+//		curWriter.writeLine(node.getSymbol() + " = ((" + typeToString(node.getType()) + "*)" +
+//				nodeToString(node.getPrefix()) + "->_Iarray)[" + nodeToString(node.getIndex()) + "];");
 	}
 	
 	@Override
@@ -918,9 +942,9 @@ public class TACCVisitor extends AbstractTACVisitor {
 			return "((boolean_shadow_t)0)";
 		else if (shadowLiteral.equals("null"))
 			return "((void *)0)";
-		if (shadowLiteral.endsWith("ub"))
+		if (shadowLiteral.endsWith("uy"))
 			shadowLiteral = "((ubyte_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2) + ')';
-		else if (shadowLiteral.endsWith("b"))
+		else if (shadowLiteral.endsWith("y"))
 			shadowLiteral = "((byte_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 1) + ')';
 		if (shadowLiteral.endsWith("us"))
 			shadowLiteral = "((ushort_shadow_t)" + shadowLiteral.substring(0, shadowLiteral.length() - 2) + ')';

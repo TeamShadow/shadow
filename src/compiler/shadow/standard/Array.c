@@ -19,10 +19,12 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CArray_Iclass = {
 
 int_shadow_t _Pshadow_Pstandard_CArray_MgetDimensions_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject* array) {
 	struct _IArray * _Itemp0;
-	int_shadow_t _Itemp1;
+	struct _Pshadow_Pstandard_CObject* _Itemp1;
+	int_shadow_t _Itemp2;
 	_Itemp0 = _Pshadow_Pstandard_CArray_MgetLengths_R_Pshadow_Pstandard_CObject(array);
-	_Itemp1 = _Pshadow_Pstandard_CArray_MgetLength_R_Pshadow_Pstandard_CObject(_Itemp0);
-	return _Itemp1;
+	_Itemp1 = (struct _Pshadow_Pstandard_CObject*)_Itemp0;
+	_Itemp2 = _Pshadow_Pstandard_CArray_MgetLength_R_Pshadow_Pstandard_CObject(_Itemp1);
+	return _Itemp2;
 }
 
 int_shadow_t _Pshadow_Pstandard_CArray_MgetLength_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject* array) {

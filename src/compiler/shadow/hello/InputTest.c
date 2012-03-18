@@ -139,18 +139,18 @@ struct _Pshadow_Phello_CInputTest_Itable _Pshadow_Phello_CInputTest_Imethods = {
 
 int main(int argc, char **argv) {
 	int i, argsLength = argc - 1; ++argv;
-	struct _Pshadow_Pstandard_CString **args = (struct _Pshadow_Pstandard_CString **)calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));
+	struct _Pshadow_Pstandard_CString **args = calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));
 	for (i = 0; i < argsLength; ++i) {
-		struct _Pshadow_Pstandard_CString *arg = (struct _Pshadow_Pstandard_CString *)malloc(sizeof(struct _Pshadow_Pstandard_CString));
+		struct _Pshadow_Pstandard_CString *arg = malloc(sizeof(struct _Pshadow_Pstandard_CString));
 		arg->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
 		arg->ascii = ((boolean_shadow_t)1);
-		arg->data = (struct _IArray *)malloc(sizeof(struct _IArray));
+		arg->data = malloc(sizeof(struct _IArray));
 		arg->data->_Iarray = (void *)argv[i];
 		arg->data->_Idims = (int_shadow_t)1;
 		arg->data->_Ilengths[0] = strlen(argv[i]);
 		args[i] = arg;
 	}
-	struct _IArray *argsArray = (struct _IArray *)malloc(sizeof(struct _IArray));
+	struct _IArray *argsArray = malloc(sizeof(struct _IArray));
 	argsArray->_Iarray = (void *)args;
 	argsArray->_Idims = 1;
 	argsArray->_Ilengths[0] = argsLength;

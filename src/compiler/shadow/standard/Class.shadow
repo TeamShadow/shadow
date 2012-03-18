@@ -2,15 +2,12 @@ package shadow.standard;
 
 class Class
 {
-	private String className;
+	private String className = "";
 
-	public constructor()
-	{
-		
-	}
+	private constructor() { }
 
 	public toString() => ( String )
 	{
-		return this.className;
+		return className;
 	}
 }

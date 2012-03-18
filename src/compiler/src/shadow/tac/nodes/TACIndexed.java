@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 import shadow.tac.AbstractTACVisitor;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
 public class TACIndexed extends TACPrefixed
@@ -17,12 +18,12 @@ public class TACIndexed extends TACPrefixed
 		index = indexNode;
 		dependencies = depends;
 	}
-	public TACIndexed(Type elementType, TACNode prefixNode, TACNode indexNode, TACPrefixed[] depends)
+	public TACIndexed(Type elementType, TACNode prefixNode, TACNode indexNode)
 	{
 		super(prefixNode);
 		type = elementType;
-		index = new TACSequence(Collections.singletonList(indexNode));
-		dependencies = depends;
+		index = indexNode;
+		dependencies = new TACPrefixed[0];
 	}
 	
 	@Override
@@ -37,6 +38,11 @@ public class TACIndexed extends TACPrefixed
 	{
 		return true;
 	}
+	@Override
+	public Type expectedPrefixType()
+	{
+		return new ArrayType(type, Collections.singletonList(1));
+	}
 	public Type getType()
 	{
 		return type;
@@ -49,7 +55,10 @@ public class TACIndexed extends TACPrefixed
 	@Override
 	public String toString()
 	{
-		return '[' + index.toString() + ']';
+		if (isPrefixed())
+			return getPrefix().toString() + '[' + index + ']';
+		else
+			return '[' + index.toString() + ']';
 	}
 	
 	public void accept(AbstractTACVisitor visitor) throws IOException

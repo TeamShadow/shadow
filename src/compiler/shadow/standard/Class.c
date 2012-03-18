@@ -23,7 +23,13 @@ struct _Pshadow_Pstandard_CString* _Pshadow_Pstandard_CClass_MtoString(struct _P
 
 void _Pshadow_Pstandard_CClass_Mconstructor(struct _Pshadow_Pstandard_CClass* this) {
 	this->_Imethods = &_Pshadow_Pstandard_CClass_Imethods;
-	this->className = ((void *)0);
+	static struct _IArray _Iarray1 = {
+		(void *)"", (int_shadow_t)1, {(int_shadow_t)0}
+	};
+	static struct _Pshadow_Pstandard_CString _Istring1 = {
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray1
+	};
+	this->className = &_Istring1;
 	return;
 }
 

@@ -1,6 +1,10 @@
 class Numeric {
 
-    public test() => () {
+    public static main( String[] args ) => () {
+    	long z = 1y + 2s + 3i + 4l;
+    	if (z == 4*5/2l)
+    		shadow.io@Console.printLine("Yes");
+    	
         int a = 1 + 2 - 3 + 4;
         int b = 1 + 2;
         int c = (2 + 3) * (4 + 5);

@@ -50,13 +50,17 @@ void _Pshadow_Pio_CConsole_Mprint_Rcode(code_shadow_t c) {
 }
 
 void _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(struct _Pshadow_Pstandard_CString *str) {
-	fwrite(str->data->_Iarray, sizeof(ubyte_shadow_t), str->data->_Ilengths[0], stdout);
-	fflush(stdout);
+	if (str == NULL)
+		printf("null");
+	else {
+		fwrite(str->data->_Iarray, sizeof(ubyte_shadow_t), str->data->_Ilengths[0], stdout);
+		fflush(stdout);
+	}
 //	printf("%s", str->data);
 }
 
 void _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject *obj) {
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(obj->_Imethods->_MtoString(obj));
+	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(obj == NULL ? NULL : obj->_Imethods->_MtoString(obj));
 //	printf("%s", obj->_Imethods->_MtoString(obj)->data);
 }
 
@@ -202,8 +206,9 @@ struct _Pshadow_Pstandard_CString* _Pshadow_Pio_CConsole_Mread(void) {
 	scanf("%100s%n", buffer, &length);
 	struct _Pshadow_Pstandard_CString *str = malloc(sizeof(struct _Pshadow_Pstandard_CString));
 	str->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
-	str->ascii = (boolean_shadow_t)0;
-	str->data = malloc(length + 1);
+	str->ascii = (boolean_shadow_t)1;
+	str->data = malloc(sizeof(struct _IArray));
+	str->data = malloc(length);
 	strcpy((char *)str->data, buffer);
 	return str;
 }

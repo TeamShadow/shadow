@@ -3,8 +3,8 @@ package shadow.standard;
 immutable final class String //implements Parsable<String> //, Collection<code>
 {
 
-	private ubyte[] data;
-	private boolean ascii;
+	private ubyte[] data = new ubyte[0];
+	private boolean ascii = true;
 
 	public getByte( int index ) => ( ubyte )
 	{
@@ -26,6 +26,8 @@ immutable final class String //implements Parsable<String> //, Collection<code>
 
 	public compareTo( String other ) => ( int )
 	{
+		if ( other == null )
+			return 1;
 		if ( ascii and other.ascii )
 		{
 			int count = Math.min( Array.getLength(data), Array.getLength(other.data) );
