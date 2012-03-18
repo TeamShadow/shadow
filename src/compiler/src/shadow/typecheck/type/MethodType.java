@@ -20,16 +20,11 @@ public class MethodType extends Type {
 		paramNames = new ArrayList<String>();
 		paramTypes = new SequenceType();
 		returns = new SequenceType();
-	}
-	
-	public boolean matches( List<ModifiedType> argumentTypes )
-	{
-		return paramTypes.matches(argumentTypes);
-	}
-	
+	}	
+
 	public boolean matches( SequenceType inputTypes )
 	{
-		return paramTypes.matchesTypesAndModifiers( inputTypes );		
+		return paramTypes.matches( inputTypes );		
 	}
 	
 	/*

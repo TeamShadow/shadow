@@ -1035,7 +1035,7 @@ void PrimitiveType():
 void ResultType():
 { debugPrint("RESULT TYPE"); }
 {
-	["nullable" {jjtThis.setModifiers(ModifierSet.NULLABLE); }]  Type()
+	["nullable" { jjtThis.setModifiers(ModifierSet.NULLABLE); }]  Type()
 }
 
 void ResultTypes():
@@ -1299,7 +1299,7 @@ void PrimaryPrefix():
 | "this" { jjtThis.setImage("this"); }
 | "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
-| LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
+| LOOKAHEAD( Type() "." "class" ) Type() "." "class"
 //| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(2) MethodCall()
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }

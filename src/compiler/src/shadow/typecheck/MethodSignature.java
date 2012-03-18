@@ -57,11 +57,6 @@ public class MethodSignature {
 		return node;
 	}
 	
-	public boolean matches( List<ModifiedType> argumentTypes )
-	{
-		return type.matches(argumentTypes);		
-	}
-	
 	public boolean matches( SequenceType argumentTypes )
 	{
 		return type.matches(argumentTypes);		

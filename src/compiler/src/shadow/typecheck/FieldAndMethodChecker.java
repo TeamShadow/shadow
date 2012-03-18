@@ -632,11 +632,22 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+			if( node.jjtGetNumChildren() > 0 )
+			{
+				Node child = node.jjtGetChild(0); 
+				node.setType(child.getType());			
+			}
+		
+		return WalkType.POST_CHILDREN;	
+	}
+	
 	
 	//
 	// Everything below here are just visitors to push up the type
-	//
-	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	//	
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	//public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }

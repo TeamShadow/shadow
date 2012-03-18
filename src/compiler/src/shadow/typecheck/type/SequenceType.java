@@ -11,7 +11,7 @@ import shadow.parser.javacc.SimpleNode;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
 {	
-	protected List<ModifiedType> types = new LinkedList<ModifiedType>(); /** List of return types */	
+	private List<ModifiedType> types = new LinkedList<ModifiedType>(); /** List of return types */	
 
 	public SequenceType() {		
 		this( new LinkedList<ModifiedType>()  );		
@@ -23,11 +23,13 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		types = modifiedTypes;
 	}
 	
+	@Override
 	public int size()
 	{
 		return types.size();
 	}
 	
+	@Override
 	public boolean isEmpty()
 	{
 		return types.isEmpty();
@@ -54,7 +56,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return type.getType().isSubtype(types.get(0).getType());		
 	}
 	
-	public boolean matchesNullables( List<ModifiedType> otherTypes )
+	public boolean acceptsNullables( List<ModifiedType> otherTypes )
 	{	
 		if( types.size() != otherTypes.size() )
 			return false;		
@@ -65,6 +67,14 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		
 		return true;		
 	}	
+	
+	public boolean acceptsNullables( ModifiedType type )
+	{	
+		if( types.size() != 1 )
+			return false;		
+		
+		return ModifierSet.isNullable(types.get(0).getModifiers()) || !ModifierSet.isNullable(type.getModifiers());
+	}
 
 	public String toString() {
 		StringBuilder builder = new StringBuilder("(");
@@ -112,7 +122,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			return false;
 		
 		for( int i = 0; i < types.size(); i++ )		
-			if( !inputTypes.get(i).getType().equals(types.get(i).getType()) || inputTypes.get(i).getModifiers() != types.get(i).getModifiers() )
+			if( !inputTypes.get(i).getType().equals(getType(i)) || inputTypes.get(i).getModifiers() != getModifiers(i) )
 				return false;
 		
 		return true;		
@@ -131,26 +141,24 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			node.setType(this);
 	}
 
-	public boolean matchesTypesAndModifiers(SequenceType inputTypes)
-	{
-		if( types.size() != inputTypes.types.size() )
-			return false;
-		
-		for( int i = 0; i < types.size(); i++ )		
-			if( !inputTypes.types.get(i).getType().equals(types.get(i).getType()) || inputTypes.types.get(i).getModifiers() != types.get(i).getModifiers() )
-				return false;
-		
-		return true;		
-	}
-
 	@Override
 	public Iterator<ModifiedType> iterator() {		
 		return types.iterator();
 	}	
 
+	@Override
 	public ModifiedType get(int i) {		
 		return types.get(i);
 	}
+	
+	public Type getType(int i) {		
+		return types.get(i).getType();
+	}
+	
+	public int getModifiers(int i) {		
+		return types.get(i).getModifiers();
+	}
+
 
 	@Override
 	public boolean contains(Object o) {

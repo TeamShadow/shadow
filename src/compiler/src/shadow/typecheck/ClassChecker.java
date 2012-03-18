@@ -236,10 +236,13 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException
 	{
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN; 
-			
-		node.setType( node.jjtGetChild(0).getType() );		
+		if(secondVisit)
+		{	
+			Type type = node.jjtGetChild(0).getType();
+			node.setType( type );
+			if( ModifierSet.isNullable(node.getModifiers()) && type.isPrimitive() )
+				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");			
+		}
 	
 		return WalkType.POST_CHILDREN;
 	}
@@ -287,6 +290,9 @@ public class ClassChecker extends BaseChecker {
 			return;
 		}		
 		
+		if( type.isPrimitive() && ModifierSet.isNullable(node.getModifiers()) )		
+			addError(node.jjtGetChild(start), Error.TYPE_MIS, "Cannot declare primitive type " + type + " as nullable");				
+			
 		// go through and add the variables
 		for(int i = start; i < node.jjtGetNumChildren(); ++i)
 		{
@@ -1037,7 +1043,7 @@ public class ClassChecker extends BaseChecker {
 							break;
 						}
 						
-						if( !currentType.matchesNullables( nextType ) )
+						if( !currentType.acceptsNullables( nextType ) )
 						{
 							addError(current, Error.TYPE_MIS, "Cannot store nullable values from " + next + " into non-nullable variables in " + current);
 							break;							
@@ -1184,7 +1190,7 @@ public class ClassChecker extends BaseChecker {
 								
 				ClassInterfaceBaseType outer = (ClassInterfaceBaseType)unboundMethod.getOuter();				
 				for( MethodSignature signature : outer.getMethods(unboundMethod.getTypeName()) )
-					if( signature.getMethodType().matches( method.getParameterTypes()) && signature.getMethodType().canReturn(method.getReturnTypes()))
+					if( signature.getMethodType().matches(method.getParameterTypes()) && signature.getMethodType().canReturn(method.getReturnTypes()))
 					{
 						node.setType(signature.getMethodType());
 						found = true;
@@ -1482,7 +1488,7 @@ public class ClassChecker extends BaseChecker {
 		{
 			Node child = node.jjtGetChild(0); 
 			
-			if( child instanceof ASTResultType ) //ResultType() "." "class"
+			if( child instanceof ASTType ) //Type() "." "class"
 			{
 				if( child.getType() instanceof ClassType )
 					node.setType( Type.CLASS );
@@ -2139,28 +2145,47 @@ public class ClassChecker extends BaseChecker {
 					addError(node, Error.INVL_TYP, "Cannot return values from a method that returns nothing");
 				else
 				{
-					Type type = node.jjtGetChild(0).getType();
+					Node child = node.jjtGetChild(0);
+					Type type = child.getType();
 					
 					if( type instanceof SequenceType )
 					{
 						SequenceType sequenceType = (SequenceType)type;
-						if( sequenceType.canAccept(returnTypes) )
+						if( returnTypes.canAccept(sequenceType) )
 						{
-							if( !sequenceType.matchesNullables(returnTypes) )							
+							if( !returnTypes.acceptsNullables(sequenceType) )							
 								addError(node, Error.TYPE_MIS, "Cannot return nullable values into non-nullable return types");
 						}
 						else
-							addError(node, Error.TYPE_MIS, "Sequence " + returnTypes + " does not match " + sequenceType);
+							addError(node, Error.TYPE_MIS, "Return type " + sequenceType + " does not match " + returnTypes );
 					}
-					
-					
-					
-					
+					else if(returnTypes.canAccept(child))
+					{
+						if( !returnTypes.acceptsNullables(child) )							
+							addError(node, Error.TYPE_MIS, "Cannot return nullable value into non-nullable return type");
+					}
+					else
+						addError(node, Error.TYPE_MIS, "Return type " + child.getType() + " does not match " + returnTypes.get(0).getType() );						
 				}
 			}
 		}	
 		
 		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+			if( node.jjtGetNumChildren() > 0 )
+			{
+				Type type = node.jjtGetChild(0).getType(); 
+				node.setType(type);
+				
+				if( ModifierSet.isNullable(node.getModifiers()) && type.isPrimitive() )
+					addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");				
+			}
+		
+		return WalkType.POST_CHILDREN;	
 	}
 
 
@@ -2171,6 +2196,4 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
 		return pushUpType(node, secondVisit); 
 	}
-	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
-	
 }
