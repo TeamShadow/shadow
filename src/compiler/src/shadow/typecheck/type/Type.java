@@ -148,7 +148,7 @@ public class Type {
 			if( t.getKind() == Kind.ARRAY )
 			{
 				ArrayType type = (ArrayType)this;
-				ArrayType other = (ArrayType)this;
+				ArrayType other = (ArrayType)t;
 				if( type.getDimensions() == other.getDimensions() )
 					return type.getBaseType().isSubtype(other.getBaseType());
 				else

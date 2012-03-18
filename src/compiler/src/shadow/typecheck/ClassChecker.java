@@ -2013,25 +2013,25 @@ public class ClassChecker extends BaseChecker {
 	@Override
 	public Object visit(ASTArrayAllocation node, Boolean secondVisit) throws ShadowException
 	{
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		//check curPrefix at some point		
-		Node child = node.jjtGetChild(0);
-		
-		int counter = 1;
-		
-		if( child instanceof ASTClassOrInterfaceType && node.jjtGetChild(counter) instanceof ASTTypeArguments ) //reference array might have type arguments
-		{
-			//for now
-			addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
-			node.setType(Type.UNKNOWN);
-			counter++;				
-		}
+		if(secondVisit)
+		{	
+			//check curPrefix at some point		
+			Node child = node.jjtGetChild(0);
 			
-		//array dims and inits
-		List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
-		node.setType(new ArrayType(child.getType(), dimensions));
+			int counter = 1;
+			
+			if( child instanceof ASTClassOrInterfaceType && node.jjtGetChild(counter) instanceof ASTTypeArguments ) //reference array might have type arguments
+			{
+				//for now
+				addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
+				node.setType(Type.UNKNOWN);
+				counter++;				
+			}
+				
+			//array dims and inits
+			List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
+			node.setType(new ArrayType(child.getType(), dimensions));
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
