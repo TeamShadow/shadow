@@ -6,7 +6,11 @@
 #include "stdlib.h"
 #include "shadow/standard/Object.meta"
 
+struct _IArray;
+
 struct _Pshadow_Pstandard_CClass;
+struct _Pshadow_Pstandard_CMath;
+struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CString_Iclass;
 struct _Pshadow_Pstandard_CString_Itable;
@@ -16,19 +20,33 @@ struct _Pshadow_Pstandard_CString {
 	
 	/* Fields */
 	boolean_shadow_t ascii;
-	ubyte_shadow_t* data;
+	struct _IArray * data;
 };
 
 
+
+
+
+
 struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CString_MgetClass(struct _Pshadow_Pstandard_CString* this);
+ubyte_shadow_t _Pshadow_Pstandard_CString_MgetByte_Rint(struct _Pshadow_Pstandard_CString*, int_shadow_t);
 struct _Pshadow_Pstandard_CString* _Pshadow_Pstandard_CString_MtoString(struct _Pshadow_Pstandard_CString*);
+int_shadow_t _Pshadow_Pstandard_CString_McompareTo_R_Pshadow_Pstandard_CString(struct _Pshadow_Pstandard_CString*, struct _Pshadow_Pstandard_CString*);
+code_shadow_t _Pshadow_Pstandard_CString_MgetCode_Rint(struct _Pshadow_Pstandard_CString*, int_shadow_t);
+int_shadow_t _Pshadow_Pstandard_CString_MgetLength(struct _Pshadow_Pstandard_CString*);
 void _Pshadow_Pstandard_CString_Mconstructor(struct _Pshadow_Pstandard_CString*);
 
 struct _Pshadow_Pstandard_CString_Itable {
 	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CString*);
 	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CString*);
+	ubyte_shadow_t (*_MgetByte_Rint)(struct _Pshadow_Pstandard_CString*, int_shadow_t);
+	int_shadow_t (*_McompareTo_R_Pshadow_Pstandard_CString)(struct _Pshadow_Pstandard_CString*, struct _Pshadow_Pstandard_CString*);
+	code_shadow_t (*_MgetCode_Rint)(struct _Pshadow_Pstandard_CString*, int_shadow_t);
+	int_shadow_t (*_MgetLength)(struct _Pshadow_Pstandard_CString*);
 };
 
 #include "shadow/standard/Class.meta"
+#include "shadow/standard/Math.meta"
+#include "shadow/standard/Array.meta"
 
 #endif

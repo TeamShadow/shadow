@@ -4,6 +4,9 @@
 
 #include "types.h"
 #include "stdlib.h"
+
+struct _IArray;
+
 struct _Pshadow_Pstandard_CClass;
 struct _Pshadow_Pstandard_CString;
 

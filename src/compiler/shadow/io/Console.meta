@@ -6,6 +6,8 @@
 #include "stdlib.h"
 #include "shadow/standard/Object.meta"
 
+struct _IArray;
+
 struct _Pshadow_Pstandard_CClass;
 struct _Pshadow_Pstandard_CString;
 

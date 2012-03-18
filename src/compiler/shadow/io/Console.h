@@ -50,11 +50,14 @@ void _Pshadow_Pio_CConsole_Mprint_Rcode(code_shadow_t c) {
 }
 
 void _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(struct _Pshadow_Pstandard_CString *str) {
-	printf("%s", str->data);
+	fwrite(str->data->_Iarray, sizeof(ubyte_shadow_t), str->data->_Ilengths[0], stdout);
+	fflush(stdout);
+//	printf("%s", str->data);
 }
 
 void _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject *obj) {
-	printf("%s", obj->_Imethods->_MtoString(obj)->data);
+	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(obj->_Imethods->_MtoString(obj));
+//	printf("%s", obj->_Imethods->_MtoString(obj)->data);
 }
 
 void _Pshadow_Pio_CConsole_MprintLine_Rboolean(boolean_shadow_t z) {
@@ -106,11 +109,15 @@ void _Pshadow_Pio_CConsole_MprintLine_Rcode(code_shadow_t c) {
 }
 
 void _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(struct _Pshadow_Pstandard_CString *str) {
-	printf("%s\n", str->data);
+	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(str);
+	_Pshadow_Pio_CConsole_MprintLine();
+//	printf("%s\n", str->data);
 }
 
 void _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject *obj) {
-	printf("%s\n", obj->_Imethods->_MtoString(obj)->data);
+	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CObject(obj);
+	_Pshadow_Pio_CConsole_MprintLine();
+//	printf("%s\n", obj->_Imethods->_MtoString(obj)->data);
 }
 
 void _Pshadow_Pio_CConsole_MprintLine(void) {

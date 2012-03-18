@@ -1,0 +1,20 @@
+package shadow.standard;
+
+class Array
+{
+	private constructor() { }
+
+	public static getLength( Object array ) => ( int )
+	{
+		return getLength( array, 0 );
+	}
+	public static getLength( Object array, int dimension ) => ( int )
+	{
+		return getLengths( array )[ dimension ];
+	}
+	public static getDimensions( Object array ) => ( int )
+	{
+		return getLength(getLengths( array ));
+	}
+	public static native getLengths( Object array ) => ( int[] );
+}

@@ -4,7 +4,10 @@
 
 #include "types.h"
 #include "stdlib.h"
+#include "string.h"
 #include "shadow/standard/Object.meta"
+
+struct _IArray;
 
 struct _Pshadow_Pio_CConsole;
 struct _Pshadow_Pstandard_CClass;
@@ -14,20 +17,20 @@ struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CInputTest_Iclass;
 struct _Pshadow_Phello_CInputTest_Itable;
 struct _Pshadow_Phello_CInputTest_Itable _Pshadow_Phello_CInputTest_Imethods;
 struct _Pshadow_Phello_CInputTest {
-     struct _Pshadow_Phello_CInputTest_Itable *_Imethods;
-     
-     /* Fields */
+	struct _Pshadow_Phello_CInputTest_Itable *_Imethods;
+	
+	/* Fields */
 };
 
 
 struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_CInputTest_MgetClass(struct _Pshadow_Phello_CInputTest* this);
 void _Pshadow_Phello_CInputTest_Mconstructor(struct _Pshadow_Phello_CInputTest*);
-void _Pshadow_Phello_CInputTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString**);
+void _Pshadow_Phello_CInputTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray *);
 
 struct _Pshadow_Phello_CInputTest_Itable {
-     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_CInputTest*);
-     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-     void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_CInputTest*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _IArray *);
 };
 
 #include "shadow/io/Console.meta"

@@ -1313,7 +1313,7 @@ void PrimarySuffix():
 }
 {
   LOOKAHEAD(2) "." "this" { jjtThis.setImage("this"); } // when does this even happen?
-| "[" ConditionalExpression() ("," ConditionalExpression())* "]"
+| "[" { jjtThis.addToImage('['); } ConditionalExpression() ("," ConditionalExpression())* "]"
 //| "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(3) "." MethodCall()
 | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }

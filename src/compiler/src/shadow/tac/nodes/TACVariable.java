@@ -9,6 +9,16 @@ public class TACVariable extends TACPrefixed
 {
 	private boolean field;
 	private Type type;
+	public TACVariable(boolean isField)
+	{
+		field = isField;
+		type = null;
+	}
+	public TACVariable(Type varType)
+	{
+		field = false;
+		type = varType;
+	}
 	public TACVariable(Type varType, String varSymbol, boolean isField)
 	{
 		field = isField;

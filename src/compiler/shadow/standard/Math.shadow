@@ -5,6 +5,15 @@ class Math
 
 	private constructor() { }
 
+	public static min( int x, int y ) => ( int )
+	{
+		return x < y ? x : y;
+	}
+	public static max( int x, int y ) => ( int )
+	{
+		return x > y ? x : y;
+	}
+
 	public static native abs( int x ) => ( uint );
 	public static native abs( long x ) => ( ulong );
 	public static native div( int num, int denom ) => ( int, int );

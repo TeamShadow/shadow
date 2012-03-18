@@ -1,9 +1,66 @@
 package shadow.hello;
 
-class Arrays {
+class Arrays
+{
 	public static main( String[] args ) => ()
 	{
-		boolean bool = 1 < 2;
-		//int[][,] a = new int[1][2,3];
+		Console.print("Arrays");
+		for (int i = 0; i < shadow.standard@Array.getLength(args); i += 1)
+		{
+			shadow.io@Console.print(' ');
+			shadow.io@Console.print(args[i]);
+		}
+		Console.printLine();
+
+		Console.printLine("Arguments:");
+		for (int i = 0; i < Array.getLength(args); i += 1)
+		{
+			Console.print('\t');
+			Console.print(i);
+			Console.print(":\t");
+			Console.printLine(args[i]);
+		}
+		Console.printLine();
+
+		Console.printLine("Arguments (backwards):");
+		for (int i = Array.getLength(args) - 1; i >= 0; i -= 1)
+		{
+			Console.print('\t');
+			Console.print(i);
+			Console.print(":\t");
+			Console.printLine(args[i]);
+		}
+		Console.printLine();
+
+		args = sort(args);
+		Console.printLine("Arguments (sorted):");
+		for (int i = 0; i < Array.getLength(args); i += 1)
+		{
+			Console.print('\t');
+			Console.print(i);
+			Console.print(":\t");
+			Console.printLine(args[i]);
+		}
+		Console.printLine();
+	}
+
+	public static sort( String[] array ) => ( String[] )
+	{
+		for ( int i = Array.getLength(array) - 1; i > 0; i -= 1 )
+		{
+			int maxIndex = i;
+			String max = array[i];
+			for ( int j = i - 1; j >= 0; j -= 1 )
+			{
+				if ( max.compareTo(array[j]) < 0 )
+				{
+					maxIndex = j;
+					max = array[j];
+				}
+			}
+			array[maxIndex] = array[i];
+			array[i] = max;
+		}
+		return array;
 	}
 }

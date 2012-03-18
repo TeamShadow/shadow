@@ -1,13 +1,57 @@
 /* AUTO-GENERATED FILE, DO NOT EDIT! */
 #include "shadow/standard/Math.meta"
 
+struct _IArray {
+	void *_Iarray;
+	int_shadow_t _Idims;
+	int_shadow_t _Ilengths[1];
+};
+
+static struct _IArray _Iarray0 = {
+	(void *)"shadow.standard@Math", (int_shadow_t)1, {(int_shadow_t)20}
+};
 static struct _Pshadow_Pstandard_CString _Istring0 = {
-	&_Pshadow_Pstandard_CString_Imethods,
-	(boolean_shadow_t)1, (ubyte_shadow_t *)"shadow.standard@Math"
+	&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CMath_Iclass = {
 	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
 };
+
+int_shadow_t _Pshadow_Pstandard_CMath_Mmin_Rint_Rint(int_shadow_t x, int_shadow_t y) {
+	boolean_shadow_t _Itemp0;
+	int_shadow_t _Itemp1;
+	_Itemp0 = x < y;
+	if ( _Itemp0 )
+		goto label0;
+	else
+		goto label1;
+label0: (void)0;
+	_Itemp1 = x;
+	goto label2;
+label1: (void)0;
+	_Itemp1 = y;
+	goto label2;
+label2: (void)0;
+	return _Itemp1;
+}
+
+int_shadow_t _Pshadow_Pstandard_CMath_Mmax_Rint_Rint(int_shadow_t x, int_shadow_t y) {
+	boolean_shadow_t _Itemp0;
+	int_shadow_t _Itemp1;
+	_Itemp0 = x > y;
+	if ( _Itemp0 )
+		goto label0;
+	else
+		goto label1;
+label0: (void)0;
+	_Itemp1 = x;
+	goto label2;
+label1: (void)0;
+	_Itemp1 = y;
+	goto label2;
+label2: (void)0;
+	return _Itemp1;
+}
 
 void _Pshadow_Pstandard_CMath_Mconstructor(struct _Pshadow_Pstandard_CMath* this) {
 	this->_Imethods = &_Pshadow_Pstandard_CMath_Imethods;
@@ -25,6 +69,7 @@ struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CMath_MgetClass(struct _Psh
 struct _Pshadow_Pstandard_CMath_Itable _Pshadow_Pstandard_CMath_Imethods = {
 	_Pshadow_Pstandard_CMath_MgetClass,
 	_Pshadow_Pstandard_CObject_MtoString,
+	_Pshadow_Pstandard_CMath_Mmin_Rint_Rint,
 	_Pshadow_Pstandard_CMath_Mln_Rdouble,
 	_Pshadow_Pstandard_CMath_Mcosh_Rdouble,
 	_Pshadow_Pstandard_CMath_Matan_Rdouble,
@@ -33,6 +78,7 @@ struct _Pshadow_Pstandard_CMath_Itable _Pshadow_Pstandard_CMath_Imethods = {
 	_Pshadow_Pstandard_CMath_Mpow_Rlong_Ruint,
 	_Pshadow_Pstandard_CMath_Mpow_Rdouble_Ruint,
 	_Pshadow_Pstandard_CMath_Mpow_Rdouble_Rdouble,
+	_Pshadow_Pstandard_CMath_Mmax_Rint_Rint,
 	_Pshadow_Pstandard_CMath_Masin_Rdouble,
 	_Pshadow_Pstandard_CMath_Mcos_Rdouble,
 	_Pshadow_Pstandard_CMath_Msqrt_Rdouble,
@@ -51,7 +97,7 @@ struct _Pshadow_Pstandard_CMath_Itable _Pshadow_Pstandard_CMath_Imethods = {
 	_Pshadow_Pstandard_CMath_Mfloor_Rdouble,
 	_Pshadow_Pstandard_CMath_Mceiling_Rdouble,
 	_Pshadow_Pstandard_CMath_Msin_Rdouble,
-	_Pshadow_Pstandard_CMath_Mtan_Rdouble,
 	_Pshadow_Pstandard_CMath_Macos_Rdouble,
+	_Pshadow_Pstandard_CMath_Mtan_Rdouble,
 };
 

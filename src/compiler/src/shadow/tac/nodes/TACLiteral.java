@@ -10,6 +10,14 @@ public class TACLiteral extends TACNode
 {
 	private Type type;
 	private Object value;
+	public TACLiteral(Type literalType, Number literalValue)
+	{
+		if (!literalType.isNumerical())
+			throw new IllegalArgumentException("Number literal must have a numerical type.");
+		type = literalType;
+		value = literalValue;
+		setSymbol(literalValue.toString());
+	}
 	public TACLiteral(Type literalType, String str)
 	{
 		type = literalType;
@@ -19,7 +27,7 @@ public class TACLiteral extends TACNode
 		else if (literalType.equals(Type.CODE))
 			value = str;
 		else if (literalType.equals(Type.STRING))
-			value = str;
+			value = str.substring(1, str.length() - 1);
 		else if (literalType.equals(Type.BOOLEAN))
 			value = Boolean.valueOf(str);
 		else if (literalType.equals(Type.FLOAT))

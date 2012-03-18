@@ -1,9 +1,17 @@
 /* AUTO-GENERATED FILE, DO NOT EDIT! */
 #include "shadow/hello/MathTest.meta"
 
+struct _IArray {
+	void *_Iarray;
+	int_shadow_t _Idims;
+	int_shadow_t _Ilengths[1];
+};
+
+static struct _IArray _Iarray0 = {
+	(void *)"shadow.hello@MathTest", (int_shadow_t)1, {(int_shadow_t)21}
+};
 static struct _Pshadow_Pstandard_CString _Istring0 = {
-	&_Pshadow_Pstandard_CString_Imethods,
-	(boolean_shadow_t)1, (ubyte_shadow_t *)"shadow.hello@MathTest"
+	&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CMathTest_Iclass = {
 	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
@@ -14,7 +22,7 @@ void _Pshadow_Phello_CMathTest_Mconstructor(struct _Pshadow_Phello_CMathTest* th
 	return;
 }
 
-void _Pshadow_Phello_CMathTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString** args) {
+void _Pshadow_Phello_CMathTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray * args) {
 	int_shadow_t _Itemp0;
 	int_shadow_t _Itemp1;
 	boolean_shadow_t _Itemp2;
@@ -128,32 +136,40 @@ label7: (void)0;
 	else
 		goto label8;
 label8: (void)0;
+	static struct _IArray _Iarray1 = {
+		(void *)"Math.abs(5) = ", (int_shadow_t)1, {(int_shadow_t)14}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring1 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.abs(5) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray1
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring1);
 	_Itemp15 = _Pshadow_Pstandard_CMath_Mabs_Rint(5);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(_Itemp15);
+	static struct _IArray _Iarray2 = {
+		(void *)"Math.abs(-5) = ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring2 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.abs(-5) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray2
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring2);
 	_Itemp16 = -5;
 	_Itemp17 = _Pshadow_Pstandard_CMath_Mabs_Rint(_Itemp16);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(_Itemp17);
+	static struct _IArray _Iarray3 = {
+		(void *)"Math.abs(5l) = ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring3 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.abs(5l) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray3
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring3);
 	_Itemp18 = +((long_shadow_t)5ll);
 	_Itemp19 = _Pshadow_Pstandard_CMath_Mabs_Rlong(_Itemp18);
 	_Pshadow_Pio_CConsole_MprintLine_Rulong(_Itemp19);
+	static struct _IArray _Iarray4 = {
+		(void *)"Math.abs(-5l) = ", (int_shadow_t)1, {(int_shadow_t)16}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring4 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.abs(-5l) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray4
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring4);
 	_Itemp20 = -((long_shadow_t)5ll);
@@ -163,18 +179,22 @@ label8: (void)0;
 	quot = 0;
 	int_shadow_t rem;
 	rem = 0;
+	static struct _IArray _Iarray5 = {
+		(void *)"Math.div(10, 3) = (", (int_shadow_t)1, {(int_shadow_t)19}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring5 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.div(10, 3) = ("
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray5
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring5);
 	_Itemp22 = _Pshadow_Pstandard_CMath_Mdiv_Rint_Rint(5, 3, &_Itemp23);
 	quot = _Itemp22;
 	rem = _Itemp23;
 	_Pshadow_Pio_CConsole_Mprint_Rint(quot);
+	static struct _IArray _Iarray6 = {
+		(void *)", ", (int_shadow_t)1, {(int_shadow_t)2}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring6 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)", "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray6
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring6);
 	_Pshadow_Pio_CConsole_Mprint_Rint(rem);
@@ -183,234 +203,298 @@ label8: (void)0;
 	longQuot = 0;
 	long_shadow_t longRem;
 	longRem = 0;
+	static struct _IArray _Iarray7 = {
+		(void *)"Math.div(10000000000l, 123456l) = (", (int_shadow_t)1, {(int_shadow_t)35}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring7 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.div(10000000000l, 123456l) = ("
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray7
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring7);
 	_Itemp24 = _Pshadow_Pstandard_CMath_Mdiv_Rlong_Rlong(((long_shadow_t)10000000000ll), ((long_shadow_t)123456ll), &_Itemp25);
 	longQuot = _Itemp24;
 	longRem = _Itemp25;
 	_Pshadow_Pio_CConsole_Mprint_Rlong(longQuot);
+	static struct _IArray _Iarray8 = {
+		(void *)", ", (int_shadow_t)1, {(int_shadow_t)2}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring8 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)", "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray8
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring8);
 	_Pshadow_Pio_CConsole_Mprint_Rlong(longRem);
 	_Pshadow_Pio_CConsole_MprintLine_Rcode(')');
+	static struct _IArray _Iarray9 = {
+		(void *)"Math.abs(1.3) = ", (int_shadow_t)1, {(int_shadow_t)16}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring9 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.abs(1.3) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray9
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring9);
 	_Itemp26 = _Pshadow_Pstandard_CMath_Mabs_Rdouble(1.3);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp26);
+	static struct _IArray _Iarray10 = {
+		(void *)"Math.abs(-1.3) = ", (int_shadow_t)1, {(int_shadow_t)17}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring10 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.abs(-1.3) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray10
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring10);
 	_Itemp27 = -1.3;
 	_Itemp28 = _Pshadow_Pstandard_CMath_Mabs_Rdouble(_Itemp27);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp28);
+	static struct _IArray _Iarray11 = {
+		(void *)"Math.floor(1) = ", (int_shadow_t)1, {(int_shadow_t)16}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring11 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.floor(1) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray11
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring11);
 	_Itemp29 = _Pshadow_Pstandard_CMath_Mfloor_Rdouble(1);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp29);
+	static struct _IArray _Iarray12 = {
+		(void *)"Math.floor(-1) = ", (int_shadow_t)1, {(int_shadow_t)17}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring12 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.floor(-1) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray12
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring12);
 	_Itemp30 = -1;
 	_Itemp31 = _Pshadow_Pstandard_CMath_Mfloor_Rdouble(_Itemp30);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp31);
+	static struct _IArray _Iarray13 = {
+		(void *)"Math.floor(1.3) = ", (int_shadow_t)1, {(int_shadow_t)18}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring13 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.floor(1.3) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray13
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring13);
 	_Itemp32 = _Pshadow_Pstandard_CMath_Mfloor_Rdouble(1.3);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp32);
+	static struct _IArray _Iarray14 = {
+		(void *)"Math.floor(-1.3) = ", (int_shadow_t)1, {(int_shadow_t)19}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring14 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.floor(-1.3) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray14
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring14);
 	_Itemp33 = -1.3;
 	_Itemp34 = _Pshadow_Pstandard_CMath_Mfloor_Rdouble(_Itemp33);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp34);
+	static struct _IArray _Iarray15 = {
+		(void *)"Math.ceiling(1) = ", (int_shadow_t)1, {(int_shadow_t)18}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring15 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.ceiling(1) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray15
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring15);
 	_Itemp35 = _Pshadow_Pstandard_CMath_Mceiling_Rdouble(1);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp35);
+	static struct _IArray _Iarray16 = {
+		(void *)"Math.ceiling(-1) = ", (int_shadow_t)1, {(int_shadow_t)19}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring16 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.ceiling(-1) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray16
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring16);
 	_Itemp36 = -1;
 	_Itemp37 = _Pshadow_Pstandard_CMath_Mceiling_Rdouble(_Itemp36);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp37);
+	static struct _IArray _Iarray17 = {
+		(void *)"Math.ceiling(1.3) = ", (int_shadow_t)1, {(int_shadow_t)20}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring17 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.ceiling(1.3) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray17
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring17);
 	_Itemp38 = _Pshadow_Pstandard_CMath_Mceiling_Rdouble(1.3);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp38);
+	static struct _IArray _Iarray18 = {
+		(void *)"Math.ceiling(-1.3) = ", (int_shadow_t)1, {(int_shadow_t)21}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring18 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.ceiling(-1.3) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray18
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring18);
 	_Itemp39 = -1.3;
 	_Itemp40 = _Pshadow_Pstandard_CMath_Mceiling_Rdouble(_Itemp39);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp40);
+	static struct _IArray _Iarray19 = {
+		(void *)"Math.sin(0) = ", (int_shadow_t)1, {(int_shadow_t)14}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring19 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.sin(0) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray19
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring19);
 	_Itemp41 = _Pshadow_Pstandard_CMath_Msin_Rdouble(0);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp41);
+	static struct _IArray _Iarray20 = {
+		(void *)"Math.cos(0) = ", (int_shadow_t)1, {(int_shadow_t)14}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring20 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.cos(0) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray20
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring20);
 	_Itemp42 = _Pshadow_Pstandard_CMath_Mcos_Rdouble(0);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp42);
+	static struct _IArray _Iarray21 = {
+		(void *)"Math.tan(0) = ", (int_shadow_t)1, {(int_shadow_t)14}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring21 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.tan(0) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray21
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring21);
 	_Itemp43 = _Pshadow_Pstandard_CMath_Mabs_Rint(0);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(_Itemp43);
+	static struct _IArray _Iarray22 = {
+		(void *)"Math.asin(1) = ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring22 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.asin(1) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray22
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring22);
 	_Itemp44 = _Pshadow_Pstandard_CMath_Masin_Rdouble(1);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp44);
+	static struct _IArray _Iarray23 = {
+		(void *)"Math.acos(1) = ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring23 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.acos(1) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray23
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring23);
 	_Itemp45 = _Pshadow_Pstandard_CMath_Macos_Rdouble(1);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp45);
+	static struct _IArray _Iarray24 = {
+		(void *)"Math.atan(1) = ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring24 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.atan(1) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray24
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring24);
 	_Itemp46 = _Pshadow_Pstandard_CMath_Matan_Rdouble(1);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp46);
+	static struct _IArray _Iarray25 = {
+		(void *)"Math.atan(5, 3) = ", (int_shadow_t)1, {(int_shadow_t)18}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring25 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.atan(5, 3) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray25
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring25);
 	_Itemp47 = _Pshadow_Pstandard_CMath_Matan_Rdouble_Rdouble(5, 3);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp47);
+	static struct _IArray _Iarray26 = {
+		(void *)"Math.sinh(0) = ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring26 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.sinh(0) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray26
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring26);
 	_Itemp48 = _Pshadow_Pstandard_CMath_Msinh_Rdouble(0);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp48);
+	static struct _IArray _Iarray27 = {
+		(void *)"Math.cosh(0) = ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring27 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.cosh(0) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray27
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring27);
 	_Itemp49 = _Pshadow_Pstandard_CMath_Mcosh_Rdouble(0);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp49);
+	static struct _IArray _Iarray28 = {
+		(void *)"Math.tanh(0) = ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring28 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.tanh(0) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray28
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring28);
 	_Itemp50 = _Pshadow_Pstandard_CMath_Mtanh_Rdouble(0);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp50);
+	static struct _IArray _Iarray29 = {
+		(void *)"Math.sqrt(33) = ", (int_shadow_t)1, {(int_shadow_t)16}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring29 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.sqrt(33) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray29
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring29);
 	_Itemp51 = _Pshadow_Pstandard_CMath_Msqrt_Rdouble(33);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp51);
+	static struct _IArray _Iarray30 = {
+		(void *)"Math.exp(1) = ", (int_shadow_t)1, {(int_shadow_t)14}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring30 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.exp(1) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray30
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring30);
 	_Itemp52 = _Pshadow_Pstandard_CMath_Mexp_Rdouble(1);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp52);
+	static struct _IArray _Iarray31 = {
+		(void *)"Math.pow(5, 9u) = ", (int_shadow_t)1, {(int_shadow_t)18}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring31 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.pow(5, 9u) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray31
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring31);
 	_Itemp53 = _Pshadow_Pstandard_CMath_Mpow_Rint_Ruint(5, 9u);
 	_Pshadow_Pio_CConsole_MprintLine_Rint(_Itemp53);
+	static struct _IArray _Iarray32 = {
+		(void *)"Math.pow(-5, 9u) = ", (int_shadow_t)1, {(int_shadow_t)19}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring32 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.pow(-5, 9u) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray32
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring32);
 	_Itemp54 = -5;
 	_Itemp55 = _Pshadow_Pstandard_CMath_Mpow_Rint_Ruint(_Itemp54, 9u);
 	_Pshadow_Pio_CConsole_MprintLine_Rint(_Itemp55);
+	static struct _IArray _Iarray33 = {
+		(void *)"Math.pow(50, 10u) = ", (int_shadow_t)1, {(int_shadow_t)20}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring33 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.pow(50, 10u) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray33
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring33);
 	_Itemp56 = _Pshadow_Pstandard_CMath_Mpow_Rint_Ruint(50, 10u);
 	_Pshadow_Pio_CConsole_MprintLine_Rint(_Itemp56);
+	static struct _IArray _Iarray34 = {
+		(void *)"Math.pow(50l, 10u) = ", (int_shadow_t)1, {(int_shadow_t)21}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring34 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.pow(50l, 10u) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray34
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring34);
 	_Itemp57 = _Pshadow_Pstandard_CMath_Mpow_Rlong_Ruint(((long_shadow_t)50ll), 10u);
 	_Pshadow_Pio_CConsole_MprintLine_Rlong(_Itemp57);
+	static struct _IArray _Iarray35 = {
+		(void *)"Math.pow(1.23, 4.56) = ", (int_shadow_t)1, {(int_shadow_t)23}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring35 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.pow(1.23, 4.56) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray35
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring35);
 	_Itemp58 = _Pshadow_Pstandard_CMath_Mpow_Rdouble_Rdouble(1.23, 4.56);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp58);
+	static struct _IArray _Iarray36 = {
+		(void *)"Math.ln(2.718281828459045) = ", (int_shadow_t)1, {(int_shadow_t)29}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring36 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.ln(2.718281828459045) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray36
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring36);
 	_Itemp59 = _Pshadow_Pstandard_CMath_Mln_Rdouble(2.718281828459045);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp59);
+	static struct _IArray _Iarray37 = {
+		(void *)"Math.log(101) = ", (int_shadow_t)1, {(int_shadow_t)16}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring37 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.log(101) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray37
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring37);
 	_Itemp60 = _Pshadow_Pstandard_CMath_Mlog_Rdouble(101);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(_Itemp60);
+	static struct _IArray _Iarray38 = {
+		(void *)"Math.log(2, 9) = ", (int_shadow_t)1, {(int_shadow_t)17}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring38 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Math.log(2, 9) = "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray38
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring38);
 	_Itemp61 = _Pshadow_Pstandard_CMath_Mlog_Rdouble_Rdouble(2, 9);
@@ -429,7 +513,23 @@ struct _Pshadow_Phello_CMathTest_Itable _Pshadow_Phello_CMathTest_Imethods = {
 };
 
 int main(int argc, char **argv) {
-	_Pshadow_Phello_CMathTest_Mmain_R_Pshadow_Pstandard_CString_A1((struct _Pshadow_Pstandard_CString **)0);
+	int i, argsLength = argc - 1; ++argv;
+	struct _Pshadow_Pstandard_CString **args = (struct _Pshadow_Pstandard_CString **)calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));
+	for (i = 0; i < argsLength; ++i) {
+		struct _Pshadow_Pstandard_CString *arg = (struct _Pshadow_Pstandard_CString *)malloc(sizeof(struct _Pshadow_Pstandard_CString));
+		arg->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
+		arg->ascii = ((boolean_shadow_t)1);
+		arg->data = (struct _IArray *)malloc(sizeof(struct _IArray));
+		arg->data->_Iarray = (void *)argv[i];
+		arg->data->_Idims = (int_shadow_t)1;
+		arg->data->_Ilengths[0] = strlen(argv[i]);
+		args[i] = arg;
+	}
+	struct _IArray *argsArray = (struct _IArray *)malloc(sizeof(struct _IArray));
+	argsArray->_Iarray = (void *)args;
+	argsArray->_Idims = 1;
+	argsArray->_Ilengths[0] = argsLength;
+	_Pshadow_Phello_CMathTest_Mmain_R_Pshadow_Pstandard_CString_A1(argsArray);
 	return 0;
 }
 

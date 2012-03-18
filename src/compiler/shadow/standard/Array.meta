@@ -1,0 +1,44 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef ARRAY_META
+#define ARRAY_META
+
+#include "types.h"
+#include "stdlib.h"
+#include "string.h"
+#include "shadow/standard/Object.meta"
+
+struct _IArray;
+
+struct _Pshadow_Pstandard_CClass;
+
+struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CArray_Iclass;
+struct _Pshadow_Pstandard_CArray_Itable;
+struct _Pshadow_Pstandard_CArray_Itable _Pshadow_Pstandard_CArray_Imethods;
+struct _Pshadow_Pstandard_CArray {
+	struct _Pshadow_Pstandard_CArray_Itable *_Imethods;
+	
+	/* Fields */
+};
+
+
+
+
+struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CArray_MgetClass(struct _Pshadow_Pstandard_CArray* this);
+struct _IArray * _Pshadow_Pstandard_CArray_MgetLengths_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject*);
+int_shadow_t _Pshadow_Pstandard_CArray_MgetDimensions_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject*);
+int_shadow_t _Pshadow_Pstandard_CArray_MgetLength_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject*);
+int_shadow_t _Pshadow_Pstandard_CArray_MgetLength_R_Pshadow_Pstandard_CObject_Rint(struct _Pshadow_Pstandard_CObject*, int_shadow_t);
+void _Pshadow_Pstandard_CArray_Mconstructor(struct _Pshadow_Pstandard_CArray*);
+
+struct _Pshadow_Pstandard_CArray_Itable {
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CArray*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	struct _IArray * (*_MgetLengths_R_Pshadow_Pstandard_CObject)(struct _Pshadow_Pstandard_CObject*);
+	int_shadow_t (*_MgetDimensions_R_Pshadow_Pstandard_CObject)(struct _Pshadow_Pstandard_CObject*);
+	int_shadow_t (*_MgetLength_R_Pshadow_Pstandard_CObject)(struct _Pshadow_Pstandard_CObject*);
+	int_shadow_t (*_MgetLength_R_Pshadow_Pstandard_CObject_Rint)(struct _Pshadow_Pstandard_CObject*, int_shadow_t);
+};
+
+#include "shadow/standard/Class.meta"
+
+#endif

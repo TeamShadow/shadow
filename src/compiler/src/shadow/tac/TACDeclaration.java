@@ -65,4 +65,10 @@ public abstract class TACDeclaration
 	{
 		return entry == null && exit == null;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return getNode().toString();
+	}
 }

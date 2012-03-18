@@ -10,6 +10,8 @@ import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
+import shadow.tac.nodes.TACGetLength;
+import shadow.tac.nodes.TACIndexed;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
@@ -59,6 +61,8 @@ public abstract class AbstractTACVisitor
 	public abstract void visit(TACCall node) throws IOException;
 	public abstract void visit(TACCast node) throws IOException;
 	public abstract void visit(TACComparison node) throws IOException;
+	public abstract void visit(TACGetLength node) throws IOException;
+	public abstract void visit(TACIndexed node) throws IOException;
 	public abstract void visit(TACLabel node) throws IOException;
 	public abstract void visit(TACLiteral node) throws IOException;
 	public abstract void visit(TACPhi node) throws IOException;

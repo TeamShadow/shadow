@@ -1,9 +1,17 @@
 /* AUTO-GENERATED FILE, DO NOT EDIT! */
 #include "shadow/standard/Object.meta"
 
+struct _IArray {
+	void *_Iarray;
+	int_shadow_t _Idims;
+	int_shadow_t _Ilengths[1];
+};
+
+static struct _IArray _Iarray0 = {
+	(void *)"shadow.standard@Object", (int_shadow_t)1, {(int_shadow_t)22}
+};
 static struct _Pshadow_Pstandard_CString _Istring0 = {
-	&_Pshadow_Pstandard_CString_Imethods,
-	(boolean_shadow_t)1, (ubyte_shadow_t *)"shadow.standard@Object"
+	&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CObject_Iclass = {
 	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0

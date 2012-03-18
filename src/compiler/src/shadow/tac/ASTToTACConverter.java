@@ -1,5 +1,7 @@
 package shadow.tac;
 
+import java.util.List;
+
 import shadow.parser.javacc.*;
 import shadow.tac.nodes.TACAllocation;
 import shadow.tac.nodes.TACAssign;
@@ -9,6 +11,8 @@ import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
+import shadow.tac.nodes.TACGetLength;
+import shadow.tac.nodes.TACIndexed;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
@@ -20,6 +24,7 @@ import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariable;
 import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
@@ -217,13 +222,13 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTWhileStatement node, TACData tac) throws ShadowException
 	{
-		visitLoop(node, tac, 0, 1, false);
+		visitLoop(tac, 0, 1, false);
 	}
 
 	@Override
 	public void visit(ASTDoStatement node, TACData tac) throws ShadowException
 	{
-		visitLoop(node, tac, 1, 0, true);
+		visitLoop(tac, 1, 0, true);
 	}
 
 	@Override
@@ -235,7 +240,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 		int body = condition + 1;
 		if (node.jjtGetChild(body) instanceof ASTForUpdate)
 			tac.getChild(++body).append(tac.getChild(body - 1));
-		visitLoop(node, tac, condition, body, false);
+		visitLoop(tac, condition, body, false);
 	}
 
 	@Override
@@ -394,61 +399,61 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTConditionalOrExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTConditionalExclusiveOrExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTConditionalAndExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTBitwiseOrExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTBitwiseExclusiveOrExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTBitwiseAndExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTEqualityExpression node, TACData tac) throws ShadowException
 	{
-		visitComparison(node, tac);
+		visitComparison(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTIsExpression node, TACData tac) throws ShadowException
 	{
-		visitComparison(node, tac);
+		visitComparison(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTRelationalExpression node, TACData tac) throws ShadowException
 	{
-		visitComparison(node, tac);
+		visitComparison(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTShiftExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
@@ -460,7 +465,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTRotateExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
@@ -472,13 +477,13 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTAdditiveExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
 	public void visit(ASTMultiplicativeExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node, tac);
+		visitBinary(node.getImage(), tac);
 	}
 
 	@Override
@@ -672,7 +677,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	public void visit(ASTCastExpression node, TACData tac) throws ShadowException
 	{
 		tac.appendChildren();
-		tac.append(new TACCast(node.getType(), tac.getChildNode(0)));
+		tac.append(new TACCast(node.getType(), tac.getChildNode(1)));
 	}
 
 	@Override
@@ -727,7 +732,18 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTArrayAllocation node, TACData tac) throws ShadowException
 	{
-		
+		TACSequence sizes = (TACSequence)tac.appendAndGetChild(1);
+		tac.append(visitArrayAllocation(tac, (ArrayType)node.getType(), sizes.getNodes(), 0));
+	}
+
+	@Override
+	public void visit(ASTArrayDimsAndInits node, TACData tac) throws ShadowException
+	{
+		tac.appendChildren();
+		TACSequence sequence = new TACSequence();
+		for (int i = 0; i < tac.getChildCount(); i++)
+			sequence.addNode(tac.getChildNode(i));
+		tac.append(sequence);
 	}
 
 	@Override
@@ -789,12 +805,6 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	}
 
 	@Override
-	public void visit(ASTArrayDimsAndInits node, TACData tac) throws ShadowException
-	{
-		
-	}
-
-	@Override
 	public void visit(ASTAssertStatement node, TACData tac) throws ShadowException
 	{
 		
@@ -849,7 +859,6 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	}
 
 
-
 	private TACLiteral getDefault(Type type)
 	{
 		if (type.isPrimitive())
@@ -861,11 +870,57 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	{
 		if (node.isImageNull())
 			tac.appendChildren();
+		else if (node.getImage().charAt(0) == '[')
+		{
+			TACPrefixed[] prefixed = new TACPrefixed[tac.getChildCount() - 1];
+			TACNode index = tac.appendAndGetChild(0);
+			for (int i = 1; i < tac.getChildCount(); i++)
+			{
+				tac.append(prefixed[i - 1] = new TACGetLength(i));
+				tac.append(new TACBinary(index, TACBinary.Operator.MULTIPLY, tac.getNode()));
+				tac.append(index = new TACBinary(tac.appendAndGetChild(i), TACBinary.Operator.ADD, tac.getNode()));
+			}
+			tac.append(new TACIndexed(node.getType(), index, prefixed));
+		}
 		else
 			tac.append(new TACVariable(node.getType(), node.getImage(), node.isField()));
 	}
 
-	private void visitLoop(SimpleNode node, TACData tac, int condition, int body, boolean atLeastOnce)
+	private TACReference visitArrayAllocation(TACData tac, ArrayType type, List<TACNode> sizes, int sizeIndex)
+	{
+		TACNode size = sizes.get(sizeIndex++);
+		for (int i = 1; i < type.getDimensions(); i++)
+			tac.append(size = new TACBinary(size, TACBinary.Operator.MULTIPLY, sizes.get(sizeIndex++)));
+		TACAllocation alloc = new TACAllocation(type, size, null, true);
+		tac.append(alloc);
+		if (sizeIndex < sizes.size())
+		{
+			TACVariable index = new TACVariable(Type.INT);
+			tac.append(index);
+			tac.append(new TACLiteral(Type.INT, 0));
+			tac.append(new TACAssign(index, tac.getNode()));
+			TACComparison condition = new TACComparison(index, TACComparison.Operator.NOT_EQUAL, size);
+			TACLabel bodyLabel = new TACLabel("body"),
+					conditionLabel = new TACLabel("condition"),
+					endLabel = new TACLabel("end");
+			tac.append(new TACBranch(conditionLabel));
+			tac.append(bodyLabel);
+			TACReference value = visitArrayAllocation(tac, (ArrayType)type.getBaseType(), sizes, sizeIndex);
+			tac.append(new TACIndexed(type, alloc, index, new TACPrefixed[0]));
+			tac.append(new TACAssign(tac.getNode(), value));
+			tac.append(new TACLiteral(Type.INT, 1));
+			tac.append(new TACBinary(index, TACBinary.Operator.ADD, tac.getNode()));
+			tac.append(new TACAssign(index, tac.getNode()));
+			tac.append(new TACBranch(conditionLabel));
+			tac.append(conditionLabel);
+			tac.append(condition);
+			tac.append(new TACBranch(condition, bodyLabel, endLabel));
+			tac.append(endLabel);
+		}
+		return new TACReference(alloc);
+	}
+
+	private void visitLoop(TACData tac, int condition, int body, boolean atLeastOnce)
 	{
 		TACLabel bodyLabel = new TACLabel("body"),
 				conditionLabel = new TACLabel("condition"),
@@ -888,39 +943,21 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 					tac.getChildNode(0)));
 	}
 
-	private void visitBinary(SimpleNode node, TACData tac)
+	private void visitBinary(String image, TACData tac)
 	{
-		if (node.isImageNull())
-			tac.appendChildren();
-		else
-		{
-			TACNode first = tac.getChildNode(0);
-			tac.appendChild(0);
-			for (int i = 0; i < node.getImage().length(); )
-			{
-				first = new TACBinary(first, TACBinary.Operator.parse(
-						node.getImage().charAt(i)), tac.getChildNode(++i));
-				tac.appendChild(i);
-				tac.append(first);
-			}
-		}
+		TACNode first = tac.appendAndGetChild(0);
+		for (int i = 0; i < image.length(); i++)
+			tac.append(first = new TACBinary(first,
+					TACBinary.Operator.parse(image.charAt(i)),
+					tac.appendAndGetChild(i + 1)));
 	}
 
-	private void visitComparison(SimpleNode node, TACData tac)
+	private void visitComparison(String image, TACData tac)
 	{
-		if (node.isImageNull())
-			tac.appendChildren();
-		else
-		{
-			TACNode first = tac.getChildNode(0);
-			tac.appendChild(0);
-			for (int i = 0; i < node.getImage().length(); )
-			{
-				first = new TACComparison(first, TACComparison.Operator.parse(
-						node.getImage().charAt(i)), tac.getChildNode(++i));
-				tac.appendChild(i);
-				tac.append(first);
-			}
-		}
+		TACNode first = tac.appendAndGetChild(0);
+		for (int i = 0; i < image.length(); i++)
+			tac.append(first = new TACComparison(first,
+					TACComparison.Operator.parse(image.charAt(i)),
+					tac.appendAndGetChild(i + 1)));
 	}
 }

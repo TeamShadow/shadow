@@ -6,30 +6,39 @@
 #include "stdlib.h"
 #include "shadow/standard/Object.meta"
 
+struct _IArray;
+
+struct _Pshadow_Pio_CConsole;
 struct _Pshadow_Pstandard_CClass;
 struct _Pshadow_Pstandard_CString;
+struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CArrays_Iclass;
 struct _Pshadow_Phello_CArrays_Itable;
 struct _Pshadow_Phello_CArrays_Itable _Pshadow_Phello_CArrays_Imethods;
 struct _Pshadow_Phello_CArrays {
-     struct _Pshadow_Phello_CArrays_Itable *_Imethods;
-     
-     /* Fields */
+	struct _Pshadow_Phello_CArrays_Itable *_Imethods;
+	
+	/* Fields */
 };
+
 
 
 struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_CArrays_MgetClass(struct _Pshadow_Phello_CArrays* this);
+struct _IArray * _Pshadow_Phello_CArrays_Msort_R_Pshadow_Pstandard_CString_A1(struct _IArray *);
 void _Pshadow_Phello_CArrays_Mconstructor(struct _Pshadow_Phello_CArrays*);
-void _Pshadow_Phello_CArrays_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString**);
+void _Pshadow_Phello_CArrays_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray *);
 
 struct _Pshadow_Phello_CArrays_Itable {
-     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_CArrays*);
-     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-     void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_CArrays*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	struct _IArray * (*_Msort_R_Pshadow_Pstandard_CString_A1)(struct _IArray *);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _IArray *);
 };
 
+#include "shadow/io/Console.meta"
 #include "shadow/standard/Class.meta"
 #include "shadow/standard/String.meta"
+#include "shadow/standard/Array.meta"
 
 #endif

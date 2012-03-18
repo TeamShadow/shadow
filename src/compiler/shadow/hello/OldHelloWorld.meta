@@ -4,7 +4,10 @@
 
 #include "types.h"
 #include "stdlib.h"
+#include "string.h"
 #include "shadow/standard/Object.meta"
+
+struct _IArray;
 
 struct _Pshadow_Pio_CConsole;
 struct _Pshadow_Pstandard_CClass;
@@ -27,7 +30,7 @@ struct _Pshadow_Phello_COldHelloWorld {
 struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_COldHelloWorld_MgetClass(struct _Pshadow_Phello_COldHelloWorld* this);
 void _Pshadow_Phello_COldHelloWorld_Mtest_Ruint_Ruint(uint_shadow_t, uint_shadow_t);
 uint_shadow_t _Pshadow_Phello_COldHelloWorld_Mfactorial_Ruint(uint_shadow_t);
-void _Pshadow_Phello_COldHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString**);
+void _Pshadow_Phello_COldHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray *);
 void _Pshadow_Phello_COldHelloWorld_Mconstructor(struct _Pshadow_Phello_COldHelloWorld*);
 void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint(struct _Pshadow_Phello_COldHelloWorld*, int_shadow_t);
 void _Pshadow_Phello_COldHelloWorld_Mconstructor_Rint_Rint(struct _Pshadow_Phello_COldHelloWorld*, int_shadow_t, int_shadow_t);
@@ -37,7 +40,7 @@ struct _Pshadow_Phello_COldHelloWorld_Itable {
 	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
 	void (*_Mtest_Ruint_Ruint)(uint_shadow_t, uint_shadow_t);
 	uint_shadow_t (*_Mfactorial_Ruint)(uint_shadow_t);
-	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CString**);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _IArray *);
 };
 
 #include "shadow/io/Console.meta"

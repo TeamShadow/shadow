@@ -1,9 +1,17 @@
 /* AUTO-GENERATED FILE, DO NOT EDIT! */
 #include "shadow/hello/HelloWorld.meta"
 
+struct _IArray {
+	void *_Iarray;
+	int_shadow_t _Idims;
+	int_shadow_t _Ilengths[1];
+};
+
+static struct _IArray _Iarray0 = {
+	(void *)"shadow.hello@HelloWorld", (int_shadow_t)1, {(int_shadow_t)23}
+};
 static struct _Pshadow_Pstandard_CString _Istring0 = {
-	&_Pshadow_Pstandard_CString_Imethods,
-	(boolean_shadow_t)1, (ubyte_shadow_t *)"shadow.hello@HelloWorld"
+	&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CHelloWorld_Iclass = {
 	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
@@ -28,9 +36,11 @@ void _Pshadow_Phello_CHelloWorld_Mdoit(struct _Pshadow_Phello_CHelloWorld* this)
 label0: (void)0;
 	_Itemp0 = i + ((uint_shadow_t)1);
 	_Pshadow_Pio_CConsole_Mprint_Ruint(_Itemp0);
+	static struct _IArray _Iarray1 = {
+		(void *)": ", (int_shadow_t)1, {(int_shadow_t)2}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring1 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)": "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray1
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring1);
 	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(this->message);
@@ -98,9 +108,11 @@ uint_shadow_t _Pshadow_Phello_CHelloWorld_Mfibonacci_Ruint_Ruint(uint_shadow_t f
 	*_Ireturn6 = seventh;
 	*_Ireturn7 = eighth;
 	*_Ireturn8 = ninth;
+	static struct _IArray _Iarray2 = {
+		(void *)"String Test", (int_shadow_t)1, {(int_shadow_t)11}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring2 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"String Test"
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray2
 	};
 	*_Ireturn9 = &_Istring2;
 	*_Ireturn10 = _Itemp9;
@@ -108,7 +120,7 @@ uint_shadow_t _Pshadow_Phello_CHelloWorld_Mfibonacci_Ruint_Ruint(uint_shadow_t f
 	return _Itemp7;
 }
 
-void _Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CString** args) {
+void _Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray * args) {
 	boolean_shadow_t _Itemp0;
 	uint_shadow_t _Itemp1;
 	uint_shadow_t _Itemp2;
@@ -137,9 +149,11 @@ void _Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Ps
 	struct _Pshadow_Pstandard_CString* _Itemp25;
 	struct _Pshadow_Pstandard_CString* _Itemp26;
 	struct _Pshadow_Pstandard_CString* name;
+	static struct _IArray _Iarray3 = {
+		(void *)"Fibonacci", (int_shadow_t)1, {(int_shadow_t)9}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring3 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Fibonacci"
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray3
 	};
 	name = &_Istring3;
 	uint_shadow_t start;
@@ -154,9 +168,11 @@ label0: (void)0;
 	else
 		goto label2;
 label1: (void)0;
+	static struct _IArray _Iarray4 = {
+		(void *)"Lucas", (int_shadow_t)1, {(int_shadow_t)5}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring4 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Lucas"
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray4
 	};
 	name = &_Istring4;
 	goto label3;
@@ -201,79 +217,101 @@ label3: (void)0;
 	fib9 = _Itemp11;
 	last = _Itemp12;
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray5 = {
+		(void *)" 0: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring5 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 0: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray5
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring5);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib0);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray6 = {
+		(void *)" 1: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring6 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 1: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray6
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring6);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib1);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray7 = {
+		(void *)" 2: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring7 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 2: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray7
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring7);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib2);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray8 = {
+		(void *)" 3: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring8 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 3: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray8
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring8);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib3);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray9 = {
+		(void *)" 4: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring9 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 4: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray9
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring9);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib4);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray10 = {
+		(void *)" 5: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring10 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 5: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray10
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring10);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib5);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray11 = {
+		(void *)" 6: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring11 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 6: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray11
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring11);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib6);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray12 = {
+		(void *)" 7: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring12 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 7: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray12
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring12);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib7);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray13 = {
+		(void *)" 8: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring13 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 8: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray13
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring13);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib8);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray14 = {
+		(void *)" 9: ", (int_shadow_t)1, {(int_shadow_t)4}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring14 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 9: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray14
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring14);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib9);
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	static struct _IArray _Iarray15 = {
+		(void *)" 10: ", (int_shadow_t)1, {(int_shadow_t)5}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring15 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)" 10: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray15
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring15);
 	_Itemp13 = fib8 + fib9;
@@ -306,16 +344,20 @@ label5: (void)0;
 	_Itemp18 = hello1->_Imethods->_MgetBoth(hello1, &_Itemp19);
 	defaultTimes = _Itemp18;
 	defaultMessage = _Itemp19;
+	static struct _IArray _Iarray16 = {
+		(void *)"Default times: ", (int_shadow_t)1, {(int_shadow_t)15}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring16 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Default times: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray16
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring16);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(defaultTimes);
 	_Pshadow_Pio_CConsole_MprintLine_Ruint(hello1->times);
+	static struct _IArray _Iarray17 = {
+		(void *)"Default message: ", (int_shadow_t)1, {(int_shadow_t)17}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring17 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Default message: "
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray17
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring17);
 	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(defaultMessage);
@@ -327,17 +369,21 @@ label5: (void)0;
 	hello2 = _Itemp20;
 	struct _Pshadow_Phello_CHelloWorld* hello3;
 	_Itemp21 = calloc(1, sizeof(struct _Pshadow_Phello_CHelloWorld));
+	static struct _IArray _Iarray18 = {
+		(void *)"Five Times!", (int_shadow_t)1, {(int_shadow_t)11}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring18 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Five Times!"
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray18
 	};
 	_Pshadow_Phello_CHelloWorld_Mconstructor_R_Pshadow_Pstandard_CString(_Itemp21, &_Istring18);
 	hello3 = _Itemp21;
 	struct _Pshadow_Phello_CHelloWorld* hello4;
 	_Itemp22 = calloc(1, sizeof(struct _Pshadow_Phello_CHelloWorld));
+	static struct _IArray _Iarray19 = {
+		(void *)"Fifteen Times!", (int_shadow_t)1, {(int_shadow_t)14}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring19 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Fifteen Times!"
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray19
 	};
 	_Pshadow_Phello_CHelloWorld_Mconstructor_Ruint_R_Pshadow_Pstandard_CString(_Itemp22, ((uint_shadow_t)15), &_Istring19);
 	hello4 = _Itemp22;
@@ -369,9 +415,11 @@ void _Pshadow_Phello_CHelloWorld_Mconstructor(struct _Pshadow_Phello_CHelloWorld
 	this->self = ((void *)0);
 	this->self = this;
 	this->times = ((uint_shadow_t)5);
+	static struct _IArray _Iarray20 = {
+		(void *)"Hello World!", (int_shadow_t)1, {(int_shadow_t)12}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring20 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Hello World!"
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray20
 	};
 	this->message = &_Istring20;
 	return;
@@ -384,9 +432,11 @@ void _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint(struct _Pshadow_Phello_CHell
 	this->self = ((void *)0);
 	this->self = this;
 	this->times = times;
+	static struct _IArray _Iarray21 = {
+		(void *)"Hello World!", (int_shadow_t)1, {(int_shadow_t)12}
+	};
 	static struct _Pshadow_Pstandard_CString _Istring21 = {
-		&_Pshadow_Pstandard_CString_Imethods,
-		(boolean_shadow_t)1, (ubyte_shadow_t *)"Hello World!"
+		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray21
 	};
 	this->message = &_Istring21;
 	return;
@@ -430,7 +480,23 @@ struct _Pshadow_Phello_CHelloWorld_Itable _Pshadow_Phello_CHelloWorld_Imethods =
 };
 
 int main(int argc, char **argv) {
-	_Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1((struct _Pshadow_Pstandard_CString **)0);
+	int i, argsLength = argc - 1; ++argv;
+	struct _Pshadow_Pstandard_CString **args = (struct _Pshadow_Pstandard_CString **)calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));
+	for (i = 0; i < argsLength; ++i) {
+		struct _Pshadow_Pstandard_CString *arg = (struct _Pshadow_Pstandard_CString *)malloc(sizeof(struct _Pshadow_Pstandard_CString));
+		arg->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
+		arg->ascii = ((boolean_shadow_t)1);
+		arg->data = (struct _IArray *)malloc(sizeof(struct _IArray));
+		arg->data->_Iarray = (void *)argv[i];
+		arg->data->_Idims = (int_shadow_t)1;
+		arg->data->_Ilengths[0] = strlen(argv[i]);
+		args[i] = arg;
+	}
+	struct _IArray *argsArray = (struct _IArray *)malloc(sizeof(struct _IArray));
+	argsArray->_Iarray = (void *)args;
+	argsArray->_Idims = 1;
+	argsArray->_Ilengths[0] = argsLength;
+	_Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(argsArray);
 	return 0;
 }
 

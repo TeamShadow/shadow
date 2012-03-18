@@ -31,7 +31,7 @@ public class TACReference extends TACNode
 	@Override
 	public String toString()
 	{
-		return getSymbol();
+		return ref.toString();
 	}
 	
 	@Override

@@ -24,6 +24,8 @@ import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
+import shadow.tac.nodes.TACGetLength;
+import shadow.tac.nodes.TACIndexed;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
@@ -45,7 +47,7 @@ import shadow.typecheck.type.Type;
  *
  */
 public class TACCVisitor extends AbstractTACVisitor {
-	private int stringAllocNumber;
+	private int arrayAllocNumber, stringAllocNumber;
 	private TabbedLineWriter cWriter, metaWriter, curWriter;
 	private String cFileName, metaFileName;
 	
@@ -88,6 +90,15 @@ public class TACCVisitor extends AbstractTACVisitor {
 		cWriter.writeLine("#include \"" + getType().getPath() + ".meta\"");	// include the header
 		cWriter.writeLine("");
 		
+		cWriter.writeLine("struct _IArray {");
+		cWriter.indent();
+		cWriter.writeLine("void *_Iarray;");
+		cWriter.writeLine("int_shadow_t _Idims;");
+		cWriter.writeLine("int_shadow_t _Ilengths[1];");
+		cWriter.outdent();
+		cWriter.writeLine("};");
+		cWriter.writeLine();
+		
 		String className = lit2lit('\"' + getType().getFullName() + '\"');
 		cWriter.writeLine("struct " + Type.CLASS.getMangledName() + ' ' +
 				getType().getMangledName() + "_Iclass = {");
@@ -107,14 +118,16 @@ public class TACCVisitor extends AbstractTACVisitor {
 		metaWriter.writeLine("");
 		metaWriter.writeLine("#include \"types.h\"");
 		metaWriter.writeLine("#include \"stdlib.h\"");
+		metaWriter.writeLine("#include \"string.h\"");
 		
 		ClassType classType = getType();
 		Type extendsType = classType.getExtendType();
 		if (extendsType != null)
-		{
 			metaWriter.writeLine("#include \"" + extendsType.getPath() + ".meta\"");
-			metaWriter.writeLine("");
-		}
+		metaWriter.writeLine();
+		
+		metaWriter.writeLine("struct _IArray;");
+		metaWriter.writeLine();
 
 		getType().addReferencedType(Type.CLASS);
 		for (Type type : getType().getReferenceTypes())
@@ -245,7 +258,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 				metaWriter.writeLine(sb.toString());
 			}
 		}
-		metaWriter.writeLine("");
+		metaWriter.writeLine();
 		
 		metaWriter.writeLine("struct " + getModule().getMangledName() + "_Itable {");
 		metaWriter.indent();
@@ -295,19 +308,19 @@ public class TACCVisitor extends AbstractTACVisitor {
 		}
 		metaWriter.outdent();
 		metaWriter.writeLine("};");
-		metaWriter.writeLine("");
+		metaWriter.writeLine();
 		
 		cWriter.writeLine(typeToString(Type.CLASS) + ' ' + getType().getMangledName() + "_MgetClass(" + typeToString(getType()) + " this) {");
 		cWriter.indent();
 		cWriter.writeLine("return &" + getType().getMangledName() + "_Iclass;");
 		cWriter.outdent();
-		cWriter.writeLine("}");
-		cWriter.writeLine("");
+		cWriter.writeLine('}');
+		cWriter.writeLine();
 		
 		if ( foundNative )
 		{
 			cWriter.writeLine("#include \"" + getType().getPath() + ".h\"");
-			cWriter.writeLine("");
+			cWriter.writeLine();
 		}
 		
 		cWriter.writeLine("struct " + getModule().getMangledName() + "_Itable " + getModule().getMangledName() + "_Imethods = {");
@@ -343,28 +356,41 @@ public class TACCVisitor extends AbstractTACVisitor {
 		
 		cWriter.outdent();
 		cWriter.writeLine("};");
-		cWriter.writeLine("");
+		cWriter.writeLine();
 		
 		if (foundMain)
 		{
 			/* Here's our main method */
 			cWriter.writeLine("int main(int argc, char **argv) {");
 			cWriter.indent();
-//			cWriter.writeLine("");
-//			cWriter.writeLine("for (int i = 0; i < argc; i++) {");
-//			cWriter.indent();
-//			cWriter.outdent();
-//			cWriter.writeLine("}");
-			cWriter.writeLine(getType().getMangledName() + "_Mmain_R_Pshadow_Pstandard_CString_A1((struct _Pshadow_Pstandard_CString **)0);");
+			cWriter.writeLine("int i, argsLength = argc - 1; ++argv;");
+			cWriter.writeLine("struct _Pshadow_Pstandard_CString **args = (struct _Pshadow_Pstandard_CString **)calloc(argsLength, sizeof(struct _Pshadow_Pstandard_CString *));");
+			cWriter.writeLine("for (i = 0; i < argsLength; ++i) {");
+			cWriter.indent();
+			cWriter.writeLine("struct _Pshadow_Pstandard_CString *arg = (struct _Pshadow_Pstandard_CString *)malloc(sizeof(struct _Pshadow_Pstandard_CString));");
+			cWriter.writeLine("arg->_Imethods = &_Pshadow_Pstandard_CString_Imethods;");
+			cWriter.writeLine("arg->ascii = ((boolean_shadow_t)1);");
+			cWriter.writeLine("arg->data = (struct _IArray *)malloc(sizeof(struct _IArray));");
+			cWriter.writeLine("arg->data->_Iarray = (void *)argv[i];");
+			cWriter.writeLine("arg->data->_Idims = (int_shadow_t)1;");
+			cWriter.writeLine("arg->data->_Ilengths[0] = strlen(argv[i]);");
+			cWriter.writeLine("args[i] = arg;");
+			cWriter.outdent();
+			cWriter.writeLine('}');
+			cWriter.writeLine("struct _IArray *argsArray = (struct _IArray *)malloc(sizeof(struct _IArray));");
+			cWriter.writeLine("argsArray->_Iarray = (void *)args;");
+			cWriter.writeLine("argsArray->_Idims = 1;");
+			cWriter.writeLine("argsArray->_Ilengths[0] = argsLength;");
+			cWriter.writeLine(getType().getMangledName() + "_Mmain_R_Pshadow_Pstandard_CString_A1(argsArray);");
 			cWriter.writeLine("return 0;");
 			cWriter.outdent();
-			cWriter.writeLine("}");
-			cWriter.writeLine("");
+			cWriter.writeLine('}');
+			cWriter.writeLine();
 		}
 
 		for (Type type : getType().getReferenceTypes())
 			metaWriter.writeLine("#include \"" + type.getPath() + ".meta\"");
-		metaWriter.writeLine("");
+		metaWriter.writeLine();
 		metaWriter.writeLine("#endif");
 		
 		metaWriter.close();
@@ -577,14 +603,25 @@ public class TACCVisitor extends AbstractTACVisitor {
 	/*public void visit(TACNode node) {
 		cWriter.writeLine(node.toString()/*, node*//*);
 	}*/
-	
+
 	private static String typeToString(TACNode node)
 	{
 		return typeToString(node.getType());
 	}
+	private static String typeToString(TACNode node, boolean ref)
+	{
+		return typeToString(node.getType(), ref);
+	}
 	private static String typeToString(Type type) {
+		return typeToString(type, true);
+	}
+	private static String typeToString(Type type, boolean ref) {
 		if (type instanceof ArrayType)
-			return typeToString(((ArrayType)type).getBaseType()) + '*';
+//			return typeToString(((ArrayType)type).getBaseType()) + '*';
+			if (ref)
+				return "struct _IArray *";
+			else
+				return "struct _IArray";
 		else
 		{
 			if (type.isPrimitive())
@@ -594,7 +631,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 				StringBuilder sb = new StringBuilder();
 				sb.append("struct ");
 				sb.append(type.getMangledName());
-				sb.append('*');
+				if (ref) sb.append('*');
 				return sb.toString();
 			}
 		}
@@ -604,9 +641,23 @@ public class TACCVisitor extends AbstractTACVisitor {
 	{
 		if (node instanceof TACLiteral)
 			return nodeToString((TACLiteral)node);
+		if (node instanceof TACGetLength)
+			return nodeToString((TACGetLength)node);
+		if (node instanceof TACIndexed)
+			return nodeToString((TACIndexed)node);
 		if (node instanceof TACPrefixed)
 			return nodeToString((TACPrefixed)node);
 		return node.getSymbol();
+	}
+
+	private String nodeToString(TACGetLength node) throws IOException
+	{
+		return nodeToString(node.getPrefix()) + "->_Ilengths[" + node.getDimension() + ']';
+	}
+	private String nodeToString(TACIndexed node) throws IOException
+	{
+		return "((" + typeToString(node.getType()) + "*)" + nodeToString(node.getPrefix()) + "->_Iarray)[" +
+				nodeToString(node.getIndex()) + ']';
 	}
 	
 	private String nodeToString(TACPrefixed node) throws IOException
@@ -627,21 +678,19 @@ public class TACCVisitor extends AbstractTACVisitor {
 			sb.append(" = "/*("*/);
 			/*sb.append(typeToString(var));*/
 			sb.append(/*")*/"calloc(");
-			if (node.getSize() == null)
+			if (!node.isArray())
 				sb.append('1');
 			else
 				sb.append(nodeToString(node.getSize()));
-			sb.append(", sizeof(struct ");
-			sb.append(node.getType().getMangledName());
+			sb.append(", sizeof(");
+			sb.append(typeToString(node, false));
+			if (node.getType() instanceof ArrayType)
+				sb.append(" + ").append(((ArrayType)node.getType()).getDimensions()).append(" * sizeof(").append(typeToString(Type.INT)).append(')');
 			sb.append("));");
 			curWriter.writeLine(sb.toString());
 		}
 		else
 			curWriter.writeLine(typeToString(node) + ' ' + nodeToString(node) + ';');
-		if (node.isArray())
-		{
-			throw new UnsupportedOperationException();
-		}
 	}
 	
 	@Override
@@ -793,6 +842,16 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
+	public void visit(TACGetLength node)
+	{
+	}
+	
+	@Override
+	public void visit(TACIndexed node)
+	{
+	}
+	
+	@Override
 	public void visit(TACVariable node)
 	{
 	}
@@ -832,14 +891,26 @@ public class TACCVisitor extends AbstractTACVisitor {
 	private String literalToString(String shadowLiteral) throws IOException {
 		if (shadowLiteral.startsWith("\""))
 		{
-			String var = "_Istring" + stringAllocNumber++;
-			cWriter.writeLine("static struct " + Type.STRING.getMangledName() + ' ' + var + " = {");
+			int length = 0;
+			for (int i = 1; i < shadowLiteral.length() - 1; i++, length++)
+				if (shadowLiteral.charAt(i) == '\\')
+					i++;
+			
+			String arrayVar = "_Iarray" + arrayAllocNumber++;
+			cWriter.writeLine("static struct _IArray " + arrayVar + " = {");
 			cWriter.indent();
-			cWriter.writeLine('&' + Type.STRING.getMangledName() + "_Imethods,");
-			cWriter.writeLine("(boolean_shadow_t)1, (ubyte_shadow_t *)" + shadowLiteral);
+			cWriter.writeLine("(void *)" + shadowLiteral + ", (int_shadow_t)1, {(int_shadow_t)" + length + '}');
 			cWriter.outdent();
 			cWriter.writeLine("};");
-			return '&' + var;
+			
+			String stringVar = "_Istring" + stringAllocNumber++;
+			cWriter.writeLine("static struct " + Type.STRING.getMangledName() + ' ' + stringVar + " = {");
+			cWriter.indent();
+			cWriter.writeLine('&' + Type.STRING.getMangledName() + "_Imethods, " +
+					"(boolean_shadow_t)1, &" + arrayVar);
+			cWriter.outdent();
+			cWriter.writeLine("};");
+			return '&' + stringVar;
 		}
 		if (shadowLiteral.equals("true"))
 			return "((boolean_shadow_t)1)";
