@@ -10,9 +10,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 
+import javax.sound.midi.Sequence;
+
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
+import shadow.parser.javacc.SimpleNode;
 import shadow.tac.AbstractTACVisitor;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
@@ -41,6 +44,7 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 /**
@@ -206,6 +210,13 @@ public class TACCVisitor extends AbstractTACVisitor {
 
 		boolean /*foundConstructor = false,*/ foundMain = false, foundNative = false;
 		metaWriter.writeLine(typeToString(Type.CLASS) + ' ' + getType().getMangledName() + "_MgetClass(" + typeToString(getType()) + " this);");
+		
+		final SequenceType EMPTY_SEQUENCE = new SequenceType();
+		final SequenceType MAIN_SEQUENCE = new SequenceType();
+		SimpleNode modifiedType = new SimpleNode(0); //dummy node
+		modifiedType.setType(new ArrayType(Type.STRING, Arrays.<Integer>asList(1)));
+		MAIN_SEQUENCE.addType(modifiedType);
+		
 		for ( List<MethodSignature> methods : getType().getMethodMap().values() )
 		{
 			for ( MethodSignature method : methods )
@@ -213,16 +224,15 @@ public class TACCVisitor extends AbstractTACVisitor {
 				/*if ( method.getSymbol().equals("constructor") )
 					foundConstructor = true;
 				else*/ if ( !(method.getSymbol().equals("getClass") &&
-						method.canAccept(Collections.<Type>emptyList())) &&
+						method.canAccept(EMPTY_SEQUENCE)) &&
 						ModifierSet.isNative(method.getASTNode().getModifiers()) )
 					foundNative = true;
-				if ( method.getSymbol().equals("main") &&
-						method.canAccept(Arrays.<Type>asList(new ArrayType(Type.STRING, Arrays.<Integer>asList(1)))) )
+				if ( method.getSymbol().equals("main") && method.canAccept(MAIN_SEQUENCE) )
 					foundMain = true;
 				
 				StringBuffer sb = new StringBuffer();
-				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes();
-				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes();
+				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes().getTypes();
+				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes().getTypes();
 				
 				// loop through the ret types
 				
@@ -238,7 +248,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 				
 				if (!ModifierSet.isStatic(method.getASTNode().getModifiers()))
 				{
-					if ( method.getSymbol().equals("getClass") && method.canAccept(Collections.<Type>emptyList()) )
+					if ( method.getSymbol().equals("getClass") && method.canAccept(EMPTY_SEQUENCE) )
 						sb.append(typeToString(getType()));
 					else
 						sb.append(typeToString(method.getMethodType().getOuter()));
@@ -268,8 +278,8 @@ public class TACCVisitor extends AbstractTACVisitor {
 			if ( !method.getSymbol().equals("constructor") )
 			{
 				StringBuffer sb = new StringBuffer();
-				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes();
-				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes();
+				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes().getTypes();
+				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes().getTypes();
 				
 				// loop through the ret types
 				
@@ -285,7 +295,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 				
 				if (!ModifierSet.isStatic(method.getASTNode().getModifiers()))
 				{
-					if ( method.getSymbol().equals("getClass") && method.canAccept(Collections.<Type>emptyList()) )
+					if ( method.getSymbol().equals("getClass") && method.canAccept(EMPTY_SEQUENCE) )
 						sb.append(typeToString(getType()));
 					else
 						sb.append(typeToString(method.getMethodType().getOuter()));
@@ -344,7 +354,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 			{
 				StringBuffer sb = new StringBuffer();
 				
-				if ( method.getSymbol().equals("getClass") && method.canAccept(Collections.<Type>emptyList()) )
+				if ( method.getSymbol().equals("getClass") && method.canAccept(EMPTY_SEQUENCE) )
 					sb.append(getType().getMangledName());
 				else
 					sb.append(method.getMethodType().getOuter().getMangledName());
@@ -450,13 +460,13 @@ public class TACCVisitor extends AbstractTACVisitor {
 		
 		int modifiers = method.getSignature().getASTNode().getModifiers();
 		
-		List<ModifiedType> retTypes = method.getReturnTypes();
+		List<ModifiedType> retTypes = method.getReturnTypes().getTypes();
 		
 		// right now we punt on returning more than one thing
 		if(retTypes.isEmpty())
 			sb.append("void");
 		else
-			sb.append(typeToString(method.getReturnTypes().get(0).getType()));
+			sb.append(typeToString(retTypes.get(0).getType()));
 		
 		sb.append(' ');
 		sb.append(getType().getMangledName());
@@ -464,7 +474,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		sb.append('(');
 		
 		List<String> paramNames = method.getParamNames();
-		List<ModifiedType> paramTypes = method.getParamTypes();
+		List<ModifiedType> paramTypes = method.getParamTypes().getTypes();
 
 		// first param is always a reference to the class, unless it's static
 		if(!ModifierSet.isStatic(modifiers))

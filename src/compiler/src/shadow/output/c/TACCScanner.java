@@ -155,10 +155,10 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACCall node)
 	{
-		if (!node.getMethodType().getReturnTypes().isEmpty() && node.getSymbol() == null)
+		if (!node.getMethodType().getReturnTypes().getTypes().isEmpty() && node.getSymbol() == null)
 		{
 			int index = 0;
-			for (ModifiedType type : node.getSequenceType().getTypes())
+			for (ModifiedType type : node.getType().getTypes())
 			{
 				node.setSymbol(index, "_Itemp" + tempCounter++);
 				allocations.put(node.getSymbol(index++), type.getType());

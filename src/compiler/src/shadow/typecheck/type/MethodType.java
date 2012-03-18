@@ -8,8 +8,8 @@ import shadow.parser.javacc.ShadowParser.ModifierSet;
 
 public class MethodType extends Type {
 	protected List<String> paramNames;
-	protected List<ModifiedType> paramTypes;
-	protected List<ModifiedType> returns; /** List of return types */
+	protected SequenceType paramTypes;
+	protected SequenceType returns; /** List of return types */
 
 	public MethodType() {
 		this(null, 0);
@@ -18,34 +18,21 @@ public class MethodType extends Type {
 	public MethodType(Type outer, int modifiers) {
 		super(null, modifiers, outer, Kind.METHOD);
 		paramNames = new ArrayList<String>();
-		paramTypes = new ArrayList<ModifiedType>();
-		returns = new LinkedList<ModifiedType>();
+		paramTypes = new SequenceType();
+		returns = new SequenceType();
 	}
 	
-	public boolean matches( List<Type> argumentTypes )
+	public boolean matches( List<ModifiedType> argumentTypes )
 	{
-		if( paramTypes.size() != argumentTypes.size() )
-			return false;
-		
-		for( int i = 0; i < paramTypes.size(); i++ )
-			if( !argumentTypes.get(i).equals(paramTypes.get(i).getType()))
-				return false;
-		
-		return true;
+		return paramTypes.matches(argumentTypes);
 	}
 	
-	public boolean matchesModifiedTypes( List<ModifiedType> argumentTypes )
+	public boolean matches( SequenceType inputTypes )
 	{
-		if( paramTypes.size() != argumentTypes.size() )
-			return false;
-		
-		for( int i = 0; i < paramTypes.size(); i++ )
-			if( !argumentTypes.get(i).getType().equals(paramTypes.get(i).getType()) || argumentTypes.get(i).getModifiers() != paramTypes.get(i).getModifiers() )
-				return false;
-		
-		return true;
+		return paramTypes.matchesTypesAndModifiers( inputTypes );		
 	}
 	
+	/*
 	public boolean returns( List<Type> returnTypes )
 	{
 		if( returns.size() != returnTypes.size() )
@@ -57,61 +44,54 @@ public class MethodType extends Type {
 		
 		return true;
 	}
+	*/
 
 
 	//this method is used to see if particular return values inside the method can be given back as return values
 	public boolean canReturn( List<ModifiedType> returnTypes )
 	{
-		if( returns.size() != returnTypes.size() )
-			return false;
-		
-		for( int i = 0; i < returns.size(); i++ )
-			if( !returnTypes.get(i).getType().isSubtype(returns.get(i).getType()))
-				return false;
-		
-		return true;
-	}	
+		return returns.canAccept(returnTypes);
+	}
+	
+	public boolean canReturn( SequenceType returnType )
+	{
+		return returns.canAccept(returnType);
+	}
 	
 	public boolean canReturn( ModifiedType type )
 	{		
-		if( returns.size() != 1 )
-			return false;
-		
-		return type.getType().isSubtype(returns.get(0).getType());
+		return returns.canAccept(type);
 	}
 	
 	public boolean returnsNothing()
 	{
-		return returns.size() == 0;
-	}
-		
+		return returns.isEmpty();
+	}		
 	
-	public boolean canAccept( List<Type> argumentTypes )
+	public boolean canAccept( List<ModifiedType> argumentTypes )
 	{
-		if( paramTypes.size() != argumentTypes.size() )
-			return false;
-		
-		for( int i = 0; i < paramTypes.size(); i++ )
-			if( !argumentTypes.get(i).isSubtype(paramTypes.get(i).getType()))
-				return false;
-		
-		return true;
+		return paramTypes.canAccept(argumentTypes);
+	}
+	
+	public boolean canAccept( SequenceType argumentTypes )
+	{
+		return paramTypes.canAccept(argumentTypes);
 	}
 	
 	public void addParameter(String name, ModifiedType type) {
 		paramNames.add(name);
-		paramTypes.add(type);
+		paramTypes.addType(type);
 	}
 	
 	public void addParameter(ModifiedType type) {
 		paramNames.add(null); // have to add to keep in synch
-		paramTypes.add(type);
+		paramTypes.addType(type);
 	}
 	
 	public ModifiedType getParameterType(String paramName) {
 		for(int i=0; i < paramNames.size(); ++i) {
 			if(paramNames.get(i).equals(paramName))
-				return paramTypes.get(i);
+				return paramTypes.getTypes().get(i);
 		}
 			
 		return null;
@@ -130,22 +110,20 @@ public class MethodType extends Type {
 		return paramNames;
 	}
 	
-	public List<ModifiedType> getParameterTypes() {
+	public SequenceType getParameterTypes() {
 		return paramTypes;
 	}
 	
-	public void addReturn(ModifiedType ret) {
-		returns.add(ret);
+	public void addReturn(ModifiedType type) {
+		returns.addType(type);		
 	}
 	
-	public List<ModifiedType> getReturnTypes() {
+	public SequenceType getReturnTypes() {
 		return returns;
 	}
 	
 	/**
-	 * Need to override equals as we're doing special things
-	 * @param ms The method signature to compare to
-	 * @return True if the methods can co-exist, False otherwise
+	 * Need to override equals as we're doing special things	
 	 */
 	public boolean equals(Object o) {
 		if( o != null && o instanceof MethodType )
@@ -159,76 +137,24 @@ public class MethodType extends Type {
 	
 	public boolean matchesParams( MethodType other )
 	{		
-		if( paramTypes.size() != other.paramTypes.size() )
-			return false;
-		
-		// check the parameters, we care about types only	
-		for(int i=0; i < paramTypes.size(); ++i)
-			if(!paramTypes.get(i).getType().equals(other.paramTypes.get(i).getType()))
-				return false;
-		
-		return true;		
+		return paramTypes.matches(other.paramTypes);		
 	}
 	
 	public boolean matchesReturns( MethodType other )
 	{		
-		if( returns.size() != other.returns.size() )
-			return false;
-		
-		// check the returns, we care about types only	
-		for(int i=0; i < returns.size(); ++i)
-			if(!returns.get(i).getType().equals(other.returns.get(i).getType()))
-				return false;
-		
-		return true;		
+		return returns.matches(other.returns);
 	}
 
-	public String toString() {
-		StringBuilder sb = new StringBuilder("(");
-		
-		for(ModifiedType type:paramTypes) {
-			
-			Type p = type.getType();
-			
-			if( ModifierSet.isFinal(type.getModifiers()))
-				sb.append("final ");
-			
-			if(p.typeName == null) // method type
-				sb.append(p.toString());
-			else
-				sb.append(p.typeName);
-			
-			sb.append(",");
-		}
-
-		if(paramTypes.size() == 0)
-			sb.append(" ) => (");
-		else {
-			sb.setCharAt(sb.lastIndexOf(","), ')');
-			sb.append(" => (");
-		}
-		
-		for(ModifiedType r:returns) {
-			if(r.getType().typeName == null)
-				sb.append(r.getType().toString());
-			else
-				sb.append(r.getType().typeName);
-			sb.append(",");
-		}
-
-		if(returns.size() == 0)
-			sb.append(" )");
-		else
-			sb.setCharAt(sb.lastIndexOf(","), ')');
-		
-		return sb.toString();
+	public String toString()
+	{		
+		return paramTypes.toString() + " => " + returns.toString();
 	}
 	
 	@Override
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();
 
-		for (ModifiedType type : paramTypes)
+		for (ModifiedType type : paramTypes.getTypes())
 			sb.append("_R").append(type.getType().getMangledName());
 		
 //		for (Type r : returns)

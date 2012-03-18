@@ -18,22 +18,9 @@ class ASTArgumentList extends SimpleNode {
     super(p, id);
   }
 
-
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
-  }
-  
-  private List<Type> typeList = new LinkedList<Type>();
-  
-  public void addType(Type type)
-  {
-	  typeList.add(type);	  
-  }
-  
-  public List<Type> getTypeList()
-  {
-	  return typeList;
   }
 }
 /* JavaCC - OriginalChecksum=1e324a5955f80a2956933f53354cb166 (do not edit this line) */

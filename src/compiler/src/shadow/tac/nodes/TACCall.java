@@ -26,8 +26,11 @@ public class TACCall extends TACPrefixed
 		name = methodName;
 		type = methodType;
 		parameters = parameterValues;
-		List<ModifiedType> argumentTypes = methodType.getParameterTypes();
-		List<ModifiedType> parameterTypes = parameterValues.getType().getTypes();
+//		Type checker should have checked all this
+/*
+		SequenceType argumentTypes = methodType.getParameterTypes();
+		SequenceType parameterTypes = parameterValues.getType();
+
 		if (argumentTypes.size() != parameterTypes.size())
 			throw new IllegalArgumentException("Wrong number of arguments.");
 		for (int i = 0; i < argumentTypes.size(); i++)
@@ -44,6 +47,7 @@ public class TACCall extends TACPrefixed
 					throw new IllegalArgumentException("Invalid types passed to method call.");
 			}
 		}
+*/
 		int returnCount = type.getReturnTypes().size();
 		if (returnCount == 0)
 			returnSymbols = null;
@@ -62,17 +66,17 @@ public class TACCall extends TACPrefixed
 		return type.getOuter();
 	}
 	@Override
-	public Type getType() {
-		List<ModifiedType> retTypes = type.getReturnTypes();
+	public SequenceType getType() {
+		
+		/*
+		SequenceType retTypes = type.getReturnTypes();
 		if (retTypes.size() == 0)
 			return null;
 		if (retTypes.size() == 1)
-			return retTypes.get(0).getType();
-		return getSequenceType();
-	}
-	public SequenceType getSequenceType()
-	{
-		return new SequenceType(type.getReturnTypes());
+			return retTypes.getTypes().get(0).getType();		
+		return retTypes;
+		*/
+		return type.getReturnTypes();
 	}
 	public String getMethodName()
 	{

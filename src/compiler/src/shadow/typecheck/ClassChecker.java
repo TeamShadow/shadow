@@ -65,6 +65,7 @@ import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
+import shadow.parser.javacc.ASTReturnStatement;
 import shadow.parser.javacc.ASTRightRotate;
 import shadow.parser.javacc.ASTRightShift;
 import shadow.parser.javacc.ASTRotateExpression;
@@ -79,7 +80,6 @@ import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTUnqualifiedName;
-import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
@@ -253,60 +253,39 @@ public class ClassChecker extends BaseChecker {
 		return visitMethod( node, secondVisit );
 	}
 	
-	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		Node child =  node.jjtGetChild(0);
-		
-		Type type = child.getType();
-		
-		List<Integer> dimensions = node.getArrayDimensions();
-		
-		if( dimensions.size() == 0 )
-			node.setType(type);
-		else
-			node.setType(new ArrayType(type, dimensions));
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException
+	{
+		if(secondVisit)			
+		{
+			Node child =  node.jjtGetChild(0);			
+			Type type = child.getType();			
+			List<Integer> dimensions = node.getArrayDimensions();
+			
+			if( dimensions.size() == 0 )
+				node.setType(type);
+			else
+				node.setType(new ArrayType(type, dimensions));
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	private void processDeclaration( Node node )
 	{
-		boolean isLocal = (node instanceof ASTLocalVariableDeclaration );
+		boolean isLocal = (node instanceof ASTLocalVariableDeclaration);		
+		int start = 0;				
 		
-		Type type = null;
-		int start = 0;
-		boolean isAuto = false;
+		if( node.jjtGetChild(start) instanceof ASTType ) //skip type declaration
+			start++;	
 		
-		if( isLocal && !(node.jjtGetChild(start) instanceof ASTType) ) 
-		{
-			isAuto = true;
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			{
-				Node declaration = node.jjtGetChild(i);
-				if( declaration.jjtGetNumChildren() == 2 )
-				{
-					type = declaration.jjtGetChild(1).getType();
-					break;
-				}
-			}
-		}
-		else
-		{
-			// get the variable type
-			type = node.jjtGetChild(start).getType();		
-			start++;
-		}
+		Type type = node.getType();
+		//type is set for local declarations immediately previously and for fields in the field and method checker
 		
 		if(type == null)
-		{
-			if( isAuto )
-				addError(node.jjtGetChild(start), Error.UNDEF_TYP, "Variable declared auto has no initializer to infer type from");
-			else
-				addError(node.jjtGetChild(start), Error.UNDEF_TYP, node.jjtGetChild(start).jjtGetChild(0).getImage());
+		{			
+			addError(node.jjtGetChild(start), Error.UNDEF_TYP, node.jjtGetChild(start).jjtGetChild(0).getImage());
 			return;
-		}
+		}		
 		
 		// go through and add the variables
 		for(int i = start; i < node.jjtGetNumChildren(); ++i)
@@ -320,15 +299,9 @@ public class ClassChecker extends BaseChecker {
 				Type initializerType = initializer.getType();
 				
 				if(!initializerType.isSubtype(type)) 
-				{
 					addError(initializer, Error.TYPE_MIS, "Cannot assign " + initializerType + " to " + type);
-					type = Type.UNKNOWN; //overwrites old type, for error case
-				}
-				else
-				{
-					if( !ModifierSet.isNullable(node.getModifiers()) && ModifierSet.isNullable(initializer.getModifiers()))
-						addError(identifier, Error.TYPE_MIS, "Cannot assign a nullable value to non-nullable variable " + identifier.getImage() );
-				}
+				else if( !ModifierSet.isNullable(node.getModifiers()) && ModifierSet.isNullable(initializer.getModifiers()))
+					addError(identifier, Error.TYPE_MIS, "Cannot assign a nullable value to non-nullable variable " + identifier.getImage() );				
 			}
 			else
 			{
@@ -343,15 +316,43 @@ public class ClassChecker extends BaseChecker {
 			
 			if( isLocal ) // add the symbol to the scope table				
 				addSymbol( identifier.getImage(), node);
-		}
-			
-		node.setType(type); //either declaration type or UNKNOWN		
+		}		
 	}
 	
 	
 	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if(secondVisit)
-			processDeclaration( node );							  		
+		{	
+			Type type = null;
+			Node child = node.jjtGetChild(0); 
+			
+			if( child instanceof ASTType )
+			{
+				type = child.getType();
+			}
+			else //auto type
+			{	
+				for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				{
+					Node declaration = node.jjtGetChild(i);
+					if( declaration.jjtGetNumChildren() == 2 )
+					{
+						type = declaration.jjtGetChild(1).getType();
+						break;
+					}
+				}
+				
+				if( type == null )
+				{
+					addError(node, Error.UNDEF_TYP, "Variable declared auto has no initializer to infer type from");
+					type = Type.UNKNOWN;
+				}
+			}			
+			
+			node.setType(type);
+			
+			processDeclaration( node );
+		}
 
 		return WalkType.POST_CHILDREN;
 	}
@@ -970,8 +971,12 @@ public class ClassChecker extends BaseChecker {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
+		SequenceType sequenceType = new SequenceType();
+		
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			node.addType(node.jjtGetChild(i).getType());
+			sequenceType.addType(node.jjtGetChild(i));
+		
+		node.setType(sequenceType);
 		
 		return WalkType.POST_CHILDREN;		
 	}
@@ -981,9 +986,9 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		
 		if( node.jjtGetNumChildren() == 0 )
-			node.setTypeList(new LinkedList<Type>());
+			node.setType(new SequenceType());
 		else
-			node.setTypeList(((ASTArgumentList)(node.jjtGetChild(0))).getTypeList());
+			node.setType(((ASTArgumentList)(node.jjtGetChild(0))).getType());
 		
 		return WalkType.POST_CHILDREN; 
 	}
@@ -997,21 +1002,7 @@ public class ClassChecker extends BaseChecker {
 		return true;		
 	}
 	
-	private boolean matchesNullables( SequenceType left, SequenceType right )
-	{
-		
-		List<ModifiedType> leftTypes = left.getTypes();
-		List<ModifiedType> rightTypes = right.getTypes();
-		
-		if( leftTypes.size() != rightTypes.size() )
-			return false;		
-		
-		for( int i = 0; i < leftTypes.size(); i++ )
-			if( !ModifierSet.isNullable(leftTypes.get(i).getModifiers()) && ModifierSet.isNullable(rightTypes.get(i).getModifiers()) )
-				return false;		
-		
-		return true;		
-	}
+
 	
 	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
@@ -1046,7 +1037,7 @@ public class ClassChecker extends BaseChecker {
 							break;
 						}
 						
-						if( !matchesNullables(currentType, nextType ) )
+						if( !currentType.matchesNullables( nextType ) )
 						{
 							addError(current, Error.TYPE_MIS, "Cannot store nullable values from " + next + " into non-nullable variables in " + current);
 							break;							
@@ -1193,7 +1184,7 @@ public class ClassChecker extends BaseChecker {
 								
 				ClassInterfaceBaseType outer = (ClassInterfaceBaseType)unboundMethod.getOuter();				
 				for( MethodSignature signature : outer.getMethods(unboundMethod.getTypeName()) )
-					if( signature.getMethodType().matchesModifiedTypes( method.getParameterTypes()) && signature.getMethodType().canReturn(method.getReturnTypes()))
+					if( signature.getMethodType().matches( method.getParameterTypes()) && signature.getMethodType().canReturn(method.getReturnTypes()))
 					{
 						node.setType(signature.getMethodType());
 						found = true;
@@ -1504,11 +1495,8 @@ public class ClassChecker extends BaseChecker {
 			else if( child instanceof ASTMethodCall && child.getType() != Type.UNKNOWN )
 			{
 				MethodType type = (MethodType)(child.getType());
-				List<ModifiedType> returnTypes = type.getReturnTypes();
-				if( returnTypes.size() == 1 )
-					node.setType( returnTypes.get(0).getType() );
-				else
-					node.setType( new SequenceType(returnTypes) );				
+				SequenceType returnTypes = type.getReturnTypes();
+				returnTypes.setNodeType(node);
 			}
 			else if( child instanceof ASTUnqualifiedName )
 			{
@@ -1586,9 +1574,9 @@ public class ClassChecker extends BaseChecker {
 		else if( node.getType() instanceof UnboundMethodType )
 		{
 			UnboundMethodType unboundMethod = (UnboundMethodType)(node.getType());
-			List<Type> typeList = new LinkedList<Type>();
+			SequenceType sequenceType = new SequenceType();
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				typeList.add(node.jjtGetChild(i).getType());
+				sequenceType.addType(node.jjtGetChild(i));
 			
 			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();
 			List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
@@ -1598,14 +1586,10 @@ public class ClassChecker extends BaseChecker {
 			
 			for( MethodSignature signature : methods ) 
 			{
-				if( signature.matches( typeList ))
+				if( signature.matches( sequenceType ) )
 				{
-					List<ModifiedType> returnTypes = signature.getMethodType().getReturnTypes();
-					if( returnTypes.size() == 1 )
-						node.setType(returnTypes.get(0).getType());
-					else										
-						node.setType( new SequenceType(returnTypes) );
-					
+					SequenceType returnTypes = signature.getMethodType().getReturnTypes();
+					returnTypes.setNodeType(node);					
 					perfectMatch = true;
 					
 					if( !methodIsAccessible( signature, currentType  ))
@@ -1613,7 +1597,7 @@ public class ClassChecker extends BaseChecker {
 					else
 						node.setType(signature.getMethodType());
 				}
-				else if( signature.canAccept(typeList))
+				else if( signature.canAccept( sequenceType ))
 					acceptableMethods.add(signature);
 			}
 			
@@ -1622,21 +1606,18 @@ public class ClassChecker extends BaseChecker {
 				if( acceptableMethods.size() == 0 )	
 				{
 					node.setType(Type.UNKNOWN);						
-					addError(node, Error.TYPE_MIS, "No method found with signature " + typeList);
+					addError(node, Error.TYPE_MIS, "No method found with signature " + sequenceType);
 				}
 				else if( acceptableMethods.size() > 1 )
 				{
 					node.setType(Type.UNKNOWN);						
-					addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + typeList);
+					addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + sequenceType);
 				}							
 				else
 				{
 					MethodSignature signature = acceptableMethods.get(0); 
-					List<ModifiedType> returnTypes = signature.getMethodType().getReturnTypes();
-					if( returnTypes.size() == 1 )
-						node.setType(returnTypes.get(0).getType());
-					else				
-						node.setType( new SequenceType(returnTypes) );											
+					SequenceType returnTypes = signature.getMethodType().getReturnTypes();
+					returnTypes.setNodeType( node ); //used instead of setType
 					
 					if( !methodIsAccessible( signature, currentType  ))
 						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
@@ -1742,11 +1723,8 @@ public class ClassChecker extends BaseChecker {
 				if( child.getType() instanceof MethodType )
 				{
 					MethodType type = (MethodType)(child.getType());
-					List<ModifiedType> returnTypes = type.getReturnTypes();
-					if( returnTypes.size() == 1 )
-						node.setType( returnTypes.get(0).getType());
-					else
-						node.setType( new SequenceType(returnTypes) );				
+					SequenceType returnTypes = type.getReturnTypes();
+					returnTypes.setNodeType(node);
 				}
 				else
 					node.setType(Type.UNKNOWN);
@@ -2080,19 +2058,20 @@ public class ClassChecker extends BaseChecker {
 		
 		//examine argument list to find constructor		
 		ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
-		List<Type> typeList = ((ASTArguments)(node.jjtGetChild(counter))).getTypeList();
+		ASTArguments arguments = (ASTArguments)(node.jjtGetChild(counter));
+		SequenceType sequenceType = (SequenceType)(arguments.getType());
 		List<MethodSignature> candidateConstructors = type.getMethods("constructor");
 		
 		// we don't have implicit constructors, so need to check if the default constructor is OK
-		if(typeList.size() == 0 && candidateConstructors == null)
+		if(sequenceType.size() == 0 && candidateConstructors == null)
 		{
 			node.setType(child.getType());
 			return WalkType.POST_CHILDREN;
 		}		
-		// we have no constructors, but they are calling with params
-		else if(typeList.size() > 0 && candidateConstructors == null)
+		// we have no constructors, but they are calling with parameters
+		else if(sequenceType.size() > 0 && candidateConstructors == null)
 		{
-			addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+			addError(child, Error.TYPE_MIS, "No constructor found with signature " + sequenceType);
 			node.setType(Type.UNKNOWN);
 			return WalkType.POST_CHILDREN;
 		}
@@ -2103,24 +2082,24 @@ public class ClassChecker extends BaseChecker {
 			
 			for( MethodSignature signature : candidateConstructors ) 
 			{
-				if( signature.matches( typeList )) 
+				if( signature.matches( sequenceType )) 
 				{
 					node.setType(child.getType());
 					node.setType(signature.getMethodType());
 					return WalkType.POST_CHILDREN;
 				}
-				else if( signature.canAccept(typeList))
+				else if( signature.canAccept( sequenceType ))
 					acceptableConstructors.add(signature);
 			}
 			
 			if( acceptableConstructors.size() == 0 ) 
 			{
-				addError(child, Error.TYPE_MIS, "No constructor found with signature " + typeList);
+				addError(child, Error.TYPE_MIS, "No constructor found with signature " + sequenceType);
 				node.setType(Type.UNKNOWN);
 			}					
 			else if( acceptableConstructors.size() > 1 )
 			{
-				addError(child, Error.TYPE_MIS, "Ambiguous constructor call with signature " + typeList);
+				addError(child, Error.TYPE_MIS, "Ambiguous constructor call with signature " + sequenceType);
 				node.setType(Type.UNKNOWN);
 			}					
 			else
@@ -2141,6 +2120,46 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit)	throws ShadowException
 	{
 		createScope(secondVisit); //scope is created purely to hold type parameters (other declarations are kept in the body scope)		
+		return WalkType.POST_CHILDREN;
+	}
+		
+	@Override
+	public Object visit(ASTReturnStatement node, Boolean secondVisit)	throws ShadowException
+	{
+		if( secondVisit )
+		{
+			if( curMethod == null ) //should never happen			
+				addError(node, Error.INVL_TYP, "Return statement outside of method body");
+			else
+			{
+				MethodType methodType = (MethodType)(curMethod.getType());
+				SequenceType returnTypes  = methodType.getReturnTypes();
+				
+				if( returnTypes.size() == 0 && node.jjtGetNumChildren() > 0 )
+					addError(node, Error.INVL_TYP, "Cannot return values from a method that returns nothing");
+				else
+				{
+					Type type = node.jjtGetChild(0).getType();
+					
+					if( type instanceof SequenceType )
+					{
+						SequenceType sequenceType = (SequenceType)type;
+						if( sequenceType.canAccept(returnTypes) )
+						{
+							if( !sequenceType.matchesNullables(returnTypes) )							
+								addError(node, Error.TYPE_MIS, "Cannot return nullable values into non-nullable return types");
+						}
+						else
+							addError(node, Error.TYPE_MIS, "Sequence " + returnTypes + " does not match " + sequenceType);
+					}
+					
+					
+					
+					
+				}
+			}
+		}	
+		
 		return WalkType.POST_CHILDREN;
 	}
 

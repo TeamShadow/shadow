@@ -41,8 +41,8 @@ public class TypeCheckerTest {
 		/*Level level = Loggers.getLoggerLevel(Loggers.PARSER);
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.OFF);
 		Loggers.setLoggerToLevel(Loggers.PARSER, Level.DEBUG);*/	
-		args.add("shadow/standard/Parsable.shadow");
-		//args.add("tests/compile/Array.shadow");
+		//args.add("shadow/standard/Parsable.shadow");
+		args.add("tests/compile/Array.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 		/*Loggers.setLoggerToLevel(Loggers.PARSER, level);
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.DEBUG);*/
@@ -55,6 +55,11 @@ public class TypeCheckerTest {
 
 	 @Test public void testAssertion() throws Exception {
 		args.add("tests/compile/Assertion.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+	 
+	@Test public void testAuto() throws Exception {
+		args.add("tests/compile/Auto.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 

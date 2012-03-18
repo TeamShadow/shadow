@@ -6,6 +6,7 @@ import java.util.Map;
 import shadow.tac.nodes.TACNode;
 import shadow.typecheck.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public class TACMethod extends TACDeclaration
@@ -39,12 +40,12 @@ public class TACMethod extends TACDeclaration
 		return sig.getMethodType().getParameterNames();
 	}
 	
-	public List<ModifiedType> getParamTypes()
+	public SequenceType getParamTypes()
 	{
 		return sig.getMethodType().getParameterTypes();
 	}
 	
-	public List<ModifiedType> getReturnTypes()
+	public SequenceType getReturnTypes()
 	{
 		return sig.getMethodType().getReturnTypes();
 	}

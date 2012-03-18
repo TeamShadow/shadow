@@ -28,7 +28,7 @@ import shadow.tac.nodes.TACVariable;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public class ASTToTACConverter extends AbstractASTToTACVisitor
@@ -342,11 +342,11 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	{
 		MethodType type = (MethodType)node.getType();
 		TACSequence args = new TACSequence();
-		List<ModifiedType> argTypes = type.getParameterTypes();
+		SequenceType argTypes = type.getParameterTypes();
 		for (int i = 0; i < tac.getChildCount(); i++)
 		{
 			TACNode arg = tac.appendAndGetChild(i);
-			Type expectedType = argTypes.get(i).getType();
+			Type expectedType = argTypes.getTypes().get(i).getType();
 			if (!arg.getType().equals(expectedType))
 				tac.append(arg = new TACCast(expectedType, arg));
 			args.addNode(arg);

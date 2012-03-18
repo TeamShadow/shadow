@@ -5,6 +5,7 @@ import java.util.List;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public class MethodSignature {
@@ -56,12 +57,17 @@ public class MethodSignature {
 		return node;
 	}
 	
-	public boolean matches( List<Type> argumentTypes )
+	public boolean matches( List<ModifiedType> argumentTypes )
 	{
 		return type.matches(argumentTypes);		
 	}
 	
-	public boolean canAccept( List<Type> argumentTypes )
+	public boolean matches( SequenceType argumentTypes )
+	{
+		return type.matches(argumentTypes);		
+	}
+	
+	public boolean canAccept( SequenceType argumentTypes )
 	{
 		return type.canAccept(argumentTypes);		
 	}	
