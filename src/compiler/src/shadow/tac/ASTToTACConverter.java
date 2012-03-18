@@ -346,7 +346,7 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 		for (int i = 0; i < tac.getChildCount(); i++)
 		{
 			TACNode arg = tac.appendAndGetChild(i);
-			Type expectedType = argTypes.getTypes().get(i).getType();
+			Type expectedType = argTypes.get(i).getType();
 			if (!arg.getType().equals(expectedType))
 				tac.append(arg = new TACCast(expectedType, arg));
 			args.addNode(arg);

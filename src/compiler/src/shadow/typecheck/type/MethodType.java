@@ -80,18 +80,18 @@ public class MethodType extends Type {
 	
 	public void addParameter(String name, ModifiedType type) {
 		paramNames.add(name);
-		paramTypes.addType(type);
+		paramTypes.add(type);
 	}
 	
 	public void addParameter(ModifiedType type) {
 		paramNames.add(null); // have to add to keep in synch
-		paramTypes.addType(type);
+		paramTypes.add(type);
 	}
 	
 	public ModifiedType getParameterType(String paramName) {
 		for(int i=0; i < paramNames.size(); ++i) {
 			if(paramNames.get(i).equals(paramName))
-				return paramTypes.getTypes().get(i);
+				return paramTypes.get(i);
 		}
 			
 		return null;
@@ -115,7 +115,7 @@ public class MethodType extends Type {
 	}
 	
 	public void addReturn(ModifiedType type) {
-		returns.addType(type);		
+		returns.add(type);		
 	}
 	
 	public SequenceType getReturnTypes() {
@@ -154,7 +154,7 @@ public class MethodType extends Type {
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();
 
-		for (ModifiedType type : paramTypes.getTypes())
+		for (ModifiedType type : paramTypes)
 			sb.append("_R").append(type.getType().getMangledName());
 		
 //		for (Type r : returns)

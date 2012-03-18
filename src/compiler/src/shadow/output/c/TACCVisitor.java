@@ -215,7 +215,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		final SequenceType MAIN_SEQUENCE = new SequenceType();
 		SimpleNode modifiedType = new SimpleNode(0); //dummy node
 		modifiedType.setType(new ArrayType(Type.STRING, Arrays.<Integer>asList(1)));
-		MAIN_SEQUENCE.addType(modifiedType);
+		MAIN_SEQUENCE.add(modifiedType);
 		
 		for ( List<MethodSignature> methods : getType().getMethodMap().values() )
 		{
@@ -231,8 +231,8 @@ public class TACCVisitor extends AbstractTACVisitor {
 					foundMain = true;
 				
 				StringBuffer sb = new StringBuffer();
-				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes().getTypes();
-				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes().getTypes();
+				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes();
+				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes();
 				
 				// loop through the ret types
 				
@@ -278,8 +278,8 @@ public class TACCVisitor extends AbstractTACVisitor {
 			if ( !method.getSymbol().equals("constructor") )
 			{
 				StringBuffer sb = new StringBuffer();
-				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes().getTypes();
-				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes().getTypes();
+				List<ModifiedType> retTypes = method.getMethodType().getReturnTypes();
+				List<ModifiedType> paramTypes = method.getMethodType().getParameterTypes();
 				
 				// loop through the ret types
 				
@@ -460,7 +460,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		
 		int modifiers = method.getSignature().getASTNode().getModifiers();
 		
-		List<ModifiedType> retTypes = method.getReturnTypes().getTypes();
+		List<ModifiedType> retTypes = method.getReturnTypes();
 		
 		// right now we punt on returning more than one thing
 		if(retTypes.isEmpty())
@@ -474,7 +474,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		sb.append('(');
 		
 		List<String> paramNames = method.getParamNames();
-		List<ModifiedType> paramTypes = method.getParamTypes().getTypes();
+		List<ModifiedType> paramTypes = method.getParamTypes();
 
 		// first param is always a reference to the class, unless it's static
 		if(!ModifierSet.isStatic(modifiers))

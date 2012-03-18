@@ -1,12 +1,15 @@
 package shadow.typecheck.type;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
 
-public class SequenceType extends Type
+public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
 {	
 	protected List<ModifiedType> types = new LinkedList<ModifiedType>(); /** List of return types */	
 
@@ -16,18 +19,8 @@ public class SequenceType extends Type
 
 	public SequenceType(List<ModifiedType> modifiedTypes)
 	{
-		super(null, 0, null, Kind.SEQUENCE);
-		
+		super(null, 0, null, Kind.SEQUENCE);		
 		types = modifiedTypes;
-	}
-
-	public void addType(ModifiedType type) {
-		types.add(type);
-	}
-	
-	public List<ModifiedType> getTypes()
-	{
-		return types;
 	}
 	
 	public int size()
@@ -53,11 +46,6 @@ public class SequenceType extends Type
 		return true;		
 	}
 	
-	public boolean canAccept( SequenceType sequenceType )
-	{
-		return canAccept( sequenceType.getTypes() );
-	}
-	
 	public boolean canAccept( ModifiedType type )
 	{
 		if( types.size() != 1 )
@@ -76,13 +64,8 @@ public class SequenceType extends Type
 				return false;		
 		
 		return true;		
-	}
-	
-	public boolean matchesNullables( SequenceType other )
-	{
-		return matchesNullables( other.getTypes() );	
 	}	
-	
+
 	public String toString() {
 		StringBuilder builder = new StringBuilder("(");
 		boolean first = true;
@@ -135,12 +118,6 @@ public class SequenceType extends Type
 		return true;		
 	}
 	
-	public boolean matches(SequenceType inputTypes)
-	{
-		return matches( inputTypes.getTypes() );		
-	}
-	
-	
 	public void setNodeType(SimpleNode node)
 	{
 		if( types.size() == 1 )
@@ -164,6 +141,110 @@ public class SequenceType extends Type
 				return false;
 		
 		return true;		
+	}
+
+	@Override
+	public Iterator<ModifiedType> iterator() {		
+		return types.iterator();
+	}	
+
+	public ModifiedType get(int i) {		
+		return types.get(i);
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		return types.contains(o);
+	}
+
+	@Override
+	public Object[] toArray() {		
+		return types.toArray();
+	}
+
+	@Override
+	public <T> T[] toArray(T[] a) {
+		return types.toArray(a);		
+	}
+
+	@Override
+	public boolean add(ModifiedType e) {
+		return types.add(e);
+	}
+
+	@Override
+	public boolean remove(Object o) {		
+		return types.remove(o);
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {		
+		return types.containsAll(c);
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends ModifiedType> c) {
+		return types.addAll(c);
+	}
+
+	@Override
+	public boolean addAll(int index, Collection<? extends ModifiedType> c) {
+		return types.addAll(index, c);
+	}
+
+	@Override
+	public boolean removeAll(Collection<?> c) {		
+		return types.removeAll(c);
+	}
+
+	@Override
+	public boolean retainAll(Collection<?> c) {		
+		return types.retainAll(c);
+	}
+
+	@Override
+	public void clear() {
+		types.clear();
+	}
+
+	@Override
+	public ModifiedType set(int index, ModifiedType element) {		
+		return types.set(index, element);
+	}
+
+	@Override
+	public void add(int index, ModifiedType element) {
+		types.add(index, element);		
+	}
+
+	@Override
+	public ModifiedType remove(int index) {		
+		return types.remove(index);
+	}
+
+	@Override
+	public int indexOf(Object o) {
+		return types.indexOf(o);
+	}
+
+	@Override
+	public int lastIndexOf(Object o) {		
+		return types.lastIndexOf(o);
+	}
+
+	@Override
+	public ListIterator<ModifiedType> listIterator() {		
+		return types.listIterator();
+	}
+
+	@Override
+	public ListIterator<ModifiedType> listIterator(int index) {		
+		return types.listIterator(index);
+	}
+
+	@Override
+	public List<ModifiedType> subList(int fromIndex, int toIndex) {		
+		return types.subList(fromIndex, toIndex);
 	}
 
 }

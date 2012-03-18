@@ -21,20 +21,20 @@ public class TACSequence extends TACNode implements Iterable<TACNode>
 	public TACSequence(TACNode node)
 	{
 		type = new SequenceType();
-		type.addType(node);
+		type.add(node);
 		nodes = Collections.singletonList(node);
 	}
 	public TACSequence(List<TACNode> nodeList)
 	{
 		type = new SequenceType();
 		for (TACNode node : nodeList)
-			type.addType(node);
+			type.add(node);
 		nodes = nodeList;
 	}
 	
 	public void addNode(TACNode node)
 	{
-		type.addType(node);
+		type.add(node);
 		nodes.add(node);
 	}
 	

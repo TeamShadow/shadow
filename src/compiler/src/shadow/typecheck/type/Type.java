@@ -189,7 +189,7 @@ public class Type {
 				return false;	
 		case SEQUENCE:
 			if ( t.getKind() == Kind.SEQUENCE )
-				return ((SequenceType)this).canAccept(((SequenceType)t).getTypes());
+				return ((SequenceType)this).canAccept(((SequenceType)t));
 			else
 				return false;
 		case METHOD:

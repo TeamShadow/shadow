@@ -974,7 +974,7 @@ public class ClassChecker extends BaseChecker {
 		SequenceType sequenceType = new SequenceType();
 		
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			sequenceType.addType(node.jjtGetChild(i));
+			sequenceType.add(node.jjtGetChild(i));
 		
 		node.setType(sequenceType);
 		
@@ -995,7 +995,7 @@ public class ClassChecker extends BaseChecker {
 	
 	private boolean isAssignable( SequenceType destination )
 	{
-		for( ModifiedType type : destination.getTypes() )
+		for( ModifiedType type : destination )
 			if( ModifierSet.isFinal(type.getModifiers()) )
 				return false;	
 		
@@ -1029,7 +1029,7 @@ public class ClassChecker extends BaseChecker {
 				if( next.getType() instanceof SequenceType )
 				{
 					SequenceType nextType = (SequenceType)(next.getType());
-					if( currentType.canAccept( nextType.getTypes() ) )
+					if( currentType.canAccept( nextType ) )
 					{
 						if( !isAssignable( currentType ) )
 						{
@@ -1223,7 +1223,7 @@ public class ClassChecker extends BaseChecker {
 			SequenceType sequence = new SequenceType();
 			
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				sequence.addType(node.jjtGetChild(i));
+				sequence.add(node.jjtGetChild(i));
 			
 			node.setType( sequence );
 		}			
@@ -1576,7 +1576,7 @@ public class ClassChecker extends BaseChecker {
 			UnboundMethodType unboundMethod = (UnboundMethodType)(node.getType());
 			SequenceType sequenceType = new SequenceType();
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				sequenceType.addType(node.jjtGetChild(i));
+				sequenceType.add(node.jjtGetChild(i));
 			
 			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();
 			List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
