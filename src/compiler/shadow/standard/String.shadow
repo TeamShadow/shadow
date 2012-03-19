@@ -5,7 +5,20 @@ immutable final class String //implements Parsable<String> //, Collection<code>
 
 	private ubyte[] data = new ubyte[0];
 	private boolean ascii = true;
-
+	
+	private constructor( boolean isAscii, ubyte[] dataArray )
+	{
+		data = dataArray;
+		ascii = isAscii;
+	}
+	
+	// Since String is immutable, it can share arrays with itself
+	public constructor( String other )
+	{
+		data = other.data;
+		ascii = other.ascii;
+	}
+	
 	public getByte( int index ) => ( ubyte )
 	{
 		return data[index];
@@ -14,30 +27,47 @@ immutable final class String //implements Parsable<String> //, Collection<code>
 	public getCode( int index ) => ( code )
 	{
 		if ( ascii )
-			return data[index];
-	// FIXME:
-		return -1;
+			return cast<code>data[index];
+	// TODO: code this
+		return '\0';
 	}
 
 	public getLength() => ( int )
 	{
-		return Array.getLength(data);
+		return data.getLength();
 	}
 
-	public compareTo( String other ) => ( int )
+	public compareTo( nullable String otherString ) => ( int )
 	{
-		if ( other == null )
-			return 1;
-		if ( ascii and other.ascii )
+		try
 		{
-			int count = Math.min( Array.getLength(data), Array.getLength(other.data) );
-			for ( int i = 0; i < count; i += 1 )
-				if ( data[i] != other.data[i] )
-					return data[i] < other.data[i] ? -1 : 1;
-			return count == Array.getLength(data) ? -1 : 1; 
+			String other = check(otherString);
+			if ( ascii and other.ascii )
+			{
+				int count = Math.min( data.getLength(), other.data.getLength() );
+				for ( int i = 0; i < count; i += 1 )
+					if ( data[i] != other.data[i] )
+						return data[i] < other.data[i] ? -1 : 1;
+				return count == data.getLength() ? count == other.data.getLength() ? 0 : -1 : 1; 
+			}
+		// TODO: code this
 		}
-	// FIXME:
+		recover
+		{
+			return 1;
+		}
 		return -1;
+	}
+	
+	public substring( int start, int end ) => ( String )
+	{
+		boolean newAscii = ascii;
+		ubyte[] newData = cast<ubyte[]>data.subarray( start, end - start, 1 );
+		if ( !ascii )
+		{
+			// Recalculate ascii-ness?
+		}
+		return new String( newAscii, newData );
 	}
 	
 /*
@@ -54,12 +84,6 @@ immutable final class String //implements Parsable<String> //, Collection<code>
 		
 		if( !isValid )
 	
-	}
-	
-	public constructor( String other )
-	{
-		
-		
 	}
 	
 	

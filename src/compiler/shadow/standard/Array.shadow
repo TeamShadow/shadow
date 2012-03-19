@@ -1,19 +1,45 @@
 package shadow.standard;
 
-// Do we want this?
-public /*native*/ abstract final class Array/*<T>*/
+// Is abstract final (not valid in java) like having only private constructors?
+//		aka. can not be created outside of this class
+/*native*/ abstract final class Array/*<T>*/
 {
-	public getLength() => ( int )
+	// TODO: Optimize these. For now they are just to reduce
+	//		 the amount of native code that keeps changing.
+	public final getLength() => ( int )
 	{
 		return getLength(0);
 	}
-	public getLength( int dimension ) => ( int )
+	public final getLength( int dimension ) => ( int )
 	{
 		return getLengths()[ dimension ];
 	}
-	public getDimensions() => ( int )
+	public final getDimensions() => ( int )
 	{
 		return getLengths().getLength();
 	}
-	public abstract getLengths() => ( int[]/*<int>*/ );
+
+	// end or length... that is the question
+	// TODO: remove elementSize by fixing getBaseClass()
+	public final native subarray( int offset, int length, int elementSize ) => ( Object/*Array<T>*/ );
+
+	// TODO: This return value must eventually be immutable.
+	//		 The returned array has direct access to the
+	//		 internal lengths which must not be changed.
+	public final native getLengths() => ( /*immutable*/ int[] /*Array<int>*/ );
+	// NOTE: Right now, this must have the same signature
+	//		 as getClass() => ( Class )
+	public final native getBaseClass() => ( Class ); /* { return T; } */
+
+	// Maybe use these methods in an Indexable<T>/Indexed<T> interface?
+	// Although it might only be used for random access collections
+	//		(like java's java.util.RandomAccess).
+	/* public final T get( int index ); */
+	/* public final void set( int index, T value ); */
+	
+	// Maybe use this method in an Iterable<T>/Iterated<T> interface?
+	//		(I feel like I stole this straight from java)
+	// It seems like Index(able|ed)<T> implies Itera(ble|ted)<T>.
+	//		(but not vice-versa) Interface hierarchy maybe?
+	/* public final Iterator<T> createIterator(); */
 }

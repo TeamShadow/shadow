@@ -1,55 +1,55 @@
 #include "stdio.h"
 #include "string.h"
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fboolean(boolean_shadow_t z) {
+void _Pshadow_Pio_CConsole_Mprint_Rboolean(boolean_shadow_t z) {
 	printf(z ? "true" : "false");
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fubyte(ubyte_shadow_t ub) {
+void _Pshadow_Pio_CConsole_Mprint_Rubyte(ubyte_shadow_t ub) {
 	printf("%hhu", ub);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fbyte(byte_shadow_t b) {
+void _Pshadow_Pio_CConsole_Mprint_Rbyte(byte_shadow_t b) {
 	printf("%hhi", b);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fushort(ushort_shadow_t us) {
+void _Pshadow_Pio_CConsole_Mprint_Rushort(ushort_shadow_t us) {
 	printf("%hu", us);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fshort(short_shadow_t s) {
+void _Pshadow_Pio_CConsole_Mprint_Rshort(short_shadow_t s) {
 	printf("%hi", s);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fuint(uint_shadow_t ui) {
+void _Pshadow_Pio_CConsole_Mprint_Ruint(uint_shadow_t ui) {
 	printf("%u", ui);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fint(int_shadow_t i) {
+void _Pshadow_Pio_CConsole_Mprint_Rint(int_shadow_t i) {
 	printf("%i", i);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fulong(ulong_shadow_t ul) {
+void _Pshadow_Pio_CConsole_Mprint_Rulong(ulong_shadow_t ul) {
 	printf("%llu", ul);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Flong(long_shadow_t l) {
+void _Pshadow_Pio_CConsole_Mprint_Rlong(long_shadow_t l) {
 	printf("%lli", l);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Ffloat(float_shadow_t f) {
+void _Pshadow_Pio_CConsole_Mprint_Rfloat(float_shadow_t f) {
 	printf("%f", f);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fdouble(double_shadow_t d) {
+void _Pshadow_Pio_CConsole_Mprint_Rdouble(double_shadow_t d) {
 	printf("%g", d);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_Fcode(code_shadow_t c) {
+void _Pshadow_Pio_CConsole_Mprint_Rcode(code_shadow_t c) {
 	printf("%lc", c);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(struct _Pshadow_Pstandard_CString *str) {
+void _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(struct _Pshadow_Pstandard_CString *str) {
 	if (str == NULL)
 		printf("null");
 	else {
@@ -59,67 +59,67 @@ void _Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(struct _Pshadow_
 //	printf("%s", str->data);
 }
 
-void _Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject *obj) {
-	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(obj == NULL ? NULL : obj->_Imethods->_MtoString(obj));
+void _Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject *obj) {
+	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(obj == NULL ? NULL : obj->_Imethods->_MtoString(obj));
 //	printf("%s", obj->_Imethods->_MtoString(obj)->data);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fboolean(boolean_shadow_t z) {
+void _Pshadow_Pio_CConsole_MprintLine_Rboolean(boolean_shadow_t z) {
 	printf(z ? "true\n" : "false\n");
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fubyte(ubyte_shadow_t ub) {
+void _Pshadow_Pio_CConsole_MprintLine_Rubyte(ubyte_shadow_t ub) {
 	printf("%hhu\n", ub);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fbyte(byte_shadow_t b) {
+void _Pshadow_Pio_CConsole_MprintLine_Rbyte(byte_shadow_t b) {
 	printf("%hhi\n", b);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fushort(ushort_shadow_t us) {
+void _Pshadow_Pio_CConsole_MprintLine_Rushort(ushort_shadow_t us) {
 	printf("%hu\n", us);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fshort(short_shadow_t s) {
+void _Pshadow_Pio_CConsole_MprintLine_Rshort(short_shadow_t s) {
 	printf("%hi\n", s);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fuint(uint_shadow_t ui) {
+void _Pshadow_Pio_CConsole_MprintLine_Ruint(uint_shadow_t ui) {
 	printf("%u\n", ui);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fint(int_shadow_t i) {
+void _Pshadow_Pio_CConsole_MprintLine_Rint(int_shadow_t i) {
 	printf("%i\n", i);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fulong(ulong_shadow_t ul) {
+void _Pshadow_Pio_CConsole_MprintLine_Rulong(ulong_shadow_t ul) {
 	printf("%llu\n", ul);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Flong(long_shadow_t l) {
+void _Pshadow_Pio_CConsole_MprintLine_Rlong(long_shadow_t l) {
 	printf("%lli\n", l);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Ffloat(float_shadow_t f) {
+void _Pshadow_Pio_CConsole_MprintLine_Rfloat(float_shadow_t f) {
 	printf("%f\n", f);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fdouble(double_shadow_t d) {
+void _Pshadow_Pio_CConsole_MprintLine_Rdouble(double_shadow_t d) {
 	printf("%g\n", d);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_Fcode(code_shadow_t c) {
+void _Pshadow_Pio_CConsole_MprintLine_Rcode(code_shadow_t c) {
 	printf("%lc\n", c);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(struct _Pshadow_Pstandard_CString *str) {
-	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(str);
+void _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(struct _Pshadow_Pstandard_CString *str) {
+	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(str);
 	_Pshadow_Pio_CConsole_MprintLine();
 //	printf("%s\n", str->data);
 }
 
-void _Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject *obj) {
-	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CObject(obj);
+void _Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject *obj) {
+	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CObject(obj);
 	_Pshadow_Pio_CConsole_MprintLine();
 //	printf("%s\n", obj->_Imethods->_MtoString(obj)->data);
 }
@@ -207,8 +207,11 @@ struct _Pshadow_Pstandard_CString* _Pshadow_Pio_CConsole_Mread(void) {
 	struct _Pshadow_Pstandard_CString *str = malloc(sizeof(struct _Pshadow_Pstandard_CString));
 	str->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
 	str->ascii = (boolean_shadow_t)1;
-	str->data = malloc(sizeof(struct _IArray));
-	str->data = malloc(length);
-	strcpy((char *)str->data, buffer);
+	str->data = malloc(sizeof(struct _Pshadow_Pstandard_CArray));
+	str->data->_Imethods = &_Pshadow_Pstandard_CArray_Imethods;
+	str->data->_Iarray = malloc(length);
+	str->data->_Idims = ((int_shadow_t)0);
+	*str->data->_Ilengths = ((int_shadow_t)length);
+	memcpy(str->data->_Iarray, buffer, length);
 	return str;
 }

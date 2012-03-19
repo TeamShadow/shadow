@@ -4,8 +4,9 @@
 
 #include "types.h"
 #include "stdlib.h"
+#include "string.h"
 
-struct _IArray;
+struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pstandard_CClass;
 struct _Pshadow_Pstandard_CString;
@@ -15,22 +16,22 @@ struct _Pshadow_Pstandard_CObject_Itable;
 struct _Pshadow_Pstandard_CObject_Itable _Pshadow_Pstandard_CObject_Imethods;
 struct _Pshadow_Pstandard_CObject {
 	struct _Pshadow_Pstandard_CObject_Itable *_Imethods;
-	
+
 	/* Fields */
 };
 
-
-struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject* this);
-struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject*);
-struct _Pshadow_Pstandard_CString* _Pshadow_Pstandard_CObject_MtoString(struct _Pshadow_Pstandard_CObject*);
-void _Pshadow_Pstandard_CObject_Mconstructor(struct _Pshadow_Pstandard_CObject*);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject *this);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject *);
+struct _Pshadow_Pstandard_CString *_Pshadow_Pstandard_CObject_MtoString(struct _Pshadow_Pstandard_CObject *);
+void _Pshadow_Pstandard_CObject_Mconstructor(struct _Pshadow_Pstandard_CObject *);
 
 struct _Pshadow_Pstandard_CObject_Itable {
-	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CObject*);
-	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	struct _Pshadow_Pstandard_CClass *(*_MgetClass)(struct _Pshadow_Pstandard_CObject *);
+	struct _Pshadow_Pstandard_CString *(*_MtoString)(struct _Pshadow_Pstandard_CObject *);
 };
 
 #include "shadow/standard/Class.meta"
 #include "shadow/standard/String.meta"
+#include "shadow/standard/Array.meta"
 
 #endif

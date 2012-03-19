@@ -43,12 +43,15 @@ public class TACCScanner extends AbstractTACVisitor
 	}
 	private void allocate(TACNode node)
 	{
-		if (node.getSymbol() == null)
+		String symbol = node.getSymbol();
+		if (symbol == null)
 		{
-			String symbol = "_Itemp" + tempCounter++;
+			symbol = "_Itemp" + tempCounter++;
 			node.setSymbol(symbol);
 			allocations.put(symbol, node.getType());
 		}
+		else if (symbol.startsWith("_Itemp") && !allocations.containsKey(symbol))
+			allocations.put(symbol, node.getType());
 	}
 	
 	@Override
@@ -59,14 +62,10 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void startFields()
 	{
-		tempCounter = labelCounter = 0;
-		allocations = new HashMap<String, Type>();
-		stringLiterals = new HashSet<String>();
 	}
 	@Override
 	public void endFields()
 	{
-		allocations = null;
 	}
 	
 	@Override
@@ -158,7 +157,7 @@ public class TACCScanner extends AbstractTACVisitor
 		if (!node.getMethodType().getReturnTypes().isEmpty() && node.getSymbol() == null)
 		{
 			int index = 0;
-			for (ModifiedType type : node.getType())
+			for (ModifiedType type : node.getSequenceType())
 			{
 				node.setSymbol(index, "_Itemp" + tempCounter++);
 				allocations.put(node.getSymbol(index++), type.getType());
@@ -182,7 +181,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACPhi node)
 	{
-		allocate(node); // note that this is not an ssa variable (in c)
+		allocate(node); // note that this is not an SSA variable
 	}
 
 	@Override
@@ -198,7 +197,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACVariable node)
 	{
-		allocate(node); // note that this is not an ssa variable (in c)
+		allocate(node); // note that this is not an SSA variable
 		if (!node.expectsPrefix() &&
 				localRenames.containsKey(node.getSymbol()))
 			node.setSymbol(localRenames.get(node.getSymbol()));

@@ -1,12 +1,10 @@
 package shadow.tac.nodes;
 
 import java.io.IOException;
-import java.util.List;
 
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.tac.AbstractTACVisitor;
 import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -66,16 +64,16 @@ public class TACCall extends TACPrefixed
 		return type.getOuter();
 	}
 	@Override
-	public SequenceType getType() {
-		
-		/*
+	public Type getType() {
 		SequenceType retTypes = type.getReturnTypes();
 		if (retTypes.size() == 0)
 			return null;
 		if (retTypes.size() == 1)
-			return retTypes.getTypes().get(0).getType();		
+			return retTypes.get(0).getType();		
 		return retTypes;
-		*/
+	}
+	public SequenceType getSequenceType()
+	{
 		return type.getReturnTypes();
 	}
 	public String getMethodName()

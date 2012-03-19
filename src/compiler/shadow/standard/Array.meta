@@ -7,7 +7,7 @@
 #include "string.h"
 #include "shadow/standard/Object.meta"
 
-struct _IArray;
+struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pstandard_CClass;
 
@@ -16,29 +16,34 @@ struct _Pshadow_Pstandard_CArray_Itable;
 struct _Pshadow_Pstandard_CArray_Itable _Pshadow_Pstandard_CArray_Imethods;
 struct _Pshadow_Pstandard_CArray {
 	struct _Pshadow_Pstandard_CArray_Itable *_Imethods;
-	
+
 	/* Fields */
+	void *_Iarray;
+	int_shadow_t _Idims;
+	int_shadow_t _Ilengths[1];
 };
 
-
-
-
-struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CArray_MgetClass(struct _Pshadow_Pstandard_CArray* this);
-struct _IArray * _Pshadow_Pstandard_CArray_MgetLengths_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject*);
-int_shadow_t _Pshadow_Pstandard_CArray_MgetDimensions_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject*);
-int_shadow_t _Pshadow_Pstandard_CArray_MgetLength_R_Pshadow_Pstandard_CObject(struct _Pshadow_Pstandard_CObject*);
-int_shadow_t _Pshadow_Pstandard_CArray_MgetLength_R_Pshadow_Pstandard_CObject_Rint(struct _Pshadow_Pstandard_CObject*, int_shadow_t);
-void _Pshadow_Pstandard_CArray_Mconstructor(struct _Pshadow_Pstandard_CArray*);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CArray_MgetClass(struct _Pshadow_Pstandard_CArray *);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CArray_MgetBaseClass(struct _Pshadow_Pstandard_CArray *);
+struct _Pshadow_Pstandard_CArray *_Pshadow_Pstandard_CArray_MgetLengths(struct _Pshadow_Pstandard_CArray *);
+int_shadow_t _Pshadow_Pstandard_CArray_MgetDimensions(struct _Pshadow_Pstandard_CArray *);
+int_shadow_t _Pshadow_Pstandard_CArray_MgetLength(struct _Pshadow_Pstandard_CArray *);
+int_shadow_t _Pshadow_Pstandard_CArray_MgetLength_Rint(struct _Pshadow_Pstandard_CArray *, int_shadow_t);
+struct _Pshadow_Pstandard_CObject *_Pshadow_Pstandard_CArray_Msubarray_Rint_Rint_Rint(struct _Pshadow_Pstandard_CArray *, int_shadow_t, int_shadow_t, int_shadow_t);
+void _Pshadow_Pstandard_CArray_Mconstructor(struct _Pshadow_Pstandard_CArray *);
 
 struct _Pshadow_Pstandard_CArray_Itable {
-	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CArray*);
-	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-	struct _IArray * (*_MgetLengths_R_Pshadow_Pstandard_CObject)(struct _Pshadow_Pstandard_CObject*);
-	int_shadow_t (*_MgetDimensions_R_Pshadow_Pstandard_CObject)(struct _Pshadow_Pstandard_CObject*);
-	int_shadow_t (*_MgetLength_R_Pshadow_Pstandard_CObject)(struct _Pshadow_Pstandard_CObject*);
-	int_shadow_t (*_MgetLength_R_Pshadow_Pstandard_CObject_Rint)(struct _Pshadow_Pstandard_CObject*, int_shadow_t);
+	struct _Pshadow_Pstandard_CClass *(*_MgetClass)(struct _Pshadow_Pstandard_CArray *);
+	struct _Pshadow_Pstandard_CString *(*_MtoString)(struct _Pshadow_Pstandard_CObject *);
+	struct _Pshadow_Pstandard_CClass *(*_MgetBaseClass)(struct _Pshadow_Pstandard_CArray *);
+	struct _Pshadow_Pstandard_CArray *(*_MgetLengths)(struct _Pshadow_Pstandard_CArray *);
+	int_shadow_t (*_MgetDimensions)(struct _Pshadow_Pstandard_CArray *);
+	int_shadow_t (*_MgetLength)(struct _Pshadow_Pstandard_CArray *);
+	int_shadow_t (*_MgetLength_Rint)(struct _Pshadow_Pstandard_CArray *, int_shadow_t);
+	struct _Pshadow_Pstandard_CObject *(*_Msubarray_Rint_Rint_Rint)(struct _Pshadow_Pstandard_CArray *, int_shadow_t, int_shadow_t, int_shadow_t);
 };
 
 #include "shadow/standard/Class.meta"
+#include "shadow/standard/Array.meta"
 
 #endif

@@ -7,7 +7,7 @@
 #include "string.h"
 #include "shadow/standard/Object.meta"
 
-struct _IArray;
+struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pstandard_CClass;
 
@@ -16,15 +16,13 @@ struct _Pshadow_Pstandard_CMath_Itable;
 struct _Pshadow_Pstandard_CMath_Itable _Pshadow_Pstandard_CMath_Imethods;
 struct _Pshadow_Pstandard_CMath {
 	struct _Pshadow_Pstandard_CMath_Itable *_Imethods;
-	
+
 	/* Fields */
 	double_shadow_t E;
 	double_shadow_t PI;
 };
 
-
-
-struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CMath_MgetClass(struct _Pshadow_Pstandard_CMath* this);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CMath_MgetClass(struct _Pshadow_Pstandard_CMath *this);
 int_shadow_t _Pshadow_Pstandard_CMath_Mmin_Rint_Rint(int_shadow_t, int_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mln_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mcosh_Rdouble(double_shadow_t);
@@ -39,10 +37,10 @@ double_shadow_t _Pshadow_Pstandard_CMath_Masin_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mcos_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Msqrt_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mmod_Rdouble_Rdouble(double_shadow_t, double_shadow_t);
-int_shadow_t _Pshadow_Pstandard_CMath_Mdiv_Rint_Rint(int_shadow_t, int_shadow_t, int_shadow_t*);
-long_shadow_t _Pshadow_Pstandard_CMath_Mdiv_Rlong_Rlong(long_shadow_t, long_shadow_t, long_shadow_t*);
+int_shadow_t _Pshadow_Pstandard_CMath_Mdiv_Rint_Rint(int_shadow_t, int_shadow_t, int_shadow_t *);
+long_shadow_t _Pshadow_Pstandard_CMath_Mdiv_Rlong_Rlong(long_shadow_t, long_shadow_t, long_shadow_t *);
 double_shadow_t _Pshadow_Pstandard_CMath_Msinh_Rdouble(double_shadow_t);
-double_shadow_t _Pshadow_Pstandard_CMath_Mparts_Rdouble(double_shadow_t, double_shadow_t*);
+double_shadow_t _Pshadow_Pstandard_CMath_Mparts_Rdouble(double_shadow_t, double_shadow_t *);
 double_shadow_t _Pshadow_Pstandard_CMath_Mlog_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mlog_Rdouble_Rdouble(double_shadow_t, double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mtanh_Rdouble(double_shadow_t);
@@ -55,11 +53,11 @@ double_shadow_t _Pshadow_Pstandard_CMath_Mceiling_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Msin_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Macos_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mtan_Rdouble(double_shadow_t);
-void _Pshadow_Pstandard_CMath_Mconstructor(struct _Pshadow_Pstandard_CMath*);
+void _Pshadow_Pstandard_CMath_Mconstructor(struct _Pshadow_Pstandard_CMath *);
 
 struct _Pshadow_Pstandard_CMath_Itable {
-	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Pstandard_CMath*);
-	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	struct _Pshadow_Pstandard_CClass *(*_MgetClass)(struct _Pshadow_Pstandard_CMath *);
+	struct _Pshadow_Pstandard_CString *(*_MtoString)(struct _Pshadow_Pstandard_CObject *);
 	int_shadow_t (*_Mmin_Rint_Rint)(int_shadow_t, int_shadow_t);
 	double_shadow_t (*_Mln_Rdouble)(double_shadow_t);
 	double_shadow_t (*_Mcosh_Rdouble)(double_shadow_t);
@@ -74,10 +72,10 @@ struct _Pshadow_Pstandard_CMath_Itable {
 	double_shadow_t (*_Mcos_Rdouble)(double_shadow_t);
 	double_shadow_t (*_Msqrt_Rdouble)(double_shadow_t);
 	double_shadow_t (*_Mmod_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
-	int_shadow_t (*_Mdiv_Rint_Rint)(int_shadow_t, int_shadow_t, int_shadow_t*);
-	long_shadow_t (*_Mdiv_Rlong_Rlong)(long_shadow_t, long_shadow_t, long_shadow_t*);
+	int_shadow_t (*_Mdiv_Rint_Rint)(int_shadow_t, int_shadow_t, int_shadow_t *);
+	long_shadow_t (*_Mdiv_Rlong_Rlong)(long_shadow_t, long_shadow_t, long_shadow_t *);
 	double_shadow_t (*_Msinh_Rdouble)(double_shadow_t);
-	double_shadow_t (*_Mparts_Rdouble)(double_shadow_t, double_shadow_t*);
+	double_shadow_t (*_Mparts_Rdouble)(double_shadow_t, double_shadow_t *);
 	double_shadow_t (*_Mlog_Rdouble)(double_shadow_t);
 	double_shadow_t (*_Mlog_Rdouble_Rdouble)(double_shadow_t, double_shadow_t);
 	double_shadow_t (*_Mtanh_Rdouble)(double_shadow_t);
@@ -93,5 +91,6 @@ struct _Pshadow_Pstandard_CMath_Itable {
 };
 
 #include "shadow/standard/Class.meta"
+#include "shadow/standard/Array.meta"
 
 #endif

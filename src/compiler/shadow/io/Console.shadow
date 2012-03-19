@@ -5,7 +5,6 @@ class Console
 
 	private constructor() { }
 
-
 	public static native print( final boolean z ) => ();
 	public static native print( final ubyte ub ) => ();
 	public static native print( final byte b ) => ();
@@ -52,9 +51,4 @@ class Console
 	public static native readCode() => ( code );
 	public static native read() => ( String );
 
-	public static main( String[] args ) => ()
-	{
-		final String helloWorld = "Hello World!";
-		printLine(helloWorld);
-	}
 }

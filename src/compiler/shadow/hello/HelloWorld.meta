@@ -7,7 +7,7 @@
 #include "string.h"
 #include "shadow/standard/Object.meta"
 
-struct _IArray;
+struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pio_CConsole;
 struct _Pshadow_Pstandard_CClass;
@@ -18,50 +18,41 @@ struct _Pshadow_Phello_CHelloWorld_Itable;
 struct _Pshadow_Phello_CHelloWorld_Itable _Pshadow_Phello_CHelloWorld_Imethods;
 struct _Pshadow_Phello_CHelloWorld {
 	struct _Pshadow_Phello_CHelloWorld_Itable *_Imethods;
-	
+
 	/* Fields */
-	struct _Pshadow_Pstandard_CString* message;
+	struct _Pshadow_Pstandard_CString *message;
 	uint_shadow_t times;
-	struct _Pshadow_Phello_CHelloWorld* self;
+	struct _Pshadow_Phello_CHelloWorld *self;
 };
 
-
-
-
-
-
-
-
-
-
-
-struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_CHelloWorld_MgetClass(struct _Pshadow_Phello_CHelloWorld* this);
-uint_shadow_t _Pshadow_Phello_CHelloWorld_MgetBoth(struct _Pshadow_Phello_CHelloWorld*, struct _Pshadow_Pstandard_CString**);
-struct _Pshadow_Pstandard_CString* _Pshadow_Phello_CHelloWorld_MgetMessage(struct _Pshadow_Phello_CHelloWorld*);
-void _Pshadow_Phello_CHelloWorld_Mdoit(struct _Pshadow_Phello_CHelloWorld*);
-uint_shadow_t _Pshadow_Phello_CHelloWorld_MgetTimes(struct _Pshadow_Phello_CHelloWorld*);
-struct _Pshadow_Pstandard_CObject* _Pshadow_Phello_CHelloWorld_MgetSelfObject(struct _Pshadow_Phello_CHelloWorld*);
-uint_shadow_t _Pshadow_Phello_CHelloWorld_Mfibonacci_Ruint_Ruint(uint_shadow_t, uint_shadow_t, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, struct _Pshadow_Pstandard_CString**, uint_shadow_t*, struct _Pshadow_Pstandard_CObject**);
-void _Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray *);
-void _Pshadow_Phello_CHelloWorld_Mconstructor(struct _Pshadow_Phello_CHelloWorld*);
-void _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint(struct _Pshadow_Phello_CHelloWorld*, uint_shadow_t);
-void _Pshadow_Phello_CHelloWorld_Mconstructor_R_Pshadow_Pstandard_CString(struct _Pshadow_Phello_CHelloWorld*, struct _Pshadow_Pstandard_CString*);
-void _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint_R_Pshadow_Pstandard_CString(struct _Pshadow_Phello_CHelloWorld*, uint_shadow_t, struct _Pshadow_Pstandard_CString*);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Phello_CHelloWorld_MgetClass(struct _Pshadow_Phello_CHelloWorld *this);
+uint_shadow_t _Pshadow_Phello_CHelloWorld_MgetBoth(struct _Pshadow_Phello_CHelloWorld *, struct _Pshadow_Pstandard_CString **);
+struct _Pshadow_Pstandard_CString *_Pshadow_Phello_CHelloWorld_MgetMessage(struct _Pshadow_Phello_CHelloWorld *);
+void _Pshadow_Phello_CHelloWorld_Mdoit(struct _Pshadow_Phello_CHelloWorld *);
+uint_shadow_t _Pshadow_Phello_CHelloWorld_MgetTimes(struct _Pshadow_Phello_CHelloWorld *);
+struct _Pshadow_Pstandard_CObject *_Pshadow_Phello_CHelloWorld_MgetSelfObject(struct _Pshadow_Phello_CHelloWorld *);
+uint_shadow_t _Pshadow_Phello_CHelloWorld_Mfibonacci_Ruint_Ruint(uint_shadow_t, uint_shadow_t, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, struct _Pshadow_Pstandard_CString **, uint_shadow_t *, struct _Pshadow_Pstandard_CObject **);
+void _Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CArray *);
+void _Pshadow_Phello_CHelloWorld_Mconstructor(struct _Pshadow_Phello_CHelloWorld *);
+void _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint(struct _Pshadow_Phello_CHelloWorld *, uint_shadow_t);
+void _Pshadow_Phello_CHelloWorld_Mconstructor_R_Pshadow_Pstandard_CString(struct _Pshadow_Phello_CHelloWorld *, struct _Pshadow_Pstandard_CString *);
+void _Pshadow_Phello_CHelloWorld_Mconstructor_Ruint_R_Pshadow_Pstandard_CString(struct _Pshadow_Phello_CHelloWorld *, uint_shadow_t, struct _Pshadow_Pstandard_CString *);
 
 struct _Pshadow_Phello_CHelloWorld_Itable {
-	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _Pshadow_Phello_CHelloWorld*);
-	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-	uint_shadow_t (*_MgetBoth)(struct _Pshadow_Phello_CHelloWorld*, struct _Pshadow_Pstandard_CString**);
-	struct _Pshadow_Pstandard_CString* (*_MgetMessage)(struct _Pshadow_Phello_CHelloWorld*);
-	void (*_Mdoit)(struct _Pshadow_Phello_CHelloWorld*);
-	uint_shadow_t (*_MgetTimes)(struct _Pshadow_Phello_CHelloWorld*);
-	struct _Pshadow_Pstandard_CObject* (*_MgetSelfObject)(struct _Pshadow_Phello_CHelloWorld*);
-	uint_shadow_t (*_Mfibonacci_Ruint_Ruint)(uint_shadow_t, uint_shadow_t, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, uint_shadow_t*, struct _Pshadow_Pstandard_CString**, uint_shadow_t*, struct _Pshadow_Pstandard_CObject**);
-	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _IArray *);
+	struct _Pshadow_Pstandard_CClass *(*_MgetClass)(struct _Pshadow_Phello_CHelloWorld *);
+	struct _Pshadow_Pstandard_CString *(*_MtoString)(struct _Pshadow_Pstandard_CObject *);
+	uint_shadow_t (*_MgetBoth)(struct _Pshadow_Phello_CHelloWorld *, struct _Pshadow_Pstandard_CString **);
+	struct _Pshadow_Pstandard_CString *(*_MgetMessage)(struct _Pshadow_Phello_CHelloWorld *);
+	void (*_Mdoit)(struct _Pshadow_Phello_CHelloWorld *);
+	uint_shadow_t (*_MgetTimes)(struct _Pshadow_Phello_CHelloWorld *);
+	struct _Pshadow_Pstandard_CObject *(*_MgetSelfObject)(struct _Pshadow_Phello_CHelloWorld *);
+	uint_shadow_t (*_Mfibonacci_Ruint_Ruint)(uint_shadow_t, uint_shadow_t, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, uint_shadow_t *, struct _Pshadow_Pstandard_CString **, uint_shadow_t *, struct _Pshadow_Pstandard_CObject **);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CArray *);
 };
 
 #include "shadow/io/Console.meta"
 #include "shadow/standard/Class.meta"
 #include "shadow/standard/String.meta"
+#include "shadow/standard/Array.meta"
 
 #endif

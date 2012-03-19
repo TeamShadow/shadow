@@ -1,28 +1,22 @@
 /* AUTO-GENERATED FILE, DO NOT EDIT! */
 #include "shadow/hello/InputTest.meta"
 
-struct _IArray {
-	void *_Iarray;
-	int_shadow_t _Idims;
-	int_shadow_t _Ilengths[1];
-};
-
-static struct _IArray _Iarray0 = {
-	(void *)"shadow.hello@InputTest", (int_shadow_t)1, {(int_shadow_t)22}
+static struct _Pshadow_Pstandard_CArray _Iarray0 = {
+	&_Pshadow_Pstandard_CArray_Imethods, (void *)"shadow.hello@InputTest", (int_shadow_t)1, {(int_shadow_t)22}
 };
 static struct _Pshadow_Pstandard_CString _Istring0 = {
-	&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray0
+	&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CInputTest_Iclass = {
 	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
 };
 
-void _Pshadow_Phello_CInputTest_Mconstructor(struct _Pshadow_Phello_CInputTest* this) {
+void _Pshadow_Phello_CInputTest_Mconstructor(struct _Pshadow_Phello_CInputTest * this) {
 	this->_Imethods = &_Pshadow_Phello_CInputTest_Imethods;
 	return;
 }
 
-void _Pshadow_Phello_CInputTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray * args) {
+void _Pshadow_Phello_CInputTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CArray * args) {
 	uint_shadow_t _Itemp0;
 	boolean_shadow_t _Itemp1;
 	int_shadow_t _Itemp2;
@@ -33,29 +27,29 @@ void _Pshadow_Phello_CInputTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IAr
 	double_shadow_t _Itemp7;
 	int_shadow_t _Itemp8;
 	double_shadow_t _Itemp9;
-	static struct _IArray _Iarray1 = {
-		(void *)"Enter a number: ", (int_shadow_t)1, {(int_shadow_t)16}
+	static struct _Pshadow_Pstandard_CArray _Iarray1 = {
+		&_Pshadow_Pstandard_CArray_Imethods, (void *)"Enter a number: ", (int_shadow_t)1, {(int_shadow_t)16}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring1 = {
-		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray1
+		&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray1
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring1);
 	uint_shadow_t total;
 	_Itemp0 = _Pshadow_Pio_CConsole_MreadUInt();
 	total = _Itemp0;
-	static struct _IArray _Iarray2 = {
-		(void *)"Enter ", (int_shadow_t)1, {(int_shadow_t)6}
+	static struct _Pshadow_Pstandard_CArray _Iarray2 = {
+		&_Pshadow_Pstandard_CArray_Imethods, (void *)"Enter ", (int_shadow_t)1, {(int_shadow_t)6}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring2 = {
-		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray2
+		&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray2
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring2);
 	_Pshadow_Pio_CConsole_Mprint_Ruint(total);
-	static struct _IArray _Iarray3 = {
-		(void *)" number", (int_shadow_t)1, {(int_shadow_t)7}
+	static struct _Pshadow_Pstandard_CArray _Iarray3 = {
+		&_Pshadow_Pstandard_CArray_Imethods, (void *)" number", (int_shadow_t)1, {(int_shadow_t)7}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring3 = {
-		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray3
+		&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray3
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring3);
 	_Itemp1 = total != ((uint_shadow_t)1);
@@ -96,38 +90,38 @@ label4: (void)0;
 		goto label5;
 label5: (void)0;
 	double_shadow_t average;
-	_Itemp7 = (double_shadow_t)sum;
-	_Itemp8 = (int_shadow_t)total;
+	_Itemp7 = (double_shadow_t )sum;
+	_Itemp8 = (int_shadow_t )total;
 	_Itemp9 = _Itemp7 / _Itemp8;
 	average = _Itemp9;
-	static struct _IArray _Iarray4 = {
-		(void *)"The sum is: ", (int_shadow_t)1, {(int_shadow_t)12}
+	static struct _Pshadow_Pstandard_CArray _Iarray4 = {
+		&_Pshadow_Pstandard_CArray_Imethods, (void *)"The sum is: ", (int_shadow_t)1, {(int_shadow_t)12}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring4 = {
-		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray4
+		&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray4
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring4);
 	_Pshadow_Pio_CConsole_MprintLine_Rint(sum);
-	static struct _IArray _Iarray5 = {
-		(void *)"The average is: ", (int_shadow_t)1, {(int_shadow_t)16}
+	static struct _Pshadow_Pstandard_CArray _Iarray5 = {
+		&_Pshadow_Pstandard_CArray_Imethods, (void *)"The average is: ", (int_shadow_t)1, {(int_shadow_t)16}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring5 = {
-		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray5
+		&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray5
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring5);
 	_Pshadow_Pio_CConsole_MprintLine_Rdouble(average);
-	static struct _IArray _Iarray6 = {
-		(void *)"The product is: ", (int_shadow_t)1, {(int_shadow_t)16}
+	static struct _Pshadow_Pstandard_CArray _Iarray6 = {
+		&_Pshadow_Pstandard_CArray_Imethods, (void *)"The product is: ", (int_shadow_t)1, {(int_shadow_t)16}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring6 = {
-		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray6
+		&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray6
 	};
 	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring6);
 	_Pshadow_Pio_CConsole_MprintLine_Rint(product);
 	return;
 }
 
-struct _Pshadow_Pstandard_CClass* _Pshadow_Phello_CInputTest_MgetClass(struct _Pshadow_Phello_CInputTest* this) {
+struct _Pshadow_Pstandard_CClass * _Pshadow_Phello_CInputTest_MgetClass(struct _Pshadow_Phello_CInputTest * this) {
 	return &_Pshadow_Phello_CInputTest_Iclass;
 }
 
@@ -144,16 +138,18 @@ int main(int argc, char **argv) {
 		struct _Pshadow_Pstandard_CString *arg = malloc(sizeof(struct _Pshadow_Pstandard_CString));
 		arg->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
 		arg->ascii = ((boolean_shadow_t)1);
-		arg->data = malloc(sizeof(struct _IArray));
+		arg->data = malloc(sizeof(struct _Pshadow_Pstandard_CArray));
+		arg->data->_Imethods = &_Pshadow_Pstandard_CArray_Imethods;
 		arg->data->_Iarray = (void *)argv[i];
 		arg->data->_Idims = (int_shadow_t)1;
-		arg->data->_Ilengths[0] = strlen(argv[i]);
+		*arg->data->_Ilengths = strlen(argv[i]);
 		args[i] = arg;
 	}
-	struct _IArray *argsArray = malloc(sizeof(struct _IArray));
+	struct _Pshadow_Pstandard_CArray *argsArray = malloc(sizeof(struct _Pshadow_Pstandard_CArray));
+	argsArray->_Imethods = &_Pshadow_Pstandard_CArray_Imethods;
 	argsArray->_Iarray = (void *)args;
 	argsArray->_Idims = 1;
-	argsArray->_Ilengths[0] = argsLength;
+	*argsArray->_Ilengths = argsLength;
 	_Pshadow_Phello_CInputTest_Mmain_R_Pshadow_Pstandard_CString_A1(argsArray);
 	return 0;
 }

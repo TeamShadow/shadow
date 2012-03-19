@@ -1,54 +1,48 @@
 /* AUTO-GENERATED FILE, DO NOT EDIT! */
 #include "Numeric.meta"
 
-struct _IArray {
-	void *_Iarray;
-	int_shadow_t _Idims;
-	int_shadow_t _Ilengths[1];
-};
-
-static struct _IArray _Iarray0 = {
-	(void *)"Numeric", (int_shadow_t)1, {(int_shadow_t)7}
+static struct _Pshadow_Pstandard_CArray _Iarray0 = {
+	&_Pshadow_Pstandard_CArray_Imethods, (void *)"Numeric", (int_shadow_t)1, {(int_shadow_t)7}
 };
 static struct _Pshadow_Pstandard_CString _Istring0 = {
-	&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray0
+	&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _P_CNumeric_Iclass = {
 	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
 };
 
-void _P_CNumeric_Mconstructor(struct _P_CNumeric* this) {
+void _P_CNumeric_Mconstructor(struct _P_CNumeric * this) {
 	this->_Imethods = &_P_CNumeric_Imethods;
 	return;
 }
 
-void _P_CNumeric_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray * args) {
-	byte_shadow_t _Itemp0;
-	byte_shadow_t _Itemp1;
-	byte_shadow_t _Itemp2;
-	int_shadow_t _Itemp3;
-	int_shadow_t _Itemp4;
-	boolean_shadow_t _Itemp5;
-	int_shadow_t _Itemp6;
-	int_shadow_t _Itemp7;
-	int_shadow_t _Itemp8;
-	int_shadow_t _Itemp9;
-	int_shadow_t _Itemp10;
-	int_shadow_t _Itemp11;
-	int_shadow_t _Itemp12;
-	int_shadow_t _Itemp13;
-	int_shadow_t _Itemp14;
-	int_shadow_t _Itemp15;
-	int_shadow_t _Itemp16;
-	int_shadow_t _Itemp17;
-	int_shadow_t _Itemp18;
-	int_shadow_t _Itemp19;
-	int_shadow_t _Itemp20;
-	int_shadow_t _Itemp21;
-	int_shadow_t _Itemp22;
-	int_shadow_t _Itemp23;
-	int_shadow_t _Itemp24;
-	int_shadow_t _Itemp25;
+void _P_CNumeric_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CArray * args) {
+	byte_shadow_t  _Itemp0;
+	byte_shadow_t  _Itemp1;
+	byte_shadow_t  _Itemp2;
+	int_shadow_t  _Itemp3;
+	int_shadow_t  _Itemp4;
+	boolean_shadow_t  _Itemp5;
+	int_shadow_t  _Itemp6;
+	int_shadow_t  _Itemp7;
+	int_shadow_t  _Itemp8;
+	int_shadow_t  _Itemp9;
+	int_shadow_t  _Itemp10;
+	int_shadow_t  _Itemp11;
+	int_shadow_t  _Itemp12;
+	int_shadow_t  _Itemp13;
+	int_shadow_t  _Itemp14;
+	int_shadow_t  _Itemp15;
+	int_shadow_t  _Itemp16;
+	int_shadow_t  _Itemp17;
+	int_shadow_t  _Itemp18;
+	int_shadow_t  _Itemp19;
+	int_shadow_t  _Itemp20;
+	int_shadow_t  _Itemp21;
+	int_shadow_t  _Itemp22;
+	int_shadow_t  _Itemp23;
+	int_shadow_t  _Itemp24;
+	int_shadow_t  _Itemp25;
 	long_shadow_t z;
 	_Itemp0 = ((byte_shadow_t)1) + ((short_shadow_t)2);
 	_Itemp1 = _Itemp0 + ((int_shadow_t)3);
@@ -62,11 +56,11 @@ void _P_CNumeric_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray * args) {
 	else
 		goto label1;
 label0: (void)0;
-	static struct _IArray _Iarray1 = {
-		(void *)"Yes", (int_shadow_t)1, {(int_shadow_t)3}
+	static struct _Pshadow_Pstandard_CArray _Iarray1 = {
+		&_Pshadow_Pstandard_CArray_Imethods, (void *)"Yes", (int_shadow_t)1, {(int_shadow_t)3}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring1 = {
-		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray1
+		&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray1
 	};
 	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring1);
 	goto label2;
@@ -112,7 +106,7 @@ label2: (void)0;
 	return;
 }
 
-struct _Pshadow_Pstandard_CClass* _P_CNumeric_MgetClass(struct _P_CNumeric* this) {
+struct _Pshadow_Pstandard_CClass * _P_CNumeric_MgetClass(struct _P_CNumeric * this) {
 	return &_P_CNumeric_Iclass;
 }
 
@@ -129,16 +123,18 @@ int main(int argc, char **argv) {
 		struct _Pshadow_Pstandard_CString *arg = malloc(sizeof(struct _Pshadow_Pstandard_CString));
 		arg->_Imethods = &_Pshadow_Pstandard_CString_Imethods;
 		arg->ascii = ((boolean_shadow_t)1);
-		arg->data = malloc(sizeof(struct _IArray));
+		arg->data = malloc(sizeof(struct _Pshadow_Pstandard_CArray));
+		arg->data->_Imethods = &_Pshadow_Pstandard_CArray_Imethods;
 		arg->data->_Iarray = (void *)argv[i];
 		arg->data->_Idims = (int_shadow_t)1;
-		arg->data->_Ilengths[0] = strlen(argv[i]);
+		*arg->data->_Ilengths = strlen(argv[i]);
 		args[i] = arg;
 	}
-	struct _IArray *argsArray = malloc(sizeof(struct _IArray));
+	struct _Pshadow_Pstandard_CArray *argsArray = malloc(sizeof(struct _Pshadow_Pstandard_CArray));
+	argsArray->_Imethods = &_Pshadow_Pstandard_CArray_Imethods;
 	argsArray->_Iarray = (void *)args;
 	argsArray->_Idims = 1;
-	argsArray->_Ilengths[0] = argsLength;
+	*argsArray->_Ilengths = argsLength;
 	_P_CNumeric_Mmain_R_Pshadow_Pstandard_CString_A1(argsArray);
 	return 0;
 }

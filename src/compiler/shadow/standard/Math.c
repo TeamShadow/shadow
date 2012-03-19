@@ -1,25 +1,19 @@
 /* AUTO-GENERATED FILE, DO NOT EDIT! */
 #include "shadow/standard/Math.meta"
 
-struct _IArray {
-	void *_Iarray;
-	int_shadow_t _Idims;
-	int_shadow_t _Ilengths[1];
-};
-
-static struct _IArray _Iarray0 = {
-	(void *)"shadow.standard@Math", (int_shadow_t)1, {(int_shadow_t)20}
+static struct _Pshadow_Pstandard_CArray _Iarray0 = {
+	&_Pshadow_Pstandard_CArray_Imethods, (void *)"shadow.standard@Math", (int_shadow_t)1, {(int_shadow_t)20}
 };
 static struct _Pshadow_Pstandard_CString _Istring0 = {
-	&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray0
+	&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CMath_Iclass = {
 	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
 };
 
-int_shadow_t _Pshadow_Pstandard_CMath_Mmin_Rint_Rint(int_shadow_t x, int_shadow_t y) {
-	boolean_shadow_t _Itemp0;
-	int_shadow_t _Itemp1;
+int_shadow_t  _Pshadow_Pstandard_CMath_Mmin_Rint_Rint(int_shadow_t  x, int_shadow_t  y) {
+	boolean_shadow_t  _Itemp0;
+	int_shadow_t  _Itemp1;
 	_Itemp0 = x < y;
 	if ( _Itemp0 )
 		goto label0;
@@ -35,9 +29,9 @@ label2: (void)0;
 	return _Itemp1;
 }
 
-int_shadow_t _Pshadow_Pstandard_CMath_Mmax_Rint_Rint(int_shadow_t x, int_shadow_t y) {
-	boolean_shadow_t _Itemp0;
-	int_shadow_t _Itemp1;
+int_shadow_t  _Pshadow_Pstandard_CMath_Mmax_Rint_Rint(int_shadow_t  x, int_shadow_t  y) {
+	boolean_shadow_t  _Itemp0;
+	int_shadow_t  _Itemp1;
 	_Itemp0 = x > y;
 	if ( _Itemp0 )
 		goto label0;
@@ -53,14 +47,14 @@ label2: (void)0;
 	return _Itemp1;
 }
 
-void _Pshadow_Pstandard_CMath_Mconstructor(struct _Pshadow_Pstandard_CMath* this) {
+void _Pshadow_Pstandard_CMath_Mconstructor(struct _Pshadow_Pstandard_CMath * this) {
 	this->_Imethods = &_Pshadow_Pstandard_CMath_Imethods;
 	this->E = 2.718281828459045;
 	this->PI = 3.141592653589793;
 	return;
 }
 
-struct _Pshadow_Pstandard_CClass* _Pshadow_Pstandard_CMath_MgetClass(struct _Pshadow_Pstandard_CMath* this) {
+struct _Pshadow_Pstandard_CClass * _Pshadow_Pstandard_CMath_MgetClass(struct _Pshadow_Pstandard_CMath * this) {
 	return &_Pshadow_Pstandard_CMath_Iclass;
 }
 

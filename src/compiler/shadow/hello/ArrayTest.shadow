@@ -1,11 +1,12 @@
 package shadow.hello;
 
 import shadow.standard@Array;
+import shadow.io@Console;
 
 class ArrayTest
 {
 	public static main( String[] args ) => ()
 	{
-		int[][] array = new int[1];
+		Console.printLine(args.getLength());
 	}
 }

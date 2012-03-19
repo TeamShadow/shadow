@@ -7,7 +7,7 @@
 #include "string.h"
 #include "shadow/standard/Object.meta"
 
-struct _IArray;
+struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pio_CConsole;
 struct _Pshadow_Pstandard_CClass;
@@ -18,23 +18,23 @@ struct _P_CNumeric_Itable;
 struct _P_CNumeric_Itable _P_CNumeric_Imethods;
 struct _P_CNumeric {
 	struct _P_CNumeric_Itable *_Imethods;
-	
+
 	/* Fields */
 };
 
-
-struct _Pshadow_Pstandard_CClass* _P_CNumeric_MgetClass(struct _P_CNumeric* this);
-void _P_CNumeric_Mconstructor(struct _P_CNumeric*);
-void _P_CNumeric_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IArray *);
+struct _Pshadow_Pstandard_CClass *_P_CNumeric_MgetClass(struct _P_CNumeric *this);
+void _P_CNumeric_Mconstructor(struct _P_CNumeric *);
+void _P_CNumeric_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CArray *);
 
 struct _P_CNumeric_Itable {
-	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _P_CNumeric*);
-	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _IArray *);
+	struct _Pshadow_Pstandard_CClass *(*_MgetClass)(struct _P_CNumeric *);
+	struct _Pshadow_Pstandard_CString *(*_MtoString)(struct _Pshadow_Pstandard_CObject *);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CArray *);
 };
 
 #include "shadow/io/Console.meta"
 #include "shadow/standard/Class.meta"
 #include "shadow/standard/String.meta"
+#include "shadow/standard/Array.meta"
 
 #endif
