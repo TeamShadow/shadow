@@ -9,7 +9,7 @@ import shadow.tac.nodes.TACAllocation;
 import shadow.tac.nodes.TACAssign;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
-import shadow.tac.nodes.TACBranchPhi;
+import shadow.tac.nodes.TACPhiBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
@@ -441,16 +441,15 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 		else
 		{
 			TACLabel trueLabel = new TACLabel("true"),
-					falseLabel = new TACLabel("false"),
-					endLabel = new TACLabel("end");
-			TACPhi phi = new TACPhi(node.getType(), tac.getChildNode(1), tac.getChildNode(2));
+					falseLabel = new TACLabel("false");
+			TACPhi phi = new TACPhi(node.getType(), new TACLabel("phi"));
 			tac.appendChild(0);
 			tac.append(new TACBranch(tac.getChildNode(0), trueLabel, falseLabel));
 			tac.append(trueLabel);
-			tac.append(new TACBranchPhi(endLabel, tac.appendAndGetChild(1), phi));
+			tac.append(new TACPhiBranch(trueLabel, tac.appendAndGetChild(1), phi));
 			tac.append(falseLabel);
-			tac.append(new TACBranchPhi(endLabel, tac.appendAndGetChild(2), phi));
-			tac.append(endLabel);
+			tac.append(new TACPhiBranch(falseLabel, tac.appendAndGetChild(2), phi));
+			tac.append(phi.getLabel());
 			tac.append(phi);
 		}
 	}
@@ -458,7 +457,26 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTConditionalOrExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node.getImage(), tac);
+		if (node.isImageNull())
+			tac.appendChildren();
+		else
+		{
+			TACPhi phi = new TACPhi(Type.BOOLEAN, new TACLabel("phi"));
+			TACLabel currentLabel = new TACLabel("start");
+			tac.append(new TACBranch(currentLabel));
+			int index;
+			for (index = 0; index < tac.getChildCount() - 1; index++)
+			{
+				TACLabel nextLabel = new TACLabel("next" + index);
+				tac.append(currentLabel);
+				tac.append(new TACPhiBranch(currentLabel, tac.appendAndGetChild(index), phi, nextLabel));
+				currentLabel = nextLabel;
+			}
+			tac.append(currentLabel);
+			tac.append(new TACPhiBranch(currentLabel, tac.appendAndGetChild(index), phi));
+			tac.append(phi.getLabel());
+			tac.append(phi);
+		}
 	}
 
 	@Override
@@ -470,7 +488,26 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTConditionalAndExpression node, TACData tac) throws ShadowException
 	{
-		visitBinary(node.getImage(), tac);
+		if (node.isImageNull())
+			tac.appendChildren();
+		else
+		{
+			TACPhi phi = new TACPhi(Type.BOOLEAN, new TACLabel("phi"));
+			TACLabel currentLabel = new TACLabel("start");
+			tac.append(new TACBranch(currentLabel));
+			int index;
+			for (index = 0; index < tac.getChildCount() - 1; index++)
+			{
+				TACLabel nextLabel = new TACLabel("next" + index);
+				tac.append(currentLabel);
+				tac.append(new TACPhiBranch(currentLabel, tac.appendAndGetChild(index), nextLabel, phi));
+				currentLabel = nextLabel;
+			}
+			tac.append(currentLabel);
+			tac.append(new TACPhiBranch(currentLabel, tac.appendAndGetChild(index), phi));
+			tac.append(phi.getLabel());
+			tac.append(phi);
+		}
 	}
 
 	@Override

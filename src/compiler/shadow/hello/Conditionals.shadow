@@ -7,6 +7,9 @@ class Conditionals {
         int d;
         boolean e = true;
 
+		if (e and e and e);
+		if (e or e or e);
+
         // literals
         if(true) { a = 0; }
         if(true and false) { a = 0; }

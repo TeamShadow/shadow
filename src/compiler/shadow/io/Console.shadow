@@ -5,35 +5,37 @@ class Console
 
 	private constructor() { }
 
-	public static native print( boolean z ) => ();
-	public static native print( ubyte ub ) => ();
-	public static native print( byte b ) => ();
-	public static native print( ushort us ) => ();
-	public static native print( short s ) => ();
-	public static native print( uint ui ) => ();
-	public static native print( int i ) => ();
-	public static native print( ulong ul ) => ();
-	public static native print( long l ) => ();
-	public static native print( float f ) => ();
-	public static native print( double d ) => ();
-	public static native print( code c ) => ();
-	public static native print( String str ) => ();
-	public static native print( Object obj ) => ();
 
-	public static native printLine( boolean z ) => ();
-	public static native printLine( ubyte ub ) => ();
-	public static native printLine( byte b ) => ();
-	public static native printLine( ushort us ) => ();
-	public static native printLine( short s ) => ();
-	public static native printLine( uint ui ) => ();
-	public static native printLine( int i ) => ();
-	public static native printLine( ulong ul ) => ();
-	public static native printLine( long l ) => ();
-	public static native printLine( float f ) => ();
-	public static native printLine( double d ) => ();
-	public static native printLine( code c ) => ();
-	public static native printLine( String str ) => ();
-	public static native printLine( Object obj ) => ();
+	public static native print( final boolean z ) => ();
+	public static native print( final ubyte ub ) => ();
+	public static native print( final byte b ) => ();
+	public static native print( final ushort us ) => ();
+	public static native print( final short s ) => ();
+	public static native print( final uint ui ) => ();
+	public static native print( final int i ) => ();
+	public static native print( final ulong ul ) => ();
+	public static native print( final long l ) => ();
+	public static native print( final float f ) => ();
+	public static native print( final double d ) => ();
+	public static native print( final code c ) => ();
+	public static native print( final String str ) => ();
+	public static native print( final Object obj ) => ();
+
+	public static native printLine( final boolean z ) => ();
+	public static native printLine( final ubyte ub ) => ();
+	public static native printLine( final byte b ) => ();
+	public static native printLine( final ushort us ) => ();
+	public static native printLine( final short s ) => ();
+	public static native printLine( final uint ui ) => ();
+	public static native printLine( final int i ) => ();
+	public static native printLine( final ulong ul ) => ();
+	public static native printLine( final long l ) => ();
+	public static native printLine( final float f ) => ();
+	public static native printLine( final double d ) => ();
+	public static native printLine( final code c ) => ();
+	public static native printLine( final String str ) => ();
+	public static native printLine( final Object obj ) => ();
+
 	public static native printLine() => ();
 
 	public static native readBoolean() => ( boolean );
@@ -50,4 +52,9 @@ class Console
 	public static native readCode() => ( code );
 	public static native read() => ( String );
 
+	public static main( String[] args ) => ()
+	{
+		final String helloWorld = "Hello World!";
+		printLine(helloWorld);
+	}
 }

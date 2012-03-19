@@ -13,7 +13,7 @@ import shadow.tac.nodes.TACAllocation;
 import shadow.tac.nodes.TACAssign;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
-import shadow.tac.nodes.TACBranchPhi;
+import shadow.tac.nodes.TACPhiBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
@@ -182,11 +182,11 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACPhi node)
 	{
-		allocate(node);
+		allocate(node); // note that this is not an ssa variable (in c)
 	}
 
 	@Override
-	public void visit(TACBranchPhi node)
+	public void visit(TACPhiBranch node)
 	{
 	}
 	
@@ -198,7 +198,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACVariable node)
 	{
-		allocate(node); // note that this is not an ssa variable (doesn't matter in c)
+		allocate(node); // note that this is not an ssa variable (in c)
 		if (!node.expectsPrefix() &&
 				localRenames.containsKey(node.getSymbol()))
 			node.setSymbol(localRenames.get(node.getSymbol()));

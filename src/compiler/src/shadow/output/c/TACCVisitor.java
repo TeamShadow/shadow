@@ -5,12 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
-
-import javax.sound.midi.Sequence;
 
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.ShadowException;
@@ -23,7 +20,6 @@ import shadow.tac.nodes.TACAllocation;
 import shadow.tac.nodes.TACAssign;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
-import shadow.tac.nodes.TACBranchPhi;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
@@ -33,6 +29,7 @@ import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
+import shadow.tac.nodes.TACPhiBranch;
 import shadow.tac.nodes.TACPrefixed;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
@@ -861,11 +858,11 @@ public class TACCVisitor extends AbstractTACVisitor {
 	}
 	
 	@Override
-	public void visit(TACBranchPhi node) throws IOException
+	public void visit(TACPhiBranch node) throws IOException
 	{
 		curWriter.writeLine(nodeToString(node.getPhi()) + " = " +
 				nodeToString(node.getValue()) + ';');
-		curWriter.writeLine("goto " + nodeToString(node.getBranch()) + ';');
+		visit((TACBranch)node);
 	}
 	
 	@Override

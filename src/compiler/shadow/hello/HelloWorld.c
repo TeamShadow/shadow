@@ -63,7 +63,7 @@ label5: (void)0;
 	static struct _Pshadow_Pstandard_CString _Istring1 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray1
 	};
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring1);
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(&_Istring1);
 	goto label6;
 label6: (void)0;
 	*_Ireturn1 = this->message;
@@ -87,7 +87,7 @@ label1: (void)0;
 	static struct _Pshadow_Pstandard_CString _Istring2 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray2
 	};
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring2);
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(&_Istring2);
 	goto label2;
 label2: (void)0;
 	return this->message;
@@ -102,15 +102,15 @@ void _Pshadow_Phello_CHelloWorld_Mdoit(struct _Pshadow_Phello_CHelloWorld* this)
 	goto label1;
 label0: (void)0;
 	_Itemp0 = i + ((uint_shadow_t)1);
-	_Pshadow_Pio_CConsole_Mprint_Ruint(_Itemp0);
+	_Pshadow_Pio_CConsole_Mprint_R_Fuint(_Itemp0);
 	static struct _IArray _Iarray3 = {
 		(void *)": ", (int_shadow_t)1, {(int_shadow_t)2}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring3 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray3
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring3);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(this->message);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring3);
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(this->message);
 	_Itemp1 = i + ((uint_shadow_t)1);
 	i = _Itemp1;
 	goto label1;
@@ -217,42 +217,54 @@ void _Pshadow_Phello_CHelloWorld_Mmain_R_Pshadow_Pstandard_CString_A1(struct _IA
 	struct _Pshadow_Phello_CHelloWorld* _Itemp22;
 	struct _Pshadow_Phello_CHelloWorld* _Itemp23;
 	struct _Pshadow_Phello_CHelloWorld* _Itemp24;
-	boolean_shadow_t _Itemp25;
+	struct _Pshadow_Phello_CHelloWorld* _Itemp25;
 	boolean_shadow_t _Itemp26;
-	boolean_shadow_t _Itemp27;
+	struct _Pshadow_Phello_CHelloWorld* _Itemp27;
 	boolean_shadow_t _Itemp28;
 	boolean_shadow_t _Itemp29;
-	boolean_shadow_t _Itemp30;
-	struct _Pshadow_Pstandard_CObject* _Itemp31;
+	struct _Pshadow_Phello_CHelloWorld* _Itemp30;
+	boolean_shadow_t _Itemp31;
 	boolean_shadow_t _Itemp32;
-	struct _Pshadow_Pstandard_CObject* _Itemp33;
-	boolean_shadow_t _Itemp34;
-	boolean_shadow_t _Itemp35;
-	struct _Pshadow_Pstandard_CObject* _Itemp36;
-	boolean_shadow_t _Itemp37;
+	boolean_shadow_t _Itemp33;
+	struct _Pshadow_Phello_CHelloWorld* _Itemp34;
+	struct _Pshadow_Pstandard_CObject* _Itemp35;
+	boolean_shadow_t _Itemp36;
+	struct _Pshadow_Pstandard_CObject* _Itemp37;
 	boolean_shadow_t _Itemp38;
 	boolean_shadow_t _Itemp39;
 	struct _Pshadow_Pstandard_CObject* _Itemp40;
-	struct _Pshadow_Phello_CHelloWorld* _Itemp41;
-	struct _Pshadow_Pstandard_CString* _Itemp42;
-	struct _Pshadow_Phello_CHelloWorld* _Itemp43;
-	struct _Pshadow_Pstandard_CString* _Itemp44;
+	boolean_shadow_t _Itemp41;
+	boolean_shadow_t _Itemp42;
+	boolean_shadow_t _Itemp43;
+	struct _Pshadow_Pstandard_CObject* _Itemp44;
 	struct _Pshadow_Phello_CHelloWorld* _Itemp45;
 	struct _Pshadow_Pstandard_CString* _Itemp46;
-	struct _Pshadow_Phello_CHelloWorld* _Itemp47;
-	struct _Pshadow_Pstandard_CString* _Itemp48;
-	struct _Pshadow_Pstandard_CObject* _Itemp49;
-	struct _Pshadow_Pstandard_CObject* _Itemp50;
-	struct _Pshadow_Pstandard_CString* _Itemp51;
-	struct _Pshadow_Pstandard_CObject* _Itemp52;
+	struct _Pshadow_Pstandard_CString* _Itemp47;
+	struct _Pshadow_Phello_CHelloWorld* _Itemp48;
+	struct _Pshadow_Pstandard_CString* _Itemp49;
+	struct _Pshadow_Pstandard_CString* _Itemp50;
+	struct _Pshadow_Phello_CHelloWorld* _Itemp51;
+	struct _Pshadow_Pstandard_CString* _Itemp52;
 	struct _Pshadow_Pstandard_CString* _Itemp53;
-	boolean_shadow_t _Itemp54;
-	struct _Pshadow_Pstandard_CObject* _Itemp55;
+	struct _Pshadow_Phello_CHelloWorld* _Itemp54;
+	struct _Pshadow_Pstandard_CString* _Itemp55;
 	struct _Pshadow_Pstandard_CString* _Itemp56;
-	boolean_shadow_t _Itemp57;
-	boolean_shadow_t _Itemp58;
-	struct _Pshadow_Pstandard_CObject* _Itemp59;
+	struct _Pshadow_Pstandard_CObject* _Itemp57;
+	struct _Pshadow_Pstandard_CObject* _Itemp58;
+	struct _Pshadow_Pstandard_CString* _Itemp59;
 	struct _Pshadow_Pstandard_CString* _Itemp60;
+	struct _Pshadow_Pstandard_CObject* _Itemp61;
+	struct _Pshadow_Pstandard_CString* _Itemp62;
+	struct _Pshadow_Pstandard_CString* _Itemp63;
+	boolean_shadow_t _Itemp64;
+	struct _Pshadow_Pstandard_CObject* _Itemp65;
+	struct _Pshadow_Pstandard_CString* _Itemp66;
+	struct _Pshadow_Pstandard_CString* _Itemp67;
+	boolean_shadow_t _Itemp68;
+	boolean_shadow_t _Itemp69;
+	struct _Pshadow_Pstandard_CObject* _Itemp70;
+	struct _Pshadow_Pstandard_CString* _Itemp71;
+	struct _Pshadow_Pstandard_CString* _Itemp72;
 	struct _Pshadow_Pstandard_CString* name;
 	static struct _IArray _Iarray5 = {
 		(void *)"Fibonacci", (int_shadow_t)1, {(int_shadow_t)9}
@@ -321,115 +333,115 @@ label3: (void)0;
 	test = _Itemp10;
 	fib9 = _Itemp11;
 	last = _Itemp12;
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray7 = {
 		(void *)" 0: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring7 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray7
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring7);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib0);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring7);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib0);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray8 = {
 		(void *)" 1: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring8 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray8
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring8);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib1);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring8);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib1);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray9 = {
 		(void *)" 2: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring9 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray9
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring9);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib2);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring9);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib2);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray10 = {
 		(void *)" 3: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring10 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray10
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring10);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib3);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring10);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib3);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray11 = {
 		(void *)" 4: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring11 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray11
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring11);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib4);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring11);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib4);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray12 = {
 		(void *)" 5: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring12 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray12
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring12);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib5);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring12);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib5);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray13 = {
 		(void *)" 6: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring13 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray13
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring13);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib6);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring13);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib6);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray14 = {
 		(void *)" 7: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring14 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray14
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring14);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib7);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring14);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib7);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray15 = {
 		(void *)" 8: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring15 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray15
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring15);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib8);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring15);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib8);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray16 = {
 		(void *)" 9: ", (int_shadow_t)1, {(int_shadow_t)4}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring16 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray16
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring16);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(fib9);
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(name);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring16);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(fib9);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(name);
 	static struct _IArray _Iarray17 = {
 		(void *)" 10: ", (int_shadow_t)1, {(int_shadow_t)5}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring17 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray17
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring17);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring17);
 	_Itemp13 = fib8 + fib9;
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(_Itemp13);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(_Itemp13);
 	_Pshadow_Pio_CConsole_MprintLine();
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(test);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject(last);
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(test);
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CObject(last);
 	_Pshadow_Pio_CConsole_MprintLine();
 	_Itemp14 = start + ((uint_shadow_t)1);
 	start = _Itemp14;
 	_Itemp15 = temp - ((uint_shadow_t)10000);
 	temp = _Itemp15;
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(temp);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(temp);
 	goto label4;
 label4: (void)0;
 	_Itemp16 = start <= ((uint_shadow_t)2);
@@ -462,24 +474,24 @@ label5: (void)0;
 	static struct _Pshadow_Pstandard_CString _Istring19 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray19
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring19);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(defaultTimes);
-	_Pshadow_Pio_CConsole_MprintLine_Ruint(hello1->times);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring19);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(defaultTimes);
+	_Pshadow_Pio_CConsole_MprintLine_R_Fuint(hello1->times);
 	static struct _IArray _Iarray20 = {
 		(void *)"Default message: ", (int_shadow_t)1, {(int_shadow_t)17}
 	};
 	static struct _Pshadow_Pstandard_CString _Istring20 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray20
 	};
-	_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(&_Istring20);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(defaultMessage);
+	_Pshadow_Pio_CConsole_Mprint_R_F_Pshadow_Pstandard_CString(&_Istring20);
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(defaultMessage);
 	_Itemp21 = hello1->self != ((void *)0);
 	if ( _Itemp21 )
 		goto label6;
 	else
 		goto label22;
 label6: (void)0;
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(hello1->self->message);
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(hello1->self->message);
 	_Pshadow_Pio_CConsole_MprintLine();
 	struct _Pshadow_Phello_CHelloWorld* hello2;
 	_Itemp22 = malloc(sizeof(struct _Pshadow_Phello_CHelloWorld));
@@ -505,135 +517,147 @@ label6: (void)0;
 	};
 	_Pshadow_Phello_CHelloWorld_Mconstructor_Ruint_R_Pshadow_Pstandard_CString(_Itemp24, ((uint_shadow_t)15), &_Istring22);
 	hello4 = _Itemp24;
-	hello1->_Imethods->_Mdoit(hello1);
-	_Itemp25 = hello2->self != ((void *)0);
-	if ( _Itemp25 )
+	_Itemp25 = (struct _Pshadow_Phello_CHelloWorld*)hello1;
+	_Itemp25->_Imethods->_Mdoit(_Itemp25);
+	_Itemp26 = hello2->self != ((void *)0);
+	if ( _Itemp26 )
 		goto label7;
 	else
 		goto label22;
 label7: (void)0;
-	hello2->self->_Imethods->_Mdoit(hello2->self);
-	_Itemp26 = hello3->self != ((void *)0);
-	if ( _Itemp26 )
+	_Itemp27 = (struct _Pshadow_Phello_CHelloWorld*)hello2->self;
+	_Itemp27->_Imethods->_Mdoit(_Itemp27);
+	_Itemp28 = hello3->self != ((void *)0);
+	if ( _Itemp28 )
 		goto label8;
 	else
 		goto label22;
 label8: (void)0;
-	_Itemp27 = hello3->self->self != ((void *)0);
-	if ( _Itemp27 )
+	_Itemp29 = hello3->self->self != ((void *)0);
+	if ( _Itemp29 )
 		goto label9;
 	else
 		goto label22;
 label9: (void)0;
-	hello3->self->self->_Imethods->_Mdoit(hello3->self->self);
-	_Itemp28 = hello4->self != ((void *)0);
-	if ( _Itemp28 )
+	_Itemp30 = (struct _Pshadow_Phello_CHelloWorld*)hello3->self->self;
+	_Itemp30->_Imethods->_Mdoit(_Itemp30);
+	_Itemp31 = hello4->self != ((void *)0);
+	if ( _Itemp31 )
 		goto label10;
 	else
 		goto label22;
 label10: (void)0;
-	_Itemp29 = hello4->self->self != ((void *)0);
-	if ( _Itemp29 )
+	_Itemp32 = hello4->self->self != ((void *)0);
+	if ( _Itemp32 )
 		goto label11;
 	else
 		goto label22;
 label11: (void)0;
-	_Itemp30 = hello4->self->self->self != ((void *)0);
-	if ( _Itemp30 )
+	_Itemp33 = hello4->self->self->self != ((void *)0);
+	if ( _Itemp33 )
 		goto label12;
 	else
 		goto label22;
 label12: (void)0;
-	hello4->self->self->self->_Imethods->_Mdoit(hello4->self->self->self);
-	_Itemp31 = (struct _Pshadow_Pstandard_CObject*)hello1;
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject(_Itemp31);
-	_Itemp32 = hello2->self != ((void *)0);
-	if ( _Itemp32 )
+	_Itemp34 = (struct _Pshadow_Phello_CHelloWorld*)hello4->self->self->self;
+	_Itemp34->_Imethods->_Mdoit(_Itemp34);
+	_Itemp35 = (struct _Pshadow_Pstandard_CObject*)hello1;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CObject(_Itemp35);
+	_Itemp36 = hello2->self != ((void *)0);
+	if ( _Itemp36 )
 		goto label13;
 	else
 		goto label22;
 label13: (void)0;
-	_Itemp33 = (struct _Pshadow_Pstandard_CObject*)hello2->self;
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject(_Itemp33);
-	_Itemp34 = hello3->self != ((void *)0);
-	if ( _Itemp34 )
+	_Itemp37 = (struct _Pshadow_Pstandard_CObject*)hello2->self;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CObject(_Itemp37);
+	_Itemp38 = hello3->self != ((void *)0);
+	if ( _Itemp38 )
 		goto label14;
 	else
 		goto label22;
 label14: (void)0;
-	_Itemp35 = hello3->self->self != ((void *)0);
-	if ( _Itemp35 )
+	_Itemp39 = hello3->self->self != ((void *)0);
+	if ( _Itemp39 )
 		goto label15;
 	else
 		goto label22;
 label15: (void)0;
-	_Itemp36 = (struct _Pshadow_Pstandard_CObject*)hello3->self->self;
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject(_Itemp36);
-	_Itemp37 = hello4->self != ((void *)0);
-	if ( _Itemp37 )
+	_Itemp40 = (struct _Pshadow_Pstandard_CObject*)hello3->self->self;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CObject(_Itemp40);
+	_Itemp41 = hello4->self != ((void *)0);
+	if ( _Itemp41 )
 		goto label16;
 	else
 		goto label22;
 label16: (void)0;
-	_Itemp38 = hello4->self->self != ((void *)0);
-	if ( _Itemp38 )
+	_Itemp42 = hello4->self->self != ((void *)0);
+	if ( _Itemp42 )
 		goto label17;
 	else
 		goto label22;
 label17: (void)0;
-	_Itemp39 = hello4->self->self->self != ((void *)0);
-	if ( _Itemp39 )
+	_Itemp43 = hello4->self->self->self != ((void *)0);
+	if ( _Itemp43 )
 		goto label18;
 	else
 		goto label22;
 label18: (void)0;
-	_Itemp40 = (struct _Pshadow_Pstandard_CObject*)hello4->self->self->self;
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CObject(_Itemp40);
+	_Itemp44 = (struct _Pshadow_Pstandard_CObject*)hello4->self->self->self;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CObject(_Itemp44);
 	_Pshadow_Pio_CConsole_MprintLine();
-	_Itemp41 = (struct _Pshadow_Phello_CHelloWorld*)hello1;
-	_Itemp42 = _Itemp41->_Imethods->_MgetMessage(_Itemp41);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(_Itemp42);
-	_Itemp43 = (struct _Pshadow_Phello_CHelloWorld*)hello2;
-	_Itemp44 = _Itemp43->_Imethods->_MgetMessage(_Itemp43);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(_Itemp44);
-	_Itemp45 = (struct _Pshadow_Phello_CHelloWorld*)hello3;
+	_Itemp45 = (struct _Pshadow_Phello_CHelloWorld*)hello1;
 	_Itemp46 = _Itemp45->_Imethods->_MgetMessage(_Itemp45);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(_Itemp46);
-	_Itemp47 = (struct _Pshadow_Phello_CHelloWorld*)hello4;
-	_Itemp48 = _Itemp47->_Imethods->_MgetMessage(_Itemp47);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(_Itemp48);
+	_Itemp47 = (struct _Pshadow_Pstandard_CString*)_Itemp46;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(_Itemp47);
+	_Itemp48 = (struct _Pshadow_Phello_CHelloWorld*)hello2;
+	_Itemp49 = _Itemp48->_Imethods->_MgetMessage(_Itemp48);
+	_Itemp50 = (struct _Pshadow_Pstandard_CString*)_Itemp49;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(_Itemp50);
+	_Itemp51 = (struct _Pshadow_Phello_CHelloWorld*)hello3;
+	_Itemp52 = _Itemp51->_Imethods->_MgetMessage(_Itemp51);
+	_Itemp53 = (struct _Pshadow_Pstandard_CString*)_Itemp52;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(_Itemp53);
+	_Itemp54 = (struct _Pshadow_Phello_CHelloWorld*)hello4;
+	_Itemp55 = _Itemp54->_Imethods->_MgetMessage(_Itemp54);
+	_Itemp56 = (struct _Pshadow_Pstandard_CString*)_Itemp55;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(_Itemp56);
 	_Pshadow_Pio_CConsole_MprintLine();
-	_Itemp49 = (struct _Pshadow_Pstandard_CObject*)hello1;
-	_Itemp50 = (struct _Pshadow_Pstandard_CObject*)_Itemp49;
-	_Itemp51 = _Itemp50->_Imethods->_MtoString(_Itemp50);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(_Itemp51);
-	_Itemp52 = (struct _Pshadow_Pstandard_CObject*)hello2;
-	_Itemp53 = _Itemp52->_Imethods->_MtoString(_Itemp52);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(_Itemp53);
-	_Itemp54 = hello3->self != ((void *)0);
-	if ( _Itemp54 )
+	_Itemp57 = (struct _Pshadow_Pstandard_CObject*)hello1;
+	_Itemp58 = (struct _Pshadow_Pstandard_CObject*)_Itemp57;
+	_Itemp59 = _Itemp58->_Imethods->_MtoString(_Itemp58);
+	_Itemp60 = (struct _Pshadow_Pstandard_CString*)_Itemp59;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(_Itemp60);
+	_Itemp61 = (struct _Pshadow_Pstandard_CObject*)hello2;
+	_Itemp62 = _Itemp61->_Imethods->_MtoString(_Itemp61);
+	_Itemp63 = (struct _Pshadow_Pstandard_CString*)_Itemp62;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(_Itemp63);
+	_Itemp64 = hello3->self != ((void *)0);
+	if ( _Itemp64 )
 		goto label19;
 	else
 		goto label22;
 label19: (void)0;
-	_Itemp55 = (struct _Pshadow_Pstandard_CObject*)hello3->self;
-	_Itemp56 = _Itemp55->_Imethods->_MtoString(_Itemp55);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(_Itemp56);
-	_Itemp57 = hello4->self != ((void *)0);
-	if ( _Itemp57 )
+	_Itemp65 = (struct _Pshadow_Pstandard_CObject*)hello3->self;
+	_Itemp66 = _Itemp65->_Imethods->_MtoString(_Itemp65);
+	_Itemp67 = (struct _Pshadow_Pstandard_CString*)_Itemp66;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(_Itemp67);
+	_Itemp68 = hello4->self != ((void *)0);
+	if ( _Itemp68 )
 		goto label20;
 	else
 		goto label22;
 label20: (void)0;
-	_Itemp58 = hello4->self->self != ((void *)0);
-	if ( _Itemp58 )
+	_Itemp69 = hello4->self->self != ((void *)0);
+	if ( _Itemp69 )
 		goto label21;
 	else
 		goto label22;
 label21: (void)0;
-	_Itemp59 = (struct _Pshadow_Pstandard_CObject*)hello4->self->self;
-	_Itemp60 = _Itemp59->_Imethods->_MtoString(_Itemp59);
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(_Itemp60);
+	_Itemp70 = (struct _Pshadow_Pstandard_CObject*)hello4->self->self;
+	_Itemp71 = _Itemp70->_Imethods->_MtoString(_Itemp70);
+	_Itemp72 = (struct _Pshadow_Pstandard_CString*)_Itemp71;
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(_Itemp72);
 	_Pshadow_Pio_CConsole_MprintLine();
 	goto label23;
 label22: (void)0;
@@ -643,7 +667,7 @@ label22: (void)0;
 	static struct _Pshadow_Pstandard_CString _Istring23 = {
 		&_Pshadow_Pstandard_CString_Imethods, (boolean_shadow_t)1, &_Iarray23
 	};
-	_Pshadow_Pio_CConsole_MprintLine_R_Pshadow_Pstandard_CString(&_Istring23);
+	_Pshadow_Pio_CConsole_MprintLine_R_F_Pshadow_Pstandard_CString(&_Istring23);
 	goto label23;
 label23: (void)0;
 	return;

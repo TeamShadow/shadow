@@ -6,7 +6,7 @@ import shadow.tac.nodes.TACAllocation;
 import shadow.tac.nodes.TACAssign;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
-import shadow.tac.nodes.TACBranchPhi;
+import shadow.tac.nodes.TACPhiBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
@@ -66,7 +66,7 @@ public abstract class AbstractTACVisitor
 	public abstract void visit(TACLabel node) throws IOException;
 	public abstract void visit(TACLiteral node) throws IOException;
 	public abstract void visit(TACPhi node) throws IOException;
-	public abstract void visit(TACBranchPhi node) throws IOException;
+	public abstract void visit(TACPhiBranch node) throws IOException;
 	public abstract void visit(TACReference node) throws IOException;
 	public abstract void visit(TACReturn node) throws IOException;
 	public abstract void visit(TACSequence node) throws IOException;

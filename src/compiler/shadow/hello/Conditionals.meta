@@ -4,7 +4,10 @@
 
 #include "types.h"
 #include "stdlib.h"
+#include "string.h"
 #include "shadow/standard/Object.meta"
+
+struct _IArray;
 
 struct _Pshadow_Pstandard_CClass;
 
@@ -12,9 +15,9 @@ struct _Pshadow_Pstandard_CClass _P_CConditionals_Iclass;
 struct _P_CConditionals_Itable;
 struct _P_CConditionals_Itable _P_CConditionals_Imethods;
 struct _P_CConditionals {
-     struct _P_CConditionals_Itable *_Imethods;
-     
-     /* Fields */
+	struct _P_CConditionals_Itable *_Imethods;
+	
+	/* Fields */
 };
 
 
@@ -23,9 +26,9 @@ void _P_CConditionals_Mtest(struct _P_CConditionals*);
 void _P_CConditionals_Mconstructor(struct _P_CConditionals*);
 
 struct _P_CConditionals_Itable {
-     struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _P_CConditionals*);
-     struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
-     void (*_Mtest)(struct _P_CConditionals*);
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _P_CConditionals*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	void (*_Mtest)(struct _P_CConditionals*);
 };
 
 #include "shadow/standard/Class.meta"
