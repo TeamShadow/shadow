@@ -2146,8 +2146,11 @@ public class ClassChecker extends BaseChecker {
 				MethodType methodType = (MethodType)(curMethod.getType());
 				SequenceType returnTypes  = methodType.getReturnTypes();
 				
-				if( returnTypes.size() == 0 && node.jjtGetNumChildren() > 0 )
-					addError(node, Error.INVL_TYP, "Cannot return values from a method that returns nothing");
+				if( returnTypes.size() == 0 )
+				{
+					if( node.jjtGetNumChildren() > 0 )
+						addError(node, Error.INVL_TYP, "Cannot return values from a method that returns nothing");
+				}
 				else
 				{
 					Node child = node.jjtGetChild(0);
