@@ -144,7 +144,7 @@ public class Type {
 		switch( kind  )
 		{
 		case ARRAY:			
-			if( t.equals(OBJECT) )
+			if( t.equals(OBJECT) || t.equals(ARRAY) )
 				return true;
 			if( t.getKind() == Kind.ARRAY )
 			{
