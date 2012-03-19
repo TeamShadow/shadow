@@ -268,7 +268,11 @@ public class ClassChecker extends BaseChecker {
 			if( dimensions.size() == 0 )
 				node.setType(type);
 			else
-				node.setType(new ArrayType(type, dimensions));
+			{
+				ArrayType arrayType = new ArrayType(type, dimensions);
+				((ClassType)currentType).addReferencedType(arrayType);
+				node.setType(arrayType);				
+			}
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -1946,8 +1950,10 @@ public class ClassChecker extends BaseChecker {
 				{
 					dimensions.add(1);
 					baseType = result;
-				}				
-				node.setType(new ArrayType( baseType, dimensions ));
+				}		
+				ArrayType arrayType = new ArrayType( baseType, dimensions );
+				node.setType(arrayType);
+				((ClassType)currentType).addReferencedType(arrayType);
 			}			
 		}		
 	

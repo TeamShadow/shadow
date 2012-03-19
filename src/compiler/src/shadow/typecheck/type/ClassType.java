@@ -250,7 +250,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		if (!equals(type) && !referencedTypes.contains(type) && !isDescendentOf(type))
 			referencedTypes.add(type);
 	}
-	public Set<Type> getReferenceTypes()
+	public Set<Type> getReferencedTypes()
 	{
 		return referencedTypes;
 	}

@@ -59,5 +59,21 @@ public class ArrayType extends ClassType
 		else
 			this.baseType = new ArrayType( baseType, arrayDimensions, index + 1);
 	}	
+	
+	public boolean equals(Object o)
+	{		
+		if( o == Type.NULL )
+			return true;
+		
+		if( o instanceof ArrayType )
+		{
+			ArrayType other = (ArrayType)o;
+			if( dimensions == other.dimensions )
+				return baseType.equals(other.baseType);
+			return false;
+		}
+		else
+			return false;
+	}
 
 }

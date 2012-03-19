@@ -133,7 +133,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		metaWriter.writeLine();
 
 		getType().addReferencedType(Type.CLASS);
-		for (Type type : getType().getReferenceTypes())
+		for (Type type : getType().getReferencedTypes())
 			metaWriter.writeLine("struct " + type.getMangledName() + ';');
 		metaWriter.writeLine("");
 		
@@ -397,7 +397,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 			cWriter.writeLine();
 		}
 
-		for (Type type : getType().getReferenceTypes())
+		for (Type type : getType().getReferencedTypes())
 			metaWriter.writeLine("#include \"" + type.getPath() + ".meta\"");
 		metaWriter.writeLine("#include \"shadow/standard/Array.meta\"");
 		metaWriter.writeLine();
