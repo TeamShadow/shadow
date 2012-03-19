@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import shadow.Configuration;
@@ -39,7 +41,6 @@ import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
@@ -47,14 +48,14 @@ import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Type.Kind;
-import shadow.typecheck.type.TypeParameterRepresentation;
 
 public class TypeCollector extends BaseChecker
 {	
 	protected Map<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();
+	protected Set<String> typeBounds = new HashSet<String>();
 	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors only
 	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
-	protected Map<Type,List<TypeParameterRepresentation>> typeParameterTable = new HashMap<Type,List<TypeParameterRepresentation>>();
+	//protected Map<Type,List<TypeParameterRepresentation>> typeParameterTable = new HashMap<Type,List<TypeParameterRepresentation>>();
 	protected String currentName = "";
 	protected Map<File, Node> files = new HashMap<File, Node>();
 	
@@ -343,7 +344,16 @@ public class TypeCollector extends BaseChecker
 	
 	
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
-	{		
+	{
+		//TODO: Make this work
+		/* Can be in:
+		 * ExtendsList (do import if @)
+		 * ImplementsList (do import if @)
+		 * TypeBound (do import if @)
+		 * ReferenceType (do import if @)
+		 * ArrayAllocation (do import if @)
+		 */
+		
 		if( secondVisit )
 		{			
 			if ( node.jjtGetNumChildren() > 0)

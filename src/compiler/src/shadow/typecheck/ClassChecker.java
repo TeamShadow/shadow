@@ -77,6 +77,7 @@ import shadow.parser.javacc.ASTSwitchStatement;
 import shadow.parser.javacc.ASTTryStatement;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArguments;
+import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTUnqualifiedName;
@@ -1586,7 +1587,13 @@ public class ClassChecker extends BaseChecker {
 		{
 			UnboundMethodType unboundMethod = (UnboundMethodType)(node.getType());
 			SequenceType sequenceType = new SequenceType();
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			
+			int start = 0;
+			
+			if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeParameters) )
+				start++;
+			
+			for( int i = start; i < node.jjtGetNumChildren(); i++ )
 				sequenceType.add(node.jjtGetChild(i));
 			
 			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();

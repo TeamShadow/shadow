@@ -3,6 +3,10 @@ package shadow.standard;
 immutable final class String //implements Parsable<String> //, Collection<code>
 {
 
+
+
+
+
 	private ubyte[] data = new ubyte[0];
 	private boolean ascii = true;
 	
@@ -44,7 +48,7 @@ immutable final class String //implements Parsable<String> //, Collection<code>
 			String other = check(otherString);
 			if ( ascii and other.ascii )
 			{
-				int count = Math.min( data.getLength(), other.data.getLength() );
+				int count = Math.min( data.getLength(), other.data.getLength() );				
 				for ( int i = 0; i < count; i += 1 )
 					if ( data[i] != other.data[i] )
 						return data[i] < other.data[i] ? -1 : 1;

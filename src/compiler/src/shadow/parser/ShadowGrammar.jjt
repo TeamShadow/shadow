@@ -1286,7 +1286,7 @@ void MethodCall():
 	Token t;
 }
 {
-    t = <IDENTIFIER> { jjtThis.setImage(t.image); } "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+    t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ /*LOOKAHEAD(TypeParameters())*/ TypeParameters() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
 }
 
 void PrimaryPrefix():
@@ -1301,7 +1301,7 @@ void PrimaryPrefix():
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | LOOKAHEAD( Type() "." "class" ) Type() "." "class"
 //| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
-| LOOKAHEAD(2) MethodCall()
+| LOOKAHEAD(MethodCall()) MethodCall()
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 | CheckExpression()
 }
