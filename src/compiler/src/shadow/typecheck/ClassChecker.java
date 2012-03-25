@@ -103,12 +103,11 @@ import shadow.typecheck.type.UnboundMethodType;
 
 public class ClassChecker extends BaseChecker {
 	private static final Log logger = Loggers.TYPE_CHECKER;
-	
-	protected LinkedList<HashMap<String, Node>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected Node curMethod = null;   /** Current method (only a single reference needed since Shadow does not allow methods to be defined inside of methods) */
+
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
-	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */
+	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
+	protected LinkedList<HashMap<String, Node>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	
 	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
@@ -116,6 +115,26 @@ public class ClassChecker extends BaseChecker {
 		curPrefix = new LinkedList<Node>();
 		labels = new LinkedList<Node>();	
 		tryBlocks = new LinkedList<ASTTryStatement>();
+	}
+	
+	public Object visitMethod( SimpleNode node, Boolean secondVisit  )
+	{
+		if(!secondVisit)
+			currentMethod = node;
+		else
+			currentMethod = null;
+		
+		createScope(secondVisit); 
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	private void createScope(Boolean secondVisit) {
+		// we have a new scope, so we need a new HashMap in the linked list
+		if(secondVisit)				
+			symbolTable.removeFirst();
+		else
+			symbolTable.addFirst(new HashMap<String, Node>());
 	}
 	
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
@@ -126,22 +145,8 @@ public class ClassChecker extends BaseChecker {
 			currentType = node.jjtGetParent().getType(); //get type from declaration
 			
 		return WalkType.POST_CHILDREN;
-	}
+	}	
 	
-	private void createScope(Boolean secondVisit) {
-		// we have a new scope, so we need a new HashMap in the linked list
-		if(secondVisit)
-		{
-/*			logger.debug("\nSYMBOL TABLE:");
-			for(String s:symbolTable.getFirst().keySet())
-				logger.debug(s + ": " + symbolTable.getFirst().get(s).getType());
-*/				
-			
-			symbolTable.removeFirst();
-		}
-		else
-			symbolTable.addFirst(new HashMap<String, Node>());
-	}
 	
 	public Object visit(ASTSwitchStatement node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
@@ -220,19 +225,6 @@ public class ClassChecker extends BaseChecker {
 				return node;
 		
 		return node;
-	}
-	
-	
-	public Object visitMethod( SimpleNode node, Boolean secondVisit  )
-	{
-		if(!secondVisit)
-			curMethod = node;
-		else
-			curMethod = null;
-		
-		createScope(secondVisit); 
-		
-		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException
@@ -451,10 +443,10 @@ public class ClassChecker extends BaseChecker {
 					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
 				
 				
-				if( curMethod != null ) //curMethod is null for field initializations
+				if( currentMethod != null ) //curMethod is null for field initializations
 				{
-					if( directAccess && ModifierSet.isStatic(curMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
-						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + curMethod);
+					if( directAccess && ModifierSet.isStatic(currentMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
+						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + currentMethod);
 				}
 				
 				return true;			
@@ -480,17 +472,7 @@ public class ClassChecker extends BaseChecker {
 	
 	
 	public boolean setTypeFromName( Node node, String name ) 
-	{	
-		//is it a type?
-		Type type = lookupType( name );		
-				
-		if(type != null)
-		{
-			((ClassType)currentType).addReferencedType(type);
-			node.setType(type);
-			return true;
-		}
-		
+	{			
 		// next go through the scopes trying to find the variable
 		Node declaration = findSymbol( name );
 		
@@ -505,8 +487,8 @@ public class ClassChecker extends BaseChecker {
 		// now check the parameters of the method
 		MethodType methodType = null;
 		
-		if( curMethod != null  )
-			methodType = (MethodType)curMethod.getType();
+		if( currentMethod != null  )
+			methodType = (MethodType)currentMethod.getType();
 		
 		if(methodType != null && methodType.containsParam(name))
 		{	
@@ -517,7 +499,20 @@ public class ClassChecker extends BaseChecker {
 		}
 			
 		// check to see if it's a field or a method			
-		return setTypeFromContext( node, name, currentType, true );
+		if( setTypeFromContext( node, name, currentType, true ) )
+			return true;
+				
+		//is it a type?
+		Type type = lookupType( name );		
+				
+		if(type != null)
+		{
+			((ClassType)currentType).addReferencedType(type);
+			node.setType(type);
+			return true;
+		}
+		
+		return false;
 	}
 	
 	
@@ -918,16 +913,9 @@ public class ClassChecker extends BaseChecker {
 				return WalkType.NO_CHILDREN;
 			}
 			
-			//ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);  //leave it for the TAC?
-			
 			Node child2 = node.jjtGetChild(2);
-			Type t2 = child2.getType();
-			
-			// SHOULD DO SOMETHING WITH THIS!!!
-			//AssignmentType assType = op.getAssignmentType(); //leave it for the TAC?
-			
-
-			
+			Type t2 = child2.getType();			
+				
 			// TODO: Add in all the types that we can compare here
 			if( !t2.isSubtype(t1) )
 			{
@@ -1460,8 +1448,8 @@ public class ClassChecker extends BaseChecker {
 				{				
 					node.setType(currentType);				
 				
-					if( curMethod != null && ModifierSet.isStatic(curMethod.getModifiers())  )					
-						addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + curMethod);
+					if( currentMethod != null && ModifierSet.isStatic(currentMethod.getModifiers())  )					
+						addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);
 				}					
 			}
 			else if( node.getImage().startsWith("super.")) //super case
@@ -2152,11 +2140,11 @@ public class ClassChecker extends BaseChecker {
 	{
 		if( secondVisit )
 		{
-			if( curMethod == null ) //should never happen			
+			if( currentMethod == null ) //should never happen			
 				addError(node, Error.INVL_TYP, "Return statement outside of method body");
 			else
 			{
-				MethodType methodType = (MethodType)(curMethod.getType());
+				MethodType methodType = (MethodType)(currentMethod.getType());
 				SequenceType returnTypes  = methodType.getReturnTypes();
 				
 				if( returnTypes.size() == 0 )

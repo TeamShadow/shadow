@@ -1,0 +1,13 @@
+class Pig<T>
+{
+	private nullable T value;
+	
+	public setValue(T input) => ()
+	{
+		value = input;
+	}
+	
+    public getValue() => (nullable T) {
+		return value;
+	}	
+}

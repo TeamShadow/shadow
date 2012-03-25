@@ -15,7 +15,10 @@ import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 	
@@ -27,8 +30,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected Package packageTree;	
 	protected Package currentPackage;
 	/** List of type parameter scopes with a hash of symbols & types for each scope */
-	protected LinkedList<HashMap<String, Node>> typeParameterTable = new LinkedList< HashMap<String, Node>>(); 
-	
+	protected LinkedList<HashMap<String, Node>> typeParameterTable = new LinkedList< HashMap<String, Node>>();
+	protected Node currentMethod = null;   /** Current method (only a single reference needed since Shadow does not allow methods to be defined inside of methods) */
 	
 
 	/** Holds the package tree structure (for name lookups) */
@@ -175,6 +178,25 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		}
 	}
 	
+	
+	public final Type lookupTypeFromCurrentMethod( String name )
+	{	
+		if( currentMethod != null )
+		{
+			MethodType methodType = (MethodType)(currentMethod.getType());
+			if( methodType.isParameterized() )
+			{
+				for( TypeParameter typeParameter : methodType.getParameters() )
+				{
+					if( typeParameter.getTypeName().equals(name))
+						return typeParameter;
+				}
+			}			
+		}
+		
+		return lookupTypeStartingAt( name, currentType );
+	}
+	
 	//outer class is just a guess, not a sure thing
 	//this method is used when starting from a specific point (as in when looking up extends lists), rather than from the current type
 	public final Type lookupTypeStartingAt( String name, Type outer )
@@ -183,10 +205,16 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		//try starting point
 		if( outer != null )
-		{
+		{			
 			type = lookupType( name, outer );
 			if( type != null )
 				return type;
+			
+			//check type parameters of outer class
+			if( outer.isParameterized() )
+				for( TypeParameter typeParameter : outer.getParameters() )
+					if( typeParameter.getTypeName().equals(name) )
+						return typeParameter;
 		
 			//walk up packages from there
 			Package p = outer.getPackage();		
@@ -211,7 +239,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return null;	
 	}
 	
-	//nothing known, start with current class
+	//nothing known, start with current method (looking for type parameters)
 	public final Type lookupType( String name )
 	{
 		if( name.contains("@"))
@@ -220,7 +248,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			return lookupType( name.substring(0, atSign), name.substring(atSign + 1 ) );
 		}
 		else
-			return lookupTypeStartingAt( name, currentType );
+			return lookupTypeFromCurrentMethod( name );
 	}
 		
 	//outer class known, no need to look at packages
@@ -286,14 +314,24 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			typeParameterTable.addFirst(new HashMap<String, Node>());
 	}
 	
+	
+	//Both must work
+	//class LinkedList<T is Eggplant> implements List<T>
+	//class LinkedList<T, U is T> implements List<T>
+	//class Piglet implements LinkedList<Pig>
+	
 	protected void addTypeParameter( String name, Node node )
 	{
-		if( typeParameterTable.get(0).containsKey( name ) ) //we only look at current scope
-			addError(node, Error.MULT_SYM, name);
-		else if( typeParameterTable.size() == 0 )
-			addError(node, Error.INVL_TYP, "No valid scope for type parameter declaration");
-		else
-			typeParameterTable.getFirst().put(name, node);  //uses node for modifiers
+		if( !typeParameterTable.get(0).containsKey( name ) ) //we only look at current scope
+		{			
+			//Don't add a second time
+			//Error will be checked in ASTTypeParameters
+			//addError(node, Error.MULT_SYM, name);
+			if( typeParameterTable.size() == 0 )
+				addError(node, Error.INVL_TYP, "No valid scope for type parameter declaration");
+			else
+				typeParameterTable.getFirst().put(name, node);  //uses node for modifiers
+		}
 	}
 	
 	protected Type findTypeParameter( String name )
@@ -304,5 +342,21 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				return node.getType();
 		
 		return null;
-	}	
+	}
+	
+	protected boolean checkTypeArguments( List<TypeParameter> parameters, SequenceType arguments )
+	{
+		if( parameters.size() == arguments.size() )
+		{
+			for( int i = 0; i < parameters.size(); i++ )
+			{
+				TypeParameter parameter = parameters.get(i);
+				if( !parameter.canAccept( arguments.get(i)  ) )
+						return false;				
+			}			
+		}
+		
+		return false;
+	}
+	
 }

@@ -52,10 +52,12 @@ import shadow.typecheck.type.Type.Kind;
 public class TypeCollector extends BaseChecker
 {	
 	protected Map<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();
-	protected Set<String> typeBounds = new HashSet<String>();
+	//protected Set<String> typeBounds = new HashSet<String>();
 	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors only
 	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
 	//protected Map<Type,List<TypeParameterRepresentation>> typeParameterTable = new HashMap<Type,List<TypeParameterRepresentation>>();
+	//protected Map<Type,List<String>> boundsTable = new HashMap<Type,List<String>>();
+	
 	protected String currentName = "";
 	protected Map<File, Node> files = new HashMap<File, Node>();
 	
@@ -350,8 +352,10 @@ public class TypeCollector extends BaseChecker
 		 * ExtendsList (do import if @)
 		 * ImplementsList (do import if @)
 		 * TypeBound (do import if @)
+		 * TypeArgument (do import if @)
 		 * ReferenceType (do import if @)
 		 * ArrayAllocation (do import if @)
+		 * ConstructorInvocation (do import if @) ALL CASES
 		 */
 		
 		if( secondVisit )
@@ -379,6 +383,10 @@ public class TypeCollector extends BaseChecker
 				}
 				
 				node.setImage(name);
+				
+				if( child instanceof ASTUnqualifiedName )
+					if( !addImport( name ) )
+						addError(node, "No file found for import " + name);					
 			}
 		}
 		return WalkType.POST_CHILDREN;
@@ -392,10 +400,7 @@ public class TypeCollector extends BaseChecker
 			{
 				Node child = node.jjtGetChild(0); 
 				if( child instanceof ASTTypeArguments )
-				{
-					ASTTypeArguments arguments = (ASTTypeArguments)child;
-					node.setRepresentations(arguments.getRepresentations());
-				}
+					node.setImage(node.getImage() + "<" + child.getImage() + ">");
 			}
 		}
 		return WalkType.POST_CHILDREN;
@@ -422,14 +427,19 @@ public class TypeCollector extends BaseChecker
 	}
 	
 	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
-	{		
+	{	
 		if( secondVisit )
 		{
+			StringBuilder builder = new StringBuilder();
+			builder.append("<");
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) 
 			{
-				ASTTypeArgument child = (ASTTypeArgument)(node.jjtGetChild(i));
-				node.addRepresentation(child.getRepresentation());
+				if( i > 0 )
+					builder.append(", ");
+				builder.append(node.getImage());
 			}
+			builder.append(">");
+			node.setImage(builder.toString());
 		}
 		return WalkType.POST_CHILDREN;
 	}
@@ -514,9 +524,9 @@ public class TypeCollector extends BaseChecker
 	{		
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ ) {
 			Node child = node.jjtGetChild(i); 
-			if( child.getClass() == ASTExtendsList.class )
+			if( child instanceof ASTExtendsList )
 				addExtends( (ASTExtendsList)child, node.getType());
-			else if( child.getClass() == ASTImplementsList.class )
+			else if( child instanceof ASTImplementsList )
 				addImplements( (ASTImplementsList)child, node.getType() );
 			//else if( child.getClass() == ASTTypeParameters.class )
 				//addTypeParameters( (ASTTypeParameters)child, node.getType() );
@@ -547,7 +557,7 @@ public class TypeCollector extends BaseChecker
 	{
 		//t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ TypeBound() ]
 		if( secondVisit )
-		{
+		{			
 			/*
 			TypeParameterRepresentation representation = new TypeParameterRepresentation( node.getImage() );
 			if( node.jjtGetNumChildren() > 0 )

@@ -13,7 +13,7 @@ public
 class ASTTypeArguments extends SimpleNode {
 	
 	private List<TypeParameter> arguments = new ArrayList<TypeParameter>();
-	 private List<TypeParameterRepresentation> representations  = new ArrayList<TypeParameterRepresentation>();
+	 //private List<TypeParameterRepresentation> representations  = new ArrayList<TypeParameterRepresentation>();
 		
 	
 	
@@ -34,18 +34,6 @@ class ASTTypeArguments extends SimpleNode {
   {
 	  return arguments;
   }
-  
-  
-  public void addRepresentation( TypeParameterRepresentation representation )
-  {
-	  representations.add( representation );
-  }
-  
-  public List<TypeParameterRepresentation> getRepresentations()
-  {
-	  return representations;
-  }  
-
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {

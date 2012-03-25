@@ -12,6 +12,7 @@ import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConstructorDeclaration;
 import shadow.parser.javacc.ASTDestructorDeclaration;
@@ -22,15 +23,15 @@ import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
-import shadow.parser.javacc.ASTModifiers;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTType;
+import shadow.parser.javacc.ASTTypeArgument;
+import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
-import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -39,8 +40,10 @@ import shadow.parser.javacc.SignatureNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
@@ -48,8 +51,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 	public FieldAndMethodChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
-	}
-	
+	}	
 	
 	public void buildTypes( Map<File, Node> files ) throws ShadowException
 	{
@@ -314,18 +316,54 @@ public class FieldAndMethodChecker extends BaseChecker {
 
 		String typeName = node.getImage();		
 		
-		Type type = findTypeParameter(typeName); 
+		//Type type = findTypeParameter(typeName); 
 				
-		if( type == null )
-			type = lookupType(typeName);
+		//if( type == null )
+		Type type = lookupType(typeName);
 		
 		if(type == null)
 		{
 			addError(node, Error.UNDEF_TYP, typeName);
 			type = Type.UNKNOWN;
 		}
-		else if (currentType instanceof ClassType)
-			((ClassType)currentType).addReferencedType(type);
+		else
+		{
+			if (currentType instanceof ClassType)
+				((ClassType)currentType).addReferencedType(type);
+			
+			Type current;
+			Type next = null;
+			
+			//walk backwards up the type, snapping up parameters
+			for( int i = node.jjtGetNumChildren() - 1; i >= 0; i-- )
+			{
+				Node child = node.jjtGetChild(i);
+				current = child.getType();
+				if( child instanceof ASTClassOrInterfaceTypeSuffix  )
+				{
+					if( child.jjtGetNumChildren() > 0 ) //has type parameters
+					{
+						//COME BACK HERE
+						if( current.isParameterized() )
+						{
+							SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
+							List<TypeParameter> parameters = current.getParameters();
+							if( checkTypeArguments( parameters, arguments ) )
+							{
+								InstantiatedType instantiatedType = new InstantiatedType(current, arguments);
+								child.setType(instantiatedType);
+								if( next != null )							
+									next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
+							}
+							else
+								addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
+						}
+						else
+							addError( child, Error.TYPE_MIS, "Cannot instantiate type parameters for non-parameterized type: " + current);
+					}
+				}				
+			}
+		}
 				
 		node.setType(type);
 		
@@ -336,34 +374,19 @@ public class FieldAndMethodChecker extends BaseChecker {
 	 * Adds a method to the current type.
 	 */
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
-		createTypeParameterScope( secondVisit );
-		Node methodDeclarator = node.jjtGetChild(0);
-		if(secondVisit)
-			finalizeMethod( methodDeclarator, node );
-			//different nodes used for modifiers and signature		
-		else
-			//different nodes used for modifiers and signature
-			node.setMethodSignature(new MethodSignature( currentType, methodDeclarator.getImage(), node.getModifiers(), node));
-			
-		return WalkType.POST_CHILDREN;
+		//different nodes used for modifiers and signature
+		Node methodDeclarator = node.jjtGetChild(0);		
+		return visitMethod( methodDeclarator, node, secondVisit );
 	}
 	
 	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if(secondVisit)
-			finalizeMethod( node, node  ); 
-		else
-			//constructor uses the same node for modifiers and signature
-			node.setMethodSignature(new MethodSignature( currentType, node.getImage(), node.getModifiers(), node));
-		return WalkType.POST_CHILDREN;
+		//constructor uses the same node for modifiers and signature
+		return visitMethod( node, node, secondVisit );
 	}
 	
-	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(secondVisit)
-			finalizeMethod( node, node  ); 
-		else
-			//destructor uses the same node for modifiers and signature
-			node.setMethodSignature(new MethodSignature( currentType, node.getImage(), node.getModifiers(), node));
-		return WalkType.POST_CHILDREN;
+	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {	
+		//destructor uses the same node for modifiers and signature
+		return visitMethod( node, node, secondVisit );		
 	}
 	
 	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
@@ -371,53 +394,61 @@ public class FieldAndMethodChecker extends BaseChecker {
 	}
 	
 	
-	private boolean finalizeMethod( Node declaration, SignatureNode node )
+	private Object visitMethod( Node declaration, SignatureNode node, Boolean secondVisit )
 	{	
-		MethodSignature signature = node.getMethodSignature();
-		MethodType methodType = signature.getMethodType();		
-		node.setType(methodType);		
-		node.setEnclosingType(currentType);
+		MethodSignature signature;
 		
-		checkMemberModifiers( node, node.getModifiers() );
-		
-		if( currentType instanceof ClassInterfaceBaseType )
+		if( secondVisit )
 		{
-			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+			signature = node.getMethodSignature();
+			if( currentType instanceof ClassInterfaceBaseType )
+			{
+				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
 
-			// make sure we don't already have an indistinguishable method
-			if( currentClass.containsIndistinguishableMethod(signature) )
-			{				
-				// get the first signature
-				MethodSignature method = currentClass.getIndistinguishableMethod(signature);				
-				addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getLineNumber());
-				return false;
-			}	
-			
-			
-			if( currentClass.containsField(signature.getSymbol()) )
-			{
-				addError(declaration, Error.MULT_SYM, "First declared on line " + currentClass.getField(signature.getSymbol()).getLine() );
-				return false;				
+				// make sure we don't already have an indistinguishable method
+				if( currentClass.containsIndistinguishableMethod(signature) )
+				{				
+					// get the first signature
+					MethodSignature method = currentClass.getIndistinguishableMethod(signature);				
+					addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getLineNumber());
+					return false;
+				}	
+				
+				
+				if( currentClass.containsField(signature.getSymbol()) )
+				{
+					addError(declaration, Error.MULT_SYM, "First declared on line " + currentClass.getField(signature.getSymbol()).getLine() );
+					return false;				
+				}
+				
+				if( currentClass.containsInnerClass(signature.getSymbol() ) )
+				{
+					addError(declaration, Error.MULT_SYM );
+					return false;
+				}
+				
+				// add the method to the current type
+				currentClass.addMethod(declaration.getImage(), signature);
+				
+//				ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());
 			}
+			else			
+				addError(node, "Cannot add method to a structure that is not a class, interface, error, enum, or exception");
 			
-			if( currentClass.containsInnerClass(signature.getSymbol() ) )
-			{
-				addError(declaration, Error.MULT_SYM );
-				return false;
-			}
-			
-			// add the method to the current type
-			currentClass.addMethod(declaration.getImage(), signature);
-			
-//			ASTUtils.DEBUG("ADDED METHOD: " + signature.toString());			
-			
-			return true;
+			currentMethod = null;
 		}
 		else
 		{
-			addError(node, "Cannot add method to a structure that is not a class, interface, error, enum, or exception");
-			return false;
-		}
+			signature = new MethodSignature( currentType, declaration.getImage(), node.getModifiers(), node);
+			node.setMethodSignature(signature);
+			MethodType methodType = signature.getMethodType();
+			node.setType(methodType);
+			node.setEnclosingType(currentType);
+			checkMemberModifiers( node, node.getModifiers() );
+			currentMethod = node;
+		}		
+		
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException {
@@ -597,11 +628,22 @@ public class FieldAndMethodChecker extends BaseChecker {
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 			{
 				TypeParameter parameter = (TypeParameter)(node.jjtGetChild(i).getType());
+				for( TypeParameter existing : parentType.getParameters() )
+					if( existing.getTypeName().equals( parameter.getTypeName() ) )
+						addError( node, Error.MULT_SYM, "Multiply defined type parameter " + existing.getTypeName() );
+				
 				parentType.addParameter(parameter);
 			}
 			
 			parentType.setParameterized(true);
 		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit)	throws ShadowException
+	{
+
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -626,7 +668,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		{
 			String symbol = node.getImage();
 			typeParameter = new TypeParameter(symbol);
-			addTypeParameter( symbol, node );
+			//addTypeParameter( symbol, node );
 			node.setType(typeParameter);
 		}
 		return WalkType.POST_CHILDREN;
@@ -645,9 +687,30 @@ public class FieldAndMethodChecker extends BaseChecker {
 	}
 	
 	
+	
+	//ASTTypeArguments Appears in: 
+	//ConstructorInvocation()
+	//ClassOrInterfaceTypeSuffix()
+	//ArrayAllocation()
+	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			SequenceType sequenceType = new SequenceType();
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				sequenceType.add(node.jjtGetChild(i));
+			
+			node.setType(sequenceType);			
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
 	//
 	// Everything below here are just visitors to push up the type
 	//	
+	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	//public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }

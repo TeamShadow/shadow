@@ -1002,7 +1002,7 @@ void TypeArguments():
 void TypeArgument():
 { debugPrint("TYPE ARGUMENT"); }
 {
-   ClassOrInterfaceType() //not reference type since an array can't be a type argument
+   ReferenceType() //reference type since an array can be a type argument
 // | "?" [ WildcardBounds() ]
 }
 
@@ -1069,7 +1069,7 @@ void UnqualifiedName():
 void NameList():
 { debugPrint("NAME LIST"); }
 {
-  Name() ( "," Name() )*
+  ClassOrInterfaceType() ( "," ClassOrInterfaceType() )*
 }
 
 
@@ -1286,7 +1286,7 @@ void MethodCall():
 	Token t;
 }
 {
-    t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ /*LOOKAHEAD(TypeParameters())*/ TypeParameters() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+    t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeArguments() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
 }
 
 void PrimaryPrefix():
@@ -1300,7 +1300,6 @@ void PrimaryPrefix():
 | "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | LOOKAHEAD( Type() "." "class" ) Type() "." "class"
-//| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(MethodCall()) MethodCall()
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 | CheckExpression()
@@ -1314,7 +1313,6 @@ void PrimarySuffix():
 {
   LOOKAHEAD(2) "." "this" { jjtThis.setImage("this"); } // when does this even happen?
 | "[" { jjtThis.addToImage('['); } ConditionalExpression() ("," ConditionalExpression())* "]"
-//| "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
 | LOOKAHEAD(3) "." MethodCall()
 | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 }

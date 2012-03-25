@@ -1,0 +1,10 @@
+class Generics
+{
+	public static main(String[] args) => () {
+        Pig<String> pig = new Pig<String>();
+        
+        pig.setValue("Help");
+        
+        nullable String output = pig.getValue();
+    }
+}

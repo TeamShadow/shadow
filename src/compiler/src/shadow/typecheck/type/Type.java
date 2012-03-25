@@ -10,11 +10,11 @@ public class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string that represents the type */
 	private final int modifiers;
-	private final Type outer; //outer class	
+	private Type outer; //outer class	
 	private final Kind kind;
 	private Package _package;
 	private List<TypeParameter> parameters = new ArrayList<TypeParameter>();
-	private List<Type> arguments = new ArrayList<Type>();
+	//private List<Type> arguments = new ArrayList<Type>();
 	private boolean parameterized;	
 		
 	// TODO: Provide documentation here
@@ -29,8 +29,9 @@ public class Type {
 		SEQUENCE,
 		TYPE_PARAMETER,
 		UNBOUND_METHOD,
-		VIEW,		
-		UNKNOWN
+		VIEW,
+		INSTANTIATED,
+		UNKNOWN, 
 	};
 	
 	public static ClassType OBJECT = null; 
@@ -131,10 +132,7 @@ public class Type {
 			return false;
 	}
 	
-	public boolean isSubtype(Type t) {				
-
-		// This subtyping code does not handle generics	
-		
+	public boolean isSubtype(Type t) {
 		if( this == UNKNOWN || t == UNKNOWN )
 			return false;
 		
@@ -150,8 +148,9 @@ public class Type {
 			{
 				ArrayType type = (ArrayType)this;
 				ArrayType other = (ArrayType)t;
+				//invariant typing on arrays
 				if( type.getDimensions() == other.getDimensions() )
-					return type.getBaseType().isSubtype(other.getBaseType());
+					return type.getBaseType().equals(other.getBaseType());
 				else
 					return false;
 			}
@@ -195,6 +194,11 @@ public class Type {
 				return false;
 		case METHOD:
 		case VIEW:
+		case INSTANTIATED:
+			if( t.getKind() == Kind.INSTANTIATED )
+				return ((InstantiatedType)this).isSubtype((InstantiatedType)t);
+			else
+				return false;
 		default:
 			return false;		
 		}
@@ -257,6 +261,11 @@ public class Type {
 	public Type getOuter()
 	{
 		return outer;
+	}
+	
+	public void setOuter(Type outer)
+	{
+		this.outer = outer;
 	}
 
 	public Kind getKind()
@@ -363,11 +372,6 @@ public class Type {
 	{
 		parameters.add(parameter);
 	}	
-
-	public  List<Type> getArguments()
-	{
-		return arguments;
-	}
 	
 	public static void mangle(String name, StringBuilder sb)
 	{
@@ -420,6 +424,8 @@ public class Type {
 	{
 		return parameterized; 
 	}
+	
+	
 	
 
 	

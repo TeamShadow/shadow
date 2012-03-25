@@ -20,4 +20,14 @@ public class TypeParameter extends Type
 	{
 		return bounds;
 	}
+
+	public boolean canAccept(ModifiedType modifiedType) {
+		Type type = modifiedType.getType();
+		for( Type bound : bounds )
+			if( !type.isSubtype(bound) )
+				return false;		
+		
+		return true;
+	}
+	
 }
