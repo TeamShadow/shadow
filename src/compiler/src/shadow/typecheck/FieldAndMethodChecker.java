@@ -317,7 +317,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		String typeName = node.getImage();		
 		
 		//Type type = findTypeParameter(typeName); 
-				
+		List<File> stuff = getImportList();		
 		//if( type == null )
 		Type type = lookupType(typeName);
 		

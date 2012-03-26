@@ -194,9 +194,10 @@ public class TypeCollector extends BaseChecker
 		
 		//Add import list
 		fileList.addAll(getImportList());
-		
-		for( File other : fileList )
+				
+		for( int i = 0; i < fileList.size(); i++ )
 		{		
+			File other = fileList.get(i);
 			File canonicalFile = other.getCanonicalFile();
 			
 			if( !files.containsKey(canonicalFile) ) //don't double add
@@ -207,7 +208,7 @@ public class TypeCollector extends BaseChecker
 			    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
 				TypeCollector collector = new TypeCollector(debug, otherTypes, new LinkedList<File>(), new Package(otherTypes));
 				walker = new ASTWalker( collector );		
-				walker.walk(otherNode);
+				walker.walk(otherNode);				
 		
 				files.put(canonicalFile, otherNode);				
 				
@@ -222,6 +223,12 @@ public class TypeCollector extends BaseChecker
 				//copy any errors into our error list
 				if( collector.getErrorCount() > 0 )
 					errorList.addAll(collector.errorList);
+				
+				for( File file : collector.getImportList() )
+				{
+					if( !fileList.contains(file) )
+						fileList.add(file);					
+				}				
 			}
 		}	
 		
