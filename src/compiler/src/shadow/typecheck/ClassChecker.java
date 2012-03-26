@@ -1596,7 +1596,7 @@ public class ClassChecker extends BaseChecker {
 			
 			for( MethodSignature signature : methods ) 
 			{
-				if( signature.matches( sequenceType ) )
+				if( signature.matches( sequenceType ) ) //signature.matches( sequenceType, context )
 				{
 					SequenceType returnTypes = signature.getMethodType().getReturnTypes();
 					returnTypes.setNodeType(node);					
@@ -1607,7 +1607,7 @@ public class ClassChecker extends BaseChecker {
 					else
 						node.setType(signature.getMethodType());
 				}
-				else if( signature.canAccept( sequenceType ))
+				else if( signature.canAccept( sequenceType )) //signature.canAccept( sequenceType, context )
 					acceptableMethods.add(signature);
 			}
 			

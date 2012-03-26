@@ -30,6 +30,7 @@ import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPackageDeclaration;
 import shadow.parser.javacc.ASTPrimaryPrefix;
+import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeBound;
@@ -393,16 +394,16 @@ public class TypeCollector extends BaseChecker
 	}
 	
 	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException
-	{		
+	{	/*	
 		if( secondVisit )
 		{
 			if( node.jjtGetNumChildren() > 0 ) 
 			{
 				Node child = node.jjtGetChild(0); 
 				if( child instanceof ASTTypeArguments )
-					node.setImage(node.getImage() + "<" + child.getImage() + ">");
+					node.setImage(node.getImage() + child.getImage());
 			}
-		}
+		}*/
 		return WalkType.POST_CHILDREN;
 	}	
 	
@@ -434,9 +435,10 @@ public class TypeCollector extends BaseChecker
 			builder.append("<");
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) 
 			{
+				Node child = node.jjtGetChild(i);
 				if( i > 0 )
 					builder.append(", ");
-				builder.append(node.getImage());
+				builder.append(child.getImage());
 			}
 			builder.append(">");
 			node.setImage(builder.toString());
@@ -445,22 +447,38 @@ public class TypeCollector extends BaseChecker
 	}
 	
 	
-	/*
+	
 	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )		
+			node.setImage(node.jjtGetChild(0).getImage());
+	
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException
 	{		
 		if( secondVisit )
 		{
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) 
+			StringBuilder builder = new StringBuilder(node.jjtGetChild(0).getImage());
+			List<Integer> dimensions = node.getArrayDimensions();
+			
+			for( int i = 0; i < dimensions.size(); i++ )
 			{
-				ASTTypeArgument child = (ASTTypeArgument)(node.jjtGetChild(i));
-				//TODO: fix this
-				//node.addRepresentation(child.getRepresentation());
-			}
+				
+				builder.append("[");
+				
+				for( int j = 1; j < dimensions.get(i); j++ )
+					builder.append(",");				
+				
+				builder.append("[");
+			}					
+			
+			node.setImage(builder.toString());
 		}
+	
 		return WalkType.POST_CHILDREN;
 	}
-	*/
-
 	
 	private void createType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException
 	{		 

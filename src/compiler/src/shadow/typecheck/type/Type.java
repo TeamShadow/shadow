@@ -424,13 +424,12 @@ public class Type {
 	{
 		return parameterized; 
 	}
-	
-	
-	
 
 	
-	
-	
-	
+	//EVERY TYPE NEEDS THIS
+	public Type replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	{	
+		return this;
+	}
 	
 }

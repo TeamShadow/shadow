@@ -331,16 +331,15 @@ public class FieldAndMethodChecker extends BaseChecker {
 			if (currentType instanceof ClassType)
 				((ClassType)currentType).addReferencedType(type);
 			
-			Type current;
+			Type current = type;
 			Type next = null;
 			
 			//walk backwards up the type, snapping up parameters
 			for( int i = node.jjtGetNumChildren() - 1; i >= 0; i-- )
 			{
-				Node child = node.jjtGetChild(i);
-				current = child.getType();
+				Node child = node.jjtGetChild(i);				
 				if( child instanceof ASTClassOrInterfaceTypeSuffix  )
-				{
+				{					
 					if( child.jjtGetNumChildren() > 0 ) //has type parameters
 					{
 						//COME BACK HERE
@@ -354,6 +353,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 								child.setType(instantiatedType);
 								if( next != null )							
 									next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
+								
+								next = instantiatedType;
+								current = instantiatedType.getBaseType().getOuter();
 							}
 							else
 								addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
@@ -390,7 +392,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN;
+		return WalkType.POST_CHILDREN;
 	}
 	
 	

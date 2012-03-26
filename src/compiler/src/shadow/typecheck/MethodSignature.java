@@ -57,6 +57,16 @@ public class MethodSignature {
 		return node;
 	}
 	
+	public boolean matches( SequenceType argumentTypes, Type container )
+	{
+		return type.matches(argumentTypes, container );		
+	}
+	
+	public boolean canAccept( SequenceType argumentTypes, Type container )
+	{
+		return type.canAccept(argumentTypes, container );		
+	}	
+	
 	public boolean matches( SequenceType argumentTypes )
 	{
 		return type.matches(argumentTypes);		
@@ -65,7 +75,7 @@ public class MethodSignature {
 	public boolean canAccept( SequenceType argumentTypes )
 	{
 		return type.canAccept(argumentTypes);		
-	}	
+	}
 
 	public boolean equals(Object o)
 	{

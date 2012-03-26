@@ -346,17 +346,17 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	protected boolean checkTypeArguments( List<TypeParameter> parameters, SequenceType arguments )
 	{
-		if( parameters.size() == arguments.size() )
-		{
-			for( int i = 0; i < parameters.size(); i++ )
-			{
-				TypeParameter parameter = parameters.get(i);
-				if( !parameter.canAccept( arguments.get(i)  ) )
-						return false;				
-			}			
-		}
+		if( parameters.size() != arguments.size() )
+			return false;
 		
-		return false;
+		for( int i = 0; i < parameters.size(); i++ )
+		{
+			TypeParameter parameter = parameters.get(i);
+			if( !parameter.canAccept( arguments.get(i)  ) )
+					return false;				
+		}	
+		
+		return true;
 	}
 	
 }

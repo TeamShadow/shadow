@@ -36,8 +36,21 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 	
 	
+	public boolean canAccept( List<ModifiedType> inputTypes, Type container )
+	{	
+		if( (container instanceof InstantiatedType) && isParameterized() )
+		{
+			InstantiatedType instantiatedType = (InstantiatedType)container;
+			SequenceType replaced = replace( instantiatedType.getParameters(), instantiatedType.getArgumentTypes() );
+			return replaced.canAccept( inputTypes );
+		}
+		else
+			return canAccept( inputTypes );				
+	}
+	
 	public boolean canAccept( List<ModifiedType> inputTypes )
-	{
+	{	
+		
 		if( types.size() != inputTypes.size() )
 			return false;
 		
@@ -115,12 +128,39 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		else
 			return false;
 	}
+	
+	public SequenceType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	{		
+		SequenceType temp = new SequenceType();
 		
+		for( int i = 0; i < types.size(); i++ )
+		{
+			ModifiedType type = types.get(i);
+			SimpleModifiedType dummy = new SimpleModifiedType( type.getType().replace( values, replacements), type.getModifiers() );
+			temp.add( dummy );
+		}
+		
+		return temp;
+	}
+		
+	public boolean matches(List<ModifiedType> inputTypes, Type container)
+	{
+		if( (container instanceof InstantiatedType) && isParameterized() )
+		{
+			InstantiatedType instantiatedType = (InstantiatedType)container;
+			SequenceType replaced = replace( instantiatedType.getParameters(), instantiatedType.getArgumentTypes() );
+			return replaced.matches( inputTypes );
+		}
+		else
+			return matches( inputTypes );
+	}
+	
 	public boolean matches(List<ModifiedType> inputTypes)
 	{
 		if( types.size() != inputTypes.size() )
 			return false;
 		
+	
 		for( int i = 0; i < types.size(); i++ )		
 			if( !inputTypes.get(i).getType().equals(getType(i)) )
 				return false;

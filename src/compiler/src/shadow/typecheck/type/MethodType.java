@@ -22,9 +22,14 @@ public class MethodType extends Type {
 		returns = new SequenceType();
 	}	
 
-	public boolean matches( SequenceType inputTypes )
+	public boolean matches( SequenceType inputTypes, Type container )
 	{
-		return paramTypes.matches( inputTypes );		
+		return paramTypes.matches( inputTypes, container );		
+	}
+	
+	public boolean matches( SequenceType inputTypes)
+	{
+		return paramTypes.matches( inputTypes);		
 	}
 	
 	/*
@@ -43,12 +48,22 @@ public class MethodType extends Type {
 
 
 	//this method is used to see if particular return values inside the method can be given back as return values
-	public boolean canReturn( List<ModifiedType> returnTypes )
+	public boolean canReturn( List<ModifiedType> returnTypes, Type container )
+	{
+		return returns.canAccept(returnTypes, container);
+	}
+	
+	public boolean canReturn( SequenceType returnType, Type container )
+	{
+		return returns.canAccept(returnType, container );
+	}
+	
+	public boolean canReturn( List<ModifiedType> returnTypes)
 	{
 		return returns.canAccept(returnTypes);
 	}
 	
-	public boolean canReturn( SequenceType returnType )
+	public boolean canReturn( SequenceType returnType)
 	{
 		return returns.canAccept(returnType);
 	}
@@ -63,9 +78,14 @@ public class MethodType extends Type {
 		return returns.isEmpty();
 	}		
 	
-	public boolean canAccept( List<ModifiedType> argumentTypes )
+	public boolean canAccept( List<ModifiedType> argumentTypes, Type container )
 	{
-		return paramTypes.canAccept(argumentTypes);
+		return paramTypes.canAccept(argumentTypes, container );
+	}
+	
+	public boolean canAccept( SequenceType argumentTypes, Type container )
+	{
+		return paramTypes.canAccept(argumentTypes, container );
 	}
 	
 	public boolean canAccept( SequenceType argumentTypes )
