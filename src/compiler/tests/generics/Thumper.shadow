@@ -1,0 +1,14 @@
+class Thumper<U> implements Thumpable<U>
+{
+	private nullable U internal;
+	
+	public constructor(U stuff)
+	{
+		internal = stuff;
+	}
+
+	public thump() => (nullable U)
+	{
+		return internal;
+	}
+}

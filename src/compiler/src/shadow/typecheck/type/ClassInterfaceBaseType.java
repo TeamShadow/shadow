@@ -1,6 +1,5 @@
 package shadow.typecheck.type;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,10 +10,20 @@ import shadow.typecheck.MethodSignature;
 
 public abstract class ClassInterfaceBaseType extends Type {
 	private ClassType extendType;
-	private HashMap<String, Node> fieldTable;
+	private Map<String, Node> fieldTable;
 	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private
 	private HashMap<String, Type> innerClasses;
 	private String packageName; //package
+
+	public Map<String, Type> getInnerClasses()
+	{
+		return innerClasses;
+	}
+	
+	protected void addInnerClass(String name, Type innerClass)
+	{
+		innerClasses.put( name, innerClass );
+	}
 	
 	public ClassInterfaceBaseType(String typeName) {
 		this( typeName, 0 );
@@ -24,11 +33,11 @@ public abstract class ClassInterfaceBaseType extends Type {
 		this( typeName, modifiers, null );
 	}
 	
-	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer ) {
+	public ClassInterfaceBaseType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
 		this( typeName, modifiers, outer, Kind.CLASS );
 	}	
 	
-	public ClassInterfaceBaseType(String typeName, int modifiers, Type outer, Kind kind ) {
+	public ClassInterfaceBaseType(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind ) {
 		super( typeName, modifiers, outer, kind );
 		fieldTable = new HashMap<String, Node>();
 		methodTable = new HashMap<String, List<MethodSignature>>();
@@ -192,6 +201,4 @@ public abstract class ClassInterfaceBaseType extends Type {
 		
 		return null;
 	}
-	
-
 }

@@ -1,18 +1,22 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import shadow.typecheck.MethodSignature;
 
 public class InstantiatedType extends ClassType {
 
 	private List<ModifiedType> argumentTypes; 
-	private Type baseType;
+	private ClassInterfaceBaseType baseType;
+	private Type instantiatedType = null;
 
-	public Type getBaseType()
+	public ClassInterfaceBaseType getBaseType()
 	{
 		return baseType;
 	}
 	
-	public void setBaseType(Type type)
+	public void setBaseType(ClassInterfaceBaseType type)
 	{
 		baseType = type;
 	}
@@ -24,7 +28,7 @@ public class InstantiatedType extends ClassType {
 	}
 	
 	
-	public InstantiatedType(Type type, List<ModifiedType> arguments) {
+	public InstantiatedType(ClassInterfaceBaseType type, List<ModifiedType> arguments) {
 		super(type.getTypeName(), type.getModifiers(), type.getOuter(), Kind.INSTANTIATED);
 		// TODO Auto-generated constructor stub
 		baseType = type;
@@ -58,14 +62,29 @@ public class InstantiatedType extends ClassType {
 				return false;
 			
 			for( int i = 0; i < argumentTypes.size(); i++ )
-				if( !argumentTypes.get(i).equals(instantiatedType.argumentTypes.get(i)) )
+			{
+				ModifiedType a = argumentTypes.get(i);
+				ModifiedType b = instantiatedType.argumentTypes.get(i);
+				if( !a.getType().equals(b.getType()) || a.getModifiers() != b.getModifiers() )					
 					return false;
+			}
 			
 			return true;			
 		}
 		else
 			return false;		
 	}
+	
+	public List<MethodSignature> getMethodList()
+	{
+		List<MethodSignature> methodsList = super.getMethodList();
+		
+		List<MethodSignature> instantiatedList = new ArrayList<MethodSignature>();
+		for( MethodSignature signature : methodsList )
+			instantiatedList.add(signature.replace( baseType.getParameters(), argumentTypes));
+		
+		return instantiatedList;		
+	}	
 
 	//type arguments must match exactly
 	//base type can be a subtype
@@ -82,5 +101,13 @@ public class InstantiatedType extends ClassType {
 				return false;			
 		
 		return true;
+	}
+	
+	public Type getInstantiatedType()
+	{
+		if( instantiatedType == null )
+			instantiatedType = baseType.replace(baseType.getParameters(), argumentTypes);
+		
+		return instantiatedType;		
 	}
 }

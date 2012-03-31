@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 
 import shadow.Configuration;
@@ -35,6 +33,7 @@ import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
+import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
@@ -42,19 +41,24 @@ import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.BaseChecker.Error;
+import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
+import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Type.Kind;
+import shadow.typecheck.type.TypeParameter;
 
 public class TypeCollector extends BaseChecker
 {	
 	protected Map<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();
 	//protected Set<String> typeBounds = new HashSet<String>();
-	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors only
+	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors and also resolving type parameters
 	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
 	//protected Map<Type,List<TypeParameterRepresentation>> typeParameterTable = new HashMap<Type,List<TypeParameterRepresentation>>();
 	//protected Map<Type,List<String>> boundsTable = new HashMap<Type,List<String>>();
@@ -62,7 +66,7 @@ public class TypeCollector extends BaseChecker
 	protected String currentName = "";
 	protected Map<File, Node> files = new HashMap<File, Node>();
 	
-	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, Type>> typeTable, LinkedList<File> importList, Package p )
+	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, LinkedList<File> importList, Package p )
 	{		
 		super(debug, typeTable, importList, p );
 		// put all of our built-in types into the TypeTable		
@@ -89,6 +93,40 @@ public class TypeCollector extends BaseChecker
 		addType(Type.EXCEPTION);
 	}
 	
+	private void updateTypeParameters()
+	{	
+		//add type parameters to declarations
+		for( Package p : getTypeTable().keySet() )
+		{
+			for( ClassInterfaceBaseType type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
+			{	
+				TreeSet<String> missingTypes = new TreeSet<String>();				
+				Node declarationNode = nodeTable.get(type);
+				if( declarationNode != null )	
+				{
+					currentType = type;			
+				
+					//need special cases for Class or Array?
+					for( int i = 0; i < declarationNode.jjtGetNumChildren(); i++ )
+					{
+						Node child = declarationNode.jjtGetChild(i);
+						
+						if( (child instanceof ASTExtendsList) || (child instanceof ASTImplementsList) )
+						{
+							for( int j = 0; j < child.jjtGetNumChildren(); j++ )
+								updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), type.getParameters(), missingTypes  );
+						}
+					}
+				}					
+									
+				
+				if( missingTypes.size() > 0 )	
+					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types " + missingTypes);		
+				
+			}
+		}		
+	}
+	
 	
 	private void updateMissingTypes()
 	{
@@ -96,9 +134,19 @@ public class TypeCollector extends BaseChecker
 		
 		for( Package p : getTypeTable().keySet() )
 		{
-			for( Type type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
+			for( ClassInterfaceBaseType type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
 			{	
-				TreeSet<String> missingTypes = new TreeSet<String>();
+				TreeSet<String> missingTypes = new TreeSet<String>();	
+				
+				//add type parameters to each type's declaration (if present)
+				Node declarationNode = nodeTable.get(type);
+				if( declarationNode != null )
+				{
+					currentType = type;
+					for( int i = 0; i < declarationNode.jjtGetNumChildren(); i++ )
+						if( declarationNode.jjtGetChild(i) instanceof ASTTypeParameters )
+							processTypeParameters( type, (ASTTypeParameters)(declarationNode.jjtGetChild(i)), missingTypes );
+				}
 				
 				if( type instanceof ClassType ) //includes error, exception, and enum (for now)
 				{		
@@ -108,7 +156,8 @@ public class TypeCollector extends BaseChecker
 						if( extendsTable.containsKey(type))
 						{
 							list = extendsTable.get(type);
-							ClassType parent = (ClassType)lookupTypeStartingAt(list.get(0), classType.getOuter()); //only one thing in extends lists for classes
+							ClassType parent = (ClassType)lookupTypeStartingAt(list.get(0), classType.getOuter()); //only one thing in extends lists for classes						
+							
 							if( parent == null )						
 								missingTypes.add(list.get(0));
 							else							
@@ -157,7 +206,9 @@ public class TypeCollector extends BaseChecker
 								interfaceType.addExtendType(_interface);
 						}
 					}				
-				}
+				}				
+				
+									
 				
 				if( missingTypes.size() > 0 )	
 					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types " + missingTypes);			
@@ -165,7 +216,136 @@ public class TypeCollector extends BaseChecker
 		}
 	}
 	
-	
+	private void updateTypeParameters(ASTClassOrInterfaceType node, List<TypeParameter> parameterList, TreeSet<String> missingTypes)
+	{
+		//[ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@"  ] ClassOrInterfaceTypeSuffix() (  LOOKAHEAD(2) "." ClassOrInterfaceTypeSuffix() )*
+		String typeName = node.getImage();	
+		ClassInterfaceBaseType type = lookupType(typeName);
+		
+		if(type == null)
+		{
+			addError(node, Error.UNDEF_TYP, typeName);
+			type = Type.UNKNOWN;
+		}
+		else
+		{
+			//if (currentType instanceof ClassType)
+			//	((ClassType)currentType).addReferencedType(type);
+			
+			//Container<T, List<String>, String, Thing<K>>.Stuff<U>		
+			
+			ClassInterfaceBaseType current = type;
+			ClassInterfaceBaseType next = null;
+			
+			//walk backwards up the type, snapping up parameters
+			//we go backwards because we need to set outer types
+			for( int i = node.jjtGetNumChildren() - 1; i >= 0; i-- )
+			{
+				Node child = node.jjtGetChild(i);				
+				if( child instanceof ASTClassOrInterfaceTypeSuffix  )
+				{					
+					if( child.jjtGetNumChildren() > 0 ) //has type parameters
+					{						
+						ASTTypeArguments typeArguments = (ASTTypeArguments) child.jjtGetChild(0);
+						SequenceType arguments = new SequenceType();
+						for( int j = 0; j < typeArguments.jjtGetNumChildren(); j++ )
+						{
+							ASTReferenceType argument = (ASTReferenceType) (typeArguments.jjtGetChild(j).jjtGetChild(0));
+							Node typeNode = argument.jjtGetChild(0); 
+							if(  typeNode instanceof ASTClassOrInterfaceType )
+								updateTypeParameters( (ASTClassOrInterfaceType) typeNode, parameterList, missingTypes );
+							
+							argument.setType(typeNode.getType());
+							arguments.add(argument);
+						}
+						
+						typeArguments.setType(arguments);
+						
+						List<TypeParameter> parameters = current.getParameters();
+						if( checkTypeArguments( parameters, arguments ) )
+						{
+							InstantiatedType instantiatedType = new InstantiatedType(current, arguments);
+							child.setType(instantiatedType);
+							if( i == node.jjtGetNumChildren() - 1 )
+								type = instantiatedType;								
+							
+							if( next != null )							
+								next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
+							
+							next = instantiatedType;
+							current = instantiatedType.getBaseType().getOuter();
+						}
+						else
+						{
+							addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
+							break;
+						}
+						
+					}
+				}				
+			}			
+		}
+				
+		node.setType(type);		
+	}
+
+
+	//This disgusting code handles type parameters
+	//It must be called before field and method checking (since other classes may be dependent on the information)
+	//It must be called after all the types have been collected, otherwise it may depend on unknown types
+	private void processTypeParameters(Type parentType, ASTTypeParameters parameters, TreeSet<String> missingTypes)
+	{	
+		for( int i = 0; i < parameters.jjtGetNumChildren(); i++ )
+			processTypeParameter( (ASTTypeParameter)(parameters.jjtGetChild(i)), missingTypes );
+		
+		for( int i = 0; i < parameters.jjtGetNumChildren(); i++ )
+		{
+			TypeParameter parameter = (TypeParameter)(parameters.jjtGetChild(i).getType());
+			for( TypeParameter existing : parentType.getParameters() )
+				if( existing.getTypeName().equals( parameter.getTypeName() ) )
+					addError( parameters, Error.MULT_SYM, "Multiply defined type parameter " + existing.getTypeName() );
+			
+			parentType.addParameter(parameter);
+		}
+		
+		parentType.setParameterized(true);
+	}
+
+	public void processTypeParameter(ASTTypeParameter node, TreeSet<String> missingTypes)
+	{		
+		String symbol = node.getImage();
+		TypeParameter typeParameter = new TypeParameter(symbol);		
+		node.setType(typeParameter);
+		
+		if( node.jjtGetNumChildren() > 0 )
+		{
+			ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
+			for( int i = 0; i < bound.jjtGetNumChildren(); i++ )
+			{
+				processTypeBound( bound, missingTypes );
+				typeParameter.addBound(bound.jjtGetChild(i).getType());
+			}
+		}
+	}
+
+
+	private void processTypeBound(ASTTypeBound bound, TreeSet<String> missingTypes)
+	{	
+		currentMethod = null;		
+		
+		for( int i = 0; i < bound.jjtGetNumChildren(); i++ )
+		{
+			Node child = bound.jjtGetChild(i); //must be ASTClassOrInterfaceType
+			Type type = lookupType( child.getImage() );
+			
+			if( type == null )
+				missingTypes.add(child.getImage());
+			else
+				child.setType(type);
+		}		
+	}
+
+
 	public void collectTypes(File input, Node node) throws ParseException, ShadowException, IOException
 	//includes files in the same directory
 	{			
@@ -205,7 +385,7 @@ public class TypeCollector extends BaseChecker
 				ShadowParser parser = new ShadowParser(new FileInputStream(canonicalFile));
 			    SimpleNode otherNode = parser.CompilationUnit();
 			    
-			    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
+			    HashMap<Package, HashMap<String, ClassInterfaceBaseType>> otherTypes = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>> ();			    
 				TypeCollector collector = new TypeCollector(debug, otherTypes, new LinkedList<File>(), new Package(otherTypes));
 				walker = new ASTWalker( collector );		
 				walker.walk(otherNode);				
@@ -228,13 +408,31 @@ public class TypeCollector extends BaseChecker
 				{
 					if( !fileList.contains(file) )
 						fileList.add(file);					
-				}				
+				}
+				
+				//copy type defining nodes into our node table
+				Map<Type,Node> otherNodeTable = collector.getNodeTable(); 
+				
+				for( Type type : otherNodeTable.keySet() )
+					if( !nodeTable.containsKey(type) )
+						nodeTable.put(type, otherNodeTable.get(type));
 			}
 		}	
 		
-		updateMissingTypes();					
+		updateMissingTypes();
+		
+		/*
+		 * type parameters are updated separately because they require knowledge of
+		 * the type hierarchy constructed in updateMissingTypes() 
+		 */		
+		updateTypeParameters();
 	}
 	
+	private Map<Type,Node> getNodeTable() {
+		return nodeTable;
+	}
+
+
 	public Map<File, Node> getFiles()
 	{
 		return files;
@@ -345,7 +543,7 @@ public class TypeCollector extends BaseChecker
 		}
 		else //entering a type
 		{					
-			currentType = node.jjtGetParent().getType();
+			currentType = (ClassInterfaceBaseType)node.jjtGetParent().getType();
 			currentName = currentType.getTypeName();				
 		}
 			
@@ -500,7 +698,7 @@ public class TypeCollector extends BaseChecker
 			addError( node, Error.MULT_SYM, "Type " + typeName + " already defined" );
 		else
 		{			
-			Type type = null;
+			ClassInterfaceBaseType type = null;
 				
 			switch( kind )
 			{			
@@ -552,9 +750,7 @@ public class TypeCollector extends BaseChecker
 			if( child instanceof ASTExtendsList )
 				addExtends( (ASTExtendsList)child, node.getType());
 			else if( child instanceof ASTImplementsList )
-				addImplements( (ASTImplementsList)child, node.getType() );
-			//else if( child.getClass() == ASTTypeParameters.class )
-				//addTypeParameters( (ASTTypeParameters)child, node.getType() );
+				addImplements( (ASTImplementsList)child, node.getType() );	
 		}
 		
 		nodeTable.put(node.getType(), node );

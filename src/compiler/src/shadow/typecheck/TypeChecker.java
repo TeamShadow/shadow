@@ -12,7 +12,7 @@ import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.type.Type;
+import shadow.typecheck.type.ClassInterfaceBaseType;
 
 public class TypeChecker {
 	private static final Log logger = Loggers.TYPE_CHECKER;
@@ -33,7 +33,7 @@ public class TypeChecker {
 	 */
 	public boolean typeCheck(Node node, File file) throws ShadowException, ParseException, IOException
 	{	 
-		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
+		HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>>();
 		Package packageTree = new Package(typeTable);
 		LinkedList<File> importList = new LinkedList<File>();
 		TypeCollector collector = new TypeCollector(debug, typeTable, importList, packageTree);

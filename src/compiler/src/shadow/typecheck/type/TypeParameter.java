@@ -3,7 +3,9 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TypeParameter extends Type
+import shadow.typecheck.type.Type.Kind;
+
+public class TypeParameter extends ClassInterfaceBaseType
 {
 	private List<Type> bounds = new ArrayList<Type>();
 
@@ -28,6 +30,46 @@ public class TypeParameter extends Type
 				return false;		
 		
 		return true;
+	}
+	
+	public boolean isSubtype(Type type)
+	{
+		if( type.getKind() == Kind.TYPE_PARAMETER )
+		{
+			TypeParameter typeParameter = (TypeParameter) type;
+			
+			for( Type bound : typeParameter.bounds )
+			{
+				boolean found = false;
+				for( int i = 0; i < bounds.size() && !found; i++ )
+				{
+					if( bounds.get(i).isSubtype(bound) )
+						found = true;					
+				}
+				
+				if( !found )
+					return false;
+			}
+			
+			return true;			
+		}
+		else
+		{
+			for( Type bound : bounds )
+				if( bound.isSubtype(type) )
+					return true;
+			
+			return false;
+		}
+	}
+	
+	public Type replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	{
+		for( int i = 0; i < values.size(); i++ )
+			if( values.get(i).getTypeName().equals(getTypeName()))
+				return replacements.get(i).getType();
+		
+		return this;
 	}
 	
 }

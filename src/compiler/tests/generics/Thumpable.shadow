@@ -1,0 +1,4 @@
+interface Thumpable<T>
+{
+	thump() => (nullable T);
+}

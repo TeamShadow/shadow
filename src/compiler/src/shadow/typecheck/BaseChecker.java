@@ -15,6 +15,7 @@ import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
@@ -25,17 +26,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	private static final Log logger = Loggers.TYPE_CHECKER;
 
 	protected ArrayList<String> errorList = new ArrayList<String>();;
-	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
+	protected HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable; /** Holds all of the types we know about */
 	protected List<File> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
-	/** List of type parameter scopes with a hash of symbols & types for each scope */
-	protected LinkedList<HashMap<String, Node>> typeParameterTable = new LinkedList< HashMap<String, Node>>();
 	protected Node currentMethod = null;   /** Current method (only a single reference needed since Shadow does not allow methods to be defined inside of methods) */
 	
 
 	/** Holds the package tree structure (for name lookups) */
-	protected Type currentType = null;
+	protected ClassInterfaceBaseType currentType = null;
 	protected boolean debug;	
 	
 	// these are constants for our error messages to keep things consistent
@@ -51,15 +50,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		//abstract String getStr();
 	}
 	
-	public final HashMap<Package, HashMap<String, Type>> getTypeTable() {
+	public final HashMap<Package, HashMap<String, ClassInterfaceBaseType>> getTypeTable() {
 		return typeTable;
 	}
 	
-	public void addType( Type type  ) {		
+	public void addType( ClassInterfaceBaseType type  ) {		
 		addType( type, packageTree );
 	}
 	
-	public void addType( Type type, Package p  ) {
+	public void addType( ClassInterfaceBaseType type, Package p  ) {
 		p.addType(type); //automatically adds to typeTable and sets type's package				
 	}
 	
@@ -67,7 +66,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return importList;
 	}
 	
-	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, Type>> hashMap, List<File> importList, Package packageTree  ) {
+	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> hashMap, List<File> importList, Package packageTree  ) {
 		this.debug = debug;
 		this.typeTable = hashMap;
 		this.importList = importList;
@@ -179,7 +178,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	
-	public final Type lookupTypeFromCurrentMethod( String name )
+	public final ClassInterfaceBaseType lookupTypeFromCurrentMethod( String name )
 	{	
 		if( currentMethod != null )
 		{
@@ -199,9 +198,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	//outer class is just a guess, not a sure thing
 	//this method is used when starting from a specific point (as in when looking up extends lists), rather than from the current type
-	public final Type lookupTypeStartingAt( String name, Type outer )
+	public final ClassInterfaceBaseType lookupTypeStartingAt( String name, Type outer )
 	{	
-		Type type = null;
+		ClassInterfaceBaseType type = null;
 		
 		//try starting point
 		if( outer != null )
@@ -240,7 +239,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	//nothing known, start with current method (looking for type parameters)
-	public final Type lookupType( String name )
+	public ClassInterfaceBaseType lookupType( String name )
 	{
 		if( name.contains("@"))
 		{
@@ -252,14 +251,14 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 		
 	//outer class known, no need to look at packages
-	public final Type lookupType( String name, Type outerClass )
+	public final ClassInterfaceBaseType lookupType( String name, Type outerClass )
 	{			
 		Package p = outerClass.getPackage();
 		
 		if( p == null )
 			p = packageTree;
 		
-		Map<String, Type> types = typeTable.get(p);
+		Map<String, ClassInterfaceBaseType> types = typeTable.get(p);
 		
 		String prefix = outerClass.getTypeName();		
 		
@@ -278,12 +277,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	//get type from specific package
-	public final Type lookupType( String name, Package p )
+	public final ClassInterfaceBaseType lookupType( String name, Package p )
 	{		
 		return typeTable.get(p).get(name);
 	}
 	
-	public final Type lookupType( String packageName, String name )
+	public final ClassInterfaceBaseType lookupType( String packageName, String name )
 	{			
 		Package p = packageTree.getChild(packageName);
 		
@@ -306,44 +305,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 
-	protected void createTypeParameterScope(Boolean secondVisit) {
-		// we have a new scope, so we need a new HashMap in the linked list
-		if(secondVisit)
-			typeParameterTable.removeFirst();		
-		else
-			typeParameterTable.addFirst(new HashMap<String, Node>());
-	}
 	
 	
-	//Both must work
+	//All must work
 	//class LinkedList<T is Eggplant> implements List<T>
 	//class LinkedList<T, U is T> implements List<T>
 	//class Piglet implements LinkedList<Pig>
 	
-	protected void addTypeParameter( String name, Node node )
-	{
-		if( !typeParameterTable.get(0).containsKey( name ) ) //we only look at current scope
-		{			
-			//Don't add a second time
-			//Error will be checked in ASTTypeParameters
-			//addError(node, Error.MULT_SYM, name);
-			if( typeParameterTable.size() == 0 )
-				addError(node, Error.INVL_TYP, "No valid scope for type parameter declaration");
-			else
-				typeParameterTable.getFirst().put(name, node);  //uses node for modifiers
-		}
-	}
 	
-	protected Type findTypeParameter( String name )
-	{
-		Node node = null;
-		for( HashMap<String,Node> map : typeParameterTable )
-			if( (node = map.get(name)) != null )
-				return node.getType();
 		
-		return null;
-	}
-	
 	protected boolean checkTypeArguments( List<TypeParameter> parameters, SequenceType arguments )
 	{
 		if( parameters.size() != arguments.size() )

@@ -3,10 +3,12 @@ package shadow.typecheck;
 import java.util.List;
 
 import shadow.parser.javacc.Node;
+import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public class MethodSignature {
 	protected final MethodType type;
@@ -18,7 +20,7 @@ public class MethodSignature {
 		this.symbol = symbol;
 		this.node = node;
 	}
-	public MethodSignature(Type enclosingType, String symbol, int modifiers, Node node) {
+	public MethodSignature(ClassInterfaceBaseType enclosingType, String symbol, int modifiers, Node node) {
 		type = new MethodType(enclosingType, modifiers);
 		this.symbol = symbol;
 		this.node = node;
@@ -108,5 +110,16 @@ public class MethodSignature {
 	
 	public MethodType getMethodType() {
 		return type;
+	}
+	
+	public MethodSignature replace(List<TypeParameter> parameters,
+			List<ModifiedType> replacements) {
+		return new MethodSignature(type.replace(parameters, replacements), symbol, node);
+	}
+	
+	public boolean matchesInterface(MethodSignature interfaceSignature) {
+			return interfaceSignature.symbol.equals(symbol) && 					
+					interfaceSignature.type.canReturn(type.getReturnTypes()) && 
+					interfaceSignature.type.canAccept(type.getParameterTypes());
 	}
 }

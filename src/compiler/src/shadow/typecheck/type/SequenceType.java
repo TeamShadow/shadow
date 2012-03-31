@@ -129,6 +129,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			return false;
 	}
 	
+	@Override
 	public SequenceType replace(List<TypeParameter> values, List<ModifiedType> replacements )
 	{		
 		SequenceType temp = new SequenceType();

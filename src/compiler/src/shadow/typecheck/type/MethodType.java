@@ -3,8 +3,10 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import shadow.parser.javacc.ShadowParser.ModifierSet;
+import shadow.typecheck.MethodSignature;
 
 public class MethodType extends Type {
 	protected List<String> paramNames;
@@ -15,7 +17,7 @@ public class MethodType extends Type {
 		this(null, 0);
 	}
 
-	public MethodType(Type outer, int modifiers) {
+	public MethodType(ClassInterfaceBaseType outer, int modifiers) {
 		super(null, modifiers, outer, Kind.METHOD);
 		paramNames = new ArrayList<String>();
 		paramTypes = new SequenceType();
@@ -176,6 +178,19 @@ public class MethodType extends Type {
 //			sb.append("_R").append(r.getMangledName());
 		
 		return sb.toString();
+	}
+	
+	
+	@Override
+	public MethodType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	{	
+		MethodType replaced = new MethodType(getOuter(), getModifiers());		
+
+		replaced.paramNames = paramNames;
+		replaced.paramTypes = paramTypes.replace(values, replacements);
+		replaced.returns = returns.replace(values, replacements);		
+		
+		return replaced;
 	}
 
 }

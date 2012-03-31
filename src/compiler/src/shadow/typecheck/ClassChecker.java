@@ -90,6 +90,7 @@ import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -109,7 +110,7 @@ public class ClassChecker extends BaseChecker {
 	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
 	protected LinkedList<HashMap<String, Node>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	
-	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<File> importList, Package packageTree ) {
+	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, Node>>();
 		curPrefix = new LinkedList<Node>();
@@ -142,7 +143,7 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )
 			currentType = currentType.getOuter();		
 		else
-			currentType = node.jjtGetParent().getType(); //get type from declaration
+			currentType = (ClassInterfaceBaseType)(node.jjtGetParent().getType()); //get type from declaration
 			
 		return WalkType.POST_CHILDREN;
 	}	
@@ -1555,7 +1556,7 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		
 		String name = node.getImage();
-		Type context;
+		ClassInterfaceBaseType context;
 		boolean directAccess;
 		
 		if( node.jjtGetParent() instanceof ASTPrimaryPrefix ) //not part of some chain of references
@@ -1565,9 +1566,18 @@ public class ClassChecker extends BaseChecker {
 		}
 		else //ASTPrimarySuffix: already in the middle of references
 		{
-			context = curPrefix.getFirst().getType();
+			context = (ClassInterfaceBaseType)(curPrefix.getFirst().getType());
 			directAccess = false;
 		}
+		
+		if( context instanceof InstantiatedType )
+		{
+			InstantiatedType instantiation = (InstantiatedType)context;
+			ClassInterfaceBaseType baseType = instantiation.getBaseType(); 
+			context = (ClassInterfaceBaseType)baseType.replace(baseType.getParameters(), instantiation.getArgumentTypes()); 
+		}		
+		
+		
 		
 		if( !setTypeFromContext( node, name, context, directAccess )) //automatically sets type if can
 		{
@@ -1588,8 +1598,12 @@ public class ClassChecker extends BaseChecker {
 			for( int i = start; i < node.jjtGetNumChildren(); i++ )
 				sequenceType.add(node.jjtGetChild(i));
 			
-			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();
-			List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
+			//old
+			//ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();
+			//List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
+			//List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
+			
+			List<MethodSignature> methods = context.getMethods(unboundMethod.getTypeName());
 			List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
 			
 			boolean perfectMatch = false;
@@ -2075,13 +2089,13 @@ public class ClassChecker extends BaseChecker {
 		List<MethodSignature> candidateConstructors = type.getMethods("constructor");
 		
 		// we don't have implicit constructors, so need to check if the default constructor is OK
-		if(sequenceType.size() == 0 && candidateConstructors == null)
+		if(sequenceType.size() == 0 && (candidateConstructors == null || candidateConstructors.size() == 0 ))
 		{
 			node.setType(child.getType());
 			return WalkType.POST_CHILDREN;
 		}		
 		// we have no constructors, but they are calling with parameters
-		else if(sequenceType.size() > 0 && candidateConstructors == null)
+		else if(sequenceType.size() > 0 && (candidateConstructors == null || candidateConstructors.size() == 0 ))
 		{
 			addError(child, Error.TYPE_MIS, "No constructor found with signature " + sequenceType);
 			node.setType(Type.UNKNOWN);

@@ -1,25 +1,27 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
+
+import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.Type;
 
 public class Package
 {	
 	private final HashMap<String, Package> children = new HashMap<String, Package>();
-	private final HashMap<String, Type> types = new HashMap<String, Type>();
+	private final HashMap<String, ClassInterfaceBaseType> types = new HashMap<String, ClassInterfaceBaseType>();
 	private final String name;	
 	private final Package parent;
 	
-	public Package(HashMap<Package, HashMap<String, Type>> typeTable)
+	public Package(HashMap<Package, HashMap<String, ClassInterfaceBaseType>> otherTypes)
 	{
-		this("", null, typeTable );
+		this("", null, otherTypes );
 	}	
 
-	private Package(String name, Package parent,  HashMap<Package, HashMap<String, Type>> typeTable)
+	private Package(String name, Package parent,  HashMap<Package, HashMap<String, ClassInterfaceBaseType>> otherTypes)
 	{
 		this.name = name;
 		this.parent = parent;
-		typeTable.put(this, types);
+		otherTypes.put(this, types);
 	}	
 	
 	/**
@@ -28,7 +30,7 @@ public class Package
 	 * @param folder
 	 * @return
 	 */
-	public Package addPackage( String name, HashMap<Package, HashMap<String, Type>> typeTable )
+	public Package addPackage( String name, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable )
 	{				
 		if( children.containsKey(name) )
 			return children.get(name);
@@ -44,7 +46,7 @@ public class Package
 	 * @param path
 	 * @return
 	 */
-	public Package addFullyQualifiedPackage( String path, HashMap<Package, HashMap<String, Type>> typeTable  )
+	public Package addFullyQualifiedPackage( String path, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable  )
 	{
 		if( path.length() > 0 )
 		{
@@ -61,15 +63,15 @@ public class Package
 			return this;
 	}
 	
-	public void addType(Type type )
+	public void addType(ClassInterfaceBaseType type )
 	{		
 		types.put(type.getTypeName(), type);
 		type.setPackage(this);
 	}
 	
 
-	public void addTypes(HashMap<String, Type> types) {
-		for( Type type : types.values() )
+	public void addTypes(HashMap<String, ClassInterfaceBaseType> types) {
+		for( ClassInterfaceBaseType type : types.values() )
 			addType( type );
 	}
 	

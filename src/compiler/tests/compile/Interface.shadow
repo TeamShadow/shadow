@@ -1,6 +1,6 @@
 interface Fooable
 {
-	public foo(int a) => (code);
+	foo(int a) => (code);
 }
 
 class Interface implements Fooable

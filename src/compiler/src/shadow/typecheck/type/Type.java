@@ -10,9 +10,9 @@ public class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string that represents the type */
 	private final int modifiers;
-	private Type outer; //outer class	
+	private ClassInterfaceBaseType outer; //outer class	
 	private final Kind kind;
-	private Package _package;
+	protected Package _package;
 	private List<TypeParameter> parameters = new ArrayList<TypeParameter>();
 	//private List<Type> arguments = new ArrayList<Type>();
 	private boolean parameterized;	
@@ -31,7 +31,8 @@ public class Type {
 		UNBOUND_METHOD,
 		VIEW,
 		INSTANTIATED,
-		UNKNOWN, 
+		UNKNOWN,
+		NULL 
 	};
 	
 	public static ClassType OBJECT = null; 
@@ -57,9 +58,9 @@ public class Type {
 	public static final ErrorType ERROR = new ErrorType( "Error", 0, null, null );	
 	public static final ExceptionType EXCEPTION = new ExceptionType( "Exception", 0, null, null );
 	
-	public static final Type UNKNOWN = new Type( "Unknown Type", 0, null, Kind.UNKNOWN ); //UNKNOWN type used for placeholder when typechecking goes wrong
+	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", 0, null, Kind.UNKNOWN ); //UNKNOWN type used for placeholder when typechecking goes wrong
 	
-	public static final Type NULL = new Type( "null" );
+	public static final ClassType NULL = new ClassType( "null", 0, null, Kind.NULL );
 	
 	public Type(String typeName) {
 		this( typeName, 0 );
@@ -69,15 +70,15 @@ public class Type {
 		this( typeName, modifiers, null );
 	}
 	
-	public Type(String typeName, int modifiers, Type outer ) {
+	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
 		this( typeName, modifiers, outer, Kind.CLASS );
 	}	
 	
-	public Type(String typeName, int modifiers, Type outer, Kind kind ) {
+	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind ) {
 		this( typeName, modifiers, outer, kind, (outer == null ? null : outer._package ) );
 	}
 	
-	public Type(String typeName, int modifiers, Type outer, Kind kind,  Package _package ) {
+	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind,  Package _package ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
 		this.outer = outer;
@@ -138,6 +139,17 @@ public class Type {
 		
 		if( equals(t) )
 			return true;
+		
+		/*
+		if( t.getKind() == Kind.TYPE_PARAMETER )
+		{
+			for( Type bound : ((TypeParameter)t).getBounds() )
+				if( !isSubtype(bound))
+					return false;
+			
+			return true;
+		}
+		*/
 		
 		switch( kind  )
 		{
@@ -258,12 +270,12 @@ public class Type {
 		return this.equals(Type.STRING);
 	}
 	
-	public Type getOuter()
+	public ClassInterfaceBaseType getOuter()
 	{
 		return outer;
 	}
 	
-	public void setOuter(Type outer)
+	public void setOuter(ClassInterfaceBaseType outer)
 	{
 		this.outer = outer;
 	}

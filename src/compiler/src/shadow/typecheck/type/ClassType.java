@@ -8,6 +8,7 @@ import java.util.Set;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
+import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.MethodSignature;
 
 public class ClassType extends ClassInterfaceBaseType {
@@ -27,11 +28,11 @@ public class ClassType extends ClassInterfaceBaseType {
 		this( typeName, modifiers, null );
 	}
 	
-	public ClassType(String typeName, int modifiers, Type outer ) {
+	public ClassType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
 		this( typeName, modifiers, outer, Kind.CLASS );
 	}	
 	
-	public ClassType(String typeName, int modifiers, Type outer, Kind kind ) {
+	public ClassType(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind ) {
 		super( typeName, modifiers, outer, kind);
 	}	
 	
@@ -75,7 +76,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		for( List<MethodSignature> signatures : methodMap.values() )
 		{
 			for( MethodSignature signature : signatures )
-				if( !containsMethod( signature, ModifierSet.PUBLIC  ) )
+				if( !recursivelyContainsInterfaceMethod( signature  ) )
 					return false;						
 		}	
 		
@@ -86,6 +87,29 @@ public class ClassType extends ClassInterfaceBaseType {
 		return true;
 	}
 
+	private boolean containsInterfaceMethod(MethodSignature signature) {
+		List<MethodSignature> list = methodTable.get(signature.getSymbol());
+		
+		if( list != null )
+			for(MethodSignature existing : list )
+				if( existing.matchesInterface(signature) && ModifierSet.isPublic(existing.getASTNode().getModifiers() ) ) 
+					return true;
+		
+		return false;
+	}
+	
+	private boolean recursivelyContainsInterfaceMethod(MethodSignature signature) {
+		if( containsInterfaceMethod(signature))
+			return true;
+
+		if( getExtendType() == null )
+			return false;					
+		
+		//recursively check parents
+		return getExtendType().recursivelyContainsInterfaceMethod(signature);
+	}
+
+	/*
 	public boolean recursivelyContainsMethod(MethodSignature signature, int modifiers ) //must have certain modifiers (usually public)
 	{
 		if( containsMethod(signature, modifiers))
@@ -97,6 +121,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		//recursively check parents
 		return getExtendType().recursivelyContainsMethod(signature, modifiers );
 	}
+	*/
 	
 	public MethodSignature recursivelyGetIndistinguishableMethod(MethodSignature signature)
 	{		
@@ -264,5 +289,48 @@ public class ClassType extends ClassInterfaceBaseType {
 		mangle(getTypeName(), sb);
 		return sb.toString();
 	}
+
+	
+	@Override
+	public ClassType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	{	
+		ClassType replaced = new ClassType( getTypeName(), getModifiers(), getOuter() );
+		
+		if( getExtendType().isParameterized() )
+		{
+			//deal with this eventually		
+			//replaced.setExtendType(getExtendType().replace(values, replacements));
+		}
+		else
+			replaced.setExtendType(getExtendType());
+		
+		Map<String, Node> fields = getFields(); 
+		
+		for( String name : fields.keySet() )
+		{
+			SimpleNode field = (SimpleNode)(fields.get(name));
+			field = field.clone();
+			field.setType(field.getType().replace(values, replacements));			
+			replaced.addField(name, field );
+		}
+		
+		Map<String, List<MethodSignature> > methods = getMethodMap();
+		
+		for( String name : methods.keySet() )
+		{
+			List<MethodSignature> signatures = methods.get(name);
+			
+			for( MethodSignature signature : signatures )			
+				replaced.addMethod(name, signature.replace(values, replacements));				
+		}
+		
+		Map<String, Type> inners = getInnerClasses();
+		
+		for( String name : inners.keySet() )		
+			replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
+		
+		return replaced;
+	}
+	
 	
 }

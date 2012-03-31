@@ -2,6 +2,8 @@ package shadow.typecheck.type;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import shadow.typecheck.MethodSignature;
 
@@ -16,11 +18,11 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		this( typeName, modifiers, null );
 	}
 	
-	public InterfaceType(String typeName, int modifiers, Type outer ) {
+	public InterfaceType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
 		this( typeName, modifiers, outer, Kind.INTERFACE );
 	}	
 		
-	public InterfaceType(String typeName, int modifiers, Type outer, Kind kind ) {
+	public InterfaceType(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind ) {
 		super( typeName, modifiers, outer, kind );
 	}
 
@@ -94,6 +96,48 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		descendants.remove(this);
 		
 		return false;
+	}
+	
+	@Override
+	public InterfaceType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	{	
+		InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers(), getOuter() );
+		
+		for( InterfaceType _interface : extendTypes )
+			replaced.addExtendType(_interface.replace(values, replacements));		
+		
+		//should have no fields in an interface
+		
+		/*
+		Map<String, ModifiedType> fields = getFields(); 
+		
+		for( String name : fields.keySet() )
+		{
+			ModifiedType field = fields.get(name);			
+			replaced.addField(name, new SimpleModifiedType( field.getType().replace(values, replacements), field.getModifiers() ) );
+		}
+		*/
+		
+		Map<String, List<MethodSignature> > methods = getMethodMap();
+		
+		for( String name : methods.keySet() )
+		{
+			List<MethodSignature> signatures = methods.get(name);
+			
+			for( MethodSignature signature : signatures )			
+				replaced.addMethod(name, signature.replace(values, replacements));				
+		}
+		
+		//should have no inner interfaces in an interface		
+		/*
+		Map<String, Type> inners = getInnerClasses();
+		
+		for( String name : inners.keySet() )		
+			replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
+		*/
+		
+		return replaced;
+		
 	}
 	
 }

@@ -23,6 +23,55 @@
 - Lambdas (delegates)
 - Generics/templates
 
+class Container<T>
+{
+	T value;
+}
+
+class ArrayList<T> implements Iterable<T>
+{}
+
+class StringList extends ArrayList<String>
+{}
+
+class Mixed<T> extends HashMap<int, T>
+{}
+
+class Outer<T>
+{
+	public class Inner
+	{
+		T stuff;	
+	}
+}
+
+class Outer<T>
+{
+	public static class Inner
+	{
+		T stuff;	
+	}
+}
+
+class Outer<T>
+{
+	public class Inner<U>
+	{
+		U stuff;	
+	}
+}
+
+class Outer<T>
+{
+	public class Inner<T> //legal?
+	{
+		T stuff;
+	}
+}
+
+
+
+
 => General <=
 - *Need a better/good way to report errors*
 - ** Col & line numbers are "wrong" for multiple AST nodes **

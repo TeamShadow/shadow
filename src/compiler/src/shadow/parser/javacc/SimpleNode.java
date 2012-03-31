@@ -217,4 +217,23 @@ public class SimpleNode implements Node {
 	{
 		return file;
 	}
+	
+	@Override
+	public SimpleNode clone()
+	{
+		SimpleNode node = new SimpleNode(id);
+		
+		node.parent = parent;
+		node.children = children;
+		node.parser = parser;
+		node.image = image;
+		node.file = file;
+		node.line = line;
+		node.column = column;
+	    node.type = type;
+	    node.modifiers = modifiers;
+	    node.enclosingType = enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
+	    
+	    return node;
+	}	
 }
