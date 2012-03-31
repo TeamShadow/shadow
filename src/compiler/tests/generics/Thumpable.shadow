@@ -1,4 +1,4 @@
-interface Thumpable<T>
+interface Thumpable<T is Parent>
 {
 	thump() => (nullable T);
 }

@@ -193,4 +193,9 @@ public class MethodType extends Type {
 		return replaced;
 	}
 
+	//covariant returns and contravariant parameters
+	public boolean matchesInterface(MethodType type) {
+		return type.returns.canSubstitute(returns) && paramTypes.canSubstitute(type.paramTypes);
+	}
+
 }

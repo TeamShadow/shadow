@@ -3,6 +3,7 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.Type.Kind;
 
 public class TypeParameter extends ClassInterfaceBaseType
@@ -32,7 +33,7 @@ public class TypeParameter extends ClassInterfaceBaseType
 		return true;
 	}
 	
-	public boolean isSubtype(Type type)
+	public boolean canTakeSubstitution(Type type)
 	{
 		if( type.getKind() == Kind.TYPE_PARAMETER )
 		{
@@ -63,6 +64,18 @@ public class TypeParameter extends ClassInterfaceBaseType
 		}
 	}
 	
+	public boolean isSubtype(Type type)
+	{		
+		if( equals(type) )
+			return true;
+		
+		for( Type bound : bounds )
+			if( bound.isSubtype(type) )
+				return true;
+		
+		return false;
+	}
+	
 	public Type replace(List<TypeParameter> values, List<ModifiedType> replacements )
 	{
 		for( int i = 0; i < values.size(); i++ )
@@ -70,6 +83,26 @@ public class TypeParameter extends ClassInterfaceBaseType
 				return replacements.get(i).getType();
 		
 		return this;
+	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getTypeName());
+		boolean first = true;
+		
+		if( !bounds.isEmpty() )
+			builder.append(" is ");
+		
+		for(Type bound : bounds )
+		{			
+			if( !first )
+				builder.append(" and ");
+					
+			builder.append(bound.toString());
+			
+			first = false;
+		}
+		
+		return builder.toString();
 	}
 	
 }

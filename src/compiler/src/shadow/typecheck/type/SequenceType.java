@@ -96,7 +96,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		for(ModifiedType type: types)
 		{			
 			if( !first )
-				builder.append(",");
+				builder.append(", ");
 			
 			Type p = type.getType();
 			
@@ -106,15 +106,15 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			if( ModifierSet.isNullable(type.getModifiers()))
 				builder.append("nullable ");
 			
-			if(p.typeName == null) // method type
+			//if(p.typeName == null) // method type
 				builder.append(p.toString());
-			else
-				builder.append(p.typeName);
+			//else
+				//builder.append(p.typeName);
 			
 			first = false;
 		}
 		
-		builder.append(" )");
+		builder.append(")");
 		
 		return builder.toString();
 	}
@@ -294,6 +294,28 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	@Override
 	public List<ModifiedType> subList(int fromIndex, int toIndex) {		
 		return types.subList(fromIndex, toIndex);
+	}
+
+	public boolean canSubstitute(List<ModifiedType> inputTypes) {	
+		if( types.size() != inputTypes.size() )
+			return false;
+		
+		for( int i = 0; i < types.size(); i++ )
+		{
+			Type input = inputTypes.get(i).getType();
+			Type type = types.get(i).getType();
+			
+			if( type instanceof TypeParameter )
+			{
+				TypeParameter parameter = (TypeParameter)type;
+				if( !parameter.canTakeSubstitution(input))
+					return false;				
+			}			
+			else if( !input.isSubtype(type) )
+				return false;
+		}
+		
+		return true;	
 	}
 
 }

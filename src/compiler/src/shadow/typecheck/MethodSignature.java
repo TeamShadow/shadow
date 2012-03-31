@@ -119,7 +119,6 @@ public class MethodSignature {
 	
 	public boolean matchesInterface(MethodSignature interfaceSignature) {
 			return interfaceSignature.symbol.equals(symbol) && 					
-					interfaceSignature.type.canReturn(type.getReturnTypes()) && 
-					interfaceSignature.type.canAccept(type.getParameterTypes());
+					interfaceSignature.type.matchesInterface(type);
 	}
 }

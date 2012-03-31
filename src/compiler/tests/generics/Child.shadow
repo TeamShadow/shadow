@@ -1,0 +1,4 @@
+class Child extends Parent
+{
+
+}

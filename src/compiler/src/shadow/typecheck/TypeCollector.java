@@ -56,15 +56,12 @@ import shadow.typecheck.type.TypeParameter;
 
 public class TypeCollector extends BaseChecker
 {	
-	protected Map<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();
-	//protected Set<String> typeBounds = new HashSet<String>();
-	protected Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors and also resolving type parameters
-	protected Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
-	//protected Map<Type,List<TypeParameterRepresentation>> typeParameterTable = new HashMap<Type,List<TypeParameterRepresentation>>();
-	//protected Map<Type,List<String>> boundsTable = new HashMap<Type,List<String>>();
+	private Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors and also resolving type parameters
+	private Map<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();	
+	private Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
 	
-	protected String currentName = "";
-	protected Map<File, Node> files = new HashMap<File, Node>();
+	private String currentName = "";
+	private Map<File, Node> files = new HashMap<File, Node>();
 	
 	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, LinkedList<File> importList, Package p )
 	{		
@@ -410,12 +407,21 @@ public class TypeCollector extends BaseChecker
 						fileList.add(file);					
 				}
 				
-				//copy type defining nodes into our node table
-				Map<Type,Node> otherNodeTable = collector.getNodeTable(); 
-				
+				//copy tables from other file into our central table
+				Map<Type,Node> otherNodeTable = collector.nodeTable;
 				for( Type type : otherNodeTable.keySet() )
 					if( !nodeTable.containsKey(type) )
 						nodeTable.put(type, otherNodeTable.get(type));
+				
+				Map<Type,List<String>> otherExtendsTable = collector.extendsTable;
+				for( Type type : otherExtendsTable.keySet() )
+					if( !extendsTable.containsKey(type) )
+						extendsTable.put(type, otherExtendsTable.get(type));
+				
+				Map<Type,List<String>> otherImplementsTable = collector.implementsTable;
+				for( Type type : otherImplementsTable.keySet() )
+					if( !implementsTable.containsKey(type) )
+						implementsTable.put(type, otherImplementsTable.get(type));
 			}
 		}	
 		
@@ -428,11 +434,6 @@ public class TypeCollector extends BaseChecker
 		updateTypeParameters();
 	}
 	
-	private Map<Type,Node> getNodeTable() {
-		return nodeTable;
-	}
-
-
 	public Map<File, Node> getFiles()
 	{
 		return files;
