@@ -308,13 +308,13 @@ public class Type {
 	}
 	
 	//for math
-	public boolean isNumerical()
+	final public boolean isNumerical()
 	{
 		return isPrimitive() && !this.equals(BOOLEAN); //includes CODE, is that right?
 	}
 	
 	//for cases where integers are required (bitwise operations, array bounds, switch statements, etc.)
-	public boolean isIntegral()
+	final public boolean isIntegral()
 	{
 		return
 		this.equals(BYTE) ||
@@ -329,7 +329,7 @@ public class Type {
 	}
 	
 	
-	public boolean isBuiltIn()
+	final public boolean isBuiltIn()
 	{
 		return
 		isPrimitive() ||
@@ -341,7 +341,7 @@ public class Type {
 		this.equals(EXCEPTION);
 	}
 	
-	public boolean isPrimitive()
+	final public boolean isPrimitive()
 	{
 		return
 		this.equals(BOOLEAN) ||

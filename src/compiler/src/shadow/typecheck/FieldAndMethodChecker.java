@@ -765,12 +765,10 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
-	//
+
 	// Everything below here are just visitors to push up the type
-	//	
+	
 	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
-	//public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 }

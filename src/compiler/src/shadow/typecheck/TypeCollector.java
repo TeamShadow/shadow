@@ -66,10 +66,12 @@ public class TypeCollector extends BaseChecker
 	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, LinkedList<File> importList, Package p )
 	{		
 		super(debug, typeTable, importList, p );
-		// put all of our built-in types into the TypeTable		
 		
-		//addType(Type.OBJECT);
-		//addType(Type.STRING);
+		// put built-in types into the TypeTable
+		// Object, String, Class, and Array are added separately
+		// since there are files that correspond to them
+		// Will all type eventually have files?
+		
 		addType(Type.BOOLEAN);
 		addType(Type.BYTE);
 		addType(Type.CODE);
@@ -92,7 +94,7 @@ public class TypeCollector extends BaseChecker
 	
 	private void updateTypeParameters()
 	{	
-		//add type parameters to declarations
+		//sets the correct types for type parameters in declarations
 		for( Package p : getTypeTable().keySet() )
 		{
 			for( ClassInterfaceBaseType type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
@@ -111,7 +113,7 @@ public class TypeCollector extends BaseChecker
 						if( (child instanceof ASTExtendsList) || (child instanceof ASTImplementsList) )
 						{
 							for( int j = 0; j < child.jjtGetNumChildren(); j++ )
-								updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), type.getParameters(), missingTypes  );
+								updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), type.getParameters(), missingTypes);
 						}
 					}
 				}					
@@ -213,29 +215,27 @@ public class TypeCollector extends BaseChecker
 		}
 	}
 	
+	// updates type parameters inside of extends and implements lists
 	private void updateTypeParameters(ASTClassOrInterfaceType node, List<TypeParameter> parameterList, TreeSet<String> missingTypes)
 	{
-		//[ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@"  ] ClassOrInterfaceTypeSuffix() (  LOOKAHEAD(2) "." ClassOrInterfaceTypeSuffix() )*
 		String typeName = node.getImage();	
-		ClassInterfaceBaseType type = lookupType(typeName);
+		ClassInterfaceBaseType type = lookupType(typeName); //retrieve the type without type parameters
 		
 		if(type == null)
 		{
-			addError(node, Error.UNDEF_TYP, typeName);
+			addError(node, Error.UNDEF_TYP, typeName);			
 			type = Type.UNKNOWN;
+			missingTypes.add(typeName);
 		}
 		else
-		{
-			//if (currentType instanceof ClassType)
-			//	((ClassType)currentType).addReferencedType(type);
-			
+		{	
 			//Container<T, List<String>, String, Thing<K>>.Stuff<U>		
 			
 			ClassInterfaceBaseType current = type;
 			ClassInterfaceBaseType next = null;
 			
-			//walk backwards up the type, snapping up parameters
-			//we go backwards because we need to set outer types
+			// walk backwards up the type, snapping up parameters
+			// we go backwards because we need to set outer types
 			for( int i = node.jjtGetNumChildren() - 1; i >= 0; i-- )
 			{
 				Node child = node.jjtGetChild(i);				
@@ -248,14 +248,15 @@ public class TypeCollector extends BaseChecker
 						for( int j = 0; j < typeArguments.jjtGetNumChildren(); j++ )
 						{
 							ASTReferenceType argument = (ASTReferenceType) (typeArguments.jjtGetChild(j).jjtGetChild(0));
-							Node typeNode = argument.jjtGetChild(0); 
+							Node typeNode = argument.jjtGetChild(0);
+							
+							//recursively update the type parameters of the type parameters...
 							if(  typeNode instanceof ASTClassOrInterfaceType )
 								updateTypeParameters( (ASTClassOrInterfaceType) typeNode, parameterList, missingTypes );
 							
 							argument.setType(typeNode.getType());
 							arguments.add(argument);
-						}
-						
+						}						
 						typeArguments.setType(arguments);
 						
 						List<TypeParameter> parameters = current.getParameters();
@@ -282,14 +283,21 @@ public class TypeCollector extends BaseChecker
 				}				
 			}			
 		}
-				
+		
+		//reset the type now that it has type parameters 
 		node.setType(type);		
 	}
 
 
-	//This disgusting code handles type parameters
-	//It must be called before field and method checking (since other classes may be dependent on the information)
-	//It must be called after all the types have been collected, otherwise it may depend on unknown types
+	/**
+	 * Adds type parameters to declarations and checks that the same parameter is not added multiple times.
+	 * It must be called before field and method checking (since other classes may be dependent on the information).
+	 * It must be called after all the types have been collected, otherwise it may depend on unknown types.
+	 * @param parentType
+	 * @param parameters
+	 * @param missingTypes
+	 */
+	
 	private void processTypeParameters(Type parentType, ASTTypeParameters parameters, TreeSet<String> missingTypes)
 	{	
 		for( int i = 0; i < parameters.jjtGetNumChildren(); i++ )
@@ -439,253 +447,6 @@ public class TypeCollector extends BaseChecker
 		return files;
 	}
 	
-/*	public void linkTypeTable()
-	{
-		//this is supposed to find the parents for everything
-		List<String> list;
-		for( Type type : getTypeTable().values() )
-		{	
-			if( type instanceof ClassType ) //includes error, exception, and enum (for now)
-			{
-				if( !type.isBuiltIn() )
-				{
-					ClassType classType = (ClassType)type;
-					if( extendsTable.containsKey(type))
-					{
-						list = extendsTable.get(type);
-						ClassType parent = (ClassType)lookupType(list.get(0), classType.getOuter()); //only one thing in extends lists for classes
-						if( parent == null )
-							addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot extend undefined class " + list.get(0));
-						else
-							classType.setExtendType(parent);
-					}
-					else if( type.getKind() == Kind.CLASS )
-						classType.setExtendType(Type.OBJECT);
-					else if( type.getKind() == Kind.ENUM )
-						classType.setExtendType(Type.ENUM);
-					else if( type.getKind() == Kind.ERROR )
-						classType.setExtendType(Type.ERROR);
-					else if( type.getKind() == Kind.EXCEPTION )
-						classType.setExtendType(Type.EXCEPTION);
-					
-					if( implementsTable.containsKey(type))
-					{
-						list = implementsTable.get(type);			
-						for( String name : list )
-						{
-							InterfaceType _interface = (InterfaceType)lookupType(name, classType.getOuter());
-							if( _interface == null )
-								addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot implement undefined interface " + name);
-							else							
-								classType.addImplementType(_interface);
-						}
-					}
-				}
-			}
-			else if( type instanceof InterfaceType ) 
-			{
-				InterfaceType interfaceType = (InterfaceType)type;
-				if( extendsTable.containsKey(type))
-				{
-					list = extendsTable.get(type);
-					for( String name : list )
-					{
-						InterfaceType _interface = (InterfaceType)lookupType(name, interfaceType.getOuter());
-						if( _interface == null )
-							addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot extend undefined interface " + name);
-						else							
-							interfaceType.addExtendType(_interface);
-					}
-				}				
-			}
-		}	
-	}
-*/
-	@Override
-	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit )
-			finalizeType( node );
-		else
-			createType( node, node.getModifiers(), node.getKind() );
-			
-		return WalkType.POST_CHILDREN;
-	}
-	
-	@Override
-	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit )
-			finalizeType( node );
-		else
-			createType( node, node.getModifiers(), Type.Kind.ENUM );
-
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	@Override
-	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit )
-			finalizeType( node );
-		else
-			createType( node, node.getModifiers(), Type.Kind.VIEW );
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit ) //leaving a type
-		{
-			currentType = currentType.getOuter();
-			if( currentType == null )
-				currentName = currentPackage.getFullyQualifiedName();
-			else
-				currentName = currentType.getTypeName();
-		}
-		else //entering a type
-		{					
-			currentType = (ClassInterfaceBaseType)node.jjtGetParent().getType();
-			currentName = currentType.getTypeName();				
-		}
-			
-		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
-	{
-		//TODO: Make this work
-		/* Can be in:
-		 * ExtendsList (do import if @)
-		 * ImplementsList (do import if @)
-		 * TypeBound (do import if @)
-		 * TypeArgument (do import if @)
-		 * ReferenceType (do import if @)
-		 * ArrayAllocation (do import if @)
-		 * ConstructorInvocation (do import if @) ALL CASES
-		 */
-		
-		if( secondVisit )
-		{			
-			if ( node.jjtGetNumChildren() > 0)
-			{
-				boolean dot = true;
-				Node child = node.jjtGetChild(0);
-				String name = child.getImage();
-				if( child instanceof ASTUnqualifiedName )
-				{
-					name += "@";
-					dot = false;
-				}
-				
-				for( int i = 1; i < node.jjtGetNumChildren(); i++ ) 
-				{	
-					if( dot )
-						name += ".";
-					else
-						dot = true;
-					
-					child = node.jjtGetChild(i);
-					name += child.getImage();					
-				}
-				
-				node.setImage(name);
-				
-				if( child instanceof ASTUnqualifiedName )
-					if( !addImport( name ) )
-						addError(node, "No file found for import " + name);					
-			}
-		}
-		return WalkType.POST_CHILDREN;
-	}
-	
-	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException
-	{	/*	
-		if( secondVisit )
-		{
-			if( node.jjtGetNumChildren() > 0 ) 
-			{
-				Node child = node.jjtGetChild(0); 
-				if( child instanceof ASTTypeArguments )
-					node.setImage(node.getImage() + child.getImage());
-			}
-		}*/
-		return WalkType.POST_CHILDREN;
-	}	
-	
-	
-	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{
-			if( node.jjtGetNumChildren() > 0 ) 
-			{
-				Node child = node.jjtGetChild(0);				
-				//triggers an import
-				if( child instanceof ASTUnqualifiedName )
-				{
-					String name = child.getImage() + "@" +  node.getImage();
-					if( !addImport( name ) )
-						addError(node, "No file found for import " + name);
-				}
-			}
-		}
-		return WalkType.POST_CHILDREN;
-	}
-	
-	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
-	{	
-		if( secondVisit )
-		{
-			StringBuilder builder = new StringBuilder();
-			builder.append("<");
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) 
-			{
-				Node child = node.jjtGetChild(i);
-				if( i > 0 )
-					builder.append(", ");
-				builder.append(child.getImage());
-			}
-			builder.append(">");
-			node.setImage(builder.toString());
-		}
-		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	
-	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )		
-			node.setImage(node.jjtGetChild(0).getImage());
-	
-		return WalkType.POST_CHILDREN;
-	}
-	
-	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{
-			StringBuilder builder = new StringBuilder(node.jjtGetChild(0).getImage());
-			List<Integer> dimensions = node.getArrayDimensions();
-			
-			for( int i = 0; i < dimensions.size(); i++ )
-			{
-				
-				builder.append("[");
-				
-				for( int j = 1; j < dimensions.get(i); j++ )
-					builder.append(",");				
-				
-				builder.append("[");
-			}					
-			
-			node.setImage(builder.toString());
-		}
-	
-		return WalkType.POST_CHILDREN;
-	}
-	
 	private void createType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException
 	{		 
 		String typeName;
@@ -757,91 +518,6 @@ public class TypeCollector extends BaseChecker
 		nodeTable.put(node.getType(), node );
 	}
 	
-	
-	/*
-	private void addTypeParameters( ASTTypeParameters node, Type type )
-	{
-		List<TypeParameterRepresentation> list = new LinkedList<TypeParameterRepresentation>();
-		
-		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-		{
-			TypeParameterRepresentation representation = constructTypeParameterRepresentation( (ASTTypeParameter)(node.jjtGetChild(i)) );
-			list.add( representation );
-			node.addRepresentation(representation);
-		}
-		
-		typeParameterTable.put(type, list);
-		
-	}
-	*/
-	
-	public Object visit(ASTTypeParameter node, Boolean secondVisit) throws ShadowException
-	{
-		//t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ TypeBound() ]
-		if( secondVisit )
-		{			
-			/*
-			TypeParameterRepresentation representation = new TypeParameterRepresentation( node.getImage() );
-			if( node.jjtGetNumChildren() > 0 )
-			{
-				ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));
-				representation.addBounds( bound.getRepresentations() );
-			}
-			
-			node.setRepresentation(representation);
-			*/
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	public Object visit(ASTTypeBound node, Boolean secondVisit) throws ShadowException
-	{
-		//"is" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
-		if( secondVisit )
-		{
-			/*
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			{
-				ASTClassOrInterfaceType child = (ASTClassOrInterfaceType)(node.jjtGetChild(i)); 
-				TypeParameterRepresentation representation = new TypeParameterRepresentation( child.getImage() );
-								
-				node.addRepresentation(representation);
-			}
-			*/
-			//TODO: fix this!
-			//It can all be simplified by making a set of the classes needed
-			//Perhaps this should all be pushed back to the next phase of the type checker
-			
-			
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	/*
-	
-	private TypeParameterRepresentation constructTypeParameterRepresentation( ASTTypeParameter parameter )
-	{
-		
-		// t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ TypeBound() ]
-
-		TypeParameterRepresentation representation = new TypeParameterRepresentation( parameter.getImage() );
-		if( parameter.jjtGetNumChildren() > 0 )
-			addBounds( representation, (ASTTypeBound)(parameter.jjtGetChild(0)) );
-		
-		return null;		
-	}
-	
-	private void addBounds( TypeParameterRepresentation representation, ASTTypeBound bound )
-	{
-		//"is" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
-		
-		//for( int i = 0; i < bound.jjtGetNumChildren(); i++ )
-		//probably won't need this
-	}
-	*/
-	
 	private void addExtends( ASTExtendsList node, Type type )
 	{
 		List<String> list = new LinkedList<String>();
@@ -861,34 +537,6 @@ public class TypeCollector extends BaseChecker
 		
 		implementsTable.put(type, list);		
 	}
-
-	
-	public Object visit(ASTPackageDeclaration node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{
-			String name = node.jjtGetChild(0).getImage();									
-			currentPackage = packageTree.addFullyQualifiedPackage(name, typeTable);			
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	@Override
-	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{
-			if( node.jjtGetNumChildren() > 0 )
-			{
-				Node child = node.jjtGetChild(0);
-				node.setImage( child.getImage() + "@" + node.getImage() );
-			}
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
 	
 	public boolean addImport( String name )
 	{
@@ -945,6 +593,8 @@ public class TypeCollector extends BaseChecker
 					path = path.replaceAll("@", separator);
 					File shadowVersion = new File( importPath, path + ".shadow" );
 					File metaVersion = new File( importPath, path + ".meta" );
+					
+					//eventually substitute meta version if available and newer
 					if( shadowVersion.exists() )
 					{
 //						if( metaVersion.exists() && metaVersion.lastModified() >= shadowVersion.lastModified() )												
@@ -971,7 +621,207 @@ public class TypeCollector extends BaseChecker
 		
 		return false;
 	}
+
+	//Visitors below this point
 	
+	@Override
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit )
+			finalizeType( node );
+		else
+			createType( node, node.getModifiers(), node.getKind() );
+			
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit )
+			finalizeType( node );
+		else
+			createType( node, node.getModifiers(), Type.Kind.ENUM );
+
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )
+			finalizeType( node );
+		else
+			createType( node, node.getModifiers(), Type.Kind.VIEW );
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit ) //leaving a type
+		{
+			currentType = currentType.getOuter();
+			if( currentType == null )
+				currentName = currentPackage.getFullyQualifiedName();
+			else
+				currentName = currentType.getTypeName();
+		}
+		else //entering a type
+		{					
+			currentType = (ClassInterfaceBaseType)node.jjtGetParent().getType();
+			currentName = currentType.getTypeName();				
+		}
+			
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
+	{		
+		/* Can be in:
+		 * ExtendsList (do import if @)
+		 * ImplementsList (do import if @)
+		 * TypeBound (do import if @)
+		 * TypeArgument (do import if @)
+		 * ReferenceType (do import if @)
+		 * ArrayAllocation (do import if @)
+		 * ConstructorInvocation (do import if @) ALL CASES
+		 */
+		
+		if( secondVisit )
+		{			
+			if ( node.jjtGetNumChildren() > 0)
+			{
+				boolean dot = true;
+				Node child = node.jjtGetChild(0);
+				String name = child.getImage();
+				if( child instanceof ASTUnqualifiedName )
+				{
+					name += "@";
+					dot = false;
+				}
+				
+				for( int i = 1; i < node.jjtGetNumChildren(); i++ ) 
+				{	
+					if( dot )
+						name += ".";
+					else
+						dot = true;
+					
+					child = node.jjtGetChild(i);
+					name += child.getImage();					
+				}
+				
+				node.setImage(name);
+				
+				if( child instanceof ASTUnqualifiedName )
+					if( !addImport( name ) )
+						addError(node, "No file found for import " + name);					
+			}
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )
+		{
+			//triggers an import since there's an ASTUnqualifiedName@
+			if( node.jjtGetNumChildren() > 0 ) 
+			{
+				Node child = node.jjtGetChild(0);				
+				
+				if( child instanceof ASTUnqualifiedName )
+				{
+					String name = child.getImage() + "@" +  node.getImage();
+					if( !addImport( name ) )
+						addError(node, "No file found for import " + name);
+				}
+			}
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
+	{	
+		if( secondVisit )
+		{
+			StringBuilder builder = new StringBuilder();
+			builder.append("<");
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) 
+			{
+				Node child = node.jjtGetChild(i);
+				if( i > 0 )
+					builder.append(", ");
+				builder.append(child.getImage());
+			}
+			builder.append(">");
+			node.setImage(builder.toString());
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	
+	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )		
+			node.setImage(node.jjtGetChild(0).getImage());
+	
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )
+		{
+			StringBuilder builder = new StringBuilder(node.jjtGetChild(0).getImage());
+			List<Integer> dimensions = node.getArrayDimensions();
+			
+			for( int i = 0; i < dimensions.size(); i++ )
+			{
+				
+				builder.append("[");
+				
+				for( int j = 1; j < dimensions.get(i); j++ )
+					builder.append(",");				
+				
+				builder.append("[");
+			}					
+			
+			node.setImage(builder.toString());
+		}
+	
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	
+	public Object visit(ASTPackageDeclaration node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			String name = node.jjtGetChild(0).getImage();									
+			currentPackage = packageTree.addFullyQualifiedPackage(name, typeTable);			
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			if( node.jjtGetNumChildren() > 0 )
+			{
+				Node child = node.jjtGetChild(0);
+				node.setImage( child.getImage() + "@" + node.getImage() );
+			}
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}	
 	
 	
 	@Override

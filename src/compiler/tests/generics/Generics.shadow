@@ -6,5 +6,7 @@ class Generics
         pig.setValue("Help");
         
         nullable String output = pig.getValue();
+        nullable Object thing;
+        thing = pig.getValue();
     }
 }

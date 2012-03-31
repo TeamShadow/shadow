@@ -19,7 +19,6 @@ import shadow.parser.javacc.ASTArrayAllocation;
 import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
-import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
@@ -28,7 +27,6 @@ import shadow.parser.javacc.ASTBreakStatement;
 import shadow.parser.javacc.ASTCastExpression;
 import shadow.parser.javacc.ASTCheckExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
-import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConditionalAndExpression;
@@ -394,7 +392,7 @@ public class ClassChecker extends BaseChecker {
 			{
 				List<MethodSignature> methods = currentClass.getMethods(fieldName);
 				
-				//unbound method (it gets bound when you supply args
+				//unbound method (it gets bound when you supply arguments)
 				if( methods != null && methods.size() > 0 )
 				{
 					node.setType( new UnboundMethodType( fieldName, currentClass ) );
@@ -444,7 +442,7 @@ public class ClassChecker extends BaseChecker {
 					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
 				
 				
-				if( currentMethod != null ) //curMethod is null for field initializations
+				if( currentMethod != null ) //currentMethod is null for field initializations
 				{
 					if( directAccess && ModifierSet.isStatic(currentMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
 						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + currentMethod);
@@ -536,10 +534,6 @@ public class ClassChecker extends BaseChecker {
 			node.setType(type);
 
 		return WalkType.NO_CHILDREN;
-	}
-	
-	public Object visit(ASTAssignmentOperator node, Boolean secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN;	// I don't think we do anything here
 	}
 	
 	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException {
@@ -1066,9 +1060,9 @@ public class ClassChecker extends BaseChecker {
 			{
 				//ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
 				//Leave it for the TAC?
-				Type t1 = child.getType();
+				Type leftType = child.getType();
 				Node right = node.jjtGetChild(2); 
-				Type t2 = right.getType();
+				Type rightType = right.getType();
 				
 				if( !ModifierSet.isAssignable(child.getModifiers()) )
 					addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
@@ -1076,25 +1070,8 @@ public class ClassChecker extends BaseChecker {
 					addError(child, Error.INVL_TYP, "Cannot assign a value to variable marked final");
 				else if( !ModifierSet.isNullable(child.getModifiers()) && ModifierSet.isNullable(right.getModifiers()) )
 					addError(child, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");
-				else					
-				{
-					// SHOULD DO SOMETHING WITH THIS!!!
-					//AssignmentType assType = op.getAssignmentType();
-					//Leave it for the TAC?
-					
-					//TODO: Fix methods so that they can return nullable values
-					
-					if( t2 instanceof MethodType ) //could this be done with a more complex subtype relationship below?
-					{
-						MethodType methodType = (MethodType)t2;
-						List<ModifiedType> type = new LinkedList<ModifiedType>();
-						type.add(child);
-						if( !methodType.canReturn( type ) )
-							addError(child, Error.TYPE_MIS, "Method with signature " + methodType + " cannot return " + t1);
-					}
-					else if( !t2.isSubtype(t1) )
-						addError(child, Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
-				}	
+				else if( !rightType.isSubtype(leftType) )
+					addError(child, Error.TYPE_MIS, "Found type " + rightType + ", type " + leftType + " required");	
 			}
 		}
 		
@@ -1598,11 +1575,6 @@ public class ClassChecker extends BaseChecker {
 			for( int i = start; i < node.jjtGetNumChildren(); i++ )
 				sequenceType.add(node.jjtGetChild(i));
 			
-			//old
-			//ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)unboundMethod.getOuter();
-			//List<MethodSignature> methods = outerClass.getMethods(unboundMethod.getTypeName());
-			//List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
-			
 			List<MethodSignature> methods = context.getMethods(unboundMethod.getTypeName());
 			List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
 			
@@ -1691,14 +1663,8 @@ public class ClassChecker extends BaseChecker {
 		}
 		else // >= 1
 		{
-			Node child = node.jjtGetChild(0); 
-			
-		
-			/*else if( child instanceof ASTMemberSelector )
-			{
-				addError(node, Error.INVL_TYP, "Generics are not yet handled");	
-				node.setType(Type.UNKNOWN);
-			}*/
+			Node child = node.jjtGetChild(0);			
+
 			if( child instanceof ASTConditionalExpression ) //array index
 			{
 				if( (prefixType instanceof ArrayType) )
@@ -1846,15 +1812,6 @@ public class ClassChecker extends BaseChecker {
 	{
 		return fieldIsAccessible( signature.getASTNode(), type );
 	}
-
-	
-	/*//Push up is wrong, the children of ResultTypes are many, we can't just push one up 
-	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException 
-	{ return pushUpType(node, secondVisit); 
-	
-	}
-	
-	*/
 	
 	public Object visit(ASTLabeledStatement node, Boolean secondVisit) throws ShadowException 
 	{ 
@@ -2141,13 +2098,6 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	@Override
-	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit)	throws ShadowException
-	{
-		createScope(secondVisit); //scope is created purely to hold type parameters (other declarations are kept in the body scope)		
-		return WalkType.POST_CHILDREN;
-	}
 		
 	@Override
 	public Object visit(ASTReturnStatement node, Boolean secondVisit)	throws ShadowException
@@ -2211,10 +2161,8 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;	
 	}
 
+	// Everything below here are visitors to push up the type
 
-	//
-	// Everything below here are just visitors to push up the type
-	//
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
 		return pushUpType(node, secondVisit); 
