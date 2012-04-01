@@ -6,18 +6,17 @@ import java.util.List;
 import shadow.typecheck.Package;
 
 
-public class Type {
+public abstract class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string that represents the type */
 	private final int modifiers;
 	private ClassInterfaceBaseType outer; //outer class	
-	private final Kind kind;
+	//private final Kind kind;
 	protected Package _package;
-	private List<TypeParameter> parameters = new ArrayList<TypeParameter>();
-	//private List<Type> arguments = new ArrayList<Type>();
+	private List<TypeParameter> parameters = new ArrayList<TypeParameter>();	
 	private boolean parameterized;	
 		
-	// TODO: Provide documentation here
+	/*
 	public static enum Kind {
 		ARRAY,
 		CLASS,
@@ -34,6 +33,7 @@ public class Type {
 		UNKNOWN,
 		NULL 
 	};
+	*/
 	
 	public static ClassType OBJECT = null; 
 	public static ClassType STRING = null; 
@@ -58,9 +58,9 @@ public class Type {
 	public static final ErrorType ERROR = new ErrorType( "Error", 0, null, null );	
 	public static final ExceptionType EXCEPTION = new ExceptionType( "Exception", 0, null, null );
 	
-	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", 0, null, Kind.UNKNOWN ); //UNKNOWN type used for placeholder when typechecking goes wrong
+	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", 0, null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	
-	public static final ClassType NULL = new ClassType( "null", 0, null, Kind.NULL );
+	public static final ClassType NULL = new ClassType("null", 0, null);
 	
 	public Type(String typeName) {
 		this( typeName, 0 );
@@ -68,21 +68,16 @@ public class Type {
 	
 	public Type(String typeName, int modifiers) {
 		this( typeName, modifiers, null );
-	}
-	
-	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
-		this( typeName, modifiers, outer, Kind.CLASS );
 	}	
-	
-	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind ) {
-		this( typeName, modifiers, outer, kind, (outer == null ? null : outer._package ) );
+
+	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer) {
+		this( typeName, modifiers, outer, (outer == null ? null : outer._package ) );
 	}
 	
-	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind,  Package _package ) {
+	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer, Package _package ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
-		this.outer = outer;
-		this.kind = kind;
+		this.outer = outer;		
 		this._package = _package;
 	}
 	
@@ -131,25 +126,15 @@ public class Type {
 		}
 		else
 			return false;
-	}
+	}	
 	
+	/*
 	public boolean isSubtype(Type t) {
 		if( this == UNKNOWN || t == UNKNOWN )
 			return false;
 		
 		if( equals(t) )
 			return true;
-		
-		/*
-		if( t.getKind() == Kind.TYPE_PARAMETER )
-		{
-			for( Type bound : ((TypeParameter)t).getBounds() )
-				if( !isSubtype(bound))
-					return false;
-			
-			return true;
-		}
-		*/
 		
 		switch( kind  )
 		{
@@ -196,7 +181,7 @@ public class Type {
 				return false;
 		case INTERFACE:
 			if( t.getKind() == Kind.INTERFACE )			
-				return ((ExceptionType)this).isDescendentOf(t);
+				return ((InterfaceType)this).isDescendentOf(t);
 			else
 				return false;	
 		case SEQUENCE:
@@ -215,6 +200,7 @@ public class Type {
 			return false;		
 		}
 	}
+	*/
 	
 	protected boolean isNumericalSubtype(Type t)
 	{
@@ -279,12 +265,6 @@ public class Type {
 	{
 		this.outer = outer;
 	}
-
-	public Kind getKind()
-	{
-	  return this.kind;
-	}
-
 	
 	/**
 	 * Given an unsigned type, returns the signed version or the same type otherwise.
@@ -436,12 +416,7 @@ public class Type {
 	{
 		return parameterized; 
 	}
-
 	
-	//EVERY TYPE NEEDS THIS
-	public Type replace(List<TypeParameter> values, List<ModifiedType> replacements )
-	{	
-		return this;
-	}
-	
+	abstract public boolean isSubtype(Type t);
+	abstract public Type replace(List<TypeParameter> values, List<ModifiedType> replacements );
 }

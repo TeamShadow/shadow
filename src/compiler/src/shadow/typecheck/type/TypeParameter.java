@@ -3,16 +3,13 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
-import shadow.parser.javacc.ShadowParser.ModifierSet;
-import shadow.typecheck.type.Type.Kind;
-
 public class TypeParameter extends ClassInterfaceBaseType
 {
 	private List<Type> bounds = new ArrayList<Type>();
 
 	public TypeParameter(String typeName)
 	{
-		super(typeName, 0, null, Kind.TYPE_PARAMETER );
+		super(typeName, 0, null);
 	}
 	
 	public void addBound(Type type) {
@@ -35,7 +32,7 @@ public class TypeParameter extends ClassInterfaceBaseType
 	
 	public boolean canTakeSubstitution(Type type)
 	{
-		if( type.getKind() == Kind.TYPE_PARAMETER )
+		if( type instanceof TypeParameter )
 		{
 			TypeParameter typeParameter = (TypeParameter) type;
 			

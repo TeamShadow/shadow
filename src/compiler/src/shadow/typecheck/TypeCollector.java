@@ -40,8 +40,8 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
+import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
@@ -51,8 +51,8 @@ import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.Type.Kind;
 import shadow.typecheck.type.TypeParameter;
+import shadow.typecheck.type.ViewType;
 
 public class TypeCollector extends BaseChecker
 {	
@@ -161,15 +161,15 @@ public class TypeCollector extends BaseChecker
 								missingTypes.add(list.get(0));
 							else							
 								classType.setExtendType(parent);
-						}
-						else if( type.getKind() == Kind.CLASS || type.getKind() == Kind.ARRAY )													
-							classType.setExtendType(Type.OBJECT);						
-						else if( type.getKind() == Kind.ENUM )
+						}										
+						else if( type instanceof EnumType )
 							classType.setExtendType(Type.ENUM);
-						else if( type.getKind() == Kind.ERROR )
+						else if( type instanceof ErrorType )
 							classType.setExtendType(Type.ERROR);
-						else if( type.getKind() == Kind.EXCEPTION )
+						else if( type instanceof ExceptionType )
 							classType.setExtendType(Type.EXCEPTION);
+						else if( type instanceof ClassType )													
+							classType.setExtendType(Type.OBJECT);		
 						
 						if( implementsTable.containsKey(type))
 						{
@@ -447,7 +447,7 @@ public class TypeCollector extends BaseChecker
 		return files;
 	}
 	
-	private void createType( SimpleNode node, int modifiers, Kind kind ) throws ShadowException
+	private void createType( SimpleNode node, int modifiers, TypeKind kind ) throws ShadowException
 	{		 
 		String typeName;
 		
@@ -460,8 +460,8 @@ public class TypeCollector extends BaseChecker
 			addError( node, Error.MULT_SYM, "Type " + typeName + " already defined" );
 		else
 		{			
-			ClassInterfaceBaseType type = null;
-				
+			ClassInterfaceBaseType type = null;	
+			
 			switch( kind )
 			{			
 			case CLASS:
@@ -479,10 +479,9 @@ public class TypeCollector extends BaseChecker
 				break;
 			case INTERFACE:
 				type = new InterfaceType(typeName, modifiers, currentType );
-				break;			
-				
+				break;
 			case VIEW:
-				//add support for views eventually			
+				type = new ViewType(typeName, modifiers );			
 			default:
 				throw new ShadowException("Unsupported type!" );
 			}			
@@ -639,7 +638,7 @@ public class TypeCollector extends BaseChecker
 		if( secondVisit )
 			finalizeType( node );
 		else
-			createType( node, node.getModifiers(), Type.Kind.ENUM );
+			createType( node, node.getModifiers(), TypeKind.ENUM );
 
 		
 		return WalkType.POST_CHILDREN;
@@ -650,7 +649,7 @@ public class TypeCollector extends BaseChecker
 		if( secondVisit )
 			finalizeType( node );
 		else
-			createType( node, node.getModifiers(), Type.Kind.VIEW );
+			createType( node, node.getModifiers(), TypeKind.VIEW );
 		
 		return WalkType.POST_CHILDREN;
 	}

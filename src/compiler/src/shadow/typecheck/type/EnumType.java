@@ -8,7 +8,7 @@ public class EnumType extends ClassType
 	}
 	
 	public EnumType(String typeName, int modifiers, ClassInterfaceBaseType outer, ClassType extendType ) {
-		super( typeName, modifiers, outer, Kind.ENUM );
+		super( typeName, modifiers, outer );
 		setExtendType( extendType );
 	}
 }

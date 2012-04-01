@@ -107,7 +107,88 @@ public class ShadowParser
 
        return addModifier( modifiers, mod );
      }
-   }
+
+
+		public static void checkClassModifiers( int modifiers ) throws ParseException
+		{		  
+		  if( isNative(modifiers) )
+	  	  	throw new ParseException("A class cannot be marked native");
+	  	  if( isWeak(modifiers) )
+	  	  	throw new ParseException("A class cannot be marked weak");
+	  	  if( isNullable(modifiers) )
+	  	  	throw new ParseException("A class cannot be marked nullable");  
+	   }
+
+
+		public static void checkExceptionModifiers( int modifiers ) throws ParseException
+		{		  
+			if( isAbstract(modifiers) || isStatic(modifiers) || isNative(modifiers) ||
+ 	  			isWeak(modifiers) || isImmutable(modifiers) || isNullable(modifiers) )
+				throw new ParseException("An exception can only be marked public, protected, private, and final");
+		}
+
+		public static void checkErrorModifiers( int modifiers ) throws ParseException
+		{
+			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) || 	  	
+	 	  		isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
+	 	  		isNullable(modifiers) )
+ 	    	  	throw new ParseException("An error can only be marked public, protected, or private");
+ 	 	}
+
+
+		public static void checkInterfaceModifiers( int modifiers ) throws ParseException
+		{
+	 	 	 if( isPublic(modifiers) || isProtected(modifiers) || isPrivate(modifiers) ||
+	 	    	isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) ||
+	 	    	isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) || isNullable(modifiers) )
+ 	    	  	throw new ParseException("An interface can only be marked final");
+ 	 	}
+
+		public static void checkViewModifiers( int modifiers ) throws ParseException
+		{
+			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) || 
+				isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
+				isNullable(modifiers))
+				throw new ParseException("A view can only be marked public, private, or protected");
+		}
+
+		public static void checkEnumModifiers( int modifiers ) throws ParseException
+		{
+			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) ||
+				isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
+				isNullable(modifiers))
+				throw new ParseException("An enum can only be marked public, private, or protected");
+		}
+
+		public static void checkFieldModifiers( int modifiers ) throws ParseException
+		{
+			if( ModifierSet.isAbstract(modifiers) )
+				throw new ParseException("A field cannot be marked abstract");
+			if( ModifierSet.isProtected(modifiers) )
+				throw new ParseException("A field cannot be marked protected");
+			if( ModifierSet.isNative(modifiers) )
+				throw new ParseException("A field cannot be marked native");
+			if( ModifierSet.isImmutable(modifiers) )
+				throw new ParseException("A field cannot be marked immutable");
+		}
+
+		public static void checkMethodModifiers( int modifiers ) throws ParseException
+		{
+		 	if( ModifierSet.isWeak(modifiers) )
+				throw new ParseException("A method cannot be marked weak");
+			if( ModifierSet.isNullable(modifiers) )
+				throw new ParseException("A method cannot be marked nullable");
+		}
+	}
+
+   	public static enum TypeKind {		
+		CLASS,
+		ENUM,
+		ERROR,
+		EXCEPTION,
+		INTERFACE,
+		VIEW
+	};
 
    private static final Log logger = Loggers.PARSER;
 
@@ -216,8 +297,7 @@ TOKEN :
 | < FLOAT: "float" >
 | < FOR: "for" >
 | < FOREACH: "foreach" >
-//| < GOTO: "goto" >
-| < GET: "get" >
+| < GET: "get" > //why?
 | < IF: "if" >
 | < IMMUTABLE: "immutable" >
 | < IMPLEMENTS: "implements" >
@@ -372,7 +452,7 @@ TOKEN :
 |
   < #LETTER:
       [
-//       "\u0024",  // this is the $, but I want to use that for versions
+//       "\u0024",  // this is the $, but we want to use that for versions
        "\u0041"-"\u005a",       
        "\u0061"-"\u007a",
        "\u00c0"-"\u00d6",
@@ -577,15 +657,7 @@ void ViewDeclaration(int modifiers):
 	debugPrint("VIEW DECLARATION");
 	Token t;
 
-   if( ModifierSet.isAbstract(modifiers) ||
-	ModifierSet.isStatic(modifiers) ||
-	ModifierSet.isFinal(modifiers) ||
-	ModifierSet.isNative(modifiers) ||
-	ModifierSet.isWeak(modifiers) ||
-	ModifierSet.isImmutable(modifiers) ||
-	ModifierSet.isNullable(modifiers))
-		throw new ParseException("A view can only be marked public, private, or protected");
-	
+   ModifierSet.checkViewModifiers( modifiers );	
 }
 {
 	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }
@@ -606,53 +678,22 @@ void ClassOrInterfaceDeclaration(int modifiers):
   { jjtThis.setModifiers(modifiers); }
   ( "class"
   	{
-  	  jjtThis.setKind(Type.Kind.CLASS);
-  	  if( ModifierSet.isNative(modifiers) )
-  	  	throw new ParseException("A class cannot be marked native");
-  	  if( ModifierSet.isWeak(modifiers) )
-  	  	throw new ParseException("A class cannot be marked weak");
-  	  if( ModifierSet.isNullable(modifiers) )
-  	  	throw new ParseException("A class cannot be marked nullable");  	  
+  	  jjtThis.setKind(TypeKind.CLASS);
+  	  ModifierSet.checkClassModifiers( modifiers );	  
   	}
  	| "exception"
  	{
- 	  jjtThis.setKind(Type.Kind.EXCEPTION); isErrorOrException = true;
- 	  if( ModifierSet.isAbstract(modifiers) ||
- 	  	ModifierSet.isStatic(modifiers) || 	  	
- 	  	ModifierSet.isNative(modifiers) ||
- 	  	ModifierSet.isWeak(modifiers) ||
- 	  	ModifierSet.isImmutable(modifiers) ||
- 	  	ModifierSet.isNullable(modifiers) )
- 	    	  	throw new ParseException("An exception can only be marked public, protected, private, and final");
+ 	  jjtThis.setKind(TypeKind.EXCEPTION); isErrorOrException = true;
+ 	  ModifierSet.checkExceptionModifiers( modifiers );
  	}
  	| "error"
- 	{ jjtThis.setKind(Type.Kind.ERROR); isErrorOrException = true;
- 	  if( 	    
- 	    ModifierSet.isAbstract(modifiers) ||
- 	  	ModifierSet.isStatic(modifiers) ||
- 	  	ModifierSet.isFinal(modifiers) || 	  	
- 	  	ModifierSet.isNative(modifiers) ||
- 	  	ModifierSet.isWeak(modifiers) ||
- 	  	ModifierSet.isImmutable(modifiers) ||
- 	  	ModifierSet.isNullable(modifiers) )
- 	    	  	throw new ParseException("An error can only be marked public, protected, or private");
-
+ 	{ jjtThis.setKind(TypeKind.ERROR); isErrorOrException = true;
+ 	  ModifierSet.checkErrorModifiers( modifiers );
  	}
  	| "interface"
  	{
- 	  jjtThis.setKind(Type.Kind.INTERFACE); isInterface = true;
- 	    if( 	    
-		ModifierSet.isPublic(modifiers) ||
-		ModifierSet.isProtected(modifiers) ||
-		ModifierSet.isPrivate(modifiers) ||
- 	    ModifierSet.isAbstract(modifiers) ||
- 	  	ModifierSet.isStatic(modifiers) ||
- 	  	ModifierSet.isFinal(modifiers) || 	  	
- 	  	ModifierSet.isNative(modifiers) ||
- 	  	ModifierSet.isWeak(modifiers) ||
- 	  	ModifierSet.isImmutable(modifiers) ||
- 	  	ModifierSet.isNullable(modifiers) )
- 	    	  	throw new ParseException("An interface can only be marked final");
+ 	  jjtThis.setKind(TypeKind.INTERFACE); isInterface = true;
+ 	   ModifierSet.checkInterfaceModifiers( modifiers ); 	   
  	 } )
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
@@ -699,14 +740,7 @@ void EnumDeclaration(int modifiers):
 {
     debugPrint("ENUM DECLARATION");
     Token t;
-	if( ModifierSet.isAbstract(modifiers) ||
-	ModifierSet.isStatic(modifiers) ||
-	ModifierSet.isFinal(modifiers) ||
-	ModifierSet.isNative(modifiers) ||
-	ModifierSet.isWeak(modifiers) ||
-	ModifierSet.isImmutable(modifiers) ||
-	ModifierSet.isNullable(modifiers))
-		throw new ParseException("An enum can only be marked public, private, or protected");
+	ModifierSet.checkEnumModifiers( modifiers );
 }
 {
 { jjtThis.setModifiers(modifiers); }
@@ -785,14 +819,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 void FieldDeclaration(int modifiers):
 {
   debugPrint("FIELD DECLARATION");
-	if( ModifierSet.isAbstract(modifiers) )
-		throw new ParseException("A field cannot be marked abstract");
-	if( ModifierSet.isProtected(modifiers) )
-		throw new ParseException("A field cannot be marked protected");
-	if( ModifierSet.isNative(modifiers) )
-		throw new ParseException("A field cannot be marked native");
-	if( ModifierSet.isImmutable(modifiers) )
-		throw new ParseException("A field cannot be marked immutable");
+	ModifierSet.checkFieldModifiers( modifiers );
 }
 {
   { jjtThis.setModifiers(modifiers); }
@@ -831,10 +858,7 @@ void ArrayInitializer():
 void MethodDeclaration(int modifiers):
 {
   debugPrint("METHOD DECLARATION");
- 	if( ModifierSet.isWeak(modifiers) )
-		throw new ParseException("A method cannot be marked weak");
-	if( ModifierSet.isNullable(modifiers) )
-		throw new ParseException("A method cannot be marked nullable");  
+	ModifierSet.checkMethodModifiers( modifiers ); 
  }
 {
   { jjtThis.setModifiers(modifiers); }  
@@ -1414,7 +1438,7 @@ void ConstructorInvocation():
 { debugPrint("CONSTRUCTOR INVOCATION"); }
 {
  	"new" { jjtThis.setImage("new"); } ClassOrInterfaceType() [ TypeArguments() ] Arguments()
- 	/* No anonymous classes in Shadow [ ClassOrInterfaceBody(false)  ] */    
+ 	/* No anonymous classes in Shadow */    
 }
 
 
@@ -1429,7 +1453,6 @@ void ArrayDimsAndInits():
   ( LOOKAHEAD(2) "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )*
 | ( "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+ ArrayInitializer()
 }
-
 
 /*
  * Statement syntax follows.
@@ -1484,7 +1507,7 @@ void BlockStatement():
 {
   LOOKAHEAD( LocalVariableDeclaration() ) LocalVariableDeclaration() ";"
 | Statement()
-//| ClassOrInterfaceDeclaration(0)  No local classes in Shadow
+// No local classes in Shadow
 }
 
 void LocalVariableDeclaration():

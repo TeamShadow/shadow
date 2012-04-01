@@ -88,13 +88,13 @@ import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.Type.Kind;
 import shadow.typecheck.type.UnboundMethodType;
 
 
@@ -1263,7 +1263,7 @@ public class ClassChecker extends BaseChecker {
 		//
 		// TODO: Eventually we'll want the notion of a collection and need to check that here
 		//
-		if( t2.getKind() == Type.Kind.ARRAY )
+		if( t2 instanceof ArrayType )
 		{
 			ArrayType array = (ArrayType)t2;
 			if( !array.getBaseType().isSubtype(t1) )
@@ -1322,7 +1322,7 @@ public class ClassChecker extends BaseChecker {
 					child = node.jjtGetChild(2*i); //formal parameter
 					
 					Type type = child.getType();
-					if( type.getKind() == Kind.EXCEPTION )
+					if( type instanceof ExceptionType )
 					{
 						for( Type existing : types )
 							if( type.isSubtype(existing) )

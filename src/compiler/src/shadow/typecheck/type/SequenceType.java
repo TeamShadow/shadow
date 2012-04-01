@@ -19,7 +19,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 
 	public SequenceType(List<ModifiedType> modifiedTypes)
 	{
-		super(null, 0, null, Kind.SEQUENCE);		
+		super(null, 0, null);		
 		types = modifiedTypes;
 	}
 	
@@ -49,8 +49,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 	
 	public boolean canAccept( List<ModifiedType> inputTypes )
-	{	
-		
+	{		
 		if( types.size() != inputTypes.size() )
 			return false;
 		
@@ -317,5 +316,15 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		
 		return true;	
 	}
-
+	
+	public boolean isSubtype(Type t)
+	{
+		if( equals(t) )
+			return true;		
+		
+		if ( t instanceof SequenceType )
+			return canAccept((SequenceType)t);
+		else
+			return false;
+	}
 }

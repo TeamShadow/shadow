@@ -16,14 +16,10 @@ public class InterfaceType extends ClassInterfaceBaseType {
 	
 	public InterfaceType(String typeName, int modifiers) {
 		this( typeName, modifiers, null );
-	}
-	
-	public InterfaceType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
-		this( typeName, modifiers, outer, Kind.INTERFACE );
 	}	
 		
-	public InterfaceType(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind ) {
-		super( typeName, modifiers, outer, kind );
+	public InterfaceType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
+		super( typeName, modifiers, outer );
 	}
 
 	public void addExtendType(InterfaceType extendType) {
@@ -140,4 +136,17 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		
 	}
 	
+	public boolean isSubtype(Type t)
+	{
+		if( t == UNKNOWN )
+			return false;
+	
+		if( equals(t) )
+			return true;		
+		
+		if( t instanceof InterfaceType )			
+			return isDescendentOf(t);
+		else
+			return false;	
+	}	
 }

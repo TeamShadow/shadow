@@ -26,14 +26,10 @@ public class ClassType extends ClassInterfaceBaseType {
 	
 	public ClassType(String typeName, int modifiers) {
 		this( typeName, modifiers, null );
-	}
-	
-	public ClassType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
-		this( typeName, modifiers, outer, Kind.CLASS );
 	}	
 	
-	public ClassType(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind ) {
-		super( typeName, modifiers, outer, kind);
+	public ClassType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
+		super( typeName, modifiers, outer );
 	}	
 	
 	public boolean isDescendentOf(Type type)
@@ -332,5 +328,21 @@ public class ClassType extends ClassInterfaceBaseType {
 		return replaced;
 	}
 	
+	public boolean isSubtype(Type t)
+	{
+		if( t == UNKNOWN || this == UNKNOWN )
+			return false;
 	
+		if( this == NULL || equals(t) )
+			return true;		
+		
+		if( t.isNumerical() && isNumerical() )
+			return isNumericalSubtype(t);
+		else if( t instanceof ClassType )			
+			return isDescendentOf(t);
+		else if( t instanceof InterfaceType )
+			return hasInterface(t);
+		else
+			return false;
+	}
 }

@@ -29,8 +29,7 @@ public class InstantiatedType extends ClassType {
 	
 	
 	public InstantiatedType(ClassInterfaceBaseType type, List<ModifiedType> arguments) {
-		super(type.getTypeName(), type.getModifiers(), type.getOuter(), Kind.INSTANTIATED);
-		// TODO Auto-generated constructor stub
+		super(type.getTypeName(), type.getModifiers(), type.getOuter());
 		baseType = type;
 		argumentTypes = arguments;		
 	}
@@ -88,19 +87,29 @@ public class InstantiatedType extends ClassType {
 
 	//type arguments must match exactly
 	//base type can be a subtype
-	public boolean isSubtype(InstantiatedType type) {
+	public boolean isSubtype(Type t)
+	{
+		if( equals(t) )
+			return true;
 		
-		if( !baseType.isSubtype(type.getBaseType()) )
+		if( t instanceof InstantiatedType )
+		{
+			InstantiatedType type = (InstantiatedType) t;
+		
+			if( !baseType.isSubtype(type.getBaseType()) )
+				return false;
+			
+			if( argumentTypes.size() != type.argumentTypes.size())
+				return false;
+			
+			for( int i = 0; i < argumentTypes.size(); i++ )
+				if( !argumentTypes.get(i).equals(type.argumentTypes.get(i)) )
+					return false;			
+			
+			return true;
+		}
+		else
 			return false;
-		
-		if( argumentTypes.size() != type.argumentTypes.size())
-			return false;
-		
-		for( int i = 0; i < argumentTypes.size(); i++ )
-			if( !argumentTypes.get(i).equals(type.argumentTypes.get(i)) )
-				return false;			
-		
-		return true;
 	}
 	
 	public Type getInstantiatedType()

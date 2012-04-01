@@ -64,7 +64,7 @@ public class ArrayType extends ClassType
 	}	
 	
 	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index ) {
-		super( makeName(baseType, arrayDimensions, index), baseType.getModifiers(), baseType.getOuter(), Kind.ARRAY );
+		super( makeName(baseType, arrayDimensions, index), baseType.getModifiers(), baseType.getOuter() );
 		dimensions = arrayDimensions.get(index);		
 		if( arrayDimensions.size() == index + 1 )
 			this.baseType = baseType;
@@ -74,7 +74,7 @@ public class ArrayType extends ClassType
 	
 	private ArrayType( Type baseType, int dimensions )
 	{
-		super(makeName(baseType, dimensions), baseType.getModifiers(), baseType.getOuter(), Kind.ARRAY );
+		super(makeName(baseType, dimensions), baseType.getModifiers(), baseType.getOuter());
 		
 		this.baseType = baseType;
 		this.dimensions = dimensions;		
@@ -91,6 +91,30 @@ public class ArrayType extends ClassType
 			if( dimensions == other.dimensions )
 				return baseType.equals(other.baseType);
 			return false;
+		}
+		else
+			return false;
+	}
+	
+	public boolean isSubtype(Type t)
+	{		
+		if( t == UNKNOWN )
+			return false;
+	
+		if( equals(t) )
+			return true;
+			
+		if( t == OBJECT || t == ARRAY )
+			return true;
+		if( t instanceof ArrayType )
+		{
+			ArrayType type = (ArrayType)this;
+			ArrayType other = (ArrayType)t;
+			//invariant subtyping on arrays
+			if( type.getDimensions() == other.getDimensions() )
+				return type.getBaseType().equals(other.getBaseType());
+			else
+				return false;
 		}
 		else
 			return false;

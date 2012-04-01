@@ -2,7 +2,7 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import shadow.typecheck.type.*;
+import shadow.parser.javacc.ShadowParser.TypeKind;
 
 public
 @SuppressWarnings("all")
@@ -31,13 +31,13 @@ class ASTClassOrInterfaceDeclaration extends SimpleNode {
 	  return this.modifiers;
   }
   
-	private Type.Kind kind;
+	private TypeKind kind;
 	
-	public void setKind(Type.Kind kind ) {
+	public void setKind(TypeKind kind ) {
 		  this.kind = kind;
 	  }
 	  
-	  public Type.Kind getKind() {
+	  public TypeKind getKind() {
 		  return this.kind;
 	  }
 	

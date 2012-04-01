@@ -1,12 +1,7 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
-import shadow.parser.javacc.ShadowParser.ModifierSet;
-import shadow.typecheck.MethodSignature;
 
 public class MethodType extends Type {
 	protected List<String> paramNames;
@@ -18,7 +13,7 @@ public class MethodType extends Type {
 	}
 
 	public MethodType(ClassInterfaceBaseType outer, int modifiers) {
-		super(null, modifiers, outer, Kind.METHOD);
+		super(null, modifiers, outer);
 		paramNames = new ArrayList<String>();
 		paramTypes = new SequenceType();
 		returns = new SequenceType();
@@ -196,6 +191,23 @@ public class MethodType extends Type {
 	//covariant returns and contravariant parameters
 	public boolean matchesInterface(MethodType type) {
 		return type.returns.canSubstitute(returns) && paramTypes.canSubstitute(type.paramTypes);
+	}
+	
+	public boolean isSubtype(Type t)
+	{
+		if( t == UNKNOWN )
+			return false;
+	
+		if( equals(t) )
+			return true;
+		
+		if( t instanceof MethodType )
+		{
+			MethodType otherMethod = (MethodType) t;
+			return returns.isSubtype(otherMethod.returns) && otherMethod.paramTypes.isSubtype(paramTypes);
+		}
+		else
+			return false;
 	}
 
 }

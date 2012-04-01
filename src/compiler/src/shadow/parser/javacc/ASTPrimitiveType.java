@@ -5,6 +5,7 @@ package shadow.parser.javacc;
 import org.apache.commons.logging.Log;
 
 import shadow.Loggers;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
 public
@@ -22,7 +23,35 @@ class ASTPrimitiveType extends SimpleNode {
 
 	public void setImage(String image) {
 		this.image = image;
-		this.type = new Type(image);
+		
+		if( image.equals("boolean"))
+			type = Type.BOOLEAN;
+		else if( image.equals("byte"))
+			type = Type.BYTE;
+		else if( image.equals("code"))
+			type = Type.CODE;
+		else if( image.equals("short"))
+			type = Type.SHORT;
+		else if( image.equals("int"))
+			type = Type.INT;
+		else if( image.equals("long"))
+			type = Type.LONG;
+		else if( image.equals("float"))
+			type = Type.FLOAT;
+		else if( image.equals("boolean"))
+			type = Type.BOOLEAN;
+		else if( image.equals("double"))
+			type = Type.DOUBLE;
+		else if( image.equals("ubyte"))
+			type = Type.UBYTE;
+		else if( image.equals("uint"))
+			type = Type.UINT;
+		else if( image.equals("ulong"))
+			type = Type.ULONG;
+		else if( image.equals("ushort"))
+			type = Type.USHORT;
+		else
+			type = Type.UNKNOWN;		
 	}
 
     public void dump(String prefix) {

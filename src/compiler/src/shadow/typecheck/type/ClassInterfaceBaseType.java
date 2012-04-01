@@ -8,12 +8,12 @@ import java.util.Map;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.MethodSignature;
 
-public abstract class ClassInterfaceBaseType extends Type {
+public abstract class ClassInterfaceBaseType extends Type
+{
 	private ClassType extendType;
 	private Map<String, Node> fieldTable;
 	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private
 	private HashMap<String, Type> innerClasses;
-	private String packageName; //package
 
 	public Map<String, Type> getInnerClasses()
 	{
@@ -29,16 +29,13 @@ public abstract class ClassInterfaceBaseType extends Type {
 		this( typeName, 0 );
 	}
 	
-	public ClassInterfaceBaseType(String typeName, int modifiers) {
+	public ClassInterfaceBaseType(String typeName, int modifiers)
+	{
 		this( typeName, modifiers, null );
-	}
-	
-	public ClassInterfaceBaseType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
-		this( typeName, modifiers, outer, Kind.CLASS );
 	}	
-	
-	public ClassInterfaceBaseType(String typeName, int modifiers, ClassInterfaceBaseType outer, Kind kind ) {
-		super( typeName, modifiers, outer, kind );
+
+	public ClassInterfaceBaseType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
+		super( typeName, modifiers, outer );
 		fieldTable = new HashMap<String, Node>();
 		methodTable = new HashMap<String, List<MethodSignature>>();
 		innerClasses = new HashMap<String, Type>();
