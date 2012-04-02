@@ -2139,7 +2139,9 @@ public class ClassChecker extends BaseChecker {
 					}
 					else
 						addError(node, Error.TYPE_MIS, "Return type " + child.getType() + " does not match " + returnTypes.get(0).getType() );						
-				}
+				}				
+				
+				node.setType(returnTypes);
 			}
 		}	
 		

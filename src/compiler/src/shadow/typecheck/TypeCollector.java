@@ -42,6 +42,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
@@ -168,6 +169,8 @@ public class TypeCollector extends BaseChecker
 							classType.setExtendType(Type.ERROR);
 						else if( type instanceof ExceptionType )
 							classType.setExtendType(Type.EXCEPTION);
+						else if( type instanceof ArrayType )													
+							classType.setExtendType(Type.ARRAY);
 						else if( type instanceof ClassType )													
 							classType.setExtendType(Type.OBJECT);		
 						
