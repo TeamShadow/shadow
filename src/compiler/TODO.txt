@@ -23,6 +23,10 @@
 - Lambdas (delegates)
 - Generics/templates
 
+Make auto typechecking work!
+Add # as the String concatenation thing 
+Break generics
+
 class Container<T>
 {
 	T value;
