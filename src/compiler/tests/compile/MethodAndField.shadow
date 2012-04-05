@@ -3,7 +3,7 @@ class MethodAndField {
     private nullable MethodAndField t;
     private int a = 1, y, z = 2;
     private double b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
-    private String c = "hello" + "world";
+    private String c = "hello" # "world";
     private boolean x = true;
 
     public blah(int a, float b, MethodAndField c) => (int, double, MethodAndField) {

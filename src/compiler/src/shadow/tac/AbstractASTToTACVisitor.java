@@ -78,6 +78,7 @@ public abstract class AbstractASTToTACVisitor implements ShadowParserVisitor {
 	public abstract void visit(ASTBitwiseAndExpression node, TACData tac) throws ShadowException;
 	public abstract void visit(ASTEqualityExpression node, TACData tac) throws ShadowException;
 	public abstract void visit(ASTIsExpression node, TACData tac) throws ShadowException;
+	public abstract void visit(ASTConcatenationExpression node, TACData tac) throws ShadowException;
 	public abstract void visit(ASTRelationalExpression node, TACData tac) throws ShadowException;
 	public abstract void visit(ASTShiftExpression node, TACData tac) throws ShadowException;
 	public abstract void visit(ASTRotateExpression node, TACData tac) throws ShadowException;
@@ -483,6 +484,12 @@ public abstract class AbstractASTToTACVisitor implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTIsExpression node, Boolean data) throws ShadowException {
+		visit(node, this.data);
+		return null;
+	}
+	
+	@Override
+	public Object visit(ASTConcatenationExpression node, Boolean data) throws ShadowException {
 		visit(node, this.data);
 		return null;
 	}

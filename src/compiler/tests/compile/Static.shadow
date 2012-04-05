@@ -3,7 +3,7 @@ class Static
     public nullable Static t;
     public int a = 1, y, z = 2;
     public double b = 0.2 + 0.3 + 0.5, g = 1.0 + 5.0;
-    public String c = "hello" + "world";
+    public String c = "hello" # "world";
     public static boolean thing1 = true;
     public boolean thing2 = true;
     

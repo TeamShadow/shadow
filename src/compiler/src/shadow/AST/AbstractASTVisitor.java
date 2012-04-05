@@ -666,4 +666,10 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 		throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
+
+	@Override
+	public Object visit(ASTConcatenationExpression node, Boolean data)
+		throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
 }

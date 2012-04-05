@@ -529,6 +529,7 @@ TOKEN :
 | < REM: "%" >
 | < LEFTSHIFT: "<<" >
 | < LEFTROTATE: "<<<" >
+| < CAT: "#" >
 | < PLUSASSIGN: "+=" >
 | < MINUSASSIGN: "-=" >
 | < STARASSIGN: "*=" >
@@ -537,7 +538,7 @@ TOKEN :
 | < ORASSIGN: "|=" >
 | < XORASSIGN: "^=" >
 | < REMASSIGN: "%=" >
-| < REFASSIGN: "#=" >
+| < CATASSIGN: "#=" >
 | < LEFTSHIFTASSIGN: "<<=" >
 | < RIGHTSHIFTASSIGN: ">>=" >
 | < RIGHTROTATEASSIGN: ">>>=" >
@@ -1194,11 +1195,19 @@ void IsExpression():
 void RelationalExpression():
 { debugPrint("RELATIONAL EXPRESSION"); }
 {
-  ShiftExpression() ( ( "<" { jjtThis.addToImage('<'); } |
+  ConcatenationExpression() ( ( "<" { jjtThis.addToImage('<'); } |
                         ">" { jjtThis.addToImage('>'); } |
                         "<=" { jjtThis.addToImage('{'); } |
-                        ">="  { jjtThis.addToImage('}'); }) ShiftExpression() )*
+                        ">="  { jjtThis.addToImage('}'); }) ConcatenationExpression() )*
 }
+
+
+void ConcatenationExpression():
+{ debugPrint("CONCATENATION EXPRESSION"); }
+{
+  ShiftExpression() ( "#" { jjtThis.addToImage('#'); }  ShiftExpression() )*
+}
+
 
 //
 // Since shift & rotate are not single characters (see TAC Symbole2Operator code)

@@ -29,6 +29,7 @@ import shadow.parser.javacc.ASTCheckExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
+import shadow.parser.javacc.ASTConcatenationExpression;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
@@ -562,6 +563,32 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;	
 	}
 	
+	public Object visit(ASTConcatenationExpression node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )
+		{		
+			Type result = node.jjtGetChild(0).getType();			
+			
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading
+			{
+				Type current = node.jjtGetChild(i).getType();
+				
+				if( result.isString() || current.isString() )
+					result = Type.STRING;
+				else
+				{
+					addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot concatenate two non-String types");
+					result = Type.UNKNOWN;
+					break;
+				}			
+			}
+				
+			node.setType(result); //propagates type up if only one child
+			pushUpModifiers(node); //can add ASSIGNABLE (if only one child)
+		}
+		
+		return WalkType.POST_CHILDREN;	
+	}	
 	
 	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
@@ -619,18 +646,16 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-
-		visitShiftRotate( node );
+		if(secondVisit)
+			visitShiftRotate( node );
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTRotateExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-
-		visitShiftRotate( node );
+		if(secondVisit)
+			visitShiftRotate( node );
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -641,20 +666,8 @@ public class ClassChecker extends BaseChecker {
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
 		{
 			Type current = node.jjtGetChild(i).getType();
-		
 			
-			if( result.isString() || current.isString() )
-			{
-				if( node.getImage().charAt(i - 1) != '+' )
-				{
-					addError(node.jjtGetChild(0), Error.INVL_TYP, "Cannot apply operator " + node.getImage().charAt(i - 1) + " to String type");
-					node.setType(Type.UNKNOWN);
-					return;
-				}
-				else
-					result = Type.STRING;
-			}
-			else if( result.isNumerical() && current.isNumerical() )
+			if( result.isNumerical() && current.isNumerical() )
 			{
 				if( result.isSubtype( current ))  //upgrades type to broader type (e.g. int goes to double)
 					result = current;
@@ -678,44 +691,42 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;		
-	
-		visitArithmetic( node );		
+		if(secondVisit)
+			visitArithmetic( node );
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-
-		visitArithmetic( node );
+		if(secondVisit)
+			visitArithmetic( node );
+		
 		return WalkType.POST_CHILDREN;
 	}
 		
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-				
-		Type type = node.jjtGetChild(0).getType();
-		String symbol = node.getImage();
-		
-		if( (symbol.equals("-") || symbol.equals("+")) ) 
-		{
-			if( !type.isNumerical() )
+		if(secondVisit)
+		{				
+			Type type = node.jjtGetChild(0).getType();
+			String symbol = node.getImage();
+			
+			if( (symbol.equals("-") || symbol.equals("+")) ) 
 			{
-				addError(node, Error.INVL_TYP, "Found type " + type + ", but numerical type required for arithmetic operations");
-				node.setType(Type.UNKNOWN);
-				return WalkType.POST_CHILDREN;
+				if( !type.isNumerical() )
+				{
+					addError(node, Error.INVL_TYP, "Found type " + type + ", but numerical type required for arithmetic operations");
+					node.setType(Type.UNKNOWN);
+					return WalkType.POST_CHILDREN;
+				}
 			}
+			else
+				pushUpModifiers( node );
+			
+			if(symbol.startsWith("-"))
+				node.setType(Type.makeSigned((ClassType)type));
+			else
+				node.setType(type);
 		}
-		else
-			pushUpModifiers( node );
-		
-		if(symbol.startsWith("-"))
-			node.setType(Type.makeSigned((ClassType)type));
-		else
-			node.setType(type);
 		
 		return WalkType.POST_CHILDREN;
 	}

@@ -537,6 +537,12 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	{
 		visitComparison(node.getImage(), tac);
 	}
+	
+	@Override
+	public void visit(ASTConcatenationExpression node, TACData tac) throws ShadowException
+	{
+		visitBinary(node.getImage(), tac);
+	}
 
 	@Override
 	public void visit(ASTRelationalExpression node, TACData tac) throws ShadowException
