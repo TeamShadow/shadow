@@ -1121,7 +1121,7 @@ void AssignmentOperator():
 { debugPrint("ASSIGNMENT OPERATOR"); }
 {
     "="    { jjtThis.setImage("="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.EQUAL); }
-  | "#="   { jjtThis.setImage("#="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.REFASSIGN); }
+  | "#="   { jjtThis.setImage("#="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.CATASSIGN); }
   | "*="   { jjtThis.setImage("*="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.STARASSIGN); }
   | "/="   { jjtThis.setImage("/="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.SLASHASSIGN); }
   | "%="   { jjtThis.setImage("%="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MODASSIGN); }

@@ -19,6 +19,7 @@ import shadow.parser.javacc.ASTArrayAllocation;
 import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
+import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
@@ -919,11 +920,22 @@ public class ClassChecker extends BaseChecker {
 				return WalkType.NO_CHILDREN;
 			}
 			
+			ASTAssignmentOperator operator = (ASTAssignmentOperator) node.jjtGetChild(1);
+			
 			Node child2 = node.jjtGetChild(2);
-			Type t2 = child2.getType();			
-				
-			// TODO: Add in all the types that we can compare here
-			if( !t2.isSubtype(t1) )
+			Type t2 = child2.getType();
+			
+			//anything can be concatenated onto a String
+			if( operator.getAssignmentType().equals(ASTAssignmentOperator.AssignmentType.CATASSIGN) )
+			{
+				if( !t1.isString()  )
+				{
+					addError(child1, Error.TYPE_MIS, "Cannot concatenate onto type " + t1);
+					node.setType(Type.UNKNOWN);
+					return WalkType.NO_CHILDREN;
+				}				
+			}
+			else if( !t2.isSubtype(t1) )
 			{
 				addError(child1, Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
 				node.setType(Type.UNKNOWN);
