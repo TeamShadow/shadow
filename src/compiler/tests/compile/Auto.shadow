@@ -8,6 +8,8 @@ class Auto
 		auto a = 4, b = 5;
 		auto c = a + b;
 		
+		//thing = 4; //uncomment for error
+		
 		//auto d; //uncomment for error
 	}
 }
