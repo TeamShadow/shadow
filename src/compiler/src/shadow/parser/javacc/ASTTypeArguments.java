@@ -6,16 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import shadow.typecheck.type.TypeParameter;
-import shadow.typecheck.type.TypeParameterRepresentation;
 
 public
 @SuppressWarnings("all")
 class ASTTypeArguments extends SimpleNode {
-	
-	private List<TypeParameter> arguments = new ArrayList<TypeParameter>();
-	 //private List<TypeParameterRepresentation> representations  = new ArrayList<TypeParameterRepresentation>();
-		
-	
 	
   public ASTTypeArguments(int id) {
     super(id);
@@ -23,16 +17,6 @@ class ASTTypeArguments extends SimpleNode {
 
   public ASTTypeArguments(ShadowParser p, int id) {
     super(p, id);
-  }
-  
-  public void addArgument(TypeParameter argument)
-  {
-	  arguments.add(argument);
-  }
-  
-  public List<TypeParameter> getArguments()
-  {
-	  return arguments;
   }
 
   /** Accept the visitor. **/

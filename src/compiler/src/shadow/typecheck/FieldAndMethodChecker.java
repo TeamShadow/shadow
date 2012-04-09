@@ -16,11 +16,9 @@ import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConstructorDeclaration;
 import shadow.parser.javacc.ASTDestructorDeclaration;
-import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
-import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMethodDeclaration;
@@ -31,6 +29,8 @@ import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
+import shadow.parser.javacc.ASTTypeBound;
+import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
@@ -42,6 +42,7 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
@@ -103,12 +104,19 @@ public class FieldAndMethodChecker extends BaseChecker {
 					if( !circular )
 					{
 						//check to see if all interfaces are satisfied
-						for( InterfaceType _interface : classType.getInterfaces() )
+						for( ClassInterfaceBaseType _interface : classType.getInterfaces() )
 						{
+							InterfaceType interfaceType;
+							
+							if( _interface instanceof InstantiatedType ) //must be instantiated version of interface
+								interfaceType = (InterfaceType) ((InstantiatedType)_interface).getInstantiatedType();
+							else
+								interfaceType = (InterfaceType) _interface; 							
+							
 							//check for circular interface issues first
-							if( _interface.isCircular() )
+							if( interfaceType.isCircular() )
 								addError(Error.INVL_TYP, "Interface " + _interface + " has a circular extends hierarchy" );
-							else if( !classType.satisfiesInterface(_interface) )
+							else if( !classType.satisfiesInterface(interfaceType) )
 								addError(Error.INVL_TYP, "Type " + classType + " does not implement interface " + _interface );					
 						}
 											
@@ -127,8 +135,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 									if( parent.recursivelyContainsIndistinguishableMethod(signature) )
 									{
 										MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
-										Node parentNode = parentSignature.getASTNode();
-										Node node = signature.getASTNode();
+										Node parentNode = parentSignature.getNode();
+										Node node = signature.getNode();
 										int parentModifiers;
 										int modifiers;
 										
@@ -177,7 +185,13 @@ public class FieldAndMethodChecker extends BaseChecker {
 	//declarationType will differ from current type only before the body (extends list, implements list)
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
-			declarationType = declarationType.getOuter();		
+		{
+			declarationType = declarationType.getOuter();
+			
+			
+			
+			
+		}
 		else
 			declarationType = (ClassInterfaceBaseType)node.getType();
 			
@@ -220,7 +234,11 @@ public class FieldAndMethodChecker extends BaseChecker {
 				{			
 					addError(node, Error.INVL_MOD, "Interface methods cannot be marked public, private, or protected since they are all public by definition" );
 					success = false;
-				}				
+				}
+				
+				
+				node.addModifier(ModifierSet.PUBLIC);
+				node.getType().addModifier(ModifierSet.PUBLIC);
 			}
 			else
 			{
@@ -244,17 +262,41 @@ public class FieldAndMethodChecker extends BaseChecker {
 			}
 		}		
 		else //fields
-		{			
-			if( visibilityModifiers == 0 )
-			{			
-				addError(node, Error.INVL_MOD, "Every field must be specified as public or private" );
-				success = false;
-			}
+		{
 			
-			if( ModifierSet.isProtected(modifiers) ) 
+			if( currentType instanceof InterfaceType )
+			{
+				if( visibilityModifiers > 0 )
+				{			
+					addError(node, Error.INVL_MOD, "Interface fields cannot be marked public, private, or protected since they are all public by definition" );
+					success = false;
+				}		
+				
+				if( ModifierSet.isStatic( modifiers ))
+				{			
+					addError(node, Error.INVL_MOD, "Interface fields cannot be marked static since they are all static by definition" );
+					success = false;
+				}
+				
+				
+				node.addModifier(ModifierSet.PUBLIC);
+				node.getType().addModifier(ModifierSet.STATIC);
+				node.addModifier(ModifierSet.PUBLIC);
+				node.getType().addModifier(ModifierSet.STATIC);
+			}
+			else
 			{			
-				addError(node, Error.INVL_MOD, "Fields cannot be declared with the protected modifier" );
-				success = false;
+				if( visibilityModifiers == 0 )
+				{			
+					addError(node, Error.INVL_MOD, "Every field must be specified as public or private" );
+					success = false;
+				}
+				
+				if( ModifierSet.isProtected(modifiers) ) 
+				{			
+					addError(node, Error.INVL_MOD, "Fields cannot be declared with the protected modifier" );
+					success = false;
+				}
 			}
 		}		
 		
@@ -341,7 +383,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		{
 			if( declarationType.isParameterized() )
 			{
-				for( TypeParameter parameter : declarationType.getParameters() )
+				for( TypeParameter parameter : declarationType.getTypeParameters() )
 				{
 					if( parameter.getTypeName().equals(name) )
 						return parameter;					
@@ -392,7 +434,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 						if( current.isParameterized() )
 						{
 							SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
-							List<TypeParameter> parameters = current.getParameters();
+							List<TypeParameter> parameters = current.getTypeParameters();
 							if( checkTypeArguments( parameters, arguments ) )
 							{
 								InstantiatedType instantiatedType = new InstantiatedType(current, arguments);
@@ -467,7 +509,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 				{				
 					// get the first signature
 					MethodSignature method = currentClass.getIndistinguishableMethod(signature);				
-					addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getLineNumber());
+					addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getNode().getLine());
 					return false;
 				}	
 				
@@ -672,66 +714,82 @@ public class FieldAndMethodChecker extends BaseChecker {
 	@Override
 	public Object visit(ASTTypeParameters node, Boolean secondVisit)	throws ShadowException
 	{		
-		if( secondVisit )
-		{		
-			//type parameters for class/interface declarations have already been found in the type collector
-			//only add for method declarations		
-			Node parent = node.jjtGetParent();
-			if( parent instanceof ASTMethodDeclarator )
-			{
-				Type parentType = node.jjtGetParent().getType();
-				
-				for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				{
-					TypeParameter parameter = (TypeParameter)(node.jjtGetChild(i).getType());
-					for( TypeParameter existing : parentType.getParameters() )
-						if( existing.getTypeName().equals( parameter.getTypeName() ) )
-							addError( node, Error.MULT_SYM, "Multiply defined type parameter " + existing.getTypeName() );
-					
-					parentType.addParameter(parameter);
-				}
-				
-				parentType.setParameterized(true);
-			}
+		Node parent = node.jjtGetParent();
+	
+		//type parameters for class/interface declarations have already been found in the type collector
+		//only add for method declarations
+		if( !secondVisit && (parent instanceof ASTMethodDeclarator) )		
+		{
+			Type declarationType = parent.jjtGetParent().getType(); //declaration is one up from declarator
+			declarationType.setParameterized(true);
 		}
+		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	@Override
-	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit)	throws ShadowException
-	{
 
-		return WalkType.POST_CHILDREN;
-	}
-	
-	/*
 	@Override
 	public Object visit(ASTTypeParameter node, Boolean secondVisit)	throws ShadowException
 	{
-		//type parameters occur only in class/interface declarations and method declarations
-		//in either case, a new scope is created that only holds type parameters
-		//(and perhaps method arguments)
 		TypeParameter typeParameter;
-		if( secondVisit )
-		{			
-			typeParameter = (TypeParameter)(node.getType());
-			if( node.jjtGetNumChildren() > 0 )
-			{
-				ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
-				for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
-					typeParameter.addBound(bound.jjtGetChild(i).getType());				
+		
+		Node grandparent = node.jjtGetParent().jjtGetParent();
+		
+		//only add generics to method declarations
+		if( grandparent instanceof ASTMethodDeclarator )
+		{
+			if( secondVisit )
+			{			
+				typeParameter = (TypeParameter)(node.getType());
+				if( node.jjtGetNumChildren() > 0 )
+				{
+					ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
+					for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
+						typeParameter.addBound((ClassInterfaceBaseType)(bound.jjtGetChild(i).getType()));				
+				}
+			}
+			else
+			{			
+				Node declaration = node.jjtGetParent().jjtGetParent().jjtGetParent(); //method declaration is  three levels up
+				Type declarationType  = declaration.getType();
+				
+				String symbol = node.getImage();
+				typeParameter = new TypeParameter(symbol);
+				
+				for( TypeParameter existing : declarationType.getTypeParameters() )
+					if( existing.getTypeName().equals( symbol ) )
+						addError( node, Error.MULT_SYM, "Multiply defined type parameter " + symbol );
+				
+				node.setType(typeParameter);
+				declarationType.addTypeParameter(typeParameter);
 			}
 		}
-		else
+		return WalkType.POST_CHILDREN;
+	}	
+	
+	
+	@Override
+	public Object visit(ASTTypeBound node, Boolean secondVisit)	throws ShadowException
+	{
+		if( secondVisit )
 		{
-			String symbol = node.getImage();
-			typeParameter = new TypeParameter(symbol);
-			//addTypeParameter( symbol, node );
-			node.setType(typeParameter);
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			{
+				Node child = node.jjtGetChild(i); //must be ASTClassOrInterfaceType
+				Type type = lookupType( child.getImage() );
+				
+				if( type == null )
+				{
+					addError( node, Error.UNDEF_TYP, "Undefined type: " + child.getImage() );
+					type = Type.UNKNOWN;
+				}
+				
+				child.setType(type);
+			}
 		}
+		
 		return WalkType.POST_CHILDREN;
 	}
-	*/
+	
 	
 	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException
 	{
@@ -769,6 +827,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 	// Everything below here are just visitors to push up the type
 	
 	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
-	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { 
+		return pushUpType(node, secondVisit); 
+	}
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 }

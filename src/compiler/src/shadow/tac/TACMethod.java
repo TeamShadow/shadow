@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import shadow.tac.nodes.TACNode;
-import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 

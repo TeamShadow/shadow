@@ -1,14 +1,8 @@
-package shadow.typecheck;
+package shadow.typecheck.type;
 
 import java.util.List;
 
 import shadow.parser.javacc.Node;
-import shadow.typecheck.type.ClassInterfaceBaseType;
-import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeParameter;
 
 public class MethodSignature {
 	protected final MethodType type;
@@ -20,6 +14,7 @@ public class MethodSignature {
 		this.symbol = symbol;
 		this.node = node;
 	}
+	
 	public MethodSignature(ClassInterfaceBaseType enclosingType, String symbol, int modifiers, Node node) {
 		type = new MethodType(enclosingType, modifiers);
 		this.symbol = symbol;
@@ -50,15 +45,11 @@ public class MethodSignature {
 	public String getSymbol() {
 		return symbol;
 	}
-	
-	public int getLineNumber() {
-		return node.getLine();
-	}
-	
-	public Node getASTNode() {
+
+	public Node getNode() {
 		return node;
 	}
-	
+		
 	public boolean matches( SequenceType argumentTypes, Type container )
 	{
 		return type.matches(argumentTypes, container );		
@@ -101,8 +92,14 @@ public class MethodSignature {
 	
 
 	public String toString() {
-		return symbol + ' ' + type.toString();
+		return symbol + " " + type.toString();
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+
 	
 	public String getMangledName() {
 		return "_M" + symbol + type.getMangledName();

@@ -8,5 +8,21 @@ class Generics
         nullable String output = pig.getValue();
         nullable Object thing;
         thing = pig.getValue();
+        
+        GenericMethod object = new GenericMethod();
+        int x = object.method<int>(13);
+        
+        Object stuff = "walnuts";
+        String value = object.method<String>(stuff);
+        
+        Child child = new Child();
+        Thumper<Child, Child> thumper = new Thumper<Child, Child>(child);
+        
+        try
+        {        
+        	child = check(thumper.thump());
+        }
+        recover
+        {}
     }
 }

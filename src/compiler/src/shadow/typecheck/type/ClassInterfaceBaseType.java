@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import shadow.parser.javacc.Node;
-import shadow.typecheck.MethodSignature;
 
 public abstract class ClassInterfaceBaseType extends Type
 {
@@ -100,7 +99,7 @@ public abstract class ClassInterfaceBaseType extends Type
 		
 		if( list != null )
 			for(MethodSignature existing : list )
-				if( existing.equals(signature) && (existing.getASTNode().getModifiers() & modifiers ) == modifiers ) 
+				if( existing.equals(signature) && (existing.getMethodType().getModifiers() & modifiers ) == modifiers ) 
 					return true;
 		
 		return false;
@@ -198,4 +197,17 @@ public abstract class ClassInterfaceBaseType extends Type
 		
 		return null;
 	}
+	
+	public boolean isRecursivelyParameterized()
+	{
+		if( isParameterized() )
+			return true;
+		
+		if( extendType == null )
+			return false;
+		
+		return extendType.isRecursivelyParameterized();
+	}
+	
+	public abstract ClassInterfaceBaseType replace(List<TypeParameter> values, List<ModifiedType> replacements );
 }

@@ -36,9 +36,9 @@ import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariable;
-import shadow.typecheck.MethodSignature;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
@@ -223,7 +223,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 					foundConstructor = true;
 				else*/ if ( !(method.getSymbol().equals("getClass") &&
 						method.canAccept(EMPTY_SEQUENCE)) &&
-						ModifierSet.isNative(method.getASTNode().getModifiers()) )
+						ModifierSet.isNative(method.getNode().getModifiers()) )
 					foundNative = true;
 				if ( method.getSymbol().equals("main") && method.canAccept(MAIN_SEQUENCE) )
 					foundMain = true;
@@ -243,7 +243,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 				sb.append(method.getMangledName());
 				sb.append('(');
 				
-				if (!ModifierSet.isStatic(method.getASTNode().getModifiers()))
+				if (!ModifierSet.isStatic(method.getNode().getModifiers()))
 				{
 					if ( method.getSymbol().equals("getClass") && method.canAccept(EMPTY_SEQUENCE) )
 						sb.append(typeToString(getType()));
@@ -258,7 +258,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 				for ( int i = 1; i < retTypes.size(); i++ )
 					sb.append(typeToString(retTypes.get(i).getType())).append("*, ");
 				
-				if (paramTypes.size() == 0 && ModifierSet.isStatic(method.getASTNode().getModifiers()))
+				if (paramTypes.size() == 0 && ModifierSet.isStatic(method.getNode().getModifiers()))
 					sb.append("void);");
 				else
 					sb.replace(sb.length() - 2, sb.length(), ");");
@@ -287,7 +287,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 				
 				sb.append("(*").append(method.getMangledName()).append(")(");
 				
-				if (!ModifierSet.isStatic(method.getASTNode().getModifiers()))
+				if (!ModifierSet.isStatic(method.getNode().getModifiers()))
 				{
 					if ( method.getSymbol().equals("getClass") && method.canAccept(EMPTY_SEQUENCE) )
 						sb.append(typeToString(getType()));
@@ -303,7 +303,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 				for ( int i = 1; i < retTypes.size(); i++ )
 					sb.append(typeToString(retTypes.get(i).getType())).append("*, ");
 				
-				if (paramTypes.size() == 0 && ModifierSet.isStatic(method.getASTNode().getModifiers()))
+				if (paramTypes.size() == 0 && ModifierSet.isStatic(method.getNode().getModifiers()))
 					sb.append("void);");
 				else
 					sb.replace(sb.length() - 2, sb.length(), ");");
@@ -464,7 +464,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 	public void startMethod(TACMethod method) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		
-		int modifiers = method.getSignature().getASTNode().getModifiers();
+		int modifiers = method.getSignature().getNode().getModifiers();
 		
 		List<ModifiedType> retTypes = method.getReturnTypes();
 		

@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import shadow.typecheck.MethodSignature;
 
 public class InterfaceType extends ClassInterfaceBaseType {
 	protected ArrayList<InterfaceType> extendTypes = new ArrayList<InterfaceType>();
@@ -96,44 +95,61 @@ public class InterfaceType extends ClassInterfaceBaseType {
 	
 	@Override
 	public InterfaceType replace(List<TypeParameter> values, List<ModifiedType> replacements )
-	{	
-		InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers(), getOuter() );
-		
-		for( InterfaceType _interface : extendTypes )
-			replaced.addExtendType(_interface.replace(values, replacements));		
-		
-		//should have no fields in an interface
-		
-		/*
-		Map<String, ModifiedType> fields = getFields(); 
-		
-		for( String name : fields.keySet() )
-		{
-			ModifiedType field = fields.get(name);			
-			replaced.addField(name, new SimpleModifiedType( field.getType().replace(values, replacements), field.getModifiers() ) );
-		}
-		*/
-		
-		Map<String, List<MethodSignature> > methods = getMethodMap();
-		
-		for( String name : methods.keySet() )
-		{
-			List<MethodSignature> signatures = methods.get(name);
+	{		
+		if( isRecursivelyParameterized() )
+		{		
+			InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers(), getOuter() );
 			
-			for( MethodSignature signature : signatures )			
-				replaced.addMethod(name, signature.replace(values, replacements));				
+			for( InterfaceType _interface : extendTypes )
+				replaced.addExtendType(_interface.replace(values, replacements));		
+			
+			//should have no fields in an interface
+			
+			/*
+			Map<String, ModifiedType> fields = getFields(); 
+			
+			for( String name : fields.keySet() )
+			{
+				ModifiedType field = fields.get(name);			
+				replaced.addField(name, new SimpleModifiedType( field.getType().replace(values, replacements), field.getModifiers() ) );
+			}
+			*/
+			
+			Map<String, List<MethodSignature> > methods = getMethodMap();
+			
+			for( String name : methods.keySet() )
+			{
+				List<MethodSignature> signatures = methods.get(name);
+				
+				for( MethodSignature signature : signatures )			
+					replaced.addMethod(name, signature.replace(values, replacements));				
+			}
+			
+			//should have no inner interfaces in an interface		
+			/*
+			Map<String, Type> inners = getInnerClasses();
+			
+			for( String name : inners.keySet() )		
+				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
+			*/
+			return replaced;
 		}
 		
-		//should have no inner interfaces in an interface		
-		/*
-		Map<String, Type> inners = getInnerClasses();
 		
-		for( String name : inners.keySet() )		
-			replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
-		*/
+		return this;
+	}
+	
+	@Override
+	public boolean isRecursivelyParameterized()
+	{
+		if( isParameterized() )
+			return true;
 		
-		return replaced;
+		for( InterfaceType parent : extendTypes )
+			if( parent.isRecursivelyParameterized() )
+				return true;
 		
+		return false;
 	}
 	
 	public boolean isSubtype(Type t)
@@ -141,7 +157,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		if( t == UNKNOWN )
 			return false;
 	
-		if( equals(t) )
+		if( equals(t) || t == Type.OBJECT )
 			return true;		
 		
 		if( t instanceof InterfaceType )			

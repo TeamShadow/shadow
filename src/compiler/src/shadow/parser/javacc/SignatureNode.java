@@ -1,7 +1,6 @@
 package shadow.parser.javacc;
 
-import shadow.Configuration;
-import shadow.typecheck.MethodSignature;
+import shadow.typecheck.type.MethodSignature;
 
 public class SignatureNode extends SimpleNode {
 	
@@ -14,7 +13,6 @@ public class SignatureNode extends SimpleNode {
     }
 	
 	private MethodSignature signature;
-	private int modifiers;	
 	
 	public MethodSignature getMethodSignature()
 	{
@@ -25,16 +23,4 @@ public class SignatureNode extends SimpleNode {
 	{
 		this.signature = signature;
 	}
-	
-
-	  
-	  public void setModifiers(int modifiers) {
-		  this.modifiers = modifiers;
-	  }
-	  
-	  public int getModifiers() {
-		  return modifiers;
-	  }
-	
-
 }

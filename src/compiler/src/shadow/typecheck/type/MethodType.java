@@ -28,21 +28,6 @@ public class MethodType extends Type {
 	{
 		return paramTypes.matches( inputTypes);		
 	}
-	
-	/*
-	public boolean returns( List<Type> returnTypes )
-	{
-		if( returns.size() != returnTypes.size() )
-			return false;
-		
-		for( int i = 0; i < returns.size(); i++ )
-			if( !returns.get(i).equals(returnTypes.get(i)))
-				return false;
-		
-		return true;
-	}
-	*/
-
 
 	//this method is used to see if particular return values inside the method can be given back as return values
 	public boolean canReturn( List<ModifiedType> returnTypes, Type container )
@@ -198,7 +183,7 @@ public class MethodType extends Type {
 		if( t == UNKNOWN )
 			return false;
 	
-		if( equals(t) )
+		if( equals(t) || t == Type.OBJECT )
 			return true;
 		
 		if( t instanceof MethodType )

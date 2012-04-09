@@ -808,7 +808,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 | modifiers = Modifiers()
   (  ClassOrInterfaceDeclaration(modifiers)
     | EnumDeclaration(modifiers)
-    | LOOKAHEAD(  "constructor" /*[ TypeParameters() ]*/ ) ConstructorDeclaration(modifiers)
+    | LOOKAHEAD(  "constructor" ) ConstructorDeclaration(modifiers)
     | LOOKAHEAD( "destructor" ) DestructorDeclaration(modifiers)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifiers) 
     | MethodDeclaration(modifiers)
@@ -914,11 +914,13 @@ void ConstructorDeclaration(int modifiers):
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }  
   // Modifiers matched in the caller
-  "constructor" /*[ TypeParameters() ]*/ FormalParameters() [ "throws" NameList() ]
-  "{"
+  "constructor" FormalParameters() [ "throws" NameList() ]
+  ( (       "{"
     [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
     ( BlockStatement() )*
-  "}"
+  "}")
+   |
+   ";" )
 }
 
 void DestructorDeclaration(int modifiers):
@@ -937,10 +939,8 @@ void DestructorDeclaration(int modifiers):
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("destructor"); }  
   // Modifiers matched in the caller
-  "destructor" //[ "throws" NameList() ] //no (checked) exceptions from destructors!
-  "{"    
-    ( BlockStatement() )*
-  "}"
+  "destructor" //no (checked) exceptions from destructors!
+  ( Block() | ";" )
 }
 
 void ExplicitConstructorInvocation():
@@ -1024,10 +1024,12 @@ void TypeArguments():
    "<" TypeArgument() ( "," TypeArgument() )* ">"
 }
 
+
+//since TypeArgument is just Type, consider getting rid of it
 void TypeArgument():
 { debugPrint("TYPE ARGUMENT"); }
 {
-   ReferenceType() //reference type since an array can be a type argument
+   Type() //reference type since an array can be a type argument
 // | "?" [ WildcardBounds() ]
 }
 

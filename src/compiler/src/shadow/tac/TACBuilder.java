@@ -10,8 +10,8 @@ import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
-import shadow.typecheck.MethodSignature;
 import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.MethodSignature;
 
 public class TACBuilder extends AbstractASTVisitor
 {
@@ -62,7 +62,7 @@ public class TACBuilder extends AbstractASTVisitor
 				module.addMethod(new TACMethod(method));
 			else
 				module.addMethod(new TACMethod(method,
-						converter.walk(method.getASTNode())));
+						converter.walk(method.getNode())));
 		}
 		
 		// generate a default constructor

@@ -1,0 +1,14 @@
+public class CompareBox<T is Comparable<T>>
+{
+	private nullable T value;
+	
+	public constructor(T input)
+	{
+		value = input;	
+	}
+	
+	public compare( T other ) => (int)
+	{
+		return T.compare( value, other );
+	}
+}

@@ -2,17 +2,14 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import shadow.typecheck.type.TypeParameter;
-import shadow.typecheck.type.TypeParameterRepresentation;
 
 public
 @SuppressWarnings("all")
-class ASTClassOrInterfaceTypeSuffix extends SimpleNode {
-	
-	private List<TypeParameterRepresentation> representations  = null;
+class ASTClassOrInterfaceTypeSuffix extends SimpleNode {	
+
 	private List<TypeParameter> parameters = null;	
 	
   public ASTClassOrInterfaceTypeSuffix(int id) {
@@ -34,17 +31,6 @@ class ASTClassOrInterfaceTypeSuffix extends SimpleNode {
 	  return parameters;
   }
   
-  
-  public void setRepresentations( List<TypeParameterRepresentation> representations )
-  {
-	  this.representations = representations;
-  }
-  
-  public List<TypeParameterRepresentation> getRepresentations()
-  {
-	  return representations;
-  }
-
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {

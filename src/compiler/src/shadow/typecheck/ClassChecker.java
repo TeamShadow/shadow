@@ -29,6 +29,7 @@ import shadow.parser.javacc.ASTCastExpression;
 import shadow.parser.javacc.ASTCheckExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConcatenationExpression;
 import shadow.parser.javacc.ASTConditionalAndExpression;
@@ -76,6 +77,7 @@ import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTSwitchStatement;
 import shadow.parser.javacc.ASTTryStatement;
 import shadow.parser.javacc.ASTType;
+import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnaryExpression;
@@ -93,10 +95,12 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
 
@@ -413,7 +417,21 @@ public class ClassChecker extends BaseChecker {
 	
 	public boolean setTypeFromContext( Node node, String name, Type context, boolean directAccess  ) //directAccess is true if there is no prefix and false if there is
 	{
-		if( context instanceof InterfaceType )
+		if( context instanceof TypeParameter )
+		{
+			TypeParameter typeParameter = (TypeParameter) context;
+			for( Type type : typeParameter.getBounds() )
+				if( setTypeFromContext( node, name, type, directAccess ) )
+					return true;
+			
+			return setTypeFromContext( node, name, Type.OBJECT, directAccess );			
+		}
+		else if( context instanceof InstantiatedType )
+		{
+			InstantiatedType instantiatedType = (InstantiatedType)context;
+			return setTypeFromContext( node, name, instantiatedType.getInstantiatedType(), directAccess );			
+		}
+		else if( context instanceof InterfaceType )
 		{			
 			InterfaceType interfaceType = (InterfaceType)context;
 			
@@ -1549,6 +1567,28 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	
+	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException
+	{
+		return WalkType.NO_CHILDREN; //should already have been handled in type collector		
+	}
+	
+	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			SequenceType sequenceType = new SequenceType();
+			
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				sequenceType.add(node.jjtGetChild(i));
+			
+			
+			node.setType(sequenceType);
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException 
 	{
 		//t = <IDENTIFIER> { jjtThis.setImage(t.image); } "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
@@ -1570,13 +1610,15 @@ public class ClassChecker extends BaseChecker {
 			directAccess = false;
 		}
 		
+		
+		/*
 		if( context instanceof InstantiatedType )
 		{
 			InstantiatedType instantiation = (InstantiatedType)context;
 			ClassInterfaceBaseType baseType = instantiation.getBaseType(); 
 			context = (ClassInterfaceBaseType)baseType.replace(baseType.getParameters(), instantiation.getArgumentTypes()); 
 		}		
-		
+		*/
 		
 		
 		if( !setTypeFromContext( node, name, context, directAccess )) //automatically sets type if can
@@ -1591,9 +1633,13 @@ public class ClassChecker extends BaseChecker {
 			SequenceType sequenceType = new SequenceType();
 			
 			int start = 0;
+			boolean hasArguments = false;
 			
-			if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeParameters) )
+			if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
+			{
 				start++;
+				hasArguments = true;
+			}
 			
 			for( int i = start; i < node.jjtGetNumChildren(); i++ )
 				sequenceType.add(node.jjtGetChild(i));
@@ -1604,19 +1650,34 @@ public class ClassChecker extends BaseChecker {
 			boolean perfectMatch = false;
 			
 			for( MethodSignature signature : methods ) 
-			{
-				if( signature.matches( sequenceType ) ) //signature.matches( sequenceType, context )
+			{				
+				MethodType methodType = signature.getMethodType();
+				
+				if( methodType.isParameterized() )
 				{
-					SequenceType returnTypes = signature.getMethodType().getReturnTypes();
+					if( hasArguments )
+					{
+						SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();
+						List<TypeParameter> parameters = methodType.getTypeParameters(); 
+						if( checkTypeArguments( parameters, arguments )   )
+							methodType = methodType.replace(parameters, arguments);
+						else
+							continue;
+					}
+				}				
+				
+				if( methodType.matches( sequenceType ) ) //signature.matches( sequenceType, context )
+				{
+					SequenceType returnTypes = methodType.getReturnTypes();					
 					returnTypes.setNodeType(node);					
 					perfectMatch = true;
 					
 					if( !methodIsAccessible( signature, currentType  ))
 						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
 					else
-						node.setType(signature.getMethodType());
+						node.setType(methodType);
 				}
-				else if( signature.canAccept( sequenceType )) //signature.canAccept( sequenceType, context )
+				else if( methodType.canAccept( sequenceType )) //signature.canAccept( sequenceType, context )
 					acceptableMethods.add(signature);
 			}
 			
@@ -1634,14 +1695,30 @@ public class ClassChecker extends BaseChecker {
 				}							
 				else
 				{
-					MethodSignature signature = acceptableMethods.get(0); 
-					SequenceType returnTypes = signature.getMethodType().getReturnTypes();
+					MethodSignature signature = acceptableMethods.get(0);
+					MethodType methodType = signature.getMethodType();
+					
+					if( methodType.isParameterized() )
+					{
+						if( hasArguments )
+						{
+							SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();
+							List<TypeParameter> parameters = methodType.getTypeParameters(); 
+							methodType = methodType.replace(parameters, arguments); //we know they match already
+						}
+						else						
+							addError(node, Error.TYPE_MIS, "Parameterized method " + signature + " is being called with no type parameters");							
+						
+					}
+					
+					SequenceType returnTypes = methodType.getReturnTypes();
 					returnTypes.setNodeType( node ); //used instead of setType
+					
 					
 					if( !methodIsAccessible( signature, currentType  ))
 						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
 					else
-						node.setType(signature.getMethodType());
+						node.setType(methodType);
 				}
 			}					
 		}
@@ -1833,7 +1910,7 @@ public class ClassChecker extends BaseChecker {
 	
 	public static boolean methodIsAccessible( MethodSignature signature, Type type )
 	{
-		return fieldIsAccessible( signature.getASTNode(), type );
+		return fieldIsAccessible( signature.getNode(), type );
 	}
 	
 	public Object visit(ASTLabeledStatement node, Boolean secondVisit) throws ShadowException 
@@ -2190,6 +2267,11 @@ public class ClassChecker extends BaseChecker {
 
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
+		return pushUpType(node, secondVisit); 
+	}
+	
+	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException
+	{
 		return pushUpType(node, secondVisit); 
 	}
 }

@@ -41,7 +41,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		if( (container instanceof InstantiatedType) && isParameterized() )
 		{
 			InstantiatedType instantiatedType = (InstantiatedType)container;
-			SequenceType replaced = replace( instantiatedType.getParameters(), instantiatedType.getArgumentTypes() );
+			SequenceType replaced = replace( instantiatedType.getTypeParameters(), instantiatedType.getTypeArguments() );
 			return replaced.canAccept( inputTypes );
 		}
 		else
@@ -148,7 +148,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		if( (container instanceof InstantiatedType) && isParameterized() )
 		{
 			InstantiatedType instantiatedType = (InstantiatedType)container;
-			SequenceType replaced = replace( instantiatedType.getParameters(), instantiatedType.getArgumentTypes() );
+			SequenceType replaced = replace( instantiatedType.getTypeParameters(), instantiatedType.getTypeArguments() );
 			return replaced.matches( inputTypes );
 		}
 		else

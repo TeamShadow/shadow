@@ -3,13 +3,12 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
-import shadow.typecheck.MethodSignature;
 
 public class InstantiatedType extends ClassType {
 
-	private List<ModifiedType> argumentTypes; 
+	private List<ModifiedType> typeArguments; 
 	private ClassInterfaceBaseType baseType;
-	private Type instantiatedType = null;
+	private ClassInterfaceBaseType instantiatedType = null;
 
 	public ClassInterfaceBaseType getBaseType()
 	{
@@ -22,16 +21,16 @@ public class InstantiatedType extends ClassType {
 	}
 	
 	
-	public List<ModifiedType> getArgumentTypes()
+	public List<ModifiedType> getTypeArguments()
 	{
-		return argumentTypes;
+		return typeArguments;
 	}
 	
 	
 	public InstantiatedType(ClassInterfaceBaseType type, List<ModifiedType> arguments) {
 		super(type.getTypeName(), type.getModifiers(), type.getOuter());
 		baseType = type;
-		argumentTypes = arguments;		
+		typeArguments = arguments;		
 	}
 	
 	public String toString()
@@ -40,11 +39,11 @@ public class InstantiatedType extends ClassType {
 		builder.append(baseType.getTypeName());
 		builder.append("<");
 		
-		for( int i = 0; i < argumentTypes.size(); i++ )
+		for( int i = 0; i < typeArguments.size(); i++ )
 		{
 			if( i > 0 )
 				builder.append(", ");
-			builder.append(argumentTypes.get(i).toString());			
+			builder.append(typeArguments.get(i).toString());			
 		}
 		
 		builder.append(">");
@@ -60,10 +59,10 @@ public class InstantiatedType extends ClassType {
 			if( !baseType.equals(instantiatedType.baseType) )
 				return false;
 			
-			for( int i = 0; i < argumentTypes.size(); i++ )
+			for( int i = 0; i < typeArguments.size(); i++ )
 			{
-				ModifiedType a = argumentTypes.get(i);
-				ModifiedType b = instantiatedType.argumentTypes.get(i);
+				ModifiedType a = typeArguments.get(i);
+				ModifiedType b = instantiatedType.typeArguments.get(i);
 				if( !a.getType().equals(b.getType()) || a.getModifiers() != b.getModifiers() )					
 					return false;
 			}
@@ -80,7 +79,7 @@ public class InstantiatedType extends ClassType {
 		
 		List<MethodSignature> instantiatedList = new ArrayList<MethodSignature>();
 		for( MethodSignature signature : methodsList )
-			instantiatedList.add(signature.replace( baseType.getParameters(), argumentTypes));
+			instantiatedList.add(signature.replace( baseType.getTypeParameters(), typeArguments));
 		
 		return instantiatedList;		
 	}	
@@ -89,7 +88,7 @@ public class InstantiatedType extends ClassType {
 	//base type can be a subtype
 	public boolean isSubtype(Type t)
 	{
-		if( equals(t) )
+		if( equals(t) || t == Type.OBJECT )
 			return true;
 		
 		if( t instanceof InstantiatedType )
@@ -99,11 +98,11 @@ public class InstantiatedType extends ClassType {
 			if( !baseType.isSubtype(type.getBaseType()) )
 				return false;
 			
-			if( argumentTypes.size() != type.argumentTypes.size())
+			if( typeArguments.size() != type.typeArguments.size())
 				return false;
 			
-			for( int i = 0; i < argumentTypes.size(); i++ )
-				if( !argumentTypes.get(i).equals(type.argumentTypes.get(i)) )
+			for( int i = 0; i < typeArguments.size(); i++ )
+				if( !typeArguments.get(i).equals(type.typeArguments.get(i)) )
 					return false;			
 			
 			return true;
@@ -112,11 +111,15 @@ public class InstantiatedType extends ClassType {
 			return false;
 	}
 	
-	public Type getInstantiatedType()
+	public ClassInterfaceBaseType getInstantiatedType()
 	{
 		if( instantiatedType == null )
-			instantiatedType = baseType.replace(baseType.getParameters(), argumentTypes);
+			instantiatedType = baseType.replace(baseType.getTypeParameters(), typeArguments);
 		
 		return instantiatedType;		
+	}
+	
+	public List<MethodSignature> getMethods(String methodName) {
+		return getInstantiatedType().getMethods(methodName);
 	}
 }

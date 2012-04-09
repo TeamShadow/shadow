@@ -185,7 +185,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			MethodType methodType = (MethodType)(currentMethod.getType());
 			if( methodType.isParameterized() )
 			{
-				for( TypeParameter typeParameter : methodType.getParameters() )
+				for( TypeParameter typeParameter : methodType.getTypeParameters() )
 				{
 					if( typeParameter.getTypeName().equals(name))
 						return typeParameter;
@@ -211,7 +211,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			
 			//check type parameters of outer class
 			if( outer.isParameterized() )
-				for( TypeParameter typeParameter : outer.getParameters() )
+				for( TypeParameter typeParameter : outer.getTypeParameters() )
 					if( typeParameter.getTypeName().equals(name) )
 						return typeParameter;
 		

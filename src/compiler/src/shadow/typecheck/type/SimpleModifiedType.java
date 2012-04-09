@@ -3,7 +3,6 @@ package shadow.typecheck.type;
 import java.util.List;
 import java.util.Map;
 
-import shadow.typecheck.MethodSignature;
 
 public class SimpleModifiedType implements ModifiedType {
 

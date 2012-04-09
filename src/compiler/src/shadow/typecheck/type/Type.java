@@ -3,17 +3,18 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.Package;
 
 
 public abstract class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string that represents the type */
-	private final int modifiers;
+	private int modifiers;
 	private ClassInterfaceBaseType outer; //outer class	
 	//private final Kind kind;
 	protected Package _package;
-	private List<TypeParameter> parameters = new ArrayList<TypeParameter>();	
+	private List<TypeParameter> typeParameters = new ArrayList<TypeParameter>();	
 	private boolean parameterized;	
 		
 	/*
@@ -110,7 +111,16 @@ public abstract class Type {
 	{
 		return modifiers;
 	}
-
+	
+	public void setModifiers(int modifiers)
+	{
+		this.modifiers = modifiers;
+	}
+	
+	public void addModifier( int modifier )
+	{
+		modifiers = ModifierSet.addModifier(modifiers, modifier);		
+	}
 	
 	public String toString()
 	{
@@ -126,81 +136,7 @@ public abstract class Type {
 		}
 		else
 			return false;
-	}	
-	
-	/*
-	public boolean isSubtype(Type t) {
-		if( this == UNKNOWN || t == UNKNOWN )
-			return false;
-		
-		if( equals(t) )
-			return true;
-		
-		switch( kind  )
-		{
-		case ARRAY:			
-			if( t.equals(OBJECT) || t.equals(ARRAY) )
-				return true;
-			if( t.getKind() == Kind.ARRAY )
-			{
-				ArrayType type = (ArrayType)this;
-				ArrayType other = (ArrayType)t;
-				//invariant typing on arrays
-				if( type.getDimensions() == other.getDimensions() )
-					return type.getBaseType().equals(other.getBaseType());
-				else
-					return false;
-			}
-			else
-				return false;			
-		case CLASS:
-			if( t.isNumerical() && this.isNumerical() )
-				return isNumericalSubtype(t);
-			else if( t.getKind() == Kind.CLASS )			
-				return ((ClassType)this).isDescendentOf(t);
-			else if( t.getKind() == Kind.INTERFACE )
-				return ((ClassType)this).hasInterface(t);
-			else
-				return false;
-		case ENUM:
-			if( t.equals(OBJECT) || t.equals(ENUM) )
-				return true;			
-			else if( t.getKind() == Kind.INTERFACE )
-				return ((EnumType)this).hasInterface(t);
-			else
-				return false;
-		case ERROR:
-			if( t.getKind() == Kind.ERROR )			
-				return ((ErrorType)this).isDescendentOf(t);
-			else
-				return false;			
-		case EXCEPTION:
-			if( t.getKind() == Kind.EXCEPTION )			
-				return ((ExceptionType)this).isDescendentOf(t);
-			else
-				return false;
-		case INTERFACE:
-			if( t.getKind() == Kind.INTERFACE )			
-				return ((InterfaceType)this).isDescendentOf(t);
-			else
-				return false;	
-		case SEQUENCE:
-			if ( t.getKind() == Kind.SEQUENCE )
-				return ((SequenceType)this).canAccept(((SequenceType)t));
-			else
-				return false;
-		case METHOD:
-		case VIEW:
-		case INSTANTIATED:
-			if( t.getKind() == Kind.INSTANTIATED )
-				return ((InstantiatedType)this).isSubtype((InstantiatedType)t);
-			else
-				return false;
-		default:
-			return false;		
-		}
 	}
-	*/
 	
 	protected boolean isNumericalSubtype(Type t)
 	{
@@ -247,7 +183,8 @@ public abstract class Type {
 		else		
 			return false;
 	}
-		
+	
+	@Override
 	public int hashCode() {
 		return toString().hashCode();
 	}
@@ -355,14 +292,14 @@ public abstract class Type {
 		_package = p;
 	}
 	
-	public List<TypeParameter> getParameters()
+	public List<TypeParameter> getTypeParameters()
 	{
-		return parameters;
+		return typeParameters;
 	}
 	
-	public void addParameter(TypeParameter parameter)
+	public void addTypeParameter(TypeParameter parameter)
 	{
-		parameters.add(parameter);
+		typeParameters.add(parameter);
 	}	
 	
 	public static void mangle(String name, StringBuilder sb)

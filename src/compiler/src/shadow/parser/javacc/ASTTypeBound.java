@@ -6,15 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import shadow.typecheck.type.TypeParameter;
-import shadow.typecheck.type.TypeParameterRepresentation;
 
 public
 @SuppressWarnings("all")
 class ASTTypeBound extends SimpleNode {
-	
-  private List<TypeParameter> bounds = new ArrayList<TypeParameter>();
-  private List<TypeParameterRepresentation> representations = new ArrayList<TypeParameterRepresentation>();	
-	
+
   public ASTTypeBound(int id) {
     super(id);
   }
@@ -23,28 +19,6 @@ class ASTTypeBound extends SimpleNode {
     super(p, id);
   }
   
-  public void addBound(TypeParameter bound)
-  {
-	  bounds.add(bound);
-  }
-  
-  public List<TypeParameter> getBounds()
-  {
-	  return bounds;
-  }
-  
-  
-  public void addRepresentation( TypeParameterRepresentation representation )
-  {
-	  representations.add( representation );
-  }
-  
-  public List<TypeParameterRepresentation> getRepresentations()
-  {
-	  return representations;
-  }  
-
-
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);

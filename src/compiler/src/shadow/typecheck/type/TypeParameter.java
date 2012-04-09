@@ -1,22 +1,25 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 
 public class TypeParameter extends ClassInterfaceBaseType
 {
-	private List<Type> bounds = new ArrayList<Type>();
+	private List<ClassInterfaceBaseType> bounds = new ArrayList<ClassInterfaceBaseType>();
 
 	public TypeParameter(String typeName)
 	{
 		super(typeName, 0, null);
 	}
 	
-	public void addBound(Type type) {
+	public void addBound(ClassInterfaceBaseType type) {
 		bounds.add(type);
 	}
 	
-	public List<Type> getBounds()
+	public List<ClassInterfaceBaseType> getBounds()
 	{
 		return bounds;
 	}
@@ -63,7 +66,7 @@ public class TypeParameter extends ClassInterfaceBaseType
 	
 	public boolean isSubtype(Type type)
 	{		
-		if( equals(type) )
+		if( equals(type) || type == Type.OBJECT )
 			return true;
 		
 		for( Type bound : bounds )
@@ -73,11 +76,11 @@ public class TypeParameter extends ClassInterfaceBaseType
 		return false;
 	}
 	
-	public Type replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	public ClassInterfaceBaseType replace(List<TypeParameter> values, List<ModifiedType> replacements )
 	{
 		for( int i = 0; i < values.size(); i++ )
 			if( values.get(i).getTypeName().equals(getTypeName()))
-				return replacements.get(i).getType();
+				return (ClassInterfaceBaseType) replacements.get(i).getType();
 		
 		return this;
 	}
@@ -100,6 +103,15 @@ public class TypeParameter extends ClassInterfaceBaseType
 		}
 		
 		return builder.toString();
+	}
+	
+	public List<MethodSignature> getMethods(String methodName)
+	{
+		Set<MethodSignature> signatures = new HashSet<MethodSignature>();
+		for(ClassInterfaceBaseType bound : bounds )					
+			signatures.addAll(bound.getMethods(methodName));
+		
+		return new ArrayList<MethodSignature>(signatures);
 	}
 	
 }

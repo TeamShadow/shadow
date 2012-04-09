@@ -9,7 +9,6 @@ import java.util.Set;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.MethodSignature;
 
 public class ClassType extends ClassInterfaceBaseType {
 	private ArrayList<InterfaceType> implementTypes = new ArrayList<InterfaceType>();
@@ -88,7 +87,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		
 		if( list != null )
 			for(MethodSignature existing : list )
-				if( existing.matchesInterface(signature) && ModifierSet.isPublic(existing.getASTNode().getModifiers() ) ) 
+				if( existing.matchesInterface(signature) && ModifierSet.isPublic(existing.getMethodType().getModifiers() ) ) 
 					return true;
 		
 		return false;
@@ -290,42 +289,41 @@ public class ClassType extends ClassInterfaceBaseType {
 	@Override
 	public ClassType replace(List<TypeParameter> values, List<ModifiedType> replacements )
 	{	
-		ClassType replaced = new ClassType( getTypeName(), getModifiers(), getOuter() );
-		
-		if( getExtendType().isParameterized() )
-		{
-			//deal with this eventually		
-			//replaced.setExtendType(getExtendType().replace(values, replacements));
-		}
-		else
-			replaced.setExtendType(getExtendType());
-		
-		Map<String, Node> fields = getFields(); 
-		
-		for( String name : fields.keySet() )
-		{
-			SimpleNode field = (SimpleNode)(fields.get(name));
-			field = field.clone();
-			field.setType(field.getType().replace(values, replacements));			
-			replaced.addField(name, field );
-		}
-		
-		Map<String, List<MethodSignature> > methods = getMethodMap();
-		
-		for( String name : methods.keySet() )
-		{
-			List<MethodSignature> signatures = methods.get(name);
+		if( isRecursivelyParameterized() )
+		{		
+			ClassType replaced = new ClassType( getTypeName(), getModifiers(), getOuter() );			
+								
+			replaced.setExtendType(getExtendType().replace(values, replacements));			
 			
-			for( MethodSignature signature : signatures )			
-				replaced.addMethod(name, signature.replace(values, replacements));				
+			Map<String, Node> fields = getFields(); 
+			
+			for( String name : fields.keySet() )
+			{
+				SimpleNode field = (SimpleNode)(fields.get(name));
+				field = field.clone();
+				field.setType(field.getType().replace(values, replacements));			
+				replaced.addField(name, field );
+			}
+			
+			Map<String, List<MethodSignature> > methods = getMethodMap();
+			
+			for( String name : methods.keySet() )
+			{
+				List<MethodSignature> signatures = methods.get(name);
+				
+				for( MethodSignature signature : signatures )			
+					replaced.addMethod(name, signature.replace(values, replacements));				
+			}
+			
+			Map<String, Type> inners = getInnerClasses();
+			
+			for( String name : inners.keySet() )		
+				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
+			
+			return replaced;
 		}
 		
-		Map<String, Type> inners = getInnerClasses();
-		
-		for( String name : inners.keySet() )		
-			replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
-		
-		return replaced;
+		return this;
 	}
 	
 	public boolean isSubtype(Type t)
@@ -333,7 +331,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( t == UNKNOWN || this == UNKNOWN )
 			return false;
 	
-		if( this == NULL || equals(t) )
+		if( this == NULL || equals(t) || t == Type.OBJECT )
 			return true;		
 		
 		if( t.isNumerical() && isNumerical() )
