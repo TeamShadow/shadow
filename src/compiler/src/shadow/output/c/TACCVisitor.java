@@ -101,15 +101,19 @@ public class TACCVisitor extends AbstractTACVisitor {
 //		cWriter.outdent();
 //		cWriter.writeLine("};");
 //		cWriter.writeLine();
-		
-		String className = lit2lit('\"' + getType().getFullName() + '\"');
+
+		String className = literalToString('\"' + getType().getFullName() + '\"'), superClassName;
+		if (getType().getExtendType() == null)
+			superClassName = literalToString("null");
+		else
+			superClassName = '&' + getType().getExtendType().getMangledName() + "_Iclass";
 		cWriter.writeLine("struct " + Type.CLASS.getMangledName() + ' ' +
 				getType().getMangledName() + "_Iclass = {");
 		cWriter.indent();
-		cWriter.writeLine('&' + Type.CLASS.getMangledName() + "_Imethods, " + className);
+		cWriter.writeLine('&' + Type.CLASS.getMangledName() + "_Imethods, " + superClassName + ", " + /*literalToString("null") + ", " +*/ className);
 		cWriter.outdent();
 		cWriter.writeLine("};");
-		cWriter.writeLine("");
+		cWriter.writeLine();
 		
 		String metaShortName = metaFileName == null ? "" : metaFileName.substring(metaFileName.lastIndexOf(File.separatorChar)+1, metaFileName.length());
 		metaShortName = metaShortName.replace('.', '_');
@@ -118,7 +122,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		metaWriter.writeLine("/* AUTO-GENERATED FILE, DO NOT EDIT! */");
 		metaWriter.writeLine("#ifndef " + metaShortName.toUpperCase());
 		metaWriter.writeLine("#define " + metaShortName.toUpperCase());
-		metaWriter.writeLine("");
+		metaWriter.writeLine();
 		metaWriter.writeLine("#include \"types.h\"");
 		metaWriter.writeLine("#include \"stdlib.h\"");
 		metaWriter.writeLine("#include \"string.h\"");
@@ -315,7 +319,7 @@ public class TACCVisitor extends AbstractTACVisitor {
 		metaWriter.writeLine("};");
 		metaWriter.writeLine();
 		
-		cWriter.writeLine(typeToString(Type.CLASS) + ' ' + getType().getMangledName() + "_MgetClass(" + typeToString(getType()) + " this) {");
+		cWriter.writeLine(typeToString(Type.CLASS) + getType().getMangledName() + "_MgetClass(" + typeToString(getType()) + "this) {");
 		cWriter.indent();
 		cWriter.writeLine("return &" + getType().getMangledName() + "_Iclass;");
 		cWriter.outdent();
@@ -398,7 +402,8 @@ public class TACCVisitor extends AbstractTACVisitor {
 		}
 
 		for (Type type : getType().getReferencedTypes())
-			metaWriter.writeLine("#include \"" + type.getPath() + ".meta\"");
+			if (!(type instanceof ArrayType))
+				metaWriter.writeLine("#include \"" + type.getPath() + ".meta\"");
 		metaWriter.writeLine("#include \"shadow/standard/Array.meta\"");
 		metaWriter.writeLine();
 		metaWriter.writeLine("#endif");
@@ -470,11 +475,10 @@ public class TACCVisitor extends AbstractTACVisitor {
 		
 		// right now we punt on returning more than one thing
 		if(retTypes.isEmpty())
-			sb.append("void");
+			sb.append("void ");
 		else
 			sb.append(typeToString(retTypes.get(0).getType()));
 		
-		sb.append(' ');
 		sb.append(getType().getMangledName());
 		sb.append(method.getMangledName());
 		sb.append('(');
@@ -484,12 +488,11 @@ public class TACCVisitor extends AbstractTACVisitor {
 
 		// first param is always a reference to the class, unless it's static
 		if(!ModifierSet.isStatic(modifiers))
-			sb.append(typeToString(getType())).append(" this, ");
+			sb.append(typeToString(getType())).append("this, ");
 
 		for (int i = 0; i < paramNames.size(); i++)
 		{
 			sb.append(typeToString(paramTypes.get(i).getType()));
-			sb.append(' ');
 			sb.append(paramNames.get(i));
 			sb.append(", ");
 		}
@@ -919,10 +922,6 @@ public class TACCVisitor extends AbstractTACVisitor {
 //		return sb.toString();
 //	}
 
-	private String lit2lit(String shadowLiteral) throws IOException {
-		return literalToString(shadowLiteral);
-	}
-	
 	private String nodeToString(TACLiteral node) throws IOException
 	{
 		return literalToString(node.getSymbol());

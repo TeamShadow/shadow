@@ -8,12 +8,12 @@ static struct _Pshadow_Pstandard_CString _Istring0 = {
 	&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CMath_Iclass = {
-	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
+	&_Pshadow_Pstandard_CClass_Imethods, &_Pshadow_Pstandard_CObject_Iclass, &_Istring0
 };
 
 int_shadow_t  _Pshadow_Pstandard_CMath_Mmin_Rint_Rint(int_shadow_t  x, int_shadow_t  y) {
-	boolean_shadow_t  _Itemp0;
-	int_shadow_t  _Itemp1;
+	boolean_shadow_t _Itemp0;
+	int_shadow_t _Itemp1;
 	_Itemp0 = x < y;
 	if ( _Itemp0 )
 		goto label0;
@@ -30,8 +30,8 @@ label2: (void)0;
 }
 
 int_shadow_t  _Pshadow_Pstandard_CMath_Mmax_Rint_Rint(int_shadow_t  x, int_shadow_t  y) {
-	boolean_shadow_t  _Itemp0;
-	int_shadow_t  _Itemp1;
+	boolean_shadow_t _Itemp0;
+	int_shadow_t _Itemp1;
 	_Itemp0 = x > y;
 	if ( _Itemp0 )
 		goto label0;

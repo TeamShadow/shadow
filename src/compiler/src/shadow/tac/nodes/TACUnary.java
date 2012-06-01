@@ -23,7 +23,12 @@ public class TACUnary extends TACOperation
 		{
 			return symbol;
 		}
-		
+
+		public boolean isNot()
+		{
+			return this == LOGICAL_NOT || this == BITWISE_NOT;
+		}
+
 		public static Operator parse(char c)
 		{
 			for (Operator op : Operator.values())

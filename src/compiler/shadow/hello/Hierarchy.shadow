@@ -1,0 +1,22 @@
+package shadow.hello;
+
+import shadow.io@Console;
+
+class Hierarchy
+{
+	public static main( String[] args ) => ()
+	{
+		try
+		{
+			Hierarchy hierarchy = new Hierarchy();
+			Console.printLine(hierarchy);
+			Console.printLine(hierarchy.getClass());
+			Console.printLine(hierarchy.getClass().getSuper());
+			Console.printLine(check(hierarchy.getClass().getSuper()).getSuper());
+		}
+		recover
+		{
+			Console.printLine("Null Pointer Exception!");
+		}
+	}
+}

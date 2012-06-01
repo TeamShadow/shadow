@@ -8,7 +8,7 @@ static struct _Pshadow_Pstandard_CString _Istring0 = {
 	&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Pio_CConsole_Iclass = {
-	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
+	&_Pshadow_Pstandard_CClass_Imethods, &_Pshadow_Pstandard_CObject_Iclass, &_Istring0
 };
 
 void _Pshadow_Pio_CConsole_Mconstructor(struct _Pshadow_Pio_CConsole * this) {

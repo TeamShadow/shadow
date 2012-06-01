@@ -1,7 +1,7 @@
 class Numeric {
 
     public static main( String[] args ) => () {
-    	long z = 1y + 2s + 3i + 4l;
+    	long z = 1y + 2s + 3i/* + 4l*/;
     	if (z == 4*5/2l)
     		shadow.io@Console.printLine("Yes");
     	

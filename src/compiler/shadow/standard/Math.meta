@@ -22,7 +22,7 @@ struct _Pshadow_Pstandard_CMath {
 	double_shadow_t PI;
 };
 
-struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CMath_MgetClass(struct _Pshadow_Pstandard_CMath *this);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CMath_MgetClass(struct _Pshadow_Pstandard_CMath *);
 int_shadow_t _Pshadow_Pstandard_CMath_Mmin_Rint_Rint(int_shadow_t, int_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mln_Rdouble(double_shadow_t);
 double_shadow_t _Pshadow_Pstandard_CMath_Mcosh_Rdouble(double_shadow_t);

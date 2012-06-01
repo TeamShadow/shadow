@@ -19,7 +19,7 @@ struct _Pshadow_Pstandard_CObject *_Pshadow_Pstandard_CArray_Msubarray_Rint_Rint
 	return (struct _Pshadow_Pstandard_CObject *)newArray;
 }
 
-struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CArray_MgetBaseClass(struct _Pshadow_Pstandard_CArray *this) {
-	return ((void *)0);
-}
+//struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CArray_MgetBaseClass(struct _Pshadow_Pstandard_CArray *this) {
+//	return ((void *)0);
+//}
 

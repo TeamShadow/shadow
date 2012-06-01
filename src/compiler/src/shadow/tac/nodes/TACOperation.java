@@ -20,14 +20,7 @@ abstract class TACOperation extends TACNode
 	protected TACOperation(TACNode op1, TACOperator op, TACNode op2)
 	{
 		if (!op1.getType().equals(op2.getType()))
-		{
-			if (op1.getType().isSubtype(op2.getType()));
-// FIXME:		op1 = new TACCast(op2.getType(), op1);
-			else if (op2.getType().isSubtype(op1.getType()));
-// FIXME:		op2 = new TACCast(op1.getType(), op2);
-			else
 				throw new IllegalArgumentException("Incompatible types.");
-		}
 		operator = op;
 		left = op1;
 		right = op2;

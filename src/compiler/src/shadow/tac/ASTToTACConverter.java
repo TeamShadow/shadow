@@ -138,19 +138,12 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTVariableDeclarator node, TACData tac) throws ShadowException
 	{
-		tac.appendChild(0);
-		TACNode value;
-		if (!tac.hasChild(1))
-		{
-			value = getDefault(node.getType());
-			tac.append(value);
-		}
-		else
-		{
-			tac.appendChild(1);
-			value = tac.getChildNode(1);
-		}
-		tac.append(new TACAssign(tac.getChildNode(0), value));
+		TACNode variable = tac.appendAndGetChild(0), value = tac.appendAndGetChild(1);
+		if (value == null)
+			tac.append(value = getDefault(node.getType()));
+		if (value.getType().isStrictSubtype(variable.getType()))
+			tac.append(value = new TACCast(variable.getType(), value));
+		tac.append(new TACAssign(variable, value));
 	}
 
 	@Override
@@ -358,11 +351,18 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTReturnStatement node, TACData tac) throws ShadowException
 	{
-		tac.appendChildren();
 		if (tac.hasChild(0))
 		{
-			// TODO: figure out expected type
-			tac.append(new TACReturn(tac.getChildNode(0)));
+			Type expectedType = node.getType();
+			TACNode returnValue = tac.appendAndGetChild(0);
+			TACSequence returnValues;
+			if (returnValue instanceof TACSequence)
+				returnValues = (TACSequence)returnValue;
+			else
+				returnValue = returnValues = new TACSequence(returnValue);
+			if (!returnValues.getType().equals(expectedType))
+				tac.append(returnValue = new TACCast(expectedType, returnValues));
+			tac.append(new TACReturn(returnValue));
 		}
 		else
 			tac.append(new TACReturn());
@@ -384,13 +384,14 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 			tac.appendChildren();
 		else
 		{
-			tac.appendChildren();
-			TACNode result = tac.getChildNode(2);
-			TACBinary.Operator operation = TACBinary.Operator.parse(
+			TACNode variable = tac.appendAndGetChild(0), value = tac.appendAndGetChild(2);
+			if (value.getType().isStrictSubtype(variable.getType()))
+				tac.append(value = new TACCast(variable.getType(), value));
+			TACBinary.Operator operator = TACBinary.Operator.parse(
 					node.jjtGetChild(1).getImage().charAt(0));
-			if (operation != null)
-				tac.append(result = new TACBinary(tac.getChildNode(0), operation, result));
-			tac.append(new TACAssign(tac.getChildNode(0), result));
+			if (operator != null)
+				tac.append(value = new TACBinary(variable, operator, value));
+			tac.append(new TACAssign(variable, value));
 		}
 	}
 
@@ -798,8 +799,8 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 						tac.append(lastNode);
 					}
 					Type expectedType = prefixed.expectedPrefixType();
-					if (prefixed.getType() != null && expectedType != null)
-						if (!prefixed.getType().equals(expectedType))
+					if (lastNode.getType() != null && expectedType != null)
+						if (!lastNode.getType().equals(expectedType))
 							tac.append(lastNode = new TACCast(expectedType, lastNode));
 					prefixed.setPrefix(lastNode);
 				}
@@ -847,10 +848,9 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	@Override
 	public void visit(ASTConstructorInvocation node, TACData tac) throws ShadowException
 	{
-		tac.appendChildren();
 		MethodType type = (MethodType)node.getType();
 		TACAllocation allocation = new TACAllocation(type.getOuter(), null, true);
-		TACSequence argSequence = (TACSequence)tac.getChildNode(1);
+		TACSequence argSequence = (TACSequence)tac.appendAndGetChild(1);
 		tac.append(allocation);
 		tac.append(new TACCall(allocation, "constructor", type, argSequence));
 		tac.append(new TACReference(allocation));
@@ -974,6 +974,12 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 			}
 			tac.append(new TACIndexed(node.getType(), index, prefixed));
 		}
+		else if (node.getImage().equals("class"))
+		{
+			Type type = node.jjtGetChild(0).getType();
+			tac.append(new TACVariable(type, type.getFullName(), false));
+			tac.append(new TACVariable(tac.getNode(), node.getType(), node.getImage(), false));
+		}
 		else
 			tac.append(new TACVariable(node.getType(), node.getImage(), node.isField()));
 	}
@@ -1039,10 +1045,15 @@ public class ASTToTACConverter extends AbstractASTToTACVisitor
 	private void visitBinary(String image, TACData tac)
 	{
 		TACNode first = tac.appendAndGetChild(0);
-		for (int i = 0; i < image.length(); i++)
-			tac.append(first = new TACBinary(first,
-					TACBinary.Operator.parse(image.charAt(i)),
-					tac.appendAndGetChild(i + 1)));
+		for (int i = 0; i < image.length(); ) {
+			TACBinary.Operator operator = TACBinary.Operator.parse(image.charAt(i));
+			TACNode second = tac.appendAndGetChild(++i);
+			if (first.getType().isStrictSubtype(second.getType()))
+				tac.append(first = new TACCast(second.getType(), first));
+			else if (second.getType().isStrictSubtype(first.getType()))
+				tac.append(second = new TACCast(first.getType(), second));
+			tac.append(first = new TACBinary(first, operator, second));
+		}
 	}
 
 	private void visitComparison(String image, TACData tac)

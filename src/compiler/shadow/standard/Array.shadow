@@ -2,8 +2,10 @@ package shadow.standard;
 
 // Is abstract final (not valid in java) like having only private constructors?
 //		aka. can not be created outside of this class
-/*native*/ abstract final class Array/*<T>*/
+/*native*/ abstract final class Array<T>
 {
+	private Class baseClass = Object.class;
+
 	// TODO: Optimize these. For now they are just to reduce
 	//		 the amount of native code that keeps changing.
 	public final getLength() => ( int )
@@ -27,9 +29,10 @@ package shadow.standard;
 	//		 The returned array has direct access to the
 	//		 internal lengths which must not be changed.
 	public final native getLengths() => ( /*immutable*/ int[] /*Array<int>*/ );
-	// NOTE: Right now, this must have the same signature
-	//		 as getClass() => ( Class )
-	public final native getBaseClass() => ( Class ); /* { return T; } */
+	public final getBaseClass() => ( Class )
+	{
+		return baseClass;
+	}
 
 	// Maybe use these methods in an Indexable<T>/Indexed<T> interface?
 	// Although it might only be used for random access collections

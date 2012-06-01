@@ -20,7 +20,7 @@ struct _Pshadow_Pstandard_CObject {
 	/* Fields */
 };
 
-struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject *this);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject *);
 struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CObject_MgetClass(struct _Pshadow_Pstandard_CObject *);
 struct _Pshadow_Pstandard_CString *_Pshadow_Pstandard_CObject_MtoString(struct _Pshadow_Pstandard_CObject *);
 void _Pshadow_Pstandard_CObject_Mconstructor(struct _Pshadow_Pstandard_CObject *);

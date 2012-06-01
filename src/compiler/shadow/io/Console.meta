@@ -21,7 +21,7 @@ struct _Pshadow_Pio_CConsole {
 	/* Fields */
 };
 
-struct _Pshadow_Pstandard_CClass *_Pshadow_Pio_CConsole_MgetClass(struct _Pshadow_Pio_CConsole *this);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pio_CConsole_MgetClass(struct _Pshadow_Pio_CConsole *);
 int_shadow_t _Pshadow_Pio_CConsole_MreadInt(void);
 ulong_shadow_t _Pshadow_Pio_CConsole_MreadULong(void);
 long_shadow_t _Pshadow_Pio_CConsole_MreadLong(void);

@@ -10,6 +10,7 @@
 struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pstandard_CClass;
+struct int_A1;
 
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CArray_Iclass;
 struct _Pshadow_Pstandard_CArray_Itable;
@@ -21,6 +22,7 @@ struct _Pshadow_Pstandard_CArray {
 	void *_Iarray;
 	int_shadow_t _Idims;
 	int_shadow_t _Ilengths[1];
+	struct _Pshadow_Pstandard_CClass *baseClass;
 };
 
 struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CArray_MgetClass(struct _Pshadow_Pstandard_CArray *);

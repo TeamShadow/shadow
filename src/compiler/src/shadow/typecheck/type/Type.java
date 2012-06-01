@@ -184,6 +184,19 @@ public abstract class Type {
 			return false;
 	}
 	
+	public int getSize()
+	{
+		if( this.equals(BYTE) || this.equals(UBYTE) || this.equals(BOOLEAN) )
+			return 1;
+		else if( this.equals(SHORT) || this.equals(USHORT) )
+			return 2;
+		else if( this.equals(INT) || this.equals(UINT) || this.equals(CODE) || this.equals(FLOAT) )
+			return 4;
+		else if( this.equals(LONG) || this.equals(ULONG) || this.equals(DOUBLE) )
+			return 8;
+		return -1;
+	}
+	
 	@Override
 	public int hashCode() {
 		return toString().hashCode();
@@ -263,16 +276,27 @@ public abstract class Type {
 		return
 		this.equals(BOOLEAN) ||
 		this.equals(BYTE) ||
-		this.equals(CODE) ||	
+		this.equals(CODE) ||
 		this.equals(SHORT) ||
 		this.equals(INT) ||
-		this.equals(LONG) ||	  
+		this.equals(LONG) ||
 		this.equals(FLOAT) ||
 		this.equals(DOUBLE) ||
 		this.equals(UBYTE) ||
 		this.equals(UINT) ||
 		this.equals(ULONG) ||
 		this.equals(USHORT);
+	}
+
+	final public boolean isSigned()
+	{
+		return
+		this.equals(BOOLEAN) ||
+		this.equals(BYTE) ||
+		this.equals(CODE) ||
+		this.equals(SHORT) ||
+		this.equals(INT) ||
+		this.equals(LONG);
 	}
 
 	//searches for inner classes that follow the name list starting at index i in names
@@ -353,7 +377,21 @@ public abstract class Type {
 	{
 		return parameterized; 
 	}
-	
-	abstract public boolean isSubtype(Type t);
+
+	/**
+	 * @param other another type
+	 * @return {@literal true} if {@code this} can be cast to {@code other} and they are not equal
+	 */
+	public boolean isStrictSubtype(Type other) {
+		if (equals(other))
+			return false;
+		return isSubtype(other);
+	}
+
+	/**
+	 * @param other another type
+	 * @return {@literal true} if {@code this} can be cast to {@code other}
+	 */
+	abstract public boolean isSubtype(Type other);
 	abstract public Type replace(List<TypeParameter> values, List<ModifiedType> replacements );
 }

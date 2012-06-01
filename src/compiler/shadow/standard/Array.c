@@ -8,45 +8,42 @@ static struct _Pshadow_Pstandard_CString _Istring0 = {
 	&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CArray_Iclass = {
-	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
+	&_Pshadow_Pstandard_CClass_Imethods, &_Pshadow_Pstandard_CObject_Iclass, &_Istring0
 };
 
-int_shadow_t  _Pshadow_Pstandard_CArray_MgetDimensions(struct _Pshadow_Pstandard_CArray * this) {
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CArray_MgetBaseClass(struct _Pshadow_Pstandard_CArray *this) {
+	return this->baseClass;
+}
+
+int_shadow_t _Pshadow_Pstandard_CArray_MgetDimensions(struct _Pshadow_Pstandard_CArray *this) {
 	struct _Pshadow_Pstandard_CArray *_Itemp0;
 	struct _Pshadow_Pstandard_CArray *_Itemp1;
-	struct _Pshadow_Pstandard_CArray *_Itemp2;
-	int_shadow_t _Itemp3;
-	_Itemp0 = (struct _Pshadow_Pstandard_CArray *)this;
-	_Itemp1 = _Itemp0->_Imethods->_MgetLengths(_Itemp0);
-	_Itemp2 = (struct _Pshadow_Pstandard_CArray *)_Itemp1;
-	_Itemp3 = _Itemp2->_Imethods->_MgetLength(_Itemp2);
-	return _Itemp3;
+	int_shadow_t _Itemp2;
+	_Itemp0 = this->_Imethods->_MgetLengths(this);
+	_Itemp1 = (struct _Pshadow_Pstandard_CArray *)_Itemp0;
+	_Itemp2 = _Itemp1->_Imethods->_MgetLength(_Itemp1);
+	return _Itemp2;
 }
 
-int_shadow_t  _Pshadow_Pstandard_CArray_MgetLength(struct _Pshadow_Pstandard_CArray * this) {
+int_shadow_t _Pshadow_Pstandard_CArray_MgetLength(struct _Pshadow_Pstandard_CArray *this) {
+	int_shadow_t _Itemp0;
+	_Itemp0 = this->_Imethods->_MgetLength_Rint(this, 0);
+	return _Itemp0;
+}
+
+int_shadow_t _Pshadow_Pstandard_CArray_MgetLength_Rint(struct _Pshadow_Pstandard_CArray *this, int_shadow_t dimension) {
 	struct _Pshadow_Pstandard_CArray *_Itemp0;
-	int_shadow_t _Itemp1;
-	_Itemp0 = (struct _Pshadow_Pstandard_CArray *)this;
-	_Itemp1 = _Itemp0->_Imethods->_MgetLength_Rint(_Itemp0, 0);
-	return _Itemp1;
+	_Itemp0 = this->_Imethods->_MgetLengths(this);
+	return ((int_shadow_t *)_Itemp0->_Iarray)[dimension];
 }
 
-int_shadow_t  _Pshadow_Pstandard_CArray_MgetLength_Rint(struct _Pshadow_Pstandard_CArray * this, int_shadow_t  dimension) {
-	struct _Pshadow_Pstandard_CArray *_Itemp0;
-	struct _Pshadow_Pstandard_CArray *_Itemp1;
-	struct _Pshadow_Pstandard_CArray *_Itemp2;
-	_Itemp0 = (struct _Pshadow_Pstandard_CArray *)this;
-	_Itemp1 = _Itemp0->_Imethods->_MgetLengths(_Itemp0);
-	_Itemp2 = (struct _Pshadow_Pstandard_CArray *)_Itemp1;
-	return ((int_shadow_t *)_Itemp2->_Iarray)[dimension];
-}
-
-void _Pshadow_Pstandard_CArray_Mconstructor(struct _Pshadow_Pstandard_CArray * this) {
+void _Pshadow_Pstandard_CArray_Mconstructor(struct _Pshadow_Pstandard_CArray *this) {
 	this->_Imethods = &_Pshadow_Pstandard_CArray_Imethods;
+	this->baseClass = &_Pshadow_Pstandard_CObject_Iclass;
 	return;
 }
 
-struct _Pshadow_Pstandard_CClass * _Pshadow_Pstandard_CArray_MgetClass(struct _Pshadow_Pstandard_CArray * this) {
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CArray_MgetClass(struct _Pshadow_Pstandard_CArray *this) {
 	return &_Pshadow_Pstandard_CArray_Iclass;
 }
 

@@ -10,6 +10,7 @@
 struct _Pshadow_Pstandard_CArray;
 
 struct _Pshadow_Pstandard_CClass;
+struct ubyte_A1;
 struct _Pshadow_Pstandard_CMath;
 
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CString_Iclass;

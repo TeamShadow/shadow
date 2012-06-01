@@ -1,4 +1,4 @@
-package shadow.output.c;
+package shadow.output.llvm;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,7 +13,6 @@ import shadow.tac.nodes.TACAllocation;
 import shadow.tac.nodes.TACAssign;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
-import shadow.tac.nodes.TACPhiBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACComparison;
@@ -23,6 +22,7 @@ import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
+import shadow.tac.nodes.TACPhiBranch;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
@@ -31,47 +31,45 @@ import shadow.tac.nodes.TACVariable;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
-public class TACCScanner extends AbstractTACVisitor
+public class TACLLVMScanner extends AbstractTACVisitor
 {
-	private int tempCounter, labelCounter;
+	private int tempCounter;
 	private Map<String, String> localRenames;
 	private Map<String, Type> allocations;
 	private Set<String> stringLiterals;
-	public TACCScanner(TACModule module)
+	public TACLLVMScanner(TACModule module)
 	{
 		super(module);
 	}
+
 	private void allocate(TACNode node)
 	{
+		if (allocations == null)
+			return;
 		String symbol = node.getSymbol();
 		if (symbol == null)
 		{
-			symbol = "_Itemp" + tempCounter++;
+			symbol = "" + tempCounter++;
 			node.setSymbol(symbol);
 			allocations.put(symbol, node.getType());
 		}
-		else if (symbol.startsWith("_Itemp") && !allocations.containsKey(symbol))
+		else if (!allocations.containsKey(symbol))
 			allocations.put(symbol, node.getType());
 	}
-	
-	@Override
-	public void startFile() { }
-	@Override
-	public void endFile() { }
 
 	@Override
-	public void startFields()
-	{
-	}
+	public void startFile() throws IOException { }
 	@Override
-	public void endFields()
-	{
-	}
+	public void endFile() throws IOException { }
+	@Override
+	public void startFields() throws IOException { }
+	@Override
+	public void endFields() throws IOException { }
 	
 	@Override
 	public void startMethod(TACMethod method)
 	{
-		tempCounter = labelCounter = 0;
+		tempCounter = 0;
 		localRenames = new HashMap<String, String>();
 		allocations = new HashMap<String, Type>();
 		stringLiterals = new HashSet<String>();
@@ -143,7 +141,7 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACLabel node)
 	{
-		node.setSymbol("label" + labelCounter++);
+		node.setSymbol("" + tempCounter++);
 	}
 
 	@Override
@@ -154,12 +152,13 @@ public class TACCScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACCall node)
 	{
-		if (!node.getMethodType().getReturnTypes().isEmpty() && node.getSymbol() == null)
+		if (!node.getMethodType().getReturnTypes().isEmpty() &&
+				node.getSymbol() == null)
 		{
 			int index = 0;
 			for (ModifiedType type : node.getSequenceType())
 			{
-				node.setSymbol(index, "_Itemp" + tempCounter++);
+				node.setSymbol(index, "" + tempCounter++);
 				allocations.put(node.getSymbol(index++), type.getType());
 			}
 		}

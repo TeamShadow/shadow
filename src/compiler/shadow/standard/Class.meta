@@ -18,16 +18,19 @@ struct _Pshadow_Pstandard_CClass {
 	struct _Pshadow_Pstandard_CClass_Itable *_Imethods;
 
 	/* Fields */
+	struct _Pshadow_Pstandard_CClass *superClass;
 	struct _Pshadow_Pstandard_CString *className;
 };
 
-struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CClass_MgetClass(struct _Pshadow_Pstandard_CClass *this);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CClass_MgetClass(struct _Pshadow_Pstandard_CClass *);
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CClass_MgetSuper(struct _Pshadow_Pstandard_CClass *);
 struct _Pshadow_Pstandard_CString *_Pshadow_Pstandard_CClass_MtoString(struct _Pshadow_Pstandard_CClass *);
 void _Pshadow_Pstandard_CClass_Mconstructor(struct _Pshadow_Pstandard_CClass *);
 
 struct _Pshadow_Pstandard_CClass_Itable {
 	struct _Pshadow_Pstandard_CClass *(*_MgetClass)(struct _Pshadow_Pstandard_CClass *);
 	struct _Pshadow_Pstandard_CString *(*_MtoString)(struct _Pshadow_Pstandard_CClass *);
+	struct _Pshadow_Pstandard_CClass *(*_MgetSuper)(struct _Pshadow_Pstandard_CClass *);
 };
 
 #include "shadow/standard/String.meta"

@@ -8,14 +8,14 @@ static struct _Pshadow_Pstandard_CString _Istring0 = {
 	&_Pshadow_Pstandard_CString_Imethods, ((boolean_shadow_t)1), &_Iarray0
 };
 struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CObject_Iclass = {
-	&_Pshadow_Pstandard_CClass_Imethods, &_Istring0
+	&_Pshadow_Pstandard_CClass_Imethods, ((void *)0), &_Istring0
 };
 
 struct _Pshadow_Pstandard_CString * _Pshadow_Pstandard_CObject_MtoString(struct _Pshadow_Pstandard_CObject * this) {
-	struct _Pshadow_Pstandard_CObject * _Itemp0;
-	struct _Pshadow_Pstandard_CClass * _Itemp1;
-	struct _Pshadow_Pstandard_CClass * _Itemp2;
-	struct _Pshadow_Pstandard_CString * _Itemp3;
+	struct _Pshadow_Pstandard_CObject *_Itemp0;
+	struct _Pshadow_Pstandard_CClass *_Itemp1;
+	struct _Pshadow_Pstandard_CClass *_Itemp2;
+	struct _Pshadow_Pstandard_CString *_Itemp3;
 	_Itemp0 = (struct _Pshadow_Pstandard_CObject *)this;
 	_Itemp1 = _Itemp0->_Imethods->_MgetClass(_Itemp0);
 	_Itemp2 = (struct _Pshadow_Pstandard_CClass *)_Itemp1;

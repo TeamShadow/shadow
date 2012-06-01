@@ -1,7 +1,9 @@
 package shadow.tac;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
@@ -41,14 +43,19 @@ public class TACBuilder extends AbstractASTVisitor
 		
 		converter.outerType = type;
 		
+		Set<Integer> visited = new HashSet<Integer>();
 		// go through the fields
 		for (Node field : type.getFields().values())
 		{
-			module.append(converter.walk(field));
-			for (int i = 1; i < field.jjtGetNumChildren(); i++)
-				module.addField(new TACField(field.getType(),
-						field.jjtGetChild(i).jjtGetChild(0).getImage()));
+			if (visited.add(System.identityHashCode(field)))
+			{
+				module.append(converter.walk(field));
+				for (int i = 1; i < field.jjtGetNumChildren(); i++)
+					module.addField(new TACField(field.getType(),
+							field.jjtGetChild(i).jjtGetChild(0).getImage()));
+			}
 		}
+		visited = null;
 		
 		// go through the methods
 		boolean foundConstructor = false;

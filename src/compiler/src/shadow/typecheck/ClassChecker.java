@@ -2210,6 +2210,7 @@ public class ClassChecker extends BaseChecker {
 			{
 				MethodType methodType = (MethodType)(currentMethod.getType());
 				SequenceType returnTypes  = methodType.getReturnTypes();
+				node.setType(returnTypes);
 				
 				if( returnTypes.size() == 0 )
 				{

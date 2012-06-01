@@ -69,7 +69,7 @@ public class TACCall extends TACPrefixed
 		if (retTypes.size() == 0)
 			return null;
 		if (retTypes.size() == 1)
-			return retTypes.get(0).getType();		
+			return retTypes.get(0).getType();
 		return retTypes;
 	}
 	public SequenceType getSequenceType()

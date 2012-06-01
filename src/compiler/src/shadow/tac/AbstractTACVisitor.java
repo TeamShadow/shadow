@@ -26,9 +26,9 @@ import shadow.typecheck.type.ClassType;
 public abstract class AbstractTACVisitor
 {
 	private TACModule module;
-	public AbstractTACVisitor(TACModule theClass)
+	public AbstractTACVisitor(TACModule module)
 	{
-		this.module = theClass;
+		this.module = module;
 	}
 	
 	public TACModule getModule()
