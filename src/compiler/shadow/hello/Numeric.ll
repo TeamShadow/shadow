@@ -1,4 +1,5 @@
 %boolean = type i1
+%code = type i32
 %ubyte = type i8
 %byte = type i8
 %ushort = type i16
@@ -9,103 +10,89 @@
 %long = type i64
 %float = type float
 %double = type double
-%code = type i32
 
-define void @_Mconstructor {
-entry:
+@string0 = constant [3 x i8] c"Yes"
+
+define void @"hello@Numeric%constructor"() {
 	ret void
 }
 
-define void @_Mmain_R_Pshadow_Pstandard_CString_A1 {
-entry:
+define void @"hello@Numeric%main"({ %"shadow.standard@String"*, %int }) {
 	%z = alloca %long
-	%0 = sext %byte 1 to %short
-	%1 = add %short %0, 2
-	%2 = sext %short %1 to %int
-	%3 = add %int %2, 3
-	%4 = sext %int %3 to %long
-	%load.0 = load %long* %z
-	store %long %4, %long* %load.0
-	%5 = mul %int 4, 5
-	%6 = sext %int %5 to %long
-	%7 = sdiv %long %6, 2
-	%load.1 = load %long* %z
-	%8 = icmp eq %long %load.1, %7
-	br %boolean %8, label %9, label %10
-9:
-	br label %11
-10:
-	br label %11
-11:
+	%1 = sext %byte 1 to %short
+	%2 = add %short %1, 2
+	%3 = sext %short %2 to %int
+	%4 = add %int %3, 3
+	%5 = sext %int %4 to %long
+	store %long %5, %long* %z
+	%6 = mul %int 4, 5
+	%7 = sext %int %6 to %long
+	%8 = sdiv %long %7, 2
+	%z.0 = load %long* %z
+	%9 = icmp eq %long %z.0, %8
+	br %boolean %9, label %10, label %11
+; %10:
+	call void @"shadow.io@Console%printLine"(getelementptr inbounds ([3 x i8]* @string0, i32 0, i32 0))
+	br label %12
+; %11:
+	br label %12
+; %12:
 	%a = alloca %int
-	%12 = add %int 1, 2
-	%13 = sub %int %12, 3
-	%14 = add %int %13, 4
-	%load.2 = load %int* %a
-	store %int %14, %int* %load.2
+	%13 = add %int 1, 2
+	%14 = sub %int %13, 3
+	%15 = add %int %14, 4
+	store %int %15, %int* %a
 	%b = alloca %int
-	%15 = add %int 1, 2
-	%load.3 = load %int* %b
-	store %int %15, %int* %load.3
+	%16 = add %int 1, 2
+	store %int %16, %int* %b
 	%c = alloca %int
-	%16 = add %int 2, 3
-	%17 = add %int 4, 5
-	%18 = mul %int %16, %17
-	%load.4 = load %int* %c
-	store %int %18, %int* %load.4
-	%load.5 = load %int* %a
-	%load.6 = load %int* %b
-	%19 = add %int %load.5, %load.6
-	%load.7 = load %int* %a
-	store %int %19, %int* %load.7
-	%20 = add %int 3, 4
-	%load.8 = load %int* %b
-	%21 = add %int %load.8, %20
-	%load.9 = load %int* %b
-	store %int %21, %int* %load.9
-	%load.10 = load %int* %a
-	%22 = shl %int %load.10, 1
-	%load.11 = load %int* %b
-	%23 = shl %int %22, %load.11
-	%load.12 = load %int* %c
-	store %int %23, %int* %load.12
-	%load.13 = load %int* %a
-	%load.14 = load %int* %b
-	%24 = mul %int %load.13, %load.14
-	%load.15 = load %int* %c
-	%25 = shl %int %load.15, %24
-	%load.16 = load %int* %c
-	store %int %25, %int* %load.16
-	%load.17 = load %int* %a
-	%load.18 = load %int* %b
-	%26 = or %int %load.17, %load.18
-	%load.19 = load %int* %a
-	store %int %26, %int* %load.19
-	%load.20 = load %int* %a
-	%load.21 = load %int* %b
-	%27 = and %int %load.20, %load.21
-	%load.22 = load %int* %a
-	store %int %27, %int* %load.22
-	%load.23 = load %int* %a
-	%load.24 = load %int* %b
-	%28 = xor %int %load.23, %load.24
-	%load.25 = load %int* %a
-	store %int %28, %int* %load.25
-	%load.26 = load %int* %b
-	%load.27 = load %int* %a
-	%29 = or %int %load.26, %load.27
-	%load.28 = load %int* %b
-	store %int %29, %int* %load.28
-	%load.29 = load %int* %b
-	%load.30 = load %int* %a
-	%30 = and %int %load.29, %load.30
-	%load.31 = load %int* %b
-	store %int %30, %int* %load.31
-	%load.32 = load %int* %b
-	%load.33 = load %int* %a
-	%31 = xor %int %load.32, %load.33
-	%load.34 = load %int* %b
-	store %int %31, %int* %load.34
+	%17 = add %int 2, 3
+	%18 = add %int 4, 5
+	%19 = mul %int %17, %18
+	store %int %19, %int* %c
+	%a.0 = load %int* %a
+	%b.0 = load %int* %b
+	%20 = add %int %a.0, %b.0
+	store %int %20, %int* %a
+	%21 = add %int 3, 4
+	%b.1 = load %int* %b
+	%22 = add %int %b.1, %21
+	store %int %22, %int* %b
+	%a.1 = load %int* %a
+	%23 = shl %int %a.1, 1
+	%b.2 = load %int* %b
+	%24 = shl %int %23, %b.2
+	store %int %24, %int* %c
+	%a.2 = load %int* %a
+	%b.3 = load %int* %b
+	%25 = mul %int %a.2, %b.3
+	%c.0 = load %int* %c
+	%26 = shl %int %c.0, %25
+	store %int %26, %int* %c
+	%a.3 = load %int* %a
+	%b.4 = load %int* %b
+	%27 = or %int %a.3, %b.4
+	store %int %27, %int* %a
+	%a.4 = load %int* %a
+	%b.5 = load %int* %b
+	%28 = and %int %a.4, %b.5
+	store %int %28, %int* %a
+	%a.5 = load %int* %a
+	%b.6 = load %int* %b
+	%29 = xor %int %a.5, %b.6
+	store %int %29, %int* %a
+	%b.7 = load %int* %b
+	%a.6 = load %int* %a
+	%30 = or %int %b.7, %a.6
+	store %int %30, %int* %b
+	%b.8 = load %int* %b
+	%a.7 = load %int* %a
+	%31 = and %int %b.8, %a.7
+	store %int %31, %int* %b
+	%b.9 = load %int* %b
+	%a.8 = load %int* %a
+	%32 = xor %int %b.9, %a.8
+	store %int %32, %int* %b
 	ret void
 }
 

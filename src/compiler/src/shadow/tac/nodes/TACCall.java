@@ -14,21 +14,20 @@ public class TACCall extends TACPrefixed
 	private MethodType type;
 	private TACSequence parameters;
 	private String[] returnSymbols;
-	public TACCall(String methodName, MethodType methodType, TACSequence parameterValues)
+	public TACCall(String methodName, MethodType methodType,
+			TACSequence parameterValues)
 	{
 		this(null, methodName, methodType, parameterValues);
 	}
-	public TACCall(TACNode prefixNode, String methodName, MethodType methodType, TACSequence parameterValues)
+	public TACCall(TACNode prefixNode, String methodName, MethodType methodType,
+			TACSequence parameterValues)
 	{
 		super(prefixNode);
 		name = methodName;
 		type = methodType;
 		parameters = parameterValues;
-//		Type checker should have checked all this
-/*
 		SequenceType argumentTypes = methodType.getParameterTypes();
 		SequenceType parameterTypes = parameterValues.getType();
-
 		if (argumentTypes.size() != parameterTypes.size())
 			throw new IllegalArgumentException("Wrong number of arguments.");
 		for (int i = 0; i < argumentTypes.size(); i++)
@@ -36,16 +35,9 @@ public class TACCall extends TACPrefixed
 			Type expectedType = argumentTypes.get(i).getType(),
 					actualType = parameterTypes.get(i).getType();
 			if (!actualType.equals(expectedType))
-			{
-				if (actualType.isSubtype(expectedType));
-// FIXME:			parameterValues.getNodes().set(i, new TACCast(
-//							expectedType, parameterValues.getNodes()
-//							.get(i)));
-				else
-					throw new IllegalArgumentException("Invalid types passed to method call.");
-			}
+					throw new IllegalArgumentException("Invalid types passed " +
+							"to method call.");
 		}
-*/
 		int returnCount = type.getReturnTypes().size();
 		if (returnCount == 0)
 			returnSymbols = null;

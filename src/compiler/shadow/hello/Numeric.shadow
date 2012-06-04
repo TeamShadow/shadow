@@ -1,3 +1,5 @@
+package hello;
+
 class Numeric {
 
     public static main( String[] args ) => () {

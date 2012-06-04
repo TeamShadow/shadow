@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.ShadowException;
@@ -32,20 +34,22 @@ import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariable;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public class TACLLVMOutput extends AbstractTACVisitor {
-	private int loadCounter;
+	private Map<String, Integer> loadCounter;
 	private TabbedLineWriter llvmWriter;
 	private String llvmFileName;
 	public TACLLVMOutput(TACModule module, File shadowFile)
 			throws ShadowException
 	{
 		super(module);
+		loadCounter = new HashMap<String, Integer>();
 		try {
 			llvmFileName = shadowFile.getAbsolutePath().
 					replace(".shadow", ".ll");
-	
+
 			File llvmFile = new File(llvmFileName);
 			llvmWriter = new TabbedLineWriter(new FileWriter(llvmFile));
 		} catch (FileNotFoundException ex) {
@@ -61,6 +65,7 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 	public void startFile() throws IOException
 	{
 		llvmWriter.writeLine("%boolean = type i1");
+		llvmWriter.writeLine("%code = type i32");
 		llvmWriter.writeLine("%ubyte = type i8");
 		llvmWriter.writeLine("%byte = type i8");
 		llvmWriter.writeLine("%ushort = type i16");
@@ -71,7 +76,11 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 		llvmWriter.writeLine("%long = type i64");
 		llvmWriter.writeLine("%float = type float");
 		llvmWriter.writeLine("%double = type double");
-		llvmWriter.writeLine("%code = type i32");
+		llvmWriter.writeLine();
+		int stringCounter = 0;
+		for (String string : getModule().getStrings())
+			llvmWriter.writeLine("@string" + stringCounter++ + " = constant [" +
+					string.length() + " x i8] c\"" + string + '\"');
 		llvmWriter.writeLine();
 	}
 	@Override
@@ -108,9 +117,14 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 				sb.append(typeToString(type.getType())).append(", ");
 			sb.replace(sb.length() - 2, sb.length(), "} ");
 		}
-		sb.append('@').append(method.getMangledName()).append(" {");
-		llvmWriter.writeLine(sb.toString());
-		llvmWriter.writeLeftLine("entry:");
+		sb.append("@\"").append(getModule().getType().getFullName()).
+				append('%').append(method.getName()).append("\"(");
+		for (ModifiedType param : method.getParamTypes())
+			sb.append(typeToString(param.getType())).append(", ");
+		if (!method.getParamTypes().isEmpty())
+			sb.delete(sb.length() - 2, sb.length());
+		llvmWriter.writeLine(sb.append(") {").toString());
+		//llvmWriter.writeLeftLine("entry:");
 		llvmWriter.indent();
 	}
 
@@ -158,14 +172,11 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 	@Override
 	public void visit(TACAssign node) throws IOException
 	{
-		if (node.getFirstOperand() instanceof TACSequence)
-			throw new UnsupportedOperationException();
-		else
-			llvmWriter.writeLine("store " +
-					typeToString(node.getSecondOperand()) + ' ' +
-					nodeToString(node.getSecondOperand()) + ", " +
-					typeToString(node.getFirstOperand()) + "* " +
-					nodeToString(node.getFirstOperand()));
+		llvmWriter.writeLine("store " +
+				typeToString(node.getSecondOperand()) + ' ' +
+				nodeToString(node.getSecondOperand()) + ", " +
+				typeToString(node.getFirstOperand()) + "* %" +
+				node.getFirstOperand().getSymbol());
 	}
 
 	@Override
@@ -202,7 +213,7 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 	@Override
 	public void visit(TACLabel node) throws IOException
 	{
-		llvmWriter.writeLeftLine(node.getSymbol() + ':');
+		llvmWriter.writeLeftLine("; %" + node.getSymbol() + ':');
 	}
 
 	@Override
@@ -218,9 +229,50 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 	}
 
 	@Override
-	public void visit(TACCall node) throws IOException {
-		// TODO Auto-generated method stub
-		
+	public void visit(TACPhiBranch node) throws IOException
+	{
+		visit((TACBranch)node);
+	}
+
+	@Override
+	public void visit(TACPhi node) throws IOException
+	{
+		StringBuilder sb = new StringBuilder().append('%').
+				append(node.getSymbol()).append(" = phi ").
+				append(typeToString(node));
+		for (TACPhiBranch branch : node)
+			sb.append(" [ ").append(nodeToString(branch.getValue())).
+					append(", %").append(branch.getFromLabel().getSymbol()).
+					append(" ],");
+		llvmWriter.writeLine(sb.deleteCharAt(sb.length() - 1).toString());
+	}
+
+	@Override
+	public void visit(TACCall node) throws IOException
+	{
+		StringBuilder sb = new StringBuilder();
+		Type type = node.getType();
+		if (type == null)
+			sb.append("call void ");
+		else
+		{
+			sb.append('%').append(node.getSymbol()).append(" = call ");
+			if (!(type instanceof SequenceType))
+				sb.append(typeToString(type)).append(' ');
+			else
+			{
+				sb.append("{ ");
+				for (ModifiedType retType : (SequenceType)type)
+					sb.append(typeToString(retType.getType())).append(", ");
+				sb.replace(sb.length() - 2, sb.length(), " } ");
+			}
+		}
+		sb.append("@\"").append(node.getMethodType().getOuter().getFullName()).
+				append('%').append(node.getMethodName()).append("\"(");
+		for (TACNode param : node.getParameters())
+			sb.append(nodeToString(param)).append(", ");
+		llvmWriter.writeLine(sb.delete(sb.length() - 2, sb.length())
+				.append(')').toString());
 	}
 
 	@Override
@@ -238,7 +290,7 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 			sb.append('{');
 			for (TACNode ret : retValues)
 				sb.append(nodeToString(ret)).append(", ");
-			sb.replace(sb.length() - 2, sb.length(), "}");
+			sb.delete(sb.length() - 2, sb.length()).append('}');
 		}
 		llvmWriter.writeLine(sb.toString());
 	}
@@ -257,18 +309,6 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 
 	@Override
 	public void visit(TACLiteral node) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void visit(TACPhi node) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void visit(TACPhiBranch node) throws IOException {
 		// TODO Auto-generated method stub
 		
 	}
@@ -375,31 +415,32 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 	}
 	private static String typeToString(Type type, boolean ref) {
 		if (type instanceof ArrayType)
-//			return typeToString(((ArrayType)type).getBaseType()) + '*';
-			if (ref)
-				return "struct _Pshadow_Pstandard_CArray *";
-			else
-				return "struct _Pshadow_Pstandard_CArray ";
+		{
+			StringBuilder sb = new StringBuilder("{ ");
+			ArrayType array = (ArrayType)type;
+			sb.append(typeToString(array.getBaseType())).append('*');
+			for (int i = 0; i < array.getDimensions(); i++)
+				sb.append(", %int");
+			return sb.append(" }").toString();
+		}
 		else
 		{
 			if (type.isPrimitive())
 				return '%' + type.getTypeName();
 			else
-			{
-				StringBuilder sb = new StringBuilder("struct ");
-				sb.append(type.getMangledName()).append(' ');
-				if (ref) sb.append('*');
-				return sb.toString();
-			}
+				return "%\"" + type.getFullName() + '\"';
 		}
 	}
 	
 	private String nodeToString(TACNode node) throws IOException
 	{
 		if (node instanceof TACVariable) {
-			String name = "%load." + loadCounter++;
-			llvmWriter.writeLine(name + " = load " +
-					typeToString(node) + "* %" + node.getSymbol());
+			Integer counter = loadCounter.get(node.getSymbol());
+			if (counter == null) counter = 0;
+			loadCounter.put(node.getSymbol(), counter + 1);
+			String name = '%' + node.getSymbol() + '.' + counter;
+			llvmWriter.writeLine(name + " = load " + typeToString(node) +
+					"* %" + node.getSymbol());
 			return name;
 		}
 		if (node instanceof TACLiteral)
@@ -408,33 +449,6 @@ public class TACLLVMOutput extends AbstractTACVisitor {
 	}
 
 	private String literalToString(String shadowLiteral) throws IOException {
-		if (shadowLiteral.startsWith("\""))
-		{
-			throw new UnsupportedOperationException();
-			/*boolean isAscii = true;
-			int length = 0;
-			for (int i = 1; i < shadowLiteral.length() - 1; i++, length++)
-				if (shadowLiteral.charAt(i) == '\\')
-					i++;
-				else if (shadowLiteral.charAt(i) >= 0x80)
-					isAscii = false;
-			
-			String arrayVar = "_Iarray" + arrayAllocNumber++;
-			cWriter.writeLine("static struct _Pshadow_Pstandard_CArray " + arrayVar + " = {");
-			cWriter.indent();
-			cWriter.writeLine("&_Pshadow_Pstandard_CArray_Imethods, (void *)" + shadowLiteral + ", (int_shadow_t)1, {(int_shadow_t)" + length + '}');
-			cWriter.outdent();
-			cWriter.writeLine("};");
-			
-			String stringVar = "_Istring" + stringAllocNumber++;
-			cWriter.writeLine("static struct " + Type.STRING.getMangledName() + ' ' + stringVar + " = {");
-			cWriter.indent();
-			cWriter.writeLine('&' + Type.STRING.getMangledName() + "_Imethods, " +
-					"((boolean_shadow_t)" + (isAscii ? 1 : 0) + "), &" + arrayVar);
-			cWriter.outdent();
-			cWriter.writeLine("};");
-			return '&' + stringVar;*/
-		}
 		if (shadowLiteral.endsWith("uy"))
 			return shadowLiteral.substring(0, shadowLiteral.length() - 2);
 		if (shadowLiteral.endsWith("y"))

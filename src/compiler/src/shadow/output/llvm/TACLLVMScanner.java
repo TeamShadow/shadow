@@ -2,9 +2,7 @@ package shadow.output.llvm;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import shadow.tac.AbstractTACVisitor;
 import shadow.tac.TACMethod;
@@ -28,7 +26,6 @@ import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariable;
-import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACLLVMScanner extends AbstractTACVisitor
@@ -36,7 +33,6 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	private int tempCounter;
 	private Map<String, String> localRenames;
 	private Map<String, Type> allocations;
-	private Set<String> stringLiterals;
 	public TACLLVMScanner(TACModule module)
 	{
 		super(module);
@@ -61,18 +57,18 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	public void startFile() throws IOException { }
 	@Override
 	public void endFile() throws IOException { }
+
 	@Override
 	public void startFields() throws IOException { }
 	@Override
 	public void endFields() throws IOException { }
-	
+
 	@Override
 	public void startMethod(TACMethod method)
 	{
-		tempCounter = 0;
+		tempCounter = method.getParamTypes().size();
 		localRenames = new HashMap<String, String>();
 		allocations = new HashMap<String, Type>();
-		stringLiterals = new HashSet<String>();
 	}
 	@Override
 	public void endMethod(TACMethod method)
@@ -80,13 +76,13 @@ public class TACLLVMScanner extends AbstractTACVisitor
 		method.setAllocations(allocations);
 		allocations = null;
 	}
-	
+
 	@Override
 	public void visit(TACNode node) throws IOException
 	{
 		super.visit(node);
 	}
-	
+
 	@Override
 	public void visit(TACAllocation node)
 	{
@@ -152,16 +148,8 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACCall node)
 	{
-		if (!node.getMethodType().getReturnTypes().isEmpty() &&
-				node.getSymbol() == null)
-		{
-			int index = 0;
-			for (ModifiedType type : node.getSequenceType())
-			{
-				node.setSymbol(index, "" + tempCounter++);
-				allocations.put(node.getSymbol(index++), type.getType());
-			}
-		}
+		if (!node.getMethodType().getReturnTypes().isEmpty())
+			allocate(node);
 	}
 
 	@Override
@@ -174,7 +162,12 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	public void visit(TACLiteral node)
 	{
 		if (node.getValue() instanceof String)
-			stringLiterals.add((String)node.getValue());
+		{
+			String string = (String)node.getValue();
+			node.setSymbol("getelementptr inbounds ([" + string.length() +
+					" x i8]* @string" + getModule().addString(string) +
+					", i32 0, i32 0)");
+		}
 	}
 
 	@Override
@@ -198,7 +191,8 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	{
 		if ("class".equals(node.getSymbol()))
 		{
-			node.setSymbol('&' + node.getPrefix().getType().getMangledName() + "_Iclass");
+			node.setSymbol('&' + node.getPrefix().getType().getMangledName() +
+					"_Iclass");
 			node.setPrefix(null);
 		}
 		else

@@ -12,12 +12,14 @@ public class TACModule extends TACDeclaration
 	private String name;
 	private List<TACField> fields;
 	private List<TACMethod> methods;
+	private List<String> strings;
 	public TACModule(ClassInterfaceBaseType moduleType, String moduleName)
 	{
 		type = moduleType;
 		name = moduleName;
 		fields = new ArrayList<TACField>();
 		methods = new ArrayList<TACMethod>();
+		strings = new ArrayList<String>();
 	}
 
 	public ClassInterfaceBaseType getType()
@@ -47,7 +49,7 @@ public class TACModule extends TACDeclaration
 	{
 		return fields;
 	}
-	
+
 	public void addMethod(TACMethod method)
 	{
 		methods.add(method);
@@ -55,5 +57,15 @@ public class TACModule extends TACDeclaration
 	public List<TACMethod> getMethods()
 	{
 		return methods;
+	}
+
+	public int addString(String string)
+	{
+		strings.add(string);
+		return strings.size() - 1;
+	}
+	public List<String> getStrings()
+	{
+		return strings;
 	}
 }
