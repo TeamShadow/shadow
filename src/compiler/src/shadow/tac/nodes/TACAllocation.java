@@ -91,9 +91,9 @@ public class TACAllocation extends TACNode
 	public String toString()
 	{
 		if (isArray())
-			return "alloc<" + type + ">(" + size + ')';
+			return "alloc<" + type + '>' + size;
 		else
-			return "" + type + ' ' + getSymbol();
+			return type.toString() + ' ' + getSymbol();
 	}
 	
 	@Override

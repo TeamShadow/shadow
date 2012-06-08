@@ -47,6 +47,10 @@ public class TACSequence extends TACNode implements Iterable<TACNode>
 	{
 		return nodes;
 	}
+	public boolean isEmpty()
+	{
+		return nodes.isEmpty();
+	}
 	@Override
 	public Iterator<TACNode> iterator()
 	{

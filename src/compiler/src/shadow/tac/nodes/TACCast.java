@@ -11,8 +11,8 @@ public class TACCast extends TACNode
 	private TACNode operand;
 	public TACCast(Type newType, TACNode operandNode)
 	{
-		if (!operandNode.getType().isSubtype(newType))
-			throw new IllegalArgumentException("Incompatible types.");
+		//if (!operandNode.getType().isSubtype(newType))
+			//throw new IllegalArgumentException("Incompatible types.");
 		type = newType;
 		operand = operandNode;
 	}
@@ -30,7 +30,7 @@ public class TACCast extends TACNode
 	@Override
 	public String toString()
 	{
-		return "cast<" + type + ">(" + operand + ')';
+		return "cast<" + type + '>' + operand;
 	}
 	
 	@Override

@@ -4,6 +4,8 @@ package shadow.standard;
 //		aka. can not be created outside of this class
 /*native*/ abstract final class Array<T>
 {
+	private /*immutable*/ long data = 0;
+	private /*immutable*/ int[] lengths = new int[0];
 	private Class baseClass = Object.class;
 
 	// TODO: Optimize these. For now they are just to reduce
@@ -18,7 +20,16 @@ package shadow.standard;
 	}
 	public final getDimensions() => ( int )
 	{
-		return getLengths().getLength();
+		nullable int[][,] test; // = new int[1][2,3];
+		try
+		{
+			return check(test).getLength(1);
+		}
+		recover
+		{
+			return 0;
+		}
+		
 	}
 
 	// end or length... that is the question
@@ -28,7 +39,10 @@ package shadow.standard;
 	// TODO: This return value must eventually be immutable.
 	//		 The returned array has direct access to the
 	//		 internal lengths which must not be changed.
-	public final native getLengths() => ( /*immutable*/ int[] /*Array<int>*/ );
+	public final getLengths() => ( /*immutable*/ int[] /*Array<int>*/ )
+	{
+		return lengths;
+	}
 	public final getBaseClass() => ( Class )
 	{
 		return baseClass;

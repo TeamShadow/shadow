@@ -3,6 +3,7 @@ package shadow.typecheck.type;
 import java.util.List;
 
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 
 public class MethodSignature {
 	protected final MethodType type;
@@ -103,6 +104,31 @@ public class MethodSignature {
 	
 	public String getMangledName() {
 		return "_M" + symbol + type.getMangledName();
+	}
+
+	public List<String> getParameterNames()
+	{
+		return type.getParameterNames();
+	}
+	
+	public SequenceType getParameterTypes()
+	{
+		return type.getParameterTypes();
+	}
+	
+	public SequenceType getReturnTypes()
+	{
+		return type.getReturnTypes();
+	}
+	
+	public boolean isStatic()
+	{
+		return ModifierSet.isStatic(type.getModifiers());
+	}
+	
+	public ClassInterfaceBaseType getOuter()
+	{
+		return type.getOuter();
 	}
 	
 	public MethodType getMethodType() {

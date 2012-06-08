@@ -274,6 +274,17 @@ public class ClassType extends ClassInterfaceBaseType {
 	{
 		return referencedTypes;
 	}
+	public Set<Type> getAllReferencedTypes()
+	{
+		Set<Type> types = new HashSet<Type>(referencedTypes);
+		ClassType current = getExtendType();
+		while (current != null)
+		{
+			types.add(current);
+			current = current.getExtendType();
+		}
+		return types;
+	}
 	
 	@Override
 	public String getMangledName()

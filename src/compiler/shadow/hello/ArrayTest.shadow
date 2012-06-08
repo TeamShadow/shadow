@@ -1,12 +1,9 @@
 package shadow.hello;
 
-import shadow.standard@Array;
-import shadow.io@Console;
-
 class ArrayTest
 {
-	public static main( String[] args ) => ()
+	public static main( int[] array ) => ()
 	{
-		Console.printLine(args.getLength());
+		int i = array[5];
 	}
 }

@@ -3,8 +3,10 @@ package shadow.tac;
 import java.util.List;
 import java.util.Map;
 
+import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.tac.nodes.TACNode;
 import shadow.typecheck.type.MethodSignature;
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -33,13 +35,18 @@ public class TACMethod extends TACDeclaration
 	{
 		return sig.getMangledName();
 	}
+	
+	public MethodType getMethodType()
+	{
+		return sig.getMethodType();
+	}
 
-	public List<String> getParamNames()
+	public List<String> getParameterNames()
 	{
 		return sig.getMethodType().getParameterNames();
 	}
 	
-	public SequenceType getParamTypes()
+	public SequenceType getParameterTypes()
 	{
 		return sig.getMethodType().getParameterTypes();
 	}
@@ -47,6 +54,11 @@ public class TACMethod extends TACDeclaration
 	public SequenceType getReturnTypes()
 	{
 		return sig.getMethodType().getReturnTypes();
+	}
+	
+	public boolean isStatic()
+	{
+		return ModifierSet.isStatic(sig.getModifiers());
 	}
 	
 	public MethodSignature getSignature()

@@ -52,7 +52,8 @@ public class TACWalker
 	
 	private void walk(TACDeclaration declaration) throws IOException
 	{
-		TACNode entryNode = declaration.getEntryNode(), exitNode = declaration.getExitNode();
+		TACNode entryNode = declaration.getEntryNode(),
+				exitNode = declaration.getExitNode();
 		while (entryNode != null) {
 			visitor.visit(entryNode);
 			if (entryNode == exitNode)

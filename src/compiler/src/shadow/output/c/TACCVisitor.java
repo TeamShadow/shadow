@@ -483,8 +483,8 @@ public class TACCVisitor extends AbstractTACVisitor {
 		sb.append(method.getMangledName());
 		sb.append('(');
 		
-		List<String> paramNames = method.getParamNames();
-		List<ModifiedType> paramTypes = method.getParamTypes();
+		List<String> paramNames = method.getParameterNames();
+		List<ModifiedType> paramTypes = method.getParameterTypes();
 
 		// first param is always a reference to the class, unless it's static
 		if(!ModifierSet.isStatic(modifiers))

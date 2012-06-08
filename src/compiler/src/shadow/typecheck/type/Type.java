@@ -186,6 +186,8 @@ public abstract class Type {
 	
 	public int getSize()
 	{
+		if( this == NULL )
+			return -1;
 		if( this.equals(BYTE) || this.equals(UBYTE) || this.equals(BOOLEAN) )
 			return 1;
 		else if( this.equals(SHORT) || this.equals(USHORT) )

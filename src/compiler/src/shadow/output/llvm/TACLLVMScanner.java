@@ -30,7 +30,7 @@ import shadow.typecheck.type.Type;
 
 public class TACLLVMScanner extends AbstractTACVisitor
 {
-	private int tempCounter;
+	private int tempCounter, labelCounter;
 	private Map<String, String> localRenames;
 	private Map<String, Type> allocations;
 	public TACLLVMScanner(TACModule module)
@@ -45,7 +45,7 @@ public class TACLLVMScanner extends AbstractTACVisitor
 		String symbol = node.getSymbol();
 		if (symbol == null)
 		{
-			symbol = "" + tempCounter++;
+			symbol = "." + tempCounter++;
 			node.setSymbol(symbol);
 			allocations.put(symbol, node.getType());
 		}
@@ -66,7 +66,9 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	@Override
 	public void startMethod(TACMethod method)
 	{
-		tempCounter = method.getParamTypes().size();
+		tempCounter = method.getParameterTypes().size() + (method.isStatic() ?
+				1 : 2);
+		labelCounter = -1;
 		localRenames = new HashMap<String, String>();
 		allocations = new HashMap<String, Type>();
 	}
@@ -137,7 +139,7 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACLabel node)
 	{
-		node.setSymbol("" + tempCounter++);
+		node.setSymbol("label" + (++labelCounter == 0 ? "" : labelCounter));
 	}
 
 	@Override
@@ -164,9 +166,7 @@ public class TACLLVMScanner extends AbstractTACVisitor
 		if (node.getValue() instanceof String)
 		{
 			String string = (String)node.getValue();
-			node.setSymbol("getelementptr inbounds ([" + string.length() +
-					" x i8]* @string" + getModule().addString(string) +
-					", i32 0, i32 0)");
+			node.setSymbol("@.str" + getModule().addString(string));
 		}
 	}
 
@@ -189,15 +189,11 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACVariable node)
 	{
-		if ("class".equals(node.getSymbol()))
+		if (!"class".equals(node.getSymbol()))
 		{
-			node.setSymbol('&' + node.getPrefix().getType().getMangledName() +
-					"_Iclass");
-			node.setPrefix(null);
-		}
-		else
-		{
-			allocate(node); // note that this is not an SSA variable
+			if (node.getSymbol() == null)
+				node.setSymbol("" + tempCounter);
+			//allocate(node); // note that this is not an SSA variable
 			if (!node.expectsPrefix() &&
 					localRenames.containsKey(node.getSymbol()))
 				node.setSymbol(localRenames.get(node.getSymbol()));
@@ -207,17 +203,19 @@ public class TACLLVMScanner extends AbstractTACVisitor
 	@Override
 	public void visit(TACGetLength node)
 	{
+		//allocate(node);
 	}
 	
 	@Override
 	public void visit(TACIndexed node)
 	{
-//		allocate(node);
+		allocate(node);
 	}
 	
 	@Override
 	public void visit(TACReturn node)
 	{
+		tempCounter++; // creates an unnamed label
 	}
 	
 	@Override

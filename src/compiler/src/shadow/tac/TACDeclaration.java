@@ -1,6 +1,7 @@
 package shadow.tac;
 
 import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACVariable;
 
 public abstract class TACDeclaration
 {
@@ -37,8 +38,10 @@ public abstract class TACDeclaration
 		return exit;
 	}
 
-	public void append(TACNode node)
+	public TACNode append(TACNode node)
 	{
+		if (node instanceof TACVariable)
+			throw new UnsupportedOperationException("TACVariable is being removed from TAC");
 		if (exit == null)
 			entry = exit = node;
 		else
@@ -46,8 +49,9 @@ public abstract class TACDeclaration
 			exit.append(node);
 			exit = node;
 		}
+		return node;
 	}
-	public void append(TACDeclaration node)
+	public TACDeclaration append(TACDeclaration node)
 	{
 		if (exit == null)
 		{
@@ -59,6 +63,7 @@ public abstract class TACDeclaration
 			exit.append(node.getEntryNode());
 			exit = node.getExitNode();
 		}
+		return node;
 	}
 	
 	public boolean isEmpty()

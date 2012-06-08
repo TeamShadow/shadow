@@ -3,26 +3,22 @@ package shadow.standard;
 immutable final class String //implements Parsable<String> //, Collection<code>
 {
 
-
-
-
-
 	private ubyte[] data = new ubyte[0];
 	private boolean ascii = true;
-	
+
 	private constructor( boolean isAscii, ubyte[] dataArray )
 	{
 		data = dataArray;
 		ascii = isAscii;
 	}
-	
+
 	// Since String is immutable, it can share arrays with itself
 	public constructor( String other )
 	{
 		data = other.data;
 		ascii = other.ascii;
 	}
-	
+
 	public getByte( int index ) => ( ubyte )
 	{
 		return data[index];
@@ -96,7 +92,7 @@ immutable final class String //implements Parsable<String> //, Collection<code>
 		return value;
 	}	
 	*/
-	public toString () => (String)
+	public toString () => ( String )
 	{
 		return this;
 	}

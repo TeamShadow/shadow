@@ -20,6 +20,7 @@ public class TACModule extends TACDeclaration
 		fields = new ArrayList<TACField>();
 		methods = new ArrayList<TACMethod>();
 		strings = new ArrayList<String>();
+		strings.add(moduleType.getFullName());
 	}
 
 	public ClassInterfaceBaseType getType()

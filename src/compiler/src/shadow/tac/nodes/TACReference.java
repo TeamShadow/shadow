@@ -18,11 +18,6 @@ public class TACReference extends TACNode
 	{
 		return ref.getType();
 	}
-	@Override
-	public String getSymbol()
-	{
-		return ref.getSymbol();
-	}
 	public TACNode getReference()
 	{
 		return ref;

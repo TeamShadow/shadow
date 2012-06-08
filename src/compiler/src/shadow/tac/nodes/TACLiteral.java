@@ -25,7 +25,14 @@ public class TACLiteral extends TACNode
 		if (str.equals("null"))
 			value = null;
 		else if (literalType.equals(Type.CODE))
-			value = str;
+		{
+			if (str.length() == 3)
+				value = (int)str.charAt(1);
+			else if (str.equals("\'\\0\'"))
+				value = (int)0;
+			else
+				throw new IllegalArgumentException("Unknown character " + str);
+		}
 		else if (literalType.equals(Type.STRING))
 			value = str.substring(1, str.length() - 1);
 		else if (literalType.equals(Type.BOOLEAN))
@@ -53,7 +60,8 @@ public class TACLiteral extends TACNode
 	}
 	
 	@Override
-	public Type getType() {
+	public Type getType()
+	{
 		return type;
 	}
 	public Object getValue()
