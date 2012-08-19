@@ -381,11 +381,22 @@ public abstract class Type {
 	}
 
 	/**
+	 * This method indicates whether a cast is necessary between two types.
+	 * <p>
+	 * Examples:
+	 * <pre>
+	 *   STRING.isStrictSubtype(OBJECT) == true
+	 *   OBJECT.isStrictSubtype(OBJECT) == false
+	 *   OBJECT.isStrictSubtype(NULL) == false
+	 *   NULL.isStrictSubtype(OBJECT) == true
+	 *   NULL.isStrictSubtype(NULL) == false
+	 * </pre>
+	 * 
 	 * @param other another type
 	 * @return {@literal true} if {@code this} can be cast to {@code other} and they are not equal
 	 */
 	public boolean isStrictSubtype(Type other) {
-		if (equals(other))
+		if (this == other) // Don't use equals method. (See examples)
 			return false;
 		return isSubtype(other);
 	}

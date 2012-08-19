@@ -216,7 +216,27 @@ public class ClassType extends ClassInterfaceBaseType {
 		else
 			return list;
 	}
-	
+
+	private String[] indexCache;
+	public int getFieldIndex(String fieldName)
+	{
+		// Lazily load cache (not needed for c output)
+		if (indexCache == null)
+		{
+			List<Node> fields = getFieldList();
+			String[] cache = new String[fields.size()];
+			for ( int i = 0; i < cache.length; i++ )
+				cache[i] = fields.get(i).jjtGetChild(1).jjtGetChild(0).
+						getImage();
+			indexCache = cache;
+		}
+
+		for (int i = indexCache.length - 1; i >= 0; i--)
+			if (indexCache[i].equals(fieldName))
+				return i;
+		return -1;
+	}
+
 	public List<Node> getFieldList()
 	{
 		List<Node> fieldList = new ArrayList<Node>();
