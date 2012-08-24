@@ -1,7 +1,7 @@
 /**
  * 
  */
-package shadow;
+package shadow.output.llvm;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +15,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
 
-import shadow.output.llvm.LLVMOutput;
+import shadow.Configuration;
+import shadow.Loggers;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
@@ -132,12 +133,17 @@ public class Main {
 		        }
 		        else
 		        {
-			        // build the TAC
 		        	TACModule module = tacBuilder.build(node);
 
-			        // output the TAC
+			        // build the TAC
+			        new LLVMOutput(true).build(module);
+
+			        // verify the TAC
+			        new LLVMOutput(false).build(module);
+
+			        // write to file
 			        new LLVMOutput(shadowFile).build(module);
-		    		
+
 			        long stopTime = System.currentTimeMillis();
 	
 			        System.err.println("COMPILED " + shadowFile.getPath() + " in " + (stopTime - startTime) + "ms");

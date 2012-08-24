@@ -1,0 +1,7 @@
+package shadow.standard;
+
+class String
+{
+	private ubyte[] data = new ubyte[0];
+	public toString() => ( String ) { return this; }
+}

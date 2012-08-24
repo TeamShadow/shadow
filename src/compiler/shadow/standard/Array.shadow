@@ -1,0 +1,50 @@
+package shadow.standard;
+
+final class Array
+{
+	private long data = 0;
+	private long[] lengths = new long[0];
+	private constructor( long data, long[] lengths )
+	{
+		this.data = data;
+		this.lengths = lengths;
+	}
+
+	public getLength() => ( long )
+	{
+		long length = 1;
+		for ( long i = 0; i < getDimensions(); i += 1 )
+			length *= getLength(i);
+		return length;
+	}
+	public getLength( long index ) => ( long )
+	{
+		return lengths[index];
+	}
+	public getLengths() => ( long[] )
+	{
+		return lengths;
+	}
+	public getDimensions() => ( long )
+	{
+		return lengths.getLength(0);
+	}
+
+/*
+	public get length() => ( long )
+	{
+		long length = lengths[0];
+		for ( long i = 1; i < dims; i += 1 )
+			length *= lengths[i];
+		return length;
+	}
+	public get lengths() => ( long[] )
+	{
+		return lengths;
+	}
+	public get dims() => ( long )
+	{
+		return lengths.length;
+	}
+*/
+}

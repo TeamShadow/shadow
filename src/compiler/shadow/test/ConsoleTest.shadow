@@ -1,0 +1,23 @@
+package shadow.test;
+
+class ConsoleTest
+{
+	public static main() => ()
+	{
+		shadow.io@Console.printLine(12345);
+		Console.print('H');
+		shadow.io@Console.print('e');
+		Console.print('l');
+		shadow.io@Console.print('l');
+		Console.print('o');
+		shadow.io@Console.print(' ');
+		Console.print('W');
+		shadow.io@Console.print('o');
+		Console.print('r');
+		shadow.io@Console.print('l');
+		Console.print('d');
+		shadow.io@Console.print('!');
+		Console.print('\n');
+		shadow.io@Console.printLine();
+	}
+}

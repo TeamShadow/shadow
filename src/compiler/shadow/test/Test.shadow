@@ -1,0 +1,28 @@
+package shadow.test;
+
+import shadow.standard@Array;
+import shadow.io@Console;
+
+class Test
+{
+	private nullable Test test = this;
+	public static main() => ()
+	{
+		nullable Test test = new Test();
+		try {
+			Console.printLine(check(check(test).test));
+		} recover {
+			Console.printLine(1);
+		}
+		try {
+			check(test).test = null;
+		} recover {
+			Console.printLine(2);
+		}
+		try {
+			Console.printLine(check(check(test).test));
+		} recover {
+			Console.printLine(3);
+		}
+	}
+}

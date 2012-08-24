@@ -1,0 +1,12 @@
+package shadow.standard;
+
+final class Class
+{
+	private nullable Class superClass = null;
+	private String className = "";
+	private constructor() { }
+
+	public getSuperClass() => ( nullable Class ) { return superClass; }
+	public getClassName() => ( String ) { return className; }
+	public toString() => ( String ) { return getClassName(); }
+}

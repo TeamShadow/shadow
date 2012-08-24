@@ -1,0 +1,26 @@
+package shadow.io;
+
+class Console
+{
+	private constructor() { }
+
+	public static printLine( boolean b ) => () { print(b); printLine(); }
+	public static printLine( int i ) => () { print(i); printLine(); }
+	public static printLine( code c ) => () { print(c); printLine(); }
+	public static printLine( long l ) => () { print(l); printLine(); }
+	public static printLine( String s ) => () { print(s); printLine(); }
+	public static printLine( Object o ) => () { print(o); printLine(); }
+	public static printLine() => () { print('\n'); }
+	public static print( boolean b ) => ()
+	{
+		if ( b )
+			print("true");
+		else
+			print("false");
+	}
+	public static print( Object o ) => () { print(o.toString()); }
+	public static native print( int i ) => ();
+	public static native print( code c ) => ();
+	public static native print( long l ) => ();
+	public static native print( String s ) => ();
+}
