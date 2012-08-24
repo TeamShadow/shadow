@@ -1,0 +1,8 @@
+class NoImport
+{
+	public method() => ()
+	{
+		shadow.io@Console.printLine();
+		Console.printLine(); // this should error
+	}
+}

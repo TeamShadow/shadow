@@ -1,9 +1,0 @@
-package shadow.hello;
-
-class ArrayTest
-{
-	public static main( int[] array ) => ()
-	{
-		int i = array[5];
-	}
-}

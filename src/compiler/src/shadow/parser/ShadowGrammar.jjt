@@ -892,7 +892,8 @@ void FormalParameter():
   "nullable" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.NULLABLE); })*
    Type() VariableDeclaratorId()
    {
-     jjtThis.setModifiers(modifiers);   }
+     jjtThis.setModifiers(modifiers);
+   }
 }
 
 void ConstructorDeclaration(int modifiers):
@@ -915,7 +916,8 @@ void ConstructorDeclaration(int modifiers):
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }  
   // Modifiers matched in the caller
   "constructor" FormalParameters() [ "throws" NameList() ]
-  ( (       "{"
+  ( (
+       "{"
     [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
     ( BlockStatement() )*
   "}")
@@ -1407,15 +1409,15 @@ void IntegerLiteral(): //useful for static arrays, etc.
 void BooleanLiteral():
 { debugPrint("BOOLEAN LITERAL"); }
 {    
-  "true" { jjtThis.setTrue(); }
-| "false"
+  "true" { jjtThis.setTrue(); jjtThis.setImage("true"); }
+| "false" { jjtThis.setImage("false"); }
  
 }
 
 void NullLiteral():
 { debugPrint("NULL LITERAL"); }
 {
-  "null"
+  "null" { jjtThis.setImage("null"); }
 }
 
 void Arguments():
@@ -1448,7 +1450,7 @@ void ArrayAllocation():
 void ConstructorInvocation():
 { debugPrint("CONSTRUCTOR INVOCATION"); }
 {
- 	"new" { jjtThis.setImage("new"); } ClassOrInterfaceType() [ TypeArguments() ] Arguments()
+ 	"new" { jjtThis.setImage("constructor"); } ClassOrInterfaceType() [ TypeArguments() ] Arguments()
  	/* No anonymous classes in Shadow */    
 }
 

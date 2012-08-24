@@ -184,7 +184,7 @@ public abstract class Type {
 			return false;
 	}
 	
-	public int getSize()
+	public int getWidth()
 	{
 		if( this == NULL )
 			return -1;
@@ -396,7 +396,9 @@ public abstract class Type {
 	 * @return {@literal true} if {@code this} can be cast to {@code other} and they are not equal
 	 */
 	public boolean isStrictSubtype(Type other) {
-		if (this == other) // Don't use equals method. (See examples)
+		if ( this == Type.NULL )
+			return other != Type.NULL;
+		if ( equals(other) )
 			return false;
 		return isSubtype(other);
 	}

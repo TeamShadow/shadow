@@ -1,10 +1,12 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
@@ -216,72 +218,101 @@ public class ClassType extends ClassInterfaceBaseType {
 		else
 			return list;
 	}
-
-	private String[] indexCache;
-	public int getFieldIndex(String fieldName)
+	
+	private Map<String, Integer> fieldIndexCache;
+	public int getFieldIndex( String fieldName )
 	{
-		// Lazily load cache (not needed for c output)
-		if (indexCache == null)
+		// Lazily load cache
+		if ( fieldIndexCache == null )
 		{
-			List<Node> fields = getFieldList();
-			String[] cache = new String[fields.size()];
-			for ( int i = 0; i < cache.length; i++ )
-				cache[i] = fields.get(i).jjtGetChild(1).jjtGetChild(0).
-						getImage();
-			indexCache = cache;
+			int start = recursivelyCountParentFields();
+			Map<String, Integer> cache = new HashMap<String, Integer>();
+			for (Map.Entry<String, ModifiedType> field : getSortedFields().
+					entrySet())
+				cache.put(field.getKey(), start++);
+			fieldIndexCache = cache;
 		}
-
-		for (int i = indexCache.length - 1; i >= 0; i--)
-			if (indexCache[i].equals(fieldName))
-				return i;
-		return -1;
+		
+		Integer index = fieldIndexCache.get(fieldName);
+		return index == null ? -1 : index;
+	}
+	private int recursivelyCountParentFields()
+	{
+		if ( getExtendType() == null )
+			return 0;
+		return getExtendType().recursivelyCountParentFields() +
+				getExtendType().getFields().size();
 	}
 
-	public List<Node> getFieldList()
+	public List<Map.Entry<String, ModifiedType>> getFieldList()
 	{
-		List<Node> fieldList = new ArrayList<Node>();
+		List<Map.Entry<String, ModifiedType>> fieldList = new ArrayList<Map.Entry<String, ModifiedType>>();
 		
 		recursivelyUpdateFieldList(fieldList);
 		
 		return fieldList;
 	}
-	public void recursivelyUpdateFieldList( List<Node> fieldList )
+	private void recursivelyUpdateFieldList( List<Map.Entry<String, ModifiedType>> fieldList )
 	{
 		if ( getExtendType() != null )
 			getExtendType().recursivelyUpdateFieldList(fieldList);
 		
-		fieldList.addAll(getFields().values());
+		fieldList.addAll(getSortedFields().entrySet());
 	}
-	
-	public List<MethodSignature> getMethodList()
+	public Map<String, ModifiedType> getSortedFields()
 	{
-		List<MethodSignature> methodsList = new ArrayList<MethodSignature>();
-		
-		recursivelyUpdateMethodList(methodsList);
-		
-		return methodsList;
+		// TODO: also sort by size
+		return new TreeMap<String, ModifiedType>(getFields());
 	}
-	public void recursivelyUpdateMethodList( List<MethodSignature> methodList )
+
+	private Map<MethodSignature, Integer> methodIndexCache;
+	public int getMethodIndex( MethodSignature method )
+	{
+		// Lazily load cache
+		if ( methodIndexCache == null )
+		{
+			Map<MethodSignature, Integer> cache =
+					new HashMap<MethodSignature, Integer>();
+			List<MethodSignature> methods = getOrderedMethods();
+			for ( int i = 0; i < methods.size(); i++ )
+				cache.put(methods.get(i), i);
+			methodIndexCache = cache;
+		}
+
+		Integer index = methodIndexCache.get(method);
+		return index == null ? -1 : index;
+	}
+
+	public List<MethodSignature> getOrderedMethods()
+	{
+		List<MethodSignature> methodList = new ArrayList<MethodSignature>();
+		
+		recursivelyUpdateOrderedMethods(methodList);
+		
+		return methodList;
+	}
+	private void recursivelyUpdateOrderedMethods( List<MethodSignature> methodList )
 	{
 		if ( getExtendType() != null )
-			getExtendType().recursivelyUpdateMethodList(methodList);
+			getExtendType().recursivelyUpdateOrderedMethods(methodList);
 		
-		for ( List<MethodSignature> methods : methodTable.values() )
-		{
+		TreeMap<String, List<MethodSignature>> sortedMethods =
+				new TreeMap<String, List<MethodSignature>>(methodTable);
+		sortedMethods.remove("constructor"); // skip constructors
+
+		for ( List<MethodSignature> methods : sortedMethods.values() )
 			for ( MethodSignature method : methods )
+				if ( !method.isStatic() ) // skip static methods
+		{
+			int index;
+			for ( index = 0; index < methodList.size(); index++ )
+				if ( methodList.get(index).isIndistinguishable(method) )
 			{
-				boolean replaced = false;
-				for ( int i = 0; i < methodList.size() && !replaced; i++ )
-				{
-					if ( methodList.get(i).isIndistinguishable(method) )
-					{
-						methodList.set(i, method);
-						replaced = true;
-					}
-				}
-				if ( !replaced )
-					methodList.add(method);
+				methodList.set(index, method);
+				break;
 			}
+			if ( index == methodList.size() )
+				methodList.add(method);
 		}
 	}
 	

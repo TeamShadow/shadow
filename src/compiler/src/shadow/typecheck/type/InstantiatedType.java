@@ -1,7 +1,7 @@
 package shadow.typecheck.type;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 
 public class InstantiatedType extends ClassType {
@@ -73,15 +73,15 @@ public class InstantiatedType extends ClassType {
 			return false;		
 	}
 	
-	public List<MethodSignature> getMethodList()
+	public List<MethodSignature> getOrderedMethods()
 	{
-		List<MethodSignature> methodsList = super.getMethodList();
+		List<MethodSignature> methodsList = super.getOrderedMethods();
 		
-		List<MethodSignature> instantiatedList = new ArrayList<MethodSignature>();
-		for( MethodSignature signature : methodsList )
-			instantiatedList.add(signature.replace( baseType.getTypeParameters(), typeArguments));
+		ListIterator<MethodSignature> iter = methodsList.listIterator();
+		while( iter.hasNext() )
+			iter.set(iter.next().replace(baseType.getTypeParameters(), typeArguments));
 		
-		return instantiatedList;		
+		return methodsList;		
 	}	
 
 	//type arguments must match exactly

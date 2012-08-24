@@ -15,15 +15,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
 
-import shadow.output.TACWalker;
-import shadow.output.c.TACCScanner;
-import shadow.output.c.TACCVisitor;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.SimpleNode;
-import shadow.tac.TACBuilder;
-import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
 
 
@@ -103,7 +98,6 @@ public class Main {
 				FileInputStream sourceStream = new FileInputStream(shadowFile);
 				ShadowParser parser = new ShadowParser(sourceStream);
 		        TypeChecker tc = new TypeChecker(false);
-		        TACBuilder tacBuilder = new TACBuilder();
 		        
 		        logger.info("Compiling " + shadowFile.getName());
 		        
@@ -135,19 +129,6 @@ public class Main {
 		        else
 		        {
 			        // build the TAC
-			        tacBuilder.build(node);
-	
-			        for (TACModule c : tacBuilder.getModules()) {
-			        	TACCScanner cScanner = new TACCScanner(c);
-			        	TACWalker scanner = new TACWalker(cScanner);
-			        	
-			        	scanner.walk();
-			        	
-		    			TACCVisitor cVisitor = new TACCVisitor(c, shadowFile);
-		    			TACWalker linearWalker = new TACWalker(cVisitor);
-		    			
-		    			linearWalker.walk();
-			        }
 		    		
 			        long stopTime = System.currentTimeMillis();
 	

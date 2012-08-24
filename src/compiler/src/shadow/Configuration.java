@@ -96,10 +96,10 @@ public class Configuration implements Iterator<File> {
 		}
 		
 		// make sure they're not specifying too many files on the command line
-		if(!compileOnly && shadowFiles.size() > 1) {
-			System.err.println("Only one file  with a main method should be specified on the command line.");
-			return false;
-		}
+//		if(!compileOnly && shadowFiles.size() > 1) {
+//			System.err.println("Only one file  with a main method should be specified on the command line.");
+//			return false;
+//		}
 		
 		if(shadowFiles.size() == 0) {
 			System.err.println("No source files specified to compile");
