@@ -1,0 +1,5 @@
+package shadow.utility;
+
+class Random {
+	public int value = 42;
+}
