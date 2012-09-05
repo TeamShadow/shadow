@@ -37,12 +37,12 @@ class Collections
 		}
 	}
 	
-	public static sort<U is MutableCollection, T is Comparable<T> >( U<T> collection ) => ()
+	public static sort<T is Comparable<T>, U is MutableCollection<T>>, ( U collection ) => ()
 	{
-		sort( collection, T.compare );
+		sort<T, U>( collection, T.compare );
 	}
 	
-	public static sort<U is MutableCollection, T>( U<T> collection, (T,T)=>(int) compare ) => ()
+	public static sort<T, U is MutableCollection<T>>( U collection, (T,T)=>(int) compare ) => ()
 	{
 		if( U is Sortable )
 		{

@@ -23,6 +23,12 @@
 - Lambdas (delegates)
 - Generics/templates
 
+
+Fix syntax for constructors in interfaces (parent classes don't count!)
+
+Take package out of the grammar.
+
+
 Break generics
 
 class Container<T>
