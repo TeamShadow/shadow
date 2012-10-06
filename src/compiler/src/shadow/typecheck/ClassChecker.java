@@ -1837,9 +1837,11 @@ public class ClassChecker extends BaseChecker {
 	
 	public static boolean fieldIsAccessible( Node node, Type type )
 	{
-		if( ModifierSet.isPublic(node.getModifiers()) || node.getEnclosingType() == type )
+		if( node.getEnclosingType() == type ) //inside class
 			return true;		
 		
+		//No longer meaningful since all fields are private
+		/*
 		if( type instanceof ClassType )
 		{
 			ClassType parent = ((ClassType)type).getExtendType();
@@ -1857,6 +1859,7 @@ public class ClassChecker extends BaseChecker {
 				parent = parent.getExtendType();
 			}
 		}
+		*/
 		
 		return false;
 	}
@@ -1909,8 +1912,30 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	public static boolean methodIsAccessible( MethodSignature signature, Type type )
-	{
-		return fieldIsAccessible( signature.getNode(), type );
+	{		
+		Node node = signature.getNode();
+		if( node.getEnclosingType() == type || ModifierSet.isPublic(node.getModifiers()) ) 
+			return true;		
+		
+		if( type instanceof ClassType )
+		{
+			ClassType parent = ((ClassType)type).getExtendType();
+			
+			while( parent != null )
+			{
+				if( node.getEnclosingType() == parent )
+				{
+					if( ModifierSet.isPrivate(node.getModifiers()))
+						return false;
+					else
+						return true;
+				}
+				
+				parent = parent.getExtendType();
+			}
+		}
+
+		return false;
 	}
 	
 	public Object visit(ASTLabeledStatement node, Boolean secondVisit) throws ShadowException 
@@ -1950,7 +1975,7 @@ public class ClassChecker extends BaseChecker {
 			Node child = node.jjtGetChild(0);
 			if( child instanceof ASTArrayInitializer )
 			{
-				//finish this!!!			
+				//TODO: finish this!!!			
 				
 			}
 			else

@@ -42,10 +42,12 @@ public class ShadowParser
      public static final int WEAK           = 0x0080;
      public static final int IMMUTABLE      = 0x0100;
      public static final int NULLABLE      	= 0x0200;
-     
-     public static final int ASSIGNABLE   	= 0x0400;
-     public static final int TYPE_NAME   	= 0x0800;
-     public static final int FIELD		   	= 0x1000;
+	 public static final int GET			= 0x0400;
+	 public static final int SET			= 0x0800;
+          
+     public static final int ASSIGNABLE   	= 0x1000;
+     public static final int TYPE_NAME   	= 0x2000;
+     public static final int FIELD		   	= 0x4000;
 
 
      /* Type Modifiers:
@@ -59,10 +61,12 @@ public class ShadowParser
 
 
      /* Declaration Modifiers:
-		public			(only for members)
-     	private			(only for members)
-     	protected 		(only for members)		
+		public			(only for methods)
+     	private			(only for methods)
+     	protected 		(only for methods)		
 		static			(only for members)
+		get				(only for fields)
+		set				(only for fields)
 		final 			(can't be changed)		
 		weak			(reference will not stop GC)
 		native          (used to map in C functions)
@@ -86,6 +90,9 @@ public class ShadowParser
      public static boolean isAbstract(int modifiers) { return (modifiers & ABSTRACT) != 0; }
      public static boolean isFinal(int modifiers) { return (modifiers & FINAL) != 0; }
      public static boolean isNative(int modifiers) { return (modifiers & NATIVE) != 0; }
+
+     public static boolean isGet(int modifiers) { return (modifiers & GET) != 0; }
+     public static boolean isSet(int modifiers) { return (modifiers & SET) != 0; }
 
      public static boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
      public static boolean isImmutable(int modifiers) { return (modifiers & IMMUTABLE) != 0; }
@@ -160,16 +167,20 @@ public class ShadowParser
 				throw new ParseException("An enum can only be marked public, private, or protected");
 		}
 
-		public static void checkFieldModifiers( int modifiers ) throws ParseException
+		public static void checkFieldModifiers( int modifiers, JJTShadowParserState state ) throws ParseException
 		{
 			if( ModifierSet.isAbstract(modifiers) )
 				throw new ParseException("A field cannot be marked abstract");
 			if( ModifierSet.isProtected(modifiers) )
 				throw new ParseException("A field cannot be marked protected");
+			if( ModifierSet.isPublic(modifiers) )
+				throw new ParseException("A field cannot be marked public: " + state.rootNode().getImage());
+			if( ModifierSet.isPrivate(modifiers) )
+				throw new ParseException("A field cannot be marked private");
 			if( ModifierSet.isNative(modifiers) )
 				throw new ParseException("A field cannot be marked native");
 			if( ModifierSet.isImmutable(modifiers) )
-				throw new ParseException("A field cannot be marked immutable");
+				throw new ParseException("A field cannot be marked immutable");			
 		}
 
 		public static void checkMethodModifiers( int modifiers ) throws ParseException
@@ -178,6 +189,10 @@ public class ShadowParser
 				throw new ParseException("A method cannot be marked weak");
 			if( ModifierSet.isNullable(modifiers) )
 				throw new ParseException("A method cannot be marked nullable");
+			if( ModifierSet.isGet(modifiers) )
+				throw new ParseException("A method cannot be marked get");
+			if( ModifierSet.isSet(modifiers) )
+				throw new ParseException("A method cannot be marked set");
 		}
 	}
 
@@ -297,7 +312,7 @@ TOKEN :
 | < FLOAT: "float" >
 | < FOR: "for" >
 | < FOREACH: "foreach" >
-| < GET: "get" > //why?
+| < GET: "get" >
 | < IF: "if" >
 | < IMMUTABLE: "immutable" >
 | < IMPLEMENTS: "implements" >
@@ -324,7 +339,7 @@ TOKEN :
 //| < STRICTFP: "strictfp" >
 | < SUPER: "super" >
 | < SWITCH: "switch" >
-| < SYNCHRONIZED: "synchronized" >
+| < SYNCHRONIZED: "synchronized" > //probably removing
 | < THIS: "this" >
 | < THROW: "throw" >
 | < THROWS: "throws" >
@@ -503,6 +518,8 @@ TOKEN :
 | < COMMA: "," >
 | < DOT: "." >
 | < AT: "@" >
+| < ARROW: "->" >
+| < YIELDS: "=>" >
 }
 
 /* OPERATORS */
@@ -623,7 +640,9 @@ int Modifiers():
   |	"immutable"{ modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.IMMUTABLE); }
   | "native" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.NATIVE); }
   | "weak" { modifiers = ModifierSet.checkAndAdd( modifiers,  ModifierSet.WEAK); }
-  |	"nullable" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.NULLABLE); }  
+  |	"nullable" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.NULLABLE); }
+  |	"get" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.GET); }
+  |	"set" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.SET); }
   | Annotation()
   )
  )*
@@ -820,7 +839,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 void FieldDeclaration(int modifiers):
 {
   debugPrint("FIELD DECLARATION");
-	ModifierSet.checkFieldModifiers( modifiers );
+	ModifierSet.checkFieldModifiers( modifiers, jjtree );
 }
 {
   { jjtThis.setModifiers(modifiers); }
@@ -1352,6 +1371,7 @@ void PrimarySuffix():
 | "[" { jjtThis.addToImage('['); } ConditionalExpression() ("," ConditionalExpression())* "]"
 | LOOKAHEAD(3) "." MethodCall()
 | "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+| "->" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 }
 
 void Literal() :

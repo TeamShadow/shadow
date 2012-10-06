@@ -56,6 +56,13 @@ public class ParseException extends Exception {
   public ParseException(String message) {
     super(message);
   }
+  
+  /** Constructor with node. */
+  public ParseException(String message, Node node) {
+    super(message + "\nFile: " + node.getFile() + "\nLine: " + node.getLine());
+  }
+  
+  
 
 
   /**

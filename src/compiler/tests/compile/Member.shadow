@@ -4,34 +4,34 @@
 class Member {
 
 	//Public
-    public int a;   	// basic int
-    public double b;	// basic double
-    public float c;		// basic float
-    public code d;   	// basic code
-    public byte e;		// basic byte
-    public boolean f;	// basic boolean
-    public short g;		// basic short
-    public long h;		// basic short    
-    public Object i = new Object();	// basic object
+    get int a;   	// basic int
+    get double b;	// basic double
+    set float c;		// basic float
+    set code d;   	// basic code
+    get set byte e;		// basic byte
+    get set boolean f;	// basic boolean
+    get set short g;		// basic short
+    get set long h;		// basic short    
+    get set Object i = new Object();	// basic object
     
 	//Private
-    private int j;   	// private int
-    private double k;	// private double
-    private float l;	// private float
-    private code m;   	// private code
-    private byte n;		// private byte
-    private boolean o;	// private boolean
-    private short p;	// private short
-    private long q;		// private short    
-    private Object s = new Object();		// private object    
+    int j;   	// private int
+    double k;	// private double
+    float l;	// private float
+    code m;   	// private code
+    byte n;		// private byte
+    boolean o;	// private boolean
+    short p;	// private short
+    long q;		// private short    
+    Object s = new Object();		// private object    
 
 
   	//Modifiers
-    public static int t;   		// static int
-    public final int u;   		// final int
-    public weak int v;   		// weak int
-    public weak int w;   		// immutable int
+    get set static int t;   		// static int
+    get final int u;   		// final int
+    set weak int v;   		// weak int
+    weak int w;   		// immutable int
     
     //Crazy Test
-    private static final weak double x;
+    get static final weak double x;
 }

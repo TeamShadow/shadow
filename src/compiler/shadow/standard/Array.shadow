@@ -2,8 +2,8 @@ package shadow.standard;
 
 final class Array
 {
-	private long data = 0;
-	private long[] lengths = new long[0];
+	long data = 0;
+	long[] lengths = new long[0];
 	private constructor( long data, long[] lengths )
 	{
 		this.data = data;

@@ -1,11 +1,11 @@
 class ComplexAccess {
 
-	private nullable Inner i;
+	nullable Inner i;
 
 	private class Inner 
 	{	
 	
-		public nullable ComplexAccess o;
+		nullable ComplexAccess o;
 	
 		public jam(int a) => (int) {
 	        return 4;
@@ -28,7 +28,7 @@ class ComplexAccess {
     	{
     		c = check(first[0]).stuff().jam(10);    	
     		ComplexAccess outer = new ComplexAccess();    	
-    		check(check(outer.i).o).i = new Inner();
+    		//check(check(outer.i).o).i = new Inner(); //TODO: add this back in when get/set is fixed
     		//outer.i.o.i = new Inner();
     	}
     	recover

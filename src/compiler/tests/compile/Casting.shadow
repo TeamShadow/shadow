@@ -1,20 +1,20 @@
 class Casting {
     // casting for members
-    public int a = cast<int>4;
-    public int b = cast<int>(4);
-    public int c = cast<int>b;
-    public int d = cast<int>(b);
-   // public int e = cast<int>(new int[3][4]);
+     int a = cast<int>4;
+     int b = cast<int>(4);
+     int c = cast<int>b;
+     int d = cast<int>(b);
+   //  int e = cast<int>(new int[3][4]);
 
 	//check all types
-    public float f = cast<float>(4);
-    public double g = cast<double>(4);
-    public code h = cast<code>(4);
-    public byte i = cast<byte>(4);
-    public boolean j = cast<boolean>(false);     
-    public String k = cast<String>(new Object());  
+     float f = cast<float>(4);
+     double g = cast<double>(4);
+     code h = cast<code>(4);
+     byte i = cast<byte>(4);
+     boolean j = cast<boolean>(false);     
+     String k = cast<String>(new Object());  
     
-    public () => () fun = cast<()=>()>blah;        
+    () => () fun = cast<()=>()>blah;        
     
     public blah() => () {
 	    // now in a method

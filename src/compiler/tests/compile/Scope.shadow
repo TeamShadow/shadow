@@ -1,6 +1,6 @@
 class Scope {
 
-	private int a;
+	int a;
 
     public blah(int a) => () {
         int a;

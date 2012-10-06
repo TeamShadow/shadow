@@ -1,7 +1,7 @@
 class Thumper<U is Child, T is Child> implements Thumpable<U>, Constructable<U>
 {
-	private nullable U internal;
-	private nullable T other;
+	nullable U internal;
+	nullable T other;
 	
 	public constructor(U stuff)
 	{

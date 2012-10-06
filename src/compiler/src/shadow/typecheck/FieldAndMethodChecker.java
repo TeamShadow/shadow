@@ -284,20 +284,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 				node.addModifier(ModifierSet.PUBLIC);
 				node.getType().addModifier(ModifierSet.STATIC);
 			}
-			else
-			{			
-				if( visibilityModifiers == 0 )
-				{			
-					addError(node, Error.INVL_MOD, "Every field must be specified as public or private" );
-					success = false;
-				}
-				
-				if( ModifierSet.isProtected(modifiers) ) 
-				{			
-					addError(node, Error.INVL_MOD, "Fields cannot be declared with the protected modifier" );
-					success = false;
-				}
-			}
 		}		
 		
 		return success;

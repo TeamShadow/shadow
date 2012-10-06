@@ -2,8 +2,8 @@ package shadow.standard;
 
 final class Class
 {
-	private nullable Class superClass = null;
-	private String className = "";
+	nullable Class superClass = null;
+	String className = "";
 	private constructor() { }
 
 	public getSuperClass() => ( nullable Class ) { return superClass; }

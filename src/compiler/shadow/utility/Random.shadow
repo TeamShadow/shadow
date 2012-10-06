@@ -1,5 +1,9 @@
 package shadow.utility;
 
 class Random {
-	public int value = 42;
+	int value = 42;
+	public nextInt() => (int)
+	{
+		return value;
+	}
 }

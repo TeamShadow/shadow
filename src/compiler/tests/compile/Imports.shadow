@@ -8,11 +8,11 @@ class Imports
 		
 		Random r = new Random();
 		
-		a += r.value;
+		a += r.nextInt();
 		
 		shadow.utility@Random v = new shadow.utility@Random();
 		
-		a *= v.value;
+		a *= v.nextInt();
 					
 	}
 }

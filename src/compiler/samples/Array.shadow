@@ -1,6 +1,6 @@
 class Array<T> implements Iterable<T>, Sortable<T>
 {
-	public constant int size;
+	final int size;
 	
 	public constructor( int size )
 	{
@@ -14,7 +14,7 @@ class Array<T> implements Iterable<T>, Sortable<T>
 	
 	private class ArrayIterator<T> implements BidirectionalIterator<T>
 	{
-		private int index = 0;
+		int index = 0;
 	
 		immutable getValue() => (T)
 		{

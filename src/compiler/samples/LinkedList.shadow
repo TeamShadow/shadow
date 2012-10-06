@@ -2,9 +2,9 @@ class LinkedList<T> implements List<T>
 {
 	private class Node<T> extends BidirectionalAuditor<T>
 	{
-		private T value = null;
-		private Node<T> next = null;
-		private Node<T> previous = null;
+	 	T value = null;
+		Node<T> next = null;
+		Node<T> previous = null;
 		
 		public constructor( T value, Node<T> next, Node<T> previous )
 		{
@@ -50,10 +50,10 @@ class LinkedList<T> implements List<T>
 			
 	}
 
-	private int size = 0;
+	int size = 0;
 	//dummy head and tail
-	private constant Node<T> head = new Node<T>( null, null, null );
-	private constant Node<T> tail = new Node<T>( null, null, null );
+	final Node<T> head = new Node<T>( null, null, null );
+	final Node<T> tail = new Node<T>( null, null, null );
 
 	public constructor()
 	{

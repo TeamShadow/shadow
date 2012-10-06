@@ -5,7 +5,7 @@ import shadow.io@Console;
 
 class Test
 {
-	private nullable Test test = this;
+	nullable Test test = this;
 	public static main() => ()
 	{
 		nullable Test test = new Test();

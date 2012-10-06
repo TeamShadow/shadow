@@ -1,6 +1,6 @@
 class Pig<T>
 {
-	private nullable T value;
+	nullable T value;
 	
 	public setValue(T input) => ()
 	{

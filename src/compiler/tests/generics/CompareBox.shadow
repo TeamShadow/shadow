@@ -1,6 +1,6 @@
 public class CompareBox<T is Comparable<T>>
 {
-	private nullable T value;
+	nullable T value;
 	
 	public constructor(T input)
 	{

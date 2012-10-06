@@ -1,19 +1,19 @@
 
 class Arrays {
     // create a single array
-    nullable public int[] a1;
-    public int[] a2 = new int[3];
-    public int[] a3 = a2;
+    nullable int[] a1;
+ 	int[] a2 = new int[3];
+  	int[] a3 = a2;
     
     // multidimensional arrays
-    nullable public int[][] b1;
-    public int[][] b2 = new int[3][4];
-    public int[][] b3 = b2;
+    nullable get set int[][] b1;
+    int[][] b2 = new int[3][4];
+    int[][] b3 = b2;
     
     // contiguous arrays    
-    nullable public int[,] c1;
-    public int[,] c2 = new int[3,4];
-    public int[,] c3 = c2;
+    nullable int[,] c1;
+    int[,] c2 = new int[3,4];
+    int[,] c3 = c2;
     
     public blah() => () {
         // test the same but in a method
