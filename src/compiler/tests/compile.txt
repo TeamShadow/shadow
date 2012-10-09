@@ -5,6 +5,7 @@
 0; Array.shadow; test_config.xml; ; ; Tests
 0; Arrays.shadow; test_config.xml; ; ; Tests
 0; Assertion.shadow; test_config.xml; ; ; Tests
+0; Auto.shadow; test_config.xml; ; ; Tests
 0; Basic.shadow; test_config.xml; ; ; Tests
 0; Bill.shadow; test_config.xml; ; ; Tests
 0; Casting.shadow; test_config.xml; ; ; Tests
@@ -32,6 +33,7 @@
 0; Operations.shadow; test_config.xml; ; ; Tests
 0; Parent.shadow; test_config.xml; ; ; Tests
 0; Private.shadow; test_config.xml; ; ; Tests
+0; Scope.shadow; test_config.xml; ; ; Tests
 0; Sequences.shadow; test_config.xml; ; ; Tests
 0; Static.shadow; test_config.xml; ; ; Tests
 0; Subtype.shadow; test_config.xml; ; ; Tests
