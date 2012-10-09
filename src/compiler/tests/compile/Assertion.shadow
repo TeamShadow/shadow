@@ -8,8 +8,8 @@ class Assertion
     	assert true;
     	
     	assert ( x == 4 );
-    	assert true : "Sandwich";
-    	//assert true : blah(); //uncomment to see error
-    	//assert true : Assertion;//uncomment to see error      
+    	assert true , "Sandwich";
+    	//assert true , blah(); //uncomment to see error
+    	//assert true , Assertion;//uncomment to see error      
     }
 } 

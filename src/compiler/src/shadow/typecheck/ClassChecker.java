@@ -17,6 +17,7 @@ import shadow.parser.javacc.ASTArgumentList;
 import shadow.parser.javacc.ASTArguments;
 import shadow.parser.javacc.ASTArrayAllocation;
 import shadow.parser.javacc.ASTArrayDimsAndInits;
+import shadow.parser.javacc.ASTArrayIndex;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
 import shadow.parser.javacc.ASTAssignmentOperator;
@@ -42,6 +43,7 @@ import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTDoStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
+import shadow.parser.javacc.ASTFieldAccess;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTForInit;
 import shadow.parser.javacc.ASTForStatement;
@@ -55,6 +57,7 @@ import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLabeledStatement;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
+import shadow.parser.javacc.ASTMethodAccess;
 import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -62,6 +65,8 @@ import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimarySuffix;
+import shadow.parser.javacc.ASTPropertyAccess;
+import shadow.parser.javacc.ASTQualifiedThis;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultType;
@@ -79,7 +84,6 @@ import shadow.parser.javacc.ASTTryStatement;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
-import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTUnqualifiedName;
@@ -98,6 +102,7 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -373,47 +378,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
-	private boolean checkField( Node node, String fieldName, Type prefixType, boolean isStatic )
-	{
-		if( prefixType instanceof ClassInterfaceBaseType )
-		{
-			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
-			if( currentClass.containsField( fieldName ) )
-			{
-				Node field = currentClass.getField(fieldName);
-				
-				if( !fieldIsAccessible( field, currentType ))				
-					addError(node, Error.INVL_MOD, "Field " + fieldName + " not accessible from current context");
-				else if( isStatic && !ModifierSet.isStatic(field.getModifiers())   )
-					addError(node, Error.INVL_MOD, "Cannot access non-static field " + fieldName + " from static context");
-				else
-				{
-					node.setType( field.getType());
-					node.setModifiers(field.getModifiers());
-					node.addModifier(ModifierSet.ASSIGNABLE);
-					return true;
-				}							
-			}
-			else
-			{
-				List<MethodSignature> methods = currentClass.getMethods(fieldName);
-				
-				//unbound method (it gets bound when you supply arguments)
-				if( methods != null && methods.size() > 0 )
-				{
-					node.setType( new UnboundMethodType( fieldName, currentClass ) );
-					return true;					
-				}
-				else
-					addError(node, Error.UNDEC_VAR, "Member " + fieldName + " not found");
-			}			
-		}
-		else
-			addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
-		
-		node.setType( Type.UNKNOWN ); //if got here, some error		
-		return false;
-	}
+	
 	
 	public boolean setTypeFromContext( Node node, String name, Type context, boolean directAccess  ) //directAccess is true if there is no prefix and false if there is
 	{
@@ -1466,7 +1431,6 @@ public class ClassChecker extends BaseChecker {
 				else
 				{				
 					node.setType(currentType);				
-				
 					if( currentMethod != null && ModifierSet.isStatic(currentMethod.getModifiers())  )					
 						addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);
 				}					
@@ -1515,12 +1479,16 @@ public class ClassChecker extends BaseChecker {
 					node.setType(Type.UNKNOWN);
 				}
 			}
+			
+			/*
 			else if( child instanceof ASTMethodCall && child.getType() != Type.UNKNOWN )
 			{
 				MethodType type = (MethodType)(child.getType());
 				SequenceType returnTypes = type.getReturnTypes();
 				returnTypes.setNodeType(node);
 			}
+			*/
+			
 			else if( child instanceof ASTUnqualifiedName )
 			{
 				node.setImage(child.getImage() + "@" + node.getImage());
@@ -1541,27 +1509,15 @@ public class ClassChecker extends BaseChecker {
 		
 		curPrefix.set(0, node); //so that the suffix can figure out where it's at
 		
-		/* OLD
+		/*   
 		  Literal()
-		  | "this" { jjtThis.setImage("this"); }
-		  | "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
-		  | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
-		  | AllocationExpression()
-		  | LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
-		  | Name()
-		*/
-		
-		
-		/* NEW
-		  Literal()
-			| "this" { jjtThis.setImage("this"); }
-			| "super" "." t = <IDENTIFIER> { jjtThis.setImage(t.image); }
-			| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
-			| AllocationExpression()
-			| LOOKAHEAD( ResultType() "." "class" ) ResultType() "." "class"
-			//| TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
-			| LOOKAHEAD(2) MethodCall()
-			| t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+		| "this" { jjtThis.setImage("this"); }
+		| "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
+		| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
+		| LOOKAHEAD( Type() "." "class" ) Type() "." "class" { jjtThis.setImage("class"); }
+		| [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+		| CheckExpression()		
+
 		 */
 				
 		return WalkType.POST_CHILDREN;
@@ -1589,6 +1545,10 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	
+	//old MethodCall was name and arguments all at the same time
+	
+	/*
 	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException 
 	{
 		//t = <IDENTIFIER> { jjtThis.setImage(t.image); } "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
@@ -1609,16 +1569,6 @@ public class ClassChecker extends BaseChecker {
 			context = (ClassInterfaceBaseType)(curPrefix.getFirst().getType());
 			directAccess = false;
 		}
-		
-		
-		/*
-		if( context instanceof InstantiatedType )
-		{
-			InstantiatedType instantiation = (InstantiatedType)context;
-			ClassInterfaceBaseType baseType = instantiation.getBaseType(); 
-			context = (ClassInterfaceBaseType)baseType.replace(baseType.getParameters(), instantiation.getArgumentTypes()); 
-		}		
-		*/
 		
 		
 		if( !setTypeFromContext( node, name, context, directAccess )) //automatically sets type if can
@@ -1732,112 +1682,372 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
+	*/
+	
+	
 	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException 
 	{
-		
-		/* NEW
-		   LOOKAHEAD(2) "." "this" { jjtThis.setImage("this"); } // when does this even happen?
-			| "[" ConditionalExpression() ("," ConditionalExpression())* "]"
-			//| "." TypeArguments() t = <IDENTIFIER> { jjtThis.setImage(t.image); } MethodCall()
-			| LOOKAHEAD(3) "." MethodCall()
-			| "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-		 */
-		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-				
-		Node prefixNode = curPrefix.getFirst();
-		Type prefixType = prefixNode.getType();
-		
-		if( ModifierSet.isNullable(prefixNode.getModifiers()) )
-			addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
-		
-		int children = node.jjtGetNumChildren();
-		
-		if(  children == 0 )
-		{
-			if( node.getImage().equals("this") )				
-				node.setType(prefixType);			
-			else //field name
-				checkField( node, node.getImage(), prefixType, ModifierSet.isTypeName(prefixNode.getModifiers()) );
-		}
-		else // >= 1
-		{
-			Node child = node.jjtGetChild(0);			
-
-			if( child instanceof ASTConditionalExpression ) //array index
-			{
-				if( (prefixType instanceof ArrayType) )
-				{
-					ArrayType arrayType = (ArrayType)prefixType;
-					
-					for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-					{
-						Type childType = node.jjtGetChild(0).getType();
-						
-						if( !childType.isIntegral() )
-						{
-							addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
-							node.setType(Type.UNKNOWN);
-						}
-					}
-					
-					if( node.getType() != Type.UNKNOWN )
-					{
-						if( node.jjtGetNumChildren() == arrayType.getDimensions() )
-						{
-							node.setType( arrayType.getBaseType() );
-							node.addModifier(ModifierSet.ASSIGNABLE);
-							
-							//primitive arrays are initialized to default values
-							//non-primitive array elements could be null
-							if( !arrayType.getBaseType().isPrimitive() )
-								node.addModifier(ModifierSet.NULLABLE);
-						}
-						else
-						{
-							node.setType(Type.UNKNOWN);
-							addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
-						}
-					}
-				}
-				else
-				{
-					node.setType(Type.UNKNOWN);
-					addError(node, Error.INVL_TYP, "Cannot subscript into non-array type " + prefixType);
-				}
-			}
-			else //MethodCall
-			{
-				//can look like a method call but not have a real method connected to it
-				if( child.getType() instanceof MethodType )
-				{
-					MethodType type = (MethodType)(child.getType());
-					SequenceType returnTypes = type.getReturnTypes();
-					returnTypes.setNodeType(node);
-				}
-				else
-					node.setType(Type.UNKNOWN);
-			}
-			
-		}
-		
-		curPrefix.set(0, node); //so that a future suffix can figure out where it's at
-		
-		/*	
-		  | LOOKAHEAD(2) "." AllocationExpression()
-		  | LOOKAHEAD(3) MemberSelector()
-		  | "[" ConditionalExpression() ("," ConditionalExpression())* "]"		  
-		  | Arguments()
-		  }		
+		/*
+			QualifiedThis()  
+			| ArrayIndex()
+			| MethodAccess()
+			| FieldAccess()
+			| PropertyAccess()
+			| MethodCall()
 		*/
+		
+		if(secondVisit)
+		{
+			Node prefixNode = curPrefix.getFirst();		
+			
+			if( ModifierSet.isNullable(prefixNode.getModifiers()) )
+				addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
+			
+			pushUpType(node, secondVisit);
+			curPrefix.set(0, node); //so that a future suffix can figure out where it's at		
+		}
+		
+		return WalkType.POST_CHILDREN;
+		
+	}
+
+	public Object visit(ASTQualifiedThis node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )					
+		{
+			Type prefixType = curPrefix.getFirst().getType();
+			node.setType(prefixType);
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTArrayIndex node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )
+		{				
+			Type prefixType = curPrefix.getFirst().getType();
+			
+			if( (prefixType instanceof ArrayType) )
+			{
+				ArrayType arrayType = (ArrayType)prefixType;
+				
+				for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				{
+					Type childType = node.jjtGetChild(i).getType();
+					
+					if( !childType.isIntegral() )
+					{
+						addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
+						node.setType(Type.UNKNOWN);
+					}
+				}
+				
+				if( node.getType() != Type.UNKNOWN )
+				{
+					if( node.jjtGetNumChildren() == arrayType.getDimensions() )
+					{
+						node.setType( arrayType.getBaseType() );
+						node.addModifier(ModifierSet.ASSIGNABLE);
+						
+						//primitive arrays are initialized to default values
+						//non-primitive array elements could be null
+						if( !arrayType.getBaseType().isPrimitive() )
+							node.addModifier(ModifierSet.NULLABLE);
+					}
+					else
+					{
+						node.setType(Type.UNKNOWN);
+						addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
+					}
+				}
+			}
+			else
+			{
+				node.setType(Type.UNKNOWN);
+				addError(node, Error.INVL_TYP, "Cannot subscript into non-array type " + prefixType);
+			}
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+
+	public Object visit(ASTMethodAccess node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )
+		{			
+			//always part of a suffix, thus always has a prefix
+			Node prefixNode = curPrefix.getFirst();
+			Type prefixType = prefixNode.getType();
+			String methodName = node.getImage();
+			
+			if( prefixType instanceof ClassInterfaceBaseType )
+			{
+				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
+				List<MethodSignature> methods = currentClass.getMethods(methodName);
+				
+				//unbound method (it gets bound when you supply arguments)
+				if( methods != null && methods.size() > 0 )			
+					node.setType( new UnboundMethodType( methodName, currentClass ) );
+				else
+					addError(node, Error.UNDEC_VAR, "Method " + methodName + " not found");
+			}
+			else		
+				addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
+			
+			if( node.getType() == null )
+				node.setType( Type.UNKNOWN );
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public static boolean fieldIsAccessible( Node node, Type type )
+	public Object visit(ASTFieldAccess node, Boolean secondVisit) throws ShadowException	
 	{
-		if( node.getEnclosingType() == type ) //inside class
+		if( secondVisit )
+		{	
+			//always part of a suffix, thus always has a prefix
+			Node prefixNode = curPrefix.getFirst();
+			Type prefixType = prefixNode.getType();
+			String fieldName = node.getImage();
+			boolean isStatic = ModifierSet.isTypeName(prefixNode.getModifiers());
+			
+			if( prefixType instanceof ClassInterfaceBaseType )
+			{
+				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
+				if( currentClass.containsField( fieldName ) )
+				{
+					Node field = currentClass.getField(fieldName);
+					
+					if( !fieldIsAccessible( field, currentType ))
+					{
+						addError(node, Error.INVL_MOD, "Field " + fieldName + " not accessible from current context");
+					}
+					else if( isStatic && !ModifierSet.isStatic(field.getModifiers()))
+					{
+						addError(node, Error.INVL_MOD, "Cannot access non-static field " + fieldName + " from static context");
+					}
+					else
+					{
+						node.setType( field.getType());
+						node.setModifiers(field.getModifiers());
+						node.addModifier(ModifierSet.ASSIGNABLE);					
+					}
+				}
+				else
+					addError(node, Error.UNDEC_VAR, "Field " + fieldName + " not found");
+						
+			}
+			else
+				addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
+			
+			if( node.getType() == null )
+				node.setType( Type.UNKNOWN );
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+		
+	public Object visit(ASTPropertyAccess node, Boolean secondVisit) throws ShadowException	
+	{
+		if( secondVisit )
+		{		
+			//always part of a suffix, thus always has a prefix
+			Node prefixNode = curPrefix.getFirst();
+			Type prefixType = prefixNode.getType();
+			String propertyName = node.getImage();
+			boolean isStatic = ModifierSet.isTypeName(prefixNode.getModifiers());
+			
+			if( prefixType instanceof ClassInterfaceBaseType )
+			{
+				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
+				List<MethodSignature> methods = currentClass.getMethods(propertyName);
+				//TODO: Check for get and set
+				//unbound method (it gets bound when you supply arguments)
+				if( methods != null && methods.size() > 0 )
+				{
+					MethodType getter = null;
+					MethodType setter = null;
+					
+					for( MethodSignature signature : methods )
+					{
+						if( ModifierSet.isGet(signature.getModifiers()) )
+							getter = signature.getMethodType();
+						else if( ModifierSet.isSet(signature.getModifiers()) )
+							setter = signature.getMethodType();
+					}
+					
+					node.setType( new PropertyType( getter, setter ) );										
+				}
+				else
+				{
+					addError(node, Error.UNDEC_VAR, "Property " + propertyName + " not found");
+					node.setType( Type.UNKNOWN ); //if got here, some error
+				}
+				
+			}
+			else
+			{
+				addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
+				node.setType( Type.UNKNOWN ); //if got here, some error
+			}
+		}
+	
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException	
+	{		
+		if( secondVisit )
+		{			
+			//always part of a suffix, thus always has a prefix
+			Node prefixNode = curPrefix.getFirst();
+			Type prefixType = prefixNode.getType();
+			String propertyName = node.getImage();
+			
+			int start = 0;
+			boolean hasArguments = false;
+			
+			if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
+			{
+				start++;
+				hasArguments = true;
+			}
+			
+			SequenceType sequenceType = new SequenceType();
+			
+			for( int i = start; i < node.jjtGetNumChildren(); i++ )
+				sequenceType.add(node.jjtGetChild(i));
+			
+		
+			if( prefixType instanceof UnboundMethodType )
+			{
+				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);			
+				
+				List<MethodSignature> methods = prefixType.getOuter().getMethods(unboundMethod.getTypeName());
+				List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
+				
+				boolean perfectMatch = false;
+				
+				for( MethodSignature signature : methods ) 
+				{				
+					MethodType methodType = signature.getMethodType();
+					
+					if( methodType.isParameterized() )
+					{
+						if( hasArguments )
+						{
+							SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();
+							List<TypeParameter> parameters = methodType.getTypeParameters(); 
+							if( checkTypeArguments( parameters, arguments )   )
+								methodType = methodType.replace(parameters, arguments);
+							else
+								continue;
+						}
+					}				
+					
+					if( methodType.matches( sequenceType ) ) //signature.matches( sequenceType, context )
+					{
+						SequenceType returnTypes = methodType.getReturnTypes();					
+						returnTypes.setNodeType(node);	 //used instead of setType					
+						perfectMatch = true;
+						
+						if( !methodIsAccessible( signature, currentType  ))
+							addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
+						//else
+						//	node.setType(methodType);
+					}
+					else if( methodType.canAccept( sequenceType )) //signature.canAccept( sequenceType, context )
+						acceptableMethods.add(signature);
+				}
+				
+				if( !perfectMatch )
+				{
+					if( acceptableMethods.size() == 0 )	
+					{
+						node.setType(Type.UNKNOWN);						
+						addError(node, Error.TYPE_MIS, "No method found with signature " + sequenceType);
+					}
+					else if( acceptableMethods.size() > 1 )
+					{
+						node.setType(Type.UNKNOWN);						
+						addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + sequenceType);
+					}							
+					else
+					{
+						MethodSignature signature = acceptableMethods.get(0);
+						MethodType methodType = signature.getMethodType();
+						
+						if( methodType.isParameterized() )
+						{
+							if( hasArguments )
+							{
+								SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();
+								List<TypeParameter> parameters = methodType.getTypeParameters(); 
+								methodType = methodType.replace(parameters, arguments); //we know they match already
+							}
+							else						
+								addError(node, Error.TYPE_MIS, "Parameterized method " + signature + " is being called with no type parameters");							
+							
+						}
+						
+						SequenceType returnTypes = methodType.getReturnTypes();
+						returnTypes.setNodeType( node ); //used instead of setType						
+						
+						if( !methodIsAccessible( signature, currentType  ))					
+							addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");						
+						//else
+						//	node.setType(methodType);
+							
+						
+					}
+				}					
+			}
+			else if( prefixType instanceof MethodType ) //only happens with method pointers
+			{
+				MethodType methodType = (MethodType)prefixType;
+				
+				if( methodType.isParameterized() )
+				{
+					if( hasArguments )
+					{
+						SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();
+						List<TypeParameter> parameters = methodType.getTypeParameters(); 
+						if( checkTypeArguments( parameters, arguments )   )
+							methodType = methodType.replace(parameters, arguments);
+						else
+						{
+							addError(node, Error.TYPE_MIS, "Type parameters " + parameters + " do not match method given by " + node);
+							node.setType(Type.UNKNOWN);
+						}							
+					}
+				}				
+				
+				if( methodType.canAccept( sequenceType ) )
+				{
+					SequenceType returnTypes = methodType.getReturnTypes();					
+					returnTypes.setNodeType(node); //sets the type
+				}
+				else 
+				{
+					addError(node, Error.TYPE_MIS, "Cannot apply arguments " + sequenceType + " to method given by " + node);
+					node.setType(Type.UNKNOWN);
+				}
+			}
+			else
+			{									
+				addError(node, Error.TYPE_MIS, "Cannot apply arguments to non-method type " + prefixType);
+				node.setType(Type.UNKNOWN);			
+			}
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public static boolean fieldIsAccessible( Node field, Type type )
+	{
+		//inside class or constant
+		if ( field.getEnclosingType() == type || ModifierSet.isConstant(field.getModifiers()) ) 
 			return true;		
 		
 		//No longer meaningful since all fields are private
@@ -1848,7 +2058,7 @@ public class ClassChecker extends BaseChecker {
 			
 			while( parent != null )
 			{
-				if( node.getEnclosingType() == parent )
+				if( field.getEnclosingType() == parent )
 				{
 					if( ModifierSet.isPrivate(node.getModifiers()))
 						return false;

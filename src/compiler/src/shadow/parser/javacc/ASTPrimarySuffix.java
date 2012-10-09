@@ -5,6 +5,7 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTPrimarySuffix extends SimpleNode {
+	
   public ASTPrimarySuffix(int id) {
     super(id);
   }
@@ -12,7 +13,7 @@ class ASTPrimarySuffix extends SimpleNode {
   public ASTPrimarySuffix(ShadowParser p, int id) {
     super(p, id);
   }
-
+  
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {

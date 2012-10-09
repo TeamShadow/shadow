@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.org.apache.bcel.internal.classfile.Signature;
+
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTBlock;
@@ -44,6 +46,7 @@ import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -81,6 +84,65 @@ public class FieldAndMethodChecker extends BaseChecker {
 						//note that the node is null for the default constructor, because nothing was made
 						// - in that case, modifiers ought to be moved to MethodSignature
 					}
+					
+					
+					//add default getters and setters
+					for( Map.Entry<String,ModifiedType> field : classType.getFieldList() )
+					{
+						int fieldModifiers = field.getValue().getModifiers();
+						
+						if( ModifierSet.isGet(fieldModifiers) || ModifierSet.isSet(fieldModifiers) )
+						{
+							List<MethodSignature> methods = classType.getMethods(field.getKey());
+							int getterCount = 0;
+							int setterCount = 0;
+							int other = 0;
+							
+							for( MethodSignature signature : methods)
+							{
+								if( ModifierSet.isGet(signature.getModifiers()) )
+									getterCount++;
+								else if( ModifierSet.isSet(signature.getModifiers()) )
+									setterCount++;
+								else
+									other++;
+							}
+							
+							if( ModifierSet.isGet(fieldModifiers) && getterCount == 0 )
+							{
+								if( other > 0 )								
+									addError(Error.INVL_TYP, "Cannot create default get property " +  field.getKey() + " when there is already a method of the same name" );
+								else
+								{
+									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
+									methodNode.setModifiers(ModifierSet.PUBLIC | ModifierSet.GET );
+									if( ModifierSet.isStatic(fieldModifiers) )
+										methodNode.addModifier(ModifierSet.STATIC );
+									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
+									methodType.addReturn(field.getValue());									
+									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
+								}								
+							}
+							
+							if( ModifierSet.isSet(fieldModifiers) && setterCount == 0 )
+							{
+								if( other > 0 )								
+									addError(Error.INVL_TYP, "Cannot create default set property " +  field.getKey() + " when there is already a method of the same name" );
+								else
+								{
+									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
+									methodNode.setModifiers(ModifierSet.PUBLIC | ModifierSet.SET );
+									if( ModifierSet.isStatic(fieldModifiers) )
+										methodNode.addModifier(ModifierSet.STATIC );
+									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
+									methodType.addParameter("value", field.getValue());									
+									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
+								}								
+							}
+						}						
+					}
+					
+					
 					
 					//check for circular class hierarchy				
 					ClassType parent = classType.getExtendType();

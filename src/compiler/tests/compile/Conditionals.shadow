@@ -38,15 +38,15 @@ class Conditionals {
         if( (2 == a or b > 1 or c < 2) or (2 == a or b > 1 or c < 2) ) { a = 0; }
         
         // simple in-line conditionals
-        a = true ? a : b;
-        a = b < 1 ? a : b;
-        a = a > 1 ? a : b;
-        a = a + b == b + a ? a : b;
+        a = true ? a , b;
+        a = b < 1 ? a , b;
+        a = a > 1 ? a , b;
+        a = a + b == b + a ? a , b;
         
         // more complex in-line conditionals
-        a = true or false ? a + b : b + a;
-        a = b < 1 and a > 1 ? (a + 1) * (b + 2) : b * a;
-        a = a > 1 or b < 1 ? a * b : a * b * a;
-        a = (a + b == b + a) and (a + b != b + a) ? (a + b) * (a + b) : (b + a) * (b + a);
+        a = true or false ? a + b , b + a;
+        a = b < 1 and a > 1 ? (a + 1) * (b + 2) , b * a;
+        a = a > 1 or b < 1 ? a * b , a * b * a;
+        a = (a + b == b + a) and (a + b != b + a) ? (a + b) * (a + b) , (b + a) * (b + a);
     }
 }

@@ -44,10 +44,12 @@ public class ShadowParser
      public static final int NULLABLE      	= 0x0200;
 	 public static final int GET			= 0x0400;
 	 public static final int SET			= 0x0800;
+	 public static final int CONSTANT		= 0x1000;
           
-     public static final int ASSIGNABLE   	= 0x1000;
-     public static final int TYPE_NAME   	= 0x2000;
-     public static final int FIELD		   	= 0x4000;
+     public static final int ASSIGNABLE   	= 0x2000;
+     public static final int TYPE_NAME   	= 0x4000;
+     public static final int FIELD		   	= 0x8000;
+     public static final int PROPERTY	   	= 0x10000;
 
 
      /* Type Modifiers:
@@ -67,6 +69,7 @@ public class ShadowParser
 		static			(only for members)
 		get				(only for fields)
 		set				(only for fields)
+		constant		(only for fields, public constant)
 		final 			(can't be changed)		
 		weak			(reference will not stop GC)
 		native          (used to map in C functions)
@@ -93,6 +96,8 @@ public class ShadowParser
 
      public static boolean isGet(int modifiers) { return (modifiers & GET) != 0; }
      public static boolean isSet(int modifiers) { return (modifiers & SET) != 0; }
+
+     public static boolean isConstant(int modifiers) { return (modifiers & CONSTANT) != 0; }
 
      public static boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
      public static boolean isImmutable(int modifiers) { return (modifiers & IMMUTABLE) != 0; }
@@ -123,14 +128,17 @@ public class ShadowParser
 	  	  if( isWeak(modifiers) )
 	  	  	throw new ParseException("A class cannot be marked weak");
 	  	  if( isNullable(modifiers) )
-	  	  	throw new ParseException("A class cannot be marked nullable");  
+	  	  	throw new ParseException("A class cannot be marked nullable");
+  	  	  if( isConstant(modifiers) )
+	  	  	throw new ParseException("A class cannot be marked constant");
 	   }
 
 
 		public static void checkExceptionModifiers( int modifiers ) throws ParseException
 		{		  
 			if( isAbstract(modifiers) || isStatic(modifiers) || isNative(modifiers) ||
- 	  			isWeak(modifiers) || isImmutable(modifiers) || isNullable(modifiers) )
+ 	  			isWeak(modifiers) || isImmutable(modifiers) || isNullable(modifiers) ||
+ 	  			isGet(modifiers) || isSet(modifiers) || isConstant(modifiers) )
 				throw new ParseException("An exception can only be marked public, protected, private, and final");
 		}
 
@@ -138,7 +146,8 @@ public class ShadowParser
 		{
 			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) || 	  	
 	 	  		isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
-	 	  		isNullable(modifiers) )
+	 	  		isNullable(modifiers) ||
+ 	  			isGet(modifiers) || isSet(modifiers) || isConstant(modifiers) )
  	    	  	throw new ParseException("An error can only be marked public, protected, or private");
  	 	}
 
@@ -155,7 +164,8 @@ public class ShadowParser
 		{
 			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) || 
 				isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
-				isNullable(modifiers))
+				isNullable(modifiers) ||
+ 	  			isGet(modifiers) || isSet(modifiers) || isConstant(modifiers) )
 				throw new ParseException("A view can only be marked public, private, or protected");
 		}
 
@@ -163,36 +173,45 @@ public class ShadowParser
 		{
 			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) ||
 				isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
-				isNullable(modifiers))
+				isNullable(modifiers) ||
+ 	  			isGet(modifiers) || isSet(modifiers) || isConstant(modifiers) )
 				throw new ParseException("An enum can only be marked public, private, or protected");
 		}
 
 		public static void checkFieldModifiers( int modifiers, JJTShadowParserState state ) throws ParseException
 		{
-			if( ModifierSet.isAbstract(modifiers) )
+			if( isAbstract(modifiers) )
 				throw new ParseException("A field cannot be marked abstract");
-			if( ModifierSet.isProtected(modifiers) )
+			if( isProtected(modifiers) )
 				throw new ParseException("A field cannot be marked protected");
-			if( ModifierSet.isPublic(modifiers) )
-				throw new ParseException("A field cannot be marked public: " + state.rootNode().getImage());
-			if( ModifierSet.isPrivate(modifiers) )
+			if( isPublic(modifiers) )
+				throw new ParseException("A field cannot be marked public");
+			if( isPrivate(modifiers) )
 				throw new ParseException("A field cannot be marked private");
-			if( ModifierSet.isNative(modifiers) )
+			if( isNative(modifiers) )
 				throw new ParseException("A field cannot be marked native");
-			if( ModifierSet.isImmutable(modifiers) )
-				throw new ParseException("A field cannot be marked immutable");			
+			if( isSet(modifiers) && ModifierSet.isFinal(modifiers) )
+				throw new ParseException("A field cannot be marked both set and final");
+			if( isConstant(modifiers) )
+			{
+				int updatedModifiers = removeModifier(modifiers, CONSTANT);
+				if( isStatic(updatedModifiers) )
+					updatedModifiers = removeModifier(modifiers, STATIC);
+
+				if( updatedModifiers != 0 )
+					throw new ParseException("A constant cannot have any modifiers other than static");			}			 			
 		}
 
 		public static void checkMethodModifiers( int modifiers ) throws ParseException
 		{
-		 	if( ModifierSet.isWeak(modifiers) )
+		 	if( isWeak(modifiers) )
 				throw new ParseException("A method cannot be marked weak");
-			if( ModifierSet.isNullable(modifiers) )
+			if( isNullable(modifiers) )
 				throw new ParseException("A method cannot be marked nullable");
-			if( ModifierSet.isGet(modifiers) )
-				throw new ParseException("A method cannot be marked get");
-			if( ModifierSet.isSet(modifiers) )
-				throw new ParseException("A method cannot be marked set");
+			if( isGet(modifiers) &&  ModifierSet.isSet(modifiers) )
+				throw new ParseException("A method cannot be marked both get and set");
+			if( isConstant(modifiers) )
+				throw new ParseException("A method cannot be marked constant");
 		}
 	}
 
@@ -1162,7 +1181,7 @@ void AssignmentOperator():
 void ConditionalExpression():
 {}
 {
-  ConditionalOrExpression() [ "?" { jjtThis.setImage("?:"); } ConditionalExpression() ":" ConditionalExpression() ]
+  ConditionalOrExpression() [ "?" { jjtThis.setImage("?:"); } ConditionalExpression() "," ConditionalExpression() ]
 }
 
 void ConditionalOrExpression():
@@ -1327,22 +1346,13 @@ void PrimaryExpression():
 { debugPrint("PRIMARY EXPRESSION"); }
 {
  	  AllocationExpression()
-	| PrimaryPrefix() ( LOOKAHEAD(2) PrimarySuffix() )* [ LOOKAHEAD(2) "." AllocationExpression() ]
+	| PrimaryPrefix() ( LOOKAHEAD(3) PrimarySuffix() )* [ LOOKAHEAD(2) "." AllocationExpression() ]
 }
 
 void Sequence():
 { debugPrint("SEQUENCE"); }
 {
 	"(" ConditionalExpression() ("," ConditionalExpression() )* ")"
-}
-
-void MethodCall():
-{
-	debugPrint("METHOD CALL");
-	Token t;
-}
-{
-    t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeArguments() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
 }
 
 void PrimaryPrefix():
@@ -1356,7 +1366,6 @@ void PrimaryPrefix():
 | "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | LOOKAHEAD( Type() "." "class" ) Type() "." "class" { jjtThis.setImage("class"); }
-| LOOKAHEAD(MethodCall()) MethodCall()
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 | CheckExpression()
 }
@@ -1367,12 +1376,64 @@ void PrimarySuffix():
 	Token t;
 }
 {
-  LOOKAHEAD(2) "." "this" { jjtThis.setImage("this"); } // when does this even happen?
-| "[" { jjtThis.addToImage('['); } ConditionalExpression() ("," ConditionalExpression())* "]"
-| LOOKAHEAD(3) "." MethodCall()
-| "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-| "->" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+  LOOKAHEAD(2) QualifiedThis()  
+| ArrayIndex()
+| MethodAccess()
+| FieldAccess()
+| PropertyAccess()
+| MethodCall()
 }
+
+void QualifiedThis():
+{
+  	debugPrint("QUALIFIED THIS");
+	Token t;}
+{
+  ":" "this" { jjtThis.setImage("this"); } // when does this even happen?  When you have inner classes, you sometimes need to know Outer.this or Inner.this}
+
+void ArrayIndex():
+{
+  debugPrint("ARRAY INDEX");
+  Token t;}
+{
+  "[" { jjtThis.addToImage('['); } ConditionalExpression() ("," ConditionalExpression())* "]"}
+
+void FieldAccess():
+{
+  	debugPrint("FIELD ACCESS");
+	Token t;}
+{
+  ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //field}
+
+void MethodAccess():
+{
+  	debugPrint("METHOD ACCESS");
+	Token t;
+}
+{
+  "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);  }
+}
+
+void PropertyAccess():
+{
+  	debugPrint("PROPERTY ACCESS");
+	Token t;
+}
+{
+  "->" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);  }
+}
+
+void MethodCall():
+{
+	debugPrint("METHOD CALL");
+	Token t;
+}
+{
+    [ TypeArguments() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+}
+
+
+
 
 void Literal() :
 {
@@ -1516,7 +1577,7 @@ void Statement():
 void AssertStatement():
 { debugPrint("ASSERT STATEMENT"); }
 {
-  "assert" ConditionalExpression() [ ":" ConditionalExpression() ] ";"
+  "assert" ConditionalExpression() [ "," ConditionalExpression() ] ";"
 }
 
 void LabeledStatement():
@@ -1582,16 +1643,36 @@ void SwitchStatement():
 { debugPrint("SWITCH STATEMENT"); }
 {
   "switch" "(" ConditionalExpression() ")" "{"
-    ( SwitchLabel() ( BlockStatement() )* )*
+    ( SwitchLabel() ( Block() ) )*
   "}"
 }
 
 void SwitchLabel():
-{}
 {
-  "case" ConditionalExpression() ":"
+	Token t;
+}
+{
+   /*LOOKAHEAD("case" PrimaryExpression())*/
+
+   "case" "(" PrimaryExpression() ("," PrimaryExpression())* ")"
+
+/*
+   ( t = <IDENTIFIER>
+  | t = <BYTE_LITERAL>
+  | <UBYTE_LITERAL>
+  | <SHORT_LITERAL>
+  | <USHORT_LITERAL>
+  | <INT_LITERAL>
+  | <UINT_LITERAL>  
+  | <LONG_LITERAL>
+  | <ULONG_LITERAL>
+  | <CODE_LITERAL>
+  | <STRING_LITERAL:
+*/
+
+
 |
-  "default" ":"
+  "default"
 }
 
 void IfStatement():

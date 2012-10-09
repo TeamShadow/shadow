@@ -13,8 +13,8 @@ class Static
         //this.a = 4; //uncomment to see static error
         //super.a = 4; //uncomment to see static error
         
-        Static.thing1 = false;
-        //Static.thing2 = false; //uncomment to see static error
+        Static:thing1 = false;
+        //Static:thing2 = false; //uncomment to see static error
         
         //return z; //uncomment (and comment next line) to see static error
         return 5;        
