@@ -1325,7 +1325,7 @@ public class ClassChecker extends BaseChecker {
 				for( int i = 0; i < node.getCatches(); i++ )				
 				{
 					//catch statement
-					child = node.jjtGetChild(2*i); //formal parameter
+					child = node.jjtGetChild(2*i+1); //formal parameter
 					
 					Type type = child.getType();
 					if( type instanceof ExceptionType )
@@ -1338,7 +1338,7 @@ public class ClassChecker extends BaseChecker {
 							}						
 					}
 					else
-						addError( child, Error.TYPE_MIS, "found " + type + "but only exception types allowed for catch parameters");
+						addError( child, Error.TYPE_MIS, "found " + type + " but only exception types allowed for catch parameters");
 				}
 				
 				//no checking necessary for recover

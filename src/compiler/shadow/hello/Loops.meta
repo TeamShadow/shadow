@@ -1,0 +1,33 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef LOOPS_META
+#define LOOPS_META
+
+#include "types.h"
+#include "stdlib.h"
+#include "shadow/standard/Object.meta"
+
+struct _Pshadow_Pstandard_CClass;
+
+struct _Pshadow_Pstandard_CClass _P_CLoops_Iclass;
+struct _P_CLoops_Itable;
+struct _P_CLoops_Itable _P_CLoops_Imethods;
+struct _P_CLoops {
+	struct _P_CLoops_Itable *_Imethods;
+	
+	/* Fields */
+};
+
+
+struct _Pshadow_Pstandard_CClass* _P_CLoops_MgetClass(struct _P_CLoops* this);
+void _P_CLoops_Mtest(struct _P_CLoops*);
+void _P_CLoops_Mconstructor(struct _P_CLoops*);
+
+struct _P_CLoops_Itable {
+	struct _Pshadow_Pstandard_CClass* (*_MgetClass)(struct _P_CLoops*);
+	struct _Pshadow_Pstandard_CString* (*_MtoString)(struct _Pshadow_Pstandard_CObject*);
+	void (*_Mtest)(struct _P_CLoops*);
+};
+
+#include "shadow/standard/Class.meta"
+
+#endif

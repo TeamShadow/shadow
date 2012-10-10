@@ -1,7 +1,18 @@
 package shadow.standard;
 
-class String
+immutable final class String
 {
 	ubyte[] data = new ubyte[0];
+	public equals( String other ) => ( boolean )
+	{
+		if ( getLength() != other.getLength() )
+			return false;
+		for ( long i = 0; i < getLength(); i += 1 )
+			if ( getCode(i) != other.getCode(i) )
+				return false;
+		return true;
+	}
+	public getCode( long index ) => ( ubyte ) { return data[index]; }
+	public getLength() => ( long ) { return data.getLength(0); }
 	public toString() => ( String ) { return this; }
 }

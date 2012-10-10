@@ -1,0 +1,10 @@
+package shadow.standard;
+
+final immutable class Error
+{
+	private String message = "";
+	public constructor() { message = "Unknown Error"; }
+	public constructor( String message ) { this.message = message; }
+	public getMessage() => ( String ) { return message; }
+	public toString() => ( String ) { return getMessage(); }
+}

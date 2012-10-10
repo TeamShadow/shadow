@@ -1,0 +1,38 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef ARRAYTEST_META
+#define ARRAYTEST_META
+
+#include "types.h"
+#include "stdlib.h"
+#include "string.h"
+#include "shadow/standard/Object.meta"
+
+
+struct _Pshadow_Pio_CConsole;
+struct _Pshadow_Pstandard_CClass;
+struct _Pshadow_Pstandard_CString;
+
+struct _Pshadow_Pstandard_CClass _Pshadow_Phello_CArrayTest_Iclass;
+struct _Pshadow_Phello_CArrayTest_Itable;
+struct _Pshadow_Phello_CArrayTest_Itable _Pshadow_Phello_CArrayTest_Imethods;
+struct _Pshadow_Phello_CArrayTest {
+	struct _Pshadow_Phello_CArrayTest_Itable *_Imethods;
+
+	/* Fields */
+};
+
+struct _Pshadow_Pstandard_CClass *_Pshadow_Phello_CArrayTest_MgetClass(struct _Pshadow_Phello_CArrayTest *this);
+void _Pshadow_Phello_CArrayTest_Mconstructor(struct _Pshadow_Phello_CArrayTest *);
+void _Pshadow_Phello_CArrayTest_Mmain_R_Pshadow_Pstandard_CString_A1(struct _Pshadow_Pstandard_CArray *);
+
+struct _Pshadow_Phello_CArrayTest_Itable {
+	struct _Pshadow_Pstandard_CClass *(*_MgetClass)(struct _Pshadow_Phello_CArrayTest *);
+	struct _Pshadow_Pstandard_CString *(*_MtoString)(struct _Pshadow_Pstandard_CObject *);
+	void (*_Mmain_R_Pshadow_Pstandard_CString_A1)(struct _Pshadow_Pstandard_CArray *);
+};
+
+#include "shadow/io/Console.meta"
+#include "shadow/standard/Class.meta"
+#include "shadow/standard/String.meta"
+
+#endif

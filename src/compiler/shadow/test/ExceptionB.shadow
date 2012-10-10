@@ -1,0 +1,3 @@
+package shadow.test;
+
+public exception ExceptionB { }

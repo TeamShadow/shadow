@@ -133,6 +133,8 @@ public abstract class Type {
 		{
 			//null type matches everything, could this ever be a problem?
 			return this == Type.NULL || o == Type.NULL || o == this;
+//			return this == Type.NULL || o == Type.NULL ||
+//					toString().equals(o.toString()); // TODO: fix other problem
 		}
 		else
 			return false;

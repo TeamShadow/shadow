@@ -1,11 +1,39 @@
 package shadow.standard;
 
-final class Class
+immutable final class Class
 {
+	// ubyte type = 0;
 	nullable Class superClass = null;
+	Class[] implementedInterfaces = new Class[0];
 	String className = "";
 	private constructor() { }
 
+	public isSubtype( Class other ) => ( boolean )
+	{
+		if ( other.isInterface() )
+			return isInterfaceSubtype(other);
+		return isClassSubtype(other);
+	}
+	private isInterfaceSubtype( Class other ) => ( boolean )
+	{
+		for ( long i = 0; i < implementedInterfaces.getLength(0); i += 1 )
+			if ( implementedInterfaces[i] == other )
+				return true;
+		return false;
+	}
+	private isClassSubtype( Class other ) => ( boolean )
+	{
+		if ( this == other )
+			return true;
+		try {
+			return check(superClass).isClassSubtype(other);
+		} recover { }
+		return false;
+	}
+
+	public isInterface() => ( boolean ) { return false; }
+	// public isInterface() => ( boolean ) { return width == 16; }
+	// public getWidth() => ( int ) { return width }
 	public getSuperClass() => ( nullable Class ) { return superClass; }
 	public getClassName() => ( String ) { return className; }
 	public toString() => ( String ) { return getClassName(); }

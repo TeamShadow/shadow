@@ -1,0 +1,36 @@
+/* AUTO-GENERATED FILE, DO NOT EDIT! */
+#ifndef CLASS_META
+#define CLASS_META
+
+#include "types.h"
+#include "stdlib.h"
+#include "string.h"
+#include "shadow/standard/Object.meta"
+
+struct _Pshadow_Pstandard_CArray;
+
+struct _Pshadow_Pstandard_CString;
+
+struct _Pshadow_Pstandard_CClass _Pshadow_Pstandard_CClass_Iclass;
+struct _Pshadow_Pstandard_CClass_Itable;
+struct _Pshadow_Pstandard_CClass_Itable _Pshadow_Pstandard_CClass_Imethods;
+struct _Pshadow_Pstandard_CClass {
+	struct _Pshadow_Pstandard_CClass_Itable *_Imethods;
+
+	/* Fields */
+	struct _Pshadow_Pstandard_CString *className;
+};
+
+struct _Pshadow_Pstandard_CClass *_Pshadow_Pstandard_CClass_MgetClass(struct _Pshadow_Pstandard_CClass *this);
+struct _Pshadow_Pstandard_CString *_Pshadow_Pstandard_CClass_MtoString(struct _Pshadow_Pstandard_CClass *);
+void _Pshadow_Pstandard_CClass_Mconstructor(struct _Pshadow_Pstandard_CClass *);
+
+struct _Pshadow_Pstandard_CClass_Itable {
+	struct _Pshadow_Pstandard_CClass *(*_MgetClass)(struct _Pshadow_Pstandard_CClass *);
+	struct _Pshadow_Pstandard_CString *(*_MtoString)(struct _Pshadow_Pstandard_CClass *);
+};
+
+#include "shadow/standard/String.meta"
+#include "shadow/standard/Array.meta"
+
+#endif

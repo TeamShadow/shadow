@@ -1347,34 +1347,4 @@ public class TACBuilder implements ShadowParserVisitor
 			return new TACLiteral(tree, "0l");
 		return new TACLiteral(tree, "null");
 	}
-	@Override
-	public Object visit(ASTQualifiedThis node, Boolean data)
-			throws ShadowException {
-		// TODO: Make this work
-		return null;
-	}
-	@Override
-	public Object visit(ASTArrayIndex node, Boolean data)
-			throws ShadowException {
-		// TODO: Make this work
-		return null;
-	}
-	@Override
-	public Object visit(ASTFieldAccess node, Boolean data)
-			throws ShadowException {
-		// TODO: Make this work
-		return null;
-	}
-	@Override
-	public Object visit(ASTMethodAccess node, Boolean data)
-			throws ShadowException {
-		// TODO: Make this work
-		return null;
-	}
-	@Override
-	public Object visit(ASTPropertyAccess node, Boolean data)
-			throws ShadowException {
-		// TODO: Make this work
-		return null;
-	}
 }

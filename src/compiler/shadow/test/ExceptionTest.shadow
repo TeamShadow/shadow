@@ -1,0 +1,21 @@
+package shadow.test;
+
+import shadow.standard@Error;
+import shadow.io@Console;
+
+class ExceptionTest
+{
+	private nullable Error e;
+	public static throwException() => () {
+		throw new ExceptionA();
+	}
+	public static main() => () {
+		try {
+			throwException();
+		} catch (ExceptionA ex) {
+			Console.printLine("ExceptionA");
+		} finally {
+			Console.printLine("finally");
+		}
+	}
+}

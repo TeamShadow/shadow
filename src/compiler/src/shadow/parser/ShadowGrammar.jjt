@@ -382,56 +382,66 @@ TOKEN :
    < BYTE_LITERAL: //can't end with b or B because of hex digits
         <DECIMAL_LITERAL> ["y","Y"]
       | <HEX_LITERAL> ["y","Y"]
+      | <BINARY_LITERAL> ["y","Y"]
       | <OCTAL_LITERAL> ["y","Y"]
   >
 |
   < UBYTE_LITERAL: //can't end with b or B because of hex digits
         <DECIMAL_LITERAL> ["u","U"]["y","Y"]
       | <HEX_LITERAL> ["u","U"]["y","Y"]
+      | <BINARY_LITERAL> ["u","U"]["y","Y"]
       | <OCTAL_LITERAL> ["u","U"]["y","Y"]
   >
-|   
+|
   < SHORT_LITERAL:
         <DECIMAL_LITERAL> ["s","S"]
       | <HEX_LITERAL> ["s","S"]
+      | <BINARY_LITERAL> ["s","S"]
       | <OCTAL_LITERAL> ["s","S"]
   >  
 |   
   < USHORT_LITERAL:
         <DECIMAL_LITERAL> ["u","U"]["s","S"]
       | <HEX_LITERAL> ["u","U"]["s","S"]
+      | <BINARY_LITERAL> ["u","U"]["s","S"]
       | <OCTAL_LITERAL> ["u","U"]["s","S"]
   >  
-|   
+|
   < INT_LITERAL:
         <DECIMAL_LITERAL> (["i","I"])?
       | <HEX_LITERAL> (["i","I"])?
+      | <BINARY_LITERAL> (["i","I"])?
       | <OCTAL_LITERAL> (["i","I"])?
   >
-| 
+|
   < UINT_LITERAL:
         <DECIMAL_LITERAL> ["u","U"](["i","I"])?
       | <HEX_LITERAL> ["u","U"](["i","I"])?
+      | <BINARY_LITERAL> ["u","U"](["i","I"])?
       | <OCTAL_LITERAL> ["u","U"](["i","I"])?
-  >  
+  >
 |
   < LONG_LITERAL:
         <DECIMAL_LITERAL> ["l","L"]
       | <HEX_LITERAL> ["l","L"]
+      | <BINARY_LITERAL> ["l","L"]
       | <OCTAL_LITERAL> ["l","L"]
   >
 |
   < ULONG_LITERAL:
         <DECIMAL_LITERAL> ["u","U"]["l","L"]
       | <HEX_LITERAL> ["u","U"]["l","L"]
+      | <BINARY_LITERAL> ["u","U"]["l","L"]
       | <OCTAL_LITERAL> ["u","U"]["l","L"]
   >
 |
-  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+  < #BINARY_LITERAL: "0" ["b","B"] (["0"-"1"])+ >
+|
+  < #DECIMAL_LITERAL: "0" | ["1"-"9"] (["0"-"9"])* >
 |
   < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
 |
-  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+  < #OCTAL_LITERAL: "0" ["o","O"] (["0"-"7"])* >
 |
   < FLOAT_LITERAL:
         (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? ["f","F"]
@@ -1524,14 +1534,14 @@ void AllocationExpression():
 void ArrayAllocation():
 { debugPrint("ARRAY ALLOCATION"); }
 {  
-  "new" { jjtThis.setImage("new"); } ( PrimitiveType() | (ClassOrInterfaceType() [ TypeArguments() ])) ArrayDimsAndInits()
+  "new" ( PrimitiveType() | (ClassOrInterfaceType() [ TypeArguments() ])) ArrayDimsAndInits()
 }
 
 
 void ConstructorInvocation():
 { debugPrint("CONSTRUCTOR INVOCATION"); }
 {
- 	"new" { jjtThis.setImage("constructor"); } ClassOrInterfaceType() [ TypeArguments() ] Arguments()
+ 	"new" ClassOrInterfaceType() [ TypeArguments() ] Arguments()
  	/* No anonymous classes in Shadow */    
 }
 
@@ -1612,7 +1622,7 @@ void LocalVariableDeclaration():
 {
   ( "final" { modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.FINAL); } |
   "nullable" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.NULLABLE); })*
-  ( Type() | "auto" ) VariableDeclarator() ( "," VariableDeclarator() )*
+  ( Type() | "auto" { jjtThis.setImage("auto"); } ) VariableDeclarator() ( "," VariableDeclarator() )*
   {
      jjtThis.setModifiers(modifiers);
   }
@@ -1635,7 +1645,7 @@ void StatementExpression():
   	//Sequence() = Sequence() = ... = Sequence() = Sequence() or
   	//Sequence() = Sequence() = ... = Sequence() = PrimaryExpression() [for method calls] 
   	  LOOKAHEAD( Sequence() ) (LOOKAHEAD( Sequence() "=" ) Sequence() "=" )+
-  	  ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() ) { jjtThis.setImage("="); }
+  	  ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() )
 	| PrimaryExpression() [ AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
 }
 

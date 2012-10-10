@@ -93,8 +93,8 @@ public class TypeCollector extends BaseChecker
 		addType(Type.NULL);	
 		
 		addType(Type.ENUM);
-		addType(Type.ERROR);	
-		addType(Type.EXCEPTION);
+//		addType(Type.ERROR);	
+//		addType(Type.EXCEPTION);
 	}
 	
 	/**
@@ -595,7 +595,10 @@ public class TypeCollector extends BaseChecker
 			typeName = currentName + "." + node.getImage();
 		
 		if( lookupType(typeName) != null )
+		{
 			addError( node, Error.MULT_SYM, "Type " + typeName + " already defined" );
+			node.setType(Type.UNKNOWN);
+		}
 		else
 		{			
 			ClassInterfaceBaseType type = null;	

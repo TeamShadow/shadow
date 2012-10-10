@@ -80,9 +80,10 @@ public class FieldAndMethodChecker extends BaseChecker {
 						//if no constructors, add the default one
 						ASTConstructorDeclaration constructorNode = new ASTConstructorDeclaration(-1);
 						constructorNode.setModifiers(ModifierSet.PUBLIC);
-						classType.addMethod("constructor", new MethodSignature( classType, "constructor", 0, constructorNode ) );
+						MethodSignature constructorSignature = new MethodSignature(classType, "constructor", 0, constructorNode);
+						constructorNode.setMethodSignature(constructorSignature);
+						classType.addMethod("constructor", constructorSignature);
 						//note that the node is null for the default constructor, because nothing was made
-						// - in that case, modifiers ought to be moved to MethodSignature
 					}
 					
 					
