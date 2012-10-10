@@ -7,11 +7,11 @@ class Math
 
 	public static min( int x, int y ) => ( int )
 	{
-		return x < y ? x : y;
+		return x < y ? x , y;
 	}
 	public static max( int x, int y ) => ( int )
 	{
-		return x > y ? x : y;
+		return x > y ? x , y;
 	}
 
 	public static native abs( int x ) => ( uint );
@@ -25,8 +25,8 @@ class Math
 	public static native mod( double num, double denom ) => ( double );
 	public static native parts( double x ) => ( double, double );
 
-	public static final double PI = 3.141592653589793;
-	public static final double E = 2.718281828459045;
+	static final double PI = 3.141592653589793;
+	static final double E = 2.718281828459045;
 
 	public static native sin( double x ) => ( double );
 	public static native cos( double x ) => ( double );

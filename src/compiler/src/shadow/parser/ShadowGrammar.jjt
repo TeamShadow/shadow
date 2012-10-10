@@ -1356,7 +1356,7 @@ void PrimaryExpression():
 { debugPrint("PRIMARY EXPRESSION"); }
 {
  	  AllocationExpression()
-	| PrimaryPrefix() ( LOOKAHEAD(3) PrimarySuffix() )* [ LOOKAHEAD(2) "." AllocationExpression() ]
+	| PrimaryPrefix() ( LOOKAHEAD(PrimarySuffix()) PrimarySuffix() )* [ LOOKAHEAD(2) "." AllocationExpression() ]
 }
 
 void Sequence():
@@ -1391,7 +1391,7 @@ void PrimarySuffix():
 | MethodAccess()
 | FieldAccess()
 | PropertyAccess()
-| MethodCall()
+| LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
 }
 
 void QualifiedThis():

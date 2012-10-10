@@ -2,9 +2,6 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
-import shadow.typecheck.type.Type.Kind;
-
-
 /**
  * 
  * @author Barry Wittman

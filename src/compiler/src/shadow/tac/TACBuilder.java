@@ -1216,8 +1216,12 @@ public class TACBuilder implements ShadowParserVisitor
 
 	private void visitMethodCall(SimpleNode node)
 	{
-		TACMethod methodRef = new TACMethod(node.getImage(), (MethodType)node.
-				getType());
+		MethodType type;
+		if (node.jjtGetNumChildren() == 0)
+			type = new MethodType((ClassInterfaceBaseType)node.getType(), 0);
+		else
+			type = (MethodType)node.getType();
+		TACMethod methodRef = new TACMethod(node.getImage(), type);
 		List<TACOperand> params = new ArrayList<TACOperand>();
 		for (int i = 0; i < tree.getNumChildren(); i++)
 		{
@@ -1346,5 +1350,35 @@ public class TACBuilder implements ShadowParserVisitor
 		if (type.equals(Type.LONG))
 			return new TACLiteral(tree, "0l");
 		return new TACLiteral(tree, "null");
+	}
+	@Override
+	public Object visit(ASTQualifiedThis node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTArrayIndex node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTFieldAccess node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTMethodAccess node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTPropertyAccess node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
