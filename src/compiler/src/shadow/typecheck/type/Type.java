@@ -3,6 +3,7 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.Package;
 
@@ -302,6 +303,38 @@ public abstract class Type {
 		this.equals(INT) ||
 		this.equals(LONG);
 	}
+	
+	public boolean acceptsAssignment( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType ) 
+	{		
+		if( assignmentType == ASTAssignmentOperator.AssignmentType.EQUAL )
+			return rightType.isSubtype(this);
+		
+		switch( assignmentType  )
+		{
+		case PLUSASSIGN:			
+		case MINUSASSIGN:
+		case STARASSIGN:
+		case SLASHASSIGN:
+			return isNumerical() && rightType.isSubtype(this);			
+
+		case ANDASSIGN:
+		case ORASSIGN:
+		case XORASSIGN:
+		case MODASSIGN:
+		case LEFTSHIFTASSIGN:
+		case RIGHTSHIFTASSIGN:
+		case RIGHTROTATEASSIGN:
+		case LEFTROTATEASSIGN:
+			return isIntegral() && rightType.isSubtype(this);
+
+		case CATASSIGN:
+			return isString();
+		}
+		
+		return false;
+		
+	}
+	
 
 	//searches for inner classes that follow the name list starting at index i in names
 	//overridden by ClassInterfaceBaseType

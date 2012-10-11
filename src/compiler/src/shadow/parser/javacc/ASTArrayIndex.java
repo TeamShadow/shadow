@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTArrayIndex extends SimpleNode {
   public ASTArrayIndex(int id) {
     super(id);
@@ -19,4 +18,4 @@ class ASTArrayIndex extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=3bb535f8e8ee83d59d0843cd41519853 (do not edit this line) */
+/* JavaCC - OriginalChecksum=371a7e41da0f17226dae954084b1ad6e (do not edit this line) */

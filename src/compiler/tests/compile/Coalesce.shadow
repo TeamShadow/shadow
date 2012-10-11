@@ -1,0 +1,23 @@
+class Coalesce {
+
+	nullable Object o1;
+	Object o2 = new Object();
+	
+	private stuff1() => (nullable Object)
+	{
+		return o1;	
+	}
+	
+	private stuff2() => (int)
+	{
+		Object a = (o1 ?? o2);
+		Object b = (o1 ?? new Object() );
+		nullable Object c = (o1 ?? null);
+		
+		//Uncomment for errors
+		//Object d = (o2 ?? o1);
+		//Object e = o1;		
+		//nullable Foo foo = new Foo();
+		//Object f = (foo ?? "pigs");
+	}
+}

@@ -2,6 +2,9 @@ package shadow.typecheck.type;
 
 import java.util.List;
 
+import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.parser.javacc.ShadowParser.ModifierSet;
+
 public class PropertyType extends Type {
 	
 	private MethodType getter;
@@ -38,6 +41,56 @@ public class PropertyType extends Type {
 	{
 		return setter != null;
 	}	
+	
+	@Override
+	public boolean acceptsAssignment( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType )
+	{
+		if( !isSettable() )
+			return false;
+		
+		Type leftType = getSetType().getType();
+		
+		if( assignmentType == ASTAssignmentOperator.AssignmentType.EQUAL )
+			return rightType.isSubtype(leftType);
+		
+		/*	
+		a->x = b;			store
+		a->x += 3;			read and store
+		c->y = a->x += 4;	read and store and give back property
+		*/
+		
+		if( !isGettable() )
+			return false;
+		
+		if( !ModifierSet.isNullable(getSetType().getModifiers()) && ModifierSet.isNullable(getGetType().getModifiers()) )
+			return false;			
+			
+		Type getType = getGetType().getType();
+		
+		switch( assignmentType  )
+		{
+		case PLUSASSIGN:			
+		case MINUSASSIGN:
+		case STARASSIGN:
+		case SLASHASSIGN:
+			return leftType.isNumerical() && getType.isSubtype(leftType) && rightType.isSubtype(leftType);			
+
+		case ANDASSIGN:
+		case ORASSIGN:
+		case XORASSIGN:
+		case MODASSIGN:
+		case LEFTSHIFTASSIGN:
+		case RIGHTSHIFTASSIGN:
+		case RIGHTROTATEASSIGN:
+		case LEFTROTATEASSIGN:
+			return leftType.isIntegral() && getType.isSubtype(leftType) && rightType.isSubtype(leftType);
+
+		case CATASSIGN:
+			return leftType.isString() && getType.isString();
+		}
+		
+		return false;
+	}
 	
 	@Override
 	public boolean isSubtype(Type other) {

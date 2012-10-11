@@ -25,3 +25,7 @@ class String {}
 
 package shadow.standard;
 class String {}
+
+Combine package into the name:
+
+class shadow.standard@String {} 

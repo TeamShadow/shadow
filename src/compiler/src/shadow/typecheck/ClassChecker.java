@@ -11,6 +11,7 @@ import org.apache.commons.logging.Log;
 import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.parser.javacc.ASTActionExpression;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocationExpression;
 import shadow.parser.javacc.ASTArgumentList;
@@ -20,6 +21,7 @@ import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTArrayIndex;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
+import shadow.parser.javacc.ASTAssignment;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
@@ -31,6 +33,7 @@ import shadow.parser.javacc.ASTCheckExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
+import shadow.parser.javacc.ASTCoalesceExpression;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConcatenationExpression;
 import shadow.parser.javacc.ASTConditionalAndExpression;
@@ -76,6 +79,7 @@ import shadow.parser.javacc.ASTRightRotate;
 import shadow.parser.javacc.ASTRightShift;
 import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTSequence;
+import shadow.parser.javacc.ASTSequenceAssignment;
 import shadow.parser.javacc.ASTShiftExpression;
 import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.ASTSwitchLabel;
@@ -784,7 +788,7 @@ public class ClassChecker extends BaseChecker {
 		{
 			Type result = null;
 			
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 			{
 				result = node.jjtGetChild(i).getType();
 			
@@ -800,27 +804,70 @@ public class ClassChecker extends BaseChecker {
 		}
 	}
 	
+	public Object visit(ASTCoalesceExpression node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )
+		{
+			if( node.jjtGetNumChildren() == 1 )
+				pushUpType(node, secondVisit); //includes modifier push up
+			else
+			{				
+				
+				Type result = null;
+				boolean isNullable = true;
+				
+				for( int i = 0; i < node.jjtGetNumChildren(); i++ ) //cycle through types, downgrading to deepest subtype
+				{
+					Node child = node.jjtGetChild(i); 
+					Type type = child.getType();
+					int modifiers = child.getModifiers();
+					
+					if( !ModifierSet.isNullable(modifiers) )
+					{
+						isNullable = false;
+						if( i < node.jjtGetNumChildren() - 1 )  //only last child can be nullable
+						{	
+							addError(child, Error.INVL_TYP, "Only the last term in a coalesce expression can be non-nullable");
+							result = Type.UNKNOWN;
+							break;
+						}
+					}
+					
+					if( result == null )
+						result = type;				
+					else if( type.isSubtype(result) )
+						result = type;
+					else if( !result.isSubtype(type) ) //neither is subtype of other, panic!
+					{
+						addError(node, Error.INVL_TYP, "Types in coalesce expression do not match");
+						result = Type.UNKNOWN;
+						break;
+					}
+				}
+				
+				node.setType(result);
+				if( isNullable )
+					node.addModifier(ModifierSet.NULLABLE);
+			}			
+		}	
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-
-		visitConditional( node );
+		if(secondVisit)
+			visitConditional( node );		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTConditionalExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-
-		visitConditional( node );
+		if(secondVisit)
+			visitConditional( node );		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-
-		visitConditional( node );
+		if(secondVisit)
+			visitConditional( node );
 		return WalkType.POST_CHILDREN;
 	}	
 
@@ -880,56 +927,99 @@ public class ClassChecker extends BaseChecker {
 				
 		visitBitwise( node );
 		return WalkType.POST_CHILDREN;
-	}	
+	}
+	
+	private boolean isValidAssignment( Node left, Node right, ASTAssignmentOperator assignment )
+	{
+		Type leftType = left.getType();		 
+		Type rightType = right.getType();
+		int rightModifiers = 0;				
+		int leftModifiers = 0;			
+		
+		if( rightType instanceof PropertyType )
+		{
+			PropertyType propertyType = (PropertyType)rightType;
+			if( propertyType.isGettable() )
+			{
+				rightType = propertyType.getGetType().getType();
+				rightModifiers = propertyType.getGetType().getModifiers();
+			}
+			else
+			{
+				addError(right, Error.TYPE_MIS, "Property " + right + "does not have get access.");
+				return false;
+			}
+		}
+		else
+			rightModifiers = right.getModifiers();
+		
+						
+		if( leftType instanceof PropertyType )  
+		{					
+			PropertyType propertyType = (PropertyType)leftType;					
+			
+			if( propertyType.acceptsAssignment(rightType, assignment.getAssignmentType()) )
+				leftModifiers = propertyType.getSetType().getModifiers();
+			else
+			{
+				addError(left, Error.TYPE_MIS, "Property " + left + " cannot accept type " + rightType + " in this assignment");
+				return false;
+			}
+		}
+		else
+		{
+			leftModifiers = left.getModifiers();
+			
+			if( !leftType.acceptsAssignment(rightType, assignment.getAssignmentType())  )
+			{
+				addError(left, Error.TYPE_MIS, "Found type " + rightType + ", type " + leftType + " required");
+				return false;
+			}
+		}
+		
+		if( !ModifierSet.isAssignable(leftModifiers) )
+		{
+			addError(left, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
+			return false;
+		}
+		else if( ModifierSet.isFinal(leftModifiers) )
+		{
+			addError(left, Error.INVL_TYP, "Cannot assign a value to variable marked final");
+			return false;
+		}
+		else if( !ModifierSet.isNullable(leftModifiers) && ModifierSet.isNullable(rightModifiers) )
+		{
+			addError(left, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
+			return false;
+		}
+		
+		
+		return true;
+	}
 
-	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTAssignment node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
+				
+		Node left = node.jjtGetChild(0);
+		ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1); 
+		Node right = node.jjtGetChild(2);
 		
-		// if we only have 1 child, we just get the type from that child
-		if(node.jjtGetNumChildren() == 1)
-			pushUpType(node, secondVisit); //takes care of modifiers
-		
-		// we have 3 children so it's an assignment
-		else if(node.jjtGetNumChildren() == 3) 
+		if( isValidAssignment( left, right, assignment ) )
 		{
-			// get the two types, we have to go up to the parent to get them
-			Node child1 = node.jjtGetChild(0);
-			Type t1 = child1.getType();
-			if( !ModifierSet.isAssignable( child1.getModifiers() ))
-			{
-				addError(child1, Error.TYPE_MIS, "Cannot assign a value to expression: " + child1 );
-				node.setType(Type.UNKNOWN);
-				return WalkType.NO_CHILDREN;
-			}
+			node.setType(left.getType());
 			
-			ASTAssignmentOperator operator = (ASTAssignmentOperator) node.jjtGetChild(1);
-			
-			Node child2 = node.jjtGetChild(2);
-			Type t2 = child2.getType();
-			
-			//anything can be concatenated onto a String
-			if( operator.getAssignmentType().equals(ASTAssignmentOperator.AssignmentType.CATASSIGN) )
-			{
-				if( !t1.isString()  )
-				{
-					addError(child1, Error.TYPE_MIS, "Cannot concatenate onto type " + t1);
-					node.setType(Type.UNKNOWN);
-					return WalkType.NO_CHILDREN;
-				}				
-			}
-			else if( !t2.isSubtype(t1) )
-			{
-				addError(child1, Error.TYPE_MIS, "Found type " + t2 + ", type " + t1 + " required");
-				node.setType(Type.UNKNOWN);
-				return WalkType.NO_CHILDREN;
-			}
-					
-			node.setType(t1);	// set this node's type
-			node.setModifiers( child2.getModifiers() ); //is this meaningful?
+			if( !(left.getType() instanceof PropertyType) )
+				node.setModifiers(left.getModifiers());
 		}
-
+		else
+			node.setType(Type.UNKNOWN);
+	
 		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
+		return pushUpType(node, secondVisit); //takes care of modifiers
 	}
 	
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
@@ -998,87 +1088,85 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN; 
 	}
 	
-	private boolean isAssignable( SequenceType destination )
-	{
-		for( ModifiedType type : destination )
-			if( ModifierSet.isFinal(type.getModifiers()) )
-				return false;	
-		
-		return true;		
+	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
+			return WalkType.POST_CHILDREN;
 	}
 	
-
+	public Object visit(ASTSequenceAssignment node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+			return WalkType.POST_CHILDREN;
+		
+		Node child = node.jjtGetChild(0);		
+		
+		//No longer needed?
+		//if( child instanceof ASTSequence && child.getType() instanceof SequenceType ) //second check used for sequences containing a single item
+																					  //(which are treated as sequences by the parser but should 
+																					  //be regarded as single values by the typechecker
+					
+		Node current = 	child;
 	
-	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
+		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
+		{	
+			if( !(current instanceof ASTSequence) || !(((ASTSequence)current).isAssignable()) )
+			{
+				addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
+				break;
+			}
+			
+			SequenceType currentType = (SequenceType)(current.getType());
+			Node next = node.jjtGetChild(i);				
+			if( next.getType() instanceof SequenceType ) //never a property, because a property can only access a single value
+			{
+				SequenceType nextType = (SequenceType)(next.getType());
+				
+				if( currentType.canAccept( nextType ) )
+				{
+					if( !currentType.isAssignable() )
+					{
+						addError(current, Error.TYPE_MIS, "Sequence " + current + " has final values that cannot be assigned");
+						break;
+					}
+					
+					if( !currentType.acceptsNullables( nextType ) )
+					{
+						addError(current, Error.TYPE_MIS, "Cannot store nullable values from " + next + " into non-nullable variables in " + current);
+						break;							
+					}
+					
+					current = next;
+				}
+				else
+				{
+					addError(current, Error.TYPE_MIS, "Sequence " + nextType + " does not match " + currentType);
+					break;
+				}
+			}
+			else
+				addError(current, Error.TYPE_MIS, next.getType() + " must be of sequence type");
+		}
+
+		return WalkType.POST_CHILDREN;	
+	}
+
+	public Object visit(ASTActionExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		Node child = node.jjtGetChild(0);
-		
-		if( child instanceof ASTSequence && child.getType() instanceof SequenceType ) //second check used for sequences containing a single item
-																					  //(which are treated as sequences by the parser but should 
-																					  //be regarded as single values by the typechecker
-		{			
-			Node current = child;			
-		
-			for( int i = 1; i < node.jjtGetNumChildren(); i++ )
-			{	
-				if( !(current instanceof ASTSequence) || !(((ASTSequence)current).isAssignable()) )
-				{
-					addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
-					break;
-				}
-				
-				SequenceType currentType = (SequenceType)(current.getType());
-				Node next = node.jjtGetChild(i);
-				if( next.getType() instanceof SequenceType )
-				{
-					SequenceType nextType = (SequenceType)(next.getType());
-					if( currentType.canAccept( nextType ) )
-					{
-						if( !isAssignable( currentType ) )
-						{
-							addError(current, Error.TYPE_MIS, "Sequence " + current + " has final values that cannot be assigned");
-							break;
-						}
-						
-						if( !currentType.acceptsNullables( nextType ) )
-						{
-							addError(current, Error.TYPE_MIS, "Cannot store nullable values from " + next + " into non-nullable variables in " + current);
-							break;							
-						}
-						
-						current = next;
-					}
-					else
-					{
-						addError(current, Error.TYPE_MIS, "Sequence " + nextType + " does not match " + currentType);
-						break;
-					}
-				}
-				else
-					addError(current, Error.TYPE_MIS, next.getType() + "must be of sequence type");
-			}
-		}
-		else //primary expression
+		if( node.jjtGetNumChildren() == 3 ) //if there is assignment
 		{
-			if( node.jjtGetNumChildren() == 3 ) //only need to proceed if there is assignment
-			{
-				//ASTAssignmentOperator op = (ASTAssignmentOperator)node.jjtGetChild(1);
-				//Leave it for the TAC?
-				Type leftType = child.getType();
-				Node right = node.jjtGetChild(2); 
-				Type rightType = right.getType();
-				
-				if( !ModifierSet.isAssignable(child.getModifiers()) )
-					addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
-				else if( ModifierSet.isFinal(child.getModifiers()) )
-					addError(child, Error.INVL_TYP, "Cannot assign a value to variable marked final");
-				else if( !ModifierSet.isNullable(child.getModifiers()) && ModifierSet.isNullable(right.getModifiers()) )
-					addError(child, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");
-				else if( !rightType.isSubtype(leftType) )
-					addError(child, Error.TYPE_MIS, "Found type " + rightType + ", type " + leftType + " required");	
-			}
+			Node left = node.jjtGetChild(0);
+			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
+			Node right = node.jjtGetChild(2);
+			
+			isValidAssignment(left, right, assignment); 
+			//will issue appropriate errors
+			//since this is an ActionExpression, there is no type to set
+		}
+		else //did something actually happen?
+		{
+			ASTPrimaryExpression child = (ASTPrimaryExpression) node.jjtGetChild(0);
+			if( !child.isAction() )
+				addError(node, Error.INVL_TYP, "Statement does not express an action");
 		}
 		
 		return WalkType.POST_CHILDREN;	
@@ -1402,8 +1490,12 @@ public class ClassChecker extends BaseChecker {
 		}
 		else								//allocation or just prefix
 		{
-			node.setType(node.jjtGetChild(0).getType());
-			pushUpModifiers( node ); 			
+			Node child = node.jjtGetChild(0);
+			node.setType(child.getType());
+			pushUpModifiers( node );
+			
+			if( child instanceof ASTAllocationExpression )
+				node.setAction(true);
 		}		
 		
 		curPrefix.removeFirst();  //pop prefix type off stack
@@ -1703,6 +1795,13 @@ public class ClassChecker extends BaseChecker {
 			if( ModifierSet.isNullable(prefixNode.getModifiers()) )
 				addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
 			
+			Node child = node.jjtGetChild(0);
+			if( (child instanceof ASTPropertyAccess) || (child instanceof ASTMethodCall)  )
+			{
+				ASTPrimaryExpression parent = (ASTPrimaryExpression) node.jjtGetParent();
+				parent.setAction(true);
+			}
+			
 			pushUpType(node, secondVisit);
 			curPrefix.set(0, node); //so that a future suffix can figure out where it's at		
 		}
@@ -1715,6 +1814,7 @@ public class ClassChecker extends BaseChecker {
 	{
 		if( secondVisit )					
 		{
+			//TODO: check if "this" is accessible
 			Type prefixType = curPrefix.getFirst().getType();
 			node.setType(prefixType);
 		}
@@ -1863,7 +1963,7 @@ public class ClassChecker extends BaseChecker {
 				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
 				List<MethodSignature> methods = currentClass.getMethods(propertyName);
 				//TODO: Check for get and set
-				//unbound method (it gets bound when you supply arguments)
+
 				if( methods != null && methods.size() > 0 )
 				{
 					MethodType getter = null;
@@ -1874,7 +1974,10 @@ public class ClassChecker extends BaseChecker {
 						if( ModifierSet.isGet(signature.getModifiers()) )
 							getter = signature.getMethodType();
 						else if( ModifierSet.isSet(signature.getModifiers()) )
+						{
 							setter = signature.getMethodType();
+							node.addModifier(ModifierSet.ASSIGNABLE);
+						}
 					}
 					
 					node.setType( new PropertyType( getter, setter ) );										
@@ -2183,10 +2286,15 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )
 		{
 			Node child = node.jjtGetChild(0);
-			if( child instanceof ASTArrayInitializer )
+			if( child instanceof ASTArrayInitializer ) //check this closely
 			{
-				//TODO: finish this!!!			
-				
+				if( visitArrayInitializer( child )  )
+				{					
+					ArrayType arrayType = (ArrayType) child.getType();
+					if( node.getArrayDimensions().size() != arrayType.getDimensions() )
+						addError(child, Error.INVL_TYP, "Dimensions do not match array initializer");
+					//do we need more checks here?
+				}								
 			}
 			else
 			{
@@ -2206,50 +2314,51 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	private boolean visitArrayInitializer(Node node)
+	{
+		Node child = node.jjtGetChild(0);
+		Type result = child.getType();
+		
+		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, downgrading to deepest subtype
+		{
+			child = node.jjtGetChild(i);
+			Type type = child.getType();
+							
+			if( type.isSubtype(result) )					
+				result = type;				
+			else if( !result.isSubtype(type) ) //neither is subtype of other, panic!
+			{
+				addError(node, Error.INVL_TYP, "Types in array initializer list do not match");
+				node.setType(Type.UNKNOWN);
+				return false;
+			}
+		}
+
+			
+		ArrayList<Integer> dimensions = new ArrayList<Integer>();
+		Type baseType;
+		if( result instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType)result;
+			dimensions.add(arrayType.getDimensions() + 1 );
+			baseType = arrayType.getBaseType();
+		}
+		else
+		{
+			dimensions.add(1);
+			baseType = result;
+		}		
+		ArrayType arrayType = new ArrayType( baseType, dimensions );
+		node.setType(arrayType);
+		((ClassType)currentType).addReferencedType(arrayType);
+		
+		return true;		
+	}
+	
 	public Object visit(ASTArrayInitializer node, Boolean secondVisit) throws ShadowException 
 	{		
 		if( secondVisit )
-		{
-			Node child = node.jjtGetChild(0);
-			Type result = child.getType();
-			
-			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
-			{
-				child = node.jjtGetChild(i);
-				Type type = child.getType();
-								
-				if( type.isSubtype(result) )					
-					result = type;				
-				else if( !result.isSubtype(type) ) //neither is subtype of other, panic!
-				{
-					addError(node, Error.INVL_TYP, "Types in array initializer list do not match");
-					result = Type.UNKNOWN;
-					break;
-				}
-			}
-			
-			if( result == Type.UNKNOWN )
-				node.setType(result);
-			else
-			{
-				ArrayList<Integer> dimensions = new ArrayList<Integer>();
-				Type baseType;
-				if( result instanceof ArrayType )
-				{
-					ArrayType arrayType = (ArrayType)result;
-					dimensions.add(arrayType.getDimensions() + 1 );
-					baseType = arrayType.getBaseType();
-				}
-				else
-				{
-					dimensions.add(1);
-					baseType = result;
-				}		
-				ArrayType arrayType = new ArrayType( baseType, dimensions );
-				node.setType(arrayType);
-				((ClassType)currentType).addReferencedType(arrayType);
-			}			
-		}		
+			visitArrayInitializer(node);		
 	
 		return WalkType.POST_CHILDREN;
 	}
@@ -2498,12 +2607,46 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;	
 	}
+	
 
 	// Everything below here are visitors to push up the type
 
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
-		return pushUpType(node, secondVisit); 
+		if( !secondVisit )
+			return WalkType.POST_CHILDREN;
+		
+		Node child = node.jjtGetChild(0);
+		
+		if( child instanceof ASTExpression )
+		{
+			Type childType = child.getType(); 
+			if( childType instanceof PropertyType )
+			{
+				PropertyType propertyType = (PropertyType) childType;
+				if( propertyType.isGettable() )
+				{
+					node.setType(propertyType.getGetType().getType());
+					node.setModifiers(propertyType.getGetType().getModifiers());					
+				}
+				else
+				{
+					node.setType(Type.UNKNOWN);
+					addError(child, Error.TYPE_MIS, "Property " + child + "does not have get access.");
+				}				
+			}
+			else
+			{
+				node.setType(child.getType());
+				node.setModifiers(child.getModifiers());
+			}			
+		}
+		else //array initializer
+		{
+			visitArrayInitializer( node );			
+		}
+		
+		return WalkType.POST_CHILDREN; 
 	}
 	
 	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException

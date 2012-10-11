@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTFieldAccess extends SimpleNode {
   public ASTFieldAccess(int id) {
     super(id);
@@ -19,4 +18,4 @@ class ASTFieldAccess extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=2b23170f01de9d84222d6fdd4b6b2854 (do not edit this line) */
+/* JavaCC - OriginalChecksum=9a2515ab69e300a4a563d54d725734ec (do not edit this line) */

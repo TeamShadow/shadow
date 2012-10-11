@@ -1354,29 +1354,53 @@ public class TACBuilder implements ShadowParserVisitor
 	@Override
 	public Object visit(ASTQualifiedThis node, Boolean data)
 			throws ShadowException {
-		// TODO Auto-generated method stub
+		// TODO: Make this work
 		return null;
 	}
 	@Override
 	public Object visit(ASTArrayIndex node, Boolean data)
 			throws ShadowException {
-		// TODO Auto-generated method stub
+		// TODO: Make this work
 		return null;
 	}
 	@Override
 	public Object visit(ASTFieldAccess node, Boolean data)
 			throws ShadowException {
-		// TODO Auto-generated method stub
+		// TODO: Make this work
 		return null;
 	}
 	@Override
 	public Object visit(ASTMethodAccess node, Boolean data)
 			throws ShadowException {
-		// TODO Auto-generated method stub
+		// TODO: Make this work
 		return null;
 	}
 	@Override
 	public Object visit(ASTPropertyAccess node, Boolean data)
+			throws ShadowException {
+		// TODO: Make this work
+		return null;
+	}	
+	@Override
+	public Object visit(ASTCoalesceExpression node, Boolean data)
+			throws ShadowException {
+		// TODO: Make this work
+		return null;
+	}
+	@Override
+	public Object visit(ASTAssignment node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTSequenceAssignment node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTActionExpression node, Boolean data)
 			throws ShadowException {
 		// TODO Auto-generated method stub
 		return null;

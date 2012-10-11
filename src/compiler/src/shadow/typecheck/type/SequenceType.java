@@ -117,6 +117,15 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		
 		return builder.toString();
 	}
+	
+	public boolean isAssignable()
+	{
+		for( ModifiedType type : this )
+			if( ModifierSet.isFinal(type.getModifiers()) )
+				return false;	
+		
+		return true;		
+	}
 
 	public boolean equals(Object o)
 	{

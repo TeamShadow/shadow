@@ -5,12 +5,25 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTPrimaryExpression extends SimpleNode {
+	
+	private boolean action = false;
+	
   public ASTPrimaryExpression(int id) {
     super(id);
   }
 
   public ASTPrimaryExpression(ShadowParser p, int id) {
     super(p, id);
+  }
+  
+  public void setAction(boolean action)
+  {
+	  this.action = action;	  
+  }
+  
+  public boolean isAction()
+  {
+	  return action;
   }
 
 

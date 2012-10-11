@@ -199,7 +199,8 @@ public class ShadowParser
 					updatedModifiers = removeModifier(modifiers, STATIC);
 
 				if( updatedModifiers != 0 )
-					throw new ParseException("A constant cannot have any modifiers other than static");			}			 			
+					throw new ParseException("A constant cannot have any modifiers other than static");
+			}			 			
 		}
 
 		public static void checkMethodModifiers( int modifiers ) throws ParseException
@@ -560,6 +561,7 @@ TOKEN :
 | < BANG: "!" >
 | < TILDE: "~" >
 | < HOOK: "?" >
+| < COALESCE: "??" >
 | < COLON: ":" >
 | < EQ: "==" >
 | < LE: "<=" >
@@ -894,14 +896,15 @@ void VariableDeclaratorId():
 void VariableInitializer():
 { debugPrint("VARIABLE INITIALIZER"); }
 {
-  ArrayInitializer()
+ "{" ArrayInitializer() ( LOOKAHEAD(2) "," ArrayInitializer() )*  [ "," ] "}"
 | Expression()
 }
 
 void ArrayInitializer():
 { debugPrint("ARRAY INITIALIZER"); }
-{
-  "{" [ VariableInitializer() ( LOOKAHEAD(2) "," VariableInitializer() )* ] [ "," ] "}"
+{  	
+ "{" ArrayInitializer() ( LOOKAHEAD(2) "," ArrayInitializer() )*  [ "," ] "}"
+|  ConditionalExpression()
 }
 
 void MethodDeclaration(int modifiers):
@@ -999,7 +1002,8 @@ void ExplicitConstructorInvocation():
   LOOKAHEAD("this" Arguments() ";")
   "this" Arguments() ";"
 |
-  [ LOOKAHEAD(2) PrimaryExpression() "." ] "super" Arguments() ";"
+  /*[ LOOKAHEAD(2) PrimaryExpression() "." ]*/ "super" Arguments() ";"
+  //what is that for?  Thing.super()?
 }
 
 void Initializer():
@@ -1166,7 +1170,19 @@ void Expression():
  */
 { debugPrint("EXPRESSION"); }
 {
-  ConditionalExpression() [ LOOKAHEAD(2) AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
+
+	LOOKAHEAD( Assignment() ) Assignment()
+|   ConditionalExpression() 
+  
+  //ConditionalExpression() [ LOOKAHEAD(2) AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
+}
+
+void Assignment() :
+{
+  debugPrint("Assignment");
+}
+{
+  PrimaryExpression() AssignmentOperator()  Expression()
 }
 
 void AssignmentOperator():
@@ -1191,7 +1207,13 @@ void AssignmentOperator():
 void ConditionalExpression():
 {}
 {
-  ConditionalOrExpression() [ "?" { jjtThis.setImage("?:"); } ConditionalExpression() "," ConditionalExpression() ]
+  CoalesceExpression() [ "?" { jjtThis.setImage("?:"); } ConditionalExpression() "," ConditionalExpression() ]
+}
+
+void CoalesceExpression():
+{}
+{
+  ConditionalOrExpression()  ( "??" ConditionalOrExpression() )*
 }
 
 void ConditionalOrExpression():
@@ -1339,7 +1361,6 @@ void CastExpression():
     jjtThis.setImage("cast< >");   
 }
 {
- // LOOKAHEAD("cast" "<" PrimitiveType()) "cast" "<" PrimitiveType() ">" UnaryExpression() |
  "cast" "<" Type() ">" PrimaryExpression()
 }
 
@@ -1397,23 +1418,29 @@ void PrimarySuffix():
 void QualifiedThis():
 {
   	debugPrint("QUALIFIED THIS");
-	Token t;}
+	Token t;
+}
 {
-  ":" "this" { jjtThis.setImage("this"); } // when does this even happen?  When you have inner classes, you sometimes need to know Outer.this or Inner.this}
+  ":" "this" { jjtThis.setImage("this"); } // when does this even happen?  When you have inner classes, you sometimes need to know Outer.this or Inner.this
+}
 
 void ArrayIndex():
 {
   debugPrint("ARRAY INDEX");
-  Token t;}
+  Token t;
+}
 {
-  "[" { jjtThis.addToImage('['); } ConditionalExpression() ("," ConditionalExpression())* "]"}
+  "[" { jjtThis.addToImage('['); } ConditionalExpression() ("," ConditionalExpression())* "]"
+}
 
 void FieldAccess():
 {
   	debugPrint("FIELD ACCESS");
-	Token t;}
+	Token t;
+}
 {
-  ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //field}
+  ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //field
+}
 
 void MethodAccess():
 {
@@ -1635,18 +1662,26 @@ void EmptyStatement():
 }
 
 void StatementExpression():
-/*
- * The last expansion of this production accepts more than the legal
- * Shadow expansions for StatementExpression.
- */
 { debugPrint("STATEMENT EXPRESSION"); }
 {
-  	//Looks like hell, but sequence expansions are either:
+  		LOOKAHEAD( SequenceAssignment() ) SequenceAssignment()
+	| 	ActionExpression()
+}
+
+void SequenceAssignment() :
+{ debugPrint("SEQUENCE ASSIGNMENT"); }
+{
+	//Looks like hell, but sequence expansions are either:
   	//Sequence() = Sequence() = ... = Sequence() = Sequence() or
   	//Sequence() = Sequence() = ... = Sequence() = PrimaryExpression() [for method calls] 
-  	  LOOKAHEAD( Sequence() ) (LOOKAHEAD( Sequence() "=" ) Sequence() "=" )+
-  	  ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() )
-	| PrimaryExpression() [ AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
+  	( LOOKAHEAD( Sequence() "=" ) Sequence() "=" )+
+  	( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() ) { jjtThis.setImage("="); }  
+}
+
+void ActionExpression() :
+{ debugPrint("ACTION EXPRESSION"); }
+{
+	PrimaryExpression() [ AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
 }
 
 void SwitchStatement():
@@ -1662,27 +1697,8 @@ void SwitchLabel():
 	Token t;
 }
 {
-   /*LOOKAHEAD("case" PrimaryExpression())*/
-
-   "case" "(" PrimaryExpression() ("," PrimaryExpression())* ")"
-
-/*
-   ( t = <IDENTIFIER>
-  | t = <BYTE_LITERAL>
-  | <UBYTE_LITERAL>
-  | <SHORT_LITERAL>
-  | <USHORT_LITERAL>
-  | <INT_LITERAL>
-  | <UINT_LITERAL>  
-  | <LONG_LITERAL>
-  | <ULONG_LITERAL>
-  | <CODE_LITERAL>
-  | <STRING_LITERAL:
-*/
-
-
-|
-  "default"
+  "case" "(" PrimaryExpression() ("," PrimaryExpression())* ")"
+| "default"
 }
 
 void IfStatement():
