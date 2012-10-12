@@ -210,4 +210,15 @@ public abstract class ClassInterfaceBaseType extends Type
 	}
 	
 	public abstract ClassInterfaceBaseType replace(List<TypeParameter> values, List<ModifiedType> replacements );
+
+	public boolean encloses(Type type) {
+		if( equals(this) )
+			return true;
+		
+		ClassInterfaceBaseType outer = type.getOuter();
+		if( outer == null )
+			return false;		
+		
+		return encloses(outer);
+	}
 }

@@ -39,7 +39,7 @@ public class SimpleTest
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("pretesting/Constructor.shadow"); 		
+		args.add("tests/compile/OutsideProperty.shadow"); 		
 		int error = Main.test(args.toArray(new String[] { }));
 		System.out.println("Error code: " + error);
 	}

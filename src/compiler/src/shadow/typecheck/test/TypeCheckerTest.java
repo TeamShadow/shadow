@@ -87,6 +87,11 @@ public class TypeCheckerTest {
 		args.add("tests/compile/Child.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+		
+		@Test public void testCoalesce() throws Exception {
+		args.add("tests/compile/Coalesce.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
 
 		@Test public void testComplexAccess() throws Exception {
 		args.add("tests/compile/ComplexAccess.shadow");
@@ -177,9 +182,19 @@ public class TypeCheckerTest {
 		args.add("tests/compile/MethodCall.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	
+	@Test public void testMethodCalls() throws Exception {
+		args.add("tests/compile/MethodCalls.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
 
 	@Test public void testOperations() throws Exception {
 		args.add("tests/compile/Operations.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+	
+	@Test public void testOutsideProperty() throws Exception {
+		args.add("tests/compile/OutsideProperty.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
@@ -192,6 +207,17 @@ public class TypeCheckerTest {
 		args.add("tests/compile/Private.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	
+	@Test public void testProperty() throws Exception {
+		args.add("tests/compile/Property.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+	
+	@Test public void testScope() throws Exception {
+		args.add("tests/compile/Scope.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
 
 	@Test public void testSequences() throws Exception {
 		args.add("tests/compile/Sequences.shadow");

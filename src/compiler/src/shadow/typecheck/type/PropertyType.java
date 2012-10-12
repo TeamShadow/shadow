@@ -135,5 +135,30 @@ public class PropertyType extends Type {
 		
 		return new PropertyType( replacedGetter, replacedSetter );
 	}
+	
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder("[");
+		
+		if( isGettable() )
+		{
+			sb.append("get: ");
+			sb.append(getGetType().getType());
+		}
+		
+		if( isGettable() && isSettable() )
+		{
+			sb.append(", ");
+		}
+		
+		if( isSettable() )
+		{
+			sb.append("set: ");
+			sb.append(getSetType().getType());
+		}
+		sb.append("]");
+		return sb.toString();		
+	}
 
 }

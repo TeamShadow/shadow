@@ -1,0 +1,23 @@
+class Property
+{
+	
+	get int a;
+	set int b;
+	get set String c = "sandwich";
+		
+	
+	public stuff() => ()
+	{
+		a = 5;
+		b = 6;
+		c = "walter";
+		
+		int x = this->a;
+		this->b = 7;
+		this->c #= " mountain"; 
+		
+		this:a = 10;
+		this:b = 500;
+		this:c = "change";		 
+	}
+}

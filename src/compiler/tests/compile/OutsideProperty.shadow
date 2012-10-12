@@ -1,0 +1,13 @@
+class OutsideProperty
+{	
+	static public stuff() => ()
+	{
+		Property p = new Property();
+		
+		int x = p->a;
+		p->b = 7;
+		p->c #= " mountain";
+		
+		p->b = cast<int>(p->c.getLength()) + 4;		
+	}
+}

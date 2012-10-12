@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.org.apache.bcel.internal.classfile.Signature;
-
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTBlock;
@@ -48,6 +46,7 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
@@ -119,8 +118,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 									methodNode.setModifiers(ModifierSet.PUBLIC | ModifierSet.GET );
 									if( ModifierSet.isStatic(fieldModifiers) )
 										methodNode.addModifier(ModifierSet.STATIC );
-									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
-									methodType.addReturn(field.getValue());									
+									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
+									int modifiers = field.getValue().getModifiers();
+									modifiers = ModifierSet.removeModifier(modifiers, ModifierSet.GET);
+									modifiers = ModifierSet.removeModifier(modifiers, ModifierSet.FIELD);
+									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
+									methodType.addReturn(modifiedType);									
 									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
 								}								
 							}
@@ -134,9 +137,14 @@ public class FieldAndMethodChecker extends BaseChecker {
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
 									methodNode.setModifiers(ModifierSet.PUBLIC | ModifierSet.SET );
 									if( ModifierSet.isStatic(fieldModifiers) )
-										methodNode.addModifier(ModifierSet.STATIC );
+										methodNode.addModifier(ModifierSet.STATIC );									
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
-									methodType.addParameter("value", field.getValue());									
+									int modifiers = field.getValue().getModifiers();
+									modifiers = ModifierSet.removeModifier(modifiers, ModifierSet.SET);
+									modifiers = ModifierSet.removeModifier(modifiers, ModifierSet.FIELD);
+									modifiers = ModifierSet.addModifier(modifiers, ModifierSet.ASSIGNABLE);
+									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
+									methodType.addParameter("value", modifiedType );									
 									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
 								}								
 							}

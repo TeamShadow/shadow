@@ -962,7 +962,7 @@ public class ClassChecker extends BaseChecker {
 				leftModifiers = propertyType.getSetType().getModifiers();
 			else
 			{
-				addError(left, Error.TYPE_MIS, "Property " + left + " cannot accept type " + rightType + " in this assignment");
+				addError(left, Error.TYPE_MIS, "Property with type " + propertyType + " cannot accept type " + rightType + " in this assignment");
 				return false;
 			}
 		}
@@ -1813,10 +1813,22 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTQualifiedThis node, Boolean secondVisit) throws ShadowException 
 	{
 		if( secondVisit )					
-		{
-			//TODO: check if "this" is accessible
-			Type prefixType = curPrefix.getFirst().getType();
-			node.setType(prefixType);
+		{	
+			node.setType(Type.UNKNOWN); //start with unknown, set if found
+				
+			if( currentMethod != null && ModifierSet.isStatic(currentMethod.getModifiers())  )					
+				addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);				
+			
+			if( ModifierSet.isTypeName(curPrefix.getFirst().getModifiers()))
+			{			
+				Type prefixType = curPrefix.getFirst().getType();				
+				if( currentType.encloses( prefixType )  )				
+					node.setType(prefixType);
+				else				
+					addError(node, Error.INVL_TYP, "Prefix of qualified this is not the current class or an enclosing class");
+			}
+			else
+				addError(node, Error.INVL_TYP, "Prefix of qualified this is not a type name");
 		}
 		return WalkType.POST_CHILDREN;
 	}
@@ -1824,8 +1836,10 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTArrayIndex node, Boolean secondVisit) throws ShadowException 
 	{
 		if( secondVisit )
-		{				
-			Type prefixType = curPrefix.getFirst().getType();
+		{			
+			Node prefixNode = curPrefix.getFirst();
+			Type prefixType = resolveType( prefixNode );
+						
 			
 			if( (prefixType instanceof ArrayType) )
 			{
@@ -1877,7 +1891,7 @@ public class ClassChecker extends BaseChecker {
 		{			
 			//always part of a suffix, thus always has a prefix
 			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = prefixNode.getType();
+			Type prefixType = resolveType( prefixNode );
 			String methodName = node.getImage();
 			
 			if( prefixType instanceof ClassInterfaceBaseType )
@@ -1907,16 +1921,16 @@ public class ClassChecker extends BaseChecker {
 		{	
 			//always part of a suffix, thus always has a prefix
 			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = prefixNode.getType();
+			Type prefixType = resolveType( prefixNode );
 			String fieldName = node.getImage();
 			boolean isStatic = ModifierSet.isTypeName(prefixNode.getModifiers());
 			
 			if( prefixType instanceof ClassInterfaceBaseType )
 			{
-				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
-				if( currentClass.containsField( fieldName ) )
+				ClassInterfaceBaseType classType = (ClassInterfaceBaseType)prefixType;
+				if( classType.containsField( fieldName ) )
 				{
-					Node field = currentClass.getField(fieldName);
+					Node field = classType.getField(fieldName);
 					
 					if( !fieldIsAccessible( field, currentType ))
 					{
@@ -1954,15 +1968,15 @@ public class ClassChecker extends BaseChecker {
 		{		
 			//always part of a suffix, thus always has a prefix
 			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = prefixNode.getType();
+			Type prefixType = resolveType( prefixNode );
 			String propertyName = node.getImage();
 			boolean isStatic = ModifierSet.isTypeName(prefixNode.getModifiers());
+			
 			
 			if( prefixType instanceof ClassInterfaceBaseType )
 			{
 				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
-				List<MethodSignature> methods = currentClass.getMethods(propertyName);
-				//TODO: Check for get and set
+				List<MethodSignature> methods = currentClass.getMethods(propertyName);				
 
 				if( methods != null && methods.size() > 0 )
 				{
@@ -1986,8 +2000,7 @@ public class ClassChecker extends BaseChecker {
 				{
 					addError(node, Error.UNDEC_VAR, "Property " + propertyName + " not found");
 					node.setType( Type.UNKNOWN ); //if got here, some error
-				}
-				
+				}				
 			}
 			else
 			{
@@ -1999,14 +2012,33 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	private Type resolveType( Node node ) //dereferences into PropertyType for getter, if needed
+	{
+		Type type = node.getType();
+		
+		if( type instanceof PropertyType )
+		{
+			PropertyType propertyType = (PropertyType) type;
+			if( propertyType.isGettable() )
+				return propertyType.getGetType().getType();
+			else
+			{
+				addError(node, Error.TYPE_MIS, "Property " + node + "does not have get access.");
+				return Type.UNKNOWN;
+			}				
+		}
+		
+		return type;
+	}
+	
 	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException	
 	{		
 		if( secondVisit )
 		{			
 			//always part of a suffix, thus always has a prefix
 			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = prefixNode.getType();
-			String propertyName = node.getImage();
+			Type prefixType = resolveType( prefixNode );
+				
 			
 			int start = 0;
 			boolean hasArguments = false;
@@ -2150,8 +2182,16 @@ public class ClassChecker extends BaseChecker {
 	public static boolean fieldIsAccessible( Node field, Type type )
 	{
 		//inside class or constant
-		if ( field.getEnclosingType() == type || ModifierSet.isConstant(field.getModifiers()) ) 
+		if ( ModifierSet.isConstant(field.getModifiers()) ) 
 			return true;		
+		
+		while( type != null )
+		{
+			if( field.getEnclosingType() == type )
+				return true;
+			
+			type = type.getOuter();
+		}
 		
 		//No longer meaningful since all fields are private
 		/*
