@@ -2617,34 +2617,27 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		
 		Node child = node.jjtGetChild(0);
-		
-		if( child instanceof ASTExpression )
+		Type childType = child.getType(); 
+		if( childType instanceof PropertyType )
 		{
-			Type childType = child.getType(); 
-			if( childType instanceof PropertyType )
+			PropertyType propertyType = (PropertyType) childType;
+			if( propertyType.isGettable() )
 			{
-				PropertyType propertyType = (PropertyType) childType;
-				if( propertyType.isGettable() )
-				{
-					node.setType(propertyType.getGetType().getType());
-					node.setModifiers(propertyType.getGetType().getModifiers());					
-				}
-				else
-				{
-					node.setType(Type.UNKNOWN);
-					addError(child, Error.TYPE_MIS, "Property " + child + "does not have get access.");
-				}				
+				node.setType(propertyType.getGetType().getType());
+				node.setModifiers(propertyType.getGetType().getModifiers());					
 			}
 			else
 			{
-				node.setType(child.getType());
-				node.setModifiers(child.getModifiers());
-			}			
+				node.setType(Type.UNKNOWN);
+				addError(child, Error.TYPE_MIS, "Property " + child + "does not have get access.");
+			}				
 		}
-		else //array initializer
+		else
 		{
-			visitArrayInitializer( node );			
-		}
+			node.setType(child.getType());
+			node.setModifiers(child.getModifiers());
+		}			
+
 		
 		return WalkType.POST_CHILDREN; 
 	}

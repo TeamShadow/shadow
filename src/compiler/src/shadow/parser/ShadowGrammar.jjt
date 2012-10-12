@@ -895,16 +895,16 @@ void VariableDeclaratorId():
 
 void VariableInitializer():
 { debugPrint("VARIABLE INITIALIZER"); }
-{
- "{" ArrayInitializer() ( LOOKAHEAD(2) "," ArrayInitializer() )*  [ "," ] "}"
+{ 
+  ArrayInitializer()
 | Expression()
 }
 
 void ArrayInitializer():
 { debugPrint("ARRAY INITIALIZER"); }
 {  	
- "{" ArrayInitializer() ( LOOKAHEAD(2) "," ArrayInitializer() )*  [ "," ] "}"
-|  ConditionalExpression()
+  LOOKAHEAD(2) "{" ArrayInitializer() ( LOOKAHEAD(2) "," ArrayInitializer() )*  [ "," ] "}"
+| "{" ConditionalExpression() ( LOOKAHEAD(2) "," ConditionalExpression() )*  [ "," ] "}"
 }
 
 void MethodDeclaration(int modifiers):
@@ -1376,6 +1376,7 @@ void CheckExpression():
 void PrimaryExpression():
 { debugPrint("PRIMARY EXPRESSION"); }
 {
+  
  	  AllocationExpression()
 	| PrimaryPrefix() ( LOOKAHEAD(PrimarySuffix()) PrimarySuffix() )* [ LOOKAHEAD(2) "." AllocationExpression() ]
 }
@@ -1383,7 +1384,7 @@ void PrimaryExpression():
 void Sequence():
 { debugPrint("SEQUENCE"); }
 {
-	"(" ConditionalExpression() ("," ConditionalExpression() )* ")"
+	"(" ConditionalExpression() ("," ConditionalExpression() )+ ")"
 }
 
 void PrimaryPrefix():
@@ -1395,10 +1396,10 @@ void PrimaryPrefix():
   Literal()
 | "this" { jjtThis.setImage("this"); }
 | "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
+| CheckExpression()
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | LOOKAHEAD( Type() "." "class" ) Type() "." "class" { jjtThis.setImage("class"); }
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-| CheckExpression()
 }
 
 void PrimarySuffix():
@@ -1421,7 +1422,7 @@ void QualifiedThis():
 	Token t;
 }
 {
-  ":" "this" { jjtThis.setImage("this"); } // when does this even happen?  When you have inner classes, you sometimes need to know Outer.this or Inner.this
+  ":" "this" { jjtThis.setImage("this"); } // When you have inner classes, you sometimes need to know Outer:this or Inner:this
 }
 
 void ArrayIndex():
@@ -1466,7 +1467,7 @@ void MethodCall():
 	Token t;
 }
 {
-    [ TypeArguments() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+  [ TypeArguments() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
 }
 
 
