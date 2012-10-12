@@ -1,8 +1,6 @@
-package shadow.hello;
-
 import shadow.io@Console;
 
-class HelloWorld
+class shadow.hello@HelloWorld
 {
 	public nullable HelloWorld self = null;
 	public uint times = 5ui;

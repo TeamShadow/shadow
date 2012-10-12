@@ -1,6 +1,4 @@
-package shadow.hello;
-
-class Container
+class shadow.hello@Container
 {
 	// Sorry for the horribly named variables
 	public Container c;

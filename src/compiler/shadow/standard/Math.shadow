@@ -1,6 +1,4 @@
-package shadow.standard;
-
-class Math
+class shadow.standard@Math
 {
 
 	private constructor() { }

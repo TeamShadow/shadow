@@ -1,6 +1,4 @@
-package shadow.utility;
-
-class Random {
+class shadow.utility@Random {
 	int value = 42;
 	public nextInt() => (int)
 	{

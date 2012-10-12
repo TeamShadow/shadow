@@ -1,6 +1,4 @@
-package shadow.io;
-
-class Console
+class shadow.io@Console
 {
 	private constructor() { }
 

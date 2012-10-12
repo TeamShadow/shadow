@@ -1,6 +1,4 @@
-package shadow.test;
-
-class ConsoleTest
+class shadow.test@ConsoleTest
 {
 	public static main() => ()
 	{

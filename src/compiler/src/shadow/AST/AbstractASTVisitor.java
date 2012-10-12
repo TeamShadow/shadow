@@ -15,12 +15,14 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
-
+	
+	/*
 	@Override
 	public Object visit(ASTPackageDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
+	*/
 
 	@Override
 	public Object visit(ASTImportDeclaration node, Boolean secondVisit)

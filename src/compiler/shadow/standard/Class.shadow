@@ -1,6 +1,4 @@
-package shadow.standard;
-
-immutable final class Class
+immutable final class shadow.standard@Class
 {
 	// ubyte type = 0;
 	nullable Class superClass = null;

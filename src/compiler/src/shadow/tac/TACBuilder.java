@@ -98,12 +98,14 @@ public class TACBuilder implements ShadowParserVisitor
 		return PRE_CHILDREN;
 	}
 
+	/*
 	@Override
 	public Object visit(ASTPackageDeclaration node, Boolean secondVisit)
 			throws ShadowException
 	{
 		return PRE_CHILDREN;
 	}
+	*/
 
 	@Override
 	public Object visit(ASTImportDeclaration node, Boolean secondVisit)

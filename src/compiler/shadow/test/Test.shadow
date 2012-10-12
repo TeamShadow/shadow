@@ -1,9 +1,7 @@
-package shadow.test;
-
 import shadow.standard@Array;
 import shadow.io@Console;
 
-class Test
+class shadow.test@Test
 {
 	nullable Test test = this;
 	public static main() => ()

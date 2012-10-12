@@ -1,9 +1,7 @@
-package shadow.standard;
-
 //interface Parsable
 //{}
 
-interface Parsable<T>
+interface shadow.standard@Parsable<T>
 {
 	public static parse<T>(String value) => (T);
 }

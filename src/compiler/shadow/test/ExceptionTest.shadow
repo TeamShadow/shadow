@@ -1,9 +1,7 @@
-package shadow.test;
-
 import shadow.standard@Error;
 import shadow.io@Console;
 
-class ExceptionTest
+class shadow.test@ExceptionTest
 {
 	private nullable Error e;
 	public static throwException() => () {

@@ -347,7 +347,7 @@ TOKEN :
 | < NULL: "null" >
 | < NULLABLE: "nullable" >
 | < OR: "or" >
-| < PACKAGE: "package">
+//| < PACKAGE: "package">
 | < PRIVATE: "private" >
 | < PROTECTED: "protected" >
 | < PUBLIC: "public" >
@@ -625,7 +625,7 @@ TOKEN :
 ASTCompilationUnit CompilationUnit():
 {}
 {
-  [ PackageDeclaration() ]
+  //[ PackageDeclaration() ]
   ( ImportDeclaration() )*
   ( TypeDeclaration() )*
   <EOF>
@@ -635,11 +635,14 @@ ASTCompilationUnit CompilationUnit():
 	}
 }
 
+
+/*
 void PackageDeclaration():
 {}
 {
   "package" UnqualifiedName() ";"
 }
+*/
 
 void ImportDeclaration():
 {}
@@ -694,8 +697,8 @@ void TypeDeclaration():
    
 }
 {
-  ";"
-| modifiers = Modifiers()
+  //";" //why allow the semicolon?
+/*|*/ modifiers = Modifiers()
   ( ClassOrInterfaceDeclaration(modifiers)
   | EnumDeclaration(modifiers)
   | AnnotationTypeDeclaration(modifiers)
@@ -711,7 +714,9 @@ void ViewDeclaration(int modifiers):
    ModifierSet.checkViewModifiers( modifiers );	
 }
 {
-	"view" t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }
+	"view"
+	[ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //can we specify packages for views?
+	t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }
 	"{"        
         ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";" )+
     "}"
@@ -746,6 +751,8 @@ void ClassOrInterfaceDeclaration(int modifiers):
  	  jjtThis.setKind(TypeKind.INTERFACE); isInterface = true;
  	   ModifierSet.checkInterfaceModifiers( modifiers ); 	   
  	 } )
+
+  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //make this work
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   [ Version() ]
@@ -795,7 +802,10 @@ void EnumDeclaration(int modifiers):
 }
 {
 { jjtThis.setModifiers(modifiers); }
-  "enum" t = <IDENTIFIER> { jjtThis.setImage(t.image);  }
+
+  "enum"
+  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ]
+  t = <IDENTIFIER> { jjtThis.setImage(t.image);  }
   [ ImplementsList(false,false) ]
   EnumBody()
 }

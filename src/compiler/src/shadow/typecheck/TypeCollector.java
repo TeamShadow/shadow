@@ -589,6 +589,19 @@ public class TypeCollector extends BaseChecker
 	{		 
 		String typeName;
 		
+		if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTUnqualifiedName) )
+		{
+			
+			if( currentType == null )
+			{
+				String name = node.jjtGetChild(0).getImage();									
+				currentPackage = packageTree.addFullyQualifiedPackage(name, typeTable);
+			}
+			else
+				addError( node, Error.INVL_TYP, "Only outermost classes can define a package" );			
+		}
+		
+		
 		if( currentType == null )
 			typeName = currentName + node.getImage(); //package name is separate
 		else
@@ -937,6 +950,7 @@ public class TypeCollector extends BaseChecker
 	
 	
 	
+	/*
 	public Object visit(ASTPackageDeclaration node, Boolean secondVisit) throws ShadowException
 	{
 		if( secondVisit )
@@ -947,6 +961,7 @@ public class TypeCollector extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;
 	}
+	*/
 	
 	@Override
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException

@@ -1,9 +1,7 @@
-package shadow.hello;
-
 import shadow.standard@Math;
 import shadow.io@Console;
 
-class MathTest
+class shadow.hello@MathTest
 {
 
 	public static main( String[] args ) => ()

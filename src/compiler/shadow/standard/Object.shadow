@@ -1,6 +1,4 @@
-package shadow.standard;
-
-class Object
+class shadow.standard@Object
 {
 	public final native getClass() => ( Class );
 	public toString() => ( String ) { return getClass().getClassName(); }

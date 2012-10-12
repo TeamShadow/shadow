@@ -1,6 +1,4 @@
-package shadow.standard;
-
-abstract final class Array<T>
+abstract final class shadow.standard@Array<T>
 {
 	long data = 0;
 	long[] lengths = new long[0];

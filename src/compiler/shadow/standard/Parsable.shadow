@@ -1,6 +1,4 @@
-package shadow.standard;
-
-interface Parsable
+interface shadow.standard@Parsable
 {}
 
 /*  Not ready for this yet

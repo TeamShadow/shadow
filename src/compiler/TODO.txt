@@ -83,6 +83,8 @@ class Outer<T>
 => General <=
 - *Need a better/good way to report errors*
 - ** Col & line numbers are "wrong" for multiple AST nodes **
+- Why does the parser never know the file that causes the error?
+
 
 => PARSING <=
 - Should string be listed as a primitive type when its semantics will always be reference style?

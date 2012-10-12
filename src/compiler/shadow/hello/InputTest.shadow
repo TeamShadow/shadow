@@ -1,8 +1,6 @@
-package shadow.hello;
-
 import shadow.io@Console;
 
-class InputTest
+class shadow.hello@InputTest
 {
 	public static main( String[] args ) => ()
 	{

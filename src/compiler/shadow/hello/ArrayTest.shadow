@@ -1,9 +1,7 @@
-package shadow.hello;
-
 import shadow.standard@Array;
 import shadow.io@Console;
 
-class ArrayTest
+class shadow.hello@ArrayTest
 {
 	public static main( String[] args ) => ()
 	{

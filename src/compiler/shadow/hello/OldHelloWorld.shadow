@@ -1,8 +1,6 @@
-package shadow.hello;
-
 import shadow.io@Console;
 
-class OldHelloWorld
+class shadow.hello@OldHelloWorld
 {
 
 	public constructor()

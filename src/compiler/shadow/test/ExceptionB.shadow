@@ -1,3 +1,1 @@
-package shadow.test;
-
-public exception ExceptionB { }
+public exception shadow.test@ExceptionB { }

@@ -1,6 +1,4 @@
-package shadow.standard;
-
-final immutable class Error
+final immutable class shadow.standard@Error
 {
 	String message = "";
 	public constructor() { message = "Unknown Error"; }
