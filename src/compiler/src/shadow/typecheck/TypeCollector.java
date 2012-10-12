@@ -27,7 +27,6 @@ import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTName;
-import shadow.parser.javacc.ASTPackageDeclaration;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;

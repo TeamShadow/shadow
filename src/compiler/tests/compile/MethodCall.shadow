@@ -1,7 +1,7 @@
 class MethodCall {
 
    
-    public static jam(int a) => (int, double) {
+    public static jam(int a) => (int turkey, double gravy) {
         return (4, 16.0);
     }
 

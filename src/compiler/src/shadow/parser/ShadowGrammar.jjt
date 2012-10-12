@@ -1059,7 +1059,7 @@ void FunctionType():
 	debugPrint("FUNCTION TYPE");
 }
 {
-    "(" [ Type() ( "," Type() )* ] ")" "=>" "(" [ ResultTypes() ] ")"
+    "(" [ ResultType() ( "," ResultType() )* ] ")" "=>" "(" [ ResultTypes() ] ")"
 }
 
 void ClassOrInterfaceType():
@@ -1126,7 +1126,7 @@ void PrimitiveType():
 void ResultType():
 { debugPrint("RESULT TYPE"); }
 {
-	["nullable" { jjtThis.setModifiers(ModifierSet.NULLABLE); }]  Type()
+	["nullable" { jjtThis.setModifiers(ModifierSet.NULLABLE); }]  Type() [ <IDENTIFIER > ] //optional identifier used only for documentation 
 }
 
 void ResultTypes():

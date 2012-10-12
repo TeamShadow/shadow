@@ -26,6 +26,20 @@ class String {}
 package shadow.standard;
 class String {}
 
-Combine package into the name:
+***************
+Local methods
+***************
 
-class shadow.standard@String {} 
+Look just like regular methods, except no public, private, or protected.
+Can include local variables, but those variables must be final.
+Can include member variables.
+Cannot be created anonymously. (This could change, but there is no good syntax, it seems.)
+Are static or non-static based on the method they are defined in.
+
+x (int) => (int, int)
+{
+
+}
+
+
+
