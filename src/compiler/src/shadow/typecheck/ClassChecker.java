@@ -59,6 +59,7 @@ import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLabeledStatement;
 import shadow.parser.javacc.ASTLiteral;
+import shadow.parser.javacc.ASTLocalMethodDeclaration;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethodAccess;
 import shadow.parser.javacc.ASTMethodCall;
@@ -122,6 +123,7 @@ public class ClassChecker extends BaseChecker {
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
 	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
 	protected LinkedList<HashMap<String, Node>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
+	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
 	
 	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<File> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
@@ -129,14 +131,15 @@ public class ClassChecker extends BaseChecker {
 		curPrefix = new LinkedList<Node>();
 		labels = new LinkedList<Node>();	
 		tryBlocks = new LinkedList<ASTTryStatement>();
+		scopeMethods = new LinkedList<Node>();
 	}
 	
 	public Object visitMethod( SimpleNode node, Boolean secondVisit  )
 	{
-		if(!secondVisit)
-			currentMethod = node;
+		if(!secondVisit)		
+			currentMethod.addFirst(node);
 		else
-			currentMethod = null;
+			currentMethod.removeFirst();
 		
 		createScope(secondVisit); 
 		
@@ -145,10 +148,20 @@ public class ClassChecker extends BaseChecker {
 	
 	private void createScope(Boolean secondVisit) {
 		// we have a new scope, so we need a new HashMap in the linked list
-		if(secondVisit)				
+		if(secondVisit)			
+		{
 			symbolTable.removeFirst();
+			scopeMethods.removeFirst();
+		}
 		else
+		{
 			symbolTable.addFirst(new HashMap<String, Node>());
+			
+			if( currentMethod.isEmpty() )
+				scopeMethods.addFirst(null);
+			else
+				scopeMethods.addFirst(currentMethod.getFirst());
+		}
 	}
 	
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
@@ -200,6 +213,17 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
+	
+	public Object visit(ASTLocalMethodDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+		{	
+			Node declaration = node.jjtGetChild(0);			
+			addSymbol(declaration.getImage(), node);
+		}		
+		return visitMethod( node, secondVisit );
+	}
+	
+	
 	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException
 	/* Note:  The ASTFormalParameters node can only be found in methods (including constructors)
 	 * However, the ASTFormalParameter node can also be found in a try-catch block
@@ -234,9 +258,24 @@ public class ClassChecker extends BaseChecker {
 	public Node findSymbol( String name )
 	{
 		Node node = null;
-		for( HashMap<String,Node> map : symbolTable )
+		for( int i = 0; i < symbolTable.size(); i++ )
+		{
+			HashMap<String,Node> map = symbolTable.get(i);		
 			if( (node = map.get(name)) != null )
+			{
+				Node method = scopeMethods.get(i);
+				if( method != null && method != currentMethod.getFirst() )
+				{
+					//situation where we are pulling a variable from an outer method
+					//it must be final!
+					
+					if( !ModifierSet.isFinal(node.getModifiers()) )
+						addError(node, Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
+				}
 				return node;
+			}
+		}
+		
 		
 		return node;
 	}
@@ -431,9 +470,9 @@ public class ClassChecker extends BaseChecker {
 					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
 				
 				
-				if( currentMethod != null ) //currentMethod is null for field initializations
+				if( !currentMethod.isEmpty() ) //currentMethod is empty for field initializations
 				{
-					if( directAccess && ModifierSet.isStatic(currentMethod.getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
+					if( directAccess && ModifierSet.isStatic(currentMethod.getFirst().getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
 						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + currentMethod);
 				}
 				
@@ -472,20 +511,22 @@ public class ClassChecker extends BaseChecker {
 			return true;
 		}
 			
-		// now check the parameters of the method
+		// now check the parameters of the methods
 		MethodType methodType = null;
 		
-		if( currentMethod != null  )
-			methodType = (MethodType)currentMethod.getType();
+		for( Node method : currentMethod)
+		{
+			methodType = (MethodType)method.getType();
 		
-		if(methodType != null && methodType.containsParam(name))
-		{	
-			node.setType(methodType.getParameterType(name).getType());
-			node.setModifiers(methodType.getParameterType(name).getModifiers());
-			node.addModifier(ModifierSet.ASSIGNABLE);			
-			return true;
+			if(methodType != null && methodType.containsParam(name))
+			{	
+				node.setType(methodType.getParameterType(name).getType());
+				node.setModifiers(methodType.getParameterType(name).getModifiers());
+				node.addModifier(ModifierSet.ASSIGNABLE);	//is this right?  Shouldn't all method parameters be unassignable?		
+				return true;
+			}
 		}
-			
+				
 		// check to see if it's a field or a method			
 		if( setTypeFromContext( node, name, currentType, true ) )
 			return true;
@@ -1523,7 +1564,7 @@ public class ClassChecker extends BaseChecker {
 				else
 				{				
 					node.setType(currentType);				
-					if( currentMethod != null && ModifierSet.isStatic(currentMethod.getModifiers())  )					
+					if( !currentMethod.isEmpty() && ModifierSet.isStatic(currentMethod.getFirst().getModifiers())  )					
 						addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);
 				}					
 			}
@@ -1816,7 +1857,7 @@ public class ClassChecker extends BaseChecker {
 		{	
 			node.setType(Type.UNKNOWN); //start with unknown, set if found
 				
-			if( currentMethod != null && ModifierSet.isStatic(currentMethod.getModifiers())  )					
+			if( !currentMethod.isEmpty() && ModifierSet.isStatic(currentMethod.getFirst().getModifiers())  )					
 				addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);				
 			
 			if( ModifierSet.isTypeName(curPrefix.getFirst().getModifiers()))
@@ -2592,7 +2633,7 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.INVL_TYP, "Return statement outside of method body");
 			else
 			{
-				MethodType methodType = (MethodType)(currentMethod.getType());
+				MethodType methodType = (MethodType)(currentMethod.getFirst().getType());
 				SequenceType returnTypes  = methodType.getReturnTypes();
 				node.setType(returnTypes);
 				

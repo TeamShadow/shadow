@@ -21,6 +21,7 @@ import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTLiteral;
+import shadow.parser.javacc.ASTLocalMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTReferenceType;
@@ -270,6 +271,28 @@ public class FieldAndMethodChecker extends BaseChecker {
 	}
 	
 	
+	public boolean checkFieldModifiers( Node node, int modifiers )
+	{		
+		boolean success = true;
+			
+		if( currentType instanceof InterfaceType )
+		{	
+			
+			if( ModifierSet.isStatic( modifiers ))
+			{			
+				addError(node, Error.INVL_MOD, "Interface fields cannot be marked static since they are all static by definition" );
+				success = false;
+			}				
+			
+			node.addModifier(ModifierSet.CONSTANT);
+			node.getType().addModifier(ModifierSet.CONSTANT);
+			//node.addModifier(ModifierSet.STATIC);
+			//node.getType().addModifier(ModifierSet.STATIC);
+		}				
+		
+		return success;
+	}
+	
 	/**
 	 * Checks method and field modifiers to see if they are legal
 	 * 
@@ -278,7 +301,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 	 * @return
 	 */
 	
-	public boolean checkMemberModifiers( Node node, int modifiers )
+	public boolean checkMethodModifiers( Node node, int modifiers )
 	{
 		int visibilityModifiers = 0;
 		boolean success = true;
@@ -295,67 +318,24 @@ public class FieldAndMethodChecker extends BaseChecker {
 		{
 			addError(node, Error.INVL_MOD, "Only one public, private, or protected modifier can be used" );
 			success = false;
-		}		
+		}
 		
-		if( node instanceof ASTMethodDeclaration ) //methods
-		{			
-			if( currentType instanceof InterfaceType )
-			{
-				if( visibilityModifiers > 0 )
-				{			
-					addError(node, Error.INVL_MOD, "Interface methods cannot be marked public, private, or protected since they are all public by definition" );
-					success = false;
-				}
-				
-				
-				node.addModifier(ModifierSet.PUBLIC);
-				node.getType().addModifier(ModifierSet.PUBLIC);
-			}
-			else
-			{
-				if( visibilityModifiers == 0 )
-				{			
-					addError(node, Error.INVL_MOD, "Every method must be specified as public, private, or protected" );
-					success = false;
-				}
-			}
-			
-			if( ModifierSet.isWeak(modifiers) ) 
-			{			
-				addError(node, Error.INVL_MOD, "Methods cannot be declared with the weak modifier" );
-				success = false;
-			}
-			
-			if( ModifierSet.isNullable(modifiers) ) 
-			{			
-				addError(node, Error.INVL_MOD, "Methods cannot be declared with the nullable modifier" );
-				success = false;
-			}
-		}		
-		else //fields
+		if( currentType instanceof InterfaceType )
 		{
+			if( visibilityModifiers > 0 )
+			{			
+				addError(node, Error.INVL_MOD, "Interface methods cannot be marked public, private, or protected since they are all public by definition" );
+				success = false;
+			}			
 			
-			if( currentType instanceof InterfaceType )
-			{
-				if( visibilityModifiers > 0 )
-				{			
-					addError(node, Error.INVL_MOD, "Interface fields cannot be marked public, private, or protected since they are all public by definition" );
-					success = false;
-				}		
-				
-				if( ModifierSet.isStatic( modifiers ))
-				{			
-					addError(node, Error.INVL_MOD, "Interface fields cannot be marked static since they are all static by definition" );
-					success = false;
-				}
-				
-				
-				node.addModifier(ModifierSet.PUBLIC);
-				node.getType().addModifier(ModifierSet.STATIC);
-				node.addModifier(ModifierSet.PUBLIC);
-				node.getType().addModifier(ModifierSet.STATIC);
-			}
-		}		
+			node.addModifier(ModifierSet.PUBLIC);
+			node.getType().addModifier(ModifierSet.PUBLIC);
+		}
+		else if( visibilityModifiers == 0 )
+		{			
+			addError(node, Error.INVL_MOD, "Every method must be specified as public, private, or protected" );
+			success = false;
+		}
 		
 		return success;
 	}
@@ -380,7 +360,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		node.setType(type);		// set the type to the node
 		node.setEnclosingType(currentType);
 
-		if( !checkMemberModifiers( node, node.getModifiers() ))
+		if( !checkFieldModifiers( node, node.getModifiers() ))
 			return WalkType.NO_CHILDREN;
 		
 		node.addModifier(ModifierSet.FIELD);	
@@ -545,6 +525,25 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return visitMethod( node, node, secondVisit );		
 	}
 	
+	public Object visit(ASTLocalMethodDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+		{			
+			Node declaration = node.jjtGetChild(0);
+			MethodSignature signature = new MethodSignature( currentType, declaration.getImage(), node.getModifiers(), node);
+			node.setMethodSignature(signature);
+			MethodType methodType = signature.getMethodType();
+			node.setType(methodType);
+			node.setEnclosingType(currentType);
+			
+			if( ModifierSet.isStatic(currentMethod.getFirst().getModifiers()))
+				node.addModifier(ModifierSet.STATIC);
+			
+			node.addModifier(ModifierSet.FINAL);
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
 		return WalkType.POST_CHILDREN;
 	}
@@ -591,7 +590,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			else			
 				addError(node, "Cannot add method to a structure that is not a class, interface, error, enum, or exception");
 			
-			currentMethod = null;
+			currentMethod.removeFirst();
 		}
 		else
 		{
@@ -600,8 +599,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 			MethodType methodType = signature.getMethodType();
 			node.setType(methodType);
 			node.setEnclosingType(currentType);
-			checkMemberModifiers( node, node.getModifiers() );
-			currentMethod = node;
+			checkMethodModifiers( node, node.getModifiers() );
+			currentMethod.addFirst(node);
 		}		
 		
 		return WalkType.POST_CHILDREN;

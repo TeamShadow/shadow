@@ -11,6 +11,7 @@
 0; Casting.shadow; test_config.xml; ; ; Tests
 0; Cast.shadow; test_config.xml; ; ; Tests
 0; Child.shadow; test_config.xml; ; ; Tests
+0; Coalesce.shadow; test_config.xml; ; ; Tests
 0; ComplexAccess.shadow; test_config.xml; ; ; Tests
 0; Conditionals.shadow; test_config.xml; ; ; Tests
 0; Constructor.shadow; test_config.xml; ; ; Tests
@@ -24,6 +25,7 @@
 0; Imports.shadow; test_config.xml; ; ; Tests
 0; InnerClass.shadow; test_config.xml; ; ; Tests
 0; Interface.shadow; test_config.xml; ; ; Tests
+0; LocalMethod.shadow; test_config.xml; ; ; Tests
 0; LValue.shadow; test_config.xml; ; ; Tests
 0; Member.shadow; test_config.xml; ; ; Tests
 0; MethodAndField.shadow; test_config.xml; ; ; Tests
@@ -31,8 +33,10 @@
 0; MethodCalls.shadow; test_config.xml; ; ; Tests
 0; Method.shadow; test_config.xml; ; ; Tests
 0; Operations.shadow; test_config.xml; ; ; Tests
+0; OutsideProperty.shadow; test_config.xml; ; ; Tests
 0; Parent.shadow; test_config.xml; ; ; Tests
 0; Private.shadow; test_config.xml; ; ; Tests
+0; Property.shadow; test_config.xml; ; ; Tests
 0; Scope.shadow; test_config.xml; ; ; Tests
 0; Sequences.shadow; test_config.xml; ; ; Tests
 0; Static.shadow; test_config.xml; ; ; Tests

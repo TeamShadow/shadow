@@ -30,7 +30,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected List<File> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
-	protected Node currentMethod = null;   /** Current method (only a single reference needed since Shadow does not allow methods to be defined inside of methods) */
+	protected LinkedList<Node> currentMethod = new LinkedList<Node>();  /** Current method is a stack since Shadow allows methods to be defined inside of methods */
 	
 
 	/** Holds the package tree structure (for name lookups) */
@@ -179,10 +179,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	
 	public final ClassInterfaceBaseType lookupTypeFromCurrentMethod( String name )
-	{	
-		if( currentMethod != null )
+	{		
+		for( Node method : currentMethod )
 		{
-			MethodType methodType = (MethodType)(currentMethod.getType());
+			MethodType methodType = (MethodType)(method.getType());
 			if( methodType.isParameterized() )
 			{
 				for( TypeParameter typeParameter : methodType.getTypeParameters() )

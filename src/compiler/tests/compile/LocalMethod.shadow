@@ -1,0 +1,66 @@
+class LocalMethod {
+
+
+	public method () => (int, int)
+	{
+		return (1,2);
+	}
+	
+	public method (int a) => (int)
+	{
+		return 1;
+	}
+	
+	public method (int a, int b) => (int)
+	{
+		return 1;
+	}
+
+    public test() => () {
+
+		int x;
+		int y;
+		
+		x = method( 3 );
+		x = method( 3, 4 );
+		x = method( 3, 4 + y );
+		
+		(x, y) = method();
+		
+		local1() => (int, int)
+		{
+			return (5, 6);		
+		}			
+		
+		local2(int a) => (int)
+		{
+			return a;
+		}
+		
+		local3(int a, int b) => (int)
+		{
+			//a = x; //uncomment to see non-final issue; too strong?  Only if assigned?
+			return a + b;
+		}
+		
+		(x,y) = local1();
+		
+		x = local2(7);
+		
+		x = local3(1, 2);
+		
+		(int, int) => (int) pointer = local3;
+		
+		y = pointer(5, 6);
+		
+		//local3 = pointer; //uncomment to see  error
+		
+		localFib(int n) => (int)
+		{
+			if( n <= 2 )
+				return 1;
+				
+			return localFib(n - 1) + localFib( n - 2 );
+		}		
+    }
+}

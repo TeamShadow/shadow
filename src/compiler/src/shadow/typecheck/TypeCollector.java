@@ -473,7 +473,7 @@ public class TypeCollector extends BaseChecker
 
 	private void processTypeBound(ASTTypeBound bound, TreeSet<String> missingTypes)
 	{	
-		currentMethod = null;		
+		currentMethod.clear();		
 		
 		for( int i = 0; i < bound.jjtGetNumChildren(); i++ )
 		{

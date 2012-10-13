@@ -157,6 +157,11 @@ public class TypeCheckerTest {
 		args.add("tests/compile/Interface.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	
+	@Test public void testLocalMethod() throws Exception {
+		args.add("tests/compile/LocalMethod.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
 
 	@Test public void testLValue() throws Exception {
 		args.add("tests/compile/LValue.shadow");

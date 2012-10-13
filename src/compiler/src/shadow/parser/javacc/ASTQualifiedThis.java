@@ -3,6 +3,7 @@
 package shadow.parser.javacc;
 
 public
+@SuppressWarnings("all")
 class ASTQualifiedThis extends SimpleNode {
   public ASTQualifiedThis(int id) {
     super(id);
@@ -18,4 +19,4 @@ class ASTQualifiedThis extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=1605d0c17157c822353e068615424d0c (do not edit this line) */
+/* JavaCC - OriginalChecksum=2dd57513031d190a663ec51cd08d26bc (do not edit this line) */

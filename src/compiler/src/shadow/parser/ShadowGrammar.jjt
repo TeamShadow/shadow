@@ -195,11 +195,9 @@ public class ShadowParser
 			if( isConstant(modifiers) )
 			{
 				int updatedModifiers = removeModifier(modifiers, CONSTANT);
-				if( isStatic(updatedModifiers) )
-					updatedModifiers = removeModifier(modifiers, STATIC);
-
+				
 				if( updatedModifiers != 0 )
-					throw new ParseException("A constant cannot have any modifiers other than static");
+					throw new ParseException("A constant cannot have any other modifiers");
 			}			 			
 		}
 
@@ -209,10 +207,57 @@ public class ShadowParser
 				throw new ParseException("A method cannot be marked weak");
 			if( isNullable(modifiers) )
 				throw new ParseException("A method cannot be marked nullable");
-			if( isGet(modifiers) &&  ModifierSet.isSet(modifiers) )
+			if( isGet(modifiers) &&  isSet(modifiers) )
 				throw new ParseException("A method cannot be marked both get and set");
 			if( isConstant(modifiers) )
 				throw new ParseException("A method cannot be marked constant");
+		}
+
+		public static void checkLocalMethodModifiers( int modifiers ) throws ParseException
+		{
+		 	if( isWeak(modifiers) )
+				throw new ParseException("A local method cannot be marked weak");
+			if( isNullable(modifiers) )
+				throw new ParseException("A local method cannot be marked nullable");
+			if( isGet(modifiers) )
+				throw new ParseException("A local method cannot be marked get");
+			if( isSet(modifiers) )
+				throw new ParseException("A local method cannot be marked set");
+			if( isConstant(modifiers) )
+				throw new ParseException("A local method cannot be marked constant");
+			if( isAbstract(modifiers) )
+				throw new ParseException("A local method cannot be marked abstract");
+			if( isProtected(modifiers) )
+				throw new ParseException("A local method cannot be marked protected");
+			if( isPublic(modifiers) )
+				throw new ParseException("A local method cannot be marked public");
+			if( isPrivate(modifiers) )
+				throw new ParseException("A local method cannot be marked private");
+			if( isNative(modifiers) )
+				throw new ParseException("A local method cannot be marked native");
+		}
+
+
+		public static void checkLocalVariableModifiers( int modifiers ) throws ParseException
+		{		 	
+			if( isGet(modifiers) )
+				throw new ParseException("A local variable cannot be marked get");
+			if( isSet(modifiers) )
+				throw new ParseException("A local variable cannot be marked set");
+			if( isConstant(modifiers) )
+				throw new ParseException("A local variable cannot be marked constant");
+			if( isAbstract(modifiers) )
+				throw new ParseException("A local variable cannot be marked abstract");
+			if( isProtected(modifiers) )
+				throw new ParseException("A local variable cannot be marked protected");
+			if( isPublic(modifiers) )
+				throw new ParseException("A local variable cannot be marked public");
+			if( isPrivate(modifiers) )
+				throw new ParseException("A local variable cannot be marked private");
+			if( isNative(modifiers) )
+				throw new ParseException("A local variable cannot be marked native");
+			if( isStatic(modifiers) )
+				throw new ParseException("A local variable cannot be marked static");
 		}
 	}
 
@@ -1644,22 +1689,40 @@ void Block():
 
 void BlockStatement():
 {
-    debugPrint("BLOCK STATEMENT");
+    debugPrint("BLOCK STATEMENT");    
 }
 {
-  LOOKAHEAD( LocalVariableDeclaration() ) LocalVariableDeclaration() ";"
+  LOOKAHEAD(LocalDeclaration()) LocalDeclaration()    
 | Statement()
 // No local classes in Shadow
 }
 
-void LocalVariableDeclaration():
+void LocalDeclaration():
+{
+  debugPrint("LOCAL DECLARATION");
+  int modifiers = 0;}
+{
+  modifiers = Modifiers()
+  ( LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
+  | LocalVariableDeclaration(modifiers) ";" )  }
+
+void LocalMethodDeclaration(int modifiers):
+{
+  	debugPrint("METHOD DECLARATION");
+	ModifierSet.checkLocalMethodModifiers( modifiers ); 
+ }
+{
+  { jjtThis.setModifiers(modifiers); }  
+  MethodDeclarator() [ "throws" NameList() ]
+  ( Block() | ";" )
+}
+
+void LocalVariableDeclaration(int modifiers):
 {
   debugPrint("LOCAL VARIABLE DECLARATION");
-  int modifiers = 0;
+  ModifierSet.checkLocalVariableModifiers( modifiers );
 }
-{
-  ( "final" { modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.FINAL); } |
-  "nullable" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.NULLABLE); })*
+{  
   ( Type() | "auto" { jjtThis.setImage("auto"); } ) VariableDeclarator() ( "," VariableDeclarator() )*
   {
      jjtThis.setModifiers(modifiers);
@@ -1757,7 +1820,7 @@ void ForInit():
 	Token t;
 }
 {
-  LOOKAHEAD( LocalVariableDeclaration() ) LocalVariableDeclaration()
+  LOOKAHEAD( LocalVariableDeclaration(0) ) LocalVariableDeclaration(0)
 | StatementExpressionList()
 }
 

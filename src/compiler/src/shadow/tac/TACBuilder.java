@@ -1407,4 +1407,16 @@ public class TACBuilder implements ShadowParserVisitor
 		// TODO Auto-generated method stub
 		return null;
 	}
+	@Override
+	public Object visit(ASTLocalDeclaration node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTLocalMethodDeclaration node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

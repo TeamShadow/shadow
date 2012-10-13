@@ -3,6 +3,7 @@
 package shadow.parser.javacc;
 
 public
+@SuppressWarnings("all")
 class ASTPropertyAccess extends SimpleNode {
   public ASTPropertyAccess(int id) {
     super(id);
@@ -18,4 +19,4 @@ class ASTPropertyAccess extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=b789905d497d254a17e0961d696acdeb (do not edit this line) */
+/* JavaCC - OriginalChecksum=749f439aa23308f96952723851700758 (do not edit this line) */
