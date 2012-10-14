@@ -32,12 +32,13 @@ public class TypeCheckerTest {
 
 		// set the levels of our loggers
 		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
-		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.TRACE);
+		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
+		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
 	}
 	
 	 @Test public void testArray() throws Exception {
 		
-		Loggers.setAllToDebug();
+		//Loggers.setAllToDebug();
 		/*Level level = Loggers.getLoggerLevel(Loggers.PARSER);
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.OFF);
 		Loggers.setLoggerToLevel(Loggers.PARSER, Level.DEBUG);*/	

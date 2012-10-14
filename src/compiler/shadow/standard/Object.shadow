@@ -2,4 +2,6 @@ class shadow.standard@Object
 {
 	public final native getClass() => ( Class );
 	public toString() => ( String ) { return getClass().getClassName(); }
+	public native clone() => ( Object ); //classes should override this if needed
+	public native immutableClone() => ( immutable Object ); //classes should override this if needed	
 }

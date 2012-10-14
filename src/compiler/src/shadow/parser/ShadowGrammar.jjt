@@ -259,6 +259,35 @@ public class ShadowParser
 			if( isStatic(modifiers) )
 				throw new ParseException("A local variable cannot be marked static");
 		}
+
+		public static void checkParameterAndReturnModifiers( int modifiers ) throws ParseException
+		{
+		  if( isPublic(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked public");	  	
+			if( isProtected(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked protected");			
+			if( isPrivate(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked private");
+			if( isGet(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked get");
+			if( isSet(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked set");
+			if( isConstant(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked constant");
+			if( isAbstract(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked abstract");			
+			if( isNative(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked native");
+			if( isStatic(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked static");
+			if( isWeak(modifiers) )
+				throw new ParseException("Method parameter and return types cannot be marked weak");
+
+			//what does final mean for parameters and return types?
+			//shouldn't all parameters be final?
+			//if( isFinal(modifiers) )
+			//	throw new ParseException("Method parameter and return types cannot be marked static");
+		}
 	}
 
    	public static enum TypeKind {		
@@ -289,7 +318,7 @@ public class ShadowParser
    }
 
    	public void debugPrint(String str) {
-        logger.debug(str + ": " + token);
+        logger.trace(str + ": " + token);
     }
    	
 }
@@ -994,10 +1023,10 @@ void FormalParameter():
 	int modifiers = 0;
 }
 {
-  ( "final" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.FINAL); } |
-  "nullable" {modifiers = ModifierSet.checkAndAdd(modifiers, ModifierSet.NULLABLE); })*
+   modifiers = Modifiers()
    Type() VariableDeclaratorId()
    {
+     ModifierSet.checkParameterAndReturnModifiers(modifiers);
      jjtThis.setModifiers(modifiers);
    }
 }
@@ -1169,9 +1198,14 @@ void PrimitiveType():
 }
 
 void ResultType():
-{ debugPrint("RESULT TYPE"); }
+{ debugPrint("RESULT TYPE");
+	int modifiers = 0;
+}
 {
-	["nullable" { jjtThis.setModifiers(ModifierSet.NULLABLE); }]  Type() [ <IDENTIFIER > ] //optional identifier used only for documentation 
+	modifiers = Modifiers() Type() [ <IDENTIFIER > ] //optional identifier used only for documentation
+	{
+	  ModifierSet.checkParameterAndReturnModifiers(modifiers);
+	  jjtThis.setModifiers(modifiers);	} 
 }
 
 void ResultTypes():

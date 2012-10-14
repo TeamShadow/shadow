@@ -643,11 +643,14 @@ public class FieldAndMethodChecker extends BaseChecker {
 			MethodSignature signature = ((SignatureNode)parent).getMethodSignature();
 			
 			// go through all the formal parameters
-			for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+			for(int i=0; i < node.jjtGetNumChildren(); ++i) 
+			{
 				Node parameter = node.jjtGetChild(i);
 				
+				//child 0 is Modifiers
+				
 				// get the name of the parameter
-				String paramSymbol = parameter.jjtGetChild(1).getImage();
+				String paramSymbol = parameter.jjtGetChild(2).getImage();
 				
 				// check if it's already in the set of parameter names
 				if(signature.containsParam(paramSymbol)) {
@@ -655,7 +658,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 					return false;	// we're done with this node
 				}				
 				
-				Node child = parameter.jjtGetChild(0);			
+				//child 1 is type
+				Node child = parameter.jjtGetChild(1);			
 				
 				// get the type of the parameter
 				parameter.setType(child.getType());
@@ -849,12 +853,11 @@ public class FieldAndMethodChecker extends BaseChecker {
 	
 	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException
 	{
-		if( secondVisit )
-			if( node.jjtGetNumChildren() > 0 )
-			{
-				Node child = node.jjtGetChild(0); 
-				node.setType(child.getType());			
-			}
+		if( secondVisit )			
+		{
+			Node child = node.jjtGetChild(1); //child 0 is always modifiers 
+			node.setType(child.getType());			
+		}
 		
 		return WalkType.POST_CHILDREN;	
 	}

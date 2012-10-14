@@ -111,6 +111,7 @@ public class ParseException extends Exception {
       }
       expected.append(eol).append("    ");
     }
+    /* //old
     String retval = "Encountered \"";
     Token tok = currentToken.next;
     for (int i = 0; i < maxSize; i++) {
@@ -125,6 +126,24 @@ public class ParseException extends Exception {
       retval += " \"";
       tok = tok.next;
     }
+    */
+    
+    //start new
+    String retval = "Encountered \"";
+    Token tok = currentToken.next;
+    for (int i = 0; i < maxSize; i++) {
+      if (i != 0) retval += " ";
+      if (tok.kind == 0) {
+        retval += tokenImage[0];
+        break;
+      }
+      //retval += " " + tokenImage[tok.kind];
+      //retval += " \"";
+      retval += add_escapes(tok.image);      
+      tok = tok.next;
+    }
+    //end new
+    
     retval += "\" at line " + currentToken.next.beginLine + ", column " + currentToken.next.beginColumn;
     retval += "." + eol;
     if (expectedTokenSequences.length == 1) {

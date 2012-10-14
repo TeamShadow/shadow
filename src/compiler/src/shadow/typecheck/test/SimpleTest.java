@@ -34,7 +34,8 @@ public class SimpleTest
 
 		// set the levels of our loggers
 		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
-		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.DEBUG);
+		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
+		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
 		
 		
 		//add desired files to list

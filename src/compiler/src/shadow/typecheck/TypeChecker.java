@@ -17,6 +17,8 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 public class TypeChecker {
 	private static final Log logger = Loggers.TYPE_CHECKER;
 	
+	
+	private File file;
 	protected boolean debug;
 	
 	public TypeChecker(boolean debug) {	
@@ -36,7 +38,7 @@ public class TypeChecker {
 		HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>>();
 		Package packageTree = new Package(typeTable);
 		LinkedList<File> importList = new LinkedList<File>();
-		TypeCollector collector = new TypeCollector(debug, typeTable, importList, packageTree);
+		TypeCollector collector = new TypeCollector(debug, typeTable, importList, packageTree, this);
 		collector.collectTypes( file, node );	
 		
 		// see how many errors we found
@@ -74,5 +76,13 @@ public class TypeChecker {
 		return true;
 	}
 	
-
+	public File getCurrentFile()
+	{
+		return file;
+	}
+	
+	public void setCurrentFile(File currentFile )
+	{
+		file = currentFile;
+	}
 }

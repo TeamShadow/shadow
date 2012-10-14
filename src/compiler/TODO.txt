@@ -6,28 +6,29 @@
 *****************************************************************************
 
 => Ver 1 Features <=
-* These are the basic list of features we're going for with v1 *
+* These are the basic features we're going for with v1 *
 - Basic numeric & control flow stuff
 - Arrays w/checking of bounds
 - Null pointer checking
-- Inheritance & interface implementation (interfaces are type-check only, right?)
+- Inheritance & interface implementation
 - Exceptions
 - Native code blocks so we can generate a CLib
 - Explicit delete
-
-=> Ver 2 Features <=
-* This list is here to show explicitly what is NOT in v1 *
 - Uninit var warning
-- Garbage collection
-- Views
 - Lambdas (delegates)
 - Generics/templates
 
 
+
+=> Ver 2 Features <=
+* This list is here to show explicitly what is NOT in v1 *
+- Garbage collection
+- Views
+- Concurrency?
+
 Fix syntax for constructors in interfaces (parent classes don't count!)
 
-Take package out of the grammar.
-
+Check properties for overloading rules.  Make sure you can't put them in interfaces.
 
 Break generics
 
@@ -76,9 +77,6 @@ class Outer<T>
 		T stuff;
 	}
 }
-
-
-
 
 => General <=
 - *Need a better/good way to report errors*

@@ -236,7 +236,9 @@ public class ClassChecker extends BaseChecker {
 		for(int i = 0; i < node.jjtGetNumChildren(); ++i)
 		{
 			Node child = node.jjtGetChild(i);
-			String varName = child.jjtGetChild(1).getImage();
+			//child 0 is Modifiers
+			//child 1 is type
+			String varName = child.jjtGetChild(2).getImage();
 			
 			addSymbol( varName, child );
 		}		
@@ -284,7 +286,8 @@ public class ClassChecker extends BaseChecker {
 	{
 		if(secondVisit)
 		{	
-			Type type = node.jjtGetChild(0).getType();
+			//child 0 is Modifiers
+			Type type = node.jjtGetChild(1).getType();
 			node.setType( type );
 			if( ModifierSet.isNullable(node.getModifiers()) && type.isPrimitive() )
 				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");			
@@ -2676,15 +2679,14 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException
 	{
-		if( secondVisit )
-			if( node.jjtGetNumChildren() > 0 )
-			{
-				Type type = node.jjtGetChild(0).getType(); 
-				node.setType(type);
-				
-				if( ModifierSet.isNullable(node.getModifiers()) && type.isPrimitive() )
-					addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");				
-			}
+		if( secondVisit )			
+		{
+			Type type = node.jjtGetChild(1).getType(); //child 0 is always Modifiers 
+			node.setType(type);
+			
+			if( ModifierSet.isNullable(node.getModifiers()) && type.isPrimitive() )
+				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");				
+		}
 		
 		return WalkType.POST_CHILDREN;	
 	}

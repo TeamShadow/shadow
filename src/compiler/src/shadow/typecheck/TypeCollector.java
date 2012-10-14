@@ -67,9 +67,13 @@ public class TypeCollector extends BaseChecker
 	private String currentName = "";
 	private Map<File, Node> files = new HashMap<File, Node>();
 	
-	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, LinkedList<File> importList, Package p )
+	private TypeChecker typeChecker;
+	
+	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, LinkedList<File> importList, Package p, TypeChecker typeChecker )
 	{		
 		super(debug, typeTable, importList, p );
+		
+		this.typeChecker = typeChecker;
 		
 		// put built-in types into the TypeTable
 		// Object, String, Class, and Array are added separately
@@ -348,7 +352,7 @@ public class TypeCollector extends BaseChecker
 
 	private void updateTypeParameters(ASTResultType node, TreeSet<String> missingTypes) {
 		
-		Node child = node.jjtGetChild(0);
+		Node child = node.jjtGetChild(1); //child 0 is always Modifiers
 		
 		updateTypeParameters( (ASTType)child , missingTypes  );
 		node.setType(child.getType());
@@ -520,10 +524,11 @@ public class TypeCollector extends BaseChecker
 			if( !files.containsKey(canonicalFile) ) //don't double add
 			{
 				ShadowParser parser = new ShadowParser(new FileInputStream(canonicalFile));
+				typeChecker.setCurrentFile(canonicalFile);
 			    SimpleNode otherNode = parser.CompilationUnit();
 			    
 			    HashMap<Package, HashMap<String, ClassInterfaceBaseType>> otherTypes = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>> ();			    
-				TypeCollector collector = new TypeCollector(debug, otherTypes, new LinkedList<File>(), new Package(otherTypes));
+				TypeCollector collector = new TypeCollector(debug, otherTypes, new LinkedList<File>(), new Package(otherTypes), typeChecker);
 				walker = new ASTWalker( collector );		
 				walker.walk(otherNode);				
 		
