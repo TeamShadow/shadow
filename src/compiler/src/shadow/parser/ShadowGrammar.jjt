@@ -122,11 +122,11 @@ public class ShadowParser
 
 		private static void checkModifiers( int modifiers, int legal, String name )  throws ParseException
 		{
-		   if( isPublic(modifiers) && !isPublic( legal )  )
-		   	throw new ParseException(name + " cannot be marked public");
-		   if( isProtected(modifiers) && !isProtected( legal )  )
-		   	throw new ParseException(name + " cannot be marked protected");
-		   if( isPrivate(modifiers) && !isPrivate( legal )  )
+		   	if( isPublic(modifiers) && !isPublic( legal )  )
+		   		throw new ParseException(name + " cannot be marked public");
+		   	if( isProtected(modifiers) && !isProtected( legal )  )
+		   		throw new ParseException(name + " cannot be marked protected");
+		   	if( isPrivate(modifiers) && !isPrivate( legal )  )
 		   		throw new ParseException(name + " cannot be marked protected");
  			if( isStatic(modifiers) && !isStatic( legal )  )
 		   		throw new ParseException(name + " cannot be marked static");
@@ -213,6 +213,16 @@ public class ShadowParser
 			checkModifiers( modifiers, IMMUTABLE, "A local method");
 		}
 
+
+		public static void checkConstructorModifiers( int modifiers ) throws ParseException
+		{
+			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE , "A constructor");
+		}
+
+		public static void checkDestructorModifiers( int modifiers ) throws ParseException
+		{
+			checkModifiers( modifiers, PUBLIC, "A destructor");
+		}		
 
 		public static void checkLocalVariableModifiers( int modifiers ) throws ParseException
 		{
@@ -981,18 +991,7 @@ void FormalParameter():
 void ConstructorDeclaration(int modifiers):
 {
   debugPrint("CONSTRUCTOR DECLARATION");
-  if( ModifierSet.isAbstract(modifiers) )
-	throw new ParseException("A constructor cannot be marked abstract");
-  if( ModifierSet.isStatic(modifiers) )
-	throw new ParseException("A constructor cannot be marked static");
-  if( ModifierSet.isNative(modifiers) )
-	throw new ParseException("A constructor cannot be marked native");
-  if( ModifierSet.isWeak(modifiers) )
-	throw new ParseException("A constructor cannot be marked weak");
-  if( ModifierSet.isImmutable(modifiers) )
-	throw new ParseException("A constructor cannot be marked immutable");
-  if( ModifierSet.isNullable(modifiers) )
-	throw new ParseException("A constructor cannot be marked nullable");  
+  ModifierSet.checkConstructorModifiers( modifiers );  
 }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }  
@@ -1010,15 +1009,7 @@ void ConstructorDeclaration(int modifiers):
 void DestructorDeclaration(int modifiers):
 {
   debugPrint("DESTRUCTOR DECLARATION");
-  if( ModifierSet.isProtected(modifiers) ||
-  	ModifierSet.isPrivate(modifiers) ||
-    ModifierSet.isAbstract(modifiers) ||
-	ModifierSet.isStatic(modifiers) ||
-  	ModifierSet.isNative(modifiers) ||
-	ModifierSet.isWeak(modifiers) ||
-	ModifierSet.isImmutable(modifiers) ||
-  	ModifierSet.isNullable(modifiers) )
-		throw new ParseException("A destructor can only be marked final");
+  ModifierSet.checkDestructorModifiers( modifiers );
 }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("destructor"); }  
@@ -1596,6 +1587,7 @@ void AllocationExpression():
   LOOKAHEAD(ArrayAllocation())
   ArrayAllocation()
 | ConstructorInvocation()
+| SingletonInstance()
 }
 
 void ArrayAllocation():
@@ -1610,6 +1602,13 @@ void ConstructorInvocation():
 {
  	"new" ClassOrInterfaceType() [ TypeArguments() ] Arguments()
  	/* No anonymous classes in Shadow */    
+}
+
+
+void SingletonInstance():
+{ debugPrint("SINGLETON INVOCATION"); }
+{
+ 	"instance" ClassOrInterfaceType() 	
 }
 
 

@@ -81,8 +81,6 @@ class Outer<T>
 => General <=
 - *Need a better/good way to report errors*
 - ** Col & line numbers are "wrong" for multiple AST nodes **
-- Why does the parser never know the file that causes the error?
-
 
 => PARSING <=
 - Should string be listed as a primitive type when its semantics will always be reference style?
@@ -93,7 +91,6 @@ Bill: Native blocks
 - Add isField to ASTNodes that are field names (DONE)
 - Multiple files
 - Meta file serialization of type information
-- Make sure that fields are ONLY public or private (DONE)
 
 => TAC <=
 - All numeric and control flow stuff

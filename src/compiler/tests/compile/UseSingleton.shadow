@@ -1,0 +1,10 @@
+class UseSingleton {
+
+	public start() => () {
+		Singleton s = instance Singleton;
+		
+		int v = s->value;
+		
+		double x = s.walnut( 3, 4 );
+	}
+}

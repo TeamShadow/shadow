@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTActionExpression extends SimpleNode {
   public ASTActionExpression(int id) {
     super(id);
@@ -19,4 +18,4 @@ class ASTActionExpression extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=68c03a9897feb64fa941290fb408842a (do not edit this line) */
+/* JavaCC - OriginalChecksum=620ada609f7a87a2d987a903f4391ef7 (do not edit this line) */

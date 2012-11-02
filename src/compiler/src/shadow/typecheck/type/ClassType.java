@@ -17,17 +17,20 @@ public class ClassType extends ClassInterfaceBaseType {
 	private Set<Type> referencedTypes = new HashSet<Type>();
 	
 	public ClassType(String typeName, ClassType parent ) {
-		this( typeName, 0 );
+		this( typeName, 0, null );
 		setExtendType( parent );
 	}
 	
+	/*
 	public ClassType(String typeName) {
 		this( typeName, 0 );
 	}
 	
+	
 	public ClassType(String typeName, int modifiers) {
 		this( typeName, modifiers, null );
-	}	
+	}
+	*/	
 	
 	public ClassType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
 		super( typeName, modifiers, outer );

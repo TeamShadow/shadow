@@ -82,6 +82,7 @@ import shadow.parser.javacc.ASTRotateExpression;
 import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTSequenceAssignment;
 import shadow.parser.javacc.ASTShiftExpression;
+import shadow.parser.javacc.ASTSingletonInstance;
 import shadow.parser.javacc.ASTStatementExpression;
 import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTSwitchStatement;
@@ -109,6 +110,7 @@ import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
@@ -2567,6 +2569,14 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		}
 		
+		if( child.getType() instanceof SingletonType )
+		{
+			addError(child, Error.INVL_TYP, "Singletons cannot be instantiated with new");
+			node.setType(Type.UNKNOWN);
+			return WalkType.POST_CHILDREN;
+		}
+
+		
 		//examine argument list to find constructor		
 		ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
 		ASTArguments arguments = (ASTArguments)(node.jjtGetChild(counter));
@@ -2622,6 +2632,28 @@ public class ClassChecker extends BaseChecker {
 				else
 					node.setType(signature.getMethodType());
 			}				
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTSingletonInstance node, Boolean secondVisit)	throws ShadowException
+	{
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		//check curPrefix at some point		
+		Node child = node.jjtGetChild(0); 
+		Type childType = child.getType();
+						
+		//check if singleton type
+		if( childType instanceof SingletonType )
+			node.setType(childType);
+		else
+		{
+			addError(node, Error.INVL_TYP, "Cannot get instance of non-singleton type " + childType);
+			node.setType(Type.UNKNOWN);
 		}
 		
 		return WalkType.POST_CHILDREN;

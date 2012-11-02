@@ -48,6 +48,7 @@ import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
@@ -224,12 +225,14 @@ public class FieldAndMethodChecker extends BaseChecker {
 										
 										if( !parentSignature.equals( signature ) )
 											addError( parentNode, "Overriding method " + signature + " differs only by return type from " + parentSignature );
-										else if( ModifierSet.isFinal(parentModifiers) || ModifierSet.isImmutable(parentModifiers) )
-											addError( parentNode, "Method " + signature + " cannot override  final or immutable methods" );
-										else if( ModifierSet.isStatic(parentModifiers) && !ModifierSet.isStatic(modifiers) )
-											addError( parentNode, "Non-static method " + signature + " cannot override static method " + parentSignature );
-										else if( !ModifierSet.isStatic(parentModifiers) && ModifierSet.isStatic(modifiers) )
-											addError( parentNode, "Static method " + signature + " cannot override non-static method " + parentSignature );
+										else if( ModifierSet.isFinal(parentModifiers) )
+											addError( parentNode, "Method " + signature + " cannot override final method" );
+										else if( !ModifierSet.isImmutable(modifiers) && ModifierSet.isImmutable(parentModifiers)  )
+											addError( parentNode, "Non-immutable method " + signature + " cannot override immutable method" );
+										//else if( ModifierSet.isStatic(parentModifiers) && !ModifierSet.isStatic(modifiers) )
+										//	addError( parentNode, "Non-static method " + signature + " cannot override static method " + parentSignature );
+										//else if( !ModifierSet.isStatic(parentModifiers) && ModifierSet.isStatic(modifiers) )
+										//	addError( parentNode, "Static method " + signature + " cannot override non-static method " + parentSignature );
 										else if( ModifierSet.isPublic(parentModifiers) && (ModifierSet.isPrivate(modifiers) || ModifierSet.isProtected(modifiers)) )
 											addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
 										else if( ModifierSet.isProtected(parentModifiers) && ModifierSet.isPrivate(modifiers)  )
@@ -363,7 +366,14 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if( !checkFieldModifiers( node, node.getModifiers() ))
 			return WalkType.NO_CHILDREN;
 		
-		node.addModifier(ModifierSet.FIELD);	
+		node.addModifier(ModifierSet.FIELD);
+		
+		if( ModifierSet.isImmutable(currentType.getModifiers()) ) {
+			node.addModifier(ModifierSet.IMMUTABLE);
+			
+			if( type.isPrimitive() )
+				node.addModifier(ModifierSet.FINAL);
+		}
 		
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
@@ -511,12 +521,24 @@ public class FieldAndMethodChecker extends BaseChecker {
 	 */
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
 		//different nodes used for modifiers and signature
-		Node methodDeclarator = node.jjtGetChild(0);		
+		Node methodDeclarator = node.jjtGetChild(0);
+		if( !secondVisit && currentType != null && ModifierSet.isImmutable(currentType.getModifiers()) ) 
+		{
+			node.addModifier(ModifierSet.IMMUTABLE);
+			methodDeclarator.addModifier(ModifierSet.IMMUTABLE);
+		}
 		return visitMethod( methodDeclarator, node, secondVisit );
 	}
 	
 	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
 		//constructor uses the same node for modifiers and signature
+		
+		if( secondVisit && (currentType instanceof SingletonType) ) {
+			Node parameters = node.jjtGetChild(0); //formal parameters
+			if( parameters.jjtGetNumChildren() > 0 )
+				addError( node, Error.INVL_TYP, "Singleton type can only specify a default constructor");
+		}
+		
 		return visitMethod( node, node, secondVisit );
 	}
 	
@@ -535,8 +557,11 @@ public class FieldAndMethodChecker extends BaseChecker {
 			node.setType(methodType);
 			node.setEnclosingType(currentType);
 			
-			if( ModifierSet.isStatic(currentMethod.getFirst().getModifiers()))
-				node.addModifier(ModifierSet.STATIC);
+			//if( ModifierSet.isStatic(currentMethod.getFirst().getModifiers()))
+			//	node.addModifier(ModifierSet.STATIC);
+			
+			if( ModifierSet.isImmutable(currentMethod.getFirst().getModifiers()))
+				node.addModifier(ModifierSet.IMMUTABLE);
 			
 			node.addModifier(ModifierSet.FINAL);
 		}

@@ -54,6 +54,7 @@ import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.ViewType;
@@ -638,8 +639,12 @@ public class TypeCollector extends BaseChecker
 			case INTERFACE:
 				type = new InterfaceType(typeName, modifiers, currentType );
 				break;
+			case SINGLETON:
+				type = new SingletonType(typeName, modifiers, currentType );
+				break;
 			case VIEW:
-				type = new ViewType(typeName, modifiers );			
+				type = new ViewType(typeName, modifiers );
+				break;
 			default:
 				throw new ShadowException("Unsupported type!" );
 			}			

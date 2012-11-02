@@ -229,6 +229,16 @@ public class TypeCheckerTest {
 		args.add("tests/compile/Sequences.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	
+	@Test public void testSingleton() throws Exception {
+		args.add("tests/compile/Singleton.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+	
+	@Test public void testUseSingleton() throws Exception {
+		args.add("tests/compile/UseSingleton.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
 
 	/*
 	@Test public void testStatic() throws Exception {

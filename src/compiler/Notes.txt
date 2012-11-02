@@ -1,12 +1,17 @@
+The static keyword is gone.
+
+Constants are implicitly static.
+There is only ever one of a singleton class, but you have to get it through the instance keyword.
+
 There are three kinds of members in Shadow:
 
 Constants
 Fields
 Methods
 
-Constants are always public, shared, final, and immutable (no modifiers!).  They are accessed with Class:CONSTANT.
+Constants are always public, final, and immutable (no modifiers!).  They are accessed with Class:CONSTANT.
 
-Fields are always private (no modifier), are optionally shared, final, immutable, get, set.  They are accessed inside the class only with this:member or Class:member (shared).
+Fields are always private (no modifier), are optionally final, immutable, get, set.  They are accessed inside the class only as member or this:member for disambiguation.
 Fields can be final (must point at the same thing) and/or immutable (contents cannot be altered).
 
 

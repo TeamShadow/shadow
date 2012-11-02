@@ -1,0 +1,9 @@
+singleton Singleton {
+
+	get int value = 6;
+		
+	public walnut(int a, int b) => (double) {
+		value += 1;
+		return cast<double>(a + b);
+	}
+}
