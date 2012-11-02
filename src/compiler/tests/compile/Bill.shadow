@@ -3,7 +3,7 @@ class Bill {
     //private int a = 7;
     //private int b;
 
-    public static main(String[] args) => () {
+    public start(String[] args) => () {
         int x, y;
         printString("Hello World");
     }
@@ -13,5 +13,5 @@ class Bill {
         return a;
     }
     
-    public static native printString(String mgs) => ();
+    public native printString(String mgs) => ();
 } 

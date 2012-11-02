@@ -120,173 +120,111 @@ public class ShadowParser
        return addModifier( modifiers, mod );
      }
 
+		private static void checkModifiers( int modifiers, int legal, String name )  throws ParseException
+		{
+		   if( isPublic(modifiers) && !isPublic( legal )  )
+		   	throw new ParseException(name + " cannot be marked public");
+		   if( isProtected(modifiers) && !isProtected( legal )  )
+		   	throw new ParseException(name + " cannot be marked protected");
+		   if( isPrivate(modifiers) && !isPrivate( legal )  )
+		   		throw new ParseException(name + " cannot be marked protected");
+ 			if( isStatic(modifiers) && !isStatic( legal )  )
+		   		throw new ParseException(name + " cannot be marked static");
+		   	if( isAbstract(modifiers) && !isAbstract( legal )  )
+		   		throw new ParseException(name + " cannot be marked abstract");
+		   	if( isFinal(modifiers) && !isFinal( legal )  )
+		   		throw new ParseException(name + " cannot be marked final");     
+		   	if( isNative(modifiers) && !isNative( legal )  )
+		   		throw new ParseException(name + " cannot be marked native");
+	   		if( isGet(modifiers) && !isGet( legal )  )
+		   		throw new ParseException(name + " cannot be marked get");
+     		if( isSet(modifiers) && !isSet( legal )  )
+		   		throw new ParseException(name + " cannot be marked set");
+		   	if( isConstant(modifiers) && !isConstant( legal )  )
+		   		throw new ParseException(name + " cannot be marked constant");
+			if( isWeak(modifiers) && !isWeak( legal )  )
+		   		throw new ParseException(name + " cannot be marked weak");
+     		if( isImmutable(modifiers) && !isImmutable( legal )  )
+		   		throw new ParseException(name + " cannot be marked immutable");
+		   	if( isNullable(modifiers) && !isNullable( legal )  )
+		   		throw new ParseException(name + " cannot be marked nullabe");		}
 
 		public static void checkClassModifiers( int modifiers ) throws ParseException
+		{
+		  checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE | ABSTRACT | FINAL | IMMUTABLE, "A class");	
+	    }
+
+
+		public static void checkSingletonModifiers( int modifiers ) throws ParseException
 		{		  
-		  if( isNative(modifiers) )
-	  	  	throw new ParseException("A class cannot be marked native");
-	  	  if( isWeak(modifiers) )
-	  	  	throw new ParseException("A class cannot be marked weak");
-	  	  if( isNullable(modifiers) )
-	  	  	throw new ParseException("A class cannot be marked nullable");
-  	  	  if( isConstant(modifiers) )
-	  	  	throw new ParseException("A class cannot be marked constant");
-	   }
-
-
+		  checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE | IMMUTABLE, "A singleton");	
+	   	}
+	   	
 		public static void checkExceptionModifiers( int modifiers ) throws ParseException
 		{		  
-			if( isAbstract(modifiers) || isStatic(modifiers) || isNative(modifiers) ||
- 	  			isWeak(modifiers) || isImmutable(modifiers) || isNullable(modifiers) ||
- 	  			isGet(modifiers) || isSet(modifiers) || isConstant(modifiers) )
-				throw new ParseException("An exception can only be marked public, protected, private, and final");
+			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE | FINAL, "An exception");
 		}
 
 		public static void checkErrorModifiers( int modifiers ) throws ParseException
 		{
-			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) || 	  	
-	 	  		isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
-	 	  		isNullable(modifiers) ||
- 	  			isGet(modifiers) || isSet(modifiers) || isConstant(modifiers) )
- 	    	  	throw new ParseException("An error can only be marked public, protected, or private");
+			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE, "An error");
  	 	}
 
 
 		public static void checkInterfaceModifiers( int modifiers ) throws ParseException
 		{
-	 	 	 if( isPublic(modifiers) || isProtected(modifiers) || isPrivate(modifiers) ||
-	 	    	isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) ||
-	 	    	isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) || isNullable(modifiers) )
- 	    	  	throw new ParseException("An interface can only be marked final");
+ 	    	checkModifiers( modifiers, FINAL, "An interface");
  	 	}
 
 		public static void checkViewModifiers( int modifiers ) throws ParseException
 		{
-			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) || 
-				isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
-				isNullable(modifiers) ||
- 	  			isGet(modifiers) || isSet(modifiers) || isConstant(modifiers) )
-				throw new ParseException("A view can only be marked public, private, or protected");
+			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE, "A view");
 		}
 
 		public static void checkEnumModifiers( int modifiers ) throws ParseException
 		{
-			if( isAbstract(modifiers) || isStatic(modifiers) || isFinal(modifiers) ||
-				isNative(modifiers) || isWeak(modifiers) || isImmutable(modifiers) ||
-				isNullable(modifiers) ||
- 	  			isGet(modifiers) || isSet(modifiers) || isConstant(modifiers) )
-				throw new ParseException("An enum can only be marked public, private, or protected");
+			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE, "An enum");
 		}
 
 		public static void checkFieldModifiers( int modifiers, JJTShadowParserState state ) throws ParseException
 		{
-			if( isAbstract(modifiers) )
-				throw new ParseException("A field cannot be marked abstract");
-			if( isProtected(modifiers) )
-				throw new ParseException("A field cannot be marked protected");
-			if( isPublic(modifiers) )
-				throw new ParseException("A field cannot be marked public");
-			if( isPrivate(modifiers) )
-				throw new ParseException("A field cannot be marked private");
-			if( isNative(modifiers) )
-				throw new ParseException("A field cannot be marked native");
-			if( isSet(modifiers) && ModifierSet.isFinal(modifiers) )
+			checkModifiers( modifiers, FINAL | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE, "A field");
+			
+			if( isSet(modifiers) && isFinal(modifiers) )
 				throw new ParseException("A field cannot be marked both set and final");
 			if( isConstant(modifiers) )
 			{
 				int updatedModifiers = removeModifier(modifiers, CONSTANT);
 				
 				if( updatedModifiers != 0 )
-					throw new ParseException("A constant cannot have any other modifiers");
+					throw new ParseException("A constant field cannot have any other modifiers");
 			}			 			
 		}
 
 		public static void checkMethodModifiers( int modifiers ) throws ParseException
 		{
-		 	if( isWeak(modifiers) )
-				throw new ParseException("A method cannot be marked weak");
-			if( isNullable(modifiers) )
-				throw new ParseException("A method cannot be marked nullable");
+		  	checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE | ABSTRACT | FINAL | IMMUTABLE | GET | SET | NATIVE, "A method");
 			if( isGet(modifiers) &&  isSet(modifiers) )
-				throw new ParseException("A method cannot be marked both get and set");
-			if( isConstant(modifiers) )
-				throw new ParseException("A method cannot be marked constant");
+				throw new ParseException("A method cannot be marked both get and set");			
 		}
 
 		public static void checkLocalMethodModifiers( int modifiers ) throws ParseException
 		{
-		 	if( isWeak(modifiers) )
-				throw new ParseException("A local method cannot be marked weak");
-			if( isNullable(modifiers) )
-				throw new ParseException("A local method cannot be marked nullable");
-			if( isGet(modifiers) )
-				throw new ParseException("A local method cannot be marked get");
-			if( isSet(modifiers) )
-				throw new ParseException("A local method cannot be marked set");
-			if( isConstant(modifiers) )
-				throw new ParseException("A local method cannot be marked constant");
-			if( isAbstract(modifiers) )
-				throw new ParseException("A local method cannot be marked abstract");
-			if( isProtected(modifiers) )
-				throw new ParseException("A local method cannot be marked protected");
-			if( isPublic(modifiers) )
-				throw new ParseException("A local method cannot be marked public");
-			if( isPrivate(modifiers) )
-				throw new ParseException("A local method cannot be marked private");
-			if( isNative(modifiers) )
-				throw new ParseException("A local method cannot be marked native");
+			checkModifiers( modifiers, IMMUTABLE, "A local method");
 		}
 
 
 		public static void checkLocalVariableModifiers( int modifiers ) throws ParseException
-		{		 	
-			if( isGet(modifiers) )
-				throw new ParseException("A local variable cannot be marked get");
-			if( isSet(modifiers) )
-				throw new ParseException("A local variable cannot be marked set");
-			if( isConstant(modifiers) )
-				throw new ParseException("A local variable cannot be marked constant");
-			if( isAbstract(modifiers) )
-				throw new ParseException("A local variable cannot be marked abstract");
-			if( isProtected(modifiers) )
-				throw new ParseException("A local variable cannot be marked protected");
-			if( isPublic(modifiers) )
-				throw new ParseException("A local variable cannot be marked public");
-			if( isPrivate(modifiers) )
-				throw new ParseException("A local variable cannot be marked private");
-			if( isNative(modifiers) )
-				throw new ParseException("A local variable cannot be marked native");
-			if( isStatic(modifiers) )
-				throw new ParseException("A local variable cannot be marked static");
+		{
+		  	checkModifiers( modifiers, FINAL | IMMUTABLE | WEAK | NULLABLE, "A local variable");
 		}
 
 		public static void checkParameterAndReturnModifiers( int modifiers ) throws ParseException
 		{
-		  if( isPublic(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked public");	  	
-			if( isProtected(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked protected");			
-			if( isPrivate(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked private");
-			if( isGet(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked get");
-			if( isSet(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked set");
-			if( isConstant(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked constant");
-			if( isAbstract(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked abstract");			
-			if( isNative(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked native");
-			if( isStatic(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked static");
-			if( isWeak(modifiers) )
-				throw new ParseException("Method parameter and return types cannot be marked weak");
+		  checkModifiers( modifiers, FINAL | IMMUTABLE | NULLABLE, "Method parameter and return types");		  
 
 			//what does final mean for parameters and return types?
-			//shouldn't all parameters be final?
-			//if( isFinal(modifiers) )
-			//	throw new ParseException("Method parameter and return types cannot be marked static");
+			//shouldn't all parameters be final?		
 		}
 	}
 
@@ -296,6 +234,7 @@ public class ShadowParser
 		ERROR,
 		EXCEPTION,
 		INTERFACE,
+		SINGLETON,
 		VIEW
 	};
 
@@ -412,6 +351,7 @@ TOKEN :
 | < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
 | < IN: "in" >
+| < INSTANCE: "instance" >
 | < IS: "is" >
 | < INT: "int" >
 | < INTERFACE: "interface" >
@@ -429,7 +369,8 @@ TOKEN :
 | < RETURN: "return" >
 | < SET: "set" >
 | < SHORT: "short" >
-| < STATIC: "static" >
+| < SINGLETON: "singleton" >
+//| < STATIC: "static" >
 //| < STRICTFP: "strictfp" >
 | < SUPER: "super" >
 | < SWITCH: "switch" >
@@ -740,7 +681,7 @@ int Modifiers():
   LOOKAHEAD(2)
   (
     "public" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PUBLIC); }
-  | "static" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.STATIC); }
+  //| "static" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.STATIC); }
   | "protected" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PROTECTED); }
   | "private" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PRIVATE); }
   | "final" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.FINAL); }
@@ -811,6 +752,12 @@ void ClassOrInterfaceDeclaration(int modifiers):
   	  jjtThis.setKind(TypeKind.CLASS);
   	  ModifierSet.checkClassModifiers( modifiers );	  
   	}
+	| "singleton"
+ 	{
+ 	  jjtThis.setKind(TypeKind.SINGLETON);
+ 	  ModifierSet.checkSingletonModifiers( modifiers );
+ 	}
+  	
  	| "exception"
  	{
  	  jjtThis.setKind(TypeKind.EXCEPTION); isErrorOrException = true;
@@ -1090,10 +1037,13 @@ void ExplicitConstructorInvocation():
   //what is that for?  Thing.super()?
 }
 
+
+
+//do wee need initializers at all?
 void Initializer():
 { debugPrint("INITIALIZER"); }
 {
-  [ "static" ] Block()
+  /*[ "static" ]*/ Block()
 }
 
 

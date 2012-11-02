@@ -1,6 +1,6 @@
 class Checking
 {
-	public static danger(nullable String s) => (String)
+	public danger(nullable String s) => (String)
 	{
 		try
 		{

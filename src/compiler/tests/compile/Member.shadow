@@ -27,11 +27,11 @@ class Member {
 
 
   	//Modifiers
-    get set static int t;   		// static int
+    get set int t;   		// int
     get final int u;   		// final int
     set weak int v;   		// weak int
-    weak int w;   		// immutable int
+    immutable int w = 3;   		// immutable int
     
     //Crazy Test
-    get static final weak double x;
+    get final weak double x;
 }

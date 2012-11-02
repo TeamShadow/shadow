@@ -1,12 +1,12 @@
 class Sequences
 {   
-    public static jam(int a) => (int, double)
+    public jam(int a) => (int, double)
     {
         return (a, 16.0);
     }
 
        
-    public static main() => ()
+    public start() => ()
     {    	
     	double x,y;
     	

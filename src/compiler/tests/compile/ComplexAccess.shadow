@@ -17,7 +17,7 @@ class ComplexAccess {
 		return new Inner();	
 	}
 	    
-    public static main() => ()
+    public start() => ()
     {
     	int c;
     	

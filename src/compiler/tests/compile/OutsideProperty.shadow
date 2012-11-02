@@ -1,6 +1,6 @@
 class OutsideProperty
 {	
-	static public stuff() => ()
+	public stuff() => ()
 	{
 		Property p = new Property();
 		

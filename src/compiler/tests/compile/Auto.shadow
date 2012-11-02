@@ -1,7 +1,7 @@
 class Auto
 {
 
-	public static stuff() => ()
+	public stuff() => ()
 	{
 		auto thing = "A string";
 		auto x = new Object();

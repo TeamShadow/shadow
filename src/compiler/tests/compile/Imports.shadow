@@ -2,7 +2,7 @@ import shadow.utility@Random;
 
 class Imports
 {
-	public static main(String[] args ) => ()
+	public start(String[] args ) => ()
 	{
 		int a = 10;
 		

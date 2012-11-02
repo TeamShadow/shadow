@@ -1,6 +1,6 @@
 class LValue
 {
-    public static main() => ()
+    public main() => ()
     {
        int x = 10;
        x = 5;
@@ -9,7 +9,7 @@ class LValue
        //blah( 6 ) = x; //uncomment to see lvalue checking
     } 
     
-    public static blah(int a) => (int)
+    public blah(int a) => (int)
     {
         return a + 5;
     }      

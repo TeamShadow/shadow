@@ -1,17 +1,17 @@
 class MethodCall {
 
    
-    public static jam(int a) => (int turkey, double gravy) {
+    public jam(int a) => (int turkey, double gravy) {
         return (4, 16.0);
     }
 
-    public static blah(int a) => (int) {
+    public blah(int a) => (int) {
         return a + 5;
     }
     
 
     
-    public static main() => ()
+    public start() => ()
     {
     	int c;
     	

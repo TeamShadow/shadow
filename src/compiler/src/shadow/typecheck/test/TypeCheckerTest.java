@@ -230,10 +230,12 @@ public class TypeCheckerTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
+	/*
 	@Test public void testStatic() throws Exception {
 		args.add("tests/compile/Static.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	*/
 
 	@Test public void testSubtype() throws Exception {
 		args.add("tests/compile/Subtype.shadow");

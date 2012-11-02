@@ -1,6 +1,6 @@
 class Array {
     
-    public static main() => ()
+    public start() => ()
     {	
     	int[] array = new int[100];
     	array[6] = 14;

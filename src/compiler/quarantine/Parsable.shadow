@@ -3,5 +3,5 @@
 
 interface shadow.standard@Parsable<T>
 {
-	public static parse<T>(String value) => (T);
+	public parse<T>(String value) => (T);
 }
