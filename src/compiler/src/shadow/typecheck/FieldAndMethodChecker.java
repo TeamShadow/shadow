@@ -370,9 +370,11 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 		if( ModifierSet.isImmutable(currentType.getModifiers()) ) {
 			node.addModifier(ModifierSet.IMMUTABLE);
-			
+			node.addModifier(ModifierSet.FINAL);
+			/*
 			if( type.isPrimitive() )
 				node.addModifier(ModifierSet.FINAL);
+			*/
 		}
 		
 		if( currentType instanceof ClassInterfaceBaseType )

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 
@@ -2106,9 +2108,7 @@ public class ClassChecker extends BaseChecker {
 				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);			
 				
 				List<MethodSignature> methods = prefixType.getOuter().getMethods(unboundMethod.getTypeName());
-				List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
-				
-				boolean perfectMatch = false;
+				TreeMap<MethodSignature, MethodType> acceptableMethods = new TreeMap<MethodSignature, MethodType>();				
 				
 				for( MethodSignature signature : methods ) 
 				{				
@@ -2127,62 +2127,47 @@ public class ClassChecker extends BaseChecker {
 						}
 					}				
 					
-					if( methodType.matches( sequenceType ) ) //signature.matches( sequenceType, context )
-					{
-						SequenceType returnTypes = methodType.getReturnTypes();					
-						returnTypes.setNodeType(node);	 //used instead of setType					
-						perfectMatch = true;
-						
-						if( !methodIsAccessible( signature, currentType  ))
-							addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
-						//else
-						//	node.setType(methodType);
+					if( methodType.matches( sequenceType ) )
+					{						
+						//perfect match, forget everything else
+						acceptableMethods.clear();
+						acceptableMethods.put(signature, methodType);
+						break;
 					}
-					else if( methodType.canAccept( sequenceType )) //signature.canAccept( sequenceType, context )
-						acceptableMethods.add(signature);
+					else if( methodType.canAccept( sequenceType ))
+						acceptableMethods.put(signature, methodType);
 				}
-				
-				if( !perfectMatch )
+			
+				if( acceptableMethods.size() == 0 )	
 				{
-					if( acceptableMethods.size() == 0 )	
-					{
-						node.setType(Type.UNKNOWN);						
-						addError(node, Error.TYPE_MIS, "No method found with signature " + sequenceType);
-					}
-					else if( acceptableMethods.size() > 1 )
-					{
-						node.setType(Type.UNKNOWN);						
-						addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + sequenceType);
-					}							
-					else
-					{
-						MethodSignature signature = acceptableMethods.get(0);
-						MethodType methodType = signature.getMethodType();
-						
-						if( methodType.isParameterized() )
-						{
-							if( hasArguments )
-							{
-								SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();
-								List<TypeParameter> parameters = methodType.getTypeParameters(); 
-								methodType = methodType.replace(parameters, arguments); //we know they match already
-							}
-							else						
-								addError(node, Error.TYPE_MIS, "Parameterized method " + signature + " is being called with no type parameters");							
-							
-						}
-						
-						SequenceType returnTypes = methodType.getReturnTypes();
-						returnTypes.setNodeType( node ); //used instead of setType						
-						
-						if( !methodIsAccessible( signature, currentType  ))					
-							addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");						
-						//else
-						//	node.setType(methodType);
-							
-						
-					}
-				}					
+					node.setType(Type.UNKNOWN);						
+					addError(node, Error.TYPE_MIS, "No method found with signature " + sequenceType);
+				}
+				else if( acceptableMethods.size() > 1 )
+				{
+					node.setType(Type.UNKNOWN);						
+					addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + sequenceType);
+				}							
+				else //exactly one thing
+				{					
+					Entry<MethodSignature, MethodType> entry = acceptableMethods.firstEntry();
+					MethodSignature signature = entry.getKey(); 
+					MethodType methodType = entry.getValue();
+					
+					//addError(node, Error.TYPE_MIS, "Parameterized method " + signature + " is being called with no type parameters");
+					
+					SequenceType returnTypes = methodType.getReturnTypes();
+					returnTypes.setNodeType( node ); //used instead of setType						
+					
+					if( !methodIsAccessible( signature, currentType  ))					
+						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");						
+					//else
+					//	node.setType(methodType);
+					
+					if( !currentMethod.isEmpty() && ModifierSet.isImmutable(currentMethod.getFirst().getModifiers()) && !ModifierSet.isImmutable(methodType.getModifiers()))
+						addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from an immutable method");					
+				}
+									
 			}
 			else if( prefixType instanceof MethodType ) //only happens with method pointers
 			{
@@ -2214,6 +2199,10 @@ public class ClassChecker extends BaseChecker {
 					addError(node, Error.TYPE_MIS, "Cannot apply arguments " + sequenceType + " to method given by " + node);
 					node.setType(Type.UNKNOWN);
 				}
+				
+				if( !currentMethod.isEmpty() && ModifierSet.isImmutable(currentMethod.getFirst().getModifiers()) && !ModifierSet.isImmutable(methodType.getModifiers()))
+					addError(node, Error.INVL_MOD, "Mutable method cannot be called from an immutable method");
+				
 			}
 			else
 			{									
@@ -2664,7 +2653,7 @@ public class ClassChecker extends BaseChecker {
 	{
 		if( secondVisit )
 		{
-			if( currentMethod == null ) //should never happen			
+			if( currentMethod.isEmpty() ) //should never happen			
 				addError(node, Error.INVL_TYP, "Return statement outside of method body");
 			else
 			{

@@ -5,7 +5,7 @@ import java.util.List;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 
-public class MethodSignature {
+public class MethodSignature implements Comparable<MethodSignature> {
 	protected final MethodType type;
 	protected final String symbol;
 	private final Node node;	/** The AST node that corresponds to the branch of the tree for this method */
@@ -143,5 +143,10 @@ public class MethodSignature {
 	public boolean matchesInterface(MethodSignature interfaceSignature) {
 			return interfaceSignature.symbol.equals(symbol) && 					
 					interfaceSignature.type.matchesInterface(type);
+	}
+
+	@Override
+	public int compareTo(MethodSignature o) {
+		return toString().compareTo(o.toString());
 	}
 }
