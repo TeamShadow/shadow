@@ -127,7 +127,7 @@ public class ShadowParser
 		   	if( isProtected(modifiers) && !isProtected( legal )  )
 		   		throw new ParseException(name + " cannot be marked protected");
 		   	if( isPrivate(modifiers) && !isPrivate( legal )  )
-		   		throw new ParseException(name + " cannot be marked protected");
+		   		throw new ParseException(name + " cannot be marked private");
  			if( isStatic(modifiers) && !isStatic( legal )  )
 		   		throw new ParseException(name + " cannot be marked static");
 		   	if( isAbstract(modifiers) && !isAbstract( legal )  )
@@ -1237,7 +1237,7 @@ void AssignmentOperator():
 void ConditionalExpression():
 {}
 {
-  CoalesceExpression() [ "?" { jjtThis.setImage("?:"); } ConditionalExpression() "," ConditionalExpression() ]
+  CoalesceExpression() [ "?" ConditionalExpression() "," ConditionalExpression() ]
 }
 
 void CoalesceExpression():
@@ -1461,7 +1461,7 @@ void ArrayIndex():
   Token t;
 }
 {
-  "[" { jjtThis.addToImage('['); } ConditionalExpression() ("," ConditionalExpression())* "]"
+  "[" ConditionalExpression() ("," ConditionalExpression())* "]"
 }
 
 void FieldAccess():

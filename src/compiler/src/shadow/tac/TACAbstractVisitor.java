@@ -7,7 +7,6 @@ import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACClass;
-import shadow.tac.nodes.TACDispatch;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
@@ -67,8 +66,6 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	public void visit(TACCast node) throws ShadowException { }
 	@Override
 	public void visit(TACClass node) throws ShadowException { }
-	@Override
-	public void visit(TACDispatch node) throws ShadowException { }
 	@Override
 	public void visit(TACFieldRef node) throws ShadowException { }
 	@Override

@@ -4,26 +4,26 @@ abstract final class shadow.standard@Array<T>
 	long[] lengths = new long[0];
 	private constructor( long data, long[] lengths )
 	{
-		this.data = data;
-		this.lengths = lengths;
+		this:data = data;
+		this:lengths = lengths;
 	}
 
-	public getLength() => ( long )
+	public immutable getLength() => ( long )
 	{
 		long length = 1;
 		for ( long i = 0; i < getDimensions(); i += 1 )
 			length *= getLength(i);
 		return length;
 	}
-	public getLength( long index ) => ( long )
+	public immutable getLength( long index ) => ( long )
 	{
 		return lengths[index];
 	}
-	public getLengths() => ( long[] )
+	public immutable getLengths() => ( long[] )
 	{
 		return lengths;
 	}
-	public getDimensions() => ( long )
+	public immutable getDimensions() => ( long )
 	{
 		return lengths.getLength(0);
 	}

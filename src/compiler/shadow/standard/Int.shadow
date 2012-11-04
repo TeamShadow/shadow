@@ -1,0 +1,19 @@
+class shadow.standard@Int
+{
+	public min( Int other ) => ( Int )
+	{
+		return this < other ? this, other;
+	}
+
+	public max( Int other ) => ( Int )
+	{
+		return this > other ? this, other;
+	}
+
+	public abs() => ( UInt )
+	{
+		return this < 0 ? -this, this;
+	}
+
+	public native div( Int other ) => ( Int quotient, Int remainder );
+}

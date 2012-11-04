@@ -11,6 +11,7 @@ import java.util.NoSuchElementException;
 
 import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -19,6 +20,7 @@ import shadow.typecheck.type.Type;
 
 public class TACMethod extends TACNodeList
 {
+	private int index;
 	private String name;
 	private MethodType type;
 	private Map<String, TACVariable> locals =
@@ -31,12 +33,14 @@ public class TACMethod extends TACNodeList
 	}
 	public TACMethod(String methodName, MethodType methodType)
 	{
+		ClassInterfaceBaseType thisType = methodType.getOuter();
+		index = ((ClassType)thisType).getMethodIndex(
+				new MethodSignature(methodType, methodName, null));
 		name = methodName;
 		type = methodType;
 		scopes.push(new LinkedHashMap<String, TACVariable>(
 				getParameterCount() * 2));
-		if (!isStatic())
-			addLocal(type.getOuter(), "this");
+		addLocal(thisType, "this");
 		for (String parameterName : methodType.getParameterNames())
 			addLocal(methodType.getParameterType(parameterName).getType(),
 					parameterName);
@@ -48,6 +52,10 @@ public class TACMethod extends TACNodeList
 		return type.getOuter();
 	}
 
+	public int getIndex()
+	{
+		return index;
+	}
 	public String getName()
 	{
 		return name;
@@ -67,7 +75,7 @@ public class TACMethod extends TACNodeList
 	}
 	public int getParameterCount()
 	{
-		return type.getParameterTypes().size() + (isStatic() ? 0 : 1);
+		return 1 + type.getParameterTypes().size();
 	}
 
 	public SequenceType getReturnTypes()
@@ -88,10 +96,6 @@ public class TACMethod extends TACNodeList
 		return type.getReturnTypes().size();
 	}
 
-	public boolean isStatic()
-	{
-		return ModifierSet.isStatic(type.getModifiers());
-	}
 	public boolean isNative()
 	{
 		return ModifierSet.isNative(type.getModifiers());

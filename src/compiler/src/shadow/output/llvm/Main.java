@@ -57,8 +57,8 @@ public class Main {
 	
 	/**
 	 * Used for unit tests, provides a return value.
-	 * @param args
-	 * @return
+	 * @param args arguments
+	 * @return error
 	 */
 	public static int test(String[] args) {
 		Configuration config = Configuration.getInstance();

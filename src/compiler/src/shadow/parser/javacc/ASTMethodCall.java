@@ -17,6 +17,6 @@ public class ASTMethodCall extends SimpleNode {
 	  
 	public String toString()
 	{
-		  return jjtGetChild(0).toString() + type;	  
+		  return /*jjtGetChild(0).toString()*/"" + type;
 	}
 }

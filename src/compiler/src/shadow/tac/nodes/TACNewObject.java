@@ -1,38 +1,37 @@
 package shadow.tac.nodes;
 
-import java.util.Collection;
-
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.ClassType;
 
-public class TACNewObject extends TACCall
+public class TACNewObject extends TACOperand
 {
-	public TACNewObject(TACMethod method, Collection<TACOperand> params)
+	private ClassType type;
+	public TACNewObject(ClassType objectType)
 	{
-		this(null, method, params);
+		this(null, objectType);
 	}
-	public TACNewObject(TACNode node, TACMethod method,
-			Collection<TACOperand> params)
+	public TACNewObject(TACNode node, ClassType objectType)
 	{
-		super(node, method, params);
+		super(node);
+		type = objectType;
 	}
 
 	@Override
 	public ClassInterfaceBaseType getType()
 	{
-		return getMethod().getPrefixType();
+		return type;
 	}
 	@Override
 	public int getNumOperands()
 	{
-		return 1 + super.getNumOperands();
+		return 0;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		return super.getOperand(num);
+		throw new IndexOutOfBoundsException();
 	}
 
 	@Override

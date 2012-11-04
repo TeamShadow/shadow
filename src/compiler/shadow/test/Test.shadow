@@ -4,21 +4,21 @@ import shadow.io@Console;
 class shadow.test@Test
 {
 	nullable Test test = this;
-	public static main() => ()
+	public main() => ()
 	{
 		nullable Test test = new Test();
 		try {
-			Console.printLine(check(check(test).test));
+			Console.printLine(check(check(test):test));
 		} recover {
 			Console.printLine(1);
 		}
 		try {
-			check(test).test = null;
+			check(test):test = null;
 		} recover {
 			Console.printLine(2);
 		}
 		try {
-			Console.printLine(check(check(test).test));
+			Console.printLine(check(check(test):test));
 		} recover {
 			Console.printLine(3);
 		}

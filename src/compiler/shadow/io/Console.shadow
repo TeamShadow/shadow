@@ -1,24 +1,24 @@
-class shadow.io@Console
+singleton shadow.io@Console
 {
-	private constructor() { }
+	public constructor() { }
 
-	public static printLine( boolean b ) => () { print(b); printLine(); }
-	public static printLine( int i ) => () { print(i); printLine(); }
-	public static printLine( code c ) => () { print(c); printLine(); }
-	public static printLine( long l ) => () { print(l); printLine(); }
-	public static printLine( String s ) => () { print(s); printLine(); }
-	public static printLine( Object o ) => () { print(o); printLine(); }
-	public static printLine() => () { print('\n'); }
-	public static print( boolean b ) => ()
+	public printLine( boolean b ) => () { print(b); printLine(); }
+	public printLine( int i ) => () { print(i); printLine(); }
+	public printLine( code c ) => () { print(c); printLine(); }
+	public printLine( long l ) => () { print(l); printLine(); }
+	public printLine( String s ) => () { print(s); printLine(); }
+	public printLine( Object o ) => () { print(o); printLine(); }
+	public printLine() => () { print('\n'); }
+	public print( boolean b ) => ()
 	{
 		if ( b )
 			print("true");
 		else
 			print("false");
 	}
-	public static print( Object o ) => () { print(o.toString()); }
-	public static native print( int i ) => ();
-	public static native print( code c ) => ();
-	public static native print( long l ) => ();
-	public static native print( String s ) => ();
+	public print( Object o ) => () { print(o.toString()); }
+	public native print( int i ) => ();
+	public native print( code c ) => ();
+	public native print( long l ) => ();
+	public native print( String s ) => ();
 }

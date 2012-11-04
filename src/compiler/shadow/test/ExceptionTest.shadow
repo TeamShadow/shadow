@@ -3,11 +3,11 @@ import shadow.io@Console;
 
 class shadow.test@ExceptionTest
 {
-	private nullable Error e;
-	public static throwException() => () {
+	nullable Error e;
+	public throwException() => () {
 		throw new ExceptionA();
 	}
-	public static main() => () {
+	public main() => () {
 		try {
 			throwException();
 		} catch (ExceptionA ex) {

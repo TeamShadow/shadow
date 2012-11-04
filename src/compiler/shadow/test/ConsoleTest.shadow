@@ -1,6 +1,6 @@
 class shadow.test@ConsoleTest
 {
-	public static main() => ()
+	public main() => ()
 	{
 		shadow.io@Console.printLine(12345);
 		Console.print('H');

@@ -20,7 +20,6 @@ import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACClass;
-import shadow.tac.nodes.TACDispatch;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
@@ -464,13 +463,6 @@ public class LLVMOutput extends TACAbstractVisitor
 				sizeof(type(node.getType())) + ')');
 		llvm.write(nextTemp(node) + " = bitcast i8* " + temp(1) + " to " +
 				type(node.getType()));
-		StringBuilder sb = new StringBuilder();
-		sb.append("call ").append(typeName(node.getMethod(), false)).
-				append('(').append(type(node.getType())).append(' ').
-				append(temp(0));
-		for (TACOperand param : node.getParameters())
-			sb.append(", ").append(typeName(param));
-		llvm.write(sb.append(')').toString());
 	}
 
 	@Override
@@ -712,37 +704,22 @@ public class LLVMOutput extends TACAbstractVisitor
 	public void visit(TACCall node) throws ShadowException
 	{
 		TACMethod method = node.getMethod();
-		StringBuilder sb = new StringBuilder();
-		if (method.getReturnCount() != 0)
-			sb.append(nextTemp(node)).append(" = ");
-		sb.append("call ").append(typeName(method, false)).append('(');
-		for (TACOperand param : node.getParameters())
-			sb.append(typeName(param)).append(", ");
-		if (method.getParameterCount() > 0)
-			sb.delete(sb.length() - 2, sb.length());
-		llvm.write(sb.append(')').toString());
-	}
-
-	@Override
-	public void visit(TACDispatch node) throws ShadowException
-	{
-		TACMethod method = node.getMethod();
-		TACOperand prefix = node.getPrefix();
-		Type prefixType = prefix.getType();
-		String methodsType = '\"' + prefixType.toString() + "$methods\"";
-		llvm.write(nextTemp() + " = getelementptr " + typeName(prefix) +
-				", i32 0, i32 0");
+		String methodsType = '\"' + method.getType().toString() + "$methods\"";
+		llvm.write(nextTemp() + " = getelementptr " +
+				typeName(node.getPrefix()) + ", i32 0, i32 0");
 		llvm.write(nextTemp() + " = load %" + methodsType + "** " + temp(1));
 		llvm.write(nextTemp() + " = getelementptr %" + methodsType + "* " +
-				temp(1) + ", i32 0, i32 " + node.getIndex());
+				temp(1) + ", i32 0, i32 " + node.getMethod().getIndex());
 		llvm.write(nextTemp() + " = load " + type(method) + "* " + temp(1));
 		StringBuilder sb = new StringBuilder();
 		if (method.getReturnCount() != 0)
 			sb.append(nextTemp(node)).append(" = ");
 		sb.append("call ").append(type(method, false)).append(' ').
-				append(temp(1)).append('(').append(typeName(prefix));
+				append(temp(1)).append('(');
 		for (TACOperand param : node.getParameters())
-			sb.append(", ").append(typeName(param));
+			sb.append(typeName(param)).append(", ");
+		if (method.getParameterCount() > 0)
+			sb.delete(sb.length() - 2, sb.length());
 		llvm.write(sb.append(')').toString());
 	}
 
@@ -856,8 +833,6 @@ public class LLVMOutput extends TACAbstractVisitor
 	{
 		StringBuilder sb = new StringBuilder("@\"").
 				append(method.getPrefixType()).append('$');
-		if (method.isStatic())
-			sb.append("static");
 		sb.append('$').append(method.getName());
 		for (ModifiedType paramType : method.getType().getParameterTypes())
 			sb.append('$').append(paramType.getType());
@@ -868,6 +843,7 @@ public class LLVMOutput extends TACAbstractVisitor
 	{
 		return typeName(node, false);
 	}
+	@SuppressWarnings("unused")
 	private static String typeName(TACMethod method, boolean params)
 	{
 		return typeName(type(method, params), name(method), false);

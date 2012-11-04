@@ -16,11 +16,11 @@
 declare noalias i8* @malloc(i64)
 declare noalias i8* @calloc(i64, i64)
 
-%"shadow.io@Console$methods" = type { %"shadow.standard@Class"* (%"shadow.io@Console"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)* }
-@"shadow.io@Console$methods" = constant %"shadow.io@Console$methods" { %"shadow.standard@Class"* (%"shadow.io@Console"*)* @"shadow.io@Console$$getClass", %"shadow.standard@String"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$toString" }
+%"shadow.io@Console$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.io@Console"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)*, void (%"shadow.io@Console"*, %boolean)*, void (%"shadow.io@Console"*, %"shadow.standard@Object"*)*, void (%"shadow.io@Console"*, %int)*, void (%"shadow.io@Console"*, %code)*, void (%"shadow.io@Console"*, %long)*, void (%"shadow.io@Console"*, %"shadow.standard@String"*)*, void (%"shadow.io@Console"*, %boolean)*, void (%"shadow.io@Console"*, %int)*, void (%"shadow.io@Console"*, %code)*, void (%"shadow.io@Console"*, %long)*, void (%"shadow.io@Console"*, %"shadow.standard@String"*)*, void (%"shadow.io@Console"*, %"shadow.standard@Object"*)*, void (%"shadow.io@Console"*)* }
+@"shadow.io@Console$methods" = constant %"shadow.io@Console$methods" { %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$clone", %"shadow.standard@Class"* (%"shadow.io@Console"*)* @"shadow.io@Console$$getClass", %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$immutableClone", %"shadow.standard@String"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$toString", void (%"shadow.io@Console"*, %boolean)* @"shadow.io@Console$$print$boolean", void (%"shadow.io@Console"*, %"shadow.standard@Object"*)* @"shadow.io@Console$$print$shadow.standard@Object", void (%"shadow.io@Console"*, %int)* @"shadow.io@Console$$print$int", void (%"shadow.io@Console"*, %code)* @"shadow.io@Console$$print$code", void (%"shadow.io@Console"*, %long)* @"shadow.io@Console$$print$long", void (%"shadow.io@Console"*, %"shadow.standard@String"*)* @"shadow.io@Console$$print$shadow.standard@String", void (%"shadow.io@Console"*, %boolean)* @"shadow.io@Console$$printLine$boolean", void (%"shadow.io@Console"*, %int)* @"shadow.io@Console$$printLine$int", void (%"shadow.io@Console"*, %code)* @"shadow.io@Console$$printLine$code", void (%"shadow.io@Console"*, %long)* @"shadow.io@Console$$printLine$long", void (%"shadow.io@Console"*, %"shadow.standard@String"*)* @"shadow.io@Console$$printLine$shadow.standard@String", void (%"shadow.io@Console"*, %"shadow.standard@Object"*)* @"shadow.io@Console$$printLine$shadow.standard@Object", void (%"shadow.io@Console"*)* @"shadow.io@Console$$printLine" }
 %"shadow.io@Console" = type { %"shadow.io@Console$methods"* }
 
-%"shadow.standard@Class$methods" = type { %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)* }
+%"shadow.standard@Class$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)* }
 @"shadow.standard@Class$methods" = external constant %"shadow.standard@Class$methods"
 %"shadow.standard@Class" = type { %"shadow.standard@Class$methods"*, %"shadow.standard@String"*, { %"shadow.standard@Class"**, [1 x %long] }, %"shadow.standard@Class"* }
 declare %"shadow.standard@Class"* @"shadow.standard@Class$$getSuperClass"(%"shadow.standard@Class"*)
@@ -32,14 +32,16 @@ declare %"shadow.standard@String"* @"shadow.standard@Class$$getClassName"(%"shad
 declare %"shadow.standard@String"* @"shadow.standard@Class$$toString"(%"shadow.standard@Class"*)
 declare void @"shadow.standard@Class$$constructor"(%"shadow.standard@Class"*)
 
-%"shadow.standard@Object$methods" = type { %"shadow.standard@Class"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)* }
+%"shadow.standard@Object$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Object"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)* }
 @"shadow.standard@Object$methods" = external constant %"shadow.standard@Object$methods"
 %"shadow.standard@Object" = type { %"shadow.standard@Object$methods"* }
 declare %"shadow.standard@Class"* @"shadow.standard@Object$$getClass"(%"shadow.standard@Object"*)
+declare %"shadow.standard@Object"* @"shadow.standard@Object$$clone"(%"shadow.standard@Object"*)
 declare %"shadow.standard@String"* @"shadow.standard@Object$$toString"(%"shadow.standard@Object"*)
+declare %"shadow.standard@Object"* @"shadow.standard@Object$$immutableClone"(%"shadow.standard@Object"*)
 declare void @"shadow.standard@Object$$constructor"(%"shadow.standard@Object"*)
 
-%"shadow.standard@String$methods" = type { %"shadow.standard@Class"* (%"shadow.standard@String"*)*, %"shadow.standard@String"* (%"shadow.standard@String"*)*, %boolean (%"shadow.standard@String"*, %"shadow.standard@String"*)*, %ubyte (%"shadow.standard@String"*, %long)*, %long (%"shadow.standard@String"*)* }
+%"shadow.standard@String$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@String"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@String"*)*, %boolean (%"shadow.standard@String"*, %"shadow.standard@String"*)*, %ubyte (%"shadow.standard@String"*, %long)*, %long (%"shadow.standard@String"*)* }
 @"shadow.standard@String$methods" = external constant %"shadow.standard@String$methods"
 %"shadow.standard@String" = type { %"shadow.standard@String$methods"*, { %ubyte*, [1 x %long] } }
 declare %boolean @"shadow.standard@String$$equals$shadow.standard@String"(%"shadow.standard@String"*, %"shadow.standard@String"*)
@@ -48,7 +50,7 @@ declare %ubyte @"shadow.standard@String$$getCode$long"(%"shadow.standard@String"
 declare %long @"shadow.standard@String$$getLength"(%"shadow.standard@String"*)
 declare void @"shadow.standard@String$$constructor"(%"shadow.standard@String"*)
 
-@"shadow.io@Console$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, { %"shadow.standard@Class"**, [1 x %long] } { %"shadow.standard@Class"** null, [1 x %long] [%long 0] }, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
+@"shadow.io@Console$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
 @"shadow.standard@Class$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@Object$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@String$class" = external constant %"shadow.standard@Class"
@@ -57,88 +59,186 @@ define %"shadow.standard@Class"* @"shadow.io@Console$$getClass"(%"shadow.io@Cons
     ret %"shadow.standard@Class"* @"shadow.io@Console$class"
 }
 
-define void @"shadow.io@Console$static$printLine$boolean"(%boolean) {
+define void @"shadow.io@Console$$printLine$boolean"(%"shadow.io@Console"*, %boolean) {
+    %this = alloca %"shadow.io@Console"*
     %b = alloca %boolean
-    store %boolean %0, %boolean* %b
-    %2 = load %boolean* %b
-    call void @"shadow.io@Console$static$print$boolean"(%boolean %2)
-    call void @"shadow.io@Console$static$printLine"()
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    store %boolean %1, %boolean* %b
+    %3 = load %"shadow.io@Console"** %this
+    %4 = load %boolean* %b
+    %5 = getelementptr %"shadow.io@Console"* %3, i32 0, i32 0
+    %6 = load %"(boolean) => ()$methods"** %5
+    %7 = getelementptr %"(boolean) => ()$methods"* %6, i32 0, i32 4
+    %8 = load void (%"shadow.io@Console"*, %boolean)** %7
+    call void %7(%"shadow.io@Console"* %3, %boolean %4)
+    %9 = load %"shadow.io@Console"** %this
+    %10 = getelementptr %"shadow.io@Console"* %9, i32 0, i32 0
+    %11 = load %"() => ()$methods"** %10
+    %12 = getelementptr %"() => ()$methods"* %11, i32 0, i32 16
+    %13 = load void (%"shadow.io@Console"*)** %12
+    call void %12(%"shadow.io@Console"* %9)
     ret void
 }
-define void @"shadow.io@Console$static$printLine$int"(%int) {
+define void @"shadow.io@Console$$printLine$int"(%"shadow.io@Console"*, %int) {
+    %this = alloca %"shadow.io@Console"*
     %i = alloca %int
-    store %int %0, %int* %i
-    %2 = load %int* %i
-    call void @"shadow.io@Console$static$print$int"(%int %2)
-    call void @"shadow.io@Console$static$printLine"()
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    store %int %1, %int* %i
+    %3 = load %"shadow.io@Console"** %this
+    %4 = load %int* %i
+    %5 = getelementptr %"shadow.io@Console"* %3, i32 0, i32 0
+    %6 = load %"(int) => ()$methods"** %5
+    %7 = getelementptr %"(int) => ()$methods"* %6, i32 0, i32 6
+    %8 = load void (%"shadow.io@Console"*, %int)** %7
+    call void %7(%"shadow.io@Console"* %3, %int %4)
+    %9 = load %"shadow.io@Console"** %this
+    %10 = getelementptr %"shadow.io@Console"* %9, i32 0, i32 0
+    %11 = load %"() => ()$methods"** %10
+    %12 = getelementptr %"() => ()$methods"* %11, i32 0, i32 16
+    %13 = load void (%"shadow.io@Console"*)** %12
+    call void %12(%"shadow.io@Console"* %9)
     ret void
 }
-define void @"shadow.io@Console$static$printLine$code"(%code) {
+define void @"shadow.io@Console$$printLine$code"(%"shadow.io@Console"*, %code) {
+    %this = alloca %"shadow.io@Console"*
     %c = alloca %code
-    store %code %0, %code* %c
-    %2 = load %code* %c
-    call void @"shadow.io@Console$static$print$code"(%code %2)
-    call void @"shadow.io@Console$static$printLine"()
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    store %code %1, %code* %c
+    %3 = load %"shadow.io@Console"** %this
+    %4 = load %code* %c
+    %5 = getelementptr %"shadow.io@Console"* %3, i32 0, i32 0
+    %6 = load %"(code) => ()$methods"** %5
+    %7 = getelementptr %"(code) => ()$methods"* %6, i32 0, i32 7
+    %8 = load void (%"shadow.io@Console"*, %code)** %7
+    call void %7(%"shadow.io@Console"* %3, %code %4)
+    %9 = load %"shadow.io@Console"** %this
+    %10 = getelementptr %"shadow.io@Console"* %9, i32 0, i32 0
+    %11 = load %"() => ()$methods"** %10
+    %12 = getelementptr %"() => ()$methods"* %11, i32 0, i32 16
+    %13 = load void (%"shadow.io@Console"*)** %12
+    call void %12(%"shadow.io@Console"* %9)
     ret void
 }
-define void @"shadow.io@Console$static$printLine$long"(%long) {
+define void @"shadow.io@Console$$printLine$long"(%"shadow.io@Console"*, %long) {
+    %this = alloca %"shadow.io@Console"*
     %l = alloca %long
-    store %long %0, %long* %l
-    %2 = load %long* %l
-    call void @"shadow.io@Console$static$print$long"(%long %2)
-    call void @"shadow.io@Console$static$printLine"()
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    store %long %1, %long* %l
+    %3 = load %"shadow.io@Console"** %this
+    %4 = load %long* %l
+    %5 = getelementptr %"shadow.io@Console"* %3, i32 0, i32 0
+    %6 = load %"(long) => ()$methods"** %5
+    %7 = getelementptr %"(long) => ()$methods"* %6, i32 0, i32 8
+    %8 = load void (%"shadow.io@Console"*, %long)** %7
+    call void %7(%"shadow.io@Console"* %3, %long %4)
+    %9 = load %"shadow.io@Console"** %this
+    %10 = getelementptr %"shadow.io@Console"* %9, i32 0, i32 0
+    %11 = load %"() => ()$methods"** %10
+    %12 = getelementptr %"() => ()$methods"* %11, i32 0, i32 16
+    %13 = load void (%"shadow.io@Console"*)** %12
+    call void %12(%"shadow.io@Console"* %9)
     ret void
 }
-define void @"shadow.io@Console$static$printLine$shadow.standard@String"(%"shadow.standard@String"*) {
+define void @"shadow.io@Console$$printLine$shadow.standard@String"(%"shadow.io@Console"*, %"shadow.standard@String"*) {
+    %this = alloca %"shadow.io@Console"*
     %s = alloca %"shadow.standard@String"*
-    store %"shadow.standard@String"* %0, %"shadow.standard@String"** %s
-    %2 = load %"shadow.standard@String"** %s
-    call void @"shadow.io@Console$static$print$shadow.standard@String"(%"shadow.standard@String"* %2)
-    call void @"shadow.io@Console$static$printLine"()
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    store %"shadow.standard@String"* %1, %"shadow.standard@String"** %s
+    %3 = load %"shadow.io@Console"** %this
+    %4 = load %"shadow.standard@String"** %s
+    %5 = getelementptr %"shadow.io@Console"* %3, i32 0, i32 0
+    %6 = load %"(shadow.standard@String) => ()$methods"** %5
+    %7 = getelementptr %"(shadow.standard@String) => ()$methods"* %6, i32 0, i32 9
+    %8 = load void (%"shadow.io@Console"*, %"shadow.standard@String"*)** %7
+    call void %7(%"shadow.io@Console"* %3, %"shadow.standard@String"* %4)
+    %9 = load %"shadow.io@Console"** %this
+    %10 = getelementptr %"shadow.io@Console"* %9, i32 0, i32 0
+    %11 = load %"() => ()$methods"** %10
+    %12 = getelementptr %"() => ()$methods"* %11, i32 0, i32 16
+    %13 = load void (%"shadow.io@Console"*)** %12
+    call void %12(%"shadow.io@Console"* %9)
     ret void
 }
-define void @"shadow.io@Console$static$printLine$shadow.standard@Object"(%"shadow.standard@Object"*) {
+define void @"shadow.io@Console$$printLine$shadow.standard@Object"(%"shadow.io@Console"*, %"shadow.standard@Object"*) {
+    %this = alloca %"shadow.io@Console"*
     %o = alloca %"shadow.standard@Object"*
-    store %"shadow.standard@Object"* %0, %"shadow.standard@Object"** %o
-    %2 = load %"shadow.standard@Object"** %o
-    call void @"shadow.io@Console$static$print$shadow.standard@Object"(%"shadow.standard@Object"* %2)
-    call void @"shadow.io@Console$static$printLine"()
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    store %"shadow.standard@Object"* %1, %"shadow.standard@Object"** %o
+    %3 = load %"shadow.io@Console"** %this
+    %4 = load %"shadow.standard@Object"** %o
+    %5 = getelementptr %"shadow.io@Console"* %3, i32 0, i32 0
+    %6 = load %"(shadow.standard@Object) => ()$methods"** %5
+    %7 = getelementptr %"(shadow.standard@Object) => ()$methods"* %6, i32 0, i32 5
+    %8 = load void (%"shadow.io@Console"*, %"shadow.standard@Object"*)** %7
+    call void %7(%"shadow.io@Console"* %3, %"shadow.standard@Object"* %4)
+    %9 = load %"shadow.io@Console"** %this
+    %10 = getelementptr %"shadow.io@Console"* %9, i32 0, i32 0
+    %11 = load %"() => ()$methods"** %10
+    %12 = getelementptr %"() => ()$methods"* %11, i32 0, i32 16
+    %13 = load void (%"shadow.io@Console"*)** %12
+    call void %12(%"shadow.io@Console"* %9)
     ret void
 }
-define void @"shadow.io@Console$static$printLine"() {
-    call void @"shadow.io@Console$static$print$code"(%code 10)
+define void @"shadow.io@Console$$printLine"(%"shadow.io@Console"*) {
+    %this = alloca %"shadow.io@Console"*
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    %2 = load %"shadow.io@Console"** %this
+    %3 = getelementptr %"shadow.io@Console"* %2, i32 0, i32 0
+    %4 = load %"(final code) => ()$methods"** %3
+    %5 = getelementptr %"(final code) => ()$methods"* %4, i32 0, i32 -1
+    %6 = load void (%"shadow.io@Console"*, %code)** %5
+    call void %5(%"shadow.io@Console"* %2, %code 10)
     ret void
 }
-define void @"shadow.io@Console$static$print$boolean"(%boolean) {
+define void @"shadow.io@Console$$print$boolean"(%"shadow.io@Console"*, %boolean) {
+    %this = alloca %"shadow.io@Console"*
     %b = alloca %boolean
-    store %boolean %0, %boolean* %b
-    %2 = load %boolean* %b
-    br %boolean %2, label %.label0, label %.label1
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    store %boolean %1, %boolean* %b
+    %3 = load %boolean* %b
+    br %boolean %3, label %.label0, label %.label1
 .label0:
-    call void @"shadow.io@Console$static$print$shadow.standard@String"(%"shadow.standard@String"* @.str1)
+    %4 = load %"shadow.io@Console"** %this
+    %5 = getelementptr %"shadow.io@Console"* %4, i32 0, i32 0
+    %6 = load %"(final shadow.standard@String) => ()$methods"** %5
+    %7 = getelementptr %"(final shadow.standard@String) => ()$methods"* %6, i32 0, i32 -1
+    %8 = load void (%"shadow.io@Console"*, %"shadow.standard@String"*)** %7
+    call void %7(%"shadow.io@Console"* %4, %"shadow.standard@String"* @.str1)
     br label %.label2
 .label1:
-    call void @"shadow.io@Console$static$print$shadow.standard@String"(%"shadow.standard@String"* @.str2)
+    %9 = load %"shadow.io@Console"** %this
+    %10 = getelementptr %"shadow.io@Console"* %9, i32 0, i32 0
+    %11 = load %"(final shadow.standard@String) => ()$methods"** %10
+    %12 = getelementptr %"(final shadow.standard@String) => ()$methods"* %11, i32 0, i32 -1
+    %13 = load void (%"shadow.io@Console"*, %"shadow.standard@String"*)** %12
+    call void %12(%"shadow.io@Console"* %9, %"shadow.standard@String"* @.str2)
     br label %.label2
 .label2:
     ret void
 }
-define void @"shadow.io@Console$static$print$shadow.standard@Object"(%"shadow.standard@Object"*) {
+define void @"shadow.io@Console$$print$shadow.standard@Object"(%"shadow.io@Console"*, %"shadow.standard@Object"*) {
+    %this = alloca %"shadow.io@Console"*
     %o = alloca %"shadow.standard@Object"*
-    store %"shadow.standard@Object"* %0, %"shadow.standard@Object"** %o
-    %2 = load %"shadow.standard@Object"** %o
-    %3 = getelementptr %"shadow.standard@Object"* %2, i32 0, i32 0
-    %4 = load %"shadow.standard@Object$methods"** %3
-    %5 = getelementptr %"shadow.standard@Object$methods"* %4, i32 0, i32 1
-    %6 = load %"shadow.standard@String"* (%"shadow.standard@Object"*)** %5
-    %7 = call %"shadow.standard@String"* %6(%"shadow.standard@Object"* %2)
-    call void @"shadow.io@Console$static$print$shadow.standard@String"(%"shadow.standard@String"* %7)
+    store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this
+    store %"shadow.standard@Object"* %1, %"shadow.standard@Object"** %o
+    %3 = load %"shadow.standard@Object"** %o
+    %4 = getelementptr %"shadow.standard@Object"* %3, i32 0, i32 0
+    %5 = load %"() => (shadow.standard@String)$methods"** %4
+    %6 = getelementptr %"() => (shadow.standard@String)$methods"* %5, i32 0, i32 3
+    %7 = load %"shadow.standard@String"* (%"shadow.standard@Object"*)** %6
+    %8 = call %"shadow.standard@String"* %7(%"shadow.standard@Object"* %3)
+    %9 = load %"shadow.io@Console"** %this
+    %10 = getelementptr %"shadow.io@Console"* %9, i32 0, i32 0
+    %11 = load %"(shadow.standard@String) => ()$methods"** %10
+    %12 = getelementptr %"(shadow.standard@String) => ()$methods"* %11, i32 0, i32 9
+    %13 = load void (%"shadow.io@Console"*, %"shadow.standard@String"*)** %12
+    call void %12(%"shadow.io@Console"* %9, %"shadow.standard@String"* %8)
     ret void
 }
-declare void @"shadow.io@Console$static$print$int"(%int)
-declare void @"shadow.io@Console$static$print$code"(%code)
-declare void @"shadow.io@Console$static$print$long"(%long)
-declare void @"shadow.io@Console$static$print$shadow.standard@String"(%"shadow.standard@String"*)
+declare void @"shadow.io@Console$$print$int"(%"shadow.io@Console"*, %int)
+declare void @"shadow.io@Console$$print$code"(%"shadow.io@Console"*, %code)
+declare void @"shadow.io@Console$$print$long"(%"shadow.io@Console"*, %long)
+declare void @"shadow.io@Console$$print$shadow.standard@String"(%"shadow.io@Console"*, %"shadow.standard@String"*)
 define void @"shadow.io@Console$$constructor"(%"shadow.io@Console"*) {
     %this = alloca %"shadow.io@Console"*
     store %"shadow.io@Console"* %0, %"shadow.io@Console"** %this

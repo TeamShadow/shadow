@@ -26,11 +26,12 @@ public class TACCall extends TACOperand
 		super(node);
 		method = methodRef;
 		SequenceType types = methodRef.getType().getParameterTypes();
-		if (params.size() != types.size())
+		if (params.size() - 1 != types.size())
 			throw new IllegalArgumentException("Wrong # args");
 		Iterator<TACOperand> paramsIter = params.iterator();
 		Iterator<ModifiedType> typesIter = types.iterator();
 		parameters = new ArrayList<TACOperand>(params.size());
+		parameters.add(check(paramsIter.next(), methodRef.getPrefixType()));
 		while (paramsIter.hasNext())
 			parameters.add(check(paramsIter.next(), typesIter.next().
 					getType()));
@@ -39,6 +40,10 @@ public class TACCall extends TACOperand
 	public TACMethod getMethod()
 	{
 		return method;
+	}
+	public TACOperand getPrefix()
+	{
+		return parameters.get(0);
 	}
 	public int getNumParameters()
 	{
@@ -61,7 +66,7 @@ public class TACCall extends TACOperand
 	@Override
 	public int getNumOperands()
 	{
-		return parameters.size() + 1;
+		return parameters.size();
 	}
 	@Override
 	public TACOperand getOperand(int num)
