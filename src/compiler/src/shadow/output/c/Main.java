@@ -80,7 +80,7 @@ public class Main {
 			
 			// parse out the command line
 			if(!config.parse(commandLine)) {
-				logger.debug("Command line parse error");
+				logger.error("Command line parse error");
 				return GENERAL_ERROR;
 			}
 			
@@ -96,14 +96,16 @@ public class Main {
 		TypeChecker checker = new TypeChecker(false);
 			 
 		try
-		{			
+		{
 			// loop through the source files, compiling them
 			while(config.hasNext())
 			{
 				File shadowFile = config.next();
-				FileInputStream sourceStream = new FileInputStream(shadowFile);
-				ShadowParser parser = new ShadowParser(sourceStream);		        
-		        checker.setCurrentFile(shadowFile);
+				checker.setCurrentFile(shadowFile);
+				
+				FileInputStream sourceStream = new FileInputStream(shadowFile);				
+				ShadowParser parser = new ShadowParser(sourceStream);
+		       
 		        TACBuilder tacBuilder = new TACBuilder();
 		        
 		        logger.info("Compiling " + shadowFile.getName());
