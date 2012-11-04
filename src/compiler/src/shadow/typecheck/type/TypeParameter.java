@@ -8,18 +8,19 @@ import java.util.Set;
 
 public class TypeParameter extends ClassInterfaceBaseType
 {
-	private List<ClassInterfaceBaseType> bounds = new ArrayList<ClassInterfaceBaseType>();
+	private Set<ClassInterfaceBaseType> bounds = new HashSet<ClassInterfaceBaseType>();
 
 	public TypeParameter(String typeName)
 	{
 		super(typeName, 0, null);
+		bounds.add(Type.OBJECT);
 	}
 	
 	public void addBound(ClassInterfaceBaseType type) {
 		bounds.add(type);
 	}
 	
-	public List<ClassInterfaceBaseType> getBounds()
+	public Set<ClassInterfaceBaseType> getBounds()
 	{
 		return bounds;
 	}
@@ -39,13 +40,16 @@ public class TypeParameter extends ClassInterfaceBaseType
 		{
 			TypeParameter typeParameter = (TypeParameter) type;
 			
-			for( Type bound : typeParameter.bounds )
+			for( Type otherBound : typeParameter.bounds )
 			{
 				boolean found = false;
-				for( int i = 0; i < bounds.size() && !found; i++ )
+				for( Type bound : bounds )
 				{
-					if( bounds.get(i).isSubtype(bound) )
-						found = true;					
+					if( bound.isSubtype(otherBound) )
+					{
+						found = true;
+						break;
+					}
 				}
 				
 				if( !found )
@@ -76,7 +80,7 @@ public class TypeParameter extends ClassInterfaceBaseType
 		return false;
 	}
 	
-	public ClassInterfaceBaseType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	public ClassInterfaceBaseType replace(List<Type> values, List<ModifiedType> replacements )
 	{
 		for( int i = 0; i < values.size(); i++ )
 			if( values.get(i).getTypeName().equals(getTypeName()))
@@ -89,17 +93,19 @@ public class TypeParameter extends ClassInterfaceBaseType
 		StringBuilder builder = new StringBuilder(getTypeName());
 		boolean first = true;
 		
-		if( !bounds.isEmpty() )
+		if( bounds.size() > 1 ) //always contains Object
 			builder.append(" is ");
 		
 		for(Type bound : bounds )
 		{			
 			if( !first )
 				builder.append(" and ");
-					
-			builder.append(bound.toString());
 			
-			first = false;
+			if( bound != Type.OBJECT )
+			{
+				builder.append(bound.toString());				
+				first = false;
+			}
 		}
 		
 		return builder.toString();

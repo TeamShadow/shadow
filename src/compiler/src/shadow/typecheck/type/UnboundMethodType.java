@@ -20,7 +20,7 @@ public class UnboundMethodType extends Type
 	}
 
 	@Override
-	public UnboundMethodType replace(List<TypeParameter> values,
+	public UnboundMethodType replace(List<Type> values,
 			List<ModifiedType> replacements) {		
 		return this;
 	}

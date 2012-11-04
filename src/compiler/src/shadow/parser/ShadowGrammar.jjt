@@ -1593,20 +1593,20 @@ void AllocationExpression():
 void ArrayAllocation():
 { debugPrint("ARRAY ALLOCATION"); }
 {  
-  "new" ( PrimitiveType() | (ClassOrInterfaceType() [ TypeArguments() ])) ArrayDimsAndInits()
+  "new" ( PrimitiveType() | ClassOrInterfaceType() ) ArrayDimsAndInits()
 }
 
 
 void ConstructorInvocation():
 { debugPrint("CONSTRUCTOR INVOCATION"); }
 {
- 	"new" ClassOrInterfaceType() [ TypeArguments() ] Arguments()
+ 	"new" ClassOrInterfaceType() Arguments()
  	/* No anonymous classes in Shadow */    
 }
 
 
 void SingletonInstance():
-{ debugPrint("SINGLETON INVOCATION"); }
+{ debugPrint("SINGLETON INSTANCE"); }
 {
  	"instance" ClassOrInterfaceType() 	
 }

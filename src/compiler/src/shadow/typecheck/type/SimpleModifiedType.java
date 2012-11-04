@@ -25,7 +25,7 @@ public class SimpleModifiedType implements ModifiedType {
 		return modifiers;
 	}	
 
-	public SimpleModifiedType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	public SimpleModifiedType replace(List<Type> values, List<ModifiedType> replacements )
 	{	
 		return new SimpleModifiedType( type.replace(values, replacements), modifiers );		
 	}

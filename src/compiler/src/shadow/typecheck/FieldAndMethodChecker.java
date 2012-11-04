@@ -41,7 +41,6 @@ import shadow.parser.javacc.SignatureNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -179,12 +178,15 @@ public class FieldAndMethodChecker extends BaseChecker {
 						//check to see if all interfaces are satisfied
 						for( ClassInterfaceBaseType _interface : classType.getInterfaces() )
 						{
-							InterfaceType interfaceType;
+							InterfaceType interfaceType = (InterfaceType) _interface;
 							
+							
+							/*
 							if( _interface instanceof InstantiatedType ) //must be instantiated version of interface
 								interfaceType = (InterfaceType) ((InstantiatedType)_interface).getInstantiatedType();
 							else
-								interfaceType = (InterfaceType) _interface; 							
+								interfaceType = (InterfaceType) _interface;
+							*/ 							
 							
 							//check for circular interface issues first
 							if( interfaceType.isCircular() )
@@ -432,10 +434,17 @@ public class FieldAndMethodChecker extends BaseChecker {
 		{
 			if( declarationType.isParameterized() )
 			{
-				for( TypeParameter parameter : declarationType.getTypeParameters() )
+				for( Type parameter : declarationType.getTypeParameters() )
 				{
-					if( parameter.getTypeName().equals(name) )
-						return parameter;					
+					
+					if( parameter instanceof TypeParameter )
+					{
+						TypeParameter typeParameter = (TypeParameter) parameter;
+						if( typeParameter.getTypeName().equals(name) )
+							return typeParameter;
+					}
+					
+										
 				}				
 			}
 		}		
@@ -483,10 +492,10 @@ public class FieldAndMethodChecker extends BaseChecker {
 						if( current.isParameterized() )
 						{
 							SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
-							List<TypeParameter> parameters = current.getTypeParameters();
+							List<Type> parameters = current.getTypeParameters();
 							if( checkTypeArguments( parameters, arguments ) )
 							{
-								InstantiatedType instantiatedType = new InstantiatedType(current, arguments);
+								ClassInterfaceBaseType instantiatedType = current.replace(parameters, arguments);
 								child.setType(instantiatedType);
 								if( i == node.jjtGetNumChildren() - 1 )
 									type = instantiatedType;								
@@ -495,7 +504,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 									next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
 								
 								next = instantiatedType;
-								current = instantiatedType.getBaseType().getOuter();
+								current = instantiatedType.getOuter();
 							}
 							else
 							{
@@ -842,7 +851,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 				String symbol = node.getImage();
 				typeParameter = new TypeParameter(symbol);
 				
-				for( TypeParameter existing : declarationType.getTypeParameters() )
+				for( Type existing : declarationType.getTypeParameters() )
 					if( existing.getTypeName().equals( symbol ) )
 						addError( node, Error.MULT_SYM, "Multiply defined type parameter " + symbol );
 				

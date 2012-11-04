@@ -1322,7 +1322,7 @@ public class TACBuilder implements ShadowParserVisitor
 
 	private void visitMethodCall(ASTMethodCall node)
 	{
-		MethodType type = node.getMethodType();
+		MethodType type = (MethodType) node.getType();
 		TACMethod methodRef = new TACMethod(identifier.getName(), type);
 		List<TACOperand> params = new ArrayList<TACOperand>();
 		params.add(prefix != null ? prefix :

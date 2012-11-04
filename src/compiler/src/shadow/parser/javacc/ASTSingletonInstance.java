@@ -3,7 +3,7 @@
 package shadow.parser.javacc;
 
 public
-class ASTSingletonInstance extends SimpleNode {
+class ASTSingletonInstance extends PrefixNode {
   public ASTSingletonInstance(int id) {
     super(id);
   }

@@ -1,0 +1,17 @@
+class PairUser
+{
+	public start() => ()
+	{
+	
+	
+		Pair<int> pair1 = new Pair <int> ( 7, 14 );
+	
+	
+		Pair<int> pair2 = new Pair <int> ( pair1 );
+		
+		
+		Pair<String> pair3 = new Pair<String>( pair1.toString(), pair2.toString() );
+	
+	
+	}
+}

@@ -203,6 +203,16 @@ public class TypeCheckerTest {
 		args.add("tests/compile/OutsideProperty.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	
+	@Test public void testPair() throws Exception {
+		args.add("tests/compile/Pair.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
+	@Test public void testPairUser() throws Exception {
+		args.add("tests/compile/PairUser.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
 
 	@Test public void testParent() throws Exception {
 		args.add("tests/compile/Parent.shadow");

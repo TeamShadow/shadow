@@ -4,7 +4,10 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTConstructorInvocation extends SimpleNode {
+class ASTConstructorInvocation extends PrefixNode {
+	
+
+	
   public ASTConstructorInvocation(int id) {
     super(id);
   }
@@ -18,5 +21,6 @@ class ASTConstructorInvocation extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
     return visitor.visit(this, data);
   }
+
 }
 /* JavaCC - OriginalChecksum=95eee80eb761cbc0445cb30eb14b4730 (do not edit this line) */

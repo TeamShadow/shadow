@@ -50,7 +50,6 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
-import shadow.typecheck.type.InstantiatedType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
@@ -169,8 +168,10 @@ public class TypeCollector extends BaseChecker
 								{
 									updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(0)), missingTypes);
 									Type childType = child.jjtGetChild(0).getType();
+									/*
 									if( childType instanceof InstantiatedType )
 										childType = ((InstantiatedType) childType).getInstantiatedType();
+									*/
 									currentType.setExtendType((ClassType) childType);
 								}
 							}
@@ -183,8 +184,11 @@ public class TypeCollector extends BaseChecker
 								{
 									updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), missingTypes);
 									Type childType = child.jjtGetChild(j).getType();
+									
+									/*
 									if( childType instanceof InstantiatedType )
-										childType = ((InstantiatedType) childType).getInstantiatedType();						
+										childType = ((InstantiatedType) childType).getInstantiatedType();
+									*/						
 									
 									extendTypes.set(j, (InterfaceType) childType );									
 								}
@@ -199,8 +203,9 @@ public class TypeCollector extends BaseChecker
 							{
 								updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), missingTypes);
 								Type childType = child.jjtGetChild(j).getType();
-								if( childType instanceof InstantiatedType )
+								/*if( childType instanceof InstantiatedType )
 									childType = ((InstantiatedType) childType).getInstantiatedType();
+								*/
 								
 								implementsTypes.set(j, (InterfaceType) childType);									
 							}							
@@ -415,7 +420,9 @@ public class TypeCollector extends BaseChecker
 						}						
 						typeArguments.setType(arguments);					
 						
-						InstantiatedType instantiatedType = new InstantiatedType(current, arguments);
+						//InstantiatedType instantiatedType = new InstantiatedType(current, arguments);
+						ClassInterfaceBaseType instantiatedType = current.replace(current.getTypeParameters(), arguments);
+						//child.setType(instantiatedType.getInstantiatedType());
 						child.setType(instantiatedType);
 						if( i == node.jjtGetNumChildren() - 1 )
 							type = instantiatedType;								
@@ -424,7 +431,7 @@ public class TypeCollector extends BaseChecker
 							next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
 						
 						next = instantiatedType;
-						current = instantiatedType.getBaseType().getOuter();
+						current = instantiatedType.getOuter();
 					}
 				}				
 			}			
@@ -458,7 +465,7 @@ public class TypeCollector extends BaseChecker
 		TypeParameter typeParameter = new TypeParameter(symbol);		
 		node.setType(typeParameter);
 		
-		for( TypeParameter existing : parentType.getTypeParameters() )
+		for( Type existing : parentType.getTypeParameters() )
 			if( existing.getTypeName().equals( typeParameter.getTypeName() ) )
 				addError( node, Error.MULT_SYM, "Multiply defined type parameter " + existing.getTypeName() );
 		

@@ -162,14 +162,14 @@ public class MethodType extends Type {
 	
 	
 	@Override
-	public MethodType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	public MethodType replace(List<Type> values, List<ModifiedType> replacements )
 	{	
 		MethodType replaced = new MethodType(getOuter(), getModifiers());		
 
 		replaced.parameterNames = parameterNames;
 		replaced.parameterTypes = parameterTypes.replace(values, replacements);
-		replaced.returns = returns.replace(values, replacements);		
-		
+		replaced.returns = returns.replace(values, replacements);	
+				
 		return replaced;
 	}
 

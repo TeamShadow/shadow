@@ -216,7 +216,7 @@ public class ClassType extends ClassInterfaceBaseType {
 				if( !list.contains( signature ) )
 					list.add(signature);
 		
-		if( getExtendType() != null )
+		if( getExtendType() != null && !methodName.equals("constructor") )
 			return getExtendType().recursivelyGetMethods(methodName, list);
 		else
 			return list;
@@ -352,7 +352,7 @@ public class ClassType extends ClassInterfaceBaseType {
 
 	
 	@Override
-	public ClassType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	public ClassType replace(List<Type> values, List<ModifiedType> replacements )
 	{	
 		if( isRecursivelyParameterized() )
 		{		
@@ -384,6 +384,13 @@ public class ClassType extends ClassInterfaceBaseType {
 			
 			for( String name : inners.keySet() )		
 				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
+			
+			//replaced.setTypeArguments( new SequenceType(replacements) );
+			
+			for( Type parameter : getTypeParameters() )			
+				replaced.addTypeParameter(parameter.replace(values, replacements));
+			
+			replaced.setParameterized(true);
 			
 			return replaced;
 		}

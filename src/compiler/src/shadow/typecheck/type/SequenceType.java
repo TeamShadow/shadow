@@ -21,7 +21,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	{
 		super(null, 0, null);		
 		types = modifiedTypes;
-	}
+	}	
 	
 	@Override
 	public int size()
@@ -38,6 +38,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	
 	public boolean canAccept( List<ModifiedType> inputTypes, Type container )
 	{	
+		/*
 		if( (container instanceof InstantiatedType) && isParameterized() )
 		{
 			InstantiatedType instantiatedType = (InstantiatedType)container;
@@ -45,6 +46,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			return replaced.canAccept( inputTypes );
 		}
 		else
+		*/
 			return canAccept( inputTypes );				
 	}
 	
@@ -138,7 +140,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 	
 	@Override
-	public SequenceType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	public SequenceType replace(List<Type> values, List<ModifiedType> replacements )
 	{		
 		SequenceType temp = new SequenceType();
 		
@@ -154,13 +156,14 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		
 	public boolean matches(List<ModifiedType> inputTypes, Type container)
 	{
+		/*
 		if( (container instanceof InstantiatedType) && isParameterized() )
 		{
 			InstantiatedType instantiatedType = (InstantiatedType)container;
 			SequenceType replaced = replace( instantiatedType.getTypeParameters(), instantiatedType.getTypeArguments() );
 			return replaced.matches( inputTypes );
 		}
-		else
+		else*/
 			return matches( inputTypes );
 	}
 	
@@ -172,6 +175,18 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	
 		for( int i = 0; i < types.size(); i++ )		
 			if( !inputTypes.get(i).getType().equals(getType(i)) )
+				return false;
+		
+		return true;		
+	}
+	
+	public boolean exactlyMatches(List<ModifiedType> inputTypes)
+	{
+		if( types.size() != inputTypes.size() )
+			return false;	
+	
+		for( int i = 0; i < types.size(); i++ )		
+			if( !inputTypes.get(i).getType().equals(getType(i)) || inputTypes.get(i).getModifiers() != get(i).getModifiers() )
 				return false;
 		
 		return true;		

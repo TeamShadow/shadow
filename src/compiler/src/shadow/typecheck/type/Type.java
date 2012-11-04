@@ -15,8 +15,12 @@ public abstract class Type {
 	private ClassInterfaceBaseType outer; //outer class	
 	//private final Kind kind;
 	protected Package _package;
-	private List<TypeParameter> typeParameters = new ArrayList<TypeParameter>();	
-	private boolean parameterized;	
+	private List<Type> typeParameters = new ArrayList<Type>();	
+	private boolean parameterized = false;
+	//private boolean instantiated = false;
+	//private SequenceType typeArguments;
+
+
 		
 	/*
 	public static enum Kind {
@@ -132,10 +136,32 @@ public abstract class Type {
 	{
 		if( o != null && o instanceof Type )
 		{
-			//null type matches everything, could this ever be a problem?
-			return this == Type.NULL || o == Type.NULL || o == this;
-//			return this == Type.NULL || o == Type.NULL ||
-//					toString().equals(o.toString()); // TODO: fix other problem
+			if( this == Type.NULL || o == Type.NULL || o == this )
+				return true;
+			
+			Type type = (Type) o;
+			
+			if( type.getPackage() == getPackage() && type.getTypeName().equals(getTypeName()) )
+			{
+				
+				if( parameterized )
+				{
+					if( type.typeParameters.size() == typeParameters.size() )
+					{
+						for( int i = 0; i < typeParameters.size(); i++ )
+						{
+							if( !type.typeParameters.get(i).equals(typeParameters.get(i)) )
+								return false;
+						}
+					}
+					else
+						return false;
+				}
+					
+				return true;
+			}	
+			else
+				return false;
 		}
 		else
 			return false;
@@ -353,12 +379,12 @@ public abstract class Type {
 		_package = p;
 	}
 	
-	public List<TypeParameter> getTypeParameters()
+	public List<Type> getTypeParameters()
 	{
 		return typeParameters;
 	}
 	
-	public void addTypeParameter(TypeParameter parameter)
+	public void addTypeParameter(Type parameter)
 	{
 		typeParameters.add(parameter);
 	}	
@@ -415,6 +441,7 @@ public abstract class Type {
 		return parameterized; 
 	}
 
+
 	/**
 	 * This method indicates whether a cast is necessary between two types.
 	 * <p>
@@ -443,5 +470,5 @@ public abstract class Type {
 	 * @return {@literal true} if {@code this} can be cast to {@code other}
 	 */
 	abstract public boolean isSubtype(Type other);
-	abstract public Type replace(List<TypeParameter> values, List<ModifiedType> replacements );
+	abstract public Type replace(List<Type> values, List<ModifiedType> replacements );
 }

@@ -71,6 +71,9 @@ public class ArrayType extends ClassType
 			this.baseType = baseType;
 		else
 			this.baseType = new ArrayType( baseType, arrayDimensions, index + 1);
+		
+		if( baseType.isParameterized() )
+			setParameterized(true);
 	}
 	
 	private ArrayType( Type baseType, int dimensions )
@@ -78,7 +81,10 @@ public class ArrayType extends ClassType
 		super(makeName(baseType, dimensions), baseType.getModifiers(), baseType.getOuter());
 		
 		this.baseType = baseType;
-		this.dimensions = dimensions;		
+		this.dimensions = dimensions;
+		
+		if( baseType.isParameterized() )
+			setParameterized(true);
 	}
 	
 	public boolean equals(Object o)
@@ -121,7 +127,7 @@ public class ArrayType extends ClassType
 			return false;
 	}
 	
-	public ArrayType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	public ArrayType replace(List<Type> values, List<ModifiedType> replacements )
 	{	
 		return new ArrayType( baseType.replace(values, replacements), dimensions  );		
 	}

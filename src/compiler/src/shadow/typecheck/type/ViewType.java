@@ -23,7 +23,7 @@ public class ViewType extends ClassInterfaceBaseType {
 	}
 
 	@Override
-	public ViewType replace(List<TypeParameter> values,	List<ModifiedType> replacements)
+	public ViewType replace(List<Type> values,	List<ModifiedType> replacements)
 	{		
 		return this;
 	}

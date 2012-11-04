@@ -94,7 +94,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 	}
 	
 	@Override
-	public InterfaceType replace(List<TypeParameter> values, List<ModifiedType> replacements )
+	public InterfaceType replace(List<Type> values, List<ModifiedType> replacements )
 	{		
 		if( isRecursivelyParameterized() )
 		{		
@@ -132,6 +132,14 @@ public class InterfaceType extends ClassInterfaceBaseType {
 			for( String name : inners.keySet() )		
 				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
 			*/
+			
+			//replaced.setTypeArguments( new SequenceType(replacements) );
+			
+			for( Type parameter : getTypeParameters() )			
+				replaced.addTypeParameter(parameter.replace(values, replacements));
+			
+			replaced.setParameterized(true);
+			
 			return replaced;
 		}
 		

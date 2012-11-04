@@ -2,11 +2,15 @@ package shadow.typecheck.type;
 
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
+import shadow.parser.javacc.Node;
 
-public class InstantiatedType extends ClassType {
+//this class may only cause problems
 
-	private List<ModifiedType> typeArguments; 
+public class OldInstantiatedType extends ClassType {
+
+	//private List<ModifiedType> typeArguments; 
 	private ClassInterfaceBaseType baseType;
 	private ClassInterfaceBaseType instantiatedType = null;
 
@@ -20,14 +24,21 @@ public class InstantiatedType extends ClassType {
 		baseType = type;
 	}
 	
+	public OldInstantiatedType(String name)
+	{
+		super(name, null);
+		
+	}
 	
+	/*
 	public List<ModifiedType> getTypeArguments()
 	{
 		return typeArguments;
 	}
+	*/
 	
-	
-	public InstantiatedType(ClassInterfaceBaseType type, List<ModifiedType> arguments) {
+	/*
+	public OldInstantiatedType(ClassInterfaceBaseType type, List<ModifiedType> arguments) {
 		super(type.getTypeName(), type.getModifiers(), type.getOuter());
 		baseType = type;
 		typeArguments = arguments;		
@@ -72,7 +83,9 @@ public class InstantiatedType extends ClassType {
 		else
 			return false;		
 	}
+	*/
 	
+	/*
 	public List<MethodSignature> getOrderedMethods()
 	{
 		List<MethodSignature> methodsList = super.getOrderedMethods();
@@ -83,6 +96,7 @@ public class InstantiatedType extends ClassType {
 		
 		return methodsList;		
 	}	
+	
 
 	//type arguments must match exactly
 	//base type can be a subtype
@@ -111,6 +125,7 @@ public class InstantiatedType extends ClassType {
 			return false;
 	}
 	
+	
 	public ClassInterfaceBaseType getInstantiatedType()
 	{
 		if( instantiatedType == null )
@@ -122,4 +137,18 @@ public class InstantiatedType extends ClassType {
 	public List<MethodSignature> getMethods(String methodName) {
 		return getInstantiatedType().getMethods(methodName);
 	}
+	
+	public Node getField(String fieldName) {
+		return getInstantiatedType().getField(fieldName);
+	}
+	
+	public ModifiedType getFieldType (String fieldName) {
+		return getInstantiatedType().getFieldType(fieldName);
+	}
+	
+	public Map<String, Node> getFields() {
+		return getInstantiatedType().getFields();
+	}
+	
+	*/
 }

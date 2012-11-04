@@ -123,7 +123,7 @@ public class PropertyType extends Type {
 	}
 
 	@Override
-	public PropertyType replace(List<TypeParameter> values,
+	public PropertyType replace(List<Type> values,
 			List<ModifiedType> replacements) {
 		
 		MethodType replacedGetter = null;
@@ -131,8 +131,8 @@ public class PropertyType extends Type {
 		if( getter != null )
 			replacedGetter = getter.replace(values, replacements);
 		if( setter != null )
-			replacedSetter = setter.replace(values, replacements);		
-		
+			replacedSetter = setter.replace(values, replacements);	
+			
 		return new PropertyType( replacedGetter, replacedSetter );
 	}
 	

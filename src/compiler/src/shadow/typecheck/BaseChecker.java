@@ -185,10 +185,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			MethodType methodType = (MethodType)(method.getType());
 			if( methodType.isParameterized() )
 			{
-				for( TypeParameter typeParameter : methodType.getTypeParameters() )
+				for( Type type : methodType.getTypeParameters() )
 				{
-					if( typeParameter.getTypeName().equals(name))
-						return typeParameter;
+					if( type instanceof TypeParameter )
+					{
+						TypeParameter typeParameter = (TypeParameter) type;
+						
+						if( typeParameter.getTypeName().equals(name))
+							return typeParameter;
+					}
 				}
 			}			
 		}
@@ -211,9 +216,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			
 			//check type parameters of outer class
 			if( outer.isParameterized() )
-				for( TypeParameter typeParameter : outer.getTypeParameters() )
-					if( typeParameter.getTypeName().equals(name) )
-						return typeParameter;
+				for( Type parameter : outer.getTypeParameters() )
+				{
+					if( parameter instanceof TypeParameter )
+					{
+						TypeParameter typeParameter = (TypeParameter) parameter;
+						if( typeParameter.getTypeName().equals(name) )
+							return typeParameter;
+					}
+				}
 		
 			//walk up packages from there
 			Package p = outer.getPackage();		
@@ -314,16 +325,21 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	
 		
-	protected boolean checkTypeArguments( List<TypeParameter> parameters, SequenceType arguments )
+	protected boolean checkTypeArguments( List<Type> parameters, SequenceType arguments )
 	{
 		if( parameters.size() != arguments.size() )
 			return false;
 		
 		for( int i = 0; i < parameters.size(); i++ )
 		{
-			TypeParameter parameter = parameters.get(i);
-			if( !parameter.canAccept( arguments.get(i)  ) )
-					return false;				
+			if( parameters.get(i) instanceof TypeParameter  )
+			{			
+				TypeParameter parameter = (TypeParameter) parameters.get(i);
+				if( !parameter.canAccept( arguments.get(i)  ) )
+						return false;
+			}
+			else
+				return false;
 		}	
 		
 		return true;

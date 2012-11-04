@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -209,7 +210,27 @@ public abstract class ClassInterfaceBaseType extends Type
 		return extendType.isRecursivelyParameterized();
 	}
 	
-	public abstract ClassInterfaceBaseType replace(List<TypeParameter> values, List<ModifiedType> replacements );
+	public abstract ClassInterfaceBaseType replace(List<Type> values, List<ModifiedType> replacements );
+		
+	public String toString() {
+		StringBuilder builder = new StringBuilder(super.toString());
+		
+		boolean first = true;
+		
+		if( isParameterized() )
+		{
+			builder.append("<");
+			for( Type parameter : getTypeParameters() ) 
+			{
+				if( !first )
+					builder.append(", ");
+				builder.append(parameter.toString() );
+			}
+			builder.append(">");			
+		}
+		
+		return builder.toString();
+	}	
 
 	public boolean encloses(Type type) {
 		if( equals(this) )

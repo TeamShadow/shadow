@@ -1,0 +1,37 @@
+class Pair<T> 
+{
+	//annoying that these have to be nullable
+	set get nullable T x;
+	set get nullable T y;
+	
+	public constructor( T x, T y )
+	{
+		this:x = x;
+		this:y = y;
+	}
+	
+	public constructor( Pair<T> pair )
+	{
+		x = pair:x;
+		y = pair:y;
+	}
+	
+	
+	public toString() => (String)
+	{
+		String value = "(";
+		
+		try
+		{
+			value #= check(x).toString() # ", ";
+			value #= check(y).toString();
+		}
+		recover
+		{			
+		}
+		
+		value #= ")";
+	
+		return value;
+	}
+}

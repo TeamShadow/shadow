@@ -135,9 +135,9 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type;
 	}
 	
-	public MethodSignature replace(List<TypeParameter> parameters,
+	public MethodSignature replace(List<Type> values,
 			List<ModifiedType> replacements) {
-		return new MethodSignature(type.replace(parameters, replacements), symbol, node);
+		return new MethodSignature(type.replace(values, replacements), symbol, node);
 	}
 	
 	public boolean matchesInterface(MethodSignature interfaceSignature) {
@@ -148,5 +148,9 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	@Override
 	public int compareTo(MethodSignature o) {
 		return toString().compareTo(o.toString());
+	}
+
+	public boolean isConstructor() {		
+		return symbol.equals("constructor");
 	}
 }
