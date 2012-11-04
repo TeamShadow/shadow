@@ -1,7 +1,11 @@
 package shadow.parser.javacc;
 
-public class ASTMethodCall extends SimpleNode {
+import shadow.typecheck.type.MethodType;
 
+public class ASTMethodCall extends SimpleNode {
+	
+	private MethodType methodType;
+	
 	public ASTMethodCall(int id) {
 		super(id);
 	}
@@ -17,6 +21,14 @@ public class ASTMethodCall extends SimpleNode {
 	  
 	public String toString()
 	{
-		  return /*jjtGetChild(0).toString()*/"" + type;
+		  return /*jjtGetChild(0).toString() + */type.toString();
+	}
+	
+	public MethodType getMethodType() {
+		return methodType;
+	}
+	
+	public void setMethodType( MethodType methodType ) {
+		this.methodType = methodType;
 	}
 }

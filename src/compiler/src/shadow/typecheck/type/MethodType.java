@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MethodType extends Type {
-	protected List<String> paramNames;
-	protected SequenceType paramTypes;
+	protected List<String> parameterNames; /** List of parameter names */
+	protected SequenceType parameterTypes; /** List of parameter types */
 	protected SequenceType returns; /** List of return types */
 
 	public MethodType() {
@@ -14,19 +14,19 @@ public class MethodType extends Type {
 
 	public MethodType(ClassInterfaceBaseType outer, int modifiers) {
 		super(null, modifiers, outer);
-		paramNames = new ArrayList<String>();
-		paramTypes = new SequenceType();
+		parameterNames = new ArrayList<String>();
+		parameterTypes = new SequenceType();
 		returns = new SequenceType();
 	}	
 
 	public boolean matches( SequenceType inputTypes, Type container )
 	{
-		return paramTypes.matches( inputTypes, container );		
+		return parameterTypes.matches( inputTypes, container );		
 	}
 	
 	public boolean matches( SequenceType inputTypes)
 	{
-		return paramTypes.matches( inputTypes);		
+		return parameterTypes.matches( inputTypes);		
 	}
 
 	//this method is used to see if particular return values inside the method can be given back as return values
@@ -35,9 +35,9 @@ public class MethodType extends Type {
 		return returns.canAccept(returnTypes, container);
 	}
 	
-	public boolean canReturn( SequenceType returnType, Type container )
+	public boolean canReturn( SequenceType returnTypes, Type container )
 	{
-		return returns.canAccept(returnType, container );
+		return returns.canAccept(returnTypes, container );
 	}
 	
 	public boolean canReturn( List<ModifiedType> returnTypes)
@@ -45,9 +45,9 @@ public class MethodType extends Type {
 		return returns.canAccept(returnTypes);
 	}
 	
-	public boolean canReturn( SequenceType returnType)
+	public boolean canReturn( SequenceType returnTypes)
 	{
-		return returns.canAccept(returnType);
+		return returns.canAccept(returnTypes);
 	}
 	
 	public boolean canReturn( ModifiedType type )
@@ -62,41 +62,41 @@ public class MethodType extends Type {
 	
 	public boolean canAccept( List<ModifiedType> argumentTypes, Type container )
 	{
-		return paramTypes.canAccept(argumentTypes, container );
+		return parameterTypes.canAccept(argumentTypes, container );
 	}
 	
 	public boolean canAccept( SequenceType argumentTypes, Type container )
 	{
-		return paramTypes.canAccept(argumentTypes, container );
+		return parameterTypes.canAccept(argumentTypes, container );
 	}
 	
 	public boolean canAccept( SequenceType argumentTypes )
 	{
-		return paramTypes.canAccept(argumentTypes);
+		return parameterTypes.canAccept(argumentTypes);
 	}
 	
 	public void addParameter(String name, ModifiedType type) {
-		paramNames.add(name);
-		paramTypes.add(type);
+		parameterNames.add(name);
+		parameterTypes.add(type);
 	}
 	
 	public void addParameter(ModifiedType type) {
-		paramNames.add(null); // have to add to keep in synch
-		paramTypes.add(type);
+		parameterNames.add(null); // have to add to keep in synch
+		parameterTypes.add(type);
 	}
 	
 	public ModifiedType getParameterType(String paramName) {
-		for(int i=0; i < paramNames.size(); ++i) {
-			if(paramNames.get(i).equals(paramName))
-				return paramTypes.get(i);
+		for(int i=0; i < parameterNames.size(); ++i) {
+			if(parameterNames.get(i).equals(paramName))
+				return parameterTypes.get(i);
 		}
 			
 		return null;
 	}
 	
 	public boolean containsParam(String paramName) {
-		for(int i=0; i < paramNames.size(); ++i) {
-			if(paramNames.get(i).equals(paramName))
+		for(int i=0; i < parameterNames.size(); ++i) {
+			if(parameterNames.get(i).equals(paramName))
 				return true;
 		}
 			
@@ -104,11 +104,11 @@ public class MethodType extends Type {
 	}
 	
 	public List<String> getParameterNames() {
-		return paramNames;
+		return parameterNames;
 	}
 	
 	public SequenceType getParameterTypes() {
-		return paramTypes;
+		return parameterTypes;
 	}
 	
 	public void addReturn(ModifiedType type) {
@@ -134,7 +134,7 @@ public class MethodType extends Type {
 	
 	public boolean matchesParams( MethodType other )
 	{		
-		return paramTypes.matches(other.paramTypes);		
+		return parameterTypes.matches(other.parameterTypes);		
 	}
 	
 	public boolean matchesReturns( MethodType other )
@@ -144,14 +144,14 @@ public class MethodType extends Type {
 
 	public String toString()
 	{		
-		return paramTypes.toString() + " => " + returns.toString();
+		return parameterTypes.toString() + " => " + returns.toString();
 	}
 	
 	@Override
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();
 
-		for (ModifiedType type : paramTypes)
+		for (ModifiedType type : parameterTypes)
 			sb.append("_R").append(type.getType().getMangledName());
 		
 //		for (Type r : returns)
@@ -166,8 +166,8 @@ public class MethodType extends Type {
 	{	
 		MethodType replaced = new MethodType(getOuter(), getModifiers());		
 
-		replaced.paramNames = paramNames;
-		replaced.paramTypes = paramTypes.replace(values, replacements);
+		replaced.parameterNames = parameterNames;
+		replaced.parameterTypes = parameterTypes.replace(values, replacements);
 		replaced.returns = returns.replace(values, replacements);		
 		
 		return replaced;
@@ -175,7 +175,7 @@ public class MethodType extends Type {
 
 	//covariant returns and contravariant parameters
 	public boolean matchesInterface(MethodType type) {
-		return type.returns.canSubstitute(returns) && paramTypes.canSubstitute(type.paramTypes);
+		return type.returns.canSubstitute(returns) && parameterTypes.canSubstitute(type.parameterTypes);
 	}
 	
 	public boolean isSubtype(Type t)
@@ -189,7 +189,7 @@ public class MethodType extends Type {
 		if( t instanceof MethodType )
 		{
 			MethodType otherMethod = (MethodType) t;
-			return returns.isSubtype(otherMethod.returns) && otherMethod.paramTypes.isSubtype(paramTypes);
+			return returns.isSubtype(otherMethod.returns) && otherMethod.parameterTypes.isSubtype(parameterTypes);
 		}
 		else
 			return false;

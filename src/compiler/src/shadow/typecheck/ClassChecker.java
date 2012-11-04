@@ -2157,7 +2157,8 @@ public class ClassChecker extends BaseChecker {
 					//addError(node, Error.TYPE_MIS, "Parameterized method " + signature + " is being called with no type parameters");
 					
 					SequenceType returnTypes = methodType.getReturnTypes();
-					returnTypes.setNodeType( node ); //used instead of setType						
+					returnTypes.setNodeType( node ); //used instead of setType
+					node.setMethodType(methodType);
 					
 					if( !methodIsAccessible( signature, currentType  ))					
 						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");						
@@ -2193,6 +2194,7 @@ public class ClassChecker extends BaseChecker {
 				{
 					SequenceType returnTypes = methodType.getReturnTypes();					
 					returnTypes.setNodeType(node); //sets the type
+					node.setMethodType(methodType);
 				}
 				else 
 				{
