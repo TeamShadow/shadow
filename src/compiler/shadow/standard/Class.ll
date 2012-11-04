@@ -47,7 +47,7 @@ declare %long @"shadow.standard@Array$$getLength"(%"shadow.standard@Array"*)
 declare %long @"shadow.standard@Array$$getLength$long"(%"shadow.standard@Array"*, %long)
 declare void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard@Array"*, %long, { %long*, [1 x %long] })
 
-@"shadow.standard@Class$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
+@"shadow.standard@Class$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, { %"shadow.standard@Class"**, [1 x %long] } { %"shadow.standard@Class"** null, [1 x %long] [%long 0] }, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
 @"shadow.standard@Object$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@String$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@Array$class" = external constant %"shadow.standard@Class"
@@ -79,20 +79,20 @@ define %boolean @"shadow.standard@Class$$isClassSubtype$shadow.standard@Class"(%
 .label1:
     br label %.label2
 .label2:
-    %6 = load %"shadow.standard@Class"** %this
-    %7 = getelementptr inbounds %"shadow.standard@Class"* %6, i32 0, i32 3
-    %8 = load %"shadow.standard@Class"** %7
-    %9 = load %"shadow.standard@Class"** %other
-    %10 = getelementptr %"shadow.standard@Class"* %8, i32 0, i32 0
-    %11 = load %"(shadow.standard@Class) => (boolean)$methods"** %10
-    %12 = getelementptr %"(shadow.standard@Class) => (boolean)$methods"* %11, i32 0, i32 6
-    %13 = load %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)** %12
-    %14 = call %boolean %13(%"shadow.standard@Class"* %8, %"shadow.standard@Class"* %9)
-    ret %boolean %14
-    br label %.label3
-.label4:
-    br label %.label3
+    %7 = load %"shadow.standard@Class"** %this
+    %8 = getelementptr inbounds %"shadow.standard@Class"* %7, i32 0, i32 3
+    %9 = load %"shadow.standard@Class"** %8
+    %10 = load %"shadow.standard@Class"** %other
+    %11 = getelementptr %"shadow.standard@Class"* %9, i32 0, i32 0
+    %12 = load %"shadow.standard@Class$methods"** %11
+    %13 = getelementptr %"shadow.standard@Class$methods"* %12, i32 0, i32 6
+    %14 = load %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)** %13
+    %15 = call %boolean %14(%"shadow.standard@Class"* %9, %"shadow.standard@Class"* %10)
+    ret %boolean %15
+    br label %.label4
 .label3:
+    br label %.label4
+.label4:
     ret %boolean false
 }
 define %boolean @"shadow.standard@Class$$isSubtype$shadow.standard@Class"(%"shadow.standard@Class"*, %"shadow.standard@Class"*) {
@@ -102,8 +102,8 @@ define %boolean @"shadow.standard@Class$$isSubtype$shadow.standard@Class"(%"shad
     store %"shadow.standard@Class"* %1, %"shadow.standard@Class"** %other
     %3 = load %"shadow.standard@Class"** %other
     %4 = getelementptr %"shadow.standard@Class"* %3, i32 0, i32 0
-    %5 = load %"() => (boolean)$methods"** %4
-    %6 = getelementptr %"() => (boolean)$methods"* %5, i32 0, i32 7
+    %5 = load %"shadow.standard@Class$methods"** %4
+    %6 = getelementptr %"shadow.standard@Class$methods"* %5, i32 0, i32 7
     %7 = load %boolean (%"shadow.standard@Class"*)** %6
     %8 = call %boolean %7(%"shadow.standard@Class"* %3)
     br %boolean %8, label %.label5, label %.label6
@@ -111,8 +111,8 @@ define %boolean @"shadow.standard@Class$$isSubtype$shadow.standard@Class"(%"shad
     %9 = load %"shadow.standard@Class"** %this
     %10 = load %"shadow.standard@Class"** %other
     %11 = getelementptr %"shadow.standard@Class"* %9, i32 0, i32 0
-    %12 = load %"(shadow.standard@Class) => (boolean)$methods"** %11
-    %13 = getelementptr %"(shadow.standard@Class) => (boolean)$methods"* %12, i32 0, i32 8
+    %12 = load %"shadow.standard@Class$methods"** %11
+    %13 = getelementptr %"shadow.standard@Class$methods"* %12, i32 0, i32 8
     %14 = load %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)** %13
     %15 = call %boolean %14(%"shadow.standard@Class"* %9, %"shadow.standard@Class"* %10)
     ret %boolean %15
@@ -120,14 +120,14 @@ define %boolean @"shadow.standard@Class$$isSubtype$shadow.standard@Class"(%"shad
 .label6:
     br label %.label7
 .label7:
-    %16 = load %"shadow.standard@Class"** %this
-    %17 = load %"shadow.standard@Class"** %other
-    %18 = getelementptr %"shadow.standard@Class"* %16, i32 0, i32 0
-    %19 = load %"(shadow.standard@Class) => (boolean)$methods"** %18
-    %20 = getelementptr %"(shadow.standard@Class) => (boolean)$methods"* %19, i32 0, i32 6
-    %21 = load %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)** %20
-    %22 = call %boolean %21(%"shadow.standard@Class"* %16, %"shadow.standard@Class"* %17)
-    ret %boolean %22
+    %17 = load %"shadow.standard@Class"** %this
+    %18 = load %"shadow.standard@Class"** %other
+    %19 = getelementptr %"shadow.standard@Class"* %17, i32 0, i32 0
+    %20 = load %"shadow.standard@Class$methods"** %19
+    %21 = getelementptr %"shadow.standard@Class$methods"* %20, i32 0, i32 6
+    %22 = load %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)** %21
+    %23 = call %boolean %22(%"shadow.standard@Class"* %17, %"shadow.standard@Class"* %18)
+    ret %boolean %23
 }
 define %boolean @"shadow.standard@Class$$isInterface"(%"shadow.standard@Class"*) {
     %this = alloca %"shadow.standard@Class"*
@@ -162,17 +162,29 @@ define %boolean @"shadow.standard@Class$$isInterfaceSubtype$shadow.standard@Clas
 .label13:
     br label %.label9
 .label9:
-    %13 = load %"shadow.standard@Class"** %this
-    %14 = getelementptr inbounds %"shadow.standard@Class"* %13, i32 0, i32 2
-    %15 = load { %"shadow.standard@Class"**, [1 x %long] }* %14
-    %16 = getelementptr { %"shadow.standard@Class"**, [1 x %long] } %15, i32 0, i32 0
-    %17 = load %"(final int) => (long)$methods"** %16
-    %18 = getelementptr %"(final int) => (long)$methods"* %17, i32 0, i32 -1
-    %19 = load %long ({ %"shadow.standard@Class"**, [1 x %long] }, %int)** %18
-    %20 = call %long %19({ %"shadow.standard@Class"**, [1 x %long] } %15, %int 0)
-    %21 = load %long* %i
-    %22 = icmp slt %long %21, %20
-    br %boolean %22, label %.label8, label %.label10
+    %14 = load %"shadow.standard@Class"** %this
+    %15 = getelementptr inbounds %"shadow.standard@Class"* %14, i32 0, i32 2
+    %16 = load { %"shadow.standard@Class"**, [1 x %long] }* %15
+    %17 = call i8* @malloc(i64 ptrtoint (%"shadow.standard@Array"* getelementptr(%"shadow.standard@Array"* null, i32 1) to i64))
+    %18 = bitcast i8* %17 to %"shadow.standard@Array"*
+    %19 = extractvalue { %"shadow.standard@Class"**, [1 x %long] } %16, 0
+    %20 = ptrtoint %"shadow.standard@Class"** %19 to %long
+    %21 = extractvalue { %"shadow.standard@Class"**, [1 x %long] } %16, 1
+    %22 = call i8* @malloc(i64 ptrtoint ([1 x %long]* getelementptr([1 x %long]* null, i32 1) to i64))
+    %23 = bitcast i8* %22 to [1 x %long]*
+    store [1 x %long] %21, [1 x %long]* %23
+    %24 = getelementptr [1 x %long]* %23, i32 0, i32 0
+    %25 = insertvalue { %long*, [1 x %long] } { %long* null, [1 x %long] [%long 1] }, %long* %24, 0
+    call void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard@Array"* %18, %long %20, { %long*, [1 x %long] } %25)
+    %26 = sext %int 0 to %long
+    %27 = getelementptr %"shadow.standard@Array"* %18, i32 0, i32 0
+    %28 = load %"shadow.standard@Array$methods"** %27
+    %29 = getelementptr %"shadow.standard@Array$methods"* %28, i32 0, i32 6
+    %30 = load %long (%"shadow.standard@Array"*, %long)** %29
+    %31 = call %long %30(%"shadow.standard@Array"* %18, %long %26)
+    %32 = load %long* %i
+    %33 = icmp slt %long %32, %31
+    br %boolean %33, label %.label8, label %.label10
 .label10:
     ret %boolean false
 }
@@ -189,8 +201,8 @@ define %"shadow.standard@String"* @"shadow.standard@Class$$toString"(%"shadow.st
     store %"shadow.standard@Class"* %0, %"shadow.standard@Class"** %this
     %2 = load %"shadow.standard@Class"** %this
     %3 = getelementptr %"shadow.standard@Class"* %2, i32 0, i32 0
-    %4 = load %"() => (shadow.standard@String)$methods"** %3
-    %5 = getelementptr %"() => (shadow.standard@String)$methods"* %4, i32 0, i32 4
+    %4 = load %"shadow.standard@Class$methods"** %3
+    %5 = getelementptr %"shadow.standard@Class$methods"* %4, i32 0, i32 4
     %6 = load %"shadow.standard@String"* (%"shadow.standard@Class"*)** %5
     %7 = call %"shadow.standard@String"* %6(%"shadow.standard@Class"* %2)
     ret %"shadow.standard@String"* %7
@@ -202,19 +214,19 @@ define void @"shadow.standard@Class$$constructor"(%"shadow.standard@Class"*) {
     %3 = getelementptr %"shadow.standard@Class"* %2, i32 0, i32 0
     store %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@Class$methods"** %3
     %4 = load %"shadow.standard@Class"** %this
-    %5 = getelementptr inbounds %"shadow.standard@Class"* %4, i32 0, i32 2
-    %6 = sext %int 0 to %long
-    %7 = call noalias i8* @calloc(i64 %6, i64 ptrtoint (%"shadow.standard@Class"** getelementptr(%"shadow.standard@Class"** null, i32 1) to i64))
-    %8 = bitcast i8* %7 to %"shadow.standard@Class"**
-    %9 = insertvalue { %"shadow.standard@Class"**, [1 x %long] } undef, %"shadow.standard@Class"** %8, 0
-    %10 = insertvalue { %"shadow.standard@Class"**, [1 x %long] } %9, %long %6, 1, 0
-    store { %"shadow.standard@Class"**, [1 x %long] } %10, { %"shadow.standard@Class"**, [1 x %long] }* %5
-    %11 = load %"shadow.standard@Class"** %this
-    %12 = getelementptr inbounds %"shadow.standard@Class"* %11, i32 0, i32 3
-    store %"shadow.standard@Class"* null, %"shadow.standard@Class"** %12
-    %13 = load %"shadow.standard@Class"** %this
-    %14 = getelementptr inbounds %"shadow.standard@Class"* %13, i32 0, i32 1
-    store %"shadow.standard@String"* @.str1, %"shadow.standard@String"** %14
+    %5 = getelementptr inbounds %"shadow.standard@Class"* %4, i32 0, i32 3
+    store %"shadow.standard@Class"* null, %"shadow.standard@Class"** %5
+    %6 = load %"shadow.standard@Class"** %this
+    %7 = getelementptr inbounds %"shadow.standard@Class"* %6, i32 0, i32 1
+    store %"shadow.standard@String"* @.str1, %"shadow.standard@String"** %7
+    %8 = load %"shadow.standard@Class"** %this
+    %9 = getelementptr inbounds %"shadow.standard@Class"* %8, i32 0, i32 2
+    %10 = sext %int 0 to %long
+    %11 = call noalias i8* @calloc(i64 %10, i64 ptrtoint (%"shadow.standard@Class"** getelementptr(%"shadow.standard@Class"** null, i32 1) to i64))
+    %12 = bitcast i8* %11 to %"shadow.standard@Class"**
+    %13 = insertvalue { %"shadow.standard@Class"**, [1 x %long] } undef, %"shadow.standard@Class"** %12, 0
+    %14 = insertvalue { %"shadow.standard@Class"**, [1 x %long] } %13, %long %10, 1, 0
+    store { %"shadow.standard@Class"**, [1 x %long] } %14, { %"shadow.standard@Class"**, [1 x %long] }* %9
     ret void
 }
 

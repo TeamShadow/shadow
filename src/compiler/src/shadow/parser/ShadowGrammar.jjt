@@ -1427,7 +1427,7 @@ void PrimaryPrefix():
 | "this" { jjtThis.setImage("this"); }
 | "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
 | CheckExpression()
-| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
+| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" { jjtThis.addToImage('('); } ConditionalExpression() ")"
 | LOOKAHEAD( Type() "." "class" ) Type() "." "class" { jjtThis.setImage("class"); }
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 }

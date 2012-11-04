@@ -20,6 +20,7 @@ import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceRef;
+import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariableRef;
@@ -52,6 +53,7 @@ public interface TACVisitor
 	public abstract void visit(TACReturn node) throws ShadowException;
 	public abstract void visit(TACSequence node) throws ShadowException;
 	public abstract void visit(TACSequenceRef node) throws ShadowException;
+	public abstract void visit(TACSingletonRef node) throws ShadowException;
 	public abstract void visit(TACStore node) throws ShadowException;
 	public abstract void visit(TACUnary node) throws ShadowException;
 	public abstract void visit(TACVariableRef node) throws ShadowException;

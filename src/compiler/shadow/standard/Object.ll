@@ -42,7 +42,7 @@ declare %long @"shadow.standard@String$$getLength"(%"shadow.standard@String"*)
 declare void @"shadow.standard@String$$constructor"(%"shadow.standard@String"*)
 
 @"shadow.standard@Class$class" = external constant %"shadow.standard@Class"
-@"shadow.standard@Object$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, %"shadow.standard@Class"* null }
+@"shadow.standard@Object$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, { %"shadow.standard@Class"**, [1 x %long] } { %"shadow.standard@Class"** null, [1 x %long] [%long 0] }, %"shadow.standard@Class"* null }
 @"shadow.standard@String$class" = external constant %"shadow.standard@Class"
 
 define %"shadow.standard@Class"* @"shadow.standard@Object$$getClass"(%"shadow.standard@Object"*) {
@@ -55,13 +55,13 @@ define %"shadow.standard@String"* @"shadow.standard@Object$$toString"(%"shadow.s
     store %"shadow.standard@Object"* %0, %"shadow.standard@Object"** %this
     %2 = load %"shadow.standard@Object"** %this
     %3 = getelementptr %"shadow.standard@Object"* %2, i32 0, i32 0
-    %4 = load %"() => (shadow.standard@Class)$methods"** %3
-    %5 = getelementptr %"() => (shadow.standard@Class)$methods"* %4, i32 0, i32 1
+    %4 = load %"shadow.standard@Object$methods"** %3
+    %5 = getelementptr %"shadow.standard@Object$methods"* %4, i32 0, i32 1
     %6 = load %"shadow.standard@Class"* (%"shadow.standard@Object"*)** %5
     %7 = call %"shadow.standard@Class"* %6(%"shadow.standard@Object"* %2)
     %8 = getelementptr %"shadow.standard@Class"* %7, i32 0, i32 0
-    %9 = load %"() => (shadow.standard@String)$methods"** %8
-    %10 = getelementptr %"() => (shadow.standard@String)$methods"* %9, i32 0, i32 4
+    %9 = load %"shadow.standard@Class$methods"** %8
+    %10 = getelementptr %"shadow.standard@Class$methods"* %9, i32 0, i32 4
     %11 = load %"shadow.standard@String"* (%"shadow.standard@Class"*)** %10
     %12 = call %"shadow.standard@String"* %11(%"shadow.standard@Class"* %7)
     ret %"shadow.standard@String"* %12

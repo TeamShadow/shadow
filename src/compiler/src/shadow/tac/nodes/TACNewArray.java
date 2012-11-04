@@ -63,6 +63,10 @@ public class TACNewArray extends TACOperand
 		return total;
 	}
 
+	public Type getBaseType()
+	{
+		return getType().getBaseType();
+	}
 	@Override
 	public ArrayType getType()
 	{

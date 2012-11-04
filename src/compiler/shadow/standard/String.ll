@@ -52,7 +52,7 @@ declare void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard
 
 @"shadow.standard@Class$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@Object$class" = external constant %"shadow.standard@Class"
-@"shadow.standard@String$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
+@"shadow.standard@String$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, { %"shadow.standard@Class"**, [1 x %long] } { %"shadow.standard@Class"** null, [1 x %long] [%long 0] }, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
 @"shadow.standard@Array$class" = external constant %"shadow.standard@Class"
 
 define %"shadow.standard@Class"* @"shadow.standard@String$$getClass"(%"shadow.standard@String"*) {
@@ -67,14 +67,14 @@ define %boolean @"shadow.standard@String$$equals$shadow.standard@String"(%"shado
     store %"shadow.standard@String"* %1, %"shadow.standard@String"** %other
     %3 = load %"shadow.standard@String"** %this
     %4 = getelementptr %"shadow.standard@String"* %3, i32 0, i32 0
-    %5 = load %"() => (long)$methods"** %4
-    %6 = getelementptr %"() => (long)$methods"* %5, i32 0, i32 6
+    %5 = load %"shadow.standard@String$methods"** %4
+    %6 = getelementptr %"shadow.standard@String$methods"* %5, i32 0, i32 6
     %7 = load %long (%"shadow.standard@String"*)** %6
     %8 = call %long %7(%"shadow.standard@String"* %3)
     %9 = load %"shadow.standard@String"** %other
     %10 = getelementptr %"shadow.standard@String"* %9, i32 0, i32 0
-    %11 = load %"() => (long)$methods"** %10
-    %12 = getelementptr %"() => (long)$methods"* %11, i32 0, i32 6
+    %11 = load %"shadow.standard@String$methods"** %10
+    %12 = getelementptr %"shadow.standard@String$methods"* %11, i32 0, i32 6
     %13 = load %long (%"shadow.standard@String"*)** %12
     %14 = call %long %13(%"shadow.standard@String"* %9)
     %15 = icmp ne %long %8, %14
@@ -85,26 +85,26 @@ define %boolean @"shadow.standard@String$$equals$shadow.standard@String"(%"shado
 .label1:
     br label %.label2
 .label2:
-    %16 = sext %int 0 to %long
-    store %long %16, %long* %i
+    %17 = sext %int 0 to %long
+    store %long %17, %long* %i
     br label %.label4
 .label3:
-    %17 = load %"shadow.standard@String"** %this
-    %18 = load %long* %i
-    %19 = getelementptr %"shadow.standard@String"* %17, i32 0, i32 0
-    %20 = load %"(long) => (ubyte)$methods"** %19
-    %21 = getelementptr %"(long) => (ubyte)$methods"* %20, i32 0, i32 5
-    %22 = load %ubyte (%"shadow.standard@String"*, %long)** %21
-    %23 = call %ubyte %22(%"shadow.standard@String"* %17, %long %18)
-    %24 = load %"shadow.standard@String"** %other
-    %25 = load %long* %i
-    %26 = getelementptr %"shadow.standard@String"* %24, i32 0, i32 0
-    %27 = load %"(long) => (ubyte)$methods"** %26
-    %28 = getelementptr %"(long) => (ubyte)$methods"* %27, i32 0, i32 5
-    %29 = load %ubyte (%"shadow.standard@String"*, %long)** %28
-    %30 = call %ubyte %29(%"shadow.standard@String"* %24, %long %25)
-    %31 = icmp ne %ubyte %23, %30
-    br %boolean %31, label %.label6, label %.label7
+    %18 = load %"shadow.standard@String"** %this
+    %19 = load %long* %i
+    %20 = getelementptr %"shadow.standard@String"* %18, i32 0, i32 0
+    %21 = load %"shadow.standard@String$methods"** %20
+    %22 = getelementptr %"shadow.standard@String$methods"* %21, i32 0, i32 5
+    %23 = load %ubyte (%"shadow.standard@String"*, %long)** %22
+    %24 = call %ubyte %23(%"shadow.standard@String"* %18, %long %19)
+    %25 = load %"shadow.standard@String"** %other
+    %26 = load %long* %i
+    %27 = getelementptr %"shadow.standard@String"* %25, i32 0, i32 0
+    %28 = load %"shadow.standard@String$methods"** %27
+    %29 = getelementptr %"shadow.standard@String$methods"* %28, i32 0, i32 5
+    %30 = load %ubyte (%"shadow.standard@String"*, %long)** %29
+    %31 = call %ubyte %30(%"shadow.standard@String"* %25, %long %26)
+    %32 = icmp ne %ubyte %24, %31
+    br %boolean %32, label %.label6, label %.label7
 .label6:
     ret %boolean false
     br label %.label8
@@ -113,15 +113,15 @@ define %boolean @"shadow.standard@String$$equals$shadow.standard@String"(%"shado
 .label8:
     br label %.label4
 .label4:
-    %32 = load %"shadow.standard@String"** %this
-    %33 = getelementptr %"shadow.standard@String"* %32, i32 0, i32 0
-    %34 = load %"() => (long)$methods"** %33
-    %35 = getelementptr %"() => (long)$methods"* %34, i32 0, i32 6
-    %36 = load %long (%"shadow.standard@String"*)** %35
-    %37 = call %long %36(%"shadow.standard@String"* %32)
-    %38 = load %long* %i
-    %39 = icmp slt %long %38, %37
-    br %boolean %39, label %.label3, label %.label5
+    %34 = load %"shadow.standard@String"** %this
+    %35 = getelementptr %"shadow.standard@String"* %34, i32 0, i32 0
+    %36 = load %"shadow.standard@String$methods"** %35
+    %37 = getelementptr %"shadow.standard@String$methods"* %36, i32 0, i32 6
+    %38 = load %long (%"shadow.standard@String"*)** %37
+    %39 = call %long %38(%"shadow.standard@String"* %34)
+    %40 = load %long* %i
+    %41 = icmp slt %long %40, %39
+    br %boolean %41, label %.label3, label %.label5
 .label5:
     ret %boolean true
 }
@@ -151,12 +151,24 @@ define %long @"shadow.standard@String$$getLength"(%"shadow.standard@String"*) {
     %2 = load %"shadow.standard@String"** %this
     %3 = getelementptr inbounds %"shadow.standard@String"* %2, i32 0, i32 1
     %4 = load { %ubyte*, [1 x %long] }* %3
-    %5 = getelementptr { %ubyte*, [1 x %long] } %4, i32 0, i32 0
-    %6 = load %"(final int) => (long)$methods"** %5
-    %7 = getelementptr %"(final int) => (long)$methods"* %6, i32 0, i32 -1
-    %8 = load %long ({ %ubyte*, [1 x %long] }, %int)** %7
-    %9 = call %long %8({ %ubyte*, [1 x %long] } %4, %int 0)
-    ret %long %9
+    %5 = call i8* @malloc(i64 ptrtoint (%"shadow.standard@Array"* getelementptr(%"shadow.standard@Array"* null, i32 1) to i64))
+    %6 = bitcast i8* %5 to %"shadow.standard@Array"*
+    %7 = extractvalue { %ubyte*, [1 x %long] } %4, 0
+    %8 = ptrtoint %ubyte* %7 to %long
+    %9 = extractvalue { %ubyte*, [1 x %long] } %4, 1
+    %10 = call i8* @malloc(i64 ptrtoint ([1 x %long]* getelementptr([1 x %long]* null, i32 1) to i64))
+    %11 = bitcast i8* %10 to [1 x %long]*
+    store [1 x %long] %9, [1 x %long]* %11
+    %12 = getelementptr [1 x %long]* %11, i32 0, i32 0
+    %13 = insertvalue { %long*, [1 x %long] } { %long* null, [1 x %long] [%long 1] }, %long* %12, 0
+    call void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard@Array"* %6, %long %8, { %long*, [1 x %long] } %13)
+    %14 = sext %int 0 to %long
+    %15 = getelementptr %"shadow.standard@Array"* %6, i32 0, i32 0
+    %16 = load %"shadow.standard@Array$methods"** %15
+    %17 = getelementptr %"shadow.standard@Array$methods"* %16, i32 0, i32 6
+    %18 = load %long (%"shadow.standard@Array"*, %long)** %17
+    %19 = call %long %18(%"shadow.standard@Array"* %6, %long %14)
+    ret %long %19
 }
 define void @"shadow.standard@String$$constructor"(%"shadow.standard@String"*) {
     %this = alloca %"shadow.standard@String"*

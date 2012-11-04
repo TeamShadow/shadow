@@ -53,7 +53,7 @@ declare void @"shadow.standard@String$$constructor"(%"shadow.standard@String"*)
 @"shadow.standard@Class$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@Object$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@String$class" = external constant %"shadow.standard@Class"
-@"shadow.standard@Array$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
+@"shadow.standard@Array$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, { %"shadow.standard@Class"**, [1 x %long] } { %"shadow.standard@Class"** null, [1 x %long] [%long 0] }, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
 
 define %"shadow.standard@Class"* @"shadow.standard@Array$$getClass"(%"shadow.standard@Array"*) {
     ret %"shadow.standard@Class"* @"shadow.standard@Array$class"
@@ -73,12 +73,24 @@ define %long @"shadow.standard@Array$$getDimensions"(%"shadow.standard@Array"*) 
     %2 = load %"shadow.standard@Array"** %this
     %3 = getelementptr inbounds %"shadow.standard@Array"* %2, i32 0, i32 2
     %4 = load { %long*, [1 x %long] }* %3
-    %5 = getelementptr { %long*, [1 x %long] } %4, i32 0, i32 0
-    %6 = load %"(final int) => (long)$methods"** %5
-    %7 = getelementptr %"(final int) => (long)$methods"* %6, i32 0, i32 -1
-    %8 = load %long ({ %long*, [1 x %long] }, %int)** %7
-    %9 = call %long %8({ %long*, [1 x %long] } %4, %int 0)
-    ret %long %9
+    %5 = call i8* @malloc(i64 ptrtoint (%"shadow.standard@Array"* getelementptr(%"shadow.standard@Array"* null, i32 1) to i64))
+    %6 = bitcast i8* %5 to %"shadow.standard@Array"*
+    %7 = extractvalue { %long*, [1 x %long] } %4, 0
+    %8 = ptrtoint %long* %7 to %long
+    %9 = extractvalue { %long*, [1 x %long] } %4, 1
+    %10 = call i8* @malloc(i64 ptrtoint ([1 x %long]* getelementptr([1 x %long]* null, i32 1) to i64))
+    %11 = bitcast i8* %10 to [1 x %long]*
+    store [1 x %long] %9, [1 x %long]* %11
+    %12 = getelementptr [1 x %long]* %11, i32 0, i32 0
+    %13 = insertvalue { %long*, [1 x %long] } { %long* null, [1 x %long] [%long 1] }, %long* %12, 0
+    call void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard@Array"* %6, %long %8, { %long*, [1 x %long] } %13)
+    %14 = sext %int 0 to %long
+    %15 = getelementptr %"shadow.standard@Array"* %6, i32 0, i32 0
+    %16 = load %"shadow.standard@Array$methods"** %15
+    %17 = getelementptr %"shadow.standard@Array$methods"* %16, i32 0, i32 6
+    %18 = load %long (%"shadow.standard@Array"*, %long)** %17
+    %19 = call %long %18(%"shadow.standard@Array"* %6, %long %14)
+    ret %long %19
 }
 define %long @"shadow.standard@Array$$getLength"(%"shadow.standard@Array"*) {
     %this = alloca %"shadow.standard@Array"*
@@ -94,16 +106,16 @@ define %long @"shadow.standard@Array$$getLength"(%"shadow.standard@Array"*) {
     %4 = load %"shadow.standard@Array"** %this
     %5 = load %long* %i
     %6 = getelementptr %"shadow.standard@Array"* %4, i32 0, i32 0
-    %7 = load %"(long) => (long)$methods"** %6
-    %8 = getelementptr %"(long) => (long)$methods"* %7, i32 0, i32 6
+    %7 = load %"shadow.standard@Array$methods"** %6
+    %8 = getelementptr %"shadow.standard@Array$methods"* %7, i32 0, i32 6
     %9 = load %long (%"shadow.standard@Array"*, %long)** %8
     %10 = call %long %9(%"shadow.standard@Array"* %4, %long %5)
     br label %.label1
 .label1:
     %11 = load %"shadow.standard@Array"** %this
     %12 = getelementptr %"shadow.standard@Array"* %11, i32 0, i32 0
-    %13 = load %"() => (long)$methods"** %12
-    %14 = getelementptr %"() => (long)$methods"* %13, i32 0, i32 4
+    %13 = load %"shadow.standard@Array$methods"** %12
+    %14 = getelementptr %"shadow.standard@Array$methods"* %13, i32 0, i32 4
     %15 = load %long (%"shadow.standard@Array"*)** %14
     %16 = call %long %15(%"shadow.standard@Array"* %11)
     %17 = load %long* %i

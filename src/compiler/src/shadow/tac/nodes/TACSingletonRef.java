@@ -2,23 +2,23 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.SingletonType;
 
-public class TACNewObject extends TACOperand
+public class TACSingletonRef extends TACReference
 {
-	private ClassType type;
-	public TACNewObject(ClassType objectType)
+	private SingletonType type;
+	public TACSingletonRef(SingletonType instanceType)
 	{
-		this(null, objectType);
+		this(null, instanceType);
 	}
-	public TACNewObject(TACNode node, ClassType objectType)
+	public TACSingletonRef(TACNode node, SingletonType instanceType)
 	{
 		super(node);
-		type = objectType;
+		type = instanceType;
 	}
 
 	@Override
-	public ClassType getType()
+	public SingletonType getType()
 	{
 		return type;
 	}
@@ -42,6 +42,6 @@ public class TACNewObject extends TACOperand
 	@Override
 	public String toString()
 	{
-		return "new " + type;
+		return "instance " + type;
 	}
 }

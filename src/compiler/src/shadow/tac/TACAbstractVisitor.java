@@ -21,6 +21,7 @@ import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceRef;
+import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariableRef;
@@ -92,6 +93,8 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	public void visit(TACSequence node) throws ShadowException { }
 	@Override
 	public void visit(TACSequenceRef node) throws ShadowException { }
+	@Override
+	public void visit(TACSingletonRef node) throws ShadowException { }
 	@Override
 	public void visit(TACStore node) throws ShadowException { }
 	@Override
