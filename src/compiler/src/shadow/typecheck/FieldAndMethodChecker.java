@@ -180,14 +180,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 						{
 							InterfaceType interfaceType = (InterfaceType) _interface;
 							
-							
-							/*
-							if( _interface instanceof InstantiatedType ) //must be instantiated version of interface
-								interfaceType = (InterfaceType) ((InstantiatedType)_interface).getInstantiatedType();
-							else
-								interfaceType = (InterfaceType) _interface;
-							*/ 							
-							
 							//check for circular interface issues first
 							if( interfaceType.isCircular() )
 								addError(Error.INVL_TYP, "Interface " + _interface + " has a circular extends hierarchy" );
@@ -197,8 +189,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 											
 						/* Check overridden methods to make sure:
 						 * 1. All overrides match exactly  (if it matches everything but return type.... trouble!)
-						 * 2. No final or immutable methods have been overridden
-						 * 3. No changes from static to regular or vice versa
+						 * 2. No final methods have been overridden
+						 * 3. Immutable methods cannot be overridden by mutable methods
 						 * 4. No overridden methods have been narrowed in access 
 						 */			
 						parent = classType.getExtendType();
@@ -231,10 +223,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 											addError( parentNode, "Method " + signature + " cannot override final method" );
 										else if( !ModifierSet.isImmutable(modifiers) && ModifierSet.isImmutable(parentModifiers)  )
 											addError( parentNode, "Non-immutable method " + signature + " cannot override immutable method" );
-										//else if( ModifierSet.isStatic(parentModifiers) && !ModifierSet.isStatic(modifiers) )
-										//	addError( parentNode, "Non-static method " + signature + " cannot override static method " + parentSignature );
-										//else if( !ModifierSet.isStatic(parentModifiers) && ModifierSet.isStatic(modifiers) )
-										//	addError( parentNode, "Static method " + signature + " cannot override non-static method " + parentSignature );
 										else if( ModifierSet.isPublic(parentModifiers) && (ModifierSet.isPrivate(modifiers) || ModifierSet.isProtected(modifiers)) )
 											addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
 										else if( ModifierSet.isProtected(parentModifiers) && ModifierSet.isPrivate(modifiers)  )

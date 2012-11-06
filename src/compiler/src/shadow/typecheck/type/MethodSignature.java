@@ -51,16 +51,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return node;
 	}
 		
-	public boolean matches( SequenceType argumentTypes, Type container )
-	{
-		return type.matches(argumentTypes, container );		
-	}
-	
-	public boolean canAccept( SequenceType argumentTypes, Type container )
-	{
-		return type.canAccept(argumentTypes, container );		
-	}	
-	
 	public boolean matches( SequenceType argumentTypes )
 	{
 		return type.matches(argumentTypes);		

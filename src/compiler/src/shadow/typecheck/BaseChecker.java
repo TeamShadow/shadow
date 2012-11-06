@@ -38,6 +38,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected boolean debug;	
 	
 	// these are constants for our error messages to keep things consistent
+	// TODO: Add more of these
 	public static enum Error {
 		INVL_TYP		{ public String toString()  { return "INVALID TYPE"; } },
 		MULT_SYM		{ public String toString()  { return "MULTIPLY DEFINED SYMBOL"; } },
@@ -72,21 +73,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		this.importList = importList;
 		this.packageTree = packageTree;
 	}
-	
-	/*
-	protected Object pushUpType(Node node, Boolean secondVisit, int child) {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		// simply push the type up the tree
-		node.setType(node.jjtGetChild(child).getType());
-		
-		return WalkType.POST_CHILDREN;
-	}
-
-	protected Object pushUpType(Node node, Boolean secondVisit) {
-		return pushUpType(node, secondVisit, 0);
-	}*/
 	
 	protected Object pushUpType(SimpleNode node, Boolean secondVisit) {
 		return pushUpType(node, secondVisit, 0);
@@ -322,9 +308,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	//class LinkedList<T is Eggplant> implements List<T>
 	//class LinkedList<T, U is T> implements List<T>
 	//class Piglet implements LinkedList<Pig>
-	
-	
-		
 	protected boolean checkTypeArguments( List<Type> parameters, SequenceType arguments )
 	{
 		if( parameters.size() != arguments.size() )

@@ -100,47 +100,8 @@ public class TypeCollector extends BaseChecker
 //		addType(Type.EXCEPTION);
 	}
 	
-	/**
-	 * addTypeParameterDependencies() adds edges into the graph to indicate type parameter dependencies.
-	 * These dependencies are used for a topological sort so that classes can be considered in 
-	 * the correct order needed to resolve type parameter issues.
-	 * @param graph
-	 */
-	/*
-	private void addTypeParameterDependencies(
-			DirectedGraph<ClassInterfaceBaseType> graph) {
 		
-		//sets the correct types for type parameters in declarations
-		for( ClassInterfaceBaseType type : graph ) //look through all types, updating their extends and implements
-		{	
-			TreeSet<String> missingTypes = new TreeSet<String>();				
-			Node declarationNode = nodeTable.get(type);
-			if( declarationNode != null )	
-			{
-				currentType = type;
-				for( int i = 0; i < declarationNode.jjtGetNumChildren(); i++ )
-				{
-					Node child = declarationNode.jjtGetChild(i);
-					
-					//only the is relationships inside of type parameters of the class being defined
-					//are important dependencies
-					if( child instanceof ASTTypeParameters )
-					{
-						for( int j = 0; j < child.jjtGetNumChildren(); j++ )
-							addTypeParameterDependencies( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), graph, missingTypes);
-					}
-				}
-			}					
-								
-			
-			if( missingTypes.size() > 0 )	
-				addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types " + missingTypes);		
-			
-		}		
-	}
-	*/
-	
-	private void updateTypeParameters()//DirectedGraph<ClassInterfaceBaseType> graph)
+	private void updateTypeParameters()
 	{	
 		//sets the correct types for type parameters in declarations
 		for( Package p : getTypeTable().keySet() )
@@ -222,7 +183,7 @@ public class TypeCollector extends BaseChecker
 	}
 	
 	
-	private void updateMissingTypes(/*DirectedGraph<ClassInterfaceBaseType> graph*/)
+	private void updateMissingTypes()
 	{
 		List<String> list;
 		
@@ -578,17 +539,14 @@ public class TypeCollector extends BaseChecker
 			}
 		}	
 		
-		
-		//DirectedGraph<ClassInterfaceBaseType> graph = new DirectedGraph<ClassInterfaceBaseType>();		
-		updateMissingTypes( /*graph */); //add all types to graph for type parameter dependence resolution
+				
+		updateMissingTypes(); //add all types to graph for type parameter dependence resolution
 		
 		/*
 		 * type parameters are updated separately because they require knowledge of
 		 * the type hierarchy constructed in updateMissingTypes() 
-		 */		
-		
-		
-		updateTypeParameters();// graph );
+		 */			
+		updateTypeParameters();
 	}
 
 
@@ -964,21 +922,7 @@ public class TypeCollector extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
-	
-	/*
-	public Object visit(ASTPackageDeclaration node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{
-			String name = node.jjtGetChild(0).getImage();									
-			currentPackage = packageTree.addFullyQualifiedPackage(name, typeTable);			
-		}
 		
-		return WalkType.POST_CHILDREN;
-	}
-	*/
-	
 	@Override
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException
 	{

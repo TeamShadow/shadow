@@ -1233,26 +1233,21 @@ public class ClassChecker extends BaseChecker {
 			if( next.getType() instanceof SequenceType ) //never a property, because a property can only access a single value
 			{
 				SequenceType nextType = (SequenceType)(next.getType());
+				List<String> reasons = new ArrayList<String>();
 				
-				if( currentType.canAccept( nextType ) )
+				if( currentType.canAccept( nextType, reasons ) )
 				{
 					if( !currentType.isAssignable() )
 					{
 						addError(current, Error.TYPE_MIS, "Sequence " + current + " has final values that cannot be assigned");
 						break;
-					}
-					
-					if( !currentType.acceptsNullables( nextType ) )
-					{
-						addError(current, Error.TYPE_MIS, "Cannot store nullable values from " + next + " into non-nullable variables in " + current);
-						break;							
-					}
+					}					
 					
 					current = next;
 				}
 				else
 				{
-					addError(current, Error.TYPE_MIS, "Sequence " + nextType + " does not match " + currentType);
+					addError(current, Error.TYPE_MIS, reasons.get(0));
 					break;
 				}
 			}
@@ -2804,25 +2799,16 @@ public class ClassChecker extends BaseChecker {
 				{
 					Node child = node.jjtGetChild(0);
 					Type type = child.getType();
+					List<String> reasons = new ArrayList<String>(1);
 					
 					if( type instanceof SequenceType )
-					{
+					{					
 						SequenceType sequenceType = (SequenceType)type;
-						if( returnTypes.canAccept(sequenceType) )
-						{
-							if( !returnTypes.acceptsNullables(sequenceType) )							
-								addError(node, Error.TYPE_MIS, "Cannot return nullable values into non-nullable return types");
-						}
-						else
-							addError(node, Error.TYPE_MIS, "Return type " + sequenceType + " does not match " + returnTypes );
+						if( !returnTypes.canAccept(sequenceType, reasons) )						
+							addError(node, Error.TYPE_MIS, reasons.get(0) );
 					}
-					else if(returnTypes.canAccept(child))
-					{
-						if( !returnTypes.acceptsNullables(child) )							
-							addError(node, Error.TYPE_MIS, "Cannot return nullable value into non-nullable return type");
-					}
-					else
-						addError(node, Error.TYPE_MIS, "Return type " + child.getType() + " does not match " + returnTypes.get(0).getType() );						
+					else if(!returnTypes.canAccept(child, reasons))
+						addError(node, Error.TYPE_MIS, reasons.get(0) );						
 				}				
 				
 				node.setType(returnTypes);

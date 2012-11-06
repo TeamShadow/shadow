@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -35,60 +36,79 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return types.isEmpty();
 	}
 	
-	
-	public boolean canAccept( List<ModifiedType> inputTypes, Type container )
-	{	
-		/*
-		if( (container instanceof InstantiatedType) && isParameterized() )
-		{
-			InstantiatedType instantiatedType = (InstantiatedType)container;
-			SequenceType replaced = replace( instantiatedType.getTypeParameters(), instantiatedType.getTypeArguments() );
-			return replaced.canAccept( inputTypes );
-		}
-		else
-		*/
-			return canAccept( inputTypes );				
-	}
-	
-	public boolean canAccept( List<ModifiedType> inputTypes )
+	public boolean canAccept( List<ModifiedType> inputTypes, List<String> reasons )
 	{		
 		if( types.size() != inputTypes.size() )
 			return false;
 		
 		for( int i = 0; i < types.size(); i++ )
-			if( !inputTypes.get(i).getType().isSubtype(types.get(i).getType()) )
+		{	
+			Type inputType = inputTypes.get(i).getType();
+			int inputModifiers  = inputTypes.get(i).getModifiers();
+			Type type = types.get(i).getType();
+			int modifiers = types.get(i).getModifiers();
+						
+			if( !inputType.isSubtype(type) )
+			{
+				if( reasons != null )
+					reasons.add(inputType + " is not a subtype of " + type);
 				return false;
+			}
+			
+			//if either type is immutable, it will work out no matter what
+			//if both are mutable, their modifiers had better both be immutable or both mutable
+			if( !ModifierSet.isImmutable(type.getModifiers()) && !ModifierSet.isImmutable(inputType.getModifiers()) &&
+				ModifierSet.isImmutable(modifiers) != ModifierSet.isImmutable(inputModifiers) )
+			{
+				if( reasons != null )
+				{				
+					String reason = "";
+					if( ModifierSet.isImmutable(modifiers) )
+						reason += "immutable ";
+					reason += type + " is not compatible with ";
+					if( ModifierSet.isImmutable(inputModifiers) )
+						reason += "immutable ";
+					reason += inputType;
+					
+					reasons.add(reason);
+				}
+				return false;
+				
+				
+			}
+			
+			if( !ModifierSet.isNullable(modifiers) && ModifierSet.isNullable(inputModifiers) )
+			{
+				if( reasons != null )
+					reasons.add("non-nullable " + type + " cannot accept nullable " + inputType);
+				
+				return false;
+			}		
+			
+		}
 		
 		return true;		
+	}
+	
+	public boolean canAccept( List<ModifiedType> inputTypes )
+	{		
+		return canAccept( inputTypes, null);		
 	}
 	
 	public boolean canAccept( ModifiedType type )
-	{
-		if( types.size() != 1 )
-			return false;
-		
-		return type.getType().isSubtype(types.get(0).getType());		
+	{		
+		return canAccept(type, null);		
 	}
 	
-	public boolean acceptsNullables( List<ModifiedType> otherTypes )
-	{	
-		if( types.size() != otherTypes.size() )
-			return false;		
+	public boolean canAccept( ModifiedType type, List<String> reasons )
+	{		
+		ArrayList<ModifiedType> list = new ArrayList<ModifiedType>(1);
+		list.add(type);
 		
-		for( int i = 0; i < types.size(); i++ )
-			if( !ModifierSet.isNullable(types.get(i).getModifiers()) && ModifierSet.isNullable(otherTypes.get(i).getModifiers()) )
-				return false;		
-		
-		return true;		
-	}	
-	
-	public boolean acceptsNullables( ModifiedType type )
-	{	
-		if( types.size() != 1 )
-			return false;		
-		
-		return ModifierSet.isNullable(types.get(0).getModifiers()) || !ModifierSet.isNullable(type.getModifiers());
+		return canAccept(list, reasons);		
 	}
+	
+	
 
 	public String toString() {
 		StringBuilder builder = new StringBuilder("(");
@@ -107,10 +127,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			if( ModifierSet.isNullable(type.getModifiers()))
 				builder.append("nullable ");
 			
-			//if(p.typeName == null) // method type
-				builder.append(p.toString());
-			//else
-				//builder.append(p.typeName);
+			if( ModifierSet.isImmutable(type.getModifiers()))
+				builder.append("immutable ");
+			
+
+			builder.append(p.toString());
 			
 			first = false;
 		}
@@ -134,7 +155,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		if (o == Type.NULL)
 			return true;
 		if( o != null && o instanceof SequenceType )
-			return matches((SequenceType)o);
+			return exactlyMatches((SequenceType)o);
 		else
 			return false;
 	}
@@ -154,19 +175,6 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return temp;
 	}
 		
-	public boolean matches(List<ModifiedType> inputTypes, Type container)
-	{
-		/*
-		if( (container instanceof InstantiatedType) && isParameterized() )
-		{
-			InstantiatedType instantiatedType = (InstantiatedType)container;
-			SequenceType replaced = replace( instantiatedType.getTypeParameters(), instantiatedType.getTypeArguments() );
-			return replaced.matches( inputTypes );
-		}
-		else*/
-			return matches( inputTypes );
-	}
-	
 	public boolean matches(List<ModifiedType> inputTypes)
 	{
 		if( types.size() != inputTypes.size() )
@@ -179,6 +187,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		
 		return true;		
 	}
+	
 	
 	public boolean exactlyMatches(List<ModifiedType> inputTypes)
 	{
