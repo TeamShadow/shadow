@@ -125,8 +125,8 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type;
 	}
 	
-	public MethodSignature replace(List<Type> values,
-			List<ModifiedType> replacements) {
+	public MethodSignature replace(SequenceType values,
+			SequenceType replacements) {
 		return new MethodSignature(type.replace(values, replacements), symbol, node);
 	}
 	

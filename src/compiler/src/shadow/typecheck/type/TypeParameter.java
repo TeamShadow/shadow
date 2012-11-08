@@ -80,11 +80,13 @@ public class TypeParameter extends ClassInterfaceBaseType
 		return false;
 	}
 	
-	public ClassInterfaceBaseType replace(List<Type> values, List<ModifiedType> replacements )
+	public ClassInterfaceBaseType replace(SequenceType values, SequenceType replacements )
 	{
 		for( int i = 0; i < values.size(); i++ )
-			if( values.get(i).getTypeName().equals(getTypeName()))
+		{
+			if( values.get(i).getType().getTypeName().equals(getTypeName()))
 				return (ClassInterfaceBaseType) replacements.get(i).getType();
+		}
 		
 		return this;
 	}

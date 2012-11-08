@@ -12,10 +12,10 @@ import shadow.parser.javacc.SimpleNode;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
 {	
-	private List<ModifiedType> types = new LinkedList<ModifiedType>(); /** List of return types */	
+	private List<ModifiedType> types; /** List of return types */	
 
 	public SequenceType() {		
-		this( new LinkedList<ModifiedType>()  );		
+		this( new ArrayList<ModifiedType>()  );		
 	}
 
 	public SequenceType(List<ModifiedType> modifiedTypes)
@@ -47,8 +47,18 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			int inputModifiers  = inputTypes.get(i).getModifiers();
 			Type type = types.get(i).getType();
 			int modifiers = types.get(i).getModifiers();
-						
-			if( !inputType.isSubtype(type) )
+							
+			if( type instanceof TypeParameter  )
+			{			
+				TypeParameter parameter = (TypeParameter) type;
+				if( !parameter.canAccept( inputTypes.get(i)  ) )
+				{
+					if( reasons != null )
+						reasons.add(inputType + " cannot be substituted for " + type);
+					return false;
+				}
+			}
+			else if( !inputType.isSubtype(type) )
 			{
 				if( reasons != null )
 					reasons.add(inputType + " is not a subtype of " + type);
@@ -161,7 +171,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 	
 	@Override
-	public SequenceType replace(List<Type> values, List<ModifiedType> replacements )
+	public SequenceType replace(SequenceType values, SequenceType replacements)
 	{		
 		SequenceType temp = new SequenceType();
 		

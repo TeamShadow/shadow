@@ -52,6 +52,7 @@ import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
@@ -413,9 +414,7 @@ public class TypeCollector extends BaseChecker
 	 */
 	
 	private void processTypeParameters(Type parentType, ASTTypeParameters parameters, TreeSet<String> missingTypes)
-	{			
-		parentType.setParameterized(true);
-		
+	{		
 		for( int i = 0; i < parameters.jjtGetNumChildren(); i++ )
 			processTypeParameter(parentType, (ASTTypeParameter)(parameters.jjtGetChild(i)), missingTypes );
 	}
@@ -426,11 +425,13 @@ public class TypeCollector extends BaseChecker
 		TypeParameter typeParameter = new TypeParameter(symbol);		
 		node.setType(typeParameter);
 		
-		for( Type existing : parentType.getTypeParameters() )
-			if( existing.getTypeName().equals( typeParameter.getTypeName() ) )
-				addError( node, Error.MULT_SYM, "Multiply defined type parameter " + existing.getTypeName() );
 		
-		parentType.addTypeParameter(typeParameter);
+		if( parentType.isParameterized() )
+			for( ModifiedType existing : parentType.getTypeParameters() )
+				if( existing.getType().getTypeName().equals( typeParameter.getTypeName() ) )
+					addError( node, Error.MULT_SYM, "Multiply defined type parameter " + existing.getType().getTypeName() );
+		
+		parentType.addTypeParameter(node);
 		
 		if( node.jjtGetNumChildren() > 0 )
 		{

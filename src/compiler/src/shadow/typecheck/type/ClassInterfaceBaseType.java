@@ -210,7 +210,7 @@ public abstract class ClassInterfaceBaseType extends Type
 		return extendType.isRecursivelyParameterized();
 	}
 	
-	public abstract ClassInterfaceBaseType replace(List<Type> values, List<ModifiedType> replacements );
+	public abstract ClassInterfaceBaseType replace(SequenceType values, SequenceType replacements );
 		
 	public String toString() {
 		StringBuilder builder = new StringBuilder(super.toString());
@@ -220,8 +220,9 @@ public abstract class ClassInterfaceBaseType extends Type
 		if( isParameterized() )
 		{
 			builder.append("<");
-			for( Type parameter : getTypeParameters() ) 
+			for( ModifiedType modifiedParameter : getTypeParameters() ) 
 			{
+				Type parameter = modifiedParameter.getType();
 				if( !first )
 					builder.append(", ");
 				builder.append(parameter.toString() );

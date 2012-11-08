@@ -7,6 +7,9 @@ import org.apache.commons.logging.Log;
 import shadow.Configuration;
 import shadow.Loggers;
 import shadow.parser.javacc.ShadowParser.ModifierSet;
+import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class SimpleNode implements Node {
@@ -235,5 +238,9 @@ public class SimpleNode implements Node {
 	    node.enclosingType = enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
 	    
 	    return node;
+	}
+	
+	public ModifiedType replace(SequenceType values, SequenceType replacements) {
+		return new SimpleModifiedType( type.replace(values, replacements), modifiers );
 	}	
 }

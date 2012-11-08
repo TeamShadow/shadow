@@ -352,7 +352,7 @@ public class ClassType extends ClassInterfaceBaseType {
 
 	
 	@Override
-	public ClassType replace(List<Type> values, List<ModifiedType> replacements )
+	public ClassType replace(SequenceType values, SequenceType replacements )
 	{	
 		if( isRecursivelyParameterized() )
 		{		
@@ -387,10 +387,11 @@ public class ClassType extends ClassInterfaceBaseType {
 			
 			//replaced.setTypeArguments( new SequenceType(replacements) );
 			
-			for( Type parameter : getTypeParameters() )			
-				replaced.addTypeParameter(parameter.replace(values, replacements));
-			
-			replaced.setParameterized(true);
+			for( ModifiedType modifiedParameter : getTypeParameters() )	
+			{
+				Type parameter = modifiedParameter.getType();
+				replaced.addTypeParameter( new SimpleModifiedType(parameter.replace(values, replacements), modifiedParameter.getModifiers()) );
+			}
 			
 			return replaced;
 		}

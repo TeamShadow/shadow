@@ -138,7 +138,7 @@ public class MethodType extends Type {
 	
 	
 	@Override
-	public MethodType replace(List<Type> values, List<ModifiedType> replacements )
+	public MethodType replace(SequenceType values, SequenceType replacements )
 	{	
 		MethodType replaced = new MethodType(getOuter(), getModifiers());		
 

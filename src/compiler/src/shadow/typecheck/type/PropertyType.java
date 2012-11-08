@@ -123,8 +123,8 @@ public class PropertyType extends Type {
 	}
 
 	@Override
-	public PropertyType replace(List<Type> values,
-			List<ModifiedType> replacements) {
+	public PropertyType replace(SequenceType values,
+			SequenceType replacements) {
 		
 		MethodType replacedGetter = null;
 		MethodType replacedSetter = null;

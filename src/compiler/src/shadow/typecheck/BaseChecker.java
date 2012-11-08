@@ -17,6 +17,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -171,8 +172,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			MethodType methodType = (MethodType)(method.getType());
 			if( methodType.isParameterized() )
 			{
-				for( Type type : methodType.getTypeParameters() )
+				for( ModifiedType modifiedType : methodType.getTypeParameters() )
 				{
+					Type type = modifiedType.getType();
 					if( type instanceof TypeParameter )
 					{
 						TypeParameter typeParameter = (TypeParameter) type;
@@ -202,8 +204,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			
 			//check type parameters of outer class
 			if( outer.isParameterized() )
-				for( Type parameter : outer.getTypeParameters() )
+				for( ModifiedType modifiedParameter : outer.getTypeParameters() )
 				{
+					Type parameter = modifiedParameter.getType();
+					
 					if( parameter instanceof TypeParameter )
 					{
 						TypeParameter typeParameter = (TypeParameter) parameter;
@@ -308,6 +312,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	//class LinkedList<T is Eggplant> implements List<T>
 	//class LinkedList<T, U is T> implements List<T>
 	//class Piglet implements LinkedList<Pig>
+	/*
 	protected boolean checkTypeArguments( List<Type> parameters, SequenceType arguments )
 	{
 		if( parameters.size() != arguments.size() )
@@ -327,5 +332,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		return true;
 	}
+	*/
 	
 }

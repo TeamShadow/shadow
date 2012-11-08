@@ -20,8 +20,8 @@ public class UnboundMethodType extends Type
 	}
 
 	@Override
-	public UnboundMethodType replace(List<Type> values,
-			List<ModifiedType> replacements) {		
+	public UnboundMethodType replace(SequenceType values,
+			SequenceType replacements) {		
 		return this;
 	}
 }

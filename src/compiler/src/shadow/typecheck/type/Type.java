@@ -15,7 +15,7 @@ public abstract class Type {
 	private ClassInterfaceBaseType outer; //outer class	
 	//private final Kind kind;
 	protected Package _package;
-	private List<Type> typeParameters = new ArrayList<Type>();	
+	private SequenceType typeParameters = null;	
 	private boolean parameterized = false;
 	//private boolean instantiated = false;
 	//private SequenceType typeArguments;
@@ -379,14 +379,19 @@ public abstract class Type {
 		_package = p;
 	}
 	
-	public List<Type> getTypeParameters()
+	public SequenceType getTypeParameters()
 	{
 		return typeParameters;
 	}
 	
-	public void addTypeParameter(Type parameter)
+	public void addTypeParameter(ModifiedType parameter)
 	{
-		typeParameters.add(parameter);
+		if( typeParameters == null )
+		{
+			typeParameters = new SequenceType();
+			parameterized = true;
+		}
+		typeParameters.add(parameter);		
 	}	
 	
 	public static void mangle(String name, StringBuilder sb)
@@ -431,6 +436,8 @@ public abstract class Type {
 		
 		return sb.toString();
 	}
+	
+	
 	public void setParameterized(boolean value)
 	{
 		parameterized = value;
@@ -470,5 +477,5 @@ public abstract class Type {
 	 * @return {@literal true} if {@code this} can be cast to {@code other}
 	 */
 	abstract public boolean isSubtype(Type other);
-	abstract public Type replace(List<Type> values, List<ModifiedType> replacements );
+	abstract public Type replace(SequenceType values, SequenceType replacements );
 }

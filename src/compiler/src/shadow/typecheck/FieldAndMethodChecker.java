@@ -422,8 +422,10 @@ public class FieldAndMethodChecker extends BaseChecker {
 		{
 			if( declarationType.isParameterized() )
 			{
-				for( Type parameter : declarationType.getTypeParameters() )
+				for( ModifiedType modifiedParameter : declarationType.getTypeParameters() )
 				{
+					
+					Type parameter = modifiedParameter.getType();
 					
 					if( parameter instanceof TypeParameter )
 					{
@@ -480,8 +482,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 						if( current.isParameterized() )
 						{
 							SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
-							List<Type> parameters = current.getTypeParameters();
-							if( checkTypeArguments( parameters, arguments ) )
+							SequenceType parameters = current.getTypeParameters();
+							//if( checkTypeArguments( parameters, arguments ) )
+							if( parameters.canAccept(arguments) )
 							{
 								ClassInterfaceBaseType instantiatedType = current.replace(parameters, arguments);
 								child.setType(instantiatedType);
@@ -839,12 +842,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 				String symbol = node.getImage();
 				typeParameter = new TypeParameter(symbol);
 				
-				for( Type existing : declarationType.getTypeParameters() )
-					if( existing.getTypeName().equals( symbol ) )
+				for( ModifiedType existing : declarationType.getTypeParameters() )
+					if( existing.getType().getTypeName().equals( symbol ) )
 						addError( node, Error.MULT_SYM, "Multiply defined type parameter " + symbol );
 				
 				node.setType(typeParameter);
-				declarationType.addTypeParameter(typeParameter);
+				declarationType.addTypeParameter(node);
 			}
 		}
 		return WalkType.POST_CHILDREN;

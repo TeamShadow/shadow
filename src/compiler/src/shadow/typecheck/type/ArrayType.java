@@ -76,6 +76,12 @@ public class ArrayType extends ClassType
 			setParameterized(true);
 	}
 	
+	@Override
+	public SequenceType getTypeParameters()
+	{
+		return baseType.getTypeParameters();		
+	}
+	
 	private ArrayType( Type baseType, int dimensions )
 	{
 		super(makeName(baseType, dimensions), baseType.getModifiers(), baseType.getOuter());
@@ -127,7 +133,7 @@ public class ArrayType extends ClassType
 			return false;
 	}
 	
-	public ArrayType replace(List<Type> values, List<ModifiedType> replacements )
+	public ArrayType replace(SequenceType values, SequenceType replacements )
 	{	
 		return new ArrayType( baseType.replace(values, replacements), dimensions  );		
 	}

@@ -1118,8 +1118,10 @@ public class ClassChecker extends BaseChecker {
 							if( current.isParameterized() )
 							{
 								SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
-								List<Type> parameters = current.getTypeParameters();
-								if( checkTypeArguments( parameters, arguments ) )
+								//List<Type> parameters = current.getTypeParameters();
+								SequenceType parameters = current.getTypeParameters();
+								if( parameters.canAccept(arguments))
+								//if( checkTypeArguments( parameters, arguments ) )
 								{
 									ClassInterfaceBaseType instantiatedType = current.replace(parameters, arguments);
 									child.setType(instantiatedType);
@@ -2194,9 +2196,9 @@ public class ClassChecker extends BaseChecker {
 					if( methodType.isParameterized() )
 					{
 						if( hasArguments )
-						{							
-							List<Type> parameters = methodType.getTypeParameters(); 
-							if( checkTypeArguments( parameters, arguments )   )
+						{	SequenceType parameters = methodType.getTypeParameters(); 
+							//if( checkTypeArguments( parameters, arguments )   )
+							if( parameters.canAccept(arguments))
 								methodType = methodType.replace(parameters, arguments);
 							else
 								continue;
@@ -2251,8 +2253,9 @@ public class ClassChecker extends BaseChecker {
 				{
 					if( hasArguments )
 					{						
-						List<Type> parameters = methodType.getTypeParameters(); 
-						if( checkTypeArguments( parameters, arguments )   )
+						SequenceType parameters = methodType.getTypeParameters(); 
+						//if( checkTypeArguments( parameters, arguments )   )
+						if( parameters.canAccept(arguments))
 							methodType = methodType.replace(parameters, arguments);
 						else
 						{
@@ -2622,10 +2625,8 @@ public class ClassChecker extends BaseChecker {
 		}	
 						
 		Node child = node.jjtGetChild(0);						
-		int counter = 1;
-		boolean hasArguments = false;
-		ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();	
-		SequenceType typeArguments = null;
+		int counter = 1;		
+		ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
 		List<Type> typeParameters = null;
 					
 
@@ -2679,16 +2680,7 @@ public class ClassChecker extends BaseChecker {
 		ASTArguments arguments = (ASTArguments)(node.jjtGetChild(counter));
 		SequenceType sequenceType = (SequenceType)(arguments.getType());
 		List<MethodSignature> candidateConstructors = type.getMethods("constructor");
-		
-		// we don't have implicit constructors, so need to check if the default constructor is OK
-		// No, that's probably not right
-		/*
-		if(sequenceType.size() == 0 && (candidateConstructors == null || candidateConstructors.size() == 0 ))
-		{
-			node.setType(child.getType());
-			return WalkType.POST_CHILDREN;
-		}
-		*/		
+					
 		// we have no constructors
 		if(sequenceType.size() > 0 && (candidateConstructors == null || candidateConstructors.size() == 0 ))
 		{
@@ -2704,9 +2696,6 @@ public class ClassChecker extends BaseChecker {
 			for( MethodSignature signature : candidateConstructors ) 
 			{		
 				MethodType methodType = signature.getMethodType();
-				
-				if( hasArguments )									
-					methodType = methodType.replace( typeParameters, typeArguments);
 				
 				if( signature.matches( sequenceType )) 
 				{
