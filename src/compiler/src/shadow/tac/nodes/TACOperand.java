@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 public abstract class TACOperand extends TACSimpleNode
@@ -23,9 +24,9 @@ public abstract class TACOperand extends TACSimpleNode
 
 	public abstract Type getType();
 	@Override
-	public int getModifiers()
+	public Modifiers getModifiers()
 	{
-		return 0;
+		return new Modifiers();
 	}
 	public final String getName()
 	{

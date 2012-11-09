@@ -36,7 +36,6 @@ import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SignatureNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
@@ -45,6 +44,7 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
@@ -79,8 +79,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 					{
 						//if no constructors, add the default one
 						ASTConstructorDeclaration constructorNode = new ASTConstructorDeclaration(-1);
-						constructorNode.setModifiers(ModifierSet.PUBLIC);
-						MethodSignature constructorSignature = new MethodSignature(classType, "constructor", 0, constructorNode);
+						constructorNode.setModifiers(Modifiers.PUBLIC);
+						MethodSignature constructorSignature = new MethodSignature(classType, "constructor", new Modifiers(), constructorNode);
 						constructorNode.setMethodSignature(constructorSignature);
 						classType.addMethod("constructor", constructorSignature);
 						//note that the node is null for the default constructor, because nothing was made
@@ -90,9 +90,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 					//add default getters and setters
 					for( Map.Entry<String,ModifiedType> field : classType.getFieldList() )
 					{
-						int fieldModifiers = field.getValue().getModifiers();
+						Modifiers fieldModifiers = field.getValue().getModifiers();
 						
-						if( ModifierSet.isGet(fieldModifiers) || ModifierSet.isSet(fieldModifiers) )
+						if( fieldModifiers.isGet() || fieldModifiers.isSet() )
 						{
 							List<MethodSignature> methods = classType.getMethods(field.getKey());
 							int getterCount = 0;
@@ -101,49 +101,49 @@ public class FieldAndMethodChecker extends BaseChecker {
 							
 							for( MethodSignature signature : methods)
 							{
-								if( ModifierSet.isGet(signature.getModifiers()) )
+								if( signature.getModifiers().isGet() )
 									getterCount++;
-								else if( ModifierSet.isSet(signature.getModifiers()) )
+								else if( signature.getModifiers().isSet() )
 									setterCount++;
 								else
 									other++;
 							}
 							
-							if( ModifierSet.isGet(fieldModifiers) && getterCount == 0 )
+							if( fieldModifiers.isGet() && getterCount == 0 )
 							{
 								if( other > 0 )								
 									addError(Error.INVL_TYP, "Cannot create default get property " +  field.getKey() + " when there is already a method of the same name" );
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									methodNode.setModifiers(ModifierSet.PUBLIC | ModifierSet.GET );
-									if( ModifierSet.isStatic(fieldModifiers) )
-										methodNode.addModifier(ModifierSet.STATIC );
+									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET );
+									if( fieldModifiers.isStatic() )
+										methodNode.addModifier(Modifiers.STATIC );
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
-									int modifiers = field.getValue().getModifiers();
-									modifiers = ModifierSet.removeModifier(modifiers, ModifierSet.GET);
-									modifiers = ModifierSet.removeModifier(modifiers, ModifierSet.FIELD);
+									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
+									modifiers.removeModifier(Modifiers.GET);
+									modifiers.removeModifier(Modifiers.FIELD);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
 									methodType.addReturn(modifiedType);									
 									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
 								}								
 							}
 							
-							if( ModifierSet.isSet(fieldModifiers) && setterCount == 0 )
+							if( fieldModifiers.isSet() && setterCount == 0 )
 							{
 								if( other > 0 )								
 									addError(Error.INVL_TYP, "Cannot create default set property " +  field.getKey() + " when there is already a method of the same name" );
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									methodNode.setModifiers(ModifierSet.PUBLIC | ModifierSet.SET );
-									if( ModifierSet.isStatic(fieldModifiers) )
-										methodNode.addModifier(ModifierSet.STATIC );									
+									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
+									if( fieldModifiers.isStatic() )
+										methodNode.addModifier(Modifiers.STATIC );									
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
-									int modifiers = field.getValue().getModifiers();
-									modifiers = ModifierSet.removeModifier(modifiers, ModifierSet.SET);
-									modifiers = ModifierSet.removeModifier(modifiers, ModifierSet.FIELD);
-									modifiers = ModifierSet.addModifier(modifiers, ModifierSet.ASSIGNABLE);
+									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
+									modifiers.removeModifier(Modifiers.SET);
+									modifiers.removeModifier(Modifiers.FIELD);
+									modifiers.addModifier(Modifiers.ASSIGNABLE);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
 									methodType.addParameter("value", modifiedType );									
 									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
@@ -204,28 +204,28 @@ public class FieldAndMethodChecker extends BaseChecker {
 										MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
 										Node parentNode = parentSignature.getNode();
 										Node node = signature.getNode();
-										int parentModifiers;
-										int modifiers;
+										Modifiers parentModifiers;
+										Modifiers modifiers;
 										
 										if( parentNode == null )
-											parentModifiers = 0;
+											parentModifiers = new Modifiers();
 										else
 											parentModifiers = parentNode.getModifiers();
 										
 										if( node == null )
-											modifiers = 0;
+											modifiers = new Modifiers();
 										else
 											modifiers = node.getModifiers();									
 										
 										if( !parentSignature.equals( signature ) )
 											addError( parentNode, "Overriding method " + signature + " differs only by return type from " + parentSignature );
-										else if( ModifierSet.isFinal(parentModifiers) )
+										else if( parentModifiers.isFinal() )
 											addError( parentNode, "Method " + signature + " cannot override final method" );
-										else if( !ModifierSet.isImmutable(modifiers) && ModifierSet.isImmutable(parentModifiers)  )
+										else if( !modifiers.isImmutable() && parentModifiers.isImmutable()  )
 											addError( parentNode, "Non-immutable method " + signature + " cannot override immutable method" );
-										else if( ModifierSet.isPublic(parentModifiers) && (ModifierSet.isPrivate(modifiers) || ModifierSet.isProtected(modifiers)) )
+										else if( parentModifiers.isPublic() && (modifiers.isPrivate() || modifiers.isProtected()) )
 											addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
-										else if( ModifierSet.isProtected(parentModifiers) && ModifierSet.isPrivate(modifiers)  )
+										else if( parentModifiers.isProtected() && modifiers.isPrivate()  )
 											addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
 									}
 								}
@@ -264,23 +264,23 @@ public class FieldAndMethodChecker extends BaseChecker {
 	}
 	
 	
-	public boolean checkFieldModifiers( Node node, int modifiers )
+	public boolean checkFieldModifiers( Node node, Modifiers modifiers )
 	{		
 		boolean success = true;
 			
 		if( currentType instanceof InterfaceType )
 		{	
 			
-			if( ModifierSet.isStatic( modifiers ))
+			if( modifiers.isStatic() )
 			{			
 				addError(node, Error.INVL_MOD, "Interface fields cannot be marked static since they are all static by definition" );
 				success = false;
 			}				
 			
-			node.addModifier(ModifierSet.CONSTANT);
-			node.getType().addModifier(ModifierSet.CONSTANT);
-			//node.addModifier(ModifierSet.STATIC);
-			//node.getType().addModifier(ModifierSet.STATIC);
+			node.addModifier(Modifiers.CONSTANT);
+			node.getType().addModifier(Modifiers.CONSTANT);
+			//node.addModifier(Modifiers.STATIC);
+			//node.getType().addModifier(Modifiers.STATIC);
 		}				
 		
 		return success;
@@ -294,17 +294,17 @@ public class FieldAndMethodChecker extends BaseChecker {
 	 * @return
 	 */
 	
-	public boolean checkMethodModifiers( Node node, int modifiers )
+	public boolean checkMethodModifiers( Node node, Modifiers modifiers )
 	{
 		int visibilityModifiers = 0;
 		boolean success = true;
 		
 		//modifiers are set, but we have to check them
-		if( ModifierSet.isPublic( modifiers ))
+		if( modifiers.isPublic())
 			visibilityModifiers++;
-		if( ModifierSet.isPrivate( modifiers ))
+		if( modifiers.isPrivate())
 			visibilityModifiers++;
-		if( ModifierSet.isProtected( modifiers ))
+		if( modifiers.isProtected())
 			visibilityModifiers++;
 		
 		if( visibilityModifiers > 1 )
@@ -321,8 +321,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 				success = false;
 			}			
 			
-			node.addModifier(ModifierSet.PUBLIC);
-			node.getType().addModifier(ModifierSet.PUBLIC);
+			node.addModifier(Modifiers.PUBLIC);
+			node.getType().addModifier(Modifiers.PUBLIC);
 		}
 		else if( visibilityModifiers == 0 )
 		{			
@@ -356,14 +356,14 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if( !checkFieldModifiers( node, node.getModifiers() ))
 			return WalkType.NO_CHILDREN;
 		
-		node.addModifier(ModifierSet.FIELD);
+		node.addModifier(Modifiers.FIELD);
 		
-		if( ModifierSet.isImmutable(currentType.getModifiers()) ) {
-			node.addModifier(ModifierSet.IMMUTABLE);
-			node.addModifier(ModifierSet.FINAL);
+		if( currentType.getModifiers().isImmutable() ) {
+			node.addModifier(Modifiers.IMMUTABLE);
+			node.addModifier(Modifiers.FINAL);
 			/*
 			if( type.isPrimitive() )
-				node.addModifier(ModifierSet.FINAL);
+				node.addModifier(Modifiers.FINAL);
 			*/
 		}
 		
@@ -524,10 +524,10 @@ public class FieldAndMethodChecker extends BaseChecker {
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
 		//different nodes used for modifiers and signature
 		Node methodDeclarator = node.jjtGetChild(0);
-		if( !secondVisit && currentType != null && ModifierSet.isImmutable(currentType.getModifiers()) ) 
+		if( !secondVisit && currentType != null && currentType.getModifiers().isImmutable() ) 
 		{
-			node.addModifier(ModifierSet.IMMUTABLE);
-			methodDeclarator.addModifier(ModifierSet.IMMUTABLE);
+			node.addModifier(Modifiers.IMMUTABLE);
+			methodDeclarator.addModifier(Modifiers.IMMUTABLE);
 		}
 		return visitMethod( methodDeclarator, node, secondVisit );
 	}
@@ -559,13 +559,13 @@ public class FieldAndMethodChecker extends BaseChecker {
 			node.setType(methodType);
 			node.setEnclosingType(currentType);
 			
-			//if( ModifierSet.isStatic(currentMethod.getFirst().getModifiers()))
-			//	node.addModifier(ModifierSet.STATIC);
+			//if( Modifiers.isStatic(currentMethod.getFirst().getModifiers()))
+			//	node.addModifier(Modifiers.STATIC);
 			
-			if( ModifierSet.isImmutable(currentMethod.getFirst().getModifiers()))
-				node.addModifier(ModifierSet.IMMUTABLE);
+			if( currentMethod.getFirst().getModifiers().isImmutable())
+				node.addModifier(Modifiers.IMMUTABLE);
 			
-			node.addModifier(ModifierSet.FINAL);
+			node.addModifier(Modifiers.FINAL);
 		}
 		
 		return WalkType.POST_CHILDREN;

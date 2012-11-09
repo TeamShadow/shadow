@@ -9,10 +9,10 @@ public class MethodType extends Type {
 	protected SequenceType returns; /** List of return types */
 
 	public MethodType() {
-		this(null, 0);
+		this(null, new Modifiers());
 	}
 
-	public MethodType(ClassInterfaceBaseType outer, int modifiers) {
+	public MethodType(ClassInterfaceBaseType outer, Modifiers modifiers) {
 		super(null, modifiers, outer);
 		parameterNames = new ArrayList<String>();
 		parameterTypes = new SequenceType();

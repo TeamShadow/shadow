@@ -6,8 +6,8 @@ import org.apache.commons.logging.Log;
 
 import shadow.Configuration;
 import shadow.Loggers;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
@@ -25,7 +25,7 @@ public class SimpleNode implements Node {
     protected int line, column;
     
     protected Type type;		// used by the type checker    
-    protected int modifiers; 	// used by the type checker
+    protected Modifiers modifiers = new Modifiers(); 	// used by the type checker
 	private Type enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
 
 	public SimpleNode(int id) {
@@ -33,8 +33,7 @@ public class SimpleNode implements Node {
     	image = "";
     	file = Configuration.getInstance().current();
     	line = column = -1;
-    	type = null;
-    	modifiers = 0;
+    	type = null;    
     	enclosingType = null;
     }
     
@@ -45,8 +44,7 @@ public class SimpleNode implements Node {
     	file = Configuration.getInstance().current();
     	line = sp.token.beginLine;
     	column = sp.token.beginColumn;
-    	type = null;
-    	modifiers = 0;
+    	type = null;    	
     	enclosingType = null;
     }
     
@@ -166,24 +164,29 @@ public class SimpleNode implements Node {
         }
     }    
     
-    public int getModifiers()
+    public Modifiers getModifiers()
 	{
 		return modifiers;
 	}
 	
-	public void setModifiers( int modifiers )
+	public void setModifiers( Modifiers modifiers )
 	{
 		this.modifiers = modifiers;
 	}	
 	
+	public void setModifiers( int modifiers )
+	{
+		this.modifiers.setModifiers(modifiers);
+	}
+	
 	public void addModifier( int mod )
 	{
-		modifiers |= mod;
+		modifiers.addModifier(mod);
 	}
 	
 	public void removeModifier( int mod )
 	{
-		modifiers &= ~mod;
+		modifiers.removeModifier(mod);
 	}
 	
 	public void setEnclosingType(Type type)
@@ -200,7 +203,7 @@ public class SimpleNode implements Node {
 	
 	public boolean isField()
 	{
-		return ModifierSet.isField(modifiers);
+		return modifiers.isField();
 	}
 
 	public String toString()

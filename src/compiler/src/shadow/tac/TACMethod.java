@@ -9,12 +9,12 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -98,7 +98,7 @@ public class TACMethod extends TACNodeList
 
 	public boolean isNative()
 	{
-		return ModifierSet.isNative(type.getModifiers());
+		return type.getModifiers().isNative();
 	}
 
 	public boolean isConstructor()

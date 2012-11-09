@@ -4,11 +4,11 @@ package shadow.typecheck.type;
 
 public class ExceptionType extends ClassType
 {
-	public ExceptionType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
+	public ExceptionType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
 		this( typeName, modifiers, outer, Type.EXCEPTION );
 	}
 	
-	public ExceptionType(String typeName, int modifiers, ClassInterfaceBaseType outer, ClassType extendType ) {
+	public ExceptionType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer, ClassType extendType ) {
 		super( typeName, modifiers, outer );
 		setExtendType( extendType );
 	}

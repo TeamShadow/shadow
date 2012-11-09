@@ -16,6 +16,7 @@ import java.io.*;
 import shadow.parser.*;
 import shadow.AST.ASTWalker;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.Modifiers;
 import org.apache.commons.logging.Log;
 import shadow.Loggers;
 
@@ -25,219 +26,6 @@ import shadow.Loggers;
  */
 public class ShadowParser
 {
-   /**
-    * Class to hold modifiers.
-    */
-   static public final class ModifierSet
-   {
-     /* Definitions of the bits in the modifiers field.  */
-     /* Unused Java modifiers are commented out until modifiers are finalized */ 
-     public static final int PUBLIC         = 0x0001;
-     public static final int PROTECTED      = 0x0002;
-     public static final int PRIVATE        = 0x0004;
-     public static final int ABSTRACT       = 0x0008;
-     public static final int STATIC         = 0x0010;
-     public static final int FINAL          = 0x0020;     
-     public static final int NATIVE       	= 0x0040;     
-     public static final int WEAK           = 0x0080;
-     public static final int IMMUTABLE      = 0x0100;
-     public static final int NULLABLE      	= 0x0200;
-	 public static final int GET			= 0x0400;
-	 public static final int SET			= 0x0800;
-	 public static final int CONSTANT		= 0x1000;
-          
-     public static final int ASSIGNABLE   	= 0x2000;
-     public static final int TYPE_NAME   	= 0x4000;
-     public static final int FIELD		   	= 0x8000;
-     public static final int PROPERTY	   	= 0x10000;
-
-
-     /* Type Modifiers:
-     	public		(only for inner classes)
-     	private		(only for inner classes)
-     	protected 	(only for inner classes)
-		final 		(can't be extended)
-		abstract		
-		immutable	(final, abstract, and immutable are mutually exclusive)
-     */
-
-
-     /* Declaration Modifiers:
-		public			(only for methods)
-     	private			(only for methods)
-     	protected 		(only for methods)		
-		static			(only for members)
-		get				(only for fields)
-		set				(only for fields)
-		constant		(only for fields, public constant)
-		final 			(can't be changed)		
-		weak			(reference will not stop GC)
-		native          (used to map in C functions)
-		nullable		(variables that can be null)
-     */
-
-     /* Hidden Modifiers: (used in the compiler internally, but cannot be marked by the user)
-		assignable 		(used to mark variables [lvalues])
-		type name		(used to distinguish between types and values/variables with that type, e.g. int vs. 5 or String vs. "figs")
-		field			(used to mark nodes that are fields, as opposed to local variables, to inform the TAC [methods are NOT marked as fields])
-     */
-     
-
-     /** A set of accessors that indicate whether the specified modifier
-         is in the set. */
-
-     public static boolean isPublic(int modifiers) { return (modifiers & PUBLIC) != 0; }
-     public static boolean isProtected(int modifiers) { return (modifiers & PROTECTED) != 0; }
-     public static boolean isPrivate(int modifiers) { return (modifiers & PRIVATE) != 0; }
-     public static boolean isStatic(int modifiers) { return (modifiers & STATIC) != 0; }
-     public static boolean isAbstract(int modifiers) { return (modifiers & ABSTRACT) != 0; }
-     public static boolean isFinal(int modifiers) { return (modifiers & FINAL) != 0; }
-     public static boolean isNative(int modifiers) { return (modifiers & NATIVE) != 0; }
-
-     public static boolean isGet(int modifiers) { return (modifiers & GET) != 0; }
-     public static boolean isSet(int modifiers) { return (modifiers & SET) != 0; }
-
-     public static boolean isConstant(int modifiers) { return (modifiers & CONSTANT) != 0; }
-
-     public static boolean isWeak(int modifiers) { return (modifiers & WEAK) != 0; }
-     public static boolean isImmutable(int modifiers) { return (modifiers & IMMUTABLE) != 0; }
-     public static boolean isNullable(int modifiers) { return (modifiers & NULLABLE) != 0; }
-     
-     public static boolean isAssignable(int modifiers) { return (modifiers & ASSIGNABLE) != 0; }
-     public static boolean isTypeName(int modifiers) { return (modifiers & TYPE_NAME) != 0; }   
-     public static boolean isField(int modifiers) { return (modifiers & FIELD) != 0; }     
-
-     /**
-      * Changes the given modifier.
-      */
-     public static int removeModifier(int modifiers, int mod) { return modifiers & ~mod; }
-     public static int addModifier(int modifiers, int mod) { return modifiers | mod; }
-     public static boolean hasModifier( int modifiers, int mod ) { return (modifiers & mod) != 0;     }
-     public static int checkAndAdd( int modifiers, int mod ) throws ParseException
-     {
-       if( hasModifier( modifiers, mod ) ) throw new ParseException( "Repeated modifiers not allowed" );
-
-       return addModifier( modifiers, mod );
-     }
-
-		private static void checkModifiers( int modifiers, int legal, String name )  throws ParseException
-		{
-		   	if( isPublic(modifiers) && !isPublic( legal )  )
-		   		throw new ParseException(name + " cannot be marked public");
-		   	if( isProtected(modifiers) && !isProtected( legal )  )
-		   		throw new ParseException(name + " cannot be marked protected");
-		   	if( isPrivate(modifiers) && !isPrivate( legal )  )
-		   		throw new ParseException(name + " cannot be marked private");
- 			if( isStatic(modifiers) && !isStatic( legal )  )
-		   		throw new ParseException(name + " cannot be marked static");
-		   	if( isAbstract(modifiers) && !isAbstract( legal )  )
-		   		throw new ParseException(name + " cannot be marked abstract");
-		   	if( isFinal(modifiers) && !isFinal( legal )  )
-		   		throw new ParseException(name + " cannot be marked final");     
-		   	if( isNative(modifiers) && !isNative( legal )  )
-		   		throw new ParseException(name + " cannot be marked native");
-	   		if( isGet(modifiers) && !isGet( legal )  )
-		   		throw new ParseException(name + " cannot be marked get");
-     		if( isSet(modifiers) && !isSet( legal )  )
-		   		throw new ParseException(name + " cannot be marked set");
-		   	if( isConstant(modifiers) && !isConstant( legal )  )
-		   		throw new ParseException(name + " cannot be marked constant");
-			if( isWeak(modifiers) && !isWeak( legal )  )
-		   		throw new ParseException(name + " cannot be marked weak");
-     		if( isImmutable(modifiers) && !isImmutable( legal )  )
-		   		throw new ParseException(name + " cannot be marked immutable");
-		   	if( isNullable(modifiers) && !isNullable( legal )  )
-		   		throw new ParseException(name + " cannot be marked nullabe");		}
-
-		public static void checkClassModifiers( int modifiers ) throws ParseException
-		{
-		  checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE | ABSTRACT | FINAL | IMMUTABLE, "A class");	
-	    }
-
-
-		public static void checkSingletonModifiers( int modifiers ) throws ParseException
-		{		  
-		  checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE | IMMUTABLE, "A singleton");	
-	   	}
-	   	
-		public static void checkExceptionModifiers( int modifiers ) throws ParseException
-		{		  
-			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE | FINAL, "An exception");
-		}
-
-		public static void checkErrorModifiers( int modifiers ) throws ParseException
-		{
-			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE, "An error");
- 	 	}
-
-
-		public static void checkInterfaceModifiers( int modifiers ) throws ParseException
-		{
- 	    	checkModifiers( modifiers, FINAL, "An interface");
- 	 	}
-
-		public static void checkViewModifiers( int modifiers ) throws ParseException
-		{
-			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE, "A view");
-		}
-
-		public static void checkEnumModifiers( int modifiers ) throws ParseException
-		{
-			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE, "An enum");
-		}
-
-		public static void checkFieldModifiers( int modifiers, JJTShadowParserState state ) throws ParseException
-		{
-			checkModifiers( modifiers, FINAL | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE, "A field");
-			
-			if( isSet(modifiers) && isFinal(modifiers) )
-				throw new ParseException("A field cannot be marked both set and final");
-			if( isConstant(modifiers) )
-			{
-				int updatedModifiers = removeModifier(modifiers, CONSTANT);
-				
-				if( updatedModifiers != 0 )
-					throw new ParseException("A constant field cannot have any other modifiers");
-			}			 			
-		}
-
-		public static void checkMethodModifiers( int modifiers ) throws ParseException
-		{
-		  	checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE | ABSTRACT | FINAL | IMMUTABLE | GET | SET | NATIVE, "A method");
-			if( isGet(modifiers) &&  isSet(modifiers) )
-				throw new ParseException("A method cannot be marked both get and set");			
-		}
-
-		public static void checkLocalMethodModifiers( int modifiers ) throws ParseException
-		{
-			checkModifiers( modifiers, IMMUTABLE, "A local method");
-		}
-
-
-		public static void checkConstructorModifiers( int modifiers ) throws ParseException
-		{
-			checkModifiers( modifiers, PUBLIC | PROTECTED | PRIVATE , "A constructor");
-		}
-
-		public static void checkDestructorModifiers( int modifiers ) throws ParseException
-		{
-			checkModifiers( modifiers, PUBLIC, "A destructor");
-		}		
-
-		public static void checkLocalVariableModifiers( int modifiers ) throws ParseException
-		{
-		  	checkModifiers( modifiers, FINAL | IMMUTABLE | WEAK | NULLABLE, "A local variable");
-		}
-
-		public static void checkParameterAndReturnModifiers( int modifiers ) throws ParseException
-		{
-		  checkModifiers( modifiers, FINAL | IMMUTABLE | NULLABLE, "Method parameter and return types");		  
-
-			//what does final mean for parameters and return types?
-			//shouldn't all parameters be final?		
-		}
-	}
-
    	public static enum TypeKind {		
 		CLASS,
 		ENUM,
@@ -681,28 +469,26 @@ void ImportDeclaration():
  * better error messages.
  */
 
-int Modifiers():
+Modifiers Modifiers():
 {
-   int modifiers = 0;
+   Modifiers modifiers = new Modifiers();
    debugPrint("MODIFIERS");
 }
 {
  (
   LOOKAHEAD(2)
   (
-    "public" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PUBLIC); }
-  //| "static" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.STATIC); }
-  | "protected" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PROTECTED); }
-  | "private" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.PRIVATE); }
-  | "final" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.FINAL); }
-  | "abstract" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.ABSTRACT); }  
-  |	"immutable"{ modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.IMMUTABLE); }
-  | "native" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.NATIVE); }
-  | "weak" { modifiers = ModifierSet.checkAndAdd( modifiers,  ModifierSet.WEAK); }
-  |	"nullable" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.NULLABLE); }
-  |	"get" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.GET); }
-  |	"set" { modifiers = ModifierSet.checkAndAdd( modifiers, ModifierSet.SET); }
-  | Annotation()
+    "public" { modifiers.checkAndAdd(Modifiers.PUBLIC); }
+  | "protected" { modifiers.checkAndAdd(Modifiers.PROTECTED); }
+  | "private" { modifiers.checkAndAdd(Modifiers.PRIVATE); }
+  | "final" { modifiers.checkAndAdd(Modifiers.FINAL); }
+  | "abstract" { modifiers.checkAndAdd(Modifiers.ABSTRACT); }  
+  |	"immutable"{ modifiers.checkAndAdd(Modifiers.IMMUTABLE); }
+  | "native" { modifiers.checkAndAdd(Modifiers.NATIVE); }
+  | "weak" { modifiers.checkAndAdd( Modifiers.WEAK); }
+  |	"nullable" { modifiers.checkAndAdd(Modifiers.NULLABLE); }
+  |	"get" { modifiers.checkAndAdd(Modifiers.GET); }
+  |	"set" { modifiers.checkAndAdd(Modifiers.SET); }
   )
  )*
 
@@ -717,7 +503,7 @@ int Modifiers():
  */
 void TypeDeclaration():
 {
-   int modifiers;
+   Modifiers modifiers;
    debugPrint("TYPE DECLARATION");
    
 }
@@ -725,18 +511,17 @@ void TypeDeclaration():
   //";" //why allow the semicolon?
 /*|*/ modifiers = Modifiers()
   ( ClassOrInterfaceDeclaration(modifiers)
-  | EnumDeclaration(modifiers)
-  | AnnotationTypeDeclaration(modifiers)
+  | EnumDeclaration(modifiers)  
   | ViewDeclaration(modifiers)
   )
 }
 
-void ViewDeclaration(int modifiers):
+void ViewDeclaration(Modifiers modifiers):
 {
 	debugPrint("VIEW DECLARATION");
 	Token t;
 
-   ModifierSet.checkViewModifiers( modifiers );	
+   modifiers.checkViewModifiers();	
 }
 {
 	"view"
@@ -748,7 +533,7 @@ void ViewDeclaration(int modifiers):
 }
 
 
-void ClassOrInterfaceDeclaration(int modifiers):
+void ClassOrInterfaceDeclaration(Modifiers modifiers):
 {
    boolean isInterface = false;
    boolean isErrorOrException = false;
@@ -760,27 +545,27 @@ void ClassOrInterfaceDeclaration(int modifiers):
   ( "class"
   	{
   	  jjtThis.setKind(TypeKind.CLASS);
-  	  ModifierSet.checkClassModifiers( modifiers );	  
+  	  modifiers.checkClassModifiers();	  
   	}
 	| "singleton"
  	{
  	  jjtThis.setKind(TypeKind.SINGLETON);
- 	  ModifierSet.checkSingletonModifiers( modifiers );
+ 	  modifiers.checkSingletonModifiers();
  	}
   	
  	| "exception"
  	{
  	  jjtThis.setKind(TypeKind.EXCEPTION); isErrorOrException = true;
- 	  ModifierSet.checkExceptionModifiers( modifiers );
+ 	  modifiers.checkExceptionModifiers();
  	}
  	| "error"
  	{ jjtThis.setKind(TypeKind.ERROR); isErrorOrException = true;
- 	  ModifierSet.checkErrorModifiers( modifiers );
+ 	  modifiers.checkErrorModifiers();
  	}
  	| "interface"
  	{
  	  jjtThis.setKind(TypeKind.INTERFACE); isInterface = true;
- 	   ModifierSet.checkInterfaceModifiers( modifiers ); 	   
+ 	   modifiers.checkInterfaceModifiers(); 	   
  	 } )
 
   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //make this work
@@ -825,11 +610,11 @@ void Version():
    "$" < VERSION_LITERAL >
 }
 
-void EnumDeclaration(int modifiers):
+void EnumDeclaration(Modifiers modifiers):
 {
     debugPrint("ENUM DECLARATION");
     Token t;
-	ModifierSet.checkEnumModifiers( modifiers );
+	modifiers.checkEnumModifiers();
 }
 {
 { jjtThis.setModifiers(modifiers); }
@@ -889,7 +674,7 @@ void ClassOrInterfaceBody(boolean isInterface):
 void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 {
    boolean isNestedInterface = false;
-   int modifiers;
+   Modifiers modifiers;
    debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {
@@ -908,10 +693,10 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 | ";"
 }
 
-void FieldDeclaration(int modifiers):
+void FieldDeclaration(Modifiers modifiers):
 {
-  debugPrint("FIELD DECLARATION");
-	ModifierSet.checkFieldModifiers( modifiers, jjtree );
+    debugPrint("FIELD DECLARATION");
+	modifiers.checkFieldModifiers();
 }
 {
   { jjtThis.setModifiers(modifiers); }
@@ -948,10 +733,10 @@ void ArrayInitializer():
 | "{" ConditionalExpression() ( LOOKAHEAD(2) "," ConditionalExpression() )*  [ "," ] "}"
 }
 
-void MethodDeclaration(int modifiers):
+void MethodDeclaration(Modifiers modifiers):
 {
   debugPrint("METHOD DECLARATION");
-	ModifierSet.checkMethodModifiers( modifiers ); 
+	modifiers.checkMethodModifiers(); 
  }
 {
   { jjtThis.setModifiers(modifiers); }  
@@ -977,21 +762,21 @@ void FormalParameters():
 void FormalParameter():
 {
     debugPrint("FORMAL PARAMETER");
-	int modifiers = 0;
+	Modifiers modifiers;
 }
 {
    modifiers = Modifiers()
    Type() VariableDeclaratorId()
    {
-     ModifierSet.checkParameterAndReturnModifiers(modifiers);
+     modifiers.checkParameterAndReturnModifiers();
      jjtThis.setModifiers(modifiers);
    }
 }
 
-void ConstructorDeclaration(int modifiers):
+void ConstructorDeclaration(Modifiers modifiers):
 {
   debugPrint("CONSTRUCTOR DECLARATION");
-  ModifierSet.checkConstructorModifiers( modifiers );  
+  modifiers.checkConstructorModifiers();  
 }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }  
@@ -1006,10 +791,10 @@ void ConstructorDeclaration(int modifiers):
    ";" )
 }
 
-void DestructorDeclaration(int modifiers):
+void DestructorDeclaration(Modifiers modifiers):
 {
   debugPrint("DESTRUCTOR DECLARATION");
-  ModifierSet.checkDestructorModifiers( modifiers );
+  modifiers.checkDestructorModifiers();
 }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("destructor"); }  
@@ -1140,12 +925,12 @@ void PrimitiveType():
 
 void ResultType():
 { debugPrint("RESULT TYPE");
-	int modifiers = 0;
+	Modifiers modifiers;
 }
 {
 	modifiers = Modifiers() Type() [ <IDENTIFIER > ] //optional identifier used only for documentation
 	{
-	  ModifierSet.checkParameterAndReturnModifiers(modifiers);
+	  modifiers.checkParameterAndReturnModifiers();
 	  jjtThis.setModifiers(modifiers);	} 
 }
 
@@ -1507,7 +1292,7 @@ void Literal() :
 {
 	debugPrint("LITERAL");
 	Token t;
-	jjtThis.addModifier(ModifierSet.FINAL); 
+	jjtThis.addModifier(Modifiers.FINAL); 
 }
 {
   (    
@@ -1524,7 +1309,7 @@ void Literal() :
 | t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UINT); }
 | t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.ULONG); }
 | BooleanLiteral() { jjtThis.setLiteral(Literal.BOOLEAN); }
-| NullLiteral() { jjtThis.setLiteral(Literal.NULL); jjtThis.addModifier(ModifierSet.NULLABLE); }  )
+| NullLiteral() { jjtThis.setLiteral(Literal.NULL); jjtThis.addModifier(Modifiers.NULLABLE); }  )
 
  /* OLD:
   t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
@@ -1683,16 +1468,16 @@ void BlockStatement():
 void LocalDeclaration():
 {
   debugPrint("LOCAL DECLARATION");
-  int modifiers = 0;}
+  Modifiers modifiers;}
 {
   modifiers = Modifiers()
   ( LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
   | LocalVariableDeclaration(modifiers) ";" )  }
 
-void LocalMethodDeclaration(int modifiers):
+void LocalMethodDeclaration(Modifiers modifiers):
 {
   	debugPrint("METHOD DECLARATION");
-	ModifierSet.checkLocalMethodModifiers( modifiers ); 
+	modifiers.checkLocalMethodModifiers(); 
  }
 {
   { jjtThis.setModifiers(modifiers); }  
@@ -1700,10 +1485,10 @@ void LocalMethodDeclaration(int modifiers):
   ( Block() | ";" )
 }
 
-void LocalVariableDeclaration(int modifiers):
+void LocalVariableDeclaration(Modifiers modifiers):
 {
   debugPrint("LOCAL VARIABLE DECLARATION");
-  ModifierSet.checkLocalVariableModifiers( modifiers );
+  modifiers.checkLocalVariableModifiers();
 }
 {  
   ( Type() | "auto" { jjtThis.setImage("auto"); } ) VariableDeclarator() ( "," VariableDeclarator() )*
@@ -1800,10 +1585,10 @@ void ForStatement() :
 void ForInit():
 {
 	debugPrint("FOR INIT");
-	Token t;
+	Token t;	
 }
 {
-  LOOKAHEAD( LocalVariableDeclaration(0) ) LocalVariableDeclaration(0)
+  LOOKAHEAD( LocalVariableDeclaration(Modifiers.NO_MODIFIERS) ) LocalVariableDeclaration(Modifiers.NO_MODIFIERS)
 | StatementExpressionList()
 }
 
@@ -1885,105 +1670,4 @@ void RightShift():
 { debugPrint("RIGHT SHIFT"); }
 {
   ( LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTSHIFT} ) ">" ">" )
-}
-
-/* Annotation syntax follows. */
-
-void Annotation() #void:
-{}
-{
-   LOOKAHEAD( "@" Name() "(" ( <IDENTIFIER> "=" | ")" ))
-   NormalAnnotation()
- |
-   LOOKAHEAD( "@" Name() "(" )
-   SingleMemberAnnotation()
- |
-   MarkerAnnotation()
-}
-
-void NormalAnnotation() #void:
-{}
-{
-   "@" Name() "(" [ MemberValuePairs() ] ")"
-}
-
-void MarkerAnnotation() #void:
-{}
-{
-  "@" Name()
-}
-
-void SingleMemberAnnotation() #void:
-{}
-{
-  "@" Name() "(" MemberValue() ")"
-}
-
-void MemberValuePairs():
-{ debugPrint("MEMBER VALUE PAIRS"); }
-{
-   MemberValuePair() ( "," MemberValuePair() )*
-}
-
-void MemberValuePair():
-{
-	debugPrint("MEMBER VALUE PAIR");
-	Token t;
-}
-{
-    t = <IDENTIFIER> { jjtThis.setImage(t.image); } "=" MemberValue()
-}
-
-void MemberValue():
-{ debugPrint("MEMBER VALUE"); }
-{
-   Annotation()
- | MemberValueArrayInitializer()
- | ConditionalExpression()
-}
-
-void  MemberValueArrayInitializer():
-{ debugPrint("MEMBER VALUE ARRAY INITIALIZER"); }
-{
-  "{" MemberValue() ( LOOKAHEAD(2) "," MemberValue() )* [ "," ] "}"
-}
-
-
-/* Annotation Types. */
-
-void AnnotationTypeDeclaration(int modifiers) #void:
-{ debugPrint("ANNOTATION TYPE DECLARATION"); }
-{
-  "@" "interface" <IDENTIFIER> AnnotationTypeBody()
-}
-
-void AnnotationTypeBody() #void:
-{ debugPrint("ANNOTATION TYPE BODY"); }
-{
-  "{" ( AnnotationTypeMemberDeclaration() )* "}"
-}
-
-void AnnotationTypeMemberDeclaration() #void:
-{
-   int modifiers;
-   debugPrint("ANNOTATION TYPE MEMBER DECLARATION"); 
-}
-{
- modifiers = Modifiers() //not sure what we want here
- (
-   LOOKAHEAD(Type() <IDENTIFIER> "(")
-    Type() <IDENTIFIER> "(" ")" [ DefaultValue() ] ";"
-  | ClassOrInterfaceDeclaration(modifiers)
-  | EnumDeclaration(modifiers)
-  | AnnotationTypeDeclaration(modifiers)
-  | FieldDeclaration(modifiers)
- )
- |
-   ( ";" )
-}
-
-void DefaultValue():
-{ debugPrint("DEFAULT VALUE"); }
-{
-  "default" MemberValue()
 }

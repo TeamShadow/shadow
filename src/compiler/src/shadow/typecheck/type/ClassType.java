@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
 
 public class ClassType extends ClassInterfaceBaseType {
@@ -17,22 +16,11 @@ public class ClassType extends ClassInterfaceBaseType {
 	private Set<Type> referencedTypes = new HashSet<Type>();
 	
 	public ClassType(String typeName, ClassType parent ) {
-		this( typeName, 0, null );
+		this( typeName, new Modifiers(), null );
 		setExtendType( parent );
 	}
 	
-	/*
-	public ClassType(String typeName) {
-		this( typeName, 0 );
-	}
-	
-	
-	public ClassType(String typeName, int modifiers) {
-		this( typeName, modifiers, null );
-	}
-	*/	
-	
-	public ClassType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
+	public ClassType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
 		super( typeName, modifiers, outer );
 	}	
 	
@@ -92,7 +80,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		
 		if( list != null )
 			for(MethodSignature existing : list )
-				if( existing.matchesInterface(signature) && ModifierSet.isPublic(existing.getMethodType().getModifiers() ) ) 
+				if( existing.matchesInterface(signature) && existing.getMethodType().getModifiers().isPublic( ) ) 
 					return true;
 		
 		return false;

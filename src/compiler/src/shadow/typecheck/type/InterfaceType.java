@@ -10,14 +10,14 @@ public class InterfaceType extends ClassInterfaceBaseType {
 	protected ArrayList<InterfaceType> extendTypes = new ArrayList<InterfaceType>();
 
 	public InterfaceType(String typeName) {
-		this( typeName, 0 );
+		this( typeName, new Modifiers() );
 	}
 	
-	public InterfaceType(String typeName, int modifiers) {
+	public InterfaceType(String typeName, Modifiers modifiers) {
 		this( typeName, modifiers, null );
 	}	
 		
-	public InterfaceType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
+	public InterfaceType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
 		super( typeName, modifiers, outer );
 	}
 
@@ -32,19 +32,6 @@ public class InterfaceType extends ClassInterfaceBaseType {
 			if( parent.equals(type) || parent.isDescendentOf( type ))
 				return true;			
 		}
-		return false;
-	}
-	
-	public boolean recursivelyContainsMethod(MethodSignature signature, int modifiers ) //must have certain modifiers (usually public)
-	{
-		if( containsMethod(signature, modifiers))
-			return true;		
-		
-		//check extends		
-		for( InterfaceType parent : extendTypes )
-			if( parent.recursivelyContainsMethod(signature, modifiers ) )
-					return true;			 		
-		
 		return false;
 	}
 	

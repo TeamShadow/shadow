@@ -53,6 +53,7 @@ import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
@@ -295,7 +296,7 @@ public class TypeCollector extends BaseChecker
 	private void updateTypeParameters(ASTFunctionType node,
 			TreeSet<String> missingTypes) {
 
-		MethodType methodType = new MethodType(currentType, 0);
+		MethodType methodType = new MethodType(currentType, new Modifiers());
 		
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 		{
@@ -556,7 +557,7 @@ public class TypeCollector extends BaseChecker
 		return files;
 	}
 	
-	private void createType( SimpleNode node, int modifiers, TypeKind kind ) throws ShadowException
+	private void createType( SimpleNode node, Modifiers modifiers, TypeKind kind ) throws ShadowException
 	{		 
 		String typeName;
 		

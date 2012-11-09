@@ -7,12 +7,17 @@ import java.util.Map;
 public class SimpleModifiedType implements ModifiedType {
 
 	Type type;
-	int modifiers;
+	Modifiers modifiers;
 	
-	public SimpleModifiedType( Type type, int modifiers )
+	public SimpleModifiedType( Type type, Modifiers modifiers )
 	{
 		this.type = type;
 		this.modifiers = modifiers;
+	}
+	
+	public SimpleModifiedType( Type type)
+	{
+		this( type, new Modifiers() );
 	}
 	
 	@Override
@@ -21,7 +26,7 @@ public class SimpleModifiedType implements ModifiedType {
 	}
 
 	@Override
-	public int getModifiers() {
+	public Modifiers getModifiers() {
 		return modifiers;
 	}	
 	

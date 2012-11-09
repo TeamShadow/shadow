@@ -41,6 +41,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
@@ -142,7 +143,7 @@ public class TACBuilder implements ShadowParserVisitor
 			for (MethodSignature method : methodList)
 				visitMethod(new TACMethod(method), fields, method.getNode());
 		if (!type.getMethodMap().containsKey("constructor"))
-			visitMethod(new TACMethod("constructor", new MethodType(type, 0)),
+			visitMethod(new TACMethod("constructor", new MethodType(type, new Modifiers())),
 					fields, null);
 
 		return NO_CHILDREN;
@@ -917,7 +918,7 @@ public class TACBuilder implements ShadowParserVisitor
 			nullLabel.new TACLabel(tree);
 			TACOperand newValue = new TACNewObject(tree, type);
 			new TACCall(tree, new TACMethod("constructor",
-					new MethodType(type, 0)), Collections.singleton(newValue));
+					new MethodType(type, new Modifiers())), Collections.singleton(newValue));
 			new TACStore(tree, value, newValue);
 			new TACStore(tree, var, newValue);
 			new TACBranch(tree, doneLabel);
@@ -938,7 +939,7 @@ public class TACBuilder implements ShadowParserVisitor
 			for (int i = 0; i < tree.getNumChildren(); i++)
 			{
 				TACOperand child = tree.appendChild(i);
-				types.add(new SimpleModifiedType(child.getType(), 0));
+				types.add(new SimpleModifiedType(child.getType()));
 				seq.add(child);
 			}
 			new TACSequence(tree, seq);
@@ -1210,41 +1211,6 @@ public class TACBuilder implements ShadowParserVisitor
 		return PRE_CHILDREN;
 	}
 
-	@Override
-	public Object visit(ASTMemberValuePairs node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMemberValuePair node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMemberValue node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTMemberValueArrayInitializer node,
-			Boolean secondVisit) throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTDefaultValue node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
 	private void visitMethod(TACMethod methodRef, Set<Node> fieldNodes,
 			Node methodNode) throws ShadowException
 	{
@@ -1338,7 +1304,7 @@ public class TACBuilder implements ShadowParserVisitor
 		ClassType type = (ClassType)node.jjtGetChild(0).getType();
 		TACOperand object = new TACNewObject(tree, type);
 		if (!type.getMethodMap().containsKey("constructor"))
-			methodType = new MethodType(type, 0);
+			methodType = new MethodType(type, new Modifiers());
 //		SequenceType paramTypes = (SequenceType)node.jjtGetChild(1).getType();
 //		List<MethodSignature> ctors = type.getMethodMap().get("constructor");
 //		if (ctors == null) // Default constructor

@@ -1,9 +1,6 @@
 package shadow.typecheck.type;
 
-import java.util.List;
-
 import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 
 public class PropertyType extends Type {
 	
@@ -62,7 +59,7 @@ public class PropertyType extends Type {
 		if( !isGettable() )
 			return false;
 		
-		if( !ModifierSet.isNullable(getSetType().getModifiers()) && ModifierSet.isNullable(getGetType().getModifiers()) )
+		if( !getSetType().getModifiers().isNullable() && getGetType().getModifiers().isNullable() )
 			return false;			
 			
 		Type getType = getGetType().getType();

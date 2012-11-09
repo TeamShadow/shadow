@@ -5,6 +5,7 @@ package shadow.parser.javacc;
 import org.apache.commons.logging.Log;
 
 import shadow.Loggers;
+import shadow.typecheck.type.Modifiers;
 
 public
 @SuppressWarnings("all")
@@ -25,29 +26,16 @@ class ASTModifiers extends SimpleNode {
     return visitor.visit(this, secondVisit);
   }
   
-  int modifiers = 0;
+  Modifiers modifiers = new Modifiers();
   
-  public void setModifiers(int modifiers) {
+  public void setModifiers(Modifiers modifiers) {
 	  this.modifiers = modifiers;
   }
   
   public void dump(String prefix) {
 	  StringBuilder sb = new StringBuilder(prefix + "ASTModifiers(" + line + ":" + column + "): ");
-	  
-	  ShadowParser.ModifierSet ms = new ShadowParser.ModifierSet();
-	  	  
-	  if(ms.isAbstract(modifiers)) sb.append("abstract ");
-	  if(ms.isFinal(modifiers)) sb.append("final ");
-	  //if(ms.isNative(modifiers)) sb.append("native ");
-	  if(ms.isPrivate(modifiers)) sb.append("private ");
-	  if(ms.isProtected(modifiers)) sb.append("protected ");
-	  if(ms.isPublic(modifiers)) sb.append("public ");
-	  if(ms.isStatic(modifiers)) sb.append("static ");
-	  //if(ms.isStrictfp(modifiers)) sb.append("strictfp ");
-	  //if(ms.isSynchronized(modifiers)) sb.append("synchronized ");
-	  //if(ms.isTransient(modifiers)) sb.append("transient ");
-	  //if(ms.isVolatile(modifiers)) sb.append("volatile ");
-	  if(modifiers == 0) sb.append("none");
+		  	  
+	  sb.append(modifiers.toString());	  
 
 	  logger.debug(sb.toString());
 	  dumpChildren(prefix);

@@ -2,6 +2,8 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.type.Modifiers;
+
 public
 @SuppressWarnings("all")
 class ASTViewDeclaration extends SimpleNode {
@@ -19,13 +21,13 @@ class ASTViewDeclaration extends SimpleNode {
     return visitor.visit(this, secondVisit);
   }
   
-  private int modifiers;
+  private Modifiers modifiers;
   
-  public void setModifiers(int modifiers) {
+  public void setModifiers(Modifiers modifiers) {
 	  this.modifiers = modifiers;
   }
   
-  public int getModifiers() {
+  public Modifiers getModifiers() {
 	  return this.modifiers;
   }
 }

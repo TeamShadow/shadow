@@ -1,11 +1,10 @@
 package shadow.typecheck;
 
-import java.util.List;
-
 import shadow.parser.javacc.Node;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -19,7 +18,7 @@ public class MethodSignature {
 		this.symbol = symbol;
 		this.node = node;
 	}
-	public MethodSignature(Type enclosingType, String symbol, int modifiers, Node node) {
+	public MethodSignature(Type enclosingType, String symbol, Modifiers modifiers, Node node) {
 		type = new MethodType((ClassInterfaceBaseType)enclosingType, modifiers);
 		this.symbol = symbol;
 		this.node = node;
@@ -42,7 +41,7 @@ public class MethodSignature {
 		type.addReturn(ret);
 	}
 	
-	public int getModifiers() {
+	public Modifiers getModifiers() {
 		return type.getModifiers();
 	}
 	

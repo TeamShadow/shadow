@@ -1,17 +1,13 @@
 package shadow.typecheck.type;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.typecheck.Package;
 
 
 public abstract class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string that represents the type */
-	private int modifiers;
+	private Modifiers modifiers;
 	private ClassInterfaceBaseType outer; //outer class	
 	//private final Kind kind;
 	protected Package _package;
@@ -60,27 +56,27 @@ public abstract class Type {
 	public static final ClassType ULONG = new ClassType( "ulong", OBJECT );
 	public static final ClassType USHORT = new ClassType( "ushort", OBJECT );
 	
-	public static final EnumType ENUM = new EnumType( "Enum", 0, null, OBJECT );
-	public static final ErrorType ERROR = new ErrorType( "Error", 0, null, null );	
-	public static final ExceptionType EXCEPTION = new ExceptionType( "Exception", 0, null, null );
+	public static final EnumType ENUM = new EnumType( "Enum", new Modifiers(), null, OBJECT );
+	public static final ErrorType ERROR = new ErrorType( "Error", new Modifiers(), null, null );	
+	public static final ExceptionType EXCEPTION = new ExceptionType( "Exception", new Modifiers(), null, null );
 	
-	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", 0, null); //UNKNOWN type used for placeholder when typechecking goes wrong
+	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	
-	public static final ClassType NULL = new ClassType("null", 0, null);
+	public static final ClassType NULL = new ClassType("null", new Modifiers(), null);
 	
 	public Type(String typeName) {
-		this( typeName, 0 );
+		this( typeName, new Modifiers() );
 	}
 	
-	public Type(String typeName, int modifiers) {
+	public Type(String typeName, Modifiers modifiers) {
 		this( typeName, modifiers, null );
 	}	
 
-	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer) {
+	public Type(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer) {
 		this( typeName, modifiers, outer, (outer == null ? null : outer._package ) );
 	}
 	
-	public Type(String typeName, int modifiers, ClassInterfaceBaseType outer, Package _package ) {
+	public Type(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer, Package _package ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
 		this.outer = outer;		
@@ -112,19 +108,19 @@ public abstract class Type {
 			return _package.getPath() + '/' + typeName;	
 	}
 	
-	public int getModifiers()
+	public Modifiers getModifiers()
 	{
 		return modifiers;
 	}
 	
-	public void setModifiers(int modifiers)
+	public void setModifiers(Modifiers modifiers)
 	{
 		this.modifiers = modifiers;
 	}
 	
 	public void addModifier( int modifier )
 	{
-		modifiers = ModifierSet.addModifier(modifiers, modifier);		
+		modifiers.addModifier(modifier);		
 	}
 	
 	public String toString()

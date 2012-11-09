@@ -12,7 +12,7 @@ public class TypeParameter extends ClassInterfaceBaseType
 
 	public TypeParameter(String typeName)
 	{
-		super(typeName, 0, null);
+		super(typeName, new Modifiers(), null);
 		bounds.add(Type.OBJECT);
 	}
 	

@@ -1,10 +1,5 @@
 package shadow.typecheck.type;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import shadow.parser.javacc.Node;
 
 public class ViewType extends ClassInterfaceBaseType {
 
@@ -12,7 +7,7 @@ public class ViewType extends ClassInterfaceBaseType {
 		super(typeName);
 	}
 
-	public ViewType(String typeName, int modifiers) {
+	public ViewType(String typeName, Modifiers modifiers) {
 		super(typeName, modifiers);
 	}
 

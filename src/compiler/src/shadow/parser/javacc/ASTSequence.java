@@ -2,7 +2,6 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 
 public
 class ASTSequence extends SimpleNode {
@@ -17,7 +16,7 @@ class ASTSequence extends SimpleNode {
   public boolean isAssignable()
   {
 	  for( int i = 0; i < jjtGetNumChildren(); i++ )
-		  if( !ModifierSet.isAssignable(jjtGetChild(i).getModifiers()) )
+		  if( !jjtGetChild(i).getModifiers().isAssignable() )
 				  return false;
 		  
 		  

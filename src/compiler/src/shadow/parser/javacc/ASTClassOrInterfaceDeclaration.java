@@ -3,6 +3,7 @@
 package shadow.parser.javacc;
 
 import shadow.parser.javacc.ShadowParser.TypeKind;
+import shadow.typecheck.type.Modifiers;
 
 public
 @SuppressWarnings("all")
@@ -21,14 +22,14 @@ class ASTClassOrInterfaceDeclaration extends SimpleNode {
     return visitor.visit(this, secondVisit);
   }
   
-  private int modifiers;
+  private Modifiers modifiers;
   
-  public void setModifiers(int modifiers) {
+  public void setModifiers(Modifiers modifiers) {
 	  this.modifiers = modifiers;
   }
   
-  public int getModifiers() {
-	  return this.modifiers;
+  public Modifiers getModifiers() {
+	  return modifiers;
   }
   
 	private TypeKind kind;

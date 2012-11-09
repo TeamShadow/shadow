@@ -3,7 +3,6 @@ package shadow.typecheck.type;
 import java.util.List;
 
 import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 
 public class MethodSignature implements Comparable<MethodSignature> {
 	protected final MethodType type;
@@ -16,7 +15,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		this.node = node;
 	}
 	
-	public MethodSignature(ClassInterfaceBaseType enclosingType, String symbol, int modifiers, Node node) {
+	public MethodSignature(ClassInterfaceBaseType enclosingType, String symbol, Modifiers modifiers, Node node) {
 		type = new MethodType(enclosingType, modifiers);
 		this.symbol = symbol;
 		this.node = node;
@@ -39,7 +38,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		type.addReturn(ret);
 	}
 	
-	public int getModifiers() {
+	public Modifiers getModifiers() {
 		return type.getModifiers();
 	}
 	
@@ -113,7 +112,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	public boolean isStatic()
 	{
-		return ModifierSet.isStatic(type.getModifiers());
+		return type.getModifiers().isStatic();
 	}
 	
 	public ClassInterfaceBaseType getOuter()

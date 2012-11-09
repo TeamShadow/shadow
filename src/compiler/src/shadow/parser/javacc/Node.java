@@ -5,6 +5,7 @@ package shadow.parser.javacc;
 import java.io.File;
 
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 /* All AST nodes must implement this interface.  It provides basic
@@ -62,7 +63,8 @@ interface Node extends ModifiedType {
 	public File getFile();
 	
 	
-	public int getModifiers();
+	public Modifiers getModifiers();
+	public void setModifiers( Modifiers modifiers );
 	public void setModifiers( int modifiers );
 	public void addModifier( int mod );
 	public void removeModifier( int mod );	

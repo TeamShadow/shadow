@@ -26,15 +26,15 @@ public abstract class ClassInterfaceBaseType extends Type
 	}
 	
 	public ClassInterfaceBaseType(String typeName) {
-		this( typeName, 0 );
+		this( typeName, new Modifiers() );
 	}
 	
-	public ClassInterfaceBaseType(String typeName, int modifiers)
+	public ClassInterfaceBaseType(String typeName, Modifiers modifiers)
 	{
 		this( typeName, modifiers, null );
 	}	
 
-	public ClassInterfaceBaseType(String typeName, int modifiers, ClassInterfaceBaseType outer ) {
+	public ClassInterfaceBaseType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
 		super( typeName, modifiers, outer );
 		fieldTable = new HashMap<String, Node>();
 		methodTable = new HashMap<String, List<MethodSignature>>();
@@ -90,17 +90,17 @@ public abstract class ClassInterfaceBaseType extends Type
 	
 	public boolean containsMethod(MethodSignature signature)
 	{
-		return containsMethod( signature, 0 );		
+		return containsMethod( signature, Modifiers.NO_MODIFIERS );		
 	}
 	
 	
-	public boolean containsMethod(MethodSignature signature, int modifiers ) //must have certain modifiers (usually public)
+	public boolean containsMethod(MethodSignature signature, Modifiers modifiers ) //must have certain modifiers (usually public)
 	{
 		List<MethodSignature> list = methodTable.get(signature.getSymbol());
 		
 		if( list != null )
 			for(MethodSignature existing : list )
-				if( existing.equals(signature) && (existing.getMethodType().getModifiers() & modifiers ) == modifiers ) 
+				if( existing.equals(signature) && (existing.getMethodType().getModifiers().hasModifier(modifiers) )) 
 					return true;
 		
 		return false;

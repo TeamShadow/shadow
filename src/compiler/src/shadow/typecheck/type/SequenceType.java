@@ -3,11 +3,9 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
@@ -20,7 +18,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 
 	public SequenceType(List<ModifiedType> modifiedTypes)
 	{
-		super(null, 0, null);		
+		super(null, new Modifiers(), null);		
 		types = modifiedTypes;
 	}	
 	
@@ -44,9 +42,9 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		for( int i = 0; i < types.size(); i++ )
 		{	
 			Type inputType = inputTypes.get(i).getType();
-			int inputModifiers  = inputTypes.get(i).getModifiers();
+			Modifiers inputModifiers  = inputTypes.get(i).getModifiers();
 			Type type = types.get(i).getType();
-			int modifiers = types.get(i).getModifiers();
+			Modifiers modifiers = types.get(i).getModifiers();
 							
 			if( type instanceof TypeParameter  )
 			{			
@@ -67,16 +65,16 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			
 			//if either type is immutable, it will work out no matter what
 			//if both are mutable, their modifiers had better both be immutable or both mutable
-			if( !ModifierSet.isImmutable(type.getModifiers()) && !ModifierSet.isImmutable(inputType.getModifiers()) &&
-				ModifierSet.isImmutable(modifiers) != ModifierSet.isImmutable(inputModifiers) )
+			if( !type.getModifiers().isImmutable() && !inputType.getModifiers().isImmutable() &&
+				modifiers.isImmutable() != inputModifiers.isImmutable() )
 			{
 				if( reasons != null )
 				{				
 					String reason = "";
-					if( ModifierSet.isImmutable(modifiers) )
+					if( modifiers.isImmutable() )
 						reason += "immutable ";
 					reason += type + " is not compatible with ";
-					if( ModifierSet.isImmutable(inputModifiers) )
+					if( inputModifiers.isImmutable() )
 						reason += "immutable ";
 					reason += inputType;
 					
@@ -87,7 +85,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 				
 			}
 			
-			if( !ModifierSet.isNullable(modifiers) && ModifierSet.isNullable(inputModifiers) )
+			if( !modifiers.isNullable() && inputModifiers.isNullable() )
 			{
 				if( reasons != null )
 					reasons.add("non-nullable " + type + " cannot accept nullable " + inputType);
@@ -128,20 +126,9 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		{			
 			if( !first )
 				builder.append(", ");
-			
-			Type p = type.getType();
-			
-			if( ModifierSet.isFinal(type.getModifiers()))
-				builder.append("final ");
-			
-			if( ModifierSet.isNullable(type.getModifiers()))
-				builder.append("nullable ");
-			
-			if( ModifierSet.isImmutable(type.getModifiers()))
-				builder.append("immutable ");
-			
-
-			builder.append(p.toString());
+								
+			builder.append(type.getModifiers().toString());
+			builder.append(type.getType());
 			
 			first = false;
 		}
@@ -154,7 +141,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	public boolean isAssignable()
 	{
 		for( ModifiedType type : this )
-			if( ModifierSet.isFinal(type.getModifiers()) )
+			if( type.getModifiers().isFinal() )
 				return false;	
 		
 		return true;		
@@ -217,8 +204,8 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		{
 			ModifiedType modifiedType = types.get(0); 
 			node.setType(modifiedType.getType());
-			if( ModifierSet.isNullable(modifiedType.getModifiers()))
-				node.addModifier(ModifierSet.NULLABLE);			
+			if( modifiedType.getModifiers().isNullable())
+				node.addModifier(Modifiers.NULLABLE);			
 		}
 		else
 			node.setType(this);
@@ -238,7 +225,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return types.get(i).getType();
 	}
 	
-	public int getModifiers(int i) {		
+	public Modifiers getModifiers(int i) {		
 		return types.get(i).getModifiers();
 	}
 

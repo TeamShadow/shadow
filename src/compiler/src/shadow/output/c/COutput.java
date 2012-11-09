@@ -4,7 +4,6 @@ import java.util.Map;
 
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
@@ -19,6 +18,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -176,7 +176,7 @@ public class COutput extends TACAbstractVisitor
 		for (ModifiedType paramType : type.getParameterTypes())
 			sb.append('%').append(paramType.getType());
 		sb.append("\"(");
-		if (!ModifierSet.isStatic(type.getModifiers()))
+		if( !type.getModifiers().isStatic() )
 			sb.append(typeToString(type.getOuter())).append(", ");
 		for (ModifiedType paramType : type.getParameterTypes())
 			sb.append(typeToString(paramType.getType())).append(", ");

@@ -100,9 +100,7 @@ import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.PrefixNode;
 import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowParser.ModifierSet;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
@@ -111,6 +109,7 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
@@ -202,7 +201,7 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTSwitchLabel node, Boolean secondVisit) throws ShadowException {
 		pushUpType(node, secondVisit);
 		
-		if( secondVisit && node.jjtGetNumChildren() > 0 && !ModifierSet.isFinal(node.getModifiers()) )
+		if( secondVisit && node.jjtGetNumChildren() > 0 && !node.getModifiers().isFinal() )
 			addError(node, Error.INVL_MOD, "Label must have constant value");			
 		
 		return WalkType.POST_CHILDREN;
@@ -276,7 +275,7 @@ public class ClassChecker extends BaseChecker {
 					//situation where we are pulling a variable from an outer method
 					//it must be final!
 					
-					if( !ModifierSet.isFinal(node.getModifiers()) )
+					if( !node.getModifiers().isFinal() )
 						addError(node, Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
 				}
 				return node;
@@ -294,7 +293,7 @@ public class ClassChecker extends BaseChecker {
 			//child 0 is Modifiers
 			Type type = node.jjtGetChild(1).getType();
 			node.setType( type );
-			if( ModifierSet.isNullable(node.getModifiers()) && type.isPrimitive() )
+			if( node.getModifiers().isNullable() && type.isPrimitive() )
 				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");			
 		}
 	
@@ -348,7 +347,7 @@ public class ClassChecker extends BaseChecker {
 			return;
 		}		
 		
-		if( type.isPrimitive() && ModifierSet.isNullable(node.getModifiers()) )		
+		if( type.isPrimitive() && node.getModifiers().isNullable() )		
 			addError(node.jjtGetChild(start), Error.TYPE_MIS, "Cannot declare primitive type " + type + " as nullable");				
 			
 		// go through and add the variables
@@ -364,12 +363,12 @@ public class ClassChecker extends BaseChecker {
 				
 				if(!initializerType.isSubtype(type)) 
 					addError(initializer, Error.TYPE_MIS, "Cannot assign " + initializerType + " to " + type);
-				else if( !ModifierSet.isNullable(node.getModifiers()) && ModifierSet.isNullable(initializer.getModifiers()))
+				else if( !node.getModifiers().isNullable() && initializer.getModifiers().isNullable())
 					addError(identifier, Error.TYPE_MIS, "Cannot assign a nullable value to non-nullable variable " + identifier.getImage() );				
 			}
 			else
 			{
-				if( !ModifierSet.isNullable(node.getModifiers()) && !type.isPrimitive() )
+				if( !node.getModifiers().isNullable() && !type.isPrimitive() )
 					addError(declaration, Error.TYPE_MIS, "Non-nullable variable " + declaration + "does not have initializer");		
 			}
 			
@@ -471,16 +470,16 @@ public class ClassChecker extends BaseChecker {
 				Node field = classType.recursivelyGetField(name);
 				node.setType(field.getType());
 				node.setModifiers(field.getModifiers());
-				node.addModifier(ModifierSet.ASSIGNABLE);
-				node.addModifier(ModifierSet.FIELD);
+				node.addModifier(Modifiers.ASSIGNABLE);
+				node.addModifier(Modifiers.FIELD);
 				
-				if( ModifierSet.isPrivate(field.getModifiers()) && currentType != classType   )
+				if( field.getModifiers().isPrivate() && currentType != classType   )
 					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
 				
 				
 				if( !currentMethod.isEmpty() ) //currentMethod is empty for field initializations
 				{
-					if( directAccess && ModifierSet.isStatic(currentMethod.getFirst().getModifiers()) && !ModifierSet.isStatic(node.getModifiers()) )
+					if( directAccess && currentMethod.getFirst().getModifiers().isStatic() && !node.getModifiers().isStatic() )
 						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + currentMethod);
 				}
 				
@@ -497,7 +496,7 @@ public class ClassChecker extends BaseChecker {
 			{
 				Type innerClass = classType.recursivelyGetInnerClass(name);
 				node.setType(innerClass);
-				node.setModifiers(ModifierSet.TYPE_NAME);
+				node.setModifiers(Modifiers.TYPE_NAME);
 				return true;
 			}
 		}
@@ -515,7 +514,7 @@ public class ClassChecker extends BaseChecker {
 		{
 			node.setType(declaration.getType());
 			node.setModifiers(declaration.getModifiers());
-			node.addModifier(ModifierSet.ASSIGNABLE);
+			node.addModifier(Modifiers.ASSIGNABLE);
 			return true;
 		}
 			
@@ -530,7 +529,7 @@ public class ClassChecker extends BaseChecker {
 			{	
 				node.setType(methodType.getParameterType(name).getType());
 				node.setModifiers(methodType.getParameterType(name).getModifiers());
-				node.addModifier(ModifierSet.ASSIGNABLE);	//is this right?  Shouldn't all method parameters be unassignable?		
+				node.addModifier(Modifiers.ASSIGNABLE);	//is this right?  Shouldn't all method parameters be unassignable?		
 				return true;
 			}
 		}
@@ -868,9 +867,9 @@ public class ClassChecker extends BaseChecker {
 				{
 					Node child = node.jjtGetChild(i); 
 					Type type = child.getType();
-					int modifiers = child.getModifiers();
+					Modifiers modifiers = child.getModifiers();
 					
-					if( !ModifierSet.isNullable(modifiers) )
+					if( !modifiers.isNullable() )
 					{
 						isNullable = false;
 						if( i < node.jjtGetNumChildren() - 1 )  //only last child can be nullable
@@ -895,7 +894,7 @@ public class ClassChecker extends BaseChecker {
 				
 				node.setType(result);
 				if( isNullable )
-					node.addModifier(ModifierSet.NULLABLE);
+					node.addModifier(Modifiers.NULLABLE);
 			}			
 		}	
 		
@@ -982,8 +981,8 @@ public class ClassChecker extends BaseChecker {
 	{
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();
-		int rightModifiers = 0;				
-		int leftModifiers = 0;			
+		Modifiers rightModifiers;				
+		Modifiers leftModifiers;			
 		
 		if( rightType instanceof PropertyType )
 		{
@@ -1026,17 +1025,17 @@ public class ClassChecker extends BaseChecker {
 			}
 		}
 		
-		if( !ModifierSet.isAssignable(leftModifiers) )
+		if( !leftModifiers.isAssignable() )
 		{
 			addError(left, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
 			return false;
 		}
-		else if( ModifierSet.isFinal(leftModifiers) )
+		else if( leftModifiers.isFinal() )
 		{
 			addError(left, Error.INVL_TYP, "Cannot assign a value to variable marked final");
 			return false;
 		}
-		else if( !ModifierSet.isNullable(leftModifiers) && ModifierSet.isNullable(rightModifiers) )
+		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 		{
 			addError(left, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
 			return false;
@@ -1561,8 +1560,11 @@ public class ClassChecker extends BaseChecker {
 		{
 			Node child = node.jjtGetChild(0);
 			
-			if( ModifierSet.isNullable(child.getModifiers()) )				
-				node.setModifiers( ModifierSet.removeModifier(child.getModifiers(), ModifierSet.NULLABLE  ));			
+			if( child.getModifiers().isNullable() )
+			{
+				node.setModifiers( child.getModifiers().getModifiers() );
+				node.removeModifier(Modifiers.NULLABLE );
+			}
 			else
 				addError( node, Error.TYPE_MIS, "check expression can only be used on an expression with a nullable type");
 			
@@ -1635,7 +1637,7 @@ public class ClassChecker extends BaseChecker {
 				else
 				{				
 					node.setType(currentType);				
-					if( !currentMethod.isEmpty() && ModifierSet.isStatic(currentMethod.getFirst().getModifiers())  )					
+					if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isStatic()  )					
 						addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);
 				}					
 			}
@@ -1904,7 +1906,7 @@ public class ClassChecker extends BaseChecker {
 		{
 			Node prefixNode = curPrefix.getFirst();		
 			
-			if( ModifierSet.isNullable(prefixNode.getModifiers()) )
+			if( prefixNode.getModifiers().isNullable() )
 				addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
 			
 			Node child = node.jjtGetChild(0);
@@ -1941,10 +1943,10 @@ public class ClassChecker extends BaseChecker {
 		{	
 			node.setType(Type.UNKNOWN); //start with unknown, set if found
 				
-			if( !currentMethod.isEmpty() && ModifierSet.isStatic(currentMethod.getFirst().getModifiers())  )					
+			if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isStatic()  )					
 				addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);				
 			
-			if( ModifierSet.isTypeName(curPrefix.getFirst().getModifiers()))
+			if( curPrefix.getFirst().getModifiers().isTypeName())
 			{			
 				Type prefixType = curPrefix.getFirst().getType();				
 				if( currentType.encloses( prefixType )  )				
@@ -1986,12 +1988,12 @@ public class ClassChecker extends BaseChecker {
 					if( node.jjtGetNumChildren() == arrayType.getDimensions() )
 					{
 						node.setType( arrayType.getBaseType() );
-						node.addModifier(ModifierSet.ASSIGNABLE);
+						node.addModifier(Modifiers.ASSIGNABLE);
 						
 						//primitive arrays are initialized to default values
 						//non-primitive array elements could be null
 						if( !arrayType.getBaseType().isPrimitive() )
-							node.addModifier(ModifierSet.NULLABLE);
+							node.addModifier(Modifiers.NULLABLE);
 					}
 					else
 					{
@@ -2048,7 +2050,7 @@ public class ClassChecker extends BaseChecker {
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );
 			String fieldName = node.getImage();
-			boolean isStatic = ModifierSet.isTypeName(prefixNode.getModifiers());
+			boolean isStatic = prefixNode.getModifiers().isTypeName();
 			
 			if( prefixType instanceof ClassInterfaceBaseType )
 			{
@@ -2061,7 +2063,7 @@ public class ClassChecker extends BaseChecker {
 					{
 						addError(node, Error.INVL_MOD, "Field " + fieldName + " not accessible from current context");
 					}
-					else if( isStatic && !ModifierSet.isStatic(field.getModifiers()))
+					else if( isStatic && !field.getModifiers().isStatic())
 					{
 						addError(node, Error.INVL_MOD, "Cannot access non-static field " + fieldName + " from static context");
 					}
@@ -2069,7 +2071,7 @@ public class ClassChecker extends BaseChecker {
 					{
 						node.setType( field.getType());
 						node.setModifiers(field.getModifiers());
-						node.addModifier(ModifierSet.ASSIGNABLE);					
+						node.addModifier(Modifiers.ASSIGNABLE);					
 					}
 				}
 				else
@@ -2095,7 +2097,7 @@ public class ClassChecker extends BaseChecker {
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );
 			String propertyName = node.getImage();
-			boolean isStatic = ModifierSet.isTypeName(prefixNode.getModifiers());
+			boolean isStatic = prefixNode.getModifiers().isTypeName();
 			
 			
 			if( prefixType instanceof ClassInterfaceBaseType )
@@ -2110,12 +2112,12 @@ public class ClassChecker extends BaseChecker {
 					
 					for( MethodSignature signature : methods )
 					{
-						if( ModifierSet.isGet(signature.getModifiers()) )
+						if( signature.getModifiers().isGet() )
 							getter = signature.getMethodType();
-						else if( ModifierSet.isSet(signature.getModifiers()) )
+						else if( signature.getModifiers().isSet() )
 						{
 							setter = signature.getMethodType();
-							node.addModifier(ModifierSet.ASSIGNABLE);
+							node.addModifier(Modifiers.ASSIGNABLE);
 						}
 					}
 					
@@ -2240,7 +2242,7 @@ public class ClassChecker extends BaseChecker {
 					//else
 					//	node.setType(methodType);
 					
-					if( !currentMethod.isEmpty() && ModifierSet.isImmutable(currentMethod.getFirst().getModifiers()) && !ModifierSet.isImmutable(methodType.getModifiers()))
+					if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isImmutable() && !methodType.getModifiers().isImmutable())
 						addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from an immutable method");					
 				}
 									
@@ -2273,7 +2275,7 @@ public class ClassChecker extends BaseChecker {
 					node.setType(Type.UNKNOWN);
 				}
 				
-				if( !currentMethod.isEmpty() && ModifierSet.isImmutable(currentMethod.getFirst().getModifiers()) && !ModifierSet.isImmutable(methodType.getModifiers()))
+				if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isImmutable() && !methodType.getModifiers().isImmutable())
 					addError(node, Error.INVL_MOD, "Mutable method cannot be called from an immutable method");
 				
 			}
@@ -2290,7 +2292,7 @@ public class ClassChecker extends BaseChecker {
 	public static boolean fieldIsAccessible( Node field, Type type )
 	{
 		//inside class or constant
-		if ( ModifierSet.isConstant(field.getModifiers()) ) 
+		if ( field.getModifiers().isConstant() ) 
 			return true;		
 		
 		while( type != null )
@@ -2311,7 +2313,7 @@ public class ClassChecker extends BaseChecker {
 			{
 				if( field.getEnclosingType() == parent )
 				{
-					if( ModifierSet.isPrivate(node.getModifiers()))
+					if( Modifiers.isPrivate(node.getModifiers()))
 						return false;
 					else
 						return true;
@@ -2327,7 +2329,7 @@ public class ClassChecker extends BaseChecker {
 
 	public static boolean classIsAccessible( Type classType, Type type )
 	{
-		if( ModifierSet.isPublic(classType.getModifiers()) || classType.getOuter() == type || classType.getOuter() == null )
+		if( classType.getModifiers().isPublic() || classType.getOuter() == type || classType.getOuter() == null )
 			return true;
 		
 		Type outer = type.getOuter();
@@ -2349,7 +2351,7 @@ public class ClassChecker extends BaseChecker {
 			{
 				if( classType.getOuter() == parent )
 				{
-					if( ModifierSet.isPrivate(classType.getModifiers()))
+					if( classType.getModifiers().isPrivate())
 						return false;
 					else
 						return true;
@@ -2375,7 +2377,7 @@ public class ClassChecker extends BaseChecker {
 	public static boolean methodIsAccessible( MethodSignature signature, Type type )
 	{		
 		Node node = signature.getNode();
-		if( node.getEnclosingType() == type || ModifierSet.isPublic(node.getModifiers()) ) 
+		if( node.getEnclosingType() == type || node.getModifiers().isPublic() ) 
 			return true;		
 		
 		if( type instanceof ClassType )
@@ -2386,7 +2388,7 @@ public class ClassChecker extends BaseChecker {
 			{
 				if( node.getEnclosingType() == parent )
 				{
-					if( ModifierSet.isPrivate(node.getModifiers()))
+					if( node.getModifiers().isPrivate())
 						return false;
 					else
 						return true;
@@ -2529,7 +2531,7 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.INVL_TYP, "Value type required for assert information and no type found");
 			else if( type instanceof ClassInterfaceBaseType )
 			{
-				if( ModifierSet.isTypeName(child.getModifiers()) )
+				if( child.getModifiers().isTypeName() )
 					addError(node, Error.INVL_TYP, "Value type required for assert information but type name used");				
 			}
 			else if( !(type instanceof ArrayType) )
@@ -2814,7 +2816,7 @@ public class ClassChecker extends BaseChecker {
 			Type type = node.jjtGetChild(1).getType(); //child 0 is always Modifiers 
 			node.setType(type);
 			
-			if( ModifierSet.isNullable(node.getModifiers()) && type.isPrimitive() )
+			if( node.getModifiers().isNullable() && type.isPrimitive() )
 				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");				
 		}
 		
