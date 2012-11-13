@@ -2329,7 +2329,7 @@ public class ClassChecker extends BaseChecker {
 
 	public static boolean classIsAccessible( Type classType, Type type )
 	{
-		if( classType.getModifiers().isPublic() || classType.getOuter() == type || classType.getOuter() == null )
+		if( classType.getModifiers().isPublic() || classType.getOuter().equals(type) || classType.getOuter() == null )
 			return true;
 		
 		Type outer = type.getOuter();
