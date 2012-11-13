@@ -1,0 +1,4 @@
+interface Fooable
+{
+	foo(int a) => (code);
+}
