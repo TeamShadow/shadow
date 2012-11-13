@@ -123,6 +123,25 @@ public class MethodType extends Type {
 		return parameterTypes.toString() + " => " + returns.toString();
 	}
 	
+	public String parametersToString()
+	{
+		StringBuilder sb = new StringBuilder("(");
+		
+		for( int i = 0; i < parameterTypes.size(); i++ )
+		{
+			if( i != 0 )
+				sb.append(", ");
+			sb.append( parameterTypes.get(i).getModifiers() );
+			sb.append(parameterTypes.get(i).getType());
+			sb.append(" ");
+			sb.append(parameterNames.get(i));			
+		}	
+			
+		sb.append(")");
+		
+		return sb.toString();
+	}
+	
 	@Override
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();

@@ -24,18 +24,20 @@ public class TACModule
 	{
 		type = moduleType;
 		for (String fieldName : moduleType.getFields().keySet())
-			fields.put(fieldName, moduleType.getFieldType(fieldName).getType());
+			fields.put(fieldName, moduleType.getField(fieldName).getType());
 		add(moduleType);
 	}
 	private void add(ClassInterfaceBaseType type)
 	{
 		if (type != null && references.add(type))
-		{
-			add(type.getExtendType());
+		{			
 			if (type instanceof ClassType)
+			{
+				add(((ClassType) type).getExtendType());
 				for (Type referenced : ((ClassType)type).getReferencedTypes())
 					if (referenced instanceof ClassInterfaceBaseType)
 						add((ClassInterfaceBaseType)referenced);
+			}
 		}
 //		if (references.add(type) && type instanceof ClassType)
 //			for (Type referenced : ((ClassType)type).getReferencedTypes())

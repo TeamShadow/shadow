@@ -195,8 +195,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	{	
 		ClassInterfaceBaseType type = null;
 		
-		//try starting point
-		if( outer != null )
+		if( name.contains("@"))
+		{
+			int atSign = name.indexOf('@');
+			return lookupType( name.substring(0, atSign), name.substring(atSign + 1 ) );
+		}
+		else if( outer != null ) 		//try starting points
 		{			
 			type = lookupType( name, outer );
 			if( type != null )
@@ -285,7 +289,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	public final ClassInterfaceBaseType lookupType( String packageName, String name )
 	{			
-		Package p = packageTree.getChild(packageName);
+		Package p;
+		
+		if( packageName.equals("default") )
+			p = packageTree;
+		else
+			p = packageTree.getChild(packageName);
 		
 		if( p == null )
 		{
@@ -293,7 +302,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			return null;
 		}
 		
-		return typeTable.get(p).get(name);
+		HashMap<String, ClassInterfaceBaseType> map = typeTable.get(p); 
+		return map.get(name);
 	}
 	
 	public int getErrorCount() {

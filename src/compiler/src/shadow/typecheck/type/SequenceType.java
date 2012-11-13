@@ -116,10 +116,13 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return canAccept(list, reasons);		
 	}
 	
-	
+	public String toString()
+	{
+		return toString("(", ")");		
+	}
 
-	public String toString() {
-		StringBuilder builder = new StringBuilder("(");
+	public String toString(String begin, String end) {
+		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;
 		
 		for(ModifiedType type: types)
@@ -133,7 +136,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			first = false;
 		}
 		
-		builder.append(")");
+		builder.append(end);
 		
 		return builder.toString();
 	}

@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import java.io.PrintWriter;
+
 
 public class ViewType extends ClassInterfaceBaseType {
 
@@ -27,5 +29,21 @@ public class ViewType extends ClassInterfaceBaseType {
 	public String toString()
 	{		
 		return "#" + super.toString();
+	}
+
+	@Override
+	public boolean isRecursivelyParameterized() {
+		return false;
+	}
+
+	@Override
+	public void printMetaFile(PrintWriter out, String linePrefix) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isDescendentOf(Type type) {
+		return false;
 	}
 }

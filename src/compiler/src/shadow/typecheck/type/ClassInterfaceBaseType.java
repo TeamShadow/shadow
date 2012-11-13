@@ -1,26 +1,30 @@
 package shadow.typecheck.type;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import shadow.parser.javacc.Node;
 
 public abstract class ClassInterfaceBaseType extends Type
 {
-	private ClassType extendType;
+
 	private Map<String, Node> fieldTable;
 	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private
-	private HashMap<String, Type> innerClasses;
+	private HashMap<String, ClassInterfaceBaseType> innerClasses;
+	private Set<Type> referencedTypes = new HashSet<Type>();
 
-	public Map<String, Type> getInnerClasses()
+	public Map<String, ClassInterfaceBaseType> getInnerClasses()
 	{
 		return innerClasses;
 	}
 	
-	protected void addInnerClass(String name, Type innerClass)
+	protected void addInnerClass(String name, ClassInterfaceBaseType innerClass)
 	{
 		innerClasses.put( name, innerClass );
 	}
@@ -38,21 +42,10 @@ public abstract class ClassInterfaceBaseType extends Type
 		super( typeName, modifiers, outer );
 		fieldTable = new HashMap<String, Node>();
 		methodTable = new HashMap<String, List<MethodSignature>>();
-		innerClasses = new HashMap<String, Type>();
+		innerClasses = new HashMap<String, ClassInterfaceBaseType>();
 		
-		if( outer != null && outer instanceof ClassInterfaceBaseType)
-		{
-			ClassInterfaceBaseType outerClass = (ClassInterfaceBaseType)outer;
-			outerClass.innerClasses.put(typeName, this);
-		}
-	}	
-	
-	public void setExtendType(ClassType extendType) {
-		this.extendType = extendType;
-	}
-	
-	public ClassType getExtendType() {
-		return extendType;
+		if( outer != null )
+			outer.innerClasses.put(typeName, this);
 	}
 	
 	public boolean containsField(String fieldName) {
@@ -63,7 +56,24 @@ public abstract class ClassInterfaceBaseType extends Type
 		return innerClasses.containsKey(className);
 	}
 	
-	public Type getInnerClass(String className) {
+	public boolean containsInnerClass(Type type)
+	{
+		return innerClasses.containsValue(type);		
+	}
+	
+	public boolean recursivelyContainsInnerClass(Type type)
+	{
+		if( innerClasses.containsValue(type) )
+			return true;
+		
+		for( ClassInterfaceBaseType innerClass : innerClasses.values() )
+			if( innerClass.recursivelyContainsInnerClass(type) )
+				return true;
+		
+		return false;
+	}
+	
+	public ClassInterfaceBaseType getInnerClass(String className) {
 		return innerClasses.get(className);
 	}
 	
@@ -74,11 +84,7 @@ public abstract class ClassInterfaceBaseType extends Type
 	public Node getField(String fieldName) {
 		return fieldTable.get(fieldName);
 	}
-	
-	public ModifiedType getFieldType (String fieldName) {
-		return fieldTable.get(fieldName);
-	}
-	
+		
 	public Map<String, Node> getFields() {
 		return fieldTable;
 	}	
@@ -199,36 +205,12 @@ public abstract class ClassInterfaceBaseType extends Type
 		return null;
 	}
 	
-	public boolean isRecursivelyParameterized()
-	{
-		if( isParameterized() )
-			return true;
-		
-		if( extendType == null )
-			return false;
-		
-		return extendType.isRecursivelyParameterized();
-	}
-	
-	public abstract ClassInterfaceBaseType replace(SequenceType values, SequenceType replacements );
 		
 	public String toString() {
 		StringBuilder builder = new StringBuilder(super.toString());
-		
-		boolean first = true;
-		
-		if( isParameterized() )
-		{
-			builder.append("<");
-			for( ModifiedType modifiedParameter : getTypeParameters() ) 
-			{
-				Type parameter = modifiedParameter.getType();
-				if( !first )
-					builder.append(", ");
-				builder.append(parameter.toString() );
-			}
-			builder.append(">");			
-		}
+			
+		if( isParameterized() )		
+			builder.append(getTypeParameters().toString("<",">"));
 		
 		return builder.toString();
 	}	
@@ -243,4 +225,19 @@ public abstract class ClassInterfaceBaseType extends Type
 		
 		return encloses(outer);
 	}
+	
+	public void addReferencedType(Type type)
+	{
+		if (!equals(type) && !(type instanceof TypeParameter ) && !referencedTypes.contains(type) && !isDescendentOf(type))
+			referencedTypes.add(type);
+	}
+	public Set<Type> getReferencedTypes()
+	{
+		return referencedTypes;
+	}
+
+	public abstract boolean isRecursivelyParameterized();	
+	public abstract ClassInterfaceBaseType replace(SequenceType values, SequenceType replacements );	
+	public abstract void printMetaFile(PrintWriter out, String linePrefix );
+	public abstract boolean isDescendentOf(Type type);
 }

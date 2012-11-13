@@ -48,7 +48,7 @@ public class Package
 	 */
 	public Package addFullyQualifiedPackage( String path, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable  )
 	{
-		if( path.length() > 0 )
+		if( path.length() > 0 && !path.equals("default") )
 		{
 			String[] folders = path.split("\\.");
 			

@@ -131,11 +131,8 @@ public class TypeCollector extends BaseChecker
 								{
 									updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(0)), missingTypes);
 									Type childType = child.jjtGetChild(0).getType();
-									/*
-									if( childType instanceof InstantiatedType )
-										childType = ((InstantiatedType) childType).getInstantiatedType();
-									*/
-									currentType.setExtendType((ClassType) childType);
+									
+									((ClassType) currentType).setExtendType((ClassType) childType);
 								}
 							}
 							else
@@ -147,11 +144,6 @@ public class TypeCollector extends BaseChecker
 								{
 									updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), missingTypes);
 									Type childType = child.jjtGetChild(j).getType();
-									
-									/*
-									if( childType instanceof InstantiatedType )
-										childType = ((InstantiatedType) childType).getInstantiatedType();
-									*/						
 									
 									extendTypes.set(j, (InterfaceType) childType );									
 								}
@@ -166,10 +158,7 @@ public class TypeCollector extends BaseChecker
 							{
 								updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), missingTypes);
 								Type childType = child.jjtGetChild(j).getType();
-								/*if( childType instanceof InstantiatedType )
-									childType = ((InstantiatedType) childType).getInstantiatedType();
-								*/
-								
+																
 								implementsTypes.set(j, (InterfaceType) childType);									
 							}							
 						}
@@ -209,7 +198,12 @@ public class TypeCollector extends BaseChecker
 						if( extendsTable.containsKey(type))
 						{
 							list = extendsTable.get(type);
-							ClassInterfaceBaseType baseType = lookupTypeStartingAt(list.get(0), classType.getOuter()); //only one thing in extends lists for classes 
+							ClassInterfaceBaseType baseType;
+							String typeName = list.get(0);
+							if( typeName.contains("@") )
+								baseType = lookupType(typeName);
+							else
+								baseType = lookupTypeStartingAt(typeName, classType.getOuter()); //only one thing in extends lists for classes 
 							
 							if( baseType == null )							
 								missingTypes.add(list.get(0));
@@ -466,7 +460,12 @@ public class TypeCollector extends BaseChecker
 		walker.walk(node);
 		files.put( input.getCanonicalFile(), node );
 		
-		//add files in directory BEFORE imports
+		List<File> fileList = new ArrayList<File>();
+		
+		//Add import list
+		fileList.addAll(getImportList());
+		
+		//add files in directory after imports
 		File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
 				{
 					public boolean accept(File dir, String name)
@@ -475,7 +474,7 @@ public class TypeCollector extends BaseChecker
 					}
 				}
 		);		
-		List<File> fileList = new ArrayList<File>();
+
 		fileList.addAll(Arrays.asList(directoryFiles));	
 		
 		//Add standard imports
@@ -483,14 +482,20 @@ public class TypeCollector extends BaseChecker
 		fileList.add(new File(path, "Object.shadow" ));
 		fileList.add(new File(path, "Class.shadow" ));
 		fileList.add(new File(path, "String.shadow" ));
+		fileList.add(new File(path, "Exception.shadow" ));
 		
-		//Add import list
-		fileList.addAll(getImportList());
 				
-		for( int i = 0; i < fileList.size(); i++ )
-		{		
-			File other = fileList.get(i);
-			File canonicalFile = other.getCanonicalFile();
+		for(int i = 0; i < fileList.size(); i++ )
+		{			
+			File canonicalFile = fileList.get(i).getCanonicalFile();
+			
+			if( canonicalFile.getName().endsWith(".shadow") ) //check for more recent .meta file 
+			{
+				String fileName = canonicalFile.getCanonicalPath();						
+				File meta = new File( fileName.substring(0, fileName.lastIndexOf(".shadow")) + ".meta" );
+				if( meta.exists() && meta.lastModified() >= canonicalFile.lastModified() )
+					canonicalFile = meta;
+			}
 			
 			if( !files.containsKey(canonicalFile) ) //don't double add
 			{
@@ -517,10 +522,10 @@ public class TypeCollector extends BaseChecker
 				if( collector.getErrorCount() > 0 )
 					errorList.addAll(collector.errorList);
 				
-				for( File file : collector.getImportList() )
+				for( File _import : collector.getImportList() )
 				{
-					if( !fileList.contains(file) )
-						fileList.add(file);					
+					if( !fileList.contains(_import) )
+						fileList.add(_import);					
 				}
 				
 				//copy tables from other file into our central table
@@ -548,7 +553,7 @@ public class TypeCollector extends BaseChecker
 		 * type parameters are updated separately because they require knowledge of
 		 * the type hierarchy constructed in updateMissingTypes() 
 		 */			
-		updateTypeParameters();
+		updateTypeParameters();	
 	}
 
 
@@ -627,6 +632,8 @@ public class TypeCollector extends BaseChecker
 					Type.STRING = (ClassType) type;
 				else if( typeName.equals("Array"))
 					Type.ARRAY = (ClassType) type;
+				else if( typeName.equals("Exception"))
+					Type.EXCEPTION = (ExceptionType) type;
 			}
 			
 			addType( type, currentPackage );
@@ -701,14 +708,7 @@ public class TypeCollector extends BaseChecker
 							}    }   );
 						
 						for( File file : matchingShadow )
-						{
-							String prefix = file.getName().substring(0, file.getName().lastIndexOf(".shadow"));
-							File metaVersion = new File( file.getParent(), prefix + ".meta"  );
-							if( metaVersion.exists() && metaVersion.lastModified() >= file.lastModified() )
-								importList.add(metaVersion);
-							else
-								importList.add(file);
-						}
+							importList.add(file);
 						
 						for( File file : matchingMeta )
 							if( !importList.contains(file))
@@ -719,25 +719,31 @@ public class TypeCollector extends BaseChecker
 				}
 				else
 				{
-					path = path.replaceAll("@", separator);
-					File shadowVersion = new File( importPath, path + ".shadow" );
-					File metaVersion = new File( importPath, path + ".meta" );
-					
-					//eventually substitute meta version if available and newer
+					File shadowVersion;
+					File metaVersion;
+					if( path.startsWith("default"))
+					{
+						path = path.replaceFirst("default@", "");
+						shadowVersion = new File( typeChecker.getCurrentFile().getParent(),  path + ".shadow");
+						metaVersion = new File( typeChecker.getCurrentFile().getParent(),  path + ".meta");
+					}
+					else
+					{
+						path = path.replaceAll("@", separator);
+						shadowVersion = new File( importPath, path + ".shadow" );
+						metaVersion = new File( importPath, path + ".meta" );
+					}
+										
 					if( shadowVersion.exists() )
 					{
-//						if( metaVersion.exists() && metaVersion.lastModified() >= shadowVersion.lastModified() )												
-//							importList.add(metaVersion);
-//						else
-							importList.add(shadowVersion);	
-						
+						importList.add(shadowVersion);
 						success = true;						
 					}
-//					else if( metaVersion.exists() )
-//					{
-//						importList.add(metaVersion);							
-//						success = true;						
-//					}
+					else if( metaVersion.exists() )
+					{
+						importList.add(metaVersion);							
+						success = true;						
+					}
 				}
 				
 				if( success )

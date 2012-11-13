@@ -1,9 +1,12 @@
 package shadow.typecheck.type;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import shadow.parser.javacc.Node;
 
 
 public class InterfaceType extends ClassInterfaceBaseType {
@@ -160,5 +163,82 @@ public class InterfaceType extends ClassInterfaceBaseType {
 			return isDescendentOf(t);
 		else
 			return false;	
-	}	
+	}
+	
+	public void printMetaFile(PrintWriter out, String linePrefix )
+	{
+		//imports
+		if( getOuter() == null )
+			for( Type importType : getReferencedTypes() )
+				if( !recursivelyContainsInnerClass(importType) )
+					out.println(linePrefix + "import " + importType.getFullName() + ";");
+		
+		//modifiers
+		out.print("\n" + linePrefix + getModifiers());		
+		out.print("interface ");
+		
+		//type name
+		if( getOuter() == null ) //outermost interface		
+			out.print(getFullName());
+		else
+			out.print(getTypeName().substring(getTypeName().lastIndexOf('.') + 1));
+		
+		//type parameters
+		if( isParameterized() )
+			out.print(getTypeParameters().toString("<", ">"));
+		
+		//extend types		
+		if( extendTypes.size() > 0 )
+		{
+			out.print("extends " );
+			boolean first = true;
+			for( InterfaceType _interface : extendTypes )
+			{
+				if(!first)
+					out.print(", ");
+				else
+					first = false;
+				out.print(_interface.getFullName());				
+			}			
+		}
+		
+		out.println(linePrefix + "{");
+		
+		String indent = linePrefix + "\t";		
+		boolean newLine;
+				
+		//constants are the only fields in interfaces
+		newLine = false;
+		for( Map.Entry<String, Node> field : getFields().entrySet() )
+			if( field.getValue().getModifiers().isConstant() )
+			{
+				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey());
+				newLine = true;
+			}
+		if( newLine )
+			out.println();	
+
+		//methods
+		newLine = false;
+		for( List<MethodSignature> list: getMethodMap().values() )		
+			for( MethodSignature signature : list )
+			{
+				Modifiers modifiers = signature.getModifiers();
+				//hack because interface methods are public inside the compiler but cannot be specified that way
+				modifiers.removeModifier(Modifiers.PUBLIC);
+				out.println(indent + signature + ";");
+				modifiers.addModifier(Modifiers.PUBLIC);
+				newLine = true;				
+			}
+		if( newLine )
+			out.println();	
+		
+		//inner classes (shouldn't exist in interfaces?)
+		for( ClassInterfaceBaseType _class : getInnerClasses().values() )
+		{
+			_class.printMetaFile(out, indent);		
+		}
+		
+		out.println(linePrefix + "}\n");	
+	}
 }

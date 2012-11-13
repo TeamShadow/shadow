@@ -1,10 +1,12 @@
 package shadow.typecheck.type;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -12,8 +14,8 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 
 public class ClassType extends ClassInterfaceBaseType {
+	private ClassType extendType;
 	private ArrayList<InterfaceType> implementTypes = new ArrayList<InterfaceType>();
-	private Set<Type> referencedTypes = new HashSet<Type>();
 	
 	public ClassType(String typeName, ClassType parent ) {
 		this( typeName, new Modifiers(), null );
@@ -22,7 +24,15 @@ public class ClassType extends ClassInterfaceBaseType {
 	
 	public ClassType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
 		super( typeName, modifiers, outer );
-	}	
+	}
+	
+	public void setExtendType(ClassType extendType) {
+		this.extendType = extendType;
+	}
+	
+	public ClassType getExtendType() {
+		return extendType;
+	}
 	
 	public boolean isDescendentOf(Type type)
 	{
@@ -307,27 +317,6 @@ public class ClassType extends ClassInterfaceBaseType {
 		}
 	}
 	
-	public void addReferencedType(Type type)
-	{
-		if (!equals(type) && !referencedTypes.contains(type) && !isDescendentOf(type))
-			referencedTypes.add(type);
-	}
-	public Set<Type> getReferencedTypes()
-	{
-		return referencedTypes;
-	}
-	public Set<Type> getAllReferencedTypes()
-	{
-		Set<Type> types = new HashSet<Type>(referencedTypes);
-		ClassType current = getExtendType();
-		while (current != null)
-		{
-			types.add(current);
-			current = current.getExtendType();
-		}
-		return types;
-	}
-	
 	@Override
 	public String getMangledName()
 	{
@@ -368,7 +357,7 @@ public class ClassType extends ClassInterfaceBaseType {
 					replaced.addMethod(name, signature.replace(values, replacements));				
 			}
 			
-			Map<String, Type> inners = getInnerClasses();
+			Map<String, ClassInterfaceBaseType> inners = getInnerClasses();
 			
 			for( String name : inners.keySet() )		
 				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
@@ -403,5 +392,118 @@ public class ClassType extends ClassInterfaceBaseType {
 			return hasInterface(t);
 		else
 			return false;
+	}
+	
+	public Set<Type> getAllReferencedTypes()
+	{
+		Set<Type> types = new HashSet<Type>(getReferencedTypes());
+		ClassType current = getExtendType();
+		while (current != null)
+		{
+			types.add(current);
+			current = current.getExtendType();
+		}
+		return types;
+	}
+	
+	public boolean isRecursivelyParameterized()
+	{
+		if( isParameterized() )
+			return true;
+		
+		if( extendType == null )
+			return false;
+		
+		return extendType.isRecursivelyParameterized();
+	}
+	
+
+	public void printMetaFile(PrintWriter out, String linePrefix )
+	{
+		printMetaFile(out, linePrefix, "class");	
+	}
+	
+	protected void printMetaFile(PrintWriter out, String linePrefix, String kind )
+	{
+		//imports
+		if( getOuter() == null )
+			for( Type importType : getAllReferencedTypes() )			
+				if( !recursivelyContainsInnerClass(importType) )
+					out.println(linePrefix + "import " + importType.getFullName() + ";");
+		
+		//modifiers
+		out.print("\n" + linePrefix + getModifiers());		
+		out.print(kind + " ");
+		
+		//type name
+		if( getOuter() == null ) //outermost class		
+			out.print(getFullName());
+		else
+			out.print(getTypeName().substring(getTypeName().lastIndexOf('.') + 1));
+			
+		
+		//type parameters
+		if( isParameterized() )
+			out.print(getTypeParameters().toString("<", ">"));
+		
+		//extend type
+		Type extendType = getExtendType();
+		if( extendType != null )
+			out.print(" extends " + extendType.getFullName() );
+		
+		//interfaces implemented
+		List<InterfaceType> interfaces = getInterfaces();
+		boolean first = true;
+		if( interfaces.size() > 0 )
+		{
+			out.print(" implements ");
+			for( InterfaceType _interface : interfaces )
+			{
+				if(!first)
+					out.print(", ");
+				else
+					first = false;
+				out.print(_interface.getFullName());				
+			}			
+		}
+		
+		out.println("\n" + linePrefix + "{");
+		
+		String indent = linePrefix + "\t";		
+		boolean newLine;
+		
+		//constants are the only public fields
+		newLine = false;
+		for( Map.Entry<String, ModifiedType> field : getSortedFields().entrySet() )
+			if( field.getValue().getModifiers().isConstant() ) 
+			{
+				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey());
+				newLine = true;
+			}		
+		if( newLine )
+			out.println();		
+
+		//methods
+		newLine = false;
+		for( List<MethodSignature> list: getMethodMap().values() )		
+			for( MethodSignature signature : list )
+			{
+				Modifiers modifiers = signature.getModifiers();
+				if( modifiers.isPublic() || modifiers.isProtected() )
+				{				
+					out.println(indent + signature + ";");
+					newLine = true;
+				}
+			}
+		if( newLine )
+			out.println();
+		
+		//inner classes
+		for( ClassInterfaceBaseType _class : getInnerClasses().values() )
+		{
+			_class.printMetaFile(out, indent);		
+		}
+		
+		out.println(linePrefix + "}\n");	
 	}
 }

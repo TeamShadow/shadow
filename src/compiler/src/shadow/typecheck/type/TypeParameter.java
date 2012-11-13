@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -120,6 +121,23 @@ public class TypeParameter extends ClassInterfaceBaseType
 			signatures.addAll(bound.getMethods(methodName));
 		
 		return new ArrayList<MethodSignature>(signatures);
+	}
+
+	@Override
+	public boolean isRecursivelyParameterized() {
+		return isParameterized();
+	}
+
+	@Override
+	public void printMetaFile(PrintWriter out, String linePrefix) {
+		// should never get called
+	}
+
+	@Override
+	public boolean isDescendentOf(Type type) {
+		// TODO Auto-generated method stub
+		// should never get called
+		return false;
 	}
 	
 }

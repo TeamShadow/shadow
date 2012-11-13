@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import java.io.File;
+
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.typecheck.Package;
 
@@ -41,6 +43,7 @@ public abstract class Type {
 	public static ClassType STRING = null; 
 	public static ClassType CLASS = null;  // meta class for holding .class variables
 	public static ClassType ARRAY = null;  // class representation of all array types
+	public static ExceptionType EXCEPTION = null;
 	
 	public static final ClassType BOOLEAN = new ClassType( "boolean", OBJECT );
 	public static final ClassType BYTE = new ClassType( "byte", OBJECT );
@@ -58,7 +61,7 @@ public abstract class Type {
 	
 	public static final EnumType ENUM = new EnumType( "Enum", new Modifiers(), null, OBJECT );
 	public static final ErrorType ERROR = new ErrorType( "Error", new Modifiers(), null, null );	
-	public static final ExceptionType EXCEPTION = new ExceptionType( "Exception", new Modifiers(), null, null );
+	
 	
 	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	
@@ -94,18 +97,21 @@ public abstract class Type {
 	}
 	
 	public String getFullName() {
-		if( _package == null || _package.getFullyQualifiedName().length() == 0 )
+		
+		if( isPrimitive() )
 			return typeName;
+		else if( _package == null || _package.getFullyQualifiedName().isEmpty())
+			return "default@" + typeName;
 		else
 			return _package.getFullyQualifiedName() + '@' + typeName;			
 	}
 	
 	public String getPath()
 	{
-		if( _package == null || _package.getPath().length() == 0 )
+		if( _package == null || _package.getPath().isEmpty() )
 			return typeName;
 		else
-			return _package.getPath() + '/' + typeName;	
+			return _package.getPath() + File.separator + typeName;	
 	}
 	
 	public Modifiers getModifiers()
@@ -125,7 +131,7 @@ public abstract class Type {
 	
 	public String toString()
 	{
-		return getFullName();		
+		return typeName;		
 	}
 
 	public boolean equals(Object o)

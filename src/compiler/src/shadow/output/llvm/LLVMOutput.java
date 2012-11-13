@@ -224,8 +224,8 @@ public class LLVMOutput extends TACAbstractVisitor
 					"*, [1 x " + type(Type.LONG) + "] } { " + type(Type.CLASS) +
 					"* null, [1 x " + type(Type.LONG) + "] [" + type(Type.LONG) +
 					" 0] }, " + type(Type.CLASS) + ' ' +
-					(type.getExtendType() == null ? null :
-					"@\"" + type.getExtendType() + "$class\"") + " }");
+					(!(type instanceof ClassType) || ((ClassType)type).getExtendType() == null ? null :
+					"@\"" + ((ClassType) type).getExtendType() + "$class\"") + " }");
 		}
 		else
 			llvm.write("@\"" + typeName + "$class\" = external constant " +

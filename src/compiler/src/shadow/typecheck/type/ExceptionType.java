@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import java.io.PrintWriter;
+
 
 
 public class ExceptionType extends ClassType
@@ -25,5 +27,10 @@ public class ExceptionType extends ClassType
 			return isDescendentOf(t);
 		else
 			return false;
+	}
+	
+	public void printMetaFile(PrintWriter out, String linePrefix )
+	{
+		printMetaFile(out, linePrefix, "exception");	
 	}
 }

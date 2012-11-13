@@ -95,9 +95,9 @@ public final class Modifiers
 		if( isPublic() )
 			sb.append("public ");
 		if( isProtected() )
-			sb.append("public ");
+			sb.append("protected ");
 		if( isPrivate() )
-			sb.append("public ");
+			sb.append("private ");
 		if( isAbstract() )
 			sb.append("abstract ");		
 		if( isFinal() )
@@ -108,7 +108,7 @@ public final class Modifiers
 			sb.append("weak ");
 		if( isImmutable() )
 			sb.append("immutable ");
-		if( isImmutable() )
+		if( isNullable() )
 			sb.append("nullable ");
 		if( isGet() )
 			sb.append("get ");

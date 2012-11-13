@@ -18,7 +18,8 @@ public class TypeChecker {
 	private static final Log logger = Loggers.TYPE_CHECKER;
 	
 	
-	private File file;
+	private File currentFile;
+	private File mainFile;
 	protected boolean debug;
 	
 	public TypeChecker(boolean debug) {	
@@ -35,6 +36,7 @@ public class TypeChecker {
 	 */
 	public boolean typeCheck(Node node, File file) throws ShadowException, ParseException, IOException
 	{	 
+		mainFile = file;
 		HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>>();
 		Package packageTree = new Package(typeTable);
 		LinkedList<File> importList = new LinkedList<File>();
@@ -78,11 +80,21 @@ public class TypeChecker {
 	
 	public File getCurrentFile()
 	{
-		return file;
+		return currentFile;
 	}
 	
-	public void setCurrentFile(File currentFile )
+	public void setCurrentFile(File file )
 	{
-		file = currentFile;
+		currentFile = file;
+	}
+	
+	public File getMainFile()
+	{
+		return mainFile;
+	}
+	
+	public void setMainFile(File file )
+	{
+		mainFile = file;
 	}
 }

@@ -1,6 +1,8 @@
 package shadow.typecheck;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +33,7 @@ import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeBound;
+import shadow.parser.javacc.ASTTypeDeclaration;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTVariableInitializer;
@@ -64,8 +67,33 @@ public class FieldAndMethodChecker extends BaseChecker {
 		ASTWalker walker = new ASTWalker(this);
 		
 		//walk over all the files
-		for( Node node : files.values() )
+		for( Map.Entry<File, Node> entry : files.entrySet() )
+		{
+			Node node = entry.getValue();
+			File file = entry.getKey();
 			walker.walk(node);
+			if( getErrorCount() == 0 ) // no errors
+			{
+				try
+				{
+					//add meta file if one doesn't exist
+					if( file.getName().endsWith(".shadow") ) //used .shadow if there was no up-to-date meta file 
+					{
+						String fileName = file.getCanonicalPath();						
+						File meta = new File( fileName.substring(0, fileName.lastIndexOf(".shadow")) + ".meta" );
+						PrintWriter out = new PrintWriter(meta);
+						ClassInterfaceBaseType type = (ClassInterfaceBaseType) node.getType();
+						type.printMetaFile(out, "");
+						out.close();						
+					}
+				}
+				catch(IOException e)
+				{
+					System.err.println("Failed to create meta file for " + file.getName());					
+				}
+			}
+		}
+		
 		
 		//deal with class problems
 		for( Package p : typeTable.keySet() )
@@ -767,9 +795,24 @@ public class FieldAndMethodChecker extends BaseChecker {
 	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
 			currentPackage = packageTree;
-		
+				
 		return WalkType.POST_CHILDREN;			
 	}
+	
+	@Override
+	public Object visit(ASTTypeDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )
+		{
+			Node child = node.jjtGetChild(1); //child 0 is modifiers
+			node.jjtGetParent().setType(child.getType());
+			node.jjtGetParent().setModifiers(child.getModifiers());
+		}
+				
+		return WalkType.POST_CHILDREN;			
+	}
+	
+	
+	
 	
 	@Override
 	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {

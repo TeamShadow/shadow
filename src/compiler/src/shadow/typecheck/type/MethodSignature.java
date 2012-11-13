@@ -78,18 +78,21 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			return type.matchesParams(signature.type );		
 		else
 			return false;
-	}
-	
+	}	
 
-	public String toString() {
-		return symbol + " " + type.toString();
+	public String toString() {		
+		if( symbol.equals("constructor") )
+			return getModifiers() + symbol + type.parametersToString();
+		else if( symbol.equals("destructor") )
+			return getModifiers() + symbol;
+		
+		return getModifiers() + symbol + type.parametersToString() + " => " + type.getReturnTypes();
 	}
 	
 	@Override
 	public int hashCode() {
 		return toString().hashCode();
 	}
-
 	
 	public String getMangledName() {
 		return "_M" + symbol + type.getMangledName();

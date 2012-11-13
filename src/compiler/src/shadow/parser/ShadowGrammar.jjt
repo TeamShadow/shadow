@@ -440,7 +440,7 @@ ASTCompilationUnit CompilationUnit():
 {
   //[ PackageDeclaration() ]
   ( ImportDeclaration() )*
-  ( TypeDeclaration() )*
+  TypeDeclaration()
   <EOF>
 
 	{
@@ -508,8 +508,7 @@ void TypeDeclaration():
    
 }
 {
-  //";" //why allow the semicolon?
-/*|*/ modifiers = Modifiers()
+	modifiers = Modifiers()
   ( ClassOrInterfaceDeclaration(modifiers)
   | EnumDeclaration(modifiers)  
   | ViewDeclaration(modifiers)
@@ -958,7 +957,8 @@ void UnqualifiedName():
 	Token t;
 }
 {
-  t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
+  "default"  { jjtThis.setImage("default");  }
+| t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
   { jjtThis.setImage(sb.toString()); }
 }
 

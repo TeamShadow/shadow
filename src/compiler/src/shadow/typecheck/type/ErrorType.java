@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import java.io.PrintWriter;
+
 public class ErrorType extends ClassType
 {
 	public ErrorType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
@@ -20,5 +22,10 @@ public class ErrorType extends ClassType
 			return isDescendentOf(t);
 		else
 			return false;
-	}	
+	}
+	
+	public void printMetaFile(PrintWriter out, String linePrefix )
+	{
+		printMetaFile(out, linePrefix, "error");	
+	}
 }
