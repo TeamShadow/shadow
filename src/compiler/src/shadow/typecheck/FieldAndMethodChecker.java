@@ -682,7 +682,19 @@ public class FieldAndMethodChecker extends BaseChecker {
 			//ASTFunctionType adds result types differently
 			{
 				parent = parent.jjtGetParent();
-				MethodSignature signature = ((SignatureNode)parent).getMethodSignature();				
+				MethodSignature signature = ((SignatureNode)parent).getMethodSignature();
+				
+				if( signature.getModifiers().isSet() )
+				{				
+					if( node.jjtGetNumChildren() != 0 )
+						addError(node, Error.INVL_TYP, "Methods marked with set cannot have any return values");				
+				}			
+				else if( signature.getModifiers().isGet() )
+				{
+					if( node.jjtGetNumChildren() != 1 )
+						addError(node, Error.INVL_TYP, "Methods marked with get must have exactly one return value");
+				}
+		
 				for(int i=0; i < node.jjtGetNumChildren(); ++i) {
 					Type type = node.jjtGetChild(i).getType();
 					
@@ -709,6 +721,18 @@ public class FieldAndMethodChecker extends BaseChecker {
 			
 			MethodSignature signature = ((SignatureNode)parent).getMethodSignature();
 			
+			if( signature.getModifiers().isSet() )
+			{				
+				if( node.jjtGetNumChildren() != 1 )
+					addError(node, Error.INVL_TYP, "Methods marked with set must have exactly one parameter");				
+			}			
+			else if( signature.getModifiers().isGet() )
+			{
+				if( node.jjtGetNumChildren() != 0 )
+					addError(node, Error.INVL_TYP, "Methods marked with get cannot have any parameters");
+			}
+			
+			
 			// go through all the formal parameters
 			for(int i=0; i < node.jjtGetNumChildren(); ++i) 
 			{
@@ -730,6 +754,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 				
 				// get the type of the parameter
 				parameter.setType(child.getType());
+				
+				if( signature.getModifiers().isSet() )
+					parameter.addModifier(Modifiers.ASSIGNABLE);
 				
 				// make sure this type is in the type table
 				if(parameter.getType() == null)
