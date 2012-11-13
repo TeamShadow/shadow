@@ -67,11 +67,11 @@ public class TypeCollector extends BaseChecker
 	private Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
 	
 	private String currentName = "";
-	private Map<File, Node> files = new HashMap<File, Node>();
+	private Map<String, Node> files = new HashMap<String, Node>();
 	
 	private TypeChecker typeChecker;
 	
-	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, LinkedList<File> importList, Package p, TypeChecker typeChecker )
+	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker )
 	{		
 		super(debug, typeTable, importList, p );
 		
@@ -451,6 +451,7 @@ public class TypeCollector extends BaseChecker
 		}		
 	}
 
+	
 
 	public void collectTypes(File input, Node node) throws ParseException, ShadowException, IOException
 	//includes files in the same directory
@@ -458,12 +459,14 @@ public class TypeCollector extends BaseChecker
 		//Walk over file being checked
 		ASTWalker walker = new ASTWalker( this );		
 		walker.walk(node);
-		files.put( input.getCanonicalFile(), node );
+		String canonicalPath = input.getCanonicalPath(); 
+		files.put( stripExtension(canonicalPath), node );
 		
-		List<File> fileList = new ArrayList<File>();
+		List<String> fileList = new ArrayList<String>();
 		
 		//Add import list
-		fileList.addAll(getImportList());
+		for( String file : getImportList() )
+			fileList.add(file);
 		
 		//add files in directory after imports
 		File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
@@ -475,40 +478,48 @@ public class TypeCollector extends BaseChecker
 				}
 		);		
 
-		fileList.addAll(Arrays.asList(directoryFiles));	
+		for( File file :  directoryFiles )
+			fileList.add(stripExtension(file.getCanonicalPath()));	
 		
 		//Add standard imports
-		String path = Configuration.getInstance().getSystemImport() + File.separator + "shadow" + File.separator + "standard" ;
-		fileList.add(new File(path, "Object.shadow" ));
-		fileList.add(new File(path, "Class.shadow" ));
-		fileList.add(new File(path, "String.shadow" ));
-		fileList.add(new File(path, "Exception.shadow" ));
-		
-				
+		String path = Configuration.getInstance().getSystemImport() + File.separator + "shadow" + File.separator + "standard" + File.separator;
+		fileList.add(path + "Object");
+		fileList.add(path + "Class");
+		fileList.add(path + "String");
+		fileList.add(path + "Exception");
+						
 		for(int i = 0; i < fileList.size(); i++ )
 		{			
-			File canonicalFile = fileList.get(i).getCanonicalFile();
-			
-			if( canonicalFile.getName().endsWith(".shadow") ) //check for more recent .meta file 
+			String canonical = fileList.get(i);
+								
+			if( !files.containsKey(canonical) ) //don't double add
 			{
-				String fileName = canonicalFile.getCanonicalPath();						
-				File meta = new File( fileName.substring(0, fileName.lastIndexOf(".shadow")) + ".meta" );
-				if( meta.exists() && meta.lastModified() >= canonicalFile.lastModified() )
-					canonicalFile = meta;
-			}
-			
-			if( !files.containsKey(canonicalFile) ) //don't double add
-			{
+				
+				File canonicalFile = new File(canonical + ".shadow");
+				if( !canonicalFile.equals(input) ) //always read the shadow file for the input file
+				{
+					if( canonicalFile.exists() )  
+					{											
+						File meta = new File( canonical + ".meta" );
+						if( meta.exists() && meta.lastModified() >= canonicalFile.lastModified() ) //check for more recent .meta file
+							canonicalFile = meta;
+					}
+					else
+					{
+						canonicalFile  = new File(canonical + ".meta");
+					}
+				}
+				
 				ShadowParser parser = new ShadowParser(new FileInputStream(canonicalFile));
 				typeChecker.setCurrentFile(canonicalFile);
 			    SimpleNode otherNode = parser.CompilationUnit();
 			    
 			    HashMap<Package, HashMap<String, ClassInterfaceBaseType>> otherTypes = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>> ();			    
-				TypeCollector collector = new TypeCollector(debug, otherTypes, new LinkedList<File>(), new Package(otherTypes), typeChecker);
+				TypeCollector collector = new TypeCollector(debug, otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
 				walker = new ASTWalker( collector );		
 				walker.walk(otherNode);				
 		
-				files.put(canonicalFile, otherNode);				
+				files.put(canonical, otherNode);				
 				
 				//copy other types into our package tree				
 				for( Package p : otherTypes.keySet() )
@@ -522,7 +533,7 @@ public class TypeCollector extends BaseChecker
 				if( collector.getErrorCount() > 0 )
 					errorList.addAll(collector.errorList);
 				
-				for( File _import : collector.getImportList() )
+				for( String _import : collector.getImportList() )
 				{
 					if( !fileList.contains(_import) )
 						fileList.add(_import);					
@@ -557,7 +568,7 @@ public class TypeCollector extends BaseChecker
 	}
 
 
-	public Map<File, Node> getFiles()
+	public Map<String, Node> getFiles()
 	{
 		return files;
 	}
@@ -707,14 +718,22 @@ public class TypeCollector extends BaseChecker
 								return name.endsWith(".meta");
 							}    }   );
 						
-						for( File file : matchingShadow )
-							importList.add(file);
-						
-						for( File file : matchingMeta )
-							if( !importList.contains(file))
-								importList.add(file);
-						
-						success = true;						
+						try 
+						{						
+							for( File file : matchingShadow )							
+									importList.add(stripExtension(file.getCanonicalPath()));
+															
+							for( File file : matchingMeta )
+							{
+								String canonicalPath = stripExtension(file.getCanonicalPath());
+								if( !importList.contains(canonicalPath))
+									importList.add(canonicalPath);
+							}
+							
+							success = true;
+						}
+						catch (IOException e) 
+						{}												
 					}
 				}
 				else
@@ -733,16 +752,22 @@ public class TypeCollector extends BaseChecker
 						shadowVersion = new File( importPath, path + ".shadow" );
 						metaVersion = new File( importPath, path + ".meta" );
 					}
-										
-					if( shadowVersion.exists() )
-					{
-						importList.add(shadowVersion);
-						success = true;						
-					}
-					else if( metaVersion.exists() )
-					{
-						importList.add(metaVersion);							
-						success = true;						
+					
+					try
+					{						
+						if( shadowVersion.exists() )
+						{							
+							importList.add(stripExtension(shadowVersion.getCanonicalPath()));							
+							success = true;						
+						}
+						else if( metaVersion.exists() )
+						{
+							importList.add(stripExtension(metaVersion.getCanonicalPath()));							
+							success = true;						
+						}
+					} 
+					catch (IOException e)
+					{						
 					}
 				}
 				

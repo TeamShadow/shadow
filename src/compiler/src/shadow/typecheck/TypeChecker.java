@@ -2,8 +2,8 @@ package shadow.typecheck;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 
 import org.apache.commons.logging.Log;
 
@@ -39,7 +39,7 @@ public class TypeChecker {
 		mainFile = file;
 		HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>>();
 		Package packageTree = new Package(typeTable);
-		LinkedList<File> importList = new LinkedList<File>();
+		ArrayList<String> importList = new ArrayList<String>();
 		TypeCollector collector = new TypeCollector(debug, typeTable, importList, packageTree, this);
 		collector.collectTypes( file, node );	
 		

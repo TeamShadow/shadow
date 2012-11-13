@@ -58,42 +58,17 @@ public class FieldAndMethodChecker extends BaseChecker {
 	
 	private ClassInterfaceBaseType declarationType = null;
 		
-	public FieldAndMethodChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<File> importList, Package packageTree ) {
+	public FieldAndMethodChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<String> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 	}	
 	
-	public void buildTypes( Map<File, Node> files ) throws ShadowException
+	public void buildTypes( Map<String, Node> files ) throws ShadowException
 	{
 		ASTWalker walker = new ASTWalker(this);
 		
 		//walk over all the files
-		for( Map.Entry<File, Node> entry : files.entrySet() )
-		{
-			Node node = entry.getValue();
-			File file = entry.getKey();
+		for( Node node : files.values() )								
 			walker.walk(node);
-			if( getErrorCount() == 0 ) // no errors
-			{
-				try
-				{
-					//add meta file if one doesn't exist
-					if( file.getName().endsWith(".shadow") ) //used .shadow if there was no up-to-date meta file 
-					{
-						String fileName = file.getCanonicalPath();						
-						File meta = new File( fileName.substring(0, fileName.lastIndexOf(".shadow")) + ".meta" );
-						PrintWriter out = new PrintWriter(meta);
-						ClassInterfaceBaseType type = (ClassInterfaceBaseType) node.getType();
-						type.printMetaFile(out, "");
-						out.close();						
-					}
-				}
-				catch(IOException e)
-				{
-					System.err.println("Failed to create meta file for " + file.getName());					
-				}
-			}
-		}
-		
 		
 		//deal with class problems
 		for( Package p : typeTable.keySet() )
@@ -148,9 +123,13 @@ public class FieldAndMethodChecker extends BaseChecker {
 									if( fieldModifiers.isStatic() )
 										methodNode.addModifier(Modifiers.STATIC );
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
-									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
+									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());									
 									modifiers.removeModifier(Modifiers.GET);
 									modifiers.removeModifier(Modifiers.FIELD);
+									if( modifiers.isSet() )
+										modifiers.removeModifier(Modifiers.SET);
+									if( modifiers.isWeak() )
+										modifiers.removeModifier(Modifiers.WEAK);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
 									methodType.addReturn(modifiedType);									
 									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
@@ -170,8 +149,12 @@ public class FieldAndMethodChecker extends BaseChecker {
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
 									modifiers.removeModifier(Modifiers.SET);
-									modifiers.removeModifier(Modifiers.FIELD);
+									modifiers.removeModifier(Modifiers.FIELD);									
 									modifiers.addModifier(Modifiers.ASSIGNABLE);
+									if( modifiers.isGet() )
+										modifiers.removeModifier(Modifiers.GET);
+									if( modifiers.isWeak() )
+										modifiers.removeModifier(Modifiers.WEAK);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
 									methodType.addParameter("value", modifiedType );									
 									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
@@ -262,6 +245,35 @@ public class FieldAndMethodChecker extends BaseChecker {
 				}
 			}
 		}
+		
+		
+		//produce meta files
+		if( getErrorCount() == 0 ) // no errors
+		{
+			for( Map.Entry<String, Node> entry : files.entrySet() )
+			{
+				Node node = entry.getValue();
+				String file = entry.getKey();
+				try
+				{					
+					File shadowVersion = new File( file + ".shadow");
+					File metaVersion = new File( file + ".meta");
+					//add meta file if one doesn't exist
+					if( !metaVersion.exists() || (shadowVersion.exists() && shadowVersion.lastModified() >= metaVersion.lastModified()) )  
+					{	
+						PrintWriter out = new PrintWriter(metaVersion);
+						ClassInterfaceBaseType type = (ClassInterfaceBaseType) node.getType();
+						type.printMetaFile(out, "");
+						out.close();						
+					}
+				}
+				catch(IOException e)
+				{
+					System.err.println("Failed to create meta file for " + node.getType() );					
+				}
+			}
+		}
+		
 	}
 	
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class

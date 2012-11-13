@@ -28,7 +28,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 
 	protected ArrayList<String> errorList = new ArrayList<String>();;
 	protected HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable; /** Holds all of the types we know about */
-	protected List<File> importList; /** Holds all of the imports we know about */
+	protected List<String> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
 	protected LinkedList<Node> currentMethod = new LinkedList<Node>();  /** Current method is a stack since Shadow allows methods to be defined inside of methods */
@@ -64,11 +64,11 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		p.addType(type); //automatically adds to typeTable and sets type's package				
 	}
 	
-	public final List<File> getImportList() {
+	public final List<String> getImportList() {
 		return importList;
 	}
 	
-	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> hashMap, List<File> importList, Package packageTree  ) {
+	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> hashMap, List<String> importList, Package packageTree  ) {
 		this.debug = debug;
 		this.typeTable = hashMap;
 		this.importList = importList;
@@ -316,7 +316,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 
-	
+	protected static String stripExtension(String file)
+	{
+		return file.substring(0, file.lastIndexOf("."));
+	}	
 	
 	//All must work
 	//class LinkedList<T is Eggplant> implements List<T>

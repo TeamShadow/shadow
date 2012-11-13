@@ -129,7 +129,7 @@ public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, Node>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
 	
-	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<File> importList, Package packageTree ) {
+	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<String> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, Node>>();
 		curPrefix = new LinkedList<Node>();
@@ -2329,7 +2329,7 @@ public class ClassChecker extends BaseChecker {
 
 	public static boolean classIsAccessible( Type classType, Type type )
 	{
-		if( classType.getModifiers().isPublic() || classType.getOuter().equals(type) || classType.getOuter() == null )
+		if( classType.getModifiers().isPublic() || classType.getOuter() == null || classType.getOuter().equals(type)  )
 			return true;
 		
 		Type outer = type.getOuter();
