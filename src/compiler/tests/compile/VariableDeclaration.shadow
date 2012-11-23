@@ -12,9 +12,10 @@ class VariableDeclaration {
         int h = 1, i = 2, j = 3;
         int k = h + i, l = i + j;
         
-        // multiple assigns
-        int m = a = b = c = d;
-        int n = e = f = g + h;
+        
+        // multiple assigns NOT allowed in Shadow
+        //int m = a = b = c = d;
+        //int n = e = f = g + h;
     }
     
     public arrays() => () {

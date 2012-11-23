@@ -456,12 +456,6 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTLabeledStatement node, Boolean secondVisit)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
 	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
@@ -573,12 +567,6 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTSynchronizedStatement node, Boolean secondVisit)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
 	public Object visit(ASTTryStatement node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
@@ -651,32 +639,26 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTFieldAccess node, Boolean data)
+	public Object visit(ASTScopeSpecifier node, Boolean data)
 			throws ShadowException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Object visit(ASTMethodAccess node, Boolean data)
+	public Object visit(ASTMethod node, Boolean data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTPropertyAccess node, Boolean data)
+	public Object visit(ASTProperty node, Boolean data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 	
 	@Override
 	public Object visit(ASTCoalesceExpression node, Boolean data)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTAssignment node, Boolean data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
@@ -709,5 +691,12 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	public Object visit(ASTSingletonInstance node, Boolean data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTQualifiedSuper node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -22,7 +22,7 @@ class Sequences
     	
     	(a) = (x);  //treated as a sequence by the parser but as single values by the typechecker
     	
-    	
-    	( a, b ) = ( u, v ) = jam( 10 );
+    	( u, v ) = jam( 10 );
+    	( a, b ) = ( u, v );
     }   
 } 

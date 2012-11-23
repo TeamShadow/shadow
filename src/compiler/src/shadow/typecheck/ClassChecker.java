@@ -1,6 +1,5 @@
 package shadow.typecheck;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -23,7 +22,6 @@ import shadow.parser.javacc.ASTArrayDimsAndInits;
 import shadow.parser.javacc.ASTArrayIndex;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
-import shadow.parser.javacc.ASTAssignment;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
@@ -48,7 +46,6 @@ import shadow.parser.javacc.ASTDestructorDeclaration;
 import shadow.parser.javacc.ASTDoStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
-import shadow.parser.javacc.ASTFieldAccess;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTForInit;
 import shadow.parser.javacc.ASTForStatement;
@@ -59,11 +56,10 @@ import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTIsExpression;
-import shadow.parser.javacc.ASTLabeledStatement;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalMethodDeclaration;
 import shadow.parser.javacc.ASTLocalVariableDeclaration;
-import shadow.parser.javacc.ASTMethodAccess;
+import shadow.parser.javacc.ASTMethod;
 import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
@@ -71,7 +67,7 @@ import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimarySuffix;
-import shadow.parser.javacc.ASTPropertyAccess;
+import shadow.parser.javacc.ASTProperty;
 import shadow.parser.javacc.ASTQualifiedThis;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
@@ -81,6 +77,7 @@ import shadow.parser.javacc.ASTReturnStatement;
 import shadow.parser.javacc.ASTRightRotate;
 import shadow.parser.javacc.ASTRightShift;
 import shadow.parser.javacc.ASTRotateExpression;
+import shadow.parser.javacc.ASTScopeSpecifier;
 import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTSequenceAssignment;
 import shadow.parser.javacc.ASTShiftExpression;
@@ -1045,6 +1042,7 @@ public class ClassChecker extends BaseChecker {
 		return true;
 	}
 
+	/*
 	public Object visit(ASTAssignment node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
@@ -1065,6 +1063,7 @@ public class ClassChecker extends BaseChecker {
 	
 		return WalkType.POST_CHILDREN;
 	}
+	*/
 	
 	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
 		return pushUpType(node, secondVisit); //takes care of modifiers
@@ -1212,48 +1211,24 @@ public class ClassChecker extends BaseChecker {
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
 		
-		Node child = node.jjtGetChild(0);		
-		
-		//No longer needed?
-		//if( child instanceof ASTSequence && child.getType() instanceof SequenceType ) //second check used for sequences containing a single item
-																					  //(which are treated as sequences by the parser but should 
-																					  //be regarded as single values by the typechecker
+		ASTSequence left = (ASTSequence) node.jjtGetChild(0);		
 					
-		Node current = 	child;
-	
-		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
-		{	
-			if( !(current instanceof ASTSequence) || !(((ASTSequence)current).isAssignable()) )
+			if( !left.isAssignable() )			
+				addError(left, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
+			else
+			{			
+				SequenceType leftType = (SequenceType)(left.getType());
+			Node right = node.jjtGetChild(1);				
+			if( right.getType() instanceof SequenceType ) //never a property, because a property can only access a single value
 			{
-				addError(child, Error.TYPE_MIS, "Cannot assign a value to expression: " + child);
-				break;
-			}
-			
-			SequenceType currentType = (SequenceType)(current.getType());
-			Node next = node.jjtGetChild(i);				
-			if( next.getType() instanceof SequenceType ) //never a property, because a property can only access a single value
-			{
-				SequenceType nextType = (SequenceType)(next.getType());
+				SequenceType rightType = (SequenceType)(right.getType());
 				List<String> reasons = new ArrayList<String>();
 				
-				if( currentType.canAccept( nextType, reasons ) )
-				{
-					if( !currentType.isAssignable() )
-					{
-						addError(current, Error.TYPE_MIS, "Sequence " + current + " has final values that cannot be assigned");
-						break;
-					}					
-					
-					current = next;
-				}
-				else
-				{
-					addError(current, Error.TYPE_MIS, reasons.get(0));
-					break;
-				}
+				if( !leftType.canAccept( rightType, reasons ) )				
+					addError(left, Error.TYPE_MIS, reasons.get(0));
 			}
 			else
-				addError(current, Error.TYPE_MIS, next.getType() + " must be of sequence type");
+				addError(left, Error.TYPE_MIS, right.getType() + " must be of sequence type");
 		}
 
 		return WalkType.POST_CHILDREN;	
@@ -1910,7 +1885,7 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
 			
 			Node child = node.jjtGetChild(0);
-			if( (child instanceof ASTPropertyAccess) || (child instanceof ASTMethodCall)  )
+			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall)  )
 			{
 				ASTPrimaryExpression parent = (ASTPrimaryExpression) node.jjtGetParent();
 				parent.setAction(true);
@@ -2012,7 +1987,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 
-	public Object visit(ASTMethodAccess node, Boolean secondVisit) throws ShadowException 
+	public Object visit(ASTMethod node, Boolean secondVisit) throws ShadowException 
 	{
 		if( secondVisit )
 		{			
@@ -2042,31 +2017,27 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTFieldAccess node, Boolean secondVisit) throws ShadowException	
+	public Object visit(ASTScopeSpecifier node, Boolean secondVisit) throws ShadowException	
 	{
 		if( secondVisit )
 		{	
 			//always part of a suffix, thus always has a prefix
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );
-			String fieldName = node.getImage();
+			String name = node.getImage();
 			boolean isStatic = prefixNode.getModifiers().isTypeName();
 			
 			if( prefixType instanceof ClassInterfaceBaseType )
 			{
 				ClassInterfaceBaseType classType = (ClassInterfaceBaseType)prefixType;
-				if( classType.containsField( fieldName ) )
+				if( classType.containsField( name ) )
 				{
-					Node field = classType.getField(fieldName);
+					Node field = classType.getField(name);
 					
 					if( !fieldIsAccessible( field, currentType ))
 					{
-						addError(node, Error.INVL_MOD, "Field " + fieldName + " not accessible from current context");
-					}
-					else if( isStatic && !field.getModifiers().isStatic())
-					{
-						addError(node, Error.INVL_MOD, "Cannot access non-static field " + fieldName + " from static context");
-					}
+						addError(node, Error.INVL_MOD, "Field " + name + " not accessible from current context");
+					}					
 					else
 					{
 						node.setType( field.getType());
@@ -2074,8 +2045,20 @@ public class ClassChecker extends BaseChecker {
 						node.addModifier(Modifiers.ASSIGNABLE);					
 					}
 				}
+				else if( classType.containsInnerClass(name) )
+				{
+					ClassInterfaceBaseType innerClass = classType.getInnerClass(name);
+					
+					if( !classIsAccessible( innerClass, currentType ) )
+						addError(node, Error.TYPE_MIS, "Class " + innerClass + " is not accessible from current context");
+					else
+					{
+						node.setType( innerClass );						
+						node.addModifier(Modifiers.TYPE_NAME);					
+					}					
+				}
 				else
-					addError(node, Error.UNDEC_VAR, "Field " + fieldName + " not found");
+					addError(node, Error.UNDEC_VAR, "Field or inner class " + name + " not found");
 						
 			}
 			else
@@ -2089,7 +2072,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 		
-	public Object visit(ASTPropertyAccess node, Boolean secondVisit) throws ShadowException	
+	public Object visit(ASTProperty node, Boolean secondVisit) throws ShadowException	
 	{
 		if( secondVisit )
 		{		
@@ -2401,6 +2384,7 @@ public class ClassChecker extends BaseChecker {
 		return false;
 	}
 	
+	/*
 	public Object visit(ASTLabeledStatement node, Boolean secondVisit) throws ShadowException 
 	{ 
 		if(!secondVisit)
@@ -2416,6 +2400,7 @@ public class ClassChecker extends BaseChecker {
 			
 		return WalkType.POST_CHILDREN;
 	}
+	*/
 	
 	public Object visit(ASTBreakStatement node, Boolean secondVisit) throws ShadowException 
 	{ 
@@ -2629,7 +2614,6 @@ public class ClassChecker extends BaseChecker {
 		Node child = node.jjtGetChild(0);						
 		int counter = 1;		
 		ClassInterfaceBaseType type = (ClassInterfaceBaseType)child.getType();
-		List<Type> typeParameters = null;
 					
 
 		if( child.getType() instanceof InterfaceType )
@@ -2645,38 +2629,6 @@ public class ClassChecker extends BaseChecker {
 			node.setType(Type.UNKNOWN);
 			return WalkType.POST_CHILDREN;
 		}		
-		
-		
-		
-		/* //type arguments all in the typename, not here
-		if( node.jjtGetChild(counter) instanceof ASTTypeArguments ) //may have type arguments
-		{	
-			if( !type.isParameterized() )
-			{
-				addError(child, Error.INVL_TYP, "Cannot supply type arguments to non-generic type " + type);
-				return WalkType.POST_CHILDREN;
-			}
-			
-			hasArguments = true;
-			typeArguments = (SequenceType) node.jjtGetChild(counter).getType();
-			typeParameters = type.getTypeParameters();
-			counter++;
-			
-			if( !checkTypeArguments( typeParameters, typeArguments ) )
-			{
-				addError(child, Error.INVL_TYP, "Incompatible type arguments to generic type " + type);
-				return WalkType.POST_CHILDREN;
-			}
-		}
-		*/
-		
-		/*
-		else if( type.isParameterized() )
-		{
-			addError(child, Error.INVL_TYP, "Must supply type arguments to generic type " + type);
-			return WalkType.POST_CHILDREN;			
-		}
-		*/
 
 		//examine argument list to find constructor
 		ASTArguments arguments = (ASTArguments)(node.jjtGetChild(counter));

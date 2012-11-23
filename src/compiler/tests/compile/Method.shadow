@@ -2,79 +2,79 @@
  * This class tests a bunch of different method declarations
  */
 class Method {
-    public b() => () { ; }   // basic void
+    public b() => () {  }   // basic void
 
-    public c(int a) => () { ; }   // built-in to void
-    public d(code a) => () { ; }   // built-in to void
-    public e(float a) => () { ; }   // built-in to void
+    public c(int a) => () {  }   // built-in to void
+    public d(code a) => () {  }   // built-in to void
+    public e(float a) => () {  }   // built-in to void
 
-    public f() => (int) { ; }   // void to built-in
-    public g() => (code) { ; }   // void to built-in
-    public h() => (float) { ; }   // void to built-in
+    public f() => (int) {  }   // void to built-in
+    public g() => (code) {  }   // void to built-in
+    public h() => (float) {  }   // void to built-in
     
-    public i(int a) => (int) { ; }   // built-in to built-in
-    public j(float a) => (int) { ; }   // built-in to built-in
-    public k(int a) => (float) { ; }   // built-in to built-in
+    public i(int a) => (int) {  }   // built-in to built-in
+    public j(float a) => (int) {  }   // built-in to built-in
+    public k(int a) => (float) {  }   // built-in to built-in
     
-    public l(int a, int b) => () { ; }
-    public m(int a, int b) => (int) { ; }
-    public n(int a, int b) => (int, int) { ; }
+    public l(int a, int b) => () {  }
+    public m(int a, int b) => (int) {  }
+    public n(int a, int b) => (int, int) {  }
     
     // arrays
-    public o(int[] a) => () { ; }
-    public p(int[] a, float[] b) => () { ; }
-    public q() => (int[]) { ; }
-    public r() => (int[], float[]) { ; }
-    public s() => (int[], int[]) { ; }
+    public o(int[] a) => () {  }
+    public p(int[] a, float[] b) => () {  }
+    public q() => (int[]) { }
+    public r() => (int[], float[]) {  }
+    public s() => (int[], int[]) {  }
 
     // functions
-    public t(() => () f) => () { ; }
-    public u(int a, () => () f) => () { ; }
-    public v(() => () f, int a) => () { ; }
-    public w(int a, () => () f, int b) => () { ; }
-    public x((int) => () f) => () { ; }
-    public y(() => (int) f) => () { ; }
-    public z((int) => (int) f) => () { ; }
-    public aa(int a, (int) => (int) f) => () { ; }
-    public bb((int) => (int) f, int a) => () { ; }
-    public cc(int a, (int) => (int) f, int b) => () { ; }
+    public t(() => () f) => () {  }
+    public u(int a, () => () f) => () {  }
+    public v(() => () f, int a) => () { }
+    public w(int a, () => () f, int b) => () { }
+    public x((int) => () f) => () {  }
+    public y(() => (int) f) => () {  }
+    public z((int) => (int) f) => () {  }
+    public aa(int a, (int) => (int) f) => () { }
+    public bb((int) => (int) f, int a) => () { }
+    public cc(int a, (int) => (int) f, int b) => () { }
     
-    public dd() => (() => ()) { ; }
-    public ee() => (int, () => ()) { ; }
-    public ff() => (() => (), int) { ; }
-    public gg() => (int, () => (), int) { ; }
-    public hh() => ((int) => ()) { ; }
-    public ii() => (() => (int)) { ; }
-    public jj() => ((int) => (int)) { ; }
-    public kk() => (int, (int) => (int)) { ; }
-    public ll() => ((int) => (int), int) { ; }
-    public mm() => (int, (int) => (int), int) { ; }
+    public dd() => (() => ()) { }
+    public ee() => (int, () => ()) { }
+    public ff() => (() => (), int) { }
+    public gg() => (int, () => (), int) { }
+    public hh() => ((int) => ()) { }
+    public ii() => (() => (int)) { }
+    public jj() => ((int) => (int)) { }
+    public kk() => (int, (int) => (int)) { }
+    public ll() => ((int) => (int), int) { }
+    public mm() => (int, (int) => (int), int) { }
     
-    public nn(() => () f) => (() => ()) { ; }
-    public oo(int a, () => () f, int b) => (() => ()) { ; }
-    public pp(() => () f) => (int, () => (), int) { ; }
-    public qq(int a, () => () f, int b) => (int, () => (), int) { ; }
+    public nn(() => () f) => (() => ()) { }
+    public oo(int a, () => () f, int b) => (() => ()) { }
+    public pp(() => () f) => (int, () => (), int) { }
+    public qq(int a, () => () f, int b) => (int, () => (), int) { }
     
-    public rr((int) => (int) f) => ((int) => (int)) { ; }
-    public ss(int a, (int) => (int) f, int b) => (int, (int) => (int), int) { ; }
+    public rr((int) => (int) f) => ((int) => (int)) { }
+    public ss(int a, (int) => (int) f, int b) => (int, (int) => (int), int) { }
     
     // multiple functions
-    public tt(() => () f1, () => () f2) => () { ; }
-    public uu(() => () f1, () => () f2) => (() => ()) { ; }
-    public vv(() => () f1, () => () f2) => (() => (), () => ()) { ; }
+    public tt(() => () f1, () => () f2) => () { }
+    public uu(() => () f1, () => () f2) => (() => ()) { }
+    public vv(() => () f1, () => () f2) => (() => (), () => ()) { }
     
-    public ww((int) => (int) f1, (int) => (int) f2) => () { ; }
-    public xx((int) => (int) f1, (int) => (int) f2) => ((int) => (int)) { ; }
-    public yy((int) => (int) f1, (int) => (int) f2) => ((int) => (int), (int) => (int)) { ; }
+    public ww((int) => (int) f1, (int) => (int) f2) => () { }
+    public xx((int) => (int) f1, (int) => (int) f2) => ((int) => (int)) { }
+    public yy((int) => (int) f1, (int) => (int) f2) => ((int) => (int), (int) => (int)) { }
     
     // functions inside of functions
-    public zz((()=>()) => () f) => () { ; }
-    public aaa((()=>()) => (()=>()) f) => () { ; }
-    public bbb((()=>()) => (()=>()) f) => (()=>()) { ; }
+    public zz((()=>()) => () f) => () { }
+    public aaa((()=>()) => (()=>()) f) => () { }
+    public bbb((()=>()) => (()=>()) f) => (()=>()) { }
     
-    public ccc(((int)=>(int)) => () f) => () { ; }
-    public ddd(((int)=>(int)) => ((int)=>(int)) f) => () { ; }
-    public eee(((int)=>(int)) => ((int)=>(int)) f) => ((int)=>(int)) { ; }
+    public ccc(((int)=>(int)) => () f) => () { }
+    public ddd(((int)=>(int)) => ((int)=>(int)) f) => () { }
+    public eee(((int)=>(int)) => ((int)=>(int)) f) => ((int)=>(int)) { }
 
 }
 

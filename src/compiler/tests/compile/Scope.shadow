@@ -10,9 +10,11 @@ class Scope {
         
         //int a; //uncomment to see multiply defined symbol
 
-        if(a == b);        
+        if(a == b)
+        	noop;        
         
-        if( a > b );
+        if( a > b )
+        	noop;
         
         if( a < b and c < d )
         	x = 10;

@@ -156,6 +156,7 @@ TOKEN :
 | < LONG: "long" >
 | < NATIVE: "native" >
 | < NEW: "new" >
+| < NOOP: "noop" >
 | < NULL: "null" >
 | < NULLABLE: "nullable" >
 | < OR: "or" >
@@ -255,7 +256,7 @@ TOKEN :
 |
   < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
 |
-  < #OCTAL_LITERAL: "0" ["o","O"] (["0"-"7"])* >
+  < #OCTAL_LITERAL: "0" ["c","C"] (["0"-"7"])* > //doesn't use 0o or 0O because it's hard to read
 |
   < FLOAT_LITERAL:
         (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? ["f","F"]
@@ -408,7 +409,7 @@ TOKEN :
 //| < ELLIPSIS: "..." >
 }
 
-/* >'s need special attention due to generics syntax. */
+/* >'s need special attention due to syntax for generics */
 TOKEN :
 {
   < RIGHTROTATE: ">>>" >
@@ -437,10 +438,9 @@ TOKEN :
 
 ASTCompilationUnit CompilationUnit():
 {}
-{
-  //[ PackageDeclaration() ]
+{  
   ( ImportDeclaration() )*
-  TypeDeclaration()
+  TypeDeclaration() //only one declaration per file
   <EOF>
 
 	{
@@ -448,14 +448,6 @@ ASTCompilationUnit CompilationUnit():
 	}
 }
 
-
-/*
-void PackageDeclaration():
-{}
-{
-  "package" UnqualifiedName() ";"
-}
-*/
 
 void ImportDeclaration():
 {}
@@ -567,7 +559,7 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers):
  	   modifiers.checkInterfaceModifiers(); 	   
  	 } )
 
-  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //make this work
+  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //package specification
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   [ Version() ]
@@ -683,13 +675,12 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 | modifiers = Modifiers()
   (  ClassOrInterfaceDeclaration(modifiers)
     | EnumDeclaration(modifiers)
-    | LOOKAHEAD(  "constructor" ) ConstructorDeclaration(modifiers)
+    | LOOKAHEAD( "constructor" ) ConstructorDeclaration(modifiers)
     | LOOKAHEAD( "destructor" ) DestructorDeclaration(modifiers)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifiers) 
     | MethodDeclaration(modifiers)
     | ViewDeclaration(modifiers)
   )
-| ";"
 }
 
 void FieldDeclaration(Modifiers modifiers):
@@ -868,7 +859,7 @@ void ClassOrInterfaceType():
 	Token t;
 }
 {
-   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@"  ] ClassOrInterfaceTypeSuffix() (  LOOKAHEAD(2) "." ClassOrInterfaceTypeSuffix() )*
+   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@"  ] ClassOrInterfaceTypeSuffix() (  LOOKAHEAD(2) ":" ClassOrInterfaceTypeSuffix() )*
 }
 
 void ClassOrInterfaceTypeSuffix():
@@ -974,31 +965,13 @@ void NameList():
  */
 
 void Expression():
-/*
- * This expansion has been written this way instead of:
- *   Assignment() | ConditionalExpression()
- * for performance reasons.
- * However, it is a weakening of the grammar for it allows the LHS of
- * assignments to be any conditional expression whereas it can only be
- * a primary expression.  Consider adding a semantic predicate to work
- * around this.
- */
 { debugPrint("EXPRESSION"); }
 {
 
-	LOOKAHEAD( Assignment() ) Assignment()
-|   ConditionalExpression() 
-  
-  //ConditionalExpression() [ LOOKAHEAD(2) AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
+	LOOKAHEAD( AllocationExpression() ) AllocationExpression()
+|   ConditionalExpression()
 }
 
-void Assignment() :
-{
-  debugPrint("Assignment");
-}
-{
-  PrimaryExpression() AssignmentOperator()  Expression()
-}
 
 void AssignmentOperator():
 { debugPrint("ASSIGNMENT OPERATOR"); }
@@ -1185,15 +1158,13 @@ void CheckExpression():
     jjtThis.setImage("check");   
 }
 { 
- "check" "(" PrimaryExpression() ")"
+ "check" "(" ConditionalExpression() ")"
 }
 
 void PrimaryExpression():
 { debugPrint("PRIMARY EXPRESSION"); }
-{
-  
- 	  AllocationExpression()
-	| PrimaryPrefix() ( LOOKAHEAD(PrimarySuffix()) PrimarySuffix() )* [ LOOKAHEAD(2) "." AllocationExpression() ]
+{  
+	PrimaryPrefix() ( LOOKAHEAD(PrimarySuffix()) PrimarySuffix() )* 
 }
 
 void Sequence():
@@ -1210,10 +1181,10 @@ void PrimaryPrefix():
 {
   Literal()
 | "this" { jjtThis.setImage("this"); }
-| "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
+| "super" { jjtThis.setImage("super"); }
 | CheckExpression()
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" { jjtThis.addToImage('('); } ConditionalExpression() ")"
-| LOOKAHEAD( Type() "." "class" ) Type() "." "class" { jjtThis.setImage("class"); }
+| LOOKAHEAD( Type() ":" "class" ) Type() ":" "class" { jjtThis.setImage("class"); }
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 }
 
@@ -1223,11 +1194,12 @@ void PrimarySuffix():
 	Token t;
 }
 {
-  LOOKAHEAD(2) QualifiedThis()  
+  LOOKAHEAD(2) QualifiedThis()
+| LOOKAHEAD(2) QualifiedSuper()  
 | ArrayIndex()
-| MethodAccess()
-| FieldAccess()
-| PropertyAccess()
+| Method()
+| ScopeSpecifier()
+| Property()
 | LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
 }
 
@@ -1237,7 +1209,20 @@ void QualifiedThis():
 	Token t;
 }
 {
-  ":" "this" { jjtThis.setImage("this"); } // When you have inner classes, you sometimes need to know Outer:this or Inner:this
+  ":" "this" { jjtThis.setImage("this"); }
+// When you have inner classes, you sometimes need to know Outer:this or Inner:this
+// Prefix must be a type name that you're currently inside of
+}
+
+void QualifiedSuper():
+{
+  	debugPrint("QUALIFIED SUPER");
+	Token t;
+}
+{
+  ":" "super" { jjtThis.setImage("super"); }
+// When you have inner classes, you sometimes need to know Outer:super or Inner:super
+// Prefix must be a type name that you're currently inside of
 }
 
 void ArrayIndex():
@@ -1249,27 +1234,27 @@ void ArrayIndex():
   "[" ConditionalExpression() ("," ConditionalExpression())* "]"
 }
 
-void FieldAccess():
+void ScopeSpecifier():
 {
-  	debugPrint("FIELD ACCESS");
+  	debugPrint("SCOPE SPECIFIER");
 	Token t;
 }
 {
-  ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //field
+  ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //constant or class
 }
 
-void MethodAccess():
+void Method():
 {
-  	debugPrint("METHOD ACCESS");
+  	debugPrint("METHOD");
 	Token t;
 }
 {
   "." t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);  }
 }
 
-void PropertyAccess():
+void Property():
 {
-  	debugPrint("PROPERTY ACCESS");
+  	debugPrint("PROPERTY");
 	Token t;
 }
 {
@@ -1310,15 +1295,6 @@ void Literal() :
 | t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.ULONG); }
 | BooleanLiteral() { jjtThis.setLiteral(Literal.BOOLEAN); }
 | NullLiteral() { jjtThis.setLiteral(Literal.NULL); jjtThis.addModifier(Modifiers.NULLABLE); }  )
-
- /* OLD:
-  t = <INTEGER_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.INT); }
-| t = <FLOATING_POINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.DOUBLE); }
-| t = <CODE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.CODE); }
-| t = <STRING_LITERAL> { jjtThis.setImage(t.image); jjtThis.setType(Type.STRING); }
-| BooleanLiteral() { jjtThis.setType(Type.BOOLEAN); }
-| NullLiteral() { jjtThis.setType(Type.NULL); }
-*/
 }
 
 
@@ -1385,7 +1361,7 @@ void ArrayAllocation():
 void ConstructorInvocation():
 { debugPrint("CONSTRUCTOR INVOCATION"); }
 {
- 	"new" ClassOrInterfaceType() Arguments()
+ 	"new" PrimaryExpression()
  	/* No anonymous classes in Shadow */    
 }
 
@@ -1415,9 +1391,8 @@ void ArrayDimsAndInits():
 
 void Statement():
 { debugPrint("STATEMENT"); }
-{
-  LOOKAHEAD(2) LabeledStatement()
-| AssertStatement()
+{  
+  AssertStatement()
 | Block()
 | EmptyStatement()
 | StatementExpression() ";"
@@ -1431,7 +1406,7 @@ void Statement():
 | ContinueStatement()
 | ReturnStatement()
 | ThrowStatement()
-| SynchronizedStatement()
+//| SynchronizedStatement()
 | TryStatement()
 }
 
@@ -1439,14 +1414,6 @@ void AssertStatement():
 { debugPrint("ASSERT STATEMENT"); }
 {
   "assert" ConditionalExpression() [ "," ConditionalExpression() ] ";"
-}
-
-void LabeledStatement():
-{
-	Token t;
-}
-{
-  t = <IDENTIFIER> { jjtThis.setImage(t.image); } ":" Statement()
 }
 
 void Block():
@@ -1500,24 +1467,23 @@ void LocalVariableDeclaration(Modifiers modifiers):
 void EmptyStatement():
 {}
 {
-  ";"
+  "noop" ";"
 }
 
 void StatementExpression():
 { debugPrint("STATEMENT EXPRESSION"); }
 {
   		LOOKAHEAD( SequenceAssignment() ) SequenceAssignment()
-	| 	ActionExpression()
+ 	|   AllocationExpression() //allocation without assignment
+	| 	ActionExpression()  //method call or assignment
 }
 
 void SequenceAssignment() :
 { debugPrint("SEQUENCE ASSIGNMENT"); }
 {
-	//Looks like hell, but sequence expansions are either:
-  	//Sequence() = Sequence() = ... = Sequence() = Sequence() or
-  	//Sequence() = Sequence() = ... = Sequence() = PrimaryExpression() [for method calls] 
-  	( LOOKAHEAD( Sequence() "=" ) Sequence() "=" )+
-  	( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() ) { jjtThis.setImage("="); }  
+  	//Sequence() = Sequence() or
+  	//Sequence() = PrimaryExpression() [for method calls that return sequences] 
+  	Sequence() "=" ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() ) { jjtThis.setImage("="); }  
 }
 
 void ActionExpression() :
@@ -1544,11 +1510,6 @@ void SwitchLabel():
 }
 
 void IfStatement():
-/*
- * The disambiguating algorithm of JavaCC automatically binds dangling
- * else's to the innermost if statement.  The LOOKAHEAD specification
- * is to tell JavaCC that we know what we are doing.
- */
 { debugPrint("IF STATEMENT"); }
 {
   "if" "(" ConditionalExpression() ")" Statement() [ LOOKAHEAD(1) "else" Statement() ]
@@ -1611,13 +1572,13 @@ void BreakStatement():
 	jjtThis.setImage("");
 }
 {
-  "break" [t = <IDENTIFIER> { jjtThis.setImage(t.image); } ] ";"
+  "break" ";"
 }
 
 void ContinueStatement():
 { debugPrint("CONTINUE STATEMENT"); }
 {
-  "continue" ";"
+  "continue" [ ConditionalExpression() ]  ";"
 }
 
 void ReturnStatement():
@@ -1636,22 +1597,24 @@ void ThrowStatement():
   "throw" ConditionalExpression() ";"
 }
 
+/*
 void SynchronizedStatement():
 {}
 {
   "synchronized" "(" ConditionalExpression() ")" Block()
 }
+*/
 
 void TryStatement():
 /*
  * Semantic check required here to make sure that at least one
- * finally/catch is present.
+ * finally/recover/catch is present.
  */
 { debugPrint("TRY STATEMENT"); }
 {
   "try" Block()
   ( "catch" "(" FormalParameter() ")" Block()  { jjtThis.addCatch(); } )*
-  [ "recover" Block() { jjtThis.addRecover(); }  ]
+  [ "recover" Block() { jjtThis.addRecover(); }]
   [ "finally" Block() { jjtThis.addFinally(); }]
 }
 

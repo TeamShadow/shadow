@@ -782,7 +782,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTFieldAccess node, Boolean secondVisit)
+	public Object visit(ASTScopeSpecifier node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit)
@@ -792,7 +792,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTMethodAccess node, Boolean secondVisit)
+	public Object visit(ASTMethod node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit)
@@ -801,7 +801,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTPropertyAccess node, Boolean secondVisit)
+	public Object visit(ASTProperty node, Boolean secondVisit)
 			throws ShadowException
 	{
 		// TODO: Make this work
@@ -956,13 +956,6 @@ public class TACBuilder implements ShadowParserVisitor
 
 	@Override
 	public Object visit(ASTAssertStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTLabeledStatement node, Boolean secondVisit)
 			throws ShadowException
 	{
 		return PRE_CHILDREN;
@@ -1145,13 +1138,6 @@ public class TACBuilder implements ShadowParserVisitor
 
 	@Override
 	public Object visit(ASTThrowStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTSynchronizedStatement node, Boolean secondVisit)
 			throws ShadowException
 	{
 		return PRE_CHILDREN;
@@ -1413,12 +1399,7 @@ public class TACBuilder implements ShadowParserVisitor
 			return new TACLiteral(tree, "0l");
 		return new TACLiteral(tree, "null");
 	}
-	@Override
-	public Object visit(ASTAssignment node, Boolean data)
-			throws ShadowException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 	@Override
 	public Object visit(ASTSequenceAssignment node, Boolean data)
 			throws ShadowException {
@@ -1439,6 +1420,12 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 	@Override
 	public Object visit(ASTLocalMethodDeclaration node, Boolean data)
+			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTQualifiedSuper node, Boolean data)
 			throws ShadowException {
 		// TODO Auto-generated method stub
 		return null;

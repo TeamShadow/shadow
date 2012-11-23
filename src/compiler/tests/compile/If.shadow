@@ -5,9 +5,11 @@ class If {
         int c, d;
         int x;
 
-        if(a == b);        
+        if(a == b)
+        	noop;        
         
-        if( a > b );
+        if( a > b )
+        	noop;
         
         if( a < b and c < d )
         	x = 10;

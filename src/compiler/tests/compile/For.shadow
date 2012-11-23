@@ -3,17 +3,17 @@ class For {
     	int i;
     	int x;
     	
-        for(int j=0; j < x; j += 1) { ; }
-        for(; i < x; i += 1) { ; }
-        for(int j=0; true; j += 1) { ; }
-        for(int j=0; j < x; ) { ; }
+        for(int j=0; j < x; j += 1) { }
+        for(; i < x; i += 1) { }
+        for(int j=0; true; j += 1) { }
+        for(int j=0; j < x; ) { }
 
-        for(i=0; i < x; i += 1) { ; }
-        for(i=0; true; i += 1) { ; }
-        for(i=0; i < x; ) { ; }
+        for(i=0; i < x; i += 1) { }
+        for(i=0; true; i += 1) { }
+        for(i=0; i < x; ) { }
         
-        for(i=0; true; i += 1) { ; }
-        for(i=0; false; i += 1) { ; }
+        for(i=0; true; i += 1) { }
+        for(i=0; false; i += 1) { }
 
 
         // nested loops
