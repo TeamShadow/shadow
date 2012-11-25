@@ -2,6 +2,8 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.type.ClassType;
+
 public
 @SuppressWarnings("all")
 class ASTPrimarySuffix extends SimpleNode {
@@ -21,5 +23,17 @@ class ASTPrimarySuffix extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
   }
+  
+	private boolean isConstructor = false;
+	
+	public void setConstructor(boolean value)
+	{		
+		isConstructor = value;
+	}
+	
+	public boolean isConstructor()
+	{
+		return isConstructor;
+	}	
 }
 /* JavaCC - OriginalChecksum=5ff3f8c58c0827c6a7f4e7bbdc7675f2 (do not edit this line) */

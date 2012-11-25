@@ -171,7 +171,7 @@ public class SimpleNode implements Node {
 	
 	public void setModifiers( Modifiers modifiers )
 	{
-		this.modifiers = modifiers;
+		this.modifiers.setModifiers(modifiers.getModifiers());
 	}	
 	
 	public void setModifiers( int modifiers )

@@ -7,11 +7,13 @@ class MethodAndField {
     boolean x = true;
 
     public blah(int a, float b, MethodAndField c) => (int, double, MethodAndField) {
-        return (5, 3.0, new MethodAndField());
+    	MethodAndField z = new MethodAndField();
+        return (5, 3.0, z);
     }
     
     public blah(float a, float z, MethodAndField c) => (int, float, MethodAndField) {
-        return (5, 3.0f, new MethodAndField());
+    	MethodAndField z = new MethodAndField();
+        return (5, 3.0f, z);
     }
 
     code d, e, f;

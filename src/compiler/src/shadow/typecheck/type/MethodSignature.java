@@ -113,11 +113,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.getReturnTypes();
 	}
 	
-	public boolean isStatic()
-	{
-		return type.getModifiers().isStatic();
-	}
-	
 	public ClassInterfaceBaseType getOuter()
 	{
 		return type.getOuter();

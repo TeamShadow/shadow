@@ -302,19 +302,18 @@ public class ClassType extends ClassInterfaceBaseType {
 		sortedMethods.remove("constructor"); // skip constructors
 
 		for ( List<MethodSignature> methods : sortedMethods.values() )
-			for ( MethodSignature method : methods )
-				if ( !method.isStatic() ) // skip static methods
-		{
-			int index;
-			for ( index = 0; index < methodList.size(); index++ )
-				if ( methodList.get(index).isIndistinguishable(method) )
+			for ( MethodSignature method : methods )				
 			{
-				methodList.set(index, method);
-				break;
+				int index;
+				for ( index = 0; index < methodList.size(); index++ )
+					if ( methodList.get(index).isIndistinguishable(method) )
+				{
+					methodList.set(index, method);
+					break;
+				}
+				if ( index == methodList.size() )
+					methodList.add(method);
 			}
-			if ( index == methodList.size() )
-				methodList.add(method);
-		}
 	}
 	
 	@Override
@@ -439,7 +438,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( getOuter() == null ) //outermost class		
 			out.print(getFullName());
 		else
-			out.print(getTypeName().substring(getTypeName().lastIndexOf('.') + 1));
+			out.print(getTypeName().substring(getTypeName().lastIndexOf(':') + 1));
 			
 		
 		//type parameters

@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTAllocationExpression extends PrefixNode {
+class ASTAllocationExpression extends SimpleNode {
 	
   public ASTAllocationExpression(int id) {
     super(id);

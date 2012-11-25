@@ -18,7 +18,7 @@ class Subtype {
 	private class BaseClass
 	{}
 	
-	private class Subclass1 extends Subtype.BaseClass
+	private class Subclass1 extends Subtype:BaseClass
 	{}
 	
 	private class Subclass2 extends BaseClass

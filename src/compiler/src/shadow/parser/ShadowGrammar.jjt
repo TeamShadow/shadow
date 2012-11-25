@@ -937,7 +937,7 @@ void Name():
 	Token t;
 }
 {
-  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
+  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) ":" t = <IDENTIFIER> { sb.append(':').append(t.image); } )*
   { jjtThis.setImage(sb.toString()); }
 }
 

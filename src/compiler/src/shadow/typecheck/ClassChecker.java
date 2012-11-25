@@ -68,6 +68,7 @@ import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimarySuffix;
 import shadow.parser.javacc.ASTProperty;
+import shadow.parser.javacc.ASTQualifiedSuper;
 import shadow.parser.javacc.ASTQualifiedThis;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
@@ -95,7 +96,6 @@ import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
-import shadow.parser.javacc.PrefixNode;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ArrayType;
@@ -473,13 +473,6 @@ public class ClassChecker extends BaseChecker {
 				if( field.getModifiers().isPrivate() && currentType != classType   )
 					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
 				
-				
-				if( !currentMethod.isEmpty() ) //currentMethod is empty for field initializations
-				{
-					if( directAccess && currentMethod.getFirst().getModifiers().isStatic() && !node.getModifiers().isStatic() )
-						addError(node, Error.INVL_MOD, "Cannot access non-static member " + name + " from static method " + currentMethod);
-				}
-				
 				return true;			
 			}
 				
@@ -542,6 +535,7 @@ public class ClassChecker extends BaseChecker {
 		{
 			((ClassType)currentType).addReferencedType(type);
 			node.setType(type);
+			node.addModifier(Modifiers.TYPE_NAME);
 			return true;
 		}
 		
@@ -551,18 +545,14 @@ public class ClassChecker extends BaseChecker {
 	
 	
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException 
-	{			
-		String[] references = node.getImage().split("\\.");
-								
-		int i = 0;
- 		
+	{	
 		Type type = lookupType( node.getImage() );
 				
 		if( type == null)
 		{ 
-			addError(node, Error.UNDEC_VAR, references[i]);
+			addError(node, Error.UNDEC_VAR, node.getImage());
 			node.setType(Type.UNKNOWN);
-			ASTUtils.DEBUG(node, "DIDN'T FIND: " + references[i]);
+			ASTUtils.DEBUG(node, "DIDN'T FIND: " + node.getImage());
 		}
 		else
 			node.setType(type);
@@ -1077,14 +1067,7 @@ public class ClassChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		
 		String typeName = node.getImage();
-		ClassInterfaceBaseType type; 
-		
-		Node parent = node.jjtGetParent(); 
-		
-		if(  parent instanceof PrefixNode && ((PrefixNode)parent).hasPrefix() )
-			type = lookupType(typeName, curPrefix.getFirst().getType());
-		else
-			type = lookupType(typeName);
+		ClassInterfaceBaseType type = lookupType(typeName);
 		
 		if(type == null)
 		{
@@ -1157,15 +1140,19 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTAllocationExpression node, Boolean secondVisit) throws ShadowException 
 	{
-		if(!secondVisit)
-		{
+		//if(!secondVisit)
+		//{
+			/*
 			if( node != node.jjtGetParent().jjtGetChild(0) ) //if not first child, has a prefix
 				node.setPrefix(true);
-			
-			return WalkType.POST_CHILDREN;
-		}
+			*/
+			//return WalkType.POST_CHILDREN;
+		//}
+		
+		return pushUpType(node, secondVisit); //takes care of modifiers
 				
-		//check curPrefix at some point		
+		//check curPrefix at some point
+		/*
 		Node child = node.jjtGetChild(0);
 		
 		if( child instanceof ASTArrayAllocation ) //array allocation		
@@ -1174,6 +1161,7 @@ public class ClassChecker extends BaseChecker {
 			node.setType(child.jjtGetChild(0).getType());  //set type of allocation expression to class (or singleton) type			
 		
 		return WalkType.POST_CHILDREN;
+		*/
 	}
 	
 	
@@ -1533,11 +1521,19 @@ public class ClassChecker extends BaseChecker {
 	{
 		if( secondVisit )
 		{
-			Node child = node.jjtGetChild(0);
+			ModifiedType child = node.jjtGetChild(0);
+			
+			//only gets make sense for a check expression
+			if( child.getType() instanceof PropertyType )
+			{
+				PropertyType propertyType = (PropertyType) child.getType();
+				child = propertyType.getGetType(); 
+			}
+			
 			
 			if( child.getModifiers().isNullable() )
 			{
-				node.setModifiers( child.getModifiers().getModifiers() );
+				node.setModifiers( child.getModifiers() );
 				node.removeModifier(Modifiers.NULLABLE );
 			}
 			else
@@ -1577,14 +1573,11 @@ public class ClassChecker extends BaseChecker {
 			node.setType(node.jjtGetChild(node.jjtGetNumChildren() - 1).getType());
 			node.setModifiers(node.jjtGetChild(node.jjtGetNumChildren() - 1).getModifiers());
 		}
-		else								//allocation or just prefix
+		else								//just prefix
 		{
 			Node child = node.jjtGetChild(0);
 			node.setType(child.getType());
 			pushUpModifiers( node );
-			
-			if( child instanceof ASTAllocationExpression )
-				node.setAction(true);
 		}		
 		
 		curPrefix.removeFirst();  //pop prefix type off stack
@@ -1602,37 +1595,27 @@ public class ClassChecker extends BaseChecker {
 		
 		if(  children == 0 )
 		{
-			if( node.getImage().equals("this") )
+			if( node.getImage().equals("this")  ) //this
 			{	
 				if( currentType instanceof InterfaceType )
 				{
 					addError(node, Error.INVL_TYP, "Reference this invalid for interfaces");
 					node.setType(Type.UNKNOWN);
 				}
-				else
-				{				
+				else				
 					node.setType(currentType);				
-					if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isStatic()  )					
-						addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);
-				}					
 			}
-			else if( node.getImage().startsWith("super.")) //super case
+			else if( node.getImage().startsWith("super")) //super case
 			{
-				if( currentType instanceof ClassType )
+				if( currentType instanceof InterfaceType )
 				{
-					String name = node.getImage().substring(6);  //removes "super."
-					
-					if( !setTypeFromContext( node, name, ((ClassType)currentType).getExtendType(), true )) //automatically sets type if can
-					{
-						addError(node, Error.UNDEC_VAR, name);
-						node.setType(Type.UNKNOWN);
-						ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);						
-					}
-				}
-				else
-				{
-					addError(node, Error.INVL_TYP, "Reference super must be used inside of class, enum, error, or exception"); //will this ever happen?
+					addError(node, Error.INVL_TYP, "Reference this invalid for interfaces");
 					node.setType(Type.UNKNOWN);
+				}
+				else		
+				{
+					ClassType classType = (ClassType) currentType;					
+					node.setType(classType.getExtendType());
 				}
 			}
 			else //just a name
@@ -1650,26 +1633,16 @@ public class ClassChecker extends BaseChecker {
 		{
 			Node child = node.jjtGetChild(0); 
 			
-			if( child instanceof ASTType ) //Type() "." "class"
+			if( child instanceof ASTType ) //Type() ":" "class"
 			{
-				if( child.getType() instanceof ClassType )
+				if( (child.getType() instanceof ClassType) && child.getModifiers().isTypeName()  )
 					node.setType( Type.CLASS );
 				else
 				{
-					addError(node, Error.INVL_TYP, ".class member only accessible on class, enum, error, or exception types"); //may need other cases
+					addError(node, Error.INVL_TYP, ":class constant only accessible on class, enum, error, exception, or singleton types"); //may need other cases
 					node.setType(Type.UNKNOWN);
 				}
-			}
-			
-			/*
-			else if( child instanceof ASTMethodCall && child.getType() != Type.UNKNOWN )
-			{
-				MethodType type = (MethodType)(child.getType());
-				SequenceType returnTypes = type.getReturnTypes();
-				returnTypes.setNodeType(node);
-			}
-			*/
-			
+			}	
 			else if( child instanceof ASTUnqualifiedName )
 			{
 				node.setImage(child.getImage() + "@" + node.getImage());
@@ -1683,7 +1656,7 @@ public class ClassChecker extends BaseChecker {
 			}
 			else
 			{
-				node.setType( child.getType() ); 	//literal, conditionalexpression, allocation expression, check expression
+				node.setType( child.getType() ); 	//literal, conditional expression, check expression
 				pushUpModifiers( node ); 			
 			}
 		}
@@ -1691,14 +1664,13 @@ public class ClassChecker extends BaseChecker {
 		curPrefix.set(0, node); //so that the suffix can figure out where it's at
 		
 		/*   
-		  Literal()
+			Literal()
 		| "this" { jjtThis.setImage("this"); }
-		| "super" "." t = <IDENTIFIER> { jjtThis.setImage("super." + t.image); }
-		| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
-		| LOOKAHEAD( Type() "." "class" ) Type() "." "class" { jjtThis.setImage("class"); }
-		| [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-		| CheckExpression()		
-
+		| "super" { jjtThis.setImage("super"); }
+		| CheckExpression()
+		| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" { jjtThis.addToImage('('); } ConditionalExpression() ")"
+		| LOOKAHEAD( Type() ":" "class" ) Type() ":" "class" { jjtThis.setImage("class"); }
+		| [ UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 		 */
 				
 		return WalkType.POST_CHILDREN;
@@ -1727,153 +1699,15 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
-	//old MethodCall was name and arguments all at the same time
-	
-	/*
-	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException 
-	{
-		//t = <IDENTIFIER> { jjtThis.setImage(t.image); } "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		String name = node.getImage();
-		ClassInterfaceBaseType context;
-		boolean directAccess;
-		
-		if( node.jjtGetParent() instanceof ASTPrimaryPrefix ) //not part of some chain of references
-		{
-			context = currentType;
-			directAccess = true;			
-		}
-		else //ASTPrimarySuffix: already in the middle of references
-		{
-			context = (ClassInterfaceBaseType)(curPrefix.getFirst().getType());
-			directAccess = false;
-		}
-		
-		
-		if( !setTypeFromContext( node, name, context, directAccess )) //automatically sets type if can
-		{
-			addError(node, Error.UNDEC_VAR, name);
-			node.setType(Type.UNKNOWN);
-			ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);
-		}
-		else if( node.getType() instanceof UnboundMethodType )
-		{
-			UnboundMethodType unboundMethod = (UnboundMethodType)(node.getType());
-			SequenceType sequenceType = new SequenceType();
-			
-			int start = 0;
-			boolean hasArguments = false;
-			
-			if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
-			{
-				start++;
-				hasArguments = true;
-			}
-			
-			for( int i = start; i < node.jjtGetNumChildren(); i++ )
-				sequenceType.add(node.jjtGetChild(i));
-			
-			List<MethodSignature> methods = context.getMethods(unboundMethod.getTypeName());
-			List<MethodSignature> acceptableMethods = new LinkedList<MethodSignature>();
-			
-			boolean perfectMatch = false;
-			
-			for( MethodSignature signature : methods ) 
-			{				
-				MethodType methodType = signature.getMethodType();
-				
-				if( methodType.isParameterized() )
-				{
-					if( hasArguments )
-					{
-						SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();
-						List<TypeParameter> parameters = methodType.getTypeParameters(); 
-						if( checkTypeArguments( parameters, arguments )   )
-							methodType = methodType.replace(parameters, arguments);
-						else
-							continue;
-					}
-				}				
-				
-				if( methodType.matches( sequenceType ) ) //signature.matches( sequenceType, context )
-				{
-					SequenceType returnTypes = methodType.getReturnTypes();					
-					returnTypes.setNodeType(node);					
-					perfectMatch = true;
-					
-					if( !methodIsAccessible( signature, currentType  ))
-						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
-					else
-						node.setType(methodType);
-				}
-				else if( methodType.canAccept( sequenceType )) //signature.canAccept( sequenceType, context )
-					acceptableMethods.add(signature);
-			}
-			
-			if( !perfectMatch )
-			{
-				if( acceptableMethods.size() == 0 )	
-				{
-					node.setType(Type.UNKNOWN);						
-					addError(node, Error.TYPE_MIS, "No method found with signature " + sequenceType);
-				}
-				else if( acceptableMethods.size() > 1 )
-				{
-					node.setType(Type.UNKNOWN);						
-					addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + sequenceType);
-				}							
-				else
-				{
-					MethodSignature signature = acceptableMethods.get(0);
-					MethodType methodType = signature.getMethodType();
-					
-					if( methodType.isParameterized() )
-					{
-						if( hasArguments )
-						{
-							SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();
-							List<TypeParameter> parameters = methodType.getTypeParameters(); 
-							methodType = methodType.replace(parameters, arguments); //we know they match already
-						}
-						else						
-							addError(node, Error.TYPE_MIS, "Parameterized method " + signature + " is being called with no type parameters");							
-						
-					}
-					
-					SequenceType returnTypes = methodType.getReturnTypes();
-					returnTypes.setNodeType( node ); //used instead of setType
-					
-					
-					if( !methodIsAccessible( signature, currentType  ))
-						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");
-					else
-						node.setType(methodType);
-				}
-			}					
-		}
-		else
-		{									
-			addError(node, Error.TYPE_MIS, "Cannot apply arguments to non-method type " + node.getType());
-			node.setType(Type.UNKNOWN);			
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	*/
-	
-	
 	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException 
 	{
 		/*
-			QualifiedThis()  
+			 QualifiedThis()
+			| QualifiedSuper()  
 			| ArrayIndex()
-			| MethodAccess()
-			| FieldAccess()
-			| PropertyAccess()
+			| Method()
+			| ScopeSpecifier()
+			| Property()
 			| MethodCall()
 		*/
 		
@@ -1884,6 +1718,9 @@ public class ClassChecker extends BaseChecker {
 			if( prefixNode.getModifiers().isNullable() )
 				addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
 			
+			if( (prefixNode instanceof ASTPrimarySuffix) && ((ASTPrimarySuffix)prefixNode).isConstructor() )
+				addError(node, Error.TYPE_MIS, "cannot apply a suffix to a constructor call");
+			
 			Node child = node.jjtGetChild(0);
 			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall)  )
 			{
@@ -1893,8 +1730,15 @@ public class ClassChecker extends BaseChecker {
 			
 			if( child instanceof ASTMethodCall )
 			{
+				ASTMethodCall call = (ASTMethodCall) child;
 				Type childType = child.getType();
-				if( childType instanceof MethodType )
+							
+				if( call.isConstructor() )
+				{
+					node.setType( call.getConstructorType() );
+					node.setConstructor(true);
+				}				
+				else if( childType instanceof MethodType )
 				{
 					MethodType methodType = (MethodType) childType;
 					SequenceType returnTypes = methodType.getReturnTypes();
@@ -1905,6 +1749,8 @@ public class ClassChecker extends BaseChecker {
 			}				
 			else
 				pushUpType(node, secondVisit);
+			
+			
 			curPrefix.set(0, node); //so that a future suffix can figure out where it's at		
 		}
 		
@@ -1917,10 +1763,7 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )					
 		{	
 			node.setType(Type.UNKNOWN); //start with unknown, set if found
-				
-			if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isStatic()  )					
-				addError(node, Error.INVL_MOD, "Cannot access non-static reference this from static method " + currentMethod);				
-			
+						
 			if( curPrefix.getFirst().getModifiers().isTypeName())
 			{			
 				Type prefixType = curPrefix.getFirst().getType();				
@@ -1931,6 +1774,32 @@ public class ClassChecker extends BaseChecker {
 			}
 			else
 				addError(node, Error.INVL_TYP, "Prefix of qualified this is not a type name");
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTQualifiedSuper node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )					
+		{	
+			node.setType(Type.UNKNOWN); //start with unknown, set if found
+						
+			if( curPrefix.getFirst().getModifiers().isTypeName())
+			{			
+				Type prefixType = curPrefix.getFirst().getType();				
+				if( currentType.encloses( prefixType )  )
+				{
+					
+					if( (prefixType instanceof ClassType) && ((ClassType)prefixType).getExtendType() != null )
+						node.setType(((ClassType)prefixType).getExtendType());
+					else
+						addError(node, Error.INVL_TYP, "Type " + prefixType + " does not have a parent class");
+				}
+				else				
+					addError(node, Error.INVL_TYP, "Prefix of qualified super is not the current class or an enclosing class");
+			}
+			else
+				addError(node, Error.INVL_TYP, "Prefix of qualified super is not a type name");
 		}
 		return WalkType.POST_CHILDREN;
 	}
@@ -2025,7 +1894,7 @@ public class ClassChecker extends BaseChecker {
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );
 			String name = node.getImage();
-			boolean isStatic = prefixNode.getModifiers().isTypeName();
+			boolean isTypeName = prefixNode.getModifiers().isTypeName();
 			
 			if( prefixType instanceof ClassInterfaceBaseType )
 			{
@@ -2038,6 +1907,10 @@ public class ClassChecker extends BaseChecker {
 					{
 						addError(node, Error.INVL_MOD, "Field " + name + " not accessible from current context");
 					}					
+					else if( field.getModifiers().isConstant() && !isTypeName )
+					{
+						addError(node, Error.INVL_MOD, "Constant " + name + " requires class name for access");
+					}
 					else
 					{
 						node.setType( field.getType());
@@ -2080,37 +1953,44 @@ public class ClassChecker extends BaseChecker {
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );
 			String propertyName = node.getImage();
-			boolean isStatic = prefixNode.getModifiers().isTypeName();
-			
-			
+			boolean isTypeName = prefixNode.getModifiers().isTypeName();
+						
 			if( prefixType instanceof ClassInterfaceBaseType )
-			{
-				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
-				List<MethodSignature> methods = currentClass.getMethods(propertyName);				
-
-				if( methods != null && methods.size() > 0 )
+			{				
+				if( isTypeName )
 				{
-					MethodType getter = null;
-					MethodType setter = null;
-					
-					for( MethodSignature signature : methods )
-					{
-						if( signature.getModifiers().isGet() )
-							getter = signature.getMethodType();
-						else if( signature.getModifiers().isSet() )
-						{
-							setter = signature.getMethodType();
-							node.addModifier(Modifiers.ASSIGNABLE);
-						}
-					}
-					
-					node.setType( new PropertyType( getter, setter ) );										
-				}
+					addError(node, Error.INVL_TYP, "Must access property " + propertyName + " on an object");
+					node.setType( Type.UNKNOWN ); //if got here, some error
+				}	
 				else
 				{
-					addError(node, Error.UNDEC_VAR, "Property " + propertyName + " not found");
-					node.setType( Type.UNKNOWN ); //if got here, some error
-				}				
+					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
+					List<MethodSignature> methods = currentClass.getMethods(propertyName);				
+	
+					if( methods != null && methods.size() > 0 )
+					{
+						MethodType getter = null;
+						MethodType setter = null;
+						
+						for( MethodSignature signature : methods )
+						{
+							if( signature.getModifiers().isGet() )
+								getter = signature.getMethodType();
+							else if( signature.getModifiers().isSet() )
+							{
+								setter = signature.getMethodType();
+								node.addModifier(Modifiers.ASSIGNABLE);
+							}
+						}
+						
+						node.setType( new PropertyType( getter, setter ) );
+					}
+					else
+					{
+						addError(node, Error.UNDEC_VAR, "Property " + propertyName + " not found");
+						node.setType( Type.UNKNOWN ); //if got here, some error
+					}				
+				}
 			}
 			else
 			{
@@ -2141,6 +2021,150 @@ public class ClassChecker extends BaseChecker {
 		return type;
 	}
 	
+	
+	protected void setConstructorType( ASTMethodCall node, Type prefixType, SequenceType typeArguments, SequenceType arguments)
+	{	
+		if( prefixType instanceof InterfaceType )
+		{
+			addError(node, Error.INVL_TYP, "Interfaces cannot be instantiated");
+			node.setType(Type.UNKNOWN);			
+		}
+		else if( prefixType instanceof SingletonType )
+		{
+			addError(node, Error.INVL_TYP, "Singletons cannot be instantiated with new");
+			node.setType(Type.UNKNOWN);			
+		}		
+		else if(!( prefixType instanceof ClassType) )
+		{
+			addError(node, Error.INVL_TYP, "A constructor cannot be called on non-class type " + prefixType);
+			node.setType(Type.UNKNOWN);
+		}
+		else
+		{
+			ClassType type = (ClassType) prefixType;			
+			if( typeArguments != null )
+				type = type.replace(type.getTypeParameters(), typeArguments);
+			
+			//examine argument list to find constructor
+			List<MethodSignature> candidateConstructors = type.getMethods("constructor");
+						
+			// we have no constructors
+			if( candidateConstructors == null || candidateConstructors.size() == 0 )
+			{
+				addError(node, Error.TYPE_MIS, "No constructor found with signature " + arguments);
+				node.setType(Type.UNKNOWN);				
+			}
+			else
+			{
+				// by the time we get here, we have a constructor list
+				TreeMap<MethodSignature, MethodType> acceptableConstructors = new TreeMap<MethodSignature, MethodType>();
+				
+				for( MethodSignature signature : candidateConstructors ) 
+				{		
+					MethodType methodType = signature.getMethodType();
+					
+					if( signature.matches( arguments )) 
+					{
+						//found it, don't look further!
+						acceptableConstructors.clear();
+						acceptableConstructors.put(signature, methodType);
+						break;
+					}
+					else if( signature.canAccept( arguments ))
+						acceptableConstructors.put(signature, methodType);
+				}
+				
+				if( acceptableConstructors.size() == 0 ) 
+				{
+					addError(node, Error.TYPE_MIS, "No constructor found with signature " + arguments);
+					node.setType(Type.UNKNOWN);
+				}					
+				else if( acceptableConstructors.size() > 1 )
+				{
+					addError(node, Error.TYPE_MIS, "Ambiguous constructor call with signature " + arguments);
+					node.setType(Type.UNKNOWN);
+				}					
+				else
+				{
+					Entry<MethodSignature, MethodType> entry = acceptableConstructors.firstEntry();
+					MethodSignature signature = entry.getKey(); 
+					MethodType methodType = entry.getValue();				 
+					
+					if( !methodIsAccessible( signature, currentType  ))
+						addError(node, Error.INVL_MOD, "Constructor " + signature + " not accessible from current context");
+					else
+					{
+						node.setType(methodType);
+						node.setConstructorType(type);
+					}
+					
+					Node greatgrandparent = node.jjtGetParent().jjtGetParent().jjtGetParent();
+					if( !(greatgrandparent instanceof ASTConstructorInvocation) )
+						addError(node, Error.TYPE_MIS, "Constructor invocation must be preceded by the new keyword");
+				}				
+			}
+		}
+	}
+	
+	protected void setMethodType( ASTMethodCall node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments )
+	{
+		TreeMap<MethodSignature, MethodType> acceptableMethods = new TreeMap<MethodSignature, MethodType>();
+		boolean hasTypeArguments = typeArguments != null;				
+		
+		for( MethodSignature signature : methods ) 
+		{				
+			MethodType methodType = signature.getMethodType();
+			
+			if( methodType.isParameterized() )
+			{
+				if( hasTypeArguments )
+				{	
+					SequenceType parameters = methodType.getTypeParameters();							
+					if( parameters.canAccept(typeArguments))
+						methodType = methodType.replace(parameters, typeArguments);
+					else
+						continue;
+				}
+			}				
+			
+			if( methodType.matches( arguments ) )
+			{						
+				//perfect match, forget everything else
+				acceptableMethods.clear();
+				acceptableMethods.put(signature, methodType);
+				break;
+			}
+			else if( methodType.canAccept( arguments ))
+				acceptableMethods.put(signature, methodType);
+		}
+			
+	
+		if( acceptableMethods.size() == 0 )	
+		{									
+			addError(node, Error.TYPE_MIS, "No method found with signature " + arguments);
+			node.setType(Type.UNKNOWN);
+		}
+		else if( acceptableMethods.size() > 1 )
+		{									
+			addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + arguments);
+			node.setType(Type.UNKNOWN);
+		}							
+		else //exactly one thing
+		{					
+			Entry<MethodSignature, MethodType> entry = acceptableMethods.firstEntry();
+			MethodSignature signature = entry.getKey(); 
+			MethodType methodType = entry.getValue();
+			
+			if( !methodIsAccessible( signature, currentType  ))					
+				addError(node, Error.INVL_MOD, "Method " + signature + " is not accessible from current context");						
+				
+			if( !methodType.getOuter().getModifiers().isImmutable() && !signature.isConstructor() && !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isImmutable() && !methodType.getModifiers().isImmutable())
+				addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from an immutable method");
+	
+			node.setType(methodType);
+		}		
+	}
+	
 	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException	
 	{		
 		if( secondVisit )
@@ -2148,87 +2172,33 @@ public class ClassChecker extends BaseChecker {
 			//always part of a suffix, thus always has a prefix
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );
-				
+			boolean isTypeName = prefixNode.getModifiers().isTypeName();				
 			
-			int start = 0;
-			boolean hasArguments = false;
-			SequenceType arguments = null;
+			int start = 0;			
+			SequenceType typeArguments = null;
 			
 			if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
 			{
-				start++;
-				hasArguments = true;
-				arguments = (SequenceType) node.jjtGetChild(0).getType();
+				start++;			
+				typeArguments = (SequenceType) node.jjtGetChild(0).getType();
 			}
 			
-			SequenceType sequenceType = new SequenceType();
+			SequenceType arguments = new SequenceType();
 			
 			for( int i = start; i < node.jjtGetNumChildren(); i++ )
-				sequenceType.add(node.jjtGetChild(i));
+				arguments.add(node.jjtGetChild(i));
 			
 		
 			if( prefixType instanceof UnboundMethodType )
 			{
-				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);			
-				
+				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);
 				List<MethodSignature> methods = prefixType.getOuter().getMethods(unboundMethod.getTypeName());
-				TreeMap<MethodSignature, MethodType> acceptableMethods = new TreeMap<MethodSignature, MethodType>();				
-				
-				for( MethodSignature signature : methods ) 
-				{				
-					MethodType methodType = signature.getMethodType();
-					
-					if( methodType.isParameterized() )
-					{
-						if( hasArguments )
-						{	SequenceType parameters = methodType.getTypeParameters(); 
-							//if( checkTypeArguments( parameters, arguments )   )
-							if( parameters.canAccept(arguments))
-								methodType = methodType.replace(parameters, arguments);
-							else
-								continue;
-						}
-					}				
-					
-					if( methodType.matches( sequenceType ) )
-					{						
-						//perfect match, forget everything else
-						acceptableMethods.clear();
-						acceptableMethods.put(signature, methodType);
-						break;
-					}
-					else if( methodType.canAccept( sequenceType ))
-						acceptableMethods.put(signature, methodType);
-				}
-			
-				if( acceptableMethods.size() == 0 )	
-				{
-					node.setType(Type.UNKNOWN);						
-					addError(node, Error.TYPE_MIS, "No method found with signature " + sequenceType);
-				}
-				else if( acceptableMethods.size() > 1 )
-				{
-					node.setType(Type.UNKNOWN);						
-					addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + sequenceType);
-				}							
-				else //exactly one thing
-				{					
-					Entry<MethodSignature, MethodType> entry = acceptableMethods.firstEntry();
-					MethodSignature signature = entry.getKey(); 
-					MethodType methodType = entry.getValue();
-					
-					//addError(node, Error.TYPE_MIS, "Parameterized method " + signature + " is being called with no type parameters");
-					node.setType(methodType);
-					
-					if( !methodIsAccessible( signature, currentType  ))					
-						addError(node, Error.INVL_MOD, "Method " + signature + " not accessible from current context");						
-					//else
-					//	node.setType(methodType);
-					
-					if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isImmutable() && !methodType.getModifiers().isImmutable())
-						addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from an immutable method");					
-				}
-									
+				setMethodType(node, methods, typeArguments, arguments); //type set inside									
+			}
+			//constructor
+			else if( (prefixType instanceof ClassInterfaceBaseType) && isTypeName )
+			{				
+				setConstructorType( node, prefixType, typeArguments, arguments);				
 			}
 			else if( prefixType instanceof MethodType ) //only happens with method pointers
 			{
@@ -2236,12 +2206,11 @@ public class ClassChecker extends BaseChecker {
 				
 				if( methodType.isParameterized() )
 				{
-					if( hasArguments )
+					if( typeArguments != null )
 					{						
-						SequenceType parameters = methodType.getTypeParameters(); 
-						//if( checkTypeArguments( parameters, arguments )   )
-						if( parameters.canAccept(arguments))
-							methodType = methodType.replace(parameters, arguments);
+						SequenceType parameters = methodType.getTypeParameters();
+						if( parameters.canAccept(typeArguments))
+							methodType = methodType.replace(parameters, typeArguments);
 						else
 						{
 							addError(node, Error.TYPE_MIS, "Type parameters " + parameters + " do not match method given by " + node);
@@ -2250,18 +2219,17 @@ public class ClassChecker extends BaseChecker {
 					}
 				}				
 				
-				if( methodType.canAccept( sequenceType ) )
+				if( methodType.canAccept( arguments ) )
 					node.setType(methodType);
 				else 
 				{
-					addError(node, Error.TYPE_MIS, "Cannot apply arguments " + sequenceType + " to method given by " + node);
+					addError(node, Error.TYPE_MIS, "Cannot apply arguments " + arguments + " to method given by " + node);
 					node.setType(Type.UNKNOWN);
 				}
 				
 				if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isImmutable() && !methodType.getModifiers().isImmutable())
-					addError(node, Error.INVL_MOD, "Mutable method cannot be called from an immutable method");
-				
-			}
+					addError(node, Error.INVL_MOD, "Mutable method cannot be called from an immutable method");				
+			}			
 			else
 			{									
 				addError(node, Error.TYPE_MIS, "Cannot apply arguments to non-method type " + prefixType);
@@ -2285,28 +2253,7 @@ public class ClassChecker extends BaseChecker {
 			
 			type = type.getOuter();
 		}
-		
-		//No longer meaningful since all fields are private
-		/*
-		if( type instanceof ClassType )
-		{
-			ClassType parent = ((ClassType)type).getExtendType();
-			
-			while( parent != null )
-			{
-				if( field.getEnclosingType() == parent )
-				{
-					if( Modifiers.isPrivate(node.getModifiers()))
-						return false;
-					else
-						return true;
-				}
-				
-				parent = parent.getExtendType();
-			}
-		}
-		*/
-		
+
 		return false;
 	}
 
@@ -2572,36 +2519,35 @@ public class ClassChecker extends BaseChecker {
 		if(secondVisit)
 		{	
 			ASTAllocationExpression parent = (ASTAllocationExpression) node.jjtGetParent();
-			if( parent.hasPrefix() )
+
+			Node child = node.jjtGetChild(0);				
+			int counter = 1;
+			
+			if( child instanceof ASTClassOrInterfaceType && node.jjtGetChild(counter) instanceof ASTTypeArguments ) //reference array might have type arguments
 			{
-				addError(node, Error.INVL_TYP, "Prefix illegal on array allocation");
+				//for now
+				addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
 				node.setType(Type.UNKNOWN);
+				counter++;				
 			}
-			else
-			{	
-				Node child = node.jjtGetChild(0);				
-				int counter = 1;
 				
-				if( child instanceof ASTClassOrInterfaceType && node.jjtGetChild(counter) instanceof ASTTypeArguments ) //reference array might have type arguments
-				{
-					//for now
-					addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
-					node.setType(Type.UNKNOWN);
-					counter++;				
-				}
-					
-				//array dims and inits
-				List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
-				node.setType(new ArrayType(child.getType(), dimensions));
-			}
+			//array dims and inits
+			List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
+			node.setType(new ArrayType(child.getType(), dimensions));
 		}
+		
 		
 		return WalkType.POST_CHILDREN;
 	}
+	
+	
 
 	@Override
 	public Object visit(ASTConstructorInvocation node, Boolean secondVisit)	throws ShadowException
 	{
+		return pushUpType(node, secondVisit);
+		
+		/*
 		if(!secondVisit)
 		{	
 			ASTAllocationExpression parent = (ASTAllocationExpression) node.jjtGetParent();
@@ -2687,35 +2633,26 @@ public class ClassChecker extends BaseChecker {
 		
 		
 		return WalkType.POST_CHILDREN;
+		*/
 	}
 	
 	@Override
 	public Object visit(ASTSingletonInstance node, Boolean secondVisit)	throws ShadowException
 	{
-		if(!secondVisit) 
-		{
-			ASTAllocationExpression parent = (ASTAllocationExpression) node.jjtGetParent();
-			if( parent.hasPrefix() )			
-				node.setPrefix(true);
-			
+		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
-		}
-						
+								
 		Node child = node.jjtGetChild(0); 
 		Type type = child.getType();
-	
 		
-		
-			//check if singleton type
-			if( type instanceof SingletonType )
-				node.setType(type);
-			else
-			{
-				addError(node, Error.INVL_TYP, "Cannot get instance of non-singleton type " + type);
-				node.setType(Type.UNKNOWN);
-			}
-		
-		
+		//check if singleton type
+		if( type instanceof SingletonType )
+			node.setType(type);
+		else
+		{
+			addError(node, Error.INVL_TYP, "Cannot get instance of non-singleton type " + type);
+			node.setType(Type.UNKNOWN);
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}

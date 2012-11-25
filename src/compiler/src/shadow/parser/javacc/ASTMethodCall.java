@@ -1,6 +1,7 @@
 package shadow.parser.javacc;
 
-import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.ClassType;
+
 
 public class ASTMethodCall extends SimpleNode {
 	
@@ -20,5 +21,25 @@ public class ASTMethodCall extends SimpleNode {
 	public String toString()
 	{
 		  return /*jjtGetChild(0).toString() + */type.toString();
-	}	
+	}
+	
+	private boolean isConstructor = false;	
+	private ClassType constructorType;
+	
+	public void setConstructorType(ClassType type)
+	{
+		constructorType = type;
+		isConstructor = true;
+	}
+	
+	public boolean isConstructor()
+	{
+		return isConstructor;
+	}
+	
+	public ClassType getConstructorType()
+	{
+		return constructorType;
+	}
+	
 }

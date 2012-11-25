@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTConstructorInvocation extends PrefixNode {
+class ASTConstructorInvocation extends SimpleNode {
 	
 
 	

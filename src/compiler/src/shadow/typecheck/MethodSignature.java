@@ -17,12 +17,7 @@ public class MethodSignature {
 		this.type = type;
 		this.symbol = symbol;
 		this.node = node;
-	}
-	public MethodSignature(Type enclosingType, String symbol, Modifiers modifiers, Node node) {
-		type = new MethodType((ClassInterfaceBaseType)enclosingType, modifiers);
-		this.symbol = symbol;
-		this.node = node;
-	}
+	}	
 	
 	public void addParameter(String name, Node node) {
 		this.type.addParameter(name, node);

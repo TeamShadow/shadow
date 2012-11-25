@@ -11,8 +11,9 @@ class Casting {
      double g = cast<double>(4);
      code h = cast<code>(4);
      byte i = cast<byte>(4);
-     boolean j = cast<boolean>(false);     
-     String k = cast<String>(new Object());  
+     boolean j = cast<boolean>(false);
+     Object o = new Object();     
+     String k = cast<String>(o);  
     
     () => () fun = cast<()=>()>blah;        
     
@@ -29,8 +30,9 @@ class Casting {
 	    double g = cast<double>(4);
 	    code h = cast<code>(4);
 	    byte i = cast<byte>(4);
-	    boolean j = cast<boolean>(false);     
-	    String k = cast<String>(new Object());  
+	    boolean j = cast<boolean>(false);
+	    Object o = new Object();     
+	    String k = cast<String>(o);  
 	    
 	    () => () fun = cast<()=>()>blah;        
 	    

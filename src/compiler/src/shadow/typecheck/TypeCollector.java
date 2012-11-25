@@ -593,7 +593,7 @@ public class TypeCollector extends BaseChecker
 		if( currentType == null )
 			typeName = currentName + node.getImage(); //package name is separate
 		else
-			typeName = currentName + "." + node.getImage();
+			typeName = currentName + ":" + node.getImage();
 		
 		if( lookupType(typeName) != null )
 		{
@@ -852,21 +852,21 @@ public class TypeCollector extends BaseChecker
 		{			
 			if ( node.jjtGetNumChildren() > 0)
 			{
-				boolean dot = true;
+				boolean colon = true;
 				Node child = node.jjtGetChild(0);
 				String name = child.getImage();
 				if( child instanceof ASTUnqualifiedName )
 				{
 					name += "@";
-					dot = false;
+					colon = false;
 				}
 				
 				for( int i = 1; i < node.jjtGetNumChildren(); i++ ) 
 				{	
-					if( dot )
-						name += ".";
+					if( colon )
+						name += ":";
 					else
-						dot = true;
+						colon = true;
 					
 					child = node.jjtGetChild(i);
 					name += child.getImage();					

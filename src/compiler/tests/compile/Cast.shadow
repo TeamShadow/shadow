@@ -3,7 +3,8 @@ class Cast {
 	public method () => ()
 	{
 		BaseClass a = new BaseClass();
-		a = cast<BaseClass>(new Subclass1()); //typechecks but should fail at run time		
+		Subclass1 z = new Subclass1();
+		a = cast<BaseClass>(z); //typechecks but should fail at run time		
 		a = new Subclass2();
 		
 		int b = cast<int>(5.4);
@@ -16,7 +17,7 @@ class Cast {
 	private class BaseClass
 	{}
 	
-	private class Subclass1 extends Cast.BaseClass
+	private class Subclass1 extends Cast:BaseClass
 	{}
 	
 	private class Subclass2 extends BaseClass

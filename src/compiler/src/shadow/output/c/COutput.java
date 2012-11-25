@@ -176,8 +176,6 @@ public class COutput extends TACAbstractVisitor
 		for (ModifiedType paramType : type.getParameterTypes())
 			sb.append('%').append(paramType.getType());
 		sb.append("\"(");
-		if( !type.getModifiers().isStatic() )
-			sb.append(typeToString(type.getOuter())).append(", ");
 		for (ModifiedType paramType : type.getParameterTypes())
 			sb.append(typeToString(paramType.getType())).append(", ");
 		trimComma(sb);

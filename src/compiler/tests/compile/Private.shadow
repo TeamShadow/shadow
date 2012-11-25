@@ -11,7 +11,7 @@ class Private
 		public stuff() => ()
 		{
 			Private outer = new Private();
-			Inner inner = outer.new Inner(); 
+			Inner inner = new outer:Inner(); 
 		}
 	
 	

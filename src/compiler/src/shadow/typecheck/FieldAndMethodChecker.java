@@ -119,9 +119,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET );
-									if( fieldModifiers.isStatic() )
-										methodNode.addModifier(Modifiers.STATIC );
+									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET );								
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());									
 									modifiers.removeModifier(Modifiers.GET);
@@ -143,9 +141,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
-									if( fieldModifiers.isStatic() )
-										methodNode.addModifier(Modifiers.STATIC );									
+									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );																		
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
 									modifiers.removeModifier(Modifiers.SET);
@@ -309,18 +305,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 		boolean success = true;
 			
 		if( currentType instanceof InterfaceType )
-		{	
-			
-			if( modifiers.isStatic() )
-			{			
-				addError(node, Error.INVL_MOD, "Interface fields cannot be marked static since they are all static by definition" );
-				success = false;
-			}				
-			
+		{
 			node.addModifier(Modifiers.CONSTANT);
-			node.getType().addModifier(Modifiers.CONSTANT);
-			//node.addModifier(Modifiers.STATIC);
-			//node.getType().addModifier(Modifiers.STATIC);
+			node.getType().addModifier(Modifiers.CONSTANT);		
 		}				
 		
 		return success;
@@ -487,13 +474,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 
 		
-		String typeName = node.getImage();		
-		
-		//Type type = findTypeParameter(typeName); 
-				
-		//if( type == null )
-		
-		
+		String typeName = node.getImage();
 		ClassInterfaceBaseType type = lookupType(typeName);
 		
 		if(type == null)
@@ -517,13 +498,11 @@ public class FieldAndMethodChecker extends BaseChecker {
 				if( child instanceof ASTClassOrInterfaceTypeSuffix  )
 				{					
 					if( child.jjtGetNumChildren() > 0 ) //has type parameters
-					{
-						//COME BACK HERE
+					{						
 						if( current.isParameterized() )
 						{
 							SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
-							SequenceType parameters = current.getTypeParameters();
-							//if( checkTypeArguments( parameters, arguments ) )
+							SequenceType parameters = current.getTypeParameters();							
 							if( parameters.canAccept(arguments) )
 							{
 								ClassInterfaceBaseType instantiatedType = current.replace(parameters, arguments);

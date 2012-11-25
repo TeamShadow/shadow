@@ -43,9 +43,12 @@ public abstract class ClassInterfaceBaseType extends Type
 		fieldTable = new HashMap<String, Node>();
 		methodTable = new HashMap<String, List<MethodSignature>>();
 		innerClasses = new HashMap<String, ClassInterfaceBaseType>();
-		
+				
 		if( outer != null )
+		{		
+			typeName = typeName.substring(typeName.lastIndexOf(':') + 1); //works even if name doesn't contain a :				
 			outer.innerClasses.put(typeName, this);
+		}
 	}
 	
 	public boolean containsField(String fieldName) {

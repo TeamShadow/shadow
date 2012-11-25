@@ -269,11 +269,11 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		while( !prefix.isEmpty())
 		{
-			if( types.containsKey(prefix + "." + name))
-				return types.get(prefix + "." + name);
+			if( types.containsKey(prefix + ":" + name))
+				return types.get(prefix + ":" + name);
 			
-			if( prefix.contains("."))
-				prefix = prefix.substring(0, prefix.lastIndexOf('.'));
+			if( prefix.contains(":"))
+				prefix = prefix.substring(0, prefix.lastIndexOf(':'));
 			else
 				prefix = "";
 		}

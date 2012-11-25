@@ -11,7 +11,8 @@ class Coalesce {
 	private stuff2() => (int)
 	{
 		Object a = (o1 ?? o2);
-		Object b = (o1 ?? new Object() );
+		Object o = new Object();
+		Object b = (o1 ?? o );
 		nullable Object c = (o1 ?? null);
 		
 		//Uncomment for errors
