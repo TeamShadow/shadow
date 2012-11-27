@@ -2,7 +2,7 @@ class Array<T> implements Iterable<T>, Sortable<T>
 {
 	final int size;
 	
-	public constructor( int size )
+	public construct( int size )
 	{
 		this.size = size;
 	}	
@@ -41,7 +41,7 @@ class Array<T> implements Iterable<T>, Sortable<T>
 	
 	public getIterator() => (BidirectionalIterator<T>)
 	{
-		return new ArrayIterator<T>();
+		return ArrayIterator<T>:contruct();
 	}
 	
 	public sort( (T,T)=>(int) compare ) => ()

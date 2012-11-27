@@ -155,7 +155,7 @@ TOKEN :
 | < INTERFACE: "interface" >
 | < LONG: "long" >
 | < NATIVE: "native" >
-| < NEW: "new" >
+//| < NEW: "new" >
 | < NOOP: "noop" >
 | < NULL: "null" >
 | < NULLABLE: "nullable" >
@@ -709,7 +709,7 @@ void VariableInitializer():
 { debugPrint("VARIABLE INITIALIZER"); }
 { 
   ArrayInitializer()
-| Expression()
+| ConditionalExpression()
 }
 
 void ArrayInitializer():
@@ -801,7 +801,7 @@ void ExplicitConstructInvocation():
 
 
 
-//do wee need initializers at all?
+//do we need initializers at all?
 void Initializer():
 { debugPrint("INITIALIZER"); }
 {
@@ -816,8 +816,8 @@ void Initializer():
 void Type():
 { debugPrint("TYPE"); }
 {
-   LOOKAHEAD(2) ReferenceType()
-    |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
+   LOOKAHEAD(ReferenceType()) ReferenceType()
+ //   |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
     |   PrimitiveType()
     |	FunctionType()
 }
@@ -864,7 +864,7 @@ void ClassOrInterfaceTypeSuffix():
 	Token t;  
 }
 {
-   t = <IDENTIFIER> [ LOOKAHEAD(2) TypeArguments() ]
+   t = <IDENTIFIER> [ LOOKAHEAD(TypeArguments()) TypeArguments() ]
    { jjtThis.setImage(t.image); }  
 }
 
@@ -1180,7 +1180,7 @@ void PrimaryPrefix():
 | "super" { jjtThis.setImage("super"); }
 | CheckExpression()
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" { jjtThis.addToImage('('); } ConditionalExpression() ")"
-| LOOKAHEAD( Type() ":" "class" ) Type() ":" "class" { jjtThis.setImage("class"); }
+| LOOKAHEAD( Type() ) Type()
 | [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 }
 
@@ -1190,10 +1190,9 @@ void PrimarySuffix():
 	Token t;
 }
 {
-  LOOKAHEAD(2) QualifiedThis()
-| LOOKAHEAD(2) QualifiedSuper()
+  LOOKAHEAD(2) QualifiedKeyword()
 | LOOKAHEAD(2) Brackets()
-| Subscript()
+| LOOKAHEAD( [ TypeArguments() ] "[" ) Subscript()
 | Method()
 | LOOKAHEAD(2) Instance()
 | LOOKAHEAD( Construct() ) Construct()
@@ -1202,28 +1201,20 @@ void PrimarySuffix():
 | LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
 }
 
-void QualifiedThis():
+void QualifiedKeyword():
 {
-  	debugPrint("QUALIFIED THIS");
+  	debugPrint("QUALIFIED KEYWORD");
 	Token t;
 }
 {
-  ":" "this" { jjtThis.setImage("this"); }
+  ":"
+  ( "this" { jjtThis.setImage("this"); }
+	| "super" { jjtThis.setImage("super"); }
+	| "class" { jjtThis.setImage("class"); }
+	)
 // When you have inner classes, you sometimes need to know Outer:this or Inner:this
 // Prefix must be a type name that you're currently inside of
 }
-
-void QualifiedSuper():
-{
-  	debugPrint("QUALIFIED SUPER");
-	Token t;
-}
-{
-  ":" "super" { jjtThis.setImage("super"); }
-// When you have inner classes, you sometimes need to know Outer:super or Inner:super
-// Prefix must be a type name that you're currently inside of
-}
-
 
 void Brackets():
 {
@@ -1231,7 +1222,7 @@ void Brackets():
   Token t;
 }
 {
-  "[" "]"
+  ( "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+
 }
 
 void Subscript():
@@ -1240,7 +1231,7 @@ void Subscript():
   Token t;
 }
 {
-  "[" ConditionalExpression() ("," ConditionalExpression())* "]"
+  [ TypeArguments() ] "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); }
 }
 
 void Construct():
@@ -1266,7 +1257,7 @@ void ScopeSpecifier():
 	Token t;
 }
 {
-  ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //constant or class
+  ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //field, constant, or class
 }
 
 void Method():
@@ -1481,7 +1472,7 @@ void LocalVariableDeclaration(Modifiers modifiers):
   modifiers.checkLocalVariableModifiers();
 }
 {  
-  ( Type() | "auto" { jjtThis.setImage("auto"); } ) VariableDeclarator() ( "," VariableDeclarator() )*
+  ("auto" { jjtThis.setImage("auto"); } | Type() ) VariableDeclarator() ( "," VariableDeclarator() )*
   {
      jjtThis.setModifiers(modifiers);
   }

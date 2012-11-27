@@ -7,7 +7,7 @@ class shadow.test@Test
 	public main() => ()
 	{
 		Console console = instance Console;
-		nullable Test test = new Test();
+		nullable Test test = Test:construct();
 		try {
 			console.printLine(check(check(test):test));
 		} recover {

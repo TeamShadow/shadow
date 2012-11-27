@@ -2,10 +2,10 @@ class Cast {
 
 	public method () => ()
 	{
-		BaseClass a = new BaseClass();
-		Subclass1 z = new Subclass1();
+		BaseClass a = BaseClass:construct();
+		Subclass1 z = Subclass1:construct();
 		a = cast<BaseClass>(z); //typechecks but should fail at run time		
-		a = new Subclass2();
+		a = Subclass2:construct();
 		
 		int b = cast<int>(5.4);
 		// int x = cast<int>(a);  //uncomment to see incomparable types

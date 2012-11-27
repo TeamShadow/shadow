@@ -2,7 +2,7 @@ public class CompareBox<T is Comparable<T>>
 {
 	nullable T value;
 	
-	public constructor(T input)
+	public construct(T input)
 	{
 		value = input;	
 	}

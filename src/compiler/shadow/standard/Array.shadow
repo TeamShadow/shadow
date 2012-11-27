@@ -1,8 +1,8 @@
 abstract final class shadow.standard@Array<T>
 {
 	long data = 0;
-	long[] lengths = new long[0];
-	private constructor( long data, long[] lengths )
+	long[] lengths = long[0];
+	private construct( long data, long[] lengths )
 	{
 		this:data = data;
 		this:lengths = lengths;

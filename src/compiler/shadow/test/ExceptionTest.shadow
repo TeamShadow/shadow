@@ -5,7 +5,7 @@ class shadow.test@ExceptionTest
 {
 	nullable Error e;
 	public throwException() => () {
-		throw new ExceptionA();
+		throw ExceptionA:construct();
 	}
 	public main() => () {
 		try {

@@ -3,6 +3,7 @@
 package shadow.parser.javacc;
 
 public
+@SuppressWarnings("all")
 class ASTExplicitConstructInvocation extends SimpleNode {
   public ASTExplicitConstructInvocation(int id) {
     super(id);
@@ -18,4 +19,4 @@ class ASTExplicitConstructInvocation extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=7c3efcaf32a116d5ec8f6d434e453482 (do not edit this line) */
+/* JavaCC - OriginalChecksum=4ecf00632bf2cab76b8d2daf9d703b06 (do not edit this line) */

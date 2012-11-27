@@ -2,16 +2,13 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 
 import shadow.Loggers;
 
 public
 @SuppressWarnings("all")
-class ASTReferenceType extends SimpleNode {
+class ASTReferenceType extends DimensionNode {
   private static final Log logger = Loggers.TYPE_CHECKER;
   
   public ASTReferenceType(int id) {
@@ -30,28 +27,12 @@ class ASTReferenceType extends SimpleNode {
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
     return visitor.visit(this, secondVisit);
-  }
-  
-  private List<Integer> arrayDimensions = new LinkedList<Integer>();
-  private int currentDimensions = 1;
-  
-  public List<Integer> getArrayDimensions() {
-	  return arrayDimensions;
-  }
+  }  
 
-  public void incrementDimensions() {
-	  currentDimensions++;  
-  }
-  
-  public void pushDimensions() {
-	  arrayDimensions.add(currentDimensions);
-	  currentDimensions = 1;
-  }
-  
   public void dump(String prefix) {
   	String className = this.getClass().getSimpleName();
 	
-  	logger.debug(prefix + className + "(" + line + ":" + column + "): " + arrayDimensions);
+  	logger.debug(prefix + className + "(" + line + ":" + column + "): " + getArrayDimensions());
     
 	dumpChildren(prefix);
   }

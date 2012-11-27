@@ -3,12 +3,12 @@ class shadow.hello@Container
 	// Sorry for the horribly named variables
 	public Container c;
 	public HelloWorld hw;
-	public constructor()
+	public construct()
 	{
 		c = null;
 		hw = null;
 	}
-	public constructor(Container o)
+	public construct(Container o)
 	{
 		c = o;
 		hw = null;
@@ -18,7 +18,7 @@ class shadow.hello@Container
 		c = null;
 		hw = o;
 	}
-	public constructor(Container o1, HelloWorld o2)
+	public construct(Container o1, HelloWorld o2)
 	{
 		c = o1;
 		hw = o2;

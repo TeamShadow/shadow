@@ -1,6 +1,6 @@
 immutable final class shadow.standard@String
 {
-	ubyte[] data = new ubyte[0];
+	ubyte[] data = ubyte[0];
 	public equals( String other ) => ( boolean )
 	{
 		if ( getLength() != other.getLength() )

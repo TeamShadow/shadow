@@ -1,6 +1,6 @@
 interface Collection<T> extends Iterable<T>
 {
-	constructor( Collection<S is T> collection );
+	construct( Collection<S is T> collection );
 	contains( T value ) => (boolean);
 	containsAll( Collection<S is T> collection ) => (boolean);
 	isEmpty() => (boolean);

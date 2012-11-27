@@ -2,8 +2,10 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+
 public
-class ASTBrackets extends SimpleNode {
+@SuppressWarnings("all")
+class ASTBrackets extends DimensionNode {
   public ASTBrackets(int id) {
     super(id);
   }
@@ -17,5 +19,8 @@ class ASTBrackets extends SimpleNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
     return visitor.visit(this, data);
   }
+  
+  
+  
 }
-/* JavaCC - OriginalChecksum=2784111a4cf5aedbb771ac420963204f (do not edit this line) */
+/* JavaCC - OriginalChecksum=f2840da10c95748dabf39f047a2d1906 (do not edit this line) */

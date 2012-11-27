@@ -2,9 +2,9 @@ immutable final class shadow.standard@Class
 {
 	// ubyte type = 0;
 	nullable Class superClass = null;
-	Class[] implementedInterfaces = new Class[0];
+	Class[] implementedInterfaces = Class[0];
 	String className = "";
-	private constructor() { }
+	private construct() { }
 
 	public isSubtype( Class other ) => ( boolean )
 	{

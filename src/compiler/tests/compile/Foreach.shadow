@@ -1,7 +1,7 @@
 class Foreach {
     public test() => () {
     
-    	int[] int_list = new int[20];
+    	int[] int_list = int[20];
 
         foreach(int i in int_list) { }
         

@@ -1,12 +1,12 @@
 class Constructor
 {
-	public constructor() {}
-    public constructor(int a) {}
-    public constructor(int a, int b) {}
+	public construct() {}
+    public construct(int a) {}
+    public construct(int a, int b) {}
     
     
-    public constructor(code a ) throws BlahException{}   
-    public constructor(String a, code b) throws BlahException{}
+    public construct(code a ) throws BlahException{}   
+    public construct(String a, code b) throws BlahException{}
 
-    public destructor {}    
+    public destroy {}    
 }

@@ -3,7 +3,7 @@ class Thumper<U is Child, T is Child> implements Thumpable<U>, Constructable<U>
 	nullable U internal;
 	nullable T other;
 	
-	public constructor(U stuff)
+	public construct(U stuff)
 	{
 		internal = stuff;
 	}

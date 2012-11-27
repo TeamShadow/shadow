@@ -1,7 +1,7 @@
 class Generics
 {
 	public start(String[] args) => () {
-        Pig<String> pig = new Pig<String>();
+        Pig<String> pig = Pig<String>:construct();
         
         pig.setValue("Help");
         
@@ -9,14 +9,14 @@ class Generics
         nullable Object thing;
         thing = pig.getValue();
         
-        GenericMethod object = new GenericMethod();
+        GenericMethod object = GenericMethod:construct();
         int x = object.method<int>(13);
         
         Object stuff = "walnuts";
         String value = object.method<String>(stuff);
         
-        Child child = new Child();
-        Thumper<Child, Child> thumper = new Thumper<Child, Child>(child);
+        Child child = Child:construct();
+        Thumper<Child, Child> thumper = Thumper<Child, Child>:construct(child);
         
         try
         {        

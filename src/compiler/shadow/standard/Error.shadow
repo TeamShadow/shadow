@@ -1,8 +1,8 @@
 final immutable class shadow.standard@Error
 {
 	String message = "";
-	public constructor() { message = "Unknown Error"; }
-	public constructor( String message ) { this.message = message; }
+	public construct() { message = "Unknown Error"; }
+	public construct( String message ) { this.message = message; }
 	public getMessage() => ( String ) { return message; }
 	public toString() => ( String ) { return getMessage(); }
 }

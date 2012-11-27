@@ -12,7 +12,7 @@ class Casting {
      code h = cast<code>(4);
      byte i = cast<byte>(4);
      boolean j = cast<boolean>(false);
-     Object o = new Object();     
+     Object o = Object:construct();     
      String k = cast<String>(o);  
     
     () => () fun = cast<()=>()>blah;        
@@ -31,7 +31,7 @@ class Casting {
 	    code h = cast<code>(4);
 	    byte i = cast<byte>(4);
 	    boolean j = cast<boolean>(false);
-	    Object o = new Object();     
+	    Object o = Object:construct();     
 	    String k = cast<String>(o);  
 	    
 	    () => () fun = cast<()=>()>blah;        

@@ -3,7 +3,8 @@
 package shadow.parser.javacc;
 
 public
-class ASTSubscript extends SimpleNode {
+@SuppressWarnings("all")
+class ASTSubscript extends DimensionNode {
   public ASTSubscript(int id) {
     super(id);
   }
@@ -18,4 +19,4 @@ class ASTSubscript extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=3b0b7eb01baaf3446f2a8cdbe1b414cf (do not edit this line) */
+/* JavaCC - OriginalChecksum=e156de09d5531131884ca98029b95525 (do not edit this line) */

@@ -1,7 +1,7 @@
 class UseSingleton {
 
 	public start() => () {
-		Singleton s = instance Singleton;
+		Singleton s = Singleton:instance;
 		
 		int v = s->value;
 		

@@ -3,6 +3,7 @@
 package shadow.parser.javacc;
 
 public
+@SuppressWarnings("all")
 class ASTMethod extends SimpleNode {
   public ASTMethod(int id) {
     super(id);
@@ -18,4 +19,4 @@ class ASTMethod extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=8065c599d1750ce96f3974419a17d2bc (do not edit this line) */
+/* JavaCC - OriginalChecksum=4351d42cc9d339b9d91d79acac875461 (do not edit this line) */

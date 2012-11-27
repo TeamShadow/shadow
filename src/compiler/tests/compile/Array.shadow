@@ -2,11 +2,12 @@ class Array {
     
     public start() => ()
     {	
-    	int[] array = new int[100];
+    	int[] array;
+    	array = int[100];
     	array[6] = 14;
     	
-    	Foo[] fooList = new Foo[100];
-    	fooList[0] = new Foo();
+    	Foo[] fooList = Foo[100];
+    	fooList[0] = Foo:construct();
     }
 
 }

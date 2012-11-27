@@ -758,7 +758,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTQualifiedThis node, Boolean secondVisit)
+	public Object visit(ASTQualifiedKeyword node, Boolean secondVisit)
 			throws ShadowException
 	{
 		// TODO: Make this work
@@ -1401,12 +1401,6 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 	@Override
 	public Object visit(ASTLocalMethodDeclaration node, Boolean data)
-			throws ShadowException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	@Override
-	public Object visit(ASTQualifiedSuper node, Boolean data)
 			throws ShadowException {
 		// TODO Auto-generated method stub
 		return null;

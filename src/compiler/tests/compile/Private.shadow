@@ -10,8 +10,8 @@ class Private
 	{
 		public stuff() => ()
 		{
-			Private outer = new Private();
-			Inner inner = new outer:Inner(); 
+			Private outer = Private:construct();
+			Inner inner = outer:Inner:construct(); 
 		}
 	
 	

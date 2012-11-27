@@ -23,23 +23,23 @@ public class ASTMethodCall extends SimpleNode {
 		  return /*jjtGetChild(0).toString() + */type.toString();
 	}
 	
-	private boolean isConstructor = false;	
-	private ClassType constructorType;
+	private boolean isConstruct = false;	
+	private ClassType constructType;
 	
-	public void setConstructorType(ClassType type)
+	public void setConstructType(ClassType type)
 	{
-		constructorType = type;
-		isConstructor = true;
+		constructType = type;
+		isConstruct = true;
 	}
 	
-	public boolean isConstructor()
+	public boolean isConstruct()
 	{
-		return isConstructor;
+		return isConstruct;
 	}
 	
-	public ClassType getConstructorType()
+	public ClassType getConstructType()
 	{
-		return constructorType;
+		return constructType;
 	}
 	
 }
