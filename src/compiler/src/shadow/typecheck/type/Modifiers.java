@@ -267,14 +267,14 @@ public final class Modifiers
 	}
 
 
-	public void checkConstructorModifiers() throws ParseException
+	public void checkConstructModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A constructor");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A construct");
 	}
 
-	public void checkDestructorModifiers() throws ParseException
+	public void checkDestroyModifiers() throws ParseException
 	{
-		checkModifiers(new Modifiers(PUBLIC), "A destructor");
+		checkModifiers(new Modifiers(PUBLIC), "A destroy");
 	}		
 
 	public void checkLocalVariableModifiers() throws ParseException

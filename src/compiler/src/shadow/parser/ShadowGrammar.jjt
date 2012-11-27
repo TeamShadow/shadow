@@ -125,11 +125,11 @@ TOKEN :
 | < CHECK: "check" >
 | < CLASS: "class" >
 | < CODE: "code" >
-| < CONSTRUCTOR: "constructor" >
+| < CONSTRUCT: "construct" >
 | < CONTINUE: "continue" >
 | < _DEFAULT: "default" >
 | < DELETE: "delete" >
-| < DESTRUCTOR: "destructor" >
+| < DESTROY: "destroy" >
 | < DO: "do" >
 | < DOUBLE: "double" >
 | < ELSE: "else" >
@@ -160,7 +160,6 @@ TOKEN :
 | < NULL: "null" >
 | < NULLABLE: "nullable" >
 | < OR: "or" >
-//| < PACKAGE: "package">
 | < PRIVATE: "private" >
 | < PROTECTED: "protected" >
 | < PUBLIC: "public" >
@@ -169,11 +168,9 @@ TOKEN :
 | < SET: "set" >
 | < SHORT: "short" >
 | < SINGLETON: "singleton" >
-//| < STATIC: "static" >
 //| < STRICTFP: "strictfp" >
 | < SUPER: "super" >
 | < SWITCH: "switch" >
-| < SYNCHRONIZED: "synchronized" > //probably removing
 | < THIS: "this" >
 | < THROW: "throw" >
 | < THROWS: "throws" >
@@ -452,7 +449,7 @@ ASTCompilationUnit CompilationUnit():
 void ImportDeclaration():
 {}
 {
-  "import" /*[ "static" ]*/ Name() ["$" [">" | "<"] < VERSION_LITERAL >] ";"  //I don't think we allow static imports
+  "import"  Name() ["$" [">" | "<"] < VERSION_LITERAL >] ";" 
 }
 
 /*
@@ -675,8 +672,8 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 | modifiers = Modifiers()
   (  ClassOrInterfaceDeclaration(modifiers)
     | EnumDeclaration(modifiers)
-    | LOOKAHEAD( "constructor" ) ConstructorDeclaration(modifiers)
-    | LOOKAHEAD( "destructor" ) DestructorDeclaration(modifiers)
+    | LOOKAHEAD( "construct" ) ConstructDeclaration(modifiers)
+    | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifiers) 
     | MethodDeclaration(modifiers)
     | ViewDeclaration(modifiers)
@@ -706,7 +703,6 @@ void VariableDeclaratorId():
 }
 {
   t = <IDENTIFIER> { jjtThis.setImage(t.image); }
-  //( "[" "]" )*  Not in Shadow!
 }
 
 void VariableInitializer():
@@ -763,43 +759,43 @@ void FormalParameter():
    }
 }
 
-void ConstructorDeclaration(Modifiers modifiers):
+void ConstructDeclaration(Modifiers modifiers):
 {
-  debugPrint("CONSTRUCTOR DECLARATION");
-  modifiers.checkConstructorModifiers();  
+  debugPrint("CONSTRUCT DECLARATION");
+  modifiers.checkConstructModifiers();  
 }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("constructor"); }  
+  { jjtThis.setModifiers(modifiers); jjtThis.setImage("construct"); }  
   // Modifiers matched in the caller
-  "constructor" FormalParameters() [ "throws" NameList() ]
+  "construct" FormalParameters() [ "throws" NameList() ]
   ( (
        "{"
-    [ LOOKAHEAD(ExplicitConstructorInvocation()) ExplicitConstructorInvocation() ]
+    [ LOOKAHEAD(ExplicitConstructInvocation()) ExplicitConstructInvocation() ]
     ( BlockStatement() )*
   "}")
    |
    ";" )
 }
 
-void DestructorDeclaration(Modifiers modifiers):
+void DestroyDeclaration(Modifiers modifiers):
 {
-  debugPrint("DESTRUCTOR DECLARATION");
-  modifiers.checkDestructorModifiers();
+  debugPrint("DESTROY DECLARATION");
+  modifiers.checkDestroyModifiers();
 }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("destructor"); }  
+  { jjtThis.setModifiers(modifiers); jjtThis.setImage("destroy"); }  
   // Modifiers matched in the caller
-  "destructor" //no (checked) exceptions from destructors!
+  "destroy" //no (checked) exceptions from destroys!
   ( Block() | ";" )
 }
 
-void ExplicitConstructorInvocation():
+void ExplicitConstructInvocation():
 { debugPrint("EXPLICIT CONTRUCTOR INVOCATION"); }
 {
-  LOOKAHEAD("this" Arguments() ";")
-  "this" Arguments() ";"
+  LOOKAHEAD("this" ":" "construct" Arguments() ";")
+  "this" ":" "construct" Arguments() ";"
 |
-  /*[ LOOKAHEAD(2) PrimaryExpression() "." ]*/ "super" Arguments() ";"
+  /*[ LOOKAHEAD(2) PrimaryExpression() "." ]*/ "super" ":" "construct" Arguments() ";"
   //what is that for?  Thing.super()?
 }
 
@@ -809,7 +805,7 @@ void ExplicitConstructorInvocation():
 void Initializer():
 { debugPrint("INITIALIZER"); }
 {
-  /*[ "static" ]*/ Block()
+  	Block()
 }
 
 
@@ -906,7 +902,6 @@ void PrimitiveType():
 | "long"    { jjtThis.setType(Type.LONG); }
 | "float"   { jjtThis.setType(Type.FLOAT); }
 | "double"  { jjtThis.setType(Type.DOUBLE); }
-/*| "String"  { jjtThis.setType(Type.STRING); }*/
 | "ubyte"   { jjtThis.setType(Type.UBYTE); }
 | "uint"    { jjtThis.setType(Type.UINT); }
 | "ulong"   { jjtThis.setType(Type.ULONG); }
@@ -964,6 +959,7 @@ void NameList():
  * Expression syntax follows.
  */
 
+/*
 void Expression():
 { debugPrint("EXPRESSION"); }
 {
@@ -971,7 +967,7 @@ void Expression():
 	LOOKAHEAD( AllocationExpression() ) AllocationExpression()
 |   ConditionalExpression()
 }
-
+*/
 
 void AssignmentOperator():
 { debugPrint("ASSIGNMENT OPERATOR"); }
@@ -1195,9 +1191,12 @@ void PrimarySuffix():
 }
 {
   LOOKAHEAD(2) QualifiedThis()
-| LOOKAHEAD(2) QualifiedSuper()  
-| ArrayIndex()
+| LOOKAHEAD(2) QualifiedSuper()
+| LOOKAHEAD(2) Brackets()
+| Subscript()
 | Method()
+| LOOKAHEAD(2) Instance()
+| LOOKAHEAD( Construct() ) Construct()
 | ScopeSpecifier()
 | Property()
 | LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
@@ -1225,14 +1224,41 @@ void QualifiedSuper():
 // Prefix must be a type name that you're currently inside of
 }
 
-void ArrayIndex():
+
+void Brackets():
 {
-  debugPrint("ARRAY INDEX");
+  debugPrint("BRACKETS");
+  Token t;
+}
+{
+  "[" "]"
+}
+
+void Subscript():
+{
+  debugPrint("SUBSCRIPT");
   Token t;
 }
 {
   "[" ConditionalExpression() ("," ConditionalExpression())* "]"
 }
+
+void Construct():
+{
+  	debugPrint("CONSTRUCT");
+}
+{
+  [ TypeArguments() ] ":" "construct" { jjtThis.setImage("construct"); debugPrint("construct");} 
+}
+
+void Instance():
+{
+  debugPrint("INSTANCE");
+}
+{
+ 	":" "instance" { jjtThis.setImage("instance"); debugPrint("instance");} 	
+}
+
 
 void ScopeSpecifier():
 {
@@ -1342,14 +1368,16 @@ void ArgumentList():
   ConditionalExpression() ( "," ConditionalExpression() )*
 }
 
+/*
 void AllocationExpression():
 { debugPrint("ALLOCATION EXPRESSION"); }
 {
   LOOKAHEAD(ArrayAllocation())
   ArrayAllocation()
-| ConstructorInvocation()
+| ConstructInvocation()
 | SingletonInstance()
 }
+
 
 void ArrayAllocation():
 { debugPrint("ARRAY ALLOCATION"); }
@@ -1358,25 +1386,19 @@ void ArrayAllocation():
 }
 
 
-void ConstructorInvocation():
-{ debugPrint("CONSTRUCTOR INVOCATION"); }
+void ConstructInvocation():
+{ debugPrint("CONSTRUCT INVOCATION"); }
 {
- 	"new" PrimaryExpression()
- 	/* No anonymous classes in Shadow */    
+ 	"new" PrimaryExpression()    
 }
-
-
-void SingletonInstance():
-{ debugPrint("SINGLETON INSTANCE"); }
-{
- 	"instance" ClassOrInterfaceType() 	
-}
+*/
 
 
 /*
  * The third LOOKAHEAD specification below is to parse to PrimarySuffix
  * if there is an expression between the "[...]".
  */
+/*
 void ArrayDimsAndInits():
 { debugPrint("ARRAY DIMS AND INITS"); }
 {
@@ -1384,6 +1406,7 @@ void ArrayDimsAndInits():
   ( LOOKAHEAD(2) "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )*
 | ( "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+ ArrayInitializer()
 }
+*/
 
 /*
  * Statement syntax follows.
@@ -1474,8 +1497,8 @@ void StatementExpression():
 { debugPrint("STATEMENT EXPRESSION"); }
 {
   		LOOKAHEAD( SequenceAssignment() ) SequenceAssignment()
- 	|   AllocationExpression() //allocation without assignment
-	| 	ActionExpression()  //method call or assignment
+ 	//|   AllocationExpression() //allocation without assignment
+	| 	Expression()  //method call or assignment
 }
 
 void SequenceAssignment() :
@@ -1486,10 +1509,10 @@ void SequenceAssignment() :
   	Sequence() "=" ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() ) { jjtThis.setImage("="); }  
 }
 
-void ActionExpression() :
-{ debugPrint("ACTION EXPRESSION"); }
+void Expression() :
+{ debugPrint("EXPRESSION"); }
 {
-	PrimaryExpression() [ AssignmentOperator() { jjtThis.setImage("?="); } Expression() ]
+	PrimaryExpression() [ AssignmentOperator() { jjtThis.setImage("?="); } ConditionalExpression() ]
 }
 
 void SwitchStatement():

@@ -14,12 +14,8 @@ import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTActionExpression;
 import shadow.parser.javacc.ASTAdditiveExpression;
-import shadow.parser.javacc.ASTAllocationExpression;
 import shadow.parser.javacc.ASTArgumentList;
 import shadow.parser.javacc.ASTArguments;
-import shadow.parser.javacc.ASTArrayAllocation;
-import shadow.parser.javacc.ASTArrayDimsAndInits;
-import shadow.parser.javacc.ASTArrayIndex;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
 import shadow.parser.javacc.ASTAssignmentOperator;
@@ -40,9 +36,9 @@ import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
-import shadow.parser.javacc.ASTConstructorDeclaration;
-import shadow.parser.javacc.ASTConstructorInvocation;
-import shadow.parser.javacc.ASTDestructorDeclaration;
+import shadow.parser.javacc.ASTConstruct;
+import shadow.parser.javacc.ASTConstructDeclaration;
+import shadow.parser.javacc.ASTDestroyDeclaration;
 import shadow.parser.javacc.ASTDoStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExpression;
@@ -55,6 +51,7 @@ import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTImportDeclaration;
+import shadow.parser.javacc.ASTInstance;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalMethodDeclaration;
@@ -82,8 +79,8 @@ import shadow.parser.javacc.ASTScopeSpecifier;
 import shadow.parser.javacc.ASTSequence;
 import shadow.parser.javacc.ASTSequenceAssignment;
 import shadow.parser.javacc.ASTShiftExpression;
-import shadow.parser.javacc.ASTSingletonInstance;
 import shadow.parser.javacc.ASTStatementExpression;
+import shadow.parser.javacc.ASTSubscript;
 import shadow.parser.javacc.ASTSwitchLabel;
 import shadow.parser.javacc.ASTSwitchStatement;
 import shadow.parser.javacc.ASTTryStatement;
@@ -298,11 +295,11 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
-	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTConstructDeclaration node, Boolean secondVisit) throws ShadowException {
 		return visitMethod( node, secondVisit );
 	}
 	
-	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit) throws ShadowException {
 		return visitMethod( node, secondVisit );
 	}
 	
@@ -1138,8 +1135,10 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	/*
 	public Object visit(ASTAllocationExpression node, Boolean secondVisit) throws ShadowException 
 	{
+	*/
 		//if(!secondVisit)
 		//{
 			/*
@@ -1149,7 +1148,7 @@ public class ClassChecker extends BaseChecker {
 			//return WalkType.POST_CHILDREN;
 		//}
 		
-		return pushUpType(node, secondVisit); //takes care of modifiers
+		//return pushUpType(node, secondVisit); //takes care of modifiers
 				
 		//check curPrefix at some point
 		/*
@@ -1162,7 +1161,7 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 		*/
-	}
+	//}
 	
 	
 	public Object visit(ASTArgumentList node, Boolean secondVisit) throws ShadowException {
@@ -1804,47 +1803,51 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTArrayIndex node, Boolean secondVisit) throws ShadowException 
+	public Object visit(ASTSubscript node, Boolean secondVisit) throws ShadowException 
 	{
 		if( secondVisit )
 		{			
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );
-						
 			
-			if( (prefixType instanceof ArrayType) )
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			{
+				Type childType = node.jjtGetChild(i).getType();
+				
+				if( !childType.isIntegral() )
+				{
+					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
+					node.setType(Type.UNKNOWN);
+					return WalkType.POST_CHILDREN;
+				}
+			}			
+			
+			if( prefixNode.getModifiers().isTypeName() || ((prefixNode instanceof ASTPrimarySuffix) && ((ASTPrimarySuffix)prefixNode).isArrayCreation() ) ) //array creation
+			{
+				ASTPrimarySuffix parent = (ASTPrimarySuffix) node.jjtGetParent();
+				parent.setArrayCreation(true);				
+				node.setType(new ArrayType( prefixType, node.jjtGetNumChildren() ) );				
+			}			
+			else if( (prefixType instanceof ArrayType) )
 			{
 				ArrayType arrayType = (ArrayType)prefixType;
-				
-				for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+							
+				if( node.jjtGetNumChildren() == arrayType.getDimensions() )
 				{
-					Type childType = node.jjtGetChild(i).getType();
+					node.setType( arrayType.getBaseType() );
+					node.addModifier(Modifiers.ASSIGNABLE);
 					
-					if( !childType.isIntegral() )
-					{
-						addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
-						node.setType(Type.UNKNOWN);
-					}
+					//primitive arrays are initialized to default values
+					//non-primitive array elements could be null
+					if( !arrayType.getBaseType().isPrimitive() )
+						node.addModifier(Modifiers.NULLABLE);
+				}
+				else
+				{
+					node.setType(Type.UNKNOWN);
+					addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
 				}
 				
-				if( node.getType() != Type.UNKNOWN )
-				{
-					if( node.jjtGetNumChildren() == arrayType.getDimensions() )
-					{
-						node.setType( arrayType.getBaseType() );
-						node.addModifier(Modifiers.ASSIGNABLE);
-						
-						//primitive arrays are initialized to default values
-						//non-primitive array elements could be null
-						if( !arrayType.getBaseType().isPrimitive() )
-							node.addModifier(Modifiers.NULLABLE);
-					}
-					else
-					{
-						node.setType(Type.UNKNOWN);
-						addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
-					}
-				}
 			}
 			else
 			{
@@ -2099,8 +2102,8 @@ public class ClassChecker extends BaseChecker {
 					}
 					
 					Node greatgrandparent = node.jjtGetParent().jjtGetParent().jjtGetParent();
-					if( !(greatgrandparent instanceof ASTConstructorInvocation) )
-						addError(node, Error.TYPE_MIS, "Constructor invocation must be preceded by the new keyword");
+					if( !(greatgrandparent instanceof ASTConstruct) )
+						addError(node, Error.TYPE_MIS, "Construct invocation must be preceded by the new keyword");
 				}				
 			}
 		}
@@ -2363,6 +2366,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.PRE_CHILDREN;
 	}
 	
+	/*
 	public Object visit(ASTArrayDimsAndInits node, Boolean secondVisit) throws ShadowException 
 	{		
 		if( secondVisit )
@@ -2395,6 +2399,8 @@ public class ClassChecker extends BaseChecker {
 	
 		return WalkType.POST_CHILDREN;
 	}
+	
+	*/
 	
 	private boolean visitArrayInitializer(Node node)
 	{
@@ -2513,6 +2519,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.NO_CHILDREN;			
 	}
 
+	/*
 	@Override
 	public Object visit(ASTArrayAllocation node, Boolean secondVisit) throws ShadowException
 	{
@@ -2539,11 +2546,11 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
+	*/
 	
 
 	@Override
-	public Object visit(ASTConstructorInvocation node, Boolean secondVisit)	throws ShadowException
+	public Object visit(ASTConstruct node, Boolean secondVisit)	throws ShadowException
 	{
 		return pushUpType(node, secondVisit);
 		
@@ -2637,7 +2644,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	@Override
-	public Object visit(ASTSingletonInstance node, Boolean secondVisit)	throws ShadowException
+	public Object visit(ASTInstance node, Boolean secondVisit)	throws ShadowException
 	{
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;

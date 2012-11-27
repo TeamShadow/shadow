@@ -82,7 +82,7 @@ public class ArrayType extends ClassType
 		return baseType.getTypeParameters();		
 	}
 	
-	private ArrayType( Type baseType, int dimensions )
+	public ArrayType( Type baseType, int dimensions )
 	{
 		super(makeName(baseType, dimensions), baseType.getModifiers(), baseType.getOuter());
 		

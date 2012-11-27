@@ -103,11 +103,11 @@ public class TACMethod extends TACNodeList
 
 	public boolean isConstructor()
 	{
-		return name.equals("constructor");
+		return name.equals("construct");
 	}
 	public boolean isDestructor()
 	{
-		return name.equals("destructor");
+		return name.equals("destroy");
 	}
 	public boolean isGetClass()
 	{

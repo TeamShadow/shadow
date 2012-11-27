@@ -142,8 +142,8 @@ public class TACBuilder implements ShadowParserVisitor
 		for (List<MethodSignature> methodList : type.getMethodMap().values())
 			for (MethodSignature method : methodList)
 				visitMethod(new TACMethod(method), fields, method.getNode());
-		if (!type.getMethodMap().containsKey("constructor"))
-			visitMethod(new TACMethod("constructor", new MethodType(type, new Modifiers())),
+		if (!type.getMethodMap().containsKey("construct"))
+			visitMethod(new TACMethod("construct", new MethodType(type, new Modifiers())),
 					fields, null);
 
 		return NO_CHILDREN;
@@ -307,7 +307,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit)
+	public Object visit(ASTConstructDeclaration node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit && !(tree.prependAllChildren() instanceof TACReturn))
@@ -316,7 +316,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit)
+	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit && !(tree.prependAllChildren() instanceof TACReturn))
@@ -325,7 +325,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTExplicitConstructorInvocation node,
+	public Object visit(ASTExplicitConstructInvocation node,
 			Boolean secondVisit)
 			throws ShadowException
 	{
@@ -766,7 +766,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTArrayIndex node, Boolean secondVisit)
+	public Object visit(ASTSubscript node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit)
@@ -872,24 +872,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTAllocationExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTArrayAllocation node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-			visitArrayAllocation((ArrayType)node.getType(), tree.
-					appendChildRemoveSequence(1).getOperands());
-		return POST_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTConstructorInvocation node, Boolean secondVisit)
+	public Object visit(ASTConstruct node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit)
@@ -898,7 +881,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTSingletonInstance node, Boolean secondVisit)
+	public Object visit(ASTInstance node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit)
@@ -917,7 +900,7 @@ public class TACBuilder implements ShadowParserVisitor
 			new TACBranch(tree, doneLabel);
 			nullLabel.new TACLabel(tree);
 			TACOperand newValue = new TACNewObject(tree, type);
-			new TACCall(tree, new TACMethod("constructor",
+			new TACCall(tree, new TACMethod("construct",
 					new MethodType(type, new Modifiers())), Collections.singleton(newValue));
 			new TACStore(tree, value, newValue);
 			new TACStore(tree, var, newValue);
@@ -928,6 +911,7 @@ public class TACBuilder implements ShadowParserVisitor
 		return POST_CHILDREN;
 	}
 
+	/*
 	@Override
 	public Object visit(ASTArrayDimsAndInits node, Boolean secondVisit)
 			throws ShadowException
@@ -946,6 +930,8 @@ public class TACBuilder implements ShadowParserVisitor
 		}
 		return POST_CHILDREN;
 	}
+	
+	*/
 
 	@Override
 	public Object visit(ASTStatement node, Boolean secondVisit)
@@ -1289,17 +1275,17 @@ public class TACBuilder implements ShadowParserVisitor
 		MethodType methodType = (MethodType)node.getType();
 		ClassType type = (ClassType)node.jjtGetChild(0).getType();
 		TACOperand object = new TACNewObject(tree, type);
-		if (!type.getMethodMap().containsKey("constructor"))
+		if (!type.getMethodMap().containsKey("construct"))
 			methodType = new MethodType(type, new Modifiers());
 //		SequenceType paramTypes = (SequenceType)node.jjtGetChild(1).getType();
-//		List<MethodSignature> ctors = type.getMethodMap().get("constructor");
-//		if (ctors == null) // Default constructor
+//		List<MethodSignature> ctors = type.getMethodMap().get("construct");
+//		if (ctors == null) // Default construct
 //			methodType = new MethodType(type, 0);
 //		else
 //			for (MethodSignature sig : ctors)
 //				if (sig.canAccept(paramTypes))
 //					methodType = sig.getMethodType();
-		TACMethod methodRef = new TACMethod("constructor", methodType);
+		TACMethod methodRef = new TACMethod("construct", methodType);
 		TACSequence sequence = tree.appendChildRemoveSequence(1);
 		List<TACOperand> params =
 				new ArrayList<TACOperand>(sequence.size() + 1);
@@ -1406,12 +1392,7 @@ public class TACBuilder implements ShadowParserVisitor
 		// TODO Auto-generated method stub
 		return null;
 	}
-	@Override
-	public Object visit(ASTActionExpression node, Boolean data)
-			throws ShadowException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 	@Override
 	public Object visit(ASTLocalDeclaration node, Boolean data)
 			throws ShadowException {
@@ -1427,6 +1408,11 @@ public class TACBuilder implements ShadowParserVisitor
 	@Override
 	public Object visit(ASTQualifiedSuper node, Boolean data)
 			throws ShadowException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object visit(ASTBrackets node, Boolean data) throws ShadowException {
 		// TODO Auto-generated method stub
 		return null;
 	}

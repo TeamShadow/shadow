@@ -16,8 +16,8 @@ import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTCompilationUnit;
-import shadow.parser.javacc.ASTConstructorDeclaration;
-import shadow.parser.javacc.ASTDestructorDeclaration;
+import shadow.parser.javacc.ASTConstructDeclaration;
+import shadow.parser.javacc.ASTDestroyDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
@@ -78,15 +78,15 @@ public class FieldAndMethodChecker extends BaseChecker {
 				if( type instanceof ClassType )
 				{
 					ClassType classType = (ClassType)type;
-					if (classType.getMethods("constructor").isEmpty())
+					if (classType.getMethods("construct").isEmpty())
 					{
-						//if no constructors, add the default one
-						ASTConstructorDeclaration constructorNode = new ASTConstructorDeclaration(-1);
-						constructorNode.setModifiers(Modifiers.PUBLIC);
-						MethodSignature constructorSignature = new MethodSignature(classType, "constructor", new Modifiers(), constructorNode);
-						constructorNode.setMethodSignature(constructorSignature);
-						classType.addMethod("constructor", constructorSignature);
-						//note that the node is null for the default constructor, because nothing was made
+						//if no constructs, add the default one
+						ASTConstructDeclaration constructNode = new ASTConstructDeclaration(-1);
+						constructNode.setModifiers(Modifiers.PUBLIC);
+						MethodSignature constructSignature = new MethodSignature(classType, "construct", new Modifiers(), constructNode);
+						constructNode.setMethodSignature(constructSignature);
+						classType.addMethod("construct", constructSignature);
+						//note that the node is null for the default construct, because nothing was made
 					}
 					
 					
@@ -551,8 +551,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return visitMethod( methodDeclarator, node, secondVisit );
 	}
 	
-	public Object visit(ASTConstructorDeclaration node, Boolean secondVisit) throws ShadowException {		
-		//constructor uses the same node for modifiers and signature
+	public Object visit(ASTConstructDeclaration node, Boolean secondVisit) throws ShadowException {		
+		//construct uses the same node for modifiers and signature
 		
 		if( secondVisit && (currentType instanceof SingletonType) ) {
 			Node parameters = node.jjtGetChild(0); //formal parameters
@@ -563,8 +563,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return visitMethod( node, node, secondVisit );
 	}
 	
-	public Object visit(ASTDestructorDeclaration node, Boolean secondVisit) throws ShadowException {	
-		//destructor uses the same node for modifiers and signature
+	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit) throws ShadowException {	
+		//destroy uses the same node for modifiers and signature
 		return visitMethod( node, node, secondVisit );		
 	}
 	
