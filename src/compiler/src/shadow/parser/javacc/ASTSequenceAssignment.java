@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTSequenceAssignment extends SimpleNode {
   public ASTSequenceAssignment(int id) {
     super(id);
@@ -19,4 +18,4 @@ class ASTSequenceAssignment extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=85b4508afa729d55138e8ba1fb23f8b7 (do not edit this line) */
+/* JavaCC - OriginalChecksum=4ca72b20e5dc7f42d54fa9e8e85bc2a3 (do not edit this line) */

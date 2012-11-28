@@ -6,7 +6,8 @@ class Auto
 		auto thing = "A string";
 		auto x = Object:construct();
 		auto a = 4;
-		auto b = 5,	c = a + b;
+		auto b = 5;
+		auto c = a + b;
 		
 		//thing = 4; //uncomment for error
 		

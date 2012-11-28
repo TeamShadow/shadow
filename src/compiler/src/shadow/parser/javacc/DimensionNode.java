@@ -1,6 +1,6 @@
 package shadow.parser.javacc;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DimensionNode extends SimpleNode {
@@ -14,7 +14,7 @@ public class DimensionNode extends SimpleNode {
     	super(sp, id);
     }
 	
-    private List<Integer> arrayDimensions = new LinkedList<Integer>();
+    private List<Integer> arrayDimensions = new ArrayList<Integer>();
     private int currentDimensions = 1;
     
     public List<Integer> getArrayDimensions() {

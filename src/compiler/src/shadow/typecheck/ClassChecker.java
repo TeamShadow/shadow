@@ -14,8 +14,10 @@ import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTActionExpression;
 import shadow.parser.javacc.ASTAdditiveExpression;
+import shadow.parser.javacc.ASTAllocation;
 import shadow.parser.javacc.ASTArgumentList;
 import shadow.parser.javacc.ASTArguments;
+import shadow.parser.javacc.ASTArray;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
 import shadow.parser.javacc.ASTAssignmentOperator;
@@ -317,7 +319,7 @@ public class ClassChecker extends BaseChecker {
 			{
 				ArrayType arrayType = new ArrayType(type, dimensions);
 				((ClassType)currentType).addReferencedType(arrayType);
-				node.setType(arrayType);				
+				node.setType(arrayType);
 			}
 		}
 		
@@ -1645,7 +1647,7 @@ public class ClassChecker extends BaseChecker {
 			}
 			else
 			{
-				node.setType( child.getType() ); 	//literal, conditional expression, check expression, type
+				node.setType( child.getType() ); 	//literal, conditional expression, check expression, primitive and function types
 				pushUpModifiers( node ); 			
 			}
 		}
@@ -1654,12 +1656,13 @@ public class ClassChecker extends BaseChecker {
 		
 		/*   
 		  Literal()
-		| "this" 
-		| "super" 
+		| "this" { jjtThis.setImage("this"); }
+		| "super" { jjtThis.setImage("super"); }
 		| CheckExpression()
 		| "(" ConditionalExpression() ")"
-		| Type()
-		| [ UnqualifiedName() "@" ] t = <IDENTIFIER> }
+		| PrimitiveType()
+		| FunctionType()
+		| [LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 		 */
 				
 		return WalkType.POST_CHILDREN;
@@ -1695,8 +1698,7 @@ public class ClassChecker extends BaseChecker {
 		| Brackets()
 		| Subscript()
 		| Method()
-		| Instance()
-		| Construct()
+		| Allocation()
 		| ScopeSpecifier()
 		| Property()
 		| MethodCall()
@@ -1710,7 +1712,7 @@ public class ClassChecker extends BaseChecker {
 				addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
 			
 			Node child = node.jjtGetChild(0);
-			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall)  )
+			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall) ||  (child instanceof ASTAllocation))
 			{
 				ASTPrimaryExpression parent = (ASTPrimaryExpression) node.jjtGetParent();
 				parent.setAction(true);
@@ -1718,15 +1720,9 @@ public class ClassChecker extends BaseChecker {
 			
 			if( child instanceof ASTMethodCall )
 			{
-				ASTMethodCall call = (ASTMethodCall) child;
 				Type childType = child.getType();
 							
-				if( call.isConstruct() )
-				{
-					node.setType( call.getConstructType() );
-					node.setConstructor(true);
-				}				
-				else if( childType instanceof MethodType )
+				if( childType instanceof MethodType )
 				{
 					MethodType methodType = (MethodType) childType;
 					SequenceType returnTypes = methodType.getReturnTypes();
@@ -1796,28 +1792,17 @@ public class ClassChecker extends BaseChecker {
 	{
 		if( secondVisit )
 		{	
-			//Ugly!
-			//because of weird array creation rules, brackets can extend an existing array creation
-			//OR create an array type from a(n inner) type
-			
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );			
 			
-			//array creation
-			if( ((prefixNode instanceof ASTPrimarySuffix) && ((ASTPrimarySuffix)prefixNode).isArrayCreation() ) ) 
-			{
-				ASTPrimarySuffix parent = (ASTPrimarySuffix) node.jjtGetParent();
-				parent.setArrayCreation(true);				
-				node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );				
-			}
-			else if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof ArrayType) )
+			if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof ArrayType) )
 			{
 				node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );				
 			}
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(node, Error.INVL_TYP, "Can only apply brackets to array creation or to mark an array type");
+				addError(node, Error.INVL_TYP, "Can only apply brackets to a type");
 			}
 		}
 		
@@ -1852,38 +1837,7 @@ public class ClassChecker extends BaseChecker {
 				}
 			}			
 			
-			//create array
-			if( prefixNode.getModifiers().isTypeName() ) //array creation
-			{
-				ASTPrimarySuffix parent = (ASTPrimarySuffix) node.jjtGetParent();
-				parent.setArrayCreation(true);
-				
-				if( typeArguments != null  )
-				{
-					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments))
-					{					
-						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
-						node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
-					}
-					else
-					{
-						addError(node, Error.TYPE_MIS, "Type " + prefixType + " cannot accept type arguments " + typeArguments);
-						node.setType(Type.UNKNOWN);
-					}
-				}
-				else
-				{
-					if( !prefixType.isParameterized() )
-						node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
-					else
-					{
-						addError(node, Error.TYPE_MIS, "Type " + prefixType + " requires type arguments");
-						node.setType(Type.UNKNOWN);	
-					}					
-				}				
-			}
-			//subscript into existing array			
-			else if( prefixType instanceof ArrayType )
+			if( prefixType instanceof ArrayType )
 			{
 				ArrayType arrayType = (ArrayType)prefixType;
 
@@ -1924,6 +1878,73 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTArray node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )
+		{			
+			Node prefixNode = curPrefix.getFirst();
+			Type prefixType = resolveType( prefixNode );			
+			SequenceType typeArguments = null;
+			int start = 0;
+			
+			if( node.jjtGetChild(0) instanceof ASTTypeArguments )
+			{
+				typeArguments = (SequenceType) node.jjtGetChild(0).getType();
+				start = 1;				
+			}
+			
+			
+			for( int i = start; i < node.jjtGetNumChildren(); i++ )
+			{
+				Type childType = node.jjtGetChild(i).getType();
+				
+				if( !childType.isIntegral() )
+				{
+					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array dimension");
+					node.setType(Type.UNKNOWN);
+					return WalkType.POST_CHILDREN;
+				}
+			}			
+			
+			//create array
+			if( prefixNode.getModifiers().isTypeName() )
+			{
+				if( typeArguments != null  )
+				{
+					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments))
+					{					
+						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
+						node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
+					}
+					else
+					{
+						addError(node, Error.TYPE_MIS, "Type " + prefixType + " cannot accept type arguments " + typeArguments);
+						node.setType(Type.UNKNOWN);
+					}
+				}
+				else
+				{
+					if( !prefixType.isParameterized() )
+						node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
+					else
+					{
+						addError(node, Error.TYPE_MIS, "Type " + prefixType + " requires type arguments");
+						node.setType(Type.UNKNOWN);	
+					}					
+				}				
+			}
+			else
+			{
+				node.setType(Type.UNKNOWN);
+				addError(node, Error.INVL_TYP, "Can only create an array from a type name");
+			}	
+			
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+
+	
 	
 	public Object visit(ASTMethod node, Boolean secondVisit) throws ShadowException 
 	{
@@ -1956,62 +1977,95 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	@Override
+	public Object visit(ASTAllocation node, Boolean secondVisit)	throws ShadowException
+	{
+		if( secondVisit )
+		{
+			pushUpModifiers( node );
+			Node child = node.jjtGetChild(0); 
+			
+			//construct sets differently
+			if( !(child instanceof ASTConstruct) )			
+				node.setType(child.getType());			
+		}
+		
+		return WalkType.POST_CHILDREN;
+		
+	}
+	
+	
+	@Override
 	public Object visit(ASTConstruct node, Boolean secondVisit)	throws ShadowException
 	{
 		if( secondVisit )
 		{
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = resolveType( prefixNode );
+			node.setType(Type.UNKNOWN);
 			
 			if( prefixType instanceof InterfaceType )
 			{
 				addError(node, Error.INVL_TYP, "Interfaces cannot be constructed");
-				node.setType(Type.UNKNOWN);			
+							
 			}
 			else if( prefixType instanceof SingletonType )
 			{
 				addError(node, Error.INVL_TYP, "Singletons cannot be constructed");
-				node.setType(Type.UNKNOWN);			
+							
 			}		
 			else if(!( prefixType instanceof ClassType) )
 			{
 				addError(node, Error.INVL_TYP, "Non constructible type " + prefixType);
-				node.setType(Type.UNKNOWN);
+				
 			}
 			else if( !prefixNode.getModifiers().isTypeName() )				
 			{
 				addError(node, Error.INVL_TYP, "Only a type is constructible");
-				node.setType(Type.UNKNOWN);				
+								
 			}
 			else
 			{
-				if( node.jjtGetNumChildren() == 1 )
+				SequenceType typeArguments = null;
+			
+				
+				int start = 0;
+				if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
 				{
-					SequenceType typeArguments = (SequenceType) node.jjtGetChild(0).getType();
+					typeArguments = (SequenceType) node.jjtGetChild(0).getType();
+					start = 1;
+				}
+				
+				SequenceType arguments = new SequenceType();
+				Node parent = node.jjtGetParent();
+				
+				for( int i = start; i < node.jjtGetNumChildren(); i++ )
+					arguments.add(node.jjtGetChild(i));
+
+				
+				if( typeArguments != null )
+				{					
 					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments) )
 					{
-						node.setType(prefixType.replace(prefixType.getTypeParameters(), typeArguments));
-						node.addModifier(Modifiers.TYPE_NAME);
+						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
+						setConstructType( node, prefixType, arguments);
+						parent.setType(prefixType);
 					}
 					else
 					{
 						addError(node, Error.TYPE_MIS, "Type " + prefixType + " cannot accept type arguments " + typeArguments);
-						node.setType(Type.UNKNOWN);						
 					}					
 				}
 				else
 				{
 					if( !prefixType.isParameterized() )
 					{
-						node.setType(prefixType);
-						node.addModifier(Modifiers.TYPE_NAME);
+						setConstructType( node, prefixType, arguments);
+						parent.setType(prefixType);
 					}
 					else
-					{
 						addError(node, Error.TYPE_MIS, "Type " + prefixType + " requires type arguments");
-						node.setType(Type.UNKNOWN);						
-					}
-				}				
+				}
+				
 			}
 			
 		}
@@ -2267,7 +2321,7 @@ public class ClassChecker extends BaseChecker {
 	}
 	
 	
-	protected void setConstructType( ASTMethodCall node, Type prefixType, SequenceType arguments)
+	protected void setConstructType( ASTConstruct node, Type prefixType, SequenceType arguments)
 	{	
 		ClassType type = (ClassType) prefixType;
 		
@@ -2321,7 +2375,6 @@ public class ClassChecker extends BaseChecker {
 				else
 				{
 					node.setType(methodType);
-					node.setConstructType(type);
 				}
 			}				
 		}
@@ -2401,7 +2454,7 @@ public class ClassChecker extends BaseChecker {
 			
 			if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
 			{
-				start++;			
+				start = 1;			
 				typeArguments = (SequenceType) node.jjtGetChild(0).getType();
 			}
 			
@@ -2416,18 +2469,7 @@ public class ClassChecker extends BaseChecker {
 				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);
 				List<MethodSignature> methods = prefixType.getOuter().getMethods(unboundMethod.getTypeName());
 				setMethodType(node, methods, typeArguments, arguments); //type set inside									
-			}
-			//constructor
-			else if( (prefixType instanceof ClassInterfaceBaseType) && isTypeName )
-			{			
-				if( typeArguments != null )
-				{
-					addError(node, Error.INVL_TYP, "Type arguments are supplied to the type name not the construct call");
-					node.setType(Type.UNKNOWN);
-				}
-				else
-					setConstructType( node, prefixType, arguments);				
-			}
+			}			
 			else if( prefixType instanceof MethodType ) //only happens with method pointers
 			{
 				MethodType methodType = (MethodType)prefixType;

@@ -3,7 +3,7 @@ class ControlFlow {
    public nothing() => ()
    {
    	int a;
-   	int[] b = int[100];
+   	int[] b = int:array[100];
    	
     if( true )
    	{

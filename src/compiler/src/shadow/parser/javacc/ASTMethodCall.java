@@ -21,25 +21,5 @@ public class ASTMethodCall extends SimpleNode {
 	public String toString()
 	{
 		  return /*jjtGetChild(0).toString() + */type.toString();
-	}
-	
-	private boolean isConstruct = false;	
-	private ClassType constructType;
-	
-	public void setConstructType(ClassType type)
-	{
-		constructType = type;
-		isConstruct = true;
-	}
-	
-	public boolean isConstruct()
-	{
-		return isConstruct;
-	}
-	
-	public ClassType getConstructType()
-	{
-		return constructType;
-	}
-	
+	}	
 }

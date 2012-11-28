@@ -22,7 +22,7 @@ class ComplexAccess {
     {
     	int c;
     	
-    	ComplexAccess[] first = ComplexAccess[100];
+    	ComplexAccess[] first = ComplexAccess:array[100];
     	first[0] = ComplexAccess:construct();
     	
     	try

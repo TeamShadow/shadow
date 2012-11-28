@@ -35,12 +35,12 @@ public class SimpleTest
 		// set the levels of our loggers
 		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
-		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
+		Loggers.setLoggerToLevel(Loggers.PARSER, Level.ALL);
 		
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("tests/compile/Auto.shadow"); 		
+		args.add("tests/compile/UseSingleton.shadow"); 		
 		int error = Main.test(args.toArray(new String[] { }));
 		System.out.println("Error code: " + error);
 	}

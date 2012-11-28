@@ -114,6 +114,7 @@ TOKEN :
 {
   < ABSTRACT: "abstract" >
 | < AND: "and" >
+| < ARRAY: "array" >
 | < ASSERT: "assert" >
 | < AUTO: "auto" >
 | < BOOLEAN: "boolean" >
@@ -826,7 +827,7 @@ void ReferenceType():
 { debugPrint("REFERENCE TYPE"); }
 {
     PrimitiveType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } "]" )+
-  | ( ClassOrInterfaceType() ) ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } "]" )*
+  | ClassOrInterfaceType() [ TypeArguments() ]  ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } "]" )*
 }
 
 void StaticArrayType():
@@ -846,6 +847,8 @@ void FunctionType():
 }
 {
     "(" [ ResultType() ( "," ResultType() )* ] ")" "=>" "(" [ ResultTypes() ] ")"
+    {
+      jjtThis.addModifier(Modifiers.TYPE_NAME);    }
 }
 
 void ClassOrInterfaceType():
@@ -894,6 +897,7 @@ void WildcardBounds(): //like C#, no wildcard bounds
 void PrimitiveType():
 { debugPrint("PRIMITIVE TYPE"); }
 {
+  (    
   "boolean" { jjtThis.setType(Type.BOOLEAN); }
 | "code"    { jjtThis.setType(Type.CODE); }
 | "byte"    { jjtThis.setType(Type.BYTE); }
@@ -906,6 +910,9 @@ void PrimitiveType():
 | "uint"    { jjtThis.setType(Type.UINT); }
 | "ulong"   { jjtThis.setType(Type.ULONG); }
 | "ushort"  { jjtThis.setType(Type.USHORT); }
+)
+{
+  jjtThis.addModifier(Modifiers.TYPE_NAME);}
 }
 
 void ResultType():
@@ -1180,8 +1187,10 @@ void PrimaryPrefix():
 | "super" { jjtThis.setImage("super"); }
 | CheckExpression()
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" { jjtThis.addToImage('('); } ConditionalExpression() ")"
-| LOOKAHEAD( Type() ) Type()
-| [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+| PrimitiveType()
+| FunctionType()
+| [LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
+//last production catches class types and identifiers
 }
 
 void PrimarySuffix():
@@ -1191,15 +1200,25 @@ void PrimarySuffix():
 }
 {
   LOOKAHEAD(2) QualifiedKeyword()
-| LOOKAHEAD(2) Brackets()
-| LOOKAHEAD( [ TypeArguments() ] "[" ) Subscript()
+| LOOKAHEAD(3) Brackets()
+| LOOKAHEAD(3) Subscript()
 | Method()
-| LOOKAHEAD(2) Instance()
-| LOOKAHEAD( Construct() ) Construct()
+| LOOKAHEAD(Allocation()) Allocation()
 | ScopeSpecifier()
 | Property()
 | LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
 }
+
+void Allocation():
+{
+  debugPrint("ALLOCATION");
+  Token t;}
+{
+  		LOOKAHEAD(2) Instance()
+	|	LOOKAHEAD(Array()) Array()
+	|   Construct()
+ }
+
 
 void QualifiedKeyword():
 {
@@ -1222,7 +1241,16 @@ void Brackets():
   Token t;
 }
 {
-  ( "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+
+  ( LOOKAHEAD(2) "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+
+}
+
+void Array():
+{
+  debugPrint("ARRAY");
+  Token t;
+}
+{
+  [ TypeArguments() ] ":" "array" ( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); })+
 }
 
 void Subscript():
@@ -1231,7 +1259,7 @@ void Subscript():
   Token t;
 }
 {
-  [ TypeArguments() ] "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); }
+  "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); }
 }
 
 void Construct():
@@ -1239,7 +1267,8 @@ void Construct():
   	debugPrint("CONSTRUCT");
 }
 {
-  [ TypeArguments() ] ":" "construct" { jjtThis.setImage("construct"); debugPrint("construct");} 
+  [ TypeArguments() ] ":" "construct" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+  { jjtThis.setImage("construct"); debugPrint("construct");  } 
 }
 
 void Instance():
@@ -1472,7 +1501,7 @@ void LocalVariableDeclaration(Modifiers modifiers):
   modifiers.checkLocalVariableModifiers();
 }
 {  
-  ("auto" { jjtThis.setImage("auto"); } | Type() ) VariableDeclarator() ( "," VariableDeclarator() )*
+  (  "auto" { jjtThis.setImage("auto"); }  | Type() ) VariableDeclarator() ( "," VariableDeclarator() )*
   {
      jjtThis.setModifiers(modifiers);
   }

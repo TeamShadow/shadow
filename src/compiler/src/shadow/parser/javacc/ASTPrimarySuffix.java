@@ -24,29 +24,5 @@ class ASTPrimarySuffix extends SimpleNode {
     return visitor.visit(this, secondVisit);
   }
   
-	private boolean isConstructor = false;
-	
-	public void setConstructor(boolean value)
-	{		
-		isConstructor = value;
-	}
-	
-	public boolean isConstructor()
-	{
-		return isConstructor;
-	}
-	
-	private boolean isArrayCreation = false;
-	
-	public void setArrayCreation(boolean value)
-	{		
-		isArrayCreation = value;
-	}
-	
-	public boolean isArrayCreation()
-	{
-		return isArrayCreation;
-	}
-	
 }
 /* JavaCC - OriginalChecksum=5ff3f8c58c0827c6a7f4e7bbdc7675f2 (do not edit this line) */

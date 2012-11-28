@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTConstruct extends SimpleNode {
   public ASTConstruct(int id) {
     super(id);
@@ -19,4 +18,4 @@ class ASTConstruct extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=efd00aa6d0d23801318d443458e32b74 (do not edit this line) */
+/* JavaCC - OriginalChecksum=1f0b73dce889c660808255a3906b4ca4 (do not edit this line) */
