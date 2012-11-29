@@ -1,0 +1,4 @@
+interface shadow.standard@CanCompare<T>
+{
+	immutable compare( T other ) => (int);
+}

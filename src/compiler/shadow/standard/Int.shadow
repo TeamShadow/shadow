@@ -1,19 +1,31 @@
-class shadow.standard@Int
+import shadow.standard@Number;
+import shadow.standard@CanCompare;
+
+
+class shadow.standard@Int //implements Number<int>, CanCompare<int>
 {
-	public min( Int other ) => ( Int )
+	public min( int other ) => ( int )
 	{
 		return this < other ? this, other;
 	}
 
-	public max( Int other ) => ( Int )
+	public max( int other ) => ( int )
 	{
 		return this > other ? this, other;
 	}
 
-	public abs() => ( UInt )
+	public abs() => ( uint )
 	{
 		return this < 0 ? -this, this;
 	}
 
-	public native div( Int other ) => ( Int quotient, Int remainder );
+	public native div( int other ) => ( int quotient, int remainder );
+	
+	public native immutable add(int other) => (int);
+	public native immutable subtract(int other) => (int);
+	public native immutable multiply(int other) => (int);
+	public native immutable divide(int other) => (int);
+	public native immutable modulus(int other) => (int);
+	
+	public native immutable compare( int other ) => (int);
 }

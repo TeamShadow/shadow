@@ -1,6 +1,5 @@
 package shadow.typecheck;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -13,12 +12,14 @@ import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
+import shadow.parser.javacc.Literal;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
@@ -56,11 +57,11 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return typeTable;
 	}
 	
-	public void addType( ClassInterfaceBaseType type  ) {		
+	public void addType( ClassInterfaceBaseType type  ) throws PackageException {		
 		addType( type, packageTree );
 	}
 	
-	public void addType( ClassInterfaceBaseType type, Package p  ) {
+	public void addType( ClassInterfaceBaseType type, Package p  ) throws PackageException {
 		p.addType(type); //automatically adds to typeTable and sets type's package				
 	}
 	
@@ -313,6 +314,59 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	public Package getPackageTree()
 	{
 		return packageTree;
+	}
+	
+	public static ClassType literalToType( Literal literal )
+	{
+		ClassType type = null;
+		switch( literal )
+		{
+		case BYTE: 		type = Type.BYTE; break;
+		case CODE: 		type = Type.CODE; break;
+		case SHORT: 	type = Type.SHORT; break;
+		case INT: 		type = Type.INT; break;
+		case LONG:		type = Type.LONG; break;
+		case FLOAT: 	type = Type.FLOAT; break;
+		case DOUBLE: 	type = Type.DOUBLE; break;
+		case STRING:	type = Type.STRING; break;
+		case UBYTE: 	type = Type.UBYTE; break;
+		case USHORT: 	type = Type.USHORT; break;
+		case UINT: 		type = Type.UINT; break;
+		case ULONG: 	type = Type.ULONG; break;
+		case BOOLEAN: 	type = Type.BOOLEAN; break;
+		case NULL: 		type = Type.NULL; break;
+		}			
+		return type;
+	}
+	
+	public static ClassType nameToPrimitiveType(String name)
+	{
+		if( name.equals("boolean") )
+			return Type.BOOLEAN;
+		else if( name.equals("byte") )
+			return Type.BYTE;
+		else if( name.equals("code") )
+			return Type.CODE;				
+		else if( name.equals("double"))
+			return  Type.DOUBLE;
+		else if( name.equals("float") )
+			return  Type.FLOAT;
+		else if( name.equals("int") )
+			return Type.INT;
+		else if( name.equals("long") )
+			return  Type.LONG;
+		else if( name.equals("short") )
+			return  Type.SHORT; 
+		else if( name.equals("ubyte") )
+			return  Type.UBYTE;
+		else if( name.equals("uint") )
+			return  Type.UINT;
+		else if( name.equals("ulong") )
+			return Type.ULONG;
+		else if( name.equals("ushort") )
+			return Type.USHORT;
+		else
+			return null;
 	}
 	
 

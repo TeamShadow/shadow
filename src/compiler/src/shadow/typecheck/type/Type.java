@@ -39,32 +39,36 @@ public abstract class Type {
 	};
 	*/
 	
-	public static ClassType OBJECT = null; 
-	public static ClassType STRING = null; 
+	public static ClassType OBJECT = null;
 	public static ClassType CLASS = null;  // meta class for holding .class variables
 	public static ClassType ARRAY = null;  // class representation of all array types
-	public static ExceptionType EXCEPTION = null;
+	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an enum
+	public static ExceptionType EXCEPTION = null;	
+	public static ErrorType ERROR = null;
+		
+	public static ClassType BOOLEAN = null;
+	public static ClassType BYTE = null;
+	public static ClassType CODE = null;
+	public static ClassType DOUBLE = null;
+	public static ClassType FLOAT = null;	
+	public static ClassType INT = null; //new ClassType( "int", OBJECT );
+	public static ClassType LONG = null;
+	public static ClassType SHORT = null;
 	
-	public static final ClassType BOOLEAN = new ClassType( "boolean", OBJECT );
-	public static final ClassType BYTE = new ClassType( "byte", OBJECT );
-	public static final ClassType CODE = new ClassType( "code", OBJECT );	
-	public static final ClassType SHORT = new ClassType( "short", OBJECT );
-	public static final ClassType INT = new ClassType( "int", OBJECT );
-	public static final ClassType LONG = new ClassType( "long", OBJECT );
-	public static final ClassType FLOAT = new ClassType( "float", OBJECT );
-	public static final ClassType DOUBLE = new ClassType( "double", OBJECT );
+	public static ClassType UBYTE = null;
+	public static ClassType UINT = null;
+	public static ClassType ULONG = null;
+	public static ClassType USHORT = null;
 	
-	public static final ClassType UBYTE = new ClassType( "ubyte", OBJECT );
-	public static final ClassType UINT = new ClassType( "uint", OBJECT );
-	public static final ClassType ULONG = new ClassType( "ulong", OBJECT );
-	public static final ClassType USHORT = new ClassType( "ushort", OBJECT );
+	public static ClassType STRING = null;
 	
-	public static final EnumType ENUM = new EnumType( "Enum", new Modifiers(), null, OBJECT );
-	public static final ErrorType ERROR = new ErrorType( "Error", new Modifiers(), null, null );	
-	
+	//interfaces needed for language features
+	public static InterfaceType CAN_COMPARE = null;
+	public static InterfaceType CAN_INDEX = null;
+	public static InterfaceType CAN_ITERATE = null;
+	public static InterfaceType NUMBER = null;	
 	
 	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
-	
 	public static final ClassType NULL = new ClassType("null", new Modifiers(), null);
 	
 	public Type(String typeName) {

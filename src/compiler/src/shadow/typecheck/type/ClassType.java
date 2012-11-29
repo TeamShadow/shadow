@@ -435,7 +435,16 @@ public class ClassType extends ClassInterfaceBaseType {
 		out.print(kind + " ");
 		
 		//type name
-		if( getOuter() == null ) //outermost class		
+		if( isPrimitive() ) //hack for capitalization purposes
+		{	
+			String name;			
+			if( typeName.startsWith("u") )
+				name = typeName.substring(0,2).toUpperCase() + typeName.substring(2);
+			else
+				name = typeName.substring(0,1).toUpperCase() + typeName.substring(1);
+			out.print("shadow.standard@" + name);
+		}
+		else if( getOuter() == null ) //outermost class		
 			out.print(getFullName());
 		else
 			out.print(getTypeName().substring(getTypeName().lastIndexOf(':') + 1));
@@ -476,7 +485,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		for( Map.Entry<String, ModifiedType> field : getSortedFields().entrySet() )
 			if( field.getValue().getModifiers().isConstant() ) 
 			{
-				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey());
+				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
 				newLine = true;
 			}		
 		if( newLine )

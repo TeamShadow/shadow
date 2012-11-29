@@ -26,6 +26,7 @@ import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
+import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
@@ -832,28 +833,14 @@ public class FieldAndMethodChecker extends BaseChecker {
 	
 	
 	@Override
-	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {
-		Type type = null;		
-		switch( node.getLiteral() )
-		{
-		case BYTE: 		type = Type.BYTE; break;
-		case CODE: 		type = Type.CODE; break;
-		case SHORT: 	type = Type.SHORT; break;
-		case INT: 		type = Type.INT; break;
-		case LONG:		type = Type.LONG; break;
-		case FLOAT: 	type = Type.FLOAT; break;
-		case DOUBLE: 	type = Type.DOUBLE; break;
-		case STRING:	type = Type.STRING; break;
-		case UBYTE: 	type = Type.UBYTE; break;
-		case USHORT: 	type = Type.USHORT; break;
-		case UINT: 		type = Type.UINT; break;
-		case ULONG: 	type = Type.ULONG; break;
-		case BOOLEAN: 	type = Type.BOOLEAN; break;
-		case NULL: 		type = Type.NULL; break;
-		}
-		
-		node.setType(type);
-		
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {							
+		node.setType(literalToType(node.getLiteral()));
+		return WalkType.NO_CHILDREN;			
+	}
+	
+	@Override
+	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {
+		node.setType(nameToPrimitiveType(node.getImage()));		
 		return WalkType.NO_CHILDREN;			
 	}
 	

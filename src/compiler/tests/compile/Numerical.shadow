@@ -1,0 +1,12 @@
+class Numerical {
+    public blah() => () {
+        int a = 5;
+        int b = 7;
+        int c, d;
+        b = a.max( 10 );
+        int length = cast<int>("stuff".getLength());
+        a = 2.min( b );
+        
+        ( c, d ) = a.div( 4 );
+	}
+}

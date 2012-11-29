@@ -1,0 +1,8 @@
+interface shadow.standard@Number<T>
+{
+	immutable add(T other) => (T);
+	immutable subtract(T other) => (T);
+	immutable multiply(T other) => (T);
+	immutable divide(T other) => (T);
+	immutable modulus(T other) => (T);
+}

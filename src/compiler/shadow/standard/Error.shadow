@@ -1,4 +1,4 @@
-final immutable class shadow.standard@Error
+final immutable error shadow.standard@Error extends shadow.standard@Exception
 {
 	String message = "";
 	public create() { message = "Unknown Error"; }

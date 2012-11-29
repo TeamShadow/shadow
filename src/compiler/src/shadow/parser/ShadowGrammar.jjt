@@ -126,6 +126,7 @@ TOKEN :
 | < CLASS: "class" >
 | < CODE: "code" >
 | < CREATE: "create" >
+| < CONSTANT: "constant" >
 | < CONTINUE: "continue" >
 | < _DEFAULT: "default" >
 | < DELETE: "delete" >
@@ -256,14 +257,14 @@ TOKEN :
   < #OCTAL_LITERAL: "0" ["c","C"] (["0"-"7"])* > //doesn't use 0o or 0O because it's hard to read
 |
   < FLOAT_LITERAL:
-        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? ["f","F"]
+        (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
       | "." (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
       | (["0"-"9"])+ <EXPONENT> ["f","F"]
       | (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
   >
 |
   < DOUBLE_LITERAL:
-        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["d","D"])?
+        (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
       | "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
       | (["0"-"9"])+ <EXPONENT> (["d","D"])?
       | (["0"-"9"])+ (<EXPONENT>)? ["d","D"]
@@ -470,14 +471,15 @@ Modifiers Modifiers():
     "public" { modifiers.checkAndAdd(Modifiers.PUBLIC); }
   | "protected" { modifiers.checkAndAdd(Modifiers.PROTECTED); }
   | "private" { modifiers.checkAndAdd(Modifiers.PRIVATE); }
+  | "abstract" { modifiers.checkAndAdd(Modifiers.ABSTRACT); }
   | "final" { modifiers.checkAndAdd(Modifiers.FINAL); }
-  | "abstract" { modifiers.checkAndAdd(Modifiers.ABSTRACT); }  
-  |	"immutable"{ modifiers.checkAndAdd(Modifiers.IMMUTABLE); }
   | "native" { modifiers.checkAndAdd(Modifiers.NATIVE); }
   | "weak" { modifiers.checkAndAdd( Modifiers.WEAK); }
+  |	"immutable"{ modifiers.checkAndAdd(Modifiers.IMMUTABLE); }
   |	"nullable" { modifiers.checkAndAdd(Modifiers.NULLABLE); }
   |	"get" { modifiers.checkAndAdd(Modifiers.GET); }
   |	"set" { modifiers.checkAndAdd(Modifiers.SET); }
+  | "constant" { modifiers.checkAndAdd(Modifiers.CONSTANT); }
   )
  )*
 
@@ -876,23 +878,28 @@ void TypeArguments():
 
 
 void PrimitiveType():
-{ debugPrint("PRIMITIVE TYPE"); }
 {
-  (    
-  "boolean" { jjtThis.setType(Type.BOOLEAN); }
-| "code"    { jjtThis.setType(Type.CODE); }
-| "byte"    { jjtThis.setType(Type.BYTE); }
-| "short"   { jjtThis.setType(Type.SHORT); }
-| "int"     { jjtThis.setType(Type.INT); }
-| "long"    { jjtThis.setType(Type.LONG); }
-| "float"   { jjtThis.setType(Type.FLOAT); }
-| "double"  { jjtThis.setType(Type.DOUBLE); }
-| "ubyte"   { jjtThis.setType(Type.UBYTE); }
-| "uint"    { jjtThis.setType(Type.UINT); }
-| "ulong"   { jjtThis.setType(Type.ULONG); }
-| "ushort"  { jjtThis.setType(Type.USHORT); }
+  	debugPrint("PRIMITIVE TYPE");
+	Token t;
+}
+{
+
+(    
+  t = "boolean"
+| t = "byte"
+| t = "code"
+| t = "double"
+| t = "float"
+| t = "int"
+| t = "long"
+| t = "short"
+| t = "ubyte"
+| t = "uint" 
+| t = "ulong" 
+| t = "ushort" 
 )
 {
+  jjtThis.setImage(t.image);
   jjtThis.addModifier(Modifiers.TYPE_NAME);}
 }
 

@@ -1,0 +1,5 @@
+interface Iterator<T>
+{
+	immutable hasNext() => (boolean);
+	next() => (T);
+}

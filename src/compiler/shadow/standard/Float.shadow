@@ -1,5 +1,5 @@
 class shadow.standard@Float
 {
-	//constant Float PI = 3.141592653589793;
-	//constant Float E = 2.718281828459045;
+	constant float PI = 3.141592653589793;
+	constant float E = 2.718281828459045;
 }

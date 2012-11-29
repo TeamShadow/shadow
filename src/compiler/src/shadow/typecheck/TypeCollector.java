@@ -42,6 +42,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
@@ -79,12 +80,15 @@ public class TypeCollector extends BaseChecker
 		// Object, String, Class, and Array are added separately
 		// since there are files that correspond to them
 		// Will all type eventually have files?
-		
+	
+		/*
+		try
+	{		
 		addType(Type.BOOLEAN);
 		addType(Type.BYTE);
 		addType(Type.CODE);
 		addType(Type.SHORT);
-		addType(Type.INT);
+		//addType(Type.INT);
 		addType(Type.LONG);
 		addType(Type.FLOAT);
 		addType(Type.DOUBLE);
@@ -96,6 +100,13 @@ public class TypeCollector extends BaseChecker
 		addType(Type.NULL);	
 		
 		addType(Type.ENUM);
+		
+	}
+	catch(PackageException e)
+	{
+		addError( Error.INVL_TYP, e.getMessage() );				
+	}*/
+		
 //		addType(Type.ERROR);	
 //		addType(Type.EXCEPTION);
 	}
@@ -191,8 +202,8 @@ public class TypeCollector extends BaseChecker
 				if( type instanceof ClassType ) //includes error, exception, and enum (for now)
 				{		
 					ClassType classType = (ClassType)type;
-					if( !type.isBuiltIn() )
-					{						
+					if( type != Type.OBJECT ) //special case to keep Object from being its own parent
+					{
 						if( extendsTable.containsKey(type))
 						{
 							list = extendsTable.get(type);
@@ -237,11 +248,7 @@ public class TypeCollector extends BaseChecker
 							}
 						}
 					}
-					else //built-in types
-					{
-						if( type != Type.OBJECT ) //special case to keep Object from being its own parent
-							classType.setExtendType(Type.OBJECT);						
-					}
+
 				}
 				else if( type instanceof InterfaceType ) 
 				{
@@ -367,7 +374,7 @@ public class TypeCollector extends BaseChecker
 						SequenceType arguments = new SequenceType();
 						for( int j = 0; j < typeArguments.jjtGetNumChildren(); j++ )
 						{
-							ASTType argument = (ASTType) (typeArguments.jjtGetChild(j).jjtGetChild(0));
+							ASTType argument = (ASTType) (typeArguments.jjtGetChild(j));
 							//recursively update the type parameters of the type parameters...							
 							updateTypeParameters( argument, missingTypes );
 							
@@ -480,11 +487,30 @@ public class TypeCollector extends BaseChecker
 			fileList.add(stripExtension(file.getCanonicalPath()));	
 		
 		//Add standard imports
-		String path = Configuration.getInstance().getSystemImport() + File.separator + "shadow" + File.separator + "standard" + File.separator;
+		//change this to pulling everything from the directory?
+		/*
+		String path = Configuration.getInstance().getSystemImport().getCanonicalPath() + File.separator + "shadow" + File.separator + "standard" + File.separator;
 		fileList.add(path + "Object");
 		fileList.add(path + "Class");
 		fileList.add(path + "String");
 		fileList.add(path + "Exception");
+		fileList.add(path + "Int");
+		*/
+		
+		//add standard imports		
+		File standardDirectory = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
+		File[] standardImports = standardDirectory.listFiles( new FilenameFilter()
+				{
+					public boolean accept(File dir, String name)
+					{
+						return name.endsWith(".shadow");
+					}
+				}
+		);
+		
+		for( File file :  standardImports )
+			fileList.add(stripExtension(file.getCanonicalPath()));	
+		
 						
 		for(int i = 0; i < fileList.size(); i++ )
 		{			
@@ -524,7 +550,14 @@ public class TypeCollector extends BaseChecker
 				{
 					//if package already exists, it won't be recreated
 					Package newPackage = packageTree.addFullyQualifiedPackage(p.getFullyQualifiedName(), typeTable);
-					newPackage.addTypes( otherTypes.get(p) );
+					try
+					{	
+						newPackage.addTypes( otherTypes.get(p) );
+					}
+					catch(PackageException e)
+					{
+						addError( node, Error.INVL_TYP, e.getMessage() );				
+					}
 				}
 				
 				//copy any errors into our error list
@@ -587,11 +620,30 @@ public class TypeCollector extends BaseChecker
 				addError( node, Error.INVL_TYP, "Only outermost classes can define a package" );			
 		}
 		
+		String image = node.getImage();		
+		if( currentPackage.getFullyQualifiedName().equals("shadow.standard"))
+		{
+			if( image.equals("Boolean") ||
+				image.equals("Byte") ||
+				image.equals("Code") ||
+				image.equals("Short") ||
+				image.equals("Int") ||
+				image.equals("Long") ||
+				image.equals("Float") ||
+				image.equals("Double") ||
+				image.equals("UByte") ||
+				image.equals("UInt") ||
+				image.equals("ULong") ||
+				image.equals("UShort") )
+			{
+				image = image.toLowerCase();				
+			}
+		}		
 		
 		if( currentType == null )
-			typeName = currentName + node.getImage(); //package name is separate
+			typeName = currentName + image; //package name is separate
 		else
-			typeName = currentName + ":" + node.getImage();
+			typeName = currentName + ":" + image;
 		
 		if( lookupType(typeName) != null )
 		{
@@ -607,8 +659,7 @@ public class TypeCollector extends BaseChecker
 			case CLASS:
 				type = new ClassType(typeName, modifiers, currentType );
 				break;
-			case ENUM:
-				//enum may need some fine tuning
+			case ENUM:				
 				type = new EnumType(typeName, modifiers, currentType );
 				break;
 			case ERROR:
@@ -632,20 +683,64 @@ public class TypeCollector extends BaseChecker
 			
 			//Special case for system types			
 			if( currentPackage.getFullyQualifiedName().equals("shadow.standard"))
-			{
+			{	
 				if( typeName.equals("Object") )
 					Type.OBJECT = (ClassType) type;
-				else if( typeName.equals("Class"))
-					Type.CLASS  = (ClassType) type;
-				else if( typeName.equals("String"))
-					Type.STRING = (ClassType) type;
+				else if( typeName.equals("Class") )
+					Type.CLASS = (ClassType) type;
 				else if( typeName.equals("Array"))
 					Type.ARRAY = (ClassType) type;
+				else if( typeName.equals("Enum"))
+					Type.ENUM = (ClassType) type; //the base class for enum is not an enum
 				else if( typeName.equals("Exception"))
 					Type.EXCEPTION = (ExceptionType) type;
+				else if( typeName.equals("Error"))
+					Type.ERROR = (ErrorType) type;
+				else if( typeName.equals("boolean"))
+					Type.BOOLEAN = (ClassType)type;
+				else if( typeName.equals("byte"))
+					Type.BYTE = (ClassType)type;
+				else if( typeName.equals("code"))
+					Type.CODE = (ClassType)type;
+				else if( typeName.equals("double"))
+					Type.DOUBLE = (ClassType)type;
+				else if( typeName.equals("float"))
+					Type.FLOAT = (ClassType)type;
+				else if( typeName.equals("int") )
+					Type.INT = (ClassType) type;
+				else if( typeName.equals("long"))				
+					Type.LONG = (ClassType)type;
+				else if( typeName.equals("short"))
+					Type.SHORT = (ClassType)type;
+				else if( typeName.equals("ubyte"))
+					Type.UBYTE = (ClassType)type;
+				else if( typeName.equals("uint"))
+					Type.UINT = (ClassType)type;
+				else if( typeName.equals("ulong"))
+					Type.ULONG = (ClassType)type;
+				else if( typeName.equals("ushort"))
+					Type.USHORT = (ClassType)type;
+				else if( typeName.equals("String") )
+					Type.STRING = (ClassType) type;
+				else if( typeName.equals("CanCompare"))
+					Type.CAN_COMPARE = (InterfaceType) type;
+				else if( typeName.equals("CanIndex"))
+					Type.CAN_INDEX = (InterfaceType) type;
+				else if( typeName.equals("CanIterate"))
+					Type.CAN_ITERATE = (InterfaceType) type;
+				else if( typeName.equals("Number"))
+					Type.NUMBER = (InterfaceType) type;
+			}			
+			
+			try
+			{			
+				addType( type, currentPackage );
+			}
+			catch(PackageException e)
+			{
+				addError( node, Error.INVL_TYP, e.getMessage() );				
 			}
 			
-			addType( type, currentPackage );
 			node.setType(type);			
 		}
 	}

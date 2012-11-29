@@ -212,7 +212,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		for( Map.Entry<String, Node> field : getFields().entrySet() )
 			if( field.getValue().getModifiers().isConstant() )
 			{
-				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey());
+				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
 				newLine = true;
 			}
 		if( newLine )

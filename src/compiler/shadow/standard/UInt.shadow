@@ -1,14 +1,14 @@
 class shadow.standard@UInt
 {
-	public min( UInt other ) => ( UInt )
+	public min( uint other ) => ( uint )
 	{
 		return this < other ? this, other;
 	}
 
-	public max( UInt other ) => ( UInt )
+	public max( uint other ) => ( uint )
 	{
 		return this > other ? this, other;
 	}
 
-	public native div( UInt other ) => ( UInt quotient, UInt remainder );
+	public native div( uint other ) => ( uint quotient, uint remainder );
 }

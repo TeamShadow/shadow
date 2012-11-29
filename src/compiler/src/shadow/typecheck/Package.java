@@ -7,6 +7,21 @@ import shadow.typecheck.type.Type;
 
 public class Package
 {	
+	public class PackageException extends Exception
+	{
+		public PackageException()
+		{
+			super();
+		}		
+
+		public PackageException(String message)
+		{
+			super(message);
+		}
+	}
+
+	
+	
 	private final HashMap<String, Package> children = new HashMap<String, Package>();
 	private final HashMap<String, ClassInterfaceBaseType> types = new HashMap<String, ClassInterfaceBaseType>();
 	private final String name;	
@@ -63,14 +78,19 @@ public class Package
 			return this;
 	}
 	
-	public void addType(ClassInterfaceBaseType type )
-	{		
-		types.put(type.getTypeName(), type);
-		type.setPackage(this);
+	public void addType(ClassInterfaceBaseType type ) throws PackageException
+	{	
+		if(!types.containsKey(type.getTypeName()))
+		{
+			types.put(type.getTypeName(), type);
+			type.setPackage(this);
+		}
+		else
+			throw new PackageException("Package " + this.toString() + " already contains type " + type);
 	}
 	
 
-	public void addTypes(HashMap<String, ClassInterfaceBaseType> types) {
+	public void addTypes(HashMap<String, ClassInterfaceBaseType> types) throws PackageException {
 		for( ClassInterfaceBaseType type : types.values() )
 			addType( type );
 	}

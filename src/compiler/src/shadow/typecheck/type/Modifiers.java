@@ -220,7 +220,7 @@ public final class Modifiers
 
 	public void checkErrorModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "An error");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | FINAL | IMMUTABLE ), "An error");
 	}
 
 
