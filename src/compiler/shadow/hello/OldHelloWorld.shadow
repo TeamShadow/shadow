@@ -3,19 +3,19 @@ import shadow.io@Console;
 class shadow.hello@OldHelloWorld
 {
 
-	public construct()
+	public create()
 	{
 		Console.printLine("object Hello World initialized with no arguments.");
 	}
 
-	public construct(int a)
+	public create(int a)
 	{
 		Console.print("object Hello World initialized with one argument: ");
 		Console.print(a);
 		Console.printLine(".");
 	}
 
-	public constructor(int a, int b)
+	public create(int a, int b)
 	{
 		Console.print("object Hello World initialized with two arguments: ");
 		Console.print(a);

@@ -2,7 +2,7 @@ class OutsideProperty
 {	
 	public stuff() => ()
 	{
-		Property p = Property:construct();
+		Property p = Property:create();
 		
 		int x = p->a;
 		p->b = 7;

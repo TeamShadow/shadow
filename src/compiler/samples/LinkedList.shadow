@@ -6,7 +6,7 @@ class LinkedList<T> implements List<T>
 		Node<T> next = null;
 		Node<T> previous = null;
 		
-		public construct( T value, Node<T> next, Node<T> previous )
+		public create( T value, Node<T> next, Node<T> previous )
 		{
 			this.value = value;
 			this.next = next;
@@ -55,13 +55,13 @@ class LinkedList<T> implements List<T>
 	final Node<T> head = new Node<T>( null, null, null );
 	final Node<T> tail = new Node<T>( null, null, null );
 
-	public construct()
+	public create()
 	{
 		head.setNext( tail );
 		tail.setPrevious( head );
 	}
 	
-	public construct( Collection<S is T> collection )
+	public create( Collection<S is T> collection )
 	{
 		addAll( collection );
 	}

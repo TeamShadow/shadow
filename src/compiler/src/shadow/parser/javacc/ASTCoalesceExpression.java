@@ -3,6 +3,7 @@
 package shadow.parser.javacc;
 
 public
+@SuppressWarnings("all")
 class ASTCoalesceExpression extends SimpleNode {
   public ASTCoalesceExpression(int id) {
     super(id);
@@ -18,4 +19,4 @@ class ASTCoalesceExpression extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=bb4b25118555792bf33146d3cd2c08e4 (do not edit this line) */
+/* JavaCC - OriginalChecksum=d6743211d1e6e730426cc7f49ba2ed10 (do not edit this line) */

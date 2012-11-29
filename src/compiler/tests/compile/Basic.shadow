@@ -9,11 +9,11 @@ class Basic {
       if(a > c and c < a and a < c)
     	a = 14;
         
-        Bob b = Bob:construct(2);      
+        Bob b = Bob:create(2);      
     }
     
     private class Bob {
-        public construct(int a) {        
+        public create(int a) {        
          int z = 14;
 
         

@@ -14,7 +14,7 @@ class ComplexAccess {
 	
 	private stuff() => (Inner)
 	{
-		Inner i = Inner:construct();
+		Inner i = Inner:create();
 		return i;
 	}
 	    
@@ -22,14 +22,14 @@ class ComplexAccess {
     {
     	int c;
     	
-    	ComplexAccess[] first = ComplexAccess:array[100];
-    	first[0] = ComplexAccess:construct();
+    	ComplexAccess[] first = ComplexAccess:create[100];
+    	first[0] = ComplexAccess:create();
     	
     	try
     	{
     		c = check(first[0]).stuff().jam(10);    	
-    		ComplexAccess outer = ComplexAccess:construct();    	
-    		check(check(outer->i)->o)->i = Inner:construct();    		
+    		ComplexAccess outer = ComplexAccess:create();    	
+    		check(check(outer->i)->o)->i = Inner:create();    		
     	}
     	recover
     	{}

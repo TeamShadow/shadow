@@ -4,13 +4,13 @@ class PairUser
 	{
 	
 	
-		Pair<int> pair1 = Pair <int>:construct( 7, 14 );
+		Pair<int> pair1 = Pair <int>:create( 7, 14 );
 	
 	
-		Pair<int> pair2 = Pair <int>:construct( pair1 );
+		Pair<int> pair2 = Pair <int>:create( pair1 );
 		
 		
-		Pair<String> pair3 = Pair<String>:construct( pair1.toString(), pair2.toString() );
+		Pair<String> pair3 = Pair<String>:create( pair1.toString(), pair2.toString() );
 	
 	
 	}

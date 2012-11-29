@@ -1,6 +1,6 @@
 singleton shadow.io@Console
 {
-	public construct() { }
+	public create() { }
 
 	public printLine( boolean b ) => () { print(b); printLine(); }
 	public printLine( int i ) => () { print(i); printLine(); }

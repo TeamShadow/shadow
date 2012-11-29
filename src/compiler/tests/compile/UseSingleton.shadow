@@ -1,7 +1,7 @@
 class UseSingleton {
 
 	public start() => () {
-		Foo f = Foo:construct();
+		Foo f = Foo:create();
 		Singleton s = Singleton:instance;
 		
 		int v = s->value;

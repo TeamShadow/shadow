@@ -1,7 +1,7 @@
 class Generics
 {
 	public start(String[] args) => () {
-        Pig<String> pig = Pig<String>:construct();
+        Pig<String> pig = Pig<String>:create();
         
         pig.setValue("Help");
         

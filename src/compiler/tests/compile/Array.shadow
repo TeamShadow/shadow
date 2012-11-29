@@ -2,11 +2,11 @@ class Array {
     
     public start() => ()
     {	
-    	int[] list = int:array[100];
+    	int[] list = int:create[100];
     	list[6] = 14;
     	
-    	Foo[] fooList = Foo:array[100];
-    	fooList[0] = Foo:construct();
+    	Foo[] fooList = Foo:create[100];
+    	fooList[0] = Foo:create();
     }
 
 }

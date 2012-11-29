@@ -2,9 +2,9 @@ class Subtype {
 
 	public method () => ()
 	{
-		BaseClass a = BaseClass:construct();
-		a = Subclass1:construct();		
-		a = Subclass2:construct();
+		BaseClass a = BaseClass:create();
+		a = Subclass1:create();		
+		a = Subclass2:create();
 		
 		int b = 2s;
 		short c = 4y;

@@ -114,7 +114,6 @@ TOKEN :
 {
   < ABSTRACT: "abstract" >
 | < AND: "and" >
-| < ARRAY: "array" >
 | < ASSERT: "assert" >
 | < AUTO: "auto" >
 | < BOOLEAN: "boolean" >
@@ -126,7 +125,7 @@ TOKEN :
 | < CHECK: "check" >
 | < CLASS: "class" >
 | < CODE: "code" >
-| < CONSTRUCT: "construct" >
+| < CREATE: "create" >
 | < CONTINUE: "continue" >
 | < _DEFAULT: "default" >
 | < DELETE: "delete" >
@@ -157,7 +156,6 @@ TOKEN :
 | < LONG: "long" >
 | < NATIVE: "native" >
 //| < NEW: "new" >
-| < NOOP: "noop" >
 | < NULL: "null" >
 | < NULLABLE: "nullable" >
 | < OR: "or" >
@@ -169,6 +167,7 @@ TOKEN :
 | < SET: "set" >
 | < SHORT: "short" >
 | < SINGLETON: "singleton" >
+| < _SKIP: "skip" >
 //| < STRICTFP: "strictfp" >
 | < SUPER: "super" >
 | < SWITCH: "switch" >
@@ -673,7 +672,7 @@ void ClassOrInterfaceBodyDeclaration(boolean isInterface):
 | modifiers = Modifiers()
   (  ClassOrInterfaceDeclaration(modifiers)
     | EnumDeclaration(modifiers)
-    | LOOKAHEAD( "construct" ) ConstructDeclaration(modifiers)
+    | LOOKAHEAD( "create" ) CreateDeclaration(modifiers)
     | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
     | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifiers) 
     | MethodDeclaration(modifiers)
@@ -760,18 +759,18 @@ void FormalParameter():
    }
 }
 
-void ConstructDeclaration(Modifiers modifiers):
+void CreateDeclaration(Modifiers modifiers):
 {
-  debugPrint("CONSTRUCT DECLARATION");
-  modifiers.checkConstructModifiers();  
+  debugPrint("CREATE DECLARATION");
+  modifiers.checkCreateModifiers();  
 }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("construct"); }  
+  { jjtThis.setModifiers(modifiers); jjtThis.setImage("create"); }  
   // Modifiers matched in the caller
-  "construct" FormalParameters() [ "throws" NameList() ]
+  "create" FormalParameters() [ "throws" NameList() ]
   ( (
        "{"
-    [ LOOKAHEAD(ExplicitConstructInvocation()) ExplicitConstructInvocation() ]
+    [ LOOKAHEAD(ExplicitCreateInvocation()) ExplicitCreateInvocation() ]
     ( BlockStatement() )*
   "}")
    |
@@ -790,14 +789,12 @@ void DestroyDeclaration(Modifiers modifiers):
   ( Block() | ";" )
 }
 
-void ExplicitConstructInvocation():
-{ debugPrint("EXPLICIT CONTRUCTOR INVOCATION"); }
+void ExplicitCreateInvocation():
+{ debugPrint("EXPLICIT CREATE INVOCATION"); }
 {
-  LOOKAHEAD("this" ":" "construct" Arguments() ";")
-  "this" ":" "construct" Arguments() ";"
-|
-  /*[ LOOKAHEAD(2) PrimaryExpression() "." ]*/ "super" ":" "construct" Arguments() ";"
-  //what is that for?  Thing.super()?
+  LOOKAHEAD("this" Arguments() ";")
+  "this" Arguments() ";"
+| "super" Arguments() ";" 
 }
 
 
@@ -874,23 +871,7 @@ void ClassOrInterfaceTypeSuffix():
 void TypeArguments():
 { debugPrint("TYPE ARGUMENTS"); }
 {
-   "<" TypeArgument() ( "," TypeArgument() )* ">"
-}
-
-
-//since TypeArgument is just Type, consider getting rid of it
-void TypeArgument():
-{ debugPrint("TYPE ARGUMENT"); }
-{
-   Type() //reference type since an array can be a type argument
-// | "?" [ WildcardBounds() ]
-}
-
-void WildcardBounds(): //like C#, no wildcard bounds
-{ debugPrint("WILDCARD BOUNDS"); }
-{
-   "extends" ReferenceType()
- | "super" ReferenceType()
+   "<" Type() ( "," Type() )* ">"
 }
 
 
@@ -1131,21 +1112,6 @@ void UnaryExpressionNotPlusMinus():
 | PrimaryExpression()
 }
 
-// This production is to determine lookahead only.  The LOOKAHEAD specifications
-// below are not used, but they are there just to indicate that we know about
-// this.
-//void CastLookahead():
-//{ debugPrint("CAST LOOKAHEAD"); }
-//{
-//  LOOKAHEAD(2)
-//  "(" PrimitiveType()
-//|
-//  LOOKAHEAD("(" Type() "[")
-//  "(" Type() "[" "]"
-//|
-//  "(" Type() ")" ( "~" | "!" | "(" | <IDENTIFIER> | "this" | "super" | "new" | Literal() )
-//}
-
 void CastExpression():
 {
     debugPrint("CAST EXPRESSION");
@@ -1202,6 +1168,7 @@ void PrimarySuffix():
   LOOKAHEAD(2) QualifiedKeyword()
 | LOOKAHEAD(3) Brackets()
 | LOOKAHEAD(3) Subscript()
+| LOOKAHEAD(2) Destroy()
 | Method()
 | LOOKAHEAD(Allocation()) Allocation()
 | ScopeSpecifier()
@@ -1215,8 +1182,8 @@ void Allocation():
   Token t;}
 {
   		LOOKAHEAD(2) Instance()
-	|	LOOKAHEAD(Array()) Array()
-	|   Construct()
+	|	LOOKAHEAD(ArrayCreate()) ArrayCreate()
+	|   Create()
  }
 
 
@@ -1244,13 +1211,13 @@ void Brackets():
   ( LOOKAHEAD(2) "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+
 }
 
-void Array():
+void ArrayCreate():
 {
-  debugPrint("ARRAY");
+  debugPrint("ARRAY CREATE");
   Token t;
 }
 {
-  [ TypeArguments() ] ":" "array" ( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); })+
+  [ TypeArguments() ] ":" "create" ( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); })+
 }
 
 void Subscript():
@@ -1262,13 +1229,13 @@ void Subscript():
   "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); }
 }
 
-void Construct():
+void Create():
 {
-  	debugPrint("CONSTRUCT");
+  	debugPrint("CREATE");
 }
 {
-  [ TypeArguments() ] ":" "construct" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
-  { jjtThis.setImage("construct"); debugPrint("construct");  } 
+  [ TypeArguments() ] ":" "create" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+  { jjtThis.setImage("create"); debugPrint("create");  } 
 }
 
 void Instance():
@@ -1287,6 +1254,15 @@ void ScopeSpecifier():
 }
 {
   ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //field, constant, or class
+}
+
+void Destroy():
+{
+  	debugPrint("DESTROY");
+	Token t;
+}
+{
+  "." "destroy" { jjtThis.setImage("destroy"); debugPrint("destroy");  }
 }
 
 void Method():
@@ -1388,31 +1364,6 @@ void ArgumentList():
   ConditionalExpression() ( "," ConditionalExpression() )*
 }
 
-/*
-void AllocationExpression():
-{ debugPrint("ALLOCATION EXPRESSION"); }
-{
-  LOOKAHEAD(ArrayAllocation())
-  ArrayAllocation()
-| ConstructInvocation()
-| SingletonInstance()
-}
-
-
-void ArrayAllocation():
-{ debugPrint("ARRAY ALLOCATION"); }
-{  
-  "new" ( PrimitiveType() | ClassOrInterfaceType() ) ArrayDimsAndInits()
-}
-
-
-void ConstructInvocation():
-{ debugPrint("CONSTRUCT INVOCATION"); }
-{
- 	"new" PrimaryExpression()    
-}
-*/
-
 
 /*
  * The third LOOKAHEAD specification below is to parse to PrimarySuffix
@@ -1510,15 +1461,14 @@ void LocalVariableDeclaration(Modifiers modifiers):
 void EmptyStatement():
 {}
 {
-  "noop" ";"
+  "skip" ";"
 }
 
 void StatementExpression():
 { debugPrint("STATEMENT EXPRESSION"); }
 {
-  		LOOKAHEAD( SequenceAssignment() ) SequenceAssignment()
- 	//|   AllocationExpression() //allocation without assignment
-	| 	Expression()  //method call or assignment
+  		LOOKAHEAD( SequenceAssignment() ) SequenceAssignment() 	
+	| 	Expression()  //method call, assignment, or allocation
 }
 
 void SequenceAssignment() :
@@ -1640,13 +1590,6 @@ void ThrowStatement():
   "throw" ConditionalExpression() ";"
 }
 
-/*
-void SynchronizedStatement():
-{}
-{
-  "synchronized" "(" ConditionalExpression() ")" Block()
-}
-*/
 
 void TryStatement():
 /*

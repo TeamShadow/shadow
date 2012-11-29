@@ -4,7 +4,7 @@ class Auto
 	public stuff() => ()
 	{
 		auto thing = "A string";
-		auto x = Object:construct();
+		auto x = Object:create();
 		auto a = 4;
 		auto b = 5;
 		auto c = a + b;

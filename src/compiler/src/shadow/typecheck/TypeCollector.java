@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,7 +30,6 @@ import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTType;
-import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
@@ -838,16 +836,6 @@ public class TypeCollector extends BaseChecker
 	@Override
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
 	{		
-		/* Can be in:
-		 * ExtendsList (do import if @)
-		 * ImplementsList (do import if @)
-		 * TypeBound (do import if @)
-		 * TypeArgument (do import if @)
-		 * ReferenceType (do import if @)
-		 * ArrayAllocation (do import if @)
-		 * ConstructorInvocation (do import if @) ALL CASES
-		 */
-		
 		if( secondVisit )
 		{			
 			if ( node.jjtGetNumChildren() > 0)
@@ -918,16 +906,6 @@ public class TypeCollector extends BaseChecker
 			builder.append(">");
 			node.setImage(builder.toString());
 		}
-		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	
-	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )		
-			node.setImage(node.jjtGetChild(0).getImage());
-	
 		return WalkType.POST_CHILDREN;
 	}
 	

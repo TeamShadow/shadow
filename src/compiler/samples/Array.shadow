@@ -2,7 +2,7 @@ class Array<T> implements Iterable<T>, Sortable<T>
 {
 	final int size;
 	
-	public construct( int size )
+	public create( int size )
 	{
 		this.size = size;
 	}	

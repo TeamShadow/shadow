@@ -322,7 +322,7 @@ public class LLVMOutput extends TACAbstractVisitor
 			llvm.write("store " + type(param) + " %" + paramIndex++ + ", " +
 					type(param) + "* %" + name(param));
 		tempCounter = ++paramIndex;
-		if (method.isConstructor())
+		if (method.isCreate())
 		{
 			ClassInterfaceBaseType type = method.getPrefixType();
 			String methodsType = '\"' + type.toString() + "$methods\"";

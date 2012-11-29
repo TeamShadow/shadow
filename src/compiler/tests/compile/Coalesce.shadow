@@ -1,7 +1,7 @@
 class Coalesce {
 
 	nullable Object o1;
-	Object o2 = Object:construct();
+	Object o2 = Object:create();
 	
 	private stuff1() => (nullable Object)
 	{
@@ -11,14 +11,14 @@ class Coalesce {
 	private stuff2() => (int)
 	{
 		Object a = (o1 ?? o2);
-		Object o = Object:construct();
+		Object o = Object:create();
 		Object b = (o1 ?? o );
 		nullable Object c = (o1 ?? null);
 		
 		//Uncomment for errors
 		//Object d = (o2 ?? o1);
 		//Object e = o1;		
-		//nullable Foo foo = Foo:construct();
+		//nullable Foo foo = Foo:create();
 		//Object f = (foo ?? "pigs");
 	}
 }

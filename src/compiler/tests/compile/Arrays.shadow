@@ -1,21 +1,21 @@
 
 class Arrays {
 
-    int[][][,,,][][,] a = int:array[4][5][8,7,6,5][31][4,2];
+    int[][][,,,][][,] a = int:create[4][5][8,7,6,5][31][4,2];
 
     // create a single array
     nullable int[] a1;
- 	int[] a2 = int:array[3];
+ 	int[] a2 = int:create[3];
   	int[] a3 = a2;
     
     // multidimensional arrays
     nullable get set int[][] b1;
-    int[][] b2 = int:array[3][4];
+    int[][] b2 = int:create[3][4];
     int[][] b3 = b2;
     
     // contiguous arrays    
     nullable int[,] c1;
-    int[,] c2 = int:array[3,4];
+    int[,] c2 = int:create[3,4];
     int[,] c3 = c2;
     
     public blah() => () {
@@ -26,17 +26,17 @@ class Arrays {
 
 	    // create a single array
 	    nullable int[] a1;
-	    int[] a2 = int:array[30];
+	    int[] a2 = int:create[30];
 	    int[] a3 = a2;
 	    
 	    // multidimensional arrays
 	    nullable int[][] b1;
-	    int[][] b2 = int:array[3][4];
+	    int[][] b2 = int:create[3][4];
 	    int[][] b3 = b2;
 	    
 	    // contiguous arrays    
 	    nullable int[,] c1;
-	    int[,] c2 = int:array[30,40];
+	    int[,] c2 = int:create[30,40];
 	    int[,] c3 = c2;
              
         // test some other array expressions
@@ -58,8 +58,8 @@ class Arrays {
         c2[7,8] = a2[8];
         int x = 4;
         
-        int [,,,,] m = int:array[ 3, 5, 7, 10, 14];
-        int [][,,][] n = int:array[5][3,9,14][8];
+        int [,,,,] m = int:create[ 3, 5, 7, 10, 14];
+        int [][,,][] n = int:create[5][3,9,14][8];
         m[2, 4, 6, x + 4, 13] = 15;
         try
         {

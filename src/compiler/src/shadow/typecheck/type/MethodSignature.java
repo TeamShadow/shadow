@@ -81,7 +81,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}	
 
 	public String toString() {		
-		if( symbol.equals("construct") )
+		if( symbol.equals("create") )
 			return getModifiers() + symbol + type.parametersToString();
 		else if( symbol.equals("destroy") )
 			return getModifiers() + symbol;
@@ -137,7 +137,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return toString().compareTo(o.toString());
 	}
 
-	public boolean isConstructor() {		
-		return symbol.equals("constructor");
+	public boolean isCreate() {		
+		return symbol.equals("create");
 	}
 }

@@ -19,7 +19,7 @@ class VariableDeclaration {
     }
     
     public arrays() => () {
-        int[] a = int:array[10];
+        int[] a = int:create[10];
         nullable int[,,,][][,][] b;    
     }
 }

@@ -142,8 +142,8 @@ public class TACBuilder implements ShadowParserVisitor
 		for (List<MethodSignature> methodList : type.getMethodMap().values())
 			for (MethodSignature method : methodList)
 				visitMethod(new TACMethod(method), fields, method.getNode());
-		if (!type.getMethodMap().containsKey("construct"))
-			visitMethod(new TACMethod("construct", new MethodType(type, new Modifiers())),
+		if (!type.getMethodMap().containsKey("create"))
+			visitMethod(new TACMethod("create", new MethodType(type, new Modifiers())),
 					fields, null);
 
 		return NO_CHILDREN;
@@ -307,7 +307,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTConstructDeclaration node, Boolean secondVisit)
+	public Object visit(ASTCreateDeclaration node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit && !(tree.prependAllChildren() instanceof TACReturn))
@@ -325,7 +325,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTExplicitConstructInvocation node,
+	public Object visit(ASTExplicitCreateInvocation node,
 			Boolean secondVisit)
 			throws ShadowException
 	{
@@ -383,20 +383,6 @@ public class TACBuilder implements ShadowParserVisitor
 
 	@Override
 	public Object visit(ASTTypeArguments node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTTypeArgument node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTWildcardBounds node, Boolean secondVisit)
 			throws ShadowException
 	{
 		return PRE_CHILDREN;
@@ -872,11 +858,11 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTConstruct node, Boolean secondVisit)
+	public Object visit(ASTCreate node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit)
-			visitConstructor(node);
+			visitCreate(node);
 		return POST_CHILDREN;
 	}
 
@@ -900,7 +886,7 @@ public class TACBuilder implements ShadowParserVisitor
 			new TACBranch(tree, doneLabel);
 			nullLabel.new TACLabel(tree);
 			TACOperand newValue = new TACNewObject(tree, type);
-			new TACCall(tree, new TACMethod("construct",
+			new TACCall(tree, new TACMethod("create",
 					new MethodType(type, new Modifiers())), Collections.singleton(newValue));
 			new TACStore(tree, value, newValue);
 			new TACStore(tree, var, newValue);
@@ -1192,7 +1178,7 @@ public class TACBuilder implements ShadowParserVisitor
 		if (!methodRef.isNative())
 		{
 			tree = tree.next();
-			if (methodRef.isConstructor())
+			if (methodRef.isCreate())
 				for (Node field : fieldNodes)
 					walk(field);
 			if (methodNode == null)
@@ -1270,22 +1256,22 @@ public class TACBuilder implements ShadowParserVisitor
 		prefix = new TACCall(tree, methodRef, params);
 	}
 
-	private void visitConstructor(SimpleNode node)
+	private void visitCreate(SimpleNode node)
 	{
 		MethodType methodType = (MethodType)node.getType();
 		ClassType type = (ClassType)node.jjtGetChild(0).getType();
 		TACOperand object = new TACNewObject(tree, type);
-		if (!type.getMethodMap().containsKey("construct"))
+		if (!type.getMethodMap().containsKey("create"))
 			methodType = new MethodType(type, new Modifiers());
 //		SequenceType paramTypes = (SequenceType)node.jjtGetChild(1).getType();
-//		List<MethodSignature> ctors = type.getMethodMap().get("construct");
-//		if (ctors == null) // Default construct
+//		List<MethodSignature> ctors = type.getMethodMap().get("create");
+//		if (ctors == null) // Default create
 //			methodType = new MethodType(type, 0);
 //		else
 //			for (MethodSignature sig : ctors)
 //				if (sig.canAccept(paramTypes))
 //					methodType = sig.getMethodType();
-		TACMethod methodRef = new TACMethod("construct", methodType);
+		TACMethod methodRef = new TACMethod("create", methodType);
 		TACSequence sequence = tree.appendChildRemoveSequence(1);
 		List<TACOperand> params =
 				new ArrayList<TACOperand>(sequence.size() + 1);
@@ -1417,7 +1403,7 @@ public class TACBuilder implements ShadowParserVisitor
 		return null;
 	}
 	@Override
-	public Object visit(ASTArray node, Boolean data) throws ShadowException {
+	public Object visit(ASTArrayCreate node, Boolean data) throws ShadowException {
 		// TODO Auto-generated method stub
 		return null;
 	}

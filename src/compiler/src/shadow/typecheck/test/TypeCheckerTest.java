@@ -104,8 +104,8 @@ public class TypeCheckerTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testConstructor() throws Exception {
-		args.add("tests/compile/Constructor.shadow");
+		@Test public void testCreate() throws Exception {
+		args.add("tests/compile/Create.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 

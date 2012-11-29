@@ -214,7 +214,7 @@ public class ClassType extends ClassInterfaceBaseType {
 				if( !list.contains( signature ) )
 					list.add(signature);
 		
-		if( getExtendType() != null && !methodName.equals("construct") )
+		if( getExtendType() != null && !methodName.equals("create") )
 			return getExtendType().recursivelyGetMethods(methodName, list);
 		else
 			return list;
@@ -299,7 +299,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		
 		TreeMap<String, List<MethodSignature>> sortedMethods =
 				new TreeMap<String, List<MethodSignature>>(methodTable);
-		sortedMethods.remove("construct"); // skip constructors
+		sortedMethods.remove("create"); // skip creates
 
 		for ( List<MethodSignature> methods : sortedMethods.values() )
 			for ( MethodSignature method : methods )				

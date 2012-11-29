@@ -16,7 +16,7 @@ import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTCompilationUnit;
-import shadow.parser.javacc.ASTConstructDeclaration;
+import shadow.parser.javacc.ASTCreateDeclaration;
 import shadow.parser.javacc.ASTDestroyDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameters;
@@ -30,7 +30,6 @@ import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTType;
-import shadow.parser.javacc.ASTTypeArgument;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeDeclaration;
@@ -78,15 +77,15 @@ public class FieldAndMethodChecker extends BaseChecker {
 				if( type instanceof ClassType )
 				{
 					ClassType classType = (ClassType)type;
-					if (classType.getMethods("construct").isEmpty())
+					if (classType.getMethods("create").isEmpty())
 					{
-						//if no constructs, add the default one
-						ASTConstructDeclaration constructNode = new ASTConstructDeclaration(-1);
-						constructNode.setModifiers(Modifiers.PUBLIC);
-						MethodSignature constructSignature = new MethodSignature(classType, "construct", new Modifiers(), constructNode);
-						constructNode.setMethodSignature(constructSignature);
-						classType.addMethod("construct", constructSignature);
-						//note that the node is null for the default construct, because nothing was made
+						//if no creates, add the default one
+						ASTCreateDeclaration createNode = new ASTCreateDeclaration(-1);
+						createNode.setModifiers(Modifiers.PUBLIC);
+						MethodSignature createSignature = new MethodSignature(classType, "create", new Modifiers(), createNode);
+						createNode.setMethodSignature(createSignature);
+						classType.addMethod("create", createSignature);
+						//note that the node is null for the default create, because nothing was made
 					}
 					
 					
@@ -551,13 +550,13 @@ public class FieldAndMethodChecker extends BaseChecker {
 		return visitMethod( methodDeclarator, node, secondVisit );
 	}
 	
-	public Object visit(ASTConstructDeclaration node, Boolean secondVisit) throws ShadowException {		
-		//construct uses the same node for modifiers and signature
+	public Object visit(ASTCreateDeclaration node, Boolean secondVisit) throws ShadowException {		
+		//create uses the same node for modifiers and signature
 		
 		if( secondVisit && (currentType instanceof SingletonType) ) {
 			Node parameters = node.jjtGetChild(0); //formal parameters
 			if( parameters.jjtGetNumChildren() > 0 )
-				addError( node, Error.INVL_TYP, "Singleton type can only specify a default constructor");
+				addError( node, Error.INVL_TYP, "Singleton type can only specify a default create");
 		}
 		
 		return visitMethod( node, node, secondVisit );
@@ -949,13 +948,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;	
 	}
-	
-	
-	
-	//ASTTypeArguments Appears in: 
-	//ConstructorInvocation()
-	//ClassOrInterfaceTypeSuffix()
-	//ArrayAllocation()
+
 	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
 	{
 		if( secondVisit )
@@ -972,8 +965,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 	
 
 	// Everything below here are just visitors to push up the type
-	
-	public Object visit(ASTTypeArgument node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+		
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { 
 		return pushUpType(node, secondVisit); 
 	}

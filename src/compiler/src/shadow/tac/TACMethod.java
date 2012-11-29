@@ -101,9 +101,9 @@ public class TACMethod extends TACNodeList
 		return type.getModifiers().isNative();
 	}
 
-	public boolean isConstructor()
+	public boolean isCreate()
 	{
-		return name.equals("construct");
+		return name.equals("create");
 	}
 	public boolean isDestructor()
 	{

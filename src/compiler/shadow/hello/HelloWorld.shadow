@@ -5,25 +5,25 @@ class shadow.hello@HelloWorld
 	public nullable HelloWorld self = null;
 	public uint times = 5ui;
 	public String message = "Hello World!";
-	public construct()
+	public create()
 	{
 		self = this;
 		times = 5ui;
 		message = "Hello World!";
 	}
-	public construct(uint times)
+	public create(uint times)
 	{
 		self = this;
 		this.times = times;
 		message = "Hello World!";
 	}
-	public construct(String message)
+	public create(String message)
 	{
 		self = this;
 		times = 5ui;
 		this.message = message;
 	}
-	public constructor(uint times, String message)
+	public create(uint times, String message)
 	{
 		self = this;
 		this.times = times;

@@ -4,13 +4,13 @@ class Pair<T>
 	set get nullable T x;
 	set get nullable T y;
 	
-	public construct( T x, T y )
+	public create( T x, T y )
 	{
 		this:x = x;
 		this:y = y;
 	}
 	
-	public construct( Pair<T> pair )
+	public create( Pair<T> pair )
 	{
 		x = pair:x;
 		y = pair:y;

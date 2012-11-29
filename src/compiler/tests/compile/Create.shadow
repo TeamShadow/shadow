@@ -1,0 +1,12 @@
+class Constructor
+{
+	public create() {}
+    public create(int a) {}
+    public create(int a, int b) {}
+    
+    
+    public create(code a ) throws BlahException{}   
+    public create(String a, code b) throws BlahException{}
+
+    public destroy {}    
+}

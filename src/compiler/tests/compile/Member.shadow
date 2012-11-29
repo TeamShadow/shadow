@@ -12,7 +12,7 @@ class Member {
     get set boolean f;	// basic boolean
     get set short g;		// basic short
     get set long h;		// basic short    
-    get set Object i = Object:construct();	// basic object
+    get set Object i = Object:create();	// basic object
     
 	//Private
     int j;   	// private int
@@ -23,7 +23,7 @@ class Member {
     boolean o;	// private boolean
     short p;	// private short
     long q;		// private short    
-    Object s = Object:construct();		// private object    
+    Object s = Object:create();		// private object    
 
 
   	//Modifiers

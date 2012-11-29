@@ -3,22 +3,22 @@ class shadow.hello@Container
 	// Sorry for the horribly named variables
 	public Container c;
 	public HelloWorld hw;
-	public construct()
+	public create()
 	{
 		c = null;
 		hw = null;
 	}
-	public construct(Container o)
+	public create(Container o)
 	{
 		c = o;
 		hw = null;
 	}
-	public constructor(HelloWorld o)
+	public create(HelloWorld o)
 	{
 		c = null;
 		hw = o;
 	}
-	public construct(Container o1, HelloWorld o2)
+	public create(Container o1, HelloWorld o2)
 	{
 		c = o1;
 		hw = o2;

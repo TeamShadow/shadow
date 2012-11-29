@@ -267,9 +267,9 @@ public final class Modifiers
 	}
 
 
-	public void checkConstructModifiers() throws ParseException
+	public void checkCreateModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A construct");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A create");
 	}
 
 	public void checkDestroyModifiers() throws ParseException

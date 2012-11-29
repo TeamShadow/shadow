@@ -1,4 +1,4 @@
 interface Constructable<T>
 {
-	construct( T value );
+	create( T value );
 }

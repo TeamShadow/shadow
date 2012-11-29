@@ -6,11 +6,11 @@ class Imports
 	{
 		int a = 10;
 		
-		Random r = Random:construct();
+		Random r = Random:create();
 		
 		a += r.nextInt();
 		
-		shadow.utility@Random v = shadow.utility@Random:construct();
+		shadow.utility@Random v = shadow.utility@Random:create();
 		
 		a *= v.nextInt();
 					
