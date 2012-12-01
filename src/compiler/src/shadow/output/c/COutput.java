@@ -58,11 +58,11 @@ public class COutput extends TACAbstractVisitor
 		for (Type type : module.getClassType().getAllReferencedTypes())
 			if (type instanceof ClassType)
 		{
-			c.write("%\"" + type.getFullName() + "!!methods\" = type {}");
+			c.write("%\"" + type.getQualifiedName() + "!!methods\" = type {}");
 			StringBuilder sb = new StringBuilder("%\"");
-			sb.append(type.getFullName());
+			sb.append(type.getQualifiedName());
 			sb.append("\" = type { %\"");
-			sb.append(type.getFullName());
+			sb.append(type.getQualifiedName());
 			sb.append("!!methods\"*");
 			for (Map.Entry<String, ModifiedType> fields : ((ClassType)type).
 					getFieldList())
@@ -170,7 +170,7 @@ public class COutput extends TACAbstractVisitor
 		StringBuilder sb = new StringBuilder();
 		sb.append(typeToString(type.getReturnTypes()));
 		sb.append(" @\"");
-		sb.append(type.getOuter().getFullName());
+		sb.append(type.getOuter().getQualifiedName());
 		sb.append('!');
 		sb.append(name);
 		for (ModifiedType paramType : type.getParameterTypes())
@@ -217,7 +217,7 @@ public class COutput extends TACAbstractVisitor
 		if (type.isPrimitive())
 			return '%' + type.getTypeName();
 		if (type instanceof ClassType)
-			return "%\"" + type.getFullName() + "\"*";
+			return "%\"" + type.getQualifiedName() + "\"*";
 		throw new IllegalArgumentException("Unknown type.");
 	}
 

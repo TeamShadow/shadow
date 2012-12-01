@@ -245,13 +245,16 @@ public final class Modifiers
 
 		if( isSet() && isFinal() )
 			throw new ParseException("A field cannot be marked both set and final");
+		
+		/*
 		if( isConstant() )
 		{	
 			int updatedModifiers = modifiers & ~CONSTANT;
 
 			if( updatedModifiers != 0 )
 				throw new ParseException("A constant field cannot have any other modifiers");
-		}			 			
+		}
+		*/			 			
 	}
 
 	public void checkMethodModifiers() throws ParseException

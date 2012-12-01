@@ -34,5 +34,5 @@ immutable final class shadow.standard@Class
 	// public getWidth() => ( int ) { return width }
 	public getSuperClass() => ( nullable Class ) { return superClass; }
 	public getClassName() => ( String ) { return className; }
-	public toString() => ( String ) { return getClassName(); }
+	public immutable toString() => ( String ) { return getClassName(); }
 }

@@ -68,7 +68,7 @@ public class TACModule
 
 	public String getFullName()
 	{
-		return type.getFullName();
+		return type.getQualifiedName();
 	}
 
 	public Set<ClassInterfaceBaseType> getReferences()

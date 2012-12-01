@@ -12,5 +12,5 @@ immutable final class shadow.standard@String
 	}
 	public getCode( long index ) => ( ubyte ) { return data[index]; }
 	public getLength() => ( long ) { return data.getLength(0); }
-	public toString() => ( String ) { return this; }
+	public immutable toString() => ( String ) { return this; }
 }

@@ -1,3 +1,10 @@
-class shadow.standard@Short
-{
+final immutable class shadow.standard@Short implements Number<short>, CanCompare<short>
+{	
+	public native immutable add(short other) => (short);
+	public native immutable subtract(short other) => (short);
+	public native immutable multiply(short other) => (short);
+	public native immutable divide(short other) => (short);
+	public native immutable modulus(short other) => (short);
+	
+	public native immutable compare(short other ) => (int);
 }

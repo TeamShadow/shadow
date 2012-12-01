@@ -208,16 +208,6 @@ public abstract class ClassInterfaceBaseType extends Type
 		return null;
 	}
 	
-		
-	public String toString() {
-		StringBuilder builder = new StringBuilder(super.toString());
-			
-		if( isParameterized() )		
-			builder.append(getTypeParameters().toString("<",">"));
-		
-		return builder.toString();
-	}	
-
 	public boolean encloses(Type type) {
 		if( equals(this) )
 			return true;

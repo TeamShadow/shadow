@@ -57,10 +57,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return typeTable;
 	}
 	
-	public void addType( ClassInterfaceBaseType type  ) throws PackageException {		
-		addType( type, packageTree );
-	}
-	
 	public void addType( ClassInterfaceBaseType type, Package p  ) throws PackageException {
 		p.addType(type); //automatically adds to typeTable and sets type's package				
 	}
@@ -373,32 +369,5 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected static String stripExtension(String file)
 	{
 		return file.substring(0, file.lastIndexOf("."));
-	}	
-	
-	//All must work
-	//class LinkedList<T is Eggplant> implements List<T>
-	//class LinkedList<T, U is T> implements List<T>
-	//class Piglet implements LinkedList<Pig>
-	/*
-	protected boolean checkTypeArguments( List<Type> parameters, SequenceType arguments )
-	{
-		if( parameters.size() != arguments.size() )
-			return false;
-		
-		for( int i = 0; i < parameters.size(); i++ )
-		{
-			if( parameters.get(i) instanceof TypeParameter  )
-			{			
-				TypeParameter parameter = (TypeParameter) parameters.get(i);
-				if( !parameter.canAccept( arguments.get(i)  ) )
-						return false;
-			}
-			else
-				return false;
-		}	
-		
-		return true;
 	}
-	*/
-	
 }

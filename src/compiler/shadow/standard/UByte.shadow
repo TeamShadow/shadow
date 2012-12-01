@@ -1,3 +1,10 @@
-class shadow.standard@UByte
-{
+final immutable class shadow.standard@UByte implements Number<ubyte>, CanCompare<ubyte>
+{	
+	public native immutable add(ubyte other) => (ubyte);
+	public native immutable subtract(ubyte other) => (ubyte);
+	public native immutable multiply(ubyte other) => (ubyte);
+	public native immutable divide(ubyte other) => (ubyte);
+	public native immutable modulus(ubyte other) => (ubyte);
+	
+	public native immutable compare(ubyte other ) => (int);
 }

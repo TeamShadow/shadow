@@ -1,5 +1,13 @@
-class shadow.standard@Double
+final immutable class shadow.standard@Double implements Number<double>, CanCompare<double>
 {
 	constant double PI = 3.141592653589793;
 	constant double E = 2.718281828459045;
+	
+	public native immutable add(double other) => (double);
+	public native immutable subtract(double other) => (double);
+	public native immutable multiply(double other) => (double);
+	public native immutable divide(double other) => (double);
+	public native immutable modulus(double other) => (double);
+	
+	public native immutable compare(double other ) => (int);	
 }

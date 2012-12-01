@@ -17,7 +17,7 @@ class Pair<T>
 	}
 	
 	
-	public toString() => (String)
+	public immutable toString() => (String)
 	{
 		String value = "(";
 		

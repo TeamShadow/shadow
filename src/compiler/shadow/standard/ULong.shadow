@@ -1,3 +1,10 @@
-class shadow.standard@ULong
-{
+final immutable class shadow.standard@ULong implements Number<ulong>, CanCompare<ulong>
+{	
+	public native immutable add(ulong other) => (ulong);
+	public native immutable subtract(ulong other) => (ulong);
+	public native immutable multiply(ulong other) => (ulong);
+	public native immutable divide(ulong other) => (ulong);
+	public native immutable modulus(ulong other) => (ulong);
+	
+	public native immutable compare(ulong other ) => (int);
 }

@@ -844,7 +844,7 @@ public class LLVMOutput extends TACAbstractVisitor
 	{
 		if (type.isPrimitive())
 			return '%' + type.getTypeName();
-		return "%\"" + type.getFullName() + "\"*";
+		return "%\"" + type.getQualifiedName() + "\"*";
 	}
 
 	private static String name(TACVariable var)

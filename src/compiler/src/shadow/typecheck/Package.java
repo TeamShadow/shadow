@@ -7,7 +7,8 @@ import shadow.typecheck.type.Type;
 
 public class Package
 {	
-	public class PackageException extends Exception
+	@SuppressWarnings("serial")
+	public static class PackageException extends Exception
 	{
 		public PackageException()
 		{
@@ -61,7 +62,7 @@ public class Package
 	 * @param path
 	 * @return
 	 */
-	public Package addFullyQualifiedPackage( String path, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable  )
+	public Package addQualifiedPackage( String path, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable  )
 	{
 		if( path.length() > 0 && !path.equals("default") )
 		{
@@ -101,12 +102,12 @@ public class Package
 		return children;
 	}
 	
-	public String getFullyQualifiedName()
+	public String getQualifiedName()
 	{
 		if (parent == null || parent.getName().isEmpty())
 			return getName();
 		
-		return parent.getFullyQualifiedName() + '.' + getName();
+		return parent.getQualifiedName() + '.' + getName();
 	}
 	
 	public String getPath()
@@ -114,7 +115,7 @@ public class Package
 		if (parent == null || parent.getName().isEmpty())
 			return getName();
 		
-		return parent.getFullyQualifiedName() + '/' + getName();
+		return parent.getQualifiedName() + '/' + getName();
 	}
 	
 	public String getMangledName()
@@ -182,7 +183,7 @@ public class Package
 
 	@Override
 	public int hashCode() {		
-		return getFullyQualifiedName().hashCode();
+		return getQualifiedName().hashCode();
 	}
 
 
@@ -191,7 +192,7 @@ public class Package
 		if( o instanceof Package )
 		{
 			Package p = (Package)o;
-			return getFullyQualifiedName().equals(p.getFullyQualifiedName());
+			return getQualifiedName().equals(p.getQualifiedName());
 		}
 
 		return false;
@@ -199,6 +200,6 @@ public class Package
 	
 	@Override
 	public String toString() {
-		return getFullyQualifiedName();
+		return getQualifiedName();
 	}	
 }

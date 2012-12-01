@@ -27,6 +27,7 @@ import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryPrefix;
+import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTType;
@@ -72,43 +73,8 @@ public class TypeCollector extends BaseChecker
 	
 	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker )
 	{		
-		super(debug, typeTable, importList, p );
-		
-		this.typeChecker = typeChecker;
-		
-		// put built-in types into the TypeTable
-		// Object, String, Class, and Array are added separately
-		// since there are files that correspond to them
-		// Will all type eventually have files?
-	
-		/*
-		try
-	{		
-		addType(Type.BOOLEAN);
-		addType(Type.BYTE);
-		addType(Type.CODE);
-		addType(Type.SHORT);
-		//addType(Type.INT);
-		addType(Type.LONG);
-		addType(Type.FLOAT);
-		addType(Type.DOUBLE);
-	
-		addType(Type.UBYTE);
-		addType(Type.UINT);
-		addType(Type.ULONG);
-		addType(Type.USHORT);
-		addType(Type.NULL);	
-		
-		addType(Type.ENUM);
-		
-	}
-	catch(PackageException e)
-	{
-		addError( Error.INVL_TYP, e.getMessage() );				
-	}*/
-		
-//		addType(Type.ERROR);	
-//		addType(Type.EXCEPTION);
+		super(debug, typeTable, importList, p );		
+		this.typeChecker = typeChecker;	
 	}
 	
 		
@@ -258,14 +224,14 @@ public class TypeCollector extends BaseChecker
 						list = extendsTable.get(type);
 						for( String name : list )
 						{
-							ClassInterfaceBaseType baseType =lookupTypeStartingAt(name, interfaceType.getOuter());
+							ClassInterfaceBaseType baseType = lookupTypeStartingAt(name, interfaceType.getOuter());
 														
 							if( baseType == null )							
 								missingTypes.add(name);
 							else if( baseType instanceof InterfaceType )	
 								interfaceType.addExtendType((InterfaceType)baseType);																
 							else
-								addError( declarationNode, Error.INVL_TYP, baseType + "is not an interface type");							
+								addError( declarationNode, Error.INVL_TYP, baseType + " is not an interface type");							
 						}
 					}				
 				}
@@ -284,7 +250,7 @@ public class TypeCollector extends BaseChecker
 		if( child instanceof ASTReferenceType )
 			updateTypeParameters( (ASTReferenceType)child, missingTypes );
 		else if( child instanceof ASTFunctionType )
-			updateTypeParameters( (ASTFunctionType)child, missingTypes );
+			updateTypeParameters( (ASTFunctionType)child, missingTypes );		
 			
 		//PrimitiveTypes are ignored
 		//StaticArrayTypes... well, they may never exist
@@ -473,7 +439,7 @@ public class TypeCollector extends BaseChecker
 		for( String file : getImportList() )
 			fileList.add(file);
 		
-		//add files in directory after imports
+		//Add files in directory after imports (order matters in case of duplicates)
 		File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
 				{
 					public boolean accept(File dir, String name)
@@ -485,17 +451,6 @@ public class TypeCollector extends BaseChecker
 
 		for( File file :  directoryFiles )
 			fileList.add(stripExtension(file.getCanonicalPath()));	
-		
-		//Add standard imports
-		//change this to pulling everything from the directory?
-		/*
-		String path = Configuration.getInstance().getSystemImport().getCanonicalPath() + File.separator + "shadow" + File.separator + "standard" + File.separator;
-		fileList.add(path + "Object");
-		fileList.add(path + "Class");
-		fileList.add(path + "String");
-		fileList.add(path + "Exception");
-		fileList.add(path + "Int");
-		*/
 		
 		//add standard imports		
 		File standardDirectory = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
@@ -549,7 +504,7 @@ public class TypeCollector extends BaseChecker
 				for( Package p : otherTypes.keySet() )
 				{
 					//if package already exists, it won't be recreated
-					Package newPackage = packageTree.addFullyQualifiedPackage(p.getFullyQualifiedName(), typeTable);
+					Package newPackage = packageTree.addQualifiedPackage(p.getQualifiedName(), typeTable);
 					try
 					{	
 						newPackage.addTypes( otherTypes.get(p) );
@@ -614,14 +569,14 @@ public class TypeCollector extends BaseChecker
 			if( currentType == null )
 			{
 				String name = node.jjtGetChild(0).getImage();									
-				currentPackage = packageTree.addFullyQualifiedPackage(name, typeTable);
+				currentPackage = packageTree.addQualifiedPackage(name, typeTable);
 			}
 			else
 				addError( node, Error.INVL_TYP, "Only outermost classes can define a package" );			
 		}
 		
 		String image = node.getImage();		
-		if( currentPackage.getFullyQualifiedName().equals("shadow.standard"))
+		if( currentPackage.getQualifiedName().equals("shadow.standard"))
 		{
 			if( image.equals("Boolean") ||
 				image.equals("Byte") ||
@@ -682,7 +637,7 @@ public class TypeCollector extends BaseChecker
 			}			
 			
 			//Special case for system types			
-			if( currentPackage.getFullyQualifiedName().equals("shadow.standard"))
+			if( currentPackage.getQualifiedName().equals("shadow.standard"))
 			{	
 				if( typeName.equals("Object") )
 					Type.OBJECT = (ClassType) type;
@@ -915,7 +870,7 @@ public class TypeCollector extends BaseChecker
 		{
 			currentType = currentType.getOuter();
 			if( currentType == null )
-				currentName = currentPackage.getFullyQualifiedName();
+				currentName = currentPackage.getQualifiedName();
 			else
 				currentName = currentType.getTypeName();
 		}
@@ -1026,6 +981,12 @@ public class TypeCollector extends BaseChecker
 		}
 	
 		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {		
+		node.setType(nameToPrimitiveType(node.getImage()));		
+		return WalkType.NO_CHILDREN;			
 	}
 	
 		

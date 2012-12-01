@@ -172,7 +172,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		if( getOuter() == null )
 			for( Type importType : getReferencedTypes() )
 				if( !recursivelyContainsInnerClass(importType) )
-					out.println(linePrefix + "import " + importType.getFullName() + ";");
+					out.println(linePrefix + "import " + importType.getQualifiedName() + ";");
 		
 		//modifiers
 		out.print("\n" + linePrefix + getModifiers());		
@@ -180,13 +180,9 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		
 		//type name
 		if( getOuter() == null ) //outermost interface		
-			out.print(getFullName());
+			out.print(getQualifiedName());
 		else
-			out.print(getTypeName().substring(getTypeName().lastIndexOf('.') + 1));
-		
-		//type parameters
-		if( isParameterized() )
-			out.print(getTypeParameters().toString("<", ">"));
+			out.print(toString().substring(getTypeName().lastIndexOf('.') + 1));
 		
 		//extend types		
 		if( extendTypes.size() > 0 )
@@ -199,7 +195,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 					out.print(", ");
 				else
 					first = false;
-				out.print(_interface.getFullName());				
+				out.print(_interface.getQualifiedName());				
 			}			
 		}
 		

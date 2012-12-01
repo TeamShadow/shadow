@@ -32,8 +32,7 @@ public abstract class Type {
 		SEQUENCE,
 		TYPE_PARAMETER,
 		UNBOUND_METHOD,
-		VIEW,
-		INSTANTIATED,
+		VIEW,		
 		UNKNOWN,
 		NULL 
 	};
@@ -100,14 +99,23 @@ public abstract class Type {
 		return typeName;
 	}
 	
-	public String getFullName() {
+	public String getQualifiedName() {
 		
 		if( isPrimitive() )
-			return typeName;
-		else if( _package == null || _package.getFullyQualifiedName().isEmpty())
-			return "default@" + typeName;
+			return toString();
+		else if( _package == null || _package.getQualifiedName().isEmpty())
+			return "default@" + toString();
 		else
-			return _package.getFullyQualifiedName() + '@' + typeName;			
+			return _package.getQualifiedName() + '@' + toString();			
+	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder(typeName);
+			
+		if( isParameterized() )		
+			builder.append(getTypeParameters().toString("<",">"));
+		
+		return builder.toString();
 	}
 	
 	public String getPath()
@@ -131,11 +139,6 @@ public abstract class Type {
 	public void addModifier( int modifier )
 	{
 		modifiers.addModifier(modifier);		
-	}
-	
-	public String toString()
-	{
-		return typeName;		
 	}
 
 	public boolean equals(Object o)

@@ -432,7 +432,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( getOuter() == null )
 			for( Type importType : getAllReferencedTypes() )			
 				if( !recursivelyContainsInnerClass(importType) )
-					out.println(linePrefix + "import " + importType.getFullName() + ";");
+					out.println(linePrefix + "import " + importType.getQualifiedName() + ";");
 		
 		//modifiers
 		out.print("\n" + linePrefix + getModifiers());		
@@ -449,19 +449,14 @@ public class ClassType extends ClassInterfaceBaseType {
 			out.print("shadow.standard@" + name);
 		}
 		else if( getOuter() == null ) //outermost class		
-			out.print(getFullName());
+			out.print(getQualifiedName());
 		else
-			out.print(getTypeName().substring(getTypeName().lastIndexOf(':') + 1));
-			
-		
-		//type parameters
-		if( isParameterized() )
-			out.print(getTypeParameters().toString("<", ">"));
+			out.print(toString().substring(getTypeName().lastIndexOf(':') + 1));
 		
 		//extend type
 		Type extendType = getExtendType();
 		if( extendType != null )
-			out.print(" extends " + extendType.getFullName() );
+			out.print(" extends " + extendType.getQualifiedName() );
 		
 		//interfaces implemented
 		List<InterfaceType> interfaces = getInterfaces();
@@ -475,7 +470,7 @@ public class ClassType extends ClassInterfaceBaseType {
 					out.print(", ");
 				else
 					first = false;
-				out.print(_interface.getFullName());				
+				out.print(_interface.getQualifiedName());				
 			}			
 		}
 		
