@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.SimpleNode;
 
 
 public class InterfaceType extends ClassInterfaceBaseType {
@@ -89,21 +90,21 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		if( isRecursivelyParameterized() )
 		{		
 			InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers(), getOuter() );
+			replaced.setPackage(getPackage());
 			
 			for( InterfaceType _interface : extendTypes )
 				replaced.addExtendType(_interface.replace(values, replacements));		
 			
-			//should have no fields in an interface
-			
-			/*
-			Map<String, ModifiedType> fields = getFields(); 
+			//only constant non-parameterized fields in an interface
+			Map<String, Node> fields = getFields(); 
 			
 			for( String name : fields.keySet() )
 			{
-				ModifiedType field = fields.get(name);			
-				replaced.addField(name, new SimpleModifiedType( field.getType().replace(values, replacements), field.getModifiers() ) );
+				SimpleNode field = (SimpleNode)(fields.get(name));
+				field = field.clone();
+				field.setType(field.getType());			
+				replaced.addField(name, field );
 			}
-			*/
 			
 			Map<String, List<MethodSignature> > methods = getMethodMap();
 			

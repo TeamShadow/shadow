@@ -1,8 +1,8 @@
-import shadow.standard@Number;
-import shadow.standard@CanCompare;
+//import shadow.standard@Number;
+//import shadow.standard@CanCompare;
 
 
-class shadow.standard@Int //implements Number<int>, CanCompare<int>
+class shadow.standard@Int implements Number<int>, CanCompare<int>
 {
 	public min( int other ) => ( int )
 	{

@@ -300,19 +300,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 	}
 	
 	
-	public boolean checkFieldModifiers( Node node, Modifiers modifiers )
-	{		
-		boolean success = true;
-			
-		if( currentType instanceof InterfaceType )
-		{
-			node.addModifier(Modifiers.CONSTANT);
-			node.getType().addModifier(Modifiers.CONSTANT);		
-		}				
 		
-		return success;
-	}
-	
 	/**
 	 * Checks method and field modifiers to see if they are legal
 	 * 
@@ -380,9 +368,6 @@ public class FieldAndMethodChecker extends BaseChecker {
 		node.setType(type);		// set the type to the node
 		node.setEnclosingType(currentType);
 
-		if( !checkFieldModifiers( node, node.getModifiers() ))
-			return WalkType.NO_CHILDREN;
-		
 		node.addModifier(Modifiers.FIELD);
 		
 		if( currentType.getModifiers().isImmutable() ) {
@@ -397,6 +382,17 @@ public class FieldAndMethodChecker extends BaseChecker {
 		if( currentType instanceof ClassInterfaceBaseType )
 		{
 			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+			
+			if( currentType instanceof InterfaceType )
+			{
+				//all interface fields are implicitly constant
+				node.addModifier(Modifiers.CONSTANT);
+				//type.addModifier(Modifiers.CONSTANT);				
+			}
+			
+			if( type.isParameterized() && node.getModifiers().isConstant() )
+				addError(node, Error.INVL_TYP, "Fields marked constant cannot have parameterized types");	
+			
 			
 			// go through inserting all the idents
 			for(int i=1; i < node.jjtGetNumChildren(); ++i)

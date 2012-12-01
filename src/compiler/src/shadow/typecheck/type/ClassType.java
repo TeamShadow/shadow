@@ -332,9 +332,13 @@ public class ClassType extends ClassInterfaceBaseType {
 	{	
 		if( isRecursivelyParameterized() )
 		{		
-			ClassType replaced = new ClassType( getTypeName(), getModifiers(), getOuter() );			
-								
+			ClassType replaced = new ClassType( getTypeName(), getModifiers(), getOuter() );
+			replaced.setPackage(getPackage());						
+			
 			replaced.setExtendType(getExtendType().replace(values, replacements));			
+			
+			for( InterfaceType _interface : implementTypes )
+				replaced.addInterface(_interface.replace(values, replacements));
 			
 			Map<String, Node> fields = getFields(); 
 			
