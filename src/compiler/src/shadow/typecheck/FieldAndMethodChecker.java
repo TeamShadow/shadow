@@ -410,7 +410,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 					return WalkType.NO_CHILDREN;
 				}			
 
-				currentClass.addField(symbol, node);
+				currentClass.addField(symbol, child);
 			}
 		}
 		else
