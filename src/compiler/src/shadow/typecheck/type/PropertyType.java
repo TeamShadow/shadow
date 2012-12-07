@@ -12,6 +12,16 @@ public class PropertyType extends Type {
 		this.getter = getter;
 		this.setter = setter;	
 	}	
+
+	public MethodType getGetter()
+	{
+		return getter;
+	}
+	
+	public MethodType getSetter()
+	{
+		return setter;
+	}
 	
 	public ModifiedType getGetType()
 	{

@@ -1,16 +1,36 @@
 immutable final class shadow.standard@String
+implements CanCompare<String>, CanIterate<String>
 {
-	ubyte[] data = ubyte[0];
+	ubyte[] data = ubyte:create[0];
+	private create() { }
+
+	public getByte( int index ) => ( ubyte )
+	{
+		return data[index];
+	}
+	public get length() => ( int ) {
+		return data->length;
+	}
+
 	public equals( String other ) => ( boolean )
 	{
-		if ( getLength() != other.getLength() )
+		if ( this->length != other->length )
 			return false;
-		for ( long i = 0; i < getLength(); i += 1 )
-			if ( getCode(i) != other.getCode(i) )
+		for ( int i = 0; i < this->length; i += 1 )
+			if ( getByte(i) != other.getByte(i) )
 				return false;
 		return true;
 	}
-	public getCode( long index ) => ( ubyte ) { return data[index]; }
-	public getLength() => ( long ) { return data.getLength(0); }
-	public immutable toString() => ( String ) { return this; }
+	public compare( String other ) => ( int )
+	{
+		for ( int i = 0; i < this->length and i < other->length; i += 1 )
+			if ( getByte(i) != other.getByte(i) )
+				return getByte(i) - other.getByte(i);
+		return this->length - other->length;
+	}
+
+	public toString() => ( String )
+	{
+		return this;
+	}
 }

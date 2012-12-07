@@ -25,7 +25,7 @@ public class TACLoad extends TACOperand
 	@Override
 	public Type getType()
 	{
-		return reference.getType();
+		return reference.getGetType();
 	}
 	@Override
 	public int getNumOperands()

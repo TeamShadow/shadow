@@ -57,6 +57,12 @@ public class TACLabelRef extends TACOperand
 		{
 			visitor.visit(this);
 		}
+
+		@Override
+		public String toString()
+		{
+			return getName();
+		}
 	}
 
 	@Override
@@ -79,5 +85,11 @@ public class TACLabelRef extends TACOperand
 	public void accept(TACVisitor visitor) throws ShadowException
 	{
 		visitor.visit(this);
+	}
+
+	@Override
+	public String toString()
+	{
+		return getName();
 	}
 }

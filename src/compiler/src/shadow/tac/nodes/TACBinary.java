@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.Type;
 
 public class TACBinary extends TACOperand
@@ -116,6 +117,10 @@ public class TACBinary extends TACOperand
 		super(node);
 		Type firstType = firstOperand.getType(),
 				secondType = secondOperand.getType();
+		if (firstType instanceof PropertyType)
+			firstType = ((PropertyType)firstType).getGetType().getType();
+		if (secondType instanceof PropertyType)
+			secondType = ((PropertyType)secondType).getGetType().getType();
 		switch (op.getOperandType())
 		{
 			case BOOLEAN:

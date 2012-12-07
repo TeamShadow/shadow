@@ -8,7 +8,7 @@ immutable final class shadow.standard@Interface
 	{
 		if ( this == other )
 			return true;
-		for ( long i = 0; i < interfaces.getLength(); i += 1 )
+		for ( long i = 0; i < interfaces->length; i += 1 )
 			try {
 				if ( check(interfaces[i]).isSubtype( other ) )
 					return true;

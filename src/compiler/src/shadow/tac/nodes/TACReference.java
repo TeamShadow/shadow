@@ -13,6 +13,15 @@ public abstract class TACReference extends TACOperand
 		super(node);
 	}
 
+	public Type getGetType()
+	{
+		return getType();
+	}
+	public Type getSetType()
+	{
+		return getType();
+	}
+
 	@Override
 	protected TACOperand checkVirtual(Type type, TACNode node)
 	{

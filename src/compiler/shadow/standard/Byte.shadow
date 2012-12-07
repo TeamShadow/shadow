@@ -1,10 +1,13 @@
 class shadow.standard@Byte implements Number<byte>, CanCompare<byte>
 {
-	public native immutable add(byte other) => (byte);
-	public native immutable subtract(byte other) => (byte);
-	public native immutable multiply(byte other) => (byte);
-	public native immutable divide(byte other) => (byte);
-	public native immutable modulus(byte other) => (byte);
-	
-	public native immutable compare(byte other) => (int);
+	public native add(byte other) => (byte);
+	public native subtract(byte other) => (byte);
+	public native multiply(byte other) => (byte);
+	public native divide(byte other) => (byte);
+	public native modulus(byte other) => (byte);
+
+	public compare(byte other) => (int)
+	{
+		return this - other;
+	}
 }

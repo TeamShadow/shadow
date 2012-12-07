@@ -3,11 +3,11 @@ final immutable class shadow.standard@Float implements Number<float>, CanCompare
 	constant float PI = 3.1415927f;
 	constant float E = 2.7182817f;
 
-	public native immutable add(float other) => (float);
-	public native immutable subtract(float other) => (float);
-	public native immutable multiply(float other) => (float);
-	public native immutable divide(float other) => (float);
-	public native immutable modulus(float other) => (float);
+	public native add(float other) => (float);
+	public native subtract(float other) => (float);
+	public native multiply(float other) => (float);
+	public native divide(float other) => (float);
+	public native modulus(float other) => (float);
 
-	public native immutable compare(float other ) => (int);
+	public native compare(float other) => (int);
 }

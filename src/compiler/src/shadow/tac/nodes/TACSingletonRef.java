@@ -42,6 +42,6 @@ public class TACSingletonRef extends TACReference
 	@Override
 	public String toString()
 	{
-		return "instance " + type;
+		return type + ":instance";
 	}
 }

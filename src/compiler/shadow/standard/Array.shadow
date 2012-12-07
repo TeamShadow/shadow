@@ -1,48 +1,25 @@
-abstract final class shadow.standard@Array<T>
+abstract final class shadow.standard@Array<T> implements CanIndex<T>
 {
 	long data = 0;
-	long[] lengths = long[0];
-	private create( long data, long[] lengths )
+	get int[] lengths = int:create[0];
+	private create( long data, int[] lengths )
 	{
 		this:data = data;
 		this:lengths = lengths;
 	}
 
-	public immutable getLength() => ( long )
+	public immutable get length() => ( int )
 	{
-		long length = 1;
-		for ( long i = 0; i < getDimensions(); i += 1 )
-			length *= getLength(i);
-		return length;
-	}
-	public immutable getLength( long index ) => ( long )
-	{
-		return lengths[index];
-	}
-	public immutable getLengths() => ( long[] )
-	{
-		return lengths;
-	}
-	public immutable getDimensions() => ( long )
-	{
-		return lengths.getLength(0);
-	}
-
-/*
-	public get length() => ( long )
-	{
-		long length = lengths[0];
-		for ( long i = 1; i < dims; i += 1 )
+		int length = lengths[0];
+		for ( int i = 1; i < this->dim; i += 1 )
 			length *= lengths[i];
 		return length;
 	}
-	public get lengths() => ( long[] )
+	public immutable get dims() => ( int )
 	{
-		return lengths;
+		return lengths->length;
 	}
-	public get dims() => ( long )
-	{
-		return lengths.length;
-	}
-*/
+
+	public native index(int index) => (T);
+	public native index(int index, T value) => ();
 }

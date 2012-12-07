@@ -125,7 +125,7 @@ public class Main {
 		        if(!result) {
 		        	logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");
 		        	
-//		        	return TYPE_CHECK_ERROR;
+		        	return TYPE_CHECK_ERROR;
 		        }
 		        
 		        // we are only parsing & type checking
@@ -138,6 +138,7 @@ public class Main {
 		        else
 		        {
 		        	TACModule module = tacBuilder.build(node);
+		        	System.out.println(module);
 
 			        // build the TAC
 			        new LLVMOutput(true).build(module);

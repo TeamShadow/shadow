@@ -1,5 +1,6 @@
 package shadow.tac;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.output.text.TextOutput;
+import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
@@ -66,7 +69,7 @@ public class TACModule
 		return (InterfaceType)type;
 	}
 
-	public String getFullName()
+	public String getQualifiedName()
 	{
 		return type.getQualifiedName();
 	}
@@ -96,5 +99,20 @@ public class TACModule
 	public List<TACMethod> getMethods()
 	{
 		return methods;
+	}
+
+	@Override
+	public String toString()
+	{
+		StringWriter writer = new StringWriter();
+		try
+		{
+			new TextOutput(writer).build(this);
+		}
+		catch (ShadowException ex)
+		{
+			return "Error";
+		}
+		return writer.toString();
 	}
 }

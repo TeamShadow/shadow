@@ -42,6 +42,6 @@ public class TACNewObject extends TACOperand
 	@Override
 	public String toString()
 	{
-		return "new " + type;
+		return type + ":create()";
 	}
 }

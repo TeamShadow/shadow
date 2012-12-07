@@ -1,5 +1,5 @@
 interface shadow.standard@CanIndex<T>
 {
 	index(int index) => (T);
-	index(int index, T value) => ();	
+	index(int index, T value) => ();
 }

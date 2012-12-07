@@ -4,21 +4,21 @@ class shadow.test@ConsoleTest
 {
 	public main() => ()
 	{
-		Console console = instance Console;
-		(instance Console).printLine(12345);
+		Console console = Console:instance;
+		Console:instance.printLine(12345);
 		console.print('H');
-		(instance Console).print('e');
+		Console:instance.print('e');
 		console.print('l');
-		(instance Console).print('l');
+		Console:instance.print('l');
 		console.print('o');
-		(instance Console).print(' ');
+		Console:instance.print(' ');
 		console.print('W');
-		(instance Console).print('o');
+		Console:instance.print('o');
 		console.print('r');
-		(instance Console).print('l');
+		Console:instance.print('l');
 		console.print('d');
-		(instance Console).print('!');
+		Console:instance.print('!');
 		console.print('\n');
-		(instance Console).printLine();
+		Console:instance.printLine();
 	}
 }

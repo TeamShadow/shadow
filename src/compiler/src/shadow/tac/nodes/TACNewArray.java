@@ -35,15 +35,15 @@ public class TACNewArray extends TACOperand
 		type = newType;
 		dimensions = new ArrayList<TACOperand>(dims.size());
 		Iterator<TACOperand> iter = dims.iterator();
-		TACOperand current = check(iter.next(), Type.LONG);
+		TACOperand current = check(iter.next(), Type.INT);
 		dimensions.add(current);
 		while (iter.hasNext())
 		{
-			TACOperand next = check(iter.next(), Type.LONG);
+			TACOperand next = check(iter.next(), Type.INT);
 			dimensions.add(next);
 			current = new TACBinary(this, current, '*', next);
 		}
-		total = check(current, Type.LONG);
+		total = check(current, Type.INT);
 	}
 
 	public int getDimensions()

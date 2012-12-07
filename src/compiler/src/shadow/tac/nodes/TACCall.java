@@ -21,20 +21,19 @@ public class TACCall extends TACOperand
 		this(null, methodRef, params);
 	}
 	public TACCall(TACNode node, TACMethod methodRef,
-			Collection<TACOperand> params)
+			Collection<? extends TACOperand> params)
 	{
 		super(node);
 		method = methodRef;
 		SequenceType types = methodRef.getType().getParameterTypes();
 		if (params.size() - 1 != types.size())
 			throw new IllegalArgumentException("Wrong # args");
-		Iterator<TACOperand> paramsIter = params.iterator();
-		Iterator<ModifiedType> typesIter = types.iterator();
+		Iterator<? extends TACOperand> paramIter = params.iterator();
+		Iterator<ModifiedType> typeIter = types.iterator();
 		parameters = new ArrayList<TACOperand>(params.size());
-		parameters.add(check(paramsIter.next(), methodRef.getPrefixType()));
-		while (paramsIter.hasNext())
-			parameters.add(check(paramsIter.next(), typesIter.next().
-					getType()));
+		parameters.add(check(paramIter.next(), methodRef.getPrefixType()));
+		while (paramIter.hasNext())
+			parameters.add(check(paramIter.next(), typeIter.next().getType()));
 	}
 
 	public TACMethod getMethod()

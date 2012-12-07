@@ -1,11 +1,12 @@
 package shadow.tac;
 
+import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import shadow.tac.nodes.TACCall;
+import shadow.output.text.TextOutput;
+import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACSimpleNode;
 
 public class TACNodeList extends TACNode implements Iterable<TACSimpleNode>
@@ -143,22 +144,52 @@ public class TACNodeList extends TACNode implements Iterable<TACSimpleNode>
 		protected abstract TACNode iterate(TACNode current);
 	}
 
-	protected static int indent = 0;
 	@Override
 	public String toString()
 	{
-		final String newline = System.getProperty("line.separator");
-		StringBuilder sb = new StringBuilder();
-		for (TACSimpleNode node : this)
+		StringWriter writer = new StringWriter();
+		try
 		{
-			if (node instanceof TACCall && ((TACCall)node).getType() != null)
-				continue;
-			if (node instanceof TACOperand)
-				continue;
-			for (int i = 0; i < indent; i++)
-				sb.append('\t');
-			sb.append(node).append(';').append(newline);
+			new TextOutput(writer).walk(this);
 		}
-		return sb.toString();
+		catch (ShadowException ex)
+		{
+			return "Error";
+		}
+		return writer.toString();
 	}
+
+//	protected static int indent = 0;
+//	protected static StringBuilder indent(StringBuilder sb) {
+//		for (int i = 0; i < indent; i++)
+//			sb.append('\t');
+//		return sb;
+//	}
+//	@Override
+//	public String toString()
+//	{
+//		int tempLabel = 0;
+//		final String newline = System.getProperty("line.separator");
+//		StringBuilder sb = new StringBuilder();
+//		for (TACSimpleNode node : this)
+//		{
+//			if (node instanceof TACLabelRef)
+//			{
+//				((TACLabelRef)node).setName("label" + tempLabel++);
+//				continue;
+//			}
+//			else if (node instanceof TACCall)
+//			{
+//				if (((TACCall)node).getType() != null)
+//					continue;
+//			}
+//			else if (node instanceof TACOperand)
+//				continue;
+//			if (node instanceof TACLabel)
+//				sb.append(node).append(':').append(newline);
+//			else
+//				indent(sb).append(node).append(';').append(newline);
+//		}
+//		return sb.toString();
+//	}
 }

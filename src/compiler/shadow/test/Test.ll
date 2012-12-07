@@ -16,162 +16,206 @@
 declare noalias i8* @malloc(i64)
 declare noalias i8* @calloc(i64, i64)
 
-@"shadow.io@Console$instance" = global %"shadow.io@Console"* null
-%"shadow.io@Console$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.io@Console"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)*, void (%"shadow.io@Console"*, %boolean)*, void (%"shadow.io@Console"*, %"shadow.standard@Object"*)*, void (%"shadow.io@Console"*, %int)*, void (%"shadow.io@Console"*, %code)*, void (%"shadow.io@Console"*, %long)*, void (%"shadow.io@Console"*, %"shadow.standard@String"*)*, void (%"shadow.io@Console"*, %boolean)*, void (%"shadow.io@Console"*, %int)*, void (%"shadow.io@Console"*, %code)*, void (%"shadow.io@Console"*, %long)*, void (%"shadow.io@Console"*, %"shadow.standard@String"*)*, void (%"shadow.io@Console"*, %"shadow.standard@Object"*)*, void (%"shadow.io@Console"*)* }
-@"shadow.io@Console$methods" = external constant %"shadow.io@Console$methods"
-%"shadow.io@Console" = type { %"shadow.io@Console$methods"* }
-declare void @"shadow.io@Console$$printLine$boolean"(%"shadow.io@Console"*, %boolean)
-declare void @"shadow.io@Console$$printLine$int"(%"shadow.io@Console"*, %int)
-declare void @"shadow.io@Console$$printLine$code"(%"shadow.io@Console"*, %code)
-declare void @"shadow.io@Console$$printLine$long"(%"shadow.io@Console"*, %long)
-declare void @"shadow.io@Console$$printLine$shadow.standard@String"(%"shadow.io@Console"*, %"shadow.standard@String"*)
-declare void @"shadow.io@Console$$printLine$shadow.standard@Object"(%"shadow.io@Console"*, %"shadow.standard@Object"*)
-declare void @"shadow.io@Console$$printLine"(%"shadow.io@Console"*)
-declare void @"shadow.io@Console$$print$boolean"(%"shadow.io@Console"*, %boolean)
-declare void @"shadow.io@Console$$print$shadow.standard@Object"(%"shadow.io@Console"*, %"shadow.standard@Object"*)
-declare void @"shadow.io@Console$$print$int"(%"shadow.io@Console"*, %int)
-declare void @"shadow.io@Console$$print$code"(%"shadow.io@Console"*, %code)
-declare void @"shadow.io@Console$$print$long"(%"shadow.io@Console"*, %long)
-declare void @"shadow.io@Console$$print$shadow.standard@String"(%"shadow.io@Console"*, %"shadow.standard@String"*)
-declare void @"shadow.io@Console$$constructor"(%"shadow.io@Console"*)
+%"Interface$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Interface"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Interface"*)*, %boolean (%"shadow.standard@Interface"*, %"shadow.standard@Interface"*)* }
+@"Interface$methods" = external constant %"Interface$methods"
+%"Interface" = type { %"Interface$methods"* }
+declare %boolean @"Interface$$isSubtype$_Pshadow_Pstandard_CInterface"(%"shadow.standard@Interface"*, %"shadow.standard@Interface"*)
+declare %"shadow.standard@String"* @"Interface$$toString"(%"shadow.standard@Interface"*)
+declare %"shadow.standard@Interface"* @"Interface$$create"(%"shadow.standard@Interface"*)
 
-%"shadow.test@Test$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.test@Test"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)*, void (%"shadow.test@Test"*)* }
-@"shadow.test@Test$methods" = constant %"shadow.test@Test$methods" { %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$clone", %"shadow.standard@Class"* (%"shadow.test@Test"*)* @"shadow.test@Test$$getClass", %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$immutableClone", %"shadow.standard@String"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$toString", void (%"shadow.test@Test"*)* @"shadow.test@Test$$main" }
-%"shadow.test@Test" = type { %"shadow.test@Test$methods"*, %"shadow.test@Test"* }
+%"Test$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.test@Test"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)*, void (%"shadow.test@Test"*)* }
+@"Test$methods" = constant %"Test$methods" { %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"Object$$copy", %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)* @"Object$$equals$_Pshadow_Pstandard_CObject", %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"Object$$freeze", %"shadow.standard@Class"* (%"shadow.test@Test"*)* @"Test$$getClass", %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)* @"Object$$referenceEquals$_Pshadow_Pstandard_CObject", %"shadow.standard@String"* (%"shadow.standard@Object"*)* @"Object$$toString", void (%"shadow.test@Test"*)* @"Test$$main" }
+%"Test" = type { %"Test$methods"*, %"shadow.test@Test"* }
 
-%"shadow.standard@Class$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)* }
-@"shadow.standard@Class$methods" = external constant %"shadow.standard@Class$methods"
-%"shadow.standard@Class" = type { %"shadow.standard@Class$methods"*, %"shadow.standard@String"*, { %"shadow.standard@Class"**, [1 x %long] }, %"shadow.standard@Class"* }
-declare %"shadow.standard@Class"* @"shadow.standard@Class$$getSuperClass"(%"shadow.standard@Class"*)
-declare %boolean @"shadow.standard@Class$$isClassSubtype$shadow.standard@Class"(%"shadow.standard@Class"*, %"shadow.standard@Class"*)
-declare %boolean @"shadow.standard@Class$$isSubtype$shadow.standard@Class"(%"shadow.standard@Class"*, %"shadow.standard@Class"*)
-declare %boolean @"shadow.standard@Class$$isInterface"(%"shadow.standard@Class"*)
-declare %boolean @"shadow.standard@Class$$isInterfaceSubtype$shadow.standard@Class"(%"shadow.standard@Class"*, %"shadow.standard@Class"*)
-declare %"shadow.standard@String"* @"shadow.standard@Class$$getClassName"(%"shadow.standard@Class"*)
-declare %"shadow.standard@String"* @"shadow.standard@Class$$toString"(%"shadow.standard@Class"*)
-declare void @"shadow.standard@Class$$constructor"(%"shadow.standard@Class"*)
+%"String$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@String"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@String"*)*, %int (%"shadow.standard@String"*, %"shadow.standard@String"*)*, %boolean (%"shadow.standard@String"*, %"shadow.standard@String"*)*, %ubyte (%"shadow.standard@String"*, %int)*, %int (%"shadow.standard@String"*)* }
+@"String$methods" = external constant %"String$methods"
+%"String" = type { %"String$methods"* }
+declare %boolean @"String$$equals$_Pshadow_Pstandard_CString"(%"shadow.standard@String"*, %"shadow.standard@String"*)
+declare %ubyte @"String$$getByte$int"(%"shadow.standard@String"*, %int)
+declare %int @"String$$compare$_Pshadow_Pstandard_CString"(%"shadow.standard@String"*, %"shadow.standard@String"*)
+declare %int @"String$$length"(%"shadow.standard@String"*)
+declare %"shadow.standard@String"* @"String$$toString"(%"shadow.standard@String"*)
+declare %"shadow.standard@String"* @"String$$create"(%"shadow.standard@String"*)
 
-%"shadow.standard@Object$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Object"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)* }
-@"shadow.standard@Object$methods" = external constant %"shadow.standard@Object$methods"
-%"shadow.standard@Object" = type { %"shadow.standard@Object$methods"* }
-declare %"shadow.standard@Class"* @"shadow.standard@Object$$getClass"(%"shadow.standard@Object"*)
-declare %"shadow.standard@Object"* @"shadow.standard@Object$$clone"(%"shadow.standard@Object"*)
-declare %"shadow.standard@String"* @"shadow.standard@Object$$toString"(%"shadow.standard@Object"*)
-declare %"shadow.standard@Object"* @"shadow.standard@Object$$immutableClone"(%"shadow.standard@Object"*)
-declare void @"shadow.standard@Object$$constructor"(%"shadow.standard@Object"*)
+%"Class$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Interface"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)* }
+@"Class$methods" = external constant %"Class$methods"
+%"Class" = type { %"Class$methods"* }
+declare %boolean @"Class$$isSubtype$_Pshadow_Pstandard_CClass"(%"shadow.standard@Class"*, %"shadow.standard@Class"*)
+declare %boolean @"Class$$isSubtype$_Pshadow_Pstandard_CInterface"(%"shadow.standard@Class"*, %"shadow.standard@Interface"*)
+declare %"shadow.standard@Class"* @"Class$$parent"(%"shadow.standard@Class"*)
+declare %"shadow.standard@String"* @"Class$$toString"(%"shadow.standard@Class"*)
+declare %"shadow.standard@Class"* @"Class$$create"(%"shadow.standard@Class"*)
 
-%"shadow.standard@String$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@String"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@String"*)*, %boolean (%"shadow.standard@String"*, %"shadow.standard@String"*)*, %ubyte (%"shadow.standard@String"*, %long)*, %long (%"shadow.standard@String"*)* }
-@"shadow.standard@String$methods" = external constant %"shadow.standard@String$methods"
-%"shadow.standard@String" = type { %"shadow.standard@String$methods"*, { %ubyte*, [1 x %long] } }
-declare %boolean @"shadow.standard@String$$equals$shadow.standard@String"(%"shadow.standard@String"*, %"shadow.standard@String"*)
-declare %"shadow.standard@String"* @"shadow.standard@String$$toString"(%"shadow.standard@String"*)
-declare %ubyte @"shadow.standard@String$$getCode$long"(%"shadow.standard@String"*, %long)
-declare %long @"shadow.standard@String$$getLength"(%"shadow.standard@String"*)
-declare void @"shadow.standard@String$$constructor"(%"shadow.standard@String"*)
+@"Console$instance" = global %"shadow.io@Console"* null
+%"Console$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.io@Console"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)*, void (%"shadow.io@Console"*, %boolean)*, void (%"shadow.io@Console"*, %"shadow.standard@Object"*)*, void (%"shadow.io@Console"*, %int)*, void (%"shadow.io@Console"*, %code)*, void (%"shadow.io@Console"*, %long)*, void (%"shadow.io@Console"*, %"shadow.standard@String"*)*, void (%"shadow.io@Console"*, %boolean)*, void (%"shadow.io@Console"*, %int)*, void (%"shadow.io@Console"*, %code)*, void (%"shadow.io@Console"*, %long)*, void (%"shadow.io@Console"*, %"shadow.standard@String"*)*, void (%"shadow.io@Console"*, %"shadow.standard@Object"*)*, void (%"shadow.io@Console"*)* }
+@"Console$methods" = external constant %"Console$methods"
+%"Console" = type { %"Console$methods"* }
+declare void @"Console$$printLine$boolean"(%"shadow.io@Console"*, %boolean)
+declare void @"Console$$printLine$int"(%"shadow.io@Console"*, %int)
+declare void @"Console$$printLine$code"(%"shadow.io@Console"*, %code)
+declare void @"Console$$printLine$long"(%"shadow.io@Console"*, %long)
+declare void @"Console$$printLine$_Pshadow_Pstandard_CString"(%"shadow.io@Console"*, %"shadow.standard@String"*)
+declare void @"Console$$printLine$_Pshadow_Pstandard_CObject"(%"shadow.io@Console"*, %"shadow.standard@Object"*)
+declare void @"Console$$printLine"(%"shadow.io@Console"*)
+declare %"shadow.io@Console"* @"Console$$create"(%"shadow.io@Console"*)
+declare void @"Console$$print$boolean"(%"shadow.io@Console"*, %boolean)
+declare void @"Console$$print$_Pshadow_Pstandard_CObject"(%"shadow.io@Console"*, %"shadow.standard@Object"*)
+declare void @"Console$$print$int"(%"shadow.io@Console"*, %int)
+declare void @"Console$$print$code"(%"shadow.io@Console"*, %code)
+declare void @"Console$$print$long"(%"shadow.io@Console"*, %long)
+declare void @"Console$$print$_Pshadow_Pstandard_CString"(%"shadow.io@Console"*, %"shadow.standard@String"*)
 
-@"shadow.io@Console$class" = external constant %"shadow.standard@Class"
-@"shadow.test@Test$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, { %"shadow.standard@Class"**, [1 x %long] } { %"shadow.standard@Class"** null, [1 x %long] [%long 0] }, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
-@"shadow.standard@Class$class" = external constant %"shadow.standard@Class"
-@"shadow.standard@Object$class" = external constant %"shadow.standard@Class"
-@"shadow.standard@String$class" = external constant %"shadow.standard@Class"
+%"Object$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Object"*)*, %boolean (%"shadow.standard@Object"*, %"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)* }
+@"Object$methods" = external constant %"Object$methods"
+%"Object" = type { %"Object$methods"* }
+declare %"shadow.standard@Class"* @"Object$$getClass"(%"shadow.standard@Object"*)
+declare %boolean @"Object$$equals$_Pshadow_Pstandard_CObject"(%"shadow.standard@Object"*, %"shadow.standard@Object"*)
+declare %"shadow.standard@Object"* @"Object$$freeze"(%"shadow.standard@Object"*)
+declare %"shadow.standard@String"* @"Object$$toString"(%"shadow.standard@Object"*)
+declare %"shadow.standard@Object"* @"Object$$create"(%"shadow.standard@Object"*)
+declare %boolean @"Object$$referenceEquals$_Pshadow_Pstandard_CObject"(%"shadow.standard@Object"*, %"shadow.standard@Object"*)
+declare %"shadow.standard@Object"* @"Object$$copy"(%"shadow.standard@Object"*)
 
-define %"shadow.standard@Class"* @"shadow.test@Test$$getClass"(%"shadow.test@Test"*) {
-    ret %"shadow.standard@Class"* @"shadow.test@Test$class"
+@"Interface$class" = external constant %"shadow.standard@Class"
+@"Test$class" = constant %"Class" { %"Class$methods"* @"Class$methods", { %"shadow.standard@Interface"**, [1 x %long] } { %"shadow.standard@Interface"** null, [1 x %long] [%long 0] }, %"String"* @.str0, %"shadow.standard@Class"* @"Object$class" }
+@"String$class" = external constant %"shadow.standard@Class"
+@"Class$class" = external constant %"shadow.standard@Class"
+@"Console$class" = external constant %"shadow.standard@Class"
+@"Object$class" = external constant %"shadow.standard@Class"
+
+define %"shadow.standard@Class"* @"Test$$getClass"(%"shadow.test@Test"*) {
+    ret %"shadow.standard@Class"* @"Test$class"
 }
 
-define void @"shadow.test@Test$$constructor"(%"shadow.test@Test"*) {
+define %"shadow.test@Test"* @"Test$$create"(%"shadow.test@Test"*) {
     %this = alloca %"shadow.test@Test"*
     store %"shadow.test@Test"* %0, %"shadow.test@Test"** %this
     %2 = load %"shadow.test@Test"** %this
     %3 = getelementptr %"shadow.test@Test"* %2, i32 0, i32 0
-    store %"shadow.test@Test$methods"* @"shadow.test@Test$methods", %"shadow.test@Test$methods"** %3
+    store %"Test$methods"* @"Test$methods", %"Test$methods"** %3
     %4 = load %"shadow.test@Test"** %this
     %5 = getelementptr inbounds %"shadow.test@Test"* %4, i32 0, i32 1
     %6 = load %"shadow.test@Test"** %this
     store %"shadow.test@Test"* %6, %"shadow.test@Test"** %5
-    ret void
+    %7 = load %"shadow.test@Test"** %this
+    ret %"shadow.test@Test"* %7
 }
-define void @"shadow.test@Test$$main"(%"shadow.test@Test"*) {
+define void @"Test$$main"(%"shadow.test@Test"*) {
     %this = alloca %"shadow.test@Test"*
-    %temp = alloca %"shadow.io@Console"*
-    %console = alloca %"shadow.io@Console"*
     %test = alloca %"shadow.test@Test"*
+    %console = alloca %"shadow.io@Console"*
     store %"shadow.test@Test"* %0, %"shadow.test@Test"** %this
-    %2 = load %"shadow.io@Console"** @"shadow.io@Console$instance"
-    %3 = icmp ne %"shadow.io@Console"* %2, null
-    br %boolean %3, label %.label0, label %.label1
-.label0:
-    %4 = load %"shadow.io@Console"** @"shadow.io@Console$instance"
-    store %"shadow.io@Console"* %4, %"shadow.io@Console"** %temp
-    br label %.label2
-.label1:
-    %5 = call noalias i8* @malloc(i64 ptrtoint (%"shadow.io@Console"* getelementptr(%"shadow.io@Console"* null, i32 1) to i64))
-    %6 = bitcast i8* %5 to %"shadow.io@Console"*
-    call void @"shadow.io@Console$$constructor"(%"shadow.io@Console"* %6)
-    store %"shadow.io@Console"* %6, %"shadow.io@Console"** @"shadow.io@Console$instance"
-    store %"shadow.io@Console"* %6, %"shadow.io@Console"** %temp
-    br label %.label2
+    %2 = call noalias i8* @malloc(i64 ptrtoint (%"shadow.test@Test"* getelementptr (%"shadow.test@Test"* null, i32 1) to i64))
+    %3 = bitcast i8* %2 to %"shadow.test@Test"*
+    %4 = call %"shadow.test@Test"* @"Test$$create"(%"shadow.test@Test"* %3)
+    store %"shadow.test@Test"* %3, %"shadow.test@Test"** %test
+    %5 = load %"shadow.io@Console"** @"Console$instance"
+    %6 = icmp eq %"shadow.io@Console"* %5, null
+    br %boolean %6, label %.label2, label %.label3
 .label2:
-    %7 = load %"shadow.io@Console"** %temp
-    store %"shadow.io@Console"* %7, %"shadow.io@Console"** %console
-    %8 = call noalias i8* @malloc(i64 ptrtoint (%"shadow.test@Test"* getelementptr(%"shadow.test@Test"* null, i32 1) to i64))
-    %9 = bitcast i8* %8 to %"shadow.test@Test"*
-    call void @"shadow.test@Test$$constructor"(%"shadow.test@Test"* %9)
-    store %"shadow.test@Test"* %9, %"shadow.test@Test"** %test
-    %10 = load %"shadow.test@Test"** %test
-    %11 = getelementptr inbounds %"shadow.test@Test"* %10, i32 0, i32 1
-    %12 = load %"shadow.io@Console"** %console
-    %13 = load %"shadow.test@Test"** %11
-    %14 = bitcast %"shadow.test@Test"* %13 to %"shadow.standard@Object"*
-    %15 = getelementptr %"shadow.io@Console"* %12, i32 0, i32 0
-    %16 = load %"shadow.io@Console$methods"** %15
-    %17 = getelementptr %"shadow.io@Console$methods"* %16, i32 0, i32 15
-    %18 = load void (%"shadow.io@Console"*, %"shadow.standard@Object"*)** %17
-    call void %18(%"shadow.io@Console"* %12, %"shadow.standard@Object"* %14)
-    br label %.label4
+    %7 = call noalias i8* @malloc(i64 ptrtoint (%"shadow.io@Console"* getelementptr (%"shadow.io@Console"* null, i32 1) to i64))
+    %8 = bitcast i8* %7 to %"shadow.io@Console"*
+    %9 = call %"shadow.io@Console"* @"Console$$create"(%"shadow.io@Console"* %8)
+    store %"shadow.io@Console"* %9, %"shadow.io@Console"** @"Console$instance"
+    br label %.label3
 .label3:
-    %19 = load %"shadow.io@Console"** %console
-    %20 = getelementptr %"shadow.io@Console"* %19, i32 0, i32 0
-    %21 = load %"shadow.io@Console$methods"** %20
-    %22 = getelementptr %"shadow.io@Console$methods"* %21, i32 0, i32 11
-    %23 = load void (%"shadow.io@Console"*, %int)** %22
-    call void %23(%"shadow.io@Console"* %19, %int 1)
-    br label %.label4
-.label4:
-    %24 = load %"shadow.test@Test"** %test
-    %25 = getelementptr inbounds %"shadow.test@Test"* %24, i32 0, i32 1
-    br label %.label6
+    %10 = load %"shadow.io@Console"** @"Console$instance"
+    %11 = load %"shadow.test@Test"** %test
+    %12 = icmp ne %"shadow.test@Test"* %11, null
+    br %boolean %12, label %.label5, label %.label0
 .label5:
-    %26 = load %"shadow.io@Console"** %console
-    %27 = getelementptr %"shadow.io@Console"* %26, i32 0, i32 0
-    %28 = load %"shadow.io@Console$methods"** %27
-    %29 = getelementptr %"shadow.io@Console$methods"* %28, i32 0, i32 11
-    %30 = load void (%"shadow.io@Console"*, %int)** %29
-    call void %30(%"shadow.io@Console"* %26, %int 2)
-    br label %.label6
+    %13 = load %"shadow.test@Test"** %test
+    %14 = getelementptr inbounds %"shadow.test@Test"* %13, i32 0, i32 1
+    %15 = load %"shadow.test@Test"** %14
+    %16 = icmp ne %"shadow.test@Test"* %15, null
+    br %boolean %16, label %.label4, label %.label0
+.label4:
+    %17 = load %"shadow.test@Test"** %14
+    %18 = bitcast %"shadow.test@Test"* %17 to %"shadow.standard@Object"*
+    %19 = getelementptr %"shadow.io@Console"* %10, i32 0, i32 0
+    %20 = load %"Console$methods"** %19
+    %21 = getelementptr %"Console$methods"* %20, i32 0, i32 17
+    %22 = load void (%"shadow.io@Console"*, %"shadow.standard@Object"*)** %21
+    call void %22(%"shadow.io@Console"* %10, %"shadow.standard@Object"* %18)
+    br label %.label1
+.label0:
+    %23 = load %"shadow.io@Console"** @"Console$instance"
+    %24 = icmp eq %"shadow.io@Console"* %23, null
+    br %boolean %24, label %.label6, label %.label7
 .label6:
-    %31 = load %"shadow.test@Test"** %test
-    %32 = getelementptr inbounds %"shadow.test@Test"* %31, i32 0, i32 1
-    %33 = load %"shadow.io@Console"** %console
-    %34 = load %"shadow.test@Test"** %32
-    %35 = bitcast %"shadow.test@Test"* %34 to %"shadow.standard@Object"*
-    %36 = getelementptr %"shadow.io@Console"* %33, i32 0, i32 0
-    %37 = load %"shadow.io@Console$methods"** %36
-    %38 = getelementptr %"shadow.io@Console$methods"* %37, i32 0, i32 15
-    %39 = load void (%"shadow.io@Console"*, %"shadow.standard@Object"*)** %38
-    call void %39(%"shadow.io@Console"* %33, %"shadow.standard@Object"* %35)
-    br label %.label8
+    %25 = call noalias i8* @malloc(i64 ptrtoint (%"shadow.io@Console"* getelementptr (%"shadow.io@Console"* null, i32 1) to i64))
+    %26 = bitcast i8* %25 to %"shadow.io@Console"*
+    %27 = call %"shadow.io@Console"* @"Console$$create"(%"shadow.io@Console"* %26)
+    store %"shadow.io@Console"* %27, %"shadow.io@Console"** @"Console$instance"
+    br label %.label7
 .label7:
-    %40 = load %"shadow.io@Console"** %console
-    %41 = getelementptr %"shadow.io@Console"* %40, i32 0, i32 0
-    %42 = load %"shadow.io@Console$methods"** %41
-    %43 = getelementptr %"shadow.io@Console$methods"* %42, i32 0, i32 11
-    %44 = load void (%"shadow.io@Console"*, %int)** %43
-    call void %44(%"shadow.io@Console"* %40, %int 3)
-    br label %.label8
+    %28 = load %"shadow.io@Console"** @"Console$instance"
+    %29 = getelementptr %"shadow.io@Console"* %28, i32 0, i32 0
+    %30 = load %"Console$methods"** %29
+    %31 = getelementptr %"Console$methods"* %30, i32 0, i32 13
+    %32 = load void (%"shadow.io@Console"*, %int)** %31
+    call void %32(%"shadow.io@Console"* %28, %int 1)
+    br label %.label1
+.label1:
+    %33 = load %"shadow.io@Console"** @"Console$instance"
+    %34 = icmp eq %"shadow.io@Console"* %33, null
+    br %boolean %34, label %.label8, label %.label9
 .label8:
+    %35 = call noalias i8* @malloc(i64 ptrtoint (%"shadow.io@Console"* getelementptr (%"shadow.io@Console"* null, i32 1) to i64))
+    %36 = bitcast i8* %35 to %"shadow.io@Console"*
+    %37 = call %"shadow.io@Console"* @"Console$$create"(%"shadow.io@Console"* %36)
+    store %"shadow.io@Console"* %37, %"shadow.io@Console"** @"Console$instance"
+    br label %.label9
+.label9:
+    %38 = load %"shadow.io@Console"** @"Console$instance"
+    store %"shadow.io@Console"* %38, %"shadow.io@Console"** %console
+    %39 = load %"shadow.test@Test"** %test
+    %40 = icmp ne %"shadow.test@Test"* %39, null
+    br %boolean %40, label %.label12, label %.label10
+.label12:
+    %41 = load %"shadow.test@Test"** %test
+    %42 = getelementptr inbounds %"shadow.test@Test"* %41, i32 0, i32 1
+    store %"shadow.test@Test"* null, %"shadow.test@Test"** %42
+    br label %.label11
+.label10:
+    %43 = load %"shadow.io@Console"** %console
+    %44 = getelementptr %"shadow.io@Console"* %43, i32 0, i32 0
+    %45 = load %"Console$methods"** %44
+    %46 = getelementptr %"Console$methods"* %45, i32 0, i32 13
+    %47 = load void (%"shadow.io@Console"*, %int)** %46
+    call void %47(%"shadow.io@Console"* %43, %int 2)
+    br label %.label11
+.label11:
+    %48 = load %"shadow.test@Test"** %test
+    %49 = icmp ne %"shadow.test@Test"* %48, null
+    br %boolean %49, label %.label16, label %.label13
+.label16:
+    %50 = load %"shadow.test@Test"** %test
+    %51 = getelementptr inbounds %"shadow.test@Test"* %50, i32 0, i32 1
+    %52 = load %"shadow.test@Test"** %51
+    %53 = icmp ne %"shadow.test@Test"* %52, null
+    br %boolean %53, label %.label15, label %.label13
+.label15:
+    %54 = load %"shadow.io@Console"** %console
+    %55 = load %"shadow.test@Test"** %51
+    %56 = bitcast %"shadow.test@Test"* %55 to %"shadow.standard@Object"*
+    %57 = getelementptr %"shadow.io@Console"* %54, i32 0, i32 0
+    %58 = load %"Console$methods"** %57
+    %59 = getelementptr %"Console$methods"* %58, i32 0, i32 17
+    %60 = load void (%"shadow.io@Console"*, %"shadow.standard@Object"*)** %59
+    call void %60(%"shadow.io@Console"* %54, %"shadow.standard@Object"* %56)
+    br label %.label14
+.label13:
+    %61 = load %"shadow.io@Console"** %console
+    %62 = getelementptr %"shadow.io@Console"* %61, i32 0, i32 0
+    %63 = load %"Console$methods"** %62
+    %64 = getelementptr %"Console$methods"* %63, i32 0, i32 13
+    %65 = load void (%"shadow.io@Console"*, %int)** %64
+    call void %65(%"shadow.io@Console"* %61, %int 3)
+    br label %.label14
+.label14:
     ret void
 }
 
-@.array0 = private unnamed_addr constant [16 x %ubyte] c"shadow.test@Test"
-@.str0 = private unnamed_addr constant %"shadow.standard@String" { %"shadow.standard@String$methods"* @"shadow.standard@String$methods", { %ubyte*, [1 x %long] } { %ubyte* getelementptr inbounds ([16 x %ubyte]* @.array0, i32 0, i32 0), [1 x %long] [%long 16] } }
+@.array0 = private unnamed_addr constant [4 x %ubyte] c"Test"
+@.str0 = private unnamed_addr constant %"shadow.standard@String" { %"String$methods"* @"String$methods", { %ubyte*, [1 x %long] } { %ubyte* getelementptr inbounds ([4 x %ubyte]* @.array0, i32 0, i32 0), [1 x %long] [%long 4] } }

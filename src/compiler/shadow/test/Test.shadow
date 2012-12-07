@@ -6,13 +6,13 @@ class shadow.test@Test
 	nullable Test test = this;
 	public main() => ()
 	{
-		Console console = instance Console;
 		nullable Test test = Test:create();
 		try {
-			console.printLine(check(check(test):test));
+			Console:instance.printLine(check(check(test):test));
 		} recover {
-			console.printLine(1);
+			Console:instance.printLine(1);
 		}
+		Console console = Console:instance;
 		try {
 			check(test):test = null;
 		} recover {

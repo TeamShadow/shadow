@@ -2,9 +2,9 @@ package shadow.output.c;
 
 import java.util.Map;
 
+import shadow.output.AbstractOutput;
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
 import shadow.tac.TACVariable;
@@ -21,8 +21,13 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
-public class COutput extends TACAbstractVisitor
+public class COutput extends AbstractOutput
 {
+	public COutput() throws ShadowException {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
 	private TabbedLineWriter meta, c;
 	private int tempCounter;
 	@Override
@@ -49,7 +54,7 @@ public class COutput extends TACAbstractVisitor
 		meta.write("typedef double shadow_double_t;");
 		meta.write();
 
-		c.write("/// " + module.getFullName());
+		c.write("/// " + module.getQualifiedName());
 		c.write();
 
 		module.getClassType().addReferencedType(Type.CLASS);
@@ -73,11 +78,11 @@ public class COutput extends TACAbstractVisitor
 		/*List<MethodSignature> methods = module.getClassType().getMethodList();
 		for (MethodSignature method : methods)
 			llvm.write("declare " + methodToString(method));*/
-		c.write("%\"" + module.getFullName() + "!!methods\" = type {}");
+		c.write("%\"" + module.getQualifiedName() + "!!methods\" = type {}");
 		StringBuilder sb = new StringBuilder("%\"");
-		sb.append(module.getFullName());
+		sb.append(module.getQualifiedName());
 		sb.append("\" = type { %\"");
-		sb.append(module.getFullName());
+		sb.append(module.getQualifiedName());
 		sb.append("!!methods\"*");
 		for (Map.Entry<String, ModifiedType> fields : module.getClassType().
 				getFieldList())

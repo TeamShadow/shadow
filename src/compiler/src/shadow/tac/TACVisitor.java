@@ -16,6 +16,7 @@ import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNodeRef;
+import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
@@ -27,13 +28,6 @@ import shadow.tac.nodes.TACVariableRef;
 
 public interface TACVisitor
 {
-	public abstract void startFile(TACModule module) throws ShadowException;
-	public abstract void endFile(TACModule module) throws ShadowException;
-
-	public abstract void startMethod(TACMethod method)
-			throws ShadowException;
-	public abstract void endMethod(TACMethod method) throws ShadowException;
-
 	public abstract void visit(TACArrayRef node) throws ShadowException;
 	public abstract void visit(TACBinary node) throws ShadowException;
 	public abstract void visit(TACBranch node) throws ShadowException;
@@ -49,6 +43,7 @@ public interface TACVisitor
 	public abstract void visit(TACNewArray node) throws ShadowException;
 	public abstract void visit(TACNewObject node) throws ShadowException;
 	public abstract void visit(TACNodeRef node) throws ShadowException;
+	public abstract void visit(TACPropertyRef node) throws ShadowException;
 	public abstract void visit(TACReference node) throws ShadowException;
 	public abstract void visit(TACReturn node) throws ShadowException;
 	public abstract void visit(TACSequence node) throws ShadowException;

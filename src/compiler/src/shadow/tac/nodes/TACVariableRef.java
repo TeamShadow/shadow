@@ -24,6 +24,10 @@ public class TACVariableRef extends TACReference
 	{
 		return variable;
 	}
+	public String getVariableName()
+	{
+		return variable.getName();
+	}
 
 	@Override
 	public Type getType()

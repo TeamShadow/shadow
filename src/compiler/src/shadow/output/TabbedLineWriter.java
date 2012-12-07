@@ -15,26 +15,39 @@ public class TabbedLineWriter
 	private boolean lineNumbers;
 	private int indent, line;
 	private Writer out;
-	public TabbedLineWriter(BufferedWriter writer)
+	public TabbedLineWriter(BufferedWriter writer) throws ShadowException
 	{
-		indent = 0;
 		out = writer;
 	}
-	public TabbedLineWriter(Writer writer)
+	public TabbedLineWriter(Writer writer) throws ShadowException
 	{
-		this(new BufferedWriter(writer));
+		out = new BufferedWriter(writer);
 	}
-	public TabbedLineWriter(OutputStream output)
+	public TabbedLineWriter(OutputStream output) throws ShadowException
 	{
-		this(new OutputStreamWriter(output));
+		out = new OutputStreamWriter(output);
 	}
-	public TabbedLineWriter(String file) throws IOException
+	public TabbedLineWriter(String file) throws ShadowException
 	{
-		this(new FileWriter(file));
+		try
+		{
+			out = new FileWriter(file);
+		}
+		catch (IOException ex)
+		{
+			throw new ShadowException(ex.getLocalizedMessage());
+		}
 	}
-	public TabbedLineWriter(File file) throws IOException
+	public TabbedLineWriter(File file) throws ShadowException
 	{
-		this(new FileWriter(file));
+		try
+		{
+			out = new FileWriter(file);
+		}
+		catch (IOException ex)
+		{
+			throw new ShadowException(ex.getLocalizedMessage());
+		}
 	}
 
 	public void setLineNumbers(boolean value)

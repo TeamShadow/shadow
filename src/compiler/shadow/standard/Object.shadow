@@ -4,7 +4,7 @@ class shadow.standard@Object
 	getClass() => ( Class );
 
 	public immutable
-	toString() => ( String ) { return getClass().getClassName(); }
+	toString() => ( String ) { return getClass().toString(); }
 
 	public native
 	copy() => ( Object ); //classes should override this if needed

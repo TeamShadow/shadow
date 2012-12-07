@@ -1,6 +1,8 @@
 package shadow.tac;
 
+import java.io.StringWriter;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,12 +11,15 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import shadow.output.text.TextOutput;
+import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACMethod extends TACNodeList
@@ -38,7 +43,7 @@ public class TACMethod extends TACNodeList
 		name = methodName;
 		type = methodType;
 		scopes.push(new LinkedHashMap<String, TACVariable>(
-				getParameterCount() * 2));
+				type.getParameterTypes().size()));
 		addLocal(thisType, "this");
 		for (String parameterName : methodType.getParameterNames())
 			addLocal(methodType.getParameterType(parameterName).getType(),
@@ -74,17 +79,28 @@ public class TACMethod extends TACNodeList
 	}
 	public int getParameterCount()
 	{
-		return 1 + type.getParameterTypes().size();
+		return scopes.peekLast().size();
+	}
+	public boolean hasParameters()
+	{
+		return !scopes.peekLast().isEmpty();
+	}
+	public boolean hasParametersExceptThis()
+	{
+		return !type.getParameterTypes().isEmpty();
 	}
 
 	public SequenceType getReturnTypes()
 	{
+		if (isCreate())
+			return new SequenceType(Collections.<ModifiedType>singletonList(
+					new SimpleModifiedType(getPrefixType())));
 		return type.getReturnTypes();
 	}
 	public Type getReturnType()
 	{
-		SequenceType retTypes = type.getReturnTypes();
-		if (retTypes.size() == 0)
+		SequenceType retTypes = getReturnTypes();
+		if (retTypes.isEmpty())
 			return null;
 		if (retTypes.size() == 1)
 			return retTypes.getType(0);
@@ -92,7 +108,11 @@ public class TACMethod extends TACNodeList
 	}
 	public int getReturnCount()
 	{
-		return type.getReturnTypes().size();
+		return getReturnTypes().size();
+	}
+	public boolean hasReturn()
+	{
+		return !getReturnTypes().isEmpty();
 	}
 
 	public boolean isNative()
@@ -104,13 +124,17 @@ public class TACMethod extends TACNodeList
 	{
 		return name.equals("create");
 	}
-	public boolean isDestructor()
+	public boolean isSpecialCreate()
 	{
-		return name.equals("destroy");
+		return isCreate() && !hasParameters();
+	}
+	public boolean isDestroy()
+	{
+		return name.equals("destroy") && !hasParametersExceptThis();
 	}
 	public boolean isGetClass()
 	{
-		return name.equals("getClass") && type.getParameterTypes().isEmpty();
+		return name.equals("getClass") && !hasParametersExceptThis();
 	}
 
 	public void enterScope()
@@ -128,7 +152,7 @@ public class TACMethod extends TACNodeList
 	}
 	public TACVariable addTempLocal(Type type)
 	{
-		return addLocal(type, "temp");
+		return addLocal(type, "_temp");
 	}
 	public TACVariable getLocal(String name)
 	{
@@ -148,21 +172,39 @@ public class TACMethod extends TACNodeList
 	@Override
 	public String toString()
 	{
-		final String newline = System.getProperty("line.separator");
-		StringBuilder sb = new StringBuilder(getName()).append('(');
-		for (TACVariable param : getParameters())
-			sb.append(param).append(", ");
-		if (getParameterCount() > 0)
-			sb.delete(sb.length() - 2, sb.length());
-		sb.append(") => (");
-		for (ModifiedType retType : getReturnTypes())
-			sb.append(retType.getType()).append(", ");
-		if (getReturnCount() > 0)
-			sb.delete(sb.length() - 2, sb.length());
-		sb.append(") {").append(newline);
-		++indent;
-		sb.append(super.toString());
-		--indent;
-		return sb.append('}').append(newline).toString();
+		StringWriter writer = new StringWriter();
+		try
+		{
+			new TextOutput(writer).build(this);
+		}
+		catch (ShadowException ex)
+		{
+			return "Error";
+		}
+		return writer.toString();
 	}
+
+//	@Override
+//	public String toString()
+//	{
+//		final String newline = System.getProperty("line.separator");
+//		StringBuilder sb = new StringBuilder();
+//		sb.append(type.getModifiers()).append(getName()).append('(');
+//		for (TACVariable param : getParameters())
+//			sb.append(param).append(", ");
+//		if (getParameterCount() > 0)
+//			sb.delete(sb.length() - 2, sb.length());
+//		sb.append(") => (");
+//		for (ModifiedType retType : getReturnTypes())
+//			sb.append(retType.getType()).append(", ");
+//		if (getReturnCount() > 0)
+//			sb.delete(sb.length() - 2, sb.length());
+//		sb.append(") {").append(newline);
+//		++indent;
+//		for (TACVariable local : locals.values())
+//			indent(sb).append(local).append(';').append(newline);
+//		sb.append(super.toString());
+//		--indent;
+//		return sb.append('}').append(newline).toString();
+//	}
 }

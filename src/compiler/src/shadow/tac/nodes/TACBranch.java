@@ -71,4 +71,12 @@ public class TACBranch extends TACSimpleNode
 	{
 		visitor.visit(this);
 	}
+
+	@Override
+	public String toString() {
+		if (isConditional())
+			return "goto " + getCondition() + " ? " + getTrueLabel() + " : " +
+				getFalseLabel();
+		return "goto " + getLabel();
+	}
 }

@@ -6,10 +6,16 @@ public class TACVariable
 {
 	private Type type;
 	private String name;
+	private int suffix;
 	public TACVariable(Type varType, String varName)
 	{
 		type = varType;
 		name = varName;
+		suffix = 0;
+	}
+	public boolean hasType()
+	{
+		return type != null;
 	}
 	public Type getType()
 	{
@@ -17,16 +23,20 @@ public class TACVariable
 	}
 	public String getName()
 	{
-		return name;
+		if (suffix == 0)
+			return name;
+		return name + suffix;
 	}
 	protected void rename()
 	{
-		name += '_';
+		suffix++;
 	}
 
 	@Override
 	public String toString()
 	{
+		if (!hasType())
+			return getName();
 		return getType().toString() + ' ' + getName();
 	}
 }
