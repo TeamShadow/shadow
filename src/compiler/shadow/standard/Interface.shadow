@@ -1,0 +1,23 @@
+immutable final class shadow.standard@Interface
+{
+	String name = "";
+	Interface[] interfaces = Interface:create[0];
+	private create() { }
+
+	public isSubtype( Interface other ) => ( boolean )
+	{
+		if ( this == other )
+			return true;
+		for ( long i = 0; i < interfaces.getLength(); i += 1 )
+			try {
+				if ( check(interfaces[i]).isSubtype( other ) )
+					return true;
+			} recover { }
+		return false;
+	}
+
+	public toString() => ( String )
+	{
+		return name;
+	}
+}

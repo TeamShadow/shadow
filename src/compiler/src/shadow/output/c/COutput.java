@@ -18,7 +18,6 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 

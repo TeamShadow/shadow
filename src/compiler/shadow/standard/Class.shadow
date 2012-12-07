@@ -1,38 +1,32 @@
 immutable final class shadow.standard@Class
 {
-	// ubyte type = 0;
-	nullable Class superClass = null;
-	Class[] implementedInterfaces = Class[0];
-	String className = "";
+	String name = "";
+	get nullable Class parent = null;
+	Interface[] interfaces = Interface:create[0];
 	private create() { }
 
 	public isSubtype( Class other ) => ( boolean )
 	{
-		if ( other.isInterface() )
-			return isInterfaceSubtype(other);
-		return isClassSubtype(other);
-	}
-	private isInterfaceSubtype( Class other ) => ( boolean )
-	{
-		for ( long i = 0; i < implementedInterfaces.getLength(0); i += 1 )
-			if ( implementedInterfaces[i] == other )
-				return true;
-		return false;
-	}
-	private isClassSubtype( Class other ) => ( boolean )
-	{
 		if ( this == other )
 			return true;
 		try {
-			return check(superClass).isClassSubtype(other);
+			return check(parent).isSubtype(other);
 		} recover { }
 		return false;
 	}
 
-	public isInterface() => ( boolean ) { return false; }
-	// public isInterface() => ( boolean ) { return width == 16; }
-	// public getWidth() => ( int ) { return width }
-	public getSuperClass() => ( nullable Class ) { return superClass; }
-	public getClassName() => ( String ) { return className; }
-	public immutable toString() => ( String ) { return getClassName(); }
+	public isSubtype( Interface other ) => ( boolean )
+	{
+		for ( long i = 0; i < interfaces.getLength(); i += 1 )
+			try {
+				if ( check(interfaces[i]).isSubtype( other ) )
+					return true;
+			} recover { }
+		return false;
+	}
+
+	public toString() => ( String )
+	{
+		return name;
+	}
 }

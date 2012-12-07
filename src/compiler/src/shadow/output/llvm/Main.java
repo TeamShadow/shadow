@@ -125,7 +125,7 @@ public class Main {
 		        if(!result) {
 		        	logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");
 		        	
-		        	return TYPE_CHECK_ERROR;
+//		        	return TYPE_CHECK_ERROR;
 		        }
 		        
 		        // we are only parsing & type checking

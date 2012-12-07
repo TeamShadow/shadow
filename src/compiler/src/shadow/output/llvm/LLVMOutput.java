@@ -195,8 +195,8 @@ public class LLVMOutput extends TACAbstractVisitor
 				llvm.write("@\"" + type + "$methods\" = external constant %\"" +
 						type + "$methods\"");
 
-			for (Map.Entry<String, ModifiedType> field : ((ClassType)type).
-					getFieldList())
+			for (Map.Entry<String, ModifiedType> field :
+					((ClassType)type).getFieldList())
 				sb.append(", ").append(type(field.getValue()));
 		}
 		llvm.write(sb.append(" }").toString());
@@ -217,13 +217,14 @@ public class LLVMOutput extends TACAbstractVisitor
 		String typeName = type.toString();
 		if (current)
 		{
+			String _interface = "%\"shadow.standard@Interface\"*";
 			llvm.write("@\"" + typeName + "$class\" = constant %\"" +
 					Type.CLASS + "\" { %\"" + Type.CLASS + "$methods\"* @\"" +
-					Type.CLASS + "$methods\", %\"" + Type.STRING + "\"* " +
-					nextString(typeName) + ", { " + type(Type.CLASS) +
-					"*, [1 x " + type(Type.LONG) + "] } { " + type(Type.CLASS) +
-					"* null, [1 x " + type(Type.LONG) + "] [" + type(Type.LONG) +
-					" 0] }, " + type(Type.CLASS) + ' ' +
+					Type.CLASS + "$methods\", { " + _interface +
+					"*, [1 x " + type(Type.LONG) + "] } { " + _interface +
+					"* null, [1 x " + type(Type.LONG) + "] [" +
+					type(Type.LONG) + " 0] }, %\"" + Type.STRING + "\"* " +
+					nextString(typeName) + ", " + type(Type.CLASS) + ' ' +
 					(!(type instanceof ClassType) || ((ClassType)type).getExtendType() == null ? null :
 					"@\"" + ((ClassType) type).getExtendType() + "$class\"") + " }");
 		}
@@ -281,27 +282,27 @@ public class LLVMOutput extends TACAbstractVisitor
 
 		if (process != null)
 			try
-		{
-			String line;
-			BufferedReader reader;
-			process.getOutputStream().close();
-
-			reader = new BufferedReader(new InputStreamReader(process.
-					getInputStream()));
-			while ((line = reader.readLine()) != null)
-				System.out.println(line);
-			reader.close();
-
-			reader = new BufferedReader(new InputStreamReader(process.
-					getErrorStream()));
-			while ((line = reader.readLine()) != null)
-				System.err.println(line);
-			reader.close();
-		}
+			{
+				String line;
+				BufferedReader reader;
+				process.getOutputStream().close();
+	
+				reader = new BufferedReader(new InputStreamReader(
+						process.getInputStream()));
+				while ((line = reader.readLine()) != null)
+					System.out.println(line);
+				reader.close();
+	
+				reader = new BufferedReader(new InputStreamReader(
+						process.getErrorStream()));
+				while ((line = reader.readLine()) != null)
+					System.err.println(line);
+				reader.close();
+			}
 			catch (IOException ex)
-		{
-			throw new ShadowException(ex.getLocalizedMessage());
-		}
+			{
+				throw new ShadowException(ex.getLocalizedMessage());
+			}
 	}
 
 	@Override
@@ -778,8 +779,8 @@ public class LLVMOutput extends TACAbstractVisitor
 
 	private static String sizeof(String type)
 	{
-		return "ptrtoint (" + type + " getelementptr(" + type + " null, i32 " +
-				"1) to i64)";
+		return "ptrtoint (" + type + " getelementptr (" + type +
+				" null, i32 1) to i64)";
 	}
 
 	private static String type(TACVariable var)
@@ -865,7 +866,7 @@ public class LLVMOutput extends TACAbstractVisitor
 	{
 		String name = node.getName();
 		if (name == null)
-			System.out.print("");//throw new NullPointerException();
+			throw new NullPointerException();
 		return name;
 	}
 	private static String name(TACMethod method)
@@ -874,7 +875,7 @@ public class LLVMOutput extends TACAbstractVisitor
 				append(method.getPrefixType()).append('$');
 		sb.append('$').append(method.getName());
 		for (ModifiedType paramType : method.getType().getParameterTypes())
-			sb.append('$').append(paramType.getType());
+			sb.append('$').append(paramType.getType().getMangledName());
 		return sb.append('\"').toString();
 	}
 
@@ -890,8 +891,7 @@ public class LLVMOutput extends TACAbstractVisitor
 	{
 		return typeName(type(node), name(node), reference);
 	}
-	private static String typeName(String type, String name,
-			boolean reference)
+	private static String typeName(String type, String name, boolean reference)
 	{
 		StringBuilder sb = new StringBuilder(type);
 		if (reference)

@@ -16,6 +16,10 @@
 declare noalias i8* @malloc(i64)
 declare noalias i8* @calloc(i64, i64)
 
+%"shadow.standard@Array<T>$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Array"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)*, %long (%"shadow.standard@Array"*)*, %long (%"shadow.standard@Array"*)*, %long (%"shadow.standard@Array"*, %long)*, { %long*, [1 x %long] } (%"shadow.standard@Array"*)* }
+@"shadow.standard@Array<T>$methods" = constant %"shadow.standard@Array<T>$methods" { %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$clone", %"shadow.standard@Class"* (%"shadow.standard@Array"*)* @"shadow.standard@Array<T>$$getClass", %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$immutableClone", %"shadow.standard@String"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$toString", %long (%"shadow.standard@Array"*)* @"shadow.standard@Array<T>$$getDimensions", %long (%"shadow.standard@Array"*)* @"shadow.standard@Array<T>$$getLength", %long (%"shadow.standard@Array"*, %long)* @"shadow.standard@Array<T>$$getLength$long", { %long*, [1 x %long] } (%"shadow.standard@Array"*)* @"shadow.standard@Array<T>$$getLengths" }
+%"shadow.standard@Array<T>" = type { %"shadow.standard@Array<T>$methods"*, %long, { %long*, [1 x %long] } }
+
 %"shadow.standard@Class$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %"shadow.standard@String"* (%"shadow.standard@Class"*)*, %"shadow.standard@Class"* (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)*, %boolean (%"shadow.standard@Class"*, %"shadow.standard@Class"*)* }
 @"shadow.standard@Class$methods" = external constant %"shadow.standard@Class$methods"
 %"shadow.standard@Class" = type { %"shadow.standard@Class$methods"*, %"shadow.standard@String"*, { %"shadow.standard@Class"**, [1 x %long] }, %"shadow.standard@Class"* }
@@ -46,20 +50,16 @@ declare %ubyte @"shadow.standard@String$$getCode$long"(%"shadow.standard@String"
 declare %long @"shadow.standard@String$$getLength"(%"shadow.standard@String"*)
 declare void @"shadow.standard@String$$constructor"(%"shadow.standard@String"*)
 
-%"shadow.standard@Array$methods" = type { %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@Class"* (%"shadow.standard@Array"*)*, %"shadow.standard@Object"* (%"shadow.standard@Object"*)*, %"shadow.standard@String"* (%"shadow.standard@Object"*)*, %long (%"shadow.standard@Array"*)*, %long (%"shadow.standard@Array"*)*, %long (%"shadow.standard@Array"*, %long)*, { %long*, [1 x %long] } (%"shadow.standard@Array"*)* }
-@"shadow.standard@Array$methods" = constant %"shadow.standard@Array$methods" { %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$clone", %"shadow.standard@Class"* (%"shadow.standard@Array"*)* @"shadow.standard@Array$$getClass", %"shadow.standard@Object"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$immutableClone", %"shadow.standard@String"* (%"shadow.standard@Object"*)* @"shadow.standard@Object$$toString", %long (%"shadow.standard@Array"*)* @"shadow.standard@Array$$getDimensions", %long (%"shadow.standard@Array"*)* @"shadow.standard@Array$$getLength", %long (%"shadow.standard@Array"*, %long)* @"shadow.standard@Array$$getLength$long", { %long*, [1 x %long] } (%"shadow.standard@Array"*)* @"shadow.standard@Array$$getLengths" }
-%"shadow.standard@Array" = type { %"shadow.standard@Array$methods"*, %long, { %long*, [1 x %long] } }
-
+@"shadow.standard@Array<T>$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, { %"shadow.standard@Class"**, [1 x %long] } { %"shadow.standard@Class"** null, [1 x %long] [%long 0] }, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
 @"shadow.standard@Class$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@Object$class" = external constant %"shadow.standard@Class"
 @"shadow.standard@String$class" = external constant %"shadow.standard@Class"
-@"shadow.standard@Array$class" = constant %"shadow.standard@Class" { %"shadow.standard@Class$methods"* @"shadow.standard@Class$methods", %"shadow.standard@String"* @.str0, { %"shadow.standard@Class"**, [1 x %long] } { %"shadow.standard@Class"** null, [1 x %long] [%long 0] }, %"shadow.standard@Class"* @"shadow.standard@Object$class" }
 
-define %"shadow.standard@Class"* @"shadow.standard@Array$$getClass"(%"shadow.standard@Array"*) {
-    ret %"shadow.standard@Class"* @"shadow.standard@Array$class"
+define %"shadow.standard@Class"* @"shadow.standard@Array<T>$$getClass"(%"shadow.standard@Array"*) {
+    ret %"shadow.standard@Class"* @"shadow.standard@Array<T>$class"
 }
 
-define { %long*, [1 x %long] } @"shadow.standard@Array$$getLengths"(%"shadow.standard@Array"*) {
+define { %long*, [1 x %long] } @"shadow.standard@Array<T>$$getLengths"(%"shadow.standard@Array"*) {
     %this = alloca %"shadow.standard@Array"*
     store %"shadow.standard@Array"* %0, %"shadow.standard@Array"** %this
     %2 = load %"shadow.standard@Array"** %this
@@ -67,7 +67,7 @@ define { %long*, [1 x %long] } @"shadow.standard@Array$$getLengths"(%"shadow.sta
     %4 = load { %long*, [1 x %long] }* %3
     ret { %long*, [1 x %long] } %4
 }
-define %long @"shadow.standard@Array$$getDimensions"(%"shadow.standard@Array"*) {
+define %long @"shadow.standard@Array<T>$$getDimensions"(%"shadow.standard@Array"*) {
     %this = alloca %"shadow.standard@Array"*
     store %"shadow.standard@Array"* %0, %"shadow.standard@Array"** %this
     %2 = load %"shadow.standard@Array"** %this
@@ -83,16 +83,16 @@ define %long @"shadow.standard@Array$$getDimensions"(%"shadow.standard@Array"*) 
     store [1 x %long] %9, [1 x %long]* %11
     %12 = getelementptr [1 x %long]* %11, i32 0, i32 0
     %13 = insertvalue { %long*, [1 x %long] } { %long* null, [1 x %long] [%long 1] }, %long* %12, 0
-    call void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard@Array"* %6, %long %8, { %long*, [1 x %long] } %13)
+    call void @"shadow.standard@Array<T>$$constructor$long$long[]"(%"shadow.standard@Array"* %6, %long %8, { %long*, [1 x %long] } %13)
     %14 = sext %int 0 to %long
     %15 = getelementptr %"shadow.standard@Array"* %6, i32 0, i32 0
-    %16 = load %"shadow.standard@Array$methods"** %15
-    %17 = getelementptr %"shadow.standard@Array$methods"* %16, i32 0, i32 6
+    %16 = load %"shadow.standard@Array<T>$methods"** %15
+    %17 = getelementptr %"shadow.standard@Array<T>$methods"* %16, i32 0, i32 6
     %18 = load %long (%"shadow.standard@Array"*, %long)** %17
     %19 = call %long %18(%"shadow.standard@Array"* %6, %long %14)
     ret %long %19
 }
-define %long @"shadow.standard@Array$$getLength"(%"shadow.standard@Array"*) {
+define %long @"shadow.standard@Array<T>$$getLength"(%"shadow.standard@Array"*) {
     %this = alloca %"shadow.standard@Array"*
     %length = alloca %long
     %i = alloca %long
@@ -106,16 +106,16 @@ define %long @"shadow.standard@Array$$getLength"(%"shadow.standard@Array"*) {
     %4 = load %"shadow.standard@Array"** %this
     %5 = load %long* %i
     %6 = getelementptr %"shadow.standard@Array"* %4, i32 0, i32 0
-    %7 = load %"shadow.standard@Array$methods"** %6
-    %8 = getelementptr %"shadow.standard@Array$methods"* %7, i32 0, i32 6
+    %7 = load %"shadow.standard@Array<T>$methods"** %6
+    %8 = getelementptr %"shadow.standard@Array<T>$methods"* %7, i32 0, i32 6
     %9 = load %long (%"shadow.standard@Array"*, %long)** %8
     %10 = call %long %9(%"shadow.standard@Array"* %4, %long %5)
     br label %.label1
 .label1:
     %11 = load %"shadow.standard@Array"** %this
     %12 = getelementptr %"shadow.standard@Array"* %11, i32 0, i32 0
-    %13 = load %"shadow.standard@Array$methods"** %12
-    %14 = getelementptr %"shadow.standard@Array$methods"* %13, i32 0, i32 4
+    %13 = load %"shadow.standard@Array<T>$methods"** %12
+    %14 = getelementptr %"shadow.standard@Array<T>$methods"* %13, i32 0, i32 4
     %15 = load %long (%"shadow.standard@Array"*)** %14
     %16 = call %long %15(%"shadow.standard@Array"* %11)
     %17 = load %long* %i
@@ -125,7 +125,7 @@ define %long @"shadow.standard@Array$$getLength"(%"shadow.standard@Array"*) {
     %19 = load %long* %length
     ret %long %19
 }
-define %long @"shadow.standard@Array$$getLength$long"(%"shadow.standard@Array"*, %long) {
+define %long @"shadow.standard@Array<T>$$getLength$long"(%"shadow.standard@Array"*, %long) {
     %this = alloca %"shadow.standard@Array"*
     %index = alloca %long
     store %"shadow.standard@Array"* %0, %"shadow.standard@Array"** %this
@@ -139,7 +139,7 @@ define %long @"shadow.standard@Array$$getLength$long"(%"shadow.standard@Array"*,
     %9 = load %long* %8
     ret %long %9
 }
-define void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard@Array"*, %long, { %long*, [1 x %long] }) {
+define void @"shadow.standard@Array<T>$$constructor$long$long[]"(%"shadow.standard@Array"*, %long, { %long*, [1 x %long] }) {
     %this = alloca %"shadow.standard@Array"*
     %data = alloca %long
     %lengths = alloca { %long*, [1 x %long] }
@@ -148,7 +148,7 @@ define void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard@
     store { %long*, [1 x %long] } %2, { %long*, [1 x %long] }* %lengths
     %4 = load %"shadow.standard@Array"** %this
     %5 = getelementptr %"shadow.standard@Array"* %4, i32 0, i32 0
-    store %"shadow.standard@Array$methods"* @"shadow.standard@Array$methods", %"shadow.standard@Array$methods"** %5
+    store %"shadow.standard@Array<T>$methods"* @"shadow.standard@Array<T>$methods", %"shadow.standard@Array<T>$methods"** %5
     %6 = load %"shadow.standard@Array"** %this
     %7 = getelementptr inbounds %"shadow.standard@Array"* %6, i32 0, i32 2
     %8 = sext %int 0 to %long
@@ -168,5 +168,5 @@ define void @"shadow.standard@Array$$constructor$long$long[]"(%"shadow.standard@
     ret void
 }
 
-@.array0 = private unnamed_addr constant [21 x %ubyte] c"shadow.standard@Array"
-@.str0 = private unnamed_addr constant %"shadow.standard@String" { %"shadow.standard@String$methods"* @"shadow.standard@String$methods", { %ubyte*, [1 x %long] } { %ubyte* getelementptr inbounds ([21 x %ubyte]* @.array0, i32 0, i32 0), [1 x %long] [%long 21] } }
+@.array0 = private unnamed_addr constant [24 x %ubyte] c"shadow.standard@Array<T>"
+@.str0 = private unnamed_addr constant %"shadow.standard@String" { %"shadow.standard@String$methods"* @"shadow.standard@String$methods", { %ubyte*, [1 x %long] } { %ubyte* getelementptr inbounds ([24 x %ubyte]* @.array0, i32 0, i32 0), [1 x %long] [%long 24] } }

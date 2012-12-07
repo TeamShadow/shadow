@@ -11,6 +11,7 @@ public class LLVMMain
 
 		arguments.add("shadow/standard/Object.shadow");
 		arguments.add("shadow/standard/Class.shadow");
+		arguments.add("shadow/standard/Interface.shadow");
 		arguments.add("shadow/standard/Array.shadow");
 		arguments.add("shadow/standard/String.shadow");
 		arguments.add("shadow/io/Console.shadow");

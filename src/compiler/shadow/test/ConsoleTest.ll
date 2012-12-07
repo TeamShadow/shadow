@@ -79,6 +79,14 @@ define %"shadow.standard@Class"* @"shadow.test@ConsoleTest$$getClass"(%"shadow.t
     ret %"shadow.standard@Class"* @"shadow.test@ConsoleTest$class"
 }
 
+define void @"shadow.test@ConsoleTest$$constructor"(%"shadow.test@ConsoleTest"*) {
+    %this = alloca %"shadow.test@ConsoleTest"*
+    store %"shadow.test@ConsoleTest"* %0, %"shadow.test@ConsoleTest"** %this
+    %2 = load %"shadow.test@ConsoleTest"** %this
+    %3 = getelementptr %"shadow.test@ConsoleTest"* %2, i32 0, i32 0
+    store %"shadow.test@ConsoleTest$methods"* @"shadow.test@ConsoleTest$methods", %"shadow.test@ConsoleTest$methods"** %3
+    ret void
+}
 define void @"shadow.test@ConsoleTest$$main"(%"shadow.test@ConsoleTest"*) {
     %this = alloca %"shadow.test@ConsoleTest"*
     %temp = alloca %"shadow.io@Console"*
@@ -319,14 +327,6 @@ define void @"shadow.test@ConsoleTest$$main"(%"shadow.test@ConsoleTest"*) {
     %121 = getelementptr %"shadow.io@Console$methods"* %120, i32 0, i32 16
     %122 = load void (%"shadow.io@Console"*)** %121
     call void %122(%"shadow.io@Console"* %118)
-    ret void
-}
-define void @"shadow.test@ConsoleTest$$constructor"(%"shadow.test@ConsoleTest"*) {
-    %this = alloca %"shadow.test@ConsoleTest"*
-    store %"shadow.test@ConsoleTest"* %0, %"shadow.test@ConsoleTest"** %this
-    %2 = load %"shadow.test@ConsoleTest"** %this
-    %3 = getelementptr %"shadow.test@ConsoleTest"* %2, i32 0, i32 0
-    store %"shadow.test@ConsoleTest$methods"* @"shadow.test@ConsoleTest$methods", %"shadow.test@ConsoleTest$methods"** %3
     ret void
 }
 

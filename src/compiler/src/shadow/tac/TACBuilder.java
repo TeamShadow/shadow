@@ -40,10 +40,8 @@ import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.UnboundMethodType;
@@ -695,7 +693,16 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-			visitMethodCall(node);
+		{
+			TACMethod methodRef = new TACMethod(identifier.getName(),
+					(MethodType)node.getType());
+			List<TACOperand> params = new ArrayList<TACOperand>();
+			params.add(prefix != null ? prefix :
+					new TACVariableRef(tree, method.getLocal("this")));
+			for (int i = 0; i < tree.getNumChildren(); i++)
+				params.add(tree.appendChild(i));
+			prefix = new TACCall(tree, methodRef, params);
+		}
 		return POST_CHILDREN;
 	}
 
@@ -862,7 +869,20 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-			visitCreate(node);
+		{
+			TACMethod methodRef = new TACMethod("constructor",
+					(MethodType)node.getType());
+			TACOperand object = new TACNewObject(tree,
+					(ClassType)methodRef.getPrefixType());
+			TACSequence sequence = tree.appendChildRemoveSequence(1);
+			List<TACOperand> params =
+					new ArrayList<TACOperand>(sequence.size() + 1);
+			params.add(object);
+			for (int i = 0; i < sequence.size(); i++)
+				params.add(sequence.get(i));
+			new TACCall(tree, methodRef, params);
+			new TACNodeRef(tree, object);
+		}
 		return POST_CHILDREN;
 	}
 
@@ -1244,44 +1264,7 @@ public class TACBuilder implements ShadowParserVisitor
 		endLabel.new TACLabel(tree);
 	}
 
-	private void visitMethodCall(ASTMethodCall node)
-	{
-		MethodType type = (MethodType) node.getType();
-		TACMethod methodRef = new TACMethod(identifier.getName(), type);
-		List<TACOperand> params = new ArrayList<TACOperand>();
-		params.add(prefix != null ? prefix :
-				new TACVariableRef(tree, method.getLocal("this")));
-		for (int i = 0; i < tree.getNumChildren(); i++)
-			params.add(tree.appendChild(i));
-		prefix = new TACCall(tree, methodRef, params);
-	}
-
-	private void visitCreate(SimpleNode node)
-	{
-		MethodType methodType = (MethodType)node.getType();
-		ClassType type = (ClassType)node.jjtGetChild(0).getType();
-		TACOperand object = new TACNewObject(tree, type);
-		if (!type.getMethodMap().containsKey("create"))
-			methodType = new MethodType(type, new Modifiers());
-//		SequenceType paramTypes = (SequenceType)node.jjtGetChild(1).getType();
-//		List<MethodSignature> ctors = type.getMethodMap().get("create");
-//		if (ctors == null) // Default create
-//			methodType = new MethodType(type, 0);
-//		else
-//			for (MethodSignature sig : ctors)
-//				if (sig.canAccept(paramTypes))
-//					methodType = sig.getMethodType();
-		TACMethod methodRef = new TACMethod("create", methodType);
-		TACSequence sequence = tree.appendChildRemoveSequence(1);
-		List<TACOperand> params =
-				new ArrayList<TACOperand>(sequence.size() + 1);
-		params.add(object);
-		for (int i = 0; i < sequence.size(); i++)
-			params.add(sequence.get(i));
-		new TACCall(tree, methodRef, params);
-		new TACNodeRef(tree, object);
-	}
-
+	@SuppressWarnings("unused")
 	private TACNodeRef visitArrayAllocation(ArrayType type,
 			List<TACOperand> sizes)
 	{
