@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -263,7 +262,11 @@ public class ClassType extends ClassInterfaceBaseType {
 	public Map<String, ModifiedType> getSortedFields()
 	{
 		// TODO: also sort by size
-		return new TreeMap<String, ModifiedType>(getFields());
+		Map<String, ModifiedType> map = new TreeMap<String, ModifiedType>(getFields());
+		if (isParameterized())
+			for (ModifiedType typeParam : getTypeParameters())
+				map.put(typeParam.getType().getTypeName(), typeParam);
+		return map;
 	}
 
 	private Map<MethodSignature, Integer> methodIndexCache;
@@ -319,11 +322,8 @@ public class ClassType extends ClassInterfaceBaseType {
 	@Override
 	public String getMangledName()
 	{
-		StringBuilder sb = new StringBuilder();
-		if (!isPrimitive())
-			sb.append(getPackage().getMangledName()).append("_C");
-		mangle(getTypeName(), sb);
-		return sb.toString();
+		return mangle(new StringBuilder(getPackage().getMangledName()).
+				append("_C"), getTypeName()).toString();
 	}
 
 	

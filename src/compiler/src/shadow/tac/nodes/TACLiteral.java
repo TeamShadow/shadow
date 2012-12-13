@@ -129,6 +129,24 @@ public class TACLiteral extends TACOperand
 			value = (int)parseNumber(literal.substring(0, literal.length() - 1),
 					32);
 		}
+		else if (literal.endsWith("f"))
+		{
+			type = Type.FLOAT;
+			value = (float)Float.parseFloat(literal.substring(0,
+					literal.length() - 1));
+		}
+		else if (literal.endsWith("d"))
+		{
+			type = Type.DOUBLE;
+			value = (double)Double.parseDouble(literal.substring(0,
+					literal.length() - 1));
+		}
+		else if (literal.indexOf('.') != -1 ||
+				literal.indexOf('e') != -1 || literal.indexOf('E') != -1)
+		{
+			type = Type.DOUBLE;
+			value = (double)Double.parseDouble(literal);
+		}
 		else
 		{
 			type = Type.INT;
@@ -137,7 +155,7 @@ public class TACLiteral extends TACOperand
 		setName(toString());
 	}
 
-	public static String parseString(String string)
+	private static String parseString(String string)
 	{
 		StringBuilder builder = new StringBuilder(string);
 		int index = 0; while ((index = builder.indexOf("\\", index)) != -1)
@@ -175,7 +193,7 @@ public class TACLiteral extends TACOperand
 		}
 		return builder.toString();
 	}
-	public static long parseNumber(String string, int bits)
+	private static long parseNumber(String string, int bits)
 	{
 		int base = 10;
 		if (string.length() > 2 && string.charAt(0) == '0')

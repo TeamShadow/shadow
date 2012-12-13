@@ -23,5 +23,6 @@ class shadow.test@Test
 		} recover {
 			console.printLine(3);
 		}
+		console.printLine();
 	}
 }

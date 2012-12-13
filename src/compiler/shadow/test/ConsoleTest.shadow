@@ -20,5 +20,6 @@ class shadow.test@ConsoleTest
 		Console:instance.print('!');
 		console.print('\n');
 		Console:instance.printLine();
+		Console:instance.print("Test String\r\n");
 	}
 }

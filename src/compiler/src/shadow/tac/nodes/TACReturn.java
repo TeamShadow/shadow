@@ -7,13 +7,13 @@ import shadow.typecheck.type.SequenceType;
 public class TACReturn extends TACSimpleNode
 {
 	private TACOperand returnValue;
-	public TACReturn()
+	public TACReturn(SequenceType expected)
 	{
-		this(null, new SequenceType(), null);
+		this(null, expected, null);
 	}
-	public TACReturn(TACNode node)
+	public TACReturn(TACNode node, SequenceType expected)
 	{
-		this(node, new SequenceType(), null);
+		this(node, expected, null);
 	}
 	public TACReturn(SequenceType expected, TACOperand op)
 	{

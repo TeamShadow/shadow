@@ -12,19 +12,14 @@ final immutable class shadow.standard@Int implements Number<int>, CanCompare<int
 
 	public abs() => ( uint )
 	{
-		return this < 0 ? -this, this;
+		return cast<uint>(this < 0 ? -this, this);
 	}
 
-	public native div( int other ) => ( int quotient, int remainder );
-	
 	public native add(int other) => (int);
 	public native subtract(int other) => (int);
 	public native multiply(int other) => (int);
 	public native divide(int other) => (int);
 	public native modulus(int other) => (int);
-	
-	public compare(int other) => (int)
-	{
-		return this - other;
-	}
+
+	public native compare(int other) => (int);
 }

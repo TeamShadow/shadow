@@ -124,10 +124,7 @@ public class Package
 		
 		if (parent != null && !parent.getName().isEmpty())
 			sb.append(parent.getMangledName());
-		sb.append("_P");
-		Type.mangle(getName(), sb);
-		
-		return sb.toString();
+		return Type.mangle(sb.append("_P"), getName()).toString();
 	}
 	
 	public Package getParent()

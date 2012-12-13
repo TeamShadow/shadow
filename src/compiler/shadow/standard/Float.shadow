@@ -1,4 +1,4 @@
-final immutable class shadow.standard@Float implements Number<float>, CanCompare<float>
+final immutable class shadow.standard@Float implements /*Number<float>,*/ CanCompare<float>
 {
 	constant float PI = 3.1415927f;
 	constant float E = 2.7182817f;

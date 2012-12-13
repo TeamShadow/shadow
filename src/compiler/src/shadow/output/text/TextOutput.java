@@ -152,7 +152,7 @@ public class TextOutput extends AbstractOutput
 	@Override
 	public void visit(TACCall node) throws ShadowException
 	{
-		if (node.getMethod().hasReturn())
+		if (!node.getMethod().hasReturn())
 			writer.write(inline.visit(new StringBuilder(), node).append(';').
 					toString());
 	}

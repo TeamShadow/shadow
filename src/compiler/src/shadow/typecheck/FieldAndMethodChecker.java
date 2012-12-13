@@ -119,7 +119,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET );								
+									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET );
+									methodNode.setImage(field.getKey());
+									methodNode.setType(field.getValue().getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());									
 									modifiers.removeModifier(Modifiers.GET);
@@ -141,7 +143,9 @@ public class FieldAndMethodChecker extends BaseChecker {
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );																		
+									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
+									methodNode.setImage(field.getKey());
+									methodNode.setType(field.getValue().getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
 									modifiers.removeModifier(Modifiers.SET);

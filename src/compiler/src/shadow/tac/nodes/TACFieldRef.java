@@ -20,13 +20,13 @@ public class TACFieldRef extends TACReference
 	{
 		super(node);
 		if (!(fieldPrefix.getType() instanceof ClassType))
-			throw new IllegalArgumentException("fieldPrefix is not a class " +
-					"type");
+			throw new IllegalArgumentException(
+					"fieldPrefix is not a class type");
 		ClassType prefixType = (ClassType)fieldPrefix.getType();
-		while (prefixType != null && !prefixType.containsField(fieldName))
-			prefixType = prefixType.getExtendType();
-		if (prefixType == null)
-			throw new IllegalArgumentException("field fieldName not found");
+//		while (prefixType != null && !prefixType.containsField(fieldName))
+//			prefixType = prefixType.getExtendType();
+//		if (prefixType == null)
+//			throw new IllegalArgumentException("field fieldName not found");
 		index = prefixType.getFieldIndex(fieldName);
 		prefix = check(fieldPrefix, prefixType);
 		type = fieldType;

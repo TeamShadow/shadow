@@ -17,6 +17,4 @@ final immutable class shadow.standard@UInt implements Number<uint>, CanCompare<u
 	{
 		return this > other ? this, other;
 	}
-
-	public native div( uint other ) => ( uint quotient, uint remainder );
 }

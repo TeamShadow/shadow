@@ -2,13 +2,16 @@ immutable final class shadow.standard@String
 implements CanCompare<String>, CanIterate<String>
 {
 	ubyte[] data = ubyte:create[0];
-	private create() { }
+	public create()
+	{
+	}
 
 	public getByte( int index ) => ( ubyte )
 	{
 		return data[index];
 	}
-	public get length() => ( int ) {
+	public get length() => ( int )
+	{
 		return data->length;
 	}
 

@@ -403,7 +403,7 @@ public abstract class Type {
 		typeParameters.add(parameter);		
 	}	
 	
-	public static void mangle(String name, StringBuilder sb)
+	public static StringBuilder mangle(StringBuilder sb, String name)
 	{
 		for (int i = 0; i < name.length(); i++)
 		{
@@ -419,6 +419,7 @@ public abstract class Type {
 					sb.append(Character.forDigit((c >> shift) & 0xf, 16));
 			}
 		}
+		return sb;
 	}
 	
 	public static String unmangle(String name)

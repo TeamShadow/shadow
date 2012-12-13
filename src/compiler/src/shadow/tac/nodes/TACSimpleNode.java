@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.Type;
 
 public abstract class TACSimpleNode extends TACNode
@@ -53,7 +54,12 @@ public abstract class TACSimpleNode extends TACNode
 	protected final TACOperand check(TACOperand operand, Type type)
 	{
 		operand = operand.checkVirtual(type, this);
+		if (type instanceof PropertyType)
+			type = ((PropertyType)type).getGetType().getType();
 		if (operand.getType().equals(type))
+			return operand;
+		if (operand.getType().getPackage().equals(type.getPackage()) &&
+				operand.getType().getTypeName().equals(type.getTypeName()))
 			return operand;
 		throw new IllegalArgumentException();
 	}

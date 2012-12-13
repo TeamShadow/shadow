@@ -3,7 +3,10 @@ immutable final class shadow.standard@Class
 	String name = "";
 	get nullable Class parent = null;
 	Interface[] interfaces = Interface:create[0];
-	private create() { }
+	int type, size;
+	//private create() { }
+
+	public native createObject() => ( Object );
 
 	public isSubtype( Class other ) => ( boolean )
 	{
@@ -17,7 +20,7 @@ immutable final class shadow.standard@Class
 
 	public isSubtype( Interface other ) => ( boolean )
 	{
-		for ( long i = 0; i < interfaces->length; i += 1 )
+		for ( int i = 0; i < interfaces->length; i += 1 )
 			try {
 				if ( check(interfaces[i]).isSubtype( other ) )
 					return true;

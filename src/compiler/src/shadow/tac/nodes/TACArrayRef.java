@@ -15,32 +15,33 @@ public class TACArrayRef extends TACReference
 {
 	private TACOperand array, total;
 	private List<TACOperand> indicies;
-	public TACArrayRef(ArrayType type, TACOperand reference, TACOperand... ops)
+	public TACArrayRef(Type type, TACOperand reference, TACOperand... ops)
 	{
 		this(null, type, reference, Arrays.asList(ops));
 	}
-	public TACArrayRef(TACNode node, ArrayType type, TACOperand reference, TACOperand... ops)
+	public TACArrayRef(TACNode node, Type type, TACOperand reference,
+			TACOperand... ops)
 	{
 		this(node, type, reference, Arrays.asList(ops));
 	}
-	public TACArrayRef(ArrayType type, TACOperand reference, Collection<TACOperand> ops)
+	public TACArrayRef(Type type, TACOperand reference, Collection<TACOperand> ops)
 	{
 		this(null, type, reference, ops);
 	}
-	public TACArrayRef(TACNode node, ArrayType type, TACOperand reference,
+	public TACArrayRef(TACNode node, Type type, TACOperand reference,
 			Collection<TACOperand> ops)
 	{
 		super(node);
 		array = check(reference, type);
 		Iterator<TACOperand> iter = ops.iterator();
 		indicies = new ArrayList<TACOperand>(ops.size());
-		TACOperand current = check(iter.next(), Type.LONG);
+		TACOperand current = check(iter.next(), Type.INT);
 		indicies.add(current);
 		while (iter.hasNext())
 		{
 			current = new TACBinary(this, current, '*', new TACLength(this,
 					array, indicies.size()));
-			TACOperand next = check(iter.next(), Type.LONG);
+			TACOperand next = check(iter.next(), Type.INT);
 			indicies.add(next);
 			current = new TACBinary(this, current, '+', next);
 		}

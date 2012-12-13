@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.Collections;
 import java.util.List;
 
 public class ArrayType extends ClassType
@@ -57,6 +58,11 @@ public class ArrayType extends ClassType
 	public String getMangledName()
 	{
 		return getBaseType().getMangledName() + "_A" + dimensions;
+	}
+	
+	public ArrayType(Type baseType)
+	{
+		this(baseType, Collections.singletonList(1), 0);
 	}
 	
 	public ArrayType(Type baseType, List<Integer> arrayDimensions ) {

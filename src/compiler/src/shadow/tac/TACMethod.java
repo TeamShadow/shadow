@@ -45,6 +45,11 @@ public class TACMethod extends TACNodeList
 		scopes.push(new LinkedHashMap<String, TACVariable>(
 				type.getParameterTypes().size()));
 		addLocal(thisType, "this");
+		Type parameterizedType = methodName.equals("create") ?
+				methodType.getOuter() : methodType;
+		if (parameterizedType.isParameterized())
+			for (ModifiedType typeParam : parameterizedType.getTypeParameters())
+				addLocal(Type.CLASS, typeParam.getType().getTypeName());
 		for (String parameterName : methodType.getParameterNames())
 			addLocal(methodType.getParameterType(parameterName).getType(),
 					parameterName);
@@ -89,6 +94,19 @@ public class TACMethod extends TACNodeList
 	{
 		return !type.getParameterTypes().isEmpty();
 	}
+	public TACVariable getParameter(String name)
+	{
+		return scopes.peekLast().get(name);
+	}
+	public TACVariable getParameter(int index)
+	{
+		if (index < 0)
+			throw new NoSuchElementException();
+		Iterator<TACVariable> iter = scopes.peekLast().values().iterator();
+		while (index-- != 0)
+			iter.next();
+		return iter.next();
+	}
 
 	public SequenceType getReturnTypes()
 	{
@@ -123,10 +141,6 @@ public class TACMethod extends TACNodeList
 	public boolean isCreate()
 	{
 		return name.equals("create");
-	}
-	public boolean isSpecialCreate()
-	{
-		return isCreate() && !hasParameters();
 	}
 	public boolean isDestroy()
 	{

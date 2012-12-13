@@ -1,0 +1,15 @@
+class shadow.test@ArrayTest
+{
+	public main() => ()
+	{
+		int[] lengths = int:create[1];
+		lengths[0] = 5;
+		Array<Object> array = Array<Object>:create(lengths);
+		auto strings = test<String>(lengths);
+	}
+
+	private test<T>( int[] lengths ) => ( Array<T> )
+	{
+		Array<T> array = Array<T>:create(lengths);
+	}
+}

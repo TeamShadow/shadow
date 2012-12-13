@@ -29,23 +29,33 @@ public class TACModule
 		for (String fieldName : moduleType.getFields().keySet())
 			fields.put(fieldName, moduleType.getField(fieldName).getType());
 		add(moduleType);
+
+		add(Type.BOOLEAN);
+		add(Type.CODE);
+		add(Type.BYTE);
+		add(Type.UBYTE);
+		add(Type.SHORT);
+		add(Type.USHORT);
+		add(Type.INT);
+		add(Type.UINT);
+		add(Type.LONG);
+		add(Type.ULONG);
+		add(Type.FLOAT);
+		add(Type.DOUBLE);
 	}
 	private void add(ClassInterfaceBaseType type)
 	{
-		if (type != null && references.add(type))
-		{			
+		if (references.add(type))
+		{
 			if (type instanceof ClassType)
 			{
-				add(((ClassType) type).getExtendType());
-				for (Type referenced : ((ClassType)type).getReferencedTypes())
+				ClassType classType = (ClassType)type;
+				add(classType.getExtendType());
+				for (Type referenced : classType.getReferencedTypes())
 					if (referenced instanceof ClassInterfaceBaseType)
 						add((ClassInterfaceBaseType)referenced);
 			}
 		}
-//		if (references.add(type) && type instanceof ClassType)
-//			for (Type referenced : ((ClassType)type).getReferencedTypes())
-//				if (referenced instanceof ClassInterfaceBaseType)
-//					add((ClassInterfaceBaseType)referenced);
 	}
 
 	public ClassInterfaceBaseType getType()

@@ -7,16 +7,15 @@ import java.util.List;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACMethod;
+import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public class TACCall extends TACOperand
 {
 	private TACMethod method;
 	private List<TACOperand> parameters;
-	public TACCall(TACMethod methodRef, Collection<TACOperand> params)
+	public TACCall(TACMethod methodRef, Collection<? extends TACOperand> params)
 	{
 		this(null, methodRef, params);
 	}
@@ -25,13 +24,13 @@ public class TACCall extends TACOperand
 	{
 		super(node);
 		method = methodRef;
-		SequenceType types = methodRef.getType().getParameterTypes();
-		if (params.size() - 1 != types.size())
+		Collection<TACVariable> types = methodRef.getParameters();
+		if (params.size() != types.size())
 			throw new IllegalArgumentException("Wrong # args");
 		Iterator<? extends TACOperand> paramIter = params.iterator();
-		Iterator<ModifiedType> typeIter = types.iterator();
+		Iterator<TACVariable> typeIter = types.iterator();
 		parameters = new ArrayList<TACOperand>(params.size());
-		parameters.add(check(paramIter.next(), methodRef.getPrefixType()));
+//		parameters.add(check(paramIter.next(), methodRef.getPrefixType()));
 		while (paramIter.hasNext())
 			parameters.add(check(paramIter.next(), typeIter.next().getType()));
 	}

@@ -34,6 +34,13 @@ public abstract class TACAbstractVisitor implements TACVisitor
 		for (TACNode node : nodeList)
 			node.accept(this);
 	}
+	public void walkTo(TACNode node) throws ShadowException
+	{
+		TACNode temp = node;
+		do
+			(temp = temp.getNext()).accept(this);
+		while (temp != node);
+	}
 
 	@Override
 	public void visit(TACArrayRef node) throws ShadowException { }
