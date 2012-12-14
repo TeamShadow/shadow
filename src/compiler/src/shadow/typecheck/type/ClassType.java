@@ -432,7 +432,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( getOuter() == null )
 			for( Type importType : getAllReferencedTypes() )			
 				if( !recursivelyContainsInnerClass(importType) )
-					out.println(linePrefix + "import " + importType.getQualifiedName() + ";");
+					out.println(linePrefix + "import " + importType.getImportName() + ";");
 		
 		//modifiers
 		out.print("\n" + linePrefix + getModifiers());		
@@ -496,7 +496,7 @@ public class ClassType extends ClassInterfaceBaseType {
 			for( MethodSignature signature : list )
 			{
 				Modifiers modifiers = signature.getModifiers();
-				if( modifiers.isPublic() || modifiers.isProtected() )
+				if( modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()  )
 				{				
 					out.println(indent + signature + ";");
 					newLine = true;

@@ -12,7 +12,6 @@ import org.apache.commons.logging.Log;
 import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
-import shadow.parser.javacc.ASTActionExpression;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocation;
 import shadow.parser.javacc.ASTArgumentList;
@@ -41,9 +40,11 @@ import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTCreate;
 import shadow.parser.javacc.ASTCreateDeclaration;
+import shadow.parser.javacc.ASTDestroy;
 import shadow.parser.javacc.ASTDestroyDeclaration;
 import shadow.parser.javacc.ASTDoStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
+import shadow.parser.javacc.ASTExplicitCreateInvocation;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTForInit;
@@ -298,6 +299,37 @@ public class ClassChecker extends BaseChecker {
 	
 	
 	public Object visit(ASTCreateDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )
+		{
+			if( currentType instanceof ClassType)
+			{
+				ClassType classType = (ClassType) currentType;
+				ClassType parentType = classType.getExtendType();
+				
+				if( parentType != null )
+				{	
+					if( !node.hasExplicitInvocation() ) 
+						//only worry if there is no explicit invocation
+						//explicit invocations are handled separately
+					{
+						boolean foundDefault = false;
+						SequenceType emptyParameters = new SequenceType();
+						for( MethodSignature method : parentType.getMethods("create") )
+						{
+							if( method.matches(emptyParameters) )
+							{
+								foundDefault = true;
+								break;
+							}
+						}
+					
+						if( !foundDefault )
+							addError(node, Error.INVL_TYP, "No explicit create invocation and parent class does not implement the default create");
+					}					
+				}
+			}
+		}		
+		
 		return visitMethod( node, secondVisit );
 	}
 	
@@ -1053,11 +1085,8 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	*/
-	
-	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
-		return pushUpType(node, secondVisit); //takes care of modifiers
-	}
-	
+
+
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
 		//if( node.getType() != null ) //optimization if type already determined by FieldAndMethodChecker
 		//	return WalkType.NO_CHILDREN;		
@@ -1195,7 +1224,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;	
 	}
 
-	public Object visit(ASTActionExpression node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
@@ -1207,7 +1236,7 @@ public class ClassChecker extends BaseChecker {
 			
 			isValidAssignment(left, right, assignment); 
 			//will issue appropriate errors
-			//since this is an ActionExpression, there is no type to set
+			//since this is an Expression (with nothing to the left), there is no type to set
 		}
 		else //did something actually happen?
 		{
@@ -1543,8 +1572,21 @@ public class ClassChecker extends BaseChecker {
 		
 		if( node.jjtGetNumChildren() > 1 ) 	//has suffixes, pull type from last suffix
 		{
-			node.setType(node.jjtGetChild(node.jjtGetNumChildren() - 1).getType());
-			node.setModifiers(node.jjtGetChild(node.jjtGetNumChildren() - 1).getModifiers());
+			
+			Node last = node.jjtGetChild(node.jjtGetNumChildren() - 1);
+						
+			if(node.jjtGetParent() instanceof ASTExpression ) //this primary expression is the left side of an assignment
+			{
+				Type type = last.getType(); //if PropertyType, preserve that
+				node.setModifiers(last.getModifiers());
+				node.setType(type);
+			}
+			else
+			{
+				ModifiedType modifiedType = resolveType( last ); //otherwise, strip away the property
+				node.setModifiers(modifiedType.getModifiers());
+				node.setType(modifiedType.getType());
+			}
 		}
 		else								//just prefix
 		{
@@ -1764,9 +1806,10 @@ public class ClassChecker extends BaseChecker {
 	{
 		if( secondVisit )
 		{	
-			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );			
-			
+			ModifiedType prefixNode = curPrefix.getFirst();
+			prefixNode = resolveType( prefixNode );
+			Type prefixType = prefixNode.getType();
+													
 			if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof ArrayType) )
 			{
 				node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );				
@@ -1785,8 +1828,9 @@ public class ClassChecker extends BaseChecker {
 	{
 		if( secondVisit )
 		{			
-			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );			
+			ModifiedType prefixNode = curPrefix.getFirst();
+			prefixNode = resolveType( prefixNode );
+			Type prefixType = prefixNode.getType();
 			SequenceType typeArguments = null;
 			int start = 0;
 			
@@ -1850,12 +1894,33 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTDestroy node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )
+		{	
+			Node prefixNode = curPrefix.getFirst();
+			Type prefixType = prefixNode.getType();			
+			
+			if( prefixNode.getModifiers().isTypeName()  )
+				addError(node, Error.INVL_TYP, "Cannot destroy a type name");
+			else if( prefixType instanceof UnboundMethodType )
+				addError(node, Error.INVL_TYP, "Cannot destroy a method");
+
+			else if( prefixType instanceof PropertyType )			
+				addError(node, Error.INVL_TYP, "Cannot destroy a property");
+			
+			node.setType(Type.UNKNOWN); //destruction has no type
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTArrayCreate node, Boolean secondVisit) throws ShadowException 
 	{
 		if( secondVisit )
 		{			
 			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );			
+			Type prefixType = prefixNode.getType();			
 			SequenceType typeArguments = null;
 			int start = 0;
 			
@@ -1923,11 +1988,16 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )
 		{			
 			//always part of a suffix, thus always has a prefix
-			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );
+			ModifiedType prefixNode = curPrefix.getFirst();
+			prefixNode = resolveType( prefixNode );
+			Type prefixType = prefixNode.getType();
 			String methodName = node.getImage();
 			
-			if( prefixType instanceof ClassInterfaceBaseType )
+			if( prefixNode.getModifiers().isTypeName() )
+			{
+				addError(node, Error.INVL_TYP, "Cannot call method on type name");				
+			}
+			else if( prefixType instanceof ClassInterfaceBaseType )
 			{
 				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
 				List<MethodSignature> methods = currentClass.getMethods(methodName);
@@ -1972,7 +2042,7 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )
 		{
 			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );
+			Type prefixType = prefixNode.getType();
 			node.setType(Type.UNKNOWN);
 			
 			if( prefixType instanceof InterfaceType )
@@ -1992,7 +2062,7 @@ public class ClassChecker extends BaseChecker {
 			}
 			else if( !prefixNode.getModifiers().isTypeName() )				
 			{
-				addError(node, Error.INVL_TYP, "Only a type is can be created");
+				addError(node, Error.INVL_TYP, "Only a type can be created");
 								
 			}
 			else
@@ -2053,15 +2123,21 @@ public class ClassChecker extends BaseChecker {
 		if(secondVisit)
 		{
 			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );
+			Type prefixType = prefixNode.getType();
 			
-			if( prefixNode.getModifiers().isTypeName() && (prefixType instanceof SingletonType) )		
-				node.setType(prefixType);
-			else
+			if( !prefixNode.getModifiers().isTypeName() )
+			{
+				addError(node, Error.INVL_TYP, "A type is needed to get an instance");
+				node.setType(Type.UNKNOWN);
+			}
+			else if( !(prefixType instanceof SingletonType) )
 			{
 				addError(node, Error.INVL_TYP, "Cannot get instance of non-singleton type " + prefixType);
 				node.setType(Type.UNKNOWN);
 			}
+			else
+				node.setType(prefixType);
+			
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2073,8 +2149,9 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )
 		{	
 			//always part of a suffix, thus always has a prefix
-			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );
+			ModifiedType prefixNode = curPrefix.getFirst();
+			prefixNode = resolveType( prefixNode );
+			Type prefixType = prefixNode.getType(); 
 			String name = node.getImage();
 			boolean isTypeName = prefixNode.getModifiers().isTypeName();
 			
@@ -2097,7 +2174,7 @@ public class ClassChecker extends BaseChecker {
 					{
 						node.setType( field.getType());
 						node.setModifiers(field.getModifiers());						
-						if( !field.getModifiers().isConstant())
+						if( !field.getModifiers().isConstant() )
 							node.addModifier(Modifiers.ASSIGNABLE);					
 					}
 				}
@@ -2133,8 +2210,9 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )
 		{		
 			//always part of a suffix, thus always has a prefix
-			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );
+			ModifiedType prefixNode = curPrefix.getFirst();
+			prefixNode = resolveType( prefixNode );
+			Type prefixType = prefixNode.getType();
 			String propertyName = node.getImage();
 			boolean isTypeName = prefixNode.getModifiers().isTypeName();
 						
@@ -2185,7 +2263,7 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private Type resolveType( Node node ) //dereferences into PropertyType for getter, if needed
+	private ModifiedType resolveType( ModifiedType node ) //dereferences into PropertyType for getter, if needed
 	{
 		Type type = node.getType();
 		
@@ -2193,17 +2271,16 @@ public class ClassChecker extends BaseChecker {
 		{
 			PropertyType propertyType = (PropertyType) type;
 			if( propertyType.isGettable() )
-				return propertyType.getGetType().getType();
+				return propertyType.getGetType();
 			else
 			{
-				addError(node, Error.TYPE_MIS, "Property " + node + "does not have get access.");
-				return Type.UNKNOWN;
+				addError((Node)node, Error.TYPE_MIS, "Property " + node + "does not have get access.");
+				return node;
 			}				
 		}
-		
-		return type;
+		else
+			return node;
 	}
-	
 	
 	protected void setCreateType( ASTCreate node, Type prefixType, SequenceType arguments)
 	{	
@@ -2329,9 +2406,9 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )
 		{			
 			//always part of a suffix, thus always has a prefix
-			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = resolveType( prefixNode );
-			boolean isTypeName = prefixNode.getModifiers().isTypeName();				
+			ModifiedType prefixNode = curPrefix.getFirst();
+			prefixNode = resolveType( prefixNode );
+			Type prefixType = prefixNode.getType();
 			
 			int start = 0;			
 			SequenceType typeArguments = null;
@@ -2745,10 +2822,47 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;	
 	}
 	
+	public Object visit(ASTExplicitCreateInvocation node, Boolean secondVisit) throws ShadowException {
+	
+		if( secondVisit )
+		{
+			SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();				
+			
+			if( currentType instanceof ClassType && ((ClassType)currentType).getExtendType() != null )
+			{
+				ClassType type = (ClassType) currentType; //assumes "this" 
+				if( node.getImage().equals("super") )								
+					type = type.getExtendType();
+								
+				boolean found = false;
+				for( MethodSignature method : type.getMethods("create") )
+				{
+					if( method.matches(arguments) )
+					{
+						found = true;
+						break;						
+					}
+				}
+				
+				if( !found )
+					addError(node, Error.TYPE_MIS, "No create matches arguments " + arguments);
+				
+			}	
+			else
+				addError(node, Error.INVL_TYP, "Cannot call explicit create on non-class type");
+			
+			ASTCreateDeclaration parent = (ASTCreateDeclaration) node.jjtGetParent();
+			parent.setExplicitInvocation(true);
+		}		
+		
+		return WalkType.POST_CHILDREN; 
+	}
+	
 
 	// Everything below here are visitors to push up the type
 
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;

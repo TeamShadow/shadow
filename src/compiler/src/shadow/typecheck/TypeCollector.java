@@ -80,7 +80,12 @@ public class TypeCollector extends BaseChecker
 		
 	private void updateTypeParameters()
 	{	
+		
+		
 		//sets the correct types for type parameters in declarations
+		
+		
+		//first add all the type parameters in class and interface declarations
 		for( Package p : getTypeTable().keySet() )
 		{
 			for( ClassInterfaceBaseType type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
@@ -92,11 +97,34 @@ public class TypeCollector extends BaseChecker
 					currentType = type;			
 									
 					for( int i = 0; i < declarationNode.jjtGetNumChildren(); i++ )
-					{
-						Node child = declarationNode.jjtGetChild(i);
-						
+					{					
 						if( declarationNode.jjtGetChild(i) instanceof ASTTypeParameters )
 							processTypeParameters( type, (ASTTypeParameters)(declarationNode.jjtGetChild(i)), missingTypes );
+					}
+				}					
+									
+				
+				if( missingTypes.size() > 0 )	
+					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types: " + missingTypes);		
+			}
+		}
+		
+		//then update the parameters in extends and implements list
+		//has to be done after all the type declarations are processed,
+		//otherwise we might update a superclass before the superclass parameters have been defined
+		for( Package p : getTypeTable().keySet() )
+		{
+			for( ClassInterfaceBaseType type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
+			{	
+				TreeSet<String> missingTypes = new TreeSet<String>();
+				Node declarationNode = nodeTable.get(type);
+				if( declarationNode != null )	
+				{
+					currentType = type;			
+									
+					for( int i = 0; i < declarationNode.jjtGetNumChildren(); i++ )
+					{
+						Node child = declarationNode.jjtGetChild(i);
 						
 						if( child instanceof ASTExtendsList )
 						{
@@ -142,7 +170,7 @@ public class TypeCollector extends BaseChecker
 									
 				
 				if( missingTypes.size() > 0 )	
-					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types " + missingTypes);		
+					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types: " + missingTypes);		
 				
 			}
 		}

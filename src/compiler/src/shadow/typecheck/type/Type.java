@@ -99,8 +99,18 @@ public abstract class Type {
 		return typeName;
 	}
 	
-	public String getQualifiedName() {
-		
+	public String getImportName() //does not include parameters
+	{		
+		if( isPrimitive() )
+			return getTypeName();
+		else if( _package == null || _package.getQualifiedName().isEmpty())
+			return "default@" + getTypeName();
+		else
+			return _package.getQualifiedName() + '@' + getTypeName();			
+	}
+	
+	public String getQualifiedName() 
+	{		
 		if( isPrimitive() )
 			return toString();
 		else if( _package == null || _package.getQualifiedName().isEmpty())

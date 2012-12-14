@@ -8,6 +8,6 @@ class OutsideProperty
 		p->b = 7;
 		p->c #= " mountain";
 		
-		p->b = cast<int>(p->c.getLength()) + 4;		
+		p->b = p->c->length + 4;		
 	}
 }

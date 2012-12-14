@@ -17,4 +17,7 @@ class shadow.standard@Object
 
 	public final immutable native
 	referenceEquals( Object other ) => ( boolean ); 
+	
+	public create()
+	{}
 }

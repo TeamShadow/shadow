@@ -83,7 +83,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 						//if no creates, add the default one
 						ASTCreateDeclaration createNode = new ASTCreateDeclaration(-1);
 						createNode.setModifiers(Modifiers.PUBLIC);
-						MethodSignature createSignature = new MethodSignature(classType, "create", new Modifiers(), createNode);
+						MethodSignature createSignature = new MethodSignature(classType, "create", createNode.getModifiers(), createNode);
 						createNode.setMethodSignature(createSignature);
 						classType.addMethod("create", createSignature);
 						//note that the node is null for the default create, because nothing was made
@@ -210,7 +210,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 							for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
 								for( MethodSignature signature : signatures )
 								{
-									if( parent.recursivelyContainsIndistinguishableMethod(signature) )
+									if( parent.recursivelyContainsIndistinguishableMethod(signature) && !signature.isCreate() )
 									{
 										MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
 										Node parentNode = parentSignature.getNode();

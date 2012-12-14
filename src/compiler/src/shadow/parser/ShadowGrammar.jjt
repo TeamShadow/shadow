@@ -795,8 +795,8 @@ void ExplicitCreateInvocation():
 { debugPrint("EXPLICIT CREATE INVOCATION"); }
 {
   LOOKAHEAD("this" Arguments() ";")
-  "this" Arguments() ";"
-| "super" Arguments() ";" 
+  "this" Arguments() ";" { jjtThis.setImage("this"); }
+| "super" Arguments() ";" { jjtThis.setImage("super"); } 
 }
 
 

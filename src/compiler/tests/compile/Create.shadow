@@ -1,6 +1,6 @@
 class Constructor
 {
-	public create() {}
+	private create() {}
     public create(int a) {}
     public create(int a, int b) {}
     

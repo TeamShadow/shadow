@@ -18,5 +18,19 @@ class ASTCreateDeclaration extends SignatureNode {
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
     return visitor.visit(this, data);
   }
+  
+  
+  private boolean explicitInvocation = false;
+  
+  public void setExplicitInvocation(boolean value)
+  {
+	  explicitInvocation = value;	  
+  }
+  
+  public boolean hasExplicitInvocation()
+  {
+	  return explicitInvocation;
+  }  
+  
 }
 /* JavaCC - OriginalChecksum=f9765d6dc3453eb835131eea80f8e3a0 (do not edit this line) */
