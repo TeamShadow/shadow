@@ -62,8 +62,12 @@ public class TACLiteral extends TACOperand
 						value = '\t';
 						break;
 					case 'u':
-						value = (char)Integer.parseInt(literal.substring(3,
-								literal.length() - 1), 16);
+						value = (char)Integer.parseInt(
+								literal.substring(3, literal.length() - 1), 16);
+						break;
+					default:
+						value = (char)Integer.parseInt(
+								literal.substring(3, literal.length() - 1), 8);
 						break;
 				}
 			}

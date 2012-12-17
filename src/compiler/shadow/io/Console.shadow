@@ -1,24 +1,16 @@
-singleton shadow.io@Console
+immutable singleton shadow.io@Console
 {
-	public create() { }
-
-	public printLine( boolean b ) => () { print(b); printLine(); }
-	public printLine( int i ) => () { print(i); printLine(); }
-	public printLine( code c ) => () { print(c); printLine(); }
-	public printLine( long l ) => () { print(l); printLine(); }
-	public printLine( String s ) => () { print(s); printLine(); }
-	public printLine( Object o ) => () { print(o); printLine(); }
-	public printLine() => () { print('\n'); }
-	public print( boolean b ) => ()
+	public printLine( nullable Object value ) => ( Console )
 	{
-		if ( b )
-			print("true");
-		else
-			print("false");
+		return print(value).printLine();
 	}
-	public print( Object o ) => () { print(o.toString()); }
-	public native print( int i ) => ();
-	public native print( code c ) => ();
-	public native print( long l ) => ();
-	public native print( String s ) => ();
+	public print( nullable Object value ) => ( Console )
+	{
+		return print((value ?? cast<Object> "null").toString());
+	}
+	public printLine() => ( Console )
+	{
+		return print("\n");
+	}
+	private native print( String value ) => ( Console );
 }

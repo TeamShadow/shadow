@@ -91,7 +91,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 					
 					
 					//add default getters and setters
-					for( Map.Entry<String,ModifiedType> field : classType.getFieldList() )
+					for( Map.Entry<String, ? extends ModifiedType> field : classType.getFields().entrySet() )
 					{
 						Modifiers fieldModifiers = field.getValue().getModifiers();
 						

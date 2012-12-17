@@ -22,4 +22,22 @@ final immutable class shadow.standard@Int implements Number<int>, CanCompare<int
 	public native modulus(int other) => (int);
 
 	public native compare(int other) => (int);
+
+	public toString() => ( String )
+	{
+		MutableString string = MutableString:create();
+		int value = this;
+		if (value < 0)
+		{
+			string.append('-');
+			value = -value;
+		}
+		do
+		{
+			string.append(cast<code>(value % 10 + '0'));
+			value /= 10;
+		}
+		while (value != 0);
+		return string.toString();
+	}
 }

@@ -2,12 +2,15 @@ package shadow.typecheck.type;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
@@ -227,8 +230,8 @@ public class ClassType extends ClassInterfaceBaseType {
 		{
 			int start = recursivelyCountParentFields();
 			Map<String, Integer> cache = new HashMap<String, Integer>();
-			for (Map.Entry<String, ModifiedType> field : getSortedFields().
-					entrySet())
+			for (Map.Entry<String, ? extends ModifiedType> field :
+					sortFields())
 				cache.put(field.getKey(), start++);
 			fieldIndexCache = cache;
 		}
@@ -244,29 +247,54 @@ public class ClassType extends ClassInterfaceBaseType {
 				getExtendType().getFields().size();
 	}
 
-	public List<Map.Entry<String, ModifiedType>> getFieldList()
+	public List<Entry<String, ? extends ModifiedType>> getAllFields()
 	{
-		List<Map.Entry<String, ModifiedType>> fieldList = new ArrayList<Map.Entry<String, ModifiedType>>();
+		List<Entry<String, ? extends ModifiedType>> fieldList = new ArrayList<Entry<String, ? extends ModifiedType>>();
 		
 		recursivelyUpdateFieldList(fieldList);
 		
 		return fieldList;
 	}
-	private void recursivelyUpdateFieldList( List<Map.Entry<String, ModifiedType>> fieldList )
+	private void recursivelyUpdateFieldList( List<Entry<String, ? extends ModifiedType>> fieldList )
 	{
 		if ( getExtendType() != null )
 			getExtendType().recursivelyUpdateFieldList(fieldList);
 		
-		fieldList.addAll(getSortedFields().entrySet());
+		fieldList.addAll(sortFields());
 	}
-	public Map<String, ModifiedType> getSortedFields()
+	public Set<Entry<String, ? extends ModifiedType>> sortFields()
 	{
-		// TODO: also sort by size
-		Map<String, ModifiedType> map = new TreeMap<String, ModifiedType>(getFields());
+		Set<Entry<String, ? extends ModifiedType>> set = new TreeSet<Entry<String, ? extends ModifiedType>>(new Comparator<Entry<String, ? extends ModifiedType>>() {
+			@Override
+			public int compare(Entry<String, ? extends ModifiedType> first, Entry<String, ? extends ModifiedType> second) {
+				int width = first.getValue().getType().getWidth() - second.getValue().getType().getWidth();
+				if (width != 0)
+					return -width;
+				return first.getKey().compareTo(second.getKey());
+			}
+		});
+		set.addAll(getFields().entrySet());
 		if (isParameterized())
-			for (ModifiedType typeParam : getTypeParameters())
-				map.put(typeParam.getType().getTypeName(), typeParam);
-		return map;
+			for (final ModifiedType typeParam : getTypeParameters())
+				set.add(new Entry<String, ModifiedType>()
+				{
+					@Override
+					public String getKey()
+					{
+						return typeParam.getType().getTypeName();
+					}
+					@Override
+					public ModifiedType getValue()
+					{
+						return new SimpleModifiedType(Type.CLASS, Modifiers.NO_MODIFIERS);
+					}
+					@Override
+					public ModifiedType setValue(ModifiedType value)
+					{
+						throw new UnsupportedOperationException();
+					}
+				});
+		return set;
 	}
 
 	private Map<MethodSignature, Integer> methodIndexCache;
@@ -302,28 +330,27 @@ public class ClassType extends ClassInterfaceBaseType {
 		
 		TreeMap<String, List<MethodSignature>> sortedMethods =
 				new TreeMap<String, List<MethodSignature>>(methodTable);
-		sortedMethods.remove("create"); // skip creates
 
 		for ( List<MethodSignature> methods : sortedMethods.values() )
-			for ( MethodSignature method : methods )				
+			for ( MethodSignature method : methods )
+				if ( method.getModifiers().isPublic() )
+		{
+			int index;
+			for ( index = 0; index < methodList.size(); index++ )
+				if ( methodList.get(index).isIndistinguishable(method) )
 			{
-				int index;
-				for ( index = 0; index < methodList.size(); index++ )
-					if ( methodList.get(index).isIndistinguishable(method) )
-				{
-					methodList.set(index, method);
-					break;
-				}
-				if ( index == methodList.size() )
-					methodList.add(method);
+				methodList.set(index, method);
+				break;
 			}
+			if ( index == methodList.size() )
+				methodList.add(method);
+		}
 	}
 	
 	@Override
 	public String getMangledName()
 	{
-		return mangle(new StringBuilder(getPackage().getMangledName()).
-				append("_C"), getTypeName()).toString();
+		return getPackage().getMangledName() + super.getMangledName();
 	}
 
 	
@@ -481,7 +508,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		
 		//constants are the only public fields
 		newLine = false;
-		for( Map.Entry<String, ModifiedType> field : getSortedFields().entrySet() )
+		for( Map.Entry<String, ? extends ModifiedType> field : sortFields() )
 			if( field.getValue().getModifiers().isConstant() ) 
 			{
 				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
@@ -511,6 +538,6 @@ public class ClassType extends ClassInterfaceBaseType {
 			_class.printMetaFile(out, indent);		
 		}
 		
-		out.println(linePrefix + "}\n");	
+		out.println(linePrefix + "}");	
 	}
 }

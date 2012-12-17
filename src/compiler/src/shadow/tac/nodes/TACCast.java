@@ -12,7 +12,7 @@ public class TACCast extends TACOperand
 	{
 		super(node);
 		type = newType;
-		operand = op;
+		operand = check(op, op.getType());
 	}
 
 	public TACOperand getOperand()

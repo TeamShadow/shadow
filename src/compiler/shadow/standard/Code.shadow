@@ -1,3 +1,9 @@
 final immutable class shadow.standard@Code
 {
+	public toString() => ( String )
+	{
+		code[] array = code:create[1];
+		array[0] = this;
+		return String:create(array);
+	}
 }

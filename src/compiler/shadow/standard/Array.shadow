@@ -1,25 +1,26 @@
 abstract final class shadow.standard@Array<T> implements CanIndex<T>
 {
-	long data = 0;
 	get immutable int[] lengths = int:create[0];
-	public create( long data, int[] lengths )
+	nullable Object data = null;
+	private create( int[] lengths, T data )
 	{
-		this:data = data;
 		this:lengths = lengths;
+		this:data = data;
 	}
 	public create( int[] lengths )
 	{
-		this:lengths = int:create[lengths->length];
-		for ( int i = 0; i < lengths->length; i += 1 )
+		this:lengths = int:create[lengths->lengths[0]];
+		for ( int i = 0; i < lengths->lengths[0]; i += 1 )
 			this:lengths[i] = lengths[i];
-		this:data = createArray(this->length);
+		// this:data = T:class.allocate(this->length);
+		this:data = allocate(this->length);
 	}
-	private native createArray( int size ) => ( long data );
+	private native allocate( int length ) => ( Object );
 
 	public immutable get length() => ( int )
 	{
-		int length = lengths[0];
-		for ( int i = 1; i < this->dims; i += 1 )
+		int length = lengths[0]; 
+		for ( int i = 1; i < lengths->lengths[0]; i += 1 )
 			length *= lengths[i];
 		return length;
 	}
@@ -28,6 +29,25 @@ abstract final class shadow.standard@Array<T> implements CanIndex<T>
 		return lengths->lengths[0];
 	}
 
+	public copy() => ( Object )
+	{
+		Array<T> copy = Array<T>:create(lengths);
+		for ( int i = 0; i < this->length; i += 1 )
+			copy.index(i, index(i));
+		return copy;
+	}
+	public native subarray( int start, int end ) => ( Array<T> );
+
 	public native index( int index ) => (T);
-	public native index( int index, T value ) => ();
+	public native index( int index, /*T*/Object value ) => ();
+
+	public immutable toString() => ( String )
+	{
+		if ( this->length == 0 )
+			return "[]";
+		MutableString string = MutableString:create("[ ").append(index(0));
+		for ( int i = 1; i < this->length; i += 1 )
+			string.append(", ").append(index(i));
+		return string.append(" ]").toString();
+	}
 }

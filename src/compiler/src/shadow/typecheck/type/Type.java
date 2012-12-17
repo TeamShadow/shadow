@@ -93,10 +93,10 @@ public abstract class Type {
 	{
 		return typeName;
 	}
-
+	
 	public String getMangledName()
 	{
-		return typeName;
+		return mangle(new StringBuilder("_C"), getTypeName()).toString();
 	}
 	
 	public String getImportName() //does not include parameters
@@ -244,7 +244,7 @@ public abstract class Type {
 			return 4;
 		else if( this.equals(LONG) || this.equals(ULONG) || this.equals(DOUBLE) )
 			return 8;
-		return -1;
+		return 6;
 	}
 	
 	@Override
@@ -421,7 +421,7 @@ public abstract class Type {
 			if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
 				sb.append(c);
 			else if (c == '_')
-				sb.append("_S");
+				sb.append(c).append(c);
 			else
 			{
 				sb.append("_U");
@@ -442,14 +442,12 @@ public abstract class Type {
 			if (c == '_')
 			{
 				c = name.charAt(++i);
-				if (c == 'S')
-					c = '_';
-				else if (c == 'U')
+				if (c == 'U')
 				{
 					c = (char)Integer.parseInt(name.substring(i, i + 4), 16);
 					i += 3;
-				} else
-					sb.append('_');
+				} else if (c == '_')
+					sb.append(c);
 			}
 			sb.append(c);
 		}

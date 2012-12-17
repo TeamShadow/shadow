@@ -30,6 +30,7 @@ public class TACModule
 			fields.put(fieldName, moduleType.getField(fieldName).getType());
 		add(moduleType);
 
+		add(Type.ARRAY);
 		add(Type.BOOLEAN);
 		add(Type.CODE);
 		add(Type.BYTE);

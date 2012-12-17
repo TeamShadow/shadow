@@ -55,36 +55,14 @@ define private %FILE* @err() {
 	ret %FILE* %6
 }
 
-declare i32 @fprintf(%FILE* nocapture, i8* nocapture, ...) nounwind
 declare i32 @fwrite(%ubyte* nocapture, i32, i32, %FILE* nocapture) nounwind
 
-@str.int = private unnamed_addr constant [3 x i8] c"%i\00"
-define void @_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_Cint(%_Pshadow_Pio_CConsole*, %int) {
-	%3 = call %FILE* @out()
-	call i32 (%FILE*, i8*, ...)* @fprintf(%FILE* %3, i8* getelementptr inbounds ([3 x i8]* @str.int, i32 0, i32 0), %int %1)
-	ret void
-}
-
-@str.code = private unnamed_addr constant [4 x i8] c"%lc\00"
-define void @_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_Ccode(%_Pshadow_Pio_CConsole*, %code) {
-	%3 = call %FILE* @out()
-	call i32 (%FILE*, i8*, ...)* @fprintf(%FILE* %3, i8* getelementptr inbounds ([4 x i8]* @str.code, i32 0, i32 0), %code %1)
-	ret void
-}
-
-@str.long = private unnamed_addr constant [5 x i8] c"%lli\00"
-define void @_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_Clong(%_Pshadow_Pio_CConsole*, %long) {
-	%3 = call %FILE* @out()
-	call i32 (%FILE*, i8*, ...)* @fprintf(%FILE* %3, i8* getelementptr inbounds ([5 x i8]* @str.long, i32 0, i32 0), %long %1)
-	ret void
-}
-
-define void @_Pshadow_Pio_CConsole_Mprint_R_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CString*) {
+define %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CString*) {
 	%3 = getelementptr %"_Pshadow_Pstandard_CString"* %1, i32 0, i32 1
 	%4 = load { %ubyte*, [1 x %int] }* %3
 	%5 = extractvalue { %ubyte*, [1 x %int] } %4, 0
 	%6 = extractvalue { %ubyte*, [1 x %int] } %4, 1, 0
 	%7 = call %FILE* @out()
 	%8 = call i32 @fwrite(%ubyte* %5, i32 1, i32 %6, %FILE* %7)
-	ret void
+	ret %_Pshadow_Pio_CConsole* %0
 }

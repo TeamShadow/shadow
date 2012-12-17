@@ -68,8 +68,8 @@ public class COutput extends AbstractOutput
 			sb.append("\" = type { %\"");
 			sb.append(type.getQualifiedName());
 			sb.append("!!methods\"*");
-			for (Map.Entry<String, ModifiedType> fields : ((ClassType)type).
-					getFieldList())
+			for (Map.Entry<String, ? extends ModifiedType> fields : ((ClassType)type).
+					getAllFields())
 				sb.append(", ").append(typeToString(fields.getValue().
 						getType()));
 			c.write(sb.append(" }").toString());
@@ -84,8 +84,8 @@ public class COutput extends AbstractOutput
 		sb.append("\" = type { %\"");
 		sb.append(module.getQualifiedName());
 		sb.append("!!methods\"*");
-		for (Map.Entry<String, ModifiedType> fields : module.getClassType().
-				getFieldList())
+		for (Map.Entry<String, ? extends ModifiedType> fields : module.getClassType().
+				getAllFields())
 			sb.append(", ").append(typeToString(fields.getValue().getType()));
 		c.write(sb.append(" }").toString());
 //		llvm.write("%\"" + module.getType().getFullName() + "\" = type { %\"" +

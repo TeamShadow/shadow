@@ -24,6 +24,7 @@ public class LLVMMain
 		arguments.add("shadow/standard/Interface.shadow");
 		arguments.add("shadow/standard/Array.shadow");
 		arguments.add("shadow/standard/String.shadow");
+		arguments.add("shadow/standard/MutableString.shadow");
 		arguments.add("shadow/standard/Boolean.shadow");
 		arguments.add("shadow/standard/Code.shadow");
 		arguments.add("shadow/standard/Byte.shadow");
@@ -43,8 +44,14 @@ public class LLVMMain
 
 		if (FORCE)
 			for (String file : arguments)
+			{
+				Main.test(new String[] { "--check", file });
 				Main.test(new String[] { file });
+			}
 		else
-			Main.test(arguments.toArray(new String[arguments.size()]));
+		{
+			if (DELETE) arguments.add(0, "--check");
+			Main.main(arguments.toArray(new String[arguments.size()]));
+		}
 	}
 }

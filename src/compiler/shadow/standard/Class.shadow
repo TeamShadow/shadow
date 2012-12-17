@@ -3,10 +3,11 @@ immutable final class shadow.standard@Class
 	String name = "";
 	get nullable Class parent = null;
 	Interface[] interfaces = Interface:create[0];
-	int type, size;
-	//private create() { }
+	int width, size, flags;
 
-	public native createObject() => ( Object );
+	private create() { }
+	private native allocate() => ( Object );
+	private native allocate( int length ) => ( Object );
 
 	public isSubtype( Class other ) => ( boolean )
 	{

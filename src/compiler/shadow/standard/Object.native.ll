@@ -4,7 +4,7 @@
 %_Pshadow_Pstandard_CObject_Mclass = type { %_Pshadow_Pstandard_CClass }
 %_Pshadow_Pstandard_CObject = type { %_Pshadow_Pstandard_CObject_Mclass* }
 
-define i1 @_Pshadow_Pstandard_CObject_MreferenceEquals_R_Pshadow_Pstandard_CObject(%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject*) {
+define i1 @_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject(%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject*) {
 	%3 = icmp eq %_Pshadow_Pstandard_CObject* %0, %1
 	ret i1 %3
 }

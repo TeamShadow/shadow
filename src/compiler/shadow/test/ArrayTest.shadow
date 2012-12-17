@@ -5,11 +5,29 @@ class shadow.test@ArrayTest
 		int[] lengths = int:create[1];
 		lengths[0] = 5;
 		Array<Object> array = Array<Object>:create(lengths);
-		auto strings = test<String>(lengths);
+		array.index(0, 0);
+		array.index(1, '2');
+		array.index(2, "four");
+		array.index(3, 88);
+		array.index(4, null);
+		Array<Object> array2 = cast<Array<Object>>array.copy();
+		Array<Object> array3 = cast<Array<Object>>array2.subarray(1, 4);
+		for ( int i = 0; i < array->length; i += 1 )
+			array.index(i, i);
+		array3.index(0, "zero");
+		array3.index(1, "one");
+		array3.index(2, "two");
+		Console:instance.printLine(array);
+		Console:instance.printLine(array2);
+		Console:instance.printLine(array3);
+		for ( int start = 0; start <= array->length; start += 1 )
+			for ( int end = start; end <= array->length; end += 1 )
+				Console:instance.printLine(array.subarray(start, end));
+		//Array<String> strings = test<String>(lengths);
 	}
 
-	private test<T>( int[] lengths ) => ( Array<T> )
+	/*private test<T>( int[] lengths ) => ( Array<T> )
 	{
 		Array<T> array = Array<T>:create(lengths);
-	}
+	}*/
 }

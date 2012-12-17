@@ -1,22 +1,11 @@
 import shadow.standard@String;
 import shadow.standard@Object;
 
-singleton shadow.io@Console extends shadow.standard@Object
+immutable singleton shadow.io@Console extends shadow.standard@Object
 {
-	public printLine(boolean b) => ();
-	public printLine(int i) => ();
-	public printLine(code c) => ();
-	public printLine(long l) => ();
-	public printLine(String s) => ();
-	public printLine(Object o) => ();
-	public printLine() => ();
+	public immutable printLine(nullable Object value) => (Console);
+	public immutable printLine() => (Console);
 	public create();
-	public print(boolean b) => ();
-	public print(Object o) => ();
-	public native print(int i) => ();
-	public native print(code c) => ();
-	public native print(long l) => ();
-	public native print(String s) => ();
+	public immutable print(nullable Object value) => (Console);
 
 }
-

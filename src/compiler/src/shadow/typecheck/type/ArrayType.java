@@ -41,6 +41,12 @@ public class ArrayType extends ClassType
 		return dimensions;
 	}
 	
+	@Override
+	public int getWidth()
+	{
+		return 6 + getDimensions() * 4;
+	}
+	
 	public Type getSuperBaseType()
 	{
 		if (baseType instanceof ArrayType)

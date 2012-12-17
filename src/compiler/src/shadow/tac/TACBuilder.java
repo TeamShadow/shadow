@@ -43,6 +43,7 @@ import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public class TACBuilder implements ShadowParserVisitor
 {
@@ -50,6 +51,7 @@ public class TACBuilder implements ShadowParserVisitor
 	private TACModule module;
 	private TACMethod method;
 	private TACOperand prefix;
+	private boolean explicitSuper;
 	private TACVariable identifier;
 	private TACBlock block;
 	public TACModule build(SimpleNode node) throws ShadowException
@@ -321,8 +323,7 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-			new TACReturn(tree, method.getReturnTypes(), new TACLoad(tree,
-					new TACVariableRef(tree, method.getLocal("this"))));
+			new TACReturn(tree, method.getType().getReturnTypes());
 		return POST_CHILDREN;
 	}
 
@@ -512,7 +513,23 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-			visitBinaryOperation(node);
+		{
+			TACLabelRef doneLabel = new TACLabelRef(tree);
+			TACReference var = new TACVariableRef(
+					method.addTempLocal(Type.BOOLEAN));
+			TACOperand value = tree.appendChild(0);
+			new TACStore(tree, var, value);
+			for (int i = 1; i < tree.getNumChildren(); i++)
+			{
+				TACLabelRef nextLabel = new TACLabelRef(tree);
+				new TACBranch(tree, value, doneLabel, nextLabel);
+				nextLabel.new TACLabel(tree);
+				new TACStore(tree, var, value = tree.appendChild(i));
+			}
+			new TACBranch(tree, doneLabel);
+			doneLabel.new TACLabel(tree);
+			new TACLoad(tree, var);
+		}
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
@@ -530,7 +547,23 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-			visitBinaryOperation(node);
+		{
+			TACLabelRef doneLabel = new TACLabelRef(tree);
+			TACReference var = new TACVariableRef(tree,
+					method.addTempLocal(Type.BOOLEAN));
+			TACOperand value = tree.appendChild(0);
+			new TACStore(tree, var, value);
+			for (int i = 1; i < tree.getNumChildren(); i++)
+			{
+				TACLabelRef nextLabel = new TACLabelRef(tree);
+				new TACBranch(tree, value, nextLabel, doneLabel);
+				nextLabel.new TACLabel(tree);
+				new TACStore(tree, var, value = tree.appendChild(i));
+			}
+			new TACBranch(tree, doneLabel);
+			doneLabel.new TACLabel(tree);
+			new TACLoad(tree, var);
+		}
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
@@ -721,18 +754,23 @@ public class TACBuilder implements ShadowParserVisitor
 				prefix = tree.appendChild(0);
 			else
 			{
-				identifier = new TACVariable(node.getType(), node.getImage());
-				if (node.isField())
+				explicitSuper = node.getImage().equals("super");
+				if (!explicitSuper)
 				{
-					prefix = new TACFieldRef(tree, new TACVariableRef(tree,
-							method.getLocal("this")), node.getType(),
+					identifier = new TACVariable(node.getType(),
 							node.getImage());
-				}
-				else
-				{
-					TACVariable var = method.getLocal(node.getImage());
-					if (var != null)
-						prefix = new TACVariableRef(tree, var);
+					if (node.isField())
+					{
+						prefix = new TACFieldRef(tree, new TACVariableRef(tree,
+								method.getParameter("this")), node.getType(),
+								node.getImage());
+					}
+					else
+					{
+						TACVariable var = method.getLocal(node.getImage());
+						if (var != null)
+							prefix = new TACVariableRef(tree, var);
+					}
 				}
 			}
 		}
@@ -824,8 +862,11 @@ public class TACBuilder implements ShadowParserVisitor
 			TACMethod methodRef = new TACMethod(identifier.getName(),
 					(MethodType)node.getType());
 			List<TACOperand> params = new ArrayList<TACOperand>();
-			params.add(prefix != null ? prefix :
-					new TACVariableRef(tree, method.getLocal("this")));
+			if (prefix == null)
+				prefix = new TACVariableRef(tree, method.getParameter("this"));
+			if (prefix.getType().getModifiers().isImmutable())
+				methodRef.makeDirect();
+			params.add(prefix);
 			for (int i = 0; i < tree.getNumChildren(); i++)
 				if (node.jjtGetChild(i) instanceof ASTTypeArguments)
 					for (ModifiedType type :
@@ -934,8 +975,13 @@ public class TACBuilder implements ShadowParserVisitor
 				if (node.jjtGetChild(i) instanceof ASTTypeArguments)
 					for (ModifiedType type : (SequenceType)
 							node.jjtGetChild(i).getType())
-						params.add(new TACClass(tree,
-								(ClassInterfaceBaseType)type.getType()));
+						if (type.getType() instanceof TypeParameter)
+							params.add(new TACFieldRef(tree, new TACVariableRef(
+									tree, method.getParameter("this")),
+									Type.CLASS, type.getType().getTypeName()));
+						else
+							params.add(new TACClass(tree,
+									(ClassInterfaceBaseType)type.getType()));
 				else
 					params.add(tree.appendChild(i));
 			new TACCall(tree, methodRef, params);
@@ -1302,7 +1348,7 @@ public class TACBuilder implements ShadowParserVisitor
 
 	private void visitLiteral(SimpleNode node)
 	{
-		new TACLiteral(tree, node.getImage());
+		prefix = new TACLiteral(tree, node.getImage());
 	}
 
 	private void visitUnaryOperation(SimpleNode node)
@@ -1422,6 +1468,8 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		if (type.equals(Type.BOOLEAN))
 			return new TACLiteral(tree, "false");
+		if (type.equals(Type.CODE))
+			return new TACLiteral(tree, "'\0'");
 		if (type.equals(Type.UBYTE))
 			return new TACLiteral(tree, "0uy");
 		if (type.equals(Type.BYTE))
