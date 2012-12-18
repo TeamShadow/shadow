@@ -31,6 +31,9 @@ class Pair<T>
 		}
 		
 		value #= ")";
+		
+		Class thingy = T:class;
+		
 	
 		return value;
 	}

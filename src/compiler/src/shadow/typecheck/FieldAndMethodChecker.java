@@ -228,7 +228,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 										else
 											modifiers = node.getModifiers();									
 										
-										if( !parentSignature.equals( signature ) )
+										if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) )
 											addError( parentNode, "Overriding method " + signature + " differs only by return type from " + parentSignature );
 										else if( parentModifiers.isFinal() )
 											addError( parentNode, "Method " + signature + " cannot override final method" );

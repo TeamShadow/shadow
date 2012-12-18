@@ -623,7 +623,7 @@ public class ClassChecker extends BaseChecker {
 		{		
 			Type result = node.jjtGetChild(0).getType();			
 			
-			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, changing to String
 			{
 				Type current = node.jjtGetChild(i).getType();
 				
@@ -881,7 +881,7 @@ public class ClassChecker extends BaseChecker {
 				Type result = null;
 				boolean isNullable = true;
 				
-				for( int i = 0; i < node.jjtGetNumChildren(); i++ ) //cycle through types, downgrading to deepest subtype
+				for( int i = 0; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
 				{
 					Node child = node.jjtGetChild(i); 
 					Type type = child.getType();
@@ -900,9 +900,9 @@ public class ClassChecker extends BaseChecker {
 					
 					if( result == null )
 						result = type;				
-					else if( type.isSubtype(result) )
+					else if( result.isSubtype(type) )
 						result = type;
-					else if( !result.isSubtype(type) ) //neither is subtype of other, panic!
+					else if( !type.isSubtype(result) ) //neither is subtype of other, panic!
 					{
 						addError(node, Error.INVL_TYP, "Types in coalesce expression do not match");
 						result = Type.UNKNOWN;
@@ -963,7 +963,7 @@ public class ClassChecker extends BaseChecker {
 					return;
 				}
 				
-				if( current.isSubtype(result))
+				if( result.isSubtype(current))
 					result = current;
 			}
 			
@@ -1789,10 +1789,10 @@ public class ClassChecker extends BaseChecker {
 				}
 				else if( kind.equals("class"))
 				{
-					if( (prefixType instanceof ClassType)  )
+					if( (prefixType instanceof ClassType) || (prefixType instanceof TypeParameter)  )
 						node.setType( Type.CLASS );
 					else					
-						addError(node, Error.INVL_TYP, ":class constant only accessible on class, enum, error, exception, and singleton types"); //may need other cases
+						addError(node, Error.INVL_TYP, ":class constant only accessible on class, enum, error, exception, singleton types and type parameters"); //may need other cases
 				}
 			}
 			else
@@ -2635,14 +2635,14 @@ public class ClassChecker extends BaseChecker {
 		Node child = node.jjtGetChild(0);
 		Type result = child.getType();
 		
-		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, downgrading to deepest subtype
+		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal type
 		{
 			child = node.jjtGetChild(i);
 			Type type = child.getType();
 							
-			if( type.isSubtype(result) )					
+			if( result.isSubtype(type) )					
 				result = type;				
-			else if( !result.isSubtype(type) ) //neither is subtype of other, panic!
+			else if( !type.isSubtype(result) ) //neither is subtype of other, panic!
 			{
 				addError(node, Error.INVL_TYP, "Types in array initializer list do not match");
 				node.setType(Type.UNKNOWN);
