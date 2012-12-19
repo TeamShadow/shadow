@@ -38,6 +38,13 @@ class shadow.standard@MutableString
 			data[length] = string.getChar(i);
 		return this;
 	}
+	public reverse() => ( MutableString )
+	{
+		for ( int left = 0, right = length - 1; left < right;
+				left += 1, right -= 1 )
+			( data[left], data[right] ) = ( data[right], data[left] );
+		return this;
+	}
 
 	public immutable toString() => ( String )
 	{

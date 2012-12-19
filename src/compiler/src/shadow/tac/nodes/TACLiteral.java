@@ -15,6 +15,7 @@ public class TACLiteral extends TACOperand
 	public TACLiteral(TACNode node, String literal)
 	{
 		super(node);
+		String lower = literal.toLowerCase();
 		if (literal.equals("null"))
 		{
 			type = Type.NULL;
@@ -79,74 +80,73 @@ public class TACLiteral extends TACOperand
 			type = Type.STRING;
 			value = parseString(literal.substring(1, literal.length() - 1));
 		}
-		else if (literal.endsWith("uy"))
+		else if (lower.endsWith("uy"))
 		{
 			type = Type.UBYTE;
 			value = (byte)parseNumber(literal.substring(0, literal.length() -
 					2), 8);
 		}
-		else if (literal.endsWith("y"))
+		else if (lower.endsWith("y"))
 		{
 			type = Type.BYTE;
 			value = (byte)parseNumber(literal.substring(0, literal.length() -
 					1), 8);
 		}
-		else if (literal.endsWith("us"))
+		else if (lower.endsWith("us"))
 		{
 			type = Type.USHORT;
 			value = (short)parseNumber(literal.substring(0, literal.length() -
 					2), 16);
 		}
-		else if (literal.endsWith("s"))
+		else if (lower.endsWith("s"))
 		{
 			type = Type.SHORT;
 			value = (short)parseNumber(literal.substring(0, literal.length() -
 					1), 16);
 		}
-		else if (literal.endsWith("ui"))
+		else if (lower.endsWith("ui"))
 		{
 			type = Type.UINT;
 			value = (int)parseNumber(literal.substring(0, literal.length() - 2),
 					32);
 		}
-		else if (literal.endsWith("i"))
+		else if (lower.endsWith("i"))
 		{
 			type = Type.INT;
 			value = (int)parseNumber(literal.substring(0, literal.length() - 1),
 					32);
 		}
-		else if (literal.endsWith("ul"))
+		else if (lower.endsWith("ul"))
 		{
 			type = Type.ULONG;
 			value = (long)parseNumber(literal.substring(0, literal.length() -
 					2), 64);
 		}
-		else if (literal.endsWith("l"))
+		else if (lower.endsWith("l"))
 		{
 			type = Type.LONG;
 			value = (long)parseNumber(literal.substring(0, literal.length() -
 					1), 64);
 		}
-		else if (literal.endsWith("u"))
+		else if (lower.endsWith("u"))
 		{
 			type = Type.UINT;
 			value = (int)parseNumber(literal.substring(0, literal.length() - 1),
 					32);
 		}
-		else if (literal.endsWith("f"))
+		else if (lower.endsWith("f"))
 		{
 			type = Type.FLOAT;
 			value = (float)Float.parseFloat(literal.substring(0,
 					literal.length() - 1));
 		}
-		else if (literal.endsWith("d"))
+		else if (lower.endsWith("d"))
 		{
 			type = Type.DOUBLE;
 			value = (double)Double.parseDouble(literal.substring(0,
 					literal.length() - 1));
 		}
-		else if (literal.indexOf('.') != -1 ||
-				literal.indexOf('e') != -1 || literal.indexOf('E') != -1)
+		else if (literal.indexOf('.') != -1 || lower.indexOf('e') != -1)
 		{
 			type = Type.DOUBLE;
 			value = (double)Double.parseDouble(literal);

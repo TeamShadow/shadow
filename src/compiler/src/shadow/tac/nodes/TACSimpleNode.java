@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public abstract class TACSimpleNode extends TACNode
 		implements Iterable<TACOperand>
@@ -53,6 +54,9 @@ public abstract class TACSimpleNode extends TACNode
 
 	protected final TACOperand check(TACOperand operand, Type type)
 	{
+		if (type instanceof TypeParameter &&
+				!(operand.getType() instanceof TypeParameter))
+			type = Type.OBJECT;
 		operand = operand.checkVirtual(type, this);
 		if (type instanceof PropertyType)
 			type = ((PropertyType)type).getGetType().getType();

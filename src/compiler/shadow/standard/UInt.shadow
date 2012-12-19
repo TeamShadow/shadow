@@ -17,4 +17,27 @@ final immutable class shadow.standard@UInt implements Number<uint>, CanCompare<u
 	{
 		return this > other ? this, other;
 	}
+
+	public toString() => ( String )
+	{
+		return toString(10u);
+	}
+	public toString( uint base ) => ( String )
+	{
+		MutableString string = MutableString:create();
+		uint value = this;
+		do
+		{
+			string.append(digit(value % base));
+			value /= base;
+		}
+		while ( value != 0u );
+		return string.reverse().toString();
+	}
+	private digit( uint digit ) => ( code )
+	{
+		if ( digit < 10u )
+			return cast<code>(digit + '0');
+		return cast<code>(digit - 10u + 'a');
+	}
 }

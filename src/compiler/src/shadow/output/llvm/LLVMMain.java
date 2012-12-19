@@ -37,10 +37,15 @@ public class LLVMMain
 		arguments.add("shadow/standard/ULong.shadow");
 		arguments.add("shadow/standard/Float.shadow");
 		arguments.add("shadow/standard/Double.shadow");
+		arguments.add("shadow/standard/Reference.shadow");
+		arguments.add("shadow/standard/System.shadow");
 		arguments.add("shadow/io/Console.shadow");
+		arguments.add("shadow/utility/Random.shadow");
 		arguments.add("shadow/test/Test.shadow");
 		arguments.add("shadow/test/ConsoleTest.shadow");
 		arguments.add("shadow/test/ArrayTest.shadow");
+		arguments.add("shadow/test/SortTest.shadow");
+		arguments.add("shadow/test/SortMain.shadow");
 
 		if (FORCE)
 			for (String file : arguments)

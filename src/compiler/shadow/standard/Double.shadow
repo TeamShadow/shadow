@@ -10,4 +10,6 @@ final immutable class shadow.standard@Double implements Number<double>, CanCompa
 	public native modulus(double other) => (double);
 
 	public native compare(double other) => (int);
+
+	public native toString() => ( String );
 }

@@ -1,0 +1,15 @@
+class shadow.standard@Reference<T>
+{
+	get set nullable T value = null;
+	public create()
+	{
+	}
+	public create( T value )
+	{
+		this:value = value;
+	}
+	public immutable toString() => ( String )
+	{
+		return (value ?? cast<Object> "null").toString();
+	}
+}

@@ -3,9 +3,14 @@ import shadow.standard@Object;
 
 immutable singleton shadow.io@Console extends shadow.standard@Object
 {
+	public immutable printError(nullable Object value) => (Console);
+	public native immutable printError(String value) => (Console);
 	public immutable printLine(nullable Object value) => (Console);
-	public immutable printLine() => (Console);
+	public native immutable printLine() => (Console);
+	public immutable printErrorLine(nullable Object value) => (Console);
+	public native immutable printErrorLine() => (Console);
 	public create();
 	public immutable print(nullable Object value) => (Console);
+	public native immutable print(String value) => (Console);
 
 }

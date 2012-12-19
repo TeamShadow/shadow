@@ -2,14 +2,20 @@ immutable final class shadow.standard@String
 implements CanCompare<String>, CanIterate<String>
 {
 	ubyte[] data = ubyte:create[0];
+	boolean ascii = true;
 	public create()
 	{
 	}
 	public create( ubyte[] data )
 	{
+		ubyte ascii = 0uy;
 		this:data = ubyte:create[data->length];
 		for ( int i = 0; i < data->length; i += 1 )
+		{
 			this:data[i] = data[i];
+			ascii |= data[i];
+		}
+		this:ascii = ascii >> 7 == 0;
 	}
 	public create( code[] data )
 	{
@@ -21,6 +27,12 @@ implements CanCompare<String>, CanIterate<String>
 	public create( String other )
 	{
 		this:data = other:data;
+		this:ascii = other:ascii;
+	}
+	private create ( ubyte[] data, boolean ascii )
+	{
+		this:data = data;
+		this:ascii = ascii;
 	}
 
 	public getChar( int index ) => ( ubyte )
@@ -29,10 +41,7 @@ implements CanCompare<String>, CanIterate<String>
 	}
 	public get chars() => ( ubyte[] )
 	{
-		ubyte[] data = ubyte:create[this:data->length];
-		for ( int i = 0; i < data->length; i += 1 )
-			this:data[i] = data[i];
-		return data;
+		return cast<ubyte[]>(cast<Object>this:data.copy());
 	}
 	public get length() => ( int )
 	{
@@ -41,9 +50,33 @@ implements CanCompare<String>, CanIterate<String>
 
 	public substring( int start, int end ) => ( String )
 	{
-		String string = String:create();
-		string:data = cast<ubyte[]>(cast<Object>this:data.subarray(start, end));
-		return string;
+		return String:create(cast<ubyte[]>(cast<Object>this:data.subarray(start, end)), ascii);
+	}
+	public concatenate( String other ) => ( String )
+	{
+		ubyte[] data = ubyte:create[this->length + other->length];
+		for ( int i = 0; i < this->length; i += 1 )
+			data[i] = getChar(i);
+		for ( int i = 0; i < other->length; i += 1 )
+			data[this->length + i] = other.getChar(i);
+		return String:create(data, this:ascii and other:ascii);
+	}
+
+	public toLowerCase() => ( String )
+	{
+		// TODO: do this correctly
+		ubyte[] data = ubyte:create[this->length];
+		for ( int i = 0; i < this->length; i += 1 )
+			data[i] = cast<ubyte>((cast<code>data[i]).toLowerCase());
+		return String:create(data, this:ascii);
+	}
+	public toUpperCase() => ( String )
+	{
+		// TODO: do this correctly
+		ubyte[] data = ubyte:create[this->length];
+		for ( int i = 0; i < this->length; i += 1 )
+			data[i] = cast<ubyte>((cast<code>data[i]).toUpperCase());
+		return String:create(data, this:ascii);
 	}
 
 	public equals( String other ) => ( boolean )

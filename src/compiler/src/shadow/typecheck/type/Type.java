@@ -309,6 +309,14 @@ public abstract class Type {
 	}
 	
 	
+	final public boolean isFloating()
+	{
+		return
+		this.equals(FLOAT) ||
+		this.equals(DOUBLE);
+	}
+	
+	
 	final public boolean isBuiltIn()
 	{
 		return
@@ -347,6 +355,15 @@ public abstract class Type {
 		this.equals(SHORT) ||
 		this.equals(INT) ||
 		this.equals(LONG);
+	}
+
+	final public boolean isUnsigned()
+	{
+		return
+		this.equals(UBYTE) ||
+		this.equals(USHORT) ||
+		this.equals(UINT) ||
+		this.equals(ULONG);
 	}
 	
 	public boolean acceptsAssignment( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType ) 

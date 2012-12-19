@@ -7,12 +7,12 @@
 %_Pshadow_Pstandard_CClass_Mclass = type opaque
 %_Pshadow_Pstandard_CClass = type { %_Pshadow_Pstandard_CClass_Mclass*, { %_Pshadow_Pstandard_CInterface**, [1 x i32] }, %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CClass*, i32, i32, i32 }
 %_Pshadow_Pstandard_CArray_Mclass = type { %_Pshadow_Pstandard_CClass }
-@_Pshadow_Pstandard_CArray_Mclass = external global %_Pshadow_Pstandard_CArray_Mclass
+@_Pshadow_Pstandard_CArray_Mclass = external constant %_Pshadow_Pstandard_CArray_Mclass
 %_Pshadow_Pstandard_CArray = type { %_Pshadow_Pstandard_CArray_Mclass*, { i32*, [1 x i32] }, %_Pshadow_Pstandard_CClass*, %_Pshadow_Pstandard_CObject* }
 %_Pshadow_Pstandard_Cint_Mclass = type { %_Pshadow_Pstandard_CClass }
-@_Pshadow_Pstandard_Cint_Mclass = external global %_Pshadow_Pstandard_Cint_Mclass
+@_Pshadow_Pstandard_Cint_Mclass = external constant %_Pshadow_Pstandard_Cint_Mclass
 
-declare %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT(%_Pshadow_Pstandard_CArray*, %_Pshadow_Pstandard_CClass*, { i32*, [1 x i32] }, %_Pshadow_Pstandard_CObject*)
+declare %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject(%_Pshadow_Pstandard_CArray*, %_Pshadow_Pstandard_CClass*, { i32*, [1 x i32] }, %_Pshadow_Pstandard_CObject*)
 declare noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass*)
 declare noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass*, i32)
 declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)
@@ -49,7 +49,7 @@ define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Ps
 	ret %_Pshadow_Pstandard_CObject* %19
 }
 
-define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject(%_Pshadow_Pstandard_CArray*, i32, %_Pshadow_Pstandard_CObject*) {
+define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_CT(%_Pshadow_Pstandard_CArray*, i32, %_Pshadow_Pstandard_CObject*) {
 	%4 = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
 	%5 = load %_Pshadow_Pstandard_CClass** %4
 	%6 = getelementptr inbounds %_Pshadow_Pstandard_CClass* %5, i32 0, i32 6
@@ -68,7 +68,7 @@ define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pst
 	ret void
 	%19 = getelementptr %_Pshadow_Pstandard_CObject* %2, i32 1
 	%20 = bitcast %_Pshadow_Pstandard_CObject* %19 to i8*
-	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %12, i8* %20, i32 %8, i32 0, i1 0)
+	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %12, i8* %20, i32 %7, i32 0, i1 0)
 	ret void
 }
 
@@ -99,6 +99,6 @@ define noalias %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Msubarray_
 	%25 = mul i32 %1, %24
 	%26 = getelementptr i8* %22, i32 %25
 	%27 = bitcast i8* %26 to %_Pshadow_Pstandard_CObject*
-	%28 = tail call %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT(%_Pshadow_Pstandard_CArray* %5, %_Pshadow_Pstandard_CClass* %7, { i32*, [1 x i32] } %19, %_Pshadow_Pstandard_CObject* %27)
+	%28 = tail call %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject(%_Pshadow_Pstandard_CArray* %5, %_Pshadow_Pstandard_CClass* %7, { i32*, [1 x i32] } %19, %_Pshadow_Pstandard_CObject* %27)
 	ret %_Pshadow_Pstandard_CArray* %28
 }

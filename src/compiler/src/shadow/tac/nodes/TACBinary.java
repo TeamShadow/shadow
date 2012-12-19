@@ -33,9 +33,9 @@ public class TACBinary extends TACOperand
 
 		OR(Type.BOOLEAN, "or"),
 		XOR(Type.BOOLEAN, "xor"),
-		AND(Type.BOOLEAN, "and"),
+		AND(Type.BOOLEAN, "and");
 
-		CONCATENATION(Type.STRING, '#');
+//		CONCATENATION(Type.STRING, '#');
 
 		private Type operand, result;
 		private char code;

@@ -268,10 +268,10 @@ _Pshadow_Pstandard_CArray_MtoString:    # @_Pshadow_Pstandard_CArray_MtoString
 	.size	_Pshadow_Pstandard_CArray_MtoString, .Ltmp50-_Pshadow_Pstandard_CArray_MtoString
 	.cfi_endproc
 
-	.globl	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT
+	.globl	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject
 	.align	16, 0x90
-	.type	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT,@function
-_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT: # @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT
+	.type	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject,@function
+_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject: # @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject
 # BB#0:
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rdi)
 	movq	%rsi, 24(%rdi)
@@ -281,7 +281,7 @@ _Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT: # @_Pshadow_Psta
 	movq	%rdi, %rax
 	ret
 .Ltmp51:
-	.size	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT, .Ltmp51-_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_CT
+	.size	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject, .Ltmp51-_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject
 
 	.globl	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1
 	.align	16, 0x90
@@ -290,126 +290,76 @@ _Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1: # @_Pshadow_Pstanda
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp59:
+.Ltmp57:
 	.cfi_def_cfa_offset 16
 	pushq	%r15
-.Ltmp60:
+.Ltmp58:
 	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp61:
+.Ltmp59:
 	.cfi_def_cfa_offset 32
-	pushq	%r13
-.Ltmp62:
-	.cfi_def_cfa_offset 40
-	pushq	%r12
-.Ltmp63:
-	.cfi_def_cfa_offset 48
 	pushq	%rbx
-.Ltmp64:
-	.cfi_def_cfa_offset 56
-	subq	$24, %rsp
-.Ltmp65:
-	.cfi_def_cfa_offset 80
-.Ltmp66:
-	.cfi_offset %rbx, -56
-.Ltmp67:
-	.cfi_offset %r12, -48
-.Ltmp68:
-	.cfi_offset %r13, -40
-.Ltmp69:
+.Ltmp60:
+	.cfi_def_cfa_offset 40
+	pushq	%rax
+.Ltmp61:
+	.cfi_def_cfa_offset 48
+.Ltmp62:
+	.cfi_offset %rbx, -40
+.Ltmp63:
 	.cfi_offset %r14, -32
-.Ltmp70:
+.Ltmp64:
 	.cfi_offset %r15, -24
-.Ltmp71:
+.Ltmp65:
 	.cfi_offset %rbp, -16
-	movl	%ecx, %r13d
-	movq	%rdx, %r12
-	movq	%rdi, %r14
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%r14)
-	movl	%r13d, 16(%rsp)
-	movq	%r12, 8(%rsp)
-	movq	%rsi, 24(%r14)
-	movq	$0, 32(%r14)
+	movl	%ecx, %r15d
+	movq	%rdx, %r14
+	movq	%rdi, %rbx
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rbx)
+	movq	%rsi, 24(%rbx)
+	movq	$0, 32(%rbx)
 	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
-	xorl	%ebp, %ebp
 	xorl	%edi, %edi
 	callq	calloc
-	movq	%rax, 8(%r14)
-	movl	$0, 16(%r14)
+	movq	%rax, 8(%rbx)
+	movl	$0, 16(%rbx)
 	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
 	movl	$1, %edi
 	callq	calloc
-	movq	%rax, %r15
-	movl	%r13d, (%r15)
+	movq	%rax, %rbp
+	movl	%r15d, (%rbp)
 	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
 	callq	malloc
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
 	movq	$_Pshadow_Pstandard_Cint_Mclass, 24(%rax)
-	movq	%r15, 8(%rax)
+	movq	%rbp, 8(%rax)
 	movl	$1, 16(%rax)
-	movq	%r12, 32(%rax)
-	movq	(%rax), %rcx
+	movq	%r14, 32(%rax)
 	movq	%rax, %rdi
-	callq	*152(%rcx)
-	movl	(%rax), %ebx
-	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
-	movl	%ebx, %edi
-	callq	calloc
-	movl	%ebx, 16(%r14)
-	movq	%rax, 8(%r14)
-	jmp	.LBB6_2
-	.align	16, 0x90
-.LBB6_1:                                # %_label9
-                                        #   in Loop: Header=BB6_2 Depth=1
-	movslq	%ebp, %rax
-	movq	8(%rsp), %rcx
-	movl	(%rcx,%rax,4), %ecx
-	movq	8(%r14), %rdx
-	movl	%ecx, (%rdx,%rax,4)
-	incl	%ebp
-	movl	16(%rsp), %r13d
-	movq	8(%rsp), %r12
-.LBB6_2:                                # %_label10
-                                        # =>This Inner Loop Header: Depth=1
-	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
-	movl	$1, %edi
-	callq	calloc
-	movq	%rax, %rbx
-	movl	%r13d, (%rbx)
-	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
-	callq	malloc
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_Cint_Mclass, 24(%rax)
-	movq	%rbx, 8(%rax)
-	movl	$1, 16(%rax)
-	movq	%r12, 32(%rax)
-	movq	(%rax), %rcx
-	movq	%rax, %rdi
-	callq	*152(%rcx)
-	cmpl	(%rax), %ebp
-	jl	.LBB6_1
-# BB#3:                                 # %_label11
-	movq	(%r14), %rax
-	movq	%r14, %rdi
+	callq	_Pshadow_Pstandard_CArray_Mcopy
+	movq	8(%rax), %rcx
+	movq	32(%rax), %rax
+	movl	(%rcx), %ecx
+	movl	%ecx, 16(%rbx)
+	movq	%rax, 8(%rbx)
+	movq	(%rbx), %rax
+	movq	%rbx, %rdi
 	callq	*144(%rax)
-	movq	24(%r14), %rcx
+	movq	24(%rbx), %rcx
 	movl	48(%rcx), %esi
 	movl	%eax, %edi
 	callq	calloc
-	movq	%rax, 32(%r14)
-	movq	%r14, %rax
-	addq	$24, %rsp
+	movq	%rax, 32(%rbx)
+	movq	%rbx, %rax
+	addq	$8, %rsp
 	popq	%rbx
-	popq	%r12
-	popq	%r13
 	popq	%r14
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp72:
-	.size	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1, .Ltmp72-_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1
+.Ltmp66:
+	.size	_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1, .Ltmp66-_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CArray_Mcopy
@@ -419,30 +369,50 @@ _Pshadow_Pstandard_CArray_Mcopy:        # @_Pshadow_Pstandard_CArray_Mcopy
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp77:
+.Ltmp72:
 	.cfi_def_cfa_offset 16
-	pushq	%r14
-.Ltmp78:
+	pushq	%r15
+.Ltmp73:
 	.cfi_def_cfa_offset 24
-	pushq	%rbx
-.Ltmp79:
+	pushq	%r14
+.Ltmp74:
 	.cfi_def_cfa_offset 32
+	pushq	%rbx
+.Ltmp75:
+	.cfi_def_cfa_offset 40
+	pushq	%rax
+.Ltmp76:
+	.cfi_def_cfa_offset 48
+.Ltmp77:
+	.cfi_offset %rbx, -40
+.Ltmp78:
+	.cfi_offset %r14, -32
+.Ltmp79:
+	.cfi_offset %r15, -24
 .Ltmp80:
-	.cfi_offset %rbx, -32
-.Ltmp81:
-	.cfi_offset %r14, -24
-.Ltmp82:
 	.cfi_offset %rbp, -16
 	movq	%rdi, %rbx
 	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
 	callq	malloc
 	movq	%rax, %r14
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%r14)
-	movl	16(%rbx), %ecx
-	movq	8(%rbx), %rdx
-	movq	24(%rbx), %rsi
-	movq	%r14, %rdi
-	callq	*_Pshadow_Pstandard_CArray_Mclass+112(%rip)
+	movq	(%rbx), %rax
+	movq	%rbx, %rdi
+	callq	*144(%rax)
+	movq	24(%rbx), %rcx
+	movl	48(%rcx), %esi
+	movl	%eax, %edi
+	callq	calloc
+	movq	%rax, %r15
+	movq	(%rbx), %rax
+	movq	24(%rbx), %rbp
+	movq	%rbx, %rdi
+	callq	*152(%rax)
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%r14)
+	movq	%rbp, 24(%r14)
+	movl	%edx, 16(%r14)
+	movq	%rax, 8(%r14)
+	movq	%r15, 32(%r14)
 	movq	(%rbx), %rax
 	movq	%rbx, %rdi
 	callq	*144(%rax)
@@ -451,7 +421,7 @@ _Pshadow_Pstandard_CArray_Mcopy:        # @_Pshadow_Pstandard_CArray_Mcopy
 # BB#1:
 	xorl	%ebp, %ebp
 	.align	16, 0x90
-.LBB7_2:                                # %_label12
+.LBB7_2:                                # %_label9
                                         # =>This Inner Loop Header: Depth=1
 	movq	(%rbx), %rax
 	movq	%rbx, %rdi
@@ -468,14 +438,16 @@ _Pshadow_Pstandard_CArray_Mcopy:        # @_Pshadow_Pstandard_CArray_Mcopy
 	incl	%ebp
 	cmpl	%eax, %ebp
 	jl	.LBB7_2
-.LBB7_3:                                # %_label14
+.LBB7_3:                                # %_label11
 	movq	%r14, %rax
+	addq	$8, %rsp
 	popq	%rbx
 	popq	%r14
+	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp83:
-	.size	_Pshadow_Pstandard_CArray_Mcopy, .Ltmp83-_Pshadow_Pstandard_CArray_Mcopy
+.Ltmp81:
+	.size	_Pshadow_Pstandard_CArray_Mcopy, .Ltmp81-_Pshadow_Pstandard_CArray_Mcopy
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CArray_Mallocate_Pshadow_Pstandard_Cint
@@ -488,8 +460,8 @@ _Pshadow_Pstandard_CArray_Mallocate_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandar
 	movl	%esi, %edi
 	movl	%eax, %esi
 	jmp	calloc                  # TAILCALL
-.Ltmp84:
-	.size	_Pshadow_Pstandard_CArray_Mallocate_Pshadow_Pstandard_Cint, .Ltmp84-_Pshadow_Pstandard_CArray_Mallocate_Pshadow_Pstandard_Cint
+.Ltmp82:
+	.size	_Pshadow_Pstandard_CArray_Mallocate_Pshadow_Pstandard_Cint, .Ltmp82-_Pshadow_Pstandard_CArray_Mallocate_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -528,8 +500,8 @@ _Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_C
 	popq	%r14
 	popq	%r15
 	ret
-.Ltmp85:
-	.size	_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint, .Ltmp85-_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint
+.Ltmp83:
+	.size	_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint, .Ltmp83-_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject
 	.align	16, 0x90
@@ -537,18 +509,18 @@ _Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_C
 _Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject: # @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject
 # BB#0:
 	pushq	%rax
-	movl	%esi, %eax
 	movq	%rdi, %rcx
-	movq	24(%rcx), %rsi
-	imull	48(%rsi), %eax
-	movslq	%eax, %rdi
+	movq	24(%rcx), %rax
+	movl	48(%rax), %r8d
+	imull	%r8d, %esi
+	movslq	%esi, %rdi
 	addq	32(%rcx), %rdi
-	testb	$1, 40(%rsi)
+	testb	$1, 40(%rax)
 	je	.LBB10_1
 # BB#2:
 	addq	$8, %rdx
 	movq	%rdx, %rsi
-	movq	%rax, %rdx
+	movq	%r8, %rdx
 	callq	memcpy
 	popq	%rax
 	ret
@@ -556,8 +528,8 @@ _Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObjec
 	movq	%rdx, (%rdi)
 	popq	%rax
 	ret
-.Ltmp86:
-	.size	_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject, .Ltmp86-_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject
+.Ltmp84:
+	.size	_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject, .Ltmp84-_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject
 
 	.globl	_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -611,8 +583,8 @@ _Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cin
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp87:
-	.size	_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint, .Ltmp87-_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint
+.Ltmp85:
+	.size	_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint, .Ltmp85-_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cboolean_Mcreate
 	.align	16, 0x90
@@ -622,8 +594,8 @@ _Pshadow_Pstandard_Cboolean_Mcreate:    # @_Pshadow_Pstandard_Cboolean_Mcreate
 	movq	$_Pshadow_Pstandard_Cboolean_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp88:
-	.size	_Pshadow_Pstandard_Cboolean_Mcreate, .Ltmp88-_Pshadow_Pstandard_Cboolean_Mcreate
+.Ltmp86:
+	.size	_Pshadow_Pstandard_Cboolean_Mcreate, .Ltmp86-_Pshadow_Pstandard_Cboolean_Mcreate
 
 	.globl	_Pshadow_Pstandard_Cbyte_Mcreate
 	.align	16, 0x90
@@ -633,8 +605,8 @@ _Pshadow_Pstandard_Cbyte_Mcreate:       # @_Pshadow_Pstandard_Cbyte_Mcreate
 	movq	$_Pshadow_Pstandard_Cbyte_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp89:
-	.size	_Pshadow_Pstandard_Cbyte_Mcreate, .Ltmp89-_Pshadow_Pstandard_Cbyte_Mcreate
+.Ltmp87:
+	.size	_Pshadow_Pstandard_Cbyte_Mcreate, .Ltmp87-_Pshadow_Pstandard_Cbyte_Mcreate
 
 	.globl	_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass
 	.align	16, 0x90
@@ -655,8 +627,8 @@ _Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass: # @_Pshadow_Pstan
 	jne	.LBB14_1
 .LBB14_3:                               # %_label0
 	ret
-.Ltmp90:
-	.size	_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass, .Ltmp90-_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass
+.Ltmp88:
+	.size	_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass, .Ltmp88-_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass
 
 	.globl	_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CInterface
 	.align	16, 0x90
@@ -665,37 +637,37 @@ _Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CInterface: # @_Pshadow_P
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp98:
+.Ltmp96:
 	.cfi_def_cfa_offset 16
 	pushq	%r15
-.Ltmp99:
+.Ltmp97:
 	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp100:
+.Ltmp98:
 	.cfi_def_cfa_offset 32
 	pushq	%r13
-.Ltmp101:
+.Ltmp99:
 	.cfi_def_cfa_offset 40
 	pushq	%r12
-.Ltmp102:
+.Ltmp100:
 	.cfi_def_cfa_offset 48
 	pushq	%rbx
-.Ltmp103:
+.Ltmp101:
 	.cfi_def_cfa_offset 56
 	pushq	%rax
-.Ltmp104:
+.Ltmp102:
 	.cfi_def_cfa_offset 64
-.Ltmp105:
+.Ltmp103:
 	.cfi_offset %rbx, -56
-.Ltmp106:
+.Ltmp104:
 	.cfi_offset %r12, -48
-.Ltmp107:
+.Ltmp105:
 	.cfi_offset %r13, -40
-.Ltmp108:
+.Ltmp106:
 	.cfi_offset %r14, -32
-.Ltmp109:
+.Ltmp107:
 	.cfi_offset %r15, -24
-.Ltmp110:
+.Ltmp108:
 	.cfi_offset %rbp, -16
 	movq	%rsi, %r14
 	movq	%rdi, %r15
@@ -753,8 +725,8 @@ _Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CInterface: # @_Pshadow_P
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp111:
-	.size	_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CInterface, .Ltmp111-_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CInterface
+.Ltmp109:
+	.size	_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CInterface, .Ltmp109-_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CInterface
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CClass_Mparent
@@ -764,8 +736,8 @@ _Pshadow_Pstandard_CClass_Mparent:      # @_Pshadow_Pstandard_CClass_Mparent
 # BB#0:
 	movq	32(%rdi), %rax
 	ret
-.Ltmp112:
-	.size	_Pshadow_Pstandard_CClass_Mparent, .Ltmp112-_Pshadow_Pstandard_CClass_Mparent
+.Ltmp110:
+	.size	_Pshadow_Pstandard_CClass_Mparent, .Ltmp110-_Pshadow_Pstandard_CClass_Mparent
 
 	.globl	_Pshadow_Pstandard_CClass_MtoString
 	.align	16, 0x90
@@ -774,8 +746,8 @@ _Pshadow_Pstandard_CClass_MtoString:    # @_Pshadow_Pstandard_CClass_MtoString
 # BB#0:
 	movq	24(%rdi), %rax
 	ret
-.Ltmp113:
-	.size	_Pshadow_Pstandard_CClass_MtoString, .Ltmp113-_Pshadow_Pstandard_CClass_MtoString
+.Ltmp111:
+	.size	_Pshadow_Pstandard_CClass_MtoString, .Ltmp111-_Pshadow_Pstandard_CClass_MtoString
 
 	.globl	_Pshadow_Pstandard_CClass_Mcreate
 	.align	16, 0x90
@@ -798,8 +770,8 @@ _Pshadow_Pstandard_CClass_Mcreate:      # @_Pshadow_Pstandard_CClass_Mcreate
 	movq	%rbx, %rax
 	popq	%rbx
 	ret
-.Ltmp114:
-	.size	_Pshadow_Pstandard_CClass_Mcreate, .Ltmp114-_Pshadow_Pstandard_CClass_Mcreate
+.Ltmp112:
+	.size	_Pshadow_Pstandard_CClass_Mcreate, .Ltmp112-_Pshadow_Pstandard_CClass_Mcreate
 
 	.globl	_Pshadow_Pstandard_CClass_Mallocate
 	.align	16, 0x90
@@ -813,8 +785,8 @@ _Pshadow_Pstandard_CClass_Mallocate:    # @_Pshadow_Pstandard_CClass_Mallocate
 	movq	%rbx, (%rax)
 	popq	%rbx
 	ret
-.Ltmp115:
-	.size	_Pshadow_Pstandard_CClass_Mallocate, .Ltmp115-_Pshadow_Pstandard_CClass_Mallocate
+.Ltmp113:
+	.size	_Pshadow_Pstandard_CClass_Mallocate, .Ltmp113-_Pshadow_Pstandard_CClass_Mallocate
 
 	.globl	_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -825,8 +797,8 @@ _Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandar
 	movl	%esi, %edi
 	movl	%eax, %esi
 	jmp	calloc                  # TAILCALL
-.Ltmp116:
-	.size	_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint, .Ltmp116-_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint
+.Ltmp114:
+	.size	_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint, .Ltmp114-_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Ccode_MtoString
 	.align	16, 0x90
@@ -835,17 +807,17 @@ _Pshadow_Pstandard_Ccode_MtoString:     # @_Pshadow_Pstandard_Ccode_MtoString
 	.cfi_startproc
 # BB#0:
 	pushq	%r14
-.Ltmp120:
+.Ltmp118:
 	.cfi_def_cfa_offset 16
 	pushq	%rbx
-.Ltmp121:
+.Ltmp119:
 	.cfi_def_cfa_offset 24
 	pushq	%rax
-.Ltmp122:
+.Ltmp120:
 	.cfi_def_cfa_offset 32
-.Ltmp123:
+.Ltmp121:
 	.cfi_offset %rbx, -24
-.Ltmp124:
+.Ltmp122:
 	.cfi_offset %r14, -16
 	movl	8(%rdi), %ebx
 	movl	_Pshadow_Pstandard_Ccode_Mclass+48(%rip), %esi
@@ -860,14 +832,14 @@ _Pshadow_Pstandard_Ccode_MtoString:     # @_Pshadow_Pstandard_Ccode_MtoString
 	movq	%rbx, %rdi
 	movq	%r14, %rsi
 	movl	$1, %edx
-	callq	*_Pshadow_Pstandard_CString_Mclass+136(%rip)
+	callq	*_Pshadow_Pstandard_CString_Mclass+144(%rip)
 	movq	%rbx, %rax
 	addq	$8, %rsp
 	popq	%rbx
 	popq	%r14
 	ret
-.Ltmp125:
-	.size	_Pshadow_Pstandard_Ccode_MtoString, .Ltmp125-_Pshadow_Pstandard_Ccode_MtoString
+.Ltmp123:
+	.size	_Pshadow_Pstandard_Ccode_MtoString, .Ltmp123-_Pshadow_Pstandard_Ccode_MtoString
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_Ccode_Mcreate
@@ -878,8 +850,8 @@ _Pshadow_Pstandard_Ccode_Mcreate:       # @_Pshadow_Pstandard_Ccode_Mcreate
 	movq	$_Pshadow_Pstandard_Ccode_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp126:
-	.size	_Pshadow_Pstandard_Ccode_Mcreate, .Ltmp126-_Pshadow_Pstandard_Ccode_Mcreate
+.Ltmp124:
+	.size	_Pshadow_Pstandard_Ccode_Mcreate, .Ltmp124-_Pshadow_Pstandard_Ccode_Mcreate
 
 	.globl	_Pshadow_Pstandard_Cdouble_Mcreate
 	.align	16, 0x90
@@ -889,8 +861,8 @@ _Pshadow_Pstandard_Cdouble_Mcreate:     # @_Pshadow_Pstandard_Cdouble_Mcreate
 	movq	$_Pshadow_Pstandard_Cdouble_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp127:
-	.size	_Pshadow_Pstandard_Cdouble_Mcreate, .Ltmp127-_Pshadow_Pstandard_Cdouble_Mcreate
+.Ltmp125:
+	.size	_Pshadow_Pstandard_Cdouble_Mcreate, .Ltmp125-_Pshadow_Pstandard_Cdouble_Mcreate
 
 	.globl	_Pshadow_Pstandard_Cfloat_Mcreate
 	.align	16, 0x90
@@ -900,8 +872,8 @@ _Pshadow_Pstandard_Cfloat_Mcreate:      # @_Pshadow_Pstandard_Cfloat_Mcreate
 	movq	$_Pshadow_Pstandard_Cfloat_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp128:
-	.size	_Pshadow_Pstandard_Cfloat_Mcreate, .Ltmp128-_Pshadow_Pstandard_Cfloat_Mcreate
+.Ltmp126:
+	.size	_Pshadow_Pstandard_Cfloat_Mcreate, .Ltmp126-_Pshadow_Pstandard_Cfloat_Mcreate
 
 	.globl	_Pshadow_Pstandard_CInterface_MisSubtype_Pshadow_Pstandard_CInterface
 	.align	16, 0x90
@@ -910,37 +882,37 @@ _Pshadow_Pstandard_CInterface_MisSubtype_Pshadow_Pstandard_CInterface: # @_Pshad
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp136:
+.Ltmp134:
 	.cfi_def_cfa_offset 16
 	pushq	%r15
-.Ltmp137:
+.Ltmp135:
 	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp138:
+.Ltmp136:
 	.cfi_def_cfa_offset 32
 	pushq	%r13
-.Ltmp139:
+.Ltmp137:
 	.cfi_def_cfa_offset 40
 	pushq	%r12
-.Ltmp140:
+.Ltmp138:
 	.cfi_def_cfa_offset 48
 	pushq	%rbx
-.Ltmp141:
+.Ltmp139:
 	.cfi_def_cfa_offset 56
 	pushq	%rax
-.Ltmp142:
+.Ltmp140:
 	.cfi_def_cfa_offset 64
-.Ltmp143:
+.Ltmp141:
 	.cfi_offset %rbx, -56
-.Ltmp144:
+.Ltmp142:
 	.cfi_offset %r12, -48
-.Ltmp145:
+.Ltmp143:
 	.cfi_offset %r13, -40
-.Ltmp146:
+.Ltmp144:
 	.cfi_offset %r14, -32
-.Ltmp147:
+.Ltmp145:
 	.cfi_offset %r15, -24
-.Ltmp148:
+.Ltmp146:
 	.cfi_offset %rbp, -16
 	movq	%rsi, %r14
 	movq	%rdi, %r15
@@ -1001,8 +973,8 @@ _Pshadow_Pstandard_CInterface_MisSubtype_Pshadow_Pstandard_CInterface: # @_Pshad
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp149:
-	.size	_Pshadow_Pstandard_CInterface_MisSubtype_Pshadow_Pstandard_CInterface, .Ltmp149-_Pshadow_Pstandard_CInterface_MisSubtype_Pshadow_Pstandard_CInterface
+.Ltmp147:
+	.size	_Pshadow_Pstandard_CInterface_MisSubtype_Pshadow_Pstandard_CInterface, .Ltmp147-_Pshadow_Pstandard_CInterface_MisSubtype_Pshadow_Pstandard_CInterface
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CInterface_MtoString
@@ -1012,8 +984,8 @@ _Pshadow_Pstandard_CInterface_MtoString: # @_Pshadow_Pstandard_CInterface_MtoStr
 # BB#0:
 	movq	24(%rdi), %rax
 	ret
-.Ltmp150:
-	.size	_Pshadow_Pstandard_CInterface_MtoString, .Ltmp150-_Pshadow_Pstandard_CInterface_MtoString
+.Ltmp148:
+	.size	_Pshadow_Pstandard_CInterface_MtoString, .Ltmp148-_Pshadow_Pstandard_CInterface_MtoString
 
 	.globl	_Pshadow_Pstandard_CInterface_Mcreate
 	.align	16, 0x90
@@ -1032,8 +1004,8 @@ _Pshadow_Pstandard_CInterface_Mcreate:  # @_Pshadow_Pstandard_CInterface_Mcreate
 	movq	%rbx, %rax
 	popq	%rbx
 	ret
-.Ltmp151:
-	.size	_Pshadow_Pstandard_CInterface_Mcreate, .Ltmp151-_Pshadow_Pstandard_CInterface_Mcreate
+.Ltmp149:
+	.size	_Pshadow_Pstandard_CInterface_Mcreate, .Ltmp149-_Pshadow_Pstandard_CInterface_Mcreate
 
 	.globl	_Pshadow_Pstandard_Cint_Mmin_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1044,8 +1016,8 @@ _Pshadow_Pstandard_Cint_Mmin_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_Cint_
 	cmpl	%esi, %eax
 	cmovgl	%esi, %eax
 	ret
-.Ltmp152:
-	.size	_Pshadow_Pstandard_Cint_Mmin_Pshadow_Pstandard_Cint, .Ltmp152-_Pshadow_Pstandard_Cint_Mmin_Pshadow_Pstandard_Cint
+.Ltmp150:
+	.size	_Pshadow_Pstandard_Cint_Mmin_Pshadow_Pstandard_Cint, .Ltmp150-_Pshadow_Pstandard_Cint_Mmin_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cint_Mabs
 	.align	16, 0x90
@@ -1057,8 +1029,8 @@ _Pshadow_Pstandard_Cint_Mabs:           # @_Pshadow_Pstandard_Cint_Mabs
 	negl	%eax
 	cmovll	%ecx, %eax
 	ret
-.Ltmp153:
-	.size	_Pshadow_Pstandard_Cint_Mabs, .Ltmp153-_Pshadow_Pstandard_Cint_Mabs
+.Ltmp151:
+	.size	_Pshadow_Pstandard_Cint_Mabs, .Ltmp151-_Pshadow_Pstandard_Cint_Mabs
 
 	.globl	_Pshadow_Pstandard_Cint_Mmax_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1069,8 +1041,8 @@ _Pshadow_Pstandard_Cint_Mmax_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_Cint_
 	cmpl	%esi, %eax
 	cmovll	%esi, %eax
 	ret
-.Ltmp154:
-	.size	_Pshadow_Pstandard_Cint_Mmax_Pshadow_Pstandard_Cint, .Ltmp154-_Pshadow_Pstandard_Cint_Mmax_Pshadow_Pstandard_Cint
+.Ltmp152:
+	.size	_Pshadow_Pstandard_Cint_Mmax_Pshadow_Pstandard_Cint, .Ltmp152-_Pshadow_Pstandard_Cint_Mmax_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cint_MtoString
 	.align	16, 0x90
@@ -1079,19 +1051,19 @@ _Pshadow_Pstandard_Cint_MtoString:      # @_Pshadow_Pstandard_Cint_MtoString
 	.cfi_startproc
 # BB#0:
 	pushq	%r15
-.Ltmp159:
+.Ltmp157:
 	.cfi_def_cfa_offset 16
 	pushq	%r14
-.Ltmp160:
+.Ltmp158:
 	.cfi_def_cfa_offset 24
 	pushq	%rbx
-.Ltmp161:
+.Ltmp159:
 	.cfi_def_cfa_offset 32
-.Ltmp162:
+.Ltmp160:
 	.cfi_offset %rbx, -32
-.Ltmp163:
+.Ltmp161:
 	.cfi_offset %r14, -24
-.Ltmp164:
+.Ltmp162:
 	.cfi_offset %r15, -16
 	movl	8(%rdi), %ebx
 	movl	_Pshadow_Pstandard_CMutableString_Mclass+44(%rip), %edi
@@ -1143,8 +1115,8 @@ _Pshadow_Pstandard_Cint_MtoString:      # @_Pshadow_Pstandard_Cint_MtoString
 	popq	%r14
 	popq	%r15
 	ret
-.Ltmp165:
-	.size	_Pshadow_Pstandard_Cint_MtoString, .Ltmp165-_Pshadow_Pstandard_Cint_MtoString
+.Ltmp163:
+	.size	_Pshadow_Pstandard_Cint_MtoString, .Ltmp163-_Pshadow_Pstandard_Cint_MtoString
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_Cint_Mcreate
@@ -1155,8 +1127,8 @@ _Pshadow_Pstandard_Cint_Mcreate:        # @_Pshadow_Pstandard_Cint_Mcreate
 	movq	$_Pshadow_Pstandard_Cint_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp166:
-	.size	_Pshadow_Pstandard_Cint_Mcreate, .Ltmp166-_Pshadow_Pstandard_Cint_Mcreate
+.Ltmp164:
+	.size	_Pshadow_Pstandard_Cint_Mcreate, .Ltmp164-_Pshadow_Pstandard_Cint_Mcreate
 
 	.globl	_Pshadow_Pstandard_Clong_Mcreate
 	.align	16, 0x90
@@ -1166,8 +1138,8 @@ _Pshadow_Pstandard_Clong_Mcreate:       # @_Pshadow_Pstandard_Clong_Mcreate
 	movq	$_Pshadow_Pstandard_Clong_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp167:
-	.size	_Pshadow_Pstandard_Clong_Mcreate, .Ltmp167-_Pshadow_Pstandard_Clong_Mcreate
+.Ltmp165:
+	.size	_Pshadow_Pstandard_Clong_Mcreate, .Ltmp165-_Pshadow_Pstandard_Clong_Mcreate
 
 	.globl	_Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject
 	.align	16, 0x90
@@ -1176,22 +1148,22 @@ _Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject: # @_Pshadow
 	.cfi_startproc
 # BB#0:                                 # %_label2
 	pushq	%rbp
-.Ltmp172:
+.Ltmp170:
 	.cfi_def_cfa_offset 16
 	pushq	%r14
-.Ltmp173:
+.Ltmp171:
 	.cfi_def_cfa_offset 24
 	pushq	%rbx
-.Ltmp174:
+.Ltmp172:
 	.cfi_def_cfa_offset 32
-.Ltmp175:
+.Ltmp173:
 	.cfi_offset %rbx, -32
-.Ltmp176:
+.Ltmp174:
 	.cfi_offset %r14, -24
-.Ltmp177:
+.Ltmp175:
 	.cfi_offset %rbp, -16
 	movq	%rdi, %r14
-	movl	$.L_string2316, %edi
+	movl	$.L_string1316, %edi
 	testq	%rsi, %rsi
 	cmovneq	%rsi, %rdi
 	movq	(%rdi), %rax
@@ -1200,7 +1172,7 @@ _Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject: # @_Pshadow
 	movq	(%rbx), %rax
 	movl	24(%r14), %ebp
 	movq	%rbx, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	addl	%eax, %ebp
 	movq	(%r14), %rax
 	movq	%r14, %rdi
@@ -1208,7 +1180,7 @@ _Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject: # @_Pshadow
 	callq	*144(%rax)
 	movq	(%rbx), %rax
 	movq	%rbx, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	testl	%eax, %eax
 	jle	.LBB34_3
 # BB#1:                                 # %_label3.lr.ph
@@ -1225,7 +1197,7 @@ _Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject: # @_Pshadow
 	incl	24(%r14)
 	movq	(%rbx), %rax
 	movq	%rbx, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	incl	%ebp
 	cmpl	%eax, %ebp
 	jl	.LBB34_2
@@ -1235,8 +1207,8 @@ _Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject: # @_Pshadow
 	popq	%r14
 	popq	%rbp
 	ret
-.Ltmp178:
-	.size	_Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject, .Ltmp178-_Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject
+.Ltmp176:
+	.size	_Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject, .Ltmp176-_Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CMutableString_Mlength
@@ -1246,8 +1218,8 @@ _Pshadow_Pstandard_CMutableString_Mlength: # @_Pshadow_Pstandard_CMutableString_
 # BB#0:
 	movl	24(%rdi), %eax
 	ret
-.Ltmp179:
-	.size	_Pshadow_Pstandard_CMutableString_Mlength, .Ltmp179-_Pshadow_Pstandard_CMutableString_Mlength
+.Ltmp177:
+	.size	_Pshadow_Pstandard_CMutableString_Mlength, .Ltmp177-_Pshadow_Pstandard_CMutableString_Mlength
 
 	.globl	_Pshadow_Pstandard_CMutableString_MensureCapacity_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1256,32 +1228,32 @@ _Pshadow_Pstandard_CMutableString_MensureCapacity_Pshadow_Pstandard_Cint: # @_Ps
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp186:
+.Ltmp184:
 	.cfi_def_cfa_offset 16
 	pushq	%r15
-.Ltmp187:
+.Ltmp185:
 	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp188:
+.Ltmp186:
 	.cfi_def_cfa_offset 32
 	pushq	%r12
-.Ltmp189:
+.Ltmp187:
 	.cfi_def_cfa_offset 40
 	pushq	%rbx
-.Ltmp190:
+.Ltmp188:
 	.cfi_def_cfa_offset 48
 	subq	$16, %rsp
-.Ltmp191:
+.Ltmp189:
 	.cfi_def_cfa_offset 64
-.Ltmp192:
+.Ltmp190:
 	.cfi_offset %rbx, -48
-.Ltmp193:
+.Ltmp191:
 	.cfi_offset %r12, -40
-.Ltmp194:
+.Ltmp192:
 	.cfi_offset %r14, -32
-.Ltmp195:
+.Ltmp193:
 	.cfi_offset %r15, -24
-.Ltmp196:
+.Ltmp194:
 	.cfi_offset %rbp, -16
 	movl	%esi, %ebp
 	movq	%rdi, %rbx
@@ -1347,8 +1319,8 @@ _Pshadow_Pstandard_CMutableString_MensureCapacity_Pshadow_Pstandard_Cint: # @_Ps
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp197:
-	.size	_Pshadow_Pstandard_CMutableString_MensureCapacity_Pshadow_Pstandard_Cint, .Ltmp197-_Pshadow_Pstandard_CMutableString_MensureCapacity_Pshadow_Pstandard_Cint
+.Ltmp195:
+	.size	_Pshadow_Pstandard_CMutableString_MensureCapacity_Pshadow_Pstandard_Cint, .Ltmp195-_Pshadow_Pstandard_CMutableString_MensureCapacity_Pshadow_Pstandard_Cint
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CMutableString_Mcapacity
@@ -1358,19 +1330,19 @@ _Pshadow_Pstandard_CMutableString_Mcapacity: # @_Pshadow_Pstandard_CMutableStrin
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp202:
+.Ltmp200:
 	.cfi_def_cfa_offset 16
 	pushq	%r14
-.Ltmp203:
+.Ltmp201:
 	.cfi_def_cfa_offset 24
 	pushq	%rbx
-.Ltmp204:
+.Ltmp202:
 	.cfi_def_cfa_offset 32
-.Ltmp205:
+.Ltmp203:
 	.cfi_offset %rbx, -32
-.Ltmp206:
+.Ltmp204:
 	.cfi_offset %r14, -24
-.Ltmp207:
+.Ltmp205:
 	.cfi_offset %rbp, -16
 	movq	8(%rdi), %r14
 	movl	16(%rdi), %ebp
@@ -1393,8 +1365,8 @@ _Pshadow_Pstandard_CMutableString_Mcapacity: # @_Pshadow_Pstandard_CMutableStrin
 	popq	%r14
 	popq	%rbp
 	jmpq	*144(%rcx)  # TAILCALL
-.Ltmp208:
-	.size	_Pshadow_Pstandard_CMutableString_Mcapacity, .Ltmp208-_Pshadow_Pstandard_CMutableString_Mcapacity
+.Ltmp206:
+	.size	_Pshadow_Pstandard_CMutableString_Mcapacity, .Ltmp206-_Pshadow_Pstandard_CMutableString_Mcapacity
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CMutableString_MtoString
@@ -1404,37 +1376,37 @@ _Pshadow_Pstandard_CMutableString_MtoString: # @_Pshadow_Pstandard_CMutableStrin
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp216:
+.Ltmp214:
 	.cfi_def_cfa_offset 16
 	pushq	%r15
-.Ltmp217:
+.Ltmp215:
 	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp218:
+.Ltmp216:
 	.cfi_def_cfa_offset 32
 	pushq	%r13
-.Ltmp219:
+.Ltmp217:
 	.cfi_def_cfa_offset 40
 	pushq	%r12
-.Ltmp220:
+.Ltmp218:
 	.cfi_def_cfa_offset 48
 	pushq	%rbx
-.Ltmp221:
+.Ltmp219:
 	.cfi_def_cfa_offset 56
 	subq	$24, %rsp
-.Ltmp222:
+.Ltmp220:
 	.cfi_def_cfa_offset 80
-.Ltmp223:
+.Ltmp221:
 	.cfi_offset %rbx, -56
-.Ltmp224:
+.Ltmp222:
 	.cfi_offset %r12, -48
-.Ltmp225:
+.Ltmp223:
 	.cfi_offset %r13, -40
-.Ltmp226:
+.Ltmp224:
 	.cfi_offset %r14, -32
-.Ltmp227:
+.Ltmp225:
 	.cfi_offset %r15, -24
-.Ltmp228:
+.Ltmp226:
 	.cfi_offset %rbp, -16
 	movq	%rdi, %r14
 	movl	24(%r14), %r15d
@@ -1483,7 +1455,7 @@ _Pshadow_Pstandard_CMutableString_MtoString: # @_Pshadow_Pstandard_CMutableStrin
 	movl	16(%rsp), %edx
 	movq	8(%rsp), %rsi
 	movq	%rbx, %rdi
-	callq	*_Pshadow_Pstandard_CString_Mclass+128(%rip)
+	callq	*_Pshadow_Pstandard_CString_Mclass+136(%rip)
 	movq	%rbx, %rax
 	addq	$24, %rsp
 	popq	%rbx
@@ -1493,8 +1465,8 @@ _Pshadow_Pstandard_CMutableString_MtoString: # @_Pshadow_Pstandard_CMutableStrin
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp229:
-	.size	_Pshadow_Pstandard_CMutableString_MtoString, .Ltmp229-_Pshadow_Pstandard_CMutableString_MtoString
+.Ltmp227:
+	.size	_Pshadow_Pstandard_CMutableString_MtoString, .Ltmp227-_Pshadow_Pstandard_CMutableString_MtoString
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CMutableString_Mcreate
@@ -1514,8 +1486,8 @@ _Pshadow_Pstandard_CMutableString_Mcreate: # @_Pshadow_Pstandard_CMutableString_
 	movq	%rbx, %rax
 	popq	%rbx
 	ret
-.Ltmp230:
-	.size	_Pshadow_Pstandard_CMutableString_Mcreate, .Ltmp230-_Pshadow_Pstandard_CMutableString_Mcreate
+.Ltmp228:
+	.size	_Pshadow_Pstandard_CMutableString_Mcreate, .Ltmp228-_Pshadow_Pstandard_CMutableString_Mcreate
 
 	.globl	_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1544,8 +1516,8 @@ _Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_Cint: # @_Pshadow_Ps
 	popq	%rbx
 	popq	%rbp
 	ret
-.Ltmp231:
-	.size	_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_Cint, .Ltmp231-_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_Cint
+.Ltmp229:
+	.size	_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_Cint, .Ltmp229-_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_CObject
 	.align	16, 0x90
@@ -1554,17 +1526,17 @@ _Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_CObject: # @_Pshadow
 	.cfi_startproc
 # BB#0:
 	pushq	%r14
-.Ltmp235:
+.Ltmp233:
 	.cfi_def_cfa_offset 16
 	pushq	%rbx
-.Ltmp236:
+.Ltmp234:
 	.cfi_def_cfa_offset 24
 	pushq	%rax
-.Ltmp237:
+.Ltmp235:
 	.cfi_def_cfa_offset 32
-.Ltmp238:
+.Ltmp236:
 	.cfi_offset %rbx, -24
-.Ltmp239:
+.Ltmp237:
 	.cfi_offset %r14, -16
 	movq	%rsi, %r14
 	movq	%rdi, %rbx
@@ -1584,8 +1556,8 @@ _Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_CObject: # @_Pshadow
 	popq	%rbx
 	popq	%r14
 	ret
-.Ltmp240:
-	.size	_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_CObject, .Ltmp240-_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_CObject
+.Ltmp238:
+	.size	_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_CObject, .Ltmp238-_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_CObject
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_Cbyte_Madd_Pshadow_Pstandard_Cbyte
@@ -1596,8 +1568,8 @@ _Pshadow_Pstandard_Cbyte_Madd_Pshadow_Pstandard_Cbyte: # @_Pshadow_Pstandard_Cby
 	addb	%dil, %sil
 	movb	%sil, %al
 	ret
-.Ltmp241:
-	.size	_Pshadow_Pstandard_Cbyte_Madd_Pshadow_Pstandard_Cbyte, .Ltmp241-_Pshadow_Pstandard_Cbyte_Madd_Pshadow_Pstandard_Cbyte
+.Ltmp239:
+	.size	_Pshadow_Pstandard_Cbyte_Madd_Pshadow_Pstandard_Cbyte, .Ltmp239-_Pshadow_Pstandard_Cbyte_Madd_Pshadow_Pstandard_Cbyte
 
 	.globl	_Pshadow_Pstandard_Cbyte_Msubtract_Pshadow_Pstandard_Cbyte
 	.align	16, 0x90
@@ -1607,8 +1579,8 @@ _Pshadow_Pstandard_Cbyte_Msubtract_Pshadow_Pstandard_Cbyte: # @_Pshadow_Pstandar
 	subb	%sil, %dil
 	movb	%dil, %al
 	ret
-.Ltmp242:
-	.size	_Pshadow_Pstandard_Cbyte_Msubtract_Pshadow_Pstandard_Cbyte, .Ltmp242-_Pshadow_Pstandard_Cbyte_Msubtract_Pshadow_Pstandard_Cbyte
+.Ltmp240:
+	.size	_Pshadow_Pstandard_Cbyte_Msubtract_Pshadow_Pstandard_Cbyte, .Ltmp240-_Pshadow_Pstandard_Cbyte_Msubtract_Pshadow_Pstandard_Cbyte
 
 	.globl	_Pshadow_Pstandard_Cbyte_Mmultiply_Pshadow_Pstandard_Cbyte
 	.align	16, 0x90
@@ -1618,8 +1590,8 @@ _Pshadow_Pstandard_Cbyte_Mmultiply_Pshadow_Pstandard_Cbyte: # @_Pshadow_Pstandar
 	movb	%sil, %al
 	mulb	%dil
 	ret
-.Ltmp243:
-	.size	_Pshadow_Pstandard_Cbyte_Mmultiply_Pshadow_Pstandard_Cbyte, .Ltmp243-_Pshadow_Pstandard_Cbyte_Mmultiply_Pshadow_Pstandard_Cbyte
+.Ltmp241:
+	.size	_Pshadow_Pstandard_Cbyte_Mmultiply_Pshadow_Pstandard_Cbyte, .Ltmp241-_Pshadow_Pstandard_Cbyte_Mmultiply_Pshadow_Pstandard_Cbyte
 
 	.globl	_Pshadow_Pstandard_Cbyte_Mdivide_Pshadow_Pstandard_Cbyte
 	.align	16, 0x90
@@ -1630,8 +1602,8 @@ _Pshadow_Pstandard_Cbyte_Mdivide_Pshadow_Pstandard_Cbyte: # @_Pshadow_Pstandard_
 	cbtw
 	idivb	%sil
 	ret
-.Ltmp244:
-	.size	_Pshadow_Pstandard_Cbyte_Mdivide_Pshadow_Pstandard_Cbyte, .Ltmp244-_Pshadow_Pstandard_Cbyte_Mdivide_Pshadow_Pstandard_Cbyte
+.Ltmp242:
+	.size	_Pshadow_Pstandard_Cbyte_Mdivide_Pshadow_Pstandard_Cbyte, .Ltmp242-_Pshadow_Pstandard_Cbyte_Mdivide_Pshadow_Pstandard_Cbyte
 
 	.globl	_Pshadow_Pstandard_Cbyte_Mmodulus_Pshadow_Pstandard_Cbyte
 	.align	16, 0x90
@@ -1644,8 +1616,8 @@ _Pshadow_Pstandard_Cbyte_Mmodulus_Pshadow_Pstandard_Cbyte: # @_Pshadow_Pstandard
 	shrw	$8, %ax
                                         # kill: AL<def> AL<kill> AX<kill>
 	ret
-.Ltmp245:
-	.size	_Pshadow_Pstandard_Cbyte_Mmodulus_Pshadow_Pstandard_Cbyte, .Ltmp245-_Pshadow_Pstandard_Cbyte_Mmodulus_Pshadow_Pstandard_Cbyte
+.Ltmp243:
+	.size	_Pshadow_Pstandard_Cbyte_Mmodulus_Pshadow_Pstandard_Cbyte, .Ltmp243-_Pshadow_Pstandard_Cbyte_Mmodulus_Pshadow_Pstandard_Cbyte
 
 	.globl	_Pshadow_Pstandard_Cbyte_Mcompare_Pshadow_Pstandard_Cbyte
 	.align	16, 0x90
@@ -1658,8 +1630,8 @@ _Pshadow_Pstandard_Cbyte_Mcompare_Pshadow_Pstandard_Cbyte: # @_Pshadow_Pstandard
 	movl	$-1, %eax
 	cmovgel	%ecx, %eax
 	ret
-.Ltmp246:
-	.size	_Pshadow_Pstandard_Cbyte_Mcompare_Pshadow_Pstandard_Cbyte, .Ltmp246-_Pshadow_Pstandard_Cbyte_Mcompare_Pshadow_Pstandard_Cbyte
+.Ltmp244:
+	.size	_Pshadow_Pstandard_Cbyte_Mcompare_Pshadow_Pstandard_Cbyte, .Ltmp244-_Pshadow_Pstandard_Cbyte_Mcompare_Pshadow_Pstandard_Cbyte
 
 	.globl	_Pshadow_Pstandard_Cubyte_Madd_Pshadow_Pstandard_Cubyte
 	.align	16, 0x90
@@ -1669,8 +1641,8 @@ _Pshadow_Pstandard_Cubyte_Madd_Pshadow_Pstandard_Cubyte: # @_Pshadow_Pstandard_C
 	addb	%dil, %sil
 	movb	%sil, %al
 	ret
-.Ltmp247:
-	.size	_Pshadow_Pstandard_Cubyte_Madd_Pshadow_Pstandard_Cubyte, .Ltmp247-_Pshadow_Pstandard_Cubyte_Madd_Pshadow_Pstandard_Cubyte
+.Ltmp245:
+	.size	_Pshadow_Pstandard_Cubyte_Madd_Pshadow_Pstandard_Cubyte, .Ltmp245-_Pshadow_Pstandard_Cubyte_Madd_Pshadow_Pstandard_Cubyte
 
 	.globl	_Pshadow_Pstandard_Cubyte_Msubtract_Pshadow_Pstandard_Cubyte
 	.align	16, 0x90
@@ -1680,8 +1652,8 @@ _Pshadow_Pstandard_Cubyte_Msubtract_Pshadow_Pstandard_Cubyte: # @_Pshadow_Pstand
 	subb	%sil, %dil
 	movb	%dil, %al
 	ret
-.Ltmp248:
-	.size	_Pshadow_Pstandard_Cubyte_Msubtract_Pshadow_Pstandard_Cubyte, .Ltmp248-_Pshadow_Pstandard_Cubyte_Msubtract_Pshadow_Pstandard_Cubyte
+.Ltmp246:
+	.size	_Pshadow_Pstandard_Cubyte_Msubtract_Pshadow_Pstandard_Cubyte, .Ltmp246-_Pshadow_Pstandard_Cubyte_Msubtract_Pshadow_Pstandard_Cubyte
 
 	.globl	_Pshadow_Pstandard_Cubyte_Mmultiply_Pshadow_Pstandard_Cubyte
 	.align	16, 0x90
@@ -1691,8 +1663,8 @@ _Pshadow_Pstandard_Cubyte_Mmultiply_Pshadow_Pstandard_Cubyte: # @_Pshadow_Pstand
 	movb	%sil, %al
 	mulb	%dil
 	ret
-.Ltmp249:
-	.size	_Pshadow_Pstandard_Cubyte_Mmultiply_Pshadow_Pstandard_Cubyte, .Ltmp249-_Pshadow_Pstandard_Cubyte_Mmultiply_Pshadow_Pstandard_Cubyte
+.Ltmp247:
+	.size	_Pshadow_Pstandard_Cubyte_Mmultiply_Pshadow_Pstandard_Cubyte, .Ltmp247-_Pshadow_Pstandard_Cubyte_Mmultiply_Pshadow_Pstandard_Cubyte
 
 	.globl	_Pshadow_Pstandard_Cubyte_Mdivide_Pshadow_Pstandard_Cubyte
 	.align	16, 0x90
@@ -1703,8 +1675,8 @@ _Pshadow_Pstandard_Cubyte_Mdivide_Pshadow_Pstandard_Cubyte: # @_Pshadow_Pstandar
                                         # kill: EAX<def> EAX<kill> AX<def>
 	divb	%sil
 	ret
-.Ltmp250:
-	.size	_Pshadow_Pstandard_Cubyte_Mdivide_Pshadow_Pstandard_Cubyte, .Ltmp250-_Pshadow_Pstandard_Cubyte_Mdivide_Pshadow_Pstandard_Cubyte
+.Ltmp248:
+	.size	_Pshadow_Pstandard_Cubyte_Mdivide_Pshadow_Pstandard_Cubyte, .Ltmp248-_Pshadow_Pstandard_Cubyte_Mdivide_Pshadow_Pstandard_Cubyte
 
 	.globl	_Pshadow_Pstandard_Cubyte_Mmodulus_Pshadow_Pstandard_Cubyte
 	.align	16, 0x90
@@ -1717,8 +1689,8 @@ _Pshadow_Pstandard_Cubyte_Mmodulus_Pshadow_Pstandard_Cubyte: # @_Pshadow_Pstanda
 	shrw	$8, %ax
                                         # kill: AL<def> AL<kill> AX<kill>
 	ret
-.Ltmp251:
-	.size	_Pshadow_Pstandard_Cubyte_Mmodulus_Pshadow_Pstandard_Cubyte, .Ltmp251-_Pshadow_Pstandard_Cubyte_Mmodulus_Pshadow_Pstandard_Cubyte
+.Ltmp249:
+	.size	_Pshadow_Pstandard_Cubyte_Mmodulus_Pshadow_Pstandard_Cubyte, .Ltmp249-_Pshadow_Pstandard_Cubyte_Mmodulus_Pshadow_Pstandard_Cubyte
 
 	.globl	_Pshadow_Pstandard_Cubyte_Mcompare_Pshadow_Pstandard_Cubyte
 	.align	16, 0x90
@@ -1731,8 +1703,8 @@ _Pshadow_Pstandard_Cubyte_Mcompare_Pshadow_Pstandard_Cubyte: # @_Pshadow_Pstanda
 	movl	$-1, %eax
 	cmovael	%ecx, %eax
 	ret
-.Ltmp252:
-	.size	_Pshadow_Pstandard_Cubyte_Mcompare_Pshadow_Pstandard_Cubyte, .Ltmp252-_Pshadow_Pstandard_Cubyte_Mcompare_Pshadow_Pstandard_Cubyte
+.Ltmp250:
+	.size	_Pshadow_Pstandard_Cubyte_Mcompare_Pshadow_Pstandard_Cubyte, .Ltmp250-_Pshadow_Pstandard_Cubyte_Mcompare_Pshadow_Pstandard_Cubyte
 
 	.globl	_Pshadow_Pstandard_Cshort_Madd_Pshadow_Pstandard_Cshort
 	.align	16, 0x90
@@ -1742,8 +1714,8 @@ _Pshadow_Pstandard_Cshort_Madd_Pshadow_Pstandard_Cshort: # @_Pshadow_Pstandard_C
 	addl	%esi, %edi
 	movw	%di, %ax
 	ret
-.Ltmp253:
-	.size	_Pshadow_Pstandard_Cshort_Madd_Pshadow_Pstandard_Cshort, .Ltmp253-_Pshadow_Pstandard_Cshort_Madd_Pshadow_Pstandard_Cshort
+.Ltmp251:
+	.size	_Pshadow_Pstandard_Cshort_Madd_Pshadow_Pstandard_Cshort, .Ltmp251-_Pshadow_Pstandard_Cshort_Madd_Pshadow_Pstandard_Cshort
 
 	.globl	_Pshadow_Pstandard_Cshort_Msubtract_Pshadow_Pstandard_Cshort
 	.align	16, 0x90
@@ -1753,8 +1725,8 @@ _Pshadow_Pstandard_Cshort_Msubtract_Pshadow_Pstandard_Cshort: # @_Pshadow_Pstand
 	subl	%esi, %edi
 	movw	%di, %ax
 	ret
-.Ltmp254:
-	.size	_Pshadow_Pstandard_Cshort_Msubtract_Pshadow_Pstandard_Cshort, .Ltmp254-_Pshadow_Pstandard_Cshort_Msubtract_Pshadow_Pstandard_Cshort
+.Ltmp252:
+	.size	_Pshadow_Pstandard_Cshort_Msubtract_Pshadow_Pstandard_Cshort, .Ltmp252-_Pshadow_Pstandard_Cshort_Msubtract_Pshadow_Pstandard_Cshort
 
 	.globl	_Pshadow_Pstandard_Cshort_Mmultiply_Pshadow_Pstandard_Cshort
 	.align	16, 0x90
@@ -1764,8 +1736,8 @@ _Pshadow_Pstandard_Cshort_Mmultiply_Pshadow_Pstandard_Cshort: # @_Pshadow_Pstand
 	imull	%esi, %edi
 	movw	%di, %ax
 	ret
-.Ltmp255:
-	.size	_Pshadow_Pstandard_Cshort_Mmultiply_Pshadow_Pstandard_Cshort, .Ltmp255-_Pshadow_Pstandard_Cshort_Mmultiply_Pshadow_Pstandard_Cshort
+.Ltmp253:
+	.size	_Pshadow_Pstandard_Cshort_Mmultiply_Pshadow_Pstandard_Cshort, .Ltmp253-_Pshadow_Pstandard_Cshort_Mmultiply_Pshadow_Pstandard_Cshort
 
 	.globl	_Pshadow_Pstandard_Cshort_Mdivide_Pshadow_Pstandard_Cshort
 	.align	16, 0x90
@@ -1776,8 +1748,8 @@ _Pshadow_Pstandard_Cshort_Mdivide_Pshadow_Pstandard_Cshort: # @_Pshadow_Pstandar
 	cwtd
 	idivw	%si
 	ret
-.Ltmp256:
-	.size	_Pshadow_Pstandard_Cshort_Mdivide_Pshadow_Pstandard_Cshort, .Ltmp256-_Pshadow_Pstandard_Cshort_Mdivide_Pshadow_Pstandard_Cshort
+.Ltmp254:
+	.size	_Pshadow_Pstandard_Cshort_Mdivide_Pshadow_Pstandard_Cshort, .Ltmp254-_Pshadow_Pstandard_Cshort_Mdivide_Pshadow_Pstandard_Cshort
 
 	.globl	_Pshadow_Pstandard_Cshort_Mmodulus_Pshadow_Pstandard_Cshort
 	.align	16, 0x90
@@ -1789,8 +1761,8 @@ _Pshadow_Pstandard_Cshort_Mmodulus_Pshadow_Pstandard_Cshort: # @_Pshadow_Pstanda
 	idivw	%si
 	movw	%dx, %ax
 	ret
-.Ltmp257:
-	.size	_Pshadow_Pstandard_Cshort_Mmodulus_Pshadow_Pstandard_Cshort, .Ltmp257-_Pshadow_Pstandard_Cshort_Mmodulus_Pshadow_Pstandard_Cshort
+.Ltmp255:
+	.size	_Pshadow_Pstandard_Cshort_Mmodulus_Pshadow_Pstandard_Cshort, .Ltmp255-_Pshadow_Pstandard_Cshort_Mmodulus_Pshadow_Pstandard_Cshort
 
 	.globl	_Pshadow_Pstandard_Cshort_Mcompare_Pshadow_Pstandard_Cshort
 	.align	16, 0x90
@@ -1803,8 +1775,8 @@ _Pshadow_Pstandard_Cshort_Mcompare_Pshadow_Pstandard_Cshort: # @_Pshadow_Pstanda
 	movl	$-1, %eax
 	cmovgel	%ecx, %eax
 	ret
-.Ltmp258:
-	.size	_Pshadow_Pstandard_Cshort_Mcompare_Pshadow_Pstandard_Cshort, .Ltmp258-_Pshadow_Pstandard_Cshort_Mcompare_Pshadow_Pstandard_Cshort
+.Ltmp256:
+	.size	_Pshadow_Pstandard_Cshort_Mcompare_Pshadow_Pstandard_Cshort, .Ltmp256-_Pshadow_Pstandard_Cshort_Mcompare_Pshadow_Pstandard_Cshort
 
 	.globl	_Pshadow_Pstandard_Cushort_Madd_Pshadow_Pstandard_Cushort
 	.align	16, 0x90
@@ -1814,8 +1786,8 @@ _Pshadow_Pstandard_Cushort_Madd_Pshadow_Pstandard_Cushort: # @_Pshadow_Pstandard
 	addl	%esi, %edi
 	movw	%di, %ax
 	ret
-.Ltmp259:
-	.size	_Pshadow_Pstandard_Cushort_Madd_Pshadow_Pstandard_Cushort, .Ltmp259-_Pshadow_Pstandard_Cushort_Madd_Pshadow_Pstandard_Cushort
+.Ltmp257:
+	.size	_Pshadow_Pstandard_Cushort_Madd_Pshadow_Pstandard_Cushort, .Ltmp257-_Pshadow_Pstandard_Cushort_Madd_Pshadow_Pstandard_Cushort
 
 	.globl	_Pshadow_Pstandard_Cushort_Msubtract_Pshadow_Pstandard_Cushort
 	.align	16, 0x90
@@ -1825,8 +1797,8 @@ _Pshadow_Pstandard_Cushort_Msubtract_Pshadow_Pstandard_Cushort: # @_Pshadow_Psta
 	subl	%esi, %edi
 	movw	%di, %ax
 	ret
-.Ltmp260:
-	.size	_Pshadow_Pstandard_Cushort_Msubtract_Pshadow_Pstandard_Cushort, .Ltmp260-_Pshadow_Pstandard_Cushort_Msubtract_Pshadow_Pstandard_Cushort
+.Ltmp258:
+	.size	_Pshadow_Pstandard_Cushort_Msubtract_Pshadow_Pstandard_Cushort, .Ltmp258-_Pshadow_Pstandard_Cushort_Msubtract_Pshadow_Pstandard_Cushort
 
 	.globl	_Pshadow_Pstandard_Cushort_Mmultiply_Pshadow_Pstandard_Cushort
 	.align	16, 0x90
@@ -1836,8 +1808,8 @@ _Pshadow_Pstandard_Cushort_Mmultiply_Pshadow_Pstandard_Cushort: # @_Pshadow_Psta
 	imull	%esi, %edi
 	movw	%di, %ax
 	ret
-.Ltmp261:
-	.size	_Pshadow_Pstandard_Cushort_Mmultiply_Pshadow_Pstandard_Cushort, .Ltmp261-_Pshadow_Pstandard_Cushort_Mmultiply_Pshadow_Pstandard_Cushort
+.Ltmp259:
+	.size	_Pshadow_Pstandard_Cushort_Mmultiply_Pshadow_Pstandard_Cushort, .Ltmp259-_Pshadow_Pstandard_Cushort_Mmultiply_Pshadow_Pstandard_Cushort
 
 	.globl	_Pshadow_Pstandard_Cushort_Mdivide_Pshadow_Pstandard_Cushort
 	.align	16, 0x90
@@ -1848,8 +1820,8 @@ _Pshadow_Pstandard_Cushort_Mdivide_Pshadow_Pstandard_Cushort: # @_Pshadow_Pstand
 	xorl	%edx, %edx
 	divw	%si
 	ret
-.Ltmp262:
-	.size	_Pshadow_Pstandard_Cushort_Mdivide_Pshadow_Pstandard_Cushort, .Ltmp262-_Pshadow_Pstandard_Cushort_Mdivide_Pshadow_Pstandard_Cushort
+.Ltmp260:
+	.size	_Pshadow_Pstandard_Cushort_Mdivide_Pshadow_Pstandard_Cushort, .Ltmp260-_Pshadow_Pstandard_Cushort_Mdivide_Pshadow_Pstandard_Cushort
 
 	.globl	_Pshadow_Pstandard_Cushort_Mmodulus_Pshadow_Pstandard_Cushort
 	.align	16, 0x90
@@ -1861,8 +1833,8 @@ _Pshadow_Pstandard_Cushort_Mmodulus_Pshadow_Pstandard_Cushort: # @_Pshadow_Pstan
 	divw	%si
 	movw	%dx, %ax
 	ret
-.Ltmp263:
-	.size	_Pshadow_Pstandard_Cushort_Mmodulus_Pshadow_Pstandard_Cushort, .Ltmp263-_Pshadow_Pstandard_Cushort_Mmodulus_Pshadow_Pstandard_Cushort
+.Ltmp261:
+	.size	_Pshadow_Pstandard_Cushort_Mmodulus_Pshadow_Pstandard_Cushort, .Ltmp261-_Pshadow_Pstandard_Cushort_Mmodulus_Pshadow_Pstandard_Cushort
 
 	.globl	_Pshadow_Pstandard_Cushort_Mcompare_Pshadow_Pstandard_Cushort
 	.align	16, 0x90
@@ -1875,8 +1847,8 @@ _Pshadow_Pstandard_Cushort_Mcompare_Pshadow_Pstandard_Cushort: # @_Pshadow_Pstan
 	movl	$-1, %eax
 	cmovael	%ecx, %eax
 	ret
-.Ltmp264:
-	.size	_Pshadow_Pstandard_Cushort_Mcompare_Pshadow_Pstandard_Cushort, .Ltmp264-_Pshadow_Pstandard_Cushort_Mcompare_Pshadow_Pstandard_Cushort
+.Ltmp262:
+	.size	_Pshadow_Pstandard_Cushort_Mcompare_Pshadow_Pstandard_Cushort, .Ltmp262-_Pshadow_Pstandard_Cushort_Mcompare_Pshadow_Pstandard_Cushort
 
 	.globl	_Pshadow_Pstandard_Cint_Madd_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1886,8 +1858,8 @@ _Pshadow_Pstandard_Cint_Madd_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_Cint_
 	addl	%esi, %edi
 	movl	%edi, %eax
 	ret
-.Ltmp265:
-	.size	_Pshadow_Pstandard_Cint_Madd_Pshadow_Pstandard_Cint, .Ltmp265-_Pshadow_Pstandard_Cint_Madd_Pshadow_Pstandard_Cint
+.Ltmp263:
+	.size	_Pshadow_Pstandard_Cint_Madd_Pshadow_Pstandard_Cint, .Ltmp263-_Pshadow_Pstandard_Cint_Madd_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1897,8 +1869,8 @@ _Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_
 	subl	%esi, %edi
 	movl	%edi, %eax
 	ret
-.Ltmp266:
-	.size	_Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint, .Ltmp266-_Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint
+.Ltmp264:
+	.size	_Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint, .Ltmp264-_Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cint_Mmultiply_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1908,8 +1880,8 @@ _Pshadow_Pstandard_Cint_Mmultiply_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_
 	imull	%esi, %edi
 	movl	%edi, %eax
 	ret
-.Ltmp267:
-	.size	_Pshadow_Pstandard_Cint_Mmultiply_Pshadow_Pstandard_Cint, .Ltmp267-_Pshadow_Pstandard_Cint_Mmultiply_Pshadow_Pstandard_Cint
+.Ltmp265:
+	.size	_Pshadow_Pstandard_Cint_Mmultiply_Pshadow_Pstandard_Cint, .Ltmp265-_Pshadow_Pstandard_Cint_Mmultiply_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cint_Mdivide_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1920,8 +1892,8 @@ _Pshadow_Pstandard_Cint_Mdivide_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_Ci
 	cltd
 	idivl	%esi
 	ret
-.Ltmp268:
-	.size	_Pshadow_Pstandard_Cint_Mdivide_Pshadow_Pstandard_Cint, .Ltmp268-_Pshadow_Pstandard_Cint_Mdivide_Pshadow_Pstandard_Cint
+.Ltmp266:
+	.size	_Pshadow_Pstandard_Cint_Mdivide_Pshadow_Pstandard_Cint, .Ltmp266-_Pshadow_Pstandard_Cint_Mdivide_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cint_Mmodulus_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1933,8 +1905,8 @@ _Pshadow_Pstandard_Cint_Mmodulus_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_C
 	idivl	%esi
 	movl	%edx, %eax
 	ret
-.Ltmp269:
-	.size	_Pshadow_Pstandard_Cint_Mmodulus_Pshadow_Pstandard_Cint, .Ltmp269-_Pshadow_Pstandard_Cint_Mmodulus_Pshadow_Pstandard_Cint
+.Ltmp267:
+	.size	_Pshadow_Pstandard_Cint_Mmodulus_Pshadow_Pstandard_Cint, .Ltmp267-_Pshadow_Pstandard_Cint_Mmodulus_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cint_Mcompare_Pshadow_Pstandard_Cint
 	.align	16, 0x90
@@ -1947,8 +1919,8 @@ _Pshadow_Pstandard_Cint_Mcompare_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandard_C
 	movl	$-1, %eax
 	cmovgel	%ecx, %eax
 	ret
-.Ltmp270:
-	.size	_Pshadow_Pstandard_Cint_Mcompare_Pshadow_Pstandard_Cint, .Ltmp270-_Pshadow_Pstandard_Cint_Mcompare_Pshadow_Pstandard_Cint
+.Ltmp268:
+	.size	_Pshadow_Pstandard_Cint_Mcompare_Pshadow_Pstandard_Cint, .Ltmp268-_Pshadow_Pstandard_Cint_Mcompare_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint
 	.align	16, 0x90
@@ -1958,8 +1930,8 @@ _Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint: # @_Pshadow_Pstandard_Cui
 	addl	%esi, %edi
 	movl	%edi, %eax
 	ret
-.Ltmp271:
-	.size	_Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint, .Ltmp271-_Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint
+.Ltmp269:
+	.size	_Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint, .Ltmp269-_Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint
 
 	.globl	_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint
 	.align	16, 0x90
@@ -1969,8 +1941,8 @@ _Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint: # @_Pshadow_Pstandar
 	subl	%esi, %edi
 	movl	%edi, %eax
 	ret
-.Ltmp272:
-	.size	_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint, .Ltmp272-_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint
+.Ltmp270:
+	.size	_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint, .Ltmp270-_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint
 
 	.globl	_Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint
 	.align	16, 0x90
@@ -1980,8 +1952,8 @@ _Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint: # @_Pshadow_Pstandar
 	imull	%esi, %edi
 	movl	%edi, %eax
 	ret
-.Ltmp273:
-	.size	_Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint, .Ltmp273-_Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint
+.Ltmp271:
+	.size	_Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint, .Ltmp271-_Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint
 
 	.globl	_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint
 	.align	16, 0x90
@@ -1992,8 +1964,8 @@ _Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint: # @_Pshadow_Pstandard_
 	xorl	%edx, %edx
 	divl	%esi
 	ret
-.Ltmp274:
-	.size	_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint, .Ltmp274-_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint
+.Ltmp272:
+	.size	_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint, .Ltmp272-_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint
 
 	.globl	_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint
 	.align	16, 0x90
@@ -2005,8 +1977,8 @@ _Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint: # @_Pshadow_Pstandard
 	divl	%esi
 	movl	%edx, %eax
 	ret
-.Ltmp275:
-	.size	_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint, .Ltmp275-_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint
+.Ltmp273:
+	.size	_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint, .Ltmp273-_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint
 
 	.globl	_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint
 	.align	16, 0x90
@@ -2019,8 +1991,8 @@ _Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint: # @_Pshadow_Pstandard
 	movl	$-1, %eax
 	cmovael	%ecx, %eax
 	ret
-.Ltmp276:
-	.size	_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint, .Ltmp276-_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint
+.Ltmp274:
+	.size	_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint, .Ltmp274-_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint
 
 	.globl	_Pshadow_Pstandard_Clong_Madd_Pshadow_Pstandard_Clong
 	.align	16, 0x90
@@ -2030,8 +2002,8 @@ _Pshadow_Pstandard_Clong_Madd_Pshadow_Pstandard_Clong: # @_Pshadow_Pstandard_Clo
 	addq	%rsi, %rdi
 	movq	%rdi, %rax
 	ret
-.Ltmp277:
-	.size	_Pshadow_Pstandard_Clong_Madd_Pshadow_Pstandard_Clong, .Ltmp277-_Pshadow_Pstandard_Clong_Madd_Pshadow_Pstandard_Clong
+.Ltmp275:
+	.size	_Pshadow_Pstandard_Clong_Madd_Pshadow_Pstandard_Clong, .Ltmp275-_Pshadow_Pstandard_Clong_Madd_Pshadow_Pstandard_Clong
 
 	.globl	_Pshadow_Pstandard_Clong_Msubtract_Pshadow_Pstandard_Clong
 	.align	16, 0x90
@@ -2041,8 +2013,8 @@ _Pshadow_Pstandard_Clong_Msubtract_Pshadow_Pstandard_Clong: # @_Pshadow_Pstandar
 	subq	%rsi, %rdi
 	movq	%rdi, %rax
 	ret
-.Ltmp278:
-	.size	_Pshadow_Pstandard_Clong_Msubtract_Pshadow_Pstandard_Clong, .Ltmp278-_Pshadow_Pstandard_Clong_Msubtract_Pshadow_Pstandard_Clong
+.Ltmp276:
+	.size	_Pshadow_Pstandard_Clong_Msubtract_Pshadow_Pstandard_Clong, .Ltmp276-_Pshadow_Pstandard_Clong_Msubtract_Pshadow_Pstandard_Clong
 
 	.globl	_Pshadow_Pstandard_Clong_Mmultiply_Pshadow_Pstandard_Clong
 	.align	16, 0x90
@@ -2052,8 +2024,8 @@ _Pshadow_Pstandard_Clong_Mmultiply_Pshadow_Pstandard_Clong: # @_Pshadow_Pstandar
 	imulq	%rsi, %rdi
 	movq	%rdi, %rax
 	ret
-.Ltmp279:
-	.size	_Pshadow_Pstandard_Clong_Mmultiply_Pshadow_Pstandard_Clong, .Ltmp279-_Pshadow_Pstandard_Clong_Mmultiply_Pshadow_Pstandard_Clong
+.Ltmp277:
+	.size	_Pshadow_Pstandard_Clong_Mmultiply_Pshadow_Pstandard_Clong, .Ltmp277-_Pshadow_Pstandard_Clong_Mmultiply_Pshadow_Pstandard_Clong
 
 	.globl	_Pshadow_Pstandard_Clong_Mdivide_Pshadow_Pstandard_Clong
 	.align	16, 0x90
@@ -2064,8 +2036,8 @@ _Pshadow_Pstandard_Clong_Mdivide_Pshadow_Pstandard_Clong: # @_Pshadow_Pstandard_
 	cqto
 	idivq	%rsi
 	ret
-.Ltmp280:
-	.size	_Pshadow_Pstandard_Clong_Mdivide_Pshadow_Pstandard_Clong, .Ltmp280-_Pshadow_Pstandard_Clong_Mdivide_Pshadow_Pstandard_Clong
+.Ltmp278:
+	.size	_Pshadow_Pstandard_Clong_Mdivide_Pshadow_Pstandard_Clong, .Ltmp278-_Pshadow_Pstandard_Clong_Mdivide_Pshadow_Pstandard_Clong
 
 	.globl	_Pshadow_Pstandard_Clong_Mmodulus_Pshadow_Pstandard_Clong
 	.align	16, 0x90
@@ -2077,8 +2049,8 @@ _Pshadow_Pstandard_Clong_Mmodulus_Pshadow_Pstandard_Clong: # @_Pshadow_Pstandard
 	idivq	%rsi
 	movq	%rdx, %rax
 	ret
-.Ltmp281:
-	.size	_Pshadow_Pstandard_Clong_Mmodulus_Pshadow_Pstandard_Clong, .Ltmp281-_Pshadow_Pstandard_Clong_Mmodulus_Pshadow_Pstandard_Clong
+.Ltmp279:
+	.size	_Pshadow_Pstandard_Clong_Mmodulus_Pshadow_Pstandard_Clong, .Ltmp279-_Pshadow_Pstandard_Clong_Mmodulus_Pshadow_Pstandard_Clong
 
 	.globl	_Pshadow_Pstandard_Clong_Mcompare_Pshadow_Pstandard_Clong
 	.align	16, 0x90
@@ -2091,8 +2063,8 @@ _Pshadow_Pstandard_Clong_Mcompare_Pshadow_Pstandard_Clong: # @_Pshadow_Pstandard
 	movl	$-1, %eax
 	cmovgel	%ecx, %eax
 	ret
-.Ltmp282:
-	.size	_Pshadow_Pstandard_Clong_Mcompare_Pshadow_Pstandard_Clong, .Ltmp282-_Pshadow_Pstandard_Clong_Mcompare_Pshadow_Pstandard_Clong
+.Ltmp280:
+	.size	_Pshadow_Pstandard_Clong_Mcompare_Pshadow_Pstandard_Clong, .Ltmp280-_Pshadow_Pstandard_Clong_Mcompare_Pshadow_Pstandard_Clong
 
 	.globl	_Pshadow_Pstandard_Culong_Madd_Pshadow_Pstandard_Culong
 	.align	16, 0x90
@@ -2102,8 +2074,8 @@ _Pshadow_Pstandard_Culong_Madd_Pshadow_Pstandard_Culong: # @_Pshadow_Pstandard_C
 	addq	%rsi, %rdi
 	movq	%rdi, %rax
 	ret
-.Ltmp283:
-	.size	_Pshadow_Pstandard_Culong_Madd_Pshadow_Pstandard_Culong, .Ltmp283-_Pshadow_Pstandard_Culong_Madd_Pshadow_Pstandard_Culong
+.Ltmp281:
+	.size	_Pshadow_Pstandard_Culong_Madd_Pshadow_Pstandard_Culong, .Ltmp281-_Pshadow_Pstandard_Culong_Madd_Pshadow_Pstandard_Culong
 
 	.globl	_Pshadow_Pstandard_Culong_Msubtract_Pshadow_Pstandard_Culong
 	.align	16, 0x90
@@ -2113,8 +2085,8 @@ _Pshadow_Pstandard_Culong_Msubtract_Pshadow_Pstandard_Culong: # @_Pshadow_Pstand
 	subq	%rsi, %rdi
 	movq	%rdi, %rax
 	ret
-.Ltmp284:
-	.size	_Pshadow_Pstandard_Culong_Msubtract_Pshadow_Pstandard_Culong, .Ltmp284-_Pshadow_Pstandard_Culong_Msubtract_Pshadow_Pstandard_Culong
+.Ltmp282:
+	.size	_Pshadow_Pstandard_Culong_Msubtract_Pshadow_Pstandard_Culong, .Ltmp282-_Pshadow_Pstandard_Culong_Msubtract_Pshadow_Pstandard_Culong
 
 	.globl	_Pshadow_Pstandard_Culong_Mmultiply_Pshadow_Pstandard_Culong
 	.align	16, 0x90
@@ -2124,8 +2096,8 @@ _Pshadow_Pstandard_Culong_Mmultiply_Pshadow_Pstandard_Culong: # @_Pshadow_Pstand
 	imulq	%rsi, %rdi
 	movq	%rdi, %rax
 	ret
-.Ltmp285:
-	.size	_Pshadow_Pstandard_Culong_Mmultiply_Pshadow_Pstandard_Culong, .Ltmp285-_Pshadow_Pstandard_Culong_Mmultiply_Pshadow_Pstandard_Culong
+.Ltmp283:
+	.size	_Pshadow_Pstandard_Culong_Mmultiply_Pshadow_Pstandard_Culong, .Ltmp283-_Pshadow_Pstandard_Culong_Mmultiply_Pshadow_Pstandard_Culong
 
 	.globl	_Pshadow_Pstandard_Culong_Mdivide_Pshadow_Pstandard_Culong
 	.align	16, 0x90
@@ -2136,8 +2108,8 @@ _Pshadow_Pstandard_Culong_Mdivide_Pshadow_Pstandard_Culong: # @_Pshadow_Pstandar
 	xorl	%edx, %edx
 	divq	%rsi
 	ret
-.Ltmp286:
-	.size	_Pshadow_Pstandard_Culong_Mdivide_Pshadow_Pstandard_Culong, .Ltmp286-_Pshadow_Pstandard_Culong_Mdivide_Pshadow_Pstandard_Culong
+.Ltmp284:
+	.size	_Pshadow_Pstandard_Culong_Mdivide_Pshadow_Pstandard_Culong, .Ltmp284-_Pshadow_Pstandard_Culong_Mdivide_Pshadow_Pstandard_Culong
 
 	.globl	_Pshadow_Pstandard_Culong_Mmodulus_Pshadow_Pstandard_Culong
 	.align	16, 0x90
@@ -2149,8 +2121,8 @@ _Pshadow_Pstandard_Culong_Mmodulus_Pshadow_Pstandard_Culong: # @_Pshadow_Pstanda
 	divq	%rsi
 	movq	%rdx, %rax
 	ret
-.Ltmp287:
-	.size	_Pshadow_Pstandard_Culong_Mmodulus_Pshadow_Pstandard_Culong, .Ltmp287-_Pshadow_Pstandard_Culong_Mmodulus_Pshadow_Pstandard_Culong
+.Ltmp285:
+	.size	_Pshadow_Pstandard_Culong_Mmodulus_Pshadow_Pstandard_Culong, .Ltmp285-_Pshadow_Pstandard_Culong_Mmodulus_Pshadow_Pstandard_Culong
 
 	.globl	_Pshadow_Pstandard_Culong_Mcompare_Pshadow_Pstandard_Culong
 	.align	16, 0x90
@@ -2163,8 +2135,8 @@ _Pshadow_Pstandard_Culong_Mcompare_Pshadow_Pstandard_Culong: # @_Pshadow_Pstanda
 	movl	$-1, %eax
 	cmovael	%ecx, %eax
 	ret
-.Ltmp288:
-	.size	_Pshadow_Pstandard_Culong_Mcompare_Pshadow_Pstandard_Culong, .Ltmp288-_Pshadow_Pstandard_Culong_Mcompare_Pshadow_Pstandard_Culong
+.Ltmp286:
+	.size	_Pshadow_Pstandard_Culong_Mcompare_Pshadow_Pstandard_Culong, .Ltmp286-_Pshadow_Pstandard_Culong_Mcompare_Pshadow_Pstandard_Culong
 
 	.globl	_Pshadow_Pstandard_Cfloat_Madd_Pshadow_Pstandard_Cfloat
 	.align	16, 0x90
@@ -2173,8 +2145,8 @@ _Pshadow_Pstandard_Cfloat_Madd_Pshadow_Pstandard_Cfloat: # @_Pshadow_Pstandard_C
 # BB#0:
 	vaddss	%xmm1, %xmm0, %xmm0
 	ret
-.Ltmp289:
-	.size	_Pshadow_Pstandard_Cfloat_Madd_Pshadow_Pstandard_Cfloat, .Ltmp289-_Pshadow_Pstandard_Cfloat_Madd_Pshadow_Pstandard_Cfloat
+.Ltmp287:
+	.size	_Pshadow_Pstandard_Cfloat_Madd_Pshadow_Pstandard_Cfloat, .Ltmp287-_Pshadow_Pstandard_Cfloat_Madd_Pshadow_Pstandard_Cfloat
 
 	.globl	_Pshadow_Pstandard_Cfloat_Msubtract_Pshadow_Pstandard_Cfloat
 	.align	16, 0x90
@@ -2183,8 +2155,8 @@ _Pshadow_Pstandard_Cfloat_Msubtract_Pshadow_Pstandard_Cfloat: # @_Pshadow_Pstand
 # BB#0:
 	vsubss	%xmm1, %xmm0, %xmm0
 	ret
-.Ltmp290:
-	.size	_Pshadow_Pstandard_Cfloat_Msubtract_Pshadow_Pstandard_Cfloat, .Ltmp290-_Pshadow_Pstandard_Cfloat_Msubtract_Pshadow_Pstandard_Cfloat
+.Ltmp288:
+	.size	_Pshadow_Pstandard_Cfloat_Msubtract_Pshadow_Pstandard_Cfloat, .Ltmp288-_Pshadow_Pstandard_Cfloat_Msubtract_Pshadow_Pstandard_Cfloat
 
 	.globl	_Pshadow_Pstandard_Cfloat_Mmultiply_Pshadow_Pstandard_Cfloat
 	.align	16, 0x90
@@ -2193,8 +2165,8 @@ _Pshadow_Pstandard_Cfloat_Mmultiply_Pshadow_Pstandard_Cfloat: # @_Pshadow_Pstand
 # BB#0:
 	vmulss	%xmm1, %xmm0, %xmm0
 	ret
-.Ltmp291:
-	.size	_Pshadow_Pstandard_Cfloat_Mmultiply_Pshadow_Pstandard_Cfloat, .Ltmp291-_Pshadow_Pstandard_Cfloat_Mmultiply_Pshadow_Pstandard_Cfloat
+.Ltmp289:
+	.size	_Pshadow_Pstandard_Cfloat_Mmultiply_Pshadow_Pstandard_Cfloat, .Ltmp289-_Pshadow_Pstandard_Cfloat_Mmultiply_Pshadow_Pstandard_Cfloat
 
 	.globl	_Pshadow_Pstandard_Cfloat_Mdivide_Pshadow_Pstandard_Cfloat
 	.align	16, 0x90
@@ -2203,8 +2175,8 @@ _Pshadow_Pstandard_Cfloat_Mdivide_Pshadow_Pstandard_Cfloat: # @_Pshadow_Pstandar
 # BB#0:
 	vdivss	%xmm1, %xmm0, %xmm0
 	ret
-.Ltmp292:
-	.size	_Pshadow_Pstandard_Cfloat_Mdivide_Pshadow_Pstandard_Cfloat, .Ltmp292-_Pshadow_Pstandard_Cfloat_Mdivide_Pshadow_Pstandard_Cfloat
+.Ltmp290:
+	.size	_Pshadow_Pstandard_Cfloat_Mdivide_Pshadow_Pstandard_Cfloat, .Ltmp290-_Pshadow_Pstandard_Cfloat_Mdivide_Pshadow_Pstandard_Cfloat
 
 	.globl	_Pshadow_Pstandard_Cfloat_Mmodulus_Pshadow_Pstandard_Cfloat
 	.align	16, 0x90
@@ -2212,8 +2184,8 @@ _Pshadow_Pstandard_Cfloat_Mdivide_Pshadow_Pstandard_Cfloat: # @_Pshadow_Pstandar
 _Pshadow_Pstandard_Cfloat_Mmodulus_Pshadow_Pstandard_Cfloat: # @_Pshadow_Pstandard_Cfloat_Mmodulus_Pshadow_Pstandard_Cfloat
 # BB#0:
 	jmp	fmodf                   # TAILCALL
-.Ltmp293:
-	.size	_Pshadow_Pstandard_Cfloat_Mmodulus_Pshadow_Pstandard_Cfloat, .Ltmp293-_Pshadow_Pstandard_Cfloat_Mmodulus_Pshadow_Pstandard_Cfloat
+.Ltmp291:
+	.size	_Pshadow_Pstandard_Cfloat_Mmodulus_Pshadow_Pstandard_Cfloat, .Ltmp291-_Pshadow_Pstandard_Cfloat_Mmodulus_Pshadow_Pstandard_Cfloat
 
 	.globl	_Pshadow_Pstandard_Cfloat_Mcompare_Pshadow_Pstandard_Cfloat
 	.align	16, 0x90
@@ -2227,8 +2199,8 @@ _Pshadow_Pstandard_Cfloat_Mcompare_Pshadow_Pstandard_Cfloat: # @_Pshadow_Pstanda
 	vucomiss	%xmm0, %xmm1
 	cmovbel	%ecx, %eax
 	ret
-.Ltmp294:
-	.size	_Pshadow_Pstandard_Cfloat_Mcompare_Pshadow_Pstandard_Cfloat, .Ltmp294-_Pshadow_Pstandard_Cfloat_Mcompare_Pshadow_Pstandard_Cfloat
+.Ltmp292:
+	.size	_Pshadow_Pstandard_Cfloat_Mcompare_Pshadow_Pstandard_Cfloat, .Ltmp292-_Pshadow_Pstandard_Cfloat_Mcompare_Pshadow_Pstandard_Cfloat
 
 	.globl	_Pshadow_Pstandard_Cdouble_Madd_Pshadow_Pstandard_Cdouble
 	.align	16, 0x90
@@ -2237,8 +2209,8 @@ _Pshadow_Pstandard_Cdouble_Madd_Pshadow_Pstandard_Cdouble: # @_Pshadow_Pstandard
 # BB#0:
 	vaddsd	%xmm1, %xmm0, %xmm0
 	ret
-.Ltmp295:
-	.size	_Pshadow_Pstandard_Cdouble_Madd_Pshadow_Pstandard_Cdouble, .Ltmp295-_Pshadow_Pstandard_Cdouble_Madd_Pshadow_Pstandard_Cdouble
+.Ltmp293:
+	.size	_Pshadow_Pstandard_Cdouble_Madd_Pshadow_Pstandard_Cdouble, .Ltmp293-_Pshadow_Pstandard_Cdouble_Madd_Pshadow_Pstandard_Cdouble
 
 	.globl	_Pshadow_Pstandard_Cdouble_Msubtract_Pshadow_Pstandard_Cdouble
 	.align	16, 0x90
@@ -2247,8 +2219,8 @@ _Pshadow_Pstandard_Cdouble_Msubtract_Pshadow_Pstandard_Cdouble: # @_Pshadow_Psta
 # BB#0:
 	vsubsd	%xmm1, %xmm0, %xmm0
 	ret
-.Ltmp296:
-	.size	_Pshadow_Pstandard_Cdouble_Msubtract_Pshadow_Pstandard_Cdouble, .Ltmp296-_Pshadow_Pstandard_Cdouble_Msubtract_Pshadow_Pstandard_Cdouble
+.Ltmp294:
+	.size	_Pshadow_Pstandard_Cdouble_Msubtract_Pshadow_Pstandard_Cdouble, .Ltmp294-_Pshadow_Pstandard_Cdouble_Msubtract_Pshadow_Pstandard_Cdouble
 
 	.globl	_Pshadow_Pstandard_Cdouble_Mmultiply_Pshadow_Pstandard_Cdouble
 	.align	16, 0x90
@@ -2257,8 +2229,8 @@ _Pshadow_Pstandard_Cdouble_Mmultiply_Pshadow_Pstandard_Cdouble: # @_Pshadow_Psta
 # BB#0:
 	vmulsd	%xmm1, %xmm0, %xmm0
 	ret
-.Ltmp297:
-	.size	_Pshadow_Pstandard_Cdouble_Mmultiply_Pshadow_Pstandard_Cdouble, .Ltmp297-_Pshadow_Pstandard_Cdouble_Mmultiply_Pshadow_Pstandard_Cdouble
+.Ltmp295:
+	.size	_Pshadow_Pstandard_Cdouble_Mmultiply_Pshadow_Pstandard_Cdouble, .Ltmp295-_Pshadow_Pstandard_Cdouble_Mmultiply_Pshadow_Pstandard_Cdouble
 
 	.globl	_Pshadow_Pstandard_Cdouble_Mdivide_Pshadow_Pstandard_Cdouble
 	.align	16, 0x90
@@ -2267,8 +2239,8 @@ _Pshadow_Pstandard_Cdouble_Mdivide_Pshadow_Pstandard_Cdouble: # @_Pshadow_Pstand
 # BB#0:
 	vdivsd	%xmm1, %xmm0, %xmm0
 	ret
-.Ltmp298:
-	.size	_Pshadow_Pstandard_Cdouble_Mdivide_Pshadow_Pstandard_Cdouble, .Ltmp298-_Pshadow_Pstandard_Cdouble_Mdivide_Pshadow_Pstandard_Cdouble
+.Ltmp296:
+	.size	_Pshadow_Pstandard_Cdouble_Mdivide_Pshadow_Pstandard_Cdouble, .Ltmp296-_Pshadow_Pstandard_Cdouble_Mdivide_Pshadow_Pstandard_Cdouble
 
 	.globl	_Pshadow_Pstandard_Cdouble_Mmodulus_Pshadow_Pstandard_Cdouble
 	.align	16, 0x90
@@ -2276,8 +2248,8 @@ _Pshadow_Pstandard_Cdouble_Mdivide_Pshadow_Pstandard_Cdouble: # @_Pshadow_Pstand
 _Pshadow_Pstandard_Cdouble_Mmodulus_Pshadow_Pstandard_Cdouble: # @_Pshadow_Pstandard_Cdouble_Mmodulus_Pshadow_Pstandard_Cdouble
 # BB#0:
 	jmp	fmod                    # TAILCALL
-.Ltmp299:
-	.size	_Pshadow_Pstandard_Cdouble_Mmodulus_Pshadow_Pstandard_Cdouble, .Ltmp299-_Pshadow_Pstandard_Cdouble_Mmodulus_Pshadow_Pstandard_Cdouble
+.Ltmp297:
+	.size	_Pshadow_Pstandard_Cdouble_Mmodulus_Pshadow_Pstandard_Cdouble, .Ltmp297-_Pshadow_Pstandard_Cdouble_Mmodulus_Pshadow_Pstandard_Cdouble
 
 	.globl	_Pshadow_Pstandard_Cdouble_Mcompare_Pshadow_Pstandard_Cdouble
 	.align	16, 0x90
@@ -2291,8 +2263,8 @@ _Pshadow_Pstandard_Cdouble_Mcompare_Pshadow_Pstandard_Cdouble: # @_Pshadow_Pstan
 	vucomisd	%xmm0, %xmm1
 	cmovbel	%ecx, %eax
 	ret
-.Ltmp300:
-	.size	_Pshadow_Pstandard_Cdouble_Mcompare_Pshadow_Pstandard_Cdouble, .Ltmp300-_Pshadow_Pstandard_Cdouble_Mcompare_Pshadow_Pstandard_Cdouble
+.Ltmp298:
+	.size	_Pshadow_Pstandard_Cdouble_Mcompare_Pshadow_Pstandard_Cdouble, .Ltmp298-_Pshadow_Pstandard_Cdouble_Mcompare_Pshadow_Pstandard_Cdouble
 
 	.globl	_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject
 	.align	16, 0x90
@@ -2303,8 +2275,8 @@ _Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject: # @_Pshadow_Pstand
 	movq	(%rdi), %rax
 	movq	96(%rax), %rax
 	jmpq	*%rax  # TAILCALL
-.Ltmp301:
-	.size	_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject, .Ltmp301-_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject
+.Ltmp299:
+	.size	_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject, .Ltmp299-_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CObject_MtoString
@@ -2314,15 +2286,15 @@ _Pshadow_Pstandard_CObject_MtoString:   # @_Pshadow_Pstandard_CObject_MtoString
 	.cfi_startproc
 # BB#0:
 	pushq	%rax
-.Ltmp303:
+.Ltmp301:
 	.cfi_def_cfa_offset 16
 	movq	(%rdi), %rax
 	callq	*88(%rax)
 	movq	24(%rax), %rax
 	popq	%rdx
 	ret
-.Ltmp304:
-	.size	_Pshadow_Pstandard_CObject_MtoString, .Ltmp304-_Pshadow_Pstandard_CObject_MtoString
+.Ltmp302:
+	.size	_Pshadow_Pstandard_CObject_MtoString, .Ltmp302-_Pshadow_Pstandard_CObject_MtoString
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CObject_Mcreate
@@ -2333,8 +2305,8 @@ _Pshadow_Pstandard_CObject_Mcreate:     # @_Pshadow_Pstandard_CObject_Mcreate
 	movq	$_Pshadow_Pstandard_CObject_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp305:
-	.size	_Pshadow_Pstandard_CObject_Mcreate, .Ltmp305-_Pshadow_Pstandard_CObject_Mcreate
+.Ltmp303:
+	.size	_Pshadow_Pstandard_CObject_Mcreate, .Ltmp303-_Pshadow_Pstandard_CObject_Mcreate
 
 	.globl	_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject
 	.align	16, 0x90
@@ -2344,8 +2316,8 @@ _Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject: # @_Pshad
 	cmpq	%rsi, %rdi
 	sete	%al
 	ret
-.Ltmp306:
-	.size	_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject, .Ltmp306-_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject
+.Ltmp304:
+	.size	_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject, .Ltmp304-_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject
 
 	.globl	_Pshadow_Pstandard_CObject_MgetClass
 	.align	16, 0x90
@@ -2354,8 +2326,8 @@ _Pshadow_Pstandard_CObject_MgetClass:   # @_Pshadow_Pstandard_CObject_MgetClass
 # BB#0:
 	movq	(%rdi), %rax
 	ret
-.Ltmp307:
-	.size	_Pshadow_Pstandard_CObject_MgetClass, .Ltmp307-_Pshadow_Pstandard_CObject_MgetClass
+.Ltmp305:
+	.size	_Pshadow_Pstandard_CObject_MgetClass, .Ltmp305-_Pshadow_Pstandard_CObject_MgetClass
 
 	.globl	_Pshadow_Pstandard_CObject_Mcopy
 	.align	16, 0x90
@@ -2364,8 +2336,8 @@ _Pshadow_Pstandard_CObject_Mcopy:       # @_Pshadow_Pstandard_CObject_Mcopy
 # BB#0:
 	movq	%rdi, %rax
 	ret
-.Ltmp308:
-	.size	_Pshadow_Pstandard_CObject_Mcopy, .Ltmp308-_Pshadow_Pstandard_CObject_Mcopy
+.Ltmp306:
+	.size	_Pshadow_Pstandard_CObject_Mcopy, .Ltmp306-_Pshadow_Pstandard_CObject_Mcopy
 
 	.globl	_Pshadow_Pstandard_CObject_Mfreeze
 	.align	16, 0x90
@@ -2374,8 +2346,8 @@ _Pshadow_Pstandard_CObject_Mfreeze:     # @_Pshadow_Pstandard_CObject_Mfreeze
 # BB#0:
 	movq	%rdi, %rax
 	ret
-.Ltmp309:
-	.size	_Pshadow_Pstandard_CObject_Mfreeze, .Ltmp309-_Pshadow_Pstandard_CObject_Mfreeze
+.Ltmp307:
+	.size	_Pshadow_Pstandard_CObject_Mfreeze, .Ltmp307-_Pshadow_Pstandard_CObject_Mfreeze
 
 	.globl	_Pshadow_Pstandard_Cshort_Mcreate
 	.align	16, 0x90
@@ -2385,8 +2357,8 @@ _Pshadow_Pstandard_Cshort_Mcreate:      # @_Pshadow_Pstandard_Cshort_Mcreate
 	movq	$_Pshadow_Pstandard_Cshort_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp310:
-	.size	_Pshadow_Pstandard_Cshort_Mcreate, .Ltmp310-_Pshadow_Pstandard_Cshort_Mcreate
+.Ltmp308:
+	.size	_Pshadow_Pstandard_Cshort_Mcreate, .Ltmp308-_Pshadow_Pstandard_Cshort_Mcreate
 
 	.globl	_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString
 	.align	16, 0x90
@@ -2395,28 +2367,28 @@ _Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString: # @_Pshadow_Pstand
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp315:
+.Ltmp313:
 	.cfi_def_cfa_offset 16
 	pushq	%r14
-.Ltmp316:
+.Ltmp314:
 	.cfi_def_cfa_offset 24
 	pushq	%rbx
-.Ltmp317:
+.Ltmp315:
 	.cfi_def_cfa_offset 32
-.Ltmp318:
+.Ltmp316:
 	.cfi_offset %rbx, -32
-.Ltmp319:
+.Ltmp317:
 	.cfi_offset %r14, -24
-.Ltmp320:
+.Ltmp318:
 	.cfi_offset %rbp, -16
 	movq	%rsi, %r14
 	movq	%rdi, %rbx
 	movq	(%rbx), %rax
-	callq	*168(%rax)
+	callq	*176(%rax)
 	movl	%eax, %ebp
 	movq	(%r14), %rax
 	movq	%r14, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	movl	%eax, %ecx
 	xorb	%al, %al
 	cmpl	%ecx, %ebp
@@ -2428,14 +2400,14 @@ _Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString: # @_Pshadow_Pstand
                                         # =>This Inner Loop Header: Depth=1
 	movq	(%rbx), %rax
 	movq	%rbx, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	cmpl	%eax, %ebp
 	jge	.LBB110_6
 # BB#3:                                 # %_label8.i
                                         #   in Loop: Header=BB110_2 Depth=1
 	movq	(%r14), %rax
 	movq	%r14, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	cmpl	%eax, %ebp
 	jge	.LBB110_6
 # BB#4:                                 # %_label2.i
@@ -2454,11 +2426,11 @@ _Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString: # @_Pshadow_Pstand
 .LBB110_6:                              # %_label4.i
 	movq	(%rbx), %rax
 	movq	%rbx, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	movl	%eax, %ebx
 	movq	(%r14), %rax
 	movq	%r14, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	subl	%eax, %ebx
 .LBB110_7:                              # %_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString.exit
 	testl	%ebx, %ebx
@@ -2468,8 +2440,8 @@ _Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString: # @_Pshadow_Pstand
 	popq	%r14
 	popq	%rbp
 	ret
-.Ltmp321:
-	.size	_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString, .Ltmp321-_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString
+.Ltmp319:
+	.size	_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString, .Ltmp319-_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString
@@ -2479,19 +2451,19 @@ _Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString: # @_Pshadow_Pstan
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp326:
+.Ltmp324:
 	.cfi_def_cfa_offset 16
 	pushq	%r14
-.Ltmp327:
+.Ltmp325:
 	.cfi_def_cfa_offset 24
 	pushq	%rbx
-.Ltmp328:
+.Ltmp326:
 	.cfi_def_cfa_offset 32
-.Ltmp329:
+.Ltmp327:
 	.cfi_offset %rbx, -32
-.Ltmp330:
+.Ltmp328:
 	.cfi_offset %r14, -24
-.Ltmp331:
+.Ltmp329:
 	.cfi_offset %rbp, -16
 	movq	%rsi, %r14
 	movq	%rdi, %rbx
@@ -2501,14 +2473,14 @@ _Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString: # @_Pshadow_Pstan
                                         # =>This Inner Loop Header: Depth=1
 	movq	(%rbx), %rax
 	movq	%rbx, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	cmpl	%eax, %ebp
 	jge	.LBB111_6
 # BB#2:                                 # %_label8
                                         #   in Loop: Header=BB111_1 Depth=1
 	movq	(%r14), %rax
 	movq	%r14, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	cmpl	%eax, %ebp
 	jge	.LBB111_6
 # BB#3:                                 # %_label2
@@ -2527,11 +2499,11 @@ _Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString: # @_Pshadow_Pstan
 .LBB111_6:                              # %_label4
 	movq	(%rbx), %rax
 	movq	%rbx, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	movl	%eax, %ebx
 	movq	(%r14), %rax
 	movq	%r14, %rdi
-	callq	*168(%rax)
+	callq	*176(%rax)
 	subl	%eax, %ebx
 	movl	%ebx, %eax
 .LBB111_5:                              # %_label5
@@ -2539,8 +2511,8 @@ _Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString: # @_Pshadow_Pstan
 	popq	%r14
 	popq	%rbp
 	ret
-.Ltmp332:
-	.size	_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString, .Ltmp332-_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString
+.Ltmp330:
+	.size	_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString, .Ltmp330-_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint
@@ -2550,37 +2522,37 @@ _Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_C
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp340:
+.Ltmp338:
 	.cfi_def_cfa_offset 16
 	pushq	%r15
-.Ltmp341:
+.Ltmp339:
 	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp342:
+.Ltmp340:
 	.cfi_def_cfa_offset 32
 	pushq	%r13
-.Ltmp343:
+.Ltmp341:
 	.cfi_def_cfa_offset 40
 	pushq	%r12
-.Ltmp344:
+.Ltmp342:
 	.cfi_def_cfa_offset 48
 	pushq	%rbx
-.Ltmp345:
+.Ltmp343:
 	.cfi_def_cfa_offset 56
 	subq	$24, %rsp
-.Ltmp346:
+.Ltmp344:
 	.cfi_def_cfa_offset 80
-.Ltmp347:
+.Ltmp345:
 	.cfi_offset %rbx, -56
-.Ltmp348:
+.Ltmp346:
 	.cfi_offset %r12, -48
-.Ltmp349:
+.Ltmp347:
 	.cfi_offset %r13, -40
-.Ltmp350:
+.Ltmp348:
 	.cfi_offset %r14, -32
-.Ltmp351:
+.Ltmp349:
 	.cfi_offset %r15, -24
-.Ltmp352:
+.Ltmp350:
 	.cfi_offset %rbp, -16
 	movl	%edx, 20(%rsp)          # 4-byte Spill
 	movl	%esi, %r15d
@@ -2650,8 +2622,8 @@ _Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_C
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp353:
-	.size	_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint, .Ltmp353-_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint
+.Ltmp351:
+	.size	_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint, .Ltmp351-_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CString_Mlength
@@ -2661,19 +2633,19 @@ _Pshadow_Pstandard_CString_Mlength:     # @_Pshadow_Pstandard_CString_Mlength
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp358:
+.Ltmp356:
 	.cfi_def_cfa_offset 16
 	pushq	%r14
-.Ltmp359:
+.Ltmp357:
 	.cfi_def_cfa_offset 24
 	pushq	%rbx
-.Ltmp360:
+.Ltmp358:
 	.cfi_def_cfa_offset 32
-.Ltmp361:
+.Ltmp359:
 	.cfi_offset %rbx, -32
-.Ltmp362:
+.Ltmp360:
 	.cfi_offset %r14, -24
-.Ltmp363:
+.Ltmp361:
 	.cfi_offset %rbp, -16
 	movq	8(%rdi), %r14
 	movl	16(%rdi), %ebp
@@ -2696,8 +2668,8 @@ _Pshadow_Pstandard_CString_Mlength:     # @_Pshadow_Pstandard_CString_Mlength
 	popq	%r14
 	popq	%rbp
 	jmpq	*144(%rcx)  # TAILCALL
-.Ltmp364:
-	.size	_Pshadow_Pstandard_CString_Mlength, .Ltmp364-_Pshadow_Pstandard_CString_Mlength
+.Ltmp362:
+	.size	_Pshadow_Pstandard_CString_Mlength, .Ltmp362-_Pshadow_Pstandard_CString_Mlength
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint
@@ -2709,8 +2681,8 @@ _Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint: # @_Pshadow_Pstandar
 	movq	8(%rdi), %rcx
 	movb	(%rcx,%rax), %al
 	ret
-.Ltmp365:
-	.size	_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint, .Ltmp365-_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint
+.Ltmp363:
+	.size	_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint, .Ltmp363-_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint
 
 	.globl	_Pshadow_Pstandard_CString_MtoString
 	.align	16, 0x90
@@ -2719,8 +2691,8 @@ _Pshadow_Pstandard_CString_MtoString:   # @_Pshadow_Pstandard_CString_MtoString
 # BB#0:
 	movq	%rdi, %rax
 	ret
-.Ltmp366:
-	.size	_Pshadow_Pstandard_CString_MtoString, .Ltmp366-_Pshadow_Pstandard_CString_MtoString
+.Ltmp364:
+	.size	_Pshadow_Pstandard_CString_MtoString, .Ltmp364-_Pshadow_Pstandard_CString_MtoString
 
 	.globl	_Pshadow_Pstandard_CString_Mchars
 	.align	16, 0x90
@@ -2729,33 +2701,22 @@ _Pshadow_Pstandard_CString_Mchars:      # @_Pshadow_Pstandard_CString_Mchars
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp373:
+.Ltmp369:
 	.cfi_def_cfa_offset 16
-	pushq	%r15
-.Ltmp374:
-	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp375:
-	.cfi_def_cfa_offset 32
-	pushq	%r12
-.Ltmp376:
-	.cfi_def_cfa_offset 40
+.Ltmp370:
+	.cfi_def_cfa_offset 24
 	pushq	%rbx
-.Ltmp377:
-	.cfi_def_cfa_offset 48
-.Ltmp378:
-	.cfi_offset %rbx, -48
-.Ltmp379:
-	.cfi_offset %r12, -40
-.Ltmp380:
-	.cfi_offset %r14, -32
-.Ltmp381:
-	.cfi_offset %r15, -24
-.Ltmp382:
+.Ltmp371:
+	.cfi_def_cfa_offset 32
+.Ltmp372:
+	.cfi_offset %rbx, -32
+.Ltmp373:
+	.cfi_offset %r14, -24
+.Ltmp374:
 	.cfi_offset %rbp, -16
-	movq	%rdi, %r14
-	movq	8(%r14), %r15
-	movl	16(%r14), %ebp
+	movq	8(%rdi), %r14
+	movl	16(%rdi), %ebp
 	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
 	movl	$1, %edi
 	callq	calloc
@@ -2768,56 +2729,139 @@ _Pshadow_Pstandard_CString_Mchars:      # @_Pshadow_Pstandard_CString_Mchars
 	movq	$_Pshadow_Pstandard_Cubyte_Mclass, 24(%rax)
 	movq	%rbx, 8(%rax)
 	movl	$1, 16(%rax)
-	movq	%r15, 32(%rax)
-	movq	(%rax), %rcx
+	movq	%r14, 32(%rax)
 	movq	%rax, %rdi
-	callq	*144(%rcx)
-	movl	%eax, %r15d
-	movl	_Pshadow_Pstandard_Cubyte_Mclass+48(%rip), %esi
-	movl	%r15d, %edi
-	callq	calloc
-	movq	%rax, %r12
-	xorl	%ebx, %ebx
-	jmp	.LBB116_2
+	callq	_Pshadow_Pstandard_CArray_Mcopy
+	movq	8(%rax), %rcx
+	movq	32(%rax), %rax
+	movl	(%rcx), %edx
+	popq	%rbx
+	popq	%r14
+	popq	%rbp
+	ret
+.Ltmp375:
+	.size	_Pshadow_Pstandard_CString_Mchars, .Ltmp375-_Pshadow_Pstandard_CString_Mchars
+	.cfi_endproc
+
+	.globl	_Pshadow_Pstandard_CString_Mconcat_Pshadow_Pstandard_CString
 	.align	16, 0x90
-.LBB116_1:                              # %_label10
-                                        #   in Loop: Header=BB116_2 Depth=1
-	movslq	%ebx, %rax
-	movb	(%r12,%rax), %cl
-	movq	8(%r14), %rdx
-	movb	%cl, (%rdx,%rax)
-	incl	%ebx
-.LBB116_2:                              # %_label11
-                                        # =>This Inner Loop Header: Depth=1
-	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
-	movl	$1, %edi
+	.type	_Pshadow_Pstandard_CString_Mconcat_Pshadow_Pstandard_CString,@function
+_Pshadow_Pstandard_CString_Mconcat_Pshadow_Pstandard_CString: # @_Pshadow_Pstandard_CString_Mconcat_Pshadow_Pstandard_CString
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp382:
+	.cfi_def_cfa_offset 16
+	pushq	%r15
+.Ltmp383:
+	.cfi_def_cfa_offset 24
+	pushq	%r14
+.Ltmp384:
+	.cfi_def_cfa_offset 32
+	pushq	%r12
+.Ltmp385:
+	.cfi_def_cfa_offset 40
+	pushq	%rbx
+.Ltmp386:
+	.cfi_def_cfa_offset 48
+	subq	$16, %rsp
+.Ltmp387:
+	.cfi_def_cfa_offset 64
+.Ltmp388:
+	.cfi_offset %rbx, -48
+.Ltmp389:
+	.cfi_offset %r12, -40
+.Ltmp390:
+	.cfi_offset %r14, -32
+.Ltmp391:
+	.cfi_offset %r15, -24
+.Ltmp392:
+	.cfi_offset %rbp, -16
+	movq	%rsi, %r14
+	movq	%rdi, %r12
+	movq	(%r12), %rax
+	callq	*176(%rax)
+	movl	%eax, %r15d
+	movq	(%r14), %rax
+	movq	%r14, %rdi
+	callq	*176(%rax)
+	movl	%eax, %ebp
+	addl	%r15d, %ebp
+	movl	_Pshadow_Pstandard_Cubyte_Mclass+48(%rip), %esi
+	movl	%ebp, %edi
 	callq	calloc
-	movq	%rax, %rbp
-	movl	%r15d, (%rbp)
-	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
+	movl	%ebp, 8(%rsp)
+	movq	%rax, (%rsp)
+	movq	(%r12), %rax
+	movq	%r12, %rdi
+	callq	*176(%rax)
+	testl	%eax, %eax
+	jle	.LBB117_3
+# BB#1:                                 # %_label10.lr.ph
+	xorl	%ebp, %ebp
+	movq	(%rsp), %r15
+	.align	16, 0x90
+.LBB117_2:                              # %_label10
+                                        # =>This Inner Loop Header: Depth=1
+	movslq	%ebp, %rbp
+	movq	8(%r12), %rax
+	movb	(%rax,%rbp), %al
+	movb	%al, (%r15,%rbp)
+	movq	(%r12), %rax
+	movq	%r12, %rdi
+	callq	*176(%rax)
+	incl	%ebp
+	cmpl	%eax, %ebp
+	jl	.LBB117_2
+.LBB117_3:                              # %_label14.preheader
+	movq	(%r14), %rax
+	movq	%r14, %rdi
+	callq	*176(%rax)
+	testl	%eax, %eax
+	jle	.LBB117_6
+# BB#4:                                 # %_label13.lr.ph
+	xorl	%ebp, %ebp
+	movq	(%rsp), %r15
+	.align	16, 0x90
+.LBB117_5:                              # %_label13
+                                        # =>This Inner Loop Header: Depth=1
+	movslq	%ebp, %rbp
+	movq	(%r12), %rax
+	movq	8(%r12), %rcx
+	movb	(%rcx,%rbp), %bl
+	movq	%r12, %rdi
+	callq	*176(%rax)
+	movl	%ebp, %ecx
+	addl	%eax, %ecx
+	movslq	%ecx, %rax
+	movb	%bl, (%r15,%rax)
+	movq	(%r14), %rax
+	movq	%r14, %rdi
+	callq	*176(%rax)
+	incl	%ebp
+	cmpl	%eax, %ebp
+	jl	.LBB117_5
+.LBB117_6:                              # %_label15
+	movl	_Pshadow_Pstandard_CString_Mclass+44(%rip), %edi
 	callq	malloc
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_Cubyte_Mclass, 24(%rax)
-	movq	%rbp, 8(%rax)
-	movl	$1, 16(%rax)
-	movq	%r12, 32(%rax)
-	movq	(%rax), %rcx
-	movq	%rax, %rdi
-	callq	*144(%rcx)
-	cmpl	%eax, %ebx
-	jl	.LBB116_1
-# BB#3:                                 # %_label12
-	movq	%r12, %rax
-	movl	%r15d, %edx
+	movq	%rax, %rbx
+	movq	$_Pshadow_Pstandard_CString_Mclass, (%rbx)
+	movq	%rbx, %rdi
+	callq	*_Pshadow_Pstandard_CString_Mclass+64(%rip)
+	movq	(%rsp), %rax
+	movl	8(%rsp), %ecx
+	movl	%ecx, 16(%rbx)
+	movq	%rax, 8(%rbx)
+	movq	%rbx, %rax
+	addq	$16, %rsp
 	popq	%rbx
 	popq	%r12
 	popq	%r14
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp383:
-	.size	_Pshadow_Pstandard_CString_Mchars, .Ltmp383-_Pshadow_Pstandard_CString_Mchars
+.Ltmp393:
+	.size	_Pshadow_Pstandard_CString_Mconcat_Pshadow_Pstandard_CString, .Ltmp393-_Pshadow_Pstandard_CString_Mconcat_Pshadow_Pstandard_CString
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CString_Mcreate
@@ -2836,8 +2880,8 @@ _Pshadow_Pstandard_CString_Mcreate:     # @_Pshadow_Pstandard_CString_Mcreate
 	movq	%rbx, %rax
 	popq	%rbx
 	ret
-.Ltmp384:
-	.size	_Pshadow_Pstandard_CString_Mcreate, .Ltmp384-_Pshadow_Pstandard_CString_Mcreate
+.Ltmp394:
+	.size	_Pshadow_Pstandard_CString_Mcreate, .Ltmp394-_Pshadow_Pstandard_CString_Mcreate
 
 	.globl	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1
 	.align	16, 0x90
@@ -2846,154 +2890,37 @@ _Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1: # @_Pshadow_Psta
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp392:
-	.cfi_def_cfa_offset 16
-	pushq	%r15
-.Ltmp393:
-	.cfi_def_cfa_offset 24
-	pushq	%r14
-.Ltmp394:
-	.cfi_def_cfa_offset 32
-	pushq	%r13
-.Ltmp395:
-	.cfi_def_cfa_offset 40
-	pushq	%r12
-.Ltmp396:
-	.cfi_def_cfa_offset 48
-	pushq	%rbx
-.Ltmp397:
-	.cfi_def_cfa_offset 56
-	subq	$24, %rsp
-.Ltmp398:
-	.cfi_def_cfa_offset 80
-.Ltmp399:
-	.cfi_offset %rbx, -56
-.Ltmp400:
-	.cfi_offset %r12, -48
-.Ltmp401:
-	.cfi_offset %r13, -40
 .Ltmp402:
-	.cfi_offset %r14, -32
-.Ltmp403:
-	.cfi_offset %r15, -24
-.Ltmp404:
-	.cfi_offset %rbp, -16
-	movl	%edx, %r14d
-	movq	%rsi, %r12
-	movq	%rdi, %r13
-	movq	$_Pshadow_Pstandard_CString_Mclass, (%r13)
-	movl	%r14d, 16(%rsp)
-	movq	%r12, 8(%rsp)
-	movl	_Pshadow_Pstandard_Cubyte_Mclass+48(%rip), %esi
-	xorl	%ebx, %ebx
-	xorl	%edi, %edi
-	callq	calloc
-	movq	%rax, 8(%r13)
-	movl	$0, 16(%r13)
-	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
-	movl	$1, %edi
-	callq	calloc
-	movq	%rax, %r15
-	movl	%r14d, (%r15)
-	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
-	callq	malloc
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_Cubyte_Mclass, 24(%rax)
-	movq	%r15, 8(%rax)
-	movl	$1, 16(%rax)
-	movq	%r12, 32(%rax)
-	movq	(%rax), %rcx
-	movq	%rax, %rdi
-	callq	*144(%rcx)
-	movl	%eax, %ebp
-	movl	_Pshadow_Pstandard_Cubyte_Mclass+48(%rip), %esi
-	movl	%ebp, %edi
-	callq	calloc
-	movl	%ebp, 16(%r13)
-	movq	%rax, 8(%r13)
-	movq	8(%rsp), %r15
-	jmp	.LBB118_2
-	.align	16, 0x90
-.LBB118_1:                              # %_label13
-                                        #   in Loop: Header=BB118_2 Depth=1
-	movslq	%ebx, %rax
-	movb	(%r15,%rax), %cl
-	movq	8(%r13), %rdx
-	movb	%cl, (%rdx,%rax)
-	incl	%ebx
-.LBB118_2:                              # %_label14
-                                        # =>This Inner Loop Header: Depth=1
-	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
-	movl	$1, %edi
-	callq	calloc
-	movq	%rax, %rbp
-	movl	%r14d, (%rbp)
-	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
-	callq	malloc
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_Cubyte_Mclass, 24(%rax)
-	movq	%rbp, 8(%rax)
-	movl	$1, 16(%rax)
-	movq	%r12, 32(%rax)
-	movq	(%rax), %rcx
-	movq	%rax, %rdi
-	callq	*144(%rcx)
-	cmpl	%eax, %ebx
-	jl	.LBB118_1
-# BB#3:                                 # %_label15
-	movq	%r13, %rax
-	addq	$24, %rsp
-	popq	%rbx
-	popq	%r12
-	popq	%r13
-	popq	%r14
-	popq	%r15
-	popq	%rbp
-	ret
-.Ltmp405:
-	.size	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1, .Ltmp405-_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1
-	.cfi_endproc
-
-	.globl	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1
-	.align	16, 0x90
-	.type	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1,@function
-_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1: # @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1
-	.cfi_startproc
-# BB#0:
-	pushq	%rbp
-.Ltmp413:
 	.cfi_def_cfa_offset 16
 	pushq	%r15
-.Ltmp414:
+.Ltmp403:
 	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp415:
+.Ltmp404:
 	.cfi_def_cfa_offset 32
 	pushq	%r13
-.Ltmp416:
+.Ltmp405:
 	.cfi_def_cfa_offset 40
 	pushq	%r12
-.Ltmp417:
+.Ltmp406:
 	.cfi_def_cfa_offset 48
 	pushq	%rbx
-.Ltmp418:
+.Ltmp407:
 	.cfi_def_cfa_offset 56
 	subq	$24, %rsp
-.Ltmp419:
+.Ltmp408:
 	.cfi_def_cfa_offset 80
-.Ltmp420:
+.Ltmp409:
 	.cfi_offset %rbx, -56
-.Ltmp421:
+.Ltmp410:
 	.cfi_offset %r12, -48
-.Ltmp422:
+.Ltmp411:
 	.cfi_offset %r13, -40
-.Ltmp423:
+.Ltmp412:
 	.cfi_offset %r14, -32
-.Ltmp424:
+.Ltmp413:
 	.cfi_offset %r15, -24
-.Ltmp425:
+.Ltmp414:
 	.cfi_offset %rbp, -16
 	movl	%edx, %r14d
 	movq	%rsi, %r12
@@ -3016,7 +2943,7 @@ _Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1: # @_Pshadow_Pstan
 	callq	malloc
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_Ccode_Mclass, 24(%rax)
+	movq	$_Pshadow_Pstandard_Cubyte_Mclass, 24(%rax)
 	movq	%r15, 8(%rax)
 	movl	$1, 16(%rax)
 	movq	%r12, 32(%rax)
@@ -3035,7 +2962,7 @@ _Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1: # @_Pshadow_Pstan
 .LBB119_1:                              # %_label16
                                         #   in Loop: Header=BB119_2 Depth=1
 	movslq	%ebx, %rax
-	movb	(%r15,%rax,4), %cl
+	movb	(%r15,%rax), %cl
 	movq	8(%r13), %rdx
 	movb	%cl, (%rdx,%rax)
 	incl	%ebx
@@ -3050,7 +2977,7 @@ _Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1: # @_Pshadow_Pstan
 	callq	malloc
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
-	movq	$_Pshadow_Pstandard_Ccode_Mclass, 24(%rax)
+	movq	$_Pshadow_Pstandard_Cubyte_Mclass, 24(%rax)
 	movq	%rbp, 8(%rax)
 	movl	$1, 16(%rax)
 	movq	%r12, 32(%rax)
@@ -3069,8 +2996,125 @@ _Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1: # @_Pshadow_Pstan
 	popq	%r15
 	popq	%rbp
 	ret
+.Ltmp415:
+	.size	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1, .Ltmp415-_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1
+	.cfi_endproc
+
+	.globl	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1
+	.align	16, 0x90
+	.type	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1,@function
+_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1: # @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1
+	.cfi_startproc
+# BB#0:
+	pushq	%rbp
+.Ltmp423:
+	.cfi_def_cfa_offset 16
+	pushq	%r15
+.Ltmp424:
+	.cfi_def_cfa_offset 24
+	pushq	%r14
+.Ltmp425:
+	.cfi_def_cfa_offset 32
+	pushq	%r13
 .Ltmp426:
-	.size	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1, .Ltmp426-_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1
+	.cfi_def_cfa_offset 40
+	pushq	%r12
+.Ltmp427:
+	.cfi_def_cfa_offset 48
+	pushq	%rbx
+.Ltmp428:
+	.cfi_def_cfa_offset 56
+	subq	$24, %rsp
+.Ltmp429:
+	.cfi_def_cfa_offset 80
+.Ltmp430:
+	.cfi_offset %rbx, -56
+.Ltmp431:
+	.cfi_offset %r12, -48
+.Ltmp432:
+	.cfi_offset %r13, -40
+.Ltmp433:
+	.cfi_offset %r14, -32
+.Ltmp434:
+	.cfi_offset %r15, -24
+.Ltmp435:
+	.cfi_offset %rbp, -16
+	movl	%edx, %r14d
+	movq	%rsi, %r12
+	movq	%rdi, %r13
+	movq	$_Pshadow_Pstandard_CString_Mclass, (%r13)
+	movl	%r14d, 16(%rsp)
+	movq	%r12, 8(%rsp)
+	movl	_Pshadow_Pstandard_Cubyte_Mclass+48(%rip), %esi
+	xorl	%ebx, %ebx
+	xorl	%edi, %edi
+	callq	calloc
+	movq	%rax, 8(%r13)
+	movl	$0, 16(%r13)
+	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
+	movl	$1, %edi
+	callq	calloc
+	movq	%rax, %r15
+	movl	%r14d, (%r15)
+	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
+	callq	malloc
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
+	movq	$_Pshadow_Pstandard_Ccode_Mclass, 24(%rax)
+	movq	%r15, 8(%rax)
+	movl	$1, 16(%rax)
+	movq	%r12, 32(%rax)
+	movq	(%rax), %rcx
+	movq	%rax, %rdi
+	callq	*144(%rcx)
+	movl	%eax, %ebp
+	movl	_Pshadow_Pstandard_Cubyte_Mclass+48(%rip), %esi
+	movl	%ebp, %edi
+	callq	calloc
+	movl	%ebp, 16(%r13)
+	movq	%rax, 8(%r13)
+	movq	8(%rsp), %r15
+	jmp	.LBB120_2
+	.align	16, 0x90
+.LBB120_1:                              # %_label19
+                                        #   in Loop: Header=BB120_2 Depth=1
+	movslq	%ebx, %rax
+	movb	(%r15,%rax,4), %cl
+	movq	8(%r13), %rdx
+	movb	%cl, (%rdx,%rax)
+	incl	%ebx
+.LBB120_2:                              # %_label20
+                                        # =>This Inner Loop Header: Depth=1
+	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
+	movl	$1, %edi
+	callq	calloc
+	movq	%rax, %rbp
+	movl	%r14d, (%rbp)
+	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
+	callq	malloc
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rax)
+	movq	$_Pshadow_Pstandard_Ccode_Mclass, 24(%rax)
+	movq	%rbp, 8(%rax)
+	movl	$1, 16(%rax)
+	movq	%r12, 32(%rax)
+	movq	(%rax), %rcx
+	movq	%rax, %rdi
+	callq	*144(%rcx)
+	cmpl	%eax, %ebx
+	jl	.LBB120_1
+# BB#3:                                 # %_label21
+	movq	%r13, %rax
+	addq	$24, %rsp
+	popq	%rbx
+	popq	%r12
+	popq	%r13
+	popq	%r14
+	popq	%r15
+	popq	%rbp
+	ret
+.Ltmp436:
+	.size	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1, .Ltmp436-_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1
 	.cfi_endproc
 
 	.globl	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString
@@ -3098,8 +3142,8 @@ _Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString: # @_Pshadow_Pstand
 	popq	%rbx
 	popq	%r14
 	ret
-.Ltmp427:
-	.size	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString, .Ltmp427-_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString
+.Ltmp437:
+	.size	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString, .Ltmp437-_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString
 
 	.globl	_Pshadow_Pstandard_Cubyte_Mcreate
 	.align	16, 0x90
@@ -3109,8 +3153,8 @@ _Pshadow_Pstandard_Cubyte_Mcreate:      # @_Pshadow_Pstandard_Cubyte_Mcreate
 	movq	$_Pshadow_Pstandard_Cubyte_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp428:
-	.size	_Pshadow_Pstandard_Cubyte_Mcreate, .Ltmp428-_Pshadow_Pstandard_Cubyte_Mcreate
+.Ltmp438:
+	.size	_Pshadow_Pstandard_Cubyte_Mcreate, .Ltmp438-_Pshadow_Pstandard_Cubyte_Mcreate
 
 	.globl	_Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint
 	.align	16, 0x90
@@ -3121,8 +3165,8 @@ _Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint: # @_Pshadow_Pstandard_Cui
 	cmpl	%esi, %eax
 	cmovael	%esi, %eax
 	ret
-.Ltmp429:
-	.size	_Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint, .Ltmp429-_Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint
+.Ltmp439:
+	.size	_Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint, .Ltmp439-_Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint
 
 	.globl	_Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint
 	.align	16, 0x90
@@ -3133,8 +3177,8 @@ _Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint: # @_Pshadow_Pstandard_Cui
 	cmpl	%esi, %eax
 	cmovbel	%esi, %eax
 	ret
-.Ltmp430:
-	.size	_Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint, .Ltmp430-_Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint
+.Ltmp440:
+	.size	_Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint, .Ltmp440-_Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint
 
 	.globl	_Pshadow_Pstandard_Cuint_Mcreate
 	.align	16, 0x90
@@ -3144,8 +3188,8 @@ _Pshadow_Pstandard_Cuint_Mcreate:       # @_Pshadow_Pstandard_Cuint_Mcreate
 	movq	$_Pshadow_Pstandard_Cuint_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp431:
-	.size	_Pshadow_Pstandard_Cuint_Mcreate, .Ltmp431-_Pshadow_Pstandard_Cuint_Mcreate
+.Ltmp441:
+	.size	_Pshadow_Pstandard_Cuint_Mcreate, .Ltmp441-_Pshadow_Pstandard_Cuint_Mcreate
 
 	.globl	_Pshadow_Pstandard_Culong_Mcreate
 	.align	16, 0x90
@@ -3155,8 +3199,8 @@ _Pshadow_Pstandard_Culong_Mcreate:      # @_Pshadow_Pstandard_Culong_Mcreate
 	movq	$_Pshadow_Pstandard_Culong_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp432:
-	.size	_Pshadow_Pstandard_Culong_Mcreate, .Ltmp432-_Pshadow_Pstandard_Culong_Mcreate
+.Ltmp442:
+	.size	_Pshadow_Pstandard_Culong_Mcreate, .Ltmp442-_Pshadow_Pstandard_Culong_Mcreate
 
 	.globl	_Pshadow_Pstandard_Cushort_Mcreate
 	.align	16, 0x90
@@ -3166,8 +3210,8 @@ _Pshadow_Pstandard_Cushort_Mcreate:     # @_Pshadow_Pstandard_Cushort_Mcreate
 	movq	$_Pshadow_Pstandard_Cushort_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp433:
-	.size	_Pshadow_Pstandard_Cushort_Mcreate, .Ltmp433-_Pshadow_Pstandard_Cushort_Mcreate
+.Ltmp443:
+	.size	_Pshadow_Pstandard_Cushort_Mcreate, .Ltmp443-_Pshadow_Pstandard_Cushort_Mcreate
 
 	.globl	_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject
 	.align	16, 0x90
@@ -3176,12 +3220,12 @@ _Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject: # @_Pshadow_Pio_CCon
 	.cfi_startproc
 # BB#0:
 	pushq	%rbx
-.Ltmp436:
+.Ltmp446:
 	.cfi_def_cfa_offset 16
-.Ltmp437:
+.Ltmp447:
 	.cfi_offset %rbx, -16
 	movq	%rdi, %rbx
-	movl	$.L_string2316, %edi
+	movl	$.L_string1316, %edi
 	testq	%rsi, %rsi
 	cmovneq	%rsi, %rdi
 	movq	(%rdi), %rax
@@ -3190,59 +3234,87 @@ _Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject: # @_Pshadow_Pio_CCon
 	movq	8(%rax), %rdi
 	movl	$stdout, %eax
 	testq	%rax, %rax
-	je	.LBB127_2
+	je	.LBB128_2
 # BB#1:
 	movq	stdout(%rip), %rcx
-	jmp	.LBB127_3
-.LBB127_2:
+	jmp	.LBB128_3
+.LBB128_2:
 	movq	_imp___iob(%rip), %rcx
 	addq	$48, %rcx
-.LBB127_3:                              # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject.exit
+.LBB128_3:                              # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject.exit
 	movl	$1, %esi
 	callq	fwrite
-	movl	$stdout, %eax
+	movl	_Pshadow_Pstandard_Ccode_Mclass+44(%rip), %edi
+	callq	malloc
+	movq	$_Pshadow_Pstandard_Ccode_Mclass, (%rax)
+	movl	$10, 8(%rax)
+	movl	$.L_string1316, %edi
 	testq	%rax, %rax
-	je	.LBB127_5
+	cmovneq	%rax, %rdi
+	movq	(%rdi), %rax
+	callq	*104(%rax)
+	movl	$stdout, %ecx
+	testq	%rcx, %rcx
+	movl	16(%rax), %edx
+	movq	8(%rax), %rdi
+	je	.LBB128_5
 # BB#4:
-	movq	stdout(%rip), %rsi
-	jmp	.LBB127_6
-.LBB127_5:
-	movq	_imp___iob(%rip), %rsi
-	addq	$48, %rsi
-.LBB127_6:                              # %_Pshadow_Pio_CConsole_MprintLine.exit
-	movl	$10, %edi
-	callq	fputc
+	movq	stdout(%rip), %rcx
+	jmp	.LBB128_6
+.LBB128_5:
+	movq	_imp___iob(%rip), %rcx
+	addq	$48, %rcx
+.LBB128_6:                              # %_Pshadow_Pio_CConsole_MprintLine.exit
+	movl	$1, %esi
+	callq	fwrite
 	movq	%rbx, %rax
 	popq	%rbx
 	ret
-.Ltmp438:
-	.size	_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject, .Ltmp438-_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject
+.Ltmp448:
+	.size	_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject, .Ltmp448-_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject
 	.cfi_endproc
 
 	.globl	_Pshadow_Pio_CConsole_MprintLine
 	.align	16, 0x90
 	.type	_Pshadow_Pio_CConsole_MprintLine,@function
 _Pshadow_Pio_CConsole_MprintLine:       # @_Pshadow_Pio_CConsole_MprintLine
+	.cfi_startproc
 # BB#0:
 	pushq	%rbx
+.Ltmp451:
+	.cfi_def_cfa_offset 16
+.Ltmp452:
+	.cfi_offset %rbx, -16
 	movq	%rdi, %rbx
-	movl	$stdout, %eax
+	movl	_Pshadow_Pstandard_Ccode_Mclass+44(%rip), %edi
+	callq	malloc
+	movq	$_Pshadow_Pstandard_Ccode_Mclass, (%rax)
+	movl	$10, 8(%rax)
+	movl	$.L_string1316, %edi
 	testq	%rax, %rax
-	je	.LBB128_2
+	cmovneq	%rax, %rdi
+	movq	(%rdi), %rax
+	callq	*104(%rax)
+	movl	$stdout, %ecx
+	testq	%rcx, %rcx
+	movl	16(%rax), %edx
+	movq	8(%rax), %rdi
+	je	.LBB129_2
 # BB#1:
-	movq	stdout(%rip), %rsi
-	jmp	.LBB128_3
-.LBB128_2:
-	movq	_imp___iob(%rip), %rsi
-	addq	$48, %rsi
-.LBB128_3:                              # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString.exit
-	movl	$10, %edi
-	callq	fputc
+	movq	stdout(%rip), %rcx
+	jmp	.LBB129_3
+.LBB129_2:
+	movq	_imp___iob(%rip), %rcx
+	addq	$48, %rcx
+.LBB129_3:                              # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject.exit
+	movl	$1, %esi
+	callq	fwrite
 	movq	%rbx, %rax
 	popq	%rbx
 	ret
-.Ltmp439:
-	.size	_Pshadow_Pio_CConsole_MprintLine, .Ltmp439-_Pshadow_Pio_CConsole_MprintLine
+.Ltmp453:
+	.size	_Pshadow_Pio_CConsole_MprintLine, .Ltmp453-_Pshadow_Pio_CConsole_MprintLine
+	.cfi_endproc
 
 	.globl	_Pshadow_Pio_CConsole_Mcreate
 	.align	16, 0x90
@@ -3252,8 +3324,8 @@ _Pshadow_Pio_CConsole_Mcreate:          # @_Pshadow_Pio_CConsole_Mcreate
 	movq	$_Pshadow_Pio_CConsole_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp440:
-	.size	_Pshadow_Pio_CConsole_Mcreate, .Ltmp440-_Pshadow_Pio_CConsole_Mcreate
+.Ltmp454:
+	.size	_Pshadow_Pio_CConsole_Mcreate, .Ltmp454-_Pshadow_Pio_CConsole_Mcreate
 
 	.globl	_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject
 	.align	16, 0x90
@@ -3262,12 +3334,12 @@ _Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject: # @_Pshadow_Pio_CConsole
 	.cfi_startproc
 # BB#0:                                 # %_label2
 	pushq	%rbx
-.Ltmp443:
+.Ltmp457:
 	.cfi_def_cfa_offset 16
-.Ltmp444:
+.Ltmp458:
 	.cfi_offset %rbx, -16
 	movq	%rdi, %rbx
-	movl	$.L_string2316, %edi
+	movl	$.L_string1316, %edi
 	testq	%rsi, %rsi
 	cmovneq	%rsi, %rdi
 	movq	(%rdi), %rax
@@ -3276,21 +3348,21 @@ _Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject: # @_Pshadow_Pio_CConsole
 	movq	8(%rax), %rdi
 	movl	$stdout, %eax
 	testq	%rax, %rax
-	je	.LBB130_2
+	je	.LBB131_2
 # BB#1:
 	movq	stdout(%rip), %rcx
-	jmp	.LBB130_3
-.LBB130_2:
+	jmp	.LBB131_3
+.LBB131_2:
 	movq	_imp___iob(%rip), %rcx
 	addq	$48, %rcx
-.LBB130_3:                              # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString.exit
+.LBB131_3:                              # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString.exit
 	movl	$1, %esi
 	callq	fwrite
 	movq	%rbx, %rax
 	popq	%rbx
 	ret
-.Ltmp445:
-	.size	_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject, .Ltmp445-_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject
+.Ltmp459:
+	.size	_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject, .Ltmp459-_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject
 	.cfi_endproc
 
 	.globl	_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString
@@ -3304,21 +3376,21 @@ _Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString: # @_Pshadow_Pio_CConsole
 	movq	8(%rsi), %rdi
 	movl	$stdout, %eax
 	testq	%rax, %rax
-	je	.LBB131_2
+	je	.LBB132_2
 # BB#1:
 	movq	stdout(%rip), %rcx
-	jmp	.LBB131_3
-.LBB131_2:
+	jmp	.LBB132_3
+.LBB132_2:
 	movq	_imp___iob(%rip), %rcx
 	addq	$48, %rcx
-.LBB131_3:                              # %out.exit
+.LBB132_3:                              # %out.exit
 	movl	$1, %esi
 	callq	fwrite
 	movq	%rbx, %rax
 	popq	%rbx
 	ret
-.Ltmp446:
-	.size	_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString, .Ltmp446-_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString
+.Ltmp460:
+	.size	_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString, .Ltmp460-_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString
 
 	.globl	_Pshadow_Ptest_CArrayTest_Mcreate
 	.align	16, 0x90
@@ -3328,8 +3400,8 @@ _Pshadow_Ptest_CArrayTest_Mcreate:      # @_Pshadow_Ptest_CArrayTest_Mcreate
 	movq	$_Pshadow_Ptest_CArrayTest_Mclass, (%rdi)
 	movq	%rdi, %rax
 	ret
-.Ltmp447:
-	.size	_Pshadow_Ptest_CArrayTest_Mcreate, .Ltmp447-_Pshadow_Ptest_CArrayTest_Mcreate
+.Ltmp461:
+	.size	_Pshadow_Ptest_CArrayTest_Mcreate, .Ltmp461-_Pshadow_Ptest_CArrayTest_Mcreate
 
 	.globl	_Pshadow_Ptest_CArrayTest_Mmain
 	.align	16, 0x90
@@ -3338,60 +3410,59 @@ _Pshadow_Ptest_CArrayTest_Mmain:        # @_Pshadow_Ptest_CArrayTest_Mmain
 	.cfi_startproc
 # BB#0:
 	pushq	%rbp
-.Ltmp455:
+.Ltmp469:
 	.cfi_def_cfa_offset 16
 	pushq	%r15
-.Ltmp456:
+.Ltmp470:
 	.cfi_def_cfa_offset 24
 	pushq	%r14
-.Ltmp457:
+.Ltmp471:
 	.cfi_def_cfa_offset 32
 	pushq	%r13
-.Ltmp458:
+.Ltmp472:
 	.cfi_def_cfa_offset 40
 	pushq	%r12
-.Ltmp459:
+.Ltmp473:
 	.cfi_def_cfa_offset 48
 	pushq	%rbx
-.Ltmp460:
+.Ltmp474:
 	.cfi_def_cfa_offset 56
-	subq	$40, %rsp
-.Ltmp461:
-	.cfi_def_cfa_offset 96
-.Ltmp462:
+	subq	$24, %rsp
+.Ltmp475:
+	.cfi_def_cfa_offset 80
+.Ltmp476:
 	.cfi_offset %rbx, -56
-.Ltmp463:
+.Ltmp477:
 	.cfi_offset %r12, -48
-.Ltmp464:
+.Ltmp478:
 	.cfi_offset %r13, -40
-.Ltmp465:
+.Ltmp479:
 	.cfi_offset %r14, -32
-.Ltmp466:
+.Ltmp480:
 	.cfi_offset %r15, -24
-.Ltmp467:
+.Ltmp481:
 	.cfi_offset %rbp, -16
 	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
 	movl	$1, %edi
 	callq	calloc
-	movq	%rax, %rbp
-	movl	$5, (%rbp)
+	movq	%rax, %rbx
+	movl	$5, (%rbx)
 	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
 	callq	malloc
-	movq	%rax, %rbx
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rbx)
-	movq	%rbx, %rdi
+	movq	%rax, %r15
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%r15)
+	movq	%r15, %rdi
 	movl	$_Pshadow_Pstandard_CObject_Mclass, %esi
-	movq	%rbp, %rdx
+	movq	%rbx, %rdx
 	movl	$1, %ecx
 	callq	*_Pshadow_Pstandard_CArray_Mclass+112(%rip)
-	movq	%rbx, 32(%rsp)
 	movl	_Pshadow_Pstandard_Cint_Mclass+44(%rip), %edi
 	callq	malloc
 	xorl	%ebp, %ebp
 	movq	$_Pshadow_Pstandard_Cint_Mclass, (%rax)
 	movl	$0, 8(%rax)
-	movq	(%rbx), %rcx
-	movq	%rbx, %rdi
+	movq	(%r15), %rcx
+	movq	%r15, %rdi
 	xorl	%esi, %esi
 	movq	%rax, %rdx
 	callq	*136(%rcx)
@@ -3399,13 +3470,13 @@ _Pshadow_Ptest_CArrayTest_Mmain:        # @_Pshadow_Ptest_CArrayTest_Mmain
 	callq	malloc
 	movq	$_Pshadow_Pstandard_Ccode_Mclass, (%rax)
 	movl	$50, 8(%rax)
-	movq	(%rbx), %rcx
-	movq	%rbx, %rdi
+	movq	(%r15), %rcx
+	movq	%r15, %rdi
 	movl	$1, %esi
 	movq	%rax, %rdx
 	callq	*136(%rcx)
-	movq	(%rbx), %rax
-	movq	%rbx, %rdi
+	movq	(%r15), %rax
+	movq	%r15, %rdi
 	movl	$2, %esi
 	movl	$.L_string1322, %edx
 	callq	*136(%rax)
@@ -3413,71 +3484,71 @@ _Pshadow_Ptest_CArrayTest_Mmain:        # @_Pshadow_Ptest_CArrayTest_Mmain
 	callq	malloc
 	movq	$_Pshadow_Pstandard_Cint_Mclass, (%rax)
 	movl	$88, 8(%rax)
-	movq	(%rbx), %rcx
-	movq	%rbx, %rdi
+	movq	(%r15), %rcx
+	movq	%r15, %rdi
 	movl	$3, %esi
 	movq	%rax, %rdx
 	callq	*136(%rcx)
-	movq	(%rbx), %rax
-	movq	%rbx, %rdi
+	movq	(%r15), %rax
+	movq	%r15, %rdi
 	movl	$4, %esi
 	xorl	%edx, %edx
 	callq	*136(%rax)
-	movq	(%rbx), %rax
-	movq	%rbx, %rdi
+	movq	(%r15), %rax
+	movq	%r15, %rdi
 	callq	*56(%rax)
-	movq	%rax, %r15
-	movq	%r15, 24(%rsp)
+	movq	%rax, %r12
+	movq	%r12, 16(%rsp)          # 8-byte Spill
 	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
 	callq	malloc
 	movq	%rax, %r14
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%r14)
-	movq	24(%r15), %rax
-	movq	%rax, (%rsp)            # 8-byte Spill
-	movl	16(%r15), %r12d
+	movq	24(%r12), %rax
+	movq	%rax, 8(%rsp)           # 8-byte Spill
+	movl	16(%r12), %r13d
 	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
-	movl	%r12d, %edi
+	movl	%r13d, %edi
 	callq	calloc
-	movq	%rax, %r13
-	movl	$3, (%r13)
-	leal	-1(%r12), %edx
-	leaq	4(%r13), %rdi
-	movq	8(%r15), %rsi
+	movq	%rax, %rbx
+	movl	$3, (%rbx)
+	leal	-1(%r13), %edx
+	leaq	4(%rbx), %rdi
+	movq	8(%r12), %rsi
 	addq	$4, %rsi
 	callq	memcpy
-	movq	(%rsp), %rcx            # 8-byte Reload
+	movq	8(%rsp), %rcx           # 8-byte Reload
 	movslq	48(%rcx), %rax
-	addq	32(%r15), %rax
+	addq	32(%r12), %rax
 	movq	$_Pshadow_Pstandard_CArray_Mclass, (%r14)
 	movq	%rcx, 24(%r14)
-	movl	%r12d, 16(%r14)
-	movq	%r13, 8(%r14)
+	movl	%r13d, 16(%r14)
+	movq	%r15, %r13
+	movq	%rbx, 8(%r14)
 	movq	%rax, 32(%r14)
-	movq	%r14, 16(%rsp)
-	movq	(%rbx), %rax
-	movq	%rbx, %rdi
+	movq	(%r13), %rax
+	movq	%r13, %rdi
 	callq	*144(%rax)
 	testl	%eax, %eax
-	jle	.LBB133_2
+	jle	.LBB134_2
 	.align	16, 0x90
-.LBB133_1:                              # %_label0
+.LBB134_1:                              # %_label0
                                         # =>This Inner Loop Header: Depth=1
 	movl	_Pshadow_Pstandard_Cint_Mclass+44(%rip), %edi
 	callq	malloc
 	movq	$_Pshadow_Pstandard_Cint_Mclass, (%rax)
 	movl	%ebp, 8(%rax)
-	movq	(%rbx), %rcx
-	movq	%rbx, %rdi
+	movq	(%r13), %rcx
+	movq	%r13, %rdi
 	movl	%ebp, %esi
 	movq	%rax, %rdx
 	callq	*136(%rcx)
-	movq	(%rbx), %rax
-	movq	%rbx, %rdi
+	movq	(%r13), %rax
+	movq	%r13, %rdi
 	callq	*144(%rax)
 	incl	%ebp
 	cmpl	%eax, %ebp
-	jl	.LBB133_1
-.LBB133_2:                              # %_label2
+	jl	.LBB134_1
+.LBB134_2:                              # %_label2
 	movq	(%r14), %rax
 	movq	%r14, %rdi
 	xorl	%esi, %esi
@@ -3493,8 +3564,9 @@ _Pshadow_Ptest_CArrayTest_Mmain:        # @_Pshadow_Ptest_CArrayTest_Mmain
 	movl	$2, %esi
 	movl	$.L_string4328, %edx
 	callq	*136(%rax)
-	cmpq	$0, _Pshadow_Pio_CConsole_Minstance(%rip)
-	jne	.LBB133_4
+	movq	_Pshadow_Pio_CConsole_Minstance(%rip), %rax
+	testq	%rax, %rax
+	jne	.LBB134_4
 # BB#3:                                 # %_label3
 	movl	_Pshadow_Pio_CConsole_Mclass+44(%rip), %edi
 	callq	malloc
@@ -3502,245 +3574,123 @@ _Pshadow_Ptest_CArrayTest_Mmain:        # @_Pshadow_Ptest_CArrayTest_Mmain
 	movq	%rax, %rdi
 	callq	*_Pshadow_Pio_CConsole_Mclass+64(%rip)
 	movq	%rax, _Pshadow_Pio_CConsole_Minstance(%rip)
-.LBB133_4:                              # %_label4
-	movl	$.L_string2316, %edi
-	testq	%rbx, %rbx
-	cmovneq	%rbx, %rdi
-	movq	(%rdi), %rax
-	callq	*104(%rax)
-	movl	16(%rax), %edx
-	movq	8(%rax), %rdi
-	movl	$stdout, %eax
+.LBB134_4:                              # %_label4
+	movq	%rax, %rdi
+	movq	%r13, %rsi
+	callq	_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject
+	movq	_Pshadow_Pio_CConsole_Minstance(%rip), %rax
 	testq	%rax, %rax
-	je	.LBB133_6
-# BB#5:
-	movq	stdout(%rip), %rcx
-	jmp	.LBB133_7
-.LBB133_6:
-	movq	_imp___iob(%rip), %rcx
-	addq	$48, %rcx
-.LBB133_7:                              # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject.exit.i
-	movl	$1, %esi
-	callq	fwrite
-	movl	$stdout, %eax
-	testq	%rax, %rax
-	je	.LBB133_9
-# BB#8:
-	movq	stdout(%rip), %rsi
-	jmp	.LBB133_10
-.LBB133_9:
-	movq	_imp___iob(%rip), %rsi
-	addq	$48, %rsi
-.LBB133_10:                             # %_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject.exit
-	movl	$10, %edi
-	callq	fputc
-	cmpq	$0, _Pshadow_Pio_CConsole_Minstance(%rip)
-	jne	.LBB133_12
-# BB#11:                                # %_label5
+	jne	.LBB134_6
+# BB#5:                                 # %_label5
 	movl	_Pshadow_Pio_CConsole_Mclass+44(%rip), %edi
 	callq	malloc
 	movq	$_Pshadow_Pio_CConsole_Mclass, (%rax)
 	movq	%rax, %rdi
 	callq	*_Pshadow_Pio_CConsole_Mclass+64(%rip)
 	movq	%rax, _Pshadow_Pio_CConsole_Minstance(%rip)
-.LBB133_12:                             # %_label6
-	movl	$.L_string2316, %edi
-	movq	24(%rsp), %rax
+.LBB134_6:                              # %_label6
+	movq	%rax, %rdi
+	movq	16(%rsp), %rsi          # 8-byte Reload
+	callq	_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject
+	movq	_Pshadow_Pio_CConsole_Minstance(%rip), %rax
 	testq	%rax, %rax
-	cmovneq	%rax, %rdi
-	movq	(%rdi), %rax
-	callq	*104(%rax)
-	movl	16(%rax), %edx
-	movq	8(%rax), %rdi
-	movl	$stdout, %eax
-	testq	%rax, %rax
-	je	.LBB133_14
-# BB#13:
-	movq	stdout(%rip), %rcx
-	jmp	.LBB133_15
-.LBB133_14:
-	movq	_imp___iob(%rip), %rcx
-	addq	$48, %rcx
-.LBB133_15:                             # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject.exit.i4
-	movl	$1, %esi
-	callq	fwrite
-	movl	$stdout, %eax
-	testq	%rax, %rax
-	je	.LBB133_17
-# BB#16:
-	movq	stdout(%rip), %rsi
-	jmp	.LBB133_18
-.LBB133_17:
-	movq	_imp___iob(%rip), %rsi
-	addq	$48, %rsi
-.LBB133_18:                             # %_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject.exit6
-	movl	$10, %edi
-	callq	fputc
-	cmpq	$0, _Pshadow_Pio_CConsole_Minstance(%rip)
-	jne	.LBB133_20
-# BB#19:                                # %_label7
+	jne	.LBB134_8
+# BB#7:                                 # %_label7
 	movl	_Pshadow_Pio_CConsole_Mclass+44(%rip), %edi
 	callq	malloc
 	movq	$_Pshadow_Pio_CConsole_Mclass, (%rax)
 	movq	%rax, %rdi
 	callq	*_Pshadow_Pio_CConsole_Mclass+64(%rip)
 	movq	%rax, _Pshadow_Pio_CConsole_Minstance(%rip)
-.LBB133_20:                             # %_label8
-	movl	$.L_string2316, %edi
-	movq	16(%rsp), %rax
-	testq	%rax, %rax
-	cmovneq	%rax, %rdi
-	movq	(%rdi), %rax
-	callq	*104(%rax)
-	movl	16(%rax), %edx
-	movq	8(%rax), %rdi
-	movl	$stdout, %eax
-	testq	%rax, %rax
-	je	.LBB133_22
-# BB#21:
-	movq	stdout(%rip), %rcx
-	jmp	.LBB133_23
-.LBB133_22:
-	movq	_imp___iob(%rip), %rcx
-	addq	$48, %rcx
-.LBB133_23:                             # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject.exit.i8
-	movl	$1, %esi
-	callq	fwrite
-	movl	$stdout, %eax
-	testq	%rax, %rax
-	je	.LBB133_25
-# BB#24:
-	movq	stdout(%rip), %rsi
-	jmp	.LBB133_26
-.LBB133_25:
-	movq	_imp___iob(%rip), %rsi
-	addq	$48, %rsi
-.LBB133_26:                             # %_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject.exit10
-	movl	$10, %edi
-	callq	fputc
-	movl	$0, 12(%rsp)
-	movq	32(%rsp), %r14
-	movq	(%r14), %rax
-	movq	%r14, %rdi
+.LBB134_8:                              # %_label8
+	movq	%rax, %rdi
+	movq	%r14, %rsi
+	callq	_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject
+	movq	(%r13), %rax
+	movq	%r13, %rdi
 	callq	*144(%rax)
 	testl	%eax, %eax
-	js	.LBB133_40
-# BB#27:
-	xorl	%r12d, %r12d
+	js	.LBB134_15
+# BB#9:                                 # %_label9.lr.ph
+	xorl	%ebx, %ebx
 	.align	16, 0x90
-.LBB133_28:                             # %_label9
+.LBB134_10:                             # %_label9
                                         # =>This Loop Header: Depth=1
-                                        #     Child Loop BB133_29 Depth 2
-	movl	%r12d, 8(%rsp)
-	movq	(%r14), %rax
-	movq	%r14, %rdi
+                                        #     Child Loop BB134_11 Depth 2
+	movl	%ebx, 8(%rsp)           # 4-byte Spill
+	movq	(%r13), %rax
+	movq	%r13, %rdi
 	callq	*144(%rax)
-	cmpl	%eax, %r12d
-	jg	.LBB133_39
+	cmpl	%eax, %ebx
+	movl	$0, %r12d
+	jg	.LBB134_14
 	.align	16, 0x90
-.LBB133_29:                             # %_label12
-                                        #   Parent Loop BB133_28 Depth=1
+.LBB134_11:                             # %_label12
+                                        #   Parent Loop BB134_10 Depth=1
                                         # =>  This Inner Loop Header: Depth=2
-	cmpq	$0, _Pshadow_Pio_CConsole_Minstance(%rip)
-	jne	.LBB133_31
-# BB#30:                                # %_label15
-                                        #   in Loop: Header=BB133_29 Depth=2
+	movq	_Pshadow_Pio_CConsole_Minstance(%rip), %rax
+	testq	%rax, %rax
+	jne	.LBB134_13
+# BB#12:                                # %_label15
+                                        #   in Loop: Header=BB134_11 Depth=2
 	movl	_Pshadow_Pio_CConsole_Mclass+44(%rip), %edi
 	callq	malloc
 	movq	$_Pshadow_Pio_CConsole_Mclass, (%rax)
 	movq	%rax, %rdi
 	callq	*_Pshadow_Pio_CConsole_Mclass+64(%rip)
 	movq	%rax, _Pshadow_Pio_CConsole_Minstance(%rip)
-.LBB133_31:                             # %_label16
-                                        #   in Loop: Header=BB133_29 Depth=2
-	movl	12(%rsp), %r13d
+.LBB134_13:                             # %_label16
+                                        #   in Loop: Header=BB134_11 Depth=2
+	movq	%rax, 16(%rsp)          # 8-byte Spill
 	movl	_Pshadow_Pstandard_CArray_Mclass+44(%rip), %edi
 	callq	malloc
-	movq	%rax, %rbp
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rbp)
-	movq	24(%r14), %rax
-	movq	%rax, (%rsp)            # 8-byte Spill
-	movl	16(%r14), %r15d
+	movq	%rax, %rbx
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rbx)
+	movq	24(%r13), %r14
+	movl	16(%r13), %r15d
 	movl	_Pshadow_Pstandard_Cint_Mclass+48(%rip), %esi
 	movl	%r15d, %edi
 	callq	calloc
-	movq	%rax, %rbx
-	subl	%r13d, %r12d
-	movl	%r12d, (%rbx)
-	leaq	4(%rbx), %rdi
-	movq	8(%r14), %rsi
+	movq	%rax, %rbp
+	movl	%r12d, (%rbp)
+	leaq	4(%rbp), %rdi
+	movq	8(%r13), %rsi
 	leal	-1(%r15), %edx
 	addq	$4, %rsi
 	callq	memcpy
-	testq	%rbp, %rbp
-	movq	%rbp, %rdi
-	movl	$.L_string2316, %eax
-	cmoveq	%rax, %rdi
-	movq	(%rsp), %rcx            # 8-byte Reload
-	imull	48(%rcx), %r13d
-	movq	32(%r14), %rax
-	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rbp)
-	movq	%rcx, 24(%rbp)
-	movl	%r15d, 16(%rbp)
-	movq	%rbx, 8(%rbp)
-	movslq	%r13d, %rcx
-	addq	%rax, %rcx
-	movq	%rcx, 32(%rbp)
-	movq	(%rdi), %rax
-	callq	*104(%rax)
-	movl	$stdout, %ecx
-	testq	%rcx, %rcx
-	movl	16(%rax), %edx
-	movq	8(%rax), %rdi
-	je	.LBB133_33
-# BB#32:                                #   in Loop: Header=BB133_29 Depth=2
-	movq	stdout(%rip), %rcx
-	jmp	.LBB133_34
-	.align	16, 0x90
-.LBB133_33:                             #   in Loop: Header=BB133_29 Depth=2
-	movq	_imp___iob(%rip), %rcx
-	addq	$48, %rcx
-.LBB133_34:                             # %_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject.exit.i12
-                                        #   in Loop: Header=BB133_29 Depth=2
-	movl	$1, %esi
-	callq	fwrite
-	movl	$stdout, %eax
-	testq	%rax, %rax
-	je	.LBB133_36
-# BB#35:                                #   in Loop: Header=BB133_29 Depth=2
-	movq	stdout(%rip), %rsi
-	jmp	.LBB133_37
-	.align	16, 0x90
-.LBB133_36:                             #   in Loop: Header=BB133_29 Depth=2
-	movq	_imp___iob(%rip), %rsi
-	addq	$48, %rsi
-.LBB133_37:                             # %_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject.exit14
-                                        #   in Loop: Header=BB133_29 Depth=2
-	movl	$10, %edi
-	callq	fputc
-	movl	8(%rsp), %r12d
-	incl	%r12d
-	movl	%r12d, 8(%rsp)
-	movq	32(%rsp), %r14
-	movq	(%r14), %rax
-	movq	%r14, %rdi
+	movq	%r14, %rdx
+	movl	48(%rdx), %eax
+	movl	8(%rsp), %r14d          # 4-byte Reload
+	imull	%r14d, %eax
+	movq	32(%r13), %rcx
+	movq	$_Pshadow_Pstandard_CArray_Mclass, (%rbx)
+	movq	%rdx, 24(%rbx)
+	movl	%r15d, 16(%rbx)
+	movq	%rbp, 8(%rbx)
+	movslq	%eax, %rax
+	addq	%rcx, %rax
+	movq	%rax, 32(%rbx)
+	movq	16(%rsp), %rdi          # 8-byte Reload
+	movq	%rbx, %rsi
+	callq	_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject
+	movq	(%r13), %rax
+	movq	%r13, %rdi
 	callq	*144(%rax)
-	cmpl	%eax, %r12d
-	jle	.LBB133_29
-# BB#38:                                # %_label13._label14_crit_edge
-                                        #   in Loop: Header=BB133_28 Depth=1
-	movl	12(%rsp), %r12d
-.LBB133_39:                             # %_label14
-                                        #   in Loop: Header=BB133_28 Depth=1
+	leal	1(%r14,%r12), %ecx
 	incl	%r12d
-	movl	%r12d, 12(%rsp)
-	movq	(%r14), %rax
-	movq	%r14, %rdi
+	cmpl	%eax, %ecx
+	jle	.LBB134_11
+.LBB134_14:                             # %_label14
+                                        #   in Loop: Header=BB134_10 Depth=1
+	movq	(%r13), %rax
+	movq	%r13, %rdi
 	callq	*144(%rax)
-	cmpl	%eax, %r12d
-	jle	.LBB133_28
-.LBB133_40:                             # %_label11
-	addq	$40, %rsp
+	movl	8(%rsp), %ebx           # 4-byte Reload
+	incl	%ebx
+	cmpl	%eax, %ebx
+	jle	.LBB134_10
+.LBB134_15:                             # %_label11
+	addq	$24, %rsp
 	popq	%rbx
 	popq	%r12
 	popq	%r13
@@ -3748,8 +3698,8 @@ _Pshadow_Ptest_CArrayTest_Mmain:        # @_Pshadow_Ptest_CArrayTest_Mmain
 	popq	%r15
 	popq	%rbp
 	ret
-.Ltmp468:
-	.size	_Pshadow_Ptest_CArrayTest_Mmain, .Ltmp468-_Pshadow_Ptest_CArrayTest_Mmain
+.Ltmp482:
+	.size	_Pshadow_Ptest_CArrayTest_Mmain, .Ltmp482-_Pshadow_Ptest_CArrayTest_Mmain
 	.cfi_endproc
 
 	.type	_Pshadow_Pstandard_CArray_Mclass,@object # @_Pshadow_Pstandard_CArray_Mclass
@@ -4397,6 +4347,7 @@ _Pshadow_Pstandard_CString_Mclass:
 	.quad	_Pshadow_Pstandard_CString_MtoString
 	.quad	_Pshadow_Pstandard_CString_Mchars
 	.quad	_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString
+	.quad	_Pshadow_Pstandard_CString_Mconcat_Pshadow_Pstandard_CString
 	.quad	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1
 	.quad	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1
 	.quad	_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString
@@ -4404,7 +4355,7 @@ _Pshadow_Pstandard_CString_Mclass:
 	.quad	_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint
 	.quad	_Pshadow_Pstandard_CString_Mlength
 	.quad	_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint
-	.size	_Pshadow_Pstandard_CString_Mclass, 184
+	.size	_Pshadow_Pstandard_CString_Mclass, 192
 
 	.type	.L_array0259,@object    # @_array0259
 	.section	.rodata,"a",@progbits
@@ -4429,7 +4380,7 @@ _Pshadow_Pstandard_CString_Mclass:
 _Pshadow_Pstandard_Cubyte_Mclass:
 	.quad	_Pshadow_Pstandard_CClass_Mclass
 	.zero	16
-	.quad	.L_string0286
+	.quad	.L_string0288
 	.quad	_Pshadow_Pstandard_CObject_Mclass
 	.long	1                       # 0x1
 	.long	(0+16)&-1
@@ -4450,20 +4401,20 @@ _Pshadow_Pstandard_Cubyte_Mclass:
 	.quad	_Pshadow_Pstandard_Cubyte_Msubtract_Pshadow_Pstandard_Cubyte
 	.size	_Pshadow_Pstandard_Cubyte_Mclass, 160
 
-	.type	.L_array0285,@object    # @_array0285
+	.type	.L_array0287,@object    # @_array0287
 	.section	.rodata,"a",@progbits
-.L_array0285:
+.L_array0287:
 	.ascii	 "ubyte"
-	.size	.L_array0285, 5
+	.size	.L_array0287, 5
 
-	.type	.L_string0286,@object   # @_string0286
+	.type	.L_string0288,@object   # @_string0288
 	.align	16
-.L_string0286:
+.L_string0288:
 	.quad	_Pshadow_Pstandard_CString_Mclass
-	.quad	.L_array0285
+	.quad	.L_array0287
 	.long	5                       # 0x5
 	.zero	4
-	.size	.L_string0286, 24
+	.size	.L_string0288, 24
 
 	.type	_Pshadow_Pstandard_Cuint_Mclass,@object # @_Pshadow_Pstandard_Cuint_Mclass
 	.data
@@ -4472,7 +4423,7 @@ _Pshadow_Pstandard_Cubyte_Mclass:
 _Pshadow_Pstandard_Cuint_Mclass:
 	.quad	_Pshadow_Pstandard_CClass_Mclass
 	.zero	16
-	.quad	.L_string0292
+	.quad	.L_string0294
 	.quad	_Pshadow_Pstandard_CObject_Mclass
 	.long	1                       # 0x1
 	.long	(0+16)&-1
@@ -4495,21 +4446,21 @@ _Pshadow_Pstandard_Cuint_Mclass:
 	.quad	_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint
 	.size	_Pshadow_Pstandard_Cuint_Mclass, 176
 
-	.type	.L_array0291,@object    # @_array0291
+	.type	.L_array0293,@object    # @_array0293
 	.section	.rodata.cst4,"aM",@progbits,4
-.L_array0291:
+.L_array0293:
 	.ascii	 "uint"
-	.size	.L_array0291, 4
+	.size	.L_array0293, 4
 
-	.type	.L_string0292,@object   # @_string0292
+	.type	.L_string0294,@object   # @_string0294
 	.section	.rodata,"a",@progbits
 	.align	16
-.L_string0292:
+.L_string0294:
 	.quad	_Pshadow_Pstandard_CString_Mclass
-	.quad	.L_array0291
+	.quad	.L_array0293
 	.long	4                       # 0x4
 	.zero	4
-	.size	.L_string0292, 24
+	.size	.L_string0294, 24
 
 	.type	_Pshadow_Pstandard_Culong_Mclass,@object # @_Pshadow_Pstandard_Culong_Mclass
 	.data
@@ -4518,7 +4469,7 @@ _Pshadow_Pstandard_Cuint_Mclass:
 _Pshadow_Pstandard_Culong_Mclass:
 	.quad	_Pshadow_Pstandard_CClass_Mclass
 	.zero	16
-	.quad	.L_string0302
+	.quad	.L_string0304
 	.quad	_Pshadow_Pstandard_CObject_Mclass
 	.long	1                       # 0x1
 	.long	(0+16)&-1
@@ -4539,20 +4490,20 @@ _Pshadow_Pstandard_Culong_Mclass:
 	.quad	_Pshadow_Pstandard_Culong_Msubtract_Pshadow_Pstandard_Culong
 	.size	_Pshadow_Pstandard_Culong_Mclass, 160
 
-	.type	.L_array0301,@object    # @_array0301
+	.type	.L_array0303,@object    # @_array0303
 	.section	.rodata,"a",@progbits
-.L_array0301:
+.L_array0303:
 	.ascii	 "ulong"
-	.size	.L_array0301, 5
+	.size	.L_array0303, 5
 
-	.type	.L_string0302,@object   # @_string0302
+	.type	.L_string0304,@object   # @_string0304
 	.align	16
-.L_string0302:
+.L_string0304:
 	.quad	_Pshadow_Pstandard_CString_Mclass
-	.quad	.L_array0301
+	.quad	.L_array0303
 	.long	5                       # 0x5
 	.zero	4
-	.size	.L_string0302, 24
+	.size	.L_string0304, 24
 
 	.type	_Pshadow_Pstandard_Cushort_Mclass,@object # @_Pshadow_Pstandard_Cushort_Mclass
 	.data
@@ -4561,7 +4512,7 @@ _Pshadow_Pstandard_Culong_Mclass:
 _Pshadow_Pstandard_Cushort_Mclass:
 	.quad	_Pshadow_Pstandard_CClass_Mclass
 	.zero	16
-	.quad	.L_string0308
+	.quad	.L_string0310
 	.quad	_Pshadow_Pstandard_CObject_Mclass
 	.long	1                       # 0x1
 	.long	(0+16)&-1
@@ -4582,20 +4533,20 @@ _Pshadow_Pstandard_Cushort_Mclass:
 	.quad	_Pshadow_Pstandard_Cushort_Msubtract_Pshadow_Pstandard_Cushort
 	.size	_Pshadow_Pstandard_Cushort_Mclass, 160
 
-	.type	.L_array0307,@object    # @_array0307
+	.type	.L_array0309,@object    # @_array0309
 	.section	.rodata,"a",@progbits
-.L_array0307:
+.L_array0309:
 	.ascii	 "ushort"
-	.size	.L_array0307, 6
+	.size	.L_array0309, 6
 
-	.type	.L_string0308,@object   # @_string0308
+	.type	.L_string0310,@object   # @_string0310
 	.align	16
-.L_string0308:
+.L_string0310:
 	.quad	_Pshadow_Pstandard_CString_Mclass
-	.quad	.L_array0307
+	.quad	.L_array0309
 	.long	6                       # 0x6
 	.zero	4
-	.size	.L_string0308, 24
+	.size	.L_string0310, 24
 
 	.type	_Pshadow_Pio_CConsole_Mclass,@object # @_Pshadow_Pio_CConsole_Mclass
 	.data
@@ -4604,7 +4555,7 @@ _Pshadow_Pstandard_Cushort_Mclass:
 _Pshadow_Pio_CConsole_Mclass:
 	.quad	_Pshadow_Pstandard_CClass_Mclass
 	.zero	16
-	.quad	.L_string0312
+	.quad	.L_string0314
 	.quad	_Pshadow_Pstandard_CObject_Mclass
 	.long	0                       # 0x0
 	.long	(0+8)&-1
@@ -4630,37 +4581,37 @@ _Pshadow_Pio_CConsole_Minstance:
 	.quad	0
 	.size	_Pshadow_Pio_CConsole_Minstance, 8
 
-	.type	.L_array0311,@object    # @_array0311
+	.type	.L_array0313,@object    # @_array0313
 	.section	.rodata,"a",@progbits
 	.align	16
-.L_array0311:
+.L_array0313:
 	.ascii	 "shadow.io@Console"
-	.size	.L_array0311, 17
+	.size	.L_array0313, 17
 
-	.type	.L_string0312,@object   # @_string0312
+	.type	.L_string0314,@object   # @_string0314
 	.align	16
-.L_string0312:
+.L_string0314:
 	.quad	_Pshadow_Pstandard_CString_Mclass
-	.quad	.L_array0311
+	.quad	.L_array0313
 	.long	17                      # 0x11
 	.zero	4
-	.size	.L_string0312, 24
+	.size	.L_string0314, 24
 
-	.type	.L_array2315,@object    # @_array2315
+	.type	.L_array1315,@object    # @_array1315
 	.section	.rodata.cst4,"aM",@progbits,4
-.L_array2315:
+.L_array1315:
 	.ascii	 "null"
-	.size	.L_array2315, 4
+	.size	.L_array1315, 4
 
-	.type	.L_string2316,@object   # @_string2316
+	.type	.L_string1316,@object   # @_string1316
 	.section	.rodata,"a",@progbits
 	.align	16
-.L_string2316:
+.L_string1316:
 	.quad	_Pshadow_Pstandard_CString_Mclass
-	.quad	.L_array2315
+	.quad	.L_array1315
 	.long	4                       # 0x4
 	.zero	4
-	.size	.L_string2316, 24
+	.size	.L_string1316, 24
 
 	.type	_Pshadow_Ptest_CArrayTest_Mclass,@object # @_Pshadow_Ptest_CArrayTest_Mclass
 	.data

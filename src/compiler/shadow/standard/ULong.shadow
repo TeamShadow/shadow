@@ -7,4 +7,27 @@ final immutable class shadow.standard@ULong implements /*Number<ulong>,*/ CanCom
 	public native modulus(ulong other) => (ulong);
 
 	public native compare(ulong other) => (int);
+
+	public toString() => ( String )
+	{
+		return toString(10ul);
+	}
+	public toString( ulong base ) => ( String )
+	{
+		MutableString string = MutableString:create();
+		ulong value = this;
+		do
+		{
+			string.append(digit(value % base));
+			value /= base;
+		}
+		while ( value != 0ul );
+		return string.reverse().toString();
+	}
+	private digit( ulong digit ) => ( code )
+	{
+		if ( digit < 10ul )
+			return cast<code>(digit + '0');
+		return cast<code>(digit - 10ul + 'a');
+	}
 }

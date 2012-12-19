@@ -1,8 +1,9 @@
 class shadow.test@ArrayTest
 {
-	public main() => ()
+	public main( Array<Object> array ) => ()
 	{
-		int[] lengths = int:create[1];
+		array.index(0, 0);
+		/*int[] lengths = int:create[1];
 		lengths[0] = 5;
 		Array<Object> array = Array<Object>:create(lengths);
 		array.index(0, 0);
@@ -22,7 +23,7 @@ class shadow.test@ArrayTest
 		Console:instance.printLine(array3);
 		for ( int start = 0; start <= array->length; start += 1 )
 			for ( int end = start; end <= array->length; end += 1 )
-				Console:instance.printLine(array.subarray(start, end));
+				Console:instance.printLine(array.subarray(start, end));*/
 		//Array<String> strings = test<String>(lengths);
 	}
 

@@ -1,4 +1,4 @@
-final immutable class shadow.standard@Long implements /*Number<long>,*/ CanCompare<long>
+final immutable class shadow.standard@Long implements Number<long>, CanCompare<long>
 {
 	public native add(long other) => (long);
 	public native subtract(long other) => (long);
@@ -7,4 +7,27 @@ final immutable class shadow.standard@Long implements /*Number<long>,*/ CanCompa
 	public native modulus(long other) => (long);
 	
 	public native compare(long other) => (int);
+
+	public abs() => ( ulong )
+	{
+		return cast<ulong>(this < 0l ? -this, this);
+	}
+	public min( long other ) => ( long )
+	{
+		return this < other ? this, other;
+	}
+	public max( long other ) => ( long )
+	{
+		return this > other ? this, other;
+	}
+
+	public toString() => ( String )
+	{
+		return toString(10ul);
+	}
+	public toString( ulong base ) => ( String )
+	{
+		String string = abs().toString(base);
+		return this >= 0 ? string, '-' # string;
+	}
 }

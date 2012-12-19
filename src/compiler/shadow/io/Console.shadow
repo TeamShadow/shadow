@@ -1,16 +1,25 @@
 immutable singleton shadow.io@Console
 {
+	public print( nullable Object value ) => ( Console )
+	{
+		return print(#value);
+	}
 	public printLine( nullable Object value ) => ( Console )
 	{
 		return print(value).printLine();
 	}
-	public print( nullable Object value ) => ( Console )
+	public native print( String value ) => ( Console );
+	public native printLine() => ( Console );
+
+	public printError( nullable Object value ) => ( Console )
 	{
-		return print((value ?? "null").toString());
+		return printError(#value);
 	}
-	public printLine() => ( Console )
+	public printErrorLine( nullable Object value ) => ( Console )
 	{
-		return print("\n");
+		return printError(value).printErrorLine();
 	}
-	private native print( String value ) => ( Console );
+	public native printError( String value ) => ( Console );
+	public native printErrorLine() => ( Console );
+
 }

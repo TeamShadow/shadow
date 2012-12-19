@@ -1,5 +1,18 @@
 final immutable class shadow.standard@Code
 {
+	public toLowerCase() => ( code )
+	{
+		if ( this >= 'A' and this <= 'Z' )
+			return this - 'A' + 'a';
+		return this;
+	}
+	public toUpperCase() => ( code )
+	{
+		if ( this >= 'a' and this <= 'z' )
+			return this - 'a' + 'A';
+		return this;
+	}
+
 	public toString() => ( String )
 	{
 		code[] array = code:create[1];

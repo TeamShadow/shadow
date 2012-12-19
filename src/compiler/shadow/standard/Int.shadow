@@ -1,20 +1,5 @@
 final immutable class shadow.standard@Int implements Number<int>, CanCompare<int>
 {
-	public min( int other ) => ( int )
-	{
-		return this < other ? this, other;
-	}
-
-	public max( int other ) => ( int )
-	{
-		return this > other ? this, other;
-	}
-
-	public abs() => ( uint )
-	{
-		return cast<uint>(this < 0 ? -this, this);
-	}
-
 	public native add(int other) => (int);
 	public native subtract(int other) => (int);
 	public native multiply(int other) => (int);
@@ -23,21 +8,26 @@ final immutable class shadow.standard@Int implements Number<int>, CanCompare<int
 
 	public native compare(int other) => (int);
 
+	public abs() => ( uint )
+	{
+		return cast<uint>(this < 0 ? -this, this);
+	}
+	public min( int other ) => ( int )
+	{
+		return this < other ? this, other;
+	}
+	public max( int other ) => ( int )
+	{
+		return this > other ? this, other;
+	}
+
 	public toString() => ( String )
 	{
-		MutableString string = MutableString:create();
-		int value = this;
-		if (value < 0)
-		{
-			string.append('-');
-			value = -value;
-		}
-		do
-		{
-			string.append(cast<code>(value % 10 + '0'));
-			value /= 10;
-		}
-		while (value != 0);
-		return string.toString();
+		return toString(10u);
+	}
+	public toString( uint base ) => ( String )
+	{
+		String string = abs().toString(base);
+		return this >= 0 ? string, '-' # string;
 	}
 }

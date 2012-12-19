@@ -9,7 +9,7 @@ abstract final class shadow.standard@Array<T> implements CanIndex<T>
 	}
 	public create( int[] lengths )
 	{
-		this:lengths = cast<int[]>lengths.copy();
+		this:lengths = cast<int[]>(cast<Object>lengths.copy());
 		this:data = allocate(this->length);
 		// this:data = T:class.allocate(this->length);
 	}
@@ -36,8 +36,8 @@ abstract final class shadow.standard@Array<T> implements CanIndex<T>
 	}
 	public immutable native subarray( int start, int end ) => ( Array<T> );
 
-	public native index( int index ) => (T);
-	public native index( int index, /*T*/Object value ) => ();
+	public immutable native index( int index ) => (T);
+	public native index( int index, T value ) => ();
 
 	public immutable toString() => ( String )
 	{

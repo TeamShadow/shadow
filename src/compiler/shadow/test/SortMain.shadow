@@ -1,0 +1,12 @@
+class shadow.test@SortMain {
+	public main(String[] args) => (int) {
+		//SortTest:create(      1, -10000, 10000).run();
+		//SortTest:create(     10, -10000, 10000).run();
+		//SortTest:create(    100, -10000, 10000).run();
+		//SortTest:create(   1000, -10000, 10000).run();
+		SortTest:create(  10000, -10000, 10000).run();
+		SortTest:create( 100000, -10000, 10000).run();
+		SortTest:create(1000000, -10000, 10000).run();
+		return 0;
+	}
+}

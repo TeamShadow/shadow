@@ -109,9 +109,13 @@ public class LLVMOutput extends AbstractOutput
 
 	private String nextString(String value)
 	{
-		String name = "@_string" + stringLiterals.size();
-		stringLiterals.add(value);
-		return name;
+		int index = stringLiterals.indexOf(value);
+		if (index == -1)
+		{
+			index = stringLiterals.size();
+			stringLiterals.add(value);
+		}
+		return "@_string" + index;
 	}
 	private String nextString(TACOperand node, String value)
 	{
@@ -188,7 +192,8 @@ public class LLVMOutput extends AbstractOutput
 						append(", ").append(type(Type.CLASS)).append(", ").
 						append(type(Type.OBJECT));
 			else if (type.equals(Type.STRING))
-				sb.append(", ").append(type(new ArrayType(Type.UBYTE)));
+				sb.append(", ").append(type(new ArrayType(Type.UBYTE))).
+						append(", ").append(type(Type.BOOLEAN));
 			else if (type.isPrimitive())
 				sb.append(", ").append(type(type));
 			writer.write(sb.append(" }").toString());
@@ -401,10 +406,11 @@ public class LLVMOutput extends AbstractOutput
 						'(' + type(Type.CLASS) + ", " + type(Type.INT) + ')');
 			}
 			if (type.equals(Type.ARRAY))
-				writer.write("declare " + type(Type.ARRAY) + " @" + raw(
-						Type.ARRAY, "_Mcreate_Pshadow_Pstandard_Cint_A1_CT") +
-						'(' + type(Type.ARRAY) + ", " + type(Type.CLASS) +
-						", " + type(new ArrayType(Type.INT)) + ", " +
+				writer.write("declare " + type(Type.ARRAY) + " @" +
+						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
+						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
+						type(Type.ARRAY) + ", " + type(Type.CLASS) + ", " +
+						type(new ArrayType(Type.INT)) + ", " +
 						type(Type.OBJECT) + ')');
 			for (List<MethodSignature> methodList : type.getMethodMap().
 					values())
@@ -429,12 +435,18 @@ public class LLVMOutput extends AbstractOutput
 				System.exit(1);
 			}
 			StringBuilder sb = new StringBuilder(data.length);
+			boolean ascii = true;
 			for (byte b : data)
+			{
+				if (b < 0)
+					ascii = false;
 				if (b != '\"' && b >= 0x20 && b < 0x7f)
 					sb.appendCodePoint(b);
 				else
-					sb.append('\\').append(Character.forDigit(b >>> 4, 16)).
+					sb.append('\\').
+							append(Character.forDigit((b & 0xff) >>> 4, 16)).
 							append(Character.forDigit(b & 0xf, 16));
+			}
 			writer.write("@_array" + stringIndex + " = private unnamed_addr " +
 					"constant [" + data.length + " x " + type(Type.UBYTE) +
 					"] c\"" + sb + '\"');
@@ -444,8 +456,9 @@ public class LLVMOutput extends AbstractOutput
 					type(new ArrayType(Type.UBYTE)) + " { " + type(Type.UBYTE) +
 					"* getelementptr inbounds ([" +
 					data.length + " x " + type(Type.UBYTE) + "]* @_array" +
-					stringIndex + ", i32 0, i32 0), [1 x %int] [%int " +
-					data.length + "] } }");
+					stringIndex + ", i32 0, i32 0), [1 x " + type(Type.INT) +
+					"] [" + type(Type.INT) + ' ' + data.length + "] }, " +
+					type(Type.BOOLEAN) + ' ' + ascii + " }");
 			stringIndex++;
 		}
 
@@ -718,8 +731,9 @@ public class LLVMOutput extends AbstractOutput
 				writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) +
 						' ' + temp(1) + " to " + type(Type.ARRAY));
 				writer.write(nextTemp() + " = call " + type(Type.ARRAY) + " @" +
-						raw(Type.ARRAY, "_Mcreate_Pshadow_Pstandard_Cint_A1" +
-						"_CT") + '(' + type(Type.ARRAY) + ' ' + temp(1) + ", " +
+						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
+						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
+						type(Type.ARRAY) + ' ' + temp(1) + ", " +
 						type(Type.CLASS) + " getelementptr inbounds (%" +
 						raw(arrayType.getBaseType(), "_Mclass") + "* @" +
 						raw(arrayType.getBaseType(), "_Mclass") +
@@ -771,10 +785,35 @@ public class LLVMOutput extends AbstractOutput
 			node.setName(srcName);
 			return;
 		}
+		if (srcType.isSigned() && destType.isFloating())
+		{
+			writer.write(nextTemp(node) + " = sitofp " + type(srcType) + ' ' +
+					srcName + " to " + type(destType));
+			return;
+		}
+		if (srcType.isUnsigned() && destType.isFloating())
+		{
+			writer.write(nextTemp(node) + " = uitofp " + type(srcType) + ' ' +
+					srcName + " to " + type(destType));
+			return;
+		}
+		if (srcType.isFloating() && destType.isSigned())
+		{
+			writer.write(nextTemp(node) + " = fptosi " + type(srcType) + ' ' +
+					srcName + " to " + type(destType));
+			return;
+		}
+		if (srcType.isFloating() && destType.isUnsigned())
+		{
+			writer.write(nextTemp(node) + " = fptoui " + type(srcType) + ' ' +
+					srcName + " to " + type(destType));
+			return;
+		}
 		int srcWidth = srcType.getWidth(), destWidth = destType.getWidth();
 		String instruction;
 		if (destWidth > srcWidth)
-			instruction = destType.isSigned() ? "sext" : "zext";
+			instruction = destType.isSigned() ? "sext" :
+					destType.isUnsigned() ? "zext" : "fext";
 		else if (destWidth < srcWidth)
 			instruction = "trunc";
 		else
@@ -911,10 +950,6 @@ public class LLVMOutput extends AbstractOutput
 			case GREATER_OR_EQUAL:
 				visitRelationalOperation(node, "ge");
 				break;
-
-			case CONCATENATION:
-				visitConcatenation(node);
-				break;
 		}
 	}
 	private void visitUnsignedOperation(TACBinary node, String instruction)
@@ -986,10 +1021,6 @@ public class LLVMOutput extends AbstractOutput
 				temp(1));
 		writer.write(nextTemp(node) + " = or" + _type_ + temp(1) + ", " +
 				temp(3));
-	}
-	private void visitConcatenation(TACBinary node) throws ShadowException
-	{
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

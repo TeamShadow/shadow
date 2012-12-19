@@ -1,7 +1,28 @@
-class shadow.utility@Random {
-	int value = 42;
-	public nextInt() => (int)
+class shadow.utility@Random
+{
+	public create()
 	{
-		return value;
+		this->seed = System:instance.nanoTime();
+	}
+	public create( ulong seed )
+	{
+		this->seed = seed;
+	}
+
+	public native set seed( ulong seed ) => ();
+
+	public nextInt() => ( int )
+	{
+		return cast<int>nextUInt();
+	}
+	public native nextUInt() => ( uint );
+
+	public nextInt( int max ) => ( int )
+	{
+		return cast<int>nextUInt(cast<uint>max);
+	}
+	public nextUInt( uint max ) => ( uint )
+	{
+		return nextUInt() % max; // TODO: use proper algorithm
 	}
 }
