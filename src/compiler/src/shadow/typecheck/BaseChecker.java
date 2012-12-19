@@ -14,6 +14,7 @@ import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.Literal;
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassInterfaceBaseType;
@@ -32,7 +33,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected List<String> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
-	protected LinkedList<Node> currentMethod = new LinkedList<Node>();  /** Current method is a stack since Shadow allows methods to be defined inside of methods */
+	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();  /** Current method is a stack since Shadow allows methods to be defined inside of methods */
 	
 
 	/** Holds the package tree structure (for name lookups) */

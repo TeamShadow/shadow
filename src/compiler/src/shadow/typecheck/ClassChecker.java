@@ -98,6 +98,7 @@ import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
@@ -136,7 +137,7 @@ public class ClassChecker extends BaseChecker {
 		scopeMethods = new LinkedList<Node>();
 	}
 	
-	public Object visitMethod( SimpleNode node, Boolean secondVisit  )
+	public Object visitMethod( SignatureNode node, Boolean secondVisit  )
 	{
 		if(!secondVisit)		
 			currentMethod.addFirst(node);
@@ -1061,6 +1062,11 @@ public class ClassChecker extends BaseChecker {
 			addError(left, Error.INVL_TYP, "Cannot assign a value to variable marked final");
 			return false;
 		}
+		else if( leftModifiers.isImmutable() && (!leftModifiers.isField() || (!currentMethod.isEmpty() && !currentMethod.getFirst().getMethodSignature().isCreate()))   )
+		{
+			addError(left, Error.INVL_TYP, "Cannot assign a value to field marked immutable except in a create");
+			return false;
+		}		
 		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 		{
 			addError(left, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
