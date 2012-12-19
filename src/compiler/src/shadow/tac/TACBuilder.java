@@ -1502,10 +1502,20 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		throw new UnsupportedOperationException();
 	}
+	
 	@Override
 	public Object visit(ASTDestroy node, Boolean secondVisit)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public Object visit(ASTUnaryToString node, Boolean secondVisit)
+			throws ShadowException 
+	{
+			if (secondVisit)
+				visitUnaryOperation(node);
+			return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 }

@@ -7,6 +7,7 @@ public class MethodType extends Type {
 	protected List<String> parameterNames; /** List of parameter names */
 	protected SequenceType parameterTypes; /** List of parameter types */
 	protected SequenceType returns; /** List of return types */
+	protected MethodType typeWithoutTypeArguments;
 
 	public MethodType() {
 		this(null, new Modifiers());
@@ -17,6 +18,7 @@ public class MethodType extends Type {
 		parameterNames = new ArrayList<String>();
 		parameterTypes = new SequenceType();
 		returns = new SequenceType();
+		typeWithoutTypeArguments = this;
 	}	
 	
 	public boolean matches( SequenceType inputTypes)
@@ -142,6 +144,11 @@ public class MethodType extends Type {
 		return sb.toString();
 	}
 	
+	public MethodType getTypeWithoutTypeArguments()
+	{		
+		return typeWithoutTypeArguments;
+	}
+	
 	@Override
 	public String getMangledName() {
 		StringBuilder sb = new StringBuilder();
@@ -154,11 +161,13 @@ public class MethodType extends Type {
 	@Override
 	public MethodType replace(SequenceType values, SequenceType replacements )
 	{	
-		MethodType replaced = new MethodType(getOuter(), getModifiers());		
-
+		MethodType replaced = new MethodType(getOuter(), getModifiers());	
+		
 		replaced.parameterNames = parameterNames;
 		replaced.parameterTypes = parameterTypes.replace(values, replacements);
-		replaced.returns = returns.replace(values, replacements);	
+		replaced.returns = returns.replace(values, replacements);
+		
+		replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 				
 		return replaced;
 	}

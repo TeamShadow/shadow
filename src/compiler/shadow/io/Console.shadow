@@ -6,7 +6,7 @@ immutable singleton shadow.io@Console
 	}
 	public print( nullable Object value ) => ( Console )
 	{
-		return print((value ?? cast<Object> "null").toString());
+		return print((value ?? "null").toString());
 	}
 	public printLine() => ( Console )
 	{

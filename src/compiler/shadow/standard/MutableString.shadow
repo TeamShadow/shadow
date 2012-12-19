@@ -32,7 +32,7 @@ class shadow.standard@MutableString
 
 	public append( nullable Object value ) => ( MutableString )
 	{
-		String string = ( value ?? cast<Object> "null" ).toString();
+		String string = ( value ?? "null" ).toString();
 		ensureCapacity( length + string->length );
 		for ( int i = 0; i < string->length; i += 1, length += 1 )
 			data[length] = string.getChar(i);

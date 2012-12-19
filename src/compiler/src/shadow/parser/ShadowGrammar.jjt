@@ -376,9 +376,11 @@ TOKEN :
 | < COALESCE: "??" >
 | < COLON: ":" >
 | < EQ: "==" >
+| < REF_EQ: "===" >
 | < LE: "<=" >
 | < GE: ">=" >
 | < NE: "!=" >
+| < REF_NE: "!==" >
 | < PLUS: "+" >
 | < MINUS: "-" >
 | < STAR: "*" >
@@ -1036,7 +1038,9 @@ void EqualityExpression():
 {}
 {
   IsExpression() ( ( "==" { jjtThis.addToImage('='); } |
-                     "!=" { jjtThis.addToImage('!'); } ) IsExpression() )*
+  					 "===" { jjtThis.addToImage('e'); } |
+                     "!=" { jjtThis.addToImage('!'); } |
+                     "!==" { jjtThis.addToImage('n'); } ) IsExpression() )*
 }
 
 void IsExpression():
@@ -1098,10 +1102,16 @@ void AdditiveExpression():
 void MultiplicativeExpression():
 {}
 {
-  UnaryExpression()
+  UnaryToString()
   ( ( "*" { jjtThis.addToImage('*'); } |
       "/" { jjtThis.addToImage('/'); } |
-      "%" { jjtThis.addToImage('%'); } ) UnaryExpression() )*
+      "%" { jjtThis.addToImage('%'); } ) UnaryToString() )*
+}
+
+void UnaryToString():
+{}
+{
+  [ "#" { jjtThis.setImage("#"); } ] UnaryExpression()
 }
 
 void UnaryExpression():

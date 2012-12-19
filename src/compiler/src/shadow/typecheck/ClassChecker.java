@@ -92,6 +92,7 @@ import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
+import shadow.parser.javacc.ASTUnaryToString;
 import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTWhileStatement;
@@ -623,19 +624,8 @@ public class ClassChecker extends BaseChecker {
 		{		
 			Type result = node.jjtGetChild(0).getType();			
 			
-			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, changing to String
-			{
-				Type current = node.jjtGetChild(i).getType();
-				
-				if( result.isString() || current.isString() )
-					result = Type.STRING;
-				else
-				{
-					addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot concatenate two non-String types");
-					result = Type.UNKNOWN;
-					break;
-				}			
-			}
+			if( node.jjtGetNumChildren() > 1 )
+				result = Type.STRING;
 				
 			node.setType(result); //propagates type up if only one child
 			pushUpModifiers(node); //can add ASSIGNABLE (if only one child)
@@ -757,6 +747,24 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 	}
+	
+	public Object visit(ASTUnaryToString node, Boolean secondVisit) throws ShadowException {
+		if(secondVisit)
+		{				
+			Type type = node.jjtGetChild(0).getType();
+			String symbol = node.getImage();
+			
+			if( symbol.equals("#")  )
+				node.setType(Type.STRING);
+			else
+			{
+				node.setType(type);			
+				pushUpModifiers( node );
+			}
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
 		
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
@@ -776,7 +784,7 @@ public class ClassChecker extends BaseChecker {
 			else
 				pushUpModifiers( node );
 			
-			if(symbol.startsWith("-"))
+			if(symbol.contains("-"))
 				node.setType(Type.makeSigned((ClassType)type));
 			else
 				node.setType(type);

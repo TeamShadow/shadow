@@ -15,6 +15,7 @@ class Property
 		int x = this->a;
 		this->b = 7;
 		this->c #= " mountain"; 
+		this->c = #10;
 		
 		this:a = 10;
 		this:b = 500;
