@@ -86,6 +86,7 @@ public class TypeCollector extends BaseChecker
 	private void updateTypeParameters()
 	{	
 	
+		Map<Type,Node> updatedNodeTable = new HashMap<Type,Node>();
 		//sets the correct types for type parameters in declarations
 		
 		
@@ -105,6 +106,8 @@ public class TypeCollector extends BaseChecker
 						if( declarationNode.jjtGetChild(i) instanceof ASTTypeParameters )
 							processTypeParameters( type, (ASTTypeParameters)(declarationNode.jjtGetChild(i)), missingTypes );
 					}
+					
+					updatedNodeTable.put(declarationNode.getType(), declarationNode);					
 				}					
 									
 				
@@ -112,6 +115,8 @@ public class TypeCollector extends BaseChecker
 					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types: " + missingTypes);		
 			}
 		}
+		
+		nodeTable = updatedNodeTable;		
 		
 		/*
 		

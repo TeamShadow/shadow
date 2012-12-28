@@ -40,7 +40,9 @@ public class TypeParameter extends ClassInterfaceBaseType
 		if( type instanceof TypeParameter )
 		{
 			TypeParameter typeParameter = (TypeParameter) type;
+			return typeName.equals(typeParameter.typeName);
 			
+			/*
 			for( Type otherBound : typeParameter.bounds )
 			{
 				boolean found = false;
@@ -57,15 +59,24 @@ public class TypeParameter extends ClassInterfaceBaseType
 					return false;
 			}
 			
-			return true;			
+			return true;	
+			*/
 		}
 		else
 		{
+			/*
 			for( Type bound : bounds )
 				if( bound.isSubtype(type) )
 					return true;
 			
 			return false;
+			*/
+			
+			for( Type bound : bounds )
+				if( !type.isSubtype(bound) )
+					return false;
+			
+			return true;
 		}
 	}
 	

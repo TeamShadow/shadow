@@ -1,0 +1,152 @@
+class shadow.utility@
+ArrayList<V>
+implements List<V>
+{
+	get int size = 0;
+	V[] elements = V:create[10];
+	int modifications = 0;
+	
+	public index(int index) => (V value)
+	{
+		if( index < 0 or index >= size )
+			throw IndexOutOfBoundsException:create();
+		
+		try
+		{
+			return check(elements[index]);
+		}
+		recover
+		{
+			//should never happen
+			throw UnexpectedNullException:create();
+		}
+	}
+	
+	
+	public index(int index, V value) => ()
+	{
+		if( index < 0 or index > size )
+			throw IndexOutOfBoundsException:create();
+			
+		if( index == size )
+		{
+			if( size >= elements->length )
+				grow();
+			size += 1;		
+		}
+			
+		elements[index] = value;
+		modifications += 1;	
+	}
+	
+	private grow() => ()
+	{
+		V[] temp = V:create[elements->length * 2];
+		for( int i = 0; i < elements->length; i += 1 )
+			temp[i] = elements[i];
+		elements = temp;	
+	}
+
+	public add(V value) => (boolean success)
+	{
+		if( size >= elements->length )
+			grow();
+		elements[size] = value;
+		size += 1;
+		modifications += 1;
+		
+		return true;			
+	}
+		
+	public clear() => ()
+	{
+		size = 0;
+		modifications += 1;
+	}
+	
+	public contains(V value) => (boolean found)
+	{				
+		return indexOf(value) != -1;	
+	}
+	
+	public indexOf(V value) => (int index)
+	{
+		for( int i = 0; i < elements->length; i += 1 )
+			if( elements[i] == value )
+				return i;
+		
+		return -1;
+	}
+	
+	public delete(int index) => (V value)
+	{
+		if( index < 0 or index >= size )
+			throw IndexOutOfBoundsException:create();
+	
+		try
+		{
+			V temp = check(elements[index]);
+			for( int i = index; i < size - 1; i += 1 )
+				elements[i] = elements[i + 1];
+			size -= 1;
+			modifications += 1;
+			return temp;
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
+		}
+	}	
+	
+	public remove(V value) => (boolean success)
+	{
+		int index = indexOf(value);
+		if( index == -1 )
+			return false;
+			
+		delete(index);
+		return true;	
+	}
+	
+	public immutable iterator() => (Iterator<V>)
+	{
+		return ArrayListIterator<V>:create();
+	}
+
+	private class ArrayListIterator<V> implements Iterator<V>
+	{
+		int index = 0;
+		int expectedModifications = modifications;
+		
+		private immutable checkForModifications() => ()
+		{
+			if( expectedModifications != modifications )
+				throw IllegalModificationException:create();		
+		}
+	
+		public immutable hasNext() => (boolean)
+		{
+			checkForModifications();
+			return index < size;
+		}
+		
+		public next() => (V)
+		{
+			checkForModifications();
+			if( index >= size )
+				throw IndexOutOfBoundsException:create();
+			try
+			{
+				V temp = check(elements[index]);
+				index += 1;
+				return temp;		
+			}
+			recover
+			{
+				//should never happen
+				throw UnexpectedNullException:create();
+			}
+		}
+	}
+
+}

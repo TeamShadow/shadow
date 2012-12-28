@@ -103,7 +103,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( containsInterfaceMethod(signature))
 			return true;
 
-		if( getExtendType() == null )
+		if( signature.getSymbol().equals("create") || getExtendType() == null )
 			return false;					
 		
 		//recursively check parents

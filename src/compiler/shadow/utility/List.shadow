@@ -1,0 +1,10 @@
+interface shadow.utility@List<E> extends CanIterate<E>, CanIndex<int,E>
+{
+	get size() => (int size);
+	add(E element) => (boolean success);
+	clear() => ();
+	contains(E element) => (boolean found);
+	indexOf(E element) => (int index);
+	delete(int index) => (E element);
+	remove(E element) => (boolean success);	
+}

@@ -129,7 +129,7 @@ TOKEN :
 | < CONSTANT: "constant" >
 | < CONTINUE: "continue" >
 | < _DEFAULT: "default" >
-| < DELETE: "delete" >
+//| < DELETE: "delete" >
 | < DESTROY: "destroy" >
 | < DO: "do" >
 | < DOUBLE: "double" >

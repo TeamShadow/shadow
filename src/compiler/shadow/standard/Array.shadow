@@ -1,4 +1,4 @@
-abstract final class shadow.standard@Array<T> implements CanIndex<T>
+abstract final class shadow.standard@Array<T> implements CanIndex<int[],T>
 {
 	get immutable int[] lengths = int:create[0];
 	nullable Object data = null;
@@ -36,8 +36,8 @@ abstract final class shadow.standard@Array<T> implements CanIndex<T>
 	}
 	public immutable native subarray( int start, int end ) => ( Array<T> );
 
-	public immutable native index( int index ) => (T);
-	public native index( int index, T value ) => ();
+	public immutable native index( int[] index ) => (T);
+	public native index( int[] index, T value ) => ();
 
 	public immutable toString() => ( String )
 	{
