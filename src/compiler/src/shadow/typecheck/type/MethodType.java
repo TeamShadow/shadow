@@ -7,8 +7,7 @@ public class MethodType extends Type {
 	protected List<String> parameterNames; /** List of parameter names */
 	protected SequenceType parameterTypes; /** List of parameter types */
 	protected SequenceType returns; /** List of return types */
-	protected MethodType typeWithoutTypeArguments;
-
+	
 	public MethodType() {
 		this(null, new Modifiers());
 	}
@@ -146,7 +145,7 @@ public class MethodType extends Type {
 	
 	public MethodType getTypeWithoutTypeArguments()
 	{		
-		return typeWithoutTypeArguments;
+		return (MethodType)typeWithoutTypeArguments;
 	}
 	
 	@Override

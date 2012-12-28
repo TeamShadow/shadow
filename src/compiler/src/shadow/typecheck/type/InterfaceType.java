@@ -88,9 +88,16 @@ public class InterfaceType extends ClassInterfaceBaseType {
 	public InterfaceType replace(SequenceType values, SequenceType replacements )
 	{		
 		if( isRecursivelyParameterized() )
-		{		
+		{					
+			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
+			if( cached != null )
+				return (InterfaceType)cached;
+			
 			InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers(), getOuter() );
 			replaced.setPackage(getPackage());
+			
+			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;			
+			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
 			
 			for( InterfaceType _interface : extendTypes )
 				replaced.addExtendType(_interface.replace(values, replacements));		

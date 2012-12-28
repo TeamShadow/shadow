@@ -3,10 +3,12 @@ package shadow.typecheck;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
@@ -18,9 +20,12 @@ import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTCreateDeclaration;
 import shadow.parser.javacc.ASTDestroyDeclaration;
+import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
+import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTLocalMethodDeclaration;
@@ -36,6 +41,7 @@ import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeDeclaration;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
+import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -57,10 +63,337 @@ import shadow.typecheck.type.TypeParameter;
 public class FieldAndMethodChecker extends BaseChecker {
 	
 	private ClassInterfaceBaseType declarationType = null;
+	private Map<Type,Node> nodeTable = null;
 		
-	public FieldAndMethodChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<String> importList, Package packageTree ) {
-		super(debug, typeTable, importList, packageTree );		
-	}	
+	public FieldAndMethodChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<String> importList, Package packageTree,  Map<Type,Node> nodeTable  ) {
+		super(debug, typeTable, importList, packageTree );
+		this.nodeTable = nodeTable;
+	}
+	
+	private void updateTypeParameters()
+	{	
+		
+		
+		//sets the correct types for type parameters in declarations
+		
+		
+		//first add all the type parameters in class and interface declarations
+		/*
+		for( Package p : getTypeTable().keySet() )
+		{
+			for( ClassInterfaceBaseType type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
+			{	
+				TreeSet<String> missingTypes = new TreeSet<String>();				
+				Node declarationNode = nodeTable.get(type);
+				if( declarationNode != null )	
+				{
+					currentType = type;			
+									
+					for( int i = 0; i < declarationNode.jjtGetNumChildren(); i++ )
+					{					
+						if( declarationNode.jjtGetChild(i) instanceof ASTTypeParameters )
+							processTypeParameters( type, (ASTTypeParameters)(declarationNode.jjtGetChild(i)), missingTypes );
+					}
+				}					
+									
+				
+				if( missingTypes.size() > 0 )	
+					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types: " + missingTypes);		
+			}
+		}
+		*/
+		
+		//then update the parameters in extends and implements list
+		//has to be done after all the type declarations are processed,
+		//otherwise we might update a superclass before the superclass parameters have been defined
+		for( Package p : getTypeTable().keySet() )
+		{
+			for( ClassInterfaceBaseType type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
+			{	
+				TreeSet<String> missingTypes = new TreeSet<String>();
+				Node declarationNode = nodeTable.get(type);
+				if( declarationNode != null )	
+				{
+					currentType = type;			
+									
+					for( int i = 0; i < declarationNode.jjtGetNumChildren(); i++ )
+					{
+						Node child = declarationNode.jjtGetChild(i);
+						
+						if( child instanceof ASTExtendsList )
+						{
+							if( currentType instanceof ClassType )
+							{
+								if( child.jjtGetNumChildren() > 0 )
+								{
+									updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(0)), missingTypes);
+									Type childType = child.jjtGetChild(0).getType();
+									
+									((ClassType) currentType).setExtendType((ClassType) childType);
+								}
+							}
+							else
+							{
+								InterfaceType interfaceType = (InterfaceType) currentType;
+								ArrayList<InterfaceType> extendTypes = interfaceType.getExtendTypes();
+								
+								for( int j = 0; j < child.jjtGetNumChildren(); j++ )
+								{
+									updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), missingTypes);
+									Type childType = child.jjtGetChild(j).getType();
+									
+									extendTypes.set(j, (InterfaceType) childType );									
+								}
+							}						
+						}
+						else if( child instanceof ASTImplementsList )
+						{					
+							ClassType classType = (ClassType) currentType;
+							ArrayList<InterfaceType> implementsTypes = classType.getInterfaces();							
+							
+							for( int j = 0; j < child.jjtGetNumChildren(); j++ )
+							{
+								updateTypeParameters( (ASTClassOrInterfaceType)(child.jjtGetChild(j)), missingTypes);
+								Type childType = child.jjtGetChild(j).getType();
+																
+								implementsTypes.set(j, (InterfaceType) childType);									
+							}							
+						}
+					}
+					
+					//update fields
+					for( Node field : type.getFields().values() )
+					{
+						Node parent = field.jjtGetParent();
+						ASTType typeNode = (ASTType) parent.jjtGetChild(0);
+						updateTypeParameters(typeNode, missingTypes);
+						field.setType(typeNode.getType());
+					}
+					
+					//update methods					
+					for( List<MethodSignature> signatures : type.getMethodMap().values() )
+						for( MethodSignature signature : signatures )
+							updateTypeParameters( signature, missingTypes );
+				}					
+									
+				
+				if( missingTypes.size() > 0 )	
+					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types: " + missingTypes);		
+				
+			}
+		}
+	}
+	
+	
+	
+	private void updateTypeParameters( MethodSignature signature, TreeSet<String> missingTypes  )
+	{
+		Node node = signature.getNode(); //MethodDeclaration, CreateDeclaration, or DestroyDeclaration
+		
+		if( node instanceof ASTMethodDeclaration )
+			node = node.jjtGetChild(0);
+		
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+		{
+			Node child = node.jjtGetChild(i);
+			
+			if( child instanceof ASTFormalParameters )				
+			{
+				for( int j = 0; j < child.jjtGetNumChildren(); j++ )
+					updateTypeParameters( (ASTFormalParameter) child.jjtGetChild(j), missingTypes  );				
+			}
+			else if( child instanceof ASTResultTypes )
+			{
+				for( int j = 0; j < child.jjtGetNumChildren(); j++ )
+					updateTypeParameters( (ASTResultType) child.jjtGetChild(j), missingTypes  );				
+			}			
+		}		
+	}
+		
+	private void updateTypeParameters(ASTType node, TreeSet<String> missingTypes)
+	{
+		Node child = node.jjtGetChild(0);
+		
+		if( child instanceof ASTReferenceType )
+			updateTypeParameters( (ASTReferenceType)child, missingTypes );
+		else if( child instanceof ASTFunctionType )
+			updateTypeParameters( (ASTFunctionType)child, missingTypes );		
+			
+		//PrimitiveTypes are ignored
+		//StaticArrayTypes... well, they may never exist
+			
+		node.setType(child.getType());
+	}
+	
+	private void updateTypeParameters(ASTFunctionType node,
+			TreeSet<String> missingTypes) {
+
+		MethodType methodType = new MethodType(currentType, new Modifiers());
+		
+		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+		{
+			Node child = node.jjtGetChild(i);
+			if( child instanceof ASTType )
+			{
+				updateTypeParameters( (ASTType) child, missingTypes  );
+				methodType.addParameter(child);
+			}
+			else if( child instanceof ASTResultTypes )
+			{	
+				for( int j = 0; j < child.jjtGetNumChildren(); j++ )
+				{
+					updateTypeParameters( (ASTResultType) child.jjtGetChild(j), missingTypes  );
+					methodType.addReturn(child.jjtGetChild(j));
+				}
+			}
+		}	
+		
+		node.setType(methodType);		
+	}
+
+	private void updateTypeParameters(ASTResultType node, TreeSet<String> missingTypes) {
+		
+		Node child = node.jjtGetChild(1); //child 0 is always Modifiers
+		
+		updateTypeParameters( (ASTType)child , missingTypes  );
+		node.setType(child.getType());
+	}
+	
+	private void updateTypeParameters(ASTFormalParameter node, TreeSet<String> missingTypes) {
+		
+		Node child = node.jjtGetChild(1); //child 0 is always Modifiers
+		
+		updateTypeParameters( (ASTType)child, missingTypes  );
+		node.setType(child.getType());
+	}
+
+	private void updateTypeParameters(ASTReferenceType node, TreeSet<String> missingTypes)
+	{
+		Node child = node.jjtGetChild(0);
+		
+		if( child instanceof ASTClassOrInterfaceType )
+			updateTypeParameters( (ASTClassOrInterfaceType) child, missingTypes );
+		
+		List<Integer> dimensions = node.getArrayDimensions();
+		
+		if( dimensions.size() == 0 )
+			node.setType(child.getType());
+		else
+			node.setType(new ArrayType(child.getType(), dimensions));	
+	}
+	
+	
+	// updates type parameters inside of extends and implements lists (and bounds lists)
+	private void updateTypeParameters(ASTClassOrInterfaceType node, TreeSet<String> missingTypes)
+	{
+		String typeName = node.getImage();	
+		ClassInterfaceBaseType type = lookupType(typeName); //retrieve the type without type parameters
+		
+		if(type == null)
+		{
+			addError(node, Error.UNDEF_TYP, typeName);			
+			type = Type.UNKNOWN;
+			missingTypes.add(typeName);
+		}
+		else
+		{	
+			//Container<T, List<String>, String, Thing<K>>.Stuff<U>		
+			
+			ClassInterfaceBaseType current = type;
+			ClassInterfaceBaseType next = null;
+			
+			// walk backwards up the type, snapping up parameters
+			// we go backwards because we need to set outer types
+			for( int i = node.jjtGetNumChildren() - 1; i >= 0; i-- )
+			{
+				Node child = node.jjtGetChild(i);				
+				if( child instanceof ASTClassOrInterfaceTypeSuffix  )
+				{					
+					if( child.jjtGetNumChildren() > 0 ) //has type parameters
+					{						
+						ASTTypeArguments typeArguments = (ASTTypeArguments) child.jjtGetChild(0);
+						SequenceType arguments = new SequenceType();
+						for( int j = 0; j < typeArguments.jjtGetNumChildren(); j++ )
+						{
+							ASTType argument = (ASTType) (typeArguments.jjtGetChild(j));
+							//recursively update the type parameters of the type parameters...							
+							updateTypeParameters( argument, missingTypes );
+							
+							arguments.add(argument);
+						}						
+						typeArguments.setType(arguments);					
+						
+						//InstantiatedType instantiatedType = new InstantiatedType(current, arguments);
+						ClassInterfaceBaseType instantiatedType = current.replace(current.getTypeParameters(), arguments);
+						//child.setType(instantiatedType.getInstantiatedType());
+						child.setType(instantiatedType);
+						if( i == node.jjtGetNumChildren() - 1 )
+							type = instantiatedType;								
+						
+						if( next != null )							
+							next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
+						
+						next = instantiatedType;
+						current = instantiatedType.getOuter();
+					}
+				}				
+			}			
+		}
+		
+		//reset the type now that it has type parameters 
+		node.setType(type);		
+	}
+
+	
+
+	/**
+	 * Adds type parameters to declarations and checks that the same parameter is not added multiple times.
+	 * It must be called before field and method checking (since other classes may be dependent on the information).
+	 * It must be called after all the types have been collected, otherwise it may depend on unknown types.
+	 * @param parentType
+	 * @param parameters
+	 * @param missingTypes
+	 */
+	
+
+	public void processTypeParameter(Type parentType, ASTTypeParameter node, TreeSet<String> missingTypes)
+	{		
+		String symbol = node.getImage();
+		TypeParameter typeParameter = new TypeParameter(symbol);		
+		node.setType(typeParameter);
+		
+		
+		if( parentType.isParameterized() )
+			for( ModifiedType existing : parentType.getTypeParameters() )
+				if( existing.getType().getTypeName().equals( typeParameter.getTypeName() ) )
+					addError( node, Error.MULT_SYM, "Multiply defined type parameter " + existing.getType().getTypeName() );
+		
+		parentType.addTypeParameter(node);
+		
+		if( node.jjtGetNumChildren() > 0 )
+		{
+			ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
+			for( int i = 0; i < bound.jjtGetNumChildren(); i++ )
+			{
+				processTypeBound( bound, missingTypes );
+				typeParameter.addBound((ClassInterfaceBaseType)bound.jjtGetChild(i).getType());
+			}
+		}
+	}
+
+
+	private void processTypeBound(ASTTypeBound bound, TreeSet<String> missingTypes)
+	{	
+		currentMethod.clear();		
+		
+		for( int i = 0; i < bound.jjtGetNumChildren(); i++ )
+		{
+			ASTClassOrInterfaceType child = (ASTClassOrInterfaceType) bound.jjtGetChild(i); //must be ASTClassOrInterfaceType			
+			updateTypeParameters(child, missingTypes);
+		}		
+	}
+
+	
 	
 	public void buildTypes( Map<String, Node> files ) throws ShadowException
 	{
@@ -69,6 +402,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 		//walk over all the files
 		for( Node node : files.values() )								
 			walker.walk(node);
+		
+		updateTypeParameters();
 		
 		//deal with class problems
 		for( Package p : typeTable.keySet() )
@@ -401,7 +736,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			// go through inserting all the idents
 			for(int i=1; i < node.jjtGetNumChildren(); ++i)
 			{
-				Node child = node.jjtGetChild(i);
+				ASTVariableDeclarator child = (ASTVariableDeclarator) node.jjtGetChild(i);
 				child.setType(type);
 				child.setModifiers(node.getModifiers());
 				child.setEnclosingType(currentType);
@@ -431,7 +766,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		
 		Type type = node.jjtGetChild(0).getType();
-		
+
 		List<Integer> dimensions = node.getArrayDimensions();
 		
 		if( dimensions.size() == 0 )
@@ -445,7 +780,7 @@ public class FieldAndMethodChecker extends BaseChecker {
 	@Override
 	public ClassInterfaceBaseType lookupType( String name ) //only addition to base checker is resolving type parameters
 	{		
-		if( currentType != declarationType ) //in declaration header, check type parameters of current class declaration
+		if( declarationType != null &&  currentType != declarationType ) //in declaration header, check type parameters of current class declaration
 		{
 			if( declarationType.isParameterized() )
 			{
@@ -486,50 +821,54 @@ public class FieldAndMethodChecker extends BaseChecker {
 		{
 			if (currentType instanceof ClassType)
 				((ClassType)currentType).addReferencedType(type);
-			
-			ClassInterfaceBaseType current = type;
-			ClassInterfaceBaseType next = null;
-			
-			//walk backwards up the type, snapping up parameters
-			//we go backwards because we need to set outer types
-			for( int i = node.jjtGetNumChildren() - 1; i >= 0; i-- )
+			/*
+			if( currentType == declarationType ) //doesn't happen in the extends list and implements list
 			{
-				Node child = node.jjtGetChild(i);				
-				if( child instanceof ASTClassOrInterfaceTypeSuffix  )
-				{					
-					if( child.jjtGetNumChildren() > 0 ) //has type parameters
-					{						
-						if( current.isParameterized() )
-						{
-							SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
-							SequenceType parameters = current.getTypeParameters();							
-							if( parameters.canAccept(arguments) )
+				ClassInterfaceBaseType current = type;
+				ClassInterfaceBaseType next = null;
+				
+				//walk backwards up the type, snapping up parameters
+				//we go backwards because we need to set outer types
+				for( int i = node.jjtGetNumChildren() - 1; i >= 0; i-- )
+				{
+					Node child = node.jjtGetChild(i);				
+					if( child instanceof ASTClassOrInterfaceTypeSuffix  )
+					{					
+						if( child.jjtGetNumChildren() > 0 ) //has type parameters
+						{						
+							if( current.isParameterized() )
 							{
-								ClassInterfaceBaseType instantiatedType = current.replace(parameters, arguments);
-								child.setType(instantiatedType);
-								if( i == node.jjtGetNumChildren() - 1 )
-									type = instantiatedType;								
-								
-								if( next != null )							
-									next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
-								
-								next = instantiatedType;
-								current = instantiatedType.getOuter();
+								SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
+								SequenceType parameters = current.getTypeParameters();							
+								if( parameters.canAccept(arguments) )
+								{
+									ClassInterfaceBaseType instantiatedType = current.replace(parameters, arguments);
+									child.setType(instantiatedType);
+									if( i == node.jjtGetNumChildren() - 1 )
+										type = instantiatedType;								
+									
+									if( next != null )							
+										next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
+									
+									next = instantiatedType;
+									current = instantiatedType.getOuter();
+								}
+								else
+								{
+									addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
+									break;
+								}
 							}
 							else
 							{
-								addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
+								addError( child, Error.TYPE_MIS, "Cannot instantiate type parameters for non-parameterized type: " + current);
 								break;
 							}
 						}
-						else
-						{
-							addError( child, Error.TYPE_MIS, "Cannot instantiate type parameters for non-parameterized type: " + current);
-							break;
-						}
-					}
-				}				
-			}			
+					}				
+				}	
+			}
+			*/
 		}
 				
 		node.setType(type);
@@ -864,37 +1203,40 @@ public class FieldAndMethodChecker extends BaseChecker {
 	@Override
 	public Object visit(ASTTypeParameter node, Boolean secondVisit)	throws ShadowException
 	{
-		TypeParameter typeParameter;
-		
-		Node grandparent = node.jjtGetParent().jjtGetParent();
-		
-		//only add generics to method declarations
-		if( grandparent instanceof ASTMethodDeclarator )
+		if( secondVisit )
 		{
-			if( secondVisit )
-			{			
-				typeParameter = (TypeParameter)(node.getType());
-				if( node.jjtGetNumChildren() > 0 )
-				{
-					ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
-					for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
-						typeParameter.addBound((ClassInterfaceBaseType)(bound.jjtGetChild(i).getType()));				
+			TypeParameter typeParameter;
+			
+			Node grandparent = node.jjtGetParent().jjtGetParent();
+			
+			//only add generics to method declarations
+			if( grandparent instanceof ASTMethodDeclarator )
+			{
+				if( secondVisit )
+				{			
+					typeParameter = (TypeParameter)(node.getType());
+					if( node.jjtGetNumChildren() > 0 )
+					{
+						ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
+						for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
+							typeParameter.addBound((ClassInterfaceBaseType)(bound.jjtGetChild(i).getType()));				
+					}
 				}
-			}
-			else
-			{			
-				Node declaration = node.jjtGetParent().jjtGetParent().jjtGetParent(); //method declaration is  three levels up
-				Type declarationType  = declaration.getType();
-				
-				String symbol = node.getImage();
-				typeParameter = new TypeParameter(symbol);
-				
-				for( ModifiedType existing : declarationType.getTypeParameters() )
-					if( existing.getType().getTypeName().equals( symbol ) )
-						addError( node, Error.MULT_SYM, "Multiply defined type parameter " + symbol );
-				
-				node.setType(typeParameter);
-				declarationType.addTypeParameter(node);
+				else
+				{			
+					Node declaration = node.jjtGetParent().jjtGetParent().jjtGetParent(); //method declaration is  three levels up
+					Type declarationType  = declaration.getType();
+					
+					String symbol = node.getImage();
+					typeParameter = new TypeParameter(symbol);
+					
+					for( ModifiedType existing : declarationType.getTypeParameters() )
+						if( existing.getType().getTypeName().equals( symbol ) )
+							addError( node, Error.MULT_SYM, "Multiply defined type parameter " + symbol );
+					
+					node.setType(typeParameter);
+					declarationType.addTypeParameter(node);
+				}
 			}
 		}
 		return WalkType.POST_CHILDREN;

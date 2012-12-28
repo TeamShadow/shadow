@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 
@@ -108,25 +109,16 @@ public class ClassType extends ClassInterfaceBaseType {
 		//recursively check parents
 		return getExtendType().recursivelyContainsInterfaceMethod(signature);
 	}
-
-	/*
-	public boolean recursivelyContainsMethod(MethodSignature signature, int modifiers ) //must have certain modifiers (usually public)
-	{
-		if( containsMethod(signature, modifiers))
-			return true;
-
-		if( getExtendType() == null )
-			return false;					
-		
-		//recursively check parents
-		return getExtendType().recursivelyContainsMethod(signature, modifiers );
-	}
-	*/
 	
 	public MethodSignature recursivelyGetIndistinguishableMethod(MethodSignature signature)
 	{		
 		if( containsIndistinguishableMethod(signature) )
 			return super.getIndistinguishableMethod(signature);
+		
+		
+		//recursively check outer
+		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsIndistinguishableMethod(signature) )		
+			return ((ClassType)getOuter()).recursivelyGetIndistinguishableMethod(signature) ;
 		
 
 		if( getExtendType() == null )
@@ -141,6 +133,10 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( containsIndistinguishableMethod(signature) )
 			return true;
 		
+		//recursively check outer
+		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsIndistinguishableMethod(signature) )		
+			return true;
+		
 		//recursively check parents
 		if( getExtendType() != null )
 			return getExtendType().recursivelyContainsIndistinguishableMethod(signature);	
@@ -150,6 +146,9 @@ public class ClassType extends ClassInterfaceBaseType {
 	
 	public boolean recursivelyContainsField(String fieldName) {
 		if( containsField(fieldName) )
+			return true;
+				
+		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsField(fieldName) )		
 			return true;
 		
 		if( getExtendType() == null )
@@ -162,9 +161,12 @@ public class ClassType extends ClassInterfaceBaseType {
 	{
 		if( containsMethod(symbol) )
 			return true;
+				
+		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsMethod(symbol) )		
+			return true;
 		
 		if( getExtendType() == null )
-			return false;
+			return false;		
 		
 		return getExtendType().recursivelyContainsMethod(symbol);
 	}
@@ -195,6 +197,9 @@ public class ClassType extends ClassInterfaceBaseType {
 		if( containsField(fieldName) )
 			return getField(fieldName);
 		
+		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsField(fieldName) )		
+			return ((ClassType)getOuter()).recursivelyGetField(fieldName);
+		
 		if( getExtendType() == null )
 			return null;
 				
@@ -215,6 +220,9 @@ public class ClassType extends ClassInterfaceBaseType {
 			for( MethodSignature signature : currentSignatures )
 				if( !list.contains( signature ) )
 					list.add(signature);
+		
+		if( getOuter() != null && getOuter() instanceof ClassType && !methodName.equals("create") )
+			((ClassType)getOuter()).recursivelyGetMethods(methodName,list);		
 		
 		if( getExtendType() != null && !methodName.equals("create") )
 			return getExtendType().recursivelyGetMethods(methodName, list);
@@ -358,9 +366,16 @@ public class ClassType extends ClassInterfaceBaseType {
 	public ClassType replace(SequenceType values, SequenceType replacements )
 	{	
 		if( isRecursivelyParameterized() )
-		{		
+		{	
+			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
+			if( cached != null )
+				return (ClassType)cached;
+			
 			ClassType replaced = new ClassType( getTypeName(), getModifiers(), getOuter() );
-			replaced.setPackage(getPackage());						
+			replaced.setPackage(getPackage());
+			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
+			
+			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
 			
 			replaced.setExtendType(getExtendType().replace(values, replacements));			
 			

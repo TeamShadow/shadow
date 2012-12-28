@@ -1,6 +1,8 @@
 package shadow.typecheck.type;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.typecheck.Package;
@@ -15,8 +17,73 @@ public abstract class Type {
 	protected Package _package;
 	private SequenceType typeParameters = null;	
 	private boolean parameterized = false;
+	protected Type typeWithoutTypeArguments = this;
 	//private boolean instantiated = false;
 	//private SequenceType typeArguments;
+	
+	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();
+	
+	private static class TypeArgumentCache
+	{
+		public ModifiedType argument;
+		public Type instantiatedType;
+		public List<TypeArgumentCache> children;
+	}
+	
+	public Type getInstantiation( SequenceType typeArguments  )
+	{
+		return getInstantiation(instantiatedTypes, typeArguments, 0 );
+	}
+	
+	public Type getTypeWithoutTypeArguments()
+	{		
+		return typeWithoutTypeArguments;
+	}
+	
+	private static Type getInstantiation(TypeArgumentCache types, SequenceType typeArguments, int index  )
+	{
+		if( index == typeArguments.size() )
+			return types.instantiatedType;
+		
+		if( types.children == null )
+			return null;
+		
+		ModifiedType argument = typeArguments.get(index);
+		for( TypeArgumentCache child : types.children )		
+			if( child.argument != null && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
+				return getInstantiation( child, typeArguments, index + 1 );
+
+		return null;
+	}
+	
+	public void addInstantiation( SequenceType typeArguments, Type type  )
+	{
+		addInstantiation(instantiatedTypes, typeArguments, 0, type );
+	}
+	
+	private static void addInstantiation(TypeArgumentCache types, SequenceType typeArguments, int index, Type type  )
+	{		
+		if( index == typeArguments.size() )		
+			types.instantiatedType = type;			
+		else
+		{		
+			if( types.children == null )
+				types.children = new ArrayList<TypeArgumentCache>();
+			
+			ModifiedType argument = typeArguments.get(index);
+			for( TypeArgumentCache child : types.children )		
+				if( child.argument != null && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
+				{
+					addInstantiation( child, typeArguments, index + 1, type );
+					return;
+				}
+			
+			TypeArgumentCache newChild = new TypeArgumentCache();
+			newChild.argument = argument;
+			types.children.add(newChild);
+			addInstantiation( newChild, typeArguments, index + 1, type );
+		}
+	}
 
 
 		
@@ -367,34 +434,35 @@ public abstract class Type {
 	}
 	
 	public boolean acceptsAssignment( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType ) 
-	{		
-		if( assignmentType == ASTAssignmentOperator.AssignmentType.EQUAL )
-			return rightType.isSubtype(this);
-		
+	{			
 		switch( assignmentType  )
 		{
+		case EQUAL:
+			return rightType.isSubtype(this);
+			
 		case PLUSASSIGN:			
 		case MINUSASSIGN:
 		case STARASSIGN:
 		case SLASHASSIGN:
+		case MODASSIGN:
 			return isNumerical() && rightType.isSubtype(this);			
 
 		case ANDASSIGN:
 		case ORASSIGN:
 		case XORASSIGN:
-		case MODASSIGN:
+			return isIntegral() && rightType.isSubtype(this);
+			
 		case LEFTSHIFTASSIGN:
 		case RIGHTSHIFTASSIGN:
 		case RIGHTROTATEASSIGN:
 		case LEFTROTATEASSIGN:
-			return isIntegral() && rightType.isSubtype(this);
+			return isIntegral() && rightType.isIntegral();
 
 		case CATASSIGN:
 			return isString();
 		}
 		
-		return false;
-		
+		return false;		
 	}
 	
 

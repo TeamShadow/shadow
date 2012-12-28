@@ -77,11 +77,15 @@ public class TypeCollector extends BaseChecker
 		this.typeChecker = typeChecker;	
 	}
 	
+	public Map<Type,Node> getNodeTable()
+	{
+		return nodeTable;
+	}	
+			
 		
 	private void updateTypeParameters()
 	{	
-		
-		
+	
 		//sets the correct types for type parameters in declarations
 		
 		
@@ -109,6 +113,9 @@ public class TypeCollector extends BaseChecker
 			}
 		}
 		
+		/*
+		
+		//no!  put this in field and method checker so that methods get updated
 		//then update the parameters in extends and implements list
 		//has to be done after all the type declarations are processed,
 		//otherwise we might update a superclass before the superclass parameters have been defined
@@ -174,6 +181,7 @@ public class TypeCollector extends BaseChecker
 				
 			}
 		}
+		*/
 	}
 	
 	
@@ -578,7 +586,8 @@ public class TypeCollector extends BaseChecker
 		 * type parameters are updated separately because they require knowledge of
 		 * the type hierarchy constructed in updateMissingTypes() 
 		 */			
-		updateTypeParameters();	
+		updateTypeParameters();
+		//this needs to go in field an method checker, otherwise fields and methods are not updated
 	}
 
 

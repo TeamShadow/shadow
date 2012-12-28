@@ -1,5 +1,5 @@
 immutable final class shadow.standard@String
-implements CanCompare<String>, CanIterate<String>
+implements CanCompare<String>, CanIterate<code>
 {
 	ubyte[] data = ubyte:create[0];
 	boolean ascii = true;
@@ -34,7 +34,7 @@ implements CanCompare<String>, CanIterate<String>
 		this:data = data;
 		this:ascii = ascii;
 	}
-
+	
 	public getChar( int index ) => ( ubyte )
 	{
 		return data[index];
@@ -94,5 +94,43 @@ implements CanCompare<String>, CanIterate<String>
 	public toString() => ( String )
 	{
 		return this;
+	}
+	
+	public immutable iterator() => (Iterator<code>)
+	{
+		return StringIterator:create();
+	}
+	
+	private class StringIterator implements Iterator<code>
+	{
+		int index = 0;
+	
+		public immutable hasNext() => (boolean)
+		{
+			return index < data->length;
+		}
+		
+		public next() => (code)
+		{
+			int bytes = 1;
+			uint value = data[index]; 
+			
+			if( value >= 0xF0 )
+				bytes = 4;
+			else if( value >= 0xE0 )
+				bytes = 3;
+			else if(  value >= 0xC0 )
+				bytes = 2;
+			
+			while( bytes > 1 )
+			{
+				value <<= 8;
+				index += 1;
+				value |= data[index];
+				bytes -= 1;
+			}			
+			
+			return cast<code>value;
+		}
 	}
 }

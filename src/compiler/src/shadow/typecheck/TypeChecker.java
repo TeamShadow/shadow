@@ -50,7 +50,7 @@ public class TypeChecker {
 			return false;
 		}
 		
-		FieldAndMethodChecker builder = new FieldAndMethodChecker(debug, typeTable, importList, packageTree );
+		FieldAndMethodChecker builder = new FieldAndMethodChecker(debug, typeTable, importList, packageTree, collector.getNodeTable() );
 		builder.buildTypes( collector.getFiles() );
 
 		logger.debug("TYPE BUILDING DONE");

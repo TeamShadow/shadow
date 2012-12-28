@@ -673,12 +673,7 @@ public class ClassChecker extends BaseChecker {
 			{					
 				Type current = child.getType();										
 				
-				if( current.isIntegral() && result.isIntegral() )
-				{							
-					if( result.isSubtype( current ))  //upgrades type to broader type (e.g. int goes to long)
-						result = current;
-				}
-				else		
+				if( !current.isIntegral() || !result.isIntegral() )				
 				{
 					addError(child, Error.INVL_TYP, "Shift and rotate operations not defined on types " + result + " and " + current);
 					node.setType(Type.UNKNOWN);

@@ -77,6 +77,4 @@ set name(Type value) => () {
 	name = value;
 }
 
-methods in interfaces cannot be immutable
-
- 
+immutable is "weak":  it only means that this (and consequently fields) can't be changed by this method (though it is possible that it changes stuff indirectly) 

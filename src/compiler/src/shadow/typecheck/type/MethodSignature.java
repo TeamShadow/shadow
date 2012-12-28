@@ -3,19 +3,20 @@ package shadow.typecheck.type;
 import java.util.List;
 
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.SignatureNode;
 
 public class MethodSignature implements Comparable<MethodSignature> {
 	protected final MethodType type;
 	protected final String symbol;
-	private final Node node;	/** The AST node that corresponds to the branch of the tree for this method */
+	private final SignatureNode node;	/** The AST node that corresponds to the branch of the tree for this method */
 
-	public MethodSignature(MethodType type, String symbol, Node node) {
+	public MethodSignature(MethodType type, String symbol, SignatureNode node) {
 		this.type = type;
 		this.symbol = symbol;
 		this.node = node;
 	}
 	
-	public MethodSignature(ClassInterfaceBaseType enclosingType, String symbol, Modifiers modifiers, Node node) {
+	public MethodSignature(ClassInterfaceBaseType enclosingType, String symbol, Modifiers modifiers, SignatureNode node) {
 		type = new MethodType(enclosingType, modifiers);
 		this.symbol = symbol;
 		this.node = node;
@@ -46,7 +47,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return symbol;
 	}
 
-	public Node getNode() {
+	public SignatureNode getNode() {
 		return node;
 	}
 		

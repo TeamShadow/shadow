@@ -1,7 +1,6 @@
 package shadow.typecheck.type;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -9,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.Node;
 
 public abstract class ClassInterfaceBaseType extends Type
