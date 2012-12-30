@@ -4,10 +4,8 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public abstract class TACOperand extends TACSimpleNode
-		implements ModifiedType
+public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 {
-	private String name;
 	protected TACOperand()
 	{
 		super();
@@ -17,9 +15,14 @@ public abstract class TACOperand extends TACSimpleNode
 		super(node);
 	}
 
-	public final void setName(String newName)
+	private String symbol;
+	public final void setSymbol(String newSymbol)
 	{
-		name = newName;
+		symbol = newSymbol;
+	}
+	public final String getSymbol()
+	{
+		return symbol;
 	}
 
 	public abstract Type getType();
@@ -27,10 +30,6 @@ public abstract class TACOperand extends TACSimpleNode
 	public Modifiers getModifiers()
 	{
 		return new Modifiers();
-	}
-	public final String getName()
-	{
-		return name;
 	}
 
 	protected final TACOperand check(TACOperand operand)

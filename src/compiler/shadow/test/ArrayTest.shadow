@@ -2,7 +2,8 @@ class shadow.test@ArrayTest
 {
 	public main( Array<Object> array ) => ()
 	{
-		array.index(0, 0);
+		int[] indicies = int:create[1];
+		array.index(indicies, 0);
 		/*int[] lengths = int:create[1];
 		lengths[0] = 5;
 		Array<Object> array = Array<Object>:create(lengths);

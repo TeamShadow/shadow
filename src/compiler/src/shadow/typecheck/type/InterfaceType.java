@@ -52,6 +52,26 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		return false;
 	}
 
+	@Override
+	protected void recursivelyGetAllMethods( List<MethodSignature> methodList )
+	{
+		for ( InterfaceType parent : getExtendTypes() )
+			parent.recursivelyGetAllMethods(methodList);
+
+		for ( List<MethodSignature> methods : getMethodMap().values() )
+			for ( MethodSignature method : methods )
+				methodList.add(method);
+	}
+
+	@Override
+	protected void recursivelyOrderAllMethods( List<MethodSignature> methodList )
+	{
+		for ( InterfaceType parent : getExtendTypes() )
+			parent.recursivelyGetAllMethods(methodList);
+
+		orderMethods(methodList);
+	}
+
 	public ArrayList<InterfaceType> getExtendTypes()
 	{
 		return extendTypes;

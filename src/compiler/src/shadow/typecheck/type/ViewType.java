@@ -1,6 +1,7 @@
 package shadow.typecheck.type;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 
 public class ViewType extends ClassInterfaceBaseType {
@@ -45,5 +46,17 @@ public class ViewType extends ClassInterfaceBaseType {
 	@Override
 	public boolean isDescendentOf(Type type) {
 		return false;
+	}
+
+	@Override
+	protected void recursivelyGetAllMethods(List<MethodSignature> methodList) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void recursivelyOrderAllMethods(List<MethodSignature> methodList) {
+		// TODO Auto-generated method stub
+		
 	}
 }

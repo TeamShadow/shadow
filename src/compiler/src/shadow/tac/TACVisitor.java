@@ -13,6 +13,7 @@ import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNodeRef;
@@ -40,6 +41,7 @@ public interface TACVisitor
 	public abstract void visit(TACLength node) throws ShadowException;
 	public abstract void visit(TACLiteral node) throws ShadowException;
 	public abstract void visit(TACLoad node) throws ShadowException;
+	public abstract void visit(TACMethodRef node) throws ShadowException;
 	public abstract void visit(TACNewArray node) throws ShadowException;
 	public abstract void visit(TACNewObject node) throws ShadowException;
 	public abstract void visit(TACNodeRef node) throws ShadowException;

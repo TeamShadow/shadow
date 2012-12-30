@@ -2,30 +2,44 @@ immutable final class shadow.standard@Class
 {
 	String name = "";
 	get nullable Class parent = null;
-	Interface[] interfaces = Interface:create[0];
-	int width, size, flags;
+	Class[] interfaces = Class:create[0];
+	nullable Object data = null;
+	int size, width, flags;
 
 	private create() { }
 	private native allocate() => ( Object );
 	private native allocate( int length ) => ( Object );
 
+	public isInterface() => ( boolean )
+	{
+		return (flags & 0b01) != 0;
+	}
+	public isPrimitive() => ( boolean )
+	{
+		return (flags & 0b10) != 0;
+	}
+
 	public isSubtype( Class other ) => ( boolean )
 	{
 		if ( this == other )
 			return true;
-		try {
-			return check(parent).isSubtype(other);
-		} recover { }
-		return false;
-	}
-
-	public isSubtype( Interface other ) => ( boolean )
-	{
-		for ( int i = 0; i < interfaces->length; i += 1 )
-			try {
-				if ( check(interfaces[i]).isSubtype( other ) )
+		if ( other.isInterface() )
+			try
+			{
+				return check(parent).isSubtype(other);
+			}
+			recover
+			{
+			}
+		else for ( int i = 0; i < interfaces->length; i += 1 )
+			try
+			{
+				if ( check(interfaces[i]).isSubtype(other) )
 					return true;
-			} recover { }
+			}
+			recover
+			{
+			}
 		return false;
 	}
 

@@ -150,5 +150,14 @@ public class TypeParameter extends ClassInterfaceBaseType
 		// should never get called
 		return false;
 	}
-	
+
+	@Override
+	protected void recursivelyGetAllMethods(List<MethodSignature> methodList) {
+		// should never get called
+	}
+
+	@Override
+	protected void recursivelyOrderAllMethods(List<MethodSignature> methodList) {
+		// should never get called
+	}
 }

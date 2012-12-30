@@ -19,6 +19,7 @@ import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACOperand;
@@ -118,7 +119,7 @@ public class TextOutput extends AbstractOutput
 	@Override
 	public void visit(TACLabelRef node) throws ShadowException
 	{
-		node.setName(String.format("_%d_", tempCounter++));
+		node.setSymbol(String.format("_%d_", tempCounter++));
 	}
 
 	@Override
@@ -194,7 +195,7 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACCall node) throws ShadowException
 		{
-			TACMethod method = node.getMethod();
+			TACMethodRef method = node.getMethod();
 			sb.append(method.getPrefixType().getQualifiedName()).append(':').
 					append(method.getName()).append('(');
 			for (TACOperand param : node.getParameters())
@@ -230,21 +231,19 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACPropertyRef node) throws ShadowException
 		{
-			visit(sb, node.getPrefix()).append("->").
-					append(node.getReferenceName());
+			visit(sb, node.getPrefix()).append("->").append(node.getName());
 		}
 
 		@Override
 		public void visit(TACFieldRef node) throws ShadowException
 		{
-			visit(sb, node.getPrefix()).append(':').
-					append(node.getReferenceName());
+			visit(sb, node.getPrefix()).append(':').append(node.getName());
 		}
 
 		@Override
 		public void visit(TACVariableRef node) throws ShadowException
 		{
-			sb.append(node.getVariableName());
+			sb.append(node.getName());
 		}
 
 		@Override

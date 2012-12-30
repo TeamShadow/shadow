@@ -163,7 +163,11 @@ public abstract class Type {
 	
 	public String getMangledName()
 	{
-		return mangle(new StringBuilder("_C"), getTypeName()).toString();
+		StringBuilder sb = new StringBuilder("_C");
+		String[] parts = getTypeName().split(":");
+		for ( String part : parts )
+			mangle(sb, part).append("_I");
+		return sb.delete(sb.length() - 2, sb.length()).toString();
 	}
 	
 	public String getImportName() //does not include parameters
@@ -510,7 +514,7 @@ public abstract class Type {
 			else
 			{
 				sb.append("_U");
-				for (int shift = 12; shift >= 0; shift -= 8)
+				for (int shift = 12; shift >= 0; shift -= 4)
 					sb.append(Character.forDigit((c >> shift) & 0xf, 16));
 			}
 		}

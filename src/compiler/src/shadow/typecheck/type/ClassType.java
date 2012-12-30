@@ -9,10 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
-import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 
@@ -305,56 +303,26 @@ public class ClassType extends ClassInterfaceBaseType {
 		return set;
 	}
 
-	private Map<MethodSignature, Integer> methodIndexCache;
-	public int getMethodIndex( MethodSignature method )
-	{
-		// Lazily load cache
-		if ( methodIndexCache == null )
-		{
-			Map<MethodSignature, Integer> cache =
-					new HashMap<MethodSignature, Integer>();
-			List<MethodSignature> methods = getOrderedMethods();
-			for ( int i = 0; i < methods.size(); i++ )
-				cache.put(methods.get(i), i);
-			methodIndexCache = cache;
-		}
-
-		Integer index = methodIndexCache.get(method);
-		return index == null ? -1 : index;
-	}
-
-	public List<MethodSignature> getOrderedMethods()
-	{
-		List<MethodSignature> methodList = new ArrayList<MethodSignature>();
-		
-		recursivelyUpdateOrderedMethods(methodList);
-		
-		return methodList;
-	}
-	private void recursivelyUpdateOrderedMethods( List<MethodSignature> methodList )
+	@Override
+	protected void recursivelyGetAllMethods( List<MethodSignature> methodList )
 	{
 		if ( getExtendType() != null )
-			getExtendType().recursivelyUpdateOrderedMethods(methodList);
-		
-		TreeMap<String, List<MethodSignature>> sortedMethods =
-				new TreeMap<String, List<MethodSignature>>(methodTable);
+			getExtendType().recursivelyGetAllMethods(methodList);
 
-		for ( List<MethodSignature> methods : sortedMethods.values() )
+		for ( List<MethodSignature> methods : getMethodMap().values() )
 			for ( MethodSignature method : methods )
-				if ( method.getModifiers().isPublic() )
-		{
-			int index;
-			for ( index = 0; index < methodList.size(); index++ )
-				if ( methodList.get(index).isIndistinguishable(method) )
-			{
-				methodList.set(index, method);
-				break;
-			}
-			if ( index == methodList.size() )
 				methodList.add(method);
-		}
 	}
-	
+
+	@Override
+	protected void recursivelyOrderAllMethods( List<MethodSignature> methodList )
+	{
+		if ( getExtendType() != null )
+			getExtendType().recursivelyOrderAllMethods(methodList);
+
+		orderMethods(methodList);
+	}
+
 	@Override
 	public String getMangledName()
 	{

@@ -127,21 +127,21 @@ public class COutput extends AbstractOutput
 	@Override
 	public void visit(TACVariableRef node) throws ShadowException
 	{
-		node.setName("%" + node.getName());
+		node.setSymbol("%" + node.getSymbol());
 	}
 	@Override
 	public void visit(TACFieldRef node) throws ShadowException
 	{
-		node.setName("%" + tempCounter++);
-		c.write(node.getName() + " = getelementptr inbounds " + typeAndName(
+		node.setSymbol("%" + tempCounter++);
+		c.write(node.getSymbol() + " = getelementptr inbounds " + typeAndName(
 				node.getPrefix()) + ", i64 0, i32 " + (node.getIndex() + 1));
 	}
 
 	@Override
 	public void visit(TACLoad node) throws ShadowException
 	{
-		node.setName("%" + tempCounter++);
-		c.write(node.getName() + " = load " +
+		node.setSymbol("%" + tempCounter++);
+		c.write(node.getSymbol() + " = load " +
 				typeAndName(node.getReference(), true));
 	}
 	@Override
@@ -155,7 +155,7 @@ public class COutput extends AbstractOutput
 	public void visit(TACReturn node) throws ShadowException
 	{
 		if (node.hasReturnValue())
-			c.write("ret " + node.getReturnValue().getName());
+			c.write("ret " + node.getReturnValue().getSymbol());
 		else
 			c.write("ret void");
 	}
@@ -196,7 +196,7 @@ public class COutput extends AbstractOutput
 		StringBuilder builder = new StringBuilder(typeToString(node.getType()));
 		if (reference)
 			builder.append('*');
-		return builder.append(' ').append(node.getName()).toString();
+		return builder.append(' ').append(node.getSymbol()).toString();
 	}
 	private static String typeToString(Type type)
 	{

@@ -1169,9 +1169,9 @@ void PrimaryPrefix():
 | "this" { jjtThis.setImage("this"); }
 | "super" { jjtThis.setImage("super"); }
 | CheckExpression()
-| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" { jjtThis.addToImage('('); } ConditionalExpression() ")"
-| PrimitiveType()
-| FunctionType()
+| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
+| PrimitiveType() { jjtThis.setImage("type"); }
+| FunctionType() { jjtThis.setImage("type"); }
 | [LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 //last production catches class types and identifiers
 }

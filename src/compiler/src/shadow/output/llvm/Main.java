@@ -137,17 +137,19 @@ public class Main {
 		        }
 		        else
 		        {
-		        	TACModule module = tacBuilder.build(node);
-		        	System.out.println(module);
-
-			        // build the TAC
-			        new LLVMOutput(true).build(module);
-
-			        // verify the TAC
-			        new LLVMOutput(false).build(module);
-
-			        // write to file
-			        new LLVMOutput(shadowFile).build(module);
+		        	for(TACModule module : tacBuilder.build(node))
+		        	{
+			        	System.out.println(module);
+	
+				        // build the TAC
+				        new LLVMOutput(true).build(module);
+	
+				        // verify the TAC
+				        new LLVMOutput(false).build(module);
+	
+				        // write to file
+				        new LLVMOutput(shadowFile).build(module);
+				    }
 
 			        long stopTime = System.currentTimeMillis();
 	

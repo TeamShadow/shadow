@@ -32,7 +32,7 @@ public class TACPropertyRef extends TACReference
 	{
 		return prefix;
 	}
-	public String getReferenceName()
+	public String getName()
 	{
 		return name;
 	}

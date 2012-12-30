@@ -137,10 +137,9 @@ public class Main {
 		        else
 		        {
 			        // build the TAC
-		        	TACModule module = tacBuilder.build(node);
-
-			        // output the TAC
-			        new LLVMOutput(shadowFile).build(module);
+		            for(TACModule module : tacBuilder.build(node))
+			            // output the TAC
+			            new LLVMOutput(shadowFile).build(module);
 		    		
 			        long stopTime = System.currentTimeMillis();
 	

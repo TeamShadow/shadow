@@ -38,7 +38,7 @@ public class TACLabelRef extends TACOperand
 
 		public String getName()
 		{
-			return TACLabelRef.this.getName();
+			return TACLabelRef.this.getSymbol();
 		}
 
 		@Override
@@ -90,6 +90,6 @@ public class TACLabelRef extends TACOperand
 	@Override
 	public String toString()
 	{
-		return getName();
+		return getSymbol();
 	}
 }

@@ -21,7 +21,6 @@ public class LLVMMain
 		List<String> arguments = new ArrayList<String>();
 		arguments.add("shadow/standard/Object.shadow");
 		arguments.add("shadow/standard/Class.shadow");
-		arguments.add("shadow/standard/Interface.shadow");
 		arguments.add("shadow/standard/Array.shadow");
 		arguments.add("shadow/standard/String.shadow");
 		arguments.add("shadow/standard/MutableString.shadow");
@@ -40,7 +39,6 @@ public class LLVMMain
 		arguments.add("shadow/standard/Reference.shadow");
 		arguments.add("shadow/standard/System.shadow");
 		arguments.add("shadow/io/Console.shadow");
-		arguments.add("shadow/utility/Random.shadow");
 		arguments.add("shadow/test/Test.shadow");
 		arguments.add("shadow/test/ConsoleTest.shadow");
 		arguments.add("shadow/test/ArrayTest.shadow");

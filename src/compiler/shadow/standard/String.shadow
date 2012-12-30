@@ -115,16 +115,16 @@ implements CanCompare<String>, CanIterate<code>
 			int bytes = 1;
 			uint value = data[index]; 
 			
-			if( value >= 0xF0 )
+			if( value >= 0xF0u )
 				bytes = 4;
-			else if( value >= 0xE0 )
+			else if( value >= 0xE0u )
 				bytes = 3;
-			else if(  value >= 0xC0 )
+			else if(  value >= 0xC0u )
 				bytes = 2;
 			
 			while( bytes > 1 )
 			{
-				value <<= 8;
+				value <<= 8u;
 				index += 1;
 				value |= data[index];
 				bytes -= 1;

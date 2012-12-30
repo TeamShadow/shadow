@@ -11,7 +11,7 @@ class shadow.standard@MutableString
 	}
 	public create( nullable Object initialValue )
 	{
-		append( initialValue );
+		append(initialValue);
 	}
 
 	public ensureCapacity( int length ) => ( MutableString )
@@ -32,7 +32,7 @@ class shadow.standard@MutableString
 
 	public append( nullable Object value ) => ( MutableString )
 	{
-		String string = ( value ?? "null" ).toString();
+		String string = # value;
 		ensureCapacity( length + string->length );
 		for ( int i = 0; i < string->length; i += 1, length += 1 )
 			data[length] = string.getChar(i);
@@ -48,9 +48,6 @@ class shadow.standard@MutableString
 
 	public immutable toString() => ( String )
 	{
-		ubyte[] data = ubyte:create[length]; 
-		for ( int i = 0; i < data->length; i += 1 )
-			data[i] = this:data[i];
-		return String:create(data);
+		return String:create(cast<ubyte[]>(cast<Object>data.subarray(0, length)));
 	}
 }

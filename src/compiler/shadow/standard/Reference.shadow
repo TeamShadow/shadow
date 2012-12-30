@@ -10,6 +10,6 @@ class shadow.standard@Reference<T>
 	}
 	public immutable toString() => ( String )
 	{
-		return (value ?? cast<Object> "null").toString();
+		return # value;
 	}
 }

@@ -43,6 +43,9 @@ public class TACModule
 		add(Type.ULONG);
 		add(Type.FLOAT);
 		add(Type.DOUBLE);
+		for (ClassInterfaceBaseType innerClass :
+				moduleType.getInnerClasses().values())
+			add(innerClass);
 	}
 	private void add(ClassInterfaceBaseType type)
 	{

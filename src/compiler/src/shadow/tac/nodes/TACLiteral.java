@@ -156,7 +156,7 @@ public class TACLiteral extends TACOperand
 			type = Type.INT;
 			value = (int)parseNumber(literal, 32);
 		}
-		setName(toString());
+		setSymbol(toString());
 	}
 
 	private static String parseString(String string)

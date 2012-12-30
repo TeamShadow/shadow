@@ -1,2 +1,7 @@
 final immutable class shadow.standard@Boolean
-{}
+{
+	public toString() => ( String )
+	{
+		return this ? "true", "false";
+	}
+}

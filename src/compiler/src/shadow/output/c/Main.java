@@ -138,9 +138,8 @@ public class Main {
 		        else
 		        {
 			        // build the TAC
-			        TACModule module = tacBuilder.build(node);
-	
-			        new COutput().build(module);
+			        for(TACModule module : tacBuilder.build(node))
+			            new COutput().build(module);
 		    		
 			        long stopTime = System.currentTimeMillis();
 	

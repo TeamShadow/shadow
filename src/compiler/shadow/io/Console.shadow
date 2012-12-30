@@ -2,7 +2,7 @@ immutable singleton shadow.io@Console
 {
 	public print( nullable Object value ) => ( Console )
 	{
-		return print(#value);
+		return print(# value);
 	}
 	public printLine( nullable Object value ) => ( Console )
 	{
@@ -13,7 +13,7 @@ immutable singleton shadow.io@Console
 
 	public printError( nullable Object value ) => ( Console )
 	{
-		return printError(#value);
+		return printError(# value);
 	}
 	public printErrorLine( nullable Object value ) => ( Console )
 	{

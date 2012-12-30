@@ -10,10 +10,9 @@ abstract final class shadow.standard@Array<T> implements CanIndex<int[],T>
 	public create( int[] lengths )
 	{
 		this:lengths = cast<int[]>(cast<Object>lengths.copy());
-		this:data = allocate(this->length);
-		// this:data = T:class.allocate(this->length);
+		this:data = allocate(T:class, this->length); // T:class.allocate(this->length);
 	}
-	private immutable native allocate( int length ) => ( Object );
+	private immutable native allocate( Class type, int length ) => ( Object );
 
 	public immutable get length() => ( int )
 	{
@@ -29,23 +28,47 @@ abstract final class shadow.standard@Array<T> implements CanIndex<int[],T>
 
 	public immutable copy() => ( Array<T> )
 	{
-		Array<T> copy = Array<T>:create(this->lengths, allocate(this->length));
-		for ( int i = 0; i < this->length; i += 1 )
-			copy.index(i, index(i));
+		Array<T> copy = Array<T>:create(this->lengths, allocate(T:class, this->length));
+		int[] indicies = int:create[this->dims];
+		while ( indicies[0] != this->lengths[0] )
+		{
+			copy.index(indicies, index(indicies));
+			int i = indicies->length - 1;
+			for ( indicies[i] += 1; i > 0 and indicies[i] == this->lengths[i];
+					i -= 1, indicies[i] += 1 )
+				indicies[i] = 0;
+		}
 		return copy;
 	}
 	public immutable native subarray( int start, int end ) => ( Array<T> );
 
-	public immutable native index( int[] index ) => (T);
-	public native index( int[] index, T value ) => ();
+	public immutable native index( int[] indicies ) => (T);
+	public native index( int[] indicies, T value ) => ();
+
+	public immutable getBaseClass() => ( Class )
+	{
+		return T:class;
+	}
 
 	public immutable toString() => ( String )
 	{
 		if ( this->length == 0 )
 			return "[]";
-		MutableString string = MutableString:create("[ ").append(index(0));
-		for ( int i = 1; i < this->length; i += 1 )
-			string.append(", ").append(index(i));
+		MutableString string = MutableString:create("[ ");
+		int[] indicies = int:create[this->dims];
+		boolean first = true;
+		while ( indicies[0] != this->lengths[0] )
+		{
+			if ( first )
+				first = false;
+			else
+				string.append(", ");
+			string.append(index(indicies));
+			int i = indicies->length - 1;
+			for ( indicies[i] += 1; i > 0 and indicies[i] == this->lengths[i];
+					i -= 1, indicies[i] += 1 )
+				indicies[i] = 0;
+		}
 		return string.append(" ]").toString();
 	}
 }

@@ -1,14 +1,15 @@
 package shadow.typecheck.type;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
-import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.Node;
 
 public abstract class ClassInterfaceBaseType extends Type
@@ -141,11 +142,70 @@ public abstract class ClassInterfaceBaseType extends Type
 	public Map<String, List<MethodSignature>> getMethodMap() {
 		return methodTable;
 	}
-	
-	public List<MethodSignature> getMethods(String methodName) {
+
+	public List<MethodSignature> getMethods(String methodName)
+	{
 		return methodTable.get(methodName);
 	}
-		
+
+	public List<MethodSignature> getAllMethods()
+	{
+		List<MethodSignature> methodList = new ArrayList<MethodSignature>();
+
+		recursivelyGetAllMethods(methodList);
+
+		return methodList;
+	}
+	protected abstract void recursivelyGetAllMethods( List<MethodSignature> methodList );
+
+	private Map<MethodSignature, Integer> methodIndexCache;
+	public int getMethodIndex( MethodSignature method )
+	{
+		// Lazily load cache
+		if ( methodIndexCache == null )
+		{
+			Map<MethodSignature, Integer> cache =
+					new HashMap<MethodSignature, Integer>();
+			List<MethodSignature> methods = orderAllMethods();
+			for ( int i = 0; i < methods.size(); i++ )
+				cache.put(methods.get(i), i);
+			methodIndexCache = cache;
+		}
+
+		Integer index = methodIndexCache.get(method);
+		return index == null ? -1 : index;
+	}
+
+	public List<MethodSignature> orderAllMethods()
+	{
+		List<MethodSignature> methodList = new ArrayList<MethodSignature>();
+
+		recursivelyOrderAllMethods(methodList);
+
+		return methodList;
+	}
+	protected abstract void recursivelyOrderAllMethods( List<MethodSignature> methodList );
+	protected void orderMethods( List<MethodSignature> methodList )
+	{
+		TreeMap<String, List<MethodSignature>> sortedMethods =
+				new TreeMap<String, List<MethodSignature>>(methodTable);
+
+		for ( List<MethodSignature> methods : sortedMethods.values() )
+			for ( MethodSignature method : methods )
+				if ( method.getModifiers().isPublic() )
+		{
+			int index;
+			for ( index = 0; index < methodList.size(); index++ )
+				if ( methodList.get(index).isIndistinguishable(method) )
+			{
+				methodList.set(index, method);
+				break;
+			}
+			if ( index == methodList.size() )
+				methodList.add(method);
+		}
+	}
+
 	/**
 	 * This function is only used for error reporting as it finds an indistinguishable signature.
 	 * @param signature

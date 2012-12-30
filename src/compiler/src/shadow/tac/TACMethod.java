@@ -14,19 +14,15 @@ import java.util.NoSuchElementException;
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ClassInterfaceBaseType;
-import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeParameter;
 
 public class TACMethod extends TACNodeList
 {
-	private int index;
 	private String name;
 	private MethodType type;
 	private Map<String, TACVariable> locals =
@@ -40,8 +36,6 @@ public class TACMethod extends TACNodeList
 	public TACMethod(String methodName, MethodType methodType)
 	{
 		ClassInterfaceBaseType thisType = methodType.getOuter();
-		index = ((ClassType)thisType).getMethodIndex(
-				new MethodSignature(methodType, methodName, null));
 		name = methodName;
 		type = methodType;
 		scopes.push(new LinkedHashMap<String, TACVariable>(
@@ -51,11 +45,7 @@ public class TACMethod extends TACNodeList
 				methodType.getOuter() : methodType;
 		if (parameterizedType.isParameterized())
 			for (ModifiedType typeParam : parameterizedType.getTypeParameters())
-			{
-				((TypeParameter)typeParam.getType()).getModifiers().
-						addModifier(Modifiers.TYPE_NAME);
 				addLocal(Type.CLASS, typeParam.getType().getTypeName());
-			}
 		for (String parameterName : methodType.getParameterNames())
 			addLocal(methodType.getParameterType(parameterName).getType(),
 					parameterName);
@@ -67,14 +57,6 @@ public class TACMethod extends TACNodeList
 		return type.getOuter();
 	}
 
-	protected void makeDirect()
-	{
-		index = -1;
-	}
-	public int getIndex()
-	{
-		return index;
-	}
 	public String getName()
 	{
 		return name;

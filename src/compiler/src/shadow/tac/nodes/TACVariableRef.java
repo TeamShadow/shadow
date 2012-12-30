@@ -24,7 +24,7 @@ public class TACVariableRef extends TACReference
 	{
 		return variable;
 	}
-	public String getVariableName()
+	public String getName()
 	{
 		return variable.getName();
 	}
