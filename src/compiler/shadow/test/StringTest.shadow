@@ -1,0 +1,11 @@
+class shadow.test@StringTest
+{
+	public main( String[] args ) => ( int )
+	{
+		Console:instance.printLine("Hello World!");
+		String:StringIterator iter = cast<String:StringIterator>"aeiouäöüß​→𐀸𝄞􏿽".iterator();
+		while (iter.hasNext())
+			Console:instance.printLine(iter.next());
+		return 0;
+	}
+}

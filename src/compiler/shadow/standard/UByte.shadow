@@ -1,10 +1,33 @@
 final immutable class shadow.standard@UByte implements Number<ubyte>, CanCompare<ubyte>
-{	
+{
 	public native add(ubyte other) => (ubyte);
 	public native subtract(ubyte other) => (ubyte);
 	public native multiply(ubyte other) => (ubyte);
 	public native divide(ubyte other) => (ubyte);
 	public native modulus(ubyte other) => (ubyte);
-	
+
 	public native compare(ubyte other) => (int);
+
+	public toString() => ( String )
+	{
+		return toString(10uy);
+	}
+	public toString( ubyte base ) => ( String )
+	{
+		MutableString string = MutableString:create();
+		ubyte value = this;
+		do
+		{
+			string.append(digit(value % base));
+			value /= base;
+		}
+		while ( value != 0uy );
+		return string.reverse().toString();
+	}
+	private digit( ubyte digit ) => ( code )
+	{
+		if ( digit < 10uy )
+			return cast<code>(cast<int>digit + '0');
+		return cast<code>(cast<int>digit - 10uy + 'a');
+	}
 }

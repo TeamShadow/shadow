@@ -83,6 +83,10 @@ public class TACModule
 		return (InterfaceType)type;
 	}
 
+	public String getName()
+	{
+		return type.getTypeName();
+	}
 	public String getQualifiedName()
 	{
 		return type.getQualifiedName();

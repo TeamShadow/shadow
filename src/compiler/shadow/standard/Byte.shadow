@@ -1,4 +1,4 @@
-class shadow.standard@Byte implements /*Number<byte>,*/ CanCompare<byte>
+final immutable class shadow.standard@Byte implements Number<byte>, CanCompare<byte>
 {
 	public native add(byte other) => (byte);
 	public native subtract(byte other) => (byte);
@@ -7,4 +7,27 @@ class shadow.standard@Byte implements /*Number<byte>,*/ CanCompare<byte>
 	public native modulus(byte other) => (byte);
 
 	public native compare(byte other) => (int);
+
+	public abs() => ( ubyte )
+	{
+		return cast<ubyte>(this < 0y ? -this, this);
+	}
+	public min( byte other ) => ( byte )
+	{
+		return this < other ? this, other;
+	}
+	public max( byte other ) => ( byte )
+	{
+		return this > other ? this, other;
+	}
+
+	public toString() => ( String )
+	{
+		return toString(10uy);
+	}
+	public toString( ubyte base ) => ( String )
+	{
+		String string = abs().toString(base);
+		return this >= 0 ? string, '-' # string;
+	}
 }

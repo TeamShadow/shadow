@@ -9,7 +9,7 @@
 %_Pshadow_Pstandard_CString = type { %_Pshadow_Pstandard_CString_Mclass*, { i8*, [1 x i32] }, i1 }
 
 declare %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass*)
-declare %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1(%_Pshadow_Pstandard_CString*, { i8*, [1 x i32] })
+declare %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pstandard_CString*, { i8*, [1 x i32] })
 
 declare i32 @sprintf(i8* nocapture, i8* nocapture, ...) nounwind
 declare i32 @strlen(i8* nocapture) nounwind
@@ -26,6 +26,6 @@ define %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_Cdouble_MtoString(%_Psha
 	%8 = call i32 @strlen(i8* nocapture %2)
 	%9 = insertvalue { i8*, [1 x i32] } undef, i8* %2, 0
 	%10 = insertvalue { i8*, [1 x i32] } %9, i32 %8, 1, 0
-	%11 = call %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cubyte_A1(%_Pshadow_Pstandard_CString* %7, { i8*, [1 x i32] } %10)
+	%11 = call %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pstandard_CString* %7, { i8*, [1 x i32] } %10)
 	ret %_Pshadow_Pstandard_CString* %11
 }

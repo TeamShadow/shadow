@@ -148,7 +148,7 @@ public class Main {
 				        new LLVMOutput(false).build(module);
 	
 				        // write to file
-				        new LLVMOutput(shadowFile).build(module);
+				        new LLVMOutput(new File(shadowFile.getParent(), module.getName().replace(':', '$') + ".ll")).build(module);
 				    }
 
 			        long stopTime = System.currentTimeMillis();

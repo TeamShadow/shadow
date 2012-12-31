@@ -23,7 +23,10 @@ define noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArray_Mallocate
 	ret %_Pshadow_Pstandard_CObject* %4
 }
 
-define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CArray*, i32) {
+declare void @abort() noreturn
+
+define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1(%_Pshadow_Pstandard_CArray*, i32) {
+	call void @abort() noreturn
 	%3 = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
 	%4 = load %_Pshadow_Pstandard_CClass** %3
 	%5 = getelementptr inbounds %_Pshadow_Pstandard_CClass* %4, i32 0, i32 7
@@ -48,7 +51,8 @@ define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Ps
 	ret %_Pshadow_Pstandard_CObject* %20
 }
 
-define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_CT(%_Pshadow_Pstandard_CArray*, i32, %_Pshadow_Pstandard_CObject*) {
+define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1_CT(%_Pshadow_Pstandard_CArray*, i32, %_Pshadow_Pstandard_CObject*) {
+	call void @abort() noreturn
 	%4 = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
 	%5 = load %_Pshadow_Pstandard_CClass** %4
 	%6 = getelementptr inbounds %_Pshadow_Pstandard_CClass* %5, i32 0, i32 7

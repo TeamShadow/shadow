@@ -35,14 +35,14 @@ public class TACMethod extends TACNodeList
 	}
 	public TACMethod(String methodName, MethodType methodType)
 	{
-		ClassInterfaceBaseType thisType = methodType.getOuter();
 		name = methodName;
 		type = methodType;
 		scopes.push(new LinkedHashMap<String, TACVariable>(
 				type.getParameterTypes().size()));
-		addLocal(thisType, "this");
-		Type parameterizedType = methodName.equals("create") ?
-				methodType.getOuter() : methodType;
+		addLocal(getPrefixType(), "this");
+		if (isCreate() && getPrefixType().hasOuter())
+			addLocal(getPrefixType().getOuter(), "outer");
+		Type parameterizedType = isCreate() ? getPrefixType() : methodType;
 		if (parameterizedType.isParameterized())
 			for (ModifiedType typeParam : parameterizedType.getTypeParameters())
 				addLocal(Type.CLASS, typeParam.getType().getTypeName());

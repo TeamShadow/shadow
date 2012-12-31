@@ -279,6 +279,24 @@ public class ClassType extends ClassInterfaceBaseType {
 				return first.getKey().compareTo(second.getKey());
 			}
 		});
+		if (getOuter() != null)
+			set.add(new Entry<String, ModifiedType>() {
+				@Override
+				public String getKey()
+				{
+					return "this";
+				}
+				@Override
+				public ModifiedType getValue()
+				{
+					return new SimpleModifiedType(getOuter());
+				}
+				@Override
+				public ModifiedType setValue(ModifiedType value)
+				{
+					throw new UnsupportedOperationException();
+				}
+			});
 		set.addAll(getFields().entrySet());
 		if (isParameterized())
 			for (final ModifiedType typeParam : getTypeParameters())
@@ -292,7 +310,7 @@ public class ClassType extends ClassInterfaceBaseType {
 					@Override
 					public ModifiedType getValue()
 					{
-						return new SimpleModifiedType(Type.CLASS, Modifiers.NO_MODIFIERS);
+						return new SimpleModifiedType(Type.CLASS);
 					}
 					@Override
 					public ModifiedType setValue(ModifiedType value)

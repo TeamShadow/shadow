@@ -1,13 +1,13 @@
 class shadow.standard@MutableString
 {
 	get int length = 0;
-	ubyte[] data = ubyte:create[10];
+	byte[] data = byte:create[10];
 	public create()
 	{
 	}
 	public create( int initialLength )
 	{
-		data = ubyte:create[initialLength];
+		data = byte:create[initialLength];
 	}
 	public create( nullable Object initialValue )
 	{
@@ -18,7 +18,7 @@ class shadow.standard@MutableString
 	{
 		if ( data->length < length )
 		{
-			ubyte[] data = ubyte:create[length];
+			byte[] data = byte:create[length];
 			for ( int i = 0; i < length.min(this:length); i += 1 )
 				data[i] = this:data[i];
 			this:data = data;
@@ -48,6 +48,6 @@ class shadow.standard@MutableString
 
 	public immutable toString() => ( String )
 	{
-		return String:create(cast<ubyte[]>(cast<Object>data.subarray(0, length)));
+		return String:create(cast<byte[]>(cast<Object>data.subarray(0, length)));
 	}
 }

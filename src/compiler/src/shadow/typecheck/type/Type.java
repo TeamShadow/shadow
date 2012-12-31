@@ -327,6 +327,10 @@ public abstract class Type {
 		return this.equals(Type.STRING);
 	}
 	
+	public boolean hasOuter() {
+		return outer != null;
+	}
+	
 	public ClassInterfaceBaseType getOuter()
 	{
 		return outer;

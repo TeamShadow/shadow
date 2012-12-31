@@ -1,6 +1,6 @@
 import shadow.utility@Random;
 
-class SortTest {
+class shadow.test@SortTest {
 	int[] array = int:create[0];
 	int min, max;
 	ulong startTime;

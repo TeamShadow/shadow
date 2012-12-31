@@ -1,4 +1,4 @@
-; shadow.test@SortMain
+; uint
 
 %boolean = type i1
 %byte = type i8
@@ -13,8 +13,8 @@
 %float = type float
 %double = type double
 
-%"_Pshadow_Ptest_CSortMain_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Ptest_CSortMain"* (%"_Pshadow_Ptest_CSortMain"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %int (%"_Pshadow_Ptest_CSortMain"*, { %"_Pshadow_Pstandard_CString"**, [1 x %int] })* }
-%"_Pshadow_Ptest_CSortMain" = type { %"_Pshadow_Ptest_CSortMain_Mclass"* }
+%"_Pshadow_Pstandard_Cuint_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cuint"* (%"_Pshadow_Pstandard_Cuint"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cuint"*)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %int (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cuint"*, %uint)* }
+%"_Pshadow_Pstandard_Cuint" = type { %"_Pshadow_Pstandard_Cuint_Mclass"*, %uint }
 %"_Pshadow_Pstandard_Cint_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cint"* (%"_Pshadow_Pstandard_Cint"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cint"*)*, %uint (%"_Pshadow_Pstandard_Cint"*)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cint"*, %uint)* }
 %"_Pshadow_Pstandard_Cint" = type { %"_Pshadow_Pstandard_Cint_Mclass"*, %int }
 %"_Pshadow_Pstandard_Cushort_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cushort"* (%"_Pshadow_Pstandard_Cushort"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %ushort (%"_Pshadow_Pstandard_Cushort"*, %ushort)*, %int (%"_Pshadow_Pstandard_Cushort"*, %ushort)*, %ushort (%"_Pshadow_Pstandard_Cushort"*, %ushort)*, %ushort (%"_Pshadow_Pstandard_Cushort"*, %ushort)*, %ushort (%"_Pshadow_Pstandard_Cushort"*, %ushort)*, %ushort (%"_Pshadow_Pstandard_Cushort"*, %ushort)* }
@@ -29,8 +29,6 @@
 %"_Pshadow_Pstandard_Cfloat" = type { %"_Pshadow_Pstandard_Cfloat_Mclass"*, %float }
 %"_Pshadow_Pstandard_Cshort_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cshort"* (%"_Pshadow_Pstandard_Cshort"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)*, %int (%"_Pshadow_Pstandard_Cshort"*, %short)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)* }
 %"_Pshadow_Pstandard_Cshort" = type { %"_Pshadow_Pstandard_Cshort_Mclass"*, %short }
-%"_Pshadow_Ptest_CSortTest_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, void (%"_Pshadow_Ptest_CSortTest"*, { %int*, [1 x %int] }, %int, %int)*, %"_Pshadow_Ptest_CSortTest"* (%"_Pshadow_Ptest_CSortTest"*, %int, %int, %int)*, { %int*, [1 x %int] } (%"_Pshadow_Ptest_CSortTest"*)*, %int (%"_Pshadow_Ptest_CSortTest"*)*, %int (%"_Pshadow_Ptest_CSortTest"*)*, %int (%"_Pshadow_Ptest_CSortTest"*)*, %int (%"_Pshadow_Ptest_CSortTest"*)*, %int (%"_Pshadow_Ptest_CSortTest"*)*, %double (%"_Pshadow_Ptest_CSortTest"*)*, void (%"_Pshadow_Ptest_CSortTest"*, { %int*, [1 x %int] })*, { %int*, [1 x %int] } (%"_Pshadow_Ptest_CSortTest"*, { %int*, [1 x %int] })*, void (%"_Pshadow_Ptest_CSortTest"*, { %int*, [1 x %int] }, %int, %int)*, void (%"_Pshadow_Ptest_CSortTest"*)* }
-%"_Pshadow_Ptest_CSortTest" = type { %"_Pshadow_Ptest_CSortTest_Mclass"* }
 %"_Pshadow_Pstandard_Cbyte_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cbyte"* (%"_Pshadow_Pstandard_Cbyte"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cbyte"*)*, %ubyte (%"_Pshadow_Pstandard_Cbyte"*)*, %byte (%"_Pshadow_Pstandard_Cbyte"*, %byte)*, %int (%"_Pshadow_Pstandard_Cbyte"*, %byte)*, %byte (%"_Pshadow_Pstandard_Cbyte"*, %byte)*, %byte (%"_Pshadow_Pstandard_Cbyte"*, %byte)*, %byte (%"_Pshadow_Pstandard_Cbyte"*, %byte)*, %byte (%"_Pshadow_Pstandard_Cbyte"*, %byte)*, %byte (%"_Pshadow_Pstandard_Cbyte"*, %byte)*, %byte (%"_Pshadow_Pstandard_Cbyte"*, %byte)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cbyte"*, %ubyte)* }
 %"_Pshadow_Pstandard_Cbyte" = type { %"_Pshadow_Pstandard_Cbyte_Mclass"*, %byte }
 %"_Pshadow_Pstandard_CString_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, { %byte*, [1 x %int] } (%"_Pshadow_Pstandard_CString"*)*, %int (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %byte*, [1 x %int] })*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %code*, [1 x %int] })*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %boolean (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %byte (%"_Pshadow_Pstandard_CString"*, %int)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CString"*)*, %int (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %int, %int)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* }
@@ -45,12 +43,12 @@
 %"_Pshadow_Pstandard_Culong" = type { %"_Pshadow_Pstandard_Culong_Mclass"*, %ulong }
 %"_Pshadow_Pstandard_Cubyte_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cubyte"* (%"_Pshadow_Pstandard_Cubyte"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cubyte"*)*, %ubyte (%"_Pshadow_Pstandard_Cubyte"*, %ubyte)*, %int (%"_Pshadow_Pstandard_Cubyte"*, %ubyte)*, %ubyte (%"_Pshadow_Pstandard_Cubyte"*, %ubyte)*, %ubyte (%"_Pshadow_Pstandard_Cubyte"*, %ubyte)*, %ubyte (%"_Pshadow_Pstandard_Cubyte"*, %ubyte)*, %ubyte (%"_Pshadow_Pstandard_Cubyte"*, %ubyte)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cubyte"*, %ubyte)* }
 %"_Pshadow_Pstandard_Cubyte" = type { %"_Pshadow_Pstandard_Cubyte_Mclass"*, %ubyte }
-%"_Pshadow_Pstandard_Cuint_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cuint"* (%"_Pshadow_Pstandard_Cuint"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cuint"*)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %int (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cuint"*, %uint)* }
-%"_Pshadow_Pstandard_Cuint" = type { %"_Pshadow_Pstandard_Cuint_Mclass"*, %uint }
 %"_Pshadow_Pstandard_CObject_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)* }
 %"_Pshadow_Pstandard_CObject" = type { %"_Pshadow_Pstandard_CObject_Mclass"* }
+%"_Pshadow_Pstandard_CMutableString_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CMutableString"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)*, %int (%"_Pshadow_Pstandard_CMutableString"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %int)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %int)*, %int (%"_Pshadow_Pstandard_CMutableString"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*)* }
+%"_Pshadow_Pstandard_CMutableString" = type { %"_Pshadow_Pstandard_CMutableString_Mclass"* }
 
-@"_Pshadow_Ptest_CSortMain_Mclass" = global %"_Pshadow_Ptest_CSortMain_Mclass" { %"_Pshadow_Pstandard_CClass" { %"_Pshadow_Pstandard_CClass_Mclass"* @"_Pshadow_Pstandard_CClass_Mclass", { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } zeroinitializer, %"_Pshadow_Pstandard_CObject"* null, %"_Pshadow_Pstandard_CString"* @_string0, %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CObject_Mclass"* @"_Pshadow_Pstandard_CObject_Mclass", i32 0, i32 0), %int 0, %int ptrtoint (%"_Pshadow_Ptest_CSortMain"* getelementptr (%"_Pshadow_Ptest_CSortMain"* null, i32 1) to i32), %int ptrtoint (%"_Pshadow_Ptest_CSortMain"** getelementptr (%"_Pshadow_Ptest_CSortMain"** null, i32 1) to i32) }, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mcopy", %"_Pshadow_Ptest_CSortMain"* (%"_Pshadow_Ptest_CSortMain"*)* @"_Pshadow_Ptest_CSortMain_Mcreate", %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mfreeze", %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MgetClass", %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MtoString", %int (%"_Pshadow_Ptest_CSortMain"*, { %"_Pshadow_Pstandard_CString"**, [1 x %int] })* @"_Pshadow_Ptest_CSortMain_Mmain_Pshadow_Pstandard_CString_A1" }
+@"_Pshadow_Pstandard_Cuint_Mclass" = global %"_Pshadow_Pstandard_Cuint_Mclass" { %"_Pshadow_Pstandard_CClass" { %"_Pshadow_Pstandard_CClass_Mclass"* @"_Pshadow_Pstandard_CClass_Mclass", { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } zeroinitializer, %"_Pshadow_Pstandard_CObject"* null, %"_Pshadow_Pstandard_CString"* @_string0, %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CObject_Mclass"* @"_Pshadow_Pstandard_CObject_Mclass", i32 0, i32 0), %int 2, %int ptrtoint (%"_Pshadow_Pstandard_Cuint"* getelementptr (%"_Pshadow_Pstandard_Cuint"* null, i32 1) to i32), %int ptrtoint (%uint* getelementptr (%uint* null, i32 1) to i32) }, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mcopy", %"_Pshadow_Pstandard_Cuint"* (%"_Pshadow_Pstandard_Cuint"*)* @"_Pshadow_Pstandard_Cuint_Mcreate", %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mfreeze", %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MgetClass", %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cuint"*)* @"_Pshadow_Pstandard_Cuint_MtoString", %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint", %int (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint", %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint", %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint", %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint", %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint", %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint", %uint (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cuint"*, %uint)* @"_Pshadow_Pstandard_Cuint_MtoString_Pshadow_Pstandard_Cuint" }
 @"_Pshadow_Pstandard_Cint_Mclass" = external global %"_Pshadow_Pstandard_Cint_Mclass"
 @"_Pshadow_Pstandard_Cushort_Mclass" = external global %"_Pshadow_Pstandard_Cushort_Mclass"
 @"_Pshadow_Pstandard_Ccode_Mclass" = external global %"_Pshadow_Pstandard_Ccode_Mclass"
@@ -58,7 +56,6 @@
 @"_Pshadow_Pstandard_Clong_Mclass" = external global %"_Pshadow_Pstandard_Clong_Mclass"
 @"_Pshadow_Pstandard_Cfloat_Mclass" = external global %"_Pshadow_Pstandard_Cfloat_Mclass"
 @"_Pshadow_Pstandard_Cshort_Mclass" = external global %"_Pshadow_Pstandard_Cshort_Mclass"
-@"_Pshadow_Ptest_CSortTest_Mclass" = external global %"_Pshadow_Ptest_CSortTest_Mclass"
 @"_Pshadow_Pstandard_Cbyte_Mclass" = external global %"_Pshadow_Pstandard_Cbyte_Mclass"
 @"_Pshadow_Pstandard_CString_Mclass" = external global %"_Pshadow_Pstandard_CString_Mclass"
 @"_Pshadow_Pstandard_CClass_Mclass" = external global %"_Pshadow_Pstandard_CClass_Mclass"
@@ -66,51 +63,184 @@
 @"_Pshadow_Pstandard_Cboolean_Mclass" = external global %"_Pshadow_Pstandard_Cboolean_Mclass"
 @"_Pshadow_Pstandard_Culong_Mclass" = external global %"_Pshadow_Pstandard_Culong_Mclass"
 @"_Pshadow_Pstandard_Cubyte_Mclass" = external global %"_Pshadow_Pstandard_Cubyte_Mclass"
-@"_Pshadow_Pstandard_Cuint_Mclass" = external global %"_Pshadow_Pstandard_Cuint_Mclass"
 @"_Pshadow_Pstandard_CObject_Mclass" = external global %"_Pshadow_Pstandard_CObject_Mclass"
+@"_Pshadow_Pstandard_CMutableString_Mclass" = external global %"_Pshadow_Pstandard_CMutableString_Mclass"
 
-define %"_Pshadow_Ptest_CSortMain"* @"_Pshadow_Ptest_CSortMain_Mcreate"(%"_Pshadow_Ptest_CSortMain"*) {
-    %this = alloca %"_Pshadow_Ptest_CSortMain"*
-    %2 = getelementptr inbounds %"_Pshadow_Ptest_CSortMain"* %0, i32 0, i32 0
-    store %"_Pshadow_Ptest_CSortMain_Mclass"* @"_Pshadow_Ptest_CSortMain_Mclass", %"_Pshadow_Ptest_CSortMain_Mclass"** %2
-    store %"_Pshadow_Ptest_CSortMain"* %0, %"_Pshadow_Ptest_CSortMain"** %this
-    ret %"_Pshadow_Ptest_CSortMain"* %0
+define %code @"_Pshadow_Pstandard_Cuint_Mdigit_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint) {
+    %this = alloca %uint
+    %digit = alloca %uint
+    %3 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"* %0, i32 0, i32 1
+    %4 = load %uint* %3
+    store %uint %4, %uint* %this
+    store %uint %1, %uint* %digit
+    %5 = load %uint* %digit
+    %6 = icmp ult %uint %5, 10
+    br %boolean %6, label %_label0, label %_label1
+_label0:
+    %7 = load %uint* %digit
+    %8 = bitcast %code 48 to %uint
+    %9 = add %uint %7, %8
+    %10 = bitcast %uint %9 to %code
+    ret %code %10
+    br label %_label2
+_label1:
+    br label %_label2
+_label2:
+    %12 = load %uint* %digit
+    %13 = sub %uint %12, 10
+    %14 = bitcast %code 97 to %uint
+    %15 = add %uint %13, %14
+    %16 = bitcast %uint %15 to %code
+    ret %code %16
 }
 
-define %int @"_Pshadow_Ptest_CSortMain_Mmain_Pshadow_Pstandard_CString_A1"(%"_Pshadow_Ptest_CSortMain"*, { %"_Pshadow_Pstandard_CString"**, [1 x %int] }) {
-    %this = alloca %"_Pshadow_Ptest_CSortMain"*
-    %args = alloca { %"_Pshadow_Pstandard_CString"**, [1 x %int] }
-    store %"_Pshadow_Ptest_CSortMain"* %0, %"_Pshadow_Ptest_CSortMain"** %this
-    store { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %1, { %"_Pshadow_Pstandard_CString"**, [1 x %int] }* %args
-    %3 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Ptest_CSortTest_Mclass"* @"_Pshadow_Ptest_CSortTest_Mclass", i32 0, i32 0))
-    %4 = bitcast %"_Pshadow_Pstandard_CObject"* %3 to %"_Pshadow_Ptest_CSortTest"*
-    %5 = sub %int 0, 10000
-    %6 = call %"_Pshadow_Ptest_CSortTest"* @"_Pshadow_Ptest_CSortTest_Mcreate_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Ptest_CSortTest"* %4, %int 10000, %int %5, %int 10000)
-    %7 = getelementptr %"_Pshadow_Ptest_CSortTest"* %4, i32 0, i32 0
-    %8 = load %"_Pshadow_Ptest_CSortTest_Mclass"** %7
-    %9 = getelementptr %"_Pshadow_Ptest_CSortTest_Mclass"* %8, i32 0, i32 20
-    %10 = load void (%"_Pshadow_Ptest_CSortTest"*)** %9
-    call void %10(%"_Pshadow_Ptest_CSortTest"* %4)
-    %11 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Ptest_CSortTest_Mclass"* @"_Pshadow_Ptest_CSortTest_Mclass", i32 0, i32 0))
-    %12 = bitcast %"_Pshadow_Pstandard_CObject"* %11 to %"_Pshadow_Ptest_CSortTest"*
-    %13 = sub %int 0, 10000
-    %14 = call %"_Pshadow_Ptest_CSortTest"* @"_Pshadow_Ptest_CSortTest_Mcreate_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Ptest_CSortTest"* %12, %int 100000, %int %13, %int 10000)
-    %15 = getelementptr %"_Pshadow_Ptest_CSortTest"* %12, i32 0, i32 0
-    %16 = load %"_Pshadow_Ptest_CSortTest_Mclass"** %15
-    %17 = getelementptr %"_Pshadow_Ptest_CSortTest_Mclass"* %16, i32 0, i32 20
-    %18 = load void (%"_Pshadow_Ptest_CSortTest"*)** %17
-    call void %18(%"_Pshadow_Ptest_CSortTest"* %12)
-    %19 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Ptest_CSortTest_Mclass"* @"_Pshadow_Ptest_CSortTest_Mclass", i32 0, i32 0))
-    %20 = bitcast %"_Pshadow_Pstandard_CObject"* %19 to %"_Pshadow_Ptest_CSortTest"*
-    %21 = sub %int 0, 10000
-    %22 = call %"_Pshadow_Ptest_CSortTest"* @"_Pshadow_Ptest_CSortTest_Mcreate_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Ptest_CSortTest"* %20, %int 1000000, %int %21, %int 10000)
-    %23 = getelementptr %"_Pshadow_Ptest_CSortTest"* %20, i32 0, i32 0
-    %24 = load %"_Pshadow_Ptest_CSortTest_Mclass"** %23
-    %25 = getelementptr %"_Pshadow_Ptest_CSortTest_Mclass"* %24, i32 0, i32 20
-    %26 = load void (%"_Pshadow_Ptest_CSortTest"*)** %25
-    call void %26(%"_Pshadow_Ptest_CSortTest"* %20)
-    ret %int 0
+define %uint @"_Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint) {
+    %this = alloca %uint
+    %other = alloca %uint
+    %_temp = alloca %uint
+    %3 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"* %0, i32 0, i32 1
+    %4 = load %uint* %3
+    store %uint %4, %uint* %this
+    store %uint %1, %uint* %other
+    %5 = load %uint* %this
+    %6 = load %uint* %other
+    %7 = icmp ult %uint %5, %6
+    br %boolean %7, label %_label3, label %_label4
+_label3:
+    %8 = load %uint* %this
+    store %uint %8, %uint* %_temp
+    br label %_label5
+_label4:
+    %9 = load %uint* %other
+    store %uint %9, %uint* %_temp
+    br label %_label5
+_label5:
+    %10 = load %uint* %_temp
+    ret %uint %10
 }
+
+declare %uint @"_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
+
+define %uint @"_Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint) {
+    %this = alloca %uint
+    %other = alloca %uint
+    %_temp = alloca %uint
+    %3 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"* %0, i32 0, i32 1
+    %4 = load %uint* %3
+    store %uint %4, %uint* %this
+    store %uint %1, %uint* %other
+    %5 = load %uint* %this
+    %6 = load %uint* %other
+    %7 = icmp ugt %uint %5, %6
+    br %boolean %7, label %_label6, label %_label7
+_label6:
+    %8 = load %uint* %this
+    store %uint %8, %uint* %_temp
+    br label %_label8
+_label7:
+    %9 = load %uint* %other
+    store %uint %9, %uint* %_temp
+    br label %_label8
+_label8:
+    %10 = load %uint* %_temp
+    ret %uint %10
+}
+
+declare %int @"_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
+
+define %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Cuint_MtoString"(%"_Pshadow_Pstandard_Cuint"*) {
+    %this = alloca %uint
+    %2 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"* %0, i32 0, i32 1
+    %3 = load %uint* %2
+    store %uint %3, %uint* %this
+    %4 = load %uint* %this
+    %5 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pstandard_Cuint_Mclass"* @"_Pshadow_Pstandard_Cuint_Mclass", i32 0, i32 0))
+    %6 = bitcast %"_Pshadow_Pstandard_CObject"*%5 to %"_Pshadow_Pstandard_Cuint"*
+    %7 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"*%6, i32 0, i32 1
+    store %uint %4, %uint* %7
+    %8 = call %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Cuint_MtoString_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"* %6, %uint 10)
+    ret %"_Pshadow_Pstandard_CString"* %8
+}
+
+define %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Cuint_MtoString_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint) {
+    %this = alloca %uint
+    %base = alloca %uint
+    %string = alloca %"_Pshadow_Pstandard_CMutableString"*
+    %value = alloca %uint
+    %3 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"* %0, i32 0, i32 1
+    %4 = load %uint* %3
+    store %uint %4, %uint* %this
+    store %uint %1, %uint* %base
+    %5 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pstandard_CMutableString_Mclass"* @"_Pshadow_Pstandard_CMutableString_Mclass", i32 0, i32 0))
+    %6 = bitcast %"_Pshadow_Pstandard_CObject"* %5 to %"_Pshadow_Pstandard_CMutableString"*
+    %7 = call %"_Pshadow_Pstandard_CMutableString"* @"_Pshadow_Pstandard_CMutableString_Mcreate"(%"_Pshadow_Pstandard_CMutableString"* %6)
+    store %"_Pshadow_Pstandard_CMutableString"* %6, %"_Pshadow_Pstandard_CMutableString"** %string
+    %8 = load %uint* %this
+    store %uint %8, %uint* %value
+    br label %_label9
+_label9:
+    %9 = load %uint* %value
+    %10 = load %uint* %base
+    %11 = urem %uint %9, %10
+    %12 = load %uint* %this
+    %13 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pstandard_Cuint_Mclass"* @"_Pshadow_Pstandard_Cuint_Mclass", i32 0, i32 0))
+    %14 = bitcast %"_Pshadow_Pstandard_CObject"*%13 to %"_Pshadow_Pstandard_Cuint"*
+    %15 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"*%14, i32 0, i32 1
+    store %uint %12, %uint* %15
+    %16 = call %code @"_Pshadow_Pstandard_Cuint_Mdigit_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"* %14, %uint %11)
+    %17 = load %"_Pshadow_Pstandard_CMutableString"** %string
+    %18 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", i32 0, i32 0))
+    %19 = bitcast %"_Pshadow_Pstandard_CObject"*%18 to %"_Pshadow_Pstandard_Ccode"*
+    %20 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"*%19, i32 0, i32 0
+    store %"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", %"_Pshadow_Pstandard_Ccode_Mclass"** %20
+    %21 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"* %19, i32 0, i32 1
+    store %code %16, %code* %21
+    %22 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %17, i32 0, i32 0
+    %23 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %22
+    %24 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %23, i32 0, i32 8
+    %25 = load %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)** %24
+    %26 = call %"_Pshadow_Pstandard_CMutableString"* %25(%"_Pshadow_Pstandard_CMutableString"* %17, %"_Pshadow_Pstandard_CObject"* %18)
+    %27 = load %uint* %value
+    %28 = load %uint* %base
+    %29 = udiv %uint %27, %28
+    store %uint %29, %uint* %value
+    br label %_label10
+_label10:
+    %30 = load %uint* %value
+    %31 = icmp ne %uint %30, 0
+    br %boolean %31, label %_label9, label %_label11
+_label11:
+    %32 = load %"_Pshadow_Pstandard_CMutableString"** %string
+    %33 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %32, i32 0, i32 0
+    %34 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %33
+    %35 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %34, i32 0, i32 14
+    %36 = load %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*)** %35
+    %37 = call %"_Pshadow_Pstandard_CMutableString"* %36(%"_Pshadow_Pstandard_CMutableString"* %32)
+    %38 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %37, i32 0, i32 0
+    %39 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %38
+    %40 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %39, i32 0, i32 7
+    %41 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CMutableString"*)** %40
+    %42 = call %"_Pshadow_Pstandard_CString"* %41(%"_Pshadow_Pstandard_CMutableString"* %37)
+    ret %"_Pshadow_Pstandard_CString"* %42
+}
+
+declare %uint @"_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
+
+declare %uint @"_Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
+
+declare %uint @"_Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
+
+define %"_Pshadow_Pstandard_Cuint"* @"_Pshadow_Pstandard_Cuint_Mcreate"(%"_Pshadow_Pstandard_Cuint"*) {
+    %this = alloca %uint
+    %2 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"* %0, i32 0, i32 0
+    store %"_Pshadow_Pstandard_Cuint_Mclass"* @"_Pshadow_Pstandard_Cuint_Mclass", %"_Pshadow_Pstandard_Cuint_Mclass"** %2
+    %3 = getelementptr inbounds %"_Pshadow_Pstandard_Cuint"* %0, i32 0, i32 1
+    %4 = load %uint* %3
+    store %uint %4, %uint* %this
+    ret %"_Pshadow_Pstandard_Cuint"* %0
+}
+
+declare %uint @"_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
 
 declare %int @"_Pshadow_Pstandard_Cint_Mmin_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_Cint"*, %int)
 declare %int @"_Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_Cint"*, %int)
@@ -175,20 +305,6 @@ declare %short @"_Pshadow_Pstandard_Cshort_Mdivide_Pshadow_Pstandard_Cshort"(%"_
 declare %short @"_Pshadow_Pstandard_Cshort_Madd_Pshadow_Pstandard_Cshort"(%"_Pshadow_Pstandard_Cshort"*, %short)
 declare %"_Pshadow_Pstandard_Cshort"* @"_Pshadow_Pstandard_Cshort_Mcreate"(%"_Pshadow_Pstandard_Cshort"*)
 declare %short @"_Pshadow_Pstandard_Cshort_Mmodulus_Pshadow_Pstandard_Cshort"(%"_Pshadow_Pstandard_Cshort"*, %short)
-
-declare %int @"_Pshadow_Ptest_CSortTest_MgetMaximum"(%"_Pshadow_Ptest_CSortTest"*)
-declare %int @"_Pshadow_Ptest_CSortTest_MgetArrayLength"(%"_Pshadow_Ptest_CSortTest"*)
-declare %int @"_Pshadow_Ptest_CSortTest_MgetArrayStart"(%"_Pshadow_Ptest_CSortTest"*)
-declare void @"_Pshadow_Ptest_CSortTest_Mrun"(%"_Pshadow_Ptest_CSortTest"*)
-declare %"_Pshadow_Ptest_CSortTest"* @"_Pshadow_Ptest_CSortTest_Mcreate_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Ptest_CSortTest"*, %int, %int, %int)
-declare void @"_Pshadow_Ptest_CSortTest_MquickSort_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Ptest_CSortTest"*, { %int*, [1 x %int] }, %int, %int)
-declare void @"_Pshadow_Ptest_CSortTest_MheapSort_Pshadow_Pstandard_Cint_A1"(%"_Pshadow_Ptest_CSortTest"*, { %int*, [1 x %int] })
-declare { %int*, [1 x %int] } @"_Pshadow_Ptest_CSortTest_MgetArray"(%"_Pshadow_Ptest_CSortTest"*)
-declare { %int*, [1 x %int] } @"_Pshadow_Ptest_CSortTest_MmergeSort_Pshadow_Pstandard_Cint_A1"(%"_Pshadow_Ptest_CSortTest"*, { %int*, [1 x %int] })
-declare %int @"_Pshadow_Ptest_CSortTest_MgetMinimum"(%"_Pshadow_Ptest_CSortTest"*)
-declare void @"_Pshadow_Ptest_CSortTest_MbucketSort_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Ptest_CSortTest"*, { %int*, [1 x %int] }, %int, %int)
-declare %double @"_Pshadow_Ptest_CSortTest_MgetTime"(%"_Pshadow_Ptest_CSortTest"*)
-declare %int @"_Pshadow_Ptest_CSortTest_MgetArrayEnd"(%"_Pshadow_Ptest_CSortTest"*)
 
 declare %byte @"_Pshadow_Pstandard_Cbyte_Mmin_Pshadow_Pstandard_Cbyte"(%"_Pshadow_Pstandard_Cbyte"*, %byte)
 declare %byte @"_Pshadow_Pstandard_Cbyte_Msubtract_Pshadow_Pstandard_Cbyte"(%"_Pshadow_Pstandard_Cbyte"*, %byte)
@@ -262,18 +378,6 @@ declare %ubyte @"_Pshadow_Pstandard_Cubyte_Madd_Pshadow_Pstandard_Cubyte"(%"_Psh
 declare %"_Pshadow_Pstandard_Cubyte"* @"_Pshadow_Pstandard_Cubyte_Mcreate"(%"_Pshadow_Pstandard_Cubyte"*)
 declare %ubyte @"_Pshadow_Pstandard_Cubyte_Mmodulus_Pshadow_Pstandard_Cubyte"(%"_Pshadow_Pstandard_Cubyte"*, %ubyte)
 
-declare %uint @"_Pshadow_Pstandard_Cuint_Mmin_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-declare %uint @"_Pshadow_Pstandard_Cuint_Msubtract_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-declare %uint @"_Pshadow_Pstandard_Cuint_Mmax_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-declare %int @"_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-declare %uint @"_Pshadow_Pstandard_Cuint_Mmultiply_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-declare %uint @"_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Cuint_MtoString"(%"_Pshadow_Pstandard_Cuint"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Cuint_MtoString_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-declare %uint @"_Pshadow_Pstandard_Cuint_Madd_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-declare %"_Pshadow_Pstandard_Cuint"* @"_Pshadow_Pstandard_Cuint_Mcreate"(%"_Pshadow_Pstandard_Cuint"*)
-declare %uint @"_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint"(%"_Pshadow_Pstandard_Cuint"*, %uint)
-
 declare %"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_CObject_MgetClass"(%"_Pshadow_Pstandard_CObject"*)
 declare %boolean @"_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)
 declare %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CObject_Mfreeze"(%"_Pshadow_Pstandard_CObject"*)
@@ -282,5 +386,15 @@ declare %boolean @"_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard
 declare %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CObject_Mcreate"(%"_Pshadow_Pstandard_CObject"*)
 declare %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CObject_Mcopy"(%"_Pshadow_Pstandard_CObject"*)
 
-@_array0 = private unnamed_addr constant [20 x %ubyte] c"shadow.test@SortMain"
-@_string0 = private unnamed_addr constant %"_Pshadow_Pstandard_CString" { %"_Pshadow_Pstandard_CString_Mclass"* @"_Pshadow_Pstandard_CString_Mclass", { %ubyte*, [1 x %int] } { %ubyte* getelementptr inbounds ([20 x %ubyte]* @_array0, i32 0, i32 0), [1 x %int] [%int 20] }, %boolean true }
+declare %"_Pshadow_Pstandard_CMutableString"* @"_Pshadow_Pstandard_CMutableString_Mappend_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)
+declare %"_Pshadow_Pstandard_CMutableString"* @"_Pshadow_Pstandard_CMutableString_Mreverse"(%"_Pshadow_Pstandard_CMutableString"*)
+declare %"_Pshadow_Pstandard_CMutableString"* @"_Pshadow_Pstandard_CMutableString_MensureCapacity_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CMutableString"*, %int)
+declare %int @"_Pshadow_Pstandard_CMutableString_Mlength"(%"_Pshadow_Pstandard_CMutableString"*)
+declare %int @"_Pshadow_Pstandard_CMutableString_Mcapacity"(%"_Pshadow_Pstandard_CMutableString"*)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CMutableString_MtoString"(%"_Pshadow_Pstandard_CMutableString"*)
+declare %"_Pshadow_Pstandard_CMutableString"* @"_Pshadow_Pstandard_CMutableString_Mcreate"(%"_Pshadow_Pstandard_CMutableString"*)
+declare %"_Pshadow_Pstandard_CMutableString"* @"_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CMutableString"*, %int)
+declare %"_Pshadow_Pstandard_CMutableString"* @"_Pshadow_Pstandard_CMutableString_Mcreate_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)
+
+@_array0 = private unnamed_addr constant [4 x %ubyte] c"uint"
+@_string0 = private unnamed_addr constant %"_Pshadow_Pstandard_CString" { %"_Pshadow_Pstandard_CString_Mclass"* @"_Pshadow_Pstandard_CString_Mclass", { %ubyte*, [1 x %int] } { %ubyte* getelementptr inbounds ([4 x %ubyte]* @_array0, i32 0, i32 0), [1 x %int] [%int 4] }, %boolean true }

@@ -66,6 +66,8 @@ public class TACMethodRef extends TACOperand
 	{
 		SequenceType paramTypes = new SequenceType();
 		paramTypes.add(new SimpleModifiedType(getPrefixType())); // this
+		if (isCreate() && getPrefixType().hasOuter())
+			paramTypes.add(new SimpleModifiedType(getPrefixType().getOuter()));
 		Type parameterizedType = isCreate() ? getPrefixType() : getType();
 		if (parameterizedType.isParameterized())
 			for (int i = parameterizedType.getTypeParameters().size(); i > 0;

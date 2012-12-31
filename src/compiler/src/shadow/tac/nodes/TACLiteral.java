@@ -134,13 +134,13 @@ public class TACLiteral extends TACOperand
 			value = (int)parseNumber(literal.substring(0, literal.length() - 1),
 					32);
 		}
-		else if (lower.endsWith("f"))
+		else if (lower.endsWith("f") && "xou".indexOf(lower.charAt(1)) == -1)
 		{
 			type = Type.FLOAT;
 			value = (float)Float.parseFloat(literal.substring(0,
 					literal.length() - 1));
 		}
-		else if (lower.endsWith("d"))
+		else if (lower.endsWith("d") && "xou".indexOf(lower.charAt(1)) == -1)
 		{
 			type = Type.DOUBLE;
 			value = (double)Double.parseDouble(literal.substring(0,
