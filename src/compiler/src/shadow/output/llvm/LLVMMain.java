@@ -43,6 +43,10 @@ public class LLVMMain
 		arguments.add("shadow/io/Console.shadow");
 		arguments.add("shadow/utility/Random.shadow");
 		arguments.add("shadow/test/Test.shadow");
+		arguments.add("shadow/test/ExceptionA.shadow");
+		arguments.add("shadow/test/ExceptionB.shadow");
+		arguments.add("shadow/test/ExceptionC.shadow");
+		arguments.add("shadow/test/ExceptionTest.shadow");
 		arguments.add("shadow/test/ArrayTest.shadow");
 		arguments.add("shadow/test/StringTest.shadow");
 		arguments.add("shadow/test/ConsoleTest.shadow");

@@ -7,13 +7,18 @@ class shadow.test@ExceptionTest
 	public throwException() => () {
 		throw ExceptionA:create();
 	}
-	public main() => () {
+	public main( String[] args ) => ( int ) {
 		try {
 			throwException();
 		} catch (ExceptionA ex) {
-			Console.printLine("ExceptionA");
-		} finally {
-			Console.printLine("finally");
+			Console:instance.printLine("ExceptionA");
+		} catch (ExceptionB ex) {
+			Console:instance.printLine("ExceptionB");
+		} catch (ExceptionC ex) {
+			Console:instance.printLine("ExceptionC");
+		//} finally {
+			//Console:instance.printLine("finally");
 		}
+		return 0;
 	}
 }

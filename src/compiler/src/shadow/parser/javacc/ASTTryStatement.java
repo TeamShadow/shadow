@@ -41,6 +41,11 @@ class ASTTryStatement extends SimpleNode {
 		return catches;
 	}
 	
+	public boolean hasCatches()
+	{
+		return catches != 0;
+	}
+	
 	public boolean hasFinally()
 	{
 		return _finally;

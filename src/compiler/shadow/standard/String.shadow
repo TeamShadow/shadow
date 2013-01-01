@@ -103,6 +103,10 @@ implements CanCompare<String>, CanIterate<code>
 	{
 		return data->length;
 	}
+	public isEmpty() => ( boolean )
+	{
+		return this->length == 0;
+	}
 
 	public substring( int start, int end ) => ( String )
 	{

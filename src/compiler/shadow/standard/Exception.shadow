@@ -1,2 +1,24 @@
+import shadow.io@Console;
+
 exception shadow.standard@Exception extends shadow.standard@Object
-{}
+{
+	get String message = "";
+	public create()
+	{
+	}
+	public create( String message )
+	{
+		this:message = message;
+	}
+
+	public final native throw_() => ();
+ 
+	protected terminate() => ()
+	{
+		Console console = Console:instance;
+		console.printError(getClass());
+		if ( !message.isEmpty() )
+			console.printError(": ").printError(message);
+		console.printErrorLine();
+	}
+}

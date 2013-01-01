@@ -14,12 +14,15 @@ import java.util.List;
 import shadow.parser.javacc.*;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
+import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabelRef;
+import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
@@ -40,6 +43,7 @@ import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -1347,57 +1351,150 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTThrowStatement node, Boolean secondVisit)
 			throws ShadowException
 	{
-		return PRE_CHILDREN;
+		if (secondVisit)
+			new TACCall(tree, new TACMethodRef(tree,
+					Type.EXCEPTION.getMethods("throw_").get(0)),
+					Collections.singletonList(tree.appendChild(0)));
+		return POST_CHILDREN;
 	}
 
 	@Override
 	public Object visit(ASTTryStatement node, Boolean secondVisit)
 			throws ShadowException
 	{
-		if (secondVisit)
+		tree = tree.next();
+		TACLabelRef doneLabel = new TACLabelRef(tree);
+		int index;
+
+		TACBlock saveBlock = block;
+
+		TACBlock outerBlock = new TACBlock(tree, saveBlock);
+		if (node.hasFinally())
+			outerBlock.addCleanup();
+
+		TACBlock innerBlock = new TACBlock(tree, outerBlock);
+		if (node.hasRecover())
+			innerBlock.addRecover();
+		innerBlock.addCatches(node.getCatches());
+		if (node.hasCatches())
+			innerBlock.addLandingpad();
+
+		index = 0;
+		block = innerBlock;
+		walk(node.jjtGetChild(index));
+		block = outerBlock;
+		for (int i = 0; i < node.getCatches(); i++)
+			walk(node.jjtGetChild(index += 2));
+		if (node.hasRecover())
+			walk(node.jjtGetChild(++index));
+		block = saveBlock;
+		if (node.hasFinally())
+			walk(node.jjtGetChild(++index));
+
+		index = 0;
+		tree.appendChild(index);
+		new TACBranch(tree, doneLabel);
+		if (node.hasCatches())
 		{
-			int index = 0;
-			TACLabelRef endLabel = null;
-			if (node.hasRecover())
-				tree.append(block.getRecover());
-			if (node.hasFinally())
-				tree.append(endLabel = block.getCleanup());
-			if (endLabel == null)
-				endLabel = new TACLabelRef(tree);
-			tree.appendChild(index++);
-			new TACBranch(tree, endLabel);
+			innerBlock.getLandingpad().new TACLabel(tree);
+			new TACLandingpad(tree, innerBlock);
 			for (int i = 0; i < node.getCatches(); i++)
 			{
-				index++;
-				index++;
-				new TACBranch(tree, endLabel);
+				innerBlock.getCatch(i).new TACLabel(tree);
+				new TACCatch(tree, (ExceptionType)node.jjtGetChild(i * 2 + 1).
+						getType());
+				tree.appendChild(++index);
+				new TACBranch(tree, doneLabel);
 			}
-			if (node.hasRecover())
-			{
-				block.getRecover().new TACLabel(tree);
-				tree.appendChild(index++);
-				new TACBranch(tree, endLabel);
-			}
-			if (node.hasFinally())
-			{
-				block.getCleanup().new TACLabel(tree);
-				index++;
-			}
-			else
-				endLabel.new TACLabel(tree);
-			block = block.getParent();
 		}
-		else
+		if (node.hasRecover())
 		{
-			if (node.getCatches() != 0)
-				throw new UnsupportedOperationException();
-			block = new TACBlock(block);
-			if (node.hasRecover())
-				block.addRecover();
-			if (node.hasFinally())
-				block.addCleanup();
+			innerBlock.getRecover().new TACLabel(tree);
+			tree.appendChild(++index);
+			new TACBranch(tree, doneLabel);
 		}
-		return POST_CHILDREN;
+		doneLabel.new TACLabel(tree);
+		if (node.hasFinally())
+		{
+			doneLabel = new TACLabelRef(tree);
+			outerBlock.getCleanup().new TACLabel(tree);
+			tree.appendChild(++index);
+			new TACBranch(tree, doneLabel);
+			doneLabel.new TACLabel(tree);
+		}
+
+		return NO_CHILDREN;
+
+//		tree.appendChild(index++);
+//		new TACBranch(tree, endLabel);
+//		for (int i = 0; i < node.getCatches(); i++)
+//		{
+//			index++;
+//			index++;
+//			new TACBranch(tree, endLabel);
+//		}
+//		if (node.hasRecover())
+//		{
+//			block.getRecover().new TACLabel(tree);
+//			tree.appendChild(index++);
+//			new TACBranch(tree, endLabel);
+//		}
+//		if (node.hasFinally())
+//		{
+//			block.getCleanup().new TACLabel(tree);
+//			index++;
+//		}
+//		else
+//			endLabel.new TACLabel(tree);
+//		block = block.getParent();
+//
+//		block = block.getParent();
+//		return NO_CHILDREN;
+//
+//		if (secondVisit)
+//		{
+//			int index = 0;
+//			TACLabelRef endLabel = null;
+//			if (node.hasRecover())
+//				tree.append(block.getRecover());
+//			if (node.hasFinally())
+//				tree.append(endLabel = block.getCleanup());
+//			if (endLabel == null)
+//				endLabel = new TACLabelRef(tree);
+//			tree.appendChild(index++);
+//			new TACBranch(tree, endLabel);
+//			for (int i = 0; i < node.getCatches(); i++)
+//			{
+//				index++;
+//				index++;
+//				new TACBranch(tree, endLabel);
+//			}
+//			if (node.hasRecover())
+//			{
+//				block.getRecover().new TACLabel(tree);
+//				tree.appendChild(index++);
+//				new TACBranch(tree, endLabel);
+//			}
+//			if (node.hasFinally())
+//			{
+//				block.getCleanup().new TACLabel(tree);
+//				index++;
+//			}
+//			else
+//				endLabel.new TACLabel(tree);
+//			block = block.getParent();
+//		}
+//		else
+//		{
+//			if (node.getCatches() != 0)
+//				throw new UnsupportedOperationException();
+//			block = new TACBlock(block);
+//			if (node.hasRecover())
+//				block.addRecover();
+//			if (node.hasFinally())
+//				block.addCleanup();
+//		}
+//		return POST_CHILDREN;
 	}
 
 	@Override

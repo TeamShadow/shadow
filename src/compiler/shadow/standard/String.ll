@@ -13,11 +13,15 @@
 %float = type float
 %double = type double
 
-%"_Pshadow_Pstandard_CString_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, { %byte*, [1 x %int] } (%"_Pshadow_Pstandard_CString"*)*, %int (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %byte*, [1 x %int] })*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %code*, [1 x %int] })*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %boolean (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %byte (%"_Pshadow_Pstandard_CString"*, %int)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CString"*)*, %int (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %int, %int)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* }
+declare i32 @__shadow_personality_v0(...)
+declare %"_Pshadow_Pstandard_CException"* @__shadow_catch(i8* nocapture) nounwind
+declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
+
+%"_Pshadow_Pstandard_CString_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, { %byte*, [1 x %int] } (%"_Pshadow_Pstandard_CString"*)*, %int (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %byte*, [1 x %int] })*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %code*, [1 x %int] })*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %boolean (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %byte (%"_Pshadow_Pstandard_CString"*, %int)*, %boolean (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CString"*)*, %int (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %int, %int)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* }
 %"_Pshadow_Pstandard_CString" = type { %"_Pshadow_Pstandard_CString_Mclass"*, { %byte*, [1 x %int] }, %boolean }
-%"_Pshadow_Pstandard_CException_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CException"* (%"_Pshadow_Pstandard_CException"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)* }
+%"_Pshadow_Pstandard_CException_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CException"* (%"_Pshadow_Pstandard_CException"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CException"* (%"_Pshadow_Pstandard_CException"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)*, void (%"_Pshadow_Pstandard_CException"*)* }
 %"_Pshadow_Pstandard_CException" = type { %"_Pshadow_Pstandard_CException_Mclass"* }
-%"_Pshadow_Pstandard_CIllegalArgumentException_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CIllegalArgumentException"* (%"_Pshadow_Pstandard_CIllegalArgumentException"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)* }
+%"_Pshadow_Pstandard_CIllegalArgumentException_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CIllegalArgumentException"* (%"_Pshadow_Pstandard_CIllegalArgumentException"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CException"* (%"_Pshadow_Pstandard_CException"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)*, void (%"_Pshadow_Pstandard_CException"*)* }
 %"_Pshadow_Pstandard_CIllegalArgumentException" = type { %"_Pshadow_Pstandard_CIllegalArgumentException_Mclass"* }
 %"_Pshadow_Pstandard_Cint_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cint"* (%"_Pshadow_Pstandard_Cint"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cint"*)*, %uint (%"_Pshadow_Pstandard_Cint"*)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %int (%"_Pshadow_Pstandard_Cint"*, %int)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_Cint"*, %uint)* }
 %"_Pshadow_Pstandard_Cint" = type { %"_Pshadow_Pstandard_Cint_Mclass"*, %int }
@@ -54,26 +58,26 @@
 %"_Pshadow_Pstandard_CMutableString_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CMutableString"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)*, %int (%"_Pshadow_Pstandard_CMutableString"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %int)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %int)*, %int (%"_Pshadow_Pstandard_CMutableString"*)*, %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*)* }
 %"_Pshadow_Pstandard_CMutableString" = type { %"_Pshadow_Pstandard_CMutableString_Mclass"* }
 
-@"_Pshadow_Pstandard_CString_Mclass" = global %"_Pshadow_Pstandard_CString_Mclass" { %"_Pshadow_Pstandard_CClass" { %"_Pshadow_Pstandard_CClass_Mclass"* @"_Pshadow_Pstandard_CClass_Mclass", { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } zeroinitializer, %"_Pshadow_Pstandard_CObject"* null, %"_Pshadow_Pstandard_CString"* @_string0, %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CObject_Mclass"* @"_Pshadow_Pstandard_CObject_Mclass", i32 0, i32 0), %int 0, %int ptrtoint (%"_Pshadow_Pstandard_CString"* getelementptr (%"_Pshadow_Pstandard_CString"* null, i32 1) to i32), %int ptrtoint (%"_Pshadow_Pstandard_CString"** getelementptr (%"_Pshadow_Pstandard_CString"** null, i32 1) to i32) }, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mcopy", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mcreate", %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mfreeze", %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MgetClass", %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_MtoString", { %byte*, [1 x %int] } (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mchars", %int (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mconcatenate_Pshadow_Pstandard_CString", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %byte*, [1 x %int] })* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %code*, [1 x %int] })* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString", %boolean (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString", %byte (%"_Pshadow_Pstandard_CString"*, %int)* @"_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Miterator", %int (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mlength", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %int, %int)* @"_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_MtoLowerCase", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_MtoUpperCase" }
-@"_Pshadow_Pstandard_CException_Mclass" = external global %"_Pshadow_Pstandard_CException_Mclass"
-@"_Pshadow_Pstandard_CIllegalArgumentException_Mclass" = external global %"_Pshadow_Pstandard_CIllegalArgumentException_Mclass"
-@"_Pshadow_Pstandard_Cint_Mclass" = external global %"_Pshadow_Pstandard_Cint_Mclass"
-@"_Pshadow_Pstandard_Cushort_Mclass" = external global %"_Pshadow_Pstandard_Cushort_Mclass"
-@"_Pshadow_Pstandard_Ccode_Mclass" = external global %"_Pshadow_Pstandard_Ccode_Mclass"
-@"_Pshadow_Pstandard_Cdouble_Mclass" = external global %"_Pshadow_Pstandard_Cdouble_Mclass"
-@"_Pshadow_Pstandard_Clong_Mclass" = external global %"_Pshadow_Pstandard_Clong_Mclass"
-@"_Pshadow_Pstandard_Cfloat_Mclass" = external global %"_Pshadow_Pstandard_Cfloat_Mclass"
-@"_Pshadow_Pstandard_Cshort_Mclass" = external global %"_Pshadow_Pstandard_Cshort_Mclass"
-@"_Pshadow_Pstandard_Cbyte_Mclass" = external global %"_Pshadow_Pstandard_Cbyte_Mclass"
-@"_Pshadow_Pstandard_CClass_Mclass" = external global %"_Pshadow_Pstandard_CClass_Mclass"
-@"_Pshadow_Pstandard_Cboolean_Mclass" = external global %"_Pshadow_Pstandard_Cboolean_Mclass"
-@"_Pshadow_Pstandard_CArray_Mclass" = external global %"_Pshadow_Pstandard_CArray_Mclass"
-@"_Pshadow_Pstandard_CString_IStringIterator_Mclass" = external global %"_Pshadow_Pstandard_CString_IStringIterator_Mclass"
-@"_Pshadow_Pstandard_Culong_Mclass" = external global %"_Pshadow_Pstandard_Culong_Mclass"
-@"_Pshadow_Pstandard_Cubyte_Mclass" = external global %"_Pshadow_Pstandard_Cubyte_Mclass"
-@"_Pshadow_Pstandard_Cuint_Mclass" = external global %"_Pshadow_Pstandard_Cuint_Mclass"
-@"_Pshadow_Pstandard_CObject_Mclass" = external global %"_Pshadow_Pstandard_CObject_Mclass"
-@"_Pshadow_Pstandard_CMutableString_Mclass" = external global %"_Pshadow_Pstandard_CMutableString_Mclass"
+@"_Pshadow_Pstandard_CString_Mclass" = constant %"_Pshadow_Pstandard_CString_Mclass" { %"_Pshadow_Pstandard_CClass" { %"_Pshadow_Pstandard_CClass_Mclass"* @"_Pshadow_Pstandard_CClass_Mclass", { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } zeroinitializer, %"_Pshadow_Pstandard_CObject"* null, %"_Pshadow_Pstandard_CString"* @_string0, %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CObject_Mclass"* @"_Pshadow_Pstandard_CObject_Mclass", i32 0, i32 0), %int 0, %int ptrtoint (%"_Pshadow_Pstandard_CString"* getelementptr (%"_Pshadow_Pstandard_CString"* null, i32 1) to i32), %int ptrtoint (%"_Pshadow_Pstandard_CString"** getelementptr (%"_Pshadow_Pstandard_CString"** null, i32 1) to i32) }, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mcopy", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mcreate", %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mequals_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mfreeze", %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MgetClass", %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_MtoString", { %byte*, [1 x %int] } (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mchars", %int (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mconcatenate_Pshadow_Pstandard_CString", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %byte*, [1 x %int] })* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, { %code*, [1 x %int] })* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString", %boolean (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString", %byte (%"_Pshadow_Pstandard_CString"*, %int)* @"_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint", %boolean (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_MisEmpty", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Miterator", %int (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_Mlength", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %int, %int)* @"_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_MtoLowerCase", %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* @"_Pshadow_Pstandard_CString_MtoUpperCase" }
+@"_Pshadow_Pstandard_CException_Mclass" = external constant %"_Pshadow_Pstandard_CException_Mclass"
+@"_Pshadow_Pstandard_CIllegalArgumentException_Mclass" = external constant %"_Pshadow_Pstandard_CIllegalArgumentException_Mclass"
+@"_Pshadow_Pstandard_Cint_Mclass" = external constant %"_Pshadow_Pstandard_Cint_Mclass"
+@"_Pshadow_Pstandard_Cushort_Mclass" = external constant %"_Pshadow_Pstandard_Cushort_Mclass"
+@"_Pshadow_Pstandard_Ccode_Mclass" = external constant %"_Pshadow_Pstandard_Ccode_Mclass"
+@"_Pshadow_Pstandard_Cdouble_Mclass" = external constant %"_Pshadow_Pstandard_Cdouble_Mclass"
+@"_Pshadow_Pstandard_Clong_Mclass" = external constant %"_Pshadow_Pstandard_Clong_Mclass"
+@"_Pshadow_Pstandard_Cfloat_Mclass" = external constant %"_Pshadow_Pstandard_Cfloat_Mclass"
+@"_Pshadow_Pstandard_Cshort_Mclass" = external constant %"_Pshadow_Pstandard_Cshort_Mclass"
+@"_Pshadow_Pstandard_Cbyte_Mclass" = external constant %"_Pshadow_Pstandard_Cbyte_Mclass"
+@"_Pshadow_Pstandard_CClass_Mclass" = external constant %"_Pshadow_Pstandard_CClass_Mclass"
+@"_Pshadow_Pstandard_Cboolean_Mclass" = external constant %"_Pshadow_Pstandard_Cboolean_Mclass"
+@"_Pshadow_Pstandard_CArray_Mclass" = external constant %"_Pshadow_Pstandard_CArray_Mclass"
+@"_Pshadow_Pstandard_CString_IStringIterator_Mclass" = external constant %"_Pshadow_Pstandard_CString_IStringIterator_Mclass"
+@"_Pshadow_Pstandard_Culong_Mclass" = external constant %"_Pshadow_Pstandard_Culong_Mclass"
+@"_Pshadow_Pstandard_Cubyte_Mclass" = external constant %"_Pshadow_Pstandard_Cubyte_Mclass"
+@"_Pshadow_Pstandard_Cuint_Mclass" = external constant %"_Pshadow_Pstandard_Cuint_Mclass"
+@"_Pshadow_Pstandard_CObject_Mclass" = external constant %"_Pshadow_Pstandard_CObject_Mclass"
+@"_Pshadow_Pstandard_CMutableString_Mclass" = external constant %"_Pshadow_Pstandard_CMutableString_Mclass"
 
 define %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoUpperCase"(%"_Pshadow_Pstandard_CString"*) {
     %this = alloca %"_Pshadow_Pstandard_CString"*
@@ -133,6 +137,19 @@ _label2:
     ret %"_Pshadow_Pstandard_CString"* %40
 }
 
+define %boolean @"_Pshadow_Pstandard_CString_MisEmpty"(%"_Pshadow_Pstandard_CString"*) {
+    %this = alloca %"_Pshadow_Pstandard_CString"*
+    store %"_Pshadow_Pstandard_CString"* %0, %"_Pshadow_Pstandard_CString"** %this
+    %2 = load %"_Pshadow_Pstandard_CString"** %this
+    %3 = getelementptr %"_Pshadow_Pstandard_CString"* %2, i32 0, i32 0
+    %4 = load %"_Pshadow_Pstandard_CString_Mclass"** %3
+    %5 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %4, i32 0, i32 18
+    %6 = load %int (%"_Pshadow_Pstandard_CString"*)** %5
+    %7 = call %int %6(%"_Pshadow_Pstandard_CString"* %2)
+    %8 = icmp eq %int %7, 0
+    ret %boolean %8
+}
+
 define %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CString_Miterator"(%"_Pshadow_Pstandard_CString"*) {
     %this = alloca %"_Pshadow_Pstandard_CString"*
     store %"_Pshadow_Pstandard_CString"* %0, %"_Pshadow_Pstandard_CString"** %this
@@ -154,12 +171,12 @@ define %boolean @"_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString"(
     %4 = load %"_Pshadow_Pstandard_CString"** %other
     %5 = getelementptr %"_Pshadow_Pstandard_CString"* %3, i32 0, i32 0
     %6 = load %"_Pshadow_Pstandard_CString_Mclass"** %5
-    %7 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %6, i32 0, i32 17
+    %7 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %6, i32 0, i32 18
     %8 = load %int (%"_Pshadow_Pstandard_CString"*)** %7
     %9 = call %int %8(%"_Pshadow_Pstandard_CString"* %3)
     %10 = getelementptr %"_Pshadow_Pstandard_CString"* %4, i32 0, i32 0
     %11 = load %"_Pshadow_Pstandard_CString_Mclass"** %10
-    %12 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %11, i32 0, i32 17
+    %12 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %11, i32 0, i32 18
     %13 = load %int (%"_Pshadow_Pstandard_CString"*)** %12
     %14 = call %int %13(%"_Pshadow_Pstandard_CString"* %4)
     %15 = icmp ne %int %9, %14
@@ -276,7 +293,7 @@ _label9:
     %22 = load %int* %i
     %23 = getelementptr %"_Pshadow_Pstandard_CString"* %21, i32 0, i32 0
     %24 = load %"_Pshadow_Pstandard_CString_Mclass"** %23
-    %25 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %24, i32 0, i32 17
+    %25 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %24, i32 0, i32 18
     %26 = load %int (%"_Pshadow_Pstandard_CString"*)** %25
     %27 = call %int %26(%"_Pshadow_Pstandard_CString"* %21)
     %28 = icmp slt %int %22, %27
@@ -287,7 +304,7 @@ _label15:
     %30 = load %int* %i
     %31 = getelementptr %"_Pshadow_Pstandard_CString"* %29, i32 0, i32 0
     %32 = load %"_Pshadow_Pstandard_CString_Mclass"** %31
-    %33 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %32, i32 0, i32 17
+    %33 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %32, i32 0, i32 18
     %34 = load %int (%"_Pshadow_Pstandard_CString"*)** %33
     %35 = call %int %34(%"_Pshadow_Pstandard_CString"* %29)
     %36 = icmp slt %int %30, %35
@@ -301,12 +318,12 @@ _label10:
     %39 = load %"_Pshadow_Pstandard_CString"** %other
     %40 = getelementptr %"_Pshadow_Pstandard_CString"* %38, i32 0, i32 0
     %41 = load %"_Pshadow_Pstandard_CString_Mclass"** %40
-    %42 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %41, i32 0, i32 17
+    %42 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %41, i32 0, i32 18
     %43 = load %int (%"_Pshadow_Pstandard_CString"*)** %42
     %44 = call %int %43(%"_Pshadow_Pstandard_CString"* %38)
     %45 = getelementptr %"_Pshadow_Pstandard_CString"* %39, i32 0, i32 0
     %46 = load %"_Pshadow_Pstandard_CString_Mclass"** %45
-    %47 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %46, i32 0, i32 17
+    %47 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %46, i32 0, i32 18
     %48 = load %int (%"_Pshadow_Pstandard_CString"*)** %47
     %49 = call %int %48(%"_Pshadow_Pstandard_CString"* %39)
     %50 = sub %int %44, %49
@@ -551,45 +568,51 @@ _label22:
     %21 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pstandard_CIllegalArgumentException_Mclass"* @"_Pshadow_Pstandard_CIllegalArgumentException_Mclass", i32 0, i32 0))
     %22 = bitcast %"_Pshadow_Pstandard_CObject"* %21 to %"_Pshadow_Pstandard_CIllegalArgumentException"*
     %23 = call %"_Pshadow_Pstandard_CIllegalArgumentException"* @"_Pshadow_Pstandard_CIllegalArgumentException_Mcreate"(%"_Pshadow_Pstandard_CIllegalArgumentException"* %22)
+    %24 = bitcast %"_Pshadow_Pstandard_CIllegalArgumentException"* %22 to %"_Pshadow_Pstandard_CException"*
+    %25 = getelementptr %"_Pshadow_Pstandard_CException"* %24, i32 0, i32 0
+    %26 = load %"_Pshadow_Pstandard_CException_Mclass"** %25
+    %27 = getelementptr %"_Pshadow_Pstandard_CException_Mclass"* %26, i32 0, i32 10
+    %28 = load void (%"_Pshadow_Pstandard_CException"*)** %27
+    call void %28(%"_Pshadow_Pstandard_CException"* %24)
     br label %_label24
 _label23:
-    %24 = load { %code*, [1 x %int] }* %data
-    %25 = load %int* %i
-    %26 = extractvalue { %code*, [1 x %int] } %24, 0
-    %27 = getelementptr inbounds %code* %26, %int %25
-    %28 = shl %int 1, 7
-    %29 = load %code* %27
-    %30 = bitcast %code %29 to %int
-    %31 = icmp sge %int %30, %28
-    br %boolean %31, label %_label25, label %_label26
+    %29 = load { %code*, [1 x %int] }* %data
+    %30 = load %int* %i
+    %31 = extractvalue { %code*, [1 x %int] } %29, 0
+    %32 = getelementptr inbounds %code* %31, %int %30
+    %33 = shl %int 1, 7
+    %34 = load %code* %32
+    %35 = bitcast %code %34 to %int
+    %36 = icmp sge %int %35, %33
+    br %boolean %36, label %_label25, label %_label26
 _label25:
-    %32 = load %"_Pshadow_Pstandard_CString"** %this
-    %33 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %32, i32 0, i32 2
-    store %boolean false, %boolean* %33
-    %34 = load %int* %length
-    %35 = add %int %34, 1
-    store %int %35, %int* %length
+    %37 = load %"_Pshadow_Pstandard_CString"** %this
+    %38 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %37, i32 0, i32 2
+    store %boolean false, %boolean* %38
+    %39 = load %int* %length
+    %40 = add %int %39, 1
+    store %int %40, %int* %length
     store %int 11, %int* %shift
     br label %_label29
 _label28:
-    %36 = load %int* %length
-    %37 = add %int %36, 1
-    store %int %37, %int* %length
-    %38 = load %int* %shift
-    %39 = add %int %38, 5
-    store %int %39, %int* %shift
+    %41 = load %int* %length
+    %42 = add %int %41, 1
+    store %int %42, %int* %length
+    %43 = load %int* %shift
+    %44 = add %int %43, 5
+    store %int %44, %int* %shift
     br label %_label29
 _label29:
-    %40 = load { %code*, [1 x %int] }* %data
-    %41 = load %int* %i
-    %42 = extractvalue { %code*, [1 x %int] } %40, 0
-    %43 = getelementptr inbounds %code* %42, %int %41
-    %44 = load %int* %shift
-    %45 = shl %int 1, %44
-    %46 = load %code* %43
-    %47 = bitcast %code %46 to %int
-    %48 = icmp sge %int %47, %45
-    br %boolean %48, label %_label28, label %_label30
+    %45 = load { %code*, [1 x %int] }* %data
+    %46 = load %int* %i
+    %47 = extractvalue { %code*, [1 x %int] } %45, 0
+    %48 = getelementptr inbounds %code* %47, %int %46
+    %49 = load %int* %shift
+    %50 = shl %int 1, %49
+    %51 = load %code* %48
+    %52 = bitcast %code %51 to %int
+    %53 = icmp sge %int %52, %50
+    br %boolean %53, label %_label28, label %_label30
 _label30:
     br label %_label27
 _label26:
@@ -597,491 +620,491 @@ _label26:
 _label27:
     br label %_label24
 _label24:
-    %49 = load %int* %i
-    %50 = add %int %49, 1
-    store %int %50, %int* %i
+    %54 = load %int* %i
+    %55 = add %int %54, 1
+    store %int %55, %int* %i
     br label %_label20
 _label20:
-    %51 = load { %code*, [1 x %int] }* %data
-    %52 = extractvalue { %code*, [1 x %int] } %51, 1, 0
-    %53 = load %int* %i
-    %54 = icmp slt %int %53, %52
-    br %boolean %54, label %_label19, label %_label21
+    %56 = load { %code*, [1 x %int] }* %data
+    %57 = extractvalue { %code*, [1 x %int] } %56, 1, 0
+    %58 = load %int* %i
+    %59 = icmp slt %int %58, %57
+    br %boolean %59, label %_label19, label %_label21
 _label21:
-    %55 = load %int* %length
-    %56 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cbyte_Mclass"* @"_Pshadow_Pstandard_Cbyte_Mclass", i32 0, i32 0), %int %55)
-    %57 = bitcast %"_Pshadow_Pstandard_CObject"* %56 to %byte*
-    %58 = insertvalue { %byte*, [1 x %int] } undef, %byte* %57, 0
-    %59 = insertvalue { %byte*, [1 x %int] } %58, %int %55, 1, 0
-    %60 = load %"_Pshadow_Pstandard_CString"** %this
-    %61 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %60, i32 0, i32 1
-    store { %byte*, [1 x %int] } %59, { %byte*, [1 x %int] }* %61
+    %60 = load %int* %length
+    %61 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cbyte_Mclass"* @"_Pshadow_Pstandard_Cbyte_Mclass", i32 0, i32 0), %int %60)
+    %62 = bitcast %"_Pshadow_Pstandard_CObject"* %61 to %byte*
+    %63 = insertvalue { %byte*, [1 x %int] } undef, %byte* %62, 0
+    %64 = insertvalue { %byte*, [1 x %int] } %63, %int %60, 1, 0
+    %65 = load %"_Pshadow_Pstandard_CString"** %this
+    %66 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %65, i32 0, i32 1
+    store { %byte*, [1 x %int] } %64, { %byte*, [1 x %int] }* %66
     store %int 0, %int* %i1
     store %int 0, %int* %j
     br label %_label32
 _label31:
-    %62 = load { %code*, [1 x %int] }* %data
-    %63 = load %int* %i1
-    %64 = extractvalue { %code*, [1 x %int] } %62, 0
-    %65 = getelementptr inbounds %code* %64, %int %63
-    %66 = shl %int 1, 7
-    %67 = load %code* %65
-    %68 = bitcast %code %67 to %int
-    %69 = icmp slt %int %68, %66
-    br %boolean %69, label %_label34, label %_label35
+    %67 = load { %code*, [1 x %int] }* %data
+    %68 = load %int* %i1
+    %69 = extractvalue { %code*, [1 x %int] } %67, 0
+    %70 = getelementptr inbounds %code* %69, %int %68
+    %71 = shl %int 1, 7
+    %72 = load %code* %70
+    %73 = bitcast %code %72 to %int
+    %74 = icmp slt %int %73, %71
+    br %boolean %74, label %_label34, label %_label35
 _label34:
-    %70 = load { %code*, [1 x %int] }* %data
-    %71 = load %int* %i1
-    %72 = extractvalue { %code*, [1 x %int] } %70, 0
-    %73 = getelementptr inbounds %code* %72, %int %71
-    %74 = load %code* %73
-    %75 = trunc %code %74 to %byte
-    %76 = load %"_Pshadow_Pstandard_CString"** %this
-    %77 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %76, i32 0, i32 1
-    %78 = load %int* %j
-    %79 = add %int %78, 0
-    %80 = load { %byte*, [1 x %int] }* %77
-    %81 = extractvalue { %byte*, [1 x %int] } %80, 0
-    %82 = getelementptr inbounds %byte* %81, %int %79
-    store %byte %75, %byte* %82
+    %75 = load { %code*, [1 x %int] }* %data
+    %76 = load %int* %i1
+    %77 = extractvalue { %code*, [1 x %int] } %75, 0
+    %78 = getelementptr inbounds %code* %77, %int %76
+    %79 = load %code* %78
+    %80 = trunc %code %79 to %byte
+    %81 = load %"_Pshadow_Pstandard_CString"** %this
+    %82 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %81, i32 0, i32 1
     %83 = load %int* %j
-    %84 = add %int %83, 1
-    store %int %84, %int* %j
+    %84 = add %int %83, 0
+    %85 = load { %byte*, [1 x %int] }* %82
+    %86 = extractvalue { %byte*, [1 x %int] } %85, 0
+    %87 = getelementptr inbounds %byte* %86, %int %84
+    store %byte %80, %byte* %87
+    %88 = load %int* %j
+    %89 = add %int %88, 1
+    store %int %89, %int* %j
     br label %_label36
 _label35:
-    %85 = load { %code*, [1 x %int] }* %data
-    %86 = load %int* %i1
-    %87 = extractvalue { %code*, [1 x %int] } %85, 0
-    %88 = getelementptr inbounds %code* %87, %int %86
-    %89 = shl %int 1, 11
-    %90 = load %code* %88
-    %91 = bitcast %code %90 to %int
-    %92 = icmp slt %int %91, %89
-    br %boolean %92, label %_label37, label %_label38
+    %90 = load { %code*, [1 x %int] }* %data
+    %91 = load %int* %i1
+    %92 = extractvalue { %code*, [1 x %int] } %90, 0
+    %93 = getelementptr inbounds %code* %92, %int %91
+    %94 = shl %int 1, 11
+    %95 = load %code* %93
+    %96 = bitcast %code %95 to %int
+    %97 = icmp slt %int %96, %94
+    br %boolean %97, label %_label37, label %_label38
 _label37:
-    %93 = load { %code*, [1 x %int] }* %data
-    %94 = load %int* %i1
-    %95 = extractvalue { %code*, [1 x %int] } %93, 0
-    %96 = getelementptr inbounds %code* %95, %int %94
-    %97 = load %code* %96
-    %98 = bitcast %code %97 to %int
-    %99 = ashr %int %98, 6
-    %100 = and %int %99, 31
-    %101 = or %int %100, 192
-    %102 = trunc %int %101 to %byte
-    %103 = load %"_Pshadow_Pstandard_CString"** %this
-    %104 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %103, i32 0, i32 1
-    %105 = load %int* %j
-    %106 = add %int %105, 0
-    %107 = load { %byte*, [1 x %int] }* %104
-    %108 = extractvalue { %byte*, [1 x %int] } %107, 0
-    %109 = getelementptr inbounds %byte* %108, %int %106
-    store %byte %102, %byte* %109
-    %110 = load { %code*, [1 x %int] }* %data
-    %111 = load %int* %i1
-    %112 = extractvalue { %code*, [1 x %int] } %110, 0
-    %113 = getelementptr inbounds %code* %112, %int %111
-    %114 = load %code* %113
-    %115 = bitcast %code %114 to %int
-    %116 = ashr %int %115, 0
-    %117 = and %int %116, 63
-    %118 = or %int %117, 128
-    %119 = trunc %int %118 to %byte
-    %120 = load %"_Pshadow_Pstandard_CString"** %this
-    %121 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %120, i32 0, i32 1
-    %122 = load %int* %j
-    %123 = add %int %122, 1
-    %124 = load { %byte*, [1 x %int] }* %121
-    %125 = extractvalue { %byte*, [1 x %int] } %124, 0
-    %126 = getelementptr inbounds %byte* %125, %int %123
-    store %byte %119, %byte* %126
+    %98 = load { %code*, [1 x %int] }* %data
+    %99 = load %int* %i1
+    %100 = extractvalue { %code*, [1 x %int] } %98, 0
+    %101 = getelementptr inbounds %code* %100, %int %99
+    %102 = load %code* %101
+    %103 = bitcast %code %102 to %int
+    %104 = ashr %int %103, 6
+    %105 = and %int %104, 31
+    %106 = or %int %105, 192
+    %107 = trunc %int %106 to %byte
+    %108 = load %"_Pshadow_Pstandard_CString"** %this
+    %109 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %108, i32 0, i32 1
+    %110 = load %int* %j
+    %111 = add %int %110, 0
+    %112 = load { %byte*, [1 x %int] }* %109
+    %113 = extractvalue { %byte*, [1 x %int] } %112, 0
+    %114 = getelementptr inbounds %byte* %113, %int %111
+    store %byte %107, %byte* %114
+    %115 = load { %code*, [1 x %int] }* %data
+    %116 = load %int* %i1
+    %117 = extractvalue { %code*, [1 x %int] } %115, 0
+    %118 = getelementptr inbounds %code* %117, %int %116
+    %119 = load %code* %118
+    %120 = bitcast %code %119 to %int
+    %121 = ashr %int %120, 0
+    %122 = and %int %121, 63
+    %123 = or %int %122, 128
+    %124 = trunc %int %123 to %byte
+    %125 = load %"_Pshadow_Pstandard_CString"** %this
+    %126 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %125, i32 0, i32 1
     %127 = load %int* %j
-    %128 = add %int %127, 2
-    store %int %128, %int* %j
+    %128 = add %int %127, 1
+    %129 = load { %byte*, [1 x %int] }* %126
+    %130 = extractvalue { %byte*, [1 x %int] } %129, 0
+    %131 = getelementptr inbounds %byte* %130, %int %128
+    store %byte %124, %byte* %131
+    %132 = load %int* %j
+    %133 = add %int %132, 2
+    store %int %133, %int* %j
     br label %_label39
 _label38:
-    %129 = load { %code*, [1 x %int] }* %data
-    %130 = load %int* %i1
-    %131 = extractvalue { %code*, [1 x %int] } %129, 0
-    %132 = getelementptr inbounds %code* %131, %int %130
-    %133 = shl %int 1, 16
-    %134 = load %code* %132
-    %135 = bitcast %code %134 to %int
-    %136 = icmp slt %int %135, %133
-    br %boolean %136, label %_label40, label %_label41
+    %134 = load { %code*, [1 x %int] }* %data
+    %135 = load %int* %i1
+    %136 = extractvalue { %code*, [1 x %int] } %134, 0
+    %137 = getelementptr inbounds %code* %136, %int %135
+    %138 = shl %int 1, 16
+    %139 = load %code* %137
+    %140 = bitcast %code %139 to %int
+    %141 = icmp slt %int %140, %138
+    br %boolean %141, label %_label40, label %_label41
 _label40:
-    %137 = load { %code*, [1 x %int] }* %data
-    %138 = load %int* %i1
-    %139 = extractvalue { %code*, [1 x %int] } %137, 0
-    %140 = getelementptr inbounds %code* %139, %int %138
-    %141 = load %code* %140
-    %142 = bitcast %code %141 to %int
-    %143 = ashr %int %142, 12
-    %144 = and %int %143, 15
-    %145 = or %int %144, 224
-    %146 = trunc %int %145 to %byte
-    %147 = load %"_Pshadow_Pstandard_CString"** %this
-    %148 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %147, i32 0, i32 1
-    %149 = load %int* %j
-    %150 = add %int %149, 0
-    %151 = load { %byte*, [1 x %int] }* %148
-    %152 = extractvalue { %byte*, [1 x %int] } %151, 0
-    %153 = getelementptr inbounds %byte* %152, %int %150
-    store %byte %146, %byte* %153
-    %154 = load { %code*, [1 x %int] }* %data
-    %155 = load %int* %i1
-    %156 = extractvalue { %code*, [1 x %int] } %154, 0
-    %157 = getelementptr inbounds %code* %156, %int %155
-    %158 = load %code* %157
-    %159 = bitcast %code %158 to %int
-    %160 = ashr %int %159, 6
-    %161 = and %int %160, 63
-    %162 = or %int %161, 128
-    %163 = trunc %int %162 to %byte
-    %164 = load %"_Pshadow_Pstandard_CString"** %this
-    %165 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %164, i32 0, i32 1
-    %166 = load %int* %j
-    %167 = add %int %166, 1
-    %168 = load { %byte*, [1 x %int] }* %165
-    %169 = extractvalue { %byte*, [1 x %int] } %168, 0
-    %170 = getelementptr inbounds %byte* %169, %int %167
-    store %byte %163, %byte* %170
-    %171 = load { %code*, [1 x %int] }* %data
-    %172 = load %int* %i1
-    %173 = extractvalue { %code*, [1 x %int] } %171, 0
-    %174 = getelementptr inbounds %code* %173, %int %172
-    %175 = load %code* %174
-    %176 = bitcast %code %175 to %int
-    %177 = ashr %int %176, 0
-    %178 = and %int %177, 63
-    %179 = or %int %178, 128
-    %180 = trunc %int %179 to %byte
-    %181 = load %"_Pshadow_Pstandard_CString"** %this
-    %182 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %181, i32 0, i32 1
-    %183 = load %int* %j
-    %184 = add %int %183, 2
-    %185 = load { %byte*, [1 x %int] }* %182
-    %186 = extractvalue { %byte*, [1 x %int] } %185, 0
-    %187 = getelementptr inbounds %byte* %186, %int %184
-    store %byte %180, %byte* %187
+    %142 = load { %code*, [1 x %int] }* %data
+    %143 = load %int* %i1
+    %144 = extractvalue { %code*, [1 x %int] } %142, 0
+    %145 = getelementptr inbounds %code* %144, %int %143
+    %146 = load %code* %145
+    %147 = bitcast %code %146 to %int
+    %148 = ashr %int %147, 12
+    %149 = and %int %148, 15
+    %150 = or %int %149, 224
+    %151 = trunc %int %150 to %byte
+    %152 = load %"_Pshadow_Pstandard_CString"** %this
+    %153 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %152, i32 0, i32 1
+    %154 = load %int* %j
+    %155 = add %int %154, 0
+    %156 = load { %byte*, [1 x %int] }* %153
+    %157 = extractvalue { %byte*, [1 x %int] } %156, 0
+    %158 = getelementptr inbounds %byte* %157, %int %155
+    store %byte %151, %byte* %158
+    %159 = load { %code*, [1 x %int] }* %data
+    %160 = load %int* %i1
+    %161 = extractvalue { %code*, [1 x %int] } %159, 0
+    %162 = getelementptr inbounds %code* %161, %int %160
+    %163 = load %code* %162
+    %164 = bitcast %code %163 to %int
+    %165 = ashr %int %164, 6
+    %166 = and %int %165, 63
+    %167 = or %int %166, 128
+    %168 = trunc %int %167 to %byte
+    %169 = load %"_Pshadow_Pstandard_CString"** %this
+    %170 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %169, i32 0, i32 1
+    %171 = load %int* %j
+    %172 = add %int %171, 1
+    %173 = load { %byte*, [1 x %int] }* %170
+    %174 = extractvalue { %byte*, [1 x %int] } %173, 0
+    %175 = getelementptr inbounds %byte* %174, %int %172
+    store %byte %168, %byte* %175
+    %176 = load { %code*, [1 x %int] }* %data
+    %177 = load %int* %i1
+    %178 = extractvalue { %code*, [1 x %int] } %176, 0
+    %179 = getelementptr inbounds %code* %178, %int %177
+    %180 = load %code* %179
+    %181 = bitcast %code %180 to %int
+    %182 = ashr %int %181, 0
+    %183 = and %int %182, 63
+    %184 = or %int %183, 128
+    %185 = trunc %int %184 to %byte
+    %186 = load %"_Pshadow_Pstandard_CString"** %this
+    %187 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %186, i32 0, i32 1
     %188 = load %int* %j
-    %189 = add %int %188, 3
-    store %int %189, %int* %j
+    %189 = add %int %188, 2
+    %190 = load { %byte*, [1 x %int] }* %187
+    %191 = extractvalue { %byte*, [1 x %int] } %190, 0
+    %192 = getelementptr inbounds %byte* %191, %int %189
+    store %byte %185, %byte* %192
+    %193 = load %int* %j
+    %194 = add %int %193, 3
+    store %int %194, %int* %j
     br label %_label42
 _label41:
-    %190 = load { %code*, [1 x %int] }* %data
-    %191 = load %int* %i1
-    %192 = extractvalue { %code*, [1 x %int] } %190, 0
-    %193 = getelementptr inbounds %code* %192, %int %191
-    %194 = shl %int 1, 21
-    %195 = load %code* %193
-    %196 = bitcast %code %195 to %int
-    %197 = icmp slt %int %196, %194
-    br %boolean %197, label %_label43, label %_label44
+    %195 = load { %code*, [1 x %int] }* %data
+    %196 = load %int* %i1
+    %197 = extractvalue { %code*, [1 x %int] } %195, 0
+    %198 = getelementptr inbounds %code* %197, %int %196
+    %199 = shl %int 1, 21
+    %200 = load %code* %198
+    %201 = bitcast %code %200 to %int
+    %202 = icmp slt %int %201, %199
+    br %boolean %202, label %_label43, label %_label44
 _label43:
-    %198 = load { %code*, [1 x %int] }* %data
-    %199 = load %int* %i1
-    %200 = extractvalue { %code*, [1 x %int] } %198, 0
-    %201 = getelementptr inbounds %code* %200, %int %199
-    %202 = load %code* %201
-    %203 = bitcast %code %202 to %int
-    %204 = ashr %int %203, 18
-    %205 = and %int %204, 7
-    %206 = or %int %205, 240
-    %207 = trunc %int %206 to %byte
-    %208 = load %"_Pshadow_Pstandard_CString"** %this
-    %209 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %208, i32 0, i32 1
-    %210 = load %int* %j
-    %211 = add %int %210, 0
-    %212 = load { %byte*, [1 x %int] }* %209
-    %213 = extractvalue { %byte*, [1 x %int] } %212, 0
-    %214 = getelementptr inbounds %byte* %213, %int %211
-    store %byte %207, %byte* %214
-    %215 = load { %code*, [1 x %int] }* %data
-    %216 = load %int* %i1
-    %217 = extractvalue { %code*, [1 x %int] } %215, 0
-    %218 = getelementptr inbounds %code* %217, %int %216
-    %219 = load %code* %218
-    %220 = bitcast %code %219 to %int
-    %221 = ashr %int %220, 12
-    %222 = and %int %221, 63
-    %223 = or %int %222, 128
-    %224 = trunc %int %223 to %byte
-    %225 = load %"_Pshadow_Pstandard_CString"** %this
-    %226 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %225, i32 0, i32 1
-    %227 = load %int* %j
-    %228 = add %int %227, 1
-    %229 = load { %byte*, [1 x %int] }* %226
-    %230 = extractvalue { %byte*, [1 x %int] } %229, 0
-    %231 = getelementptr inbounds %byte* %230, %int %228
-    store %byte %224, %byte* %231
-    %232 = load { %code*, [1 x %int] }* %data
-    %233 = load %int* %i1
-    %234 = extractvalue { %code*, [1 x %int] } %232, 0
-    %235 = getelementptr inbounds %code* %234, %int %233
-    %236 = load %code* %235
-    %237 = bitcast %code %236 to %int
-    %238 = ashr %int %237, 6
-    %239 = and %int %238, 63
-    %240 = or %int %239, 128
-    %241 = trunc %int %240 to %byte
-    %242 = load %"_Pshadow_Pstandard_CString"** %this
-    %243 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %242, i32 0, i32 1
-    %244 = load %int* %j
-    %245 = add %int %244, 2
-    %246 = load { %byte*, [1 x %int] }* %243
-    %247 = extractvalue { %byte*, [1 x %int] } %246, 0
-    %248 = getelementptr inbounds %byte* %247, %int %245
-    store %byte %241, %byte* %248
-    %249 = load { %code*, [1 x %int] }* %data
-    %250 = load %int* %i1
-    %251 = extractvalue { %code*, [1 x %int] } %249, 0
-    %252 = getelementptr inbounds %code* %251, %int %250
-    %253 = load %code* %252
-    %254 = bitcast %code %253 to %int
-    %255 = ashr %int %254, 0
-    %256 = and %int %255, 63
-    %257 = or %int %256, 128
-    %258 = trunc %int %257 to %byte
-    %259 = load %"_Pshadow_Pstandard_CString"** %this
-    %260 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %259, i32 0, i32 1
-    %261 = load %int* %j
-    %262 = add %int %261, 3
-    %263 = load { %byte*, [1 x %int] }* %260
-    %264 = extractvalue { %byte*, [1 x %int] } %263, 0
-    %265 = getelementptr inbounds %byte* %264, %int %262
-    store %byte %258, %byte* %265
+    %203 = load { %code*, [1 x %int] }* %data
+    %204 = load %int* %i1
+    %205 = extractvalue { %code*, [1 x %int] } %203, 0
+    %206 = getelementptr inbounds %code* %205, %int %204
+    %207 = load %code* %206
+    %208 = bitcast %code %207 to %int
+    %209 = ashr %int %208, 18
+    %210 = and %int %209, 7
+    %211 = or %int %210, 240
+    %212 = trunc %int %211 to %byte
+    %213 = load %"_Pshadow_Pstandard_CString"** %this
+    %214 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %213, i32 0, i32 1
+    %215 = load %int* %j
+    %216 = add %int %215, 0
+    %217 = load { %byte*, [1 x %int] }* %214
+    %218 = extractvalue { %byte*, [1 x %int] } %217, 0
+    %219 = getelementptr inbounds %byte* %218, %int %216
+    store %byte %212, %byte* %219
+    %220 = load { %code*, [1 x %int] }* %data
+    %221 = load %int* %i1
+    %222 = extractvalue { %code*, [1 x %int] } %220, 0
+    %223 = getelementptr inbounds %code* %222, %int %221
+    %224 = load %code* %223
+    %225 = bitcast %code %224 to %int
+    %226 = ashr %int %225, 12
+    %227 = and %int %226, 63
+    %228 = or %int %227, 128
+    %229 = trunc %int %228 to %byte
+    %230 = load %"_Pshadow_Pstandard_CString"** %this
+    %231 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %230, i32 0, i32 1
+    %232 = load %int* %j
+    %233 = add %int %232, 1
+    %234 = load { %byte*, [1 x %int] }* %231
+    %235 = extractvalue { %byte*, [1 x %int] } %234, 0
+    %236 = getelementptr inbounds %byte* %235, %int %233
+    store %byte %229, %byte* %236
+    %237 = load { %code*, [1 x %int] }* %data
+    %238 = load %int* %i1
+    %239 = extractvalue { %code*, [1 x %int] } %237, 0
+    %240 = getelementptr inbounds %code* %239, %int %238
+    %241 = load %code* %240
+    %242 = bitcast %code %241 to %int
+    %243 = ashr %int %242, 6
+    %244 = and %int %243, 63
+    %245 = or %int %244, 128
+    %246 = trunc %int %245 to %byte
+    %247 = load %"_Pshadow_Pstandard_CString"** %this
+    %248 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %247, i32 0, i32 1
+    %249 = load %int* %j
+    %250 = add %int %249, 2
+    %251 = load { %byte*, [1 x %int] }* %248
+    %252 = extractvalue { %byte*, [1 x %int] } %251, 0
+    %253 = getelementptr inbounds %byte* %252, %int %250
+    store %byte %246, %byte* %253
+    %254 = load { %code*, [1 x %int] }* %data
+    %255 = load %int* %i1
+    %256 = extractvalue { %code*, [1 x %int] } %254, 0
+    %257 = getelementptr inbounds %code* %256, %int %255
+    %258 = load %code* %257
+    %259 = bitcast %code %258 to %int
+    %260 = ashr %int %259, 0
+    %261 = and %int %260, 63
+    %262 = or %int %261, 128
+    %263 = trunc %int %262 to %byte
+    %264 = load %"_Pshadow_Pstandard_CString"** %this
+    %265 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %264, i32 0, i32 1
     %266 = load %int* %j
-    %267 = add %int %266, 4
-    store %int %267, %int* %j
+    %267 = add %int %266, 3
+    %268 = load { %byte*, [1 x %int] }* %265
+    %269 = extractvalue { %byte*, [1 x %int] } %268, 0
+    %270 = getelementptr inbounds %byte* %269, %int %267
+    store %byte %263, %byte* %270
+    %271 = load %int* %j
+    %272 = add %int %271, 4
+    store %int %272, %int* %j
     br label %_label45
 _label44:
-    %268 = load { %code*, [1 x %int] }* %data
-    %269 = load %int* %i1
-    %270 = extractvalue { %code*, [1 x %int] } %268, 0
-    %271 = getelementptr inbounds %code* %270, %int %269
-    %272 = shl %int 1, 26
-    %273 = load %code* %271
-    %274 = bitcast %code %273 to %int
-    %275 = icmp slt %int %274, %272
-    br %boolean %275, label %_label46, label %_label47
+    %273 = load { %code*, [1 x %int] }* %data
+    %274 = load %int* %i1
+    %275 = extractvalue { %code*, [1 x %int] } %273, 0
+    %276 = getelementptr inbounds %code* %275, %int %274
+    %277 = shl %int 1, 26
+    %278 = load %code* %276
+    %279 = bitcast %code %278 to %int
+    %280 = icmp slt %int %279, %277
+    br %boolean %280, label %_label46, label %_label47
 _label46:
-    %276 = load { %code*, [1 x %int] }* %data
-    %277 = load %int* %i1
-    %278 = extractvalue { %code*, [1 x %int] } %276, 0
-    %279 = getelementptr inbounds %code* %278, %int %277
-    %280 = load %code* %279
-    %281 = bitcast %code %280 to %int
-    %282 = ashr %int %281, 24
-    %283 = and %int %282, 3
-    %284 = or %int %283, 248
-    %285 = trunc %int %284 to %byte
-    %286 = load %"_Pshadow_Pstandard_CString"** %this
-    %287 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %286, i32 0, i32 1
-    %288 = load %int* %j
-    %289 = add %int %288, 0
-    %290 = load { %byte*, [1 x %int] }* %287
-    %291 = extractvalue { %byte*, [1 x %int] } %290, 0
-    %292 = getelementptr inbounds %byte* %291, %int %289
-    store %byte %285, %byte* %292
-    %293 = load { %code*, [1 x %int] }* %data
-    %294 = load %int* %i1
-    %295 = extractvalue { %code*, [1 x %int] } %293, 0
-    %296 = getelementptr inbounds %code* %295, %int %294
-    %297 = load %code* %296
-    %298 = bitcast %code %297 to %int
-    %299 = ashr %int %298, 18
-    %300 = and %int %299, 63
-    %301 = or %int %300, 128
-    %302 = trunc %int %301 to %byte
-    %303 = load %"_Pshadow_Pstandard_CString"** %this
-    %304 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %303, i32 0, i32 1
-    %305 = load %int* %j
-    %306 = add %int %305, 1
-    %307 = load { %byte*, [1 x %int] }* %304
-    %308 = extractvalue { %byte*, [1 x %int] } %307, 0
-    %309 = getelementptr inbounds %byte* %308, %int %306
-    store %byte %302, %byte* %309
-    %310 = load { %code*, [1 x %int] }* %data
-    %311 = load %int* %i1
-    %312 = extractvalue { %code*, [1 x %int] } %310, 0
-    %313 = getelementptr inbounds %code* %312, %int %311
-    %314 = load %code* %313
-    %315 = bitcast %code %314 to %int
-    %316 = ashr %int %315, 12
-    %317 = and %int %316, 63
-    %318 = or %int %317, 128
-    %319 = trunc %int %318 to %byte
-    %320 = load %"_Pshadow_Pstandard_CString"** %this
-    %321 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %320, i32 0, i32 1
-    %322 = load %int* %j
-    %323 = add %int %322, 2
-    %324 = load { %byte*, [1 x %int] }* %321
-    %325 = extractvalue { %byte*, [1 x %int] } %324, 0
-    %326 = getelementptr inbounds %byte* %325, %int %323
-    store %byte %319, %byte* %326
-    %327 = load { %code*, [1 x %int] }* %data
-    %328 = load %int* %i1
-    %329 = extractvalue { %code*, [1 x %int] } %327, 0
-    %330 = getelementptr inbounds %code* %329, %int %328
-    %331 = load %code* %330
-    %332 = bitcast %code %331 to %int
-    %333 = ashr %int %332, 6
-    %334 = and %int %333, 63
-    %335 = or %int %334, 128
-    %336 = trunc %int %335 to %byte
-    %337 = load %"_Pshadow_Pstandard_CString"** %this
-    %338 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %337, i32 0, i32 1
-    %339 = load %int* %j
-    %340 = add %int %339, 3
-    %341 = load { %byte*, [1 x %int] }* %338
-    %342 = extractvalue { %byte*, [1 x %int] } %341, 0
-    %343 = getelementptr inbounds %byte* %342, %int %340
-    store %byte %336, %byte* %343
-    %344 = load { %code*, [1 x %int] }* %data
-    %345 = load %int* %i1
-    %346 = extractvalue { %code*, [1 x %int] } %344, 0
-    %347 = getelementptr inbounds %code* %346, %int %345
-    %348 = load %code* %347
-    %349 = bitcast %code %348 to %int
-    %350 = ashr %int %349, 0
-    %351 = and %int %350, 63
-    %352 = or %int %351, 128
-    %353 = trunc %int %352 to %byte
-    %354 = load %"_Pshadow_Pstandard_CString"** %this
-    %355 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %354, i32 0, i32 1
-    %356 = load %int* %j
-    %357 = add %int %356, 4
-    %358 = load { %byte*, [1 x %int] }* %355
-    %359 = extractvalue { %byte*, [1 x %int] } %358, 0
-    %360 = getelementptr inbounds %byte* %359, %int %357
-    store %byte %353, %byte* %360
+    %281 = load { %code*, [1 x %int] }* %data
+    %282 = load %int* %i1
+    %283 = extractvalue { %code*, [1 x %int] } %281, 0
+    %284 = getelementptr inbounds %code* %283, %int %282
+    %285 = load %code* %284
+    %286 = bitcast %code %285 to %int
+    %287 = ashr %int %286, 24
+    %288 = and %int %287, 3
+    %289 = or %int %288, 248
+    %290 = trunc %int %289 to %byte
+    %291 = load %"_Pshadow_Pstandard_CString"** %this
+    %292 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %291, i32 0, i32 1
+    %293 = load %int* %j
+    %294 = add %int %293, 0
+    %295 = load { %byte*, [1 x %int] }* %292
+    %296 = extractvalue { %byte*, [1 x %int] } %295, 0
+    %297 = getelementptr inbounds %byte* %296, %int %294
+    store %byte %290, %byte* %297
+    %298 = load { %code*, [1 x %int] }* %data
+    %299 = load %int* %i1
+    %300 = extractvalue { %code*, [1 x %int] } %298, 0
+    %301 = getelementptr inbounds %code* %300, %int %299
+    %302 = load %code* %301
+    %303 = bitcast %code %302 to %int
+    %304 = ashr %int %303, 18
+    %305 = and %int %304, 63
+    %306 = or %int %305, 128
+    %307 = trunc %int %306 to %byte
+    %308 = load %"_Pshadow_Pstandard_CString"** %this
+    %309 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %308, i32 0, i32 1
+    %310 = load %int* %j
+    %311 = add %int %310, 1
+    %312 = load { %byte*, [1 x %int] }* %309
+    %313 = extractvalue { %byte*, [1 x %int] } %312, 0
+    %314 = getelementptr inbounds %byte* %313, %int %311
+    store %byte %307, %byte* %314
+    %315 = load { %code*, [1 x %int] }* %data
+    %316 = load %int* %i1
+    %317 = extractvalue { %code*, [1 x %int] } %315, 0
+    %318 = getelementptr inbounds %code* %317, %int %316
+    %319 = load %code* %318
+    %320 = bitcast %code %319 to %int
+    %321 = ashr %int %320, 12
+    %322 = and %int %321, 63
+    %323 = or %int %322, 128
+    %324 = trunc %int %323 to %byte
+    %325 = load %"_Pshadow_Pstandard_CString"** %this
+    %326 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %325, i32 0, i32 1
+    %327 = load %int* %j
+    %328 = add %int %327, 2
+    %329 = load { %byte*, [1 x %int] }* %326
+    %330 = extractvalue { %byte*, [1 x %int] } %329, 0
+    %331 = getelementptr inbounds %byte* %330, %int %328
+    store %byte %324, %byte* %331
+    %332 = load { %code*, [1 x %int] }* %data
+    %333 = load %int* %i1
+    %334 = extractvalue { %code*, [1 x %int] } %332, 0
+    %335 = getelementptr inbounds %code* %334, %int %333
+    %336 = load %code* %335
+    %337 = bitcast %code %336 to %int
+    %338 = ashr %int %337, 6
+    %339 = and %int %338, 63
+    %340 = or %int %339, 128
+    %341 = trunc %int %340 to %byte
+    %342 = load %"_Pshadow_Pstandard_CString"** %this
+    %343 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %342, i32 0, i32 1
+    %344 = load %int* %j
+    %345 = add %int %344, 3
+    %346 = load { %byte*, [1 x %int] }* %343
+    %347 = extractvalue { %byte*, [1 x %int] } %346, 0
+    %348 = getelementptr inbounds %byte* %347, %int %345
+    store %byte %341, %byte* %348
+    %349 = load { %code*, [1 x %int] }* %data
+    %350 = load %int* %i1
+    %351 = extractvalue { %code*, [1 x %int] } %349, 0
+    %352 = getelementptr inbounds %code* %351, %int %350
+    %353 = load %code* %352
+    %354 = bitcast %code %353 to %int
+    %355 = ashr %int %354, 0
+    %356 = and %int %355, 63
+    %357 = or %int %356, 128
+    %358 = trunc %int %357 to %byte
+    %359 = load %"_Pshadow_Pstandard_CString"** %this
+    %360 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %359, i32 0, i32 1
     %361 = load %int* %j
-    %362 = add %int %361, 5
-    store %int %362, %int* %j
+    %362 = add %int %361, 4
+    %363 = load { %byte*, [1 x %int] }* %360
+    %364 = extractvalue { %byte*, [1 x %int] } %363, 0
+    %365 = getelementptr inbounds %byte* %364, %int %362
+    store %byte %358, %byte* %365
+    %366 = load %int* %j
+    %367 = add %int %366, 5
+    store %int %367, %int* %j
     br label %_label48
 _label47:
-    %363 = load { %code*, [1 x %int] }* %data
-    %364 = load %int* %i1
-    %365 = extractvalue { %code*, [1 x %int] } %363, 0
-    %366 = getelementptr inbounds %code* %365, %int %364
-    %367 = shl %int 1, 31
-    %368 = load %code* %366
-    %369 = bitcast %code %368 to %int
-    %370 = icmp slt %int %369, %367
-    br %boolean %370, label %_label49, label %_label50
+    %368 = load { %code*, [1 x %int] }* %data
+    %369 = load %int* %i1
+    %370 = extractvalue { %code*, [1 x %int] } %368, 0
+    %371 = getelementptr inbounds %code* %370, %int %369
+    %372 = shl %int 1, 31
+    %373 = load %code* %371
+    %374 = bitcast %code %373 to %int
+    %375 = icmp slt %int %374, %372
+    br %boolean %375, label %_label49, label %_label50
 _label49:
-    %371 = load { %code*, [1 x %int] }* %data
-    %372 = load %int* %i1
-    %373 = extractvalue { %code*, [1 x %int] } %371, 0
-    %374 = getelementptr inbounds %code* %373, %int %372
-    %375 = load %code* %374
-    %376 = bitcast %code %375 to %int
-    %377 = ashr %int %376, 30
-    %378 = and %int %377, 1
-    %379 = or %int %378, 252
-    %380 = trunc %int %379 to %byte
-    %381 = load %"_Pshadow_Pstandard_CString"** %this
-    %382 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %381, i32 0, i32 1
-    %383 = load %int* %j
-    %384 = add %int %383, 0
-    %385 = load { %byte*, [1 x %int] }* %382
-    %386 = extractvalue { %byte*, [1 x %int] } %385, 0
-    %387 = getelementptr inbounds %byte* %386, %int %384
-    store %byte %380, %byte* %387
-    %388 = load { %code*, [1 x %int] }* %data
-    %389 = load %int* %i1
-    %390 = extractvalue { %code*, [1 x %int] } %388, 0
-    %391 = getelementptr inbounds %code* %390, %int %389
-    %392 = load %code* %391
-    %393 = bitcast %code %392 to %int
-    %394 = ashr %int %393, 24
-    %395 = and %int %394, 63
-    %396 = or %int %395, 128
-    %397 = trunc %int %396 to %byte
-    %398 = load %"_Pshadow_Pstandard_CString"** %this
-    %399 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %398, i32 0, i32 1
-    %400 = load %int* %j
-    %401 = add %int %400, 1
-    %402 = load { %byte*, [1 x %int] }* %399
-    %403 = extractvalue { %byte*, [1 x %int] } %402, 0
-    %404 = getelementptr inbounds %byte* %403, %int %401
-    store %byte %397, %byte* %404
-    %405 = load { %code*, [1 x %int] }* %data
-    %406 = load %int* %i1
-    %407 = extractvalue { %code*, [1 x %int] } %405, 0
-    %408 = getelementptr inbounds %code* %407, %int %406
-    %409 = load %code* %408
-    %410 = bitcast %code %409 to %int
-    %411 = ashr %int %410, 18
-    %412 = and %int %411, 63
-    %413 = or %int %412, 128
-    %414 = trunc %int %413 to %byte
-    %415 = load %"_Pshadow_Pstandard_CString"** %this
-    %416 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %415, i32 0, i32 1
-    %417 = load %int* %j
-    %418 = add %int %417, 2
-    %419 = load { %byte*, [1 x %int] }* %416
-    %420 = extractvalue { %byte*, [1 x %int] } %419, 0
-    %421 = getelementptr inbounds %byte* %420, %int %418
-    store %byte %414, %byte* %421
-    %422 = load { %code*, [1 x %int] }* %data
-    %423 = load %int* %i1
-    %424 = extractvalue { %code*, [1 x %int] } %422, 0
-    %425 = getelementptr inbounds %code* %424, %int %423
-    %426 = load %code* %425
-    %427 = bitcast %code %426 to %int
-    %428 = ashr %int %427, 12
-    %429 = and %int %428, 63
-    %430 = or %int %429, 128
-    %431 = trunc %int %430 to %byte
-    %432 = load %"_Pshadow_Pstandard_CString"** %this
-    %433 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %432, i32 0, i32 1
-    %434 = load %int* %j
-    %435 = add %int %434, 3
-    %436 = load { %byte*, [1 x %int] }* %433
-    %437 = extractvalue { %byte*, [1 x %int] } %436, 0
-    %438 = getelementptr inbounds %byte* %437, %int %435
-    store %byte %431, %byte* %438
-    %439 = load { %code*, [1 x %int] }* %data
-    %440 = load %int* %i1
-    %441 = extractvalue { %code*, [1 x %int] } %439, 0
-    %442 = getelementptr inbounds %code* %441, %int %440
-    %443 = load %code* %442
-    %444 = bitcast %code %443 to %int
-    %445 = ashr %int %444, 6
-    %446 = and %int %445, 63
-    %447 = or %int %446, 128
-    %448 = trunc %int %447 to %byte
-    %449 = load %"_Pshadow_Pstandard_CString"** %this
-    %450 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %449, i32 0, i32 1
-    %451 = load %int* %j
-    %452 = add %int %451, 4
-    %453 = load { %byte*, [1 x %int] }* %450
-    %454 = extractvalue { %byte*, [1 x %int] } %453, 0
-    %455 = getelementptr inbounds %byte* %454, %int %452
-    store %byte %448, %byte* %455
-    %456 = load { %code*, [1 x %int] }* %data
-    %457 = load %int* %i1
-    %458 = extractvalue { %code*, [1 x %int] } %456, 0
-    %459 = getelementptr inbounds %code* %458, %int %457
-    %460 = load %code* %459
-    %461 = bitcast %code %460 to %int
-    %462 = ashr %int %461, 0
-    %463 = and %int %462, 63
-    %464 = or %int %463, 128
-    %465 = trunc %int %464 to %byte
-    %466 = load %"_Pshadow_Pstandard_CString"** %this
-    %467 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %466, i32 0, i32 1
-    %468 = load %int* %j
-    %469 = add %int %468, 5
-    %470 = load { %byte*, [1 x %int] }* %467
-    %471 = extractvalue { %byte*, [1 x %int] } %470, 0
-    %472 = getelementptr inbounds %byte* %471, %int %469
-    store %byte %465, %byte* %472
+    %376 = load { %code*, [1 x %int] }* %data
+    %377 = load %int* %i1
+    %378 = extractvalue { %code*, [1 x %int] } %376, 0
+    %379 = getelementptr inbounds %code* %378, %int %377
+    %380 = load %code* %379
+    %381 = bitcast %code %380 to %int
+    %382 = ashr %int %381, 30
+    %383 = and %int %382, 1
+    %384 = or %int %383, 252
+    %385 = trunc %int %384 to %byte
+    %386 = load %"_Pshadow_Pstandard_CString"** %this
+    %387 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %386, i32 0, i32 1
+    %388 = load %int* %j
+    %389 = add %int %388, 0
+    %390 = load { %byte*, [1 x %int] }* %387
+    %391 = extractvalue { %byte*, [1 x %int] } %390, 0
+    %392 = getelementptr inbounds %byte* %391, %int %389
+    store %byte %385, %byte* %392
+    %393 = load { %code*, [1 x %int] }* %data
+    %394 = load %int* %i1
+    %395 = extractvalue { %code*, [1 x %int] } %393, 0
+    %396 = getelementptr inbounds %code* %395, %int %394
+    %397 = load %code* %396
+    %398 = bitcast %code %397 to %int
+    %399 = ashr %int %398, 24
+    %400 = and %int %399, 63
+    %401 = or %int %400, 128
+    %402 = trunc %int %401 to %byte
+    %403 = load %"_Pshadow_Pstandard_CString"** %this
+    %404 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %403, i32 0, i32 1
+    %405 = load %int* %j
+    %406 = add %int %405, 1
+    %407 = load { %byte*, [1 x %int] }* %404
+    %408 = extractvalue { %byte*, [1 x %int] } %407, 0
+    %409 = getelementptr inbounds %byte* %408, %int %406
+    store %byte %402, %byte* %409
+    %410 = load { %code*, [1 x %int] }* %data
+    %411 = load %int* %i1
+    %412 = extractvalue { %code*, [1 x %int] } %410, 0
+    %413 = getelementptr inbounds %code* %412, %int %411
+    %414 = load %code* %413
+    %415 = bitcast %code %414 to %int
+    %416 = ashr %int %415, 18
+    %417 = and %int %416, 63
+    %418 = or %int %417, 128
+    %419 = trunc %int %418 to %byte
+    %420 = load %"_Pshadow_Pstandard_CString"** %this
+    %421 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %420, i32 0, i32 1
+    %422 = load %int* %j
+    %423 = add %int %422, 2
+    %424 = load { %byte*, [1 x %int] }* %421
+    %425 = extractvalue { %byte*, [1 x %int] } %424, 0
+    %426 = getelementptr inbounds %byte* %425, %int %423
+    store %byte %419, %byte* %426
+    %427 = load { %code*, [1 x %int] }* %data
+    %428 = load %int* %i1
+    %429 = extractvalue { %code*, [1 x %int] } %427, 0
+    %430 = getelementptr inbounds %code* %429, %int %428
+    %431 = load %code* %430
+    %432 = bitcast %code %431 to %int
+    %433 = ashr %int %432, 12
+    %434 = and %int %433, 63
+    %435 = or %int %434, 128
+    %436 = trunc %int %435 to %byte
+    %437 = load %"_Pshadow_Pstandard_CString"** %this
+    %438 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %437, i32 0, i32 1
+    %439 = load %int* %j
+    %440 = add %int %439, 3
+    %441 = load { %byte*, [1 x %int] }* %438
+    %442 = extractvalue { %byte*, [1 x %int] } %441, 0
+    %443 = getelementptr inbounds %byte* %442, %int %440
+    store %byte %436, %byte* %443
+    %444 = load { %code*, [1 x %int] }* %data
+    %445 = load %int* %i1
+    %446 = extractvalue { %code*, [1 x %int] } %444, 0
+    %447 = getelementptr inbounds %code* %446, %int %445
+    %448 = load %code* %447
+    %449 = bitcast %code %448 to %int
+    %450 = ashr %int %449, 6
+    %451 = and %int %450, 63
+    %452 = or %int %451, 128
+    %453 = trunc %int %452 to %byte
+    %454 = load %"_Pshadow_Pstandard_CString"** %this
+    %455 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %454, i32 0, i32 1
+    %456 = load %int* %j
+    %457 = add %int %456, 4
+    %458 = load { %byte*, [1 x %int] }* %455
+    %459 = extractvalue { %byte*, [1 x %int] } %458, 0
+    %460 = getelementptr inbounds %byte* %459, %int %457
+    store %byte %453, %byte* %460
+    %461 = load { %code*, [1 x %int] }* %data
+    %462 = load %int* %i1
+    %463 = extractvalue { %code*, [1 x %int] } %461, 0
+    %464 = getelementptr inbounds %code* %463, %int %462
+    %465 = load %code* %464
+    %466 = bitcast %code %465 to %int
+    %467 = ashr %int %466, 0
+    %468 = and %int %467, 63
+    %469 = or %int %468, 128
+    %470 = trunc %int %469 to %byte
+    %471 = load %"_Pshadow_Pstandard_CString"** %this
+    %472 = getelementptr inbounds %"_Pshadow_Pstandard_CString"* %471, i32 0, i32 1
     %473 = load %int* %j
-    %474 = add %int %473, 6
-    store %int %474, %int* %j
+    %474 = add %int %473, 5
+    %475 = load { %byte*, [1 x %int] }* %472
+    %476 = extractvalue { %byte*, [1 x %int] } %475, 0
+    %477 = getelementptr inbounds %byte* %476, %int %474
+    store %byte %470, %byte* %477
+    %478 = load %int* %j
+    %479 = add %int %478, 6
+    store %int %479, %int* %j
     br label %_label51
 _label50:
     br label %_label51
@@ -1096,16 +1119,16 @@ _label42:
 _label39:
     br label %_label36
 _label36:
-    %475 = load %int* %i1
-    %476 = add %int %475, 1
-    store %int %476, %int* %i1
+    %480 = load %int* %i1
+    %481 = add %int %480, 1
+    store %int %481, %int* %i1
     br label %_label32
 _label32:
-    %477 = load { %code*, [1 x %int] }* %data
-    %478 = extractvalue { %code*, [1 x %int] } %477, 1, 0
-    %479 = load %int* %i1
-    %480 = icmp slt %int %479, %478
-    br %boolean %480, label %_label31, label %_label33
+    %482 = load { %code*, [1 x %int] }* %data
+    %483 = extractvalue { %code*, [1 x %int] } %482, 1, 0
+    %484 = load %int* %i1
+    %485 = icmp slt %int %484, %483
+    br %boolean %485, label %_label31, label %_label33
 _label33:
     ret %"_Pshadow_Pstandard_CString"* %0
 }
@@ -1185,12 +1208,12 @@ define %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mconcatenate_
     %4 = load %"_Pshadow_Pstandard_CString"** %other
     %5 = getelementptr %"_Pshadow_Pstandard_CString"* %3, i32 0, i32 0
     %6 = load %"_Pshadow_Pstandard_CString_Mclass"** %5
-    %7 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %6, i32 0, i32 17
+    %7 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %6, i32 0, i32 18
     %8 = load %int (%"_Pshadow_Pstandard_CString"*)** %7
     %9 = call %int %8(%"_Pshadow_Pstandard_CString"* %3)
     %10 = getelementptr %"_Pshadow_Pstandard_CString"* %4, i32 0, i32 0
     %11 = load %"_Pshadow_Pstandard_CString_Mclass"** %10
-    %12 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %11, i32 0, i32 17
+    %12 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %11, i32 0, i32 18
     %13 = load %int (%"_Pshadow_Pstandard_CString"*)** %12
     %14 = call %int %13(%"_Pshadow_Pstandard_CString"* %4)
     %15 = add %int %9, %14
@@ -1219,7 +1242,7 @@ _label53:
     %30 = load %int* %i
     %31 = getelementptr %"_Pshadow_Pstandard_CString"* %29, i32 0, i32 0
     %32 = load %"_Pshadow_Pstandard_CString_Mclass"** %31
-    %33 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %32, i32 0, i32 17
+    %33 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %32, i32 0, i32 18
     %34 = load %int (%"_Pshadow_Pstandard_CString"*)** %33
     %35 = call %int %34(%"_Pshadow_Pstandard_CString"* %29)
     %36 = icmp slt %int %30, %35
@@ -1234,7 +1257,7 @@ _label55:
     %40 = load %"_Pshadow_Pstandard_CString"** %this
     %41 = getelementptr %"_Pshadow_Pstandard_CString"* %40, i32 0, i32 0
     %42 = load %"_Pshadow_Pstandard_CString_Mclass"** %41
-    %43 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %42, i32 0, i32 17
+    %43 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %42, i32 0, i32 18
     %44 = load %int (%"_Pshadow_Pstandard_CString"*)** %43
     %45 = call %int %44(%"_Pshadow_Pstandard_CString"* %40)
     %46 = load %int* %i1
@@ -1252,7 +1275,7 @@ _label56:
     %54 = load %int* %i1
     %55 = getelementptr %"_Pshadow_Pstandard_CString"* %53, i32 0, i32 0
     %56 = load %"_Pshadow_Pstandard_CString_Mclass"** %55
-    %57 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %56, i32 0, i32 17
+    %57 = getelementptr %"_Pshadow_Pstandard_CString_Mclass"* %56, i32 0, i32 18
     %58 = load %int (%"_Pshadow_Pstandard_CString"*)** %57
     %59 = call %int %58(%"_Pshadow_Pstandard_CString"* %53)
     %60 = icmp slt %int %54, %59
@@ -1279,7 +1302,10 @@ _label58:
     ret %"_Pshadow_Pstandard_CString"* %62
 }
 
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CException_Mmessage"(%"_Pshadow_Pstandard_CException"*)
+declare void @"_Pshadow_Pstandard_CException_Mthrow__"(%"_Pshadow_Pstandard_CException"*)
 declare %"_Pshadow_Pstandard_CException"* @"_Pshadow_Pstandard_CException_Mcreate"(%"_Pshadow_Pstandard_CException"*)
+declare %"_Pshadow_Pstandard_CException"* @"_Pshadow_Pstandard_CException_Mcreate_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CException"*, %"_Pshadow_Pstandard_CString"*)
 
 declare %"_Pshadow_Pstandard_CIllegalArgumentException"* @"_Pshadow_Pstandard_CIllegalArgumentException_Mcreate"(%"_Pshadow_Pstandard_CIllegalArgumentException"*)
 
