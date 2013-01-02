@@ -80,26 +80,28 @@ define %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pst
     %_temp = alloca %"_Pshadow_Pstandard_CString"*
     store %"_Pshadow_Pio_CConsole"* %0, %"_Pshadow_Pio_CConsole"** %this
     store %"_Pshadow_Pstandard_CObject"* %1, %"_Pshadow_Pstandard_CObject"** %value
-    %3 = load %"_Pshadow_Pstandard_CObject"** %value
-    %4 = icmp eq %"_Pshadow_Pstandard_CObject"* %3, null
-    br %boolean %4, label %_label0, label %_label1
+    %3 = load %"_Pshadow_Pio_CConsole"** %this
+    %4 = load %"_Pshadow_Pstandard_CObject"** %value
+    %5 = icmp eq %"_Pshadow_Pstandard_CObject"* %4, null
+    br %boolean %5, label %_label0, label %_label1
 _label0:
     store %"_Pshadow_Pstandard_CString"* @_string1, %"_Pshadow_Pstandard_CString"** %_temp
     br label %_label2
 _label1:
-    %5 = load %"_Pshadow_Pstandard_CObject"** %value
-    %6 = getelementptr %"_Pshadow_Pstandard_CObject"* %5, i32 0, i32 0
-    %7 = load %"_Pshadow_Pstandard_CObject_Mclass"** %6
-    %8 = getelementptr %"_Pshadow_Pstandard_CObject_Mclass"* %7, i32 0, i32 7
-    %9 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)** %8
-    %10 = call %"_Pshadow_Pstandard_CString"* %9(%"_Pshadow_Pstandard_CObject"* %5)
-    store %"_Pshadow_Pstandard_CString"* %10, %"_Pshadow_Pstandard_CString"** %_temp
+    %6 = load %"_Pshadow_Pstandard_CObject"** %value
+    %7 = getelementptr %"_Pshadow_Pstandard_CObject"* %6, i32 0, i32 0
+    %8 = load %"_Pshadow_Pstandard_CObject_Mclass"** %7
+    %9 = getelementptr %"_Pshadow_Pstandard_CObject_Mclass"* %8, i32 0, i32 7
+    %10 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)** %9
+    %11 = load %"_Pshadow_Pstandard_CObject"** %value
+    %12 = call %"_Pshadow_Pstandard_CString"* %10(%"_Pshadow_Pstandard_CObject"* %11)
+    store %"_Pshadow_Pstandard_CString"* %12, %"_Pshadow_Pstandard_CString"** %_temp
     br label %_label2
 _label2:
-    %11 = load %"_Pshadow_Pstandard_CString"** %_temp
-    %12 = load %"_Pshadow_Pio_CConsole"** %this
-    %13 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"* %12, %"_Pshadow_Pstandard_CString"* %11)
-    ret %"_Pshadow_Pio_CConsole"* %13
+    %13 = load %"_Pshadow_Pstandard_CString"** %_temp
+    %14 = load %"_Pshadow_Pio_CConsole"** %this
+    %15 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"* %14, %"_Pshadow_Pstandard_CString"* %13)
+    ret %"_Pshadow_Pio_CConsole"* %15
 }
 
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)
@@ -110,10 +112,11 @@ define %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine_Pshadow_Psta
     store %"_Pshadow_Pio_CConsole"* %0, %"_Pshadow_Pio_CConsole"** %this
     store %"_Pshadow_Pstandard_CObject"* %1, %"_Pshadow_Pstandard_CObject"** %value
     %3 = load %"_Pshadow_Pio_CConsole"** %this
-    %4 = load %"_Pshadow_Pstandard_CObject"** %value
-    %5 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %3, %"_Pshadow_Pstandard_CObject"* %4)
-    %6 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine"(%"_Pshadow_Pio_CConsole"* %5)
-    ret %"_Pshadow_Pio_CConsole"* %6
+    %4 = load %"_Pshadow_Pio_CConsole"** %this
+    %5 = load %"_Pshadow_Pstandard_CObject"** %value
+    %6 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %4, %"_Pshadow_Pstandard_CObject"* %5)
+    %7 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine"(%"_Pshadow_Pio_CConsole"* %6)
+    ret %"_Pshadow_Pio_CConsole"* %7
 }
 
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine"(%"_Pshadow_Pio_CConsole"*)
@@ -124,10 +127,11 @@ define %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintErrorLine_Pshadow
     store %"_Pshadow_Pio_CConsole"* %0, %"_Pshadow_Pio_CConsole"** %this
     store %"_Pshadow_Pstandard_CObject"* %1, %"_Pshadow_Pstandard_CObject"** %value
     %3 = load %"_Pshadow_Pio_CConsole"** %this
-    %4 = load %"_Pshadow_Pstandard_CObject"** %value
-    %5 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %3, %"_Pshadow_Pstandard_CObject"* %4)
-    %6 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintErrorLine"(%"_Pshadow_Pio_CConsole"* %5)
-    ret %"_Pshadow_Pio_CConsole"* %6
+    %4 = load %"_Pshadow_Pio_CConsole"** %this
+    %5 = load %"_Pshadow_Pstandard_CObject"** %value
+    %6 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %4, %"_Pshadow_Pstandard_CObject"* %5)
+    %7 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintErrorLine"(%"_Pshadow_Pio_CConsole"* %6)
+    ret %"_Pshadow_Pio_CConsole"* %7
 }
 
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintErrorLine"(%"_Pshadow_Pio_CConsole"*)
@@ -146,26 +150,28 @@ define %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandar
     %_temp = alloca %"_Pshadow_Pstandard_CString"*
     store %"_Pshadow_Pio_CConsole"* %0, %"_Pshadow_Pio_CConsole"** %this
     store %"_Pshadow_Pstandard_CObject"* %1, %"_Pshadow_Pstandard_CObject"** %value
-    %3 = load %"_Pshadow_Pstandard_CObject"** %value
-    %4 = icmp eq %"_Pshadow_Pstandard_CObject"* %3, null
-    br %boolean %4, label %_label3, label %_label4
+    %3 = load %"_Pshadow_Pio_CConsole"** %this
+    %4 = load %"_Pshadow_Pstandard_CObject"** %value
+    %5 = icmp eq %"_Pshadow_Pstandard_CObject"* %4, null
+    br %boolean %5, label %_label3, label %_label4
 _label3:
     store %"_Pshadow_Pstandard_CString"* @_string1, %"_Pshadow_Pstandard_CString"** %_temp
     br label %_label5
 _label4:
-    %5 = load %"_Pshadow_Pstandard_CObject"** %value
-    %6 = getelementptr %"_Pshadow_Pstandard_CObject"* %5, i32 0, i32 0
-    %7 = load %"_Pshadow_Pstandard_CObject_Mclass"** %6
-    %8 = getelementptr %"_Pshadow_Pstandard_CObject_Mclass"* %7, i32 0, i32 7
-    %9 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)** %8
-    %10 = call %"_Pshadow_Pstandard_CString"* %9(%"_Pshadow_Pstandard_CObject"* %5)
-    store %"_Pshadow_Pstandard_CString"* %10, %"_Pshadow_Pstandard_CString"** %_temp
+    %6 = load %"_Pshadow_Pstandard_CObject"** %value
+    %7 = getelementptr %"_Pshadow_Pstandard_CObject"* %6, i32 0, i32 0
+    %8 = load %"_Pshadow_Pstandard_CObject_Mclass"** %7
+    %9 = getelementptr %"_Pshadow_Pstandard_CObject_Mclass"* %8, i32 0, i32 7
+    %10 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)** %9
+    %11 = load %"_Pshadow_Pstandard_CObject"** %value
+    %12 = call %"_Pshadow_Pstandard_CString"* %10(%"_Pshadow_Pstandard_CObject"* %11)
+    store %"_Pshadow_Pstandard_CString"* %12, %"_Pshadow_Pstandard_CString"** %_temp
     br label %_label5
 _label5:
-    %11 = load %"_Pshadow_Pstandard_CString"** %_temp
-    %12 = load %"_Pshadow_Pio_CConsole"** %this
-    %13 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"* %12, %"_Pshadow_Pstandard_CString"* %11)
-    ret %"_Pshadow_Pio_CConsole"* %13
+    %13 = load %"_Pshadow_Pstandard_CString"** %_temp
+    %14 = load %"_Pshadow_Pio_CConsole"** %this
+    %15 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"* %14, %"_Pshadow_Pstandard_CString"* %13)
+    ret %"_Pshadow_Pio_CConsole"* %15
 }
 
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)

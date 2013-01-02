@@ -87,19 +87,22 @@ _label1:
     br label %_label2
 _label2:
     %7 = load %"_Pshadow_Pstandard_CClass"** %other
-    %8 = call %boolean @"_Pshadow_Pstandard_CClass_MisInterface"(%"_Pshadow_Pstandard_CClass"* %7)
-    br %boolean %8, label %_label3, label %_label4
+    %8 = load %"_Pshadow_Pstandard_CClass"** %other
+    %9 = call %boolean @"_Pshadow_Pstandard_CClass_MisInterface"(%"_Pshadow_Pstandard_CClass"* %8)
+    %10 = xor %boolean -1, %9
+    br %boolean %10, label %_label3, label %_label4
 _label3:
-    %9 = load %"_Pshadow_Pstandard_CClass"** %this
-    %10 = getelementptr inbounds %"_Pshadow_Pstandard_CClass"* %9, i32 0, i32 4
-    %11 = load %"_Pshadow_Pstandard_CClass"** %10
-    %12 = icmp ne %"_Pshadow_Pstandard_CClass"* %11, null
-    br %boolean %12, label %_label8, label %_label7
+    %11 = load %"_Pshadow_Pstandard_CClass"** %this
+    %12 = getelementptr inbounds %"_Pshadow_Pstandard_CClass"* %11, i32 0, i32 4
+    %13 = load %"_Pshadow_Pstandard_CClass"** %12
+    %14 = icmp ne %"_Pshadow_Pstandard_CClass"* %13, null
+    br %boolean %14, label %_label8, label %_label7
 _label8:
-    %13 = load %"_Pshadow_Pstandard_CClass"** %10
-    %14 = load %"_Pshadow_Pstandard_CClass"** %other
-    %15 = call %boolean @"_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass"(%"_Pshadow_Pstandard_CClass"* %13, %"_Pshadow_Pstandard_CClass"* %14)
-    ret %boolean %15
+    %15 = load %"_Pshadow_Pstandard_CClass"** %12
+    %16 = load %"_Pshadow_Pstandard_CClass"** %12
+    %17 = load %"_Pshadow_Pstandard_CClass"** %other
+    %18 = call %boolean @"_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass"(%"_Pshadow_Pstandard_CClass"* %16, %"_Pshadow_Pstandard_CClass"* %17)
+    ret %boolean %18
     br label %_label6
 _label7:
     br label %_label6
@@ -109,20 +112,21 @@ _label4:
     store %int 0, %int* %i
     br label %_label10
 _label9:
-    %17 = load %"_Pshadow_Pstandard_CClass"** %this
-    %18 = getelementptr inbounds %"_Pshadow_Pstandard_CClass"* %17, i32 0, i32 1
-    %19 = load { %"_Pshadow_Pstandard_CClass"**, [1 x %int] }* %18
-    %20 = load %int* %i
-    %21 = extractvalue { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } %19, 0
-    %22 = getelementptr inbounds %"_Pshadow_Pstandard_CClass"** %21, %int %20
-    %23 = load %"_Pshadow_Pstandard_CClass"** %22
-    %24 = icmp ne %"_Pshadow_Pstandard_CClass"* %23, null
-    br %boolean %24, label %_label17, label %_label13
+    %20 = load %"_Pshadow_Pstandard_CClass"** %this
+    %21 = getelementptr inbounds %"_Pshadow_Pstandard_CClass"* %20, i32 0, i32 1
+    %22 = load { %"_Pshadow_Pstandard_CClass"**, [1 x %int] }* %21
+    %23 = load %int* %i
+    %24 = extractvalue { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } %22, 0
+    %25 = getelementptr inbounds %"_Pshadow_Pstandard_CClass"** %24, %int %23
+    %26 = load %"_Pshadow_Pstandard_CClass"** %25
+    %27 = icmp ne %"_Pshadow_Pstandard_CClass"* %26, null
+    br %boolean %27, label %_label17, label %_label13
 _label17:
-    %25 = load %"_Pshadow_Pstandard_CClass"** %22
-    %26 = load %"_Pshadow_Pstandard_CClass"** %other
-    %27 = call %boolean @"_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass"(%"_Pshadow_Pstandard_CClass"* %25, %"_Pshadow_Pstandard_CClass"* %26)
-    br %boolean %27, label %_label14, label %_label15
+    %28 = load %"_Pshadow_Pstandard_CClass"** %25
+    %29 = load %"_Pshadow_Pstandard_CClass"** %25
+    %30 = load %"_Pshadow_Pstandard_CClass"** %other
+    %31 = call %boolean @"_Pshadow_Pstandard_CClass_MisSubtype_Pshadow_Pstandard_CClass"(%"_Pshadow_Pstandard_CClass"* %29, %"_Pshadow_Pstandard_CClass"* %30)
+    br %boolean %31, label %_label14, label %_label15
 _label14:
     ret %boolean true
     br label %_label16
@@ -133,18 +137,18 @@ _label16:
 _label13:
     br label %_label12
 _label12:
-    %29 = load %int* %i
-    %30 = add %int %29, 1
-    store %int %30, %int* %i
+    %33 = load %int* %i
+    %34 = add %int %33, 1
+    store %int %34, %int* %i
     br label %_label10
 _label10:
-    %31 = load %"_Pshadow_Pstandard_CClass"** %this
-    %32 = getelementptr inbounds %"_Pshadow_Pstandard_CClass"* %31, i32 0, i32 1
-    %33 = load { %"_Pshadow_Pstandard_CClass"**, [1 x %int] }* %32
-    %34 = extractvalue { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } %33, 1, 0
-    %35 = load %int* %i
-    %36 = icmp slt %int %35, %34
-    br %boolean %36, label %_label9, label %_label11
+    %35 = load %"_Pshadow_Pstandard_CClass"** %this
+    %36 = getelementptr inbounds %"_Pshadow_Pstandard_CClass"* %35, i32 0, i32 1
+    %37 = load { %"_Pshadow_Pstandard_CClass"**, [1 x %int] }* %36
+    %38 = extractvalue { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } %37, 1, 0
+    %39 = load %int* %i
+    %40 = icmp slt %int %39, %38
+    br %boolean %40, label %_label9, label %_label11
 _label11:
     br label %_label5
 _label5:

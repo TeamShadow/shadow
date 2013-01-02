@@ -99,35 +99,37 @@ _label0:
 _label1:
     %7 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
     store %"_Pshadow_Pio_CConsole"* %7, %"_Pshadow_Pio_CConsole"** %console
-    %8 = load %"_Pshadow_Pstandard_CException"** %this
-    %9 = bitcast %"_Pshadow_Pstandard_CException"* %8 to %"_Pshadow_Pstandard_CObject"*
-    %10 = getelementptr %"_Pshadow_Pstandard_CObject"* %9, i32 0, i32 0
-    %11 = load %"_Pshadow_Pstandard_CObject_Mclass"** %10
-    %12 = getelementptr %"_Pshadow_Pstandard_CObject_Mclass"* %11, i32 0, i32 5
-    %13 = load %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)** %12
-    %14 = call %"_Pshadow_Pstandard_CClass"* %13(%"_Pshadow_Pstandard_CObject"* %9)
-    %15 = load %"_Pshadow_Pio_CConsole"** %console
-    %16 = bitcast %"_Pshadow_Pstandard_CClass"* %14 to %"_Pshadow_Pstandard_CObject"*
-    %17 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %15, %"_Pshadow_Pstandard_CObject"* %16)
-    %18 = load %"_Pshadow_Pstandard_CException"** %this
-    %19 = getelementptr inbounds %"_Pshadow_Pstandard_CException"* %18, i32 0, i32 1
-    %20 = load %"_Pshadow_Pstandard_CString"** %19
+    %8 = load %"_Pshadow_Pio_CConsole"** %console
+    %9 = load %"_Pshadow_Pstandard_CException"** %this
+    %10 = bitcast %"_Pshadow_Pstandard_CException"* %9 to %"_Pshadow_Pstandard_CObject"*
+    %11 = load %"_Pshadow_Pstandard_CException"** %this
+    %12 = bitcast %"_Pshadow_Pstandard_CException"* %11 to %"_Pshadow_Pstandard_CObject"*
+    %13 = call %"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_CObject_MgetClass"(%"_Pshadow_Pstandard_CObject"* %12)
+    %14 = load %"_Pshadow_Pio_CConsole"** %console
+    %15 = bitcast %"_Pshadow_Pstandard_CClass"* %13 to %"_Pshadow_Pstandard_CObject"*
+    %16 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %14, %"_Pshadow_Pstandard_CObject"* %15)
+    %17 = load %"_Pshadow_Pstandard_CException"** %this
+    %18 = getelementptr inbounds %"_Pshadow_Pstandard_CException"* %17, i32 0, i32 1
+    %19 = load %"_Pshadow_Pstandard_CString"** %18
+    %20 = load %"_Pshadow_Pstandard_CString"** %18
     %21 = call %boolean @"_Pshadow_Pstandard_CString_MisEmpty"(%"_Pshadow_Pstandard_CString"* %20)
     %22 = xor %boolean -1, %21
     br %boolean %22, label %_label2, label %_label3
 _label2:
     %23 = load %"_Pshadow_Pio_CConsole"** %console
-    %24 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"* %23, %"_Pshadow_Pstandard_CString"* @_string1)
-    %25 = load %"_Pshadow_Pstandard_CException"** %this
-    %26 = getelementptr inbounds %"_Pshadow_Pstandard_CException"* %25, i32 0, i32 1
-    %27 = load %"_Pshadow_Pstandard_CString"** %26
-    %28 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"* %24, %"_Pshadow_Pstandard_CString"* %27)
+    %24 = load %"_Pshadow_Pio_CConsole"** %console
+    %25 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"* %24, %"_Pshadow_Pstandard_CString"* @_string1)
+    %26 = load %"_Pshadow_Pstandard_CException"** %this
+    %27 = getelementptr inbounds %"_Pshadow_Pstandard_CException"* %26, i32 0, i32 1
+    %28 = load %"_Pshadow_Pstandard_CString"** %27
+    %29 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"* %25, %"_Pshadow_Pstandard_CString"* %28)
     br label %_label4
 _label3:
     br label %_label4
 _label4:
-    %29 = load %"_Pshadow_Pio_CConsole"** %console
-    %30 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintErrorLine"(%"_Pshadow_Pio_CConsole"* %29)
+    %30 = load %"_Pshadow_Pio_CConsole"** %console
+    %31 = load %"_Pshadow_Pio_CConsole"** %console
+    %32 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintErrorLine"(%"_Pshadow_Pio_CConsole"* %31)
     ret void
 }
 

@@ -1,20 +1,19 @@
 package shadow.tac.nodes;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.tac.nodes.TACLabelRef;
-import shadow.tac.nodes.TACNode;
 import shadow.typecheck.type.Type;
 
 public class TACBlock extends TACOperand
 {
 	private TACBlock parent;
-	private TACLabelRef breakLabel, continueLabel, landingpadLabel,
-			recoverLabel, cleanupLabel;
+	private TACLabelRef breakLabel, continueLabel, landingpadLabel;
 	private List<TACLabelRef> catchLabels;
+	private TACLabelRef recoverLabel, cleanupLabel;
 	public TACBlock()
 	{
 		this(null, null);
@@ -31,9 +30,12 @@ public class TACBlock extends TACOperand
 	{
 		super(node);
 		parent = parentBlock;
-		breakLabel = continueLabel = landingpadLabel = recoverLabel =
-				cleanupLabel = null;
-		catchLabels = new LinkedList<TACLabelRef>();
+		breakLabel = null;
+		continueLabel = null;
+		landingpadLabel = null;
+		catchLabels = null;
+		recoverLabel = null;
+		cleanupLabel = null;
 	}
 
 	@Override
@@ -42,58 +44,48 @@ public class TACBlock extends TACOperand
 		return null;
 	}
 
-	public boolean hasParent()
-	{
-		return parent != null;
-	}
 	public TACBlock getParent()
 	{
 		return parent;
 	}
 
-	public boolean hasBreak()
-	{
-		return breakLabel != null;
-	}
 	public TACLabelRef getBreak()
 	{
-		if (!hasBreak() && hasParent())
-			return getParent().getBreak();
-		return breakLabel;
+		if (breakLabel != null)
+			return breakLabel;
+		if (parent != null)
+			return parent.getBreak();
+		return null;
 	}
-	public void addBreak()
+	public TACLabelRef addBreak()
 	{
-		if (hasBreak())
+		if (breakLabel != null)
 			throw new IllegalStateException("Break label already added.");
-		breakLabel = new TACLabelRef(this);
+		return breakLabel = new TACLabelRef(this);
 	}
 
-	public boolean hasContinue()
-	{
-		return continueLabel != null;
-	}
 	public TACLabelRef getContinue()
 	{
-		if (!hasContinue() && hasParent())
-			return getParent().getContinue();
-		return continueLabel;
+		if (continueLabel != null)
+			return continueLabel;
+		return parent == null ? null : parent.getContinue();
 	}
-	public void addContinue()
+	public TACLabelRef addContinue()
 	{
-		if (hasContinue())
+		if (continueLabel != null)
 			throw new IllegalStateException("Continue label already added.");
-		continueLabel = new TACLabelRef(this);
+		return continueLabel = new TACLabelRef(this);
 	}
 
 	public boolean hasLandingpad()
 	{
-		return landingpadLabel != null;
+		return getLandingpad() != null;
 	}
 	public TACLabelRef getLandingpad()
 	{
-		if (!hasLandingpad() && hasParent())
-			return getParent().getLandingpad();
-		return landingpadLabel;
+		if (landingpadLabel != null)
+			return landingpadLabel;
+		return parent == null ? null : parent.getLandingpad();
 	}
 	public TACLandingpad getLandingpadNode()
 	{
@@ -101,22 +93,22 @@ public class TACBlock extends TACOperand
 	}
 	public TACLabelRef addLandingpad()
 	{
-		if (hasLandingpad())
+		if (landingpadLabel != null)
 			throw new IllegalStateException("Landingpad label already added.");
 		return landingpadLabel = new TACLabelRef(this);
 	}
 
-	public boolean hasCatches()
-	{
-		return !catchLabels.isEmpty();
-	}
 	public int getNumCatches()
 	{
-		return catchLabels.size();
+		if (catchLabels != null)
+			return catchLabels.size();
+		return parent == null ? 0 : parent.getNumCatches();
 	}
 	public TACLabelRef getCatch(int num)
 	{
-		return catchLabels.get(num);
+		if (catchLabels != null)
+			return catchLabels.get(num);
+		return parent == null ? null : parent.getCatch(num);
 	}
 	public TACCatch getCatchNode(int num)
 	{
@@ -128,41 +120,36 @@ public class TACBlock extends TACOperand
 	}
 	public List<TACLabelRef> addCatches(int num)
 	{
-		if (hasCatches())
+		if (catchLabels != null)
 			throw new IllegalStateException("Catch labels already added.");
+		if (num == 0)
+			return Collections.emptyList();
+		catchLabels = new ArrayList<TACLabelRef>(num);
 		for (int i = 0; i < num; i++)
 			catchLabels.add(new TACLabelRef(this));
 		return catchLabels;
 	}
 
-	public boolean hasRecover()
-	{
-		return recoverLabel != null;
-	}
 	public TACLabelRef getRecover()
 	{
-		if (!hasRecover() && hasParent())
-			return getParent().getRecover();
-		return recoverLabel;
+		if (recoverLabel != null)
+			return recoverLabel;
+		return parent == null ? null : parent.getRecover();
 	}
 	public TACLabelRef addRecover()
 	{
-		if (hasRecover())
+		if (recoverLabel != null)
 			throw new IllegalStateException("Recover label already added.");
 		return recoverLabel = new TACLabelRef(this);
 	}
 
-	public boolean hasCleanup()
-	{
-		return cleanupLabel != null;
-	}
 	public TACLabelRef getCleanup()
 	{
 		return cleanupLabel;
 	}
 	public TACLabelRef addCleanup()
 	{
-		if (hasCleanup())
+		if (cleanupLabel != null)
 			throw new IllegalStateException("Cleanup label already added.");
 		return cleanupLabel = new TACLabelRef(this);
 	}
@@ -170,37 +157,44 @@ public class TACBlock extends TACOperand
 	@Override
 	public int getNumOperands()
 	{
-		int operands = getNumCatches();
-		if (hasParent())
+		int operands = 0;
+		if (parent != null)
 			operands++;
-		if (hasBreak())
+		if (breakLabel != null)
 			operands++;
-		if (hasContinue())
+		if (continueLabel != null)
 			operands++;
-		if (hasLandingpad())
+		if (landingpadLabel != null)
 			operands++;
-		if (hasRecover())
+		if (catchLabels != null)
+			operands += catchLabels.size();
+		if (recoverLabel != null)
 			operands++;
-		if (hasCleanup())
+		if (cleanupLabel != null)
 			operands++;
 		return operands;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		if (hasParent() && num-- == 0)
-			return getParent();
-		if (hasBreak() && num-- == 0)
-			return getBreak();
-		if (hasContinue() && num-- == 0)
-			return getContinue();
-		if (hasLandingpad() && num-- == 0)
-			return getLandingpad();
-		if (hasRecover() && num-- == 0)
-			return getRecover();
-		if (hasCleanup() && num-- == 0)
-			return getCleanup();
-		return getCatch(num);
+		if (parent != null && num-- == 0)
+			return parent;
+		if (breakLabel != null && num-- == 0)
+			return breakLabel;
+		if (continueLabel != null && num-- == 0)
+			return continueLabel;
+		if (landingpadLabel != null && num-- == 0)
+			return landingpadLabel;
+		if (catchLabels != null)
+			if (num < catchLabels.size())
+				return catchLabels.get(num);
+			else
+				num -= catchLabels.size();
+		if (recoverLabel != null && num-- == 0)
+			return recoverLabel;
+		if (cleanupLabel != null && num-- == 0)
+			return cleanupLabel;
+		throw new IndexOutOfBoundsException();
 	}
 
 	@Override

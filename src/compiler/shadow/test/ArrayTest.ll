@@ -93,18 +93,19 @@ define void @"_Pshadow_Ptest_CArrayTest_Mmain_Pshadow_Pstandard_CArray"(%"_Pshad
     %6 = insertvalue { %int*, [1 x %int] } %5, %int 1, 1, 0
     store { %int*, [1 x %int] } %6, { %int*, [1 x %int] }* %indicies
     %7 = load %"_Pshadow_Pstandard_CArray"** %array
-    %8 = load { %int*, [1 x %int] }* %indicies
-    %9 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cint_Mclass"* @"_Pshadow_Pstandard_Cint_Mclass", i32 0, i32 0))
-    %10 = bitcast %"_Pshadow_Pstandard_CObject"*%9 to %"_Pshadow_Pstandard_Cint"*
-    %11 = getelementptr inbounds %"_Pshadow_Pstandard_Cint"*%10, i32 0, i32 0
-    store %"_Pshadow_Pstandard_Cint_Mclass"* @"_Pshadow_Pstandard_Cint_Mclass", %"_Pshadow_Pstandard_Cint_Mclass"** %11
-    %12 = getelementptr inbounds %"_Pshadow_Pstandard_Cint"* %10, i32 0, i32 1
-    store %int 0, %int* %12
-    %13 = getelementptr %"_Pshadow_Pstandard_CArray"* %7, i32 0, i32 0
-    %14 = load %"_Pshadow_Pstandard_CArray_Mclass"** %13
-    %15 = getelementptr %"_Pshadow_Pstandard_CArray_Mclass"* %14, i32 0, i32 12
-    %16 = load void (%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] }, %"_Pshadow_Pstandard_CObject"*)** %15
-    call void %16(%"_Pshadow_Pstandard_CArray"* %7, { %int*, [1 x %int] } %8, %"_Pshadow_Pstandard_CObject"* %9)
+    %8 = getelementptr %"_Pshadow_Pstandard_CArray"* %7, i32 0, i32 0
+    %9 = load %"_Pshadow_Pstandard_CArray_Mclass"** %8
+    %10 = getelementptr %"_Pshadow_Pstandard_CArray_Mclass"* %9, i32 0, i32 12
+    %11 = load void (%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] }, %"_Pshadow_Pstandard_CObject"*)** %10
+    %12 = load %"_Pshadow_Pstandard_CArray"** %array
+    %13 = load { %int*, [1 x %int] }* %indicies
+    %14 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cint_Mclass"* @"_Pshadow_Pstandard_Cint_Mclass", i32 0, i32 0))
+    %15 = bitcast %"_Pshadow_Pstandard_CObject"*%14 to %"_Pshadow_Pstandard_Cint"*
+    %16 = getelementptr inbounds %"_Pshadow_Pstandard_Cint"*%15, i32 0, i32 0
+    store %"_Pshadow_Pstandard_Cint_Mclass"* @"_Pshadow_Pstandard_Cint_Mclass", %"_Pshadow_Pstandard_Cint_Mclass"** %16
+    %17 = getelementptr inbounds %"_Pshadow_Pstandard_Cint"* %15, i32 0, i32 1
+    store %int 0, %int* %17
+    call void %11(%"_Pshadow_Pstandard_CArray"* %12, { %int*, [1 x %int] } %13, %"_Pshadow_Pstandard_CObject"* %14)
     ret void
 }
 

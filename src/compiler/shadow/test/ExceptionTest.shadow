@@ -1,24 +1,36 @@
 import shadow.standard@Error;
 import shadow.io@Console;
 
-class shadow.test@ExceptionTest
+immutable class shadow.test@ExceptionTest
 {
-	nullable Error e;
-	public throwException() => () {
+	public test() => () {
 		throw ExceptionA:create();
 	}
-	public main( String[] args ) => ( int ) {
+	public test1() => () {
 		try {
-			throwException();
+			test();
 		} catch (ExceptionA ex) {
-			Console:instance.printLine("ExceptionA");
-		} catch (ExceptionB ex) {
-			Console:instance.printLine("ExceptionB");
-		} catch (ExceptionC ex) {
-			Console:instance.printLine("ExceptionC");
-		//} finally {
-			//Console:instance.printLine("finally");
+			Console:instance.printLine("test1 caught ExceptionA");
 		}
+	}
+	public test2() => () {
+		try {
+			test1();
+		} catch (ExceptionA ex) {
+			Console:instance.printLine("test2 caught ExceptionA");
+		} catch (ExceptionB ex) {
+			Console:instance.printLine("test2 caught ExceptionB");
+		}
+	}
+	public test3() => () {
+		try {
+			test2();
+		} catch (Exception ex) {
+			Console:instance.printLine("test3 caught Exception");
+		}
+	}
+	public main( String[] args ) => ( int ) {
+		test3();
 		return 0;
 	}
 }

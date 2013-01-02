@@ -91,10 +91,11 @@ define %uint @"_Pshadow_Putility_CRandom_MnextUInt_Pshadow_Pstandard_Cuint"(%"_P
     %5 = load %"_Pshadow_Putility_CRandom_Mclass"** %4
     %6 = getelementptr %"_Pshadow_Putility_CRandom_Mclass"* %5, i32 0, i32 11
     %7 = load %uint (%"_Pshadow_Putility_CRandom"*)** %6
-    %8 = call %uint %7(%"_Pshadow_Putility_CRandom"* %3)
-    %9 = load %uint* %max
-    %10 = urem %uint %8, %9
-    ret %uint %10
+    %8 = load %"_Pshadow_Putility_CRandom"** %this
+    %9 = call %uint %7(%"_Pshadow_Putility_CRandom"* %8)
+    %10 = load %uint* %max
+    %11 = urem %uint %9, %10
+    ret %uint %11
 }
 
 define %"_Pshadow_Putility_CRandom"* @"_Pshadow_Putility_CRandom_Mcreate"(%"_Pshadow_Putility_CRandom"*) {
@@ -148,9 +149,10 @@ define %int @"_Pshadow_Putility_CRandom_MnextInt"(%"_Pshadow_Putility_CRandom"*)
     %4 = load %"_Pshadow_Putility_CRandom_Mclass"** %3
     %5 = getelementptr %"_Pshadow_Putility_CRandom_Mclass"* %4, i32 0, i32 11
     %6 = load %uint (%"_Pshadow_Putility_CRandom"*)** %5
-    %7 = call %uint %6(%"_Pshadow_Putility_CRandom"* %2)
-    %8 = bitcast %uint %7 to %int
-    ret %int %8
+    %7 = load %"_Pshadow_Putility_CRandom"** %this
+    %8 = call %uint %6(%"_Pshadow_Putility_CRandom"* %7)
+    %9 = bitcast %uint %8 to %int
+    ret %int %9
 }
 
 define %int @"_Pshadow_Putility_CRandom_MnextInt_Pshadow_Pstandard_Cint"(%"_Pshadow_Putility_CRandom"*, %int) {
@@ -158,16 +160,17 @@ define %int @"_Pshadow_Putility_CRandom_MnextInt_Pshadow_Pstandard_Cint"(%"_Psha
     %max = alloca %int
     store %"_Pshadow_Putility_CRandom"* %0, %"_Pshadow_Putility_CRandom"** %this
     store %int %1, %int* %max
-    %3 = load %int* %max
-    %4 = bitcast %int %3 to %uint
-    %5 = load %"_Pshadow_Putility_CRandom"** %this
-    %6 = getelementptr %"_Pshadow_Putility_CRandom"* %5, i32 0, i32 0
-    %7 = load %"_Pshadow_Putility_CRandom_Mclass"** %6
-    %8 = getelementptr %"_Pshadow_Putility_CRandom_Mclass"* %7, i32 0, i32 12
-    %9 = load %uint (%"_Pshadow_Putility_CRandom"*, %uint)** %8
-    %10 = call %uint %9(%"_Pshadow_Putility_CRandom"* %5, %uint %4)
-    %11 = bitcast %uint %10 to %int
-    ret %int %11
+    %3 = load %"_Pshadow_Putility_CRandom"** %this
+    %4 = getelementptr %"_Pshadow_Putility_CRandom"* %3, i32 0, i32 0
+    %5 = load %"_Pshadow_Putility_CRandom_Mclass"** %4
+    %6 = getelementptr %"_Pshadow_Putility_CRandom_Mclass"* %5, i32 0, i32 12
+    %7 = load %uint (%"_Pshadow_Putility_CRandom"*, %uint)** %6
+    %8 = load %int* %max
+    %9 = bitcast %int %8 to %uint
+    %10 = load %"_Pshadow_Putility_CRandom"** %this
+    %11 = call %uint %7(%"_Pshadow_Putility_CRandom"* %10, %uint %9)
+    %12 = bitcast %uint %11 to %int
+    ret %int %12
 }
 
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CException_Mmessage"(%"_Pshadow_Pstandard_CException"*)

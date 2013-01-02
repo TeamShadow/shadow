@@ -128,23 +128,25 @@ _label6:
     %21 = load %"_Pshadow_Pstandard_CString_IStringIterator_Mclass"** %20
     %22 = getelementptr %"_Pshadow_Pstandard_CString_IStringIterator_Mclass"* %21, i32 0, i32 9
     %23 = load %code (%"_Pshadow_Pstandard_CString_IStringIterator"*)** %22
-    %24 = call %code %23(%"_Pshadow_Pstandard_CString_IStringIterator"* %19)
-    %25 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", i32 0, i32 0))
-    %26 = bitcast %"_Pshadow_Pstandard_CObject"*%25 to %"_Pshadow_Pstandard_Ccode"*
-    %27 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"*%26, i32 0, i32 0
-    store %"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", %"_Pshadow_Pstandard_Ccode_Mclass"** %27
-    %28 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"* %26, i32 0, i32 1
-    store %code %24, %code* %28
-    %29 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %18, %"_Pshadow_Pstandard_CObject"* %25)
+    %24 = load %"_Pshadow_Pstandard_CString_IStringIterator"** %iter
+    %25 = call %code %23(%"_Pshadow_Pstandard_CString_IStringIterator"* %24)
+    %26 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", i32 0, i32 0))
+    %27 = bitcast %"_Pshadow_Pstandard_CObject"*%26 to %"_Pshadow_Pstandard_Ccode"*
+    %28 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"*%27, i32 0, i32 0
+    store %"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", %"_Pshadow_Pstandard_Ccode_Mclass"** %28
+    %29 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"* %27, i32 0, i32 1
+    store %code %25, %code* %29
+    %30 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %18, %"_Pshadow_Pstandard_CObject"* %26)
     br label %_label3
 _label3:
-    %30 = load %"_Pshadow_Pstandard_CString_IStringIterator"** %iter
-    %31 = getelementptr %"_Pshadow_Pstandard_CString_IStringIterator"* %30, i32 0, i32 0
-    %32 = load %"_Pshadow_Pstandard_CString_IStringIterator_Mclass"** %31
-    %33 = getelementptr %"_Pshadow_Pstandard_CString_IStringIterator_Mclass"* %32, i32 0, i32 8
-    %34 = load %boolean (%"_Pshadow_Pstandard_CString_IStringIterator"*)** %33
-    %35 = call %boolean %34(%"_Pshadow_Pstandard_CString_IStringIterator"* %30)
-    br %boolean %35, label %_label2, label %_label4
+    %31 = load %"_Pshadow_Pstandard_CString_IStringIterator"** %iter
+    %32 = getelementptr %"_Pshadow_Pstandard_CString_IStringIterator"* %31, i32 0, i32 0
+    %33 = load %"_Pshadow_Pstandard_CString_IStringIterator_Mclass"** %32
+    %34 = getelementptr %"_Pshadow_Pstandard_CString_IStringIterator_Mclass"* %33, i32 0, i32 8
+    %35 = load %boolean (%"_Pshadow_Pstandard_CString_IStringIterator"*)** %34
+    %36 = load %"_Pshadow_Pstandard_CString_IStringIterator"** %iter
+    %37 = call %boolean %35(%"_Pshadow_Pstandard_CString_IStringIterator"* %36)
+    br %boolean %37, label %_label2, label %_label4
 _label4:
     ret %int 0
 }

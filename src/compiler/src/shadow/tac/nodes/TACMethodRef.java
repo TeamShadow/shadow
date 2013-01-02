@@ -5,7 +5,6 @@ import java.util.Collections;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassInterfaceBaseType;
-import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -15,51 +14,76 @@ import shadow.typecheck.type.Type;
 
 public class TACMethodRef extends TACOperand
 {
-	private int index;
-	private String name;
+	private TACOperand prefix;
 	private MethodType type;
+	private String name;
 	public TACMethodRef(MethodSignature sig)
 	{
-		this(null, sig.getSymbol(), sig.getMethodType());
+		this(null, null, sig.getMethodType(), sig.getSymbol());
 	}
-	public TACMethodRef(String methodName, MethodType methodType)
+	public TACMethodRef(MethodType methodType, String methodName)
 	{
-		this(null, methodName, methodType);
+		this(null, null, methodType, methodName);
+	}
+	public TACMethodRef(TACOperand prefixNode, MethodSignature sig)
+	{
+		this(null, prefixNode, sig.getMethodType(), sig.getSymbol());
+	}
+	public TACMethodRef(TACOperand prefixNode, MethodType methodType,
+			String methodName)
+	{
+		this(null, prefixNode, methodType, methodName);
 	}
 	public TACMethodRef(TACNode node, MethodSignature sig)
 	{
-		this(node, sig.getSymbol(), sig.getMethodType());
+		this(node, null, sig.getMethodType(), sig.getSymbol());
 	}
-	public TACMethodRef(TACNode node, String methodName, MethodType methodType)
+	public TACMethodRef(TACNode node, MethodType methodType, String methodName)
+	{
+		this(node, null, methodType, methodName);
+	}
+	public TACMethodRef(TACNode node, TACOperand prefixNode,
+			MethodSignature sig)
+	{
+		this(node, prefixNode, sig.getMethodType(), sig.getSymbol());
+	}
+	public TACMethodRef(TACNode node, TACOperand prefixNode,
+			MethodType methodType, String methodName)
 	{
 		super(node);
-		ClassInterfaceBaseType thisType = methodType.getOuter();
-		index = ((ClassType)thisType).getMethodIndex(
-				new MethodSignature(methodType, methodName, null));
-		name = methodName;
+		if (prefixNode != null)
+			prefix = check(prefixNode, methodType.getOuter());
 		type = methodType;
+		name = methodName;
 	}
 
 	public ClassInterfaceBaseType getPrefixType()
 	{
 		return type.getOuter();
 	}
-
-	public void makeDirect()
+	public boolean hasPrefix()
 	{
-		index = -1;
+		return prefix != null;
+	}
+	public TACOperand getPrefix()
+	{
+		return prefix;
 	}
 	public int getIndex()
 	{
+		int index = type.getOuter().getMethodIndex(
+				new MethodSignature(type, name, null));
+		if (index == -1 || prefix == null)
+			throw new UnsupportedOperationException();
 		return index;
-	}
-	public String getName()
-	{
-		return name;
 	}
 	public MethodType getType()
 	{
 		return type;
+	}
+	public String getName()
+	{
+		return name;
 	}
 
 	public SequenceType getParameterTypes()
@@ -146,11 +170,13 @@ public class TACMethodRef extends TACOperand
 	@Override
 	public int getNumOperands()
 	{
-		return 0;
+		return prefix == null ? 0 : 1;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
+		if (prefix != null && num == 0)
+			return prefix;
 		throw new IndexOutOfBoundsException();
 	}
 

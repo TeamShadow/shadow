@@ -8,26 +8,33 @@ import shadow.typecheck.type.Type;
 
 public class TACPropertyRef extends TACReference
 {
+	private TACBlock blockRef;
 	private TACOperand prefix;
 	private PropertyType type;
 	private String name;
-	public TACPropertyRef(TACOperand propertyPrefix, PropertyType propertyType,
-			String propertyName)
-	{
-		this(null, propertyPrefix, propertyType, propertyName);
-	}
-	public TACPropertyRef(TACNode node, TACOperand propertyPrefix,
+	public TACPropertyRef(TACBlock block, TACOperand propertyPrefix,
 			PropertyType propertyType, String propertyName)
+	{
+		this(null, block, propertyPrefix, propertyType, propertyName);
+	}
+	public TACPropertyRef(TACNode node, TACBlock block,
+			TACOperand propertyPrefix, PropertyType propertyType,
+			String propertyName)
 	{
 		super(node);
 		if (!(propertyPrefix.getType() instanceof ClassType))
 			throw new IllegalArgumentException("propertyPrefix is not a " +
 					"class type");
+		blockRef = block;
 		prefix = check(propertyPrefix, propertyPrefix.getType());
 		type = propertyType;
 		name = propertyName;
 	}
 
+	public TACBlock getBlock()
+	{
+		return blockRef;
+	}
 	public TACOperand getPrefix()
 	{
 		return prefix;

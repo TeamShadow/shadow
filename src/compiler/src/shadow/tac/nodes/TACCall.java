@@ -13,16 +13,19 @@ import shadow.typecheck.type.Type;
 
 public class TACCall extends TACOperand
 {
+	private TACBlock blockRef;
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
-	public TACCall(TACMethodRef method, Collection<? extends TACOperand> params)
+	public TACCall(TACBlock block, TACMethodRef method,
+			Collection<? extends TACOperand> params)
 	{
-		this(null, method, params);
+		this(null, block, method, params);
 	}
-	public TACCall(TACNode node, TACMethodRef method,
+	public TACCall(TACNode node, TACBlock block, TACMethodRef method,
 			Collection<? extends TACOperand> params)
 	{
 		super(node);
+		blockRef = block;
 		methodRef = method;
 		SequenceType types = method.getParameterTypes();
 		if (params.size() != types.size())
@@ -34,6 +37,10 @@ public class TACCall extends TACOperand
 			parameters.add(check(paramIter.next(), typeIter.next().getType()));
 	}
 
+	public TACBlock getBlock()
+	{
+		return blockRef;
+	}
 	public TACMethodRef getMethod()
 	{
 		return methodRef;
@@ -63,12 +70,14 @@ public class TACCall extends TACOperand
 	@Override
 	public int getNumOperands()
 	{
-		return parameters.size() + 1;
+		return 2 + parameters.size();
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
 		if (num == 0)
+			return blockRef;
+		if (num == 1)
 			return methodRef;
 		return parameters.get(num - 1);
 	}

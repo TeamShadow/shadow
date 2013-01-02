@@ -23,7 +23,7 @@ immutable final class shadow.standard@Class
 	{
 		if ( this == other )
 			return true;
-		if ( other.isInterface() )
+		if ( !other.isInterface() )
 			try
 			{
 				return check(parent).isSubtype(other);

@@ -111,12 +111,13 @@ define %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Culong_MtoString"(%"_
     %3 = load %ulong* %2
     store %ulong %3, %ulong* %this
     %4 = load %ulong* %this
-    %5 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pstandard_Culong_Mclass"* @"_Pshadow_Pstandard_Culong_Mclass", i32 0, i32 0))
-    %6 = bitcast %"_Pshadow_Pstandard_CObject"*%5 to %"_Pshadow_Pstandard_Culong"*
-    %7 = getelementptr inbounds %"_Pshadow_Pstandard_Culong"*%6, i32 0, i32 1
-    store %ulong %4, %ulong* %7
-    %8 = call %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Culong_MtoString_Pshadow_Pstandard_Culong"(%"_Pshadow_Pstandard_Culong"* %6, %ulong 10)
-    ret %"_Pshadow_Pstandard_CString"* %8
+    %5 = load %ulong* %this
+    %6 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pstandard_Culong_Mclass"* @"_Pshadow_Pstandard_Culong_Mclass", i32 0, i32 0))
+    %7 = bitcast %"_Pshadow_Pstandard_CObject"*%6 to %"_Pshadow_Pstandard_Culong"*
+    %8 = getelementptr inbounds %"_Pshadow_Pstandard_Culong"*%7, i32 0, i32 1
+    store %ulong %5, %ulong* %8
+    %9 = call %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Culong_MtoString_Pshadow_Pstandard_Culong"(%"_Pshadow_Pstandard_Culong"* %7, %ulong 10)
+    ret %"_Pshadow_Pstandard_CString"* %9
 }
 
 define %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Culong_MtoString_Pshadow_Pstandard_Culong"(%"_Pshadow_Pstandard_Culong"*, %ulong) {
@@ -136,49 +137,52 @@ define %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_Culong_MtoString_Psha
     store %ulong %8, %ulong* %value
     br label %_label3
 _label3:
-    %9 = load %ulong* %value
-    %10 = load %ulong* %base
-    %11 = urem %ulong %9, %10
-    %12 = load %ulong* %this
-    %13 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pstandard_Culong_Mclass"* @"_Pshadow_Pstandard_Culong_Mclass", i32 0, i32 0))
-    %14 = bitcast %"_Pshadow_Pstandard_CObject"*%13 to %"_Pshadow_Pstandard_Culong"*
-    %15 = getelementptr inbounds %"_Pshadow_Pstandard_Culong"*%14, i32 0, i32 1
-    store %ulong %12, %ulong* %15
-    %16 = call %code @"_Pshadow_Pstandard_Culong_Mdigit_Pshadow_Pstandard_Culong"(%"_Pshadow_Pstandard_Culong"* %14, %ulong %11)
-    %17 = load %"_Pshadow_Pstandard_CMutableString"** %string
-    %18 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", i32 0, i32 0))
-    %19 = bitcast %"_Pshadow_Pstandard_CObject"*%18 to %"_Pshadow_Pstandard_Ccode"*
-    %20 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"*%19, i32 0, i32 0
-    store %"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", %"_Pshadow_Pstandard_Ccode_Mclass"** %20
-    %21 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"* %19, i32 0, i32 1
-    store %code %16, %code* %21
-    %22 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %17, i32 0, i32 0
-    %23 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %22
-    %24 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %23, i32 0, i32 8
-    %25 = load %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)** %24
-    %26 = call %"_Pshadow_Pstandard_CMutableString"* %25(%"_Pshadow_Pstandard_CMutableString"* %17, %"_Pshadow_Pstandard_CObject"* %18)
-    %27 = load %ulong* %value
-    %28 = load %ulong* %base
-    %29 = udiv %ulong %27, %28
-    store %ulong %29, %ulong* %value
+    %9 = load %"_Pshadow_Pstandard_CMutableString"** %string
+    %10 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %9, i32 0, i32 0
+    %11 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %10
+    %12 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %11, i32 0, i32 8
+    %13 = load %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*, %"_Pshadow_Pstandard_CObject"*)** %12
+    %14 = load %ulong* %this
+    %15 = load %ulong* %value
+    %16 = load %ulong* %base
+    %17 = urem %ulong %15, %16
+    %18 = load %ulong* %this
+    %19 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pstandard_Culong_Mclass"* @"_Pshadow_Pstandard_Culong_Mclass", i32 0, i32 0))
+    %20 = bitcast %"_Pshadow_Pstandard_CObject"*%19 to %"_Pshadow_Pstandard_Culong"*
+    %21 = getelementptr inbounds %"_Pshadow_Pstandard_Culong"*%20, i32 0, i32 1
+    store %ulong %18, %ulong* %21
+    %22 = call %code @"_Pshadow_Pstandard_Culong_Mdigit_Pshadow_Pstandard_Culong"(%"_Pshadow_Pstandard_Culong"* %20, %ulong %17)
+    %23 = load %"_Pshadow_Pstandard_CMutableString"** %string
+    %24 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", i32 0, i32 0))
+    %25 = bitcast %"_Pshadow_Pstandard_CObject"*%24 to %"_Pshadow_Pstandard_Ccode"*
+    %26 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"*%25, i32 0, i32 0
+    store %"_Pshadow_Pstandard_Ccode_Mclass"* @"_Pshadow_Pstandard_Ccode_Mclass", %"_Pshadow_Pstandard_Ccode_Mclass"** %26
+    %27 = getelementptr inbounds %"_Pshadow_Pstandard_Ccode"* %25, i32 0, i32 1
+    store %code %22, %code* %27
+    %28 = call %"_Pshadow_Pstandard_CMutableString"* %13(%"_Pshadow_Pstandard_CMutableString"* %23, %"_Pshadow_Pstandard_CObject"* %24)
+    %29 = load %ulong* %value
+    %30 = load %ulong* %base
+    %31 = udiv %ulong %29, %30
+    store %ulong %31, %ulong* %value
     br label %_label4
 _label4:
-    %30 = load %ulong* %value
-    %31 = icmp ne %ulong %30, 0
-    br %boolean %31, label %_label3, label %_label5
+    %32 = load %ulong* %value
+    %33 = icmp ne %ulong %32, 0
+    br %boolean %33, label %_label3, label %_label5
 _label5:
-    %32 = load %"_Pshadow_Pstandard_CMutableString"** %string
-    %33 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %32, i32 0, i32 0
-    %34 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %33
-    %35 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %34, i32 0, i32 14
-    %36 = load %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*)** %35
-    %37 = call %"_Pshadow_Pstandard_CMutableString"* %36(%"_Pshadow_Pstandard_CMutableString"* %32)
-    %38 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %37, i32 0, i32 0
-    %39 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %38
-    %40 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %39, i32 0, i32 7
-    %41 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CMutableString"*)** %40
-    %42 = call %"_Pshadow_Pstandard_CString"* %41(%"_Pshadow_Pstandard_CMutableString"* %37)
-    ret %"_Pshadow_Pstandard_CString"* %42
+    %34 = load %"_Pshadow_Pstandard_CMutableString"** %string
+    %35 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %34, i32 0, i32 0
+    %36 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %35
+    %37 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %36, i32 0, i32 14
+    %38 = load %"_Pshadow_Pstandard_CMutableString"* (%"_Pshadow_Pstandard_CMutableString"*)** %37
+    %39 = load %"_Pshadow_Pstandard_CMutableString"** %string
+    %40 = call %"_Pshadow_Pstandard_CMutableString"* %38(%"_Pshadow_Pstandard_CMutableString"* %39)
+    %41 = getelementptr %"_Pshadow_Pstandard_CMutableString"* %40, i32 0, i32 0
+    %42 = load %"_Pshadow_Pstandard_CMutableString_Mclass"** %41
+    %43 = getelementptr %"_Pshadow_Pstandard_CMutableString_Mclass"* %42, i32 0, i32 7
+    %44 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CMutableString"*)** %43
+    %45 = call %"_Pshadow_Pstandard_CString"* %44(%"_Pshadow_Pstandard_CMutableString"* %40)
+    ret %"_Pshadow_Pstandard_CString"* %45
 }
 
 declare %ulong @"_Pshadow_Pstandard_Culong_Mdivide_Pshadow_Pstandard_Culong"(%"_Pshadow_Pstandard_Culong"*, %ulong)

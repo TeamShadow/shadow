@@ -113,12 +113,14 @@ _label1:
     %9 = load %"_Pshadow_Pstandard_CObject_Mclass"** %8
     %10 = getelementptr %"_Pshadow_Pstandard_CObject_Mclass"* %9, i32 0, i32 7
     %11 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)** %10
-    %12 = call %"_Pshadow_Pstandard_CString"* %11(%"_Pshadow_Pstandard_CObject"* %7)
-    store %"_Pshadow_Pstandard_CString"* %12, %"_Pshadow_Pstandard_CString"** %_temp
+    %12 = load %"_Pshadow_Pstandard_CObject"** %3
+    %13 = bitcast %"_Pshadow_Pstandard_CObject"* %12 to %"_Pshadow_Pstandard_CObject"*
+    %14 = call %"_Pshadow_Pstandard_CString"* %11(%"_Pshadow_Pstandard_CObject"* %13)
+    store %"_Pshadow_Pstandard_CString"* %14, %"_Pshadow_Pstandard_CString"** %_temp
     br label %_label2
 _label2:
-    %13 = load %"_Pshadow_Pstandard_CString"** %_temp
-    ret %"_Pshadow_Pstandard_CString"* %13
+    %15 = load %"_Pshadow_Pstandard_CString"** %_temp
+    ret %"_Pshadow_Pstandard_CString"* %15
 }
 
 define %"_Pshadow_Pstandard_CReference"* @"_Pshadow_Pstandard_CReference_Mcreate"(%"_Pshadow_Pstandard_CReference"*, %"_Pshadow_Pstandard_CClass"*) {

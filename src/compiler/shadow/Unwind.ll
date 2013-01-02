@@ -436,7 +436,7 @@ action_record.next.valid:
 	%p.17 = getelementptr i8* %p.14, i32 %action_record.next_offset
 	br label %find.catch
 found.catch:
-br i1 %action.search_phase, label %return.handler, label %install.context
+	br i1 %action.search_phase, label %return.handler, label %install.context
 found.cleanup:
 	br i1 %action.search_phase, label %return.continue, label %install.context
 return.error: ret %_Unwind_Reason_Code 3 ; _URC_FATAL_PHASE1_ERROR = 3
