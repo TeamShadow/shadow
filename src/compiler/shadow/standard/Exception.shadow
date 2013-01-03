@@ -13,12 +13,13 @@ exception shadow.standard@Exception extends shadow.standard@Object
 
 	public final native throw_() => ();
  
-	protected terminate() => ()
+	private terminate() => ( int )
 	{
 		Console console = Console:instance;
 		console.printError(getClass());
 		if ( !message.isEmpty() )
 			console.printError(": ").printError(message);
 		console.printErrorLine();
+		return 1;
 	}
 }

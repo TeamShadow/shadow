@@ -97,8 +97,8 @@ public class TACMethodRef extends TACOperand
 			for (int i = parameterizedType.getTypeParameters().size(); i > 0;
 					i--)
 				paramTypes.add(new SimpleModifiedType(Type.CLASS));
-		for (String parameterName : getType().getParameterNames())
-			paramTypes.add(getType().getParameterType(parameterName));
+		for (ModifiedType parameterType : getType().getParameterTypes())
+			paramTypes.add(parameterType);
 		return paramTypes;
 	}
 	public int getParameterCount()

@@ -1,1 +1,3 @@
-public exception shadow.test@ExceptionA { }
+public exception shadow.test@ExceptionA
+{
+}

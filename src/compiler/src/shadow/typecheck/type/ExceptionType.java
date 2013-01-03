@@ -23,6 +23,9 @@ public class ExceptionType extends ClassType
 		if( equals(t) )
 			return true;		
 		
+		if ( t.equals(OBJECT) )
+			return true;
+		
 		if( t instanceof ExceptionType )			
 			return isDescendentOf(t);
 		else

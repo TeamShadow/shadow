@@ -479,9 +479,5 @@ entry:
 	%7 = bitcast %struct._Unwind_Exception* %6 to %_Pshadow_Pstandard_CException**
 	store %_Pshadow_Pstandard_CException* %0, %_Pshadow_Pstandard_CException** %7
 	%8 = tail call %_Unwind_Reason_Code @_Unwind_RaiseException(%struct._Unwind_Exception* %2)
-	%9 = icmp eq %_Unwind_Reason_Code %8, 5 ; _URC_END_OF_STACK = 5
-	br i1 %9, label %10, label %11
-	tail call void @_Pshadow_Pstandard_CException_Mterminate(%_Pshadow_Pstandard_CException* %0)
-	tail call void @exit(i32 -1) noreturn nounwind unreachable
 	tail call void @abort() noreturn nounwind unreachable
 }

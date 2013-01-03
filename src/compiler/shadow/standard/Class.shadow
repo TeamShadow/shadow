@@ -7,8 +7,8 @@ immutable final class shadow.standard@Class
 	int size, width, flags;
 
 	private create() { }
-	private native allocate() => ( Object );
-	private native allocate( int length ) => ( Object );
+	protected native allocate() => ( Object );
+	protected native allocate( int length ) => ( Object );
 
 	public isInterface() => ( boolean )
 	{

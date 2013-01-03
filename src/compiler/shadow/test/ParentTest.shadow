@@ -1,0 +1,17 @@
+import shadow.io@Console;
+
+class shadow.test@ParentTest
+{
+	public create()
+	{
+		Console:instance.printLine(getClass() # ":create()");
+	}
+	public create( int x )
+	{
+		Console:instance.printLine(getClass() # ":create(" # x # ')');
+	}
+	public create( String y )
+	{
+		Console:instance.printLine(getClass() # ":create(\"" # y # "\")");
+	}
+}

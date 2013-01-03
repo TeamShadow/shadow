@@ -52,6 +52,10 @@ public abstract class TACSimpleNode extends TACNode
 	public abstract int getNumOperands();
 	public abstract TACOperand getOperand(int num);
 
+	protected final TACOperand check(TACOperand operand)
+	{
+		return operand.checkVirtual(operand.getType(), this);
+	}
 	protected final TACOperand check(TACOperand operand, Type type)
 	{
 		if (type instanceof TypeParameter &&

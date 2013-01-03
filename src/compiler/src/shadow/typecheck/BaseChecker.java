@@ -135,7 +135,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		if( msg != null && msg.length() > 0 )
 			error += ": " + msg; 
 		
-		errorList.add(error);
+		System.err.println(error);
+//		errorList.add(error);
 	}
 	
 	/**

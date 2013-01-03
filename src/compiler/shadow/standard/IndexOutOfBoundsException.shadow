@@ -1,2 +1,8 @@
 exception shadow.standard@IndexOutOfBoundsException
-{}
+{
+	public create() { }
+	public create( int index )
+	{
+		super("index " # index # " out of bounds");
+	}
+}

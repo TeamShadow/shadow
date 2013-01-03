@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -16,10 +17,19 @@ public class TACCall extends TACOperand
 	private TACBlock blockRef;
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
+	public TACCall(TACBlock block, TACMethodRef method, TACOperand... params)
+	{
+		this(null, block, method, Arrays.asList(params));
+	}
 	public TACCall(TACBlock block, TACMethodRef method,
 			Collection<? extends TACOperand> params)
 	{
 		this(null, block, method, params);
+	}
+	public TACCall(TACNode node, TACBlock block, TACMethodRef method,
+			TACOperand... params)
+	{
+		this(node, block, method, Arrays.asList(params));
 	}
 	public TACCall(TACNode node, TACBlock block, TACMethodRef method,
 			Collection<? extends TACOperand> params)

@@ -4,7 +4,7 @@ import shadow.io@Console;
 immutable class shadow.test@ExceptionTest
 {
 	public test() => () {
-		throw ExceptionA:create();
+		throw IndexOutOfBoundsException:create();
 	}
 	public test1() => () {
 		try {

@@ -23,11 +23,12 @@ import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACFieldRef;
+import shadow.tac.nodes.TACInit;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
-import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
@@ -35,10 +36,12 @@ import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
+import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
+import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
@@ -206,6 +209,10 @@ public class LLVMOutput extends AbstractOutput
 						append(", ").append(type(Type.BOOLEAN));
 			else if (type.isPrimitive())
 				sb.append(", ").append(type(type));
+			else if (type instanceof ClassType)
+				for (Entry<String, ? extends ModifiedType> field :
+						((ClassType)type).getAllFields())
+					sb.append(", ").append(type(field.getValue()));
 			writer.write(sb.append(" }").toString());
 		}
 		writer.write();
@@ -461,9 +468,9 @@ public class LLVMOutput extends AbstractOutput
 			writer.write("@_string" + stringIndex + " = private unnamed_addr " +
 					"constant %" + raw(Type.STRING) + " { %" + raw(Type.STRING,
 					"_Mclass") + "* @" + raw(Type.STRING, "_Mclass") + ", " +
-					type(new ArrayType(Type.UBYTE)) + " { " + type(Type.UBYTE) +
+					type(new ArrayType(Type.BYTE)) + " { " + type(Type.BYTE) +
 					"* getelementptr inbounds ([" +
-					data.length + " x " + type(Type.UBYTE) + "]* @_array" +
+					data.length + " x " + type(Type.BYTE) + "]* @_array" +
 					stringIndex + ", i32 0, i32 0), [1 x " + type(Type.INT) +
 					"] [" + type(Type.INT) + ' ' + data.length + "] }, " +
 					type(Type.BOOLEAN) + ' ' + ascii + " }");
@@ -518,15 +525,6 @@ public class LLVMOutput extends AbstractOutput
 			writer.indent();
 			for (TACVariable local : method.getLocals())
 				writer.write('%' + name(local) + " = alloca " + type(local));
-			if (method.isCreate())
-			{
-				ClassType type = (ClassType)method.getPrefixType();
-				writer.write(nextTemp() + " = getelementptr inbounds %" +
-						raw(type) + "* %0, i32 0, i32 0");
-				writer.write("store %" + raw(type, "_Mclass") + "* @" +
-						raw(type, "_Mclass") + ", %" + raw(type, "_Mclass") +
-						"** " + temp(0));
-			}
 			boolean first = method.getPrefixType().isPrimitive();
 			int paramIndex = 0;
 			for (TACVariable param : method.getParameters())
@@ -672,10 +670,10 @@ public class LLVMOutput extends AbstractOutput
 						"_Mallocate") + '(' + type(Type.CLASS) +
 						" getelementptr inbounds (%" + raw(srcType, "_Mclass") +
 						"* @" + raw(srcType, "_Mclass") + ", i32 0, i32 0))");
-				writer.write(nextTemp() + " = bitcast " + type(
-						Type.OBJECT) + temp(1) + " to %" + raw(srcType) + '*');
+				writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) +
+						' ' + temp(1) + " to %" + raw(srcType) + '*');
 				writer.write(nextTemp() + " = getelementptr inbounds %" +
-						raw(srcType) + '*' + temp(1) + ", i32 0, i32 0");
+						raw(srcType) + "* " + temp(1) + ", i32 0, i32 0");
 				writer.write("store %" + raw(srcType, "_Mclass") + "* @" +
 						raw(srcType, "_Mclass") + ", %" +
 						raw(srcType, "_Mclass") + "** " + temp(0));
@@ -875,9 +873,8 @@ public class LLVMOutput extends AbstractOutput
 		Type type = node.getType(), baseType = node.getType().getBaseType();
 		writer.write(nextTemp() + " = call noalias " + type(Type.OBJECT) +
 				" @" + raw(Type.CLASS, "_Mallocate_Pshadow_Pstandard_Cint") +
-				'(' + type(Type.CLASS) + " getelementptr inbounds (%" +
-				raw(baseType, "_Mclass") + "* @" + raw(baseType, "_Mclass") +
-				", i32 0, i32 0), " + typeSymbol(node.getTotalSize()) + ')');
+				'(' + typeSymbol(node.getBaseClass()) + ", " +
+				typeSymbol(node.getTotalSize()) + ')');
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
 				temp(1) + " to " + type(baseType) + '*');
 		writer.write(nextTemp() + " = insertvalue " + type(node.getType()) +
@@ -1058,6 +1055,19 @@ public class LLVMOutput extends AbstractOutput
 	}
 
 	@Override
+	public void visit(TACNot node) throws ShadowException
+	{
+		writer.write(nextTemp(node) + " = xor " +
+				typeSymbol(node.getOperand()) + ", true");
+	}
+	@Override
+	public void visit(TACSame node) throws ShadowException
+	{
+		writer.write(nextTemp(node) + " = icmp eq " + typeSymbol(
+				node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
+	}
+
+	@Override
 	public void visit(TACLoad node) throws ShadowException
 	{
 		TACReference reference = node.getReference();
@@ -1123,7 +1133,6 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACCall node) throws ShadowException
 	{
-		
 		TACMethodRef method = node.getMethod();
 		StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
 				"invoke" : "call").append(' ').
@@ -1139,10 +1148,8 @@ public class LLVMOutput extends AbstractOutput
 				{
 					writer.write(nextTemp(node) + " = call noalias " +
 							type(Type.OBJECT) + " @" + raw(Type.CLASS,
-							"_Mallocate") + '(' + type(Type.CLASS) +
-							" getelementptr (%" + raw(paramType, "_Mclass") +
-							"* @" + raw(paramType, "_Mclass") +
-							", i32 0, i32 0))");
+							"_Mallocate") + '(' + type(Type.CLASS) + ' ' +
+							classOf(paramType) + ')');
 					writer.write(nextTemp() + " = bitcast " +
 							type(Type.OBJECT) + temp(1) + " to %" +
 							raw(paramType) + '*');
@@ -1172,6 +1179,16 @@ public class LLVMOutput extends AbstractOutput
 			writer.outdent();
 			writer.outdent();
 		}
+	}
+
+	@Override
+	public void visit(TACInit node) throws ShadowException
+	{
+		Type type = node.getThisType();
+		writer.write(nextTemp() + " = getelementptr inbounds %" + raw(type) +
+				"* %0, i32 0, i32 0");
+		writer.write("store %" + raw(type, "_Mclass") + "* @" + raw(type,
+				"_Mclass") + ", %" + raw(type, "_Mclass") + "** " + temp(0));
 	}
 
 	@Override

@@ -21,6 +21,10 @@ public class TACVariable
 	{
 		return type;
 	}
+	public String getOriginalName()
+	{
+		return name;
+	}
 	public String getName()
 	{
 		if (suffix == 0)

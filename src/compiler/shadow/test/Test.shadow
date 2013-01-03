@@ -1,4 +1,3 @@
-import shadow.standard@Array;
 import shadow.io@Console;
 
 class shadow.test@Test

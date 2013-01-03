@@ -1,0 +1,111 @@
+class shadow.utility@LinkedList<V> implements List<V>
+{
+	private class Node
+	{
+		Node prev = this, next = this;
+		nullable V value = null;
+		public create() { }
+		public create( V value, Node next )
+		{
+			this:value = value;
+			( next:prev:next, this:prev, this:next, next:prev ) =
+					( this, next:prev, next, this );
+		}
+
+		public clear() => ()
+		{
+			( prev, next ) = ( this, this );
+		}
+		public delete() => ()
+		{
+			( prev:next, next:prev ) = ( next, prev );
+		}
+	}
+	get int size = 0;
+	Node header = Node:create();
+
+	public index( int index ) => ( V value )
+	{
+		return find(index):value;
+	}
+	public index( int index, V value ) => ()
+	{
+		if ( index == size )
+			add(value);
+		else
+			find(index):value = value;
+	}
+
+	public add( V value ) => ( boolean added )
+	{
+		Node:create(value, header);
+		size += 1;
+		return true;
+	}
+	public remove( V value ) => ( boolean removed )
+	{
+		try
+		{
+			nullable Node node;
+			( , node ) = find(value);
+			check(node).delete();
+			size -= 1;
+			return true;
+		}
+		recover
+		{
+			return false;
+		}
+	}
+	public delete( int index ) => ( V value )
+	{
+		find(index).delete();
+	}
+	public indexOf( V value ) => ( int index )
+	{
+		return find(value);
+	}
+	public contains( V value ) => ( boolean found )
+	{
+		return indexof(value) != -1;
+	}
+	public clear() => ()
+	{
+		header.clear();
+		size = 0;
+	}
+
+	private find( int index ) => ( Node node )
+	{
+		if ( cast<uint>index >= cast<uint>size )
+			throw IndexOutOfBoundsException:create();
+		Node current = header;
+		if ( index < size / 2 )
+			while ( index != 0 )
+			{
+				current = current:next;
+				index -= 1;
+			}
+		else
+			while ( index != size )
+			{
+				current = current:prev;
+				index += 1;
+			}
+		return current;
+	}
+	private find( V value ) => ( int index, nullable Node node )
+	{
+		int index = 0;
+		Node current = header;
+		do
+		{
+			if ( current:value == value )
+				return ( index, current );
+			index += 1;
+			current = current:next;
+		}
+		while ( current !== header );
+		return ( -1, null );
+	}
+}

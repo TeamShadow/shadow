@@ -1,4 +1,4 @@
-interface Iterator<T>
+interface shadow.standard@Iterator<T>
 {
 	immutable hasNext() => (boolean);
 	next() => (T);

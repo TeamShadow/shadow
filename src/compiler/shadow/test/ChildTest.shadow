@@ -1,0 +1,22 @@
+import shadow.io@Console;
+
+class shadow.test@ChildTest extends ParentTest
+{
+	public create()
+	{
+		this(3);
+	}
+	public create( int x )
+	{
+		super("Hello World!");
+	}
+	public create( String y )
+	{
+		super(5);
+	}
+
+	public main( String[] args ) => ( int )
+	{
+		Console:instance.printLine(getClass() # ":main(" # args # ')');
+	}
+}

@@ -25,17 +25,12 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 		return symbol;
 	}
 
-	public abstract Type getType();
 	@Override
 	public Modifiers getModifiers()
 	{
 		return new Modifiers();
 	}
-
-	protected final TACOperand check(TACOperand operand)
-	{
-		return check(operand, getType());
-	}
+	public abstract Type getType();
 
 	protected TACOperand checkVirtual(Type type, TACNode node)
 	{

@@ -14,25 +14,30 @@ import shadow.typecheck.type.Type;
 public class TACNewArray extends TACOperand
 {
 	private ArrayType type;
+	private TACOperand base;
 	private List<TACOperand> dimensions;
 	private TACOperand total;
-	public TACNewArray(ArrayType newType, TACOperand... dims)
+	public TACNewArray(ArrayType arrayType, TACOperand baseClass,
+			TACOperand... dims)
 	{
-		this(null, newType, Arrays.asList(dims));
+		this(null, arrayType, baseClass, Arrays.asList(dims));
 	}
-	public TACNewArray(TACNode node, ArrayType newType, TACOperand... dims)
+	public TACNewArray(TACNode node, ArrayType arrayType, TACOperand baseClass,
+			TACOperand... dims)
 	{
-		this(node, newType, Arrays.asList(dims));
+		this(node, arrayType, baseClass, Arrays.asList(dims));
 	}
-	public TACNewArray(ArrayType newType, Collection<TACOperand> dims)
+	public TACNewArray(ArrayType arrayType, TACOperand baseClass,
+			Collection<TACOperand> dims)
 	{
-		this(null, newType, dims);
+		this(null, arrayType, baseClass, dims);
 	}
-	public TACNewArray(TACNode node, ArrayType newType,
+	public TACNewArray(TACNode node, ArrayType arrayType, TACOperand baseClass,
 			Collection<TACOperand> dims)
 	{
 		super(node);
-		type = newType;
+		type = arrayType;
+		base = check(baseClass, Type.CLASS);
 		dimensions = new ArrayList<TACOperand>(dims.size());
 		Iterator<TACOperand> iter = dims.iterator();
 		TACOperand current = check(iter.next(), Type.INT);
@@ -46,6 +51,10 @@ public class TACNewArray extends TACOperand
 		total = check(current, Type.INT);
 	}
 
+	public TACOperand getBaseClass()
+	{
+		return base;
+	}
 	public int getDimensions()
 	{
 		return dimensions.size();

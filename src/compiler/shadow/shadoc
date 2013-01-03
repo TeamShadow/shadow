@@ -1,0 +1,105 @@
+#!/bin/bash
+
+function color {
+	COLOR=$1
+	shift
+	if [ -t 2 ]; then
+		echo -e \\x1b[1\;${COLOR}m$@\\x1b[0m
+	else
+		echo -e $@
+	fi
+}
+function red {
+	color 31 $@ >&2
+}
+function green {
+	color 32 $@
+}
+function yellow {
+	color 33 $@ >&2
+}
+
+[ -z "$CC" ] && CC="$(which clang gcc | head --lines=1)"
+NOTDONE=true
+COMPILE=true
+RUN=false
+FILE=a.out
+while $NOTDONE; do
+	case "$1" in
+		-O | --optimized)
+			OPTIMIZED=-O3
+		;;
+		--interpret)
+			COMPILE=false
+			yellow "Exceptions may not work in $1 mode."
+		;;
+		-c | --compile)
+			COMPILE=true
+		;;
+		-r | --run)
+			RUN=true
+		;;
+		-o*)
+			FILE="${1:2}"
+			if [ -z "$FILE" ]; then
+				shift
+				FILE="$1"
+			fi 
+		;;
+		--output=*)
+			FILE="${1:9}"
+		;;
+		--output)
+			shift
+			FILE="$1"
+		;;
+		-i*)
+			TEMP="${1:2}"
+			if [ -z "$TEMP" ]; then
+				shift
+				TEMP="$1"
+			fi
+			IMPORT="$IMPORT ${1:9}"
+		;;
+		--import=*)
+			IMPORT="$IMPORT ${1:9}"
+		;;
+		--import)
+			shift
+			IMPORT="$IMPORT test/$1Test.ll"
+		;;
+		--)
+			NOTDONE=false
+		;;
+		-*)
+			yellow "Unknown option $1."
+		;;
+		*)
+			TESTPREFIX="$1"
+			NOTDONE=false
+		;;
+	esac
+	shift
+done
+FILE="$(cd $(dirname "$FILE") ; pwd)/$(basename "$FILE")"
+
+if [ -z "$TESTPREFIX" ]; then
+	green <<DONE
+	Usage: $0 <test prefix> <other files>...
+DONE
+elif [ -z "$(which llvm-link)" ]; then
+	red "You do not have llvm installed."
+elif [ -z "$CC" ]; then
+	red "You do not have clang or gcc installed."
+else
+	llvm-link <(sed "s/Test/${TESTPREFIX}Test/g" Main.ll) \
+			"test/${TESTPREFIX}Test.ll" $IMPORT Linux.ll Unwind64.ll \
+			standard/*.ll io/*.ll utility/*.ll | opt $OPTIMIZED | (
+		if $COMPILE; then
+			llc $OPTIMIZED | "$CC" $OPTIMIZED -x assembler - -lm -lrt \
+					-o "$FILE" && $RUN && "$FILE" "$@"
+		elif $RUN; then
+			lli $OPTIMIZED
+		fi
+	)
+fi

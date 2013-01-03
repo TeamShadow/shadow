@@ -3,9 +3,6 @@ class shadow.standard@Object
 	public final native immutable
 	getClass() => ( Class );
 
-	public immutable
-	toString() => ( String ) { return getClass().toString(); }
-
 	public native
 	copy() => ( Object ); //classes should override this if needed
 
@@ -13,11 +10,8 @@ class shadow.standard@Object
 	freeze() => ( immutable Object ); //classes should override this if needed
 
 	public immutable
-	equals( Object other ) => ( boolean ) { return referenceEquals( other ); }
+	equals( Object other ) => ( boolean ) { return this === other; }
 
-	public final immutable native
-	referenceEquals( Object other ) => ( boolean ); 
-	
-	public create()
-	{}
+	public immutable
+	toString() => ( String ) { return getClass().toString(); }
 }
