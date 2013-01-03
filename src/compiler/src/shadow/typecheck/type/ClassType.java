@@ -23,7 +23,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		setExtendType( parent );
 	}
 	
-	public ClassType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
+	public ClassType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {		
 		super( typeName, modifiers, outer );
 	}
 	
@@ -47,13 +47,16 @@ public class ClassType extends ClassInterfaceBaseType {
 		return false;
 	}
 	
-	public boolean hasInterface(Type type)
+	public boolean hasInterface(InterfaceType type)
 	{	
 		ClassType current = this;
 		while( current != null )
 		{
-			if( current.implementTypes.contains(type) )
-				return true;
+			for( InterfaceType interfaceType : current.implementTypes )
+			{
+				if( interfaceType.getTypeWithoutTypeArguments().equals( type.getTypeWithoutTypeArguments() ) )
+					return true;
+			}
 			current = current.getExtendType();			
 		}
 		return false;
@@ -420,7 +423,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		else if( t instanceof ClassType )			
 			return isDescendentOf(t);
 		else if( t instanceof InterfaceType )
-			return hasInterface(t);
+			return hasInterface((InterfaceType)t);
 		else
 			return false;
 	}

@@ -289,6 +289,7 @@ public abstract class ClassInterfaceBaseType extends Type
 		return referencedTypes;
 	}
 
+	public abstract boolean hasInterface(InterfaceType type);
 	public abstract boolean isRecursivelyParameterized();	
 	public abstract ClassInterfaceBaseType replace(SequenceType values, SequenceType replacements );	
 	public abstract void printMetaFile(PrintWriter out, String linePrefix );

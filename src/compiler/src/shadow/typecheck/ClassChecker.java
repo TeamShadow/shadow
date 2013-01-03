@@ -1840,62 +1840,107 @@ public class ClassChecker extends BaseChecker {
 			ModifiedType prefixNode = curPrefix.getFirst();
 			prefixNode = resolveType( prefixNode );
 			Type prefixType = prefixNode.getType();
-			SequenceType typeArguments = null;
-			int start = 0;
-			
-			if( node.jjtGetChild(0) instanceof ASTTypeArguments )
-			{
-				typeArguments = (SequenceType) node.jjtGetChild(0).getType();
-				start = 1;				
-			}
-			
-			
-			for( int i = start; i < node.jjtGetNumChildren(); i++ )
-			{
-				Type childType = node.jjtGetChild(i).getType();
-				
-				if( !childType.isIntegral() )
-				{
-					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
-					node.setType(Type.UNKNOWN);
-					return WalkType.POST_CHILDREN;
-				}
-			}			
 			
 			if( prefixType instanceof ArrayType )
 			{
 				ArrayType arrayType = (ArrayType)prefixType;
-
-				if( typeArguments != null )
+				
+				for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				{
-					addError(node, Error.TYPE_MIS, "Cannot apply type arguments to an array subscript");
-					node.setType(Type.UNKNOWN);	
+					Type childType = node.jjtGetChild(i).getType();
+					
+					if( !childType.isIntegral() )
+					{
+						addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
+						node.setType(Type.UNKNOWN);
+						return WalkType.POST_CHILDREN;
+					}
+				}
+				
+			    //only goes one level deep because of nullability
+				int dimension = node.getArrayDimensions().get(0);				
+				if( dimension == arrayType.getDimensions() )
+				{
+					node.setType( arrayType.getBaseType() );
+					node.addModifier(Modifiers.ASSIGNABLE);
+					
+					//primitive arrays are initialized to default values
+					//non-primitive array elements could be null
+					if( !arrayType.getBaseType().isPrimitive() )
+						node.addModifier(Modifiers.NULLABLE);						
+				}				
+				else
+				{
+					node.setType(Type.UNKNOWN);
+					addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
+				}
+				
+			}			
+			else if( prefixType instanceof ClassInterfaceBaseType && ((ClassInterfaceBaseType) prefixType).hasInterface(Type.CAN_INDEX) )
+			{
+				if( node.jjtGetNumChildren() == 1)
+				{
+					SequenceType arguments = new SequenceType();
+					Node child = node.jjtGetChild(0);
+					arguments.add(child);					
+					
+					ClassInterfaceBaseType classType = (ClassInterfaceBaseType) prefixType;
+					TreeMap<MethodSignature, MethodType> acceptableIndexes = new TreeMap<MethodSignature, MethodType>();
+					
+					for( MethodSignature signature : classType.getMethods("index") ) 
+					{		
+						MethodType methodType = signature.getMethodType();
+						
+						if( signature.matches( arguments )) 
+						{
+							//found it, don't look further!
+							acceptableIndexes.clear();
+							acceptableIndexes.put(signature, methodType);
+							break;
+						}
+						else if( signature.canAccept( arguments ))
+							acceptableIndexes.put(signature, methodType);
+					}
+					
+					if( acceptableIndexes.size() == 0 ) 
+					{
+						addError(node, Error.TYPE_MIS, "Cannot index into type " + prefixType + " with subscript of type " + child.getType());
+						node.setType(Type.UNKNOWN);
+					}					
+					else if( acceptableIndexes.size() > 1 )
+					{
+						addError(node, Error.TYPE_MIS, "Ambiguous index into type " + prefixType + " with subscript of type " + child.getType());
+						node.setType(Type.UNKNOWN);
+					}					
+					else
+					{
+						Entry<MethodSignature, MethodType> entry = acceptableIndexes.firstEntry();
+						MethodSignature signature = entry.getKey(); 
+						MethodType methodType = entry.getValue();				 
+						
+						if( !methodIsAccessible( signature, currentType  ))
+						{
+							node.setType(Type.UNKNOWN);
+							addError(node, Error.INVL_MOD, "Index not accessible from current context");
+						}
+						else
+						{
+							node.setType(methodType.getReturnTypes().getType(0));
+							node.setModifiers(methodType.getReturnTypes().get(0).getModifiers());
+							node.addModifier(Modifiers.ASSIGNABLE);
+						}
+					}	
 				}
 				else
 				{
-				    //only goes one level deep because of nullability
-					int dimension = node.getArrayDimensions().get(0);				
-					if( dimension == arrayType.getDimensions() )
-					{
-						node.setType( arrayType.getBaseType() );
-						node.addModifier(Modifiers.ASSIGNABLE);
-						
-						//primitive arrays are initialized to default values
-						//non-primitive array elements could be null
-						if( !arrayType.getBaseType().isPrimitive() )
-							node.addModifier(Modifiers.NULLABLE);						
-					}
-					else
-					{
-						node.setType(Type.UNKNOWN);
-						addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
-					}
-				}
-			}			
+					node.setType(Type.UNKNOWN);
+					addError(node, Error.INVL_TYP, "Cannot subscript into non-array type " + prefixType + " with multiple subscripts");
+				}				
+			}
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(node, Error.INVL_TYP, "Cannot subscript into non-array type " + prefixType);
+				addError(node, Error.INVL_TYP, "Cannot subscript into type " + prefixType + " because it does not implement " + Type.CAN_INDEX);
 			}	
 			
 		}

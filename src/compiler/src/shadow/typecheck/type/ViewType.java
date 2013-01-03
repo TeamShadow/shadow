@@ -49,6 +49,12 @@ public class ViewType extends ClassInterfaceBaseType {
 	}
 
 	@Override
+	public boolean hasInterface(InterfaceType type) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
 	protected void recursivelyGetAllMethods(List<MethodSignature> methodList) {
 		// TODO Auto-generated method stub
 		

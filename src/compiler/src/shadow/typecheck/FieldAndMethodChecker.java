@@ -70,6 +70,8 @@ public class FieldAndMethodChecker extends BaseChecker {
 		this.nodeTable = nodeTable;
 	}
 	
+	
+	//process types in order, using topological sort
 	private void updateTypeParameters()
 	{	
 		

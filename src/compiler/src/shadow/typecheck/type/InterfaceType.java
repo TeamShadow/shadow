@@ -29,6 +29,18 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		this.extendTypes.add(extendType);
 	}
 	
+	public boolean hasInterface(InterfaceType type)
+	{	
+		if( this.getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments() ))
+			return true;
+				
+		for( InterfaceType interfaceType : extendTypes )
+			if( interfaceType.hasInterface(type) )
+				return true;
+		
+		return false;
+	}
+	
 	public boolean isDescendentOf(Type type)
 	{			
 		for( InterfaceType parent : extendTypes )

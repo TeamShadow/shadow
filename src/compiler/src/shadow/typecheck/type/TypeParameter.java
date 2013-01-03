@@ -72,11 +72,17 @@ public class TypeParameter extends ClassInterfaceBaseType
 			return false;
 			*/
 			
+			
+			//newer stuff
+			/*
 			for( Type bound : bounds )
 				if( !type.isSubtype(bound) )
 					return false;
 			
 			return true;
+			*/
+			
+			return false;
 		}
 	}
 	
@@ -145,11 +151,16 @@ public class TypeParameter extends ClassInterfaceBaseType
 	}
 
 	@Override
-	public boolean isDescendentOf(Type type) {
-		// TODO Auto-generated method stub
+	public boolean isDescendentOf(Type type) {		
 		// should never get called
 		return false;
 	}
+
+	@Override
+	public boolean hasInterface(InterfaceType type) {
+		return false;
+	}
+	
 
 	@Override
 	protected void recursivelyGetAllMethods(List<MethodSignature> methodList) {

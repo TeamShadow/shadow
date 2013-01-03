@@ -194,17 +194,12 @@ public class TypeCollector extends BaseChecker
 	{
 		List<String> list;
 		
-		for( Package p : getTypeTable().keySet() )
+		for( Node declarationNode : nodeTable.values() )
 		{
-			for( ClassInterfaceBaseType type : getTypeTable().get(p).values() ) //look through all types, updating their extends and implements
-			{	
 				TreeSet<String> missingTypes = new TreeSet<String>();
-				//graph.addNode(type);
-				
-				
-				Node declarationNode = nodeTable.get(type);
-				if( declarationNode != null )				
-					currentType = type;
+				ClassInterfaceBaseType type = (ClassInterfaceBaseType) declarationNode.getType();
+
+				currentType = type;
 				
 				if( type instanceof ClassType ) //includes error, exception, and enum (for now)
 				{		
@@ -281,7 +276,7 @@ public class TypeCollector extends BaseChecker
 				if( missingTypes.size() > 0 )	
 					addError( nodeTable.get(type), Error.UNDEF_TYP, "Cannot define type " + type + " because it depends on the following undefined types " + missingTypes);			
 			}
-		}
+
 	}
 	
 	private void updateTypeParameters(ASTType node, TreeSet<String> missingTypes)
