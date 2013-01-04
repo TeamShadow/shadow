@@ -1,25 +1,25 @@
 class shadow.standard@MutableString
 {
-	get int length = 0;
+	get int size = 0;
 	byte[] data = byte:create[10];
 	public create()
 	{
 	}
-	public create( int initialLength )
+	public create( int initialSize )
 	{
-		data = byte:create[initialLength];
+		data = byte:create[initialSize];
 	}
 	public create( nullable Object initialValue )
 	{
 		append(initialValue);
 	}
 
-	public ensureCapacity( int length ) => ( MutableString )
+	public ensureCapacity( int size ) => ( MutableString )
 	{
-		if ( data->length < length )
+		if ( this->capacity < size )
 		{
-			byte[] data = byte:create[length];
-			for ( int i = 0; i < length.min(this:length); i += 1 )
+			byte[] data = byte:create[size];
+			for ( int i = 0; i < this->size; i += 1 )
 				data[i] = this:data[i];
 			this:data = data;
 		}
@@ -27,20 +27,20 @@ class shadow.standard@MutableString
 	}
 	public immutable get capacity() => ( int )
 	{
-		return data->length;
+		return data->size;
 	}
 
 	public append( nullable Object value ) => ( MutableString )
 	{
 		String string = # value;
-		ensureCapacity( length + string->length );
-		for ( int i = 0; i < string->length; i += 1, length += 1 )
-			data[length] = string.getChar(i);
+		ensureCapacity( size + string->size );
+		for ( int i = 0; i < string->size; i += 1, size += 1 )
+			data[size] = string.getChar(i);
 		return this;
 	}
 	public reverse() => ( MutableString )
 	{
-		for ( int left = 0, right = length - 1; left < right;
+		for ( int left = 0, right = size - 1; left < right;
 				left += 1, right -= 1 )
 			( data[left], data[right] ) = ( data[right], data[left] );
 		return this;
@@ -48,6 +48,6 @@ class shadow.standard@MutableString
 
 	public immutable toString() => ( String )
 	{
-		return String:create(cast<byte[]>(cast<Object>data.subarray(0, length)));
+		return String:create(cast<byte[]>(cast<Object>data.subarray(0, size)));
 	}
 }

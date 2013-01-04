@@ -1,0 +1,8 @@
+interface shadow.utility@Set<E> extends CanIterate<E>, CanIndex<E, boolean>
+{
+	get size() => ( int size );
+	immutable contains( E element ) => ( boolean found );
+	add( E element ) => ( boolean success );
+	remove( E element ) => ( boolean success );
+	clear() => ();
+}

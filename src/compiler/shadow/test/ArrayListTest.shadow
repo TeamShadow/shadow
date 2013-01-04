@@ -7,9 +7,9 @@ class shadow.test@ArrayListTest
 	public main( String[] args ) => ( int )
 	{
 		ArrayList<String> list = ArrayList<String>:create();
-		for ( int i = 0; i < args->length; i += 1 )
+		for ( int i = 0; i < args->size; i += 1 )
 			list.add(args[i]);
-		for ( int i = 1; i < args->length; i += 3 )
+		for ( int i = 1; i < args->size; i += 3 )
 			Console:instance.printLine(list.remove(args[i]));
 		Console:instance.printLine(list.remove(""));
 		for ( int i = 0; i < list->size; i += 1 )

@@ -1,0 +1,159 @@
+class shadow.utility@HashSet<V is CanHash> implements Set<V>
+{
+	get int size = 0, modifications = 0;
+	Node[] table = Node:create[256];
+	float load;
+
+	private final class Node
+	{
+		int hash;
+		V value;
+		nullable Node next = null;
+
+		private create( int initialHash, V initialValue )
+		{
+			hash = initialHash;
+			value = initialValue;
+		}
+		private create( int initialHash, V initialValue, nullable Node after )
+		{
+			hash = initialHash;
+			value = initialValue;
+			next = after;
+		}
+	}
+
+	private hash( V value ) => ( int index, int hash )
+	{
+		uint temp = cast<uint>value->hash;
+		int hash = cast<int>(temp ^ temp >> 16 ^ temp >> 8);
+		return ( hash & table->size - 1, index );
+	}
+
+	public index( V value ) => ( boolean found )
+	{
+		return contains(value);
+	}
+	public index( V value, boolean add ) => ()
+	{
+		if ( add )
+			add(value);
+		else
+			remove(value);
+	}
+
+	public add( V value ) => ( boolean added )
+	{
+		( int index, int hash ) = hash(value);
+		try
+		{
+			Node current = check(table[index]);
+			while ( current:hash != hash and current:value != value )
+				current = check(current:next);
+			return false;
+		}
+		recover
+		{
+			table[index] = Node:create(hash, value, table[index]);
+			modifications += 1;
+			return true;
+		}
+	}
+	public remove( V value ) => ( boolean removed )
+	{
+		( int index, int hash ) = hash(value);
+		try
+		{
+			nullable Node last = null;
+			Node current = check(table[index]);
+			while ( current:hash != hash and current:value != value )
+				( last, current ) = ( current, check(current:next) );
+			try
+			{
+				check(last):next = current:next;
+			}
+			recover
+			{
+				table[index] = current:next;
+			}
+			modifications += 1;
+			return true;
+		}
+		recover
+		{
+			return false;
+		}
+	}
+	public immutable contains( V value ) => ( boolean found )
+	{
+		( int index, int hash ) = hash(value);
+		try
+		{
+			Node current = check(table[index]);
+			while ( current:hash != hash and current:value != value )
+				current = check(current:next);
+			return true;
+		}
+		recover
+		{
+			return false;
+		}
+	}
+
+	public immutable iterator() => ( Iterator<V> )
+	{
+		return HashSetIterator:create();
+	}
+	private final class HashSetIterator implements Iterator<V>
+	{
+		int index = 0;
+		nullable Node current;
+		int expectedModifications = modifications;
+		private create()
+		{
+			current = next(null);
+		}
+		private next( nullable Node current ) => ( nullable Node )
+		{
+			try
+			{
+				return check(check(current):next);
+			}
+			recover
+			{
+				while ( current === null and index < table->size );
+				{
+					current = table[index];
+					index += 1;
+				}
+				return current;
+			}
+		}
+
+		private immutable checkForModifications() => ()
+		{
+			if ( modifications != expectedModifications )
+				throw IllegalModificationException:create();
+		}
+
+		public immutable hasNext() => ( boolean )
+		{
+			checkForModifications();
+			return current !== null;
+		}
+
+		private next() => ( V value )
+		{
+			checkForModifications();
+			try
+			{
+				( V value, current ) = ( check(current):value, next(current) );
+				return value;
+			}
+			recover
+			{
+				throw IndexOutOfBoundsException:create();
+			}
+		}
+	}
+}

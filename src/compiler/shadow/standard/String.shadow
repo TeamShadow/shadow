@@ -9,8 +9,8 @@ implements CanCompare<String>, CanIterate<code>
 	public create( byte[] data )
 	{
 		byte ascii = 0y;
-		this:data = byte:create[data->length];
-		for ( int i = 0; i < data->length; i += 1 )
+		this:data = byte:create[data->size];
+		for ( int i = 0; i < data->size; i += 1 )
 		{
 			this:data[i] = data[i];
 			ascii |= data[i];
@@ -19,19 +19,19 @@ implements CanCompare<String>, CanIterate<code>
 	}
 	public create( code[] data )
 	{
-		int length = data->length;
-		for ( int i = 0; i < data->length; i += 1 )
+		int size = data->size;
+		for ( int i = 0; i < data->size; i += 1 )
 			if ( data[i] < 0 )
 				throw IllegalArgumentException:create();
 			else if ( data[i] >= 1 << 7 )
 			{
 				this:ascii = false;
-				length += 1;
+				size += 1;
 				for ( int shift = 11; data[i] >= 1 << shift; shift += 5 )
-					length += 1;
+					size += 1;
 			}
-		this:data = byte:create[length];
-		for ( int i = 0, j = 0; i < data->length; i += 1 )
+		this:data = byte:create[size];
+		for ( int i = 0, j = 0; i < data->size; i += 1 )
 		{
 			if ( data[i] < 1 << 7 )
 			{
@@ -99,13 +99,13 @@ implements CanCompare<String>, CanIterate<code>
 	{
 		return cast<byte[]>(cast<Object>this:data.copy());
 	}
-	public get length() => ( int )
+	public get size() => ( int )
 	{
-		return data->length;
+		return data->size;
 	}
 	public isEmpty() => ( boolean )
 	{
-		return this->length == 0;
+		return this->size == 0;
 	}
 
 	public substring( int start, int end ) => ( String )
@@ -115,11 +115,11 @@ implements CanCompare<String>, CanIterate<code>
 	}
 	public concatenate( String other ) => ( String )
 	{
-		byte[] data = byte:create[this->length + other->length];
-		for ( int i = 0; i < this->length; i += 1 )
+		byte[] data = byte:create[this->size + other->size];
+		for ( int i = 0; i < this->size; i += 1 )
 			data[i] = getChar(i);
-		for ( int i = 0; i < other->length; i += 1 )
-			data[this->length + i] = other.getChar(i);
+		for ( int i = 0; i < other->size; i += 1 )
+			data[this->size + i] = other.getChar(i);
 		return String:create(data, this:ascii and other:ascii);
 	}
 
@@ -144,14 +144,14 @@ implements CanCompare<String>, CanIterate<code>
 
 	public equals( String other ) => ( boolean )
 	{
-		return this->length != other->length and compare(other) == 0;
+		return this->size != other->size and compare(other) == 0;
 	}
 	public compare( String other ) => ( int )
 	{
-		for ( int i = 0; i < this->length and i < other->length; i += 1 )
+		for ( int i = 0; i < this->size and i < other->size; i += 1 )
 			if ( getChar(i) != other.getChar(i) )
 				return getChar(i) - other.getChar(i);
-		return this->length - other->length;
+		return this->size - other->size;
 	}
 
 	public toString() => ( String )
@@ -170,7 +170,7 @@ implements CanCompare<String>, CanIterate<code>
 
 		public immutable hasNext() => ( boolean )
 		{
-			return index < data->length;
+			return index < data->size;
 		}
 
 		public next() => ( code )

@@ -4,10 +4,10 @@ class shadow.test@SortTest {
 	int[] array = int:create[0];
 	int min, max;
 	ulong startTime;
-	public create(int length, int min, int max) {
-		int[] array = int:create[length];
+	public create(int size, int min, int max) {
+		int[] array = int:create[size];
 		Random random = Random:create();
-		for (int i = 0; i < array->length; i += 1)
+		for (int i = 0; i < array->size; i += 1)
 			array[i] = random.nextInt(max - min + 1) + min;
 		this:array = array;
 		this:min = min;
@@ -22,10 +22,10 @@ class shadow.test@SortTest {
 		return 0;
 	}
 	public getArrayEnd() => (int) {
-		return this:array->length;
+		return this:array->size;
 	}
 	public getArrayLength() => (int) {
-		return this:array->length;
+		return this:array->size;
 	}
 	public getMinimum() => (int) {
 		return this:min;
@@ -38,7 +38,7 @@ class shadow.test@SortTest {
 	}
 
 	public run() => () {
-		Console:instance.printLine("Array length:\t\t" # getArrayLength());
+		Console:instance.printLine("Array size:\t\t" # getArrayLength());
 		quickSort();
 		mergeSort();
 		heapSort();
@@ -84,7 +84,7 @@ class shadow.test@SortTest {
 	}
 	private checkArray(int[] array) => (boolean) {
 		int last = getMinimum();
-		for (int i = 0; i < array->length; last = array[i], i += 1)
+		for (int i = 0; i < array->size; last = array[i], i += 1)
 			if (array[i] < last)
 				return false;
 		return true;
@@ -106,19 +106,19 @@ class shadow.test@SortTest {
 	}
 
 	/*public mergeSort(int[] array) => () {
-		if (array->length > 1) {
-			int[] left = int:create[array->length >> 1],
-					right = int:create[array->length + 1 >> 1];
-			for (int i = 0; i < left->length; i += 1)
+		if (array->size > 1) {
+			int[] left = int:create[array->size >> 1],
+					right = int:create[array->size + 1 >> 1];
+			for (int i = 0; i < left->size; i += 1)
 				left[i] = array[i];
-			for (int i = 0; i < right->length; i += 1)
-				right[i] = array[i + left->length];
+			for (int i = 0; i < right->size; i += 1)
+				right[i] = array[i + left->size];
 			mergeSort(left);
 			mergeSort(right);
 			for (int index = 0, leftIndex = 0, rightIndex = 0;
-					index < array->length; index += 1)
-				if (leftIndex != left->length and
-						(rightIndex == right->length or
+					index < array->size; index += 1)
+				if (leftIndex != left->size and
+						(rightIndex == right->size or
 								left[leftIndex] < right[rightIndex]))
 				{
 					array[index] = left[leftIndex];
@@ -133,14 +133,14 @@ class shadow.test@SortTest {
 	}*/
 
 	public mergeSort(int[] array) => (int[]) {
-		if (array->length > 1) {
-			int[] left = mergeSort(cast<int[]>(cast<Object>array.subarray(0, array->length >> 1)));
-			int[] right = mergeSort(cast<int[]>(cast<Object>array.subarray(array->length >> 1, array->length)));
-			array = int:create[array->length];
+		if (array->size > 1) {
+			int[] left = mergeSort(cast<int[]>(cast<Object>array.subarray(0, array->size >> 1)));
+			int[] right = mergeSort(cast<int[]>(cast<Object>array.subarray(array->size >> 1, array->size)));
+			array = int:create[array->size];
 			for (int index = 0, leftIndex = 0, rightIndex = 0;
-					index < array->length; index += 1)
-				if (leftIndex != left->length and
-						(rightIndex == right->length or
+					index < array->size; index += 1)
+				if (leftIndex != left->size and
+						(rightIndex == right->size or
 								left[leftIndex] < right[rightIndex]))
 				{
 					array[index] = left[leftIndex];
@@ -156,28 +156,28 @@ class shadow.test@SortTest {
 	}
 
 	public heapSort(int[] array) => () {
-		for (int i = 1; i < array->length; i += 1)
+		for (int i = 1; i < array->size; i += 1)
 			for (int j = i - 1; array[j / 2] < array[j + 1]; j = j / 2 - 1)
 				(array[j / 2], array[j + 1]) = (array[j + 1], array[j / 2]);
-		for (int length = array->length - 1; length >= 0; length -= 1) {
-			int temp = array[length], i = length, j = 0;
+		for (int size = array->size - 1; size >= 0; size -= 1) {
+			int temp = array[size], i = size, j = 0;
 			do {
 				array[i] = array[j];
 				i = j;
 				j = i * 2 + 1;
-				if (j + 1 < length and array[j + 1] > array[j])
+				if (j + 1 < size and array[j + 1] > array[j])
 					j += 1;
-			} while (j < length and array[j] > temp);
+			} while (j < size and array[j] > temp);
 			array[i] = temp;
 		}
 	}
 
 	public bucketSort(int[] array, int min, int max) => () {
 		int[] values = int:create[max - min + 1];
-		for (int i = 0; i < array->length; i += 1)
+		for (int i = 0; i < array->size; i += 1)
 			values[array[i] - min] += 1;
 		int index = 0;
-		for (int valueIndex = 0; valueIndex < values->length; valueIndex += 1)
+		for (int valueIndex = 0; valueIndex < values->size; valueIndex += 1)
 			for (int i = values[valueIndex]; i > 0; i -= 1, index += 1)
 				array[index] = valueIndex + min;
 	}

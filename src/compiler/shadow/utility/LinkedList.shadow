@@ -1,55 +1,104 @@
 class shadow.utility@LinkedList<V> implements List<V>
 {
-	private class Node
-	{
-		Node prev = this, next = this;
-		nullable V value = null;
-		public create() { }
-		public create( V value, Node next )
-		{
-			this:value = value;
-			( next:prev:next, this:prev, this:next, next:prev ) =
-					( this, next:prev, next, this );
-		}
+	get int size = 0, modifications = 0;
+	final Node header = Node:create();
 
-		public clear() => ()
+	private final class Node
+	{
+		get Node prev = this, next = this;
+		get nullable V value = null;
+		private create() { }
+		private create( V initialValue, Node after )
+		{
+			( after:prev:next, prev,       next,  after:prev ) =
+			( this,            after:prev, after, this       );
+			value = initialValue;
+			size += 1;
+			modifications += 1;
+		}
+		private set value( V initialValue ) => ()
+		{
+			value = initialValue;
+			modifications += 1;
+		}
+		private clear() => ()
 		{
 			( prev, next ) = ( this, this );
+			size = 0;
+			modifications += 1;
 		}
-		public delete() => ()
+		private delete() => ()
 		{
 			( prev:next, next:prev ) = ( next, prev );
+			size -= 1;
+			modifications += 1;
 		}
 	}
-	get int size = 0;
-	Node header = Node:create();
+	private findNode( int index ) => ( Node node )
+	{
+		if ( cast<uint>index >= cast<uint>size )
+			throw IndexOutOfBoundsException:create();
+		Node current = header;
+		if ( index < size / 2 )
+			while ( index != 0 )
+			{
+				current = current->next;
+				index -= 1;
+			}
+		else
+			while ( index != size )
+			{
+				current = current->prev;
+				index += 1;
+			}
+		return current;
+	}
+	private findNode( V value ) => ( Node node )
+	{
+		( , nullable Node node ) = find(value);
+		return node;
+	}
+	private find( int index ) => ( int index, nullable Node node )
+	{
+		return ( index, findNode(index) );
+	}
+	private find( V value ) => ( int index, nullable Node node )
+	{
+		int index = 0;
+		Node current = header;
+		while (true)
+		{
+			current = current->next;
+			if ( current === header )
+				return ( -1, null );
+			if ( current->value == value )
+				return ( index, current );
+			index += 1;
+		}
+	}
 
 	public index( int index ) => ( V value )
 	{
-		return find(index):value;
+		return findNode(index)->value;
 	}
 	public index( int index, V value ) => ()
 	{
 		if ( index == size )
-			add(value);
+			Node:create(value, header);
 		else
-			find(index):value = value;
+			findNode(index)->value = value;
 	}
 
 	public add( V value ) => ( boolean added )
 	{
 		Node:create(value, header);
-		size += 1;
 		return true;
 	}
 	public remove( V value ) => ( boolean removed )
 	{
 		try
 		{
-			nullable Node node;
-			( , node ) = find(value);
-			check(node).delete();
-			size -= 1;
+			check(findNode(value)).delete();
 			return true;
 		}
 		recover
@@ -59,7 +108,7 @@ class shadow.utility@LinkedList<V> implements List<V>
 	}
 	public delete( int index ) => ( V value )
 	{
-		find(index).delete();
+		findNode(index).delete();
 	}
 	public indexOf( V value ) => ( int index )
 	{
@@ -67,45 +116,39 @@ class shadow.utility@LinkedList<V> implements List<V>
 	}
 	public contains( V value ) => ( boolean found )
 	{
-		return indexof(value) != -1;
+		return find(value) != -1;
 	}
 	public clear() => ()
 	{
 		header.clear();
-		size = 0;
 	}
 
-	private find( int index ) => ( Node node )
+	public immutable iterator() => ( Iterator<V> )
 	{
-		if ( cast<uint>index >= cast<uint>size )
-			throw IndexOutOfBoundsException:create();
-		Node current = header;
-		if ( index < size / 2 )
-			while ( index != 0 )
-			{
-				current = current:next;
-				index -= 1;
-			}
-		else
-			while ( index != size )
-			{
-				current = current:prev;
-				index += 1;
-			}
-		return current;
+		return LinkedListIterator:create();
 	}
-	private find( V value ) => ( int index, nullable Node node )
+	private final class LinkedListIterator implements Iterator<V>
 	{
-		int index = 0;
-		Node current = header;
-		do
+		Node current = header->next;
+		int expectedModifications = modifications;
+
+		private immutable checkForModifications() => ()
 		{
-			if ( current:value == value )
-				return ( index, current );
-			index += 1;
-			current = current:next;
+			if ( modifications != expectedModifications )
+				throw IllegalModificationException:create();
 		}
-		while ( current !== header );
-		return ( -1, null );
+		public immutable hasNext() => ( boolean )
+		{
+			checkForModifications();
+			return current !== header;
+		}
+		public next() => ( V value )
+		{
+			checkForModifications();
+			if ( !hasNext() )
+				throw IndexOutOfBoundsException:create();
+			( V value, current ) = ( current->value, current->next );
+			return value;
+		}
 	}
 }
