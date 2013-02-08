@@ -486,7 +486,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		
 		//extend type
 		Type extendType = getExtendType();
-		if( extendType != null )
+		if( extendType != null && !(this instanceof SingletonType) && !(this instanceof ErrorType)  )
 			out.print(" extends " + extendType.getQualifiedName() );
 		
 		//interfaces implemented

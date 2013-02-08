@@ -1,6 +1,6 @@
 import shadow.io@Console;
 
-exception shadow.standard@Exception extends shadow.standard@Object
+exception shadow.standard@Exception
 {
 	get String message = "";
 	public create()

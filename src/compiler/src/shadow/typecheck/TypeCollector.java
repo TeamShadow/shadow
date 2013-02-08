@@ -580,13 +580,13 @@ public class TypeCollector extends BaseChecker
 		}	
 		
 				
-		updateMissingTypes(); //add all types to graph for type parameter dependence resolution
+		//updateMissingTypes(); //add all types to graph for type parameter dependence resolution
 		
 		/*
 		 * type parameters are updated separately because they require knowledge of
 		 * the type hierarchy constructed in updateMissingTypes() 
 		 */			
-		updateTypeParameters();
+		//updateTypeParameters();
 		//this needs to go in field an method checker, otherwise fields and methods are not updated
 	}
 
@@ -928,9 +928,9 @@ public class TypeCollector extends BaseChecker
 			if ( node.jjtGetNumChildren() > 0)
 			{
 				boolean colon = true;
-				Node child = node.jjtGetChild(0);
-				String name = child.getImage();
-				if( child instanceof ASTUnqualifiedName )
+				Node first = node.jjtGetChild(0);
+				String name = first.getImage();
+				if( first instanceof ASTUnqualifiedName )
 				{
 					name += "@";
 					colon = false;
@@ -943,15 +943,19 @@ public class TypeCollector extends BaseChecker
 					else
 						colon = true;
 					
-					child = node.jjtGetChild(i);
-					name += child.getImage();					
+					name += node.jjtGetChild(i).getImage();					
 				}
 				
 				node.setImage(name);
 				
-				if( child instanceof ASTUnqualifiedName )
-					if( !addImport( name ) )
-						addError(node, "No file found for import " + name);					
+				if( first instanceof ASTUnqualifiedName )
+				{
+					String importName = name;					
+					if( importName.contains(":"))
+						importName = importName.substring(0, importName.indexOf(':'));
+					if( !addImport( importName ) )
+						addError(node, "No file found for import " + importName);
+				}
 			}
 		}
 		return WalkType.POST_CHILDREN;

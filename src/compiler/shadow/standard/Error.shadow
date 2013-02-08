@@ -1,13 +1,12 @@
-final immutable error shadow.standard@Error extends shadow.standard@Exception
-{
-	get String message = "";
+final immutable error shadow.standard@Error
+{	
 	public create()
 	{
-		message = "Unknown Error";
+		this("Unknown Error");
 	}
 	public create( String message )
 	{
-		this.message = message;
+		super(message);
 	}
 
 	public toString() => ( String )

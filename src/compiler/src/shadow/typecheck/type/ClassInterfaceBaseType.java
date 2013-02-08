@@ -19,7 +19,19 @@ public abstract class ClassInterfaceBaseType extends Type
 	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private
 	private HashMap<String, ClassInterfaceBaseType> innerClasses;
 	private Set<Type> referencedTypes = new HashSet<Type>();
+	private List<ClassInterfaceBaseType> typeParameterDependencies = new ArrayList<ClassInterfaceBaseType>();
 
+	public void addTypeParameterDependency( ClassInterfaceBaseType type )
+	{
+		typeParameterDependencies.add(type);	
+	}
+	
+	public List<ClassInterfaceBaseType> getTypeParameterDependencies()
+	{
+		return typeParameterDependencies;
+	}
+	
+	
 	public Map<String, ClassInterfaceBaseType> getInnerClasses()
 	{
 		return innerClasses;
@@ -221,6 +233,7 @@ public abstract class ClassInterfaceBaseType extends Type
 		
 		return null;
 	}
+	
 	
 	protected Type findType(String[] names, int i)
 	{

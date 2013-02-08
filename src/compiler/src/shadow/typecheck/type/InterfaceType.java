@@ -92,7 +92,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 	//see if interface has circular extends hierarchy
 	public boolean isCircular()
 	{
-		HashSet<InterfaceType> descendants = new HashSet<InterfaceType>();			
+		HashSet<Type> descendants = new HashSet<Type>();			
 		
 		return recursiveIsCircular( descendants );
 	}
@@ -100,12 +100,12 @@ public class InterfaceType extends ClassInterfaceBaseType {
 	//recursively look at parents, adding yourself to the list of interfaces as you go
 	//if you find yourself, it's circular
 	//if you don't, remove yourself afterwards
-	private boolean recursiveIsCircular( HashSet<InterfaceType> descendants )
+	private boolean recursiveIsCircular( HashSet<Type> descendants )
 	{
 		if( descendants.contains(this) )
 				return true;
 		
-		descendants.add(this);
+		descendants.add(this.typeWithoutTypeArguments);
 		
 		for( InterfaceType _interface : extendTypes )
 			if( _interface.recursiveIsCircular(descendants) )

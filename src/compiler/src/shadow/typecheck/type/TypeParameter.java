@@ -25,6 +25,11 @@ public class TypeParameter extends ClassInterfaceBaseType
 	{
 		return bounds;
 	}
+	
+	public void setBounds(Set<ClassInterfaceBaseType> bounds)
+	{
+		this.bounds = bounds;
+	}
 
 	public boolean canAccept(ModifiedType modifiedType) {
 		Type type = modifiedType.getType();
@@ -41,49 +46,10 @@ public class TypeParameter extends ClassInterfaceBaseType
 		{
 			TypeParameter typeParameter = (TypeParameter) type;
 			return typeName.equals(typeParameter.typeName);
-			
-			/*
-			for( Type otherBound : typeParameter.bounds )
-			{
-				boolean found = false;
-				for( Type bound : bounds )
-				{
-					if( bound.isSubtype(otherBound) )
-					{
-						found = true;
-						break;
-					}
-				}
-				
-				if( !found )
-					return false;
-			}
-			
-			return true;	
-			*/
 		}
 		else
-		{
-			/*
-			for( Type bound : bounds )
-				if( bound.isSubtype(type) )
-					return true;
 			
 			return false;
-			*/
-			
-			
-			//newer stuff
-			/*
-			for( Type bound : bounds )
-				if( !type.isSubtype(bound) )
-					return false;
-			
-			return true;
-			*/
-			
-			return false;
-		}
 	}
 	
 	public boolean isSubtype(Type type)

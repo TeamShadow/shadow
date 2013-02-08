@@ -2,6 +2,8 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import java.util.LinkedList;
+
 
 public
 class ASTSequence extends SimpleNode {
@@ -13,16 +15,24 @@ class ASTSequence extends SimpleNode {
     super(p, id);
   }
   
-  public boolean isAssignable()
+  private LinkedList<Boolean> usedItems = new LinkedList<Boolean>();
+  
+  public void addItem()
   {
-	  for( int i = 0; i < jjtGetNumChildren(); i++ )
-		  if( !jjtGetChild(i).getModifiers().isAssignable() )
-				  return false;
-		  
-		  
-	  return true;
+	  usedItems.add(false);
   }
-
+  
+  public void setUsed()
+  {
+	  if( !usedItems.isEmpty())
+		  usedItems.set(usedItems.size() - 1, true);
+  }
+  
+  public LinkedList<Boolean> getUsedItems()
+  {
+	  return usedItems;
+  }
+  
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {

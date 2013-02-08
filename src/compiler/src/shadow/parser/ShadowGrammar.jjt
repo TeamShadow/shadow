@@ -527,8 +527,6 @@ void ViewDeclaration(Modifiers modifiers):
 
 void ClassOrInterfaceDeclaration(Modifiers modifiers):
 {
-   boolean isInterface = false;
-   boolean isErrorOrException = false;
    debugPrint("CLASS OR INTERFACE DECLARARTION");
    Token t;
 }
@@ -547,16 +545,16 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers):
   	
  	| "exception"
  	{
- 	  jjtThis.setKind(TypeKind.EXCEPTION); isErrorOrException = true;
+ 	  jjtThis.setKind(TypeKind.EXCEPTION);
  	  modifiers.checkExceptionModifiers();
  	}
  	| "error"
- 	{ jjtThis.setKind(TypeKind.ERROR); isErrorOrException = true;
+ 	{ jjtThis.setKind(TypeKind.ERROR);
  	  modifiers.checkErrorModifiers();
  	}
  	| "interface"
  	{
- 	  jjtThis.setKind(TypeKind.INTERFACE); isInterface = true;
+ 	  jjtThis.setKind(TypeKind.INTERFACE);
  	   modifiers.checkInterfaceModifiers(); 	   
  	 } )
 
@@ -564,12 +562,12 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers):
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   [ Version() ]
-  [ ExtendsList(isInterface) ]
-  [ ImplementsList(isInterface, isErrorOrException) ]
-  ClassOrInterfaceBody(isInterface)
+  [ ExtendsList(jjtThis.getKind()) ]
+  [ ImplementsList(jjtThis.getKind()) ]
+  ClassOrInterfaceBody(jjtThis.getKind())
 }
 
-void ExtendsList(boolean isInterface):
+void ExtendsList(TypeKind kind):
 {
    boolean extendsMoreThanOne = false;
    debugPrint("EXTENDS LIST");
@@ -578,21 +576,27 @@ void ExtendsList(boolean isInterface):
    "extends" ClassOrInterfaceType()
    ( "," ClassOrInterfaceType() { extendsMoreThanOne = true; } )*
    {
-      if (extendsMoreThanOne && !isInterface)
+      if (extendsMoreThanOne && kind != TypeKind.INTERFACE)
          throw new ParseException("A class cannot extend more than one other class");
+      if (kind == TypeKind.ERROR)
+         throw new ParseException("An error cannot extend another type");
+      if (kind == TypeKind.SINGLETON)
+         throw new ParseException("A singleton cannot extend another type");
    }
 }
 
-void ImplementsList(boolean isInterface, boolean isErrorOrException):
+void ImplementsList(TypeKind kind):
 { debugPrint("IMPLEMENTS"); }
 {
    "implements" ClassOrInterfaceType()
    ( "," ClassOrInterfaceType() )*
    {
-      if (isInterface)
+      if (kind == TypeKind.INTERFACE)
          throw new ParseException("An interface cannot implement other interfaces");
-      if( isErrorOrException )
-      	throw new ParseException("An error or exception cannot implement interfaces");
+      if( kind == TypeKind.ERROR )
+      	throw new ParseException("An error cannot implement interfaces");
+      if( kind == TypeKind.EXCEPTION )
+      	throw new ParseException("An exception cannot implement interfaces");
    }
 }
 
@@ -614,7 +618,7 @@ void EnumDeclaration(Modifiers modifiers):
   "enum"
   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ]
   t = <IDENTIFIER> { jjtThis.setImage(t.image);  }
-  [ ImplementsList(false,false) ]
+  [ ImplementsList(TypeKind.ENUM) ]
   EnumBody()
 }
 
@@ -623,7 +627,7 @@ void EnumBody():
 {
    "{"
    EnumConstant() ( "," EnumConstant() )*
-   [ ";" ( ClassOrInterfaceBodyDeclaration(false) )* ]
+   [ ";" ( ClassOrInterfaceBodyDeclaration(TypeKind.ENUM) )* ]
    "}"
 }
 
@@ -633,7 +637,7 @@ void EnumConstant():
 	Token t;
 }
 {
-  t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ Arguments() ] [ ClassOrInterfaceBody(false) ]
+  t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ Arguments() ] [ ClassOrInterfaceBody(TypeKind.ENUM) ]
 }
 
 void TypeParameters():
@@ -657,20 +661,19 @@ void TypeBound():
    "is" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
 }
 
-void ClassOrInterfaceBody(boolean isInterface):
+void ClassOrInterfaceBody(TypeKind kind):
 { debugPrint("CLASS OR INTERFACE BODY"); }
 {
-  "{" ( ClassOrInterfaceBodyDeclaration(isInterface) )* "}"
+  "{" ( ClassOrInterfaceBodyDeclaration(kind) )* "}"
 }
 
-void ClassOrInterfaceBodyDeclaration(boolean isInterface):
+void ClassOrInterfaceBodyDeclaration(TypeKind kind):
 {
-   boolean isNestedInterface = false;
    Modifiers modifiers;
    debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {
-  LOOKAHEAD(2) Initializer() { if (isInterface) throw new ParseException("An interface cannot have initializers"); }
+  LOOKAHEAD(2) Initializer() { if (kind == TypeKind.INTERFACE) throw new ParseException("An interface cannot have initializers"); }
 // Just get all the modifiers out of the way. If you want to do
 // more checks, pass the modifiers down to the member  
 | modifiers = Modifiers()
@@ -1154,9 +1157,11 @@ void PrimaryExpression():
 }
 
 void Sequence():
-{ debugPrint("SEQUENCE"); }
 {
-	"(" ConditionalExpression() ("," ConditionalExpression() )+ ")"
+  debugPrint("SEQUENCE");
+}
+{
+	"("	{ { jjtThis.addItem();}	} [ConditionalExpression() { jjtThis.setUsed();} ] ("," { { jjtThis.addItem();}	} [ConditionalExpression() { jjtThis.setUsed();}] )+ ")"
 }
 
 void PrimaryPrefix():

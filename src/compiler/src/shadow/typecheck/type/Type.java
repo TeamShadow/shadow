@@ -473,6 +473,11 @@ public abstract class Type {
 		return false;		
 	}
 	
+	//overridden by ClassInterfaceBaseType
+	public Type getInnerClass( String name )
+	{
+		return null;
+	}
 
 	//searches for inner classes that follow the name list starting at index i in names
 	//overridden by ClassInterfaceBaseType

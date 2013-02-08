@@ -44,7 +44,9 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 
 	public add( V value ) => ( boolean added )
 	{
-		( int index, int hash ) = hash(value);
+		int index;
+		int hash;
+		( index, hash ) = hash(value);
 		try
 		{
 			Node current = check(table[index]);
@@ -60,8 +62,10 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 		}
 	}
 	public remove( V value ) => ( boolean removed )
-	{
-		( int index, int hash ) = hash(value);
+	{	
+		int index;
+		int hash;
+		( index, hash ) = hash(value);
 		try
 		{
 			nullable Node last = null;
@@ -86,7 +90,8 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	}
 	public immutable contains( V value ) => ( boolean found )
 	{
-		( int index, int hash ) = hash(value);
+		int index, hash;
+		( index, hash ) = hash(value);
 		try
 		{
 			Node current = check(table[index]);
@@ -121,7 +126,7 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 			}
 			recover
 			{
-				while ( current === null and index < table->size );
+				while ( current === null and index < table->size )
 				{
 					current = table[index];
 					index += 1;
@@ -147,7 +152,8 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 			checkForModifications();
 			try
 			{
-				( V value, current ) = ( check(current):value, next(current) );
+				V value;
+				(  value, current ) = ( check(current):value, next(current) );
 				return value;
 			}
 			recover

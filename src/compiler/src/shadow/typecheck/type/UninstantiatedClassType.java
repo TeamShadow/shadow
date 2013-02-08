@@ -6,29 +6,33 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 	
 	public UninstantiatedClassType(ClassType type, SequenceType typeArguments )
 	{
-		super(type.getTypeName(), type.getModifiers(), type.getOuter() );		
+		this(type, typeArguments, type.getOuter() );		
+	}
+	
+	public UninstantiatedClassType(ClassType type, SequenceType typeArguments, ClassInterfaceBaseType outer )
+	{
+		super(type.getTypeName(), type.getModifiers(), outer );		
 		this.type = type;
 		this.typeArguments = typeArguments;
 	}
 	
 	@Override
-	public ClassType instantiate()
-	{
-		SequenceType instantiatedArguments = new SequenceType();
-		
+	public ClassType instantiate() throws InstantiationException
+	{		
 		for( int i = 0; i < typeArguments.size(); i++ )
 		{
 			ModifiedType argument = typeArguments.get(i);
 			if( argument.getType() instanceof UninstantiatedType )
 			{
 				UninstantiatedType uninstantiatedArgument = (UninstantiatedType) argument.getType();
-				instantiatedArguments.add(new SimpleModifiedType( uninstantiatedArgument.instantiate(), argument.getModifiers()  ) );
+				argument.setType(uninstantiatedArgument.instantiate());
 			}
-			else
-				instantiatedArguments.add( argument );
-		}		
+		}
 		
-		return type.replace(type.getTypeParameters(), instantiatedArguments);
+		if( !type.getTypeParameters().canAccept(typeArguments) )
+			throw new InstantiationException( "Type parameters " + type.getTypeParameters() + " cannot accept type arguments " + typeArguments );
+		
+		return type.replace(type.getTypeParameters(), typeArguments);
 	}
 	
 }

@@ -6,9 +6,9 @@ class shadow.utility@LinkedList<V> implements List<V>
 	private final class Node
 	{
 		get Node prev = this, next = this;
-		get nullable V value = null;
-		private create() { }
-		private create( V initialValue, Node after )
+		get set nullable V value = null;
+		public create() { }
+		public create( V initialValue, Node after )
 		{
 			( after:prev:next, prev,       next,  after:prev ) =
 			( this,            after:prev, after, this       );
@@ -16,25 +16,25 @@ class shadow.utility@LinkedList<V> implements List<V>
 			size += 1;
 			modifications += 1;
 		}
-		private set value( V initialValue ) => ()
+		public set value( V initialValue ) => ()
 		{
 			value = initialValue;
 			modifications += 1;
 		}
-		private clear() => ()
+		public clear() => ()
 		{
 			( prev, next ) = ( this, this );
 			size = 0;
 			modifications += 1;
 		}
-		private delete() => ()
+		public delete() => ()
 		{
 			( prev:next, next:prev ) = ( next, prev );
 			size -= 1;
 			modifications += 1;
 		}
 	}
-	private findNode( int index ) => ( Node node )
+	private findIndex( int index ) => ( Node node )
 	{
 		if ( cast<uint>index >= cast<uint>size )
 			throw IndexOutOfBoundsException:create();
@@ -53,16 +53,7 @@ class shadow.utility@LinkedList<V> implements List<V>
 			}
 		return current;
 	}
-	private findNode( V value ) => ( Node node )
-	{
-		( , nullable Node node ) = find(value);
-		return node;
-	}
-	private find( int index ) => ( int index, nullable Node node )
-	{
-		return ( index, findNode(index) );
-	}
-	private find( V value ) => ( int index, nullable Node node )
+	private findNode( V value ) => ( int index, nullable Node node )
 	{
 		int index = 0;
 		Node current = header;
@@ -77,16 +68,16 @@ class shadow.utility@LinkedList<V> implements List<V>
 		}
 	}
 
-	public index( int index ) => ( V value )
+	public index( int index ) => ( nullable V value )
 	{
-		return findNode(index)->value;
+		return findIndex(index)->value;
 	}
 	public index( int index, V value ) => ()
 	{
 		if ( index == size )
 			Node:create(value, header);
 		else
-			findNode(index)->value = value;
+			findIndex(index)->value = value;
 	}
 
 	public add( V value ) => ( boolean added )
@@ -98,7 +89,9 @@ class shadow.utility@LinkedList<V> implements List<V>
 	{
 		try
 		{
-			check(findNode(value)).delete();
+			nullable Node node;
+			(, node) = findNode(value);
+			check(node).delete();
 			return true;
 		}
 		recover
@@ -106,17 +99,22 @@ class shadow.utility@LinkedList<V> implements List<V>
 			return false;
 		}
 	}
-	public delete( int index ) => ( V value )
+	public delete( int index ) => ( nullable V value )
 	{
-		findNode(index).delete();
+		Node node = findIndex(index);
+		nullable V value = node->value;
+		node.delete();
+		return V;
 	}
 	public indexOf( V value ) => ( int index )
 	{
-		return find(value);
+		int index;
+		(index, ) = findNode(value);
+		return index;
 	}
 	public contains( V value ) => ( boolean found )
-	{
-		return find(value) != -1;
+	{		 
+		return indexOf(value) != -1;
 	}
 	public clear() => ()
 	{
@@ -142,12 +140,13 @@ class shadow.utility@LinkedList<V> implements List<V>
 			checkForModifications();
 			return current !== header;
 		}
-		public next() => ( V value )
+		public next() => ( nullable V value )
 		{
 			checkForModifications();
 			if ( !hasNext() )
 				throw IndexOutOfBoundsException:create();
-			( V value, current ) = ( current->value, current->next );
+			nullable V value = null;
+			( value, current ) = ( current->value, current->next );
 			return value;
 		}
 	}

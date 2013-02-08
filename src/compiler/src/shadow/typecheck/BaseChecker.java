@@ -12,17 +12,26 @@ import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
+import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
+import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.Literal;
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
+import shadow.typecheck.type.UninstantiatedClassType;
+import shadow.typecheck.type.UninstantiatedInterfaceType;
 
 public abstract class BaseChecker extends AbstractASTVisitor {
 	
@@ -199,24 +208,34 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			return lookupType( name.substring(0, atSign), name.substring(atSign + 1 ) );
 		}
 		else if( outer != null ) 		//try starting points
-		{			
-			type = lookupType( name, outer );
-			if( type != null )
-				return type;
+		{
+			type = null;
+			Type current = outer;
 			
-			//check type parameters of outer class
-			if( outer.isParameterized() )
-				for( ModifiedType modifiedParameter : outer.getTypeParameters() )
-				{
-					Type parameter = modifiedParameter.getType();
-					
-					if( parameter instanceof TypeParameter )
+			while( current != null)
+			{			
+				//check type parameters of outer class
+				if( current.isParameterized() )
+					for( ModifiedType modifiedParameter : current.getTypeParameters() )
 					{
-						TypeParameter typeParameter = (TypeParameter) parameter;
-						if( typeParameter.getTypeName().equals(name) )
-							return typeParameter;
-					}
-				}
+						Type parameter = modifiedParameter.getType();
+						
+						if( parameter instanceof TypeParameter )
+						{
+							TypeParameter typeParameter = (TypeParameter) parameter;
+							if( typeParameter.getTypeName().equals(name) )
+								return typeParameter;
+						}
+					}				
+
+				if( current instanceof ClassInterfaceBaseType )
+					type = ((ClassInterfaceBaseType)current).getInnerClass(name);
+				
+				if( type != null )
+					return type;
+					
+				current = current.getOuter();
+			}
 		
 			//walk up packages from there
 			Package p = outer.getPackage();		
@@ -251,34 +270,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		}
 		else
 			return lookupTypeFromCurrentMethod( name );
-	}
-		
-	//outer class known, no need to look at packages
-	public final ClassInterfaceBaseType lookupType( String name, Type outerClass )
-	{			
-		Package p = outerClass.getPackage();
-		
-		if( p == null )
-			p = packageTree;
-		
-		Map<String, ClassInterfaceBaseType> types = typeTable.get(p);
-		
-		String prefix = outerClass.getTypeName();		
-		
-		while( !prefix.isEmpty())
-		{
-			if( types.containsKey(prefix + ":" + name))
-				return types.get(prefix + ":" + name);
-			
-			if( prefix.contains(":"))
-				prefix = prefix.substring(0, prefix.lastIndexOf(':'));
-			else
-				prefix = "";
-		}
-		
-		return types.get(name);
-	}
-	
+	}		
+
 	//get type from specific package
 	public final ClassInterfaceBaseType lookupType( String name, Package p )
 	{		
@@ -371,4 +364,300 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	{
 		return file.substring(0, file.lastIndexOf("."));
 	}
+	
+	protected Object typeResolution(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
+	{	
+		if( node.getType() != null ) //optimization if type already determined
+			return WalkType.NO_CHILDREN;		
+		
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Node child = node.jjtGetChild(0); 
+		String typeName = child.getImage();
+		int start = 1;
+		
+		if( child instanceof ASTUnqualifiedName )
+		{					
+			child = node.jjtGetChild(start);
+			typeName += "@" + child.getImage();
+			start++;					
+		}
+		
+		ClassInterfaceBaseType type = lookupType(typeName);				
+		
+		if(type == null)
+		{
+			addError(node, Error.UNDEF_TYP, typeName);			
+			node.setType(Type.UNKNOWN);					
+		}
+		else
+		{			
+			if (currentType instanceof ClassType)
+				((ClassType)currentType).addReferencedType(type);
+		
+			if( !classIsAccessible( type, currentType  ) )		
+				addError(node, Error.TYPE_MIS, "Class " + type + " is not accessible from current context");
+			
+			if( child.jjtGetNumChildren() == 1 ) //contains arguments
+			{
+				SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+				if( type.isParameterized() ) 
+				{		
+					SequenceType parameters = type.getTypeParameters();
+					if( parameters.canAccept(arguments ) )					
+						type = type.replace(parameters, arguments);
+					else
+					{						
+						addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
+						type = Type.UNKNOWN;
+					}
+				}
+				else
+				{
+					addError( child, Error.TYPE_MIS, "Cannot instantiate type parameters for non-parameterized type: " + type);
+					type = Type.UNKNOWN;
+				}										
+			}
+			else if( type.isParameterized() ) //parameterized but no parameters!	
+			{
+				addError(child, Error.INVL_TYP, child.getImage() + " requires type parameters but none were supplied");
+				type = Type.UNKNOWN;
+			}			
+			
+			
+			
+			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
+			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
+			{
+				ClassInterfaceBaseType outer = type;
+				child = node.jjtGetChild(i);
+				type = outer.getInnerClass(child.getImage());
+				
+				if(type == null)
+				{
+					addError(node, Error.UNDEF_TYP, child.getImage());			
+					type = Type.UNKNOWN;					
+				}
+				else
+				{
+					if (currentType instanceof ClassType)
+						((ClassType)currentType).addReferencedType(type);
+				
+					if( !classIsAccessible( type, currentType  ) )		
+						addError(node, Error.TYPE_MIS, "Class " + type + " is not accessible from current context");
+					
+					if( child.jjtGetNumChildren() == 1 ) //contains arguments
+					{
+						SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+						if( type.isParameterized() ) 
+						{		
+							SequenceType parameters = type.getTypeParameters();
+							if( parameters.canAccept(arguments ) )					
+								type = type.replace(parameters, arguments);
+							else
+							{						
+								addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
+								type = Type.UNKNOWN;
+							}
+						}
+						else
+						{
+							addError( child, Error.TYPE_MIS, "Cannot instantiate type parameters for non-parameterized type: " + type);
+							type = Type.UNKNOWN;
+						}										
+					}
+					else if( type.isParameterized() ) //parameterized but no parameters!	
+					{
+						addError(child, Error.INVL_TYP, child.getImage() + " requires type parameters but none were supplied");
+						type = Type.UNKNOWN;
+					}
+				}
+			}
+			//set the type now that it has type parameters 
+			node.setType(type);	
+		}	
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	protected Object deferredTypeResolution(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
+	{	
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Node child = node.jjtGetChild(0); 
+		String typeName = child.getImage();
+		int start = 1;
+		
+		if( child instanceof ASTUnqualifiedName )
+		{					
+			child = node.jjtGetChild(start);
+			typeName += "@" + child.getImage();
+			start++;					
+		}
+		
+		ClassInterfaceBaseType type = lookupType(typeName);				
+		
+		if(type == null)
+		{
+			addError(node, Error.UNDEF_TYP, typeName);			
+			node.setType(Type.UNKNOWN);					
+		}
+		else
+		{			
+			if (currentType instanceof ClassType)
+				((ClassType)currentType).addReferencedType(type);
+		
+			if( !classIsAccessible( type, currentType  ) )		
+				addError(node, Error.TYPE_MIS, "Class " + type + " is not accessible from current context");
+			
+			if( child.jjtGetNumChildren() == 1 ) //contains arguments
+			{
+				SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+				if( type.isParameterized() ) 
+				{					
+					if( type instanceof ClassType )						
+						type = new UninstantiatedClassType( (ClassType)type, arguments);
+					else if( type instanceof InterfaceType )
+						type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments);
+				}
+				else
+				{
+					addError( child, Error.TYPE_MIS, "Cannot instantiate type parameters for non-parameterized type: " + type);
+					type = Type.UNKNOWN;
+				}										
+			}
+			else if( type.isParameterized() ) //parameterized but no parameters!	
+			{
+				addError(child, Error.INVL_TYP, child.getImage() + " requires type parameters but none were supplied");
+				type = Type.UNKNOWN;
+			}			
+			
+			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
+			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
+			{
+				ClassInterfaceBaseType outer = type;
+				child = node.jjtGetChild(i);
+				type = outer.getInnerClass(child.getImage());
+				
+				if(type == null)
+				{
+					addError(node, Error.UNDEF_TYP, child.getImage());			
+					type = Type.UNKNOWN;					
+				}
+				else
+				{
+					if (currentType instanceof ClassType)
+						((ClassType)currentType).addReferencedType(type);
+				
+					if( !classIsAccessible( type, currentType  ) )		
+						addError(node, Error.TYPE_MIS, "Class " + type + " is not accessible from current context");
+					
+					if( child.jjtGetNumChildren() == 1 ) //contains arguments
+					{
+						SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+						if( type.isParameterized() ) 
+						{		
+							
+							if( type instanceof ClassType )						
+								type = new UninstantiatedClassType( (ClassType)type, arguments);
+							else if( type instanceof InterfaceType )
+								type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments);
+						}
+						else
+						{
+							addError( child, Error.TYPE_MIS, "Cannot instantiate type parameters for non-parameterized type: " + type);
+							type = Type.UNKNOWN;
+						}										
+					}
+					else if( type.isParameterized() ) //parameterized but no parameters!	
+					{
+						addError(child, Error.INVL_TYP, child.getImage() + " requires type parameters but none were supplied");
+						type = Type.UNKNOWN;
+					}
+				}
+			}
+			//set the type now that it has type parameters 
+			node.setType(type);	
+		}	
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	public static boolean classIsAccessible( Type classType, Type type )
+	{
+		if( classType.getModifiers().isPublic() || classType.getOuter() == null || classType.getOuter().equals(type)  )
+			return true;
+		
+		Type outer = type.getOuter();
+		
+		while( outer != null )
+		{
+			if( outer == classType.getOuter() )
+				return true;
+			
+			outer = outer.getOuter();		
+		}
+		
+		
+		if( type instanceof ClassType )
+		{
+			ClassType parent = ((ClassType)type).getExtendType();
+			
+			while( parent != null )
+			{
+				if( classType.getOuter() == parent )
+				{
+					if( classType.getModifiers().isPrivate())
+						return false;
+					else
+						return true;
+				}
+				
+				outer = parent.getOuter();
+				
+				while( outer != null )
+				{
+					if( outer == classType.getOuter() )
+						return true;
+					
+					outer = outer.getOuter();		
+				}
+				
+				parent = parent.getExtendType();
+			}
+		}
+		
+		return false;
+	}
+	
+	public static boolean methodIsAccessible( MethodSignature signature, Type type )
+	{		
+		Node node = signature.getNode();
+		if( node.getEnclosingType() == type || node.getModifiers().isPublic() ) 
+			return true;		
+		
+		if( type instanceof ClassType )
+		{
+			ClassType parent = ((ClassType)type).getExtendType();
+			
+			while( parent != null )
+			{
+				if( node.getEnclosingType() == parent )
+				{
+					if( node.getModifiers().isPrivate())
+						return false;
+					else
+						return true;
+				}
+				
+				parent = parent.getExtendType();
+			}
+		}
+
+		return false;
+	}
+	
+	
 }

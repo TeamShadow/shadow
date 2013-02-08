@@ -46,6 +46,7 @@ import shadow.parser.javacc.ASTDoStatement;
 import shadow.parser.javacc.ASTEqualityExpression;
 import shadow.parser.javacc.ASTExplicitCreateInvocation;
 import shadow.parser.javacc.ASTExpression;
+import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTForInit;
 import shadow.parser.javacc.ASTForStatement;
@@ -54,6 +55,7 @@ import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTIfStatement;
+import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTInstance;
 import shadow.parser.javacc.ASTIsExpression;
@@ -63,6 +65,7 @@ import shadow.parser.javacc.ASTLocalVariableDeclaration;
 import shadow.parser.javacc.ASTMethod;
 import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
+import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
@@ -90,6 +93,8 @@ import shadow.parser.javacc.ASTSwitchStatement;
 import shadow.parser.javacc.ASTTryStatement;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArguments;
+import shadow.parser.javacc.ASTTypeBound;
+import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTUnaryExpression;
 import shadow.parser.javacc.ASTUnaryExpressionNotPlusMinus;
 import shadow.parser.javacc.ASTUnaryToString;
@@ -100,6 +105,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
@@ -125,12 +131,12 @@ public class ClassChecker extends BaseChecker {
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
 	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
-	protected LinkedList<HashMap<String, Node>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
+	protected LinkedList<HashMap<String, ModifiedType>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
 	
 	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<String> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
-		symbolTable = new LinkedList<HashMap<String, Node>>();
+		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
 		curPrefix = new LinkedList<Node>();
 		labels = new LinkedList<Node>();	
 		tryBlocks = new LinkedList<ASTTryStatement>();
@@ -139,8 +145,19 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visitMethod( SignatureNode node, Boolean secondVisit  )
 	{
-		if(!secondVisit)		
+		if(!secondVisit)
+		{			
+			if( node instanceof ASTLocalMethodDeclaration )
+			{				
+				MethodSignature signature = new MethodSignature( currentType, node.jjtGetChild(0).getImage(), node.getModifiers(), node);
+				node.setMethodSignature(signature);
+				MethodType methodType = signature.getMethodType();
+				node.setType(methodType);
+				node.setEnclosingType(currentType);
+				//what modifiers (if any) are allowed for a local method declaration?
+			}			
 			currentMethod.addFirst(node);
+		}
 		else
 			currentMethod.removeFirst();
 		
@@ -158,7 +175,7 @@ public class ClassChecker extends BaseChecker {
 		}
 		else
 		{
-			symbolTable.addFirst(new HashMap<String, Node>());
+			symbolTable.addFirst(new HashMap<String, ModifiedType>());
 			
 			if( currentMethod.isEmpty() )
 				scopeMethods.addFirst(null);
@@ -233,39 +250,78 @@ public class ClassChecker extends BaseChecker {
 	 * This is why we add parameters to the symbol table in ASTFormalParameters and not ASTFormalParameter
 	 */
 	{
+		
+		Node parent = node.jjtGetParent();
+		Node grandparent = parent.jjtGetParent();
+		
+		if( parent instanceof ASTCreateDeclaration || grandparent instanceof ASTMethodDeclaration )
+		{
+			MethodType methodType = currentMethod.getFirst().getMethodSignature().getMethodType();
+			for(String symbol : methodType.getParameterNames())
+				addSymbol( symbol, methodType.getParameterType(symbol));
+			
+			return WalkType.NO_CHILDREN;
+		}		
+		
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;	
-	
-		for(int i = 0; i < node.jjtGetNumChildren(); ++i)
+		
+		if( grandparent instanceof ASTLocalMethodDeclaration )
 		{
-			Node child = node.jjtGetChild(i);
-			//child 0 is Modifiers
-			//child 1 is type
-			String varName = child.jjtGetChild(2).getImage();
-			
-			addSymbol( varName, child );
-		}		
+			MethodSignature signature = null;
+			signature = ((SignatureNode)grandparent).getMethodSignature();
+			for(int i = 0; i < node.jjtGetNumChildren(); ++i)
+			{
+				Node parameter = node.jjtGetChild(i);
+				//child 0 is Modifiers
+				//child 1 is type
+				String paramSymbol = parameter.jjtGetChild(2).getImage();			
+				
+				//child 0 is Modifiers				
+				// get the name of the parameter							
+				// check if it's already in the set of parameter names
+				if(signature.containsParam(paramSymbol))
+					addError(parameter.jjtGetChild(1), Error.MULT_SYM, "In parameter names");					
+							
+				//child 1 is type
+				Node child = parameter.jjtGetChild(1);			
+				
+				// get the type of the parameter
+				parameter.setType(child.getType());				
+				
+				// make sure this type is in the type table
+				if(parameter.getType() == null)		
+				{
+					addError(child, Error.UNDEF_TYP);
+					parameter.setType(Type.UNKNOWN);
+				}
+					
+				// add the parameter type to the signature
+				signature.addParameter(paramSymbol, parameter);
+				addSymbol( paramSymbol, parameter );			
+			}
+		}
 
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public void addSymbol( String name, Node node )
+	public void addSymbol( String name, ModifiedType node )
 	{
 		if( symbolTable.get(0).containsKey( name ) ) //we only look at current scope
-			addError(node, Error.MULT_SYM, name);
+			addError(Error.MULT_SYM, name);
 		else if( symbolTable.size() == 0 )
-			addError(node, Error.INVL_TYP, "No valid scope for variable declaration");
+			addError(Error.INVL_TYP, "No valid scope for variable declaration");
 		else
 			symbolTable.getFirst().put(name, node);  //uses node for modifiers
 	}
 	
 	
-	public Node findSymbol( String name )
+	public ModifiedType findSymbol( String name )
 	{
-		Node node = null;
+		ModifiedType node = null;
 		for( int i = 0; i < symbolTable.size(); i++ )
 		{
-			HashMap<String,Node> map = symbolTable.get(i);		
+			HashMap<String,ModifiedType> map = symbolTable.get(i);		
 			if( (node = map.get(name)) != null )
 			{
 				Node method = scopeMethods.get(i);
@@ -273,9 +329,10 @@ public class ClassChecker extends BaseChecker {
 				{
 					//situation where we are pulling a variable from an outer method
 					//it must be final!
+					//local method declarations don't count
 					
-					if( !node.getModifiers().isFinal() )
-						addError(node, Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
+					if( !(node instanceof ASTLocalMethodDeclaration) && !node.getModifiers().isFinal() )
+						addError(Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
 				}
 				return node;
 			}
@@ -531,7 +588,7 @@ public class ClassChecker extends BaseChecker {
 	public boolean setTypeFromName( Node node, String name ) 
 	{			
 		// next go through the scopes trying to find the variable
-		Node declaration = findSymbol( name );
+		ModifiedType declaration = findSymbol( name );
 		
 		if( declaration != null ) 
 		{
@@ -1097,82 +1154,7 @@ public class ClassChecker extends BaseChecker {
 
 
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
-		//if( node.getType() != null ) //optimization if type already determined by FieldAndMethodChecker
-		//	return WalkType.NO_CHILDREN;		
-		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		String typeName = node.getImage();
-		ClassInterfaceBaseType type = lookupType(typeName);
-		
-		if(type == null)
-		{
-			addError(node, Error.UNDEF_TYP, typeName);
-			type = Type.UNKNOWN;
-		}
-		else 
-		{	
-			if (currentType instanceof ClassType)
-				((ClassType)currentType).addReferencedType(type);
-		
-			if( !classIsAccessible( type, currentType  ) )		
-				addError(node, Error.TYPE_MIS, "Class " + type + " is not accessible from current context");
-			else
-			{			
-				ClassInterfaceBaseType current = type;
-				ClassInterfaceBaseType next = null;
-				
-				//walk backwards up the type, snapping up parameters
-				//we go backwards because we need to set outer types
-				for( int i = node.jjtGetNumChildren() - 1; i >= 0; i-- )
-				{
-					Node child = node.jjtGetChild(i);				
-					if( child instanceof ASTClassOrInterfaceTypeSuffix  )
-					{					
-						if( child.jjtGetNumChildren() > 0 ) //has type parameters
-						{
-							//COME BACK HERE
-							if( current.isParameterized() )
-							{
-								SequenceType arguments = (SequenceType)(child.jjtGetChild(0).getType());
-								//List<Type> parameters = current.getTypeParameters();
-								SequenceType parameters = current.getTypeParameters();
-								if( parameters.canAccept(arguments))
-								//if( checkTypeArguments( parameters, arguments ) )
-								{
-									ClassInterfaceBaseType instantiatedType = current.replace(parameters, arguments);
-									child.setType(instantiatedType);
-									if( i == node.jjtGetNumChildren() - 1 )
-										type = instantiatedType;								
-									
-									if( next != null )							
-										next.setOuter(instantiatedType); //should only happen if next is an instantiated type too
-									
-									next = instantiatedType;
-									current = instantiatedType.getOuter();
-								}
-								else
-								{
-									addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
-									break;
-								}
-							}
-							else
-							{
-								addError( child, Error.TYPE_MIS, "Cannot instantiate type parameters for non-parameterized type: " + current);
-								break;
-							}
-						}
-					}				
-				}
-			}
-			
-		}
-				
-		node.setType(type);
-		
-		return WalkType.POST_CHILDREN;
+		return typeResolution(node, secondVisit);
 	}	
 	
 	
@@ -1210,13 +1192,14 @@ public class ClassChecker extends BaseChecker {
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
 		
-		ASTSequence left = (ASTSequence) node.jjtGetChild(0);		
+			ASTSequence left = (ASTSequence) node.jjtGetChild(0);
+			SequenceType leftType = (SequenceType)(left.getType());
 					
-			if( !left.isAssignable() )			
+			if( !leftType.isAssignable() )			
 				addError(left, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
 			else
 			{			
-				SequenceType leftType = (SequenceType)(left.getType());
+				
 			Node right = node.jjtGetChild(1);				
 			if( right.getType() instanceof SequenceType ) //never a property, because a property can only access a single value
 			{
@@ -1283,6 +1266,43 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
+	@Override
+	public Object visit(ASTTypeParameter node, Boolean secondVisit)	throws ShadowException
+	{
+		if( secondVisit )
+		{
+			String symbol = node.getImage();
+			TypeParameter typeParameter = new TypeParameter(symbol);					
+			Node grandparent = node.jjtGetParent().jjtGetParent(); //parent is always TypeParameters
+			Type type;
+			
+			
+			if( grandparent instanceof ASTMethodDeclarator ) //skip class declarations (already done in type updater)
+			//this will only be for local methods at this stage
+			{
+				//if( grandparent instanceof ASTClassOrInterfaceDeclaration )										
+				//	type = grandparent.getType();
+				//else // grandparent instanceof ASTMethodDeclarator				
+					type = grandparent.jjtGetParent().getType(); //method declaration is  three levels up
+				
+				for( ModifiedType existing : type.getTypeParameters() )
+					if( existing.getType().getTypeName().equals( symbol ) )
+						addError( node, Error.MULT_SYM, "Multiply defined type parameter " + typeParameter.getTypeName() );
+				
+				if( node.jjtGetNumChildren() > 0 )
+				{
+					ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
+					for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
+						typeParameter.addBound((ClassInterfaceBaseType)(bound.jjtGetChild(i).getType()));				
+				}			
+				
+				node.setType(typeParameter);
+				type.addTypeParameter(node);
+			}			
+		}
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTFunctionType node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
@@ -1312,12 +1332,32 @@ public class ClassChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException 
+	{
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 	
 		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 			node.addType(node.jjtGetChild(i));
+		
+		Node parent = node.jjtGetParent();
+		Node grandparent = parent.jjtGetParent();
+		if( parent instanceof ASTMethodDeclarator && grandparent instanceof ASTLocalMethodDeclaration )
+		{
+			MethodSignature signature = ((SignatureNode)grandparent).getMethodSignature();		
+	
+			for(int i=0; i < node.jjtGetNumChildren(); ++i) 
+			{
+				Type type = node.jjtGetChild(i).getType();
+				
+				// make sure the return type is in the type table
+				if(type == null)					
+					addError(node.jjtGetChild(i), Error.UNDEF_TYP);
+				else						
+				// add the return type to our signature
+					signature.addReturn(node.jjtGetChild(i));
+			}
+		}
 
 		return WalkType.POST_CHILDREN;
 	}
@@ -1375,16 +1415,27 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTSequence node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
-			return WalkType.POST_CHILDREN;		
+			return WalkType.POST_CHILDREN;
 		
-		if( node.jjtGetNumChildren() == 1 ) //maybe, or should it be treated like a sequence with one thing in it?
+		LinkedList<Boolean> usedItems = node.getUsedItems();
+		
+		if( node.jjtGetNumChildren() == 1 && usedItems.size() == 1 ) //maybe, or should it be treated like a sequence with one thing in it?
 			pushUpType(node, secondVisit);
 		else
 		{
 			SequenceType sequence = new SequenceType();
+			int child = 0;		
 			
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				sequence.add(node.jjtGetChild(i));
+			for( int i = 0; i < usedItems.size(); i++ )
+			{
+				if( usedItems.get(i))
+				{
+					sequence.add(node.jjtGetChild(child));
+					child++;
+				}
+				else
+					sequence.add(null);
+			}
 			
 			node.setType( sequence );
 		}			
@@ -1694,7 +1745,7 @@ public class ClassChecker extends BaseChecker {
 	
 	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException
 	{
-		return WalkType.NO_CHILDREN; //should already have been handled in type collector		
+		return WalkType.PRE_CHILDREN;		
 	}
 	
 	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
@@ -2531,9 +2582,12 @@ public class ClassChecker extends BaseChecker {
 		if ( field.getModifiers().isConstant() ) 
 			return true;		
 		
+		type = type.getTypeWithoutTypeArguments();
+		Type enclosing = field.getEnclosingType().getTypeWithoutTypeArguments();
+		
 		while( type != null )
 		{
-			if( field.getEnclosingType() == type )
+			if( enclosing.equals(type) )
 				return true;
 			
 			type = type.getOuter();
@@ -2542,79 +2596,6 @@ public class ClassChecker extends BaseChecker {
 		return false;
 	}
 
-	public static boolean classIsAccessible( Type classType, Type type )
-	{
-		if( classType.getModifiers().isPublic() || classType.getOuter() == null || classType.getOuter().equals(type)  )
-			return true;
-		
-		Type outer = type.getOuter();
-		
-		while( outer != null )
-		{
-			if( outer == classType.getOuter() )
-				return true;
-			
-			outer = outer.getOuter();		
-		}
-		
-		
-		if( type instanceof ClassType )
-		{
-			ClassType parent = ((ClassType)type).getExtendType();
-			
-			while( parent != null )
-			{
-				if( classType.getOuter() == parent )
-				{
-					if( classType.getModifiers().isPrivate())
-						return false;
-					else
-						return true;
-				}
-				
-				outer = parent.getOuter();
-				
-				while( outer != null )
-				{
-					if( outer == classType.getOuter() )
-						return true;
-					
-					outer = outer.getOuter();		
-				}
-				
-				parent = parent.getExtendType();
-			}
-		}
-		
-		return false;
-	}
-	
-	public static boolean methodIsAccessible( MethodSignature signature, Type type )
-	{		
-		Node node = signature.getNode();
-		if( node.getEnclosingType() == type || node.getModifiers().isPublic() ) 
-			return true;		
-		
-		if( type instanceof ClassType )
-		{
-			ClassType parent = ((ClassType)type).getExtendType();
-			
-			while( parent != null )
-			{
-				if( node.getEnclosingType() == parent )
-				{
-					if( node.getModifiers().isPrivate())
-						return false;
-					else
-						return true;
-				}
-				
-				parent = parent.getExtendType();
-			}
-		}
-
-		return false;
-	}
 	
 	/*
 	public Object visit(ASTLabeledStatement node, Boolean secondVisit) throws ShadowException 
@@ -2946,4 +2927,21 @@ public class ClassChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN; 
 	}
+	
+	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException { 
+		return WalkType.NO_CHILDREN;
+	}
+	
+	public Object visit(ASTImplementsList node, Boolean secondVisit) throws ShadowException { 
+		return WalkType.NO_CHILDREN;
+	}
+	
+	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException 
+	{ 
+		if( node.jjtGetParent() instanceof ASTLocalMethodDeclaration ) //non local already handled
+			return WalkType.POST_CHILDREN;		
+		else
+			return WalkType.NO_CHILDREN;		
+	}
+	
 }

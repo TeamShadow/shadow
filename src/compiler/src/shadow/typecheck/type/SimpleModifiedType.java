@@ -46,4 +46,9 @@ public class SimpleModifiedType implements ModifiedType {
 	{	
 		return new SimpleModifiedType( type.replace(values, replacements), modifiers );		
 	}
+
+	@Override
+	public void setType(Type type) {
+		this.type = type;
+	}
 }

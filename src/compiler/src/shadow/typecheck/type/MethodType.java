@@ -52,6 +52,11 @@ public class MethodType extends Type {
 		return parameterTypes.canAccept(argumentTypes);
 	}
 	
+	public boolean canAccept(ModifiedType candidate)
+	{
+		return parameterTypes.canAccept(candidate);	
+	}
+	
 	public void addParameter(String name, ModifiedType type) {
 		parameterNames.add(name);
 		parameterTypes.add(type);
@@ -193,4 +198,5 @@ public class MethodType extends Type {
 			return false;
 	}
 
+	
 }

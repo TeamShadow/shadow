@@ -141,4 +141,14 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	public boolean isCreate() {		
 		return symbol.equals("create");
 	}
+	
+	public boolean isGet()
+	{	
+		return ( node.getModifiers().isGet() && type.getReturnTypes().size() == 1 && type.getParameterTypes().isEmpty() );	
+	}
+	
+	public boolean isSet()
+	{	
+		return ( node.getModifiers().isSet() && type.getReturnTypes().isEmpty() && type.getParameterTypes().size() == 1 );	
+	}
 }
