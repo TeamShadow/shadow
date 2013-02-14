@@ -11,7 +11,7 @@ exception shadow.standard@Exception
 		this:message = message;
 	}
 
-	public final native throw_() => ();
+	public native throw_() => ();
  
 	private terminate() => ( int )
 	{

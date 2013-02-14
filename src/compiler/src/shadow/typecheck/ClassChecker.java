@@ -217,7 +217,7 @@ public class ClassChecker extends BaseChecker {
 	public Object visit(ASTSwitchLabel node, Boolean secondVisit) throws ShadowException {
 		pushUpType(node, secondVisit);
 		
-		if( secondVisit && node.jjtGetNumChildren() > 0 && !node.getModifiers().isFinal() )
+		if( secondVisit && node.jjtGetNumChildren() > 0 && !node.getModifiers().isConstant() )
 			addError(node, Error.INVL_MOD, "Label must have constant value");			
 		
 		return WalkType.POST_CHILDREN;
@@ -331,8 +331,10 @@ public class ClassChecker extends BaseChecker {
 					//it must be final!
 					//local method declarations don't count
 					
-					if( !(node instanceof ASTLocalMethodDeclaration) && !node.getModifiers().isFinal() )
-						addError(Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
+					//add a check to deal with this, even without final
+					
+					//if( !(node instanceof ASTLocalMethodDeclaration) && !node.getModifiers().isFinal() )
+					//	addError(Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
 				}
 				return node;
 			}
@@ -1109,10 +1111,15 @@ public class ClassChecker extends BaseChecker {
 			addError(left, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
 			return false;
 		}
-		else if( leftModifiers.isFinal() )
+		/*else if( leftModifiers.isFinal() )
 		{
 			addError(left, Error.INVL_TYP, "Cannot assign a value to variable marked final");
 			return false;
+		}*/
+		else if( leftModifiers.isConstant() )
+		{
+			addError(left, Error.INVL_TYP, "Cannot assign a value to variable marked constant");
+			return false;			
 		}
 		else if( leftModifiers.isImmutable() && (!leftModifiers.isField() || (!currentMethod.isEmpty() && !currentMethod.getFirst().getMethodSignature().isCreate()))   )
 		{

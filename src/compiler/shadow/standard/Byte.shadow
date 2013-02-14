@@ -1,4 +1,4 @@
-final immutable class shadow.standard@Byte implements Number<byte>, CanCompare<byte>
+immutable class shadow.standard@Byte implements Number<byte>, CanCompare<byte>
 {
 	public native add(byte other) => (byte);
 	public native subtract(byte other) => (byte);

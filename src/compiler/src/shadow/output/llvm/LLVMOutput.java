@@ -596,7 +596,7 @@ public class LLVMOutput extends AbstractOutput
 	{
 		if (node.hasPrefix() &&
 				!node.getPrefixType().getModifiers().isImmutable() &&
-				!node.getType().getModifiers().isFinal() &&
+				//!node.getType().getModifiers().isFinal() && //replace with Readonly?
 				!node.getType().getModifiers().isPrivate())
 		{
 			writer.write(nextTemp() + " = getelementptr " +

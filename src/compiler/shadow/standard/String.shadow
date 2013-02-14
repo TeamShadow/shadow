@@ -1,4 +1,4 @@
-immutable final class shadow.standard@String
+immutable class shadow.standard@String
 implements CanCompare<String>, CanIterate<code>
 {
 	byte[] data = byte:create[0];

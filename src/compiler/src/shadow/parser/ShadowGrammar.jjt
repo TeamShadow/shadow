@@ -139,7 +139,7 @@ TOKEN :
 | < EXCEPTION: "exception" >
 | < EXTENDS: "extends" >
 | < FALSE: "false" >
-| < FINAL: "final" >
+//| < FINAL: "final" >
 | < FINALLY: "finally" >
 | < FLOAT: "float" >
 | < FOR: "for" >
@@ -163,6 +163,7 @@ TOKEN :
 | < PRIVATE: "private" >
 | < PROTECTED: "protected" >
 | < PUBLIC: "public" >
+| < READONLY: "readonly" >
 | < RECOVER: "recover" >
 | < RETURN: "return" >
 | < SET: "set" >
@@ -474,7 +475,8 @@ Modifiers Modifiers():
   | "protected" { modifiers.checkAndAdd(Modifiers.PROTECTED); }
   | "private" { modifiers.checkAndAdd(Modifiers.PRIVATE); }
   | "abstract" { modifiers.checkAndAdd(Modifiers.ABSTRACT); }
-  | "final" { modifiers.checkAndAdd(Modifiers.FINAL); }
+  //| "final" { modifiers.checkAndAdd(Modifiers.FINAL); }
+  | "readonly" { modifiers.checkAndAdd(Modifiers.READONLY); }
   | "native" { modifiers.checkAndAdd(Modifiers.NATIVE); }
   | "weak" { modifiers.checkAndAdd( Modifiers.WEAK); }
   |	"immutable"{ modifiers.checkAndAdd(Modifiers.IMMUTABLE); }
@@ -1321,7 +1323,8 @@ void Literal() :
 {
 	debugPrint("LITERAL");
 	Token t;
-	jjtThis.addModifier(Modifiers.FINAL); 
+	jjtThis.addModifier(Modifiers.IMMUTABLE);
+	jjtThis.addModifier(Modifiers.CONSTANT); 
 }
 {
   (    

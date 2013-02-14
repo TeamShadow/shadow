@@ -1,4 +1,4 @@
-final immutable error shadow.standard@Error
+immutable error shadow.standard@Error
 {	
 	public create()
 	{

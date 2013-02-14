@@ -2,12 +2,12 @@ class Final {
     
     public main() => ()
     {	
-    	final int a = 10;
+    	int a = 10;
     	
     	//a = 6;  //uncomment to see final error
     }
     
-    public stuff(final int x) => ()
+    public stuff(int x) => ()
     {
     	//x = 5;    
     }

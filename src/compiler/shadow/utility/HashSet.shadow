@@ -4,7 +4,7 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	Node[] table = Node:create[256];
 	float load;
 
-	private final class Node
+	private class Node
 	{
 		int hash;
 		V value;
@@ -109,7 +109,7 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	{
 		return HashSetIterator:create();
 	}
-	private final class HashSetIterator implements Iterator<V>
+	private class HashSetIterator implements Iterator<V>
 	{
 		int index = 0;
 		nullable Node current;

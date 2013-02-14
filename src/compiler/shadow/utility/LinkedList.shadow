@@ -1,9 +1,9 @@
 class shadow.utility@LinkedList<V> implements List<V>
 {
 	get int size = 0, modifications = 0;
-	final Node header = Node:create();
+	Node header = Node:create();
 
-	private final class Node
+	private class Node
 	{
 		get Node prev = this, next = this;
 		get set nullable V value = null;

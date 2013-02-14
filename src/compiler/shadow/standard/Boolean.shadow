@@ -1,4 +1,4 @@
-final immutable class shadow.standard@Boolean
+immutable class shadow.standard@Boolean
 {
 	public toString() => ( String )
 	{

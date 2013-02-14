@@ -1,5 +1,5 @@
 // Do we want this?
-public /*native*/ abstract final class shadow.standard@Array/*<T>*/
+public /*native*/ abstract class shadow.standard@Array/*<T>*/
 {
 	public getLength() => ( int )
 	{

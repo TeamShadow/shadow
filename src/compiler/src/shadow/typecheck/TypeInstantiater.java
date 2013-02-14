@@ -292,10 +292,12 @@ public class TypeInstantiater extends BaseChecker {
 								
 								if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) )
 									addError( parentNode, "Overriding method " + signature + " differs only by return type from " + parentSignature );
-								else if( parentModifiers.isFinal() )
-									addError( parentNode, "Method " + signature + " cannot override final method" );
-								else if( !modifiers.isImmutable() && parentModifiers.isImmutable()  )
-									addError( parentNode, "Non-immutable method " + signature + " cannot override immutable method" );
+								//else if( parentModifiers.isFinal() )
+								//	addError( parentNode, "Method " + signature + " cannot override final method" );
+								//else if( parentModifiers.isImmutable() )
+								//	addError( parentNode, "Method " + signature + " cannot override immutable method" );
+								else if( !modifiers.isReadonly() && parentModifiers.isReadonly()  )
+									addError( parentNode, "Non-readonly method " + signature + " cannot override readonly method" );
 								else if( parentModifiers.isPublic() && (modifiers.isPrivate() || modifiers.isProtected()) )
 									addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
 								else if( parentModifiers.isProtected() && modifiers.isPrivate()  )

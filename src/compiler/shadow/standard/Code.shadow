@@ -1,4 +1,4 @@
-final immutable class shadow.standard@Code
+immutable class shadow.standard@Code
 {
 	public toLowerCase() => ( code )
 	{

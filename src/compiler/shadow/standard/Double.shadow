@@ -1,4 +1,4 @@
-final immutable class shadow.standard@Double implements Number<double>, CanCompare<double>
+immutable class shadow.standard@Double implements Number<double>, CanCompare<double>
 {
 	constant double PI = 3.141592653589793;
 	constant double E = 2.718281828459045;

@@ -52,8 +52,8 @@ class LinkedList<T> implements List<T>
 
 	int size = 0;
 	//dummy head and tail
-	final Node<T> head = new Node<T>( null, null, null );
-	final Node<T> tail = new Node<T>( null, null, null );
+	Node<T> head = new Node<T>( null, null, null );
+	Node<T> tail = new Node<T>( null, null, null );
 
 	public create()
 	{

@@ -400,7 +400,10 @@ public class FieldAndMethodChecker extends BaseChecker {
 			if( currentMethod.getFirst().getModifiers().isImmutable())
 				node.addModifier(Modifiers.IMMUTABLE);
 			
-			node.addModifier(Modifiers.FINAL);
+			if( currentMethod.getFirst().getModifiers().isReadonly())
+				node.addModifier(Modifiers.READONLY);
+			
+			//node.addModifier(Modifiers.FINAL);
 		}
 		
 		return WalkType.POST_CHILDREN;

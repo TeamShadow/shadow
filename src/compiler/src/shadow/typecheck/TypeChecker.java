@@ -95,7 +95,7 @@ public class TypeChecker {
 		// see how many errors we found
 		if(extendAdder.getErrorCount() > 0)
 		{
-			builder.printErrors();
+			extendAdder.printErrors();
 			return false;
 		}
 

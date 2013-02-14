@@ -1,4 +1,4 @@
-final immutable class shadow.standard@UByte implements Number<ubyte>, CanCompare<ubyte>
+immutable class shadow.standard@UByte implements Number<ubyte>, CanCompare<ubyte>
 {
 	public native add(ubyte other) => (ubyte);
 	public native subtract(ubyte other) => (ubyte);

@@ -40,7 +40,7 @@ public class SimpleTest
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("shadow/utility/LinkedList.shadow"); 		
+		args.add("shadow/standard/Object.shadow"); 		
 		int error = Main.test(args.toArray(new String[] { }));
 		System.out.println("Error code: " + error);
 	}

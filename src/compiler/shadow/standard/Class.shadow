@@ -1,4 +1,4 @@
-immutable final class shadow.standard@Class
+immutable class shadow.standard@Class
 {
 	String name = "";
 	get nullable Class parent = null;

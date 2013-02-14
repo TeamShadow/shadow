@@ -1,4 +1,4 @@
-final immutable class shadow.standard@UInt implements Number<uint>, CanCompare<uint>
+immutable class shadow.standard@UInt implements Number<uint>, CanCompare<uint>
 {	
 	public native add(uint other) => (uint);
 	public native subtract(uint other) => (uint);

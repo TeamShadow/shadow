@@ -1,6 +1,6 @@
 class Array<T> implements Iterable<T>, Sortable<T>
 {
-	final int size;
+	immutable int size;
 	
 	public create( int size )
 	{

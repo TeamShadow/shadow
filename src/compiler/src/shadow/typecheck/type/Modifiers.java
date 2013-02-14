@@ -13,7 +13,8 @@ public final class Modifiers
 	public static final int PROTECTED      	= 0x0002;
 	public static final int PRIVATE       	= 0x0004;
 	public static final int ABSTRACT       	= 0x0008;	
-	public static final int FINAL          	= 0x0010;     
+	//public static final int FINAL          	= 0x0010;     
+	public static final int READONLY		= 0x0010;
 	public static final int NATIVE			= 0x0020;     
 	public static final int WEAK           	= 0x0040;
 	public static final int IMMUTABLE      	= 0x0080;
@@ -99,8 +100,10 @@ public final class Modifiers
 			sb.append("private ");
 		if( isAbstract() )
 			sb.append("abstract ");		
-		if( isFinal() )
-			sb.append("final ");
+		/*if( isFinal() )
+			sb.append("final ");*/
+		if( isReadonly() )
+			sb.append("readonly ");
 		if( isNative() )
 			sb.append("native ");
 		if( isWeak() )
@@ -143,7 +146,8 @@ public final class Modifiers
 	public boolean isProtected() { return (modifiers & PROTECTED) != 0; }
 	public boolean isPrivate() { return (modifiers & PRIVATE) != 0; }	
 	public boolean isAbstract() { return (modifiers & ABSTRACT) != 0; }
-	public boolean isFinal() { return (modifiers & FINAL) != 0; }
+	//public boolean isFinal() { return (modifiers & FINAL) != 0; }
+	public boolean isReadonly() { return (modifiers & READONLY) != 0; }
 	public boolean isNative() { return (modifiers & NATIVE) != 0; }
 
 	public boolean isGet() { return (modifiers & GET) != 0; }
@@ -184,8 +188,10 @@ public final class Modifiers
 			throw new ParseException(name + " cannot be marked private");		
 		if( isAbstract() && !legal.isAbstract()  )
 			throw new ParseException(name + " cannot be marked abstract");
-		if( isFinal() && !legal.isFinal()  )
-			throw new ParseException(name + " cannot be marked final");     
+		/*if( isFinal() && !legal.isFinal()  )
+			throw new ParseException(name + " cannot be marked final"); */
+		if( isReadonly() && !legal.isReadonly()  )
+			throw new ParseException(name + " cannot be marked readonly");
 		if( isNative() && !legal.isNative()  )
 			throw new ParseException(name + " cannot be marked native");
 		if( isGet() && !legal.isGet()  )
@@ -204,29 +210,29 @@ public final class Modifiers
 
 	public void checkClassModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | FINAL | IMMUTABLE), "A class");	
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE), "A class");	
 	}
 
 
 	public void checkSingletonModifiers() throws ParseException
 	{		  
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | IMMUTABLE), "A singleton");	
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE), "A singleton");	
 	}
 
 	public void checkExceptionModifiers() throws ParseException
 	{		  
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | FINAL), "An exception");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE ), "An exception");
 	}
 
 	public void checkErrorModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | FINAL | IMMUTABLE ), "An error");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE ), "An error");
 	}
 
 
 	public void checkInterfaceModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(FINAL), "An interface");
+		checkModifiers( new Modifiers(), "An interface");
 	}
 
 	public void checkViewModifiers() throws ParseException
@@ -241,12 +247,12 @@ public final class Modifiers
 
 	public void checkFieldModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(FINAL | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE), "A field");
+		checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE), "A field");
 
+		/*
 		if( isSet() && isFinal() )
 			throw new ParseException("A field cannot be marked both set and final");
 		
-		/*
 		if( isConstant() )
 		{	
 			int updatedModifiers = modifiers & ~CONSTANT;
@@ -259,7 +265,7 @@ public final class Modifiers
 
 	public void checkMethodModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | FINAL | IMMUTABLE | GET | SET | NATIVE), "A method");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE | GET | SET | NATIVE), "A method");
 		if( isGet() &&  isSet() )
 			throw new ParseException("A method cannot be marked both get and set");			
 	}
@@ -282,12 +288,12 @@ public final class Modifiers
 
 	public void checkLocalVariableModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(FINAL | IMMUTABLE | WEAK | NULLABLE), "A local variable");
+		checkModifiers( new Modifiers(READONLY | IMMUTABLE | WEAK | NULLABLE), "A local variable");
 	}
 
 	public void checkParameterAndReturnModifiers() throws ParseException
 	{
-		checkModifiers( new Modifiers(FINAL | IMMUTABLE | NULLABLE), "Method parameter and return types");		  
+		checkModifiers( new Modifiers(READONLY | IMMUTABLE | NULLABLE), "Method parameter and return types");		  
 
 		//what does final mean for parameters and return types?
 		//shouldn't all parameters be final?		

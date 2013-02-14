@@ -20,7 +20,20 @@ Methods can be final (cannot be overridden) and/or immutable (cannot change the 
 
 constant is the keyword for constants.
 
-Classes can be immutable meaning that all members are immutable.
+Classes can be immutable meaning that all members are immutable and methods are immutable.
+Immutable classes cannot be subclassed.
+Immutable methods cannot be overridden.
+
+immutable
+for classes means everything is immutable and cannot be subclassed
+for methods means "this" is immutable and cannot be overridden
+for references, means readonly, and there are no non-readonly references
+
+readonly
+for references, means only readonly and immutable methods can be called
+for methods, it means "this" is readonly
+for classes means everything is readonly (and can be subclassed)
+
 
 immutable Wombat x = new Wombat();
 immutable function(int a) => ()
