@@ -46,9 +46,9 @@ public class ImplementsAndExtendsChecker extends BaseChecker {
 	
 	public ImplementsAndExtendsChecker(boolean debug,
 			HashMap<Package, HashMap<String, ClassInterfaceBaseType>> hashMap,
-			List<String> importList, Package packageTree) {
+			List<String> importList, Package packageTree)
+	{
 		super(debug, hashMap, importList, packageTree);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public void checkImplementsAndExtends(Map<String, Node> files) throws ShadowException

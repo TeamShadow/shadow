@@ -55,12 +55,13 @@ public class TypeChecker {
 			return false;
 		}		
 		
-		//add type parameters for types, making them UninitializedTypes 
+		//Updates types, adding:
+		//Fields and methods
+		//Type parameters
+		//All types with type parameters (except for declarations) are UninitializedTypes 
 		TypeUpdater updater = new TypeUpdater(debug, typeTable, importList, packageTree);
 		updater.updateTypes( collector.getFiles() );
-		//done!
 		
-
 		// see how many errors we found
 		if(updater.getErrorCount() > 0)
 		{
@@ -68,21 +69,8 @@ public class TypeChecker {
 			return false;
 		}
 		
-		//we must add fields and methods with uninstantiated types
-		//otherwise parameterized types won't have fields and methods added to them at all
-		//then we add fields and methods
-		FieldAndMethodChecker builder = new FieldAndMethodChecker(debug, typeTable, importList, packageTree, collector.getNodeTable() );
-		builder.buildTypes( collector.getFiles() );		
-		//not done!		
 		
-		// see how many errors we found
-		if(builder.getErrorCount() > 0)
-		{
-			builder.printErrors();
-			return false;
-		}
-		
-		logger.debug("TYPE BUILDING DONE");
+		logger.debug("TYPE UPDATING DONE");
 		
 		
 		//then we add extends and implements and check those, and check duplicate methods

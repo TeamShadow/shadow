@@ -423,38 +423,4 @@ public class TypeInstantiater extends BaseChecker {
 		{
 			return WalkType.NO_CHILDREN; //skip all blocks
 		}
-		
-		/*
-	
-		@Override
-		public Object visit(ASTCreateDeclaration node, Boolean secondVisit) throws ShadowException
-		{		
-			return WalkType.NO_CHILDREN;
-		}
-		
-		@Override
-		public Object visit(ASTDestroyDeclaration node, Boolean secondVisit) throws ShadowException
-		{		
-			return WalkType.NO_CHILDREN;
-		}
-		
-		@Override
-		public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException
-		{		
-			return WalkType.NO_CHILDREN;
-		}
-		
-		@Override
-		public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException
-		{		
-			return WalkType.NO_CHILDREN;
-		}
-		
-		@Override
-		public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException
-		{		
-			return WalkType.NO_CHILDREN;
-		}
-		
-		*/
 }
