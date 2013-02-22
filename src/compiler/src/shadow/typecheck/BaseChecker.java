@@ -47,6 +47,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 
 	/** Holds the package tree structure (for name lookups) */
 	protected ClassInterfaceBaseType currentType = null;
+	protected ClassInterfaceBaseType declarationType = null;
 	protected boolean debug;	
 	
 	// these are constants for our error messages to keep things consistent

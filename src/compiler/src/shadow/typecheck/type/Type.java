@@ -556,6 +556,12 @@ public abstract class Type {
 	
 	public void setParameterized(boolean value)
 	{
+		if( value && typeParameters == null )
+			typeParameters = new SequenceType();
+		
+		if( !value )
+			typeParameters = null;			
+			
 		parameterized = value;
 	}
 	

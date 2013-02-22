@@ -32,7 +32,7 @@ public class TypeChecker {
 	/**
 	 * Given the root node of an AST, type-checks the AST.
 	 * @param node The root node of the AST
-	 * @return True of the type-check is OK, false otherwise (errors are printed)
+	 * @return True if the type-check is OK, false otherwise (errors are printed)
 	 * @throws ShadowException
 	 * @throws ParseException 
 	 * @throws IOException 
@@ -58,6 +58,7 @@ public class TypeChecker {
 		//Updates types, adding:
 		//Fields and methods
 		//Type parameters
+		//Extends and implements lists
 		//All types with type parameters (except for declarations) are UninitializedTypes 
 		TypeUpdater updater = new TypeUpdater(debug, typeTable, importList, packageTree);
 		updater.updateTypes( collector.getFiles() );
@@ -71,23 +72,7 @@ public class TypeChecker {
 		
 		
 		logger.debug("TYPE UPDATING DONE");
-		
-		
-		//then we add extends and implements and check those, and check duplicate methods
-		ImplementsAndExtendsChecker extendAdder = new ImplementsAndExtendsChecker(debug, typeTable, importList, packageTree);
-		extendAdder.checkImplementsAndExtends(collector.getFiles());
-		//done
-		
-		
-		
-		// see how many errors we found
-		if(extendAdder.getErrorCount() > 0)
-		{
-			extendAdder.printErrors();
-			return false;
-		}
-
-		
+	
 		
 		//then we instantiate all the types after checking to make sure that we can
 		//One reason we have to do this is to catch incomplete generic types:
@@ -95,7 +80,6 @@ public class TypeChecker {
 		//Another is that we can't instantiate before fields and methods are added
 		TypeInstantiater instantiater = new TypeInstantiater( debug, typeTable, importList, packageTree );
 		instantiater.instantiateTypes( collector.getNodeTable() );
-		//maybe done!			
 
 		// see how many errors we found
 		if(instantiater.getErrorCount() > 0)
