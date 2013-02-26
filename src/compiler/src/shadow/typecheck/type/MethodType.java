@@ -12,7 +12,7 @@ public class MethodType extends Type {
 		this(null, new Modifiers());
 	}
 
-	public MethodType(ClassInterfaceBaseType outer, Modifiers modifiers) {
+	public MethodType(Type outer, Modifiers modifiers) {
 		super(null, modifiers, outer);
 		parameterNames = new ArrayList<String>();
 		parameterTypes = new SequenceType();
@@ -196,7 +196,5 @@ public class MethodType extends Type {
 		}
 		else
 			return false;
-	}
-
-	
+	}	
 }

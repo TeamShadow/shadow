@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import org.apache.commons.logging.Log;
-
-import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTAdditiveExpression;
@@ -105,9 +102,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
@@ -125,8 +120,7 @@ import shadow.typecheck.type.UnboundMethodType;
 
 //no automatic promotion for bitwise operators
 
-public class ClassChecker extends BaseChecker {
-	private static final Log logger = Loggers.TYPE_CHECKER;
+public class ClassChecker extends BaseChecker {	
 
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
@@ -134,7 +128,7 @@ public class ClassChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, ModifiedType>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
 	
-	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable, List<String> importList, Package packageTree ) {
+	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<String> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
 		curPrefix = new LinkedList<Node>();
@@ -189,7 +183,7 @@ public class ClassChecker extends BaseChecker {
 		if( secondVisit )
 			currentType = currentType.getOuter();		
 		else
-			currentType = (ClassInterfaceBaseType)(node.jjtGetParent().getType()); //get type from declaration
+			currentType = node.jjtGetParent().getType(); //get type from declaration
 			
 		return WalkType.POST_CHILDREN;
 	}	
@@ -1300,7 +1294,7 @@ public class ClassChecker extends BaseChecker {
 				{
 					ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
 					for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
-						typeParameter.addBound((ClassInterfaceBaseType)(bound.jjtGetChild(i).getType()));				
+						typeParameter.addBound(bound.jjtGetChild(i).getType());				
 				}			
 				
 				node.setType(typeParameter);
@@ -1390,7 +1384,7 @@ public class ClassChecker extends BaseChecker {
 				boolean found = false;
 				
 								
-				ClassInterfaceBaseType outer = (ClassInterfaceBaseType)unboundMethod.getOuter();				
+				Type outer = unboundMethod.getOuter();				
 				for( MethodSignature signature : outer.getMethods(unboundMethod.getTypeName()) )
 					if( signature.getMethodType().matches(method.getParameterTypes()) && signature.getMethodType().canReturn(method.getReturnTypes()))
 					{
@@ -1934,18 +1928,17 @@ public class ClassChecker extends BaseChecker {
 				}
 				
 			}			
-			else if( prefixType instanceof ClassInterfaceBaseType && ((ClassInterfaceBaseType) prefixType).hasInterface(Type.CAN_INDEX) )
+			else if( prefixType.hasInterface(Type.CAN_INDEX) )
 			{
 				if( node.jjtGetNumChildren() == 1)
 				{
 					SequenceType arguments = new SequenceType();
 					Node child = node.jjtGetChild(0);
 					arguments.add(child);					
-					
-					ClassInterfaceBaseType classType = (ClassInterfaceBaseType) prefixType;
+									
 					TreeMap<MethodSignature, MethodType> acceptableIndexes = new TreeMap<MethodSignature, MethodType>();
 					
-					for( MethodSignature signature : classType.getMethods("index") ) 
+					for( MethodSignature signature : prefixType.getMethods("index") ) 
 					{		
 						MethodType methodType = signature.getMethodType();
 						
@@ -2109,19 +2102,17 @@ public class ClassChecker extends BaseChecker {
 			{
 				addError(node, Error.INVL_TYP, "Cannot call method on type name");				
 			}
-			else if( prefixType instanceof ClassInterfaceBaseType )
-			{
-				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
-				List<MethodSignature> methods = currentClass.getMethods(methodName);
+			else
+			{				
+				List<MethodSignature> methods = prefixType.getMethods(methodName);
 				
 				//unbound method (it gets bound when you supply arguments)
 				if( methods != null && methods.size() > 0 )			
-					node.setType( new UnboundMethodType( methodName, currentClass ) );
+					node.setType( new UnboundMethodType( methodName, prefixType ) );
 				else
 					addError(node, Error.UNDEC_VAR, "Method " + methodName + " not found");
 			}
-			else		
-				addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
+			
 			
 			if( node.getType() == null )
 				node.setType( Type.UNKNOWN );
@@ -2267,47 +2258,41 @@ public class ClassChecker extends BaseChecker {
 			String name = node.getImage();
 			boolean isTypeName = prefixNode.getModifiers().isTypeName();
 			
-			if( prefixType instanceof ClassInterfaceBaseType )
+			if( prefixType.containsField( name ) )
 			{
-				ClassInterfaceBaseType classType = (ClassInterfaceBaseType)prefixType;
-				if( classType.containsField( name ) )
+				Node field = prefixType.getField(name);
+				
+				if( !fieldIsAccessible( field, currentType ))
 				{
-					Node field = classType.getField(name);
-					
-					if( !fieldIsAccessible( field, currentType ))
-					{
-						addError(node, Error.INVL_MOD, "Field " + name + " not accessible from current context");
-					}					
-					else if( field.getModifiers().isConstant() && !isTypeName )
-					{
-						addError(node, Error.INVL_MOD, "Constant " + name + " requires class name for access");
-					}
-					else
-					{
-						node.setType( field.getType());
-						node.setModifiers(field.getModifiers());						
-						if( !field.getModifiers().isConstant() )
-							node.addModifier(Modifiers.ASSIGNABLE);					
-					}
-				}
-				else if( classType.containsInnerClass(name) )
+					addError(node, Error.INVL_MOD, "Field " + name + " not accessible from current context");
+				}					
+				else if( field.getModifiers().isConstant() && !isTypeName )
 				{
-					ClassInterfaceBaseType innerClass = classType.getInnerClass(name);
-					
-					if( !classIsAccessible( innerClass, currentType ) )
-						addError(node, Error.TYPE_MIS, "Class " + innerClass + " is not accessible from current context");
-					else
-					{
-						node.setType( innerClass );						
-						node.addModifier(Modifiers.TYPE_NAME);					
-					}					
+					addError(node, Error.INVL_MOD, "Constant " + name + " requires class name for access");
 				}
 				else
-					addError(node, Error.UNDEC_VAR, "Field or inner class " + name + " not found");
-						
+				{
+					node.setType( field.getType());
+					node.setModifiers(field.getModifiers());						
+					if( !field.getModifiers().isConstant() )
+						node.addModifier(Modifiers.ASSIGNABLE);					
+				}
+			}
+			else if( prefixType.containsInnerClass(name) )
+			{
+				Type innerClass = prefixType.getInnerClass(name);
+				
+				if( !classIsAccessible( innerClass, currentType ) )
+					addError(node, Error.TYPE_MIS, "Class " + innerClass + " is not accessible from current context");
+				else
+				{
+					node.setType( innerClass );						
+					node.addModifier(Modifiers.TYPE_NAME);					
+				}					
 			}
 			else
-				addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
+				addError(node, Error.UNDEC_VAR, "Field or inner class " + name + " not found");
+	
 			
 			if( node.getType() == null )
 				node.setType( Type.UNKNOWN );
@@ -2328,48 +2313,41 @@ public class ClassChecker extends BaseChecker {
 			String propertyName = node.getImage();
 			boolean isTypeName = prefixNode.getModifiers().isTypeName();
 						
-			if( prefixType instanceof ClassInterfaceBaseType )
+						
+			if( isTypeName )
+			{
+				addError(node, Error.INVL_TYP, "Must access property " + propertyName + " on an object");
+				node.setType( Type.UNKNOWN ); //if got here, some error
+			}	
+			else
 			{				
-				if( isTypeName )
+				List<MethodSignature> methods = prefixType.getMethods(propertyName);				
+
+				if( methods != null && methods.size() > 0 )
 				{
-					addError(node, Error.INVL_TYP, "Must access property " + propertyName + " on an object");
-					node.setType( Type.UNKNOWN ); //if got here, some error
-				}	
+					MethodType getter = null;
+					MethodType setter = null;
+					
+					for( MethodSignature signature : methods )
+					{
+						if( signature.getModifiers().isGet() )
+							getter = signature.getMethodType();
+						else if( signature.getModifiers().isSet() )
+						{
+							setter = signature.getMethodType();
+							node.addModifier(Modifiers.ASSIGNABLE);
+						}
+					}
+					
+					node.setType( new PropertyType( getter, setter ) );
+				}
 				else
 				{
-					ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)prefixType;
-					List<MethodSignature> methods = currentClass.getMethods(propertyName);				
-	
-					if( methods != null && methods.size() > 0 )
-					{
-						MethodType getter = null;
-						MethodType setter = null;
-						
-						for( MethodSignature signature : methods )
-						{
-							if( signature.getModifiers().isGet() )
-								getter = signature.getMethodType();
-							else if( signature.getModifiers().isSet() )
-							{
-								setter = signature.getMethodType();
-								node.addModifier(Modifiers.ASSIGNABLE);
-							}
-						}
-						
-						node.setType( new PropertyType( getter, setter ) );
-					}
-					else
-					{
-						addError(node, Error.UNDEC_VAR, "Property " + propertyName + " not found");
-						node.setType( Type.UNKNOWN ); //if got here, some error
-					}				
-				}
+					addError(node, Error.UNDEC_VAR, "Property " + propertyName + " not found");
+					node.setType( Type.UNKNOWN ); //if got here, some error
+				}				
 			}
-			else
-			{
-				addError(node, Error.INVL_TYP, prefixType + " not valid class or interface");
-				node.setType( Type.UNKNOWN ); //if got here, some error
-			}
+			
 		}
 	
 		return WalkType.POST_CHILDREN;
@@ -2737,13 +2715,8 @@ public class ClassChecker extends BaseChecker {
 			Type type = child.getType();
 			if( type == null )
 				addError(node, Error.INVL_TYP, "Value type required for assert information and no type found");
-			else if( type instanceof ClassInterfaceBaseType )
-			{
-				if( child.getModifiers().isTypeName() )
-					addError(node, Error.INVL_TYP, "Value type required for assert information but type name used");				
-			}
-			else if( !(type instanceof ArrayType) )
-				addError(node, Error.INVL_TYP, "Value type required for assert information and " + type + " found");			
+			else if( child.getModifiers().isTypeName() )
+				addError(node, Error.INVL_TYP, "Value type required for assert information but type name used");
 		}
 		
 		return WalkType.POST_CHILDREN;

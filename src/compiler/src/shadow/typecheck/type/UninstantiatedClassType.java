@@ -9,7 +9,7 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 		this(type, typeArguments, type.getOuter() );		
 	}
 	
-	public UninstantiatedClassType(ClassType type, SequenceType typeArguments, ClassInterfaceBaseType outer )
+	public UninstantiatedClassType(ClassType type, SequenceType typeArguments, Type outer )
 	{
 		super(type.getTypeName(), type.getModifiers(), outer );		
 		this.type = type;

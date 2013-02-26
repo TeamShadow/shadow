@@ -44,7 +44,6 @@ import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.MethodSignature;
@@ -145,7 +144,7 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTClassOrInterfaceDeclaration node,
 			Boolean secondVisit) throws ShadowException
 	{
-		ClassInterfaceBaseType type = (ClassInterfaceBaseType)node.getType();
+		Type type = node.getType();
 		module = new TACModule(type);
 
 		for (List<MethodSignature> methodList : type.getMethodMap().values())
@@ -945,8 +944,7 @@ public class TACBuilder implements ShadowParserVisitor
 					{
 						TACReference thisRef = new TACVariableRef(tree,
 								method.getParameter("this"));
-						while (!((ClassInterfaceBaseType)thisRef.getType()).
-								containsField(node.getImage()))
+						while (!thisRef.getType().containsField(node.getImage()))
 							thisRef = new TACFieldRef(tree, thisRef,
 									thisRef.getType().getOuter(), "this");
 						prefix = new TACFieldRef(tree, thisRef, node.getType(),
@@ -984,8 +982,7 @@ public class TACBuilder implements ShadowParserVisitor
 							method.getParameter("this")), Type.CLASS,
 							identifier.getName());
 				else
-					new TACClass(tree,
-							(ClassInterfaceBaseType)identifier.getType());
+					new TACClass(tree,identifier.getType());
 			else
 				// TODO: Make this work
 				throw new UnsupportedOperationException();
@@ -1068,8 +1065,7 @@ public class TACBuilder implements ShadowParserVisitor
 				if (node.jjtGetChild(i) instanceof ASTTypeArguments)
 					for (ModifiedType type :
 							(SequenceType)node.jjtGetChild(i).getType())
-						params.add(new TACClass(tree,
-								(ClassInterfaceBaseType)type.getType()));
+						params.add(new TACClass(tree, type.getType()));
 				else
 					params.add(tree.appendChild(i));
 			prefix = new TACCall(tree, block, methodRef, params);
@@ -1186,8 +1182,7 @@ public class TACBuilder implements ShadowParserVisitor
 									tree, method.getParameter("this")),
 									Type.CLASS, type.getType().getTypeName()));
 						else
-							params.add(new TACClass(tree,
-									(ClassInterfaceBaseType)type.getType()));
+							params.add(new TACClass(tree, type.getType()));
 				else
 					params.add(tree.appendChild(i));
 			new TACCall(tree, block, methodRef, params);
@@ -1617,7 +1612,7 @@ public class TACBuilder implements ShadowParserVisitor
 			tree = tree.next();
 			if (implicitCreate = methodRef.isCreate())
 			{
-				ClassInterfaceBaseType type = methodRef.getPrefixType();
+				Type type = methodRef.getPrefixType();
 				tree = tree.next();
 				if (type.hasOuter())
 					new TACStore(tree,
@@ -1719,8 +1714,7 @@ public class TACBuilder implements ShadowParserVisitor
 			List<TACOperand> sizes)
 	{
 		TACOperand baseClass;
-		ClassInterfaceBaseType baseType = (ClassInterfaceBaseType)type.
-				getBaseType();
+		Type baseType = type.getBaseType();
 		if (baseType instanceof TypeParameter)
 		{
 			String name = baseType.getTypeName();

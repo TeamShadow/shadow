@@ -1,10 +1,20 @@
 package shadow.typecheck.type;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import javax.naming.OperationNotSupportedException;
 
 import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.parser.javacc.Node;
 import shadow.typecheck.Package;
 
 
@@ -12,14 +22,18 @@ public abstract class Type {
 	//types should not change after construction
 	protected final String typeName;	/** A string that represents the type */
 	private Modifiers modifiers;
-	private ClassInterfaceBaseType outer; //outer class	
-	//private final Kind kind;
+	private Type outer; //outer class or interface
 	protected Package _package;
 	private SequenceType typeParameters = null;	
 	private boolean parameterized = false;
 	protected Type typeWithoutTypeArguments = this;
-	//private boolean instantiated = false;
-	//private SequenceType typeArguments;
+
+	private Map<String, Node> fieldTable;
+	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private
+	private HashMap<String, Type> innerClasses;
+	private Set<Type> referencedTypes = new HashSet<Type>();
+	private List<Type> typeParameterDependencies = new ArrayList<Type>();
+	
 	
 	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();
 	
@@ -145,15 +159,25 @@ public abstract class Type {
 		this( typeName, modifiers, null );
 	}	
 
-	public Type(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer) {
+	public Type(String typeName, Modifiers modifiers, Type outer) {
 		this( typeName, modifiers, outer, (outer == null ? null : outer._package ) );
 	}
 	
-	public Type(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer, Package _package ) {
+	public Type(String typeName, Modifiers modifiers, Type outer, Package _package ) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
 		this.outer = outer;		
 		this._package = _package;
+		
+		fieldTable = new HashMap<String, Node>();
+		methodTable = new HashMap<String, List<MethodSignature>>();
+		innerClasses = new HashMap<String, Type>();
+				
+		if( outer != null && typeName != null )
+		{		
+			typeName = typeName.substring(typeName.lastIndexOf(':') + 1); //works even if name doesn't contain a :				
+			outer.innerClasses.put(typeName, this);
+		}
 	}
 	
 	public String getTypeName() 
@@ -331,12 +355,12 @@ public abstract class Type {
 		return outer != null;
 	}
 	
-	public ClassInterfaceBaseType getOuter()
+	public Type getOuter()
 	{
 		return outer;
 	}
 	
-	public void setOuter(ClassInterfaceBaseType outer)
+	public void setOuter(Type outer)
 	{
 		this.outer = outer;
 	}
@@ -473,19 +497,6 @@ public abstract class Type {
 		return false;		
 	}
 	
-	//overridden by ClassInterfaceBaseType
-	public Type getInnerClass( String name )
-	{
-		return null;
-	}
-
-	//searches for inner classes that follow the name list starting at index i in names
-	//overridden by ClassInterfaceBaseType
-	protected Type findType(String[] names, int i)
-	{
-		return null;
-	}
-	
 	public Package getPackage()
 	{
 		return _package;
@@ -598,6 +609,296 @@ public abstract class Type {
 	 * @param other another type
 	 * @return {@literal true} if {@code this} can be cast to {@code other}
 	 */
-	abstract public boolean isSubtype(Type other);
-	abstract public Type replace(SequenceType values, SequenceType replacements );
+	
+	
+	public void addTypeParameterDependency( Type type )
+	{
+		typeParameterDependencies.add(type);	
+	}
+	
+	public List<Type> getTypeParameterDependencies()
+	{
+		return typeParameterDependencies;
+	}
+	
+	
+	public Map<String, Type> getInnerClasses()
+	{
+		return innerClasses;
+	}
+	
+	protected void addInnerClass(String name, Type innerClass)
+	{
+		innerClasses.put( name, innerClass );
+	}
+	
+		
+	public boolean containsField(String fieldName) {
+		return fieldTable.containsKey(fieldName);
+	}
+	
+	public boolean containsInnerClass(String className) {
+		return innerClasses.containsKey(className);
+	}
+	
+	public boolean containsInnerClass(Type type)
+	{
+		return innerClasses.containsValue(type);		
+	}
+	
+	public boolean recursivelyContainsInnerClass(Type type)
+	{
+		if( innerClasses.containsValue(type) )
+			return true;
+		
+		for( Type innerClass : innerClasses.values() )
+			if( innerClass.recursivelyContainsInnerClass(type) )
+				return true;
+		
+		return false;
+	}
+	
+	public Type getInnerClass(String className) {
+		return innerClasses.get(className);
+	}
+	
+	public void addField(String fieldName, Node node) {
+		fieldTable.put(fieldName, node);
+	}
+	
+	public Node getField(String fieldName) {
+		return fieldTable.get(fieldName);
+	}
+		
+	public Map<String, Node> getFields() {
+		return fieldTable;
+	}	
+	
+	public boolean containsMethod(String symbol)
+	{
+		return methodTable.get(symbol) != null;		
+	}	
+	
+	public boolean containsMethod(MethodSignature signature)
+	{
+		return containsMethod( signature, Modifiers.NO_MODIFIERS );		
+	}
+	
+	
+	public boolean containsMethod(MethodSignature signature, Modifiers modifiers ) //must have certain modifiers (usually public)
+	{
+		List<MethodSignature> list = methodTable.get(signature.getSymbol());
+		
+		if( list != null )
+			for(MethodSignature existing : list )
+				if( existing.equals(signature) && (existing.getMethodType().getModifiers().hasModifier(modifiers) )) 
+					return true;
+		
+		return false;
+	}	
+	
+	public boolean containsIndistinguishableMethod(MethodSignature signature) //not identical, but indistinguishable at call time
+	{
+		List<MethodSignature> list = methodTable.get(signature.getSymbol());
+		
+		if( list != null )
+			for(MethodSignature existing : list )
+				if( existing.isIndistinguishable(signature))
+					return true;
+		
+		return false;
+	}
+	
+	public void addMethod(String name, MethodSignature signature) {
+		if( methodTable.containsKey(name) )		
+			methodTable.get(name).add(signature);
+		else
+		{
+			List<MethodSignature> list = new LinkedList<MethodSignature>();
+			list.add(signature);
+			methodTable.put(name, list);
+		}
+	}
+	
+	public Map<String, List<MethodSignature>> getMethodMap() {
+		return methodTable;
+	}
+
+	public List<MethodSignature> getMethods(String methodName)
+	{
+		return methodTable.get(methodName);
+	}
+
+	public List<MethodSignature> getAllMethods()
+	{
+		List<MethodSignature> methodList = new ArrayList<MethodSignature>();
+
+		recursivelyGetAllMethods(methodList);
+
+		return methodList;
+	}
+	
+	private Map<MethodSignature, Integer> methodIndexCache;
+	public int getMethodIndex( MethodSignature method )
+	{
+		// Lazily load cache
+		if ( methodIndexCache == null )
+		{
+			Map<MethodSignature, Integer> cache =
+					new HashMap<MethodSignature, Integer>();
+			List<MethodSignature> methods = orderAllMethods();
+			for ( int i = 0; i < methods.size(); i++ )
+				cache.put(methods.get(i), i);
+			methodIndexCache = cache;
+		}
+
+		Integer index = methodIndexCache.get(method);
+		return index == null ? -1 : index;
+	}
+
+	public List<MethodSignature> orderAllMethods()
+	{
+		List<MethodSignature> methodList = new ArrayList<MethodSignature>();
+
+		recursivelyOrderAllMethods(methodList);
+
+		return methodList;
+	}
+	
+	protected void orderMethods( List<MethodSignature> methodList )
+	{
+		TreeMap<String, List<MethodSignature>> sortedMethods =
+				new TreeMap<String, List<MethodSignature>>(methodTable);
+
+		for ( List<MethodSignature> methods : sortedMethods.values() )
+			for ( MethodSignature method : methods )
+				if ( method.getModifiers().isPublic() )
+		{
+			int index;
+			for ( index = 0; index < methodList.size(); index++ )
+				if ( methodList.get(index).isIndistinguishable(method) )
+			{
+				methodList.set(index, method);
+				break;
+			}
+			if ( index == methodList.size() )
+				methodList.add(method);
+		}
+	}
+
+	/**
+	 * This function is only used for error reporting as it finds an indistinguishable signature.
+	 * @param signature
+	 * @return
+	 */
+	public MethodSignature getIndistinguishableMethod(MethodSignature signature)
+	{		
+		for(MethodSignature ms : methodTable.get(signature.getSymbol()))
+		{
+			if(ms.isIndistinguishable(signature))
+				return ms;			
+		}
+		
+		return null;
+	}
+	
+	
+	protected Type findType(String[] names, int i)
+	{
+		Type type;
+		for( String name : innerClasses.keySet() )
+		{
+			if( name.equals( names[i]) )
+			{
+				if( i == names.length - 1)
+					return innerClasses.get(name);
+				
+				type = innerClasses.get(name).findType(names, i + 1);
+				if( type != null )
+					return type;
+			}			
+		}
+		
+		for( String name : fieldTable.keySet() )
+		{
+			if( name.equals( names[i]) )
+			{
+				if( i == names.length - 1)
+					return fieldTable.get(name).getType();
+				
+				type = fieldTable.get(name).getType().findType(names, i + 1);
+				if( type != null )
+					return type;
+			}			
+		}
+		
+		for( String name : methodTable.keySet() )
+		{
+			if( name.equals( names[i]) )
+			{
+				UnboundMethodType methodType = new UnboundMethodType(name, this ); 
+				if( i == names.length - 1)
+					return methodType;
+				
+				type = methodType.findType(names, i + 1);
+				if( type != null )
+					return type;
+			}			
+		}
+		
+		return null;
+	}
+	
+	public boolean encloses(Type type) {
+		if( equals(this) )
+			return true;
+		
+		Type outer = type.getOuter();
+		if( outer == null )
+			return false;		
+		
+		return encloses(outer);
+	}
+	
+	public void addReferencedType(Type type)
+	{
+		if (!equals(type) && !(type instanceof TypeParameter ) && !referencedTypes.contains(type) && !isDescendentOf(type))
+			referencedTypes.add(type);
+	}
+	public Set<Type> getReferencedTypes()
+	{
+		return referencedTypes;
+	}
+
+	public boolean hasInterface(InterfaceType type)
+	{
+		return false;
+	}
+	
+	public boolean isDescendentOf(Type type)
+	{
+		return false;
+	}
+	
+	protected void recursivelyGetAllMethods( List<MethodSignature> methodList )
+	{
+		throw new UnsupportedOperationException();
+	}
+	
+	public boolean isRecursivelyParameterized()
+	{
+		return isParameterized();
+	}
+	
+	protected void recursivelyOrderAllMethods( List<MethodSignature> methodList )
+	{
+		throw new UnsupportedOperationException();
+	}
+		
+	public void printMetaFile(PrintWriter out, String linePrefix) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public abstract boolean isSubtype(Type other);
+	public abstract Type replace(SequenceType values, SequenceType replacements );
 }

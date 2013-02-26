@@ -1,12 +1,10 @@
 package shadow.typecheck;
 
 import shadow.parser.javacc.Node;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.Type;
 
 public class MethodSignature {
 	protected final MethodType type;

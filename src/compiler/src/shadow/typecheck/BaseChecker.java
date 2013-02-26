@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 
@@ -13,7 +12,6 @@ import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
-import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.Literal;
 import shadow.parser.javacc.Node;
@@ -21,7 +19,6 @@ import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -38,7 +35,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	private static final Log logger = Loggers.TYPE_CHECKER;
 
 	protected ArrayList<String> errorList = new ArrayList<String>();;
-	protected HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable; /** Holds all of the types we know about */
+	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
 	protected List<String> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
@@ -46,8 +43,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 
 	/** Holds the package tree structure (for name lookups) */
-	protected ClassInterfaceBaseType currentType = null;
-	protected ClassInterfaceBaseType declarationType = null;
+	protected Type currentType = null;
+	protected Type declarationType = null;
 	protected boolean debug;	
 	
 	// these are constants for our error messages to keep things consistent
@@ -64,11 +61,11 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		//abstract String getStr();
 	}
 	
-	public final HashMap<Package, HashMap<String, ClassInterfaceBaseType>> getTypeTable() {
+	public final HashMap<Package, HashMap<String, Type>> getTypeTable() {
 		return typeTable;
 	}
 	
-	public void addType( ClassInterfaceBaseType type, Package p  ) throws PackageException {
+	public void addType( Type type, Package p  ) throws PackageException {
 		p.addType(type); //automatically adds to typeTable and sets type's package				
 	}
 	
@@ -76,7 +73,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return importList;
 	}
 	
-	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> hashMap, List<String> importList, Package packageTree  ) {
+	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, Type>> hashMap, List<String> importList, Package packageTree  ) {
 		this.debug = debug;
 		this.typeTable = hashMap;
 		this.importList = importList;
@@ -173,7 +170,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	
-	public final ClassInterfaceBaseType lookupTypeFromCurrentMethod( String name )
+	public final Type lookupTypeFromCurrentMethod( String name )
 	{		
 		for( Node method : currentMethod )
 		{
@@ -199,9 +196,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	//outer class is just a guess, not a sure thing
 	//this method is used when starting from a specific point (as in when looking up extends lists), rather than from the current type
-	public final ClassInterfaceBaseType lookupTypeStartingAt( String name, Type outer )
+	public final Type lookupTypeStartingAt( String name, Type outer )
 	{	
-		ClassInterfaceBaseType type = null;
+		Type type = null;
 		
 		if( name.contains("@"))
 		{
@@ -229,8 +226,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						}
 					}				
 
-				if( current instanceof ClassInterfaceBaseType )
-					type = ((ClassInterfaceBaseType)current).getInnerClass(name);
+				
+				type = current.getInnerClass(name);
 				
 				if( type != null )
 					return type;
@@ -262,7 +259,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	//nothing known, start with current method (looking for type parameters)
-	public ClassInterfaceBaseType lookupType( String name )
+	public Type lookupType( String name )
 	{
 		if( name.contains("@"))
 		{
@@ -274,12 +271,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}		
 
 	//get type from specific package
-	public final ClassInterfaceBaseType lookupType( String name, Package p )
+	public final Type lookupType( String name, Package p )
 	{		
 		return typeTable.get(p).get(name);
 	}
 	
-	public final ClassInterfaceBaseType lookupType( String packageName, String name )
+	public final Type lookupType( String packageName, String name )
 	{			
 		Package p;
 		
@@ -294,7 +291,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			return null;
 		}
 		
-		HashMap<String, ClassInterfaceBaseType> map = typeTable.get(p); 
+		HashMap<String, Type> map = typeTable.get(p); 
 		return map.get(name);
 	}
 	
@@ -385,7 +382,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			start++;					
 		}
 		
-		ClassInterfaceBaseType type = lookupType(typeName);				
+		Type type = lookupType(typeName);				
 		
 		if(type == null)
 		{
@@ -431,7 +428,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
 			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
 			{
-				ClassInterfaceBaseType outer = type;
+				Type outer = type;
 				child = node.jjtGetChild(i);
 				type = outer.getInnerClass(child.getImage());
 				
@@ -498,7 +495,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			start++;					
 		}
 		
-		ClassInterfaceBaseType type = lookupType(typeName);				
+		Type type = lookupType(typeName);				
 		
 		if(type == null)
 		{
@@ -538,7 +535,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
 			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
 			{
-				ClassInterfaceBaseType outer = type;
+				Type outer = type;
 				child = node.jjtGetChild(i);
 				type = outer.getInnerClass(child.getImage());
 				

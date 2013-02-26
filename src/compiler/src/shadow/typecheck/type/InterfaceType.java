@@ -9,8 +9,8 @@ import java.util.Map;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 
-
-public class InterfaceType extends ClassInterfaceBaseType {
+public class InterfaceType extends Type 
+{
 	protected ArrayList<InterfaceType> extendTypes = new ArrayList<InterfaceType>();
 
 	public InterfaceType(String typeName) {
@@ -21,7 +21,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 		this( typeName, modifiers, null );
 	}	
 		
-	public InterfaceType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
+	public InterfaceType(String typeName, Modifiers modifiers, Type outer ) {
 		super( typeName, modifiers, outer );
 	}
 
@@ -270,7 +270,7 @@ public class InterfaceType extends ClassInterfaceBaseType {
 			out.println();	
 		
 		//inner classes (shouldn't exist in interfaces?)
-		for( ClassInterfaceBaseType _class : getInnerClasses().values() )
+		for( Type _class : getInnerClasses().values() )
 		{
 			_class.printMetaFile(out, indent);		
 		}

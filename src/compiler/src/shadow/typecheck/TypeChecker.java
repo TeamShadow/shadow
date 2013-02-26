@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -15,7 +14,7 @@ import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.type.ClassInterfaceBaseType;
+import shadow.typecheck.type.Type;
 
 public class TypeChecker {
 	private static final Log logger = Loggers.TYPE_CHECKER;
@@ -40,7 +39,7 @@ public class TypeChecker {
 	public boolean typeCheck(Node node, File file) throws ShadowException, ParseException, IOException
 	{	 
 		mainFile = file;
-		HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>>();
+		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		Package packageTree = new Package(typeTable);
 		ArrayList<String> importList = new ArrayList<String>();
 		
@@ -120,8 +119,7 @@ public class TypeChecker {
 				if( !metaVersion.exists() || (shadowVersion.exists() && shadowVersion.lastModified() >= metaVersion.lastModified()) )  
 				{	
 					PrintWriter out = new PrintWriter(metaVersion);
-					ClassInterfaceBaseType type = (ClassInterfaceBaseType) node.getType();
-					type.printMetaFile(out, "");
+					node.getType().printMetaFile(out, "");
 					out.close();						
 				}
 			}

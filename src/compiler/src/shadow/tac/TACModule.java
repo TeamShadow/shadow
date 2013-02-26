@@ -11,19 +11,18 @@ import java.util.Set;
 
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.Type;
 
 public class TACModule
 {
-	private ClassInterfaceBaseType type;
-	private Set<ClassInterfaceBaseType> references =
-			new HashSet<ClassInterfaceBaseType>();
+	private Type type;
+	private Set<Type> references =
+			new HashSet<Type>();
 	private Map<String, Type> fields = new HashMap<String, Type>();
 	private List<TACMethod> methods = new ArrayList<TACMethod>();
-	public TACModule(ClassInterfaceBaseType moduleType)
+	public TACModule(Type moduleType)
 	{
 		type = moduleType;
 		for (String fieldName : moduleType.getFields().keySet())
@@ -46,11 +45,11 @@ public class TACModule
 		add(Type.DOUBLE);
 		if (moduleType.getOuter() != null)
 			add(moduleType.getOuter());
-		for (ClassInterfaceBaseType innerClass :
+		for (Type innerClass :
 				moduleType.getInnerClasses().values())
 			add(innerClass);
 	}
-	private void add(ClassInterfaceBaseType type)
+	private void add(Type type)
 	{
 		if (references.add(type))
 		{
@@ -59,13 +58,12 @@ public class TACModule
 				ClassType classType = (ClassType)type;
 				add(classType.getExtendType());
 				for (Type referenced : classType.getReferencedTypes())
-					if (referenced instanceof ClassInterfaceBaseType)
-						add((ClassInterfaceBaseType)referenced);
+					add(referenced);
 			}
 		}
 	}
 
-	public ClassInterfaceBaseType getType()
+	public Type getType()
 	{
 		return type;
 	}
@@ -95,7 +93,7 @@ public class TACModule
 		return type.getQualifiedName();
 	}
 
-	public Set<ClassInterfaceBaseType> getReferences()
+	public Set<Type> getReferences()
 	{
 		return references;
 	}

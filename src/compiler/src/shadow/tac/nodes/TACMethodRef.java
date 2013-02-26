@@ -4,7 +4,6 @@ import java.util.Collections;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -57,7 +56,7 @@ public class TACMethodRef extends TACOperand
 		name = methodName;
 	}
 
-	public ClassInterfaceBaseType getPrefixType()
+	public Type getPrefixType()
 	{
 		return type.getOuter();
 	}

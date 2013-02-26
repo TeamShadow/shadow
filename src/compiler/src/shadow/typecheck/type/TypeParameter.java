@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Set;
 
 
-public class TypeParameter extends ClassInterfaceBaseType
+public class TypeParameter extends Type
 {
-	private Set<ClassInterfaceBaseType> bounds = new HashSet<ClassInterfaceBaseType>();
+	private Set<Type> bounds = new HashSet<Type>();
 
 	public TypeParameter(String typeName)
 	{
@@ -17,16 +17,16 @@ public class TypeParameter extends ClassInterfaceBaseType
 		bounds.add(Type.OBJECT);
 	}
 	
-	public void addBound(ClassInterfaceBaseType type) {
+	public void addBound(Type type) {
 		bounds.add(type);
 	}
 	
-	public Set<ClassInterfaceBaseType> getBounds()
+	public Set<Type> getBounds()
 	{
 		return bounds;
 	}
 	
-	public void setBounds(Set<ClassInterfaceBaseType> bounds)
+	public void setBounds(Set<Type> bounds)
 	{
 		this.bounds = bounds;
 	}
@@ -64,12 +64,12 @@ public class TypeParameter extends ClassInterfaceBaseType
 		return false;
 	}
 	
-	public ClassInterfaceBaseType replace(SequenceType values, SequenceType replacements )
+	public Type replace(SequenceType values, SequenceType replacements )
 	{
 		for( int i = 0; i < values.size(); i++ )
 		{
 			if( values.get(i).getType().getTypeName().equals(getTypeName()))
-				return (ClassInterfaceBaseType) replacements.get(i).getType();
+				return replacements.get(i).getType();
 		}
 		
 		return this;
@@ -100,7 +100,7 @@ public class TypeParameter extends ClassInterfaceBaseType
 	public List<MethodSignature> getMethods(String methodName)
 	{
 		Set<MethodSignature> signatures = new HashSet<MethodSignature>();
-		for(ClassInterfaceBaseType bound : bounds )					
+		for(Type bound : bounds )					
 			signatures.addAll(bound.getMethods(methodName));
 		
 		return new ArrayList<MethodSignature>(signatures);

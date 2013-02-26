@@ -5,11 +5,11 @@ import java.io.PrintWriter;
 
 public class EnumType extends ClassType
 {
-	public EnumType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
+	public EnumType(String typeName, Modifiers modifiers, Type outer ) {
 		this( typeName, modifiers, outer, Type.ENUM );
 	}
 	
-	public EnumType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer, ClassType extendType ) {
+	public EnumType(String typeName, Modifiers modifiers, Type outer, ClassType extendType ) {
 		super( typeName, modifiers, outer );
 		setExtendType( extendType );
 	}

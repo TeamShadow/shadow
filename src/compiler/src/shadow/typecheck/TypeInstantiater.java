@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -17,7 +16,6 @@ import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
@@ -25,7 +23,6 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UninstantiatedClassType;
@@ -35,7 +32,7 @@ import shadow.typecheck.type.UninstantiatedType;
 public class TypeInstantiater extends BaseChecker {
 
 	public TypeInstantiater(boolean debug,
-			HashMap<Package, HashMap<String, ClassInterfaceBaseType>> hashMap,
+			HashMap<Package, HashMap<String, Type>> hashMap,
 			List<String> importList, Package packageTree) {
 		super(debug, hashMap, importList, packageTree);		
 	}
@@ -48,7 +45,7 @@ public class TypeInstantiater extends BaseChecker {
 			graph.addNode( declarationNode );
 		
 		for(Node declarationNode : nodeTable.values() )
-			for( ClassInterfaceBaseType dependency : ((ClassInterfaceBaseType)declarationNode.getType()).getTypeParameterDependencies()  )
+			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  )
 				graph.addEdge(nodeTable.get(dependency), declarationNode);
 		
 		List<Node> nodeList;
@@ -66,73 +63,69 @@ public class TypeInstantiater extends BaseChecker {
 			//update fields and methods			
 			for(Node declarationNode : nodeList )
 			{	
-				Type type = declarationNode.getType();
-				if( type instanceof ClassInterfaceBaseType )
+				Type type = declarationNode.getType();				
+					
+				//update fields					
+				Map<String,Node> fields = type.getFields();					
+				for( Node node : fields.values() )
 				{
-					ClassInterfaceBaseType classInterfaceBaseType = (ClassInterfaceBaseType) type;
-					
-					//update fields					
-					Map<String,Node> fields = classInterfaceBaseType.getFields();					
-					for( Node node : fields.values() )
-					{
-						 Type nodeType = node.getType();
-						 if( nodeType instanceof UninstantiatedType )
+					 Type nodeType = node.getType();
+					 if( nodeType instanceof UninstantiatedType )
+					 {
+						 try 
 						 {
-							 try 
-							 {
-								node.setType( ((UninstantiatedType)nodeType).instantiate() );
-							 }
-							 catch (InstantiationException e)
-							 {							
-								 addError(declarationNode, Error.INVL_TYP, e.getMessage() );
-							 }							 
+							node.setType( ((UninstantiatedType)nodeType).instantiate() );
 						 }
-					}
-					
-					//update methods					
-					Map<String, List<MethodSignature>> methodTable = classInterfaceBaseType.getMethodMap();					
-					for( String name : methodTable.keySet() )
-					{	
-						for( MethodSignature signature: methodTable.get(name) )
+						 catch (InstantiationException e)
+						 {							
+							 addError(declarationNode, Error.INVL_TYP, e.getMessage() );
+						 }							 
+					 }
+				}
+				
+				//update methods					
+				Map<String, List<MethodSignature>> methodTable = type.getMethodMap();					
+				for( String name : methodTable.keySet() )
+				{	
+					for( MethodSignature signature: methodTable.get(name) )
+					{
+						MethodType methodType = signature.getMethodType();
+						updateTypeParameters(methodType, signature.getNode());
+						
+						for( String parameter : methodType.getParameterNames() )
 						{
-							MethodType methodType = signature.getMethodType();
-							updateTypeParameters(methodType, signature.getNode());
-							
-							for( String parameter : methodType.getParameterNames() )
+							ModifiedType parameterType = methodType.getParameterType(parameter);
+							if( parameterType.getType() instanceof UninstantiatedType )
 							{
-								ModifiedType parameterType = methodType.getParameterType(parameter);
-								if( parameterType.getType() instanceof UninstantiatedType )
+								try
 								{
-									try
-									{
-										parameterType.setType( ((UninstantiatedType)parameterType.getType()).instantiate() );
-									} 
-									catch (InstantiationException e) 
-									{									
-										addError(signature.getNode(), Error.INVL_TYP, e.getMessage() );
-									}
+									parameterType.setType( ((UninstantiatedType)parameterType.getType()).instantiate() );
+								} 
+								catch (InstantiationException e) 
+								{									
+									addError(signature.getNode(), Error.INVL_TYP, e.getMessage() );
 								}
 							}
-							
-							for( ModifiedType returnType : methodType.getReturnTypes() )
-							{
-								if( returnType.getType() instanceof UninstantiatedType )
-								{
-									try
-									{
-										returnType.setType( ((UninstantiatedType)returnType.getType()).instantiate() );
-									} 
-									catch (InstantiationException e) 
-									{									
-										addError(signature.getNode(), Error.INVL_TYP, e.getMessage() );
-									}
-								}
-							}
-							
 						}
+						
+						for( ModifiedType returnType : methodType.getReturnTypes() )
+						{
+							if( returnType.getType() instanceof UninstantiatedType )
+							{
+								try
+								{
+									returnType.setType( ((UninstantiatedType)returnType.getType()).instantiate() );
+								} 
+								catch (InstantiationException e) 
+								{									
+									addError(signature.getNode(), Error.INVL_TYP, e.getMessage() );
+								}
+							}
+						}						
 					}
 				}
 			}
+			
 		}
 		catch( CycleFoundException e )
 		{
@@ -156,13 +149,13 @@ public class TypeInstantiater extends BaseChecker {
 				ClassType classType = (ClassType) type;					
 				graph.addEdge(nodeTable.get(classType.getExtendType()), declarationNode);
 				
-				for( ClassInterfaceBaseType dependency : classType.getInterfaces() )
+				for( Type dependency : classType.getInterfaces() )
 					graph.addEdge(nodeTable.get(dependency), declarationNode);
 			}
 			else if( type instanceof InterfaceType )
 			{
 				InterfaceType interfaceType = (InterfaceType) type;
-				for( ClassInterfaceBaseType dependency : interfaceType.getExtendTypes() )
+				for( Type dependency : interfaceType.getExtendTypes() )
 					graph.addEdge(nodeTable.get(dependency), declarationNode);
 			}				
 		}
@@ -323,13 +316,13 @@ public class TypeInstantiater extends BaseChecker {
 			for( ModifiedType modifiedType : type.getTypeParameters() )
 			{						
 				TypeParameter typeParameter = (TypeParameter) modifiedType.getType();
-				Set<ClassInterfaceBaseType> bounds = typeParameter.getBounds();						
+				Set<Type> bounds = typeParameter.getBounds();						
 				
 				if( !bounds.isEmpty() )
 				{	
-					Set<ClassInterfaceBaseType> updatedBounds = new HashSet<ClassInterfaceBaseType>();
+					Set<Type> updatedBounds = new HashSet<Type>();
 					
-					for( ClassInterfaceBaseType boundType : bounds )
+					for( Type boundType : bounds )
 					{	
 						if( boundType instanceof UninstantiatedType )
 						{

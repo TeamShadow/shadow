@@ -49,7 +49,6 @@ import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -65,7 +64,7 @@ public class LLVMOutput extends AbstractOutput
 	private Process process = null;
 	private int tempCounter = 0, labelCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();
-	private ClassInterfaceBaseType moduleType;
+	private Type moduleType;
 	private boolean inCreate;
 	public LLVMOutput(File file) throws ShadowException
 	{
@@ -181,7 +180,7 @@ public class LLVMOutput extends AbstractOutput
 					sb.append(", ").append(type(field.getValue()));
 			writer.write(sb.append(" }").toString());
 		}
-		for (ClassInterfaceBaseType type : module.getReferences())
+		for (Type type : module.getReferences())
 			if (type instanceof ClassType && !(type instanceof ArrayType) &&
 					!type.equals(module.getType()))
 		{
@@ -246,7 +245,7 @@ public class LLVMOutput extends AbstractOutput
 						type(type) + " null");
 		}
 
-		for (ClassInterfaceBaseType type : module.getReferences())
+		for (Type type : module.getReferences())
 		{
 			if (type instanceof ClassType && !(type instanceof ArrayType) &&
 					!type.equals(module.getType()))
@@ -261,21 +260,21 @@ public class LLVMOutput extends AbstractOutput
 		writer.write();
 
 //		for (Type type : module.getClassType().getAllReferencedTypes())
-//			if (type instanceof ClassInterfaceBaseType && !type.isPrimitive())
-//				defineClass((ClassInterfaceBaseType)type, false);
+//			if ( !type.isPrimitive())
+//				defineClass(type, false);
 //		defineClass(module.getType(), true);
 
-//		for (ClassInterfaceBaseType type : module.getReferences())
+//		for (Type type : module.getReferences())
 //			if (!type.isPrimitive())
 //				declareType(type, type.equals(module.getType()));
 //		writer.write();
 
-//		for (ClassInterfaceBaseType type : module.getReferences())
+//		for (Type type : module.getReferences())
 //			if (!type.isPrimitive())
 //				declareClass(type, type.equals(module.getType()));
 //		writer.write();
 
-//		for (ClassInterfaceBaseType type : module.getReferences())
+//		for (Type type : module.getReferences())
 //			if (!type.isPrimitive())
 //				defineClass(type, type.equals(module.getType()));
 //		writer.write();
@@ -302,7 +301,7 @@ public class LLVMOutput extends AbstractOutput
 //		writer.write();
 	}
 
-//	private void declareClass(ClassInterfaceBaseType type, boolean current)
+//	private void declareClass(Type type, boolean current)
 //			throws ShadowException
 //	{
 //		if (type instanceof ArrayType)
@@ -359,7 +358,7 @@ public class LLVMOutput extends AbstractOutput
 //		writer.write();
 //	}
 //
-//	private void defineClass(ClassInterfaceBaseType type, boolean current)
+//	private void defineClass(Type type, boolean current)
 //			throws ShadowException
 //	{
 //		if (type instanceof ArrayType)
@@ -407,7 +406,7 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void endFile(TACModule module) throws ShadowException
 	{
-		for (ClassInterfaceBaseType type : module.getReferences())
+		for (Type type : module.getReferences())
 			if (type instanceof ClassType && !(type instanceof ArrayType) &&
 					!type.equals(module.getType()))
 		{

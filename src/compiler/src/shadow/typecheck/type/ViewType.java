@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.util.List;
 
 
-public class ViewType extends ClassInterfaceBaseType {
+public class ViewType extends Type {
 
 	public ViewType(String typeName) {
 		super(typeName);

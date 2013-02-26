@@ -28,10 +28,10 @@ import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACVariableRef;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Type;
 
 public class TextOutput extends AbstractOutput
 {
@@ -49,7 +49,7 @@ public class TextOutput extends AbstractOutput
 	@Override
 	public void startFile(TACModule module) throws ShadowException
 	{
-		ClassInterfaceBaseType type = module.getType();
+		Type type = module.getType();
 		StringBuilder sb = new StringBuilder(type.getModifiers().toString()).
 				append("class ").append(type.getQualifiedName());
 		if (type instanceof ClassType)

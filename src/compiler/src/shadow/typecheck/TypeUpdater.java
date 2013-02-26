@@ -40,7 +40,6 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
@@ -59,7 +58,7 @@ import shadow.typecheck.type.TypeParameter;
 public class TypeUpdater extends BaseChecker
 {
 	public TypeUpdater(boolean debug,
-			HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable,
+			HashMap<Package, HashMap<String, Type>> typeTable,
 			List<String> importList, Package packageTree) {
 		super(debug, typeTable, importList, packageTree);
 	}	
@@ -216,7 +215,7 @@ public class TypeUpdater extends BaseChecker
 	}
 	
 	@Override
-	public ClassInterfaceBaseType lookupType( String name ) //only addition to base checker is resolving type parameters
+	public Type lookupType( String name ) //only addition to base checker is resolving type parameters
 	{		
 		if( declarationType != null &&  currentType != declarationType ) //in declaration header, check type parameters of current class declaration
 		{
@@ -319,44 +318,37 @@ public class TypeUpdater extends BaseChecker
 		
 		if( secondVisit )
 		{
-			signature = node.getMethodSignature();
-			if( currentType instanceof ClassInterfaceBaseType )
-			{
-				ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
-
-				// make sure we don't already have an indistinguishable method
-				if( currentClass.containsIndistinguishableMethod(signature) )
-				{				
-					// get the first signature
-					MethodSignature method = currentClass.getIndistinguishableMethod(signature);				
-					addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getNode().getLine());
-					return false;
-				}	
-				
-				
-				//check fields
-				ModifiedType field = currentClass.getField(signature.getSymbol());				
-				if( field != null )
-				{	
-					if( !(field.getModifiers().isGet() && signature.isGet()) && !(field.getModifiers().isSet() && signature.isSet())  )
-					{
-						addError(declaration, Error.MULT_SYM, "First declared on line " + currentClass.getField(signature.getSymbol()).getLine() );
-						return false;				
-					}
-				}
-				
-				if( currentClass.containsInnerClass(signature.getSymbol() ) )
-				{
-					addError(declaration, Error.MULT_SYM );
-					return false;
-				}
-				
-				// add the method to the current type
-				currentClass.addMethod(declaration.getImage(), signature);
-			}
-			else			
-				addError(node, "Cannot add method to a structure that is not a class, interface, error, enum, or exception");
+			signature = node.getMethodSignature();			
 			
+			// make sure we don't already have an indistinguishable method
+			if( currentType.containsIndistinguishableMethod(signature) )
+			{				
+				// get the first signature
+				MethodSignature method = currentType.getIndistinguishableMethod(signature);				
+				addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getNode().getLine());
+				return false;
+			}	
+			
+			
+			//check fields
+			ModifiedType field = currentType.getField(signature.getSymbol());				
+			if( field != null )
+			{	
+				if( !(field.getModifiers().isGet() && signature.isGet()) && !(field.getModifiers().isSet() && signature.isSet())  )
+				{
+					addError(declaration, Error.MULT_SYM, "First declared on line " + currentType.getField(signature.getSymbol()).getLine() );
+					return false;				
+				}
+			}
+			
+			if( currentType.containsInnerClass(signature.getSymbol() ) )
+			{
+				addError(declaration, Error.MULT_SYM );
+				return false;
+			}
+			
+			// add the method to the current type
+			currentType.addMethod(declaration.getImage(), signature);
 			currentMethod.removeFirst();
 		}
 		else
@@ -614,7 +606,7 @@ public class TypeUpdater extends BaseChecker
 			declarationType = declarationType.getOuter();
 		}
 		else
-			declarationType = (ClassInterfaceBaseType)node.getType();
+			declarationType = node.getType();
 			
 		return WalkType.POST_CHILDREN;
 	}
@@ -684,45 +676,35 @@ public class TypeUpdater extends BaseChecker
 			*/
 		}
 		
-		if( currentType instanceof ClassInterfaceBaseType )
+		if( currentType instanceof InterfaceType )
 		{
-			ClassInterfaceBaseType currentClass = (ClassInterfaceBaseType)currentType;
+			//all interface fields are implicitly constant
+			node.addModifier(Modifiers.CONSTANT);							
+		}
+		
+		if( type.isParameterized() && node.getModifiers().isConstant() )
+			addError(node, Error.INVL_TYP, "Fields marked constant cannot have parameterized types");	
+		
+		
+		// go through inserting all the idents
+		for(int i=1; i < node.jjtGetNumChildren(); ++i)
+		{
+			ASTVariableDeclarator child = (ASTVariableDeclarator) node.jjtGetChild(i);
+			child.setType(type);
+			child.setModifiers(node.getModifiers());
+			child.setEnclosingType(currentType);
+			String symbol = child.jjtGetChild(0).getImage();
 			
-			if( currentType instanceof InterfaceType )
+			// make sure we don't already have this symbol
+			if(currentType.containsField(symbol) || currentType.containsMethod(symbol) || currentType.containsInnerClass(symbol) )
 			{
-				//all interface fields are implicitly constant
-				node.addModifier(Modifiers.CONSTANT);
-				//type.addModifier(Modifiers.CONSTANT);				
-			}
-			
-			if( type.isParameterized() && node.getModifiers().isConstant() )
-				addError(node, Error.INVL_TYP, "Fields marked constant cannot have parameterized types");	
-			
-			
-			// go through inserting all the idents
-			for(int i=1; i < node.jjtGetNumChildren(); ++i)
-			{
-				ASTVariableDeclarator child = (ASTVariableDeclarator) node.jjtGetChild(i);
-				child.setType(type);
-				child.setModifiers(node.getModifiers());
-				child.setEnclosingType(currentType);
-				String symbol = child.jjtGetChild(0).getImage();
-				
-				// make sure we don't already have this symbol
-				if(currentClass.containsField(symbol) || currentClass.containsMethod(symbol) || currentClass.containsInnerClass(symbol) )
-				{
-					addError(child.jjtGetChild(0), Error.MULT_SYM, symbol);
-					return WalkType.NO_CHILDREN;
-				}			
+				addError(child.jjtGetChild(0), Error.MULT_SYM, symbol);
+				return WalkType.NO_CHILDREN;
+			}			
 
-				currentClass.addField(symbol, child);
-			}
+			currentType.addField(symbol, child);
 		}
-		else
-		{
-			addError(node, "Cannot add field to a structure that is not a class, interface, error, enum, or exception");
-			return WalkType.NO_CHILDREN;
-		}
+		
 			
 		return WalkType.POST_CHILDREN;
 	}
@@ -792,7 +774,7 @@ public class TypeUpdater extends BaseChecker
 			{
 				ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
 				for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
-					typeParameter.addBound((ClassInterfaceBaseType)(bound.jjtGetChild(i).getType()));				
+					typeParameter.addBound(bound.jjtGetChild(i).getType());				
 			}			
 			
 			node.setType(typeParameter);

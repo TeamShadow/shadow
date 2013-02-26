@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import java.io.PrintWriter;
+
 import shadow.parser.javacc.ASTAssignmentOperator;
 
 public class PropertyType extends Type {
@@ -167,5 +169,4 @@ public class PropertyType extends Type {
 		sb.append("]");
 		return sb.toString();		
 	}
-
 }

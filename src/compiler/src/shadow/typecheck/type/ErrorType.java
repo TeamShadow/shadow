@@ -4,11 +4,11 @@ import java.io.PrintWriter;
 
 public class ErrorType extends ClassType
 {
-	public ErrorType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
+	public ErrorType(String typeName, Modifiers modifiers, Type outer ) {
 		this( typeName, modifiers, outer, Type.ERROR );
 	}
 	
-	public ErrorType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer, ClassType extendType ) {
+	public ErrorType(String typeName, Modifiers modifiers, Type outer, ClassType extendType ) {
 		super( typeName, modifiers, outer );
 		setExtendType( extendType );
 	}

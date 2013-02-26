@@ -14,7 +14,7 @@ import java.util.TreeSet;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 
-public class ClassType extends ClassInterfaceBaseType {
+public class ClassType extends Type {
 	private ClassType extendType;
 	private ArrayList<InterfaceType> implementTypes = new ArrayList<InterfaceType>();
 	
@@ -23,7 +23,7 @@ public class ClassType extends ClassInterfaceBaseType {
 		setExtendType( parent );
 	}
 	
-	public ClassType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {		
+	public ClassType(String typeName, Modifiers modifiers, Type outer ) {		
 		super( typeName, modifiers, outer );
 	}
 	
@@ -391,7 +391,7 @@ public class ClassType extends ClassInterfaceBaseType {
 					replaced.addMethod(name, signature.replace(values, replacements));				
 			}
 			
-			Map<String, ClassInterfaceBaseType> inners = getInnerClasses();
+			Map<String, Type> inners = getInnerClasses();
 			
 			for( String name : inners.keySet() )		
 				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
@@ -537,7 +537,7 @@ public class ClassType extends ClassInterfaceBaseType {
 			out.println();
 		
 		//inner classes
-		for( ClassInterfaceBaseType _class : getInnerClasses().values() )
+		for( Type _class : getInnerClasses().values() )
 		{
 			_class.printMetaFile(out, indent);		
 		}

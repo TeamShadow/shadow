@@ -16,7 +16,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		this.node = node;
 	}
 	
-	public MethodSignature(ClassInterfaceBaseType enclosingType, String symbol, Modifiers modifiers, SignatureNode node) {
+	public MethodSignature(Type enclosingType, String symbol, Modifiers modifiers, SignatureNode node) {
 		type = new MethodType(enclosingType, modifiers);
 		this.symbol = symbol;
 		this.node = node;
@@ -114,7 +114,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.getReturnTypes();
 	}
 	
-	public ClassInterfaceBaseType getOuter()
+	public Type getOuter()
 	{
 		return type.getOuter();
 	}

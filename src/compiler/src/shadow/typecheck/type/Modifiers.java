@@ -248,19 +248,6 @@ public final class Modifiers
 	public void checkFieldModifiers() throws ParseException
 	{
 		checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE), "A field");
-
-		/*
-		if( isSet() && isFinal() )
-			throw new ParseException("A field cannot be marked both set and final");
-		
-		if( isConstant() )
-		{	
-			int updatedModifiers = modifiers & ~CONSTANT;
-
-			if( updatedModifiers != 0 )
-				throw new ParseException("A constant field cannot have any other modifiers");
-		}
-		*/			 			
 	}
 
 	public void checkMethodModifiers() throws ParseException

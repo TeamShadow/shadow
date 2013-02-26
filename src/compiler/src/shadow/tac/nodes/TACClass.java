@@ -2,23 +2,22 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.Type;
 
 public class TACClass extends TACOperand
 {
-	private ClassInterfaceBaseType type;
-	public TACClass(ClassInterfaceBaseType classType)
+	private Type type;
+	public TACClass(Type classType)
 	{
 		this(null, classType);
 	}
-	public TACClass(TACNode node, ClassInterfaceBaseType classType)
+	public TACClass(TACNode node, Type classType)
 	{
 		super(node);
 		type = classType;
 	}
 
-	public ClassInterfaceBaseType getClassType()
+	public Type getClassType()
 	{
 		return type;
 	}

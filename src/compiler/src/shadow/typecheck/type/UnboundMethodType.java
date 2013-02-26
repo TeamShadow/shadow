@@ -1,15 +1,14 @@
 package shadow.typecheck.type;
 
-import java.util.List;
 
 public class UnboundMethodType extends Type
 {
-	public UnboundMethodType(String typeName, ClassInterfaceBaseType outer )
+	public UnboundMethodType(String typeName, Type outer )
 	{
 		this(typeName, outer, new Modifiers());		
 	}
 	
-	public UnboundMethodType(String typeName, ClassInterfaceBaseType outer, Modifiers modifiers)
+	public UnboundMethodType(String typeName, Type outer, Modifiers modifiers)
 	{
 		super( typeName, modifiers, outer);
 	}

@@ -6,11 +6,11 @@ import java.io.PrintWriter;
 
 public class ExceptionType extends ClassType
 {
-	public ExceptionType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
+	public ExceptionType(String typeName, Modifiers modifiers, Type outer ) {
 		this( typeName, modifiers, outer, Type.EXCEPTION );
 	}
 	
-	public ExceptionType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer, ClassType extendType ) {
+	public ExceptionType(String typeName, Modifiers modifiers, Type outer, ClassType extendType ) {
 		super( typeName, modifiers, outer );
 		setExtendType( extendType );
 	}

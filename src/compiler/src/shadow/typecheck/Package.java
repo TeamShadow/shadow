@@ -1,8 +1,6 @@
 package shadow.typecheck;
 
 import java.util.HashMap;
-
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.Type;
 
 public class Package
@@ -24,16 +22,16 @@ public class Package
 	
 	
 	private final HashMap<String, Package> children = new HashMap<String, Package>();
-	private final HashMap<String, ClassInterfaceBaseType> types = new HashMap<String, ClassInterfaceBaseType>();
+	private final HashMap<String, Type> types = new HashMap<String, Type>();
 	private final String name;	
 	private final Package parent;
 	
-	public Package(HashMap<Package, HashMap<String, ClassInterfaceBaseType>> otherTypes)
+	public Package(HashMap<Package, HashMap<String, Type>> otherTypes)
 	{
 		this("", null, otherTypes );
 	}	
 
-	private Package(String name, Package parent,  HashMap<Package, HashMap<String, ClassInterfaceBaseType>> otherTypes)
+	private Package(String name, Package parent,  HashMap<Package, HashMap<String, Type>> otherTypes)
 	{
 		this.name = name;
 		this.parent = parent;
@@ -46,7 +44,7 @@ public class Package
 	 * @param folder
 	 * @return
 	 */
-	public Package addPackage( String name, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable )
+	public Package addPackage( String name, HashMap<Package, HashMap<String, Type>> typeTable )
 	{				
 		if( children.containsKey(name) )
 			return children.get(name);
@@ -62,7 +60,7 @@ public class Package
 	 * @param path
 	 * @return
 	 */
-	public Package addQualifiedPackage( String path, HashMap<Package, HashMap<String, ClassInterfaceBaseType>> typeTable  )
+	public Package addQualifiedPackage( String path, HashMap<Package, HashMap<String, Type>> typeTable  )
 	{
 		if( path.length() > 0 && !path.equals("default") )
 		{
@@ -79,7 +77,7 @@ public class Package
 			return this;
 	}
 	
-	public void addType(ClassInterfaceBaseType type ) throws PackageException
+	public void addType(Type type ) throws PackageException
 	{	
 		if(!types.containsKey(type.getTypeName()))
 		{
@@ -91,8 +89,8 @@ public class Package
 	}
 	
 
-	public void addTypes(HashMap<String, ClassInterfaceBaseType> types) throws PackageException {
-		for( ClassInterfaceBaseType type : types.values() )
+	public void addTypes(HashMap<String, Type> types) throws PackageException {
+		for( Type type : types.values() )
 			addType( type );
 	}
 	

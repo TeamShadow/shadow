@@ -9,7 +9,7 @@ public class SingletonType extends ClassType {
 
 	}
 
-	public SingletonType(String typeName, Modifiers modifiers, ClassInterfaceBaseType outer ) {
+	public SingletonType(String typeName, Modifiers modifiers, Type outer ) {
 		super( typeName, modifiers, outer );
 	}
 	

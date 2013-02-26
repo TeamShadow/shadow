@@ -34,7 +34,6 @@ import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
@@ -47,16 +46,12 @@ import shadow.typecheck.type.ViewType;
 
 public class TypeCollector extends BaseChecker
 {	
-	private Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors and also resolving type parameters
-	private Map<Type,List<String>> extendsTable = new HashMap<Type,List<String>>();	
-	private Map<Type,List<String>> implementsTable = new HashMap<Type,List<String>>();
-	
+	private Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors and also resolving type parameters	
 	private String currentName = "";
-	private Map<String, Node> files = new HashMap<String, Node>();
-	
+	private Map<String, Node> files = new HashMap<String, Node>();	
 	private TypeChecker typeChecker;
 	
-	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, ClassInterfaceBaseType>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker )
+	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker )
 	{		
 		super(debug, typeTable, importList, p );		
 		this.typeChecker = typeChecker;	
@@ -136,7 +131,7 @@ public class TypeCollector extends BaseChecker
 				typeChecker.setCurrentFile(canonicalFile);
 			    SimpleNode otherNode = parser.CompilationUnit();
 			    
-			    HashMap<Package, HashMap<String, ClassInterfaceBaseType>> otherTypes = new HashMap<Package, HashMap<String, ClassInterfaceBaseType>> ();			    
+			    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
 				TypeCollector collector = new TypeCollector(debug, otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
 				walker = new ASTWalker( collector );		
 				walker.walk(otherNode);				
@@ -172,17 +167,7 @@ public class TypeCollector extends BaseChecker
 				Map<Type,Node> otherNodeTable = collector.nodeTable;
 				for( Type type : otherNodeTable.keySet() )
 					if( !nodeTable.containsKey(type) )
-						nodeTable.put(type, otherNodeTable.get(type));
-				
-				Map<Type,List<String>> otherExtendsTable = collector.extendsTable;
-				for( Type type : otherExtendsTable.keySet() )
-					if( !extendsTable.containsKey(type) )
-						extendsTable.put(type, otherExtendsTable.get(type));
-				
-				Map<Type,List<String>> otherImplementsTable = collector.implementsTable;
-				for( Type type : otherImplementsTable.keySet() )
-					if( !implementsTable.containsKey(type) )
-						implementsTable.put(type, otherImplementsTable.get(type));
+						nodeTable.put(type, otherNodeTable.get(type));				
 			}
 		}		
 	}
@@ -241,7 +226,7 @@ public class TypeCollector extends BaseChecker
 		}
 		else
 		{			
-			ClassInterfaceBaseType type = null;	
+			Type type = null;	
 			
 			switch( kind )
 			{			
@@ -334,22 +319,6 @@ public class TypeCollector extends BaseChecker
 			declarationType = type;
 		}
 	}
-	
-	private void finalizeType( SimpleNode node )
-	{		
-		/*
-		for( int i = 0; i < node.jjtGetNumChildren(); i++ ) {
-			Node child = node.jjtGetChild(i); 
-			if( child instanceof ASTExtendsList )
-				addExtends( (ASTExtendsList)child, node.getType());
-			else if( child instanceof ASTImplementsList )
-				addImplements( (ASTImplementsList)child, node.getType() );	
-		}
-		*/
-		
-		nodeTable.put(node.getType(), node );
-	}
-		
 	
 	public boolean addImport( String name )
 	{
@@ -453,7 +422,7 @@ public class TypeCollector extends BaseChecker
 	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
-			finalizeType( node );
+			nodeTable.put(node.getType(), node );
 		else
 			createType( node, node.getModifiers(), node.getKind() );
 			
@@ -463,7 +432,7 @@ public class TypeCollector extends BaseChecker
 	@Override
 	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
-			finalizeType( node );
+			nodeTable.put(node.getType(), node );
 		else
 			createType( node, node.getModifiers(), TypeKind.ENUM );
 
@@ -474,7 +443,7 @@ public class TypeCollector extends BaseChecker
 	@Override
 	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
 		if( secondVisit )
-			finalizeType( node );
+			nodeTable.put(node.getType(), node );
 		else
 			createType( node, node.getModifiers(), TypeKind.VIEW );
 		
@@ -494,7 +463,7 @@ public class TypeCollector extends BaseChecker
 		}
 		else //entering a type
 		{					
-			currentType = (ClassInterfaceBaseType)node.jjtGetParent().getType();
+			currentType = node.jjtGetParent().getType();
 			currentName = currentType.getTypeName();				
 		}
 			

@@ -13,7 +13,6 @@ import java.util.NoSuchElementException;
 
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.type.ClassInterfaceBaseType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -52,7 +51,7 @@ public class TACMethod extends TACNodeList
 		enterScope();
 	}
 
-	public ClassInterfaceBaseType getPrefixType()
+	public Type getPrefixType()
 	{
 		return type.getOuter();
 	}
