@@ -35,7 +35,7 @@ public class StandardLibraryTest {
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
 		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
 	}
-	
+	/*
 	 @Test public void testArray() throws Exception {
 		
 	
@@ -108,7 +108,7 @@ public class StandardLibraryTest {
 		args.add("shadow/standard/Float.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
-
+*/
 		@Test public void testIllegalArgumentException() throws Exception {
 		args.add("shadow/standard/IllegalArgumentException.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
@@ -123,7 +123,7 @@ public class StandardLibraryTest {
 		args.add("shadow/standard/Int.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
-
+/*
 		@Test public void testIterator() throws Exception {
 		args.add("shadow/standard/Iterator.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
@@ -193,4 +193,5 @@ public class StandardLibraryTest {
 		args.add("shadow/standard/UShort.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	*/
 }

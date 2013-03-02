@@ -120,7 +120,8 @@ import shadow.typecheck.type.UnboundMethodType;
 
 //no automatic promotion for bitwise operators
 
-public class ClassChecker extends BaseChecker {	
+public class ClassChecker extends BaseChecker 
+{	
 
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
@@ -2432,7 +2433,7 @@ public class ClassChecker extends BaseChecker {
 		
 	}
 	
-	protected void setMethodType( ASTMethodCall node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments )
+	protected MethodSignature setMethodType( ASTMethodCall node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments )
 	{
 		TreeMap<MethodSignature, MethodType> acceptableMethods = new TreeMap<MethodSignature, MethodType>();
 		boolean hasTypeArguments = typeArguments != null;				
@@ -2483,12 +2484,12 @@ public class ClassChecker extends BaseChecker {
 			
 			if( !methodIsAccessible( signature, currentType  ))					
 				addError(node, Error.INVL_MOD, "Method " + signature + " is not accessible from current context");						
-				
-			if( !methodType.getOuter().getModifiers().isImmutable() && !signature.isCreate() && !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isImmutable() && !methodType.getModifiers().isImmutable())
-				addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from an immutable method");
-	
+		
 			node.setType(methodType);
+			return signature;
 		}		
+		
+		return null;
 	}
 	
 	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException	
@@ -2519,7 +2520,13 @@ public class ClassChecker extends BaseChecker {
 			{
 				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);
 				List<MethodSignature> methods = prefixType.getOuter().getMethods(unboundMethod.getTypeName());
-				setMethodType(node, methods, typeArguments, arguments); //type set inside									
+				MethodSignature signature = setMethodType(node, methods, typeArguments, arguments); //type set inside
+				
+				if( signature != null &&  prefixNode.getModifiers().isImmutable() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )
+					addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from an immutable reference");
+				
+				if( signature != null &&  prefixNode.getModifiers().isReadonly() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )
+					addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from a readonly reference");				
 			}			
 			else if( prefixType instanceof MethodType ) //only happens with method pointers
 			{
@@ -2547,9 +2554,12 @@ public class ClassChecker extends BaseChecker {
 					addError(node, Error.TYPE_MIS, "Cannot apply arguments " + arguments + " to method given by " + node);
 					node.setType(Type.UNKNOWN);
 				}
+								
+				if( prefixNode.getModifiers().isImmutable() && !methodType.getModifiers().isImmutable() && !methodType.getModifiers().isReadonly()  )
+					addError(node, Error.INVL_MOD, "Mutable method cannot be called from an immutable reference");
 				
-				if( !currentMethod.isEmpty() && currentMethod.getFirst().getModifiers().isImmutable() && !methodType.getModifiers().isImmutable())
-					addError(node, Error.INVL_MOD, "Mutable method cannot be called from an immutable method");				
+				if( prefixNode.getModifiers().isReadonly() && !methodType.getModifiers().isImmutable() && !methodType.getModifiers().isReadonly()  )
+					addError(node, Error.INVL_MOD, "Mutable method cannot be called from a readonly reference");
 			}			
 			else
 			{									

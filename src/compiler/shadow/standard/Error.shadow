@@ -11,6 +11,6 @@ immutable error shadow.standard@Error
 
 	public toString() => ( String )
 	{
-		return message;
+		return super->message;
 	}
 }
