@@ -5,13 +5,13 @@ import static junit.framework.Assert.assertEquals;
 import java.util.ArrayList;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import shadow.Loggers;
 import shadow.Main;
+import shadow.typecheck.type.Type;
 
 public class StandardLibraryTest {
 	
@@ -34,8 +34,14 @@ public class StandardLibraryTest {
 		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
 		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
+	}	
+	
+	@After
+	public void cleanUp()
+	{
+		Type.clearTypes();
 	}
-	/*
+	
 	 @Test public void testArray() throws Exception {
 		
 	
@@ -108,7 +114,7 @@ public class StandardLibraryTest {
 		args.add("shadow/standard/Float.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
-*/
+
 		@Test public void testIllegalArgumentException() throws Exception {
 		args.add("shadow/standard/IllegalArgumentException.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
@@ -123,7 +129,7 @@ public class StandardLibraryTest {
 		args.add("shadow/standard/Int.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
-/*
+
 		@Test public void testIterator() throws Exception {
 		args.add("shadow/standard/Iterator.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
@@ -192,6 +198,5 @@ public class StandardLibraryTest {
 	@Test public void testUShort() throws Exception {
 		args.add("shadow/standard/UShort.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
-	}
-	*/
+	}	
 }

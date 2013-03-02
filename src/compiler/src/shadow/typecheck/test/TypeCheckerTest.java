@@ -5,13 +5,13 @@ import static junit.framework.Assert.assertEquals;
 import java.util.ArrayList;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import shadow.Loggers;
 import shadow.Main;
+import shadow.typecheck.type.Type;
 
 public class TypeCheckerTest {
 	
@@ -34,6 +34,12 @@ public class TypeCheckerTest {
 		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
 		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
+	}
+	
+	@After
+	public void cleanUp()
+	{
+		Type.clearTypes();
 	}
 	
 	 @Test public void testArray() throws Exception {

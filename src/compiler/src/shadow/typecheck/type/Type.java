@@ -151,6 +151,35 @@ public abstract class Type {
 	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(), null);
 	
+	//used to clear out types between runs of the JUnit tests
+	//otherwise, types can become mixed between two different runs of the type checker
+	public static void clearTypes()				
+	{
+		OBJECT = null;
+		CLASS = null;
+		ARRAY = null;
+		ENUM = null;
+		EXCEPTION = null;	
+		ERROR = null;			
+		BOOLEAN = null;
+		BYTE = null;
+		CODE = null;
+		DOUBLE = null;
+		FLOAT = null;	
+		INT = null;
+		LONG = null;
+		SHORT = null;
+		UBYTE = null;
+		UINT = null;
+		ULONG = null;
+		USHORT = null;
+		STRING = null;
+		CAN_COMPARE = null;
+		CAN_INDEX = null;
+		CAN_ITERATE = null;
+		NUMBER = null;
+	}
+	
 	public Type(String typeName) {
 		this( typeName, new Modifiers() );
 	}
