@@ -125,7 +125,8 @@ class shadow.utility@LinkedList<V> implements List<V>
 	{
 		return LinkedListIterator:create();
 	}
-	private final class LinkedListIterator implements Iterator<V>
+	
+	private class LinkedListIterator implements Iterator<V>
 	{
 		Node current = header->next;
 		int expectedModifications = modifications;

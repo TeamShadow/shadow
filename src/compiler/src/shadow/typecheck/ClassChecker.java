@@ -1386,7 +1386,7 @@ public class ClassChecker extends BaseChecker
 				
 								
 				Type outer = unboundMethod.getOuter();				
-				for( MethodSignature signature : outer.getMethods(unboundMethod.getTypeName()) )
+				for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) )
 					if( signature.getMethodType().matches(method.getParameterTypes()) && signature.getMethodType().canReturn(method.getReturnTypes()))
 					{
 						node.setType(signature.getMethodType());
@@ -1492,17 +1492,25 @@ public class ClassChecker extends BaseChecker
 		Type t1 = node.jjtGetChild(0).getType(); //Type declaration
 		Type t2 = node.jjtGetChild(1).getType(); //Collection
 		
-		//
-		// TODO: Eventually we'll want the notion of a collection and need to check that here
-		//
 		if( t2 instanceof ArrayType )
 		{
 			ArrayType array = (ArrayType)t2;
 			if( !array.getBaseType().isSubtype(t1) )
 				addError(node, Error.TYPE_MIS, "incompatible foreach variable, found: " + t1 + " expected: " + array.getBaseType());
 		}
+		else if( t2.hasInterface(Type.CAN_ITERATE) )
+		{
+			Type iterationType = null;
+			for(InterfaceType _interface : t2.getInterfaces() )
+				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE))				
+					iterationType = _interface.getTypeParameters().getType(0);
+			
+			
+			if( iterationType == null || !iterationType.isSubtype(t1) )
+				addError(node, Error.TYPE_MIS, "incompatible foreach variable, found: " + t1 + " expected: " + iterationType);			
+		}
 		else
-			addError(node, Error.TYPE_MIS, "foreach loop only works on arrays in this typechecker build, found: " + t2);
+			addError(node, Error.TYPE_MIS, "Type " + t2 + " does not implement CanIterate and cannot be the target of a foreach loop");
 			
 				
 		return WalkType.POST_CHILDREN;
@@ -1939,7 +1947,7 @@ public class ClassChecker extends BaseChecker
 									
 					TreeMap<MethodSignature, MethodType> acceptableIndexes = new TreeMap<MethodSignature, MethodType>();
 					
-					for( MethodSignature signature : prefixType.getMethods("index") ) 
+					for( MethodSignature signature : prefixType.getAllMethods("index") ) 
 					{		
 						MethodType methodType = signature.getMethodType();
 						
@@ -2105,7 +2113,7 @@ public class ClassChecker extends BaseChecker
 			}
 			else
 			{				
-				List<MethodSignature> methods = prefixType.getMethods(methodName);
+				List<MethodSignature> methods = prefixType.getAllMethods(methodName);
 				
 				//unbound method (it gets bound when you supply arguments)
 				if( methods != null && methods.size() > 0 )			
@@ -2279,9 +2287,10 @@ public class ClassChecker extends BaseChecker
 						node.addModifier(Modifiers.ASSIGNABLE);					
 				}
 			}
-			else if( prefixType.containsInnerClass(name) )
+			else if( prefixType instanceof ClassType && ((ClassType)prefixType).containsInnerClass(name) )
 			{
-				Type innerClass = prefixType.getInnerClass(name);
+				ClassType classType = (ClassType) prefixType;
+				ClassType innerClass = classType.getInnerClass(name);
 				
 				if( !classIsAccessible( innerClass, currentType ) )
 					addError(node, Error.TYPE_MIS, "Class " + innerClass + " is not accessible from current context");
@@ -2322,7 +2331,7 @@ public class ClassChecker extends BaseChecker
 			}	
 			else
 			{				
-				List<MethodSignature> methods = prefixType.getMethods(propertyName);				
+				List<MethodSignature> methods = prefixType.getAllMethods(propertyName);				
 
 				if( methods != null && methods.size() > 0 )
 				{
@@ -2519,7 +2528,12 @@ public class ClassChecker extends BaseChecker
 			if( prefixType instanceof UnboundMethodType )
 			{
 				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);
-				List<MethodSignature> methods = prefixType.getOuter().getMethods(unboundMethod.getTypeName());
+				List<MethodSignature> methods;
+				Type outer = prefixType.getOuter(); 
+				if(outer instanceof ClassType )
+					methods = ((ClassType)outer).getAnyVisibleMethods(unboundMethod.getTypeName());
+				else
+					methods = outer.getAllMethods(unboundMethod.getTypeName());
 				MethodSignature signature = setMethodType(node, methods, typeArguments, arguments); //type set inside
 				
 				if( signature != null &&  prefixNode.getModifiers().isImmutable() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )

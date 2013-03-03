@@ -40,13 +40,24 @@ public class TypeInstantiater extends BaseChecker {
 	public void instantiateTypes(Map<Type,Node> nodeTable) throws ShadowException
 	{	
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
+		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();		
 		
 		for(Node declarationNode : nodeTable.values() )
+		{
 			graph.addNode( declarationNode );
+			Type typeWithoutArguments = declarationNode.getType().getTypeWithoutTypeArguments(); 
+			uninstantiatedNodes.put(typeWithoutArguments, declarationNode);
+		}
 		
 		for(Node declarationNode : nodeTable.values() )
 			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  )
-				graph.addEdge(nodeTable.get(dependency), declarationNode);
+			{
+				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
+				if( dependencyNode == null )
+					addError(declarationNode, "Dependency not found");
+				else
+					graph.addEdge(dependencyNode, declarationNode);				
+			}
 		
 		List<Node> nodeList;
 		
@@ -146,19 +157,30 @@ public class TypeInstantiater extends BaseChecker {
 			
 			if( type instanceof ClassType )
 			{
-				ClassType classType = (ClassType) type;					
-				graph.addEdge(nodeTable.get(classType.getExtendType()), declarationNode);
+				ClassType classType = (ClassType) type;
 				
-				for( Type dependency : classType.getInterfaces() )
-					graph.addEdge(nodeTable.get(dependency), declarationNode);
+				if( classType.getExtendType() != null )
+				{
+					Node dependencyNode = uninstantiatedNodes.get(classType.getExtendType().getTypeWithoutTypeArguments());
+					if( dependencyNode == null )
+						addError(declarationNode, "Dependency not found");
+					else
+						graph.addEdge(dependencyNode, declarationNode);
+				}
 			}
-			else if( type instanceof InterfaceType )
+				
+			for( Type dependency : type.getInterfaces() )
 			{
-				InterfaceType interfaceType = (InterfaceType) type;
-				for( Type dependency : interfaceType.getExtendTypes() )
-					graph.addEdge(nodeTable.get(dependency), declarationNode);
-			}				
+				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
+				if( dependencyNode == null )
+					addError(declarationNode, "Dependency not found");
+				else
+					graph.addEdge(dependencyNode, declarationNode);
+			}
 		}
+		
+		Type hashSet = null;
+		Type arrayList = null;
 		
 		try
 		{
@@ -171,6 +193,10 @@ public class TypeInstantiater extends BaseChecker {
 				{
 					ClassType classType = (ClassType) type;					
 					ClassType parent = classType.getExtendType();
+					if( classType.getTypeName().endsWith("HashSet") )
+						hashSet = classType;
+					else if( classType.getTypeName().endsWith("ArrayList") )
+						arrayList = classType;
 					
 					//update parent
 					if( parent != null && parent instanceof UninstantiatedClassType )
@@ -208,7 +234,7 @@ public class TypeInstantiater extends BaseChecker {
 				else if( type instanceof InterfaceType )
 				{	
 					//update interfaces
-					ArrayList<InterfaceType> interfaces = ((InterfaceType)type).getExtendTypes();;					
+					ArrayList<InterfaceType> interfaces = ((InterfaceType)type).getInterfaces();;					
 					for( int i = 0; i < interfaces.size(); i++ )
 					{ 
 						InterfaceType interfaceType = interfaces.get(i);
@@ -301,9 +327,16 @@ public class TypeInstantiater extends BaseChecker {
 				
 				//check to see if all interfaces are satisfied				
 				for( InterfaceType interfaceType : classType.getInterfaces() )
-				{						
-					if( !classType.satisfiesInterface(interfaceType) )
-						addError(Error.INVL_TYP, "Type " + classType + " does not implement interface " + interfaceType );					
+				{	
+					ArrayList<String> reasons = new ArrayList<String>();
+					
+					if( !classType.satisfiesInterface(interfaceType, reasons) )
+					{
+						String message = "Type " + classType + " does not implement interface " + interfaceType;
+						for( String reason : reasons )
+							message += "\n\t" + reason;
+						addError(Error.INVL_TYP, message );
+					}
 				}
 			}
 		}

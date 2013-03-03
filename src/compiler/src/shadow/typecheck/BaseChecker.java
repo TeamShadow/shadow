@@ -226,8 +226,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						}
 					}				
 
-				
-				type = current.getInnerClass(name);
+				if( current instanceof ClassType )
+					type = ((ClassType)current).getInnerClass(name);
 				
 				if( type != null )
 					return type;
@@ -430,7 +430,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			{
 				Type outer = type;
 				child = node.jjtGetChild(i);
-				type = outer.getInnerClass(child.getImage());
+				type = null;
+				if( outer instanceof ClassType )
+					type = ((ClassType)outer).getInnerClass(child.getImage());
 				
 				if(type == null)
 				{
@@ -537,7 +539,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			{
 				Type outer = type;
 				child = node.jjtGetChild(i);
-				type = outer.getInnerClass(child.getImage());
+				type = null;
+				if( outer instanceof ClassType )
+					type = ((ClassType)outer).getInnerClass(child.getImage());
 				
 				if(type == null)
 				{

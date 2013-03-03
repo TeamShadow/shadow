@@ -213,7 +213,7 @@ public class TypeCollector extends BaseChecker
 				image = image.toLowerCase();				
 			}
 		}		
-		
+			
 		if( currentType == null )
 			typeName = currentName + image; //package name is separate
 		else
@@ -243,7 +243,7 @@ public class TypeCollector extends BaseChecker
 				type = new ExceptionType(typeName, modifiers, currentType );
 				break;
 			case INTERFACE:
-				type = new InterfaceType(typeName, modifiers, currentType );
+				type = new InterfaceType(typeName, modifiers);
 				break;
 			case SINGLETON:
 				type = new SingletonType(typeName, modifiers, currentType );

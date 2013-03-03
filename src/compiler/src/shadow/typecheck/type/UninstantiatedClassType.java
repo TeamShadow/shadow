@@ -35,4 +35,16 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 		return type.replace(type.getTypeParameters(), typeArguments);
 	}
 	
+	@Override
+	public String toString(boolean withBounds)
+	{
+		return type.toString() + typeArguments.toString(" [", "]", withBounds);
+	}
+	
+	@Override
+	public Type getTypeWithoutTypeArguments()
+	{
+		return type.getTypeWithoutTypeArguments();		
+	}
+	
 }

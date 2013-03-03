@@ -27,9 +27,9 @@ public class ViewType extends Type {
 	}
 	
 	@Override
-	public String toString()
+	public String toString(boolean withBounds)
 	{		
-		return "#" + super.toString();
+		return "#" + super.toString(withBounds);
 	}
 
 	@Override
@@ -54,11 +54,6 @@ public class ViewType extends Type {
 		return false;
 	}
 
-	@Override
-	protected void recursivelyGetAllMethods(List<MethodSignature> methodList) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	protected void recursivelyOrderAllMethods(List<MethodSignature> methodList) {

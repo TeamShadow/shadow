@@ -6,16 +6,16 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 
 	private class Node
 	{
-		int hash;
-		V value;
-		nullable Node next = null;
+		get int hash;
+		get nullable V value;
+		get set nullable Node next = null;
 
-		private create( int initialHash, V initialValue )
+		public create( int initialHash, V initialValue )
 		{
 			hash = initialHash;
 			value = initialValue;
 		}
-		private create( int initialHash, V initialValue, nullable Node after )
+		public create( int initialHash, V initialValue, nullable Node after )
 		{
 			hash = initialHash;
 			value = initialValue;
@@ -27,7 +27,7 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	{
 		uint temp = cast<uint>value->hash;
 		int hash = cast<int>(temp ^ temp >> 16 ^ temp >> 8);
-		return ( hash & table->size - 1, index );
+		return ( hash & table->size - 1, hash );
 	}
 
 	public index( V value ) => ( boolean found )
@@ -37,7 +37,7 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	public index( V value, boolean add ) => ()
 	{
 		if ( add )
-			add(value);
+			this.add(value);
 		else
 			remove(value);
 	}
@@ -46,12 +46,12 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	{
 		int index;
 		int hash;
-		( index, hash ) = hash(value);
+		( index, hash ) = this.hash(value);
 		try
 		{
 			Node current = check(table[index]);
-			while ( current:hash != hash and current:value != value )
-				current = check(current:next);
+			while ( current->hash != hash and current->value != value )
+				current = check(current->next);
 			return false;
 		}
 		recover
@@ -65,20 +65,20 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	{	
 		int index;
 		int hash;
-		( index, hash ) = hash(value);
+		( index, hash ) = this.hash(value);
 		try
 		{
 			nullable Node last = null;
 			Node current = check(table[index]);
-			while ( current:hash != hash and current:value != value )
-				( last, current ) = ( current, check(current:next) );
+			while ( current->hash != hash and current->value != value )
+				( last, current ) = ( current, check(current->next) );
 			try
 			{
-				check(last):next = current:next;
+				check(last)->next = current->next;
 			}
 			recover
 			{
-				table[index] = current:next;
+				table[index] = current->next;
 			}
 			modifications += 1;
 			return true;
@@ -91,12 +91,12 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	public immutable contains( V value ) => ( boolean found )
 	{
 		int index, hash;
-		( index, hash ) = hash(value);
+		( index, hash ) = this.hash(value);
 		try
 		{
 			Node current = check(table[index]);
-			while ( current:hash != hash and current:value != value )
-				current = check(current:next);
+			while ( current->hash != hash and current->value != value )
+				current = check(current->next);
 			return true;
 		}
 		recover
@@ -109,20 +109,28 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 	{
 		return HashSetIterator:create();
 	}
+	
+	public clear() => ()
+	{
+		size = 0;
+		table = Node:create[256];
+	}
+	
+	
 	private class HashSetIterator implements Iterator<V>
 	{
 		int index = 0;
 		nullable Node current;
 		int expectedModifications = modifications;
-		private create()
+		public create()
 		{
 			current = next(null);
 		}
-		private next( nullable Node current ) => ( nullable Node )
+		public next( nullable Node current ) => ( nullable Node )
 		{
 			try
 			{
-				return check(check(current):next);
+				return check(check(current)->next);
 			}
 			recover
 			{
@@ -147,14 +155,14 @@ class shadow.utility@HashSet<V is CanHash> implements Set<V>
 			return current !== null;
 		}
 
-		private next() => ( V value )
+		public next() => ( V value )
 		{
 			checkForModifications();
 			try
 			{
-				V value;
-				(  value, current ) = ( check(current):value, next(current) );
-				return value;
+				nullable V value = null;
+				(  value, current ) = ( check(current)->value, next(current) );
+				return check(value);
 			}
 			recover
 			{

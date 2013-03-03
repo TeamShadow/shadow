@@ -42,14 +42,7 @@ public class TypeParameter extends Type
 	
 	public boolean canTakeSubstitution(Type type)
 	{
-		if( type instanceof TypeParameter )
-		{
-			TypeParameter typeParameter = (TypeParameter) type;
-			return typeName.equals(typeParameter.typeName);
-		}
-		else
-			
-			return false;
+		return equals(type);
 	}
 	
 	public boolean isSubtype(Type type)
@@ -64,6 +57,33 @@ public class TypeParameter extends Type
 		return false;
 	}
 	
+	public boolean equals(Object o)
+	{
+		if( o != null && o instanceof TypeParameter )
+		{
+			if( o == this )
+				return true;
+			
+			TypeParameter type = (TypeParameter) o;
+			
+			if( type.getTypeName().equals(getTypeName()) )
+			{
+				if( type.bounds.size() != bounds.size() )
+					return false;
+								
+				for( Type bound : bounds )
+					if( !type.bounds.contains(bound) )
+						return false;
+					
+				return true;
+			}	
+			else
+				return false;
+		}
+		else
+			return false;
+	}
+	
 	public Type replace(SequenceType values, SequenceType replacements )
 	{
 		for( int i = 0; i < values.size(); i++ )
@@ -76,25 +96,36 @@ public class TypeParameter extends Type
 	}
 	
 	public String toString() {
+		return toString(false);
+	}
+	
+	public String toString(boolean withBounds) {
 		StringBuilder builder = new StringBuilder(getTypeName());
 		boolean first = true;
 		
-		if( bounds.size() > 1 ) //always contains Object
+		if( withBounds && bounds.size() > 1 ) //always contains Object
+		{	
 			builder.append(" is ");
-		
-		for(Type bound : bounds )
-		{			
-			if( !first )
-				builder.append(" and ");
 			
-			if( bound != Type.OBJECT )
-			{
-				builder.append(bound.toString());				
-				first = false;
+			for(Type bound : bounds )
+			{	
+				if( bound != Type.OBJECT )
+				{			
+					if( !first )
+						builder.append(" and ");
+					
+					builder.append(bound.toString(withBounds));				
+					first = false;
+				}
 			}
 		}
 		
 		return builder.toString();
+	}
+	
+	public List<MethodSignature> getAllMethods(String methodName)
+	{
+		return getMethods(methodName);
 	}
 	
 	public List<MethodSignature> getMethods(String methodName)
@@ -126,12 +157,7 @@ public class TypeParameter extends Type
 	public boolean hasInterface(InterfaceType type) {
 		return false;
 	}
-	
 
-	@Override
-	protected void recursivelyGetAllMethods(List<MethodSignature> methodList) {
-		// should never get called
-	}
 
 	@Override
 	protected void recursivelyOrderAllMethods(List<MethodSignature> methodList) {

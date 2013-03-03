@@ -11,30 +11,20 @@ import shadow.parser.javacc.SimpleNode;
 
 public class InterfaceType extends Type 
 {
-	protected ArrayList<InterfaceType> extendTypes = new ArrayList<InterfaceType>();
-
 	public InterfaceType(String typeName) {
 		this( typeName, new Modifiers() );
 	}
 	
 	public InterfaceType(String typeName, Modifiers modifiers) {
-		this( typeName, modifiers, null );
+		super( typeName, modifiers );
 	}	
-		
-	public InterfaceType(String typeName, Modifiers modifiers, Type outer ) {
-		super( typeName, modifiers, outer );
-	}
 
-	public void addExtendType(InterfaceType extendType) {
-		this.extendTypes.add(extendType);
-	}
-	
 	public boolean hasInterface(InterfaceType type)
 	{	
 		if( this.getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments() ))
 			return true;
 				
-		for( InterfaceType interfaceType : extendTypes )
+		for( InterfaceType interfaceType : getInterfaces() )
 			if( interfaceType.hasInterface(type) )
 				return true;
 		
@@ -43,7 +33,7 @@ public class InterfaceType extends Type
 	
 	public boolean isDescendentOf(Type type)
 	{			
-		for( InterfaceType parent : extendTypes )
+		for( InterfaceType parent : getInterfaces() )
 		{
 			if( parent.equals(type) || parent.isDescendentOf( type ))
 				return true;			
@@ -57,37 +47,50 @@ public class InterfaceType extends Type
 			return true;		
 		
 		//check extends		
-		for( InterfaceType parent : extendTypes )
+		for( InterfaceType parent : getInterfaces() )
 			if( parent.recursivelyContainsMethod(symbol ) )
 					return true;			 		
 		
 		return false;
 	}
 
-	@Override
-	protected void recursivelyGetAllMethods( List<MethodSignature> methodList )
-	{
-		for ( InterfaceType parent : getExtendTypes() )
+	
+	
+	protected void recursivelyGetAllMethods( List<MethodSignature> methodList  )
+	{	
+		for ( InterfaceType parent : getInterfaces() )
 			parent.recursivelyGetAllMethods(methodList);
 
 		for ( List<MethodSignature> methods : getMethodMap().values() )
 			for ( MethodSignature method : methods )
 				methodList.add(method);
 	}
+	
 
 	@Override
 	protected void recursivelyOrderAllMethods( List<MethodSignature> methodList )
 	{
-		for ( InterfaceType parent : getExtendTypes() )
+		for ( InterfaceType parent : getInterfaces() )
 			parent.recursivelyGetAllMethods(methodList);
 
 		orderMethods(methodList);
 	}
-
-	public ArrayList<InterfaceType> getExtendTypes()
+	
+	protected void addAllMethods(String methodName, List<MethodSignature> list)
 	{
-		return extendTypes;
+		includeMethods( methodName, list );			
+		for( InterfaceType _interface : getInterfaces() )				
+			_interface.addAllMethods(methodName, list);		
 	}
+	
+	//get methods from interface and ancestors
+	public List<MethodSignature> getAllMethods(String methodName)
+	{
+		List<MethodSignature> list = new ArrayList<MethodSignature>();		
+		addAllMethods( methodName, list );					
+		return list;
+	}
+	
 
 	//see if interface has circular extends hierarchy
 	public boolean isCircular()
@@ -107,7 +110,7 @@ public class InterfaceType extends Type
 		
 		descendants.add(this.typeWithoutTypeArguments);
 		
-		for( InterfaceType _interface : extendTypes )
+		for( InterfaceType _interface : getInterfaces() )
 			if( _interface.recursiveIsCircular(descendants) )
 				return true;
 		
@@ -125,14 +128,14 @@ public class InterfaceType extends Type
 			if( cached != null )
 				return (InterfaceType)cached;
 			
-			InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers(), getOuter() );
+			InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers() );
 			replaced.setPackage(getPackage());
 			
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;			
 			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
 			
-			for( InterfaceType _interface : extendTypes )
-				replaced.addExtendType(_interface.replace(values, replacements));		
+			for( InterfaceType _interface : getInterfaces() )
+				replaced.addInterface(_interface.replace(values, replacements));		
 			
 			//only constant non-parameterized fields in an interface
 			Map<String, Node> fields = getFields(); 
@@ -184,7 +187,7 @@ public class InterfaceType extends Type
 		if( isParameterized() )
 			return true;
 		
-		for( InterfaceType parent : extendTypes )
+		for( InterfaceType parent : getInterfaces() )
 			if( parent.isRecursivelyParameterized() )
 				return true;
 		
@@ -209,9 +212,8 @@ public class InterfaceType extends Type
 	{
 		//imports
 		if( getOuter() == null )
-			for( Type importType : getReferencedTypes() )
-				if( !recursivelyContainsInnerClass(importType) )
-					out.println(linePrefix + "import " + importType.getImportName() + ";");
+			for( Type importType : getReferencedTypes() )				
+				out.println(linePrefix + "import " + importType.getImportName() + ";");
 		
 		//modifiers
 		out.print("\n" + linePrefix + getModifiers());		
@@ -219,16 +221,19 @@ public class InterfaceType extends Type
 		
 		//type name
 		if( getOuter() == null ) //outermost interface		
-			out.print(getQualifiedName());
+			out.print(getQualifiedName(true));
 		else
-			out.print(toString().substring(getTypeName().lastIndexOf(':') + 1));
+		{
+			String name = toString(true); 
+			out.print(name.substring(name.lastIndexOf(':') + 1));
+		}
 		
 		//extend types		
-		if( extendTypes.size() > 0 )
+		if( getInterfaces().size() > 0 )
 		{
 			out.print("extends " );
 			boolean first = true;
-			for( InterfaceType _interface : extendTypes )
+			for( InterfaceType _interface : getInterfaces() )
 			{
 				if(!first)
 					out.print(", ");
@@ -269,11 +274,6 @@ public class InterfaceType extends Type
 		if( newLine )
 			out.println();	
 		
-		//inner classes (shouldn't exist in interfaces?)
-		for( Type _class : getInnerClasses().values() )
-		{
-			_class.printMetaFile(out, indent);		
-		}
 		
 		out.println(linePrefix + "}\n");	
 	}

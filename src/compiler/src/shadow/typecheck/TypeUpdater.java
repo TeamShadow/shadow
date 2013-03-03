@@ -103,7 +103,7 @@ public class TypeUpdater extends BaseChecker
 						
 						if( fieldModifiers.isGet() || fieldModifiers.isSet() )
 						{
-							List<MethodSignature> methods = classType.getMethods(field.getKey());
+							List<MethodSignature> methods = classType.getAllMethods(field.getKey());
 							int getterCount = 0;
 							int setterCount = 0;
 							int other = 0;
@@ -341,7 +341,7 @@ public class TypeUpdater extends BaseChecker
 				}
 			}
 			
-			if( currentType.containsInnerClass(signature.getSymbol() ) )
+			if( currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(signature.getSymbol() ) )
 			{
 				addError(declaration, Error.MULT_SYM );
 				return false;
@@ -496,28 +496,13 @@ public class TypeUpdater extends BaseChecker
 	}
 	
 	
+	/*
 	@Override
 	public Object visit(ASTTypeBound node, Boolean secondVisit)	throws ShadowException
-	{
-		if( secondVisit )
-		{
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			{
-				Node child = node.jjtGetChild(i); //must be ASTClassOrInterfaceType
-				Type type = lookupType( child.getImage() );
-				
-				if( type == null )
-				{
-					addError( node, Error.UNDEF_TYP, "Undefined type: " + child.getImage() );
-					type = Type.UNKNOWN;
-				}
-				
-				child.setType(type);
-			}
-		}
-		
+	{		
 		return WalkType.POST_CHILDREN;
 	}
+	*/
 	
 	
 	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException
@@ -687,7 +672,7 @@ public class TypeUpdater extends BaseChecker
 		
 		
 		// go through inserting all the idents
-		for(int i=1; i < node.jjtGetNumChildren(); ++i)
+		for(int i = 1; i < node.jjtGetNumChildren(); ++i)
 		{
 			ASTVariableDeclarator child = (ASTVariableDeclarator) node.jjtGetChild(i);
 			child.setType(type);
@@ -696,7 +681,7 @@ public class TypeUpdater extends BaseChecker
 			String symbol = child.jjtGetChild(0).getImage();
 			
 			// make sure we don't already have this symbol
-			if(currentType.containsField(symbol) || currentType.containsMethod(symbol) || currentType.containsInnerClass(symbol) )
+			if(currentType.containsField(symbol) || currentType.containsMethod(symbol) || (currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(symbol)) )
 			{
 				addError(child.jjtGetChild(0), Error.MULT_SYM, symbol);
 				return WalkType.NO_CHILDREN;
@@ -823,7 +808,7 @@ public class TypeUpdater extends BaseChecker
 				{					
 					Type type = node.jjtGetChild(i).getType();
 					if( type instanceof InterfaceType )
-						interfaceType.addExtendType((InterfaceType)type);
+						interfaceType.addInterface((InterfaceType)type);
 					else				
 						addError( node, Error.INVL_TYP, type + "is not an interface type");
 				}					

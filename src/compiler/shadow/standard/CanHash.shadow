@@ -1,4 +1,4 @@
-interface shadow.utility@CanHash
+interface shadow.standard@CanHash
 {
 	get hash() => ( int );
 }

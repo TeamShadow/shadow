@@ -44,10 +44,11 @@ public class TACModule
 		add(Type.FLOAT);
 		add(Type.DOUBLE);
 		if (moduleType.getOuter() != null)
-			add(moduleType.getOuter());
-		for (Type innerClass :
-				moduleType.getInnerClasses().values())
-			add(innerClass);
+			add(moduleType.getOuter());		
+		if( moduleType instanceof ClassType )
+			for (Type innerClass :
+				((ClassType)moduleType).getInnerClasses().values())
+				add(innerClass);
 	}
 	private void add(Type type)
 	{

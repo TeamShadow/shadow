@@ -4,17 +4,19 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 {	
 	private InterfaceType type;
 	private SequenceType typeArguments;
+
 	
 	public UninstantiatedInterfaceType(InterfaceType type, SequenceType typeArguments )
 	{
-		this(type, typeArguments, type.getOuter() );		
-	}
-	
-	public UninstantiatedInterfaceType(InterfaceType type, SequenceType typeArguments, Type outer )
-	{
-		super(type.getTypeName(), type.getModifiers(), outer );		
+		super(type.getTypeName(), type.getModifiers());		
 		this.type = type;
 		this.typeArguments = typeArguments;
+	}
+	
+	@Override
+	public String toString(boolean withBounds)
+	{
+		return type.toString() + typeArguments.toString(" [", "]", withBounds);
 	}
 
 	@Override
@@ -34,5 +36,11 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 			throw new InstantiationException( "Type parameters " + type.getTypeParameters() + " cannot accept type arguments " + typeArguments );
 		
 		return type.replace(type.getTypeParameters(), typeArguments);
+	}
+	
+	@Override
+	public Type getTypeWithoutTypeArguments()
+	{
+		return type.getTypeWithoutTypeArguments();		
 	}
 }

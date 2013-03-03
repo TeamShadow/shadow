@@ -27,10 +27,11 @@ public abstract class Type {
 	private SequenceType typeParameters = null;	
 	private boolean parameterized = false;
 	protected Type typeWithoutTypeArguments = this;
+	
+	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();
 
 	private Map<String, Node> fieldTable;
-	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private
-	private HashMap<String, Type> innerClasses;
+	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private	
 	private Set<Type> referencedTypes = new HashSet<Type>();
 	private List<Type> typeParameterDependencies = new ArrayList<Type>();
 	
@@ -200,13 +201,7 @@ public abstract class Type {
 		
 		fieldTable = new HashMap<String, Node>();
 		methodTable = new HashMap<String, List<MethodSignature>>();
-		innerClasses = new HashMap<String, Type>();
-				
-		if( outer != null && typeName != null )
-		{		
-			typeName = typeName.substring(typeName.lastIndexOf(':') + 1); //works even if name doesn't contain a :				
-			outer.innerClasses.put(typeName, this);
-		}
+		
 	}
 	
 	public String getTypeName() 
@@ -235,19 +230,34 @@ public abstract class Type {
 	
 	public String getQualifiedName() 
 	{		
+		return getQualifiedName(false);			
+	}
+	
+	public String getQualifiedName(boolean withBounds) 
+	{		
 		if( isPrimitive() )
-			return toString();
+			return toString(withBounds);
 		else if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + toString();
+			return "default@" + toString(withBounds);
 		else
-			return _package.getQualifiedName() + '@' + toString();			
+			return _package.getQualifiedName() + '@' + toString(withBounds);			
 	}
 	
 	public String toString() {
-		StringBuilder builder = new StringBuilder(typeName);
+		return toString(false);
+	}
+	
+	public String toString(boolean withBounds) {		
+		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
+		StringBuilder builder;
+		
+		if( getOuter() == null )		
+			builder = new StringBuilder(className);
+		else
+			builder = new StringBuilder(getOuter().toString(withBounds) + ":" + className );
 			
 		if( isParameterized() )		
-			builder.append(getTypeParameters().toString("<",">"));
+			builder.append(getTypeParameters().toString("<",">", withBounds));
 		
 		return builder.toString();
 	}
@@ -650,46 +660,9 @@ public abstract class Type {
 		return typeParameterDependencies;
 	}
 	
-	
-	public Map<String, Type> getInnerClasses()
-	{
-		return innerClasses;
-	}
-	
-	protected void addInnerClass(String name, Type innerClass)
-	{
-		innerClasses.put( name, innerClass );
-	}
-	
-		
 	public boolean containsField(String fieldName) {
 		return fieldTable.containsKey(fieldName);
-	}
-	
-	public boolean containsInnerClass(String className) {
-		return innerClasses.containsKey(className);
-	}
-	
-	public boolean containsInnerClass(Type type)
-	{
-		return innerClasses.containsValue(type);		
-	}
-	
-	public boolean recursivelyContainsInnerClass(Type type)
-	{
-		if( innerClasses.containsValue(type) )
-			return true;
-		
-		for( Type innerClass : innerClasses.values() )
-			if( innerClass.recursivelyContainsInnerClass(type) )
-				return true;
-		
-		return false;
-	}
-	
-	public Type getInnerClass(String className) {
-		return innerClasses.get(className);
-	}
+	}	
 	
 	public void addField(String fieldName, Node node) {
 		fieldTable.put(fieldName, node);
@@ -753,18 +726,21 @@ public abstract class Type {
 		return methodTable;
 	}
 
+	
 	public List<MethodSignature> getMethods(String methodName)
 	{
-		return methodTable.get(methodName);
-	}
-
-	public List<MethodSignature> getAllMethods()
-	{
-		List<MethodSignature> methodList = new ArrayList<MethodSignature>();
-
-		recursivelyGetAllMethods(methodList);
-
-		return methodList;
+		List<MethodSignature> signatures = methodTable.get(methodName);
+		if( signatures == null )
+			return new ArrayList<MethodSignature>();
+		else
+			return methodTable.get(methodName);
+	}	
+	
+	protected void includeMethods( String methodName, List<MethodSignature> list )
+	{		
+		for( MethodSignature signature : getMethods(methodName) )
+			if( !list.contains( signature ) )
+				list.add(signature);		
 	}
 	
 	private Map<MethodSignature, Integer> methodIndexCache;
@@ -829,54 +805,7 @@ public abstract class Type {
 		}
 		
 		return null;
-	}
-	
-	
-	protected Type findType(String[] names, int i)
-	{
-		Type type;
-		for( String name : innerClasses.keySet() )
-		{
-			if( name.equals( names[i]) )
-			{
-				if( i == names.length - 1)
-					return innerClasses.get(name);
-				
-				type = innerClasses.get(name).findType(names, i + 1);
-				if( type != null )
-					return type;
-			}			
-		}
-		
-		for( String name : fieldTable.keySet() )
-		{
-			if( name.equals( names[i]) )
-			{
-				if( i == names.length - 1)
-					return fieldTable.get(name).getType();
-				
-				type = fieldTable.get(name).getType().findType(names, i + 1);
-				if( type != null )
-					return type;
-			}			
-		}
-		
-		for( String name : methodTable.keySet() )
-		{
-			if( name.equals( names[i]) )
-			{
-				UnboundMethodType methodType = new UnboundMethodType(name, this ); 
-				if( i == names.length - 1)
-					return methodType;
-				
-				type = methodType.findType(names, i + 1);
-				if( type != null )
-					return type;
-			}			
-		}
-		
-		return null;
-	}
+	}	
 	
 	public boolean encloses(Type type) {
 		if( equals(this) )
@@ -904,14 +833,18 @@ public abstract class Type {
 		return false;
 	}
 	
+	public void addInterface(InterfaceType implementType) {
+		interfaces.add(implementType);
+	}
+	
+	public ArrayList<InterfaceType> getInterfaces()
+	{
+		return interfaces;
+	}	
+	
 	public boolean isDescendentOf(Type type)
 	{
 		return false;
-	}
-	
-	protected void recursivelyGetAllMethods( List<MethodSignature> methodList )
-	{
-		throw new UnsupportedOperationException();
 	}
 	
 	public boolean isRecursivelyParameterized()
@@ -928,6 +861,12 @@ public abstract class Type {
 		throw new UnsupportedOperationException();
 	}
 	
+	public List<MethodSignature> getAllMethods(String methodName)
+	{
+		throw new UnsupportedOperationException();
+	}
+	
 	public abstract boolean isSubtype(Type other);
 	public abstract Type replace(SequenceType values, SequenceType replacements );
+	
 }

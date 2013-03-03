@@ -118,10 +118,19 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	
 	public String toString()
 	{
-		return toString("(", ")");		
+		return toString("(", ")", false);		
+	}
+	
+	public String toString(boolean withBounds)
+	{
+		return toString("(", ")", withBounds);		
+	}
+	
+	public String toString(String begin, String end) {
+		return toString(begin, end, false);
 	}
 
-	public String toString(String begin, String end) {
+	public String toString(String begin, String end, boolean withBounds ) {
 		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;
 		
@@ -134,7 +143,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			if( type != null )
 			{
 				builder.append(type.getModifiers().toString());
-				builder.append(type.getType());
+				builder.append(type.getType().toString(withBounds));
 			}
 			
 			first = false;

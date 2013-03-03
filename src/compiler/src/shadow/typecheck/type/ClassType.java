@@ -14,9 +14,10 @@ import java.util.TreeSet;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 
-public class ClassType extends Type {
-	private ClassType extendType;
-	private ArrayList<InterfaceType> implementTypes = new ArrayList<InterfaceType>();
+public class ClassType extends Type
+{
+	private ClassType extendType;	
+	private HashMap<String, ClassType> innerClasses;
 	
 	public ClassType(String typeName, ClassType parent ) {
 		this( typeName, new Modifiers(), null );
@@ -25,6 +26,14 @@ public class ClassType extends Type {
 	
 	public ClassType(String typeName, Modifiers modifiers, Type outer ) {		
 		super( typeName, modifiers, outer );
+		
+		innerClasses = new HashMap<String, ClassType>();
+		
+		if( outer != null && outer instanceof ClassType && typeName != null )
+		{		
+			typeName = typeName.substring(typeName.lastIndexOf(':') + 1); //works even if name doesn't contain a :				
+			((ClassType)outer).innerClasses.put(typeName, this);
+		}
 	}
 	
 	public void setExtendType(ClassType extendType) {
@@ -46,32 +55,8 @@ public class ClassType extends Type {
 		}
 		return false;
 	}
-	
-	public boolean hasInterface(InterfaceType type)
-	{	
-		ClassType current = this;
-		while( current != null )
-		{
-			for( InterfaceType interfaceType : current.implementTypes )
-			{
-				if( interfaceType.getTypeWithoutTypeArguments().equals( type.getTypeWithoutTypeArguments() ) )
-					return true;
-			}
-			current = current.getExtendType();			
-		}
-		return false;
-	}
-	
-	public void addInterface(InterfaceType implementType) {
-		implementTypes.add(implementType);
-	}
-	
-	public ArrayList<InterfaceType> getInterfaces()
-	{
-		return implementTypes;
-	}	
-	
-	public boolean satisfiesInterface( InterfaceType _interface  )
+		
+	public boolean satisfiesInterface( InterfaceType _interface, List<String> reasons  )
 	{
 		Map<String, List<MethodSignature> > methodMap =  _interface.getMethodMap();
 		
@@ -79,11 +64,14 @@ public class ClassType extends Type {
 		{
 			for( MethodSignature signature : signatures )
 				if( !recursivelyContainsInterfaceMethod( signature  ) )
-					return false;						
+				{
+					reasons.add("Does not contain method " + signature);
+					return false;
+				}
 		}	
 		
-		for( InterfaceType parentInterface : _interface.getExtendTypes()  )
-			if( !satisfiesInterface( parentInterface ) )
+		for( InterfaceType parentInterface : _interface.getInterfaces()  )
+			if( !satisfiesInterface( parentInterface, reasons ) )
 				return false;
 		
 		return true;
@@ -135,7 +123,8 @@ public class ClassType extends Type {
 			return true;
 		
 		//recursively check outer
-		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsIndistinguishableMethod(signature) )		
+		Type outer = getOuter();
+		if( outer != null && outer instanceof ClassType && ((ClassType)outer).recursivelyContainsIndistinguishableMethod(signature) )		
 			return true;
 		
 		//recursively check parents
@@ -183,7 +172,7 @@ public class ClassType extends Type {
 		return getExtendType().recursivelyContainsInnerClass(className);
 	}
 	
-	public Type recursivelyGetInnerClass(String className) {
+	public ClassType recursivelyGetInnerClass(String className) {
 		if( containsInnerClass(className) )
 			return getInnerClass(className);
 		
@@ -207,28 +196,50 @@ public class ClassType extends Type {
 		return getExtendType().recursivelyGetField(fieldName);
 	}
 	
-	public List<MethodSignature> getMethods(String methodName) {
-		List<MethodSignature> list = new ArrayList<MethodSignature>();			
-		
-		return recursivelyGetMethods(methodName, list);
-	}
-	
-	public List<MethodSignature> recursivelyGetMethods( String methodName, List<MethodSignature> list  )
+	//get methods from class and ancestors, useful for checking for duplicates
+	public List<MethodSignature> getAllMethods(String methodName)
 	{
-		List<MethodSignature> currentSignatures = methodTable.get(methodName);
+		List<MethodSignature> list = new ArrayList<MethodSignature>();
 		
-		if( currentSignatures != null )
-			for( MethodSignature signature : currentSignatures )
-				if( !list.contains( signature ) )
-					list.add(signature);
+		includeMethods( methodName, list );
 		
-		if( getOuter() != null && getOuter() instanceof ClassType && !methodName.equals("create") )
-			((ClassType)getOuter()).recursivelyGetMethods(methodName,list);		
+		if( !methodName.equals("create") )
+		{		
+			ClassType parent = extendType;
+			while( parent != null )
+			{
+				parent.includeMethods(methodName, list);
+				parent = parent.extendType;
+			}
+		}
 		
-		if( getExtendType() != null && !methodName.equals("create") )
-			return getExtendType().recursivelyGetMethods(methodName, list);
-		else
-			return list;
+		return list;
+	}	
+	
+	//get methods from all visible sources, adds outer classes too
+	public List<MethodSignature> getAnyVisibleMethods(String methodName)
+	{
+		List<MethodSignature> list = getAllMethods(methodName);
+				
+		if( !methodName.equals("create") )
+		{				
+			//outer classes of this and parents
+			ClassType current = this;
+			while( current != null )
+			{
+				Type outer = current.getOuter();
+				while( outer != null && outer instanceof ClassType)
+				{
+					ClassType outerClass = (ClassType)outer;
+					outerClass.includeMethods(methodName, list);
+					outer = outerClass.getOuter();
+				}
+				
+				current = current.extendType;
+			}		
+		}
+		
+		return list;
 	}
 	
 	private Map<String, Integer> fieldIndexCache;
@@ -325,17 +336,6 @@ public class ClassType extends Type {
 	}
 
 	@Override
-	protected void recursivelyGetAllMethods( List<MethodSignature> methodList )
-	{
-		if ( getExtendType() != null )
-			getExtendType().recursivelyGetAllMethods(methodList);
-
-		for ( List<MethodSignature> methods : getMethodMap().values() )
-			for ( MethodSignature method : methods )
-				methodList.add(method);
-	}
-
-	@Override
 	protected void recursivelyOrderAllMethods( List<MethodSignature> methodList )
 	{
 		if ( getExtendType() != null )
@@ -360,7 +360,7 @@ public class ClassType extends Type {
 			if( cached != null )
 				return (ClassType)cached;
 			
-			ClassType replaced = new ClassType( getTypeName(), getModifiers(), getOuter() );
+			ClassType replaced = new ClassType( getTypeName(), getModifiers(), (ClassType)getOuter() );
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			
@@ -368,7 +368,7 @@ public class ClassType extends Type {
 			
 			replaced.setExtendType(getExtendType().replace(values, replacements));			
 			
-			for( InterfaceType _interface : implementTypes )
+			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.replace(values, replacements));
 			
 			Map<String, Node> fields = getFields(); 
@@ -391,7 +391,7 @@ public class ClassType extends Type {
 					replaced.addMethod(name, signature.replace(values, replacements));				
 			}
 			
-			Map<String, Type> inners = getInnerClasses();
+			Map<String, ClassType> inners = getInnerClasses();
 			
 			for( String name : inners.keySet() )		
 				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
@@ -451,6 +451,56 @@ public class ClassType extends Type {
 		return extendType.isRecursivelyParameterized();
 	}
 	
+	public boolean hasInterface(InterfaceType type)
+	{	
+		ClassType current = this;
+		while( current != null )
+		{
+			for( InterfaceType interfaceType : current.getInterfaces() )
+			{
+				if( interfaceType.getTypeWithoutTypeArguments().equals( type.getTypeWithoutTypeArguments() ) )
+					return true;
+			}
+			current = current.getExtendType();			
+		}
+		return false;
+	}
+	
+	public Map<String, ClassType> getInnerClasses()
+	{
+		return innerClasses;
+	}
+	
+	protected void addInnerClass(String name, ClassType innerClass)
+	{
+		innerClasses.put( name, innerClass );
+	}
+	
+	public boolean containsInnerClass(String className) {
+		return innerClasses.containsKey(className);
+	}
+	
+	public boolean containsInnerClass(Type type)
+	{
+		return innerClasses.containsValue(type);		
+	}
+	
+	public boolean recursivelyContainsInnerClass(Type type)
+	{
+		if( innerClasses.containsValue(type) )
+			return true;
+		
+		for( ClassType innerClass : innerClasses.values() )
+			if( innerClass.recursivelyContainsInnerClass(type) )
+				return true;
+		
+		return false;
+	}
+	
+	public ClassType getInnerClass(String className) {
+		return innerClasses.get(className);
+	}
+	
 
 	public void printMetaFile(PrintWriter out, String linePrefix )
 	{
@@ -469,10 +519,12 @@ public class ClassType extends Type {
 		out.print("\n" + linePrefix + getModifiers());		
 		out.print(kind + " ");
 		
+		
+		
 		//type name
+		String name;
 		if( isPrimitive() ) //hack for capitalization purposes
-		{	
-			String name;			
+		{							
 			if( typeName.startsWith("u") )
 				name = typeName.substring(0,2).toUpperCase() + typeName.substring(2);
 			else
@@ -480,9 +532,12 @@ public class ClassType extends Type {
 			out.print("shadow.standard@" + name);
 		}
 		else if( getOuter() == null ) //outermost class		
-			out.print(getQualifiedName());
+			out.print(getQualifiedName(true));
 		else
-			out.print(toString().substring(getTypeName().lastIndexOf(':') + 1));
+		{	
+			name = toString(true);
+			out.print(name.substring(name.lastIndexOf(':') + 1));
+		}
 		
 		//extend type
 		Type extendType = getExtendType();
@@ -539,7 +594,8 @@ public class ClassType extends Type {
 		//inner classes
 		for( Type _class : getInnerClasses().values() )
 		{
-			_class.printMetaFile(out, indent);		
+			if( !_class.getModifiers().isPrivate() )
+				_class.printMetaFile(out, indent);		
 		}
 		
 		out.println(linePrefix + "}");	

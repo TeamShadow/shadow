@@ -1,7 +1,5 @@
 package shadow.typecheck.type;
 
-import java.io.PrintWriter;
-
 import shadow.parser.javacc.ASTAssignmentOperator;
 
 public class PropertyType extends Type {
@@ -148,12 +146,18 @@ public class PropertyType extends Type {
 	@Override
 	public String toString()
 	{
+		return toString(false);
+	}
+	
+	@Override
+	public String toString(boolean withBounds)
+	{
 		StringBuilder sb = new StringBuilder("[");
 		
 		if( isGettable() )
 		{
 			sb.append("get: ");
-			sb.append(getGetType().getType());
+			sb.append(getGetType().getType().toString(withBounds));
 		}
 		
 		if( isGettable() && isSettable() )
@@ -164,7 +168,7 @@ public class PropertyType extends Type {
 		if( isSettable() )
 		{
 			sb.append("set: ");
-			sb.append(getSetType().getType());
+			sb.append(getSetType().getType().toString(withBounds));
 		}
 		sb.append("]");
 		return sb.toString();		

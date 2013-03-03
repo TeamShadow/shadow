@@ -8,31 +8,35 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 public class DirectedGraph<T> implements Iterable<T> {
 	
 	
-	private class Node implements Comparable<Node>
+	private class GraphNode implements Comparable<GraphNode>
 	{
 		public T value;
 		
-		public Set<Node> incoming = new HashSet<Node>();
-		public Set<Node> outgoing = new HashSet<Node>();
+		public Set<GraphNode> incoming = new HashSet<GraphNode>();
+		public Set<GraphNode> outgoing = new HashSet<GraphNode>();
 		@Override
-		public int compareTo(Node o) {
+		public int compareTo(GraphNode o) {
 			// TODO Auto-generated method stub
 			return 0;
-		}				
+		}
+		
+		public String toString()
+		{
+			return value.toString() + " in: " + incoming.size() + " out: " + outgoing.size();			
+		}
 	}	
 	
-	private Map<T, Node> nodes = new HashMap<T, Node>();	
+	private Map<T, GraphNode> nodes = new HashMap<T, GraphNode>();	
 	
 	void addNode(T value)
 	{
 		if( !nodes.containsKey(value) )
 		{
-			Node node = new Node();
+			GraphNode node = new GraphNode();
 			node.value = value;
 			
 			nodes.put(value, node);
@@ -41,8 +45,8 @@ public class DirectedGraph<T> implements Iterable<T> {
 	
 	boolean addEdge(T start, T end)
 	{
-		Node startNode = nodes.get(start);
-		Node endNode = nodes.get(end);
+		GraphNode startNode = nodes.get(start);
+		GraphNode endNode = nodes.get(end);
 		
 		if( startNode == null || endNode == null )
 			return false;
@@ -56,8 +60,8 @@ public class DirectedGraph<T> implements Iterable<T> {
 	
 	boolean hasEdge(T start, T end)
 	{
-		Node startNode = nodes.get(start);
-		Node endNode = nodes.get(end);
+		GraphNode startNode = nodes.get(start);
+		GraphNode endNode = nodes.get(end);
 		
 		if( startNode == null || endNode == null )
 			return false;
@@ -67,13 +71,15 @@ public class DirectedGraph<T> implements Iterable<T> {
 
 	public List<T> topologicalSort() throws CycleFoundException
 	{	
-		ArrayDeque<Node> S = new ArrayDeque<Node>();
+		ArrayDeque<GraphNode> S = new ArrayDeque<GraphNode>();
 		List<T> list = new ArrayList<T>();
 		
-		HashMap<Node, Integer> inDegrees = new HashMap<Node, Integer>();
+		HashMap<GraphNode, Integer> inDegrees = new HashMap<GraphNode, Integer>();
 		
-		for( Node node : nodes.values() )
+		for( GraphNode node : nodes.values() )
 		{
+			String data = node.toString();
+			
 			if( node.incoming.isEmpty())
 				S.add(node);
 			else
@@ -82,10 +88,10 @@ public class DirectedGraph<T> implements Iterable<T> {
 		
 		while( !S.isEmpty() )
 		{
-			Node node = S.removeFirst();
+			GraphNode node = S.removeFirst();
 			list.add(node.value);
 			
-			for( Node child : node.outgoing )
+			for( GraphNode child : node.outgoing )
 			{
 				int in = inDegrees.get(child) - 1;				
 				if( in <= 0 )
