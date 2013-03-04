@@ -128,7 +128,7 @@ public class ClassChecker extends BaseChecker
 	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
 	protected LinkedList<HashMap<String, ModifiedType>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
-	
+
 	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<String> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
@@ -450,11 +450,13 @@ public class ClassChecker extends BaseChecker
 				else if( !node.getModifiers().isNullable() && initializer.getModifiers().isNullable())
 					addError(identifier, Error.TYPE_MIS, "Cannot assign a nullable value to non-nullable variable " + identifier.getImage() );				
 			}
+			/* //leave this to the TAC 
 			else
 			{
 				if( !node.getModifiers().isNullable() && !type.isPrimitive() )
 					addError(declaration, Error.TYPE_MIS, "Non-nullable variable " + declaration + "does not have initializer");		
 			}
+			*/
 			
 			declaration.setType(type);
 			declaration.setModifiers(node.getModifiers());
@@ -759,7 +761,8 @@ public class ClassChecker extends BaseChecker
 	
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
 		{
-			Type current = node.jjtGetChild(i).getType();
+			Node currentNode = node.jjtGetChild(i);
+			Type current = currentNode.getType();
 			
 			if( result.isNumerical() && current.isNumerical() )
 			{
@@ -771,6 +774,31 @@ public class ClassChecker extends BaseChecker
 					node.setType(Type.UNKNOWN);
 					return;					
 				}					
+			}
+			else if( result.hasInterface(Type.NUMBER) )
+			{
+				SequenceType argument = new SequenceType();
+				argument.add(currentNode);
+				char operation = node.getImage().charAt(i - 1);
+				String methodName = "";
+				switch( operation )
+				{
+				case '+': methodName = "add"; break;
+				case '-': methodName = "subtract"; break;
+				case '*': methodName = "multiply"; break;
+				case '/': methodName = "divide"; break;
+				case '%': methodName = "modulus"; break;
+				}			
+				 
+				MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), new SequenceType(), argument );
+				if( signature != null )
+					result = signature.getReturnTypes().getType(0);
+				else
+				{
+					addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot apply arithmetic operations to " + result + " and " + current);
+					node.setType(Type.UNKNOWN);
+					return;
+				}				
 			}
 			else		
 			{
@@ -2136,10 +2164,10 @@ public class ClassChecker extends BaseChecker
 		if( secondVisit )
 		{
 			pushUpModifiers( node );
-			Node child = node.jjtGetChild(0); 
+			Node child = node.jjtGetChild(0);			
 			
 			//create sets differently
-			if( !(child instanceof ASTCreate) )			
+			if(  !(child instanceof ASTCreate) )			
 				node.setType(child.getType());			
 		}
 		
@@ -2156,6 +2184,7 @@ public class ClassChecker extends BaseChecker
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = prefixNode.getType();
 			node.setType(Type.UNKNOWN);
+			Node parent = node.jjtGetParent();
 			
 			if( prefixType instanceof InterfaceType )
 			{
@@ -2190,7 +2219,7 @@ public class ClassChecker extends BaseChecker
 				}
 				
 				SequenceType arguments = new SequenceType();
-				Node parent = node.jjtGetParent();
+				
 				
 				for( int i = start; i < node.jjtGetNumChildren(); i++ )
 					arguments.add(node.jjtGetChild(i));
@@ -2222,6 +2251,8 @@ public class ClassChecker extends BaseChecker
 				
 			}
 			
+			if( node.getType() == Type.UNKNOWN )
+				parent.setType(Type.UNKNOWN);			
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2442,7 +2473,7 @@ public class ClassChecker extends BaseChecker
 		
 	}
 	
-	protected MethodSignature setMethodType( ASTMethodCall node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments )
+	protected MethodSignature setMethodType( Node node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments )
 	{
 		TreeMap<MethodSignature, MethodType> acceptableMethods = new TreeMap<MethodSignature, MethodType>();
 		boolean hasTypeArguments = typeArguments != null;				
@@ -2606,24 +2637,6 @@ public class ClassChecker extends BaseChecker
 	}
 
 	
-	/*
-	public Object visit(ASTLabeledStatement node, Boolean secondVisit) throws ShadowException 
-	{ 
-		if(!secondVisit)
-		{
-			String label = node.getImage();
-			if(findSymbol(label) != null || labels.contains(label))
-				addError(node, Error.MULT_SYM, label);
-			else
-				labels.push(node);	
-		}
-		else
-			labels.pop();
-			
-		return WalkType.POST_CHILDREN;
-	}
-	*/
-	
 	public Object visit(ASTBreakStatement node, Boolean secondVisit) throws ShadowException 
 	{ 
 		if( !node.getImage().isEmpty() )
@@ -2636,43 +2649,7 @@ public class ClassChecker extends BaseChecker
 		}
 			
 		return WalkType.PRE_CHILDREN;
-	}
-	
-	/*
-	public Object visit(ASTArrayDimsAndInits node, Boolean secondVisit) throws ShadowException 
-	{		
-		if( secondVisit )
-		{
-			Node child = node.jjtGetChild(0);
-			if( child instanceof ASTArrayInitializer ) //check this closely
-			{
-				if( visitArrayInitializer( child )  )
-				{					
-					ArrayType arrayType = (ArrayType) child.getType();
-					if( node.getArrayDimensions().size() != arrayType.getDimensions() )
-						addError(child, Error.INVL_TYP, "Dimensions do not match array initializer");
-					//do we need more checks here?
-				}								
-			}
-			else
-			{
-				for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				{
-					child = node.jjtGetChild(i); 
-					if( !child.getType().isNumerical() )
-					{
-						addError(child, Error.INVL_TYP, "Numerical type must be specified for array dimensions");				
-						break;
-					}
-				}
-			}
-		}
-			
-	
-		return WalkType.POST_CHILDREN;
-	}
-	
-	*/
+	}	
 	
 	private boolean visitArrayInitializer(Node node)
 	{
@@ -2772,38 +2749,6 @@ public class ClassChecker extends BaseChecker
 		return WalkType.NO_CHILDREN;			
 	}
 
-	/*
-	@Override
-	public Object visit(ASTArrayAllocation node, Boolean secondVisit) throws ShadowException
-	{
-		if(secondVisit)
-		{	
-			ASTAllocationExpression parent = (ASTAllocationExpression) node.jjtGetParent();
-
-			Node child = node.jjtGetChild(0);				
-			int counter = 1;
-			
-			if( child instanceof ASTClassOrInterfaceType && node.jjtGetChild(counter) instanceof ASTTypeArguments ) //reference array might have type arguments
-			{
-				//for now
-				addError(node.jjtGetChild(counter), Error.INVL_TYP, "Generics are not yet handled");
-				node.setType(Type.UNKNOWN);
-				counter++;				
-			}
-				
-			//array dims and inits
-			List<Integer> dimensions = ((ASTArrayDimsAndInits)(node.jjtGetChild(counter))).getArrayDimensions();
-			node.setType(new ArrayType(child.getType(), dimensions));
-		}
-		
-		
-		return WalkType.POST_CHILDREN;
-	}
-	*/
-	
-
-	
-	
 	
 		
 	@Override

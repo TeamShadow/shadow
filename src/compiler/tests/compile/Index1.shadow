@@ -1,0 +1,11 @@
+class Index1 implements CanIndex<String, int>
+{
+	public index(String key) => (int value)
+	{
+		return key->size;
+	}
+	
+	
+	public index(String key, int value) => ()
+	{}
+}

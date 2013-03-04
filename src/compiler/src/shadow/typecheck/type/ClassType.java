@@ -458,7 +458,7 @@ public class ClassType extends Type
 		{
 			for( InterfaceType interfaceType : current.getInterfaces() )
 			{
-				if( interfaceType.getTypeWithoutTypeArguments().equals( type.getTypeWithoutTypeArguments() ) )
+				if( interfaceType.hasInterface(type) )
 					return true;
 			}
 			current = current.getExtendType();			

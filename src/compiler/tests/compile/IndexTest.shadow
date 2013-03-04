@@ -1,0 +1,19 @@
+import shadow.utility@HashSet;
+
+class IndexTest
+{
+	public start() => ()
+	{
+		Index1 test1 = Index1:create();
+		Index2<double> test2 = Index2<double>:create();
+		
+		test1["yo"] = 3;		
+		int result = test1["spring"];
+		
+		test2['x'] = 4.1;
+		double value = test2['x'];
+		
+		HashSet<int> collection = HashSet<int>:create();		
+		collection[4] = true;
+	}
+}

@@ -1,4 +1,4 @@
-immutable class shadow.standard@Int implements Number<int>, CanCompare<int>
+immutable class shadow.standard@Int implements Number<int>, CanCompare<int>, CanHash
 {
 	public native add(int other) => (int);
 	public native subtract(int other) => (int);
@@ -30,4 +30,9 @@ immutable class shadow.standard@Int implements Number<int>, CanCompare<int>
 		String string = abs().toString(base);
 		return this >= 0 ? string, '-' # string;
 	}
+	
+	public get hash() => ( int )
+	{
+		return this;
+	}	
 }

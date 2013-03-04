@@ -1,0 +1,19 @@
+class MatrixTest
+{
+	public start() => ()
+	{
+		Matrix a = Matrix:create(3,3);
+		Matrix b = Matrix:create(3,3);
+		
+		(a[0][0], a[1][1], a[2][2]) = (1, 1, 1);
+		a[1][2] = 4;
+				
+		(b[0][0], b[1][1], b[2][2]) = (1, 1, 1);
+		b[2][0] = 3;
+		
+		
+		Matrix c = a + b;
+		Matrix d = a - b;
+		Matrix e = a * b;
+	}
+}

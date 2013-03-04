@@ -1,0 +1,23 @@
+class Index2<E> implements CanIndex<code, E>
+{
+
+	nullable E storage = null;
+
+	public index(code key) => (E value)
+	{		
+		try
+		{
+			return check(storage);
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
+		}
+	}
+	
+	
+	public index(code key, E value) => ()
+	{
+		storage = value;	
+	}
+}

@@ -407,7 +407,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						type = type.replace(parameters, arguments);
 					else
 					{						
-						addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
+						addError( child, Error.TYPE_MIS, "Type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
 						type = Type.UNKNOWN;
 					}
 				}
@@ -457,7 +457,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 								type = type.replace(parameters, arguments);
 							else
 							{						
-								addError( child, Error.TYPE_MIS, "Type arguments " + arguments + " do not match type parameters " + parameters );
+								addError( child, Error.TYPE_MIS, "Type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
 								type = Type.UNKNOWN;
 							}
 						}

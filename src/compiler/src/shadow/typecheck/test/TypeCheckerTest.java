@@ -120,11 +120,6 @@ public class TypeCheckerTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-		@Test public void testFinal() throws Exception {
-		args.add("tests/compile/Final.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
-	}
-
 		@Test public void testFoo() throws Exception {
 		args.add("tests/compile/Foo.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
@@ -154,6 +149,21 @@ public class TypeCheckerTest {
 		args.add("tests/compile/Imports.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	
+	@Test public void testIndex1() throws Exception {
+		args.add("tests/compile/Index1.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+	
+	@Test public void testIndex2() throws Exception {
+		args.add("tests/compile/Index2.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+	
+	@Test public void testIndexTest() throws Exception {
+		args.add("tests/compile/IndexTest.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
 
 	@Test public void testInnerClass() throws Exception {
 		args.add("tests/compile/InnerClass.shadow");
@@ -174,6 +184,17 @@ public class TypeCheckerTest {
 		args.add("tests/compile/LValue.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+	
+	@Test public void testMatrix() throws Exception {
+		args.add("tests/compile/Matrix.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+	
+	@Test public void testMatrixTest() throws Exception {
+		args.add("tests/compile/MatrixTest.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+
 
 	@Test public void testMember() throws Exception {
 		args.add("tests/compile/Member.shadow");
