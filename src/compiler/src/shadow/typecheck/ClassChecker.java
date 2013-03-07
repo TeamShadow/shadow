@@ -1514,11 +1514,18 @@ public class ClassChecker extends BaseChecker
 	
 	public Object visit(ASTForeachStatement node, Boolean secondVisit) throws ShadowException {
 		createScope(secondVisit); //for variables declared in header, right?  Pretty sure that works
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
+		
+		if(!secondVisit)		
+			return WalkType.POST_CHILDREN;		
 				
 		Type t1 = node.jjtGetChild(0).getType(); //Type declaration
 		Type t2 = node.jjtGetChild(1).getType(); //Collection
+		
+		
+		node.setType(t1);
+		addSymbol( node.getImage(), node );
+		
+		//TODO: Fix this to take auto and also take modifiers like nullable, readonly, and immutable
 		
 		if( t2 instanceof ArrayType )
 		{
@@ -1559,8 +1566,7 @@ public class ClassChecker extends BaseChecker
 		Type conditionalType = null;
 		
 		if(hasInit)
-			conditionalType = node.jjtGetChild(1).getType();
-			
+			conditionalType = node.jjtGetChild(1).getType();			
 		else
 			conditionalType = node.jjtGetChild(0).getType();
 		

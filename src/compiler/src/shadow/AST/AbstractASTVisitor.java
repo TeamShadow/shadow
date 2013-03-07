@@ -606,8 +606,7 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	@Override
 	public Object visit(ASTScopeSpecifier node, Boolean data)
 			throws ShadowException {
-		// TODO Auto-generated method stub
-		return null;
+		return WalkType.PRE_CHILDREN;
 	}
 
 	@Override
@@ -681,6 +680,12 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTUnaryToString node, Boolean data)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTForeachInit node, Boolean data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}

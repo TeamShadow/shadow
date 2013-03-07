@@ -1829,4 +1829,9 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		throw new UnsupportedOperationException();
 	}
+	@Override
+	public Object visit(ASTForeachInit node, Boolean data)
+			throws ShadowException {
+		throw new UnsupportedOperationException();
+	}
 }
