@@ -17,10 +17,10 @@ import org.apache.commons.logging.Log;
 
 import shadow.Configuration;
 import shadow.Loggers;
+import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
-import shadow.parser.javacc.SimpleNode;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
@@ -114,15 +114,16 @@ public class Main {
 		        long startTime = System.currentTimeMillis();
 
 		        // parse the file
+		        /*
 		        SimpleNode node = parser.CompilationUnit();
 		        
 		        if(Loggers.TYPE_CHECKER.isTraceEnabled())
 		        	node.dump("");
-		        
+		        */
 		        // type check the AST
-		        boolean result = checker.typeCheck(node, shadowFile);
+		        Node node = checker.typeCheck(shadowFile);
 		        
-		        if(!result) {
+		        if(node == null) {
 		        	logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");
 		        	
 		        	return TYPE_CHECK_ERROR;

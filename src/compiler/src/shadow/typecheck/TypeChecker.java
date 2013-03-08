@@ -36,7 +36,7 @@ public class TypeChecker {
 	 * @throws ParseException 
 	 * @throws IOException 
 	 */
-	public boolean typeCheck(Node node, File file) throws ShadowException, ParseException, IOException
+	public Node typeCheck(File file) throws ShadowException, ParseException, IOException
 	{	 
 		mainFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
@@ -45,13 +45,14 @@ public class TypeChecker {
 		
 		//collector looks over all files and creates types for everything needed
 		TypeCollector collector = new TypeCollector(debug, typeTable, importList, packageTree, this);
-		collector.collectTypes( file, node );	
+		//return value is the top node for the class we are compiling		
+		Node node = collector.collectTypes( file );	
 		
 		// see how many errors we found
 		if(collector.getErrorCount() > 0)
 		{
 			collector.printErrors();
-			return false;
+			return null;
 		}		
 		
 		//Updates types, adding:
@@ -66,7 +67,7 @@ public class TypeChecker {
 		if(updater.getErrorCount() > 0)
 		{
 			updater.printErrors();
-			return false;
+			return null;
 		}
 		
 		
@@ -84,7 +85,7 @@ public class TypeChecker {
 		if(instantiater.getErrorCount() > 0)
 		{
 			instantiater.printErrors();
-			return false;
+			return null;
 		}	
 				
 		printMetaFiles( collector.getFiles() );		
@@ -98,10 +99,10 @@ public class TypeChecker {
 		// see how many errors we found
 		if(checker.getErrorCount() > 0) {
 			checker.printErrors();
-			return false;
+			return null;
 		}
 		
-		return true;
+		return node;
 	}
 	
 	protected void printMetaFiles( Map<String, Node> files )

@@ -17,6 +17,7 @@ import shadow.parser.javacc.ASTArrayCreate;
 import shadow.parser.javacc.ASTArrayInitializer;
 import shadow.parser.javacc.ASTAssertStatement;
 import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.ASTBitwiseAndExpression;
 import shadow.parser.javacc.ASTBitwiseExclusiveOrExpression;
 import shadow.parser.javacc.ASTBitwiseOrExpression;
@@ -47,6 +48,7 @@ import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTForInit;
 import shadow.parser.javacc.ASTForStatement;
+import shadow.parser.javacc.ASTForeachInit;
 import shadow.parser.javacc.ASTForeachStatement;
 import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
@@ -112,6 +114,7 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -442,13 +445,9 @@ public class ClassChecker extends BaseChecker
 			
 			if(declaration.jjtGetNumChildren() == 2) // check for initializer
 			{
-				Node initializer = declaration.jjtGetChild(1); 					
-				Type initializerType = initializer.getType();
-				
-				if(!initializerType.isSubtype(type)) 
-					addError(initializer, Error.TYPE_MIS, "Cannot assign " + initializerType + " to " + type);
-				else if( !node.getModifiers().isNullable() && initializer.getModifiers().isNullable())
-					addError(identifier, Error.TYPE_MIS, "Cannot assign a nullable value to non-nullable variable " + identifier.getImage() );				
+				Node initializer = declaration.jjtGetChild(1);
+				isValidInitialization(node, initializer, declaration );
+				//issues appropriate errors				
 			}
 			/* //leave this to the TAC 
 			else
@@ -498,8 +497,7 @@ public class ClassChecker extends BaseChecker
 				}
 			}			
 			
-			node.setType(type);
-			
+			node.setType(type);			
 			processDeclaration( node );
 		}
 
@@ -526,12 +524,7 @@ public class ClassChecker extends BaseChecker
 					return true;
 			
 			return setTypeFromContext( node, name, Type.OBJECT, directAccess );			
-		}
-		/*else if( context instanceof InstantiatedType )
-		{
-			InstantiatedType instantiatedType = (InstantiatedType)context;
-			return setTypeFromContext( node, name, instantiatedType.getInstantiatedType(), directAccess );			
-		}*/
+		}		
 		else if( context instanceof InterfaceType )
 		{			
 			InterfaceType interfaceType = (InterfaceType)context;
@@ -1081,7 +1074,28 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private boolean isValidAssignment( Node left, Node right, ASTAssignmentOperator assignment )
+	private boolean isValidInitialization( ModifiedType left, ModifiedType right, Node errorNode )
+	{		
+		Type leftType = left.getType();		 
+		Type rightType = right.getType();
+		Modifiers rightModifiers = left.getModifiers();				
+		Modifiers leftModifiers = right.getModifiers();
+		
+		if( !rightType.isSubtype(leftType) )
+		{
+			addError(errorNode, Error.TYPE_MIS, "Found type " + rightType + ", type " + leftType + " required");
+			return false;
+		}
+		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
+		{
+			addError(errorNode, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, Node errorNode )
 	{
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();
@@ -1098,7 +1112,7 @@ public class ClassChecker extends BaseChecker
 			}
 			else
 			{
-				addError(right, Error.TYPE_MIS, "Property " + right + "does not have get access.");
+				addError(errorNode, Error.TYPE_MIS, "Property " + right + "does not have get access.");
 				return false;
 			}
 		}
@@ -1110,11 +1124,11 @@ public class ClassChecker extends BaseChecker
 		{					
 			PropertyType propertyType = (PropertyType)leftType;					
 			
-			if( propertyType.acceptsAssignment(rightType, assignment.getAssignmentType()) )
+			if( propertyType.acceptsAssignment(rightType, assignmentType) )
 				leftModifiers = propertyType.getSetType().getModifiers();
 			else
 			{
-				addError(left, Error.TYPE_MIS, "Property with type " + propertyType + " cannot accept type " + rightType + " in this assignment");
+				addError(errorNode, Error.TYPE_MIS, "Property with type " + propertyType + " cannot accept type " + rightType + " in this assignment");
 				return false;
 			}
 		}
@@ -1122,66 +1136,36 @@ public class ClassChecker extends BaseChecker
 		{
 			leftModifiers = left.getModifiers();
 			
-			if( !leftType.acceptsAssignment(rightType, assignment.getAssignmentType())  )
+			if( !leftType.acceptsAssignment(rightType, assignmentType)  )
 			{
-				addError(left, Error.TYPE_MIS, "Found type " + rightType + ", type " + leftType + " required");
+				addError(errorNode, Error.TYPE_MIS, "Found type " + rightType + ", type " + leftType + " required");
 				return false;
 			}
 		}
 		
 		if( !leftModifiers.isAssignable() )
 		{
-			addError(left, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
+			addError(errorNode, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
 			return false;
-		}
-		/*else if( leftModifiers.isFinal() )
-		{
-			addError(left, Error.INVL_TYP, "Cannot assign a value to variable marked final");
-			return false;
-		}*/
+		}		
 		else if( leftModifiers.isConstant() )
 		{
-			addError(left, Error.INVL_TYP, "Cannot assign a value to variable marked constant");
+			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to variable marked constant");
 			return false;			
 		}
 		else if( leftModifiers.isImmutable() && (!leftModifiers.isField() || (!currentMethod.isEmpty() && !currentMethod.getFirst().getMethodSignature().isCreate()))   )
 		{
-			addError(left, Error.INVL_TYP, "Cannot assign a value to field marked immutable except in a create");
+			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to field marked immutable except in a create");
 			return false;
 		}		
 		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 		{
-			addError(left, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
+			addError(errorNode, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
 			return false;
 		}
-		
-		
+				
 		return true;
 	}
-
-	/*
-	public Object visit(ASTAssignment node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-				
-		Node left = node.jjtGetChild(0);
-		ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1); 
-		Node right = node.jjtGetChild(2);
-		
-		if( isValidAssignment( left, right, assignment ) )
-		{
-			node.setType(left.getType());
-			
-			if( !(left.getType() instanceof PropertyType) )
-				node.setModifiers(left.getModifiers());
-		}
-		else
-			node.setType(Type.UNKNOWN);
-	
-		return WalkType.POST_CHILDREN;
-	}
-	*/
-
 
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
 		return typeResolution(node, secondVisit);
@@ -1256,7 +1240,7 @@ public class ClassChecker extends BaseChecker
 			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
 			Node right = node.jjtGetChild(2);
 			
-			isValidAssignment(left, right, assignment); 
+			isValidAssignment(left, right, assignment.getAssignmentType(), left); 
 			//will issue appropriate errors
 			//since this is an Expression (with nothing to the left), there is no type to set
 		}
@@ -1513,68 +1497,78 @@ public class ClassChecker extends BaseChecker
 	
 	
 	public Object visit(ASTForeachStatement node, Boolean secondVisit) throws ShadowException {
-		createScope(secondVisit); //for variables declared in header, right?  Pretty sure that works
-		
+		createScope(secondVisit); //for variables declared in header
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
+	public Object visit(ASTForeachInit node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)		
-			return WalkType.POST_CHILDREN;		
+			return WalkType.POST_CHILDREN;	
 				
-		Type t1 = node.jjtGetChild(0).getType(); //Type declaration
-		Type t2 = node.jjtGetChild(1).getType(); //Collection
+		//child 0 is Modifiers		
+		Type collectionType = null;
+		ModifiedType element = null;
+		boolean isAuto = false;
 		
-		
-		node.setType(t1);
-		addSymbol( node.getImage(), node );
-		
-		//TODO: Fix this to take auto and also take modifiers like nullable, readonly, and immutable
-		
-		if( t2 instanceof ArrayType )
+		if( node.jjtGetNumChildren() == 2 ) //auto type
 		{
-			ArrayType array = (ArrayType)t2;
-			if( !array.getBaseType().isSubtype(t1) )
-				addError(node, Error.TYPE_MIS, "incompatible foreach variable, found: " + t1 + " expected: " + array.getBaseType());
-		}
-		else if( t2.hasInterface(Type.CAN_ITERATE) )
-		{
-			Type iterationType = null;
-			for(InterfaceType _interface : t2.getInterfaces() )
-				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE))				
-					iterationType = _interface.getTypeParameters().getType(0);
-			
-			
-			if( iterationType == null || !iterationType.isSubtype(t1) )
-				addError(node, Error.TYPE_MIS, "incompatible foreach variable, found: " + t1 + " expected: " + iterationType);			
+			collectionType = node.jjtGetChild(1).getType();
+			node.setType(Type.UNKNOWN);
+			isAuto = true;
 		}
 		else
-			addError(node, Error.TYPE_MIS, "Type " + t2 + " does not implement CanIterate and cannot be the target of a foreach loop");
-			
+		{				
+			node.setType(node.jjtGetChild(1).getType());
+			collectionType =  node.jjtGetChild(2).getType();
+		}	
+		
+						
+		if( collectionType instanceof ArrayType )
+		{
+			ArrayType array = (ArrayType)collectionType;
+			element = new SimpleModifiedType( array.getBaseType(), new Modifiers() );
+		}
+		else if( collectionType.hasInterface(Type.CAN_ITERATE) )
+		{			
+			for(InterfaceType _interface : collectionType.getInterfaces() )
+				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE))
+				{
+					element = _interface.getTypeParameters().get(0);
+					break;
+				}
+		}
+		else
+			addError(node, Error.TYPE_MIS, "Type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach loop");
+		
+		if( isAuto && element != null && element.getType() != null )
+			node.setType(element.getType());
+				
+		if( isValidInitialization( node, element, node ) )		
+			addSymbol( node.getImage(), node );
 				
 		return WalkType.POST_CHILDREN;
 	}
 
+
 	public Object visit(ASTForStatement node, Boolean secondVisit) throws ShadowException {
-		boolean hasInit = false;
+		createScope(secondVisit);
 		
-		if(node.jjtGetChild(0) instanceof ASTForInit) {
-			createScope(secondVisit);	// only need the scope if we've created new vars
-			hasInit = true;
+		if(secondVisit)
+		{
+			int start = 0;
+			if(node.jjtGetChild(start) instanceof ASTForInit)
+				start = 1;	
+			
+			// the conditional type might come first or second depending upon if there is an init or not
+			Type conditionalType = node.jjtGetChild(start).getType();			
+			
+			ASTUtils.DEBUG("TYPE: " + conditionalType);
+			
+			if(conditionalType == null || !conditionalType.equals( Type.BOOLEAN ) )
+				addError(node, Error.TYPE_MIS, "conditional of for statement must be boolean, found: " + conditionalType);
 		}
-		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		// the conditional type might come first or second depending upon if there is an init or not
-		Type conditionalType = null;
-		
-		if(hasInit)
-			conditionalType = node.jjtGetChild(1).getType();			
-		else
-			conditionalType = node.jjtGetChild(0).getType();
-		
-		ASTUtils.DEBUG("TYPE: " + conditionalType);
-		
-		if(conditionalType == null || !conditionalType.equals( Type.BOOLEAN ) )
-			addError(node, Error.TYPE_MIS, "conditional of for statement must be boolean, found: " + conditionalType);
-		
+			
 		return WalkType.POST_CHILDREN;
 	}	
 	

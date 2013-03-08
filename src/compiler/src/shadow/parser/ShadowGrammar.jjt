@@ -1548,8 +1548,7 @@ void DoStatement():
 void ForeachStatement():
 {
 	debugPrint("FOREACH STATEMENT");
-	Token t;
-	//TODO: Fix this to take auto and also take modifiers like nullable, readonly, and immutable
+	Token t;	
 }
 {
   "foreach" "(" ForeachInit() ")" Statement()
@@ -1564,7 +1563,8 @@ void ForeachInit():
 {
  	modifiers = Modifiers() ( "auto" | Type() ) t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression()
  	{
- 	  modifiers.checkLocalVariableModifiers(); 	}
+ 	  modifiers.checkLocalVariableModifiers();
+ 	  jjtThis.setModifiers(modifiers); 	}
 }
 
 

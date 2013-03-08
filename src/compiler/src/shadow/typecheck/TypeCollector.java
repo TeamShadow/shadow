@@ -62,33 +62,15 @@ public class TypeCollector extends BaseChecker
 		return nodeTable;
 	}				
 		
-	public void collectTypes(File input, Node node) throws ParseException, ShadowException, IOException
-	//includes files in the same directory
+	public Node collectTypes(File input) throws ParseException, ShadowException, IOException
 	{			
-		//Walk over file being checked
-		ASTWalker walker = new ASTWalker( this );		
-		walker.walk(node);
-		String canonicalPath = input.getCanonicalPath(); 
-		files.put( stripExtension(canonicalPath), node );
-		
+		//Create walker
+		ASTWalker walker = new ASTWalker( this );
+		Node resultNode = null;		
 		List<String> fileList = new ArrayList<String>();
 		
-		//Add import list
-		for( String file : getImportList() )
-			fileList.add(file);
-		
-		//Add files in directory after imports (order matters in case of duplicates)
-		File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
-				{
-					public boolean accept(File dir, String name)
-					{
-						return name.endsWith(".shadow");
-					}
-				}
-		);		
-
-		for( File file :  directoryFiles )
-			fileList.add(stripExtension(file.getCanonicalPath()));	
+		//add file to be checked to list
+		fileList.add(stripExtension(input.getCanonicalPath()));
 		
 		//add standard imports		
 		File standardDirectory = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
@@ -100,10 +82,9 @@ public class TypeCollector extends BaseChecker
 					}
 				}
 		);
-		
+				
 		for( File file :  standardImports )
-			fileList.add(stripExtension(file.getCanonicalPath()));	
-		
+			fileList.add(stripExtension(file.getCanonicalPath()));
 						
 		for(int i = 0; i < fileList.size(); i++ )
 		{			
@@ -129,14 +110,19 @@ public class TypeCollector extends BaseChecker
 				
 				ShadowParser parser = new ShadowParser(new FileInputStream(canonicalFile));
 				typeChecker.setCurrentFile(canonicalFile);
-			    SimpleNode otherNode = parser.CompilationUnit();
+			    Node node = parser.CompilationUnit();
+			    
+			    //this node is needed for full type checking and compilation
+			    if( i == 0 )			    	
+			    	resultNode = node;
 			    
 			    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
 				TypeCollector collector = new TypeCollector(debug, otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
 				walker = new ASTWalker( collector );		
-				walker.walk(otherNode);				
+				walker.walk(node);				
 		
-				files.put(canonical, otherNode);				
+				files.put(canonical, node);				
+ 
 				
 				//copy other types into our package tree				
 				for( Package p : otherTypes.keySet() )
@@ -163,13 +149,29 @@ public class TypeCollector extends BaseChecker
 						fileList.add(_import);					
 				}
 				
+				//Add files in directory after imports (order matters in case of duplicates)
+				File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
+						{
+							public boolean accept(File dir, String name)
+							{
+								return name.endsWith(".shadow");
+							}
+						}
+				);		
+
+				for( File file :  directoryFiles )
+					fileList.add(stripExtension(file.getCanonicalPath()));	
+				
 				//copy tables from other file into our central table
 				Map<Type,Node> otherNodeTable = collector.nodeTable;
 				for( Type type : otherNodeTable.keySet() )
 					if( !nodeTable.containsKey(type) )
 						nodeTable.put(type, otherNodeTable.get(type));				
 			}
-		}		
+		}
+		
+		//return the node corresponding to the file being compiled
+		return resultNode;
 	}
 
 
