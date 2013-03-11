@@ -3,7 +3,7 @@ import shadow.io@Console;
 class shadow.test@Test
 {
 	nullable Test test = this;
-	public main() => ()
+	public main(String[] args) => ()
 	{
 		nullable Test test = Test:create();
 		try {

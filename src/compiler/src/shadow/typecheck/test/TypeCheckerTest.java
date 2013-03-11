@@ -36,12 +36,6 @@ public class TypeCheckerTest {
 		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
 	}
 	
-	@After
-	public void cleanUp()
-	{
-		Type.clearTypes();
-	}
-	
 	 @Test public void testArray() throws Exception {
 		
 		//Loggers.setAllToDebug();

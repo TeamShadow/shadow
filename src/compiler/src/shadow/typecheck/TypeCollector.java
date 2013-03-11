@@ -94,7 +94,7 @@ public class TypeCollector extends BaseChecker
 			{
 				
 				File canonicalFile = new File(canonical + ".shadow");
-				if( !canonicalFile.equals(input) ) //always read the shadow file for the input file
+				if( !canonicalFile.equals(input.getCanonicalFile()) ) //always read the shadow file for the input file
 				{
 					if( canonicalFile.exists() )  
 					{											

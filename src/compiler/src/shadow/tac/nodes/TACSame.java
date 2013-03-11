@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.tac.nodes.TACBinary.Operation;
 import shadow.typecheck.type.Type;
 
 public class TACSame extends TACOperand
@@ -23,6 +24,15 @@ public class TACSame extends TACOperand
 			secondOperand = check(secondOperand, firstOperand.getType());
 		first = firstOperand;
 		second = secondOperand;
+	}
+
+	public TACOperand getFirst()
+	{
+		return first;
+	}
+	public TACOperand getSecond()
+	{
+		return second;
 	}
 
 	@Override

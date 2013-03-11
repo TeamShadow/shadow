@@ -16,7 +16,8 @@ define noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate
 	%4 = call noalias i8* @malloc(i32 %3) nounwind
 	%5 = bitcast i8* %4 to %_Pshadow_Pstandard_CObject*
 	%6 = getelementptr %_Pshadow_Pstandard_CObject* %5, i32 0, i32 0
-;	store %_Pshadow_Pstandard_CClass* %0, %_Pshadow_Pstandard_CClass** %6
+	%7 = bitcast %_Pshadow_Pstandard_CClass* %0 to %_Pshadow_Pstandard_CObject_Mclass*
+	store %_Pshadow_Pstandard_CObject_Mclass* %7, %_Pshadow_Pstandard_CObject_Mclass** %6
 	ret %_Pshadow_Pstandard_CObject* %5
 }
 

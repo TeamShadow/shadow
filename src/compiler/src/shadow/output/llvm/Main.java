@@ -24,6 +24,7 @@ import shadow.parser.javacc.ShadowParser;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
+import shadow.typecheck.type.Type;
 
 
 /**
@@ -143,10 +144,10 @@ public class Main {
 			        	System.out.println(module);
 	
 				        // build the TAC
-				        new LLVMOutput(true).build(module);
+				        //new LLVMOutput(true).build(module);
 	
 				        // verify the TAC
-				        new LLVMOutput(false).build(module);
+				        //new LLVMOutput(false).build(module);
 	
 				        // write to file
 				        new LLVMOutput(new File(shadowFile.getParent(), module.getName().replace(':', '$') + ".ll")).build(module);
@@ -156,6 +157,8 @@ public class Main {
 	
 			        System.err.println("COMPILED " + shadowFile.getPath() + " in " + (stopTime - startTime) + "ms");
 		        }
+		        
+		        Type.clearTypes();
 			}			
 		} catch(FileNotFoundException fnfe) {
 			System.err.println("FILE " + checker.getCurrentFile() + ") NOT FOUND: " + fnfe.getLocalizedMessage());

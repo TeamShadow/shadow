@@ -35,13 +35,7 @@ public class ShadowUtilityTest {
 		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
 		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
 	}	
-	
-	@After
-	public void cleanUp()
-	{
-		Type.clearTypes();
-	}
-	
+
 	 @Test public void testArrayList() throws Exception {		
 	
 		args.add("shadow/utility/ArrayList.shadow");

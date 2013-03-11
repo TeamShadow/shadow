@@ -1,8 +1,25 @@
 immutable singleton shadow.io@Console
 {
+	private boolean wasLF = false;
+	public readLine() => ( String )
+	{
+		auto string = MutableString:create();
+		char c = readCode();
+		if ( wasLF and c == '\n' )
+			c = readCode();
+		while ( c != '\n' and c != '\r' )
+		{
+			string.append(c);
+			c = readCode();
+		}
+		wasLF = c == '\r';
+		return #string;
+	}
+	public native readCode() => ( code );
+
 	public print( nullable Object value ) => ( Console )
 	{
-		return print(# value);
+		return print(#value);
 	}
 	public printLine( nullable Object value ) => ( Console )
 	{
@@ -13,7 +30,7 @@ immutable singleton shadow.io@Console
 
 	public printError( nullable Object value ) => ( Console )
 	{
-		return printError(# value);
+		return printError(#value);
 	}
 	public printErrorLine( nullable Object value ) => ( Console )
 	{
@@ -21,5 +38,4 @@ immutable singleton shadow.io@Console
 	}
 	public native printError( String value ) => ( Console );
 	public native printErrorLine() => ( Console );
-
 }

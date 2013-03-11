@@ -1532,7 +1532,7 @@ public class ClassChecker extends BaseChecker
 		}
 		else if( collectionType.hasInterface(Type.CAN_ITERATE) )
 		{			
-			for(InterfaceType _interface : collectionType.getInterfaces() )
+			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
 				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE))
 				{
 					element = _interface.getTypeParameters().get(0);

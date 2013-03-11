@@ -19,6 +19,7 @@ public class InterfaceType extends Type
 		super( typeName, modifiers );
 	}	
 
+	@Override
 	public boolean hasInterface(InterfaceType type)
 	{	
 		if( this.getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments() ))
@@ -29,6 +30,15 @@ public class InterfaceType extends Type
 				return true;
 		
 		return false;
+	}
+	
+	@Override
+	public ArrayList<InterfaceType> getAllInterfaces()
+	{		
+		ArrayList<InterfaceType> list = super.getAllInterfaces();
+		list.add(this);
+		
+		return list;
 	}
 	
 	public boolean isDescendentOf(Type type)

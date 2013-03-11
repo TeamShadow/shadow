@@ -25,6 +25,7 @@ import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACReturn;
+import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACVariableRef;
@@ -178,6 +179,19 @@ public class TextOutput extends AbstractOutput
 			return builder;
 		}
 
+		@Override
+		public void visit(TACSame node) throws ShadowException
+		{
+			boolean paren = parentheses;
+			if (paren) sb.append('(');
+			parentheses = true;
+			visit(sb, node.getFirst()).append(" === ");
+			parentheses = true;
+			visit(sb, node.getSecond());
+			if (paren) sb.append(')');
+			parentheses = false;
+		}
+		
 		@Override
 		public void visit(TACBinary node) throws ShadowException
 		{

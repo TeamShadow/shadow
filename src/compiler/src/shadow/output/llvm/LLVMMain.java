@@ -20,7 +20,7 @@ public class LLVMMain
 
 		List<String> arguments = new ArrayList<String>();
 
-		arguments.add("--check");
+		//arguments.add("--check");
 
 		arguments.add("shadow/standard/Object.shadow");
 		arguments.add("shadow/standard/Class.shadow");

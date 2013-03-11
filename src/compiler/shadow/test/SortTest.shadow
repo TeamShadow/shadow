@@ -1,3 +1,4 @@
+import shadow.io@Console;
 import shadow.utility@Random;
 
 class shadow.test@SortTest {

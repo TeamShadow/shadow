@@ -840,6 +840,16 @@ public abstract class Type {
 	public ArrayList<InterfaceType> getInterfaces()
 	{
 		return interfaces;
+	}
+	
+	public ArrayList<InterfaceType> getAllInterfaces()
+	{		
+		ArrayList<InterfaceType> list = new ArrayList<InterfaceType>();
+						
+		for( InterfaceType interfaceType : getInterfaces() )
+			list.addAll( interfaceType.getAllInterfaces() );
+		
+		return list;
 	}	
 	
 	public boolean isDescendentOf(Type type)

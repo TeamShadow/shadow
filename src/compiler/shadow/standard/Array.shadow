@@ -29,21 +29,21 @@ abstract class shadow.standard@Array<T> implements CanIndex<int[],T>
 	public immutable copy() => ( Array<T> )
 	{
 		Array<T> copy = Array<T>:create(this->lengths, allocate(T:class, this->size));
-		int[] indicies = int:create[this->dims];
-		while ( indicies[0] != this->lengths[0] )
+		int[] indices = int:create[this->dims];
+		while ( indices[0] != this->lengths[0] )
 		{
-			copy.index(indicies, index(indicies));
-			int i = indicies->size - 1;
-			for ( indicies[i] += 1; i > 0 and indicies[i] == this->lengths[i];
-					i -= 1, indicies[i] += 1 )
-				indicies[i] = 0;
+			copy.index(indices, index(indices));
+			int i = indices->size - 1;
+			for ( indices[i] += 1; i > 0 and indices[i] == this->lengths[i];
+					i -= 1, indices[i] += 1 )
+				indices[i] = 0;
 		}
 		return copy;
 	}
 	public immutable native subarray( int start, int end ) => ( Array<T> );
 
-	public immutable native index( int[] indicies ) => (T);
-	public native index( int[] indicies, T value ) => ();
+	public immutable native index( int[] indices ) => (T);
+	public native index( int[] indices, T value ) => ();
 
 	public immutable getBaseClass() => ( Class )
 	{
@@ -55,19 +55,19 @@ abstract class shadow.standard@Array<T> implements CanIndex<int[],T>
 		if ( this->size == 0 )
 			return "[]";
 		MutableString string = MutableString:create("[ ");
-		int[] indicies = int:create[this->dims];
+		int[] indices = int:create[this->dims];
 		boolean first = true;
-		while ( indicies[0] != this->lengths[0] )
+		while ( indices[0] != this->lengths[0] )
 		{
 			if ( first )
 				first = false;
 			else
 				string.append(", ");
-			string.append(index(indicies));
-			int i = indicies->size - 1;
-			for ( indicies[i] += 1; i > 0 and indicies[i] == this->lengths[i];
-					i -= 1, indicies[i] += 1 )
-				indicies[i] = 0;
+			string.append(index(indices));
+			int i = indices->size - 1;
+			for ( indices[i] += 1; i > 0 and indices[i] == this->lengths[i];
+					i -= 1, indices[i] += 1 )
+				indices[i] = 0;
 		}
 		return string.append(" ]").toString();
 	}
