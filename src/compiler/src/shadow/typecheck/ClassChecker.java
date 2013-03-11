@@ -1078,8 +1078,9 @@ public class ClassChecker extends BaseChecker
 	{		
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();
-		Modifiers rightModifiers = left.getModifiers();				
-		Modifiers leftModifiers = right.getModifiers();
+		Modifiers leftModifiers = left.getModifiers();
+		Modifiers rightModifiers = right.getModifiers();				
+		
 		
 		if( !rightType.isSubtype(leftType) )
 		{

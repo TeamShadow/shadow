@@ -27,7 +27,8 @@ Immutable methods cannot be overridden.
 immutable
 for classes means everything is immutable and cannot be subclassed
 for methods means "this" is immutable and cannot be overridden
-for references, means readonly, and there are no non-readonly references
+for local references, means readonly, and there are no non-readonly references
+for field references, it is the same, but also can only be assigned once
 
 readonly
 for references, means only readonly and immutable methods can be called
@@ -78,7 +79,7 @@ Getters and setters
 Methods with the modifier get must have type () => (Type)
 Methods with the modifier set must have type (Type) => ()
 
-Getters and setters cannot be overloaded.
+Getters and setters cannot be overloaded.... or can they?
 
 If a field has a get modifier and there are no getters with that name, then the class gets this method for free:
 immutable get name() => (immutable Type) {
@@ -88,6 +89,4 @@ immutable get name() => (immutable Type) {
 If a field has a set modifier and there are no setters with that name, then the class gets this method for free:
 set name(Type value) => () {
 	name = value;
-}
-
-immutable is "weak":  it only means that this (and consequently fields) can't be changed by this method (though it is possible that it changes stuff indirectly) 
+} 

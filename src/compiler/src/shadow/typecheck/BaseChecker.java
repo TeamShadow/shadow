@@ -41,8 +41,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected Package currentPackage;
 	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();  /** Current method is a stack since Shadow allows methods to be defined inside of methods */
 	
-
-	/** Holds the package tree structure (for name lookups) */
 	protected Type currentType = null;
 	protected Type declarationType = null;
 	protected boolean debug;	
@@ -57,8 +55,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		UNDEF_TYP		{ public String toString()  { return "UNDEFINED TYPE"; } },
 		TYPE_MIS		{ public String toString()  { return "TYPE MISMATCH"; } },
 		INVL_MOD		{ public String toString() { return "INVALID MODIFIER"; } };
-		
-		//abstract String getStr();
 	}
 	
 	public final HashMap<Package, HashMap<String, Type>> getTypeTable() {
@@ -80,16 +76,18 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		this.packageTree = packageTree;
 	}
 	
-	protected Object pushUpType(SimpleNode node, Boolean secondVisit) {
+	protected Object pushUpType(SimpleNode node, Boolean secondVisit)
+	{
 		return pushUpType(node, secondVisit, 0);
 	}
 	
-	protected Object pushUpType(SimpleNode node, Boolean secondVisit, int child) {
+	protected Object pushUpType(SimpleNode node, Boolean secondVisit, int child) 
+	{
 		if(secondVisit)
 		{
 			if( node.jjtGetNumChildren() > child )
 			{			
-				// simply push the type up the tree
+				// push the type up the tree
 				Node childNode = node.jjtGetChild(child); 
 				node.setType(childNode.getType());
 				node.setModifiers( childNode.getModifiers());
@@ -163,14 +161,14 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * Print out the list of errors to the given stream.
 	 * @param stream The stream to print the errors to.
 	 */
-	public void printErrors() {
-		for(String msg:errorList) {
-			logger.error(msg);
-		}
+	public void printErrors() 
+	{
+		for(String message : errorList)
+			logger.error(message);		
 	}
 	
 	
-	public final Type lookupTypeFromCurrentMethod( String name )
+	protected final Type lookupTypeFromCurrentMethod( String name )
 	{		
 		for( Node method : currentMethod )
 		{
@@ -196,14 +194,14 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	//outer class is just a guess, not a sure thing
 	//this method is used when starting from a specific point (as in when looking up extends lists), rather than from the current type
-	public final Type lookupTypeStartingAt( String name, Type outer )
+	protected final Type lookupTypeStartingAt( String name, Type outer )
 	{	
 		Type type = null;
 		
 		if( name.contains("@"))
 		{
 			int atSign = name.indexOf('@');
-			return lookupType( name.substring(0, atSign), name.substring(atSign + 1 ) );
+			return lookupType( name.substring(atSign + 1 ), name.substring(0, atSign) );
 		}
 		else if( outer != null ) 		//try starting points
 		{
@@ -259,24 +257,24 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	//nothing known, start with current method (looking for type parameters)
-	public Type lookupType( String name )
+	protected Type lookupType( String name )
 	{
 		if( name.contains("@"))
 		{
 			int atSign = name.indexOf('@');
-			return lookupType( name.substring(0, atSign), name.substring(atSign + 1 ) );
+			return lookupType( name.substring(atSign + 1 ), name.substring(0, atSign) );
 		}
 		else
 			return lookupTypeFromCurrentMethod( name );
 	}		
 
 	//get type from specific package
-	public final Type lookupType( String name, Package p )
+	protected final Type lookupType( String name, Package p )
 	{		
 		return typeTable.get(p).get(name);
 	}
 	
-	public final Type lookupType( String packageName, String name )
+	private final Type lookupType( String name, String packageName )
 	{			
 		Package p;
 		
@@ -295,7 +293,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return map.get(name);
 	}
 	
-	public int getErrorCount() {
+	public int getErrorCount()
+	{
 		return errorList.size();
 	}
 	
@@ -421,8 +420,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			{
 				addError(child, Error.INVL_TYP, child.getImage() + " requires type parameters but none were supplied");
 				type = Type.UNKNOWN;
-			}			
-			
+			}
 			
 			
 			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
@@ -587,7 +585,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public static boolean classIsAccessible( Type classType, Type type )
+	protected static boolean classIsAccessible( Type classType, Type type )
 	{
 		if( classType.getModifiers().isPublic() || classType.getOuter() == null || classType.getOuter().equals(type)  )
 			return true;
@@ -634,7 +632,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return false;
 	}
 	
-	public static boolean methodIsAccessible( MethodSignature signature, Type type )
+	protected static boolean methodIsAccessible( MethodSignature signature, Type type )
 	{		
 		Node node = signature.getNode();
 		if( node.getEnclosingType() == type || node.getModifiers().isPublic() ) 
@@ -659,7 +657,5 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		}
 
 		return false;
-	}
-	
-	
+	}	
 }
