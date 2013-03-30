@@ -1,10 +1,10 @@
 immutable singleton shadow.io@Console
 {
-	private boolean wasLF = false;
+	boolean wasLF = false;
 	public readLine() => ( String )
 	{
 		auto string = MutableString:create();
-		char c = readCode();
+		code c = readCode();
 		if ( wasLF and c == '\n' )
 			c = readCode();
 		while ( c != '\n' and c != '\r' )
@@ -12,7 +12,7 @@ immutable singleton shadow.io@Console
 			string.append(c);
 			c = readCode();
 		}
-		wasLF = c == '\r';
+		wasLF = ( c == '\r' );
 		return #string;
 	}
 	public native readCode() => ( code );
