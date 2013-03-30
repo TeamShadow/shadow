@@ -7,6 +7,57 @@ public
 class ASTPrimaryExpression extends SimpleNode {
 	
 	private boolean action = false;
+	private Kind kind;
+	
+	public enum Kind
+	{
+		LITERAL,
+		THIS,
+		SUPER,
+		CHECK,
+		CONDITIONAL,
+		PRIMITIVE_TYPE,
+		FUNCTION_TYPE,
+		CLASS_TYPE,
+		IDENTIFIER,
+		QUALIFIED_THIS,
+		QUALIFIED_SUPER
+		
+	}
+	
+	
+	/* prefix
+	Literal()
+	| "this" { jjtThis.setImage("this"); }
+	| "super" { jjtThis.setImage("super"); }
+	| CheckExpression()
+	| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
+	| PrimitiveType()
+	| FunctionType()
+	| [LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <I
+	
+	suffix
+	  LOOKAHEAD(2) QualifiedKeyword()
+| LOOKAHEAD(3) Brackets()
+| LOOKAHEAD(3) Subscript()
+| LOOKAHEAD(2) Destroy()
+| Method()
+| LOOKAHEAD(Allocation()) Allocation()
+| ScopeSpecifier()
+| Property()
+| LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
+
+	*/
+	
+	public void setKind(Kind kind)
+	{
+		this.kind = kind;		
+	}
+	
+	public Kind getKind()
+	{
+		return kind;		
+	}
 	
   public ASTPrimaryExpression(int id) {
     super(id);

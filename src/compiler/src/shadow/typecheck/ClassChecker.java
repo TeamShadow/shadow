@@ -1126,7 +1126,10 @@ public class ClassChecker extends BaseChecker
 			PropertyType propertyType = (PropertyType)leftType;					
 			
 			if( propertyType.acceptsAssignment(rightType, assignmentType) )
+			{
 				leftModifiers = propertyType.getSetType().getModifiers();
+				leftType = propertyType.getSetType().getType();
+			}
 			else
 			{
 				addError(errorNode, Error.TYPE_MIS, "Property with type " + propertyType + " cannot accept type " + rightType + " in this assignment");
@@ -1153,17 +1156,41 @@ public class ClassChecker extends BaseChecker
 		{
 			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to variable marked constant");
 			return false;			
-		}
-		else if( leftModifiers.isImmutable() && (!leftModifiers.isField() || (!currentMethod.isEmpty() && !currentMethod.getFirst().getMethodSignature().isCreate()))   )
-		{
-			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to field marked immutable except in a create");
-			return false;
-		}		
+		}				
 		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 		{
 			addError(errorNode, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
 			return false;
 		}
+		
+		if( leftModifiers.isImmutable() )
+		{			
+			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() )
+			{
+				addError(errorNode, Error.INVL_TYP, "Cannot assign a non-immutable value to an immutable reference");
+				return false;
+			}
+			
+			if( leftModifiers.isField() )
+			{} //do something!
+			
+			
+			/*
+			if( leftModifiers.isField() || (!currentMethod.isEmpty() && !currentMethod.getFirst().getMethodSignature().isCreate()))   ))
+			
+			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to field marked immutable except in a create");
+			return false;
+			*/
+		}
+		else
+		{
+			if( rightModifiers.isImmutable() && !leftType.getModifiers().isImmutable() )
+			{
+				addError(errorNode, Error.INVL_TYP, "Cannot assign an immutable value to a non-immutable reference");
+				return false;
+			}
+		}
+		
 				
 		return true;
 	}
@@ -1237,9 +1264,9 @@ public class ClassChecker extends BaseChecker
 		
 		if( node.jjtGetNumChildren() == 3 ) //if there is assignment
 		{
-			Node left = node.jjtGetChild(0);
+			ASTPrimaryExpression left = (ASTPrimaryExpression) node.jjtGetChild(0);
 			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
-			Node right = node.jjtGetChild(2);
+			ASTConditionalExpression right = (ASTConditionalExpression) node.jjtGetChild(2);
 			
 			isValidAssignment(left, right, assignment.getAssignmentType(), left); 
 			//will issue appropriate errors

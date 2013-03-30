@@ -387,7 +387,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			return true;		
 		
 		if ( t instanceof SequenceType )
-			return canAccept((SequenceType)t);
+			return ((SequenceType)t).canAccept(this);
 		else
 			return false;
 	}
