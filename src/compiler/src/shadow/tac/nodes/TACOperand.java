@@ -1,7 +1,5 @@
 package shadow.tac.nodes;
 
-import javax.naming.OperationNotSupportedException;
-
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -33,15 +31,14 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 		return new Modifiers();
 	}
 	public abstract Type getType();
-	
 	public void setType(Type type)
 	{
 		throw new UnsupportedOperationException();
 	}
 
-	protected TACOperand checkVirtual(Type type, TACNode node)
+	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
 	{
-		if (getType().isStrictSubtype(type))
+		if (getType().isStrictSubtype(type.getType()))
 			return new TACCast(node, type, this);
 		return this;
 	}

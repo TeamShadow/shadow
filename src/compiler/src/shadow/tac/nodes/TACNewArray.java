@@ -9,6 +9,7 @@ import java.util.List;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACNewArray extends TACOperand
@@ -37,18 +38,20 @@ public class TACNewArray extends TACOperand
 	{
 		super(node);
 		type = arrayType;
-		base = check(baseClass, Type.CLASS);
+		base = check(baseClass, new SimpleModifiedType(Type.CLASS));
 		dimensions = new ArrayList<TACOperand>(dims.size());
 		Iterator<TACOperand> iter = dims.iterator();
-		TACOperand current = check(iter.next(), Type.INT);
+		TACOperand current = check(iter.next(),
+				new SimpleModifiedType(Type.INT));
 		dimensions.add(current);
 		while (iter.hasNext())
 		{
-			TACOperand next = check(iter.next(), Type.INT);
+			TACOperand next = check(iter.next(),
+					new SimpleModifiedType(Type.INT));
 			dimensions.add(next);
 			current = new TACBinary(this, current, '*', next);
 		}
-		total = check(current, Type.INT);
+		total = check(current, new SimpleModifiedType(Type.INT));
 	}
 
 	public TACOperand getBaseClass()

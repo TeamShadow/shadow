@@ -61,6 +61,6 @@ public class TACSequenceRef extends TACReference
 		StringBuilder sb = new StringBuilder().append('(');
 		for (TACReference node : sequence)
 			sb.append(node).append(", ");
-		return sb.delete(sb.length() - 2, sb.length()).toString();
+		return sb.delete(sb.length() - 2, sb.length()).append(')').toString();
 	}
 }

@@ -4,14 +4,14 @@ class shadow.test@ParentTest
 {
 	public create()
 	{
-		Console:instance.printLine(getClass() # ":create()");
+		Console:instance.printLine(ParentTest:class # ":create()");
 	}
 	public create( int x )
 	{
-		Console:instance.printLine(getClass() # ":create(" # x # ')');
+		Console:instance.printLine(ParentTest:class # ":create(" # x # ')');
 	}
 	public create( String y )
 	{
-		Console:instance.printLine(getClass() # ":create(\"" # y # "\")");
+		Console:instance.printLine(ParentTest:class # ":create(\"" # y # "\")");
 	}
 }

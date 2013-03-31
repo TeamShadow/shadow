@@ -1,7 +1,8 @@
 class shadow.utility@LinkedList<V> implements List<V>
 {
-	get int size = 0, modifications = 0;
+	get int size = 0;
 	Node header = Node:create();
+	int modifications = 0;
 
 	private class Node
 	{
@@ -104,7 +105,7 @@ class shadow.utility@LinkedList<V> implements List<V>
 		Node node = findIndex(index);
 		nullable V value = node->value;
 		node.delete();
-		return V;
+		return value;
 	}
 	public indexOf( V value ) => ( int index )
 	{

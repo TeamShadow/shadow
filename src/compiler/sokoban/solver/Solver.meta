@@ -1,0 +1,10 @@
+import shadow.standard@String;
+import shadow.standard@Object;
+import shadow.standard@MutableString;
+
+class sokoban.solver@Solver extends shadow.standard@Object
+{
+	public create();
+	public main(String[] args) => ();
+
+}

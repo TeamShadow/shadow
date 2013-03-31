@@ -14,7 +14,7 @@ public class TACNot extends TACOperand
 	public TACNot(TACNode node, TACOperand operand)
 	{
 		super(node);
-		op = check(operand, Type.BOOLEAN);
+		op = check(operand, this);
 	}
 
 	public TACOperand getOperand()
@@ -38,6 +38,12 @@ public class TACNot extends TACOperand
 		if (num == 0)
 			return op;
 		throw new IndexOutOfBoundsException();
+	}
+
+	@Override
+	public String toString()
+	{
+		return '!' + op.toString();
 	}
 
 	@Override

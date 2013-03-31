@@ -3,8 +3,8 @@ package shadow.tac.nodes;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.PropertyType;
-import shadow.typecheck.type.Type;
 
 public class TACPropertyRef extends TACReference
 {
@@ -26,7 +26,7 @@ public class TACPropertyRef extends TACReference
 			throw new IllegalArgumentException("propertyPrefix is not a " +
 					"class type");
 		blockRef = block;
-		prefix = check(propertyPrefix, propertyPrefix.getType());
+		prefix = check(propertyPrefix, propertyPrefix);
 		type = propertyType;
 		name = propertyName;
 	}
@@ -50,14 +50,14 @@ public class TACPropertyRef extends TACReference
 		return type;
 	}
 	@Override
-	public Type getGetType()
+	public ModifiedType getGetType()
 	{
-		return type.getGetType().getType();
+		return type.getGetType();
 	}
 	@Override
-	public Type getSetType()
+	public ModifiedType getSetType()
 	{
-		return type.getSetType().getType();
+		return type.getSetType();
 	}
 	@Override
 	public int getNumOperands()

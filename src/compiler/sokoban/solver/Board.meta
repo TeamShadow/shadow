@@ -1,0 +1,75 @@
+import shadow.utility@List;
+import shadow.standard@CanCompare;
+import shadow.utility@Set;
+import shadow.standard@String;
+import shadow.standard@Object;
+import shadow.standard@CanIterate;
+
+class sokoban.solver@Board extends shadow.standard@Object
+{
+	constant ushort[] EMPTY;
+	constant code FLOOR;
+	constant int MAX;
+	constant code TARGET;
+	constant code WALL;
+
+	public immutable getStates() => (Set<Board:State>);
+	public immutable getInitialState() => (Board:State);
+	public immutable toString() => (String);
+	public create(List<String> rows, int cols);
+
+
+	public class State extends shadow.standard@Object implements shadow.standard@CanCompare<Board:State>, default@CanIterate<T> [Unknown Type]
+	{
+		public immutable isWinning() => (boolean);
+		public immutable iterator() => (Iterator<Board:State:Coordinate>);
+		public equals(Object other) => (boolean);
+		public compare(Board:State other) => (int);
+		public hashCode() => (int);
+		private create();
+		private create(Board:State other, Board:State:Coordinate player);
+		public getMove(MutableString sb, Board:State:Coordinate to) => (Board:State:Coordinate);
+		public immutable getBoxes() => (CanIterate<Board:State:Coordinate>);
+		public immutable getMaxDistance() => (int);
+		public immutable isLosing(Board:State:Coordinate box) => (boolean);
+		public immutable getNumCoordinates(int dist) => (int);
+		public getPath(MutableString sb, Board:State:Coordinate from, Board:State:Coordinate to) => (MutableString);
+		public immutable tryMove(Board:State:Coordinate from, Board:State:Coordinate to) => (Board:State);
+		public toString() => (String);
+		public immutable getCoordinate(int dist, int num) => (Board:State:Coordinate);
+		public move(Board:State:Coordinate from, Board:State:Coordinate to) => (Board:State);
+		public immutable getPlayer() => (Board:State:Coordinate);
+
+
+		public class Coordinate extends shadow.standard@Object implements shadow.standard@CanCompare<Board:State:Coordinate>, shadow.standard@CanIterate<Board:State:Coordinate>
+		{
+			public hasBox() => (boolean);
+			public isFull() => (boolean);
+			public hashCode() => (int);
+			public hasPlayer() => (boolean);
+			public getCol() => (int);
+			public isFloor() => (boolean);
+			public moveDownRight() => (Board:State:Coordinate);
+			public moveUpLeft() => (Board:State:Coordinate);
+			public moveUpRight() => (Board:State:Coordinate);
+			public isEmpty() => (boolean);
+			public moveDown() => (Board:State:Coordinate);
+			public isTarget() => (boolean);
+			public moveLeft() => (Board:State:Coordinate);
+			public getRow() => (int);
+			public iterator() => (Iterator<Board:State:Coordinate>);
+			public moveDownLeft() => (Board:State:Coordinate);
+			public isWall() => (boolean);
+			public equals(Object other) => (boolean);
+			public compare(Board:State:Coordinate other) => (int);
+			public moveRight() => (Unknown Type);
+			private create();
+			private create(int i);
+			private create(int row, int col);
+			public create(Board:State:Coordinate other);
+			public moveUp() => (Board:State:Coordinate);
+			public toString() => (String);
+
+		}
+	}
+}

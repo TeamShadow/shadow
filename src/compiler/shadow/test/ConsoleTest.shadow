@@ -2,7 +2,7 @@ import shadow.io@Console;
 
 class shadow.test@ConsoleTest
 {
-	public main() => ()
+	public main( String[] args ) => ()
 	{
 		Console console = Console:instance;
 		Console:instance.printLine(12345);
@@ -21,5 +21,17 @@ class shadow.test@ConsoleTest
 		console.print('\n');
 		Console:instance.printLine();
 		Console:instance.print("Test String\r\n");
+
+		console.printLine();
+		console.print("Enter your name: ");
+		console.printLine("Your name is " # console.readLine() # '!');
+		boolean eof;
+		do
+		{
+			code c;
+			( c, eof ) = console.readCode();
+			console.printLine(c);
+		}
+		while ( !eof );
 	}
 }

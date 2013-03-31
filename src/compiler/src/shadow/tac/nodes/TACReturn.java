@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 
 public class TACReturn extends TACSimpleNode
 {
@@ -28,9 +29,9 @@ public class TACReturn extends TACSimpleNode
 				throw new IllegalArgumentException();
 		}
 		else if (expected.size() == 1)
-			returnValue = check(op, expected.getType(0));
+			returnValue = check(op, expected.get(0));
 		else
-			returnValue = check(op, expected);
+			returnValue = check(op, new SimpleModifiedType(expected));
 	}
 
 	public boolean hasReturnValue()

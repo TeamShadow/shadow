@@ -51,7 +51,8 @@ public class TACMethodRef extends TACOperand
 	{
 		super(node);
 		if (prefixNode != null)
-			prefix = check(prefixNode, methodType.getOuter());
+			prefix = check(prefixNode,
+					new SimpleModifiedType(methodType.getOuter()));
 		type = methodType;
 		name = methodName;
 	}

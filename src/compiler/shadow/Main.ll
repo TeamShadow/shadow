@@ -23,11 +23,11 @@ declare %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstan
 declare %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintErrorLine(%_Pshadow_Pio_CConsole*)
 declare i32 @strlen(i8* nocapture)
 
-%_Pshadow_Ptest_CSortMain = type opaque
-%_Pshadow_Ptest_CSortMain_Mclass = type { %_Pshadow_Pstandard_CClass }
-@_Pshadow_Ptest_CSortMain_Mclass = external constant %_Pshadow_Ptest_CSortMain_Mclass
-declare %_Pshadow_Ptest_CSortMain* @_Pshadow_Ptest_CSortMain_Mcreate(%_Pshadow_Ptest_CSortMain*)
-declare i32 @_Pshadow_Ptest_CSortMain_Mmain_Pshadow_Pstandard_CString_A1(%_Pshadow_Ptest_CSortMain*, { %_Pshadow_Pstandard_CString**, [1 x i32] })
+%_Pshadow_Ptest_CTest = type opaque
+%_Pshadow_Ptest_CTest_Mclass = type { %_Pshadow_Pstandard_CClass }
+@_Pshadow_Ptest_CTest_Mclass = external constant %_Pshadow_Ptest_CTest_Mclass
+declare %_Pshadow_Ptest_CTest* @_Pshadow_Ptest_CTest_Mcreate(%_Pshadow_Ptest_CTest*)
+declare i32 @_Pshadow_Ptest_CTest_Mmain_Pshadow_Pstandard_CString_A1(%_Pshadow_Ptest_CTest*, { %_Pshadow_Pstandard_CString**, [1 x i32] })
 
 declare i32 @__shadow_personality_v0(...)
 declare %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture) nounwind
@@ -55,12 +55,12 @@ define i32 @main(i32, i8**) {
 	%18 = load i8** %17
 	%19 = icmp eq i8* %18, null
 	br i1 %19, label %20, label %6
-	%21 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* getelementptr inbounds (%_Pshadow_Ptest_CSortMain_Mclass* @_Pshadow_Ptest_CSortMain_Mclass, i32 0, i32 0))
-	%22 = bitcast %_Pshadow_Pstandard_CObject* %21 to %_Pshadow_Ptest_CSortMain*
-	%23 = call %_Pshadow_Ptest_CSortMain* @_Pshadow_Ptest_CSortMain_Mcreate(%_Pshadow_Ptest_CSortMain* %22)
+	%21 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* getelementptr inbounds (%_Pshadow_Ptest_CTest_Mclass* @_Pshadow_Ptest_CTest_Mclass, i32 0, i32 0))
+	%22 = bitcast %_Pshadow_Pstandard_CObject* %21 to %_Pshadow_Ptest_CTest*
+	%23 = call %_Pshadow_Ptest_CTest* @_Pshadow_Ptest_CTest_Mcreate(%_Pshadow_Ptest_CTest* %22)
 	%24 = insertvalue { %_Pshadow_Pstandard_CString**, [1 x i32] } undef, %_Pshadow_Pstandard_CString** %5, 0
 	%25 = insertvalue { %_Pshadow_Pstandard_CString**, [1 x i32] } %24, i32 %3, 1, 0
-	%26 = invoke i32 @_Pshadow_Ptest_CSortMain_Mmain_Pshadow_Pstandard_CString_A1(%_Pshadow_Ptest_CSortMain* %23, { %_Pshadow_Pstandard_CString**, [1 x i32] } %25)
+	%26 = invoke i32 @_Pshadow_Ptest_CTest_Mmain_Pshadow_Pstandard_CString_A1(%_Pshadow_Ptest_CTest* %23, { %_Pshadow_Pstandard_CString**, [1 x i32] } %25)
 			to label %27 unwind label %28
 	ret i32 %26
 	%29 = landingpad { i8*, i32 } personality i32 (...)* @__shadow_personality_v0

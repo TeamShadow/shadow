@@ -3,32 +3,38 @@ package shadow.tac.nodes;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 public class TACFieldRef extends TACReference
 {
 	private int index;
 	private TACOperand prefix;
-	private Type type;
+	private ModifiedType type;
 	private String name;
-	public TACFieldRef(TACOperand fieldPrefix, Type fieldType, String fieldName)
+	public TACFieldRef(TACOperand fieldPrefix, String fieldName)
 	{
-		this(null, fieldPrefix, fieldType, fieldName);
+		this(null, fieldPrefix, fieldName);
 	}
-	public TACFieldRef(TACNode node, TACOperand fieldPrefix, Type fieldType,
-			String fieldName)
+	public TACFieldRef(TACNode node, TACOperand fieldPrefix, String fieldName)
+	{
+		this(node, fieldPrefix, ((ClassType)fieldPrefix.getType()).
+				getField(fieldName), fieldName);
+	}
+	public TACFieldRef(TACNode node, TACOperand fieldPrefix,
+			ModifiedType fieldType, String fieldName)
 	{
 		super(node);
-		if (!(fieldPrefix.getType() instanceof ClassType))
-			throw new IllegalArgumentException(
-					"fieldPrefix is not a class type");
+		if (fieldType == null)
+			throw new NullPointerException();
 		ClassType prefixType = (ClassType)fieldPrefix.getType();
 //		while (prefixType != null && !prefixType.containsField(fieldName))
 //			prefixType = prefixType.getExtendType();
 //		if (prefixType == null)
 //			throw new IllegalArgumentException("field fieldName not found");
 		index = prefixType.getFieldIndex(fieldName);
-		prefix = check(fieldPrefix, prefixType);
+		prefix = check(fieldPrefix, fieldPrefix);
 		type = fieldType;
 		name = fieldName;
 	}
@@ -47,9 +53,14 @@ public class TACFieldRef extends TACReference
 	}
 
 	@Override
+	public Modifiers getModifiers()
+	{
+		return type.getModifiers();
+	}
+	@Override
 	public Type getType()
 	{
-		return type;
+		return type.getType();
 	}
 	@Override
 	public int getNumOperands()
@@ -73,6 +84,6 @@ public class TACFieldRef extends TACReference
 	@Override
 	public String toString()
 	{
-		return prefix.toString() + '.' + name;
+		return prefix.toString() + ':' + name;
 	}
 }

@@ -23,6 +23,7 @@ import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACNodeRef;
 import shadow.tac.nodes.TACNot;
+import shadow.tac.nodes.TACPlaceholder;
 import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
@@ -93,6 +94,8 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	public void visit(TACNot node) throws ShadowException { }
 	@Override
 	public void visit(TACPropertyRef node) throws ShadowException { }
+	@Override
+	public void visit(TACPlaceholder node) throws ShadowException { }
 	@Override
 	public void visit(TACReference node) throws ShadowException { }
 	@Override

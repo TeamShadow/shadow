@@ -33,7 +33,7 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 %"_Pshadow_Pstandard_Clong" = type { %"_Pshadow_Pstandard_Clong_Mclass"*, %long }
 %"_Pshadow_Pstandard_Cfloat_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cfloat"* (%"_Pshadow_Pstandard_Cfloat"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %float (%"_Pshadow_Pstandard_Cfloat"*, %float)*, %int (%"_Pshadow_Pstandard_Cfloat"*, %float)*, %float (%"_Pshadow_Pstandard_Cfloat"*, %float)*, %float (%"_Pshadow_Pstandard_Cfloat"*, %float)*, %float (%"_Pshadow_Pstandard_Cfloat"*, %float)*, %float (%"_Pshadow_Pstandard_Cfloat"*, %float)* }
 %"_Pshadow_Pstandard_Cfloat" = type { %"_Pshadow_Pstandard_Cfloat_Mclass"*, %float }
-%"_Pshadow_Pio_CConsole_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*)* }
+%"_Pshadow_Pio_CConsole_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*)*, { %byte, %boolean } (%"_Pshadow_Pio_CConsole"*)*, { %code, %boolean } (%"_Pshadow_Pio_CConsole"*)*, { %"_Pshadow_Pstandard_CString"*, %boolean } (%"_Pshadow_Pio_CConsole"*)* }
 %"_Pshadow_Pio_CConsole" = type { %"_Pshadow_Pio_CConsole_Mclass"* }
 %"_Pshadow_Pstandard_Cshort_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_Cshort"* (%"_Pshadow_Pstandard_Cshort"*)*, %boolean (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)*, %int (%"_Pshadow_Pstandard_Cshort"*, %short)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)*, %short (%"_Pshadow_Pstandard_Cshort"*, %short)* }
 %"_Pshadow_Pstandard_Cshort" = type { %"_Pshadow_Pstandard_Cshort_Mclass"*, %short }
@@ -171,128 +171,158 @@ _label6:
     br label %_label7
 _label7:
     %54 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
-    %55 = load %"_Pshadow_Putility_CArrayList"** %list
-    %56 = getelementptr %"_Pshadow_Putility_CArrayList"* %55, i32 0, i32 0
-    %57 = load %"_Pshadow_Putility_CArrayList_Mclass"** %56
-    %58 = getelementptr %"_Pshadow_Putility_CArrayList_Mclass"* %57, i32 0, i32 15
-    %59 = load %boolean (%"_Pshadow_Putility_CArrayList"*, %"_Pshadow_Pstandard_CObject"*)** %58
-    %60 = load { %"_Pshadow_Pstandard_CString"**, [1 x %int] }* %args
-    %61 = load %int* %i1
-    %62 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %60, 0
-    %63 = getelementptr inbounds %"_Pshadow_Pstandard_CString"** %62, %int %61
-    %64 = load %"_Pshadow_Putility_CArrayList"** %list
-    %65 = load %"_Pshadow_Pstandard_CString"** %63
-    %66 = bitcast %"_Pshadow_Pstandard_CString"* %65 to %"_Pshadow_Pstandard_CObject"*
-    %67 = call %boolean %59(%"_Pshadow_Putility_CArrayList"* %64, %"_Pshadow_Pstandard_CObject"* %66)
-    %68 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cboolean_Mclass"* @"_Pshadow_Pstandard_Cboolean_Mclass", i32 0, i32 0))
-    %69 = bitcast %"_Pshadow_Pstandard_CObject"* %68 to %"_Pshadow_Pstandard_Cboolean"*
-    %70 = getelementptr inbounds %"_Pshadow_Pstandard_Cboolean"* %69, i32 0, i32 0
-    store %"_Pshadow_Pstandard_Cboolean_Mclass"* @"_Pshadow_Pstandard_Cboolean_Mclass", %"_Pshadow_Pstandard_Cboolean_Mclass"** %70
-    %71 = getelementptr inbounds %"_Pshadow_Pstandard_Cboolean"* %69, i32 0, i32 1
-    store %boolean %67, %boolean* %71
-    %72 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %54, %"_Pshadow_Pstandard_CObject"* %68)
-    %73 = load %int* %i1
-    %74 = add %int %73, 3
-    store %int %74, %int* %i1
+    %55 = getelementptr %"_Pshadow_Pio_CConsole"* %54, i32 0, i32 0
+    %56 = load %"_Pshadow_Pio_CConsole_Mclass"** %55
+    %57 = getelementptr %"_Pshadow_Pio_CConsole_Mclass"* %56, i32 0, i32 13
+    %58 = load %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)** %57
+    %59 = load %"_Pshadow_Putility_CArrayList"** %list
+    %60 = getelementptr %"_Pshadow_Putility_CArrayList"* %59, i32 0, i32 0
+    %61 = load %"_Pshadow_Putility_CArrayList_Mclass"** %60
+    %62 = getelementptr %"_Pshadow_Putility_CArrayList_Mclass"* %61, i32 0, i32 15
+    %63 = load %boolean (%"_Pshadow_Putility_CArrayList"*, %"_Pshadow_Pstandard_CObject"*)** %62
+    %64 = load { %"_Pshadow_Pstandard_CString"**, [1 x %int] }* %args
+    %65 = load %int* %i1
+    %66 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %64, 0
+    %67 = getelementptr inbounds %"_Pshadow_Pstandard_CString"** %66, %int %65
+    %68 = load %"_Pshadow_Putility_CArrayList"** %list
+    %69 = load %"_Pshadow_Pstandard_CString"** %67
+    %70 = bitcast %"_Pshadow_Pstandard_CString"* %69 to %"_Pshadow_Pstandard_CObject"*
+    %71 = call %boolean %63(%"_Pshadow_Putility_CArrayList"* %68, %"_Pshadow_Pstandard_CObject"* %70)
+    %72 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cboolean_Mclass"* @"_Pshadow_Pstandard_Cboolean_Mclass", i32 0, i32 0))
+    %73 = bitcast %"_Pshadow_Pstandard_CObject"* %72 to %"_Pshadow_Pstandard_Cboolean"*
+    %74 = getelementptr inbounds %"_Pshadow_Pstandard_Cboolean"* %73, i32 0, i32 0
+    store %"_Pshadow_Pstandard_Cboolean_Mclass"* @"_Pshadow_Pstandard_Cboolean_Mclass", %"_Pshadow_Pstandard_Cboolean_Mclass"** %74
+    %75 = getelementptr inbounds %"_Pshadow_Pstandard_Cboolean"* %73, i32 0, i32 1
+    store %boolean %71, %boolean* %75
+    %76 = call %"_Pshadow_Pio_CConsole"* %58(%"_Pshadow_Pio_CConsole"* %54, %"_Pshadow_Pstandard_CObject"* %72)
+    %77 = load %int* %i1
+    %78 = add %int %77, 3
+    store %int %78, %int* %i1
     br label %_label4
 _label4:
-    %75 = load { %"_Pshadow_Pstandard_CString"**, [1 x %int] }* %args
-    %76 = load %int* %i1
-    %77 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %75, 1
-    %78 = call %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cint_Mclass"* @"_Pshadow_Pstandard_Cint_Mclass", i32 0, i32 0), %int 1)
-    %79 = bitcast %"_Pshadow_Pstandard_CObject"* %78 to [1 x %int]*
-    store [1 x %int] %77, [1 x %int]* %79
-    %80 = getelementptr inbounds [1 x %int]* %79, i32 0, i32 0
-    %81 = insertvalue { %int*, [1 x %int] } { %int* null, [1 x %int] [%int 1] }, %int* %80, 0
-    %82 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %75, 0
-    %83 = bitcast %"_Pshadow_Pstandard_CString"** %82 to %"_Pshadow_Pstandard_CObject"*
-    %84 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CArray_Mclass"* @"_Pshadow_Pstandard_CArray_Mclass", i32 0, i32 0))
-    %85 = bitcast %"_Pshadow_Pstandard_CObject"* %84 to %"_Pshadow_Pstandard_CArray"*
-    %86 = call %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CArray"* %85, %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CString_Mclass"* @"_Pshadow_Pstandard_CString_Mclass", i32 0, i32 0), { %int*, [1 x %int] } %81, %"_Pshadow_Pstandard_CObject"* %83)
-    %87 = getelementptr %"_Pshadow_Pstandard_CArray"* %86, i32 0, i32 0
-    %88 = load %"_Pshadow_Pstandard_CArray_Mclass"** %87
-    %89 = getelementptr %"_Pshadow_Pstandard_CArray_Mclass"* %88, i32 0, i32 13
-    %90 = load %int (%"_Pshadow_Pstandard_CArray"*)** %89
-    %91 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %75, 1
-    %92 = call %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cint_Mclass"* @"_Pshadow_Pstandard_Cint_Mclass", i32 0, i32 0), %int 1)
-    %93 = bitcast %"_Pshadow_Pstandard_CObject"* %92 to [1 x %int]*
-    store [1 x %int] %91, [1 x %int]* %93
-    %94 = getelementptr inbounds [1 x %int]* %93, i32 0, i32 0
-    %95 = insertvalue { %int*, [1 x %int] } { %int* null, [1 x %int] [%int 1] }, %int* %94, 0
-    %96 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %75, 0
-    %97 = bitcast %"_Pshadow_Pstandard_CString"** %96 to %"_Pshadow_Pstandard_CObject"*
-    %98 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CArray_Mclass"* @"_Pshadow_Pstandard_CArray_Mclass", i32 0, i32 0))
-    %99 = bitcast %"_Pshadow_Pstandard_CObject"* %98 to %"_Pshadow_Pstandard_CArray"*
-    %100 = call %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CArray"* %99, %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CString_Mclass"* @"_Pshadow_Pstandard_CString_Mclass", i32 0, i32 0), { %int*, [1 x %int] } %95, %"_Pshadow_Pstandard_CObject"* %97)
-    %101 = call %int %90(%"_Pshadow_Pstandard_CArray"* %100)
-    %102 = icmp slt %int %76, %101
-    br %boolean %102, label %_label3, label %_label5
+    %79 = load { %"_Pshadow_Pstandard_CString"**, [1 x %int] }* %args
+    %80 = load %int* %i1
+    %81 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %79, 1
+    %82 = call %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cint_Mclass"* @"_Pshadow_Pstandard_Cint_Mclass", i32 0, i32 0), %int 1)
+    %83 = bitcast %"_Pshadow_Pstandard_CObject"* %82 to [1 x %int]*
+    store [1 x %int] %81, [1 x %int]* %83
+    %84 = getelementptr inbounds [1 x %int]* %83, i32 0, i32 0
+    %85 = insertvalue { %int*, [1 x %int] } { %int* null, [1 x %int] [%int 1] }, %int* %84, 0
+    %86 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %79, 0
+    %87 = bitcast %"_Pshadow_Pstandard_CString"** %86 to %"_Pshadow_Pstandard_CObject"*
+    %88 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CArray_Mclass"* @"_Pshadow_Pstandard_CArray_Mclass", i32 0, i32 0))
+    %89 = bitcast %"_Pshadow_Pstandard_CObject"* %88 to %"_Pshadow_Pstandard_CArray"*
+    %90 = call %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CArray"* %89, %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CString_Mclass"* @"_Pshadow_Pstandard_CString_Mclass", i32 0, i32 0), { %int*, [1 x %int] } %85, %"_Pshadow_Pstandard_CObject"* %87)
+    %91 = getelementptr %"_Pshadow_Pstandard_CArray"* %90, i32 0, i32 0
+    %92 = load %"_Pshadow_Pstandard_CArray_Mclass"** %91
+    %93 = getelementptr %"_Pshadow_Pstandard_CArray_Mclass"* %92, i32 0, i32 13
+    %94 = load %int (%"_Pshadow_Pstandard_CArray"*)** %93
+    %95 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %79, 1
+    %96 = call %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cint_Mclass"* @"_Pshadow_Pstandard_Cint_Mclass", i32 0, i32 0), %int 1)
+    %97 = bitcast %"_Pshadow_Pstandard_CObject"* %96 to [1 x %int]*
+    store [1 x %int] %95, [1 x %int]* %97
+    %98 = getelementptr inbounds [1 x %int]* %97, i32 0, i32 0
+    %99 = insertvalue { %int*, [1 x %int] } { %int* null, [1 x %int] [%int 1] }, %int* %98, 0
+    %100 = extractvalue { %"_Pshadow_Pstandard_CString"**, [1 x %int] } %79, 0
+    %101 = bitcast %"_Pshadow_Pstandard_CString"** %100 to %"_Pshadow_Pstandard_CObject"*
+    %102 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CArray_Mclass"* @"_Pshadow_Pstandard_CArray_Mclass", i32 0, i32 0))
+    %103 = bitcast %"_Pshadow_Pstandard_CObject"* %102 to %"_Pshadow_Pstandard_CArray"*
+    %104 = call %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CArray"* %103, %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_CString_Mclass"* @"_Pshadow_Pstandard_CString_Mclass", i32 0, i32 0), { %int*, [1 x %int] } %99, %"_Pshadow_Pstandard_CObject"* %101)
+    %105 = call %int %94(%"_Pshadow_Pstandard_CArray"* %104)
+    %106 = icmp slt %int %80, %105
+    br %boolean %106, label %_label3, label %_label5
 _label5:
-    %103 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
-    %104 = icmp eq %"_Pshadow_Pio_CConsole"* %103, null
-    br %boolean %104, label %_label8, label %_label9
+    %107 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    %108 = icmp eq %"_Pshadow_Pio_CConsole"* %107, null
+    br %boolean %108, label %_label8, label %_label9
 _label8:
-    %105 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pio_CConsole_Mclass"* @"_Pshadow_Pio_CConsole_Mclass", i32 0, i32 0))
-    %106 = bitcast %"_Pshadow_Pstandard_CObject"* %105 to %"_Pshadow_Pio_CConsole"*
-    %107 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pio_CConsole"* %106)
-    store %"_Pshadow_Pio_CConsole"* %107, %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    %109 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pio_CConsole_Mclass"* @"_Pshadow_Pio_CConsole_Mclass", i32 0, i32 0))
+    %110 = bitcast %"_Pshadow_Pstandard_CObject"* %109 to %"_Pshadow_Pio_CConsole"*
+    %111 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pio_CConsole"* %110)
+    store %"_Pshadow_Pio_CConsole"* %111, %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
     br label %_label9
 _label9:
-    %108 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
-    %109 = load %"_Pshadow_Putility_CArrayList"** %list
-    %110 = getelementptr %"_Pshadow_Putility_CArrayList"* %109, i32 0, i32 0
-    %111 = load %"_Pshadow_Putility_CArrayList_Mclass"** %110
-    %112 = getelementptr %"_Pshadow_Putility_CArrayList_Mclass"* %111, i32 0, i32 15
-    %113 = load %boolean (%"_Pshadow_Putility_CArrayList"*, %"_Pshadow_Pstandard_CObject"*)** %112
-    %114 = load %"_Pshadow_Putility_CArrayList"** %list
-    %115 = bitcast %"_Pshadow_Pstandard_CString"* @_string1 to %"_Pshadow_Pstandard_CObject"*
-    %116 = call %boolean %113(%"_Pshadow_Putility_CArrayList"* %114, %"_Pshadow_Pstandard_CObject"* %115)
-    %117 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cboolean_Mclass"* @"_Pshadow_Pstandard_Cboolean_Mclass", i32 0, i32 0))
-    %118 = bitcast %"_Pshadow_Pstandard_CObject"* %117 to %"_Pshadow_Pstandard_Cboolean"*
-    %119 = getelementptr inbounds %"_Pshadow_Pstandard_Cboolean"* %118, i32 0, i32 0
-    store %"_Pshadow_Pstandard_Cboolean_Mclass"* @"_Pshadow_Pstandard_Cboolean_Mclass", %"_Pshadow_Pstandard_Cboolean_Mclass"** %119
-    %120 = getelementptr inbounds %"_Pshadow_Pstandard_Cboolean"* %118, i32 0, i32 1
-    store %boolean %116, %boolean* %120
-    %121 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %108, %"_Pshadow_Pstandard_CObject"* %117)
+    %112 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    %113 = getelementptr %"_Pshadow_Pio_CConsole"* %112, i32 0, i32 0
+    %114 = load %"_Pshadow_Pio_CConsole_Mclass"** %113
+    %115 = getelementptr %"_Pshadow_Pio_CConsole_Mclass"* %114, i32 0, i32 13
+    %116 = load %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)** %115
+    %117 = load %"_Pshadow_Putility_CArrayList"** %list
+    %118 = getelementptr %"_Pshadow_Putility_CArrayList"* %117, i32 0, i32 0
+    %119 = load %"_Pshadow_Putility_CArrayList_Mclass"** %118
+    %120 = getelementptr %"_Pshadow_Putility_CArrayList_Mclass"* %119, i32 0, i32 15
+    %121 = load %boolean (%"_Pshadow_Putility_CArrayList"*, %"_Pshadow_Pstandard_CObject"*)** %120
+    %122 = load %"_Pshadow_Putility_CArrayList"** %list
+    %123 = bitcast %"_Pshadow_Pstandard_CString"* @_string1 to %"_Pshadow_Pstandard_CObject"*
+    %124 = call %boolean %121(%"_Pshadow_Putility_CArrayList"* %122, %"_Pshadow_Pstandard_CObject"* %123)
+    %125 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%"_Pshadow_Pstandard_Cboolean_Mclass"* @"_Pshadow_Pstandard_Cboolean_Mclass", i32 0, i32 0))
+    %126 = bitcast %"_Pshadow_Pstandard_CObject"* %125 to %"_Pshadow_Pstandard_Cboolean"*
+    %127 = getelementptr inbounds %"_Pshadow_Pstandard_Cboolean"* %126, i32 0, i32 0
+    store %"_Pshadow_Pstandard_Cboolean_Mclass"* @"_Pshadow_Pstandard_Cboolean_Mclass", %"_Pshadow_Pstandard_Cboolean_Mclass"** %127
+    %128 = getelementptr inbounds %"_Pshadow_Pstandard_Cboolean"* %126, i32 0, i32 1
+    store %boolean %124, %boolean* %128
+    %129 = call %"_Pshadow_Pio_CConsole"* %116(%"_Pshadow_Pio_CConsole"* %112, %"_Pshadow_Pstandard_CObject"* %125)
     store %int 0, %int* %i2
     br label %_label11
 _label10:
-    %122 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
-    %123 = icmp eq %"_Pshadow_Pio_CConsole"* %122, null
-    br %boolean %123, label %_label13, label %_label14
+    %130 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    %131 = icmp eq %"_Pshadow_Pio_CConsole"* %130, null
+    br %boolean %131, label %_label13, label %_label14
 _label13:
-    %124 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pio_CConsole_Mclass"* @"_Pshadow_Pio_CConsole_Mclass", i32 0, i32 0))
-    %125 = bitcast %"_Pshadow_Pstandard_CObject"* %124 to %"_Pshadow_Pio_CConsole"*
-    %126 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pio_CConsole"* %125)
-    store %"_Pshadow_Pio_CConsole"* %126, %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    %132 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pio_CConsole_Mclass"* @"_Pshadow_Pio_CConsole_Mclass", i32 0, i32 0))
+    %133 = bitcast %"_Pshadow_Pstandard_CObject"* %132 to %"_Pshadow_Pio_CConsole"*
+    %134 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pio_CConsole"* %133)
+    store %"_Pshadow_Pio_CConsole"* %134, %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
     br label %_label14
 _label14:
-    %127 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
-    %128 = load %"_Pshadow_Putility_CArrayList"** %list
-    %129 = getelementptr %"_Pshadow_Putility_CArrayList"* %128, i32 0, i32 0
-    %130 = load %"_Pshadow_Putility_CArrayList_Mclass"** %129
-    %131 = getelementptr %"_Pshadow_Putility_CArrayList_Mclass"* %130, i32 0, i32 11
-    %132 = load %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Putility_CArrayList"*, %int)** %131
-    %133 = load %"_Pshadow_Putility_CArrayList"** %list
-    %134 = load %int* %i2
-    %135 = call %"_Pshadow_Pstandard_CObject"* %132(%"_Pshadow_Putility_CArrayList"* %133, %int %134)
-    %136 = bitcast %"_Pshadow_Pstandard_CObject"* %135 to %"_Pshadow_Pstandard_CObject"*
-    %137 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"* %127, %"_Pshadow_Pstandard_CObject"* %136)
-    %138 = load %int* %i2
-    %139 = add %int %138, 1
-    store %int %139, %int* %i2
+    %135 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    %136 = getelementptr %"_Pshadow_Pio_CConsole"* %135, i32 0, i32 0
+    %137 = load %"_Pshadow_Pio_CConsole_Mclass"** %136
+    %138 = getelementptr %"_Pshadow_Pio_CConsole_Mclass"* %137, i32 0, i32 13
+    %139 = load %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)** %138
+    %140 = load %"_Pshadow_Putility_CArrayList"** %list
+    %141 = getelementptr %"_Pshadow_Putility_CArrayList"* %140, i32 0, i32 0
+    %142 = load %"_Pshadow_Putility_CArrayList_Mclass"** %141
+    %143 = getelementptr %"_Pshadow_Putility_CArrayList_Mclass"* %142, i32 0, i32 11
+    %144 = load %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Putility_CArrayList"*, %int)** %143
+    %145 = load %"_Pshadow_Putility_CArrayList"** %list
+    %146 = load %int* %i2
+    %147 = call %"_Pshadow_Pstandard_CObject"* %144(%"_Pshadow_Putility_CArrayList"* %145, %int %146)
+    %148 = bitcast %"_Pshadow_Pstandard_CObject"* %147 to %"_Pshadow_Pstandard_CObject"*
+    %149 = call %"_Pshadow_Pio_CConsole"* %139(%"_Pshadow_Pio_CConsole"* %135, %"_Pshadow_Pstandard_CObject"* %148)
+    %150 = load %int* %i2
+    %151 = add %int %150, 1
+    store %int %151, %int* %i2
     br label %_label11
 _label11:
-    %140 = load %"_Pshadow_Putility_CArrayList"** %list
-    %141 = load %int* %i2
-    %142 = getelementptr %"_Pshadow_Putility_CArrayList"* %140, i32 0, i32 0
-    %143 = load %"_Pshadow_Putility_CArrayList_Mclass"** %142
-    %144 = getelementptr %"_Pshadow_Putility_CArrayList_Mclass"* %143, i32 0, i32 16
-    %145 = load %int (%"_Pshadow_Putility_CArrayList"*)** %144
-    %146 = call %int %145(%"_Pshadow_Putility_CArrayList"* %140)
-    %147 = icmp slt %int %141, %146
-    br %boolean %147, label %_label10, label %_label12
+    %152 = load %"_Pshadow_Putility_CArrayList"** %list
+    %153 = load %int* %i2
+    %154 = getelementptr %"_Pshadow_Putility_CArrayList"* %152, i32 0, i32 0
+    %155 = load %"_Pshadow_Putility_CArrayList_Mclass"** %154
+    %156 = getelementptr %"_Pshadow_Putility_CArrayList_Mclass"* %155, i32 0, i32 16
+    %157 = load %int (%"_Pshadow_Putility_CArrayList"*)** %156
+    %158 = call %int %157(%"_Pshadow_Putility_CArrayList"* %152)
+    %159 = icmp slt %int %153, %158
+    br %boolean %159, label %_label10, label %_label12
 _label12:
+    %160 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    %161 = icmp eq %"_Pshadow_Pio_CConsole"* %160, null
+    br %boolean %161, label %_label15, label %_label16
+_label15:
+    %162 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* getelementptr (%"_Pshadow_Pio_CConsole_Mclass"* @"_Pshadow_Pio_CConsole_Mclass", i32 0, i32 0))
+    %163 = bitcast %"_Pshadow_Pstandard_CObject"* %162 to %"_Pshadow_Pio_CConsole"*
+    %164 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pio_CConsole"* %163)
+    store %"_Pshadow_Pio_CConsole"* %164, %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    br label %_label16
+_label16:
+    %165 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+    %166 = getelementptr %"_Pshadow_Pio_CConsole"* %165, i32 0, i32 0
+    %167 = load %"_Pshadow_Pio_CConsole_Mclass"** %166
+    %168 = getelementptr %"_Pshadow_Pio_CConsole_Mclass"* %167, i32 0, i32 13
+    %169 = load %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)** %168
+    %170 = load %"_Pshadow_Putility_CArrayList"** %list
+    %171 = bitcast %"_Pshadow_Putility_CArrayList"* %170 to %"_Pshadow_Pstandard_CObject"*
+    %172 = call %"_Pshadow_Pio_CConsole"* %169(%"_Pshadow_Pio_CConsole"* %165, %"_Pshadow_Pstandard_CObject"* %171)
     ret %int 0
 }
 
@@ -361,13 +391,16 @@ declare %float @"_Pshadow_Pstandard_Cfloat_Mmodulus_Pshadow_Pstandard_Cfloat"(%"
 
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)
+declare { %"_Pshadow_Pstandard_CString"*, %boolean } @"_Pshadow_Pio_CConsole_MreadLine"(%"_Pshadow_Pio_CConsole"*)
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintLine"(%"_Pshadow_Pio_CConsole"*)
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintErrorLine_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_MprintErrorLine"(%"_Pshadow_Pio_CConsole"*)
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pio_CConsole"*)
+declare { %byte, %boolean } @"_Pshadow_Pio_CConsole_MreadByte"(%"_Pshadow_Pio_CConsole"*)
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CObject"(%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)
 declare %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString"(%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)
+declare { %code, %boolean } @"_Pshadow_Pio_CConsole_MreadCode"(%"_Pshadow_Pio_CConsole"*)
 
 declare %short @"_Pshadow_Pstandard_Cshort_Msubtract_Pshadow_Pstandard_Cshort"(%"_Pshadow_Pstandard_Cshort"*, %short)
 declare %int @"_Pshadow_Pstandard_Cshort_Mcompare_Pshadow_Pstandard_Cshort"(%"_Pshadow_Pstandard_Cshort"*, %short)
@@ -390,22 +423,22 @@ declare %byte @"_Pshadow_Pstandard_Cbyte_Madd_Pshadow_Pstandard_Cbyte"(%"_Pshado
 declare %"_Pshadow_Pstandard_Cbyte"* @"_Pshadow_Pstandard_Cbyte_Mcreate"(%"_Pshadow_Pstandard_Cbyte"*)
 declare %byte @"_Pshadow_Pstandard_Cbyte_Mmodulus_Pshadow_Pstandard_Cbyte"(%"_Pshadow_Pstandard_Cbyte"*, %byte)
 
+declare %boolean @"_Pshadow_Pstandard_CString_MisEmpty"(%"_Pshadow_Pstandard_CString"*)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoUpperCase"(%"_Pshadow_Pstandard_CString"*)
 declare %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CString_Miterator"(%"_Pshadow_Pstandard_CString"*)
 declare %boolean @"_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoLowerCase"(%"_Pshadow_Pstandard_CString"*)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CString"*, %int, %int)
 declare %int @"_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)
+declare %byte @"_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CString"*, %int)
+declare { %byte*, [1 x %int] } @"_Pshadow_Pstandard_CString_Mchars"(%"_Pshadow_Pstandard_CString"*)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoString"(%"_Pshadow_Pstandard_CString"*)
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate"(%"_Pshadow_Pstandard_CString"*)
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1"(%"_Pshadow_Pstandard_CString"*, { %byte*, [1 x %int] })
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1"(%"_Pshadow_Pstandard_CString"*, { %code*, [1 x %int] })
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mconcatenate_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)
 declare %int @"_Pshadow_Pstandard_CString_Msize"(%"_Pshadow_Pstandard_CString"*)
-declare %boolean @"_Pshadow_Pstandard_CString_MisEmpty"(%"_Pshadow_Pstandard_CString"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoUpperCase"(%"_Pshadow_Pstandard_CString"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoLowerCase"(%"_Pshadow_Pstandard_CString"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CString"*, %int, %int)
-declare %byte @"_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CString"*, %int)
-declare { %byte*, [1 x %int] } @"_Pshadow_Pstandard_CString_Mchars"(%"_Pshadow_Pstandard_CString"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoString"(%"_Pshadow_Pstandard_CString"*)
 
 declare noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"*)
 declare noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CClass"*, %int)

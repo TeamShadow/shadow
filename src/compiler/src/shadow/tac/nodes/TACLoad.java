@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 public class TACLoad extends TACOperand
@@ -23,9 +24,14 @@ public class TACLoad extends TACOperand
 	}
 
 	@Override
+	public Modifiers getModifiers()
+	{
+		return reference.getGetType().getModifiers();
+	}
+	@Override
 	public Type getType()
 	{
-		return reference.getGetType();
+		return reference.getGetType().getType();
 	}
 	@Override
 	public int getNumOperands()

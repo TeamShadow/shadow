@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.Type;
 
@@ -115,28 +116,27 @@ public class TACBinary extends TACOperand
 			TACOperand secondOperand)
 	{
 		super(node);
-		Type firstType = firstOperand.getType(),
-				secondType = secondOperand.getType();
-		if (firstType instanceof PropertyType)
-			firstType = ((PropertyType)firstType).getGetType().getType();
-		if (secondType instanceof PropertyType)
-			secondType = ((PropertyType)secondType).getGetType().getType();
+		ModifiedType firstType = firstOperand, secondType = secondOperand;
+		if (firstType.getType() instanceof PropertyType)
+			firstType = ((PropertyType)firstType.getType()).getGetType();
+		if (secondType.getType() instanceof PropertyType)
+			secondType = ((PropertyType)secondType.getType()).getGetType();
 		switch (op.getOperandType())
 		{
 			case BOOLEAN:
-				firstType = secondType = Type.BOOLEAN;
+				firstType = secondType = this;
 				break;
 			case INTEGRAL:
 			case NUMERICAL:
 			case OBJECT:
-				firstType = secondType = secondType.isSubtype(firstType) ?
-						firstType : secondType;
+				firstType = secondType = secondType.getType().
+						isSubtype(firstType.getType()) ? firstType : secondType;
 				break;
 			default:
 				throw new InternalError("Unknown operand type");
 		}
-		first = check(firstOperand, firstType);
 		operation = op;
+		first = check(firstOperand, firstType);
 		second = check(secondOperand, firstType);
 	}
 

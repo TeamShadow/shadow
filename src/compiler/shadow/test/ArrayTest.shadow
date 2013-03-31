@@ -1,30 +1,29 @@
+import shadow.io@Console;
+
 class shadow.test@ArrayTest
 {
-	public main( Array<Object> array ) => ()
+	public main( String[] args ) => ()
 	{
-		int[] indicies = int:create[1];
-		array.index(indicies, 0);
-		/*int[] lengths = int:create[1];
-		lengths[0] = 5;
-		Array<Object> array = Array<Object>:create(lengths);
-		array.index(0, 0);
-		array.index(1, '2');
-		array.index(2, "four");
-		array.index(3, 88);
-		array.index(4, null);
+		int[] temp = int:create[1];
+		temp[0] = 5; Array<Object> array = Array<Object>:create(temp);
+		temp[0] = 0; array.index(temp, 0);
+		temp[0] = 1; array.index(temp, '2');
+		temp[0] = 2; array.index(temp, "four");
+		temp[0] = 3; array.index(temp, 88);
+		temp[0] = 4; array.index(temp, null);
 		Array<Object> array2 = cast<Array<Object>>array.copy();
 		Array<Object> array3 = cast<Array<Object>>array2.subarray(1, 4);
-		for ( int i = 0; i < array->size; i += 1 )
-			array.index(i, i);
-		array3.index(0, "zero");
-		array3.index(1, "one");
-		array3.index(2, "two");
+		for ( temp[0] = 0; temp[0] < array->size; temp[0] += 1 )
+			array.index(temp, temp[0]);
+		temp[0] = 0; array3.index(temp, "zero");
+		temp[0] = 1; array3.index(temp, "one");
+		temp[0] = 2; array3.index(temp, "two");
 		Console:instance.printLine(array);
 		Console:instance.printLine(array2);
 		Console:instance.printLine(array3);
 		for ( int start = 0; start <= array->size; start += 1 )
 			for ( int end = start; end <= array->size; end += 1 )
-				Console:instance.printLine(array.subarray(start, end));*/
+				Console:instance.printLine(array.subarray(start, end));
 		//Array<String> strings = test<String>(lengths);
 	}
 

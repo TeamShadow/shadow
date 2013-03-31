@@ -73,12 +73,9 @@ public class TACUnary extends TACOperand
 	public TACUnary(TACNode node, Operation op, TACOperand first)
 	{
 		super(node);
-		Type type = first.getType();
 		switch (op.getOperandType())
 		{
 			case BOOLEAN:
-				type = Type.BOOLEAN;
-				break;
 			case NUMERICAL:
 			case INTEGRAL:
 				break;
@@ -86,7 +83,7 @@ public class TACUnary extends TACOperand
 				throw new InternalError("Unknown operand type");
 		}
 		operation = op;
-		operand = check(first, type);
+		operand = check(first, first);
 	}
 
 	public Operation getOperation()

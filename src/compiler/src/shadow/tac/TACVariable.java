@@ -1,13 +1,21 @@
 package shadow.tac;
 
+import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class TACVariable
+public class TACVariable implements ModifiedType
 {
-	private Type type;
+	private ModifiedType type;
 	private String name;
 	private int suffix;
-	public TACVariable(Type varType, String varName)
+	public TACVariable(ModifiedType varType)
+	{
+		type = varType;
+		name = null;
+		suffix = 0;
+	}
+	public TACVariable(ModifiedType varType, String varName)
 	{
 		type = varType;
 		name = varName;
@@ -17,9 +25,18 @@ public class TACVariable
 	{
 		return type != null;
 	}
+	public Modifiers getModifiers()
+	{
+		return type.getModifiers();
+	}
 	public Type getType()
 	{
-		return type;
+		return type.getType();
+	}
+	@Override
+	public void setType(Type type)
+	{
+		throw new UnsupportedOperationException();
 	}
 	public String getOriginalName()
 	{

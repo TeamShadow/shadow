@@ -1,4 +1,4 @@
-class shadow.standard@MutableString
+class shadow.standard@MutableString implements CanIndex<int, byte>
 {
 	get int size = 0;
 	byte[] data = byte:create[10];
@@ -28,6 +28,19 @@ class shadow.standard@MutableString
 	public immutable get capacity() => ( int )
 	{
 		return data->size;
+	}
+
+	public immutable index( int index ) => ( byte value )
+	{
+		if ( index < 0 or index > size )
+			throw IndexOutOfBoundsException:create();
+		return data[index];
+	}
+	public immutable index( int index, byte value ) => ()
+	{
+		if ( index < 0 or index > size )
+			throw IndexOutOfBoundsException:create();
+		data[index] = value;
 	}
 
 	public append( nullable Object value ) => ( MutableString )

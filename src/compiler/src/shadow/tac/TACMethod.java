@@ -38,16 +38,17 @@ public class TACMethod extends TACNodeList
 		type = methodType;
 		scopes.push(new LinkedHashMap<String, TACVariable>(
 				type.getParameterTypes().size()));
-		addLocal(getPrefixType(), "this");
+		addLocal(new SimpleModifiedType(getPrefixType()), "this");
 		if (isCreate() && getPrefixType().hasOuter())
-			addLocal(getPrefixType().getOuter(), "outer");
+			addLocal(new SimpleModifiedType(getPrefixType().getOuter()),
+					"outer");
 		Type parameterizedType = isCreate() ? getPrefixType() : methodType;
 		if (parameterizedType.isParameterized())
 			for (ModifiedType typeParam : parameterizedType.getTypeParameters())
-				addLocal(Type.CLASS, typeParam.getType().getTypeName());
+				addLocal(new SimpleModifiedType(Type.CLASS),
+						typeParam.getType().getTypeName());
 		for (String parameterName : methodType.getParameterNames())
-			addLocal(methodType.getParameterType(parameterName).getType(),
-					parameterName);
+			addLocal(methodType.getParameterType(parameterName), parameterName);
 		enterScope();
 	}
 
@@ -146,7 +147,7 @@ public class TACMethod extends TACNodeList
 	{
 		scopes.push(new HashMap<String, TACVariable>());
 	}
-	public TACVariable addLocal(Type type, String name)
+	public TACVariable addLocal(ModifiedType type, String name)
 	{
 		TACVariable variable = new TACVariable(type, name);
 		while (locals.containsKey(variable.getName()))
@@ -155,7 +156,7 @@ public class TACMethod extends TACNodeList
 		scopes.peek().put(name, variable);
 		return variable;
 	}
-	public TACVariable addTempLocal(Type type)
+	public TACVariable addTempLocal(ModifiedType type)
 	{
 		return addLocal(type, "_temp");
 	}

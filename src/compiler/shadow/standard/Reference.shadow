@@ -4,12 +4,12 @@ class shadow.standard@Reference<T>
 	public create()
 	{
 	}
-	public create( T value )
+	public create( nullable T value )
 	{
 		this:value = value;
 	}
 	public immutable toString() => ( String )
 	{
-		return # value;
+		return #value;
 	}
 }

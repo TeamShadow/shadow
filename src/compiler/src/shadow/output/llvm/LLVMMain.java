@@ -20,7 +20,7 @@ public class LLVMMain
 
 		List<String> arguments = new ArrayList<String>();
 
-		//arguments.add("--check");
+		arguments.add("--check");
 
 		arguments.add("shadow/standard/Object.shadow");
 		arguments.add("shadow/standard/Class.shadow");
@@ -47,13 +47,13 @@ public class LLVMMain
 		arguments.add("shadow/standard/UnexpectedNullException.shadow");
 		arguments.add("shadow/io/Console.shadow");
 
-//		arguments.add("shadow/utility/Random.shadow");
+		arguments.add("shadow/utility/Random.shadow");
 //		arguments.add("shadow/utility/List.shadow");
 //		arguments.add("shadow/utility/Set.shadow");
-//		arguments.add("shadow/utility/ArrayList.shadow");
-//		arguments.add("shadow/utility/LinkedList.shadow");
+		arguments.add("shadow/utility/ArrayList.shadow");
+		arguments.add("shadow/utility/LinkedList.shadow");
 //		arguments.add("shadow/utility/HashSet.shadow");
-//		arguments.add("shadow/utility/IllegalModificationException.shadow");
+		arguments.add("shadow/utility/IllegalModificationException.shadow");
 
 		arguments.add("shadow/test/Test.shadow");
 		arguments.add("shadow/test/ExceptionA.shadow");
@@ -68,6 +68,9 @@ public class LLVMMain
 		arguments.add("shadow/test/ArrayListTest.shadow");
 		arguments.add("shadow/test/SortTest.shadow");
 		arguments.add("shadow/test/SortMain.shadow");
+
+		arguments.add("sokoban/solver/Solver.shadow");
+		arguments.add("sokoban/solver/Board.shadow");
 
 		if (FORCE)
 			for (String file : arguments)

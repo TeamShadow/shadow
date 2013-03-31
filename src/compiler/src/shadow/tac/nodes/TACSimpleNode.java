@@ -3,9 +3,8 @@ package shadow.tac.nodes;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import shadow.typecheck.type.PropertyType;
-import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeParameter;
+import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.SequenceType;
 
 public abstract class TACSimpleNode extends TACNode
 		implements Iterable<TACOperand>
@@ -52,22 +51,24 @@ public abstract class TACSimpleNode extends TACNode
 	public abstract int getNumOperands();
 	public abstract TACOperand getOperand(int num);
 
-	protected final TACOperand check(TACOperand operand)
+	protected final TACOperand check(TACOperand operand, ModifiedType type)
 	{
-		return operand.checkVirtual(operand.getType(), this);
-	}
-	protected final TACOperand check(TACOperand operand, Type type)
-	{
-		if (type instanceof TypeParameter &&
+		if (type instanceof TACReference)
+			type = ((TACReference)type).getGetType();
+		/*if (type.getType() instanceof TypeParameter &&
 				!(operand.getType() instanceof TypeParameter))
-			type = Type.OBJECT;
+			type = new SimpleModifiedType(Type.OBJECT);*/
 		operand = operand.checkVirtual(type, this);
-		if (type instanceof PropertyType)
-			type = ((PropertyType)type).getGetType().getType();
-		if (operand.getType().equals(type))
+		if (operand.getType().equals(type.getType()))
 			return operand;
-		if (operand.getType().getPackage().equals(type.getPackage()) &&
-				operand.getType().getTypeName().equals(type.getTypeName()))
+		if (operand.getType() instanceof SequenceType &&
+				type.getType() instanceof SequenceType &&
+				((SequenceType)operand.getType()).matches(
+						((SequenceType)type.getType())))
+			return operand;
+		if (operand.getType().getPackage().equals(type.getType().
+				getPackage()) && operand.getType().getTypeName().equals(type.
+				getType().getTypeName()))
 			return operand;
 		throw new IllegalArgumentException();
 	}

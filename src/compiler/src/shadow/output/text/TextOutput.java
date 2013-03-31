@@ -22,12 +22,14 @@ import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
+import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
+import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
@@ -180,6 +182,15 @@ public class TextOutput extends AbstractOutput
 		}
 
 		@Override
+		public void visit(TACNot node) throws ShadowException
+		{
+			sb.append('!');
+			parentheses = true;
+			visit(sb, node.getOperand());
+			parentheses = false;
+		}
+
+		@Override
 		public void visit(TACSame node) throws ShadowException
 		{
 			boolean paren = parentheses;
@@ -191,7 +202,16 @@ public class TextOutput extends AbstractOutput
 			if (paren) sb.append(')');
 			parentheses = false;
 		}
-		
+
+		@Override
+		public void visit(TACUnary node) throws ShadowException
+		{
+			sb.append(node.getOperation());
+			parentheses = true;
+			visit(sb, node.getOperand());
+			parentheses = false;
+		}
+
 		@Override
 		public void visit(TACBinary node) throws ShadowException
 		{
@@ -285,7 +305,7 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACLiteral node) throws ShadowException
 		{
-			sb.append(node.getValue());
+			sb.append(node);
 		}
 	}
 }

@@ -44,7 +44,7 @@ public class TACCall extends TACOperand
 		Iterator<ModifiedType> typeIter = types.iterator();
 		parameters = new ArrayList<TACOperand>(params.size());
 		while (paramIter.hasNext())
-			parameters.add(check(paramIter.next(), typeIter.next().getType()));
+			parameters.add(check(paramIter.next(), typeIter.next()));
 	}
 
 	public TACBlock getBlock()

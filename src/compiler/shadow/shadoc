@@ -24,10 +24,16 @@ NOTDONE=true
 COMPILE=true
 RUN=false
 FILE=a.out
-while $NOTDONE; do
+IMPORT=
+OPTIMIZED=
+FLAGS=
+while [ -n "$1" ]; do
 	case "$1" in
 		-O | --optimized)
 			OPTIMIZED=-O3
+		;;
+		-g | --debug)
+			FLAGS=-g
 		;;
 		--interpret)
 			COMPILE=false
@@ -59,24 +65,24 @@ while $NOTDONE; do
 				shift
 				TEMP="$1"
 			fi
-			IMPORT="$IMPORT ${1:9}"
+			IMPORT="$IMPORT $TEMP.ll"
 		;;
 		--import=*)
-			IMPORT="$IMPORT ${1:9}"
+			IMPORT="$IMPORT ${1:9}.ll"
 		;;
 		--import)
 			shift
-			IMPORT="$IMPORT test/$1Test.ll"
+			IMPORT="$IMPORT $1.ll"
 		;;
 		--)
-			NOTDONE=false
+			shift
+			TESTPREFIX="$1"
 		;;
 		-*)
 			yellow "Unknown option $1."
 		;;
 		*)
 			TESTPREFIX="$1"
-			NOTDONE=false
 		;;
 	esac
 	shift
@@ -84,22 +90,24 @@ done
 FILE="$(cd $(dirname "$FILE") ; pwd)/$(basename "$FILE")"
 
 if [ -z "$TESTPREFIX" ]; then
-	green <<DONE
-	Usage: $0 <test prefix> <other files>...
-DONE
+	green "Usage: $0 <test prefix> <other files>..."
 elif [ -z "$(which llvm-link)" ]; then
 	red "You do not have llvm installed."
 elif [ -z "$CC" ]; then
 	red "You do not have clang or gcc installed."
 else
-	llvm-link <(sed "s/Test/${TESTPREFIX}Test/g" Main.ll) \
-			"test/${TESTPREFIX}Test.ll" $IMPORT Linux.ll Unwind64.ll \
-			standard/*.ll io/*.ll utility/*.ll | opt $OPTIMIZED | (
+	llvm-link Unwind64.ll Linux.ll standard/*.ll io/*.ll utility/*.ll \
+			$IMPORT "test/${TESTPREFIX}.ll" \
+			<(sed -e "s/Test/${TESTPREFIX}/g" Main.ll) | opt $OPTIMIZED | (
 		if $COMPILE; then
-			llc $OPTIMIZED | "$CC" $OPTIMIZED -x assembler - -lm -lrt \
-					-o "$FILE" && $RUN && "$FILE" "$@"
+			llc $OPTIMIZED | tee >(if  [[ "$FLAGS" =~ -g ]]; then cat >-; else cat >/dev/null; fi) | \
+					"$CC" $OPTIMIZED $FLAGS -x assembler - -lm -lrt \
+					-o "$FILE"
+			if [[ $? == 1 ]] && $RUN; then
+				"$FILE" "$@" <&10
+			fi
 		elif $RUN; then
 			lli $OPTIMIZED
 		fi
-	)
+	) 10<&0
 fi

@@ -144,10 +144,10 @@ public class Main {
 			        	System.out.println(module);
 	
 				        // build the TAC
-				        //new LLVMOutput(true).build(module);
+				        new LLVMOutput(true).build(module);
 	
 				        // verify the TAC
-				        //new LLVMOutput(false).build(module);
+				        new LLVMOutput(false).build(module);
 	
 				        // write to file
 				        new LLVMOutput(new File(shadowFile.getParent(), module.getName().replace(':', '$') + ".ll")).build(module);

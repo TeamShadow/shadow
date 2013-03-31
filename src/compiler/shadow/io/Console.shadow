@@ -1,21 +1,50 @@
-immutable singleton shadow.io@Console
+singleton shadow.io@Console
 {
 	boolean wasLF = false;
-	public readLine() => ( String )
+	public readLine() => ( String, boolean eof )
 	{
 		auto string = MutableString:create();
-		code c = readCode();
+		code c;
+		boolean eof;
+		( c, eof ) = readCode();
+//		( code c, boolean eof ) = readCode();
 		if ( wasLF and c == '\n' )
-			c = readCode();
-		while ( c != '\n' and c != '\r' )
+			( c, eof ) = readCode();
+		while ( c != '\n' and c != '\r' and !eof )
 		{
 			string.append(c);
-			c = readCode();
+			( c, eof ) = readCode();
 		}
 		wasLF = ( c == '\r' );
-		return #string;
+		return ( #string, eof );
 	}
-	public native readCode() => ( code );
+	public readCode() => ( code, boolean eof )
+	{
+		int value;
+		boolean eof;
+		( value, eof ) = readByte();
+		if ( value < 0 )
+		{
+			int bytes = 0;
+			byte mask = 1y << 7y >> 1y;
+			while ( value >= mask )
+			{
+				bytes += 1;
+				mask >>= 1y;
+			}
+			value &= ~mask;
+			while ( bytes > 0 )
+			{
+				value <<= 6;
+				byte b;
+				( b, eof ) = readByte();
+				value |= b & 0b00111111y;
+				bytes -= 1;
+			}
+		}
+		return ( cast<code>value, eof );
+	}
+	public native readByte() => ( byte, boolean eof );
 
 	public print( nullable Object value ) => ( Console )
 	{

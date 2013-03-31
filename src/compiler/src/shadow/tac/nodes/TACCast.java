@@ -2,17 +2,27 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACCast extends TACOperand
 {
-	private Type type;
+	private ModifiedType type;
 	private TACOperand operand;
-	public TACCast(TACNode node, Type newType, TACOperand op)
+	public TACCast(ModifiedType newType, TACOperand op)
+	{
+		this(null, newType, op);
+	}
+	public TACCast(TACNode node, ModifiedType newType, TACOperand op)
 	{
 		super(node);
+		if (newType.getType() == Type.NULL)
+			newType = new SimpleModifiedType(Type.OBJECT,
+					new Modifiers(Modifiers.NULLABLE));
 		type = newType;
-		operand = check(op, op.getType());
+		operand = check(op, op);
 	}
 
 	public TACOperand getOperand()
@@ -21,9 +31,14 @@ public class TACCast extends TACOperand
 	}
 
 	@Override
+	public Modifiers getModifiers()
+	{
+		return type.getModifiers();
+	}
+	@Override
 	public Type getType()
 	{
-		return type;
+		return type.getType();
 	}
 	@Override
 	public int getNumOperands()
@@ -47,6 +62,6 @@ public class TACCast extends TACOperand
 	@Override
 	public String toString()
 	{
-		return "cast<" + type + '>' + operand;
+		return "cast<" + getModifiers() + getType() + '>' + getOperand();
 	}
 }

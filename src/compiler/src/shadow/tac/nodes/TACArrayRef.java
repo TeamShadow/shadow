@@ -9,39 +9,41 @@ import java.util.List;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACArrayRef extends TACReference
 {
 	private TACOperand array, total;
 	private List<TACOperand> indicies;
-	public TACArrayRef(Type type, TACOperand reference, TACOperand... ops)
+	public TACArrayRef(TACOperand reference, TACOperand... ops)
 	{
-		this(null, type, reference, Arrays.asList(ops));
+		this(null, reference, Arrays.asList(ops));
 	}
-	public TACArrayRef(TACNode node, Type type, TACOperand reference,
-			TACOperand... ops)
+	public TACArrayRef(TACNode node, TACOperand reference, TACOperand... ops)
 	{
-		this(node, type, reference, Arrays.asList(ops));
+		this(node, reference, Arrays.asList(ops));
 	}
-	public TACArrayRef(Type type, TACOperand reference, Collection<TACOperand> ops)
+	public TACArrayRef(TACOperand reference, Collection<TACOperand> ops)
 	{
-		this(null, type, reference, ops);
+		this(null, reference, ops);
 	}
-	public TACArrayRef(TACNode node, Type type, TACOperand reference,
+	public TACArrayRef(TACNode node, TACOperand reference,
 			Collection<TACOperand> ops)
 	{
 		super(node);
-		array = check(reference, type);
+		array = check(reference, reference);
 		Iterator<TACOperand> iter = ops.iterator();
 		indicies = new ArrayList<TACOperand>(ops.size());
-		TACOperand current = check(iter.next(), Type.INT);
+		TACOperand current = check(iter.next(),
+				new SimpleModifiedType(Type.INT));
 		indicies.add(current);
 		while (iter.hasNext())
 		{
 			current = new TACBinary(this, current, '*', new TACLength(this,
 					array, indicies.size()));
-			TACOperand next = check(iter.next(), Type.INT);
+			TACOperand next = check(iter.next(),
+					new SimpleModifiedType(Type.INT));
 			indicies.add(next);
 			current = new TACBinary(this, current, '+', next);
 		}

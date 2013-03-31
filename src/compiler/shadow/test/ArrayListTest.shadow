@@ -14,5 +14,6 @@ class shadow.test@ArrayListTest
 		Console:instance.printLine(list.remove(""));
 		for ( int i = 0; i < list->size; i += 1 )
 			Console:instance.printLine(list.index(i));
+		Console:instance.printLine(list);
 	}
 }

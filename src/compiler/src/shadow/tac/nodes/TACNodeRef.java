@@ -2,6 +2,8 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 public class TACNodeRef extends TACOperand
@@ -22,6 +24,11 @@ public class TACNodeRef extends TACOperand
 		return reference;
 	}
 
+	@Override
+	public Modifiers getModifiers()
+	{
+		return reference.getModifiers();
+	}
 	@Override
 	public Type getType()
 	{
@@ -53,7 +60,7 @@ public class TACNodeRef extends TACOperand
 	}
 
 	@Override
-	protected TACOperand checkVirtual(Type type, TACNode node)
+	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
 	{
 		return reference.checkVirtual(type, node);
 	}

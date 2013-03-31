@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 public class TACLiteral extends TACOperand
@@ -236,11 +237,22 @@ public class TACLiteral extends TACOperand
 		return value;
 	}
 
+	public boolean isNull()
+	{
+		return type == Type.NULL;
+	}
 	public Object getValue()
 	{
 		return value;
 	}
 
+	@Override
+	public Modifiers getModifiers()
+	{
+		if (isNull())
+			return new Modifiers(Modifiers.NULLABLE);
+		return Modifiers.NO_MODIFIERS;
+	}
 	@Override
 	public Type getType()
 	{
@@ -266,6 +278,10 @@ public class TACLiteral extends TACOperand
 	@Override
 	public String toString()
 	{
+		if (type == Type.CODE)
+			return '\'' + String.valueOf(value) + '\'';
+		if (type == Type.STRING)
+			return '\"' + String.valueOf(value) + '\"';
 		return String.valueOf(value);
 	}
 }

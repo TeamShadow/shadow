@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 public class TACVariableRef extends TACReference
@@ -29,6 +30,11 @@ public class TACVariableRef extends TACReference
 		return variable.getName();
 	}
 
+	@Override
+	public Modifiers getModifiers()
+	{
+		return variable.getModifiers();
+	}
 	@Override
 	public Type getType()
 	{

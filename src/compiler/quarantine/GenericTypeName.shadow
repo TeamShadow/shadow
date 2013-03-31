@@ -1,0 +1,7 @@
+class GenericTypeName<T>
+{
+	public test() => (T)
+	{
+		return T;
+	}
+}

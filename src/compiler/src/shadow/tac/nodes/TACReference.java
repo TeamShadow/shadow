@@ -1,6 +1,6 @@
 package shadow.tac.nodes;
 
-import shadow.typecheck.type.Type;
+import shadow.typecheck.type.ModifiedType;
 
 public abstract class TACReference extends TACOperand
 {
@@ -13,18 +13,20 @@ public abstract class TACReference extends TACOperand
 		super(node);
 	}
 
-	public Type getGetType()
+	public ModifiedType getGetType()
 	{
-		return getType();
+		return this;
 	}
-	public Type getSetType()
+	public ModifiedType getSetType()
 	{
-		return getType();
+		return this;
 	}
 
 	@Override
-	protected TACOperand checkVirtual(Type type, TACNode node)
+	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
 	{
+		if (type instanceof TACReference)
+			type = ((TACReference)type).getGetType();
 		return new TACLoad(node, this).checkVirtual(type, node);
 	}
 }

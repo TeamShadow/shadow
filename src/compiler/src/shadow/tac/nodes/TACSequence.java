@@ -10,7 +10,6 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.Type;
 
 public class TACSequence extends TACOperand
 {
@@ -84,12 +83,12 @@ public class TACSequence extends TACOperand
 	}
 
 	@Override
-	protected TACOperand checkVirtual(Type type, TACNode node)
+	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
 	{
-		Iterator<ModifiedType> types = ((SequenceType)type).iterator();
+		Iterator<ModifiedType> types = ((SequenceType)type.getType()).iterator();
 		ListIterator<TACOperand> seq = sequence.listIterator();
 		while (seq.hasNext())
-			seq.set(check(seq.next(), types.next().getType()));
+			seq.set(check(seq.next(), types.next()));
 		return this;
 	}
 }

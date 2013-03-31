@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACBranch extends TACSimpleNode
@@ -25,7 +26,7 @@ public class TACBranch extends TACSimpleNode
 	{
 		super(node);
 		if (cond != null)
-			condition = check(cond, Type.BOOLEAN);
+			condition = check(cond, new SimpleModifiedType(Type.BOOLEAN));
 		trueLabel = trueRef;
 		falseLabel = falseRef;
 	}

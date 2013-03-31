@@ -164,7 +164,7 @@ implements CanCompare<String>, CanIterate<code>
 		return StringIterator:create();
 	}
 
-	private class StringIterator implements Iterator<code>
+	public class StringIterator implements Iterator<code>
 	{
 		int index = 0;
 

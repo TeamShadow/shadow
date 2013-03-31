@@ -2,7 +2,6 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.tac.nodes.TACBinary.Operation;
 import shadow.typecheck.type.Type;
 
 public class TACSame extends TACOperand
@@ -16,12 +15,12 @@ public class TACSame extends TACOperand
 			TACOperand secondOperand)
 	{
 		super(node);
-		firstOperand = check(firstOperand);
-		secondOperand = check(secondOperand);
+		firstOperand = check(firstOperand, firstOperand);
+		secondOperand = check(secondOperand, secondOperand);
 		if (firstOperand.getType().isSubtype(secondOperand.getType()))
-			firstOperand = check(firstOperand, secondOperand.getType());
+			firstOperand = check(firstOperand, secondOperand);
 		else
-			secondOperand = check(secondOperand, firstOperand.getType());
+			secondOperand = check(secondOperand, firstOperand);
 		first = firstOperand;
 		second = secondOperand;
 	}
@@ -53,6 +52,12 @@ public class TACSame extends TACOperand
 		if (num == 1)
 			return second;
 		throw new IndexOutOfBoundsException();
+	}
+
+	@Override
+	public String toString()
+	{
+		return first + " === " + second;
 	}
 
 	@Override

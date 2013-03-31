@@ -38,6 +38,7 @@ import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
+import shadow.tac.nodes.TACPlaceholder;
 import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACReturn;
@@ -55,6 +56,7 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -65,7 +67,7 @@ public class LLVMOutput extends AbstractOutput
 	private int tempCounter = 0, labelCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();
 	private Type moduleType;
-	private boolean inCreate;
+	private TACMethod method;
 	public LLVMOutput(File file) throws ShadowException
 	{
 		super(new File(file.getParent(),
@@ -511,7 +513,7 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void startMethod(TACMethod method) throws ShadowException
 	{
-		inCreate = method.isCreate();
+		this.method = method;
 		tempCounter = method.getParameterCount() + 1;
 		if (method.isNative())
 		{
@@ -551,7 +553,7 @@ public class LLVMOutput extends AbstractOutput
 		if (!method.isNative())
 			writer.write('}');
 		writer.write();
-		inCreate = false;
+		method = null;
 	}
 
 	@Override
@@ -638,31 +640,87 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACClass node) throws ShadowException
 	{
-		node.setSymbol(classOf(node.getClassType()));
+		if (node.hasOperand())
+			node.setSymbol(node.getOperand().getSymbol());
+		else
+			node.setSymbol(classOf(node.getClassType()));
 	}
 
 	@Override
 	public void visit(TACSequence node) throws ShadowException
 	{
-		String type = type(node), last = "undef";
-		for (int i = 0; i < node.size(); i++, last = temp(0))
-			writer.write(nextTemp(node) + " = insertvalue " + type + ' ' + last +
-					", " + typeSymbol(node.get(i)) + ", " + i);
+		node.setSymbol("undef");
+		for (int i = 0; i < node.size(); i++)
+		{
+			String result = nextTemp();
+			writer.write(result + " = insertvalue " + typeSymbol(node) + ", " +
+					typeSymbol(node.get(i)) + ", " + i);
+			node.setSymbol(result);
+		}
 	}
 
 	@Override
 	public void visit(TACCast node) throws ShadowException
-	{
+	{ 
 		String srcName = node.getOperand().getSymbol();
-		Type srcType = node.getOperand().getType(), destType = node.getType();
-		if (srcType == Type.NULL)
+		ModifiedType srcType = node.getOperand(), destType = node;
+		if (srcType.getType() instanceof SequenceType ||
+				destType.getType() instanceof SequenceType)
+		{
+			if (srcType.getType() instanceof SequenceType &&
+					destType.getType() instanceof SequenceType)
+			{
+				node.setSymbol("undef");
+				int index = 0;
+				for (ModifiedType type : (SequenceType)destType.getType()) {
+					TACOperand value = new TACPlaceholder(
+							((SequenceType)srcType.getType()).get(index));
+					writer.write(nextTemp(value) + " = extractvalue " +
+							typeSymbol(node.getOperand()) + ", " + index);
+					TACCast cast = new TACCast(value, type, value);
+					walkTo(value);
+					String result = nextTemp();
+					writer.write(result + " = insertvalue " + typeSymbol(node)
+							+ ", " + typeSymbol(cast) + ", " + index);
+					node.setSymbol(result);
+					index++;
+				}
+			}
+			else if (srcType.getType() instanceof SequenceType)
+			{
+				srcType = ((SequenceType)srcType.getType()).get(0);
+				TACOperand value = new TACPlaceholder(srcType);
+				writer.write(nextTemp(value) + " = extractvalue " +
+						typeSymbol(node.getOperand()) + ", 0");
+				TACCast cast = new TACCast(value, destType, value);
+				walkTo(cast);
+				node.setSymbol(cast.getSymbol());
+			}
+			else
+			{
+				destType = ((SequenceType)destType.getType()).get(0);
+				TACCast cast = new TACCast(destType, node.getOperand());
+				walkTo(cast);
+				String result = nextTemp();
+				writer.write(result + " = insertvalue " + type(node)
+						+ " undef, " + typeSymbol(cast) + ", 0");
+				node.setSymbol(result);
+			}
+			return;
+		}
+		if (srcType.getType() == Type.NULL)
 		{
 			node.setSymbol("null");
 			return;
 		}
-		if (srcType.isPrimitive() != destType.isPrimitive())
+		if (destType.getType() == Type.NULL)
 		{
-			if (srcType.isPrimitive())
+			node.setSymbol(node.getOperand().getSymbol());
+			return;
+		}
+		if (srcType.getType().isPrimitive() != destType.getType().isPrimitive())
+		{
+			if (srcType.getType().isPrimitive())
 			{
 				writer.write(nextTemp(node) + " = call noalias " +
 						type(Type.OBJECT) + " @" + raw(Type.CLASS,
@@ -681,18 +739,19 @@ public class LLVMOutput extends AbstractOutput
 				writer.write("store " + type(srcType) + ' ' + srcName + ", " +
 						type(srcType) + "* " + temp(0));
 				srcName = temp(3);
-				srcType = Type.OBJECT;
+				srcType = new SimpleModifiedType(Type.OBJECT);
 			}
 			else
 			{
 				throw new UnsupportedOperationException();
 			}
 		}
-		if (srcType instanceof ArrayType != destType instanceof ArrayType)
+		if (srcType.getType() instanceof ArrayType !=
+				destType.getType() instanceof ArrayType)
 		{
-			if (srcType instanceof ArrayType)
+			if (srcType.getType() instanceof ArrayType)
 			{
-				ArrayType arrayType = (ArrayType)srcType;
+				ArrayType arrayType = (ArrayType)srcType.getType();
 	//			int dimensions = arrayType.getDimensions();
 	//			String lengthsType = "[" + dimensions + " x %int]";
 	//			writer.write(nextTemp() + " = call i8* @malloc(i32 " +
@@ -725,6 +784,9 @@ public class LLVMOutput extends AbstractOutput
 	//					"_Mclass") + ", i32 0, i32 0), %long " + temp(6) + ", " +
 	//					type(new ArrayType(Type.INT)) + ' ' + temp(1) + ')');
 	//			writer.writeLeft("; convert " + srcType + " to " + destType);
+				TACClass baseClass = new TACClass(arrayType.getBaseType(),
+						method);
+				walkTo(baseClass);
 				ArrayType intArray = new ArrayType(Type.INT);
 				String dimsType = " [" + arrayType.getDimensions() + " x " +
 						type(Type.INT) + ']';
@@ -765,25 +827,30 @@ public class LLVMOutput extends AbstractOutput
 						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
 						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
 						type(Type.ARRAY) + ' ' + temp(1) + ", " +
-						type(Type.CLASS) + " getelementptr inbounds (%" +
-						raw(arrayType.getBaseType(), "_Mclass") + "* @" +
-						raw(arrayType.getBaseType(), "_Mclass") +
-						", i32 0, i32 0), " + type(new ArrayType(Type.INT)) +
-						' ' + temp(5) + ", " + type(Type.OBJECT) + ' ' +
-						temp(3) + ')');
-				srcType = Type.ARRAY;
+						typeSymbol(baseClass) + ", " +
+						type(new ArrayType(Type.INT)) + ' ' + temp(5) + ", " +
+						type(Type.OBJECT) + ' ' + temp(3) + ')');
+				srcType = new SimpleModifiedType(Type.ARRAY);
 				srcName = temp(0);
+
+//				TACClass baseClass = new TACClass(arrayType.getBaseType(),
+//						method);
+//				TACMethodRef createMethod = new TACMethodRef(baseClass,
+//						Type.ARRAY.getMethod("create", 2));
+//				TACCall create = new TACCall(createMethod
+//						new TACMethodRef(Type.ARRAY.getMethod("create", 2)),
+//						);
 			}
 			else
 			{
-				if (!srcType.equals(Type.ARRAY))
+				if (!srcType.getType().equals(Type.ARRAY))
 				{
 					writer.write(nextTemp() + " = bitcast " + type(srcType) +
 							' ' + srcName + " to " + type(Type.ARRAY));
-					srcType = Type.ARRAY;
+					srcType = new SimpleModifiedType(Type.ARRAY);
 					srcName = temp(0);
 				}
-				ArrayType arrayType = (ArrayType)destType;
+				ArrayType arrayType = (ArrayType)destType.getType();
 				String baseType = type(arrayType.getBaseType()) + '*',
 						dimsType = " [" + arrayType.getDimensions() + " x " +
 								type(Type.INT) + ']';
@@ -811,40 +878,41 @@ public class LLVMOutput extends AbstractOutput
 				srcName = temp(0);
 			}
 		}
-		if (destType.equals(srcType))
+		if (destType.getType().equals(srcType.getType()))
 		{
 			node.setSymbol(srcName);
 			return;
 		}
-		if (srcType.isSigned() && destType.isFloating())
+		if (srcType.getType().isSigned() && destType.getType().isFloating())
 		{
 			writer.write(nextTemp(node) + " = sitofp " + type(srcType) + ' ' +
 					srcName + " to " + type(destType));
 			return;
 		}
-		if (srcType.isUnsigned() && destType.isFloating())
+		if (srcType.getType().isUnsigned() && destType.getType().isFloating())
 		{
 			writer.write(nextTemp(node) + " = uitofp " + type(srcType) + ' ' +
 					srcName + " to " + type(destType));
 			return;
 		}
-		if (srcType.isFloating() && destType.isSigned())
+		if (srcType.getType().isFloating() && destType.getType().isSigned())
 		{
 			writer.write(nextTemp(node) + " = fptosi " + type(srcType) + ' ' +
 					srcName + " to " + type(destType));
 			return;
 		}
-		if (srcType.isFloating() && destType.isUnsigned())
+		if (srcType.getType().isFloating() && destType.getType().isUnsigned())
 		{
 			writer.write(nextTemp(node) + " = fptoui " + type(srcType) + ' ' +
 					srcName + " to " + type(destType));
 			return;
 		}
-		int srcWidth = srcType.getWidth(), destWidth = destType.getWidth();
+		int srcWidth = srcType.getType().getWidth(),
+				destWidth = destType.getType().getWidth();
 		String instruction;
 		if (destWidth > srcWidth)
-			instruction = destType.isSigned() ? "sext" :
-					destType.isUnsigned() ? "zext" : "fext";
+			instruction = destType.getType().isSigned() ? "sext" :
+					destType.getType().isUnsigned() ? "zext" : "fext";
 		else if (destWidth < srcWidth)
 			instruction = "trunc";
 		else
@@ -1195,7 +1263,7 @@ public class LLVMOutput extends AbstractOutput
 	{
 		if (node.hasReturnValue())
 			writer.write("ret " + typeSymbol(node.getReturnValue()));
-		else if (inCreate)
+		else if (method.isCreate())
 			writer.write("ret %" + raw(moduleType) + "* %0");
 		else
 			writer.write("ret void");
@@ -1391,6 +1459,14 @@ public class LLVMOutput extends AbstractOutput
 		return type(Type.OBJECT);
 	}
 
+	private static String raw(ModifiedType type)
+	{
+		return raw(type.getType(), "");
+	}
+	private static String raw(ModifiedType type, String extra)
+	{
+		return raw(type.getType(), extra);
+	}
 	private static String raw(Type type)
 	{
 		return raw(type, "");

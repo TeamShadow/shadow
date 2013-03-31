@@ -2,7 +2,6 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
 public class TACLength extends TACOperand
@@ -16,7 +15,7 @@ public class TACLength extends TACOperand
 	public TACLength(TACNode node, TACOperand arrayRef, int dim)
 	{
 		super(node);
-		array = check(arrayRef, (ArrayType)arrayRef.getType());
+		array = check(arrayRef, arrayRef);
 		dimension = dim;
 	}
 
@@ -56,6 +55,6 @@ public class TACLength extends TACOperand
 	@Override
 	public String toString()
 	{
-		return array + ".getLength(" + dimension + ')';
+		return array + "->lengths[" + dimension + ']';
 	}
 }

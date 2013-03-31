@@ -26,7 +26,18 @@ define i64 @_Pshadow_Pstandard_CSystem_MnanoTime(%_Pshadow_Pstandard_CSystem*) {
 }
 
 @newline = private unnamed_addr constant [1 x i8] c"\0A"
+declare i32 @read(i32, i8* nocapture, i32)
 declare i32 @write(i32, i8* nocapture, i32)
+define { i8, i1 } @_Pshadow_Pio_CConsole_MreadByte(%_Pshadow_Pio_CConsole*) {
+	%2 = alloca i8
+	%3 = call i32 @read(i32 0, i8* nocapture %2, i32 1)
+	%4 = icmp ne i32 %3, 1
+	%5 = insertvalue { i8, i1 } undef, i1 %4, 1
+	%6 = load i8* %2
+	%7 = select i1 %4, i8 0, i8 %6
+	%8 = insertvalue { i8, i1 } %5, i8 %7, 0
+	ret { i8, i1 } %8
+}
 define %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CString*) {
 	%3 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 1, i32 0
 	%4 = load i8** %3
