@@ -2801,16 +2801,24 @@ public class ClassChecker extends BaseChecker
 				{
 					Node child = node.jjtGetChild(0);
 					Type type = child.getType();
-					List<String> reasons = new ArrayList<String>(1);
 					
-					if( type instanceof SequenceType )
-					{					
-						SequenceType sequenceType = (SequenceType)type;
-						if( !returnTypes.canAccept(sequenceType, reasons) )						
-							addError(node, Error.TYPE_MIS, reasons.get(0) );
+					
+					SequenceType sequenceType;
+					
+					if( type instanceof SequenceType )										
+						sequenceType = (SequenceType)type;
+					else
+					{
+						sequenceType = new SequenceType();
+						sequenceType.add(child);						
 					}
-					else if(!returnTypes.canAccept(child, reasons))
-						addError(node, Error.TYPE_MIS, reasons.get(0) );						
+					
+					if( !returnTypes.isSubtype(sequenceType) )						
+						addError(node, Error.TYPE_MIS, "Cannot return " + sequenceType + " when " + returnTypes + (returnTypes.size() == 1 ? " is" : " are") + " expected" );
+					
+					for( ModifiedType modifiedType : sequenceType )
+						if( modifiedType.getModifiers().isTypeName() )
+							addError(node, Error.TYPE_MIS, "Cannot return type name from method" );
 				}				
 				
 				node.setType(returnTypes);

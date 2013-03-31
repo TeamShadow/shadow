@@ -96,7 +96,8 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		}
 		
 		return true;		
-	}
+	}	
+	
 	
 	public boolean canAccept( List<ModifiedType> inputTypes )
 	{		

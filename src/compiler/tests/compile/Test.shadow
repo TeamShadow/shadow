@@ -1,7 +1,13 @@
-class Test
+class Test<T>
 {
-	public toTest() => ( Test )
+	public toTest() => ( Test<T> )
 	{
 		return this;
 	}
+		
+	public getThing() => ( int, T )
+	{
+		return (5, T);	
+	}
+	
 }
