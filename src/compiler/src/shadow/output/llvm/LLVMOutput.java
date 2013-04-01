@@ -66,7 +66,7 @@ public class LLVMOutput extends AbstractOutput
 	private Process process = null;
 	private int tempCounter = 0, labelCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();
-	private Type moduleType;
+	private TACModule module;
 	private TACMethod method;
 	public LLVMOutput(File file) throws ShadowException
 	{
@@ -140,7 +140,7 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void startFile(TACModule module) throws ShadowException
 	{
-		moduleType = module.getType();
+		this.module = module;
 
 		writer.write("; " + module.getQualifiedName());
 		writer.write();
@@ -515,7 +515,7 @@ public class LLVMOutput extends AbstractOutput
 	{
 		this.method = method;
 		tempCounter = method.getParameterCount() + 1;
-		if (method.isNative())
+		if (method.isNative() || module.isInterface())
 		{
 			writer.write("declare " + methodToString(method));
 			writer.indent();
@@ -550,7 +550,7 @@ public class LLVMOutput extends AbstractOutput
 	public void endMethod(TACMethod method) throws ShadowException
 	{
 		writer.outdent();
-		if (!method.isNative())
+		if (!method.isNative() && !module.isInterface())
 			writer.write('}');
 		writer.write();
 		method = null;
@@ -1264,7 +1264,7 @@ public class LLVMOutput extends AbstractOutput
 		if (node.hasReturnValue())
 			writer.write("ret " + typeSymbol(node.getReturnValue()));
 		else if (method.isCreate())
-			writer.write("ret %" + raw(moduleType) + "* %0");
+			writer.write("ret %" + raw(module.getType()) + "* %0");
 		else
 			writer.write("ret void");
 		nextTemp();

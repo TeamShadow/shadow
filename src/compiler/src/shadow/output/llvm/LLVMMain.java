@@ -20,7 +20,8 @@ public class LLVMMain
 
 		List<String> arguments = new ArrayList<String>();
 
-		arguments.add("--check");
+//		arguments.add("--check");
+		arguments.add("shadow/test/Test.shadow");
 
 		arguments.add("shadow/standard/Object.shadow");
 		arguments.add("shadow/standard/Class.shadow");
@@ -39,6 +40,7 @@ public class LLVMMain
 		arguments.add("shadow/standard/ULong.shadow");
 		arguments.add("shadow/standard/Float.shadow");
 		arguments.add("shadow/standard/Double.shadow");
+		arguments.add("shadow/standard/Number.shadow");
 		arguments.add("shadow/standard/Reference.shadow");
 		arguments.add("shadow/standard/System.shadow");
 		arguments.add("shadow/standard/Exception.shadow");
@@ -48,29 +50,28 @@ public class LLVMMain
 		arguments.add("shadow/io/Console.shadow");
 
 		arguments.add("shadow/utility/Random.shadow");
-//		arguments.add("shadow/utility/List.shadow");
-//		arguments.add("shadow/utility/Set.shadow");
+		arguments.add("shadow/utility/List.shadow");
+		arguments.add("shadow/utility/Set.shadow");
 		arguments.add("shadow/utility/ArrayList.shadow");
 		arguments.add("shadow/utility/LinkedList.shadow");
 //		arguments.add("shadow/utility/HashSet.shadow");
 		arguments.add("shadow/utility/IllegalModificationException.shadow");
 
-		arguments.add("shadow/test/Test.shadow");
-		arguments.add("shadow/test/ExceptionA.shadow");
-		arguments.add("shadow/test/ExceptionB.shadow");
-		arguments.add("shadow/test/ExceptionC.shadow");
-		arguments.add("shadow/test/ExceptionTest.shadow");
-		arguments.add("shadow/test/ParentTest.shadow");
-		arguments.add("shadow/test/ChildTest.shadow");
-		arguments.add("shadow/test/ArrayTest.shadow");
-		arguments.add("shadow/test/StringTest.shadow");
-		arguments.add("shadow/test/ConsoleTest.shadow");
-		arguments.add("shadow/test/ArrayListTest.shadow");
-		arguments.add("shadow/test/SortTest.shadow");
-		arguments.add("shadow/test/SortMain.shadow");
+//		arguments.add("shadow/test/ExceptionA.shadow");
+//		arguments.add("shadow/test/ExceptionB.shadow");
+//		arguments.add("shadow/test/ExceptionC.shadow");
+//		arguments.add("shadow/test/ExceptionTest.shadow");
+//		arguments.add("shadow/test/ParentTest.shadow");
+//		arguments.add("shadow/test/ChildTest.shadow");
+//		arguments.add("shadow/test/ArrayTest.shadow");
+//		arguments.add("shadow/test/StringTest.shadow");
+//		arguments.add("shadow/test/ConsoleTest.shadow");
+//		arguments.add("shadow/test/ArrayListTest.shadow");
+//		arguments.add("shadow/test/SortTest.shadow");
+//		arguments.add("shadow/test/SortMain.shadow");
 
-		arguments.add("sokoban/solver/Solver.shadow");
-		arguments.add("sokoban/solver/Board.shadow");
+//		arguments.add("sokoban/solver/Solver.shadow");
+//		arguments.add("sokoban/solver/Board.shadow");
 
 		if (FORCE)
 			for (String file : arguments)

@@ -1,8 +1,9 @@
 class shadow.utility@HashSet<V is CanHash> implements Set<V>
 {
-	get int size = 0, modifications = 0;
+	get int size = 0;
 	Node[] table = Node:create[256];
 	float load;
+	int modifications = 0;
 
 	private class Node
 	{

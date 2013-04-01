@@ -627,6 +627,8 @@ public abstract class Type {
 	public boolean isStrictSubtype(Type other) {
 		if ( this == Type.NULL )
 			return other != Type.NULL;
+		if ( other == Type.NULL )
+			return this instanceof SequenceType;
 		if ( equals(other) )
 			return false;
 		return isSubtype(other);
@@ -723,6 +725,26 @@ public abstract class Type {
 		else
 			return methodTable.get(methodName);
 	}	
+	
+	/**
+	 * Simple way to get a known method.
+	 * Example:
+	 *     Type.ARRAY.getMethod("index", 1);
+	 */
+	public MethodSignature getMethod(String methodName, int parameters)
+	{
+		MethodSignature method = null;
+		List<MethodSignature> methods = getMethods(methodName);
+		for (MethodSignature candidate : methods)
+			if (candidate.getParameterTypes().size() == parameters)
+				if (method == null)
+					method = candidate;
+				else
+					throw new IllegalArgumentException("Multiple matching methods found");
+		if (method == null)
+			throw new IllegalArgumentException("No matching method found");
+		return method;
+	}
 	
 	protected void includeMethods( String methodName, List<MethodSignature> list )
 	{		

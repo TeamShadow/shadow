@@ -59,7 +59,7 @@ import shadow.typecheck.type.UnboundMethodType;
 
 public class TACBuilder implements ShadowParserVisitor
 {
-	private Collection<TACModule> modules = new LinkedList<TACModule>();
+	private Collection<TACModule> modules;
 	private TACTree tree;
 	private TACModule module;
 	private TACMethod method;
@@ -69,6 +69,7 @@ public class TACBuilder implements ShadowParserVisitor
 	private TACBlock block;
 	public Collection<TACModule> build(Node node) throws ShadowException
 	{
+		modules = null;
 		tree = new TACTree();
 		module = null;
 		method = null;
@@ -155,7 +156,8 @@ public class TACBuilder implements ShadowParserVisitor
 			visitMethod(new TACMethod("create",
 					new MethodType(type, new Modifiers())), null);
 
-		modules.add(module);
+		List<TACModule> saveModules = new ArrayList<TACModule>();
+		saveModules.add(module);
 		TACTree saveTree = tree;
 
 		Node body = node.jjtGetChild(node.jjtGetNumChildren() - 1);
@@ -164,9 +166,10 @@ public class TACBuilder implements ShadowParserVisitor
 			SimpleNode child = (SimpleNode)body.jjtGetChild(i);
 			if (child.jjtGetNumChildren() > 1 && child.jjtGetChild(1) instanceof
 					ASTClassOrInterfaceDeclaration)
-				build(child);
+				saveModules.addAll(build(child));
 		}
 
+		modules = saveModules;
 		tree = saveTree;
 		return NO_CHILDREN;
 	}
