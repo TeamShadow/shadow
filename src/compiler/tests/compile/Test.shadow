@@ -5,9 +5,12 @@ class Test<T>
 		return this;
 	}
 		
+		
+/*
 	public getThing() => ( int, T )
 	{
-		return (5, T);	
+		return (5, 5);	
 	}
+*/
 	
 }

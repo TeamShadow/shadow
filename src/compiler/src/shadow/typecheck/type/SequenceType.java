@@ -47,7 +47,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 				Modifiers inputModifiers  = inputTypes.get(i).getModifiers();
 				Type type = types.get(i).getType();
 				Modifiers modifiers = types.get(i).getModifiers();
-								
+							
 				if( type instanceof TypeParameter  )
 				{			
 					TypeParameter parameter = (TypeParameter) type;
@@ -92,6 +92,38 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 					
 					return false;
 				}	
+			}			
+		}
+		
+		return true;		
+	}	
+	
+	
+	public boolean canReturn( List<ModifiedType> inputTypes )
+	{		
+		if( types.size() != inputTypes.size() )
+			return false;
+		
+		for( int i = 0; i < types.size(); i++ )
+		{	
+			if( types.get(i) != null )
+			{
+				Type inputType = inputTypes.get(i).getType();
+				Modifiers inputModifiers  = inputTypes.get(i).getModifiers();
+				Type type = types.get(i).getType();
+				Modifiers modifiers = types.get(i).getModifiers();
+				
+				if( !inputType.isSubtype(type) )
+					return false;
+				
+				//if either type is immutable, it will work out no matter what
+				//if both are mutable, their modifiers had better both be immutable or both mutable
+				if( !type.getModifiers().isImmutable() && !inputType.getModifiers().isImmutable() &&
+					modifiers.isImmutable() != inputModifiers.isImmutable() )
+					return false;				
+				
+				if( !modifiers.isNullable() && inputModifiers.isNullable() )
+					return false;	
 			}			
 		}
 		
@@ -200,14 +232,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			return false;
 		
 	
-		for( int i = 0; i < types.size(); i++ )	
-		{
-			Type inputType = inputTypes.get(i).getType();
-			Type type = get(i).getType();
+		for( int i = 0; i < types.size(); i++ )
 			if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().equals(getType(i)) )
 				return false;
 			
-		}
+		
 		
 		return true;		
 	}

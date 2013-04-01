@@ -2813,7 +2813,7 @@ public class ClassChecker extends BaseChecker
 						sequenceType.add(child);						
 					}
 					
-					if( !returnTypes.isSubtype(sequenceType) )						
+					if( !returnTypes.canReturn(sequenceType) )						
 						addError(node, Error.TYPE_MIS, "Cannot return " + sequenceType + " when " + returnTypes + (returnTypes.size() == 1 ? " is" : " are") + " expected" );
 					
 					for( ModifiedType modifiedType : sequenceType )
