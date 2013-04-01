@@ -295,23 +295,11 @@ public abstract class Type {
 			Type type = (Type) o;
 			
 			if( type.getPackage() == getPackage() && type.getTypeName().equals(getTypeName()) )
-			{
-				
+			{				
 				if( parameterized )
-				{
-					if( type.typeParameters.size() == typeParameters.size() )
-					{
-						for( int i = 0; i < typeParameters.size(); i++ )
-						{
-							if( !type.typeParameters.get(i).equals(typeParameters.get(i)) )
-								return false;
-						}
-					}
-					else
-						return false;
-				}
-					
-				return true;
+					return type.typeParameters.equals(typeParameters);
+				else
+					return true;
 			}	
 			else
 				return false;

@@ -96,44 +96,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		}
 		
 		return true;		
-	}	
-	
-	
-	public boolean canReturn( List<ModifiedType> inputTypes )
-	{		
-		if( types.size() != inputTypes.size() )
-			return false;
-		
-		for( int i = 0; i < types.size(); i++ )
-		{	
-			if( types.get(i) != null )
-			{
-				Type inputType = inputTypes.get(i).getType();
-				Modifiers inputModifiers  = inputTypes.get(i).getModifiers();
-				Type type = types.get(i).getType();
-				Modifiers modifiers = types.get(i).getModifiers();
-				
-				if( !inputType.isSubtype(type) )
-					return false;
-				
-				//if either type is immutable, it will work out no matter what
-				//if both are mutable, their modifiers had better both be immutable or both mutable
-				if( !type.getModifiers().isImmutable() && !inputType.getModifiers().isImmutable() &&
-					modifiers.isImmutable() != inputModifiers.isImmutable() )
-					return false;				
-				
-				if( !modifiers.isNullable() && inputModifiers.isNullable() )
-					return false;	
-			}			
-		}
-		
-		return true;		
-	}	
-	
+	}
 	
 	public boolean canAccept( List<ModifiedType> inputTypes )
 	{		
-		return canAccept( inputTypes, null);		
+		return canAccept(inputTypes, null);		
 	}
 	
 	public boolean canAccept( ModifiedType type )
@@ -170,8 +137,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		for(ModifiedType type: types)
 		{			
 			if( !first )
-				builder.append(", ");
-								
+				builder.append(", ");								
 			
 			if( type != null )
 			{
@@ -196,14 +162,27 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return true;		
 	}
 
+	@Override
 	public boolean equals(Object o)
 	{
 		if (o == Type.NULL)
 			return true;
+		
 		if( o != null && o instanceof SequenceType )
-			return exactlyMatches((SequenceType)o);
-		else
-			return false;
+		{	
+			SequenceType inputTypes = (SequenceType)o; 
+			
+			if( types.size() != inputTypes.size() )
+				return false;	
+		
+			for( int i = 0; i < types.size(); i++ )		
+				if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().equals(getType(i)) || !inputTypes.get(i).getModifiers().equals(get(i).getModifiers()) )
+					return false;
+			
+			return true;
+		}		
+		
+		return false;
 	}
 	
 	@Override
@@ -229,27 +208,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	public boolean matches(List<ModifiedType> inputTypes)
 	{
 		if( types.size() != inputTypes.size() )
-			return false;
-		
+			return false;		
 	
 		for( int i = 0; i < types.size(); i++ )
 			if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().equals(getType(i)) )
-				return false;
-			
-		
-		
-		return true;		
-	}
-	
-	
-	public boolean exactlyMatches(List<ModifiedType> inputTypes)
-	{
-		if( types.size() != inputTypes.size() )
-			return false;	
-	
-		for( int i = 0; i < types.size(); i++ )		
-			if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().equals(getType(i)) || !inputTypes.get(i).getModifiers().equals(get(i).getModifiers()) )
-				return false;
+				return false;				
 		
 		return true;		
 	}
@@ -286,7 +249,6 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		ModifiedType modifiedType = types.get(i); 		
 		return modifiedType == null ? null : modifiedType.getModifiers();
 	}
-
 
 	@Override
 	public boolean contains(Object o) {
@@ -379,45 +341,47 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 
 	@Override
-	public List<ModifiedType> subList(int fromIndex, int toIndex) {		
+	public List<ModifiedType> subList(int fromIndex, int toIndex)
+	{		
 		return types.subList(fromIndex, toIndex);
 	}
 
-	public boolean canSubstitute(List<ModifiedType> inputTypes) {	
-		if( types.size() != inputTypes.size() )
-			return false;
-		
-		for( int i = 0; i < types.size(); i++ )
-		{
-			ModifiedType modifiedInput = inputTypes.get(i);
-			ModifiedType modifiedType = types.get(i);
-			
-			if( modifiedInput == null || modifiedType == null )
-				return false;
-			
-			Type input = modifiedInput.getType();
-			Type type = modifiedType.getType();
-			
-			if( type instanceof TypeParameter )
-			{
-				TypeParameter parameter = (TypeParameter)type;
-				if( !parameter.canTakeSubstitution(input))
-					return false;				
-			}			
-			else if( !input.isSubtype(type) )
-				return false;
-		}
-		
-		return true;	
-	}
-	
 	public boolean isSubtype(Type t)
 	{
 		if( equals(t) )
-			return true;		
+			return true;
 		
 		if ( t instanceof SequenceType )
-			return ((SequenceType)t).canAccept(this);
+		{
+			SequenceType inputTypes = (SequenceType)t;			
+			
+			if( types.size() != inputTypes.size() )
+				return false;
+			
+			for( int i = 0; i < types.size(); i++ )
+			{	
+				if( types.get(i) != null )
+				{
+					Type inputType = inputTypes.get(i).getType();
+					Modifiers inputModifiers  = inputTypes.get(i).getModifiers();
+					Type type = types.get(i).getType();
+					Modifiers modifiers = types.get(i).getModifiers();
+					
+					if( !type.isSubtype(inputType) )
+						return false;
+					
+					//if either type is immutable, it will work out no matter what
+					//if both are mutable, their modifiers had better both be immutable or both mutable
+					if( !type.getModifiers().isImmutable() && !inputType.getModifiers().isImmutable() &&
+						modifiers.isImmutable() != inputModifiers.isImmutable() )
+						return false;				
+					
+					if( modifiers.isNullable() && !inputModifiers.isNullable() )
+						return false;	
+				}			
+			}			
+			return true;
+		}
 		else
 			return false;
 	}

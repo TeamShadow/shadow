@@ -3,7 +3,7 @@ class ArrayCast
 	public test() => ()
 	{
 		int[] array1 = int:create[5];
-		Array<double> array2 = array1; // fails to typecheck
+		Array<int> array2 = array1; // fails to typecheck
 		int[] array3 = array2; // fails to typecheck
 	}
 }

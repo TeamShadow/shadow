@@ -100,12 +100,19 @@ class shadow.utility@LinkedList<V> implements List<V>
 			return false;
 		}
 	}
-	public delete( int index ) => ( nullable V value )
+	public delete( int index ) => (V value)
 	{
 		Node node = findIndex(index);
-		nullable V value = node->value;
-		node.delete();
-		return value;
+		try
+		{
+			V value = check(node->value);
+			node.delete();
+			return value;
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
+		}
 	}
 	public indexOf( V value ) => ( int index )
 	{
@@ -142,14 +149,21 @@ class shadow.utility@LinkedList<V> implements List<V>
 			checkForModifications();
 			return current !== header;
 		}
-		public next() => ( nullable V value )
+		public next() => ( V value )
 		{
 			checkForModifications();
 			if ( !hasNext() )
 				throw IndexOutOfBoundsException:create();
-			nullable V value = null;
-			( value, current ) = ( current->value, current->next );
-			return value;
+			try
+			{
+				V value = check(current->value);
+				current = current->next;			
+				return value;
+			}
+			recover
+			{
+				throw UnexpectedNullException:create();
+			}
 		}
 	}
 }

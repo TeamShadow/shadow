@@ -410,6 +410,21 @@ public class ClassType extends Type
 		return this;
 	}
 	
+	@Override
+	public boolean equals(Object o)
+	{		
+		if( this.getTypeWithoutTypeArguments() == Type.ARRAY && this.getTypeParameters().size() == 1 && o instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType)o;
+			ModifiedType baseType = this.getTypeParameters().get(0);			
+			return baseType != null && arrayType.getBaseType().equals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
+		}
+		
+		return super.equals(o);
+	}
+	
+	
+	@Override
 	public boolean isSubtype(Type t)
 	{
 		if( t == UNKNOWN || this == UNKNOWN )
@@ -426,6 +441,8 @@ public class ClassType extends Type
 			return hasInterface((InterfaceType)t);
 		else
 			return false;
+		
+		//note that a ClassType is never the subtype of a TypeParameter
 	}
 	
 	public Set<Type> getAllReferencedTypes()

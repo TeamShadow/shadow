@@ -31,18 +31,18 @@ public class TypeParameter extends Type
 		this.bounds = bounds;
 	}
 
-	public boolean canAccept(ModifiedType modifiedType) {
+	public boolean canAccept(ModifiedType modifiedType)
+	{
 		Type type = modifiedType.getType();
+		
+		if( equals(type) )
+			return true;
+		
 		for( Type bound : bounds )
 			if( !type.isSubtype(bound) )
 				return false;		
 		
 		return true;
-	}
-	
-	public boolean canTakeSubstitution(Type type)
-	{
-		return equals(type);
 	}
 	
 	public boolean isSubtype(Type type)

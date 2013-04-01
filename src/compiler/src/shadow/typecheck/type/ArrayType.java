@@ -114,11 +114,19 @@ public class ArrayType extends ClassType
 		{
 			ArrayType other = (ArrayType)o;
 			if( dimensions == other.dimensions )
-				return baseType.equals(other.baseType);
-			return false;
+				return baseType.equals(other.baseType);			
 		}
-		else
-			return false;
+		else if( o instanceof ClassType )
+		{
+			ClassType other = (ClassType)o;
+			if( other.getTypeWithoutTypeArguments() == Type.ARRAY && other.getTypeParameters().size() == 1 )	
+			{
+				ModifiedType baseType = other.getTypeParameters().get(0);			
+				return baseType != null && this.getBaseType().equals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
+			}
+		}	
+		
+		return false;
 	}
 	
 	public boolean isSubtype(Type t)

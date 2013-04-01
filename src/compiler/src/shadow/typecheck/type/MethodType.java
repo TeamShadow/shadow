@@ -20,7 +20,7 @@ public class MethodType extends Type {
 		typeWithoutTypeArguments = this;
 	}	
 	
-	public boolean matches( SequenceType inputTypes)
+	public boolean matches( SequenceType inputTypes )
 	{
 		return parameterTypes.matches( inputTypes);		
 	}
@@ -178,7 +178,9 @@ public class MethodType extends Type {
 
 	//covariant returns and contravariant parameters
 	public boolean matchesInterface(MethodType type) {
-		return type.returns.canSubstitute(returns) && parameterTypes.canSubstitute(type.parameterTypes);
+		boolean value = returns.isSubtype(type.returns) && type.parameterTypes.isSubtype(parameterTypes); 
+		//return type.returns.canAccept(returns) && parameterTypes.canAccept(type.parameterTypes);
+		return value;
 	}
 	
 	public boolean isSubtype(Type t)

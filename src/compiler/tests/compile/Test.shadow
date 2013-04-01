@@ -11,6 +11,6 @@ class Test<T>
 	{
 		return (5, 5);	
 	}
-*/
 	
+*/	
 }

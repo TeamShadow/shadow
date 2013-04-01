@@ -130,7 +130,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	public boolean matchesInterface(MethodSignature interfaceSignature) {
 			return interfaceSignature.symbol.equals(symbol) && 					
-					interfaceSignature.type.matchesInterface(type);
+					type.matchesInterface(interfaceSignature.type);
 	}
 
 	@Override
