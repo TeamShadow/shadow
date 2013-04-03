@@ -33,6 +33,9 @@ define i64 @_Pshadow_Pstandard_CSystem_MnanoTime(%_Pshadow_Pstandard_CSystem*) {
 declare x86_stdcallcc i8* @GetStdHandle(i32)
 declare x86_stdcallcc i32 @WriteConsoleA(i8*, i8*, i32, i32*, i8*)
 declare x86_stdcallcc i32 @WriteConsoleW(i8*, i8*, i32, i32*, i8*)
+define { i8, i1 } @_Pshadow_Pio_CConsole_MreadByte(%_Pshadow_Pio_CConsole*) {
+	ret { i8, i1 } { i8 0, i1 1 }
+}
 define %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CString*) {
 	%3 = alloca i32
 	%4 = call x86_stdcallcc i8* @GetStdHandle(i32 -11)

@@ -5,6 +5,8 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.Main;
+
 public class LLVMMain
 {
 	public static final boolean DELETE = false, FORCE = false;

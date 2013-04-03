@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 
@@ -24,6 +25,9 @@ public class TypeChecker {
 	private File mainFile;
 	protected boolean debug;
 	
+	private Package packageTree = null;
+	private TypeCollector collector = null;
+	
 	public TypeChecker(boolean debug) {	
 		this.debug = debug;
 	}
@@ -40,11 +44,11 @@ public class TypeChecker {
 	{	 
 		mainFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
-		Package packageTree = new Package(typeTable);
+		packageTree = new Package(typeTable);
 		ArrayList<String> importList = new ArrayList<String>();
 		
 		//collector looks over all files and creates types for everything needed
-		TypeCollector collector = new TypeCollector(debug, typeTable, importList, packageTree, this);
+		collector = new TypeCollector(debug, typeTable, importList, packageTree, this);
 		//return value is the top node for the class we are compiling		
 		Node node = collector.collectTypes( file );	
 		
@@ -129,6 +133,16 @@ public class TypeChecker {
 				System.err.println("Failed to create meta file for " + node.getType() );					
 			}
 		}
+	}
+	
+	public Package getPackageTree()
+	{
+		return packageTree;		
+	}
+	
+	public Set<String> getFiles()
+	{
+		return collector.getFiles().keySet();		
 	}
 	
 	public File getCurrentFile()

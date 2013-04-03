@@ -1,4 +1,4 @@
-package shadow.typecheck.test;
+package shadow.test.typecheck;
 
 import java.util.ArrayList;
 

@@ -101,26 +101,27 @@ define %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CReference_MtoString"
     %2 = load %"_Pshadow_Pstandard_CReference"** %this
     %3 = getelementptr inbounds %"_Pshadow_Pstandard_CReference"* %2, i32 0, i32 2
     %4 = load %"_Pshadow_Pstandard_CObject"** %3
-    %5 = icmp eq %"_Pshadow_Pstandard_CObject"* %4, null
-    br %boolean %5, label %_label0, label %_label1
+    %5 = bitcast %"_Pshadow_Pstandard_CObject"* %4 to %"_Pshadow_Pstandard_CObject"*
+    %6 = icmp eq %"_Pshadow_Pstandard_CObject"* %5, null
+    br %boolean %6, label %_label0, label %_label1
 _label0:
     store %"_Pshadow_Pstandard_CString"* @_string1, %"_Pshadow_Pstandard_CString"** %_temp
     br label %_label2
 _label1:
-    %6 = load %"_Pshadow_Pstandard_CObject"** %3
-    %7 = bitcast %"_Pshadow_Pstandard_CObject"* %6 to %"_Pshadow_Pstandard_CObject"*
-    %8 = getelementptr %"_Pshadow_Pstandard_CObject"* %7, i32 0, i32 0
-    %9 = load %"_Pshadow_Pstandard_CObject_Mclass"** %8
-    %10 = getelementptr %"_Pshadow_Pstandard_CObject_Mclass"* %9, i32 0, i32 6
-    %11 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)** %10
-    %12 = load %"_Pshadow_Pstandard_CObject"** %3
-    %13 = bitcast %"_Pshadow_Pstandard_CObject"* %12 to %"_Pshadow_Pstandard_CObject"*
-    %14 = call %"_Pshadow_Pstandard_CString"* %11(%"_Pshadow_Pstandard_CObject"* %13)
-    store %"_Pshadow_Pstandard_CString"* %14, %"_Pshadow_Pstandard_CString"** %_temp
+    %7 = load %"_Pshadow_Pstandard_CObject"** %3
+    %8 = bitcast %"_Pshadow_Pstandard_CObject"* %7 to %"_Pshadow_Pstandard_CObject"*
+    %9 = getelementptr %"_Pshadow_Pstandard_CObject"* %8, i32 0, i32 0
+    %10 = load %"_Pshadow_Pstandard_CObject_Mclass"** %9
+    %11 = getelementptr %"_Pshadow_Pstandard_CObject_Mclass"* %10, i32 0, i32 6
+    %12 = load %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)** %11
+    %13 = load %"_Pshadow_Pstandard_CObject"** %3
+    %14 = bitcast %"_Pshadow_Pstandard_CObject"* %13 to %"_Pshadow_Pstandard_CObject"*
+    %15 = call %"_Pshadow_Pstandard_CString"* %12(%"_Pshadow_Pstandard_CObject"* %14)
+    store %"_Pshadow_Pstandard_CString"* %15, %"_Pshadow_Pstandard_CString"** %_temp
     br label %_label2
 _label2:
-    %15 = load %"_Pshadow_Pstandard_CString"** %_temp
-    ret %"_Pshadow_Pstandard_CString"* %15
+    %16 = load %"_Pshadow_Pstandard_CString"** %_temp
+    ret %"_Pshadow_Pstandard_CString"* %16
 }
 
 define %"_Pshadow_Pstandard_CReference"* @"_Pshadow_Pstandard_CReference_Mcreate"(%"_Pshadow_Pstandard_CReference"*, %"_Pshadow_Pstandard_CClass"*) {
@@ -252,22 +253,22 @@ declare %byte @"_Pshadow_Pstandard_Cbyte_Madd_Pshadow_Pstandard_Cbyte"(%"_Pshado
 declare %"_Pshadow_Pstandard_Cbyte"* @"_Pshadow_Pstandard_Cbyte_Mcreate"(%"_Pshadow_Pstandard_Cbyte"*)
 declare %byte @"_Pshadow_Pstandard_Cbyte_Mmodulus_Pshadow_Pstandard_Cbyte"(%"_Pshadow_Pstandard_Cbyte"*, %byte)
 
-declare %boolean @"_Pshadow_Pstandard_CString_MisEmpty"(%"_Pshadow_Pstandard_CString"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoUpperCase"(%"_Pshadow_Pstandard_CString"*)
 declare %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CString_Miterator"(%"_Pshadow_Pstandard_CString"*)
 declare %boolean @"_Pshadow_Pstandard_CString_Mequals_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoLowerCase"(%"_Pshadow_Pstandard_CString"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CString"*, %int, %int)
 declare %int @"_Pshadow_Pstandard_CString_Mcompare_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)
-declare %byte @"_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CString"*, %int)
-declare { %byte*, [1 x %int] } @"_Pshadow_Pstandard_CString_Mchars"(%"_Pshadow_Pstandard_CString"*)
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoString"(%"_Pshadow_Pstandard_CString"*)
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate"(%"_Pshadow_Pstandard_CString"*)
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1"(%"_Pshadow_Pstandard_CString"*, { %byte*, [1 x %int] })
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Ccode_A1"(%"_Pshadow_Pstandard_CString"*, { %code*, [1 x %int] })
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)
 declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mconcatenate_Pshadow_Pstandard_CString"(%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)
 declare %int @"_Pshadow_Pstandard_CString_Msize"(%"_Pshadow_Pstandard_CString"*)
+declare %boolean @"_Pshadow_Pstandard_CString_MisEmpty"(%"_Pshadow_Pstandard_CString"*)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoUpperCase"(%"_Pshadow_Pstandard_CString"*)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoLowerCase"(%"_Pshadow_Pstandard_CString"*)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Msubstring_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CString"*, %int, %int)
+declare %byte @"_Pshadow_Pstandard_CString_MgetChar_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CString"*, %int)
+declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_MtoString"(%"_Pshadow_Pstandard_CString"*)
+declare { %byte*, [1 x %int] } @"_Pshadow_Pstandard_CString_Mchars"(%"_Pshadow_Pstandard_CString"*)
 
 declare noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"*)
 declare noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CClass"*, %int)

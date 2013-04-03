@@ -626,9 +626,7 @@ public abstract class Type {
 	 */
 	public boolean isStrictSubtype(Type other) {
 		if ( this == Type.NULL )
-			return other != Type.NULL;
-		if ( other == Type.NULL )
-			return this instanceof SequenceType;
+			return other != Type.NULL;		
 		if ( equals(other) )
 			return false;
 		return isSubtype(other);
