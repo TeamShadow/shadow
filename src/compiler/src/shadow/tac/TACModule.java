@@ -3,64 +3,65 @@ package shadow.tac;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACModule
 {
 	private Type type;
-	private Set<Type> references =
-			new HashSet<Type>();
-	private Map<String, Type> fields = new HashMap<String, Type>();
+	private Set<Type> references = new HashSet<Type>();
+	private Map<String, Type> fields = new LinkedHashMap<String, Type>();
 	private List<TACMethod> methods = new ArrayList<TACMethod>();
 	public TACModule(Type moduleType)
 	{
 		type = moduleType;
-		for (String fieldName : moduleType.getFields().keySet())
-			fields.put(fieldName, moduleType.getField(fieldName).getType());
+		if (moduleType instanceof ClassType)
+			for (Entry<String, ? extends ModifiedType> field :
+					((ClassType)moduleType).orderAllFields())
+				fields.put(field.getKey(), field.getValue().getType());
 		add(moduleType);
-
-		add(Type.EXCEPTION);
-		add(Type.ARRAY);
 		add(Type.BOOLEAN);
-		add(Type.CODE);
-		add(Type.BYTE);
 		add(Type.UBYTE);
-		add(Type.SHORT);
+		add(Type.BYTE);
 		add(Type.USHORT);
-		add(Type.INT);
+		add(Type.SHORT);
 		add(Type.UINT);
-		add(Type.LONG);
+		add(Type.INT);
 		add(Type.ULONG);
-		add(Type.FLOAT);
-		add(Type.DOUBLE);
-		if (moduleType.getOuter() != null)
-			add(moduleType.getOuter());		
-		if( moduleType instanceof ClassType )
-			for (Type innerClass :
-				((ClassType)moduleType).getInnerClasses().values())
-				add(innerClass);
+		add(Type.LONG);
+		add(Type.CODE);
+		add(Type.ARRAY);
+		add(Type.EXCEPTION);
 	}
 	private void add(Type type)
 	{
-		if (references.add(type))
+		if (references.add(type.getTypeWithoutTypeArguments()))
 		{
 			if (type instanceof ClassType)
 			{
 				ClassType classType = (ClassType)type;
-				add(classType.getExtendType());
-				for (Type referenced : classType.getReferencedTypes())
-					add(referenced);
+				if (classType.getExtendType() != null)
+					add(classType.getExtendType());
+				for (Type innerType : classType.getInnerClasses().values())
+					add(innerType);
 			}
+			for (InterfaceType interfaceType : type.getInterfaces())
+				add(interfaceType);
+			if (type.getOuter() != null)
+				add(type.getOuter());
+			for (Type referenced : type.getReferencedTypes())
+				add(referenced);
 		}
 	}
 

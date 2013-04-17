@@ -1,0 +1,7 @@
+class shadow.test@Tortoise implements CanRun
+{
+	public run() => ()
+	{
+		shadow.io@Console:instance.printLine(this # " runs slow and steady.");
+	}
+}

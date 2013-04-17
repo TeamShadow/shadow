@@ -1,0 +1,4 @@
+interface shadow.io@CanClose
+{
+	close() => ();
+}

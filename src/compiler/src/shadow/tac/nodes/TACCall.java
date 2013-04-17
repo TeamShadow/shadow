@@ -69,7 +69,7 @@ public class TACCall extends TACOperand
 	}
 	public List<TACOperand> getParameters()
 	{
-		return parameters;
+		return new ArrayList<TACOperand>(parameters);
 	}
 
 	@Override

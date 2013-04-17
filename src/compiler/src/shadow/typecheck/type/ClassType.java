@@ -267,22 +267,22 @@ public class ClassType extends Type
 				getExtendType().getFields().size();
 	}
 
-	public List<Entry<String, ? extends ModifiedType>> getAllFields()
+	public List<Entry<String, ? extends ModifiedType>> orderAllFields()
 	{
 		List<Entry<String, ? extends ModifiedType>> fieldList = new ArrayList<Entry<String, ? extends ModifiedType>>();
 		
-		recursivelyUpdateFieldList(fieldList);
+		recursivelyOrderAllFields(fieldList);
 		
 		return fieldList;
 	}
-	private void recursivelyUpdateFieldList( List<Entry<String, ? extends ModifiedType>> fieldList )
+	private void recursivelyOrderAllFields( List<Entry<String, ? extends ModifiedType>> fieldList )
 	{
 		if ( getExtendType() != null )
-			getExtendType().recursivelyUpdateFieldList(fieldList);
+			getExtendType().recursivelyOrderAllFields(fieldList);
 		
 		fieldList.addAll(sortFields());
 	}
-	public Set<Entry<String, ? extends ModifiedType>> sortFields()
+	private Set<Entry<String, ? extends ModifiedType>> sortFields()
 	{
 		Set<Entry<String, ? extends ModifiedType>> set = new TreeSet<Entry<String, ? extends ModifiedType>>(new Comparator<Entry<String, ? extends ModifiedType>>() {
 			@Override

@@ -1,6 +1,12 @@
 singleton shadow.io@Console
 {
 	boolean wasLF = false;
+	public create()
+	{
+		init();
+	}
+	private native init() => ();
+
 	public readLine() => ( String, boolean eof )
 	{
 		auto string = MutableString:create();

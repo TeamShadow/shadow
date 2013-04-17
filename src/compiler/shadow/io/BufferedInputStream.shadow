@@ -1,0 +1,26 @@
+class shadow.io@BufferedInputStream implements InputStream
+{
+	InputStream stream;
+	byte[] buffer;
+	int size;
+	public create( InputStream input )
+	{
+		this( input, 1024 );
+	}
+	public create( InputStream input, int bufferSize )
+	{
+		stream = input;
+		buffer = byte:create[bufferSize];
+		size = 0;
+	}
+
+	public read( byte[] buffer ) => ( int )
+	{
+		return stream.read(buffer);
+	}
+
+	public close() => ()
+	{
+		stream.close();
+	}
+}

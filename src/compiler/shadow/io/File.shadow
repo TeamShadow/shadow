@@ -1,0 +1,29 @@
+class shadow.io@File implements InputStream, OutputStream
+{
+	nullable Object data = null;
+	get Path path = Path:create();
+	private create( Object data )
+	{
+		this:data = data;
+	}
+	public create( String path )
+	{
+		this:path = Path:create(path);
+	}
+	public create( Path path )
+	{
+		this:path = path;
+	}
+	public destroy
+	{
+		close();
+	}
+
+	public native read( byte[] buffer ) => ( int );
+	public native write( byte[] buffer ) => ( int );
+	public native get position() => ( ulong );
+	public native set position( ulong position ) => ();
+	public native get size() => ( ulong );
+	public native set size( ulong size ) => ();
+	public native close() => ();
+}

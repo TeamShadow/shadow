@@ -1,0 +1,16 @@
+class shadow.test@InterfaceTest
+{
+	public main( String[] args ) => ()
+	{
+		CanRun cheetah = Cheetah:create();
+		CanRun hare = Hare:create();
+		CanRun tortoise = Tortoise:create();
+		cheetah.run();
+		hare.run();
+		tortoise.run();
+		( cheetah, hare, tortoise ) = ( tortoise, cheetah, hare );
+		cheetah.run();
+		hare.run();
+		tortoise.run();
+	}
+}

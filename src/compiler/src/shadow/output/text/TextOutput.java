@@ -27,6 +27,8 @@ import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
+import shadow.tac.nodes.TACSequence;
+import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACUnary;
@@ -278,6 +280,24 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACVariableRef node) throws ShadowException
 		{
 			sb.append(node.getName());
+		}
+
+		@Override
+		public void visit(TACSequenceRef node) throws ShadowException
+		{
+			sb.append('(');
+			for (TACOperand operand : node)
+				visit(sb, operand).append(", ");
+			sb.delete(sb.length() - 2, sb.length()).append(')');
+		}
+
+		@Override
+		public void visit(TACSequence node) throws ShadowException
+		{
+			sb.append('(');
+			for (TACOperand operand : node)
+				visit(sb, operand).append(", ");
+			sb.delete(sb.length() - 2, sb.length()).append(')');
 		}
 
 		@Override

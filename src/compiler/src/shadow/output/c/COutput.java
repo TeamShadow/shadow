@@ -1,7 +1,5 @@
 package shadow.output.c;
 
-import java.util.Map;
-
 import shadow.output.AbstractOutput;
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.ShadowException;
@@ -68,10 +66,8 @@ public class COutput extends AbstractOutput
 			sb.append("\" = type { %\"");
 			sb.append(type.getQualifiedName());
 			sb.append("!!methods\"*");
-			for (Map.Entry<String, ? extends ModifiedType> fields : ((ClassType)type).
-					getAllFields())
-				sb.append(", ").append(typeToString(fields.getValue().
-						getType()));
+			for (Type fieldType : module.getFieldTypes())
+				sb.append(", ").append(typeToString(fieldType));
 			c.write(sb.append(" }").toString());
 			c.write();
 		}
@@ -84,9 +80,8 @@ public class COutput extends AbstractOutput
 		sb.append("\" = type { %\"");
 		sb.append(module.getQualifiedName());
 		sb.append("!!methods\"*");
-		for (Map.Entry<String, ? extends ModifiedType> fields : module.getClassType().
-				getAllFields())
-			sb.append(", ").append(typeToString(fields.getValue().getType()));
+		for (Type fieldType : module.getFieldTypes())
+			sb.append(", ").append(typeToString(fieldType));
 		c.write(sb.append(" }").toString());
 //		llvm.write("%\"" + module.getType().getFullName() + "\" = type { %\"" +
 //				module.getType().getFullName() + "!!methods\"* }");

@@ -5,7 +5,7 @@
 %_Pshadow_Pstandard_CString = type opaque
 %_Pshadow_Pstandard_CInterface = type opaque
 %_Pshadow_Pstandard_CClass_Mclass = type opaque
-%_Pshadow_Pstandard_CClass = type { %_Pshadow_Pstandard_CClass_Mclass*, { %_Pshadow_Pstandard_CClass**, [1 x i32] }, %_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CClass*, i32, i32, i32 }
+%_Pshadow_Pstandard_CClass = type { %_Pshadow_Pstandard_CClass_Mclass*, { %_Pshadow_Pstandard_CObject**, [1 x i32] }, { %_Pshadow_Pstandard_CClass**, [1 x i32] }, %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CClass*, i32, i32, i32 }
 %_Pshadow_Pstandard_CArray_Mclass = type { %_Pshadow_Pstandard_CClass }
 @_Pshadow_Pstandard_CArray_Mclass = external constant %_Pshadow_Pstandard_CArray_Mclass
 %_Pshadow_Pstandard_CArray = type { %_Pshadow_Pstandard_CArray_Mclass*, { i32*, [1 x i32] }, %_Pshadow_Pstandard_CClass*, %_Pshadow_Pstandard_CObject* }

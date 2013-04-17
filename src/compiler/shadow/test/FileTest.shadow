@@ -1,0 +1,13 @@
+import shadow.io@CanClose;
+import shadow.io@InputStream;
+import shadow.io@OutputStream;
+import shadow.io@Path;
+import shadow.io@File;
+
+class FileTest
+{
+	public main( String[] args ) => ()
+	{
+		File file = File:create("testFile");
+	}
+}

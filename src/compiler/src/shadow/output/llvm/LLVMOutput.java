@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import shadow.output.AbstractOutput;
 import shadow.output.TabbedLineWriter;
@@ -134,13 +133,13 @@ public class LLVMOutput extends AbstractOutput
 	}
 
 	// Class type flags
-	@SuppressWarnings("unused")
 	private static final int INTERFACE = 1, PRIMITIVE = 2;
 
 	@Override
 	public void startFile(TACModule module) throws ShadowException
 	{
 		this.module = module;
+		Type moduleType = module.getType();
 
 		writer.write("; " + module.getQualifiedName());
 		writer.write();
@@ -165,95 +164,166 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
 		writer.write();
 
-		if (module.getType() instanceof ClassType)
+		StringBuilder sb = new StringBuilder().append('%').
+				append(raw(moduleType, "_Mclass")).append(" = type { ");
+		if (moduleType instanceof ClassType)
+			sb.append('%').append(raw(Type.CLASS)).append(", ");
+		writer.write(sb.append(methodList(moduleType.orderAllMethods(), false)).
+				append(" }").toString());
+		if (moduleType instanceof ClassType)
 		{
-			ClassType type = module.getClassType();
-			writer.write('%' + raw(type, "_Mclass") + " = type { %" +
-					raw(Type.CLASS) + methodList(type, type.orderAllMethods(),
-					false) + " }");
-			StringBuilder sb = new StringBuilder().append('%').
-					append(raw(type)).append(" = type { %").
-					append(raw(type, "_Mclass")).append('*');
-			if (type.isPrimitive())
-				sb.append(", ").append(type(type));
-			else
-				for (Entry<String, ? extends ModifiedType> field :
-						type.getAllFields())
-					sb.append(", ").append(type(field.getValue()));
+			sb.setLength(0);
+			sb.append('%').append(raw(moduleType)).append(" = type { %").
+					append(raw(moduleType, "_Mclass")).append('*');
+			if (moduleType.isPrimitive())
+				sb.append(", ").append(type(moduleType));
+			else for (Type fieldType : module.getFieldTypes())
+				sb.append(", ").append(type(fieldType));
 			writer.write(sb.append(" }").toString());
 		}
 		for (Type type : module.getReferences())
-			if (type instanceof ClassType && !(type instanceof ArrayType) &&
+			if (type != null && !(type instanceof ArrayType) &&
 					!type.equals(module.getType()))
 		{
-			writer.write('%' + raw(type, "_Mclass") + " = type { %" +
-					raw(Type.CLASS) + methodList(type, ((ClassType)type).
-					orderAllMethods(), false) + " }");
-			StringBuilder sb = new StringBuilder().append('%').
-					append(raw(type)).append(" = type { %").
-					append(raw(type, "_Mclass")).append('*');
-			if (type.equals(Type.CLASS))
-				sb.append(", ").
-						append(type(new ArrayType(Type.CLASS))).append(", ").
-						append(type(Type.OBJECT)).append(", ").
-						append(type(Type.STRING)).append(", ").
-						append(type(Type.CLASS)).append(", ").
-						append(type(Type.INT)).append(", ").
-						append(type(Type.INT)).append(", ").
-						append(type(Type.INT));
-			else if (type.equals(Type.ARRAY))
-				sb.append(", ").append(type(new ArrayType(Type.INT))).
-						append(", ").append(type(Type.CLASS)).append(", ").
-						append(type(Type.OBJECT));
-			else if (type.equals(Type.STRING))
-				sb.append(", ").append(type(new ArrayType(Type.UBYTE))).
-						append(", ").append(type(Type.BOOLEAN));
-			else if (type.isPrimitive())
-				sb.append(", ").append(type(type));
-			else if (type instanceof ClassType)
-				for (Entry<String, ? extends ModifiedType> field :
-						((ClassType)type).getAllFields())
-					sb.append(", ").append(type(field.getValue()));
-			writer.write(sb.append(" }").toString());
+			sb.setLength(0);
+			sb.append('%').append(raw(type, "_Mclass")).append(" = type { ");
+			if (type instanceof ClassType)
+				sb.append('%').append(raw(Type.CLASS)).append(", ");
+			writer.write(sb.append(methodList(type.orderAllMethods(), false)).
+					append(" }").toString());
+			if (type instanceof ClassType)
+			{
+				sb.setLength(0);
+				sb.append('%').append(raw(type)).append(" = type { %").
+						append(raw(type, "_Mclass")).append('*');
+				/*if (type.equals(Type.CLASS))
+					sb.append(", ").append(type(new ArrayType(Type.OBJECT))).
+							append(", ").
+							append(type(new ArrayType(Type.CLASS))).
+							append(", ").append(type(Type.STRING)).append(", ").
+							append(type(Type.CLASS)).append(", ").
+							append(type(Type.INT)).append(", ").
+							append(type(Type.INT)).append(", ").
+							append(type(Type.INT));
+				else if (type.equals(Type.ARRAY))
+					sb.append(", ").append(type(new ArrayType(Type.INT))).
+							append(", ").append(type(Type.CLASS)).append(", ").
+							append(type(Type.OBJECT));
+				else if (type.equals(Type.STRING))
+					sb.append(", ").append(type(new ArrayType(Type.UBYTE))).
+							append(", ").append(type(Type.BOOLEAN));
+				else */if (type.isPrimitive())
+					sb.append(", ").append(type(type));
+				else for (Type fieldType : module.getFieldTypes())
+					sb.append(", ").append(type(fieldType));
+				writer.write(sb.append(" }").toString());
+			}
 		}
 		writer.write();
 
-		if (module.getType() instanceof ClassType)
+		List<InterfaceType> interfaces = moduleType.getAllInterfaces();
+		int interfaceCount = interfaces.size();
+		StringBuilder interfaceData = new StringBuilder(
+				"@_interfaceData = private unnamed_addr constant [").
+				append(interfaceCount).append(" x ").
+				append(type(Type.OBJECT)).append("] [");
+		StringBuilder interfaceClasses = new StringBuilder(
+				"@_interfaces = private unnamed_addr constant [").
+				append(interfaceCount).append(" x ").
+				append(type(Type.CLASS)).append("] [");
+		for (int i = 0; i < interfaceCount; i++)
 		{
-			ClassType type = module.getClassType();
-			List<MethodSignature> methods = type.orderAllMethods();
-			int flags = 0;
-			if (type.isPrimitive())
-				flags |= PRIMITIVE;
-			String width = sizeof(type(type) + '*'),
-					size = sizeof('%' + raw(type) + '*'),
-					parent = null;
-			if (type.getExtendType() != null)
-				parent = classOf(type.getExtendType());
-			writer.write('@' + raw(type, "_Mclass") + " = constant %" +
-					raw(type, "_Mclass") + " { %" + raw(Type.CLASS) + " { %" +
-					raw(Type.CLASS, "_Mclass") + "* @" + raw(Type.CLASS,
-					"_Mclass") + ", " + type(new ArrayType(Type.CLASS)) +
-					" zeroinitializer, " + type(Type.OBJECT) + " null, " +
-					type(Type.STRING) + ' ' +
-					nextString(type.getQualifiedName()) + ", " +
-					type(Type.CLASS) + ' ' + parent + ", " +
-					type(Type.INT) + ' ' + flags + ", " +
-					type(Type.INT) + ' ' + size + ", " +
-					type(Type.INT) + ' ' + width + " }" +
-					methodList(type, methods, true) + " }");
-			if (type instanceof SingletonType)
-				writer.write('@' + raw(type, "_Minstance") + " = global " +
-						type(type) + " null");
+			InterfaceType type = interfaces.get(i);
+			if (moduleType instanceof ClassType)
+			{
+				List<MethodSignature> methods = type.orderAllMethods();
+				for (int j = 0; j < methods.size(); j++)
+					methods.set(j, moduleType.getIndistinguishableMethod(
+							methods.get(j)));
+				String methodsType = methodList(methods, false);
+				writer.write("@_class" + i +
+						" = private unnamed_addr constant { " + methodsType +
+						" } { " + methodList(methods, true) + " }");
+				interfaceData.append(type(Type.OBJECT)).append(" bitcast ({ ").
+						append(methodsType).append(" }* @_class").append(i).
+						append(" to ").append(type(Type.OBJECT)).append("), ");
+			}
+			interfaceClasses.append(type(Type.CLASS)).append(' ').
+					append(classOf(type)).append(", ");
 		}
+		if (interfaceCount != 0)
+		{
+			interfaceData.delete(interfaceData.length() - 2,
+					interfaceData.length());
+			interfaceClasses.delete(interfaceClasses.length() - 2,
+					interfaceClasses.length());
+		}
+		if (moduleType instanceof ClassType)
+			writer.write(interfaceData.append(']').toString());
+		writer.write(interfaceClasses.append(']').toString());
+
+		List<MethodSignature> methods = moduleType.orderAllMethods();
+		int flags = 0;
+		if (moduleType.isPrimitive())
+			flags |= PRIMITIVE;
+		if (moduleType instanceof ClassType)
+		{
+			ClassType parentType = ((ClassType)moduleType).getExtendType();
+			writer.write('@' + raw(moduleType, "_Mclass") + " = constant %" +
+					raw(moduleType, "_Mclass") + " { %" + raw(Type.CLASS) +
+					" { %" + raw(Type.CLASS, "_Mclass") + "* @" +
+					raw(Type.CLASS, "_Mclass") + ", " +
+					type(new ArrayType(Type.OBJECT)) + " { " +
+					type(Type.OBJECT) + "* getelementptr inbounds ([" +
+					interfaceCount + " x " + type(Type.OBJECT) +
+					"]* @_interfaceData, i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + type(Type.INT) + ' ' +
+					interfaceCount + "] }, " +
+					type(new ArrayType(Type.CLASS)) + " { " + type(Type.CLASS) +
+					"* getelementptr inbounds ([" + interfaceCount + " x " +
+					type(Type.CLASS) + "]* @_interfaces, i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + type(Type.INT) + ' ' +
+					interfaceCount + "] }, " + type(Type.STRING) + ' ' +
+					nextString(moduleType.getQualifiedName()) + ", " +
+					type(Type.CLASS) + ' ' +
+					(parentType != null ? classOf(parentType) : null) + ", " +
+					type(Type.INT) + ' ' + flags + ", " + type(Type.INT) + ' ' +
+					sizeof('%' + raw(moduleType) + '*') + ", " +
+					type(Type.INT) + ' ' + sizeof(type(moduleType) + '*') +
+					" }, " + methodList(methods, true) + " }");
+		}
+		else
+		{
+			flags |= INTERFACE;
+			writer.write('@' + raw(moduleType, "_Mclass") + " = constant %" +
+					raw(Type.CLASS) + " { %" + raw(Type.CLASS, "_Mclass") +
+					"* @" + raw(Type.CLASS, "_Mclass") + ", " +
+					type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " +
+					type(new ArrayType(Type.CLASS)) + " { " + type(Type.CLASS) +
+					"* getelementptr inbounds ([" + interfaceCount + " x " +
+					type(Type.CLASS) + "]* @_interfaces, i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + type(Type.INT) + ' ' +
+					interfaceCount + "] }, " + type(Type.STRING) + ' ' +
+					nextString(moduleType.getQualifiedName()) + ", " +
+					type(Type.CLASS) + " null, " + type(Type.INT) + ' ' +
+					flags + ", " + type(Type.INT) + " -1, " + type(Type.INT) +
+					' ' + sizeof(type(moduleType) + '*') + " }");
+		}
+		if (moduleType instanceof SingletonType)
+			writer.write('@' + raw(moduleType, "_Minstance") + " = global " +
+					type(moduleType) + " null");
 
 		for (Type type : module.getReferences())
 		{
-			if (type instanceof ClassType && !(type instanceof ArrayType) &&
+			if (type != null && !(type instanceof ArrayType) &&
 					!type.equals(module.getType()))
 			{
-				writer.write('@' + raw(type, "_Mclass") +
-						" = external constant %" + raw(type, "_Mclass"));
+				if (type instanceof InterfaceType)
+					writer.write('@' + raw(type, "_Mclass") +
+							" = external constant %" + raw(Type.CLASS));
+				if (type instanceof ClassType)
+					writer.write('@' + raw(type, "_Mclass") +
+							" = external constant %" + raw(type, "_Mclass"));
 				if (type instanceof SingletonType)
 					writer.write('@' + raw(type, "_Minstance") +
 							" = external global " + type(type));
@@ -391,8 +461,8 @@ public class LLVMOutput extends AbstractOutput
 //					rawtype(Type.CLASS));
 //	}
 
-	private String methodList(Type type, Iterable<MethodSignature> methods,
-			boolean mode) throws ShadowException
+	private String methodList(Iterable<MethodSignature> methods, boolean mode)
+			throws ShadowException
 	{
 		StringBuilder sb = new StringBuilder();
 		for (MethodSignature methodSignature : methods)
@@ -402,7 +472,7 @@ public class LLVMOutput extends AbstractOutput
 			if (mode)
 				sb.append(' ').append(name(method));
 		}
-		return sb.toString();
+		return sb.substring(2);
 	}
 
 	@Override
@@ -418,8 +488,13 @@ public class LLVMOutput extends AbstractOutput
 						raw(Type.CLASS, "_Mallocate") + '(' +
 						type(Type.CLASS) + ')');
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
-						raw(Type.CLASS, "_Mallocate_Pshadow_Pstandard_Cint") +
-						'(' + type(Type.CLASS) + ", " + type(Type.INT) + ')');
+						raw(Type.CLASS, "_Mallocate" +
+						Type.INT.getMangledName()) + '(' + type(Type.CLASS) +
+						", " + type(Type.INT) + ')');
+				writer.write("declare " + type(Type.OBJECT) + " @" +
+						raw(Type.CLASS, "_MinterfaceData" +
+						Type.CLASS.getMangledName()) + '(' + type(Type.CLASS) +
+						", " + type(Type.CLASS) + ')');
 			}
 			if (type.equals(Type.ARRAY))
 				writer.write("declare " + type(Type.ARRAY) + " @" +
@@ -514,8 +589,10 @@ public class LLVMOutput extends AbstractOutput
 	public void startMethod(TACMethod method) throws ShadowException
 	{
 		this.method = method;
+		if (method.getPrefixType() instanceof InterfaceType)
+			return;
 		tempCounter = method.getParameterCount() + 1;
-		if (method.isNative() || module.isInterface())
+		if (method.isNative())
 		{
 			writer.write("declare " + methodToString(method));
 			writer.indent();
@@ -595,7 +672,17 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACMethodRef node) throws ShadowException
 	{
-		if (node.hasPrefix() &&
+		if (node.getPrefixType() instanceof InterfaceType)
+		{
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getPrefix()) + ", 0");
+			writer.write(nextTemp() + " = getelementptr %" +
+					raw(node.getPrefixType(), "_Mclass") + "* " +
+					temp(1) + ", i32 0, i32 " + node.getIndex());
+			writer.write(nextTemp(node) + " = load " + methodType(node) +
+					"* " + temp(1));
+		}
+		else if (node.hasPrefix() &&
 				!node.getPrefixType().getModifiers().isImmutable() &&
 				//!node.getType().getModifiers().isFinal() && //replace with Readonly?
 				!node.getType().getModifiers().isPrivate())
@@ -715,7 +802,37 @@ public class LLVMOutput extends AbstractOutput
 		}
 		if (destType.getType() == Type.NULL)
 		{
-			node.setSymbol(node.getOperand().getSymbol());
+			node.setSymbol(srcName);
+			return;
+		}
+		if (srcType.getType() instanceof InterfaceType)
+		{
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand()) + ", 1");
+			srcName = temp(0);
+			srcType = new SimpleModifiedType(Type.OBJECT);
+		}
+		if (destType.getType() instanceof InterfaceType)
+		{
+			TACMethodRef methodRef = new TACMethodRef(
+					Type.CLASS.getMethods("interfaceData").get(0));
+			TACClass destClass = new TACClass(methodRef, destType.getType(),
+					method);
+			TACClass srcClass = new TACClass(destClass, srcType.getType(),
+					method);
+			TACCall call = new TACCall(srcClass, new TACBlock(), methodRef,
+					srcClass, destClass);
+			walkTo(call);
+			writer.write(nextTemp() + " = bitcast " + typeSymbol(call) +
+					" to %" + raw(destType, "_Mclass") + '*');
+			writer.write(nextTemp() + " = insertvalue " + type(destType) +
+					" undef, %" + raw(destType, "_Mclass") + "* " + temp(1) +
+					", 0");
+			writer.write(nextTemp() + " = bitcast " +
+					typeSymbol(node.getOperand()) + " to " + type(Type.OBJECT));
+			writer.write(nextTemp(node) + " = insertvalue " + type(destType) +
+					' ' + temp(2) + ", " + type(Type.OBJECT) + ' ' + temp(1) +
+					", 1");
 			return;
 		}
 		if (srcType.getType().isPrimitive() != destType.getType().isPrimitive())
@@ -1211,9 +1328,15 @@ public class LLVMOutput extends AbstractOutput
 			{
 				first = false;
 				Type paramType = param.getType();
-				if (paramType.isPrimitive())
+				if (paramType instanceof InterfaceType)
 				{
-					writer.write(nextTemp(node) + " = call noalias " +
+					writer.write(nextTemp() + " = extractvalue " +
+							typeSymbol(param) + ", 1");
+					sb.append(type(Type.OBJECT) + ' ' + temp(0));
+				}
+				else if (paramType.isPrimitive())
+				{
+					writer.write(nextTemp() + " = call noalias " +
 							type(Type.OBJECT) + " @" + raw(Type.CLASS,
 							"_Mallocate") + '(' + type(Type.CLASS) + ' ' +
 							classOf(paramType) + ')');
@@ -1320,6 +1443,8 @@ public class LLVMOutput extends AbstractOutput
 
 	private static String classOf(Type type)
 	{
+		if (type instanceof InterfaceType)
+			return '@' + raw(type, "_Mclass");
 		return "getelementptr inbounds (%" + raw(type, "_Mclass") + "* @" +
 				raw(type, "_Mclass") + ", i32 0, i32 0)";
 	}
@@ -1343,7 +1468,9 @@ public class LLVMOutput extends AbstractOutput
 				if (first)
 				{
 					first = false;
-					if (method.getPrefixType().isPrimitive())
+					if (method.getPrefixType() instanceof InterfaceType)
+						sb.append(type(Type.OBJECT));
+					else if (method.getPrefixType().isPrimitive())
 						sb.append('%').append(raw(paramType.getType())).
 								append('*');
 					else
@@ -1452,7 +1579,7 @@ public class LLVMOutput extends AbstractOutput
 	}
 	private static String type(InterfaceType type)
 	{
-		return type(Type.OBJECT);
+		return "{ %" + raw(type, "_Mclass") + "*, " + type(Type.OBJECT) + " }";
 	}
 	private static String type(TypeParameter type)
 	{

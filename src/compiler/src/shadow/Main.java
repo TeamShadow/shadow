@@ -103,7 +103,7 @@ public class Main {
 		List<String> linkCommand = new ArrayList<String>();
 		linkCommand.add("llvm-link");
 		linkCommand.add("-");
-		linkCommand.add("shadow/Unwind" + config.getArch() + ".ll");
+	linkCommand.add("shadow/Unwind" + config.getArch() + ".ll");
 		linkCommand.add("shadow/" + config.getOs() + ".ll");
 		String mainClass = null;
 
@@ -180,20 +180,27 @@ public class Main {
 			}
 			if (!config.isCheckOnly())
 			{
-				BufferedReader main = new BufferedReader(new FileReader("shadow/Main.ll"));
-				Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-				Process optimize = new ProcessBuilder("opt", "-O3").redirectError(Redirect.INHERIT).start();
-				Process compile = new ProcessBuilder("llc", "-O3").redirectError(Redirect.INHERIT).start();
+				String target;
 				List<String> assembleCommand = new ArrayList<String>();
 				assembleCommand.add("gcc");
 				assembleCommand.add("-x");
 				assembleCommand.add("assembler");
 				assembleCommand.add("-");
 				if (config.getOs().equals("Linux")) {
+					target = "x86_64-gnu-linux";
 					assembleCommand.add("-lm");
 					assembleCommand.add("-lrt");
+				} else if (System.getProperty("os.name").equals("Linux")) {
+					target = "i686-w64-mingw32";
+					assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
+				} else {
+					target = "i386-unknown-mingw32";
 				}
-				Process assemble = new ProcessBuilder(assembleCommand).redirectError(Redirect.INHERIT).start();
+				BufferedReader main = new BufferedReader(new FileReader("shadow/Main.ll"));
+				Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
+				Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
+				Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+				Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 				try {
 					new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
 					new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();

@@ -1,0 +1,4 @@
+interface shadow.io@OutputStream extends CanClose
+{
+	write( byte[] buffer ) => ( int );
+}

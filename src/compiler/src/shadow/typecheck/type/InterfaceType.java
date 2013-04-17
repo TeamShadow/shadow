@@ -50,7 +50,13 @@ public class InterfaceType extends Type
 		}
 		return false;
 	}
-	
+
+	@Override
+	public String getMangledName()
+	{
+		return getPackage().getMangledName() + super.getMangledName();
+	}
+
 	public boolean recursivelyContainsMethod( String symbol )
 	{
 		if( containsMethod(symbol))
@@ -216,6 +222,12 @@ public class InterfaceType extends Type
 			return isDescendentOf(t);
 		else
 			return false;	
+	}
+	
+	@Override
+	public int getWidth()
+	{
+		return 12;
 	}
 	
 	public void printMetaFile(PrintWriter out, String linePrefix )
