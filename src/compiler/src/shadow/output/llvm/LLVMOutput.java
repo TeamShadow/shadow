@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import shadow.output.AbstractOutput;
 import shadow.output.TabbedLineWriter;
@@ -196,7 +197,7 @@ public class LLVMOutput extends AbstractOutput
 				sb.setLength(0);
 				sb.append('%').append(raw(type)).append(" = type { %").
 						append(raw(type, "_Mclass")).append('*');
-				/*if (type.equals(Type.CLASS))
+				if (type.equals(Type.CLASS))
 					sb.append(", ").append(type(new ArrayType(Type.OBJECT))).
 							append(", ").
 							append(type(new ArrayType(Type.CLASS))).
@@ -212,10 +213,11 @@ public class LLVMOutput extends AbstractOutput
 				else if (type.equals(Type.STRING))
 					sb.append(", ").append(type(new ArrayType(Type.UBYTE))).
 							append(", ").append(type(Type.BOOLEAN));
-				else */if (type.isPrimitive())
+				else if (type.isPrimitive())
 					sb.append(", ").append(type(type));
-				else for (Type fieldType : module.getFieldTypes())
-					sb.append(", ").append(type(fieldType));
+				else for (Entry<String, ? extends ModifiedType> field :
+						((ClassType)type).orderAllFields())
+					sb.append(", ").append(type(field.getValue()));
 				writer.write(sb.append(" }").toString());
 			}
 		}
