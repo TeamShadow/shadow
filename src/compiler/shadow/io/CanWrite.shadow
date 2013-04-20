@@ -1,0 +1,4 @@
+interface shadow.io@CanWrite
+{
+	write( byte[] buffer ) => ( int );
+}

@@ -1,4 +1,0 @@
-interface shadow.io@InputStream extends CanClose
-{
-	read( byte[] buffer ) => ( int );
-}

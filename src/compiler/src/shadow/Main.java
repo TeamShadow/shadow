@@ -183,6 +183,7 @@ public class Main {
 				String target;
 				List<String> assembleCommand = new ArrayList<String>();
 				assembleCommand.add("gcc");
+				//assembleCommand.add("-g");
 				assembleCommand.add("-x");
 				assembleCommand.add("assembler");
 				assembleCommand.add("-");
@@ -243,6 +244,7 @@ public class Main {
 					compile.destroy();
 					assemble.destroy();
 				}
+				System.err.println("SUCCESS");
 			}
 		} catch(FileNotFoundException fnfe) {
 			System.err.println("FILE " + checker.getCurrentFile() + ") NOT FOUND: " + fnfe.getLocalizedMessage());

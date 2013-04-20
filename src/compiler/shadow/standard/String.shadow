@@ -108,6 +108,10 @@ implements CanCompare<String>, CanIterate<code>
 		return this->size == 0;
 	}
 
+	public substring( int start ) => ( String )
+	{
+		return substring(start, this->size);
+	}
 	public substring( int start, int end ) => ( String )
 	{
 		return String:create(cast<byte[]>(cast<Object>

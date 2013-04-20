@@ -1,8 +1,8 @@
-class shadow.io@File implements InputStream, OutputStream
+class shadow.io@File implements CanRead, CanWrite, CanClose
 {
-	nullable Object data = null;
+	long data = -1l, pos = 0;
 	get Path path = Path:create();
-	private create( Object data )
+	private create( long data )
 	{
 		this:data = data;
 	}
@@ -18,12 +18,18 @@ class shadow.io@File implements InputStream, OutputStream
 	{
 		close();
 	}
+	public toString() => ( String )
+	{
+		return #path;
+	}
 
-	public native read( byte[] buffer ) => ( int );
-	public native write( byte[] buffer ) => ( int );
-	public native get position() => ( ulong );
-	public native set position( ulong position ) => ();
-	public native get size() => ( ulong );
-	public native set size( ulong size ) => ();
-	public native close() => ();
+	public native get exists() => ( boolean ) throws IOException;
+	public native set exists( boolean createOrDelete ) => () throws IOException;
+	public native get position() => ( long ) throws IOException;
+	public native set position( long position ) => () throws IOException;
+	public native get size() => ( long ) throws IOException;
+	public native set size( long size ) => () throws IOException;
+	public native read( byte[] buffer ) => ( int ) throws IOException;
+	public native write( byte[] buffer ) => ( int ) throws IOException;
+	public native close() => () throws IOException;
 }

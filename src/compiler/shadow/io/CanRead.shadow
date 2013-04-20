@@ -1,0 +1,4 @@
+interface shadow.io@CanRead
+{
+	read( byte[] buffer ) => ( int );
+}

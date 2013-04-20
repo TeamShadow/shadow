@@ -3,28 +3,71 @@
 %_Pshadow_Pstandard_CObject_Mclass = type { %_Pshadow_Pstandard_CClass, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, i1 (%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CClass* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CObject*)* }
 %_Pshadow_Pstandard_CObject = type { %_Pshadow_Pstandard_CObject_Mclass* }
 %_Pshadow_Pstandard_CClass_Mclass = type opaque
-%_Pshadow_Pstandard_CClass = type { %_Pshadow_Pstandard_CClass_Mclass*, { %_Pshadow_Pstandard_CClass**, [1 x i32] }, %_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CClass*, i32, i32, i32 }
+%_Pshadow_Pstandard_CClass = type { %_Pshadow_Pstandard_CClass_Mclass*, { %_Pshadow_Pstandard_CObject**, [1 x i32] }, { %_Pshadow_Pstandard_CClass**, [1 x i32] }, %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CClass*, i32, i32, i32 }
 %_Pshadow_Pstandard_CString_Mclass = type opaque
 %_Pshadow_Pstandard_CString = type { %_Pshadow_Pstandard_CString_Mclass*, { i8*, [1 x i32] }, i1 }
+%_Pshadow_Pstandard_CException_Mclass = type { %_Pshadow_Pstandard_CClass, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CException* (%_Pshadow_Pstandard_CException*)*, i1 (%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CClass* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CException* (%_Pshadow_Pstandard_CException*, %_Pshadow_Pstandard_CString*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CException*)*, void (%_Pshadow_Pstandard_CException*)* }
+%_Pshadow_Pstandard_CException = type { %_Pshadow_Pstandard_CException_Mclass* }
+@_Pshadow_Pstandard_CException_Mclass = external constant %_Pshadow_Pstandard_CException_Mclass
 %_Pshadow_Pstandard_CSystem = type opaque
 %_Pshadow_Pio_CPath = type opaque
 %_Pshadow_Pio_CFile_Mclass = type opaque
-%_Pshadow_Pio_CFile = type { %_Pshadow_Pio_CFile_Mclass*, %_Pshadow_Pstandard_CObject*, %_Pshadow_Pio_CPath* }
+%_Pshadow_Pio_CFile = type { %_Pshadow_Pio_CFile_Mclass*, i64, i64, %_Pshadow_Pio_CPath* }
 %_Pshadow_Pio_CConsole_Mclass = type opaque
 %_Pshadow_Pio_CConsole = type { %_Pshadow_Pio_CConsole_Mclass*, i1 }
 @_Pshadow_Pio_CConsole_Mclass = external constant %_Pshadow_Pio_CConsole_Mclass
+%_Pshadow_Pio_CIOException_Mclass = type { %_Pshadow_Pstandard_CClass }
+%_Pshadow_Pio_CIOException = type { %_Pshadow_Pio_CIOException_Mclass* }
+@_Pshadow_Pio_CIOException_Mclass = external constant %_Pshadow_Pio_CIOException_Mclass
 
-declare %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CObject_Mcreate(%_Pshadow_Pstandard_CObject*)
+declare %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pio_CIOException*)
+declare noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass*)
 
 declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)
 
 declare noalias i8* @malloc(i32) nounwind
 declare void @free(i8*) nounwind
 
+@newline = private unnamed_addr constant [2 x i8] c"\0D\0A"
+declare x86_stdcallcc i8* @GetStdHandle(i32)
+declare x86_stdcallcc i32 @GetFileType(i8*)
+declare x86_stdcallcc i32 @GetConsoleMode(i8*, i32*)
+declare x86_stdcallcc i32 @SetConsoleMode(i8*, i32)
+declare x86_stdcallcc i32 @SetConsoleCP(i32)
+declare x86_stdcallcc i32 @SetConsoleOutputCP(i32)
+declare x86_stdcallcc i32 @WriteConsoleA(i8*, i8*, i32, i32*, i8*)
+declare x86_stdcallcc i32 @WriteConsoleW(i8*, i8*, i32, i32*, i8*)
+
+declare x86_stdcallcc i32 @GetLastError()
+declare x86_stdcallcc i32 @GetFileAttributesA(i8*)
+declare x86_stdcallcc i32 @SetFilePointerEx(i8*, i64, i64*, i32)
+declare x86_stdcallcc i32 @SetEndOfFile(i8*)
+declare x86_stdcallcc i32 @GetFileSizeEx(i8*, i64*)
+declare x86_stdcallcc i8* @CreateFileA(i8*, i32, i32, i8*, i32, i32, i8*)
+declare x86_stdcallcc i32 @ReadFile(i8*, i8*, i32, i32*, i8*)
+declare x86_stdcallcc i32 @WriteFile(i8*, i8*, i32, i32*, i8*)
+declare x86_stdcallcc i32 @DeleteFileA(i8*)
+declare x86_stdcallcc i32 @CloseHandle(i8*)
+
 declare x86_stdcallcc i32 @MultiByteToWideChar(i32, i32, i8*, i32, i16*, i32)
 
 declare x86_stdcallcc i32 @QueryPerformanceFrequency(i64*)
 declare x86_stdcallcc i32 @QueryPerformanceCounter(i64*)
+
+define private void @throwIOException() noreturn {
+	%1 = tail call x86_stdcallcc i32 @GetLastError()
+	%2 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* getelementptr inbounds (%_Pshadow_Pio_CIOException_Mclass* @_Pshadow_Pio_CIOException_Mclass, i32 0, i32 0))
+	%3 = bitcast %_Pshadow_Pstandard_CObject* %2 to %_Pshadow_Pio_CIOException*
+	%4 = call %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pio_CIOException* %3)
+	%5 = bitcast %_Pshadow_Pio_CIOException* %4 to %_Pshadow_Pstandard_CException*
+	%6 = getelementptr inbounds %_Pshadow_Pstandard_CException* %5, i32 0, i32 0
+	%7 = load %_Pshadow_Pstandard_CException_Mclass** %6
+	%8 = getelementptr inbounds %_Pshadow_Pstandard_CException_Mclass* %7, i32 0, i32 9
+	%9 = load void (%_Pshadow_Pstandard_CException*)** %8
+	call void %9(%_Pshadow_Pstandard_CException* %5)
+	unreachable
+}
+
 define i64 @_Pshadow_Pstandard_CSystem_MnanoTime(%_Pshadow_Pstandard_CSystem*) {
 	%2 = alloca i64
 	%3 = alloca i64
@@ -42,18 +85,6 @@ define i64 @_Pshadow_Pstandard_CSystem_MnanoTime(%_Pshadow_Pstandard_CSystem*) {
 	ret i64 0
 }
 
-@newline = private unnamed_addr constant [2 x i8] c"\0D\0A"
-declare x86_stdcallcc i8* @GetStdHandle(i32)
-declare x86_stdcallcc i32 @GetFileType(i8*)
-declare x86_stdcallcc i32 @GetConsoleMode(i8*, i32*)
-declare x86_stdcallcc i32 @SetConsoleMode(i8*, i32)
-declare x86_stdcallcc i32 @SetConsoleCP(i32)
-declare x86_stdcallcc i32 @SetConsoleOutputCP(i32)
-declare x86_stdcallcc i32 @OpenFile(i8*, i8*, i32)
-declare x86_stdcallcc i32 @ReadFile(i8*, i8*, i32, i32*, i8*)
-declare x86_stdcallcc i32 @WriteFile(i8*, i8*, i32, i32*, i8*)
-declare x86_stdcallcc i32 @WriteConsoleA(i8*, i8*, i32, i32*, i8*)
-declare x86_stdcallcc i32 @WriteConsoleW(i8*, i8*, i32, i32*, i8*)
 define void @_Pshadow_Pio_CConsole_Minit(%_Pshadow_Pio_CConsole*) {
 	%2 = call x86_stdcallcc i32 @SetConsoleCP(i32 65001)
 	%3 = call x86_stdcallcc i32 @SetConsoleOutputCP(i32 65001)
@@ -147,9 +178,8 @@ define i32 @_Pshadow_Pio_CPath_Mseparator(%_Pshadow_Pio_CPath*) {
 	ret i32 92
 }
 
-define void @_Pshadow_Pio_CFile_Mopen(%_Pshadow_Pio_CFile*) {
-	%temp = alloca i8, i32 88
-	%2 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
+define private i8* @filepath(%_Pshadow_Pio_CFile*) {
+	%2 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 3
 	%3 = load %_Pshadow_Pio_CPath** %2
 	%4 = bitcast %_Pshadow_Pio_CPath* %3 to %_Pshadow_Pstandard_CObject*
 	%5 = getelementptr %_Pshadow_Pstandard_CObject* %4, i32 0, i32 0
@@ -166,32 +196,164 @@ define void @_Pshadow_Pio_CFile_Mopen(%_Pshadow_Pio_CFile*) {
 	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %15, i8* %11, i32 %13, i32 1, i1 0)
 	%16 = getelementptr inbounds i8* %15, i32 %13
 	store i8 0, i8* %16
-	%17 = call i32 @OpenFile(i8* %15, i8* %temp, i32 2)
-	call void @free(i8* %15)
-	%18 = inttoptr i32 %17 to %_Pshadow_Pstandard_CObject*
-	%19 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
-	store %_Pshadow_Pstandard_CObject* %18, %_Pshadow_Pstandard_CObject** %19
+	ret i8* %15
+}
+
+define i1 @_Pshadow_Pio_CFile_Mexists(%_Pshadow_Pio_CFile*) {
+	%2 = tail call i8* @filepath(%_Pshadow_Pio_CFile* %0)
+	%3 = tail call x86_stdcallcc i32 @GetFileAttributesA(i8* %2)
+	tail call void @free(i8* %2)
+	%4 = icmp sge i32 %3, 0
+	ret i1 %4
+}
+define void @_Pshadow_Pio_CFile_Mexists_Pshadow_Pstandard_Cboolean(%_Pshadow_Pio_CFile*, i1) {
+	tail call void @_Pshadow_Pio_CFile_Mclose(%_Pshadow_Pio_CFile* %0)
+	%3 = tail call i8* @filepath(%_Pshadow_Pio_CFile* %0)
+	br i1 %1, label %4, label %10
+	%5 = tail call x86_stdcallcc i8* @CreateFileA(i8* %3, i32 shl (i32 1, i32 30), i32 7, i8* null, i32 1, i32 128, i8* null)
+	tail call void @free(i8* %3)
+	%6 = ptrtoint i8* %5 to i64
+	%7 = icmp sge i64 %6, 0
+	br i1 %7, label %8, label %14
+	%9 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	store i64 %6, i64* %9
+	ret void
+	%11 = tail call x86_stdcallcc i32 @DeleteFileA(i8* %3)
+	tail call void @free(i8* %3)
+	%12 = icmp ne i32 %11, 0
+	br i1 %12, label %13, label %14
+	ret void
+	tail call void @throwIOException() noreturn
+	unreachable
+}
+define i64 @_Pshadow_Pio_CFile_Mposition(%_Pshadow_Pio_CFile*) {
+	%2 = alloca i64
+	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%4 = load i64* %3
+	%5 = inttoptr i64 %4 to i8*
+	%6 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %5, i64 0, i64* %2, i32 1)
+	%7 = icmp ne i32 %6, 0
+	br i1 %7, label %8, label %10
+	%9 = load i64* %2
+	ret i64 %9
+	tail call void @throwIOException() noreturn
+	unreachable
+}
+define void @_Pshadow_Pio_CFile_Mposition_Pshadow_Pstandard_Clong(%_Pshadow_Pio_CFile*, i64) {
+	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%4 = load i64* %3
+	%5 = inttoptr i64 %4 to i8*
+	%6 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %5, i64 %1, i64* null, i32 0)
+	%7 = icmp ne i32 %6, 0
+	br i1 %7, label %8, label %9
+	ret void
+	tail call void @throwIOException() noreturn
+	unreachable
+}
+define i64 @_Pshadow_Pio_CFile_Msize(%_Pshadow_Pio_CFile*) {
+	%2 = alloca i64
+	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%4 = load i64* %3
+	%5 = inttoptr i64 %4 to i8*
+	%6 = call x86_stdcallcc i32 @GetFileSizeEx(i8* %5, i64* %2)
+	%7 = icmp ne i32 %6, 0
+	br i1 %7, label %8, label %10
+	%9 = load i64* %2
+	ret i64 %9
+	tail call void @throwIOException() noreturn
+	unreachable
+}
+define void @_Pshadow_Pio_CFile_Msize_Pshadow_Pstandard_Clong(%_Pshadow_Pio_CFile*, i64) {
+	%3 = alloca i64
+	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%5 = load i64* %4
+	%6 = inttoptr i64 %5 to i8*
+	%7 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %6, i64 0, i64* %3, i32 1)
+	%8 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %6, i64 %1, i64* null, i32 0)
+	%9 = call x86_stdcallcc i32 @SetEndOfFile(i8* %6)
+	%10 = load i64* %3
+	%11 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %6, i64 %10, i64* null, i32 0)
 	ret void
 }
 define i32 @_Pshadow_Pio_CFile_Mread_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pio_CFile*, { i8*, [1 x i32] }) {
 	%3 = alloca i32
 	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
-	%5 = load %_Pshadow_Pstandard_CObject** %4
-	%6 = bitcast %_Pshadow_Pstandard_CObject* %5 to i8*
+	%5 = load i64* %4
+	%6 = inttoptr i64 %5 to i8*
 	%7 = extractvalue { i8*, [1 x i32] } %1, 0
 	%8 = extractvalue { i8*, [1 x i32] } %1, 1, 0
-	%9 = call i32 @ReadFile(i8* %6, i8* %7, i32 %8, i32* %3, i8* null)
-	%10 = load i32* %3
-	ret i32 %10
+	br label %9
+	%10 = phi i8* [ %6, %2 ], [ %26, %23 ]
+	%11 = call x86_stdcallcc i32 @ReadFile(i8* %10, i8* %7, i32 %8, i32* %3, i8* null)
+	%12 = icmp ne i32 %11, 0
+	br i1 %12, label %13, label %15
+	%14 = load i32* %3
+	ret i32 %14
+	%16 = tail call i32 @GetLastError()
+	%17 = icmp eq i32 %16, 5
+	%18 = icmp eq i32 %16, 6
+	%19 = or i1 %17, %18
+	br i1 %19, label %20, label %29
+	%21 = icmp sge i64 %5, 0
+	br i1 %21, label %22, label %23
+	tail call void @_Pshadow_Pio_CFile_Mclose(%_Pshadow_Pio_CFile* %0)
+	br label %23
+	%24 = phi i32 [ shl (i32 1, i32 31), %20 ], [ shl (i32 3, i32 30), %22 ]
+	%25 = tail call i8* @filepath(%_Pshadow_Pio_CFile* %0)
+	%26 = tail call x86_stdcallcc i8* @CreateFileA(i8* %25, i32 %24, i32 7, i8* null, i32 3, i32 0, i8* null)
+	tail call void @free(i8* %25)
+	%27 = ptrtoint i8* %26 to i64
+	store i64 %27, i64* %4
+	%28 = icmp sge i64 %27, 0
+	br i1 %28, label %9, label %29
+	tail call void @throwIOException() noreturn
+	unreachable
 }
 define i32 @_Pshadow_Pio_CFile_Mwrite_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pio_CFile*, { i8*, [1 x i32] }) {
 	%3 = alloca i32
 	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
-	%5 = load %_Pshadow_Pstandard_CObject** %4
-	%6 = bitcast %_Pshadow_Pstandard_CObject* %5 to i8*
+	%5 = load i64* %4
+	%6 = inttoptr i64 %5 to i8*
 	%7 = extractvalue { i8*, [1 x i32] } %1, 0
 	%8 = extractvalue { i8*, [1 x i32] } %1, 1, 0
-	%9 = call i32 @WriteFile(i8* %6, i8* %7, i32 %8, i32* %3, i8* null)
-	%10 = load i32* %3
-	ret i32 %10
+	br label %9
+	%10 = phi i8* [ %6, %2 ], [ %26, %23 ]
+	%11 = call x86_stdcallcc i32 @WriteFile(i8* %10, i8* %7, i32 %8, i32* %3, i8* null)
+	%12 = icmp ne i32 %11, 0
+	br i1 %12, label %13, label %15
+	%14 = load i32* %3
+	ret i32 %14
+	%16 = tail call i32 @GetLastError()
+	%17 = icmp eq i32 %16, 5
+	%18 = icmp eq i32 %16, 6
+	%19 = or i1 %17, %18
+	br i1 %19, label %20, label %29
+	%21 = icmp sge i64 %5, 0
+	br i1 %21, label %22, label %23
+	tail call void @_Pshadow_Pio_CFile_Mclose(%_Pshadow_Pio_CFile* %0)
+	br label %23
+	%24 = phi i32 [ shl (i32 1, i32 30), %20 ], [ shl (i32 3, i32 30), %22 ]
+	%25 = tail call i8* @filepath(%_Pshadow_Pio_CFile* %0)
+	%26 = tail call x86_stdcallcc i8* @CreateFileA(i8* %25, i32 %24, i32 7, i8* null, i32 3, i32 0, i8* null)
+	tail call void @free(i8* %25)
+	%27 = ptrtoint i8* %26 to i64
+	store i64 %27, i64* %4
+	%28 = icmp sge i64 %27, 0
+	br i1 %28, label %9, label %29
+	tail call void @throwIOException() noreturn
+	unreachable
+}
+define void @_Pshadow_Pio_CFile_Mclose(%_Pshadow_Pio_CFile*) {
+	%2 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%3 = load i64* %2
+	store i64 -1, i64* %2
+	%4 = inttoptr i64 %3 to i8*
+	%5 = tail call x86_stdcallcc i32 @CloseHandle(i8* %4)
+	%6 = icmp ne i32 %5, 0
+	br i1 %6, label %7, label %8
+	ret void
+	%9 = icmp slt i64 %3, 0
+	br i1 %9, label %7, label %10
+	tail call void @throwIOException() noreturn
+	unreachable
 }

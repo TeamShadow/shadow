@@ -5,6 +5,9 @@ import java.util.NoSuchElementException;
 
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
+import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public abstract class TACSimpleNode extends TACNode
 		implements Iterable<TACOperand>
@@ -55,9 +58,9 @@ public abstract class TACSimpleNode extends TACNode
 	{
 		if (type instanceof TACReference)
 			type = ((TACReference)type).getGetType();
-		/*if (type.getType() instanceof TypeParameter &&
+		if (type.getType() instanceof TypeParameter &&
 				!(operand.getType() instanceof TypeParameter))
-			type = new SimpleModifiedType(Type.OBJECT);*/
+			type = new SimpleModifiedType(Type.OBJECT);
 		operand = operand.checkVirtual(type, this);
 		if (operand.getType().equals(type.getType()))
 			return operand;

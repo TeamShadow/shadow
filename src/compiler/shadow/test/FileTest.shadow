@@ -1,13 +1,32 @@
 import shadow.io@CanClose;
-import shadow.io@InputStream;
-import shadow.io@OutputStream;
+import shadow.io@CanRead;
+import shadow.io@CanWrite;
 import shadow.io@Path;
 import shadow.io@File;
+import shadow.io@IOException;
+import shadow.io@Console;
 
-class FileTest
+class shadow.test@FileTest
 {
 	public main( String[] args ) => ()
 	{
-		File file = File:create("testFile");
+		Console console = Console:instance;
+		try
+		{
+			File file = File:create(args[0]);
+			if (!file->exists)
+				file->exists = true;
+			String line = console.readLine();
+			byte[] chars = line->chars;
+			file.write(chars);
+			file->size = file->position;
+			file.read(chars);
+			console.printLine(String:create(chars));
+			file.close();
+		}
+		catch ( IOException ex )
+		{
+			console.printLine("Exception caught");
+		}
 	}
 }
