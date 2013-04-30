@@ -1638,10 +1638,15 @@ void TryStatement():
 { debugPrint("TRY STATEMENT"); }
 {
   "try" Block()
-  ( "catch" "(" FormalParameter() ")" Block()  { jjtThis.addCatch(); } )*
+  ( CatchStatement() { jjtThis.addCatch(); } )*
   [ "recover" Block() { jjtThis.addRecover(); }]
   [ "finally" Block() { jjtThis.addFinally(); }]
 }
+
+void CatchStatement():
+{ debugPrint("CATCH STATEMENT"); }
+{
+ "catch" "(" FormalParameter() ")" Block()   }
 
 /* We use productions to match >>>, >> and > so that we can keep the
  * type declaration syntax with generics clean

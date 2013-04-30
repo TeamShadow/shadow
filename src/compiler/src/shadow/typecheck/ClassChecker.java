@@ -25,6 +25,7 @@ import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTBrackets;
 import shadow.parser.javacc.ASTBreakStatement;
 import shadow.parser.javacc.ASTCastExpression;
+import shadow.parser.javacc.ASTCatchStatement;
 import shadow.parser.javacc.ASTCheckExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -329,7 +330,7 @@ public class ClassChecker extends BaseChecker
 					//it must be final!
 					//local method declarations don't count
 					
-					//add a check to deal with this, even without final
+					//TODO: add a check to deal with this, even without final
 					
 					//if( !(node instanceof ASTLocalMethodDeclaration) && !node.getModifiers().isFinal() )
 					//	addError(Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
@@ -351,6 +352,12 @@ public class ClassChecker extends BaseChecker
 			node.setType( type );
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
 				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");			
+			
+			if( node.jjtGetParent() instanceof ASTCatchStatement )
+			{
+				Node identifier = node.jjtGetChild(2); //modifiers, type, then VariableDeclaratorId
+				addSymbol( identifier.getImage(), node );				
+			}
 		}
 	
 		return WalkType.POST_CHILDREN;
@@ -1601,6 +1608,30 @@ public class ClassChecker extends BaseChecker
 	}	
 	
 	
+	@Override
+	public Object visit(ASTCatchStatement node, Boolean secondVisit) throws ShadowException 
+	{	
+		if( secondVisit )
+		{
+			Node child = node.jjtGetChild(0); //formal parameter
+			Type type = child.getType();
+			
+			if( !(type instanceof ExceptionType) )
+				addError( child, Error.TYPE_MIS, "found " + type + " but only exception types allowed for catch parameters");
+			
+			if( child.getModifiers().getModifiers() != 0 )
+				addError( child, Error.TYPE_MIS, "cannot apply modifiers to catch parameters");
+			
+			node.setType(type);
+		}
+		
+		createScope( secondVisit );
+		
+				
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
 	public Object visit(ASTTryStatement node, Boolean secondVisit) throws ShadowException 
 	{		
 		if(secondVisit)
@@ -1608,27 +1639,23 @@ public class ClassChecker extends BaseChecker
 			if( node.getBlocks() == 0 )
 				addError( node, Error.TYPE_MIS, "try statement must have at least one catch, recover, or finally block" );
 			else
-			{				
-				Node child;
+			{	
 				List<Type> types = new LinkedList<Type>();
 				
 				for( int i = 0; i < node.getCatches(); i++ )				
 				{
 					//catch statement
-					child = node.jjtGetChild(2*i+1); //formal parameter
-					
+					Node child = node.jjtGetChild(i+1); //skip first block
 					Type type = child.getType();
-					if( type instanceof ExceptionType )
-					{
-						for( Type existing : types )
-							if( type.isSubtype(existing) )
-							{
-								addError( child, Error.TYPE_MIS, "unreachable catch: " + type );
-								break;
-							}						
-					}
-					else
-						addError( child, Error.TYPE_MIS, "found " + type + " but only exception types allowed for catch parameters");
+					
+					for( Type existing : types )
+						if( type.isSubtype(existing) )
+						{
+							addError( child, Error.TYPE_MIS, "unreachable catch: " + type );
+							break;
+						}
+						
+					types.add(type);
 				}
 				
 				//no checking necessary for recover
@@ -2928,5 +2955,4 @@ public class ClassChecker extends BaseChecker
 		else
 			return WalkType.NO_CHILDREN;		
 	}
-	
 }

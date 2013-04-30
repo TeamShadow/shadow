@@ -1822,4 +1822,9 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException {
 		throw new UnsupportedOperationException();
 	}
+	@Override
+	public Object visit(ASTCatchStatement node, Boolean data)
+			throws ShadowException {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -88,12 +88,12 @@ public class StandardLibraryTest {
 		args.add("shadow/standard/Double.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
-
+/*
 		@Test public void testEnum() throws Exception {
 		args.add("shadow/standard/Enum.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
-
+*/
 		@Test public void testError() throws Exception {
 		args.add("shadow/standard/Error.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
