@@ -92,7 +92,7 @@ public class TextOutput extends AbstractOutput
 		for (TACVariable param : method.getParameters())
 			sb.append(param.getType().getQualifiedName()).append(' ').
 					append(param.getName()).append(", ");
-		if (method.hasParameters())
+		if (!method.getParameters().isEmpty())
 			sb.delete(sb.length() - 2, sb.length());
 		sb.append(") => (");
 		for (ModifiedType retType : method.getReturnTypes())

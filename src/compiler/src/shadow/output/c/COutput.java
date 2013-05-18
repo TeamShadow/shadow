@@ -108,7 +108,7 @@ public class COutput extends AbstractOutput
 			c.write("store " + typeToString(local.getType()) + " %" +
 					paramIndex++ + ", " + typeToString(local.getType()) +
 					"* %" + local.getName());
-		tempCounter = method.getParameterCount() + 1;
+		tempCounter = method.getParameters().size() + 1;
 	}
 
 	@Override

@@ -593,7 +593,7 @@ public class LLVMOutput extends AbstractOutput
 		this.method = method;
 		if (method.getPrefixType() instanceof InterfaceType)
 			return;
-		tempCounter = method.getParameterCount() + 1;
+		tempCounter = method.getParameters().size() + 1;
 		if (method.isNative())
 		{
 			writer.write("declare " + methodToString(method));

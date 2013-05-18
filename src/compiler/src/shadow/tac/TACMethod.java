@@ -1,6 +1,7 @@
 package shadow.tac;
 
 import java.io.StringWriter;
+import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -36,8 +37,7 @@ public class TACMethod extends TACNodeList
 	{
 		name = methodName;
 		type = methodType;
-		scopes.push(new LinkedHashMap<String, TACVariable>(
-				type.getParameterTypes().size()));
+		enterScope();
 		addLocal(new SimpleModifiedType(getPrefixType()), "this");
 		if (isCreate() && getPrefixType().hasOuter())
 			addLocal(new SimpleModifiedType(getPrefixType().getOuter()),
@@ -66,38 +66,71 @@ public class TACMethod extends TACNodeList
 		return type;
 	}
 
+	public boolean hasParametersExceptThis()
+	{
+		return !type.getParameterTypes().isEmpty();
+	}
 	public Collection<TACVariable> getLocals()
 	{
 		return locals.values();
 	}
 	public Collection<TACVariable> getParameters()
 	{
-		return scopes.peekLast().values();
+		return new Parameters();
 	}
-	public int getParameterCount()
+	public TACVariable getThis()
 	{
-		return scopes.peekLast().size();
+		return locals.values().iterator().next();
 	}
-	public boolean hasParameters()
+	public boolean hasParameter(String name)
 	{
-		return !scopes.peekLast().isEmpty();
-	}
-	public boolean hasParametersExceptThis()
-	{
-		return !type.getParameterTypes().isEmpty();
+		return scopes.peekLast().containsKey(name);
 	}
 	public TACVariable getParameter(String name)
 	{
 		return scopes.peekLast().get(name);
 	}
-	public TACVariable getParameter(int index)
+	private class Parameters extends AbstractCollection<TACVariable>
 	{
-		if (index < 0)
-			throw new NoSuchElementException();
-		Iterator<TACVariable> iter = scopes.peekLast().values().iterator();
-		while (index-- != 0)
-			iter.next();
-		return iter.next();
+		@Override
+		public int size()
+		{
+			return scopes.peekLast().size();
+		}
+		@Override
+		public Iterator<TACVariable> iterator()
+		{
+			return new LimitedIterator<TACVariable>(locals.values().iterator(),
+					size());
+		}
+	}
+	private static class LimitedIterator<T> implements Iterator<T>
+	{
+		private Iterator<T> iterator;
+		private int remaining;
+		public LimitedIterator(Iterator<T> iter, int size)
+		{
+			iterator = iter;
+			remaining = size;
+		}
+		@Override
+		public boolean hasNext()
+		{
+			return remaining != 0 && iterator.hasNext();
+		}
+		@Override
+		public T next()
+		{
+			if (remaining == 0)
+				throw new NoSuchElementException();
+			remaining--;
+			return iterator.next();
+		}
+		@Override
+		public void remove()
+		{
+			iterator.remove();
+		}
 	}
 
 	public SequenceType getReturnTypes()
