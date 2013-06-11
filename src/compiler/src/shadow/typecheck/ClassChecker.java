@@ -31,7 +31,6 @@ import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTClassOrInterfaceTypeSuffix;
 import shadow.parser.javacc.ASTCoalesceExpression;
-import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTConcatenationExpression;
 import shadow.parser.javacc.ASTConditionalAndExpression;
 import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
@@ -56,7 +55,7 @@ import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTImplementsList;
-import shadow.parser.javacc.ASTImportDeclaration;
+import shadow.parser.javacc.ASTInnerTryStatement;
 import shadow.parser.javacc.ASTInstance;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLiteral;
@@ -67,7 +66,6 @@ import shadow.parser.javacc.ASTMethodCall;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTMultiplicativeExpression;
-import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryExpression;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimarySuffix;
@@ -632,7 +630,7 @@ public class ClassChecker extends BaseChecker
 	}
 	
 	
-	
+	/*
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException 
 	{	
 		Type type = lookupType( node.getImage() );
@@ -648,6 +646,7 @@ public class ClassChecker extends BaseChecker
 
 		return WalkType.NO_CHILDREN;
 	}
+	*/
 	
 	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
@@ -1638,38 +1637,42 @@ public class ClassChecker extends BaseChecker
 		{
 			if( node.getBlocks() == 0 )
 				addError( node, Error.TYPE_MIS, "try statement must have at least one catch, recover, or finally block" );
-			else
-			{	
-				List<Type> types = new LinkedList<Type>();
-				
-				for( int i = 0; i < node.getCatches(); i++ )				
-				{
-					//catch statement
-					Node child = node.jjtGetChild(i+1); //skip first block
-					Type type = child.getType();
-					
-					for( Type existing : types )
-						if( type.isSubtype(existing) )
-						{
-							addError( child, Error.TYPE_MIS, "unreachable catch: " + type );
-							break;
-						}
 						
-					types.add(type);
-				}
-				
-				//no checking necessary for recover
-				
-				//no checking necessary for finally 
-				
-				tryBlocks.removeFirst();
-			}						
+			tryBlocks.removeFirst();									
 		}	
 		else
 			tryBlocks.addFirst(node);
 			
 		
 		return WalkType.POST_CHILDREN;
+	}
+	
+	public Object visit(ASTInnerTryStatement node, Boolean secondVisit) throws ShadowException
+	{
+		if(secondVisit)
+		{	
+			List<Type> types = new LinkedList<Type>();
+			
+			for( int i = 0; i < node.getCatches(); i++ )				
+			{
+				//catch statement
+				Node child = node.jjtGetChild(i+1); //skip first block
+				Type type = child.getType();
+				
+				for( Type existing : types )
+					if( type.isSubtype(existing) )
+					{
+						addError( child, Error.TYPE_MIS, "unreachable catch: " + type );
+						break;
+					}
+					
+				types.add(type);
+			}
+			
+			//no checking necessary for recover			
+		}	
+		
+		return WalkType.POST_CHILDREN;		
 	}
 	
 	public Object visit(ASTCheckExpression node, Boolean secondVisit) throws ShadowException 
@@ -1701,7 +1704,9 @@ public class ClassChecker extends BaseChecker
 			boolean found = false;
 			for( ASTTryStatement statement : tryBlocks )
 			{
-				if( statement.hasRecover() )
+				ASTInnerTryStatement innerStatement = (ASTInnerTryStatement) statement.jjtGetChild(0);			
+				
+				if( innerStatement.hasRecover() )
 				{
 					found = true;
 					break;
@@ -2778,19 +2783,15 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+	
+	/*
 	@Override
 	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
 		currentPackage = node.getPackage();		
 		return WalkType.NO_CHILDREN;
 	}
-	
-	@Override
-	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
-			currentPackage = packageTree;
-		
-		return WalkType.POST_CHILDREN;			
-	}
+	*/	
+
 	
 	@Override
 	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {						

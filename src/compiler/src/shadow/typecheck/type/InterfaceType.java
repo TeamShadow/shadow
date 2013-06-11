@@ -8,6 +8,7 @@ import java.util.Map;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.Package;
 
 public class InterfaceType extends Type 
 {
@@ -233,9 +234,36 @@ public class InterfaceType extends Type
 	public void printMetaFile(PrintWriter out, String linePrefix )
 	{
 		//imports
+		/*
 		if( getOuter() == null )
 			for( Type importType : getReferencedTypes() )				
 				out.println(linePrefix + "import " + importType.getImportName() + ";");
+		*/
+		if( getOuter() == null )
+		{
+			HashSet<Type> imports = new HashSet<Type>();
+			
+			for( Object importItem : getImportedItems() )
+			{
+				if( importItem instanceof Type )
+				{
+					Type importType = (Type)importItem;
+					if( getReferencedTypes().contains(importType))
+						imports.add(importType);
+						
+				}
+				else if( importItem instanceof Package )
+				{
+					Package importPackage = (Package)importItem;
+					for( Type referencedType : getReferencedTypes() )
+						if( referencedType.getPackage().equals( importPackage ) )
+							imports.add(referencedType);					
+				}
+			}
+			
+			for( Type type : imports )			
+				out.println(linePrefix + "import " + type.getImportName() + ";");
+		}
 		
 		//modifiers
 		out.print("\n" + linePrefix + getModifiers());		

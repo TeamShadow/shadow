@@ -1460,43 +1460,45 @@ public class TACBuilder implements ShadowParserVisitor
 		TACBlock outerBlock = new TACBlock(tree, saveBlock);
 		if (node.hasFinally())
 			outerBlock.addCleanup();
+		
+		ASTInnerTryStatement innerStatement = (ASTInnerTryStatement) node.jjtGetChild(0);
 
 		TACBlock innerBlock = new TACBlock(tree, outerBlock);
-		if (node.hasRecover())
+		if (innerStatement.hasRecover())
 			innerBlock.addRecover();
-		innerBlock.addCatches(node.getCatches());
-		if (node.hasCatches())
+		innerBlock.addCatches(innerStatement.getCatches());
+		if (innerStatement.hasCatches())
 			innerBlock.addLandingpad();
 
 		index = 0;
 		block = innerBlock;
-		walk(node.jjtGetChild(index));
+		walk(innerStatement.jjtGetChild(index));
 		block = outerBlock;
-		for (int i = 0; i < node.getCatches(); i++)
-			walk(node.jjtGetChild(++index));
-		if (node.hasRecover())
-			walk(node.jjtGetChild(++index));
+		for (int i = 0; i < innerStatement.getCatches(); i++)
+			walk(innerStatement.jjtGetChild(++index));
+		if (innerStatement.hasRecover())
+			walk(innerStatement.jjtGetChild(++index));
 		block = saveBlock;
 		if (node.hasFinally())
-			walk(node.jjtGetChild(++index));
+			walk(node.jjtGetChild(1));
 
 		index = 0;
 		tree.appendChild(index);
 		new TACBranch(tree, doneLabel);
-		if (node.hasCatches())
+		if (innerStatement.hasCatches())
 		{
 			innerBlock.getLandingpad().new TACLabel(tree);
 			new TACLandingpad(tree, innerBlock);
-			for (int i = 0; i < node.getCatches(); i++)
+			for (int i = 0; i < innerStatement.getCatches(); i++)
 			{
 				innerBlock.getCatch(i).new TACLabel(tree);
-				new TACCatch(tree, (ExceptionType)node.jjtGetChild(i + 1).
+				new TACCatch(tree, (ExceptionType)innerStatement.jjtGetChild(i + 1).
 						getType());
 				tree.appendChild(++index);
 				new TACBranch(tree, doneLabel);
 			}
 		}
-		if (node.hasRecover())
+		if (innerStatement.hasRecover())
 		{
 			innerBlock.getRecover().new TACLabel(tree);
 			tree.appendChild(++index);
@@ -1826,6 +1828,13 @@ public class TACBuilder implements ShadowParserVisitor
 
 	@Override
 	public Object visit(ASTForeachInit node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public Object visit(ASTInnerTryStatement node, Boolean data)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();

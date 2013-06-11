@@ -124,9 +124,9 @@ public class MethodType extends Type {
 		return returns.matches(other.returns);
 	}
 
-	public String toString()
+	public String toString(boolean withBounds)
 	{		
-		return parameterTypes.toString() + " => " + returns.toString();
+		return parameterTypes.toString(withBounds) + " => " + returns.toString(withBounds);
 	}
 	
 	public String parametersToString()

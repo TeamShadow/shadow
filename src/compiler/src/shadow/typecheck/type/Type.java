@@ -38,6 +38,11 @@ public abstract class Type {
 	
 	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();
 	
+	private LinkedList<Object> importedItems = new LinkedList<Object>();
+	
+	
+	
+	
 	private static class TypeArgumentCache
 	{
 		public ModifiedType argument;
@@ -886,5 +891,16 @@ public abstract class Type {
 	
 	public abstract boolean isSubtype(Type other);
 	public abstract Type replace(SequenceType values, SequenceType replacements );
+	
+	
+	public void addImportedItems( List<Object> items )
+	{
+		importedItems.addAll(items);		
+	}
+	
+	public List<Object> getImportedItems()
+	{
+		return importedItems;		
+	}
 	
 }

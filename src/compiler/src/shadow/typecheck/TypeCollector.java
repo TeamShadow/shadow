@@ -7,6 +7,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,12 +19,12 @@ import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTEnumDeclaration;
-import shadow.parser.javacc.ASTImportDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTTypeArguments;
+import shadow.parser.javacc.ASTTypeDeclaration;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTViewDeclaration;
@@ -50,6 +51,8 @@ public class TypeCollector extends BaseChecker
 	private String currentName = "";
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private TypeChecker typeChecker;
+	
+	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
 	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker )
 	{		
@@ -83,7 +86,7 @@ public class TypeCollector extends BaseChecker
 				}
 		);
 				
-		for( File file :  standardImports )
+		for( File file :  standardImports )			
 			fileList.add(stripExtension(file.getCanonicalPath()));
 						
 		for(int i = 0; i < fileList.size(); i++ )
@@ -150,7 +153,7 @@ public class TypeCollector extends BaseChecker
 				}
 				
 				//Add files in directory after imports (order matters in case of duplicates)
-				File[] directoryFiles = input.getParentFile().listFiles( new FilenameFilter()
+				File[] directoryFiles = canonicalFile.getParentFile().listFiles( new FilenameFilter()
 						{
 							public boolean accept(File dir, String name)
 							{
@@ -306,7 +309,9 @@ public class TypeCollector extends BaseChecker
 					Type.CAN_ITERATE = (InterfaceType) type;
 				else if( typeName.equals("Number"))
 					Type.NUMBER = (InterfaceType) type;
-			}			
+			}
+			
+			type.addImportedItems( importedItems );
 			
 			try
 			{			
@@ -418,7 +423,47 @@ public class TypeCollector extends BaseChecker
 		
 		return false;
 	}
-
+	
+	@Override
+	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+		{
+			currentPackage = packageTree;
+			importedItems.clear();			
+			currentName = "";
+		}
+		
+		return WalkType.POST_CHILDREN;			
+	}
+	
+	@Override
+	public Object visit(ASTTypeDeclaration node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )		
+			importedItems.add("shadow.standard"); //add standard imports after explicit ones
+				
+		return WalkType.POST_CHILDREN;			
+	}
+	
+	
+	@Override
+	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit )
+		{
+			String name = node.getImage();
+			if( node.jjtGetNumChildren() > 0 ) //has @ sign
+				name = node.jjtGetChild(0).getImage() + "@" + name;
+			
+			if( addImport( name ) )
+				importedItems.add(name);
+			else
+				addError(node, "No file found for import " + name);		
+		}
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	
 	//Visitors below this point
 	
 	@Override
@@ -524,7 +569,8 @@ public class TypeCollector extends BaseChecker
 	{		
 		if( secondVisit )
 		{
-			//triggers an import since there's an ASTUnqualifiedName@
+			//triggers an import (adding a file to the compilation process) 
+			//since there's an ASTUnqualifiedName@
 			if( node.jjtGetNumChildren() > 0 ) 
 			{
 				Node child = node.jjtGetChild(0);				
@@ -589,43 +635,4 @@ public class TypeCollector extends BaseChecker
 		return WalkType.NO_CHILDREN;			
 	}
 	
-		
-	@Override
-	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{
-			if( node.jjtGetNumChildren() > 0 )
-			{
-				Node child = node.jjtGetChild(0);
-				node.setImage( child.getImage() + "@" + node.getImage() );
-			}
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}	
-	
-	
-	@Override
-	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit )
-		{
-			String name = node.jjtGetChild(0).getImage();
-			if( !addImport( name ) )
-				addError(node, "No file found for import " + name);		
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	@Override
-	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
-		{
-			currentPackage = packageTree;
-			currentName = "";
-		}
-		
-		return WalkType.POST_CHILDREN;			
-	}
 }

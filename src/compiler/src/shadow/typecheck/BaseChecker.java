@@ -11,7 +11,10 @@ import shadow.Loggers;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
+import shadow.parser.javacc.ASTClassOrInterfaceBody;
+import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.Literal;
 import shadow.parser.javacc.Node;
@@ -40,7 +43,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected Package packageTree;	
 	protected Package currentPackage;
 	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();  /** Current method is a stack since Shadow allows methods to be defined inside of methods */
-	
+		
 	protected Type currentType = null;
 	protected Type declarationType = null;
 	protected boolean debug;	
@@ -189,7 +192,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			}			
 		}
 		
-		return lookupTypeStartingAt( name, currentType );
+		/* if( currentType != null )
+			return lookupTypeStartingAt( name, currentType );
+		else */
+		return lookupTypeStartingAt( name, declarationType );
 	}
 	
 	//outer class is just a guess, not a sure thing
@@ -245,13 +251,27 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			}			
 		}
 		
-		//still not found, try all packages
-		for( Package _package : typeTable.keySet() )
-		{
-			type = lookupType( name, _package  );
-			if( type != null )
-				return type;			
-		}
+		//still not found, try all the packages and types that the outer class imported
+		if( outer != null )
+			for( Object item : outer.getImportedItems() )
+			{
+				type = null;
+				
+				if( item instanceof Package )
+				{
+					Package importedPackage = (Package) item;
+					type = lookupType( name, importedPackage );	
+				}
+				else if( item instanceof Type )
+				{
+					Type importedType = (Type) item;
+					if( importedType.getTypeWithoutTypeArguments().getTypeName().equals( name ) )
+						type = importedType;				
+				}
+				
+				if( type != null )
+					return type;			
+			}
 		
 		return null;	
 	}
@@ -657,5 +677,44 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		}
 
 		return false;
+	}
+	
+	@Override
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException
+	{		
+		if( secondVisit ) //leaving a type
+			currentType = currentType.getOuter();
+		else //entering a type
+		{					
+			currentType = declarationType;
+			currentPackage = currentType.getPackage();				
+		}
+			
+		return WalkType.POST_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException
+	{			
+		if( secondVisit )			
+			declarationType = declarationType.getOuter();		
+		else
+		{
+			declarationType = node.getType();
+			currentPackage = declarationType.getPackage();
+		}
+			
+		return WalkType.POST_CHILDREN;
 	}	
+	
+	// TypeCollector overrides, because it does something different
+	// All other checkers use this
+	@Override
+	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException 
+	{	
+		if( !secondVisit )		
+			currentPackage = packageTree;
+		
+		return WalkType.POST_CHILDREN;
+	}
 }

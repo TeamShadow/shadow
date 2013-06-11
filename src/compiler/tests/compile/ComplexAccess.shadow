@@ -2,7 +2,7 @@ class ComplexAccess {
 
 	get set nullable Inner i;
 
-	private class Inner 
+	public class Inner 
 	{	
 	
 		get nullable ComplexAccess o;

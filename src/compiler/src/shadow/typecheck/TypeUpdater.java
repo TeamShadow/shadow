@@ -8,12 +8,12 @@ import java.util.Map;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTBlock;
-import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTCreateDeclaration;
 import shadow.parser.javacc.ASTDestroyDeclaration;
+import shadow.parser.javacc.ASTEnumDeclaration;
 import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameters;
@@ -67,7 +67,7 @@ public class TypeUpdater extends BaseChecker
 	public void updateTypes(Map<String, Node> files) throws ShadowException
 	{	
 		ASTWalker walker = new ASTWalker( this );
-		for(Node declarationNode : files.values() )		
+		for(Node declarationNode : files.values() )
 			walker.walk(declarationNode);
 		
 		addConstructorsAndProperties();
@@ -468,24 +468,51 @@ public class TypeUpdater extends BaseChecker
 
 	@Override
 	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
-			currentPackage = packageTree;
+		if( !secondVisit )		
+			currentPackage = packageTree;		
 				
 		return WalkType.POST_CHILDREN;			
 	}
 	
 	@Override
-	public Object visit(ASTTypeDeclaration node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTTypeDeclaration node, Boolean secondVisit) throws ShadowException
+	{		
 		if( secondVisit )
 		{
 			Node child = node.jjtGetChild(1); //child 0 is modifiers
 			node.jjtGetParent().setType(child.getType());
 			node.jjtGetParent().setModifiers(child.getModifiers());
-		}
+		}	
 				
 		return WalkType.POST_CHILDREN;			
 	}
 	
+	
+	private void updateImports( Node node )
+	{
+		//changing these items updates the correct imports inside the type
+		List<Object> importedItems = node.getType().getImportedItems();
+		for( int i = 0; i < importedItems.size(); i++ )
+		{
+			String item = (String) importedItems.get(i);
+			if( item.contains("@") ) //specific class
+			{
+				Type type = lookupType(item);
+				if( type == null )
+					addError(node.jjtGetParent(), Error.UNDEF_TYP, "Cannot import undefined type " + item);
+				else
+					importedItems.set(i, type);	
+			}
+			else
+			{
+				Package p = packageTree.getChild(item);
+				if( p == null )
+					addError(node.jjtGetParent(), Error.UNDEF_TYP, "Cannot import undefined package " + item);
+				else
+					importedItems.set(i, p);					
+			}			
+		}
+	}
 	
 	
 	
@@ -517,34 +544,11 @@ public class TypeUpdater extends BaseChecker
 	}
 
 	
-	
-
-	
 	//Visitors below this point
 	
-	@Override
-	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException
+	
+	private Object visitDeclaration( Node node, Boolean secondVisit ) throws ShadowException
 	{		
-		if( secondVisit ) //leaving a type
-			currentType = currentType.getOuter();
-		else //entering a type
-		{					
-			currentType = declarationType;
-			currentPackage = currentType.getPackage();				
-		}
-			
-		return WalkType.POST_CHILDREN;
-	}
-
-	
-
-	
-	//But we still need to know what type we're in to sort out type parameters in the extends list
-	//declarationType will differ from current type only before the body (extends list, implements list)
-	//if no extends added, fix those too	
-	@Override
-	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException
-	{			
 		if( secondVisit )
 		{
 			if( declarationType instanceof ClassType )
@@ -580,10 +584,8 @@ public class TypeUpdater extends BaseChecker
 						classType.setExtendType(Type.EXCEPTION);
 					else if ( declarationType == Type.EXCEPTION )
 						classType.setExtendType(Type.OBJECT);
-				}
-				
-			}	
-			
+				}				
+			}
 			
 			if( declarationType.getOuter() != null )			
 				declarationType.addTypeParameterDependency(declarationType.getOuter());
@@ -591,12 +593,40 @@ public class TypeUpdater extends BaseChecker
 			declarationType = declarationType.getOuter();
 		}
 		else
+		{
 			declarationType = node.getType();
+			currentPackage = declarationType.getPackage();
+			updateImports( node );
+		}
 			
 		return WalkType.POST_CHILDREN;
+		
+		
 	}
 	
 	
+	//But we still need to know what type we're in to sort out type parameters in the extends list
+	//declarationType will differ from current type only before the body (extends list, implements list)
+	//if no extends added, fix those too	
+	@Override
+	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException
+	{			
+		return visitDeclaration( node, secondVisit );
+	}
+	
+	@Override
+	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException
+	{			
+		return visitDeclaration( node, secondVisit );
+	}
+	
+	@Override
+	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException
+	{			
+		return visitDeclaration( node, secondVisit );
+	}
+	
+	@Override
 	public Object visit(ASTCreateDeclaration node, Boolean secondVisit) throws ShadowException {		
 		//create uses the same node for modifiers and signature
 		
@@ -693,13 +723,6 @@ public class TypeUpdater extends BaseChecker
 			
 		return WalkType.POST_CHILDREN;
 	}
-
-	
-	@Override
-	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException
-	{		
-		return WalkType.NO_CHILDREN;
-	}	
 		
 	//type parameters will only be visited here on type declarations 
 	@Override

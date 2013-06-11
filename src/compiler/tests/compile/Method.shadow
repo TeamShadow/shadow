@@ -51,6 +51,7 @@ class Method {
     public mm() => (int, (int) => (int), int) { }
     
     public nn(() => () f) => (() => ()) { }
+    
     public oo(int a, () => () f, int b) => (() => ()) { }
     public pp(() => () f) => (int, () => (), int) { }
     public qq(int a, () => () f, int b) => (int, () => (), int) { }

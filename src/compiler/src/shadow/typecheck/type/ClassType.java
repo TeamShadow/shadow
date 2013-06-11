@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import shadow.typecheck.Package;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
@@ -528,9 +529,36 @@ public class ClassType extends Type
 	{
 		//imports
 		if( getOuter() == null )
+		{
+			HashSet<Type> imports = new HashSet<Type>();
+			
+			for( Object importItem : getImportedItems() )
+			{
+				if( importItem instanceof Type )
+				{
+					Type importType = (Type)importItem;
+					if( getAllReferencedTypes().contains(importType))
+						imports.add(importType);
+						
+				}
+				else if( importItem instanceof Package )
+				{
+					Package importPackage = (Package)importItem;
+					for( Type referencedType : getAllReferencedTypes() )
+						if( referencedType.getPackage().equals( importPackage ) )
+							imports.add(referencedType);					
+				}
+			}
+			
+			for( Type type : imports )			
+				out.println(linePrefix + "import " + type.getImportName() + ";");
+		}
+			
+		/*
 			for( Type importType : getAllReferencedTypes() )			
 				if( !recursivelyContainsInnerClass(importType) )
-					out.println(linePrefix + "import " + importType.getImportName() + ";");
+					out.println(linePrefix + "import " + importType.getImportName() + ";");					
+		*/
 		
 		//modifiers
 		out.print("\n" + linePrefix + getModifiers());		

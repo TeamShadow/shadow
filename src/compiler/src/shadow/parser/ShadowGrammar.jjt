@@ -1637,10 +1637,16 @@ void TryStatement():
  */
 { debugPrint("TRY STATEMENT"); }
 {
+  InnerTryStatement()
+  [ "finally" Block() { jjtThis.addFinally(); }]
+}
+
+void InnerTryStatement():
+{ debugPrint("INNER TRY STATEMENT"); }
+{  
   "try" Block()
   ( CatchStatement() { jjtThis.addCatch(); } )*
   [ "recover" Block() { jjtThis.addRecover(); }]
-  [ "finally" Block() { jjtThis.addFinally(); }]
 }
 
 void CatchStatement():
