@@ -777,14 +777,16 @@ void CreateDeclaration(Modifiers modifiers):
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("create"); }  
   // Modifiers matched in the caller
   "create" FormalParameters() [ "throws" NameList() ]
-  ( (
-       "{"
-    [ LOOKAHEAD(ExplicitCreateInvocation()) ExplicitCreateInvocation() ]
-    ( BlockStatement() )*
-  "}")
-   |
-   ";" )
+  ( CreateBlock() | ";" )
 }
+
+void CreateBlock():
+{
+  debugPrint("CREATE BLOCK");    
+}
+{
+	"{" [ LOOKAHEAD(ExplicitCreateInvocation()) ExplicitCreateInvocation() ]
+    ( BlockStatement() )*  "}" }
 
 void DestroyDeclaration(Modifiers modifiers):
 {
@@ -1426,7 +1428,7 @@ void Statement():
 | ReturnStatement()
 | ThrowStatement()
 //| SynchronizedStatement()
-| TryStatement()
+| FinallyStatement() //includes try/catch/recover/finally
 }
 
 void AssertStatement():
@@ -1630,11 +1632,51 @@ void ThrowStatement():
 }
 
 
-void TryStatement():
+
+// for a simpler back end, a finally statement holds
+// the try, the catches, and the recover (even if no finally is used)
+void FinallyStatement():
 /*
  * Semantic check required here to make sure that at least one
  * finally/recover/catch is present.
  */
+{ debugPrint("FINALLY STATEMENT"); }
+{
+  RecoverStatement()
+  [ "finally" Block() { jjtThis.addFinally(); } ]
+}
+
+void RecoverStatement():
+{ debugPrint("RECOVER STATEMENT"); }
+{
+  CatchStatements()
+  [ "recover" Block() { jjtThis.addRecover(); } ]
+}
+
+void CatchStatements():
+{ debugPrint("CATCH STATEMENTS"); }
+{
+  TryStatement()
+  ( CatchStatement() { jjtThis.addCatch(); } )*
+}
+
+void CatchStatement():
+{ debugPrint("CATCH STATEMENT"); }
+{ 
+  "catch" "(" FormalParameter() ")" Block()
+}
+
+void TryStatement():
+{ debugPrint("TRY STATEMENT"); }
+{
+  "try" Block()
+}
+
+/*
+void TryStatement():
+
+ // Semantic check required here to make sure that at least one
+ // finally/recover/catch is present. 
 { debugPrint("TRY STATEMENT"); }
 {
   InnerTryStatement()
@@ -1653,6 +1695,7 @@ void CatchStatement():
 { debugPrint("CATCH STATEMENT"); }
 {
  "catch" "(" FormalParameter() ")" Block()   }
+*/
 
 /* We use productions to match >>>, >> and > so that we can keep the
  * type declaration syntax with generics clean

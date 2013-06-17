@@ -1451,6 +1451,8 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTTryStatement node, Boolean secondVisit)
 			throws ShadowException
 	{
+		//Broken by recent grammar changes
+		/*
 		tree = tree.next();
 		TACLabelRef doneLabel = new TACLabelRef(tree);
 		int index;
@@ -1513,7 +1515,7 @@ public class TACBuilder implements ShadowParserVisitor
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
 		}
-
+*/
 		return NO_CHILDREN;
 
 //		tree.appendChild(index++);
@@ -1831,10 +1833,31 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
+	}	
+
+	@Override
+	public Object visit(ASTFinallyStatement node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}	
+
+	@Override
+	public Object visit(ASTRecoverStatement node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public Object visit(ASTInnerTryStatement node, Boolean data)
+	public Object visit(ASTCatchStatements node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public Object visit(ASTCreateBlock node, Boolean data)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();

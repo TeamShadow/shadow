@@ -13,7 +13,6 @@ class ASTSequenceAssignment extends SimpleNode {
     super(p, id);
   }
 
-
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
     return visitor.visit(this, data);

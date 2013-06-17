@@ -10,6 +10,7 @@ import java.util.Set;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
+import shadow.parser.javacc.ASTCreateBlock;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTType;
@@ -446,6 +447,12 @@ public class TypeInstantiater extends BaseChecker {
 	
 		@Override
 		public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException
+		{
+			return WalkType.NO_CHILDREN; //skip all blocks
+		}
+		
+		@Override
+		public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException
 		{
 			return WalkType.NO_CHILDREN; //skip all blocks
 		}

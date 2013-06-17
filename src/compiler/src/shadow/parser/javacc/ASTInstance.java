@@ -12,8 +12,7 @@ class ASTInstance extends SimpleNode {
   public ASTInstance(ShadowParser p, int id) {
     super(p, id);
   }
-
-
+  
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
     return visitor.visit(this, data);

@@ -3,6 +3,7 @@
 package shadow.parser.javacc;
 
 public
+@SuppressWarnings("all")
 class ASTCatchStatement extends SimpleNode {
   public ASTCatchStatement(int id) {
     super(id);
@@ -12,10 +13,9 @@ class ASTCatchStatement extends SimpleNode {
     super(p, id);
   }
 
-//comment
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=2bb6f24c25e9235a7ebf90b7aedd58cb (do not edit this line) */
+/* JavaCC - OriginalChecksum=07ade73ed37da4847823690f405d2041 (do not edit this line) */

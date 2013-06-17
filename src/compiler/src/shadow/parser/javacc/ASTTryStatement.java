@@ -5,31 +5,20 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTTryStatement extends SimpleNode
-{	
-	private boolean _finally = false;
+{
 	
+	private boolean recover = false;
 	
-	public void addFinally()
+	public void addRecover()
 	{
-		_finally = true;		
+		recover = true;		
 	}
 	
-	public int getBlocks()
+	public boolean hasRecover()
 	{
-		ASTInnerTryStatement child = (ASTInnerTryStatement) jjtGetChild(0); 
-		int value = child.getCatches();
-		if( child.hasRecover() )
-			value++;
-		if( _finally )
-			value++;
-		
-		return value;		
-	}	
+		return recover;		
+	}
 	
-	public boolean hasFinally()
-	{
-		return _finally;
-	}	
 	
   public ASTTryStatement(int id) {
     super(id);

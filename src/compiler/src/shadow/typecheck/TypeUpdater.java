@@ -11,6 +11,7 @@ import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
+import shadow.parser.javacc.ASTCreateBlock;
 import shadow.parser.javacc.ASTCreateDeclaration;
 import shadow.parser.javacc.ASTDestroyDeclaration;
 import shadow.parser.javacc.ASTEnumDeclaration;
@@ -966,6 +967,10 @@ public class TypeUpdater extends BaseChecker
 	
 	
 	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
+		return WalkType.NO_CHILDREN; //skip all blocks
+	}
+	
+	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException {
 		return WalkType.NO_CHILDREN; //skip all blocks
 	}
 	

@@ -26,6 +26,7 @@ import shadow.parser.javacc.ASTBrackets;
 import shadow.parser.javacc.ASTBreakStatement;
 import shadow.parser.javacc.ASTCastExpression;
 import shadow.parser.javacc.ASTCatchStatement;
+import shadow.parser.javacc.ASTCatchStatements;
 import shadow.parser.javacc.ASTCheckExpression;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -37,6 +38,7 @@ import shadow.parser.javacc.ASTConditionalExclusiveOrExpression;
 import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTConditionalOrExpression;
 import shadow.parser.javacc.ASTCreate;
+import shadow.parser.javacc.ASTCreateBlock;
 import shadow.parser.javacc.ASTCreateDeclaration;
 import shadow.parser.javacc.ASTDestroy;
 import shadow.parser.javacc.ASTDestroyDeclaration;
@@ -46,6 +48,7 @@ import shadow.parser.javacc.ASTExplicitCreateInvocation;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTFinallyStatement;
 import shadow.parser.javacc.ASTForInit;
 import shadow.parser.javacc.ASTForStatement;
 import shadow.parser.javacc.ASTForeachInit;
@@ -55,7 +58,6 @@ import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTIfStatement;
 import shadow.parser.javacc.ASTImplementsList;
-import shadow.parser.javacc.ASTInnerTryStatement;
 import shadow.parser.javacc.ASTInstance;
 import shadow.parser.javacc.ASTIsExpression;
 import shadow.parser.javacc.ASTLiteral;
@@ -72,6 +74,7 @@ import shadow.parser.javacc.ASTPrimarySuffix;
 import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTProperty;
 import shadow.parser.javacc.ASTQualifiedKeyword;
+import shadow.parser.javacc.ASTRecoverStatement;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultType;
@@ -354,7 +357,7 @@ public class ClassChecker extends BaseChecker
 			if( node.jjtGetParent() instanceof ASTCatchStatement )
 			{
 				Node identifier = node.jjtGetChild(2); //modifiers, type, then VariableDeclaratorId
-				addSymbol( identifier.getImage(), node );				
+				addSymbol( identifier.getImage(), node ); //add identifier so that it's usable in the catch block				
 			}
 		}
 	
@@ -395,6 +398,11 @@ public class ClassChecker extends BaseChecker
 		}		
 		
 		return visitMethod( node, secondVisit );
+	}
+	
+	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException {
+		createScope(secondVisit);
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit) throws ShadowException {
@@ -1534,8 +1542,7 @@ public class ClassChecker extends BaseChecker
 		createScope(secondVisit); //for variables declared in header
 		return WalkType.POST_CHILDREN;
 	}
-	
-	
+		
 	public Object visit(ASTForeachInit node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)		
 			return WalkType.POST_CHILDREN;	
@@ -1607,72 +1614,89 @@ public class ClassChecker extends BaseChecker
 	}	
 	
 	
+
+	
+	public Object visit(ASTFinallyStatement node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			if( node.getBlocks() <= 0 )
+				addError( node, Error.TYPE_MIS, "try statement must have at least one catch, recover, or finally block" );
+		}
+		
+		return WalkType.POST_CHILDREN;		
+	}
+	
+	public Object visit(ASTRecoverStatement node, Boolean secondVisit) throws ShadowException
+	{	
+		if( !secondVisit )
+		{
+			if( node.hasRecover() )
+			{
+				ASTTryStatement grandchild = (ASTTryStatement) node.jjtGetChild(0).jjtGetChild(0);
+				grandchild.addRecover();
+			}				
+		}		
+		
+		return WalkType.POST_CHILDREN;		
+	}
+	
+	
 	@Override
-	public Object visit(ASTCatchStatement node, Boolean secondVisit) throws ShadowException 
+	public Object visit(ASTCatchStatements node, Boolean secondVisit) throws ShadowException 
 	{	
 		if( secondVisit )
 		{
-			Node child = node.jjtGetChild(0); //formal parameter
-			Type type = child.getType();
+			List<Type> types = node.getCatchParameters();
 			
-			if( !(type instanceof ExceptionType) )
-				addError( child, Error.TYPE_MIS, "found " + type + " but only exception types allowed for catch parameters");
-			
-			if( child.getModifiers().getModifiers() != 0 )
-				addError( child, Error.TYPE_MIS, "cannot apply modifiers to catch parameters");
-			
-			node.setType(type);
-		}
-		
-		createScope( secondVisit );
-		
+			for( int i = 0; i < node.getCatches(); i++ )
+			{	
+				Node child = node.jjtGetChild(i + 1); //catches after the try
+				Type type = child.getType();				
 				
-		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	public Object visit(ASTTryStatement node, Boolean secondVisit) throws ShadowException 
-	{		
-		if(secondVisit)
-		{
-			if( node.getBlocks() == 0 )
-				addError( node, Error.TYPE_MIS, "try statement must have at least one catch, recover, or finally block" );
-						
-			tryBlocks.removeFirst();									
-		}	
-		else
-			tryBlocks.addFirst(node);
-			
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	public Object visit(ASTInnerTryStatement node, Boolean secondVisit) throws ShadowException
-	{
-		if(secondVisit)
-		{	
-			List<Type> types = new LinkedList<Type>();
-			
-			for( int i = 0; i < node.getCatches(); i++ )				
-			{
-				//catch statement
-				Node child = node.jjtGetChild(i+1); //skip first block
-				Type type = child.getType();
-				
-				for( Type existing : types )
-					if( type.isSubtype(existing) )
+				for( Type catchParameter : types )				
+					if( type.isSubtype(catchParameter) )
 					{
 						addError( child, Error.TYPE_MIS, "unreachable catch: " + type );
 						break;
 					}
-					
-				types.add(type);
+				
+				types.add(type); //adds to node's permanent list			
 			}
+		}
+				
+		return WalkType.POST_CHILDREN;	
+	}
+	
+	@Override
+	public Object visit(ASTCatchStatement node, Boolean secondVisit) throws ShadowException	
+	{	
+		if( secondVisit )
+		{		
+			Node child = node.jjtGetChild(0);
+			Type type = child.getType();
 			
-			//no checking necessary for recover			
-		}	
+			if( !(type instanceof ExceptionType) )
+				addError( child, Error.TYPE_MIS, "found " + type + " but only exception types allowed for catch parameters");
 		
-		return WalkType.POST_CHILDREN;		
+			if( child.getModifiers().getModifiers() != 0 )
+				addError( child, Error.TYPE_MIS, "cannot apply modifiers to catch parameters");
+		}
+		
+		createScope(secondVisit); //for catch parameter
+		
+		return WalkType.POST_CHILDREN;	
+		
+	}
+	
+	public Object visit(ASTTryStatement node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+			tryBlocks.removeLast();
+		else
+			tryBlocks.add(node);		
+		
+		return WalkType.POST_CHILDREN;	
 	}
 	
 	public Object visit(ASTCheckExpression node, Boolean secondVisit) throws ShadowException 
@@ -1703,10 +1727,8 @@ public class ClassChecker extends BaseChecker
 		{
 			boolean found = false;
 			for( ASTTryStatement statement : tryBlocks )
-			{
-				ASTInnerTryStatement innerStatement = (ASTInnerTryStatement) statement.jjtGetChild(0);			
-				
-				if( innerStatement.hasRecover() )
+			{	
+				if( statement.hasRecover() )
 				{
 					found = true;
 					break;
@@ -1714,7 +1736,7 @@ public class ClassChecker extends BaseChecker
 			}
 			
 			if( !found )
-				addError( node, Error.TYPE_MIS, "check expression not inside of try statement with recover block");
+				addError( node, Error.TYPE_MIS, "check expression has not matching recover block");
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2899,8 +2921,8 @@ public class ClassChecker extends BaseChecker
 			else
 				addError(node, Error.INVL_TYP, "Cannot call explicit create on non-class type");
 			
-			ASTCreateDeclaration parent = (ASTCreateDeclaration) node.jjtGetParent();
-			parent.setExplicitInvocation(true);
+			ASTCreateDeclaration grandparent = (ASTCreateDeclaration) node.jjtGetParent().jjtGetParent();
+			grandparent.setExplicitInvocation(true);
 		}		
 		
 		return WalkType.POST_CHILDREN; 
