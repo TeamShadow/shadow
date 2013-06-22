@@ -4,22 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTTryStatement extends SimpleNode
-{
-	
-	private boolean recover = false;
-	
-	public void addRecover()
-	{
-		recover = true;		
-	}
-	
-	public boolean hasRecover()
-	{
-		return recover;		
-	}
-	
-	
+class ASTTryStatement extends SimpleNode {
   public ASTTryStatement(int id) {
     super(id);
   }
@@ -29,9 +14,35 @@ class ASTTryStatement extends SimpleNode
   }
 
 
+  public ASTCatchStatements getCatchStatements() {
+    return (ASTCatchStatements)jjtGetParent();
+  }
+
+  public ASTRecoverStatement getRecoverStatement() {
+    return (ASTRecoverStatement)jjtGetParent().jjtGetParent();
+  }
+
+  public ASTFinallyStatement getFinallyStatement() {
+    return (ASTFinallyStatement)jjtGetParent().jjtGetParent().jjtGetParent();
+  }
+
+
+  public int getBlocks() {
+    int blocks = getCatchStatements().getCatches();
+
+    if (getRecoverStatement().hasRecover())
+        blocks++;
+
+    if (getFinallyStatement().hasFinally())
+        blocks++;
+
+    return blocks;
+  }
+
+
   /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
-    return visitor.visit(this, secondVisit);
+  public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
+    return visitor.visit(this, data);
   }
 }
 /* JavaCC - OriginalChecksum=d0a6f893a75cd9fcdc4d152c1f6b63fc (do not edit this line) */

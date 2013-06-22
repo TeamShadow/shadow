@@ -5,26 +5,17 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTRecoverStatement extends SimpleNode {
-	
-	
-	private boolean recover = false;
-	
-	public void addRecover()
-	{
-		recover = true;		
-	}
-	
-	public boolean hasRecover()
-	{
-		return recover;		
-	}
-	
   public ASTRecoverStatement(int id) {
     super(id);
   }
 
   public ASTRecoverStatement(ShadowParser p, int id) {
     super(p, id);
+  }
+
+
+  public boolean hasRecover() {
+    return jjtGetNumChildren() == 2;
   }
 
 

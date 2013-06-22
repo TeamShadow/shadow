@@ -5,45 +5,17 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTFinallyStatement extends SimpleNode {
-	
-	private boolean _finally = false;
-	
-	
-	public void addFinally()
-	{
-		_finally = true;
-	}
-	
-	public boolean hasFinally()
-	{
-		return _finally;		
-	}
-	
-	public int getBlocks()
-	{
-		int value = 0;
-		
-		if( _finally )
-			value++;
-		
-		ASTRecoverStatement child = (ASTRecoverStatement) jjtGetChild(0);
-		if( child.hasRecover() )
-			value++;
-		
-		ASTCatchStatements grandchild = (ASTCatchStatements) child.jjtGetChild(0);
-		value += grandchild.getCatches();
-		
-		return value;
-		
-	}
-	
-	
   public ASTFinallyStatement(int id) {
     super(id);
   }
 
   public ASTFinallyStatement(ShadowParser p, int id) {
     super(p, id);
+  }
+
+
+  public boolean hasFinally() {
+    return jjtGetNumChildren() == 2;
   }
 
 

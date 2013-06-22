@@ -2,44 +2,20 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import shadow.typecheck.type.Type;
-
 public
 @SuppressWarnings("all")
 class ASTCatchStatements extends SimpleNode {
-
-	private int catches = 0;
-	private List<Type> catchParameters = new ArrayList<Type>();
-	
-	public void addCatch()
-	{
-		catches++;		
-	}
-	
-	public int getCatches()
-	{		
-		return catches;		
-	}
-	
-	public void addCatchParameter(Type type)
-	{
-		catchParameters.add(type);
-	}
-	
-	public List<Type> getCatchParameters()
-	{
-		return catchParameters;
-	}
-	
   public ASTCatchStatements(int id) {
     super(id);
   }
 
   public ASTCatchStatements(ShadowParser p, int id) {
     super(p, id);
+  }
+
+
+  public int getCatches() {
+    return jjtGetNumChildren() - 1;
   }
 
 

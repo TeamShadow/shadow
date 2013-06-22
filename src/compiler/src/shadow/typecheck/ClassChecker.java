@@ -48,7 +48,6 @@ import shadow.parser.javacc.ASTExplicitCreateInvocation;
 import shadow.parser.javacc.ASTExpression;
 import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
-import shadow.parser.javacc.ASTFinallyStatement;
 import shadow.parser.javacc.ASTForInit;
 import shadow.parser.javacc.ASTForStatement;
 import shadow.parser.javacc.ASTForeachInit;
@@ -74,7 +73,6 @@ import shadow.parser.javacc.ASTPrimarySuffix;
 import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTProperty;
 import shadow.parser.javacc.ASTQualifiedKeyword;
-import shadow.parser.javacc.ASTRecoverStatement;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTRelationalExpression;
 import shadow.parser.javacc.ASTResultType;
@@ -1613,41 +1611,12 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}	
 	
-	
-
-	
-	public Object visit(ASTFinallyStatement node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{
-			if( node.getBlocks() <= 0 )
-				addError( node, Error.TYPE_MIS, "try statement must have at least one catch, recover, or finally block" );
-		}
-		
-		return WalkType.POST_CHILDREN;		
-	}
-	
-	public Object visit(ASTRecoverStatement node, Boolean secondVisit) throws ShadowException
-	{	
-		if( !secondVisit )
-		{
-			if( node.hasRecover() )
-			{
-				ASTTryStatement grandchild = (ASTTryStatement) node.jjtGetChild(0).jjtGetChild(0);
-				grandchild.addRecover();
-			}				
-		}		
-		
-		return WalkType.POST_CHILDREN;		
-	}
-	
-	
 	@Override
 	public Object visit(ASTCatchStatements node, Boolean secondVisit) throws ShadowException 
 	{	
 		if( secondVisit )
 		{
-			List<Type> types = node.getCatchParameters();
+			List<Type> types = new ArrayList<Type>();
 			
 			for( int i = 0; i < node.getCatches(); i++ )
 			{	
@@ -1692,7 +1661,11 @@ public class ClassChecker extends BaseChecker
 	public Object visit(ASTTryStatement node, Boolean secondVisit) throws ShadowException
 	{
 		if( secondVisit )
+		{
+			if( node.getBlocks() <= 0 )
+				addError( node, Error.TYPE_MIS, "try statement must have at least one catch, recover, or finally block" );
 			tryBlocks.removeLast();
+		}
 		else
 			tryBlocks.add(node);		
 		
@@ -1728,7 +1701,7 @@ public class ClassChecker extends BaseChecker
 			boolean found = false;
 			for( ASTTryStatement statement : tryBlocks )
 			{	
-				if( statement.hasRecover() )
+				if( statement.getRecoverStatement().hasRecover() )
 				{
 					found = true;
 					break;
