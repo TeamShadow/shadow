@@ -38,7 +38,7 @@ public class TypeInstantiater extends BaseChecker {
 		super(debug, hashMap, importList, packageTree);		
 	}
 	
-	public void instantiateTypes(Map<Type,Node> nodeTable) throws ShadowException
+	public void instantiateTypes(Map<Type,Node> nodeTable) throws ShadowException, TypeCheckException
 	{	
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
 		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();		
@@ -55,7 +55,7 @@ public class TypeInstantiater extends BaseChecker {
 			{
 				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
 				if( dependencyNode == null )
-					addError(declarationNode, "Dependency not found");
+					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " + declarationNode.getType() + " is dependent on unavailable type " + dependency);
 				else
 					graph.addEdge(dependencyNode, declarationNode);				
 			}
@@ -90,7 +90,7 @@ public class TypeInstantiater extends BaseChecker {
 						 }
 						 catch (InstantiationException e)
 						 {							
-							 addError(declarationNode, Error.INVL_TYP, e.getMessage() );
+							 addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 						 }							 
 					 }
 				}
@@ -115,7 +115,7 @@ public class TypeInstantiater extends BaseChecker {
 								} 
 								catch (InstantiationException e) 
 								{									
-									addError(signature.getNode(), Error.INVL_TYP, e.getMessage() );
+									addError(signature.getNode(), Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 								}
 							}
 						}
@@ -130,7 +130,7 @@ public class TypeInstantiater extends BaseChecker {
 								} 
 								catch (InstantiationException e) 
 								{									
-									addError(signature.getNode(), Error.INVL_TYP, e.getMessage() );
+									addError(signature.getNode(), Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 								}
 							}
 						}						
@@ -142,7 +142,7 @@ public class TypeInstantiater extends BaseChecker {
 		catch( CycleFoundException e )
 		{
 			Type type = (Type) e.getCycleCause();			
-			addError(nodeTable.get(type), Error.INVL_TYP, "Type " + type + " contains a circular type parameter definition");
+			addError(nodeTable.get(type), Error.INVALID_TYPE_PARAMETERS, "Type " + type + " contains a circular type parameter definition");
 		}
 				
 			
@@ -180,11 +180,10 @@ public class TypeInstantiater extends BaseChecker {
 			}
 		}
 		
-		Type hashSet = null;
-		Type arrayList = null;
+		
 		
 		try
-		{
+		{			
 			nodeList = graph.topologicalSort();
 			
 			for(Node declarationNode : nodeList )
@@ -194,11 +193,7 @@ public class TypeInstantiater extends BaseChecker {
 				{
 					ClassType classType = (ClassType) type;					
 					ClassType parent = classType.getExtendType();
-					if( classType.getTypeName().endsWith("HashSet") )
-						hashSet = classType;
-					else if( classType.getTypeName().endsWith("ArrayList") )
-						arrayList = classType;
-					
+
 					//update parent
 					if( parent != null && parent instanceof UninstantiatedClassType )
 					{
@@ -209,7 +204,7 @@ public class TypeInstantiater extends BaseChecker {
 						} 
 						catch (InstantiationException e) 
 						{
-							addError(declarationNode, Error.INVL_TYP, e.getMessage() );
+							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 						}
 					}
 					
@@ -227,7 +222,7 @@ public class TypeInstantiater extends BaseChecker {
 							} 
 							catch (InstantiationException e) 
 							{
-								addError(declarationNode, Error.INVL_TYP, e.getMessage() );
+								addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 							}						
 						}
 					}
@@ -248,7 +243,7 @@ public class TypeInstantiater extends BaseChecker {
 							} 
 							catch (InstantiationException e) 
 							{
-								addError(declarationNode, Error.INVL_TYP, e.getMessage() );
+								addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 							}						
 						}
 					}
@@ -258,19 +253,10 @@ public class TypeInstantiater extends BaseChecker {
 		catch( CycleFoundException e )
 		{
 			Type type = (Type) e.getCycleCause();			
-			addError(nodeTable.get(type), Error.INVL_TYP, "Type " + type + " contains a circular extends or implements definition");
+			addError(nodeTable.get(type), Error.INVALID_HIERARCHY, "Type " + type + " contains a circular extends or implements definition");
 		}
 			
-			/*
-			ASTWalker walker = new ASTWalker(this);			
-			
-			//no need to walk?  seems like stuff is already updated
-			//walk over all the files (updates nodes in case they need the right values)
-			for( Node node : nodeTable.values() )								
-				walker.walk(node);
-			*/
-		
-		
+
 		
 		for( Node declarationNode : nodeTable.values() )	
 		{			
@@ -336,10 +322,16 @@ public class TypeInstantiater extends BaseChecker {
 						String message = "Type " + classType + " does not implement interface " + interfaceType;
 						for( String reason : reasons )
 							message += "\n\t" + reason;
-						addError(Error.INVL_TYP, message );
+						addError(Error.MISSING_INTERFACE, message );
 					}
 				}
 			}
+		}
+		
+		if( errorList.size() > 0 )
+		{
+			printErrors();
+			throw errorList.get(0);
 		}
 	}
 	
@@ -366,7 +358,7 @@ public class TypeInstantiater extends BaseChecker {
 							}
 							catch( InstantiationException e )
 							{
-								addError(declarationNode, Error.INVL_TYP, e.getMessage() );
+								addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 							}								
 						}
 						
@@ -393,7 +385,7 @@ public class TypeInstantiater extends BaseChecker {
 			} 
 			catch (InstantiationException e) 
 			{
-				addError(node, Error.INVL_TYP, e.getMessage() );
+				addError(node, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 			}
 		}		
 		
@@ -433,7 +425,7 @@ public class TypeInstantiater extends BaseChecker {
 			node.setType(type);
 			
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
-				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");				
+				addError(node, Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);				
 		}
 		
 		return WalkType.POST_CHILDREN;	

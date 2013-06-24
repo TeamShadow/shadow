@@ -40,7 +40,7 @@ public class TypeChecker {
 	 * @throws ParseException 
 	 * @throws IOException 
 	 */
-	public Node typeCheck(File file) throws ShadowException, ParseException, IOException
+	public Node typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException
 	{	 
 		mainFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
@@ -52,13 +52,6 @@ public class TypeChecker {
 		//return value is the top node for the class we are compiling		
 		Node node = collector.collectTypes( file );	
 		
-		// see how many errors we found
-		if(collector.getErrorCount() > 0)
-		{
-			collector.printErrors();
-			return null;
-		}		
-		
 		//Updates types, adding:
 		//Fields and methods
 		//Type parameters
@@ -67,45 +60,18 @@ public class TypeChecker {
 		TypeUpdater updater = new TypeUpdater(debug, typeTable, importList, packageTree);
 		updater.updateTypes( collector.getFiles() );
 		
-		// see how many errors we found
-		if(updater.getErrorCount() > 0)
-		{
-			updater.printErrors();
-			return null;
-		}
-		
-		
-		logger.debug("TYPE UPDATING DONE");
-	
-		
 		//then we instantiate all the types after checking to make sure that we can
 		//One reason we have to do this is to catch incomplete generic types:
 		//class A<T is A<T>>
 		//Another is that we can't instantiate before fields and methods are added
 		TypeInstantiater instantiater = new TypeInstantiater( debug, typeTable, importList, packageTree );
 		instantiater.instantiateTypes( collector.getNodeTable() );
-
-		// see how many errors we found
-		if(instantiater.getErrorCount() > 0)
-		{
-			instantiater.printErrors();
-			return null;
-		}	
-				
+		
 		printMetaFiles( collector.getFiles() );		
 		
 		ClassChecker checker = new ClassChecker(debug, typeTable, importList, packageTree );
-		ASTWalker walker = new ASTWalker(checker);
-		
-		// now go through and check the whole class
-		walker.walk(node);	
-
-		// see how many errors we found
-		if(checker.getErrorCount() > 0) {
-			checker.printErrors();
-			return null;
-		}
-		
+		checker.checkClass(node);		
+	
 		return node;
 	}
 	

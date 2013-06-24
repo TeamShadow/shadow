@@ -65,7 +65,7 @@ public class TypeCollector extends BaseChecker
 		return nodeTable;
 	}				
 		
-	public Node collectTypes(File input) throws ParseException, ShadowException, IOException
+	public Node collectTypes(File input) throws ParseException, ShadowException, TypeCheckException, IOException
 	{			
 		//Create walker
 		ASTWalker walker = new ASTWalker( this );
@@ -138,7 +138,7 @@ public class TypeCollector extends BaseChecker
 					}
 					catch(PackageException e)
 					{
-						addError( node, Error.INVL_TYP, e.getMessage() );				
+						addError( node, Error.INVALID_PACKAGE, e.getMessage() );				
 					}
 				}
 				
@@ -171,7 +171,13 @@ public class TypeCollector extends BaseChecker
 					if( !nodeTable.containsKey(type) )
 						nodeTable.put(type, otherNodeTable.get(type));				
 			}
-		}
+		}		
+		
+		if( errorList.size() > 0 )
+		{
+			printErrors();
+			throw errorList.get(0);
+		}		
 		
 		//return the node corresponding to the file being compiled
 		return resultNode;
@@ -196,7 +202,7 @@ public class TypeCollector extends BaseChecker
 				currentPackage = packageTree.addQualifiedPackage(name, typeTable);
 			}
 			else
-				addError( node, Error.INVL_TYP, "Only outermost classes can define a package" );			
+				addError( node, Error.INVALID_PACKAGE, "Package can only be defined by outermost classes" );			
 		}
 		
 		String image = node.getImage();		
@@ -226,7 +232,7 @@ public class TypeCollector extends BaseChecker
 		
 		if( lookupType(typeName) != null )
 		{
-			addError( node, Error.MULT_SYM, "Type " + typeName + " already defined" );
+			addError( node, Error.MULTIPLY_DEFINED_SYMBOL, "Type " + typeName + " already defined" );
 			node.setType(Type.UNKNOWN);
 		}
 		else
@@ -319,7 +325,7 @@ public class TypeCollector extends BaseChecker
 			}
 			catch(PackageException e)
 			{
-				addError( node, Error.INVL_TYP, e.getMessage() );				
+				addError( node, Error.INVALID_PACKAGE, e.getMessage() );				
 			}
 			
 			node.setType(type);	
@@ -419,7 +425,7 @@ public class TypeCollector extends BaseChecker
 			
 		}
 		else
-			addError(Error.UNDEF_TYP, "No import paths specified, cannot import " + name);
+			addError(Error.INVALID_IMPORT, "No import paths specified, cannot import " + name);
 		
 		return false;
 	}

@@ -49,5 +49,5 @@ CanIterate -> foreach
 Should class names always be separated with colons?
 How do you instance an inner singleton?
 
-Singletons should not be accessible inside of constructors, for leakage reasons.
+Singletons should not be accessible inside of constructors, for leakage reasons. <== does that matter?
 

@@ -33,7 +33,7 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 		}
 		
 		if( !type.getTypeParameters().canAccept(typeArguments) )
-			throw new InstantiationException( "Type parameters " + type.getTypeParameters() + " cannot accept type arguments " + typeArguments );
+			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
 		
 		return type.replace(type.getTypeParameters(), typeArguments);
 	}

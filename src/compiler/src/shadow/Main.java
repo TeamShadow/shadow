@@ -27,6 +27,7 @@ import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
+import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
 import shadow.typecheck.type.Type;
 
@@ -123,19 +124,16 @@ public class Main {
 				// get the start time for the compile
 				long startTime = System.currentTimeMillis();
 
-				// parse the file
-				/*
-				SimpleNode node = parser.CompilationUnit();
-
-				if(Loggers.TYPE_CHECKER.isTraceEnabled())
-					node.dump("");
-				*/
 				// type check the AST
-				Node node = checker.typeCheck(shadowFile);
-
-				if(node == null) {
+				Node node = null;
+				
+				try
+				{
+					node = checker.typeCheck(shadowFile);
+				}
+				catch( TypeCheckException e )
+				{				
 					logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");
-
 					return TYPE_CHECK_ERROR;
 				}
 

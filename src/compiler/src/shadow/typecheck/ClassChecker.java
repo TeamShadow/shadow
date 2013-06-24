@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import shadow.AST.ASTUtils;
+import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTAdditiveExpression;
 import shadow.parser.javacc.ASTAllocation;
@@ -106,6 +107,7 @@ import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -135,10 +137,23 @@ public class ClassChecker extends BaseChecker
 	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<String> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
-		curPrefix = new LinkedList<Node>();
-		labels = new LinkedList<Node>();	
+		curPrefix = new LinkedList<Node>();			
 		tryBlocks = new LinkedList<ASTTryStatement>();
 		scopeMethods = new LinkedList<Node>();
+	}
+	
+	public void checkClass(Node node) throws ShadowException, TypeCheckException
+	{
+		ASTWalker walker = new ASTWalker(this);
+		
+		// now go through and check the whole class
+		walker.walk(node);
+		
+		if( errorList.size() > 0 )
+		{
+			printErrors();
+			throw errorList.get(0);
+		}	
 	}
 	
 	public Object visitMethod( SignatureNode node, Boolean secondVisit  )
@@ -197,14 +212,14 @@ public class ClassChecker extends BaseChecker
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		Type type = node.jjtGetChild(0).getType();
-		if(!type.isIntegral() && !type.isString())//TODO allow enum types
-			addError(node,Error.INVL_TYP, "Found type " + type + ", but integral or string type required for switch.");
+		if(!type.isIntegral() && !type.isString() && !(type instanceof EnumType))
+			addError(node,Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in switch statement, only integral, String, and enum types allowed");
 		for(int i=1;i<node.jjtGetNumChildren();++i) {
 			Node childNode = node.jjtGetChild(i);
 			if(childNode.getClass() == ASTSwitchLabel.class) {
 				if(childNode.getType() != null){ //default label should have null type 
 					if(!childNode.getType().isSubtype(type)) {
-						addError(childNode,Error.TYPE_MIS,"Label type " + childNode.getType() + " does not match switch type " + type + ".");
+						addError(childNode,Error.MISMATCHED_TYPE,"Label type " + childNode.getType() + " does not match switch type " + type);
 					}
 				}
 			}
@@ -216,7 +231,7 @@ public class ClassChecker extends BaseChecker
 		pushUpType(node, secondVisit);
 		
 		if( secondVisit && node.jjtGetNumChildren() > 0 && !node.getModifiers().isConstant() )
-			addError(node, Error.INVL_MOD, "Label must have constant value");			
+			addError(node, Error.INVALID_TYPE, "Value supplied as label must be constant");			
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -279,7 +294,7 @@ public class ClassChecker extends BaseChecker
 				// get the name of the parameter							
 				// check if it's already in the set of parameter names
 				if(signature.containsParam(paramSymbol))
-					addError(parameter.jjtGetChild(1), Error.MULT_SYM, "In parameter names");					
+					addError(parameter.jjtGetChild(1), Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + paramSymbol + " cannot be redefined in this context");					
 							
 				//child 1 is type
 				Node child = parameter.jjtGetChild(1);			
@@ -290,7 +305,7 @@ public class ClassChecker extends BaseChecker
 				// make sure this type is in the type table
 				if(parameter.getType() == null)		
 				{
-					addError(child, Error.UNDEF_TYP);
+					addError(child, Error.UNDEFINED_TYPE);
 					parameter.setType(Type.UNKNOWN);
 				}
 					
@@ -305,12 +320,27 @@ public class ClassChecker extends BaseChecker
 	
 	public void addSymbol( String name, ModifiedType node )
 	{
-		if( symbolTable.get(0).containsKey( name ) ) //we only look at current scope
-			addError(Error.MULT_SYM, name);
-		else if( symbolTable.size() == 0 )
-			addError(Error.INVL_TYP, "No valid scope for variable declaration");
+				
+		
+		if( symbolTable.size() == 0 )
+			addError(Error.INVALID_STRUCTURE, "Declaration is illegal outside of a defined scope");
 		else
-			symbolTable.getFirst().put(name, node);  //uses node for modifiers
+		{
+			boolean found = false;
+		
+			for( HashMap<String, ModifiedType> scope : symbolTable )
+			{			
+				if( scope.containsKey( name ) ) //we look at all enclosing scopes
+				{
+					addError(Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + name + " cannot be redefined in this context");
+					found = true;
+					break;
+				}
+			}
+			
+			if( !found )			
+				symbolTable.getFirst().put(name, node);  //uses node for modifiers
+		}
 	}
 	
 	
@@ -350,7 +380,7 @@ public class ClassChecker extends BaseChecker
 			Type type = node.jjtGetChild(1).getType();
 			node.setType( type );
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
-				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");			
+				addError(node, Error.INVALID_MODIFIER, "Modifer nullable cannot be applied to primitive type " + type);			
 			
 			if( node.jjtGetParent() instanceof ASTCatchStatement )
 			{
@@ -389,7 +419,7 @@ public class ClassChecker extends BaseChecker
 						}
 					
 						if( !foundDefault )
-							addError(node, Error.INVL_TYP, "No explicit create invocation and parent class does not implement the default create");
+							addError(node, Error.MISSING_CREATE, "Explicit create invocation is missing, and parent class " + parentType + " does not implement the default create");
 					}					
 				}
 			}
@@ -441,12 +471,12 @@ public class ClassChecker extends BaseChecker
 		
 		if(type == null)
 		{			
-			addError(node.jjtGetChild(start), Error.UNDEF_TYP, node.jjtGetChild(start).jjtGetChild(0).getImage());
+			addError(node.jjtGetChild(start), Error.UNDEFINED_TYPE, "Type " + node.jjtGetChild(start).jjtGetChild(0).getImage() + " not defined in this context");
 			return;
 		}		
 		
 		if( type.isPrimitive() && node.getModifiers().isNullable() )		
-			addError(node.jjtGetChild(start), Error.TYPE_MIS, "Cannot declare primitive type " + type + " as nullable");				
+			addError(node.jjtGetChild(start), Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);				
 			
 		// go through and add the variables
 		for(int i = start; i < node.jjtGetNumChildren(); ++i)
@@ -503,7 +533,7 @@ public class ClassChecker extends BaseChecker
 				
 				if( type == null )
 				{
-					addError(node, Error.UNDEF_TYP, "Variable declared auto has no initializer to infer type from");
+					addError(node, Error.UNDEFINED_TYPE, "Variable declared auto has no initializer to infer type from");
 					type = Type.UNKNOWN;
 				}
 			}			
@@ -564,7 +594,7 @@ public class ClassChecker extends BaseChecker
 				node.addModifier(Modifiers.FIELD);
 				
 				if( field.getModifiers().isPrivate() && currentType != classType   )
-					addError(node, Error.INVL_MOD, "Cannot access private variable " + field.getImage());						
+					addError(node, Error.ILLEGAL_ACCESS, "Private variable " + field.getImage() + "not accessible from this context");						
 				
 				return true;			
 			}
@@ -665,7 +695,7 @@ public class ClassChecker extends BaseChecker
 			Type current = node.jjtGetChild(i).getType(); 
 			if( !result.isNumerical() || !current.isNumerical() )
 			{
-				addError(node, Error.INVL_TYP, "Relational operator not defined on types " + result + " and " + current);
+				addError(node, Error.INVALID_TYPE, "Relational operator not defined on types " + result + " and " + current);
 				node.setType(Type.UNKNOWN);
 				return WalkType.POST_CHILDREN;
 			}	
@@ -707,7 +737,7 @@ public class ClassChecker extends BaseChecker
 			Type current = node.jjtGetChild(i).getType(); 
 			if( !result.isSubtype(current) && !current.isSubtype(result) )
 			{
-				addError(node, Error.INVL_TYP, "Equality operator not defined on types " + result + " and " + current);
+				addError(node, Error.INVALID_TYPE, "Equality operator not defined on types " + result + " and " + current);
 				node.setType(Type.UNKNOWN);
 				return WalkType.POST_CHILDREN;
 			}	
@@ -736,7 +766,7 @@ public class ClassChecker extends BaseChecker
 				
 				if( !current.isIntegral() || !result.isIntegral() )				
 				{
-					addError(child, Error.INVL_TYP, "Shift and rotate operations not defined on types " + result + " and " + current);
+					addError(child, Error.INVALID_TYPE, "Shift and rotate operations not defined on types " + result + " and " + current);
 					node.setType(Type.UNKNOWN);
 					return;
 				}
@@ -775,7 +805,7 @@ public class ClassChecker extends BaseChecker
 					result = current;
 				else if( !current.isSubtype(result) )
 				{
-					addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot apply arithmetic operations to " + result + " and " + current);
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply arithmetic operations to " + result + " and " + current);
 					node.setType(Type.UNKNOWN);
 					return;					
 				}					
@@ -800,14 +830,14 @@ public class ClassChecker extends BaseChecker
 					result = signature.getReturnTypes().getType(0);
 				else
 				{
-					addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot apply arithmetic operations to " + result + " and " + current);
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply arithmetic operations to " + result + " and " + current);
 					node.setType(Type.UNKNOWN);
 					return;
 				}				
 			}
 			else		
 			{
-				addError(node.jjtGetChild(i), Error.INVL_TYP, "Cannot apply arithmetic operations to " + result + " and " + current);
+				addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply arithmetic operations to " + result + " and " + current);
 				node.setType(Type.UNKNOWN);
 				return;						
 			}				
@@ -859,7 +889,7 @@ public class ClassChecker extends BaseChecker
 			{
 				if( !type.isNumerical() )
 				{
-					addError(node, Error.INVL_TYP, "Found type " + type + ", but numerical type required for arithmetic operations");
+					addError(node, Error.INVALID_TYPE, "Arithmetic operations cannot be applied to type " + type);
 					node.setType(Type.UNKNOWN);
 					return WalkType.POST_CHILDREN;
 				}
@@ -886,7 +916,7 @@ public class ClassChecker extends BaseChecker
 		{
 			if( !type.isIntegral() )
 			{
-				addError(node, Error.INVL_TYP, "Found type " + type + ", but integral type required for bitwise operations");
+				addError(node, Error.INVALID_TYPE, "Supplied type " + type + "cannot be used with a bitwise operator, integral type required");
 				type = Type.UNKNOWN;				
 			}
 		}		
@@ -894,7 +924,7 @@ public class ClassChecker extends BaseChecker
 		{
 			if( !type.equals(Type.BOOLEAN)) 
 			{
-				addError(node, Error.INVL_TYP, "Found type " + type + ", but boolean type required for logical operations");
+				addError(node, Error.INVALID_TYPE, "Supplied type " + type + "cannot be used with a logical operator, boolean type required");
 				type = Type.UNKNOWN;				
 			}
 		}
@@ -920,7 +950,7 @@ public class ClassChecker extends BaseChecker
 			
 			if( !t1.equals(Type.BOOLEAN) ) 
 			{			
-				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type" + t1 + ", but boolean type required for conditional operations");
+				addError(node.jjtGetChild(0), Error.INVALID_TYPE, "Supplied type " + t1 + " cannot be used in the condition of a ternary operator, boolean type required");
 				node.setType(Type.UNKNOWN);
 			}
 			else if( t2.isSubtype(t3) )
@@ -929,7 +959,7 @@ public class ClassChecker extends BaseChecker
 				node.setType(t2);
 			else 
 			{
-				addError(node, Error.TYPE_MIS, "Type " + t2 + " must match " + t3 + " in ternary operator");
+				addError(node, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of ternary operator");
 				node.setType(Type.UNKNOWN);
 			}
 		}		
@@ -951,7 +981,7 @@ public class ClassChecker extends BaseChecker
 			
 				if( result != Type.BOOLEAN )
 				{
-					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + result + ", but boolean type required for conditional operations");			
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Supplied type " + result + " cannot be used with a logical operator, boolean type required");			
 					node.setType(Type.UNKNOWN);
 					return;
 				}					
@@ -983,7 +1013,7 @@ public class ClassChecker extends BaseChecker
 						isNullable = false;
 						if( i < node.jjtGetNumChildren() - 1 )  //only last child can be nullable
 						{	
-							addError(child, Error.INVL_TYP, "Only the last term in a coalesce expression can be non-nullable");
+							addError(child, Error.INVALID_TYPE, "Only the last term in a coalesce expression can be non-nullable");
 							result = Type.UNKNOWN;
 							break;
 						}
@@ -995,7 +1025,7 @@ public class ClassChecker extends BaseChecker
 						result = type;
 					else if( !type.isSubtype(result) ) //neither is subtype of other, panic!
 					{
-						addError(node, Error.INVL_TYP, "Types in coalesce expression do not match");
+						addError(node, Error.MISMATCHED_TYPE, "Supplied type " + type + " does not match type " + result + " in coalesce expression");
 						result = Type.UNKNOWN;
 						break;
 					}
@@ -1038,7 +1068,7 @@ public class ClassChecker extends BaseChecker
 			Type result = node.jjtGetChild(0).getType();
 			if( !result.isIntegral() )
 			{
-				addError(node.jjtGetChild(0), Error.INVL_TYP, "Found type " + result + ", but integral type required for shift and rotate operations");
+				addError(node.jjtGetChild(0), Error.INVALID_TYPE, "Supplied type " + result + " cannot be used with a shift or rotate operator, integral type required");
 				node.setType(Type.UNKNOWN);
 				return;
 			}
@@ -1049,7 +1079,7 @@ public class ClassChecker extends BaseChecker
 			
 				if( !current.isIntegral() )
 				{
-					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + current + ", but integral type required for shift and rotate operations");
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Supplied type " + current + " cannot be used with a shift or rotate operator, integral type required");
 					node.setType(Type.UNKNOWN);
 					return;
 				}
@@ -1096,12 +1126,12 @@ public class ClassChecker extends BaseChecker
 		
 		if( !rightType.isSubtype(leftType) )
 		{
-			addError(errorNode, Error.TYPE_MIS, "Found type " + rightType + ", type " + leftType + " required");
+			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with type " + rightType + " cannot be assigned to left hand side with type " + leftType);
 			return false;
 		}
 		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 		{
-			addError(errorNode, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
+			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
 			return false;
 		}
 		
@@ -1125,7 +1155,7 @@ public class ClassChecker extends BaseChecker
 			}
 			else
 			{
-				addError(errorNode, Error.TYPE_MIS, "Property " + right + "does not have get access.");
+				addError(errorNode, Error.ILLEGAL_ACCESS, "Property " + right + "does not have get access");
 				return false;
 			}
 		}
@@ -1144,7 +1174,7 @@ public class ClassChecker extends BaseChecker
 			}
 			else
 			{
-				addError(errorNode, Error.TYPE_MIS, "Property with type " + propertyType + " cannot accept type " + rightType + " in this assignment");
+				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with type " + rightType + " cannot be assigned to property with type " + propertyType);
 				return false;
 			}
 		}
@@ -1154,24 +1184,24 @@ public class ClassChecker extends BaseChecker
 			
 			if( !leftType.acceptsAssignment(rightType, assignmentType)  )
 			{
-				addError(errorNode, Error.TYPE_MIS, "Found type " + rightType + ", type " + leftType + " required");
+				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with type " + rightType + " cannot be assigned to left hand side with type " + leftType);
 				return false;
 			}
 		}
 		
 		if( !leftModifiers.isAssignable() )
 		{
-			addError(errorNode, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
+			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
 			return false;
 		}		
 		else if( leftModifiers.isConstant() )
 		{
-			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to variable marked constant");
+			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
 			return false;			
 		}				
 		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 		{
-			addError(errorNode, Error.TYPE_MIS, "Cannot assign a nullable value to a non-nullable variable");			
+			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
 			return false;
 		}
 		
@@ -1179,7 +1209,7 @@ public class ClassChecker extends BaseChecker
 		{			
 			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() )
 			{
-				addError(errorNode, Error.INVL_TYP, "Cannot assign a non-immutable value to an immutable reference");
+				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side");
 				return false;
 			}
 			
@@ -1198,7 +1228,7 @@ public class ClassChecker extends BaseChecker
 		{
 			if( rightModifiers.isImmutable() && !leftType.getModifiers().isImmutable() )
 			{
-				addError(errorNode, Error.INVL_TYP, "Cannot assign an immutable value to a non-immutable reference");
+				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side");
 				return false;
 			}
 		}
@@ -1246,14 +1276,13 @@ public class ClassChecker extends BaseChecker
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
 		
-			ASTSequence left = (ASTSequence) node.jjtGetChild(0);
-			SequenceType leftType = (SequenceType)(left.getType());
-					
-			if( !leftType.isAssignable() )			
-				addError(left, Error.TYPE_MIS, "Cannot assign a value to expression: " + left);
-			else
-			{			
+		ASTSequence left = (ASTSequence) node.jjtGetChild(0);
+		SequenceType leftType = (SequenceType)(left.getType());
 				
+		if( !leftType.isAssignable() )			
+			addError(left, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
+		else
+		{	
 			Node right = node.jjtGetChild(1);				
 			if( right.getType() instanceof SequenceType ) //never a property, because a property can only access a single value
 			{
@@ -1261,10 +1290,10 @@ public class ClassChecker extends BaseChecker
 				List<String> reasons = new ArrayList<String>();
 				
 				if( !leftType.canAccept( rightType, reasons ) )				
-					addError(left, Error.TYPE_MIS, reasons.get(0));
+					addError(left, Error.INVALID_ASSIGNMENT, reasons.get(0));
 			}
 			else
-				addError(left, Error.TYPE_MIS, right.getType() + " must be of sequence type");
+				addError(left, Error.INVALID_ASSIGNMENT, "Right hand side type " + right.getType() + " cannot be assigned to a sequence");
 		}
 
 		return WalkType.POST_CHILDREN;	
@@ -1288,7 +1317,7 @@ public class ClassChecker extends BaseChecker
 		{
 			ASTPrimaryExpression child = (ASTPrimaryExpression) node.jjtGetChild(0);
 			if( !child.isAction() )
-				addError(node, Error.INVL_TYP, "Statement does not express an action");
+				addError(node, Error.NO_ACTION, "Statement does not perform an action");
 		}
 		
 		return WalkType.POST_CHILDREN;	
@@ -1312,7 +1341,7 @@ public class ClassChecker extends BaseChecker
 				node.setType(Type.BOOLEAN);
 			else
 			{
-				addError(node, Error.TYPE_MIS, "Type " + t1 + " uncomparable with type " + t2);
+				addError(node, Error.MISMATCHED_TYPE, "Supplied type " + t1 + " cannot be compared with type " + t2 + " in an is statement");
 				node.setType(Type.UNKNOWN);
 			}
 		}			
@@ -1341,7 +1370,7 @@ public class ClassChecker extends BaseChecker
 				
 				for( ModifiedType existing : type.getTypeParameters() )
 					if( existing.getType().getTypeName().equals( symbol ) )
-						addError( node, Error.MULT_SYM, "Multiply defined type parameter " + typeParameter.getTypeName() );
+						addError( node, Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + typeParameter.getTypeName() + " cannot be redefined in this context" );
 				
 				if( node.jjtGetNumChildren() > 0 )
 				{
@@ -1406,7 +1435,7 @@ public class ClassChecker extends BaseChecker
 				
 				// make sure the return type is in the type table
 				if(type == null)					
-					addError(node.jjtGetChild(i), Error.UNDEF_TYP);
+					addError(node.jjtGetChild(i), Error.UNDEFINED_TYPE);
 				else						
 				// add the return type to our signature
 					signature.addReturn(node.jjtGetChild(i));
@@ -1448,7 +1477,7 @@ public class ClassChecker extends BaseChecker
 					
 				if( !found )
 				{
-					addError(node, Error.TYPE_MIS, "Cannot cast: No method " + unboundMethod.getTypeName() + " matches signature " + method);
+					addError(node, Error.MISMATCHED_TYPE, "No method " + unboundMethod.getTypeName() + " matches signature " + method);
 					node.setType(Type.UNKNOWN);
 				}				
 			}			
@@ -1459,7 +1488,7 @@ public class ClassChecker extends BaseChecker
 				node.setType(t1);
 			else
 			{
-				addError(node, Error.TYPE_MIS, "Type " + t2 + " cannot be cast to " + t1);
+				addError(node, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " cannot be cast to type " + t1);
 				node.setType(Type.UNKNOWN);
 			}
 		}			
@@ -1506,7 +1535,7 @@ public class ClassChecker extends BaseChecker
 		Type t = node.jjtGetChild(0).getType(); 
 		
 		if( !t.equals( Type.BOOLEAN ) )
-			addError(node, Error.TYPE_MIS, "conditional of if statement must be boolean, found: " + t);
+			addError(node, Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + t);
 				
 		return WalkType.POST_CHILDREN;
 	}
@@ -1518,7 +1547,7 @@ public class ClassChecker extends BaseChecker
 		Type t = node.jjtGetChild(0).getType(); 
 		
 		if( !t.equals( Type.BOOLEAN ) )
-			addError(node, Error.TYPE_MIS, "conditional of while statement must be boolean, found: " + t);
+			addError(node, Error.INVALID_TYPE, "Condition of while statement cannot accept non-boolean type " + t);
 				
 		return WalkType.POST_CHILDREN;
 	}
@@ -1530,7 +1559,7 @@ public class ClassChecker extends BaseChecker
 		Type t = node.jjtGetChild(1).getType(); //second child, not first like if and while 
 		
 		if( !t.equals( Type.BOOLEAN ) )
-			addError(node, Error.TYPE_MIS, "conditional of do statement must be boolean, found: " + t);
+			addError(node, Error.INVALID_TYPE, "Condition of do statement cannot accept non-boolean type " + t);
 				
 		return WalkType.POST_CHILDREN;
 	}
@@ -1578,7 +1607,7 @@ public class ClassChecker extends BaseChecker
 				}
 		}
 		else
-			addError(node, Error.TYPE_MIS, "Type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach loop");
+			addError(node, Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach statement");
 		
 		if( isAuto && element != null && element.getType() != null )
 			node.setType(element.getType());
@@ -1605,7 +1634,7 @@ public class ClassChecker extends BaseChecker
 			ASTUtils.DEBUG("TYPE: " + conditionalType);
 			
 			if(conditionalType == null || !conditionalType.equals( Type.BOOLEAN ) )
-				addError(node, Error.TYPE_MIS, "conditional of for statement must be boolean, found: " + conditionalType);
+				addError(node, Error.INVALID_TYPE, "Supplied type " + conditionalType + " cannot be used in the condition of a for statement, boolean type required");
 		}
 			
 		return WalkType.POST_CHILDREN;
@@ -1626,7 +1655,7 @@ public class ClassChecker extends BaseChecker
 				for( Type catchParameter : types )				
 					if( type.isSubtype(catchParameter) )
 					{
-						addError( child, Error.TYPE_MIS, "unreachable catch: " + type );
+						addError( child, Error.UNREACHABLE_CODE, "Catch block for exception " + type + " cannot be reached" );
 						break;
 					}
 				
@@ -1646,10 +1675,10 @@ public class ClassChecker extends BaseChecker
 			Type type = child.getType();
 			
 			if( !(type instanceof ExceptionType) )
-				addError( child, Error.TYPE_MIS, "found " + type + " but only exception types allowed for catch parameters");
+				addError( child, Error.INVALID_TYPE, "Supplied type " + type + " cannot be used as a catch parameter, exception types required");
 		
 			if( child.getModifiers().getModifiers() != 0 )
-				addError( child, Error.TYPE_MIS, "cannot apply modifiers to catch parameters");
+				addError( child, Error.INVALID_MODIFIER, "Modifiers cannot be applied to a catch parameter");
 		}
 		
 		createScope(secondVisit); //for catch parameter
@@ -1663,7 +1692,7 @@ public class ClassChecker extends BaseChecker
 		if( secondVisit )
 		{
 			if( node.getBlocks() <= 0 )
-				addError( node, Error.TYPE_MIS, "try statement must have at least one catch, recover, or finally block" );
+				addError( node, Error.INVALID_STRUCTURE, "At least one catch, recover, or finally block must be associated with a try statement" );
 			tryBlocks.removeLast();
 		}
 		else
@@ -1692,7 +1721,7 @@ public class ClassChecker extends BaseChecker
 				node.removeModifier(Modifiers.NULLABLE );
 			}
 			else
-				addError( node, Error.TYPE_MIS, "check expression can only be used on an expression with a nullable type");
+				addError( node, Error.INVALID_TYPE, "Non-nullable expression cannot be used in a check statement");
 			
 			node.setType(child.getType());
 		}
@@ -1709,7 +1738,7 @@ public class ClassChecker extends BaseChecker
 			}
 			
 			if( !found )
-				addError( node, Error.TYPE_MIS, "check expression has not matching recover block");
+				addError( node, Error.INVALID_STRUCTURE, "No recover block supplied for check statement");
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -1767,7 +1796,7 @@ public class ClassChecker extends BaseChecker
 			{	
 				if( currentType instanceof InterfaceType )
 				{
-					addError(node, Error.INVL_TYP, "Reference this invalid for interfaces");
+					addError(node, Error.INVALID_SELF_REFERENCE, "Reference this invalid for interfaces");
 					node.setType(Type.UNKNOWN);
 				}
 				else				
@@ -1777,7 +1806,7 @@ public class ClassChecker extends BaseChecker
 			{
 				if( currentType instanceof InterfaceType )
 				{
-					addError(node, Error.INVL_TYP, "Reference super invalid for interfaces");
+					addError(node, Error.INVALID_SELF_REFERENCE, "Reference super invalid for interfaces");
 					node.setType(Type.UNKNOWN);
 				}
 				else		
@@ -1791,9 +1820,8 @@ public class ClassChecker extends BaseChecker
 				String name = node.getImage();
 				if( !setTypeFromName( node, name )) //automatically sets type if can
 				{
-					addError(node, Error.UNDEC_VAR, name);
-					node.setType(Type.UNKNOWN);
-					ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);						
+					addError(node, Error.UNDEFINED_TYPE, "Type " + name + " not defined in this context");
+					node.setType(Type.UNKNOWN);											
 				}
 			}
 		}
@@ -1807,9 +1835,8 @@ public class ClassChecker extends BaseChecker
 				String name = node.getImage();
 				if( !setTypeFromName( node, name )) //automatically sets type if can
 				{
-					addError(node, Error.UNDEC_VAR, name);
-					node.setType(Type.UNKNOWN);
-					ASTUtils.DEBUG(node, "DIDN'T FIND: " + name);						
+					addError(node, Error.UNDEFINED_TYPE, "Type " + name + " not defined in this context");
+					node.setType(Type.UNKNOWN);											
 				}
 			}
 			else
@@ -1876,7 +1903,7 @@ public class ClassChecker extends BaseChecker
 			Node prefixNode = curPrefix.getFirst();		
 			
 			if( prefixNode.getModifiers().isNullable() )
-				addError(node, Error.TYPE_MIS, "cannot dereference nullable variable");
+				addError(node, Error.INVALID_DEREFERENCE, "Nullable reference cannot be dereferenced");
 			
 			Node child = node.jjtGetChild(0);
 			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall) ||  (child instanceof ASTAllocation))
@@ -1925,7 +1952,7 @@ public class ClassChecker extends BaseChecker
 					if( currentType.encloses( prefixType )  )				
 						node.setType(prefixType);
 					else				
-						addError(node, Error.INVL_TYP, "Prefix of :" + node.getImage() + " is not the current class or an enclosing class");
+						addError(node, Error.INVALID_SELF_REFERENCE, "Prefix of :" + node.getImage() + " is not the current class or an enclosing class");
 				}
 				else if( kind.equals("super") )
 				{
@@ -1935,21 +1962,21 @@ public class ClassChecker extends BaseChecker
 						if( (prefixType instanceof ClassType) && ((ClassType)prefixType).getExtendType() != null )
 							node.setType(((ClassType)prefixType).getExtendType());
 						else
-							addError(node, Error.INVL_TYP, "Type " + prefixType + " does not have a parent class");
+							addError(node, Error.INVALID_SELF_REFERENCE, "Type " + prefixType + " does not have a super class");
 					}
 					else				
-						addError(node, Error.INVL_TYP, "Prefix of qualified super is not the current class or an enclosing class");
+						addError(node, Error.INVALID_SELF_REFERENCE, "Prefix of qualified super is not the current class or an enclosing class");
 				}
 				else if( kind.equals("class"))
 				{
 					if( (prefixType instanceof ClassType) || (prefixType instanceof TypeParameter)  )
 						node.setType( Type.CLASS );
 					else					
-						addError(node, Error.INVL_TYP, ":class constant only accessible on class, enum, error, exception, singleton types and type parameters"); //may need other cases
+						addError(node, Error.INVALID_TYPE, ":class constant only accessible on class, enum, error, exception, singleton types and type parameters"); //may need other cases
 				}
 			}
 			else
-				addError(node, Error.INVL_TYP, "Prefix of :" + kind + " is not a type name");
+				addError(node, Error.NOT_TYPE, "Prefix of :" + kind + " is not a type name");
 		}
 		return WalkType.POST_CHILDREN;
 	}
@@ -1970,7 +1997,7 @@ public class ClassChecker extends BaseChecker
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(node, Error.INVL_TYP, "Can only apply brackets to a type");
+				addError(node, Error.NOT_TYPE, "Can only apply brackets to a type");
 			}
 		}
 		
@@ -1995,7 +2022,7 @@ public class ClassChecker extends BaseChecker
 					
 					if( !childType.isIntegral() )
 					{
-						addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array subscript");
+						addError(node.jjtGetChild(i), Error.INVALID_SUBSCRIPT, "Subscript type " + childType + " is invalid, integral type required");
 						node.setType(Type.UNKNOWN);
 						return WalkType.POST_CHILDREN;
 					}
@@ -2016,7 +2043,7 @@ public class ClassChecker extends BaseChecker
 				else
 				{
 					node.setType(Type.UNKNOWN);
-					addError(node, Error.TYPE_MIS, "Needed "  + arrayType.getDimensions() + " indexes into array but found " +  node.jjtGetNumChildren());
+					addError(node, Error.INVALID_SUBSCRIPT, "Subscript gives " + node.jjtGetNumChildren() + " indexes but "  + arrayType.getDimensions() + " are required");
 				}
 				
 			}			
@@ -2047,12 +2074,12 @@ public class ClassChecker extends BaseChecker
 					
 					if( acceptableIndexes.size() == 0 ) 
 					{
-						addError(node, Error.TYPE_MIS, "Cannot index into type " + prefixType + " with subscript of type " + child.getType());
+						addError(node, Error.INVALID_SUBSCRIPT, "Subscript type " + prefixType + " cannot index into type " + child.getType());
 						node.setType(Type.UNKNOWN);
 					}					
 					else if( acceptableIndexes.size() > 1 )
 					{
-						addError(node, Error.TYPE_MIS, "Ambiguous index into type " + prefixType + " with subscript of type " + child.getType());
+						addError(node, Error.INVALID_SUBSCRIPT, "Subscript type " + prefixType + " gives an ambiguous index into type " + child.getType());
 						node.setType(Type.UNKNOWN);
 					}					
 					else
@@ -2064,7 +2091,7 @@ public class ClassChecker extends BaseChecker
 						if( !methodIsAccessible( signature, currentType  ))
 						{
 							node.setType(Type.UNKNOWN);
-							addError(node, Error.INVL_MOD, "Index not accessible from current context");
+							addError(node, Error.ILLEGAL_ACCESS, "Index not accessible from this context");
 						}
 						else
 						{
@@ -2077,13 +2104,13 @@ public class ClassChecker extends BaseChecker
 				else
 				{
 					node.setType(Type.UNKNOWN);
-					addError(node, Error.INVL_TYP, "Cannot subscript into non-array type " + prefixType + " with multiple subscripts");
+					addError(node, Error.INVALID_SUBSCRIPT, "Subscript supplies multiple indexes into non-array type " + prefixType);
 				}				
 			}
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(node, Error.INVL_TYP, "Cannot subscript into type " + prefixType + " because it does not implement " + Type.CAN_INDEX);
+				addError(node, Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX);
 			}	
 			
 		}
@@ -2099,12 +2126,12 @@ public class ClassChecker extends BaseChecker
 			Type prefixType = prefixNode.getType();			
 			
 			if( prefixNode.getModifiers().isTypeName()  )
-				addError(node, Error.INVL_TYP, "Cannot destroy a type name");
+				addError(node, Error.INVALID_DESTROY, "Type name cannot be destroyed");
 			else if( prefixType instanceof UnboundMethodType )
-				addError(node, Error.INVL_TYP, "Cannot destroy a method");
+				addError(node, Error.INVALID_DESTROY, "Method cannot be destroyed");
 
 			else if( prefixType instanceof PropertyType )			
-				addError(node, Error.INVL_TYP, "Cannot destroy a property");
+				addError(node, Error.INVALID_DESTROY, "Property cannot be destroyed");
 			
 			node.setType(Type.UNKNOWN); //destruction has no type
 		}
@@ -2134,7 +2161,7 @@ public class ClassChecker extends BaseChecker
 				
 				if( !childType.isIntegral() )
 				{
-					addError(node.jjtGetChild(i), Error.INVL_TYP, "Found type " + childType + ", but integral type required for array dimension");
+					addError(node.jjtGetChild(i), Error.INVALID_SUBSCRIPT, "Supplied type " +  childType + " cannot be used in this subscript, integral type required");
 					node.setType(Type.UNKNOWN);
 					return WalkType.POST_CHILDREN;
 				}
@@ -2145,16 +2172,25 @@ public class ClassChecker extends BaseChecker
 			{
 				if( typeArguments != null  )
 				{
-					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments))
-					{					
-						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
-						node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
+					if( prefixType.isParameterized() )
+					{
+						if( prefixType.getTypeParameters().canAccept(typeArguments) )
+						{					
+							prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
+							node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
+						}
+						else
+						{
+							addError(node, Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match type parameters " + prefixType.getTypeParameters() );
+							node.setType(Type.UNKNOWN);
+						}						
 					}
 					else
 					{
-						addError(node, Error.TYPE_MIS, "Type " + prefixType + " cannot accept type arguments " + typeArguments);
+						addError(node, Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + typeArguments + " supplied for non-parameterized type " + prefixType);						
 						node.setType(Type.UNKNOWN);
 					}
+					
 				}
 				else
 				{
@@ -2162,7 +2198,7 @@ public class ClassChecker extends BaseChecker
 						node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
 					else
 					{
-						addError(node, Error.TYPE_MIS, "Type " + prefixType + " requires type arguments");
+						addError(node, Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
 						node.setType(Type.UNKNOWN);	
 					}					
 				}				
@@ -2170,7 +2206,7 @@ public class ClassChecker extends BaseChecker
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(node, Error.INVL_TYP, "Can only create an array from a type name");
+				addError(node, Error.NOT_TYPE, "Type name must be used to create an array");
 			}	
 			
 		}
@@ -2192,7 +2228,7 @@ public class ClassChecker extends BaseChecker
 			
 			if( prefixNode.getModifiers().isTypeName() )
 			{
-				addError(node, Error.INVL_TYP, "Cannot call method on type name");				
+				addError(node, Error.NOT_OBJECT, "Type name cannot be used to call method");				
 			}
 			else
 			{				
@@ -2202,7 +2238,7 @@ public class ClassChecker extends BaseChecker
 				if( methods != null && methods.size() > 0 )			
 					node.setType( new UnboundMethodType( methodName, prefixType ) );
 				else
-					addError(node, Error.UNDEC_VAR, "Method " + methodName + " not found");
+					addError(node, Error.UNDEFINED_SYMBOL, "Method " + methodName + " not defined in this context");
 			}
 			
 			
@@ -2243,22 +2279,22 @@ public class ClassChecker extends BaseChecker
 			
 			if( prefixType instanceof InterfaceType )
 			{
-				addError(node, Error.INVL_TYP, "Interfaces cannot be created");
+				addError(node, Error.INVALID_CREATE, "Interfaces cannot be created");
 							
 			}
 			else if( prefixType instanceof SingletonType )
 			{
-				addError(node, Error.INVL_TYP, "Singletons cannot be created");
+				addError(node, Error.INVALID_CREATE, "Singletons cannot be created");
 							
 			}		
 			else if(!( prefixType instanceof ClassType) )
 			{
-				addError(node, Error.INVL_TYP, "Type " + prefixType + " cannot be created");
+				addError(node, Error.INVALID_CREATE, "Type " + prefixType + " cannot be created");
 				
 			}
 			else if( !prefixNode.getModifiers().isTypeName() )				
 			{
-				addError(node, Error.INVL_TYP, "Only a type can be created");
+				addError(node, Error.INVALID_CREATE, "Only a type can be created");
 								
 			}
 			else
@@ -2290,7 +2326,7 @@ public class ClassChecker extends BaseChecker
 					}
 					else
 					{
-						addError(node, Error.TYPE_MIS, "Type " + prefixType + " cannot accept type arguments " + typeArguments);
+						addError(node, Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());
 					}					
 				}
 				else
@@ -2301,7 +2337,7 @@ public class ClassChecker extends BaseChecker
 						parent.setType(prefixType);
 					}
 					else
-						addError(node, Error.TYPE_MIS, "Type " + prefixType + " requires type arguments");
+						addError(node, Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
 				}
 				
 			}
@@ -2325,12 +2361,12 @@ public class ClassChecker extends BaseChecker
 			
 			if( !prefixNode.getModifiers().isTypeName() )
 			{
-				addError(node, Error.INVL_TYP, "A type is needed to get an instance");
+				addError(node, Error.INVALID_INSTANCE, "A type is needed to get an instance");
 				node.setType(Type.UNKNOWN);
 			}
 			else if( !(prefixType instanceof SingletonType) )
 			{
-				addError(node, Error.INVL_TYP, "Cannot get instance of non-singleton type " + prefixType);
+				addError(node, Error.INVALID_INSTANCE, "Non-singleton type " + prefixType + " cannot be instanced");
 				node.setType(Type.UNKNOWN);
 			}
 			else
@@ -2359,11 +2395,11 @@ public class ClassChecker extends BaseChecker
 				
 				if( !fieldIsAccessible( field, currentType ))
 				{
-					addError(node, Error.INVL_MOD, "Field " + name + " not accessible from current context");
+					addError(node, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
 				}					
 				else if( field.getModifiers().isConstant() && !isTypeName )
 				{
-					addError(node, Error.INVL_MOD, "Constant " + name + " requires class name for access");
+					addError(node, Error.ILLEGAL_ACCESS, "Constant " + name + " requires class name for access");
 				}
 				else
 				{
@@ -2379,7 +2415,7 @@ public class ClassChecker extends BaseChecker
 				ClassType innerClass = classType.getInnerClass(name);
 				
 				if( !classIsAccessible( innerClass, currentType ) )
-					addError(node, Error.TYPE_MIS, "Class " + innerClass + " is not accessible from current context");
+					addError(node, Error.ILLEGAL_ACCESS, "Class " + innerClass + " is not accessible from this context");
 				else
 				{
 					node.setType( innerClass );						
@@ -2387,7 +2423,7 @@ public class ClassChecker extends BaseChecker
 				}					
 			}
 			else
-				addError(node, Error.UNDEC_VAR, "Field or inner class " + name + " not found");
+				addError(node, Error.UNDEFINED_SYMBOL, "Field or inner class " + name + " not defined in this context");
 	
 			
 			if( node.getType() == null )
@@ -2412,7 +2448,7 @@ public class ClassChecker extends BaseChecker
 						
 			if( isTypeName )
 			{
-				addError(node, Error.INVL_TYP, "Must access property " + propertyName + " on an object");
+				addError(node, Error.NOT_OBJECT, "Object reference must be used to access property " + propertyName);
 				node.setType( Type.UNKNOWN ); //if got here, some error
 			}	
 			else
@@ -2439,7 +2475,7 @@ public class ClassChecker extends BaseChecker
 				}
 				else
 				{
-					addError(node, Error.UNDEC_VAR, "Property " + propertyName + " not found");
+					addError(node, Error.UNDEFINED_SYMBOL, "Property " + propertyName + " not defined in this context");
 					node.setType( Type.UNKNOWN ); //if got here, some error
 				}				
 			}
@@ -2460,7 +2496,7 @@ public class ClassChecker extends BaseChecker
 				return propertyType.getGetType();
 			else
 			{
-				addError((Node)node, Error.TYPE_MIS, "Property " + node + "does not have get access.");
+				addError((Node)node, Error.ILLEGAL_ACCESS, "Property " + node + " does not have get access");
 				return node;
 			}				
 		}
@@ -2478,7 +2514,7 @@ public class ClassChecker extends BaseChecker
 		// we have no creates
 		if( candidateCreates == null || candidateCreates.size() == 0 )
 		{
-			addError(node, Error.TYPE_MIS, "No create method found with signature " + arguments);
+			addError(node, Error.INVALID_METHOD, "Create with signature " + arguments + " is not defined in this context");
 			node.setType(Type.UNKNOWN);				
 		}
 		else
@@ -2503,12 +2539,12 @@ public class ClassChecker extends BaseChecker
 			
 			if( acceptableCreates.size() == 0 ) 
 			{
-				addError(node, Error.TYPE_MIS, "No create found with signature " + arguments);
+				addError(node, Error.INVALID_METHOD, "Create with signature " + arguments + " is not defined in this context");
 				node.setType(Type.UNKNOWN);
 			}					
 			else if( acceptableCreates.size() > 1 )
 			{
-				addError(node, Error.TYPE_MIS, "Ambiguous create call with signature " + arguments);
+				addError(node, Error.INVALID_ARGUMENTS, "Ambiguous create call with signature " + arguments);
 				node.setType(Type.UNKNOWN);
 			}					
 			else
@@ -2518,7 +2554,7 @@ public class ClassChecker extends BaseChecker
 				MethodType methodType = entry.getValue();				 
 				
 				if( !methodIsAccessible( signature, currentType  ))
-					addError(node, Error.INVL_MOD, "Create " + signature + " not accessible from current context");
+					addError(node, Error.ILLEGAL_ACCESS, "Create " + signature + " not accessible from this context");
 				else
 				{
 					node.setType(methodType);
@@ -2563,12 +2599,12 @@ public class ClassChecker extends BaseChecker
 	
 		if( acceptableMethods.size() == 0 )	
 		{									
-			addError(node, Error.TYPE_MIS, "No method found with signature " + arguments);
+			addError(node, Error.INVALID_METHOD, "Method with signature " + arguments + " is not defined in this context");
 			node.setType(Type.UNKNOWN);
 		}
 		else if( acceptableMethods.size() > 1 )
 		{									
-			addError(node, Error.TYPE_MIS, "Ambiguous method call with signature " + arguments);
+			addError(node, Error.INVALID_ARGUMENTS, "Ambiguous method call with signature " + arguments);
 			node.setType(Type.UNKNOWN);
 		}							
 		else //exactly one thing
@@ -2578,7 +2614,7 @@ public class ClassChecker extends BaseChecker
 			MethodType methodType = entry.getValue();
 			
 			if( !methodIsAccessible( signature, currentType  ))					
-				addError(node, Error.INVL_MOD, "Method " + signature + " is not accessible from current context");						
+				addError(node, Error.ILLEGAL_ACCESS, "Method " + signature + " is not accessible from this context");						
 		
 			node.setType(methodType);
 			return signature;
@@ -2623,10 +2659,10 @@ public class ClassChecker extends BaseChecker
 				MethodSignature signature = setMethodType(node, methods, typeArguments, arguments); //type set inside
 				
 				if( signature != null &&  prefixNode.getModifiers().isImmutable() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )
-					addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from an immutable reference");
+					addError(node, Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from an immutable reference");
 				
 				if( signature != null &&  prefixNode.getModifiers().isReadonly() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )
-					addError(node, Error.INVL_MOD, "Mutable method " + signature + " cannot be called from a readonly reference");				
+					addError(node, Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from a readonly reference");				
 			}			
 			else if( prefixType instanceof MethodType ) //only happens with method pointers
 			{
@@ -2641,7 +2677,7 @@ public class ClassChecker extends BaseChecker
 							methodType = methodType.replace(parameters, typeArguments);
 						else
 						{
-							addError(node, Error.TYPE_MIS, "Type parameters " + parameters + " do not match method given by " + node);
+							addError(node, Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match method type arguments " + typeArguments);
 							node.setType(Type.UNKNOWN);
 						}							
 					}
@@ -2651,19 +2687,19 @@ public class ClassChecker extends BaseChecker
 					node.setType(methodType);
 				else 
 				{
-					addError(node, Error.TYPE_MIS, "Cannot apply arguments " + arguments + " to method given by " + node);
+					addError(node, Error.INVALID_ARGUMENTS, "Supplied method arguments " + arguments + " do not match method parameters " + methodType.getParameterTypes());
 					node.setType(Type.UNKNOWN);
 				}
 								
 				if( prefixNode.getModifiers().isImmutable() && !methodType.getModifiers().isImmutable() && !methodType.getModifiers().isReadonly()  )
-					addError(node, Error.INVL_MOD, "Mutable method cannot be called from an immutable reference");
+					addError(node, Error.ILLEGAL_ACCESS, "Mutable method cannot be called from an immutable reference");
 				
 				if( prefixNode.getModifiers().isReadonly() && !methodType.getModifiers().isImmutable() && !methodType.getModifiers().isReadonly()  )
-					addError(node, Error.INVL_MOD, "Mutable method cannot be called from a readonly reference");
+					addError(node, Error.ILLEGAL_ACCESS, "Mutable method cannot be called from a readonly reference");
 			}			
 			else
 			{									
-				addError(node, Error.TYPE_MIS, "Cannot apply arguments to non-method type " + prefixType);
+				addError(node, Error.INVALID_METHOD, "Cannot apply arguments to non-method type " + prefixType);
 				node.setType(Type.UNKNOWN);			
 			}
 		}
@@ -2693,16 +2729,9 @@ public class ClassChecker extends BaseChecker
 
 	
 	public Object visit(ASTBreakStatement node, Boolean secondVisit) throws ShadowException 
-	{ 
-		if( !node.getImage().isEmpty() )
-		{
-			for( Node label : labels )			
-				if( label.equals(node.getImage()) )
-					return WalkType.PRE_CHILDREN;
-				
-			addError(node, Error.UNDEC_VAR, "No matching label for break statement");			
-		}
-			
+	{
+		//TODO: Check if break is in loop or switch
+		
 		return WalkType.PRE_CHILDREN;
 	}	
 	
@@ -2720,7 +2749,7 @@ public class ClassChecker extends BaseChecker
 				result = type;				
 			else if( !type.isSubtype(result) ) //neither is subtype of other, panic!
 			{
-				addError(node, Error.INVL_TYP, "Types in array initializer list do not match");
+				addError(node, Error.MISMATCHED_TYPE, "Types in array initializer list do not match");
 				node.setType(Type.UNKNOWN);
 				return false;
 			}
@@ -2763,16 +2792,16 @@ public class ClassChecker extends BaseChecker
 		Type assertType = node.jjtGetChild(0).getType();
 		
 		if( !assertType.equals(Type.BOOLEAN))
-			addError(node, Error.INVL_TYP, "Found type " + assertType + ", but boolean type required for assert condition");
+			addError(node, Error.INVALID_TYPE, "Supplied type " + assertType + " cannot be used in the condition of an assert, boolean required");
 		
 		if( node.jjtGetNumChildren() > 1 )
 		{
 			Node child = node.jjtGetChild(1);
 			Type type = child.getType();
 			if( type == null )
-				addError(node, Error.INVL_TYP, "Value type required for assert information and no type found");
+				addError(node, Error.NOT_OBJECT, "Object type required for assert information and no type found");
 			else if( child.getModifiers().isTypeName() )
-				addError(node, Error.INVL_TYP, "Value type required for assert information but type name used");
+				addError(node, Error.NOT_OBJECT, "Object type required for assert information but type name used");
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2808,7 +2837,7 @@ public class ClassChecker extends BaseChecker
 		if( secondVisit )
 		{
 			if( currentMethod.isEmpty() ) //should never happen			
-				addError(node, Error.INVL_TYP, "Return statement outside of method body");
+				addError(node, Error.INVALID_STRUCTURE, "Return statement cannot be outside of method body");
 			else
 			{
 				MethodType methodType = (MethodType)(currentMethod.getFirst().getType());
@@ -2818,7 +2847,7 @@ public class ClassChecker extends BaseChecker
 				if( returnTypes.size() == 0 )
 				{
 					if( node.jjtGetNumChildren() > 0 )
-						addError(node, Error.INVL_TYP, "Cannot return values from a method that returns nothing");
+						addError(node, Error.INVALID_RETURNS, "Cannot return values from a method that returns nothing");
 				}
 				else
 				{
@@ -2837,11 +2866,11 @@ public class ClassChecker extends BaseChecker
 					}
 					
 					if( !sequenceType.isSubtype(returnTypes) )						
-						addError(node, Error.TYPE_MIS, "Cannot return " + sequenceType + " when " + returnTypes + (returnTypes.size() == 1 ? " is" : " are") + " expected" );
+						addError(node, Error.INVALID_RETURNS, "Cannot return " + sequenceType + " when " + returnTypes + (returnTypes.size() == 1 ? " is" : " are") + " expected" );
 					
 					for( ModifiedType modifiedType : sequenceType )
 						if( modifiedType.getModifiers().isTypeName() )
-							addError(node, Error.TYPE_MIS, "Cannot return type name from method" );
+							addError(node, Error.INVALID_RETURNS, "Cannot return type name from a method" );
 				}				
 				
 				node.setType(returnTypes);
@@ -2859,7 +2888,7 @@ public class ClassChecker extends BaseChecker
 			node.setType(type);
 			
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
-				addError(node, Error.TYPE_MIS, "Cannot mark primitive type " + type + " as nullable");				
+				addError(node, Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);				
 		}
 		
 		return WalkType.POST_CHILDREN;	
@@ -2888,11 +2917,11 @@ public class ClassChecker extends BaseChecker
 				}
 				
 				if( !found )
-					addError(node, Error.TYPE_MIS, "No create matches arguments " + arguments);
+					addError(node, Error.INVALID_METHOD, "Create with arguments " + arguments + " is not defined in this context");
 				
 			}	
 			else
-				addError(node, Error.INVL_TYP, "Cannot call explicit create on non-class type");
+				addError(node, Error.INVALID_CREATE, "Non-class type cannot be created");
 			
 			ASTCreateDeclaration grandparent = (ASTCreateDeclaration) node.jjtGetParent().jjtGetParent();
 			grandparent.setExplicitInvocation(true);
@@ -2923,7 +2952,7 @@ public class ClassChecker extends BaseChecker
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(child, Error.TYPE_MIS, "Property " + child + "does not have get access.");
+				addError(child, Error.ILLEGAL_ACCESS, "Property " + child + "does not have get access.");
 			}				
 		}
 		else

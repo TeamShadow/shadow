@@ -65,7 +65,7 @@ public class TypeUpdater extends BaseChecker
 	}	
 	
 	
-	public void updateTypes(Map<String, Node> files) throws ShadowException
+	public void updateTypes(Map<String, Node> files) throws ShadowException, TypeCheckException
 	{	
 		ASTWalker walker = new ASTWalker( this );
 		for(Node declarationNode : files.values() )
@@ -74,6 +74,12 @@ public class TypeUpdater extends BaseChecker
 		addConstructorsAndProperties();
 		
 		checkForCircularClassHierarchies(files);
+		
+		if( errorList.size() > 0 )
+		{
+			printErrors();
+			throw errorList.get(0);
+		}
 	}
 	
 	private void addConstructorsAndProperties()
@@ -122,7 +128,7 @@ public class TypeUpdater extends BaseChecker
 							if( fieldModifiers.isGet() && getterCount == 0 )
 							{
 								if( other > 0 )								
-									addError(Error.INVL_TYP, "Cannot create default get property " +  field.getKey() + " when there is already a method of the same name" );
+									addError(Error.MULTIPLY_DEFINED_SYMBOL, "Default get property " +  field.getKey() + " cannot redefine a method of the same name" );
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
@@ -146,7 +152,7 @@ public class TypeUpdater extends BaseChecker
 							if( fieldModifiers.isSet() && setterCount == 0 )
 							{
 								if( other > 0 )								
-									addError(Error.INVL_TYP, "Cannot create default set property " +  field.getKey() + " when there is already a method of the same name" );
+									addError(Error.MULTIPLY_DEFINED_SYMBOL, "Default set property " +  field.getKey() + " cannot redefine a method of the same name" );
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
@@ -194,7 +200,7 @@ public class TypeUpdater extends BaseChecker
 				{
 					if( hierarchy.contains(parent.getTypeWithoutTypeArguments()) )	
 					{
-						addError(Error.INVL_TYP, "Circular type hierarchy for class " + classType );
+						addError(Error.INVALID_HIERARCHY, "Class " + classType + " contains a circular extends or implements definition");
 						circular = true;
 					}
 					else
@@ -207,7 +213,7 @@ public class TypeUpdater extends BaseChecker
 				{
 					if( interfaceType.isCircular() )
 					{
-						addError(Error.INVL_TYP, "Interface " + interfaceType + " has a circular extends hierarchy" );
+						addError(Error.INVALID_HIERARCHY, "Interface " + interfaceType + " has a circular extends definition" );
 						circular = true;
 					}
 				}				
@@ -264,7 +270,7 @@ public class TypeUpdater extends BaseChecker
 		
 		if( visibilityModifiers > 1 )
 		{
-			addError(node, Error.INVL_MOD, "Only one public, private, or protected modifier can be used" );
+			addError(node, Error.INVALID_MODIFIER, "Only one public, private, or protected modifier can be used at once" );
 			success = false;
 		}
 		
@@ -272,7 +278,7 @@ public class TypeUpdater extends BaseChecker
 		{
 			if( visibilityModifiers > 0 )
 			{			
-				addError(node, Error.INVL_MOD, "Interface methods cannot be marked public, private, or protected since they are all public by definition" );
+				addError(node, Error.INVALID_MODIFIER, "Interface methods cannot be marked public, private, or protected since they are all public by definition" );
 				success = false;
 			}			
 			
@@ -281,7 +287,7 @@ public class TypeUpdater extends BaseChecker
 		}
 		else if( visibilityModifiers == 0 )
 		{			
-			addError(node, Error.INVL_MOD, "Every method must be specified as public, private, or protected" );
+			addError(node, Error.INVALID_MODIFIER, "Every class method must be specified as public, private, or protected" );
 			success = false;
 		}
 		
@@ -326,7 +332,7 @@ public class TypeUpdater extends BaseChecker
 			{				
 				// get the first signature
 				MethodSignature method = currentType.getIndistinguishableMethod(signature);				
-				addError(declaration, Error.MULT_MTH, "Indistinguishable method already declared on line " + method.getNode().getLine());
+				addError(declaration, Error.MULTIPLY_DEFINED_SYMBOL, "Indistinguishable method already declared on line " + method.getNode().getLine());
 				return false;
 			}	
 			
@@ -337,14 +343,14 @@ public class TypeUpdater extends BaseChecker
 			{	
 				if( !(field.getModifiers().isGet() && signature.isGet()) && !(field.getModifiers().isSet() && signature.isSet())  )
 				{
-					addError(declaration, Error.MULT_SYM, "First declared on line " + currentType.getField(signature.getSymbol()).getLine() );
+					addError(declaration, Error.MULTIPLY_DEFINED_SYMBOL, "Method name " + signature.getSymbol() + " already declared as field on line " + currentType.getField(signature.getSymbol()).getLine() );
 					return false;				
 				}
 			}
 			
 			if( currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(signature.getSymbol() ) )
 			{
-				addError(declaration, Error.MULT_SYM );
+				addError(declaration, Error.MULTIPLY_DEFINED_SYMBOL, "Method name " + signature.getSymbol() + " already declared as inner class" );
 				return false;
 			}
 			
@@ -380,20 +386,21 @@ public class TypeUpdater extends BaseChecker
 				if( signature.getModifiers().isSet() )
 				{				
 					if( node.jjtGetNumChildren() != 0 )
-						addError(node, Error.INVL_TYP, "Methods marked with set cannot have any return values");				
+						addError(node, Error.INVALID_RETURNS, "Methods marked with set cannot have return values");				
 				}			
 				else if( signature.getModifiers().isGet() )
 				{
 					if( node.jjtGetNumChildren() != 1 )
-						addError(node, Error.INVL_TYP, "Methods marked with get must have exactly one return value");
+						addError(node, Error.INVALID_RETURNS, "Methods marked with get must have exactly one return value");
 				}
 		
-				for(int i=0; i < node.jjtGetNumChildren(); ++i) {
+				for(int i=0; i < node.jjtGetNumChildren(); ++i)
+				{
 					Type type = node.jjtGetChild(i).getType();
 					
 					// make sure the return type is in the type table
 					if(type == null)					
-						addError(node.jjtGetChild(i), Error.UNDEF_TYP);
+						addError(node.jjtGetChild(i), Error.UNDEFINED_TYPE);
 					else						
 					// add the return type to our signature
 						signature.addReturn(node.jjtGetChild(i));
@@ -417,12 +424,12 @@ public class TypeUpdater extends BaseChecker
 			if( signature.getModifiers().isSet() )
 			{				
 				if( node.jjtGetNumChildren() != 1 )
-					addError(node, Error.INVL_TYP, "Methods marked with set must have exactly one parameter");				
+					addError(node, Error.INVALID_PARAMETERS, "Methods marked with set must have exactly one parameter");				
 			}			
 			else if( signature.getModifiers().isGet() )
 			{
 				if( node.jjtGetNumChildren() != 0 )
-					addError(node, Error.INVL_TYP, "Methods marked with get cannot have any parameters");
+					addError(node, Error.INVALID_PARAMETERS, "Methods marked with get cannot have any parameters");
 			}
 			
 			
@@ -438,7 +445,7 @@ public class TypeUpdater extends BaseChecker
 				
 				// check if it's already in the set of parameter names
 				if(signature.containsParam(paramSymbol)) {
-					addError(parameter.jjtGetChild(1), Error.MULT_SYM, "In parameter names");
+					addError(parameter.jjtGetChild(1), Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + paramSymbol + " already defined as a parameter name");
 					return false;	// we're done with this node
 				}				
 				
@@ -454,7 +461,7 @@ public class TypeUpdater extends BaseChecker
 				// make sure this type is in the type table
 				if(parameter.getType() == null)
 				{
-					addError(child, Error.UNDEF_TYP);
+					addError(child, Error.UNDEFINED_TYPE);
 					return false;
 				}
 					
@@ -500,7 +507,7 @@ public class TypeUpdater extends BaseChecker
 			{
 				Type type = lookupType(item);
 				if( type == null )
-					addError(node.jjtGetParent(), Error.UNDEF_TYP, "Cannot import undefined type " + item);
+					addError(node.jjtGetParent(), Error.INVALID_IMPORT, "Undefined type " + item + " cannot be imported");
 				else
 					importedItems.set(i, type);	
 			}
@@ -508,7 +515,7 @@ public class TypeUpdater extends BaseChecker
 			{
 				Package p = packageTree.getChild(item);
 				if( p == null )
-					addError(node.jjtGetParent(), Error.UNDEF_TYP, "Cannot import undefined package " + item);
+					addError(node.jjtGetParent(), Error.INVALID_IMPORT, "Undefined package " + item + " cannot be imported");
 				else
 					importedItems.set(i, p);					
 			}			
@@ -634,7 +641,7 @@ public class TypeUpdater extends BaseChecker
 		if( secondVisit && (currentType instanceof SingletonType) ) {
 			Node parameters = node.jjtGetChild(0); //formal parameters
 			if( parameters.jjtGetNumChildren() > 0 )
-				addError( node, Error.INVL_TYP, "Singleton type can only specify a default create");
+				addError( node, Error.INVALID_SINGLETON_CREATE, "Singleton type " + currentType + " can only specify a default create");
 		}
 		
 		return visitMethod( node, node, secondVisit );
@@ -664,7 +671,8 @@ public class TypeUpdater extends BaseChecker
 	/**
 	 * Add the field declarations.
 	 */
-	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException
+	{
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
@@ -674,7 +682,7 @@ public class TypeUpdater extends BaseChecker
 		// make sure we have this type
 		if(type == null)
 		{
-			addError(node.jjtGetChild(0).jjtGetChild(0), Error.UNDEF_TYP, node.jjtGetChild(0).jjtGetChild(0).getImage());
+			addError(node.jjtGetChild(0).jjtGetChild(0), Error.UNDEFINED_TYPE, "Type " + node.jjtGetChild(0).jjtGetChild(0).getImage() + " not defined in this context");
 			return WalkType.NO_CHILDREN;
 		}
 		
@@ -683,14 +691,12 @@ public class TypeUpdater extends BaseChecker
 
 		node.addModifier(Modifiers.FIELD);
 		
-		if( currentType.getModifiers().isImmutable() ) {
+		if( currentType.getModifiers().isImmutable() )
 			node.addModifier(Modifiers.IMMUTABLE);
-			//node.addModifier(Modifiers.FINAL);
-			/*
-			if( type.isPrimitive() )
-				node.addModifier(Modifiers.FINAL);
-			*/
-		}
+		
+		if( currentType.getModifiers().isReadonly() )
+			node.addModifier(Modifiers.READONLY);
+
 		
 		if( currentType instanceof InterfaceType )
 		{
@@ -699,7 +705,7 @@ public class TypeUpdater extends BaseChecker
 		}
 		
 		if( type.isParameterized() && node.getModifiers().isConstant() )
-			addError(node, Error.INVL_TYP, "Fields marked constant cannot have parameterized types");	
+			addError(node, Error.INVALID_TYPE_PARAMETERS, "Fields marked constant cannot have parameterized types");	
 		
 		
 		// go through inserting all the idents
@@ -714,7 +720,7 @@ public class TypeUpdater extends BaseChecker
 			// make sure we don't already have this symbol
 			if(currentType.containsField(symbol) || currentType.containsMethod(symbol) || (currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(symbol)) )
 			{
-				addError(child.jjtGetChild(0), Error.MULT_SYM, symbol);
+				addError(child.jjtGetChild(0), Error.MULTIPLY_DEFINED_SYMBOL, "Field " + symbol + " cannot be redefined in this context");
 				return WalkType.NO_CHILDREN;
 			}			
 
@@ -740,17 +746,17 @@ public class TypeUpdater extends BaseChecker
 			}		
 			else if( declarationType instanceof SingletonType )
 			{
-				addError(node, Error.INVL_TYP, "Cannot declare singleton type " + declarationType + " with type parameters");
+				addError(node, Error.INVALID_TYPE_PARAMETERS, "Singleton type " + declarationType + " cannot be parameterized");
 				return WalkType.NO_CHILDREN;
 			}
 			else if( declarationType instanceof ExceptionType )
 			{
-				addError(node, Error.INVL_TYP, "Cannot declare exception type " + declarationType + " with type parameters");
+				addError(node, Error.INVALID_TYPE_PARAMETERS, "Exception type " + declarationType + " cannot be parameterized");
 				return WalkType.NO_CHILDREN;
 			}
 			else if( declarationType instanceof ErrorType )
 			{
-				addError(node, Error.INVL_TYP, "Cannot declare error type " + declarationType + " with type parameters");
+				addError(node, Error.INVALID_TYPE_PARAMETERS, "Error type " + declarationType + " cannot be parameterized");
 				return WalkType.NO_CHILDREN;
 			}
 		}
@@ -777,7 +783,7 @@ public class TypeUpdater extends BaseChecker
 			if( type.isParameterized() )
 				for( ModifiedType existing : type.getTypeParameters() )
 					if( existing.getType().getTypeName().equals( symbol ) )
-						addError( node, Error.MULT_SYM, "Multiply defined type parameter " + typeParameter.getTypeName() );
+						addError( node, Error.MULTIPLY_DEFINED_SYMBOL, "Type parameter " + typeParameter.getTypeName() + " cannot be redefined in this context" );
 			
 			if( node.jjtGetNumChildren() > 0 )
 			{
@@ -815,14 +821,14 @@ public class TypeUpdater extends BaseChecker
 					if( extendType.getClass() == ClassType.class )
 						classType.setExtendType((ClassType) extendType);
 					else
-						addError(child.jjtGetChild(0), Error.INVL_TYP, "Cannot create class type " + declarationType + " by extending non-class type " + extendType);
+						addError(child.jjtGetChild(0), Error.INVALID_EXTEND, "Class type " + declarationType + " cannot extend non-class type " + extendType);
 				}
 				else if( declarationType.getClass() == ExceptionType.class )
 				{
 					if( extendType.getClass() == ExceptionType.class )
 						classType.setExtendType((ClassType) extendType);
 					else
-						addError(child.jjtGetChild(0), Error.INVL_TYP, "Cannot create exception type " + declarationType + " by extending non-exception type " + extendType);
+						addError(child.jjtGetChild(0), Error.INVALID_EXTEND, "Exception type " + declarationType + " cannot extend non-exception type " + extendType);
 				}
 			}
 			else if( declarationType instanceof InterfaceType ) 
@@ -834,7 +840,7 @@ public class TypeUpdater extends BaseChecker
 					if( type instanceof InterfaceType )
 						interfaceType.addInterface((InterfaceType)type);
 					else				
-						addError( node, Error.INVL_TYP, type + "is not an interface type");
+						addError( node, Error.INVALID_EXTEND, "Interface type " + interfaceType + " cannot extend non-interface type " + type);
 				}					
 			}
 		}
@@ -854,7 +860,7 @@ public class TypeUpdater extends BaseChecker
 				if( type instanceof InterfaceType )
 					classType.addInterface((InterfaceType)type);
 				else				
-					addError( node, Error.INVL_TYP, type + "is not an interface type");
+					addError( node, Error.INVALID_IMPLEMENT, "Class type " + classType + " cannot implement non-interface type" + type);
 			}				
 		}
 		
@@ -927,7 +933,7 @@ public class TypeUpdater extends BaseChecker
 			
 			if( child.getType() == null ) 
 			{
-				addError(child, Error.UNDEF_TYP, child.getImage());
+				addError(child, Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in this context");
 				node.setType(Type.UNKNOWN);
 				return WalkType.POST_CHILDREN;
 			}
@@ -947,7 +953,7 @@ public class TypeUpdater extends BaseChecker
 				
 				if(type == null)
 				{
-					addError(child.jjtGetChild(0), Error.UNDEF_TYP, child.jjtGetChild(0).getImage());
+					addError(child.jjtGetChild(0), Error.UNDEFINED_TYPE, "Type " + child.jjtGetChild(0).getImage() + " not defined in this context");
 					node.setType(Type.UNKNOWN);
 					return WalkType.POST_CHILDREN;
 				}

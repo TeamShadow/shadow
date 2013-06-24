@@ -1168,6 +1168,7 @@ void Sequence():
 	"("	{ { jjtThis.addItem();}	} [ConditionalExpression() { jjtThis.setUsed();} ] ("," { { jjtThis.addItem();}	} [ConditionalExpression() { jjtThis.setUsed();}] )+ ")"
 }
 
+
 void PrimaryPrefix():
 {
 	debugPrint("PRIMARY PREFIX");
@@ -1643,21 +1644,21 @@ void FinallyStatement():
 { debugPrint("FINALLY STATEMENT"); }
 {
   RecoverStatement()
-  [ "finally" Block() { jjtThis.addFinally(); } ]
+  [ "finally" Block() ]
 }
 
 void RecoverStatement():
 { debugPrint("RECOVER STATEMENT"); }
 {
   CatchStatements()
-  [ "recover" Block() { jjtThis.addRecover(); } ]
+  [ "recover" Block() ]
 }
 
 void CatchStatements():
 { debugPrint("CATCH STATEMENTS"); }
 {
   TryStatement()
-  ( CatchStatement() { jjtThis.addCatch(); } )*
+  ( CatchStatement() )*
 }
 
 void CatchStatement():

@@ -23,6 +23,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
+import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
 import shadow.typecheck.type.Type;
 
@@ -121,11 +122,15 @@ public class Main {
 		        //	node.dump("");
 		        
 		        // type check the AST
-		        Node node = checker.typeCheck(shadowFile);
+		        Node node = null;
 		        
-		        if(node == null) {
-		        	logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");
-		        	
+		        try
+		        {
+		        	node = checker.typeCheck(shadowFile);
+		        }
+		        catch( TypeCheckException e )
+		        {
+		        	logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");		        	
 		        	return TYPE_CHECK_ERROR;
 		        }
 		        
