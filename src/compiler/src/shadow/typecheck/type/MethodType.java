@@ -3,7 +3,7 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MethodType extends Type {
+public class MethodType extends ClassType {
 	protected List<String> parameterNames; /** List of parameter names */
 	protected SequenceType parameterTypes; /** List of parameter types */
 	protected SequenceType returns; /** List of return types */
@@ -18,6 +18,7 @@ public class MethodType extends Type {
 		parameterTypes = new SequenceType();
 		returns = new SequenceType();
 		typeWithoutTypeArguments = this;
+		setExtendType(Type.METHOD); // added
 	}	
 	
 	public boolean matches( SequenceType inputTypes )

@@ -315,6 +315,10 @@ public class TypeCollector extends BaseChecker
 					Type.CAN_ITERATE = (InterfaceType) type;
 				else if( typeName.equals("Number"))
 					Type.NUMBER = (InterfaceType) type;
+				else if( typeName.equals("UnboundMethod"))
+					Type.UNBOUND_METHOD = (ClassType)type;
+				else if( typeName.equals("Method"))
+					Type.METHOD = (ClassType)type;
 			}
 			
 			type.addImportedItems( importedItems );

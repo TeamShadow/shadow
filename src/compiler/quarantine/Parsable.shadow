@@ -1,7 +1,0 @@
-//interface Parsable
-//{}
-
-interface shadow.standard@Parsable<T>
-{
-	public parse<T>(String value) => (T);
-}

@@ -128,6 +128,9 @@ public abstract class Type {
 	public static ClassType OBJECT = null;
 	public static ClassType CLASS = null;  // meta class for holding .class variables
 	public static ClassType ARRAY = null;  // class representation of all array types
+	public static ClassType METHOD = null;  // class representation for references with function type
+	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
+
 	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an enum
 	public static ExceptionType EXCEPTION = null;	
 	public static ErrorType ERROR = null;
@@ -152,7 +155,7 @@ public abstract class Type {
 	public static InterfaceType CAN_COMPARE = null;
 	public static InterfaceType CAN_INDEX = null;
 	public static InterfaceType CAN_ITERATE = null;
-	public static InterfaceType NUMBER = null;	
+	public static InterfaceType NUMBER = null;
 	
 	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(), null);

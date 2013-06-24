@@ -40,7 +40,7 @@ public class SimpleTest
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("pretesting/ArrayCast.shadow"); 		
+		args.add("quarantine/Property.shadow"); 		
 		int error = Main.test(args.toArray(new String[] { }));
 		System.out.println("Error code: " + error);
 	}

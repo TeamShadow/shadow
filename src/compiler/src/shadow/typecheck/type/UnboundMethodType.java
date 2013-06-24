@@ -1,7 +1,7 @@
 package shadow.typecheck.type;
 
 
-public class UnboundMethodType extends Type
+public class UnboundMethodType extends ClassType
 {
 	public UnboundMethodType(String typeName, Type outer )
 	{
@@ -11,6 +11,7 @@ public class UnboundMethodType extends Type
 	public UnboundMethodType(String typeName, Type outer, Modifiers modifiers)
 	{
 		super( typeName, modifiers, outer);
+		setExtendType(Type.UNBOUND_METHOD); // added
 	}
 	
 	public boolean isSubtype(Type t)
