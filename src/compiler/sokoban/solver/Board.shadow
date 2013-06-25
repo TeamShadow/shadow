@@ -14,8 +14,8 @@ class sokoban.solver@Board {
 	public create(List<String> rows, int cols) {
 		if (cols <= 0 or cols >= MAX or rows.size() <= 0 or rows.size() >= MAX or (cols == MAX and rows.size() == MAX))
 			throw IllegalArgumentException:create("Invalid size");
-		width = cast<ushort>cols;
-		height = cast<ushort>rows.size();
+		width = cast<ushort>(cols);
+		height = cast<ushort>(rows.size());
 		ushort boxes = 0, targets = 0;
 		for (int row = 0; row < height; row += 1)
 			for (int col = 0; col < width; col += 1)
@@ -387,7 +387,7 @@ class sokoban.solver@Board {
 				return false;
 			if (state[0] != cast<State>(other).state[0])
 				return false;
-			foreach (Coordinate otherCoord in cast<State>other) {
+			foreach (Coordinate otherCoord in cast<State>(other)) {
 				Coordinate thisCoord = Coordinate:create(otherCoord);
 				if (thisCoord.hasBox() != otherCoord.hasBox() or
 						thisCoord.isReachable() != otherCoord.isReachable())
@@ -448,7 +448,7 @@ class sokoban.solver@Board {
 			private create(int i) {
 				if (i >= board.length)
 					throw IllegalArgumentException:create();
-				index = cast<ushort>i;
+				index = cast<ushort>(i);
 			}
 			private create(int row, int col) {
 				this(row * width + col);

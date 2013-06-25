@@ -43,6 +43,6 @@ immutable class shadow.standard@UInt implements Number<uint>, CanCompare<uint>, 
 	
 	public get hash() => ( int )
 	{
-		return cast<int>this;
+		return cast<int>(this);
 	}
 }

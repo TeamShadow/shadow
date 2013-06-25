@@ -27,7 +27,7 @@ immutable class shadow.standard@UByte implements Number<ubyte>, CanCompare<ubyte
 	private digit( ubyte digit ) => ( code )
 	{
 		if ( digit < 10uy )
-			return cast<code>(cast<int>digit + '0');
-		return cast<code>(cast<int>digit - 10uy + 'a');
+			return cast<code>(cast<int>(digit) + '0');
+		return cast<code>(cast<int>(digit) - 10uy + 'a');
 	}
 }

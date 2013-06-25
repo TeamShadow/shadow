@@ -37,7 +37,7 @@ class shadow.utility@LinkedList<V> implements List<V>
 	}
 	private findIndex( int index ) => ( Node node )
 	{
-		if ( cast<uint>index >= cast<uint>size )
+		if ( cast<uint>(index) >= cast<uint>(size) )
 			throw IndexOutOfBoundsException:create();
 		Node current = header;
 		if ( index < size / 2 )

@@ -11,8 +11,8 @@ class shadow.test@ArrayTest
 		temp[0] = 2; array.index(temp, "four");
 		temp[0] = 3; array.index(temp, 88);
 		temp[0] = 4; array.index(temp, null);
-		Array<Object> array2 = cast<Array<Object>>array.copy();
-		Array<Object> array3 = cast<Array<Object>>array2.subarray(1, 4);
+		Array<Object> array2 = cast<Array<Object>>(array.copy());
+		Array<Object> array3 = cast<Array<Object>>(array2.subarray(1, 4));
 		for ( temp[0] = 0; temp[0] < array->size; temp[0] += 1 )
 			array.index(temp, temp[0]);
 		temp[0] = 0; array3.index(temp, "zero");

@@ -48,7 +48,7 @@ singleton shadow.io@Console
 				bytes -= 1;
 			}
 		}
-		return ( cast<code>value, eof );
+		return ( cast<code>(value), eof );
 	}
 	public native readByte() => ( byte, boolean eof );
 

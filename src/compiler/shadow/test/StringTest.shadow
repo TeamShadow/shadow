@@ -5,7 +5,7 @@ class shadow.test@StringTest
 	public main( String[] args ) => ( int )
 	{
 		Console:instance.printLine("Hello World!");
-		String:StringIterator iter = cast<String:StringIterator>"aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½".iterator();
+		String:StringIterator iter = cast<String:StringIterator>("aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½".iterator());
 		while (iter.hasNext())
 			Console:instance.printLine(iter.next());
 		return 0;

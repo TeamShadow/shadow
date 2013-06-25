@@ -1841,7 +1841,7 @@ public class ClassChecker extends BaseChecker
 			}
 			else
 			{
-				node.setType( child.getType() ); 	//literal, conditional expression, check expression, primitive and function types
+				node.setType( child.getType() ); 	//literal, conditional expression, check expression, cast expression, primitive and function types
 				pushUpModifiers( node ); 			
 			}
 		}

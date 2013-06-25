@@ -1132,7 +1132,6 @@ void UnaryExpressionNotPlusMinus():
 { debugPrint("UNARY EXPRESSION NOT PLUS MINUS"); }
 {
   ( "~" { jjtThis.setImage("~"); } | "!" { jjtThis.setImage("!"); } ) UnaryExpression()
-| CastExpression()
 | PrimaryExpression()
 }
 
@@ -1142,7 +1141,7 @@ void CastExpression():
     jjtThis.setImage("cast< >");   
 }
 {
- "cast" "<" Type() ">" PrimaryExpression()
+ "cast" "<" Type() ">" "(" ConditionalExpression() ")"
 }
 
 void CheckExpression():
@@ -1179,6 +1178,7 @@ void PrimaryPrefix():
 | "this" { jjtThis.setImage("this"); }
 | "super" { jjtThis.setImage("super"); }
 | CheckExpression()
+| CastExpression()
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | PrimitiveType()
 | FunctionType()

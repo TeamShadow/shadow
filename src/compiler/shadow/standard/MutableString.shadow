@@ -61,6 +61,6 @@ class shadow.standard@MutableString implements CanIndex<int, byte>
 
 	public immutable toString() => ( String )
 	{
-		return String:create(cast<byte[]>(cast<Object>data.subarray(0, size)));
+		return String:create(cast<byte[]>(cast<Object>(data.subarray(0, size))));
 	}
 }

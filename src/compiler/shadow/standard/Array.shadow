@@ -9,7 +9,7 @@ abstract class shadow.standard@Array<T> implements CanIndex<int[],T>
 	}
 	public create( int[] lengths )
 	{
-		this:lengths = cast<int[]>(cast<Object>lengths.copy());
+		this:lengths = cast<int[]>(cast<Object>(lengths.copy()));
 		this:data = allocate(T:class, this->size); // T:class.allocate(this->size);
 	}
 	private immutable native allocate( Class type, int size ) => ( Object );

@@ -33,6 +33,6 @@ immutable class shadow.standard@Long implements Number<long>, CanCompare<long>, 
 	
 	public get hash() => ( int )
 	{
-		return cast<int>this;
+		return cast<int>(this);
 	}
 }

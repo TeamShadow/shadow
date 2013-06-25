@@ -173,7 +173,7 @@ class shadow.hello@HelloWorld
 			Console.printLine(hello4.getMessage());
 			Console.printLine();
 	
-			Console.printLine((cast<Object>hello1).toString());
+			Console.printLine(cast<Object>(hello1).toString());
 			Console.printLine(hello2.toString());
 			Console.printLine(check(hello3.self).toString());
 			Console.printLine(check(check(hello4.self).self).toString());

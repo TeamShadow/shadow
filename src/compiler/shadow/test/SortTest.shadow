@@ -17,7 +17,7 @@ class shadow.test@SortTest {
 	}
 
 	public getArray() => (int[]) {
-		return cast<int[]>(cast<Object>array.copy());
+		return cast<int[]>(cast<Object>(array.copy()));
 	}
 	public getArrayStart() => (int) {
 		return 0;
@@ -135,8 +135,8 @@ class shadow.test@SortTest {
 
 	public mergeSort(int[] array) => (int[]) {
 		if (array->size > 1) {
-			int[] left = mergeSort(cast<int[]>(cast<Object>array.subarray(0, array->size >> 1)));
-			int[] right = mergeSort(cast<int[]>(cast<Object>array.subarray(array->size >> 1, array->size)));
+			int[] left = mergeSort(cast<int[]>(cast<Object>(array.subarray(0, array->size >> 1))));
+			int[] right = mergeSort(cast<int[]>(cast<Object>(array.subarray(array->size >> 1, array->size))));
 			array = int:create[array->size];
 			for (int index = 0, leftIndex = 0, rightIndex = 0;
 					index < array->size; index += 1)

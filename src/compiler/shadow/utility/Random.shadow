@@ -13,13 +13,13 @@ class shadow.utility@Random
 
 	public nextInt() => ( int )
 	{
-		return cast<int>nextUInt();
+		return cast<int>(nextUInt());
 	}
 	public native nextUInt() => ( uint );
 
 	public nextInt( int max ) => ( int )
 	{
-		return cast<int>nextUInt(cast<uint>max);
+		return cast<int>(nextUInt(cast<uint>(max)));
 	}
 	public nextUInt( uint max ) => ( uint )
 	{

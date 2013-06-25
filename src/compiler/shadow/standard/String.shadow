@@ -35,7 +35,7 @@ implements CanCompare<String>, CanIterate<code>
 		{
 			if ( data[i] < 1 << 7 )
 			{
-				this:data[j + 0] = cast<byte>data[i];
+				this:data[j + 0] = cast<byte>(data[i]);
 				j += 1;
 			}
 			else if ( data[i] < 1 << 11 )
@@ -97,7 +97,7 @@ implements CanCompare<String>, CanIterate<code>
 	}
 	public get chars() => ( byte[] )
 	{
-		return cast<byte[]>(cast<Object>this:data.copy());
+		return cast<byte[]>(cast<Object>(this:data.copy()));
 	}
 	public get size() => ( int )
 	{
@@ -114,8 +114,8 @@ implements CanCompare<String>, CanIterate<code>
 	}
 	public substring( int start, int end ) => ( String )
 	{
-		return String:create(cast<byte[]>(cast<Object>
-				this:data.subarray(start, end)), this:ascii);
+		return String:create(cast<byte[]>(cast<Object>(
+				this:data.subarray(start, end))), this:ascii);
 	}
 	public concatenate( String other ) => ( String )
 	{
@@ -199,7 +199,7 @@ implements CanCompare<String>, CanIterate<code>
 				}
 			}
 			index += 1;
-			return cast<code>value;
+			return cast<code>(value);
 		}
 	}
 }

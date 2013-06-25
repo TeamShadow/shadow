@@ -20,7 +20,7 @@ class shadow.hello@InputTest
 			sum += next;
 			product *= next;
 		}
-		double average = cast<double>sum / cast<int>total;
+		double average = cast<double>(sum) / cast<int>(total);
 
 		Console.print("The sum is: ");
 		Console.printLine(sum);

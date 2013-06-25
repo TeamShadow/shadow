@@ -1,10 +1,8 @@
 class Casting {
     // casting for members
-     int a = cast<int>4;
-     int b = cast<int>(4);
-     int c = cast<int>b;
-     int d = cast<int>(b);
-   //  int e = cast<int>(new int[3][4]);
+     int a = cast<int>(4);
+     int d = cast<int>(a);
+
 
 	//check all types
      float f = cast<float>(4);
@@ -15,15 +13,12 @@ class Casting {
      Object o = Object:create();     
      String k = cast<String>(o);  
     
-    () => () fun = cast<()=>()>blah;        
+    () => () fun = cast<()=>()>(blah);        
     
     public blah() => () {
 	    // now in a method
-	    int a = cast<int>4;
-	    int b = cast<int>(4);
-	    int c = cast<int>b;
-	    int d = cast<int>(b);
-	    //int e = cast<int>(new int[3][4]);
+	    int a = cast<int>(4);	    
+	    int d = cast<int>(a);
 	
 		//check all types
 	    float f = cast<float>(4);
@@ -34,7 +29,7 @@ class Casting {
 	    Object o = Object:create();     
 	    String k = cast<String>(o);  
 	    
-	    () => () fun = cast<()=>()>blah;        
+	    () => () fun = cast<()=>()>(blah);        
 	    
 	    //crazy cast	        
         //(int[][][], int, int ) => ( ()=>(int[][][])) b  = cast<(int[][][], int, int ) => ( ()=>(int[][][]))>(blah);        
