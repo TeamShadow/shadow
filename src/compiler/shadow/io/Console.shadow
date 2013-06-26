@@ -9,7 +9,7 @@ singleton shadow.io@Console
 
 	public readLine() => ( String, boolean eof )
 	{
-		auto string = MutableString:create();
+		var string = MutableString:create();
 		code c;
 		boolean eof;
 		( c, eof ) = readCode();

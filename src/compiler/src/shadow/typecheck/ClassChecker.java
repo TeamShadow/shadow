@@ -533,7 +533,7 @@ public class ClassChecker extends BaseChecker
 				
 				if( type == null )
 				{
-					addError(node, Error.UNDEFINED_TYPE, "Variable declared auto has no initializer to infer type from");
+					addError(node, Error.UNDEFINED_TYPE, "Variable declared with var has no initializer to infer type from");
 					type = Type.UNKNOWN;
 				}
 			}			
@@ -1577,13 +1577,13 @@ public class ClassChecker extends BaseChecker
 		//child 0 is Modifiers		
 		Type collectionType = null;
 		ModifiedType element = null;
-		boolean isAuto = false;
+		boolean isVar = false;
 		
-		if( node.jjtGetNumChildren() == 2 ) //auto type
+		if( node.jjtGetNumChildren() == 2 ) //var type
 		{
 			collectionType = node.jjtGetChild(1).getType();
 			node.setType(Type.UNKNOWN);
-			isAuto = true;
+			isVar = true;
 		}
 		else
 		{				
@@ -1609,7 +1609,7 @@ public class ClassChecker extends BaseChecker
 		else
 			addError(node, Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach statement");
 		
-		if( isAuto && element != null && element.getType() != null )
+		if( isVar && element != null && element.getType() != null )
 			node.setType(element.getType());
 				
 		if( isValidInitialization( node, element, node ) )		

@@ -115,7 +115,6 @@ TOKEN :
   < ABSTRACT: "abstract" >
 | < AND: "and" >
 | < ASSERT: "assert" >
-| < AUTO: "auto" >
 | < BOOLEAN: "boolean" >
 | < BREAK: "break" >
 | < BYTE: "byte" >
@@ -183,6 +182,7 @@ TOKEN :
 | < UINT: "uint" >
 | < ULONG: "ulong" >
 | < USHORT: "ushort" >
+| < VAR: "var" >
 | < VIEW: "view" >
 | < WEAK: "weak" >
 | < WHILE: "while" >
@@ -1480,7 +1480,7 @@ void LocalVariableDeclaration(Modifiers modifiers):
   modifiers.checkLocalVariableModifiers();
 }
 {  
-  (  "auto" { jjtThis.setImage("auto"); }  | Type() ) VariableDeclarator() ( "," VariableDeclarator() )*
+  (  "var" { jjtThis.setImage("var"); }  | Type() ) VariableDeclarator() ( "," VariableDeclarator() )*
   {
      jjtThis.setModifiers(modifiers);
   }
@@ -1564,7 +1564,7 @@ void ForeachInit():
 	Modifiers modifiers;	
 }
 {
- 	modifiers = Modifiers() ( "auto" | Type() ) t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression()
+ 	modifiers = Modifiers() ( "var" | Type() ) t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression()
  	{
  	  modifiers.checkLocalVariableModifiers();
  	  jjtThis.setModifiers(modifiers); 	}

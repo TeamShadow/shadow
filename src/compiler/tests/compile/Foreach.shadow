@@ -5,14 +5,14 @@ class Foreach {
     public test() => () {
     
     	int[] int_list = int:create[20];
-    	auto values = ArrayList<double>:create();
+    	var values = ArrayList<double>:create();
     	
     	values.add( 3.5 );
     	values.add( 5.2 );
     	values.add( 7.6 );
     	values.add( 4.2 );
     	
-    	auto words = LinkedList<String>:create();
+    	var words = LinkedList<String>:create();
     	
     	words.add("pig");
     	words.add("fig");

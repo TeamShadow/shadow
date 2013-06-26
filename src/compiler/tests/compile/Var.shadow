@@ -1,0 +1,16 @@
+class Auto
+{
+
+	public stuff() => ()
+	{
+		var thing = "A string";
+		var x = Object:create();
+		var a = 4;
+		var b = 5;
+		var c = a + b;
+		
+		//thing = 4; //uncomment for error
+		
+		//var d; //uncomment for error
+	}
+}

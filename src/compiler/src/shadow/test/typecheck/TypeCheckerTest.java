@@ -59,8 +59,8 @@ public class TypeCheckerTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 	 
-	@Test public void testAuto() throws Exception {
-		args.add("tests/compile/Auto.shadow");
+	@Test public void testVar() throws Exception {
+		args.add("tests/compile/Var.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
