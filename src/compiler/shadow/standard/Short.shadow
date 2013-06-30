@@ -1,10 +1,216 @@
-immutable class shadow.standard@Short implements /*Number<short>,*/ CanCompare<short>
+immutable class shadow.standard@
+	Short
+implements
+	Integer<short>,
+	Integer<int>,
+	Integer<long>,
+	Number<float>,
+	Number<double>,
+	CanHash
 {
+	// implement Integer<short>
+	public native bitOr(short other) => (short);
+	public native bitXor(short other) => (short);
+	public native bitAnd(short other) => (short);
+
+	// implement Number<short>
 	public native add(short other) => (short);
 	public native subtract(short other) => (short);
 	public native multiply(short other) => (short);
 	public native divide(short other) => (short);
 	public native modulus(short other) => (short);
 
+	// implement CanCompare<short>
 	public native compare(short other) => (int);
+
+	// implement CanEqual<short>
+	public native equals(short other) => (boolean);
+
+
+	// implement Integer<int>
+	public bitOr(int other) => (int)
+	{
+		return cast<int>(this) | other;
+	}
+	public bitXor(int other) => (int)
+	{
+		return cast<int>(this) ^ other;
+	}
+	public bitAnd(int other) => (int)
+	{
+		return cast<int>(this) & other;
+	}
+
+	// implement Number<int>
+	public add(int other) => (int)
+	{
+		return cast<int>(this) + other;
+	}
+	public subtract(int other) => (int)
+	{
+		return cast<int>(this) - other;
+	}
+	public multiply(int other) => (int)
+	{
+		return cast<int>(this) * other;
+	}
+	public divide(int other) => (int)
+	{
+		return cast<int>(this) / other;
+	}
+	public modulus(int other) => (int)
+	{
+		return cast<int>(this) % other;
+	}
+
+	// implement CanCompare<int>
+	public compare(int other) => (int)
+	{
+		return cast<int>(this).compare(other);
+	}
+
+
+	// implement Integer<long>
+	public bitOr(long other) => (long)
+	{
+		return cast<long>(this) | other;
+	}
+	public bitXor(long other) => (long)
+	{
+		return cast<long>(this) ^ other;
+	}
+	public bitAnd(long other) => (long)
+	{
+		return cast<long>(this) & other;
+	}
+
+	// implement Number<long>
+	public add(long other) => (long)
+	{
+		return cast<long>(this) + other;
+	}
+	public subtract(long other) => (long)
+	{
+		return cast<long>(this) - other;
+	}
+	public multiply(long other) => (long)
+	{
+		return cast<long>(this) * other;
+	}
+	public divide(long other) => (long)
+	{
+		return cast<long>(this) / other;
+	}
+	public modulus(long other) => (long)
+	{
+		return cast<long>(this) % other;
+	}
+
+	// implement CanCompare<long>
+	public compare(long other) => (int)
+	{
+		return cast<long>(this).compare(other);
+	}
+
+
+	// implement Number<float>
+	public add(float other) => (float)
+	{
+		return cast<float>(this) + other;
+	}
+	public subtract(float other) => (float)
+	{
+		return cast<float>(this) - other;
+	}
+	public multiply(float other) => (float)
+	{
+		return cast<float>(this) * other;
+	}
+	public divide(float other) => (float)
+	{
+		return cast<float>(this) / other;
+	}
+	public modulus(float other) => (float)
+	{
+		return cast<float>(this) % other;
+	}
+
+	// implement CanCompare<float>
+	public compare(float other) => (int)
+	{
+		return cast<float>(this).compare(other);
+	}
+
+	// implement CanEqual<float>
+	public equals(float other) => (boolean)
+	{
+		return cast<float>(this) == other;
+	}
+
+
+	// implement Number<double>
+	public add(double other) => (double)
+	{
+		return cast<double>(this) + other;
+	}
+	public subtract(double other) => (double)
+	{
+		return cast<double>(this) - other;
+	}
+	public multiply(double other) => (double)
+	{
+		return cast<double>(this) * other;
+	}
+	public divide(double other) => (double)
+	{
+		return cast<double>(this) / other;
+	}
+	public modulus(double other) => (double)
+	{
+		return cast<double>(this) % other;
+	}
+
+	// implement CanCompare<double>
+	public compare(double other) => (int)
+	{
+		return cast<double>(this).compare(other);
+	}
+
+	// implement CanEqual<double>
+	public equals(double other) => (boolean)
+	{
+		return cast<double>(this) == other;
+	}
+
+
+	// implement CanHash
+	public get hash() => (int)
+	{
+		return cast<int>(this);
+	}
+
+
+	public abs() => (ushort)
+	{
+		return cast<ushort>(this < 0y ? -this, this);
+	}
+	public min(short other) => (short)
+	{
+		return this < other ? this, other;
+	}
+	public max(short other) => (short)
+	{
+		return this > other ? this, other;
+	}
+
+
+	public toString() => (String)
+	{
+		return toString(10us);
+	}
+	public toString(ushort base) => (String)
+	{
+		String string = abs().toString(base);
+		return this >= 0 ? string, '-' # string;
+	}
 }

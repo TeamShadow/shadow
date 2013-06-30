@@ -1,13 +1,68 @@
-immutable class shadow.standard@Float implements /*Number<float>,*/ CanCompare<float>
+immutable class shadow.standard@
+	Float
+implements
+	Number<float>,
+	Number<double>,
+	CanHash
 {
 	constant float PI = 3.1415927f;
 	constant float E = 2.7182817f;
 
+	// implement Number<float>
 	public native add(float other) => (float);
 	public native subtract(float other) => (float);
 	public native multiply(float other) => (float);
 	public native divide(float other) => (float);
 	public native modulus(float other) => (float);
 
+	// implement CanCompare<float>
 	public native compare(float other) => (int);
+
+	// implement CanEqual<float>
+	public native equals(float other) => (boolean);
+
+
+	// implement Number<double>
+	public add(double other) => (double)
+	{
+		return cast<double>(this) + other;
+	}
+	public subtract(double other) => (double)
+	{
+		return cast<double>(this) - other;
+	}
+	public multiply(double other) => (double)
+	{
+		return cast<double>(this) * other;
+	}
+	public divide(double other) => (double)
+	{
+		return cast<double>(this) / other;
+	}
+	public modulus(double other) => (double)
+	{
+		return cast<double>(this) % other;
+	}
+
+	// implement CanCompare<double>
+	public compare(double other) => (int)
+	{
+		return cast<double>(this).compare(other);
+	}
+
+	// implement CanEqual<double>
+	public equals(double other) => (boolean)
+	{
+		return cast<double>(this) == other;
+	}
+
+
+	// implement CanHash
+	public get hash() => (int)
+	{
+		return this->rawBits->hash;
+	}
+
+
+	public native get rawBits() => (int);
 }

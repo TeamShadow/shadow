@@ -1,18 +1,85 @@
-immutable class shadow.standard@ULong implements /*Number<ulong>,*/ CanCompare<ulong>
+immutable class shadow.standard@
+	ULong
+implements
+	Integer<ulong>,
+	Number<double>,
+	CanHash
 {
+	// implement Integer<ulong>
+	public native bitOr(ulong other) => (ulong);
+	public native bitXor(ulong other) => (ulong);
+	public native bitAnd(ulong other) => (ulong);
+
+	// implement Number<ulong>
 	public native add(ulong other) => (ulong);
 	public native subtract(ulong other) => (ulong);
 	public native multiply(ulong other) => (ulong);
 	public native divide(ulong other) => (ulong);
 	public native modulus(ulong other) => (ulong);
 
+	// implement CanCompare<ulong>
 	public native compare(ulong other) => (int);
 
-	public toString() => ( String )
+	// implement CanEqual<ulong>
+	public native equals(ulong other) => (boolean);
+
+
+	// implement Number<double>
+	public add(double other) => (double)
+	{
+		return cast<double>(this) + other;
+	}
+	public subtract(double other) => (double)
+	{
+		return cast<double>(this) - other;
+	}
+	public multiply(double other) => (double)
+	{
+		return cast<double>(this) * other;
+	}
+	public divide(double other) => (double)
+	{
+		return cast<double>(this) / other;
+	}
+	public modulus(double other) => (double)
+	{
+		return cast<double>(this) % other;
+	}
+
+	// implement CanCompare<double>
+	public compare(double other) => (int)
+	{
+		return cast<double>(this).compare(other);
+	}
+
+	// implement CanEqual<double>
+	public equals(double other) => (boolean)
+	{
+		return cast<double>(this) == other;
+	}
+
+	// implement CanHash
+	public get hash() => (int)
+	{
+		return cast<int>(this);
+	}
+
+
+	public min(ulong other) => (ulong)
+	{
+		return this < other ? this, other;
+	}
+	public max(ulong other) => (ulong)
+	{
+		return this > other ? this, other;
+	}
+
+
+	public toString() => (String)
 	{
 		return toString(10ul);
 	}
-	public toString( ulong base ) => ( String )
+	public toString(ulong base) => (String)
 	{
 		MutableString string = MutableString:create();
 		ulong value = this;
@@ -21,12 +88,12 @@ immutable class shadow.standard@ULong implements /*Number<ulong>,*/ CanCompare<u
 			string.append(digit(value % base));
 			value /= base;
 		}
-		while ( value != 0ul );
+		while (value != 0ul);
 		return string.reverse().toString();
 	}
-	private digit( ulong digit ) => ( code )
+	private digit(ulong digit) => (code)
 	{
-		if ( digit < 10ul )
+		if (digit < 10ul)
 			return cast<code>(digit + '0');
 		return cast<code>(digit - 10ul + 'a');
 	}

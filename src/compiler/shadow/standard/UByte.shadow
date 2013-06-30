@@ -1,18 +1,254 @@
-immutable class shadow.standard@UByte implements Number<ubyte>, CanCompare<ubyte>
+immutable class shadow.standard@
+	UByte
+implements
+	Integer<ubyte>,
+	Integer<ushort>,
+	Integer<uint>,
+	Integer<ulong>,
+	Number<float>,
+	Number<double>,
+	CanHash
 {
+	// implement Integer<ubyte>
+	public native bitOr(ubyte other) => (ubyte);
+	public native bitXor(ubyte other) => (ubyte);
+	public native bitAnd(ubyte other) => (ubyte);
+
+	// implement Number<ubyte>
 	public native add(ubyte other) => (ubyte);
 	public native subtract(ubyte other) => (ubyte);
 	public native multiply(ubyte other) => (ubyte);
 	public native divide(ubyte other) => (ubyte);
 	public native modulus(ubyte other) => (ubyte);
 
+	// implement CanCompare<ubyte>
 	public native compare(ubyte other) => (int);
 
-	public toString() => ( String )
+	// implement CanEqual<ubyte>
+	public native equals(ubyte other) => (boolean);
+
+
+	// implement Integer<ushort>
+	public bitOr(ushort other) => (ushort)
+	{
+		return cast<ushort>(this) | other;
+	}
+	public bitXor(ushort other) => (ushort)
+	{
+		return cast<ushort>(this) ^ other;
+	}
+	public bitAnd(ushort other) => (ushort)
+	{
+		return cast<ushort>(this) & other;
+	}
+
+	// implement Number<ushort>
+	public add(ushort other) => (ushort)
+	{
+		return cast<ushort>(this) + other;
+	}
+	public subtract(ushort other) => (ushort)
+	{
+		return cast<ushort>(this) - other;
+	}
+	public multiply(ushort other) => (ushort)
+	{
+		return cast<ushort>(this) * other;
+	}
+	public divide(ushort other) => (ushort)
+	{
+		return cast<ushort>(this) / other;
+	}
+	public modulus(ushort other) => (ushort)
+	{
+		return cast<ushort>(this) % other;
+	}
+
+	// implement CanCompare<ushort>
+	public compare(ushort other) => (int)
+	{
+		return cast<ushort>(this).compare(other);
+	}
+
+
+	// implement Integer<uint>
+	public bitOr(uint other) => (uint)
+	{
+		return cast<uint>(this) | other;
+	}
+	public bitXor(uint other) => (uint)
+	{
+		return cast<uint>(this) ^ other;
+	}
+	public bitAnd(uint other) => (uint)
+	{
+		return cast<uint>(this) & other;
+	}
+
+	// implement Number<uint>
+	public add(uint other) => (uint)
+	{
+		return cast<uint>(this) + other;
+	}
+	public subtract(uint other) => (uint)
+	{
+		return cast<uint>(this) - other;
+	}
+	public multiply(uint other) => (uint)
+	{
+		return cast<uint>(this) * other;
+	}
+	public divide(uint other) => (uint)
+	{
+		return cast<uint>(this) / other;
+	}
+	public modulus(uint other) => (uint)
+	{
+		return cast<uint>(this) % other;
+	}
+
+	// implement CanCompare<uint>
+	public compare(uint other) => (int)
+	{
+		return cast<uint>(this).compare(other);
+	}
+
+
+	// implement Integer<ulong>
+	public bitOr(ulong other) => (ulong)
+	{
+		return cast<ulong>(this) | other;
+	}
+	public bitXor(ulong other) => (ulong)
+	{
+		return cast<ulong>(this) ^ other;
+	}
+	public bitAnd(ulong other) => (ulong)
+	{
+		return cast<ulong>(this) & other;
+	}
+
+	// implement Number<ulong>
+	public add(ulong other) => (ulong)
+	{
+		return cast<ulong>(this) + other;
+	}
+	public subtract(ulong other) => (ulong)
+	{
+		return cast<ulong>(this) - other;
+	}
+	public multiply(ulong other) => (ulong)
+	{
+		return cast<ulong>(this) * other;
+	}
+	public divide(ulong other) => (ulong)
+	{
+		return cast<ulong>(this) / other;
+	}
+	public modulus(ulong other) => (ulong)
+	{
+		return cast<ulong>(this) % other;
+	}
+
+	// implement CanCompare<ulong>
+	public compare(ulong other) => (int)
+	{
+		return cast<ulong>(this).compare(other);
+	}
+
+
+	// implement Number<float>
+	public add(float other) => (float)
+	{
+		return cast<float>(this) + other;
+	}
+	public subtract(float other) => (float)
+	{
+		return cast<float>(this) - other;
+	}
+	public multiply(float other) => (float)
+	{
+		return cast<float>(this) * other;
+	}
+	public divide(float other) => (float)
+	{
+		return cast<float>(this) / other;
+	}
+	public modulus(float other) => (float)
+	{
+		return cast<float>(this) % other;
+	}
+
+	// implement CanCompare<float>
+	public compare(float other) => (int)
+	{
+		return cast<float>(this).compare(other);
+	}
+
+	// implement CanEqual<float>
+	public equals(float other) => (boolean)
+	{
+		return cast<float>(this) == other;
+	}
+
+
+	// implement Number<double>
+	public add(double other) => (double)
+	{
+		return cast<double>(this) + other;
+	}
+	public subtract(double other) => (double)
+	{
+		return cast<double>(this) - other;
+	}
+	public multiply(double other) => (double)
+	{
+		return cast<double>(this) * other;
+	}
+	public divide(double other) => (double)
+	{
+		return cast<double>(this) / other;
+	}
+	public modulus(double other) => (double)
+	{
+		return cast<double>(this) % other;
+	}
+
+	// implement CanCompare<double>
+	public compare(double other) => (int)
+	{
+		return cast<double>(this).compare(other);
+	}
+
+	// implement CanEqual<double>
+	public equals(double other) => (boolean)
+	{
+		return cast<double>(this) == other;
+	}
+
+
+	// implement CanHash
+	public get hash() => (int)
+	{
+		return cast<int>(this);
+	}
+
+
+	public min(ubyte other) => (ubyte)
+	{
+		return this < other ? this, other;
+	}
+	public max(ubyte other) => (ubyte)
+	{
+		return this > other ? this, other;
+	}
+
+
+	public toString() => (String)
 	{
 		return toString(10uy);
 	}
-	public toString( ubyte base ) => ( String )
+	public toString(ubyte base) => (String)
 	{
 		MutableString string = MutableString:create();
 		ubyte value = this;
@@ -21,12 +257,12 @@ immutable class shadow.standard@UByte implements Number<ubyte>, CanCompare<ubyte
 			string.append(digit(value % base));
 			value /= base;
 		}
-		while ( value != 0uy );
+		while (value != 0uy);
 		return string.reverse().toString();
 	}
-	private digit( ubyte digit ) => ( code )
+	private digit(ubyte digit) => (code)
 	{
-		if ( digit < 10uy )
+		if (digit < 10uy)
 			return cast<code>(cast<int>(digit) + '0');
 		return cast<code>(cast<int>(digit) - 10uy + 'a');
 	}

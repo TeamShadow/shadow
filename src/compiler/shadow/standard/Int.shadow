@@ -1,38 +1,171 @@
-immutable class shadow.standard@Int implements Number<int>, CanCompare<int>, CanHash
+immutable class shadow.standard@
+	Int
+implements
+	Integer<int>,
+	Integer<long>,
+	Number<float>,
+	Number<double>,
+	CanHash
 {
+	// implement Integer<int>
+	public native bitOr(int other) => (int);
+	public native bitXor(int other) => (int);
+	public native bitAnd(int other) => (int);
+
+	// implement Number<int>
 	public native add(int other) => (int);
 	public native subtract(int other) => (int);
 	public native multiply(int other) => (int);
 	public native divide(int other) => (int);
 	public native modulus(int other) => (int);
 
+	// implement CanCompare<int>
 	public native compare(int other) => (int);
 
-	public abs() => ( uint )
+	// implement CanEqual<int>
+	public native equals(int other) => (boolean);
+
+
+	// implement Integer<long>
+	public bitOr(long other) => (long)
+	{
+		return cast<long>(this) | other;
+	}
+	public bitXor(long other) => (long)
+	{
+		return cast<long>(this) ^ other;
+	}
+	public bitAnd(long other) => (long)
+	{
+		return cast<long>(this) & other;
+	}
+
+	// implement Number<long>
+	public add(long other) => (long)
+	{
+		return cast<long>(this) + other;
+	}
+	public subtract(long other) => (long)
+	{
+		return cast<long>(this) - other;
+	}
+	public multiply(long other) => (long)
+	{
+		return cast<long>(this) * other;
+	}
+	public divide(long other) => (long)
+	{
+		return cast<long>(this) / other;
+	}
+	public modulus(long other) => (long)
+	{
+		return cast<long>(this) % other;
+	}
+
+	// implement CanCompare<long>
+	public compare(long other) => (int)
+	{
+		return cast<long>(this).compare(other);
+	}
+
+	// implement CanEqual<float>
+	public equals(float other) => (boolean)
+	{
+		return cast<float>(this) == other;
+	}
+
+
+	// implement Number<float>
+	public add(float other) => (float)
+	{
+		return cast<float>(this) + other;
+	}
+	public subtract(float other) => (float)
+	{
+		return cast<float>(this) - other;
+	}
+	public multiply(float other) => (float)
+	{
+		return cast<float>(this) * other;
+	}
+	public divide(float other) => (float)
+	{
+		return cast<float>(this) / other;
+	}
+	public modulus(float other) => (float)
+	{
+		return cast<float>(this) % other;
+	}
+
+	// implement CanCompare<float>
+	public compare(float other) => (int)
+	{
+		return cast<float>(this).compare(other);
+	}
+
+
+	// implement Number<double>
+	public add(double other) => (double)
+	{
+		return cast<double>(this) + other;
+	}
+	public subtract(double other) => (double)
+	{
+		return cast<double>(this) - other;
+	}
+	public multiply(double other) => (double)
+	{
+		return cast<double>(this) * other;
+	}
+	public divide(double other) => (double)
+	{
+		return cast<double>(this) / other;
+	}
+	public modulus(double other) => (double)
+	{
+		return cast<double>(this) % other;
+	}
+
+	// implement CanCompare<double>
+	public compare(double other) => (int)
+	{
+		return cast<double>(this).compare(other);
+	}
+
+	// implement CanEqual<double>
+	public equals(double other) => (boolean)
+	{
+		return cast<double>(this) == other;
+	}
+
+
+	// implement CanHash
+	public get hash() => (int)
+	{
+		return cast<int>(this);
+	}
+
+
+	public abs() => (uint)
 	{
 		return cast<uint>(this < 0 ? -this, this);
 	}
-	public min( int other ) => ( int )
+	public min(int other) => (int)
 	{
 		return this < other ? this, other;
 	}
-	public max( int other ) => ( int )
+	public max(int other) => (int)
 	{
 		return this > other ? this, other;
 	}
 
-	public toString() => ( String )
+	public toString() => (String)
 	{
 		return toString(10u);
 	}
-	public toString( uint base ) => ( String )
+	public toString(uint base) => (String)
 	{
 		String string = abs().toString(base);
 		return this >= 0 ? string, '-' # string;
 	}
-	
-	public get hash() => ( int )
-	{
-		return this;
-	}	
 }

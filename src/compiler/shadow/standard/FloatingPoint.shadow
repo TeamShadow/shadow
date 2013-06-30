@@ -1,0 +1,9 @@
+interface shadow.standard@
+	FloatingPoint<T>
+extends
+	Number<T>
+{
+	immutable isNaN() => (boolean);
+	immutable isFinite() => (boolean);
+	immutable isInfinite() => (boolean);
+}

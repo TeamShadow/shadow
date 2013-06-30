@@ -1,4 +1,7 @@
-interface shadow.standard@CanCompare<T>
+interface shadow.standard@
+	CanCompare<T>
+extends
+	CanEqual<T>
 {
-	immutable compare( T other ) => (int);
+	immutable compare(T other) => (int);
 }

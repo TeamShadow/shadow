@@ -1,4 +1,7 @@
-interface shadow.standard@Number<T>
+interface shadow.standard@
+	Number<T>
+extends
+	CanCompare<T>
 {
 	immutable add(T other) => (T);
 	immutable subtract(T other) => (T);

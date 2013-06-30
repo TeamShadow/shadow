@@ -1,0 +1,9 @@
+interface shadow.standard@
+	Integer<T>
+extends
+	Number<T>
+{
+	immutable bitOr(T other) => (T);
+	immutable bitXor(T other) => (T);
+	immutable bitAnd(T other) => (T);
+}

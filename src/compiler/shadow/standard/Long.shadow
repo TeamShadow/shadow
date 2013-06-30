@@ -1,38 +1,91 @@
-immutable class shadow.standard@Long implements Number<long>, CanCompare<long>, CanHash
+immutable class shadow.standard@
+	Long
+implements
+	Number<long>,
+	Number<double>,
+	CanHash
 {
+	// implement longeger<long>
+	public native bitOr(long other) => (long);
+	public native bitXor(long other) => (long);
+	public native bitAnd(long other) => (long);
+
+	// implement Number<long>
 	public native add(long other) => (long);
 	public native subtract(long other) => (long);
 	public native multiply(long other) => (long);
 	public native divide(long other) => (long);
 	public native modulus(long other) => (long);
-	
+
+	// implement CanCompare<long>
 	public native compare(long other) => (int);
 
-	public abs() => ( ulong )
+	// implement CanEqual<long>
+	public native equals(long other) => (boolean);
+
+
+	// implement Number<double>
+	public add(double other) => (double)
 	{
-		return cast<ulong>(this < 0l ? -this, this);
+		return cast<double>(this) + other;
 	}
-	public min( long other ) => ( long )
+	public subtract(double other) => (double)
+	{
+		return cast<double>(this) - other;
+	}
+	public multiply(double other) => (double)
+	{
+		return cast<double>(this) * other;
+	}
+	public divide(double other) => (double)
+	{
+		return cast<double>(this) / other;
+	}
+	public modulus(double other) => (double)
+	{
+		return cast<double>(this) % other;
+	}
+
+	// implement CanCompare<double>
+	public compare(double other) => (int)
+	{
+		return cast<double>(this).compare(other);
+	}
+
+	// implement CanEqual<double>
+	public equals(double other) => (boolean)
+	{
+		return cast<double>(this) == other;
+	}
+
+
+	// implement CanHash
+	public get hash() => (int)
+	{
+		return cast<int>(this) ^ cast<int>(this >> 32);
+	}
+
+
+	public abs() => (ulong)
+	{
+		return cast<ulong>(this < 0 ? -this, this);
+	}
+	public min(long other) => (long)
 	{
 		return this < other ? this, other;
 	}
-	public max( long other ) => ( long )
+	public max(long other) => (long)
 	{
 		return this > other ? this, other;
 	}
 
-	public toString() => ( String )
+	public toString() => (String)
 	{
 		return toString(10ul);
 	}
-	public toString( ulong base ) => ( String )
+	public toString(ulong base) => (String)
 	{
 		String string = abs().toString(base);
 		return this >= 0 ? string, '-' # string;
-	}
-	
-	public get hash() => ( int )
-	{
-		return cast<int>(this);
 	}
 }
