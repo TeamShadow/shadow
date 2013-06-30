@@ -474,8 +474,7 @@ Modifiers Modifiers():
     "public" { modifiers.checkAndAdd(Modifiers.PUBLIC); }
   | "protected" { modifiers.checkAndAdd(Modifiers.PROTECTED); }
   | "private" { modifiers.checkAndAdd(Modifiers.PRIVATE); }
-  | "abstract" { modifiers.checkAndAdd(Modifiers.ABSTRACT); }
-  //| "final" { modifiers.checkAndAdd(Modifiers.FINAL); }
+  | "abstract" { modifiers.checkAndAdd(Modifiers.ABSTRACT); }  
   | "readonly" { modifiers.checkAndAdd(Modifiers.READONLY); }
   | "native" { modifiers.checkAndAdd(Modifiers.NATIVE); }
   | "weak" { modifiers.checkAndAdd( Modifiers.WEAK); }
@@ -655,6 +654,8 @@ void TypeParameter():
 }
 {
    t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ TypeBound() ]
+   {
+     jjtThis.addModifier(Modifiers.TYPE_NAME);   }
 }
 
 void TypeBound():
@@ -728,29 +729,41 @@ void ArrayInitializer():
 | "{" ConditionalExpression() ( LOOKAHEAD(2) "," ConditionalExpression() )*  [ "," ] "}"
 }
 
-void MethodDeclaration(Modifiers modifiers):
-{
-  debugPrint("METHOD DECLARATION");
-	modifiers.checkMethodModifiers(); 
- }
-{
-  { jjtThis.setModifiers(modifiers); }  
-  MethodDeclarator() [ "throws" NameList() ]
-  ( Block() | ";" )
-}
-
-void MethodDeclarator():
+void MethodDeclarator(boolean isLocal):
 {
 	debugPrint("METHOD DECLARATOR");
+	Token t;	
+}
+{
+	{ jjtThis.setLocal(isLocal); }  
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters(isLocal) "=>" ResultTypes()
+}
+
+void InlineMethodDeclarator():
+{
+	debugPrint("INLINE METHOD DECLARATOR");
 	Token t;
 }
 {
-  t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters() "=>" "(" [ ResultTypes() ] ")"
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters(true) "=>" InlineResults()
+}
+	
+void InlineResults():
+{
+	debugPrint("INLINE RESULTS");
+	Token t;
+}
+{
+ "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ]  ")"
 }
 
-void FormalParameters():
-{ debugPrint("FORMAL PARAMETERS"); }
+void FormalParameters(boolean isLocal):
 {
+  debugPrint("FORMAL PARAMETERS");
+   
+ }
+{
+	{ jjtThis.setLocal(isLocal); }
   "(" [ FormalParameter() ( "," FormalParameter() )* ] ")"
 }
 
@@ -768,6 +781,17 @@ void FormalParameter():
    }
 }
 
+void MethodDeclaration(Modifiers modifiers):
+{
+  debugPrint("METHOD DECLARATION");
+	modifiers.checkMethodModifiers(); 
+ }
+{
+  { jjtThis.setModifiers(modifiers); }  
+  MethodDeclarator(false) [ "throws" NameList() ]
+  ( Block() | ";" )
+}
+
 void CreateDeclaration(Modifiers modifiers):
 {
   debugPrint("CREATE DECLARATION");
@@ -776,8 +800,17 @@ void CreateDeclaration(Modifiers modifiers):
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("create"); }  
   // Modifiers matched in the caller
-  "create" FormalParameters() [ "throws" NameList() ]
+  CreateDeclarator() [ "throws" NameList() ]
   ( CreateBlock() | ";" )
+}
+
+void CreateDeclarator():
+{
+	debugPrint("CREATE DECLARATOR");
+	Token t;
+}
+{
+  "create" { jjtThis.setImage("create"); } FormalParameters(false)
 }
 
 void CreateBlock():
@@ -854,7 +887,7 @@ void FunctionType():
 	debugPrint("FUNCTION TYPE");
 }
 {
-    "(" [ ResultType() ( "," ResultType() )* ] ")" "=>" "(" [ ResultTypes() ] ")"
+    ResultTypes() "=>" ResultTypes()
     {
       jjtThis.addModifier(Modifiers.TYPE_NAME);    }
 }
@@ -926,7 +959,7 @@ void ResultType():
 void ResultTypes():
 { debugPrint("RESULT TYPES"); }
 {
-  ResultType() ( "," ResultType() )*
+  "(" [ ResultType() ( "," ResultType() )* ] ")"
 }
 
 void Name():
@@ -1132,6 +1165,13 @@ void UnaryExpressionNotPlusMinus():
 { debugPrint("UNARY EXPRESSION NOT PLUS MINUS"); }
 {
   ( "~" { jjtThis.setImage("~"); } | "!" { jjtThis.setImage("!"); } ) UnaryExpression()
+| InlineMethodDefinition()
+}
+
+void InlineMethodDefinition():
+{ debugPrint("INLINE METHOD DEFINITION"); }
+{
+  LOOKAHEAD(FormalParameters(true) "=>" ) FormalParameters(true) "=>" InlineResults() //inline method definition
 | PrimaryExpression()
 }
 
@@ -1459,19 +1499,32 @@ void LocalDeclaration():
   debugPrint("LOCAL DECLARATION");
   Modifiers modifiers;}
 {
-  modifiers = Modifiers()
-  ( LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
+  modifiers = Modifiers()    
+  (
+    LOOKAHEAD(InlineMethodDeclaration(modifiers)) InlineMethodDeclaration(modifiers)
+  | LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
   | LocalVariableDeclaration(modifiers) ";" )  }
 
-void LocalMethodDeclaration(Modifiers modifiers):
+void InlineMethodDeclaration(Modifiers modifiers):
 {
-  	debugPrint("METHOD DECLARATION");
+  	debugPrint("INLINE METHOD DECLARATION");
 	modifiers.checkLocalMethodModifiers(); 
  }
 {
   { jjtThis.setModifiers(modifiers); }  
-  MethodDeclarator() [ "throws" NameList() ]
-  ( Block() | ";" )
+  InlineMethodDeclarator() [ "throws" NameList() ]
+  ";"
+}
+
+void LocalMethodDeclaration(Modifiers modifiers):
+{
+  	debugPrint("LOCAL METHOD DECLARATION");
+	modifiers.checkLocalMethodModifiers(); 
+ }
+{
+  { jjtThis.setModifiers(modifiers); }  
+  MethodDeclarator(true) [ "throws" NameList() ]
+  Block()
 }
 
 void LocalVariableDeclaration(Modifiers modifiers):

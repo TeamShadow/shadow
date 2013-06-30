@@ -81,4 +81,9 @@ class Matrix implements Number<Matrix>, CanIndex<int, double[]>
 	{
 		throw UnsupportedOperationException:create();
 	}
+	
+	public immutable compare( Matrix other ) => (int)
+	{
+		throw UnsupportedOperationException:create();
+	}
 }

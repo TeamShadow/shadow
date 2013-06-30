@@ -4,7 +4,20 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTMethodDeclarator extends SimpleNode {
+class ASTMethodDeclarator extends SimpleNode 
+{
+	private boolean local = false;
+	
+	public boolean isLocal()
+	{
+		return local;
+	}
+	
+	public void setLocal(boolean value)
+	{
+		local = value;
+	}	
+	
   public ASTMethodDeclarator(int id) {
     super(id);
   }

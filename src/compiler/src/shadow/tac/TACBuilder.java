@@ -1862,4 +1862,34 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		throw new UnsupportedOperationException();
 	}
+	@Override
+	public Object visit(ASTInlineMethodDeclarator node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTInlineResults node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTCreateDeclarator node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTInlineMethodDefinition node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTInlineMethodDeclaration node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
 }

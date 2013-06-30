@@ -22,7 +22,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		this.node = node;
 	}
 	
-	public void addParameter(String name, Node node) {
+	public void addParameter(String name, ModifiedType node) {
 		this.type.addParameter(name, node);
 	}
 	

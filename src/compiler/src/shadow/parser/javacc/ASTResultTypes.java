@@ -10,9 +10,8 @@ import shadow.typecheck.type.Type;
 
 public
 @SuppressWarnings("all")
-class ASTResultTypes extends SimpleNode {
-	
-	private List<ModifiedType> types = new ArrayList<ModifiedType>(); 
+class ASTResultTypes extends SequenceNode {
+	 
 	
   public ASTResultTypes(int id) {
     super(id);
@@ -21,17 +20,6 @@ class ASTResultTypes extends SimpleNode {
   public ASTResultTypes(ShadowParser p, int id) {
     super(p, id);
   }
-  
-  public void addType(ModifiedType type)
-  {
-	  types.add(type);
-  }
-  
-  public List<ModifiedType> getTypes()
-  {
-	  return types;
-  }
-  
 
 
   /** Accept the visitor. **/

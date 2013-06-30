@@ -3,7 +3,9 @@ class Property
 	public get x() => (int)
 	{
 		return 0;
+		
 	}
+	
 	public get hash() => (int)
 	{
 		return x->hash;

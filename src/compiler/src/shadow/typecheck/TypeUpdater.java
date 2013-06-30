@@ -13,15 +13,16 @@ import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTCreateBlock;
 import shadow.parser.javacc.ASTCreateDeclaration;
+import shadow.parser.javacc.ASTCreateDeclarator;
 import shadow.parser.javacc.ASTDestroyDeclaration;
 import shadow.parser.javacc.ASTEnumDeclaration;
 import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
+import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
 import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTLiteral;
-import shadow.parser.javacc.ASTLocalMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
 import shadow.parser.javacc.ASTPrimitiveType;
@@ -294,7 +295,10 @@ public class TypeUpdater extends BaseChecker
 		return success;
 	}
 	
-	public Object visit(ASTLocalMethodDeclaration node, Boolean secondVisit) throws ShadowException {
+	//should never be visited in the type updater
+	/*
+	public Object visit(ASTLocalMethodDeclaration node, Boolean secondVisit) throws ShadowException
+	{
 		if( !secondVisit )
 		{			
 			Node declaration = node.jjtGetChild(0);
@@ -304,20 +308,16 @@ public class TypeUpdater extends BaseChecker
 			node.setType(methodType);
 			node.setEnclosingType(currentType);
 			
-			//if( Modifiers.isStatic(currentMethod.getFirst().getModifiers()))
-			//	node.addModifier(Modifiers.STATIC);
-			
 			if( currentMethod.getFirst().getModifiers().isImmutable())
 				node.addModifier(Modifiers.IMMUTABLE);
 			
 			if( currentMethod.getFirst().getModifiers().isReadonly())
 				node.addModifier(Modifiers.READONLY);
-			
-			//node.addModifier(Modifiers.FINAL);
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
+	*/
 	
 	private Object visitMethod( Node declaration, SignatureNode node, Boolean secondVisit )
 	{	
@@ -372,101 +372,128 @@ public class TypeUpdater extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException
+	{
 		if(secondVisit)
-		{
-			
-			Node parent = node.jjtGetParent();
-			if( parent instanceof ASTMethodDeclarator )
-			//ASTFunctionType adds result types differently
-			{
-				parent = parent.jjtGetParent();
-				MethodSignature signature = ((SignatureNode)parent).getMethodSignature();
-				
-				if( signature.getModifiers().isSet() )
-				{				
-					if( node.jjtGetNumChildren() != 0 )
-						addError(node, Error.INVALID_RETURNS, "Methods marked with set cannot have return values");				
-				}			
-				else if( signature.getModifiers().isGet() )
-				{
-					if( node.jjtGetNumChildren() != 1 )
-						addError(node, Error.INVALID_RETURNS, "Methods marked with get must have exactly one return value");
-				}
-		
-				for(int i=0; i < node.jjtGetNumChildren(); ++i)
-				{
-					Type type = node.jjtGetChild(i).getType();
-					
-					// make sure the return type is in the type table
-					if(type == null)					
-						addError(node.jjtGetChild(i), Error.UNDEFINED_TYPE);
-					else						
-					// add the return type to our signature
-						signature.addReturn(node.jjtGetChild(i));
-				}
-			}
+		{	
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				node.addType(node.jjtGetChild(i));
 		}
 		
 		return WalkType.POST_CHILDREN;			
 	}
 	
+	public Object visit(ASTCreateDeclarator node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			ASTCreateDeclaration parent = (ASTCreateDeclaration) node.jjtGetParent();
+			MethodSignature signature = parent.getMethodSignature();
+			visitDeclarator( node, parent );			
+			
+			if( (currentType instanceof SingletonType) && signature.getParameterTypes().size() > 0 )
+					addError( node, Error.INVALID_SINGLETON_CREATE, "Singleton type " + currentType + " can only specify a default create");
+		}		
+		
+		return WalkType.POST_CHILDREN;	
+	}
 	
-	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException {
-		if(secondVisit)
-		{			
-			Node parent = node.jjtGetParent();			
-			if( parent instanceof ASTMethodDeclarator )
-				parent = parent.jjtGetParent();  //signature is kept in ASTMethodDeclaration
-			
-			MethodSignature signature = ((SignatureNode)parent).getMethodSignature();
-			
+	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			ASTMethodDeclaration parent = (ASTMethodDeclaration) node.jjtGetParent();
+			visitDeclarator( node, parent );			
+		}		
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	private void visitDeclarator( Node node, SignatureNode parent )
+	{
+		MethodSignature signature = parent.getMethodSignature();
+		
+		//ASTCreateDeclarator will never have type parameters 
+		int index = 0;		
+		if( node.jjtGetChild(index) instanceof ASTTypeParameters )
+		{
+			Type methodType = signature.getMethodType();
+			methodType.setParameterized(true);
+			index++;
+		}
+		
+		// add parameters to the signature
+		ASTFormalParameters parameters = (ASTFormalParameters) node.jjtGetChild(index);
+		List<String> parameterNames = parameters.getParameterNames();
+		SequenceType parameterTypes = parameters.getType();		
+		
+		for( int i = 0; i < parameterNames.size(); ++i )				
+			signature.addParameter(parameterNames.get(i), parameterTypes.get(i));
+		
+		if( signature.getModifiers().isSet() )
+		{				
+			if( parameterTypes.size() != 1 )
+				addError(node, Error.INVALID_MODIFIER, "Methods marked with set must have exactly one parameter");
+			else
+				signature.getParameterTypes().get(0).getModifiers().addModifier(Modifiers.ASSIGNABLE);
+		}			
+		else if( signature.getModifiers().isGet() )
+		{
+			if( parameterTypes.size() != 0 )
+				addError(node, Error.INVALID_MODIFIER, "Methods marked with get cannot have any parameters");
+		}		
+
+		//add return types
+		index++;
+		if( node.jjtGetNumChildren() > index ) //creates have no results
+		{		
+			ASTResultTypes results = (ASTResultTypes) node.jjtGetChild(index);
+					
+			for( ModifiedType modifiedType : results.getType() ) 
+				signature.addReturn(modifiedType);
+		
 			if( signature.getModifiers().isSet() )
 			{				
-				if( node.jjtGetNumChildren() != 1 )
-					addError(node, Error.INVALID_PARAMETERS, "Methods marked with set must have exactly one parameter");				
+				if( signature.getReturnTypes().size() != 0 )
+					addError(node, Error.INVALID_MODIFIER, "Methods marked with set cannot have return values");				
 			}			
 			else if( signature.getModifiers().isGet() )
 			{
-				if( node.jjtGetNumChildren() != 0 )
-					addError(node, Error.INVALID_PARAMETERS, "Methods marked with get cannot have any parameters");
+				if( signature.getReturnTypes().size() != 1 )
+					addError(node, Error.INVALID_MODIFIER, "Methods marked with get must have exactly one return value");
 			}
+		}		
+	}
+	
+	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException
+	{
+		if(secondVisit)
+		{	
+			//child 0 is Modifiers
+			Type type = node.jjtGetChild(1).getType();
+			String symbol = node.jjtGetChild(2).getImage();
+			node.setType( type );
+			node.setImage( symbol );
 			
-			
+			if( node.getModifiers().isNullable() && type.isPrimitive() )
+				addError(node, Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);		
+		}		
+	
+		return WalkType.POST_CHILDREN;
+	}	
+	
+	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException
+	{
+		if(secondVisit)
+		{		
 			// go through all the formal parameters
-			for(int i=0; i < node.jjtGetNumChildren(); ++i) 
+			for(int i = 0; i < node.jjtGetNumChildren(); ++i) 
 			{
 				Node parameter = node.jjtGetChild(i);
-				
-				//child 0 is Modifiers
-				
-				// get the name of the parameter
-				String paramSymbol = parameter.jjtGetChild(2).getImage();
-				
-				// check if it's already in the set of parameter names
-				if(signature.containsParam(paramSymbol)) {
-					addError(parameter.jjtGetChild(1), Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + paramSymbol + " already defined as a parameter name");
-					return false;	// we're done with this node
-				}				
-				
-				//child 1 is type
-				Node child = parameter.jjtGetChild(1);			
-				
-				// get the type of the parameter
-				parameter.setType(child.getType());
-				
-				if( signature.getModifiers().isSet() )
-					parameter.addModifier(Modifiers.ASSIGNABLE);
-				
-				// make sure this type is in the type table
-				if(parameter.getType() == null)
-				{
-					addError(child, Error.UNDEFINED_TYPE);
-					return false;
-				}
-					
-				// add the parameter type to the signature
-				signature.addParameter(paramSymbol, parameter);
+				String parameterName = parameter.getImage();
+				if( node.getParameterNames().contains( parameterName ) )
+					addError(parameter.jjtGetChild(1), Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + parameterName + " already defined as a parameter name");
+				node.addParameter(parameterName, parameter);
 			}	
 		}
 		
@@ -475,7 +502,8 @@ public class TypeUpdater extends BaseChecker
 	
 
 	@Override
-	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException
+	{
 		if( !secondVisit )		
 			currentPackage = packageTree;		
 				
@@ -525,20 +553,12 @@ public class TypeUpdater extends BaseChecker
 	
 	
 	@Override
-	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {							
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException
+	{							
 		node.setType(literalToType(node.getLiteral()));
 		return WalkType.NO_CHILDREN;			
 	}
-	
-	
-	/*
-	@Override
-	public Object visit(ASTTypeBound node, Boolean secondVisit)	throws ShadowException
-	{		
-		return WalkType.POST_CHILDREN;
-	}
-	*/
-	
+
 	
 	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException
 	{
@@ -550,10 +570,8 @@ public class TypeUpdater extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;	
 	}
-
 	
-	//Visitors below this point
-	
+	//Visitors below this point	
 	
 	private Object visitDeclaration( Node node, Boolean secondVisit ) throws ShadowException
 	{		
@@ -635,20 +653,15 @@ public class TypeUpdater extends BaseChecker
 	}
 	
 	@Override
-	public Object visit(ASTCreateDeclaration node, Boolean secondVisit) throws ShadowException {		
-		//create uses the same node for modifiers and signature
-		
-		if( secondVisit && (currentType instanceof SingletonType) ) {
-			Node parameters = node.jjtGetChild(0); //formal parameters
-			if( parameters.jjtGetNumChildren() > 0 )
-				addError( node, Error.INVALID_SINGLETON_CREATE, "Singleton type " + currentType + " can only specify a default create");
-		}
-		
-		return visitMethod( node, node, secondVisit );
+	public Object visit(ASTCreateDeclaration node, Boolean secondVisit) throws ShadowException 
+	{
+		Node methodDeclarator = node.jjtGetChild(0); //probably unnecessary
+		return visitMethod( methodDeclarator, node, secondVisit );
 	}
 	
 	@Override
-	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit) throws ShadowException {	
+	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit) throws ShadowException
+	{	
 		//destroy uses the same node for modifiers and signature
 		return visitMethod( node, node, secondVisit );		
 	}
@@ -731,35 +744,26 @@ public class TypeUpdater extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 		
-	//type parameters will only be visited here on type declarations 
+	//type parameters will only be visited here on type declarations and class methods 
 	@Override
 	public Object visit(ASTTypeParameters node, Boolean secondVisit) throws ShadowException
 	{		
-		if( !secondVisit )
+		if( secondVisit )
 		{			
-			Node parent = node.jjtGetParent();
-			
-			if( parent instanceof ASTMethodDeclarator )		
+			SequenceType typeParameters = node.getType();			
+			for( int i = 0; i < typeParameters.size(); ++i )
 			{
-				Type methodType = parent.jjtGetParent().getType(); //declaration is one up from declarator
-				methodType.setParameterized(true);
-			}		
-			else if( declarationType instanceof SingletonType )
-			{
-				addError(node, Error.INVALID_TYPE_PARAMETERS, "Singleton type " + declarationType + " cannot be parameterized");
-				return WalkType.NO_CHILDREN;
-			}
-			else if( declarationType instanceof ExceptionType )
-			{
-				addError(node, Error.INVALID_TYPE_PARAMETERS, "Exception type " + declarationType + " cannot be parameterized");
-				return WalkType.NO_CHILDREN;
-			}
-			else if( declarationType instanceof ErrorType )
-			{
-				addError(node, Error.INVALID_TYPE_PARAMETERS, "Error type " + declarationType + " cannot be parameterized");
-				return WalkType.NO_CHILDREN;
+				TypeParameter firstParameter = (TypeParameter) typeParameters.get(i).getType();
+				
+				for( int j = i + 1; j < typeParameters.size(); ++j )
+				{
+					TypeParameter secondParameter = (TypeParameter) typeParameters.get(j).getType();
+					if( firstParameter.getTypeName().equals(secondParameter.getTypeName()) )
+						addError( node, Error.MULTIPLY_DEFINED_SYMBOL, "Type parameter " + firstParameter.getTypeName() + " cannot be redefined in this context" );
+				}
 			}
 		}
+			
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -769,28 +773,34 @@ public class TypeUpdater extends BaseChecker
 	{		
 		if( secondVisit )
 		{	
-			String symbol = node.getImage();
-			TypeParameter typeParameter = new TypeParameter(symbol);					
-			Node grandparent = node.jjtGetParent().jjtGetParent(); //parent is always TypeParameters
-			Type type;
-			
-			
-			if( grandparent instanceof ASTMethodDeclarator )						
-				type = grandparent.jjtGetParent().getType(); //method declaration is  three levels up
-			else
-				type = declarationType; //add parameters to current class
-			
-			if( type.isParameterized() )
-				for( ModifiedType existing : type.getTypeParameters() )
-					if( existing.getType().getTypeName().equals( symbol ) )
-						addError( node, Error.MULTIPLY_DEFINED_SYMBOL, "Type parameter " + typeParameter.getTypeName() + " cannot be redefined in this context" );
+			TypeParameter typeParameter = (TypeParameter) node.getType();
 			
 			if( node.jjtGetNumChildren() > 0 )
 			{
 				ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
 				for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
 					typeParameter.addBound(bound.jjtGetChild(i).getType());				
-			}			
+			}
+		}
+		else
+		{	
+			//type parameters are created on the first visit so that bounds dependent on them can look up the right type
+			String symbol = node.getImage();
+			TypeParameter typeParameter = new TypeParameter(symbol);					
+			
+			Type type;
+						
+			if( currentMethod.size() == 1 )						
+				type = currentMethod.getFirst().getMethodSignature().getMethodType();  //add type parameters to method
+			else
+				type = declarationType; //add parameters to current class
+			
+			if( type instanceof SingletonType )			
+				addError(node, Error.INVALID_TYPE_PARAMETERS, "Singleton type " + declarationType + " cannot be parameterized");
+			else if( type instanceof ExceptionType )			
+				addError(node, Error.INVALID_TYPE_PARAMETERS, "Exception type " + declarationType + " cannot be parameterized");
+			else if( type instanceof ErrorType )
+				addError(node, Error.INVALID_TYPE_PARAMETERS, "Error type " + declarationType + " cannot be parameterized");
 			
 			node.setType(typeParameter);
 			type.addTypeParameter(node);
@@ -801,7 +811,8 @@ public class TypeUpdater extends BaseChecker
 	
 	
 	@Override
-	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
+	{
 		return deferredTypeResolution(node, secondVisit);	
 	}
 	
@@ -904,7 +915,8 @@ public class TypeUpdater extends BaseChecker
 	
 
 	@Override
-	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException
+	{
 		node.setType(nameToPrimitiveType(node.getImage()));		
 		return WalkType.NO_CHILDREN;			
 	}
@@ -917,54 +929,25 @@ public class TypeUpdater extends BaseChecker
 	 */
 	public Object visit(ASTFunctionType node, Boolean secondVisit) throws ShadowException
 	{
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		MethodType methodType = new MethodType(); // it has no name
-		
-		// add all the parameters to this method
-		int i;
-		for(i=0; i < node.jjtGetNumChildren(); ++i) {
-			Node child = node.jjtGetChild(i);
+		if( secondVisit )
+		{		
+			MethodType methodType = new MethodType();		
+			Node parameters = node.jjtGetChild(0);
+			SequenceType parameterTypes = (SequenceType) parameters.getType();
 			
-			// check to see if we've moved on to the result types
-			if( child instanceof ASTResultTypes )
-				break;
-			
-			if( child.getType() == null ) 
-			{
-				addError(child, Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in this context");
-				node.setType(Type.UNKNOWN);
-				return WalkType.POST_CHILDREN;
-			}
+			Node returns = node.jjtGetChild(1);
+			SequenceType returnTypes = (SequenceType) returns.getType();
+							
+			for( ModifiedType parameter : parameterTypes  )
+				methodType.addParameter(parameter);			
 				
-			methodType.addParameter(child);	// add the type as the parameter
+			for( ModifiedType type : returnTypes )
+				methodType.addReturn(type);
+			
+			node.setType(methodType);
 		}
 		
-		// check to see if we have result types
-		if(i < node.jjtGetNumChildren())
-		{
-			Node resultsNode = node.jjtGetChild(i);
-			
-			for(int j = 0; j < resultsNode.jjtGetNumChildren(); ++j)
-			{
-				Node child = resultsNode.jjtGetChild(j);
-				Type type = child.getType();
-				
-				if(type == null)
-				{
-					addError(child.jjtGetChild(0), Error.UNDEFINED_TYPE, "Type " + child.jjtGetChild(0).getImage() + " not defined in this context");
-					node.setType(Type.UNKNOWN);
-					return WalkType.POST_CHILDREN;
-				}
-					
-				methodType.addReturn(child);
-			}
-		}
-		
-		node.setType(methodType);
-		
-		return WalkType.POST_CHILDREN;
+		return WalkType.POST_CHILDREN;		
 	}
 	
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { 

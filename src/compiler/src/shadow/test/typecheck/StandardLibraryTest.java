@@ -210,7 +210,7 @@ public class StandardLibraryTest {
 	}
 
 	@Test public void testUnexpectedOperationException() throws Exception {
-		args.add("shadow/standard/UnexpectedOperationException.shadow");
+		args.add("shadow/standard/UnsupportedOperationException.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 

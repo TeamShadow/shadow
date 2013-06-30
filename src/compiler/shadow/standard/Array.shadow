@@ -2,7 +2,7 @@ abstract class shadow.standard@Array<T> implements CanIndex<int[],T>
 {
 	get immutable int[] lengths = int:create[0];
 	nullable Object data = null;
-	private create( int[] lengths, Object data )
+	private create( int[] lengths, Object data )	
 	{
 		this:lengths = lengths;
 		this:data = data;
