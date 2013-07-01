@@ -36,6 +36,12 @@ public class TypeCheckerTest {
 		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
 	}
 	
+	@Test public void testAnonymousInlineMethod() throws Exception {
+		args.add("tests/compile/AnonymousInlineMethod.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}	
+	
+	
 	 @Test public void testArray() throws Exception {
 		
 		//Loggers.setAllToDebug();
@@ -156,6 +162,12 @@ public class TypeCheckerTest {
 	
 	@Test public void testIndexTest() throws Exception {
 		args.add("tests/compile/IndexTest.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
+	
+
+	@Test public void testInlineMethodTest() throws Exception {
+		args.add("tests/compile/InlineMethod.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 

@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTInlineMethodDefinition extends SimpleNode {
+class ASTInlineMethodDefinition extends SignatureNode {
   public ASTInlineMethodDefinition(int id) {
     super(id);
   }

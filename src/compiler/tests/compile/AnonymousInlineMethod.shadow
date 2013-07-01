@@ -1,0 +1,26 @@
+class AnonymousInlineMethod
+{
+	public sort( int[] array, (int, int)=>(int) compare ) => ()
+	{
+		for( int i = 0; i < array->size - 1; i += 1 )
+			for( int j = 0; j < array->size - 1; j += 1 )			
+				if( compare(array[j], array[j+1]) > 0 )
+				{
+					int temp = array[j];
+					array[j] = array[j + 1];
+					array[j + 1] = temp;				
+				}
+	}
+	
+    public test() => () 
+    {		
+		int[] values = int:create[100];
+		
+		for( int i = 0; i < values->size; i += 1 )
+			values[i] = i;
+			
+		sort( values, (int a, int b) => (a - b) );
+		
+		sort( values, (int a, int b) => (b - a) );
+    }
+}

@@ -7,6 +7,7 @@ public class MethodType extends ClassType {
 	protected List<String> parameterNames; /** List of parameter names */
 	protected SequenceType parameterTypes; /** List of parameter types */
 	protected SequenceType returns; /** List of return types */
+	protected boolean inline = false; /** Whether the method is defined inline */ 
 	
 	public MethodType() {
 		this(null, new Modifiers());
@@ -199,5 +200,15 @@ public class MethodType extends ClassType {
 		}
 		else
 			return false;
-	}	
+	}
+	
+	public void setInline( boolean inline )
+	{
+		this.inline = inline;
+	}
+	
+	public boolean isInline()
+	{
+		return inline;
+	}
 }

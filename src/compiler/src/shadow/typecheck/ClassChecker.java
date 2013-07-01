@@ -63,19 +63,39 @@ public class ClassChecker extends BaseChecker
 		}	
 	}
 	
+	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit )
+			currentType = currentType.getOuter();		
+		else
+			currentType = node.jjtGetParent().getType(); //get type from declaration
+			
+		return WalkType.POST_CHILDREN;
+	}
+
 	public Object visitMethod( SignatureNode node, Boolean secondVisit  )
 	{
 		if(!secondVisit)
 		{			
-			if( node instanceof ASTLocalMethodDeclaration || node instanceof ASTInlineMethodDeclaration )
+			if( node instanceof ASTLocalMethodDeclaration || node instanceof ASTInlineMethodDeclaration || node instanceof ASTInlineMethodDefinition )
 			{				
-				MethodSignature signature = new MethodSignature( currentType, node.jjtGetChild(0).getImage(), node.getModifiers(), node);
+				MethodSignature signature;
+				
+				if( node instanceof ASTInlineMethodDefinition )
+					signature = new MethodSignature( currentType, "", node.getModifiers(), node);
+				else
+					signature = new MethodSignature( currentType, node.jjtGetChild(0).getImage(), node.getModifiers(), node);
 				node.setMethodSignature(signature);
 				MethodType methodType = signature.getMethodType();
+
+				if( node instanceof ASTInlineMethodDeclaration || node instanceof ASTInlineMethodDefinition  )
+					methodType.setInline(true);				
+				
 				node.setType(methodType);
 				node.setEnclosingType(currentType);
 				//what modifiers (if any) are allowed for a local method declaration?
-			}			
+			}
+			
 			currentMethod.addFirst(node);
 		}
 		else
@@ -103,17 +123,6 @@ public class ClassChecker extends BaseChecker
 				scopeMethods.addFirst(currentMethod.getFirst());
 		}
 	}
-	
-	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
-	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit )
-			currentType = currentType.getOuter();		
-		else
-			currentType = node.jjtGetParent().getType(); //get type from declaration
-			
-		return WalkType.POST_CHILDREN;
-	}	
-	
 	
 	public Object visit(ASTSwitchStatement node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
@@ -2536,7 +2545,7 @@ public class ClassChecker extends BaseChecker
 				if( signature != null &&  prefixNode.getModifiers().isReadonly() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )
 					addError(node, Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from a readonly reference");				
 			}			
-			else if( prefixType instanceof MethodType ) //only happens with method pointers
+			else if( prefixType instanceof MethodType ) //only happens with method pointers and local methods
 			{
 				MethodType methodType = (MethodType)prefixType;
 				
@@ -2553,7 +2562,14 @@ public class ClassChecker extends BaseChecker
 							node.setType(Type.UNKNOWN);
 						}							
 					}
-				}				
+				}
+				
+				if( methodType.isInline() )
+				{
+					for( SignatureNode signatureNode : currentMethod )
+						if( signatureNode.getMethodSignature().getMethodType() == methodType ) //if literally the same MethodType, we have illegal recursion						
+							addError(node, Error.INVALID_STRUCTURE, "Inline method cannot be called recursively");
+				}
 				
 				if( methodType.canAccept( arguments ) )
 					node.setType(methodType);
@@ -2845,14 +2861,14 @@ public class ClassChecker extends BaseChecker
 	}
 	
 	public Object visit(ASTInlineMethodDefinition node, Boolean secondVisit) throws ShadowException 
-	{ 
-		if( secondVisit )
+	{	
+		Node child = node.jjtGetChild(0);
+		
+		if( child instanceof ASTFormalParameters ) //inline method definition
 		{
-			Node child = node.jjtGetChild(0);
-			
-			if( child instanceof ASTFormalParameters ) //inline method definition
-			{
-				MethodType methodType = new MethodType();
+			if( secondVisit )
+			{				
+				MethodType methodType = node.getMethodSignature().getMethodType();
 				ASTFormalParameters parameters = (ASTFormalParameters) child;
 				List<String> parameterNames = parameters.getParameterNames();
 				SequenceType parameterTypes = parameters.getType();		
@@ -2864,14 +2880,23 @@ public class ClassChecker extends BaseChecker
 				ASTInlineResults results = (ASTInlineResults) node.jjtGetChild(1);
 							
 				for( ModifiedType modifiedType : results.getType() ) 
-					methodType.addReturn(modifiedType);
+					methodType.addReturn(modifiedType);				
+				
+				node.setType(methodType);
 			}
-			else //primary expression
+			
+			visitMethod(node, secondVisit);
+			
+		}
+		else //primary expression
+		{
+			if( secondVisit )
 			{
 				node.setType(child.getType());
 				pushUpModifiers( node );
 			}
 		}
+		
 		
 		return WalkType.POST_CHILDREN;
 	}

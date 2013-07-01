@@ -389,7 +389,7 @@ public class TypeUpdater extends BaseChecker
 		{
 			ASTCreateDeclaration parent = (ASTCreateDeclaration) node.jjtGetParent();
 			MethodSignature signature = parent.getMethodSignature();
-			visitDeclarator( node, parent );			
+			visitDeclarator( node, signature  );			
 			
 			if( (currentType instanceof SingletonType) && signature.getParameterTypes().size() > 0 )
 					addError( node, Error.INVALID_SINGLETON_CREATE, "Singleton type " + currentType + " can only specify a default create");
@@ -403,16 +403,14 @@ public class TypeUpdater extends BaseChecker
 		if( secondVisit )
 		{
 			ASTMethodDeclaration parent = (ASTMethodDeclaration) node.jjtGetParent();
-			visitDeclarator( node, parent );			
+			visitDeclarator( node, parent.getMethodSignature() );			
 		}		
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private void visitDeclarator( Node node, SignatureNode parent )
-	{
-		MethodSignature signature = parent.getMethodSignature();
-		
+	private void visitDeclarator( Node node, MethodSignature signature )
+	{	
 		//ASTCreateDeclarator will never have type parameters 
 		int index = 0;		
 		if( node.jjtGetChild(index) instanceof ASTTypeParameters )
