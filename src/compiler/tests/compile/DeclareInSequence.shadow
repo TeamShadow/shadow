@@ -1,0 +1,19 @@
+class DeclareInSequence
+{   
+    public jam(int a) => (int, double)
+    {
+        return (a, 16.0);
+    }
+
+       
+    public start() => ()
+    {    	
+    	(int x, double y) = jam(15);
+    	
+    	int a;
+    	( a, double b ) = ( x, y );
+    	    	
+    	( x, y ) = 6;
+    	( code m, code n ) = '?';
+    }   
+} 

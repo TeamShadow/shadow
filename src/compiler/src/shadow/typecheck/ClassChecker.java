@@ -434,10 +434,7 @@ public class ClassChecker extends BaseChecker
 			processDeclaration( node );							  		
 
 		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	
+	}	
 	
 	public boolean setTypeFromContext( Node node, String name, Type context, boolean directAccess  ) //directAccess is true if there is no prefix and false if there is
 	{
@@ -548,25 +545,6 @@ public class ClassChecker extends BaseChecker
 		
 		return false;
 	}
-	
-	
-	/*
-	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException 
-	{	
-		Type type = lookupType( node.getImage() );
-				
-		if( type == null)
-		{ 
-			addError(node, Error.UNDEC_VAR, node.getImage());
-			node.setType(Type.UNKNOWN);
-			ASTUtils.DEBUG(node, "DIDN'T FIND: " + node.getImage());
-		}
-		else
-			node.setType(type);
-
-		return WalkType.NO_CHILDREN;
-	}
-	*/
 	
 	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
@@ -1000,29 +978,7 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private boolean isValidInitialization( ModifiedType left, ModifiedType right, Node errorNode )
-	{		
-		Type leftType = left.getType();		 
-		Type rightType = right.getType();
-		Modifiers leftModifiers = left.getModifiers();
-		Modifiers rightModifiers = right.getModifiers();				
-		
-		
-		if( !rightType.isSubtype(leftType) )
-		{
-			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with type " + rightType + " cannot be assigned to left hand side with type " + leftType);
-			return false;
-		}
-		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
-		{
-			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
-			return false;
-		}
-		
-		return true;
-	}
-	
-	private boolean isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, Node errorNode )
+	private boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, Node errorNode, boolean isInitialization )
 	{
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();
@@ -1073,22 +1029,7 @@ public class ClassChecker extends BaseChecker
 			}
 		}
 		
-		if( !leftModifiers.isAssignable() )
-		{
-			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
-			return false;
-		}		
-		else if( leftModifiers.isConstant() )
-		{
-			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
-			return false;			
-		}				
-		else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
-		{
-			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
-			return false;
-		}
-		
+		//immutability
 		if( leftModifiers.isImmutable() )
 		{			
 			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() )
@@ -1098,7 +1039,7 @@ public class ClassChecker extends BaseChecker
 			}
 			
 			if( leftModifiers.isField() )
-			{} //do something!
+			{} //do something!  what about readonly fields?
 			
 			
 			/*
@@ -1112,13 +1053,53 @@ public class ClassChecker extends BaseChecker
 		{
 			if( rightModifiers.isImmutable() && !leftType.getModifiers().isImmutable() )
 			{
-				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side");
+				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable left hand side");
 				return false;
+			}
+			
+			//readonly issues
+			if( !leftModifiers.isReadonly() ) //and of course not immutable
+			{
+				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() && !rightType.getModifiers().isReadonly() )
+				{
+					addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with readonly value cannot be assigned to non-readonly left hand side");
+					return false;
+				}				
 			}
 		}
 		
+		//nullability
+		if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
+		{
+			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
+			return false;
+		}		
+
+		if( !isInitialization ) //only differences between initializations and assignments
+		{
+			if( !leftModifiers.isAssignable() )
+			{
+				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
+				return false;
+			}		
+			else if( leftModifiers.isConstant() )
+			{
+				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
+				return false;			
+			}
+		}
 				
 		return true;
+	}
+	
+	private boolean isValidInitialization( ModifiedType left, ModifiedType right, Node errorNode )
+	{		
+		return checkAssignment( left, right, AssignmentType.EQUAL, errorNode, true );
+	}
+	
+	private boolean isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, Node errorNode )
+	{
+		return checkAssignment( left, right, assignmentType, errorNode, false );
 	}
 
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
@@ -1163,24 +1144,47 @@ public class ClassChecker extends BaseChecker
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
 		
-		ASTSequence left = (ASTSequence) node.jjtGetChild(0);
-		SequenceType leftType = (SequenceType)(left.getType());
-				
-		if( !leftType.isAssignable() )			
-			addError(left, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
-		else
+		ASTSequenceLeftSide left = (ASTSequenceLeftSide) node.jjtGetChild(0);
+		SequenceType leftSequence = left.getType();
+		Node right = node.jjtGetChild(1);
+		Type rightType = right.getType();
+		ModifiedType rightElement = right;
+		
+		//check lengths first
+		if( rightType instanceof SequenceType && leftSequence.size() != ((SequenceType)rightType).size() ) 
+		{				
+			addError(left, Error.INVALID_ASSIGNMENT, "Right hand side " + ((SequenceType)rightType) + " cannot be assigned to left hand side " + leftSequence + " because their lengths do not match");
+			return WalkType.POST_CHILDREN;				
+		}
+
+		for( int i = 0; i < leftSequence.size(); ++i )
 		{	
-			Node right = node.jjtGetChild(1);				
-			if( right.getType() instanceof SequenceType ) //never a property, because a property can only access a single value
-			{
-				SequenceType rightType = (SequenceType)(right.getType());
-				List<String> reasons = new ArrayList<String>();
+			ModifiedType leftElement = leftSequence.get(i);
+			
+			if( leftElement != null ) //can be skipped
+			{		
+				if( rightType instanceof SequenceType )
+					rightElement = ((SequenceType)rightType).get(i);
 				
-				if( !leftType.canAccept( rightType, reasons ) )				
-					addError(left, Error.INVALID_ASSIGNMENT, reasons.get(0));
+				if( leftElement.getType().equals( Type.VAR ) )
+				{
+					if( rightElement.getType() instanceof PropertyType )
+					{
+						PropertyType propertyType = (PropertyType)rightElement.getType();
+						if( propertyType.isGettable() )						
+							leftElement.setType(propertyType.getGetType().getType());
+						else
+							addError(node, Error.ILLEGAL_ACCESS, "Property " + right + "does not have get access");
+					}
+					else
+						leftElement.setType(rightElement.getType());
+				}			
+				
+				if( leftElement instanceof ASTSequenceVariable ) //declaration
+					isValidInitialization(leftElement, rightElement, node);
+				else //otherwise simple assignment
+					isValidAssignment(leftElement, rightElement, AssignmentType.EQUAL, node);
 			}
-			else
-				addError(left, Error.INVALID_ASSIGNMENT, "Right hand side type " + right.getType() + " cannot be assigned to a sequence");
 		}
 
 		return WalkType.POST_CHILDREN;	
@@ -1327,8 +1331,7 @@ public class ClassChecker extends BaseChecker
 	
 	public Object visit(ASTCastExpression node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
+			return WalkType.POST_CHILDREN;		
 		
 		if( node.jjtGetNumChildren() == 1 )
 			pushUpType(node, secondVisit);
@@ -1337,6 +1340,7 @@ public class ClassChecker extends BaseChecker
 			Type t1 = node.jjtGetChild(0).getType();  //type
 			Type t2 = node.jjtGetChild(1).getType();  //expression
 			
+			node.setModifiers(node.jjtGetChild(1).getModifiers());
 			
 			if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) //casting methods
 			{
@@ -1376,31 +1380,51 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTSequence node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		LinkedList<Boolean> usedItems = node.getUsedItems();
-		
-		if( node.jjtGetNumChildren() == 1 && usedItems.size() == 1 ) //maybe, or should it be treated like a sequence with one thing in it?
-			pushUpType(node, secondVisit);
-		else
+	public Object visit(ASTSequenceRightSide node, Boolean secondVisit) throws ShadowException 
+	{
+		if(secondVisit)
 		{
-			SequenceType sequence = new SequenceType();
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )							
+				node.addType(node.jjtGetChild(i));
+		}
+
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTSequenceVariable node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			if( node.jjtGetNumChildren() > 1 ) //type specified
+				node.setType(node.jjtGetChild(1).getType());
+			else //var used
+				node.setType(Type.VAR);
+			
+			addSymbol(node.getImage(), node);
+		}		
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTSequenceLeftSide node, Boolean secondVisit) throws ShadowException
+	{
+		if(secondVisit)
+		{	
+			LinkedList<Boolean> usedItems = node.getUsedItems();
 			int child = 0;		
 			
 			for( int i = 0; i < usedItems.size(); i++ )
 			{
 				if( usedItems.get(i))
-				{
-					sequence.add(node.jjtGetChild(child));
+				{					
+					node.addType(node.jjtGetChild(child));
 					child++;
 				}
 				else
-					sequence.add(null);
+					node.addType(null);
 			}
-			
-			node.setType( sequence );
 		}			
 
 		return WalkType.POST_CHILDREN;

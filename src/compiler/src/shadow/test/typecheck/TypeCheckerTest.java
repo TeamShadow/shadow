@@ -119,6 +119,11 @@ public class TypeCheckerTest {
 		args.add("tests/compile/ControlFlow.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
+		
+	@Test public void testDeclareInSequence() throws Exception {
+		args.add("tests/compile/DeclareInSequence.shadow");
+		assertEquals(0, Main.test(args.toArray(new String[] { })));
+	}
 
 		@Test public void testFoo() throws Exception {
 		args.add("tests/compile/Foo.shadow");

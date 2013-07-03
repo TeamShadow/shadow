@@ -216,7 +216,7 @@ public class InterfaceType extends Type
 		if( t == UNKNOWN )
 			return false;
 	
-		if( equals(t) || t == Type.OBJECT )
+		if( equals(t) || t == Type.OBJECT || t == Type.VAR )
 			return true;		
 		
 		if( t instanceof InterfaceType )			

@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.SimpleNode;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
@@ -152,15 +153,6 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		
 		return builder.toString();
 	}
-	
-	public boolean isAssignable()
-	{
-		for( ModifiedType type : this )
-			if( type != null && type.getModifiers().isConstant() )
-				return false;	
-		
-		return true;		
-	}
 
 	@Override
 	public boolean equals(Object o)
@@ -224,7 +216,13 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			ModifiedType modifiedType = types.get(0); 
 			node.setType(modifiedType.getType());
 			if( modifiedType.getModifiers().isNullable())
-				node.addModifier(Modifiers.NULLABLE);			
+				node.addModifier(Modifiers.NULLABLE);
+			
+			if( modifiedType.getModifiers().isReadonly())
+				node.addModifier(Modifiers.READONLY);
+			
+			if( modifiedType.getModifiers().isImmutable())
+				node.addModifier(Modifiers.IMMUTABLE);			
 		}
 		else
 			node.setType(this);
@@ -345,7 +343,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	{		
 		return types.subList(fromIndex, toIndex);
 	}
-
+	
 	public boolean isSubtype(Type t)
 	{
 		if( equals(t) )

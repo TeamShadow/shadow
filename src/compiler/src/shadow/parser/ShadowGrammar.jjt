@@ -706,6 +706,8 @@ void VariableDeclarator():
   VariableDeclaratorId() [ "=" VariableInitializer() ]
 }
 
+
+//TODO: get rid of this production?  It's just a token.
 void VariableDeclaratorId():
 {
     debugPrint("VARIABLE DECLARATOR ID");
@@ -1199,13 +1201,36 @@ void PrimaryExpression():
 	PrimaryPrefix() ( LOOKAHEAD(PrimarySuffix()) PrimarySuffix() )* 
 }
 
-void Sequence():
+void SequenceRightSide():
 {
-  debugPrint("SEQUENCE");
+  debugPrint("SEQUENCE RIGHT SIDE");
 }
 {
-	"("	{ { jjtThis.addItem();}	} [ConditionalExpression() { jjtThis.setUsed();} ] ("," { { jjtThis.addItem();}	} [ConditionalExpression() { jjtThis.setUsed();}] )+ ")"
+	"("	ConditionalExpression() (","  ConditionalExpression() )+ ")"
 }
+
+void SequenceLeftSide():
+{
+  debugPrint("SEQUENCE LEFT SIDE");
+}
+{
+  	"(" { { jjtThis.addItem();}	} [ (LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();} ] ("," { { jjtThis.addItem();}	} [(LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();}] )+ ")"
+	
+}
+
+void SequenceVariable() :
+{
+  debugPrint("SEQUENCE VARIABLE");
+  Modifiers modifiers;
+  Token t;}
+{
+  modifiers = Modifiers() ( "var" | Type() )  t = <IDENTIFIER>
+  {
+	jjtThis.setImage(t.image);
+	modifiers.checkLocalVariableModifiers();
+	jjtThis.setModifiers(modifiers);
+  }}
+
 
 
 void PrimaryPrefix():
@@ -1555,9 +1580,9 @@ void StatementExpression():
 void SequenceAssignment() :
 { debugPrint("SEQUENCE ASSIGNMENT"); }
 {
-  	//Sequence() = Sequence() or
-  	//Sequence() = PrimaryExpression() [for method calls that return sequences] 
-  	Sequence() "=" ( LOOKAHEAD( Sequence() ) Sequence() | PrimaryExpression() ) { jjtThis.setImage("="); }  
+  	//SequenceLeftSide() = SequenceRightSide() or
+  	//SequenceLeftSide() = PrimaryExpression() [for method calls that return sequences, or splats] 
+  	SequenceLeftSide() "=" ( LOOKAHEAD( SequenceRightSide() ) SequenceRightSide() | PrimaryExpression() ) { jjtThis.setImage("="); }  
 }
 
 void Expression() :
@@ -1674,7 +1699,7 @@ void ReturnStatement():
 {
   "return"
   ( ";"
-  | LOOKAHEAD(Sequence()) Sequence() ";"
+  | LOOKAHEAD(SequenceRightSide()) SequenceRightSide() ";"
   |  ConditionalExpression() ";"   
   )
 }

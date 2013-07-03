@@ -158,7 +158,8 @@ public abstract class Type {
 	public static InterfaceType NUMBER = null;
 	
 	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
-	public static final ClassType NULL = new ClassType("null", new Modifiers(), null);
+	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null);
+	public static final VarType VAR = new VarType(); //VAR type used for placeholder for variables declared with var, until type is known
 	
 	//used to clear out types between runs of the JUnit tests
 	//otherwise, types can become mixed between two different runs of the type checker

@@ -908,6 +908,7 @@ public class TACBuilder implements ShadowParserVisitor
 		return NO_CHILDREN;
 	}
 
+	/*
 	@Override
 	public Object visit(ASTSequence node, Boolean secondVisit)
 			throws ShadowException
@@ -929,6 +930,7 @@ public class TACBuilder implements ShadowParserVisitor
 		}
 		return POST_CHILDREN;
 	}
+	*/
 
 	@Override
 	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit)
@@ -1888,6 +1890,24 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 	@Override
 	public Object visit(ASTInlineMethodDeclaration node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTSequenceRightSide node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTSequenceLeftSide node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTSequenceVariable node, Boolean data)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();

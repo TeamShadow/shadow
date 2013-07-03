@@ -431,7 +431,7 @@ public class ClassType extends Type
 		if( t == UNKNOWN || this == UNKNOWN )
 			return false;
 	
-		if( this == NULL || equals(t) || t == Type.OBJECT )
+		if( this == NULL || equals(t) || t == Type.OBJECT || t == Type.VAR )
 			return true;		
 		
 		if( t.isNumerical() && isNumerical() )
