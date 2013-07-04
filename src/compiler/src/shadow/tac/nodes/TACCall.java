@@ -89,7 +89,7 @@ public class TACCall extends TACOperand
 			return blockRef;
 		if (num == 1)
 			return methodRef;
-		return parameters.get(num - 1);
+		return parameters.get(num - 2);
 	}
 
 	@Override

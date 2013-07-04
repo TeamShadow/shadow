@@ -21,7 +21,7 @@ implements
 	public native compare(ulong other) => (int);
 
 	// implement CanEqual<ulong>
-	public native equals(ulong other) => (boolean);
+	public native equal(ulong other) => (boolean);
 
 
 	// implement Number<double>
@@ -53,7 +53,7 @@ implements
 	}
 
 	// implement CanEqual<double>
-	public equals(double other) => (boolean)
+	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}

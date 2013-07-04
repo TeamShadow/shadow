@@ -59,6 +59,8 @@ public class TypeParameter extends Type
 	
 	public boolean equals(Object o)
 	{
+		if( o == Type.NULL )
+			return true;
 		if( o != null && o instanceof TypeParameter )
 		{
 			if( o == this )
@@ -156,11 +158,5 @@ public class TypeParameter extends Type
 	@Override
 	public boolean hasInterface(InterfaceType type) {
 		return false;
-	}
-
-
-	@Override
-	protected void recursivelyOrderAllMethods(List<MethodSignature> methodList) {
-		// should never get called
 	}
 }

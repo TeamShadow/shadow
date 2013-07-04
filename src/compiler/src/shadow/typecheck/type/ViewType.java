@@ -1,7 +1,6 @@
 package shadow.typecheck.type;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 
 public class ViewType extends Type {
@@ -52,12 +51,5 @@ public class ViewType extends Type {
 	public boolean hasInterface(InterfaceType type) {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-
-	@Override
-	protected void recursivelyOrderAllMethods(List<MethodSignature> methodList) {
-		// TODO Auto-generated method stub
-		
 	}
 }

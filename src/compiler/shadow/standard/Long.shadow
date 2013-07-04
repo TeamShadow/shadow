@@ -21,7 +21,7 @@ implements
 	public native compare(long other) => (int);
 
 	// implement CanEqual<long>
-	public native equals(long other) => (boolean);
+	public native equal(long other) => (boolean);
 
 
 	// implement Number<double>
@@ -53,7 +53,7 @@ implements
 	}
 
 	// implement CanEqual<double>
-	public equals(double other) => (boolean)
+	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}

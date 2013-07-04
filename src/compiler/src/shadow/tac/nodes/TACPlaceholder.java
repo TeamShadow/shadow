@@ -28,6 +28,11 @@ public class TACPlaceholder extends TACOperand
 	{
 		return type.getType();
 	}
+	@Override
+	public void setType(Type newType)
+	{
+		type.setType(newType);
+	}
 
 	@Override
 	public int getNumOperands()

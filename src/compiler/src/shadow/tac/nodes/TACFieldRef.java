@@ -19,8 +19,8 @@ public class TACFieldRef extends TACReference
 	}
 	public TACFieldRef(TACNode node, TACOperand fieldPrefix, String fieldName)
 	{
-		this(node, fieldPrefix, ((ClassType)fieldPrefix.getType()).
-				getField(fieldName), fieldName);
+		this(node, fieldPrefix, fieldPrefix.getType().getField(fieldName),
+				fieldName);
 	}
 	public TACFieldRef(TACNode node, TACOperand fieldPrefix,
 			ModifiedType fieldType, String fieldName)
@@ -43,6 +43,10 @@ public class TACFieldRef extends TACReference
 	{
 		return index;
 	}
+	public Type getPrefixType()
+	{
+		return prefix.getType();
+	}
 	public TACOperand getPrefix()
 	{
 		return prefix;
@@ -61,6 +65,11 @@ public class TACFieldRef extends TACReference
 	public Type getType()
 	{
 		return type.getType();
+	}
+	@Override
+	public void setType(Type newType)
+	{
+		type.setType(newType);
 	}
 	@Override
 	public int getNumOperands()

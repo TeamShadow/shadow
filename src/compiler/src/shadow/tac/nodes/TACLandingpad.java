@@ -2,8 +2,9 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.Type;
 
-public class TACLandingpad extends TACSimpleNode
+public class TACLandingpad extends TACOperand
 {
 	private TACBlock block;
 	public TACLandingpad(TACBlock blockRef)
@@ -19,6 +20,12 @@ public class TACLandingpad extends TACSimpleNode
 	public TACBlock getBlock()
 	{
 		return block;
+	}
+
+	@Override
+	public Type getType()
+	{
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

@@ -26,7 +26,7 @@ public class LLVMMain
 //		arguments.add("src/test_windows_config.xml");
 
 //		arguments.add("--check");
-		arguments.add("shadow/test/FileTest.shadow");
+		arguments.add("shadow/test/Test.shadow");
 
 		arguments.add("shadow/standard/Object.shadow");
 		arguments.add("shadow/standard/Class.shadow");
@@ -46,10 +46,13 @@ public class LLVMMain
 		arguments.add("shadow/standard/Float.shadow");
 		arguments.add("shadow/standard/Double.shadow");
 		arguments.add("shadow/standard/Number.shadow");
+		arguments.add("shadow/standard/Integer.shadow");
+		arguments.add("shadow/standard/FloatingPoint.shadow");
 		arguments.add("shadow/standard/Reference.shadow");
 		arguments.add("shadow/standard/System.shadow");
 		arguments.add("shadow/standard/Iterator.shadow");
 
+		arguments.add("shadow/standard/CanEqual.shadow");
 		arguments.add("shadow/standard/CanCompare.shadow");
 		arguments.add("shadow/standard/CanIterate.shadow");
 		arguments.add("shadow/standard/CanIndex.shadow");
@@ -68,13 +71,13 @@ public class LLVMMain
 		arguments.add("shadow/io/File.shadow");
 		arguments.add("shadow/io/IOException.shadow");
 
-		arguments.add("shadow/utility/Random.shadow");
-		arguments.add("shadow/utility/List.shadow");
-		arguments.add("shadow/utility/Set.shadow");
-		arguments.add("shadow/utility/ArrayList.shadow");
-		arguments.add("shadow/utility/LinkedList.shadow");
+//		arguments.add("shadow/utility/Random.shadow");
+//		arguments.add("shadow/utility/List.shadow");
+//		arguments.add("shadow/utility/Set.shadow");
+//		arguments.add("shadow/utility/ArrayList.shadow");
+//		arguments.add("shadow/utility/LinkedList.shadow");
 //		arguments.add("shadow/utility/HashSet.shadow");
-		arguments.add("shadow/utility/IllegalModificationException.shadow");
+//		arguments.add("shadow/utility/IllegalModificationException.shadow");
 
 //		arguments.add("shadow/test/ExceptionA.shadow");
 //		arguments.add("shadow/test/ExceptionB.shadow");
@@ -97,7 +100,7 @@ public class LLVMMain
 			for (String file : arguments)
 			{
 				Main.test(new String[] { "--check", file });
-				Main.test(new String[] { file });
+				//Main.test(new String[] { file });
 			}
 		else
 		{

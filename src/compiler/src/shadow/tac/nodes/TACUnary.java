@@ -112,7 +112,7 @@ public class TACUnary extends TACOperand
 	@Override
 	public int getNumOperands()
 	{
-		return 2;
+		return 1;
 	}
 	@Override
 	public TACOperand getOperand(int num)

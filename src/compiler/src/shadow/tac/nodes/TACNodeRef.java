@@ -35,6 +35,11 @@ public class TACNodeRef extends TACOperand
 		return reference.getType();
 	}
 	@Override
+	public void setType(Type newType)
+	{
+		reference.setType(newType);
+	}
+	@Override
 	public int getNumOperands()
 	{
 		return 1;

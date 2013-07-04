@@ -146,7 +146,7 @@ public class TypeUpdater extends BaseChecker
 										modifiers.removeModifier(Modifiers.WEAK);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
 									methodType.addReturn(modifiedType);									
-									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
+									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), null));
 								}								
 							}
 							
@@ -171,7 +171,7 @@ public class TypeUpdater extends BaseChecker
 										modifiers.removeModifier(Modifiers.WEAK);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
 									methodType.addParameter("value", modifiedType );									
-									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), methodNode));
+									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), null));
 								}								
 							}
 						}						

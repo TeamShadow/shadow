@@ -11,22 +11,45 @@ class shadow.test@FileTest
 	public main( String[] args ) => ()
 	{
 		Console console = Console:instance;
+		nullable File nullableFile = null;
 		try
 		{
 			File file = File:create(args[0]);
-			if (!file->exists)
+			nullableFile = file;
+			try
+			{
+				console.printLine("try begin");
 				file->exists = true;
+				console.printLine("try end");
+			}
+			catch ( IOException ex )
+			{
+				console.printLine("catch ( " # ex # " )");
+			}
+			finally
+			{
+				console.printLine("finally");
+			}
 			String line = console.readLine();
 			byte[] chars = line->chars;
 			file.write(chars);
 			file->size = file->position;
 			file.read(chars);
 			console.printLine(String:create(chars));
-			file.close();
 		}
 		catch ( IOException ex )
 		{
-			console.printLine("Exception caught");
+			console.printLine(ex);
+		}
+		finally
+		{
+			try
+			{
+				check(nullableFile).close();
+			}
+			recover
+			{
+			}
 		}
 	}
 }

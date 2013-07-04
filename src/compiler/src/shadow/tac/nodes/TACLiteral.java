@@ -1,5 +1,19 @@
 package shadow.tac.nodes;
 
+import shadow.interpreter.ShadowBoolean;
+import shadow.interpreter.ShadowByte;
+import shadow.interpreter.ShadowCode;
+import shadow.interpreter.ShadowDouble;
+import shadow.interpreter.ShadowFloat;
+import shadow.interpreter.ShadowInt;
+import shadow.interpreter.ShadowLong;
+import shadow.interpreter.ShadowShort;
+import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowUByte;
+import shadow.interpreter.ShadowUInt;
+import shadow.interpreter.ShadowULong;
+import shadow.interpreter.ShadowUShort;
+import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Modifiers;
@@ -7,8 +21,7 @@ import shadow.typecheck.type.Type;
 
 public class TACLiteral extends TACOperand
 {
-	private Type type;
-	private Object value;
+	private ShadowValue value;
 	public TACLiteral(String literal)
 	{
 		this(null, literal);
@@ -18,23 +31,10 @@ public class TACLiteral extends TACOperand
 		super(node);
 		String lower = literal.toLowerCase();
 		if (literal.equals("null"))
-		{
-			type = Type.NULL;
-			value = null;
-		}
-		else if (literal.equals("true"))
-		{
-			type = Type.BOOLEAN;
-			value = true;
-		}
-		else if (literal.equals("false"))
-		{
-			type = Type.BOOLEAN;
-			value = false;
-		}
+			this.value = ShadowValue.NULL;
 		else if (literal.startsWith("\'") && literal.endsWith("\'"))
 		{
-			type = Type.CODE;
+			int value;
 			if (literal.charAt(1) == '\\')
 			{
 				switch (literal.charAt(2))
@@ -75,94 +75,46 @@ public class TACLiteral extends TACOperand
 			}
 			else
 				value = literal.charAt(1);
+			this.value = new ShadowCode(value);
 		}
 		else if (literal.startsWith("\"") && literal.endsWith("\""))
-		{
-			type = Type.STRING;
-			value = parseString(literal.substring(1, literal.length() - 1));
-		}
+			this.value = new ShadowString(parseString(literal));
+		else if (literal.equals("true"))
+			this.value = new ShadowBoolean(true);
+		else if (literal.equals("false"))
+			this.value = new ShadowBoolean(false);
 		else if (lower.endsWith("uy"))
-		{
-			type = Type.UBYTE;
-			value = (byte)parseNumber(literal.substring(0, literal.length() -
-					2), 8);
-		}
+			this.value = new ShadowUByte((byte)parseNumber(literal, 2, 8));
 		else if (lower.endsWith("y"))
-		{
-			type = Type.BYTE;
-			value = (byte)parseNumber(literal.substring(0, literal.length() -
-					1), 8);
-		}
+			this.value = new ShadowByte((byte)parseNumber(literal, 1, 7));
 		else if (lower.endsWith("us"))
-		{
-			type = Type.USHORT;
-			value = (short)parseNumber(literal.substring(0, literal.length() -
-					2), 16);
-		}
+			this.value = new ShadowUShort((short)parseNumber(literal, 2, 16));
 		else if (lower.endsWith("s"))
-		{
-			type = Type.SHORT;
-			value = (short)parseNumber(literal.substring(0, literal.length() -
-					1), 16);
-		}
+			this.value = new ShadowShort((short)parseNumber(literal, 1, 15));
 		else if (lower.endsWith("ui"))
-		{
-			type = Type.UINT;
-			value = (int)parseNumber(literal.substring(0, literal.length() - 2),
-					32);
-		}
+			this.value = new ShadowUInt((int)parseNumber(literal, 2, 32));
 		else if (lower.endsWith("i"))
-		{
-			type = Type.INT;
-			value = (int)parseNumber(literal.substring(0, literal.length() - 1),
-					32);
-		}
+			this.value = new ShadowInt((int)parseNumber(literal, 1, 31));
 		else if (lower.endsWith("ul"))
-		{
-			type = Type.ULONG;
-			value = (long)parseNumber(literal.substring(0, literal.length() -
-					2), 64);
-		}
+			this.value = new ShadowULong((long)parseNumber(literal, 2, 64));
 		else if (lower.endsWith("l"))
-		{
-			type = Type.LONG;
-			value = (long)parseNumber(literal.substring(0, literal.length() -
-					1), 64);
-		}
+			this.value = new ShadowLong((long)parseNumber(literal, 1, 63));
 		else if (lower.endsWith("u"))
-		{
-			type = Type.UINT;
-			value = (int)parseNumber(literal.substring(0, literal.length() - 1),
-					32);
-		}
+			this.value = new ShadowUInt((int)parseNumber(literal, 1, 32));
 		else if (lower.endsWith("f") && "xou".indexOf(lower.charAt(1)) == -1)
-		{
-			type = Type.FLOAT;
-			value = (float)Float.parseFloat(literal.substring(0,
-					literal.length() - 1));
-		}
+			this.value = new ShadowFloat((float)parseNumber(literal, 1));
 		else if (lower.endsWith("d") && "xou".indexOf(lower.charAt(1)) == -1)
-		{
-			type = Type.DOUBLE;
-			value = (double)Double.parseDouble(literal.substring(0,
-					literal.length() - 1));
-		}
+			this.value = new ShadowDouble((double)parseNumber(literal, 1));
 		else if (literal.indexOf('.') != -1 || lower.indexOf('e') != -1)
-		{
-			type = Type.DOUBLE;
-			value = (double)Double.parseDouble(literal);
-		}
+			this.value = new ShadowDouble((double)parseNumber(literal, 0));
 		else
-		{
-			type = Type.INT;
-			value = (int)parseNumber(literal, 32);
-		}
-		setSymbol(toString());
+			this.value = new ShadowInt((int)parseNumber(literal, 0, 31));
 	}
 
 	private static String parseString(String string)
 	{
-		StringBuilder builder = new StringBuilder(string);
+		StringBuilder builder = new StringBuilder(
+				string.substring(1, string.length() - 1));
 		int index = 0; while ((index = builder.indexOf("\\", index)) != -1)
 		{
 			switch (builder.charAt(index + 1))
@@ -198,9 +150,15 @@ public class TACLiteral extends TACOperand
 		}
 		return builder.toString();
 	}
-	private static long parseNumber(String string, int bits)
+	private static double parseNumber(String string, int suffix)
+	{
+		string = string.substring(0, string.length() - suffix);
+		return Double.parseDouble(string);
+	}
+	private static long parseNumber(String string, int suffix, int bits)
 	{
 		int base = 10;
+		string = string.substring(0, string.length() - suffix);
 		if (string.length() > 2 && string.charAt(0) == '0')
 		{
 			switch (string.charAt(1))
@@ -232,31 +190,30 @@ public class TACLiteral extends TACOperand
 				throw new NumberFormatException("Invalid digit");
 			value = value * base + digit;
 		}
-		if ((value & ~(((1L << (bits >> 1)) << (bits >> 1)) - 1)) != 0)
+		if (value != 1L << bits &&
+				(value & ~((1L << (bits >> 1) << (bits + 1 >> 1)) - 1)) != 0)
 			throw new NumberFormatException("too big");
 		return value;
 	}
 
-	public boolean isNull()
-	{
-		return type == Type.NULL;
-	}
-	public Object getValue()
+	public ShadowValue getValue()
 	{
 		return value;
 	}
-
 	@Override
 	public Modifiers getModifiers()
 	{
-		if (isNull())
-			return new Modifiers(Modifiers.NULLABLE);
-		return Modifiers.NO_MODIFIERS;
+		return getValue().getModifiers();
 	}
 	@Override
 	public Type getType()
 	{
-		return type;
+		return getValue().getType();
+	}
+	@Override
+	public void setType(Type type)
+	{
+		getValue().setType(type);
 	}
 	@Override
 	public int getNumOperands()
@@ -278,10 +235,6 @@ public class TACLiteral extends TACOperand
 	@Override
 	public String toString()
 	{
-		if (type == Type.CODE)
-			return '\'' + String.valueOf(value) + '\'';
-		if (type == Type.STRING)
-			return '\"' + String.valueOf(value) + '\"';
-		return String.valueOf(value);
+		return value.toString();
 	}
 }

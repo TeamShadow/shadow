@@ -44,7 +44,7 @@ public class ArrayType extends ClassType
 	@Override
 	public int getWidth()
 	{
-		return 6 + getDimensions() * 4;
+		return OBJECT.getWidth() + getDimensions() * INT.getWidth();
 	}
 	
 	public Type getSuperBaseType()
@@ -71,6 +71,17 @@ public class ArrayType extends ClassType
 		this(baseType, Collections.singletonList(1), 0);
 	}
 	
+	public ArrayType( Type baseType, int dimensions )
+	{
+		super(makeName(baseType, dimensions), baseType.getModifiers(), baseType.getOuter());
+		
+		this.baseType = baseType;
+		this.dimensions = dimensions;
+		
+		if( baseType.isParameterized() )
+			setParameterized(true);
+	}
+	
 	public ArrayType(Type baseType, List<Integer> arrayDimensions ) {
 		this( baseType, arrayDimensions, 0 );
 	}	
@@ -92,17 +103,6 @@ public class ArrayType extends ClassType
 	public SequenceType getTypeParameters()
 	{
 		return baseType.getTypeParameters();		
-	}
-	
-	protected ArrayType( Type baseType, int dimensions )
-	{
-		super(makeName(baseType, dimensions), baseType.getModifiers(), baseType.getOuter());
-		
-		this.baseType = baseType;
-		this.dimensions = dimensions;
-		
-		if( baseType.isParameterized() )
-			setParameterized(true);
 	}
 	
 	public boolean equals(Object o)

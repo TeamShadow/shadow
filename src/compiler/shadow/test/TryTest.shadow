@@ -1,0 +1,27 @@
+import shadow.io@Console;
+
+immutable class shadow.test@TryTest
+{
+	public main( String[] args ) => ( int )
+	{
+		Console console = Console:instance;
+		try
+		{
+			console.printLine("before throw");
+			throw Exception:create("message");
+			console.printLine("after throw");
+		}
+		catch (Exception ex)
+		{
+			console.printLine("catch (" # ex # ")");
+		}
+		recover
+		{
+			console.printLine("recover");
+		}
+		finally
+		{
+			console.printLine("finally");
+		}
+	}
+}

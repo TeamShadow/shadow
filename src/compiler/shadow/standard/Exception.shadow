@@ -11,8 +11,6 @@ exception shadow.standard@Exception
 		this:message = message;
 	}
 
-	public native throw_() => ();
-
 	private terminate() => ( int )
 	{
 		Console console = Console:instance;

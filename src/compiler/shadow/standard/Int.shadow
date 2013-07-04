@@ -23,7 +23,7 @@ implements
 	public native compare(int other) => (int);
 
 	// implement CanEqual<int>
-	public native equals(int other) => (boolean);
+	public native equal(int other) => (boolean);
 
 
 	// implement Integer<long>
@@ -68,10 +68,10 @@ implements
 		return cast<long>(this).compare(other);
 	}
 
-	// implement CanEqual<float>
-	public equals(float other) => (boolean)
+	// implement CanEqual<long>
+	public equal(long other) => (boolean)
 	{
-		return cast<float>(this) == other;
+		return cast<long>(this) == other;
 	}
 
 
@@ -101,6 +101,12 @@ implements
 	public compare(float other) => (int)
 	{
 		return cast<float>(this).compare(other);
+	}
+
+	// implement CanEqual<float>
+	public equal(float other) => (boolean)
+	{
+		return cast<float>(this) == other;
 	}
 
 
@@ -133,7 +139,7 @@ implements
 	}
 
 	// implement CanEqual<double>
-	public equals(double other) => (boolean)
+	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}

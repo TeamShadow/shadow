@@ -4,8 +4,10 @@
 %_Pshadow_Pstandard_CObject = type { %_Pshadow_Pstandard_CObject_Mclass* }
 %_Pshadow_Pstandard_CClass_Mclass = type opaque
 %_Pshadow_Pstandard_CClass = type { %_Pshadow_Pstandard_CClass_Mclass*, { %_Pshadow_Pstandard_CObject**, [1 x i32] }, { %_Pshadow_Pstandard_CClass**, [1 x i32] }, %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CClass*, i32, i32, i32 }
-%_Pshadow_Pstandard_CString_Mclass = type opaque
+%_Pshadow_Pstandard_CString_Mclass = type { %_Pshadow_Pstandard_CClass, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*)*, i1 (%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CClass* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*)*, { i8*, [1 x i32] } (%_Pshadow_Pstandard_CString*)*, i32 (%_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CString*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CString*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*, { i8*, [1 x i32] })*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*, { i32*, [1 x i32] })*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CString*)*, i1 (%_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CString*)*, i8 (%_Pshadow_Pstandard_CString*, i32)*, i1 (%_Pshadow_Pstandard_CString*)*, { %_Pshadow_Pstandard_CIterator_Mclass*, %_Pshadow_Pstandard_CObject* } (%_Pshadow_Pstandard_CString*)*, i32 (%_Pshadow_Pstandard_CString*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*, i32)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*, i32, i32)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CString*)* }
 %_Pshadow_Pstandard_CString = type { %_Pshadow_Pstandard_CString_Mclass*, { i8*, [1 x i32] }, i1 }
+@_Pshadow_Pstandard_CString_Mclass = external constant %_Pshadow_Pstandard_CString_Mclass
+%_Pshadow_Pstandard_CIterator_Mclass = type opaque
 %_Pshadow_Pstandard_CException_Mclass = type { %_Pshadow_Pstandard_CClass, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CException* (%_Pshadow_Pstandard_CException*)*, i1 (%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CClass* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CException* (%_Pshadow_Pstandard_CException*, %_Pshadow_Pstandard_CString*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CException*)*, void (%_Pshadow_Pstandard_CException*)* }
 %_Pshadow_Pstandard_CException = type { %_Pshadow_Pstandard_CException_Mclass* }
 @_Pshadow_Pstandard_CException_Mclass = external constant %_Pshadow_Pstandard_CException_Mclass
@@ -20,7 +22,8 @@
 %_Pshadow_Pio_CIOException = type { %_Pshadow_Pio_CIOException_Mclass* }
 @_Pshadow_Pio_CIOException_Mclass = external constant %_Pshadow_Pio_CIOException_Mclass
 
-declare %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pio_CIOException*)
+declare %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pstandard_CString*, { i8*, [1 x i32] })
+declare %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate_Pshadow_Pstandard_CString(%_Pshadow_Pio_CIOException*, %_Pshadow_Pstandard_CString*)
 declare noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass*)
 
 declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)
@@ -29,6 +32,8 @@ declare noalias i8* @malloc(i32) nounwind
 declare void @free(i8*) nounwind
 
 declare i32* @__errno_location() nounwind readnone
+declare i8* @strerror_r(i32, i8*, i32) nounwind
+declare i32 @strlen(i8*) nounwind readonly
 declare i32 @access(i8* nocapture, i32)
 declare i64 @lseek64(i32, i64, i32)
 declare i32 @truncate64(i8* nocapture, i64)
@@ -43,17 +48,38 @@ declare i32 @close(i32)
 declare i32 @clock_gettime(i32, %struct.timespec*) nounwind
 
 define private void @throwIOException() noreturn {
-	%1 = tail call i32* @__errno_location() nounwind readnone
-	%2 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* getelementptr inbounds (%_Pshadow_Pio_CIOException_Mclass* @_Pshadow_Pio_CIOException_Mclass, i32 0, i32 0))
-	%3 = bitcast %_Pshadow_Pstandard_CObject* %2 to %_Pshadow_Pio_CIOException*
-	%4 = call %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pio_CIOException* %3)
-	%5 = bitcast %_Pshadow_Pio_CIOException* %4 to %_Pshadow_Pstandard_CException*
-	%6 = getelementptr inbounds %_Pshadow_Pstandard_CException* %5, i32 0, i32 0
-	%7 = load %_Pshadow_Pstandard_CException_Mclass** %6
-	%8 = getelementptr inbounds %_Pshadow_Pstandard_CException_Mclass* %7, i32 0, i32 9
-	%9 = load void (%_Pshadow_Pstandard_CException*)** %8
-	call void %9(%_Pshadow_Pstandard_CException* %5)
+	%1 = alloca i8, i32 256
+	%2 = tail call i32* @__errno_location() nounwind readnone
+	%3 = load i32* %2
+	%4 = call i8* @strerror_r(i32 %3, i8* %1, i32 256) nounwind
+	%5 = insertvalue { i8*, [1 x i32] } undef, i8* %4, 0
+	%6 = tail call i32 @strlen(i8* %4)
+	%7 = insertvalue { i8*, [1 x i32] } %5, i32 %6, 1, 0
+	%8 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* getelementptr inbounds (%_Pshadow_Pstandard_CString_Mclass* @_Pshadow_Pstandard_CString_Mclass, i32 0, i32 0))
+	%9 = bitcast %_Pshadow_Pstandard_CObject* %8 to %_Pshadow_Pstandard_CString*
+	%10 = call %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pstandard_CString* %9, { i8*, [1 x i32] } %7)
+	%11 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* getelementptr inbounds (%_Pshadow_Pio_CIOException_Mclass* @_Pshadow_Pio_CIOException_Mclass, i32 0, i32 0))
+	%12 = bitcast %_Pshadow_Pstandard_CObject* %11 to %_Pshadow_Pio_CIOException*
+	%13 = call %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate_Pshadow_Pstandard_CString(%_Pshadow_Pio_CIOException* %12, %_Pshadow_Pstandard_CString* %10)
+	%14 = bitcast %_Pshadow_Pio_CIOException* %13 to %_Pshadow_Pstandard_CException*
+	%15 = getelementptr inbounds %_Pshadow_Pstandard_CException* %14, i32 0, i32 0
+	%16 = load %_Pshadow_Pstandard_CException_Mclass** %15
+	%17 = getelementptr inbounds %_Pshadow_Pstandard_CException_Mclass* %16, i32 0, i32 9
+	%18 = load void (%_Pshadow_Pstandard_CException*)** %17
+	call void %18(%_Pshadow_Pstandard_CException* %14)
 	unreachable
+
+;	%1 = tail call i32* @__errno_location() nounwind readnone
+;	%2 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* getelementptr inbounds (%_Pshadow_Pio_CIOException_Mclass* @_Pshadow_Pio_CIOException_Mclass, i32 0, i32 0))
+;	%3 = bitcast %_Pshadow_Pstandard_CObject* %2 to %_Pshadow_Pio_CIOException*
+;	%4 = call %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pio_CIOException* %3)
+;	%5 = bitcast %_Pshadow_Pio_CIOException* %4 to %_Pshadow_Pstandard_CException*
+;	%6 = getelementptr inbounds %_Pshadow_Pstandard_CException* %5, i32 0, i32 0
+;	%7 = load %_Pshadow_Pstandard_CException_Mclass** %6
+;	%8 = getelementptr inbounds %_Pshadow_Pstandard_CException_Mclass* %7, i32 0, i32 9
+;	%9 = load void (%_Pshadow_Pstandard_CException*)** %8
+;	call void %9(%_Pshadow_Pstandard_CException* %5)
+;	unreachable
 }
 
 define i64 @_Pshadow_Pstandard_CSystem_MnanoTime(%_Pshadow_Pstandard_CSystem*) {

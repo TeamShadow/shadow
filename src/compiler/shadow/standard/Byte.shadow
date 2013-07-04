@@ -25,7 +25,7 @@ implements
 	public native compare(byte other) => (int);
 
 	// implement CanEqual<byte>
-	public native equals(byte other) => (boolean);
+	public native equal(byte other) => (boolean);
 
 
 	// implement Integer<short>
@@ -68,6 +68,12 @@ implements
 	public compare(short other) => (int)
 	{
 		return cast<short>(this).compare(other);
+	}
+
+	// implement CanEqual<short>
+	public equal(short other) => (boolean)
+	{
+		return cast<short>(this) == other;
 	}
 
 
@@ -113,6 +119,12 @@ implements
 		return cast<int>(this).compare(other);
 	}
 
+	// implement CanEqual<int>
+	public equal(int other) => (boolean)
+	{
+		return cast<int>(this) == other;
+	}
+
 
 	// implement Integer<long>
 	public bitOr(long other) => (long)
@@ -156,6 +168,12 @@ implements
 		return cast<long>(this).compare(other);
 	}
 
+	// implement CanEqual<long>
+	public equal(long other) => (boolean)
+	{
+		return cast<long>(this) == other;
+	}
+
 
 	// implement Number<float>
 	public add(float other) => (float)
@@ -186,7 +204,7 @@ implements
 	}
 
 	// implement CanEqual<float>
-	public equals(float other) => (boolean)
+	public equal(float other) => (boolean)
 	{
 		return cast<float>(this) == other;
 	}
@@ -221,7 +239,7 @@ implements
 	}
 
 	// implement CanEqual<double>
-	public equals(double other) => (boolean)
+	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}

@@ -209,7 +209,7 @@ public class StandardLibraryTest {
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}
 
-	@Test public void testUnexpectedOperationException() throws Exception {
+	@Test public void testUnsupportedOperationException() throws Exception {
 		args.add("shadow/standard/UnsupportedOperationException.shadow");
 		assertEquals(0, Main.test(args.toArray(new String[] { })));
 	}

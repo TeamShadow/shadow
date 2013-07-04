@@ -56,7 +56,7 @@ declare %_Unwind_Ptr @_Unwind_GetDataRelBase(%struct._Unwind_Context*) nounwind 
 declare %_Unwind_Ptr @_Unwind_GetTextRelBase(%struct._Unwind_Context*) nounwind readonly
 declare i8* @_Unwind_FindEnclosingFunction(i8*) nounwind readonly
 
-declare noalias i8* @malloc(i32) nounwind
+declare noalias i8* @malloc(i64) nounwind
 declare void @free(i8*) nounwind
 declare void @abort() noreturn nounwind
 declare void @exit(i32) noreturn nounwind
@@ -452,7 +452,23 @@ install.context:
 abort: tail call void @abort() noreturn nounwind unreachable
 }
 
-define %_Pshadow_Pstandard_CException* @__shadow_catch(i8*) {
+define void @__shadow_throw(%_Pshadow_Pstandard_CObject*) cold noreturn {
+entry:
+	%1 = tail call noalias i8* @malloc(i64 add (i64 ptrtoint (%struct._Unwind_Exception* getelementptr (%struct._Unwind_Exception* null, i64 1) to i64), i64 ptrtoint (i1** getelementptr (i1** null, i64 1) to i64))) nounwind
+	%2 = bitcast i8* %1 to %struct._Unwind_Exception*
+	%3 = load %_Unwind_Exception_Class* bitcast ([8 x i8]* @shadow.exception.class to %_Unwind_Exception_Class*)
+	%4 = getelementptr %struct._Unwind_Exception* %2, i64 0, i32 0
+	store %_Unwind_Exception_Class %3, %_Unwind_Exception_Class* %4
+	%5 = getelementptr %struct._Unwind_Exception* %2, i64 0, i32 1
+	store %_Unwind_Exception_Cleanup_Fn @shadow.exception.cleanup, %_Unwind_Exception_Cleanup_Fn* %5
+	%6 = getelementptr %struct._Unwind_Exception* %2, i64 1
+	%7 = bitcast %struct._Unwind_Exception* %6 to %_Pshadow_Pstandard_CObject**
+	store %_Pshadow_Pstandard_CObject* %0, %_Pshadow_Pstandard_CObject** %7
+	%8 = tail call %_Unwind_Reason_Code @_Unwind_RaiseException(%struct._Unwind_Exception* %2)
+	tail call void @abort() noreturn nounwind unreachable
+}
+
+define %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture) nounwind {
 entry:
 	%1 = bitcast i8* %0 to %struct._Unwind_Exception*
 	%2 = getelementptr %struct._Unwind_Exception* %1, i32 1
@@ -460,24 +476,4 @@ entry:
 	%4 = load %_Pshadow_Pstandard_CException** %3
 	tail call void @free(i8* %0) nounwind
 	ret %_Pshadow_Pstandard_CException* %4
-}
-
-declare void @puts(i8*) nounwind
-
-@eos = private unnamed_addr constant [4 x i8] c"eos\00"
-
-define void @_Pshadow_Pstandard_CException_Mthrow__(%_Pshadow_Pstandard_CException*) noreturn {
-entry:
-	%1 = tail call noalias i8* @malloc(i32 add (i32 ptrtoint (%struct._Unwind_Exception* getelementptr (%struct._Unwind_Exception* null, i32 1) to i32), i32 ptrtoint (i1** getelementptr (i1** null, i32 1) to i32))) nounwind
-	%2 = bitcast i8* %1 to %struct._Unwind_Exception*
-	%3 = load %_Unwind_Exception_Class* bitcast ([8 x i8]* @shadow.exception.class to %_Unwind_Exception_Class*)
-	%4 = getelementptr %struct._Unwind_Exception* %2, i32 0, i32 0
-	store %_Unwind_Exception_Class %3, %_Unwind_Exception_Class* %4
-	%5 = getelementptr %struct._Unwind_Exception* %2, i32 0, i32 1
-	store %_Unwind_Exception_Cleanup_Fn @shadow.exception.cleanup, %_Unwind_Exception_Cleanup_Fn* %5
-	%6 = getelementptr %struct._Unwind_Exception* %2, i32 1
-	%7 = bitcast %struct._Unwind_Exception* %6 to %_Pshadow_Pstandard_CException**
-	store %_Pshadow_Pstandard_CException* %0, %_Pshadow_Pstandard_CException** %7
-	%8 = tail call %_Unwind_Reason_Code @_Unwind_RaiseException(%struct._Unwind_Exception* %2)
-	tail call void @abort() noreturn nounwind unreachable
 }

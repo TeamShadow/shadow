@@ -21,22 +21,30 @@ public class TACVariable implements ModifiedType
 		name = varName;
 		suffix = 0;
 	}
+	public TACVariable(ModifiedType varType, String varName, int varSuffix)
+	{
+		type = varType;
+		name = varName;
+		suffix = varSuffix;
+	}
 	public boolean hasType()
 	{
 		return type != null;
 	}
+	@Override
 	public Modifiers getModifiers()
 	{
 		return type.getModifiers();
 	}
+	@Override
 	public Type getType()
 	{
 		return type.getType();
 	}
 	@Override
-	public void setType(Type type)
+	public void setType(Type newType)
 	{
-		throw new UnsupportedOperationException();
+		type.setType(newType);
 	}
 	public String getOriginalName()
 	{

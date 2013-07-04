@@ -4,7 +4,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 
-public class TACLabelRef extends TACOperand
+public class TACLabelRef extends TACOperand implements TACDestination
 {
 	private TACLabel label;
 	public TACLabelRef()
@@ -15,6 +15,19 @@ public class TACLabelRef extends TACOperand
 	{
 		super(node);
 		label = null;
+	}
+
+	@Override
+	public int getNumPossibilities()
+	{
+		return 1;
+	}
+	@Override
+	public TACLabelRef getPossibility(int num)
+	{
+		if (num == 0)
+			return this;
+		throw new IndexOutOfBoundsException("num");
 	}
 
 	public TACLabel getLabel()
@@ -36,9 +49,9 @@ public class TACLabelRef extends TACOperand
 			label = this;
 		}
 
-		public String getName()
+		public TACLabelRef getRef()
 		{
-			return TACLabelRef.this.getSymbol();
+			return TACLabelRef.this;
 		}
 
 		@Override
@@ -61,7 +74,7 @@ public class TACLabelRef extends TACOperand
 		@Override
 		public String toString()
 		{
-			return getName();
+			return TACLabelRef.this.toString();
 		}
 	}
 
@@ -90,6 +103,6 @@ public class TACLabelRef extends TACOperand
 	@Override
 	public String toString()
 	{
-		return getSymbol();
+		return data.toString();
 	}
 }

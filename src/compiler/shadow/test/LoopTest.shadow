@@ -1,0 +1,77 @@
+import shadow.io@Console;
+
+class shadow.test@LoopTest
+{
+	public main( String[] args ) => ()
+	{
+		Console console = Console:instance;
+		console.printLine("return " # test(console));
+	}
+	public test( Console console ) => ( String )
+	{
+		console.printLine("before " # "outer");
+		try
+		{
+			console.printLine("try " # "before " # "outer");
+			for ( int i = 0; i < 2; i += 1 )
+			{
+				console.printLine("loop " # "before " # "skip");
+				try
+				{
+					console.printLine("try " # "before " # "skip");
+					skip;
+					console.printLine("try " # "after " # "skip");
+				}
+				finally
+				{
+					console.printLine("finally " # "skip");
+				}
+				console.printLine("loop " # "after " # "skip");
+			}
+			for ( int i = 0; i < 2; i += 1 )
+			{
+				console.printLine("loop " # "before " # "continue");
+				try
+				{
+					console.printLine("try " # "before " # "continue");
+					continue;
+					console.printLine("try " # "after " # "continue");
+				}
+				finally
+				{
+					console.printLine("finally " # "continue");
+				}
+				console.printLine("loop " # "after " # "continue");
+			}
+			for ( int i = 0; i < 2; i += 1 )
+			{
+				console.printLine("loop " # "before " # "break");
+				try
+				{
+					console.printLine("try " # "before " # "break");
+					break;
+					console.printLine("try " # "after " # "break");
+				}
+				finally
+				{
+					console.printLine("finally " # "break");
+				}
+				console.printLine("loop " # "after " # "break");
+			}
+			console.printLine("try " # "after " # "outer");
+
+			console.printLine("before " # "return " # "first");
+			return "first";
+			console.printLine("after " # "return " # "first");
+		}
+		finally
+		{
+			console.printLine("finally " # "outer");
+			console.printLine("before " # "return " # "second");
+			//return "second";
+			console.printLine("after " # "return " # "second");
+		}
+		console.printLine("after " # "outer");
+		return "last";
+	}
+}

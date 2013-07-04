@@ -59,9 +59,18 @@ public class TabbedLineWriter
 	{
 		++indent;
 	}
+	public void indent(int amount)
+	{
+		indent += amount;
+	}
 	public void outdent()
 	{
 		if (--indent < 0)
+			indent = 0;
+	}
+	public void outdent(int amount)
+	{
+		if ((indent -= amount) < 0)
 			indent = 0;
 	}
 	private static final int TAB_SIZE = 4, INDENT_BUFFER_SIZE = 8 * TAB_SIZE;

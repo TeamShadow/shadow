@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.naming.OperationNotSupportedException;
-
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.Package;
@@ -304,11 +302,23 @@ public abstract class Type {
 			Type type = (Type) o;
 			
 			if( type.getPackage() == getPackage() && type.getTypeName().equals(getTypeName()) )
-			{				
+			{
+				
 				if( parameterized )
-					return type.typeParameters.equals(typeParameters);
-				else
-					return true;
+				{
+					if( type.typeParameters.size() == typeParameters.size() )
+					{
+						for( int i = 0; i < typeParameters.size(); i++ )
+						{
+							if( !type.typeParameters.get(i).equals(typeParameters.get(i)) )
+								return false;
+						}
+					}
+					else
+						return false;
+				}
+					
+				return true;
 			}	
 			else
 				return false;
@@ -363,10 +373,16 @@ public abstract class Type {
 			return false;
 	}
 	
-	public int getWidth()
+	public static int getWidth(ModifiedType type)
+	{
+		if (type.getModifiers().isNullable())
+			return OBJECT.getWidth(); // nullable makes a primitive type a reference
+		return type.getType().getWidth();
+	}
+	protected int getWidth()
 	{
 		if( this == NULL )
-			return -1;
+			return OBJECT.getWidth();
 		if( this.equals(BYTE) || this.equals(UBYTE) || this.equals(BOOLEAN) )
 			return 1;
 		else if( this.equals(SHORT) || this.equals(USHORT) )
@@ -376,6 +392,10 @@ public abstract class Type {
 		else if( this.equals(LONG) || this.equals(ULONG) || this.equals(DOUBLE) )
 			return 8;
 		return 6;
+	}
+	public boolean isSimpleReference()
+	{
+		return getWidth() == OBJECT.getWidth();
 	}
 	
 	@Override
@@ -635,7 +655,7 @@ public abstract class Type {
 	 */
 	public boolean isStrictSubtype(Type other) {
 		if ( this == Type.NULL )
-			return other != Type.NULL;		
+			return other != Type.NULL;
 		if ( equals(other) )
 			return false;
 		return isSubtype(other);
@@ -736,14 +756,16 @@ public abstract class Type {
 	/**
 	 * Simple way to get a known method.
 	 * Example:
-	 *     Type.ARRAY.getMethod("index", 1);
+	 *     Type.ARRAY.getMethod("index", Type.INT);
 	 */
-	public MethodSignature getMethod(String methodName, int parameters)
+	public MethodSignature getMethod(String methodName, Type... argumentTypes)
 	{
+		SequenceType arguments = new SequenceType();
+		for (Type argument : argumentTypes)
+			arguments.add(new SimpleModifiedType(argument));
 		MethodSignature method = null;
-		List<MethodSignature> methods = getMethods(methodName);
-		for (MethodSignature candidate : methods)
-			if (candidate.getParameterTypes().size() == parameters)
+		for (MethodSignature candidate : getMethods(methodName))
+			if (candidate.matches(arguments))
 				if (method == null)
 					method = candidate;
 				else
@@ -780,32 +802,65 @@ public abstract class Type {
 
 	public List<MethodSignature> orderAllMethods()
 	{
-		List<MethodSignature> methodList = new ArrayList<MethodSignature>();
-
-		recursivelyOrderAllMethods(methodList);
-
-		return methodList;
+		return recursivelyOrderAllMethods(new ArrayList<MethodSignature>());
 	}
-	
-	protected void orderMethods( List<MethodSignature> methodList )
-	{
-		TreeMap<String, List<MethodSignature>> sortedMethods =
-				new TreeMap<String, List<MethodSignature>>(methodTable);
 
-		for ( List<MethodSignature> methods : sortedMethods.values() )
+	public List<MethodSignature> orderMethods()
+	{
+		return recursivelyOrderMethods(new ArrayList<MethodSignature>());
+	}
+
+	protected List<MethodSignature> orderMethods( List<MethodSignature> methodList, boolean add )
+	{
+		int parentSize = methodList.size();
+		List<MethodSignature> result = add ? methodList : new ArrayList<MethodSignature>();
+		for ( List<MethodSignature> methods : new TreeMap<String, List<MethodSignature>>(getMethodMap()).values() )
 			for ( MethodSignature method : methods )
-				if ( method.getModifiers().isPublic() )
+				if ( !method.getModifiers().isPrivate() )
 		{
-			int index;
-			for ( index = 0; index < methodList.size(); index++ )
-				if ( methodList.get(index).isIndistinguishable(method) )
+			SequenceType parameters = method.getParameterTypes();
+			boolean replaced = false;
+			MethodSignature wrapper = method;
+			for ( int i = 0; i < parentSize; i++ )
 			{
-				methodList.set(index, method);
-				break;
+				MethodSignature parentMethod = methodList.get(i);
+				SequenceType parentParameters = parentMethod.getParameterTypes();
+				if ( (!method.isCreate() || parentMethod.getOuter() instanceof InterfaceType) &&
+						method.getSymbol().equals(parentMethod.getSymbol()) &&
+						parameters.size() == parentParameters.size() )
+				{
+					boolean replace = true, wrapped = false;
+					if (!method.isCreate() && method.getOuter().isPrimitive())
+						wrapped = true;
+					for ( int j = 0; replace && j < parameters.size(); j++ )
+					{
+						ModifiedType parameter = parameters.get(j),
+								parentParameter = parentParameters.get(j);
+						if ( !parameter.getType().isSubtype(parentParameter.getType()) )
+							replace = false;
+						else if ( getWidth(parameter) != getWidth(parentParameter) )
+							wrapped = true;
+					}
+					if ( replace )
+					{
+						replaced = true;
+						if ( wrapped && wrapper == method )
+							wrapper = parentMethod.wrap(method);
+						methodList.set(i, wrapper);
+					}
+				}
 			}
-			if ( index == methodList.size() )
-				methodList.add(method);
+			if ( wrapper != method )
+			{
+				if ( !add )
+					result.add(wrapper);
+				result.add(method);
+			}
+			else if ( !add || !replaced )
+				if ( !method.isCreate() || method.getOuter() instanceof InterfaceType )
+					result.add(method);
 		}
+		return result;
 	}
 
 	/**
@@ -837,7 +892,7 @@ public abstract class Type {
 	
 	public void addReferencedType(Type type)
 	{
-		if (!equals(type) && !(type instanceof TypeParameter ) && !referencedTypes.contains(type) && !isDescendentOf(type))
+		if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) && !isDescendentOf(type))
 			referencedTypes.add(type);
 	}
 	public Set<Type> getReferencedTypes()
@@ -878,8 +933,12 @@ public abstract class Type {
 	{
 		return isParameterized();
 	}
-	
-	protected void recursivelyOrderAllMethods( List<MethodSignature> methodList )
+
+	protected List<MethodSignature> recursivelyOrderMethods( List<MethodSignature> methodList )
+	{
+		throw new UnsupportedOperationException();
+	}
+	protected List<MethodSignature> recursivelyOrderAllMethods( List<MethodSignature> methodList )
 	{
 		throw new UnsupportedOperationException();
 	}

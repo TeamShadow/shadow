@@ -82,17 +82,39 @@ public class InterfaceType extends Type
 			for ( MethodSignature method : methods )
 				methodList.add(method);
 	}
-	
+
 
 	@Override
-	protected void recursivelyOrderAllMethods( List<MethodSignature> methodList )
+	protected List<MethodSignature> recursivelyOrderAllMethods( List<MethodSignature> methodList )
 	{
 		for ( InterfaceType parent : getInterfaces() )
-			parent.recursivelyGetAllMethods(methodList);
-
-		orderMethods(methodList);
+			parent.recursivelyOrderAllMethods(methodList);
+		return orderMethods(methodList, false);
 	}
-	
+
+	@Override
+	protected List<MethodSignature> recursivelyOrderMethods( List<MethodSignature> methodList )
+	{
+		for ( InterfaceType parent : getInterfaces() )
+			parent.recursivelyOrderAllMethods(methodList);
+		return orderMethods(methodList, true);
+	}
+
+	public List<MethodSignature> orderAllMethods( ClassType implementation )
+	{
+		List<MethodSignature> methodList = orderAllMethods();
+		implementation.orderMethods(methodList, false);
+		return methodList;
+	}
+
+	public List<MethodSignature> orderMethods( ClassType implementation )
+	{
+		List<MethodSignature> methodList = orderMethods();
+		implementation.orderMethods(methodList, false);
+		return methodList;
+	}
+
+
 	protected void addAllMethods(String methodName, List<MethodSignature> list)
 	{
 		includeMethods( methodName, list );			
@@ -228,7 +250,7 @@ public class InterfaceType extends Type
 	@Override
 	public int getWidth()
 	{
-		return 12;
+		return OBJECT.getWidth() * 2;
 	}
 	
 	public void printMetaFile(PrintWriter out, String linePrefix )

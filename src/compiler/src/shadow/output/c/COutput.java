@@ -8,12 +8,12 @@ import shadow.tac.TACModule;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
@@ -122,21 +122,21 @@ public class COutput extends AbstractOutput
 	@Override
 	public void visit(TACVariableRef node) throws ShadowException
 	{
-		node.setSymbol("%" + node.getSymbol());
+		node.data = "%" + symbol(node);
 	}
 	@Override
 	public void visit(TACFieldRef node) throws ShadowException
 	{
-		node.setSymbol("%" + tempCounter++);
-		c.write(node.getSymbol() + " = getelementptr inbounds " + typeAndName(
+		node.data = "%" + tempCounter++;
+		c.write(symbol(node) + " = getelementptr inbounds " + typeAndName(
 				node.getPrefix()) + ", i64 0, i32 " + (node.getIndex() + 1));
 	}
 
 	@Override
 	public void visit(TACLoad node) throws ShadowException
 	{
-		node.setSymbol("%" + tempCounter++);
-		c.write(node.getSymbol() + " = load " +
+		node.data = "%" + tempCounter++;
+		c.write(symbol(node) + " = load " +
 				typeAndName(node.getReference(), true));
 	}
 	@Override
@@ -150,17 +150,24 @@ public class COutput extends AbstractOutput
 	public void visit(TACReturn node) throws ShadowException
 	{
 		if (node.hasReturnValue())
-			c.write("ret " + node.getReturnValue().getSymbol());
+			c.write("ret " + symbol(node.getReturnValue()));
 		else
 			c.write("ret void");
 	}
 
-	@SuppressWarnings("unused")
-	private static String methodToString(MethodSignature method)
+	private static String symbol(TACOperand node)
 	{
-		return methodToString(method.getSymbol(), method.getMethodType());
+		Object symbol = node.data;
+		if (symbol instanceof String)
+			return (String)symbol;
+		throw new NullPointerException();
 	}
+
 	private static String methodToString(TACMethod method)
+	{
+		return methodToString(method.getMethod());
+	}
+	private static String methodToString(TACMethodRef method)
 	{
 		return methodToString(method.getName(), method.getType());
 	}
@@ -191,7 +198,7 @@ public class COutput extends AbstractOutput
 		StringBuilder builder = new StringBuilder(typeToString(node.getType()));
 		if (reference)
 			builder.append('*');
-		return builder.append(' ').append(node.getSymbol()).toString();
+		return builder.append(' ').append(symbol(node)).toString();
 	}
 	private static String typeToString(Type type)
 	{

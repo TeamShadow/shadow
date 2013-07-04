@@ -20,20 +20,27 @@ public class TACNodeList extends TACNode implements Iterable<TACSimpleNode>
 		node.insertBefore(getNext());
 	}
 
+	public void appendAll(TACNode nodes)
+	{
+		connect(getPrevious(), nodes.getNext(), nodes, this);
+	}
+	public void prependAll(TACNode nodes)
+	{
+		connect(this, nodes.getNext(), nodes, getNext());
+	}
+
 	public void insertAfter(TACNode node)
 	{
 		if (node == null || node == this || isEmpty())
 			return;
-		connect(getPrevious(), node.getNext());
-		connect(node, getNext());
+		connect(getPrevious(), node.getNext(), node, getNext());
 		clear();
 	}
 	public void insertBefore(TACNode node)
 	{
 		if (node == null || node == this || isEmpty())
 			return;
-		connect(node.getPrevious(), getNext());
-		connect(getPrevious(), node);
+		connect(node.getPrevious(), getNext(), getPrevious(), node);
 		clear();
 	}
 

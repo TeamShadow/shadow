@@ -3,7 +3,6 @@ package shadow.tac;
 import java.io.StringWriter;
 import java.util.AbstractCollection;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,62 +13,59 @@ import java.util.NoSuchElementException;
 
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.nodes.TACMethodRef;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACMethod extends TACNodeList
 {
-	private String name;
-	private MethodType type;
-	private Map<String, TACVariable> locals =
-			new LinkedHashMap<String, TACVariable>();
-	private Deque<Map<String, TACVariable>> scopes =
-			new LinkedList<Map<String, TACVariable>>();
-	public TACMethod(MethodSignature sig)
+	private TACMethodRef method;
+	private Map<String, TACVariable> locals;
+	private Deque<Map<String, TACVariable>> scopes;
+	private boolean landingpad;
+	public TACMethod(MethodSignature methodSignature)
 	{
-		this(sig.getSymbol(), sig.getMethodType());
+		this(new TACMethodRef(methodSignature));
 	}
-	public TACMethod(String methodName, MethodType methodType)
+	public TACMethod(MethodType methodType, String methodName)
 	{
-		name = methodName;
-		type = methodType;
+		this(new TACMethodRef(methodType, methodName));
+	}
+	private TACMethod(TACMethodRef methodRef)
+	{
+		method = methodRef;
+		locals = new LinkedHashMap<String, TACVariable>();
+		scopes = new LinkedList<Map<String, TACVariable>>();
+		landingpad = false;
 		enterScope();
-		addLocal(new SimpleModifiedType(getPrefixType()), "this");
-		if (isCreate() && getPrefixType().hasOuter())
-			addLocal(new SimpleModifiedType(getPrefixType().getOuter()),
-					"outer");
-		Type parameterizedType = isCreate() ? getPrefixType() : methodType;
+		Type prefixType = methodRef.getPrefixType();
+		addLocal(new SimpleModifiedType(prefixType), "this");
+		if (methodRef.isCreate() && prefixType.hasOuter())
+			addLocal(new SimpleModifiedType(prefixType.getOuter()), "outer");
+		Type parameterizedType = methodRef.isCreate() ? prefixType :
+				methodRef.getType();
 		if (parameterizedType.isParameterized())
 			for (ModifiedType typeParam : parameterizedType.getTypeParameters())
 				addLocal(new SimpleModifiedType(Type.CLASS),
 						typeParam.getType().getTypeName());
-		for (String parameterName : methodType.getParameterNames())
-			addLocal(methodType.getParameterType(parameterName), parameterName);
+	}
+	public TACMethod addParameters()
+	{
+		MethodType type = getMethod().getType();
+		for (String name : type.getParameterNames())
+			addLocal(type.getParameterType(name), name);
 		enterScope();
+		return this;
 	}
 
-	public Type getPrefixType()
+	public TACMethodRef getMethod()
 	{
-		return type.getOuter();
+		return method;
 	}
 
-	public String getName()
-	{
-		return name;
-	}
-	public MethodType getType()
-	{
-		return type;
-	}
-
-	public boolean hasParametersExceptThis()
-	{
-		return !type.getParameterTypes().isEmpty();
-	}
 	public Collection<TACVariable> getLocals()
 	{
 		return locals.values();
@@ -133,49 +129,6 @@ public class TACMethod extends TACNodeList
 		}
 	}
 
-	public SequenceType getReturnTypes()
-	{
-		if (isCreate())
-			return new SequenceType(Collections.<ModifiedType>singletonList(
-					new SimpleModifiedType(getPrefixType())));
-		return type.getReturnTypes();
-	}
-	public Type getReturnType()
-	{
-		SequenceType retTypes = getReturnTypes();
-		if (retTypes.isEmpty())
-			return null;
-		if (retTypes.size() == 1)
-			return retTypes.getType(0);
-		return retTypes;
-	}
-	public int getReturnCount()
-	{
-		return getReturnTypes().size();
-	}
-	public boolean hasReturn()
-	{
-		return !getReturnTypes().isEmpty();
-	}
-
-	public boolean isNative()
-	{
-		return type.getModifiers().isNative();
-	}
-
-	public boolean isCreate()
-	{
-		return name.equals("create");
-	}
-	public boolean isDestroy()
-	{
-		return name.equals("destroy") && !hasParametersExceptThis();
-	}
-	public boolean isGetClass()
-	{
-		return name.equals("getClass") && !hasParametersExceptThis();
-	}
-
 	public void enterScope()
 	{
 		scopes.push(new HashMap<String, TACVariable>());
@@ -206,6 +159,15 @@ public class TACMethod extends TACNodeList
 		scopes.pop();
 		if (scopes.isEmpty())
 			throw new NoSuchElementException();
+	}
+
+	public void setHasLandingpad()
+	{
+		landingpad = true;
+	}
+	public boolean hasLandingpad()
+	{
+		return landingpad;
 	}
 
 	@Override

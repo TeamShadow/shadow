@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import shadow.typecheck.Package;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.Package;
 
 public class ClassType extends Type
 {
@@ -288,7 +288,7 @@ public class ClassType extends Type
 		Set<Entry<String, ? extends ModifiedType>> set = new TreeSet<Entry<String, ? extends ModifiedType>>(new Comparator<Entry<String, ? extends ModifiedType>>() {
 			@Override
 			public int compare(Entry<String, ? extends ModifiedType> first, Entry<String, ? extends ModifiedType> second) {
-				int width = first.getValue().getType().getWidth() - second.getValue().getType().getWidth();
+				int width = getWidth(first.getValue()) - getWidth(second.getValue());
 				if (width != 0)
 					return -width;
 				return first.getKey().compareTo(second.getKey());
@@ -312,7 +312,9 @@ public class ClassType extends Type
 					throw new UnsupportedOperationException();
 				}
 			});
-		set.addAll(getFields().entrySet());
+		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
+			if (!field.getValue().getModifiers().isConstant())
+				set.add(field);
 		if (isParameterized())
 			for (final ModifiedType typeParam : getTypeParameters())
 				set.add(new Entry<String, ModifiedType>()
@@ -337,12 +339,19 @@ public class ClassType extends Type
 	}
 
 	@Override
-	protected void recursivelyOrderAllMethods( List<MethodSignature> methodList )
+	protected List<MethodSignature> recursivelyOrderMethods( List<MethodSignature> methodList )
 	{
 		if ( getExtendType() != null )
 			getExtendType().recursivelyOrderAllMethods(methodList);
+		return orderMethods(methodList, false);
+	}
 
-		orderMethods(methodList);
+	@Override
+	protected List<MethodSignature> recursivelyOrderAllMethods( List<MethodSignature> methodList )
+	{
+		if ( getExtendType() != null )
+			getExtendType().recursivelyOrderAllMethods(methodList);
+		return orderMethods(methodList, true);
 	}
 
 	@Override

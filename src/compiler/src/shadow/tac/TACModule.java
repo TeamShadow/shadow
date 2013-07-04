@@ -22,6 +22,7 @@ public class TACModule
 	private Type type;
 	private Set<Type> references = new HashSet<Type>();
 	private Map<String, Type> fields = new LinkedHashMap<String, Type>();
+	private List<TACConstant> constants = new ArrayList<TACConstant>();
 	private List<TACMethod> methods = new ArrayList<TACMethod>();
 	public TACModule(Type moduleType)
 	{
@@ -41,6 +42,8 @@ public class TACModule
 		add(Type.ULONG);
 		add(Type.LONG);
 		add(Type.CODE);
+		add(Type.FLOAT);
+		add(Type.DOUBLE);
 		add(Type.ARRAY);
 		add(Type.EXCEPTION);
 	}
@@ -111,6 +114,15 @@ public class TACModule
 	public Type getFieldType(String name)
 	{
 		return fields.get(name);
+	}
+
+	public void addConstant(TACConstant constant)
+	{
+		constants.add(constant);
+	}
+	public List<TACConstant> getConstants()
+	{
+		return constants;
 	}
 
 	public void addMethod(TACMethod method)

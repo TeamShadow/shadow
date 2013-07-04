@@ -2,24 +2,33 @@ package shadow.typecheck.type;
 
 import java.util.List;
 
-import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SignatureNode;
 
 public class MethodSignature implements Comparable<MethodSignature> {
 	protected final MethodType type;
 	protected final String symbol;
 	private final SignatureNode node;	/** The AST node that corresponds to the branch of the tree for this method */
+	private final MethodSignature wrapped;
+
+	private MethodSignature(MethodType type, String symbol, SignatureNode node, MethodSignature wrapped) {
+		this.type = type;
+		this.symbol = symbol;
+		this.node = node;
+		this.wrapped = wrapped;
+	}
 
 	public MethodSignature(MethodType type, String symbol, SignatureNode node) {
 		this.type = type;
 		this.symbol = symbol;
 		this.node = node;
+		this.wrapped = null;
 	}
 	
 	public MethodSignature(Type enclosingType, String symbol, Modifiers modifiers, SignatureNode node) {
 		type = new MethodType(enclosingType, modifiers);
 		this.symbol = symbol;
 		this.node = node;
+		this.wrapped = null;
 	}
 	
 	public void addParameter(String name, ModifiedType node) {
@@ -150,5 +159,15 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	public boolean isSet()
 	{	
 		return ( node.getModifiers().isSet() && type.getReturnTypes().isEmpty() && type.getParameterTypes().size() == 1 );	
+	}
+
+	public boolean isWrapper() {
+		return wrapped != null;
+	}
+	public MethodSignature getWrapped() {
+		return wrapped;
+	}
+	public MethodSignature wrap(MethodSignature wrapped) {
+		return new MethodSignature(type, symbol, node, wrapped);
 	}
 }

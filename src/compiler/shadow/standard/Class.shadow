@@ -27,7 +27,7 @@ immutable class shadow.standard@Class
 
 	public isSubtype( Class other ) => ( boolean )
 	{
-		if ( this == other )
+		if ( this === other )
 			return true;
 		if ( !other.isInterface() )
 			try

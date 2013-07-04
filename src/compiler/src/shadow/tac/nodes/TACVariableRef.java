@@ -41,6 +41,11 @@ public class TACVariableRef extends TACReference
 		return variable.getType();
 	}
 	@Override
+	public void setType(Type newType)
+	{
+		variable.setType(newType);
+	}
+	@Override
 	public int getNumOperands()
 	{
 		return 0;

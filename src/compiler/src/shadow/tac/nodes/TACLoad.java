@@ -34,6 +34,11 @@ public class TACLoad extends TACOperand
 		return reference.getGetType().getType();
 	}
 	@Override
+	public void setType(Type newType)
+	{
+		reference.getSetType().setType(newType);
+	}
+	@Override
 	public int getNumOperands()
 	{
 		return 1;

@@ -6,6 +6,7 @@ import shadow.typecheck.type.Type;
 
 public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 {
+	public Object data;
 	protected TACOperand()
 	{
 		super();
@@ -15,22 +16,14 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 		super(node);
 	}
 
-	private String symbol;
-	public final void setSymbol(String newSymbol)
-	{
-		symbol = newSymbol;
-	}
-	public final String getSymbol()
-	{
-		return symbol;
-	}
-
 	@Override
 	public Modifiers getModifiers()
 	{
 		return new Modifiers();
 	}
+	@Override
 	public abstract Type getType();
+	@Override
 	public void setType(Type type)
 	{
 		throw new UnsupportedOperationException();

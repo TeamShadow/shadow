@@ -1,5 +1,5 @@
 interface shadow.standard@
 	CanEqual<T>
 {
-	immutable equals(T other) => (boolean);
+	immutable equal(T other) => (boolean);
 }

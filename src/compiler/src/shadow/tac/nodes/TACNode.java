@@ -77,8 +77,13 @@ public abstract class TACNode
 	}
 	protected final void connect(TACNode first, TACNode second, TACNode third)
 	{
+		connect(first, second, second, third);
+	}
+	protected final void connect(TACNode first, TACNode second,
+			TACNode third, TACNode fourth)
+	{
 		connect(first, second);
-		connect(second, third);
+		connect(third, fourth);
 	}
 	protected final void connect(TACNode first, TACNode second)
 	{

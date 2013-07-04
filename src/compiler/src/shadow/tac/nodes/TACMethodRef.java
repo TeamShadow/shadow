@@ -16,38 +16,44 @@ public class TACMethodRef extends TACOperand
 	private TACOperand prefix;
 	private MethodType type;
 	private String name;
+	private TACMethodRef wrapped;
 	public TACMethodRef(MethodSignature sig)
 	{
-		this(null, null, sig.getMethodType(), sig.getSymbol());
+		this(null, null, sig.getMethodType(), sig.getSymbol(),
+				sig.getWrapped());
 	}
 	public TACMethodRef(MethodType methodType, String methodName)
 	{
-		this(null, null, methodType, methodName);
+		this(null, null, methodType, methodName, (MethodSignature)null);
 	}
 	public TACMethodRef(TACOperand prefixNode, MethodSignature sig)
 	{
-		this(null, prefixNode, sig.getMethodType(), sig.getSymbol());
+		this(null, prefixNode, sig.getMethodType(), sig.getSymbol(),
+				sig.getWrapped());
 	}
 	public TACMethodRef(TACOperand prefixNode, MethodType methodType,
 			String methodName)
 	{
-		this(null, prefixNode, methodType, methodName);
+		this(null, prefixNode, methodType, methodName, (MethodSignature)null);
 	}
 	public TACMethodRef(TACNode node, MethodSignature sig)
 	{
-		this(node, null, sig.getMethodType(), sig.getSymbol());
+		this(node, null, sig.getMethodType(), sig.getSymbol(),
+				sig.getWrapped());
 	}
 	public TACMethodRef(TACNode node, MethodType methodType, String methodName)
 	{
-		this(node, null, methodType, methodName);
+		this(node, null, methodType, methodName, (MethodSignature)null);
 	}
 	public TACMethodRef(TACNode node, TACOperand prefixNode,
 			MethodSignature sig)
 	{
-		this(node, prefixNode, sig.getMethodType(), sig.getSymbol());
+		this(node, prefixNode, sig.getMethodType(), sig.getSymbol(),
+				sig.isWrapper() ? sig.getWrapped() : null);
 	}
-	public TACMethodRef(TACNode node, TACOperand prefixNode,
-			MethodType methodType, String methodName)
+	private TACMethodRef(TACNode node, TACOperand prefixNode,
+			MethodType methodType, String methodName,
+			MethodSignature wrappedSignature)
 	{
 		super(node);
 		if (prefixNode != null)
@@ -55,6 +61,34 @@ public class TACMethodRef extends TACOperand
 					new SimpleModifiedType(methodType.getOuter()));
 		type = methodType;
 		name = methodName;
+		if (wrappedSignature != null)
+			wrapped = new TACMethodRef((TACNode)this, wrappedSignature);
+	}
+	public TACMethodRef(TACMethodRef other)
+	{
+		this(null, null, other.getType(), other.getName(), other.getWrapped());
+	}
+	public TACMethodRef(TACNode node, TACMethodRef other)
+	{
+		this(node, null, other.getType(), other.getName(), other.getWrapped());
+	}
+	public TACMethodRef(TACNode node, TACOperand prefixNode,
+			MethodType methodType, String methodName)
+	{
+		this(node, prefixNode, methodType, methodName, (TACMethodRef)null);
+	}
+	private TACMethodRef(TACNode node, TACOperand prefixNode,
+			MethodType methodType, String methodName,
+			TACMethodRef otherWrapped)
+	{
+		super(node);
+		if (prefixNode != null)
+			prefix = check(prefixNode,
+					new SimpleModifiedType(methodType.getOuter()));
+		type = methodType;
+		name = methodName;
+		if (otherWrapped != null)
+			wrapped = new TACMethodRef((TACNode)this, otherWrapped);
 	}
 
 	public Type getPrefixType()
@@ -77,6 +111,7 @@ public class TACMethodRef extends TACOperand
 			throw new UnsupportedOperationException();
 		return index;
 	}
+	@Override
 	public MethodType getType()
 	{
 		return type;
@@ -85,11 +120,22 @@ public class TACMethodRef extends TACOperand
 	{
 		return name;
 	}
+	public boolean isWrapper()
+	{
+		return wrapped != null;
+	}
+	public TACMethodRef getWrapped()
+	{
+		return wrapped;
+	}
 
 	public SequenceType getParameterTypes()
 	{
 		SequenceType paramTypes = new SequenceType();
-		paramTypes.add(new SimpleModifiedType(getPrefixType())); // this
+		if (isCreate())
+			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
+		else
+			paramTypes.add(new SimpleModifiedType(getPrefixType())); // this
 		if (isCreate() && getPrefixType().hasOuter())
 			paramTypes.add(new SimpleModifiedType(getPrefixType().getOuter()));
 		Type parameterizedType = isCreate() ? getPrefixType() : getType();
@@ -100,6 +146,10 @@ public class TACMethodRef extends TACOperand
 		for (ModifiedType parameterType : getType().getParameterTypes())
 			paramTypes.add(parameterType);
 		return paramTypes;
+	}
+	public ModifiedType getParameterType(int index)
+	{
+		return getParameterTypes().get(index);
 	}
 	public int getParameterCount()
 	{
@@ -134,19 +184,50 @@ public class TACMethodRef extends TACOperand
 	{
 		return getReturnTypes().size();
 	}
-	public boolean hasReturn()
+	public boolean isVoid()
 	{
-		return !getReturnTypes().isEmpty();
+		return getReturnCount() == 0;
+	}
+	public Type getVoidReturnType()
+	{
+		if (!isVoid())
+			throw new IllegalStateException();
+		return null;
+	}
+	public boolean isSingle()
+	{
+		return getReturnCount() == 1;
+	}
+	public ModifiedType getSingleReturnType()
+	{
+		if (!isSingle())
+			throw new IllegalStateException();
+		return getReturnTypes().get(0);
+	}
+	public boolean isSequence()
+	{
+		return getReturnCount() > 1;
+	}
+	public SequenceType getSequenceReturnTypes()
+	{
+		if (!isSequence())
+			throw new IllegalStateException();
+		return getReturnTypes();
 	}
 
 	public Type getReturnType()
 	{
-		SequenceType retTypes = getReturnTypes();
-		if (retTypes.isEmpty())
-			return null;
-		if (retTypes.size() == 1)
-			return retTypes.getType(0);
-		return retTypes;
+		if (isVoid())
+			return getVoidReturnType();
+		if (isSingle())
+			return getSingleReturnType().getType();
+		if (isSequence())
+			return getSequenceReturnTypes();
+		throw new IllegalStateException();
+	}
+	public ModifiedType getReturnType(int index)
+	{
+		return getReturnTypes().get(index);
 	}
 
 	public boolean isNative()
@@ -166,17 +247,25 @@ public class TACMethodRef extends TACOperand
 	{
 		return name.equals("getClass") && !hasExplicitParameters();
 	}
+	public boolean isGet()
+	{
+		return type.getModifiers().isGet() && !hasExplicitParameters();
+	}
+	public boolean isSet()
+	{
+		return type.getModifiers().isGet() && getExplicitParameterCount() == 1;
+	}
 
 	@Override
 	public int getNumOperands()
 	{
-		return prefix == null ? 0 : 1;
+		return hasPrefix() ? 1 : 0;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		if (prefix != null && num == 0)
-			return prefix;
+		if (hasPrefix() && num == 0)
+			return getPrefix();
 		throw new IndexOutOfBoundsException();
 	}
 

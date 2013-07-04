@@ -2,26 +2,39 @@ import shadow.io@Console;
 
 class shadow.test@Test
 {
-	nullable Test test = this;
+	public test(Console console) => ()
+	{
+		for (int i = 0; i < 100; i += 1)
+		{
+			if (i % 5 == 0)
+			{
+				try
+				{
+					continue;
+				}
+				finally
+				{
+					console.printLine("finally");
+					break;
+				}
+			}
+			console.printLine(i.toString());
+			if (i == 24)
+			{
+				try
+				{
+					break;
+				}
+				finally
+				{
+					console.printLine("finally");
+					continue;
+				}
+			}
+		}
+	}
 	public main(String[] args) => ()
 	{
-		nullable Test test = Test:create();
-		try {
-			Console:instance.printLine(check(check(test):test));
-		} recover {
-			Console:instance.printLine(1);
-		}
-		Console console = Console:instance;
-		try {
-			check(test):test = null;
-		} recover {
-			console.printLine(2);
-		}
-		try {
-			console.printLine(check(check(test):test));
-		} recover {
-			console.printLine(3);
-		}
-		console.printLine();
+		test(Console:instance);
 	}
 }

@@ -41,6 +41,11 @@ public class TACCast extends TACOperand
 		return type.getType();
 	}
 	@Override
+	public void setType(Type newType)
+	{
+		type.setType(newType);
+	}
+	@Override
 	public int getNumOperands()
 	{
 		return 1;

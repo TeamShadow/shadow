@@ -123,6 +123,8 @@ public class Main {
 		        
 		        // type check the AST
 		        Node node = null;
+		        	
+	        	sourceStream.close();
 		        
 		        try
 		        {

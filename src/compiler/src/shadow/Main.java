@@ -178,6 +178,12 @@ public class Main {
 			}
 			if (!config.isCheckOnly())
 			{
+				{ // any output after this point is important, avoid getting it mixed in with previous output
+					System.out.println();
+					System.out.flush();
+					try { Thread.sleep(250); }
+					catch (InterruptedException ex) { }
+				}
 				String target;
 				List<String> assembleCommand = new ArrayList<String>();
 				assembleCommand.add("gcc");
@@ -198,7 +204,7 @@ public class Main {
 				BufferedReader main = new BufferedReader(new FileReader("shadow/Main.ll"));
 				Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 				Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
-				Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+				Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
 				Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 				try {
 					new Pipe(link.getInputStream(), optimize.getOutputStream()).start();

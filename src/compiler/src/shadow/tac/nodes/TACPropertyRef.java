@@ -22,13 +22,13 @@ public class TACPropertyRef extends TACReference
 			String propertyName)
 	{
 		super(node);
-		if (!(propertyPrefix.getType() instanceof ClassType))
-			throw new IllegalArgumentException("propertyPrefix is not a " +
-					"class type");
 		blockRef = block;
 		prefix = check(propertyPrefix, propertyPrefix);
 		type = propertyType;
 		name = propertyName;
+		if (!(prefix.getType() instanceof ClassType))
+			throw new IllegalArgumentException("propertyPrefix is not a " +
+					"class type");
 	}
 
 	public TACBlock getBlock()

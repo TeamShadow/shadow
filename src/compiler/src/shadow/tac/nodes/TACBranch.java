@@ -7,8 +7,16 @@ import shadow.typecheck.type.Type;
 
 public class TACBranch extends TACSimpleNode
 {
-	private TACOperand condition;
 	private TACLabelRef trueLabel, falseLabel;
+	private TACOperand operand;
+	public TACBranch(TACDestination dest)
+	{
+		this(null, dest);
+	}
+	public TACBranch(TACNode node, TACDestination dest)
+	{
+		this(node, (TACOperand)dest, null, null);
+	}
 	public TACBranch(TACLabelRef labelRef)
 	{
 		this(null, labelRef);
@@ -25,19 +33,45 @@ public class TACBranch extends TACSimpleNode
 			TACLabelRef falseRef)
 	{
 		super(node);
-		if (cond != null)
-			condition = check(cond, new SimpleModifiedType(Type.BOOLEAN));
 		trueLabel = trueRef;
 		falseLabel = falseRef;
+		if (isConditional())
+			operand = check(cond, new SimpleModifiedType(Type.BOOLEAN));
+		else if (isDirect())
+			if (cond == null)
+				operand = cond;
+			else
+				throw new IllegalArgumentException("not null");
+		else if (isIndirect())
+			if (cond != null && cond instanceof TACDestination)
+				operand = cond;
+			else
+				throw new IllegalArgumentException("null");
 	}
 
 	public boolean isConditional()
 	{
 		return trueLabel != falseLabel;
 	}
+	public boolean isDirect()
+	{
+		return trueLabel == falseLabel && trueLabel != null;
+	}
+	public boolean isIndirect()
+	{
+		return trueLabel == null && falseLabel == null;
+	}
 	public TACOperand getCondition()
 	{
-		return condition;
+		return operand;
+	}
+	public TACOperand getOperand()
+	{
+		return operand;
+	}
+	public TACDestination getDestination()
+	{
+		return (TACDestination)operand;
 	}
 	public TACLabelRef getLabel()
 	{
@@ -57,13 +91,19 @@ public class TACBranch extends TACSimpleNode
 	@Override
 	public int getNumOperands()
 	{
-		return isConditional() ? 1 : 0;
+		return isConditional() ? 3 : 1;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		if (num == 0 && isConditional())
-			return condition;
+		if (num == 0)
+			return isDirect() ? getLabel() : getCondition();
+		if (!isConditional())
+			throw new IndexOutOfBoundsException("num");
+		if (num == 1)
+			return getTrueLabel();
+		if (num == 2)
+			return getFalseLabel();
 		throw new IndexOutOfBoundsException("num");
 	}
 
@@ -78,6 +118,8 @@ public class TACBranch extends TACSimpleNode
 		if (isConditional())
 			return "goto " + getCondition() + " ? " + getTrueLabel() + " : " +
 				getFalseLabel();
-		return "goto " + getLabel();
+		if (isDirect())
+			return "goto " + getLabel();
+		return "goto " + getDestination();
 	}
 }

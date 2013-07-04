@@ -1,5 +1,8 @@
-immutable class shadow.standard@String
-implements CanCompare<String>, CanIterate<code>
+immutable class shadow.standard@
+	String
+implements
+	CanCompare<String>,
+	CanIterate<code>
 {
 	byte[] data = byte:create[0];
 	boolean ascii = true;
@@ -146,7 +149,7 @@ implements CanCompare<String>, CanIterate<code>
 		return string.toString();
 	}
 
-	public equals( String other ) => ( boolean )
+	public equal( String other ) => ( boolean )
 	{
 		return this->size != other->size and compare(other) == 0;
 	}

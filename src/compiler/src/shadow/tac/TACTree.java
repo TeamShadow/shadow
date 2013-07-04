@@ -1,7 +1,10 @@
 package shadow.tac;
 
+import java.io.StringWriter;
 import java.util.Arrays;
 
+import shadow.output.text.TextOutput;
+import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACSequence;
@@ -14,6 +17,10 @@ public class TACTree extends TACNodeList
 	protected TACTree()
 	{
 		this(null, 0);
+	}
+	protected TACTree(int numChildren)
+	{
+		this(null, numChildren);
 	}
 	public TACTree(TACTree parent, int numChildren)
 	{
@@ -72,6 +79,22 @@ public class TACTree extends TACNodeList
 		last.remove();
 		return (TACSequence)last;
 	}
+	public TACSimpleNode appendAllChildren()
+	{
+		TACSimpleNode last = null;
+		for (int i = 1; i <= index; i++)
+		{
+			TACNodeList child = children[i];
+			if (child != null)
+			{
+				last = child.getLast();
+				append(child);
+				children[i] = null;
+			}
+		}
+		index = 0;
+		return last;
+	}
 	public TACOperand deleteChild(int i)
 	{
 		if (i >= index)
@@ -118,7 +141,7 @@ public class TACTree extends TACNodeList
 	}
 	public TACTree done()
 	{
-		prependAllChildren();
+		appendAllChildren();
 		return children[0];
 	}
 	public void appendChildTo(int index, TACNode node)
@@ -139,10 +162,21 @@ public class TACTree extends TACNodeList
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder();
-		for (int i = 1; i <= index; i++)
-			if (children[i] != null)
-				sb.append(children[i]);
-		return sb.append(super.toString()).toString();
+		StringWriter writer = new StringWriter();
+		try
+		{
+			TextOutput output = new TextOutput(writer);
+			output.walk(this);
+			if (!writer.toString().isEmpty())
+				writer.write(System.getProperty("line.separator"));
+			for (int i = 1; i <= index; i++)
+				if (children[i] != null)
+					output.walk(children[i]);
+		}
+		catch (ShadowException ex)
+		{
+			return "Error";
+		}
+		return writer.toString();
 	}
 }

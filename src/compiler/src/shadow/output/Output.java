@@ -7,8 +7,8 @@ import shadow.tac.TACVisitor;
 
 public interface Output extends TACVisitor
 {
-	public abstract void startFile(TACModule module) throws ShadowException;
-	public abstract void endFile(TACModule module) throws ShadowException;
-	public abstract void startMethod(TACMethod method) throws ShadowException;
-	public abstract void endMethod(TACMethod method) throws ShadowException;
+	void startFile(TACModule module) throws ShadowException;
+	void endFile(TACModule module) throws ShadowException;
+	void startMethod(TACMethod method) throws ShadowException;
+	void endMethod(TACMethod method) throws ShadowException;
 }
