@@ -4,21 +4,21 @@ import shadow.parser.javacc.ASTAssignmentOperator;
 
 public class PropertyType extends Type {
 	
-	private MethodType getter;
-	private MethodType setter;
+	private MethodSignature getter;
+	private MethodSignature setter;
 	
-	public PropertyType(MethodType getter, MethodType setter) {	
+	public PropertyType(MethodSignature getter, MethodSignature setter) {	
 		super(null);			
 		this.getter = getter;
 		this.setter = setter;	
 	}	
 
-	public MethodType getGetter()
+	public MethodSignature getGetter()
 	{
 		return getter;
 	}
 	
-	public MethodType getSetter()
+	public MethodSignature getSetter()
 	{
 		return setter;
 	}
@@ -133,8 +133,8 @@ public class PropertyType extends Type {
 	public PropertyType replace(SequenceType values,
 			SequenceType replacements) {
 		
-		MethodType replacedGetter = null;
-		MethodType replacedSetter = null;
+		MethodSignature replacedGetter = null;
+		MethodSignature replacedSetter = null;
 		if( getter != null )
 			replacedGetter = getter.replace(values, replacements);
 		if( setter != null )

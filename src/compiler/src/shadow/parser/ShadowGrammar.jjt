@@ -838,11 +838,10 @@ void DestroyDeclaration(Modifiers modifiers):
 void ExplicitCreateInvocation():
 { debugPrint("EXPLICIT CREATE INVOCATION"); }
 {
-  LOOKAHEAD("this" Arguments() ";")
-  "this" Arguments() ";" { jjtThis.setImage("this"); }
-| "super" Arguments() ";" { jjtThis.setImage("super"); } 
+  ( "this" { jjtThis.setImage("this"); } | "super" { jjtThis.setImage("super"); } )
+ "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+ ";"   
 }
-
 
 
 //do we need initializers at all?
@@ -1214,7 +1213,7 @@ void SequenceLeftSide():
   debugPrint("SEQUENCE LEFT SIDE");
 }
 {
-  	"(" { { jjtThis.addItem();}	} [ (LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();} ] ("," { { jjtThis.addItem();}	} [(LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();}] )+ ")"
+  	"(" { { jjtThis.addItem();}	} [ (LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();} ] ("," { { jjtThis.addItem();}	} [(LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();}] )* ")"
 	
 }
 
@@ -1448,15 +1447,8 @@ void NullLiteral():
 void Arguments():
 { debugPrint("ARGUMENTS"); }
 {
-  "(" [ ArgumentList() ] ")"
+  "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
 }
-
-void ArgumentList():
-{ debugPrint("ARGUMENT LIST"); }
-{
-  ConditionalExpression() ( "," ConditionalExpression() )*
-}
-
 
 /*
  * The third LOOKAHEAD specification below is to parse to PrimarySuffix

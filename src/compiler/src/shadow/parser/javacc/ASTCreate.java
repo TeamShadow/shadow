@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTCreate extends SimpleNode {
+class ASTCreate extends SignatureNode {
   public ASTCreate(int id) {
     super(id);
   }

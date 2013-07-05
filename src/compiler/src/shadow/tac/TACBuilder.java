@@ -1185,6 +1185,7 @@ public class TACBuilder implements ShadowParserVisitor
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
+	/*
 	@Override
 	public Object visit(ASTArguments node, Boolean secondVisit)
 			throws ShadowException
@@ -1193,9 +1194,10 @@ public class TACBuilder implements ShadowParserVisitor
 			new TACSequence(tree);
 		return node.jjtGetNumChildren() != 0 ? PRE_CHILDREN : POST_CHILDREN;
 	}
+	*/
 
 	@Override
-	public Object visit(ASTArgumentList node, Boolean secondVisit)
+	public Object visit(ASTArguments node, Boolean secondVisit) //used to be ASTArgumentList
 			throws ShadowException
 	{
 		if (secondVisit)

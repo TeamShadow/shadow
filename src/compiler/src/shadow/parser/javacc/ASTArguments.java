@@ -8,7 +8,7 @@ import shadow.typecheck.type.ModifiedType;
 
 public
 @SuppressWarnings("all")
-class ASTArguments extends SimpleNode {
+class ASTArguments extends SequenceNode {
   public ASTArguments(int id) {
     super(id);
   }

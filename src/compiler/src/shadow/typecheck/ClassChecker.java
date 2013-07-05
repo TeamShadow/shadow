@@ -1104,32 +1104,15 @@ public class ClassChecker extends BaseChecker
 
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
 		return typeResolution(node, secondVisit);
-	}	
-	
-	
-	public Object visit(ASTArgumentList node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		SequenceType sequenceType = new SequenceType();
-		
-		for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			sequenceType.add(node.jjtGetChild(i));
-		
-		node.setType(sequenceType);
-		
-		return WalkType.POST_CHILDREN;		
 	}
 	
 	public Object visit(ASTArguments node, Boolean secondVisit) throws ShadowException
 	{
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		if( node.jjtGetNumChildren() == 0 )
-			node.setType(new SequenceType());
-		else
-			node.setType(((ASTArgumentList)(node.jjtGetChild(0))).getType());
+		if(secondVisit)
+		{		
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				node.addType(node.jjtGetChild(i));
+		}
 		
 		return WalkType.POST_CHILDREN; 
 	}
@@ -2220,14 +2203,17 @@ public class ClassChecker extends BaseChecker
 				for( int i = start; i < node.jjtGetNumChildren(); i++ )
 					arguments.add(node.jjtGetChild(i));
 
+				MethodSignature signature;
 				
 				if( typeArguments != null )
 				{					
 					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments) )
 					{
 						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
-						setCreateType( node, prefixType, arguments);
+						signature = setCreateType( node, prefixType, arguments);
+						node.setMethodSignature(signature);
 						parent.setType(prefixType);
+						//TODO: see if something similar can be done for ASTMethodCall
 					}
 					else
 					{
@@ -2238,8 +2224,10 @@ public class ClassChecker extends BaseChecker
 				{
 					if( !prefixType.isParameterized() )
 					{
-						setCreateType( node, prefixType, arguments);
+						signature = setCreateType( node, prefixType, arguments);
+						node.setMethodSignature(signature);
 						parent.setType(prefixType);
+						//TODO: see if something similar can be done for ASTMethodCall
 					}
 					else
 						addError(node, Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
@@ -2362,16 +2350,16 @@ public class ClassChecker extends BaseChecker
 
 				if( methods != null && methods.size() > 0 )
 				{
-					MethodType getter = null;
-					MethodType setter = null;
+					MethodSignature getter = null;
+					MethodSignature setter = null;
 					
 					for( MethodSignature signature : methods )
 					{
 						if( signature.getModifiers().isGet() )
-							getter = signature.getMethodType();
+							getter = signature;
 						else if( signature.getModifiers().isSet() )
 						{
-							setter = signature.getMethodType();
+							setter = signature;
 							node.addModifier(Modifiers.ASSIGNABLE);
 						}
 					}
@@ -2409,7 +2397,7 @@ public class ClassChecker extends BaseChecker
 			return node;
 	}
 	
-	protected void setCreateType( ASTCreate node, Type prefixType, SequenceType arguments)
+	protected MethodSignature setCreateType( ASTCreate node, Type prefixType, SequenceType arguments)
 	{	
 		ClassType type = (ClassType) prefixType;
 		
@@ -2463,10 +2451,12 @@ public class ClassChecker extends BaseChecker
 				else
 				{
 					node.setType(methodType);
+					return signature;
 				}
 			}				
 		}
 		
+		return null;		
 	}
 	
 	protected MethodSignature setMethodType( Node node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments )
@@ -2562,6 +2552,7 @@ public class ClassChecker extends BaseChecker
 				else
 					methods = outer.getAllMethods(unboundMethod.getTypeName());
 				MethodSignature signature = setMethodType(node, methods, typeArguments, arguments); //type set inside
+				node.setMethodSignature(signature);
 				
 				if( signature != null &&  prefixNode.getModifiers().isImmutable() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )
 					addError(node, Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from an immutable reference");
@@ -2810,20 +2801,28 @@ public class ClassChecker extends BaseChecker
 	{	
 		if( secondVisit )
 		{
-			SequenceType arguments = (SequenceType) node.jjtGetChild(0).getType();				
+			SequenceType arguments = new SequenceType();
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+				arguments.add(node.jjtGetChild(i));			
 			
-			if( currentType instanceof ClassType && ((ClassType)currentType).getExtendType() != null )
+			if( currentType instanceof ClassType )
 			{
 				ClassType type = (ClassType) currentType; //assumes "this" 
-				if( node.getImage().equals("super") )								
-					type = type.getExtendType();
+				if( node.getImage().equals("super") )
+				{
+					if( type.getExtendType() != null )
+						type = type.getExtendType();
+					else
+						addError(node, Error.INVALID_CREATE, "Class type " + type + " cannot invoke a parent create because it does not extend another type");
+				}
 								
 				boolean found = false;
-				for( MethodSignature method : type.getMethods("create") )
+				for( MethodSignature signature : type.getMethods("create") )
 				{
-					if( method.matches(arguments) )
+					if( signature.matches(arguments) )
 					{
 						found = true;
+						node.setMethodSignature(signature);
 						break;						
 					}
 				}
@@ -2833,7 +2832,7 @@ public class ClassChecker extends BaseChecker
 				
 			}	
 			else
-				addError(node, Error.INVALID_CREATE, "Non-class type cannot be created");
+				addError(node, Error.INVALID_CREATE, "Non-class type " + currentType + " cannot be created");
 			
 			ASTCreateDeclaration grandparent = (ASTCreateDeclaration) node.jjtGetParent().jjtGetParent();
 			grandparent.setExplicitInvocation(true);

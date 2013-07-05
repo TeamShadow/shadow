@@ -15,5 +15,7 @@ class DeclareInSequence
     	    	
     	( x, y ) = 6;
     	( code m, code n ) = '?';
+    	
+    	(int q) = (3);
     }   
 } 

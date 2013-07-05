@@ -1,9 +1,8 @@
 package shadow.parser.javacc;
 
-import shadow.typecheck.type.ClassType;
 
 
-public class ASTMethodCall extends SimpleNode {
+public class ASTMethodCall extends SignatureNode {
 	
 	public ASTMethodCall(int id) {
 		super(id);
