@@ -9,26 +9,22 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	protected final String symbol;
 	private final SignatureNode node;	/** The AST node that corresponds to the branch of the tree for this method */
 	private final MethodSignature wrapped;
+	private MethodSignature signatureWithoutTypeArguments;
 
 	private MethodSignature(MethodType type, String symbol, SignatureNode node, MethodSignature wrapped) {
 		this.type = type;
 		this.symbol = symbol;
 		this.node = node;
 		this.wrapped = wrapped;
+		signatureWithoutTypeArguments = this;
 	}
 
 	public MethodSignature(MethodType type, String symbol, SignatureNode node) {
-		this.type = type;
-		this.symbol = symbol;
-		this.node = node;
-		this.wrapped = null;
+		this(type, symbol, node, null);
 	}
 	
-	public MethodSignature(Type enclosingType, String symbol, Modifiers modifiers, SignatureNode node) {
-		type = new MethodType(enclosingType, modifiers);
-		this.symbol = symbol;
-		this.node = node;
-		this.wrapped = null;
+	public MethodSignature(Type enclosingType, String symbol, Modifiers modifiers, SignatureNode node) {		
+		this(new MethodType(enclosingType, modifiers), symbol, node);
 	}
 	
 	public void addParameter(String name, ModifiedType node) {
@@ -134,7 +130,14 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	public MethodSignature replace(SequenceType values,
 			SequenceType replacements) {
-		return new MethodSignature(type.replace(values, replacements), symbol, node);
+		MethodSignature replaced = new MethodSignature(type.replace(values, replacements), symbol, node);
+		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
+		return replaced;
+	}
+	
+	public MethodSignature getSignatureWithoutTypeArguments()
+	{
+		return signatureWithoutTypeArguments; 
 	}
 	
 	public boolean matchesInterface(MethodSignature interfaceSignature) {

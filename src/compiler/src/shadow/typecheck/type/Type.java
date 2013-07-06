@@ -296,7 +296,7 @@ public abstract class Type {
 	{
 		if( o != null && o instanceof Type )
 		{
-			if( this == Type.NULL || o == Type.NULL || o == this )
+			if( o == this )
 				return true;
 			
 			Type type = (Type) o;

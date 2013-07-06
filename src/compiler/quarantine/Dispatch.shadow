@@ -16,6 +16,6 @@ class Dispatch
 	}
 	public fails() => ()
 	{
-		fails(5);
+		fails(5L);
 	}
 }
