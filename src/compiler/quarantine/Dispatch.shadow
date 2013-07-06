@@ -1,0 +1,21 @@
+class Dispatch
+{
+	public works(double x) => ()
+	{
+	}
+	public works() => ()
+	{
+		works(5);
+	}
+
+	public fails(long x) => ()
+	{
+	}
+	public fails(double x) => ()
+	{
+	}
+	public fails() => ()
+	{
+		fails(5);
+	}
+}
