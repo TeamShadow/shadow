@@ -237,7 +237,7 @@ public class SimpleNode implements Node {
 		node.line = line;
 		node.column = column;
 	    node.type = type;
-	    node.modifiers = modifiers;
+	    node.modifiers = new Modifiers(modifiers);
 	    node.enclosingType = enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
 	    
 	    return node;

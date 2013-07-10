@@ -1011,19 +1011,19 @@ void AssignmentOperator():
 { debugPrint("ASSIGNMENT OPERATOR"); }
 {
     "="    { jjtThis.setImage("="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.EQUAL); }
-  | "#="   { jjtThis.setImage("#="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.CATASSIGN); }
-  | "*="   { jjtThis.setImage("*="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.STARASSIGN); }
-  | "/="   { jjtThis.setImage("/="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.SLASHASSIGN); }
-  | "%="   { jjtThis.setImage("%="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MODASSIGN); }
-  | "+="   { jjtThis.setImage("+="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.PLUSASSIGN); }
-  | "-="   { jjtThis.setImage("-="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MINUSASSIGN); }
-  | "<<="  { jjtThis.setImage("l="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTSHIFTASSIGN); }
-  | ">>="  { jjtThis.setImage("r="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHTSHIFTASSIGN); }
-  | ">>>=" { jjtThis.setImage("L="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHTROTATEASSIGN); }
-  | "<<<=" { jjtThis.setImage("R="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFTROTATEASSIGN); }
-  | "&="   { jjtThis.setImage("&="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.ANDASSIGN); }
-  | "^="   { jjtThis.setImage("^="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.XORASSIGN); }
-  | "|="   { jjtThis.setImage("|="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.ORASSIGN); }
+  | "#="   { jjtThis.setImage("#="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.CAT); }
+  | "*="   { jjtThis.setImage("*="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.STAR); }
+  | "/="   { jjtThis.setImage("/="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.SLASH); }
+  | "%="   { jjtThis.setImage("%="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MOD); }
+  | "+="   { jjtThis.setImage("+="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.PLUS); }
+  | "-="   { jjtThis.setImage("-="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MINUS); }
+  | "<<="  { jjtThis.setImage("l="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFT_SHIFT); }
+  | ">>="  { jjtThis.setImage("r="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHT_SHIFT); }
+  | ">>>=" { jjtThis.setImage("L="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHT_ROTATE); }
+  | "<<<=" { jjtThis.setImage("R="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFT_ROTATE); }
+  | "&="   { jjtThis.setImage("&="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.AND); }
+  | "^="   { jjtThis.setImage("^="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.XOR); }
+  | "|="   { jjtThis.setImage("|="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.OR); }
 }
 
 void ConditionalExpression():

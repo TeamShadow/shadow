@@ -1,6 +1,11 @@
 package shadow.typecheck.type;
 
+import java.util.List;
+
 import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.typecheck.BaseChecker.Error;
+import shadow.typecheck.ClassChecker;
+import shadow.typecheck.ClassChecker.SubstitutionType;
 
 public class PropertyType extends Type {
 	
@@ -49,17 +54,21 @@ public class PropertyType extends Type {
 		return setter != null;
 	}	
 	
-	@Override
-	public boolean acceptsAssignment( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType )
+	
+	//fix this after add/subtract/mod/multiply/divide stuff is done
+	public boolean acceptsAssignment( ModifiedType right, ASTAssignmentOperator.AssignmentType assignmentType, SubstitutionType substitutionType, List<String> reasons )
 	{
 		if( !isSettable() )
+		{
+			ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Non-settable property type " + this + " cannot be assigned to");
 			return false;
+		}
 		
-		Type leftType = getSetType().getType();
+		ModifiedType left = getSetType();
 		
 		if( assignmentType == ASTAssignmentOperator.AssignmentType.EQUAL )
-			return rightType.isSubtype(leftType);
-		
+			return ClassChecker.checkAssignment(left, right, assignmentType, substitutionType, reasons);
+	
 		/*	
 		a->x = b;			store
 		a->x += 3;			read and store
@@ -67,37 +76,59 @@ public class PropertyType extends Type {
 		*/
 		
 		if( !isGettable() )
+		{
+			ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Non-gettable property type " + this + " cannot use assignment other than =");
 			return false;
+		}
+			
 		
-		if( !getSetType().getModifiers().isNullable() && getGetType().getModifiers().isNullable() )
-			return false;			
+		if( !ClassChecker.checkAssignment(left, right, assignmentType, substitutionType, reasons) )
+			return false; //checks modifiers			
 			
 		Type getType = getGetType().getType();
+		Type leftType = left.getType();
+		Type rightType = right.getType();
+		
+		boolean success = true;
 		
 		switch( assignmentType  )
 		{
-		case PLUSASSIGN:			
-		case MINUSASSIGN:
-		case STARASSIGN:
-		case SLASHASSIGN:
-			return leftType.isNumerical() && getType.isSubtype(leftType) && rightType.isSubtype(leftType);			
+		case PLUS:			
+		case MINUS:
+		case STAR:
+		case SLASH:
+			success = leftType.isNumerical() && getType.isSubtype(leftType) && rightType.isSubtype(leftType);
+			if( !success )
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Non-numerical result cannot be assigned");
+			
+			return success;
 
-		case ANDASSIGN:
-		case ORASSIGN:
-		case XORASSIGN:
-		case MODASSIGN:
-		case LEFTSHIFTASSIGN:
-		case RIGHTSHIFTASSIGN:
-		case RIGHTROTATEASSIGN:
-		case LEFTROTATEASSIGN:
-			return leftType.isIntegral() && getType.isSubtype(leftType) && rightType.isSubtype(leftType);
+		case AND:
+		case OR:
+		case XOR:
+		case MOD:
+		case LEFT_SHIFT:
+		case RIGHT_SHIFT:
+		case RIGHT_ROTATE:
+		case LEFT_ROTATE:
+			success = leftType.isIntegral() && getType.isSubtype(leftType) && rightType.isSubtype(leftType);
+			if( !success )
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Non-integral result cannot be assigned");
+			
+			return success;
+			
 
-		case CATASSIGN:
-			return leftType.isString() && getType.isString();
+		case CAT:			
+			success = leftType.isString() && getType.isString();
+			if( !success )
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Non-String result cannot be concatenated");
+			
+			return success;
 		}
 		
 		return false;
-	}
+	}	
+	
 	
 	@Override
 	public boolean isSubtype(Type other) {

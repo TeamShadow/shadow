@@ -28,11 +28,6 @@ public class MethodType extends ClassType {
 	}
 
 	//this method is used to see if particular return values inside the method can be given back as return values
-	public boolean canReturn( List<ModifiedType> returnTypes)
-	{
-		return returns.canAccept(returnTypes);
-	}
-	
 	public boolean canReturn( SequenceType returnTypes)
 	{
 		return returns.canAccept(returnTypes);
@@ -180,8 +175,7 @@ public class MethodType extends ClassType {
 
 	//covariant returns and contravariant parameters
 	public boolean matchesInterface(MethodType type) {
-		boolean value = returns.isSubtype(type.returns) && type.parameterTypes.isSubtype(parameterTypes); 
-		//return type.returns.canAccept(returns) && parameterTypes.canAccept(type.parameterTypes);
+		boolean value = returns.isSubtype(type.returns) && type.parameterTypes.isSubtype(parameterTypes);
 		return value;
 	}
 	

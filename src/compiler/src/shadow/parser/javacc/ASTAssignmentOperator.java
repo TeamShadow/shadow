@@ -21,29 +21,29 @@ class ASTAssignmentOperator extends SimpleNode {
   
   public enum AssignmentType {
 	  EQUAL,
-	  PLUSASSIGN,
-	  MINUSASSIGN,
-	  STARASSIGN,
-	  SLASHASSIGN,
-	  ANDASSIGN,
-	  ORASSIGN,
-	  XORASSIGN,
-	  MODASSIGN,
-	  CATASSIGN,
-	  LEFTSHIFTASSIGN,
-	  RIGHTSHIFTASSIGN,
-	  RIGHTROTATEASSIGN,
-	  LEFTROTATEASSIGN
+	  PLUS,
+	  MINUS,
+	  STAR,
+	  SLASH,
+	  AND,
+	  OR,
+	  XOR,
+	  MOD,
+	  CAT,
+	  LEFT_SHIFT,
+	  RIGHT_SHIFT,
+	  RIGHT_ROTATE,
+	  LEFT_ROTATE
   }
   
-  protected AssignmentType assType;
+  protected AssignmentType assignmentType;
   
   public void setAssignmentType(AssignmentType type) {
-	this.assType = type;  
+	this.assignmentType = type;  
   }
   
   public AssignmentType getAssignmentType() {
-	  return this.assType;
+	  return this.assignmentType;
   }
 }
 /* JavaCC - OriginalChecksum=92708bdf2f854aa06c093a0c5cea3295 (do not edit this line) */

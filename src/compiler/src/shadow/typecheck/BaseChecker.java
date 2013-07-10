@@ -21,6 +21,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.ClassChecker.SubstitutionType;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
@@ -185,6 +186,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 */
 	protected void addError(Node node, String msg) {
 		addError( node, null, msg );
+	}
+	
+	protected void addErrors(Node node, List<String> messages)
+	{		
+		if( messages != null )
+			for( String message : messages )
+				addError( node, message );
 	}
 	
 	/**
@@ -490,7 +498,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				if( type.isParameterized() ) 
 				{		
 					SequenceType parameters = type.getTypeParameters();
-					if( parameters.canAccept(arguments ) )					
+					if( parameters.canAccept(arguments) )					
 						type = type.replace(parameters, arguments);
 					else
 					{						

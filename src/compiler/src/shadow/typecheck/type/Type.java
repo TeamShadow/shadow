@@ -13,6 +13,8 @@ import java.util.TreeMap;
 
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.Node;
+import shadow.typecheck.ClassChecker;
+import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.Package;
 
 
@@ -520,37 +522,87 @@ public abstract class Type {
 		this.equals(UINT) ||
 		this.equals(ULONG);
 	}
+
 	
-	public boolean acceptsAssignment( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType ) 
-	{			
+	public boolean acceptsAssignment( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType, List<String> reasons ) 
+	{
+		boolean accepts = false;
+		
+		/* should be unnecessary
+		if( rightType instanceof SequenceType ) 
+		{
+			ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Sequence type " + rightType + " cannot be assigned to non-sequence type " + this);
+			return false;
+		}
+		*/
+		
 		switch( assignmentType  )
 		{
 		case EQUAL:
-			return rightType.isSubtype(this);
+			accepts = rightType.isSubtype(this);
+			if( !accepts )
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
 			
-		case PLUSASSIGN:			
-		case MINUSASSIGN:
-		case STARASSIGN:
-		case SLASHASSIGN:
-		case MODASSIGN:
-			return isNumerical() && rightType.isSubtype(this);			
-
-		case ANDASSIGN:
-		case ORASSIGN:
-		case XORASSIGN:
-			return isIntegral() && rightType.isSubtype(this);
+			return accepts;			
 			
-		case LEFTSHIFTASSIGN:
-		case RIGHTSHIFTASSIGN:
-		case RIGHTROTATEASSIGN:
-		case LEFTROTATEASSIGN:
-			return isIntegral() && rightType.isIntegral();
+		case PLUS:			
+		case MINUS:
+		case STAR:
+		case SLASH:
+		case MOD:			
+			accepts = isNumerical();
+			if( !accepts )
+			{
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not a numerical type");
+				return false;
+			}
+					
+			accepts = rightType.isSubtype(this);
+			if( !accepts )
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
+			
+			return accepts;
 
-		case CATASSIGN:
-			return isString();
+		case AND:
+		case OR:
+		case XOR:
+			accepts = isIntegral();
+			if( !accepts )
+			{
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not an integral type");
+				return false;
+			}
+			
+			accepts = rightType.isSubtype(this);
+			if( !accepts )
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
+			
+			return accepts;
+			
+		case LEFT_SHIFT:
+		case RIGHT_SHIFT:
+		case RIGHT_ROTATE:
+		case LEFT_ROTATE:			
+			accepts = isIntegral();
+			if( !accepts )
+			{
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not an integral type");
+				return false;
+			}
+			
+			accepts = rightType.isIntegral();
+			if( !accepts )
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not an integral type");
+			
+			return accepts;
+
+		case CAT:
+			accepts = isString();
+			if( !accepts )
+				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING);
 		}
 		
-		return false;		
+		return accepts;		
 	}
 	
 	public Package getPackage()

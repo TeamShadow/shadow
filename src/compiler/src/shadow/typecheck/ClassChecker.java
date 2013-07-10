@@ -40,7 +40,7 @@ public class ClassChecker extends BaseChecker
 	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
 	protected LinkedList<HashMap<String, ModifiedType>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
-
+	
 	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<String> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
@@ -371,8 +371,7 @@ public class ClassChecker extends BaseChecker
 			if(declaration.jjtGetNumChildren() == 2) // check for initializer
 			{
 				Node initializer = declaration.jjtGetChild(1);
-				isValidInitialization(node, initializer, declaration );
-				//issues appropriate errors				
+				addErrors( declaration, isValidInitialization(node, initializer) );				
 			}
 			/* //leave this to the TAC 
 			else
@@ -930,7 +929,7 @@ public class ClassChecker extends BaseChecker
 			Type result = node.jjtGetChild(0).getType();
 			if( !result.isIntegral() )
 			{
-				addError(node.jjtGetChild(0), Error.INVALID_TYPE, "Supplied type " + result + " cannot be used with a shift or rotate operator, integral type required");
+				addError(node.jjtGetChild(0), Error.INVALID_TYPE, "Supplied type " + result + " cannot be used with a bitwise operator, integral type required");
 				node.setType(Type.UNKNOWN);
 				return;
 			}
@@ -941,7 +940,7 @@ public class ClassChecker extends BaseChecker
 			
 				if( !current.isIntegral() )
 				{
-					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Supplied type " + current + " cannot be used with a shift or rotate operator, integral type required");
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Supplied type " + current + " cannot be used with a bitwise operator, integral type required");
 					node.setType(Type.UNKNOWN);
 					return;
 				}
@@ -978,63 +977,93 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, Node errorNode, boolean isInitialization )
+	
+	
+	public enum SubstitutionType
+	{
+		ASSIGNMENT, BINDING, INITIALIZATION;
+	}
+	
+	public static void addReason(List<String> reasons, Error type, String reason)
+	{
+		if( reasons != null )
+			reasons.add(type.getName() + ": " + reason);		
+	}
+	
+	
+	public static boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, SubstitutionType substitutionType, List<String> reasons )
 	{
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();
-		Modifiers rightModifiers;				
-		Modifiers leftModifiers;			
 		
+		
+		//process property on right first
 		if( rightType instanceof PropertyType )
-		{
-			PropertyType propertyType = (PropertyType)rightType;
+		{					
+			PropertyType propertyType = (PropertyType)rightType;					
+			
 			if( propertyType.isGettable() )
 			{
-				rightType = propertyType.getGetType().getType();
-				rightModifiers = propertyType.getGetType().getModifiers();
+				right = propertyType.getGetType();
+				rightType = right.getType();
 			}
 			else
 			{
-				addError(errorNode, Error.ILLEGAL_ACCESS, "Property " + right + "does not have get access");
-				return false;
+				addReason(reasons, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not gettable");
+				return false;				
 			}
 		}
-		else
-			rightModifiers = right.getModifiers();
 		
-						
+		//property on left			
 		if( leftType instanceof PropertyType )  
 		{					
 			PropertyType propertyType = (PropertyType)leftType;					
 			
-			if( propertyType.acceptsAssignment(rightType, assignmentType) )
-			{
-				leftModifiers = propertyType.getSetType().getModifiers();
-				leftType = propertyType.getSetType().getType();
-			}
+			if( propertyType.isSettable() )
+				return checkAssignment( propertyType.getSetType(), right, assignmentType, substitutionType, reasons );
 			else
 			{
-				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with type " + rightType + " cannot be assigned to property with type " + propertyType);
-				return false;
+				addReason(reasons, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not settable");
+				return false;				
 			}
 		}
-		else
+		
+	
+		
+		//sequence on left
+		if( leftType instanceof SequenceType )
 		{
-			leftModifiers = left.getModifiers();
+			SequenceType sequenceLeft = (SequenceType) leftType;
 			
-			if( !leftType.acceptsAssignment(rightType, assignmentType)  )
+			if( !assignmentType.equals(AssignmentType.EQUAL))
 			{
-				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with type " + rightType + " cannot be assigned to left hand side with type " + leftType);
+				addReason(reasons, Error.INVALID_ASSIGNMENT, "Sequence type " + sequenceLeft + " cannot be assigned with any operator other than =");
 				return false;
 			}
+			
+			
+			if( !sequenceLeft.canAccept(right, substitutionType, reasons) )
+				return false;
 		}
+		
+		
+		//normal types	
+		if( !leftType.acceptsAssignment(rightType, assignmentType, reasons )  )
+			return false;
+
+		
+		//check modifiers after types
+		Modifiers rightModifiers = right.getModifiers();			
+		Modifiers leftModifiers = left.getModifiers();
+	
 		
 		//immutability
 		if( leftModifiers.isImmutable() )
 		{			
-			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() )
+			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() && !leftType.getModifiers().isImmutable() )
+			//never a problem if either type is immutable (though the left could never be if the right isn't)
 			{
-				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side");
+				addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side");
 				return false;
 			}
 			
@@ -1051,18 +1080,20 @@ public class ClassChecker extends BaseChecker
 		}
 		else
 		{
-			if( rightModifiers.isImmutable() && !leftType.getModifiers().isImmutable() )
+			if( rightModifiers.isImmutable() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
+			//never a problem if either type is immutable
 			{
-				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable left hand side");
+				addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable left hand side");
 				return false;
 			}
 			
 			//readonly issues
-			if( !leftModifiers.isReadonly() ) //and of course not immutable
+			if( !leftModifiers.isReadonly() ) //and of course not immutable			
 			{
-				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() && !rightType.getModifiers().isReadonly() )
+				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() && !rightType.getModifiers().isReadonly() && !leftType.getModifiers().isReadonly() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
+				//never a problem if either type is immutable or readonly
 				{
-					addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with readonly value cannot be assigned to non-readonly left hand side");
+					addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side with readonly value cannot be assigned to non-readonly left hand side");
 					return false;
 				}				
 			}
@@ -1071,20 +1102,20 @@ public class ClassChecker extends BaseChecker
 		//nullability
 		if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 		{
-			addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
+			addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
 			return false;
 		}		
 
-		if( !isInitialization ) //only differences between initializations and assignments
+		if( substitutionType.equals(SubstitutionType.ASSIGNMENT) ) //only differences between initializations and assignments
 		{
 			if( !leftModifiers.isAssignable() )
 			{
-				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
+				addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
 				return false;
 			}		
 			else if( leftModifiers.isConstant() )
 			{
-				addError(errorNode, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
+				addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
 				return false;			
 			}
 		}
@@ -1092,14 +1123,25 @@ public class ClassChecker extends BaseChecker
 		return true;
 	}
 	
-	private boolean isValidInitialization( ModifiedType left, ModifiedType right, Node errorNode )
+	private List<String> isValidInitialization( ModifiedType left, ModifiedType right )
 	{		
-		return checkAssignment( left, right, AssignmentType.EQUAL, errorNode, true );
+		List<String> errors = new ArrayList<String>();
+		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionType.INITIALIZATION, errors );
+		return errors;
 	}
 	
-	private boolean isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, Node errorNode )
+	private List<String> isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType)
 	{
-		return checkAssignment( left, right, assignmentType, errorNode, false );
+		List<String> errors = new ArrayList<String>();
+		checkAssignment( left, right, assignmentType, SubstitutionType.ASSIGNMENT, errors );
+		return errors;		
+	}
+	
+	private List<String> isValidBinding( ModifiedType left, ModifiedType right )
+	{
+		List<String> errors = new ArrayList<String>();
+		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionType.BINDING, errors );
+		return errors;
 	}
 
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
@@ -1161,12 +1203,12 @@ public class ClassChecker extends BaseChecker
 					}
 					else
 						leftElement.setType(rightElement.getType());
-				}			
-				
-				if( leftElement instanceof ASTSequenceVariable ) //declaration
-					isValidInitialization(leftElement, rightElement, node);
+				}
+							
+				if( leftElement instanceof ASTSequenceVariable ) //declaration									
+					addErrors( node, isValidInitialization(leftElement, rightElement));				
 				else //otherwise simple assignment
-					isValidAssignment(leftElement, rightElement, AssignmentType.EQUAL, node);
+					addErrors( node, isValidAssignment(leftElement, rightElement, AssignmentType.EQUAL));
 			}
 		}
 
@@ -1182,8 +1224,8 @@ public class ClassChecker extends BaseChecker
 			ASTPrimaryExpression left = (ASTPrimaryExpression) node.jjtGetChild(0);
 			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
 			ASTConditionalExpression right = (ASTConditionalExpression) node.jjtGetChild(2);
-			
-			isValidAssignment(left, right, assignment.getAssignmentType(), left); 
+			addErrors(left, isValidAssignment(left, right, assignment.getAssignmentType()));
+					
 			//will issue appropriate errors
 			//since this is an Expression (with nothing to the left), there is no type to set
 		}
@@ -1499,8 +1541,11 @@ public class ClassChecker extends BaseChecker
 		if( isVar && element != null && element.getType() != null )
 			node.setType(element.getType());
 				
-		if( isValidInitialization( node, element, node ) )		
+		List<String> errors = isValidInitialization( node, element);
+		if( errors.isEmpty() )
 			addSymbol( node.getImage(), node );
+		else
+			addErrors( node, errors );
 				
 		return WalkType.POST_CHILDREN;
 	}
@@ -2062,7 +2107,7 @@ public class ClassChecker extends BaseChecker
 				{
 					if( prefixType.isParameterized() )
 					{
-						if( prefixType.getTypeParameters().canAccept(typeArguments) )
+						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionType.BINDING) )
 						{					
 							prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
 							node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
@@ -2207,7 +2252,7 @@ public class ClassChecker extends BaseChecker
 				
 				if( typeArguments != null )
 				{					
-					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments) )
+					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionType.BINDING) )
 					{
 						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
 						signature = setCreateType( node, prefixType, arguments);
@@ -2473,7 +2518,7 @@ public class ClassChecker extends BaseChecker
 				if( hasTypeArguments )
 				{	
 					SequenceType parameters = methodType.getTypeParameters();							
-					if( parameters.canAccept(typeArguments))
+					if( parameters.canAccept(typeArguments, SubstitutionType.BINDING))
 						methodType = methodType.replace(parameters, typeArguments);
 					else
 						continue;
@@ -2569,7 +2614,7 @@ public class ClassChecker extends BaseChecker
 					if( typeArguments != null )
 					{						
 						SequenceType parameters = methodType.getTypeParameters();
-						if( parameters.canAccept(typeArguments))
+						if( parameters.canAccept(typeArguments, SubstitutionType.BINDING))
 							methodType = methodType.replace(parameters, typeArguments);
 						else
 						{

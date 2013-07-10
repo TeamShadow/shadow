@@ -16,6 +16,7 @@ import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.ClassChecker.SubstitutionType;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InstantiationException;

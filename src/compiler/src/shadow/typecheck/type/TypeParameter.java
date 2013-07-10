@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import shadow.parser.javacc.ASTAssignmentOperator;
+
 
 public class TypeParameter extends Type
 {
@@ -31,10 +33,9 @@ public class TypeParameter extends Type
 		this.bounds = bounds;
 	}
 
-	public boolean canAccept(ModifiedType modifiedType)
-	{
-		Type type = modifiedType.getType();
-		
+	@Override
+	public boolean acceptsAssignment(Type type, ASTAssignmentOperator.AssignmentType assignmentType, List<String> reasons)
+	{	
 		if( equals(type) )
 			return true;
 		

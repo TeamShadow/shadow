@@ -6,8 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.SimpleNode;
+import shadow.typecheck.BaseChecker.Error;
+import shadow.typecheck.ClassChecker;
+import shadow.typecheck.ClassChecker.SubstitutionType;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
 {	
@@ -35,86 +38,80 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return types.isEmpty();
 	}
 	
-	public boolean canAccept( List<ModifiedType> inputTypes, List<String> reasons )
+	
+	/*
+	public boolean acceptsAssignment( Type type, SubstitutionType substitutionType, List<String> reasons )
+	{
+		if( type instanceof SequenceType )		
+			return canAccept( (SequenceType)type, substitutionType, reasons );
+		else
+			return canAccept( new SimpleModifiedType( type, new Modifiers()), substitutionType, reasons );
+	}
+	*/
+		
+	//public boolean canAccept( List<ModifiedType> inputTypes, SubstitutionType substitutionType, List<String> reasons )
+	public boolean canAccept( SequenceType inputTypes, SubstitutionType substitutionType, List<String> reasons )
 	{		
 		if( types.size() != inputTypes.size() )
+		{
+			ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Sequence type " + inputTypes + " does not have the same number of elements as sequence type " + this);
 			return false;
+		}
 		
 		for( int i = 0; i < types.size(); i++ )
 		{	
 			if( types.get(i) != null )
 			{
-				Type inputType = inputTypes.get(i).getType();
-				Modifiers inputModifiers  = inputTypes.get(i).getModifiers();
-				Type type = types.get(i).getType();
-				Modifiers modifiers = types.get(i).getModifiers();
-							
-				if( type instanceof TypeParameter  )
-				{			
-					TypeParameter parameter = (TypeParameter) type;
-					if( !parameter.canAccept( inputTypes.get(i)  ) )
-					{
-						if( reasons != null )
-							reasons.add(inputType + " cannot be substituted for " + type);
-						return false;
-					}
-				}
-				else if( !inputType.isSubtype(type) )
-				{
-					if( reasons != null )
-						reasons.add(inputType + " is not a subtype of " + type);
-					return false;
-				}
+				ModifiedType left = types.get(i);
+				ModifiedType right = inputTypes.get(i);
 				
-				//if either type is immutable, it will work out no matter what
-				//if both are mutable, their modifiers had better both be immutable or both mutable
-				if( !type.getModifiers().isImmutable() && !inputType.getModifiers().isImmutable() &&
-					modifiers.isImmutable() != inputModifiers.isImmutable() )
-				{
-					if( reasons != null )
-					{				
-						String reason = "";
-						if( modifiers.isImmutable() )
-							reason += "immutable ";
-						reason += type + " is not compatible with ";
-						if( inputModifiers.isImmutable() )
-							reason += "immutable ";
-						reason += inputType;
-						
-						reasons.add(reason);
-					}
+				if( !ClassChecker.checkAssignment(left, right, AssignmentType.EQUAL, substitutionType, reasons ))
 					return false;
-				}
-				
-				if( !modifiers.isNullable() && inputModifiers.isNullable() )
-				{
-					if( reasons != null )
-						reasons.add("non-nullable " + type + " cannot accept nullable " + inputType);
-					
-					return false;
-				}	
 			}			
 		}
 		
 		return true;		
 	}
 	
-	public boolean canAccept( List<ModifiedType> inputTypes )
+	public boolean canAccept( SequenceType inputTypes )
 	{		
-		return canAccept(inputTypes, null);		
+		return canAccept(inputTypes, SubstitutionType.BINDING);		
+	}
+	
+	public boolean canAccept( SequenceType inputTypes, SubstitutionType substitutionType )
+	{		
+		return canAccept(inputTypes, substitutionType, null);		
 	}
 	
 	public boolean canAccept( ModifiedType type )
 	{		
-		return canAccept(type, null);		
+		return canAccept(type, SubstitutionType.BINDING);		
 	}
 	
-	public boolean canAccept( ModifiedType type, List<String> reasons )
+	public boolean canAccept( ModifiedType type, SubstitutionType substitutionType )
 	{		
-		ArrayList<ModifiedType> list = new ArrayList<ModifiedType>(1);
-		list.add(type);
-		
-		return canAccept(list, reasons);		
+		return canAccept(type, substitutionType, null);		
+	}
+	
+	public boolean canAccept( ModifiedType inputType, SubstitutionType substitutionType, List<String> reasons )
+	{	
+		if( substitutionType.equals( SubstitutionType.BINDING ) )
+		{
+			SequenceType input = new SequenceType();
+			input.add(inputType);		
+			return canAccept(input, substitutionType, reasons);
+		}
+		else
+		{
+			//for splats
+			for( ModifiedType modifiedType : types )
+			{
+				if( !ClassChecker.checkAssignment(modifiedType, inputType, AssignmentType.EQUAL, substitutionType, reasons))
+					return false;
+			}
+			
+			return true;
+		}
 	}
 	
 	public String toString()
@@ -344,6 +341,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return types.subList(fromIndex, toIndex);
 	}
 	
+	@Override
 	public boolean isSubtype(Type t)
 	{
 		if( equals(t) )

@@ -1688,7 +1688,7 @@ public class TACBuilder implements ShadowParserVisitor
 		{
 			tree.appendChild(0);
 			new TACBranch(tree, block.getDone());
-			if (parent.hasCatches())
+			if (parent.getCatches() > 0 )
 			{
 				method.setHasLandingpad();
 				block.getLandingpad().new TACLabel(tree);
@@ -1699,7 +1699,7 @@ public class TACBuilder implements ShadowParserVisitor
 				block = block.getParent();
 			}
 		}
-		else if (parent.hasCatches())
+		else if (parent.getCatches() > 0)
 			block = new TACBlock(tree, block).addLandingpad().addUnwind();
 		return POST_CHILDREN;
 	}
@@ -2300,6 +2300,18 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 	@Override
 	public Object visit(ASTSequenceVariable node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTRightRotate node, Boolean data)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTRightShift node, Boolean data)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
