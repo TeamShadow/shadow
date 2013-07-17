@@ -15,26 +15,39 @@ implements
 	constant long EXPONENT_MASK = 0x7ff0000000000000l;
 	constant long SIGNIFICAND_MASK = 0xfffffffffffffl;
 
-	// implement Number<double>
-	public native add(double other) => (double);
-	public native subtract(double other) => (double);
-	public native multiply(double other) => (double);
-	public native divide(double other) => (double);
-	public native modulus(double other) => (double);
+	// implement Number
+	public native toByte() => (byte);
+	public native toUByte() => (ubyte);
+	public native toShort() => (short);
+	public native toUShort() => (ushort);
+	public native toInt() => (int);
+	public native toUInt() => (uint);
+	public native toLong() => (long);
+	public native toULong() => (ulong);
+	public native toCode() => (code);
+	public native toFloat() => (float);
+	public native toDouble() => (double);
 
+	// implement CanAdd<double>
+	public native add(double other) => (double);
+	// implement CanSubtract<double>
+	public native subtract(double other) => (double);
+	// implement CanMultiply<double>
+	public native multiply(double other) => (double);
+	// implement CanDivide<double>
+	public native divide(double other) => (double);
+	// implement CanModulus<double>
+	public native modulus(double other) => (double);
 	// implement CanCompare<double>
 	public native compare(double other) => (int);
-
 	// implement CanEqual<double>
 	public native equal(double other) => (boolean);
-
 
 	// implement CanHash
 	public get hash() => (int)
 	{
 		return this->bits->hash;
 	}
-
 
 	public isNaN() => (boolean)
 	{
@@ -50,7 +63,6 @@ implements
 	{
 		return (this->raw & EXPONENT_MASK) != EXPONENT_MASK;
 	}
-
 
 	public native get raw() => (long);
 	public get bits() => (long)

@@ -1,14 +1,52 @@
-immutable class shadow.standard@Code
+immutable class shadow.standard@
+	Code
+implements
+	Number<code>,
+	CanHash
 {
-	public toLowerCase() => ( code )
+	// implement Number
+	public native toByte() => (byte);
+	public native toUByte() => (ubyte);
+	public native toShort() => (short);
+	public native toUShort() => (ushort);
+	public native toInt() => (int);
+	public native toUInt() => (uint);
+	public native toLong() => (long);
+	public native toULong() => (ulong);
+	public native toCode() => (code);
+	public native toFloat() => (float);
+	public native toDouble() => (double);
+
+	// implement CanAdd<code>
+	public native add(code other) => (code);
+	// implement CanSubtract<code>
+	public native subtract(code other) => (code);
+	// implement CanMultiply<code>
+	public native multiply(code other) => (code);
+	// implement CanDivide<code>
+	public native divide(code other) => (code);
+	// implement CanModulus<code>
+	public native modulus(code other) => (code);
+	// implement CanCompare<code>
+	public native compare(code other) => (int);
+	// implement CanEqual<code>
+	public native equal(code other) => (boolean);
+
+	// implement CanHash
+	public get hash() => (int)
 	{
-		if ( this >= 'A' and this <= 'Z' )
+		return cast<int>(this);
+	}
+
+	public toLowerCase() => (code)
+	{
+		if (this >= 'A' and this <= 'Z')
 			return this - 'A' + 'a';
 		return this;
 	}
-	public toUpperCase() => ( code )
+	public toUpperCase() => (code)
 	{
-		if ( this >= 'a' and this <= 'z' )
+		if (this >= 'a' and this <= 'z')
 			return this - 'a' + 'A';
 		return this;
 	}

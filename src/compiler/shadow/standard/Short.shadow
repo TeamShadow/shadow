@@ -8,24 +8,63 @@ implements
 	Number<double>,
 	CanHash
 {
+	// implement Integer
+	public native bitComplement() => (short);
+	public native bitShiftLeft(uint amount) => (short);
+	public native bitShiftRight(uint amount) => (short);
+	public native bitRotateLeft(uint amount) => (short);
+	public native bitRotateRight(uint amount) => (short);
+	public native bitShiftLeft(int amount) => (short)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
+	}
+	public native bitShiftRight(int amount) => (short)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
+	}
+	public native bitRotateLeft(int amount) => (short)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
+	}
+	public native bitRotateRight(int amount) => (short)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);
+	}
+	// implement Number
+	public native toByte() => (byte);
+	public native toUByte() => (ubyte);
+	public native toShort() => (short);
+	public native toUShort() => (ushort);
+	public native toInt() => (int);
+	public native toUInt() => (uint);
+	public native toLong() => (long);
+	public native toULong() => (ulong);
+	public native toCode() => (code);
+	public native toFloat() => (float);
+	public native toDouble() => (double);
+
 	// implement Integer<short>
 	public native bitOr(short other) => (short);
 	public native bitXor(short other) => (short);
 	public native bitAnd(short other) => (short);
-
-	// implement Number<short>
+	// implement CanAdd<short>
 	public native add(short other) => (short);
+	// implement CanSubtract<short>
 	public native subtract(short other) => (short);
+	// implement CanMultiply<short>
 	public native multiply(short other) => (short);
+	// implement CanDivide<short>
 	public native divide(short other) => (short);
+	// implement CanModulus<short>
 	public native modulus(short other) => (short);
-
 	// implement CanCompare<short>
 	public native compare(short other) => (int);
-
 	// implement CanEqual<short>
 	public native equal(short other) => (boolean);
-
 
 	// implement Integer<int>
 	public bitOr(int other) => (int)
@@ -40,41 +79,41 @@ implements
 	{
 		return cast<int>(this) & other;
 	}
-
-	// implement Number<int>
+	// implement CanAdd<int>
 	public add(int other) => (int)
 	{
 		return cast<int>(this) + other;
 	}
+	// implement CanSubtract<int>
 	public subtract(int other) => (int)
 	{
 		return cast<int>(this) - other;
 	}
+	// implement CanMultiply<int>
 	public multiply(int other) => (int)
 	{
 		return cast<int>(this) * other;
 	}
+	// implement CanDivide<int>
 	public divide(int other) => (int)
 	{
 		return cast<int>(this) / other;
 	}
+	// implement CanModulus<int>
 	public modulus(int other) => (int)
 	{
 		return cast<int>(this) % other;
 	}
-
 	// implement CanCompare<int>
 	public compare(int other) => (int)
 	{
 		return cast<int>(this).compare(other);
 	}
-
 	// implement CanEqual<int>
 	public equal(int other) => (boolean)
 	{
 		return cast<int>(this) == other;
 	}
-
 
 	// implement Integer<long>
 	public bitOr(long other) => (long)
@@ -89,118 +128,119 @@ implements
 	{
 		return cast<long>(this) & other;
 	}
-
-	// implement Number<long>
+	// implement CanAdd<long>
 	public add(long other) => (long)
 	{
 		return cast<long>(this) + other;
 	}
+	// implement CanSubtract<long>
 	public subtract(long other) => (long)
 	{
 		return cast<long>(this) - other;
 	}
+	// implement CanMultiply<long>
 	public multiply(long other) => (long)
 	{
 		return cast<long>(this) * other;
 	}
+	// implement CanDivide<long>
 	public divide(long other) => (long)
 	{
 		return cast<long>(this) / other;
 	}
+	// implement CanModulus<long>
 	public modulus(long other) => (long)
 	{
 		return cast<long>(this) % other;
 	}
-
 	// implement CanCompare<long>
 	public compare(long other) => (int)
 	{
 		return cast<long>(this).compare(other);
 	}
-
 	// implement CanEqual<long>
 	public equal(long other) => (boolean)
 	{
 		return cast<long>(this) == other;
 	}
 
-
-	// implement Number<float>
+	// implement CanAdd<float>
 	public add(float other) => (float)
 	{
 		return cast<float>(this) + other;
 	}
+	// implement CanSubtract<float>
 	public subtract(float other) => (float)
 	{
 		return cast<float>(this) - other;
 	}
+	// implement CanMultiply<float>
 	public multiply(float other) => (float)
 	{
 		return cast<float>(this) * other;
 	}
+	// implement CanDivide<float>
 	public divide(float other) => (float)
 	{
 		return cast<float>(this) / other;
 	}
+	// implement CanModulus<float>
 	public modulus(float other) => (float)
 	{
 		return cast<float>(this) % other;
 	}
-
 	// implement CanCompare<float>
 	public compare(float other) => (int)
 	{
 		return cast<float>(this).compare(other);
 	}
-
 	// implement CanEqual<float>
 	public equal(float other) => (boolean)
 	{
 		return cast<float>(this) == other;
 	}
 
-
-	// implement Number<double>
+	// implement CanAdd<double>
 	public add(double other) => (double)
 	{
 		return cast<double>(this) + other;
 	}
+	// implement CanSubtract<double>
 	public subtract(double other) => (double)
 	{
 		return cast<double>(this) - other;
 	}
+	// implement CanMultiply<double>
 	public multiply(double other) => (double)
 	{
 		return cast<double>(this) * other;
 	}
+	// implement CanDivide<double>
 	public divide(double other) => (double)
 	{
 		return cast<double>(this) / other;
 	}
+	// implement CanModulus<double>
 	public modulus(double other) => (double)
 	{
 		return cast<double>(this) % other;
 	}
-
 	// implement CanCompare<double>
 	public compare(double other) => (int)
 	{
 		return cast<double>(this).compare(other);
 	}
-
 	// implement CanEqual<double>
 	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}
 
-
 	// implement CanHash
 	public get hash() => (int)
 	{
 		return cast<int>(this);
 	}
-
 
 	public abs() => (ushort)
 	{
@@ -215,7 +255,10 @@ implements
 		return this > other ? this, other;
 	}
 
-
+	public toUnsigned() => (ushort)
+	{
+		return toUShort();
+	}
 	public toString() => (String)
 	{
 		return toString(10us);

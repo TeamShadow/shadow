@@ -2,39 +2,31 @@ import shadow.io@Console;
 
 class shadow.test@Test
 {
-	public test(Console console) => ()
-	{
-		for (int i = 0; i < 100; i += 1)
-		{
-			if (i % 5 == 0)
-			{
-				try
-				{
-					continue;
-				}
-				finally
-				{
-					console.printLine("finally");
-					break;
-				}
-			}
-			console.printLine(i.toString());
-			if (i == 24)
-			{
-				try
-				{
-					break;
-				}
-				finally
-				{
-					console.printLine("finally");
-					continue;
-				}
-			}
-		}
-	}
 	public main(String[] args) => ()
 	{
-		test(Console:instance);
+		Console console = Console:instance;
+		{
+			(int x, int y) = 5;
+			console.printLine(x === y); // is true
+		}
+		{
+			int x = 5;
+			int y = x;
+			console.printLine(x === y); // is true
+		}
+		{
+			(immutable Object x, immutable Object y) = 5;
+			console.printLine(x === y); // is false
+		}
+		{
+			immutable Object x = 5;
+			immutable Object y = 5;
+			console.printLine(x === y); // is false
+		}
+		{
+			immutable Object x = 5;
+			immutable Object y = x;
+			console.printLine(x === y); // is true
+		}
 	}
 }

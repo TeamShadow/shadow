@@ -5,66 +5,105 @@ implements
 	Number<double>,
 	CanHash
 {
-	// implement longeger<long>
+	// implement Integer
+	public native bitComplement() => (long);
+	public native bitShiftLeft(uint amount) => (long);
+	public native bitShiftRight(uint amount) => (long);
+	public native bitRotateLeft(uint amount) => (long);
+	public native bitRotateRight(uint amount) => (long);
+	public native bitShiftLeft(int amount) => (long)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
+	}
+	public native bitShiftRight(int amount) => (long)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
+	}
+	public native bitRotateLeft(int amount) => (long)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
+	}
+	public native bitRotateRight(int amount) => (long)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);
+	}
+	// implement Number
+	public native toByte() => (byte);
+	public native toUByte() => (ubyte);
+	public native toShort() => (short);
+	public native toUShort() => (ushort);
+	public native toInt() => (int);
+	public native toUInt() => (uint);
+	public native toLong() => (long);
+	public native toULong() => (ulong);
+	public native toCode() => (code);
+	public native toFloat() => (float);
+	public native toDouble() => (double);
+
+	// implement Integer<long>
 	public native bitOr(long other) => (long);
 	public native bitXor(long other) => (long);
 	public native bitAnd(long other) => (long);
-
-	// implement Number<long>
+	// implement CanAdd<long>
 	public native add(long other) => (long);
+	// implement CanSubtract<long>
 	public native subtract(long other) => (long);
+	// implement CanMultiply<long>
 	public native multiply(long other) => (long);
+	// implement CanDivide<long>
 	public native divide(long other) => (long);
+	// implement CanModulus<long>
 	public native modulus(long other) => (long);
-
 	// implement CanCompare<long>
 	public native compare(long other) => (int);
-
 	// implement CanEqual<long>
 	public native equal(long other) => (boolean);
 
-
-	// implement Number<double>
+	// implement CanAdd<double>
 	public add(double other) => (double)
 	{
 		return cast<double>(this) + other;
 	}
+	// implement CanSubtract<double>
 	public subtract(double other) => (double)
 	{
 		return cast<double>(this) - other;
 	}
+	// implement CanMultiply<double>
 	public multiply(double other) => (double)
 	{
 		return cast<double>(this) * other;
 	}
+	// implement CanDivide<double>
 	public divide(double other) => (double)
 	{
 		return cast<double>(this) / other;
 	}
+	// implement CanModulus<double>
 	public modulus(double other) => (double)
 	{
 		return cast<double>(this) % other;
 	}
-
 	// implement CanCompare<double>
 	public compare(double other) => (int)
 	{
 		return cast<double>(this).compare(other);
 	}
-
 	// implement CanEqual<double>
 	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}
 
-
 	// implement CanHash
 	public get hash() => (int)
 	{
 		return cast<int>(this) ^ cast<int>(this >> 32);
 	}
-
 
 	public abs() => (ulong)
 	{
@@ -79,6 +118,10 @@ implements
 		return this > other ? this, other;
 	}
 
+	public toUnsigned() => (ulong)
+	{
+		return toULong();
+	}
 	public toString() => (String)
 	{
 		return toString(10ul);

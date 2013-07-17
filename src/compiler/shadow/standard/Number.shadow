@@ -1,11 +1,21 @@
 interface shadow.standard@
 	Number<T>
 extends
+	CanAdd<T>,
+	CanSubtract<T>,
+	CanMultiply<T>,
+	CanDivide<T>,
 	CanCompare<T>
 {
-	immutable add(T other) => (T);
-	immutable subtract(T other) => (T);
-	immutable multiply(T other) => (T);
-	immutable divide(T other) => (T);
-	immutable modulus(T other) => (T);
+	immutable toByte() => (byte);
+	immutable toUByte() => (ubyte);
+	immutable toShort() => (short);
+	immutable toUShort() => (ushort);
+	immutable toInt() => (int);
+	immutable toUInt() => (uint);
+	immutable toLong() => (long);
+	immutable toULong() => (ulong);
+	immutable toCode() => (code);
+	immutable toFloat() => (float);
+	immutable toDouble() => (double);
 }

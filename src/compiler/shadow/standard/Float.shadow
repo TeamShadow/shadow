@@ -16,61 +16,75 @@ implements
 	constant int EXPONENT_MASK = 0x78000000;
 	constant int SIGNIFICAND_MASK = 0x7ffffff;
 
-	// implement Number<float>
-	public native add(float other) => (float);
-	public native subtract(float other) => (float);
-	public native multiply(float other) => (float);
-	public native divide(float other) => (float);
-	public native modulus(float other) => (float);
+	// implement Number
+	public native toByte() => (byte);
+	public native toUByte() => (ubyte);
+	public native toShort() => (short);
+	public native toUShort() => (ushort);
+	public native toInt() => (int);
+	public native toUInt() => (uint);
+	public native toLong() => (long);
+	public native toULong() => (ulong);
+	public native toCode() => (code);
+	public native toFloat() => (float);
+	public native toDouble() => (double);
 
+	// implement CanAdd<float>
+	public native add(float other) => (float);
+	// implement CanSubtract<float>
+	public native subtract(float other) => (float);
+	// implement CanMultiply<float>
+	public native multiply(float other) => (float);
+	// implement CanDivide<float>
+	public native divide(float other) => (float);
+	// implement CanModulus<float>
+	public native modulus(float other) => (float);
 	// implement CanCompare<float>
 	public native compare(float other) => (int);
-
 	// implement CanEqual<float>
 	public native equal(float other) => (boolean);
 
-
-	// implement Number<double>
+	// implement CanAdd<double>
 	public add(double other) => (double)
 	{
 		return cast<double>(this) + other;
 	}
+	// implement CanSubtract<double>
 	public subtract(double other) => (double)
 	{
 		return cast<double>(this) - other;
 	}
+	// implement CanMultiply<double>
 	public multiply(double other) => (double)
 	{
 		return cast<double>(this) * other;
 	}
+	// implement CanDivide<double>
 	public divide(double other) => (double)
 	{
 		return cast<double>(this) / other;
 	}
+	// implement CanModulus<double>
 	public modulus(double other) => (double)
 	{
 		return cast<double>(this) % other;
 	}
-
 	// implement CanCompare<double>
 	public compare(double other) => (int)
 	{
 		return cast<double>(this).compare(other);
 	}
-
 	// implement CanEqual<double>
 	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}
 
-
 	// implement CanHash
 	public get hash() => (int)
 	{
 		return this->bits->hash;
 	}
-
 
 	public isNaN() => (boolean)
 	{
@@ -86,7 +100,6 @@ implements
 	{
 		return (this->raw & EXPONENT_MASK) != EXPONENT_MASK;
 	}
-
 
 	public native get raw() => (int);
 	public get bits() => (int)

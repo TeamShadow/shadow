@@ -1,5 +1,9 @@
 immutable class shadow.standard@Boolean
 {
+	public not() => ( boolean )
+	{
+		return this ? false, true;
+	}
 	public toString() => ( String )
 	{
 		return this ? "true", "false";
