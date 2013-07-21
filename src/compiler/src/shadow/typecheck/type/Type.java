@@ -13,8 +13,10 @@ import java.util.TreeMap;
 
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.ClassChecker;
 import shadow.typecheck.BaseChecker.Error;
+import shadow.typecheck.ClassChecker.SubstitutionType;
 import shadow.typecheck.Package;
 
 
@@ -554,74 +556,168 @@ public abstract class Type {
 		}
 		*/
 		
-		switch( assignmentType  )
+		//equal and cat are separate because they are not dependent on implementing a specific interface
+		if( assignmentType.equals(AssignmentType.EQUAL) )
 		{
-		case EQUAL:
 			accepts = rightType.isSubtype(this);
 			if( !accepts )
 				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
-			
-			return accepts;			
-			
-		case PLUS:			
-		case MINUS:
-		case STAR:
-		case SLASH:
-		case MOD:			
-			accepts = isNumerical();
-			if( !accepts )
-			{
-				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not a numerical type");
-				return false;
-			}
-					
-			accepts = rightType.isSubtype(this);
-			if( !accepts )
-				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
-			
+		
 			return accepts;
-
-		case AND:
-		case OR:
-		case XOR:
-			accepts = isIntegral();
-			if( !accepts )
-			{
-				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not an integral type");
-				return false;
-			}
-			
-			accepts = rightType.isSubtype(this);
-			if( !accepts )
-				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
-			
-			return accepts;
-			
-		case LEFT_SHIFT:
-		case RIGHT_SHIFT:
-		case RIGHT_ROTATE:
-		case LEFT_ROTATE:			
-			accepts = isIntegral();
-			if( !accepts )
-			{
-				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not an integral type");
-				return false;
-			}
-			
-			accepts = rightType.isIntegral();
-			if( !accepts )
-				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not an integral type");
-			
-			return accepts;
-
-		case CAT:
+		}
+		else if( assignmentType.equals(AssignmentType.CAT) )
+		{
 			accepts = isString();
 			if( !accepts )
 				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING);
+			
+			return accepts;
 		}
 		
-		return accepts;		
+		String methodName = "";
+		InterfaceType interfaceType = null;
+		String operator = "";
+		
+		switch( assignmentType  )
+		{	
+		case PLUS:
+			methodName = "add";
+			interfaceType = Type.CAN_ADD;
+			operator = "+";
+			break;
+		case MINUS:
+			methodName = "subtract";
+			interfaceType = Type.CAN_SUBTRACT;
+			operator = "-";
+			break;
+		case STAR:
+			methodName = "multiply";
+			interfaceType = Type.CAN_MULTIPLY;
+			operator = "*";
+			break;
+		case SLASH:
+			methodName = "divide";
+			interfaceType = Type.CAN_DIVIDE;
+			operator = "/";
+			break;
+		case MOD:
+			methodName = "modulus";
+			interfaceType = Type.CAN_MODULUS;
+			operator = "%";
+			break;
+		case AND:
+			methodName = "bitAnd";
+			interfaceType = Type.INTEGER;
+			operator = "&";
+			break;
+		case OR:
+			methodName = "bitOr";
+			interfaceType = Type.INTEGER;
+			operator = "|";
+			break;
+		case XOR:
+			methodName = "bitXor";
+			interfaceType = Type.INTEGER;
+			operator = "^";
+			break;			
+		case LEFT_SHIFT:
+			methodName = "bitShiftLeft";
+			interfaceType = Type.INTEGER;
+			operator = "<<";
+			break;
+		case RIGHT_SHIFT:
+			methodName = "bitShiftRight";
+			interfaceType = Type.INTEGER;
+			operator = ">>";
+			break;
+		case LEFT_ROTATE:
+			methodName = "bitRotateLeft";
+			interfaceType = Type.INTEGER;
+			operator = "<<<";
+			break;
+		case RIGHT_ROTATE:
+			methodName = "bitRotateRight";
+			interfaceType = Type.INTEGER;
+			operator = ">>>";
+			break;
+		default:
+			return false;
+		}
+		
+		if( hasInterface(interfaceType) )
+		{
+			SequenceType argument = new SequenceType(new SimpleModifiedType(rightType));									
+			List<String> errors = new ArrayList<String>();
+			MethodSignature signature = getMatchingMethod(methodName, argument, null, errors);
+			if( signature != null )
+			{
+				Type result = signature.getReturnTypes().getType(0);
+				accepts = result.isSubtype(this);
+				if( !accepts )
+					ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + result + " is not a subtype of " + this);				
+				return accepts;
+			}
+			else
+			{
+				reasons.addAll(errors);
+				return false;
+			}				
+		}
+		else		
+		{
+			ClassChecker.addReason(reasons, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType);			
+			return false;						
+		}
 	}
+	
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments )
+	{
+		List<String> errors = new ArrayList<String>();
+		return getMatchingMethod(methodName, arguments, typeArguments, errors );
+	}
+	
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<String> errors )
+	{
+		boolean hasTypeArguments = typeArguments != null;
+		MethodSignature candidate = null;		
+		
+		for( MethodSignature signature : getAllMethods(methodName) ) 
+		{				
+			MethodType methodType = signature.getMethodType();			
+			
+			if( methodType.isParameterized() )
+			{
+				if( hasTypeArguments )
+				{	
+					SequenceType parameters = methodType.getTypeParameters();							
+					if( parameters.canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER))
+					{
+						methodType = methodType.replace(parameters, typeArguments);
+						signature = signature.replace(parameters, typeArguments);
+					}
+					else
+						continue;
+				}
+			}				
+			
+			if( signature.canAccept(arguments ) )
+			{						
+				if( candidate == null || signature.getParameterTypes().isSubtype(candidate.getParameterTypes()) )
+					candidate = signature;
+				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
+				{					
+					ClassChecker.addReason(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments);
+					return null;
+				}				
+			}			
+		}			
+	
+		if( candidate == null )			
+			ClassChecker.addReason(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context");
+		
+		return candidate;
+	}
+	
 	
 	public Package getPackage()
 	{

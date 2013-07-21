@@ -771,8 +771,7 @@ public class ClassChecker extends BaseChecker
 			
 			if( result.hasInterface(interfaceType) )
 			{
-				SequenceType argument = new SequenceType();
-				argument.add(currentNode);							
+				SequenceType argument = new SequenceType(currentNode);											
 				 
 				MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), null, argument );
 				if( signature != null )
