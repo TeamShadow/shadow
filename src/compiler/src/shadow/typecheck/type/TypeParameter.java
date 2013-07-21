@@ -12,6 +12,7 @@ import shadow.parser.javacc.ASTAssignmentOperator;
 public class TypeParameter extends Type
 {
 	private Set<Type> bounds = new HashSet<Type>();
+	private boolean toStringRecursion = false; //keeps type parameters that have bounds containing themselves from infinitely recursing
 
 	public TypeParameter(String typeName)
 	{
@@ -33,6 +34,7 @@ public class TypeParameter extends Type
 		this.bounds = bounds;
 	}
 
+	/*
 	@Override
 	public boolean acceptsAssignment(Type type, ASTAssignmentOperator.AssignmentType assignmentType, List<String> reasons)
 	{	
@@ -42,6 +44,26 @@ public class TypeParameter extends Type
 		for( Type bound : bounds )
 			if( !type.isSubtype(bound) )
 				return false;		
+		
+		return true;
+	}
+	*/
+	
+	public boolean acceptsSubstitution(Type type)
+	{
+		if( equals(type) )
+			return true;
+		
+		SequenceType values = new SequenceType(new SimpleModifiedType(this));	
+		SequenceType replacements = new SequenceType(new SimpleModifiedType(type));		
+		
+		Set<Type> substitutedBounds = new HashSet<Type>();
+		for( Type bound : bounds )
+			substitutedBounds.add( bound.replace(values, replacements));
+		
+		for( Type bound : substitutedBounds )
+			if( !type.isSubtype(bound) )
+				return false;	
 		
 		return true;
 	}
@@ -60,10 +82,9 @@ public class TypeParameter extends Type
 	
 	public boolean equals(Object o)
 	{
-		if( o == Type.NULL )
-			return true;
 		if( o != null && o instanceof TypeParameter )
 		{
+			/*
 			if( o == this )
 				return true;
 			
@@ -82,6 +103,10 @@ public class TypeParameter extends Type
 			}	
 			else
 				return false;
+				
+			*/
+			
+			return o == this; //has to match exactly
 		}
 		else
 			return false;
@@ -106,8 +131,9 @@ public class TypeParameter extends Type
 		StringBuilder builder = new StringBuilder(getTypeName());
 		boolean first = true;
 		
-		if( withBounds && bounds.size() > 1 ) //always contains Object
+		if( !toStringRecursion && withBounds && bounds.size() > 1 ) //always contains Object
 		{	
+			toStringRecursion = true;			
 			builder.append(" is ");
 			
 			for(Type bound : bounds )
@@ -121,10 +147,14 @@ public class TypeParameter extends Type
 					first = false;
 				}
 			}
+			
+			toStringRecursion = false;
 		}
 		
 		return builder.toString();
 	}
+	
+	
 	
 	public List<MethodSignature> getAllMethods(String methodName)
 	{
@@ -157,7 +187,12 @@ public class TypeParameter extends Type
 	}
 
 	@Override
-	public boolean hasInterface(InterfaceType type) {
+	public boolean hasInterface(InterfaceType type)
+	{
+		for(Type bound : bounds)
+			if( bound.hasInterface(type))
+				return true;
+		
 		return false;
 	}
 }

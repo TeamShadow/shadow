@@ -1,10 +1,14 @@
 immutable class shadow.standard@
 	Long
 implements
-	Number<long>,
+	Integer<long>,
 	Number<double>,
+	CanNegate<long>,
 	CanHash
 {
+    constant long MAX = 9223372036854775807L;
+    constant long MIN = -9223372036854775808L; 
+
 	// implement Integer
 	public native bitComplement() => (long);
 	public native bitShiftLeft(uint amount) => (long);
@@ -98,7 +102,10 @@ implements
 	{
 		return cast<double>(this) == other;
 	}
-
+	
+	// implement CanNegate<long>
+	public immutable native negate() => (long);
+	
 	// implement CanHash
 	public get hash() => (int)
 	{

@@ -9,6 +9,8 @@ implements
 	Number<double>,
 	CanHash
 {
+	constant ubyte MAX = 255uy;
+	constant ubyte MIN = 0uy;
 	// implement Integer
 	public native bitComplement() => (ubyte);
 	public native bitShiftLeft(uint amount) => (ubyte);

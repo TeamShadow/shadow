@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTEqualityExpression extends SimpleNode {
+class ASTEqualityExpression extends OperationNode {
   public ASTEqualityExpression(int id) {
     super(id);
   }

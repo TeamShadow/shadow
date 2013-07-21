@@ -3,6 +3,7 @@ immutable class shadow.standard@
 implements
 	Number<float>,
 	Number<double>,
+	CanNegate<float>,
 	CanHash
 {
 	constant float PI = 3.1415927f;
@@ -100,6 +101,9 @@ implements
 	{
 		return (this->raw & EXPONENT_MASK) != EXPONENT_MASK;
 	}
+	
+	// implement CanNegate<float>
+	public native immutable negate() => (float);
 
 	public native get raw() => (int);
 	public get bits() => (int)

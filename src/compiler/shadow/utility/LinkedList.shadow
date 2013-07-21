@@ -1,4 +1,4 @@
-class shadow.utility@LinkedList<V> implements List<V>
+class shadow.utility@LinkedList<V is CanEqual<V>> implements List<V>
 {
 	get int size = 0;
 	Node header = Node:create();

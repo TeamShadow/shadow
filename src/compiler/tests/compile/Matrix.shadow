@@ -1,4 +1,10 @@
-class Matrix implements Number<Matrix>, CanIndex<int, double[]>
+class Matrix implements
+CanAdd<Matrix>,
+CanSubtract<Matrix>,
+CanMultiply<Matrix>,
+CanNegate<Matrix>,
+CanEqual<Matrix>,
+CanIndex<int, double[]>
 {
 	double[][] values;
 	get int rows;
@@ -72,16 +78,17 @@ class Matrix implements Number<Matrix>, CanIndex<int, double[]>
 	
 	}
 	
-	public immutable divide(Matrix other) => (Matrix)
-	{
-		throw UnsupportedOperationException:create();
-	}
-	
-	public immutable modulus(Matrix other) => (Matrix)
-	{
-		throw UnsupportedOperationException:create();
-	}
-	
+	public immutable negate() => (Matrix)
+	{		
+		Matrix result = Matrix:create(rows, columns);
+		
+		for( int i = 0; i < rows; i += 1 )
+			for( int j = 0; j < columns; j += 1 )				
+					result[i][j] = -(this[i][j]);
+		
+		return result;	
+	}	
+
 	public immutable equal(Matrix other) => (boolean)
 	{
 		if( rows != other:rows or columns != other:columns )
@@ -93,10 +100,5 @@ class Matrix implements Number<Matrix>, CanIndex<int, double[]>
 					return false;
 					
 		return true;
-	}
-	
-	public immutable compare( Matrix other ) => (int)
-	{
-		throw UnsupportedOperationException:create();
 	}
 }

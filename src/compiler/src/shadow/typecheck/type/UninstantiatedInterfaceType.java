@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import shadow.typecheck.ClassChecker.SubstitutionType;
+
 public class UninstantiatedInterfaceType extends InterfaceType implements UninstantiatedType 
 {	
 	private InterfaceType type;
@@ -30,9 +32,9 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 				UninstantiatedType uninstantiatedArgument = (UninstantiatedType) argument.getType();
 				argument.setType(uninstantiatedArgument.instantiate());
 			}
-		}
+		}		
 		
-		if( !type.getTypeParameters().canAccept(typeArguments) )
+		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER) )
 			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
 		
 		return type.replace(type.getTypeParameters(), typeArguments);

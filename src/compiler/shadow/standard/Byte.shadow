@@ -7,8 +7,12 @@ implements
 	Integer<long>,
 	Number<float>,
 	Number<double>,
+	CanNegate<byte>,
 	CanHash
 {
+	constant byte MAX = 127y;
+	constant byte MIN = -128y;
+
 	// implement Integer
 	public native bitComplement() => (byte);
 	public native bitShiftLeft(uint amount) => (byte);
@@ -285,6 +289,9 @@ implements
 	{
 		return cast<double>(this) == other;
 	}
+	
+	// implement CanNegate<byte>
+	public immutable native negate() => (byte);	
 
 	// implement CanHash
 	public get hash() => (int)

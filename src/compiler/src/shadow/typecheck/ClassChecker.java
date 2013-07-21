@@ -392,7 +392,8 @@ public class ClassChecker extends BaseChecker
 	}
 	
 	
-	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {		
+	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException
+	{		
 		if(secondVisit)
 		{	
 			Type type = null;
@@ -587,52 +588,134 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;	
 	}	
 	
-	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
-			return WalkType.POST_CHILDREN;
-
-		Type result = node.jjtGetChild(0).getType();
-					
-		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
+	public Object visit(ASTEqualityExpression node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
 		{
-			Type current = node.jjtGetChild(i).getType(); 
-			if( !result.isSubtype(current) && !current.isSubtype(result) )
+			Type result = node.jjtGetChild(0).getType();
+						
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ )
 			{
-				addError(node, Error.INVALID_TYPE, "Equality operator not defined on types " + result + " and " + current);
-				node.setType(Type.UNKNOWN);
-				return WalkType.POST_CHILDREN;
-			}	
+				char operation = node.getImage().charAt(i - 1);
+				String symbol = "";
+				switch( operation )
+				{
+				case '=': symbol = "=="; break;
+				case 'e': symbol = "==="; break;
+				case '!': symbol = "!="; break;
+				case 'n': symbol = "!=="; break;
+				}
+				
+				Node currentNode = node.jjtGetChild(i);
+				Type current = currentNode.getType();
+				if( operation == '=' || operation == '!')
+				{	
+					if( result.hasInterface(Type.CAN_EQUAL) )
+					{
+						SequenceType argument = new SequenceType();
+						argument.add(currentNode);							
+						 
+						MethodSignature signature = setMethodType(node, result.getAllMethods("equal"), null, argument );
+						if( signature != null )
+						{
+							result = signature.getReturnTypes().getType(0);
+							node.addOperation(signature);
+						}
+						else
+						{
+							addError(node, Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+							result = Type.UNKNOWN;	
+							break;
+						}				
+					}
+					else		
+					{
+						addError(node, Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+						result = Type.UNKNOWN;
+						break;
+					}			
+				}
+				else if( !result.isSubtype(current) && !current.isSubtype(result) )
+				{
+					addError(node, Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+					result = Type.UNKNOWN;	
+					break;
+				}	
+				
+				result = Type.BOOLEAN;  //boolean after one comparison			
+			}
 			
-			result = Type.BOOLEAN;  //boolean after one comparison			
+			node.setType(result); //propagates type up if only one child
+			pushUpModifiers(node); //can overwrite ASSIGNABLE (if only one child)
 		}
-		
-		node.setType(result); //propagates type up if only one child
-		pushUpModifiers(node); //can overwrite ASSIGNABLE (if only one child)
-			
 		
 		return WalkType.POST_CHILDREN;		
 	}
 	
-	public void visitShiftRotate( SimpleNode node ) throws ShadowException
+	public void visitShiftRotate( OperationNode node ) throws ShadowException
 	{			
 		Type result = node.jjtGetChild(0).getType();
-			
+		int symbolIndex = 0;
+		
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one, short => int => long is possible
 		{
-			Node child = node.jjtGetChild(i); 
-	
-			if( !(child  instanceof ASTRightShift) && !(child instanceof ASTRightRotate)  ) //RightRotate() and RightShift() have their own productions
-			{					
-				Type current = child.getType();										
-				
-				if( !current.isIntegral() || !result.isIntegral() )				
+			Node currentNode = node.jjtGetChild(i);
+			Type current = currentNode.getType();
+			char operator = node.getImage().charAt(symbolIndex);
+			String methodName = "";
+			String symbol = "";
+			
+			switch( operator )
+			{
+			case 'l':
+				methodName = "bitShiftLeft";
+				symbol = "<<";
+				break;
+			case 'L':
+				methodName = "bitRotateLeft";
+				symbol = "<<<";
+				 break;
+			case 'r':
+				methodName = "bitShiftRight";
+				symbol = ">>";
+				break;
+			case 'R':
+				methodName = "bitRotateRight";
+				symbol = ">>>";
+				break;
+			}
+			
+			if( !(currentNode instanceof ASTRightShift) && !(currentNode instanceof ASTRightRotate)  ) //RightRotate() and RightShift() have their own productions
+			{
+				if( result.hasInterface(Type.INTEGER) )
 				{
-					addError(child, Error.INVALID_TYPE, "Shift and rotate operations not defined on types " + result + " and " + current);
-					node.setType(Type.UNKNOWN);
-					return;
+					SequenceType argument = new SequenceType();
+					argument.add(currentNode);							
+					 
+					MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), null, argument );
+					if( signature != null )
+					{
+						result = signature.getReturnTypes().getType(0);
+						node.addOperation(signature);
+					}
+					else
+					{
+						addError(node, Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+						result = Type.UNKNOWN;	
+						break;
+					}				
 				}
-			}				
-		}				
+				else		
+				{
+					addError(node, Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+					result = Type.UNKNOWN;
+					break;
+				}
+				
+				symbolIndex++;
+			}
+		}						
+					
 		node.setType(result); //propagates type up if only one child	
 		pushUpModifiers(node);  //can add ASSIGNABLE (if only one child)
 	}
@@ -651,54 +734,62 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public void visitArithmetic(SimpleNode node) throws ShadowException 
+	public void visitArithmetic(OperationNode node) throws ShadowException 
 	{
 		Type result = node.jjtGetChild(0).getType();
-	
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
-		{
+		{			
+			char operator = node.getImage().charAt(i - 1);
+			InterfaceType interfaceType = null;
+			String methodName = "";
+			switch( operator )
+			{
+			case '+':
+				methodName = "add";
+				interfaceType = Type.CAN_ADD;
+				break;
+			case '-':
+				methodName = "subtract";
+				interfaceType = Type.CAN_SUBTRACT;
+				break;
+			case '*':
+				methodName = "multiply";
+				interfaceType = Type.CAN_MULTIPLY;
+				break;
+			case '/':
+				methodName = "divide";
+				interfaceType = Type.CAN_DIVIDE;
+				break;
+			case '%':
+				methodName = "modulus";
+				interfaceType = Type.CAN_MODULUS;
+				break;
+			}
+			
 			Node currentNode = node.jjtGetChild(i);
 			Type current = currentNode.getType();
 			
-			if( result.isNumerical() && current.isNumerical() )
-			{
-				if( result.isSubtype( current ))  //upgrades type to broader type (e.g. int goes to double)
-					result = current;
-				else if( !current.isSubtype(result) )
-				{
-					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply arithmetic operations to " + result + " and " + current);
-					node.setType(Type.UNKNOWN);
-					return;					
-				}					
-			}
-			else if( result.hasInterface(Type.NUMBER) )
+			if( result.hasInterface(interfaceType) )
 			{
 				SequenceType argument = new SequenceType();
-				argument.add(currentNode);
-				char operation = node.getImage().charAt(i - 1);
-				String methodName = "";
-				switch( operation )
-				{
-				case '+': methodName = "add"; break;
-				case '-': methodName = "subtract"; break;
-				case '*': methodName = "multiply"; break;
-				case '/': methodName = "divide"; break;
-				case '%': methodName = "modulus"; break;
-				}			
+				argument.add(currentNode);							
 				 
-				MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), new SequenceType(), argument );
+				MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), null, argument );
 				if( signature != null )
+				{
 					result = signature.getReturnTypes().getType(0);
+					node.addOperation(signature);
+				}
 				else
 				{
-					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply arithmetic operations to " + result + " and " + current);
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + operator + " to " + result + " and " + current);
 					node.setType(Type.UNKNOWN);
 					return;
 				}				
 			}
 			else		
 			{
-				addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply arithmetic operations to " + result + " and " + current);
+				addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + operator + " to " + result + " and " + current);
 				node.setType(Type.UNKNOWN);
 				return;						
 			}				
@@ -740,59 +831,90 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 		
-	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException
+	{
 		if(secondVisit)
 		{				
 			Type type = node.jjtGetChild(0).getType();
-			String symbol = node.getImage();
+			String operator = node.getImage();
 			
-			if( (symbol.equals("-") || symbol.equals("+")) ) 
+			if( (operator.equals("-") || operator.equals("+")) ) 
 			{
-				if( !type.isNumerical() )
+				if( type.hasInterface(Type.CAN_NEGATE) )
 				{
-					addError(node, Error.INVALID_TYPE, "Arithmetic operations cannot be applied to type " + type);
-					node.setType(Type.UNKNOWN);
-					return WalkType.POST_CHILDREN;
+					MethodSignature signature = setMethodType(node, type.getAllMethods("negate"), null, new SequenceType() );
+					if( signature != null )
+					{
+						type = signature.getReturnTypes().getType(0);
+						node.addOperation(signature);
+					}
+					else
+					{
+						addError(node, Error.INVALID_TYPE, "Cannot apply unary " + operator + " to type " + type + " which does not implement interface " + Type.CAN_NEGATE);
+						type = Type.UNKNOWN;						
+					}
+				}
+				else
+				{
+					addError(node, Error.INVALID_TYPE, "Cannot apply unary " + operator + " to type " + type + " which does not implement interface " + Type.CAN_NEGATE);
+					type = Type.UNKNOWN;					
 				}
 			}
 			else
 				pushUpModifiers( node );
 			
+			//maybe unsigned types can't be negated
+			/*
 			if(symbol.contains("-"))
 				node.setType(Type.makeSigned((ClassType)type));
 			else
-				node.setType(type);
+			*/
+			node.setType(type);
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 		
 	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		Type type = node.jjtGetChild(0).getType();
-		
-		if(node.getImage().startsWith("~") )
-		{
-			if( !type.isIntegral() )
+		if(secondVisit)
+		{				
+			Type type = node.jjtGetChild(0).getType();
+			
+			if(node.getImage().startsWith("~") )
 			{
-				addError(node, Error.INVALID_TYPE, "Supplied type " + type + "cannot be used with a bitwise operator, integral type required");
-				type = Type.UNKNOWN;				
-			}
-		}		
-		else if(node.getImage().startsWith("!") )
-		{
-			if( !type.equals(Type.BOOLEAN)) 
+				if( type.hasInterface(Type.INTEGER) )
+				{	 
+					MethodSignature signature = setMethodType(node, type.getAllMethods("bitComplement"), null, new SequenceType() );
+					if( signature != null )
+					{
+						type = signature.getReturnTypes().getType(0);
+						node.addOperation(signature);
+					}
+					else
+					{
+						addError(node, Error.INVALID_TYPE, "Cannot apply operator ~ to type " + type + " which does not implement " + Type.INTEGER);
+						type = Type.UNKNOWN;						
+					}
+				}
+				else					
+				{
+					addError(node, Error.INVALID_TYPE, "Cannot apply operator ~ to type " + type + " which does not implement " + Type.INTEGER);
+					type = Type.UNKNOWN;				
+				}
+			}		
+			else if(node.getImage().startsWith("!") )
 			{
-				addError(node, Error.INVALID_TYPE, "Supplied type " + type + "cannot be used with a logical operator, boolean type required");
-				type = Type.UNKNOWN;				
+				if( !type.equals(Type.BOOLEAN)) 
+				{
+					addError(node, Error.INVALID_TYPE, "Cannot apply operator ! to type " + type + " which is not boolean");
+					type = Type.UNKNOWN;				
+				}
 			}
+			else
+				pushUpModifiers( node ); //can add ASSIGNABLE (if only one child)
+			
+			node.setType(type);
 		}
-		else
-			pushUpModifiers( node ); //can add ASSIGNABLE (if only one child)
-		
-		node.setType(type);		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -858,8 +980,7 @@ public class ClassChecker extends BaseChecker
 			if( node.jjtGetNumChildren() == 1 )
 				pushUpType(node, secondVisit); //includes modifier push up
 			else
-			{				
-				
+			{	
 				Type result = null;
 				boolean isNullable = true;
 				
@@ -920,33 +1041,51 @@ public class ClassChecker extends BaseChecker
 	}	
 
 
-	public void visitBitwise(SimpleNode node ) throws ShadowException {
+	public void visitBitwise(OperationNode node ) throws ShadowException {
 				
 		if( node.jjtGetNumChildren() == 1 )
 			pushUpType(node, true); //includes modifier push up
 		else
-		{
+		{	
 			Type result = node.jjtGetChild(0).getType();
-			if( !result.isIntegral() )
-			{
-				addError(node.jjtGetChild(0), Error.INVALID_TYPE, "Supplied type " + result + " cannot be used with a bitwise operator, integral type required");
-				node.setType(Type.UNKNOWN);
-				return;
-			}
 			
-			for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ )
 			{
-				Type current = node.jjtGetChild(i).getType();
-			
-				if( !current.isIntegral() )
+				Node currentNode = node.jjtGetChild(i);
+				Type current = currentNode.getType();
+				char operator = node.getImage().charAt(i - 1);
+				String methodName = "";
+				switch( operator )
 				{
-					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Supplied type " + current + " cannot be used with a bitwise operator, integral type required");
-					node.setType(Type.UNKNOWN);
-					return;
+				case '|': methodName = "bitOr"; break;				
+				case '&': methodName = "bitAnd"; break;
+				case '^': methodName = "bitXor"; break;
 				}
 				
-				if( result.isSubtype(current))
-					result = current;
+				if( result.hasInterface(Type.INTEGER) )
+				{
+					SequenceType argument = new SequenceType();
+					argument.add(currentNode);							
+					 
+					MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), null, argument );
+					if( signature != null )
+					{
+						result = signature.getReturnTypes().getType(0);
+						node.addOperation(signature);
+					}
+					else
+					{
+						addError(node, Error.INVALID_TYPE, "Operator " + operator + " not defined on types " + result + " and " + current);
+						node.setType(Type.UNKNOWN);	
+						break;
+					}				
+				}
+				else		
+				{
+					addError(node, Error.INVALID_TYPE, "Operator " + operator + " not defined on types " + result + " and " + current);
+					node.setType(Type.UNKNOWN);
+					break;
+				}
 			}
 			
 			node.setType(result);
@@ -954,34 +1093,27 @@ public class ClassChecker extends BaseChecker
 	}
 	
 	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-				
-		visitBitwise( node );
+		if(secondVisit)
+			visitBitwise( node );
 		return WalkType.POST_CHILDREN;
 	}	
 	
 	public Object visit(ASTBitwiseExclusiveOrExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-				
-		visitBitwise( node );
+		if(secondVisit)
+			visitBitwise( node );
 		return WalkType.POST_CHILDREN;
 	}	
 	
 	public Object visit(ASTBitwiseAndExpression node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-				
-		visitBitwise( node );
+		if(secondVisit)
+			visitBitwise( node );
 		return WalkType.POST_CHILDREN;
 	}
 	
 	
-	
 	public enum SubstitutionType
 	{
-		ASSIGNMENT, BINDING, INITIALIZATION;
+		ASSIGNMENT, BINDING, TYPE_PARAMETER, INITIALIZATION;
 	}
 	
 	public static void addReason(List<String> reasons, Error type, String reason)
@@ -1047,8 +1179,27 @@ public class ClassChecker extends BaseChecker
 		}
 		
 		
-		//normal types	
-		if( !leftType.acceptsAssignment(rightType, assignmentType, reasons )  )
+		//type parameter binding follows different rules
+		if( substitutionType.equals(SubstitutionType.TYPE_PARAMETER))
+		{			
+			if( leftType instanceof TypeParameter )
+			{
+				TypeParameter typeParameter = (TypeParameter) leftType;
+				if( !typeParameter.acceptsSubstitution(rightType) )
+				{
+					addReason(reasons, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type argument " + leftType);
+					return false;					
+				}					
+			}
+			else
+			{
+				//will this ever happen?
+				addReason(reasons, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type " + leftType + " which is not a type parameter");
+				return false;				
+			}			
+		}
+		//normal types
+		else if( !leftType.acceptsAssignment(rightType, assignmentType, reasons )  )
 			return false;
 
 		
@@ -2107,7 +2258,7 @@ public class ClassChecker extends BaseChecker
 				{
 					if( prefixType.isParameterized() )
 					{
-						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionType.BINDING) )
+						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER) )
 						{					
 							prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
 							node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
@@ -2252,7 +2403,7 @@ public class ClassChecker extends BaseChecker
 				
 				if( typeArguments != null )
 				{					
-					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionType.BINDING) )
+					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER) )
 					{
 						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
 						signature = setCreateType( node, prefixType, arguments);
@@ -2446,118 +2597,65 @@ public class ClassChecker extends BaseChecker
 	{	
 		ClassType type = (ClassType) prefixType;
 		
-		//examine argument list to find create
-		List<MethodSignature> candidateCreates = type.getMethods("create");
-					
-		// we have no creates
-		if( candidateCreates == null || candidateCreates.size() == 0 )
-		{
-			addError(node, Error.INVALID_METHOD, "Create with signature " + arguments + " is not defined in this context");
-			node.setType(Type.UNKNOWN);				
-		}
-		else
-		{
-			//we have a create list
-			TreeMap<MethodSignature, MethodType> acceptableCreates = new TreeMap<MethodSignature, MethodType>();
-			
-			for( MethodSignature signature : candidateCreates ) 
-			{		
-				MethodType methodType = signature.getMethodType();
-				
-				if( signature.matches( arguments )) 
-				{
-					//found it, don't look further!
-					acceptableCreates.clear();
-					acceptableCreates.put(signature, methodType);
-					break;
-				}
-				else if( signature.canAccept( arguments ))
-					acceptableCreates.put(signature, methodType);
-			}
-			
-			if( acceptableCreates.size() == 0 ) 
-			{
-				addError(node, Error.INVALID_METHOD, "Create with signature " + arguments + " is not defined in this context");
-				node.setType(Type.UNKNOWN);
-			}					
-			else if( acceptableCreates.size() > 1 )
-			{
-				addError(node, Error.INVALID_ARGUMENTS, "Ambiguous create call with signature " + arguments);
-				node.setType(Type.UNKNOWN);
-			}					
-			else
-			{
-				Entry<MethodSignature, MethodType> entry = acceptableCreates.firstEntry();
-				MethodSignature signature = entry.getKey(); 
-				MethodType methodType = entry.getValue();				 
-				
-				if( !methodIsAccessible( signature, currentType  ))
-					addError(node, Error.ILLEGAL_ACCESS, "Create " + signature + " not accessible from this context");
-				else
-				{
-					node.setType(methodType);
-					return signature;
-				}
-			}				
-		}
-		
-		return null;		
+		return setMethodType( node, type.getMethods("create"), null, arguments, "create" );		
 	}
+	
 	
 	protected MethodSignature setMethodType( Node node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments )
 	{
-		TreeMap<MethodSignature, MethodType> acceptableMethods = new TreeMap<MethodSignature, MethodType>();
-		boolean hasTypeArguments = typeArguments != null;				
+		return setMethodType( node, methods, typeArguments, arguments, "method" );
+	}
+	
+	protected MethodSignature setMethodType( Node node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments, String kind )
+	{		
+		boolean hasTypeArguments = typeArguments != null;
+		MethodSignature candidate = null;
+		String capitalized = Character.toUpperCase(kind.charAt(0)) + kind.substring(1);		
 		
 		for( MethodSignature signature : methods ) 
 		{				
-			MethodType methodType = signature.getMethodType();
+			MethodType methodType = signature.getMethodType();			
 			
 			if( methodType.isParameterized() )
 			{
 				if( hasTypeArguments )
 				{	
 					SequenceType parameters = methodType.getTypeParameters();							
-					if( parameters.canAccept(typeArguments, SubstitutionType.BINDING))
+					if( parameters.canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER))
+					{
 						methodType = methodType.replace(parameters, typeArguments);
+						signature = signature.replace(parameters, typeArguments);
+					}
 					else
 						continue;
 				}
 			}				
 			
-			if( methodType.matches( arguments ) )
+			if( signature.canAccept(arguments ) )
 			{						
-				//perfect match, forget everything else
-				acceptableMethods.clear();
-				acceptableMethods.put(signature, methodType);
-				break;
-			}
-			else if( methodType.canAccept( arguments ))
-				acceptableMethods.put(signature, methodType);
+				if( candidate == null || signature.getParameterTypes().isSubtype(candidate.getParameterTypes()) )
+					candidate = signature;
+				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
+				{					
+					addError(node, Error.INVALID_ARGUMENTS, "Ambiguous " + kind + " call with signature " + arguments);
+					node.setType(Type.UNKNOWN);					
+				}				
+			}			
 		}
 			
 	
-		if( acceptableMethods.size() == 0 )	
+		if( candidate == null )	
 		{									
-			addError(node, Error.INVALID_METHOD, "Method with signature " + arguments + " is not defined in this context");
+			addError(node, Error.INVALID_METHOD, capitalized + " with signature " + arguments + " is not defined in this context");
 			node.setType(Type.UNKNOWN);
 		}
-		else if( acceptableMethods.size() > 1 )
-		{									
-			addError(node, Error.INVALID_ARGUMENTS, "Ambiguous method call with signature " + arguments);
-			node.setType(Type.UNKNOWN);
-		}							
 		else //exactly one thing
-		{					
-			Entry<MethodSignature, MethodType> entry = acceptableMethods.firstEntry();
-			MethodSignature signature = entry.getKey(); 
-			MethodType methodType = entry.getValue();
-			
-			if( !methodIsAccessible( signature, currentType  ))					
-				addError(node, Error.ILLEGAL_ACCESS, "Method " + signature + " is not accessible from this context");						
+		{	
+			if( !methodIsAccessible( candidate, currentType  ))					
+				addError(node, Error.ILLEGAL_ACCESS, capitalized + " " + candidate + " is not accessible from this context");						
 		
-			node.setType(methodType);
-			return signature;
+			node.setType(candidate.getMethodType());
+			return candidate;
 		}		
 		
 		return null;
@@ -2614,7 +2712,7 @@ public class ClassChecker extends BaseChecker
 					if( typeArguments != null )
 					{						
 						SequenceType parameters = methodType.getTypeParameters();
-						if( parameters.canAccept(typeArguments, SubstitutionType.BINDING))
+						if( parameters.canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER))
 							methodType = methodType.replace(parameters, typeArguments);
 						else
 						{

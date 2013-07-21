@@ -5,8 +5,12 @@ implements
 	Integer<long>,
 	Number<float>,
 	Number<double>,
+	CanNegate<int>,
 	CanHash
 {
+	constant int MAX =  2147483647;
+	constant int MIN =  -2147483648;
+
 	// implement Integer
 	public native bitComplement() => (int);
 	public native bitShiftLeft(uint amount) => (int);
@@ -185,6 +189,9 @@ implements
 	{
 		return cast<double>(this) == other;
 	}
+	
+	// implement CanNegate<int>
+	public immutable native negate() => (int);	
 
 	// implement CanHash
 	public get hash() => (int)

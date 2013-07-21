@@ -1,4 +1,4 @@
-class shadow.utility@HashSet<V is CanHash> implements Set<V>
+class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 {
 	get int size = 0;
 	Node[] table = Node:create[256];

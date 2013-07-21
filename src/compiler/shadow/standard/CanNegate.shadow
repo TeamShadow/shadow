@@ -1,0 +1,5 @@
+interface shadow.standard@
+	CanNegate<T>
+{
+	immutable negate() => (T);
+}

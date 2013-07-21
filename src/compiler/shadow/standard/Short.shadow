@@ -6,8 +6,11 @@ implements
 	Integer<long>,
 	Number<float>,
 	Number<double>,
+	CanNegate<short>,
 	CanHash
 {
+	constant short MAX = 32767s;
+	constant short MIN = -32768s;	
 	// implement Integer
 	public native bitComplement() => (short);
 	public native bitShiftLeft(uint amount) => (short);
@@ -235,6 +238,9 @@ implements
 	{
 		return cast<double>(this) == other;
 	}
+		
+	// implement CanNegate<short>
+	public immutable native negate() => (short);
 
 	// implement CanHash
 	public get hash() => (int)

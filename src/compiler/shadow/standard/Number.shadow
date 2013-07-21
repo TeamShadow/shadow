@@ -5,6 +5,7 @@ extends
 	CanSubtract<T>,
 	CanMultiply<T>,
 	CanDivide<T>,
+	CanModulus<T>,
 	CanCompare<T>
 {
 	immutable toByte() => (byte);

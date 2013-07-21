@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTUnaryExpressionNotPlusMinus extends SimpleNode {
+class ASTUnaryExpressionNotPlusMinus extends OperationNode {
   public ASTUnaryExpressionNotPlusMinus(int id) {
     super(id);
   }

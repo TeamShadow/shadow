@@ -1,5 +1,5 @@
 class shadow.utility@
-ArrayList<V>
+ArrayList<V is CanEqual<V>>
 implements List<V>
 {
 	get int size = 0;
@@ -110,10 +110,10 @@ implements List<V>
 
 	public immutable iterator() => (Iterator<V>)
 	{
-		return ArrayListIterator<V>:create();
+		return ArrayListIterator:create();
 	}
 	
-	private class ArrayListIterator<V> implements Iterator<V>
+	private class ArrayListIterator implements Iterator<V>
 	{
 		int index = 0;
 		int expectedModifications = modifications;

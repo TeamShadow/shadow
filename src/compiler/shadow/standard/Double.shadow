@@ -2,6 +2,7 @@ immutable class shadow.standard@
 	Double
 implements
 	Number<double>,
+	CanNegate<double>,	
 	CanHash
 {
 	constant double PI = 3.141592653589793;
@@ -71,4 +72,7 @@ implements
 			return NaN->raw;
 		return this->raw;
 	}
+	
+	// implement CanNegate<double>
+	public immutable native negate() => (double);
 }

@@ -1,4 +1,4 @@
-interface shadow.utility@List<E> extends CanIterate<E>, CanIndex<int, E>
+interface shadow.utility@List<E is CanEqual<E>> extends CanIterate<E>, CanIndex<int, E>
 {
 	immutable get size() => ( int size );
 	immutable indexOf(E element) => ( int index );

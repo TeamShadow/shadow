@@ -498,7 +498,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				if( type.isParameterized() ) 
 				{		
 					SequenceType parameters = type.getTypeParameters();
-					if( parameters.canAccept(arguments) )					
+					if( parameters.canAccept(arguments, SubstitutionType.TYPE_PARAMETER) )					
 						type = type.replace(parameters, arguments);
 					else
 					{						
@@ -547,7 +547,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						if( type.isParameterized() ) 
 						{		
 							SequenceType parameters = type.getTypeParameters();
-							if( parameters.canAccept(arguments ) )					
+							if( parameters.canAccept(arguments, SubstitutionType.TYPE_PARAMETER ) )					
 								type = type.replace(parameters, arguments);
 							else
 							{						

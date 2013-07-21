@@ -269,56 +269,42 @@ public class TypeCollector extends BaseChecker
 			//Special case for system types			
 			if( currentPackage.getQualifiedName().equals("shadow.standard"))
 			{	
-				if( typeName.equals("Object") )
-					Type.OBJECT = (ClassType) type;
-				else if( typeName.equals("Class") )
-					Type.CLASS = (ClassType) type;
-				else if( typeName.equals("Array"))
-					Type.ARRAY = (ClassType) type;
-				else if( typeName.equals("Enum"))
-					Type.ENUM = (ClassType) type; //the base class for enum is not an enum
-				else if( typeName.equals("Exception"))
-					Type.EXCEPTION = (ExceptionType) type;
-				else if( typeName.equals("Error"))
-					Type.ERROR = (ErrorType) type;
-				else if( typeName.equals("boolean"))
-					Type.BOOLEAN = (ClassType)type;
-				else if( typeName.equals("byte"))
-					Type.BYTE = (ClassType)type;
-				else if( typeName.equals("code"))
-					Type.CODE = (ClassType)type;
-				else if( typeName.equals("double"))
-					Type.DOUBLE = (ClassType)type;
-				else if( typeName.equals("float"))
-					Type.FLOAT = (ClassType)type;
-				else if( typeName.equals("int") )
-					Type.INT = (ClassType) type;
-				else if( typeName.equals("long"))				
-					Type.LONG = (ClassType)type;
-				else if( typeName.equals("short"))
-					Type.SHORT = (ClassType)type;
-				else if( typeName.equals("ubyte"))
-					Type.UBYTE = (ClassType)type;
-				else if( typeName.equals("uint"))
-					Type.UINT = (ClassType)type;
-				else if( typeName.equals("ulong"))
-					Type.ULONG = (ClassType)type;
-				else if( typeName.equals("ushort"))
-					Type.USHORT = (ClassType)type;
-				else if( typeName.equals("String") )
-					Type.STRING = (ClassType) type;
-				else if( typeName.equals("CanCompare"))
-					Type.CAN_COMPARE = (InterfaceType) type;
-				else if( typeName.equals("CanIndex"))
-					Type.CAN_INDEX = (InterfaceType) type;
-				else if( typeName.equals("CanIterate"))
-					Type.CAN_ITERATE = (InterfaceType) type;
-				else if( typeName.equals("Number"))
-					Type.NUMBER = (InterfaceType) type;
-				else if( typeName.equals("UnboundMethod"))
-					Type.UNBOUND_METHOD = (ClassType)type;
-				else if( typeName.equals("Method"))
-					Type.METHOD = (ClassType)type;
+				switch( typeName )
+				{
+				case "Array":			Type.ARRAY = (ClassType) type; break;			
+				case "CanAdd":			Type.CAN_ADD = (InterfaceType)type; break;
+				case "CanCompare":		Type.CAN_COMPARE = (InterfaceType) type; break;
+				case "CanDivide":		Type.CAN_DIVIDE = (InterfaceType)type; break;
+				case "CanEqual":		Type.CAN_EQUAL = (InterfaceType) type; break;	
+				case "CanModulus":		Type.CAN_MODULUS = (InterfaceType)type; break;
+				case "CanMultiply":		Type.CAN_MULTIPLY = (InterfaceType)type; break;
+				case "CanNegate":		Type.CAN_NEGATE = (InterfaceType)type; break;
+				case "CanSubtract":		Type.CAN_SUBTRACT = (InterfaceType)type; break;
+				case "CanIndex":		Type.CAN_INDEX = (InterfaceType) type; break;
+				case "CanIterate":		Type.CAN_ITERATE = (InterfaceType) type; break;
+				case "Class":			Type.CLASS = (ClassType) type; break;
+				case "boolean":			Type.BOOLEAN = (ClassType)type; break;
+				case "byte":			Type.BYTE = (ClassType)type; break;
+				case "code":			Type.CODE = (ClassType)type; break;
+				case "double":			Type.DOUBLE = (ClassType)type; break;
+				case "Enum":			Type.ENUM = (ClassType) type; break;//the base class for enum is not an enum
+				case "Error":			Type.ERROR = (ErrorType) type; break;				
+				case "Exception":		Type.EXCEPTION = (ExceptionType) type; break;
+				case "float":			Type.FLOAT = (ClassType)type; break;
+				case "int":				Type.INT = (ClassType) type; break;
+				case "Integer":			Type.INTEGER = (InterfaceType) type; break;
+				case "long":			Type.LONG = (ClassType)type; break;
+				case "Method":			Type.METHOD = (ClassType)type; break;
+				case "Number":			Type.NUMBER = (InterfaceType) type; break;
+				case "Object":			Type.OBJECT = (ClassType) type; break;				
+				case "short":			Type.SHORT = (ClassType)type; break;
+				case "String":			Type.STRING = (ClassType) type; break;
+				case "ubyte":			Type.UBYTE = (ClassType)type; break;
+				case "uint":			Type.UINT = (ClassType)type; break;
+				case "ulong":			Type.ULONG = (ClassType)type; break;
+				case "UnboundMethod":	Type.UNBOUND_METHOD = (ClassType)type; break;
+				case "ushort":			Type.USHORT = (ClassType)type; break;
+				}
 			}
 			
 			type.addImportedItems( importedItems );

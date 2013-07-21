@@ -131,7 +131,7 @@ public abstract class Type {
 	public static ClassType METHOD = null;  // class representation for references with function type
 	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
 
-	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an enum
+	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
 	public static ExceptionType EXCEPTION = null;	
 	public static ErrorType ERROR = null;
 		
@@ -140,7 +140,7 @@ public abstract class Type {
 	public static ClassType CODE = null;
 	public static ClassType DOUBLE = null;
 	public static ClassType FLOAT = null;	
-	public static ClassType INT = null; //new ClassType( "int", OBJECT );
+	public static ClassType INT = null;
 	public static ClassType LONG = null;
 	public static ClassType SHORT = null;
 	
@@ -153,9 +153,17 @@ public abstract class Type {
 	
 	//interfaces needed for language features
 	public static InterfaceType CAN_COMPARE = null;
+	public static InterfaceType CAN_EQUAL = null;
 	public static InterfaceType CAN_INDEX = null;
 	public static InterfaceType CAN_ITERATE = null;
 	public static InterfaceType NUMBER = null;
+	public static InterfaceType INTEGER = null;
+	public static InterfaceType CAN_ADD = null;
+	public static InterfaceType CAN_SUBTRACT = null;
+	public static InterfaceType CAN_MULTIPLY = null;
+	public static InterfaceType CAN_DIVIDE = null;
+	public static InterfaceType CAN_MODULUS = null;
+	public static InterfaceType CAN_NEGATE = null;
 	
 	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null);
@@ -168,6 +176,8 @@ public abstract class Type {
 		OBJECT = null;
 		CLASS = null;
 		ARRAY = null;
+		METHOD = null;
+		UNBOUND_METHOD = null;
 		ENUM = null;
 		EXCEPTION = null;	
 		ERROR = null;			
@@ -185,9 +195,17 @@ public abstract class Type {
 		USHORT = null;
 		STRING = null;
 		CAN_COMPARE = null;
+		CAN_EQUAL = null;
 		CAN_INDEX = null;
 		CAN_ITERATE = null;
 		NUMBER = null;
+		INTEGER = null;
+		CAN_ADD = null;
+		CAN_SUBTRACT = null;
+		CAN_MULTIPLY = null;
+		CAN_DIVIDE = null;
+		CAN_MODULUS = null;
+		CAN_NEGATE = null;
 	}
 	
 	public Type(String typeName) {
@@ -945,7 +963,14 @@ public abstract class Type {
 	public void addReferencedType(Type type)
 	{
 		if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) && !isDescendentOf(type))
-			referencedTypes.add(type);
+		{
+			referencedTypes.add(type.typeWithoutTypeArguments);
+			if( type.isParameterized() )
+			{
+				for( ModifiedType typeParameter : type.getTypeParameters() )
+					addReferencedType( typeParameter.getType() );
+			}
+		}
 	}
 	public Set<Type> getReferencedTypes()
 	{

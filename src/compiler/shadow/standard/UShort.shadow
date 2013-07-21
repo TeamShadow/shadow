@@ -8,6 +8,10 @@ implements
 	Number<double>,
 	CanHash
 {
+
+	constant ushort MAX = 65535us;
+	constant ushort MIN = 0us;
+
 	// implement Integer
 	public native bitComplement() => (ushort);
 	public native bitShiftLeft(uint amount) => (ushort);

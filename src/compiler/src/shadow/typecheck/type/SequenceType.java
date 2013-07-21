@@ -14,7 +14,14 @@ import shadow.typecheck.ClassChecker.SubstitutionType;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
 {	
-	private List<ModifiedType> types; /** List of return types */	
+	private List<ModifiedType> types; /** List of return types */
+	
+	public SequenceType(ModifiedType type) {
+		this();
+		add(type);
+	}
+
+	
 
 	public SequenceType() {		
 		this( new ArrayList<ModifiedType>()  );		

@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTBitwiseExclusiveOrExpression extends SimpleNode {
+class ASTBitwiseExclusiveOrExpression extends OperationNode {
   public ASTBitwiseExclusiveOrExpression(int id) {
     super(id);
   }
