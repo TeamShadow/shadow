@@ -197,8 +197,10 @@ public class ClassType extends Type
 		return getExtendType().recursivelyGetField(fieldName);
 	}
 	
-	//get methods from class and ancestors, useful for checking for duplicates
-	public List<MethodSignature> getAllMethods(String methodName)
+	//get methods from class and ancestors
+	//does not include visible outer class methods
+	/*
+	public List<MethodSignature> getMethods(String methodName)
 	{
 		List<MethodSignature> list = new ArrayList<MethodSignature>();
 		
@@ -215,19 +217,29 @@ public class ClassType extends Type
 		}
 		
 		return list;
-	}	
+	}
+	*/
 	
 	//get methods from all visible sources, adds outer classes too
-	public List<MethodSignature> getAnyVisibleMethods(String methodName)
+	public List<MethodSignature> getAllMethods(String methodName)
 	{
-		List<MethodSignature> list = getAllMethods(methodName);
+		List<MethodSignature> list = getMethods(methodName);
 				
 		if( !methodName.equals("create") )
-		{				
+		{	
+			//first the parents
+			ClassType parent = extendType;
+			while( parent != null )
+			{
+				parent.includeMethods(methodName, list);
+				parent = parent.extendType;
+			}
+			
 			//outer classes of this and parents
 			ClassType current = this;
 			while( current != null )
-			{
+			{	
+				//then outer classes
 				Type outer = current.getOuter();
 				while( outer != null && outer instanceof ClassType)
 				{

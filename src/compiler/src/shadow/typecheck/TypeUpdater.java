@@ -111,10 +111,11 @@ public class TypeUpdater extends BaseChecker
 						
 						if( fieldModifiers.isGet() || fieldModifiers.isSet() )
 						{
-							List<MethodSignature> methods = classType.getAllMethods(field.getKey());
+							List<MethodSignature> methods = classType.getMethods(field.getKey());
 							int getterCount = 0;
 							int setterCount = 0;
-							int other = 0;
+							int getterCollision = 0;
+							int setterCollision = 0;
 							
 							for( MethodSignature signature : methods)
 							{
@@ -122,14 +123,16 @@ public class TypeUpdater extends BaseChecker
 									getterCount++;
 								else if( signature.getModifiers().isSet() )
 									setterCount++;
-								else
-									other++;
+								else if( signature.getParameterTypes().isEmpty() )
+									getterCollision++;
+								else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().equals(signature.getParameterTypes().get(0).getType())  )
+									setterCollision++;
 							}
 							
 							if( fieldModifiers.isGet() && getterCount == 0 )
 							{
-								if( other > 0 )								
-									addError(Error.MULTIPLY_DEFINED_SYMBOL, "Default get property " +  field.getKey() + " cannot redefine a method of the same name" );
+								if( getterCollision > 0 )								
+									addError(Error.INVALID_MODIFIER, "Default get property " +  field.getKey() + " cannot replace a method with an indistinguishable signature" );
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
@@ -152,8 +155,8 @@ public class TypeUpdater extends BaseChecker
 							
 							if( fieldModifiers.isSet() && setterCount == 0 )
 							{
-								if( other > 0 )								
-									addError(Error.MULTIPLY_DEFINED_SYMBOL, "Default set property " +  field.getKey() + " cannot redefine a method of the same name" );
+								if( setterCollision > 0 )								
+									addError(Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot replace a method with an indistinguishable signature" );
 								else
 								{
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
@@ -186,8 +189,7 @@ public class TypeUpdater extends BaseChecker
 		for(Node declarationNode : files.values() )
 		{			
 			if( declarationNode.getType() instanceof ClassType )
-			{
-				
+			{				
 				ClassType classType = (ClassType) declarationNode.getType();
 				
 				//check for circular class hierarchy				

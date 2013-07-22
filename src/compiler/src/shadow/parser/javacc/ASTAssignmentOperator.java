@@ -20,20 +20,39 @@ class ASTAssignmentOperator extends SimpleNode {
   }
   
   public enum AssignmentType {
-	  EQUAL,
-	  PLUS,
-	  MINUS,
-	  STAR,
-	  SLASH,
-	  AND,
-	  OR,
-	  XOR,
-	  MOD,
-	  CAT,
-	  LEFT_SHIFT,
-	  RIGHT_SHIFT,
-	  RIGHT_ROTATE,
-	  LEFT_ROTATE
+	  EQUAL("=", ""),
+	  CAT("#", "concatenate"),
+	  PLUS("+", "add"),
+	  MINUS("-", "subtract"),
+	  STAR("*", "multiply"),
+	  SLASH("/", "divide"),
+	  MOD("%", "modulus"),
+	  AND("&", "bitAnd"),
+	  OR("|", "bitOr"),
+	  XOR("^", "bitXor"),
+	  LEFT_SHIFT("<<", "bitShiftLeft"),
+	  RIGHT_SHIFT(">>", "bitShiftRight"),
+	  LEFT_ROTATE("<<<", "bitRotateLeft"),
+	  RIGHT_ROTATE(">>>", "bitRotateLeft");	  
+	  
+	  private String operator;
+	  private String method;
+	  
+	  AssignmentType( String operator, String method )
+	  {
+		  this.operator = operator;
+		  this.method = method;		  
+	  }
+	  
+	  public String getOperator()
+	  {
+		  return operator;
+	  }
+	  
+	  public String getMethod()
+	  {
+		  return method;
+	  }
   }
   
   protected AssignmentType assignmentType;

@@ -615,7 +615,7 @@ public class ClassChecker extends BaseChecker
 						SequenceType argument = new SequenceType();
 						argument.add(currentNode);							
 						 
-						MethodSignature signature = setMethodType(node, result.getAllMethods("equal"), null, argument );
+						MethodSignature signature = setMethodType(node, result, "equal", argument );
 						if( signature != null )
 						{
 							result = signature.getReturnTypes().getType(0);
@@ -692,7 +692,7 @@ public class ClassChecker extends BaseChecker
 					SequenceType argument = new SequenceType();
 					argument.add(currentNode);							
 					 
-					MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), null, argument );
+					MethodSignature signature = setMethodType(node, result, methodName, argument );
 					if( signature != null )
 					{
 						result = signature.getReturnTypes().getType(0);
@@ -773,7 +773,7 @@ public class ClassChecker extends BaseChecker
 			{
 				SequenceType argument = new SequenceType(currentNode);											
 				 
-				MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), null, argument );
+				MethodSignature signature = setMethodType(node, result, methodName, argument );
 				if( signature != null )
 				{
 					result = signature.getReturnTypes().getType(0);
@@ -841,7 +841,7 @@ public class ClassChecker extends BaseChecker
 			{
 				if( type.hasInterface(Type.CAN_NEGATE) )
 				{
-					MethodSignature signature = setMethodType(node, type.getAllMethods("negate"), null, new SequenceType() );
+					MethodSignature signature = setMethodType(node, type, "negate", new SequenceType() );
 					if( signature != null )
 					{
 						type = signature.getReturnTypes().getType(0);
@@ -883,7 +883,7 @@ public class ClassChecker extends BaseChecker
 			{
 				if( type.hasInterface(Type.INTEGER) )
 				{	 
-					MethodSignature signature = setMethodType(node, type.getAllMethods("bitComplement"), null, new SequenceType() );
+					MethodSignature signature = setMethodType(node, type, "bitComplement", new SequenceType() );
 					if( signature != null )
 					{
 						type = signature.getReturnTypes().getType(0);
@@ -1066,7 +1066,7 @@ public class ClassChecker extends BaseChecker
 					SequenceType argument = new SequenceType();
 					argument.add(currentNode);							
 					 
-					MethodSignature signature = setMethodType(node, result.getAllMethods(methodName), null, argument );
+					MethodSignature signature = setMethodType(node, result, methodName, argument );
 					if( signature != null )
 					{
 						result = signature.getReturnTypes().getType(0);
@@ -1374,7 +1374,23 @@ public class ClassChecker extends BaseChecker
 			ASTPrimaryExpression left = (ASTPrimaryExpression) node.jjtGetChild(0);
 			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
 			ASTConditionalExpression right = (ASTConditionalExpression) node.jjtGetChild(2);
-			addErrors(left, isValidAssignment(left, right, assignment.getAssignmentType()));
+			List<String> errors = isValidAssignment(left, right, assignment.getAssignmentType()); 
+			
+			if( errors.isEmpty() )
+			{
+				Type leftType = left.getType();
+				Type rightType = right.getType();
+				
+				if( leftType instanceof PropertyType )
+					leftType = ((PropertyType)leftType).getSetType().getType();
+				
+				if( rightType instanceof PropertyType )
+					rightType = ((PropertyType)rightType).getGetType().getType();
+						
+				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(new SimpleModifiedType(rightType))));
+			}
+			else				
+				addErrors(left, errors);			
 					
 			//will issue appropriate errors
 			//since this is an Expression (with nothing to the left), there is no type to set
@@ -2593,71 +2609,31 @@ public class ClassChecker extends BaseChecker
 	}
 	
 	protected MethodSignature setCreateType( ASTCreate node, Type prefixType, SequenceType arguments)
-	{	
-		ClassType type = (ClassType) prefixType;
-		
-		return setMethodType( node, type.getMethods("create"), null, arguments, "create" );		
+	{			
+		return setMethodType( node, prefixType, "create", arguments, null);		
 	}
 	
-	
-	protected MethodSignature setMethodType( Node node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments )
+	protected MethodSignature setMethodType( Node node, Type type, String method, SequenceType arguments)
 	{
-		return setMethodType( node, methods, typeArguments, arguments, "method" );
+		return setMethodType( node, type, method, arguments, null );
 	}
-	
-	protected MethodSignature setMethodType( Node node, List<MethodSignature> methods, SequenceType typeArguments, SequenceType arguments, String kind )
-	{		
-		boolean hasTypeArguments = typeArguments != null;
-		MethodSignature candidate = null;
-		String capitalized = Character.toUpperCase(kind.charAt(0)) + kind.substring(1);		
+
+	protected MethodSignature setMethodType( Node node, Type type, String method, SequenceType arguments, SequenceType typeArguments )
+	{	
+		List<String> errors = new ArrayList<String>();
+		MethodSignature signature = type.getMatchingMethod(method, arguments, typeArguments, errors);
 		
-		for( MethodSignature signature : methods ) 
-		{				
-			MethodType methodType = signature.getMethodType();			
-			
-			if( methodType.isParameterized() )
-			{
-				if( hasTypeArguments )
-				{	
-					SequenceType parameters = methodType.getTypeParameters();							
-					if( parameters.canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER))
-					{
-						methodType = methodType.replace(parameters, typeArguments);
-						signature = signature.replace(parameters, typeArguments);
-					}
-					else
-						continue;
-				}
-			}				
-			
-			if( signature.canAccept(arguments ) )
-			{						
-				if( candidate == null || signature.getParameterTypes().isSubtype(candidate.getParameterTypes()) )
-					candidate = signature;
-				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
-				{					
-					addError(node, Error.INVALID_ARGUMENTS, "Ambiguous " + kind + " call with signature " + arguments);
-					node.setType(Type.UNKNOWN);					
-				}				
-			}			
-		}
-			
-	
-		if( candidate == null )	
-		{									
-			addError(node, Error.INVALID_METHOD, capitalized + " with signature " + arguments + " is not defined in this context");
-			node.setType(Type.UNKNOWN);
-		}
-		else //exactly one thing
-		{	
-			if( !methodIsAccessible( candidate, currentType  ))					
-				addError(node, Error.ILLEGAL_ACCESS, capitalized + " " + candidate + " is not accessible from this context");						
+		if( signature == null )
+			addErrors(node, errors);	
+		else
+		{
+			if( !methodIsAccessible( signature, currentType  ))					
+				addError(node, Error.ILLEGAL_ACCESS, signature + " is not accessible from this context");						
 		
-			node.setType(candidate.getMethodType());
-			return candidate;
+			node.setType(signature.getMethodType());		
 		}		
 		
-		return null;
+		return signature;
 	}
 	
 	public Object visit(ASTMethodCall node, Boolean secondVisit) throws ShadowException	
@@ -2686,14 +2662,9 @@ public class ClassChecker extends BaseChecker
 		
 			if( prefixType instanceof UnboundMethodType )
 			{
-				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);
-				List<MethodSignature> methods;
-				Type outer = prefixType.getOuter(); 
-				if(outer instanceof ClassType )
-					methods = ((ClassType)outer).getAnyVisibleMethods(unboundMethod.getTypeName());
-				else
-					methods = outer.getAllMethods(unboundMethod.getTypeName());
-				MethodSignature signature = setMethodType(node, methods, typeArguments, arguments); //type set inside
+				UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);				
+				Type outer = prefixType.getOuter();
+				MethodSignature signature = setMethodType(node, outer, unboundMethod.getTypeName(), arguments, typeArguments); //type set inside
 				node.setMethodSignature(signature);
 				
 				if( signature != null &&  prefixNode.getModifiers().isImmutable() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )

@@ -43,8 +43,6 @@ public abstract class Type {
 	private LinkedList<Object> importedItems = new LinkedList<Object>();
 	
 	
-	
-	
 	private static class TypeArgumentCache
 	{
 		public ModifiedType argument;
@@ -491,21 +489,8 @@ public abstract class Type {
 		return
 		this.equals(FLOAT) ||
 		this.equals(DOUBLE);
-	}
-	
-	
-	final public boolean isBuiltIn()
-	{
-		return
-		isPrimitive() ||
-		this.equals(CLASS) ||
-		this.equals(OBJECT) ||		
-		this.equals(STRING) ||		
-		this.equals(ENUM) ||
-		this.equals(ERROR) ||
-		this.equals(EXCEPTION);
-	}
-	
+	}	
+		
 	final public boolean isPrimitive()
 	{
 		return
@@ -574,71 +559,25 @@ public abstract class Type {
 			return accepts;
 		}
 		
-		String methodName = "";
+		String methodName = assignmentType.getMethod();
 		InterfaceType interfaceType = null;
-		String operator = "";
+		String operator = assignmentType.getOperator();
 		
 		switch( assignmentType  )
 		{	
-		case PLUS:
-			methodName = "add";
-			interfaceType = Type.CAN_ADD;
-			operator = "+";
-			break;
-		case MINUS:
-			methodName = "subtract";
-			interfaceType = Type.CAN_SUBTRACT;
-			operator = "-";
-			break;
-		case STAR:
-			methodName = "multiply";
-			interfaceType = Type.CAN_MULTIPLY;
-			operator = "*";
-			break;
-		case SLASH:
-			methodName = "divide";
-			interfaceType = Type.CAN_DIVIDE;
-			operator = "/";
-			break;
-		case MOD:
-			methodName = "modulus";
-			interfaceType = Type.CAN_MODULUS;
-			operator = "%";
-			break;
+		case PLUS: interfaceType = Type.CAN_ADD; break;
+		case MINUS: interfaceType = Type.CAN_SUBTRACT; break;
+		case STAR: interfaceType = Type.CAN_MULTIPLY; break;
+		case SLASH: interfaceType = Type.CAN_DIVIDE; break;
+		case MOD: interfaceType = Type.CAN_MODULUS; break;
 		case AND:
-			methodName = "bitAnd";
-			interfaceType = Type.INTEGER;
-			operator = "&";
-			break;
 		case OR:
-			methodName = "bitOr";
-			interfaceType = Type.INTEGER;
-			operator = "|";
-			break;
 		case XOR:
-			methodName = "bitXor";
-			interfaceType = Type.INTEGER;
-			operator = "^";
-			break;			
 		case LEFT_SHIFT:
-			methodName = "bitShiftLeft";
-			interfaceType = Type.INTEGER;
-			operator = "<<";
-			break;
 		case RIGHT_SHIFT:
-			methodName = "bitShiftRight";
-			interfaceType = Type.INTEGER;
-			operator = ">>";
-			break;
 		case LEFT_ROTATE:
-			methodName = "bitRotateLeft";
-			interfaceType = Type.INTEGER;
-			operator = "<<<";
-			break;
 		case RIGHT_ROTATE:
-			methodName = "bitRotateRight";
 			interfaceType = Type.INTEGER;
-			operator = ">>>";
 			break;
 		default:
 			return false;
@@ -668,6 +607,11 @@ public abstract class Type {
 			ClassChecker.addReason(reasons, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType);			
 			return false;						
 		}
+	}
+	
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments)
+	{
+		return getMatchingMethod(methodName, arguments, null );
 	}
 	
 	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments )
@@ -916,7 +860,7 @@ public abstract class Type {
 		if( signatures == null )
 			return new ArrayList<MethodSignature>();
 		else
-			return methodTable.get(methodName);
+			return signatures;
 	}	
 	
 	/**
