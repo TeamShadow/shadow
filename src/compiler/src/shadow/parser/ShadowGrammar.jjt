@@ -37,14 +37,19 @@ public class ShadowParser
 	};
 
    private static final Log logger = Loggers.PARSER;
+   private File file = null;
+   public File getFile()
+   {
+     return file;   }
 
    public ShadowParser(String fileName)
    {
       this(System.in);
-      FileInputStream fis = null;
+      FileInputStream fis = null;      
       
       try {
-      	fis = new FileInputStream(new File(fileName));
+        file = new File(fileName);
+      	fis = new FileInputStream(file);
         ReInit(fis);
       } catch(Exception e) {
         logger.error("Error reading file: " + fileName, e);

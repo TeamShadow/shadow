@@ -12,8 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 import shadow.Configuration;
+import shadow.TypeCheckException;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -124,8 +126,7 @@ public class TypeCollector extends BaseChecker
 				walker = new ASTWalker( collector );		
 				walker.walk(node);				
 		
-				files.put(canonical, node);				
- 
+				files.put(canonical, node);
 				
 				//copy other types into our package tree				
 				for( Package p : otherTypes.keySet() )
@@ -138,7 +139,7 @@ public class TypeCollector extends BaseChecker
 					}
 					catch(PackageException e)
 					{
-						addError( node, Error.INVALID_PACKAGE, e.getMessage() );				
+						addError(Error.INVALID_PACKAGE, e.getMessage() );				
 					}
 				}
 				
@@ -202,7 +203,7 @@ public class TypeCollector extends BaseChecker
 				currentPackage = packageTree.addQualifiedPackage(name, typeTable);
 			}
 			else
-				addError( node, Error.INVALID_PACKAGE, "Package can only be defined by outermost classes" );			
+				addError(Error.INVALID_PACKAGE, "Package can only be defined by outermost classes" );			
 		}
 		
 		String image = node.getImage();		
@@ -232,7 +233,7 @@ public class TypeCollector extends BaseChecker
 		
 		if( lookupType(typeName) != null )
 		{
-			addError( node, Error.MULTIPLY_DEFINED_SYMBOL, "Type " + typeName + " already defined" );
+			addError(Error.MULTIPLY_DEFINED_SYMBOL, "Type " + typeName + " already defined" );
 			node.setType(Type.UNKNOWN);
 		}
 		else
@@ -315,7 +316,7 @@ public class TypeCollector extends BaseChecker
 			}
 			catch(PackageException e)
 			{
-				addError( node, Error.INVALID_PACKAGE, e.getMessage() );				
+				addError(Error.INVALID_PACKAGE, e.getMessage() );				
 			}
 			
 			node.setType(type);	
@@ -453,7 +454,7 @@ public class TypeCollector extends BaseChecker
 			if( addImport( name ) )
 				importedItems.add(name);
 			else
-				addError(node, "No file found for import " + name);		
+				addError(Error.INVALID_IMPORT, "No file found for import " + name);		
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -554,7 +555,7 @@ public class TypeCollector extends BaseChecker
 					if( importName.contains(":"))
 						importName = importName.substring(0, importName.indexOf(':'));
 					if( !addImport( importName ) )
-						addError(node, "No file found for import " + importName);
+						addError(Error.INVALID_IMPORT, "No file found for import " + importName);
 				}
 			}
 		}
@@ -575,7 +576,7 @@ public class TypeCollector extends BaseChecker
 				{
 					String name = child.getImage() + "@" +  node.getImage();
 					if( !addImport( name ) )
-						addError(node, "No file found for import " + name);
+						addError(Error.INVALID_IMPORT, "No file found for import " + name);
 				}
 			}
 		}

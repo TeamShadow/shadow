@@ -1,17 +1,13 @@
 package shadow.test.typecheck;
 
-import static junit.framework.Assert.assertEquals;
-
 import java.util.ArrayList;
 
 import org.apache.log4j.Level;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import shadow.Loggers;
 import shadow.Main;
-import shadow.typecheck.type.Type;
 
 public class ShadowUtilityTest {
 	
@@ -39,37 +35,37 @@ public class ShadowUtilityTest {
 	 @Test public void testArrayList() throws Exception {		
 	
 		args.add("shadow/utility/ArrayList.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		Main.run(args.toArray(new String[] { }));
 	
 	}
 
 	@Test public void testHashSet() throws Exception {
 		args.add("shadow/utility/HashSet.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		Main.run(args.toArray(new String[] { }));
 	}
 
 	 @Test public void testIllegalModificationException() throws Exception {
 		args.add("shadow/utility/IllegalModificationException.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		Main.run(args.toArray(new String[] { }));
 	}
 	 
 	@Test public void testLinkedList() throws Exception {
 		args.add("shadow/utility/LinkedList.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		Main.run(args.toArray(new String[] { }));
 	}
 
 	@Test public void testList() throws Exception {
 		args.add("shadow/utility/List.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		Main.run(args.toArray(new String[] { }));
 	}
 
 	@Test public void testRandom() throws Exception {
 		args.add("shadow/utility/Random.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		Main.run(args.toArray(new String[] { }));
 	}
 
 	@Test public void testSet() throws Exception {
 		args.add("shadow/utility/Set.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		Main.run(args.toArray(new String[] { }));
 	}
 }

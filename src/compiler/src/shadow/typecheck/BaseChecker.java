@@ -8,9 +8,11 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 
 import shadow.Loggers;
+import shadow.TypeCheckException;
 import shadow.AST.ASTUtils;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
+import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -48,84 +50,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected Type currentType = null;
 	protected Type declarationType = null;
 	protected boolean debug;	
-	
-	// these are constants for our error messages to keep things consistent
-	// TODO: Add more of these
-	/*
-	public static enum Error {
-		INVL_TYP		{ public String toString()  { return "INVALID TYPE"; } },
-		MULT_SYM		{ public String toString()  { return "MULTIPLY DEFINED SYMBOL"; } },
-		MULT_MTH		{ public String toString()  { return "MULTIPLY DEFINED METHODS"; } },
-		UNDEC_VAR		{ public String toString()  { return "UNDECLARED VARIABLE"; } },
-		UNDEF_TYP		{ public String toString()  { return "UNDEFINED TYPE"; } },
-		TYPE_MIS		{ public String toString()  { return "TYPE MISMATCH"; } },
-		INVL_MOD		{ public String toString() { return "INVALID MODIFIER"; } };
-	}
-	*/
-	
-	public static enum Error
-	{		
-		ILLEGAL_ACCESS("Illegal access", "Class, member, method, or property not accessible from this context"),
-		INVALID_ARGUMENTS("Invalid arguments", "Supplied method arguments do not match parameters"),
-		INVALID_ASSIGNMENT("Invalid assignment", "Right hand side cannot be assigned to left hand side"),
-		INVALID_CAST("Invalid cast", "Result type cannot be cast to specified type"),
-		INVALID_CREATE("Invalid create", "Target cannot be created"),
-		INVALID_DEPENDENCY("Invalid dependency", "Type is dependent on an invalid or unavailable type"),
-		INVALID_DEREFERENCE("Invalid dereference", "Nullable reference cannot be dereferenced"),
-		INVALID_DESTROY("Invalid destroy", "Target cannot be destroyed"),
-		INVALID_EXTEND("Invalid extend", "Type cannot extend given type"),
-		INVALID_HIERARCHY("Invalid hierarchy", "Type contains a circular extends or implements definition"),
-		INVALID_IMPLEMENT("Invalid implement", "Type cannot implement given type"),
-		INVALID_IMPORT("Invalid import", "Type or package cannot be imported"),
-		INVALID_INSTANCE("Invalid instance", "Target cannot be instanced"),
-		INVALID_METHOD("Invalid method", "Method with specified signature is not defined in this context"),
-		INVALID_MODIFIER("Invalid modifier", "Modifier cannot be applied to this declaration"),
-		INVALID_OVERRIDE("Invalid override", "Method cannot override parent method"),
-		INVALID_PACKAGE("Invalid package", "Package cannot be defined"),
-		INVALID_PARAMETERS("Invalid parameters", "Method cannot be declared with the given parameters"),
-		INVALID_RETURNS("Invalid returns", "Supplied return values do not match method signature"),
-		INVALID_SELF_REFERENCE("Invalid self reference", "Self reference is invalid"),
-		INVALID_SINGLETON_CREATE("Invalid singleton create", "Singleton type can only specify a default create"),
-		INVALID_STRUCTURE("Invalid structure", "Language construct cannot be used in this way"),
-		INVALID_SUBSCRIPT("Invalid subscript", "Subscript is of wrong type or number"),
-		INVALID_TRY("Invalid try", "Try statement incorrectly constructed"),
-		INVALID_TYPE("Invalid type", "Supplied type cannot be used with this language construct"),
-		INVALID_TYPE_ARGUMENTS("Invalid type arguments", "Supplied type arguments do not match type parameters"),
-		INVALID_TYPE_PARAMETERS("Invalid type parameters", "Type cannot be parameterized"),
-		MISMATCHED_TYPE("Mismatched type", "Supplied type does not match another type supplied to this language construct"),
-		MISSING_CREATE("Missing create invocation", "Explicit create invocation is missing, and parent class does not implement the default create"),
-		MISSING_INTERFACE("Missing interface", "Type does not implement a required interface"),
-		MISSING_TYPE_ARGUMENTS("Missing type arguments", "Type arguments not supplied for parameterized type"),
-		MULTIPLY_DEFINED_SYMBOL("Multiply defined symbol", "Symbol cannot be redefined in this context"),
-		NO_ACTION("No action", "Statement does not perform an action"),
-		NOT_OBJECT("Not object", "Object reference must be used"),
-		NOT_TYPE("Not type", "Type name must be used"),
-		UNDEFINED_PACKAGE("Undefined package", "Package not defined in this context"),
-		UNDEFINED_SYMBOL("Undefined symbol", "Symbol has not been defined in this context"),
-		UNDEFINED_TYPE("Undefined type", "Type not defined in this context"),
-		UNNECESSARY_TYPE_ARGUMENTS("Unnecessary type arguments", "Type arguments supplied for non-parameterized type"),
-		UNREACHABLE_CODE("Unreachable code", "Code cannot be reached");
-		
-		private final String name;
-		private final String message;		
-		
-		Error( String name, String message )
-		{
-			this.name = name;
-			this.message = message;
-		}
-		
-		public String getName()
-		{
-			return name;
-		}
-		
-		public String getMessage()
-		{
-			return message;			
-		}
-	}	
-	
 	
 	public final HashMap<Package, HashMap<String, Type>> getTypeTable() {
 		return typeTable;
@@ -174,9 +98,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			Node child = node.jjtGetChild(0);
 			node.setModifiers( child.getModifiers() );
 		}
-	}
-	
-	
+	}	
 	
 
 	/**
@@ -184,15 +106,37 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param node The node where the error occurred. This will be printed in the standard format.
 	 * @param msg The message to communicate to the user.
 	 */
-	protected void addError(Node node, String msg) {
-		addError( node, null, msg );
+	protected void addError(String msg) {
+		addError( null, msg );
+	}
+	
+	protected void addErrors(List<String> messages)
+	{		
+		if( messages != null )
+			for( String message : messages )
+				addError( message );
 	}
 	
 	protected void addErrors(Node node, List<String> messages)
 	{		
 		if( messages != null )
 			for( String message : messages )
-				addError( node, message );
+				addError( node, null, message );
+	}
+	
+	protected void addError(Node node, Error type, String msg)
+	{
+		String error = "";
+
+		error += "(" + node.getFile().getName() + ")";
+		error += "[" + node.getLine() + ":" + node.getColumn() + "] ";
+		
+		if( type != null )
+			error += type.getName() + ": ";		
+		
+		error += msg;		
+		
+		errorList.add(new TypeCheckException(type, error));
 	}
 	
 	/**
@@ -201,23 +145,20 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param type One of the pre-defined types of errors.
 	 * @param msg The message associated with the error.
 	 */
-	protected void addError(Node node, Error type, String msg) {
+	protected void addError(Error type, String msg)
+	{
 		String error = "";
 		
-		if( node != null )
+		if( getFile() != null )
 		{
-			if( node.getFile() != null )
-				error += "(" + node.getFile().getName() + ")";
-			error += "[" + ASTUtils.getLineCol(node) + "] ";
+			error += "(" + getFile().getName() + ")";
+			error += "[" + getLine() + ":" + getColumn() + "] ";
 		}
 		
 		if( type != null )
-			error += type.getName();
+			error += type.getName() + ": ";		
 		
-		if( msg != null && msg.length() > 0 )
-			error += ": " + msg;
-		else
-			error += ": " + type.getMessage();
+		error += msg;		
 		
 		errorList.add(new TypeCheckException(type, error));
 	}
@@ -227,12 +168,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param node The node where the error occurred. This will be printed in standard format.
 	 * @param type One of the pre-defined types of errors.
 	 */
-	protected void addError(Node node, Error type) {
-		addError( node, type, "" );
-	}
-	
-	protected void addError(Error type, String message) {
-		addError( null, type, message );
+	protected void addError(Error type) {
+		addError( type, type.getMessage() );
 	}
 	
 	
@@ -424,34 +361,23 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	public static ClassType nameToPrimitiveType(String name)
 	{
-		if( name.equals("boolean") )
-			return Type.BOOLEAN;
-		else if( name.equals("byte") )
-			return Type.BYTE;
-		else if( name.equals("code") )
-			return Type.CODE;				
-		else if( name.equals("double"))
-			return  Type.DOUBLE;
-		else if( name.equals("float") )
-			return  Type.FLOAT;
-		else if( name.equals("int") )
-			return Type.INT;
-		else if( name.equals("long") )
-			return  Type.LONG;
-		else if( name.equals("short") )
-			return  Type.SHORT; 
-		else if( name.equals("ubyte") )
-			return  Type.UBYTE;
-		else if( name.equals("uint") )
-			return  Type.UINT;
-		else if( name.equals("ulong") )
-			return Type.ULONG;
-		else if( name.equals("ushort") )
-			return Type.USHORT;
-		else
-			return null;
-	}
-	
+		switch(name)
+		{
+		case "boolean": return Type.BOOLEAN;
+		case "byte":	return Type.BYTE;
+		case "code":	return Type.CODE;				
+		case "double":	return  Type.DOUBLE;
+		case "float":	return  Type.FLOAT;
+		case "int":		return Type.INT;
+		case "long":	return  Type.LONG;
+		case "short":	return  Type.SHORT; 
+		case "ubyte":	return  Type.UBYTE;
+		case "uint":	return  Type.UINT;
+		case "ulong":	return Type.ULONG;
+		case "ushort":	return Type.USHORT;
+		default: 		return null;
+		}
+	}	
 
 	protected static String stripExtension(String file)
 	{
@@ -481,7 +407,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		if(type == null)
 		{
-			addError(node, Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
+			addError(Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
 			node.setType(Type.UNKNOWN);					
 		}
 		else
@@ -490,7 +416,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				((ClassType)currentType).addReferencedType(type);
 		
 			if( !classIsAccessible( type, currentType  ) )		
-				addError(node, Error.ILLEGAL_ACCESS, "Class " + type + " not accessible from current context");
+				addError(Error.ILLEGAL_ACCESS, "Class " + type + " not accessible from current context");
 			
 			if( child.jjtGetNumChildren() == 1 ) //contains arguments
 			{
@@ -502,19 +428,19 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						type = type.replace(parameters, arguments);
 					else
 					{						
-						addError( child, Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
+						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
 						type = Type.UNKNOWN;
 					}
 				}
 				else
 				{
-					addError( child, Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
+					addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
 					type = Type.UNKNOWN;
 				}										
 			}
 			else if( type.isParameterized() ) //parameterized but no parameters!	
 			{
-				addError(child, Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
+				addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
 				type = Type.UNKNOWN;
 			}
 			
@@ -530,7 +456,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				
 				if(type == null)
 				{
-					addError(node, Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in this context");			
+					addError(Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in this context");			
 					type = Type.UNKNOWN;					
 				}
 				else
@@ -539,7 +465,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						((ClassType)currentType).addReferencedType(type);
 				
 					if( !classIsAccessible( type, currentType  ) )		
-						addError(node, Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
+						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
 					
 					if( child.jjtGetNumChildren() == 1 ) //contains arguments
 					{
@@ -551,19 +477,19 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 								type = type.replace(parameters, arguments);
 							else
 							{						
-								addError( child, Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
+								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
 								type = Type.UNKNOWN;
 							}
 						}
 						else
 						{
-							addError( child, Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
+							addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
 							type = Type.UNKNOWN;
 						}										
 					}
 					else if( type.isParameterized() ) //parameterized but no parameters!	
 					{
-						addError(child, Error.MISSING_TYPE_ARGUMENTS, "Type arguments are not supplised for parameterized type " + child.getImage());
+						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments are not supplised for parameterized type " + child.getImage());
 						type = Type.UNKNOWN;
 					}
 				}
@@ -595,7 +521,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		if(type == null)
 		{
-			addError(node, Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
+			addError(Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
 			node.setType(Type.UNKNOWN);					
 		}
 		else
@@ -604,7 +530,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				((ClassType)currentType).addReferencedType(type);
 		
 			if( !classIsAccessible( type, currentType  ) )		
-				addError(node, Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
+				addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
 			
 			if( child.jjtGetNumChildren() == 1 ) //contains arguments
 			{
@@ -618,13 +544,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				}
 				else
 				{
-					addError( child, Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
+					addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
 					type = Type.UNKNOWN;
 				}										
 			}
 			else if( type.isParameterized() ) //parameterized but no parameters!	
 			{
-				addError(child, Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
+				addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
 				type = Type.UNKNOWN;
 			}			
 			
@@ -639,7 +565,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				
 				if(type == null)
 				{
-					addError(node, Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in current context");			
+					addError(Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in current context");			
 					type = Type.UNKNOWN;					
 				}
 				else
@@ -648,7 +574,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						((ClassType)currentType).addReferencedType(type);
 				
 					if( !classIsAccessible( type, currentType  ) )		
-						addError(node, Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from current context");
+						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from current context");
 					
 					if( child.jjtGetNumChildren() == 1 ) //contains arguments
 					{
@@ -663,13 +589,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						}
 						else
 						{
-							addError( child, Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
+							addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
 							type = Type.UNKNOWN;
 						}										
 					}
 					else if( type.isParameterized() ) //parameterized but no parameters!	
 					{
-						addError(child, Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
+						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
 						type = Type.UNKNOWN;
 					}
 				}

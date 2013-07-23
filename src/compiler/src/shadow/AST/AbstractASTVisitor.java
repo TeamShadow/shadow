@@ -1,9 +1,52 @@
 package shadow.AST;
 
+import java.io.File;
+
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.*;
 
 public class AbstractASTVisitor implements ShadowParserVisitor {
+	
+	private File file;
+	private int line;
+	private int column;
+	
+	public void setLocation(Node node)
+	{
+		file = node.getFile();
+		line = node.getLine();
+		column = node.getColumn();
+	}
+	
+	public void setFile(File file)
+	{
+		this.file = file;
+	}
+	
+	public File getFile()
+	{
+		return file;
+	}
+	
+	public void setLine(int line)
+	{
+		this.line = line;
+	}
+	
+	public int getLine()
+	{
+		return line;
+	}
+	
+	public void setColumn(int column)
+	{
+		this.column = column;
+	}
+	
+	public int getColumn()
+	{
+		return column;
+	}
 
 	@Override
 	public Object visit(SimpleNode node, Boolean secondVisit) throws ShadowException {

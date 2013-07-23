@@ -31,7 +31,7 @@ public class SimpleNode implements Node {
 	public SimpleNode(int id) {
     	this.id = id;
     	image = "";
-    	file = Configuration.getInstance().current();
+    	file = Configuration.getInstance().current();  //left over, worthwhile?  	
     	line = column = -1;
     	type = null;    
     	enclosingType = null;
@@ -41,7 +41,8 @@ public class SimpleNode implements Node {
     	this.id = id;
     	parser = sp;
     	image = "";
-    	file = Configuration.getInstance().current();
+    	//file = Configuration.getInstance().current();
+    	file = sp.getFile();
     	line = sp.token.beginLine;
     	column = sp.token.beginColumn;
     	type = null;    	
@@ -197,9 +198,7 @@ public class SimpleNode implements Node {
 	public Type getEnclosingType()
 	{
 		return enclosingType;
-	} 
-	
-	
+	}
 	
 	public boolean isField()
 	{

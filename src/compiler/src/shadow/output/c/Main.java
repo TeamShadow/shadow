@@ -16,14 +16,15 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
 
 import shadow.Configuration;
+import shadow.ConfigurationException;
 import shadow.Loggers;
+import shadow.TypeCheckException;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
-import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
 import shadow.typecheck.type.Type;
 
@@ -81,17 +82,16 @@ public class Main {
 			}
 			
 			// parse out the command line
-			if(!config.parse(commandLine)) {
-				logger.error("Command line parse error");
-				return GENERAL_ERROR;
-			}
+			config.parse(commandLine);
 			
 		} catch (org.apache.commons.cli.ParseException e) {
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			return GENERAL_ERROR;
-		} catch (ShadowException e) {
-			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
+		} 
+		catch (ConfigurationException e) 
+		{	
+			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());			
 			return GENERAL_ERROR;
 		}
 		

@@ -6,9 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.ClassChecker;
 import shadow.typecheck.ClassChecker.SubstitutionType;
 

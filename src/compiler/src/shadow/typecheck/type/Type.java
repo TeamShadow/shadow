@@ -11,11 +11,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.ClassChecker;
-import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.ClassChecker.SubstitutionType;
 import shadow.typecheck.Package;
 

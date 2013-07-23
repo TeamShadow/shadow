@@ -95,7 +95,7 @@ public class OutputTest {
 	
 	@Test public void testTest() throws Exception {
 		args.add(0, "shadow/test/Test.shadow");
-		assertEquals(0, Main.test(args.toArray(new String[] { })));
+		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"shadow.test@Test\n" +
 				"3\n");

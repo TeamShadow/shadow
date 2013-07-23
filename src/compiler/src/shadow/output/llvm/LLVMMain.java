@@ -99,7 +99,7 @@ public class LLVMMain
 		if (FORCE)
 			for (String file : arguments)
 			{
-				Main.test(new String[] { "--check", file });
+				Main.main(new String[] { "--check", file });
 				//Main.test(new String[] { file });
 			}
 		else

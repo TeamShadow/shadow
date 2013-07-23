@@ -1,0 +1,8 @@
+import shadow.standard@Object;
+
+class default@Test extends shadow.standard@Object
+{
+	public method() => ();
+	public create();
+
+}

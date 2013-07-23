@@ -11,6 +11,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 
 import shadow.Loggers;
+import shadow.TypeCheckException;
 import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;

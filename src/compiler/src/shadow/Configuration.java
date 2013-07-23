@@ -52,19 +52,25 @@ public class Configuration implements Iterator<File> {
 	/**
 	 * Parses the command line and sets all of the internal variables.
 	 * @param cmdLine The command line passed to the compiler.
-	 * @throws ShadowException
+	 * @throws ConfigurationException 
 	 * @throws ParseException 
 	 */
-	public boolean parse(CommandLine cmdLine) throws ShadowException {
+	public void parse(CommandLine cmdLine) throws ConfigurationException
+	{
 		this.reset();	// resetting the counter in case we parse multiple times
 		
-		if(cmdLine.hasOption(CONFIG_FILE)){
+		if(cmdLine.hasOption(CONFIG_FILE))
+		{
 			// parse the config file on the command line if we have it
 			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG_FILE)));
-		} else if(System.getenv("SHADOW_SYSTEM_CONFIG") != null){
+		}
+		else if(System.getenv("SHADOW_SYSTEM_CONFIG") != null)
+		{
 			// use the system config from the environment
 			parseConfigFile(new File(System.getenv("SHADOW_SYSTEM_CONFIG")));
-		} else {
+		}
+		else
+		{
 			// parse the correct built-in configuration file
 			if(System.getProperty("os.name").startsWith("Windows"))
 				parseConfigFile(System.class.getResource("/windows_system.xml"));
@@ -91,20 +97,12 @@ public class Configuration implements Iterator<File> {
 		
 		// get all of the files to compile
 		shadowFiles = new ArrayList<File>();
-		for(String shadowFile:cmdLine.getArgs()) {
+		for(String shadowFile:cmdLine.getArgs())
 			shadowFiles.add(new File(shadowFile));
-		}
 		
-		// make sure they're not specifying too many files on the command line
-//		if(!compileOnly && shadowFiles.size() > 1) {
-//			System.err.println("Only one file  with a main method should be specified on the command line.");
-//			return false;
-//		}
-		
-		if(shadowFiles.size() == 0) {
-			System.err.println("No source files specified to compile");
-			return false;
-		}
+	
+		if(shadowFiles.size() == 0)
+			throw new ConfigurationException("No source files specified to compile");
 		
 		// set the main class if we're not only compiling
 		if(!compileOnly)
@@ -113,27 +111,17 @@ public class Configuration implements Iterator<File> {
 		//
 		// Sanity checks
 		//
-		if(!checkOnly && mainClass == null) {
-			System.err.println("Did not specify a main class");
-			return false;
-		}
+		if(!checkOnly && mainClass == null)
+			throw new ConfigurationException("Did not specify a main class");
 		
-		if(arch == -1) {
-			System.err.println("Did not specify an architecture");
-			return false;
-		}
+		if(arch == -1)
+			throw new ConfigurationException("Did not specify an architecture");
 		
-		if(os == null) {
-			System.err.println("Did not specify an OS");
-			return false;
-		}
+		if(os == null)
+			throw new ConfigurationException("Did not specify an OS");
 		
-		if(this.systemImportPath == null) {
-			System.err.println("No system import path specified");
-			return false;
-		}
-		
-		return true;
+		if(this.systemImportPath == null)
+			throw new ConfigurationException("No system import path specified");
 	}
 	
 	/**

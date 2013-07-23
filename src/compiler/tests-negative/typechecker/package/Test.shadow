@@ -1,0 +1,6 @@
+class Test
+{
+	public class package@Inner
+	{
+	}
+}

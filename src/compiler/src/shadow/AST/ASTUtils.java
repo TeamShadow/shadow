@@ -18,10 +18,6 @@ public class ASTUtils {
 		return node.getLine() + ":" + node.getColumn();
 	}
 	
-	static public String getSymLineCol(Node node) {
-		return node.getImage() + " " + getLineCol(node);
-	}
-	
 	public static void DEBUG(String msg) {
 		logger.debug(msg);
 	}

@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.TypeCheckException;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCreateBlock;
@@ -16,7 +18,6 @@ import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.ClassChecker.SubstitutionType;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InstantiationException;
@@ -165,7 +166,7 @@ public class TypeInstantiater extends BaseChecker {
 				{
 					Node dependencyNode = uninstantiatedNodes.get(classType.getExtendType().getTypeWithoutTypeArguments());
 					if( dependencyNode == null )
-						addError(declarationNode, "Dependency not found");
+						addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 					else
 						graph.addEdge(dependencyNode, declarationNode);
 				}
@@ -175,7 +176,7 @@ public class TypeInstantiater extends BaseChecker {
 			{
 				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
 				if( dependencyNode == null )
-					addError(declarationNode, "Dependency not found");
+					addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 				else
 					graph.addEdge(dependencyNode, declarationNode);
 			}
@@ -298,17 +299,17 @@ public class TypeInstantiater extends BaseChecker {
 									modifiers = node.getModifiers();									
 								
 								if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) )
-									addError( parentNode, "Overriding method " + signature + " differs only by return type from " + parentSignature );
+									addError( parentNode, Error.INVALID_OVERRIDE, "Overriding method " + signature + " differs only by return type from " + parentSignature );
 								//else if( parentModifiers.isFinal() )
 								//	addError( parentNode, "Method " + signature + " cannot override final method" );
 								//else if( parentModifiers.isImmutable() )
 								//	addError( parentNode, "Method " + signature + " cannot override immutable method" );
 								else if( !modifiers.isReadonly() && parentModifiers.isReadonly()  )
-									addError( parentNode, "Non-readonly method " + signature + " cannot override readonly method" );
+									addError( parentNode, Error.INVALID_OVERRIDE, "Non-readonly method " + signature + " cannot override readonly method" );
 								else if( parentModifiers.isPublic() && (modifiers.isPrivate() || modifiers.isProtected()) )
-									addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
+									addError( parentNode, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
 								else if( parentModifiers.isProtected() && modifiers.isPrivate()  )
-									addError( parentNode, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
+									addError( parentNode, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
 							}
 						}
 				}

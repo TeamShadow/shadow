@@ -2,8 +2,8 @@ package shadow.typecheck.type;
 
 import java.util.List;
 
+import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.typecheck.BaseChecker.Error;
 import shadow.typecheck.ClassChecker;
 import shadow.typecheck.ClassChecker.SubstitutionType;
 

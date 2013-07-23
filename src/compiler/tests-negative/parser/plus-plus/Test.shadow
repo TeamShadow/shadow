@@ -1,0 +1,9 @@
+class Test
+{
+	public method() => ()
+	{
+		int a = 5;
+		
+		a++;	
+	}
+}

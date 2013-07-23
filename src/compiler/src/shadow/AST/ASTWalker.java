@@ -27,6 +27,7 @@ public class ASTWalker {
 	 */
 	public void walk(Node node) throws ShadowException {
 		// call accept on the node indicating it's the pre-visit
+		visitor.setLocation(node);
 		WalkType wt = (WalkType)node.jjtAccept(visitor, false);
 		
 		// we don't want to go down this branch
@@ -41,7 +42,10 @@ public class ASTWalker {
 		
 		// if asked, visit the node again after the children
 		if(wt == WalkType.POST_CHILDREN)
+		{
+			visitor.setLocation(node);
 			node.jjtAccept(visitor, true);
+		}
 	}
 	
 	/**
@@ -51,6 +55,7 @@ public class ASTWalker {
 	 */
 	public void preorderWalk(Node node) throws ShadowException {
 		// call accept on the node indicating it's the pre-visit
+		visitor.setLocation(node);
 		node.jjtAccept(visitor, false);
 		
 		// go through the children in order
@@ -74,6 +79,7 @@ public class ASTWalker {
 			walk(node.jjtGetChild(i));
 		}
 
+		visitor.setLocation(node);
 		node.jjtAccept(visitor, true);
 	}
 
