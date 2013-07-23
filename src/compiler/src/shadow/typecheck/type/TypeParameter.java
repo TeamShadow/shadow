@@ -54,8 +54,8 @@ public class TypeParameter extends Type
 		if( equals(type) )
 			return true;
 		
-		SequenceType values = new SequenceType(new SimpleModifiedType(this));	
-		SequenceType replacements = new SequenceType(new SimpleModifiedType(type));		
+		SequenceType values = new SequenceType(this);	
+		SequenceType replacements = new SequenceType(type);		
 		
 		Set<Type> substitutedBounds = new HashSet<Type>();
 		for( Type bound : bounds )

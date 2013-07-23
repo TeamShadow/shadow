@@ -20,27 +20,80 @@ import shadow.typecheck.ClassChecker.SubstitutionType;
 import shadow.typecheck.Package;
 
 
-public abstract class Type {
+public abstract class Type
+{
 	//types should not change after construction
-	protected final String typeName;	/** A string that represents the type */
+	private final String typeName;	/** A string that represents the type */
 	private Modifiers modifiers;
 	private Type outer; //outer class or interface
-	protected Package _package;
+	private Package _package;
 	private SequenceType typeParameters = null;	
 	private boolean parameterized = false;
 	protected Type typeWithoutTypeArguments = this;
 	
 	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();
-
-	private Map<String, Node> fieldTable;
-	protected HashMap<String, List<MethodSignature> > methodTable; // TODO: change this to private	
+		
+	private Map<String, Node> fieldTable = new HashMap<String, Node>();
+	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> referencedTypes = new HashSet<Type>();
 	private List<Type> typeParameterDependencies = new ArrayList<Type>();
 	
 	
-	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();
-	
+	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();	
 	private LinkedList<Object> importedItems = new LinkedList<Object>();
+	
+	
+	/*
+	 * Predefined system types needed for Shadow
+	 */
+	
+	public static ClassType OBJECT = null;
+	public static ClassType CLASS = null;  // meta class for holding .class variables
+	public static ClassType ARRAY = null;  // class representation of all array types
+	public static ClassType METHOD = null;  // class representation for references with function type
+	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
+
+	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
+	public static ExceptionType EXCEPTION = null;	
+	public static ErrorType ERROR = null;
+		
+	public static ClassType BOOLEAN = null;
+	public static ClassType BYTE = null;
+	public static ClassType CODE = null;
+	public static ClassType DOUBLE = null;
+	public static ClassType FLOAT = null;	
+	public static ClassType INT = null;
+	public static ClassType LONG = null;
+	public static ClassType SHORT = null;
+	
+	public static ClassType UBYTE = null;
+	public static ClassType UINT = null;
+	public static ClassType ULONG = null;
+	public static ClassType USHORT = null;
+	
+	public static ClassType STRING = null;
+	
+	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
+	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null);
+	public static final VarType VAR = new VarType(); //VAR type used for placeholder for variables declared with var, until type is known
+	
+	
+	/*
+	 * Predefined interfaces needed for Shadow
+	 */	
+
+	public static InterfaceType CAN_COMPARE = null;
+	public static InterfaceType CAN_EQUAL = null;
+	public static InterfaceType CAN_INDEX = null;
+	public static InterfaceType CAN_ITERATE = null;
+	public static InterfaceType NUMBER = null;
+	public static InterfaceType INTEGER = null;
+	public static InterfaceType CAN_ADD = null;
+	public static InterfaceType CAN_SUBTRACT = null;
+	public static InterfaceType CAN_MULTIPLY = null;
+	public static InterfaceType CAN_DIVIDE = null;
+	public static InterfaceType CAN_MODULUS = null;
+	public static InterfaceType CAN_NEGATE = null;	
 	
 	
 	private static class TypeArgumentCache
@@ -103,71 +156,7 @@ public abstract class Type {
 			types.children.add(newChild);
 			addInstantiation( newChild, typeArguments, index + 1, type );
 		}
-	}
-
-
-		
-	/*
-	public static enum Kind {
-		ARRAY,
-		CLASS,
-		ENUM,
-		ERROR,
-		EXCEPTION,
-		INTERFACE,
-		METHOD,		
-		SEQUENCE,
-		TYPE_PARAMETER,
-		UNBOUND_METHOD,
-		VIEW,		
-		UNKNOWN,
-		NULL 
-	};
-	*/
-	
-	public static ClassType OBJECT = null;
-	public static ClassType CLASS = null;  // meta class for holding .class variables
-	public static ClassType ARRAY = null;  // class representation of all array types
-	public static ClassType METHOD = null;  // class representation for references with function type
-	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
-
-	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
-	public static ExceptionType EXCEPTION = null;	
-	public static ErrorType ERROR = null;
-		
-	public static ClassType BOOLEAN = null;
-	public static ClassType BYTE = null;
-	public static ClassType CODE = null;
-	public static ClassType DOUBLE = null;
-	public static ClassType FLOAT = null;	
-	public static ClassType INT = null;
-	public static ClassType LONG = null;
-	public static ClassType SHORT = null;
-	
-	public static ClassType UBYTE = null;
-	public static ClassType UINT = null;
-	public static ClassType ULONG = null;
-	public static ClassType USHORT = null;
-	
-	public static ClassType STRING = null;
-	
-	//interfaces needed for language features
-	public static InterfaceType CAN_COMPARE = null;
-	public static InterfaceType CAN_EQUAL = null;
-	public static InterfaceType CAN_INDEX = null;
-	public static InterfaceType CAN_ITERATE = null;
-	public static InterfaceType NUMBER = null;
-	public static InterfaceType INTEGER = null;
-	public static InterfaceType CAN_ADD = null;
-	public static InterfaceType CAN_SUBTRACT = null;
-	public static InterfaceType CAN_MULTIPLY = null;
-	public static InterfaceType CAN_DIVIDE = null;
-	public static InterfaceType CAN_MODULUS = null;
-	public static InterfaceType CAN_NEGATE = null;
-	
-	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
-	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null);
-	public static final VarType VAR = new VarType(); //VAR type used for placeholder for variables declared with var, until type is known
+	}	
 	
 	//used to clear out types between runs of the JUnit tests
 	//otherwise, types can become mixed between two different runs of the type checker
@@ -208,6 +197,10 @@ public abstract class Type {
 		CAN_NEGATE = null;
 	}
 	
+	/*
+	 * Constructors
+	 */
+	
 	public Type(String typeName) {
 		this( typeName, new Modifiers() );
 	}
@@ -220,15 +213,12 @@ public abstract class Type {
 		this( typeName, modifiers, outer, (outer == null ? null : outer._package ) );
 	}
 	
-	public Type(String typeName, Modifiers modifiers, Type outer, Package _package ) {
+	public Type(String typeName, Modifiers modifiers, Type outer, Package _package )
+	{
 		this.typeName = typeName;
 		this.modifiers = modifiers;
 		this.outer = outer;		
 		this._package = _package;
-		
-		fieldTable = new HashMap<String, Node>();
-		methodTable = new HashMap<String, List<MethodSignature>>();
-		
 	}
 	
 	public String getTypeName() 
@@ -585,7 +575,7 @@ public abstract class Type {
 		
 		if( hasInterface(interfaceType) )
 		{
-			SequenceType argument = new SequenceType(new SimpleModifiedType(rightType));									
+			SequenceType argument = new SequenceType(rightType);									
 			List<String> errors = new ArrayList<String>();
 			MethodSignature signature = getMatchingMethod(methodName, argument, null, errors);
 			if( signature != null )
@@ -612,7 +602,8 @@ public abstract class Type {
 	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments)
 	{
 		return getMatchingMethod(methodName, arguments, null );
-	}
+	}	
+	
 	
 	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments )
 	{
@@ -660,8 +651,7 @@ public abstract class Type {
 			ClassChecker.addReason(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context");
 		
 		return candidate;
-	}
-	
+	}	
 	
 	public Package getPackage()
 	{
@@ -861,28 +851,6 @@ public abstract class Type {
 			return new ArrayList<MethodSignature>();
 		else
 			return signatures;
-	}	
-	
-	/**
-	 * Simple way to get a known method.
-	 * Example:
-	 *     Type.ARRAY.getMethod("index", Type.INT);
-	 */
-	public MethodSignature getMethod(String methodName, Type... argumentTypes)
-	{
-		SequenceType arguments = new SequenceType();
-		for (Type argument : argumentTypes)
-			arguments.add(new SimpleModifiedType(argument));
-		MethodSignature method = null;
-		for (MethodSignature candidate : getMethods(methodName))
-			if (candidate.matches(arguments))
-				if (method == null)
-					method = candidate;
-				else
-					throw new IllegalArgumentException("Multiple matching methods found");
-		if (method == null)
-			throw new IllegalArgumentException("No matching method found");
-		return method;
 	}
 	
 	protected void includeMethods( String methodName, List<MethodSignature> list )
@@ -989,7 +957,8 @@ public abstract class Type {
 		return null;
 	}	
 	
-	public boolean encloses(Type type) {
+	public boolean encloses(Type type)
+	{
 		if( equals(this) )
 			return true;
 		

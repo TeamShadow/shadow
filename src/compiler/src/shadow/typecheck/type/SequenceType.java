@@ -20,8 +20,10 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		this();
 		add(type);
 	}
-
 	
+	public SequenceType(Type type) {
+		this(new SimpleModifiedType(type));		
+	}	
 
 	public SequenceType() {		
 		this( new ArrayList<ModifiedType>()  );		

@@ -548,28 +548,56 @@ public class ClassChecker extends BaseChecker
 		return false;
 	}
 	
-	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
-			return WalkType.POST_CHILDREN;		
-
-		Type result = node.jjtGetChild(0).getType();
-					
-		for( int i = 1; i < node.jjtGetNumChildren(); i++ )
+	public Object visit(ASTRelationalExpression node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )
 		{
-			Type current = node.jjtGetChild(i).getType(); 
-			if( !result.isNumerical() || !current.isNumerical() )
+			Type result = node.jjtGetChild(0).getType();
+						
+			for( int i = 1; i < node.jjtGetNumChildren(); i++ )
 			{
-				addError(Error.INVALID_TYPE, "Relational operator not defined on types " + result + " and " + current);
-				node.setType(Type.UNKNOWN);
-				return WalkType.POST_CHILDREN;
-			}	
+				Node currentNode = node.jjtGetChild(i);
+				Type current = currentNode.getType();
+				char operation = node.getImage().charAt(i - 1);
+				String symbol = "";
+				switch( operation )
+				{
+				case '<': symbol = "<"; break;
+				case '>': symbol = ">"; break;
+				case '{': symbol = "<="; break;
+				case '}': symbol = ">="; break;	
+				}
+				
+				if( result.hasInterface(Type.CAN_COMPARE) )
+				{
+					SequenceType argument = new SequenceType(currentNode);												
+					 
+					MethodSignature signature = setMethodType(node, result, "compare", argument );
+					if( signature != null )
+					{
+						result = signature.getReturnTypes().getType(0);
+						node.addOperation(signature);
+					}
+					else
+					{
+						addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+						result = Type.UNKNOWN;	
+						break;
+					}				
+				}
+				else		
+				{
+					addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+					result = Type.UNKNOWN;
+					break;
+				}
+				
+				result = Type.BOOLEAN;  //boolean after one comparison
+			}
 			
-			result = Type.BOOLEAN;  //boolean after one comparison
-		
+			node.setType(result); //propagates type up if only one child
+			pushUpModifiers(node); //can make ASSIGNABLE (if only one child)
 		}
-		
-		node.setType(result); //propagates type up if only one child
-		pushUpModifiers(node); //can make ASSIGNABLE (if only one child)	
 		
 		return WalkType.POST_CHILDREN;	
 	}
@@ -1389,7 +1417,7 @@ public class ClassChecker extends BaseChecker
 				if( rightType instanceof PropertyType )
 					rightType = ((PropertyType)rightType).getGetType().getType();
 						
-				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(new SimpleModifiedType(rightType))));
+				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(rightType)));
 			}
 			else				
 				addErrors(errors);			
@@ -2825,16 +2853,6 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
-	/*
-	@Override
-	public Object visit(ASTImportDeclaration node, Boolean secondVisit) throws ShadowException {
-		currentPackage = node.getPackage();		
-		return WalkType.NO_CHILDREN;
-	}
-	*/	
-
-	
 	@Override
 	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {						
 		node.setType(literalToType(node.getLiteral()));		
@@ -2845,9 +2863,7 @@ public class ClassChecker extends BaseChecker
 	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {		
 		node.setType(nameToPrimitiveType(node.getImage()));		
 		return WalkType.NO_CHILDREN;			
-	}
-
-	
+	}	
 		
 	@Override
 	public Object visit(ASTReturnStatement node, Boolean secondVisit)	throws ShadowException

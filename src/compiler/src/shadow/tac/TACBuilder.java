@@ -1635,7 +1635,7 @@ public class TACBuilder implements ShadowParserVisitor
 				TACLabelRef catchLabel = block.getCatch(i - 1),
 						skip = new TACLabelRef(tree);
 				new TACBranch(tree, new TACCall(tree, block, new TACMethodRef(
-						tree, Type.INT.getMethod("equal", Type.INT)), typeid,
+						tree, Type.INT.getMatchingMethod("equal", new SequenceType(Type.INT))), typeid,
 						new TACTypeId(tree, new TACClass(tree, type, method))),
 						catchLabel, skip);
 				catchLabel.new TACLabel(tree);

@@ -78,8 +78,9 @@ public class ClassType extends Type
 		return true;
 	}
 
-	private boolean containsInterfaceMethod(MethodSignature signature) {
-		List<MethodSignature> list = methodTable.get(signature.getSymbol());
+	private boolean containsInterfaceMethod(MethodSignature signature)
+	{
+		List<MethodSignature> list = getMethods(signature.getSymbol());
 		
 		if( list != null )
 			for(MethodSignature existing : list )
@@ -584,17 +585,16 @@ public class ClassType extends Type
 		//modifiers
 		out.print("\n" + linePrefix + getModifiers());		
 		out.print(kind + " ");
-		
-		
+			
 		
 		//type name
 		String name;
 		if( isPrimitive() ) //hack for capitalization purposes
 		{							
-			if( typeName.startsWith("u") )
-				name = typeName.substring(0,2).toUpperCase() + typeName.substring(2);
+			if( getTypeName().startsWith("u") )
+				name = getTypeName().substring(0,2).toUpperCase() + getTypeName().substring(2);
 			else
-				name = typeName.substring(0,1).toUpperCase() + typeName.substring(1);
+				name = getTypeName().substring(0,1).toUpperCase() + getTypeName().substring(1);
 			out.print("shadow.standard@" + name);
 		}
 		else if( getOuter() == null ) //outermost class		
