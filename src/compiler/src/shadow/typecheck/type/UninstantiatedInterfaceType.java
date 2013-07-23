@@ -1,6 +1,6 @@
 package shadow.typecheck.type;
 
-import shadow.typecheck.ClassChecker.SubstitutionType;
+import shadow.typecheck.BaseChecker.SubstitutionType;
 
 public class UninstantiatedInterfaceType extends InterfaceType implements UninstantiatedType 
 {	

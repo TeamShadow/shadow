@@ -1140,189 +1140,7 @@ public class ClassChecker extends BaseChecker
 	}
 	
 	
-	public enum SubstitutionType
-	{
-		ASSIGNMENT, BINDING, TYPE_PARAMETER, INITIALIZATION;
-	}
 	
-	public static void addReason(List<String> reasons, Error type, String reason)
-	{
-		if( reasons != null )
-			reasons.add(type.getName() + ": " + reason);		
-	}
-	
-	
-	public static boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, SubstitutionType substitutionType, List<String> reasons )
-	{
-		Type leftType = left.getType();		 
-		Type rightType = right.getType();
-		
-		
-		//process property on right first
-		if( rightType instanceof PropertyType )
-		{					
-			PropertyType propertyType = (PropertyType)rightType;					
-			
-			if( propertyType.isGettable() )
-			{
-				right = propertyType.getGetType();
-				rightType = right.getType();
-			}
-			else
-			{
-				addReason(reasons, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not gettable");
-				return false;				
-			}
-		}
-		
-		//property on left			
-		if( leftType instanceof PropertyType )  
-		{					
-			PropertyType propertyType = (PropertyType)leftType;					
-			
-			if( propertyType.isSettable() )
-				return checkAssignment( propertyType.getSetType(), right, assignmentType, substitutionType, reasons );
-			else
-			{
-				addReason(reasons, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not settable");
-				return false;				
-			}
-		}
-		
-	
-		
-		//sequence on left
-		if( leftType instanceof SequenceType )
-		{
-			SequenceType sequenceLeft = (SequenceType) leftType;
-			
-			if( !assignmentType.equals(AssignmentType.EQUAL))
-			{
-				addReason(reasons, Error.INVALID_ASSIGNMENT, "Sequence type " + sequenceLeft + " cannot be assigned with any operator other than =");
-				return false;
-			}
-			
-			
-			if( !sequenceLeft.canAccept(right, substitutionType, reasons) )
-				return false;
-		}
-		
-		
-		//type parameter binding follows different rules
-		if( substitutionType.equals(SubstitutionType.TYPE_PARAMETER))
-		{			
-			if( leftType instanceof TypeParameter )
-			{
-				TypeParameter typeParameter = (TypeParameter) leftType;
-				if( !typeParameter.acceptsSubstitution(rightType) )
-				{
-					addReason(reasons, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type argument " + leftType);
-					return false;					
-				}					
-			}
-			else
-			{
-				//will this ever happen?
-				addReason(reasons, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type " + leftType + " which is not a type parameter");
-				return false;				
-			}			
-		}
-		//normal types
-		else if( !leftType.acceptsAssignment(rightType, assignmentType, reasons )  )
-			return false;
-
-		
-		//check modifiers after types
-		Modifiers rightModifiers = right.getModifiers();			
-		Modifiers leftModifiers = left.getModifiers();
-	
-		
-		//immutability
-		if( leftModifiers.isImmutable() )
-		{			
-			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() && !leftType.getModifiers().isImmutable() )
-			//never a problem if either type is immutable (though the left could never be if the right isn't)
-			{
-				addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side");
-				return false;
-			}
-			
-			if( leftModifiers.isField() )
-			{} //do something!  what about readonly fields?
-			
-			
-			/*
-			if( leftModifiers.isField() || (!currentMethod.isEmpty() && !currentMethod.getFirst().getMethodSignature().isCreate()))   ))
-			
-			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to field marked immutable except in a create");
-			return false;
-			*/
-		}
-		else
-		{
-			if( rightModifiers.isImmutable() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
-			//never a problem if either type is immutable
-			{
-				addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable left hand side");
-				return false;
-			}
-			
-			//readonly issues
-			if( !leftModifiers.isReadonly() ) //and of course not immutable			
-			{
-				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() && !rightType.getModifiers().isReadonly() && !leftType.getModifiers().isReadonly() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
-				//never a problem if either type is immutable or readonly
-				{
-					addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side with readonly value cannot be assigned to non-readonly left hand side");
-					return false;
-				}				
-			}
-		}
-		
-		//nullability
-		if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
-		{
-			addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
-			return false;
-		}		
-
-		if( substitutionType.equals(SubstitutionType.ASSIGNMENT) ) //only differences between initializations and assignments
-		{
-			if( !leftModifiers.isAssignable() )
-			{
-				addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
-				return false;
-			}		
-			else if( leftModifiers.isConstant() )
-			{
-				addReason(reasons, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
-				return false;			
-			}
-		}
-				
-		return true;
-	}
-	
-	private List<String> isValidInitialization( ModifiedType left, ModifiedType right )
-	{		
-		List<String> errors = new ArrayList<String>();
-		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionType.INITIALIZATION, errors );
-		return errors;
-	}
-	
-	private List<String> isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType)
-	{
-		List<String> errors = new ArrayList<String>();
-		checkAssignment( left, right, assignmentType, SubstitutionType.ASSIGNMENT, errors );
-		return errors;		
-	}
-	
-	private List<String> isValidBinding( ModifiedType left, ModifiedType right )
-	{
-		List<String> errors = new ArrayList<String>();
-		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionType.BINDING, errors );
-		return errors;
-	}
 
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
 		return typeResolution(node, secondVisit);
@@ -1404,7 +1222,7 @@ public class ClassChecker extends BaseChecker
 			ASTPrimaryExpression left = (ASTPrimaryExpression) node.jjtGetChild(0);
 			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
 			ASTConditionalExpression right = (ASTConditionalExpression) node.jjtGetChild(2);
-			List<String> errors = isValidAssignment(left, right, assignment.getAssignmentType()); 
+			List<TypeCheckException> errors = isValidAssignment(left, right, assignment.getAssignmentType()); 
 			
 			if( errors.isEmpty() )
 			{
@@ -1737,7 +1555,7 @@ public class ClassChecker extends BaseChecker
 		if( isVar && element != null && element.getType() != null )
 			node.setType(element.getType());
 				
-		List<String> errors = isValidInitialization( node, element);
+		List<TypeCheckException> errors = isValidInitialization( node, element);
 		if( errors.isEmpty() )
 			addSymbol( node.getImage(), node );
 		else
@@ -2650,7 +2468,7 @@ public class ClassChecker extends BaseChecker
 
 	protected MethodSignature setMethodType( Node node, Type type, String method, SequenceType arguments, SequenceType typeArguments )
 	{	
-		List<String> errors = new ArrayList<String>();
+		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
 		MethodSignature signature = type.getMatchingMethod(method, arguments, typeArguments, errors);
 		
 		if( signature == null )

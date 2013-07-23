@@ -11,12 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import shadow.TypeCheckException;
 import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
-import shadow.typecheck.ClassChecker;
-import shadow.typecheck.ClassChecker.SubstitutionType;
+import shadow.parser.javacc.Node;
+import shadow.typecheck.BaseChecker;
+import shadow.typecheck.BaseChecker.SubstitutionType;
 import shadow.typecheck.Package;
 
 
@@ -519,24 +520,16 @@ public abstract class Type
 	}
 
 	
-	public boolean acceptsAssignment( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType, List<String> reasons ) 
+	public boolean canAccept( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType, List<TypeCheckException> errors ) 
 	{
 		boolean accepts = false;
-		
-		/* should be unnecessary
-		if( rightType instanceof SequenceType ) 
-		{
-			ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Sequence type " + rightType + " cannot be assigned to non-sequence type " + this);
-			return false;
-		}
-		*/
 		
 		//equal and cat are separate because they are not dependent on implementing a specific interface
 		if( assignmentType.equals(AssignmentType.EQUAL) )
 		{
 			accepts = rightType.isSubtype(this);
 			if( !accepts )
-				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
+				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
 		
 			return accepts;
 		}
@@ -544,7 +537,7 @@ public abstract class Type
 		{
 			accepts = isString();
 			if( !accepts )
-				ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING);
+				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING);
 			
 			return accepts;
 		}
@@ -575,26 +568,22 @@ public abstract class Type
 		
 		if( hasInterface(interfaceType) )
 		{
-			SequenceType argument = new SequenceType(rightType);									
-			List<String> errors = new ArrayList<String>();
+			SequenceType argument = new SequenceType(rightType);
 			MethodSignature signature = getMatchingMethod(methodName, argument, null, errors);
 			if( signature != null )
 			{
 				Type result = signature.getReturnTypes().getType(0);
 				accepts = result.isSubtype(this);
 				if( !accepts )
-					ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Type " + result + " is not a subtype of " + this);				
+					BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + result + " is not a subtype of " + this);				
 				return accepts;
 			}
-			else
-			{
-				reasons.addAll(errors);
-				return false;
-			}				
+			else							
+				return false;				
 		}
 		else		
 		{
-			ClassChecker.addReason(reasons, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType);			
+			BaseChecker.addError(errors, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType);			
 			return false;						
 		}
 	}
@@ -607,11 +596,11 @@ public abstract class Type
 	
 	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments )
 	{
-		List<String> errors = new ArrayList<String>();
+		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
 		return getMatchingMethod(methodName, arguments, typeArguments, errors );
 	}
 	
-	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<String> errors )
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<TypeCheckException> errors )
 	{
 		boolean hasTypeArguments = typeArguments != null;
 		MethodSignature candidate = null;		
@@ -641,14 +630,14 @@ public abstract class Type
 					candidate = signature;
 				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
 				{					
-					ClassChecker.addReason(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments);
+					BaseChecker.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments);
 					return null;
 				}				
 			}			
 		}			
 	
 		if( candidate == null )			
-			ClassChecker.addReason(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context");
+			BaseChecker.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context");
 		
 		return candidate;
 	}	

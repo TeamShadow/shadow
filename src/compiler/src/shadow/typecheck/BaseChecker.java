@@ -9,10 +9,10 @@ import org.apache.commons.logging.Log;
 
 import shadow.Loggers;
 import shadow.TypeCheckException;
-import shadow.AST.ASTUtils;
+import shadow.TypeCheckException.Error;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
-import shadow.TypeCheckException.Error;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -23,20 +23,26 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.ClassChecker.SubstitutionType;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UninstantiatedClassType;
 import shadow.typecheck.type.UninstantiatedInterfaceType;
 
-public abstract class BaseChecker extends AbstractASTVisitor {
+public abstract class BaseChecker extends AbstractASTVisitor
+{	
+	public enum SubstitutionType
+	{
+		ASSIGNMENT, BINDING, TYPE_PARAMETER, INITIALIZATION;
+	}
 	
 	private static final Log logger = Loggers.TYPE_CHECKER;
 
@@ -98,30 +104,202 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			Node child = node.jjtGetChild(0);
 			node.setModifiers( child.getModifiers() );
 		}
+	}
+	
+	public static void addError(List<TypeCheckException> errors, Error type, String reason)
+	{
+		if( errors != null )
+			errors.add(new TypeCheckException(type, reason));		
 	}	
 	
+	public static boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, SubstitutionType substitutionType, List<TypeCheckException> errors )
+	{
+		Type leftType = left.getType();		 
+		Type rightType = right.getType();
+		
+		
+		//process property on right first
+		if( rightType instanceof PropertyType )
+		{					
+			PropertyType propertyType = (PropertyType)rightType;					
+			
+			if( propertyType.isGettable() )
+			{
+				right = propertyType.getGetType();
+				rightType = right.getType();
+			}
+			else
+			{
+				addError(errors, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not gettable");
+				return false;				
+			}
+		}
+		
+		//property on left			
+		if( leftType instanceof PropertyType )  
+		{					
+			PropertyType propertyType = (PropertyType)leftType;					
+			
+			if( propertyType.isSettable() )
+				return checkAssignment( propertyType.getSetType(), right, assignmentType, substitutionType, errors );
+			else
+			{
+				addError(errors, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not settable");
+				return false;				
+			}
+		}	
+	
+		
+		//sequence on left
+		if( leftType instanceof SequenceType )
+		{
+			SequenceType sequenceLeft = (SequenceType) leftType;
+			
+			if( !assignmentType.equals(AssignmentType.EQUAL))
+			{
+				addError(errors, Error.INVALID_ASSIGNMENT, "Sequence type " + sequenceLeft + " cannot be assigned with any operator other than =");
+				return false;
+			}			
+			
+			if( !sequenceLeft.canAccept(right, substitutionType, errors) )
+				return false;
+		}
+		
+		
+		//type parameter binding follows different rules
+		if( substitutionType.equals(SubstitutionType.TYPE_PARAMETER))
+		{			
+			if( leftType instanceof TypeParameter )
+			{
+				TypeParameter typeParameter = (TypeParameter) leftType;
+				if( !typeParameter.acceptsSubstitution(rightType) )
+				{
+					addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type argument " + leftType);
+					return false;					
+				}					
+			}
+			else
+			{
+				//will this ever happen?
+				addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type " + leftType + " which is not a type parameter");
+				return false;				
+			}			
+		}
+		//normal types
+		else if( !leftType.canAccept(rightType, assignmentType, errors )  )
+			return false;
+
+		
+		//check modifiers after types
+		Modifiers rightModifiers = right.getModifiers();			
+		Modifiers leftModifiers = left.getModifiers();
+	
+		
+		//immutability
+		if( leftModifiers.isImmutable() )
+		{			
+			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() && !leftType.getModifiers().isImmutable() )
+			//never a problem if either type is immutable (though the left could never be if the right isn't)
+			{
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side");
+				return false;
+			}
+			
+			if( leftModifiers.isField() )
+			{} //do something!  what about readonly fields?
+			
+			
+			/*
+			if( leftModifiers.isField() || (!currentMethod.isEmpty() && !currentMethod.getFirst().getMethodSignature().isCreate()))   ))
+			
+			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to field marked immutable except in a create");
+			return false;
+			*/
+		}
+		else
+		{
+			if( rightModifiers.isImmutable() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
+			//never a problem if either type is immutable
+			{
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable left hand side");
+				return false;
+			}
+			
+			//readonly issues
+			if( !leftModifiers.isReadonly() ) //and of course not immutable			
+			{
+				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() && !rightType.getModifiers().isReadonly() && !leftType.getModifiers().isReadonly() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
+				//never a problem if either type is immutable or readonly
+				{
+					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with readonly value cannot be assigned to non-readonly left hand side");
+					return false;
+				}				
+			}
+		}
+		
+		//nullability
+		if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
+		{
+			addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
+			return false;
+		}		
+
+		if( substitutionType.equals(SubstitutionType.ASSIGNMENT) ) //only differences between initializations and assignments
+		{
+			if( !leftModifiers.isAssignable() )
+			{
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
+				return false;
+			}		
+			else if( leftModifiers.isConstant() )
+			{
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
+				return false;			
+			}
+		}
+				
+		return true;
+	}
+	
+	protected List<TypeCheckException> isValidInitialization( ModifiedType left, ModifiedType right )
+	{		
+		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionType.INITIALIZATION, errors );
+		return errors;
+	}
+	
+	protected List<TypeCheckException> isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType)
+	{
+		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		checkAssignment( left, right, assignmentType, SubstitutionType.ASSIGNMENT, errors );
+		return errors;		
+	}
+	
+	protected List<TypeCheckException> isValidBinding( ModifiedType left, ModifiedType right )
+	{
+		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionType.BINDING, errors );
+		return errors;
+	}
 
 	/**
 	 * Adds an error message to the list errors we keep until the end.
 	 * @param node The node where the error occurred. This will be printed in the standard format.
 	 * @param msg The message to communicate to the user.
 	 */
-	protected void addError(String msg) {
-		addError( null, msg );
+	
+	protected void addErrors(List<TypeCheckException> errors)
+	{		
+		if( errors != null )
+			for( TypeCheckException error : errors )
+				addError( error.getError(), error.getMessage() );
 	}
 	
-	protected void addErrors(List<String> messages)
+	protected void addErrors(Node node, List<TypeCheckException> errors )
 	{		
-		if( messages != null )
-			for( String message : messages )
-				addError( message );
-	}
-	
-	protected void addErrors(Node node, List<String> messages)
-	{		
-		if( messages != null )
-			for( String message : messages )
-				addError( node, null, message );
+		if( errors != null )
+			for( TypeCheckException error : errors )
+				addError( node, error.getError(), error.getMessage() );
 	}
 	
 	protected void addError(Node node, Error type, String msg)
@@ -162,16 +340,6 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		errorList.add(new TypeCheckException(type, error));
 	}
-	
-	/**
-	 * Adds an error messages to the list of errors.
-	 * @param node The node where the error occurred. This will be printed in standard format.
-	 * @param type One of the pre-defined types of errors.
-	 */
-	protected void addError(Error type) {
-		addError( type, type.getMessage() );
-	}
-	
 	
 	/**
 	 * Print out the list of errors to the given stream.

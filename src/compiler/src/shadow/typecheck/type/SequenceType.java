@@ -6,11 +6,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import shadow.TypeCheckException;
 import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.ClassChecker;
-import shadow.typecheck.ClassChecker.SubstitutionType;
+import shadow.typecheck.BaseChecker;
+import shadow.typecheck.BaseChecker.SubstitutionType;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
 {	
@@ -59,11 +60,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	*/
 		
 	//public boolean canAccept( List<ModifiedType> inputTypes, SubstitutionType substitutionType, List<String> reasons )
-	public boolean canAccept( SequenceType inputTypes, SubstitutionType substitutionType, List<String> reasons )
+	public boolean canAccept( SequenceType inputTypes, SubstitutionType substitutionType, List<TypeCheckException> errors )
 	{		
 		if( types.size() != inputTypes.size() )
 		{
-			ClassChecker.addReason(reasons, Error.INVALID_ASSIGNMENT, "Sequence type " + inputTypes + " does not have the same number of elements as sequence type " + this);
+			BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Sequence type " + inputTypes + " does not have the same number of elements as sequence type " + this);
 			return false;
 		}
 		
@@ -74,7 +75,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 				ModifiedType left = types.get(i);
 				ModifiedType right = inputTypes.get(i);
 				
-				if( !ClassChecker.checkAssignment(left, right, AssignmentType.EQUAL, substitutionType, reasons ))
+				if( !BaseChecker.checkAssignment(left, right, AssignmentType.EQUAL, substitutionType, errors ))
 					return false;
 			}			
 		}
@@ -102,7 +103,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return canAccept(type, substitutionType, null);		
 	}
 	
-	public boolean canAccept( ModifiedType inputType, SubstitutionType substitutionType, List<String> reasons )
+	public boolean canAccept( ModifiedType inputType, SubstitutionType substitutionType, List<TypeCheckException> reasons )
 	{	
 		if( substitutionType.equals( SubstitutionType.BINDING ) )
 		{
@@ -115,7 +116,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			//for splats
 			for( ModifiedType modifiedType : types )
 			{
-				if( !ClassChecker.checkAssignment(modifiedType, inputType, AssignmentType.EQUAL, substitutionType, reasons))
+				if( !BaseChecker.checkAssignment(modifiedType, inputType, AssignmentType.EQUAL, substitutionType, reasons))
 					return false;
 			}
 			
