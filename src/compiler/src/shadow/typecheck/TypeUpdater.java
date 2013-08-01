@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import shadow.TypeCheckException;
+import shadow.TypeCheckException.Error;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
-import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -37,7 +37,7 @@ import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeDeclaration;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
-import shadow.parser.javacc.ASTVariableDeclarator;
+import shadow.parser.javacc.ASTVariableDeclaratorId;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
@@ -472,10 +472,8 @@ public class TypeUpdater extends BaseChecker
 		if(secondVisit)
 		{	
 			//child 0 is Modifiers
-			Type type = node.jjtGetChild(1).getType();
-			String symbol = node.jjtGetChild(2).getImage();
-			node.setType( type );
-			node.setImage( symbol );
+			Type type = node.jjtGetChild(1).getType();			
+			node.setType( type );			
 			
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
 				addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);		
@@ -691,7 +689,7 @@ public class TypeUpdater extends BaseChecker
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		// a field dec has a type followed by 1 or more idents
+		// a field declaration has a type followed by an identifier (or a sequence of them)
 		Type type = node.jjtGetChild(0).getType();
 		
 		// make sure we have this type
@@ -699,9 +697,9 @@ public class TypeUpdater extends BaseChecker
 		{
 			addError(Error.UNDEFINED_TYPE, "Type " + node.jjtGetChild(0).jjtGetChild(0).getImage() + " not defined in this context");
 			return WalkType.NO_CHILDREN;
-		}
+		}		
 		
-		node.setType(type);		// set the type to the node
+		node.setType(type);
 		node.setEnclosingType(currentType);
 
 		node.addModifier(Modifiers.FIELD);
@@ -720,28 +718,27 @@ public class TypeUpdater extends BaseChecker
 		}
 		
 		if( type.isParameterized() && node.getModifiers().isConstant() )
-			addError(Error.INVALID_TYPE_PARAMETERS, "Fields marked constant cannot have parameterized types");	
+			addError(Error.INVALID_TYPE_PARAMETERS, "Fields marked constant cannot have parameterized types");
 		
-		
-		// go through inserting all the idents
+		if( type.isPrimitive() && node.getModifiers().isNullable() )		
+			addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
+				
+		// go through inserting all the identifiers
 		for(int i = 1; i < node.jjtGetNumChildren(); ++i)
 		{
-			ASTVariableDeclarator child = (ASTVariableDeclarator) node.jjtGetChild(i);
-			child.setType(type);
-			child.setModifiers(node.getModifiers());
-			child.setEnclosingType(currentType);
-			String symbol = child.jjtGetChild(0).getImage();
+			Node declarator = node.jjtGetChild(i);			
+						
+			declarator.setType(type);
+			declarator.setModifiers(node.getModifiers());
+			declarator.setEnclosingType(currentType);
+			String symbol = declarator.getImage();
 			
 			// make sure we don't already have this symbol
-			if(currentType.containsField(symbol) || currentType.containsMethod(symbol) || (currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(symbol)) )
-			{
-				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field " + symbol + " cannot be redefined in this context");
-				return WalkType.NO_CHILDREN;
-			}			
-
-			currentType.addField(symbol, child);
-		}
-		
+			if(currentType.containsField(symbol) || currentType.containsMethod(symbol) || (currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(symbol)) )			
+				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field " + symbol + " cannot be redefined in this context");				
+			else
+				currentType.addField(symbol, declarator);			
+		}		
 			
 		return WalkType.POST_CHILDREN;
 	}

@@ -11,13 +11,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-
-import shadow.parser.javacc.ShadowException;
+import org.apache.log4j.Logger;
 
 public class Configuration implements Iterator<File> {
 	
-	private Log logger = Loggers.SHADOW;
+	private Logger logger = Loggers.SHADOW;
 	
 	// these are the single letter command line args
 	private static final String CONFIG_FILE = "C";

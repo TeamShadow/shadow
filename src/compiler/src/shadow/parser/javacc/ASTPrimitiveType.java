@@ -2,16 +2,15 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
 
 import shadow.Loggers;
-import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
 public
 @SuppressWarnings("all")
 class ASTPrimitiveType extends SimpleNode {
-  private static final Log logger = Loggers.TYPE_CHECKER;
+  private static final Logger logger = Loggers.TYPE_CHECKER;
   
   public ASTPrimitiveType(int id) {
     super(id);

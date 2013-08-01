@@ -8,10 +8,9 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import shadow.TypeCheckException;
-import shadow.AST.ASTUtils;
+import shadow.TypeCheckException.Error;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
-import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.*;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.type.ArrayType;
@@ -79,7 +78,7 @@ public class ClassChecker extends BaseChecker
 	{
 		if(!secondVisit)
 		{			
-			if( node instanceof ASTLocalMethodDeclaration || node instanceof ASTInlineMethodDeclaration || node instanceof ASTInlineMethodDefinition )
+			if( node instanceof ASTLocalMethodDeclaration || /*node instanceof ASTInlineMethodDeclaration ||*/ node instanceof ASTInlineMethodDefinition )
 			{				
 				MethodSignature signature;
 				
@@ -90,7 +89,7 @@ public class ClassChecker extends BaseChecker
 				node.setMethodSignature(signature);
 				MethodType methodType = signature.getMethodType();
 
-				if( node instanceof ASTInlineMethodDeclaration || node instanceof ASTInlineMethodDefinition  )
+				if( /*node instanceof ASTInlineMethodDeclaration ||*/ node instanceof ASTInlineMethodDefinition  )
 					methodType.setInline(true);				
 				
 				node.setType(methodType);
@@ -172,6 +171,7 @@ public class ClassChecker extends BaseChecker
 		return visitMethod( node, secondVisit );
 	}
 	
+	/*
 	public Object visit(ASTInlineMethodDeclaration node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
 		{	
@@ -179,7 +179,8 @@ public class ClassChecker extends BaseChecker
 			addSymbol(declaration.getImage(), node);
 		}		
 		return visitMethod( node, secondVisit );
-	}	
+	}
+	*/	
 	
 	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException	
 	{
@@ -264,15 +265,13 @@ public class ClassChecker extends BaseChecker
 		if(secondVisit)
 		{	
 			//child 0 is Modifiers
-			Type type = node.jjtGetChild(1).getType();
-			String symbol = node.jjtGetChild(2).getImage();
-			node.setType( type );
-			node.setImage(symbol);
+			Type type = node.jjtGetChild(1).getType();			
+			node.setType( type );			
 			
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
 				addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
  
-			addSymbol( symbol, node );
+			addSymbol( node.getImage(), node );
 		}
 	
 		return WalkType.POST_CHILDREN;
@@ -344,6 +343,8 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+	
+	/*
 	private void processDeclaration( Node node )
 	{
 		boolean isLocal = (node instanceof ASTLocalVariableDeclaration);		
@@ -354,86 +355,121 @@ public class ClassChecker extends BaseChecker
 		
 		Type type = node.getType();
 		//type is set for local declarations immediately previously and for fields in the field and method checker
+		//can be a single type or var
 		
 		if(type == null)
 		{			
-			addError(node.jjtGetChild(start), Error.UNDEFINED_TYPE, "Type " + node.jjtGetChild(start).jjtGetChild(0).getImage() + " not defined in this context");
+			addError(Error.UNDEFINED_TYPE, "Type " + node.jjtGetChild(start).jjtGetChild(0).getImage() + " not defined in this context");
 			return;
 		}		
 		
 		if( type.isPrimitive() && node.getModifiers().isNullable() )		
-			addError(node.jjtGetChild(start), Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);				
+			addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);				
 			
-		// go through and add the variables
-		for(int i = start; i < node.jjtGetNumChildren(); ++i)
+		Node declaration = node.jjtGetChild(start);  //either VariableDeclarator or SequenceDeclarator
+		int last = declaration.jjtGetNumChildren() - 1;
+		Node initializer = declaration.jjtGetChild(last);
+		
+		//check if initializer exists and can be assigned
+		if( initializer instanceof ASTVariableInitializer || initializer instanceof ASTSequenceInitializer )
 		{
-			Node declaration = node.jjtGetChild(i);
-			Node identifier = declaration.jjtGetChild(0);
-			
-			if(declaration.jjtGetNumChildren() == 2) // check for initializer
+			List<TypeCheckException> errors = isValidInitialization(node, initializer);
+			if( !errors.isEmpty() )		
 			{
-				Node initializer = declaration.jjtGetChild(1);
-				addErrors(declaration, isValidInitialization(node, initializer) );				
+				addErrors(node, errors  );
+				return;
 			}
-			/* //leave this to the TAC 
-			else
+		}
+		
+		//set types
+		for( int i = 0; i < declaration.jjtGetNumChildren(); ++i)
+		{
+			Node identifier = declaration.jjtGetChild(i);			
+			
+			if(identifier instanceof ASTVariableDeclaratorId ) //last one might be initializer
 			{
-				if( !node.getModifiers().isNullable() && !type.isPrimitive() )
-					addError(declaration, Error.TYPE_MIS, "Non-nullable variable " + declaration + "does not have initializer");		
+				if( type instanceof SequenceType )				
+					identifier.setType(((SequenceType)type).getType(i));
+				else
+					identifier.setType(type);
+				identifier.setModifiers(node.getModifiers());
+				
+				if( isLocal ) // add the symbol to the scope table				
+					addSymbol( identifier.getImage(), identifier );
 			}
-			*/
-			
-			declaration.setType(type);
-			declaration.setModifiers(node.getModifiers());
-			identifier.setType(type);
-			identifier.setModifiers(node.getModifiers());
-			
-			if( isLocal ) // add the symbol to the scope table				
-				addSymbol( identifier.getImage(), node);
 		}		
 	}
+	*/
 	
 	
 	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException
 	{		
 		if(secondVisit)
 		{	
-			Type type = null;
-			Node child = node.jjtGetChild(0); 
+			Type type = null;			
+			Node child = node.jjtGetChild(0);			
+			boolean isVar = false;
 			
-			if( child instanceof ASTType )
-			{
+			if( child instanceof ASTType )			
 				type = child.getType();
+			else //var type
+			{
+				type = Type.VAR;
+				isVar = true;
 			}
-			else //auto type
-			{	
-				for( int i = 0; i < node.jjtGetNumChildren(); i++ )
+			
+			node.setType(type);		
+			
+			//add variables
+			for( int i = isVar ? 0 : 1; i < node.jjtGetNumChildren(); ++i )
+			{
+				Node declarator = node.jjtGetChild(i);
+				
+				if( isVar )
 				{
-					Node declaration = node.jjtGetChild(i);
-					if( declaration.jjtGetNumChildren() == 2 )
+					if( declarator.jjtGetNumChildren() > 0 ) //has initializer
+						declarator.setType(declarator.jjtGetChild(0).getType());
+					else
 					{
-						type = declaration.jjtGetChild(1).getType();
-						break;
+						declarator.setType(Type.UNKNOWN);
+						addError(declarator, Error.UNDEFINED_TYPE, "Variable declared with var has no initializer to infer type from");
 					}
 				}
-				
-				if( type == null )
-				{
-					addError(Error.UNDEFINED_TYPE, "Variable declared with var has no initializer to infer type from");
-					type = Type.UNKNOWN;
-				}
-			}			
-			
-			node.setType(type);			
-			processDeclaration( node );
+				else
+					declarator.setType(type);
+										
+				declarator.setModifiers(node.getModifiers());					
+				addSymbol( declarator.getImage(), declarator ); //add to local scope
+					
+				if( declarator.getType().isPrimitive() && declarator.getModifiers().isNullable() )		
+					addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
+			}
+						
+			checkInitializers( node );
 		}
 
 		return WalkType.POST_CHILDREN;
 	}
+	
+	private void checkInitializers(Node node)
+	{
+		int start = 0;
+		Node declarator = node.jjtGetChild(start);  //could be either VariableDeclarator or SequenceDeclarator
+		if( declarator instanceof ASTType ) //if type, skip to first declarator
+			start++;
+		
+		for( int i = start; i < node.jjtGetNumChildren(); ++i )
+		{
+			declarator = node.jjtGetChild(i);
+			if( declarator.jjtGetNumChildren() > 0 ) //has initializer
+				addErrors(declarator, isValidInitialization(declarator, declarator.jjtGetChild(0)));
+		}			
+	}
 
-	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {		
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException
+	{		
 		if(secondVisit)
-			processDeclaration( node );							  		
+			checkInitializers(node); //check all initializers
 
 		return WalkType.POST_CHILDREN;
 	}	
@@ -1203,8 +1239,13 @@ public class ClassChecker extends BaseChecker
 						leftElement.setType(rightElement.getType());
 				}
 							
-				if( leftElement instanceof ASTSequenceVariable ) //declaration									
-					addErrors(isValidInitialization(leftElement, rightElement));				
+				if( leftElement instanceof ASTSequenceVariable ) //declaration	
+				{
+					if( leftElement.getType().isPrimitive() && leftElement.getModifiers().isNullable() )		
+						addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + leftElement.getType());
+					
+					addErrors(isValidInitialization(leftElement, rightElement));
+				}
 				else //otherwise simple assignment
 					addErrors(isValidAssignment(leftElement, rightElement, AssignmentType.EQUAL));
 			}
@@ -1419,6 +1460,11 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+	public Object visit(ASTRightSide node, Boolean secondVisit) throws ShadowException 
+	{
+		return pushUpType(node, secondVisit);		
+	}
+	
 	public Object visit(ASTSequenceRightSide node, Boolean secondVisit) throws ShadowException 
 	{
 		if(secondVisit)
@@ -1576,8 +1622,6 @@ public class ClassChecker extends BaseChecker
 			
 			// the conditional type might come first or second depending upon if there is an init or not
 			Type conditionalType = node.jjtGetChild(start).getType();			
-			
-			ASTUtils.DEBUG("TYPE: " + conditionalType);
 			
 			if(conditionalType == null || !conditionalType.equals( Type.BOOLEAN ) )
 				addError(Error.INVALID_TYPE, "Supplied type " + conditionalType + " cannot be used in the condition of a for statement, boolean type required");
@@ -2704,18 +2748,14 @@ public class ClassChecker extends BaseChecker
 				else
 				{
 					Node child = node.jjtGetChild(0);
-					Type type = child.getType();
-					
+					Type type = child.getType();					
 					
 					SequenceType sequenceType;
 					
 					if( type instanceof SequenceType )										
 						sequenceType = (SequenceType)type;
-					else
-					{
-						sequenceType = new SequenceType();
-						sequenceType.add(child);						
-					}
+					else					
+						sequenceType = new SequenceType(child);
 					
 					if( !sequenceType.isSubtype(returnTypes) )						
 						addError(Error.INVALID_RETURNS, "Cannot return " + sequenceType + " when " + returnTypes + (returnTypes.size() == 1 ? " is" : " are") + " expected" );
@@ -2790,8 +2830,6 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN; 
 	}
 	
-
-	// Everything below here are visitors to push up the type
 
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
 	
@@ -2873,6 +2911,7 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+	/*
 	public Object visit(ASTInlineMethodDeclarator node, Boolean secondVisit) throws ShadowException
 	{
 		if( secondVisit )		
@@ -2881,6 +2920,7 @@ public class ClassChecker extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;
 	}
+	*/
 	
 	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException 
 	{ 

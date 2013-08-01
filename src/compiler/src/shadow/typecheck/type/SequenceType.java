@@ -103,20 +103,23 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return canAccept(type, substitutionType, null);		
 	}
 	
-	public boolean canAccept( ModifiedType inputType, SubstitutionType substitutionType, List<TypeCheckException> reasons )
+	public boolean canAccept( ModifiedType inputType, SubstitutionType substitutionType, List<TypeCheckException> errors )
 	{	
 		if( substitutionType.equals( SubstitutionType.BINDING ) )
 		{
 			SequenceType input = new SequenceType();
 			input.add(inputType);		
-			return canAccept(input, substitutionType, reasons);
+			return canAccept(input, substitutionType, errors);
 		}
 		else
-		{
+		{			
+			if( inputType.getType() instanceof SequenceType )
+				return canAccept( (SequenceType)inputType.getType(), substitutionType, errors );
+			
 			//for splats
 			for( ModifiedType modifiedType : types )
 			{
-				if( !BaseChecker.checkAssignment(modifiedType, inputType, AssignmentType.EQUAL, substitutionType, reasons))
+				if( !BaseChecker.checkAssignment(modifiedType, inputType, AssignmentType.EQUAL, substitutionType, errors))
 					return false;
 			}
 			

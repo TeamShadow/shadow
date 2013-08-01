@@ -2,6 +2,7 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
+import org.apache.commons.logging.impl.SimpleLog;
 import org.apache.log4j.Level;
 
 import shadow.Loggers;
@@ -33,14 +34,13 @@ public class SimpleTest
 		}
 
 		// set the levels of our loggers
-		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
-		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
-		Loggers.setLoggerToLevel(Loggers.PARSER, Level.ALL);
-		
+		Loggers.SHADOW.setLevel(Level.DEBUG);
+		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
+		Loggers.PARSER.setLevel(Level.INFO);	
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("quarantine/Dispatch.shadow"); 		
+		args.add("shadow/utility/HashSet.shadow"); 		
 		Main.main(args.toArray(new String[] { }));		
 	}
 }

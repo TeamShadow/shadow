@@ -44,10 +44,8 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 	}
 
 	public add( V value ) => ( boolean added )
-	{
-		int index;
-		int hash;
-		( index, hash ) = this.hash(value);
+	{		
+		( int index, int hash ) = this.hash(value);
 		try
 		{
 			Node current = check(table[index]);
@@ -64,9 +62,7 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 	}
 	public remove( V value ) => ( boolean removed )
 	{	
-		int index;
-		int hash;
-		( index, hash ) = this.hash(value);
+		( int index, int hash ) = this.hash(value);
 		try
 		{
 			nullable Node last = null;
@@ -90,9 +86,8 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 		}
 	}
 	public immutable contains( V value ) => ( boolean found )
-	{
-		int index, hash;
-		( index, hash ) = this.hash(value);
+	{		
+		( int index, int hash ) = this.hash(value);
 		try
 		{
 			Node current = check(table[index]);
@@ -160,9 +155,8 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 		{
 			checkForModifications();
 			try
-			{
-				nullable V value = null;
-				(  value, current ) = ( check(current)->value, next(current) );
+			{				 
+				( nullable V value, current ) = ( check(current)->value, next(current) );
 				return check(value);
 			}
 			recover

@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 
 /**
@@ -170,117 +171,117 @@ public final class Modifiers
 	public void addModifier(int mod) { modifiers = modifiers | mod; }
 	public boolean hasModifier(int mod ) { return (modifiers & mod) != 0;     }
 	public boolean hasModifier(Modifiers modifier) { return hasModifier(modifier.modifiers);     }
-	public void checkAndAdd(int mod ) throws ParseException
+	public void checkAndAdd(int mod, Node node ) throws ParseException
 	{
 		if( hasModifier(mod ) )
-			throw new ParseException( "Repeated modifiers not allowed" );
+			throw new ParseException("Repeated modifiers not allowed", node);
 
 		addModifier(mod );
 	}
 
-	public void checkModifiers( Modifiers legal, String name )  throws ParseException
+	public void checkModifiers( Modifiers legal, String name, Node node )  throws ParseException
 	{	
 		if( isPublic() && !legal.isPublic()  )
-			throw new ParseException(name + " cannot be marked public");
+			throw new ParseException(name + " cannot be marked public", node);
 		if( isProtected() && !legal.isProtected( )  )
-			throw new ParseException(name + " cannot be marked protected");
+			throw new ParseException(name + " cannot be marked protected", node);
 		if( isPrivate() && !legal.isPrivate()  )
-			throw new ParseException(name + " cannot be marked private");		
+			throw new ParseException(name + " cannot be marked private", node);
 		if( isAbstract() && !legal.isAbstract()  )
-			throw new ParseException(name + " cannot be marked abstract");
+			throw new ParseException(name + " cannot be marked abstract", node);
 		/*if( isFinal() && !legal.isFinal()  )
 			throw new ParseException(name + " cannot be marked final"); */
 		if( isReadonly() && !legal.isReadonly()  )
-			throw new ParseException(name + " cannot be marked readonly");
+			throw new ParseException(name + " cannot be marked readonly", node);
 		if( isNative() && !legal.isNative()  )
-			throw new ParseException(name + " cannot be marked native");
+			throw new ParseException(name + " cannot be marked native", node);
 		if( isGet() && !legal.isGet()  )
-			throw new ParseException(name + " cannot be marked get");
+			throw new ParseException(name + " cannot be marked get", node);
 		if( isSet() && !legal.isSet()  )
-			throw new ParseException(name + " cannot be marked set");
+			throw new ParseException(name + " cannot be marked set", node);
 		if( isConstant() && !legal.isConstant()  )
-			throw new ParseException(name + " cannot be marked constant");
+			throw new ParseException(name + " cannot be marked constant", node);
 		if( isWeak() && !legal.isWeak()  )
-			throw new ParseException(name + " cannot be marked weak");
+			throw new ParseException(name + " cannot be marked weak", node);
 		if( isImmutable() && !legal.isImmutable()  )
-			throw new ParseException(name + " cannot be marked immutable");
+			throw new ParseException(name + " cannot be marked immutable", node);
 		if( isNullable() && !legal.isNullable()  )
-			throw new ParseException(name + " cannot be marked nullabe");
+			throw new ParseException(name + " cannot be marked nullable", node);
 	}
 
-	public void checkClassModifiers() throws ParseException
+	public void checkClassModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE), "A class");	
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE), "A class", node);	
 	}
 
 
-	public void checkSingletonModifiers() throws ParseException
+	public void checkSingletonModifiers(Node node) throws ParseException
 	{		  
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE), "A singleton");	
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE), "A singleton", node);	
 	}
 
-	public void checkExceptionModifiers() throws ParseException
+	public void checkExceptionModifiers(Node node) throws ParseException
 	{		  
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE ), "An exception");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE ), "An exception", node);
 	}
 
-	public void checkErrorModifiers() throws ParseException
+	public void checkErrorModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE ), "An error");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE ), "An error", node);
 	}
 
 
-	public void checkInterfaceModifiers() throws ParseException
+	public void checkInterfaceModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(), "An interface");
+		checkModifiers( new Modifiers(), "An interface", node);
 	}
 
-	public void checkViewModifiers() throws ParseException
+	public void checkViewModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A view");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A view", node);
 	}
 
-	public void checkEnumModifiers() throws ParseException
+	public void checkEnumModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "An enum");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "An enum", node);
 	}
 
-	public void checkFieldModifiers() throws ParseException
+	public void checkFieldModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE), "A field");
+		checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE), "A field", node);
 	}
 
-	public void checkMethodModifiers() throws ParseException
+	public void checkMethodModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE | GET | SET | NATIVE), "A method");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE | GET | SET | NATIVE), "A method", node);
 		if( isGet() &&  isSet() )
-			throw new ParseException("A method cannot be marked both get and set");			
+			throw new ParseException("A method cannot be marked both get and set", node);			
 	}
 
-	public void checkLocalMethodModifiers() throws ParseException
+	public void checkLocalMethodModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(IMMUTABLE), "A local method");
+		checkModifiers( new Modifiers(IMMUTABLE), "A local method", node);
 	}
 
 
-	public void checkCreateModifiers() throws ParseException
+	public void checkCreateModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A create");
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A create", node);
 	}
 
-	public void checkDestroyModifiers() throws ParseException
+	public void checkDestroyModifiers(Node node) throws ParseException
 	{
-		checkModifiers(new Modifiers(PUBLIC), "A destroy");
+		checkModifiers(new Modifiers(PUBLIC), "A destroy", node);
 	}		
 
-	public void checkLocalVariableModifiers() throws ParseException
+	public void checkLocalVariableModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(READONLY | IMMUTABLE | WEAK | NULLABLE), "A local variable");
+		checkModifiers( new Modifiers(READONLY | IMMUTABLE | WEAK | NULLABLE), "A local variable", node);
 	}
 
-	public void checkParameterAndReturnModifiers() throws ParseException
+	public void checkParameterAndReturnModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(READONLY | IMMUTABLE | NULLABLE), "Method parameter and return types");		  
+		checkModifiers( new Modifiers(READONLY | IMMUTABLE | NULLABLE), "Method parameter and return types", node);		  
 
 		//what does final mean for parameters and return types?
 		//shouldn't all parameters be final?		

@@ -2,7 +2,6 @@ package shadow.typecheck;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,9 +12,9 @@ import java.util.Map;
 
 import shadow.Configuration;
 import shadow.TypeCheckException;
+import shadow.TypeCheckException.Error;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
-import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -33,6 +32,7 @@ import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowFileParser;
 import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.parser.javacc.SimpleNode;
@@ -113,7 +113,7 @@ public class TypeCollector extends BaseChecker
 					}
 				}
 				
-				ShadowParser parser = new ShadowParser(new FileInputStream(canonicalFile));
+				ShadowParser parser = new ShadowFileParser(canonicalFile);				
 				typeChecker.setCurrentFile(canonicalFile);
 			    Node node = parser.CompilationUnit();
 			    

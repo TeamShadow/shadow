@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
 
 import shadow.Loggers;
 import shadow.TypeCheckException;
@@ -44,7 +44,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		ASSIGNMENT, BINDING, TYPE_PARAMETER, INITIALIZATION;
 	}
 	
-	private static final Log logger = Loggers.TYPE_CHECKER;
+	private static final Logger logger = Loggers.TYPE_CHECKER;
 
 	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
 	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
@@ -161,8 +161,13 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				return false;
 			}			
 			
-			if( !sequenceLeft.canAccept(right, substitutionType, errors) )
-				return false;
+			//if( !sequenceLeft.canAccept(right, substitutionType, errors) )
+			//	return false;
+			
+			//should this return either way?
+			
+			//Trying this:
+			return sequenceLeft.canAccept(right, substitutionType, errors);
 		}
 		
 		
@@ -348,7 +353,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	public void printErrors() 
 	{
 		for(TypeCheckException exception : errorList)
-			logger.error(exception.getMessage());		
+			logger.error(exception.getMessage());
 	}
 	
 	

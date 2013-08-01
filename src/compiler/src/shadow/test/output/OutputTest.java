@@ -8,12 +8,13 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.impl.SimpleLog;
 import org.apache.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
 
-import shadow.Loggers;
 import shadow.Main;
+import shadow.Loggers;
 
 public class OutputTest {
 	
@@ -66,9 +67,9 @@ public class OutputTest {
 		}
 
 		// set the levels of our loggers
-		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.OFF);
-		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.OFF);
-		Loggers.setLoggerToLevel(Loggers.PARSER, Level.OFF);
+		Loggers.SHADOW.setLevel(Level.OFF);
+		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
+		Loggers.PARSER.setLevel(Level.OFF);
 	}	
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException {

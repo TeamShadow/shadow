@@ -19,7 +19,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.Node;
@@ -48,7 +48,7 @@ public class Main {
 	public static final int COMMAND_LINE_ERROR		= -6;
 	public static final int CONFIGURATION_ERROR		= -7;
 
-	private static final Log logger = Loggers.SHADOW;
+	private static final Logger logger = Loggers.SHADOW;
 
 	/**
 	 * This is the starting point of the compiler.

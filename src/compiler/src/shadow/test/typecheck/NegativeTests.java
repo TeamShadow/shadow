@@ -2,6 +2,7 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
+import org.apache.commons.logging.impl.SimpleLog;
 import org.apache.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,16 +23,15 @@ public class NegativeTests {
 
 		String osName = System.getProperty("os.name");
 
-		if(osName.startsWith("Windows")) {
+		if(osName.startsWith("Windows"))
 			args.add("src/test_windows_config.xml");
-		} else {
-			args.add("src/test_linux_config.xml");
-		}
-
+		else
+			args.add("src/test_linux_config.xml");		
+		
 		// set the levels of our loggers
-		Loggers.setLoggerToLevel(Loggers.SHADOW, Level.DEBUG);
-		Loggers.setLoggerToLevel(Loggers.TYPE_CHECKER, Level.INFO);
-		Loggers.setLoggerToLevel(Loggers.PARSER, Level.INFO);
+		Loggers.SHADOW.setLevel(Level.DEBUG);
+		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
+		Loggers.PARSER.setLevel(Level.INFO);
 	}
 	
 	private void enforce(Error type) throws Exception

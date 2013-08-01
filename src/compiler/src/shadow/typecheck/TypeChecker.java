@@ -19,9 +19,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.Type;
 
 public class TypeChecker {
-	private static final Log logger = Loggers.TYPE_CHECKER;
-	
-	
+
 	private File currentFile;
 	private File mainFile;
 	protected boolean debug;

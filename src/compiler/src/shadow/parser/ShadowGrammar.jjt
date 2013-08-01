@@ -17,8 +17,8 @@ import shadow.parser.*;
 import shadow.AST.ASTWalker;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Modifiers;
-import org.apache.commons.logging.Log;
 import shadow.Loggers;
+import org.apache.log4j.Logger;
 
 /**
  * Grammar to parse Shadow
@@ -26,7 +26,8 @@ import shadow.Loggers;
  */
 public class ShadowParser
 {
-   	public static enum TypeKind {		
+   	public static enum TypeKind
+   	{		
 		CLASS,
 		ENUM,
 		ERROR,
@@ -36,30 +37,9 @@ public class ShadowParser
 		VIEW
 	};
 
-   private static final Log logger = Loggers.PARSER;
-   private File file = null;
-   public File getFile()
-   {
-     return file;   }
-
-   public ShadowParser(String fileName)
-   {
-      this(System.in);
-      FileInputStream fis = null;      
-      
-      try {
-        file = new File(fileName);
-      	fis = new FileInputStream(file);
-        ReInit(fis);
-      } catch(Exception e) {
-        logger.error("Error reading file: " + fileName, e);
-      } finally {
-      	try { fis.close(); }
-      	catch(Exception e) { ; }
-      }
-   }
-
-   	public void debugPrint(String str) {
+   private static final Logger logger = Loggers.PARSER;
+   	public void debugPrint(String str)
+   	{
         logger.trace(str + ": " + token);
     }
    	
@@ -476,18 +456,18 @@ Modifiers Modifiers():
  (
   LOOKAHEAD(2)
   (
-    "public" { modifiers.checkAndAdd(Modifiers.PUBLIC); }
-  | "protected" { modifiers.checkAndAdd(Modifiers.PROTECTED); }
-  | "private" { modifiers.checkAndAdd(Modifiers.PRIVATE); }
-  | "abstract" { modifiers.checkAndAdd(Modifiers.ABSTRACT); }  
-  | "readonly" { modifiers.checkAndAdd(Modifiers.READONLY); }
-  | "native" { modifiers.checkAndAdd(Modifiers.NATIVE); }
-  | "weak" { modifiers.checkAndAdd( Modifiers.WEAK); }
-  |	"immutable"{ modifiers.checkAndAdd(Modifiers.IMMUTABLE); }
-  |	"nullable" { modifiers.checkAndAdd(Modifiers.NULLABLE); }
-  |	"get" { modifiers.checkAndAdd(Modifiers.GET); }
-  |	"set" { modifiers.checkAndAdd(Modifiers.SET); }
-  | "constant" { modifiers.checkAndAdd(Modifiers.CONSTANT); }
+    "public" { modifiers.checkAndAdd(Modifiers.PUBLIC, jjtThis); }
+  | "protected" { modifiers.checkAndAdd(Modifiers.PROTECTED, jjtThis); }
+  | "private" { modifiers.checkAndAdd(Modifiers.PRIVATE, jjtThis); }
+  | "abstract" { modifiers.checkAndAdd(Modifiers.ABSTRACT, jjtThis); }  
+  | "readonly" { modifiers.checkAndAdd(Modifiers.READONLY, jjtThis); }
+  | "native" { modifiers.checkAndAdd(Modifiers.NATIVE, jjtThis); }
+  | "weak" { modifiers.checkAndAdd( Modifiers.WEAK, jjtThis); }
+  |	"immutable"{ modifiers.checkAndAdd(Modifiers.IMMUTABLE, jjtThis); }
+  |	"nullable" { modifiers.checkAndAdd(Modifiers.NULLABLE, jjtThis); }
+  |	"get" { modifiers.checkAndAdd(Modifiers.GET, jjtThis); }
+  |	"set" { modifiers.checkAndAdd(Modifiers.SET, jjtThis); }
+  | "constant" { modifiers.checkAndAdd(Modifiers.CONSTANT, jjtThis); }
   )
  )*
 
@@ -519,15 +499,25 @@ void ViewDeclaration(Modifiers modifiers):
 	debugPrint("VIEW DECLARATION");
 	Token t;
 
-   modifiers.checkViewModifiers();	
+   modifiers.checkViewModifiers(jjtThis);	
 }
 {
 	"view"
 	[ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //can we specify packages for views?
 	t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }
 	"{"        
-        ( ( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) VariableDeclaratorId() ";" )+
+        ( ViewBodyDeclaration() )+
     "}"
+}
+
+void ViewBodyDeclaration():
+{
+	debugPrint("VIEW BODY DECLARATION");
+	Token t;
+}
+{	
+	( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) t = <IDENTIFIER> ";"
+	{ jjtThis.setImage(t.image);}
 }
 
 
@@ -541,27 +531,27 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers):
   ( "class"
   	{
   	  jjtThis.setKind(TypeKind.CLASS);
-  	  modifiers.checkClassModifiers();	  
+  	  modifiers.checkClassModifiers(jjtThis);	  
   	}
 	| "singleton"
  	{
  	  jjtThis.setKind(TypeKind.SINGLETON);
- 	  modifiers.checkSingletonModifiers();
+ 	  modifiers.checkSingletonModifiers(jjtThis);
  	}
   	
  	| "exception"
  	{
  	  jjtThis.setKind(TypeKind.EXCEPTION);
- 	  modifiers.checkExceptionModifiers();
+ 	  modifiers.checkExceptionModifiers(jjtThis);
  	}
  	| "error"
  	{ jjtThis.setKind(TypeKind.ERROR);
- 	  modifiers.checkErrorModifiers();
+ 	  modifiers.checkErrorModifiers(jjtThis);
  	}
  	| "interface"
  	{
  	  jjtThis.setKind(TypeKind.INTERFACE);
- 	   modifiers.checkInterfaceModifiers(); 	   
+ 	   modifiers.checkInterfaceModifiers(jjtThis); 	   
  	 } )
 
   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //package specification
@@ -583,11 +573,11 @@ void ExtendsList(TypeKind kind):
    ( "," ClassOrInterfaceType() { extendsMoreThanOne = true; } )*
    {
       if (extendsMoreThanOne && kind != TypeKind.INTERFACE)
-         throw new ParseException("A class cannot extend more than one other class");
+         throw new ParseException("A class cannot extend more than one other class",jjtThis);
       if (kind == TypeKind.ERROR)
-         throw new ParseException("An error cannot extend another type");
+         throw new ParseException("An error cannot extend another type",jjtThis);
       if (kind == TypeKind.SINGLETON)
-         throw new ParseException("A singleton cannot extend another type");
+         throw new ParseException("A singleton cannot extend another type",jjtThis);
    }
 }
 
@@ -598,11 +588,11 @@ void ImplementsList(TypeKind kind):
    ( "," ClassOrInterfaceType() )*
    {
       if (kind == TypeKind.INTERFACE)
-         throw new ParseException("An interface cannot implement other interfaces");
+         throw new ParseException("An interface cannot implement other interfaces",jjtThis);
       if( kind == TypeKind.ERROR )
-      	throw new ParseException("An error cannot implement interfaces");
+      	throw new ParseException("An error cannot implement interfaces",jjtThis);
       if( kind == TypeKind.EXCEPTION )
-      	throw new ParseException("An exception cannot implement interfaces");
+      	throw new ParseException("An exception cannot implement interfaces",jjtThis);
    }
 }
 
@@ -616,7 +606,7 @@ void EnumDeclaration(Modifiers modifiers):
 {
     debugPrint("ENUM DECLARATION");
     Token t;
-	modifiers.checkEnumModifiers();
+	modifiers.checkEnumModifiers(jjtThis);
 }
 {
 { jjtThis.setModifiers(modifiers); }
@@ -681,7 +671,7 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
    debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {
-  LOOKAHEAD(2) Initializer() { if (kind == TypeKind.INTERFACE) throw new ParseException("An interface cannot have initializers"); }
+  LOOKAHEAD(2) Initializer() { if (kind == TypeKind.INTERFACE) throw new ParseException("An interface cannot have initializers",jjtThis); }
 // Just get all the modifiers out of the way. If you want to do
 // more checks, pass the modifiers down to the member  
 | modifiers = Modifiers()
@@ -689,7 +679,7 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
     | EnumDeclaration(modifiers)
     | LOOKAHEAD( "create" ) CreateDeclaration(modifiers)
     | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
-    | LOOKAHEAD( Type() <IDENTIFIER> ( "," | "=" | ";" ) ) FieldDeclaration(modifiers) 
+    | LOOKAHEAD( FieldDeclaration(modifiers) ) FieldDeclaration(modifiers) 
     | MethodDeclaration(modifiers)
     | ViewDeclaration(modifiers)
   )
@@ -698,28 +688,23 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
 void FieldDeclaration(Modifiers modifiers):
 {
     debugPrint("FIELD DECLARATION");
-	modifiers.checkFieldModifiers();
+	modifiers.checkFieldModifiers(jjtThis);
 }
 {
   { jjtThis.setModifiers(modifiers); }
-  Type() VariableDeclarator() ( "," VariableDeclarator() )* ";"
+  Type()
+  VariableDeclarator() ("," VariableDeclarator() )*
+  ";"
 }
 
 void VariableDeclarator():
-{ debugPrint("VARIABLE DECLARATOR"); }
 {
-  VariableDeclaratorId() [ "=" VariableInitializer() ]
-}
-
-
-//TODO: get rid of this production?  It's just a token.
-void VariableDeclaratorId():
-{
-    debugPrint("VARIABLE DECLARATOR ID");
-    Token t;
+  debugPrint("VARIABLE DECLARATOR");
+  Token t;
 }
 {
-  t = <IDENTIFIER> { jjtThis.setImage(t.image); }
+   t = <IDENTIFIER> [ "=" VariableInitializer() ]
+   { jjtThis.setImage(t.image); }
 }
 
 void VariableInitializer():
@@ -746,6 +731,8 @@ void MethodDeclarator(boolean isLocal):
   t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters(isLocal) "=>" ResultTypes()
 }
 
+
+/*
 void InlineMethodDeclarator():
 {
 	debugPrint("INLINE METHOD DECLARATOR");
@@ -754,6 +741,7 @@ void InlineMethodDeclarator():
 {
   t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters(true) "=>" InlineResults()
 }
+*/
 	
 void InlineResults():
 {
@@ -778,20 +766,22 @@ void FormalParameter():
 {
     debugPrint("FORMAL PARAMETER");
 	Modifiers modifiers;
+	Token t;
 }
 {
    modifiers = Modifiers()
-   Type() VariableDeclaratorId()
+   Type() t = <IDENTIFIER> 
    {
-     modifiers.checkParameterAndReturnModifiers();
+     modifiers.checkParameterAndReturnModifiers(jjtThis);
      jjtThis.setModifiers(modifiers);
+     jjtThis.setImage(t.image);     
    }
 }
 
 void MethodDeclaration(Modifiers modifiers):
 {
   debugPrint("METHOD DECLARATION");
-	modifiers.checkMethodModifiers(); 
+	modifiers.checkMethodModifiers(jjtThis); 
  }
 {
   { jjtThis.setModifiers(modifiers); }  
@@ -802,7 +792,7 @@ void MethodDeclaration(Modifiers modifiers):
 void CreateDeclaration(Modifiers modifiers):
 {
   debugPrint("CREATE DECLARATION");
-  modifiers.checkCreateModifiers();  
+  modifiers.checkCreateModifiers(jjtThis);  
 }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("create"); }  
@@ -831,7 +821,7 @@ void CreateBlock():
 void DestroyDeclaration(Modifiers modifiers):
 {
   debugPrint("DESTROY DECLARATION");
-  modifiers.checkDestroyModifiers();
+  modifiers.checkDestroyModifiers(jjtThis);
 }
 {
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("destroy"); }  
@@ -958,7 +948,7 @@ void ResultType():
 {
 	modifiers = Modifiers() Type() [ <IDENTIFIER > ] //optional identifier used only for documentation
 	{
-	  modifiers.checkParameterAndReturnModifiers();
+	  modifiers.checkParameterAndReturnModifiers(jjtThis);
 	  jjtThis.setModifiers(modifiers);	} 
 }
 
@@ -1205,12 +1195,21 @@ void PrimaryExpression():
 	PrimaryPrefix() ( LOOKAHEAD(PrimarySuffix()) PrimarySuffix() )* 
 }
 
+void RightSide():
+{
+  debugPrint("RIGHT SIDE");
+}
+{
+	LOOKAHEAD( SequenceRightSide() ) SequenceRightSide()
+ | 	ConditionalExpression()
+}
+
 void SequenceRightSide():
 {
   debugPrint("SEQUENCE RIGHT SIDE");
 }
 {
-	"("	ConditionalExpression() (","  ConditionalExpression() )+ ")"
+ 	"("	ConditionalExpression() (","  ConditionalExpression() )+ ")"
 }
 
 void SequenceLeftSide():
@@ -1231,7 +1230,7 @@ void SequenceVariable() :
   modifiers = Modifiers() ( "var" | Type() )  t = <IDENTIFIER>
   {
 	jjtThis.setImage(t.image);
-	modifiers.checkLocalVariableModifiers();
+	modifiers.checkLocalVariableModifiers(jjtThis);
 	jjtThis.setModifiers(modifiers);
   }}
 
@@ -1523,25 +1522,27 @@ void LocalDeclaration():
 {
   modifiers = Modifiers()    
   (
-    LOOKAHEAD(InlineMethodDeclaration(modifiers)) InlineMethodDeclaration(modifiers)
-  | LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
+    //LOOKAHEAD(InlineMethodDeclaration(modifiers)) InlineMethodDeclaration(modifiers)
+    LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
   | LocalVariableDeclaration(modifiers) ";" )  }
 
+/*
 void InlineMethodDeclaration(Modifiers modifiers):
 {
   	debugPrint("INLINE METHOD DECLARATION");
-	modifiers.checkLocalMethodModifiers(); 
+	modifiers.checkLocalMethodModifiers(jjtThis); 
  }
 {
   { jjtThis.setModifiers(modifiers); }  
   InlineMethodDeclarator() [ "throws" NameList() ]
   ";"
 }
+*/
 
 void LocalMethodDeclaration(Modifiers modifiers):
 {
   	debugPrint("LOCAL METHOD DECLARATION");
-	modifiers.checkLocalMethodModifiers(); 
+	modifiers.checkLocalMethodModifiers(jjtThis); 
  }
 {
   { jjtThis.setModifiers(modifiers); }  
@@ -1552,10 +1553,11 @@ void LocalMethodDeclaration(Modifiers modifiers):
 void LocalVariableDeclaration(Modifiers modifiers):
 {
   debugPrint("LOCAL VARIABLE DECLARATION");
-  modifiers.checkLocalVariableModifiers();
+  modifiers.checkLocalVariableModifiers(jjtThis);
 }
 {  
-  (  "var" { jjtThis.setImage("var"); }  | Type() ) VariableDeclarator() ( "," VariableDeclarator() )*
+  (  "var" { jjtThis.setImage("var"); }  | Type() )
+  VariableDeclarator() ("," VariableDeclarator() )*
   {
      jjtThis.setModifiers(modifiers);
   }
@@ -1577,9 +1579,7 @@ void StatementExpression():
 void SequenceAssignment() :
 { debugPrint("SEQUENCE ASSIGNMENT"); }
 {
-  	//SequenceLeftSide() = SequenceRightSide() or
-  	//SequenceLeftSide() = PrimaryExpression() [for method calls that return sequences, or splats] 
-  	SequenceLeftSide() "=" ( LOOKAHEAD( SequenceRightSide() ) SequenceRightSide() | PrimaryExpression() ) { jjtThis.setImage("="); }  
+  	SequenceLeftSide() "=" RightSide() { jjtThis.setImage("="); }  
 }
 
 void Expression() :
@@ -1641,7 +1641,7 @@ void ForeachInit():
 {
  	modifiers = Modifiers() ( "var" | Type() ) t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression()
  	{
- 	  modifiers.checkLocalVariableModifiers();
+ 	  modifiers.checkLocalVariableModifiers(jjtThis);
  	  jjtThis.setModifiers(modifiers); 	}
 }
 
@@ -1656,10 +1656,11 @@ void ForStatement() :
 void ForInit():
 {
 	debugPrint("FOR INIT");
-	Token t;	
+	Token t;
+	Modifiers modifiers;	
 }
 {
-  LOOKAHEAD( LocalVariableDeclaration(Modifiers.NO_MODIFIERS) ) LocalVariableDeclaration(Modifiers.NO_MODIFIERS)
+  LOOKAHEAD( Modifiers() LocalVariableDeclaration(Modifiers.NO_MODIFIERS) ) modifiers = Modifiers() LocalVariableDeclaration(modifiers)
 | StatementExpressionList()
 }
 
@@ -1695,9 +1696,9 @@ void ReturnStatement():
 { debugPrint("RETURN STATEMENT"); }
 {
   "return"
-  ( ";"
-  | LOOKAHEAD(SequenceRightSide()) SequenceRightSide() ";"
-  |  ConditionalExpression() ";"   
+  (
+    ";"
+  | RightSide() ";"   
   )
 }
 
@@ -1747,31 +1748,6 @@ void TryStatement():
 {
   "try" Block()
 }
-
-/*
-void TryStatement():
-
- // Semantic check required here to make sure that at least one
- // finally/recover/catch is present. 
-{ debugPrint("TRY STATEMENT"); }
-{
-  InnerTryStatement()
-  [ "finally" Block() { jjtThis.addFinally(); }]
-}
-
-void InnerTryStatement():
-{ debugPrint("INNER TRY STATEMENT"); }
-{  
-  "try" Block()
-  ( CatchStatement() { jjtThis.addCatch(); } )*
-  [ "recover" Block() { jjtThis.addRecover(); }]
-}
-
-void CatchStatement():
-{ debugPrint("CATCH STATEMENT"); }
-{
- "catch" "(" FormalParameter() ")" Block()   }
-*/
 
 /* We use productions to match >>>, >> and > so that we can keep the
  * type declaration syntax with generics clean

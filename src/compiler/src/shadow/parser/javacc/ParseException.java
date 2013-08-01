@@ -2,6 +2,8 @@
 /* JavaCCOptions:KEEP_LINE_COL=null */
 package shadow.parser.javacc;
 
+import java.io.File;
+
 /**
  * This exception is thrown when parse errors are encountered.
  * You can explicitly create objects of this exception type by
@@ -12,8 +14,8 @@ package shadow.parser.javacc;
  * mechanisms so long as you retain the public fields.
  */
 @SuppressWarnings("all")
-public class ParseException extends Exception {
-
+public class ParseException extends Exception
+{
   /**
    * The version identifier for this Serializable class.
    * Increment only if the <i>serialized</i> form of the
@@ -52,18 +54,19 @@ public class ParseException extends Exception {
     super();
   }
 
-  /** Constructor with message. */
-  public ParseException(String message) {
-    super(message);
-  }
   
-  /** Constructor with node. */
+  /** Constructor with message and node. */
   public ParseException(String message, Node node) {
-    super(message + "\nFile: " + node.getFile() + "\nLine: " + node.getLine());
+    super("(" + node.getFile().getName() + ") [" + node.getLine() + ":" + node.getColumn() + "] " + message);    
   }
   
-  
-
+  /** Constructor that adds a file to an existing ParseException */
+  public ParseException(ParseException other, File file) {
+    super("(" + file.getName() + ") " + other.getLocalizedMessage());
+    currentToken = other.currentToken;
+    expectedTokenSequences = other.expectedTokenSequences;
+    tokenImage = other.tokenImage;    
+  }  
 
   /**
    * This is the last token that has been consumed successfully.  If
@@ -95,8 +98,7 @@ public class ParseException extends Exception {
    */
   private static String initialise(Token currentToken,
                            int[][] expectedTokenSequences,
-                           String[] tokenImage) {
-    String eol = System.getProperty("line.separator", "\n");
+                           String[] tokenImage) {    
     StringBuffer expected = new StringBuffer();
     int maxSize = 0;
     for (int i = 0; i < expectedTokenSequences.length; i++) {
@@ -129,7 +131,9 @@ public class ParseException extends Exception {
     */
     
     //start new
-    String retval = "Encountered \"";
+    String retval = "[" + currentToken.next.beginLine + ":" + currentToken.next.beginColumn + "] ";
+    retval += "Encountered \"";
+    
     Token tok = currentToken.next;
     for (int i = 0; i < maxSize; i++) {
       if (i != 0) retval += " ";
@@ -144,8 +148,8 @@ public class ParseException extends Exception {
     }
     //end new
     
-    retval += "\" at line " + currentToken.next.beginLine + ", column " + currentToken.next.beginColumn;
-    retval += "." + eol;
+    //retval += "\" at line " + currentToken.next.beginLine + ", column " + currentToken.next.beginColumn;
+    retval += "\"" + eol;
     if (expectedTokenSequences.length == 1) {
       retval += "Was expecting:" + eol + "    ";
     } else {
@@ -158,7 +162,7 @@ public class ParseException extends Exception {
   /**
    * The end of line string for this machine.
    */
-  protected String eol = System.getProperty("line.separator", "\n");
+  protected static String eol = System.getProperty("line.separator", "\n");
 
   /**
    * Used to convert raw characters to their escaped version

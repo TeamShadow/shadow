@@ -13,7 +13,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
@@ -22,7 +22,6 @@ import shadow.TypeCheckException;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowParser;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
@@ -44,7 +43,7 @@ public class Main {
 	public static final int TYPE_CHECK_ERROR = -3;
 	public static final int TAC_ERROR		 = -4;
 	
-	private static final Log logger = Loggers.SHADOW;
+	private static final Logger logger = Loggers.SHADOW;
 
 	/**
 	 * This is the starting point of the compiler.
@@ -105,8 +104,7 @@ public class Main {
 				File shadowFile = config.next();
 				checker.setCurrentFile(shadowFile);
 				
-				FileInputStream sourceStream = new FileInputStream(shadowFile);				
-				ShadowParser parser = new ShadowParser(sourceStream);
+				FileInputStream sourceStream = new FileInputStream(shadowFile);
 		       
 		        TACBuilder tacBuilder = new TACBuilder();
 		        
@@ -157,17 +155,17 @@ public class Main {
 		        Type.clearTypes();
 			}			
 		} catch(FileNotFoundException fnfe) {
-			System.err.println("FILE " + checker.getCurrentFile() + ") NOT FOUND: " + fnfe.getLocalizedMessage());
+			System.err.println("FILE NOT FOUND: " + fnfe.getLocalizedMessage());
 			return GENERAL_ERROR;
-		} catch(ParseException pe) {
-			System.err.println("PARSE ERROR " + checker.getCurrentFile() + ": " + pe.getLocalizedMessage());
-			return PARSE_ERROR;
+		} catch(ParseException pe)	{
+			System.err.println("PARSE ERROR: " + pe.getLocalizedMessage());
+			return PARSE_ERROR;			
 		} catch (ShadowException e) {
-			System.err.println("ERROR ON FILE " + checker.getCurrentFile() + ": " + e.getLocalizedMessage());
+			System.err.println("ERROR ON FILE: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			return TYPE_CHECK_ERROR;
 		} catch (IOException e)	{
-			System.err.println("FILE DEPENDENCY ERROR " + checker.getCurrentFile() + ": " + e.getLocalizedMessage());
+			System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			return TYPE_CHECK_ERROR;
 		}

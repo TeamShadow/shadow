@@ -2,9 +2,8 @@ package shadow.parser.javacc;
 
 import java.io.File;
 
-import org.apache.commons.logging.Log;
+import org.apache.log4j.Logger;
 
-import shadow.Configuration;
 import shadow.Loggers;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -13,12 +12,12 @@ import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class SimpleNode implements Node {
-	private static final Log logger = Loggers.TYPE_CHECKER;
+	private static final Logger logger = Loggers.TYPE_CHECKER;
 	
     protected Node parent;
     protected Node[] children;
     protected int id;
-    protected ShadowParser parser;
+    //protected ShadowParser parser;
     
     protected String image;
     protected File file;
@@ -30,8 +29,7 @@ public class SimpleNode implements Node {
 
 	public SimpleNode(int id) {
     	this.id = id;
-    	image = "";
-    	file = Configuration.getInstance().current();  //left over, worthwhile?  	
+    	image = "";    	
     	line = column = -1;
     	type = null;    
     	enclosingType = null;
@@ -39,10 +37,10 @@ public class SimpleNode implements Node {
     
     public SimpleNode(ShadowParser sp, int id) {
     	this.id = id;
-    	parser = sp;
+    	//parser = sp;
     	image = "";
-    	//file = Configuration.getInstance().current();
-    	file = sp.getFile();
+    	if( sp instanceof ShadowFileParser )
+    		file = ((ShadowFileParser)sp).getFile();    	
     	line = sp.token.beginLine;
     	column = sp.token.beginColumn;
     	type = null;    	
@@ -230,7 +228,7 @@ public class SimpleNode implements Node {
 		
 		node.parent = parent;
 		node.children = children;
-		node.parser = parser;
+		//node.parser = parser;
 		node.image = image;
 		node.file = file;
 		node.line = line;
