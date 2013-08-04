@@ -1,0 +1,12 @@
+class Test
+{
+	public method(int a, double b) => ( boolean )
+	{
+		return false;
+	}
+	
+	public method(int c, double d) => ( int )
+	{
+		return 5;
+	}
+}

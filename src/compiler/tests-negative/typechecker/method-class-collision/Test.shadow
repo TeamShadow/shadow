@@ -1,0 +1,12 @@
+class Test
+{
+	public Method(int a, double b) => ( boolean )
+	{
+		return false;
+	}
+	
+	public class Method
+	{
+		
+	}
+}

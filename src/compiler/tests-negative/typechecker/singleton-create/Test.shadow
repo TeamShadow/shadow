@@ -1,0 +1,9 @@
+singleton Test
+{
+	int x;
+
+	public create(int y)
+	{
+		x = y;
+	}
+}

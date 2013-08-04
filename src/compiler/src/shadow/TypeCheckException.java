@@ -15,6 +15,7 @@ public class TypeCheckException extends Exception
 		INVALID_DEREFERENCE("Invalid dereference", "Nullable reference cannot be dereferenced"),
 		INVALID_DESTROY("Invalid destroy", "Target cannot be destroyed"),
 		INVALID_EXTEND("Invalid extend", "Type cannot extend given type"),
+		INVALID_FILE("Invalid file", "Outermost type must be declared in a file with a matching name"),
 		INVALID_HIERARCHY("Invalid hierarchy", "Type contains a circular extends or implements definition"),
 		INVALID_IMPLEMENT("Invalid implement", "Type cannot implement given type"),
 		INVALID_IMPORT("Invalid import", "Type or package cannot be imported"),

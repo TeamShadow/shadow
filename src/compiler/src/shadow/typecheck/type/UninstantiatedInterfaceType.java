@@ -6,7 +6,11 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 {	
 	private InterfaceType type;
 	private SequenceType typeArguments;
-
+	
+	public SequenceType getTypeArguments()
+	{
+		return typeArguments;
+	}
 	
 	public UninstantiatedInterfaceType(InterfaceType type, SequenceType typeArguments )
 	{

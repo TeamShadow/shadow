@@ -1,0 +1,9 @@
+class Test
+{
+	public x(int value) => ()
+	{
+		
+	}
+
+	set int x;
+}

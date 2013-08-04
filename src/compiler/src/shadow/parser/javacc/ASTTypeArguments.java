@@ -9,7 +9,7 @@ import shadow.typecheck.type.TypeParameter;
 
 public
 @SuppressWarnings("all")
-class ASTTypeArguments extends SimpleNode {
+class ASTTypeArguments extends SequenceNode {
 	
   public ASTTypeArguments(int id) {
     super(id);

@@ -57,5 +57,11 @@ public class NegativeTests {
 		args.add("tests-negative/parser/plus-plus/Test.shadow");
 		enforce();
 	}
+	
+	@Test public void testMemberVisibility() throws Exception
+	{
+		args.add("tests-negative/parser/member-visibility/Test.shadow");
+		enforce();
+	}
 
 }

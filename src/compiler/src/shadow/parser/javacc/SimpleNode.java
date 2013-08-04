@@ -41,8 +41,10 @@ public class SimpleNode implements Node {
     	image = "";
     	if( sp instanceof ShadowFileParser )
     		file = ((ShadowFileParser)sp).getFile();    	
-    	line = sp.token.beginLine;
-    	column = sp.token.beginColumn;
+    	//line = sp.token.beginLine;
+    	//column = sp.token.beginColumn;
+    	line = sp.token.next.beginLine;
+    	column = sp.token.next.beginColumn;
     	type = null;    	
     	enclosingType = null;
     }

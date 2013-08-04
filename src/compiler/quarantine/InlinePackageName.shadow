@@ -1,7 +1,0 @@
-class InlinePackageName
-{
-	public method() => ()
-	{
-		shadow.io@Console.printLine();
-	}
-}

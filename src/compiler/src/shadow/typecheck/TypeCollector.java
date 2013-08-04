@@ -190,7 +190,7 @@ public class TypeCollector extends BaseChecker
 		return files;
 	}
 	
-	private void createType( SimpleNode node, Modifiers modifiers, TypeKind kind ) throws ShadowException
+	private Object createType( SimpleNode node, Modifiers modifiers, TypeKind kind ) throws ShadowException
 	{		 
 		String typeName;
 		
@@ -203,10 +203,44 @@ public class TypeCollector extends BaseChecker
 				currentPackage = packageTree.addQualifiedPackage(name, typeTable);
 			}
 			else
-				addError(Error.INVALID_PACKAGE, "Package can only be defined by outermost classes" );			
+			{
+				addError(Error.INVALID_PACKAGE, "Package can only be defined by outermost classes" );
+				return WalkType.NO_CHILDREN;
+			}
 		}
 		
-		String image = node.getImage();		
+		String image = node.getImage();	
+		
+		//for outer types, check that type name matches file name (if using a file)
+		if( currentType == null && node.getFile() != null )
+		{
+			File file = node.getFile();
+			String fileName = stripExtension(file.getName());
+			if( !fileName.equals(image) )
+			{
+				addError(Error.INVALID_FILE, "Type " + image + " must be declared in a file named " + image + ".shadow or " + image + ".meta" );
+				return WalkType.NO_CHILDREN;
+			}
+			else //check packages
+			{
+				Package _package = currentPackage;
+				File parent = file.getParentFile();
+				
+				while( _package != packageTree && parent != null )
+				{	
+					if( !_package.getName().equals(parent.getName()) )
+					{
+						addError(Error.INVALID_PACKAGE, "Type " + image + " cannot be added to package " + currentPackage.getQualifiedName() + " unless it is defined in directory " + currentPackage.getPath() );
+						return WalkType.NO_CHILDREN;						
+					}
+					
+					parent = parent.getParentFile();
+					_package = _package.getParent();
+				}
+			}			
+		}		
+		
+		
 		if( currentPackage.getQualifiedName().equals("shadow.standard"))
 		{
 			if( image.equals("Boolean") ||
@@ -234,7 +268,7 @@ public class TypeCollector extends BaseChecker
 		if( lookupType(typeName) != null )
 		{
 			addError(Error.MULTIPLY_DEFINED_SYMBOL, "Type " + typeName + " already defined" );
-			node.setType(Type.UNKNOWN);
+			return WalkType.NO_CHILDREN;
 		}
 		else
 		{			
@@ -316,12 +350,15 @@ public class TypeCollector extends BaseChecker
 			}
 			catch(PackageException e)
 			{
-				addError(Error.INVALID_PACKAGE, e.getMessage() );				
+				addError(Error.INVALID_PACKAGE, e.getMessage() );
+				return WalkType.NO_CHILDREN;
 			}
 			
 			node.setType(type);	
 			declarationType = type;
 		}
+		
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public boolean addImport( String name )
@@ -466,32 +503,34 @@ public class TypeCollector extends BaseChecker
 	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
+		{
 			nodeTable.put(node.getType(), node );
+			return WalkType.POST_CHILDREN;
+		}
 		else
-			createType( node, node.getModifiers(), node.getKind() );
-			
-		return WalkType.POST_CHILDREN;
+			return createType( node, node.getModifiers(), node.getKind() );
 	}
 	
 	@Override
 	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
+		{
 			nodeTable.put(node.getType(), node );
+			return WalkType.POST_CHILDREN;
+		}
 		else
-			createType( node, node.getModifiers(), TypeKind.ENUM );
-
-		
-		return WalkType.POST_CHILDREN;
+			return createType( node, node.getModifiers(), TypeKind.ENUM );
 	}
 	
 	@Override
 	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
 		if( secondVisit )
+		{
 			nodeTable.put(node.getType(), node );
+			return WalkType.POST_CHILDREN;
+		}
 		else
-			createType( node, node.getModifiers(), TypeKind.VIEW );
-		
-		return WalkType.POST_CHILDREN;
+			return createType( node, node.getModifiers(), TypeKind.VIEW );
 	}
 	
 	@Override
@@ -517,7 +556,8 @@ public class TypeCollector extends BaseChecker
 	@Override
 	public Object visit(ASTTypeParameters node, Boolean secondVisit) throws ShadowException
 	{	
-		declarationType.setParameterized(true);	
+		if( declarationType != null )
+			declarationType.setParameterized(true);	
 		return WalkType.NO_CHILDREN;
 	}
 	
@@ -627,7 +667,8 @@ public class TypeCollector extends BaseChecker
 	}
 	
 	@Override
-	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {		
+	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException
+	{		
 		node.setType(nameToPrimitiveType(node.getImage()));		
 		return WalkType.NO_CHILDREN;			
 	}

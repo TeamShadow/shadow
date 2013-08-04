@@ -1,0 +1,7 @@
+import shadow.standard@Object;
+
+class default@Test<U, U> extends shadow.standard@Object
+{
+	public create();
+
+}

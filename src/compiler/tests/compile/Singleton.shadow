@@ -1,6 +1,12 @@
 singleton Singleton {
 
 	get int value = 6;
+	int other;
+	
+	public create()
+	{
+		other = 5;
+	}	
 		
 	public walnut(int a, int b) => (double) {
 		value += 1;

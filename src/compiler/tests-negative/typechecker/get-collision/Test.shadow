@@ -1,0 +1,11 @@
+class Test
+{
+	public x() => (int)
+	{
+		return 5;
+	}
+
+	get int x;
+	
+	
+}

@@ -1,0 +1,7 @@
+class Test
+{
+	int Variable;
+	
+	public class Variable
+	{}
+}

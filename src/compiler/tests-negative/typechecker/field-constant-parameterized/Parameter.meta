@@ -1,0 +1,7 @@
+import shadow.standard@Object;
+
+class default@Parameter<T> extends shadow.standard@Object
+{
+	public create();
+
+}

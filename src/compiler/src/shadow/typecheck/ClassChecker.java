@@ -30,12 +30,8 @@ import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
-
-//no automatic promotion for bitwise operators
-
 public class ClassChecker extends BaseChecker 
-{	
-
+{
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
 	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
@@ -463,6 +459,8 @@ public class ClassChecker extends BaseChecker
 			declarator = node.jjtGetChild(i);
 			if( declarator.jjtGetNumChildren() > 0 ) //has initializer
 				addErrors(declarator, isValidInitialization(declarator, declarator.jjtGetChild(0)));
+			else if( declarator.getModifiers().isConstant() ) //only fields are ever constant
+				addError( declarator, Error.INVALID_MODIFIER, "Field declared with modifier constant must have an initializer");
 		}			
 	}
 
@@ -1862,14 +1860,9 @@ public class ClassChecker extends BaseChecker
 	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
 	{
 		if( secondVisit )
-		{
-			SequenceType sequenceType = new SequenceType();
-			
+		{	
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				sequenceType.add(node.jjtGetChild(i));
-			
-			
-			node.setType(sequenceType);
+				node.addType(node.jjtGetChild(i));
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2141,7 +2134,7 @@ public class ClassChecker extends BaseChecker
 			
 			if( node.jjtGetChild(0) instanceof ASTTypeArguments )
 			{
-				typeArguments = (SequenceType) node.jjtGetChild(0).getType();
+				typeArguments = ((ASTTypeArguments) node.jjtGetChild(0)).getType();
 				start = 1;				
 			}
 			
@@ -2296,7 +2289,7 @@ public class ClassChecker extends BaseChecker
 				int start = 0;
 				if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
 				{
-					typeArguments = (SequenceType) node.jjtGetChild(0).getType();
+					typeArguments = ((ASTTypeArguments) node.jjtGetChild(0)).getType();
 					start = 1;
 				}
 				
@@ -2543,7 +2536,7 @@ public class ClassChecker extends BaseChecker
 			if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
 			{
 				start = 1;			
-				typeArguments = (SequenceType) node.jjtGetChild(0).getType();
+				typeArguments = ((ASTTypeArguments) node.jjtGetChild(0)).getType();
 			}
 			
 			SequenceType arguments = new SequenceType();

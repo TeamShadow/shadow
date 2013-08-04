@@ -6,6 +6,11 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 	private ClassType type;
 	private SequenceType typeArguments;	
 	
+	public SequenceType getTypeArguments()
+	{
+		return typeArguments;
+	}
+	
 	public UninstantiatedClassType(ClassType type, SequenceType typeArguments )
 	{
 		this(type, typeArguments, type.getOuter() );		

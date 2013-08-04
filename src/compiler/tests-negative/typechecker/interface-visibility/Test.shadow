@@ -1,0 +1,4 @@
+interface Test
+{
+	public method() => ();
+}

@@ -40,7 +40,7 @@ public class SimpleTest
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("shadow/utility/HashSet.shadow"); 		
+		args.add("tests-negative/typechecker/class-implements-non-interface/Test.shadow"); 		
 		Main.main(args.toArray(new String[] { }));		
 	}
 }

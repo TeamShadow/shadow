@@ -561,6 +561,9 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers):
   [ ExtendsList(jjtThis.getKind()) ]
   [ ImplementsList(jjtThis.getKind()) ]
   ClassOrInterfaceBody(jjtThis.getKind())
+  {
+    jjtThis.setLine(t.beginLine);
+    jjtThis.setColumn(t.beginColumn);  }
 }
 
 void ExtendsList(TypeKind kind):

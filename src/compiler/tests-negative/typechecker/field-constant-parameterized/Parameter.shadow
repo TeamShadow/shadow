@@ -1,0 +1,4 @@
+class Parameter<T>
+{
+	T value;
+}

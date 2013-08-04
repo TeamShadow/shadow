@@ -1,0 +1,4 @@
+class Test<T>
+{
+	constant Parameter<T> p;
+}
