@@ -1,5 +1,0 @@
-interface Auditor<T> extends Iterator<T>
-{
-	immutable getNext() => (Auditor<T>);
-	setValue(T value) => ();
-}

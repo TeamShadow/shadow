@@ -1,4 +1,0 @@
-interface AuditableCollection<T> extends MutableCollection<T>
-{
-	getAuditor() => (Auditor<T>);
-}

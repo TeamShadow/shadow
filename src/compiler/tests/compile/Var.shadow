@@ -1,4 +1,4 @@
-class Auto
+class Var
 {
 
 	public stuff() => ()

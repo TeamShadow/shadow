@@ -1,8 +1,0 @@
-interface MutableCollection<T> extends Collection<T>
-{
-	add( T value ) => ();
-	addAll( Collection<S is T> collection ) => (); 
-	clear() => ();
-	remove( T value ) => ();	
-	removeAll( (T)=>(boolean) condition ) => ();			
-}

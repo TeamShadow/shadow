@@ -1,7 +1,7 @@
 The static keyword is gone.
 
 Constants are implicitly static.
-There is only ever one of a singleton class, but you have to get it through the instance keyword.
+There is only ever one of a singleton class (per thread), but you have to get it through the instance keyword.
 
 There are three kinds of members in Shadow:
 

@@ -1,6 +1,0 @@
-interface Iterator<T>
-{
-	immutable getValue() => (T);
-	immutable getNext() => (Iterator<T>);
-	immutable isValid() => (boolean); 
-}

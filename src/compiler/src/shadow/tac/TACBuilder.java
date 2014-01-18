@@ -445,7 +445,7 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		if (secondVisit)
 			new TACVariableRef(tree,
-					method.addLocal(node, node.jjtGetChild(2).getImage()));
+					method.addLocal(node, node.getImage()));
 		return POST_CHILDREN;
 	}
 

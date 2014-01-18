@@ -1307,7 +1307,7 @@ public class LLVMOutput extends AbstractOutput
 		{
 			TACPropertyRef property = (TACPropertyRef)reference;
 			TACMethodRef method = new TACMethodRef(property.getPrefix(),
-					property.getType().getGetter(), property.getName());
+					property.getType().getGetter().getMethodType(), property.getName());
 			TACCall call = new TACCall(method.getNext(), property.getBlock(),
 					method, Collections.singletonList(property.getPrefix()));
 			walk(call);
@@ -1336,7 +1336,7 @@ public class LLVMOutput extends AbstractOutput
 		{
 			TACPropertyRef property = (TACPropertyRef)reference;
 			TACMethodRef method = new TACMethodRef(property.getPrefix(),
-					property.getType().getSetter(), property.getName());
+					property.getType().getSetter().getMethodType(), property.getName());
 			walk(new TACCall(method.getNext(), property.getBlock(), method,
 					Arrays.asList(property.getPrefix(), node.getValue())));
 		}

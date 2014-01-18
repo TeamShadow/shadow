@@ -1,3 +1,0 @@
-interface BidirectionalAuditor<T> extends Auditor<T>, BidirectionalIterator<T>
-{	
-}
