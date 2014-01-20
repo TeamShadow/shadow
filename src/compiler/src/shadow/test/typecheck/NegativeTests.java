@@ -250,4 +250,16 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/class-implements-non-interface/Test.shadow"); 
 		enforce(Error.INVALID_IMPLEMENT);		
 	}
+	
+	@Test public void testReadonlyStore() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-store/Test.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testReadonlyCall() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-call/Test.shadow"); 
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
 }

@@ -223,10 +223,10 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		}
 		else
 		{
-			if( rightModifiers.isImmutable() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
+			if( rightModifiers.isImmutable() && !leftModifiers.isReadonly() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
 			//never a problem if either type is immutable
 			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable left hand side");
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable and non-readonly left hand side");
 				return false;
 			}
 			

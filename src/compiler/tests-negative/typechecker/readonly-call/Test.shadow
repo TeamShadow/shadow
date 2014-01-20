@@ -1,0 +1,9 @@
+class Test
+{
+	readonly Object a = Object:create();
+
+    public foo() => () 
+    {
+    	a.copy(); //illegal    	    	
+    }  
+}

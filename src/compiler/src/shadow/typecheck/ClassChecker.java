@@ -1788,8 +1788,14 @@ public class ClassChecker extends BaseChecker
 					addError(Error.INVALID_SELF_REFERENCE, "Reference this invalid for interfaces");
 					node.setType(Type.UNKNOWN);
 				}
-				else				
-					node.setType(currentType);				
+				else
+				{
+					node.setType(currentType);
+					if( currentType.getModifiers().isImmutable() )
+						node.addModifier(Modifiers.IMMUTABLE);
+					if( currentType.getModifiers().isReadonly() )
+						node.addModifier(Modifiers.READONLY);					
+				}
 			}
 			else if( node.getImage().startsWith("super")) //super case
 			{
@@ -1802,6 +1808,11 @@ public class ClassChecker extends BaseChecker
 				{
 					ClassType classType = (ClassType) currentType;					
 					node.setType(classType.getExtendType());
+					//uses readonly and immutable from current class to prevent tampering
+					if( currentType.getModifiers().isImmutable() )
+						node.addModifier(Modifiers.IMMUTABLE);
+					if( currentType.getModifiers().isReadonly() )
+						node.addModifier(Modifiers.READONLY);	
 				}
 			}
 			else //just a name
@@ -2223,11 +2234,17 @@ public class ClassChecker extends BaseChecker
 					node.setType( new UnboundMethodType( methodName, prefixType ) );
 				else
 					addError(Error.UNDEFINED_SYMBOL, "Method " + methodName + " not defined in this context");
-			}
-			
+			}			
 			
 			if( node.getType() == null )
-				node.setType( Type.UNKNOWN );
+				node.setType( Type.UNKNOWN );			
+			
+			//these push the immutable or readonly modifier to the prefix of the call
+			if( prefixNode.getModifiers().isImmutable() )
+				node.addModifier(Modifiers.IMMUTABLE);
+			
+			if( prefixNode.getModifiers().isReadonly() )
+				node.addModifier(Modifiers.READONLY);			
 		}
 		
 		return WalkType.POST_CHILDREN;

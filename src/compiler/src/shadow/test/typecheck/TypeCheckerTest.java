@@ -249,11 +249,15 @@ public class TypeCheckerTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
+	@Test public void testReadonly() throws Exception {
+		args.add("tests/compile/Readonly.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
 	@Test public void testScope() throws Exception {
 		args.add("tests/compile/Scope.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
-
 
 	@Test public void testSequences() throws Exception {
 		args.add("tests/compile/Sequences.shadow");
@@ -269,13 +273,6 @@ public class TypeCheckerTest {
 		args.add("tests/compile/UseSingleton.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
-
-	/*
-	@Test public void testStatic() throws Exception {
-		args.add("tests/compile/Static.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	*/
 
 	@Test public void testSubtype() throws Exception {
 		args.add("tests/compile/Subtype.shadow");
