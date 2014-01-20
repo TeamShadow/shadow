@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTConcatenationExpression extends SimpleNode {
   public ASTConcatenationExpression(int id) {
     super(id);
@@ -18,4 +17,4 @@ class ASTConcatenationExpression extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=3f8c402adb63d50f540693f8238141d2 (do not edit this line) */
+/* JavaCC - OriginalChecksum=2a6e9c5aa44c013c1c60c2d549db9d09 (do not edit this line) */

@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTExplicitCreateInvocation extends SignatureNode {
   public ASTExplicitCreateInvocation(int id) {
     super(id);
@@ -18,4 +17,4 @@ class ASTExplicitCreateInvocation extends SignatureNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=e5fb6c73d239920ab3e3000e58c61ce8 (do not edit this line) */
+/* JavaCC - OriginalChecksum=1b84cc2a333ec6ea4fcaef8b4a648aa4 (do not edit this line) */

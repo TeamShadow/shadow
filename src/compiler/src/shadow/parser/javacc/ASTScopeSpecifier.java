@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTScopeSpecifier extends SimpleNode {
   public ASTScopeSpecifier(int id) {
     super(id);
@@ -18,4 +17,4 @@ class ASTScopeSpecifier extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=b090230ca00a1d03c693955bb2a2e45c (do not edit this line) */
+/* JavaCC - OriginalChecksum=8b00b253c4b138fe9f3bb731d3036f3f (do not edit this line) */

@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTDestroy extends SimpleNode {
   public ASTDestroy(int id) {
     super(id);
@@ -18,4 +17,4 @@ class ASTDestroy extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=875100276863eea7981f474d9935a5e0 (do not edit this line) */
+/* JavaCC - OriginalChecksum=a56902ceb4e30fc374d52a15d3ee8639 (do not edit this line) */

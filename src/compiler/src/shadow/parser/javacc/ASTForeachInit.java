@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 public
-@SuppressWarnings("all")
 class ASTForeachInit extends SimpleNode {
   public ASTForeachInit(int id) {
     super(id);
@@ -18,4 +17,4 @@ class ASTForeachInit extends SimpleNode {
     return visitor.visit(this, data);
   }
 }
-/* JavaCC - OriginalChecksum=0d0ea5946269e0e7c6ef4bac9564cc00 (do not edit this line) */
+/* JavaCC - OriginalChecksum=5c44f8acdfecaa6b51ffc396e27b57f0 (do not edit this line) */
