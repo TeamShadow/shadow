@@ -142,7 +142,11 @@ public class TypeUpdater extends BaseChecker
 									methodNode.setImage(field.getKey());
 									methodNode.setType(field.getValue().getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
-									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());									
+									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
+									if( modifiers.isImmutable() )
+										methodNode.addModifier(Modifiers.IMMUTABLE);
+									else if( modifiers.isReadonly() )
+										methodNode.addModifier(Modifiers.READONLY);
 									modifiers.removeModifier(Modifiers.GET);
 									modifiers.removeModifier(Modifiers.FIELD);
 									if( modifiers.isSet() )
@@ -167,6 +171,11 @@ public class TypeUpdater extends BaseChecker
 									methodNode.setType(field.getValue().getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
+									//is it even possible to have an immutable or readonly set?
+									if( modifiers.isImmutable() )
+										methodNode.addModifier(Modifiers.IMMUTABLE);
+									else if( modifiers.isReadonly() )
+										methodNode.addModifier(Modifiers.READONLY);
 									modifiers.removeModifier(Modifiers.SET);
 									modifiers.removeModifier(Modifiers.FIELD);									
 									modifiers.addModifier(Modifiers.ASSIGNABLE);
@@ -649,10 +658,20 @@ public class TypeUpdater extends BaseChecker
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException 
 	{		
 		Node methodDeclarator = node.jjtGetChild(0);
-		if( !secondVisit && currentType != null && currentType.getModifiers().isImmutable() ) 
+		
+		//creates are not marked immutable or readonly since they change fields
+		if( !secondVisit && currentType != null && !node.getImage().equals("create") ) 
 		{
-			node.addModifier(Modifiers.IMMUTABLE);
-			methodDeclarator.addModifier(Modifiers.IMMUTABLE);
+			if( currentType.getModifiers().isImmutable() )
+			{
+				node.addModifier(Modifiers.IMMUTABLE);
+				methodDeclarator.addModifier(Modifiers.IMMUTABLE);
+			}
+			else if( currentType.getModifiers().isReadonly() )
+			{
+				node.addModifier(Modifiers.READONLY);
+				methodDeclarator.addModifier(Modifiers.READONLY);
+			}
 		}
 		return visitMethod( methodDeclarator.getImage(), node, secondVisit );
 	}

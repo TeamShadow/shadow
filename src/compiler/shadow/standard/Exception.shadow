@@ -21,7 +21,7 @@ exception shadow.standard@Exception
 		return 1;
 	}
 
-	public immutable toString() => ( String )
+	public readonly toString() => ( String )
 	{
 		return super.toString() # ": " # message;
 	}

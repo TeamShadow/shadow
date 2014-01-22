@@ -1,0 +1,21 @@
+class Test
+{ 
+    Object x = Object:create();
+    set int y = 5;
+
+    public foo() => () 
+    {
+    	y = 10;
+    }
+
+    readonly public bar() => ()
+    {
+    	x.copy();
+    	foo();
+    	this.foo();
+    	this:x.copy();    	
+    
+    	this->y = 3; 	    	 	    	    
+    }  
+    
+}

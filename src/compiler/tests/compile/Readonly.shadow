@@ -3,6 +3,9 @@ class Readonly
     readonly Object value1 = Object:create();
     readonly Object value2 = Object:create();
     immutable Object thing = Object:create().freeze();
+    
+    Object x = Object:create();
+    set int y = 5;
 
     public foo() => () 
     {
@@ -13,13 +16,14 @@ class Readonly
     	
     	Object other2 = Object:create();
     	value1 = other2;
-    	    	
-    	//Object value4 = value1; //can't be done, uncomment to see
-    	//Object value5 = value1.copy(); //can't be done, uncomment to see
     	
     	boolean test = value1.equals(value2);
-    	String out = value1.toString();    	
+    	String out = value1.toString();
     }
 
-    
+    readonly public bar() => ()
+    {
+    	String z = x.toString();
+    	int a = y + 2; 
+    }  
 }

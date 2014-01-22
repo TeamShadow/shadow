@@ -269,9 +269,9 @@ public class TypeInstantiater extends BaseChecker {
 				ClassType parent = classType.getExtendType();			
 		
 				/* Check overridden methods to make sure:
-				 * 1. All overrides match exactly  (if it matches everything but return type.... trouble!)
-				 * 2. No final methods have been overridden
-				 * 3. Immutable methods cannot be overridden by mutable methods
+				 * 1. All overrides match exactly  (if it matches everything but return type... trouble!)
+				 * 2. No immutable methods have been overridden
+				 * 3. Readonly methods cannot be overridden by mutable methods
 				 * 4. No overridden methods have been narrowed in access 
 				 */			
 			
@@ -293,23 +293,21 @@ public class TypeInstantiater extends BaseChecker {
 								else
 									parentModifiers = parentNode.getModifiers();
 								
-								if( node == null )
-									modifiers = new Modifiers();
+								if( node == null )								
+									modifiers = new Modifiers();								
 								else
 									modifiers = node.getModifiers();									
 								
 								if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) )
-									addError( parentNode, Error.INVALID_OVERRIDE, "Overriding method " + signature + " differs only by return type from " + parentSignature );
-								//else if( parentModifiers.isFinal() )
-								//	addError( parentNode, "Method " + signature + " cannot override final method" );
-								//else if( parentModifiers.isImmutable() )
-								//	addError( parentNode, "Method " + signature + " cannot override immutable method" );
-								else if( !modifiers.isReadonly() && parentModifiers.isReadonly()  )
-									addError( parentNode, Error.INVALID_OVERRIDE, "Non-readonly method " + signature + " cannot override readonly method" );
+									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " differs only by return type from " + parentSignature );
+								else if( parentModifiers.isImmutable() )
+									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot override immutable method" );
+								else if( !modifiers.isReadonly() && !modifiers.isImmutable() && parentModifiers.isReadonly()  )
+									addError( node, Error.INVALID_OVERRIDE, "Mutable method " + signature + " cannot override readonly method" );
 								else if( parentModifiers.isPublic() && (modifiers.isPrivate() || modifiers.isProtected()) )
-									addError( parentNode, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
+									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
 								else if( parentModifiers.isProtected() && modifiers.isPrivate()  )
-									addError( parentNode, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
+									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
 							}
 						}
 				}

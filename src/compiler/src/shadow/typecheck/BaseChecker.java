@@ -251,15 +251,22 @@ public abstract class BaseChecker extends AbstractASTVisitor
 
 		if( substitutionType.equals(SubstitutionType.ASSIGNMENT) ) //only differences between initializations and assignments
 		{
-			if( !leftModifiers.isAssignable() )
-			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
-				return false;
-			}		
-			else if( leftModifiers.isConstant() )
+			
+			if( leftModifiers.isConstant() )
 			{
 				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
 				return false;			
+			}
+			else if( !leftModifiers.isAssignable() )
+			{
+				//might be non-assignable due to immutable or readonly references
+				if( leftModifiers.isImmutable() )
+					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned in immutable context of expression " + left);
+				else if( leftModifiers.isReadonly() )
+					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned in readonly context of expression " + left);
+				else				
+					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
+				return false;
 			}
 		}
 				

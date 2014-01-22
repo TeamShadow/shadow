@@ -8,5 +8,16 @@ class Parent {
         
       
       return c;  
-    }    
+    }  
+    
+    
+    public readonly thing() => (int)
+    {
+    	return 5;
+    }  
+    
+    public immutable stuff() => (int)
+    {
+    	return 9;
+    }
 } 

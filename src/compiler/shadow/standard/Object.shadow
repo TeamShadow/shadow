@@ -9,9 +9,9 @@ class shadow.standard@Object
 	public native
 	freeze() => ( immutable Object ); //classes should override this if needed
 
-	public immutable
+	public readonly
 	equals( readonly Object other ) => ( boolean ) { return this === other; }
 
-	public immutable
+	public readonly
 	toString() => ( String ) { return getClass().toString(); }
 }

@@ -1,0 +1,18 @@
+class Test
+{	 
+    Object x = Object:create();
+    int y = 5;
+    
+    int[] array = int:create[100];
+
+    readonly public bar() => ()
+    {
+    	this:x = Object:create();
+    	x = Object:create();
+    	y = 7;
+    	this:y = 7;
+    	
+    	array[7] = 10;  
+    	//x.copy();    	    
+    }  
+}

@@ -496,6 +496,9 @@ public class ClassChecker extends BaseChecker
 		else if( context instanceof ClassType  )
 		{
 			ClassType classType;
+			Modifiers methodModifiers = null;
+			if( !currentMethod.isEmpty() )
+				methodModifiers = currentMethod.getFirst().getModifiers();
 			
 			if( context instanceof ArrayType )
 				classType = Type.ARRAY;
@@ -506,19 +509,37 @@ public class ClassChecker extends BaseChecker
 			{
 				Node field = classType.recursivelyGetField(name);
 				node.setType(field.getType());
-				node.setModifiers(field.getModifiers());
-				node.addModifier(Modifiers.ASSIGNABLE);
-				node.addModifier(Modifiers.FIELD);
+				node.setModifiers(field.getModifiers());				
+				//node.addModifier(Modifiers.FIELD); //redundant?
 				
-				if( field.getModifiers().isPrivate() && currentType != classType   )
-					addError(Error.ILLEGAL_ACCESS, "Private variable " + field.getImage() + "not accessible from this context");						
+				if( !fieldIsAccessible( field, currentType ) )
+					addError(Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
+				else
+				{	
+					//can't change fields in immutable or readonly methods (creates are not marked immutable or readonly)					
+					if( methodModifiers != null && methodModifiers.isImmutable() )
+						node.addModifier(Modifiers.IMMUTABLE);
+					else if( methodModifiers != null && methodModifiers.isReadonly() )
+						node.addModifier(Modifiers.READONLY);
+					/*Complex condition:
+					 * Any field that isn't immutable or readonly is assignable
+					 * Unless it's a constant
+					 * But constants ARE assignable in field definitions or creates
+					 */
+					else if( !field.getModifiers().isConstant() || currentMethod.isEmpty() || currentMethod.getFirst().getMethodSignature().isCreate() )
+						node.addModifier(Modifiers.ASSIGNABLE);
+				}
 				
 				return true;			
 			}
 				
 			if( classType.recursivelyContainsMethod(name))
 			{
-				node.setType( new UnboundMethodType( name, classType ) );				
+				node.setType( new UnboundMethodType( name, classType ) );	
+				if( methodModifiers != null && methodModifiers.isImmutable() )
+					node.addModifier(Modifiers.IMMUTABLE);
+				else if( methodModifiers != null && methodModifiers.isReadonly() )
+					node.addModifier(Modifiers.READONLY);
 				return true;
 			}
 			
@@ -1778,49 +1799,42 @@ public class ClassChecker extends BaseChecker
 	
 		
 		int children = node.jjtGetNumChildren();
+		String image = node.getImage();
 		
 		if(  children == 0 )
 		{
-			if( node.getImage().equals("this")  ) //this
+			if( image.equals("this") || image.equals("super") ) //this or super
 			{	
 				if( currentType instanceof InterfaceType )
 				{
-					addError(Error.INVALID_SELF_REFERENCE, "Reference this invalid for interfaces");
+					addError(Error.INVALID_SELF_REFERENCE, "Reference " + image + " invalid for interfaces");
 					node.setType(Type.UNKNOWN);
 				}
 				else
 				{
-					node.setType(currentType);
-					if( currentType.getModifiers().isImmutable() )
+					if( image.equals("this") )					
+						node.setType(currentType);
+					else
+					{
+						ClassType classType = (ClassType) currentType;					
+						node.setType(classType.getExtendType());						
+					}
+					
+					Modifiers methodModifiers = null;
+					if(!currentMethod.isEmpty() )
+						methodModifiers = currentMethod.getFirst().getModifiers();
+					
+					if( currentType.getModifiers().isImmutable() || ( methodModifiers!= null && methodModifiers.isImmutable() ) )
 						node.addModifier(Modifiers.IMMUTABLE);
-					if( currentType.getModifiers().isReadonly() )
+					if( currentType.getModifiers().isReadonly() || ( methodModifiers!= null && methodModifiers.isReadonly() ))
 						node.addModifier(Modifiers.READONLY);					
 				}
-			}
-			else if( node.getImage().startsWith("super")) //super case
-			{
-				if( currentType instanceof InterfaceType )
-				{
-					addError(Error.INVALID_SELF_REFERENCE, "Reference super invalid for interfaces");
-					node.setType(Type.UNKNOWN);
-				}
-				else		
-				{
-					ClassType classType = (ClassType) currentType;					
-					node.setType(classType.getExtendType());
-					//uses readonly and immutable from current class to prevent tampering
-					if( currentType.getModifiers().isImmutable() )
-						node.addModifier(Modifiers.IMMUTABLE);
-					if( currentType.getModifiers().isReadonly() )
-						node.addModifier(Modifiers.READONLY);	
-				}
-			}
+			}	
 			else //just a name
-			{
-				String name = node.getImage();
-				if( !setTypeFromName( node, name )) //automatically sets type if can
+			{				
+				if( !setTypeFromName( node, image )) //automatically sets type if can
 				{
-					addError(Error.UNDEFINED_TYPE, "Type " + name + " not defined in this context");
+					addError(Error.UNDEFINED_TYPE, "Type " + image + " not defined in this context");
 					node.setType(Type.UNKNOWN);											
 				}
 			}
@@ -1831,11 +1845,10 @@ public class ClassChecker extends BaseChecker
 			
 			if( child instanceof ASTUnqualifiedName )
 			{
-				node.setImage(child.getImage() + "@" + node.getImage());
-				String name = node.getImage();
-				if( !setTypeFromName( node, name )) //automatically sets type if can
+				node.setImage(child.getImage() + "@" + node.getImage());				
+				if( !setTypeFromName( node, image )) //automatically sets type if can
 				{
-					addError(Error.UNDEFINED_TYPE, "Type " + name + " not defined in this context");
+					addError(Error.UNDEFINED_TYPE, "Type " + image + " not defined in this context");
 					node.setType(Type.UNKNOWN);											
 				}
 			}
@@ -2028,7 +2041,12 @@ public class ClassChecker extends BaseChecker
 				if( dimension == arrayType.getDimensions() )
 				{
 					node.setType( arrayType.getBaseType() );
-					node.addModifier(Modifiers.ASSIGNABLE);
+					if( prefixNode.getModifiers().isImmutable() )
+						node.addModifier(Modifiers.IMMUTABLE);
+					if( prefixNode.getModifiers().isReadonly() )
+						node.addModifier(Modifiers.READONLY);
+					if( !prefixNode.getModifiers().isImmutable() && !prefixNode.getModifiers().isReadonly()  )
+						node.addModifier(Modifiers.ASSIGNABLE);			
 					
 					//primitive arrays are initialized to default values
 					//non-primitive array elements could be null
@@ -2410,8 +2428,12 @@ public class ClassChecker extends BaseChecker
 				else
 				{
 					node.setType( field.getType());
-					node.setModifiers(field.getModifiers());						
-					if( !field.getModifiers().isConstant() )
+					node.setModifiers(field.getModifiers());
+					if( prefixNode.getModifiers().isImmutable() )
+						node.addModifier(Modifiers.IMMUTABLE);
+					else if( prefixNode.getModifiers().isReadonly() )
+						node.addModifier(Modifiers.READONLY);
+					else if( !field.getModifiers().isConstant() )
 						node.addModifier(Modifiers.ASSIGNABLE);					
 				}
 			}
@@ -2459,7 +2481,11 @@ public class ClassChecker extends BaseChecker
 			}	
 			else
 			{				
-				List<MethodSignature> methods = prefixType.getAllMethods(propertyName);				
+				List<MethodSignature> methods = prefixType.getAllMethods(propertyName);	
+				if( prefixNode.getModifiers().isImmutable() )
+					node.addModifier(Modifiers.IMMUTABLE);
+				else if( prefixNode.getModifiers().isReadonly() )
+					node.addModifier(Modifiers.READONLY);					
 
 				if( methods != null && methods.size() > 0 )
 				{
@@ -2473,9 +2499,24 @@ public class ClassChecker extends BaseChecker
 						else if( signature.getModifiers().isSet() )
 						{
 							setter = signature;
-							node.addModifier(Modifiers.ASSIGNABLE);
+							
+							//never checked, it seems
+							//if( !prefixNode.getModifiers().isImmutable() && !prefixNode.getModifiers().isReadonly() )
+							//	node.addModifier(Modifiers.ASSIGNABLE);
 						}
-					}
+					}					
+					
+					if( getter != null && prefixNode.getModifiers().isImmutable() && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
+						addError(Error.ILLEGAL_ACCESS, "Mutable get property cannot be called from an immutable reference");
+					
+					if( setter != null && prefixNode.getModifiers().isImmutable() && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
+						addError(Error.ILLEGAL_ACCESS, "Mutable set property cannot be called from an immutable reference");
+					
+					if( getter != null && prefixNode.getModifiers().isReadonly() && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
+						addError(Error.ILLEGAL_ACCESS, "Mutable get property cannot be called from a readonly reference");
+					
+					if( setter != null && prefixNode.getModifiers().isReadonly() && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
+						addError(Error.ILLEGAL_ACCESS, "Mutable set property cannot be called from a readonly reference");
 					
 					node.setType( new PropertyType( getter, setter ) );
 				}

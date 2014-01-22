@@ -262,4 +262,18 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/readonly-call/Test.shadow"); 
 		enforce(Error.ILLEGAL_ACCESS);		
 	}
+	
+	@Test public void testReadonlyMethodStore() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-method-store/Test.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testReadonlyMethodCall() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-method-call/Test.shadow"); 
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
+	
+	
 }

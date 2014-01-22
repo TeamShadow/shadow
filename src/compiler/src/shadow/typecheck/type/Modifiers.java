@@ -100,9 +100,7 @@ public final class Modifiers
 		if( isPrivate() )
 			sb.append("private ");
 		if( isAbstract() )
-			sb.append("abstract ");		
-		/*if( isFinal() )
-			sb.append("final ");*/
+			sb.append("abstract ");
 		if( isReadonly() )
 			sb.append("readonly ");
 		if( isNative() )
@@ -189,8 +187,6 @@ public final class Modifiers
 			throw new ParseException(name + " cannot be marked private", node);
 		if( isAbstract() && !legal.isAbstract()  )
 			throw new ParseException(name + " cannot be marked abstract", node);
-		/*if( isFinal() && !legal.isFinal()  )
-			throw new ParseException(name + " cannot be marked final"); */
 		if( isReadonly() && !legal.isReadonly()  )
 			throw new ParseException(name + " cannot be marked readonly", node);
 		if( isNative() && !legal.isNative()  )
@@ -211,23 +207,31 @@ public final class Modifiers
 
 	public void checkClassModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE), "A class", node);	
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE), "A class", node);
+		if( isReadonly() && isImmutable() )
+			throw new ParseException("A class cannot be marked both readonly and immutable", node);
 	}
 
 
 	public void checkSingletonModifiers(Node node) throws ParseException
 	{		  
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE), "A singleton", node);	
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE), "A singleton", node);
+		if( isReadonly() && isImmutable() )
+			throw new ParseException("A singleton cannot be marked both readonly and immutable", node);
 	}
 
 	public void checkExceptionModifiers(Node node) throws ParseException
 	{		  
 		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE ), "An exception", node);
+		if( isReadonly() && isImmutable() )
+			throw new ParseException("An exception cannot be marked both readonly and immutable", node);
 	}
 
 	public void checkErrorModifiers(Node node) throws ParseException
 	{
 		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE ), "An error", node);
+		if( isReadonly() && isImmutable() )
+			throw new ParseException("An error cannot be marked both readonly and immutable", node);
 	}
 
 
@@ -249,13 +253,27 @@ public final class Modifiers
 	public void checkFieldModifiers(Node node) throws ParseException
 	{
 		checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE), "A field", node);
+		if( isReadonly() && isImmutable() )
+			throw new ParseException("A field cannot be marked both readonly and immutable", node);
+		if( isSet() && isImmutable() )
+			throw new ParseException("A field cannot be marked both set and immutable", node);
+		if( isSet() && isReadonly() )
+			throw new ParseException("A field cannot be marked both set and readonly", node);
+		if( isConstant() && isImmutable() )
+			throw new ParseException("A field cannot be marked both constant and immutable", node);
+		if( isConstant() && isReadonly() )
+			throw new ParseException("A field cannot be marked both constant and readonly", node);
 	}
 
 	public void checkMethodModifiers(Node node) throws ParseException
 	{
 		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE | GET | SET | NATIVE), "A method", node);
 		if( isGet() &&  isSet() )
-			throw new ParseException("A method cannot be marked both get and set", node);			
+			throw new ParseException("A method cannot be marked both get and set", node);
+		if( isReadonly() && isImmutable() )
+			throw new ParseException("A method cannot be marked both readonly and immutable", node);
+		if( isAbstract() && isImmutable() )
+			throw new ParseException("A method cannot be marked both abstract and immutable", node);
 	}
 
 	public void checkLocalMethodModifiers(Node node) throws ParseException
@@ -277,14 +295,15 @@ public final class Modifiers
 	public void checkLocalVariableModifiers(Node node) throws ParseException
 	{
 		checkModifiers( new Modifiers(READONLY | IMMUTABLE | WEAK | NULLABLE), "A local variable", node);
+		if( isReadonly() && isImmutable() )
+			throw new ParseException("A local variable cannot be marked both readonly and immutable", node);
 	}
 
 	public void checkParameterAndReturnModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(READONLY | IMMUTABLE | NULLABLE), "Method parameter and return types", node);		  
-
-		//what does final mean for parameters and return types?
-		//shouldn't all parameters be final?		
+		checkModifiers( new Modifiers(READONLY | IMMUTABLE | NULLABLE), "Method parameter and return types", node);
+		if( isReadonly() && isImmutable() )
+			throw new ParseException("Method parameter and return types cannot be marked both readonly and immutable", node);
 	}
 
 	public void setModifiers(int modifiers) {

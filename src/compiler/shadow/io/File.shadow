@@ -18,7 +18,7 @@ class shadow.io@File implements CanRead, CanWrite, CanClose
 	{
 		close();
 	}
-	public toString() => ( String )
+	public readonly toString() => ( String )
 	{
 		return #path;
 	}
