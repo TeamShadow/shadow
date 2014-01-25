@@ -1,8 +1,0 @@
-import shadow.standard@Object;
-
-class default@Test extends shadow.standard@Object
-{
-	public readonly bar() => ();
-	public create();
-
-}
