@@ -7,9 +7,19 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 
 	private class Node
 	{
-		get int hash;
+		immutable get int hash;
 		get nullable V value;
 		get set nullable Node next = null;
+		
+		public readonly get next() => (readonly nullable Node)
+		{
+			return this:next;
+		}
+		
+		public readonly get value() => (nullable V)
+		{
+			return this:value;
+		}
 
 		public create( int initialHash, V initialValue )
 		{
@@ -24,7 +34,7 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 		}
 	}
 
-	private hash( V value ) => ( int index, int hash )
+	private immutable hash( V value ) => ( int index, int hash )
 	{
 		uint temp = cast<uint>(value->hash);
 		int hash = cast<int>(temp ^ temp >> 16 ^ temp >> 8);
@@ -85,12 +95,12 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 			return false;
 		}
 	}
-	public immutable contains( V value ) => ( boolean found )
+	public readonly contains( V value ) => ( boolean found )
 	{		
 		( int index, int hash ) = this.hash(value);
 		try
 		{
-			Node current = check(table[index]);
+			readonly Node current = check(table[index]);
 			while ( current->hash != hash and current->value != value )
 				current = check(current->next);
 			return true;
@@ -139,13 +149,13 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 			}
 		}
 
-		private immutable checkForModifications() => ()
+		private readonly checkForModifications() => ()
 		{
 			if ( modifications != expectedModifications )
 				throw IllegalModificationException:create();
 		}
 
-		public immutable hasNext() => ( boolean )
+		public readonly hasNext() => ( boolean )
 		{
 			checkForModifications();
 			return current !== null;

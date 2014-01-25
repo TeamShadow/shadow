@@ -518,9 +518,16 @@ public class ClassChecker extends BaseChecker
 				{	
 					//can't change fields in immutable or readonly methods (creates are not marked immutable or readonly)					
 					if( methodModifiers != null && methodModifiers.isImmutable() )
+					{
 						node.addModifier(Modifiers.IMMUTABLE);
+						node.removeModifier(Modifiers.READONLY);
+					}
 					else if( methodModifiers != null && methodModifiers.isReadonly() )
-						node.addModifier(Modifiers.READONLY);
+					{
+						
+						if( !node.getModifiers().isImmutable() )
+							node.addModifier(Modifiers.READONLY);
+					}
 					/*Complex condition:
 					 * Any field that isn't immutable or readonly is assignable
 					 * Unless it's a constant
@@ -1824,9 +1831,17 @@ public class ClassChecker extends BaseChecker
 					if(!currentMethod.isEmpty() )
 						methodModifiers = currentMethod.getFirst().getModifiers();
 					
+					/*
 					if( currentType.getModifiers().isImmutable() || ( methodModifiers!= null && methodModifiers.isImmutable() ) )
 						node.addModifier(Modifiers.IMMUTABLE);
 					if( currentType.getModifiers().isReadonly() || ( methodModifiers!= null && methodModifiers.isReadonly() ))
+						node.addModifier(Modifiers.READONLY);
+					*/					
+					
+					//in this case, depends only on current method (creates are exempt)
+					if( methodModifiers!= null && methodModifiers.isImmutable() )
+						node.addModifier(Modifiers.IMMUTABLE);
+					else if( methodModifiers!= null && methodModifiers.isReadonly() )
 						node.addModifier(Modifiers.READONLY);					
 				}
 			}	
@@ -2043,10 +2058,15 @@ public class ClassChecker extends BaseChecker
 					node.setType( arrayType.getBaseType() );
 					if( prefixNode.getModifiers().isImmutable() )
 						node.addModifier(Modifiers.IMMUTABLE);
-					if( prefixNode.getModifiers().isReadonly() )
+					else if( prefixNode.getModifiers().isReadonly() )
 						node.addModifier(Modifiers.READONLY);
-					if( !prefixNode.getModifiers().isImmutable() && !prefixNode.getModifiers().isReadonly()  )
-						node.addModifier(Modifiers.ASSIGNABLE);			
+					else
+						node.addModifier(Modifiers.ASSIGNABLE);
+					
+					//backdoor for creates
+					//immutable and readonly array should only be assignable in creates
+					if( prefixNode.getModifiers().isAssignable() ) 
+						node.addModifier(Modifiers.ASSIGNABLE);
 					
 					//primitive arrays are initialized to default values
 					//non-primitive array elements could be null
@@ -2429,10 +2449,33 @@ public class ClassChecker extends BaseChecker
 				{
 					node.setType( field.getType());
 					node.setModifiers(field.getModifiers());
+					
+					/*
+					boolean afterThis = false;
+					
+					if( prefixNode instanceof ASTPrimaryPrefix )
+					{						
+						ASTPrimaryPrefix prefix = (ASTPrimaryPrefix)prefixNode;
+						afterThis = prefix.getImage().equals("this");
+					}
+										
+					if( afterThis && !currentMethod.isEmpty() && currentMethod.getFirst().getMethodSignature().isCreate() )
+					{
+						node.removeModifier(Modifiers.IMMUTABLE);
+						node.removeModifier(Modifiers.READONLY);
+					}
+					*/
+										
 					if( prefixNode.getModifiers().isImmutable() )
+					{
 						node.addModifier(Modifiers.IMMUTABLE);
+						node.removeModifier(Modifiers.READONLY); //can only be one
+					}
 					else if( prefixNode.getModifiers().isReadonly() )
-						node.addModifier(Modifiers.READONLY);
+					{
+						if( !node.getModifiers().isImmutable() )
+							node.addModifier(Modifiers.READONLY);
+					}
 					else if( !field.getModifiers().isConstant() )
 						node.addModifier(Modifiers.ASSIGNABLE);					
 				}

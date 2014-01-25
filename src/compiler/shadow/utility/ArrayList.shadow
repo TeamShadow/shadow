@@ -6,7 +6,7 @@ implements List<V>
 	V[] elements = V:create[10];
 	int modifications = 0;
 	
-	public immutable index(int index) => (V value)
+	public readonly index(int index) => (V value)
 	{
 		if( index < 0 or index >= size )
 			throw IndexOutOfBoundsException:create();
@@ -64,12 +64,12 @@ implements List<V>
 		modifications += 1;
 	}
 	
-	public immutable contains(V value) => (boolean found)
+	public readonly contains(V value) => (boolean found)
 	{				
 		return indexOf(value) != -1;	
 	}
 	
-	public immutable indexOf(V value) => (int index)
+	public readonly indexOf(V value) => (int index)
 	{
 		for( int i = 0; i < elements->size; i += 1 )
 			if( elements[i] == value )
@@ -108,7 +108,7 @@ implements List<V>
 		return true;	
 	}
 
-	public immutable iterator() => (Iterator<V>)
+	public readonly iterator() => (Iterator<V>)
 	{
 		return ArrayListIterator:create();
 	}

@@ -381,9 +381,25 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 					
 					//if either type is immutable, it will work out no matter what
 					//if both are mutable, their modifiers had better both be immutable or both mutable
-					if( !type.getModifiers().isImmutable() && !inputType.getModifiers().isImmutable() &&
-						modifiers.isImmutable() != inputModifiers.isImmutable() )
-						return false;				
+					if( !type.getModifiers().isImmutable() && !inputType.getModifiers().isImmutable() )
+					{
+						//inputModifiers = modifiers
+						
+						//if this is immutable, storage reference must be readonly or immutable
+						if( modifiers.isImmutable() && !inputModifiers.isImmutable() && !inputModifiers.isReadonly() )
+							return false;
+						
+						//you can't put a readonly thing into a mutable reference (but not an immutable one)
+						//but you can put a mutable thing into a readonly reference
+						if( modifiers.isReadonly() && !inputModifiers.isReadonly() )
+							return false;
+						
+						if( inputModifiers.isImmutable() && !modifiers.isImmutable() )
+							return false;
+					}	
+					
+						
+										
 					
 					if( modifiers.isNullable() && !inputModifiers.isNullable() )
 						return false;	

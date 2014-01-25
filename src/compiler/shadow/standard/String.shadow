@@ -4,10 +4,12 @@ implements
 	CanCompare<String>,
 	CanIterate<code>
 {
-	byte[] data = byte:create[0];
-	boolean ascii = true;
+	byte[] data;
+	boolean ascii;
 	public create()
 	{
+		this:data = byte:create[0];
+		this:ascii = true;
 	}
 	public create( byte[] data )
 	{
@@ -99,7 +101,7 @@ implements
 	}
 
 	public getChar( int index ) => ( byte )
-	{
+	{		
 		return data[index];
 	}
 	public get chars() => ( byte[] )

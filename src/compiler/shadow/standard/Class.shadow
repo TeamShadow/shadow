@@ -9,7 +9,7 @@ immutable class shadow.standard@Class
 	private create() { }
 	protected native allocate() => ( Object );
 	protected native allocate( int size ) => ( Object );
-	protected interfaceData( Class interfaceClass ) => ( nullable Object )
+	protected interfaceData( Class interfaceClass ) => ( immutable nullable Object )
 	{
 		for ( int i = 0; i < interfaces->size; i += 1 )
 			if ( interfaces[i] === interfaceClass )

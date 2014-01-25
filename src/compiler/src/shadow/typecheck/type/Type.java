@@ -624,9 +624,12 @@ public abstract class Type
 				}
 			}				
 			
+			//the list of method signatures starts with the closest (current class) and then adds parents and outer classes
+			//always stick with the current if you can
+			//(only replace if signature is a subtype of candidate but candidate is not a subtype of signature)
 			if( signature.canAccept(arguments ) )
-			{						
-				if( candidate == null || signature.getParameterTypes().isSubtype(candidate.getParameterTypes()) )
+			{	
+				if( candidate == null || (signature.getParameterTypes().isSubtype(candidate.getParameterTypes()) && !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) ) )
 					candidate = signature;
 				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
 				{					

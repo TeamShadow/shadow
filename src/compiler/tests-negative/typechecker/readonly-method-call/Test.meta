@@ -1,0 +1,10 @@
+import shadow.standard@Object;
+
+class default@Test extends shadow.standard@Object
+{
+	public foo() => ();
+	public readonly bar() => ();
+	public create();
+	public set y(int value) => ();
+
+}

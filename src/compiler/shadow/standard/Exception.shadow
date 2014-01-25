@@ -2,7 +2,7 @@ import shadow.io@Console;
 
 exception shadow.standard@Exception
 {
-	get String message = "";
+	immutable get String message;
 	public create()
 	{
 	}
