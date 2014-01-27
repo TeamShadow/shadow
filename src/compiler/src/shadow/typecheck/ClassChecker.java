@@ -509,25 +509,20 @@ public class ClassChecker extends BaseChecker
 			{
 				Node field = classType.recursivelyGetField(name);
 				node.setType(field.getType());
-				node.setModifiers(field.getModifiers());				
-				//node.addModifier(Modifiers.FIELD); //redundant?
+				node.setModifiers(field.getModifiers());
+				if( field.getModifiers().isImmutable() )
+					node.addModifier(Modifiers.RETURN_IMMUTABLE);
+				else if( field.getModifiers().isReadonly() )
+					node.addModifier(Modifiers.RETURN_READONLY);				
 				
 				if( !fieldIsAccessible( field, currentType ) )
 					addError(Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
 				else
 				{	
-					//can't change fields in immutable or readonly methods (creates are not marked immutable or readonly)					
-					if( methodModifiers != null && methodModifiers.isImmutable() )
-					{
-						node.addModifier(Modifiers.IMMUTABLE);
-						node.removeModifier(Modifiers.READONLY);
-					}
-					else if( methodModifiers != null && methodModifiers.isReadonly() )
-					{
-						
-						if( !node.getModifiers().isImmutable() )
-							node.addModifier(Modifiers.READONLY);
-					}
+					//temporarily upgrade fields in immutable or readonly methods to readonly 
+					//(creates are not marked immutable or readonly)					
+					if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
+						node.getModifiers().upgradeToReadonly();
 					/*Complex condition:
 					 * Any field that isn't immutable or readonly is assignable
 					 * Unless it's a constant
@@ -1019,8 +1014,42 @@ public class ClassChecker extends BaseChecker
 		else if(node.jjtGetNumChildren() == 3)
 		{			
 			Type t1 = node.jjtGetChild(0).getType();
-			Type t2 = node.jjtGetChild(1).getType();
-			Type t3 = node.jjtGetChild(2).getType();
+			
+			Node first = node.jjtGetChild(1); 
+			Type t2 = first.getType();
+			Node second = node.jjtGetChild(2);
+			Type t3 = second.getType();
+			
+			//regular modifiers
+			if( first.getModifiers().isNullable() || second.getModifiers().isNullable() )
+				node.addModifier(Modifiers.NULLABLE);
+			
+			if( first.getModifiers().isReadonly() || second.getModifiers().isReadonly() )
+				node.addModifier(Modifiers.READONLY);
+			
+			if( first.getModifiers().isImmutable() && second.getModifiers().isImmutable() )
+			{
+				node.removeModifier(Modifiers.READONLY);
+				node.addModifier(Modifiers.IMMUTABLE);				
+			}
+			else if( first.getModifiers().isImmutable() != second.getModifiers().isImmutable()  && !t1.getModifiers().isImmutable() && !t2.getModifiers().isImmutable() )
+			{
+				addError(node, Error.INVALID_MODIFIER, "Expressions " + first + " and " + second + " have incompatible levels of mutability");
+			}
+			
+			//now return modifiers			
+			if( first.getModifiers().isReturnReadonly() || second.getModifiers().isReturnReadonly() )
+				node.addModifier(Modifiers.RETURN_READONLY);
+			
+			if( first.getModifiers().isReturnImmutable() && second.getModifiers().isReturnImmutable() )
+			{
+				node.removeModifier(Modifiers.RETURN_READONLY);
+				node.addModifier(Modifiers.RETURN_IMMUTABLE);				
+			}
+			else if( first.getModifiers().isReturnImmutable() != second.getModifiers().isReturnImmutable()  && !t1.getModifiers().isImmutable() && !t2.getModifiers().isImmutable() )
+			{
+				addError(node, Error.INVALID_MODIFIER, "Expressions " + first + " and " + second + " have incompatible levels of mutability");
+			}				
 			
 			if( !t1.equals(Type.BOOLEAN) ) 
 			{			
@@ -1033,13 +1062,13 @@ public class ClassChecker extends BaseChecker
 				node.setType(t2);
 			else 
 			{
-				addError(Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of ternary operator");
+				addError(node, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of ternary operator");
 				node.setType(Type.UNKNOWN);
 			}
-		}		
+		}	
 		
 		return WalkType.POST_CHILDREN;
-	}
+	}	
 	
 	public void visitConditional(SimpleNode node ) throws ShadowException {
 		
@@ -1252,18 +1281,7 @@ public class ClassChecker extends BaseChecker
 					rightElement = ((SequenceType)rightType).get(i);
 				
 				if( leftElement.getType().equals( Type.VAR ) )
-				{
-					if( rightElement.getType() instanceof PropertyType )
-					{
-						PropertyType propertyType = (PropertyType)rightElement.getType();
-						if( propertyType.isGettable() )						
-							leftElement.setType(propertyType.getGetType().getType());
-						else
-							addError(Error.ILLEGAL_ACCESS, "Property " + right + "does not have get access");
-					}
-					else
-						leftElement.setType(rightElement.getType());
-				}
+					leftElement.setType(resolveType( rightElement).getType());				
 							
 				if( leftElement instanceof ASTSequenceVariable ) //declaration	
 				{
@@ -1447,6 +1465,7 @@ public class ClassChecker extends BaseChecker
 			Type t2 = node.jjtGetChild(1).getType();  //expression
 			
 			node.setModifiers(node.jjtGetChild(1).getModifiers());
+			node.removeModifier(Modifiers.ASSIGNABLE);			
 			
 			if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) //casting methods
 			{
@@ -1486,6 +1505,7 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+
 	public Object visit(ASTRightSide node, Boolean secondVisit) throws ShadowException 
 	{
 		return pushUpType(node, secondVisit);		
@@ -1722,19 +1742,12 @@ public class ClassChecker extends BaseChecker
 		if( secondVisit )
 		{
 			ModifiedType child = node.jjtGetChild(0);
-			
-			//only gets make sense for a check expression
-			if( child.getType() instanceof PropertyType )
-			{
-				PropertyType propertyType = (PropertyType) child.getType();
-				child = propertyType.getGetType(); 
-			}
-			
+			child = resolveType( child );			
 			
 			if( child.getModifiers().isNullable() )
 			{
-				node.setModifiers( child.getModifiers() );
-				node.removeModifier(Modifiers.NULLABLE );
+				node.setModifiers(child.getModifiers());
+				node.removeModifier(Modifiers.NULLABLE);
 			}
 			else
 				addError(Error.INVALID_TYPE, "Non-nullable expression cannot be used in a check statement");
@@ -1827,22 +1840,18 @@ public class ClassChecker extends BaseChecker
 						node.setType(classType.getExtendType());						
 					}
 					
+					if( currentType.getModifiers().isImmutable() )
+						node.getModifiers().addModifier(Modifiers.RETURN_IMMUTABLE);
+					else if( currentType.getModifiers().isReadonly() )
+						node.getModifiers().addModifier(Modifiers.RETURN_READONLY);
+					
 					Modifiers methodModifiers = null;
 					if(!currentMethod.isEmpty() )
 						methodModifiers = currentMethod.getFirst().getModifiers();
 					
-					/*
-					if( currentType.getModifiers().isImmutable() || ( methodModifiers!= null && methodModifiers.isImmutable() ) )
-						node.addModifier(Modifiers.IMMUTABLE);
-					if( currentType.getModifiers().isReadonly() || ( methodModifiers!= null && methodModifiers.isReadonly() ))
-						node.addModifier(Modifiers.READONLY);
-					*/					
-					
 					//in this case, depends only on current method (creates are exempt)
-					if( methodModifiers!= null && methodModifiers.isImmutable() )
-						node.addModifier(Modifiers.IMMUTABLE);
-					else if( methodModifiers!= null && methodModifiers.isReadonly() )
-						node.addModifier(Modifiers.READONLY);					
+					if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
+						node.getModifiers().upgradeToReadonly();
 				}
 			}	
 			else //just a name
@@ -1968,12 +1977,25 @@ public class ClassChecker extends BaseChecker
 						
 			if( curPrefix.getFirst().getModifiers().isTypeName())
 			{	
-				Type prefixType = curPrefix.getFirst().getType();
+				Type prefixType = curPrefix.getFirst().getType();				
+				Modifiers methodModifiers = null;
+				if(!currentMethod.isEmpty() )
+					methodModifiers = currentMethod.getFirst().getModifiers();
+				
+				//in this case, depends only on current method (creates are exempt)
+				if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
+					node.getModifiers().upgradeToReadonly();
 				
 				if( kind.equals("this") )
 				{					
-					if( currentType.encloses( prefixType )  )				
-						node.setType(prefixType);
+					if( currentType.encloses( prefixType )  )
+					{
+						node.setType(prefixType);						
+						if( prefixType.getModifiers().isImmutable() )
+							node.getModifiers().addModifier(Modifiers.RETURN_IMMUTABLE);
+						else if( prefixType.getModifiers().isReadonly() )
+							node.getModifiers().addModifier(Modifiers.RETURN_READONLY);
+					}
 					else				
 						addError(Error.INVALID_SELF_REFERENCE, "Prefix of :" + node.getImage() + " is not the current class or an enclosing class");
 				}
@@ -1983,7 +2005,13 @@ public class ClassChecker extends BaseChecker
 					{
 						
 						if( (prefixType instanceof ClassType) && ((ClassType)prefixType).getExtendType() != null )
+						{
 							node.setType(((ClassType)prefixType).getExtendType());
+							if( prefixType.getModifiers().isImmutable() )
+								node.getModifiers().addModifier(Modifiers.RETURN_IMMUTABLE);
+							else if( prefixType.getModifiers().isReadonly() )
+								node.getModifiers().addModifier(Modifiers.RETURN_READONLY);
+						}
 						else
 							addError(Error.INVALID_SELF_REFERENCE, "Type " + prefixType + " does not have a super class");
 					}
@@ -1993,7 +2021,11 @@ public class ClassChecker extends BaseChecker
 				else if( kind.equals("class"))
 				{
 					if( (prefixType instanceof ClassType) || (prefixType instanceof TypeParameter)  )
+					{
 						node.setType( Type.CLASS );
+						node.addModifier(Modifiers.IMMUTABLE);
+						node.addModifier(Modifiers.RETURN_IMMUTABLE);
+					}
 					else					
 						addError(Error.INVALID_TYPE, ":class constant only accessible on class, enum, error, exception, singleton types and type parameters"); //may need other cases
 				}
@@ -2062,6 +2094,11 @@ public class ClassChecker extends BaseChecker
 						node.addModifier(Modifiers.READONLY);
 					else
 						node.addModifier(Modifiers.ASSIGNABLE);
+									
+					if( prefixNode.getModifiers().isReturnImmutable() )
+						node.addModifier(Modifiers.RETURN_IMMUTABLE);
+					else if( prefixNode.getModifiers().isReturnReadonly() )
+						node.addModifier(Modifiers.RETURN_READONLY);
 					
 					//backdoor for creates
 					//immutable and readonly array should only be assignable in creates
@@ -2279,10 +2316,14 @@ public class ClassChecker extends BaseChecker
 			
 			//these push the immutable or readonly modifier to the prefix of the call
 			if( prefixNode.getModifiers().isImmutable() )
-				node.addModifier(Modifiers.IMMUTABLE);
+				node.addModifier(Modifiers.IMMUTABLE);			
+			else if( prefixNode.getModifiers().isReadonly() )
+				node.addModifier(Modifiers.READONLY);
 			
-			if( prefixNode.getModifiers().isReadonly() )
-				node.addModifier(Modifiers.READONLY);			
+			if( prefixNode.getModifiers().isReturnImmutable() )
+				node.addModifier(Modifiers.RETURN_IMMUTABLE);
+			else if( prefixNode.getModifiers().isReturnReadonly() )
+				node.addModifier(Modifiers.RETURN_READONLY);				
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2450,26 +2491,15 @@ public class ClassChecker extends BaseChecker
 					node.setType( field.getType());
 					node.setModifiers(field.getModifiers());
 					
-					/*
-					boolean afterThis = false;
-					
-					if( prefixNode instanceof ASTPrimaryPrefix )
-					{						
-						ASTPrimaryPrefix prefix = (ASTPrimaryPrefix)prefixNode;
-						afterThis = prefix.getImage().equals("this");
-					}
-										
-					if( afterThis && !currentMethod.isEmpty() && currentMethod.getFirst().getMethodSignature().isCreate() )
-					{
-						node.removeModifier(Modifiers.IMMUTABLE);
-						node.removeModifier(Modifiers.READONLY);
-					}
-					*/
+					if( field.getModifiers().isImmutable() )
+						node.addModifier(Modifiers.RETURN_IMMUTABLE);
+					else if( field.getModifiers().isReadonly() )
+						node.addModifier(Modifiers.RETURN_READONLY);
 										
 					if( prefixNode.getModifiers().isImmutable() )
 					{
 						node.addModifier(Modifiers.IMMUTABLE);
-						node.removeModifier(Modifiers.READONLY); //can only be one
+						node.removeModifier(Modifiers.READONLY); //can only be one or the other
 					}
 					else if( prefixNode.getModifiers().isReadonly() )
 					{
@@ -2528,7 +2558,12 @@ public class ClassChecker extends BaseChecker
 				if( prefixNode.getModifiers().isImmutable() )
 					node.addModifier(Modifiers.IMMUTABLE);
 				else if( prefixNode.getModifiers().isReadonly() )
-					node.addModifier(Modifiers.READONLY);					
+					node.addModifier(Modifiers.READONLY);	
+				
+				if( prefixNode.getModifiers().isReturnImmutable() )
+					node.addModifier(Modifiers.RETURN_IMMUTABLE);
+				else if( prefixNode.getModifiers().isReturnReadonly() )
+					node.addModifier(Modifiers.RETURN_READONLY);
 
 				if( methods != null && methods.size() > 0 )
 				{
@@ -2547,8 +2582,11 @@ public class ClassChecker extends BaseChecker
 							//if( !prefixNode.getModifiers().isImmutable() && !prefixNode.getModifiers().isReadonly() )
 							//	node.addModifier(Modifiers.ASSIGNABLE);
 						}
-					}					
+					}
 					
+					boolean setterOrGetter = setter != null || getter != null;
+					
+					/*
 					if( getter != null && prefixNode.getModifiers().isImmutable() && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
 						addError(Error.ILLEGAL_ACCESS, "Mutable get property cannot be called from an immutable reference");
 					
@@ -2560,12 +2598,28 @@ public class ClassChecker extends BaseChecker
 					
 					if( setter != null && prefixNode.getModifiers().isReadonly() && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
 						addError(Error.ILLEGAL_ACCESS, "Mutable set property cannot be called from a readonly reference");
+					*/
 					
-					node.setType( new PropertyType( getter, setter ) );
+					if( getter != null && (prefixNode.getModifiers().isImmutable() || prefixNode.getModifiers().isReadonly()) && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
+						getter = null;
+					
+					if( setter != null && (prefixNode.getModifiers().isImmutable() || prefixNode.getModifiers().isReadonly()) && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
+						setter = null;
+					
+					if( setter == null && getter == null )
+					{
+						if( setterOrGetter )
+							addError(node, Error.INVALID_PROPERTY, "Mutable property " + propertyName + " cannot be called from " + (prefixNode.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
+						else
+							addError(node, Error.INVALID_PROPERTY, "Property " + propertyName + " not defined in this context");
+						node.setType( Type.UNKNOWN );	
+					}
+					else
+						node.setType( new PropertyType( getter, setter ) );
 				}
 				else
 				{
-					addError(Error.UNDEFINED_SYMBOL, "Property " + propertyName + " not defined in this context");
+					addError(node, Error.UNDEFINED_SYMBOL, "Property " + propertyName + " not defined in this context");
 					node.setType( Type.UNKNOWN ); //if got here, some error
 				}				
 			}
@@ -2586,8 +2640,8 @@ public class ClassChecker extends BaseChecker
 				return propertyType.getGetType();
 			else
 			{
-				addError(Error.ILLEGAL_ACCESS, "Property " + node + " does not have get access");
-				return node;
+				addError(Error.ILLEGAL_ACCESS, "Property " + node + " does not have appropriate get access");
+				return new SimpleModifiedType( Type.UNKNOWN );
 			}				
 		}
 		else
@@ -2831,8 +2885,7 @@ public class ClassChecker extends BaseChecker
 			else
 			{
 				MethodType methodType = (MethodType)(currentMethod.getFirst().getType());
-				SequenceType returnTypes  = methodType.getReturnTypes();
-				node.setType(returnTypes);
+				SequenceType returnTypes  = methodType.getReturnTypes();				
 				
 				if( returnTypes.size() == 0 )
 				{
@@ -2843,25 +2896,44 @@ public class ClassChecker extends BaseChecker
 				{
 					Node child = node.jjtGetChild(0);
 					Type type = child.getType();					
-					
 					SequenceType sequenceType;
 					
-					if( type instanceof SequenceType )										
-						sequenceType = (SequenceType)type;
-					else					
-						sequenceType = new SequenceType(child);
+					if( type instanceof SequenceType )					
+						sequenceType = (SequenceType) type;
+					else
+						sequenceType = new SequenceType( child );
 					
-					if( !sequenceType.isSubtype(returnTypes) )						
-						addError(Error.INVALID_RETURNS, "Cannot return " + sequenceType + " when " + returnTypes + (returnTypes.size() == 1 ? " is" : " are") + " expected" );
+					//reconstitute full return types based on types with return modifiers
+					//return modifiers can differ from regular modifiers because readonly and immutable methods
+					//can enforce readonly constraints to keep object internals from changing during the method
+					for( int i = 0; i < sequenceType.size(); ++i )
+					{
+						Modifiers modifiers = sequenceType.get(i).getModifiers();
+						modifiers.removeModifier(Modifiers.READONLY);
+						modifiers.removeModifier(Modifiers.IMMUTABLE);
+						if( modifiers.isReturnImmutable() )
+						{
+							modifiers.addModifier(Modifiers.IMMUTABLE);
+							modifiers.removeModifier(Modifiers.RETURN_IMMUTABLE);
+						}
+						else if( modifiers.isReturnReadonly() )
+						{
+							modifiers.addModifier(Modifiers.READONLY);
+							modifiers.removeModifier(Modifiers.RETURN_READONLY);
+						}
+						
+						node.addType(new SimpleModifiedType(sequenceType.getType(i), modifiers ) );
+					}
+										
+					if( !node.getType().isSubtype(returnTypes) )						
+						addError(Error.INVALID_RETURNS, "Cannot return " + node.getType() + " when " + returnTypes + (returnTypes.size() == 1 ? " is" : " are") + " expected" );
 					
-					for( ModifiedType modifiedType : sequenceType )
+					for( ModifiedType modifiedType : node.getType() )
 						if( modifiedType.getModifiers().isTypeName() )
-							addError(Error.INVALID_RETURNS, "Cannot return type name from a method" );
-				}				
-				
-				node.setType(returnTypes);
-			}
-		}	
+							addError(Error.INVALID_RETURNS, "Cannot return type name from a method" );			
+				}
+			}			
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -2931,27 +3003,10 @@ public class ClassChecker extends BaseChecker
 		if( !secondVisit )
 			return WalkType.POST_CHILDREN;
 		
-		Node child = node.jjtGetChild(0);
-		Type childType = child.getType(); 
-		if( childType instanceof PropertyType )
-		{
-			PropertyType propertyType = (PropertyType) childType;
-			if( propertyType.isGettable() )
-			{
-				node.setType(propertyType.getGetType().getType());
-				node.setModifiers(propertyType.getGetType().getModifiers());					
-			}
-			else
-			{
-				node.setType(Type.UNKNOWN);
-				addError(Error.ILLEGAL_ACCESS, "Property " + child + "does not have get access.");
-			}				
-		}
-		else
-		{
-			node.setType(child.getType());
-			node.setModifiers(child.getModifiers());
-		}
+		Node child = node.jjtGetChild(0);		
+		ModifiedType modifiedType = resolveType( child );
+		node.setType(modifiedType.getType());
+		node.setModifiers(modifiedType.getModifiers());		
 		
 		return WalkType.POST_CHILDREN; 
 	}

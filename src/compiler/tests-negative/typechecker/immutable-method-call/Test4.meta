@@ -1,0 +1,10 @@
+import shadow.standard@Object;
+
+class default@Test4 extends shadow.standard@Object
+{
+	public foo() => ();
+	public immutable bar() => ();
+	public create();
+	public set y(int value) => ();
+
+}

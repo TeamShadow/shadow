@@ -2,17 +2,17 @@ package shadow.typecheck.type;
 
 
 
-public class SimpleModifiedType implements ModifiedType {
-
+public class SimpleModifiedType implements ModifiedType
+{
 	Type type;
-	Modifiers modifiers;
+	Modifiers modifiers;	
 	
-	public SimpleModifiedType( Type type, Modifiers modifiers )
+	public SimpleModifiedType( Type type, Modifiers modifiers)
 	{
 		this.type = type;
-		this.modifiers = modifiers;
-	}
-	
+		this.modifiers = modifiers;		
+	}	
+		
 	public SimpleModifiedType( Type type)
 	{
 		this( type, new Modifiers() );
@@ -26,14 +26,15 @@ public class SimpleModifiedType implements ModifiedType {
 	@Override
 	public Modifiers getModifiers() {
 		return modifiers;
-	}	
+	}
+	
 	
 	@Override
 	public boolean equals(Object o) {
 		if( o instanceof ModifiedType  )
 		{
 			ModifiedType modifiedType = (ModifiedType) o;
-			return type.equals(modifiedType.getType()) && modifiers == modifiedType.getModifiers();				
+			return type.equals(modifiedType.getType()) && modifiers.equals(modifiedType.getModifiers());				
 		}
 		
 		return false;

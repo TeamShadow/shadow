@@ -1,0 +1,12 @@
+class Test4
+{	 
+    Object x = Object:create();
+    int y = 5;
+    
+    int[] array = int:create[100];
+
+    readonly public bar() => ()
+    {    
+    	this:y = 7;     	    
+    }  
+}

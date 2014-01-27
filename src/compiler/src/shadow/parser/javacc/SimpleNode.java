@@ -25,6 +25,7 @@ public class SimpleNode implements Node {
     
     protected Type type;		// used by the type checker    
     protected Modifiers modifiers = new Modifiers(); 	// used by the type checker
+    
 	private Type enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
 
 	public SimpleNode(int id) {
@@ -173,11 +174,11 @@ public class SimpleNode implements Node {
 	public void setModifiers( Modifiers modifiers )
 	{
 		this.modifiers.setModifiers(modifiers.getModifiers());
-	}	
-	
-	public void setModifiers( int modifiers )
+	}
+
+	public void setModifiers( int mods )
 	{
-		this.modifiers.setModifiers(modifiers);
+		this.modifiers.setModifiers(mods);
 	}
 	
 	public void addModifier( int mod )
@@ -244,5 +245,7 @@ public class SimpleNode implements Node {
 	
 	public ModifiedType replace(SequenceType values, SequenceType replacements) {
 		return new SimpleModifiedType( type.replace(values, replacements), modifiers );
-	}	
+	}
+
+		
 }

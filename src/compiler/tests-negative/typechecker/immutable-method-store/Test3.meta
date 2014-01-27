@@ -1,0 +1,8 @@
+import shadow.standard@Object;
+
+class default@Test3 extends shadow.standard@Object
+{
+	public immutable bar() => ();
+	public create();
+
+}

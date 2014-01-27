@@ -1,0 +1,12 @@
+class Test1
+{	 
+    Object x = Object:create();
+    int y = 5;
+    
+    int[] array = int:create[100];
+
+    immutable public bar() => ()
+    {
+    	this:x = Object:create();        	    
+    }  
+}

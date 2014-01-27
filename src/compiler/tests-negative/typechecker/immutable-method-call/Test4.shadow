@@ -1,0 +1,16 @@
+class Test4
+{ 
+    Object x = Object:create();
+    set int y = 5;
+
+    public foo() => () 
+    {
+    	y = 10;
+    }
+
+    immutable public bar() => ()
+    {
+    	this->y = 3; 	    	 	    	    
+    }  
+    
+}

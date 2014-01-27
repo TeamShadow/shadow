@@ -1,0 +1,16 @@
+class Test1
+{ 
+    Object x = Object:create();
+    set int y = 5;
+
+    public foo() => () 
+    {
+    	y = 10;
+    }
+
+    readonly public bar() => ()
+    {
+    	x.copy();    	 	    	 	    	    
+    }  
+    
+}

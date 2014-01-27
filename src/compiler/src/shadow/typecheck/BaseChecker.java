@@ -90,7 +90,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				// push the type up the tree
 				Node childNode = node.jjtGetChild(child); 
 				node.setType(childNode.getType());
-				node.setModifiers( childNode.getModifiers());
+				node.setModifiers(childNode.getModifiers()); //copies current and return modifiers
 			}
 		}
 		
@@ -102,7 +102,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		if( node.jjtGetNumChildren() == 1 )
 		{
 			Node child = node.jjtGetChild(0);
-			node.setModifiers( child.getModifiers() );
+			node.setModifiers(child.getModifiers()); //copies current and return modifiers
 		}
 	}
 	
@@ -115,8 +115,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	public static boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, SubstitutionType substitutionType, List<TypeCheckException> errors )
 	{
 		Type leftType = left.getType();		 
-		Type rightType = right.getType();
-		
+		Type rightType = right.getType();		
 		
 		//process property on right first
 		if( rightType instanceof PropertyType )

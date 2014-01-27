@@ -11,7 +11,7 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 		get nullable V value;
 		get set nullable Node next = null;
 		
-		public readonly get next() => (readonly nullable Node)
+		public readonly get next() => (nullable Node)
 		{
 			return this:next;
 		}
@@ -100,7 +100,7 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 		( int index, int hash ) = this.hash(value);
 		try
 		{
-			readonly Node current = check(table[index]);
+			readonly Node current = check(table[index]);			
 			while ( current->hash != hash and current->value != value )
 				current = check(current->next);
 			return true;

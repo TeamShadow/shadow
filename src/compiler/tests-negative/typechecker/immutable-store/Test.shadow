@@ -1,0 +1,9 @@
+class Test
+{
+	immutable Object a = Object:create().freeze();   
+    
+    public foo() => () 
+    {
+    	Object b = a; //illegal   	    	
+    }    
+}

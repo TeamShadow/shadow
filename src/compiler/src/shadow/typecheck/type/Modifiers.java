@@ -14,7 +14,7 @@ public final class Modifiers
 	public static final int PROTECTED      	= 0x0002;
 	public static final int PRIVATE       	= 0x0004;
 	public static final int ABSTRACT       	= 0x0008;	
-	//public static final int FINAL          	= 0x0010;     
+     
 	public static final int READONLY		= 0x0010;
 	public static final int NATIVE			= 0x0020;     
 	public static final int WEAK           	= 0x0040;
@@ -28,37 +28,42 @@ public final class Modifiers
 	public static final int TYPE_NAME   	= 0x2000;
 	public static final int FIELD		   	= 0x4000;
 	public static final int PROPERTY	   	= 0x8000;
+	public static final int RETURN_READONLY	= 0x10000;
+	public static final int RETURN_IMMUTABLE = 0x20000;
 	
 	public static final Modifiers NO_MODIFIERS = new Modifiers();
 
 	/* Type Modifiers:
-  	public		(only for inner classes)
-  	private		(only for inner classes)
-  	protected 	(only for inner classes)
-		final 		(can't be extended)
+  		public		(only for inner classes)
+  		private		(only for inner classes)
+  		protected 	(only for inner classes)		
 		abstract		
-		immutable	(final, abstract, and immutable are mutually exclusive)
+		immutable	(abstract, readonly, and immutable are mutually exclusive)
+		readonly	(abstract, readonly, and immutable are mutually exclusive)
 	 */
 
 
 	/* Declaration Modifiers:
-		public			(only for methods)
-  	private			(only for methods)
-  	protected 		(only for methods)		
-		static			(only for members)
-		get				(only for fields)
-		set				(only for fields)
-		constant		(only for fields, public constant)
-		final 			(can't be changed)		
-		weak			(reference will not stop GC)
-		native          (used to map in C functions)
-		nullable		(variables that can be null)
+		public		(only for methods)
+  		private		(only for methods)
+  		protected 	(only for methods)
+		get			(only for fields)
+		set			(only for fields)
+		constant	(only for fields, public constant)
+				
+		weak		(reference will not stop GC)
+		native      (used to map in C functions)
+		nullable	(variables that can be null)
+		immutable	(all references to this object are readonly)
+		readonly	(no mutable methods can be called on this reference)
 	 */
 
 	/* Hidden Modifiers: (used in the compiler internally, but cannot be marked by the user)
 		assignable 		(used to mark variables [lvalues])
 		type name		(used to distinguish between types and values/variables with that type, e.g. int vs. 5 or String vs. "figs")
 		field			(used to mark nodes that are fields, as opposed to local variables, to inform the TAC [methods are NOT marked as fields])
+		return readonly	(returned object will be readonly)
+		return immutable(returned object will be immutable)
 	 */
 
 
@@ -133,6 +138,10 @@ public final class Modifiers
 			sb.append("[type name] ");
 		if( isField())
 			sb.append("[field] ");
+		if( isReturnReadonly())
+			sb.append("[return readonly] ");
+		if( isReturnImmutable())
+			sb.append("[return immutable] ");
 		
 		return sb.toString();
 	}
@@ -160,7 +169,9 @@ public final class Modifiers
 
 	public boolean isAssignable() { return (modifiers & ASSIGNABLE) != 0; }
 	public boolean isTypeName() { return (modifiers & TYPE_NAME) != 0; }   
-	public boolean isField() { return (modifiers & FIELD) != 0; }     
+	public boolean isField() { return (modifiers & FIELD) != 0; } 
+	public boolean isReturnReadonly() { return (modifiers & RETURN_READONLY) != 0; }
+	public boolean isReturnImmutable() { return (modifiers & RETURN_IMMUTABLE) != 0; }	
 
 	/**
 	 * Changes the given modifier.
@@ -175,6 +186,14 @@ public final class Modifiers
 			throw new ParseException("Repeated modifiers not allowed", node);
 
 		addModifier(mod );
+	}
+	
+	public void upgradeToReadonly()
+	{
+		//if already immutable, don't change
+		if( !isImmutable() )
+			addModifier(Modifiers.READONLY);
+		//if already readonly, doesn't cause a problem
 	}
 
 	public void checkModifiers( Modifiers legal, String name, Node node )  throws ParseException

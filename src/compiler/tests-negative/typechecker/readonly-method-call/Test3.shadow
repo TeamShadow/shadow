@@ -1,4 +1,4 @@
-class Test
+class Test3
 { 
     Object x = Object:create();
     set int y = 5;
@@ -10,12 +10,7 @@ class Test
 
     readonly public bar() => ()
     {
-    	x.copy();
-    	foo();
-    	this.foo();
-    	this:x.copy();    	
-    
-    	this->y = 3; 	    	 	    	    
+    	this.foo();    	 	    	 	    	    
     }  
     
 }

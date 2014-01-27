@@ -25,6 +25,7 @@ public class TypeCheckException extends Exception
 		INVALID_OVERRIDE("Invalid override", "Method cannot override parent method"),
 		INVALID_PACKAGE("Invalid package", "Package cannot be defined"),
 		INVALID_PARAMETERS("Invalid parameters", "Method cannot be declared with the given parameters"),
+		INVALID_PROPERTY("Invalid property", "No matching property can be found"),
 		INVALID_RETURNS("Invalid returns", "Supplied return values do not match method signature"),
 		INVALID_SELF_REFERENCE("Invalid self reference", "Self reference is invalid"),
 		INVALID_SINGLETON_CREATE("Invalid singleton create", "Singleton type can only specify a default create"),

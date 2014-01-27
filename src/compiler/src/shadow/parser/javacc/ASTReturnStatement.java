@@ -4,7 +4,7 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTReturnStatement extends SimpleNode {
+class ASTReturnStatement extends SequenceNode {
   public ASTReturnStatement(int id) {
     super(id);
   }

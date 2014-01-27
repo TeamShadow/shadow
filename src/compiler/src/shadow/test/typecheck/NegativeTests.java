@@ -263,16 +263,112 @@ public class NegativeTests {
 		enforce(Error.ILLEGAL_ACCESS);		
 	}
 	
-	@Test public void testReadonlyMethodStore() throws Exception
+	@Test public void testReadonlyMethodStore1() throws Exception
 	{
-		args.add("tests-negative/typechecker/readonly-method-store/Test.shadow"); 
+		args.add("tests-negative/typechecker/readonly-method-store/Test1.shadow"); 
 		enforce(Error.INVALID_ASSIGNMENT);		
 	}
 	
-	@Test public void testReadonlyMethodCall() throws Exception
+	@Test public void testReadonlyMethodStore2() throws Exception
 	{
-		args.add("tests-negative/typechecker/readonly-method-call/Test.shadow"); 
+		args.add("tests-negative/typechecker/readonly-method-store/Test2.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testReadonlyMethodStore3() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-method-store/Test3.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testReadonlyMethodStore4() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-method-store/Test4.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testReadonlyMethodCall1() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-method-call/Test1.shadow"); 
 		enforce(Error.ILLEGAL_ACCESS);		
+	}
+	
+	@Test public void testReadonlyMethodCall2() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-method-call/Test2.shadow"); 
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
+	
+	@Test public void testReadonlyMethodCall3() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-method-call/Test3.shadow"); 
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
+	
+	@Test public void testReadonlyMethodCall4() throws Exception
+	{
+		args.add("tests-negative/typechecker/readonly-method-call/Test4.shadow"); 
+		enforce(Error.INVALID_PROPERTY);		
+	}
+	
+	@Test public void testImmutableStore() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-store/Test.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testImmutableCall() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-call/Test.shadow"); 
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
+	
+	@Test public void testImmutableMethodStore1() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-method-store/Test1.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testImmutableMethodStore2() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-method-store/Test2.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testImmutableMethodStore3() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-method-store/Test3.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testImmutableMethodStore4() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-method-store/Test4.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testImmutableMethodCall1() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-method-call/Test1.shadow"); 
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
+	
+	@Test public void testImmutableMethodCall2() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-method-call/Test2.shadow"); 
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
+	
+	@Test public void testImmutableMethodCall3() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-method-call/Test3.shadow"); 
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
+	
+	@Test public void testImmutableMethodCall4() throws Exception
+	{
+		args.add("tests-negative/typechecker/immutable-method-call/Test4.shadow"); 
+		enforce(Error.INVALID_PROPERTY);		
 	}
 	
 	
