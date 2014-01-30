@@ -29,8 +29,6 @@ public final class Modifiers
 	public static final int FIELD		   	= 0x4000;
 	public static final int PROPERTY	   	= 0x8000;
 	public static final int TEMPORARY_READONLY	= 0x10000;
-	public static final int IN_CREATE		= 0x20000;
-	
 	
 	public static final Modifiers NO_MODIFIERS = new Modifiers();
 
@@ -140,9 +138,7 @@ public final class Modifiers
 		if( isField())
 			sb.append("[field] ");
 		if( isTemporaryReadonly())
-			sb.append("[return readonly] ");
-		if( isInCreate() )
-			sb.append("[in create] ");
+			sb.append("[temporary readonly] ");
 		
 		return sb.toString();
 	}
@@ -171,10 +167,9 @@ public final class Modifiers
 	public boolean isAssignable() { return (modifiers & ASSIGNABLE) != 0; }
 	public boolean isTypeName() { return (modifiers & TYPE_NAME) != 0; }   
 	public boolean isField() { return (modifiers & FIELD) != 0; } 
-	public boolean isTemporaryReadonly() { return (modifiers & TEMPORARY_READONLY) != 0; }
-	public boolean isInCreate() { return (modifiers & IN_CREATE) != 0; }
+	public boolean isTemporaryReadonly() { return (modifiers & TEMPORARY_READONLY) != 0; }	
 		
-	public boolean isMutable() {  return !isReadonly() && !isImmutable() && !isTemporaryReadonly(); }
+	public boolean isMutable() {  return !isReadonly() && !isImmutable() && !isTemporaryReadonly() && !isConstant(); }
 
 	/**
 	 * Changes the given modifier.

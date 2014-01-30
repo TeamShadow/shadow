@@ -85,7 +85,7 @@ public class ClassChecker extends BaseChecker
 				node.setMethodSignature(signature);
 				MethodType methodType = signature.getMethodType();
 
-				if( /*node instanceof ASTInlineMethodDeclaration ||*/ node instanceof ASTInlineMethodDefinition  )
+				if( node instanceof ASTInlineMethodDefinition  )
 					methodType.setInline(true);				
 				
 				node.setType(methodType);
@@ -472,16 +472,16 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}	
 	
-	public boolean setTypeFromContext( Node node, String name, Type context, boolean directAccess  ) //directAccess is true if there is no prefix and false if there is
+	public boolean setTypeFromContext( Node node, String name, Type context )
 	{
 		if( context instanceof TypeParameter )
 		{
 			TypeParameter typeParameter = (TypeParameter) context;
 			for( Type type : typeParameter.getBounds() )
-				if( setTypeFromContext( node, name, type, directAccess ) )
+				if( setTypeFromContext( node, name, type ) )
 					return true;
 			
-			return setTypeFromContext( node, name, Type.OBJECT, directAccess );			
+			return setTypeFromContext( node, name, Type.OBJECT );			
 		}		
 		else if( context instanceof InterfaceType )
 		{			
@@ -496,7 +496,7 @@ public class ClassChecker extends BaseChecker
 		else if( context instanceof ClassType  )
 		{
 			ClassType classType;
-			Modifiers methodModifiers = null;
+			Modifiers methodModifiers = Modifiers.NO_MODIFIERS;
 			if( !currentMethod.isEmpty() )
 				methodModifiers = currentMethod.getFirst().getModifiers();
 			
@@ -514,20 +514,17 @@ public class ClassChecker extends BaseChecker
 				if( !fieldIsAccessible( field, currentType ) )
 					addError(Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
 				else
-				{	
-					//temporarily upgrade fields in immutable or readonly methods to readonly 
-					//(creates are not marked immutable or readonly)					
-					if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
+				{						
+					if( field.getModifiers().isConstant() )
+					{
+						if( currentMethod.isEmpty() ) //constants are only assignable in declarations
+							node.addModifier(Modifiers.ASSIGNABLE);
+					}
+					//creates and declarations are not marked immutable or readonly
+					else if( methodModifiers.isImmutable() || methodModifiers.isReadonly() )						
 						node.getModifiers().upgradeToTemporaryReadonly();
-					/*Complex condition:
-					 * Any field that isn't immutable or readonly is assignable
-					 * Unless it's a constant
-					 * But constants ARE assignable in field definitions or creates
-					 */
-					else if( !field.getModifiers().isConstant() || currentMethod.isEmpty() || currentMethod.getFirst().getMethodSignature().isCreate() )
+					else
 						node.addModifier(Modifiers.ASSIGNABLE);
-					
-					//not good enough, it has to be the current type!
 				}
 				
 				return true;			
@@ -586,7 +583,7 @@ public class ClassChecker extends BaseChecker
 		}
 				
 		// check to see if it's a field or a method			
-		if( setTypeFromContext( node, name, currentType, true ) )
+		if( setTypeFromContext( node, name, currentType ) )
 			return true;
 				
 		//is it a type?
@@ -1825,16 +1822,12 @@ public class ClassChecker extends BaseChecker
 					else if( currentType.getModifiers().isReadonly() )
 						node.getModifiers().addModifier(Modifiers.READONLY);
 					
-					Modifiers methodModifiers = null;
-					if(!currentMethod.isEmpty() )
-					{
+					Modifiers methodModifiers = Modifiers.NO_MODIFIERS;
+					if(!currentMethod.isEmpty() )					
 						methodModifiers = currentMethod.getFirst().getModifiers();
-						if( image.equals("this") && currentMethod.getFirst().getMethodSignature().isCreate())
-							node.getModifiers().addModifier(Modifiers.IN_CREATE);						
-					}
 					
 					//upgrade if current method is non-mutable
-					if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
+					if( methodModifiers.isImmutable() || methodModifiers.isReadonly() )
 						node.getModifiers().upgradeToTemporaryReadonly();					
 				}
 			}	
@@ -1926,7 +1919,10 @@ public class ClassChecker extends BaseChecker
 			{
 				ASTPrimaryExpression parent = (ASTPrimaryExpression) node.jjtGetParent();
 				parent.setAction(true);
-			}			
+			}	
+			
+			if( child instanceof ASTQualifiedKeyword )
+				node.setImage(child.getImage()); //"this", "super", or "class"
 			
 			if( child instanceof ASTMethodCall )
 			{
@@ -1961,14 +1957,7 @@ public class ClassChecker extends BaseChecker
 						
 			if( curPrefix.getFirst().getModifiers().isTypeName())
 			{	
-				Type prefixType = curPrefix.getFirst().getType();				
-				Modifiers methodModifiers = null;
-				if(!currentMethod.isEmpty() )
-					methodModifiers = currentMethod.getFirst().getModifiers();
-				
-				//in this case, depends only on current method (creates are exempt)
-				if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
-					node.getModifiers().upgradeToTemporaryReadonly();
+				Type prefixType = curPrefix.getFirst().getType();
 				
 				if( kind.equals("this") )
 				{					
@@ -2011,6 +2000,14 @@ public class ClassChecker extends BaseChecker
 					else					
 						addError(Error.INVALID_TYPE, ":class constant only accessible on class, enum, error, exception, singleton types and type parameters"); //may need other cases
 				}
+				
+				Modifiers methodModifiers = null;
+				if(!currentMethod.isEmpty() )
+					methodModifiers = currentMethod.getFirst().getModifiers();
+				
+				//in this case, depends only on current method (creates are exempt)
+				if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
+					node.getModifiers().upgradeToTemporaryReadonly();
 			}
 			else
 				addError(Error.NOT_TYPE, "Prefix of :" + kind + " is not a type name");
@@ -2469,7 +2466,22 @@ public class ClassChecker extends BaseChecker
 															
 					if( !prefixNode.getModifiers().isMutable() )					
 						node.getModifiers().upgradeToTemporaryReadonly();
-					else if( !field.getModifiers().isConstant() )
+					
+					//only in a create if
+					//prefix is "this"
+					//current method is create
+					//current method is inside prefix type
+					boolean insideCreate = false;
+					
+					if( currentMethod.isEmpty() )
+						insideCreate = true; //declaration
+					else
+					{
+						MethodSignature signature = currentMethod.getFirst().getMethodSignature();												
+						insideCreate = curPrefix.getFirst().getImage().equals("this") && signature.isCreate() && signature.getOuter().equals(prefixType);   
+					}
+										
+					if( node.getModifiers().isMutable() || insideCreate )
 						node.addModifier(Modifiers.ASSIGNABLE);					
 				}
 			}
@@ -2667,10 +2679,10 @@ public class ClassChecker extends BaseChecker
 				MethodSignature signature = setMethodType(node, outer, unboundMethod.getTypeName(), arguments, typeArguments); //type set inside
 				node.setMethodSignature(signature);
 				
-				if( signature != null &&  prefixNode.getModifiers().isImmutable() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )
+				if( signature != null &&  prefixNode.getModifiers().isImmutable() && signature.getModifiers().isMutable()  )
 					addError(Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from an immutable reference");
 				
-				if( signature != null &&  prefixNode.getModifiers().isReadonly() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly()  )
+				if( signature != null &&  (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly()) && signature.getModifiers().isMutable() )
 					addError(Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from a readonly reference");				
 			}			
 			else if( prefixType instanceof MethodType ) //only happens with method pointers and local methods
