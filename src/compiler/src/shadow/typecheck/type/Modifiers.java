@@ -28,8 +28,9 @@ public final class Modifiers
 	public static final int TYPE_NAME   	= 0x2000;
 	public static final int FIELD		   	= 0x4000;
 	public static final int PROPERTY	   	= 0x8000;
-	public static final int RETURN_READONLY	= 0x10000;
-	public static final int RETURN_IMMUTABLE = 0x20000;
+	public static final int TEMPORARY_READONLY	= 0x10000;
+	public static final int IN_CREATE		= 0x20000;
+	
 	
 	public static final Modifiers NO_MODIFIERS = new Modifiers();
 
@@ -138,10 +139,10 @@ public final class Modifiers
 			sb.append("[type name] ");
 		if( isField())
 			sb.append("[field] ");
-		if( isReturnReadonly())
+		if( isTemporaryReadonly())
 			sb.append("[return readonly] ");
-		if( isReturnImmutable())
-			sb.append("[return immutable] ");
+		if( isInCreate() )
+			sb.append("[in create] ");
 		
 		return sb.toString();
 	}
@@ -170,8 +171,10 @@ public final class Modifiers
 	public boolean isAssignable() { return (modifiers & ASSIGNABLE) != 0; }
 	public boolean isTypeName() { return (modifiers & TYPE_NAME) != 0; }   
 	public boolean isField() { return (modifiers & FIELD) != 0; } 
-	public boolean isReturnReadonly() { return (modifiers & RETURN_READONLY) != 0; }
-	public boolean isReturnImmutable() { return (modifiers & RETURN_IMMUTABLE) != 0; }	
+	public boolean isTemporaryReadonly() { return (modifiers & TEMPORARY_READONLY) != 0; }
+	public boolean isInCreate() { return (modifiers & IN_CREATE) != 0; }
+		
+	public boolean isMutable() {  return !isReadonly() && !isImmutable() && !isTemporaryReadonly(); }
 
 	/**
 	 * Changes the given modifier.
@@ -188,12 +191,11 @@ public final class Modifiers
 		addModifier(mod );
 	}
 	
-	public void upgradeToReadonly()
+	public void upgradeToTemporaryReadonly()
 	{
-		//if already immutable, don't change
-		if( !isImmutable() )
-			addModifier(Modifiers.READONLY);
-		//if already readonly, doesn't cause a problem
+		//if already immutable or readonly, don't change
+		if( !isImmutable() && !isReadonly() )
+			addModifier(Modifiers.TEMPORARY_READONLY);
 	}
 
 	public void checkModifiers( Modifiers legal, String name, Node node )  throws ParseException

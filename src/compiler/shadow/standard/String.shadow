@@ -8,7 +8,7 @@ implements
 	boolean ascii;
 	public create()
 	{
-		this:data = byte:create[0];
+		this:data = cast<byte[]>(byte:create[0].freeze());
 		this:ascii = true;
 	}
 	public create( byte[] data )

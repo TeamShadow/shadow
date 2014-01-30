@@ -510,10 +510,6 @@ public class ClassChecker extends BaseChecker
 				Node field = classType.recursivelyGetField(name);
 				node.setType(field.getType());
 				node.setModifiers(field.getModifiers());
-				if( field.getModifiers().isImmutable() )
-					node.addModifier(Modifiers.RETURN_IMMUTABLE);
-				else if( field.getModifiers().isReadonly() )
-					node.addModifier(Modifiers.RETURN_READONLY);				
 				
 				if( !fieldIsAccessible( field, currentType ) )
 					addError(Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
@@ -522,7 +518,7 @@ public class ClassChecker extends BaseChecker
 					//temporarily upgrade fields in immutable or readonly methods to readonly 
 					//(creates are not marked immutable or readonly)					
 					if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
-						node.getModifiers().upgradeToReadonly();
+						node.getModifiers().upgradeToTemporaryReadonly();
 					/*Complex condition:
 					 * Any field that isn't immutable or readonly is assignable
 					 * Unless it's a constant
@@ -530,6 +526,8 @@ public class ClassChecker extends BaseChecker
 					 */
 					else if( !field.getModifiers().isConstant() || currentMethod.isEmpty() || currentMethod.getFirst().getMethodSignature().isCreate() )
 						node.addModifier(Modifiers.ASSIGNABLE);
+					
+					//not good enough, it has to be the current type!
 				}
 				
 				return true;			
@@ -1019,37 +1017,19 @@ public class ClassChecker extends BaseChecker
 			Type t2 = first.getType();
 			Node second = node.jjtGetChild(2);
 			Type t3 = second.getType();
-			
-			//regular modifiers
+						
 			if( first.getModifiers().isNullable() || second.getModifiers().isNullable() )
-				node.addModifier(Modifiers.NULLABLE);
+				node.addModifier(Modifiers.NULLABLE);		
 			
 			if( first.getModifiers().isReadonly() || second.getModifiers().isReadonly() )
 				node.addModifier(Modifiers.READONLY);
+			else if( first.getModifiers().isTemporaryReadonly() || second.getModifiers().isTemporaryReadonly() )
+				node.addModifier(Modifiers.TEMPORARY_READONLY);			
 			
-			if( first.getModifiers().isImmutable() && second.getModifiers().isImmutable() )
-			{
-				node.removeModifier(Modifiers.READONLY);
-				node.addModifier(Modifiers.IMMUTABLE);				
-			}
+			if( first.getModifiers().isImmutable() && second.getModifiers().isImmutable() )			
+				node.addModifier(Modifiers.IMMUTABLE);
 			else if( first.getModifiers().isImmutable() != second.getModifiers().isImmutable()  && !t1.getModifiers().isImmutable() && !t2.getModifiers().isImmutable() )
-			{
 				addError(node, Error.INVALID_MODIFIER, "Expressions " + first + " and " + second + " have incompatible levels of mutability");
-			}
-			
-			//now return modifiers			
-			if( first.getModifiers().isReturnReadonly() || second.getModifiers().isReturnReadonly() )
-				node.addModifier(Modifiers.RETURN_READONLY);
-			
-			if( first.getModifiers().isReturnImmutable() && second.getModifiers().isReturnImmutable() )
-			{
-				node.removeModifier(Modifiers.RETURN_READONLY);
-				node.addModifier(Modifiers.RETURN_IMMUTABLE);				
-			}
-			else if( first.getModifiers().isReturnImmutable() != second.getModifiers().isReturnImmutable()  && !t1.getModifiers().isImmutable() && !t2.getModifiers().isImmutable() )
-			{
-				addError(node, Error.INVALID_MODIFIER, "Expressions " + first + " and " + second + " have incompatible levels of mutability");
-			}				
 			
 			if( !t1.equals(Type.BOOLEAN) ) 
 			{			
@@ -1841,17 +1821,21 @@ public class ClassChecker extends BaseChecker
 					}
 					
 					if( currentType.getModifiers().isImmutable() )
-						node.getModifiers().addModifier(Modifiers.RETURN_IMMUTABLE);
+						node.getModifiers().addModifier(Modifiers.IMMUTABLE);
 					else if( currentType.getModifiers().isReadonly() )
-						node.getModifiers().addModifier(Modifiers.RETURN_READONLY);
+						node.getModifiers().addModifier(Modifiers.READONLY);
 					
 					Modifiers methodModifiers = null;
 					if(!currentMethod.isEmpty() )
+					{
 						methodModifiers = currentMethod.getFirst().getModifiers();
+						if( image.equals("this") && currentMethod.getFirst().getMethodSignature().isCreate())
+							node.getModifiers().addModifier(Modifiers.IN_CREATE);						
+					}
 					
-					//in this case, depends only on current method (creates are exempt)
+					//upgrade if current method is non-mutable
 					if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
-						node.getModifiers().upgradeToReadonly();
+						node.getModifiers().upgradeToTemporaryReadonly();					
 				}
 			}	
 			else //just a name
@@ -1984,7 +1968,7 @@ public class ClassChecker extends BaseChecker
 				
 				//in this case, depends only on current method (creates are exempt)
 				if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
-					node.getModifiers().upgradeToReadonly();
+					node.getModifiers().upgradeToTemporaryReadonly();
 				
 				if( kind.equals("this") )
 				{					
@@ -1992,9 +1976,9 @@ public class ClassChecker extends BaseChecker
 					{
 						node.setType(prefixType);						
 						if( prefixType.getModifiers().isImmutable() )
-							node.getModifiers().addModifier(Modifiers.RETURN_IMMUTABLE);
+							node.getModifiers().addModifier(Modifiers.IMMUTABLE);
 						else if( prefixType.getModifiers().isReadonly() )
-							node.getModifiers().addModifier(Modifiers.RETURN_READONLY);
+							node.getModifiers().addModifier(Modifiers.READONLY);
 					}
 					else				
 						addError(Error.INVALID_SELF_REFERENCE, "Prefix of :" + node.getImage() + " is not the current class or an enclosing class");
@@ -2002,15 +1986,14 @@ public class ClassChecker extends BaseChecker
 				else if( kind.equals("super") )
 				{
 					if( currentType.encloses( prefixType )  )
-					{
-						
+					{						
 						if( (prefixType instanceof ClassType) && ((ClassType)prefixType).getExtendType() != null )
 						{
 							node.setType(((ClassType)prefixType).getExtendType());
 							if( prefixType.getModifiers().isImmutable() )
-								node.getModifiers().addModifier(Modifiers.RETURN_IMMUTABLE);
+								node.getModifiers().addModifier(Modifiers.IMMUTABLE);
 							else if( prefixType.getModifiers().isReadonly() )
-								node.getModifiers().addModifier(Modifiers.RETURN_READONLY);
+								node.getModifiers().addModifier(Modifiers.READONLY);
 						}
 						else
 							addError(Error.INVALID_SELF_REFERENCE, "Type " + prefixType + " does not have a super class");
@@ -2023,8 +2006,7 @@ public class ClassChecker extends BaseChecker
 					if( (prefixType instanceof ClassType) || (prefixType instanceof TypeParameter)  )
 					{
 						node.setType( Type.CLASS );
-						node.addModifier(Modifiers.IMMUTABLE);
-						node.addModifier(Modifiers.RETURN_IMMUTABLE);
+						node.addModifier(Modifiers.IMMUTABLE);						
 					}
 					else					
 						addError(Error.INVALID_TYPE, ":class constant only accessible on class, enum, error, exception, singleton types and type parameters"); //may need other cases
@@ -2092,13 +2074,10 @@ public class ClassChecker extends BaseChecker
 						node.addModifier(Modifiers.IMMUTABLE);
 					else if( prefixNode.getModifiers().isReadonly() )
 						node.addModifier(Modifiers.READONLY);
+					else if( prefixNode.getModifiers().isTemporaryReadonly() )
+						node.addModifier(Modifiers.TEMPORARY_READONLY);
 					else
 						node.addModifier(Modifiers.ASSIGNABLE);
-									
-					if( prefixNode.getModifiers().isReturnImmutable() )
-						node.addModifier(Modifiers.RETURN_IMMUTABLE);
-					else if( prefixNode.getModifiers().isReturnReadonly() )
-						node.addModifier(Modifiers.RETURN_READONLY);
 					
 					//backdoor for creates
 					//immutable and readonly array should only be assignable in creates
@@ -2319,11 +2298,8 @@ public class ClassChecker extends BaseChecker
 				node.addModifier(Modifiers.IMMUTABLE);			
 			else if( prefixNode.getModifiers().isReadonly() )
 				node.addModifier(Modifiers.READONLY);
-			
-			if( prefixNode.getModifiers().isReturnImmutable() )
-				node.addModifier(Modifiers.RETURN_IMMUTABLE);
-			else if( prefixNode.getModifiers().isReturnReadonly() )
-				node.addModifier(Modifiers.RETURN_READONLY);				
+			else if( prefixNode.getModifiers().isTemporaryReadonly() )
+				node.addModifier(Modifiers.TEMPORARY_READONLY);				
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2488,24 +2464,11 @@ public class ClassChecker extends BaseChecker
 				}
 				else
 				{
-					node.setType( field.getType());
+					node.setType(field.getType());
 					node.setModifiers(field.getModifiers());
-					
-					if( field.getModifiers().isImmutable() )
-						node.addModifier(Modifiers.RETURN_IMMUTABLE);
-					else if( field.getModifiers().isReadonly() )
-						node.addModifier(Modifiers.RETURN_READONLY);
-										
-					if( prefixNode.getModifiers().isImmutable() )
-					{
-						node.addModifier(Modifiers.IMMUTABLE);
-						node.removeModifier(Modifiers.READONLY); //can only be one or the other
-					}
-					else if( prefixNode.getModifiers().isReadonly() )
-					{
-						if( !node.getModifiers().isImmutable() )
-							node.addModifier(Modifiers.READONLY);
-					}
+															
+					if( !prefixNode.getModifiers().isMutable() )					
+						node.getModifiers().upgradeToTemporaryReadonly();
 					else if( !field.getModifiers().isConstant() )
 						node.addModifier(Modifiers.ASSIGNABLE);					
 				}
@@ -2558,12 +2521,9 @@ public class ClassChecker extends BaseChecker
 				if( prefixNode.getModifiers().isImmutable() )
 					node.addModifier(Modifiers.IMMUTABLE);
 				else if( prefixNode.getModifiers().isReadonly() )
-					node.addModifier(Modifiers.READONLY);	
-				
-				if( prefixNode.getModifiers().isReturnImmutable() )
-					node.addModifier(Modifiers.RETURN_IMMUTABLE);
-				else if( prefixNode.getModifiers().isReturnReadonly() )
-					node.addModifier(Modifiers.RETURN_READONLY);
+					node.addModifier(Modifiers.READONLY);
+				else if( prefixNode.getModifiers().isTemporaryReadonly() )
+					node.addModifier(Modifiers.TEMPORARY_READONLY);				
 
 				if( methods != null && methods.size() > 0 )
 				{
@@ -2600,10 +2560,10 @@ public class ClassChecker extends BaseChecker
 						addError(Error.ILLEGAL_ACCESS, "Mutable set property cannot be called from a readonly reference");
 					*/
 					
-					if( getter != null && (prefixNode.getModifiers().isImmutable() || prefixNode.getModifiers().isReadonly()) && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
+					if( getter != null && !prefixNode.getModifiers().isMutable() && getter.getModifiers().isMutable()  )
 						getter = null;
 					
-					if( setter != null && (prefixNode.getModifiers().isImmutable() || prefixNode.getModifiers().isReadonly()) && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
+					if( setter != null && !prefixNode.getModifiers().isMutable() && setter.getModifiers().isMutable() )
 						setter = null;
 					
 					if( setter == null && getter == null )
@@ -2909,18 +2869,7 @@ public class ClassChecker extends BaseChecker
 					for( int i = 0; i < sequenceType.size(); ++i )
 					{
 						Modifiers modifiers = sequenceType.get(i).getModifiers();
-						modifiers.removeModifier(Modifiers.READONLY);
-						modifiers.removeModifier(Modifiers.IMMUTABLE);
-						if( modifiers.isReturnImmutable() )
-						{
-							modifiers.addModifier(Modifiers.IMMUTABLE);
-							modifiers.removeModifier(Modifiers.RETURN_IMMUTABLE);
-						}
-						else if( modifiers.isReturnReadonly() )
-						{
-							modifiers.addModifier(Modifiers.READONLY);
-							modifiers.removeModifier(Modifiers.RETURN_READONLY);
-						}
+						modifiers.removeModifier(Modifiers.TEMPORARY_READONLY);
 						
 						node.addType(new SimpleModifiedType(sequenceType.getType(i), modifiers ) );
 					}
