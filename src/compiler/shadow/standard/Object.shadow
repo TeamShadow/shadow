@@ -3,10 +3,10 @@ class shadow.standard@Object
 	public native immutable
 	getClass() => ( Class );
 
-	public native
+	public native readonly
 	copy() => ( Object ); //classes should override this if needed
 
-	public native
+	public native readonly
 	freeze() => ( immutable Object ); //classes should override this if needed
 
 	public readonly

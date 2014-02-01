@@ -76,8 +76,12 @@ public class TypeUpdater extends BaseChecker
 		
 		addConstructorsAndProperties();
 		
-		checkForCircularClassHierarchies(files);
+		//checkForCircularClassHierarchies(files);
 		
+		/*
+		if( errorList.size() == 0 )
+			enforceReadonlyMethods(files);
+		*/
 		if( errorList.size() > 0 )
 		{
 			printErrors();
@@ -103,7 +107,18 @@ public class TypeUpdater extends BaseChecker
 						createNode.setMethodSignature(createSignature);
 						classType.addMethod("create", createSignature);
 						//note that the node is null for the default create, because nothing was made
-					}					
+					}
+					
+					if( classType != Type.OBJECT )
+					{
+						//add freeze
+						ASTMethodDeclaration freezeNode = new ASTMethodDeclaration(-1);
+						freezeNode.setModifiers(Modifiers.PUBLIC | Modifiers.IMMUTABLE | Modifiers.NATIVE);
+						MethodSignature freezeSignature = new MethodSignature(classType, "freeze", freezeNode.getModifiers(), freezeNode);
+						freezeSignature.addReturn(new SimpleModifiedType(classType, new Modifiers(Modifiers.IMMUTABLE)));
+						freezeNode.setMethodSignature(freezeSignature);
+						classType.addMethod("freeze", freezeSignature);
+					}				
 					
 					//add default getters and setters
 					for( Map.Entry<String, Node> field : classType.getFields().entrySet() )
@@ -324,28 +339,14 @@ public class TypeUpdater extends BaseChecker
 				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Indistinguishable method already declared on line " + method.getNode().getLine());
 				return WalkType.NO_CHILDREN;
 			}	
-			
-			
-			//check fields
-			//no, the current system allows method names and fields to have the same name
-			//disambiguation is done via colon (:) for field or dot (.) for method 
-			/*
-			ModifiedType field = currentType.getField(signature.getSymbol());				
-			if( field != null )
-			{	
-				if( !(field.getModifiers().isGet() && signature.isGet()) && !(field.getModifiers().isSet() && signature.isSet())  )
-				{
-					addError(Error.MULTIPLY_DEFINED_SYMBOL, "Method name " + signature.getSymbol() + " already declared as field on line " + currentType.getField(signature.getSymbol()).getLine() );
-					return false;				
-				}
-			}
-			*/
-			
+				
+			/*//This shouldn't be a problem, since methods are accessed withi . and inner classes with :
 			if( currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(signature.getSymbol() ) )
 			{
 				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Method name " + signature.getSymbol() + " already declared as inner class" );
 				return WalkType.NO_CHILDREN;
 			}
+			*/
 			
 			// add the method to the current type
 			currentType.addMethod(name, signature);

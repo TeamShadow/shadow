@@ -172,7 +172,7 @@ implements
 		return this;
 	}
 	
-	public immutable iterator() => ( Iterator<code> )
+	public iterator() => ( Iterator<code> )
 	{
 		return StringIterator:create();
 	}
@@ -210,5 +210,5 @@ implements
 			index += 1;
 			return cast<code>(value);
 		}
-	}
+	}	
 }

@@ -328,5 +328,5 @@ implements
 		if (digit < 10uy)
 			return cast<code>(cast<int>(digit) + '0');
 		return cast<code>(cast<int>(digit) - 10uy + 'a');
-	}
+	}	
 }

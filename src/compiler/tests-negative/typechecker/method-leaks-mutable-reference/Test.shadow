@@ -1,0 +1,10 @@
+immutable class Test
+{ 
+    int x = 5;
+    Object o = Object:create().freeze();
+
+    public create(Danger d) 
+    {
+    	d.take(o);
+    }    
+}

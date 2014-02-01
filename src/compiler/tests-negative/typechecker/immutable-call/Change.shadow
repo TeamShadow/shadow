@@ -1,0 +1,9 @@
+class Change
+{
+	int x = 5;
+	
+	public change() => ()
+	{
+		x += 1;
+	}
+}

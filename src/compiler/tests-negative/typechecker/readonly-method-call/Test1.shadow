@@ -1,6 +1,6 @@
 class Test1
 { 
-    Object x = Object:create();
+    Change x = Change:create();
     set int y = 5;
 
     public foo() => () 
@@ -10,7 +10,7 @@ class Test1
 
     readonly public bar() => ()
     {
-    	x.copy();    	 	    	 	    	    
+    	x.change();    	 	    	 	    	    
     }  
     
 }

@@ -1,0 +1,12 @@
+class Danger
+{
+	public start() => ()
+	{
+		Test t = Test:create(this);	
+	}
+	
+	public take(Object object) => ()
+	{
+		object.copy();
+	}
+}

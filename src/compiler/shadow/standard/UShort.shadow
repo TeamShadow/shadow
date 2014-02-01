@@ -280,5 +280,5 @@ implements
 		if (digit < 10us)
 			return cast<code>(cast<int>(digit) + '0');
 		return cast<code>(cast<int>(digit) - 10us + 'a');
-	}
+	}	
 }

@@ -56,5 +56,5 @@ implements
 		code[] array = code:create[1];
 		array[0] = this;
 		return String:create(array);
-	}
+	}	
 }

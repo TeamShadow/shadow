@@ -123,13 +123,7 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/typechecker/method-method-collision/Test.shadow");
 		enforce(Error.MULTIPLY_DEFINED_SYMBOL);		
-	}
-	
-	@Test public void testMethodClassCollision() throws Exception
-	{
-		args.add("tests-negative/typechecker/method-class-collision/Test.shadow");
-		enforce(Error.MULTIPLY_DEFINED_SYMBOL);		
-	}
+	}	
 	
 	@Test public void testSingletonCreate() throws Exception
 	{
@@ -369,6 +363,12 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/typechecker/immutable-method-call/Test4.shadow"); 
 		enforce(Error.INVALID_PROPERTY);		
+	}
+	
+	@Test public void testMethodLeaksMutableReference() throws Exception
+	{
+		args.add("tests-negative/typechecker/method-leaks-mutable-reference/Test.shadow"); 
+		enforce(Error.INVALID_METHOD);		
 	}
 	
 	

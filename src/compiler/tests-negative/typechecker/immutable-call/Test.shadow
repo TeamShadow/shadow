@@ -1,9 +1,9 @@
 class Test
 {
-	immutable Object a = Object:create().freeze();
+	immutable Change a = Change:create().freeze();
 
     public foo() => () 
     {
-    	a.copy(); //illegal    	    	
+    	a.change(); //illegal    	    	
     }  
 }

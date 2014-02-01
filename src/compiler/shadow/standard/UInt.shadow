@@ -228,5 +228,5 @@ implements
 		if (digit < 10u)
 			return cast<code>(digit + '0');
 		return cast<code>(digit - 10u + 'a');
-	}
+	}	
 }

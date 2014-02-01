@@ -103,7 +103,7 @@ implements
 	}
 	
 	// implement CanNegate<float>
-	public native immutable negate() => (float);
+	public native negate() => (float);
 
 	public native get raw() => (int);
 	public get bits() => (int)

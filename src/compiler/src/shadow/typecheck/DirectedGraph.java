@@ -105,7 +105,9 @@ public class DirectedGraph<T> implements Iterable<T> {
 		}
 		
 		if( !inDegrees.isEmpty() )			
-			throw new CycleFoundException( inDegrees.keySet().toArray()[0] );
+		{				
+			throw new CycleFoundException( inDegrees.keySet().iterator().next().value );
+		}
 		
 		return list;
 	}

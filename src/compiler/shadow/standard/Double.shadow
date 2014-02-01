@@ -74,5 +74,5 @@ implements
 	}
 	
 	// implement CanNegate<double>
-	public immutable native negate() => (double);
+	public native negate() => (double);	
 }

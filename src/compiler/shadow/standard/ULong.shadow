@@ -141,5 +141,5 @@ implements
 		if (digit < 10ul)
 			return cast<code>(digit + '0');
 		return cast<code>(digit - 10ul + 'a');
-	}
+	}	
 }

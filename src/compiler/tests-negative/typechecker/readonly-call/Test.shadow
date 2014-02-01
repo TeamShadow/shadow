@@ -1,9 +1,9 @@
 class Test
 {
-	readonly Object a = Object:create();
+	readonly Change a = Change:create();
 
     public foo() => () 
     {
-    	a.copy(); //illegal    	    	
+    	a.change(); //illegal    	    	
     }  
 }

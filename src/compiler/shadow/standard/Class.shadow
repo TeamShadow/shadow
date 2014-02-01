@@ -52,5 +52,5 @@ immutable class shadow.standard@Class
 	public toString() => ( String )
 	{
 		return name;
-	}
+	}	
 }
