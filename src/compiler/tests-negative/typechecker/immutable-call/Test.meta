@@ -2,6 +2,7 @@ import shadow.standard@Object;
 
 class default@Test extends shadow.standard@Object
 {
+	public native immutable freeze() => (immutable Test);
 	public foo() => ();
 	public create();
 

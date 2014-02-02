@@ -40,10 +40,10 @@ public class TypeInstantiater extends BaseChecker {
 		super(debug, hashMap, importList, packageTree);		
 	}
 	
-	public void instantiateTypes(Map<Type,Node> nodeTable) throws ShadowException, TypeCheckException
-	{	
+	private void instantiateTypeParameters( Map<Type,Node> nodeTable,  Map<Type, Node> uninstantiatedNodes  )
+	{		
+		//first build graph of type parameter dependencies
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
-		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();		
 		
 		for(Node declarationNode : nodeTable.values() )
 		{
@@ -62,11 +62,10 @@ public class TypeInstantiater extends BaseChecker {
 					graph.addEdge(dependencyNode, declarationNode);				
 			}
 		
-		List<Node> nodeList;
-		
+		//update parameters based on topological sort of type parameter dependencies
 		try
 		{					
-			nodeList = graph.topologicalSort();
+			List<Node> nodeList = graph.topologicalSort();
 			//update type parameters
 			for(Node declarationNode : nodeList )
 			{	
@@ -146,10 +145,12 @@ public class TypeInstantiater extends BaseChecker {
 			Type type = (Type) e.getCycleCause();			
 			addError(nodeTable.get(type), Error.INVALID_TYPE_PARAMETERS, "Type " + type + " contains a circular type parameter definition");
 		}
-				
-			
-		//now do dependencies based on extends and implements
-		graph = new DirectedGraph<Node>();
+	}
+	
+	private void updateExtendsAndImplements(Map<Type,Node> nodeTable, Map<Type, Node> uninstantiatedNodes)
+	{
+		//now make dependency graph based on extends and implements
+		DirectedGraph<Node> graph = new DirectedGraph<Node>();
 		
 		for(Node declarationNode : nodeTable.values() )
 			graph.addNode( declarationNode );
@@ -186,7 +187,7 @@ public class TypeInstantiater extends BaseChecker {
 		
 		try
 		{			
-			nodeList = graph.topologicalSort();
+			List<Node> nodeList = graph.topologicalSort();
 			
 			for(Node declarationNode : nodeList )
 			{	
@@ -257,88 +258,102 @@ public class TypeInstantiater extends BaseChecker {
 			Node node = (Node) e.getCycleCause();			
 			addError(node, Error.INVALID_HIERARCHY, "Type " + node.getType() + " contains a circular extends or implements definition");
 		}
+	}
+	
+	private void checkOverrides(Map<Type,Node> nodeTable)
+	{	
+		for( Node declarationNode : nodeTable.values() )	
+		{			
+			if( declarationNode.getType() instanceof ClassType )
+			{					
+				ClassType classType = (ClassType)declarationNode.getType();
+				ClassType parent = classType.getExtendType();			
 			
-
-		if( errorList.isEmpty() )
-		{		
-			for( Node declarationNode : nodeTable.values() )	
-			{			
-				if( declarationNode.getType() instanceof ClassType )
-				{					
-					ClassType classType = (ClassType)declarationNode.getType();
-					ClassType parent = classType.getExtendType();			
-				
-					if( parent != null)
+				if( parent != null)
+				{
+					
+					//enforce immutability
+					//any mutable parent method must be overridden 
+					if( classType.getModifiers().isImmutable() || classType.getModifiers().isReadonly() )
 					{
-						
-						//enforce immutability
-						//any mutable parent method must be overridden 
-						if( classType.getModifiers().isImmutable() || classType.getModifiers().isReadonly() )
-						{
-							List<MethodSignature> list = classType.orderAllMethods();
-							for( MethodSignature signature : list )
-								if( !signature.isCreate() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly() )
-									addError(signature.getNode(), Error.INVALID_METHOD, "Mutable parent method " + signature + " must be overridden by non-mutable method" );
-						}
-						
-						/* Check overridden methods to make sure:
-						 * 1. All overrides match exactly  (if it matches everything but return type...ambiguous!)
-						 * 2. No immutable methods have been overridden
-						 * 3. Readonly methods cannot be overridden by mutable methods
-						 * 4. No overridden methods have been narrowed in access 
-						 */
-						
-						for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
-							for( MethodSignature signature : signatures )
-							{
-								if( parent.recursivelyContainsIndistinguishableMethod(signature) && !signature.isCreate() )
-								{
-									MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
-									Node parentNode = parentSignature.getNode();
-									Node node = signature.getNode();
-									Modifiers parentModifiers;
-									Modifiers modifiers;
-									
-									if( parentNode == null )
-										parentModifiers = new Modifiers();
-									else
-										parentModifiers = parentNode.getModifiers();
-									
-									if( node == null )								
-										modifiers = new Modifiers();								
-									else
-										modifiers = node.getModifiers();									
-									
-									if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) && classType != Type.ERROR )
-										addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " differs only by return type from " + parentSignature );
-									else if( parentModifiers.isImmutable() && !signature.getSymbol().equals("freeze") )
-										addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot override immutable method" );
-									else if( !modifiers.isReadonly() && !modifiers.isImmutable() && parentModifiers.isReadonly()  )
-										addError( node, Error.INVALID_OVERRIDE, "Mutable method " + signature + " cannot override readonly method" );
-									else if( parentModifiers.isPublic() && (modifiers.isPrivate() || modifiers.isProtected()) )
-										addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
-									else if( parentModifiers.isProtected() && modifiers.isPrivate()  )
-										addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
-								}
-							}
+						List<MethodSignature> list = classType.orderAllMethods();
+						for( MethodSignature signature : list )
+							if( !signature.isCreate() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly() )
+								addError(signature.getNode(), Error.INVALID_METHOD, "Mutable parent method " + signature + " must be overridden by non-mutable method" );
 					}
 					
-					//check to see if all interfaces are satisfied				
-					for( InterfaceType interfaceType : classType.getInterfaces() )
-					{	
-						ArrayList<String> reasons = new ArrayList<String>();
-						
-						if( !classType.satisfiesInterface(interfaceType, reasons) )
+					/* Check overridden methods to make sure:
+					 * 1. All overrides match exactly  (if it matches everything but return type...ambiguous!)
+					 * 2. No immutable methods have been overridden
+					 * 3. Readonly methods cannot be overridden by mutable methods
+					 * 4. No overridden methods have been narrowed in access 
+					 */
+					
+					for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
+						for( MethodSignature signature : signatures )
 						{
-							String message = "Type " + classType + " does not implement interface " + interfaceType;
-							for( String reason : reasons )
-								message += "\n\t" + reason;
-							addError(Error.MISSING_INTERFACE, message );
+							if( parent.recursivelyContainsIndistinguishableMethod(signature) && !signature.isCreate() )
+							{
+								MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
+								Node parentNode = parentSignature.getNode();
+								Node node = signature.getNode();
+								Modifiers parentModifiers;
+								Modifiers modifiers;
+								
+								if( parentNode == null )
+									parentModifiers = new Modifiers();
+								else
+									parentModifiers = parentNode.getModifiers();
+								
+								if( node == null )								
+									modifiers = new Modifiers();								
+								else
+									modifiers = node.getModifiers();									
+								
+								if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) && classType != Type.ERROR )
+									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " differs only by return type from " + parentSignature );
+								else if( parentModifiers.isImmutable() && !signature.getSymbol().equals("freeze") )
+									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot override immutable method" );
+								else if( !modifiers.isReadonly() && !modifiers.isImmutable() && parentModifiers.isReadonly()  )
+									addError( node, Error.INVALID_OVERRIDE, "Mutable method " + signature + " cannot override readonly method" );
+								else if( parentModifiers.isPublic() && (modifiers.isPrivate() || modifiers.isProtected()) )
+									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
+								else if( parentModifiers.isProtected() && modifiers.isPrivate()  )
+									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of protected method " + parentSignature );									
+							}
 						}
+				}
+				
+				//check to see if all interfaces are satisfied				
+				for( InterfaceType interfaceType : classType.getInterfaces() )
+				{	
+					ArrayList<String> reasons = new ArrayList<String>();
+					
+					if( !classType.satisfiesInterface(interfaceType, reasons) )
+					{
+						String message = "Type " + classType + " does not implement interface " + interfaceType;
+						for( String reason : reasons )
+							message += "\n\t" + reason;
+						addError(Error.MISSING_INTERFACE, message );
 					}
 				}
 			}
 		}
+				
+	}
+	
+	public void instantiateTypes(Map<Type,Node> nodeTable) throws ShadowException, TypeCheckException
+	{	
+		//nodes before they've had their type parameters instantiated
+		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();		
+		
+		instantiateTypeParameters( nodeTable, uninstantiatedNodes );
+		
+		if( errorList.isEmpty() )
+			updateExtendsAndImplements( nodeTable, uninstantiatedNodes );
+		
+		if( errorList.isEmpty() )
+			checkOverrides( nodeTable );		
 		
 		if( errorList.size() > 0 )
 		{
@@ -441,22 +456,16 @@ public class TypeInstantiater extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;	
 	}
-
 	
+	@Override
+	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException
+	{
+		return WalkType.NO_CHILDREN; //skip all blocks
+	}
 	
-		//next five skip methods, fields, views, and blocks
-		//can't!
-	
-	
-		@Override
-		public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException
-		{
-			return WalkType.NO_CHILDREN; //skip all blocks
-		}
-		
-		@Override
-		public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException
-		{
-			return WalkType.NO_CHILDREN; //skip all blocks
-		}
+	@Override
+	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException
+	{
+		return WalkType.NO_CHILDREN; //skip all blocks
+	}
 }
