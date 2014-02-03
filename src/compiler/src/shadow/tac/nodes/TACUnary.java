@@ -4,6 +4,12 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 
+/** 
+ * TAC representation of unary operator
+ * Example: -x
+ * @author Jacob Young
+ */
+
 public class TACUnary extends TACOperand
 {
 	public static enum Operation

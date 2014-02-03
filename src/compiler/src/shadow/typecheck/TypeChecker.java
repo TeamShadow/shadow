@@ -17,7 +17,7 @@ import shadow.typecheck.type.Type;
 public class TypeChecker {
 
 	private File currentFile;
-	private File mainFile;
+	// File mainFile;
 	protected boolean debug;
 	
 	private Package packageTree = null;
@@ -37,7 +37,9 @@ public class TypeChecker {
 	 */
 	public Node typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException
 	{	 
-		mainFile = file;
+		
+		currentFile = file;
+		//mainFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		packageTree = new Package(typeTable);
 		ArrayList<String> importList = new ArrayList<String>();
@@ -116,6 +118,8 @@ public class TypeChecker {
 		currentFile = file;
 	}
 	
+	/*
+	
 	public File getMainFile()
 	{
 		return mainFile;
@@ -125,4 +129,5 @@ public class TypeChecker {
 	{
 		mainFile = file;
 	}
+	*/
 }

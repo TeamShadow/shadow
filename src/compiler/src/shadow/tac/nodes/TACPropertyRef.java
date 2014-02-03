@@ -6,6 +6,12 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.PropertyType;
 
+/** 
+ * TAC representation of property call
+ * Example: ->x
+ * @author Jacob Young
+ */
+
 public class TACPropertyRef extends TACReference
 {
 	private TACBlock blockRef;

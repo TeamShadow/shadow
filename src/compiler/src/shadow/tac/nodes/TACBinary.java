@@ -6,6 +6,12 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.Type;
 
+/** 
+ * TAC representation of binary operator
+ * Example: x + y 
+ * @author Jacob Young
+ */
+
 public class TACBinary extends TACOperand
 {
 	public static enum Operation

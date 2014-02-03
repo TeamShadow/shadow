@@ -4,6 +4,12 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 
+/** 
+ * TAC representation of reference equals
+ * Example: x === y
+ * @author Jacob Young
+ */
+
 public class TACSame extends TACOperand
 {
 	private TACOperand first, second;

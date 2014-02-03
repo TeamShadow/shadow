@@ -12,6 +12,12 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
+/** 
+ * TAC representation of array allocation
+ * Example: int:create[5]
+ * @author Jacob Young
+ */
+
 public class TACNewArray extends TACOperand
 {
 	private ArrayType type;
@@ -106,8 +112,8 @@ public class TACNewArray extends TACOperand
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder("new ").append(getType().
-				getSuperBaseType());
+		StringBuilder sb = new StringBuilder(getType().
+				getSuperBaseType().toString()).append(":create");
 		Iterator<TACOperand> dims = dimensionIterator();
 		Type current = getType();
 		while (current instanceof ArrayType)

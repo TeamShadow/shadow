@@ -138,7 +138,7 @@ public class Main {
 		while(config.hasNext())
 		{
 			File shadowFile = config.next();
-			checker.setCurrentFile(shadowFile);
+			//checker.setCurrentFile(shadowFile);
 
 			//FileInputStream sourceStream = new FileInputStream(shadowFile);
 			//ShadowParser parser = new ShadowParser(sourceStream);

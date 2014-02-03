@@ -2042,6 +2042,10 @@ public class TACBuilder implements ShadowParserVisitor
 				else
 					new TACReturn(tree, methodRef.getReturnTypes());
 			}
+			else if( methodSignature.getSymbol().equals("freeze") && methodSignature.getParameterTypes().size() == 0   )
+			{
+				//TODO: Make something crazy happen for freezes like we do for implicit creates				
+			}
 			else if (methodRef.isNative())
 				walk(methodSignature.getNode().jjtGetChild(0).jjtGetChild(0));
 			else if (methodRef.isWrapper())

@@ -3,6 +3,12 @@ package shadow.tac.nodes;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 
+/** 
+ * TAC representation of assignment
+ * Example: x = y
+ * @author Jacob Young
+ */
+
 public class TACStore extends TACSimpleNode
 {
 	private TACReference reference;

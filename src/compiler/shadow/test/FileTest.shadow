@@ -11,11 +11,10 @@ class shadow.test@FileTest
 	public main( String[] args ) => ()
 	{
 		Console console = Console:instance;
-		nullable File nullableFile = null;
+		File file;		
 		try
 		{
-			File file = File:create(args[0]);
-			nullableFile = file;
+			file = File:create(check(args[0]));			
 			try
 			{
 				console.printLine("try begin");
@@ -30,7 +29,7 @@ class shadow.test@FileTest
 			{
 				console.printLine("finally");
 			}
-			String line = console.readLine();
+			(String line, ) = console.readLine();
 			byte[] chars = line->chars;
 			file.write(chars);
 			file->size = file->position;
@@ -41,15 +40,13 @@ class shadow.test@FileTest
 		{
 			console.printLine(ex);
 		}
+		recover
+		{
+			console.printLine("Null argument given!");
+		}
 		finally
 		{
-			try
-			{
-				check(nullableFile).close();
-			}
-			recover
-			{
-			}
+			file.close();
 		}
 	}
 }

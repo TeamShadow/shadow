@@ -1688,10 +1688,19 @@ public class ClassChecker extends BaseChecker
 			Type type = child.getType();
 			
 			if( !(type instanceof ExceptionType) )
+			{
 				addError( child, Error.INVALID_TYPE, "Supplied type " + type + " cannot be used as a catch parameter, exception types required");
-		
+				node.setType(Type.UNKNOWN);				
+			}
+			else
+				node.setType(type);
+			
+					
 			if( child.getModifiers().getModifiers() != 0 )
 				addError( child, Error.INVALID_MODIFIER, "Modifiers cannot be applied to a catch parameter");
+			
+			
+			
 		}
 		
 		createScope(secondVisit); //for catch parameter

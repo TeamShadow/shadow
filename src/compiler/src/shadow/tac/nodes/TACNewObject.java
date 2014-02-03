@@ -4,6 +4,12 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
 
+/** 
+ * TAC representation of object allocation
+ * Example: Object:create()
+ * @author Jacob Young
+ */
+
 public class TACNewObject extends TACOperand
 {
 	private ClassType type;

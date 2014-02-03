@@ -5,6 +5,12 @@ import shadow.tac.TACVisitor;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 
+/** 
+ * TAC representation of return statement
+ * Example: return 5
+ * @author Jacob Young
+ */
+
 public class TACReturn extends TACSimpleNode
 {
 	private TACOperand returnValue;

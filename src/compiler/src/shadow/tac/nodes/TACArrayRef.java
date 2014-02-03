@@ -12,6 +12,11 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
+/** 
+ * TAC representation of array subscript
+ * Example: [x, y, z] 
+ * @author Jacob Young
+ */
 public class TACArrayRef extends TACReference
 {
 	private TACOperand array, total;

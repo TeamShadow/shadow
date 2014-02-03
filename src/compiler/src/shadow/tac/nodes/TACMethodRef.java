@@ -253,7 +253,7 @@ public class TACMethodRef extends TACOperand
 	}
 	public boolean isSet()
 	{
-		return type.getModifiers().isGet() && getExplicitParameterCount() == 1;
+		return type.getModifiers().isSet() && getExplicitParameterCount() == 1;
 	}
 
 	@Override

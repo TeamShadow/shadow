@@ -5,6 +5,12 @@ import shadow.tac.TACVisitor;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
+/** 
+ * TAC representation of exception throw
+ * Example: throw e
+ * @author Jacob Young
+ */
+
 public class TACThrow extends TACSimpleNode
 {
 	private TACBlock block;

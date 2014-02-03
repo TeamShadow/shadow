@@ -101,9 +101,9 @@ public class TACLiteral extends TACOperand
 			this.value = new ShadowLong((long)parseNumber(literal, 1, 63));
 		else if (lower.endsWith("u"))
 			this.value = new ShadowUInt((int)parseNumber(literal, 1, 32));
-		else if (lower.endsWith("f") && "xou".indexOf(lower.charAt(1)) == -1)
+		else if (lower.endsWith("f") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
 			this.value = new ShadowFloat((float)parseNumber(literal, 1));
-		else if (lower.endsWith("d") && "xou".indexOf(lower.charAt(1)) == -1)
+		else if (lower.endsWith("d") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
 			this.value = new ShadowDouble((double)parseNumber(literal, 1));
 		else if (literal.indexOf('.') != -1 || lower.indexOf('e') != -1)
 			this.value = new ShadowDouble((double)parseNumber(literal, 0));
@@ -168,8 +168,8 @@ public class TACLiteral extends TACOperand
 					base = 2;
 					string = string.substring(2);
 					break;
-				case 'o':
-				case 'O':
+				case 'c':
+				case 'C':
 					base = 8;
 					string = string.substring(2);
 					break;

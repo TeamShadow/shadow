@@ -7,13 +7,21 @@ class shadow.test@ArrayListTest
 	public main( String[] args ) => ( int )
 	{
 		ArrayList<String> list = ArrayList<String>:create();
-		for ( int i = 0; i < args->size; i += 1 )
-			list.add(args[i]);
-		for ( int i = 1; i < args->size; i += 3 )
-			Console:instance.printLine(list.remove(args[i]));
-		Console:instance.printLine(list.remove(""));
-		for ( int i = 0; i < list->size; i += 1 )
-			Console:instance.printLine(list.index(i));
-		Console:instance.printLine(list);
+		
+		try
+		{
+			for ( int i = 0; i < args->size; i += 1 )
+				list.add(check(args[i]));
+			for ( int i = 1; i < args->size; i += 3 )
+				Console:instance.printLine(list.remove(check(args[i])));
+			Console:instance.printLine(list.remove(""));
+			for ( int i = 0; i < list->size; i += 1 )
+				Console:instance.printLine(list.index(i));
+			Console:instance.printLine(list);
+		}
+		recover
+		{}
+			
+		return 0;
 	}
 }

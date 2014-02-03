@@ -7,6 +7,12 @@ import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
+/** 
+ * TAC representation of class constant
+ * Example: Object:class
+ * @author Jacob Young
+ */
+
 public class TACClass extends TACOperand
 {
 	private Type type;
