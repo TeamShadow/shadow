@@ -283,7 +283,7 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		if (secondVisit)
 		{
-			String name = node.jjtGetChild(0).getImage();
+			String name = node.getImage();
 			TACReference ref;
 			if (node.isField())
 				ref = new TACFieldRef(tree,
