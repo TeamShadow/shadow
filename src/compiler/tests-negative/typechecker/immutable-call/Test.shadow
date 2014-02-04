@@ -1,6 +1,6 @@
 class Test
 {
-	immutable Change a = Change:create().freeze();
+	immutable Change a = freeze(Change:create());
 
     public foo() => () 
     {

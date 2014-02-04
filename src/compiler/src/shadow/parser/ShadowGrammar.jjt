@@ -128,6 +128,7 @@ TOKEN :
 | < FLOAT: "float" >
 | < FOR: "for" >
 | < FOREACH: "foreach" >
+| < FREEZE: "freeze" >
 | < GET: "get" >
 | < IF: "if" >
 | < IMMUTABLE: "immutable" >
@@ -1192,6 +1193,15 @@ void CheckExpression():
  "check" "(" ConditionalExpression() ")"
 }
 
+void FreezeExpression():
+{
+    debugPrint("FREEZE EXPRESSION");
+    jjtThis.setImage("freeze");   
+}
+{ 
+ "freeze" "(" ConditionalExpression() ")"
+}
+
 void PrimaryExpression():
 { debugPrint("PRIMARY EXPRESSION"); }
 {  
@@ -1249,6 +1259,7 @@ void PrimaryPrefix():
 | "this" { jjtThis.setImage("this"); }
 | "super" { jjtThis.setImage("super"); }
 | CheckExpression()
+| FreezeExpression()
 | CastExpression()
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
 | PrimitiveType()

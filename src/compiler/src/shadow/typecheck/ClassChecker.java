@@ -1723,6 +1723,20 @@ public class ClassChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;	
 	}
 	
+	public Object visit(ASTFreezeExpression node, Boolean secondVisit) throws ShadowException 
+	{
+		if( secondVisit )
+		{
+			ModifiedType child = node.jjtGetChild(0);
+			child = resolveType( child );
+			node.setModifiers(child.getModifiers());
+			node.addModifier(Modifiers.IMMUTABLE);
+			node.setType(child.getType());
+		}	
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	public Object visit(ASTCheckExpression node, Boolean secondVisit) throws ShadowException 
 	{
 		if( secondVisit )
@@ -1864,23 +1878,12 @@ public class ClassChecker extends BaseChecker
 			}
 			else
 			{
-				node.setType( child.getType() ); 	//literal, conditional expression, check expression, cast expression, primitive and function types
+				node.setType( child.getType() ); 	//literal, conditional expression, check expression, freeze expression, cast expression, primitive and function types
 				pushUpModifiers( node ); 			
 			}
 		}
 		
 		curPrefix.set(0, node); //so that the suffix can figure out where it's at
-		
-		/*   
-		  Literal()
-		| "this" { jjtThis.setImage("this"); }
-		| "super" { jjtThis.setImage("super"); }
-		| CheckExpression()
-		| "(" ConditionalExpression() ")"
-		| PrimitiveType()
-		| FunctionType()
-		| [LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
-		 */
 				
 		return WalkType.POST_CHILDREN;
 	}

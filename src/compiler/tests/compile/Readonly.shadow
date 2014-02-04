@@ -2,7 +2,7 @@ class Readonly
 {
     readonly Object value1 = Object:create();
     readonly Object value2 = Object:create();
-    immutable Object thing = Object:create().freeze();
+    immutable Object thing = freeze(Object:create());
     
     Object x = Object:create();
     set int y = 5;

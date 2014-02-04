@@ -1,6 +1,6 @@
 class Test
 {
-	immutable Object a = Object:create().freeze();   
+	immutable Object a = freeze(Object:create());   
     
     public foo() => () 
     {

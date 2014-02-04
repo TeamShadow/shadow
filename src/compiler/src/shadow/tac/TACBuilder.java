@@ -2041,11 +2041,7 @@ public class TACBuilder implements ShadowParserVisitor
 				}
 				else
 					new TACReturn(tree, methodRef.getReturnTypes());
-			}
-			else if( methodSignature.getSymbol().equals("freeze") && methodSignature.getParameterTypes().size() == 0   )
-			{
-				//TODO: Make something crazy happen for freezes like we do for implicit creates				
-			}
+			}	
 			else if (methodRef.isNative())
 				walk(methodSignature.getNode().jjtGetChild(0).jjtGetChild(0));
 			else if (methodRef.isWrapper())
@@ -2272,44 +2268,50 @@ public class TACBuilder implements ShadowParserVisitor
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public Object visit(ASTSequenceRightSide node, Boolean data)
+	public Object visit(ASTSequenceRightSide node, Boolean secondVisit)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public Object visit(ASTSequenceLeftSide node, Boolean data)
+	public Object visit(ASTSequenceLeftSide node, Boolean secondVisit)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public Object visit(ASTSequenceVariable node, Boolean data)
+	public Object visit(ASTSequenceVariable node, Boolean secondVisit)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public Object visit(ASTRightRotate node, Boolean data)
+	public Object visit(ASTRightRotate node, Boolean secondVisit)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public Object visit(ASTRightShift node, Boolean data)
+	public Object visit(ASTRightShift node, Boolean secondVisit)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
 	}
 	
 	@Override
-	public Object visit(ASTRightSide node, Boolean data)
+	public Object visit(ASTRightSide node, Boolean secondVisit)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();
 	}
 	@Override
-	public Object visit(ASTViewBodyDeclaration node, Boolean data)
+	public Object visit(ASTViewBodyDeclaration node, Boolean secondVisit)
+			throws ShadowException
+	{
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public Object visit(ASTFreezeExpression node, Boolean secondVisit)
 			throws ShadowException
 	{
 		throw new UnsupportedOperationException();

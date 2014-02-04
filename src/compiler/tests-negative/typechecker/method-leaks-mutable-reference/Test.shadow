@@ -1,7 +1,7 @@
 immutable class Test
 { 
     int x = 5;
-    Object o = Object:create().freeze();
+    Object o = freeze(Object:create());
 
     public create(Danger d) 
     {

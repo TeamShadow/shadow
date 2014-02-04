@@ -109,6 +109,8 @@ public class TypeUpdater extends BaseChecker
 						//note that the node is null for the default create, because nothing was made
 					}
 					
+					
+					/*
 					if( classType != Type.OBJECT )
 					{
 						//add freeze
@@ -118,7 +120,8 @@ public class TypeUpdater extends BaseChecker
 						freezeSignature.addReturn(new SimpleModifiedType(classType, new Modifiers(Modifiers.IMMUTABLE)));
 						freezeNode.setMethodSignature(freezeSignature);
 						classType.addMethod("freeze", freezeSignature);
-					}				
+					}
+					*/				
 					
 					//add default getters and setters
 					for( Map.Entry<String, Node> field : classType.getFields().entrySet() )

@@ -3,7 +3,7 @@ immutable class shadow.standard@Class
 	String name = "";
 	get nullable Class parent = null;
 	Class[] interfaces = Class:create[0];
-	Object[] data = cast<Object[]>(Object:create[0].freeze());
+	Object[] data = freeze(Object:create[0]);
 	int size, width, flags;
 
 	private create() { }
