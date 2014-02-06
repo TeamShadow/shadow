@@ -37,8 +37,8 @@ public class SimpleTest
 		
 		//add desired files to list
 		//args.add("--compile");
-		//args.add("tests-negative/typechecker/class-implements-non-interface/Test.shadow"); 		
-		args.add("tests/compile/Readonly.shadow");
+		args.add("tests-negative/typechecker/circular-type-parameter/Test.shadow"); 		
+		//args.add("tests/compile/Readonly.shadow");
 		Main.main(args.toArray(new String[] { }));		
 	}
 }

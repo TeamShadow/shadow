@@ -71,12 +71,6 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTTypeDeclaration node, Boolean secondVisit)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
 	public Object visit(ASTViewDeclaration node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;

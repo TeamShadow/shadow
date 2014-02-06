@@ -25,7 +25,6 @@ import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimitiveType;
 import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTTypeArguments;
-import shadow.parser.javacc.ASTTypeDeclaration;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTViewDeclaration;
@@ -463,13 +462,15 @@ public class TypeCollector extends BaseChecker
 		if( !secondVisit )
 		{
 			currentPackage = packageTree;
-			importedItems.clear();			
+			importedItems.clear();
+			importedItems.add("shadow.standard");
 			currentName = "";
 		}
 		
-		return WalkType.POST_CHILDREN;			
+		return WalkType.PRE_CHILDREN;			
 	}
 	
+	/*
 	@Override
 	public Object visit(ASTTypeDeclaration node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )		
@@ -477,6 +478,7 @@ public class TypeCollector extends BaseChecker
 				
 		return WalkType.POST_CHILDREN;			
 	}
+	*/
 	
 	
 	@Override

@@ -138,13 +138,6 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTTypeDeclaration node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
 	public Object visit(ASTViewDeclaration node, Boolean secondVisit)
 			throws ShadowException
 	{

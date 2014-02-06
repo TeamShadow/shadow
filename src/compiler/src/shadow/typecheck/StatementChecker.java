@@ -30,7 +30,7 @@ import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
-public class ClassChecker extends BaseChecker 
+public class StatementChecker extends BaseChecker 
 {
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
@@ -38,7 +38,7 @@ public class ClassChecker extends BaseChecker
 	protected LinkedList<HashMap<String, ModifiedType>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
 	
-	public ClassChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<String> importList, Package packageTree ) {
+	public StatementChecker(boolean debug, HashMap<Package, HashMap<String, Type>> typeTable, List<String> importList, Package packageTree ) {
 		super(debug, typeTable, importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
 		curPrefix = new LinkedList<Node>();			
@@ -46,7 +46,7 @@ public class ClassChecker extends BaseChecker
 		scopeMethods = new LinkedList<Node>();
 	}
 	
-	public void checkClass(Node node) throws ShadowException, TypeCheckException
+	public void check(Node node) throws ShadowException, TypeCheckException
 	{
 		ASTWalker walker = new ASTWalker(this);
 		

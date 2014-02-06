@@ -17,7 +17,6 @@ import shadow.typecheck.type.Type;
 public class TypeChecker {
 
 	private File currentFile;
-	// File mainFile;
 	protected boolean debug;
 	
 	private Package packageTree = null;
@@ -36,10 +35,8 @@ public class TypeChecker {
 	 * @throws IOException 
 	 */
 	public Node typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException
-	{	 
-		
+	{	
 		currentFile = file;
-		//mainFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		packageTree = new Package(typeTable);
 		ArrayList<String> importList = new ArrayList<String>();
@@ -51,23 +48,18 @@ public class TypeChecker {
 		
 		//Updates types, adding:
 		//Fields and methods
-		//Type parameters
+		//Type parameters (including necessary instantiations)
+		//All types with type parameters (except for declarations) are UninitializedTypes
 		//Extends and implements lists
-		//All types with type parameters (except for declarations) are UninitializedTypes 
 		TypeUpdater updater = new TypeUpdater(debug, typeTable, importList, packageTree);
-		updater.updateTypes( collector.getFiles() );
+		updater.update( collector.getNodeTable() );
 		
-		//then we instantiate all the types after checking to make sure that we can
-		//One reason we have to do this is to catch incomplete generic types:
-		//class A<T is A<T>>
-		//Another is that we can't instantiate before fields and methods are added
-		TypeInstantiater instantiater = new TypeInstantiater( debug, typeTable, importList, packageTree );
-		instantiater.instantiateTypes( collector.getNodeTable() );
-		
+		//As an optimization, print .meta files for .shadow files with no .meta files or with out of date ones
 		printMetaFiles( collector.getFiles() );		
 		
-		ClassChecker checker = new ClassChecker(debug, typeTable, importList, packageTree );
-		checker.checkClass(node);		
+		//The "real" typechecking happens here as each statement is checked for type safety and other features
+		StatementChecker checker = new StatementChecker(debug, typeTable, importList, packageTree );
+		checker.check(node);		
 	
 		return node;
 	}
