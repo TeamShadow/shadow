@@ -961,30 +961,6 @@ public class TACBuilder implements ShadowParserVisitor
 		return NO_CHILDREN;
 	}
 
-	/*
-	@Override
-	public Object visit(ASTSequence node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
-			List<TACOperand> sequence =
-					new ArrayList<TACOperand>(node.getUsedItems().size());
-			int index = 0;
-			for (boolean used : node.getUsedItems())
-				if (used)
-					sequence.add(tree.appendChild(index++));
-				else
-					sequence.add(new TACVariableRef(tree,
-							method.addTempLocal(new SimpleModifiedType(
-									Type.OBJECT,
-									new Modifiers(Modifiers.NULLABLE)))));
-			new TACSequence(tree, sequence);
-		}
-		return POST_CHILDREN;
-	}
-	*/
-
 	@Override
 	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit)
 			throws ShadowException
@@ -1377,8 +1353,33 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
+		{
+			ASTRightSide rightSide = (ASTRightSide) node.jjtGetChild(1);
+			ASTSequenceLeftSide leftSide = (ASTSequenceLeftSide) node.jjtGetChild(0);
+			//create splat
+			if( !(rightSide.getType() instanceof SequenceType)  )
+			{				
+				//TODO: Fix splats
+				//needs to look like a Sequence
+					
+				TACReference temporary = new TACVariableRef(tree,
+						method.addTempLocal(rightSide));	
+				new TACStore(tree, temporary, tree.appendChild(0));  //is that right? probably not child 0
+				
+				List<TACOperand> sequence =
+						new ArrayList<TACOperand>(leftSide.getType().size());
+				
+				for (int index = 0; index < leftSide.getType().size(); index++ )				
+						sequence.add(new TACLoad(tree, temporary));
+				new TACSequence(tree, sequence);
+				
+			}
+		
 			new TACStore(tree, new TACSequenceRef(tree,
 					tree.appendChildRemoveSequence(0)), tree.appendChild(1));
+		}
+		
+		
 		return POST_CHILDREN;
 	}
 
@@ -2238,7 +2239,8 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTBrackets node, Boolean secondVisit)
 			throws ShadowException
 	{
-		throw new UnsupportedOperationException();
+		//builds onto a type only, no action required
+		return PRE_CHILDREN;
 	}
 
 	@Override
@@ -2260,23 +2262,58 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		throw new UnsupportedOperationException();
 	}
+
 	@Override
 	public Object visit(ASTSequenceRightSide node, Boolean secondVisit)
 			throws ShadowException
 	{
-		throw new UnsupportedOperationException();
-	}
+		if (secondVisit)
+		{
+			List<TACOperand> sequence =
+					new ArrayList<TACOperand>(node.getType().size());
+			
+			for (int index = 0; index < node.getType().size(); index++ )				
+					sequence.add(tree.appendChild(index));
+			new TACSequence(tree, sequence);	
+		}
+			
+		return POST_CHILDREN; 
+	}	
+	
 	@Override
 	public Object visit(ASTSequenceLeftSide node, Boolean secondVisit)
 			throws ShadowException
 	{
-		throw new UnsupportedOperationException();
+		if (secondVisit)
+		{
+			List<TACOperand> sequence =
+					new ArrayList<TACOperand>(node.getUsedItems().size());
+			int index = 0;
+			for (boolean used : node.getUsedItems())
+				if (used)
+					sequence.add(tree.appendChild(index++));
+				else
+					sequence.add(new TACVariableRef(tree,
+							method.addTempLocal(new SimpleModifiedType(
+									Type.OBJECT,
+									new Modifiers(Modifiers.NULLABLE)))));
+			new TACSequence(tree, sequence);	
+		}
+			
+		return POST_CHILDREN; 		
 	}
 	@Override
 	public Object visit(ASTSequenceVariable node, Boolean secondVisit)
 			throws ShadowException
 	{
-		throw new UnsupportedOperationException();
+		if (secondVisit)
+		{
+			String name = node.getImage();
+			TACReference ref = new TACVariableRef(tree, method.addLocal(node, name));
+			//default values since storage happens after the right side is dealt with			
+			//new TACStore(tree, ref, getDefaultValue(node));			
+		}
+		return POST_CHILDREN;
 	}
 	@Override
 	public Object visit(ASTRightRotate node, Boolean secondVisit)
@@ -2295,7 +2332,7 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTRightSide node, Boolean secondVisit)
 			throws ShadowException
 	{
-		throw new UnsupportedOperationException();
+		return PRE_CHILDREN;
 	}
 	@Override
 	public Object visit(ASTViewBodyDeclaration node, Boolean secondVisit)
