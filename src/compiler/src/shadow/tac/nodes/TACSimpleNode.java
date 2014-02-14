@@ -64,7 +64,8 @@ public abstract class TACSimpleNode extends TACNode
 				!(operand.getType() instanceof TypeParameter))
 			type = new SimpleModifiedType(Type.OBJECT);		
 		
-		//for splats
+		//for splats //no! handled in SequenceAssignment
+		/*
 		if( type.getType() instanceof SequenceType && !(operand.getType() instanceof SequenceType))
 		{
 			SequenceType sequenceType = (SequenceType) type.getType(); 
@@ -73,6 +74,7 @@ public abstract class TACSimpleNode extends TACNode
 				list.add(new TACNodeRef(operand));
 			operand = new TACSequence(list);			
 		}
+		*/
 		
 		operand = operand.checkVirtual(type, this); //puts in casts where needed
 		if (operand.getType().equals(type.getType()))

@@ -1364,7 +1364,8 @@ public class TACBuilder implements ShadowParserVisitor
 					
 				TACReference temporary = new TACVariableRef(tree,
 						method.addTempLocal(rightSide));	
-				new TACStore(tree, temporary, tree.appendChild(0));  //is that right? probably not child 0
+				new TACStore(tree, temporary, tree.appendChild(1));  //is that right? child 0 didn't work
+				//this looks good, but now child 1 is null below
 				
 				List<TACOperand> sequence =
 						new ArrayList<TACOperand>(leftSide.getType().size());
@@ -1375,6 +1376,7 @@ public class TACBuilder implements ShadowParserVisitor
 				
 			}
 		
+			//trouble here because of null spot left by "appending" RHS
 			new TACStore(tree, new TACSequenceRef(tree,
 					tree.appendChildRemoveSequence(0)), tree.appendChild(1));
 		}

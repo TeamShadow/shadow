@@ -3,6 +3,13 @@ package shadow.tac.nodes;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 
+/**
+ * Abstract class to organize basic TAC operations
+ * Each TACNode serves as a node in a circular doubly-linked list
+ * @author Jacob Young
+ */
+
+
 public abstract class TACNode
 {
 	private TACNode prev, next;
@@ -10,6 +17,12 @@ public abstract class TACNode
 	{
 		this(null);
 	}
+	
+	/**
+	 * Constructor adds current node *before* parameter node
+	 * @param node
+	 */
+	
 	protected TACNode(TACNode node)
 	{
 		clear();
@@ -24,11 +37,21 @@ public abstract class TACNode
 	{
 		return next;
 	}
-
+	
+	/**
+	 * Puts input node after current node
+	 * @param node
+	 */
+	
 	public void append(TACNode node)
 	{
 		node.insertAfter(this);
 	}
+	
+	/**
+	 * Puts input node before current node
+	 * @param node
+	 */
 	public void prepend(TACNode node)
 	{
 		node.insertBefore(this);
@@ -49,6 +72,11 @@ public abstract class TACNode
 		node.remove();
 	}
 
+	/**
+	 * Inserts current node after parameter node
+	 * @param node
+	 */
+	
 	public void insertAfter(TACNode node)
 	{
 		if (node == this)

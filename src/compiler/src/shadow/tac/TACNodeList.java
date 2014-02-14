@@ -11,15 +11,32 @@ import shadow.tac.nodes.TACSimpleNode;
 
 public class TACNodeList extends TACNode implements Iterable<TACSimpleNode>
 {
+	/**
+	 * Inserts parameter node before current list
+	 */
+	
 	public void append(TACNode node)
 	{
 		node.insertAfter(getPrevious());
 	}
+	
+	/**
+	 * Inserts parameter node after current list
+	 */
 	public void prepend(TACNode node)
 	{
 		node.insertBefore(getNext());
 	}
 
+	/**
+	 * Inserts parameter nodes before current list 
+	 * and inserts whatever is after nodes after what used to be 
+	 * before the list
+	 * 
+	 * How does this make sense?
+	 */
+	//neither of these are used, maybe they are wrong
+	/*
 	public void appendAll(TACNode nodes)
 	{
 		connect(getPrevious(), nodes.getNext(), nodes, this);
@@ -28,7 +45,9 @@ public class TACNodeList extends TACNode implements Iterable<TACSimpleNode>
 	{
 		connect(this, nodes.getNext(), nodes, getNext());
 	}
+	*/
 
+	
 	public void insertAfter(TACNode node)
 	{
 		if (node == null || node == this || isEmpty())

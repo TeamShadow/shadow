@@ -10,6 +10,13 @@ import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSimpleNode;
 
+/**
+ * TACTree contains a dynamic array of TACTrees
+ * Element 0 is always the parent TACTree 
+ * @author Jacob Young
+ *
+ */
+
 public class TACTree extends TACNodeList
 {
 	private int index = 0;
@@ -57,6 +64,18 @@ public class TACTree extends TACNodeList
 	{
 		return index;
 	}
+	
+	/**
+	 * Takes the ith child tree and appends it to the current tree.
+	 * Bizarrely, appending means inserting the child tree *before* the current tree.
+	 * Sets ith child to null after appending.
+	 * If the last thing in the child tree is an operand (not another tree),
+	 * it is returned.
+	 * Otherwise, null is returned.   
+	 * @param i
+	 * @return
+	 */
+	
 	public TACOperand appendChild(int i)
 	{
 		if (i >= index)
