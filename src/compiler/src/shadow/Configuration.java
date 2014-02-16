@@ -29,7 +29,7 @@ public class Configuration implements Iterator<File> {
 	private File systemImportPath = null;	/** This is the import path for all the system files */
 	private List<File> importPaths = null;
 	private boolean checkOnly = false;		/** Run only parser & type-checker */
-	private boolean compileOnly = false;	/** Only compile the files on the command line */
+	private boolean compileOnly = false;	/** Compile the files on the command line but do not link */
 	private int arch = -1;
 	private String os = null;
 	

@@ -1372,13 +1372,17 @@ public class TACBuilder implements ShadowParserVisitor
 				
 				for (int index = 0; index < leftSide.getType().size(); index++ )				
 						sequence.add(new TACLoad(tree, temporary));
-				new TACSequence(tree, sequence);
+				
+				new TACStore(tree, new TACSequenceRef(tree,
+						tree.appendChildRemoveSequence(0)), new TACSequence(tree, sequence) );
 				
 			}
-		
+			else
+			{		
 			//trouble here because of null spot left by "appending" RHS
-			new TACStore(tree, new TACSequenceRef(tree,
-					tree.appendChildRemoveSequence(0)), tree.appendChild(1));
+				new TACStore(tree, new TACSequenceRef(tree,
+						tree.appendChildRemoveSequence(0)), tree.appendChild(1));
+			}
 		}
 		
 		
