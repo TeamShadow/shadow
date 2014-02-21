@@ -765,37 +765,35 @@ public class StatementChecker extends BaseChecker
 				methodName = "bitRotateRight";
 				symbol = ">>>";
 				break;
-			}
-			
-			if( !(currentNode instanceof ASTRightShift) && !(currentNode instanceof ASTRightRotate)  ) //RightRotate() and RightShift() have their own productions
+			}			
+		
+			if( result.hasInterface(Type.INTEGER) )
 			{
-				if( result.hasInterface(Type.INTEGER) )
+				SequenceType argument = new SequenceType();
+				argument.add(currentNode);							
+				 
+				MethodSignature signature = setMethodType(node, result, methodName, argument );
+				if( signature != null )
 				{
-					SequenceType argument = new SequenceType();
-					argument.add(currentNode);							
-					 
-					MethodSignature signature = setMethodType(node, result, methodName, argument );
-					if( signature != null )
-					{
-						result = signature.getReturnTypes().getType(0);
-						node.addOperation(signature);
-					}
-					else
-					{
-						addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
-						result = Type.UNKNOWN;	
-						break;
-					}				
+					result = signature.getReturnTypes().getType(0);
+					node.addOperation(signature);
 				}
-				else		
+				else
 				{
 					addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
-					result = Type.UNKNOWN;
+					result = Type.UNKNOWN;	
 					break;
-				}
-				
-				symbolIndex++;
+				}				
 			}
+			else		
+			{
+				addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+				result = Type.UNKNOWN;
+				break;
+			}
+			
+			symbolIndex++;
+			
 		}						
 					
 		node.setType(result); //propagates type up if only one child	

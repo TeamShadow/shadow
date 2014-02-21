@@ -143,7 +143,7 @@ public class TACBinary extends TACOperand
 		}
 		operation = op;
 		first = check(firstOperand, firstType);
-		second = check(secondOperand, firstType);
+		second = check(secondOperand, secondType);
 	}
 
 	public TACOperand getFirst()

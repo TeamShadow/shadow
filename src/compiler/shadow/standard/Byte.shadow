@@ -19,22 +19,22 @@ implements
 	public native bitShiftRight(uint amount) => (byte);
 	public native bitRotateLeft(uint amount) => (byte);
 	public native bitRotateRight(uint amount) => (byte);
-	public native bitShiftLeft(int amount) => (byte)
+	public bitShiftLeft(int amount) => (byte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
 	}
-	public native bitShiftRight(int amount) => (byte)
+	public bitShiftRight(int amount) => (byte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
 	}
-	public native bitRotateLeft(int amount) => (byte)
+	public bitRotateLeft(int amount) => (byte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
 	}
-	public native bitRotateRight(int amount) => (byte)
+	public bitRotateRight(int amount) => (byte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);

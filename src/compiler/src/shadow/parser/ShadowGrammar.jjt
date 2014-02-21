@@ -1128,7 +1128,8 @@ void ShiftExpression():
 {
   RotateExpression()
   ( ( "<<" { jjtThis.addToImage('l'); } |
-      RightShift() { jjtThis.addToImage('r'); } ) RotateExpression() )*
+      LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTSHIFT} ) ">" ">" { jjtThis.addToImage('r'); } ) // >> needs special treatment
+      RotateExpression() )*
 }
 
 void RotateExpression():
@@ -1136,7 +1137,8 @@ void RotateExpression():
 {
   AdditiveExpression()
   ( ( "<<<" { jjtThis.addToImage('L'); } |
-      RightRotate() { jjtThis.addToImage('R'); } ) AdditiveExpression() )*
+      LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTROTATE} ) ">" ">" ">"  { jjtThis.addToImage('R'); } ) // >>> needs special treatment
+      AdditiveExpression() )*
 }
 
 //
@@ -1780,6 +1782,8 @@ void TryStatement():
  * type declaration syntax with generics clean
  */
 
+//folded into rotate and shift productions to avoid extraneous AST nodes
+/*
 void RightRotate():
 { debugPrint("RIGHT ROTATE"); }
 {
@@ -1792,3 +1796,4 @@ void RightShift():
 {
   ( LOOKAHEAD({ getToken(1).kind == GT && ((GTToken)getToken(1)).realKind == RIGHTSHIFT} ) ">" ">" )
 }
+*/

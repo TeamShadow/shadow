@@ -283,10 +283,10 @@ public class TACBuilder implements ShadowParserVisitor
 						new TACVariableRef(tree, method.getThis()), name);
 			else
 				ref = new TACVariableRef(tree, method.addLocal(node, name));
-			if (node.jjtGetNumChildren() == 1)
+			if (node.jjtGetNumChildren() == 0)
 				new TACStore(tree, ref, getDefaultValue(node));
 			else
-				new TACStore(tree, ref, tree.appendChild(1));
+				new TACStore(tree, ref, tree.appendChild(0));
 		}
 		return POST_CHILDREN;
 	}
@@ -2321,18 +2321,6 @@ public class TACBuilder implements ShadowParserVisitor
 		}
 		return POST_CHILDREN;
 	}
-	@Override
-	public Object visit(ASTRightRotate node, Boolean secondVisit)
-			throws ShadowException
-	{
-		throw new UnsupportedOperationException();
-	}
-	@Override
-	public Object visit(ASTRightShift node, Boolean secondVisit)
-			throws ShadowException
-	{
-		throw new UnsupportedOperationException();
-	}
 	
 	@Override
 	public Object visit(ASTRightSide node, Boolean secondVisit)
@@ -2350,6 +2338,8 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTFreezeExpression node, Boolean secondVisit)
 			throws ShadowException
 	{
-		throw new UnsupportedOperationException();
+		return PRE_CHILDREN;
+		//throw new UnsupportedOperationException();
+		//TODO: Make freeze work
 	}
 }

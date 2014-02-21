@@ -1,8 +1,6 @@
 package shadow.tac.nodes;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import shadow.typecheck.type.ModifiedType;
@@ -62,19 +60,7 @@ public abstract class TACSimpleNode extends TACNode
 			type = ((TACReference)type).getGetType();
 		if (type.getType() instanceof TypeParameter &&
 				!(operand.getType() instanceof TypeParameter))
-			type = new SimpleModifiedType(Type.OBJECT);		
-		
-		//for splats //no! handled in SequenceAssignment
-		/*
-		if( type.getType() instanceof SequenceType && !(operand.getType() instanceof SequenceType))
-		{
-			SequenceType sequenceType = (SequenceType) type.getType(); 
-			List<TACOperand> list = new ArrayList<TACOperand>( sequenceType.size() );
-			for( int i = 0; i < sequenceType.size(); ++i )
-				list.add(new TACNodeRef(operand));
-			operand = new TACSequence(list);			
-		}
-		*/
+			type = new SimpleModifiedType(Type.OBJECT);
 		
 		operand = operand.checkVirtual(type, this); //puts in casts where needed
 		if (operand.getType().equals(type.getType()))
