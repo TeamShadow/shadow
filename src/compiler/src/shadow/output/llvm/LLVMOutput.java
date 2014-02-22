@@ -1148,6 +1148,12 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACBinary node) throws ShadowException
 	{
+		if( node.getOperation().hasMethod() )
+		{
+			
+		}	
+		
+		/*
 		switch (node.getOperation())
 		{
 			case ADD:
@@ -1209,8 +1215,9 @@ public class LLVMOutput extends AbstractOutput
 				break;
 			case GREATER_OR_EQUAL:
 				visitRelationalOperation(node, "ge");
-				break;
+				break;				
 		}
+		*/
 	}
 	private void visitUnsignedOperation(TACBinary node, String instruction)
 			throws ShadowException

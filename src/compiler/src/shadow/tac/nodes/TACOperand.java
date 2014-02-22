@@ -1,7 +1,10 @@
 package shadow.tac.nodes;
 
+import shadow.tac.nodes.TACBinary.Operation;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public abstract class TACOperand extends TACSimpleNode implements ModifiedType
@@ -34,5 +37,5 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 		if (getType().isStrictSubtype(type.getType()))
 			return new TACCast(node, type, this);
 		return this;
-	}
+	}	
 }

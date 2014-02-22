@@ -2,8 +2,11 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.PropertyType;
+import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 /** 
@@ -14,110 +17,96 @@ import shadow.typecheck.type.Type;
 
 public class TACBinary extends TACOperand
 {
-	public static enum Operation
-	{
-		ADD(Type.NUMERICAL, '+'),
-		SUBTRACT(Type.NUMERICAL, '-'),
-		MULTIPLY(Type.NUMERICAL, '*'),
-		DIVIDE(Type.NUMERICAL, '/'),
-		MODULUS(Type.NUMERICAL, '%'),
+	public static class Operation
+	{		
+		// CONCATENATION(Type.STRING, '#');
 
-		BITWISE_OR(Type.INTEGRAL, '|'),
-		BITWISE_XOR(Type.INTEGRAL, '^'),
-		BITWISE_AND(Type.INTEGRAL, '&'),
-
-		SHIFT_LEFT(Type.INTEGRAL, 'l', "<<"),
-		SHIFT_RIGHT(Type.INTEGRAL, 'r', ">>"),
-		ROTATE_LEFT(Type.INTEGRAL, 'L', "<<<"),
-		ROTATE_RIGHT(Type.INTEGRAL, 'R', ">>>"),
-
-		EQUAL(Type.OBJECT, Type.BOOLEAN, "=="),
-		NOT_EQUAL(Type.OBJECT, Type.BOOLEAN, "!="),
-		LESS_THAN(Type.NUMERICAL, Type.BOOLEAN, '<'),
-		GREATER_THAN(Type.NUMERICAL, Type.BOOLEAN, '>'),
-		LESS_OR_EQUAL(Type.NUMERICAL, Type.BOOLEAN, '{', "<="),
-		GREATER_OR_EQUAL(Type.NUMERICAL, Type.BOOLEAN, '}', ">="),
-
-		OR(Type.BOOLEAN, "or"),
-		XOR(Type.BOOLEAN, "xor"),
-		AND(Type.BOOLEAN, "and");
-
-//		CONCATENATION(Type.STRING, '#');
-
-		private Type operand, result;
-		private char code;
+		private MethodSignature method;
+		private ModifiedType result;		
 		private String string;
-		private Operation(Type type, char c)
-		{
-			this(type, type, c);
-		}
-		private Operation(Type type, String s)
-		{
-			this(type, type, s);
-		}
-		private Operation(Type type, char c, String s)
-		{
-			this(type, type, c, s);
-		}
-		private Operation(Type operandType, Type resultType, char c)
-		{
-			this(operandType, resultType, c, String.valueOf(c));
-		}
-		private Operation(Type operandType, Type resultType, String s)
-		{
-			this(operandType, resultType, s.charAt(0), s);
-		}
-		private Operation(Type operandType, Type resultType, char c, String s)
-		{
-			operand = operandType;
-			result = resultType;
-			code = c;
-			string = s;
-		}
+		private boolean negate = false;
+		private int direction = 0;
+				
+		public Operation( ModifiedType firstType, ModifiedType secondType, char op )
+		{			
+			String operation = "";
+			string = String.valueOf(op);
+			switch( op )
+			{
+			case '+': operation = "add"; break;
+			case '-': operation = "subtract"; break;
+			case '*': operation = "multiply"; break;
+			case '/': operation = "divide"; break;
+			case '%': operation = "modulus"; break;
 
-		public Type getOperandType()
-		{
-			return operand;
+			case '|': operation = "bitOr"; break;
+			case '^': operation = "bitXor"; break;
+			case '&': operation = "bitAnd"; break;
+			case 'l': operation = "bitShiftLeft"; string = "<<"; break;
+			case 'r': operation = "bitShiftRight"; string = ">>";  break;
+			case 'L': operation = "bitRotateLeft"; string = "<<<"; break;
+			case 'R': operation = "bitRotateLeft"; string = ">>>"; break;
+
+			case '=': operation = "equal"; string = "=="; break;
+			case '!': operation = "equals"; negate = true; string = "!="; break;
+			
+			case '<': operation = "compare"; direction = -1; break;
+			case '>': operation = "compare"; direction = 1; break;
+			case '{': operation = "compare"; direction = 1; negate = true; string = "<="; break;
+			case '}': operation = "compare"; direction = -1; negate = true; string = ">="; break;
+			
+			//no methods for these
+			case 'o': string = "or"; break;
+			case 'x': string = "xor"; break;
+			case 'a': string = "and"; break;
+			
+			default:
+				throw new InternalError("Unknown operator: " + op);
+			}
+			
+			if( operation.isEmpty() ) //boolean operations
+				result = new SimpleModifiedType(Type.BOOLEAN);
+			else
+			{
+				Type methodClass = firstType.getType();
+				method = methodClass.getMatchingMethod(operation, new SequenceType(secondType));
+				result = method.getReturnTypes().get(0);
+			}			
 		}
-		public Type getResultType()
+					
+		public boolean hasMethod()
+		{
+			return method != null;
+		}
+		
+		public ModifiedType getResultType()
 		{
 			return result;
 		}
-
-		public static Operation valueOf(char c)
-		{
-			for (Operation operation : values())
-				if (operation.code == c)
-					return operation;
-			return null;
-		}
+		
 		@Override
 		public String toString()
 		{
 			return string;
-		}
-
-		public static enum Type
-		{ BOOLEAN, INTEGRAL, NUMERICAL, STRING, CLASS, OBJECT }
+		}	
 	}
 
 	private Operation operation;
 	private TACOperand first, second;
-	public TACBinary(TACOperand firstOperand, char op,
-			TACOperand secondOperand)
-	{
-		this(null, firstOperand, Operation.valueOf(op), secondOperand);
-	}
-	public TACBinary(TACNode node, TACOperand firstOperand, char op,
-			TACOperand secondOperand)
-	{
-		this(node, firstOperand, Operation.valueOf(op), secondOperand);
-	}
+
+	/*
 	public TACBinary(TACOperand firstOperand, Operation op,
 			TACOperand secondOperand)
 	{
 		this(null, firstOperand, op, secondOperand);
 	}
+	*/
+	public TACBinary(TACNode node, TACOperand firstOperand, char op,
+			TACOperand secondOperand)
+	{
+		this(node, firstOperand, new Operation(firstOperand, secondOperand, op), secondOperand);
+	}
+
 	public TACBinary(TACNode node, TACOperand firstOperand, Operation op,
 			TACOperand secondOperand)
 	{
@@ -127,20 +116,17 @@ public class TACBinary extends TACOperand
 			firstType = ((PropertyType)firstType.getType()).getGetType();
 		if (secondType.getType() instanceof PropertyType)
 			secondType = ((PropertyType)secondType.getType()).getGetType();
-		switch (op.getOperandType())
+		/*
+		firstType = op.getFirstType();
+		secondType = op.getSecondType();
+		*/
+		/*	
+		else //and, or, xor are the only ones without methods
 		{
-			case BOOLEAN:
-				firstType = secondType = this;
-				break;
-			case INTEGRAL:
-			case NUMERICAL:
-			case OBJECT:
-				firstType = secondType = secondType.getType().
-						isSubtype(firstType.getType()) ? firstType : secondType;
-				break;
-			default:
-				throw new InternalError("Unknown operand type");
+			firstType = secondType = this; //all booleans
 		}
+		*/
+		
 		operation = op;
 		first = check(firstOperand, firstType);
 		second = check(secondOperand, secondType);
@@ -162,18 +148,7 @@ public class TACBinary extends TACOperand
 	@Override
 	public Type getType()
 	{
-		switch (operation.getResultType())
-		{
-			case BOOLEAN:
-				return Type.BOOLEAN;
-			case INTEGRAL:
-			case NUMERICAL:
-				return first.getType();
-			case STRING:
-				return Type.STRING;
-			default:
-				throw new InternalError("Unknown result type");
-		}
+		return operation.getResultType().getType();
 	}
 	@Override
 	public int getNumOperands()

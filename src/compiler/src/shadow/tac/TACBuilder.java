@@ -14,6 +14,7 @@ import java.util.List;
 import shadow.parser.javacc.*;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
+import shadow.tac.nodes.TACBinary.Operation;
 import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -1073,8 +1074,7 @@ public class TACBuilder implements ShadowParserVisitor
 				ArrayType arrayType = (ArrayType)prefix.getType();
 				TACOperand length = new TACLength(tree, prefix, 0);
 				for (int i = 1; i < arrayType.getDimensions(); i++)
-					length = new TACBinary(tree, length, '*',
-							new TACLength(tree, prefix, i));
+					length = new TACBinary(tree, length, '*', new TACLength(tree, prefix, i));
 				prefix = length;
 			}
 			else
