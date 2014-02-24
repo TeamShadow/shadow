@@ -20,17 +20,30 @@ public class TACBinary extends TACOperand
 	public static class Operation
 	{		
 		// CONCATENATION(Type.STRING, '#');
+		
+		public enum Comparison { NONE, LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUAL, GREATER_THAN_OR_EQUAL };
 
 		private MethodSignature method;
 		private ModifiedType result;		
 		private String string;
-		private boolean negate = false;
-		private int direction = 0;
+		private Comparison comparison;
+		private ModifiedType first;
+		private ModifiedType second;
 				
 		public Operation( ModifiedType firstType, ModifiedType secondType, char op )
-		{			
+		{
+			
+			if (firstType.getType() instanceof PropertyType)
+				firstType = ((PropertyType)firstType.getType()).getGetType();
+			if (secondType.getType() instanceof PropertyType)
+				secondType = ((PropertyType)secondType.getType()).getGetType();
+			
+			first = firstType;
+			second = secondType;
+			
 			String operation = "";
 			string = String.valueOf(op);
+			comparison = Comparison.NONE;
 			switch( op )
 			{
 			case '+': operation = "add"; break;
@@ -48,12 +61,12 @@ public class TACBinary extends TACOperand
 			case 'R': operation = "bitRotateLeft"; string = ">>>"; break;
 
 			case '=': operation = "equal"; string = "=="; break;
-			case '!': operation = "equals"; negate = true; string = "!="; break;
+			case '!': operation = "equals"; string = "!="; break;
 			
-			case '<': operation = "compare"; direction = -1; break;
-			case '>': operation = "compare"; direction = 1; break;
-			case '{': operation = "compare"; direction = 1; negate = true; string = "<="; break;
-			case '}': operation = "compare"; direction = -1; negate = true; string = ">="; break;
+			case '<': operation = "compare"; comparison = Comparison.LESS_THAN; break;
+			case '>': operation = "compare"; comparison = Comparison.GREATER_THAN; break;
+			case '{': operation = "compare"; comparison = Comparison.LESS_THAN_OR_EQUAL; string = "<="; break;
+			case '}': operation = "compare"; comparison = Comparison.GREATER_THAN_OR_EQUAL; string = ">="; break;
 			
 			//no methods for these
 			case 'o': string = "or"; break;
@@ -84,11 +97,31 @@ public class TACBinary extends TACOperand
 			return result;
 		}
 		
+		public ModifiedType getFirst()
+		{
+			return first;
+		}
+		
+		public ModifiedType getSecond()
+		{
+			return second;
+		}
+		
 		@Override
 		public String toString()
 		{
 			return string;
-		}	
+		}
+		
+		public MethodSignature getMethod()
+		{
+			return method;
+		}
+		
+		public Comparison getComparison()
+		{
+			return comparison;
+		}
 	}
 
 	private Operation operation;
@@ -106,16 +139,13 @@ public class TACBinary extends TACOperand
 	{
 		this(node, firstOperand, new Operation(firstOperand, secondOperand, op), secondOperand);
 	}
+	
 
 	public TACBinary(TACNode node, TACOperand firstOperand, Operation op,
 			TACOperand secondOperand)
 	{
 		super(node);
-		ModifiedType firstType = firstOperand, secondType = secondOperand;
-		if (firstType.getType() instanceof PropertyType)
-			firstType = ((PropertyType)firstType.getType()).getGetType();
-		if (secondType.getType() instanceof PropertyType)
-			secondType = ((PropertyType)secondType.getType()).getGetType();
+
 		/*
 		firstType = op.getFirstType();
 		secondType = op.getSecondType();
@@ -128,8 +158,8 @@ public class TACBinary extends TACOperand
 		*/
 		
 		operation = op;
-		first = check(firstOperand, firstType);
-		second = check(secondOperand, secondType);
+		first = check(firstOperand, op.getFirst());
+		second = check(secondOperand, op.getSecond());
 	}
 
 	public TACOperand getFirst()
@@ -139,7 +169,7 @@ public class TACBinary extends TACOperand
 	public Operation getOperation()
 	{
 		return operation;
-	}
+	}	
 	public TACOperand getSecond()
 	{
 		return second;
@@ -164,6 +194,8 @@ public class TACBinary extends TACOperand
 			return second;
 		throw new IndexOutOfBoundsException();
 	}
+	
+	
 
 	@Override
 	public void accept(TACVisitor visitor) throws ShadowException

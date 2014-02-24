@@ -68,6 +68,8 @@ import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.UnboundMethodType;
 
+import shadow.tac.nodes.TACBinary.Operation.Comparison;
+
 public class TACBuilder implements ShadowParserVisitor
 {
 	private Collection<TACModule> modules;
@@ -734,6 +736,8 @@ public class TACBuilder implements ShadowParserVisitor
 								nullLiteral));
 						new TACBranch(tree, doneLabel);
 						nonnullLabel.new TACLabel(tree);
+						MethodSignature method = value.getType().getMatchingMethod("equal", new SequenceType(other));
+						/*//should never happen
 						MethodSignature method = null;
 						for (MethodSignature candidate :
 								value.getType().getMethods("equal"))
@@ -744,6 +748,7 @@ public class TACBuilder implements ShadowParserVisitor
 							throw new IllegalArgumentException("Could not " +
 									"apply == to types " + value.getType() +
 									" and " + other.getType());
+						*/
 						new TACStore(tree, var, new TACCall(tree, block,
 								new TACMethodRef(tree, value, method),
 								value, other));
@@ -2092,6 +2097,7 @@ public class TACBuilder implements ShadowParserVisitor
 		new TACUnary(tree, node.getImage().charAt(0), tree.appendChild(0));
 	}
 
+	/*
 	private void visitBinaryOperation(SimpleNode node)
 	{
 		int child = 0;
@@ -2107,6 +2113,48 @@ public class TACBuilder implements ShadowParserVisitor
 				next = tree.appendChild(child++);
 			current = new TACBinary(tree, current, operation, next);
 		}
+	}
+	*/
+	
+	private void visitBinaryOperation(SimpleNode node)
+	{	
+		
+		int child = 0;		
+		String image = node.getImage();
+		TACOperand current = null;
+			while( current == null )
+				current = tree.appendChild(child++);
+		for( int index = 0; index < image.length(); index++ )
+		{
+			char c = image.charAt(index);
+			TACOperand next = null;
+			while( next == null )
+				next = tree.appendChild(child++);
+			Operation operation = new Operation( current, next, c ); 
+			
+			if( operation.hasMethod() ) //operation based on method
+			{			
+				TACVariableRef var = new TACVariableRef(tree,
+					method.addTempLocal(node));		
+				MethodSignature method = operation.getMethod();		
+				new TACStore(tree, var, new TACCall(tree, block,
+					new TACMethodRef(tree, current, method),
+					current, next));		
+				current = new TACLoad(tree, var);
+				
+
+				if( operation.getComparison() != Comparison.NONE )
+				{
+
+					//TODO: 				//throw in stuff for <, >, <=, >=	
+				}				
+				
+			}
+			else
+				current = new TACBinary(tree, current, operation, next);
+		}
+		
+		
 	}
 
 	private void visitExpression(SimpleNode node)
