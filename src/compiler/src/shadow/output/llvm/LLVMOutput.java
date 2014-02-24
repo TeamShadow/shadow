@@ -1147,77 +1147,41 @@ public class LLVMOutput extends AbstractOutput
 
 	@Override
 	public void visit(TACBinary node) throws ShadowException
-	{
-		if( node.getOperation().hasMethod() )
+	{		
+		//only binary operations possible are +, -, *, /, %, and <, >, <=, >= on ints 
+		switch (node.getOperation().toString())
 		{
-			
-		}	
-		
-		/*
-		switch (node.getOperation())
-		{
-			case ADD:
+			case "+":
 				visitUnsignedOperation(node, "add");
 				break;
-			case SUBTRACT:
+			case "-":
 				visitUnsignedOperation(node, "sub");
 				break;
-			case MULTIPLY:
+			case "*":
 				visitUnsignedOperation(node, "mul");
 				break;
-			case DIVIDE:
+			case "/":
 				visitSignedOperation(node, "div");
 				break;
-			case MODULUS:
+			case "%":
 				visitSignedOperation(node, "rem");
 				break;
-
-			case OR:
-			case BITWISE_OR:
-				visitNormalOperation(node, "or");
-				break;
-			case XOR:
-			case BITWISE_XOR:
-				visitNormalOperation(node, "xor");
-				break;
-			case AND:
-			case BITWISE_AND:
-				visitNormalOperation(node, "and");
-				break;
-
-			case SHIFT_LEFT:
-				visitNormalOperation(node, "shl");
-				break;
-			case SHIFT_RIGHT:
-				visitShiftOperation(node, "shr");
-				break;
-			case ROTATE_LEFT:
-				visitRotateLeft(node);
-				break;
-			case ROTATE_RIGHT:
-				visitRotateRight(node);
-				break;
-
-			case EQUAL:
-				visitEqualityOperation(node, "eq");
-				break;
-			case NOT_EQUAL:
-				visitEqualityOperation(node, "ne");
-				break;
-			case LESS_THAN:
+			case "<":
 				visitRelationalOperation(node, "lt");
 				break;
-			case GREATER_THAN:
+			case ">":
 				visitRelationalOperation(node, "gt");
 				break;
-			case LESS_OR_EQUAL:
+			case "<=":
 				visitRelationalOperation(node, "le");
 				break;
-			case GREATER_OR_EQUAL:
+			case ">=":
 				visitRelationalOperation(node, "ge");
-				break;				
-		}
-		*/
+				break;
+			default:
+				throw new UnsupportedOperationException(
+						"Binary operation " + node.getOperation() + " not supported on current types" );
+		}		
 	}
 	private void visitUnsignedOperation(TACBinary node, String instruction)
 			throws ShadowException

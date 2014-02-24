@@ -13,6 +13,7 @@ import shadow.typecheck.type.Type;
  * TAC representation of binary operator
  * Example: x + y 
  * @author Jacob Young
+ * @author Barry Wittman
  */
 
 public class TACBinary extends TACOperand
@@ -29,8 +30,14 @@ public class TACBinary extends TACOperand
 		private Comparison comparison;
 		private ModifiedType first;
 		private ModifiedType second;
-				
+		
 		public Operation( ModifiedType firstType, ModifiedType secondType, char op )
+		{
+			this( firstType, secondType, op, false );
+			
+		}
+				
+		public Operation( ModifiedType firstType, ModifiedType secondType, char op, boolean noMethod )
 		{
 			
 			if (firstType.getType() instanceof PropertyType)
@@ -77,8 +84,10 @@ public class TACBinary extends TACOperand
 				throw new InternalError("Unknown operator: " + op);
 			}
 			
-			if( operation.isEmpty() ) //boolean operations
+			if( operation.isEmpty() || operation.equals("compare") ) //boolean operations and comparisons
 				result = new SimpleModifiedType(Type.BOOLEAN);
+			else if( noMethod ) //direct computations for int values using +, -, *, /, and %
+				result = new SimpleModifiedType(Type.INT);			
 			else
 			{
 				Type methodClass = firstType.getType();
@@ -137,7 +146,7 @@ public class TACBinary extends TACOperand
 	public TACBinary(TACNode node, TACOperand firstOperand, char op,
 			TACOperand secondOperand)
 	{
-		this(node, firstOperand, new Operation(firstOperand, secondOperand, op), secondOperand);
+		this(node, firstOperand, new Operation(firstOperand, secondOperand, op, true), secondOperand);
 	}
 	
 
@@ -160,6 +169,32 @@ public class TACBinary extends TACOperand
 		operation = op;
 		first = check(firstOperand, op.getFirst());
 		second = check(secondOperand, op.getSecond());
+		
+		//only a few basic operations are supported in TACBinary
+		//everything else is based on methods from operator overloading
+		switch( operation.toString() )
+		{
+		case "+":
+		case "-":
+		case "*":
+		case "/":
+		case "%":
+		case "<":
+		case ">":
+		case "<=":
+		case ">=":
+			if( !first.getType().equals(Type.INT) || !second.getType().equals(Type.INT) )
+				throw new InternalError("Binary operator " + operation + " is invalid on types " + first.getType() + " and " + second.getType());
+			break;
+		case "and":
+		case "or":
+		case "xor":
+			if( !first.getType().equals(Type.BOOLEAN) || !second.getType().equals(Type.BOOLEAN) )
+				throw new InternalError("Binary operator " + operation + " is invalid on types " + first.getType() + " and " + second.getType());
+			break;
+		default:
+			throw new InternalError("Binary operator " + operation + " is invalid");			
+		}		
 	}
 
 	public TACOperand getFirst()

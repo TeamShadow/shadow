@@ -2140,21 +2140,22 @@ public class TACBuilder implements ShadowParserVisitor
 				new TACStore(tree, var, new TACCall(tree, block,
 					new TACMethodRef(tree, current, method),
 					current, next));		
-				current = new TACLoad(tree, var);
-				
+				current = new TACLoad(tree, var);			
 
-				if( operation.getComparison() != Comparison.NONE )
+				//comparisons will always give positive, negative or zero integer
+				//must be compared to 0 with regular comparison to work
+				switch( operation.getComparison() )
 				{
-
-					//TODO: 				//throw in stuff for <, >, <=, >=	
-				}				
-				
+				case LESS_THAN: current = new TACBinary(tree, current, '<', new TACLiteral(tree, "0") ); break;
+				case GREATER_THAN: current = new TACBinary(tree, current, '>', new TACLiteral(tree, "0") ); break;
+				case LESS_THAN_OR_EQUAL: current = new TACBinary(tree, current, '{', new TACLiteral(tree, "0") ); break;
+				case GREATER_THAN_OR_EQUAL: current = new TACBinary(tree, current, '}', new TACLiteral(tree, "0") ); break;
+				default: //do nothing
+				}
 			}
 			else
 				current = new TACBinary(tree, current, operation, next);
 		}
-		
-		
 	}
 
 	private void visitExpression(SimpleNode node)
