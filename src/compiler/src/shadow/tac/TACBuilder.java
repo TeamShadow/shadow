@@ -12,9 +12,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import shadow.parser.javacc.*;
+import shadow.tac.nodes.BinaryOperation;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBinary.Operation;
+import shadow.tac.nodes.TACBinaryMethod;
 import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -67,8 +68,6 @@ import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.UnboundMethodType;
-
-import shadow.tac.nodes.TACBinary.Operation.Comparison;
 
 public class TACBuilder implements ShadowParserVisitor
 {
@@ -2130,17 +2129,24 @@ public class TACBuilder implements ShadowParserVisitor
 			TACOperand next = null;
 			while( next == null )
 				next = tree.appendChild(child++);
-			Operation operation = new Operation( current, next, c ); 
+			BinaryOperation operation = new BinaryOperation( current, next, c ); 
 			
 			if( operation.hasMethod() ) //operation based on method
-			{			
+			{	
+				/*
 				TACVariableRef var = new TACVariableRef(tree,
 					method.addTempLocal(node));		
 				MethodSignature method = operation.getMethod();		
 				new TACStore(tree, var, new TACCall(tree, block,
 					new TACMethodRef(tree, current, method),
 					current, next));		
-				current = new TACLoad(tree, var);			
+				current = new TACLoad(tree, var);
+				*/
+				
+				TACVariableRef var = new TACVariableRef(tree,
+						method.addTempLocal(node));
+				new TACStore(tree, var, new TACBinaryMethod(tree, block, current, operation, next));		
+				current = new TACLoad(tree, var);
 
 				//comparisons will always give positive, negative or zero integer
 				//must be compared to 0 with regular comparison to work

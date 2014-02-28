@@ -16,8 +16,11 @@ import shadow.typecheck.type.Type;
  * @author Barry Wittman
  */
 
-public class TACBinary extends TACBinaryMethod
-{		
+public class TACBinary extends TACOperand
+{	
+	private BinaryOperation operation;
+	private TACOperand first, second;
+	
 	public TACBinary(TACNode node, TACOperand firstOperand, char op,
 			TACOperand secondOperand)
 	{
@@ -27,11 +30,54 @@ public class TACBinary extends TACBinaryMethod
 	public TACBinary(TACNode node, TACOperand firstOperand, BinaryOperation op,
 			TACOperand secondOperand)
 	{
-		super(node, firstOperand, op, secondOperand);
+		super(node);
+		
+		operation = op;
+		first = check(firstOperand, op.getFirst());
+		second = check(secondOperand, op.getSecond());
 		
 		//only "pure" operators (not method-based ones) are allowed in TACBinary
 		if( op.hasMethod() )
 			throw new InternalError("Binary operator " + op + " is invalid on types " + op.getFirst().getType() + " and " + op.getSecond().getType());
+	}
+	
+	public TACOperand getFirst()
+	{
+		return first;
+	}
+	public BinaryOperation getOperation()
+	{
+		return operation;
+	}	
+	public TACOperand getSecond()
+	{
+		return second;
+	}
+
+	@Override
+	public Type getType()
+	{
+		return operation.getResultType().getType();
+	}
+	@Override
+	public int getNumOperands()
+	{
+		return 2;
+	}
+	@Override
+	public TACOperand getOperand(int num)
+	{
+		if (num == 0)
+			return first;
+		if (num == 1)
+			return second;
+		throw new IndexOutOfBoundsException();
+	}
+
+	@Override
+	public void accept(TACVisitor visitor) throws ShadowException
+	{
+		visitor.visit(this);
 	}
 
 	private static boolean paren = false;

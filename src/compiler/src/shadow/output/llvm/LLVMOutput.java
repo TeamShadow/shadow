@@ -36,6 +36,7 @@ import shadow.tac.TACModule;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
+import shadow.tac.nodes.TACBinaryMethod;
 import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -1144,11 +1145,82 @@ public class LLVMOutput extends AbstractOutput
 		writer.write(nextTemp(node) + " = " + instruction + ' ' + typeText(node,
 				first) + ", " + symbol(node.getOperand()));
 	}
+	
+	
+	/*
+	@Override
+	public void visit(TACBinary node) throws ShadowException
+	{
+		switch (node.getOperation())
+		{
+			case ADD:
+				visitUnsignedOperation(node, "add");
+				break;
+			case SUBTRACT:
+				visitUnsignedOperation(node, "sub");
+				break;
+			case MULTIPLY:
+				visitUnsignedOperation(node, "mul");
+				break;
+			case DIVIDE:
+				visitSignedOperation(node, "div");
+				break;
+			case MODULUS:
+				visitSignedOperation(node, "rem");
+				break;
+
+			case OR:
+			case BITWISE_OR:
+				visitNormalOperation(node, "or");
+				break;
+			case XOR:
+			case BITWISE_XOR:
+				visitNormalOperation(node, "xor");
+				break;
+			case AND:
+			case BITWISE_AND:
+				visitNormalOperation(node, "and");
+				break;
+
+			case SHIFT_LEFT:
+				visitNormalOperation(node, "shl");
+				break;
+			case SHIFT_RIGHT:
+				visitShiftOperation(node, "shr");
+				break;
+			case ROTATE_LEFT:
+				visitRotateLeft(node);
+				break;
+			case ROTATE_RIGHT:
+				visitRotateRight(node);
+				break;
+
+			case EQUAL:
+				visitEqualityOperation(node, "eq");
+				break;
+			case NOT_EQUAL:
+				visitEqualityOperation(node, "ne");
+				break;
+			case LESS_THAN:
+				visitRelationalOperation(node, "lt");
+				break;
+			case GREATER_THAN:
+				visitRelationalOperation(node, "gt");
+				break;
+			case LESS_OR_EQUAL:
+				visitRelationalOperation(node, "le");
+				break;
+			case GREATER_OR_EQUAL:
+				visitRelationalOperation(node, "ge");
+				break;
+		}
+	}
+ 	*/
+	 
 
 	@Override
 	public void visit(TACBinary node) throws ShadowException
-	{		
-		//only binary operations possible are +, -, *, /, %, and <, >, <=, >= on ints 
+	{	
 		switch (node.getOperation().toString())
 		{
 			case "+":
@@ -1165,6 +1237,39 @@ public class LLVMOutput extends AbstractOutput
 				break;
 			case "%":
 				visitSignedOperation(node, "rem");
+				break;
+
+			case "or":
+			case "|":
+				visitNormalOperation(node, "or");
+				break;
+			case "xor":
+			case "^":
+				visitNormalOperation(node, "xor");
+				break;
+			case "and":
+			case "&":
+				visitNormalOperation(node, "and");
+				break;
+
+			case "<<":
+				visitNormalOperation(node, "shl");
+				break;
+			case ">>":
+				visitShiftOperation(node, "shr");
+				break;
+			case "<<<":
+				visitRotateLeft(node);
+				break;
+			case ">>>":
+				visitRotateRight(node);
+				break;
+
+			case "==":
+				visitEqualityOperation(node, "eq");
+				break;
+			case "!=":
+				visitEqualityOperation(node, "ne");
 				break;
 			case "<":
 				visitRelationalOperation(node, "lt");
@@ -1411,6 +1516,61 @@ public class LLVMOutput extends AbstractOutput
 			visit(label.new TACLabel());
 			writer.outdent(2);
 		}
+	}
+	
+	@Override
+	public void visit(TACBinaryMethod node) throws ShadowException {
+		TACMethodRef method = node.getMethod();
+		StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
+				"invoke" : "call").append(' ').
+				append(methodType(method)).append(' ').
+				append(symbol(method)).append('(');
+		boolean first = true;
+		for (TACOperand param : node.getParameters())
+			if (first)
+			{
+				first = false;
+				/*Type paramType = param.getType();
+				if (paramType instanceof InterfaceType)
+				{
+					writer.write(nextTemp() + " = extractvalue " +
+							typeSymbol(param) + ", 1");
+					sb.append(type(Type.OBJECT) + ' ' + temp(0));
+				}
+				else if (paramType.isPrimitive())
+				{
+					writer.write(nextTemp() + " = call noalias " +
+							type(Type.OBJECT) + " @" + raw(Type.CLASS,
+							"_Mallocate") + '(' + type(Type.CLASS) + ' ' +
+							classOf(paramType) + ')');
+					writer.write(nextTemp() + " = bitcast " +
+							type(Type.OBJECT) + temp(1) + " to %" +
+							raw(paramType) + '*');
+					writer.write(nextTemp() + " = getelementptr inbounds %" +
+							raw(paramType) + '*' + temp(1) + ", i32 0, i32 1");
+					writer.write("store " + typeSymbol(param) + ", " +
+							type(paramType) + "* " + temp(0));
+					sb.append('%').append(raw(paramType)).append("* ").
+							append(temp(1));
+				}
+				else*/
+					sb.append(typeSymbol(param));
+			}
+			else
+				sb.append(", ").append(typeSymbol(param));
+		if (!method.getReturnTypes().isEmpty())
+			sb.insert(0, nextTemp(node) + " = ");
+		writer.write(sb.append(')').toString());
+		if (node.getBlock().hasLandingpad())
+		{
+			TACLabelRef label = new TACLabelRef();
+			visit(label);
+			writer.indent(2);
+			writer.write(" to label " + symbol(label) + " unwind label " +
+					symbol(node.getBlock().getLandingpad()));
+			visit(label.new TACLabel());
+			writer.outdent(2);
+		}		
 	}
 
 	@Override
@@ -1894,4 +2054,5 @@ public class LLVMOutput extends AbstractOutput
 			sb.append('*');
 		return sb.append(' ').append(name).toString();
 	}
+	
 }
