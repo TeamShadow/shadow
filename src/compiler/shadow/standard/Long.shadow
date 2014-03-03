@@ -1,6 +1,7 @@
 immutable class shadow.standard@
 	Long
 implements
+	Bitwise<long>,
 	Integer<long>,
 	Number<double>,
 	CanNegate<long>,
@@ -9,28 +10,28 @@ implements
     constant long MAX = 9223372036854775807L;
     constant long MIN = -9223372036854775808L; 
 
-	// implement Integer
+	// implement Bitwise
 	public native bitComplement() => (long);
 	public native bitShiftLeft(uint amount) => (long);
 	public native bitShiftRight(uint amount) => (long);
 	public native bitRotateLeft(uint amount) => (long);
 	public native bitRotateRight(uint amount) => (long);
-	public native bitShiftLeft(int amount) => (long)
+	public bitShiftLeft(int amount) => (long)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
 	}
-	public native bitShiftRight(int amount) => (long)
+	public bitShiftRight(int amount) => (long)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
 	}
-	public native bitRotateLeft(int amount) => (long)
+	public bitRotateLeft(int amount) => (long)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
 	}
-	public native bitRotateRight(int amount) => (long)
+	public bitRotateRight(int amount) => (long)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);

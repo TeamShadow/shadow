@@ -1,6 +1,7 @@
 immutable class shadow.standard@
 	UInt
 implements
+	Bitwise<uint>,
 	Integer<uint>,
 	Integer<ulong>,
 	Number<float>,
@@ -9,28 +10,28 @@ implements
 {
 	constant uint MAX =  4294967295u;
 	constant uint MIN =  0u;
-	// implement Integer
+	// implement Bitwise
 	public native bitComplement() => (uint);
 	public native bitShiftLeft(uint amount) => (uint);
 	public native bitShiftRight(uint amount) => (uint);
 	public native bitRotateLeft(uint amount) => (uint);
 	public native bitRotateRight(uint amount) => (uint);
-	public native bitShiftLeft(int amount) => (uint)
+	public bitShiftLeft(int amount) => (uint)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
 	}
-	public native bitShiftRight(int amount) => (uint)
+	public bitShiftRight(int amount) => (uint)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
 	}
-	public native bitRotateLeft(int amount) => (uint)
+	public bitRotateLeft(int amount) => (uint)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
 	}
-	public native bitRotateRight(int amount) => (uint)
+	public bitRotateRight(int amount) => (uint)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);

@@ -1,6 +1,7 @@
 immutable class shadow.standard@
 	Byte
 implements
+	Bitwise<byte>,
 	Integer<byte>,
 	Integer<short>,
 	Integer<int>,
@@ -13,7 +14,7 @@ implements
 	constant byte MAX = 127y;
 	constant byte MIN = -128y;
 
-	// implement Integer
+	// implement Bitwise<byte>
 	public native bitComplement() => (byte);
 	public native bitShiftLeft(uint amount) => (byte);
 	public native bitShiftRight(uint amount) => (byte);

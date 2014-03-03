@@ -3,7 +3,6 @@ package shadow.tac;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBinaryMethod;
 import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -46,8 +45,7 @@ import shadow.tac.nodes.TACVariableRef;
 public interface TACVisitor
 {
 	public abstract void visit(TACArrayRef node) throws ShadowException;
-	public abstract void visit(TACBinary node) throws ShadowException;
-	public abstract void visit(TACBinaryMethod node) throws ShadowException;
+	public abstract void visit(TACBinary node) throws ShadowException;	
 	public abstract void visit(TACBlock node) throws ShadowException;
 	public abstract void visit(TACBranch node) throws ShadowException;
 	public abstract void visit(TACCall node) throws ShadowException;

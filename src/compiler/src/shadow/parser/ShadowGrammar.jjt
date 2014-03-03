@@ -1157,31 +1157,40 @@ void AdditiveExpression():
 void MultiplicativeExpression():
 {}
 {
-  UnaryToString()
+  UnaryExpression()
   ( ( "*" { jjtThis.addToImage('*'); } |
       "/" { jjtThis.addToImage('/'); } |
-      "%" { jjtThis.addToImage('%'); } ) UnaryToString() )*
+      "%" { jjtThis.addToImage('%'); } ) UnaryExpression() )*
 }
 
+/*
 void UnaryToString():
 {}
 {
   [ "#" { jjtThis.setImage("#"); } ] UnaryExpression()
 }
+*/
 
 void UnaryExpression():
 {}
 {
-  ( "+" { jjtThis.setImage("+"); } | "-" { jjtThis.setImage("-"); } ) UnaryExpression()
-| UnaryExpressionNotPlusMinus()
+  //removed unary + since it's useless
+  //( "+" { jjtThis.setImage("+"); } | "-" { jjtThis.setImage("-"); } ) UnaryExpression()
+  "-" { jjtThis.setImage("-"); } UnaryExpression()
+| "#" { jjtThis.setImage("#"); } UnaryExpression()
+| "~" { jjtThis.setImage("~"); } UnaryExpression()
+| "!" { jjtThis.setImage("!"); } UnaryExpression()  
+| InlineMethodDefinition()
 }
 
+/*
 void UnaryExpressionNotPlusMinus():
 { debugPrint("UNARY EXPRESSION NOT PLUS MINUS"); }
 {
   ( "~" { jjtThis.setImage("~"); } | "!" { jjtThis.setImage("!"); } ) UnaryExpression()
 | InlineMethodDefinition()
 }
+*/
 
 void InlineMethodDefinition():
 { debugPrint("INLINE METHOD DEFINITION"); }

@@ -388,12 +388,6 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
 	public Object visit(ASTCastExpression node, Boolean secondVisit)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
@@ -682,12 +676,6 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTDestroy node, Boolean data) throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTUnaryToString node, Boolean data)
-			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 

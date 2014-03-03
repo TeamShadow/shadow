@@ -36,7 +36,6 @@ import shadow.tac.TACModule;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBinaryMethod;
 import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -127,7 +126,7 @@ public class LLVMOutput extends AbstractOutput
 	private String nextTemp(TACOperand node)
 	{
 		String name = nextTemp();
-		node.data = name;
+		node.setData(name);
 		return name;
 	}
 
@@ -138,7 +137,7 @@ public class LLVMOutput extends AbstractOutput
 	private String nextLabel(TACOperand node)
 	{
 		String name = nextLabel();
-		node.data = name;
+		node.setData(name);
 		return name;
 	}
 
@@ -196,7 +195,7 @@ public class LLVMOutput extends AbstractOutput
 		{
 			ShadowInterpreter interpreter = new ShadowInterpreter();
 			interpreter.walk(constant);
-			Object result = constant.getValue().data;
+			Object result = constant.getValue().getData();
 			if (!(result instanceof ShadowValue))
 				throw new UnsupportedOperationException(
 						"Could not interpret constant initializer");
@@ -683,13 +682,13 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACVariableRef node) throws ShadowException
 	{
-		node.data = '%' + name(node.getVariable());
+		node.setData( '%' + name(node.getVariable()));
 	}
 
 	@Override
 	public void visit(TACSingletonRef node) throws ShadowException
 	{
-		node.data = '@' + raw(node.getType(), "_Minstance");
+		node.setData( '@' + raw(node.getType(), "_Minstance"));
 	}
 
 	@Override
@@ -705,7 +704,7 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACConstantRef node) throws ShadowException
 	{
-		node.data = name(node);
+		node.setData(name(node));
 	}
 
 	@Override
@@ -751,7 +750,7 @@ public class LLVMOutput extends AbstractOutput
 					"* " + temp(1));
 		}
 		else
-			node.data = name(node);
+			node.setData(name(node));
 	}
 
 //	@Override
@@ -771,16 +770,16 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACLiteral node) throws ShadowException
 	{
-		node.data = literal(node.getValue());
+		node.setData(literal(node.getValue()));
 	}
 
 	@Override
 	public void visit(TACClass node) throws ShadowException
 	{
 		if (node.hasOperand())
-			node.data = symbol(node.getOperand());
+			node.setData(symbol(node.getOperand()));
 		else
-			node.data = classOf(node.getClassType());
+			node.setData(classOf(node.getClassType()));
 	}
 
 	@Override
@@ -793,7 +792,7 @@ public class LLVMOutput extends AbstractOutput
 					current) + ", " + typeSymbol(node.get(i)) + ", " + i);
 			current = temp(0);
 		}
-		node.data = current;
+		node.setData(current);
 	}
 
 	@Override
@@ -821,7 +820,7 @@ public class LLVMOutput extends AbstractOutput
 					current = temp(0);
 					index++;
 				}
-				node.data = current;
+				node.setData(current);
 			}
 			else if (srcType.getType() instanceof SequenceType)
 			{
@@ -831,7 +830,7 @@ public class LLVMOutput extends AbstractOutput
 						typeSymbol(node.getOperand()) + ", 0");
 				TACCast cast = new TACCast(value, destType, value);
 				walk(cast);
-				node.data = symbol(cast);
+				node.setData(symbol(cast));
 			}
 			else
 			{
@@ -840,18 +839,21 @@ public class LLVMOutput extends AbstractOutput
 				walk(cast);
 				writer.write(nextTemp() + " = insertvalue " + type(node)
 						+ " undef, " + typeSymbol(cast) + ", 0");
-				node.data = temp(0);
+				node.setData( temp(0));
 			}
 			return;
 		}
 		if (srcType.getType() == Type.NULL)
 		{
-			node.data = "null";
+			if( destType.getType() instanceof ArrayType)
+				node.setData("undef");  //Shadow arrays are not pointers, they're structs with pointers and lengths
+			else
+				node.setData("null");
 			return;
 		}
 		if (destType.getType() == Type.NULL)
 		{
-			node.data = srcName;
+			node.setData(srcName);
 			return;
 		}
 		if (srcType.getType() instanceof InterfaceType)
@@ -1043,7 +1045,7 @@ public class LLVMOutput extends AbstractOutput
 		}
 		if (destType.getType().equals(srcType.getType()))
 		{
-			node.data = srcName;
+			node.setData(srcName);
 			return;
 		}
 		if (srcType.getType().isSigned() && destType.getType().isFloating())
@@ -1127,14 +1129,16 @@ public class LLVMOutput extends AbstractOutput
 	{
 		switch (node.getOperation())
 		{
-			case PLUS:
+		/*
+			case "+":
 				visitUnary(node, "add", "0");
 				break;
-			case MINUS:
+		*/
+			case "-":
 				visitUnary(node, "sub", "0");
 				break;
-			case COMPLEMENT:
-			case NOT:
+			case "~":
+			case "!":
 				visitUnary(node, "xor", "-1");
 				break;
 		}
@@ -1387,7 +1391,7 @@ public class LLVMOutput extends AbstractOutput
 			TACCall call = new TACCall(method.getNext(), property.getBlock(),
 					method, Collections.singletonList(property.getPrefix()));
 			walk(call);
-			node.data = symbol(call);
+			node.setData(symbol(call));
 		}
 		else
 			writer.write(nextTemp(node) + " = load " +
@@ -1516,61 +1520,6 @@ public class LLVMOutput extends AbstractOutput
 			visit(label.new TACLabel());
 			writer.outdent(2);
 		}
-	}
-	
-	@Override
-	public void visit(TACBinaryMethod node) throws ShadowException {
-		TACMethodRef method = node.getMethod();
-		StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
-				"invoke" : "call").append(' ').
-				append(methodType(method)).append(' ').
-				append(symbol(method)).append('(');
-		boolean first = true;
-		for (TACOperand param : node.getParameters())
-			if (first)
-			{
-				first = false;
-				/*Type paramType = param.getType();
-				if (paramType instanceof InterfaceType)
-				{
-					writer.write(nextTemp() + " = extractvalue " +
-							typeSymbol(param) + ", 1");
-					sb.append(type(Type.OBJECT) + ' ' + temp(0));
-				}
-				else if (paramType.isPrimitive())
-				{
-					writer.write(nextTemp() + " = call noalias " +
-							type(Type.OBJECT) + " @" + raw(Type.CLASS,
-							"_Mallocate") + '(' + type(Type.CLASS) + ' ' +
-							classOf(paramType) + ')');
-					writer.write(nextTemp() + " = bitcast " +
-							type(Type.OBJECT) + temp(1) + " to %" +
-							raw(paramType) + '*');
-					writer.write(nextTemp() + " = getelementptr inbounds %" +
-							raw(paramType) + '*' + temp(1) + ", i32 0, i32 1");
-					writer.write("store " + typeSymbol(param) + ", " +
-							type(paramType) + "* " + temp(0));
-					sb.append('%').append(raw(paramType)).append("* ").
-							append(temp(1));
-				}
-				else*/
-					sb.append(typeSymbol(param));
-			}
-			else
-				sb.append(", ").append(typeSymbol(param));
-		if (!method.getReturnTypes().isEmpty())
-			sb.insert(0, nextTemp(node) + " = ");
-		writer.write(sb.append(')').toString());
-		if (node.getBlock().hasLandingpad())
-		{
-			TACLabelRef label = new TACLabelRef();
-			visit(label);
-			writer.indent(2);
-			writer.write(" to label " + symbol(label) + " unwind label " +
-					symbol(node.getBlock().getLandingpad()));
-			visit(label.new TACLabel());
-			writer.outdent(2);
-		}		
 	}
 
 	@Override
@@ -1863,7 +1812,7 @@ public class LLVMOutput extends AbstractOutput
 
 	private static String name(TACLabel label)
 	{
-		Object name = label.getRef().data;
+		Object name = label.getRef().getData();
 		if (name instanceof String)
 			return ((String)name).substring(1);
 		throw new NullPointerException();
@@ -1910,7 +1859,7 @@ public class LLVMOutput extends AbstractOutput
 
 	private static String symbol(TACOperand node)
 	{
-		Object symbol = node.data;
+		Object symbol = node.getData();
 		if (symbol instanceof String)
 			return (String)symbol;
 		throw new NullPointerException();

@@ -1,0 +1,15 @@
+interface shadow.standard@
+	Bitwise<T>
+extends
+	Number<T>
+{	
+	immutable bitComplement() => (T);
+	immutable bitShiftLeft(uint amount) => (T);
+	immutable bitShiftRight(uint amount) => (T);
+	immutable bitRotateLeft(uint amount) => (T);
+	immutable bitRotateRight(uint amount) => (T);
+	immutable bitShiftLeft(int amount) => (T);
+	immutable bitShiftRight(int amount) => (T);
+	immutable bitRotateLeft(int amount) => (T);
+	immutable bitRotateRight(int amount) => (T);
+}

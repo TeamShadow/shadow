@@ -1,6 +1,7 @@
 immutable class shadow.standard@
 	UByte
 implements
+	Bitwise<ubyte>,
 	Integer<ubyte>,
 	Integer<ushort>,
 	Integer<uint>,
@@ -11,7 +12,7 @@ implements
 {
 	constant ubyte MAX = 255uy;
 	constant ubyte MIN = 0uy;
-	// implement Integer
+	// implement Bitwise
 	public native bitComplement() => (ubyte);
 	public native bitShiftLeft(uint amount) => (ubyte);
 	public native bitShiftRight(uint amount) => (ubyte);

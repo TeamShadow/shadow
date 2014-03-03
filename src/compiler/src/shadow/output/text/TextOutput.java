@@ -189,10 +189,10 @@ public class TextOutput extends AbstractOutput
 	{
 		if (node == null)
 			return "null";
-		Object symbol = node.data;
+		Object symbol = node.getData();
 		if (!(symbol instanceof String))
 		{
-			node.data = symbol = "" + '_' + tempCounter++ + '_';
+			node.setData( symbol = "" + '_' + tempCounter++ + '_');
 			if (shouldExist)
 				writer.writeLeft("// Unknown reference: " + symbol + "!!!");
 		}

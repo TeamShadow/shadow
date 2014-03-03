@@ -122,12 +122,12 @@ public class COutput extends AbstractOutput
 	@Override
 	public void visit(TACVariableRef node) throws ShadowException
 	{
-		node.data = "%" + symbol(node);
+		node.setData("%" + symbol(node));
 	}
 	@Override
 	public void visit(TACFieldRef node) throws ShadowException
 	{
-		node.data = "%" + tempCounter++;
+		node.setData("%" + tempCounter++);
 		c.write(symbol(node) + " = getelementptr inbounds " + typeAndName(
 				node.getPrefix()) + ", i64 0, i32 " + (node.getIndex() + 1));
 	}
@@ -135,7 +135,7 @@ public class COutput extends AbstractOutput
 	@Override
 	public void visit(TACLoad node) throws ShadowException
 	{
-		node.data = "%" + tempCounter++;
+		node.setData("%" + tempCounter++);
 		c.write(symbol(node) + " = load " +
 				typeAndName(node.getReference(), true));
 	}
@@ -157,7 +157,7 @@ public class COutput extends AbstractOutput
 
 	private static String symbol(TACOperand node)
 	{
-		Object symbol = node.data;
+		Object symbol = node.getData();
 		if (symbol instanceof String)
 			return (String)symbol;
 		throw new NullPointerException();

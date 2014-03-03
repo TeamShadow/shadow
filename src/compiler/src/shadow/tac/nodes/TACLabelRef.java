@@ -103,6 +103,6 @@ public class TACLabelRef extends TACOperand implements TACDestination
 	@Override
 	public String toString()
 	{
-		return data.toString();
+		return getData().toString();
 	}
 }

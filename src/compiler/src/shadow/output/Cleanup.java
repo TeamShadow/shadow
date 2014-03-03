@@ -22,8 +22,8 @@ public class Cleanup extends AbstractOutput
 	protected void visit(TACSimpleNode node) throws ShadowException
 	{
 		if (node instanceof TACOperand)
-			((TACOperand)node).data = null;
+			((TACOperand)node).setData(null);
 		for (TACOperand operand : node)
-			operand.data = null;
+			operand.setData(null);
 	}
 }

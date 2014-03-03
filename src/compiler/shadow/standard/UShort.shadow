@@ -1,6 +1,7 @@
 immutable class shadow.standard@
 	UShort
 implements
+	Bitwise<ushort>,
 	Integer<ushort>,
 	Integer<uint>,
 	Integer<ulong>,
@@ -12,28 +13,28 @@ implements
 	constant ushort MAX = 65535us;
 	constant ushort MIN = 0us;
 
-	// implement Integer
+	// implement Bitwise
 	public native bitComplement() => (ushort);
 	public native bitShiftLeft(uint amount) => (ushort);
 	public native bitShiftRight(uint amount) => (ushort);
 	public native bitRotateLeft(uint amount) => (ushort);
 	public native bitRotateRight(uint amount) => (ushort);
-	public native bitShiftLeft(int amount) => (ushort)
+	public bitShiftLeft(int amount) => (ushort)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
 	}
-	public native bitShiftRight(int amount) => (ushort)
+	public bitShiftRight(int amount) => (ushort)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
 	}
-	public native bitRotateLeft(int amount) => (ushort)
+	public bitRotateLeft(int amount) => (ushort)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
 	}
-	public native bitRotateRight(int amount) => (ushort)
+	public bitRotateRight(int amount) => (ushort)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);

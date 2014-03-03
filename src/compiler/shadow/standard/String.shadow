@@ -20,7 +20,7 @@ implements
 			this:data[i] = data[i];
 			ascii |= data[i];
 		}
-		this:ascii = ascii < 0;
+		this:ascii = ascii < 0; //change from 0 to 0y for trouble to happen
 	}
 	public create( code[] data )
 	{

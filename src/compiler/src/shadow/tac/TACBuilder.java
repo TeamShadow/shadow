@@ -12,10 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import shadow.parser.javacc.*;
-import shadow.tac.nodes.BinaryOperation;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBinaryMethod;
 import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -156,7 +154,7 @@ public class TACBuilder implements ShadowParserVisitor
 		for (Node constant : type.getFields().values())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
-						constant.jjtGetChild(0).getImage()), constant);
+						constant.getImage()), constant);
 		for (List<MethodSignature> methods : type.getMethodMap().values())
 			for (MethodSignature method : methods)
 				if (method.isCreate() || method.getModifiers().isPrivate())
@@ -638,7 +636,7 @@ public class TACBuilder implements ShadowParserVisitor
 			Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit)
-			visitBinaryOperation(node);
+			visitBooleanOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
@@ -769,9 +767,14 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTIsExpression node, Boolean secondVisit)
 			throws ShadowException
 	{
+		
 		if (secondVisit)
-			visitBinaryOperation(node);
-		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
+		{
+			throw new UnsupportedOperationException();
+			//visitBinaryOperation(node);
+		}
+		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;		
+		//how is an "is" expression done?  repeated comparison of typeid values?		
 	}
 
 	@Override
@@ -866,6 +869,7 @@ public class TACBuilder implements ShadowParserVisitor
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
+	/*
 	@Override
 	public Object visit(ASTUnaryToString node, Boolean secondVisit)
 			throws ShadowException
@@ -894,16 +898,63 @@ public class TACBuilder implements ShadowParserVisitor
 		}
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
+	*/
 
 	@Override
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit)
-			visitUnaryOperation(node);
+		{
+			TACOperand operand = tree.appendChild(0);
+			String op = node.getImage(); 
+			if( op.equals("#")) //string is special because of nulls
+			{	
+				TACLabelRef nullLabel = new TACLabelRef(tree),
+						nonnullLabel = new TACLabelRef(tree),
+						doneLabel = new TACLabelRef(tree);
+				TACReference var = new TACVariableRef(tree,
+						method.addTempLocal(node));
+				new TACBranch(tree, new TACSame(tree, operand, new TACLiteral(tree,
+						"null")), nullLabel, nonnullLabel);
+				nullLabel.new TACLabel(tree);
+				new TACStore(tree, var, new TACLiteral(tree, "\"null\""));
+				new TACBranch(tree, doneLabel);
+				nonnullLabel.new TACLabel(tree);
+				new TACStore(tree, var, new TACCall(tree, block,
+						new TACMethodRef(tree, operand, node.getOperations().get(0)),
+						Collections.singletonList(operand)));
+				new TACBranch(tree, doneLabel);
+				doneLabel.new TACLabel(tree);
+				new TACLoad(tree, var);
+			}
+			else
+			{
+				Type type = operand.getType();
+				if( type instanceof PropertyType )
+					type = ((PropertyType)type).getGetType().getType();
+					
+				if( op.equals("!") )
+					new TACUnary(tree, "!", operand);
+				else
+				{
+					MethodSignature signature = node.getOperations().get(0); 
+					if( type.isPrimitive() && signature.getModifiers().isNative() )
+						new TACUnary(tree, signature, op, operand);				
+					else
+					{
+						TACVariableRef var = new TACVariableRef(tree,
+								method.addTempLocal(node));
+						new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, operand, node.getOperations().get(0)), operand));		
+						new TACLoad(tree, var);
+					}
+				}
+			}
+		}
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
+	/*
 	@Override
 	public Object visit(ASTUnaryExpressionNotPlusMinus node,
 			Boolean secondVisit) throws ShadowException
@@ -912,6 +963,7 @@ public class TACBuilder implements ShadowParserVisitor
 			visitUnaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
+	*/
 
 	@Override
 	public Object visit(ASTInlineMethodDefinition node, Boolean secondVisit)
@@ -1078,7 +1130,7 @@ public class TACBuilder implements ShadowParserVisitor
 				ArrayType arrayType = (ArrayType)prefix.getType();
 				TACOperand length = new TACLength(tree, prefix, 0);
 				for (int i = 1; i < arrayType.getDimensions(); i++)
-					length = new TACBinary(tree, length, '*', new TACLength(tree, prefix, i));
+					length = new TACBinary(tree, length, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(tree, prefix, i), false);
 				prefix = length;
 			}
 			else
@@ -1987,7 +2039,7 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		TACTree saveTree = tree;
 		tree = new TACTree(1);
-		walk(constantNode.jjtGetChild(1));
+		walk(constantNode.jjtGetChild(0));
 		tree.done();
 		constantRef.append(tree);
 		module.addConstant(constantRef);
@@ -2091,10 +2143,13 @@ public class TACBuilder implements ShadowParserVisitor
 		tree = saveTree;
 	}
 
+	/*
 	private void visitUnaryOperation(SimpleNode node)
 	{
+		
 		new TACUnary(tree, node.getImage().charAt(0), tree.appendChild(0));
 	}
+	*/
 
 	/*
 	private void visitBinaryOperation(SimpleNode node)
@@ -2115,62 +2170,85 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 	*/
 	
-	private void visitBinaryOperation(SimpleNode node)
-	{	
-		
+	private void visitBooleanOperation(Node node)
+	{
 		int child = 0;		
 		String image = node.getImage();
 		TACOperand current = null;
 			while( current == null )
 				current = tree.appendChild(child++);
-		for( int index = 0; index < image.length(); index++ )
+		for( int index = 0; index < node.getImage().length(); index++ )
 		{
-			char c = image.charAt(index);
+			char op = image.charAt(index);
 			TACOperand next = null;
 			while( next == null )
 				next = tree.appendChild(child++);
-			BinaryOperation operation = new BinaryOperation( current, next, c ); 
 			
-			if( operation.hasMethod() ) //operation based on method
-			{	
-				/*
-				TACVariableRef var = new TACVariableRef(tree,
-					method.addTempLocal(node));		
-				MethodSignature method = operation.getMethod();		
-				new TACStore(tree, var, new TACCall(tree, block,
-					new TACMethodRef(tree, current, method),
-					current, next));		
-				current = new TACLoad(tree, var);
-				*/
-				
-				TACVariableRef var = new TACVariableRef(tree,
-						method.addTempLocal(node));
-				new TACStore(tree, var, new TACBinaryMethod(tree, block, current, operation, next));		
-				current = new TACLoad(tree, var);
-
-				//comparisons will always give positive, negative or zero integer
-				//must be compared to 0 with regular comparison to work
-				switch( operation.getComparison() )
-				{
-				case LESS_THAN: current = new TACBinary(tree, current, '<', new TACLiteral(tree, "0") ); break;
-				case GREATER_THAN: current = new TACBinary(tree, current, '>', new TACLiteral(tree, "0") ); break;
-				case LESS_THAN_OR_EQUAL: current = new TACBinary(tree, current, '{', new TACLiteral(tree, "0") ); break;
-				case GREATER_THAN_OR_EQUAL: current = new TACBinary(tree, current, '}', new TACLiteral(tree, "0") ); break;
-				default: //do nothing
-				}
+			TACBinary.Boolean connector = null;
+			switch( op )
+			{
+			case 'a': connector = TACBinary.Boolean.AND; break;
+			case 'o': connector = TACBinary.Boolean.OR; break;
+			case 'x': connector = TACBinary.Boolean.XOR; break;
+			default: throw new IllegalArgumentException("Operator " + op + " is not a valid boolean operator");			
 			}
+									
+			current = new TACBinary(tree, current, connector, next);
+		}	
+	}
+	
+	private void visitBinaryOperation(OperationNode node)
+	{	
+		int child = 0;		
+		String image = node.getImage();
+		TACOperand current = null;
+			while( current == null )
+				current = tree.appendChild(child++);
+		for( int index = 0; index < node.getOperations().size(); index++ )
+		{
+			char op = image.charAt(index);
+			TACOperand next = null;
+			while( next == null )
+				next = tree.appendChild(child++);
+			//BinaryOperation operation = new BinaryOperation( current, next, c );
+			MethodSignature signature = node.getOperations().get(index);
+			boolean isCompare = ( op == '<' || op == '>' || op == '{' || op == '}' );
+			Type currentType = current.getType();
+			if( currentType instanceof PropertyType )
+				currentType = ((PropertyType)currentType).getGetType().getType();
+			
+			if( currentType.isPrimitive() && signature.getModifiers().isNative() ) //operation based on method
+				current = new TACBinary(tree, current, signature, op, next, isCompare );
 			else
-				current = new TACBinary(tree, current, operation, next);
+			{
+				//comparisons will always give positive, negative or zero integer
+				//must be compared to 0 with regular int comparison to work
+				if( isCompare )
+				{
+					TACVariableRef var = new TACVariableRef(tree,
+							method.addTempLocal(new SimpleModifiedType(Type.INT)));
+					new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, current, signature), current, new TACLiteral(tree, "0")));		
+					current = new TACLoad(tree, var);					
+					current = new TACBinary(tree, current, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), op, new TACLiteral(tree, "0"), true );
+				}
+				else
+				{
+					TACVariableRef var = new TACVariableRef(tree,
+							method.addTempLocal(node));
+					new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, current, signature), current, next));		
+					current = new TACLoad(tree, var);
+				}
+			}			
 		}
 	}
 
-	private void visitExpression(SimpleNode node)
+	private void visitExpression(OperationNode node)
 	{
 		TACOperand value = tree.appendChild(2);
 		TACReference var = (TACReference)tree.appendChild(0);
 		char operation = node.jjtGetChild(1).getImage().charAt(0);
 		if (operation != '=')
-			value = new TACBinary(tree, var, operation, value);
+			value = new TACBinary(tree, var, node.getOperations().get(0), operation, value);
 		new TACStore(tree, var, value);
 	}
 
@@ -2220,7 +2298,7 @@ public class TACBuilder implements ShadowParserVisitor
 			bodyLabel.new TACLabel(tree);
 			new TACStore(tree, new TACArrayRef(tree, alloc, index),
 					visitArrayAllocation((ArrayType)type.getBaseType(), sizes));
-			new TACStore(tree, index, new TACBinary(tree, index, '+',
+			new TACStore(tree, index, new TACBinary(tree, index, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+',
 					new TACLiteral(tree, "1")));
 			new TACBranch(tree, condLabel);
 			condLabel.new TACLabel(tree);

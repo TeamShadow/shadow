@@ -1,6 +1,7 @@
 immutable class shadow.standard@
 	Short
 implements
+	Bitwise<short>,
 	Integer<short>,
 	Integer<int>,
 	Integer<long>,
@@ -11,28 +12,28 @@ implements
 {
 	constant short MAX = 32767s;
 	constant short MIN = -32768s;	
-	// implement Integer
+	// implement Bitwise
 	public native bitComplement() => (short);
 	public native bitShiftLeft(uint amount) => (short);
 	public native bitShiftRight(uint amount) => (short);
 	public native bitRotateLeft(uint amount) => (short);
 	public native bitRotateRight(uint amount) => (short);
-	public native bitShiftLeft(int amount) => (short)
+	public bitShiftLeft(int amount) => (short)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
 	}
-	public native bitShiftRight(int amount) => (short)
+	public bitShiftRight(int amount) => (short)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
 	}
-	public native bitRotateLeft(int amount) => (short)
+	public bitRotateLeft(int amount) => (short)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
 	}
-	public native bitRotateRight(int amount) => (short)
+	public bitRotateRight(int amount) => (short)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);

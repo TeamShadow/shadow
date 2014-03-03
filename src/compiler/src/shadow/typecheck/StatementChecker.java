@@ -705,21 +705,21 @@ public class StatementChecker extends BaseChecker
 						}
 						else
 						{
-							addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+							addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
 							result = Type.UNKNOWN;	
 							break;
 						}				
 					}
 					else		
 					{
-						addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+						addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
 						result = Type.UNKNOWN;
 						break;
 					}			
 				}
 				else if( !result.isSubtype(current) && !current.isSubtype(result) )
 				{
-					addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+					addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
 					result = Type.UNKNOWN;	
 					break;
 				}	
@@ -734,6 +734,93 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;		
 	}
 	
+	public void visitBinary( OperationNode node ) throws ShadowException
+	{
+		Type result = node.jjtGetChild(0).getType();
+		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
+		{			
+			char operator = node.getImage().charAt(i - 1);
+			InterfaceType interfaceType = null;
+			String methodName = "";
+			String symbol = String.valueOf(operator);
+			switch( operator )
+			{
+			case '+':
+				methodName = "add";
+				interfaceType = Type.CAN_ADD;
+				break;
+			case '-':
+				methodName = "subtract";
+				interfaceType = Type.CAN_SUBTRACT;
+				break;
+			case '*':
+				methodName = "multiply";
+				interfaceType = Type.CAN_MULTIPLY;
+				break;
+			case '/':
+				methodName = "divide";
+				interfaceType = Type.CAN_DIVIDE;
+				break;
+			case '%':
+				methodName = "modulus";
+				interfaceType = Type.CAN_MODULUS;
+				break;
+			case 'l':
+				methodName = "bitShiftLeft";
+				symbol = "<<";
+				interfaceType = Type.INTEGER;
+				break;
+			case 'L':
+				methodName = "bitRotateLeft";
+				symbol = "<<<";
+				interfaceType = Type.INTEGER;
+				 break;
+			case 'r':
+				methodName = "bitShiftRight";
+				symbol = ">>";
+				interfaceType = Type.INTEGER;
+				break;
+			case 'R':
+				methodName = "bitRotateRight";
+				symbol = ">>>";
+				interfaceType = Type.INTEGER;
+				break;
+			}
+			
+			Node currentNode = node.jjtGetChild(i);
+			Type current = currentNode.getType();
+			
+			if( result.hasInterface(interfaceType) )
+			{
+				SequenceType argument = new SequenceType(currentNode);											
+				 
+				MethodSignature signature = setMethodType(node, result, methodName, argument );
+				if( signature != null )
+				{
+					result = signature.getReturnTypes().getType(0);
+					node.addOperation(signature);
+				}
+				else
+				{
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
+					node.setType(Type.UNKNOWN);
+					return;
+				}				
+			}
+			else		
+			{
+				addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
+				node.setType(Type.UNKNOWN);
+				return;						
+			}				
+		}
+			
+		node.setType(result); //propagates type up if only one child
+		pushUpModifiers(node); //can add ASSIGNABLE (if only one child)
+		
+	}
+	
+	/*
 	public void visitShiftRotate( OperationNode node ) throws ShadowException
 	{			
 		Type result = node.jjtGetChild(0).getType();
@@ -799,21 +886,23 @@ public class StatementChecker extends BaseChecker
 		node.setType(result); //propagates type up if only one child	
 		pushUpModifiers(node);  //can add ASSIGNABLE (if only one child)
 	}
+	*/
 	
 	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
-			visitShiftRotate( node );
+			visitBinary( node );
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTRotateExpression node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
-			visitShiftRotate( node );
+			visitBinary( node );
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
+	/*
 	public void visitArithmetic(OperationNode node) throws ShadowException 
 	{
 		Type result = node.jjtGetChild(0).getType();
@@ -877,21 +966,23 @@ public class StatementChecker extends BaseChecker
 		node.setType(result); //propagates type up if only one child
 		pushUpModifiers(node); //can add ASSIGNABLE (if only one child)
 	}
+	*/
 	
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
-			visitArithmetic( node );
+			visitBinary( node );
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
-			visitArithmetic( node );
+			visitBinary( node );
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
+	/*
 	public Object visit(ASTUnaryToString node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
 		{				
@@ -909,51 +1000,71 @@ public class StatementChecker extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;
 	}
+	*/
+	
+	private Type visitUnary( ASTUnaryExpression node, String method, String operator, InterfaceType interfaceType )
+	{
+		Type type = node.jjtGetChild(0).getType();
+		
+		if( type.hasInterface(interfaceType) )
+		{
+			MethodSignature signature = setMethodType(node, type, method, new SequenceType() );
+			if( signature != null )
+			{
+				type = signature.getReturnTypes().getType(0);
+				node.addOperation(signature);
+			}
+			else
+			{
+				addError(Error.INVALID_TYPE, "Cannot apply " + operator + " to type " + type + " which does not implement interface " + interfaceType);
+				type = Type.UNKNOWN;						
+			}
+		}
+		else
+		{
+			addError(Error.INVALID_TYPE, "Cannot apply " + operator + " to type " + type + " which does not implement interface " + interfaceType);
+			type = Type.UNKNOWN;					
+		}
+		
+		return type;
+	}
 		
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit) throws ShadowException
 	{
 		if(secondVisit)
-		{				
-			Type type = node.jjtGetChild(0).getType();
+		{	
 			String operator = node.getImage();
+			Type type = node.jjtGetChild(0).getType();
 			
-			if( (operator.equals("-") || operator.equals("+")) ) 
+			if( operator.equals("-") )
+				type = visitUnary( node, "negate", "unary -", Type.CAN_NEGATE);
+			else if( operator.equals("~") )
+				type = visitUnary( node, "bitComplement", "operator ~", Type.INTEGER);
+			else if( operator.equals("#") )
 			{
-				if( type.hasInterface(Type.CAN_NEGATE) )
+				MethodSignature signature = setMethodType(node, type, "toString", new SequenceType() );
+				node.addOperation(signature); //should never be null
+				type = Type.STRING;
+			}
+			else if( operator.equals("!") )
+			{
+				if( !type.equals(Type.BOOLEAN)) 
 				{
-					MethodSignature signature = setMethodType(node, type, "negate", new SequenceType() );
-					if( signature != null )
-					{
-						type = signature.getReturnTypes().getType(0);
-						node.addOperation(signature);
-					}
-					else
-					{
-						addError(Error.INVALID_TYPE, "Cannot apply unary " + operator + " to type " + type + " which does not implement interface " + Type.CAN_NEGATE);
-						type = Type.UNKNOWN;						
-					}
-				}
-				else
-				{
-					addError(Error.INVALID_TYPE, "Cannot apply unary " + operator + " to type " + type + " which does not implement interface " + Type.CAN_NEGATE);
-					type = Type.UNKNOWN;					
-				}
+					addError(Error.INVALID_TYPE, "Cannot apply operator ! to type " + type + " which is not boolean");
+					type = Type.UNKNOWN;				
+				}				
 			}
 			else
 				pushUpModifiers( node );
 			
-			//maybe unsigned types can't be negated
-			/*
-			if(symbol.contains("-"))
-				node.setType(Type.makeSigned((ClassType)type));
-			else
-			*/
+	
 			node.setType(type);
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 		
+	/*
 	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
 		{				
@@ -996,6 +1107,7 @@ public class StatementChecker extends BaseChecker
 		}
 		return WalkType.POST_CHILDREN;
 	}
+	*/
 	
 	
 	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException {
@@ -2867,9 +2979,10 @@ public class StatementChecker extends BaseChecker
 			else
 			{
 				MethodType methodType = (MethodType)(currentMethod.getFirst().getType());
-				SequenceType returnTypes  = methodType.getReturnTypes();				
+				node.setType(methodType.getReturnTypes()); //return statement set to exactly the types method returns
+														   //implicit casts are added in TAC conversion if the values don't match exactly			
 				
-				if( returnTypes.size() == 0 )
+				if( node.getType().size() == 0 )
 				{
 					if( node.jjtGetNumChildren() > 0 )
 						addError(Error.INVALID_RETURNS, "Cannot return values from a method that returns nothing");
@@ -2885,6 +2998,8 @@ public class StatementChecker extends BaseChecker
 					else
 						sequenceType = new SequenceType( child );
 					
+					SequenceType updatedTypes = new SequenceType();
+					
 					//reconstitute full return types based on types with return modifiers
 					//return modifiers can differ from regular modifiers because readonly and immutable methods
 					//can enforce readonly constraints to keep object internals from changing during the method
@@ -2893,13 +3008,13 @@ public class StatementChecker extends BaseChecker
 						Modifiers modifiers = sequenceType.get(i).getModifiers();
 						modifiers.removeModifier(Modifiers.TEMPORARY_READONLY);
 						
-						node.addType(new SimpleModifiedType(sequenceType.getType(i), modifiers ) );
+						updatedTypes.add(new SimpleModifiedType(sequenceType.getType(i), modifiers ) );
 					}
 										
-					if( !node.getType().isSubtype(returnTypes) )						
-						addError(Error.INVALID_RETURNS, "Cannot return " + node.getType() + " when " + returnTypes + (returnTypes.size() == 1 ? " is" : " are") + " expected" );
+					if( !updatedTypes.isSubtype(node.getType()) )						
+						addError(Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + node.getType() + (node.getType().size() == 1 ? " is" : " are") + " expected" );
 					
-					for( ModifiedType modifiedType : node.getType() )
+					for( ModifiedType modifiedType : updatedTypes )
 						if( modifiedType.getModifiers().isTypeName() )
 							addError(Error.INVALID_RETURNS, "Cannot return type name from a method" );			
 				}

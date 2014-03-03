@@ -1,15 +1,23 @@
 package shadow.tac.nodes;
 
-import shadow.tac.nodes.TACBinary.Operation;
-import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 {
-	public Object data;
+	private Object data;
+	
+	public Object getData()
+	{
+		return data;
+	}
+	
+	public void setData(Object data)
+	{
+		this.data = data;
+	}
+
 	protected TACOperand()
 	{
 		super();
@@ -32,6 +40,7 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 		throw new UnsupportedOperationException();
 	}
 
+	//does this sometimes need a toString thrown in?
 	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
 	{
 		if (getType().isStrictSubtype(type.getType()))

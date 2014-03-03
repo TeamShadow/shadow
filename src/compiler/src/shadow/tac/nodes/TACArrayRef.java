@@ -9,6 +9,7 @@ import java.util.List;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -45,12 +46,12 @@ public class TACArrayRef extends TACReference
 		indicies.add(current);
 		while (iter.hasNext())
 		{
-			current = new TACBinary(this, current, '*', new TACLength(this,
+			current = new TACBinary(this, current, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(this,
 					array, indicies.size()));
 			TACOperand next = check(iter.next(),
 					new SimpleModifiedType(Type.INT));
 			indicies.add(next);
-			current = new TACBinary(this, current, '+', next);
+			current = new TACBinary(this, current, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', next);
 		}
 		total = current;
 	}
