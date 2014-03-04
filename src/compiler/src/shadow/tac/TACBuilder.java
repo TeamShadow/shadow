@@ -409,12 +409,11 @@ public class TACBuilder implements ShadowParserVisitor
 					superType = thisType.getExtendType();
 			MethodType type = new MethodType("this".equals(node.getImage()) ?
 					thisType : superType, new Modifiers());
-			TACSequence sequence = tree.appendChildRemoveSequence(0);
-			List<TACOperand> params = new ArrayList<TACOperand>(
-					sequence.size());
+			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(new TACVariableRef(tree, method.getThis()));
-			for (TACOperand param : sequence)
+			for (int i = 0; i < tree.getNumChildren(); i++)
 			{
+				TACOperand param = tree.appendChild(i); 
 				params.add(param);
 				type.addParameter(param);
 			}

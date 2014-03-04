@@ -34,12 +34,22 @@ public class InterfaceType extends Type
 	}
 	
 	@Override
-	public ArrayList<InterfaceType> getAllInterfaces()
-	{		
+	public HashSet<InterfaceType> getAllInterfaces()
+	{	
+		HashSet<InterfaceType> allInterfaces = super.getAllInterfaces();		
+		allInterfaces.add(this);
+		
+		return allInterfaces;
+		
+		
+		//allows duplicates and needs not to
+		/*
+		
 		ArrayList<InterfaceType> list = super.getAllInterfaces();
 		list.add(this);
 		
 		return list;
+		*/
 	}
 	
 	public boolean isDescendentOf(Type type)
@@ -131,6 +141,7 @@ public class InterfaceType extends Type
 	}
 	
 
+	/*
 	//see if interface has circular extends hierarchy
 	public boolean isCircular()
 	{
@@ -138,7 +149,9 @@ public class InterfaceType extends Type
 		
 		return recursiveIsCircular( descendants );
 	}
+	*/
 	
+	/*
 	//recursively look at parents, adding yourself to the list of interfaces as you go
 	//if you find yourself, it's circular
 	//if you don't, remove yourself afterwards
@@ -157,6 +170,7 @@ public class InterfaceType extends Type
 		
 		return false;
 	}
+	*/
 	
 	@Override
 	public InterfaceType replace(SequenceType values, SequenceType replacements )
@@ -351,5 +365,11 @@ public class InterfaceType extends Type
 		
 		
 		out.println(linePrefix + "}\n");	
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return toString(true).hashCode();
 	}
 }

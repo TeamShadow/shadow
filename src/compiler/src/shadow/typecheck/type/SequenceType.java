@@ -147,11 +147,8 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		StringBuilder builder = new StringBuilder("_L");		
 		
 		for(ModifiedType type: types)
-		{		
-			builder.append("_T");
 			builder.append(type.getType().getMangledNameWithGenerics());			
-		}
-		
+			
 		builder.append("_R");
 		
 		return builder.toString();

@@ -517,6 +517,7 @@ public class ClassType extends Type
 	protected void addInnerClass(String name, ClassType innerClass)
 	{
 		innerClasses.put( name, innerClass );
+		innerClass.setOuter(this);
 	}
 	
 	public boolean containsInnerClass(String className) {

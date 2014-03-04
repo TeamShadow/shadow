@@ -332,7 +332,10 @@ public abstract class Type
 			{
 				
 				if( parameterized )
-				{
+				{	
+					return type.typeParameters.matches(typeParameters);
+					
+					/*
 					if( type.typeParameters.size() == typeParameters.size() )
 					{
 						for( int i = 0; i < typeParameters.size(); i++ )
@@ -342,7 +345,7 @@ public abstract class Type
 						}
 					}
 					else
-						return false;
+						return false;*/
 				}
 					
 				return true;
@@ -1009,14 +1012,14 @@ public abstract class Type
 		return interfaces;
 	}
 	
-	public ArrayList<InterfaceType> getAllInterfaces()
+	public HashSet<InterfaceType> getAllInterfaces()
 	{		
-		ArrayList<InterfaceType> list = new ArrayList<InterfaceType>();
+		HashSet<InterfaceType> set = new HashSet<InterfaceType>();
 						
 		for( InterfaceType interfaceType : getInterfaces() )
-			list.addAll( interfaceType.getAllInterfaces() );
+			set.addAll( interfaceType.getAllInterfaces() );
 		
-		return list;
+		return set;
 	}	
 	
 	public boolean isDescendentOf(Type type)

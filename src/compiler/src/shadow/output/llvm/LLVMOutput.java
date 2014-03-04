@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -247,7 +248,7 @@ public class LLVMOutput extends AbstractOutput
 		}
 		writer.write();
 
-		List<InterfaceType> interfaces = moduleType.getAllInterfaces();
+		HashSet<InterfaceType> interfaces = moduleType.getAllInterfaces();
 		int interfaceCount = interfaces.size();
 		StringBuilder interfaceData = new StringBuilder(
 				"@_interfaceData = private unnamed_addr constant [").
@@ -257,23 +258,24 @@ public class LLVMOutput extends AbstractOutput
 				"@_interfaces = private unnamed_addr constant [").
 				append(interfaceCount).append(" x ").
 				append(type(Type.CLASS)).append("] [");
-		for (int i = 0; i < interfaceCount; i++)
-		{
-			InterfaceType type = interfaces.get(i);
+		int i = 0;
+		for(InterfaceType type : interfaces)
+		{			
 			if (module.isClass())
 			{
 				List<MethodSignature> methods = type.orderAllMethods(module.
 						getClassType());
-				String methodsType = interfaceMethodList(methods, false);
+				String methodsType = methodList(methods, false);
 				writer.write("@_class" + i +
 						" = private unnamed_addr constant { " + methodsType +
-						" } { " + interfaceMethodList(methods, true) + " }");
+						" } { " + methodList(methods, true) + " }");
 				interfaceData.append(type(Type.OBJECT)).append(" bitcast ({ ").
 						append(methodsType).append(" }* @_class").append(i).
 						append(" to ").append(type(Type.OBJECT)).append("), ");
 			}
 			interfaceClasses.append(typeText(Type.CLASS, classOf(type))).
 					append(", ");
+			i++;
 		}
 		if (interfaceCount != 0)
 		{
@@ -496,21 +498,6 @@ public class LLVMOutput extends AbstractOutput
 		}
 		return sb.substring(2);
 	}
-	
-	private String interfaceMethodList(Iterable<MethodSignature> methods, boolean name)
-			throws ShadowException
-	{
-		StringBuilder sb = new StringBuilder();
-		for (MethodSignature method : methods)
-		{
-			TACMethodRef methodRef = new TACMethodRef(method);
-			sb.append(", ").append(methodType(methodRef));
-			if (name)
-				sb.append(' ').append(name(methodRef));
-		}
-		return sb.substring(2);
-	}
-	
 
 	@Override
 	public void endFile(TACModule module) throws ShadowException
