@@ -264,10 +264,10 @@ public class LLVMOutput extends AbstractOutput
 			{
 				List<MethodSignature> methods = type.orderAllMethods(module.
 						getClassType());
-				String methodsType = methodList(methods, false);
+				String methodsType = interfaceMethodList(methods, false);
 				writer.write("@_class" + i +
 						" = private unnamed_addr constant { " + methodsType +
-						" } { " + methodList(methods, true) + " }");
+						" } { " + interfaceMethodList(methods, true) + " }");
 				interfaceData.append(type(Type.OBJECT)).append(" bitcast ({ ").
 						append(methodsType).append(" }* @_class").append(i).
 						append(" to ").append(type(Type.OBJECT)).append("), ");
@@ -496,6 +496,21 @@ public class LLVMOutput extends AbstractOutput
 		}
 		return sb.substring(2);
 	}
+	
+	private String interfaceMethodList(Iterable<MethodSignature> methods, boolean name)
+			throws ShadowException
+	{
+		StringBuilder sb = new StringBuilder();
+		for (MethodSignature method : methods)
+		{
+			TACMethodRef methodRef = new TACMethodRef(method);
+			sb.append(", ").append(methodType(methodRef));
+			if (name)
+				sb.append(' ').append(name(methodRef));
+		}
+		return sb.substring(2);
+	}
+	
 
 	@Override
 	public void endFile(TACModule module) throws ShadowException
@@ -1836,7 +1851,28 @@ public class LLVMOutput extends AbstractOutput
 				append(constant.getPrefixType().getMangledName()).append("_M"),
 				constant.getName()).append('\"').toString();
 	}
+	
+	//Is it only the wrapped ones that correspond to interface methods?
+	//If so, those are the ones that need special generic attention
 	private static String name(TACMethodRef method)
+	{
+		StringBuilder sb = new StringBuilder("@\"");
+		
+		if( method.isWrapper() )		
+			sb.append(method.getPrefixType().getMangledNameWithGenerics());
+		else
+			sb.append(method.getPrefixType().getMangledName());	
+		
+		sb = Type.mangle( sb.append("_M"), method.getName());
+		for (ModifiedType paramType : method.getType().getParameterTypes())
+			sb.append(paramType.getType().getMangledName());
+		if (method.isWrapper())
+			sb.append("_W");
+		return sb.append('\"').toString();
+	}	
+	
+	/*//old
+	 private static String name(TACMethodRef method)
 	{
 		StringBuilder sb = Type.mangle(new StringBuilder("@\"").
 				append(method.getPrefixType().getMangledName()).append("_M"),
@@ -1847,6 +1883,22 @@ public class LLVMOutput extends AbstractOutput
 			sb.append("_W");
 		return sb.append('\"').toString();
 	}
+	*/
+	//with interfaces, generic types are also needed to avoid collisions with
+	//methods implementing a different generic version of the same interface
+	/*
+	private static String interfaceName(TACMethodRef method)
+	{
+		StringBuilder sb = Type.mangle(new StringBuilder("@\"").
+				append(method.getPrefixType().getMangledNameWithGenerics()).append("_M"),
+				method.getName());
+		for (ModifiedType paramType : method.getType().getParameterTypes())
+			sb.append(paramType.getType().getMangledName());
+		if (method.isWrapper())
+			sb.append("_W");
+		return sb.append('\"').toString();
+	}
+	*/
 	private static String name(TACMethod method)
 	{
 		return name(method.getMethod());

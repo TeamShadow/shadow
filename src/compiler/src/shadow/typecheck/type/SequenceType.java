@@ -140,7 +140,23 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	public String toString(String begin, String end) {
 		return toString(begin, end, false);
 	}
-
+	
+	@Override
+	public String getMangledNameWithGenerics()
+	{
+		StringBuilder builder = new StringBuilder("_L");		
+		
+		for(ModifiedType type: types)
+		{		
+			builder.append("_T");
+			builder.append(type.getType().getMangledNameWithGenerics());			
+		}
+		
+		builder.append("_R");
+		
+		return builder.toString();
+	}
+	
 	public String toString(String begin, String end, boolean withBounds ) {
 		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;

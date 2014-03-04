@@ -236,6 +236,22 @@ public abstract class Type
 		return sb.delete(sb.length() - 2, sb.length()).toString();
 	}
 	
+			
+	public String getMangledNameWithGenerics() {		
+		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
+		StringBuilder builder;
+		
+		if( getOuter() == null )		
+			builder = new StringBuilder("_C").append(className);
+		else
+			builder = new StringBuilder(getOuter().getMangledNameWithGenerics() + "_I" + className );
+			
+		if( isParameterized() )		
+			builder.append(getTypeParameters().getMangledNameWithGenerics());
+				
+		return builder.toString();
+	}	
+	
 	public String getImportName() //does not include parameters
 	{		
 		if( isPrimitive() )
@@ -689,7 +705,7 @@ public abstract class Type
 		return sb;
 	}
 	
-	public static String unmangle(String name)
+	public static String unmangle(String name) //never used?
 	{
 		StringBuilder sb = new StringBuilder(name.length());
 		
@@ -821,6 +837,7 @@ public abstract class Type
 	}
 	
 	public void addMethod(String name, MethodSignature signature) {
+		signature.getMethodType().setOuter(this);		
 		if( methodTable.containsKey(name) )		
 			methodTable.get(name).add(signature);
 		else

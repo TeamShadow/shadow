@@ -193,8 +193,11 @@ public class InterfaceType extends Type
 			{
 				List<MethodSignature> signatures = methods.get(name);
 				
-				for( MethodSignature signature : signatures )			
-					replaced.addMethod(name, signature.replace(values, replacements));				
+				for( MethodSignature signature : signatures )
+				{
+					MethodSignature replacedSignature = signature.replace(values, replacements);					
+					replaced.addMethod(name, replacedSignature);
+				}
 			}
 			
 			//should have no inner interfaces in an interface		
