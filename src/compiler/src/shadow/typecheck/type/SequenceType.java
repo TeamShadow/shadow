@@ -146,8 +146,12 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	{
 		StringBuilder builder = new StringBuilder("_L");		
 		
-		for(ModifiedType type: types)
-			builder.append(type.getType().getMangledNameWithGenerics());			
+		//to distinguish generics that have the same type name, we have to add packages as well
+		for(ModifiedType modifiedType: types)
+		{
+			Type type = modifiedType.getType();
+			builder.append(type.getPackage().getMangledName() + type.getMangledNameWithGenerics());
+		}
 			
 		builder.append("_R");
 		

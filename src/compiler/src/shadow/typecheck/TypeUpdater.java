@@ -392,7 +392,9 @@ public class TypeUpdater extends BaseChecker
 				
 			for( Type dependency : type.getInterfaces() )
 			{
-				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
+				
+				dependency = dependency.getTypeWithoutTypeArguments();
+				Node dependencyNode = uninstantiatedNodes.get(dependency);
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 				else

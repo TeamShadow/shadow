@@ -370,6 +370,6 @@ public class InterfaceType extends Type
 	@Override
 	public int hashCode()
 	{
-		return toString(true).hashCode();
+		return toString().hashCode();
 	}
 }
