@@ -29,12 +29,16 @@ public class ClassType extends Type
 		super( typeName, modifiers, outer );
 		
 		innerClasses = new HashMap<String, ClassType>();
+		//take out outer class names
+		//typeName = typeName.substring(typeName.lastIndexOf(':') + 1); //works even if name doesn't contain a :
 		
-		if( outer != null && outer instanceof ClassType && typeName != null )
+		/*
+		if( outer != null && outer instanceof ClassType && typeName != null && !(this instanceof UnboundMethodType)  )
 		{		
 			typeName = typeName.substring(typeName.lastIndexOf(':') + 1); //works even if name doesn't contain a :				
 			((ClassType)outer).innerClasses.put(typeName, this);
 		}
+		*/
 	}
 	
 	public void setExtendType(ClassType extendType) {
@@ -514,7 +518,7 @@ public class ClassType extends Type
 		return innerClasses;
 	}
 	
-	protected void addInnerClass(String name, ClassType innerClass)
+	public void addInnerClass(String name, ClassType innerClass)
 	{
 		innerClasses.put( name, innerClass );
 		innerClass.setOuter(this);

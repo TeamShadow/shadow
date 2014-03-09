@@ -68,9 +68,22 @@ public class TACBinary extends TACOperand
 		if (secondType.getType() instanceof PropertyType)
 			secondType = ((PropertyType)secondType.getType()).getGetType();
 		
-		operation = op;
+		operation = op;		
 		first = check(firstOperand, firstType);
-		second = check(secondOperand, secondType);
+		
+		//shifts and rotates have weird issues
+		//LLVM insists that you rotate a byte with a byte
+		//so we have to throw in explicit casts
+		if( (op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>")) && !firstType.getType().equals(secondType))
+		{
+			//second = check(secondOperand, secondType);
+			//node.append(secondOperand);
+			second = new TACCast(this, firstType, secondOperand );
+			//second = check(secondOperand, secondType, true);
+			//second = check(secondOperand, secondType);
+		}
+		else
+			second = check(secondOperand, secondType);
 		result = resultType;
 	}
 	

@@ -28,12 +28,14 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
 
 /**
- * @author wspeirs
- *
+ * @author Bill Speirs
+ * @author Barry Wittman
+ * @author Jacob Young 
  */
 public class Main {
 	/*
@@ -154,6 +156,7 @@ public class Main {
 			try
 			{
 				node = checker.typeCheck(shadowFile);
+				
 			}
 			catch( TypeCheckException e )
 			{				
@@ -175,12 +178,12 @@ public class Main {
 					if (mainClass == null)
 						mainClass = module.getType().getMangledName();
 					System.out.println(module);
-
+					
 					// build the TAC
 					new LLVMOutput(true).build(module);
 
 					// verify the TAC
-					new LLVMOutput(false).build(module);
+					//new LLVMOutput(false).build(module);
 
 					// write to file
 					String name = module.getName().replace(':', '$');

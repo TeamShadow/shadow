@@ -54,6 +54,11 @@ public abstract class TACSimpleNode extends TACNode
 	public abstract int getNumOperands();
 	public abstract TACOperand getOperand(int num);
 
+/*	protected final TACOperand check(TACOperand operand, ModifiedType type)
+	{
+		return check(operand, type, false);
+	}
+	*/
 	protected final TACOperand check(TACOperand operand, ModifiedType type)
 	{
 		if (type instanceof TACReference)
@@ -69,7 +74,7 @@ public abstract class TACSimpleNode extends TACNode
 		
 		if (operand.getType() instanceof SequenceType &&
 				type.getType() instanceof SequenceType &&
-				((SequenceType)operand.getType()).matches( //replace with subtype?
+				((SequenceType)operand.getType()).matches( //replace with subtype? no!
 						((SequenceType)type.getType())))
 			return operand;		
 

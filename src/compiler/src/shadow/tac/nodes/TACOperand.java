@@ -39,12 +39,28 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 	{
 		throw new UnsupportedOperationException();
 	}
+	
+
+	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
+	{
+		if (getType().isStrictSubtype(type.getType()))
+			return new TACCast(node, type, this);		
+		return this;
+	}
+	/*
+	protected TACOperand checkVirtual(ModifiedType type, TACNode node, boolean allowDowncast)
+	{
+		if (getType().isStrictSubtype(type.getType()))
+			return new TACCast(node, type, this);
+		if( allowDowncast && type.getType().isStrictSubtype(getType()))
+			return new TACCast(node, type, this);
+		return this;
+	}
 
 	//does this sometimes need a toString thrown in?
 	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
 	{
-		if (getType().isStrictSubtype(type.getType()))
-			return new TACCast(node, type, this);
-		return this;
-	}	
+		return checkVirtual(type, node, false);
+	}
+	*/	
 }

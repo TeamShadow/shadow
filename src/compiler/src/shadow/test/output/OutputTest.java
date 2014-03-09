@@ -22,6 +22,7 @@ public class OutputTest {
 
 	@Before
 	public void setUp() throws Exception {
+		args.add("shadow/utility/LinkedList.shadow");
 		args.add("shadow/standard/Object.shadow");
 		args.add("shadow/standard/Class.shadow");
 		args.add("shadow/standard/Array.shadow");
@@ -52,7 +53,7 @@ public class OutputTest {
 		args.add("shadow/utility/List.shadow");
 		args.add("shadow/utility/Set.shadow");
 		args.add("shadow/utility/ArrayList.shadow");
-		args.add("shadow/utility/LinkedList.shadow");
+		
 //		args.add("shadow/utility/HashSet.shadow");
 		args.add("shadow/utility/IllegalModificationException.shadow");
 		

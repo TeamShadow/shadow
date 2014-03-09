@@ -873,8 +873,10 @@ public class LLVMOutput extends AbstractOutput
 					method);
 			TACClass srcClass = new TACClass(destClass, srcType.getType(),
 					method);
+			walk(srcClass); //good idea?
 			TACCall call = new TACCall(srcClass, new TACBlock(), methodRef,
 					srcClass, destClass);
+			//walk(destClass); //picks up other stuff? FIX IF NEEDED
 			walk(call);
 			writer.write(nextTemp() + " = bitcast " + typeSymbol(call) +
 					" to %" + raw(destType, "_Mclass") + '*');

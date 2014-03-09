@@ -732,7 +732,10 @@ public class TACBuilder implements ShadowParserVisitor
 								nullLiteral));
 						new TACBranch(tree, doneLabel);
 						nonnullLabel.new TACLabel(tree);
-						MethodSignature method = value.getType().getMatchingMethod("equal", new SequenceType(other));
+						Type valueType = value.getType();
+						if( valueType instanceof PropertyType )
+							valueType = ((PropertyType)valueType).getGetType().getType();
+						MethodSignature method = valueType.getMatchingMethod("equal", new SequenceType(other));
 						/*//should never happen
 						MethodSignature method = null;
 						for (MethodSignature candidate :

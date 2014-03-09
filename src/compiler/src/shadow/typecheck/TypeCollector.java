@@ -257,8 +257,8 @@ public class TypeCollector extends BaseChecker
 			{
 				image = image.toLowerCase();				
 			}
-		}		
-			
+		}	
+		
 		if( currentType == null )
 			typeName = currentName + image; //package name is separate
 		else
@@ -271,12 +271,12 @@ public class TypeCollector extends BaseChecker
 		}
 		else
 		{			
-			Type type = null;	
+			Type type = null;
 			
 			switch( kind )
 			{			
 			case CLASS:
-				type = new ClassType(typeName, modifiers, currentType );
+				type = new ClassType(typeName, modifiers, currentType );				
 				break;
 			case ENUM:				
 				type = new EnumType(typeName, modifiers, currentType );
@@ -298,7 +298,17 @@ public class TypeCollector extends BaseChecker
 				break;
 			default:
 				throw new ShadowException("Unsupported type!" );
-			}			
+			}
+			
+			if( currentType != null && 
+				currentType instanceof ClassType &&					
+				( kind == TypeKind.CLASS ||
+				kind == TypeKind.ENUM ||
+				kind == TypeKind.ERROR  ||
+				kind == TypeKind.EXCEPTION) )
+			{					
+					((ClassType)currentType).addInnerClass(image, (ClassType)type); 
+			}
 			
 			//Special case for system types			
 			if( currentPackage.getQualifiedName().equals("shadow.standard"))

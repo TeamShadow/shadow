@@ -53,8 +53,17 @@ public class StatementChecker extends BaseChecker
 		// now go through and check the whole class
 		walker.walk(node);
 		
+		if( node.getType() instanceof ClassType )
+		{
+			List<ClassType> list = new ArrayList<ClassType>(((ClassType)node.getType()).getInnerClasses().values());
+			if( list.size() > 4000 )
+				System.out.println("bleh");
+		}
+		
 		if( errorList.size() > 0 )
 		{
+			
+			
 			printErrors();
 			throw errorList.get(0);
 		}	
