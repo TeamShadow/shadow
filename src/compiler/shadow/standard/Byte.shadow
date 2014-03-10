@@ -1,7 +1,6 @@
 immutable class shadow.standard@
 	Byte
 implements
-	Bitwise<byte>,
 	Integer<byte>,
 	Integer<short>,
 	Integer<int>,

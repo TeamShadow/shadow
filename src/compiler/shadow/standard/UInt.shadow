@@ -1,7 +1,6 @@
 immutable class shadow.standard@
 	UInt
 implements
-	Bitwise<uint>,
 	Integer<uint>,
 	Integer<ulong>,
 	Number<float>,

@@ -19,8 +19,8 @@ public class ConfigParser {
 		digester.addSetProperties("shadow");	// root element w/properties
 		
 		// parse the system path
-		digester.addCallMethod("shadow/system_import", "setSystemImport", 1);
-		digester.addCallParam("shadow/system_import", 0);
+		digester.addCallMethod("shadow/system", "setSystemImport", 1);
+		digester.addCallParam("shadow/system", 0);
 		
 		// parse the import paths
 		digester.addCallMethod("shadow/import", "addImport", 1);

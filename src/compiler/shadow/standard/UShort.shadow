@@ -1,7 +1,6 @@
 immutable class shadow.standard@
 	UShort
 implements
-	Bitwise<ushort>,
 	Integer<ushort>,
 	Integer<uint>,
 	Integer<ulong>,

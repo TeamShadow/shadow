@@ -1,7 +1,6 @@
 immutable class shadow.standard@
 	UByte
 implements
-	Bitwise<ubyte>,
 	Integer<ubyte>,
 	Integer<ushort>,
 	Integer<uint>,

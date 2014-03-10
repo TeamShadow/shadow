@@ -1,7 +1,6 @@
 immutable class shadow.standard@
 	Int
 implements
-	Bitwise<int>,
 	Integer<int>,
 	Integer<long>,
 	Number<float>,

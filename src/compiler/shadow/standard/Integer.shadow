@@ -3,6 +3,15 @@ interface shadow.standard@
 extends
 	Number<T>
 {
+	immutable bitComplement() => (T);
+	immutable bitShiftLeft(uint amount) => (T);
+	immutable bitShiftRight(uint amount) => (T);
+	immutable bitRotateLeft(uint amount) => (T);
+	immutable bitRotateRight(uint amount) => (T);
+	immutable bitShiftLeft(int amount) => (T);
+	immutable bitShiftRight(int amount) => (T);
+	immutable bitRotateLeft(int amount) => (T);
+	immutable bitRotateRight(int amount) => (T);
 	immutable bitOr(T other) => (T);
 	immutable bitXor(T other) => (T);
 	immutable bitAnd(T other) => (T);	

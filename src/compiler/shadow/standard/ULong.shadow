@@ -1,7 +1,6 @@
 immutable class shadow.standard@
 	ULong
 implements
-	Bitwise<ulong>,
 	Integer<ulong>,
 	Number<double>,
 	CanHash

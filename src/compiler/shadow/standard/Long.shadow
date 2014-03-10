@@ -1,7 +1,6 @@
 immutable class shadow.standard@
 	Long
 implements
-	Bitwise<long>,
 	Integer<long>,
 	Number<double>,
 	CanNegate<long>,
