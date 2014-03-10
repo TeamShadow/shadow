@@ -183,7 +183,7 @@ public class Main {
 					new LLVMOutput(true).build(module);
 
 					// verify the TAC
-					//new LLVMOutput(false).build(module);
+					new LLVMOutput(false).build(module);
 
 					// write to file
 					String name = module.getName().replace(':', '$');

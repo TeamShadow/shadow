@@ -18,18 +18,24 @@ public class Configuration implements Iterator<File> {
 	private Logger logger = Loggers.SHADOW;
 	
 	// these are the single letter command line args
-	private static final String CONFIG_FILE = "C";
-	private static final String CHECK		= "check";
-	private static final String COMPILE		= "compile";
+	private static final String CONFIG 			= "c";
+	private static final String CONFIG_LONG 	= "config";
+	private static final String TYPECHECK		= "t";
+	private static final String TYPECHECK_LONG	= "typecheck";
+	private static final String NO_LINK			= "n";
+	private static final String NO_LINK_LONG	= "nolink";
+	private static final String HELP			= "h";
+	private static final String HELP_LONG		= "help";
+
 
 	private String parentConfig = null; /** The parent configuration from a config file */
 	private String mainClass = null; /** The file containing the class with the Main method */
 	private List<File> shadowFiles = null;
 	private int currentShadowFile = 0;
-	private File systemImportPath = null;	/** This is the import path for all the system files */
+	private File systemPath = null;	/** This is the import path for all the system files */
 	private List<File> importPaths = null;
 	private boolean checkOnly = false;		/** Run only parser & type-checker */
-	private boolean compileOnly = false;	/** Compile the files on the command line but do not link */
+	private boolean noLink = false;	/** Compile the files on the command line but do not link */
 	private int arch = -1;
 	private String os = null;
 	
@@ -57,23 +63,23 @@ public class Configuration implements Iterator<File> {
 	{
 		this.reset();	// resetting the counter in case we parse multiple times
 		
-		if(cmdLine.hasOption(CONFIG_FILE))
+		if(cmdLine.hasOption(CONFIG))
 		{
 			// parse the config file on the command line if we have it
-			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG_FILE)));
+			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG)));
 		}
-		else if(System.getenv("SHADOW_SYSTEM_CONFIG") != null)
+		else if(System.getenv("SHADOW_CONFIG") != null)
 		{
 			// use the system config from the environment
-			parseConfigFile(new File(System.getenv("SHADOW_SYSTEM_CONFIG")));
+			parseConfigFile(new File(System.getenv("SHADOW_CONFIG")));
 		}
 		else
 		{
 			// parse the correct built-in configuration file
 			if(System.getProperty("os.name").startsWith("Windows"))
-				parseConfigFile(System.class.getResource("/windows_system.xml"));
+				parseConfigFile(System.class.getResource("/shadow-windows.xml"));
 			else
-				parseConfigFile(System.class.getResource("/linux_system.xml"));
+				parseConfigFile(System.class.getResource("/shadow-linux.xml"));
 		}
 
 		// print the import paths if we're debugging
@@ -88,10 +94,10 @@ public class Configuration implements Iterator<File> {
 		//
 		
 		// see if all we want is to check the file
-		checkOnly = cmdLine.hasOption(CHECK);
+		checkOnly = cmdLine.hasOption(TYPECHECK);
 		
 		// see if we're only compiling files
-		compileOnly = cmdLine.hasOption(COMPILE);
+		noLink = cmdLine.hasOption(NO_LINK);
 		
 		// get all of the files to compile
 		shadowFiles = new ArrayList<File>();
@@ -102,8 +108,8 @@ public class Configuration implements Iterator<File> {
 		if(shadowFiles.size() == 0)
 			throw new ConfigurationException("No source files specified to compile");
 		
-		// set the main class if we're not only compiling
-		if(!compileOnly)
+		// set the main class if we're linking
+		if(!noLink)
 			mainClass = shadowFiles.get(0).getAbsolutePath();
 		
 		//
@@ -118,7 +124,7 @@ public class Configuration implements Iterator<File> {
 		if(os == null)
 			throw new ConfigurationException("Did not specify an OS");
 		
-		if(this.systemImportPath == null)
+		if(this.systemPath == null)
 			throw new ConfigurationException("No system import path specified");
 	}
 	
@@ -164,24 +170,23 @@ public class Configuration implements Iterator<File> {
 
 		// setup the configuration file option
 		@SuppressWarnings("static-access")
-		Option configOption = OptionBuilder.withLongOpt("config")
+		Option configOption = OptionBuilder.withLongOpt(CONFIG_LONG)
 										   .hasArg()
 										   .withArgName("config.xml")
 										   .withDescription("Configuration file\ndefault is shadow_config.xml")
-										   .create(CONFIG_FILE);
+										   .create(CONFIG);
 
-		// create the check option
+		// create the typecheck option
 		@SuppressWarnings("static-access")
-		Option checkOption = OptionBuilder.withLongOpt(CHECK)
+		Option checkOption = OptionBuilder.withLongOpt(TYPECHECK_LONG)
 										  .withDescription("Parse and type-check the Shadow files")
-										  .create();
+										  .create(TYPECHECK);
 
-		// create the compile option
+		// create the nolink option
 		@SuppressWarnings("static-access")
-		Option compileOption = OptionBuilder.withLongOpt(COMPILE)
-										    .withDescription("Compile Shadow files")
-										    .hasArg()
-										    .create();
+		Option compileOption = OptionBuilder.withLongOpt(NO_LINK_LONG)											
+										    .withDescription("Compile Shadow files but do not link")										    
+										    .create(NO_LINK);
 
 		// add all the options from above
 		options.addOption(configOption);
@@ -189,8 +194,8 @@ public class Configuration implements Iterator<File> {
 		options.addOption(compileOption);
 
 		// add new simple options
-		options.addOption(new Option("h", "help", false, "Print this help message"));
-
+		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
+		
 		return options;
 	}
 
@@ -229,12 +234,12 @@ public class Configuration implements Iterator<File> {
 	}
 
 	public File getSystemImport() {
-		return systemImportPath;
+		return systemPath;
 	}
 
 	public void setSystemImport(String systemImportPath) {
-		if(this.systemImportPath == null)
-			this.systemImportPath = new File(systemImportPath);
+		if(this.systemPath == null)
+			this.systemPath = new File(systemImportPath);
 	}
 
 	public void setParent(String parentConfig) {

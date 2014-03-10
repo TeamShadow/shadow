@@ -20,7 +20,7 @@ public class SimpleTest
 	public static void main(String[] unused)
 	{
 		ArrayList<String> args = new ArrayList<String>();
-		args.add("--check");
+		args.add("--typecheck");
 		args.add("--config");
 		
 		String osName = System.getProperty("os.name");

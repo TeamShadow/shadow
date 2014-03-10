@@ -228,7 +228,7 @@ public class ClassType extends Type
 	//get methods from all visible sources, adds outer classes too
 	public List<MethodSignature> getAllMethods(String methodName)
 	{
-		List<MethodSignature> list = getMethods(methodName);
+		List<MethodSignature> list = new ArrayList<MethodSignature>(getMethods(methodName));
 				
 		if( !methodName.equals("create") )
 		{	
