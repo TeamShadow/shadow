@@ -11,7 +11,7 @@ implements
 	constant int MAX =  2147483647;
 	constant int MIN =  -2147483648;
 
-	// implement Bitwise
+	// implement Integer
 	public native bitComplement() => (int);
 	public native bitShiftLeft(uint amount) => (int);
 	public native bitShiftRight(uint amount) => (int);

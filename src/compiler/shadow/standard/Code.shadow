@@ -1,9 +1,35 @@
 immutable class shadow.standard@
 	Code
 implements
-	Number<code>,
+	Integer<code>,
 	CanHash
 {
+	public native bitComplement() => (code);
+	public native bitShiftLeft(uint amount) => (code);
+	public native bitShiftRight(uint amount) => (code);
+	public native bitRotateLeft(uint amount) => (code);
+	public native bitRotateRight(uint amount) => (code);
+	public bitShiftLeft(int amount) => (code)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
+	}
+	public bitShiftRight(int amount) => (code)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
+	}
+	public bitRotateLeft(int amount) => (code)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
+	}
+	public bitRotateRight(int amount) => (code)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);
+	}
+
 	// implement Number
 	public native toByte() => (byte);
 	public native toUByte() => (ubyte);
@@ -16,6 +42,9 @@ implements
 	public native toCode() => (code);
 	public native toFloat() => (float);
 	public native toDouble() => (double);
+	public native bitOr(code other) => (code);
+	public native bitXor(code other) => (code);
+	public native bitAnd(code other) => (code);
 
 	// implement CanAdd<code>
 	public native add(code other) => (code);

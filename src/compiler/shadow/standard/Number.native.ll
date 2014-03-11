@@ -4,9 +4,6 @@ attributes #0 = { alwaysinline nounwind readnone }
 ; shadow.standard@Boolean native methods
 
 
-; shadow.standard@Code native methods
-
-
 ; shadow.standard@Byte native methods
 
 define i8 @_Pshadow_Pstandard_Cbyte_MbitComplement(i8) #0 {
@@ -95,6 +92,48 @@ define i1 @_Pshadow_Pstandard_Cbyte_Mequal_Pshadow_Pstandard_Cbyte(i8, i8) #0 {
 	ret i1 %3
 }
 
+define i8 @_Pshadow_Pstandard_Cbyte_Mnegate(i8) #0 {	
+	%2 = sub i8 0, %0
+	ret i8 %2
+}
+
+define i8 @_Pshadow_Pstandard_Cbyte_MtoByte(i8) #0 {	
+	ret i8 %0
+}
+@_Pshadow_Pstandard_Cbyte_MtoUByte(i8) = alias i8 (i8)* @_Pshadow_Pstandard_Cbyte_MtoByte
+define i16 @_Pshadow_Pstandard_Cbyte_MtoShort(i8) #0 {	
+	%2 = sext i8 %0 to i16
+	ret i16 %2
+}
+define i16 @_Pshadow_Pstandard_Cbyte_MtoUShort(i8) #0 {
+	%2 = zext i8 %0 to i16
+	ret i16 %2
+}
+define i32 @_Pshadow_Pstandard_Cbyte_MtoInt(i8) #0 {	
+	%2 = sext i8 %0 to i32
+	ret i32 %2
+}
+define i32 @_Pshadow_Pstandard_Cbyte_MtoUInt(i8) #0 {
+	%2 = zext i8 %0 to i32
+	ret i32 %2
+}
+@_Pshadow_Pstandard_Cbyte_MtoCode(i8) = alias i32 (i8)* @_Pshadow_Pstandard_Cbyte_MtoUInt
+define i64 @_Pshadow_Pstandard_Cbyte_MtoLong(i8) #0 {
+	%2 = sext i8 %0 to i64
+	ret i64 %2
+}
+define i64 @_Pshadow_Pstandard_Cbyte_MtoULong(i8) #0 {
+	%2 = zext i8 %0 to i64
+	ret i64 %2
+}
+define float @_Pshadow_Pstandard_Cbyte_MtoFloat(i8) #0 {
+	%2 = sitofp i8 %0 to float
+	ret float %2
+}
+define double @_Pshadow_Pstandard_Cbyte_MtoDouble(i8) #0 {
+	%2 = sitofp i8 %0 to double
+	ret double %2
+}
 
 ; shadow.standard@UByte native methods
 
@@ -136,6 +175,25 @@ define i32 @_Pshadow_Pstandard_Cubyte_Mcompare_Pshadow_Pstandard_Cubyte(i8, i8) 
 
 @_Pshadow_Pstandard_Cubyte_Mequal_Pshadow_Pstandard_Cubyte = alias i1 (i8, i8)* @_Pshadow_Pstandard_Cbyte_Mequal_Pshadow_Pstandard_Cbyte
 
+@_Pshadow_Pstandard_Cubyte_MtoByte(i8) = alias i8 (i8)* @_Pshadow_Pstandard_Cbyte_MtoByte 
+@_Pshadow_Pstandard_Cubyte_MtoUByte(i8) = alias i8 (i8)* @_Pshadow_Pstandard_Cbyte_MtoByte
+@_Pshadow_Pstandard_Cubyte_MtoShort(i8) = alias i16 (i8)* @_Pshadow_Pstandard_Cbyte_MtoUShort 
+@_Pshadow_Pstandard_Cubyte_MtoUShort(i8) = alias i16 (i8)* @_Pshadow_Pstandard_Cbyte_MtoUShort
+@_Pshadow_Pstandard_Cubyte_MtoInt(i8) = alias i32 (i8)* @_Pshadow_Pstandard_Cbyte_MtoUInt
+@_Pshadow_Pstandard_Cubyte_MtoUInt(i8) = alias i32 (i8)* @_Pshadow_Pstandard_Cbyte_MtoUInt
+@_Pshadow_Pstandard_Cubyte_MtoCode(i8) = alias i32 (i8)* @_Pshadow_Pstandard_Cbyte_MtoUInt
+@_Pshadow_Pstandard_Cubyte_MtoLong(i8) = alias i64 (i8)* @_Pshadow_Pstandard_Cbyte_MtoULong
+@_Pshadow_Pstandard_Cubyte_MtoULong(i8)= alias i64 (i8)* @_Pshadow_Pstandard_Cbyte_MtoULong
+
+define float @_Pshadow_Pstandard_Cubyte_MtoFloat(i8) #0 {
+	%2 = uitofp i8 %0 to float
+	ret float %2
+}
+
+define double @_Pshadow_Pstandard_Cubyte_MtoDouble(i8) #0 {
+	%2 = uitofp i8 %0 to double
+	ret double %2
+}
 
 ; shadow.standard@Short native methods
 
@@ -337,7 +395,6 @@ define i32 @_Pshadow_Pstandard_Cint_Mmodulus_Pshadow_Pstandard_Cint(i32, i32) #0
 	%3 = srem i32 %0, %1
 	ret i32 %3
 }
-
 define i32 @_Pshadow_Pstandard_Cint_Mcompare_Pshadow_Pstandard_Cint(i32, i32) #0 {
 	%3 = icmp ne i32 %0, %1
 	%4 = zext i1 %3 to i32
@@ -345,10 +402,44 @@ define i32 @_Pshadow_Pstandard_Cint_Mcompare_Pshadow_Pstandard_Cint(i32, i32) #0
 	%6 = select i1 %5, i32 -1, i32 %4
 	ret i32 %6
 }
-
 define i1 @_Pshadow_Pstandard_Cint_Mequal_Pshadow_Pstandard_Cint(i32, i32) #0 {
 	%3 = icmp eq i32 %0, %1
 	ret i1 %3
+}
+
+define i32 @_Pshadow_Pstandard_Cint_Mnegate(i32) #0 {	
+	%2 = sub i32 0, %0
+	ret i32 %2
+}
+
+define i8 @_Pshadow_Pstandard_Cint_MtoByte(i32) #0 {	
+	%2 = trunc i32 %0 to i8
+	ret i8 %2
+}
+@_Pshadow_Pstandard_Cint_MtoUByte(i32) = alias i8 (i32)* @_Pshadow_Pstandard_Cint_MtoByte(i32)  
+define i16 @_Pshadow_Pstandard_Cint_MtoShort(i32) #0 {
+	%2 = trunc i32 %0 to i16
+	ret i16 %2
+}
+@_Pshadow_Pstandard_Cint_MtoUShort(i32) = alias i16 (i32)* @_Pshadow_Pstandard_Cint_MtoShort
+define i32 @_Pshadow_Pstandard_Cint_MtoInt(i32) #0 {	
+	ret i32 %0
+}
+@_Pshadow_Pstandard_Cint_MtoUInt(i32 %this) = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtoInt
+@_Pshadow_Pstandard_Cint_MtoCode(i32 %this) = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtoInt
+
+define i64 @_Pshadow_Pstandard_Cint_MtoLong(i32) #0 {
+	%2 = sext i32 %0 to i64
+	ret i64 %2
+}
+@_Pshadow_Pstandard_Cint_MtoULong(i32 %this) = alias i64 (i32)* @_Pshadow_Pstandard_Cint_MtoLong 
+define float @_Pshadow_Pstandard_Cint_MtoFloat(i32) #0 {
+	%2 = sitofp i32 %0 to float
+	ret float %2
+}
+define double @_Pshadow_Pstandard_Cint_MtoDouble(i32 %0) #0 {
+	%2 = sitofp i32 %this to double
+	ret double %2
 }
 
 
@@ -390,6 +481,58 @@ define i32 @_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint(i32, i32) 
 }
 
 @_Pshadow_Pstandard_Cuint_Mequal_Pshadow_Pstandard_Cuint = alias i1 (i32, i32)* @_Pshadow_Pstandard_Cint_Mequal_Pshadow_Pstandard_Cint
+
+@_Pshadow_Pstandard_Cuint_MtoByte = alias i8 (i32)* @_Pshadow_Pstandard_Cint_MtoByte 	
+@_Pshadow_Pstandard_Cuint_MtoUByte = alias i8 (i32)* @_Pshadow_Pstandard_Cint_MtoByte
+@_Pshadow_Pstandard_Cuint_MtoShort = alias i16 (i32)* @_Pshadow_Pstandard_Cint_MtoShort 
+@_Pshadow_Pstandard_Cuint_MtoUShort = alias i16 (i32)* @_Pshadow_Pstandard_Cint_MtoShort
+@_Pshadow_Pstandard_Cuint_MtoInt = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtoInt
+@_Pshadow_Pstandard_Cuint_MtoUInt = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtoInt
+@_Pshadow_Pstandard_Cuint_MtoCode(i32) = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtoInt
+define i64 @_Pshadow_Pstandard_Cuint_MtoLong(i32) #0 {
+	%2 = zext i32 %0 to i64
+	ret i64 %2
+}
+@_Pshadow_Pstandard_Cuint_MtoULong = alias i64 (i32)* @_Pshadow_Pstandard_Cuint_MtoLong
+define float @_Pshadow_Pstandard_Cuint_MtoFloat(i32) #0 {
+	%2 = uitofp i32 %0 to float
+	ret float %2
+}
+define double @_Pshadow_Pstandard_Cuint_MtoDouble(i32) #0 {
+	%2 = uitofp i32 %0 to double
+	ret double %2
+}
+
+; shadow.standard@Code native methods
+
+@_Pshadow_Pstandard_Ccode_MtoByte = alias i8 (i32)* @_Pshadow_Pstandard_Cint_MtoByte
+@_Pshadow_Pstandard_Ccode_MtoUByte = alias i8 (i32)* @_Pshadow_Pstandard_Cint_MtoByte
+@_Pshadow_Pstandard_Ccode_MtoShort = alias i16 (i32)* @_Pshadow_Pstandard_Cint_MtoShort
+@_Pshadow_Pstandard_Ccode_MtoUShort = alias i16 (i32)* @_Pshadow_Pstandard_Cint_MtoShort
+@_Pshadow_Pstandard_Ccode_MtoInt = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtoInt
+@_Pshadow_Pstandard_Ccode_MtoUInt = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtoInt
+@_Pshadow_Pstandard_Ccode_MtoCode = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtoInt
+@_Pshadow_Pstandard_Ccode_MtoLong = alias i64 (i32)* @_Pshadow_Pstandard_Cint_MtoLong
+@_Pshadow_Pstandard_Ccode_MtoULong = alias i64 (i32)* @_Pshadow_Pstandard_Cint_MtoLong
+@_Pshadow_Pstandard_Ccode_MtoFloat = alias float (i32)* @_Pshadow_Pstandard_Cuint_MtoFloat
+@_Pshadow_Pstandard_Ccode_MtoDouble = alias double (i32)* @_Pshadow_Pstandard_Cuint_MtoDouble
+
+@_Pshadow_Pstandard_Ccode_MbitComplement = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MbitComplement
+@_Pshadow_Pstandard_Ccode_MbitOr_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_MbitOr_Pshadow_Pstandard_Cint
+@_Pshadow_Pstandard_Ccode_MbitXor_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_MbitXor_Pshadow_Pstandard_Cint
+@_Pshadow_Pstandard_Ccode_MbitAnd_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_MbitAnd_Pshadow_Pstandard_Cint
+@_Pshadow_Pstandard_Ccode_MbitShiftLeft_Pshadow_Pstandard_Cuint = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_MbitShiftLeft_Pshadow_Pstandard_Cuint
+@_Pshadow_Pstandard_Ccode_MbitShiftRight_Pshadow_Pstandard_Cuint = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cuint_MbitShiftRight_Pshadow_Pstandard_Cuint
+@_Pshadow_Pstandard_Ccode_MbitRotateLeft_Pshadow_Pstandard_Cuint = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_MbitRotateLeft_Pshadow_Pstandard_Cuint
+@_Pshadow_Pstandard_Ccode_MbitRotateRight_Pshadow_Pstandard_Cuint = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_MbitRotateRight_Pshadow_Pstandard_Cuint
+
+@_Pshadow_Pstandard_Ccode_Madd_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_Madd_Pshadow_Pstandard_Cint
+@_Pshadow_Pstandard_Ccode_Msubtract_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint
+@_Pshadow_Pstandard_Ccode_Mmultiply_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cint_Mmultiply_Pshadow_Pstandard_Cint
+@_Pshadow_Pstandard_Ccode_Mdivide_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cuint_Mdivide_Pshadow_Pstandard_Cuint
+@_Pshadow_Pstandard_Ccode_Mmodulus_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cuint_Mmodulus_Pshadow_Pstandard_Cuint
+@_Pshadow_Pstandard_Ccode_Mcompare_Pshadow_Pstandard_Ccode = alias i32 (i32, i32)* @_Pshadow_Pstandard_Cuint_Mcompare_Pshadow_Pstandard_Cuint
+@_Pshadow_Pstandard_Ccode_Mequal_Pshadow_Pstandard_Ccode = alias i1 (i32, i32)* @_Pshadow_Pstandard_Cint_Mequal_Pshadow_Pstandard_Cint
 
 
 ; shadow.standard@Long native methods

@@ -48,6 +48,7 @@ public class OutputTest {
 		args.add("shadow/standard/IndexOutOfBoundsException.shadow");
 		args.add("shadow/standard/UnexpectedNullException.shadow");
 		args.add("shadow/io/Console.shadow");
+		args.add("shadow/io/IOException.shadow");
 
 		args.add("shadow/utility/Random.shadow");
 		args.add("shadow/utility/List.shadow");
