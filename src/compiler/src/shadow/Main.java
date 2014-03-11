@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -28,7 +29,6 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
-import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
 
@@ -135,73 +135,97 @@ public class Main {
 		linkCommand.add("shadow/Unwind" + config.getArch() + ".ll");
 		linkCommand.add("shadow/" + config.getOs() + ".ll");
 		String mainClass = null;
+		TreeSet<String> files = null;
 
 		// loop through the source files, compiling them
 		while(config.hasNext())
 		{
-			File shadowFile = config.next();
-			//checker.setCurrentFile(shadowFile);
-
-			//FileInputStream sourceStream = new FileInputStream(shadowFile);
-			//ShadowParser parser = new ShadowParser(sourceStream);
-
-			logger.info("Compiling " + shadowFile.getName());
-
-			// get the start time for the compile
-			long startTime = System.currentTimeMillis();
-
-			// type check the AST
-			Node node = null;
+			File mainFile = config.next();			
+			files = null;
 			
-			try
+			do
 			{
-				node = checker.typeCheck(shadowFile);
-				
-			}
-			catch( TypeCheckException e )
-			{				
-				logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");
-				throw e;
-			}
-
-			// we are only parsing & type checking
-			if(config.isCheckOnly()) 
-			{
-				long stopTime = System.currentTimeMillis();
-
-				System.err.println("FILE " + shadowFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
-			}
-			else
-			{
-				for(TACModule module : tacBuilder.build(node))
+				File currentFile;
+				String currentPath;
+				if( files == null )
 				{
-					if (mainClass == null)
-						mainClass = module.getType().getMangledName();
-					System.out.println(module);
+					currentFile = mainFile;
+					currentPath = mainFile.getCanonicalPath();
 					
-					// build the TAC
-					new LLVMOutput(true).build(module);
-
-					// verify the TAC
-					new LLVMOutput(false).build(module);
-
-					// write to file
-					String name = module.getName().replace(':', '$');
-					File llvmFile = new File(shadowFile.getParent(), name + ".ll");
-					new LLVMOutput(llvmFile).build(module);
-					if (llvmFile.exists())
-						linkCommand.add(llvmFile.getPath());
-					File nativeFile = new File(shadowFile.getParent(), name + ".native.ll");
-					if (nativeFile.exists())
-						linkCommand.add(nativeFile.getPath());
+					//strip extension
+					currentPath = currentPath.substring(0, currentPath.lastIndexOf("."));
+				}
+				else
+				{
+					currentPath = files.first();
+					currentFile = new File(currentPath + ".shadow");
+				}
+				
+				//checker.setCurrentFile(shadowFile);
+	
+				//FileInputStream sourceStream = new FileInputStream(shadowFile);
+				//ShadowParser parser = new ShadowParser(sourceStream);
+	
+				logger.info("Compiling " + currentFile.getName());
+	
+				// get the start time for the compile
+				long startTime = System.currentTimeMillis();
+	
+				// type check the AST
+				Node node = null;
+				
+				try
+				{
+					node = checker.typeCheck(currentFile);
+					//get all the other needed files
+					if( currentFile == mainFile )
+						files = new TreeSet<String>(checker.getFiles());				
+				}
+				catch( TypeCheckException e )
+				{				
+					logger.error(currentFile.getPath() + " FAILED TO TYPE CHECK");
+					throw e;
+				}
+					
+				if(config.isCheckOnly()) // we are only parsing & type checking
+				{
+					long stopTime = System.currentTimeMillis();	
+					System.err.println("FILE " + currentFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
+				}
+				else
+				{
+					for(TACModule module : tacBuilder.build(node))
+					{
+						if (mainClass == null)
+							mainClass = module.getType().getMangledName();
+						System.out.println(module);
+						
+						// build the TAC
+						new LLVMOutput(true).build(module);
+	
+						// verify the TAC
+						new LLVMOutput(false).build(module);
+	
+						// write to file
+						String name = module.getName().replace(':', '$');
+						File llvmFile = new File(currentFile.getParent(), name + ".ll");
+						new LLVMOutput(llvmFile).build(module);
+						if (llvmFile.exists())
+							linkCommand.add(llvmFile.getPath());
+						File nativeFile = new File(currentFile.getParent(), name + ".native.ll");
+						if (nativeFile.exists())
+							linkCommand.add(nativeFile.getPath());
+					}
+	
+					long stopTime = System.currentTimeMillis();
+	
+					System.err.println("COMPILED " + currentFile.getPath() + " in " + (stopTime - startTime) + "ms");
 				}
 
-				long stopTime = System.currentTimeMillis();
-
-				System.err.println("COMPILED " + shadowFile.getPath() + " in " + (stopTime - startTime) + "ms");
-			}
-
-			Type.clearTypes();
+				Type.clearTypes();			
+				
+				files.remove( currentPath );				
+			} while( !files.isEmpty() );
 		}
 		if (!config.isCheckOnly())
 		{

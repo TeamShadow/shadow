@@ -1,3 +1,5 @@
+
+
 class shadow.test@Cheetah implements CanRun
 {
 	public run() => ()

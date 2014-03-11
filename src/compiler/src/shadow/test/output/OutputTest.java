@@ -22,6 +22,7 @@ public class OutputTest {
 
 	@Before
 	public void setUp() throws Exception {
+		/*
 		args.add("shadow/utility/LinkedList.shadow");
 		args.add("shadow/standard/Object.shadow");
 		args.add("shadow/standard/Class.shadow");
@@ -57,7 +58,7 @@ public class OutputTest {
 		
 //		args.add("shadow/utility/HashSet.shadow");
 		args.add("shadow/utility/IllegalModificationException.shadow");
-		
+		*/
 		args.add("--config");
 		
 		String osName = System.getProperty("os.name");

@@ -37,7 +37,7 @@ public class SimpleTest
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("tests-negative/typechecker/circular-type-parameter/Test.shadow"); 		
+		args.add("shadow/test/Cheetah.shadow"); 		
 		//args.add("tests/compile/Readonly.shadow");
 		Main.main(args.toArray(new String[] { }));		
 	}

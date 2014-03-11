@@ -1989,7 +1989,7 @@ public class StatementChecker extends BaseChecker
 			if( child instanceof ASTUnqualifiedName )
 			{
 				node.setImage(child.getImage() + "@" + node.getImage());				
-				if( !setTypeFromName( node, image )) //automatically sets type if can
+				if( !setTypeFromName( node, node.getImage() )) //automatically sets type if can
 				{
 					addError(Error.UNDEFINED_TYPE, "Type " + image + " not defined in this context");
 					node.setType(Type.UNKNOWN);											

@@ -496,7 +496,11 @@ public class LLVMOutput extends AbstractOutput
 			if (name)
 				sb.append(' ').append(name(methodRef));
 		}
-		return sb.substring(2);
+		
+		if( sb.length() > 0 )
+			return sb.substring(2);
+		else
+			return sb.toString();  //no methods!
 	}
 
 	@Override

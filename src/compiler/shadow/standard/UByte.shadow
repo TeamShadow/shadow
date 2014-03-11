@@ -17,22 +17,22 @@ implements
 	public native bitShiftRight(uint amount) => (ubyte);
 	public native bitRotateLeft(uint amount) => (ubyte);
 	public native bitRotateRight(uint amount) => (ubyte);
-	public native bitShiftLeft(int amount) => (ubyte)
+	public bitShiftLeft(int amount) => (ubyte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
 	}
-	public native bitShiftRight(int amount) => (ubyte)
+	public bitShiftRight(int amount) => (ubyte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
 	}
-	public native bitRotateLeft(int amount) => (ubyte)
+	public bitRotateLeft(int amount) => (ubyte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
 	}
-	public native bitRotateRight(int amount) => (ubyte)
+	public bitRotateRight(int amount) => (ubyte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);

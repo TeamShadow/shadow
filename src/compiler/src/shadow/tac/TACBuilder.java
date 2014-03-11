@@ -405,19 +405,16 @@ public class TACBuilder implements ShadowParserVisitor
 		if (secondVisit)
 		{
 			implicitCreate = false;
-			ClassType thisType = (ClassType)method.getMethod().getPrefixType(),
-					superType = thisType.getExtendType();
-			MethodType type = new MethodType("this".equals(node.getImage()) ?
-					thisType : superType, new Modifiers());
+			ClassType thisType = (ClassType)method.getMethod().getPrefixType();
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(new TACVariableRef(tree, method.getThis()));
 			for (int i = 0; i < tree.getNumChildren(); i++)
 			{
 				TACOperand param = tree.appendChild(i); 
 				params.add(param);
-				type.addParameter(param);
+				//type.addParameter(param);
 			}
-			new TACCall(tree, block, new TACMethodRef(tree, type, "create"),
+			new TACCall(tree, block, new TACMethodRef(tree, node.getMethodSignature()),
 					params);
 			if (node.getImage().equals("super"))
 				new TACInit(tree, thisType);
@@ -1033,10 +1030,14 @@ public class TACBuilder implements ShadowParserVisitor
 			{
 				String name = node.getImage();
 				explicitSuper = name.equals("super");
-				if (!(explicitSuper || node.getModifiers().isTypeName() ||
+				if (!(/*explicitSuper ||*/ node.getModifiers().isTypeName() ||
 						node.getType() instanceof UnboundMethodType))
 				{
-					TACVariable local = method.getLocal(name);
+					TACVariable local;
+					if( explicitSuper )
+						local = method.getLocal("this");
+					else
+						local = method.getLocal(name);
 					if (local != null)
 						prefix = new TACVariableRef(tree, local);
 					else
@@ -1053,7 +1054,7 @@ public class TACBuilder implements ShadowParserVisitor
 						else
 							prefix = new TACFieldRef(tree, thisRef, name);
 					}
-				}
+				}				
 			}
 		}
 		return POST_CHILDREN;
@@ -1126,7 +1127,7 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		if (secondVisit)
 		{
-			if (prefix.getType() instanceof ArrayType &&
+			if (prefix != null && prefix.getType() instanceof ArrayType &&
 					node.getImage().equals("length"))
 			{
 				ArrayType arrayType = (ArrayType)prefix.getType();
