@@ -3,7 +3,7 @@
 package shadow.parser.javacc;
 
 public
-class ASTConcatenationExpression extends SimpleNode {
+class ASTConcatenationExpression extends OperationNode {
   public ASTConcatenationExpression(int id) {
     super(id);
   }

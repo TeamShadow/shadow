@@ -670,7 +670,18 @@ public class StatementChecker extends BaseChecker
 			Type result = node.jjtGetChild(0).getType();			
 			
 			if( node.jjtGetNumChildren() > 1 )
+			{
 				result = Type.STRING;
+				for( int i = 0; i < node.jjtGetNumChildren() && result != Type.UNKNOWN; ++i )
+				{
+					Type childType = node.jjtGetChild(i).getType(); 
+					if( childType instanceof SequenceType )
+					{
+						addError(Error.INVALID_TYPE, "Cannot apply operator # to sequence type " + childType);
+						result = Type.UNKNOWN;						
+					}
+				}
+			}
 				
 			node.setType(result); //propagates type up if only one child
 			pushUpModifiers(node); //can add ASSIGNABLE (if only one child)
@@ -1051,9 +1062,17 @@ public class StatementChecker extends BaseChecker
 				type = visitUnary( node, "bitComplement", "operator ~", Type.INTEGER);
 			else if( operator.equals("#") )
 			{
-				MethodSignature signature = setMethodType(node, type, "toString", new SequenceType() );
-				node.addOperation(signature); //should never be null
-				type = Type.STRING;
+				if( type instanceof SequenceType )
+				{
+					addError(Error.INVALID_TYPE, "Cannot apply operator # to sequence type " + type);
+					type = Type.UNKNOWN;
+				}
+				else
+				{
+					MethodSignature signature = setMethodType(node, type, "toString", new SequenceType() );
+					node.addOperation(signature); //should never be null
+					type = Type.STRING;
+				}
 			}
 			else if( operator.equals("!") )
 			{

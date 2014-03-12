@@ -68,20 +68,25 @@ public abstract class TACSimpleNode extends TACNode
 			type = new SimpleModifiedType(Type.OBJECT);
 		
 		operand = operand.checkVirtual(type, this); //puts in casts where needed
-		if (operand.getType().equals(type.getType()))
-			return operand;
-			
+		Type operandType = operand.getType();
+		Type typeType = type.getType();
 		
-		if (operand.getType() instanceof SequenceType &&
-				type.getType() instanceof SequenceType &&
-				((SequenceType)operand.getType()).matches( //replace with subtype? no!
-						((SequenceType)type.getType())))
-			return operand;		
+		if (operandType.equals(typeType))
+			return operand;
+					
+		if (operandType instanceof SequenceType &&
+				typeType instanceof SequenceType &&
+				((SequenceType)operandType).matches( //replace with subtype? no!
+						((SequenceType)typeType)))
+			return operand;
+		else if( (operandType instanceof SequenceType) != (typeType instanceof SequenceType))
+			throw new IllegalArgumentException();
 
-		if (operand.getType().getPackage().equals(type.getType().
+		if (operandType.getPackage().equals(typeType.
 				getPackage()) && operand.getType().getTypeName().equals(type.
 				getType().getTypeName()))
 			return operand;
+
 		throw new IllegalArgumentException();
 	}
 }

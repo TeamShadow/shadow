@@ -791,12 +791,12 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		if (secondVisit)
 		{
-			TACOperand last = null;
+			TACOperand last = null;			
 			for (int i = 0; i < tree.getNumChildren(); i++)
 			{
 				TACOperand operand = tree.appendChild(i);
-				if (!operand.getType().isPrimitive() &&
-						!(operand.getType() instanceof ArrayType))
+				Type type = operand.getType();
+				if (!type.isPrimitive() && !(type instanceof ArrayType))
 				{ // TODO: actually check nullable
 					TACLabelRef nullLabel = new TACLabelRef(tree),
 							nonnullLabel = new TACLabelRef(tree),
@@ -812,7 +812,7 @@ public class TACBuilder implements ShadowParserVisitor
 					nonnullLabel.new TACLabel(tree);
 					new TACStore(tree, var, new TACCall(tree, block,
 							new TACMethodRef(tree, operand,
-									Type.OBJECT.getMethods("toString").get(0)),
+									type.getMatchingMethod("toString", new SequenceType())),
 							Collections.singletonList(operand)));
 					new TACBranch(tree, doneLabel);
 					doneLabel.new TACLabel(tree);
@@ -821,7 +821,7 @@ public class TACBuilder implements ShadowParserVisitor
 				else
 					operand = new TACCall(tree, block,
 							new TACMethodRef(tree, operand,
-									Type.OBJECT.getMethods("toString").get(0)),
+									type.getMatchingMethod("toString", new SequenceType())),
 							Collections.singletonList(operand));
 				last = i == 0 ? operand : new TACCall(tree, block,
 						new TACMethodRef(tree,
@@ -1707,9 +1707,15 @@ public class TACBuilder implements ShadowParserVisitor
 				block = block.getParent();
 			}
 		}
-		else if (parent.hasRecover())
-			block = new TACBlock(tree, block).addRecover().
-					addCatches(node.getCatches());
+		else 
+		{
+			block = new TACBlock(tree, block);
+			if (parent.hasRecover())
+				block.addRecover();
+			
+			block.addCatches(node.getCatches());
+		}
+								
 		return POST_CHILDREN;
 	}
 

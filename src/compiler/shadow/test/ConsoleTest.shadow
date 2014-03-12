@@ -24,12 +24,12 @@ class shadow.test@ConsoleTest
 
 		console.printLine();
 		console.print("Enter your name: ");
-		console.printLine("Your name is " # console.readLine() # '!');
+		(String line, ) = console.readLine();
+		console.printLine("Your name is " # line # '!');
 		boolean eof;
 		do
-		{
-			code c;
-			( c, eof ) = console.readCode();
+		{			
+			(code c, eof) = console.readCode();
 			console.printLine(c);
 		}
 		while ( !eof );

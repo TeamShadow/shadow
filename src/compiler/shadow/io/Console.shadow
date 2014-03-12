@@ -10,10 +10,10 @@ singleton shadow.io@Console
 	public readLine() => ( String, boolean eof )
 	{
 		var string = MutableString:create();
-		code c;
-		boolean eof;
-		( c, eof ) = readCode();
-//		( code c, boolean eof ) = readCode();
+//		code c;
+//		boolean eof;
+//		( c, eof ) = readCode();
+		( code c, boolean eof ) = readCode();
 		if ( wasLF and c == '\n' )
 			( c, eof ) = readCode();
 		while ( c != '\n' and c != '\r' and !eof )
