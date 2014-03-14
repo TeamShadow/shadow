@@ -179,7 +179,8 @@ public class Main {
 					node = checker.typeCheck(currentFile);
 					//get all the other needed files
 					if( currentFile == mainFile )
-						files = new TreeSet<String>(checker.getFiles());				
+						//files = new TreeSet<String>(checker.getFiles());
+						files = checker.getFileDependencies(node.getType());
 				}
 				catch( TypeCheckException e )
 				{				
@@ -200,11 +201,11 @@ public class Main {
 							mainClass = module.getType().getMangledName();
 						System.out.println(module);
 						
-						// build the TAC
+						// build the LLVM
 						new LLVMOutput(true).build(module);
 	
-						// verify the TAC
-						//new LLVMOutput(false).build(module);
+						// verify and optimize the LLVM
+						new LLVMOutput(false).build(module);
 	
 						// write to file
 						String name = module.getName().replace(':', '$');

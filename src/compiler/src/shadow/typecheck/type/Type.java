@@ -21,7 +21,7 @@ import shadow.typecheck.BaseChecker.SubstitutionType;
 import shadow.typecheck.Package;
 
 
-public abstract class Type
+public abstract class Type implements Comparable<Type>
 {
 	//types should not change after construction
 	private final String typeName;	/** A string that represents the type */
@@ -429,8 +429,9 @@ public abstract class Type
 	}
 	
 	@Override
-	public int hashCode() {
-		return toString().hashCode();
+	public final int hashCode() {
+		String name = getImportName();
+		return name.hashCode();
 	}
 	
 	public boolean isString() {
@@ -1062,6 +1063,12 @@ public abstract class Type
 	public List<Object> getImportedItems()
 	{
 		return importedItems;		
+	}
+	
+	@Override
+	public final int compareTo(Type other)
+	{
+		return getImportName().compareTo(other.getImportName());		
 	}
 	
 }

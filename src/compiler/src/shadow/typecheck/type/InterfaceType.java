@@ -366,10 +366,4 @@ public class InterfaceType extends Type
 		
 		out.println(linePrefix + "}\n");	
 	}
-	
-	@Override
-	public int hashCode()
-	{
-		return toString().hashCode();
-	}
 }
