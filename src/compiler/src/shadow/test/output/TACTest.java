@@ -2,7 +2,6 @@ package shadow.test.output;
 
 import java.util.ArrayList;
 
-import org.apache.commons.logging.impl.SimpleLog;
 import org.apache.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,15 +30,12 @@ public class TACTest {
 		Loggers.SHADOW.setLevel(Level.DEBUG);
 		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
 		Loggers.PARSER.setLevel(Level.INFO);
-	}
-	
-	
-	/*
+	}	
+		
 	@Test public void testArrayList() throws Exception {
 		args.add("shadow/test/ArrayListTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-	}
-	*/
+	}	
 	
 	@Test public void testArray() throws Exception {
 		args.add("shadow/test/ArrayTest.shadow");

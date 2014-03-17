@@ -8,13 +8,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.impl.SimpleLog;
 import org.apache.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
 
-import shadow.Main;
 import shadow.Loggers;
+import shadow.Main;
 
 public class OutputTest {
 	
@@ -22,43 +21,7 @@ public class OutputTest {
 
 	@Before
 	public void setUp() throws Exception {
-		/*
-		args.add("shadow/utility/LinkedList.shadow");
-		args.add("shadow/standard/Object.shadow");
-		args.add("shadow/standard/Class.shadow");
-		args.add("shadow/standard/Array.shadow");
-		args.add("shadow/standard/String.shadow");
-		args.add("shadow/standard/MutableString.shadow");
-		args.add("shadow/standard/Boolean.shadow");
-		args.add("shadow/standard/Code.shadow");
-		args.add("shadow/standard/Byte.shadow");
-		args.add("shadow/standard/UByte.shadow");
-		args.add("shadow/standard/Short.shadow");
-		args.add("shadow/standard/UShort.shadow");
-		args.add("shadow/standard/Int.shadow");
-		args.add("shadow/standard/UInt.shadow");
-		args.add("shadow/standard/Long.shadow");
-		args.add("shadow/standard/ULong.shadow");
-		args.add("shadow/standard/Float.shadow");
-		args.add("shadow/standard/Double.shadow");
-		args.add("shadow/standard/Number.shadow");
-		args.add("shadow/standard/Reference.shadow");
-		args.add("shadow/standard/System.shadow");
-		args.add("shadow/standard/Exception.shadow");
-		args.add("shadow/standard/IllegalArgumentException.shadow");
-		args.add("shadow/standard/IndexOutOfBoundsException.shadow");
-		args.add("shadow/standard/UnexpectedNullException.shadow");
-		args.add("shadow/io/Console.shadow");
-		args.add("shadow/io/IOException.shadow");
-
-		args.add("shadow/utility/Random.shadow");
-		args.add("shadow/utility/List.shadow");
-		args.add("shadow/utility/Set.shadow");
-		args.add("shadow/utility/ArrayList.shadow");
 		
-//		args.add("shadow/utility/HashSet.shadow");
-		args.add("shadow/utility/IllegalModificationException.shadow");
-		*/
 		args.add("--config");
 		
 		String osName = System.getProperty("os.name");
@@ -94,16 +57,68 @@ public class OutputTest {
 			if (line != null)
 				builder.append(line).append('\n');
 		} while (line != null);
-		assertEquals(builder.toString(), expectedOutput);
+		String output = builder.toString(); 
+		assertEquals(output, expectedOutput);
 	}
 	
 	@Test public void testTest() throws Exception {
 		args.add(0, "shadow/test/Test.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"shadow.test@Test\n" +
-				"3\n");
-	}
-
+				"true\n" + 
+				"true\n" + 
+				"false\n" + 
+				"false\n" + 
+				"true\n");
+	}	
 	
+	@Test public void testArrayList() throws Exception {
+		args.add("shadow/test/ArrayListTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}	
+	
+	@Test public void testArray() throws Exception {
+		args.add("shadow/test/ArrayTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}	
+	
+	@Test public void testChild() throws Exception {
+		args.add("shadow/test/ChildTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testConsole() throws Exception {
+		args.add("shadow/test/ConsoleTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testException() throws Exception {
+		args.add("shadow/test/ExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testFile() throws Exception {
+		args.add("shadow/test/FileTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testInterface() throws Exception {
+		args.add("shadow/test/InterfaceTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testLoop() throws Exception {
+		args.add("shadow/test/LoopTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testSort() throws Exception {
+		args.add("shadow/test/SortMain.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testTry() throws Exception {
+		args.add("shadow/test/TryTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}	
 }

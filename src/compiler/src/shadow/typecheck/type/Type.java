@@ -983,14 +983,23 @@ public abstract class Type implements Comparable<Type>
 	}
 	
 	public void addReferencedType(Type type)
-	{
-		if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) && !isDescendentOf(type))
+	{		
+		if( type != null )
 		{
-			referencedTypes.add(type.typeWithoutTypeArguments);
-			if( type.isParameterized() )
+			if( type instanceof ArrayType )
 			{
-				for( ModifiedType typeParameter : type.getTypeParameters() )
-					addReferencedType( typeParameter.getType() );
+				ArrayType arrayType = (ArrayType) type;
+				addReferencedType(Type.ARRAY);
+				addReferencedType(arrayType.getBaseType());			
+			}
+			else if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
+			{
+				referencedTypes.add(type.typeWithoutTypeArguments);
+				if( type.isParameterized() )
+				{
+					for( ModifiedType typeParameter : type.getTypeParameters() )
+						addReferencedType( typeParameter.getType() );
+				}
 			}
 		}
 	}

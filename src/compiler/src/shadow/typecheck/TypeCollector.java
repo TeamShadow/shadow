@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import shadow.Configuration;
 import shadow.TypeCheckException;
@@ -71,107 +72,109 @@ public class TypeCollector extends BaseChecker
 		//Create walker
 		ASTWalker walker = new ASTWalker( this );
 		Node resultNode = null;		
-		List<String> fileList = new ArrayList<String>();
+		TreeSet<String> uncheckedFiles = new TreeSet<String>();
+		String inputFile = stripExtension(input.getCanonicalPath()); 
 		
 		//add file to be checked to list
-		fileList.add(stripExtension(input.getCanonicalPath()));
+		uncheckedFiles.add(inputFile);
+		
+		FilenameFilter filter = new FilenameFilter()
+		{
+			public boolean accept(File dir, String name)
+			{
+				return name.endsWith(".shadow");
+			}
+		};
 		
 		//add standard imports		
-		File standardDirectory = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
-		File[] standardImports = standardDirectory.listFiles( new FilenameFilter()
-				{
-					public boolean accept(File dir, String name)
-					{
-						return name.endsWith(".shadow");
-					}
-				}
-		);
-				
-		for( File file :  standardImports )			
-			fileList.add(stripExtension(file.getCanonicalPath()));
-						
-		for(int i = 0; i < fileList.size(); i++ )
-		{			
-			String canonical = fileList.get(i);
-								
-			if( !files.containsKey(canonical) ) //don't double add
-			{
-				
-				File canonicalFile = new File(canonical + ".shadow");
-				if( !canonicalFile.equals(input.getCanonicalFile()) ) //always read the shadow file for the input file
-				{
-					if( canonicalFile.exists() )  
-					{											
-						File meta = new File( canonical + ".meta" );
-						if( meta.exists() && meta.lastModified() >= canonicalFile.lastModified() ) //check for more recent .meta file
-							canonicalFile = meta;
-					}
-					else
-					{
-						canonicalFile  = new File(canonical + ".meta");
-					}
-				}
-				
-				ShadowParser parser = new ShadowFileParser(canonicalFile);				
-				typeChecker.setCurrentFile(canonicalFile);
-			    Node node = parser.CompilationUnit();
-			    
-			    //this node is needed for full type checking and compilation
-			    if( i == 0 )			    	
-			    	resultNode = node;
-			    
-			    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-				TypeCollector collector = new TypeCollector(debug, otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
-				walker = new ASTWalker( collector );		
-				walker.walk(node);				
+		File directory = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
+		File[] imports = directory.listFiles( filter );
+		for( File file :  imports )			
+			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
-				files.put(canonical, node);
-				
-				//copy other types into our package tree				
-				for( Package p : otherTypes.keySet() )
-				{
-					//if package already exists, it won't be recreated
-					Package newPackage = packageTree.addQualifiedPackage(p.getQualifiedName(), typeTable);
-					try
-					{	
-						newPackage.addTypes( otherTypes.get(p) );
-					}
-					catch(PackageException e)
-					{
-						addError(Error.INVALID_PACKAGE, e.getMessage() );				
-					}
+		//add io imports
+		directory = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "io" );
+		imports = directory.listFiles( filter );
+		for( File file :  imports )			
+			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
+						
+		while(!uncheckedFiles.isEmpty())
+		{			
+			String canonical = uncheckedFiles.first();
+			uncheckedFiles.remove(canonical);								
+							
+			File canonicalFile = new File(canonical + ".shadow");
+			if( !canonicalFile.equals(input.getCanonicalFile()) ) //always read the shadow file for the input file
+			{
+				if( canonicalFile.exists() )  
+				{											
+					File meta = new File( canonical + ".meta" );
+					if( meta.exists() && meta.lastModified() >= canonicalFile.lastModified() ) //check for more recent .meta file
+						canonicalFile = meta;
 				}
-				
-				//copy any errors into our error list
-				if( collector.getErrorCount() > 0 )
-					errorList.addAll(collector.errorList);
-				
-				for( String _import : collector.getImportList() )
+				else
 				{
-					if( !fileList.contains(_import) )
-						fileList.add(_import);					
+					canonicalFile  = new File(canonical + ".meta");
 				}
-				
-				//Add files in directory after imports (order matters in case of duplicates)
-				File[] directoryFiles = canonicalFile.getParentFile().listFiles( new FilenameFilter()
-						{
-							public boolean accept(File dir, String name)
-							{
-								return name.endsWith(".shadow");
-							}
-						}
-				);		
-
-				for( File file :  directoryFiles )
-					fileList.add(stripExtension(file.getCanonicalPath()));	
-				
-				//copy tables from other file into our central table
-				Map<Type,Node> otherNodeTable = collector.nodeTable;
-				for( Type type : otherNodeTable.keySet() )
-					if( !nodeTable.containsKey(type) )
-						nodeTable.put(type, otherNodeTable.get(type));				
 			}
-		}		
+			
+			ShadowParser parser = new ShadowFileParser(canonicalFile);				
+			typeChecker.setCurrentFile(canonicalFile);
+		    Node node = parser.CompilationUnit();
+		    
+		    //this node is needed for full type checking and compilation
+		    if( canonical.equals(inputFile) )			    	
+		    	resultNode = node;
+		    
+		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
+			TypeCollector collector = new TypeCollector(debug, otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
+			walker = new ASTWalker( collector );		
+			walker.walk(node);				
+	
+			files.put(canonical, node);
+			
+			//copy other types into our package tree				
+			for( Package p : otherTypes.keySet() )
+			{
+				//if package already exists, it won't be recreated
+				Package newPackage = packageTree.addQualifiedPackage(p.getQualifiedName(), typeTable);
+				try
+				{	
+					newPackage.addTypes( otherTypes.get(p) );
+				}
+				catch(PackageException e)
+				{
+					addError(Error.INVALID_PACKAGE, e.getMessage() );				
+				}
+			}
+			
+			//copy any errors into our error list
+			if( collector.getErrorCount() > 0 )
+				errorList.addAll(collector.errorList);
+			
+			for( String _import : collector.getImportList() )
+			{
+				if( !files.containsKey(_import) )
+					uncheckedFiles.add(_import);					
+			}
+			
+			//Add files in directory after imports
+			File[] directoryFiles = canonicalFile.getParentFile().listFiles( filter );		
+
+			for( File file :  directoryFiles )
+			{
+				String name = stripExtension(file.getCanonicalPath()); 
+				if( !files.containsKey(name) )
+					uncheckedFiles.add(name);
+			}
+			
+			//copy tables from other file into our central table
+			Map<Type,Node> otherNodeTable = collector.nodeTable;
+			for( Type type : otherNodeTable.keySet() )
+				if( !nodeTable.containsKey(type) )
+					nodeTable.put(type, otherNodeTable.get(type));				
+		}
+				
 		
 		if( errorList.size() > 0 )
 		{

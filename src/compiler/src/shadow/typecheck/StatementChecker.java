@@ -16,6 +16,7 @@ import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
+import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -53,13 +54,6 @@ public class StatementChecker extends BaseChecker
 		// now go through and check the whole class
 		walker.walk(node);
 		
-		if( node.getType() instanceof ClassType )
-		{
-			List<ClassType> list = new ArrayList<ClassType>(((ClassType)node.getType()).getInnerClasses().values());
-			if( list.size() > 4000 )
-				System.out.println("bleh");
-		}
-		
 		if( errorList.size() > 0 )
 		{
 			
@@ -74,7 +68,18 @@ public class StatementChecker extends BaseChecker
 		if( secondVisit )
 			currentType = currentType.getOuter();		
 		else
+		{
 			currentType = node.jjtGetParent().getType(); //get type from declaration
+			
+			for( InterfaceType interfaceType : currentType.getInterfaces() )
+				currentType.addReferencedType(interfaceType);
+						
+			if( currentType instanceof ClassType )
+			{
+				ClassType classType = (ClassType) currentType;
+				currentType.addReferencedType(classType.getExtendType());
+			}
+		}
 			
 		return WalkType.POST_CHILDREN;
 	}
@@ -82,11 +87,11 @@ public class StatementChecker extends BaseChecker
 	public Object visitMethod( SignatureNode node, Boolean secondVisit  )
 	{
 		if(!secondVisit)
-		{			
+		{		
+			MethodSignature signature;
+			
 			if( node instanceof ASTLocalMethodDeclaration || /*node instanceof ASTInlineMethodDeclaration ||*/ node instanceof ASTInlineMethodDefinition )
-			{				
-				MethodSignature signature;
-				
+			{	
 				if( node instanceof ASTInlineMethodDefinition )
 					signature = new MethodSignature( currentType, "", node.getModifiers(), node);
 				else
@@ -101,6 +106,14 @@ public class StatementChecker extends BaseChecker
 				node.setEnclosingType(currentType);
 				//what modifiers (if any) are allowed for a local method declaration?
 			}
+			else
+				signature = node.getMethodSignature();
+			
+			for( ModifiedType modifiedType : signature.getParameterTypes() )
+				currentType.addReferencedType(modifiedType.getType());
+			
+			for( ModifiedType modifiedType : signature.getReturnTypes() )
+				currentType.addReferencedType(modifiedType.getType());			
 			
 			currentMethod.addFirst(node);
 		}
@@ -2987,13 +3000,17 @@ public class StatementChecker extends BaseChecker
 	
 	@Override
 	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {						
-		node.setType(literalToType(node.getLiteral()));		
+		Type type = literalToType(node.getLiteral());
+		node.setType(type);
+		if( type != Type.NULL )
+			currentType.addReferencedType(type);
 		return WalkType.NO_CHILDREN;			
 	}
 	
 	@Override
 	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {		
-		node.setType(nameToPrimitiveType(node.getImage()));		
+		node.setType(nameToPrimitiveType(node.getImage()));
+		currentType.addReferencedType(node.getType());
 		return WalkType.NO_CHILDREN;			
 	}	
 		
@@ -3126,10 +3143,14 @@ public class StatementChecker extends BaseChecker
 	}
 	
 	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException { 
+		for( int i = 0; i < node.jjtGetNumChildren(); ++i )
+			declarationType.addReferencedType(node.jjtGetChild(i).getType());
 		return WalkType.NO_CHILDREN;
 	}
 	
-	public Object visit(ASTImplementsList node, Boolean secondVisit) throws ShadowException { 
+	public Object visit(ASTImplementsList node, Boolean secondVisit) throws ShadowException {
+		for( int i = 0; i < node.jjtGetNumChildren(); ++i )
+			declarationType.addReferencedType(node.jjtGetChild(i).getType());
 		return WalkType.NO_CHILDREN;
 	}
 	

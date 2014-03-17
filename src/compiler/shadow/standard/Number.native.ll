@@ -363,6 +363,7 @@ define i32 @_Pshadow_Pstandard_Cushort_Mcompare_Pshadow_Pstandard_Cushort(i16, i
 @_Pshadow_Pstandard_Cushort_Mequal_Pshadow_Pstandard_Cushort = alias i1 (i16, i16)* @_Pshadow_Pstandard_Cshort_Mequal_Pshadow_Pstandard_Cshort
 
 @_Pshadow_Pstandard_Cushort_MtoByte = alias i8 (i16)* @_Pshadow_Pstandard_Cshort_MtoByte 
+@_Pshadow_Pstandard_Cushort_MtoUByte = alias i8 (i16)* @_Pshadow_Pstandard_Cshort_MtoByte
 @_Pshadow_Pstandard_Cushort_MtoShort = alias i16 (i16)* @_Pshadow_Pstandard_Cshort_MtoShort 
 @_Pshadow_Pstandard_Cushort_MtoUShort = alias i16 (i16)* @_Pshadow_Pstandard_Cshort_MtoShort
 @_Pshadow_Pstandard_Cushort_MtoInt = alias i32 (i16)* @_Pshadow_Pstandard_Cshort_MtoUInt 	

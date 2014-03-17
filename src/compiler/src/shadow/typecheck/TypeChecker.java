@@ -101,8 +101,28 @@ public class TypeChecker {
 		return collector.getFiles().keySet();		
 	}
 	
-	public TreeSet<String> getFileDependencies(Type mainType)
-	{
+	public void addFileDependencies(Type mainType, Set<String> files, Set<String> checkedFiles)
+	{		
+		try
+		{			
+			Map<Type, Node> nodeTable = collector.getNodeTable();			
+						
+			for( Type type : mainType.getReferencedTypes() )
+			{
+				File file = nodeTable.get(type.getTypeWithoutTypeArguments()).getFile();
+				String fileName = BaseChecker.stripExtension(file.getCanonicalPath());
+				if( !checkedFiles.contains(fileName) )
+						files.add(fileName);
+			}
+		}
+		catch( IOException e )
+		{
+			System.err.println(e.getLocalizedMessage());
+		}
+		
+		/*
+		//this was too complicated, got all the files at once
+		//now, we get the references needed for each class
 		TreeSet<String> files = new TreeSet<String>();
 		Map<Type, Node> nodeTable = collector.getNodeTable();
 		
@@ -134,7 +154,9 @@ public class TypeChecker {
 			System.err.println("No file found for type " + type );
 		}
 		
-		return files;		
+		return files;
+		*/
+				
 	}
 	
 	public File getCurrentFile()

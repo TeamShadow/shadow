@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -49,8 +50,9 @@ public class Main {
 	 * This is the starting point of the compiler.
 	 * 
 	 * @param args Command line arguments to control the compiler
+	 * @throws MalformedURLException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws MalformedURLException {
 		int ret = test(args);
 		
 		if(ret != NO_ERROR)
@@ -61,8 +63,9 @@ public class Main {
 	 * Used for unit tests, provides a return value.
 	 * @param args arguments
 	 * @return error
+	 * @throws MalformedURLException 
 	 */
-	public static int test(String[] args) {
+	public static int test(String[] args) throws MalformedURLException {
 		Configuration config = Configuration.getInstance();
 
 		try {
@@ -112,12 +115,6 @@ public class Main {
 		        
 		        // get the start time for the compile
 		        long startTime = System.currentTimeMillis();
-
-		        // parse the file
-		        //SimpleNode node = parser.CompilationUnit();
-		        
-		        //if(Loggers.TYPE_CHECKER.isTraceEnabled())
-		        //	node.dump("");
 		        
 		        // type check the AST
 		        Node node = null;

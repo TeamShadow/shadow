@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -106,6 +107,13 @@ public class Main {
 		}
 	}
 
+	private static String getPath( File directory, String name ) throws IOException
+	{
+		File file = new File( directory, name + ".shadow" );
+		String path = file.getCanonicalPath();		
+		path = path.substring(0, path.lastIndexOf(".")); //strip extension
+		return path;		
+	}
 	
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException 
 	{
@@ -127,15 +135,20 @@ public class Main {
 		// throws exceptions if there are problems
 		config.parse(commandLine);
 		
+		File system = config.getSystemImport();
+		
 		TypeChecker checker = new TypeChecker(false);
 		TACBuilder tacBuilder = new TACBuilder();
 		List<String> linkCommand = new ArrayList<String>();
 		linkCommand.add("llvm-link");
 		linkCommand.add("-");
-		linkCommand.add("shadow/Unwind" + config.getArch() + ".ll");
-		linkCommand.add("shadow/" + config.getOs() + ".ll");
+		String unwindFile = new File( system, "shadow" + File.separator + "Unwind" + config.getArch() + ".ll" ).getCanonicalPath();
+		linkCommand.add( unwindFile);
+		String OSFile = new File( system, "shadow" + File.separator + config.getOs() + ".ll" ).getCanonicalPath();
+		linkCommand.add( OSFile);		
 		String mainClass = null;
-		TreeSet<String> files = null;
+		TreeSet<String> files;
+		HashSet<String> checkedFiles = new HashSet<String>();
 
 		// loop through the source files, compiling them
 		while(config.hasNext())
@@ -150,21 +163,37 @@ public class Main {
 				if( files == null )
 				{
 					currentFile = mainFile;
-					currentPath = mainFile.getCanonicalPath();
-					
+					currentPath = mainFile.getCanonicalPath();					
 					//strip extension
 					currentPath = currentPath.substring(0, currentPath.lastIndexOf("."));
+					files = new TreeSet<String>();
+					files.add(currentPath);
+					
+					if( !config.isCheckOnly() )
+					{
+						File standard = new File( system, "shadow" + File.separator + "standard" );
+						File io = new File( system, "shadow" + File.separator + "io" );
+						
+						//minimum standard files needed for compilation
+						files.add( getPath( standard, "Array" ));
+						files.add( getPath( standard, "Class" ));					
+						files.add( getPath( standard, "Exception" ));
+						files.add( getPath( standard, "Iterator" ));
+						files.add( getPath( standard, "Object" ));
+						files.add( getPath( standard, "String" ));
+						files.add( getPath( standard, "System" ));
+						
+						files.add( getPath( io, "Console" ));
+						files.add( getPath( io, "File" ));
+						files.add( getPath( io, "IOException" ));
+						files.add( getPath( io, "Path" ));
+					}
 				}
 				else
 				{
 					currentPath = files.first();
 					currentFile = new File(currentPath + ".shadow");
 				}
-				
-				//checker.setCurrentFile(shadowFile);
-	
-				//FileInputStream sourceStream = new FileInputStream(shadowFile);
-				//ShadowParser parser = new ShadowParser(sourceStream);
 	
 				logger.info("Compiling " + currentFile.getName());
 	
@@ -178,9 +207,10 @@ public class Main {
 				{
 					node = checker.typeCheck(currentFile);
 					//get all the other needed files
-					if( currentFile == mainFile )
+					//if( currentFile == mainFile )
 						//files = new TreeSet<String>(checker.getFiles());
-						files = checker.getFileDependencies(node.getType());
+					if( !config.isCheckOnly() )					
+						checker.addFileDependencies(node.getType(), files, checkedFiles);
 				}
 				catch( TypeCheckException e )
 				{				
@@ -190,7 +220,7 @@ public class Main {
 					
 				if(config.isCheckOnly()) // we are only parsing & type checking
 				{
-					long stopTime = System.currentTimeMillis();	
+					long stopTime = System.currentTimeMillis();
 					System.err.println("FILE " + currentFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
 				}
 				else
@@ -202,20 +232,20 @@ public class Main {
 						System.out.println(module);
 						
 						// build the LLVM
-						new LLVMOutput(true).build(module);
+						// LLVMOutput(true).build(module);
 	
-						// verify and optimize the LLVM
-						new LLVMOutput(false).build(module);
+						// verify the LLVM
+						//new LLVMOutput(false).build(module);
 	
 						// write to file
 						String name = module.getName().replace(':', '$');
 						File llvmFile = new File(currentFile.getParent(), name + ".ll");
 						new LLVMOutput(llvmFile).build(module);
 						if (llvmFile.exists())
-							linkCommand.add(llvmFile.getPath());
+							linkCommand.add(llvmFile.getCanonicalPath());
 						File nativeFile = new File(currentFile.getParent(), name + ".native.ll");
 						if (nativeFile.exists())
-							linkCommand.add(nativeFile.getPath());
+							linkCommand.add(nativeFile.getCanonicalPath());
 					}
 	
 					long stopTime = System.currentTimeMillis();
@@ -225,10 +255,13 @@ public class Main {
 
 				Type.clearTypes();			
 				
-				files.remove( currentPath );				
+				files.remove( currentPath );
+				checkedFiles.add( currentPath );
 			} while( !files.isEmpty() );
+			
+			
 		}
-		if (!config.isCheckOnly())
+		if (!config.isCheckOnly() && !config.isNoLink())
 		{
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.println();
@@ -253,7 +286,14 @@ public class Main {
 			} else {
 				target = "i386-unknown-mingw32";
 			}
-			BufferedReader main = new BufferedReader(new FileReader("shadow/Main.ll"));
+			
+			if( config.hasOutput() )
+			{
+				assembleCommand.add("-o");
+				assembleCommand.add(config.getOutput().getPath());
+			}
+			
+			BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
 			Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();

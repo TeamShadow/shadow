@@ -1,6 +1,7 @@
 package shadow;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -26,10 +27,11 @@ public class Configuration implements Iterator<File> {
 	private static final String NO_LINK_LONG	= "nolink";
 	private static final String HELP			= "h";
 	private static final String HELP_LONG		= "help";
+	private static final String OUTPUT			= "o";
+	private static final String OUTPUT_LONG		= "output";
 
 
-	private String parentConfig = null; /** The parent configuration from a config file */
-	private String mainClass = null; /** The file containing the class with the Main method */
+	private String parentConfig = null; /** The parent configuration from a config file */	
 	private List<File> shadowFiles = null;
 	private int currentShadowFile = 0;
 	private File systemPath = null;	/** This is the import path for all the system files */
@@ -38,6 +40,7 @@ public class Configuration implements Iterator<File> {
 	private boolean noLink = false;	/** Compile the files on the command line but do not link */
 	private int arch = -1;
 	private String os = null;
+	private File output = null;
 	
 	private static Configuration config = new Configuration();
 	
@@ -57,29 +60,72 @@ public class Configuration implements Iterator<File> {
 	 * Parses the command line and sets all of the internal variables.
 	 * @param cmdLine The command line passed to the compiler.
 	 * @throws ConfigurationException 
+	 * @throws MalformedURLException 
 	 * @throws ParseException 
 	 */
-	public void parse(CommandLine cmdLine) throws ConfigurationException
+	public void parse(CommandLine cmdLine) throws ConfigurationException, MalformedURLException
 	{
 		this.reset();	// resetting the counter in case we parse multiple times
+		
+		// get all of the files to compile
+		shadowFiles = new ArrayList<File>();
+		for(String shadowFile:cmdLine.getArgs())
+			shadowFiles.add(new File(shadowFile));
 		
 		if(cmdLine.hasOption(CONFIG))
 		{
 			// parse the config file on the command line if we have it
 			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG)));
 		}
-		else if(System.getenv("SHADOW_CONFIG") != null)
-		{
-			// use the system config from the environment
-			parseConfigFile(new File(System.getenv("SHADOW_CONFIG")));
-		}
 		else
 		{
-			// parse the correct built-in configuration file
-			if(System.getProperty("os.name").startsWith("Windows"))
-				parseConfigFile(System.class.getResource("/shadow-windows.xml"));
+			URL url = null; 
+			
+			//first look for a config in the same folder as the file being compiled
+			if( shadowFiles.size() > 0)
+			{
+				File file = shadowFiles.get(0);
+				File configuration;
+								
+				if(System.getProperty("os.name").startsWith("Windows"))
+				{
+					configuration = new File( file, "shadow-windows.xml");
+					if( configuration.exists() )
+						url = configuration.toURI().toURL();
+				}
+				else
+				{
+					configuration = new File( file, "shadow-linux.xml");
+					if( configuration.exists() )
+						url = configuration.toURI().toURL();					
+				}
+				
+				if( url == null )
+				{
+					configuration = new File( file, "shadow.xml");
+					if( configuration.exists() )
+						url = configuration.toURI().toURL();
+				}
+			}
+			
+			//next look for one in the compiler home
+			if( url == null )
+			{
+				if(System.getProperty("os.name").startsWith("Windows"))
+					url = Main.class.getResource("/shadow-windows.xml");
+				else
+					url = Main.class.getResource("/shadow-linux.xml");
+				
+				if( url == null )
+					url = Main.class.getResource("/shadow.xml");
+			}
+			
+			if( url != null )
+				parseConfigFile(url);
+			else if(System.getenv("SHADOW_CONFIG") != null)
+				parseConfigFile(new File(System.getenv("SHADOW_CONFIG")));
 			else
-				parseConfigFile(System.class.getResource("/shadow-linux.xml"));
+				throw new ConfigurationException("No configuration file specified!");			
 		}
 
 		// print the import paths if we're debugging
@@ -99,30 +145,19 @@ public class Configuration implements Iterator<File> {
 		// see if we're only compiling files
 		noLink = cmdLine.hasOption(NO_LINK);
 		
-		// get all of the files to compile
-		shadowFiles = new ArrayList<File>();
-		for(String shadowFile:cmdLine.getArgs())
-			shadowFiles.add(new File(shadowFile));
-		
+		if( cmdLine.hasOption(OUTPUT))
+			output = new File(cmdLine.getOptionValue(OUTPUT));		
 	
 		if(shadowFiles.size() == 0)
 			throw new ConfigurationException("No source files specified to compile");
-		
-		// set the main class if we're linking
-		if(!noLink)
-			mainClass = shadowFiles.get(0).getAbsolutePath();
-		
-		//
+
 		// Sanity checks
-		//
-		if(!checkOnly && mainClass == null)
-			throw new ConfigurationException("Did not specify a main class");
 		
 		if(arch == -1)
-			throw new ConfigurationException("Did not specify an architecture");
+			throw new ConfigurationException("Architecture not specified");
 		
 		if(os == null)
-			throw new ConfigurationException("Did not specify an OS");
+			throw new ConfigurationException("OS not specified");
 		
 		if(this.systemPath == null)
 			throw new ConfigurationException("No system import path specified");
@@ -167,13 +202,20 @@ public class Configuration implements Iterator<File> {
 	 */
 	public static Options createCommandLineOptions() {
 		Options options = new Options();
+		
+		String fileName;
+		
+		if(System.getProperty("os.name").startsWith("Windows"))
+			fileName = "shadow-windows.xml";
+		else
+			fileName = "shadow-linux.xml";
 
 		// setup the configuration file option
 		@SuppressWarnings("static-access")
 		Option configOption = OptionBuilder.withLongOpt(CONFIG_LONG)
 										   .hasArg()
 										   .withArgName("config.xml")
-										   .withDescription("Configuration file\ndefault is shadow_config.xml")
+										   .withDescription("Specify configuration file\nDefault is " + fileName + " or shadow.xml")
 										   .create(CONFIG);
 
 		// create the typecheck option
@@ -187,26 +229,27 @@ public class Configuration implements Iterator<File> {
 		Option compileOption = OptionBuilder.withLongOpt(NO_LINK_LONG)											
 										    .withDescription("Compile Shadow files but do not link")										    
 										    .create(NO_LINK);
+		
+		// create the nolink option
+		@SuppressWarnings("static-access")
+		Option outputOption = OptionBuilder.withLongOpt(OUTPUT_LONG)
+											.hasArg()
+											.withArgName("file")
+										    .withDescription("Place output into <file>")										    
+										    .create(OUTPUT);
 
 		// add all the options from above
 		options.addOption(configOption);
 		options.addOption(checkOption);
 		options.addOption(compileOption);
+		options.addOption(outputOption);
 
 		// add new simple options
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
 		
 		return options;
 	}
-
-	public String getMainClass() {
-		return mainClass;
-	}
-
-	public void setMainClass(String mainClass) {
-		this.mainClass = mainClass;
-	}
-
+	
 	public int getArch() {
 		return arch;
 	}
@@ -248,6 +291,20 @@ public class Configuration implements Iterator<File> {
 
 	public boolean isCheckOnly() {
 		return checkOnly;
+	}
+	
+	public boolean isNoLink() {
+		return noLink;
+	}
+	
+	public boolean hasOutput()
+	{
+		return output != null;
+	}
+	
+	public File getOutput()
+	{
+		return output;		
 	}
 
 	/**

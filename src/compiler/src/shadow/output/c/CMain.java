@@ -1,11 +1,12 @@
 package shadow.output.c;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CMain
 {
-	public static void main(String[] args)
+	public static void main(String[] args) throws MalformedURLException
 	{
 		List<String> arguments = new ArrayList<String>();
 
