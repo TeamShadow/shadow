@@ -3,15 +3,15 @@ import shadow.io@Console;
 
 immutable class shadow.test@ExceptionTest
 {
-	public test() => () {
+	public test() => () {		
 		throw IndexOutOfBoundsException:create();
 	}
 	public test1() => () {
-		try {
-			test();
+		try {			
+			test();			
 		} catch (ExceptionA ex) {
 			Console:instance.printLine("test1 caught ExceptionA");
-		}
+		}		
 	}
 	public test2() => () {
 		try {
@@ -30,7 +30,7 @@ immutable class shadow.test@ExceptionTest
 		}
 	}
 	public main( String[] args ) => ( int ) {
-		test3();
+		test3();		
 		return 0;
 	}
 }

@@ -1698,7 +1698,15 @@ public class TACBuilder implements ShadowParserVisitor
 				{
 					TACLabelRef continueUnwind = block.getUnwind();
 					if (continueUnwind != null)
-						new TACBranch(tree, continueUnwind);
+						new TACBranch(tree, continueUnwind); //try inside of try
+					else
+					{	
+						System.err.println("Trouble!");
+						//rethrow if necessary!
+						TACLabelRef unreachableLabel = new TACLabelRef(tree);
+						new TACThrow(tree, block, typeid);
+						unreachableLabel.new TACLabel(tree);						
+					}					
 				}
 			}
 			if (parent.hasRecover())
@@ -1758,7 +1766,12 @@ public class TACBuilder implements ShadowParserVisitor
 			}
 		}
 		else if (parent.getCatches() > 0)
-			block = new TACBlock(tree, block).addLandingpad().addUnwind();
+		{	
+			//block.addLandingpad().addUnwind(); //unwind should be added to the ASTCatchStatement's block
+			//block = new TACBlock(tree, block); //should the landing pad be on the previous block too?
+			//old code
+			block = new TACBlock(tree, block).addLandingpad().addUnwind(); //unwind should be added to the ASTCatchStatement's block
+		}
 		return POST_CHILDREN;
 	}
 

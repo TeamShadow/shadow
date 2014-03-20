@@ -230,14 +230,14 @@ public class Main {
 						if (mainClass == null)
 							mainClass = module.getType().getMangledName();
 						//Debug prints
-						logger.debug(module.toString());
-						//System.out.println(module);
+						//logger.info(module.toString());
+						System.out.println(module);
 						
 						// build the LLVM
 						// LLVMOutput(true).build(module);
 	
 						// verify the LLVM
-						new LLVMOutput(false).build(module);
+						//new LLVMOutput(false).build(module);
 	
 						// write to file
 						String name = module.getName().replace(':', '$');
