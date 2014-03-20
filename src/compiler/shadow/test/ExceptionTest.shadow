@@ -5,10 +5,11 @@ immutable class shadow.test@ExceptionTest
 {
 	public test() => () {		
 		throw IndexOutOfBoundsException:create();
+		//throw ExceptionA:create();
 	}
 	public test1() => () {
 		try {			
-			test();			
+			test();						
 		} catch (ExceptionA ex) {
 			Console:instance.printLine("test1 caught ExceptionA");
 		}		

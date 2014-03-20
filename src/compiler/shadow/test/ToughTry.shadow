@@ -1,0 +1,76 @@
+import shadow.io@Console;
+
+class shadow.test@ToughTry
+{
+	Console console = Console:instance;
+
+	public main( String[] args ) => ( int )
+	{		
+		console.printLine("test 1");
+		test1();
+		
+		console.printLine("test 2");
+		test2();
+		
+		console.printLine("test 3");
+		int result = test3();
+		console.printLine("Result: " # result);
+	}
+	
+	public test1() => ()
+	{		
+		try
+		{
+			int x = normal();
+			console.printLine(x);
+		}
+		catch (Exception ex)
+		{
+			console.printLine("catch (" # ex # ")");
+		}
+		finally
+		{
+			console.printLine("finally");
+		}	
+	}
+	
+	public test2() => ()
+	{		
+		try
+		{
+			int x = trouble();
+			console.printLine(x);
+		}
+		catch (Exception ex)
+		{
+			console.printLine("catch (" # ex # ")");
+		}
+		finally
+		{
+			console.printLine("finally");
+		}	
+	}
+
+	public test3() => (int)
+	{		
+		try
+		{
+			return 3;
+		}
+		finally
+		{
+			console.printLine("finally");
+		}	
+	}
+		
+	public trouble() => (int)
+	{
+		throw Exception:create();	
+	}
+	
+	public normal() => (int)
+	{
+		return 16;	
+	}	
+
+}

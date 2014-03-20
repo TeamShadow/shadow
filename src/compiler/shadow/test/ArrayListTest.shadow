@@ -7,20 +7,31 @@ class shadow.test@ArrayListTest
 	public main( String[] args ) => ( int )
 	{
 		ArrayList<String> list = ArrayList<String>:create();
+		Console out = Console:instance;
 		
 		try
 		{
+			out.printLine("Adding args...");
 			for ( int i = 0; i < args->size; i += 1 )
 				list.add(check(args[i]));
+			out.printLine("Done adding.");
+			out.printLine("Removing args...");
 			for ( int i = 1; i < args->size; i += 3 )
-				Console:instance.printLine(list.remove(check(args[i])));
-			Console:instance.printLine(list.remove(""));
+				out.printLine(list.remove(check(args[i])));
+			out.printLine("Removed args.");
+			out.printLine("Removing empty string...");
+			out.printLine(list.remove(""));
+			out.printLine("Removed empty string.");
+			out.printLine("Printing args...");
 			for ( int i = 0; i < list->size; i += 1 )
-				Console:instance.printLine(list.index(i));
-			Console:instance.printLine(list);
+				out.printLine(list.index(i));
+			out.printLine("Printed args.");
+			out.printLine(list);
 		}
 		recover
-		{}
+		{
+			out.printLine("Recovery needed.");
+		}
 			
 		return 0;
 	}

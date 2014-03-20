@@ -27,9 +27,9 @@ public class TACTest {
 		}
 
 		// set the levels of our loggers
-		Loggers.SHADOW.setLevel(Level.DEBUG);
-		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
-		Loggers.PARSER.setLevel(Level.INFO);
+		Loggers.SHADOW.setLevel(Level.INFO);
+		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
+		Loggers.PARSER.setLevel(Level.OFF);
 	}	
 		
 	@Test public void testArrayList() throws Exception {
@@ -44,6 +44,11 @@ public class TACTest {
 	
 	@Test public void testChild() throws Exception {
 		args.add("shadow/test/ChildTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testCommandLine() throws Exception {
+		args.add("shadow/test/CommandLine.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 	
@@ -84,6 +89,11 @@ public class TACTest {
 	
 	@Test public void testTry() throws Exception {
 		args.add("shadow/test/TryTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testToughTry() throws Exception {
+		args.add("shadow/test/ToughTry.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 }

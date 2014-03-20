@@ -613,7 +613,7 @@ public class StatementChecker extends BaseChecker
 				
 		if(type != null)
 		{
-			((ClassType)currentType).addReferencedType(type);
+			currentType.addReferencedType(type);			
 			node.setType(type);
 			node.addModifier(Modifiers.TYPE_NAME);
 			return true;
@@ -1802,6 +1802,19 @@ public class StatementChecker extends BaseChecker
 		}
 			
 		return WalkType.POST_CHILDREN;
+	}	
+	
+	@Override
+	public Object visit(ASTThrowStatement node, Boolean secondVisit) throws ShadowException
+	{
+		if( secondVisit )
+		{
+			Node child = node.jjtGetChild(0);
+			if( !(child.getType() instanceof ExceptionType) && !(child.getType() instanceof ErrorType)  )
+				addError(Error.INVALID_TYPE, "Supplied type " + child.getType() + " cannot be used in a throw clause, exception or error type required");
+		}
+		
+		return WalkType.POST_CHILDREN;	
 	}	
 	
 	@Override

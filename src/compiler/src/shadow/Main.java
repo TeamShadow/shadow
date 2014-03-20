@@ -206,9 +206,7 @@ public class Main {
 				try
 				{
 					node = checker.typeCheck(currentFile);
-					//get all the other needed files
-					//if( currentFile == mainFile )
-						//files = new TreeSet<String>(checker.getFiles());
+					//get all the other needed files				
 					if( !config.isCheckOnly() )					
 						checker.addFileDependencies(node.getType(), files, checkedFiles);
 				}
@@ -221,7 +219,7 @@ public class Main {
 				if(config.isCheckOnly()) // we are only parsing & type checking
 				{
 					long stopTime = System.currentTimeMillis();
-					System.err.println("FILE " + currentFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
+					logger.info("FILE " + currentFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
 				}
 				else
 				{
@@ -230,8 +228,8 @@ public class Main {
 						if (mainClass == null)
 							mainClass = module.getType().getMangledName();
 						//Debug prints
-						//logger.info(module.toString());
-						System.out.println(module);
+						logger.debug(module.toString());
+						//System.out.println(module);
 						
 						// build the LLVM
 						// LLVMOutput(true).build(module);
@@ -252,7 +250,7 @@ public class Main {
 	
 					long stopTime = System.currentTimeMillis();
 	
-					System.err.println("COMPILED " + currentFile.getPath() + " in " + (stopTime - startTime) + "ms");
+					logger.info("COMPILED " + currentFile.getPath() + " in " + (stopTime - startTime) + "ms");
 				}
 
 				Type.clearTypes();			
@@ -282,12 +280,29 @@ public class Main {
 				target = "x86_64-gnu-linux";
 				assembleCommand.add("-lm");
 				assembleCommand.add("-lrt");
-			} else if (System.getProperty("os.name").equals("Linux")) {
+			}
+			else if( config.getArch() == 32 )
+			{			 
+				target = "i686-w64-mingw32";
+				//target = "i386-unknown-mingw32";
+				//assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
+			}
+			else 
+			{
+				//target = "i686-w64-mingw32";
+				target = "x86_64-w64-mingw32";
+			}
+			
+			//assembleCommand.add("-m" + config.getArch());
+			
+			/*//old
+			 else if (System.getProperty("os.name").equals("Linux")) {			 
 				target = "i686-w64-mingw32";
 				assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
 			} else {
 				target = "i386-unknown-mingw32";
 			}
+			*/
 			
 			if( config.hasOutput() )
 			{
@@ -334,7 +349,7 @@ public class Main {
 				compile.destroy();
 				assemble.destroy();
 			}
-			System.err.println("SUCCESS");
+			logger.info("SUCCESS");
 		}
 	}
 

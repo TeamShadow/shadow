@@ -33,7 +33,7 @@ public class OutputTest {
 		}
 
 		// set the levels of our loggers
-		Loggers.SHADOW.setLevel(Level.OFF);
+		Loggers.SHADOW.setLevel(Level.INFO);
 		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
 		Loggers.PARSER.setLevel(Level.OFF);
 	}	
@@ -75,6 +75,13 @@ public class OutputTest {
 	@Test public void testArrayList() throws Exception {
 		args.add("shadow/test/ArrayListTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		run(new String[] {"all", "good", "men", "shall", "perish"},
+				"shall\n" + 
+				"\n" + 
+				"all\n" + 
+				"good\n" + 
+				"men\n" +
+				"perish\n");
 	}	
 	
 	@Test public void testArray() throws Exception {
@@ -120,5 +127,10 @@ public class OutputTest {
 	@Test public void testTry() throws Exception {
 		args.add("shadow/test/TryTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-	}	
+	}
+	
+	@Test public void testToughTry() throws Exception {
+		args.add("shadow/test/ToughTry.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

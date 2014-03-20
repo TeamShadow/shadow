@@ -1001,6 +1001,13 @@ public abstract class Type implements Comparable<Type>
 						addReferencedType( typeParameter.getType() );
 				}
 			}
+			
+			Type outer = getOuter();
+			while( outer != null )
+			{
+				outer.addReferencedType(type);
+				outer = outer.getOuter();
+			}			
 		}
 	}
 	public Set<Type> getReferencedTypes()
