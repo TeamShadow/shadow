@@ -5,15 +5,17 @@ class shadow.test@MethodOperations
 	public main(String[] args) => ()
 	{
 		Console console = Console:instance;
-		
+	
 		int x = 6;
 		int y = 6;
 		int z = 7;
+		
 		String s1 = "trouble";
 		String s2 = "trouble";
+	
 		String s3 = "rubble";
 		//CanEqual<int> xWrapper = x;
-		
+	
 		if( x == y )
 			console.printLine("x == y");
 		else
@@ -29,10 +31,10 @@ class shadow.test@MethodOperations
 		else
 			console.printLine("s1 != s2");
 			
-		if( s1 == s3 )
-			console.printLine("s1 == s3");
-		else
+		if( s1 != s3 )
 			console.printLine("s1 != s3");
+		else
+			console.printLine("s1 == s3");
 		
 		/*	
 		if( xWrapper == y)

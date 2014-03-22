@@ -706,12 +706,6 @@ public class TACBuilder implements ShadowParserVisitor
 					if (node.jjtGetChild(index - 1).getType().isPrimitive() &&
 							node.jjtGetChild(index).getType().isPrimitive())
 					{
-//						TACOperand parent = value;
-//						if (value.getType().isSubtype(other.getType()))
-//							parent = other;
-//						value = new TACCall(tree, block, new TACMethodRef(tree,
-//								parent, Type.OBJECT.getMethods("equals").
-//								get(0)), value, other);
 						value = new TACSame(tree, value, other);
 					}
 					else
@@ -732,25 +726,13 @@ public class TACBuilder implements ShadowParserVisitor
 						Type valueType = value.getType();
 						if( valueType instanceof PropertyType )
 							valueType = ((PropertyType)valueType).getGetType().getType();
-						MethodSignature method = valueType.getMatchingMethod("equal", new SequenceType(other));
-						/*//should never happen
-						MethodSignature method = null;
-						for (MethodSignature candidate :
-								value.getType().getMethods("equal"))
-							if (candidate.canAccept(new SequenceType(
-									Arrays.<ModifiedType>asList(other))))
-								method = candidate;
-						if (method == null)
-							throw new IllegalArgumentException("Could not " +
-									"apply == to types " + value.getType() +
-									" and " + other.getType());
-						*/
+						MethodSignature signature = valueType.getMatchingMethod("equal", new SequenceType(other));												
 						new TACStore(tree, var, new TACCall(tree, block,
-								new TACMethodRef(tree, value, method),
+								new TACMethodRef(tree, value, signature),
 								value, other));
 						new TACBranch(tree, doneLabel);
 						doneLabel.new TACLabel(tree);
-						value = new TACLoad(tree, var);
+						value = new TACLoad(tree, var);						
 					}
 				}
 				else
@@ -819,10 +801,12 @@ public class TACBuilder implements ShadowParserVisitor
 					operand = new TACLoad(tree, var);
 				}
 				else
+				{
 					operand = new TACCall(tree, block,
 							new TACMethodRef(tree, operand,
 									type.getMatchingMethod("toString", new SequenceType())),
 							Collections.singletonList(operand));
+				}
 				last = i == 0 ? operand : new TACCall(tree, block,
 						new TACMethodRef(tree,
 								Type.STRING.getMethods("concatenate").get(0)),
@@ -1418,13 +1402,10 @@ public class TACBuilder implements ShadowParserVisitor
 			//create splat
 			if( !(rightSide.getType() instanceof SequenceType)  )
 			{				
-				//TODO: Fix splats
-				//needs to look like a Sequence
-					
 				TACReference temporary = new TACVariableRef(tree,
 						method.addTempLocal(rightSide));	
 				new TACStore(tree, temporary, tree.appendChild(1));  //is that right? child 0 didn't work
-				//this looks good, but now child 1 is null below
+
 				
 				List<TACOperand> sequence =
 						new ArrayList<TACOperand>(leftSide.getType().size());
@@ -1434,11 +1415,9 @@ public class TACBuilder implements ShadowParserVisitor
 				
 				new TACStore(tree, new TACSequenceRef(tree,
 						tree.appendChildRemoveSequence(0)), new TACSequence(tree, sequence) );
-				
 			}
 			else
-			{		
-			//trouble here because of null spot left by "appending" RHS
+			{
 				new TACStore(tree, new TACSequenceRef(tree,
 						tree.appendChildRemoveSequence(0)), tree.appendChild(1));
 			}

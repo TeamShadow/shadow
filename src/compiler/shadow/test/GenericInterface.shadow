@@ -1,0 +1,7 @@
+class shadow.test@GenericInterface
+{
+	public main( String[] args ) => ()
+	{
+		
+	}
+}

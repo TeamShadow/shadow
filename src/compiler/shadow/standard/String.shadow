@@ -157,7 +157,7 @@ implements
 
 	public equal( String other ) => ( boolean )
 	{
-		return this->size != other->size and compare(other) == 0;
+		return this->size == other->size and compare(other) == 0;
 	}
 	public compare( String other ) => ( int )
 	{
