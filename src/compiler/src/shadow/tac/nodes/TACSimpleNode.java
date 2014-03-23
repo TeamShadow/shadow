@@ -82,8 +82,10 @@ public abstract class TACSimpleNode extends TACNode
 		else if( (operandType instanceof SequenceType) != (typeType instanceof SequenceType))
 			throw new IllegalArgumentException();
 
-		if (operandType.getPackage().equals(typeType.
-				getPackage()) && operand.getType().getTypeName().equals(type.
+		shadow.typecheck.Package operandPackage = operandType.getPackage();
+		shadow.typecheck.Package typePackage = typeType.getPackage();
+		
+		if ( operandPackage != null && typePackage != null && operandPackage.equals(typePackage) && operand.getType().getTypeName().equals(type.
 				getType().getTypeName()))
 			return operand;
 

@@ -101,4 +101,9 @@ public class TACTest {
 		args.add("shadow/test/MethodOperations.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testPrimitive() throws Exception {
+		args.add("shadow/test/PrimitiveTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

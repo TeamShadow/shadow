@@ -766,6 +766,46 @@ public class TACBuilder implements ShadowParserVisitor
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
+	
+	
+	private TACOperand convertToString( TACOperand operand, Node node )
+	{
+		Type type = operand.getType();
+		if( type.equals(Type.STRING ) )
+			return operand;
+		
+		if (!type.isPrimitive() && !(type instanceof ArrayType))
+		{ // TODO: actually check nullable
+			TACLabelRef nullLabel = new TACLabelRef(tree),
+					nonnullLabel = new TACLabelRef(tree),
+					doneLabel = new TACLabelRef(tree);
+			TACReference var = new TACVariableRef(tree,
+					method.addTempLocal(node));
+			new TACBranch(tree, new TACSame(tree, operand,
+					new TACLiteral(tree, "null")), nullLabel,
+					nonnullLabel);
+			nullLabel.new TACLabel(tree);
+			new TACStore(tree, var, new TACLiteral(tree, "\"null\""));
+			new TACBranch(tree, doneLabel);
+			nonnullLabel.new TACLabel(tree);
+			new TACStore(tree, var, new TACCall(tree, block,
+					new TACMethodRef(tree, operand,
+							type.getMatchingMethod("toString", new SequenceType())),
+					Collections.singletonList(operand)));
+			new TACBranch(tree, doneLabel);
+			doneLabel.new TACLabel(tree);
+			operand = new TACLoad(tree, var);
+		}
+		else
+		{
+			operand = new TACCall(tree, block,
+					new TACMethodRef(tree, operand,
+							type.getMatchingMethod("toString", new SequenceType())),
+					Collections.singletonList(operand));
+		}
+		
+		return operand;
+	}
 
 	@Override
 	public Object visit(ASTConcatenationExpression node, Boolean secondVisit)
@@ -777,36 +817,9 @@ public class TACBuilder implements ShadowParserVisitor
 			for (int i = 0; i < tree.getNumChildren(); i++)
 			{
 				TACOperand operand = tree.appendChild(i);
-				Type type = operand.getType();
-				if (!type.isPrimitive() && !(type instanceof ArrayType))
-				{ // TODO: actually check nullable
-					TACLabelRef nullLabel = new TACLabelRef(tree),
-							nonnullLabel = new TACLabelRef(tree),
-							doneLabel = new TACLabelRef(tree);
-					TACReference var = new TACVariableRef(tree,
-							method.addTempLocal(node));
-					new TACBranch(tree, new TACSame(tree, operand,
-							new TACLiteral(tree, "null")), nullLabel,
-							nonnullLabel);
-					nullLabel.new TACLabel(tree);
-					new TACStore(tree, var, new TACLiteral(tree, "\"null\""));
-					new TACBranch(tree, doneLabel);
-					nonnullLabel.new TACLabel(tree);
-					new TACStore(tree, var, new TACCall(tree, block,
-							new TACMethodRef(tree, operand,
-									type.getMatchingMethod("toString", new SequenceType())),
-							Collections.singletonList(operand)));
-					new TACBranch(tree, doneLabel);
-					doneLabel.new TACLabel(tree);
-					operand = new TACLoad(tree, var);
-				}
-				else
-				{
-					operand = new TACCall(tree, block,
-							new TACMethodRef(tree, operand,
-									type.getMatchingMethod("toString", new SequenceType())),
-							Collections.singletonList(operand));
-				}
+				
+				operand = convertToString( operand, node );				
+				
 				last = i == 0 ? operand : new TACCall(tree, block,
 						new TACMethodRef(tree,
 								Type.STRING.getMethods("concatenate").get(0)),
@@ -893,23 +906,7 @@ public class TACBuilder implements ShadowParserVisitor
 			String op = node.getImage(); 
 			if( op.equals("#")) //string is special because of nulls
 			{	
-				TACLabelRef nullLabel = new TACLabelRef(tree),
-						nonnullLabel = new TACLabelRef(tree),
-						doneLabel = new TACLabelRef(tree);
-				TACReference var = new TACVariableRef(tree,
-						method.addTempLocal(node));
-				new TACBranch(tree, new TACSame(tree, operand, new TACLiteral(tree,
-						"null")), nullLabel, nonnullLabel);
-				nullLabel.new TACLabel(tree);
-				new TACStore(tree, var, new TACLiteral(tree, "\"null\""));
-				new TACBranch(tree, doneLabel);
-				nonnullLabel.new TACLabel(tree);
-				new TACStore(tree, var, new TACCall(tree, block,
-						new TACMethodRef(tree, operand, node.getOperations().get(0)),
-						Collections.singletonList(operand)));
-				new TACBranch(tree, doneLabel);
-				doneLabel.new TACLabel(tree);
-				new TACLoad(tree, var);
+				convertToString( operand, node );
 			}
 			else
 			{
