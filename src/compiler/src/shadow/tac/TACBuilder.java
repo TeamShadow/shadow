@@ -405,7 +405,7 @@ public class TACBuilder implements ShadowParserVisitor
 		if (secondVisit)
 		{
 			implicitCreate = false;
-			ClassType thisType = (ClassType)method.getMethod().getPrefixType();
+			ClassType thisType = (ClassType)method.getMethod().getOuterType();
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(new TACVariableRef(tree, method.getThis()));
 			for (int i = 0; i < tree.getNumChildren(); i++)
@@ -1135,11 +1135,19 @@ public class TACBuilder implements ShadowParserVisitor
 		{
 			if (prefix == null)
 				prefix = new TACVariableRef(tree, method.getThis());
+ 		
 			TACMethodRef methodRef = new TACMethodRef(tree,
 					explicitSuper ? null : prefix,
 					((MethodType)node.getType()).getTypeWithoutTypeArguments(),
 					identifier.getName());
 			List<TACOperand> params = new ArrayList<TACOperand>();
+			
+			
+			//TODO: fix me!
+			//new craziness
+			if( prefix.getType() instanceof InterfaceType )
+				prefix = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), prefix);
+			
 			params.add(prefix);
 			for (int i = 0; i < tree.getNumChildren(); i++)
 				if (node.jjtGetChild(i) instanceof ASTTypeArguments)
@@ -1243,12 +1251,12 @@ public class TACBuilder implements ShadowParserVisitor
 			TACMethodRef methodRef = new TACMethodRef(tree,
 					(MethodType)node.getType(), node.getImage());
 			TACOperand object = new TACNewObject(tree,
-					(ClassType)methodRef.getPrefixType());
+					(ClassType)methodRef.getOuterType());
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(object);
-			if (methodRef.getPrefixType().hasOuter())
+			if (methodRef.getOuterType().hasOuter())
 			{
-				Type outerType = methodRef.getPrefixType().getOuter();
+				Type outerType = methodRef.getOuterType().getOuter();
 				TACVariable thisRef = method.getThis();
 				if (thisRef.getType().equals(outerType))
 					params.add(new TACVariableRef(tree, thisRef));
@@ -2072,7 +2080,7 @@ public class TACBuilder implements ShadowParserVisitor
 			block = new TACBlock(tree = new TACTree(1));
 			if (implicitCreate = methodRef.isCreate())
 			{
-				Type type = methodRef.getPrefixType();
+				Type type = methodRef.getOuterType();
 				if (type.hasOuter())
 					new TACStore(tree,
 							new TACFieldRef(tree, new TACVariableRef(tree,
@@ -2141,7 +2149,7 @@ public class TACBuilder implements ShadowParserVisitor
 				walk(methodSignature.getNode());
 			if (implicitCreate)
 			{
-				ClassType thisType = (ClassType)methodRef.getPrefixType(),
+				ClassType thisType = (ClassType)methodRef.getOuterType(),
 						superType = thisType.getExtendType();
 				if (superType != null)
 					new TACCall(method, block, new TACMethodRef(method,

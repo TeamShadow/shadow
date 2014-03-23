@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -83,15 +84,21 @@ public class TACMethodRef extends TACOperand
 	{
 		super(node);
 		if (prefixNode != null)
-			prefix = check(prefixNode,
-					new SimpleModifiedType(methodType.getOuter()));
+		{
+			/*if( methodType.getOuter() instanceof InterfaceType )
+				prefix = check(prefixNode,
+						new SimpleModifiedType(Type.OBJECT));
+			else*/
+				prefix = check(prefixNode,
+						new SimpleModifiedType(methodType.getOuter()));
+		}
 		type = methodType;
 		name = methodName;
 		if (otherWrapped != null)
 			wrapped = new TACMethodRef((TACNode)this, otherWrapped);
 	}
 
-	public Type getPrefixType()
+	public Type getOuterType()
 	{
 		return type.getOuter();
 	}
@@ -132,13 +139,14 @@ public class TACMethodRef extends TACOperand
 	public SequenceType getParameterTypes()
 	{
 		SequenceType paramTypes = new SequenceType();
-		if (isCreate())
+		Type prefixType = getOuterType();
+		if (isCreate() || prefixType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
 			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
 		else
-			paramTypes.add(new SimpleModifiedType(getPrefixType())); // this
-		if (isCreate() && getPrefixType().hasOuter())
-			paramTypes.add(new SimpleModifiedType(getPrefixType().getOuter()));
-		Type parameterizedType = isCreate() ? getPrefixType() : getType();
+			paramTypes.add(new SimpleModifiedType(prefixType)); // this
+		if (isCreate() && getOuterType().hasOuter())
+			paramTypes.add(new SimpleModifiedType(getOuterType().getOuter()));
+		Type parameterizedType = isCreate() ? getOuterType() : getType();
 		if (parameterizedType.isParameterized())
 			for (int i = parameterizedType.getTypeParameters().size(); i > 0;
 					i--)
@@ -177,7 +185,7 @@ public class TACMethodRef extends TACOperand
 	{
 		if (isCreate())
 			return new SequenceType(Collections.<ModifiedType>singletonList(
-					new SimpleModifiedType(getPrefixType())));
+					new SimpleModifiedType(getOuterType())));
 		return getType().getReturnTypes();
 	}
 	public int getReturnCount()

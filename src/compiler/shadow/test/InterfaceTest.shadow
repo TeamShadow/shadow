@@ -5,21 +5,15 @@ class shadow.test@InterfaceTest
 	public main( String[] args ) => ()
 	{
 		Console out = Console:instance;
-		out.printLine("Creating cheetah...");
 		CanRun cheetah = Cheetah:create();
-		out.printLine("Creating hare...");
-		CanRun hare = Hare:create();
-		out.printLine("Creating tortoise...");
+		CanRun hare = Hare:create();		
 		CanRun tortoise = Tortoise:create();
-		out.printLine("Cheetah runs...");
 		cheetah.run();
-		out.printLine("Hare runs...");
 		hare.run();
-		out.printLine("Tortoise runs...");
 		tortoise.run();
 		( cheetah, hare, tortoise ) = ( tortoise, cheetah, hare );
 		cheetah.run();
 		hare.run();
-		tortoise.run();
+		tortoise.run();				
 	}
 }

@@ -381,7 +381,7 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACCall node) throws ShadowException
 		{
 			TACMethodRef method = node.getMethod();
-			sb.append(method.getPrefixType().getQualifiedName()).append(':').
+			sb.append(method.getOuterType().getQualifiedName()).append(':').
 					append(method.getName()).append('(');
 			for (TACOperand param : node.getParameters())
 				visit(sb, param).append(", ");

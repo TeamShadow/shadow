@@ -136,7 +136,11 @@ public class InterfaceType extends Type
 	public List<MethodSignature> getAllMethods(String methodName)
 	{
 		List<MethodSignature> list = new ArrayList<MethodSignature>();		
-		addAllMethods( methodName, list );					
+		addAllMethods( methodName, list );	
+		
+		//get from Object, too
+		list.addAll( Type.OBJECT.getAllMethods(methodName));		
+		
 		return list;
 	}
 	

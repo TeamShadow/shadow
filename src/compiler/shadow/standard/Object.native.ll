@@ -20,6 +20,6 @@ define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CObject_Mcopy(%_Pshadow_
 	ret %_Pshadow_Pstandard_CObject* %0
 }
 
-define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CObject_Mfreeze(%_Pshadow_Pstandard_CObject*) {
-	ret %_Pshadow_Pstandard_CObject* %0
-}
+;define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CObject_Mfreeze(%_Pshadow_Pstandard_CObject*) {
+;	ret %_Pshadow_Pstandard_CObject* %0
+;}

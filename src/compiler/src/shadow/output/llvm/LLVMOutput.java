@@ -642,7 +642,7 @@ public class LLVMOutput extends AbstractOutput
 				writer.write('%' + name(local) + " = alloca " + type(local));
 			if (method.hasLandingpad())
 				writer.write("%_exception = alloca { i8*, i32 }");
-			boolean primitiveCreate = !method.getMethod().getPrefixType().
+			boolean primitiveCreate = !method.getMethod().getOuterType().
 					isSimpleReference() && methodRef.isCreate(), first = true;
 			int paramIndex = 0;
 			for (TACVariable param : method.getParameters())
@@ -730,27 +730,27 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACMethodRef node) throws ShadowException
 	{
-		if (node.getPrefixType() instanceof InterfaceType)
+		if (node.getOuterType() instanceof InterfaceType)
 		{
 			writer.write(nextTemp() + " = extractvalue " +
 					typeSymbol(node.getPrefix()) + ", 0");
 			writer.write(nextTemp() + " = getelementptr %" +
-					raw(node.getPrefixType(), "_Mclass") + "* " +
+					raw(node.getOuterType(), "_Mclass") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex());
 			writer.write(nextTemp(node) + " = load " + methodType(node) +
 					"* " + temp(1));
 		}
 		else if (node.hasPrefix() &&
-				!node.getPrefixType().getModifiers().isImmutable() &&
+				!node.getOuterType().getModifiers().isImmutable() &&
 				//!node.getType().getModifiers().isFinal() && //replace with Readonly?
 				!node.getType().getModifiers().isPrivate())
 		{
 			writer.write(nextTemp() + " = getelementptr " +
 					typeSymbol(node.getPrefix()) + ", i32 0, i32 0");
 			writer.write(nextTemp() + " = load %" +
-					raw(node.getPrefixType(), "_Mclass") + "** " + temp(1));
+					raw(node.getOuterType(), "_Mclass") + "** " + temp(1));
 			writer.write(nextTemp() + " = getelementptr %" +
-					raw(node.getPrefixType(), "_Mclass") + "* " +
+					raw(node.getOuterType(), "_Mclass") + "* " +
 					temp(1) + ", i32 0, i32 " + (node.getIndex() + 1));
 			writer.write(nextTemp(node) + " = load " + methodType(node) +
 					"* " + temp(1));
@@ -1676,10 +1676,10 @@ public class LLVMOutput extends AbstractOutput
 		StringBuilder sb = new StringBuilder();
 		if (name && (method.getModifiers().isPrivate() || method.isWrapper()))
 			sb.append("private ");
-		boolean primitiveCreate = !method.getPrefixType().isSimpleReference() &&
+		boolean primitiveCreate = !method.getOuterType().isSimpleReference() &&
 				method.isCreate();
 		if (primitiveCreate)
-			sb.append('%').append(raw(method.getPrefixType())).append('*');
+			sb.append('%').append(raw(method.getOuterType())).append('*');
 		else
 		{
 			if (method.isVoid())
@@ -1852,9 +1852,9 @@ public class LLVMOutput extends AbstractOutput
 		StringBuilder sb = new StringBuilder("@\"");
 		
 		if( method.isWrapper() )		
-			sb.append(method.getPrefixType().getMangledNameWithGenerics());
+			sb.append(method.getOuterType().getMangledNameWithGenerics());
 		else
-			sb.append(method.getPrefixType().getMangledName());	
+			sb.append(method.getOuterType().getMangledName());	
 		
 		sb = Type.mangle( sb.append("_M"), method.getName());
 		for (ModifiedType paramType : method.getType().getParameterTypes())

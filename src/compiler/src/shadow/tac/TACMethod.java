@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACMethodRef;
+import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -41,7 +42,10 @@ public class TACMethod extends TACNodeList
 		scopes = new LinkedList<Map<String, TACVariable>>();
 		landingpad = false;
 		enterScope();
-		Type prefixType = methodRef.getPrefixType();
+		Type prefixType = methodRef.getOuterType();		
+		if( prefixType instanceof InterfaceType )
+			prefixType = Type.OBJECT;
+		
 		addLocal(new SimpleModifiedType(prefixType), "this");
 		if (methodRef.isCreate() && prefixType.hasOuter())
 			addLocal(new SimpleModifiedType(prefixType.getOuter()), "outer");

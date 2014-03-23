@@ -103,7 +103,7 @@ public class TACCall extends TACOperand
 	{
 		StringBuilder sb = new StringBuilder();
 		TACMethodRef method = getMethod();
-		sb.append(method.getPrefixType()).append('.').append(method.getName()).
+		sb.append(method.getOuterType()).append('.').append(method.getName()).
 				append('(');
 		for (TACOperand parameter : getParameters())
 			sb.append(parameter).append(", ");

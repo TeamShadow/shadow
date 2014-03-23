@@ -4,7 +4,6 @@ class shadow.test@Cheetah implements CanRun
 {
 	public run() => ()
 	{
-		//shadow.io@Console:instance.printLine(this # " runs at " # 75 # " mph.");
-		Console:instance.printLine(this);
+		shadow.io@Console:instance.printLine(this # " runs at " # 75 # " mph.");
 	}
 }
