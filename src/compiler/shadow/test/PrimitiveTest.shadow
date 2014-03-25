@@ -6,26 +6,27 @@ class PrimitiveTest
 	{
 		Console out = Console:instance;
 		int x = 5;		
+	/*	
 		out.printLine(x);
 		
 		out.printLine(x.toString());
 		
 		out.printLine(#x);
+		
 		
 		Object object = x;
 		
-		out.printLine(x);
+		out.printLine(object);
 		
-		out.printLine(x.toString());
+		out.printLine(object.toString());
 		
 		out.printLine(#x);
-		
-		/*
+	*/
 		CanAdd<int> thing = x;
+		
 		
 		int z = thing.add(3);
 		
-		out.printLine(z);
-		*/
+		out.printLine(z);				
 	}
 }

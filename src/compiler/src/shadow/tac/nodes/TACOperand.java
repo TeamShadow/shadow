@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 {
@@ -44,7 +45,12 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
 	{
 		if (getType().isStrictSubtype(type.getType()))
-			return new TACCast(node, type, this);		
+			return new TACCast(node, type, this);
+		
+		//if it got past the typechecker, we need to cast this type parameter into a real thing
+		if( (getType() instanceof TypeParameter) && !(type.getType() instanceof TypeParameter)  )
+			return new TACCast(node, type, this);
+		
 		return this;
 	}
 	/*

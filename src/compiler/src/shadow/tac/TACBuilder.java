@@ -1136,6 +1136,7 @@ public class TACBuilder implements ShadowParserVisitor
 			TACMethodRef methodRef = new TACMethodRef(tree,
 					explicitSuper ? null : prefix,
 					((MethodType)node.getType()).getTypeWithoutTypeArguments(),
+					//((MethodType)node.getType()), //what if I put the type arguments back in?  maybe only for Interfaces?
 					identifier.getName());
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			

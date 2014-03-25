@@ -871,6 +871,31 @@ public class LLVMOutput extends AbstractOutput
 		}
 		if (destType.getType() instanceof InterfaceType)
 		{
+			if (srcType.getType().isPrimitive())
+			{
+				writer.write(nextTemp(node) + " = call noalias " +
+						type(Type.OBJECT) + " @" + raw(Type.CLASS,
+						"_Mallocate") + '(' + type(Type.CLASS) +
+						" getelementptr inbounds (%" + raw(srcType, "_Mclass") +
+						"* @" + raw(srcType, "_Mclass") + ", i32 0, i32 0))");
+				writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT,
+						temp(1)) + " to %" + raw(srcType) + '*');
+				writer.write(nextTemp() + " = getelementptr inbounds %" +
+						raw(srcType) + "* " + temp(1) + ", i32 0, i32 0");
+				writer.write("store %" + raw(srcType, "_Mclass") + "* @" +
+						raw(srcType, "_Mclass") + ", %" +
+						raw(srcType, "_Mclass") + "** " + temp(0));
+				writer.write(nextTemp() + " = getelementptr inbounds %" +
+						raw(srcType) + "* " + temp(2) + ", i32 0, i32 1");
+				writer.write("store " + typeText(srcType, srcName) + ", " +
+						typeText(srcType, temp(0), true));
+				srcName = temp(3);
+				srcType = new SimpleModifiedType(Type.OBJECT);
+			}			
+			/*else
+				srcName = typeSymbol(node.getOperand()); //old thing for below
+			*/
+			
 			TACMethodRef methodRef = new TACMethodRef(
 					Type.CLASS.getMethods("interfaceData").get(0));
 			TACClass destClass = new TACClass(methodRef, destType.getType(),
@@ -888,7 +913,8 @@ public class LLVMOutput extends AbstractOutput
 					" undef, %" + raw(destType, "_Mclass") + "* " + temp(1) +
 					", 0");
 			writer.write(nextTemp() + " = bitcast " +
-					typeSymbol(node.getOperand()) + " to " + type(Type.OBJECT));
+					typeText(srcType, srcName) + " to " + type(Type.OBJECT));
+			/*      ^ used to be typeSymbol(node.getOperand()) */
 			writer.write(nextTemp(node) + " = insertvalue " + typeText(destType,
 					temp(2)) + ", " + typeTemp(Type.OBJECT, 1) + ", 1");
 			return;
