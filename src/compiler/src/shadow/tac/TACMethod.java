@@ -56,13 +56,22 @@ public class TACMethod extends TACNodeList
 				addLocal(new SimpleModifiedType(Type.CLASS),
 						typeParam.getType().getTypeName());
 	}
-	public TACMethod addParameters()
+	
+	public TACMethod addParameters(boolean isWrapped)
 	{
 		MethodType type = getMethod().getType();
+		if( isWrapped )
+			type = type.getTypeWithoutTypeArguments();
+		
 		for (String name : type.getParameterNames())
 			addLocal(type.getParameterType(name), name);
 		enterScope();
 		return this;
+	}
+	
+	public TACMethod addParameters()
+	{
+		return addParameters(false);
 	}
 
 	public TACMethodRef getMethod()

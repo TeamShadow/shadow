@@ -24,8 +24,12 @@ class PrimitiveTest
 	*/
 		CanAdd<int> thing = x;
 		
+		//out.printLine(thing);
+		
 		
 		int z = thing.add(3);
+		
+		//int z = x.add(3);
 		
 		out.printLine(z);				
 	}

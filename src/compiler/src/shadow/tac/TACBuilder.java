@@ -2127,7 +2127,7 @@ public class TACBuilder implements ShadowParserVisitor
 				TACMethodRef wrapped = methodRef.getWrapped();
 				SequenceType fromTypes = methodRef.getParameterTypes(),
 						toTypes = wrapped.getParameterTypes();
-				Iterator<TACVariable> fromArguments = method.addParameters().
+				Iterator<TACVariable> fromArguments = method.addParameters(true).
 						getParameters().iterator();
 				List<TACOperand> toArguments = new ArrayList<TACOperand>(
 						toTypes.size());

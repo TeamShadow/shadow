@@ -870,7 +870,8 @@ public class LLVMOutput extends AbstractOutput
 			srcType = new SimpleModifiedType(Type.OBJECT);
 		}
 		if (destType.getType() instanceof InterfaceType)
-		{
+		{			
+			Type interfaceClass = srcType.getType(); //which class's interface table gets searched			
 			if (srcType.getType().isPrimitive())
 			{
 				writer.write(nextTemp(node) + " = call noalias " +
@@ -889,8 +890,8 @@ public class LLVMOutput extends AbstractOutput
 						raw(srcType) + "* " + temp(2) + ", i32 0, i32 1");
 				writer.write("store " + typeText(srcType, srcName) + ", " +
 						typeText(srcType, temp(0), true));
-				srcName = temp(3);
-				srcType = new SimpleModifiedType(Type.OBJECT);
+				srcName = temp(3);				
+				srcType = new SimpleModifiedType(Type.OBJECT);				
 			}			
 			/*else
 				srcName = typeSymbol(node.getOperand()); //old thing for below
@@ -900,7 +901,7 @@ public class LLVMOutput extends AbstractOutput
 					Type.CLASS.getMethods("interfaceData").get(0));
 			TACClass destClass = new TACClass(methodRef, destType.getType(),
 					method);
-			TACClass srcClass = new TACClass(destClass, srcType.getType(),
+			TACClass srcClass = new TACClass(destClass, interfaceClass,
 					method);
 			walk(srcClass); //good idea?
 			TACCall call = new TACCall(srcClass, new TACBlock(), methodRef,

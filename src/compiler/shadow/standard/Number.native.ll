@@ -434,6 +434,7 @@ define i32 @_Pshadow_Pstandard_Cint_Madd_Pshadow_Pstandard_Cint(i32, i32) #0 {
 	%3 = add i32 %0, %1
 	ret i32 %3
 }
+
 define i32 @_Pshadow_Pstandard_Cint_Msubtract_Pshadow_Pstandard_Cint(i32, i32) #0 {
 	%3 = sub i32 %0, %1
 	ret i32 %3

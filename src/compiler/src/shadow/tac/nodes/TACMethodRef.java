@@ -139,11 +139,11 @@ public class TACMethodRef extends TACOperand
 	public SequenceType getParameterTypes()
 	{
 		SequenceType paramTypes = new SequenceType();
-		Type prefixType = getOuterType();
-		if (isCreate() || prefixType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
+		Type outerType = getOuterType();
+		if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
 			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
 		else
-			paramTypes.add(new SimpleModifiedType(prefixType)); // this
+			paramTypes.add(new SimpleModifiedType(outerType)); // this
 		if (isCreate() && getOuterType().hasOuter())
 			paramTypes.add(new SimpleModifiedType(getOuterType().getOuter()));
 		Type parameterizedType = isCreate() ? getOuterType() : getType();
@@ -151,8 +151,14 @@ public class TACMethodRef extends TACOperand
 			for (int i = parameterizedType.getTypeParameters().size(); i > 0;
 					i--)
 				paramTypes.add(new SimpleModifiedType(Type.CLASS));
-		for (ModifiedType parameterType : getType().getParameterTypes())
-			paramTypes.add(parameterType);
+		
+		MethodType methodType = getType();
+		if( isWrapper() )
+			methodType = methodType.getTypeWithoutTypeArguments();	
+				
+		for (ModifiedType parameterType : methodType.getParameterTypes())
+			paramTypes.add(parameterType);	
+			
 		return paramTypes;
 	}
 	public ModifiedType getParameterType(int index)
@@ -186,7 +192,12 @@ public class TACMethodRef extends TACOperand
 		if (isCreate())
 			return new SequenceType(Collections.<ModifiedType>singletonList(
 					new SimpleModifiedType(getOuterType())));
-		return getType().getReturnTypes();
+		
+		MethodType methodType = getType();
+		if( isWrapper() )
+			methodType = methodType.getTypeWithoutTypeArguments();
+		
+		return methodType.getReturnTypes();
 	}
 	public int getReturnCount()
 	{
