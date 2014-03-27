@@ -429,7 +429,7 @@ public abstract class Type implements Comparable<Type>
 	}
 	
 	@Override
-	public final int hashCode() {
+	public int hashCode() {
 		String name = getImportName();
 		return name.hashCode();
 	}
@@ -1085,6 +1085,36 @@ public abstract class Type implements Comparable<Type>
 	public final int compareTo(Type other)
 	{
 		return getImportName().compareTo(other.getImportName());		
+	}
+	
+	protected final void printImports(PrintWriter out, String linePrefix )
+	{
+		//imports
+		if( getOuter() == null )
+		{
+			HashSet<String> imports = new HashSet<String>();
+			
+			for( Object importItem : getImportedItems() )
+			{
+				if( importItem instanceof Type )
+				{
+					Type importType = (Type)importItem;
+					if( getReferencedTypes().contains(importType))
+						imports.add(importType.getImportName());
+						
+				}
+				else if( importItem instanceof Package )
+				{
+					Package importPackage = (Package)importItem;
+					for( Type referencedType : getReferencedTypes() )
+						if( referencedType.getPackage().equals( importPackage ) )
+							imports.add(referencedType.getImportName());					
+				}
+			}
+			
+			for( String importType : imports )			
+				out.println(linePrefix + "import " + importType + ";");
+		}
 	}
 	
 }

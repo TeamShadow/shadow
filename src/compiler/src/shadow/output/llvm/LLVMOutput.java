@@ -735,7 +735,8 @@ public class LLVMOutput extends AbstractOutput
 			writer.write(nextTemp() + " = extractvalue " +
 					typeSymbol(node.getPrefix()) + ", 0");
 			writer.write(nextTemp() + " = getelementptr %" +
-					raw(node.getOuterType(), "_Mclass") + "* " +
+					//raw(node.getOuterType(), "_Mclass") + "* " +
+					raw(node.getPrefix(), "_Mclass") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex());
 			writer.write(nextTemp(node) + " = load " + methodType(node) +
 					"* " + temp(1));

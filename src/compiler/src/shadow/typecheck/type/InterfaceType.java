@@ -65,7 +65,14 @@ public class InterfaceType extends Type
 	@Override
 	public String getMangledName()
 	{
-		return getPackage().getMangledName() + super.getMangledName();
+		Package _package = getPackage();
+		StringBuilder sb = new StringBuilder(_package.getMangledName());
+		sb.append(super.getMangledName());
+		
+		if( isParameterized() )
+			sb.append(getTypeParameters().getMangledNameWithGenerics());
+
+		return sb.toString();		
 	}
 
 	public boolean recursivelyContainsMethod( String symbol )
@@ -274,39 +281,23 @@ public class InterfaceType extends Type
 		return OBJECT.getWidth() * 2;
 	}
 	
+	@Override
+	public int hashCode() {
+		String name = getImportName();
+		//interfaces must be differentiated by generics
+		//since it is possible for a class to implement
+		//multiple generic versions of the same interface
+		if( isParameterized() )
+			name += getTypeParameters().toString("<", ">");
+		
+		return name.hashCode();
+	}
+
+	
+	
 	public void printMetaFile(PrintWriter out, String linePrefix )
 	{
-		//imports
-		/*
-		if( getOuter() == null )
-			for( Type importType : getReferencedTypes() )				
-				out.println(linePrefix + "import " + importType.getImportName() + ";");
-		*/
-		if( getOuter() == null )
-		{
-			HashSet<Type> imports = new HashSet<Type>();
-			
-			for( Object importItem : getImportedItems() )
-			{
-				if( importItem instanceof Type )
-				{
-					Type importType = (Type)importItem;
-					if( getReferencedTypes().contains(importType))
-						imports.add(importType);
-						
-				}
-				else if( importItem instanceof Package )
-				{
-					Package importPackage = (Package)importItem;
-					for( Type referencedType : getReferencedTypes() )
-						if( referencedType.getPackage().equals( importPackage ) )
-							imports.add(referencedType);					
-				}
-			}
-			
-			for( Type type : imports )			
-				out.println(linePrefix + "import " + type.getImportName() + ";");
-		}
+		printImports(out, linePrefix);		
 		
 		//modifiers
 		out.print("\n" + linePrefix + getModifiers());		

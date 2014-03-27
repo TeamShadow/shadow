@@ -53,7 +53,10 @@ public class TypeChecker {
 		//All types with type parameters (except for declarations) are UninitializedTypes
 		//Extends and implements lists
 		TypeUpdater updater = new TypeUpdater(debug, typeTable, importList, packageTree);
-		updater.update( collector.getNodeTable() );
+		Map<Type, Node> nodeTable = collector.getNodeTable();
+		nodeTable = updater.update( nodeTable );
+				
+		collector.setNodeTable( nodeTable );
 		
 		//As an optimization, print .meta files for .shadow files with no .meta files or with out of date ones
 		printMetaFiles( collector.getFiles() );		
@@ -108,8 +111,9 @@ public class TypeChecker {
 			Map<Type, Node> nodeTable = collector.getNodeTable();			
 						
 			for( Type type : mainType.getReferencedTypes() )
-			{
-				File file = nodeTable.get(type.getTypeWithoutTypeArguments()).getFile();
+			{				
+				Node node = nodeTable.get(type.getTypeWithoutTypeArguments());
+				File file = node.getFile();
 				String fileName = BaseChecker.stripExtension(file.getCanonicalPath());
 				if( !checkedFiles.contains(fileName) )
 						files.add(fileName);

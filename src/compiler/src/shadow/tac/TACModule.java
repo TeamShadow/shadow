@@ -16,6 +16,8 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.UninstantiatedType;
+
 
 public class TACModule
 {
@@ -49,7 +51,14 @@ public class TACModule
 	}
 	private void add(Type type)
 	{
-		if (references.add(type.getTypeWithoutTypeArguments()))
+		boolean newlyAdded;
+		
+		if( type instanceof InterfaceType )
+			newlyAdded = references.add(type);
+		else
+			newlyAdded = references.add(type.getTypeWithoutTypeArguments());
+				
+		if( newlyAdded )
 		{
 			if (type instanceof ClassType)
 			{

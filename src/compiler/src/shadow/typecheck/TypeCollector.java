@@ -519,7 +519,7 @@ public class TypeCollector extends BaseChecker
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
 		{
-			nodeTable.put(node.getType(), node );
+			nodeTable.put(node.getType().getTypeWithoutTypeArguments(), node );
 			return WalkType.POST_CHILDREN;
 		}
 		else
@@ -530,7 +530,7 @@ public class TypeCollector extends BaseChecker
 	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
 		{
-			nodeTable.put(node.getType(), node );
+			nodeTable.put(node.getType().getTypeWithoutTypeArguments(), node );
 			return WalkType.POST_CHILDREN;
 		}
 		else
@@ -541,7 +541,7 @@ public class TypeCollector extends BaseChecker
 	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
 		if( secondVisit )
 		{
-			nodeTable.put(node.getType(), node );
+			nodeTable.put(node.getType().getTypeWithoutTypeArguments(), node );
 			return WalkType.POST_CHILDREN;
 		}
 		else
@@ -686,6 +686,10 @@ public class TypeCollector extends BaseChecker
 	{		
 		node.setType(nameToPrimitiveType(node.getImage()));		
 		return WalkType.NO_CHILDREN;			
+	}
+
+	public void setNodeTable(Map<Type, Node> nodeTable) {
+		this.nodeTable = nodeTable;		
 	}
 	
 }

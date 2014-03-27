@@ -73,7 +73,7 @@ public class TypeUpdater extends BaseChecker
 	
 	
 	//public void updateTypes(Map<String, Node> files) throws ShadowException, TypeCheckException
-	public void update(Map<Type, Node> nodeTable) throws ShadowException, TypeCheckException
+	public Map<Type,Node> update(Map<Type, Node> nodeTable) throws ShadowException, TypeCheckException
 	{	
 		ASTWalker walker = new ASTWalker( this );
 		for(Node declarationNode : nodeTable.values() )
@@ -84,14 +84,14 @@ public class TypeUpdater extends BaseChecker
 			addConstructorsAndProperties();
 
 		//go through type parameters and instantiate them where applicable
-		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();
+		//Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();
 		if( errorList.isEmpty() )
-			instantiateTypeParameters( nodeTable, uninstantiatedNodes );
+			nodeTable = instantiateTypeParameters( nodeTable );
 		
 		//update extends and implements lists based on updated type parameters
 		//includes a check for circular extends and implements
 		if( errorList.isEmpty() )
-			updateExtendsAndImplements( nodeTable, uninstantiatedNodes );
+			updateExtendsAndImplements( nodeTable );
 		
 		//now that the types are figured out, make sure all the method overrides are legal
 		if( errorList.isEmpty() )
@@ -102,6 +102,8 @@ public class TypeUpdater extends BaseChecker
 			printErrors();
 			throw errorList.get(0);
 		}
+		
+		return nodeTable;
 	}
 	
 	private void addConstructorsAndProperties()
@@ -257,22 +259,23 @@ public class TypeUpdater extends BaseChecker
 	}
 	*/
 	
-	private void instantiateTypeParameters( Map<Type,Node> nodeTable,  Map<Type, Node> uninstantiatedNodes  )
+	private Map<Type,Node> instantiateTypeParameters( Map<Type,Node> nodeTable/*,  Map<Type, Node> uninstantiatedNodes*/  )
 	{		
 		//first build graph of type parameter dependencies
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
+		Map<Type, Node> updatedNodeTable = new HashMap<Type,Node>();
 		
 		for(Node declarationNode : nodeTable.values() )
 		{
 			graph.addNode( declarationNode );
-			Type typeWithoutArguments = declarationNode.getType().getTypeWithoutTypeArguments(); 
-			uninstantiatedNodes.put(typeWithoutArguments, declarationNode);
+			//Type typeWithoutArguments = declarationNode.getType().getTypeWithoutTypeArguments(); 
+			//uninstantiatedNodes.put(typeWithoutArguments, declarationNode);
 		}
 		
 		for(Node declarationNode : nodeTable.values() )
 			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  )
 			{
-				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
+				Node dependencyNode = nodeTable.get(dependency); //used to be from uninstantiated nodes
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " + declarationNode.getType() + " is dependent on unavailable type " + dependency);
 				else
@@ -288,6 +291,8 @@ public class TypeUpdater extends BaseChecker
 			{	
 				Type type = declarationNode.getType();				
 				updateTypeParameters( type, declarationNode );
+				//need a new table because types have changed and will hash to different locations
+				updatedNodeTable.put(declarationNode.getType().getTypeWithoutTypeArguments(), declarationNode);
 			}
 			
 			//update fields and methods			
@@ -362,9 +367,11 @@ public class TypeUpdater extends BaseChecker
 			Type type = (Type) e.getCycleCause();			
 			addError(nodeTable.get(type), Error.INVALID_TYPE_PARAMETERS, "Type " + type + " contains a circular type parameter definition");
 		}
+		
+		return updatedNodeTable;
 	}
 	
-	private void updateExtendsAndImplements(Map<Type,Node> nodeTable, Map<Type, Node> uninstantiatedNodes)
+	private void updateExtendsAndImplements(Map<Type,Node> nodeTable/*, Map<Type, Node> uninstantiatedNodes*/)
 	{
 		//now make dependency graph based on extends and implements
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
@@ -382,7 +389,7 @@ public class TypeUpdater extends BaseChecker
 				
 				if( classType.getExtendType() != null )
 				{
-					Node dependencyNode = uninstantiatedNodes.get(classType.getExtendType().getTypeWithoutTypeArguments());
+					Node dependencyNode = nodeTable.get(classType.getExtendType().getTypeWithoutTypeArguments());
 					if( dependencyNode == null )
 						addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 					else
@@ -394,7 +401,7 @@ public class TypeUpdater extends BaseChecker
 			{
 				
 				dependency = dependency.getTypeWithoutTypeArguments();
-				Node dependencyNode = uninstantiatedNodes.get(dependency);
+				Node dependencyNode = nodeTable.get(dependency);
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 				else

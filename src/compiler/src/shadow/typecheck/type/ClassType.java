@@ -557,32 +557,7 @@ public class ClassType extends Type
 	
 	protected void printMetaFile(PrintWriter out, String linePrefix, String kind )
 	{
-		//imports
-		if( getOuter() == null )
-		{
-			HashSet<Type> imports = new HashSet<Type>();
-			
-			for( Object importItem : getImportedItems() )
-			{
-				if( importItem instanceof Type )
-				{
-					Type importType = (Type)importItem;
-					if( getAllReferencedTypes().contains(importType))
-						imports.add(importType);
-						
-				}
-				else if( importItem instanceof Package )
-				{
-					Package importPackage = (Package)importItem;
-					for( Type referencedType : getAllReferencedTypes() )
-						if( referencedType.getPackage().equals( importPackage ) )
-							imports.add(referencedType);					
-				}
-			}
-			
-			for( Type type : imports )			
-				out.println(linePrefix + "import " + type.getImportName() + ";");
-		}
+		printImports(out, linePrefix);
 			
 		/*
 			for( Type importType : getAllReferencedTypes() )			
