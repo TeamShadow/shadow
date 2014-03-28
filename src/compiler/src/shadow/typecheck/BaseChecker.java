@@ -590,10 +590,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			node.setType(Type.UNKNOWN);					
 		}
 		else
-		{			
-			if (currentType instanceof ClassType)
-				((ClassType)currentType).addReferencedType(type);
-		
+		{	
 			if( !classIsAccessible( type, currentType  ) )		
 				addError(Error.ILLEGAL_ACCESS, "Class " + type + " not accessible from current context");
 			
@@ -623,6 +620,10 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				type = Type.UNKNOWN;
 			}
 			
+			//after updating type parameters
+			if (currentType instanceof ClassType)
+				((ClassType)currentType).addReferencedType(type);
+			
 			
 			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
 			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
@@ -640,9 +641,6 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				}
 				else
 				{
-					if (currentType instanceof ClassType)
-						((ClassType)currentType).addReferencedType(type);
-				
 					if( !classIsAccessible( type, currentType  ) )		
 						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
 					
@@ -671,6 +669,10 @@ public abstract class BaseChecker extends AbstractASTVisitor
 						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments are not supplised for parameterized type " + child.getImage());
 						type = Type.UNKNOWN;
 					}
+					
+					//after updating type parameters
+					if (currentType instanceof ClassType)
+						((ClassType)currentType).addReferencedType(type);
 				}
 			}
 			//set the type now that it has type parameters 

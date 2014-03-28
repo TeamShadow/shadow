@@ -11,8 +11,9 @@ import shadow.parser.javacc.ASTAssignmentOperator;
 
 public class TypeParameter extends Type
 {
-	private Set<Type> bounds = new HashSet<Type>();
+	private Set<Type> bounds = new HashSet<Type>();	
 	private boolean toStringRecursion = false; //keeps type parameters that have bounds containing themselves from infinitely recursing
+	private TypeParameter recursiveParameterCheck = null; //keeps infinite type parameters checking from happening
 
 	public TypeParameter(String typeName)
 	{
@@ -20,7 +21,21 @@ public class TypeParameter extends Type
 		bounds.add(Type.OBJECT);
 	}
 	
-	public void addBound(Type type) {
+	public ClassType getClassBound()
+	{
+		for( Type bound : bounds )
+			if( bound instanceof ClassType )
+				return (ClassType)bound;
+				
+		return Type.OBJECT;
+	}
+	
+	
+	public void addBound(Type type) {		
+		//only one class at a time
+		if( type instanceof ClassType )		
+			bounds.remove(getClassBound());		
+		
 		bounds.add(type);
 	}
 	
@@ -82,34 +97,48 @@ public class TypeParameter extends Type
 	
 	public boolean equals(Object o)
 	{
-		if( o != null && o instanceof TypeParameter )
+		try
 		{
-			/*
-			if( o == this )
-				return true;
-			
-			TypeParameter type = (TypeParameter) o;
-			
-			if( type.getTypeName().equals(getTypeName()) )
+			if( o != null && o instanceof TypeParameter )
 			{
-				if( type.bounds.size() != bounds.size() )
-					return false;
-								
-				for( Type bound : bounds )
-					if( !type.bounds.contains(bound) )
+				
+				if( o == this )
+					return true;
+				
+				TypeParameter type = (TypeParameter) o;
+				
+				//in a deeper layer of recursion, things must have worked out!
+				if( recursiveParameterCheck == type )
+					return true;
+				
+				recursiveParameterCheck = type;
+				
+				if( type.getTypeName().equals(getTypeName()) )
+				{
+					if( type.bounds.size() != bounds.size() )
 						return false;
+									
+					for( Type bound : bounds )
+						if( !type.bounds.contains(bound) )
+							return false;
+						
+					return true;
+				}	
+				else
+					return false;
 					
-				return true;
-			}	
+				/*			
+				return o == this; //has to match exactly
+				does it?  come up with an example where this is a problem
+				*/
+			}
 			else
 				return false;
-				
-			*/
-			
-			return o == this; //has to match exactly
 		}
-		else
-			return false;
+		finally
+		{
+			recursiveParameterCheck = null; //always resets, no matter how things are returned
+		}
 	}
 	
 	public Type replace(SequenceType values, SequenceType replacements )

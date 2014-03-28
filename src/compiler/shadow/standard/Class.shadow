@@ -1,4 +1,4 @@
-//import shadow.io@Console;
+import shadow.io@Console;
 
 immutable class shadow.standard@Class
 {
@@ -14,10 +14,13 @@ immutable class shadow.standard@Class
 	protected interfaceData( Class interfaceClass ) => ( immutable nullable Object )
 	{
 		for ( int i = 0; i < interfaces->size; i += 1 )
+		{
+			Console:instance.printLine(interfaces[i]);
 			if ( interfaces[i] === interfaceClass )
 				return data[i];
+		}
 				
-		//Console:instance.printLine("Interface not found!");
+		Console:instance.printLine("Interface not found!");
 	}
 
 	public isInterface() => ( boolean )

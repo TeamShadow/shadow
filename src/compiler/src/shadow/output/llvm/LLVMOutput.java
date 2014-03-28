@@ -248,16 +248,23 @@ public class LLVMOutput extends AbstractOutput
 		}
 		writer.write();
 
-		HashSet<InterfaceType> interfaces = moduleType.getAllInterfaces();
+		HashSet<InterfaceType> interfaces = moduleType.getAllInterfaces();		
 		int interfaceCount = interfaces.size();
 		StringBuilder interfaceData = new StringBuilder(
 				"@_interfaceData = private unnamed_addr constant [").
 				append(interfaceCount).append(" x ").
 				append(type(Type.OBJECT)).append("] [");
-		StringBuilder interfaceClasses = new StringBuilder(
-				"@_interfaces = private unnamed_addr constant [").
-				append(interfaceCount).append(" x ").
-				append(type(Type.CLASS)).append("] [");
+		StringBuilder interfaceClasses = new StringBuilder("@_interfaces");
+		//interfaces must share their interfaces (at least parameterized ones)
+		if( moduleType instanceof InterfaceType && moduleType.isParameterized() )
+			interfaceClasses.append(moduleType.getMangledName()).append(" = ");
+		else
+			interfaceClasses.append(" = private ");
+		
+		interfaceClasses.append("unnamed_addr constant [").
+			append(interfaceCount).append(" x ").
+			append(type(Type.CLASS)).append("] [");
+			
 		int i = 0;
 		for(InterfaceType type : interfaces)
 		{			
@@ -325,7 +332,8 @@ public class LLVMOutput extends AbstractOutput
 					type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " +
 					type(new ArrayType(Type.CLASS)) + " { " + type(Type.CLASS) +
 					"* getelementptr inbounds ([" + interfaceCount + " x " +
-					type(Type.CLASS) + "]* @_interfaces, i32 0, i32 0), [1 x " +
+					type(Type.CLASS) + "]* @_interfaces" + (moduleType.isParameterized() ? moduleType.getMangledName() : "" ) + 
+					", i32 0, i32 0), [1 x " +
 					type(Type.INT) + "] [" + typeLiteral(interfaceCount) +
 					"] }, " + typeLiteral(moduleType.getQualifiedName()) +
 					", " + type(Type.CLASS) + " null, " + typeLiteral(flags) +
@@ -336,15 +344,48 @@ public class LLVMOutput extends AbstractOutput
 			writer.write('@' + raw(moduleType, "_Minstance") + " = global " +
 					type(moduleType) + " null");
 
+		HashSet<InterfaceType> referencedInterfaces = new HashSet<InterfaceType>();
+		if( moduleType instanceof InterfaceType && moduleType.isParameterized() )
+			referencedInterfaces.add((InterfaceType)(moduleType.getTypeWithoutTypeArguments()));
+		
 		for (Type type : module.getReferences())
 		{
 			if (type != null && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
 					!type.equals(module.getType()))
-			{
+			{				
 				if (type instanceof InterfaceType)
-					writer.write('@' + raw(type, "_Mclass") +
-							" = external constant %" + raw(Type.CLASS));
+				{
+					int size = type.getAllInterfaces().size();
+					InterfaceType unparameterizedType = (InterfaceType)(type.getTypeWithoutTypeArguments());
+					if( !referencedInterfaces.contains(unparameterizedType) )
+					{
+						referencedInterfaces.add(unparameterizedType);
+						writer.write('@' + raw(unparameterizedType, "_Mclass") +
+								" = external constant %" + raw(Type.CLASS));
+						
+						if( unparameterizedType.isParameterized() )
+							writer.write("@_interfaces" + unparameterizedType.getMangledName() +
+									" = external constant [" + size + " x %" + raw(Type.CLASS) + "*]");							
+					}
+					
+					//parameterized interfaces must be defined locally
+					if( type.isParameterized() && !type.equals(unparameterizedType) )
+					{	
+						writer.write('@' + raw(type, "_Mclass") + " = private constant %" +
+								raw(Type.CLASS) + " { %" + raw(Type.CLASS, "_Mclass") +
+								"* @" + raw(Type.CLASS, "_Mclass") + ", " +
+								type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " +
+								type(new ArrayType(Type.CLASS)) + " { " + type(Type.CLASS) +
+								"* getelementptr inbounds ([" + size + " x " +
+								type(Type.CLASS) + "]* @_interfaces" + unparameterizedType.getMangledName() + " , i32 0, i32 0), [1 x " +
+								type(Type.INT) + "] [" + typeLiteral(size) +
+								"] }, " + typeLiteral(type.getQualifiedName()) +
+								", " + type(Type.CLASS) + " null, " + typeLiteral(INTERFACE) +
+								", " + typeLiteral(-1) + ", " + typeText(Type.INT,
+								sizeof(type(type) + '*')) + " }");
+					}					
+				}
 				if (type instanceof ClassType)
 					writer.write('@' + raw(type, "_Mclass") +
 							" = external constant %" + raw(type, "_Mclass"));

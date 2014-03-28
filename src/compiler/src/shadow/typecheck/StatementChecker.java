@@ -3156,8 +3156,8 @@ public class StatementChecker extends BaseChecker
 	}
 	
 	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException { 
-		for( int i = 0; i < node.jjtGetNumChildren(); ++i )
-			declarationType.addReferencedType(node.jjtGetChild(i).getType());
+		//for( int i = 0; i < node.jjtGetNumChildren(); ++i )
+		//	declarationType.addReferencedType(node.jjtGetChild(i).getType());
 		return WalkType.NO_CHILDREN;
 	}
 	

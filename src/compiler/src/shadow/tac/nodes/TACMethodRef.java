@@ -120,8 +120,11 @@ public class TACMethodRef extends TACOperand
 	}
 	@Override
 	public MethodType getType()
-	{
-		return type;
+	{		
+		if( isWrapper() || getOuterType() instanceof InterfaceType )
+			return type.getTypeWithoutTypeArguments();
+		else
+			return type;
 	}
 	public String getName()
 	{
@@ -153,8 +156,6 @@ public class TACMethodRef extends TACOperand
 				paramTypes.add(new SimpleModifiedType(Type.CLASS));
 		
 		MethodType methodType = getType();
-		if( isWrapper() )
-			methodType = methodType.getTypeWithoutTypeArguments();	
 				
 		for (ModifiedType parameterType : methodType.getParameterTypes())
 			paramTypes.add(parameterType);	
@@ -192,12 +193,8 @@ public class TACMethodRef extends TACOperand
 		if (isCreate())
 			return new SequenceType(Collections.<ModifiedType>singletonList(
 					new SimpleModifiedType(getOuterType())));
-		
-		MethodType methodType = getType();
-		if( isWrapper() )
-			methodType = methodType.getTypeWithoutTypeArguments();
-		
-		return methodType.getReturnTypes();
+			
+		return getType().getReturnTypes();
 	}
 	public int getReturnCount()
 	{

@@ -994,7 +994,10 @@ public abstract class Type implements Comparable<Type>
 			}
 			else if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
 			{
-				referencedTypes.add(type.typeWithoutTypeArguments);
+				if( type instanceof InterfaceType  )
+					referencedTypes.add(type);
+				else
+					referencedTypes.add(type.typeWithoutTypeArguments);
 				if( type.isParameterized() )
 				{
 					for( ModifiedType typeParameter : type.getTypeParameters() )
