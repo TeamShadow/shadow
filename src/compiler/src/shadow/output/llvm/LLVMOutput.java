@@ -92,6 +92,7 @@ public class LLVMOutput extends AbstractOutput
 	private Process process = null;
 	private int tempCounter = 0, labelCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();
+	private HashSet<GenericInterface> genericInterfaces = new HashSet<GenericInterface>();
 	private TACModule module;
 	private TACMethod method;
 	public LLVMOutput(File file) throws ShadowException
@@ -144,16 +145,9 @@ public class LLVMOutput extends AbstractOutput
 
 	// Class type flags
 	private static final int INTERFACE = 1, PRIMITIVE = 2;
-
-	@Override
-	public void startFile(TACModule module) throws ShadowException
+	
+	private void writeStandardTypes() throws ShadowException
 	{
-		this.module = module;
-		Type moduleType = module.getType();
-
-		writer.write("; " + module.getQualifiedName());
-		writer.write();
-
 		writer.write("%boolean = type i1");
 		writer.write("%byte = type i8");
 		writer.write("%ubyte = type i8");
@@ -173,7 +167,20 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("declare void @__shadow_throw(" + type(Type.OBJECT) + ") noreturn");
 		writer.write("declare " + type(Type.EXCEPTION) + " @__shadow_catch(i8* nocapture) nounwind");
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
+		writer.write();		
+	}
+	
+
+	@Override
+	public void startFile(TACModule module) throws ShadowException
+	{
+		this.module = module;
+		Type moduleType = module.getType();
+
+		writer.write("; " + module.getQualifiedName());
 		writer.write();
+
+		writeStandardTypes();
 
 		StringBuilder sb = new StringBuilder().append('%').
 				append(raw(moduleType, "_Mclass")).append(" = type { ");
@@ -384,6 +391,9 @@ public class LLVMOutput extends AbstractOutput
 								", " + type(Type.CLASS) + " null, " + typeLiteral(INTERFACE) +
 								", " + typeLiteral(-1) + ", " + typeText(Type.INT,
 								sizeof(type(type) + '*')) + " }");
+						
+						
+						genericInterfaces.add(new GenericInterface(type.toString(), type.getMangledName(), unparameterizedType.getMangledName(), size));
 					}					
 				}
 				if (type instanceof ClassType)
@@ -543,45 +553,9 @@ public class LLVMOutput extends AbstractOutput
 		else
 			return sb.toString();  //no methods!
 	}
-
-	@Override
-	public void endFile(TACModule module) throws ShadowException
+	
+	public void writeStringLiterals() throws ShadowException
 	{
-		for (Type type : module.getReferences())
-			if (type instanceof ClassType && !(type instanceof ArrayType) &&
-					!(type instanceof UnboundMethodType) &&
-					!type.equals(module.getType()))
-		{
-			if (type.equals(Type.CLASS))
-			{
-				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
-						raw(Type.CLASS, "_Mallocate") + '(' +
-						type(Type.CLASS) + ')');
-				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
-						raw(Type.CLASS, "_Mallocate" +
-						Type.INT.getMangledName()) + '(' + type(Type.CLASS) +
-						", " + type(Type.INT) + ')');
-				writer.write("declare " + type(Type.OBJECT) + " @" +
-						raw(Type.CLASS, "_MinterfaceData" +
-						Type.CLASS.getMangledName()) + '(' + type(Type.CLASS) +
-						", " + type(Type.CLASS) + ')');
-			}
-			if (type.equals(Type.ARRAY))
-				writer.write("declare " + type(Type.ARRAY) + " @" +
-						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
-						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
-						type(Type.OBJECT) + ", " + type(Type.CLASS) + ", " +
-						type(new ArrayType(Type.INT)) + ", " +
-						type(Type.OBJECT) + ')');
-			for (List<MethodSignature> methodList :
-					type.getMethodMap().values())
-				for (MethodSignature method : methodList)
-					if (method.getModifiers().isPublic())
-						writer.write("declare " + methodToString(
-								new TACMethod(method).addParameters()));
-			writer.write();
-		}
-
 		int stringIndex = 0;
 		for (String literal : stringLiterals)
 		{
@@ -621,7 +595,48 @@ public class LLVMOutput extends AbstractOutput
 					"] [" + typeLiteral(data.length) + "] }, " +
 					typeLiteral(ascii) + " }");
 			stringIndex++;
+		}		
+	}
+
+	@Override
+	public void endFile(TACModule module) throws ShadowException
+	{
+		for (Type type : module.getReferences())
+			if (type instanceof ClassType && !(type instanceof ArrayType) &&
+					!(type instanceof UnboundMethodType) &&
+					!type.equals(module.getType()))
+		{
+			if (type.equals(Type.CLASS))
+			{
+				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
+						raw(Type.CLASS, "_Mallocate") + '(' +
+						type(Type.CLASS) + ')');
+				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
+						raw(Type.CLASS, "_Mallocate" +
+						Type.INT.getMangledName()) + '(' + type(Type.CLASS) +
+						", " + type(Type.INT) + ')');
+				writer.write("declare " + type(Type.OBJECT) + " @" +
+						raw(Type.CLASS, "_MinterfaceData" +
+						Type.CLASS.getMangledName()) + '(' + type(Type.CLASS) +
+						", " + type(Type.CLASS) + ')');
+			}
+			if (type.equals(Type.ARRAY))
+				writer.write("declare " + type(Type.ARRAY) + " @" +
+						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
+						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
+						type(Type.OBJECT) + ", " + type(Type.CLASS) + ", " +
+						type(new ArrayType(Type.INT)) + ", " +
+						type(Type.OBJECT) + ')');
+			for (List<MethodSignature> methodList :
+					type.getMethodMap().values())
+				for (MethodSignature method : methodList)
+					if (method.getModifiers().isPublic())
+						writer.write("declare " + methodToString(
+								new TACMethod(method).addParameters()));
+			writer.write();
 		}
+
+		writeStringLiterals();
 
 		if (process != null)
 			try
@@ -1225,80 +1240,8 @@ public class LLVMOutput extends AbstractOutput
 	{
 		writer.write(nextTemp(node) + " = " + instruction + ' ' + typeText(node,
 				first) + ", " + symbol(node.getOperand()));
-	}
+	}	
 	
-	
-	/*
-	@Override
-	public void visit(TACBinary node) throws ShadowException
-	{
-		switch (node.getOperation())
-		{
-			case ADD:
-				visitUnsignedOperation(node, "add");
-				break;
-			case SUBTRACT:
-				visitUnsignedOperation(node, "sub");
-				break;
-			case MULTIPLY:
-				visitUnsignedOperation(node, "mul");
-				break;
-			case DIVIDE:
-				visitSignedOperation(node, "div");
-				break;
-			case MODULUS:
-				visitSignedOperation(node, "rem");
-				break;
-
-			case OR:
-			case BITWISE_OR:
-				visitNormalOperation(node, "or");
-				break;
-			case XOR:
-			case BITWISE_XOR:
-				visitNormalOperation(node, "xor");
-				break;
-			case AND:
-			case BITWISE_AND:
-				visitNormalOperation(node, "and");
-				break;
-
-			case SHIFT_LEFT:
-				visitNormalOperation(node, "shl");
-				break;
-			case SHIFT_RIGHT:
-				visitShiftOperation(node, "shr");
-				break;
-			case ROTATE_LEFT:
-				visitRotateLeft(node);
-				break;
-			case ROTATE_RIGHT:
-				visitRotateRight(node);
-				break;
-
-			case EQUAL:
-				visitEqualityOperation(node, "eq");
-				break;
-			case NOT_EQUAL:
-				visitEqualityOperation(node, "ne");
-				break;
-			case LESS_THAN:
-				visitRelationalOperation(node, "lt");
-				break;
-			case GREATER_THAN:
-				visitRelationalOperation(node, "gt");
-				break;
-			case LESS_OR_EQUAL:
-				visitRelationalOperation(node, "le");
-				break;
-			case GREATER_OR_EQUAL:
-				visitRelationalOperation(node, "ge");
-				break;
-		}
-	}
- 	*/
-	 
-
 	@Override
 	public void visit(TACBinary node) throws ShadowException
 	{	
@@ -2032,15 +1975,15 @@ public class LLVMOutput extends AbstractOutput
 			return literal((String)((ShadowString)value).getValue());
 		throw new UnsupportedOperationException(value.getClass().toString());
 	}
-	private String literal(boolean value)
+	private static String literal(boolean value)
 	{
 		return Boolean.toString(value);
 	}
-	private String literal(long value)
+	private static String literal(long value)
 	{
 		return Long.toString(value);
 	}
-	private String literal(double value)
+	private static String literal(double value)
 	{
 		long raw = Double.doubleToRawLongBits(value);
 		StringBuilder sb = new StringBuilder("0x");
@@ -2062,7 +2005,7 @@ public class LLVMOutput extends AbstractOutput
 	{
 		return typeText(Type.BOOLEAN, literal(value));
 	}
-	private String typeLiteral(int value)
+	private static String typeLiteral(int value)
 	{
 		return typeText(Type.INT, literal(value));
 	}
@@ -2118,4 +2061,51 @@ public class LLVMOutput extends AbstractOutput
 		return sb.append(' ').append(name).toString();
 	}
 	
+	public HashSet<GenericInterface> getGenericInterfaces()
+	{
+		return genericInterfaces;
+	}	
+	
+	public void setGenericInterfaces(HashSet<GenericInterface> genericInterfaces)
+	{
+		this.genericInterfaces = genericInterfaces;
+	}
+	
+	
+	public void buildInterfaces() throws ShadowException
+	{
+		writer.write("; Generic Interfaces");
+		writer.write();
+
+		writeStandardTypes();
+		
+		HashSet<String> generics = new HashSet<String>();
+				
+		for( GenericInterface _interface : genericInterfaces )
+		{
+			int size = _interface.getSize();
+			if( generics.add(_interface.getMangledGeneric()) )
+			{			
+				writer.write("@_interfaces" + _interface.getMangledGeneric() +
+						" = external constant [" + size + " x %" + raw(Type.CLASS) + "*]");
+			}
+				
+			writer.write("@\"" + _interface.getMangledName() + "\"_Mclass" + " = private constant %" +
+				raw(Type.CLASS) + " { %" + raw(Type.CLASS, "_Mclass") +
+				"* @" + raw(Type.CLASS, "_Mclass") + ", " +
+				type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " +
+				type(new ArrayType(Type.CLASS)) + " { " + type(Type.CLASS) +
+				"* getelementptr inbounds ([" + size + " x " +
+				type(Type.CLASS) + "]* @_interfaces" + _interface.getMangledGeneric() + " , i32 0, i32 0), [1 x " +
+				type(Type.INT) + "] [" + typeLiteral(size) +
+				"] }, " + typeLiteral(_interface.getName()) +
+				", " + type(Type.CLASS) + " null, " + typeLiteral(INTERFACE) +
+				", " + typeLiteral(-1) + ", " + typeText(Type.INT,
+				sizeof("{ %\"" + _interface.getMangledName() + "\"_Mclass" + "*, " + type(Type.OBJECT) + " }" + '*')) + " }");
+		}
+		
+		writer.write();
+		
+		writeStringLiterals();		
+	}	
 }

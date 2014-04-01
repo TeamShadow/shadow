@@ -23,6 +23,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.Logger;
 
+import shadow.output.llvm.GenericInterface;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -155,6 +156,7 @@ public class Main {
 		{
 			File mainFile = config.next();			
 			files = null;
+			HashSet<GenericInterface> genericInterfaces = new HashSet<GenericInterface>();  
 			
 			do
 			{
@@ -240,7 +242,11 @@ public class Main {
 						// write to file
 						String name = module.getName().replace(':', '$');
 						File llvmFile = new File(currentFile.getParent(), name + ".ll");
-						new LLVMOutput(llvmFile).build(module);
+						LLVMOutput output = new LLVMOutput(llvmFile);
+						output.build(module);
+						
+						genericInterfaces.addAll(output.getGenericInterfaces());						
+						
 						if (llvmFile.exists())
 							linkCommand.add(llvmFile.getCanonicalPath());
 						File nativeFile = new File(currentFile.getParent(), name + ".native.ll");
@@ -253,13 +259,23 @@ public class Main {
 					logger.info("COMPILED " + currentFile.getPath() + " in " + (stopTime - startTime) + "ms");
 				}
 
-				Type.clearTypes();			
+					
 				
 				files.remove( currentPath );
 				checkedFiles.add( currentPath );
+				
+				//after all LLVM generated, make a special generics file
+				if( !config.isCheckOnly() && files.isEmpty() && !genericInterfaces.isEmpty() )
+				{
+					File interfaceFile = new File( mainFile.getParentFile(), mainFile.getName().replace(".shadow", ".interfaces.shadow"));
+					LLVMOutput interfaceOutput = new LLVMOutput( interfaceFile );
+					interfaceOutput.setGenericInterfaces(genericInterfaces);
+					interfaceOutput.buildInterfaces();				
+				}
+				
+				Type.clearTypes();		
+				
 			} while( !files.isEmpty() );
-			
-			
 		}
 		if (!config.isCheckOnly() && !config.isNoLink())
 		{
