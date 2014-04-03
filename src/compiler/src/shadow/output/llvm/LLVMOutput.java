@@ -95,8 +95,9 @@ public class LLVMOutput extends AbstractOutput
 	private HashSet<GenericInterface> genericInterfaces = new HashSet<GenericInterface>();
 	private TACModule module;
 	private TACMethod method;
+	
 	public LLVMOutput(File file) throws ShadowException
-	{
+	{		
 		super(new File(file.getParent(),
 				file.getName().replace(".shadow", ".ll")));
 	}
@@ -379,6 +380,10 @@ public class LLVMOutput extends AbstractOutput
 					//parameterized interfaces must be defined locally
 					if( type.isParameterized() && !type.equals(unparameterizedType) )
 					{	
+						writer.write('@' + raw(type, "_Mclass") +
+								" = external constant %" + raw(Type.CLASS));
+						
+						/*
 						writer.write('@' + raw(type, "_Mclass") + " = private constant %" +
 								raw(Type.CLASS) + " { %" + raw(Type.CLASS, "_Mclass") +
 								"* @" + raw(Type.CLASS, "_Mclass") + ", " +
@@ -391,7 +396,7 @@ public class LLVMOutput extends AbstractOutput
 								", " + type(Type.CLASS) + " null, " + typeLiteral(INTERFACE) +
 								", " + typeLiteral(-1) + ", " + typeText(Type.INT,
 								sizeof(type(type) + '*')) + " }");
-						
+						*/
 						
 						genericInterfaces.add(new GenericInterface(type.toString(), type.getMangledName(), unparameterizedType.getMangledName(), size));
 					}					
@@ -2090,18 +2095,36 @@ public class LLVMOutput extends AbstractOutput
 						" = external constant [" + size + " x %" + raw(Type.CLASS) + "*]");
 			}
 				
-			writer.write("@\"" + _interface.getMangledName() + "\"_Mclass" + " = private constant %" +
+			writer.write("@\"" + _interface.getMangledName() + "_Mclass\"" + " = constant %" +
 				raw(Type.CLASS) + " { %" + raw(Type.CLASS, "_Mclass") +
 				"* @" + raw(Type.CLASS, "_Mclass") + ", " +
 				type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " +
 				type(new ArrayType(Type.CLASS)) + " { " + type(Type.CLASS) +
 				"* getelementptr inbounds ([" + size + " x " +
-				type(Type.CLASS) + "]* @_interfaces" + _interface.getMangledGeneric() + " , i32 0, i32 0), [1 x " +
+				type(Type.CLASS) + "]* @_interfaces" + _interface.getMangledGeneric() + ", i32 0, i32 0), [1 x " +
 				type(Type.INT) + "] [" + typeLiteral(size) +
 				"] }, " + typeLiteral(_interface.getName()) +
 				", " + type(Type.CLASS) + " null, " + typeLiteral(INTERFACE) +
 				", " + typeLiteral(-1) + ", " + typeText(Type.INT,
-				sizeof("{ %\"" + _interface.getMangledName() + "\"_Mclass" + "*, " + type(Type.OBJECT) + " }" + '*')) + " }");
+				sizeof("{ %\"" + _interface.getMangledName() + "_Mclass\"" + "*, " + type(Type.OBJECT) + " }" + '*')) + " }");
+			
+			
+			/*
+			writer.write('@' + raw(moduleType, "_Mclass") + " = constant %" +
+					raw(Type.CLASS) + " { %" + raw(Type.CLASS, "_Mclass") +
+					"* @" + raw(Type.CLASS, "_Mclass") + ", " +
+					type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " +
+					type(new ArrayType(Type.CLASS)) + " { " + type(Type.CLASS) +
+					"* getelementptr inbounds ([" + interfaceCount + " x " +
+					type(Type.CLASS) + "]* @_interfaces" + (moduleType.isParameterized() ? moduleType.getMangledName() : "" ) + 
+					", i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + typeLiteral(interfaceCount) +
+					"] }, " + typeLiteral(moduleType.getQualifiedName()) +
+					", " + type(Type.CLASS) + " null, " + typeLiteral(flags) +
+					", " + typeLiteral(-1) + ", " + typeText(Type.INT,
+					sizeof(type(moduleType) + '*')) + " }");
+			 */
+			
 		}
 		
 		writer.write();

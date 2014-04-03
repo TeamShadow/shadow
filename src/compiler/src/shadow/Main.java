@@ -267,10 +267,12 @@ public class Main {
 				//after all LLVM generated, make a special generics file
 				if( !config.isCheckOnly() && files.isEmpty() && !genericInterfaces.isEmpty() )
 				{
-					File interfaceFile = new File( mainFile.getParentFile(), mainFile.getName().replace(".shadow", ".interfaces.shadow"));
+					File interfaceFile = new File( mainFile.getParent(), mainFile.getName().replace(".shadow", ".interfaces.shadow"));
 					LLVMOutput interfaceOutput = new LLVMOutput( interfaceFile );
 					interfaceOutput.setGenericInterfaces(genericInterfaces);
-					interfaceOutput.buildInterfaces();				
+					interfaceOutput.buildInterfaces();
+					
+					linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
 				}
 				
 				Type.clearTypes();		

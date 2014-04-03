@@ -12,6 +12,7 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 		implements Output
 {
 	protected TabbedLineWriter writer;
+	protected File file;
 	public AbstractOutput(TabbedLineWriter out)
 	{
 		writer = out;
@@ -27,6 +28,12 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 	public AbstractOutput(File out) throws ShadowException
 	{
 		this(new TabbedLineWriter(out));
+		file = out;
+	}
+	
+	public File getFile()
+	{
+		return file;
 	}
 
 	public void build(TACModule module) throws ShadowException
