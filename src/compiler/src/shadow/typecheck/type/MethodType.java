@@ -184,7 +184,7 @@ public class MethodType extends ClassType {
 		if( t == UNKNOWN )
 			return false;
 	
-		if( equals(t) || t == Type.OBJECT )
+		if( typeEquals(t) || t == Type.OBJECT )
 			return true;
 		
 		if( t instanceof MethodType )

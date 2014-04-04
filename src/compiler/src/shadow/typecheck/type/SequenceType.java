@@ -149,7 +149,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		//to distinguish generics that have the same type name, we have to add packages as well
 		for(ModifiedType modifiedType: types)
 		{
-			builder.append(modifiedType.getType().getMangledName());
+			Type type = modifiedType.getType();
+			if( type instanceof TypeParameter ) //always print _T to avoid problems with CanEqual<T> and CanEqual<V>
+				builder.append("_T");
+			else			
+				builder.append(type.getMangledName());
 			//Type type = modifiedType.getType();
 			//shadow.typecheck.Package _package = type.getPackage();
 			//builder.append(type.getPackage().getMangledName() + type.getMangledNameWithGenerics());
@@ -184,20 +188,20 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 
 	@Override
-	public boolean equals(Object o)
+	public boolean typeEquals(Type type)
 	{
-		if (o == Type.NULL)
+		if (type == Type.NULL)
 			return true;
 		
-		if( o != null && o instanceof SequenceType )
+		if( type != null && type instanceof SequenceType )
 		{	
-			SequenceType inputTypes = (SequenceType)o; 
+			SequenceType inputTypes = (SequenceType)type; 
 			
 			if( types.size() != inputTypes.size() )
 				return false;	
 		
 			for( int i = 0; i < types.size(); i++ )		
-				if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().equals(getType(i)) || !inputTypes.get(i).getModifiers().equals(get(i).getModifiers()) )
+				if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().typeEquals(getType(i)) || !inputTypes.get(i).getModifiers().equals(get(i).getModifiers()) )
 					return false;
 			
 			return true;
@@ -232,7 +236,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			return false;		
 	
 		for( int i = 0; i < types.size(); i++ )
-			if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().equals(getType(i)) )
+			if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().typeEquals(getType(i)) )
 				return false;				
 		
 		return true;		
@@ -376,7 +380,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	@Override
 	public boolean isSubtype(Type t)
 	{
-		if( equals(t) )
+		if( typeEquals(t) )
 			return true;
 		
 		if ( t instanceof SequenceType )

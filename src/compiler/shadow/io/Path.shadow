@@ -30,7 +30,7 @@ immutable class shadow.io@Path
 				start = i + 1;
 			}
 		}
-		if ( index != count )
+		if ( index != count )		
 			components[index] = path.substring(start);
 	}
 	public native get separator() => ( code );

@@ -23,7 +23,7 @@ public class InterfaceType extends Type
 	@Override
 	public boolean hasInterface(InterfaceType type)
 	{	
-		if( this.getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments() ))
+		if( this.getTypeWithoutTypeArguments().typeEquals(type.getTypeWithoutTypeArguments() ))
 			return true;
 				
 		for( InterfaceType interfaceType : getInterfaces() )
@@ -56,7 +56,7 @@ public class InterfaceType extends Type
 	{			
 		for( InterfaceType parent : getInterfaces() )
 		{
-			if( parent.equals(type) || parent.isDescendentOf( type ))
+			if( parent.typeEquals(type) || parent.isDescendentOf( type ))
 				return true;			
 		}
 		return false;
@@ -266,7 +266,7 @@ public class InterfaceType extends Type
 		if( t == UNKNOWN )
 			return false;
 	
-		if( equals(t) || t == Type.OBJECT || t == Type.VAR )
+		if( typeEquals(t) || t == Type.OBJECT || t == Type.VAR )
 			return true;		
 		
 		if( t instanceof InterfaceType )			

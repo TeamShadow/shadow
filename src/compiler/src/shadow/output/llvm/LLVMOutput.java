@@ -147,7 +147,7 @@ public class LLVMOutput extends AbstractOutput
 	// Class type flags
 	private static final int INTERFACE = 1, PRIMITIVE = 2;
 	
-	private void writeStandardTypes() throws ShadowException
+	private void writePrimitiveTypes() throws ShadowException
 	{
 		writer.write("%boolean = type i1");
 		writer.write("%byte = type i8");
@@ -161,14 +161,67 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("%ulong = type i64");
 		writer.write("%float = type float");
 		writer.write("%double = type double");
-		writer.write();
+		writer.write();	
+	}
+	
+	private void writeTypeDeclaration(Type type) throws ShadowException
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append('%').append(raw(type, "_Mclass")).append(" = type { ");
+		if (type instanceof ClassType)
+			sb.append('%').append(raw(Type.CLASS)).append(", ");
+		writer.write(sb.append(methodList(type.orderAllMethods(), false)).
+				append(" }").toString());
+		if (type instanceof ClassType)
+		{
+			sb.setLength(0);
+			sb.append('%').append(raw(type)).append(" = type { %").
+					append(raw(type, "_Mclass")).append('*');
+			if (type.typeEquals(Type.CLASS))
+				sb.append(", ").append(type(new ArrayType(Type.OBJECT))).
+						append(", ").
+						append(type(new ArrayType(Type.CLASS))).
+						append(", ").append(type(Type.STRING)).append(", ").
+						append(type(Type.CLASS)).append(", ").
+						append(type(Type.INT)).append(", ").
+						append(type(Type.INT)).append(", ").
+						append(type(Type.INT));
+			else if (type.typeEquals(Type.ARRAY))
+				sb.append(", ").append(type(new ArrayType(Type.INT))).
+						append(", ").append(type(Type.CLASS)).append(", ").
+						append(type(Type.OBJECT));
+			else if (type.typeEquals(Type.STRING))
+				sb.append(", ").append(type(new ArrayType(Type.UBYTE))).
+						append(", ").append(type(Type.BOOLEAN));
+			else if (type.isPrimitive())
+				sb.append(", ").append(type(type));
+			else for (Entry<String, ? extends ModifiedType> field :
+					((ClassType)type).orderAllFields())
+				sb.append(", ").append(type(field.getValue()));
+			writer.write(sb.append(" }").toString());
+		}	
+	}
+	
+	private void writeTypeConstants(Type type) throws ShadowException
+	{
+		if (type instanceof InterfaceType)
+		{	
+			//parameterized interfaces must be defined locally
+			Type unparameterizedType = type.getTypeWithoutTypeArguments(); 
+			if( type.isParameterized() && !type.typeEquals(unparameterizedType) )
+			{	
+				writer.write('@' + raw(type, "_Mclass") +
+						" = external constant %" + raw(Type.CLASS));				
 
-		// Methods for exception handling
-		writer.write("declare i32 @__shadow_personality_v0(...)");
-		writer.write("declare void @__shadow_throw(" + type(Type.OBJECT) + ") noreturn");
-		writer.write("declare " + type(Type.EXCEPTION) + " @__shadow_catch(i8* nocapture) nounwind");
-		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
-		writer.write();		
+				genericInterfaces.add(new GenericInterface(type.toString(), type.getMangledName(), unparameterizedType.getMangledName(), type.getAllInterfaces().size()));
+			}					
+		}
+		if (type instanceof ClassType)
+			writer.write('@' + raw(type, "_Mclass") +
+					" = external constant %" + raw(type, "_Mclass"));
+		if (type instanceof SingletonType)
+			writer.write('@' + raw(type, "_Minstance") +
+					" = external global " + type(type));	
 	}
 	
 
@@ -181,7 +234,14 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("; " + module.getQualifiedName());
 		writer.write();
 
-		writeStandardTypes();
+		writePrimitiveTypes();
+		
+		// Methods for exception handling
+		writer.write("declare i32 @__shadow_personality_v0(...)");
+		writer.write("declare void @__shadow_throw(" + type(Type.OBJECT) + ") noreturn");
+		writer.write("declare " + type(Type.EXCEPTION) + " @__shadow_catch(i8* nocapture) nounwind");
+		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
+		writer.write();	
 
 		StringBuilder sb = new StringBuilder().append('%').
 				append(raw(moduleType, "_Mclass")).append(" = type { ");
@@ -215,44 +275,9 @@ public class LLVMOutput extends AbstractOutput
 		for (Type type : module.getReferences())
 			if (type != null && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
-					!type.equals(module.getType()))
+					!type.typeEquals(module.getType()))
 		{
-			sb.setLength(0);
-			sb.append('%').append(raw(type, "_Mclass")).append(" = type { ");
-			if (type instanceof ClassType)
-				sb.append('%').append(raw(Type.CLASS)).append(", ");
-			writer.write(sb.append(methodList(type.orderAllMethods(), false)).
-					append(" }").toString());
-			if (type instanceof ClassType)
-			{
-				if (type.getTypeName().equals("compare"))
-					throw new Error(type.getClass().toString());
-				sb.setLength(0);
-				sb.append('%').append(raw(type)).append(" = type { %").
-						append(raw(type, "_Mclass")).append('*');
-				if (type.equals(Type.CLASS))
-					sb.append(", ").append(type(new ArrayType(Type.OBJECT))).
-							append(", ").
-							append(type(new ArrayType(Type.CLASS))).
-							append(", ").append(type(Type.STRING)).append(", ").
-							append(type(Type.CLASS)).append(", ").
-							append(type(Type.INT)).append(", ").
-							append(type(Type.INT)).append(", ").
-							append(type(Type.INT));
-				else if (type.equals(Type.ARRAY))
-					sb.append(", ").append(type(new ArrayType(Type.INT))).
-							append(", ").append(type(Type.CLASS)).append(", ").
-							append(type(Type.OBJECT));
-				else if (type.equals(Type.STRING))
-					sb.append(", ").append(type(new ArrayType(Type.UBYTE))).
-							append(", ").append(type(Type.BOOLEAN));
-				else if (type.isPrimitive())
-					sb.append(", ").append(type(type));
-				else for (Entry<String, ? extends ModifiedType> field :
-						((ClassType)type).orderAllFields())
-					sb.append(", ").append(type(field.getValue()));
-				writer.write(sb.append(" }").toString());
-			}
+			writeTypeDeclaration(type);
 		}
 		writer.write();
 
@@ -360,53 +385,25 @@ public class LLVMOutput extends AbstractOutput
 		{
 			if (type != null && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
-					!type.equals(module.getType()))
-			{				
-				if (type instanceof InterfaceType)
+					!type.typeEquals(module.getType()))
+			{	
+				if( type instanceof InterfaceType )
 				{
 					int size = type.getAllInterfaces().size();
 					InterfaceType unparameterizedType = (InterfaceType)(type.getTypeWithoutTypeArguments());
-					if( !referencedInterfaces.contains(unparameterizedType) )
-					{
-						referencedInterfaces.add(unparameterizedType);
+					//need reference to unparameterized interface
+					if( referencedInterfaces.add(unparameterizedType) )
+					{						
 						writer.write('@' + raw(unparameterizedType, "_Mclass") +
 								" = external constant %" + raw(Type.CLASS));
 						
 						if( unparameterizedType.isParameterized() )
 							writer.write("@_interfaces" + unparameterizedType.getMangledName() +
 									" = external constant [" + size + " x %" + raw(Type.CLASS) + "*]");							
-					}
-					
-					//parameterized interfaces must be defined locally
-					if( type.isParameterized() && !type.equals(unparameterizedType) )
-					{	
-						writer.write('@' + raw(type, "_Mclass") +
-								" = external constant %" + raw(Type.CLASS));
-						
-						/*
-						writer.write('@' + raw(type, "_Mclass") + " = private constant %" +
-								raw(Type.CLASS) + " { %" + raw(Type.CLASS, "_Mclass") +
-								"* @" + raw(Type.CLASS, "_Mclass") + ", " +
-								type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " +
-								type(new ArrayType(Type.CLASS)) + " { " + type(Type.CLASS) +
-								"* getelementptr inbounds ([" + size + " x " +
-								type(Type.CLASS) + "]* @_interfaces" + unparameterizedType.getMangledName() + " , i32 0, i32 0), [1 x " +
-								type(Type.INT) + "] [" + typeLiteral(size) +
-								"] }, " + typeLiteral(type.getQualifiedName()) +
-								", " + type(Type.CLASS) + " null, " + typeLiteral(INTERFACE) +
-								", " + typeLiteral(-1) + ", " + typeText(Type.INT,
-								sizeof(type(type) + '*')) + " }");
-						*/
-						
-						genericInterfaces.add(new GenericInterface(type.toString(), type.getMangledName(), unparameterizedType.getMangledName(), size));
 					}					
-				}
-				if (type instanceof ClassType)
-					writer.write('@' + raw(type, "_Mclass") +
-							" = external constant %" + raw(type, "_Mclass"));
-				if (type instanceof SingletonType)
-					writer.write('@' + raw(type, "_Minstance") +
-							" = external global " + type(type));
+				}				
+				
+				writeTypeConstants(type);
 			}
 		}
 		writer.write();
@@ -609,9 +606,9 @@ public class LLVMOutput extends AbstractOutput
 		for (Type type : module.getReferences())
 			if (type instanceof ClassType && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
-					!type.equals(module.getType()))
+					!type.typeEquals(module.getType()))
 		{
-			if (type.equals(Type.CLASS))
+			if (type.typeEquals(Type.CLASS))
 			{
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, "_Mallocate") + '(' +
@@ -625,7 +622,7 @@ public class LLVMOutput extends AbstractOutput
 						Type.CLASS.getMangledName()) + '(' + type(Type.CLASS) +
 						", " + type(Type.CLASS) + ')');
 			}
-			if (type.equals(Type.ARRAY))
+			if (type.typeEquals(Type.ARRAY))
 				writer.write("declare " + type(Type.ARRAY) + " @" +
 						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
 						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
@@ -1107,7 +1104,7 @@ public class LLVMOutput extends AbstractOutput
 			}
 			else
 			{
-				if (!srcType.getType().equals(Type.ARRAY))
+				if (!srcType.getType().typeEquals(Type.ARRAY))
 				{
 					writer.write(nextTemp() + " = bitcast " + typeText(srcType,
 							srcName) + " to " + type(Type.ARRAY));
@@ -1140,7 +1137,7 @@ public class LLVMOutput extends AbstractOutput
 				srcName = temp(0);
 			}
 		}
-		if (destType.getType().equals(srcType.getType()))
+		if (destType.getType().typeEquals(srcType.getType()))
 		{
 			node.setData(srcName);
 			return;
@@ -1191,7 +1188,7 @@ public class LLVMOutput extends AbstractOutput
 				type(Type.CLASS) + " getelementptr (%" + raw(node.getType(),
 				"_Mclass") + "* @" + raw(node.getType(), "_Mclass") +
 				", i32 0, i32 0))");
-		if (!node.getType().equals(Type.OBJECT))
+		if (!node.getType().typeEquals(Type.OBJECT))
 			writer.write(nextTemp(node) + " = bitcast " + type(Type.OBJECT) +
 					' ' + temp(1) + " to " + type(node.getType()));
 	}
@@ -2082,7 +2079,14 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("; Generic Interfaces");
 		writer.write();
 
-		writeStandardTypes();
+		writePrimitiveTypes();
+		
+		writeTypeDeclaration(Type.OBJECT);
+		writeTypeDeclaration(Type.CLASS);
+		writeTypeDeclaration(Type.STRING);
+		
+		writeTypeConstants(Type.CLASS);
+		writeTypeConstants(Type.STRING);		
 		
 		HashSet<String> generics = new HashSet<String>();
 				
@@ -2095,6 +2099,7 @@ public class LLVMOutput extends AbstractOutput
 						" = external constant [" + size + " x %" + raw(Type.CLASS) + "*]");
 			}
 				
+			writer.write("%\"" + _interface.getMangledName() + "_Mclass\"" + " = type opaque");
 			writer.write("@\"" + _interface.getMangledName() + "_Mclass\"" + " = constant %" +
 				raw(Type.CLASS) + " { %" + raw(Type.CLASS, "_Mclass") +
 				"* @" + raw(Type.CLASS, "_Mclass") + ", " +

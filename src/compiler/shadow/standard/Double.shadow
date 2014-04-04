@@ -12,9 +12,9 @@ implements
 	constant double INFINITY = 1d / 0d;
 	constant double NEGATIVE_INFINITY = -1d / 0d;
 
-	constant long SIGN_MASK = 0x8000000000000000l;
-	constant long EXPONENT_MASK = 0x7ff0000000000000l;
-	constant long SIGNIFICAND_MASK = 0xfffffffffffffl;
+	constant long SIGN_MASK = 0x8000000000000000L;
+	constant long EXPONENT_MASK = 0x7ff0000000000000L;
+	constant long SIGNIFICAND_MASK = 0xfffffffffffffL;
 
 	// implement Number
 	public native toByte() => (byte);
@@ -63,6 +63,77 @@ implements
 	public isFinite() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) != EXPONENT_MASK;
+	}
+	
+/*	
+	
+private cut(ulong f, int e) => (ulong, ulong, ulong)
+{
+	ulong TEN7 = 10000000L;
+	ulong part2 = (f % (TEN7 >> e)) << e;
+	ulong tmp = f / (TEN7 >> e);
+	ulong part1 = tmp % TEN7;
+	ulong part0 = tmp / TEN7;
+	
+	return (part0, part1, part2);
+}
+
+//based on the paper 
+//Printing Floating-Point Numbers Quickly and Accurately with Integers
+//by Florian Loitsch
+void grisu(double v, StringBuilder buffer)
+{ 
+ ulong f;
+ int e;
+ ulong part0, part1, part2;
+int q = 64, alpha = 0, gamma = 3;
+w = normalize diy fp(double2diy fp(v));
+ int mk = k comp(w.e + q, alpha, gamma);
+13: diy fp c mk = cached power(mk);
+14: diy fp D = multiply(w, c mk);
+(part0, part1, part2) = cut(D, ps);
+sprintf(buffer, "%u%07u%07ue%d", ps[0], ps[1], ps[2], -mk);
+}
+	
+	*/
+	
+	
+	public  toString() => (String)
+	{
+		if( isNaN() )
+			return "NaN";
+			
+		if( this === INFINITY )
+			return "Infinity";
+		
+		if( this === NEGATIVE_INFINITY )
+			return "-Infinity";
+	
+		MutableString output = MutableString:create();
+		long bits = this->bits;
+		if( (bits & SIGN_MASK) != 0L )
+			output.append("-");
+							
+		long exponent = (bits & EXPONENT_MASK) >> 53;
+		long significand = bits & SIGNIFICAND_MASK;	
+		
+		if( exponent == 0L )
+		{
+			if( significand == 0L )
+				 return output.append("0.0").toString();
+				 
+			output.append("0.");						
+			exponent = -1022; 			
+		}
+		else
+		{
+			//significand |= (SIGNIFICAND_MASK + 1L);
+			output.append("1.");
+			exponent -= 1023;
+		}
+		
+		//This is not right!  Output is in base 2!		
+		return output.append( significand.toString(2u) ).append("e").append( exponent.toString(2u) ).toString();		 
 	}
 
 	public native get raw() => (long);

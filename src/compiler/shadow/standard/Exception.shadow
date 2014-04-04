@@ -5,6 +5,7 @@ exception shadow.standard@Exception
 	immutable get String message;
 	public create()
 	{
+		message = "";
 	}
 	public create( String message )
 	{
@@ -21,8 +22,11 @@ exception shadow.standard@Exception
 		return 1;
 	}
 
-	public readonly toString() => ( String )
+	public immutable toString() => ( String )
 	{
-		return super.toString() # ": " # message;
+		if( message.isEmpty() )
+			return super.toString();
+		else
+			return super.toString() # ": " # message;
 	}
 }

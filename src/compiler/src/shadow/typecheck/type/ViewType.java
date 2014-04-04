@@ -16,7 +16,7 @@ public class ViewType extends Type {
 	@Override
 	public boolean isSubtype(Type t)
 	{
-		return equals(t);
+		return typeEquals(t);
 	}
 
 	@Override

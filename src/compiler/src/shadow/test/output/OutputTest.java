@@ -87,11 +87,39 @@ public class OutputTest {
 	@Test public void testArray() throws Exception {
 		args.add("shadow/test/ArrayTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"[ 0, 1, 2, 3, 4 ]\n" +
+				"[ 0, zero, one, two, shadow.standard@Object ]\n" + 
+				"[ zero, one, two ]\n" +
+				"[]\n" +
+				"[ 0 ]\n" +
+				"[ 0, 1 ]\n" +
+				"[ 0, 1, 2 ]\n" +
+				"[ 0, 1, 2, 3 ]\n" +
+				"[ 0, 1, 2, 3, 4 ]\n" +
+				"[]\n" +
+				"[ 1 ]\n" +
+				"[ 1, 2 ]\n" +
+				"[ 1, 2, 3 ]\n" +
+				"[ 1, 2, 3, 4 ]\n" +
+				"[]\n" +
+				"[ 2 ]\n" +
+				"[ 2, 3 ]\n" +
+				"[ 2, 3, 4 ]\n" +
+				"[]\n" +
+				"[ 3 ]\n" +
+				"[ 3, 4 ]\n" +
+				"[]\n" +
+				"[ 4 ]\n" +
+				"[]\n");
 	}	
 	
 	@Test public void testChild() throws Exception {
 		args.add("shadow/test/ChildTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"shadow.test@ParentTest:create(\"Hello World!\")\n" + 
+				"shadow.test@ChildTest:main([])\n");
 	}
 	
 	@Test public void testConsole() throws Exception {
@@ -132,5 +160,17 @@ public class OutputTest {
 	@Test public void testToughTry() throws Exception {
 		args.add("shadow/test/ToughTry.shadow");
 		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testPrimitive() throws Exception {
+		args.add("shadow/test/PrimitiveTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"5\n" + 
+				"5\n" + 
+				"5\n" + 
+				"5\n" + 
+				"5\n" +
+				"8\n");
 	}
 }

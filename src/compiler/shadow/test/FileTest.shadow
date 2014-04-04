@@ -11,30 +11,31 @@ class shadow.test@FileTest
 	public main( String[] args ) => ()
 	{
 		Console console = Console:instance;
-		File file;		
+		
+		if( args->size == 0 )
+			throw Exception:create("No file specified!");
+		
+		File file;	
 		try
 		{
-			file = File:create(check(args[0]));			
+			
+			file = File:create(check(args[0]));
+			 			
 			try
-			{
-				console.printLine("try begin");
-				file->exists = true;
-				console.printLine("try end");
+			{				
+				file->exists = true;			
 			}
 			catch ( IOException ex )
 			{
 				console.printLine("catch ( " # ex # " )");
-			}
-			finally
-			{
-				console.printLine("finally");
-			}
+			}			
+						
 			(String line, ) = console.readLine();
 			byte[] chars = line->chars;
 			file.write(chars);
 			file->size = file->position;
 			file.read(chars);
-			console.printLine(String:create(chars));
+			console.printLine(String:create(chars));			
 		}
 		catch ( IOException ex )
 		{

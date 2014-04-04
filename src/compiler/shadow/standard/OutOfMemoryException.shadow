@@ -1,0 +1,3 @@
+exception shadow.standard@OutOfMemoryException
+{		
+}

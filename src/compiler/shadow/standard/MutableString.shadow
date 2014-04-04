@@ -42,6 +42,14 @@ class shadow.standard@MutableString implements CanIndex<int, byte>
 			throw IndexOutOfBoundsException:create();
 		data[index] = value;
 	}
+	
+	public append( byte value ) => ( MutableString )
+	{		
+		ensureCapacity( size + 1 );		
+		data[size] = value;
+		size += 1;
+		return this;
+	}
 
 	public append( nullable Object value ) => ( MutableString )
 	{

@@ -31,7 +31,8 @@ immutable class shadow.test@ExceptionTest
 		}
 	}
 	public main( String[] args ) => ( int ) {
-		test3();		
+		test3();	
+		throw Exception:create();	
 		return 0;
 	}
 }

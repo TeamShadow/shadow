@@ -105,24 +105,25 @@ public class ArrayType extends ClassType
 		return baseType.getTypeParameters();		
 	}
 	
-	public boolean equals(Object o)
+	@Override
+	public boolean typeEquals(Type type)
 	{		
-		if( o == Type.NULL )
+		if( type == Type.NULL )
 			return true;
 		
-		if( o instanceof ArrayType )
+		if( type instanceof ArrayType )
 		{
-			ArrayType other = (ArrayType)o;
+			ArrayType other = (ArrayType)type;
 			if( dimensions == other.dimensions )
-				return baseType.equals(other.baseType);			
+				return baseType.typeEquals(other.baseType);			
 		}
-		else if( o instanceof ClassType )
+		else if( type instanceof ClassType )
 		{
-			ClassType other = (ClassType)o;
+			ClassType other = (ClassType)type;
 			if( other.getTypeWithoutTypeArguments() == Type.ARRAY && other.getTypeParameters().size() == 1 )	
 			{
 				ModifiedType baseType = other.getTypeParameters().get(0);			
-				return baseType != null && this.getBaseType().equals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
+				return baseType != null && this.getBaseType().typeEquals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
 			}
 		}	
 		
@@ -134,7 +135,7 @@ public class ArrayType extends ClassType
 		if( t == UNKNOWN )
 			return false;
 	
-		if( equals(t) )
+		if( typeEquals(t) )
 			return true;
 			
 		if( t == OBJECT || t == ARRAY )
@@ -145,7 +146,7 @@ public class ArrayType extends ClassType
 			ArrayType other = (ArrayType)t;
 			//invariant subtyping on arrays
 			if( type.getDimensions() == other.getDimensions() )
-				return type.getBaseType().equals(other.getBaseType());
+				return type.getBaseType().typeEquals(other.getBaseType());
 			else
 				return false;
 		}

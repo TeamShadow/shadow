@@ -1,6 +1,6 @@
 ; Windows specific native methods
 
-%_Pshadow_Pstandard_CObject_Mclass = type { %_Pshadow_Pstandard_CClass, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, i1 (%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CClass* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CObject*)* }
+%"_Pshadow_Pstandard_CObject_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)* }
 %_Pshadow_Pstandard_CObject = type { %_Pshadow_Pstandard_CObject_Mclass* }
 %_Pshadow_Pstandard_CClass_Mclass = type opaque
 %_Pshadow_Pstandard_CClass = type { %_Pshadow_Pstandard_CClass_Mclass*, { %_Pshadow_Pstandard_CObject**, [1 x i32] }, { %_Pshadow_Pstandard_CClass**, [1 x i32] }, %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CClass*, i32, i32, i32 }
@@ -184,7 +184,7 @@ define private i8* @filepath(%_Pshadow_Pio_CFile*) {
 	%4 = bitcast %_Pshadow_Pio_CPath* %3 to %_Pshadow_Pstandard_CObject*
 	%5 = getelementptr %_Pshadow_Pstandard_CObject* %4, i32 0, i32 0
 	%6 = load %_Pshadow_Pstandard_CObject_Mclass** %5
-	%7 = getelementptr %_Pshadow_Pstandard_CObject_Mclass* %6, i32 0, i32 6
+	%7 = getelementptr %_Pshadow_Pstandard_CObject_Mclass* %6, i32 0, i32 3
 	%8 = load %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CObject*)** %7
 	%9 = call %_Pshadow_Pstandard_CString* %8(%_Pshadow_Pstandard_CObject* %4)
 	%10 = getelementptr inbounds %_Pshadow_Pstandard_CString* %9, i32 0, i32 1, i32 0

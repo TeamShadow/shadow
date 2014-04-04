@@ -790,7 +790,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	
 	protected static boolean classIsAccessible( Type classType, Type type )
 	{
-		if( classType.getModifiers().isPublic() || classType.getOuter() == null || classType.getOuter().equals(type)  )
+		if( classType.getModifiers().isPublic() || classType.getOuter() == null || classType.getOuter().typeEquals(type)  )
 			return true;
 		
 		Type outer = type.getOuter();

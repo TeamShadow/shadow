@@ -71,7 +71,7 @@ public abstract class TACSimpleNode extends TACNode
 		Type operandType = operand.getType();
 		Type typeType = type.getType();
 		
-		if (operandType.equals(typeType))
+		if (operandType.typeEquals(typeType))
 			return operand;
 					
 		if (operandType instanceof SequenceType &&

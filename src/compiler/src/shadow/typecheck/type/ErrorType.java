@@ -15,10 +15,10 @@ public class ErrorType extends ClassType
 	
 	public boolean isSubtype(Type t)
 	{
-		if( equals(t) )
+		if( typeEquals(t) )
 			return true;	
 		
-		if ( t.equals(OBJECT) || t.equals(Type.EXCEPTION) )
+		if ( t.typeEquals(OBJECT) || t.typeEquals(Type.EXCEPTION) )
 			return true;
 		
 		if( t instanceof ErrorType )			

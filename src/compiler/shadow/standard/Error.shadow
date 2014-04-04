@@ -8,9 +8,4 @@ immutable error shadow.standard@Error //extends Exception happens by default
 	{
 		super(message);
 	}
-
-	public toString() => ( String )
-	{
-		return super->message;
-	}
 }

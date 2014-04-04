@@ -8,6 +8,7 @@
 %_Pshadow_Pstandard_CString_Mclass = type { %_Pshadow_Pstandard_CClass }
 @_Pshadow_Pstandard_CString_Mclass = external constant %_Pshadow_Pstandard_CString_Mclass
 %_Pshadow_Pstandard_CException_Mclass = type { %_Pshadow_Pstandard_CClass }
+@_Pshadow_Pstandard_CException_Mclass = external constant %_Pshadow_Pstandard_CException_Mclass 
 %_Pshadow_Pstandard_CException = type { %_Pshadow_Pstandard_CException_Mclass*, %_Pshadow_Pstandard_CString* }
 %_Pshadow_Pio_CConsole_Mclass = type { %_Pshadow_Pstandard_CClass }
 @_Pshadow_Pio_CConsole_Mclass = external constant %_Pshadow_Pio_CConsole_Mclass
@@ -21,6 +22,7 @@ declare %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_Mcreate(%_Pshadow_Pio_CCo
 declare %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CObject(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CObject*)
 declare %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CString*)
 declare %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintErrorLine(%_Pshadow_Pio_CConsole*)
+declare %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintErrorLine_Pshadow_Pstandard_CObject(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CObject*)
 declare i32 @strlen(i8* nocapture)
 
 %_Pshadow_Ptest_CTest = type opaque
@@ -64,7 +66,7 @@ define i32 @main(i32, i8**) {
 			to label %27 unwind label %28
 	ret i32 %26
 	%29 = landingpad { i8*, i32 } personality i32 (...)* @__shadow_personality_v0
-			catch %_Pshadow_Pstandard_CClass* null
+            catch %"_Pshadow_Pstandard_CClass"* getelementptr inbounds (%_Pshadow_Pstandard_CException_Mclass* @_Pshadow_Pstandard_CException_Mclass, i32 0, i32 0)
 	%30 = extractvalue { i8*, i32 } %29, 0
 	%31 = call %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture %30) nounwind
 	%32 = load %_Pshadow_Pio_CConsole** @_Pshadow_Pio_CConsole_Minstance
@@ -75,23 +77,8 @@ define i32 @main(i32, i8**) {
 	%37 = call %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_Mcreate(%_Pshadow_Pio_CConsole* %36)
 	store %_Pshadow_Pio_CConsole* %37, %_Pshadow_Pio_CConsole** @_Pshadow_Pio_CConsole_Minstance
 	br label %38
-	%39 = phi %_Pshadow_Pio_CConsole* [ %32, %28 ], [ %37, %34 ]
-	%40 = bitcast %_Pshadow_Pstandard_CException* %31 to %_Pshadow_Pstandard_CObject*
-	%41 = call %_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_CObject_MgetClass(%_Pshadow_Pstandard_CObject* %40)
-	%42 = bitcast %_Pshadow_Pstandard_CClass* %41 to %_Pshadow_Pstandard_CObject*
-	%43 = call %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CObject(%_Pshadow_Pio_CConsole* %39, %_Pshadow_Pstandard_CObject* %42)
-	%44 = getelementptr inbounds %_Pshadow_Pstandard_CException* %31, i32 0, i32 1
-	%45 = load %_Pshadow_Pstandard_CString** %44
-	%46 = getelementptr inbounds %_Pshadow_Pstandard_CString* %45, i32 0, i32 1, i32 1, i32 0
-	%47 = load i32* %46
-	%48 = icmp ne i32 %47, 0
-	br i1 %48, label %49, label %52
-	%50 = call %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole* %39, %_Pshadow_Pstandard_CString* @separator)
-	%51 = call %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole* %39, %_Pshadow_Pstandard_CString* %45)
-	br label %52
-	%53 = call %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintErrorLine(%_Pshadow_Pio_CConsole* %39)
+	%39 = load %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_Minstance"
+	%40 = bitcast %_Pshadow_Pstandard_CException* %31 to %_Pshadow_Pstandard_CObject*	
+	%41 = call %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintErrorLine_Pshadow_Pstandard_CObject(%_Pshadow_Pio_CConsole* %39, %_Pshadow_Pstandard_CObject* %40 )
 	ret i32 1
 }
-
-@separator.data = private unnamed_addr constant [2 x i8] c": "
-@separator = private unnamed_addr constant %_Pshadow_Pstandard_CString { %_Pshadow_Pstandard_CString_Mclass* @_Pshadow_Pstandard_CString_Mclass, { i8*, [1 x i32] } { i8* getelementptr inbounds ([2 x i8]* @separator.data, i32 0, i32 0), [1 x i32] [i32 2] }, i1 true }

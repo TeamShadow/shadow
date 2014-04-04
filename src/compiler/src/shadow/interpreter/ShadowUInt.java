@@ -25,21 +25,21 @@ public class ShadowUInt extends ShadowValue
 	@Override
 	protected ShadowValue cast(Type type) throws ShadowException
 	{
-		if (type.equals(Type.BYTE))
+		if (type.typeEquals(Type.BYTE))
 			return new ShadowByte((byte)(getValue() & 0xffff));
-		if (type.equals(Type.SHORT))
+		if (type.typeEquals(Type.SHORT))
 			return new ShadowShort((short)(getValue() & 0xffff));
-		if (type.equals(Type.INT))
+		if (type.typeEquals(Type.INT))
 			return new ShadowInt((int)(getValue() & 0xffff));
-		if (type.equals(Type.LONG))
+		if (type.typeEquals(Type.LONG))
 			return new ShadowLong((long)(getValue() & 0xffff));
-		if (type.equals(Type.UBYTE))
+		if (type.typeEquals(Type.UBYTE))
 			return new ShadowUInt((byte)(getValue() & 0xffff));
-		if (type.equals(Type.USHORT))
+		if (type.typeEquals(Type.USHORT))
 			return new ShadowUInt((short)(getValue() & 0xffff));
-		if (type.equals(Type.UINT))
+		if (type.typeEquals(Type.UINT))
 			return new ShadowUInt((int)(getValue() & 0xffff));
-		if (type.equals(Type.ULONG))
+		if (type.typeEquals(Type.ULONG))
 			return new ShadowULong((long)(getValue() & 0xffff));
 		return this;
 	}

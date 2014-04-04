@@ -25,9 +25,9 @@ public class ShadowDouble extends ShadowValue
 	@Override
 	protected ShadowValue cast(Type type) throws ShadowException
 	{
-		if (type.equals(Type.FLOAT))
+		if (type.typeEquals(Type.FLOAT))
 			return new ShadowFloat((float)getValue());
-		if (type.equals(Type.DOUBLE))
+		if (type.typeEquals(Type.DOUBLE))
 			return new ShadowDouble((double)getValue());
 		return this;
 	}

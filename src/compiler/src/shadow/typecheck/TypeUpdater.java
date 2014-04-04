@@ -148,7 +148,7 @@ public class TypeUpdater extends BaseChecker
 									setterCount++;
 								else if( signature.getParameterTypes().isEmpty() )
 									getterCollision++;
-								else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().equals(signature.getParameterTypes().get(0).getType())  )
+								else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().typeEquals(signature.getParameterTypes().get(0).getType())  )
 									setterCollision++;
 							}
 							

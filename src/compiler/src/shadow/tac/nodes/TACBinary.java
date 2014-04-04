@@ -74,7 +74,7 @@ public class TACBinary extends TACOperand
 		//shifts and rotates have weird issues
 		//LLVM insists that you rotate a byte with a byte
 		//so we have to throw in explicit casts
-		if( (op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>")) && !firstType.getType().equals(secondType))
+		if( (op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>")) && !firstType.getType().typeEquals(secondType.getType()))
 		{
 			//second = check(secondOperand, secondType);
 			//node.append(secondOperand);
