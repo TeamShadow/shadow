@@ -45,7 +45,7 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 	}
 	
 	@Override
-	public Type getTypeWithoutTypeArguments()
+	public InterfaceType getTypeWithoutTypeArguments()
 	{
 		return type.getTypeWithoutTypeArguments();		
 	}

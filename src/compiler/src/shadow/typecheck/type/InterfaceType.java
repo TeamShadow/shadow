@@ -23,7 +23,7 @@ public class InterfaceType extends Type
 	@Override
 	public boolean hasInterface(InterfaceType type)
 	{	
-		if( this.getTypeWithoutTypeArguments().typeEquals(type.getTypeWithoutTypeArguments() ))
+		if( this.getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments() ))
 			return true;
 				
 		for( InterfaceType interfaceType : getInterfaces() )
@@ -56,7 +56,7 @@ public class InterfaceType extends Type
 	{			
 		for( InterfaceType parent : getInterfaces() )
 		{
-			if( parent.typeEquals(type) || parent.isDescendentOf( type ))
+			if( parent.equals(type) || parent.isDescendentOf( type ))
 				return true;			
 		}
 		return false;
@@ -266,7 +266,7 @@ public class InterfaceType extends Type
 		if( t == UNKNOWN )
 			return false;
 	
-		if( typeEquals(t) || t == Type.OBJECT || t == Type.VAR )
+		if( equals(t) || t == Type.OBJECT || t == Type.VAR )
 			return true;		
 		
 		if( t instanceof InterfaceType )			
@@ -281,6 +281,7 @@ public class InterfaceType extends Type
 		return OBJECT.getWidth() * 2;
 	}
 	
+	/*
 	@Override
 	public int hashCode() {
 		String name = getImportName();
@@ -292,8 +293,13 @@ public class InterfaceType extends Type
 		
 		return name.hashCode();
 	}
-
+	*/
 	
+	@Override
+	public InterfaceType getTypeWithoutTypeArguments()
+	{
+		return (InterfaceType)super.getTypeWithoutTypeArguments();
+	}
 	
 	public void printMetaFile(PrintWriter out, String linePrefix )
 	{

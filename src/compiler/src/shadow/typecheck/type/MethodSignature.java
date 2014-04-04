@@ -71,7 +71,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		if( o != null && o instanceof MethodSignature )
 		{
 			MethodSignature ms = (MethodSignature)o;			
-			return ms.symbol.equals(symbol) && ms.type.typeEquals(type);
+			return ms.symbol.equals(symbol) && ms.type.equals(type);
 		}
 		else
 			return false;

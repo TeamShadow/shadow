@@ -1089,7 +1089,7 @@ public class StatementChecker extends BaseChecker
 			}
 			else if( operator.equals("!") )
 			{
-				if( !type.typeEquals(Type.BOOLEAN)) 
+				if( !type.equals(Type.BOOLEAN)) 
 				{
 					addError(Error.INVALID_TYPE, "Cannot apply operator ! to type " + type + " which is not boolean");
 					type = Type.UNKNOWN;				
@@ -1179,7 +1179,7 @@ public class StatementChecker extends BaseChecker
 			else if( first.getModifiers().isImmutable() != second.getModifiers().isImmutable()  && !t1.getModifiers().isImmutable() && !t2.getModifiers().isImmutable() )
 				addError(node, Error.INVALID_MODIFIER, "Expressions " + first + " and " + second + " have incompatible levels of mutability");
 			
-			if( !t1.typeEquals(Type.BOOLEAN) ) 
+			if( !t1.equals(Type.BOOLEAN) ) 
 			{			
 				addError(node.jjtGetChild(0), Error.INVALID_TYPE, "Supplied type " + t1 + " cannot be used in the condition of a ternary operator, boolean type required");
 				node.setType(Type.UNKNOWN);
@@ -1408,7 +1408,7 @@ public class StatementChecker extends BaseChecker
 				if( rightType instanceof SequenceType )
 					rightElement = ((SequenceType)rightType).get(i);
 				
-				if( leftElement.getType().typeEquals( Type.VAR ) )
+				if( leftElement.getType().equals( Type.VAR ) )
 					leftElement.setType(resolveType( rightElement).getType());				
 							
 				if( leftElement instanceof ASTSequenceVariable ) //declaration	
@@ -1697,7 +1697,7 @@ public class StatementChecker extends BaseChecker
 		
 		Type t = node.jjtGetChild(0).getType(); 
 		
-		if( !t.typeEquals( Type.BOOLEAN ) )
+		if( !t.equals( Type.BOOLEAN ) )
 			addError(Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + t);
 				
 		return WalkType.POST_CHILDREN;
@@ -1709,7 +1709,7 @@ public class StatementChecker extends BaseChecker
 		
 		Type t = node.jjtGetChild(0).getType(); 
 		
-		if( !t.typeEquals( Type.BOOLEAN ) )
+		if( !t.equals( Type.BOOLEAN ) )
 			addError(Error.INVALID_TYPE, "Condition of while statement cannot accept non-boolean type " + t);
 				
 		return WalkType.POST_CHILDREN;
@@ -1721,7 +1721,7 @@ public class StatementChecker extends BaseChecker
 		
 		Type t = node.jjtGetChild(1).getType(); //second child, not first like if and while 
 		
-		if( !t.typeEquals( Type.BOOLEAN ) )
+		if( !t.equals( Type.BOOLEAN ) )
 			addError(Error.INVALID_TYPE, "Condition of do statement cannot accept non-boolean type " + t);
 				
 		return WalkType.POST_CHILDREN;
@@ -1763,7 +1763,7 @@ public class StatementChecker extends BaseChecker
 		else if( collectionType.hasInterface(Type.CAN_ITERATE) )
 		{			
 			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
-				if( _interface.getTypeWithoutTypeArguments().typeEquals(Type.CAN_ITERATE))
+				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE))
 				{
 					element = _interface.getTypeParameters().get(0);
 					break;
@@ -1797,7 +1797,7 @@ public class StatementChecker extends BaseChecker
 			// the conditional type might come first or second depending upon if there is an init or not
 			Type conditionalType = node.jjtGetChild(start).getType();			
 			
-			if(conditionalType == null || !conditionalType.typeEquals( Type.BOOLEAN ) )
+			if(conditionalType == null || !conditionalType.equals( Type.BOOLEAN ) )
 				addError(Error.INVALID_TYPE, "Supplied type " + conditionalType + " cannot be used in the condition of a for statement, boolean type required");
 		}
 			
@@ -2654,7 +2654,7 @@ public class StatementChecker extends BaseChecker
 					else
 					{
 						MethodSignature signature = currentMethod.getFirst().getMethodSignature();												
-						insideCreate = curPrefix.getFirst().getImage().equals("this") && signature.isCreate() && signature.getOuter().typeEquals(prefixType);   
+						insideCreate = curPrefix.getFirst().getImage().equals("this") && signature.isCreate() && signature.getOuter().equals(prefixType);   
 					}
 										
 					if( node.getModifiers().isMutable() || insideCreate )
@@ -2922,7 +2922,7 @@ public class StatementChecker extends BaseChecker
 		
 		while( type != null )
 		{
-			if( enclosing.typeEquals(type) )
+			if( enclosing.equals(type) )
 				return true;
 			
 			type = type.getOuter();
@@ -2995,7 +2995,7 @@ public class StatementChecker extends BaseChecker
 	
 		Type assertType = node.jjtGetChild(0).getType();
 		
-		if( !assertType.typeEquals(Type.BOOLEAN))
+		if( !assertType.equals(Type.BOOLEAN))
 			addError(Error.INVALID_TYPE, "Supplied type " + assertType + " cannot be used in the condition of an assert, boolean required");
 		
 		if( node.jjtGetNumChildren() > 1 )

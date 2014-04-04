@@ -177,7 +177,7 @@ public class LLVMOutput extends AbstractOutput
 			sb.setLength(0);
 			sb.append('%').append(raw(type)).append(" = type { %").
 					append(raw(type, "_Mclass")).append('*');
-			if (type.typeEquals(Type.CLASS))
+			if (type.equals(Type.CLASS))
 				sb.append(", ").append(type(new ArrayType(Type.OBJECT))).
 						append(", ").
 						append(type(new ArrayType(Type.CLASS))).
@@ -186,11 +186,11 @@ public class LLVMOutput extends AbstractOutput
 						append(type(Type.INT)).append(", ").
 						append(type(Type.INT)).append(", ").
 						append(type(Type.INT));
-			else if (type.typeEquals(Type.ARRAY))
+			else if (type.equals(Type.ARRAY))
 				sb.append(", ").append(type(new ArrayType(Type.INT))).
 						append(", ").append(type(Type.CLASS)).append(", ").
 						append(type(Type.OBJECT));
-			else if (type.typeEquals(Type.STRING))
+			else if (type.equals(Type.STRING))
 				sb.append(", ").append(type(new ArrayType(Type.UBYTE))).
 						append(", ").append(type(Type.BOOLEAN));
 			else if (type.isPrimitive())
@@ -206,9 +206,11 @@ public class LLVMOutput extends AbstractOutput
 	{
 		if (type instanceof InterfaceType)
 		{	
-			//parameterized interfaces must be defined locally
+			//parameterized interfaces are stored in a separate file
 			Type unparameterizedType = type.getTypeWithoutTypeArguments(); 
-			if( type.isParameterized() && !type.typeEquals(unparameterizedType) )
+			if( type.isParameterized() && !type.getMangledName().equals(unparameterizedType.getMangledName()) )
+			//it's possible to have multiple generic versions of an interface that are indistinguishable to LLVM
+			//this second condition prevents that
 			{	
 				writer.write('@' + raw(type, "_Mclass") +
 						" = external constant %" + raw(Type.CLASS));				
@@ -272,12 +274,30 @@ public class LLVMOutput extends AbstractOutput
 					typeLiteral((ShadowValue)result));
 			Cleanup.getInstance().walk(constant);
 		}
+		
+		HashSet<InterfaceType> definedInterfaces = new HashSet<InterfaceType>();
 		for (Type type : module.getReferences())
+		{
+			/*
 			if (type != null && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
-					!type.typeEquals(module.getType()))
-		{
-			writeTypeDeclaration(type);
+					!type.equals(module.getType())
+					)
+			*/
+			if(type != null && !type.equals(module.getType()))		
+			{			
+				if(type instanceof InterfaceType )
+				{
+					InterfaceType interfaceType = (InterfaceType) type;
+					if( !interfaceType.isParameterized() || 
+						!interfaceType.getMangledName().equals(interfaceType.getTypeWithoutTypeArguments().getMangledName()) ||
+						definedInterfaces.add(interfaceType.getTypeWithoutTypeArguments())
+					)
+					writeTypeDeclaration(type);
+				}
+				else				
+					writeTypeDeclaration(type);
+			}
 		}
 		writer.write();
 
@@ -385,7 +405,7 @@ public class LLVMOutput extends AbstractOutput
 		{
 			if (type != null && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
-					!type.typeEquals(module.getType()))
+					!type.equals(module.getType()))
 			{	
 				if( type instanceof InterfaceType )
 				{
@@ -606,9 +626,9 @@ public class LLVMOutput extends AbstractOutput
 		for (Type type : module.getReferences())
 			if (type instanceof ClassType && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
-					!type.typeEquals(module.getType()))
+					!type.equals(module.getType()))
 		{
-			if (type.typeEquals(Type.CLASS))
+			if (type.equals(Type.CLASS))
 			{
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, "_Mallocate") + '(' +
@@ -622,7 +642,7 @@ public class LLVMOutput extends AbstractOutput
 						Type.CLASS.getMangledName()) + '(' + type(Type.CLASS) +
 						", " + type(Type.CLASS) + ')');
 			}
-			if (type.typeEquals(Type.ARRAY))
+			if (type.equals(Type.ARRAY))
 				writer.write("declare " + type(Type.ARRAY) + " @" +
 						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
 						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
@@ -1104,7 +1124,7 @@ public class LLVMOutput extends AbstractOutput
 			}
 			else
 			{
-				if (!srcType.getType().typeEquals(Type.ARRAY))
+				if (!srcType.getType().equals(Type.ARRAY))
 				{
 					writer.write(nextTemp() + " = bitcast " + typeText(srcType,
 							srcName) + " to " + type(Type.ARRAY));
@@ -1137,7 +1157,7 @@ public class LLVMOutput extends AbstractOutput
 				srcName = temp(0);
 			}
 		}
-		if (destType.getType().typeEquals(srcType.getType()))
+		if (destType.getType().equals(srcType.getType()))
 		{
 			node.setData(srcName);
 			return;
@@ -1188,7 +1208,7 @@ public class LLVMOutput extends AbstractOutput
 				type(Type.CLASS) + " getelementptr (%" + raw(node.getType(),
 				"_Mclass") + "* @" + raw(node.getType(), "_Mclass") +
 				", i32 0, i32 0))");
-		if (!node.getType().typeEquals(Type.OBJECT))
+		if (!node.getType().equals(Type.OBJECT))
 			writer.write(nextTemp(node) + " = bitcast " + type(Type.OBJECT) +
 					' ' + temp(1) + " to " + type(node.getType()));
 	}

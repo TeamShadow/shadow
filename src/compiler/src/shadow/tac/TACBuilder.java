@@ -771,7 +771,7 @@ public class TACBuilder implements ShadowParserVisitor
 	private TACOperand convertToString( TACOperand operand, Node node )
 	{
 		Type type = operand.getType();
-		if( type.typeEquals(Type.STRING ) )
+		if( type.equals(Type.STRING ) )
 			return operand;
 		
 		if (!type.isPrimitive() && !(type instanceof ArrayType))
@@ -1256,7 +1256,7 @@ public class TACBuilder implements ShadowParserVisitor
 			{
 				Type outerType = methodRef.getOuterType().getOuter();
 				TACVariable thisRef = method.getThis();
-				if (thisRef.getType().typeEquals(outerType))
+				if (thisRef.getType().equals(outerType))
 					params.add(new TACVariableRef(tree, thisRef));
 				else
 					throw new UnsupportedOperationException();
@@ -2371,25 +2371,25 @@ public class TACBuilder implements ShadowParserVisitor
 
 	private TACOperand getDefaultValue(ModifiedType type)
 	{
-		if (type.getType().typeEquals(Type.BOOLEAN))
+		if (type.getType().equals(Type.BOOLEAN))
 			return new TACLiteral(tree, "false");
-		if (type.getType().typeEquals(Type.CODE))
+		if (type.getType().equals(Type.CODE))
 			return new TACLiteral(tree, "'\0'");
-		if (type.getType().typeEquals(Type.UBYTE))
+		if (type.getType().equals(Type.UBYTE))
 			return new TACLiteral(tree, "0uy");
-		if (type.getType().typeEquals(Type.BYTE))
+		if (type.getType().equals(Type.BYTE))
 			return new TACLiteral(tree, "0y");
-		if (type.getType().typeEquals(Type.USHORT))
+		if (type.getType().equals(Type.USHORT))
 			return new TACLiteral(tree, "0us");
-		if (type.getType().typeEquals(Type.SHORT))
+		if (type.getType().equals(Type.SHORT))
 			return new TACLiteral(tree, "0s");
-		if (type.getType().typeEquals(Type.UINT))
+		if (type.getType().equals(Type.UINT))
 			return new TACLiteral(tree, "0ui");
-		if (type.getType().typeEquals(Type.INT))
+		if (type.getType().equals(Type.INT))
 			return new TACLiteral(tree, "0i");
-		if (type.getType().typeEquals(Type.ULONG))
+		if (type.getType().equals(Type.ULONG))
 			return new TACLiteral(tree, "0ul");
-		if (type.getType().typeEquals(Type.LONG))
+		if (type.getType().equals(Type.LONG))
 			return new TACLiteral(tree, "0l");
 //		if (!type.getModifiers().isNullable())
 //			throw new IllegalArgumentException();

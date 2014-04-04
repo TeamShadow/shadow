@@ -54,7 +54,7 @@ public class ClassType extends Type
 		ClassType parent = getExtendType();
 		while( parent != null )
 		{
-			if( parent.typeEquals(type))
+			if( parent.equals(type))
 				return true;
 			parent = parent.getExtendType();			
 		}
@@ -441,16 +441,16 @@ public class ClassType extends Type
 	}
 	
 	@Override
-	public boolean typeEquals(Type type)
+	public boolean equals(Type type)
 	{		
 		if( this.getTypeWithoutTypeArguments() == Type.ARRAY && this.getTypeParameters().size() == 1 && type instanceof ArrayType )
 		{
 			ArrayType arrayType = (ArrayType)type;
 			ModifiedType baseType = this.getTypeParameters().get(0);			
-			return baseType != null && arrayType.getBaseType().typeEquals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
+			return baseType != null && arrayType.getBaseType().equals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
 		}
 		
-		return super.typeEquals(type);
+		return super.equals(type);
 	}
 	
 	
@@ -460,7 +460,7 @@ public class ClassType extends Type
 		if( t == UNKNOWN || this == UNKNOWN )
 			return false;
 	
-		if( this == NULL || typeEquals(t) || t == Type.OBJECT || t == Type.VAR )
+		if( this == NULL || equals(t) || t == Type.OBJECT || t == Type.VAR )
 			return true;		
 		
 		if( t.isNumerical() && isNumerical() )
@@ -549,6 +549,12 @@ public class ClassType extends Type
 		return innerClasses.get(className);
 	}
 	
+	@Override
+	public ClassType getTypeWithoutTypeArguments()
+	{
+		return (ClassType)super.getTypeWithoutTypeArguments();
+	}
+	
 
 	public void printMetaFile(PrintWriter out, String linePrefix )
 	{
@@ -590,7 +596,7 @@ public class ClassType extends Type
 		
 		//extend type
 		Type extendType = getExtendType();
-		if( extendType != null && !(this instanceof SingletonType) && !(this instanceof ErrorType) && !this.typeEquals(Type.EXCEPTION)  )
+		if( extendType != null && !(this instanceof SingletonType) && !(this instanceof ErrorType) && !this.equals(Type.EXCEPTION)  )
 			out.print(" extends " + extendType.getQualifiedName() );
 		
 		//interfaces implemented

@@ -148,7 +148,7 @@ public class TypeUpdater extends BaseChecker
 									setterCount++;
 								else if( signature.getParameterTypes().isEmpty() )
 									getterCollision++;
-								else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().typeEquals(signature.getParameterTypes().get(0).getType())  )
+								else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().equals(signature.getParameterTypes().get(0).getType())  )
 									setterCollision++;
 							}
 							
@@ -264,18 +264,19 @@ public class TypeUpdater extends BaseChecker
 		//first build graph of type parameter dependencies
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
 		Map<Type, Node> updatedNodeTable = new HashMap<Type,Node>();
+		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();
 		
 		for(Node declarationNode : nodeTable.values() )
 		{
 			graph.addNode( declarationNode );
-			//Type typeWithoutArguments = declarationNode.getType().getTypeWithoutTypeArguments(); 
-			//uninstantiatedNodes.put(typeWithoutArguments, declarationNode);
+			Type typeWithoutArguments = declarationNode.getType().getTypeWithoutTypeArguments(); 
+			uninstantiatedNodes.put(typeWithoutArguments, declarationNode);
 		}
 		
 		for(Node declarationNode : nodeTable.values() )
 			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  )
 			{
-				Node dependencyNode = nodeTable.get(dependency); //used to be from uninstantiated nodes
+				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " + declarationNode.getType() + " is dependent on unavailable type " + dependency);
 				else
@@ -367,6 +368,8 @@ public class TypeUpdater extends BaseChecker
 			Type type = (Type) e.getCycleCause();			
 			addError(nodeTable.get(type), Error.INVALID_TYPE_PARAMETERS, "Type " + type + " contains a circular type parameter definition");
 		}
+		
+		uninstantiatedNodes.clear();
 		
 		return updatedNodeTable;
 	}

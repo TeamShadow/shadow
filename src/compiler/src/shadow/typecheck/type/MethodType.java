@@ -101,7 +101,8 @@ public class MethodType extends ClassType {
 	/**
 	 * Need to override equals as we're doing special things	
 	 */
-	public boolean equals(Object o) {
+	@Override
+	public boolean equals(Type o) {
 		if( o != null && o instanceof MethodType )
 		{		
 			MethodType methodType = (MethodType)o;			
@@ -184,7 +185,7 @@ public class MethodType extends ClassType {
 		if( t == UNKNOWN )
 			return false;
 	
-		if( typeEquals(t) || t == Type.OBJECT )
+		if( equals(t) || t == Type.OBJECT )
 			return true;
 		
 		if( t instanceof MethodType )

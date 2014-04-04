@@ -66,7 +66,7 @@ public class TypeParameter extends Type
 	
 	public boolean acceptsSubstitution(Type type)
 	{
-		if( typeEquals(type) )
+		if( equals(type) )
 			return true;
 		
 		SequenceType values = new SequenceType(this);	
@@ -85,7 +85,7 @@ public class TypeParameter extends Type
 	
 	public boolean isSubtype(Type type)
 	{		
-		if( typeEquals(type) || type == Type.OBJECT )
+		if( equals(type) || type == Type.OBJECT )
 			return true;
 		
 		for( Type bound : bounds )
@@ -118,7 +118,8 @@ public class TypeParameter extends Type
 		return false;
 	}
 	
-	public boolean equals(Object o)
+	@Override
+	public boolean equals(Type o)
 	{
 		try
 		{

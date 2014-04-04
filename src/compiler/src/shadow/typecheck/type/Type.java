@@ -124,7 +124,7 @@ public abstract class Type implements Comparable<Type>
 		
 		ModifiedType argument = typeArguments.get(index);
 		for( TypeArgumentCache child : types.children )		
-			if( child.argument != null && child.argument.getType().typeEquals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
+			if( child.argument != null && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
 				return getInstantiation( child, typeArguments, index + 1 );
 
 		return null;
@@ -146,7 +146,7 @@ public abstract class Type implements Comparable<Type>
 			
 			ModifiedType argument = typeArguments.get(index);
 			for( TypeArgumentCache child : types.children )		
-				if( child.argument != null && child.argument.getType().typeEquals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
+				if( child.argument != null && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
 				{
 					addInstantiation( child, typeArguments, index + 1, type );
 					return;
@@ -319,13 +319,8 @@ public abstract class Type implements Comparable<Type>
 		modifiers.addModifier(modifier);		
 	}
 	
-	public boolean equals(Type type)
-	{
-		return this.getMangledName().equals(type.getMangledName());		
-	}
-
 	//separate from equals() because we need certain different types to be equivalent in hash tables
-	public boolean typeEquals(Type type)
+	public boolean equals(Type type)
 	{
 		if( type != null )
 		{
@@ -367,45 +362,45 @@ public abstract class Type implements Comparable<Type>
 	
 	protected boolean isNumericalSubtype(Type t)
 	{
-		if( this.typeEquals(BYTE) )
+		if( this.equals(BYTE) )
 		{
-			return t.typeEquals(SHORT) || t.typeEquals(INT) || t.typeEquals(LONG) || t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
-		else if( this.typeEquals(CODE) )
+		else if( this.equals(CODE) )
 		{
-			return t.typeEquals(INT) || t.typeEquals(UINT) || t.typeEquals(LONG) || t.typeEquals(ULONG) || t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(INT) || t.equals(UINT) || t.equals(LONG) || t.equals(ULONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
-		else if( this.typeEquals(SHORT) )
+		else if( this.equals(SHORT) )
 		{
-			return t.typeEquals(INT) || t.typeEquals(LONG) || t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
-		else if( this.typeEquals(INT) )
+		else if( this.equals(INT) )
 		{
-			return t.typeEquals(LONG) || t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
-		else if( this.typeEquals(LONG))
+		else if( this.equals(LONG))
 		{
-			return t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(FLOAT) || t.equals(DOUBLE);
 		}
-		else if( this.typeEquals(FLOAT))
+		else if( this.equals(FLOAT))
 		{
-			return t.typeEquals(DOUBLE);
+			return t.equals(DOUBLE);
 		}
-		else if( this.typeEquals(UBYTE))
+		else if( this.equals(UBYTE))
 		{
-			return t.typeEquals(USHORT) || t.typeEquals(UINT) || t.typeEquals(ULONG)  || t.typeEquals(SHORT) || t.typeEquals(INT) || t.typeEquals(LONG) || t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(USHORT) || t.equals(UINT) || t.equals(ULONG)  || t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}		
-		else if( this.typeEquals(UINT))
+		else if( this.equals(UINT))
 		{
-			return t.typeEquals(ULONG) || t.typeEquals(LONG) || t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(ULONG) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
-		else if( this.typeEquals(ULONG) )
+		else if( this.equals(ULONG) )
 		{
-			return t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(FLOAT) || t.equals(DOUBLE);
 		}
-		else if( this.typeEquals(USHORT) )
+		else if( this.equals(USHORT) )
 		{
-			return t.typeEquals(UINT) || t.typeEquals(ULONG)  || t.typeEquals(INT) || t.typeEquals(LONG) || t.typeEquals(FLOAT) || t.typeEquals(DOUBLE);
+			return t.equals(UINT) || t.equals(ULONG)  || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
 		else		
 			return false;
@@ -421,13 +416,13 @@ public abstract class Type implements Comparable<Type>
 	{
 		if( this == NULL )
 			return OBJECT.getWidth();
-		if( this.typeEquals(BYTE) || this.typeEquals(UBYTE) || this.typeEquals(BOOLEAN) )
+		if( this.equals(BYTE) || this.equals(UBYTE) || this.equals(BOOLEAN) )
 			return 1;
-		else if( this.typeEquals(SHORT) || this.typeEquals(USHORT) )
+		else if( this.equals(SHORT) || this.equals(USHORT) )
 			return 2;
-		else if( this.typeEquals(INT) || this.typeEquals(UINT) || this.typeEquals(CODE) || this.typeEquals(FLOAT) )
+		else if( this.equals(INT) || this.equals(UINT) || this.equals(CODE) || this.equals(FLOAT) )
 			return 4;
-		else if( this.typeEquals(LONG) || this.typeEquals(ULONG) || this.typeEquals(DOUBLE) )
+		else if( this.equals(LONG) || this.equals(ULONG) || this.equals(DOUBLE) )
 			return 8;
 		return 6;
 	}
@@ -437,13 +432,12 @@ public abstract class Type implements Comparable<Type>
 	}
 	
 	@Override
-	public int hashCode() {
-		String name = getMangledName();
-		return name.hashCode();
+	public final int hashCode() {		
+		return toString().hashCode();
 	}
 	
 	public boolean isString() {
-		return this.typeEquals(Type.STRING);
+		return this.equals(Type.STRING);
 	}
 	
 	public boolean hasOuter() {
@@ -466,16 +460,16 @@ public abstract class Type implements Comparable<Type>
 	 * @return The signed version of the type.
 	 */
 	public static ClassType makeSigned(ClassType type) {
-		if(type.typeEquals(UBYTE))
+		if(type.equals(UBYTE))
 			return BYTE;
 		
-		if(type.typeEquals(USHORT))
+		if(type.equals(USHORT))
 			return SHORT;
 		
-		if(type.typeEquals(UINT))
+		if(type.equals(UINT))
 			return INT;
 		
-		if(type.typeEquals(ULONG))
+		if(type.equals(ULONG))
 			return LONG;
 		
 		return type;
@@ -484,67 +478,67 @@ public abstract class Type implements Comparable<Type>
 	//for math
 	final public boolean isNumerical()
 	{
-		return isPrimitive() && !this.typeEquals(BOOLEAN); //includes CODE, is that right?
+		return isPrimitive() && !this.equals(BOOLEAN); //includes CODE, is that right?
 	}
 	
 	//for cases where integers are required (bitwise operations, array bounds, switch statements, etc.)
 	final public boolean isIntegral()
 	{
 		return
-		this.typeEquals(BYTE) ||
-		this.typeEquals(CODE) ||	
-		this.typeEquals(SHORT) ||
-		this.typeEquals(INT) ||
-		this.typeEquals(LONG) ||	  
-		this.typeEquals(UBYTE) ||
-		this.typeEquals(UINT) ||
-		this.typeEquals(ULONG) ||
-		this.typeEquals(USHORT);
+		this.equals(BYTE) ||
+		this.equals(CODE) ||	
+		this.equals(SHORT) ||
+		this.equals(INT) ||
+		this.equals(LONG) ||	  
+		this.equals(UBYTE) ||
+		this.equals(UINT) ||
+		this.equals(ULONG) ||
+		this.equals(USHORT);
 	}
 	
 	
 	final public boolean isFloating()
 	{
 		return
-		this.typeEquals(FLOAT) ||
-		this.typeEquals(DOUBLE);
+		this.equals(FLOAT) ||
+		this.equals(DOUBLE);
 	}	
 		
 	final public boolean isPrimitive()
 	{
 		return
-		this.typeEquals(BOOLEAN) ||
-		this.typeEquals(BYTE) ||
-		this.typeEquals(CODE) ||
-		this.typeEquals(SHORT) ||
-		this.typeEquals(INT) ||
-		this.typeEquals(LONG) ||
-		this.typeEquals(FLOAT) ||
-		this.typeEquals(DOUBLE) ||
-		this.typeEquals(UBYTE) ||
-		this.typeEquals(UINT) ||
-		this.typeEquals(ULONG) ||
-		this.typeEquals(USHORT);
+		this.equals(BOOLEAN) ||
+		this.equals(BYTE) ||
+		this.equals(CODE) ||
+		this.equals(SHORT) ||
+		this.equals(INT) ||
+		this.equals(LONG) ||
+		this.equals(FLOAT) ||
+		this.equals(DOUBLE) ||
+		this.equals(UBYTE) ||
+		this.equals(UINT) ||
+		this.equals(ULONG) ||
+		this.equals(USHORT);
 	}
 
 	final public boolean isSigned()
 	{
 		return
-		this.typeEquals(BOOLEAN) ||
-		this.typeEquals(BYTE) ||
-		this.typeEquals(CODE) ||
-		this.typeEquals(SHORT) ||
-		this.typeEquals(INT) ||
-		this.typeEquals(LONG);
+		this.equals(BOOLEAN) ||
+		this.equals(BYTE) ||
+		this.equals(CODE) ||
+		this.equals(SHORT) ||
+		this.equals(INT) ||
+		this.equals(LONG);
 	}
 
 	final public boolean isUnsigned()
 	{
 		return
-		this.typeEquals(UBYTE) ||
-		this.typeEquals(USHORT) ||
-		this.typeEquals(UINT) ||
-		this.typeEquals(ULONG);
+		this.equals(UBYTE) ||
+		this.equals(USHORT) ||
+		this.equals(UINT) ||
+		this.equals(ULONG);
 	}
 
 	
@@ -776,7 +770,7 @@ public abstract class Type implements Comparable<Type>
 	public boolean isStrictSubtype(Type other) {
 		if ( this == Type.NULL )
 			return other != Type.NULL;
-		if ( typeEquals(other) )
+		if ( equals(other) )
 			return false;
 		return isSubtype(other);
 	}
@@ -980,7 +974,7 @@ public abstract class Type implements Comparable<Type>
 	
 	public boolean encloses(Type type)
 	{
-		if( typeEquals(this) )
+		if( equals(this) )
 			return true;
 		
 		Type outer = type.getOuter();
@@ -1000,7 +994,7 @@ public abstract class Type implements Comparable<Type>
 				addReferencedType(Type.ARRAY);
 				addReferencedType(arrayType.getBaseType());			
 			}
-			else if (!typeEquals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
+			else if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
 			{
 				if( type instanceof InterfaceType  )
 					referencedTypes.add(type);
@@ -1095,7 +1089,7 @@ public abstract class Type implements Comparable<Type>
 	@Override
 	public final int compareTo(Type other)
 	{
-		return getMangledName().compareTo(other.getMangledName());		
+		return toString().compareTo(other.toString());		
 	}
 	
 	protected final void printImports(PrintWriter out, String linePrefix )

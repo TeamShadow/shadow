@@ -49,7 +49,7 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 	}
 	
 	@Override
-	public Type getTypeWithoutTypeArguments()
+	public ClassType getTypeWithoutTypeArguments()
 	{
 		return type.getTypeWithoutTypeArguments();		
 	}

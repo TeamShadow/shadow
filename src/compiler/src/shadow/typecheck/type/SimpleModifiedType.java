@@ -34,7 +34,7 @@ public class SimpleModifiedType implements ModifiedType
 		if( o instanceof ModifiedType  )
 		{
 			ModifiedType modifiedType = (ModifiedType) o;
-			return type.typeEquals(modifiedType.getType()) && modifiers.equals(modifiedType.getModifiers());				
+			return type.equals(modifiedType.getType()) && modifiers.equals(modifiedType.getModifiers());				
 		}
 		
 		return false;

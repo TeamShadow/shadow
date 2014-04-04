@@ -16,7 +16,7 @@ public class UnboundMethodType extends ClassType
 	
 	public boolean isSubtype(Type t)
 	{
-		return typeEquals(t) || t == Type.OBJECT;
+		return equals(t) || t == Type.OBJECT;
 	}
 
 	@Override

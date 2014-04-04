@@ -20,10 +20,10 @@ public class ExceptionType extends ClassType
 		if( t == UNKNOWN )
 			return false;
 	
-		if( typeEquals(t) )
+		if( equals(t) )
 			return true;		
 		
-		if ( t.typeEquals(OBJECT) )
+		if ( t.equals(OBJECT) )
 			return true;
 		
 		if( t instanceof ExceptionType )			
