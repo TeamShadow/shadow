@@ -1956,6 +1956,17 @@ public class StatementChecker extends BaseChecker
 				Type type = last.getType(); //if PropertyType, preserve that
 				node.setModifiers(last.getModifiers());
 				node.setType(type);
+				
+				/*
+				if( last instanceof ASTSubscript )
+				{
+					ASTSubscript subscript = (ASTSubscript) last;
+					MethodSignature 
+					
+					
+				}
+				*/
+				
 			}
 			else
 			{
@@ -2275,53 +2286,24 @@ public class StatementChecker extends BaseChecker
 				{
 					SequenceType arguments = new SequenceType();
 					Node child = node.jjtGetChild(0);
-					arguments.add(child);					
-									
-					TreeMap<MethodSignature, MethodType> acceptableIndexes = new TreeMap<MethodSignature, MethodType>();
+					arguments.add(child);
 					
-					for( MethodSignature signature : prefixType.getAllMethods("index") ) 
-					{		
-						MethodType methodType = signature.getMethodType();
+					MethodSignature signature = setMethodType( node, prefixType, "index", arguments);
 						
-						if( signature.matches( arguments )) 
-						{
-							//found it, don't look further!
-							acceptableIndexes.clear();
-							acceptableIndexes.put(signature, methodType);
-							break;
-						}
-						else if( signature.canAccept( arguments ))
-							acceptableIndexes.put(signature, methodType);
+					if( signature == null || !methodIsAccessible( signature, currentType  ))
+					{
+						node.setType(Type.UNKNOWN);
+						addError(Error.ILLEGAL_ACCESS, "Index not accessible from this context");
 					}
-					
-					if( acceptableIndexes.size() == 0 ) 
-					{
-						addError(Error.INVALID_SUBSCRIPT, "Subscript type " + prefixType + " cannot index into type " + child.getType());
-						node.setType(Type.UNKNOWN);
-					}					
-					else if( acceptableIndexes.size() > 1 )
-					{
-						addError(Error.INVALID_SUBSCRIPT, "Subscript type " + prefixType + " gives an ambiguous index into type " + child.getType());
-						node.setType(Type.UNKNOWN);
-					}					
 					else
 					{
-						Entry<MethodSignature, MethodType> entry = acceptableIndexes.firstEntry();
-						MethodSignature signature = entry.getKey(); 
-						MethodType methodType = entry.getValue();				 
+						ModifiedType modifiedType = signature.getReturnTypes().get(0); 
+						node.setType(modifiedType.getType());
+						node.setModifiers(modifiedType.getModifiers());
+						node.setMethodSignature( signature );
+						//node.addModifier(Modifiers.ASSIGNABLE);
+					}
 						
-						if( !methodIsAccessible( signature, currentType  ))
-						{
-							node.setType(Type.UNKNOWN);
-							addError(Error.ILLEGAL_ACCESS, "Index not accessible from this context");
-						}
-						else
-						{
-							node.setType(methodType.getReturnTypes().getType(0));
-							node.setModifiers(methodType.getReturnTypes().get(0).getModifiers());
-							node.addModifier(Modifiers.ASSIGNABLE);
-						}
-					}	
 				}
 				else
 				{

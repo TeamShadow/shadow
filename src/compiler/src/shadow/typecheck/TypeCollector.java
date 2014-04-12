@@ -483,16 +483,6 @@ public class TypeCollector extends BaseChecker
 		return WalkType.PRE_CHILDREN;			
 	}
 	
-	/*
-	@Override
-	public Object visit(ASTTypeDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )		
-			importedItems.add("shadow.standard"); //add standard imports after explicit ones
-				
-		return WalkType.POST_CHILDREN;			
-	}
-	*/
-	
 	
 	@Override
 	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException

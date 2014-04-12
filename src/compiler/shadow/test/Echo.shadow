@@ -1,0 +1,31 @@
+import shadow.io@Console;
+
+class Echo
+{
+	public main(String[] args) => ()
+	{
+		Console screen = Console:instance;
+		String input;
+		
+		screen.printLine("Fibonacci of 10: " # fibonacci(10));
+		
+/*		
+		do
+		{
+			screen.print("Say something: ");
+			(input, ) = screen.readLine();
+			screen.printLine(input);		
+		} while( input != "quit" );
+	*/	
+	
+	}
+	
+	public fibonacci( int n ) => (int)
+	{
+		if( n <= 2 )
+			return 1;
+		return fibonacci( n - 1) + fibonacci( n - 2);
+	}
+	
+
+}

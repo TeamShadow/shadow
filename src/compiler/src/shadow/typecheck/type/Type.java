@@ -262,6 +262,15 @@ public abstract class Type implements Comparable<Type>
 			return _package.getQualifiedName() + '@' + getTypeName();			
 	}
 	
+	
+	public final String getHashName()
+	{
+		if( _package == null || _package.getQualifiedName().isEmpty())
+			return "default@" + toString();
+		else
+			return _package.getQualifiedName() + '@' + toString();		
+	}
+	
 	public String getQualifiedName() 
 	{		
 		return getQualifiedName(false);			
@@ -319,6 +328,11 @@ public abstract class Type implements Comparable<Type>
 		modifiers.addModifier(modifier);		
 	}
 	
+	public final boolean manglesTheSameAs(Type type)
+	{
+		return getMangledName().equals(type.getMangledName());		
+	}
+	
 	//separate from equals() because we need certain different types to be equivalent in hash tables
 	public boolean equals(Type type)
 	{
@@ -326,30 +340,11 @@ public abstract class Type implements Comparable<Type>
 		{
 			if( type == this )
 				return true;
-			
-			Package _package = getPackage();
-			String name = type.getTypeName();
-			String name2 = getTypeName();
-			
+						
 			if( type.getPackage() == getPackage() && type.getTypeName().equals(getTypeName()) )
-			{
-				
+			{				
 				if( parameterized )
-				{	
 					return type.typeParameters.matches(typeParameters);
-					
-					/*
-					if( type.typeParameters.size() == typeParameters.size() )
-					{
-						for( int i = 0; i < typeParameters.size(); i++ )
-						{
-							if( !type.typeParameters.get(i).equals(typeParameters.get(i)) )
-								return false;
-						}
-					}
-					else
-						return false;*/
-				}
 					
 				return true;
 			}	
@@ -433,7 +428,7 @@ public abstract class Type implements Comparable<Type>
 	
 	@Override
 	public final int hashCode() {		
-		return toString().hashCode();
+		return getHashName().hashCode();
 	}
 	
 	public boolean isString() {
@@ -1089,7 +1084,7 @@ public abstract class Type implements Comparable<Type>
 	@Override
 	public final int compareTo(Type other)
 	{
-		return toString().compareTo(other.toString());		
+		return getHashName().compareTo(other.getHashName());		
 	}
 	
 	protected final void printImports(PrintWriter out, String linePrefix )

@@ -61,7 +61,7 @@ public class InterfaceType extends Type
 		}
 		return false;
 	}
-
+	
 	@Override
 	public String getMangledName()
 	{

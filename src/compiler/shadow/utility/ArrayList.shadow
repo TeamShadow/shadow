@@ -1,3 +1,5 @@
+import shadow.io@Console;
+
 class shadow.utility@
 ArrayList<V is CanEqual<V>>
 implements List<V>
@@ -70,10 +72,12 @@ implements List<V>
 	}
 	
 	public readonly indexOf(V value) => (int index)
-	{
+	{		
 		for( int i = 0; i < elements->size; i += 1 )
+		{
 			if( elements[i] == value )
 				return i;
+		}
 		
 		return -1;
 	}

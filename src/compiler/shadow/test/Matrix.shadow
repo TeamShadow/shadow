@@ -1,0 +1,104 @@
+class Matrix implements
+CanAdd<Matrix>,
+CanSubtract<Matrix>,
+CanMultiply<Matrix>,
+CanNegate<Matrix>,
+CanEqual<Matrix>,
+CanIndex<int, double[]>
+{
+	double[][] values;
+	get int rows;
+	get int columns;
+		
+	public create(int rows, int columns )
+	{
+		this:rows = rows;
+		this:columns = columns;
+		values = double:create[rows][columns];
+	}
+
+	public index(int row) => (double[])
+	{
+		try
+		{
+			return check(values[row]);
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();		
+		}
+	}	
+	
+	public index(int row, double[] replacementRow) => ()
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	public immutable add(Matrix other) => (Matrix)
+	{
+		if( other:rows != rows or other:columns != columns )
+			throw IllegalArgumentException:create();
+			
+		Matrix result = Matrix:create(rows, columns);
+		
+		for( int i = 0; i < rows; i += 1 )
+			for( int j = 0; j < columns; j += 1 )
+				result[i][j] = this[i][j] + other[i][j];
+				
+		return result;
+	}
+	
+	public immutable subtract(Matrix other) => (Matrix)
+	{
+		if( other:rows != rows or other:columns != columns )
+			throw IllegalArgumentException:create();
+			
+		Matrix result = Matrix:create(rows, columns);
+		
+		for( int i = 0; i < rows; i += 1 )
+			for( int j = 0; j < columns; j += 1 )
+				result[i][j] = this[i][j] - other[i][j];
+		
+		return result;
+	}
+	
+	public immutable multiply(Matrix other) => (Matrix)
+	{
+		if( other:rows != columns )
+			throw IllegalArgumentException:create();
+			
+		Matrix result = Matrix:create(rows, other:columns);
+		
+		for( int i = 0; i < rows; i += 1 )
+			for( int j = 0; j < other:columns; j += 1 )
+				for( int k = 0; k < columns; k += 1 )
+					result[i][j] += this[i][k] * other[k][j];
+		
+		return result;
+	
+	}
+	
+	public immutable negate() => (Matrix)
+	{		
+		Matrix result = Matrix:create(rows, columns);
+		
+		for( int i = 0; i < rows; i += 1 )
+			for( int j = 0; j < columns; j += 1 )				
+					result[i][j] = -(this[i][j]);
+		
+		return result;	
+	}	
+
+	public immutable equal(Matrix other) => (boolean)
+	{
+		if( rows != other:rows or columns != other:columns )
+			return false;
+			
+		for( int i = 0; i < rows; i += 1 )
+			for( int j = 0; j < columns; j += 1 )
+				if( this[i][j] != other[i][j] )
+					return false;
+					
+		return true;
+	}
+}

@@ -54,8 +54,8 @@ public class TACBinary extends TACOperand
 	
 	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, char op,
 			TACOperand secondOperand, boolean isCompare)
-	{
-		this( node, firstOperand, new SimpleModifiedType(signature.getOuter()), stringVersion(op), secondOperand, signature.getParameterTypes().get(0), isCompare ? new SimpleModifiedType(Type.BOOLEAN) : signature.getReturnTypes().get(0) );
+	{		
+		this( node, firstOperand, new SimpleModifiedType(signature.getOuter()), stringVersion(op), secondOperand, signature.getParameterTypes().get(0), isCompare ? new SimpleModifiedType(Type.BOOLEAN) : signature.getReturnTypes().get(0) );	
 	}
 	
 	private TACBinary(TACNode node, TACOperand firstOperand, ModifiedType firstType, String op,

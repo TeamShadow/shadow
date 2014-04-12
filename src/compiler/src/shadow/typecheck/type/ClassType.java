@@ -332,19 +332,21 @@ public class ClassType extends Type
 		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
 			if (!field.getValue().getModifiers().isConstant())
 				set.add(field);
-		if (isParameterized())
+		if (isParameterized())		
 			for (final ModifiedType typeParam : getTypeParameters())
+			{
+				final TypeParameter parameter = (TypeParameter) typeParam.getType();
 				set.add(new Entry<String, ModifiedType>()
 				{
 					@Override
 					public String getKey()
 					{
-						return typeParam.getType().getTypeName();
+						return parameter.getTypeName();
 					}
 					@Override
 					public ModifiedType getValue()
 					{
-						return new SimpleModifiedType(Type.CLASS);
+						return new SimpleModifiedType(parameter.getClassBound());
 					}
 					@Override
 					public ModifiedType setValue(ModifiedType value)
@@ -352,6 +354,9 @@ public class ClassType extends Type
 						throw new UnsupportedOperationException();
 					}
 				});
+				
+				//add stuff here to fill out type bounds?
+			}
 		return set;
 	}
 

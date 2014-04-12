@@ -1,0 +1,60 @@
+immutable class Complex implements
+CanAdd<Complex>,
+CanSubtract<Complex>,
+CanMultiply<Complex>,
+CanEqual<Complex>
+{
+	get int real;
+	get int imaginary;
+	
+	public create(int real, int imaginary)
+	{
+		this:real = real;
+		this:imaginary = imaginary;
+	}
+	
+	public create()
+	{
+		this(0,0);
+	}
+	
+	public add(Complex other) => (Complex)
+	{
+		return Complex:create(real + other:real, imaginary + other:imaginary);
+	}
+	
+	public subtract(Complex other) => (Complex)
+	{
+		return Complex:create(real - other:real, imaginary - other:imaginary);
+	}
+	
+	public multiply(Complex other) => (Complex)
+	{
+		return Complex:create(real * other:real - imaginary * other:imaginary,
+					real * other:imaginary + imaginary * other:real);	
+	}
+	
+	public equal(Complex other) => (boolean)
+	{
+		return real == other:real and imaginary == other:imaginary;
+	}
+	
+	public toString() => (String)
+	{
+		if( real == 0 and imaginary == 0 )
+			return "0";
+			
+		String value = "";
+		if( real != 0 )
+			value #= real;
+			
+		if( imaginary < 0 )
+			value #= " - " # imaginary.abs();
+			
+		if( imaginary > 0 )
+			value #= " + " # imaginary;
+			
+		return value;			
+	}
+	
+}

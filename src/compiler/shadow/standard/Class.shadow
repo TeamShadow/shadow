@@ -18,6 +18,8 @@ immutable class shadow.standard@Class
 			if ( interfaces[i] === interfaceClass )
 				return data[i];
 		}
+		
+		Console:instance.printLine( interfaceClass # " not found!");
 	}
 
 	public isInterface() => ( boolean )

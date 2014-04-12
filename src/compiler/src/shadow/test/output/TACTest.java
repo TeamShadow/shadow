@@ -106,4 +106,19 @@ public class TACTest {
 		args.add("shadow/test/PrimitiveTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testMatrix() throws Exception {
+		args.add("shadow/test/MatrixTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testComplex() throws Exception {
+		args.add("shadow/test/ComplexTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testEcho() throws Exception {
+		args.add("shadow/test/Echo.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

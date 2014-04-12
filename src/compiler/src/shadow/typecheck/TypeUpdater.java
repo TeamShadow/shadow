@@ -75,6 +75,7 @@ public class TypeUpdater extends BaseChecker
 	//public void updateTypes(Map<String, Node> files) throws ShadowException, TypeCheckException
 	public Map<Type,Node> update(Map<Type, Node> nodeTable) throws ShadowException, TypeCheckException
 	{	
+		//adds fields and methods
 		ASTWalker walker = new ASTWalker( this );
 		for(Node declarationNode : nodeTable.values() )
 			if( !declarationNode.getType().hasOuter() ) //only walk outer types, inner ones will get covered automatically
@@ -1071,7 +1072,6 @@ public class TypeUpdater extends BaseChecker
 		
 		if( currentType.getModifiers().isReadonly() )
 			node.addModifier(Modifiers.READONLY);
-
 		
 		if( currentType instanceof InterfaceType )
 			node.addModifier(Modifiers.CONSTANT); //all interface fields are implicitly constant
