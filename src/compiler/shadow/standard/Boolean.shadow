@@ -1,4 +1,5 @@
 immutable class shadow.standard@Boolean
+implements CanEqual<boolean>
 {
 	public not() => ( boolean )
 	{
@@ -7,5 +8,10 @@ immutable class shadow.standard@Boolean
 	public toString() => ( String )
 	{
 		return this ? "true", "false";
+	}
+	
+	public equal(boolean other) => (boolean)
+	{
+		return this === other;	
 	}
 }

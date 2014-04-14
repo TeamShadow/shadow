@@ -197,6 +197,12 @@ public class StandardLibraryTest {
 		args.add("shadow/standard/ULong.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+
+	@Test public void testBigInteger() throws Exception {
+		args.add("shadow/standard/BigInteger.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 
 	@Test public void testUnboundMethod() throws Exception {
 		args.add("shadow/standard/UnboundMethod.shadow");
