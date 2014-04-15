@@ -86,6 +86,7 @@ public abstract class Type implements Comparable<Type>
 	public static InterfaceType CAN_COMPARE = null;
 	public static InterfaceType CAN_EQUAL = null;
 	public static InterfaceType CAN_INDEX = null;
+	public static InterfaceType CAN_INDEX_STORE = null;
 	public static InterfaceType CAN_ITERATE = null;
 	public static InterfaceType NUMBER = null;
 	public static InterfaceType INTEGER = null;
@@ -187,6 +188,7 @@ public abstract class Type implements Comparable<Type>
 		CAN_COMPARE = null;
 		CAN_EQUAL = null;
 		CAN_INDEX = null;
+		CAN_INDEX_STORE = null;
 		CAN_ITERATE = null;
 		NUMBER = null;
 		INTEGER = null;
@@ -361,9 +363,10 @@ public abstract class Type implements Comparable<Type>
 		{
 			return t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
-		else if( this.equals(CODE) )
+		else if( this.equals(CODE) )  //just like uint?
 		{
-			return t.equals(INT) || t.equals(UINT) || t.equals(LONG) || t.equals(ULONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			return t.equals(UINT) || t.equals(ULONG) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			//return t.equals(INT) || t.equals(UINT) || t.equals(LONG) || t.equals(ULONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
 		else if( this.equals(SHORT) )
 		{
@@ -387,7 +390,8 @@ public abstract class Type implements Comparable<Type>
 		}		
 		else if( this.equals(UINT))
 		{
-			return t.equals(ULONG) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			return t.equals(CODE) || t.equals(ULONG) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			//return t.equals(ULONG) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
 		else if( this.equals(ULONG) )
 		{
@@ -521,7 +525,7 @@ public abstract class Type implements Comparable<Type>
 		return
 		this.equals(BOOLEAN) ||
 		this.equals(BYTE) ||
-		this.equals(CODE) ||
+		//this.equals(CODE) ||
 		this.equals(SHORT) ||
 		this.equals(INT) ||
 		this.equals(LONG);
@@ -532,6 +536,7 @@ public abstract class Type implements Comparable<Type>
 		return
 		this.equals(UBYTE) ||
 		this.equals(USHORT) ||
+		this.equals(CODE) || //right?
 		this.equals(UINT) ||
 		this.equals(ULONG);
 	}

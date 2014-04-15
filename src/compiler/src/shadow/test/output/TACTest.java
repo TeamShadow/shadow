@@ -121,4 +121,9 @@ public class TACTest {
 		args.add("shadow/test/Echo.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testBigInteger() throws Exception {
+		args.add("shadow/test/BigIntegerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

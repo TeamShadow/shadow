@@ -1170,40 +1170,39 @@ public class LLVMOutput extends AbstractOutput
 			node.setData(srcName);
 			return;
 		}
-		if (srcType.getType().isSigned() && destType.getType().isFloating())
-		{
-			writer.write(nextTemp(node) + " = sitofp " + typeText(srcType,
-					srcName) + ' ' + " to " + type(destType));
-			return;
-		}
-		if (srcType.getType().isUnsigned() && destType.getType().isFloating())
-		{
-			writer.write(nextTemp(node) + " = uitofp " + typeText(srcType,
-					srcName) + ' ' + " to " + type(destType));
-			return;
-		}
-		if (srcType.getType().isFloating() && destType.getType().isSigned())
-		{
-			writer.write(nextTemp(node) + " = fptosi " + typeText(srcType,
-					srcName) + ' ' + " to " + type(destType));
-			return;
-		}
-		if (srcType.getType().isFloating() && destType.getType().isUnsigned())
-		{
-			writer.write(nextTemp(node) + " = fptoui" + typeText(srcType,
-					srcName) + ' ' + " to " + type(destType));
-			return;
-		}
+		
+		String instruction;
 		int srcWidth = Type.getWidth(srcType),
 				destWidth = Type.getWidth(destType);
-		String instruction;
-		if (destWidth > srcWidth)
-			instruction = destType.getType().isSigned() ? "sext" :
-					destType.getType().isUnsigned() ? "zext" : "fpext";
-		else if (destWidth < srcWidth)
-			instruction = "trunc";
+		
+		if( srcType.getType().isFloating() )
+		{
+			if( destType.getType().isFloating() )
+				instruction = srcWidth > destWidth ? "fptrunc" : (srcWidth < destWidth ? "fpext" : "bitcast");
+			else if( destType.getType().isSigned() )
+				instruction = "fptosi";
+			else
+				instruction = "fptoui";
+		}
+		else if( srcType.getType().isSigned() )
+		{
+			if( destType.getType().isFloating() )
+				instruction = "sitofp";
+			else if( destType.getType().isSigned() )
+				instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "sext" : "bitcast");
+			else
+				instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
+		}
+		else if( srcType.getType().isUnsigned() )
+		{
+			if( destType.getType().isFloating() )
+				instruction = "uitofp";
+			else
+				instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
+		}
 		else
-			instruction = "bitcast";
+			instruction = "bitcast";		
+		
 		writer.write(nextTemp(node) + " = " + instruction + ' ' +
 				typeText(srcType, srcName) + " to " + type(destType));
 	}
@@ -1257,7 +1256,10 @@ public class LLVMOutput extends AbstractOutput
 				break;
 		*/
 			case "-":
-				visitUnary(node, "sub", "0");
+				if( node.getType().isFloating() )
+					visitUnary(node, "fsub", "-0.0");
+				else
+					visitUnary(node, "sub", "0");
 				break;
 			case "~":
 			case "!":
@@ -1423,8 +1425,12 @@ public class LLVMOutput extends AbstractOutput
 	public void visit(TACSame node) throws ShadowException
 	{
 		Type type = node.getOperand(0).getType();
-		String op = type.isIntegral() || !type.isPrimitive() ?
-				"icmp eq " : "fcmp oeq ";
+		//String op = type.isIntegral() || !type.isPrimitive() ?
+		//		"icmp eq " : "fcmp oeq ";
+		
+		String op = type.isFloating() ?
+				"fcmp oeq " : "icmp eq " ;
+
 		writer.write(nextTemp(node) + " = " + op + typeSymbol(
 				node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
 	}

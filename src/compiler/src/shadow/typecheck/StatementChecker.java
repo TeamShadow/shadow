@@ -707,7 +707,8 @@ public class StatementChecker extends BaseChecker
 	{
 		if( secondVisit )
 		{
-			Type result = node.jjtGetChild(0).getType();
+			Node result = node.jjtGetChild(0);
+			Type resultType = result.getType();
 						
 			for( int i = 1; i < node.jjtGetNumChildren(); i++ )
 			{
@@ -725,42 +726,49 @@ public class StatementChecker extends BaseChecker
 				Type current = currentNode.getType();
 				if( operation == '=' || operation == '!')
 				{	
-					if( result.hasInterface(Type.CAN_EQUAL) )
+					if( result.getModifiers().isNullable() )
+					{
+						addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to statement with nullable type");
+						resultType = Type.UNKNOWN;	
+						break;
+					}						
+					
+					if( resultType.hasInterface(Type.CAN_EQUAL) )
 					{
 						SequenceType argument = new SequenceType();
 						argument.add(currentNode);							
 						 
-						MethodSignature signature = setMethodType(node, result, "equal", argument );
+						MethodSignature signature = setMethodType(node, resultType, "equal", argument );
 						if( signature != null )
 						{
-							result = signature.getReturnTypes().getType(0);
+							resultType = signature.getReturnTypes().getType(0);
 							node.addOperation(signature);
 						}
 						else
 						{
-							addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
-							result = Type.UNKNOWN;	
+							addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current);
+							resultType = Type.UNKNOWN;	
 							break;
 						}				
 					}
 					else		
 					{
-						addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
-						result = Type.UNKNOWN;
+						addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current);
+						resultType = Type.UNKNOWN;
 						break;
 					}			
 				}
-				else if( !result.isSubtype(current) && !current.isSubtype(result) )
+				else if( !resultType.isSubtype(current) && !current.isSubtype(resultType) )
 				{
-					addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
-					result = Type.UNKNOWN;	
+					addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current);
+					resultType = Type.UNKNOWN;	
 					break;
 				}	
 				
-				result = Type.BOOLEAN;  //boolean after one comparison			
+				resultType = Type.BOOLEAN;  //boolean after one comparison			
 			}
 			
-			node.setType(result); //propagates type up if only one child
+			node.setType(resultType); //propagates type up if only one child
 			pushUpModifiers(node); //can overwrite ASSIGNABLE (if only one child)
 		}
 		

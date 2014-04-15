@@ -178,6 +178,76 @@ implements Number<BigInteger>
 		negative = value < 0L;		
 	}
 	
+	public create(String value)
+	{
+		this(value, 10u);	
+	}
+	
+	
+	public create(String value, uint base)
+	{
+		if( base < 2u or base > 36u )
+			throw IllegalArgumentException:create();
+			
+		ulong initial = 0uL;		
+		int i = 0;
+		if( value->size > 0 and value[i] == '-' )
+		{
+			negative = true;
+			i += 1;
+		}
+		
+		//try to fit into a single "digit"				
+		while( i < value->size and initial < BASE )
+		{
+			initial *= base;
+			initial += digitValue( value[i] );
+			i += 1;					
+		}
+		
+		uint[] values;
+	
+		if( initial < BASE )
+		{
+			values = uint:create[1];
+			values[0] = cast<uint>(initial);
+		}
+		else
+		{
+			//undo last operation
+			i -= 1;
+			initial -= digitValue( value[i] );
+			initial /= base;
+			values = uint:create[1];
+			values[0] = cast<uint>(initial);
+			uint[] baseRepresentation = uint:create[1];
+			baseRepresentation[0] = base;
+			uint[] digitRepresentation = uint:create[1];		
+			
+			while( i < value->size )
+			{
+				values = unsignedMultiply( values, baseRepresentation );
+				digitRepresentation[0] = digitValue( value[i] );
+				values = unsignedAdd( values, digitRepresentation );
+				i += 1;			
+			}
+		}
+		
+		data = values;	
+	}
+	
+	private digitValue(byte letter) => (uint)
+	{
+		if( letter >= '0' and letter <= '9' )
+			return cast<uint>(letter - '0');
+		else if( letter >= 'A' and letter <= 'Z' )
+			return cast<uint>(letter - 'A' + 10);
+		else if( letter >= 'a' and letter <= 'a' )
+			return cast<uint>(letter - 'A' + 10);
+		else
+			throw IllegalArgumentException:create();	
+	}
+	
 	private unsignedCompare(uint[] data, uint[] other) => (int)
 	{
 		if( data->size < other->size )
@@ -267,19 +337,19 @@ implements Number<BigInteger>
 	
 	public toString() => (String)
 	{
-		return toString(10);	
+		return toString(10u);	
 	}
 	
-	public toString(int base) => (String)
+	public toString(uint base) => (String)
 	{
-		if( base < 2 or base > 36 )
+		if( base < 2u or base > 36u )
 			throw IllegalArgumentException:create();
 		
 		if( isZero(data) )
 			return "0";
 			
 		MutableString buffer = MutableString:create();
-		BigInteger divisor = BigInteger:create(base);
+		BigInteger divisor = BigInteger:create(base.toInt());
 		
 		uint[] number = data;
 		uint[] quotient;

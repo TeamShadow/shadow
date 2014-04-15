@@ -1,5 +1,4 @@
 interface shadow.standard@CanIndex<K,V>
 {
-	readonly index(K key) => (nullable V value);
-	index(K key, V value) => ();
+	readonly index(K key) => (nullable V value);	
 }

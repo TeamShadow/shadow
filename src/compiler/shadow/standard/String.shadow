@@ -2,7 +2,8 @@ immutable class shadow.standard@
 	String
 implements
 	CanCompare<String>,
-	CanIterate<code>
+	CanIterate<code>,
+	CanIndex<int,byte>	
 {
 	byte[] data;
 	boolean ascii;
@@ -100,9 +101,9 @@ implements
 		this:ascii = ascii;
 	}
 
-	public getChar( int index ) => ( byte )
+	public index( int location ) => ( byte )
 	{		
-		return data[index];
+		return data[location];
 	}
 	public get chars() => ( byte[] )
 	{
@@ -130,9 +131,9 @@ implements
 	{
 		byte[] data = byte:create[this->size + other->size];
 		for ( int i = 0; i < this->size; i += 1 )
-			data[i] = getChar(i);
+			data[i] = index(i);
 		for ( int i = 0; i < other->size; i += 1 )
-			data[this->size + i] = other.getChar(i);
+			data[this->size + i] = other.index(i);
 		return String:create(data, this:ascii and other:ascii);
 	}
 
@@ -162,8 +163,8 @@ implements
 	public compare( String other ) => ( int )
 	{
 		for ( int i = 0; i < this->size and i < other->size; i += 1 )
-			if ( getChar(i) != other.getChar(i) )
-				return getChar(i) - other.getChar(i);
+			if ( index(i) != other.index(i) )
+				return index(i) - other.index(i);
 		return this->size - other->size;
 	}
 

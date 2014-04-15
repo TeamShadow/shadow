@@ -1,0 +1,17 @@
+import shadow.io@Console;
+
+class BigIntegerTest
+{
+	public main(String[] args) => ()
+	{
+		BigInteger a = BigInteger:create(1);
+		BigInteger b = BigInteger:create(2);
+		Console out = Console:instance;
+		
+		for( int i = 0; i < 100; i += 1 )
+		{
+			a = a.multiply(b);
+			out.printLine(i # ": " # a.toString() );		
+		}			
+	}
+}

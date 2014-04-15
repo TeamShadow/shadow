@@ -328,6 +328,7 @@ public class TypeCollector extends BaseChecker
 				case "CanNegate":		Type.CAN_NEGATE = (InterfaceType)type; break;
 				case "CanSubtract":		Type.CAN_SUBTRACT = (InterfaceType)type; break;
 				case "CanIndex":		Type.CAN_INDEX = (InterfaceType) type; break;
+				case "CanIndexStore":	Type.CAN_INDEX_STORE = (InterfaceType) type; break;
 				case "CanIterate":		Type.CAN_ITERATE = (InterfaceType) type; break;
 				case "Class":			Type.CLASS = (ClassType) type; break;
 				case "boolean":			Type.BOOLEAN = (ClassType)type; break;
