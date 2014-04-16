@@ -11,6 +11,8 @@ class BigIntegerTest
 		for( int i = 0; i < 100; i += 1 )
 		{
 			a = a.multiply(b);
+			out.printLine("Multiplication successful!");
+			
 			out.printLine(i # ": " # a.toString() );		
 		}			
 	}

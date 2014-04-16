@@ -1,3 +1,5 @@
+import shadow.io@Console;
+
 immutable class BigInteger
 implements Number<BigInteger>
 {
@@ -150,7 +152,7 @@ implements Number<BigInteger>
 			
 			quotient[i] = mid;	 
 		}
-		return quotient;
+		return removeZeroes(quotient);
 	}
 	
 	
@@ -340,6 +342,14 @@ implements Number<BigInteger>
 		return toString(10u);	
 	}
 	
+	private print(uint[] values, Console out) => ()
+	{
+		out.print(values->size # ": ["); 
+		for( int i = 0; i < values->size; i += 1 )
+			out.print(values[i] # " ");	
+		out.printLine("]");	
+	}
+	
 	public toString(uint base) => (String)
 	{
 		if( base < 2u or base > 36u )
@@ -358,12 +368,20 @@ implements Number<BigInteger>
 		
 		if( negative )
 			buffer.append("-");
+			
+		Console out = Console:instance;
 				
 		do
 		{
 			quotient = unsignedDivide( number, divisor:data );
-			product = unsignedMultiply( quotient, divisor:data ); 		
+			out.printLine( "Divide: " # quotient );			
+			
+			product = unsignedMultiply( quotient, divisor:data );
+			out.printLine( "Product: " # product );
+			 		
 			remainder = unsignedSubtract( number, product );
+			out.printLine( "Remainder: " # remainder );
+			
 			uint digit = remainder[0]; 
 			
 			if( digit >= 10 ) //A through Z
