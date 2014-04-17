@@ -3,6 +3,7 @@ immutable class shadow.standard@
 implements
 	Integer<uint>,
 	Integer<ulong>,
+	Integer<long>,
 	Number<float>,
 	Number<double>,
 	CanHash
@@ -115,6 +116,56 @@ implements
 	{
 		return cast<ulong>(this) == other;
 	}
+	
+	// implement Integer<long>
+	public bitOr(long other) => (long)
+	{
+		return cast<long>(this) | other;
+	}
+	public bitXor(long other) => (long)
+	{
+		return cast<long>(this) ^ other;
+	}
+	public bitAnd(long other) => (long)
+	{
+		return cast<long>(this) & other;
+	}
+	// implement CanAdd<long>
+	public add(long other) => (long)
+	{
+		return cast<long>(this) + other;
+	}
+	// implement CanSubtract<long>
+	public subtract(long other) => (long)
+	{
+		return cast<long>(this) - other;
+	}
+	// implement CanMultiply<long>
+	public multiply(long other) => (long)
+	{
+		return cast<long>(this) * other;
+	}
+	// implement CanDivide<long>
+	public divide(long other) => (long)
+	{
+		return cast<long>(this) / other;
+	}
+	// implement CanModulus<long>
+	public modulus(long other) => (long)
+	{
+		return cast<long>(this) % other;
+	}
+	// implement CanCompare<long>
+	public compare(long other) => (int)
+	{
+		return cast<long>(this).compare(other);
+	}
+	// implement CanEqual<long>
+	public equal(long other) => (boolean)
+	{
+		return cast<long>(this) == other;
+	}
+	
 
 	// implement CanAdd<float>
 	public add(float other) => (float)

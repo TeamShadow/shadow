@@ -798,6 +798,8 @@ public class TACBuilder implements ShadowParserVisitor
 	private TACOperand convertToString( TACOperand operand, Node node )
 	{
 		Type type = operand.getType();
+		if(type instanceof PropertyType )
+			type = ((PropertyType)type).getGetType().getType();
 		if( type.equals(Type.STRING ) )
 			return operand;
 		

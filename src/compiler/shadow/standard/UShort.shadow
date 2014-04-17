@@ -2,7 +2,9 @@ immutable class shadow.standard@
 	UShort
 implements
 	Integer<ushort>,
+	Integer<int>,
 	Integer<uint>,
+	Integer<long>,
 	Integer<ulong>,
 	Number<float>,
 	Number<double>,
@@ -118,6 +120,56 @@ implements
 	{
 		return cast<uint>(this) == other;
 	}
+	
+	// implement Integer<int>
+	public bitOr(int other) => (int)
+	{
+		return cast<int>(this) | other;
+	}
+	public bitXor(int other) => (int)
+	{
+		return cast<int>(this) ^ other;
+	}
+	public bitAnd(int other) => (int)
+	{
+		return cast<int>(this) & other;
+	}
+	// implement CanAdd<int>
+	public add(int other) => (int)
+	{
+		return cast<int>(this) + other;
+	}
+	// implement CanSubtract<int>
+	public subtract(int other) => (int)
+	{
+		return cast<int>(this) - other;
+	}
+	// implement CanMultiply<int>
+	public multiply(int other) => (int)
+	{
+		return cast<int>(this) * other;
+	}
+	// implement CanDivide<int>
+	public divide(int other) => (int)
+	{
+		return cast<int>(this) / other;
+	}
+	// implement CanModulus<int>
+	public modulus(int other) => (int)
+	{
+		return cast<int>(this) % other;
+	}
+	// implement CanCompare<int>
+	public compare(int other) => (int)
+	{
+		return cast<int>(this).compare(other);
+	}
+	// implement CanEqual<int>
+	public equal(int other) => (boolean)
+	{
+		return cast<int>(this) == other;
+	}
+	
 
 	// implement Integer<ulong>
 	public bitOr(ulong other) => (ulong)
@@ -167,6 +219,55 @@ implements
 	{
 		return cast<ulong>(this) == other;
 	}
+	// implement Integer<long>
+	public bitOr(long other) => (long)
+	{
+		return cast<long>(this) | other;
+	}
+	public bitXor(long other) => (long)
+	{
+		return cast<long>(this) ^ other;
+	}
+	public bitAnd(long other) => (long)
+	{
+		return cast<long>(this) & other;
+	}
+	// implement CanAdd<long>
+	public add(long other) => (long)
+	{
+		return cast<long>(this) + other;
+	}
+	// implement CanSubtract<long>
+	public subtract(long other) => (long)
+	{
+		return cast<long>(this) - other;
+	}
+	// implement CanMultiply<long>
+	public multiply(long other) => (long)
+	{
+		return cast<long>(this) * other;
+	}
+	// implement CanDivide<long>
+	public divide(long other) => (long)
+	{
+		return cast<long>(this) / other;
+	}
+	// implement CanModulus<long>
+	public modulus(long other) => (long)
+	{
+		return cast<long>(this) % other;
+	}
+	// implement CanCompare<long>
+	public compare(long other) => (int)
+	{
+		return cast<long>(this).compare(other);
+	}
+	// implement CanEqual<long>
+	public equal(long other) => (boolean)
+	{
+		return cast<long>(this) == other;
+	}
+	
 
 	// implement CanAdd<float>
 	public add(float other) => (float)

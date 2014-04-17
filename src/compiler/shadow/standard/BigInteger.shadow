@@ -123,7 +123,111 @@ implements Number<BigInteger>
 		return BigInteger:create( remainder, negative );
 	}
 	
+	private leadingZeroes(uint value) => (uint)
+	{
+		uint mask = (1u << 31);
+		uint zeroes = 0u;
+		while( (~mask & value) == value )
+		{
+			zeroes += 1u;
+			mask >>= 1;
+		}
+		return zeroes;
+	}
+	
+	private unsignedLeftShift(uint[] data, uint amount) => (uint[])
+	{	
+		int jump = cast<int>(amount/32u);
+		int shift = cast<int>(amount%32u);
+		uint[] result = uint:create[data->size + jump + 1];
+		for( int i = result->size - 1; i > jump; i -= 1 )
+			result[i] = (data[i - jump] << shift) | (data[i - jump - 1] >> (32 - shift));
+		result[jump] = data[0] << shift;			
+		for( int i = 0; i < jump; i += 1 )
+			result[i] = 0u;
+			
+		return removeZeroes( result );
+	}
+	
 	//unsignedDivide assumes that first is no smaller than second
+	private unsignedDivide(uint[] first, uint[] second) => (uint[] quotient)
+	{
+		uint[] quotient = uint:create[first->size - second->size + 1];
+		int comparison;
+		ulong value;
+		
+		if( isZero( second ) )
+			throw IllegalArgumentException:create("Division by zero!");
+			
+		if( second->size == 1 ) //single digit divisor is handled specially
+		{
+			value = 0uL;
+			ulong divisor = second[0];
+			for( int i = first->size - 1; i >= 0; i -= 1 )
+			{
+				quotient[i] = cast<uint>((value*BASE + first[i])/divisor);
+				value = (value*BASE	 + first[i]) - quotient[i]*divisor;			
+			}
+			
+			return removeZeroes(quotient);		
+		}
+		
+		uint zeroes = leadingZeroes(second[second->size - 1]);
+		uint[] normalizedDivisor = 	unsignedLeftShift( second, zeroes );
+		uint[] normalizedData = 	unsignedLeftShift( first, zeroes );
+		ulong quotientEstimate; 
+		ulong remainderEstimate;
+		uint[] product;
+		long test;
+		long carry;
+		
+		for( int i = quotient->size - 1; i >= 0; i -= 1 )
+		{
+			value = normalizedData[i + second->size]*BASE + normalizedData[i + second->size - 1];
+			quotientEstimate = value/normalizedDivisor[second->size - 1]; 			
+			remainderEstimate = value - quotientEstimate*normalizedDivisor[second->size - 1];
+			
+			while( quotientEstimate >= BASE or
+				   quotientEstimate*normalizedDivisor[second->size - 2] > BASE*remainderEstimate + normalizedDivisor[second->size - 2] )
+			{
+				quotientEstimate  -= 1uL;
+				remainderEstimate += normalizedDivisor[second->size - 1];
+				
+				if( remainderEstimate >= BASE )
+					break;			
+			}
+			
+			carry = 0L;
+			for( int j = 0; j < second->size; j += 1 )
+			{
+				value = quotientEstimate * normalizedDivisor[i];
+				test = cast<long>(normalizedData[i + j]) - carry - cast<long>(value % BASE);  
+				normalizedData[i + j] = cast<uint>(test);
+				carry = cast<long>(value / BASE) - (test / cast<long>(BASE));
+			}
+			test = cast<long>(normalizedData[i + second->size]) - carry;  
+			normalizedData[i + second->size] = cast<uint>(test);
+
+			quotient[i] = cast<uint>(quotientEstimate);
+			
+			if( test < 0L )
+			{
+				quotient[i] -= 1u;
+				carry = 0L;
+				for( int j = 0; j < second->size; j += 1 )
+				{
+					test = normalizedData[i + j] + normalizedDivisor[j] + carry;
+					normalizedData[i + j] = cast<uint>(test);
+					carry = test / cast<long>(BASE);				
+				}
+				
+				normalizedData[i + second->size] += cast<uint>(carry);
+			}
+		}
+		return removeZeroes(quotient);
+	}
+	
+	/*
 	private unsignedDivide(uint[] first, uint[] second) => (uint[] quotient)
 	{
 		uint[] quotient = uint:create[first->size - second->size + 1];
@@ -139,6 +243,7 @@ implements Number<BigInteger>
 			{
 				quotient[i] = mid;	
 				product = unsignedMultiply( quotient, second );
+				print( product, Console:instance );
 				comparison = unsignedCompare( product, first );
 				if( comparison == 0 )			
 					return quotient;
@@ -148,12 +253,19 @@ implements Number<BigInteger>
 					min = mid + 1u;
 					
 				mid = (max + min)/2u;
+				Console:instance.printLine("Mid: " # mid );				
 			}
 			
 			quotient[i] = mid;	 
+			product = unsignedMultiply( quotient, second );
+			if( unsignedCompare( product, first ) > 0 )
+				quotient[i] = mid - 1u;
+				
+			Console:instance.printLine("Final mid: " # quotient[i] );	 
 		}
 		return removeZeroes(quotient);
 	}
+	*/
 	
 	
 	public create(int value)
@@ -325,7 +437,7 @@ implements Number<BigInteger>
 	private removeZeroes( uint[] values ) => ( uint[] )
 	{
 		int zeroes = 0;
-		while( values[values->size - zeroes - 1] != 0 )
+		while( values[values->size - zeroes - 1] == 0 )
 			zeroes += 1;
 			
 		if( zeroes == values->size )
@@ -359,6 +471,13 @@ implements Number<BigInteger>
 			return "0";
 			
 		MutableString buffer = MutableString:create();
+				
+		if( negative )
+			buffer.append("-");			
+			
+		if( data->size == 1 )
+			return buffer.append( data[0].toString(base) ).toString();
+			
 		BigInteger divisor = BigInteger:create(base.toInt());
 		
 		uint[] number = data;
@@ -366,33 +485,36 @@ implements Number<BigInteger>
 		uint[] product;
 		uint[] remainder;
 		
-		if( negative )
-			buffer.append("-");
 			
 		Console out = Console:instance;
 				
 		do
 		{
+			out.printLine( "Number: " );
+			print( number, out );
+		
 			quotient = unsignedDivide( number, divisor:data );
-			out.printLine( "Divide: " # quotient );			
+			//out.printLine( "Divide: " );
+			//print( quotient, out );			
 			
 			product = unsignedMultiply( quotient, divisor:data );
-			out.printLine( "Product: " # product );
+			//out.printLine( "Product: " );
+			//print( product, out );
 			 		
 			remainder = unsignedSubtract( number, product );
-			out.printLine( "Remainder: " # remainder );
+			out.printLine( "Remainder: " );
+			print( remainder, out );
 			
 			uint digit = remainder[0]; 
 			
-			if( digit >= 10 ) //A through Z
-				buffer.append(cast<byte>(digit - 10 + 'A'));
+			if( digit >= 10u ) //A through Z
+				buffer.append(cast<byte>(digit + 'A') - 10y);
 			else
 				buffer.append(cast<byte>(digit + '0'));
 				
 			number = quotient;				
 		} while( !isZero( number ) );
-		
-		
+				
 		return buffer.reverse().toString();
 	}
 	
