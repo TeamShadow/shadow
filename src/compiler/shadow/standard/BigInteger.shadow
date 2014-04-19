@@ -124,14 +124,13 @@ implements Number<BigInteger>
 	}
 	
 	private leadingZeroes(uint value) => (uint)
-	{
-		uint mask = (1u << 31);
+	{		
 		uint zeroes = 0u;
-		while( (~mask & value) == value )
-		{
-			zeroes += 1u;
-			mask >>= 1;
-		}
+		if (value <= 0x0000FFFF) {zeroes += 16u; value = value <<16;}
+		if (value <= 0x00FFFFFF) {zeroes += 8u; value = value << 8;}
+		if (value <= 0x0FFFFFFF) {zeroes += 4u; value = value << 4;}
+		if (value <= 0x3FFFFFFF) {zeroes += 2u; value = value << 2;}
+		if (value <= 0x7FFFFFFF) {zeroes += 1u;}	   
 		return zeroes;
 	}
 	
@@ -145,6 +144,21 @@ implements Number<BigInteger>
 		result[jump] = data[0] << shift;			
 		for( int i = 0; i < jump; i += 1 )
 			result[i] = 0u;
+			
+		return removeZeroes( result );
+	}
+	
+	private unsignedRightShift(uint[] data, uint amount) => (uint[])
+	{	
+		int jump = cast<int>(amount/32u);
+		int shift = cast<int>(amount%32u);
+		uint[] result = uint:create[(data->size - jump).max(1)];
+		for( int i = 0; i < result->size - 1; i += 1 )
+			result[i] = (data[i + jump] >> shift) | (data[i + jump + 1] << (32 - shift));
+		if( data->size > jump )
+			result[result->size - 1] = data[data->size - 1] >> shift;
+		else
+			result[result->size - 1] = 0u;
 			
 		return removeZeroes( result );
 	}
@@ -181,14 +195,14 @@ implements Number<BigInteger>
 		long test;
 		long carry;
 		
-		for( int i = quotient->size - 1; i >= 0; i -= 1 )
+		for( int i = first->size - second->size; i >= 0; i -= 1 )
 		{
 			value = normalizedData[i + second->size]*BASE + normalizedData[i + second->size - 1];
 			quotientEstimate = value/normalizedDivisor[second->size - 1]; 			
 			remainderEstimate = value - quotientEstimate*normalizedDivisor[second->size - 1];
 			
 			while( quotientEstimate >= BASE or
-				   quotientEstimate*normalizedDivisor[second->size - 2] > BASE*remainderEstimate + normalizedDivisor[second->size - 2] )
+				   quotientEstimate*normalizedDivisor[second->size - 2] > BASE*remainderEstimate + normalizedData[i + second->size - 2] )
 			{
 				quotientEstimate  -= 1uL;
 				remainderEstimate += normalizedDivisor[second->size - 1];
@@ -200,10 +214,10 @@ implements Number<BigInteger>
 			carry = 0L;
 			for( int j = 0; j < second->size; j += 1 )
 			{
-				value = quotientEstimate * normalizedDivisor[i];
-				test = cast<long>(normalizedData[i + j]) - carry - cast<long>(value % BASE);  
+				value = quotientEstimate * normalizedDivisor[j];
+				test = cast<long>(normalizedData[i + j]) - carry - cast<long>(value & 0xFFFFFFFFuL);  
 				normalizedData[i + j] = cast<uint>(test);
-				carry = cast<long>(value / BASE) - (test / cast<long>(BASE));
+				carry = cast<long>(value >> 32) - (test >> 32);
 			}
 			test = cast<long>(normalizedData[i + second->size]) - carry;  
 			normalizedData[i + second->size] = cast<uint>(test);
@@ -211,12 +225,12 @@ implements Number<BigInteger>
 			quotient[i] = cast<uint>(quotientEstimate);
 			
 			if( test < 0L )
-			{
+			{						
 				quotient[i] -= 1u;
 				carry = 0L;
 				for( int j = 0; j < second->size; j += 1 )
 				{
-					test = normalizedData[i + j] + normalizedDivisor[j] + carry;
+					test = carry + normalizedData[i + j] + normalizedDivisor[j];
 					normalizedData[i + j] = cast<uint>(test);
 					carry = test / cast<long>(BASE);				
 				}
@@ -226,47 +240,6 @@ implements Number<BigInteger>
 		}
 		return removeZeroes(quotient);
 	}
-	
-	/*
-	private unsignedDivide(uint[] first, uint[] second) => (uint[] quotient)
-	{
-		uint[] quotient = uint:create[first->size - second->size + 1];
-		uint[] product;
-		int comparison;
-		for( int i = quotient->size - 1; i >= 0; i -= 1 )
-		{
-			uint max = cast<uint>(BASE - 1uL);
-			uint min = 0u;
-			uint mid = (max + min)/2u;
-			
-			while( min < max )
-			{
-				quotient[i] = mid;	
-				product = unsignedMultiply( quotient, second );
-				print( product, Console:instance );
-				comparison = unsignedCompare( product, first );
-				if( comparison == 0 )			
-					return quotient;
-				else if( comparison > 0 )
-					max = mid - 1u;
-				else
-					min = mid + 1u;
-					
-				mid = (max + min)/2u;
-				Console:instance.printLine("Mid: " # mid );				
-			}
-			
-			quotient[i] = mid;	 
-			product = unsignedMultiply( quotient, second );
-			if( unsignedCompare( product, first ) > 0 )
-				quotient[i] = mid - 1u;
-				
-			Console:instance.printLine("Final mid: " # quotient[i] );	 
-		}
-		return removeZeroes(quotient);
-	}
-	*/
-	
 	
 	public create(int value)
 	{
@@ -299,10 +272,10 @@ implements Number<BigInteger>
 	
 	
 	public create(String value, uint base)
-	{
+	{	
 		if( base < 2u or base > 36u )
-			throw IllegalArgumentException:create();
-			
+			throw IllegalArgumentException:create("Invalid base: " # base);
+	
 		ulong initial = 0uL;		
 		int i = 0;
 		if( value->size > 0 and value[i] == '-' )
@@ -315,7 +288,7 @@ implements Number<BigInteger>
 		while( i < value->size and initial < BASE )
 		{
 			initial *= base;
-			initial += digitValue( value[i] );
+			initial += digitValue( value[i], base );
 			i += 1;					
 		}
 		
@@ -330,7 +303,7 @@ implements Number<BigInteger>
 		{
 			//undo last operation
 			i -= 1;
-			initial -= digitValue( value[i] );
+			initial -= digitValue( value[i], base );
 			initial /= base;
 			values = uint:create[1];
 			values[0] = cast<uint>(initial);
@@ -341,7 +314,7 @@ implements Number<BigInteger>
 			while( i < value->size )
 			{
 				values = unsignedMultiply( values, baseRepresentation );
-				digitRepresentation[0] = digitValue( value[i] );
+				digitRepresentation[0] = digitValue( value[i], base );				
 				values = unsignedAdd( values, digitRepresentation );
 				i += 1;			
 			}
@@ -350,16 +323,23 @@ implements Number<BigInteger>
 		data = values;	
 	}
 	
-	private digitValue(byte letter) => (uint)
+	private digitValue(byte letter, uint base) => (uint)
 	{
+		uint value = 0u;
+	
 		if( letter >= '0' and letter <= '9' )
-			return cast<uint>(letter - '0');
+			value = cast<uint>(letter - '0');
 		else if( letter >= 'A' and letter <= 'Z' )
-			return cast<uint>(letter - 'A' + 10);
-		else if( letter >= 'a' and letter <= 'a' )
-			return cast<uint>(letter - 'A' + 10);
+			value = cast<uint>(letter - 'A' + 10);
+		else if( letter >= 'a' and letter <= 'z' )
+			value = cast<uint>(letter - 'a' + 10);
 		else
-			throw IllegalArgumentException:create();	
+			throw IllegalArgumentException:create("Invalid digit: " # letter);
+			
+		if( value >= base )
+			throw IllegalArgumentException:create("Invalid digit: " # letter);
+			
+		return value;
 	}
 	
 	private unsignedCompare(uint[] data, uint[] other) => (int)
@@ -465,7 +445,7 @@ implements Number<BigInteger>
 	public toString(uint base) => (String)
 	{
 		if( base < 2u or base > 36u )
-			throw IllegalArgumentException:create();
+			throw IllegalArgumentException:create("Invalid base: " # base);
 		
 		if( isZero(data) )
 			return "0";
@@ -483,28 +463,16 @@ implements Number<BigInteger>
 		uint[] number = data;
 		uint[] quotient;
 		uint[] product;
-		uint[] remainder;
-		
+		uint[] remainder;		
 			
 		Console out = Console:instance;
 				
 		do
 		{
-			out.printLine( "Number: " );
-			print( number, out );
-		
-			quotient = unsignedDivide( number, divisor:data );
-			//out.printLine( "Divide: " );
-			//print( quotient, out );			
-			
+			quotient = unsignedDivide( number, divisor:data );			
 			product = unsignedMultiply( quotient, divisor:data );
-			//out.printLine( "Product: " );
-			//print( product, out );
-			 		
 			remainder = unsignedSubtract( number, product );
-			out.printLine( "Remainder: " );
-			print( remainder, out );
-			
+		
 			uint digit = remainder[0]; 
 			
 			if( digit >= 10u ) //A through Z
@@ -522,7 +490,6 @@ implements Number<BigInteger>
 	{
 		return data->size == 1 and data[0] == 0u;
 	}
-	
 	
 	immutable public toByte() => (byte)
 	{
@@ -589,4 +556,116 @@ implements Number<BigInteger>
 		
 		return negative ? -total , total; 
 	}
+	
+	public abs() => (BigInteger)
+	{
+		if( negative )
+			return BigInteger:create(data, false);
+			
+		return this;
+	}
+	
+	public negate() => (BigInteger)
+	{
+		return BigInteger:create(data, !negative);	
+	}
+	
+	public min(BigInteger other) => (BigInteger)
+	{
+		if( compare(other) < 0 )
+			return this;
+		else
+			return other;	
+	}
+	
+	public max(BigInteger other) => (BigInteger)
+	{
+		if( compare(other) > 0 )
+			return this;
+		else
+			return other;	
+	}
+	
+	public bitShiftLeft(int amount) => (BigInteger)
+	{
+		uint abs = amount.abs();
+		if( amount > 0 )
+			return BigInteger:create( unsignedLeftShift(data, abs), negative );
+		else if( amount < 0 )
+			return BigInteger:create( unsignedRightShift(data, abs), negative );
+		else
+			return this;			
+	}
+	
+	public bitShiftRight(int amount) => (BigInteger)
+	{
+		uint abs = amount.abs();
+		if( amount > 0 )
+			return BigInteger:create( unsignedRightShift(data, abs), negative );
+		else if( amount < 0 )
+			return BigInteger:create( unsignedLeftShift(data, abs), negative );
+		else
+			return this;			
+	}
+	
+	public hash() => (int)
+	{
+		int value = 0;
+		
+		for( int i = 0; i < data->size; i += 1 )
+			value = 31*value + cast<int>(data[i]);
+			
+		return negative ? -value, value;	
+	}
+	
+	public power(BigInteger exponent) => (BigInteger)
+	{
+		if( exponent:negative )
+			throw IllegalArgumentException:create("Negative exponent: " # exponent);
+		
+		if( isZero( exponent:data ) )
+			return BigInteger:create(1);
+			
+		if( exponent:data->size == 1 and exponent:data[0] == 1u )
+			return this;
+		
+		BigInteger halfExponent = exponent.bitShiftRight(1);	
+		BigInteger halfPower = power( halfExponent );
+		BigInteger fullPower = halfPower.multiply(halfPower);
+		
+		if( exponent:data[0] % 2u == 1u )
+		  	fullPower = fullPower.multiply( this );
+		  	
+		return fullPower; 
+	}
+	
+	public modulusPower(BigInteger exponent, BigInteger m) => (BigInteger)
+	{
+		if( m:negative or isZero(m:data) )
+			throw IllegalArgumentException:create("Negative modulus: " # m);
+			
+		if( exponent:negative )		
+			exponent = m.subtract( exponent );
+			
+		if( exponent.compare( m ) >= 0 )
+			exponent = exponent.modulus(m);
+		
+		if( isZero( exponent:data ) )
+			return BigInteger:create(1);
+			
+		if( exponent:data->size == 1 and exponent:data[0] == 1u )
+			return this.modulus(m);
+		
+		BigInteger halfExponent = exponent.bitShiftRight(1);	
+		BigInteger halfPower = modulusPower( halfExponent, m );
+		BigInteger fullPower = halfPower.multiply(halfPower);
+		
+		if( exponent:data[0] % 2u == 1u )
+		  	fullPower = fullPower.multiply( this );
+		  	
+		return fullPower.modulus(m); 
+	}
+	
+	
+	
 }

@@ -11,9 +11,100 @@ class BigIntegerTest
 		for( int i = 0; i < 100; i += 1 )
 		{
 			a = a.multiply(b);
-			out.printLine("Multiplication successful!");
-			
 			out.printLine(i # ": " # a.toString() );		
-		}			
+		}
+		
+		a = BigInteger:create("458248854125127692644763689697630452603077525667039488167595");
+		out.printLine("a: " # a.toString() );		
+		b = BigInteger:create("424527578038877065750254364514248265552431685221767");
+		out.printLine("b: " # b.toString() );
+		
+		BigInteger c = a.add(b);
+		
+		out.printLine("a + b: " # c.toString() );
+		
+		c = a.subtract(b);
+		
+		out.printLine("a - b: " # c.toString() );
+		
+		c = a.multiply(b);
+		
+		out.printLine("a * b: " # c.toString() );
+		
+		c = a.divide(b);
+		
+		out.printLine("a / b: " # c.toString() );
+		
+		c = a.modulus(b);
+		
+		out.printLine("a % b: " # c.toString() );
+		
+		a = BigInteger:create("39614081257132168796771975171");				
+		b = BigInteger:create("9903520314283042199192993793");
+		
+		c = a.divide(b);		
+		out.printLine("a / b: " # c.toString() );
+		
+		a = BigInteger:create("604462909807314587353091");				
+		b = BigInteger:create("151115727451828646838273");
+		
+		c = a.divide(b);		
+		out.printLine("a / b: " # c.toString() );
+		
+		
+		a = BigInteger:create("604462910088780974129152");
+		b = BigInteger:create("140737488420863");
+		
+		c = a.divide(b);		
+		out.printLine("a / b: " # c.toString() );
+		
+		
+		a = BigInteger:create("1088106248679888654515960060368369658209432154206098279861140");				
+		b = BigInteger:create("194325039044807020348815014929665056260373966650791");
+		
+		c = a.divide(b);		
+		out.printLine("a / b: " # c.toString() );
+		
+		a = BigInteger:create("558318991206915904337240806788084186254930834418610190327197");				
+		b = BigInteger:create("912863885955816268258473602355145877030139075961248");
+		
+		c = a.divide(b);		
+		out.printLine("a / b: " # c.toString() );
+		
+		a = BigInteger:create("1447625921914355538132061446114584151810433912450095873506167");				
+		b = BigInteger:create("348001081784609701659049880373417782733826929500644");
+		
+		c = a.divide(b);		
+		out.printLine("a / b: " # c.toString() );
+		
+		a = BigInteger:create("1089253881189519113944356420917073585142133802703917583762458");				
+		b = BigInteger:create("1246674720020253955178609074617907710695049808017262");
+		
+		c = a.divide(b);		
+		out.printLine("a / b: " # c.toString() );
+		
+		//RSA
+		
+		BigInteger p = BigInteger:create("38137146478983831408009709021021835083729831626448083574539607211461682538291307715165710188928954339252408328141359115691621711928579423628854790675575858625206021198675433930386542227381585998395089");
+		BigInteger q = BigInteger:create("57569106685791217718416021239630277356222269411117264452034206971794864652494396807762375979641305525395995660910826832804063207482093385868413233666281989225690768342594712899820232794040332350867801");
+		BigInteger n = p.multiply(q);
+		BigInteger e = BigInteger:create("17");
+		BigInteger d = BigInteger:create("904038245904815859246608659413348467636586304713660985574717774186927757689667723863591894663290653792437712460247806059690060805405495045727426700849017956013931381059299794611361022562816463431692050953448480718971404285821367230139691426170988123605445162519959266635660433072351585787379059069248182733126005834745142115060035338763615738038039359677119415564163446149575718091757482254611856753");
+		BigInteger M = BigInteger:create("123456789101112131415161718");
+		
+		out.printLine("n: " # n);
+		
+		BigInteger C = M.modulusPower(e, n);
+		
+		out.printLine("C: " # C);
+		
+		BigInteger newM = C.modulusPower(d, n);
+		
+		out.printLine("Decrypted M: " # newM);	
+		
+		
+		
+		
+		
 	}
 }

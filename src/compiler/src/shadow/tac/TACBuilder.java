@@ -2217,7 +2217,7 @@ public class TACBuilder implements ShadowParserVisitor
 				{
 					TACVariableRef var = new TACVariableRef(tree,
 							method.addTempLocal(new SimpleModifiedType(Type.INT)));
-					new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, current, signature), current, new TACLiteral(tree, "0")));		
+					new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, current, signature), current, next));		
 					current = new TACLoad(tree, var);					
 					current = new TACBinary(tree, current, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), op, new TACLiteral(tree, "0"), true );
 				}
