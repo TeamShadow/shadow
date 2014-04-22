@@ -19,23 +19,23 @@ class BigIntegerTest
 		b = BigInteger:create("424527578038877065750254364514248265552431685221767");
 		out.printLine("b: " # b.toString() );
 		
-		BigInteger c = a.add(b);
+		BigInteger c = a + b;
 		
 		out.printLine("a + b: " # c.toString() );
 		
-		c = a.subtract(b);
+		c = a - b;
 		
 		out.printLine("a - b: " # c.toString() );
 		
-		c = a.multiply(b);
+		c = a * b;
 		
 		out.printLine("a * b: " # c.toString() );
 		
-		c = a.divide(b);
+		c = a / b;
 		
 		out.printLine("a / b: " # c.toString() );
 		
-		c = a.modulus(b);
+		c = a % b;
 		
 		out.printLine("a % b: " # c.toString() );
 		
@@ -48,7 +48,7 @@ class BigIntegerTest
 		a = BigInteger:create("604462909807314587353091");				
 		b = BigInteger:create("151115727451828646838273");
 		
-		c = a.divide(b);		
+		c = a / b;		
 		out.printLine("a / b: " # c.toString() );
 		
 		

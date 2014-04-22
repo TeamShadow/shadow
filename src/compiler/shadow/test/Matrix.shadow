@@ -1,3 +1,5 @@
+import shadow.io@Console;
+
 class Matrix implements
 CanAdd<Matrix>,
 CanSubtract<Matrix>,
@@ -16,34 +18,33 @@ CanIndex<int, double[]>
 		this:columns = columns;
 		values = double:create[rows][columns];
 	}
-
+	
 	public index(int row) => (double[])
 	{
-		try
-		{
-			return check(values[row]);
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();		
-		}
-	}	
-	
-	public index(int row, double[] replacementRow) => ()
-	{
-		throw UnsupportedOperationException:create();
+		return values[row];	
 	}
 	
 	public immutable add(Matrix other) => (Matrix)
 	{
+		Console:instance.printLine("Rows: " # rows);
+		Console:instance.printLine("Columns: " # columns);
+	
 		if( other:rows != rows or other:columns != columns )
 			throw IllegalArgumentException:create();
 			
 		Matrix result = Matrix:create(rows, columns);
+		Console:instance.printLine("Created!");
+		
 		
 		for( int i = 0; i < rows; i += 1 )
+		{
+			Console:instance.printLine("Row: " # i);
 			for( int j = 0; j < columns; j += 1 )
+			{
+				Console:instance.printLine("Column: " # j);
 				result[i][j] = this[i][j] + other[i][j];
+			}
+		}
 				
 		return result;
 	}
@@ -101,4 +102,13 @@ CanIndex<int, double[]>
 					
 		return true;
 	}
+	
+	/*
+	public toString() => (String)
+	{
+		var output = MutableString:create();
+	
+	}
+	*/
+	
 }

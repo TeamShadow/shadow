@@ -1,19 +1,34 @@
+import shadow.io@Console;
+
 class MatrixTest
 {
-	public main() => ()
-	{
+	public main(String[] args) => ()
+	{	
+		Console out = Console:instance;
+	
 		Matrix a = Matrix:create(3,3);
 		Matrix b = Matrix:create(3,3);
 		
 		(a[0][0], a[1][1], a[2][2]) = (1, 1, 1);
 		a[1][2] = 4;
+		
+		out.printLine("a: " # a);
 				
 		(b[0][0], b[1][1], b[2][2]) = (1, 1, 1);
 		b[2][0] = 3;
+		
+		out.printLine("b: " # b);
 		
 		
 		Matrix c = a + b;
 		Matrix d = a - b;
 		Matrix e = a * b;
+		
+		out.printLine("c: " # c);
+		out.printLine("d: " # d);
+		out.printLine("e: " # e);
+		
+		
+		
 	}
 }

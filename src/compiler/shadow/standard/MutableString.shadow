@@ -43,6 +43,49 @@ class shadow.standard@MutableString implements CanIndex<int, byte>
 		data[index] = value;
 	}
 	
+	public insert( byte value, int index ) => (MutableString)
+	{
+		ensureCapacity( size + 1 );
+		for( int i = size; i >= index + 1; i -= 1 )
+			data[i] = data[i - 1];		
+		data[index] = value;
+		size += 1;
+		return this;			
+	}
+	
+	public insert( nullable Object value, int index ) => (MutableString)
+	{
+		String string = #value;
+		ensureCapacity( size + string->size );
+		for( int i = size + string->size - 1; i >= index + string->size; i -= 1 )
+			data[i] = data[i - string->size];
+		for( int i = 0; i < string->size; i += 1 )
+			data[i + index] = string.index(i);
+		size += string->size;
+		return this;			
+	}
+	
+	public delete(int index) => (MutableString)
+	{
+		return delete(index, index + 1);
+	}
+	
+	public delete(int start, int end) => (MutableString)
+	{
+		if ( start < 0 or start >= size )
+			throw IllegalArgumentException:create("Invalid start index");
+			
+		if( end <= start or end > size )
+			throw IllegalArgumentException:create("Invalid end index");
+			
+		for( int i = start; i < size - (end - start); i += 1 )
+			data[i] = data[i + (end - start)];
+		
+		size -= end - start;
+		
+		return this;
+	}
+	
 	public append( byte value ) => ( MutableString )
 	{		
 		ensureCapacity( size + 1 );		
@@ -50,10 +93,27 @@ class shadow.standard@MutableString implements CanIndex<int, byte>
 		size += 1;
 		return this;
 	}
+	
+	public prepend( byte value ) => ( MutableString )
+	{		
+		return insert( value, 0 );
+	}
+	
+	public prepend( nullable Object value ) => ( MutableString )
+	{
+		String string = #value;
+		ensureCapacity( size + string->size );
+		for ( int i = 0; i < size; i += 1 )		
+			data[i + string->size] = data[i];
+		for( int i = 0; i < string->size; i += 1 )
+			data[i] = string.index(i);
+		size += string->size;
+		return this;
+	}
 
 	public append( nullable Object value ) => ( MutableString )
 	{
-		String string = # value;
+		String string = #value;
 		ensureCapacity( size + string->size );
 		for ( int i = 0; i < string->size; i += 1, size += 1 )
 			data[size] = string.index(i);
@@ -65,6 +125,17 @@ class shadow.standard@MutableString implements CanIndex<int, byte>
 				left += 1, right -= 1 )
 			( data[left], data[right] ) = ( data[right], data[left] );
 		return this;
+	}
+	
+	public immutable substring(int start, int end) => (String)
+	{
+		if ( start < 0 or start >= size )
+			throw IllegalArgumentException:create("Invalid start index");
+			
+		if( end <= start or end > size )
+			throw IllegalArgumentException:create("Invalid end index");
+	
+		return String:create(cast<byte[]>(cast<Object>(data.subarray(start, end))));	
 	}
 
 	public immutable toString() => ( String )

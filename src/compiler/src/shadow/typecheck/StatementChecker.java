@@ -2257,7 +2257,7 @@ public class StatementChecker extends BaseChecker
 					}
 				}
 				
-			    //only goes one level deep because of nullability
+			    //only goes one level deep
 				int dimension = node.getArrayDimensions().get(0);				
 				if( dimension == arrayType.getDimensions() )
 				{
@@ -2278,7 +2278,10 @@ public class StatementChecker extends BaseChecker
 					
 					//primitive arrays are initialized to default values
 					//non-primitive array elements could be null
-					if( !arrayType.getBaseType().isPrimitive() )
+					//however, arrays of arrays are not-null
+					//instead, they will be filled with default values, including a length of zero
+					//thus, we don't need to check nullability, but we do need a range check
+					if( !arrayType.getBaseType().isPrimitive() && !(arrayType.getBaseType() instanceof ArrayType)  )
 						node.addModifier(Modifiers.NULLABLE);						
 				}				
 				else

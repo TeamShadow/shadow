@@ -1224,9 +1224,23 @@ public class LLVMOutput extends AbstractOutput
 	public void visit(TACNewArray node) throws ShadowException
 	{
 		Type type = node.getType(), baseType = node.getType().getBaseType();
+		
+		String allocationClass;
+		
+		//typeText(type, symbol(node));				
+		if( baseType instanceof ArrayType )
+		{			
+			allocationClass = typeText(Type.CLASS, classOf(Type.OBJECT)); 
+			//can probably simplify this to be the same thing either way with manipulation of baseType
+		}
+		else
+		{			
+			allocationClass  = typeSymbol(node.getBaseClass());
+		}
+		
 		writer.write(nextTemp() + " = call noalias " + type(Type.OBJECT) +
 				" @" + raw(Type.CLASS, "_Mallocate_Pshadow_Pstandard_Cint") +
-				'(' + typeSymbol(node.getBaseClass()) + ", " +
+			 	'(' + allocationClass + ", " +
 				typeSymbol(node.getTotalSize()) + ')');
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
 				temp(1) + " to " + type(baseType) + '*');
@@ -1236,6 +1250,21 @@ public class LLVMOutput extends AbstractOutput
 			writer.write(nextTemp(node) + " = insertvalue " + type(type) +
 					' ' + temp(1) + ", " + typeSymbol(node.getDimension(i)) +
 					", 1, " + i);
+		
+		/*	//old	
+		writer.write(nextTemp() + " = call noalias " + type(Type.OBJECT) +
+				" @" + raw(Type.CLASS, "_Mallocate_Pshadow_Pstandard_Cint") +
+			 	'(' + typeSymbol(node.getBaseClass()) + ", " +
+				typeSymbol(node.getTotalSize()) + ')');
+		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
+				temp(1) + " to " + type(baseType) + '*');
+		writer.write(nextTemp() + " = insertvalue " + type(node.getType()) +
+				" undef, " + type(baseType) + "* " + temp(1) + ", 0");
+		for (int i = 0; i < node.getDimensions(); i++)
+			writer.write(nextTemp(node) + " = insertvalue " + type(type) +
+					' ' + temp(1) + ", " + typeSymbol(node.getDimension(i)) +
+					", 1, " + i);
+		*/
 	}
 
 	@Override

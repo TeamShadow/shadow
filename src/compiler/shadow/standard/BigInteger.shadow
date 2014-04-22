@@ -100,8 +100,10 @@ implements Number<BigInteger>
 		
 		if( comparison == 0 )
 			return BigInteger:create( (negative xor other:negative ? -1 , 1) );
+			
+		(uint[] quotient, ) = unsignedDivide( data, other:data );
 					
-		return BigInteger:create( unsignedDivide( data, other:data ), negative xor other:negative );
+		return BigInteger:create( quotient, negative xor other:negative );
 	}
 	
 	public modulus(BigInteger other) => (BigInteger)
@@ -113,10 +115,8 @@ implements Number<BigInteger>
 		if( comparison == 0 )
 			return BigInteger:create( 0 );
 			
-		uint[] quotient = unsignedDivide( data, other:data );
-		uint[] product = unsignedMultiply( quotient, other:data ); 		
-		uint[] remainder = unsignedSubtract( data, product );
-		 
+		(, uint[] remainder) = unsignedDivide( data, other:data );
+		
 		if( remainder->size == 1 and remainder[0] == 0u )
 			return BigInteger:create( 0 );
 		
@@ -139,9 +139,11 @@ implements Number<BigInteger>
 		int jump = cast<int>(amount/32u);
 		int shift = cast<int>(amount%32u);
 		uint[] result = uint:create[data->size + jump + 1];
-		for( int i = result->size - 1; i > jump; i -= 1 )
+
+		result[result->size - 1] = data[result->size - 1 - jump - 1] >> (32 - shift);
+		for( int i = jump + 1; i < result->size - 1; i += 1 )
 			result[i] = (data[i - jump] << shift) | (data[i - jump - 1] >> (32 - shift));
-		result[jump] = data[0] << shift;			
+		result[jump] = data[0] << shift;
 		for( int i = 0; i < jump; i += 1 )
 			result[i] = 0u;
 			
@@ -164,14 +166,14 @@ implements Number<BigInteger>
 	}
 	
 	//unsignedDivide assumes that first is no smaller than second
-	private unsignedDivide(uint[] first, uint[] second) => (uint[] quotient)
+	private unsignedDivide(uint[] first, uint[] second) => (uint[] quotient, uint[] remainder)
 	{
 		uint[] quotient = uint:create[first->size - second->size + 1];
 		int comparison;
 		ulong value;
 		
 		if( isZero( second ) )
-			throw IllegalArgumentException:create("Division by zero!");
+			throw IllegalArgumentException:create("Division by zero");
 			
 		if( second->size == 1 ) //single digit divisor is handled specially
 		{
@@ -183,7 +185,10 @@ implements Number<BigInteger>
 				value = (value*BASE	 + first[i]) - quotient[i]*divisor;			
 			}
 			
-			return removeZeroes(quotient);		
+			uint[] remainder = uint:create[1];
+			remainder[0] = cast<uint>(value);
+			
+			return (removeZeroes(quotient), remainder );		
 		}
 		
 		uint zeroes = leadingZeroes(second[second->size - 1]);
@@ -238,7 +243,7 @@ implements Number<BigInteger>
 				normalizedData[i + second->size] += cast<uint>(carry);
 			}
 		}
-		return removeZeroes(quotient);
+		return (removeZeroes(quotient), unsignedRightShift(normalizedData, zeroes));
 	}
 	
 	public create(int value)
@@ -461,17 +466,14 @@ implements Number<BigInteger>
 		BigInteger divisor = BigInteger:create(base.toInt());
 		
 		uint[] number = data;
-		uint[] quotient;
-		uint[] product;
+		uint[] quotient;		
 		uint[] remainder;		
 			
 		Console out = Console:instance;
 				
 		do
 		{
-			quotient = unsignedDivide( number, divisor:data );			
-			product = unsignedMultiply( quotient, divisor:data );
-			remainder = unsignedSubtract( number, product );
+			(quotient, remainder) = unsignedDivide( number, divisor:data );			
 		
 			uint digit = remainder[0]; 
 			
