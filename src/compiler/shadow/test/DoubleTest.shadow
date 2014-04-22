@@ -24,5 +24,29 @@ class DoubleTest
 			c /= 10;
 			d /= 10;
 		}
+		
+		double minSub = 4.9406564584124654E-324;
+		double maxSub = 2.2250738585072009E-308;
+		double min = 2.225073858507201E-308;
+		double max = 1.7976931348623157E308;
+		double zero = 0.0;
+		double negativeZero = -0.0;
+		double infinity = 1.0/0.0;
+		//double nan = double:NaN; //fix this!  Constants should be available.
+		double negativeInfinity = -1.0/0.0;
+		//double e = double:E;
+		//double pi = double:PI;
+		
+		out.printLine("minSub: " # minSub );
+		out.printLine("maxSub: " # maxSub );
+		out.printLine("min: " # min );
+		out.printLine("max: " # max );
+		out.printLine("zero: " # zero );
+		out.printLine("negativeZero: " # negativeZero );
+		out.printLine("infinity: " # infinity );
+		out.printLine("nan: " # (0d / 0d) );
+		out.printLine("negativeInfinity: " # negativeInfinity );
+		out.printLine("e: " # 2.718281828459045 );
+		out.printLine("pi: " # 3.141592653589793 );
 	}
 }
