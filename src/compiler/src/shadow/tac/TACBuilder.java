@@ -23,6 +23,7 @@ import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
+import shadow.tac.nodes.TACGenericClass;
 import shadow.tac.nodes.TACInit;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
@@ -1298,7 +1299,7 @@ public class TACBuilder implements ShadowParserVisitor
 		if (secondVisit)
 		{
 			List<TACOperand> sizes = new ArrayList<TACOperand>(
-					tree.getNumChildren());
+					tree.getNumChildren());			
 			for (int i = 0; i < tree.getNumChildren(); i++)
 				sizes.add(tree.appendChild(i));
 			prefix = visitArrayAllocation((ArrayType)node.getType(), sizes);
@@ -1312,10 +1313,22 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		if (secondVisit)
 		{
+			/*
+			if (node.jjtGetChild(i) instanceof ASTTypeArguments)
+				for (ModifiedType type : (SequenceType)
+						node.jjtGetChild(i).getType())
+					params.add(new TACClass(tree, type.getType(), method));
+			 */
+			
 			TACMethodRef methodRef = new TACMethodRef(tree,
 					(MethodType)node.getType(), node.getImage());
-			TACOperand object = new TACNewObject(tree,
-					(ClassType)methodRef.getOuterType());
+			
+			ClassType classType = (ClassType)methodRef.getOuterType();
+			
+			if( classType.isParameterized() ) //create generic type
+				new TACGenericClass(tree, classType, method);
+						
+			TACOperand object = new TACNewObject(tree, classType );
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(object);
 			if (methodRef.getOuterType().hasOuter())
@@ -1327,13 +1340,14 @@ public class TACBuilder implements ShadowParserVisitor
 				else
 					throw new UnsupportedOperationException();
 			}
-			for (int i = 0; i < tree.getNumChildren(); i++)
-				if (node.jjtGetChild(i) instanceof ASTTypeArguments)
-					for (ModifiedType type : (SequenceType)
-							node.jjtGetChild(i).getType())
-						params.add(new TACClass(tree, type.getType(), method));
-				else
+			
+			int start = 0;
+			if( node.jjtGetNumChildren() > 0 && node.jjtGetChild(0) instanceof ASTTypeArguments )
+				start++;
+			
+			for (int i = start; i < tree.getNumChildren(); i++)
 					params.add(tree.appendChild(i));
+			
 			new TACCall(tree, block, methodRef, params);
 			prefix = new TACNodeRef(tree, object);
 		}
@@ -2055,6 +2069,8 @@ public class TACBuilder implements ShadowParserVisitor
 									"this"),
 							new TACVariableRef(tree,
 									method.getParameter("outer")));
+				//TODO: Fix this for methods with type parameters
+				/*
 				if (type.isParameterized())
 					for (ModifiedType typeParam : type.getTypeParameters())
 						new TACStore(tree,
@@ -2065,6 +2081,7 @@ public class TACBuilder implements ShadowParserVisitor
 								new TACVariableRef(tree,
 										method.getParameter(typeParam.
 												getType().getTypeName())));
+				*/
 				for (Node field : type.getFields().values())
 					if (!field.getModifiers().isConstant())
 						walk(field);

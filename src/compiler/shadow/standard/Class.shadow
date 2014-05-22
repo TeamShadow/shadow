@@ -1,16 +1,21 @@
 import shadow.io@Console;
 
-immutable class shadow.standard@Class
+immutable class shadow.standard@Class extends AbstractClass
 {
 	String name = "";
 	get nullable Class parent = null;
 	Class[] interfaces = Class:create[0];
 	Object[] data = freeze(Object:create[0]);
-	int size, width, flags;
 
-	private create() { }
-	protected native allocate() => ( Object );
-	protected native allocate( int size ) => ( Object );
+	protected create(int flags, int size, String name, Class parent, Class[] interfaces, immutable Object[] data ) 
+	{
+		super( flags, size );
+		this:name = name;
+		this:parent = parent;
+		this:interfaces = interfaces;
+		this:data = data;
+	}
+	
 	protected interfaceData( Class interfaceClass ) => ( immutable nullable Object )
 	{
 		for ( int i = 0; i < interfaces->size; i += 1 )
@@ -22,17 +27,11 @@ immutable class shadow.standard@Class
 		Console:instance.printLine( interfaceClass # " not found!");
 	}
 
-	public isInterface() => ( boolean )
+	public isSubtype( AbstractClass other ) => ( boolean )
 	{
-		return (flags & 0b01) != 0;
-	}
-	public isPrimitive() => ( boolean )
-	{
-		return (flags & 0b10) != 0;
-	}
-
-	public isSubtype( Class other ) => ( boolean )
-	{
+		if( other.isArray() or other.isMethod() )
+			return false;
+	
 		if ( this === other )
 			return true;
 		if ( !other.isInterface() )

@@ -1,0 +1,13 @@
+import shadow.io@Console;
+
+class GenericTest
+{
+	public main(String[] args) => ()
+	{
+		Container<String> container1 = Container<String>:create("blub");
+		Console out = Console:instance;
+		
+		out.printLine( "Class: " # container1.getClass() );		
+		out.printLine( "Value: " # container1.getObject() );
+	}
+}

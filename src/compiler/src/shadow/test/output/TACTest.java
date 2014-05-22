@@ -131,4 +131,14 @@ public class TACTest {
 		args.add("shadow/test/DoubleTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testArrayAsObject() throws Exception {
+		args.add("shadow/test/ArrayAsObject.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testGeneric() throws Exception {
+		args.add("shadow/test/GenericTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

@@ -177,10 +177,13 @@ public class Main {
 						File io = new File( system, "shadow" + File.separator + "io" );
 						
 						//minimum standard files needed for compilation
+						files.add( getPath( standard, "AbstractClass" ));
 						files.add( getPath( standard, "Array" ));
-						files.add( getPath( standard, "Class" ));					
+						files.add( getPath( standard, "ArrayClass" ));
+						files.add( getPath( standard, "Class" ));						
 						files.add( getPath( standard, "Exception" ));
 						files.add( getPath( standard, "Iterator" ));
+						files.add( getPath( standard, "MethodClass" ));						
 						files.add( getPath( standard, "Object" ));
 						files.add( getPath( standard, "String" ));
 						files.add( getPath( standard, "System" ));

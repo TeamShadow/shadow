@@ -514,7 +514,7 @@ public class TypeUpdater extends BaseChecker
 					
 					/* Check overridden methods to make sure:
 					 * 1. All overrides match exactly  (if it matches everything but return type...ambiguous!)
-					 * 2. No immutable methods have been overridden
+					 * 2. No immutable methods have been overridden NOT RIGHT NOW... add "locked" keyword?
 					 * 3. Readonly methods cannot be overridden by mutable methods
 					 * 4. No overridden methods have been narrowed in access 
 					 */
@@ -542,8 +542,8 @@ public class TypeUpdater extends BaseChecker
 								
 								if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) && classType != Type.ERROR )
 									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " differs only by return type from " + parentSignature );
-								else if( parentModifiers.isImmutable() && !signature.getSymbol().equals("freeze") )
-									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot override immutable method" );
+								//else if( parentModifiers.isImmutable() && !signature.getSymbol().equals("freeze") )
+								//	addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot override immutable method" );
 								else if( !modifiers.isReadonly() && !modifiers.isImmutable() && parentModifiers.isReadonly()  )
 									addError( node, Error.INVALID_OVERRIDE, "Mutable method " + signature + " cannot override readonly method" );
 								else if( parentModifiers.isPublic() && (modifiers.isPrivate() || modifiers.isProtected()) )

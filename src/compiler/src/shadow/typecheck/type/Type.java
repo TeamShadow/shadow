@@ -49,7 +49,11 @@ public abstract class Type implements Comparable<Type>
 	 */
 	
 	public static ClassType OBJECT = null;
-	public static ClassType CLASS = null;  // meta class for holding .class variables
+	public static ClassType ABSTRACT_CLASS = null;  // base meta class for holding abstract .class variables
+	public static ClassType CLASS = null;  // meta class for holding normal .class variables
+	public static ClassType ARRAY_CLASS = null;  // meta class for holding array .class variables
+	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic .class variables
+	public static ClassType METHOD_CLASS = null;  // meta class for holding class variables for function pointers
 	public static ClassType ARRAY = null;  // class representation of all array types
 	public static ClassType METHOD = null;  // class representation for references with function type
 	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
@@ -166,12 +170,16 @@ public abstract class Type implements Comparable<Type>
 	{
 		OBJECT = null;
 		CLASS = null;
+		ABSTRACT_CLASS = null;
 		ARRAY = null;
+		ARRAY_CLASS = null; 
 		METHOD = null;
+		METHOD_CLASS = null;		
 		UNBOUND_METHOD = null;
 		ENUM = null;
 		EXCEPTION = null;	
-		ERROR = null;			
+		ERROR = null;		
+		GENERIC_CLASS = null;
 		BOOLEAN = null;
 		BYTE = null;
 		CODE = null;

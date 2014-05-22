@@ -46,6 +46,7 @@ import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
+import shadow.tac.nodes.TACGenericClass;
 import shadow.tac.nodes.TACInit;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
@@ -243,27 +244,25 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("declare void @__shadow_throw(" + type(Type.OBJECT) + ") noreturn");
 		writer.write("declare " + type(Type.EXCEPTION) + " @__shadow_catch(i8* nocapture) nounwind");
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
-		writer.write();	
-
-		/*
-		StringBuilder sb = new StringBuilder().append('%').
-				append(raw(moduleType, "_Mclass")).append(" = type { ");
-		if (moduleType instanceof ClassType)
-			sb.append('%').append(raw(Type.CLASS)).append(", ");
-		writer.write(sb.append(methodList(moduleType.orderAllMethods(), false)).
-				append(" }").toString());
-		if (moduleType instanceof ClassType)
+		writer.write();
+		
+		
+		//Class fields (since the order is all changed)
+		if( moduleType instanceof ClassType )
 		{
-			sb.setLength(0);
-			sb.append('%').append(raw(moduleType)).append(" = type { %").
-					append(raw(moduleType, "_Mclass")).append('*');
-			if (moduleType.isPrimitive())
-				sb.append(", ").append(type(moduleType));
-			else for (Type fieldType : module.getFieldTypes())
-				sb.append(", ").append(type(fieldType));
-			writer.write(sb.append(" }").toString());
+			ClassType classType = (ClassType) moduleType;
+			writer.write("; 0: class (Class)");
+			int counter = 1;
+			for (Entry<String, ? extends ModifiedType> field :
+				(classType).orderAllFields())
+			{	
+				
+				writer.write("; " + counter + ": " + field.getKey() + " (" + field.getValue().getType() + ")" );
+				++counter;				
+			}
+			
+			writer.write();
 		}
-		*/
 		
 		writeTypeDeclaration(moduleType); //replace the stuff above?
 		
@@ -636,15 +635,18 @@ public class LLVMOutput extends AbstractOutput
 					!(type instanceof UnboundMethodType) &&
 					!type.equals(module.getType()))
 		{
-			if (type.equals(Type.CLASS))
+			if (type.equals(Type.ABSTRACT_CLASS))
 			{
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
-						raw(Type.CLASS, "_Mallocate") + '(' +
-						type(Type.CLASS) + ')');
+						raw(Type.ABSTRACT_CLASS, "_Mallocate") + '(' +
+						type(Type.ABSTRACT_CLASS) + ')');
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
-						raw(Type.CLASS, "_Mallocate" +
-						Type.INT.getMangledName()) + '(' + type(Type.CLASS) +
-						", " + type(Type.INT) + ')');
+						raw(Type.ABSTRACT_CLASS, "_Mallocate" +
+						Type.INT.getMangledName()) + '(' + type(Type.ABSTRACT_CLASS) +
+						", " + type(Type.INT) + ')');				
+			}
+			if( type.equals(Type.CLASS))
+			{
 				writer.write("declare " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, "_MinterfaceData" +
 						Type.CLASS.getMangledName()) + '(' + type(Type.CLASS) +
@@ -1207,14 +1209,101 @@ public class LLVMOutput extends AbstractOutput
 				typeText(srcType, srcName) + " to " + type(destType));
 	}
 
+	
+	@Override
+	public void visit(TACGenericClass node) throws ShadowException
+	{
+		TACOperand classObject = node.getClassObject();
+		TACOperand parameters = node.getParameters();
+		
+		//writer.write(nextTemp() + " = getelementptr %" + raw(node.getClassType(),
+		//		"_Mclass") + "* @" + raw(node.getClassType(), "_Mclass") +
+		//		", i32 0, i32 1");
+		
+		
+		//no! wrong flags
+		//flags (int)		
+		//writer.write(nextTemp() + " = getelementptr %" + type(Type.INT) + "* @" + raw(node.getClassType(), "_Mclass") +
+		//		", i32 0, i32 1");
+		writer.write(nextTemp() + " = getelementptr " + type(Type.INT) + "* %" + classObject.getData() +
+				", i32 0, i32 1");
+		writer.write("store " + typeText(Type.INT, "8") + ", " + type(Type.INT) + "* " + temp(1)); 
+		
+		//size (int)
+		writer.write(nextTemp() + " = getelementptr " + type(Type.INT) + "* @" + raw(node.getClassType(), "_Mclass") +
+				", i32 0, i32 2");
+		writer.write(nextTemp() + " = getelementptr " + type(Type.INT) + "* %" + classObject.getData() +
+				", i32 0, i32 2");
+		writer.write("store " + type(Type.INT) + " " + temp(2) + ", " + type(Type.INT) + "* " + temp(1));
+
+		//data (Object[])
+		ArrayType arrayType = new ArrayType(Type.OBJECT);
+		writer.write(nextTemp() + " = getelementptr " + type(arrayType) + "* @" + raw(node.getClassType(), "_Mclass") +
+				", i32 0, i32 3");
+		writer.write(nextTemp() + " = getelementptr " + type(arrayType) + "* %" + classObject.getData() +
+				", i32 0, i32 3");
+		writer.write("store " + type(arrayType) + " " + temp(2) + ", " + type(arrayType) + "* " + temp(1));
+		
+		//interfaces (Class[])  (going to require additional work for generic interfaces)
+		arrayType = new ArrayType(Type.CLASS);
+		writer.write(nextTemp() + " = getelementptr " + type(arrayType) + "* @" + raw(node.getClassType(), "_Mclass") +
+				", i32 0, i32 4");
+		writer.write(nextTemp() + " = getelementptr " + type(arrayType) + "* %" + classObject.getData() +
+				", i32 0, i32 4");
+		writer.write("store " + type(arrayType) + " " + temp(2) + ", " + type(arrayType) + "* " + temp(1));
+		
+		//name (String) 
+		writer.write(nextTemp() + " = getelementptr " + type(Type.STRING) + "* @" + raw(node.getClassType(), "_Mclass") +
+				", i32 0, i32 5");
+		writer.write(nextTemp() + " = getelementptr " + type(Type.STRING) + "* %" + classObject.getData() +
+				", i32 0, i32 5");
+		writer.write("store" + type(Type.STRING) + " " + temp(2) + ", " + type(Type.STRING) + "* " + temp(1));
+		
+		//parent (Class) (also needs additional work for generic parent)
+		writer.write(nextTemp() + " = getelementptr " + type(Type.CLASS) + "* @" + raw(node.getClassType(), "_Mclass") +
+				", i32 0, i32 6");
+		writer.write(nextTemp() + " = getelementptr " + type(Type.CLASS) + "* %" + classObject.getData() +
+				", i32 0, i32 6");
+		writer.write("store " + type(Type.CLASS) + " " + temp(2) + ", " + type(Type.CLASS) + "* " + temp(1));
+		
+		//parameters (Class[])
+		arrayType = new ArrayType(Type.CLASS);
+		writer.write(nextTemp() + " = getelementptr " + type(arrayType) + "* %" + classObject.getData() +
+				", i32 0, i32 7");
+		writer.write("store " + type(arrayType) + " %" + parameters.getData() + ", " + type(arrayType) + "* " + temp(1));
+		
+		
+		//rawClass (NormalClass)
+		writer.write(nextTemp() + " = getelementptr " + type(Type.CLASS) + "* %" + classObject.getData() +
+				", i32 0, i32 8");
+		writer.write("store " + type(Type.CLASS) + " @" + raw(node.getClassType(), "_Mclass") + ", " + type(Type.CLASS) + "* " + temp(1));
+		
+		writer.write(nextTemp(node) + " = load " + type(Type.GENERIC_CLASS) + "* %" + classObject.getData());		
+	}
+
 	@Override
 	public void visit(TACNewObject node) throws ShadowException
 	{
-		writer.write(nextTemp(node) + " = call noalias " + type(Type.OBJECT) +
-				" @" + raw(Type.CLASS, "_Mallocate") + '(' +
-				type(Type.CLASS) + " getelementptr (%" + raw(node.getType(),
-				"_Mclass") + "* @" + raw(node.getType(), "_Mclass") +
-				", i32 0, i32 0))");
+		ClassType type = node.getType();
+		
+		//add something special in for type parameters
+		if( type.isParameterized() )
+		{
+			writer.write(nextTemp() + " = bitcast " + type(Type.GENERIC_CLASS) + "%" + temp(2) + " to " + type(Type.ABSTRACT_CLASS) );
+			writer.write(nextTemp(node) + " = call noalias " + type(Type.OBJECT) +
+					" @" + raw(Type.ABSTRACT_CLASS, "_Mallocate") + '(' +
+					type(Type.CLASS) + " %" + temp(1) + ")");			
+		}
+		else
+		{
+			writer.write(nextTemp() + " = getelementptr %" + raw(node.getType(),
+					"_Mclass") + "* @" + raw(node.getType(), "_Mclass") +
+					", i32 0, i32 0");
+			writer.write(nextTemp() + " = bitcast " + type(Type.CLASS) + "%" + temp(2) + " to " + type(Type.ABSTRACT_CLASS) );
+			writer.write(nextTemp(node) + " = call noalias " + type(Type.OBJECT) +
+					" @" + raw(Type.ABSTRACT_CLASS, "_Mallocate") + '(' +
+					type(Type.CLASS) + "%" + temp(1) + " )");
+		}
 		if (!node.getType().equals(Type.OBJECT))
 			writer.write(nextTemp(node) + " = bitcast " + type(Type.OBJECT) +
 					' ' + temp(1) + " to " + type(node.getType()));
@@ -2145,7 +2234,11 @@ public class LLVMOutput extends AbstractOutput
 		writePrimitiveTypes();
 		
 		writeTypeDeclaration(Type.OBJECT);
-		writeTypeDeclaration(Type.CLASS);
+		writeTypeDeclaration(Type.ABSTRACT_CLASS);
+		writeTypeDeclaration(Type.CLASS);		
+		writeTypeDeclaration(Type.ARRAY_CLASS);
+		writeTypeDeclaration(Type.GENERIC_CLASS);
+		writeTypeDeclaration(Type.METHOD_CLASS);
 		writeTypeDeclaration(Type.STRING);
 		
 		writeTypeConstants(Type.CLASS);

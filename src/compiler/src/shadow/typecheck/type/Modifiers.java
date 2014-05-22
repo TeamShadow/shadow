@@ -285,11 +285,11 @@ public final class Modifiers
 	{
 		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE | GET | SET | NATIVE), "A method", node);
 		if( isGet() &&  isSet() )
-			throw new ParseException("A method cannot be marked both get and set", node);
+			throw new ParseException("A method cannot be marked both get and set", node);		
 		if( isReadonly() && isImmutable() )
 			throw new ParseException("A method cannot be marked both readonly and immutable", node);
-		if( isAbstract() && isImmutable() )
-			throw new ParseException("A method cannot be marked both abstract and immutable", node);
+		//if( isAbstract() && isImmutable() )
+		//	throw new ParseException("A method cannot be marked both abstract and immutable", node);		
 	}
 
 	public void checkLocalMethodModifiers(Node node) throws ParseException

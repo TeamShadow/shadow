@@ -1,0 +1,13 @@
+import shadow.io@Console;
+
+class shadow.test@ArrayAsObject
+{
+	public main( String[] args ) => ( )
+	{
+		Console out = Console:instance;	
+		int[] values = int:create[135];
+		int size = values->size;
+		
+		out.printLine( "Size: " # size );
+	}
+}

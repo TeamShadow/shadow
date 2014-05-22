@@ -1,0 +1,14 @@
+class Container<T>
+{
+	T object;
+	
+	public create(T value)
+	{
+		object = value;
+	}
+	
+	public getObject() => (T)
+	{
+		return object;
+	}
+}

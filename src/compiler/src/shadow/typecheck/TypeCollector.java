@@ -87,14 +87,14 @@ public class TypeCollector extends BaseChecker
 		};
 		
 		//add standard imports		
-		File directory = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
-		File[] imports = directory.listFiles( filter );
+		File standard = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" ).getCanonicalFile();
+		File[] imports = standard.listFiles( filter );
 		for( File file :  imports )			
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add io imports
-		directory = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "io" );
-		imports = directory.listFiles( filter );
+		File io = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "io" );
+		imports = io.listFiles( filter );
 		for( File file :  imports )			
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 						
@@ -109,7 +109,9 @@ public class TypeCollector extends BaseChecker
 				if( canonicalFile.exists() )  
 				{											
 					File meta = new File( canonical + ".meta" );
-					if( meta.exists() && meta.lastModified() >= canonicalFile.lastModified() ) //check for more recent .meta file
+					if( meta.exists() && meta.lastModified() >= canonicalFile.lastModified() && //check for more recent .meta file 
+						!canonicalFile.getParentFile().equals(standard)  )  //read whole standard files for now, since member information is used for class files
+																																								
 						canonicalFile = meta;
 				}
 				else
@@ -318,7 +320,9 @@ public class TypeCollector extends BaseChecker
 			{	
 				switch( typeName )
 				{
+				case "AbstractClass":	Type.ABSTRACT_CLASS = (ClassType) type; break;
 				case "Array":			Type.ARRAY = (ClassType) type; break;			
+				case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
 				case "CanAdd":			Type.CAN_ADD = (InterfaceType)type; break;
 				case "CanCompare":		Type.CAN_COMPARE = (InterfaceType) type; break;
 				case "CanDivide":		Type.CAN_DIVIDE = (InterfaceType)type; break;
@@ -330,7 +334,7 @@ public class TypeCollector extends BaseChecker
 				case "CanIndex":		Type.CAN_INDEX = (InterfaceType) type; break;
 				case "CanIndexStore":	Type.CAN_INDEX_STORE = (InterfaceType) type; break;
 				case "CanIterate":		Type.CAN_ITERATE = (InterfaceType) type; break;
-				case "Class":			Type.CLASS = (ClassType) type; break;
+				case "Class":			Type.CLASS = (ClassType) type; break;				
 				case "boolean":			Type.BOOLEAN = (ClassType)type; break;
 				case "byte":			Type.BYTE = (ClassType)type; break;
 				case "code":			Type.CODE = (ClassType)type; break;
@@ -339,10 +343,12 @@ public class TypeCollector extends BaseChecker
 				case "Error":			Type.ERROR = (ErrorType) type; break;				
 				case "Exception":		Type.EXCEPTION = (ExceptionType) type; break;
 				case "float":			Type.FLOAT = (ClassType)type; break;
+				case "GenericClass":	Type.GENERIC_CLASS = (ClassType) type; break;
 				case "int":				Type.INT = (ClassType) type; break;
 				case "Integer":			Type.INTEGER = (InterfaceType) type; break;
 				case "long":			Type.LONG = (ClassType)type; break;
 				case "Method":			Type.METHOD = (ClassType)type; break;
+				case "MethodClass":		Type.METHOD_CLASS = (ClassType) type; break;				
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;

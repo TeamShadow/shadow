@@ -49,8 +49,8 @@ public class TACMethod extends TACNodeList
 		addLocal(new SimpleModifiedType(prefixType), "this");
 		if (methodRef.isCreate() && prefixType.hasOuter())
 			addLocal(new SimpleModifiedType(prefixType.getOuter()), "outer");
-		Type parameterizedType = methodRef.isCreate() ? prefixType :
-				methodRef.getType();
+		//Type parameterizedType = methodRef.isCreate() ? prefixType : methodRef.getType();
+		Type parameterizedType = methodRef.getType();
 		if (parameterizedType.isParameterized())
 			for (ModifiedType typeParam : parameterizedType.getTypeParameters())
 				addLocal(new SimpleModifiedType(Type.CLASS),

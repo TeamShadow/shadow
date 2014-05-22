@@ -1,0 +1,34 @@
+immutable class shadow.standard@ArrayClass extends AbstractClass
+{	
+	AbstractClass baseClass;
+	int dims;
+
+	protected create(int flags, int size, AbstractClass baseClass, int dimensions)
+	{ 
+		super( flags, size );
+		this:baseClass = baseClass;
+		this:dims = dimensions;
+	}	
+	
+	public isSubtype( AbstractClass other ) => ( boolean )
+	{
+		if( other.isArray() )
+		{ 
+			ArrayClass arrayClass = cast<ArrayClass>(other);
+			return arrayClass:dims == dims and arrayClass:baseClass.isSubtype(baseClass) and baseClass.isSubtype(arrayClass:baseClass);
+		}
+		
+		return false;
+	}	
+	
+	public toString() => ( String )
+	{
+		MutableString out = MutableString:create( #baseClass );
+		out.append("[");		
+		for( int i = 1; i < dims; i += 1 )		
+				out.append(",");
+		
+		out.append("]");
+		return #out;	
+	}
+}

@@ -4,6 +4,8 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
@@ -53,6 +55,13 @@ public class TACClass extends TACOperand
 	@Override
 	public Type getType()
 	{
+		if( type instanceof ArrayType )			
+			return Type.ARRAY_CLASS;
+		if( type instanceof MethodType )
+			return Type.METHOD_CLASS;
+		if( type.isParameterized() && !type.equals(type.getTypeWithoutTypeArguments()) )
+			return Type.GENERIC_CLASS;
+		
 		return Type.CLASS;
 	}
 	@Override

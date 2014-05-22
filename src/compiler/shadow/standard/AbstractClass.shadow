@@ -1,0 +1,44 @@
+import shadow.io@Console;
+
+immutable abstract class shadow.standard@AbstractClass
+{	
+	int flags;
+	get int size;
+	
+	protected create(int flags, int size) 
+	{ 
+		this:flags = flags;
+		this:size = size;
+	}
+	
+	protected native allocate() => ( Object );
+	protected native allocate( int size ) => ( Object );
+	
+	public isInterface() => ( boolean )
+	{
+		return (flags & 0b01) != 0;
+	}
+	public isPrimitive() => ( boolean )
+	{
+		return (flags & 0b10) != 0;
+	}
+	public isNormal() => ( boolean )
+	{
+		return (flags & 0b100) != 0;
+	}
+	public isGeneric() => ( boolean )
+	{
+		return (flags & 0b1000) != 0;
+	}
+	public isArray() => ( boolean )
+	{
+		return (flags & 0b10000) != 0;
+	}
+	public isMethod() => ( boolean )
+	{
+		return (flags & 0b100000) != 0;
+	}
+
+	public abstract isSubtype( AbstractClass other ) => ( boolean );
+	public abstract toString() => ( String );
+}

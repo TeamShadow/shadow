@@ -1,0 +1,77 @@
+import shadow.io@Console;
+
+immutable class shadow.standard@GenericClass extends Class
+{	
+	AbstractClass[] parameters = AbstractClass:create[0];
+	Class rawClass;
+
+	protected create(int flags, int size, String name, Class parent, Class[] interfaces, immutable Object[] data, Class rawClass, AbstractClass[] parameters )
+	{
+		super(flags, size, name, parent, interfaces, data);
+		this:rawClass = rawClass;
+		this:parameters = parameters;
+	}
+
+	public isSubtype( AbstractClass other ) => ( boolean )
+	{
+		if( other.isArray() or other.isMethod() )
+			return false;
+	
+		if ( this === other )
+			return true;
+			
+		if ( !other.isInterface() )
+		{
+			try
+			{
+				if( other.isNormal() )
+					return check(parent).isSubtype(other);
+					
+				//other is generic
+				GenericClass genericOther = cast<GenericClass>(other);
+				if( check(rawClass).isSubtype(genericOther:rawClass) and parameters->size >= genericOther:parameters->size )
+				{
+					for ( int i = 0; i < genericOther:generics->size; i += 1 )
+						if( !parameters[i].isSubtype(genericOther:parameters[i]) or !genericOther:parameters[i].isSubtype(parameters[i]) )
+							return false;
+							
+					return true;
+				}
+				
+				return false;
+			}
+			recover
+			{
+			}
+		}
+		else for ( int i = 0; i < interfaces->size; i += 1 )
+		{
+			try
+			{
+				if ( check(interfaces[i]).isSubtype(other) )
+					return true;
+			}
+			recover
+			{
+			}
+		}
+		return false;
+	}
+
+	public toString() => ( String )
+	{
+		MutableString out = MutableString:create( #rawClass );
+		out.append("<");		
+		for( int i = 0; i < generics->size; i += 1 )
+		{
+			if( i > 0 )
+				out.append(", ");
+			
+			out.append( #generics[i] );
+		}
+		
+		out.append(">");		
+		
+		return #out;
+	}	
+}
