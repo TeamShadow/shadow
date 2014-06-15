@@ -107,9 +107,9 @@ implements
 	public immutable native negate() => (long);
 	
 	// implement CanHash
-	public get hash() => (int)
+	public get hash() => (uint)
 	{
-		return cast<int>(this) ^ cast<int>(this >> 32);
+		return cast<uint>(this) ^ cast<uint>(this >> 32);
 	}
 
 	public abs() => (ulong)

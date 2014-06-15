@@ -49,11 +49,8 @@ public abstract class Type implements Comparable<Type>
 	 */
 	
 	public static ClassType OBJECT = null;
-	public static ClassType ABSTRACT_CLASS = null;  // base meta class for holding abstract .class variables
 	public static ClassType CLASS = null;  // meta class for holding normal .class variables
-	public static ClassType ARRAY_CLASS = null;  // meta class for holding array .class variables
-	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic .class variables
-	public static ClassType METHOD_CLASS = null;  // meta class for holding class variables for function pointers
+	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic .class variables	
 	public static ClassType ARRAY = null;  // class representation of all array types
 	public static ClassType METHOD = null;  // class representation for references with function type
 	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
@@ -92,6 +89,7 @@ public abstract class Type implements Comparable<Type>
 	public static InterfaceType CAN_INDEX = null;
 	public static InterfaceType CAN_INDEX_STORE = null;
 	public static InterfaceType CAN_ITERATE = null;
+	public static InterfaceType ITERATOR = null;
 	public static InterfaceType NUMBER = null;
 	public static InterfaceType INTEGER = null;
 	public static InterfaceType CAN_ADD = null;
@@ -169,12 +167,9 @@ public abstract class Type implements Comparable<Type>
 	public static void clearTypes()				
 	{
 		OBJECT = null;
-		CLASS = null;
-		ABSTRACT_CLASS = null;
-		ARRAY = null;
-		ARRAY_CLASS = null; 
-		METHOD = null;
-		METHOD_CLASS = null;		
+		CLASS = null;		
+		ARRAY = null;		 
+		METHOD = null;				
 		UNBOUND_METHOD = null;
 		ENUM = null;
 		EXCEPTION = null;	
@@ -198,6 +193,7 @@ public abstract class Type implements Comparable<Type>
 		CAN_INDEX = null;
 		CAN_INDEX_STORE = null;
 		CAN_ITERATE = null;
+		ITERATOR = null;
 		NUMBER = null;
 		INTEGER = null;
 		CAN_ADD = null;
@@ -431,7 +427,8 @@ public abstract class Type implements Comparable<Type>
 			return 4;
 		else if( this.equals(LONG) || this.equals(ULONG) || this.equals(DOUBLE) )
 			return 8;
-		return 6;
+		
+		return 6; //for objects?  So that they're always considered between 4 and 8 bytes?
 	}
 	public boolean isSimpleReference()
 	{

@@ -342,9 +342,9 @@ implements
 	}
 
 	// implement CanHash
-	public get hash() => (int)
+	public get hash() => (uint)
 	{
-		return cast<int>(this);
+		return cast<uint>(this);
 	}
 
 	public min(ushort other) => (ushort)

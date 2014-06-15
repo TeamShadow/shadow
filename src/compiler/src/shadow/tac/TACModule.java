@@ -48,15 +48,22 @@ public class TACModule
 		add(Type.DOUBLE);
 		add(Type.ARRAY);
 		add(Type.EXCEPTION);
+		add(Type.GENERIC_CLASS);
+		//add(Type.ARRAY_CLASS);
+		//add(Type.METHOD_CLASS);
 	}
 	private void add(Type type)
 	{
 		boolean newlyAdded;
-		
+		/*
 		if( type instanceof InterfaceType )
 			newlyAdded = references.add(type);
 		else
-			newlyAdded = references.add(type.getTypeWithoutTypeArguments());
+		{
+		*/
+		
+		newlyAdded = references.add(type);
+		
 				
 		if( newlyAdded )
 		{

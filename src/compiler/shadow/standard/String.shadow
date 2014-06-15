@@ -3,7 +3,8 @@ immutable class shadow.standard@
 implements
 	CanCompare<String>,
 	CanIterate<code>,
-	CanIndex<int,byte>	
+	CanIndex<int,byte>,
+	CanHash	
 {
 	byte[] data;
 	boolean ascii;
@@ -176,6 +177,19 @@ implements
 	public iterator() => ( Iterator<code> )
 	{
 		return StringIterator:create();
+	}
+	
+	public get hash() => ( uint )
+	{
+		uint value = 0u;		 
+		
+		for( int i = 0; i < data->size; i += 1 )
+		{
+			value *= 31u;
+			value += cast<uint>( data[i] );
+		}
+		
+		return value;
 	}
 
 	public class StringIterator implements Iterator<code>

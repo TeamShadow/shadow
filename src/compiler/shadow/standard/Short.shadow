@@ -243,9 +243,9 @@ implements
 	public immutable native negate() => (short);
 
 	// implement CanHash
-	public get hash() => (int)
+	public get hash() => (uint)
 	{
-		return cast<int>(this);
+		return cast<uint>(this);
 	}
 
 	public abs() => (ushort)

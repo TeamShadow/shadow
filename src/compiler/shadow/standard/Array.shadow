@@ -40,6 +40,8 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>
 		}
 		return copy;
 	}
+	
+	//only makes sense for 1D arrays?
 	public immutable native subarray( int start, int end ) => ( Array<T> );
 
 	public immutable native index( int[] indices ) => (T);

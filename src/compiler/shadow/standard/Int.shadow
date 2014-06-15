@@ -194,9 +194,9 @@ implements
 	public immutable native negate() => (int);	
 
 	// implement CanHash
-	public get hash() => (int)
+	public get hash() => (uint)
 	{
-		return cast<int>(this);
+		return cast<uint>(this);
 	}
 
 	public abs() => (uint)
@@ -221,8 +221,8 @@ implements
 		return toString(10u);
 	}
 	public toString(uint base) => (String)
-	{
-		String string = abs().toString(base);
+	{		
+		String string = abs().toString(base);			
 		return this >= 0 ? string, '-' # string;
 	}	
 }

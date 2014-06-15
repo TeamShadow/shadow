@@ -44,7 +44,10 @@ public class ArrayType extends ClassType
 	@Override
 	public int getWidth()
 	{
-		return OBJECT.getWidth() + getDimensions() * INT.getWidth();
+		//return OBJECT.getWidth() + getDimensions() * INT.getWidth();
+		return 5;  //not the actual width, just a value that helps sort the fields
+		//references have a "width" of 6, which covers either 4 or 8 byte pointers
+		//arrays go after the references but before 4 byte primitives
 	}
 	
 	public Type getSuperBaseType()

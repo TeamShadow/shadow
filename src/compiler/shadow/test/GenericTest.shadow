@@ -7,7 +7,17 @@ class GenericTest
 		Container<String> container1 = Container<String>:create("blub");
 		Console out = Console:instance;
 		
-		out.printLine( "Class: " # container1.getClass() );		
-		out.printLine( "Value: " # container1.getObject() );
+		//out.printLine("Before");
+		
+		Class c = container1.getClass();
+		/*
+		out.printLine("Got class");
+		
+		String s = c.toString();
+		
+		out.printLine("Made string");
+		*/
+		//out.printLine( "Class: " # c.toString() );		
+		out.printLine( "Value: " # container1.getObject() );		
 	}
 }

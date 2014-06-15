@@ -320,9 +320,9 @@ public class TypeCollector extends BaseChecker
 			{	
 				switch( typeName )
 				{
-				case "AbstractClass":	Type.ABSTRACT_CLASS = (ClassType) type; break;
+				//case "AbstractClass":	Type.ABSTRACT_CLASS = (ClassType) type; break;
 				case "Array":			Type.ARRAY = (ClassType) type; break;			
-				case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
+				//case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
 				case "CanAdd":			Type.CAN_ADD = (InterfaceType)type; break;
 				case "CanCompare":		Type.CAN_COMPARE = (InterfaceType) type; break;
 				case "CanDivide":		Type.CAN_DIVIDE = (InterfaceType)type; break;
@@ -346,9 +346,10 @@ public class TypeCollector extends BaseChecker
 				case "GenericClass":	Type.GENERIC_CLASS = (ClassType) type; break;
 				case "int":				Type.INT = (ClassType) type; break;
 				case "Integer":			Type.INTEGER = (InterfaceType) type; break;
+				case "Iterator":		Type.ITERATOR = (InterfaceType) type; break;
 				case "long":			Type.LONG = (ClassType)type; break;
 				case "Method":			Type.METHOD = (ClassType)type; break;
-				case "MethodClass":		Type.METHOD_CLASS = (ClassType) type; break;				
+				//case "MethodClass":		Type.METHOD_CLASS = (ClassType) type; break;				
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;

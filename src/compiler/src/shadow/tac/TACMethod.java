@@ -46,9 +46,12 @@ public class TACMethod extends TACNodeList
 		if( prefixType instanceof InterfaceType )
 			prefixType = Type.OBJECT;
 		
-		addLocal(new SimpleModifiedType(prefixType), "this");
-		if (methodRef.isCreate() && prefixType.hasOuter())
-			addLocal(new SimpleModifiedType(prefixType.getOuter()), "outer");
+		addLocal(new SimpleModifiedType(prefixType), "this");		
+		if (methodRef.isCreate() )
+		{	
+			if( prefixType.hasOuter())
+				addLocal(new SimpleModifiedType(prefixType.getOuter()), "_outer");
+		}
 		//Type parameterizedType = methodRef.isCreate() ? prefixType : methodRef.getType();
 		Type parameterizedType = methodRef.getType();
 		if (parameterizedType.isParameterized())

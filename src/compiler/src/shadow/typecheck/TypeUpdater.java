@@ -1161,7 +1161,7 @@ public class TypeUpdater extends BaseChecker
 		{	
 			//type parameters are created on the first visit so that bounds dependent on them can look up the right type
 			String symbol = node.getImage();
-			TypeParameter typeParameter = new TypeParameter(symbol);			
+			TypeParameter typeParameter = new TypeParameter(symbol, declarationType);			
 			
 			Type type;
 						

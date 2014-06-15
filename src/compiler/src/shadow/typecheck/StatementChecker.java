@@ -1537,7 +1537,7 @@ public class StatementChecker extends BaseChecker
 			//symbol is added on first visit because bounds may be dependent on it
 			//e.g. A is CanEquate<A>
 			String symbol = node.getImage();
-			TypeParameter typeParameter = new TypeParameter(symbol);
+			TypeParameter typeParameter = new TypeParameter(symbol, declarationType);
 			addSymbol( symbol, node );
 			node.setType(typeParameter);
 		}

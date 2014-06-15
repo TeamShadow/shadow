@@ -69,6 +69,21 @@ public class InterfaceType extends Type
 		StringBuilder sb = new StringBuilder(_package.getMangledName());
 		sb.append(super.getMangledName());
 		
+		/*
+		if( isParameterized() )
+			sb.append(getTypeParameters().getMangledNameWithGenerics());
+		*/
+
+		return sb.toString();		
+	}
+	
+	@Override
+	public String getMangledNameWithGenerics()
+	{
+		Package _package = getPackage();
+		StringBuilder sb = new StringBuilder(_package.getMangledName());
+		sb.append(super.getMangledName());
+		
 		if( isParameterized() )
 			sb.append(getTypeParameters().getMangledNameWithGenerics());
 

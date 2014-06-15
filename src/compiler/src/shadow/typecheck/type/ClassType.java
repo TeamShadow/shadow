@@ -332,6 +332,7 @@ public class ClassType extends Type
 		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
 			if (!field.getValue().getModifiers().isConstant())
 				set.add(field);
+		/* //no, type parameters live in the classes now 
 		if (isParameterized())		
 			for (final ModifiedType typeParam : getTypeParameters())
 			{
@@ -357,6 +358,7 @@ public class ClassType extends Type
 				
 				//add stuff here to fill out type bounds?
 			}
+		*/
 		return set;
 	}
 
@@ -379,7 +381,29 @@ public class ClassType extends Type
 	@Override
 	public String getMangledName()
 	{
-		return getPackage().getMangledName() + super.getMangledName();
+		Package _package = getPackage();
+		StringBuilder sb = new StringBuilder(_package.getMangledName());
+		sb.append(super.getMangledName());
+		
+		/*
+		if( isParameterized() )
+			sb.append(getTypeParameters().getMangledNameWithGenerics());
+		*/
+
+		return sb.toString();		
+	}
+	
+	@Override
+	public String getMangledNameWithGenerics()
+	{
+		Package _package = getPackage();
+		StringBuilder sb = new StringBuilder(_package.getMangledName());
+		sb.append(super.getMangledName());
+				
+		if( isParameterized() )
+			sb.append(getTypeParameters().getMangledNameWithGenerics());
+		
+		return sb.toString();		
 	}
 
 	

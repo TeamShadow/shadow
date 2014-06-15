@@ -54,7 +54,7 @@ public class TACGenericClass extends TACOperand
 		}
 		
 		//class to hold the generic class
-		classObject = new TACNewObject(this, Type.GENERIC_CLASS);
+		classObject = new TACNewObject(this, Type.GENERIC_CLASS, method);
 	}
 	
 	public TACOperand getClassObject()

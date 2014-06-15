@@ -1,4 +1,4 @@
 interface shadow.standard@CanHash
 {
-	get hash() => ( int );
+	get hash() => ( uint );
 }

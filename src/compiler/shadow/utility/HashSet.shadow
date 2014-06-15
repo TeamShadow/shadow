@@ -36,7 +36,7 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 
 	private immutable hash( V value ) => ( int index, int hash )
 	{
-		uint temp = cast<uint>(value->hash);
+		uint temp = value->hash;
 		int hash = cast<int>(temp ^ temp >> 16 ^ temp >> 8);
 		return ( hash & table->size - 1, hash );
 	}

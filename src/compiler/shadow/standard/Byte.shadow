@@ -294,9 +294,9 @@ implements
 	public immutable native negate() => (byte);	
 
 	// implement CanHash
-	public get hash() => (int)
+	public get hash() => (uint)
 	{
-		return cast<int>(this);
+		return cast<uint>(this);
 	}
 
 	public abs() => (ubyte)

@@ -591,7 +591,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		}
 		else
 		{	
-			if( !classIsAccessible( type, currentType  ) )		
+			if( !classIsAccessible( type, declarationType  ) )		
 				addError(Error.ILLEGAL_ACCESS, "Class " + type + " not accessible from current context");
 			
 			if( child.jjtGetNumChildren() == 1 ) //contains arguments
@@ -710,7 +710,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			if (currentType instanceof ClassType)
 				((ClassType)currentType).addReferencedType(type);
 		
-			if( !classIsAccessible( type, currentType  ) )		
+			if( !classIsAccessible( type, declarationType  ) )		
 				addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
 			
 			if( child.jjtGetNumChildren() == 1 ) //contains arguments
@@ -838,7 +838,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	protected static boolean methodIsAccessible( MethodSignature signature, Type type )
 	{		
 		Node node = signature.getNode();
-		if( node.getEnclosingType() == type || node.getModifiers().isPublic() ) 
+		if( signature.getMethodType().getModifiers().isPublic() || (node != null && node.getEnclosingType() == type )  ) 
 			return true;		
 		
 		if( type instanceof ClassType )

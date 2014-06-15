@@ -1,28 +1,57 @@
 ; Windows specific native methods
 
-%"_Pshadow_Pstandard_CObject_Mclass" = type { %"_Pshadow_Pstandard_CClass", %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)* }
-%_Pshadow_Pstandard_CObject = type { %_Pshadow_Pstandard_CObject_Mclass* }
-%_Pshadow_Pstandard_CClass_Mclass = type opaque
-%_Pshadow_Pstandard_CClass = type { %_Pshadow_Pstandard_CClass_Mclass*, { %_Pshadow_Pstandard_CObject**, [1 x i32] }, { %_Pshadow_Pstandard_CClass**, [1 x i32] }, %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CClass*, i32, i32, i32 }
-%_Pshadow_Pstandard_CString_Mclass = type opaque
-%_Pshadow_Pstandard_CString = type { %_Pshadow_Pstandard_CString_Mclass*, { i8*, [1 x i32] }, i1 }
-%_Pshadow_Pstandard_CException_Mclass = type { %_Pshadow_Pstandard_CClass, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CException* (%_Pshadow_Pstandard_CException*)*, i1 (%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CObject* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CClass* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CObject*)*, %_Pshadow_Pstandard_CException* (%_Pshadow_Pstandard_CException*, %_Pshadow_Pstandard_CString*)*, %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CException*)*, void (%_Pshadow_Pstandard_CException*)* }
-%_Pshadow_Pstandard_CException = type { %_Pshadow_Pstandard_CException_Mclass* }
-@_Pshadow_Pstandard_CException_Mclass = external constant %_Pshadow_Pstandard_CException_Mclass
-%_Pshadow_Pstandard_CSystem = type opaque
-%_Pshadow_Pio_CPath = type opaque
-%_Pshadow_Pio_CFile_Mclass = type opaque
-%_Pshadow_Pio_CFile = type { %_Pshadow_Pio_CFile_Mclass*, i64, i64, %_Pshadow_Pio_CPath* }
-%_Pshadow_Pio_CConsole_Mclass = type opaque
-%_Pshadow_Pio_CConsole = type { %_Pshadow_Pio_CConsole_Mclass*, i1 }
-@_Pshadow_Pio_CConsole_Mclass = external constant %_Pshadow_Pio_CConsole_Mclass
-%_Pshadow_Pio_CIOException_Mclass = type { %_Pshadow_Pstandard_CClass }
-%_Pshadow_Pio_CIOException = type { %_Pshadow_Pio_CIOException_Mclass* }
-@_Pshadow_Pio_CIOException_Mclass = external constant %_Pshadow_Pio_CIOException_Mclass
+%boolean = type i1
+%byte = type i8
+%ubyte = type i8
+%short = type i16
+%ushort = type i16
+%int = type i32
+%uint = type i32
+%code = type i32
+%long = type i64
+%ulong = type i64
+%float = type float
+%double = type double
 
-declare %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pio_CIOException*)
+; standard definitions
+%"_Pshadow_Pstandard_CObject_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)* }
+%"_Pshadow_Pstandard_CObject" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CObject_methods"*  }
+%"_Pshadow_Pstandard_CClass_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass"*)*, %uint (%"_Pshadow_Pstandard_CClass"*)*, { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CClass"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CClass"*)*, %int (%"_Pshadow_Pstandard_CClass"*)*, %int (%"_Pshadow_Pstandard_CClass"*)*, %int (%"_Pshadow_Pstandard_CClass"*)* }
+%"_Pshadow_Pstandard_CClass" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass_methods"* , %"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CClass"*, { %"_Pshadow_Pstandard_CObject"**, [1 x %int] }, { %"_Pshadow_Pstandard_CClass"**, [1 x %int] }, %int, %int }
+%"_Pshadow_Pstandard_CGenericClass_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass"*)*, %uint (%"_Pshadow_Pstandard_CClass"*)*, { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CClass"*)*, %boolean (%"_Pshadow_Pstandard_CGenericClass"*, %"_Pshadow_Pstandard_CClass"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CClass"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CClass"*)*, %int (%"_Pshadow_Pstandard_CClass"*)*, %int (%"_Pshadow_Pstandard_CClass"*)*, %int (%"_Pshadow_Pstandard_CClass"*)* }
+%"_Pshadow_Pstandard_CGenericClass" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CGenericClass_methods"* , %"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CClass"*, { %"_Pshadow_Pstandard_CObject"**, [1 x %int] }, { %"_Pshadow_Pstandard_CClass"**, [1 x %int] }, %int, %int, { %"_Pshadow_Pstandard_CObject"**, [1 x %int] } }
+%"_Pshadow_Pstandard_CIterator_methods" = type { %boolean (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* }
+%"_Pshadow_Pstandard_CString_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, { %byte*, [1 x %int] } (%"_Pshadow_Pstandard_CString"*)*, %int (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %boolean (%"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CString"*)*, %uint (%"_Pshadow_Pstandard_CString"*)*, %byte (%"_Pshadow_Pstandard_CString"*, %int)*, %boolean (%"_Pshadow_Pstandard_CString"*)*, { %"_Pshadow_Pstandard_CIterator_methods"*, %"_Pshadow_Pstandard_CObject"* } (%"_Pshadow_Pstandard_CString"*)*, %int (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %int)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*, %int, %int)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CString"*)* }
+%"_Pshadow_Pstandard_CString" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CString_methods"* , { %byte*, [1 x %int] }, %boolean }
+
+%"_Pshadow_Pio_CIOException_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)* }
+%"_Pshadow_Pio_CIOException" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pio_CIOException_methods"* , %"_Pshadow_Pstandard_CString"* }
+%"_Pshadow_Pstandard_CException_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)* }
+%"_Pshadow_Pstandard_CException" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CException_methods"* , %"_Pshadow_Pstandard_CString"* }
+
+@"_Pshadow_Pstandard_CClass_methods" = external constant %"_Pshadow_Pstandard_CClass_methods"
+@"_Pshadow_Pstandard_CClass_class" = external constant %"_Pshadow_Pstandard_CClass"
+@"_Pshadow_Pstandard_CString_methods" = external constant %"_Pshadow_Pstandard_CString_methods"
+@"_Pshadow_Pstandard_CString_class" = external constant %"_Pshadow_Pstandard_CClass"
+@"_Pshadow_Pstandard_CException_methods" = external constant %"_Pshadow_Pstandard_CException_methods"
+@"_Pshadow_Pstandard_CException_class" = external constant %"_Pshadow_Pstandard_CClass"
+@"_Pshadow_Pio_CIOException_class" = external constant %"_Pshadow_Pstandard_CClass"
+@"_Pshadow_Pio_CIOException_methods" = external constant %"_Pshadow_Pio_CIOException_methods"
+%"_Pshadow_Pio_CFile_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pio_CFile"*)*, void (%"_Pshadow_Pio_CFile"*)*, void (%"_Pshadow_Pio_CFile"*)*, %boolean (%"_Pshadow_Pio_CFile"*)*, void (%"_Pshadow_Pio_CFile"*, %boolean)*, %"_Pshadow_Pio_CPath"* (%"_Pshadow_Pio_CFile"*)*, %long (%"_Pshadow_Pio_CFile"*)*, void (%"_Pshadow_Pio_CFile"*, %long)*, %int (%"_Pshadow_Pio_CFile"*, { %byte*, [1 x %int] })*, %long (%"_Pshadow_Pio_CFile"*)*, void (%"_Pshadow_Pio_CFile"*, %long)*, %int (%"_Pshadow_Pio_CFile"*, { %byte*, [1 x %int] })* }
+%"_Pshadow_Pio_CFile" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pio_CFile_methods"* , %long, %long, %"_Pshadow_Pio_CPath"* }
+%"_Pshadow_Pio_CPath_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pio_CPath"*)*, %code (%"_Pshadow_Pio_CPath"*)* }
+%"_Pshadow_Pio_CPath" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pio_CPath_methods"* , { %"_Pshadow_Pstandard_CString"**, [1 x %int] } }
+%_Pshadow_Pstandard_CSystem = type opaque
+%_Pshadow_Pio_CConsole = type opaque
+
+declare %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pstandard_CObject*, { i8*, [1 x i32] })
+declare %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate_Pshadow_Pstandard_CString(%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CString*)
+declare %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pstandard_CObject*)
 declare noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass*)
 
+
+declare i32 @__shadow_personality_v0(...)
+declare void @__shadow_throw(%"_Pshadow_Pstandard_CObject"*) noreturn
 declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)
 
 declare noalias i8* @malloc(i32) nounwind
@@ -54,18 +83,18 @@ declare x86_stdcallcc i32 @MultiByteToWideChar(i32, i32, i8*, i32, i16*, i32)
 declare x86_stdcallcc i32 @QueryPerformanceFrequency(i64*)
 declare x86_stdcallcc i32 @QueryPerformanceCounter(i64*)
 
+; one day update this method to use the @FormatMessage() function
 define private void @throwIOException() noreturn {
 	%1 = tail call x86_stdcallcc i32 @GetLastError()
-	%2 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* getelementptr inbounds (%_Pshadow_Pio_CIOException_Mclass* @_Pshadow_Pio_CIOException_Mclass, i32 0, i32 0))
-	%3 = bitcast %_Pshadow_Pstandard_CObject* %2 to %_Pshadow_Pio_CIOException*
-	%4 = call %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pio_CIOException* %3)
-	%5 = bitcast %_Pshadow_Pio_CIOException* %4 to %_Pshadow_Pstandard_CException*
-	%6 = getelementptr inbounds %_Pshadow_Pstandard_CException* %5, i32 0, i32 0
-	%7 = load %_Pshadow_Pstandard_CException_Mclass** %6
-	%8 = getelementptr inbounds %_Pshadow_Pstandard_CException_Mclass* %7, i32 0, i32 9
-	%9 = load void (%_Pshadow_Pstandard_CException*)** %8
-	call void %9(%_Pshadow_Pstandard_CException* %5)
-	unreachable
+	%2 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Pio_CIOException_class)
+	%3 = getelementptr inbounds %_Pshadow_Pstandard_CObject* %2, i32 0, i32 0
+	store %_Pshadow_Pstandard_CClass* @_Pshadow_Pio_CIOException_class, %_Pshadow_Pstandard_CClass** %3
+	%4 = getelementptr inbounds %_Pshadow_Pstandard_CObject* %2, i32 0, i32 1
+	store %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Pio_CIOException_methods* @_Pshadow_Pio_CIOException_methods to %_Pshadow_Pstandard_CObject_methods*), %_Pshadow_Pstandard_CObject_methods** %4
+	%5 = call %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pstandard_CObject* %2)
+	%6 = bitcast %"_Pshadow_Pio_CIOException"* %5 to %"_Pshadow_Pstandard_CObject"*
+	call void @__shadow_throw(%"_Pshadow_Pstandard_CObject"* %6) noreturn
+    unreachable	
 }
 
 define i64 @_Pshadow_Pstandard_CSystem_MnanoTime(%_Pshadow_Pstandard_CSystem*) {
@@ -103,16 +132,15 @@ define { i8, i1 } @_Pshadow_Pio_CConsole_MreadByte(%_Pshadow_Pio_CConsole*) {
 	%11 = insertvalue { i8, i1 } %10, i1 %7, 1
 	ret { i8, i1 } %11
 }
+
+; does this work for non-ASCII strings?
 define %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CString*) {
 	%3 = alloca i32
 	%4 = call x86_stdcallcc i8* @GetStdHandle(i32 -11)
-	%5 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 1, i32 0
+	%5 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 2, i32 0
 	%6 = load i8** %5
-	%7 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 1, i32 1, i32 0
+	%7 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 2, i32 1, i32 0
 	%8 = load i32* %7
-;	%9 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 2
-;	%10 = load i1* %9
-;	br i1 %10, label %11, label %13
 	%9 = call x86_stdcallcc i32 @WriteFile(i8* %4, i8* %6, i32 %8, i32* %3, i8* null)
 	ret %_Pshadow_Pio_CConsole* %0
 ;	%14 = call x86_stdcallcc i32 @GetFileType(i8* %4)
@@ -150,11 +178,11 @@ define %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintLine(%_Pshadow_Pio_C
 define %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintError_Pshadow_Pstandard_CString(%_Pshadow_Pio_CConsole*, %_Pshadow_Pstandard_CString*) {
 	%3 = alloca i32
 	%4 = call x86_stdcallcc i8* @GetStdHandle(i32 -12)
-	%5 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 1, i32 0
+	%5 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 2, i32 0
 	%6 = load i8** %5
-	%7 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 1, i32 1, i32 0
+	%7 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 2, i32 1, i32 0
 	%8 = load i32* %7
-	%9 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 2
+	%9 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 3
 	%10 = load i1* %9
 	br i1 %10, label %11, label %13
 	%12 = call x86_stdcallcc i32 @WriteConsoleA(i8* %4, i8* %6, i32 %8, i32* %3, i8* null)
@@ -179,24 +207,23 @@ define i32 @_Pshadow_Pio_CPath_Mseparator(%_Pshadow_Pio_CPath*) {
 }
 
 define private i8* @filepath(%_Pshadow_Pio_CFile*) {
-	%2 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 3
+	%2 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 4
 	%3 = load %_Pshadow_Pio_CPath** %2
-	%4 = bitcast %_Pshadow_Pio_CPath* %3 to %_Pshadow_Pstandard_CObject*
-	%5 = getelementptr %_Pshadow_Pstandard_CObject* %4, i32 0, i32 0
-	%6 = load %_Pshadow_Pstandard_CObject_Mclass** %5
-	%7 = getelementptr %_Pshadow_Pstandard_CObject_Mclass* %6, i32 0, i32 3
-	%8 = load %_Pshadow_Pstandard_CString* (%_Pshadow_Pstandard_CObject*)** %7
-	%9 = call %_Pshadow_Pstandard_CString* %8(%_Pshadow_Pstandard_CObject* %4)
-	%10 = getelementptr inbounds %_Pshadow_Pstandard_CString* %9, i32 0, i32 1, i32 0
-	%11 = load i8** %10
-	%12 = getelementptr inbounds %_Pshadow_Pstandard_CString* %9, i32 0, i32 1, i32 1, i32 0
-	%13 = load i32* %12
-	%14 = add nuw i32 %13, 1
-	%15 = call noalias i8* @malloc(i32 %14)
-	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %15, i8* %11, i32 %13, i32 1, i1 0)
-	%16 = getelementptr inbounds i8* %15, i32 %13
-	store i8 0, i8* %16
-	ret i8* %15
+	%4 = getelementptr %_Pshadow_Pio_CPath* %3, i32 0, i32 1
+	%5 = load %_Pshadow_Pio_CPath_methods** %4
+	%6 = getelementptr %_Pshadow_Pio_CPath_methods* %5, i32 0, i32 2
+	%7 = load %_Pshadow_Pstandard_CString* (%_Pshadow_Pio_CPath*)** %6
+	%8 = tail call %_Pshadow_Pstandard_CString* %7(%_Pshadow_Pio_CPath* %3)
+	%9 = getelementptr inbounds %_Pshadow_Pstandard_CString* %8, i32 0, i32 2, i32 0
+	%10 = load i8** %9
+	%11 = getelementptr inbounds %_Pshadow_Pstandard_CString* %8, i32 0, i32 2, i32 1, i32 0
+	%12 = load i32* %11
+	%13 = add nuw i32 %12, 1
+	%14 = tail call noalias i8* @malloc(i32 %13)
+	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %14, i8* %10, i32 %12, i32 1, i1 0)
+	%15 = getelementptr inbounds i8* %14, i32 %12
+	store i8 0, i8* %15
+	ret i8* %14
 }
 
 define i1 @_Pshadow_Pio_CFile_Mexists(%_Pshadow_Pio_CFile*) {
@@ -215,7 +242,7 @@ define void @_Pshadow_Pio_CFile_Mexists_Pshadow_Pstandard_Cboolean(%_Pshadow_Pio
 	%6 = ptrtoint i8* %5 to i64
 	%7 = icmp sge i64 %6, 0
 	br i1 %7, label %8, label %14
-	%9 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%9 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
 	store i64 %6, i64* %9
 	ret void
 	%11 = tail call x86_stdcallcc i32 @DeleteFileA(i8* %3)
@@ -228,7 +255,7 @@ define void @_Pshadow_Pio_CFile_Mexists_Pshadow_Pstandard_Cboolean(%_Pshadow_Pio
 }
 define i64 @_Pshadow_Pio_CFile_Mposition(%_Pshadow_Pio_CFile*) {
 	%2 = alloca i64
-	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
 	%4 = load i64* %3
 	%5 = inttoptr i64 %4 to i8*
 	%6 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %5, i64 0, i64* %2, i32 1)
@@ -240,7 +267,7 @@ define i64 @_Pshadow_Pio_CFile_Mposition(%_Pshadow_Pio_CFile*) {
 	unreachable
 }
 define void @_Pshadow_Pio_CFile_Mposition_Pshadow_Pstandard_Clong(%_Pshadow_Pio_CFile*, i64) {
-	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
 	%4 = load i64* %3
 	%5 = inttoptr i64 %4 to i8*
 	%6 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %5, i64 %1, i64* null, i32 0)
@@ -252,7 +279,7 @@ define void @_Pshadow_Pio_CFile_Mposition_Pshadow_Pstandard_Clong(%_Pshadow_Pio_
 }
 define i64 @_Pshadow_Pio_CFile_Msize(%_Pshadow_Pio_CFile*) {
 	%2 = alloca i64
-	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%3 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
 	%4 = load i64* %3
 	%5 = inttoptr i64 %4 to i8*
 	%6 = call x86_stdcallcc i32 @GetFileSizeEx(i8* %5, i64* %2)
@@ -265,7 +292,7 @@ define i64 @_Pshadow_Pio_CFile_Msize(%_Pshadow_Pio_CFile*) {
 }
 define void @_Pshadow_Pio_CFile_Msize_Pshadow_Pstandard_Clong(%_Pshadow_Pio_CFile*, i64) {
 	%3 = alloca i64
-	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
 	%5 = load i64* %4
 	%6 = inttoptr i64 %5 to i8*
 	%7 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %6, i64 0, i64* %3, i32 1)
@@ -277,7 +304,7 @@ define void @_Pshadow_Pio_CFile_Msize_Pshadow_Pstandard_Clong(%_Pshadow_Pio_CFil
 }
 define i32 @_Pshadow_Pio_CFile_Mread_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pio_CFile*, { i8*, [1 x i32] }) {
 	%3 = alloca i32
-	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
 	%5 = load i64* %4
 	%6 = inttoptr i64 %5 to i8*
 	%7 = extractvalue { i8*, [1 x i32] } %1, 0
@@ -311,7 +338,7 @@ define i32 @_Pshadow_Pio_CFile_Mread_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pio_CF
 }
 define i32 @_Pshadow_Pio_CFile_Mwrite_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pio_CFile*, { i8*, [1 x i32] }) {
 	%3 = alloca i32
-	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%4 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
 	%5 = load i64* %4
 	%6 = inttoptr i64 %5 to i8*
 	%7 = extractvalue { i8*, [1 x i32] } %1, 0
@@ -344,7 +371,7 @@ define i32 @_Pshadow_Pio_CFile_Mwrite_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pio_C
 	unreachable
 }
 define void @_Pshadow_Pio_CFile_Mclose(%_Pshadow_Pio_CFile*) {
-	%2 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 1
+	%2 = getelementptr inbounds %_Pshadow_Pio_CFile* %0, i32 0, i32 2
 	%3 = load i64* %2
 	store i64 -1, i64* %2
 	%4 = inttoptr i64 %3 to i8*

@@ -15,9 +15,9 @@ public class TypeParameter extends Type
 	private boolean toStringRecursion = false; //keeps type parameters that have bounds containing themselves from infinitely recursing
 	private TypeParameter recursiveParameterCheck = null; //keeps infinite type parameters checking from happening
 
-	public TypeParameter(String typeName)
+	public TypeParameter(String typeName, Type outer)
 	{
-		super(typeName, new Modifiers(), null);
+		super(typeName, new Modifiers(), outer);
 		bounds.add(Type.OBJECT);
 	}
 	

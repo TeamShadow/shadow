@@ -147,15 +147,22 @@ public class TACMethodRef extends TACOperand
 			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
 		else
 			paramTypes.add(new SimpleModifiedType(outerType)); // this
-		if (isCreate() && getOuterType().hasOuter())
-			paramTypes.add(new SimpleModifiedType(getOuterType().getOuter()));
 		
+		
+		//creates don't need class and methods because they are already inited
+		//paramTypes.add( new SimpleModifiedType(Type.CLASS));
+		//paramTypes.add( new SimpleModifiedType(Type.OBJECT)); //method table	
+			
+		if( isCreate() && getOuterType().hasOuter() )
+				paramTypes.add(new SimpleModifiedType(getOuterType().getOuter()));			
+			
 		//type parameters no longer passed to method for generic objects, only for purely parameterized methods
 		//Type parameterizedType = isCreate() ? getOuterType() : getType();
 		Type parameterizedType = getType();
 		if (parameterizedType.isParameterized())
 			for (int i = parameterizedType.getTypeParameters().size(); i > 0; i--)
-				paramTypes.add(new SimpleModifiedType(Type.CLASS));		
+				paramTypes.add(new SimpleModifiedType(Type.CLASS));
+		//TODO: add twice as many?  class type + method table?
 		
 		MethodType methodType = getType();
 				
