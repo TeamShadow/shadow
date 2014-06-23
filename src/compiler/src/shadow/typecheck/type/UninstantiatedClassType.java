@@ -23,6 +23,11 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 		this.typeArguments = typeArguments;
 	}
 	
+	public ClassType getType()
+	{
+		return type;
+	}
+	
 	@Override
 	public ClassType instantiate() throws InstantiationException
 	{		

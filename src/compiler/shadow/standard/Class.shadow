@@ -184,20 +184,7 @@ immutable class shadow.standard@Class implements CanHash
 
 	public toString() => ( String )
 	{
-		Console:instance.printLine("Help!");
-		
-		int a = this:flags;
-		//int a = 5;
-		
-		Console:instance.printLine("Trouble");
-		
-		//String s = this.name();
-		String s = a.toString();
-		Console:instance.printLine("To String Done"); 
-	
-		return s; 
-		
-		//# this.name();
+		return name;
 	}
 	
 	public native pointerSize() => ( int );	
@@ -208,16 +195,34 @@ immutable class shadow.standard@Class implements CanHash
 			return pointerSize() + 4 * size;		
 		else if( isMethod() )		
 			return 3 * pointerSize() + 4 * size;		
+		else if( isPrimitive() )
+		{
+			if( this === boolean:class or 
+				this === byte:class or
+				this === ubyte:class )
+				return 1;
+			else if( this === short:class or
+				this === ushort:class )
+				return 2;
+			else if( this === code:class or
+				this === float:class or
+				this === int:class or
+				this === uint:class )
+				return 4;
+			else
+				return 8;
+ 
+		}
 		else
-			return size;	
+			return size;			
 	}
 	
 	public get width() => ( int )
-	{
-		if( isArray() or isMethod() or isPrimitive() )
+	{		
+		if( isArray() or isMethod() or isPrimitive() )							
 			return this.size();
-		else
-			return pointerSize();
+		else		
+			return pointerSize();		
 	}
 	
 	public get hash() => ( uint )

@@ -62,18 +62,19 @@ public class InterfaceType extends Type
 		return false;
 	}
 	
+	/*
 	@Override
 	public String getMangledName()
 	{
 		Package _package = getPackage();
-		StringBuilder sb = new StringBuilder(_package.getMangledName());
+		StringBuilder sb;
+		if( _package == null )
+			sb = new StringBuilder("_Pdefault");
+		else
+			sb = new StringBuilder(_package.getMangledName());
 		sb.append(super.getMangledName());
 		
-		/*
-		if( isParameterized() )
-			sb.append(getTypeParameters().getMangledNameWithGenerics());
-		*/
-
+		
 		return sb.toString();		
 	}
 	
@@ -81,7 +82,11 @@ public class InterfaceType extends Type
 	public String getMangledNameWithGenerics()
 	{
 		Package _package = getPackage();
-		StringBuilder sb = new StringBuilder(_package.getMangledName());
+		StringBuilder sb;
+		if( _package == null )
+			sb = new StringBuilder("_Pdefault");
+		else
+			sb = new StringBuilder(_package.getMangledName());
 		sb.append(super.getMangledName());
 		
 		if( isParameterized() )
@@ -89,6 +94,7 @@ public class InterfaceType extends Type
 
 		return sb.toString();		
 	}
+	*/
 
 	public boolean recursivelyContainsMethod( String symbol )
 	{

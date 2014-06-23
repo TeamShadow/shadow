@@ -1,11 +1,15 @@
+import shadow.io@Console;
+
 abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>
 {
-	get immutable int[] lengths = int:create[0];
-	nullable Object data = null;
+	get immutable int[] lengths;
+	Object data;
 	private create( int[] lengths, Object data )	
 	{
 		this:lengths = lengths;
+		//Console:instance.printLine("Lengths!");
 		this:data = data;
+		//Console:instance.printLine("Data!");
 	}
 	public create( int[] lengths )
 	{
@@ -17,15 +21,13 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>
 	public immutable get size() => ( int )
 	{
 		int size = lengths[0];
-		for ( int i = 1; i < lengths->lengths[0]; i += 1 )
+		for ( int i = 1; i < this->dims; i += 1 )
 			size *= lengths[i];
 		return size;
 	}
-	public immutable get dims() => ( int )
-	{
-		return lengths->lengths[0];
-	}
-
+	
+	public immutable native get dims() => ( int );
+	
 	public immutable copy() => ( Array<T> )
 	{
 		Array<T> copy = Array<T>:create(this->lengths, allocate(T:class, this->size));

@@ -4,4 +4,5 @@ public interface UninstantiatedType
 {
 	Type instantiate() throws InstantiationException;
 	SequenceType getTypeArguments();
+	Type getType();
 }

@@ -12,6 +12,11 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 		return typeArguments;
 	}
 	
+	public InterfaceType getType()
+	{
+		return type;
+	}
+	
 	public UninstantiatedInterfaceType(InterfaceType type, SequenceType typeArguments )
 	{
 		super(type.getTypeName(), type.getModifiers());		

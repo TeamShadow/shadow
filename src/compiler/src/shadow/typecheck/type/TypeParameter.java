@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.typecheck.Package;
 
 
 public class TypeParameter extends Type
@@ -205,6 +206,18 @@ public class TypeParameter extends Type
 		}
 		
 		return builder.toString();
+	}
+	
+	@Override
+	public String getMangledNameWithGenerics() {		
+		return "_C" + getTypeName();		
+	}	
+	
+	
+	
+	public String getMangledName()
+	{
+		return "_C" + getTypeName();
 	}
 	
 	

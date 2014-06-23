@@ -66,6 +66,7 @@ declare x86_stdcallcc i32 @SetConsoleCP(i32)
 declare x86_stdcallcc i32 @SetConsoleOutputCP(i32)
 declare x86_stdcallcc i32 @WriteConsoleA(i8*, i8*, i32, i32*, i8*)
 declare x86_stdcallcc i32 @WriteConsoleW(i8*, i8*, i32, i32*, i8*)
+declare x86_stdcallcc i32 @FlushFileBuffers(i8*)
 
 declare x86_stdcallcc i32 @GetLastError()
 declare x86_stdcallcc i32 @GetFileAttributesA(i8*)
@@ -142,6 +143,7 @@ define %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_Mprint_Pshadow_Pstandard_C
 	%7 = getelementptr inbounds %_Pshadow_Pstandard_CString* %1, i32 0, i32 2, i32 1, i32 0
 	%8 = load i32* %7
 	%9 = call x86_stdcallcc i32 @WriteFile(i8* %4, i8* %6, i32 %8, i32* %3, i8* null)
+	;%10 = call x86_stdcallcc i32 @FlushFileBuffers(i8* %4)
 	ret %_Pshadow_Pio_CConsole* %0
 ;	%14 = call x86_stdcallcc i32 @GetFileType(i8* %4)
 ;	%15 = icmp ne i32 %14, 2

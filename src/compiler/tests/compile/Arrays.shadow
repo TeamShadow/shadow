@@ -47,8 +47,8 @@ class Arrays {
         
         try
         {        
-        	check(b2[7])[8] = 3;
-        	check(b2[7])[8] = a2[8];
+        	b2[7][8] = 3;
+        	b2[7][8] = a2[8];
         }
         recover
         {        
@@ -63,7 +63,7 @@ class Arrays {
         m[2, 4, 6, x + 4, 13] = 15;
         try
         {
-        	check(check(n[4])[2, x + 4, 13])[7] = 15;
+        	n[4][2, x + 4, 13][7] = 15;
         }
         recover
         {}

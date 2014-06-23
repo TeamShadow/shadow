@@ -3,6 +3,8 @@ package shadow.typecheck.type;
 import java.util.Collections;
 import java.util.List;
 
+import shadow.TypeCheckException;
+
 public class ArrayType extends ClassType
 {	
 	private int dimensions;
@@ -133,6 +135,14 @@ public class ArrayType extends ClassType
 		return false;
 	}
 	
+	@Override
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<TypeCheckException> errors )
+	{
+		ClassType arrayType = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(baseType));
+		return arrayType.getMatchingMethod(methodName, arguments, typeArguments, errors);		
+	}
+	
+	
 	public boolean isSubtype(Type t)
 	{		
 		if( t == UNKNOWN )
@@ -141,8 +151,15 @@ public class ArrayType extends ClassType
 		if( equals(t) )
 			return true;
 			
-		if( t == OBJECT || t == ARRAY )
+		if( t == OBJECT )
 			return true;
+		
+		if( t.getTypeWithoutTypeArguments().equals(Type.ARRAY) )
+		{
+			Type typeArgument = t.getTypeParameters().get(0).getType();
+			return typeArgument.equals(baseType);
+		}
+		
 		if( t instanceof ArrayType )
 		{
 			ArrayType type = (ArrayType)this;
@@ -160,5 +177,17 @@ public class ArrayType extends ClassType
 	public ArrayType replace(SequenceType values, SequenceType replacements )
 	{	
 		return new ArrayType( baseType.replace(values, replacements), dimensions  );		
+	}
+
+
+	public boolean baseIsTypeParameter()
+	{
+		if( baseType instanceof TypeParameter )
+			return true;
+		
+		if( baseType instanceof ArrayType )
+			return ((ArrayType)baseType).baseIsTypeParameter();
+	
+		return false;
 	}
 }

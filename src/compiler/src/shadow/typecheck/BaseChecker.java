@@ -36,6 +36,7 @@ import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UninstantiatedClassType;
 import shadow.typecheck.type.UninstantiatedInterfaceType;
+import shadow.typecheck.type.UninstantiatedType;
 
 public abstract class BaseChecker extends AbstractASTVisitor
 {	
@@ -698,8 +699,10 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			start++;					
 		}
 		
-		Type type = lookupType(typeName);				
+		Type type = lookupType(typeName);	
 		
+		
+				
 		if(type == null)
 		{
 			addError(Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
@@ -737,8 +740,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			
 			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
 			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
-			{
+			{	
 				Type outer = type;
+				if( outer instanceof UninstantiatedType )
+					outer = ((UninstantiatedType)type).getType();
+				
 				child = node.jjtGetChild(i);
 				type = null;
 				if( outer instanceof ClassType )

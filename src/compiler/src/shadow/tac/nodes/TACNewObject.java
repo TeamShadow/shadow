@@ -4,6 +4,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.Type;
 
 /** 
  * TAC representation of object allocation
@@ -43,11 +44,17 @@ public class TACNewObject extends TACOperand
 	{
 		return methodTable;
 	}
+	
+	public ClassType getClassType()
+	{
+		return type;
+	}
+		
 
 	@Override
 	public ClassType getType()
 	{
-		return type;
+		return Type.OBJECT;
 	}	
 
 	@Override

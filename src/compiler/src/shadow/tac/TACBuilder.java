@@ -1100,16 +1100,24 @@ public class TACBuilder implements ShadowParserVisitor
 		if (prefix == null)
 			prefix = new TACVariableRef(tree, method.getThis());
 		
-		TACMethodRef methodRef = new TACMethodRef(tree,
-				explicitSuper ? null : prefix,
-				methodType.getTypeWithoutTypeArguments(),				
-				methodName);
-		List<TACOperand> params = new ArrayList<TACOperand>();
-		
 		if( prefix.getType() instanceof InterfaceType )		
 			prefix = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), prefix);
+		else if( prefix.getType() instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType) prefix.getType();
+			Type genericArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
+			prefix = new TACCast(tree, new SimpleModifiedType(genericArray), prefix);
+		}
+		
+		TACMethodRef methodRef = new TACMethodRef(tree,
+				//explicitSuper ? null : prefix,
+				prefix,
+				methodType.getTypeWithoutTypeArguments(),
+				methodName);
+		List<TACOperand> params = new ArrayList<TACOperand>();
 				
-		params.add(prefix);
+		//params.add(prefix);
+		params.add(methodRef.getPrefix());
 		for (int i = 0; i < tree.getNumChildren(); i++)
 			if (node.jjtGetChild(i) instanceof ASTTypeArguments)
 				for (ModifiedType type :
@@ -1129,16 +1137,21 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTQualifiedKeyword node, Boolean secondVisit)
 			throws ShadowException
 	{
+		/*
 		if (secondVisit)
 		{
 			if (node.getImage().equals("class"))
 			{	
-				TACClass _class = new TACClass(tree, identifier.getType(), method);				
+				prefix = new TACClass(tree, identifier.getType(), method).getClassData();				
 			}
 			else // TODO: Make this work
 				throw new UnsupportedOperationException();
 		}
+		
 		return POST_CHILDREN;
+		*/
+		
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -1173,7 +1186,21 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-			prefix = new TACFieldRef(tree, prefix, node.getImage());
+		{			
+			if( node.getImage().equals("class"))
+			{
+				Type type = identifier.getType();
+				if( node.jjtGetNumChildren() > 0 )
+				{
+					ASTTypeArguments arguments = (ASTTypeArguments) node.jjtGetChild(0);
+					type = type.replace(type.getTypeParameters(), arguments.getType());					
+				}
+				
+				prefix = new TACClass(tree, type, method).getClassData();
+			}
+			else			
+				prefix = new TACFieldRef(tree, prefix, node.getImage());
+		}
 		return POST_CHILDREN;
 	}
 
@@ -1308,14 +1335,7 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-		{
-			/*
-			if (node.jjtGetChild(i) instanceof ASTTypeArguments)
-				for (ModifiedType type : (SequenceType)
-						node.jjtGetChild(i).getType())
-					params.add(new TACClass(tree, type.getType(), method));
-			 */
-			
+		{	
 			MethodType methodType = (MethodType) node.getType();
 			
 			//methodRef doesn't have parameters because the same method gets called no matter what
@@ -1329,11 +1349,6 @@ public class TACBuilder implements ShadowParserVisitor
 			
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(object);
-			
-			/*
-			if( classType.isParameterized() ) //create generic type
-				params.add(new TACGenericClass(tree, classType, method));
-			*/
 			
 			if (methodRef.getOuterType().hasOuter())
 			{
@@ -1352,8 +1367,10 @@ public class TACBuilder implements ShadowParserVisitor
 			for (int i = start; i < tree.getNumChildren(); i++)
 					params.add(tree.appendChild(i));
 			
-			new TACCall(tree, block, methodRef, params);
-			prefix = new TACNodeRef(tree, object);
+			TACCall call = new TACCall(tree, block, methodRef, params);
+			//prefix = new TACNodeRef(tree, object);
+			//prefix = new TACNodeRef(tree, call);
+			prefix = call;
 		}
 		return POST_CHILDREN;
 	}
@@ -1371,9 +1388,11 @@ public class TACBuilder implements ShadowParserVisitor
 			new TACBranch(tree, new TACSame(tree, instance, new TACLiteral(tree,
 					"null")), initLabel, doneLabel);
 			initLabel.new TACLabel(tree);
-			new TACStore(tree, instance, new TACCall(tree, block,
-					new TACMethodRef(tree, type.getMethods("create").get(0)),
-					Collections.singletonList(new TACNewObject(tree, type, method))));
+			
+			TACMethodRef methodRef = new TACMethodRef(tree, type.getMethods("create").get(0));
+			TACOperand object = new TACNewObject(tree, type, method);
+			TACCall call = new TACCall(tree, block, methodRef, object );			
+			new TACStore(tree, instance, call ); 				
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
 			prefix = new TACLoad(tree, instance);

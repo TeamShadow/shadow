@@ -2117,7 +2117,10 @@ public class StatementChecker extends BaseChecker
 			}	
 			
 			if( child instanceof ASTQualifiedKeyword )
-				node.setImage(child.getImage()); //"this", "super", or "class"
+				node.setImage(child.getImage()); //"this", "super"
+			
+			if( child instanceof ASTScopeSpecifier && child.getImage().equals("class"))
+				node.setImage(child.getImage()); //"class"
 			
 			if( child instanceof ASTMethodCall )
 			{
@@ -2184,17 +2187,7 @@ public class StatementChecker extends BaseChecker
 					}
 					else				
 						addError(Error.INVALID_SELF_REFERENCE, "Prefix of qualified super is not the current class or an enclosing class");
-				}
-				else if( kind.equals("class"))
-				{
-					if( (prefixType instanceof ClassType) || (prefixType instanceof TypeParameter)  )
-					{
-						node.setType( Type.CLASS );
-						node.addModifier(Modifiers.IMMUTABLE);						
-					}
-					else					
-						addError(Error.INVALID_TYPE, ":class constant only accessible on class, enum, error, exception, singleton types and type parameters"); //may need other cases
-				}
+				}			
 				
 				Modifiers methodModifiers = null;
 				if(!currentMethod.isEmpty() )
@@ -2609,24 +2602,58 @@ public class StatementChecker extends BaseChecker
 	{
 		if( secondVisit )
 		{	
-			//always part of a suffix, thus always has a prefix
+			//always part of a suffix, thus always has a prefix			
 			ModifiedType prefixNode = curPrefix.getFirst();
 			prefixNode = resolveType( prefixNode );
 			Type prefixType = prefixNode.getType(); 
 			String name = node.getImage();
 			boolean isTypeName = prefixNode.getModifiers().isTypeName();
 			
-			if( prefixType.containsField( name ) )
+			if( name.equals("class") )
+			{	
+				if( isTypeName )
+				{
+					if( node.jjtGetNumChildren() > 0 ) //has type arguments
+					{							
+						ASTTypeArguments arguments = (ASTTypeArguments) node.jjtGetChild(0);
+						SequenceType parameterTypes = prefixType.getTypeParameters();
+						SequenceType argumentTypes = arguments.getType();
+						
+						if( !prefixType.isParameterized() )
+							addError( Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + argumentTypes + " supplied for non-parameterized type " + prefixType);
+						else if( !parameterTypes.canAccept(argumentTypes, SubstitutionType.TYPE_PARAMETER) )
+							addError( Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
+						else													
+							((ClassType)currentType).addReferencedType(prefixType.replace(parameterTypes, argumentTypes));
+					}
+					else if( prefixType.isParameterized() )
+						addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
+				}
+				else
+					addError( Error.NOT_TYPE, "Constant class requires type name for access");
+				
+				node.setType( Type.CLASS );
+				node.addModifier(Modifiers.IMMUTABLE);	
+			}			
+			else if( prefixType.containsField( name ) )
 			{
 				Node field = prefixType.getField(name);
 				
-				if( !fieldIsAccessible( field, currentType ))
+				if( node.jjtGetNumChildren() > 0 ) //has type arguments
+				{
+					addError(Error.INVALID_TYPE_ARGUMENTS, "Type arguments should not be used for field access");
+				}
+				else if( !fieldIsAccessible( field, currentType ))
 				{
 					addError(Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
 				}					
 				else if( field.getModifiers().isConstant() && !isTypeName )
 				{
-					addError(Error.ILLEGAL_ACCESS, "Constant " + name + " requires class name for access");
+					addError(Error.ILLEGAL_ACCESS, "Constant " + name + " requires type name for access");
+				}
+				else if( isTypeName )
+				{
+					addError(Error.ILLEGAL_ACCESS, "Field " + name + " is only accessible from an object reference");
 				}
 				else
 				{
@@ -2654,7 +2681,7 @@ public class StatementChecker extends BaseChecker
 						node.addModifier(Modifiers.ASSIGNABLE);					
 				}
 			}
-			else if( prefixType instanceof ClassType && ((ClassType)prefixType).containsInnerClass(name) )
+			else if( prefixType instanceof ClassType && ((ClassType)prefixType).containsInnerClass(name) && isTypeName )
 			{
 				ClassType classType = (ClassType) prefixType;
 				ClassType innerClass = classType.getInnerClass(name);

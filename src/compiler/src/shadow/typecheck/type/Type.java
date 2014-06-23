@@ -233,30 +233,6 @@ public abstract class Type implements Comparable<Type>
 		return typeName;
 	}
 	
-	public String getMangledName()
-	{
-		StringBuilder sb = new StringBuilder("_C");
-		String[] parts = getTypeName().split(":");
-		for ( String part : parts )
-			mangle(sb, part).append("_I");
-		return sb.delete(sb.length() - 2, sb.length()).toString();
-	}
-	
-			
-	public String getMangledNameWithGenerics() {		
-		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
-		StringBuilder builder;
-		
-		if( getOuter() == null )		
-			builder = new StringBuilder("_C").append(className);
-		else
-			builder = new StringBuilder(getOuter().getMangledNameWithGenerics() + "_I" + className );
-			
-		if( isParameterized() )		
-			builder.append(getTypeParameters().getMangledNameWithGenerics());
-				
-		return builder.toString();
-	}	
 	
 	public String getImportName() //does not include parameters
 	{		
@@ -267,14 +243,64 @@ public abstract class Type implements Comparable<Type>
 		else
 			return _package.getQualifiedName() + '@' + getTypeName();			
 	}
+
+			
+	public String getMangledNameWithGenerics() {		
+		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
+		StringBuilder builder;
+		
+		if( getOuter() == null )
+		{
+			Package _package = getPackage();			
+			if( _package == null )
+				builder = new StringBuilder("_Pdefault");
+			else
+				builder = new StringBuilder(_package.getMangledName());
+			
+			builder.append("_C").append(className);
+		}
+		else
+			builder = new StringBuilder(getOuter().getMangledNameWithGenerics() + "_I" + className );
+			
+		if( isParameterized() )		
+			builder.append(getTypeParameters().getMangledNameWithGenerics());
+				
+		return builder.toString();
+	}	
+
 	
+
+	public String getMangledName()
+	{
+		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
+		StringBuilder builder;
+		
+		if( getOuter() == null )
+		{
+			Package _package = getPackage();			
+			if( _package == null )
+				builder = new StringBuilder("_Pdefault");
+			else
+				builder = new StringBuilder(_package.getMangledName());
+			
+			builder.append("_C").append(className);
+		}
+		else
+			builder = new StringBuilder(getOuter().getMangledName() + "_I" + className );
+				
+		return builder.toString();	
+	}
 	
 	public final String getHashName()
 	{
+		/*
 		if( _package == null || _package.getQualifiedName().isEmpty())
 			return "default@" + toString();
 		else
-			return _package.getQualifiedName() + '@' + toString();		
+			return _package.getQualifiedName() + '@' + toString();
+		*/
+		
+		return getMangledNameWithGenerics();
 	}
 	
 	public String getQualifiedName() 
@@ -337,6 +363,18 @@ public abstract class Type implements Comparable<Type>
 	public final boolean manglesTheSameAs(Type type)
 	{
 		return getMangledName().equals(type.getMangledName());		
+	}
+	
+	@Override
+	public boolean equals(Object object)
+	{
+		if( object instanceof Type )
+		{
+			Type type = (Type)object;
+			return equals( type );			
+		}
+		else
+			return false;
 	}
 	
 	//separate from equals() because we need certain different types to be equivalent in hash tables
@@ -755,6 +793,30 @@ public abstract class Type implements Comparable<Type>
 	{
 		return parameterized; 
 	}
+	
+	public boolean isFullyInstantiated()
+	{
+		if( !parameterized )
+			return false;
+		
+		for( ModifiedType parameter : typeParameters )		
+			if( parameter.getType() instanceof TypeParameter )
+				return false;			
+		
+		return true;		
+	}
+	
+	public boolean isUninstantiated()
+	{
+		if( !parameterized )
+			return true;
+		
+		for( ModifiedType parameter : typeParameters )		
+			if( !(parameter.getType() instanceof TypeParameter) )
+				return false;			
+		
+		return true;		
+	}
 
 
 	/**
@@ -996,19 +1058,50 @@ public abstract class Type implements Comparable<Type>
 			if( type instanceof ArrayType )
 			{
 				ArrayType arrayType = (ArrayType) type;
-				addReferencedType(Type.ARRAY);
-				addReferencedType(arrayType.getBaseType());			
+				ClassType instantiatedArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
+				addReferencedType(instantiatedArray);
+				//addReferencedType(Type.ARRAY);
+				//addReferencedType(arrayType.getBaseType());			
+			}
+			else if( type instanceof MethodType )
+			{
+				MethodType methodType = (MethodType) type;
+				for( ModifiedType parameter : methodType.getParameterTypes() )
+					addReferencedType( parameter.getType() );
+				
+				for( ModifiedType _return : methodType.getReturnTypes() )
+					addReferencedType( _return.getType() );				
 			}
 			else if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
 			{
-				if( type instanceof InterfaceType  )
+				//if( type instanceof InterfaceType  )
 					referencedTypes.add(type);
-				else
-					referencedTypes.add(type.typeWithoutTypeArguments);
+				//else
+				//	referencedTypes.add(type.typeWithoutTypeArguments);
 				if( type.isParameterized() )
 				{
-					for( ModifiedType typeParameter : type.getTypeParameters() )
-						addReferencedType( typeParameter.getType() );
+					if( type.isFullyInstantiated() )
+					{				
+						referencedTypes.add(type.typeWithoutTypeArguments);
+						
+						for( ModifiedType typeParameter : type.getTypeParameters() )
+						{
+							addReferencedType( typeParameter.getType() );
+							
+							//we also need to keep representations of array and method type parameters, but only for objects
+							if( type instanceof ClassType && type.isFullyInstantiated() )
+							{
+								if( type instanceof MethodType )
+									referencedTypes.add(type);
+								else if( type instanceof ArrayType && !((ArrayType)type).baseIsTypeParameter() )
+									referencedTypes.add(type);
+							}						
+						}
+					}
+				}
+				else
+				{
+					referencedTypes.add(type);					
 				}
 			}
 			

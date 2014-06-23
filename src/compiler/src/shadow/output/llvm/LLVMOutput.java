@@ -164,25 +164,52 @@ public class LLVMOutput extends AbstractOutput
 	}
 	
 	
-	private void writeTypeDeclaration(Type type ) throws ShadowException
+	private void writeTypeDeclaration(Type type) throws ShadowException
 	{
 		StringBuilder sb = new StringBuilder();
-		sb.append('%').append(raw(type, "_methods")).append(" = type { ");
-		//if (type instanceof ClassType)
-		//	sb.append('%').append(raw(Type.CLASS)).append(", ");
-		writer.write(sb.append(methodList(type.orderAllMethods(), false)).
-				append(" }").toString());
-		if (type instanceof ClassType)
+		
+		if( type instanceof InterfaceType )
 		{
-			//first thing in every object is the class
+			if( type.isFullyInstantiated() )
+				sb.append('%').append(withGenerics(type, "_methods")).append(" = type { ");
+			else if( type.isUninstantiated() )
+				sb.append('%').append(raw(type, "_methods")).append(" = type { ");
+			//if (type instanceof ClassType)
+			//	sb.append('%').append(raw(Type.CLASS)).append(", ");
+			writer.write(sb.append(methodList(type.orderAllMethods(), false)).
+					append(" }").toString());
+		}
+		else if (type instanceof ClassType)
+		{			
+			if( type.isUninstantiated() )
+			{
+				sb.append('%').append(raw(type, "_methods")).append(" = type { ");
+				writer.write(sb.append(methodList(type.orderAllMethods(), false)).
+						append(" }").toString());
+				
+				sb.setLength(0);
+				//first thing in every object is the class			
+				sb.append('%').append(raw(type)).append(" = type { ");
+				
+				sb.append(type(Type.CLASS)).append(", ");
+				
+				//then the method table
+				sb.append('%').append(raw(type, "_methods")).append("* ");
+				
+			}
+			/*
 			sb.setLength(0);
-			sb.append('%').append(raw(type)).append(" = type { ");
-					//append(raw(type, "_Mclass")).append('*');
+			//first thing in every object is the class			
+			if( type.isUninstantiated() )
+				sb.append('%').append(raw(type)).append(" = type { ");
+			else
+				sb.append('%').append(withGenerics(type)).append(" = type { ");
 			
 			sb.append(type(Type.CLASS)).append(", ");
 			
 			//then the method table
 			sb.append('%').append(raw(type, "_methods")).append("* ");
+			*/
 			
 			/*
 			
@@ -214,43 +241,42 @@ public class LLVMOutput extends AbstractOutput
 	}
 	
 	private void writeTypeConstants(Type type) throws ShadowException
-	{
-		Type unparameterizedType = type.getTypeWithoutTypeArguments();
-		
+	{	
 		if (type instanceof InterfaceType)
 		{	
 			//parameterized interfaces are stored in a separate file			 
-			if( type.isParameterized() && !type.getMangledNameWithGenerics().equals(unparameterizedType.getMangledNameWithGenerics()) )
+			if( type.isFullyInstantiated() )
 			//it's possible to have multiple generic versions of an interface that are indistinguishable to LLVM
 			//this second condition prevents that
 			{	
 				writer.write('@' + withGenerics(type, "_class") +
 						" = external constant %" + raw(Type.CLASS));				
 
-				generics.add(new Generic(type.toString(), type.getMangledNameWithGenerics(), type.getMangledName(), type.getAllInterfaces().size(), true));
+				generics.add(new Generic(type));
 			}					
 		}
-		if (type instanceof ClassType)
+		else if (type instanceof ClassType)
 		{
-			if( type.isParameterized() && !type.getMangledNameWithGenerics().equals(unparameterizedType.getMangledNameWithGenerics()) )
+			if( type.isFullyInstantiated() )
 			{
 				writer.write('@' + withGenerics(type, "_class") +
 						" = external constant %" + raw(Type.CLASS));
 				
-				Generic generic = new Generic(type.toString(), type.getMangledNameWithGenerics(), type.getMangledName(), type.getAllInterfaces().size(), false);
+				Generic generic = new Generic(type);
 				
 				for( ModifiedType parameter : type.getTypeParameters() )
-				{
-					generic.addParameter("@" + withGenerics(parameter.getType(), "_class") );
-					generic.addParameter("@" + raw(parameter.getType(), "_methods" ));
+				{					
+					generic.addParameter(parameter.getType().getMangledNameWithGenerics());
+					//generic.addParameter("bitcast (" + type(Type.CLASS) + " @" + withGenerics(parameter.getType(), "_class") + " to " + type(Type.OBJECT) + ")" );
+					//generic.addParameter("bitcast (%" + raw(parameter.getType(), "_methods" ) + "* @" + raw(parameter.getType(), "_methods" ) + " to " + type(Type.OBJECT) + ")" );
 				}
 				
 				for( InterfaceType _interface : type.getAllInterfaces() )				
-					generic.addParameter("@" + withGenerics(_interface, "_class"));
+					generic.addInterface("@" + withGenerics(_interface, "_class"));
 				
 				generics.add(generic);				
 			}
-			else
+			else if( type.isUninstantiated() )
 			{
 				//methods recorded only for non-parameterized class
 				writer.write('@' + raw(type, "_methods") +
@@ -260,6 +286,7 @@ public class LLVMOutput extends AbstractOutput
 						" = external constant %" + raw(Type.CLASS));
 			}
 		}
+		
 		if (type instanceof SingletonType) //never parameterized
 			writer.write('@' + raw(type, "_instance") +
 					" = external global " + type(type));	
@@ -320,39 +347,40 @@ public class LLVMOutput extends AbstractOutput
 			Cleanup.getInstance().walk(constant);
 		}
 		
-		HashSet<InterfaceType> definedInterfaces = new HashSet<InterfaceType>();
+		HashSet<Type> definedGenerics = new HashSet<Type>();
 		for (Type type : module.getReferences())
 		{
 			if(type != null && !type.equals(module.getType()))		
-			{			
-				if(type instanceof InterfaceType )
+			{	
+				if( !type.isParameterized() )
+					writeTypeDeclaration(type);	
+				else
 				{
-					InterfaceType interfaceType = (InterfaceType) type;
-					if( !interfaceType.isParameterized() )
-						writeTypeDeclaration(type);	
-					else
-					{
-						InterfaceType unparameterizedType = interfaceType.getTypeWithoutTypeArguments();
-						
-						//write all parameterized interfaces
-						if( !interfaceType.manglesTheSameAs(unparameterizedType)) 
-							writeTypeDeclaration(type);
-						//if unparameterized version has not been declared yet, do it
-						if( definedInterfaces.add(unparameterizedType) &&
-							!unparameterizedType.manglesTheSameAs(module.getType()))
-							writeTypeDeclaration(unparameterizedType);
-					}					
+					Type unparameterizedType = type.getTypeWithoutTypeArguments();
+					
+					//write all parameterized interfaces
+					if( type.isFullyInstantiated() && type instanceof InterfaceType ) 
+						writeTypeDeclaration(type);
+					//if unparameterized version has not been declared yet, do it
+					if( definedGenerics.add(unparameterizedType) &&
+						//keep as mangles the same as?
+						!unparameterizedType.equals(module.getType()))
+						writeTypeDeclaration(unparameterizedType);
 				}
-				else				
-					writeTypeDeclaration(type);
 			}
 		}
 		writer.write();
 
 		HashSet<InterfaceType> interfaces = moduleType.getAllInterfaces();		
 		int interfaceCount = interfaces.size();
-		StringBuilder interfaceData = new StringBuilder(
-				"@_interfaceData = private unnamed_addr constant [").
+		StringBuilder interfaceData;
+		
+		interfaceData = new StringBuilder( "@_interfaceData" + moduleType.getMangledName() + " = " );
+		
+		if( !moduleType.isParameterized() )
+			interfaceData.append("private ");
+				
+		interfaceData.append("unnamed_addr constant [").
 				append(interfaceCount).append(" x ").
 				append(type(Type.OBJECT)).append("] [");
 		StringBuilder interfaceClasses = new StringBuilder("@_interfaces");
@@ -419,7 +447,7 @@ public class LLVMOutput extends AbstractOutput
 					type(new ArrayType(Type.OBJECT)) + " { " +   //data
 					type(Type.OBJECT) + "* getelementptr inbounds ([" +
 					interfaceCount + " x " + type(Type.OBJECT) +
-					"]* @_interfaceData, i32 0, i32 0), [1 x " + 
+					"]* @_interfaceData" + moduleType.getMangledName() + ", i32 0, i32 0), [1 x " + 
 					type(Type.INT) + "] [" + typeLiteral(interfaceCount) +
 					"] }, " + 
 					type(new ArrayType(Type.CLASS)) + " { " + //interfaces
@@ -738,13 +766,15 @@ public class LLVMOutput extends AbstractOutput
 						//type(Type.CLASS) + ", " +
 						type(new ArrayType(Type.INT)) + ", " +
 						type(Type.OBJECT) + ')');
-			for (List<MethodSignature> methodList :
-					type.getMethodMap().values())
-				for (MethodSignature method : methodList)
-					if (method.getModifiers().isPublic() ||
-						(module.getType().isSubtype(type)  && method.getModifiers().isProtected()))
-						writer.write("declare " + methodToString(
-								new TACMethod(method).addParameters()));
+			
+			if( type.isUninstantiated()  )
+				for (List<MethodSignature> methodList :
+						type.getMethodMap().values())
+					for (MethodSignature method : methodList)
+						if (method.getModifiers().isPublic() ||
+							(module.getType().isSubtype(type)  && method.getModifiers().isProtected()))
+							writer.write("declare " + methodToString(
+									new TACMethod(method).addParameters()));
 			writer.write();
 		}
 
@@ -967,7 +997,12 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACClass.TACClassData node) throws ShadowException
 	{
-		node.setData("@" + raw(node.getClassType(), "_class"));		
+		Type type = node.getClassType();
+		
+		if( type.isParameterized() && !type.toString().equals(type.getTypeWithoutTypeArguments().toString()))
+			node.setData("@" + withGenerics(type, "_class"));
+		else
+			node.setData("@" + raw(type, "_class"));
 	}
 	
 	@Override
@@ -1173,9 +1208,16 @@ public class LLVMOutput extends AbstractOutput
 	//					"_Mclass") + ", i32 0, i32 0), %long " + temp(6) + ", " +
 	//					type(new ArrayType(Type.INT)) + ' ' + temp(1) + ')');
 	//			writer.writeLeft("; convert " + srcType + " to " + destType);
+				/*
 				TACClass baseClass = new TACClass(arrayType.getBaseType(),
 						method);
 				walk(baseClass);
+				*/
+				
+				ClassType arrayWrapper = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
+				TACClass arrayClass = new TACClass(arrayWrapper, method);
+				walk(arrayClass);
+				
 				ArrayType intArray = new ArrayType(Type.INT);
 				String dimsType = " [" + arrayType.getDimensions() + " x " +
 						type(Type.INT) + ']';
@@ -1205,18 +1247,18 @@ public class LLVMOutput extends AbstractOutput
 				writer.write(nextTemp() + " = call noalias " +
 						type(Type.OBJECT) + " @" + raw(Type.CLASS,
 						"_Mallocate") + '(' + typeText(Type.CLASS,
-						classOf(Type.ARRAY)) + ')');
+						symbol(arrayClass.getClassData())) + ')');
 								
 				//copy class
 				writer.write(nextTemp() + " = getelementptr inbounds " +
 						type(Type.OBJECT) + " " + temp(1) + ", i32 0, i32 0");
-				writer.write("store " + type(Type.CLASS) + " " + symbol(baseClass.getClassData()) + ", " +
+				writer.write("store " + type(Type.CLASS) + " " + symbol(arrayClass.getClassData()) + ", " +
 						type(Type.CLASS) + "* " + temp(0));
 				
 				//copy methodtable
 				writer.write(nextTemp() + " = getelementptr inbounds " +
-						type(Type.OBJECT) + " " + node.getData() + ", i32 0, i32 1");
-				writer.write("store %" + raw(Type.OBJECT, "_methods") + "* bitcast(%" + raw(arrayType.getBaseType().getTypeWithoutTypeArguments(), "_methods") + "* " +  symbol(baseClass.getMethodTable()) + " to %" + raw(Type.OBJECT, "_methods") + "*), " +
+						type(Type.OBJECT) + " " + temp(2) + ", i32 0, i32 1");
+				writer.write("store %" + raw(Type.OBJECT, "_methods") + "* bitcast(%" + raw(Type.ARRAY, "_methods") + "* " +  symbol(arrayClass.getMethodTable()) + " to %" + raw(Type.OBJECT, "_methods") + "*), " +
 						"%" + raw(Type.OBJECT, "_methods") + "** " + temp(0));	
 								
 				writer.write(nextTemp() + " = call " + type(Type.ARRAY) + " @" +
@@ -1388,7 +1430,11 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACNewObject node) throws ShadowException
 	{				
-		ClassType type = node.getType();		
+		ClassType type = node.getClassType();	
+		
+		TACOperand _class = node.getClassData();
+		TACOperand methods = node.getMethodTable();	
+		
 		
 		//add something special in for type parameters
 		/*if( type.isParameterized() )
@@ -1409,27 +1455,27 @@ public class LLVMOutput extends AbstractOutput
 		//	writer.write(nextTemp() + " = bitcast " + type(Type.CLASS) + " " + temp(1) + " to " + type(Type.CLASS) );
 			writer.write(nextTemp(node) + " = call noalias " + type(Type.OBJECT) +
 					" @" + raw(Type.CLASS, "_Mallocate") + '(' + type(Type.CLASS) +
-					"@" + raw(node.getType(), "_class") + " )");
+					" " + symbol(_class) + " )");
 		//}
 		
-		TACOperand _class = node.getClassData();
-		TACOperand methods = node.getMethodTable();	
-		
+
 		//copy class
 		writer.write(nextTemp() + " = getelementptr inbounds " +
-				type(Type.OBJECT) + " " + node.getData() + ", i32 0, i32 0");
+				type(Type.OBJECT) + " " + symbol(node) + ", i32 0, i32 0");
 		writer.write("store " + type(Type.CLASS) + " " +  symbol(_class) + ", " +
 				type(Type.CLASS) + "* " + temp(0));
 		
 		//copy methodtable
 		writer.write(nextTemp() + " = getelementptr inbounds " +
-				type(Type.OBJECT) + " " + node.getData() + ", i32 0, i32 1");
+				type(Type.OBJECT) + " " + symbol(node) + ", i32 0, i32 1");
 		writer.write("store %" + raw(Type.OBJECT, "_methods") + "* bitcast(%" + raw(type.getTypeWithoutTypeArguments(), "_methods") + "* " +  symbol(methods) + " to %" + raw(Type.OBJECT, "_methods") + "*), " +
 				"%" + raw(Type.OBJECT, "_methods") + "** " + temp(0));	
 		
+		/*
 		if (!type.equals(Type.OBJECT))
 			writer.write(nextTemp(node) + " = bitcast " + type(Type.OBJECT) +
 					' ' + temp(3) + " to " + type(type));
+		*/
 	}
 
 	@Override
@@ -1683,10 +1729,28 @@ public class LLVMOutput extends AbstractOutput
 		if (reference instanceof TACPropertyRef)
 		{
 			TACPropertyRef property = (TACPropertyRef)reference;
-			TACMethodRef method = new TACMethodRef(property.getPrefix(),
-					property.getType().getGetter().getMethodType(), property.getName());
+			TACOperand prefix = property.getPrefix();
+			
+			if( prefix.getType() instanceof InterfaceType )	
+			{
+				prefix = new TACCast(null, new SimpleModifiedType(Type.OBJECT), prefix);
+				walk(prefix);				
+			}
+			else if( prefix.getType() instanceof ArrayType )
+			{
+				ArrayType arrayType = (ArrayType) prefix.getType();
+				Type genericArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
+				prefix = new TACCast(null, new SimpleModifiedType(genericArray), prefix);
+				walk(prefix);
+			}
+			
+			TACMethodRef method = new TACMethodRef(prefix,
+			//		property.getType().getGetter().getMethodType(), property.getName());
+					property.getType().getGetter().getMethodType().getTypeWithoutTypeArguments(), property.getName());
+			//TACCall call = new TACCall(method.getNext(), property.getBlock(),
+			//		method, Collections.singletonList(property.getPrefix()));
 			TACCall call = new TACCall(method.getNext(), property.getBlock(),
-					method, Collections.singletonList(property.getPrefix()));
+					method, Collections.singletonList(method.getPrefix()));
 			walk(call);
 			node.setData(symbol(call));
 		}
@@ -1712,10 +1776,28 @@ public class LLVMOutput extends AbstractOutput
 		else if (reference instanceof TACPropertyRef)
 		{
 			TACPropertyRef property = (TACPropertyRef)reference;
-			TACMethodRef method = new TACMethodRef(property.getPrefix(),
-					property.getType().getSetter().getMethodType(), property.getName());
+			TACOperand prefix = property.getPrefix();
+			
+			if( prefix.getType() instanceof InterfaceType )		
+			{
+				prefix = new TACCast(null, new SimpleModifiedType(Type.OBJECT), prefix);
+				walk(prefix);
+				
+			}
+			else if( prefix.getType() instanceof ArrayType )
+			{
+				ArrayType arrayType = (ArrayType) prefix.getType();
+				Type genericArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
+				prefix = new TACCast(null, new SimpleModifiedType(genericArray), prefix);
+				walk(prefix);
+			}			
+
+			TACMethodRef method = new TACMethodRef(prefix,
+					property.getType().getSetter().getMethodType().getTypeWithoutTypeArguments(), property.getName());
+			//walk(new TACCall(method.getNext(), property.getBlock(), method,
+			//		Arrays.asList(property.getPrefix(), node.getValue())));
 			walk(new TACCall(method.getNext(), property.getBlock(), method,
-					Arrays.asList(property.getPrefix(), node.getValue())));
+					Arrays.asList(method.getPrefix(), node.getValue())));
 		}
 		else
 			writer.write("store " + typeSymbol(node.getValue()) + ", " +
@@ -2116,11 +2198,11 @@ public class LLVMOutput extends AbstractOutput
 	}
 	private static String withGenerics(ModifiedType type, String extra)
 	{
-		return raw(type.getType(), extra);
+		return withGenerics(type.getType(), extra);
 	}
 	private static String withGenerics(Type type)
 	{
-		return raw(type, "");
+		return withGenerics(type, "");
 	}
 	private static String withGenerics(Type type, String extra)
 	{
@@ -2400,15 +2482,27 @@ public class LLVMOutput extends AbstractOutput
 		writeTypeDeclaration(Type.ITERATOR);
 		writeTypeDeclaration(Type.STRING);
 		
-		writeTypeConstants(Type.CLASS);
-		writeTypeConstants(Type.STRING);		
+		writeTypeConstants(Type.OBJECT);		
+		writeTypeConstants(Type.CLASS);		
+		//writeTypeDeclaration(Type.ARRAY_CLASS);
+		writeTypeConstants(Type.GENERIC_CLASS);
+		//writeTypeDeclaration(Type.METHOD_CLASS);
+		writeTypeConstants(Type.ITERATOR);
+		writeTypeConstants(Type.STRING);
+		
 		
 		HashSet<String> genericNames = new HashSet<String>();
+		HashSet<String> parameterNames = new HashSet<String>();
 		HashSet<String> types = new HashSet<String>();
+		
+		types.add(Type.OBJECT.getMangledNameWithGenerics());
+		types.add(Type.CLASS.getMangledNameWithGenerics());
+		types.add(Type.GENERIC_CLASS.getMangledNameWithGenerics());
+		types.add(Type.ITERATOR.getMangledNameWithGenerics());
+		types.add(Type.STRING.getMangledNameWithGenerics());
 				
 		for( Generic generic : generics )
-		{
-			
+		{			
 			if( generic.isInterface() )
 			{
 				int size = generic.getSize();
@@ -2448,6 +2542,12 @@ public class LLVMOutput extends AbstractOutput
 			{
 				if( types.add(generic.getMangledName()) )
 				{	
+					if( genericNames.add(generic.getMangledGeneric()) )
+					{
+						writer.write("@_interfaceData" + generic.getMangledGeneric() + " = external constant [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
+						writer.write(generic.getTypeLayout());
+					}
+					
 					StringBuilder sb = new StringBuilder("[");
 					boolean first = true;
 					
@@ -2464,9 +2564,10 @@ public class LLVMOutput extends AbstractOutput
 					sb.append("]");					
 					
 					writer.write("@_interfaces" + generic.getMangledName() +
-							" = constant [" + generic.getInterfaces().size() + " x " + type(Type.CLASS) + "] " + sb.toString());
+							" = private constant [" + generic.getInterfaces().size() + " x " + type(Type.CLASS) + "] " + sb.toString());
 					
 					sb.setLength(0);
+					sb.append("[");					
 					first = true;
 					
 					for(String parameter : generic.getParameters() )
@@ -2475,14 +2576,15 @@ public class LLVMOutput extends AbstractOutput
 							first = false;
 						else
 							sb.append(", ");
-						sb.append(type(Type.OBJECT)).append(" ");
-						sb.append(parameter);
+						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
+						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + parameter + "_methods\"* @\"" + parameter + "_methods\" to " + type(Type.OBJECT) + ")" );
+						parameterNames.add(parameter);
 					}
 					
 					sb.append("]");					
 					
 					writer.write("@_parameters" + generic.getMangledName() +
-							" = constant [" + generic.getParameters().size() + " x " + type(Type.OBJECT) + "] " + sb.toString());
+							" = private constant [" + generic.getParameters().size()*2 + " x " + type(Type.OBJECT) + "] " + sb.toString());
 					
 					writer.write("@\"" + generic.getMangledName() + "_class\"" + " = constant %" +
 							raw(Type.GENERIC_CLASS) + " { " + 		
@@ -2494,23 +2596,36 @@ public class LLVMOutput extends AbstractOutput
 							type(Type.CLASS) +  " " + generic.getParent() + ", "  +//parent 					
 							
 							type(new ArrayType(Type.OBJECT)) + 
-							" { " + type(Type.OBJECT) + "* getelementptr (" + type(Type.CLASS) + " @\"" + generic.getMangledGeneric() + "_class\", i32 0, i32 4), [1 x " +
+							//" extractvalue (" + type(Type.CLASS) + " @\"" + generic.getMangledGeneric() + "_class\", 4), " +
+							" { " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* @_interfaceData" + generic.getMangledGeneric() + ", i32 0, i32 0), [1 x " +
 							type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) +	"] }, " + //data
 														
 							type(new ArrayType(Type.CLASS)) + 
 							" { " + type(Type.CLASS) + "* getelementptr inbounds ([" + generic.getInterfaces().size() + " x " +
-							type(Type.CLASS) + "]* @_interfaces" + generic.getMangledGeneric() + ", i32 0, i32 0), [1 x " +
+							type(Type.CLASS) + "]* @_interfaces" + generic.getMangledName() + ", i32 0, i32 0), [1 x " +
 							type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) + "] }, " + //interfaces
 						
 							typeLiteral(GENERIC) + ", " + //flags							
 							typeText(Type.INT, sizeof('%' + generic.getMangledGeneric() + '*')) + ", " + //size
 							
 							type(new ArrayType(Type.OBJECT)) + 
-							" { " + type(Type.OBJECT) + "* getelementptr inbounds ([" + generic.getParameters().size() + " x " +
-							type(Type.OBJECT) + "]* @_parameters" + generic.getMangledGeneric() + ", i32 0, i32 0), [1 x " +
-							type(Type.INT) + "] [" + typeLiteral(generic.getParameters().size()) + "] }" + //parameters
+							" { " + type(Type.OBJECT) + "* getelementptr inbounds ([" + generic.getParameters().size()*2 + " x " +
+							type(Type.OBJECT) + "]* @_parameters" + generic.getMangledName() + ", i32 0, i32 0), [1 x " +
+							type(Type.INT) + "] [" + typeLiteral(generic.getParameters().size()*2) + "] }" + //parameters
 							" }");
 				}
+			}
+		}
+		
+		writer.write();
+		
+		for( String parameter : parameterNames)
+		{
+			if( !types.contains(parameter) )
+			{
+				writer.write("@\"" + parameter + "_class\" = external constant %" + raw(Type.CLASS));
+				writer.write("%\"" + parameter + "_methods\" = type opaque");				
+				writer.write("@\"" + parameter + "_methods\" = external constant %\"" + parameter + "_methods\"");
 			}
 		}
 		

@@ -378,26 +378,31 @@ public class ClassType extends Type
 		return orderMethods(methodList, true);
 	}
 
-	@Override
+/*
 	public String getMangledName()
 	{
 		Package _package = getPackage();
-		StringBuilder sb = new StringBuilder(_package.getMangledName());
+		StringBuilder sb;
+		if( _package == null )
+			sb = new StringBuilder("_Pdefault");
+		else
+			sb = new StringBuilder(_package.getMangledName());
 		sb.append(super.getMangledName());
 		
-		/*
-		if( isParameterized() )
-			sb.append(getTypeParameters().getMangledNameWithGenerics());
-		*/
+		
 
 		return sb.toString();		
 	}
 	
-	@Override
+	
 	public String getMangledNameWithGenerics()
 	{
 		Package _package = getPackage();
-		StringBuilder sb = new StringBuilder(_package.getMangledName());
+		StringBuilder sb;
+		if( _package == null )
+			sb = new StringBuilder("_Pdefault");
+		else
+			sb = new StringBuilder(_package.getMangledName());
 		sb.append(super.getMangledName());
 				
 		if( isParameterized() )
@@ -406,6 +411,7 @@ public class ClassType extends Type
 		return sb.toString();		
 	}
 
+*/
 	
 	@Override
 	public ClassType replace(SequenceType values, SequenceType replacements )
@@ -490,7 +496,15 @@ public class ClassType extends Type
 			return false;
 	
 		if( this == NULL || equals(t) || t == Type.OBJECT || t == Type.VAR )
-			return true;		
+			return true;
+		
+		/* takes an explicit cast to turn an Array<T> to a T[], because dimensions might not work
+		if( t instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType) t;
+			return ( getTypeWithoutTypeArguments().equals(Type.ARRAY) && getTypeParameters().get(0).getType().equals(arrayType.getBaseType()));
+		}
+		*/
 		
 		if( t.isNumerical() && isNumerical() )
 			return isNumericalSubtype(t);
@@ -649,14 +663,23 @@ public class ClassType extends Type
 		String indent = linePrefix + "\t";		
 		boolean newLine;
 		
-		//constants are the only public fields
+		//only constants were here before
+		//now all fields have to be around, just so that generics can figure out how big they need to be
+		//necessary?  perhaps code can be written to compute the size
+		//TODO: try to take this back to constants only
 		newLine = false;
 		for( Map.Entry<String, ? extends ModifiedType> field : sortFields() )
-			if( field.getValue().getModifiers().isConstant() ) 
+		{
+	//		if( field.getValue().getModifiers().isConstant() ) 
+	//		{
+			
+			if( !field.getKey().equals("this")  )
 			{
 				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
 				newLine = true;
-			}		
+			}
+	//		}
+		}
 		if( newLine )
 			out.println();		
 
@@ -678,7 +701,7 @@ public class ClassType extends Type
 		//inner classes
 		for( Type _class : getInnerClasses().values() )
 		{
-			if( !_class.getModifiers().isPrivate() )
+			//if( !_class.getModifiers().isPrivate() )
 				_class.printMetaFile(out, indent);		
 		}
 		

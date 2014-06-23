@@ -1304,7 +1304,7 @@ void PrimarySuffix():
 | LOOKAHEAD(2) Destroy()
 | Method()
 | LOOKAHEAD(Allocation()) Allocation()
-| ScopeSpecifier()
+| LOOKAHEAD(ScopeSpecifier()) ScopeSpecifier()
 | Property()
 | LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
 }
@@ -1325,13 +1325,13 @@ void QualifiedKeyword():
   	debugPrint("QUALIFIED KEYWORD");
 	Token t;
 }
-{
+{    
   ":"
   ( "this" { jjtThis.setImage("this"); }
-	| "super" { jjtThis.setImage("super"); }
-	| "class" { jjtThis.setImage("class"); }
+	| "super" { jjtThis.setImage("super"); }	
 	)
 // When you have inner classes, you sometimes need to know Outer:this or Inner:this
+// same for Outer:super or Inner:super
 // Prefix must be a type name that you're currently inside of
 }
 
@@ -1386,7 +1386,7 @@ void ScopeSpecifier():
 	Token t;
 }
 {
-  ":" t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image);} //field, constant, or class
+	[ TypeArguments() ] ":" (t = <IDENTIFIER> | t = "class") { jjtThis.setImage(t.image); debugPrint(t.image);} //field, constant, or class
 }
 
 void Destroy():

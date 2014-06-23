@@ -69,10 +69,11 @@ public class TACMethodRef extends TACOperand
 	{
 		this(null, null, other.getType(), other.getName(), other.getWrapped());
 	}
+
 	public TACMethodRef(TACNode node, TACMethodRef other)
 	{
 		this(node, null, other.getType(), other.getName(), other.getWrapped());
-	}
+	}	
 	public TACMethodRef(TACNode node, TACOperand prefixNode,
 			MethodType methodType, String methodName)
 	{
@@ -92,6 +93,8 @@ public class TACMethodRef extends TACOperand
 				prefix = check(prefixNode,
 						new SimpleModifiedType(methodType.getOuter()));
 		}
+	//	else
+	//		prefix = check(prefixNode, new SimpleModifiedType(methodType.getOuter()));
 		type = methodType;
 		name = methodName;
 		if (otherWrapped != null)

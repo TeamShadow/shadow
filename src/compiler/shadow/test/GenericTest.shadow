@@ -2,22 +2,21 @@ import shadow.io@Console;
 
 class GenericTest
 {
+
 	public main(String[] args) => ()
 	{
 		Container<String> container1 = Container<String>:create("blub");
+		Container<int> container2 = Container<int>:create(17);
 		Console out = Console:instance;
 		
-		//out.printLine("Before");
+		out.printLine("Size: " # container1.getClass()->size );
+		out.printLine("Width: " # container1.getClass()->width );
+		out.printLine("Class: " # container1.getClass());		
+		out.printLine("Contents: " # container1.getObject() );							
 		
-		Class c = container1.getClass();
-		/*
-		out.printLine("Got class");
-		
-		String s = c.toString();
-		
-		out.printLine("Made string");
-		*/
-		//out.printLine( "Class: " # c.toString() );		
-		out.printLine( "Value: " # container1.getObject() );		
+		out.printLine("Size: " # container2.getClass()->size );
+		out.printLine("Width: " # container2.getClass()->width );
+		out.printLine("Class: " # container2.getClass());		
+		out.printLine("Contents: " # container2.getObject() );
 	}
 }

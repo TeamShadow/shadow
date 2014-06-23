@@ -62,8 +62,10 @@ public class TACModule
 		{
 		*/
 		
-		newlyAdded = references.add(type);
-		
+		if( type.isFullyInstantiated() || type.isUninstantiated() )
+			newlyAdded = references.add(type);
+		else
+			newlyAdded = true;		
 				
 		if( newlyAdded )
 		{

@@ -6,6 +6,7 @@ package shadow;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -305,8 +306,8 @@ public class Main {
 			}
 			else if( config.getArch() == 32 )
 			{			 
-				target = "i686-w64-mingw32";
-				//target = "i386-unknown-mingw32";
+				//target = "i686-w64-mingw32";
+				target = "i386-unknown-mingw32";
 				//assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
 			}
 			else 
@@ -332,7 +333,8 @@ public class Main {
 				assembleCommand.add(config.getOutput().getPath());
 			}
 			
-			BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
+			//BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
+			BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
 			Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
@@ -342,11 +344,18 @@ public class Main {
 				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
 				String line = main.readLine();
+				
+				File replaced = new File("ReplacedMain.ll");
+				FileOutputStream stream = new FileOutputStream(replaced);
+				
 				while (line != null) {
 					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
 					link.getOutputStream().write(line.getBytes());
+					stream.write(line.getBytes());
 					line = main.readLine();
 				}
+				
+				stream.close();
 				try {
 					main.close();
 				} catch (IOException ex) { }

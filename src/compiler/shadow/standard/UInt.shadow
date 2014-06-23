@@ -263,22 +263,22 @@ implements
 		return toString(10u);
 	}
 	public toString(uint base) => (String)
-	{			
+	{	
 		MutableString string = MutableString:create();
 		uint value = this;
 		do
-		{
+		{					
 			string.append(digit(value % base));
 			value /= base;		
 		}
-		while (value != 0u);		
-			
+		while (value != 0u);
+					
 		return string.reverse().toString();
 	}
-	private digit(uint digit) => (code)
+	private digit(uint digit) => (byte)
 	{
 		if (digit < 10u)
-			return cast<code>(digit + '0');
-		return cast<code>(digit - 10u + 'a');
+			return cast<byte>(digit + '0');
+		return cast<byte>(digit - 10u + 'a');
 	}	
 }
