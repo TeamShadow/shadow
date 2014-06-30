@@ -14,8 +14,7 @@ public class Generic implements Comparable<Generic>
 {	
 	private String name;
 	private String mangledName;
-	private String mangledGeneric;
-	private int size;
+	private String mangledGeneric;	
 	boolean isInterface;
 	ArrayList<String> parameters = new ArrayList<String>();
 	ArrayList<String> interfaces = new ArrayList<String>();
@@ -28,8 +27,7 @@ public class Generic implements Comparable<Generic>
 	{
 		name = type.toString();
 		mangledName = type.getMangledNameWithGenerics();
-		mangledGeneric = type.getMangledName();
-		size = type.getAllInterfaces().size();				
+		mangledGeneric = type.getMangledName();						
 		isInterface = type instanceof InterfaceType;
 		
 		if( !isInterface )
@@ -49,8 +47,24 @@ public class Generic implements Comparable<Generic>
 					((ClassType)base).orderAllFields())
 					sb.append(", ").append(simplify(field.getValue().getType()));
 			typeLayout = sb.append(" }").toString();
+			
+			
+			ClassType classType = (ClassType) type;
+			if( classType.getExtendType() == null )
+				parent = "null";
+			else
+				parent = "@\"" + classType.getExtendType().getMangledNameWithGenerics() + "_class\"";
 		}
 		
+		for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() )
+		{
+			Type parameterType = parameter.getType();
+			
+			if( parameterType instanceof ArrayType )
+				parameterType = ((ArrayType)parameterType).convertToGeneric();
+				
+			addParameter(parameterType.getMangledNameWithGenerics());
+		}		
 	}
 	
 	public String getTypeLayout()
@@ -122,28 +136,29 @@ public class Generic implements Comparable<Generic>
 		return mangledGeneric;
 	}
 	
-	public int getSize()	
-	{
-		return size;
-	}
-	
 	@Override
 	public int hashCode()
 	{
-		return name.hashCode();		
+		return mangledName.hashCode();		
 	}
 	
 	@Override
 	public int compareTo(Generic other)
 	{
-		return name.compareTo(other.name);		
+		return mangledName.compareTo(other.mangledName);		
+	}
+	
+	@Override
+	public String toString()
+	{
+		return mangledName;
 	}
 	
 	@Override
 	public boolean equals(Object other)
 	{
 		if( other instanceof Generic )		
-			return name.equals(((Generic)other).getName());
+			return mangledName.equals(((Generic)other).mangledName);
 		else
 			return false;
 	}

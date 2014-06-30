@@ -794,28 +794,71 @@ public abstract class Type implements Comparable<Type>
 		return parameterized; 
 	}
 	
+	//Must have type parameters AND have them all filled in
+	//or have none and have all outer types all filled in
 	public boolean isFullyInstantiated()
 	{
-		if( !parameterized )
+		if( !isParameterizedIncludingOuterClasses() )
 			return false;
 		
-		for( ModifiedType parameter : typeParameters )		
-			if( parameter.getType() instanceof TypeParameter )
-				return false;			
+		if( parameterized )
+			for( ModifiedType parameter : typeParameters )		
+				if( parameter.getType() instanceof TypeParameter )
+					return false;
 		
+		if( hasOuter() )			
+			return getOuter().isFullyInstantiated();
+				
 		return true;		
+	}
+	
+	public List<ModifiedType> getTypeParametersIncludingOuterClasses()
+	{
+		List<ModifiedType> list = new ArrayList<ModifiedType>();
+		
+		if( hasOuter() )
+			list.addAll( outer.getTypeParametersIncludingOuterClasses() );
+		
+		if( isParameterized() )
+			list.addAll( getTypeParameters() );
+		
+		return list;
+	}
+	
+	public boolean isParameterizedIncludingOuterClasses()
+	{
+		if( isParameterized() )
+			return true;
+		
+		if( hasOuter() )
+			return getOuter().isParameterizedIncludingOuterClasses();
+		
+		return false;		
+	}
+	
+	public boolean isRecursivelyParameterized()
+	{
+		return isParameterized();	
 	}
 	
 	public boolean isUninstantiated()
 	{
-		if( !parameterized )
+		return equals(getTypeWithoutTypeArguments());
+		
+		/*
+		if( !isParameterizedIncludingOuterClasses() )
 			return true;
 		
-		for( ModifiedType parameter : typeParameters )		
-			if( !(parameter.getType() instanceof TypeParameter) )
-				return false;			
+		if( parameterized )
+			for( ModifiedType parameter : typeParameters )		
+				if( !(parameter.getType() instanceof TypeParameter) )
+					return false;		
+
+		if( hasOuter() )			
+			return getOuter().isUninstantiated();
 		
-		return true;		
+		return true;
+		*/
 	}
 
 
@@ -1041,7 +1084,7 @@ public abstract class Type implements Comparable<Type>
 	
 	public boolean encloses(Type type)
 	{
-		if( equals(this) )
+		if( equals(type) )
 			return true;
 		
 		Type outer = type.getOuter();
@@ -1057,9 +1100,13 @@ public abstract class Type implements Comparable<Type>
 		{
 			if( type instanceof ArrayType )
 			{
+				
 				ArrayType arrayType = (ArrayType) type;
+				/*
 				ClassType instantiatedArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
 				addReferencedType(instantiatedArray);
+				*/
+				addReferencedType(arrayType.convertToGeneric());
 				//addReferencedType(Type.ARRAY);
 				//addReferencedType(arrayType.getBaseType());			
 			}
@@ -1089,13 +1136,15 @@ public abstract class Type implements Comparable<Type>
 							addReferencedType( typeParameter.getType() );
 							
 							//we also need to keep representations of array and method type parameters, but only for objects
+							/*
 							if( type instanceof ClassType && type.isFullyInstantiated() )
 							{
 								if( type instanceof MethodType )
 									referencedTypes.add(type);
 								else if( type instanceof ArrayType && !((ArrayType)type).baseIsTypeParameter() )
 									referencedTypes.add(type);
-							}						
+							}
+							*/						
 						}
 					}
 				}
@@ -1147,11 +1196,6 @@ public abstract class Type implements Comparable<Type>
 		return false;
 	}
 	
-	public boolean isRecursivelyParameterized()
-	{
-		return isParameterized();
-	}
-
 	protected List<MethodSignature> recursivelyOrderMethods( List<MethodSignature> methodList )
 	{
 		throw new UnsupportedOperationException();

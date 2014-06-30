@@ -172,38 +172,6 @@ public class InterfaceType extends Type
 		return list;
 	}
 	
-
-	/*
-	//see if interface has circular extends hierarchy
-	public boolean isCircular()
-	{
-		HashSet<Type> descendants = new HashSet<Type>();			
-		
-		return recursiveIsCircular( descendants );
-	}
-	*/
-	
-	/*
-	//recursively look at parents, adding yourself to the list of interfaces as you go
-	//if you find yourself, it's circular
-	//if you don't, remove yourself afterwards
-	private boolean recursiveIsCircular( HashSet<Type> descendants )
-	{
-		if( descendants.contains(this) )
-				return true;
-		
-		descendants.add(this.typeWithoutTypeArguments);
-		
-		for( InterfaceType _interface : getInterfaces() )
-			if( _interface.recursiveIsCircular(descendants) )
-				return true;
-		
-		descendants.remove(this);
-		
-		return false;
-	}
-	*/
-	
 	@Override
 	public InterfaceType replace(SequenceType values, SequenceType replacements )
 	{		

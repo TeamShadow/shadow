@@ -2159,7 +2159,7 @@ public class StatementChecker extends BaseChecker
 				
 				if( kind.equals("this") )
 				{					
-					if( currentType.encloses( prefixType )  )
+					if( prefixType.encloses( currentType )  )
 					{
 						node.setType(prefixType);						
 						if( prefixType.getModifiers().isImmutable() )

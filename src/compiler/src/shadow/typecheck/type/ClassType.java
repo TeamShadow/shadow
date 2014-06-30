@@ -29,16 +29,6 @@ public class ClassType extends Type
 		super( typeName, modifiers, outer );
 		
 		innerClasses = new HashMap<String, ClassType>();
-		//take out outer class names
-		//typeName = typeName.substring(typeName.lastIndexOf(':') + 1); //works even if name doesn't contain a :
-		
-		/*
-		if( outer != null && outer instanceof ClassType && typeName != null && !(this instanceof UnboundMethodType)  )
-		{		
-			typeName = typeName.substring(typeName.lastIndexOf(':') + 1); //works even if name doesn't contain a :				
-			((ClassType)outer).innerClasses.put(typeName, this);
-		}
-		*/
 	}
 	
 	public void setExtendType(ClassType extendType) {
@@ -311,12 +301,13 @@ public class ClassType extends Type
 				return first.getKey().compareTo(second.getKey());
 			}
 		});
+		
 		if (getOuter() != null)
 			set.add(new Entry<String, ModifiedType>() {
 				@Override
 				public String getKey()
 				{
-					return "this";
+					return "_outer";
 				}
 				@Override
 				public ModifiedType getValue()
@@ -329,6 +320,7 @@ public class ClassType extends Type
 					throw new UnsupportedOperationException();
 				}
 			});
+		
 		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
 			if (!field.getValue().getModifiers().isConstant())
 				set.add(field);
@@ -377,41 +369,17 @@ public class ClassType extends Type
 			getExtendType().recursivelyOrderAllMethods(methodList);
 		return orderMethods(methodList, true);
 	}
-
-/*
-	public String getMangledName()
-	{
-		Package _package = getPackage();
-		StringBuilder sb;
-		if( _package == null )
-			sb = new StringBuilder("_Pdefault");
-		else
-			sb = new StringBuilder(_package.getMangledName());
-		sb.append(super.getMangledName());
-		
-		
-
-		return sb.toString();		
-	}
 	
-	
-	public String getMangledNameWithGenerics()
+	@Override
+	public int getMethodIndex( MethodSignature method )
 	{
-		Package _package = getPackage();
-		StringBuilder sb;
-		if( _package == null )
-			sb = new StringBuilder("_Pdefault");
-		else
-			sb = new StringBuilder(_package.getMangledName());
-		sb.append(super.getMangledName());
-				
-		if( isParameterized() )
-			sb.append(getTypeParameters().getMangledNameWithGenerics());
+		int index = super.getMethodIndex(method);
 		
-		return sb.toString();		
+		if( index == -1 )
+			return -1;
+		else			
+			return index + 1; //first location is used for parent method table
 	}
-
-*/
 	
 	@Override
 	public ClassType replace(SequenceType values, SequenceType replacements )
@@ -498,13 +466,16 @@ public class ClassType extends Type
 		if( this == NULL || equals(t) || t == Type.OBJECT || t == Type.VAR )
 			return true;
 		
+		if( t instanceof TypeParameter )
+			return isSubtype(((TypeParameter)t).getClassBound());
+		
 		/* takes an explicit cast to turn an Array<T> to a T[], because dimensions might not work
 		if( t instanceof ArrayType )
 		{
 			ArrayType arrayType = (ArrayType) t;
 			return ( getTypeWithoutTypeArguments().equals(Type.ARRAY) && getTypeParameters().get(0).getType().equals(arrayType.getBaseType()));
 		}
-		*/
+		*/	
 		
 		if( t.isNumerical() && isNumerical() )
 			return isNumericalSubtype(t);
@@ -673,7 +644,7 @@ public class ClassType extends Type
 	//		if( field.getValue().getModifiers().isConstant() ) 
 	//		{
 			
-			if( !field.getKey().equals("this")  )
+			if( !field.getKey().equals("_outer")  )
 			{
 				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
 				newLine = true;

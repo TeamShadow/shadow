@@ -71,6 +71,12 @@ public class ArrayType extends ClassType
 		return getBaseType().getMangledName() + "_A" + dimensions;
 	}
 	
+	@Override
+	public String getMangledNameWithGenerics()
+	{
+		return getBaseType().getMangledNameWithGenerics() + "_A" + dimensions;
+	}
+	
 	public ArrayType(Type baseType)
 	{
 		this(baseType, Collections.singletonList(1), 0);
@@ -177,6 +183,16 @@ public class ArrayType extends ClassType
 	public ArrayType replace(SequenceType values, SequenceType replacements )
 	{	
 		return new ArrayType( baseType.replace(values, replacements), dimensions  );		
+	}
+	
+	public ClassType convertToGeneric()
+	{
+		Type base = baseType;
+		
+		if( base instanceof ArrayType )
+			base = ((ArrayType)base).convertToGeneric();
+		
+		return Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));
 	}
 
 

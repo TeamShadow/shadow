@@ -18,6 +18,7 @@ public class TACMethodRef extends TACOperand
 	private MethodType type;
 	private String name;
 	private TACMethodRef wrapped;
+	private boolean isSuper = false;
 	public TACMethodRef(MethodSignature sig)
 	{
 		this(null, null, sig.getMethodType(), sig.getSymbol(),
@@ -63,7 +64,7 @@ public class TACMethodRef extends TACOperand
 		type = methodType;
 		name = methodName;
 		if (wrappedSignature != null)
-			wrapped = new TACMethodRef((TACNode)this, wrappedSignature);
+			wrapped = new TACMethodRef((TACNode)this, wrappedSignature);		
 	}
 	public TACMethodRef(TACMethodRef other)
 	{
@@ -307,5 +308,15 @@ public class TACMethodRef extends TACOperand
 	public String toString()
 	{
 		return name + type;
+	}
+	
+	public void setSuper(boolean value)
+	{
+		isSuper = value;
+	}
+	
+	public boolean isSuper()
+	{
+		return isSuper;
 	}
 }

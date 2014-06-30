@@ -408,9 +408,12 @@ public class TACBuilder implements ShadowParserVisitor
 			ClassType thisType = (ClassType)method.getMethod().getOuterType();
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(new TACVariableRef(tree, method.getThis()));
+			//TODO: test explicit constructor invocations
+			//shouldn't need any special generic stuff, right?
+			/*
 			if( isSuper )
 			{
-				//TODO: Deal with parameterized parent types
+			
 				
 			}
 			else if( thisType.isParameterized()  )
@@ -421,6 +424,7 @@ public class TACBuilder implements ShadowParserVisitor
 				params.add(_class.getMethodTable());
 				//params.add(new TACVariableRef(tree, (TACVariable)(parameters.toArray()[1])));
 			}
+			*/
 			for (int i = 0; i < tree.getNumChildren(); i++)
 			{
 				TACOperand param = tree.appendChild(i); 
@@ -1068,7 +1072,7 @@ public class TACBuilder implements ShadowParserVisitor
 						while (!thisRef.getType().containsField(name))
 							thisRef = new TACFieldRef(tree, thisRef,
 									new SimpleModifiedType(thisRef.getType().
-											getOuter()), "this");
+											getOuter()), "_outer");
 						if (node.getModifiers().isConstant())
 							prefix = new TACConstantRef(tree, thisRef.getType(),
 									name);
@@ -1110,10 +1114,10 @@ public class TACBuilder implements ShadowParserVisitor
 		}
 		
 		TACMethodRef methodRef = new TACMethodRef(tree,
-				//explicitSuper ? null : prefix,
 				prefix,
 				methodType.getTypeWithoutTypeArguments(),
-				methodName);
+				methodName);		
+		methodRef.setSuper(explicitSuper);
 		List<TACOperand> params = new ArrayList<TACOperand>();
 				
 		//params.add(prefix);
@@ -2089,7 +2093,7 @@ public class TACBuilder implements ShadowParserVisitor
 							new TACFieldRef(tree, new TACVariableRef(tree,
 									method.getThis()),
 									new SimpleModifiedType(type.getOuter()),
-									"this"),
+									"_outer"),
 							new TACVariableRef(tree,
 									method.getParameter("_outer")));
 				//TODO: Fix this for methods with type parameters

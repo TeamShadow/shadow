@@ -5,9 +5,12 @@ class GenericTest
 
 	public main(String[] args) => ()
 	{
+		Console out = Console:instance;
+	
+	
 		Container<String> container1 = Container<String>:create("blub");
 		Container<int> container2 = Container<int>:create(17);
-		Console out = Console:instance;
+		
 		
 		out.printLine("Size: " # container1.getClass()->size );
 		out.printLine("Width: " # container1.getClass()->width );
@@ -18,5 +21,31 @@ class GenericTest
 		out.printLine("Width: " # container2.getClass()->width );
 		out.printLine("Class: " # container2.getClass());		
 		out.printLine("Contents: " # container2.getObject() );
+		
+	/*
+	
+		int[][] walnuts = int:create[7][18];
+		int count = 1;
+		
+		for( int i = 0; i < walnuts->size; i += 1 )
+		{
+			for( int j = 0; j < walnuts[i]->size; j += 1 )
+			{
+				walnuts[i][j] = count;
+				count += 1;
+			}
+		}
+		
+		for( int i = 0; i < walnuts->size; i += 1 )
+		{
+			for( int j = 0; j < walnuts[i]->size; j += 1 )
+			{
+				out.print(walnuts[i][j] # " ");				
+			}
+			out.printLine();
+		}
+	
+		out.printLine("Done!");	
+		*/
 	}
 }

@@ -12,6 +12,7 @@ immutable class shadow.standard@Class implements CanHash
 	private native allocate() => ( Object );
 	private native allocate( int size ) => ( Object );
 	
+	
 	public isInterface() => ( boolean )
 	{
 		return (flags & 0b01) != 0;
@@ -194,7 +195,9 @@ immutable class shadow.standard@Class implements CanHash
 		if( isArray() )		
 			return pointerSize() + 4 * size;		
 		else if( isMethod() )		
-			return 3 * pointerSize() + 4 * size;		
+			return 3 * pointerSize() + 4 * size;
+		else if( isInterface() )
+			return 2 * pointerSize();		
 		else if( isPrimitive() )
 		{
 			if( this === boolean:class or 
@@ -210,8 +213,7 @@ immutable class shadow.standard@Class implements CanHash
 				this === uint:class )
 				return 4;
 			else
-				return 8;
- 
+				return 8; 
 		}
 		else
 			return size;			
@@ -219,7 +221,7 @@ immutable class shadow.standard@Class implements CanHash
 	
 	public get width() => ( int )
 	{		
-		if( isArray() or isMethod() or isPrimitive() )							
+		if( isArray() or isMethod() or isPrimitive() or isInterface() )							
 			return this.size();
 		else		
 			return pointerSize();		

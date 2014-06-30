@@ -4,8 +4,8 @@ import shadow.io@Console;
 immutable class shadow.test@ExceptionTest
 {
 	public test() => () {		
-		throw IndexOutOfBoundsException:create();
-		//throw ExceptionA:create();
+		//throw IndexOutOfBoundsException:create();
+		throw ExceptionB:create();
 	}
 	public test1() => () {
 		try {			
@@ -32,7 +32,15 @@ immutable class shadow.test@ExceptionTest
 	}
 	public main( String[] args ) => ( int ) {
 		test3();	
-		throw Exception:create();	
+		
+		try
+		{
+			throw Exception:create();
+		}
+		catch(Exception e)
+		{
+			Console:instance.printLine("Exception: " # e);
+		}	
 		return 0;
 	}
 }

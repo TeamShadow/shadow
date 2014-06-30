@@ -73,11 +73,16 @@ implements List<V>
 	
 	public readonly indexOf(V value) => (int index)
 	{		
-		for( int i = 0; i < elements->size; i += 1 )
+		try
 		{
-			if( elements[i] == value )
-				return i;
+			for( int i = 0; i < size; i += 1 )
+			{
+				if( check(elements[i]) == value )
+					return i;
+			}
 		}
+		recover
+		{}
 		
 		return -1;
 	}
@@ -110,6 +115,22 @@ implements List<V>
 			
 		delete(index);
 		return true;	
+	}
+	
+	public readonly toString() => (String)
+	{
+		MutableString string = MutableString:create("[");
+		boolean first = true;
+		for( int i = 0; i < size; i += 1 )
+		{
+			if( first )
+				first = false;
+			else
+				string.append(", ");
+			string.append(#index(i));
+		}
+		
+		return string.append("]").toString();
 	}
 
 	public readonly iterator() => (Iterator<V>)

@@ -333,8 +333,8 @@ public class Main {
 				assembleCommand.add(config.getOutput().getPath());
 			}
 			
-			//BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
-			BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
+			BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
+			//BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
 			Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
@@ -345,17 +345,17 @@ public class Main {
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
 				String line = main.readLine();
 				
-				File replaced = new File("ReplacedMain.ll");
-				FileOutputStream stream = new FileOutputStream(replaced);
+				//File replaced = new File("ReplacedMain.ll");
+				//FileOutputStream stream = new FileOutputStream(replaced);
 				
 				while (line != null) {
 					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
 					link.getOutputStream().write(line.getBytes());
-					stream.write(line.getBytes());
+					//stream.write(line.getBytes());
 					line = main.readLine();
 				}
 				
-				stream.close();
+				//stream.close();
 				try {
 					main.close();
 				} catch (IOException ex) { }

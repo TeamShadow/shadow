@@ -57,25 +57,24 @@ immutable class shadow.standard@GenericClass extends Class
 		return false;
 	}
 	
-	/*
-	public get name() => ( String )
+	private findClass( GenericClass[] classes, Class[] parameters ) => (nullable Class)
 	{
-	
-	
-		MutableString out = MutableString:create( rawClass->name );
-		out.append("Gravy<");		
-		for( int i = 0; i < parameters->size; i += 1 )
+		try
 		{
-			if( i > 0 )
-				out.append(", ");
-			
-			out.append( #parameters[i] );
+			for( int i = 0; i < classes->size; i += 1 )
+			{
+				boolean matching = true;
+				for( int j = 0; j < parameters->size and matching; j += 1 )
+					if( parameters[j] !== check(classes[i]):parameters[j * 2] )
+						matching = false;
+						
+				if( matching )
+					return cast<Class>(classes[i]);
+			}
 		}
+		recover
+		{}		
 		
-		out.append(">");		
-		
-		return #out;
-	}	
-	
-	*/
+		return null;
+	}
 }

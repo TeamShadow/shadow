@@ -5,8 +5,8 @@ import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -98,17 +98,17 @@ public class TACClass extends TACOperand
 			visitor.visit(this);			
 		}
 	}
-	
-	
+		
 	public TACClass(Type classType, TACMethod method)
 	{
 		this(null, classType, method);
 	}
+	
 	public TACClass(TACNode node, Type classType, TACMethod method)
 	{
 		super(node);
-		type = classType;
-		if (classType instanceof TypeParameter)
+		type = classType;		
+		if (type instanceof TypeParameter)
 		{			
 			TACVariable var = method.getParameter(classType.getTypeName());
 			if (var != null)
@@ -135,9 +135,9 @@ public class TACClass extends TACOperand
 				//get generics field from GenericClass
 				//get arrayref to index location
 				
-				
-				TACClass classValue = new TACClass(this, outer, method);
-				TACOperand genericClass = new TACCast(this, new SimpleModifiedType(Type.GENERIC_CLASS), classValue.getClassData() );
+				TACVariableRef _this = new TACVariableRef(this, method.getThis());				
+				TACLoad classValue = new TACLoad(this, new TACFieldRef(this, _this, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class")); 
+				TACOperand genericClass = new TACCast(this, new SimpleModifiedType(Type.GENERIC_CLASS), classValue );
 				TACOperand generics = new TACFieldRef(this, genericClass, "parameters" );
 				TACOperand parameter = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index)) );
 				
@@ -146,11 +146,50 @@ public class TACClass extends TACOperand
 						
 				//check( parameter, new SimpleModifiedType(Type.CLASS));			
 			}
-		}
+		}		
 		else
-		{			
-			methodTable = new TACMethodTable(this);
-			classData = new TACClassData(this);
+		{	
+			if( type instanceof ArrayType )			
+				type = ((ArrayType)type).convertToGeneric();
+			
+			if( !type.isParameterizedIncludingOuterClasses() || type.isFullyInstantiated())
+			{	
+				classData = new TACClassData(this);
+				methodTable = new TACMethodTable(this);
+			}
+			else //type is partially instantiated
+			{	
+				Type outer = method.getMethod().getOuterType();
+				//we're currently inside this type and can get it from class values
+				if( type.encloses(outer) )
+				{
+					
+					TACOperand prefix = new TACVariableRef(this, method.getThis());
+					
+					while( !type.equals(outer))
+					{
+						prefix = new TACFieldRef(this, prefix, prefix, "_outer");
+						outer = outer.getOuter();						
+					}
+					
+					classData = new TACLoad(this, new TACFieldRef(this, prefix, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class"));
+					methodTable = new TACMethodTable(this);
+				}
+				else
+				{					
+					TACOperand[] arguments = new TACOperand[type.getTypeParametersIncludingOuterClasses().size()];
+					int i = 0;
+					
+					for( ModifiedType argument : type.getTypeParametersIncludingOuterClasses() )
+					{					
+						arguments[i] = new TACClass(this, argument.getType(), method).getClassData();					
+						i++;
+					}
+					
+					classData = new TACConstructGeneric(this, arguments, type.getTypeWithoutTypeArguments());
+					methodTable = new TACMethodTable(this);
+				}
+			}
 		}
 	}
 

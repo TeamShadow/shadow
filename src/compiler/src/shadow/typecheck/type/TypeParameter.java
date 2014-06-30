@@ -119,6 +119,8 @@ public class TypeParameter extends Type
 		return false;
 	}
 	
+	
+	/*
 	@Override
 	public boolean equals(Type o)
 	{
@@ -138,7 +140,7 @@ public class TypeParameter extends Type
 				
 				recursiveParameterCheck = type;
 				
-				if( type.getTypeName().equals(getTypeName()) )
+				if( type.getTypeName().equals(getTypeName())  )
 				{
 					if( type.bounds.size() != bounds.size() )
 						return false;
@@ -150,12 +152,7 @@ public class TypeParameter extends Type
 					return true;
 				}	
 				else
-					return false;
-					
-				/*			
-				return o == this; //has to match exactly
-				does it?  come up with an example where this is a problem
-				*/
+					return false;				
 			}
 			else
 				return false;
@@ -164,6 +161,22 @@ public class TypeParameter extends Type
 		{
 			recursiveParameterCheck = null; //always resets, no matter how things are returned
 		}
+	}
+	*/
+	
+	@Override
+	public boolean equals(Type o)
+	{
+		if( o != null && o instanceof TypeParameter )
+		{				
+			if( o == this )
+				return true;
+			
+			TypeParameter type = (TypeParameter) o;				
+			return type.getTypeName().equals(getTypeName()) && getOuter() == type.getOuter();
+		}
+		else
+			return false;	
 	}
 	
 	public Type replace(SequenceType values, SequenceType replacements )
@@ -210,14 +223,17 @@ public class TypeParameter extends Type
 	
 	@Override
 	public String getMangledNameWithGenerics() {		
-		return "_C" + getTypeName();		
+		//return "_C" + getTypeName();
+		
+		return getClassBound().getMangledNameWithGenerics();
 	}	
 	
 	
 	
 	public String getMangledName()
 	{
-		return "_C" + getTypeName();
+		//return "_C" + getTypeName();
+		return getClassBound().getMangledName();
 	}
 	
 	

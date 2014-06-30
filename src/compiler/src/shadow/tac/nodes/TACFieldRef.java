@@ -33,7 +33,18 @@ public class TACFieldRef extends TACReference
 //			prefixType = prefixType.getExtendType();
 //		if (prefixType == null)
 //			throw new IllegalArgumentException("field fieldName not found");
-		index = prefixType.getFieldIndex(fieldName);
+		if( fieldName.equals("class"))
+			index = 0;
+		else if( fieldName.equals("_methods"))
+			index = 1;
+		else
+		{
+			//0 is class
+			//1 is methods			
+			
+			// _outer is a member for inner classes, but it is made available through normal field lookup
+			index = prefixType.getFieldIndex(fieldName) + 2;
+		}
 		prefix = check(fieldPrefix, fieldPrefix);
 		type = fieldType;
 		name = fieldName;

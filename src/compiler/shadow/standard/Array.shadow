@@ -6,10 +6,8 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>
 	Object data;
 	private create( int[] lengths, Object data )	
 	{
-		this:lengths = lengths;
-		//Console:instance.printLine("Lengths!");
-		this:data = data;
-		//Console:instance.printLine("Data!");
+		this:lengths = lengths;		
+		this:data = data;		
 	}
 	public create( int[] lengths )
 	{
