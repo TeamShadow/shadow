@@ -371,17 +371,6 @@ public class ClassType extends Type
 	}
 	
 	@Override
-	public int getMethodIndex( MethodSignature method )
-	{
-		int index = super.getMethodIndex(method);
-		
-		if( index == -1 )
-			return -1;
-		else			
-			return index + 1; //first location is used for parent method table
-	}
-	
-	@Override
 	public ClassType replace(SequenceType values, SequenceType replacements )
 	{	
 		if( isRecursivelyParameterized() )

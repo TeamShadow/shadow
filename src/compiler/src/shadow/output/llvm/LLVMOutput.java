@@ -190,17 +190,7 @@ public class LLVMOutput extends AbstractOutput
 			{
 				sb.append('%').append(raw(type, "_methods")).append(" = type { ");
 				
-				//pointer to super methods
-				if( classType.getExtendType() != null )
-					sb.append('%').append(raw(classType.getExtendType(), "_methods") + '*');
-				else
-					sb.append('%').append(raw(Type.OBJECT, "_methods") + '*');
-				
-				List<MethodSignature> signatures = type.orderAllMethods();
-				if( signatures.size() > 0 )
-					sb.append(", ");
-				
-				writer.write(sb.append(methodList(signatures, false)).
+				writer.write(sb.append(methodList(type.orderAllMethods(), false)).
 						append(" }").toString());
 				
 				sb.setLength(0);
@@ -362,11 +352,7 @@ public class LLVMOutput extends AbstractOutput
 					append(interfaceCount).append(" x ").
 					append(type(Type.OBJECT)).append("] [");
 			StringBuilder interfaceClasses = new StringBuilder("@_interfaces = private ");
-			//interfaces must share their interfaces (at least parameterized ones)
-			//if( moduleType instanceof InterfaceType && moduleType.isParameterized() )
-			//	interfaceClasses.append(moduleType.getMangledName()).append(" = ");
-			//else
-			//	interfaceClasses.append(" = private ");
+		
 			
 			interfaceClasses.append("unnamed_addr constant [").
 				append(interfaceCount).append(" x ").
@@ -410,15 +396,10 @@ public class LLVMOutput extends AbstractOutput
 		if (moduleType.isPrimitive())
 			flags |= PRIMITIVE;
 		if (module.isClass())
-		{
-			boolean comma = methods.size() > 0;
+		{			
 			ClassType parentType = ((ClassType)moduleType).getExtendType();
 			writer.write('@' + raw(moduleType, "_methods") + " = constant %" +
-					raw(moduleType, "_methods") + " { " +
-					(parentType != null ?
-							'%' + raw(parentType, "_methods") + "* @" + raw(parentType, "_methods") :
-							'%' + raw(Type.OBJECT, "_methods") + "* null") +
-					(comma ? ", " : "" ) +
+					raw(moduleType, "_methods") + " { " +					
 					methodList(methods, true) + " }");
 			
 			//nothing will ever be the raw, unparameterized class
@@ -496,25 +477,7 @@ public class LLVMOutput extends AbstractOutput
 			if (type != null && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
 					!type.equals(module.getType()))
-			{	
-				/*
-				if( type instanceof InterfaceType )
-				{
-					int size = type.getAllInterfaces().size();
-					InterfaceType unparameterizedType = (InterfaceType)(type.getTypeWithoutTypeArguments());
-					//need reference to unparameterized interface
-					if( referencedInterfaces.add(unparameterizedType) )
-					{						
-						writer.write('@' + raw(unparameterizedType, "_class") +
-								" = external constant %" + raw(Type.CLASS));
-						
-						if( unparameterizedType.isParameterized() )
-							writer.write("@_interfaces" + unparameterizedType.getMangledName() +
-									" = external constant [" + size + " x %" + raw(Type.CLASS) + "*]");							
-					}					
-				}	
-				*/			
-				
+			{				
 				if( (type.isFullyInstantiated() && recordedTypes.add(type.getMangledNameWithGenerics())) ||  
 					(type.isUninstantiated() && recordedTypes.add(type.getMangledName()))	)				
 					writeTypeConstants(type);
@@ -834,26 +797,17 @@ public class LLVMOutput extends AbstractOutput
 				!node.getOuterType().isPrimitive() &&
 				//!node.getOuterType().getModifiers().isImmutable() &&
 				//!node.getType().getModifiers().isFinal() && //replace with Readonly?
-				(!node.getType().getModifiers().isPrivate() || node.isSuper() ) )
+				!node.getType().getModifiers().isPrivate() &&
+				!node.isSuper() )
 		{	
 			writer.write(nextTemp() + " = getelementptr " +
 					typeSymbol(node.getPrefix()) + ", i32 0, i32 1");
 			
 			writer.write(nextTemp() + " = load %" +
 					raw(node.getPrefix().getType(), "_methods") + "** " + temp(1));
-				
-			if( node.isSuper() )
-			{				
-				writer.write(nextTemp() + " = getelementptr %" +
-						raw(node.getPrefix().getType(), "_methods") + "* " +
-						temp(1) + ", i32 0, i32 0"); //parent method table
-				
-				writer.write(nextTemp() + " = load %" +
-						raw(node.getOuterType(), "_methods") + "** " + temp(1));
-			}
 			
 			writer.write(nextTemp() + " = getelementptr %" +
-					raw(node.getOuterType(), "_methods") + "* " +
+					raw(node.getPrefix().getType(), "_methods") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex()); //may need to + 1 to the node.getIndex() if a parent method table is added	
 			
 			writer.write(nextTemp(node) + " = load " + methodType(node) +
