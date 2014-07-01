@@ -1,4 +1,5 @@
-class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
+class shadow.utility@HashSet<V is CanHash and CanEqual<V>>
+	implements Set<V>
 {
 	get int size = 0;
 	Node[] table = Node:create[256];
@@ -8,7 +9,7 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 	private class Node
 	{
 		immutable get int hash;
-		get nullable V value;
+		get V value;
 		get set nullable Node next = null;
 		
 		public readonly get next() => (nullable Node)
@@ -16,7 +17,7 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>> implements Set<V>
 			return this:next;
 		}
 		
-		public readonly get value() => (nullable V)
+		public readonly get value() => (V)
 		{
 			return this:value;
 		}

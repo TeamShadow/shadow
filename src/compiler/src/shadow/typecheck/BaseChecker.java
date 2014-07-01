@@ -25,6 +25,7 @@ import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.IndexType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -134,6 +135,12 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				return false;				
 			}
 		}
+		else if( rightType instanceof IndexType )
+		{
+			IndexType indexType = (IndexType)rightType;
+			right = indexType.getReadType();
+			rightType = right.getType();
+		}
 		
 		//property on left			
 		if( leftType instanceof PropertyType )  
@@ -147,7 +154,18 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				addError(errors, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not settable");
 				return false;				
 			}
-		}	
+		}
+		else if( leftType instanceof IndexType )
+		{
+			IndexType indexType = (IndexType)leftType;
+			if( indexType.applyInput(right) )
+				return checkAssignment( indexType.getStoreType(), right, assignmentType, substitutionType, errors );
+			else
+			{
+				addError(errors, Error.INVALID_ASSIGNMENT, "Subscript " + indexType + " cannot store " + rightType);
+				return false;
+			}
+		}
 	
 		
 		//sequence on left
@@ -699,9 +717,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			start++;					
 		}
 		
-		Type type = lookupType(typeName);	
-		
-		
+		Type type = lookupType(typeName);
 				
 		if(type == null)
 		{

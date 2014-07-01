@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import shadow.TypeCheckException;
 import shadow.TypeCheckException.Error;
@@ -18,6 +16,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
+import shadow.typecheck.type.IndexType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -1440,9 +1439,10 @@ public class StatementChecker extends BaseChecker
 		
 		if( node.jjtGetNumChildren() == 3 ) //if there is assignment
 		{
-			ASTPrimaryExpression left = (ASTPrimaryExpression) node.jjtGetChild(0);
+			ASTPrimaryExpression left = (ASTPrimaryExpression) node.jjtGetChild(0);			
 			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
 			ASTConditionalExpression right = (ASTConditionalExpression) node.jjtGetChild(2);
+			
 			List<TypeCheckException> errors = isValidAssignment(left, right, assignment.getAssignmentType()); 
 			
 			if( errors.isEmpty() )
@@ -1452,9 +1452,13 @@ public class StatementChecker extends BaseChecker
 				
 				if( leftType instanceof PropertyType )
 					leftType = ((PropertyType)leftType).getSetType().getType();
+				else if( leftType instanceof IndexType )
+					leftType = ((IndexType)leftType).getStoreType().getType();
 				
 				if( rightType instanceof PropertyType )
 					rightType = ((PropertyType)rightType).getGetType().getType();
+				else if( rightType instanceof IndexType )
+					rightType = ((IndexType)rightType).getReadType().getType();
 						
 				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(rightType)));
 			}
@@ -1958,23 +1962,13 @@ public class StatementChecker extends BaseChecker
 		{
 			
 			Node last = node.jjtGetChild(node.jjtGetNumChildren() - 1);
+			node.setSuffix(last);
 						
 			if(node.jjtGetParent() instanceof ASTExpression ) //this primary expression is the left side of an assignment
 			{
 				Type type = last.getType(); //if PropertyType, preserve that
 				node.setModifiers(last.getModifiers());
 				node.setType(type);
-				
-				/*
-				if( last instanceof ASTSubscript )
-				{
-					ASTSubscript subscript = (ASTSubscript) last;
-					MethodSignature 
-					
-					
-				}
-				*/
-				
 			}
 			else
 			{
@@ -1986,6 +1980,7 @@ public class StatementChecker extends BaseChecker
 		else								//just prefix
 		{
 			Node child = node.jjtGetChild(0);
+			node.setSuffix(child);
 			node.setType(child.getType());
 			pushUpModifiers( node );
 		}		
@@ -2281,9 +2276,8 @@ public class StatementChecker extends BaseChecker
 				{
 					node.setType(Type.UNKNOWN);
 					addError(Error.INVALID_SUBSCRIPT, "Subscript gives " + node.jjtGetNumChildren() + " indexes but "  + arrayType.getDimensions() + " are required");
-				}
-				
-			}			
+				}				
+			}						
 			else if( prefixType.hasInterface(Type.CAN_INDEX) )
 			{
 				if( node.jjtGetNumChildren() == 1)
@@ -2302,12 +2296,18 @@ public class StatementChecker extends BaseChecker
 					else
 					{
 						ModifiedType modifiedType = signature.getReturnTypes().get(0); 
-						node.setType(modifiedType.getType());
 						node.setModifiers(modifiedType.getModifiers());
-						node.setMethodSignature( signature );
-						//node.addModifier(Modifiers.ASSIGNABLE);
-					}
+						node.setMethodSignature( signature );						
 						
+						if( prefixType.hasInterface(Type.CAN_INDEX_STORE) )
+						{	
+							IndexType indexType = new IndexType(modifiedType, child, new UnboundMethodType("index", prefixType));
+							node.setType(indexType);
+							node.addModifier(Modifiers.ASSIGNABLE);							
+						}
+						else						
+							node.setType(modifiedType.getType());
+					}						
 				}
 				else
 				{
@@ -2681,7 +2681,7 @@ public class StatementChecker extends BaseChecker
 						node.addModifier(Modifiers.ASSIGNABLE);					
 				}
 			}
-			else if( prefixType instanceof ClassType && ((ClassType)prefixType).containsInnerClass(name) && isTypeName )
+			else if( prefixType instanceof ClassType && ((ClassType)prefixType).containsInnerClass(name) )
 			{
 				ClassType classType = (ClassType) prefixType;
 				ClassType innerClass = classType.getInnerClass(name);
@@ -2797,7 +2797,7 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private ModifiedType resolveType( ModifiedType node ) //dereferences into PropertyType for getter, if needed
+	private ModifiedType resolveType( ModifiedType node ) //dereferences into PropertyType or IndexType for getter, if needed
 	{
 		Type type = node.getType();
 		
@@ -2811,6 +2811,11 @@ public class StatementChecker extends BaseChecker
 				addError(Error.ILLEGAL_ACCESS, "Property " + node + " does not have appropriate get access");
 				return new SimpleModifiedType( Type.UNKNOWN );
 			}				
+		}
+		else if( type instanceof IndexType )
+		{
+			IndexType indexType = (IndexType) type;
+			return indexType.getReadType();  			
 		}
 		else
 			return node;

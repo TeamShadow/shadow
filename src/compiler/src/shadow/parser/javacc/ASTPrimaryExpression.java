@@ -7,8 +7,20 @@ public
 class ASTPrimaryExpression extends SimpleNode {
 	
 	private boolean action = false;
-	private Kind kind;
+	//private Kind kind;
+	private Node suffix;
 	
+	public void setSuffix(Node node)
+	{
+		suffix = node;
+	}
+	
+	public Node getSuffix()
+	{
+		return suffix;
+	}
+	
+	/*
 	public enum Kind
 	{
 		LITERAL,
@@ -25,7 +37,7 @@ class ASTPrimaryExpression extends SimpleNode {
 		
 	}
 	
-	
+	*/
 	/* prefix
 	Literal()
 	| "this" { jjtThis.setImage("this"); }
@@ -49,6 +61,7 @@ class ASTPrimaryExpression extends SimpleNode {
 
 	*/
 	
+	/*
 	public void setKind(Kind kind)
 	{
 		this.kind = kind;		
@@ -58,6 +71,7 @@ class ASTPrimaryExpression extends SimpleNode {
 	{
 		return kind;		
 	}
+	*/
 	
   public ASTPrimaryExpression(int id) {
     super(id);

@@ -58,14 +58,21 @@ class shadow.utility@LinkedList<V is CanEqual<V>> implements List<V>
 	{
 		int index = 0;
 		Node current = header;
-		while (true)
+		try
 		{
-			current = current->next;
-			if ( current === header )
-				return ( -1, null );
-			if ( current->value == value )
-				return ( index, current );
-			index += 1;
+			while (true)
+			{
+				current = current->next;
+				if ( current === header )
+					return ( -1, null );
+				if ( check(current->value) == value )
+					return ( index, current );
+				index += 1;
+			}
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
 		}
 	}
 

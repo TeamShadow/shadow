@@ -18,20 +18,8 @@ CanIndex<int, double[]>
 	}
 
 	public index(int row) => (double[])
-	{
-		try
-		{
-			return check(values[row]);
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();		
-		}
-	}	
-	
-	public index(int row, double[] replacementRow) => ()
-	{
-		throw UnsupportedOperationException:create();
+	{		
+		return values[row];		
 	}
 	
 	public immutable add(Matrix other) => (Matrix)

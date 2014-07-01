@@ -1,4 +1,4 @@
-class Index2<E> implements CanIndex<code, E>
+class Index2<E> implements CanIndexStore<code, E>
 {
 
 	nullable E storage = null;
