@@ -7,20 +7,15 @@ public class IndexType extends Type
 	private ModifiedType readType;
 	private ModifiedType storeType;
 	private MethodSignature storeSignature;
+	private MethodSignature readSignature;
 
-	/*
-	public IndexType(ModifiedType readType, ModifiedType index) {	
-		super(null);			
-		this.readType = readType;
-		this.index = index;	
-	}
-	*/
 	
-	public IndexType(ModifiedType readType, ModifiedType index, UnboundMethodType method) {	
+	public IndexType(ModifiedType readType, MethodSignature readSignature, ModifiedType index, UnboundMethodType method) {	
 		super(null);			
 		this.readType = readType;
 		this.index = index;			
-		this.method = method;			
+		this.method = method;
+		this.readSignature = readSignature;
 	}
 	
 	public boolean canAccept(ModifiedType input)
@@ -72,6 +67,11 @@ public class IndexType extends Type
 		return storeSignature;
 	}
 	
+	public MethodSignature getReadSignature()
+	{			
+		return readSignature;
+	}
+	
 	public boolean isStorable()
 	{
 		return storeType != null;
@@ -114,15 +114,20 @@ public class IndexType extends Type
 		ModifiedType replacedIndex;		
 		ModifiedType replacedGetType;
 		UnboundMethodType replacedMethod;
+		MethodSignature replacedReadSignature;
 		IndexType replacement;
 		
 		replacedGetType = new SimpleModifiedType(readType.getType().replace(values, replacements), readType.getModifiers());		
 		replacedIndex = new SimpleModifiedType(index.getType().replace(values, replacements), index.getModifiers());		
 		replacedMethod = method.replace(values, replacements);
-		replacement = new IndexType( replacedGetType, replacedIndex,  replacedMethod );
+		replacedReadSignature = readSignature.replace(values, replacements);
+		replacement = new IndexType( replacedGetType, replacedReadSignature, replacedIndex,  replacedMethod );
 			
 		if( storeType != null )
+		{
 			replacement.storeType = new SimpleModifiedType(storeType.getType().replace(values, replacements), storeType.getModifiers());
+			replacement.storeSignature = storeSignature.replace(values, replacements);
+		}
 			
 		return replacement;
 	}

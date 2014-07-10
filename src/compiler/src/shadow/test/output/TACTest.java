@@ -141,4 +141,9 @@ public class TACTest {
 		args.add("shadow/test/GenericTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testSubscript() throws Exception {
+		args.add("shadow/test/SubscriptTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

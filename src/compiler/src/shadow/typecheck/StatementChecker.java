@@ -2301,7 +2301,7 @@ public class StatementChecker extends BaseChecker
 						
 						if( prefixType.hasInterface(Type.CAN_INDEX_STORE) )
 						{	
-							IndexType indexType = new IndexType(modifiedType, child, new UnboundMethodType("index", prefixType));
+							IndexType indexType = new IndexType(modifiedType, signature, child, new UnboundMethodType("index", prefixType));
 							node.setType(indexType);
 							node.addModifier(Modifiers.ASSIGNABLE);							
 						}

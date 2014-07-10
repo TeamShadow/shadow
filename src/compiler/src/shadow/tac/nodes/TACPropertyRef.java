@@ -8,6 +8,7 @@ import shadow.typecheck.type.PropertyType;
 
 /** 
  * TAC representation of property call
+ * Needed because a property could be a store as well as a load
  * Example: ->x
  * @author Jacob Young
  */

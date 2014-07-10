@@ -141,6 +141,25 @@ class shadow.utility@LinkedList<V is CanEqual<V>> implements List<V>
 		return LinkedListIterator:create();
 	}
 	
+	public readonly toString() => (String)
+	{
+		var string = MutableString:create("[");
+		var i = iterator();		
+		
+		boolean first = true;
+		while( i.hasNext() )
+		{
+			if( first )
+				first = false;
+			else
+				string.append(", ");
+			string.append(#i.next());
+		}
+		
+		return string.append("]").toString();
+	}
+	
+	
 	private class LinkedListIterator implements Iterator<V>
 	{
 		Node current = header->next;

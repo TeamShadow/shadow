@@ -46,6 +46,7 @@ import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
+import shadow.tac.nodes.TACSubscriptRef;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
@@ -54,6 +55,7 @@ import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ExceptionType;
+import shadow.typecheck.type.IndexType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -1159,33 +1161,6 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTSubscript node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
-			Type prefixType = prefix.getType();
-			if( prefixType instanceof PropertyType )
-				prefixType = ((PropertyType)prefixType).getGetType().getType();
-			
-			if( prefixType instanceof ArrayType )
-			{
-				List<TACOperand> indicies =
-						new ArrayList<TACOperand>(tree.getNumChildren());
-				for (int i = 0; i < tree.getNumChildren(); i++)
-					indicies.add(tree.appendChild(i));
-				prefix = new TACArrayRef(tree, prefix, indicies);
-			}
-			else  if( prefixType.hasInterface(Type.CAN_INDEX))
-			{	//CanIndex, read only				
-				MethodSignature signature = node.getMethodSignature();
-				methodCall(signature.getMethodType(), "index", node);
-			}
-		}
-		return POST_CHILDREN;
-	}
-
-	@Override
 	public Object visit(ASTScopeSpecifier node, Boolean secondVisit)
 			throws ShadowException
 	{
@@ -1216,6 +1191,42 @@ public class TACBuilder implements ShadowParserVisitor
 			identifier = new TACVariable(node, node.getImage());
 		return POST_CHILDREN;
 	}
+	
+	@Override
+	public Object visit(ASTSubscript node, Boolean secondVisit)
+			throws ShadowException
+	{
+		if (secondVisit)
+		{
+			Type prefixType = prefix.getType();
+			if( prefixType instanceof PropertyType )
+				prefixType = ((PropertyType)prefixType).getGetType().getType();
+			
+			if( prefixType instanceof ArrayType )
+			{
+				List<TACOperand> indicies =
+						new ArrayList<TACOperand>(tree.getNumChildren());
+				for (int i = 0; i < tree.getNumChildren(); i++)
+					indicies.add(tree.appendChild(i));
+				prefix = new TACArrayRef(tree, prefix, indicies);
+			}
+			else  if( prefixType.hasInterface(Type.CAN_INDEX))
+			{	
+				if( prefixType.hasInterface(Type.CAN_INDEX_STORE) && node.getType() instanceof IndexType && ((IndexType)node.getType()).isStorable() )
+				{
+					IndexType indexType = (IndexType) node.getType();
+					prefix = new TACSubscriptRef(tree, block, prefix, tree.appendChild(0), indexType);
+				}
+				else
+				{
+					//CanIndex, read only				
+					MethodSignature signature = node.getMethodSignature();
+					methodCall(signature.getMethodType(), "index", node);
+				}
+			}
+		}
+		return POST_CHILDREN;
+	}	
 
 	@Override
 	public Object visit(ASTProperty node, Boolean secondVisit)
@@ -1227,8 +1238,8 @@ public class TACBuilder implements ShadowParserVisitor
 			if( prefixType instanceof PropertyType )
 				prefixType = ((PropertyType)prefixType).getGetType().getType();
 			
-			if( /*prefix != null &&*/ prefixType instanceof ArrayType &&
-					node.getImage().equals("size")) //optimization to avoid creating an Array object
+			if( prefixType instanceof ArrayType && node.getImage().equals("size"))
+				//optimization to avoid creating an Array object
 			{
 				ArrayType arrayType = (ArrayType)prefixType;
 				TACOperand length = new TACLength(tree, prefix, 0);
@@ -1403,28 +1414,6 @@ public class TACBuilder implements ShadowParserVisitor
 		}
 		return POST_CHILDREN;
 	}
-
-	/*
-	@Override
-	public Object visit(ASTArrayDimsAndInits node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
-			List<ModifiedType> types = new ArrayList<ModifiedType>();
-			List<TACOperand> seq = new ArrayList<TACOperand>();
-			for (int i = 0; i < tree.getNumChildren(); i++)
-			{
-				TACOperand child = tree.appendChild(i);
-				types.add(new SimpleModifiedType(child.getType()));
-				seq.add(child);
-			}
-			new TACSequence(tree, seq);
-		}
-		return POST_CHILDREN;
-	}
-	
-	*/
 
 	@Override
 	public Object visit(ASTStatement node, Boolean secondVisit)
@@ -2175,33 +2164,6 @@ public class TACBuilder implements ShadowParserVisitor
 		this.method = null;
 		tree = saveTree;
 	}
-
-	/*
-	private void visitUnaryOperation(SimpleNode node)
-	{
-		
-		new TACUnary(tree, node.getImage().charAt(0), tree.appendChild(0));
-	}
-	*/
-
-	/*
-	private void visitBinaryOperation(SimpleNode node)
-	{
-		int child = 0;
-		TACOperand current = null;
-		while (current == null)
-			current = tree.appendChild(child++);
-		String operations = node.getImage();
-		for (int i = 0; i < operations.length(); i++)
-		{
-			char operation = operations.charAt(i);
-			TACOperand next = null;
-			while (next == null)
-				next = tree.appendChild(child++);
-			current = new TACBinary(tree, current, operation, next);
-		}
-	}
-	*/
 	
 	private void visitBooleanOperation(Node node)
 	{
@@ -2341,44 +2303,6 @@ public class TACBuilder implements ShadowParserVisitor
 		}
 		return new TACNodeRef(tree, alloc);
 	}
-
-//	private TACReference visitArrayAllocation(TACData tac, ArrayType type, List<TACNode> sizes, int sizeIndex)
-//	{
-//		int startIndex = sizeIndex;
-//		TACNode size = sizes.get(sizeIndex++);
-//		for (int i = 1; i < type.getDimensions(); i++)
-//			tac.append(size = new TACBinary(size, TACBinary.Operator.MULTIPLY, sizes.get(sizeIndex++)));
-//		TACAllocation alloc = new TACAllocation(type, size, sizes, startIndex);
-//		tac.append(alloc);
-//		if (sizeIndex < sizes.size())
-//		{
-//			TACOldVariable index = new TACOldVariable(Type.INT);
-//			tac.append(new TACAllocation(index));
-//			tac.append(new TACLiteral(Type.INT, 0));
-//			tac.append(new TACAssign(index, tac.getNode()));
-//			TACComparison condition = new TACComparison(index, TACComparison.Operator.NOT_EQUAL, size);
-//			TACLabel bodyLabel = new TACLabel("body"),
-//					conditionLabel = new TACLabel("condition"),
-//					endLabel = new TACLabel("end");
-//			tac.append(new TACBranch(conditionLabel));
-//			tac.append(bodyLabel);
-//			TACReference value = visitArrayAllocation(tac, (ArrayType)type.getBaseType(), sizes, sizeIndex);
-//			tac.append(new TACIndexed(type.getBaseType(), alloc, new TACReference(index)));
-//			tac.append(new TACAssign(tac.getNode(), new TACReference(value)));
-//			tac.append(new TACAssign(
-//					tac.append(new TACReference(index)),
-//					tac.append(new TACBinary(
-//							tac.append(new TACReference(index)),
-//							TACBinary.Operator.ADD,
-//							tac.append(new TACLiteral(Type.INT, 1))))));
-//			tac.append(new TACBranch(conditionLabel));
-//			tac.append(conditionLabel);
-//			tac.append(condition);
-//			tac.append(new TACBranch(condition, bodyLabel, endLabel));
-//			tac.append(endLabel);
-//		}
-//		return new TACReference(alloc);
-//	}
 
 	private TACOperand getDefaultValue(ModifiedType type)
 	{

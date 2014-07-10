@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
+import shadow.tac.nodes.TACConstructGeneric;
 import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabelRef;
@@ -71,8 +73,8 @@ import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
-import shadow.tac.nodes.TACConstructGeneric;
 import shadow.tac.nodes.TACStore;
+import shadow.tac.nodes.TACSubscriptRef;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
@@ -1576,13 +1578,50 @@ public class LLVMOutput extends AbstractOutput
 				walk(prefix);
 			}
 			
-			TACMethodRef method = new TACMethodRef(prefix,
-			//		property.getType().getGetter().getMethodType(), property.getName());
+			TACMethodRef method = new TACMethodRef(prefix,			
 					property.getType().getGetter().getMethodType().getTypeWithoutTypeArguments(), property.getName());
-			//TACCall call = new TACCall(method.getNext(), property.getBlock(),
-			//		method, Collections.singletonList(property.getPrefix()));
 			TACCall call = new TACCall(method.getNext(), property.getBlock(),
 					method, Collections.singletonList(method.getPrefix()));
+			walk(call);
+			node.setData(symbol(call));
+		}
+		else if( reference instanceof TACSubscriptRef )
+		{
+			TACSubscriptRef subscript = (TACSubscriptRef)reference;
+			TACOperand prefix = subscript.getPrefix();
+			TACOperand index = subscript.getIndex();
+			
+			if( prefix.getType() instanceof InterfaceType )	
+			{
+				prefix = new TACCast(null, new SimpleModifiedType(Type.OBJECT), prefix);
+				walk(prefix);				
+			}
+			else if( prefix.getType() instanceof ArrayType )
+			{
+				ArrayType arrayType = (ArrayType) prefix.getType();				
+				prefix = new TACCast(null, new SimpleModifiedType(arrayType.convertToGeneric()), prefix);
+				walk(prefix);
+			}
+			
+			if( index.getType() instanceof InterfaceType )	
+			{
+				index = new TACCast(null, new SimpleModifiedType(Type.OBJECT), index);
+				walk(index);				
+			}
+			else if( index.getType() instanceof ArrayType )
+			{
+				ArrayType arrayType = (ArrayType) index.getType();				
+				index = new TACCast(null, new SimpleModifiedType(arrayType.convertToGeneric()), prefix);
+				walk(index);
+			}
+			
+			TACMethodRef method = new TACMethodRef(prefix,			
+					subscript.getType().getReadSignature().getSignatureWithoutTypeArguments());
+			List<TACOperand> params = new ArrayList<TACOperand>();
+			params.add(method.getPrefix());
+			params.add(index);
+			TACCall call = new TACCall(method.getNext(), subscript.getBlock(),
+					method, params);
 			walk(call);
 			node.setData(symbol(call));
 		}
@@ -1630,6 +1669,46 @@ public class LLVMOutput extends AbstractOutput
 			//		Arrays.asList(property.getPrefix(), node.getValue())));
 			walk(new TACCall(method.getNext(), property.getBlock(), method,
 					Arrays.asList(method.getPrefix(), node.getValue())));
+		}
+		else if( reference instanceof TACSubscriptRef )
+		{
+			TACSubscriptRef subscript = (TACSubscriptRef)reference;
+			TACOperand prefix = subscript.getPrefix();
+			TACOperand index = subscript.getIndex();
+			
+			if( prefix.getType() instanceof InterfaceType )	
+			{
+				prefix = new TACCast(null, new SimpleModifiedType(Type.OBJECT), prefix);
+				walk(prefix);				
+			}
+			else if( prefix.getType() instanceof ArrayType )
+			{
+				ArrayType arrayType = (ArrayType) prefix.getType();				
+				prefix = new TACCast(null, new SimpleModifiedType(arrayType.convertToGeneric()), prefix);
+				walk(prefix);
+			}
+			
+			if( index.getType() instanceof InterfaceType )	
+			{
+				index = new TACCast(null, new SimpleModifiedType(Type.OBJECT), index);
+				walk(index);				
+			}
+			else if( index.getType() instanceof ArrayType )
+			{
+				ArrayType arrayType = (ArrayType) index.getType();				
+				index = new TACCast(null, new SimpleModifiedType(arrayType.convertToGeneric()), prefix);
+				walk(index);
+			}
+			
+			TACMethodRef method = new TACMethodRef(prefix,			
+					subscript.getType().getStoreSignature().getSignatureWithoutTypeArguments());
+			List<TACOperand> params = new ArrayList<TACOperand>();
+			params.add(method.getPrefix());
+			params.add(index);
+			params.add(node.getValue());
+			TACCall call = new TACCall(method.getNext(), subscript.getBlock(),
+					method, params);
+			walk(call);			
 		}
 		else
 			writer.write("store " + typeSymbol(node.getValue()) + ", " +
