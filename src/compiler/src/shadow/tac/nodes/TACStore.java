@@ -46,7 +46,7 @@ public class TACStore extends TACSimpleNode
 			return reference;
 		if (num == 1)
 			return value;
-		throw new IndexOutOfBoundsException("num");
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

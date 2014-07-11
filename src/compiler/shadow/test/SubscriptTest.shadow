@@ -7,35 +7,44 @@ class shadow.test@SubscriptTest
 {
 	public main( String[] args ) => ()
 	{
-		ArrayList<String> list = ArrayList<String>:create();
 		LinkedList<String> list2 = LinkedList<String>:create();
-		ArrayList<int> numbers = ArrayList<int>:create();
-		Console out = Console:instance;
+	
+		ArrayList<String> list = ArrayList<String>:create();
 		
-		list.add("Help");
-		list.add("me");
-		list.add("with");
-		list.add("my");
-		list.add("troubles");
+		ArrayList<int> numbers = ArrayList<int>:create();
+	
+		Console out = Console:instance;
 		
 		list2.add("Help");
 		list2.add("me");
 		list2.add("with");
 		list2.add("my");
 		list2.add("troubles");
+		
+				
+		list.add("Help");
+		list.add("me");
+		list.add("with");
+		list.add("my");
+		list.add("troubles");
+					
 					
 		for( int i = 0; i < 20; i += 1 )
-			numbers.add(i + 1);
-			
+			numbers.add(i + 1);		
 		
 		out.printLine(list[3]); //my
 		
 		out.printLine(numbers[16]); //17
 		
 		list[0] = "Visit";
-		list[4] = "wombats";
+		list[4] = "wombats";			
+		
 		
 		list2[2] = "off";
+		
+		out.printLine(list2[2]);
+		
+		
 		list2[4] = "boat";
 		
 		numbers[3] = 409;
@@ -44,6 +53,7 @@ class shadow.test@SubscriptTest
 		
 		out.printLine("Words: " # list);
 		out.printLine("Other words: " # list2);
+		
 		out.printLine("Numbers: " # numbers);						
 	}
 }

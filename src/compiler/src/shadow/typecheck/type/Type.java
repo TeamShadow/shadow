@@ -43,6 +43,8 @@ public abstract class Type implements Comparable<Type>
 	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();	
 	private LinkedList<Object> importedItems = new LinkedList<Object>();
 	
+	private static boolean referenceRecursion = false;
+	
 	
 	/*
 	 * Predefined system types needed for Shadow
@@ -387,8 +389,14 @@ public abstract class Type implements Comparable<Type>
 						
 			if( type.getPackage() == getPackage() && type.getTypeName().equals(getTypeName()) )
 			{				
-				if( parameterized )
-					return type.typeParameters.matches(typeParameters);
+				if( isParameterizedIncludingOuterClasses() )
+				{
+					if( isParameterized() && !type.typeParameters.matches(typeParameters) )
+						return false;
+					
+					if( hasOuter() )
+						return getOuter().equals(type.getOuter());
+				}
 					
 				return true;
 			}	
@@ -1096,19 +1104,13 @@ public abstract class Type implements Comparable<Type>
 	
 	public void addReferencedType(Type type)
 	{		
-		if( type != null )
-		{
+		if( type != null && !(type instanceof UninstantiatedType) )
+		{			
 			if( type instanceof ArrayType )
-			{
-				
+			{				
 				ArrayType arrayType = (ArrayType) type;
-				/*
-				ClassType instantiatedArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
-				addReferencedType(instantiatedArray);
-				*/
 				addReferencedType(arrayType.convertToGeneric());
-				//addReferencedType(Type.ARRAY);
-				//addReferencedType(arrayType.getBaseType());			
+				//covers Type.ARRAY and all recursive base types
 			}
 			else if( type instanceof MethodType )
 			{
@@ -1120,32 +1122,22 @@ public abstract class Type implements Comparable<Type>
 					addReferencedType( _return.getType() );				
 			}
 			else if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
-			{
-				//if( type instanceof InterfaceType  )
-					referencedTypes.add(type);
-				//else
-				//	referencedTypes.add(type.typeWithoutTypeArguments);
+			{		
 				if( type.isParameterized() )
 				{
 					if( type.isFullyInstantiated() )
 					{				
+						referencedTypes.add(type);
 						referencedTypes.add(type.typeWithoutTypeArguments);
 						
-						for( ModifiedType typeParameter : type.getTypeParameters() )
+						if( !referenceRecursion )
 						{
-							addReferencedType( typeParameter.getType() );
+							referenceRecursion = true; //prevents rabbit hole recursion on type parameters								
+							for( ModifiedType typeParameter : type.getTypeParameters() )						
+								addReferencedType( typeParameter.getType() );
 							
-							//we also need to keep representations of array and method type parameters, but only for objects
-							/*
-							if( type instanceof ClassType && type.isFullyInstantiated() )
-							{
-								if( type instanceof MethodType )
-									referencedTypes.add(type);
-								else if( type instanceof ArrayType && !((ArrayType)type).baseIsTypeParameter() )
-									referencedTypes.add(type);
-							}
-							*/						
-						}
+							referenceRecursion = false;
+						}						
 					}
 				}
 				else
@@ -1154,12 +1146,33 @@ public abstract class Type implements Comparable<Type>
 				}
 			}
 			
+			//add inner types, since their instantiations must be recorded
+			if( type instanceof ClassType )
+			{
+				ClassType classType = (ClassType) type;
+				for( ClassType inner : classType.getInnerClasses().values() )
+					addReferencedType( inner );				
+			}
+			
+			//add reference to outer types					
 			Type outer = getOuter();
 			while( outer != null )
 			{
 				outer.addReferencedType(type);
 				outer = outer.getOuter();
-			}			
+			}
+			
+			ArrayList<InterfaceType> interfaces = type.getInterfaces(); 
+			
+			//add interfaces
+			for( InterfaceType interfaceType : interfaces )
+				addReferencedType(interfaceType);
+			
+			/* 
+			//add extend types (recursively) needed?
+			if( type instanceof ClassType )
+				addReferencedType( ((ClassType)type).getExtendType() );
+			*/
 		}
 	}
 	public Set<Type> getReferencedTypes()

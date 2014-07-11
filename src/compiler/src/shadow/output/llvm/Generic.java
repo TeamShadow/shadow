@@ -54,6 +54,10 @@ public class Generic implements Comparable<Generic>
 				parent = "null";
 			else
 				parent = "@\"" + classType.getExtendType().getMangledNameWithGenerics() + "_class\"";
+			
+			//interfaces are only needed for generic classes
+			for( InterfaceType interface_ : type.getAllInterfaces() )
+				interfaces.add(interface_.getMangledNameWithGenerics());			
 		}
 		
 		for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() )
@@ -63,7 +67,7 @@ public class Generic implements Comparable<Generic>
 			if( parameterType instanceof ArrayType )
 				parameterType = ((ArrayType)parameterType).convertToGeneric();
 				
-			addParameter(parameterType.getMangledNameWithGenerics());
+			parameters.add(parameterType.getMangledNameWithGenerics());
 		}		
 	}
 	
@@ -106,21 +110,11 @@ public class Generic implements Comparable<Generic>
 		return parameters;
 	}
 	
-	public void addParameter(String parameter)
-	{
-		parameters.add(parameter);		
-	}
-	
 	public ArrayList<String> getInterfaces()
 	{
 		return interfaces;
-	}
-	
-	public void addInterface(String _interface)
-	{
-		interfaces.add(_interface);		
-	}
-	
+	}	
+
 	public String getName()
 	{
 		return name;

@@ -111,12 +111,15 @@ public class TypeChecker {
 			Map<Type, Node> nodeTable = collector.getNodeTable();			
 						
 			for( Type type : mainType.getReferencedTypes() )
-			{				
-				Node node = nodeTable.get(type.getTypeWithoutTypeArguments());
-				File file = node.getFile();
-				String fileName = BaseChecker.stripExtension(file.getCanonicalPath());
-				if( !checkedFiles.contains(fileName) )
-						files.add(fileName);
+			{	
+				if( !type.hasOuter() )
+				{				
+					Node node = nodeTable.get(type.getTypeWithoutTypeArguments());
+					File file = node.getFile();
+					String fileName = BaseChecker.stripExtension(file.getCanonicalPath());
+					if( !checkedFiles.contains(fileName) )
+							files.add(fileName);
+				}
 			}
 		}
 		catch( IOException e )

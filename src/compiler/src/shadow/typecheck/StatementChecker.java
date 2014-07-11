@@ -561,6 +561,7 @@ public class StatementChecker extends BaseChecker
 				return true;
 			}
 			
+			/*
 			if( classType.recursivelyContainsInnerClass(name))
 			{
 				Type innerClass = classType.recursivelyGetInnerClass(name);
@@ -568,6 +569,7 @@ public class StatementChecker extends BaseChecker
 				node.setModifiers(Modifiers.TYPE_NAME);
 				return true;
 			}
+			*/
 		}
 
 		return false;

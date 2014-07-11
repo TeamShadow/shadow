@@ -418,13 +418,12 @@ public class ClassType extends Type
 			for( String name : inners.keySet() )		
 				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
 			
-			//replaced.setTypeArguments( new SequenceType(replacements) );
-			
-			for( ModifiedType modifiedParameter : getTypeParameters() )	
-			{
-				Type parameter = modifiedParameter.getType();
-				replaced.addTypeParameter( new SimpleModifiedType(parameter.replace(values, replacements), modifiedParameter.getModifiers()) );
-			}
+			if( isParameterized() )
+				for( ModifiedType modifiedParameter : getTypeParameters() )	
+				{
+					Type parameter = modifiedParameter.getType();
+					replaced.addTypeParameter( new SimpleModifiedType(parameter.replace(values, replacements), modifiedParameter.getModifiers()) );
+				}
 			
 			return replaced;
 		}
@@ -492,7 +491,7 @@ public class ClassType extends Type
 	
 	public boolean isRecursivelyParameterized()
 	{
-		if( isParameterized() )
+		if( isParameterizedIncludingOuterClasses() )
 			return true;
 		
 		if( extendType == null )

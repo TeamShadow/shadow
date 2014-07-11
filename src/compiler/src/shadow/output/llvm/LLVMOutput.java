@@ -186,8 +186,7 @@ public class LLVMOutput extends AbstractOutput
 					append(" }").toString());
 		}
 		else if (type instanceof ClassType)
-		{			
-			ClassType classType = (ClassType) type;
+		{	
 			if( type.isUninstantiated() )
 			{
 				sb.append('%').append(raw(type, "_methods")).append(" = type { ");
@@ -473,8 +472,9 @@ public class LLVMOutput extends AbstractOutput
 		//if( moduleType instanceof InterfaceType && moduleType.isParameterized() )
 		//	referencedInterfaces.add((InterfaceType)(moduleType.getTypeWithoutTypeArguments()));
 		HashSet<String> recordedTypes = new HashSet<String>();
+		Set<Type> references = module.getReferences(); 
 		
-		for (Type type : module.getReferences())
+		for (Type type : references )
 		{
 			if (type != null && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
@@ -786,10 +786,10 @@ public class LLVMOutput extends AbstractOutput
 		if (node.getOuterType() instanceof InterfaceType)
 		{
 			writer.write(nextTemp() + " = extractvalue " +
-					typeSymbol(node.getPrefix()) + ", 0");
+					type(node.getOuterType()) + " " + symbol(node.getThis()) + ", 0");
 			writer.write(nextTemp() + " = getelementptr %" +
-					//raw(node.getOuterType(), "_Mclass") + "* " +
-					raw(node.getPrefix(), "_methods") + "* " +
+					raw(node.getOuterType(), "_methods") + "* " +
+					//raw(node.getPrefix(), "_methods") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex());
 			writer.write(nextTemp(node) + " = load " + methodType(node) +
 					"* " + temp(1));
@@ -803,13 +803,13 @@ public class LLVMOutput extends AbstractOutput
 				!node.isSuper() )
 		{	
 			writer.write(nextTemp() + " = getelementptr " +
-					typeSymbol(node.getPrefix()) + ", i32 0, i32 1");
+					typeSymbol(node.getThis()) + ", i32 0, i32 1");
 			
 			writer.write(nextTemp() + " = load %" +
-					raw(node.getPrefix().getType(), "_methods") + "** " + temp(1));
+					raw(node.getThis().getType(), "_methods") + "** " + temp(1));
 			
 			writer.write(nextTemp() + " = getelementptr %" +
-					raw(node.getPrefix().getType(), "_methods") + "* " +
+					raw(node.getThis().getType(), "_methods") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex()); //may need to + 1 to the node.getIndex() if a parent method table is added	
 			
 			writer.write(nextTemp(node) + " = load " + methodType(node) +
@@ -976,7 +976,7 @@ public class LLVMOutput extends AbstractOutput
 		{			
 			Type interfaceClass = srcType.getType(); //which class's interface table gets searched			
 			if (srcType.getType().isPrimitive())
-			{			
+			{	
 				srcName = allocatePrimitive(node, srcType.getType(), srcName);
 				srcType = new SimpleModifiedType(Type.OBJECT);				
 			}			
@@ -1517,10 +1517,10 @@ public class LLVMOutput extends AbstractOutput
 		for( int i = 0; i < size; i++ )
 		{
 			writer.write(nextTemp() + " = getelementptr " + type(Type.CLASS) + "* " + start + ", i32 " + i);  			
-			writer.write("store " + type(Type.CLASS) + " " + symbol(node.getOperand(i)) + ", " + type(Type.CLASS) + "* " + temp(1));			
+			writer.write("store " + type(Type.CLASS) + " " + symbol(node.getOperand(i)) + ", " + type(Type.CLASS) + "* " + temp(0));			
 		}		
 		
-		writer.write(nextTemp() + " = insertvalue " + type(new ArrayType(Type.CLASS)) + " undef, " + type(Type.CLASS) + "*" + start + ", 0");
+		writer.write(nextTemp() + " = insertvalue " + type(new ArrayType(Type.CLASS)) + " undef, " + type(Type.CLASS) + "* " + start + ", 0");
 		writer.write(nextTemp() + " = insertvalue " + type(new ArrayType(Type.CLASS)) + " " + temp(1) + ", " + typeLiteral(size) + ", 1, 0" );
 		writer.write(nextTemp() + " = load " + type(genericClassArray) + "*  @_generics" + node.getClassType().getMangledName());
 		writer.write(nextTemp(node) + " = call " + 
@@ -1542,6 +1542,7 @@ public class LLVMOutput extends AbstractOutput
 		writer.write(nextTemp(node) + " = xor " +
 				typeSymbol(node.getOperand()) + ", true");
 	}
+	
 	@Override
 	public void visit(TACSame node) throws ShadowException
 	{
@@ -1581,9 +1582,10 @@ public class LLVMOutput extends AbstractOutput
 			TACMethodRef method = new TACMethodRef(prefix,			
 					property.getType().getGetter().getMethodType().getTypeWithoutTypeArguments(), property.getName());
 			TACCall call = new TACCall(method.getNext(), property.getBlock(),
-					method, Collections.singletonList(method.getPrefix()));
+					method, Collections.singletonList(method.getThis()));
 			walk(call);
 			node.setData(symbol(call));
+			property.setData(symbol(call));
 		}
 		else if( reference instanceof TACSubscriptRef )
 		{
@@ -1618,12 +1620,13 @@ public class LLVMOutput extends AbstractOutput
 			TACMethodRef method = new TACMethodRef(prefix,			
 					subscript.getType().getReadSignature().getSignatureWithoutTypeArguments());
 			List<TACOperand> params = new ArrayList<TACOperand>();
-			params.add(method.getPrefix());
+			params.add(method.getThis());
 			params.add(index);
 			TACCall call = new TACCall(method.getNext(), subscript.getBlock(),
 					method, params);
 			walk(call);
 			node.setData(symbol(call));
+			subscript.setData(symbol(call));
 		}
 		else
 			writer.write(nextTemp(node) + " = load " +
@@ -1668,7 +1671,7 @@ public class LLVMOutput extends AbstractOutput
 			//walk(new TACCall(method.getNext(), property.getBlock(), method,
 			//		Arrays.asList(property.getPrefix(), node.getValue())));
 			walk(new TACCall(method.getNext(), property.getBlock(), method,
-					Arrays.asList(method.getPrefix(), node.getValue())));
+					Arrays.asList(method.getThis(), node.getValue())));
 		}
 		else if( reference instanceof TACSubscriptRef )
 		{
@@ -1703,7 +1706,7 @@ public class LLVMOutput extends AbstractOutput
 			TACMethodRef method = new TACMethodRef(prefix,			
 					subscript.getType().getStoreSignature().getSignatureWithoutTypeArguments());
 			List<TACOperand> params = new ArrayList<TACOperand>();
-			params.add(method.getPrefix());
+			params.add(method.getThis());
 			params.add(index);
 			params.add(node.getValue());
 			TACCall call = new TACCall(method.getNext(), subscript.getBlock(),
@@ -2429,9 +2432,9 @@ public class LLVMOutput extends AbstractOutput
 						sb.append(type(Type.CLASS)).append(" ");
 
 						if( _interface.contains("_L_"))	
-							sb.append("bitcast (" + type(Type.GENERIC_CLASS) + " " + _interface + " to " + type(Type.CLASS) + ")");
+							sb.append("bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + _interface + "_class\" to " + type(Type.CLASS) + ")");
 						else
-							sb.append(_interface);							
+							sb.append("@\"" + _interface + "_class\"");							
 					}
 					
 					sb.append("]");					

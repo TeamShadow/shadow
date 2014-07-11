@@ -232,6 +232,9 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		
 	public boolean matches(List<ModifiedType> inputTypes)
 	{
+		if( inputTypes == null )
+			return false;
+		
 		if( types.size() != inputTypes.size() )
 			return false;		
 	

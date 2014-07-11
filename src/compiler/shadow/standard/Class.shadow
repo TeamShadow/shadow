@@ -80,13 +80,15 @@ immutable class shadow.standard@Class implements CanHash
 	
 	private interfaceData( Class interfaceClass ) => ( immutable nullable Object )
 	{
+	
+		//Console:instance.printLine( this # " is current class");
 		for ( int i = 0; i < interfaces->size; i += 1 )
 		{		
 			if ( interfaces[i] === interfaceClass )
 				return data[i];
 		}
 		
-		Console:instance.printLine( interfaceClass # " not found!");
+		//Console:instance.printLine( interfaceClass # " not found!");
 		return null;
 	}
 	

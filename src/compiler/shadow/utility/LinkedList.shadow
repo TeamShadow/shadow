@@ -142,9 +142,9 @@ class shadow.utility@LinkedList<V is CanEqual<V>> implements List<V>
 	}
 	
 	public readonly toString() => (String)
-	{
+	{	
 		var string = MutableString:create("[");
-		var i = iterator();		
+		var i = iterator();				
 		
 		boolean first = true;
 		while( i.hasNext() )
@@ -153,7 +153,8 @@ class shadow.utility@LinkedList<V is CanEqual<V>> implements List<V>
 				first = false;
 			else
 				string.append(", ");
-			string.append(#i.next());
+			
+			string.append(#i.next());			
 		}
 		
 		return string.append("]").toString();
@@ -181,8 +182,8 @@ class shadow.utility@LinkedList<V is CanEqual<V>> implements List<V>
 			if ( !hasNext() )
 				throw IndexOutOfBoundsException:create();
 			try
-			{
-				V value = check(current->value);
+			{				
+				V value = check(current->value);			
 				current = current->next;			
 				return value;
 			}

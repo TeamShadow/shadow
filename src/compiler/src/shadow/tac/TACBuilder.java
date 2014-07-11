@@ -1021,6 +1021,7 @@ public class TACBuilder implements ShadowParserVisitor
 					"null")), block.getRecover(), continueLabel);
 			continueLabel.new TACLabel(tree);
 			prefix = new TACNodeRef(tree, operand);
+			//prefix = operand;
 		}
 		return POST_CHILDREN;
 	}
@@ -1106,14 +1107,16 @@ public class TACBuilder implements ShadowParserVisitor
 		if (prefix == null)
 			prefix = new TACVariableRef(tree, method.getThis());
 		
+		/*
 		if( prefix.getType() instanceof InterfaceType )		
 			prefix = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), prefix);
 		else if( prefix.getType() instanceof ArrayType )
 		{
 			ArrayType arrayType = (ArrayType) prefix.getType();
-			Type genericArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
+			Type genericArray = arrayType.convertToGeneric();
 			prefix = new TACCast(tree, new SimpleModifiedType(genericArray), prefix);
 		}
+		*/		
 		
 		TACMethodRef methodRef = new TACMethodRef(tree,
 				prefix,
@@ -1123,7 +1126,7 @@ public class TACBuilder implements ShadowParserVisitor
 		List<TACOperand> params = new ArrayList<TACOperand>();
 				
 		//params.add(prefix);
-		params.add(methodRef.getPrefix());
+		params.add(methodRef.getThis());
 		for (int i = 0; i < tree.getNumChildren(); i++)
 			if (node.jjtGetChild(i) instanceof ASTTypeArguments)
 				for (ModifiedType type :
@@ -2302,6 +2305,7 @@ public class TACBuilder implements ShadowParserVisitor
 			endLabel.new TACLabel(tree);
 		}
 		return new TACNodeRef(tree, alloc);
+		//return alloc;
 	}
 
 	private TACOperand getDefaultValue(ModifiedType type)

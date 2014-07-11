@@ -23,6 +23,16 @@ public class TACNodeRef extends TACOperand
 	{
 		return reference;
 	}
+	
+	@Override
+	public Object getData()
+	{	
+		if( reference != null )
+			return reference.getData();
+		
+		return null;
+	}
+	
 
 	@Override
 	public Modifiers getModifiers()

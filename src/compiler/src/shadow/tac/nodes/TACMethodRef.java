@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -15,6 +16,7 @@ import shadow.typecheck.type.Type;
 public class TACMethodRef extends TACOperand
 {
 	private TACOperand prefix;
+	private TACOperand _this;
 	private MethodType type;
 	private String name;
 	private TACMethodRef wrapped;
@@ -53,22 +55,40 @@ public class TACMethodRef extends TACOperand
 		this(node, prefixNode, sig.getMethodType(), sig.getSymbol(),
 				sig.isWrapper() ? sig.getWrapped() : null);
 	}
+	
+	private void initialize(TACOperand prefixNode, MethodType methodType, String methodName)
+	{
+		if (prefixNode != null)
+		{	
+			prefix = prefixNode;
+			/*
+			if( prefix.getType() instanceof InterfaceType )
+				_this = check(prefixNode,
+						new SimpleModifiedType(Type.OBJECT));
+			else*/
+			if( prefix.getType() instanceof ArrayType )
+			{
+				ArrayType arrayType = (ArrayType) prefix.getType();
+				Type genericArray = arrayType.convertToGeneric();
+				_this = check(prefixNode, new SimpleModifiedType(genericArray));
+			}
+			else
+				_this = check(prefixNode,
+						new SimpleModifiedType(methodType.getOuter()));
+		}
+		type = methodType;
+		name = methodName;		
+	}
+	
 	private TACMethodRef(TACNode node, TACOperand prefixNode,
 			MethodType methodType, String methodName,
 			MethodSignature wrappedSignature)
 	{
 		super(node);
-		if (prefixNode != null)
-			prefix = check(prefixNode,
-					new SimpleModifiedType(methodType.getOuter()));
-		type = methodType;
-		name = methodName;
+		initialize( prefixNode, methodType, methodName);
+		
 		if (wrappedSignature != null)
 			wrapped = new TACMethodRef((TACNode)this, wrappedSignature);		
-	}
-	public TACMethodRef(TACMethodRef other)
-	{
-		this(null, null, other.getType(), other.getName(), other.getWrapped());
 	}
 
 	public TACMethodRef(TACNode node, TACMethodRef other)
@@ -85,19 +105,8 @@ public class TACMethodRef extends TACOperand
 			TACMethodRef otherWrapped)
 	{
 		super(node);
-		if (prefixNode != null)
-		{
-			/*if( methodType.getOuter() instanceof InterfaceType )
-				prefix = check(prefixNode,
-						new SimpleModifiedType(Type.OBJECT));
-			else*/
-				prefix = check(prefixNode,
-						new SimpleModifiedType(methodType.getOuter()));
-		}
-	//	else
-	//		prefix = check(prefixNode, new SimpleModifiedType(methodType.getOuter()));
-		type = methodType;
-		name = methodName;
+		initialize( prefixNode, methodType, methodName);		
+		
 		if (otherWrapped != null)
 			wrapped = new TACMethodRef((TACNode)this, otherWrapped);
 	}
@@ -113,6 +122,11 @@ public class TACMethodRef extends TACOperand
 	public TACOperand getPrefix()
 	{
 		return prefix;
+	}
+	
+	public TACOperand getThis()
+	{
+		return _this;
 	}
 	public int getIndex()
 	{
@@ -294,7 +308,7 @@ public class TACMethodRef extends TACOperand
 	public TACOperand getOperand(int num)
 	{
 		if (hasPrefix() && num == 0)
-			return getPrefix();
+			return getThis();
 		throw new IndexOutOfBoundsException();
 	}
 
