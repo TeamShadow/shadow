@@ -10,6 +10,7 @@ public class PropertyType extends GetSetType
 	}	
 	
 	@Override
+	//probably never gets used
 	public boolean isSubtype(Type other) {
 
 		if( other instanceof PropertyType )

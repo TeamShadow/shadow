@@ -25,7 +25,7 @@ import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.SubscriptType;
+import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -33,6 +33,7 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UninstantiatedClassType;
@@ -41,7 +42,7 @@ import shadow.typecheck.type.UninstantiatedType;
 
 public abstract class BaseChecker extends AbstractASTVisitor
 {	
-	public enum SubstitutionType
+	public enum SubstitutionKind
 	{
 		ASSIGNMENT, BINDING, TYPE_PARAMETER, INITIALIZATION;
 	}
@@ -114,33 +115,29 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			errors.add(new TypeCheckException(type, reason));		
 	}	
 	
-	public static boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, SubstitutionType substitutionType, List<TypeCheckException> errors )
+	public static boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, SubstitutionKind substitutionType, List<TypeCheckException> errors )
 	{
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();		
 		
-		//process property on right first
-		if( rightType instanceof PropertyType )
+		//process property or subscript on right first
+		if( rightType instanceof GetSetType )
 		{					
-			PropertyType propertyType = (PropertyType)rightType;					
+			GetSetType getSetType = (GetSetType)rightType;					
 			
-			if( propertyType.isGettable() )
+			if( getSetType.isGettable() )
 			{
-				right = propertyType.getGetType();
+				right = getSetType.getGetType();
 				rightType = right.getType();
 			}
 			else
 			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not gettable");
+				String kind = (rightType instanceof PropertyType) ? "Property " : "Subscript ";				
+				addError(errors, Error.INVALID_ASSIGNMENT, kind + getSetType + " is not gettable");
 				return false;				
 			}
 		}
-		else if( rightType instanceof SubscriptType )
-		{
-			SubscriptType indexType = (SubscriptType)rightType;
-			right = indexType.getGetType();
-			rightType = right.getType();
-		}
+	
 		
 		//property on left			
 		if( leftType instanceof PropertyType )  
@@ -190,7 +187,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		
 		
 		//type parameter binding follows different rules
-		if( substitutionType.equals(SubstitutionType.TYPE_PARAMETER))
+		if( substitutionType.equals(SubstitutionKind.TYPE_PARAMETER))
 		{			
 			if( leftType instanceof TypeParameter )
 			{
@@ -267,7 +264,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			return false;
 		}		
 
-		if( substitutionType.equals(SubstitutionType.ASSIGNMENT) ) //only differences between initializations and assignments
+		if( substitutionType.equals(SubstitutionKind.ASSIGNMENT) ) //only differences between initializations and assignments
 		{
 			
 			if( leftModifiers.isConstant() )
@@ -294,21 +291,21 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	protected List<TypeCheckException> isValidInitialization( ModifiedType left, ModifiedType right )
 	{		
 		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
-		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionType.INITIALIZATION, errors );
+		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionKind.INITIALIZATION, errors );
 		return errors;
 	}
 	
 	protected List<TypeCheckException> isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType)
 	{
 		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
-		checkAssignment( left, right, assignmentType, SubstitutionType.ASSIGNMENT, errors );
+		checkAssignment( left, right, assignmentType, SubstitutionKind.ASSIGNMENT, errors );
 		return errors;		
 	}
 	
 	protected List<TypeCheckException> isValidBinding( ModifiedType left, ModifiedType right )
 	{
 		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
-		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionType.BINDING, errors );
+		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionKind.BINDING, errors );
 		return errors;
 	}
 
@@ -619,7 +616,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				if( type.isParameterized() ) 
 				{		
 					SequenceType parameters = type.getTypeParameters();
-					if( parameters.canAccept(arguments, SubstitutionType.TYPE_PARAMETER) )					
+					if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER) )					
 						type = type.replace(parameters, arguments);
 					else
 					{						
@@ -669,7 +666,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 						if( type.isParameterized() ) 
 						{		
 							SequenceType parameters = type.getTypeParameters();
-							if( parameters.canAccept(arguments, SubstitutionType.TYPE_PARAMETER ) )					
+							if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER ) )					
 								type = type.replace(parameters, arguments);
 							else
 							{						

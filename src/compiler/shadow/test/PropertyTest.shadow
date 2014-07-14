@@ -1,0 +1,29 @@
+import shadow.io@Console;
+
+class shadow.test@PropertyTest
+{
+	public main( String[] args ) => ()
+	{	
+		var out = Console:instance;	
+		var property = Property:create();
+		
+		property->x = 17;
+		out.printLine(property->x); //17
+		property->x += 7;
+		out.printLine(property->x); //24
+		
+		out.printLine(property->y); //5	
+
+		property->z = "Jams!";
+		
+		out.printLine(property.magic()); //Jams!
+		
+		property->strange1 = 43;
+		
+		out.printLine(property->strange1); //53
+		
+		property->strange2 = 91;
+		
+		out.printLine(property->strange2); //182					
+	}
+}

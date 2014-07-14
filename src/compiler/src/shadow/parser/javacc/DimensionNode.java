@@ -3,7 +3,7 @@ package shadow.parser.javacc;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DimensionNode extends SignatureNode {
+public class DimensionNode extends SimpleNode {
 
 	
 	public DimensionNode(int id) {

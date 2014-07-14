@@ -80,7 +80,10 @@ public class SubscriptType extends GetSetType
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().replace(values, replacements), index.getModifiers());
 		UnboundMethodType replacedMethod = method.replace(values, replacements);
-		MethodSignature replacedGetter = getter.replace(values, replacements);
+		MethodSignature replacedGetter = null;		
+		if( getter != null )
+			replacedGetter = getter.replace(values, replacements);
+		
 		SubscriptType replacement = new SubscriptType( replacedGetter, replacedIndex,  replacedMethod );
 			
 		if( setter != null )					

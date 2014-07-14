@@ -17,7 +17,7 @@ import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.BaseChecker.SubstitutionType;
+import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.Package;
 
 
@@ -687,7 +687,7 @@ public abstract class Type implements Comparable<Type>
 				if( hasTypeArguments )
 				{	
 					SequenceType parameters = methodType.getTypeParameters();							
-					if( parameters.canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER))
+					if( parameters.canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER))
 					{
 						methodType = methodType.replace(parameters, typeArguments);
 						signature = signature.replace(parameters, typeArguments);

@@ -2295,24 +2295,23 @@ public class StatementChecker extends BaseChecker
 					arguments.add(child);
 					
 					MethodSignature signature = setMethodType( node, prefixType, "index", arguments);
+					
+					if( signature != null && prefixNode.getModifiers().isImmutable() && signature.getModifiers().isMutable()  )
+						signature = null;
+					
+					if( signature != null && (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly()) && signature.getModifiers().isMutable() )
+						signature = null;
+					
+					
+							
+					SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
+					node.setType(subscriptType);
+					
+					if( signature != null )					
+						node.setModifiers(subscriptType.getGetType().getModifiers());
 						
-					if( signature == null || !methodIsAccessible( signature, currentType  ))
-					{
-						node.setType(Type.UNKNOWN);
-						addError(Error.ILLEGAL_ACCESS, "Index not accessible from this context");
-					}
-					else
-					{
-						ModifiedType modifiedType = signature.getReturnTypes().get(0); 
-						node.setModifiers(modifiedType.getModifiers());
-						node.setMethodSignature( signature );
-						
-						SubscriptType indexType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
-						node.setType(indexType);
-						
-						if( prefixType.hasInterface(Type.CAN_INDEX_STORE) )	
-							node.addModifier(Modifiers.ASSIGNABLE);
-					}						
+					if( prefixType.hasInterface(Type.CAN_INDEX_STORE) && !(prefixNode.getModifiers().isImmutable() || prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly())  )	
+						node.addModifier(Modifiers.ASSIGNABLE);											
 				}
 				else
 				{
@@ -2387,7 +2386,7 @@ public class StatementChecker extends BaseChecker
 				{
 					if( prefixType.isParameterized() )
 					{
-						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER) )
+						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
 						{					
 							prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
 							node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
@@ -2539,7 +2538,7 @@ public class StatementChecker extends BaseChecker
 				
 				if( typeArguments != null )
 				{					
-					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER) )
+					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
 					{
 						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
 						signature = setCreateType( node, prefixType, arguments);
@@ -2626,7 +2625,7 @@ public class StatementChecker extends BaseChecker
 						
 						if( !prefixType.isParameterized() )
 							addError( Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + argumentTypes + " supplied for non-parameterized type " + prefixType);
-						else if( !parameterTypes.canAccept(argumentTypes, SubstitutionType.TYPE_PARAMETER) )
+						else if( !parameterTypes.canAccept(argumentTypes, SubstitutionKind.TYPE_PARAMETER) )
 							addError( Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
 						else													
 							((ClassType)currentType).addReferencedType(prefixType.replace(parameterTypes, argumentTypes));
@@ -2776,7 +2775,13 @@ public class StatementChecker extends BaseChecker
 					if( getter != null && !prefixNode.getModifiers().isMutable() && getter.getModifiers().isMutable()  )
 						getter = null;
 					
+					if( getter != null && !methodIsAccessible(getter, currentType))
+						getter = null;
+					
 					if( setter != null && !prefixNode.getModifiers().isMutable() && setter.getModifiers().isMutable() )
+						setter = null;
+					
+					if( setter != null && !methodIsAccessible(setter, currentType))
 						setter = null;
 					
 					if( setter == null && getter == null )
@@ -2806,21 +2811,19 @@ public class StatementChecker extends BaseChecker
 	{
 		Type type = node.getType();
 		
-		if( type instanceof PropertyType )
+		if( type instanceof GetSetType )
 		{
-			PropertyType propertyType = (PropertyType) type;
-			if( propertyType.isGettable() )
-				return propertyType.getGetType();
+			GetSetType getSetType = (GetSetType) type;
+			if( getSetType.isGettable() )
+			{			
+				return getSetType.getGetType();
+			}
 			else
 			{
-				addError(Error.ILLEGAL_ACCESS, "Property " + node + " does not have appropriate get access");
+				String kind = (type instanceof PropertyType) ? "Property " : "Subscript ";
+				addError(Error.ILLEGAL_ACCESS, kind + node + " does not have appropriate get access");
 				return new SimpleModifiedType( Type.UNKNOWN );
 			}				
-		}
-		else if( type instanceof SubscriptType )
-		{
-			SubscriptType indexType = (SubscriptType) type;
-			return indexType.getGetType();  			
 		}
 		else
 			return node;
@@ -2900,7 +2903,7 @@ public class StatementChecker extends BaseChecker
 					if( typeArguments != null )
 					{						
 						SequenceType parameters = methodType.getTypeParameters();
-						if( parameters.canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER))
+						if( parameters.canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER))
 							methodType = methodType.replace(parameters, typeArguments);
 						else
 						{
@@ -2961,7 +2964,6 @@ public class StatementChecker extends BaseChecker
 		return false;
 	}
 
-	
 	public Object visit(ASTBreakStatement node, Boolean secondVisit) throws ShadowException 
 	{
 		//TODO: Check if break is in loop or switch

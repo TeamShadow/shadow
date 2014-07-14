@@ -1,6 +1,6 @@
 package shadow.typecheck.type;
 
-import shadow.typecheck.BaseChecker.SubstitutionType;
+import shadow.typecheck.BaseChecker.SubstitutionKind;
 
 public class UninstantiatedClassType extends ClassType implements UninstantiatedType {
 	private ClassType type;
@@ -41,7 +41,7 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 			}
 		}
 		
-		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionType.TYPE_PARAMETER) )
+		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
 			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
 		
 		return type.replace(type.getTypeParameters(), typeArguments);

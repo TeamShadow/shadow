@@ -11,7 +11,7 @@ import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.BaseChecker.SubstitutionType;
+import shadow.typecheck.BaseChecker.SubstitutionKind;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
 {	
@@ -60,7 +60,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	*/
 		
 	//public boolean canAccept( List<ModifiedType> inputTypes, SubstitutionType substitutionType, List<String> reasons )
-	public boolean canAccept( SequenceType inputTypes, SubstitutionType substitutionType, List<TypeCheckException> errors )
+	public boolean canAccept( SequenceType inputTypes, SubstitutionKind substitutionType, List<TypeCheckException> errors )
 	{		
 		if( types.size() != inputTypes.size() )
 		{
@@ -85,27 +85,27 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	
 	public boolean canAccept( SequenceType inputTypes )
 	{		
-		return canAccept(inputTypes, SubstitutionType.BINDING);		
+		return canAccept(inputTypes, SubstitutionKind.BINDING);		
 	}
 	
-	public boolean canAccept( SequenceType inputTypes, SubstitutionType substitutionType )
+	public boolean canAccept( SequenceType inputTypes, SubstitutionKind substitutionType )
 	{		
 		return canAccept(inputTypes, substitutionType, null);		
 	}
 	
 	public boolean canAccept( ModifiedType type )
 	{		
-		return canAccept(type, SubstitutionType.BINDING);		
+		return canAccept(type, SubstitutionKind.BINDING);		
 	}
 	
-	public boolean canAccept( ModifiedType type, SubstitutionType substitutionType )
+	public boolean canAccept( ModifiedType type, SubstitutionKind substitutionType )
 	{		
 		return canAccept(type, substitutionType, null);		
 	}
 	
-	public boolean canAccept( ModifiedType inputType, SubstitutionType substitutionType, List<TypeCheckException> errors )
+	public boolean canAccept( ModifiedType inputType, SubstitutionKind substitutionType, List<TypeCheckException> errors )
 	{	
-		if( substitutionType.equals( SubstitutionType.BINDING ) )
+		if( substitutionType.equals( SubstitutionKind.BINDING ) )
 		{
 			SequenceType input = new SequenceType();
 			input.add(inputType);		

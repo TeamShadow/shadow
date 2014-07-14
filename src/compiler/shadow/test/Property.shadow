@@ -1,0 +1,29 @@
+class shadow.test@Property
+{
+	get set int x;
+	get double y;
+	set String z;
+	
+	set get int strange1;
+	get set int strange2;
+	
+	public create()
+	{
+		y = 5;	
+	}
+	
+	public magic() => (String)
+	{
+		return z;
+	}
+	
+	public set strange1(int value) => ()
+	{
+		strange1 = value + 10;
+	}
+	
+	public get readonly strange2() => (int)
+	{
+		return strange2 * 2;
+	}
+}

@@ -564,25 +564,28 @@ public class TACBuilder implements ShadowParserVisitor
 			TACOperand right = tree.appendChild(2);
 			char operation = node.jjtGetChild(1).getImage().charAt(0);
 			
-			if( node.jjtGetChild(0).getType() instanceof SubscriptType )
-			{				
-				//not pretty, but gets the correct subscript node
-				ASTSubscript subscriptNode = (ASTSubscript) (((ASTPrimaryExpression)node.jjtGetChild(0)).getSuffix().jjtGetChild(0));
-								
-				SubscriptType subscriptType = (SubscriptType) subscriptNode.getType();
+			if( node.jjtGetChild(0).getType() instanceof GetSetType )
+			{					
+				GetSetType getSetType = (GetSetType) node.jjtGetChild(0).getType();
 				List<TACOperand> parameters = new ArrayList<TACOperand>();
 				parameters.add(left);  //prefix
-				parameters.add(subscriptNode.getIndex()); //index
+				if( getSetType instanceof SubscriptType )
+				{
+					//not pretty, but gets the correct subscript node
+					ASTSubscript subscriptNode = (ASTSubscript) (((ASTPrimaryExpression)node.jjtGetChild(0)).getSuffix().jjtGetChild(0));
+					parameters.add(subscriptNode.getIndex()); //index (not needed for properties)
+				}
+				
 				TACMethodRef methodRef;
 				MethodSignature signature;
 				
 				if (operation != '=')
 				{	
-					signature = subscriptType.getGetter();	
+					signature = getSetType.getGetter();	
 					methodRef = new TACMethodRef(tree,
 							left, //prefix
 							signature.getMethodType().getTypeWithoutTypeArguments(),
-							"index");					 														
+							signature.getSymbol());					 														
 					TACOperand result = new TACCall(tree, block, methodRef, parameters);
 					right = new TACBinary(tree, result, node.getOperations().get(0), operation, right);
 					
@@ -591,14 +594,14 @@ public class TACBuilder implements ShadowParserVisitor
 				
 				parameters.add(right); //value to store (possibly updated by code above)
 				
-				signature = subscriptType.getSetter();	
+				signature = getSetType.getSetter();	
 				methodRef = new TACMethodRef(tree,
 						left, //prefix
 						signature.getMethodType().getTypeWithoutTypeArguments(),
-						"index");
+						signature.getSymbol());
 				
 				new TACCall(tree, block, methodRef, parameters);
-			}
+			}			
 			else
 			{	
 				
@@ -1296,8 +1299,8 @@ public class TACBuilder implements ShadowParserVisitor
 		if (secondVisit)
 		{	//prefix should never be null			
 			Type prefixType = prefix.getType();
-			if( prefixType instanceof PropertyType )
-				prefixType = ((PropertyType)prefixType).getGetType().getType();
+			if( prefixType instanceof GetSetType )
+				prefixType = ((GetSetType)prefixType).getGetType().getType();
 			
 			if( prefixType instanceof ArrayType && node.getImage().equals("size"))
 				//optimization to avoid creating an Array object
@@ -1309,11 +1312,28 @@ public class TACBuilder implements ShadowParserVisitor
 				prefix = length;
 			}
 			else
-				prefix = new TACPropertyRef(tree, block, prefix,
-						(PropertyType)node.getType(), node.getImage());
+			{
+				PropertyType propertyType = (PropertyType) node.getType();
+				//only do the straight loads
+				//stores (and +='s) are handled in ASTExpression
+				if( propertyType.isLoad() && !propertyType.isStore() )
+				{
+					MethodSignature signature = propertyType.getGetter();
+					methodCall(signature.getMethodType(), signature.getSymbol(), node);					
+				}
+				else
+				{	
+					tree.append(prefix); //append the prefix for future use
+				}
+			}
+				//prefix = new TACPropertyRef(tree, block, prefix,
+				//		(PropertyType)node.getType(), node.getImage());
 		}
 		return POST_CHILDREN;
 	}
+	
+	
+	
 
 	@Override
 	public Object visit(ASTMethodCall node, Boolean secondVisit)
@@ -2378,6 +2398,10 @@ public class TACBuilder implements ShadowParserVisitor
 			return new TACLiteral(tree, "0ul");
 		if (type.getType().equals(Type.LONG))
 			return new TACLiteral(tree, "0l");
+		if( type.getType().equals(Type.DOUBLE))
+			return new TACLiteral(tree, "0.0");
+		if( type.getType().equals(Type.FLOAT))
+			return new TACLiteral(tree, "0.0f");		
 //		if (!type.getModifiers().isNullable())
 //			throw new IllegalArgumentException();
 		return new TACCast(tree, type, new TACLiteral(tree, "null"));
