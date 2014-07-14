@@ -786,7 +786,7 @@ public class LLVMOutput extends AbstractOutput
 		if (node.getOuterType() instanceof InterfaceType)
 		{
 			writer.write(nextTemp() + " = extractvalue " +
-					type(node.getOuterType()) + " " + symbol(node.getThis()) + ", 0");
+					type(node.getOuterType()) + " " + symbol(node.getPrefix()) + ", 0");
 			writer.write(nextTemp() + " = getelementptr %" +
 					raw(node.getOuterType(), "_methods") + "* " +
 					//raw(node.getPrefix(), "_methods") + "* " +
@@ -803,13 +803,13 @@ public class LLVMOutput extends AbstractOutput
 				!node.isSuper() )
 		{	
 			writer.write(nextTemp() + " = getelementptr " +
-					typeSymbol(node.getThis()) + ", i32 0, i32 1");
+					typeSymbol(node.getPrefix()) + ", i32 0, i32 1");
 			
 			writer.write(nextTemp() + " = load %" +
-					raw(node.getThis().getType(), "_methods") + "** " + temp(1));
+					raw(node.getPrefix().getType(), "_methods") + "** " + temp(1));
 			
 			writer.write(nextTemp() + " = getelementptr %" +
-					raw(node.getThis().getType(), "_methods") + "* " +
+					raw(node.getPrefix().getType(), "_methods") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex()); //may need to + 1 to the node.getIndex() if a parent method table is added	
 			
 			writer.write(nextTemp(node) + " = load " + methodType(node) +
@@ -1582,7 +1582,7 @@ public class LLVMOutput extends AbstractOutput
 			TACMethodRef method = new TACMethodRef(prefix,			
 					property.getType().getGetter().getMethodType().getTypeWithoutTypeArguments(), property.getName());
 			TACCall call = new TACCall(method.getNext(), property.getBlock(),
-					method, Collections.singletonList(method.getThis()));
+					method, Collections.singletonList(method.getPrefix()));
 			walk(call);
 			node.setData(symbol(call));
 			property.setData(symbol(call));
@@ -1618,9 +1618,9 @@ public class LLVMOutput extends AbstractOutput
 			}
 			
 			TACMethodRef method = new TACMethodRef(prefix,			
-					subscript.getType().getReadSignature().getSignatureWithoutTypeArguments());
+					subscript.getType().getGetter().getSignatureWithoutTypeArguments());
 			List<TACOperand> params = new ArrayList<TACOperand>();
-			params.add(method.getThis());
+			params.add(method.getPrefix());
 			params.add(index);
 			TACCall call = new TACCall(method.getNext(), subscript.getBlock(),
 					method, params);
@@ -1671,7 +1671,7 @@ public class LLVMOutput extends AbstractOutput
 			//walk(new TACCall(method.getNext(), property.getBlock(), method,
 			//		Arrays.asList(property.getPrefix(), node.getValue())));
 			walk(new TACCall(method.getNext(), property.getBlock(), method,
-					Arrays.asList(method.getThis(), node.getValue())));
+					Arrays.asList(method.getPrefix(), node.getValue())));
 		}
 		else if( reference instanceof TACSubscriptRef )
 		{
@@ -1704,9 +1704,9 @@ public class LLVMOutput extends AbstractOutput
 			}
 			
 			TACMethodRef method = new TACMethodRef(prefix,			
-					subscript.getType().getStoreSignature().getSignatureWithoutTypeArguments());
+					subscript.getType().getSetter().getSignatureWithoutTypeArguments());
 			List<TACOperand> params = new ArrayList<TACOperand>();
-			params.add(method.getThis());
+			params.add(method.getPrefix());
 			params.add(index);
 			params.add(node.getValue());
 			TACCall call = new TACCall(method.getNext(), subscript.getBlock(),

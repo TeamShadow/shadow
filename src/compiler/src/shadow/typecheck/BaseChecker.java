@@ -25,7 +25,7 @@ import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.IndexType;
+import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -135,10 +135,10 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				return false;				
 			}
 		}
-		else if( rightType instanceof IndexType )
+		else if( rightType instanceof SubscriptType )
 		{
-			IndexType indexType = (IndexType)rightType;
-			right = indexType.getReadType();
+			SubscriptType indexType = (SubscriptType)rightType;
+			right = indexType.getGetType();
 			rightType = right.getType();
 		}
 		
@@ -155,11 +155,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				return false;				
 			}
 		}
-		else if( leftType instanceof IndexType )
+		else if( leftType instanceof SubscriptType )
 		{
-			IndexType indexType = (IndexType)leftType;
+			SubscriptType indexType = (SubscriptType)leftType;
 			if( indexType.applyInput(right) )
-				return checkAssignment( indexType.getStoreType(), right, assignmentType, substitutionType, errors );
+				return checkAssignment( indexType.getSetType(), right, assignmentType, substitutionType, errors );
 			else
 			{
 				addError(errors, Error.INVALID_ASSIGNMENT, "Subscript " + indexType + " cannot store " + rightType);

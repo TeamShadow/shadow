@@ -1,51 +1,12 @@
 package shadow.typecheck.type;
 
 
-public class PropertyType extends Type {
-	
-	private MethodSignature getter;
-	private MethodSignature setter;
-	
-	public PropertyType(MethodSignature getter, MethodSignature setter) {	
-		super(null);			
+public class PropertyType extends GetSetType
+{	
+	public PropertyType(MethodSignature getter, MethodSignature setter)
+	{			
 		this.getter = getter;
 		this.setter = setter;	
-	}	
-
-	public MethodSignature getGetter()
-	{
-		return getter;
-	}
-	
-	public MethodSignature getSetter()
-	{
-		return setter;
-	}
-	
-	public ModifiedType getGetType()
-	{
-		if( getter == null )
-			return null;
-		
-		return getter.getReturnTypes().get(0);
-	}
-	
-	public ModifiedType getSetType()
-	{
-		if( setter == null )
-			return null;
-		
-		return setter.getParameterTypes().get(0);
-	}
-	
-	public boolean isGettable()
-	{
-		return getter != null;		
-	}
-	
-	public boolean isSettable()
-	{
-		return setter != null;
 	}	
 	
 	@Override

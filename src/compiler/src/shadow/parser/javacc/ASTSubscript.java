@@ -2,9 +2,15 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.tac.nodes.TACOperand;
+
 public
 @SuppressWarnings("all")
 class ASTSubscript extends DimensionNode {
+
+	private TACOperand index = null;
+	
+	
   public ASTSubscript(int id) {
     super(id);
   }
@@ -12,7 +18,16 @@ class ASTSubscript extends DimensionNode {
   public ASTSubscript(ShadowParser p, int id) {
     super(p, id);
   }
-
+  
+  public void setIndex(TACOperand index)
+  {
+	  this.index = index;
+  }
+  
+  public TACOperand getIndex()
+  {
+	  return index;
+  }
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {

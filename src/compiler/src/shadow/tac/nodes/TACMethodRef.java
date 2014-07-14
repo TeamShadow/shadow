@@ -15,8 +15,7 @@ import shadow.typecheck.type.Type;
 
 public class TACMethodRef extends TACOperand
 {
-	private TACOperand prefix;
-	private TACOperand _this;
+	private TACOperand prefix;	
 	private MethodType type;
 	private String name;
 	private TACMethodRef wrapped;
@@ -70,10 +69,10 @@ public class TACMethodRef extends TACOperand
 			{
 				ArrayType arrayType = (ArrayType) prefix.getType();
 				Type genericArray = arrayType.convertToGeneric();
-				_this = check(prefixNode, new SimpleModifiedType(genericArray));
+				prefix = check(prefixNode, new SimpleModifiedType(genericArray));
 			}
 			else
-				_this = check(prefixNode,
+				prefix = check(prefixNode,
 						new SimpleModifiedType(methodType.getOuter()));
 		}
 		type = methodType;
@@ -119,14 +118,10 @@ public class TACMethodRef extends TACOperand
 	{
 		return prefix != null;
 	}
+	
 	public TACOperand getPrefix()
 	{
 		return prefix;
-	}
-	
-	public TACOperand getThis()
-	{
-		return _this;
 	}
 	public int getIndex()
 	{
@@ -308,7 +303,7 @@ public class TACMethodRef extends TACOperand
 	public TACOperand getOperand(int num)
 	{
 		if (hasPrefix() && num == 0)
-			return getThis();
+			return getPrefix();
 		throw new IndexOutOfBoundsException();
 	}
 

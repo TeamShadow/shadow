@@ -16,7 +16,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
-import shadow.typecheck.type.IndexType;
+import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -26,6 +26,7 @@ import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
+import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
@@ -1452,15 +1453,20 @@ public class StatementChecker extends BaseChecker
 				Type leftType = left.getType();
 				Type rightType = right.getType();
 				
-				if( leftType instanceof PropertyType )
-					leftType = ((PropertyType)leftType).getSetType().getType();
-				else if( leftType instanceof IndexType )
-					leftType = ((IndexType)leftType).getStoreType().getType();
+				if( leftType instanceof GetSetType )
+				{
+					GetSetType getSetType = (GetSetType) leftType;
+					//here we have a chance to tell the type whether it will only be storing or doing both
+					if( assignment.getAssignmentType() == AssignmentType.EQUAL )
+						getSetType.setStoreOnly();
+					else
+						getSetType.setLoadStore();					
+					
+					leftType = getSetType.getSetType().getType();
+				}
 				
-				if( rightType instanceof PropertyType )
-					rightType = ((PropertyType)rightType).getGetType().getType();
-				else if( rightType instanceof IndexType )
-					rightType = ((IndexType)rightType).getReadType().getType();
+				if( rightType instanceof GetSetType )
+					rightType = ((GetSetType)rightType).getGetType().getType();
 						
 				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(rightType)));
 			}
@@ -2299,16 +2305,13 @@ public class StatementChecker extends BaseChecker
 					{
 						ModifiedType modifiedType = signature.getReturnTypes().get(0); 
 						node.setModifiers(modifiedType.getModifiers());
-						node.setMethodSignature( signature );						
+						node.setMethodSignature( signature );
 						
-						if( prefixType.hasInterface(Type.CAN_INDEX_STORE) )
-						{	
-							IndexType indexType = new IndexType(modifiedType, signature, child, new UnboundMethodType("index", prefixType));
-							node.setType(indexType);
-							node.addModifier(Modifiers.ASSIGNABLE);							
-						}
-						else						
-							node.setType(modifiedType.getType());
+						SubscriptType indexType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
+						node.setType(indexType);
+						
+						if( prefixType.hasInterface(Type.CAN_INDEX_STORE) )	
+							node.addModifier(Modifiers.ASSIGNABLE);
 					}						
 				}
 				else
@@ -2814,10 +2817,10 @@ public class StatementChecker extends BaseChecker
 				return new SimpleModifiedType( Type.UNKNOWN );
 			}				
 		}
-		else if( type instanceof IndexType )
+		else if( type instanceof SubscriptType )
 		{
-			IndexType indexType = (IndexType) type;
-			return indexType.getReadType();  			
+			SubscriptType indexType = (SubscriptType) type;
+			return indexType.getGetType();  			
 		}
 		else
 			return node;

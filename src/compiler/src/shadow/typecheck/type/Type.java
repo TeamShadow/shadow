@@ -1248,18 +1248,18 @@ public abstract class Type implements Comparable<Type>
 	}
 	
 	protected final void printImports(PrintWriter out, String linePrefix )
-	{
-		//imports
+	{		
 		if( getOuter() == null )
 		{
 			HashSet<String> imports = new HashSet<String>();
 			
+			//imported items come from import statements and fully qualified classes
 			for( Object importItem : getImportedItems() )
 			{
 				if( importItem instanceof Type )
 				{
 					Type importType = (Type)importItem;
-					if( getReferencedTypes().contains(importType))
+					if( !importType.hasOuter() && getReferencedTypes().contains(importType))
 						imports.add(importType.getImportName());
 						
 				}
@@ -1267,7 +1267,7 @@ public abstract class Type implements Comparable<Type>
 				{
 					Package importPackage = (Package)importItem;
 					for( Type referencedType : getReferencedTypes() )
-						if( referencedType.getPackage().equals( importPackage ) )
+						if( !referencedType.hasOuter() && referencedType.getPackage().equals( importPackage ) )
 							imports.add(referencedType.getImportName());					
 				}
 			}
