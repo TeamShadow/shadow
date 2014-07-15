@@ -1761,6 +1761,7 @@ public class StatementChecker extends BaseChecker
 		Type collectionType = null;
 		ModifiedType element = null;
 		boolean isVar = false;
+		boolean iterable = true;
 		
 		if( node.jjtGetNumChildren() == 2 ) //var type
 		{
@@ -1774,11 +1775,12 @@ public class StatementChecker extends BaseChecker
 			collectionType =  node.jjtGetChild(2).getType();
 		}	
 		
+		node.setCollectionType(collectionType);		
 						
 		if( collectionType instanceof ArrayType )
 		{
-			ArrayType array = (ArrayType)collectionType;
-			element = new SimpleModifiedType( array.getBaseType(), new Modifiers() );
+			ArrayType array = (ArrayType)collectionType;			
+			element = new SimpleModifiedType( array.getBaseType() );
 		}
 		else if( collectionType.hasInterface(Type.CAN_ITERATE) )
 		{			
@@ -1790,16 +1792,22 @@ public class StatementChecker extends BaseChecker
 				}
 		}
 		else
+		{
 			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach statement");
+			iterable = false;
+		}		
 		
-		if( isVar && element != null && element.getType() != null )
-			node.setType(element.getType());
-				
-		List<TypeCheckException> errors = isValidInitialization( node, element);
-		if( errors.isEmpty() )
-			addSymbol( node.getImage(), node );
-		else
-			addErrors(errors );
+		if( iterable )
+		{
+			if( isVar && element != null && element.getType() != null )
+				node.setType(element.getType());
+					
+			List<TypeCheckException> errors = isValidInitialization( node, element);
+			if( errors.isEmpty() )
+				addSymbol( node.getImage(), node );
+			else
+				addErrors(errors );
+		}
 				
 		return WalkType.POST_CHILDREN;
 	}
@@ -2545,6 +2553,9 @@ public class StatementChecker extends BaseChecker
 						node.setMethodSignature(signature);
 						parent.setType(prefixType);
 						//TODO: see if something similar can be done for ASTMethodCall
+						
+						//occasionally this type is only seen here and must be added to the referenced types
+						currentType.addReferencedType(prefixType);
 					}
 					else
 					{

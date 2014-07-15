@@ -43,7 +43,7 @@ public class TACLength extends TACOperand
 	{
 		if (num == 0)
 			return array;
-		throw new IndexOutOfBoundsException("num");
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

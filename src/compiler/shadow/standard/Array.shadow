@@ -1,6 +1,6 @@
 import shadow.io@Console;
 
-abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>
+abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIterate<T>
 {
 	get immutable int[] lengths;
 	Object data;
@@ -72,5 +72,65 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>
 				indices[i] = 0;
 		}
 		return string.append(" ]").toString();
+	}
+	
+	public readonly iterator() => (Iterator<T>)
+	{
+		return ArrayIterator:create();
+	} 
+	
+	private class ArrayIterator implements Iterator<T>
+	{
+		int[] position = int:create[lengths->size];
+		
+		public create()
+		{
+			Console out = Console:instance;
+			out.printLine("Lengths: " # lengths );
+			out.printLine("Position: " # position );
+			out.printLine();
+		}
+		
+		public immutable hasNext() => (boolean)
+		{
+			for( int i = 0; i < lengths->size; i += 1 )
+				if( position[i] < lengths[i] - 1 )
+					return true;
+					
+			return false;		
+		}
+		
+		public next() => (T)
+		{
+			boolean carry = true;
+			/*			
+			for( int i = lengths->size - 1; i >= 0 and carry; i -= 1 )
+			{
+				if( position[i] < lengths[i] - 1 )
+				{
+					position[i] += 1;
+					carry = false;
+				}
+				else
+					position[i] = 0;
+			}
+			*/
+			
+			for( int i = 0; i < lengths->size and carry; i += 1 )
+			{
+				if( position[i] < lengths[i] - 1 )
+				{
+					position[i] += 1;
+					carry = false;
+				}
+				else
+					position[i] = 0;
+			}
+			
+			if( carry )
+				throw IndexOutOfBoundsException:create();
+			else
+				return index( position ); 
+		}
 	}
 }

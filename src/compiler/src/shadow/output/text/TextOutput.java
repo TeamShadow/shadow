@@ -33,7 +33,6 @@ import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
@@ -410,12 +409,6 @@ public class TextOutput extends AbstractOutput
 			for (int i = 1; i < node.getNumIndicies(); i++)
 				visit(sb.append(", "), node.getIndex(i));
 			sb.append(']');
-		}
-
-		@Override
-		public void visit(TACPropertyRef node) throws ShadowException
-		{
-			visit(sb, node.getPrefix()).append("->").append(node.getName());
 		}
 
 		@Override

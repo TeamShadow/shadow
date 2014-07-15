@@ -1,0 +1,39 @@
+import shadow.io@Console;
+import shadow.utility@LinkedList;
+
+class shadow.test@ForeachTest
+{
+	public main( String[] args ) => ()
+	{
+		Console out = Console:instance;
+		int[] array = int:create[20];
+		double[,,] values = double:create[2,4,3];
+		var list = LinkedList<String>:create();
+		
+		list.add("My");
+		list.add("dog");
+		list.add("has");
+		list.add("fleas");
+		
+		for( int i = 0; i < array->size; i += 1 )
+			array[i] = array->size - i;
+			
+		double counter = 0.0;
+		for( int i = 0; i < 2; i += 1 )
+			for( int j = 0; j < 4; j += 1 )
+				for( int k = 0; k < 3; k += 1 )
+				{
+					values[i,j,k] = counter;
+					counter += 1.0;
+				}		
+		
+		foreach( int value in array )
+			out.printLine( value );
+			
+		foreach( String word in list )
+			out.printLine( word );
+			
+		foreach( double value in values )
+			out.printLine( value );
+	}
+}

@@ -5,9 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -65,7 +62,6 @@ import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
 import shadow.tac.nodes.TACPlaceholder;
-import shadow.tac.nodes.TACPropertyRef;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
@@ -74,7 +70,6 @@ import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
-import shadow.tac.nodes.TACSubscriptRef;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
@@ -107,6 +102,8 @@ public class LLVMOutput extends AbstractOutput
 		super(new File(file.getParent(),
 				file.getName().replace(".shadow", ".ll")));
 	}
+	
+	//used to do an LLVM check pass
 	public LLVMOutput(boolean mode) throws ShadowException
 	{
 		if (!mode)
@@ -1561,81 +1558,16 @@ public class LLVMOutput extends AbstractOutput
 	public void visit(TACLoad node) throws ShadowException
 	{
 		TACReference reference = node.getReference();
-		if (reference instanceof TACPropertyRef)
-		{
-			TACPropertyRef property = (TACPropertyRef)reference;
-			TACOperand prefix = property.getPrefix();
-			
-			if( prefix.getType() instanceof InterfaceType )	
-			{
-				prefix = new TACCast(null, new SimpleModifiedType(Type.OBJECT), prefix);
-				walk(prefix);				
-			}
-			else if( prefix.getType() instanceof ArrayType )
-			{
-				ArrayType arrayType = (ArrayType) prefix.getType();
-				Type genericArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
-				prefix = new TACCast(null, new SimpleModifiedType(genericArray), prefix);
-				walk(prefix);
-			}
-			
-			TACMethodRef method = new TACMethodRef(prefix,			
-					property.getType().getGetter().getMethodType().getTypeWithoutTypeArguments(), property.getName());
-			TACCall call = new TACCall(method.getNext(), property.getBlock(),
-					method, Collections.singletonList(method.getPrefix()));
-			walk(call);
-			node.setData(symbol(call));
-			property.setData(symbol(call));
-		}
-		else if( reference instanceof TACSubscriptRef )
-		{
-			TACSubscriptRef subscript = (TACSubscriptRef)reference;
-			TACOperand prefix = subscript.getPrefix();
-			TACOperand index = subscript.getIndex();
-			
-			if( prefix.getType() instanceof InterfaceType )	
-			{
-				prefix = new TACCast(null, new SimpleModifiedType(Type.OBJECT), prefix);
-				walk(prefix);				
-			}
-			else if( prefix.getType() instanceof ArrayType )
-			{
-				ArrayType arrayType = (ArrayType) prefix.getType();				
-				prefix = new TACCast(null, new SimpleModifiedType(arrayType.convertToGeneric()), prefix);
-				walk(prefix);
-			}
-			
-			if( index.getType() instanceof InterfaceType )	
-			{
-				index = new TACCast(null, new SimpleModifiedType(Type.OBJECT), index);
-				walk(index);				
-			}
-			else if( index.getType() instanceof ArrayType )
-			{
-				ArrayType arrayType = (ArrayType) index.getType();				
-				index = new TACCast(null, new SimpleModifiedType(arrayType.convertToGeneric()), prefix);
-				walk(index);
-			}
-			
-			TACMethodRef method = new TACMethodRef(prefix,			
-					subscript.getType().getGetter().getSignatureWithoutTypeArguments());
-			List<TACOperand> params = new ArrayList<TACOperand>();
-			params.add(method.getPrefix());
-			params.add(index);
-			TACCall call = new TACCall(method.getNext(), subscript.getBlock(),
-					method, params);
-			walk(call);
-			node.setData(symbol(call));
-			subscript.setData(symbol(call));
-		}
-		else
-			writer.write(nextTemp(node) + " = load " +
-					typeSymbol(reference.getGetType(), reference, true));
+		
+		writer.write(nextTemp(node) + " = load " +
+			typeSymbol(reference.getGetType(), reference, true));
 	}
+	
 	@Override
 	public void visit(TACStore node) throws ShadowException
 	{
 		TACReference reference = node.getReference();
+		
 		if (reference instanceof TACSequenceRef)
 		{
 			TACSequenceRef seq = (TACSequenceRef)reference;
@@ -1647,75 +1579,11 @@ public class LLVMOutput extends AbstractOutput
 						", " + typeSymbol(seq.get(i), true));
 			}
 		}
-		else if (reference instanceof TACPropertyRef)
-		{
-			TACPropertyRef property = (TACPropertyRef)reference;
-			TACOperand prefix = property.getPrefix();
-			
-			if( prefix.getType() instanceof InterfaceType )		
-			{
-				prefix = new TACCast(null, new SimpleModifiedType(Type.OBJECT), prefix);
-				walk(prefix);
-				
-			}
-			else if( prefix.getType() instanceof ArrayType )
-			{
-				ArrayType arrayType = (ArrayType) prefix.getType();
-				Type genericArray = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
-				prefix = new TACCast(null, new SimpleModifiedType(genericArray), prefix);
-				walk(prefix);
-			}			
-
-			TACMethodRef method = new TACMethodRef(prefix,
-					property.getType().getSetter().getMethodType().getTypeWithoutTypeArguments(), property.getName());
-			//walk(new TACCall(method.getNext(), property.getBlock(), method,
-			//		Arrays.asList(property.getPrefix(), node.getValue())));
-			walk(new TACCall(method.getNext(), property.getBlock(), method,
-					Arrays.asList(method.getPrefix(), node.getValue())));
-		}
-		else if( reference instanceof TACSubscriptRef )
-		{
-			TACSubscriptRef subscript = (TACSubscriptRef)reference;
-			TACOperand prefix = subscript.getPrefix();
-			TACOperand index = subscript.getIndex();
-			
-			if( prefix.getType() instanceof InterfaceType )	
-			{
-				prefix = new TACCast(null, new SimpleModifiedType(Type.OBJECT), prefix);
-				walk(prefix);				
-			}
-			else if( prefix.getType() instanceof ArrayType )
-			{
-				ArrayType arrayType = (ArrayType) prefix.getType();				
-				prefix = new TACCast(null, new SimpleModifiedType(arrayType.convertToGeneric()), prefix);
-				walk(prefix);
-			}
-			
-			if( index.getType() instanceof InterfaceType )	
-			{
-				index = new TACCast(null, new SimpleModifiedType(Type.OBJECT), index);
-				walk(index);				
-			}
-			else if( index.getType() instanceof ArrayType )
-			{
-				ArrayType arrayType = (ArrayType) index.getType();				
-				index = new TACCast(null, new SimpleModifiedType(arrayType.convertToGeneric()), prefix);
-				walk(index);
-			}
-			
-			TACMethodRef method = new TACMethodRef(prefix,			
-					subscript.getType().getSetter().getSignatureWithoutTypeArguments());
-			List<TACOperand> params = new ArrayList<TACOperand>();
-			params.add(method.getPrefix());
-			params.add(index);
-			params.add(node.getValue());
-			TACCall call = new TACCall(method.getNext(), subscript.getBlock(),
-					method, params);
-			walk(call);			
-		}
 		else
+		{		
 			writer.write("store " + typeSymbol(node.getValue()) + ", " +
-					typeSymbol(reference.getSetType(), reference, true));
+				typeSymbol(reference.getSetType(), reference, true));
+		}
 	}
 
 	@Override
@@ -1790,29 +1658,6 @@ public class LLVMOutput extends AbstractOutput
 			writer.outdent(2);
 		}
 	}
-
-	/*
-	@Override
-	public void visit(TACInit node) throws ShadowException
-	{		
-		Type type = node.getThisType();
-		TACOperand _class = node.getClassData();
-		TACOperand methods = node.getMethodTable();
-		TACOperand object = node.getObject();	
-		
-		//copy class
-		writer.write(nextTemp() + " = getelementptr inbounds " +
-				type(Type.OBJECT) + " " + object.getData() + ", i32 0, i32 0");
-		writer.write("store " + type(Type.CLASS) + " " +  _class.getData() + " " +
-				type(Type.CLASS) + "* " + temp(0));
-		
-		//copy methodtable
-		writer.write(nextTemp() + " = getelementptr inbounds " +
-				type(Type.OBJECT) + " " + object.getData() + ", i32 0, i32 1");
-		writer.write("store " + "%" + raw(type, "_methods") + "* " +  methods.getData() + ", " +
-				"%" + raw(type, "_methods") + "** " + temp(0));
-	}
-	*/
 
 	@Override
 	public void visit(TACReturn node) throws ShadowException
