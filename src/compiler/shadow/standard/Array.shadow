@@ -55,21 +55,19 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	public immutable toString() => ( String )
 	{
 		if ( this->size == 0 )
-			return "[]";
+			return "[]";			
+			
 		MutableString string = MutableString:create("[ ");
-		int[] indices = int:create[this->dims];
+		int[] indices = int:create[this->dims];				
+		
 		boolean first = true;
-		while ( indices[0] != this->lengths[0] )
+		foreach( T value in this )
 		{
 			if ( first )
 				first = false;
 			else
 				string.append(", ");
-			string.append(index(indices));
-			int i = indices->size - 1;
-			for ( indices[i] += 1; i > 0 and indices[i] == this->lengths[i];
-					i -= 1, indices[i] += 1 )
-				indices[i] = 0;
+			string.append(value);			
 		}
 		return string.append(" ]").toString();
 	}
@@ -81,56 +79,22 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	
 	private class ArrayIterator implements Iterator<T>
 	{
-		int[] position = int:create[lengths->size];
-		
-		public create()
-		{
-			Console out = Console:instance;
-			out.printLine("Lengths: " # lengths );
-			out.printLine("Position: " # position );
-			out.printLine();
-		}
+		int[] position = int:create[lengths->size];		
 		
 		public immutable hasNext() => (boolean)
-		{
-			for( int i = 0; i < lengths->size; i += 1 )
-				if( position[i] < lengths[i] - 1 )
-					return true;
-					
-			return false;		
+		{								
+			return position[0] != lengths[0];		
 		}
 		
 		public next() => (T)
 		{
-			boolean carry = true;
-			/*			
-			for( int i = lengths->size - 1; i >= 0 and carry; i -= 1 )
-			{
-				if( position[i] < lengths[i] - 1 )
-				{
-					position[i] += 1;
-					carry = false;
-				}
-				else
-					position[i] = 0;
-			}
-			*/
+			T value = index( position );
+			int i = lengths->size - 1;
 			
-			for( int i = 0; i < lengths->size and carry; i += 1 )
-			{
-				if( position[i] < lengths[i] - 1 )
-				{
-					position[i] += 1;
-					carry = false;
-				}
-				else
-					position[i] = 0;
-			}
+			for ( position[i] += 1; i > 0 and position[i] == lengths[i]; i -= 1, position[i] += 1 )
+				position[i] = 0;
 			
-			if( carry )
-				throw IndexOutOfBoundsException:create();
-			else
-				return index( position ); 
+			return value;  
 		}
 	}
 }
