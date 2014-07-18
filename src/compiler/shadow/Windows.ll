@@ -48,7 +48,7 @@
 declare %_Pshadow_Pstandard_CString* @_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pstandard_CObject*, { i8*, [1 x i32] })
 declare %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate_Pshadow_Pstandard_CString(%_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CString*)
 declare %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pstandard_CObject*)
-declare noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass*)
+declare noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass*, %"_Pshadow_Pstandard_CObject_methods"*)
 
 
 declare i32 @__shadow_personality_v0(...)
@@ -88,14 +88,10 @@ declare x86_stdcallcc i32 @QueryPerformanceCounter(i64*)
 ; one day update this method to use the @FormatMessage() function
 define private void @throwIOException() noreturn {
 	%1 = tail call x86_stdcallcc i32 @GetLastError()
-	%2 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Pio_CIOException_class)
-	%3 = getelementptr inbounds %_Pshadow_Pstandard_CObject* %2, i32 0, i32 0
-	store %_Pshadow_Pstandard_CClass* @_Pshadow_Pio_CIOException_class, %_Pshadow_Pstandard_CClass** %3
-	%4 = getelementptr inbounds %_Pshadow_Pstandard_CObject* %2, i32 0, i32 1
-	store %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Pio_CIOException_methods* @_Pshadow_Pio_CIOException_methods to %_Pshadow_Pstandard_CObject_methods*), %_Pshadow_Pstandard_CObject_methods** %4
-	%5 = call %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pstandard_CObject* %2)
-	%6 = bitcast %"_Pshadow_Pio_CIOException"* %5 to %"_Pshadow_Pstandard_CObject"*
-	call void @__shadow_throw(%"_Pshadow_Pstandard_CObject"* %6) noreturn
+	%2 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Pio_CIOException_class, %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Pio_CIOException_methods* @_Pshadow_Pio_CIOException_methods to %_Pshadow_Pstandard_CObject_methods*))
+	%3 = call %_Pshadow_Pio_CIOException* @_Pshadow_Pio_CIOException_Mcreate(%_Pshadow_Pstandard_CObject* %2)
+	%4 = bitcast %"_Pshadow_Pio_CIOException"* %3 to %"_Pshadow_Pstandard_CObject"*
+	call void @__shadow_throw(%"_Pshadow_Pstandard_CObject"* %4) noreturn
     unreachable	
 }
 

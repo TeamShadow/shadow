@@ -422,14 +422,18 @@ implements Number<BigInteger>
 	private removeZeroes( uint[] values ) => ( uint[] )
 	{
 		int zeroes = 0;
-		while( values[values->size - zeroes - 1] == 0 )
+		int index = values->size - 1; 
+		while( index >= 0 and values[index] == 0 )
+		{
 			zeroes += 1;
+			index -= 1;
+		}
 			
 		if( zeroes == values->size )
 			zeroes -= 1;
 			
 		if( zeroes > 0 )
-			return cast<uint[]>( cast<Object>(values.subarray( 0, values->size - zeroes )));
+			return cast<uint[]>(values.subarray( 0, values->size - zeroes ));
 		
 		return values;
 	}

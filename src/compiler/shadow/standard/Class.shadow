@@ -9,7 +9,7 @@ immutable class shadow.standard@Class implements CanHash
 	int flags;
 	get int size;
 		
-	private native allocate() => ( Object );
+	//private native allocate() => ( Object );
 	private native allocate( int size ) => ( Object );
 	
 	

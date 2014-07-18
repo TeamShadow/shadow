@@ -1,3 +1,5 @@
+import shadow.io@Console;
+
 class shadow.standard@MutableString implements CanIndex<int, byte>
 {
 	get int size = 0;
@@ -139,7 +141,11 @@ class shadow.standard@MutableString implements CanIndex<int, byte>
 	}
 
 	public immutable toString() => ( String )
-	{
-		return String:create(cast<byte[]>(cast<Object>(data.subarray(0, size))));
+	{	
+		byte[] bytes = data;
+		if( data->size != size ) 
+			bytes = cast<byte[]>(data.subarray(0, size));
+				
+		return String:create(bytes);
 	}
 }

@@ -12,7 +12,7 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	public create( int[] lengths )
 	{
 		this:lengths = cast<int[]>(cast<Object>(lengths.copy()));
-		this:data = allocate(T:class, this->size); // T:class.allocate(this->size);
+		this:data = allocate(T:class, this->size);
 	}
 	private immutable native allocate( Class type, int size ) => ( Object );
 

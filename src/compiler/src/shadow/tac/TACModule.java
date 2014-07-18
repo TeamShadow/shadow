@@ -52,9 +52,12 @@ public class TACModule
 		//add(Type.ARRAY_CLASS);
 		//add(Type.METHOD_CLASS);
 	}
+	 
+	
 	private void add(Type type)
 	{
 		boolean newlyAdded;
+		
 		/*
 		if( type instanceof InterfaceType )
 			newlyAdded = references.add(type);
@@ -65,7 +68,7 @@ public class TACModule
 		if( type.isFullyInstantiated() || type.isUninstantiated() )
 			newlyAdded = references.add(type);
 		else
-			newlyAdded = true;		
+			newlyAdded = false;		
 				
 		if( newlyAdded )
 		{
@@ -83,7 +86,7 @@ public class TACModule
 				add(type.getOuter());
 			for (Type referenced : type.getReferencedTypes())
 				add(referenced);
-		}
+		}		
 	}
 
 	public Type getType()

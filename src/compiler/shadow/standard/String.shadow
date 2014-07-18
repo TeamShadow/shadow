@@ -125,8 +125,7 @@ implements
 	}
 	public substring( int start, int end ) => ( String )
 	{
-		return String:create(cast<byte[]>(cast<Object>(
-				this:data.subarray(start, end))), this:ascii);
+		return String:create(cast<byte[]>(data.subarray(start, end)), ascii);
 	}
 	public concatenate( String other ) => ( String )
 	{

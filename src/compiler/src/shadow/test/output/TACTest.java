@@ -156,4 +156,10 @@ public class TACTest {
 		args.add("shadow/test/ForeachTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testBasic() throws Exception {
+		args.add("shadow/test/BasicTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+
 }
