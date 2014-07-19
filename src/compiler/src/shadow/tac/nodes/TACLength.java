@@ -8,10 +8,7 @@ public class TACLength extends TACOperand
 {
 	private TACOperand array;
 	private int dimension;
-	public TACLength(TACOperand arrayRef, int dim)
-	{
-		this(null, arrayRef, dim);
-	}
+
 	public TACLength(TACNode node, TACOperand arrayRef, int dim)
 	{
 		super(node);

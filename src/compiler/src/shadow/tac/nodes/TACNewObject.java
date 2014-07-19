@@ -18,11 +18,11 @@ public class TACNewObject extends TACOperand
 	private TACOperand classData;
 	private TACOperand methodTable;	
 	
-	public TACNewObject(ClassType type, TACMethod method)
+	public TACNewObject(ClassType type)
 	{
-		this(null, type, method);
+		this(null, type);
 	}
-	public TACNewObject(TACNode node, ClassType type, TACMethod method)
+	public TACNewObject(TACNode node, ClassType type)
 	{
 		super(node);		
 		this.type = type;
@@ -30,7 +30,7 @@ public class TACNewObject extends TACOperand
 
 		//TODO: do we really need a separate TACClass object? refactor?
 		//class needs real type
-		TACClass _class = new TACClass(this, type, method );
+		TACClass _class = new TACClass(this, type);
 		this.classData = _class.getClassData();
 		this.methodTable = _class.getMethodTable();
 	}

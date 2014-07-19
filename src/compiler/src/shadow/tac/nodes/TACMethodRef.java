@@ -29,16 +29,6 @@ public class TACMethodRef extends TACOperand
 	{
 		this(null, null, methodType, methodName, (MethodSignature)null);
 	}
-	public TACMethodRef(TACOperand prefixNode, MethodSignature sig)
-	{
-		this(null, prefixNode, sig.getMethodType(), sig.getSymbol(),
-				sig.getWrapped());
-	}
-	public TACMethodRef(TACOperand prefixNode, MethodType methodType,
-			String methodName)
-	{
-		this(null, prefixNode, methodType, methodName, (MethodSignature)null);
-	}
 	public TACMethodRef(TACNode node, MethodSignature sig)
 	{
 		this(node, null, sig.getMethodType(), sig.getSymbol(),

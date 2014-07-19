@@ -48,6 +48,7 @@ import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -141,20 +142,20 @@ public class TextOutput extends AbstractOutput
 	public void startMethod(TACMethod method) throws ShadowException
 	{
 		tempCounter = 0;
-		TACMethodRef methodRef = method.getMethod();
+		MethodSignature signature = method.getMethod();
 		StringBuilder sb = new StringBuilder(
-				methodRef.getModifiers().toString()).
-				append(methodRef.getName()).append('(');
+				signature.getModifiers().toString()).
+				append(signature.getSymbol()).append('(');
 		for (TACVariable param : method.getParameters())
 			sb.append(param.getType().getQualifiedName()).append(' ').
 					append(param.getName()).append(", ");
 		if (!method.getParameters().isEmpty())
 			sb.delete(sb.length() - 2, sb.length());
 		sb.append(") => (");
-		for (ModifiedType retType : methodRef.getReturnTypes())
+		for (ModifiedType retType : signature.getFullReturnTypes())
 			sb.append(retType.getType().getQualifiedName());
 		sb.append(')');
-		if (methodRef.isNative())
+		if (signature.isNative())
 			writer.write(sb.append(';').toString());
 		else
 		{

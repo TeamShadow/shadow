@@ -22,20 +22,12 @@ public class TACArrayRef extends TACReference
 {
 	private TACOperand array, total;
 	private List<TACOperand> indicies;
-	/*
-	public TACArrayRef(TACOperand reference, TACOperand... ops)
-	{
-		this(null, reference, Arrays.asList(ops));
-	}
-	*/
+	
 	public TACArrayRef(TACNode node, TACOperand reference, TACOperand... ops)
 	{
 		this(node, reference, Arrays.asList(ops));
 	}
-	public TACArrayRef(TACOperand reference, Collection<TACOperand> ops)
-	{
-		this(null, reference, ops);
-	}
+	
 	public TACArrayRef(TACNode node, TACOperand reference,
 			Collection<TACOperand> ops)
 	{

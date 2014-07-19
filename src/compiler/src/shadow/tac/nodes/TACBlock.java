@@ -15,10 +15,7 @@ public class TACBlock extends TACOperand
 	private List<TACLabelRef> catchLabels;
 	private TACLabelRef recoverLabel, doneLabel, cleanupLabel;
 	private TACDestinationPhiRef cleanupPhi;
-	public TACBlock()
-	{
-		this(null, null);
-	}
+
 	public TACBlock(TACBlock parentBlock)
 	{
 		this(null, parentBlock);

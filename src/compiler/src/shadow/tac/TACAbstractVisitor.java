@@ -13,6 +13,7 @@ import shadow.tac.nodes.TACClass.TACClassData;
 import shadow.tac.nodes.TACClass.TACMethodTable;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACConstructGeneric;
+import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACDestinationPhiRef;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericClass;
@@ -30,12 +31,12 @@ import shadow.tac.nodes.TACNodeRef;
 import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.tac.nodes.TACPlaceholder;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
+import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSimpleNode;
 import shadow.tac.nodes.TACSingletonRef;
@@ -130,7 +131,7 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	@Override
 	public void visit(TACPhiRef node) throws ShadowException { }
 	@Override
-	public void visit(TACPlaceholder node) throws ShadowException { }	
+	public void visit(TACSequenceElement node) throws ShadowException { }	
 	@Override
 	public void visit(TACReference node) throws ShadowException { }
 	@Override
@@ -159,4 +160,6 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	public void visit(TACVariableRef node) throws ShadowException { }
 	@Override
 	public void visit(TACConstructGeneric node) throws ShadowException { }
+	@Override
+	public void visit(TACConversion node) throws ShadowException { }
 }

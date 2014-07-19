@@ -20,13 +20,9 @@ public class TACGenericClass extends TACOperand
 {
 	private Type type;	
 	private TACOperand parameters;
-	private TACOperand classObject;
-		
-	public TACGenericClass(Type classType, TACMethod method)
-	{
-		this(null, classType, method);		
-	}
-	public TACGenericClass(TACNode node, Type classType, TACMethod method)
+	private TACOperand classObject;		
+
+	public TACGenericClass(TACNode node, Type classType)
 	{
 		super(node);
 		type = classType;
@@ -34,7 +30,7 @@ public class TACGenericClass extends TACOperand
 		SequenceType typeParameters = classType.getTypeParameters();	
 		
 		//array 
-		parameters = new TACNewArray(this, new ArrayType(Type.CLASS, 1), new TACClass(this, Type.CLASS, method), new TACLiteral(this, "" + typeParameters.size()) );
+		parameters = new TACNewArray(this, new ArrayType(Type.CLASS, 1), new TACClass(this, Type.CLASS), new TACLiteral(this, "" + typeParameters.size()) );
 		TACOperand operand;
 		int index = 0;
 		List<TACOperand> indices;
@@ -42,9 +38,9 @@ public class TACGenericClass extends TACOperand
 		{
 			//maybe add something for TypeParameters
 			if( parameter.getType().isParameterized() )
-				operand = new TACGenericClass(this, parameter.getType(), method);
+				operand = new TACGenericClass(this, parameter.getType());
 			else
-				operand = new TACClass(this, parameter.getType(), method);
+				operand = new TACClass(this, parameter.getType());
 						
 			indices = new ArrayList<TACOperand>(1);
 			indices.add(new TACLiteral(this, "" + index ));
@@ -54,7 +50,7 @@ public class TACGenericClass extends TACOperand
 		}
 		
 		//class to hold the generic class
-		classObject = new TACNewObject(this, Type.GENERIC_CLASS, method);
+		classObject = new TACNewObject(this, Type.GENERIC_CLASS);
 	}
 	
 	public TACOperand getClassObject()

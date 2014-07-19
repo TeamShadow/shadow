@@ -3,6 +3,7 @@ package shadow.interpreter;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.nodes.TACBinary;
+import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACUnary;

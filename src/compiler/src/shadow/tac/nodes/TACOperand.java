@@ -7,7 +7,7 @@ import shadow.typecheck.type.TypeParameter;
 
 public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 {
-	private Object data;
+	private Object data;	
 	
 	public Object getData()
 	{

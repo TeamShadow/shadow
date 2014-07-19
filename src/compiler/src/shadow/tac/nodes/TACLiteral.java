@@ -22,10 +22,7 @@ import shadow.typecheck.type.Type;
 public class TACLiteral extends TACOperand
 {
 	private ShadowValue value;
-	public TACLiteral(String literal)
-	{
-		this(null, literal);
-	}
+
 	public TACLiteral(TACNode node, String literal)
 	{
 		super(node);

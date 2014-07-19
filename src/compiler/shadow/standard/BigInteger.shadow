@@ -126,7 +126,7 @@ implements Number<BigInteger>
 	private leadingZeroes(uint value) => (uint)
 	{		
 		uint zeroes = 0u;
-		if (value <= 0x0000FFFF) {zeroes += 16u; value = value <<16;}
+		if (value <= 0x0000FFFF) {zeroes += 16u; value = value << 16;}
 		if (value <= 0x00FFFFFF) {zeroes += 8u; value = value << 8;}
 		if (value <= 0x0FFFFFFF) {zeroes += 4u; value = value << 4;}
 		if (value <= 0x3FFFFFFF) {zeroes += 2u; value = value << 2;}

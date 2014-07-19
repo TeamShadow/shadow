@@ -1,5 +1,6 @@
 package shadow.tac.nodes;
 
+import shadow.tac.TACMethod;
 import shadow.typecheck.type.ModifiedType;
 
 public abstract class TACReference extends TACOperand

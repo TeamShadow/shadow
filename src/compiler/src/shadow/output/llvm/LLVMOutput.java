@@ -46,6 +46,7 @@ import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACConstructGeneric;
+import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabelRef;
@@ -61,12 +62,12 @@ import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.tac.nodes.TACPlaceholder;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
+import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
@@ -81,7 +82,6 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -103,7 +103,7 @@ public class LLVMOutput extends AbstractOutput
 				file.getName().replace(".shadow", ".ll")));
 	}
 	
-	//used to do an LLVM check pass
+	//used to do an LLVM check pass for debugging
 	public LLVMOutput(boolean mode) throws ShadowException
 	{
 		if (!mode)
@@ -480,10 +480,10 @@ public class LLVMOutput extends AbstractOutput
 		StringBuilder sb = new StringBuilder();
 		for (MethodSignature method : methods)
 		{
-			TACMethodRef methodRef = new TACMethodRef(method);
-			sb.append(", ").append(methodType(methodRef));
+			//TACMethodRef methodRef = new TACMethodRef(method);
+			sb.append(", ").append(methodType(method));
 			if (name)
-				sb.append(' ').append(name(methodRef));
+				sb.append(' ').append(name(method));
 		}
 		
 		if( sb.length() > 0 )
@@ -593,7 +593,8 @@ public class LLVMOutput extends AbstractOutput
 						if (method.getModifiers().isPublic() ||
 							(module.getType().isSubtype(type)  && method.getModifiers().isProtected()))
 							writer.write("declare " + methodToString(
-									new TACMethod(method).addParameters()));
+									//new TACMethod(method).addParameters()));
+									method));
 			writer.write();
 		}
 		
@@ -665,9 +666,10 @@ public class LLVMOutput extends AbstractOutput
 		this.method = method;
 		if (module.isInterface())
 			return;
-		TACMethodRef methodRef = method.getMethod();
-		tempCounter = methodRef.getParameterCount() + 1;
-		if (methodRef.isNative())
+		MethodSignature signature = method.getMethod();
+		SequenceType parameters = signature.getFullParameterTypes();
+		tempCounter = parameters.size() + 1;
+		if (signature.isNative())
 		{
 			writer.write("declare " + methodToString(method));
 			writer.indent();
@@ -680,8 +682,8 @@ public class LLVMOutput extends AbstractOutput
 				writer.write('%' + name(local) + " = alloca " + type(local));
 			if (method.hasLandingpad())
 				writer.write("%_exception = alloca { i8*, i32 }");
-			boolean primitiveCreate = !method.getMethod().getOuterType().
-					isSimpleReference() && methodRef.isCreate(), first = true;
+			boolean primitiveCreate = !signature.getOuter().
+					isSimpleReference() && signature.isCreate(), first = true;
 			int paramIndex = 0;
 			for (TACVariable param : method.getParameters())
 			{
@@ -689,7 +691,7 @@ public class LLVMOutput extends AbstractOutput
 				if (first)
 				{
 					first = false;
-					if (methodRef.isCreate())
+					if (signature.isCreate())
 					{
 						writer.write(nextTemp() + " = bitcast " +
 								typeText(Type.OBJECT, symbol) + " to %" +
@@ -851,6 +853,8 @@ public class LLVMOutput extends AbstractOutput
 		node.setData(current);
 	}
 	
+	
+	/*
 	private String allocatePrimitive(TACOperand node, Type srcType, String srcName) throws ShadowException
 	{
 		writer.write(nextTemp(node) + " = call noalias " +
@@ -871,7 +875,246 @@ public class LLVMOutput extends AbstractOutput
 				typeText(srcType, temp(0), true));
 		return temp(2);
 	}
+	*/
+	
+	@Override
+	public void visit(TACConversion node) throws ShadowException
+	{
+		TACOperand source = node.getOperand(0);		
+		Type destType = node.getType();
+		Type srcType = source.getType();
+		ArrayType arrayType;
+		String dimsType;
+		
+		switch( node.getKind()  )
+		{
+		case INTERFACE_TO_OBJECT:
+			writer.write(nextTemp(node) + " = extractvalue " +
+					typeSymbol(source) + ", 1");			
+			break;
+			
+		case OBJECT_TO_INTERFACE:
+			//operand 1 is the previously processed methods
+			writer.write(nextTemp() + " = bitcast " + typeSymbol(node.getOperand(1)) +
+					" to %" + raw(destType, "_methods") + '*');
+			writer.write(nextTemp() + " = insertvalue " + type(destType) +
+					" undef, %" + raw(destType, "_methods") + "* " + temp(1) +
+					", 0");
+			writer.write(nextTemp() + " = bitcast " +
+					typeSymbol(source) + " to " + type(Type.OBJECT));
+			
+			writer.write(nextTemp(node) + " = insertvalue " + typeText(destType,
+					temp(2)) + ", " + typeTemp(Type.OBJECT, 1) + ", 1");
+			break;
+			
+		case PRIMITIVE_TO_OBJECT:
+			writer.write(nextTemp() + " = call noalias " +
+					type(Type.OBJECT) + " @" + raw(Type.CLASS,
+					"_Mallocate") + '(' + type(Type.CLASS) +
+					" @" + raw(srcType, "_class") + ", %" + 
+					raw(Type.OBJECT, "_methods") + "* bitcast(%" +
+					raw(srcType, "_methods") + "* @" +	raw(srcType, "_methods") +
+					" to %" + raw(Type.OBJECT, "_methods") + "*)" +
+					")");		
+			
+			writer.write(nextTemp(node) + " = bitcast " + typeText(Type.OBJECT,
+					temp(1)) + " to %" + raw(srcType) + "*");		
+			
+			writer.write(nextTemp() + " = getelementptr inbounds %" +
+					raw(srcType) + "* " + temp(1) + ", i32 0, i32 2");
+			writer.write("store " + typeSymbol(source) + ", " +
+					typeText(srcType, temp(0), true));
+			break;
+			
+		case OBJECT_TO_PRIMITIVE:
+			writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to %" + raw(destType) +  "*");
+			writer.write(nextTemp() + " = getelementptr inbounds %" +
+					raw(destType) + "* " + temp(1) + ", i32 0, i32 2");
+			writer.write(nextTemp(node) + " = load " + typeTemp(destType, 1, true));			
+			break;
+			
+		case ARRAY_TO_OBJECT:
+			arrayType = (ArrayType) srcType;
+			TACClass arrayClass = (TACClass)node.getOperand(1);			
+			
+			ArrayType intArray = new ArrayType(Type.INT);
+			dimsType = " [" + arrayType.getDimensions() + " x " +
+					type(Type.INT) + ']';
+			writer.write(nextTemp() + " = extractvalue " + typeSymbol(source) + ", 1");				
+			writer.write(nextTemp() + " = call " + type(Type.OBJECT) +
+					" @" + raw(Type.CLASS,
+					"_Mallocate" + Type.INT.getMangledName()) + '(' +
+					typeText(Type.CLASS, classOf(Type.INT)) + ", " +
+					typeLiteral(arrayType.getDimensions()) + ')');
+			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT,
+					temp(1)) + " to" + dimsType + '*');
+			writer.write("store" + dimsType + ' ' + temp(2) + ',' +
+					dimsType + "* " + temp(0));
+			writer.write(nextTemp() + " = getelementptr inbounds" +
+					dimsType + "* " + temp(1) + ", i32 0, i32 0");
+			writer.write(nextTemp() + " = insertvalue " + type(intArray) +
+					" { " + type(Type.INT) + "* null, [1 x " +
+					type(Type.INT) + "] [" +
+					typeLiteral(arrayType.getDimensions()) + "] }, " +
+					typeTemp(Type.INT, 1, true) + ", 0");
+			writer.write(nextTemp() + " = extractvalue " + typeSymbol(source) + ", 0");
+			writer.write(nextTemp() + " = bitcast " +
+					typeTemp(arrayType.getBaseType(), 1, true) + " to " +
+					type(Type.OBJECT));
+			writer.write(nextTemp() + " = call noalias " +
+					type(Type.OBJECT) + " @" + raw(Type.CLASS,
+					"_Mallocate") + '(' + typeText(Type.CLASS,
+					symbol(arrayClass.getClassData())) + ", %" +
+					raw(Type.OBJECT, "_methods") + "* bitcast(%" + raw(Type.ARRAY, "_methods") + "* " +  symbol(arrayClass.getMethodTable()) + " to %" + raw(Type.OBJECT, "_methods") + "*)" + 
+					')');
+							
+			writer.write(nextTemp(node) + " = call " + type(Type.ARRAY) + " @" +
+					raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
+					getMangledName() + Type.OBJECT.getMangledName()) + '(' +
+					typeTemp(Type.OBJECT, 1) + ", " +						
+					typeTemp(new ArrayType(Type.INT), 4) + ", " +
+					typeTemp(Type.OBJECT, 2) + ')');
+			break;
+			
+		case OBJECT_TO_ARRAY:
+			String srcName = symbol(source);
+			if (!srcType.equals(Type.ARRAY))
+			{
+				writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to " + type(Type.ARRAY));
+				srcType = Type.ARRAY;
+				srcName = temp(0);
+			}
+			arrayType = (ArrayType)destType;
+			String baseType = type(arrayType.getBaseType()) + '*';
+			dimsType = " [" + arrayType.getDimensions() + " x " +
+							type(Type.INT) + ']';
+			writer.write(nextTemp() + " = getelementptr inbounds " +
+							typeText(srcType, srcName) + ", i32 0, i32 2");
+			writer.write(nextTemp() + " = load " + type(Type.OBJECT) +
+					"* " + temp(1));
+			writer.write(nextTemp() + " = bitcast " + typeTemp(Type.OBJECT,
+					1) + " to " + baseType);
+			writer.write(nextTemp() + " = insertvalue " + type(destType) +
+					" undef, " + baseType + ' ' + temp(1) + ", 0");
+			writer.write(nextTemp() + " = getelementptr inbounds " +
+					typeText(srcType, srcName) + ", i32 0, i32 3, i32 0");
+			writer.write(nextTemp() + " = load " + type(Type.INT) + "** " +
+					temp(1));
+			writer.write(nextTemp() + " = bitcast " + type(Type.INT) +
+					"* " + temp(1) + " to" + dimsType + '*');
+			writer.write(nextTemp() + " = load" + dimsType + "* " +
+					temp(1));
+			writer.write(nextTemp(node) + " = insertvalue " + typeTemp(destType,
+					5) + ',' + dimsType + ' ' + temp(1) + ", 1");
+			break;
+		case SEQUENCE_TO_SEQUENCE:			
+			String current = "undef";
+			int index = 0;			
+			for (int i = 1; i < node.getNumOperands(); i ++) //first operand is source
+			{	
+				writer.write(nextTemp() + " = insertvalue " + typeText(node,current) + ", " +
+						typeSymbol(node.getOperand(i)) + ", " + index);
+				current = temp(0);
+				index++;
+			}
+			node.setData(current);			
+			break;
+		case SEQUENCE_TO_OBJECT:
+			node.setData(symbol(node.getOperand(1)));
+			break;
+		case OBJECT_TO_SEQUENCE:			
+			writer.write(nextTemp(node) + " = insertvalue " + type(node)
+					+ " undef, " + typeSymbol(node.getOperand(1)) + ", 0");						
+			break;
+		}
+	}
+	
+	@Override
+	public void visit(TACSequenceElement node ) throws ShadowException
+	{	
+		writer.write(nextTemp(node) + " = extractvalue " +
+				typeSymbol(node.getOperand(0)) + ", " + node.getIndex());		
+	}
+	
+	@Override
+	public void visit(TACCast node) throws ShadowException
+	{ 
+		Type srcType = node.getOperand().getType(), destType = node.getType();
+		
+		if (destType.equals(srcType) || destType == Type.NULL )
+		{
+			node.setData(symbol(node.getOperand()));
+			return;
+		}
+		else if( srcType == Type.NULL )
+		{
+			if( destType instanceof ArrayType || destType instanceof InterfaceType )
+				node.setData("zeroinitializer");  //Shadow arrays are not pointers, they're structs with pointers and lengths
+										//change back to undef?
+			else
+				node.setData("null");
+			
+			return;
+		}	
+		
+		//all substantive conversions have been taken care of with TACConversion
+		//but conversions of primitive types and pointer casts are swept up here 
+		
+		String instruction;
+		int srcWidth = Type.getWidth(node.getOperand()),
+				destWidth = Type.getWidth(node);
+		
+		String srcTypeName = type(srcType);
+		String destTypeName = type(destType);
+		
+		if( srcType.isPrimitive() && destType.isPrimitive() )
+		{
+			if( srcType.isFloating() )
+			{
+				if( destType.isFloating() )
+					instruction = srcWidth > destWidth ? "fptrunc" : (srcWidth < destWidth ? "fpext" : "bitcast");
+				else if( destType.isSigned() )
+					instruction = "fptosi";
+				else
+					instruction = "fptoui";
+			}
+			else if( srcType.isSigned() )
+			{
+				if( destType.isFloating() )
+					instruction = "sitofp";
+				else if( destType.isSigned() )
+					instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "sext" : "bitcast");
+				else
+					instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
+			}
+			else if( srcType.isUnsigned() )
+			{
+				if( destType.isFloating() )
+					instruction = "uitofp";
+				else
+					instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
+			}
+			else
+				instruction = "bitcast"; //should never happen
+		}
+		else
+		{
+			instruction = "bitcast";
+			
+			//primitive types are in their object forms
+			if( srcType.isPrimitive() )
+				srcTypeName = "%\"" + srcType.getMangledName() + "\"*";
+			
+			if( destType.isPrimitive() )
+				destTypeName = "%\"" + destType.getMangledName() + "\"*";			
+		}
+		
+		writer.write(nextTemp(node) + " = " + instruction + ' ' +
+				srcTypeName + ' ' + symbol(node.getOperand()) + " to " + destTypeName);
+	} 
 
+	
+	/*
 	@Override
 	public void visit(TACCast node) throws ShadowException
 	{ 
@@ -948,16 +1191,11 @@ public class LLVMOutput extends AbstractOutput
 				srcName = allocatePrimitive(node, srcType.getType(), srcName);
 				srcType = new SimpleModifiedType(Type.OBJECT);				
 			}			
-			/*else
-				srcName = typeSymbol(node.getOperand()); //old thing for below
-			*/
-			
+
 			TACMethodRef methodRef = new TACMethodRef(
 					Type.CLASS.getMethods("interfaceData").get(0));
-			TACClass destClass = new TACClass(methodRef, destType.getType(),
-					method);
-			TACClass srcClass = new TACClass(destClass, interfaceClass,
-					method);
+			TACClass destClass = new TACClass(methodRef, destType.getType());
+			TACClass srcClass = new TACClass(destClass, interfaceClass);
 			walk(srcClass); //good idea?
 			TACCall call = new TACCall(srcClass, new TACBlock(), methodRef,
 					srcClass, destClass);
@@ -970,7 +1208,7 @@ public class LLVMOutput extends AbstractOutput
 					", 0");
 			writer.write(nextTemp() + " = bitcast " +
 					typeText(srcType, srcName) + " to " + type(Type.OBJECT));
-			/*      ^ used to be typeSymbol(node.getOperand()) */
+			//      ^ used to be typeSymbol(node.getOperand())
 			writer.write(nextTemp(node) + " = insertvalue " + typeText(destType,
 					temp(2)) + ", " + typeTemp(Type.OBJECT, 1) + ", 1");
 			return;
@@ -1000,7 +1238,7 @@ public class LLVMOutput extends AbstractOutput
 			{
 				ArrayType arrayType = (ArrayType)srcType.getType();
 				ClassType arrayWrapper = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(arrayType.getBaseType()));
-				TACClass arrayClass = new TACClass(arrayWrapper, method);
+				TACClass arrayClass = new TACClass(arrayWrapper);
 				walk(arrayClass);
 				
 				ArrayType intArray = new ArrayType(Type.INT);
@@ -1120,7 +1358,7 @@ public class LLVMOutput extends AbstractOutput
 		
 		writer.write(nextTemp(node) + " = " + instruction + ' ' +
 				typeText(srcType, srcName) + " to " + type(destType));
-	}
+	} */
 
 	@Override
 	public void visit(TACNewObject node) throws ShadowException
@@ -1651,21 +1889,76 @@ public class LLVMOutput extends AbstractOutput
 			//	raw(type, "_Mclass") + ", i32 0, i32 0)";
 	}
 	
-	private static String methodTableOf(Type type)
-	{
-		return '@' + raw(type, "_methods");
-	}
-	
-	
-
 	private static String methodType(TACMethodRef method)
 	{
 		return methodToString(method, false, true) + '*';
 	}
+	
+	private static String methodType(MethodSignature method)
+	{
+		return methodToString(method, false, true) + '*';
+	}
+	
 	private static String methodToString(TACMethod method)
 	{
 		return methodToString(method.getMethod(), true, true);
 	}
+	
+	private static String methodToString(MethodSignature signature)
+	{
+		return methodToString(signature, true, true);
+	}
+	
+	private static String methodToString(MethodSignature signature, boolean name, boolean parameters)
+	{
+		StringBuilder sb = new StringBuilder();
+		if (name && (/*signature.getModifiers().isPrivate() ||*/ signature.isWrapper()))
+			sb.append("private ");
+		boolean primitiveCreate = !signature.getOuter().isSimpleReference() &&
+				signature.isCreate();
+		if (primitiveCreate)
+			sb.append('%').append(raw(signature.getOuter())).append('*');
+		else
+		{
+			SequenceType returnTypes = signature.getFullReturnTypes();
+			if( returnTypes.size() == 0 )
+				sb.append("void");
+			else if (returnTypes.size() == 1 )			
+				sb.append(type(returnTypes.get(0)));
+			else
+				sb.append(type(returnTypes));
+		}
+		sb.append(' ');
+		if (name)
+			sb.append(name(signature));
+		if (parameters)
+		{
+			sb.append('(');
+			boolean first = true;
+			SequenceType parameterTypes = signature.getFullParameterTypes();
+			
+			for (int i = 0; i < parameterTypes.size(); i++)
+			{
+				if (first)
+				{
+					first = false;
+					if (primitiveCreate)
+						sb.append('%').append(raw(parameterTypes.get(i))).
+								append('*');
+					else
+						sb.append(type(parameterTypes.get(i)));
+					if (name && signature.isCreate())
+						sb.append(" returned");
+				}
+				else
+					sb.append(", ").append(type(parameterTypes.get(i)));
+			}
+			sb.append(')');
+		}
+		return sb.toString();
+		
+	}
+	
 	private static String methodToString(TACMethodRef method, boolean name,
 			boolean parameters)
 	{
@@ -1677,7 +1970,7 @@ public class LLVMOutput extends AbstractOutput
 		if (primitiveCreate)
 			sb.append('%').append(raw(method.getOuterType())).append('*');
 		else
-		{
+		{			
 			if (method.isVoid())
 				sb.append("void");
 			else if (method.isSingle())
@@ -1729,9 +2022,6 @@ public class LLVMOutput extends AbstractOutput
 	}
 	private static String type(ModifiedType type)
 	{
-//		if (!type.getModifiers().isTypeName() &&
-//				type.getType() instanceof TypeParameter)
-//			return type(Type.CLASS);
 		return type(type.getType());
 	}
 	private static String type(Type type)
@@ -1785,10 +2075,6 @@ public class LLVMOutput extends AbstractOutput
 	{
 		return raw(type.getType(), "");
 	}
-	private static String raw(ModifiedType type, String extra)
-	{
-		return raw(type.getType(), extra);
-	}
 	private static String raw(Type type)
 	{
 		return raw(type, "");
@@ -1796,40 +2082,13 @@ public class LLVMOutput extends AbstractOutput
 	private static String raw(Type type, String extra)
 	{
 		return '\"' + type.getMangledName() + extra + '\"';
-	}
-	
-	private static String withGenerics(ModifiedType type)
-	{
-		return withGenerics(type.getType(), "");
-	}
-	private static String withGenerics(ModifiedType type, String extra)
-	{
-		return withGenerics(type.getType(), extra);
-	}
-	private static String withGenerics(Type type)
-	{
-		return withGenerics(type, "");
-	}
+	}	
+
 	private static String withGenerics(Type type, String extra)
 	{
 		return '\"' + type.getMangledNameWithGenerics() + extra + '\"';
 	}
 
-	/*private static String wrapType(ModifiedType type, ModifiedType wrappedType)
-	{
-		if (Type.getWidth(type) == Type.getWidth(wrappedType))
-			return type(type);
-		return '%' + raw(type) + '*';
-	}
-	private static String wrapType(SequenceType type, SequenceType wrappedType)
-	{
-		if (type.size() != wrappedType.size())
-			throw new IllegalArgumentException();
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < type.size(); i++)
-			sb.append(", ").append(wrapType(type.get(i), wrappedType.get(i)));
-		return sb.replace(0, 2, "{ ").append(" }").toString();
-	}*/
 
 	private static String name(TACLabel label)
 	{
@@ -1870,6 +2129,7 @@ public class LLVMOutput extends AbstractOutput
 			sb.append(method.getOuterType().getMangledName());	
 		
 		sb = Type.mangle( sb.append("_M"), method.getName());
+		
 		for (ModifiedType paramType : method.getType().getParameterTypes())
 		{
 			Type type = paramType.getType();
@@ -1883,7 +2143,40 @@ public class LLVMOutput extends AbstractOutput
 		if (method.isWrapper())
 			sb.append("_W");
 		return sb.append('\"').toString();
-	}	
+	}
+	
+	private static String name(MethodSignature method)
+	{
+		StringBuilder sb = new StringBuilder("@\"");
+		
+		if( method.isWrapper() )		
+			sb.append(method.getOuter().getMangledNameWithGenerics());
+		else
+			sb.append(method.getOuter().getMangledName());
+		
+		SequenceType parameters;
+		if( method.isWrapper() || method.getOuter() instanceof InterfaceType )
+			parameters =  method.getMethodType().getTypeWithoutTypeArguments().getParameterTypes();
+		else
+			parameters = method.getMethodType().getParameterTypes();
+		
+		sb = Type.mangle( sb.append("_M"), method.getSymbol());
+		for (ModifiedType paramType : parameters)
+		{
+			Type type = paramType.getType();
+			//if( type instanceof ArrayType )
+			//	type = ((ArrayType)type).convertToGeneric();
+			if( type instanceof TypeParameter )
+				type = ((TypeParameter)type).getClassBound();
+			
+			sb.append(type.getMangledNameWithGenerics());
+		}
+		if (method.isWrapper())
+			sb.append("_W");
+		return sb.append('\"').toString();
+	}
+	
+	
 	
 	/*//old
 	 private static String name(TACMethodRef method)
@@ -2032,14 +2325,6 @@ public class LLVMOutput extends AbstractOutput
 		return typeText(type, temp(offset));
 	}
 	private String typeTemp(Type type, int offset, boolean reference)
-	{
-		return typeText(type, temp(offset), reference);
-	}
-	private String typeTemp(ModifiedType type, int offset)
-	{
-		return typeText(type, temp(offset));
-	}
-	private String typeTemp(ModifiedType type, int offset, boolean reference)
 	{
 		return typeText(type, temp(offset), reference);
 	}

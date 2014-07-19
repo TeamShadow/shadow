@@ -5,10 +5,6 @@ import shadow.tac.TACVisitor;
 
 public class TACDestinationPhiRef extends TACPhiRef implements TACDestination
 {
-	public TACDestinationPhiRef()
-	{
-		this(null);
-	}
 	public TACDestinationPhiRef(TACNode node)
 	{
 		super(node);

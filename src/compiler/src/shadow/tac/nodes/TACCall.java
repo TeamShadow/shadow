@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
@@ -17,27 +18,18 @@ public class TACCall extends TACOperand
 	private TACBlock blockRef;
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
-	public TACCall(TACBlock block, TACMethodRef method, TACOperand... params)
+
+	public TACCall(TACNode node, TACBlock block, TACMethodRef methodRef, TACOperand... params)
 	{
-		this(null, block, method, Arrays.asList(params));
+		this(node, block, methodRef, Arrays.asList(params));
 	}
-	public TACCall(TACBlock block, TACMethodRef method,
-			Collection<? extends TACOperand> params)
-	{
-		this(null, block, method, params);
-	}
-	public TACCall(TACNode node, TACBlock block, TACMethodRef method,
-			TACOperand... params)
-	{
-		this(node, block, method, Arrays.asList(params));
-	}
-	public TACCall(TACNode node, TACBlock block, TACMethodRef method,
+	public TACCall(TACNode node, TACBlock block, TACMethodRef methodRef,
 			Collection<? extends TACOperand> params)
 	{
 		super(node);
 		blockRef = block;
-		methodRef = method;
-		SequenceType types = method.getParameterTypes();
+		this.methodRef = methodRef;
+		SequenceType types = methodRef.getParameterTypes();
 		if (params.size() != types.size())
 			throw new IllegalArgumentException("Wrong # args");
 		Iterator<? extends TACOperand> paramIter = params.iterator();

@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import shadow.tac.TACMethod;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;

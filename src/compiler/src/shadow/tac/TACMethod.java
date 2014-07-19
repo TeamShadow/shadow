@@ -23,37 +23,29 @@ import shadow.typecheck.type.Type;
 
 public class TACMethod extends TACNodeList
 {
-	private TACMethodRef method;
+	private MethodSignature method;
 	private Map<String, TACVariable> locals;
 	private Deque<Map<String, TACVariable>> scopes;
 	private boolean landingpad;
 	public TACMethod(MethodSignature methodSignature)
-	{
-		this(new TACMethodRef(methodSignature));
-	}
-	public TACMethod(MethodType methodType, String methodName)
-	{
-		this(new TACMethodRef(methodType, methodName));
-	}
-	private TACMethod(TACMethodRef methodRef)
-	{
-		method = methodRef;
+	{	
+		method = methodSignature;
 		locals = new LinkedHashMap<String, TACVariable>();
 		scopes = new LinkedList<Map<String, TACVariable>>();
 		landingpad = false;
 		enterScope();
-		Type prefixType = methodRef.getOuterType();		
+		Type prefixType = methodSignature.getOuter();		
 		if( prefixType instanceof InterfaceType )
 			prefixType = Type.OBJECT;
 		
 		addLocal(new SimpleModifiedType(prefixType), "this");		
-		if (methodRef.isCreate() )
+		if (methodSignature.isCreate() )
 		{	
 			if( prefixType.hasOuter())
 				addLocal(new SimpleModifiedType(prefixType.getOuter()), "_outer");
 		}
 		//Type parameterizedType = methodRef.isCreate() ? prefixType : methodRef.getType();
-		Type parameterizedType = methodRef.getType();
+		Type parameterizedType = methodSignature.getMethodType();
 		if (parameterizedType.isParameterized())
 			for (ModifiedType typeParam : parameterizedType.getTypeParameters())
 				addLocal(new SimpleModifiedType(Type.CLASS),
@@ -62,7 +54,7 @@ public class TACMethod extends TACNodeList
 	
 	public TACMethod addParameters(boolean isWrapped)
 	{
-		MethodType type = getMethod().getType();
+		MethodType type = getMethod().getMethodType();		
 		if( isWrapped )
 			type = type.getTypeWithoutTypeArguments();
 		
@@ -77,7 +69,7 @@ public class TACMethod extends TACNodeList
 		return addParameters(false);
 	}
 
-	public TACMethodRef getMethod()
+	public MethodSignature getMethod()
 	{
 		return method;
 	}

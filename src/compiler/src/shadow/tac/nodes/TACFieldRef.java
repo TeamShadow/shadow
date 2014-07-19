@@ -13,10 +13,7 @@ public class TACFieldRef extends TACReference
 	private TACOperand prefix;
 	private ModifiedType type;
 	private String name;
-	public TACFieldRef(TACOperand fieldPrefix, String fieldName)
-	{
-		this(null, fieldPrefix, fieldName);
-	}
+
 	public TACFieldRef(TACNode node, TACOperand fieldPrefix, String fieldName)
 	{
 		this(node, fieldPrefix, fieldPrefix.getType().getField(fieldName),
@@ -27,8 +24,7 @@ public class TACFieldRef extends TACReference
 	{
 		super(node);
 		if (fieldType == null)
-			throw new NullPointerException();
-		ClassType prefixType = (ClassType)fieldPrefix.getType();
+			throw new NullPointerException();		
 //		while (prefixType != null && !prefixType.containsField(fieldName))
 //			prefixType = prefixType.getExtendType();
 //		if (prefixType == null)
@@ -40,7 +36,8 @@ public class TACFieldRef extends TACReference
 		else
 		{
 			//0 is class
-			//1 is methods			
+			//1 is methods
+			ClassType prefixType = (ClassType)fieldPrefix.getType();
 			
 			// _outer is a member for inner classes, but it is made available through normal field lookup
 			index = prefixType.getFieldIndex(fieldName) + 2;

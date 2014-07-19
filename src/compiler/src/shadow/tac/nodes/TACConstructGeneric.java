@@ -10,11 +10,6 @@ public class TACConstructGeneric extends TACOperand
 	TACOperand[] elements;
 	Type type;
 	
-	public TACConstructGeneric(TACOperand[] elements, Type type)
-	{
-		this(null, elements, type);
-	}
-	
 	public TACConstructGeneric(TACNode node, TACOperand[] elements, Type type)
 	{
 		super(node);

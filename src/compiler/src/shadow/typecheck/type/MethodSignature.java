@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.Collections;
 import java.util.List;
 
 import shadow.parser.javacc.SignatureNode;
@@ -84,7 +85,49 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			return type.matchesParams(signature.type );		
 		else
 			return false;
-	}	
+	}
+	
+	public SequenceType getFullReturnTypes()
+	{	
+		if (isCreate())
+			return new SequenceType(Collections.<ModifiedType>singletonList(
+					new SimpleModifiedType(getOuter())));
+			
+		return getMethodType().getReturnTypes();
+	}
+	
+	public SequenceType getFullParameterTypes()
+	{
+		SequenceType paramTypes = new SequenceType();
+		Type outerType = getOuter();
+		if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
+			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
+		else
+			paramTypes.add(new SimpleModifiedType(outerType)); // this
+			
+		if( isCreate() && getOuter().hasOuter() )
+				paramTypes.add(new SimpleModifiedType(getOuter().getOuter()));			
+			
+		//type parameters no longer passed to method for generic objects, only for purely parameterized methods
+		//Type parameterizedType = isCreate() ? getOuterType() : getType();
+		
+		MethodType methodType;
+		
+		if( isWrapper() || getOuter() instanceof InterfaceType )
+			methodType = type.getTypeWithoutTypeArguments();
+		else
+			methodType = type;		
+		 
+		if (methodType.isParameterized())
+			for (int i = methodType.getTypeParameters().size(); i > 0; i--)
+				paramTypes.add(new SimpleModifiedType(Type.CLASS));
+		//TODO: add twice as many?  class type + method table?
+				
+		for (ModifiedType parameterType : methodType.getParameterTypes())
+			paramTypes.add(parameterType);	
+			
+		return paramTypes;
+	}
 
 	public String toString() {		
 		if( symbol.equals("create") )
@@ -156,14 +199,48 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	public boolean isGet()
 	{	
-		return ( node.getModifiers().isGet() && type.getReturnTypes().size() == 1 && type.getParameterTypes().isEmpty() );	
+		return ( type.getModifiers().isGet() && type.getReturnTypes().size() == 1 && type.getParameterTypes().isEmpty() );	
 	}
 	
 	public boolean isSet()
 	{	
-		return ( node.getModifiers().isSet() && type.getReturnTypes().isEmpty() && type.getParameterTypes().size() == 1 );	
+		return ( type.getModifiers().isSet() && type.getReturnTypes().isEmpty() && type.getParameterTypes().size() == 1 );	
 	}
+	
+	public boolean isNative()
+	{
+		return type.getModifiers().isNative();
+	}
+	
+	public boolean isVoid()
+	{
+		return type.getReturnTypes().size() == 0;
+	}
+	
+	public boolean isSingle()
+	{
+		return type.getReturnTypes().size() == 1;
+	}	
 
+	public boolean isSequence()
+	{
+		return type.getReturnTypes().size() > 1;
+	}
+	
+	public ModifiedType getSingleReturnType()
+	{
+		if (!isSingle())
+			throw new IllegalStateException();
+		return getReturnTypes().get(0);
+	}
+	
+	public SequenceType getSequenceReturnTypes()
+	{
+		if (!isSequence())
+			throw new IllegalStateException();
+		return getReturnTypes();
+	}
+	
 	public boolean isWrapper() {
 		return wrapped != null;
 	}

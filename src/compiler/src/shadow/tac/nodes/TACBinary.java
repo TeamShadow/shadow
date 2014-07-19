@@ -5,7 +5,6 @@ import shadow.tac.TACVisitor;
 import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -50,17 +49,17 @@ public class TACBinary extends TACOperand
 	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, char op,
 			TACOperand secondOperand)
 	{
-		this( node, firstOperand, signature, op, secondOperand, false );
+		this( node, firstOperand, signature, op, secondOperand, false);
 	}
 	
 	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, char op,
 			TACOperand secondOperand, boolean isCompare)
 	{		
-		this( node, firstOperand, new SimpleModifiedType(signature.getOuter()), stringVersion(op), secondOperand, signature.getParameterTypes().get(0), isCompare ? new SimpleModifiedType(Type.BOOLEAN) : signature.getReturnTypes().get(0) );	
+		this( node, firstOperand, new SimpleModifiedType(signature.getOuter()), stringVersion(op), secondOperand, signature.getParameterTypes().get(0), isCompare ? new SimpleModifiedType(Type.BOOLEAN) : signature.getReturnTypes().get(0));	
 	}
 	
 	private TACBinary(TACNode node, TACOperand firstOperand, ModifiedType firstType, String op,
-			TACOperand secondOperand, ModifiedType secondType, ModifiedType resultType )
+			TACOperand secondOperand, ModifiedType secondType, ModifiedType resultType)
 	{
 		super(node);
 		
@@ -79,7 +78,7 @@ public class TACBinary extends TACOperand
 		{
 			//second = check(secondOperand, secondType);
 			//node.append(secondOperand);
-			second = new TACCast(this, firstType, secondOperand );
+			second = new TACCast(this, firstType, secondOperand);
 			//second = check(secondOperand, secondType, true);
 			//second = check(secondOperand, secondType);
 		}

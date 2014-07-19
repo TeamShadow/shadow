@@ -88,9 +88,21 @@ public class TACBuilder implements ShadowParserVisitor
 		implicitCreate = false;
 		identifier = null;
 		block = null;
+		TACNode.setBuilder(this);  //ugly, non-typesafe approach
 		walk(node);
 		return modules;
 	}
+	
+	public TACMethod getMethod()
+	{
+		return method;
+	}
+	
+	public TACBlock getBlock()
+	{
+		return block;
+	}
+	
 	public void walk(Node node) throws ShadowException
 	{
 		tree = tree.next(node.jjtGetNumChildren());
@@ -334,18 +346,19 @@ public class TACBuilder implements ShadowParserVisitor
 				last.remove();
 			else
 			{
-				TACMethodRef methodRef = method.getMethod();
-				if (methodRef.isVoid())
-					new TACReturn(tree, methodRef.getReturnTypes());
-				else if (methodRef.isSingle())
-					new TACReturn(tree, methodRef.getReturnTypes(),
-							getDefaultValue(methodRef.getSingleReturnType()));
+				MethodSignature signature = method.getMethod();
+				SequenceType returnTypes = signature.getFullReturnTypes(); 
+				if (signature.isVoid())
+					new TACReturn(tree, returnTypes );
+				else if (signature.isSingle())
+					new TACReturn(tree, returnTypes,
+							getDefaultValue(returnTypes.get(0)));
 				else
 				{
 					List<TACOperand> seq = new ArrayList<TACOperand>();
-					for (ModifiedType type : methodRef.getReturnTypes())
+					for (ModifiedType type : returnTypes)
 						seq.add(getDefaultValue(type));
-					new TACReturn(tree, methodRef.getSequenceReturnTypes(),
+					new TACReturn(tree, returnTypes,
 							new TACSequence(tree, seq));
 				}
 			}
@@ -370,7 +383,7 @@ public class TACBuilder implements ShadowParserVisitor
 					last.getPrevious() instanceof TACReturn)
 				last.remove();
 			else
-				new TACReturn(tree, method.getMethod().getReturnTypes(),
+				new TACReturn(tree, method.getMethod().getFullReturnTypes(),
 						new TACVariableRef(tree, method.getThis()));
 		}
 		return POST_CHILDREN;
@@ -393,7 +406,7 @@ public class TACBuilder implements ShadowParserVisitor
 					last.getPrevious() instanceof TACReturn)
 				last.remove();
 			else
-				new TACReturn(tree, method.getMethod().getReturnTypes());
+				new TACReturn(tree, method.getMethod().getFullReturnTypes());
 		}
 		return POST_CHILDREN;
 	}
@@ -406,7 +419,7 @@ public class TACBuilder implements ShadowParserVisitor
 		{
 			implicitCreate = false;
 			boolean isSuper = node.getImage().equals("super");
-			ClassType thisType = (ClassType)method.getMethod().getOuterType();
+			ClassType thisType = (ClassType)method.getMethod().getOuter();
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(new TACVariableRef(tree, method.getThis()));
 			//TODO: test explicit constructor invocations
@@ -1154,7 +1167,7 @@ public class TACBuilder implements ShadowParserVisitor
 				for (ModifiedType type :
 						(SequenceType)node.jjtGetChild(i).getType())
 				{
-					TACClass _class = new TACClass(tree, type.getType(), method); 
+					TACClass _class = new TACClass(tree, type.getType()); 
 					params.add(_class.getClassData());
 					params.add(_class.getMethodTable());
 				}
@@ -1200,7 +1213,7 @@ public class TACBuilder implements ShadowParserVisitor
 					type = type.replace(type.getTypeParameters(), arguments.getType());					
 				}
 				
-				prefix = new TACClass(tree, type, method).getClassData();
+				prefix = new TACClass(tree, type).getClassData();
 			}
 			else			
 				prefix = new TACFieldRef(tree, prefix, node.getImage());
@@ -1403,7 +1416,7 @@ public class TACBuilder implements ShadowParserVisitor
 			
 			ClassType classType = (ClassType)(methodType.getOuter());  //class type needs to be parameterized to get the parameters
 										
-			TACOperand object = new TACNewObject(tree, classType, method );
+			TACOperand object = new TACNewObject(tree, classType);
 					
 			
 			List<TACOperand> params = new ArrayList<TACOperand>();
@@ -1449,7 +1462,7 @@ public class TACBuilder implements ShadowParserVisitor
 			initLabel.new TACLabel(tree);
 			
 			TACMethodRef methodRef = new TACMethodRef(tree, type.getMethods("create").get(0));
-			TACOperand object = new TACNewObject(tree, type, method);
+			TACOperand object = new TACNewObject(tree, type);
 			TACCall call = new TACCall(tree, block, methodRef, object );			
 			new TACStore(tree, instance, call ); 				
 			new TACBranch(tree, doneLabel);
@@ -1817,7 +1830,7 @@ public class TACBuilder implements ShadowParserVisitor
 						skip = new TACLabelRef(tree);
 				new TACBranch(tree, new TACCall(tree, block, new TACMethodRef(
 						tree, Type.INT.getMatchingMethod("equal", new SequenceType(Type.INT))), typeid,
-						new TACTypeId(tree, new TACClass(tree, type, method).getClassData())),
+						new TACTypeId(tree, new TACClass(tree, type).getClassData())),
 						catchLabel, skip);
 				catchLabel.new TACLabel(tree);
 				tree.appendChild(i);
@@ -2117,14 +2130,13 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		TACTree saveTree = tree;
-		TACMethod method = this.method = new TACMethod(methodSignature);
-		TACMethodRef methodRef = method.getMethod();
+		TACMethod method = this.method = new TACMethod(methodSignature);		
 		if (module.isClass()/* && !methodRef.isNative()*/)
 		{
 			block = new TACBlock(tree = new TACTree(1));
-			if (implicitCreate = methodRef.isCreate())
+			if (implicitCreate = methodSignature.isCreate())
 			{
-				Type type = methodRef.getOuterType();
+				Type type = methodSignature.getOuter();
 				if (type.hasOuter())
 					new TACStore(tree,
 							new TACFieldRef(tree, new TACVariableRef(tree,
@@ -2154,28 +2166,28 @@ public class TACBuilder implements ShadowParserVisitor
 			{
 				method.addParameters();
 				TACFieldRef field = new TACFieldRef(tree, new TACVariableRef(
-						tree, method.getThis()), methodRef.getName());
-				if (methodRef.isGet())
-					new TACReturn(tree, methodRef.getReturnTypes(),
+						tree, method.getThis()), methodSignature.getSymbol());
+				if (methodSignature.isGet())
+					new TACReturn(tree, methodSignature.getFullReturnTypes(),
 							new TACLoad(tree, field));
-				else if (methodRef.isSet())
+				else if (methodSignature.isSet())
 				{
 					TACVariable value = null;
 					for (TACVariable parameter : method.getParameters())
 						value = parameter;
 					new TACStore(tree, field, new TACVariableRef(tree, value));
-					new TACReturn(tree, methodRef.getReturnTypes());
+					new TACReturn(tree, methodSignature.getFullReturnTypes());
 				}
 				else
-					new TACReturn(tree, methodRef.getReturnTypes());
+					new TACReturn(tree, methodSignature.getFullReturnTypes());
 			}	
-			else if (methodRef.isNative())
+			else if (methodSignature.isNative())
 				walk(methodSignature.getNode().jjtGetChild(0).jjtGetChild(0));
-			else if (methodRef.isWrapper())
+			else if (methodSignature.isWrapper())
 			{
-				TACMethodRef wrapped = methodRef.getWrapped();
-				SequenceType fromTypes = methodRef.getParameterTypes(),
-						toTypes = wrapped.getParameterTypes();
+				MethodSignature wrapped = methodSignature.getWrapped();
+				SequenceType fromTypes = methodSignature.getFullParameterTypes(),
+						toTypes = wrapped.getFullParameterTypes();
 				Iterator<TACVariable> fromArguments = method.addParameters(true).
 						getParameters().iterator();
 				List<TACOperand> toArguments = new ArrayList<TACOperand>(
@@ -2188,7 +2200,7 @@ public class TACBuilder implements ShadowParserVisitor
 						argument = new TACCast(tree, toTypes.get(i), argument);
 					toArguments.add(argument);
 				}
-				new TACReturn(tree, methodRef.getReturnTypes(),
+				new TACReturn(tree, methodSignature.getFullReturnTypes(),
 						new TACCall(tree, block, new TACMethodRef(tree,
 									wrapped), toArguments));
 			}
@@ -2196,7 +2208,7 @@ public class TACBuilder implements ShadowParserVisitor
 				walk(methodSignature.getNode());
 			if (implicitCreate)
 			{
-				ClassType thisType = (ClassType)methodRef.getOuterType(),
+				ClassType thisType = (ClassType)methodSignature.getOuter(),
 						superType = thisType.getExtendType();
 				if (superType != null)
 					new TACCall(method, block, new TACMethodRef(method,
@@ -2402,7 +2414,7 @@ public class TACBuilder implements ShadowParserVisitor
 	private TACOperand visitArrayAllocation(ArrayType type,
 			List<TACOperand> sizes)
 	{
-		TACOperand baseClass = new TACClass(tree, type.getBaseType(), method).getClassData();
+		TACOperand baseClass = new TACClass(tree, type.getBaseType()).getClassData();
 		TACNewArray alloc = new TACNewArray(tree, type, baseClass,
 				sizes.subList(0, type.getDimensions()));
 		sizes = sizes.subList(type.getDimensions(), sizes.size());

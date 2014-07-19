@@ -14,7 +14,7 @@ public class TypeParameter extends Type
 {
 	private Set<Type> bounds = new HashSet<Type>();	
 	private boolean toStringRecursion = false; //keeps type parameters that have bounds containing themselves from infinitely recursing
-	private TypeParameter recursiveParameterCheck = null; //keeps infinite type parameters checking from happening
+	//private TypeParameter recursiveParameterCheck = null; //keeps infinite type parameters checking from happening
 
 	public TypeParameter(String typeName, Type outer)
 	{

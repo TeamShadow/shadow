@@ -7,10 +7,7 @@ import shadow.typecheck.type.ExceptionType;
 public class TACCatch extends TACOperand
 {
 	private ExceptionType type;
-	public TACCatch(ExceptionType catchType)
-	{
-		this(null, catchType);
-	}
+
 	public TACCatch(TACNode node, ExceptionType catchType)
 	{
 		super(node);

@@ -120,7 +120,7 @@ public class ArrayType extends ClassType
 	public boolean equals(Type type)
 	{		
 		if( type == Type.NULL )
-			return true;
+			return false;
 		
 		if( type instanceof ArrayType )
 		{
@@ -148,7 +148,7 @@ public class ArrayType extends ClassType
 		return arrayType.getMatchingMethod(methodName, arguments, typeArguments, errors);		
 	}
 	
-	
+	@Override
 	public boolean isSubtype(Type t)
 	{		
 		if( t == UNKNOWN )

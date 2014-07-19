@@ -4,18 +4,31 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
-public class TACPlaceholder extends TACOperand
+public class TACSequenceElement extends TACOperand
 {
 	private ModifiedType type;
-	public TACPlaceholder(ModifiedType nodeType)
+	private TACOperand sequence;
+	private int index;
+		
+	public TACSequenceElement(TACOperand sequence, int index)
 	{
-		this(null, nodeType);
+		this(null, sequence, index);
 	}
-	public TACPlaceholder(TACNode node, ModifiedType nodeType)
+	public TACSequenceElement(TACNode node, TACOperand sequence, int index)
 	{
-		type = nodeType;
+		super(node);
+		SequenceType sequenceType = (SequenceType) sequence.getType();
+		type = sequenceType.get(index);
+		this.sequence = sequence;
+		this.index = index;
+	}
+	
+	public int getIndex()
+	{
+		return index;
 	}
 
 	@Override
@@ -37,12 +50,15 @@ public class TACPlaceholder extends TACOperand
 	@Override
 	public int getNumOperands()
 	{
-		return 0;
+		return 1;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		throw new IndexOutOfBoundsException();
+		if( num == 0 )
+			return sequence;
+		
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

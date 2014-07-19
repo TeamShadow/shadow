@@ -24,8 +24,7 @@ public class TACClass extends TACOperand
 	private TACOperand methodTable;
 	
 	public class TACClassData extends TACOperand
-	{
-		
+	{		
 		public TACClassData(TACNode node)
 		{
 			super(node);
@@ -97,19 +96,15 @@ public class TACClass extends TACOperand
 		{
 			visitor.visit(this);			
 		}
-	}
-		
-	public TACClass(Type classType, TACMethod method)
-	{
-		this(null, classType, method);
-	}
-	
-	public TACClass(TACNode node, Type classType, TACMethod method)
+	}		
+
+	public TACClass(TACNode node, Type classType)
 	{
 		super(node);
-		type = classType;		
+		type = classType;
+		TACMethod method = getBuilder().getMethod();
 		if (type instanceof TypeParameter)
-		{			
+		{	
 			TACVariable var = method.getParameter(classType.getTypeName());
 			if (var != null)
 			{
@@ -137,14 +132,12 @@ public class TACClass extends TACOperand
 				
 				TACVariableRef _this = new TACVariableRef(this, method.getThis());				
 				TACLoad classValue = new TACLoad(this, new TACFieldRef(this, _this, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class")); 
-				TACOperand genericClass = new TACCast(this, new SimpleModifiedType(Type.GENERIC_CLASS), classValue );
-				TACOperand generics = new TACFieldRef(this, genericClass, "parameters" );
-				TACOperand parameter = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index)) );
+				TACOperand genericClass = new TACCast(this, new SimpleModifiedType(Type.GENERIC_CLASS), classValue);
+				TACOperand generics = new TACFieldRef(this, genericClass, "parameters");
+				TACOperand parameter = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index)));
 				
 				methodTable = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index + 1)) );
 				classData = new TACCast(this, new SimpleModifiedType(Type.CLASS), parameter );
-						
-				//check( parameter, new SimpleModifiedType(Type.CLASS));			
 			}
 		}		
 		else
@@ -159,7 +152,7 @@ public class TACClass extends TACOperand
 			}
 			else //type is partially instantiated
 			{	
-				Type outer = method.getMethod().getOuterType();
+				Type outer = method.getMethod().getOuter();
 				//we're currently inside this type and can get it from class values
 				if( type.encloses(outer) )
 				{
@@ -182,7 +175,7 @@ public class TACClass extends TACOperand
 					
 					for( ModifiedType argument : type.getTypeParametersIncludingOuterClasses() )
 					{					
-						arguments[i] = new TACClass(this, argument.getType(), method).getClassData();					
+						arguments[i] = new TACClass(this, argument.getType()).getClassData();					
 						i++;
 					}
 					

@@ -8,10 +8,7 @@ import shadow.typecheck.type.Type;
 public class TACLoad extends TACOperand
 {
 	private TACReference reference;
-	public TACLoad(TACReference ref)
-	{
-		reference = ref;
-	}
+
 	public TACLoad(TACNode node, TACReference ref)
 	{
 		super(node);

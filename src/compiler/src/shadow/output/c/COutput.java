@@ -8,12 +8,12 @@ import shadow.tac.TACModule;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLoad;
-import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
@@ -167,9 +167,9 @@ public class COutput extends AbstractOutput
 	{
 		return methodToString(method.getMethod());
 	}
-	private static String methodToString(TACMethodRef method)
+	private static String methodToString(MethodSignature method)
 	{
-		return methodToString(method.getName(), method.getType());
+		return methodToString(method.getSymbol(), method.getMethodType());
 	}
 	private static String methodToString(String name, MethodType type)
 	{

@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACBuilder;
 import shadow.tac.TACVisitor;
 
 /**
@@ -13,6 +14,19 @@ import shadow.tac.TACVisitor;
 public abstract class TACNode
 {
 	private TACNode prev, next;
+	
+	private static TACBuilder builder;
+	
+	public static TACBuilder getBuilder()
+	{
+		return builder;
+	}
+	
+	public static void setBuilder(TACBuilder builder)
+	{
+		TACNode.builder = builder;
+	}
+	
 	protected TACNode()
 	{
 		this(null);

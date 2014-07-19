@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
@@ -9,25 +10,14 @@ public class TACBranch extends TACSimpleNode
 {
 	private TACLabelRef trueLabel, falseLabel;
 	private TACOperand operand;
-	public TACBranch(TACDestination dest)
-	{
-		this(null, dest);
-	}
+
 	public TACBranch(TACNode node, TACDestination dest)
 	{
 		this(node, (TACOperand)dest, null, null);
 	}
-	public TACBranch(TACLabelRef labelRef)
-	{
-		this(null, labelRef);
-	}
 	public TACBranch(TACNode node, TACLabelRef labelRef)
 	{
 		this(node, null, labelRef, labelRef);
-	}
-	public TACBranch(TACOperand cond, TACLabelRef trueRef, TACLabelRef falseRef)
-	{
-		this(null, cond, trueRef, falseRef);
 	}
 	public TACBranch(TACNode node, TACOperand cond, TACLabelRef trueRef,
 			TACLabelRef falseRef)

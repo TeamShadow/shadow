@@ -16,6 +16,7 @@ import shadow.tac.nodes.TACConstructGeneric;
 import shadow.tac.nodes.TACDestinationPhiRef;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericClass;
+import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
@@ -29,7 +30,7 @@ import shadow.tac.nodes.TACNodeRef;
 import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.tac.nodes.TACPlaceholder;
+import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
@@ -73,7 +74,7 @@ public interface TACVisitor
 	public abstract void visit(TACNot node) throws ShadowException;
 	public abstract void visit(TACPhi node) throws ShadowException;
 	public abstract void visit(TACPhiRef node) throws ShadowException;
-	public abstract void visit(TACPlaceholder node) throws ShadowException;	
+	public abstract void visit(TACSequenceElement node) throws ShadowException;	
 	public abstract void visit(TACReference node) throws ShadowException;
 	public abstract void visit(TACResume node) throws ShadowException;
 	public abstract void visit(TACReturn node) throws ShadowException;
@@ -88,4 +89,5 @@ public interface TACVisitor
 	public abstract void visit(TACUnwind node) throws ShadowException;
 	public abstract void visit(TACVariableRef node) throws ShadowException;
 	public abstract void visit(TACConstructGeneric node) throws ShadowException;
+	public abstract void visit(TACConversion node) throws ShadowException;
 }

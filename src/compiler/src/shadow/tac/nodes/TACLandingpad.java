@@ -7,10 +7,7 @@ import shadow.typecheck.type.Type;
 public class TACLandingpad extends TACOperand
 {
 	private TACBlock block;
-	public TACLandingpad(TACBlock blockRef)
-	{
-		this(null, blockRef);
-	}
+
 	public TACLandingpad(TACNode node, TACBlock blockRef)
 	{
 		super(node);
