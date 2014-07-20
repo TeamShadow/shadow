@@ -11,12 +11,8 @@ public class TACSequenceElement extends TACOperand
 {
 	private ModifiedType type;
 	private TACOperand sequence;
-	private int index;
-		
-	public TACSequenceElement(TACOperand sequence, int index)
-	{
-		this(null, sequence, index);
-	}
+	private int index;		
+
 	public TACSequenceElement(TACNode node, TACOperand sequence, int index)
 	{
 		super(node);

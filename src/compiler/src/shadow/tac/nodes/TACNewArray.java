@@ -25,21 +25,13 @@ public class TACNewArray extends TACOperand
 	private TACOperand base;
 	private List<TACOperand> dimensions;
 	private TACOperand total;
-	public TACNewArray(ArrayType arrayType, TACOperand baseClass,
-			TACOperand... dims)
-	{
-		this(null, arrayType, baseClass, Arrays.asList(dims));
-	}
+
 	public TACNewArray(TACNode node, ArrayType arrayType, TACOperand baseClass,
 			TACOperand... dims)
 	{
 		this(node, arrayType, baseClass, Arrays.asList(dims));
 	}
-	public TACNewArray(ArrayType arrayType, TACOperand baseClass,
-			Collection<TACOperand> dims)
-	{
-		this(null, arrayType, baseClass, dims);
-	}
+
 	public TACNewArray(TACNode node, ArrayType arrayType, TACOperand baseClass,
 			Collection<TACOperand> dims)
 	{

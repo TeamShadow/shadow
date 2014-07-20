@@ -14,18 +14,12 @@ import shadow.typecheck.type.SimpleModifiedType;
 public class TACReturn extends TACSimpleNode
 {
 	private TACOperand returnValue;
-	public TACReturn(SequenceType expected)
-	{
-		this(null, expected, null);
-	}
+
 	public TACReturn(TACNode node, SequenceType expected)
 	{
 		this(node, expected, null);
 	}
-	public TACReturn(SequenceType expected, TACOperand op)
-	{
-		this(null, expected, op);
-	}
+
 	public TACReturn(TACNode node, SequenceType expected, TACOperand op)
 	{
 		super(node);

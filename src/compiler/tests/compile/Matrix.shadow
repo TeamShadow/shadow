@@ -17,7 +17,7 @@ CanIndex<int, double[]>
 		values = double:create[rows][columns];
 	}
 
-	public index(int row) => (double[])
+	public immutable index(int row) => (double[])
 	{		
 		return values[row];		
 	}

@@ -10,10 +10,7 @@ import shadow.typecheck.type.Type;
 public class TACNodeRef extends TACOperand
 {
 	private TACOperand reference;
-	public TACNodeRef(TACOperand op)
-	{
-		this(null, op);
-	}
+
 	public TACNodeRef(TACNode node, TACOperand op)
 	{
 		super(node);

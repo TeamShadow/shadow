@@ -7,10 +7,7 @@ import shadow.typecheck.type.Type;
 public class TACNot extends TACOperand
 {
 	private TACOperand op;
-	public TACNot(TACOperand operand)
-	{
-		this(null, operand);
-	}
+
 	public TACNot(TACNode node, TACOperand operand)
 	{
 		super(node);

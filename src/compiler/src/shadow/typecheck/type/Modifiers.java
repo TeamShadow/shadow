@@ -105,6 +105,8 @@ public final class Modifiers
 			sb.append("private ");
 		if( isAbstract() )
 			sb.append("abstract ");
+		if( this.isTemporaryReadonly() )
+			sb.append("temporary readonly ");
 		if( isReadonly() )
 			sb.append("readonly ");
 		if( isNative() )

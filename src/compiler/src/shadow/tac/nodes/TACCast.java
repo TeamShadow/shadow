@@ -86,29 +86,6 @@ public class TACCast extends TACOperand
 			operand = op;
 		}		
 	}
-	
-	
-	private void sequenceCast(ModifiedType newType, TACOperand op)
-	{
-		//if destination is sequence, source must be as well (even if it only has a single value)
-		if( newType.getType() instanceof SequenceType )
-		{
-			SequenceType destType = (SequenceType) newType.getType();			
-			//this is wrong, extract values!
-			List<TACOperand> operands = new ArrayList<TACOperand>(op.getNumOperands());
-			for( int i = 0; i < op.getNumOperands(); i++ )
-				operands.add( check(op.getOperand(i), destType.get(i)));
-			
-			operand = new TACSequence(this, operands);			
-		}
-		//source is a sequence, but destination is not
-		//get first thing from the source
-		else
-		{
-			SequenceType srcType = (SequenceType) op.getType();			 
-			operand = check( op.getOperand(0), srcType.get(0));
-		}
-	}
 
 	public TACOperand getOperand()
 	{

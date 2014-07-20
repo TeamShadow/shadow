@@ -7,10 +7,7 @@ import shadow.typecheck.type.SingletonType;
 public class TACSingletonRef extends TACReference
 {
 	private SingletonType type;
-	public TACSingletonRef(SingletonType instanceType)
-	{
-		this(null, instanceType);
-	}
+
 	public TACSingletonRef(TACNode node, SingletonType instanceType)
 	{
 		super(node);

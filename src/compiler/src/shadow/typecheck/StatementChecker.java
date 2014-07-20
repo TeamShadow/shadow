@@ -2303,15 +2303,10 @@ public class StatementChecker extends BaseChecker
 					arguments.add(child);
 					
 					MethodSignature signature = setMethodType( node, prefixType, "index", arguments);
-					
-					if( signature != null && prefixNode.getModifiers().isImmutable() && signature.getModifiers().isMutable()  )
+										
+					if( signature != null && (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
 						signature = null;
-					
-					if( signature != null && (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly()) && signature.getModifiers().isMutable() )
-						signature = null;
-					
-					
-							
+												
 					SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
 					node.setType(subscriptType);
 					

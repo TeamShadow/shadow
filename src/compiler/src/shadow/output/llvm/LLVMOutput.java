@@ -1801,6 +1801,8 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("unreachable");
 	}
 
+	
+	/*
 	@Override
 	public void visit(TACTypeId node) throws ShadowException
 	{
@@ -1815,6 +1817,7 @@ public class LLVMOutput extends AbstractOutput
 					"@llvm.eh.typeid.for(i8* " + temp(1) + ") nounwind");
 		}
 	}
+	*/
 
 	@Override
 	public void visit(TACLandingpad node) throws ShadowException

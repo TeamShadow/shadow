@@ -20,15 +20,7 @@ public class TACMethodRef extends TACOperand
 	private String name;
 	private TACMethodRef wrapped;
 	private boolean isSuper = false;
-	public TACMethodRef(MethodSignature sig)
-	{
-		this(null, null, sig.getMethodType(), sig.getSymbol(),
-				sig.getWrapped());
-	}
-	public TACMethodRef(MethodType methodType, String methodName)
-	{
-		this(null, null, methodType, methodName, (MethodSignature)null);
-	}
+
 	public TACMethodRef(TACNode node, MethodSignature sig)
 	{
 		this(node, null, sig.getMethodType(), sig.getSymbol(),

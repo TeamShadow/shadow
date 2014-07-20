@@ -14,21 +14,7 @@ import shadow.typecheck.type.SequenceType;
 public class TACSequence extends TACOperand
 {
 	private List<TACOperand> sequence;
-	public TACSequence()
-	{
-		super();
-		sequence = Collections.emptyList();
-	}
-	public TACSequence(TACNode node)
-	{
-		super(node);
-		sequence = Collections.emptyList();
-	}
-	public TACSequence(List<TACOperand> seq)
-	{
-		super();
-		sequence = new ArrayList<TACOperand>(seq);
-	}
+
 	public TACSequence(TACNode node, List<TACOperand> seq)
 	{
 		super(node);

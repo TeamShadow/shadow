@@ -17,11 +17,7 @@ public class TACNewObject extends TACOperand
 	private ClassType type;	
 	private TACOperand classData;
 	private TACOperand methodTable;	
-	
-	public TACNewObject(ClassType type)
-	{
-		this(null, type);
-	}
+
 	public TACNewObject(TACNode node, ClassType type)
 	{
 		super(node);		

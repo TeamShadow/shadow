@@ -13,10 +13,7 @@ import shadow.typecheck.type.Type;
 public class TACSame extends TACOperand
 {
 	private TACOperand first, second;
-	public TACSame(TACOperand firstOperand, TACOperand secondOperand)
-	{
-		this(null, firstOperand, secondOperand);
-	}
+
 	public TACSame(TACNode node, TACOperand firstOperand,
 			TACOperand secondOperand)
 	{

@@ -7,10 +7,7 @@ import shadow.typecheck.type.Type;
 public class TACUnwind extends TACOperand
 {
 	private TACBlock block;
-	public TACUnwind(TACBlock blockRef)
-	{
-		this(null, blockRef);
-	}
+
 	public TACUnwind(TACNode node, TACBlock blockRef)
 	{
 		super(node);

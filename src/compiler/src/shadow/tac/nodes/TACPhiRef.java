@@ -15,10 +15,7 @@ public class TACPhiRef extends TACOperand
 	private TACPhi phi;
 	private List<TACLabelRef> labels;
 	private Map<TACLabelRef, TACOperand> values;
-	public TACPhiRef()
-	{
-		this(null);
-	}
+
 	public TACPhiRef(TACNode node)
 	{
 		super(node);

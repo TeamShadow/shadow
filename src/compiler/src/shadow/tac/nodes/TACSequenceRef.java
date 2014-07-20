@@ -12,10 +12,7 @@ public class TACSequenceRef extends TACReference
 {
 	private SequenceType type;
 	private List<TACReference> sequence;
-	public TACSequenceRef(TACSequence seq)
-	{
-		this(null, seq);
-	}
+
 	public TACSequenceRef(TACNode node, TACSequence seq)
 	{
 		super(node);

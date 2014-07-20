@@ -5,10 +5,6 @@ import shadow.tac.TACVisitor;
 
 public class TACResume extends TACSimpleNode
 {
-	public TACResume()
-	{
-		this(null);
-	}
 	public TACResume(TACNode node)
 	{
 		super(node);

@@ -19,10 +19,6 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 		this.data = data;
 	}
 
-	protected TACOperand()
-	{
-		super();
-	}
 	protected TACOperand(TACNode node)
 	{
 		super(node);

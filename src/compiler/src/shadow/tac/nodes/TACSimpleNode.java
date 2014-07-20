@@ -13,10 +13,6 @@ import shadow.typecheck.type.TypeParameter;
 public abstract class TACSimpleNode extends TACNode
 		implements Iterable<TACOperand>
 {
-	protected TACSimpleNode()
-	{
-		this(null);
-	}
 	protected TACSimpleNode(TACNode node)
 	{
 		super(node);

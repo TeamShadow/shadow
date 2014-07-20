@@ -7,18 +7,7 @@ import shadow.typecheck.type.Type;
 public class TACTypeId extends TACOperand
 {
 	private TACOperand operand;
-	public TACTypeId()
-	{
-		this(null, null);
-	}
-	public TACTypeId(TACNode node)
-	{
-		this(node, null);
-	}
-	public TACTypeId(TACOperand op)
-	{
-		this(null, op);
-	}
+	
 	public TACTypeId(TACNode node, TACOperand op)
 	{
 		super(node);

@@ -15,10 +15,7 @@ public class TACThrow extends TACSimpleNode
 {
 	private TACBlock block;
 	private TACOperand exception;
-	public TACThrow(TACBlock blockRef, TACOperand op)
-	{
-		this(null, blockRef, op);
-	}
+
 	public TACThrow(TACNode node, TACBlock blockRef, TACOperand op)
 	{
 		super(node);
