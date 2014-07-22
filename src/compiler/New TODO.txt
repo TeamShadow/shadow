@@ -40,12 +40,6 @@ x (int) => (int, int)
 
 }
 
-
-Add operator overloading for Number (+, -, *, /, % )
-CanIndex ([], [])
-CanIterate -> foreach
-
-
 Should class names always be separated with colons?
 How do you instance an inner singleton?
 

@@ -1,0 +1,10 @@
+/bin
+*.meta
+*.ll
+!*.native.ll
+*.exe
+!Linux.ll
+!Main.ll
+!NoArguments.ll
+!Unwind*.ll
+!Windows.ll
