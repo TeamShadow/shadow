@@ -10,9 +10,6 @@ singleton shadow.io@Console
 	public readLine() => ( String, boolean eof )
 	{
 		var string = MutableString:create();
-//		code c;
-//		boolean eof;
-//		( c, eof ) = readCode();
 		( code c, boolean eof ) = readCode();
 		if ( wasLF and c == '\n' )
 			( c, eof ) = readCode();
@@ -24,6 +21,22 @@ singleton shadow.io@Console
 		wasLF = ( c == '\r' );
 		return ( #string, eof );
 	}
+	
+	public readString() => ( String, boolean eof )
+	{
+		var string = MutableString:create();
+		( code c, boolean eof ) = readCode();
+		while( !eof and (c == '\n' or c == '\r' or c == ' ' or c == '\t'))
+			( c, eof ) = readCode();
+		while( !eof and c != '\n' and c != '\r' and c != ' ' and c != '\t')
+		{
+			string.append(c);
+			( c, eof ) = readCode();
+		}
+		wasLF = ( c == '\r' );
+		return ( #string, eof );
+	}
+	
 	public readCode() => ( code, boolean eof )
 	{
 		int value;

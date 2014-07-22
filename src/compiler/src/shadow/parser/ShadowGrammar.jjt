@@ -22,7 +22,9 @@ import org.apache.log4j.Logger;
 
 /**
  * Grammar to parse Shadow
- * @author William R. Speirs, Barry Wittman, and Jacob Young
+ * @author William R. Speirs
+ * @author Barry Wittman
+ * @author Jacob Young
  */
 public class ShadowParser
 {
@@ -1629,7 +1631,7 @@ void SwitchStatement():
 { debugPrint("SWITCH STATEMENT"); }
 {
   "switch" "(" ConditionalExpression() ")" "{"
-    ( SwitchLabel() ( Block() ) )*
+    ( SwitchLabel() ( Block() ) )+
   "}"
 }
 

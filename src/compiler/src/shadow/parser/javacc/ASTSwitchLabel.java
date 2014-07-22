@@ -2,9 +2,45 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import shadow.tac.nodes.TACLabelRef;
+import shadow.tac.nodes.TACOperand;
+
 public
 @SuppressWarnings("all")
 class ASTSwitchLabel extends SimpleNode {
+	
+	private List<TACOperand> values = new ArrayList<TACOperand>();
+	private TACLabelRef label;
+	
+	public TACLabelRef getLabel()
+	{
+		return label;
+	}
+	
+	public void setLabel(TACLabelRef label)
+	{
+		this.label = label;
+	}
+	
+	
+	public void addValue(TACOperand value)
+	{
+		values.add(value);
+	}
+	
+	public List<TACOperand> getValues()
+	{
+		return values;
+	}
+	
+	public boolean isDefault()
+	{
+		return jjtGetNumChildren() == 0;
+	}
+	
   public ASTSwitchLabel(int id) {
     super(id);
   }

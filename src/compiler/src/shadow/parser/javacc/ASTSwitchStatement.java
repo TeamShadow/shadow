@@ -5,6 +5,19 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTSwitchStatement extends SimpleNode {
+
+	private boolean hasDefault = false;
+	
+	public void setDefault(boolean value)
+	{
+		hasDefault = value;
+	}
+	
+	public boolean hasDefault()
+	{
+		return hasDefault;
+	}
+	
   public ASTSwitchStatement(int id) {
     super(id);
   }

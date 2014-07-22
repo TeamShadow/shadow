@@ -1,0 +1,66 @@
+import shadow.io@Console;
+
+class shadow.test@SwitchTest
+{
+	public main( String[] args ) => ()
+	{
+		Console out = Console:instance;		
+		
+		for( int i = 1; i <= 10; i += 1 )
+		{
+			switch( i )
+			{
+				case( 3 )
+				{
+					out.printLine("Three!");					
+				}
+				case( 4s )
+				{
+					out.printLine("Four!");			
+				}
+				case( 5 )
+				{
+					out.printLine("Five");				
+				}
+				case( 7, 8, 9 )
+				{
+					out.printLine("Others!");		
+				}
+				default
+				{
+					out.printLine("Default!");
+				}
+				case( 10 )
+				{
+					out.printLine("Ten!");
+				} 
+			}
+		}
+		
+		
+		boolean done = false;
+		
+		while( !done )
+		{
+			out.print("Enter the magic word: ");
+			(String s, ) = out.readLine();
+			
+			switch( s )
+			{
+				case( "bedula", "fez", "habib" )
+				{
+					out.printLine("Welcome, " # s);					
+				}
+				case( "sesame" )
+				{
+					out.printLine("That's the magic word!");
+					done = true;
+				}
+				default
+				{
+					out.printLine("What are you talking about?");					
+				}
+			}
+		}
+	}
+}

@@ -144,29 +144,62 @@ public class StatementChecker extends BaseChecker
 	}
 	
 	public Object visit(ASTSwitchStatement node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		Type type = node.jjtGetChild(0).getType();
-		if(!type.isIntegral() && !type.isString() && !(type instanceof EnumType))
-			addError(Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in switch statement, only integral, String, and enum types allowed");
-		for(int i=1;i<node.jjtGetNumChildren();++i) {
-			Node childNode = node.jjtGetChild(i);
-			if(childNode.getClass() == ASTSwitchLabel.class) {
-				if(childNode.getType() != null){ //default label should have null type 
-					if(!childNode.getType().isSubtype(type)) {
-						addError(childNode,Error.MISMATCHED_TYPE,"Label type " + childNode.getType() + " does not match switch type " + type);
+		if(secondVisit)
+		{			
+			int defaultCounter = 0;
+			Type type = node.jjtGetChild(0).getType();
+			if(!type.isIntegral() && !type.isString() && !(type instanceof EnumType))
+				addError(Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in switch statement, only integral, String, and enum types allowed");
+			for(int i=1;i<node.jjtGetNumChildren();++i) {
+				Node childNode = node.jjtGetChild(i);
+				if(childNode.getClass() == ASTSwitchLabel.class) {
+					if(childNode.getType() != null){ //default label should have null type 
+						if(!childNode.getType().isSubtype(type)) {
+							addError(childNode,Error.INVALID_LABEL,"Label type " + childNode.getType() + " does not match switch type " + type);
+						}
 					}
-				}
+					else
+						defaultCounter++;
+				}	
 			}
+			
+			if( defaultCounter == 1 )
+				node.setDefault(true);
+			else if( defaultCounter > 1 )
+				addError(node, Error.INVALID_LABEL, "Switch cannot have multiple default labels");			
 		}
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTSwitchLabel node, Boolean secondVisit) throws ShadowException {
-		pushUpType(node, secondVisit);
+	public Object visit(ASTSwitchLabel node, Boolean secondVisit) throws ShadowException
+	{	
+		if( secondVisit && node.jjtGetNumChildren() > 0)
+		{	
+			Type result = null; 
 		
-		if( secondVisit && node.jjtGetNumChildren() > 0 && !node.getModifiers().isConstant() )
-			addError(Error.INVALID_TYPE, "Value supplied as label must be constant");			
+			for( int i = 0; i < node.jjtGetNumChildren(); i++  )
+			{
+				Node child = node.jjtGetChild(0);
+				Type type = child.getType();
+	
+				if( result == null )
+					result = type;				
+				else if( result.isSubtype(type) )
+					result = type;
+				else if( !type.isSubtype(result) ) //neither is subtype of other, panic!
+				{
+					addError(Error.MISMATCHED_TYPE, "Supplied type " + type + " does not match type " + result + " in switch label");
+					result = Type.UNKNOWN;
+					break;
+				}
+				
+				if( !child.getModifiers().isConstant() )
+					addError(Error.INVALID_TYPE, "Value supplied as label must be constant");
+			}
+			
+			node.setType(result);
+			node.addModifier(Modifiers.CONSTANT);
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
@@ -3193,15 +3226,11 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN; 
 	}
 	
-	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException { 
-		//for( int i = 0; i < node.jjtGetNumChildren(); ++i )
-		//	declarationType.addReferencedType(node.jjtGetChild(i).getType());
+	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException {
 		return WalkType.NO_CHILDREN;
 	}
 	
 	public Object visit(ASTImplementsList node, Boolean secondVisit) throws ShadowException {
-		//for( int i = 0; i < node.jjtGetNumChildren(); ++i )
-		//	declarationType.addReferencedType(node.jjtGetChild(i).getType());
 		return WalkType.NO_CHILDREN;
 	}
 	

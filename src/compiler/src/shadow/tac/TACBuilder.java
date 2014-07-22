@@ -52,6 +52,7 @@ import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InterfaceType;
@@ -1590,14 +1591,101 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTSwitchStatement node, Boolean secondVisit)
 			throws ShadowException
 	{
-		return PRE_CHILDREN;
+		if( secondVisit )
+		{
+			TACOperand value = tree.appendChild(0);
+			Type type = value.getType();
+			TACLabelRef defaultLabel = null;
+			TACLabelRef doneLabel = new TACLabelRef(tree);
+			if( node.hasDefault() )
+				defaultLabel = new TACLabelRef(tree);
+			
+			if( !( value.getType() instanceof EnumType ) )
+			{	
+				//first go through and do the conditions
+				for( int i = 1; i < node.jjtGetNumChildren(); i += 2 )
+				{	
+					ASTSwitchLabel label = (ASTSwitchLabel) node.jjtGetChild(i);
+										
+					if( label.isDefault() )											
+						label.setLabel(defaultLabel);
+					else
+					{	
+						tree.appendChild(i); //append label conditions
+						
+						TACLabelRef matchingCase = new TACLabelRef(tree);
+						label.setLabel(matchingCase);
+						for( int j = 0; j < label.getValues().size(); j++ )
+						{
+							TACOperand operand = label.getValues().get(j);
+							TACOperand comparison;
+							MethodSignature signature = type.getMatchingMethod("equal", new SequenceType(operand));
+							
+							if( type.isPrimitive() && signature.getModifiers().isNative() )
+								comparison = new TACBinary(tree, value, signature, '=', operand, false );
+							else								
+								comparison = new TACCall(tree, block, new TACMethodRef(tree, value, signature), value, operand);
+														
+							boolean moreConditions = false;
+							if( j < label.getValues().size() - 1 ) //more conditions in this label
+								moreConditions = true;
+							else if( i < node.jjtGetNumChildren() - 4 ) //at least two more labels (of which only one can be default)
+								moreConditions = true;
+							else if( i < node.jjtGetNumChildren() - 2 && !((ASTSwitchLabel)node.jjtGetChild(i + 2)).isDefault() ) //one more label which isn't default
+								moreConditions = true;
+							else
+								moreConditions = false;
+								
+							
+							TACLabelRef next;
+							
+							if( moreConditions )
+								next = new TACLabelRef(tree);
+							else if( node.hasDefault() )
+								next = defaultLabel;
+							else
+								next = doneLabel;
+							
+							new TACBranch(tree, comparison, matchingCase, next);
+							if( moreConditions )
+								next.new TACLabel(tree);							
+						}
+					}
+				}								
+				
+				//then go through and add the executable blocks of code to jump to
+				for( int i = 1; i < node.jjtGetNumChildren(); i += 2 )
+				{	
+					ASTSwitchLabel label = (ASTSwitchLabel) node.jjtGetChild(i);
+					label.getLabel().new TACLabel(tree); //mark start of code
+					
+					tree.appendChild(i + 1); //add block of code (the child after each label)				
+					
+					new TACBranch(tree, doneLabel);	
+				}
+				
+				doneLabel.new TACLabel(tree);
+			}
+			else
+				throw new UnsupportedOperationException();		
+		}
+		
+		
+		return POST_CHILDREN;
 	}
 
 	@Override
 	public Object visit(ASTSwitchLabel node, Boolean secondVisit)
 			throws ShadowException
 	{
-		return PRE_CHILDREN;
+		
+		if( secondVisit )
+		{		
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ )		
+				node.addValue(tree.appendChild(i));
+		}
+		
+		return POST_CHILDREN;
 	}
 
 	@Override
