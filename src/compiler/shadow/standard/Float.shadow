@@ -80,6 +80,21 @@ implements
 	{
 		return cast<double>(this) == other;
 	}
+	
+	//other math operations
+	public native squareRoot() => (float);
+	public native power(int value) => (float);
+	public native power(float value) => (float);
+	public native sin() => (float);
+	public native cos() => (float);
+	public native logBaseE() => (float);
+	public native logBase2() => (float);
+	public native logBase10() => (float);
+	public native multiplyAdd(float multiplicand, float addend) => (float);
+	public native floor() => (float);
+	public native ceiling() => (float);
+	public native round() => (float);	
+	
 
 	// implement CanHash
 	public get hash() => (uint)
@@ -110,6 +125,18 @@ implements
 	{
 		if (isNaN())
 			return NaN->raw;
-		return this->raw;
+		return this->raw;	
 	}
+	
+	public  toString() => (String)
+	{
+		return toDouble().toString(1, 16, 7, 3);
+	}	
+	
+	public  toString(int minPrecision, int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
+	{
+		return toDouble().toString(minPrecision, maxPrecision, integerThreshold, fractionalThreshold);
+	}
+	
+	
 }

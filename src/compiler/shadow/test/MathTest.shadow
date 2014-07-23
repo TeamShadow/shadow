@@ -1,0 +1,80 @@
+import shadow.io@Console;
+
+class shadow.test@MathTest
+{
+	public main( String[] args ) => ()
+	{
+		Console out = Console:instance;
+		double a = 5.7;
+		
+		out.printLine("Square root of " # a # " = " # a.squareRoot());
+		out.printLine( a # "^3 = " # a.power(3));
+		out.printLine( a # "^3.6 = " # a.power(3.6));
+		out.printLine( "sin(" # a # ") = " # a.sin());
+		out.printLine( "cos(" # a # ") = " # a.cos());
+		out.printLine( "ln(" # a # ") = " # a.logBaseE());
+		out.printLine( "log10(" # a # ") = " # a.logBase10());
+		out.printLine( "log2(" # a # ") = " # a.logBase2());
+		out.printLine(  a # "* 4.1 + 6.2 = " # a.multiplyAdd(4.1, 6.2));
+		out.printLine( "floor(" # a # ") = " # a.floor());
+		out.printLine( "ceil(" # a # ") = " # a.ceiling());
+		out.printLine( a # " rounds to " # a.round());
+		
+		float b = -6.7f;
+		
+		out.printLine("Square root of " # b # " = " # b.squareRoot());
+		out.printLine( b # "^3 = " # b.power(3));
+		out.printLine( b # "^3.6 = " # b.power(3.6f));
+		out.printLine( "sin(" # b # ") = " # b.sin());
+		out.printLine( "cos(" # b # ") = " # b.cos());
+		out.printLine( "ln(" # b # ") = " # b.logBaseE());
+		out.printLine( "log10(" # b # ") = " # b.logBase10());
+		out.printLine( "log2(" # b # ") = " # b.logBase2());
+		out.printLine(  b # "* 4.1 + 6.2 = " # b.multiplyAdd(4.1f, 6.2f));
+		out.printLine( "floor(" # b # ") = " # b.floor());
+		out.printLine( "ceil(" # b # ") = " # b.ceiling());
+		out.printLine( b # " rounds to " # b.round());
+		
+		int c = 10;
+		
+		out.printLine("Square root of " # c # " = " # c.squareRoot());
+		out.printLine( c # "^3 = " # c.power(3));
+		out.printLine( c # "^3.6 = " # c.power(3.6));
+		out.printLine( "sin(" # c # ") = " # c.sin());
+		out.printLine( "cos(" # c # ") = " # c.cos());
+		out.printLine( "ln(" # c # ") = " # c.logBaseE());
+		out.printLine( "log10(" # c # ") = " # c.logBase10());
+		out.printLine( "log2(" # c # ") = " # c.logBase2());
+		out.printLine( "endian flip of " # c # " is " # c.flipEndian());
+		out.printLine( "one bits in " # c # " is " # c.ones());
+		out.printLine( "leading zeroes in " # c # " is " # c.leadingZeroes());
+		out.printLine( "trailing zeroes in " # c # " is " # c.trailingZeroes());
+		(int answer, boolean overflow) = c.addWithOverflow(30);
+		out.printLine( "adding 30 to " # c # " yields " # answer # ", overflow: " # overflow );
+		(answer, overflow) = c.subtractWithOverflow(30);
+		out.printLine( "subtracting 30 from " # c # " yields " # answer # ", overflow: " # overflow );
+		(answer, overflow) = c.multiplyWithOverflow(50000);	
+		out.printLine( "multiply 50000 by " # c # " yields " # answer # ", overflow: " # overflow );
+		
+		ushort d = 10us;
+		
+		out.printLine("Square root of " # d # " = " # d.squareRoot());
+		out.printLine( d # "^3 = " # d.power(3));
+		out.printLine( d # "^3.6 = " # d.power(3.6));
+		out.printLine( "sin(" # d # ") = " # d.sin());
+		out.printLine( "cos(" # d # ") = " # d.cos());
+		out.printLine( "ln(" # d # ") = " # d.logBaseE());
+		out.printLine( "log10(" # d # ") = " # d.logBase10());
+		out.printLine( "log2(" # d # ") = " # d.logBase2());
+		out.printLine( "endian flip of " # d # " is " # d.flipEndian());
+		out.printLine( "one bits in " # d # " is " # d.ones());
+		out.printLine( "leading zeroes in " # d # " is " # d.leadingZeroes());
+		out.printLine( "trailing zeroes in " # d # " is " # d.trailingZeroes());
+		(ushort result, boolean flow) = d.addWithOverflow(30us);
+		out.printLine( "adding 30 to " # d # " yields " # result # ", overflow: " # flow );
+		(result, flow) = d.subtractWithOverflow(30us);
+		out.printLine( "subtracting 30 from " # d # " yields " # result # ", overflow: " # flow );
+		(result, flow) = d.multiplyWithOverflow(50000us);	
+		out.printLine( "multiply 50000 by " # d # " yields " # result # ", overflow: " # flow );		
+	}
+}

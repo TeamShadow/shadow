@@ -1,5 +1,84 @@
 attributes #0 = { alwaysinline nounwind readnone }
 
+declare float     @llvm.sqrt.f32(float %Val)
+declare double    @llvm.sqrt.f64(double %Val)
+
+declare float     @llvm.powi.f32(float  %Val, i32 %power)
+declare double    @llvm.powi.f64(double %Val, i32 %power)
+
+declare float     @llvm.sin.f32(float  %Val)
+declare double    @llvm.sin.f64(double %Val)
+
+declare float     @llvm.cos.f32(float  %Val)
+declare double    @llvm.cos.f64(double %Val)
+
+declare float     @llvm.pow.f32(float  %Val, float %Power)
+declare double    @llvm.pow.f64(double %Val, double %Power)
+
+declare float     @llvm.log.f32(float  %Val)
+declare double    @llvm.log.f64(double %Val)
+
+declare float     @llvm.log10.f32(float  %Val)
+declare double    @llvm.log10.f64(double %Val)
+
+declare float     @llvm.log2.f32(float  %Val)
+declare double    @llvm.log2.f64(double %Val)
+
+declare float     @llvm.fma.f32(float  %a, float  %b, float  %c)
+declare double    @llvm.fma.f64(double %a, double %b, double %c)
+
+declare float     @llvm.floor.f32(float  %Val)
+declare double    @llvm.floor.f64(double %Val)
+
+declare float     @llvm.ceil.f32(float  %Val)
+declare double    @llvm.ceil.f64(double %Val)
+
+declare float     @llvm.round.f32(float  %Val)
+declare double    @llvm.round.f64(double %Val)
+
+declare i16 @llvm.bswap.i16(i16 %Val)
+declare i32 @llvm.bswap.i32(i32 %Val)
+declare i64 @llvm.bswap.i64(i64 %Val)
+
+declare i8 @llvm.ctpop.i8(i8  %Val)
+declare i16 @llvm.ctpop.i16(i16 %Val)
+declare i32 @llvm.ctpop.i32(i32 %Val)
+declare i64 @llvm.ctpop.i64(i64 %Val)
+
+declare i8   @llvm.ctlz.i8  (i8   %Val, i1 %Undef)
+declare i16  @llvm.ctlz.i16 (i16  %Val, i1 %Undef)
+declare i32  @llvm.ctlz.i32 (i32  %Val, i1 %Undef)
+declare i64  @llvm.ctlz.i64 (i64  %Val, i1 %Undef)
+
+declare i8   @llvm.cttz.i8  (i8   %Val, i1 %Undef)
+declare i16  @llvm.cttz.i16 (i16  %Val, i1 %Undef)
+declare i32  @llvm.cttz.i32 (i32  %Val, i1 %Undef)
+declare i64  @llvm.cttz.i64 (i64  %Val, i1 %Undef)
+
+declare {i16, i1} @llvm.sadd.with.overflow.i16(i16 %a, i16 %b)
+declare {i32, i1} @llvm.sadd.with.overflow.i32(i32 %a, i32 %b)
+declare {i64, i1} @llvm.sadd.with.overflow.i64(i64 %a, i64 %b)
+
+declare {i16, i1} @llvm.uadd.with.overflow.i16(i16 %a, i16 %b)
+declare {i32, i1} @llvm.uadd.with.overflow.i32(i32 %a, i32 %b)
+declare {i64, i1} @llvm.uadd.with.overflow.i64(i64 %a, i64 %b)
+
+declare {i16, i1} @llvm.ssub.with.overflow.i16(i16 %a, i16 %b)
+declare {i32, i1} @llvm.ssub.with.overflow.i32(i32 %a, i32 %b)
+declare {i64, i1} @llvm.ssub.with.overflow.i64(i64 %a, i64 %b)
+
+declare {i16, i1} @llvm.usub.with.overflow.i16(i16 %a, i16 %b)
+declare {i32, i1} @llvm.usub.with.overflow.i32(i32 %a, i32 %b)
+declare {i64, i1} @llvm.usub.with.overflow.i64(i64 %a, i64 %b)
+
+declare {i16, i1} @llvm.smul.with.overflow.i16(i16 %a, i16 %b)
+declare {i32, i1} @llvm.smul.with.overflow.i32(i32 %a, i32 %b)
+declare {i64, i1} @llvm.smul.with.overflow.i64(i64 %a, i64 %b)
+
+declare {i16, i1} @llvm.umul.with.overflow.i16(i16 %a, i16 %b)
+declare {i32, i1} @llvm.umul.with.overflow.i32(i32 %a, i32 %b)
+declare {i64, i1} @llvm.umul.with.overflow.i64(i64 %a, i64 %b)
+
 ; shadow.standard@Boolean native methods
 
 
@@ -134,6 +213,20 @@ define double @_Pshadow_Pstandard_Cbyte_MtoDouble(i8) #0 {
 	ret double %2
 }
 
+define i8 @_Pshadow_Pstandard_Cbyte_Mones(i8) #0 {
+	%2 = call i8 @llvm.ctpop.i8(i8 %0)
+	ret i8 %2
+}
+
+define i8 @_Pshadow_Pstandard_Cbyte_MleadingZeroes(i8) #0 {
+	%2 = call i8  @llvm.ctlz.i8(i8 %0, i1 false)
+	ret i8 %2
+}
+define i8 @_Pshadow_Pstandard_Cbyte_MtrailingZeroes(i8) #0 {
+	%2 = call i8  @llvm.cttz.i8(i8 %0, i1 false)
+	ret i8 %2
+}
+
 ; shadow.standard@UByte native methods
 
 @_Pshadow_Pstandard_Cubyte_MbitComplement = alias i8 (i8)* @_Pshadow_Pstandard_Cbyte_MbitComplement
@@ -193,6 +286,10 @@ define double @_Pshadow_Pstandard_Cubyte_MtoDouble(i8) #0 {
 	%2 = uitofp i8 %0 to double
 	ret double %2
 }
+
+@_Pshadow_Pstandard_Cubyte_Mones = alias i8 (i8)* @_Pshadow_Pstandard_Cbyte_Mones
+@_Pshadow_Pstandard_Cubyte_MleadingZeroes = alias i8 (i8)* @_Pshadow_Pstandard_Cbyte_MleadingZeroes
+@_Pshadow_Pstandard_Cubyte_MtrailingZeroes = alias i8 (i8)* @_Pshadow_Pstandard_Cbyte_MtrailingZeroes	
 
 ; shadow.standard@Short native methods
 
@@ -322,6 +419,40 @@ define double @_Pshadow_Pstandard_Cshort_MtoDouble(i16) #0 {
 	ret double %2
 }
 
+define i16 @_Pshadow_Pstandard_Cshort_MflipEndian(i16) #0 {
+	%2 = call i16 @llvm.bswap.i16(i16 %0)
+	ret i16 %2
+}
+
+define i16 @_Pshadow_Pstandard_Cshort_Mones(i16) #0 {
+	%2 = call i16 @llvm.ctpop.i16(i16 %0)
+	ret i16 %2
+}
+
+define i16 @_Pshadow_Pstandard_Cshort_MleadingZeroes(i16) #0 {
+	%2 = call i16  @llvm.ctlz.i16(i16 %0, i1 false)
+	ret i16 %2
+}
+define i16 @_Pshadow_Pstandard_Cshort_MtrailingZeroes(i16) #0 {
+	%2 = call i16  @llvm.cttz.i16(i16 %0, i1 false)
+	ret i16 %2
+}
+	
+define {i16, i1} @_Pshadow_Pstandard_Cshort_MaddWithOverflow_Pshadow_Pstandard_Cshort(i16, i16) #0 {
+	%3 = call {i16, i1} @llvm.sadd.with.overflow.i16(i16 %0, i16 %1)
+	ret {i16, i1} %3
+}
+
+define {i16, i1} @_Pshadow_Pstandard_Cshort_MsubtractWithOverflow_Pshadow_Pstandard_Cshort(i16, i16) #0 {
+	%3 = call {i16, i1} @llvm.ssub.with.overflow.i16(i16 %0, i16 %1)
+	ret {i16, i1} %3
+}
+
+define {i16, i1} @_Pshadow_Pstandard_Cshort_MmultiplyWithOverflow_Pshadow_Pstandard_Cshort(i16, i16) #0 {
+	%3 = call {i16, i1} @llvm.smul.with.overflow.i16(i16 %0, i16 %1)
+	ret {i16, i1} %3
+}
+
 ; shadow.standard@UShort native methods
 
 @_Pshadow_Pstandard_Cushort_MbitComplement = alias i16 (i16)* @_Pshadow_Pstandard_Cshort_MbitComplement
@@ -378,6 +509,26 @@ define float @_Pshadow_Pstandard_Cushort_MtoFloat(i16) #0 {
 define double @_Pshadow_Pstandard_Cushort_MtoDouble(i16) #0 {
 	%2 = uitofp i16 %0 to double
 	ret double %2
+}
+
+@_Pshadow_Pstandard_Cushort_MflipEndian = alias i16 (i16)* @_Pshadow_Pstandard_Cshort_MflipEndian
+@_Pshadow_Pstandard_Cushort_Mones = alias i16 (i16)* @_Pshadow_Pstandard_Cshort_Mones
+@_Pshadow_Pstandard_Cushort_MleadingZeroes = alias i16 (i16)* @_Pshadow_Pstandard_Cshort_MleadingZeroes
+@_Pshadow_Pstandard_Cushort_MtrailingZeroes = alias i16 (i16)* @_Pshadow_Pstandard_Cshort_MtrailingZeroes	
+	
+define {i16, i1} @_Pshadow_Pstandard_Cushort_MaddWithOverflow_Pshadow_Pstandard_Cushort(i16, i16) #0 {
+	%3 = call {i16, i1} @llvm.uadd.with.overflow.i16(i16 %0, i16 %1)
+	ret {i16, i1} %3
+}
+
+define {i16, i1} @_Pshadow_Pstandard_Cushort_MsubtractWithOverflow_Pshadow_Pstandard_Cushort(i16, i16) #0 {
+	%3 = call {i16, i1} @llvm.usub.with.overflow.i16(i16 %0, i16 %1)
+	ret {i16, i1} %3
+}
+
+define {i16, i1} @_Pshadow_Pstandard_Cushort_MmultiplyWithOverflow_Pshadow_Pstandard_Cushort(i16, i16) #0 {
+	%3 = call {i16, i1} @llvm.umul.with.overflow.i16(i16 %0, i16 %1)
+	ret {i16, i1} %3
 }
 
 ; shadow.standard@Int native methods
@@ -501,6 +652,40 @@ define double @_Pshadow_Pstandard_Cint_MtoDouble(i32) #0 {
 	ret double %2
 }
 
+define i32 @_Pshadow_Pstandard_Cint_MflipEndian(i32) #0 {
+	%2 = call i32 @llvm.bswap.i32(i32 %0)
+	ret i32 %2
+}
+
+define i32 @_Pshadow_Pstandard_Cint_Mones(i32) #0 {
+	%2 = call i32 @llvm.ctpop.i32(i32 %0)
+	ret i32 %2
+}
+
+define i32 @_Pshadow_Pstandard_Cint_MleadingZeroes(i32) #0 {
+	%2 = call i32  @llvm.ctlz.i32(i32 %0, i1 false)
+	ret i32 %2
+}
+define i32 @_Pshadow_Pstandard_Cint_MtrailingZeroes(i32) #0 {
+	%2 = call i32  @llvm.cttz.i32(i32 %0, i1 false)
+	ret i32 %2
+}
+	
+define {i32, i1} @_Pshadow_Pstandard_Cint_MaddWithOverflow_Pshadow_Pstandard_Cint(i32, i32) #0 {
+	%3 = call {i32, i1} @llvm.sadd.with.overflow.i32(i32 %0, i32 %1)
+	ret {i32, i1} %3
+}
+
+define {i32, i1} @_Pshadow_Pstandard_Cint_MsubtractWithOverflow_Pshadow_Pstandard_Cint(i32, i32) #0 {
+	%3 = call {i32, i1} @llvm.ssub.with.overflow.i32(i32 %0, i32 %1)
+	ret {i32, i1} %3
+}
+
+define {i32, i1} @_Pshadow_Pstandard_Cint_MmultiplyWithOverflow_Pshadow_Pstandard_Cint(i32, i32) #0 {
+	%3 = call {i32, i1} @llvm.smul.with.overflow.i32(i32 %0, i32 %1)
+	ret {i32, i1} %3
+}
+
 ; shadow.standard@UInt native methods
 
 @_Pshadow_Pstandard_Cuint_MbitComplement = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MbitComplement
@@ -556,6 +741,26 @@ define float @_Pshadow_Pstandard_Cuint_MtoFloat(i32) #0 {
 define double @_Pshadow_Pstandard_Cuint_MtoDouble(i32) #0 {
 	%2 = uitofp i32 %0 to double
 	ret double %2
+}
+
+@_Pshadow_Pstandard_Cuint_MflipEndian = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MflipEndian
+@_Pshadow_Pstandard_Cuint_Mones = alias i32 (i32)* @_Pshadow_Pstandard_Cint_Mones
+@_Pshadow_Pstandard_Cuint_MleadingZeroes = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MleadingZeroes
+@_Pshadow_Pstandard_Cuint_MtrailingZeroes = alias i32 (i32)* @_Pshadow_Pstandard_Cint_MtrailingZeroes	
+	
+define {i32, i1} @_Pshadow_Pstandard_Cuint_MaddWithOverflow_Pshadow_Pstandard_Cuint(i32, i32) #0 {
+	%3 = call {i32, i1} @llvm.uadd.with.overflow.i32(i32 %0, i32 %1)
+	ret {i32, i1} %3
+}
+
+define {i32, i1} @_Pshadow_Pstandard_Cuint_MsubtractWithOverflow_Pshadow_Pstandard_Cuint(i32, i32) #0 {
+	%3 = call {i32, i1} @llvm.usub.with.overflow.i32(i32 %0, i32 %1)
+	ret {i32, i1} %3
+}
+
+define {i32, i1} @_Pshadow_Pstandard_Cuint_MmultiplyWithOverflow_Pshadow_Pstandard_Cuint(i32, i32) #0 {
+	%3 = call {i32, i1} @llvm.umul.with.overflow.i32(i32 %0, i32 %1)
+	ret {i32, i1} %3
 }
 
 ; shadow.standard@Code native methods
@@ -712,6 +917,41 @@ define double @_Pshadow_Pstandard_Clong_MtoDouble(i64) #0 {
 	ret double %2
 }
 
+define i64 @_Pshadow_Pstandard_Clong_MflipEndian(i64) #0 {
+	%2 = call i64 @llvm.bswap.i64(i64 %0)
+	ret i64 %2
+}
+
+define i64 @_Pshadow_Pstandard_Clong_Mones(i64) #0 {
+	%2 = call i64 @llvm.ctpop.i64(i64 %0)
+	ret i64 %2
+}
+
+define i64 @_Pshadow_Pstandard_Clong_MleadingZeroes(i64) #0 {
+	%2 = call i64  @llvm.ctlz.i64(i64 %0, i1 false)
+	ret i64 %2
+}
+define i64 @_Pshadow_Pstandard_Clong_MtrailingZeroes(i64) #0 {
+	%2 = call i64  @llvm.cttz.i64(i64 %0, i1 false)
+	ret i64 %2
+}
+	
+;define {i64, i1} @_Pshadow_Pstandard_Clong_MaddWithOverflow_Pshadow_Pstandard_Clong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.sadd.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
+
+;define {i64, i1} @_Pshadow_Pstandard_Clong_MsubtractWithOverflow_Pshadow_Pstandard_Clong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.ssub.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
+
+;define {i64, i1} @_Pshadow_Pstandard_Clong_MmultiplyWithOverflow_Pshadow_Pstandard_Clong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.smul.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
+
+
 ; shadow.standard@ULong native methods
 
 @_Pshadow_Pstandard_Culong_MbitComplement = alias i64 (i64)* @_Pshadow_Pstandard_Clong_MbitComplement
@@ -769,6 +1009,26 @@ define double @_Pshadow_Pstandard_Culong_MtoDouble(i64) #0 {
 	%2 = uitofp i64 %0 to double
 	ret double %2
 }
+
+@_Pshadow_Pstandard_Culong_MflipEndian = alias i64 (i64)* @_Pshadow_Pstandard_Clong_MflipEndian
+@_Pshadow_Pstandard_Culong_Mones = alias i64 (i64)* @_Pshadow_Pstandard_Clong_Mones
+@_Pshadow_Pstandard_Culong_MleadingZeroes = alias i64 (i64)* @_Pshadow_Pstandard_Clong_MleadingZeroes
+@_Pshadow_Pstandard_Culong_MtrailingZeroes = alias i64 (i64)* @_Pshadow_Pstandard_Clong_MtrailingZeroes	
+	
+;define {i64, i1} @_Pshadow_Pstandard_Culong_MaddWithOverflow_Pshadow_Pstandard_Culong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.uadd.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
+
+;define {i64, i1} @_Pshadow_Pstandard_Culong_MsubtractWithOverflow_Pshadow_Pstandard_Culong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.usub.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
+
+;define {i64, i1} @_Pshadow_Pstandard_Culong_MmultiplyWithOverflow_Pshadow_Pstandard_Culong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.umul.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
 
 ; shadow.standard@Float native methods
 
@@ -876,6 +1136,66 @@ define double @_Pshadow_Pstandard_Cfloat_MtoDouble(float) #0 {
 	ret double %2
 }
 
+define float @_Pshadow_Pstandard_Cfloat_MsquareRoot(float) #0 {	
+	%2 = call float @llvm.sqrt.f32(float %0)
+	ret float %2
+}	
+
+define float @_Pshadow_Pstandard_Cfloat_Mpower_Pshadow_Pstandard_Cint(float, i32) #0 {	
+	%3 = call float @llvm.powi.f32(float %0, i32 %1)
+	ret float %3
+}	
+
+define float @_Pshadow_Pstandard_Cfloat_Mpower_Pshadow_Pstandard_Cfloat(float, float) #0 {	
+	%3 = call float @llvm.pow.f32(float %0, float %1)
+	ret float %3
+}
+
+define float @_Pshadow_Pstandard_Cfloat_Msin(float) #0 {	
+	%2 = call float @llvm.sin.f32(float %0)
+	ret float %2
+}
+
+define float @_Pshadow_Pstandard_Cfloat_Mcos(float) #0 {	
+	%2 = call float @llvm.cos.f32(float %0)
+	ret float %2
+}
+
+define float @_Pshadow_Pstandard_Cfloat_MlogBaseE(float) #0 {	
+	%2 = call float @llvm.log.f32(float %0)
+	ret float %2
+}
+
+define float @_Pshadow_Pstandard_Cfloat_MlogBase2(float) #0 {	
+	%2 = call float @llvm.log2.f32(float %0)
+	ret float %2
+}
+
+define float @_Pshadow_Pstandard_Cfloat_MlogBase10(float) #0 {	
+	%2 = call float @llvm.log10.f32(float %0)
+	ret float %2
+}
+
+define float @_Pshadow_Pstandard_Cfloat_MmultiplyAdd_Pshadow_Pstandard_Cfloat_Pshadow_Pstandard_Cfloat(float, float, float) #0 {	
+	%4 = call float @llvm.fma.f32(float %0, float %1, float %2)
+	ret float %4
+}	
+
+define float @_Pshadow_Pstandard_Cfloat_Mfloor(float) #0 {
+	%2 = call float @llvm.floor.f32(float %0)
+	ret float %2
+}
+
+define float @_Pshadow_Pstandard_Cfloat_Mceiling(float) #0 {	
+	%2 = call float @llvm.ceil.f32(float %0)
+	ret float %2
+}
+
+define float @_Pshadow_Pstandard_Cfloat_Mround(float) #0 {	
+	%2 = call float @llvm.round.f32(float %0)
+	ret float %2
+}
+
 ; shadow.standard@Double native methods
 
 define double @_Pshadow_Pstandard_Cdouble_Madd_Pshadow_Pstandard_Cdouble(double, double) #0 {
@@ -980,4 +1300,64 @@ define float @_Pshadow_Pstandard_Cdouble_MtoFloat(double) #0 {
 
 define double @_Pshadow_Pstandard_Cdouble_MtoDouble(double) #0 {	
 	ret double %0
+}
+
+define double @_Pshadow_Pstandard_Cdouble_MsquareRoot(double) #0 {	
+	%2 = call double @llvm.sqrt.f64(double %0)
+	ret double %2
+}	
+
+define double @_Pshadow_Pstandard_Cdouble_Mpower_Pshadow_Pstandard_Cint(double, i32) #0 {	
+	%3 = call double @llvm.powi.f64(double %0, i32 %1)
+	ret double %3
+}	
+
+define double @_Pshadow_Pstandard_Cdouble_Mpower_Pshadow_Pstandard_Cdouble(double, double) #0 {	
+	%3 = call double @llvm.pow.f64(double %0, double %1)
+	ret double %3
+}
+
+define double @_Pshadow_Pstandard_Cdouble_Msin(double) #0 {	
+	%2 = call double @llvm.sin.f64(double %0)
+	ret double %2
+}
+
+define double @_Pshadow_Pstandard_Cdouble_Mcos(double) #0 {	
+	%2 = call double @llvm.cos.f64(double %0)
+	ret double %2
+}
+
+define double @_Pshadow_Pstandard_Cdouble_MlogBaseE(double) #0 {	
+	%2 = call double @llvm.log.f64(double %0)
+	ret double %2
+}
+
+define double @_Pshadow_Pstandard_Cdouble_MlogBase2(double) #0 {	
+	%2 = call double @llvm.log2.f64(double %0)
+	ret double %2
+}
+
+define double @_Pshadow_Pstandard_Cdouble_MlogBase10(double) #0 {	
+	%2 = call double @llvm.log10.f64(double %0)
+	ret double %2
+}
+
+define double @_Pshadow_Pstandard_Cdouble_MmultiplyAdd_Pshadow_Pstandard_Cdouble_Pshadow_Pstandard_Cdouble(double, double, double) #0 {	
+	%4 = call double @llvm.fma.f64(double %0, double %1, double %2)
+	ret double %4
+}	
+
+define double @_Pshadow_Pstandard_Cdouble_Mfloor(double) #0 {
+	%2 = call double @llvm.floor.f64(double %0)
+	ret double %2
+}
+
+define double @_Pshadow_Pstandard_Cdouble_Mceiling(double) #0 {	
+	%2 = call double @llvm.ceil.f64(double %0)
+	ret double %2
+}
+
+define double @_Pshadow_Pstandard_Cdouble_Mround(double) #0 {	
+	%2 = call double @llvm.round.f64(double %0)
+	ret double %2
 }

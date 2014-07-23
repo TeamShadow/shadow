@@ -340,6 +340,54 @@ implements
 	{
 		return cast<double>(this) == other;
 	}
+	
+	public squareRoot() => (double)
+	{
+		return toDouble().squareRoot();
+	}
+	
+	public power(int value) => (double)
+	{
+		return toDouble().power(value);
+	}
+	
+	public power(double value) => (double)
+	{
+		return toDouble().power(value);
+	}
+	
+	public sin() => (double)
+	{
+		return toDouble().sin();
+	}
+	
+	public cos() => (double)	
+	{
+		return toDouble().cos();
+	}
+	
+	public logBaseE() => (double)	
+	{
+		return toDouble().logBaseE();
+	}
+	
+	public logBase2() => (double)	
+	{
+		return toDouble().logBase2();
+	}
+	
+	public logBase10() => (double)	
+	{
+		return toDouble().logBase10();
+	}
+	
+	public native flipEndian() => (ushort);
+	public native ones() => (ushort);
+	public native leadingZeroes() => (ushort);
+	public native trailingZeroes() => (ushort);
+	public native addWithOverflow(ushort value) => (ushort, boolean);
+	public native subtractWithOverflow(ushort value) => (ushort, boolean);
+	public native multiplyWithOverflow(ushort value) => (ushort, boolean);
 
 	// implement CanHash
 	public get hash() => (uint)

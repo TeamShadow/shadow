@@ -166,5 +166,10 @@ public class TACTest {
 		args.add("shadow/test/SwitchTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testMath() throws Exception {
+		args.add("shadow/test/MathTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 
 }

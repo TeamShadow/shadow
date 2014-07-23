@@ -45,6 +45,20 @@ implements
 	public native compare(double other) => (int);
 	// implement CanEqual<double>
 	public native equal(double other) => (boolean);
+	
+	//other math operations
+	public native squareRoot() => (double);
+	public native power(int value) => (double);
+	public native power(double value) => (double);
+	public native sin() => (double);
+	public native cos() => (double);
+	public native logBaseE() => (double);
+	public native logBase2() => (double);
+	public native logBase10() => (double);
+	public native multiplyAdd(double multiplicand, double addend) => (double);
+	public native floor() => (double);
+	public native ceiling() => (double);
+	public native round() => (double);
 
 	// implement CanHash
 	public get hash() => (uint)

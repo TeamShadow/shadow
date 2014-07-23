@@ -241,6 +241,55 @@ implements
 		
 	// implement CanNegate<short>
 	public immutable native negate() => (short);
+	
+	public squareRoot() => (double)
+	{
+		return toDouble().squareRoot();
+	}
+	
+	public power(int value) => (double)
+	{
+		return toDouble().power(value);
+	}
+	
+	public power(double value) => (double)
+	{
+		return toDouble().power(value);
+	}
+	
+	public sin() => (double)
+	{
+		return toDouble().sin();
+	}
+	
+	public cos() => (double)	
+	{
+		return toDouble().cos();
+	}
+	
+	public logBaseE() => (double)	
+	{
+		return toDouble().logBaseE();
+	}
+	
+	public logBase2() => (double)	
+	{
+		return toDouble().logBase2();
+	}
+	
+	public logBase10() => (double)	
+	{
+		return toDouble().logBase10();
+	}
+	
+	public native flipEndian() => (short);
+	public native ones() => (short);
+	public native leadingZeroes() => (short);
+	public native trailingZeroes() => (short);
+	public native addWithOverflow(short value) => (short, boolean);
+	public native subtractWithOverflow(short value) => (short, boolean);
+	public native multiplyWithOverflow(short value) => (short, boolean);
+	
 
 	// implement CanHash
 	public get hash() => (uint)

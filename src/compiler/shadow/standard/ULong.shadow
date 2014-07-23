@@ -100,6 +100,55 @@ implements
 	{
 		return cast<double>(this) == other;
 	}
+	
+	public squareRoot() => (double)
+	{
+		return toDouble().squareRoot();
+	}
+	
+	public power(int value) => (double)
+	{
+		return toDouble().power(value);
+	}
+	
+	public power(double value) => (double)
+	{
+		return toDouble().power(value);
+	}
+	
+	public sin() => (double)
+	{
+		return toDouble().sin();
+	}
+	
+	public cos() => (double)	
+	{
+		return toDouble().cos();
+	}
+	
+	public logBaseE() => (double)	
+	{
+		return toDouble().logBaseE();
+	}
+	
+	public logBase2() => (double)	
+	{
+		return toDouble().logBase2();
+	}
+	
+	public logBase10() => (double)	
+	{
+		return toDouble().logBase10();
+	}
+	
+	public native flipEndian() => (ulong);
+	public native ones() => (ulong);
+	public native leadingZeroes() => (ulong);
+	public native trailingZeroes() => (ulong);
+	//public native addWithOverflow(ulong value) => (ulong, boolean);
+	//public native subtractWithOverflow(ulong value) => (ulong, boolean);
+	//public native multiplyWithOverflow(ulong value) => (ulong, boolean);	
+	
 
 	// implement CanHash
 	public get hash() => (uint)
