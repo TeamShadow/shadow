@@ -190,6 +190,128 @@ implements
 		
 		return value;
 	}
+	
+	public toByte() => (byte)
+	{
+		ulong min = cast<ulong>(-cast<long>(byte:MIN));
+		ulong max = cast<ulong>(byte:MAX);
+	
+		(ulong value, boolean negative) = parseInteger(min, max);
+		
+		if( negative )	
+		 	return cast<byte>(-cast<long>(value));		
+		else		
+			return cast<byte>(value);					
+	}	
+	
+	public toUByte() => (ubyte)
+	{
+		(ulong value, ) = parseInteger(ubyte:MIN, ubyte:MAX);
+		return cast<ubyte>(value);
+	}
+	
+	public toShort() => (short)
+	{
+		ulong min = cast<ulong>(-cast<long>(short:MIN));
+		ulong max = cast<ulong>(short:MAX);
+	
+		(ulong value, boolean negative) = parseInteger(min, max);
+		
+		if( negative )	
+		 	return cast<short>(-cast<long>(value));		
+		else		
+			return cast<short>(value);
+	}
+	public toUShort() => (ushort)
+	{
+		(ulong value, ) = parseInteger(ushort:MIN, ushort:MAX);
+		return cast<ushort>(value);
+	}
+	
+	public toInt() => (int)
+	{
+		ulong min = cast<ulong>(-cast<long>(int:MIN));
+		ulong max = cast<ulong>(int:MAX);
+	
+		(ulong value, boolean negative) = parseInteger(min, max);
+		
+		if( negative )	
+		 	return cast<int>(-cast<long>(value));		
+		else		
+			return cast<int>(value);	
+	}
+	
+	public toUInt() => (uint)
+	{
+		(ulong value, ) = parseInteger(uint:MIN, uint:MAX);
+		return cast<uint>(value);	
+	}
+		
+	public toLong() => (long)
+	{
+		ulong min = cast<ulong>(cast<ulong>(long:MAX) + 1uL);
+		ulong max = cast<ulong>(long:MAX);
+	
+		(ulong value, boolean negative) = parseInteger(min, max);
+		
+		if( negative )	
+		 	return -cast<long>(value); //works even for long:MIN since -long:MIN == long:MIN		
+		else		
+			return cast<long>(value);	
+	}
+	
+	
+	public toULong() => (ulong)
+	{
+		(ulong value, ) = parseInteger(ulong:MIN, ulong:MAX);
+		return value;
+	}	
+	
+	public toFloat() => (float)
+	{
+		return cast<float>(toDouble());
+	}
+	
+	public toDouble() => (double)
+	{
+		//TODO: fix this
+	}
+	
+	private parseInteger(ulong min, ulong max) => (ulong value, boolean negative)
+	{
+		boolean signed = min != 0uL;	
+		boolean negative = false;
+		ulong value = 0uL;		
+		boolean first = true;
+		
+		for( byte digit : data )
+		{
+			ulong old = value;
+			value *= 10uL;			
+
+			if( first and signed and digit == '-' )
+				negative = true;
+			else if( digit >= '0' and digit <= '9' )
+				value += cast<ulong>(digit - '0');
+			else
+				throw NumberFormatException:create("Illegal digit: " # cast<code>(digit));
+				
+			if( value < old )
+				throw NumberFormatException:create("Maximum length exceeded");
+				
+			first = false;
+		}
+		
+		//because we are dealing with unsigned values, this is (confusingly) the inverse of the true minimum		
+		if( negative and value > min )
+			throw NumberFormatException:create("Value too small");
+			
+		if( !negative and value > max )
+			throw NumberFormatException:create("Value too large");		
+		
+		return (value, negative);
+	}
+	
 
 	public class StringIterator implements Iterator<code>
 	{

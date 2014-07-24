@@ -1,0 +1,11 @@
+exception shadow.standard@NumberFormatException
+{
+	public create()
+	{
+		super();
+	}
+	public create( String message )
+	{
+		super(message);
+	}
+}
