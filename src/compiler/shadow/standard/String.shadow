@@ -273,8 +273,68 @@ implements
 	}
 	
 	public toDouble() => (double)
-	{
-		//TODO: fix this
+	{			
+		boolean negative = false;
+		double value = 0.0;		
+		boolean first = true;
+		boolean afterDecimal = false;
+		boolean inExponent = false;
+		boolean negativeExponent = false;
+		int decimalPosition = 0;
+		int exponent = 0;
+		
+		foreach( byte digit in data )
+		{		
+			if( inExponent )
+			{
+				exponent *= 10;
+				if( first and (digit == '-' or digit == '+') )								
+					negativeExponent = digit == '-';				
+				else if( digit >= '0' and digit <= '9' )				
+					exponent += cast<int>(digit - '0');
+				else
+					throw NumberFormatException:create("Illegal digit in exponent: " # cast<code>(digit));
+					
+				if( exponent >= 1024 )
+					throw NumberFormatException:create("Exponent too large");
+				
+				first = false;				
+			}
+			else
+			{			
+				if( first and (digit == '-' or digit == '+') )								
+					negative = digit == '-';				
+				else if( digit >= '0' and digit <= '9' )
+				{				
+					value = value.multiplyAdd(10.0, cast<double>(digit - '0'));
+					if( afterDecimal )
+						decimalPosition += 1;					
+				}
+				else if( digit == '.' and !afterDecimal )
+					afterDecimal = true;
+				else if( digit == 'e' or digit == 'E' )
+					inExponent = true;
+				else				
+					throw NumberFormatException:create("Illegal digit in mantissa: " # cast<code>(digit));
+					
+					
+				if( inExponent )
+					first = true;
+				else
+					first = false;
+			}
+		}
+		
+		if( negative )
+			value = -value;
+			
+		if( negativeExponent )
+			exponent = -exponent;
+					
+		if( afterDecimal )
+			exponent -= decimalPosition;				
+				
+		return value * (10.0).power(exponent);
 	}
 	
 	private parseInteger(ulong min, ulong max) => (ulong value, boolean negative)
@@ -284,7 +344,7 @@ implements
 		ulong value = 0uL;		
 		boolean first = true;
 		
-		for( byte digit : data )
+		foreach( byte digit in data )
 		{
 			ulong old = value;
 			value *= 10uL;			

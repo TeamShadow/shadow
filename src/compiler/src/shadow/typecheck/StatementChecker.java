@@ -2649,6 +2649,7 @@ public class StatementChecker extends BaseChecker
 			ModifiedType prefixNode = curPrefix.getFirst();
 			prefixNode = resolveType( prefixNode );
 			Type prefixType = prefixNode.getType(); 
+			node.setPrefixType(prefixType); //mostly useful for constants
 			String name = node.getImage();
 			boolean isTypeName = prefixNode.getModifiers().isTypeName();
 			
@@ -2694,7 +2695,7 @@ public class StatementChecker extends BaseChecker
 				{
 					addError(Error.ILLEGAL_ACCESS, "Constant " + name + " requires type name for access");
 				}
-				else if( isTypeName )
+				else if( !field.getModifiers().isConstant() && isTypeName )
 				{
 					addError(Error.ILLEGAL_ACCESS, "Field " + name + " is only accessible from an object reference");
 				}

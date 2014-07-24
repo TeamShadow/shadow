@@ -1216,7 +1216,9 @@ public class TACBuilder implements ShadowParserVisitor
 				
 				prefix = new TACClass(tree, type).getClassData();
 			}
-			else			
+			else if( node.getModifiers().isConstant() )
+				prefix = new TACConstantRef(tree, node.getPrefixType(), node.getImage());
+			else				
 				prefix = new TACFieldRef(tree, prefix, node.getImage());
 		}
 		return POST_CHILDREN;

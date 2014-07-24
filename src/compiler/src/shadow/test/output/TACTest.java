@@ -171,5 +171,11 @@ public class TACTest {
 		args.add("shadow/test/MathTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	
+	@Test public void testString() throws Exception {
+		args.add("shadow/test/StringTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 
 }

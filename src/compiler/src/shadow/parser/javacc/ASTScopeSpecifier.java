@@ -2,8 +2,25 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.typecheck.type.Type;
+
 public
 class ASTScopeSpecifier extends SimpleNode {
+
+	Type prefixType;
+	
+
+	public void setPrefixType(Type type)
+	{
+		prefixType = type;
+	}
+	
+	public Type getPrefixType()
+	{
+		return prefixType;
+	}
+	
+	
   public ASTScopeSpecifier(int id) {
     super(id);
   }

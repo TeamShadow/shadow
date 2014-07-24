@@ -2,12 +2,62 @@ import shadow.io@Console;
 
 class shadow.test@StringTest
 {
-	public main( String[] args ) => ( int )
+	public main( String[] args ) => ()
 	{
-		Console:instance.printLine("Hello World!");
+		Console out = Console:instance;
+		out.printLine("Hello World!");
+		//foreach( code letter in "blearghhhh" )
+		//	out.printLine(letter);
+		
+		//foreach( code letter in "aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½" )
+		//	out.printLine(letter);
+		
 		String:StringIterator iter = cast<String:StringIterator>("aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½".iterator());
 		while (iter.hasNext())
-			Console:instance.printLine(iter.next());
-		return 0;
+			out.printLine(iter.next());
+			
+		String x = "5";
+		String y = "-7";
+		String z = "3.47";
+		String r = "-3.47";
+		String s = "123.657e+21";
+		String t = "-123.657e-21";
+				
+		byte a = x.toByte();
+		byte b = y.toByte();
+		ubyte c = x.toUByte();
+		out.printLine("a: " # a # " (" # a.getClass() # ")" );
+		out.printLine("b: " # b # " (" # b.getClass() # ")" );
+		out.printLine("c: " # c # " (" # c.getClass() # ")" );
+		
+		short d = x.toShort();
+		short e = y.toShort();
+		ushort f = x.toUShort();
+		out.printLine("d: " # d # " (" # d.getClass() # ")" );
+		out.printLine("e: " # e # " (" # e.getClass() # ")" );
+		out.printLine("f: " # f # " (" # f.getClass() # ")" );  
+		
+		int g = x.toInt();
+		int h = y.toInt();
+		uint i = x.toUInt();
+		out.printLine("g: " # g # " (" # g.getClass() # ")" );
+		out.printLine("h: " # h # " (" # h.getClass() # ")" );
+		out.printLine("i: " # i # " (" # i.getClass() # ")" );
+		
+		long j = x.toLong();
+		long k = y.toLong();
+		ulong m = x.toULong();
+		out.printLine("j: " # j # " (" # j.getClass() # ")" );
+		out.printLine("k: " # k # " (" # k.getClass() # ")" );
+		out.printLine("m: " # m # " (" # m.getClass() # ")" );
+		
+		double n = r.toDouble();
+		double o = s.toDouble();
+		double p = t.toDouble();
+		float q = t.toFloat();
+		out.printLine("n: " # n # " (" # n.getClass() # ")" );
+		out.printLine("o: " # o # " (" # o.getClass() # ")" );
+		out.printLine("p: " # p # " (" # p.getClass() # ")" );
+		out.printLine("q: " # q # " (" # q.getClass() # ")" );		
 	}
 }

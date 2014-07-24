@@ -31,6 +31,7 @@ import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
 import shadow.output.TabbedLineWriter;
+import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
@@ -587,6 +588,7 @@ public class LLVMOutput extends AbstractOutput
 						type(Type.OBJECT) + ')');
 			
 			if( type.isUninstantiated() && recordedClasses.add(type.getMangledName()) )
+			{
 				for (List<MethodSignature> methodList :
 						type.getMethodMap().values())
 					for (MethodSignature method : methodList)
@@ -595,6 +597,19 @@ public class LLVMOutput extends AbstractOutput
 							writer.write("declare " + methodToString(
 									//new TACMethod(method).addParameters()));
 									method));
+				
+				for( Entry<String, Node> entry : type.getFields().entrySet())
+				{
+					Node field = entry.getValue();
+					String name = entry.getKey();
+					if( field.getModifiers().isConstant() )
+					{
+						writer.write("@\"" + 				
+						field.getEnclosingType().getMangledName() + "_M" + 
+						name + "\" = external constant " + type(field.getType()));
+					}
+				}
+			}
 			writer.write();
 		}
 		
