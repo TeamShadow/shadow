@@ -6,13 +6,11 @@ class shadow.test@StringTest
 	{
 		Console out = Console:instance;
 		out.printLine("Hello World!");
-		//foreach( code letter in "blearghhhh" )
-		//	out.printLine(letter);
+		foreach( code letter in "blearghhhh" )
+			out.printLine(letter);
 		
-		//foreach( code letter in "aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½" )
-		//	out.printLine(letter);
 		
-		String:StringIterator iter = cast<String:StringIterator>("aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½".iterator());
+		Iterator<code> iter = "aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½".iterator();
 		while (iter.hasNext())
 			out.printLine(iter.next());
 			

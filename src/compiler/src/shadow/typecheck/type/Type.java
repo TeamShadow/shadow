@@ -474,7 +474,7 @@ public abstract class Type implements Comparable<Type>
 		else if( this.equals(LONG) || this.equals(ULONG) || this.equals(DOUBLE) )
 			return 8;
 		
-		return 6; //for objects?  So that they're always considered between 4 and 8 bytes?
+		return 6; //for objects?  So that they're always considered between 4 and 8 bytes and not equal to any primitive?
 	}
 	public boolean isSimpleReference()
 	{
@@ -1030,12 +1030,14 @@ public abstract class Type implements Comparable<Type>
 				if ( !method.getModifiers().isPrivate() )
 		{
 			SequenceType parameters = method.getParameterTypes();
+			SequenceType returns = method.getReturnTypes();
 			boolean replaced = false;
 			MethodSignature wrapper = method;
 			for ( int i = 0; i < parentSize; i++ )
 			{
-				MethodSignature parentMethod = methodList.get(i);
+				MethodSignature parentMethod = methodList.get(i);				
 				SequenceType parentParameters = parentMethod.getParameterTypes();
+				SequenceType rawParameters = parentMethod.getMethodType().getTypeWithoutTypeArguments().getParameterTypes();
 				if ( (!method.isCreate() || parentMethod.getOuter() instanceof InterfaceType) &&
 						method.getSymbol().equals(parentMethod.getSymbol()) &&
 						parameters.size() == parentParameters.size() )
@@ -1046,12 +1048,31 @@ public abstract class Type implements Comparable<Type>
 					for ( int j = 0; replace && j < parameters.size(); j++ )
 					{
 						ModifiedType parameter = parameters.get(j),
-								parentParameter = parentParameters.get(j);
-						if ( !parameter.getType().isSubtype(parentParameter.getType()) )
+								parentParameter = parentParameters.get(j),
+								rawParameter = rawParameters.get(j);
+						
+						//if ( !parameter.getType().isSubtype(parentParameter.getType()) )
+						if ( !parentParameter.getType().isSubtype(parameter.getType()) )
 							replace = false;
-						else if ( getWidth(parameter) != getWidth(parentParameter) )
+						else if ( getWidth(parameter) != getWidth(rawParameter) )
 							wrapped = true;
 					}
+										
+					//adding wrapping for returns as well
+					SequenceType parentReturns = parentMethod.getReturnTypes();
+					SequenceType rawReturns = parentMethod.getMethodType().getTypeWithoutTypeArguments().getReturnTypes();
+					for ( int j = 0; replace && j < returns.size(); j++ )
+					{
+						ModifiedType returnValue = returns.get(j),
+								parentReturn = parentReturns.get(j),
+								rawReturn = rawReturns.get(j);
+						if ( !returnValue.getType().isSubtype(parentReturn.getType()) )
+							replace = false;
+						else if ( getWidth(returnValue) != getWidth(rawReturn) )
+							wrapped = true;
+					}
+					
+					
 					if ( replace )
 					{
 						replaced = true;

@@ -50,6 +50,7 @@ public class ArrayType extends ClassType
 		return 5;  //not the actual width, just a value that helps sort the fields
 		//references have a "width" of 6, which covers either 4 or 8 byte pointers
 		//arrays go after the references but before 4 byte primitives
+		//also, arrays are never the same width as objects or primitives for overriding purposes
 	}
 	
 	public Type getSuperBaseType()

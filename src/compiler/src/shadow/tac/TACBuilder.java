@@ -42,6 +42,7 @@ import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
+import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
@@ -2288,11 +2289,43 @@ public class TACBuilder implements ShadowParserVisitor
 							new TACVariableRef(tree, fromArguments.next());
 					if (!fromTypes.getType(i).isSubtype(toTypes.getType(i)))
 						argument = new TACCast(tree, toTypes.get(i), argument);
-					toArguments.add(argument);
+					toArguments.add(argument);				
 				}
-				new TACReturn(tree, methodSignature.getFullReturnTypes(),
-						new TACCall(tree, block, new TACMethodRef(tree,
-									wrapped), toArguments));
+				
+				TACOperand value = new TACCall(tree, block, new TACMethodRef(tree,
+						wrapped), toArguments); 
+				
+				if( methodSignature.getFullReturnTypes().isEmpty() )
+					new TACReturn(tree, methodSignature.getFullReturnTypes(), null);
+				else
+				{
+					fromTypes = wrapped.getFullReturnTypes();
+					toTypes = methodSignature.getFullReturnTypes();
+					
+					if( value.getType() instanceof SequenceType )
+					{
+						List<TACOperand> toReturns = new ArrayList<TACOperand>(
+								toTypes.size());
+						//split the sequence apart
+						for (int i = 0; i < toTypes.size(); i++)
+						{
+							TACOperand returnValue = new TACSequenceElement(tree, value, i);									
+							
+							if (!fromTypes.getType(i).isSubtype(toTypes.getType(i)))
+								returnValue = new TACCast(tree, toTypes.get(i), returnValue);
+							toReturns.add(returnValue);				
+						}
+						
+						value = new TACSequence(tree, toReturns);
+					}
+					else
+					{
+						if( !fromTypes.getType(0).isSubtype(toTypes.getType(0)) )
+							value = new TACCast(tree, toTypes.get(0), value);
+					}
+					
+					new TACReturn(tree, toTypes, value);	
+				}
 			}
 			else
 				walk(methodSignature.getNode());

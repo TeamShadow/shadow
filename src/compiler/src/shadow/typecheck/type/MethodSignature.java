@@ -92,8 +92,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		if (isCreate())
 			return new SequenceType(Collections.<ModifiedType>singletonList(
 					new SimpleModifiedType(getOuter())));
-			
-		return getMethodType().getReturnTypes();
+		
+		if( isWrapper() || getOuter() instanceof InterfaceType )
+			return type.getTypeWithoutTypeArguments().getReturnTypes();
+		else
+			return type.getReturnTypes();
 	}
 	
 	public SequenceType getFullParameterTypes()
