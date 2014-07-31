@@ -33,11 +33,11 @@ public class SimpleTest
 		// set the levels of our loggers
 		Loggers.SHADOW.setLevel(Level.DEBUG);
 		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
-		Loggers.PARSER.setLevel(Level.INFO);	
+		Loggers.PARSER.setLevel(Level.ALL);	
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("shadow/test/Cheetah.shadow"); 		
+		args.add("shadow/standard/Byte.shadow"); 		
 		//args.add("tests/compile/Readonly.shadow");
 		Main.main(args.toArray(new String[] { }));		
 	}

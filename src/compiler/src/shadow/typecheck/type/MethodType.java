@@ -20,13 +20,20 @@ public class MethodType extends ClassType {
 		returns = new SequenceType();
 		typeWithoutTypeArguments = this;
 		setExtendType(Type.METHOD); // added
+	}
+	
+	
+	//used to copy a MethodType with different modifiers
+	public MethodType copy(Modifiers modifiers)
+	{
+		MethodType copiedType = new MethodType(getOuter(), modifiers);
+		copiedType.parameterNames.addAll(parameterNames);
+		copiedType.parameterTypes.addAll(parameterTypes);
+		copiedType.returns.addAll(returns);
+		copiedType.typeWithoutTypeArguments = typeWithoutTypeArguments;
+		return copiedType;
 	}	
 	
-	public boolean matches( SequenceType inputTypes )
-	{
-		return parameterTypes.matches( inputTypes);		
-	}
-
 	//this method is used to see if particular return values inside the method can be given back as return values
 	public boolean canReturn( SequenceType returnTypes)
 	{

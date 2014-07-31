@@ -11,6 +11,7 @@ import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.*;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
+import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
@@ -343,11 +344,10 @@ public class StatementChecker extends BaseChecker
 						//only worry if there is no explicit invocation
 						//explicit invocations are handled separately
 					{
-						boolean foundDefault = false;
-						SequenceType emptyParameters = new SequenceType();
+						boolean foundDefault = false;						
 						for( MethodSignature method : parentType.getMethods("create") )
 						{
-							if( method.matches(emptyParameters) )
+							if( method.getParameterTypes().isEmpty() )
 							{
 								foundDefault = true;
 								break;
@@ -1653,23 +1653,50 @@ public class StatementChecker extends BaseChecker
 				MethodType method = (MethodType)t1;
 				UnboundMethodType unboundMethod = (UnboundMethodType)t2;				
 				
-				boolean found = false;
+							
+				MethodSignature candidate = null;
+				Type outer = unboundMethod.getOuter();			
 				
-								
-				Type outer = unboundMethod.getOuter();				
-				for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) )
-					if( signature.getMethodType().matches(method.getParameterTypes()) && signature.getMethodType().canReturn(method.getReturnTypes()))
+				for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) ) 
+				{				
+					MethodType methodType = signature.getMethodType();			
+					//no type arguments for method pointers?
+					/*
+					if( methodType.isParameterized() )
 					{
-						node.setType(signature.getMethodType());
-						found = true;
-						break;
+						if( hasTypeArguments )
+						{	
+							SequenceType parameters = methodType.getTypeParameters();							
+							if( parameters.canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER))
+							{
+								methodType = methodType.replace(parameters, typeArguments);
+								signature = signature.replace(parameters, typeArguments);
+							}
+							else
+								continue;
+						}
 					}
+					*/				
 					
-				if( !found )
-				{
-					addError(Error.MISMATCHED_TYPE, "No method " + unboundMethod.getTypeName() + " matches signature " + method);
-					node.setType(Type.UNKNOWN);
-				}				
+					//the list of method signatures starts with the closest (current class) and then adds parents and outer classes
+					//always stick with the current if you can
+					//(only replace if signature is a subtype of candidate but candidate is not a subtype of signature)					
+					if( signature.getMethodType().isSubtype(method))
+					{	
+						if( candidate == null || (candidate.getMethodType().isSubtype(signature.getMethodType()) )) //take the broadest method possible that matches the cast target
+							candidate = signature;
+						else if( !signature.getMethodType().isSubtype(candidate.getMethodType()) ) //then two acceptable signatures are not subtypes of each other
+						{					
+							addError(Error.INVALID_ARGUMENTS, "Ambiguous cast from " + unboundMethod.getTypeName() + " to " + method);
+							break;
+						}				
+					}			
+				}			
+			
+				if( candidate == null )			
+					addError(Error.INVALID_METHOD, "No definition of " + unboundMethod.getTypeName() + " matches type " + method);
+				else
+					node.setType(candidate.getMethodType());
 			}			
 			else if( t1.isNumerical() && t2.isNumerical() ) //some numerical types (int and uint) are not superclasses or subclasses of each other
 															//for convenience, all numerical types should be castable
@@ -3185,22 +3212,10 @@ public class StatementChecker extends BaseChecker
 						type = type.getExtendType();
 					else
 						addError(Error.INVALID_CREATE, "Class type " + type + " cannot invoke a parent create because it does not extend another type");
-				}
+				}								
 								
-				boolean found = false;
-				for( MethodSignature signature : type.getMethods("create") )
-				{
-					if( signature.matches(arguments) )
-					{
-						found = true;
-						node.setMethodSignature(signature);
-						break;						
-					}
-				}
-				
-				if( !found )
-					addError(Error.INVALID_METHOD, "Create with arguments " + arguments + " is not defined in this context");
-				
+				MethodSignature signature = setMethodType(node, type, "create", arguments, null); //type set inside
+				node.setMethodSignature(signature);
 			}	
 			else
 				addError(Error.INVALID_CREATE, "Non-class type " + currentType + " cannot be created");

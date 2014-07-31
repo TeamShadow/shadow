@@ -55,13 +55,8 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public SignatureNode getNode() {
 		return node;
-	}
-		
-	public boolean matches( SequenceType argumentTypes )
-	{
-		return type.matches(argumentTypes);		
-	}
-	
+	}		
+
 	public boolean canAccept( SequenceType argumentTypes )
 	{
 		return type.canAccept(argumentTypes);		
@@ -200,6 +195,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return symbol.equals("create");
 	}
 	
+	public boolean isCopy()
+	{
+		return symbol.equals("copy");
+	}
+	
 	public boolean isGet()
 	{	
 		return ( type.getModifiers().isGet() && type.getReturnTypes().size() == 1 && type.getParameterTypes().isEmpty() );	
@@ -250,7 +250,12 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	public MethodSignature getWrapped() {
 		return wrapped;
 	}
-	public MethodSignature wrap(MethodSignature wrapped) {
-		return new MethodSignature(type, symbol, node, wrapped);
+
+	
+	public MethodSignature wrap(MethodSignature wrapped) {		
+		Modifiers modifiers = new Modifiers(wrapped.getModifiers().getModifiers());
+		modifiers.removeModifier(Modifiers.NATIVE);		
+		MethodType methodType = type.copy(modifiers);		
+		return new MethodSignature(methodType, symbol, node, wrapped);
 	}
 }

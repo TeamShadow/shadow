@@ -177,5 +177,11 @@ public class TACTest {
 		args.add("shadow/test/StringTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testAddressMap() throws Exception {
+		args.add("shadow/test/AddressMapTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+
 
 }

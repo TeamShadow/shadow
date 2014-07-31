@@ -108,7 +108,7 @@ public class TypeUpdater extends BaseChecker
 	}
 	
 	private void addConstructorsAndProperties()
-	{		
+	{
 		for( Package p : typeTable.keySet() )
 		{
 			for( Type type : typeTable.get(p).values() ) 
@@ -126,6 +126,26 @@ public class TypeUpdater extends BaseChecker
 						classType.addMethod("create", createSignature);
 						//note that the node is null for the default create, because nothing was made
 					}
+					
+					//add copy methods
+					//first, one with no arguments
+					ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
+					copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);					
+					MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode);
+					copySignature.addReturn(new SimpleModifiedType(classType));
+					copyNode.setMethodSignature(copySignature);
+					classType.addMethod("copy", copySignature);
+					
+					//then, one with a set to hold addresses
+					copyNode = new ASTMethodDeclaration(-1);
+					copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);
+					copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode);
+					copySignature.addParameter("addresses", new SimpleModifiedType(Type.ADDRESS_MAP));
+					copySignature.addReturn(new SimpleModifiedType(classType));					
+					copyNode.setMethodSignature(copySignature);
+					classType.addMethod("copy", copySignature);
+					
+					classType.addReferencedType(Type.ADDRESS_MAP); //so the use of this type is recorded
 					
 					//add default getters and setters
 					for( Map.Entry<String, Node> field : classType.getFields().entrySet() )
@@ -1090,8 +1110,11 @@ public class TypeUpdater extends BaseChecker
 			}
 		}
 		
-		if( type.isPrimitive() && node.getModifiers().isNullable() )		
-			addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
+		//if( type.isPrimitive() && node.getModifiers().isNullable() )		
+		//	addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
+		
+		//if( type instanceof SingletonType )
+		//	addError(Error.INVALID_TYPE, "Fields cannot be declared with singleton types");
 				
 		// go through inserting all the identifiers
 		for(int i = 1; i < node.jjtGetNumChildren(); ++i)

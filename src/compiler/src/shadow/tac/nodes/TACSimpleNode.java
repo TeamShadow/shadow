@@ -63,6 +63,8 @@ public abstract class TACSimpleNode extends TACNode
 		if (type.getType() instanceof TypeParameter &&
 				!(operand.getType() instanceof TypeParameter))
 			type = new SimpleModifiedType(Type.OBJECT);
+	//	if( type.getModifiers().isNullable() && type.getType().isPrimitive() )
+	//		type = new SimpleModifiedType(Type.OBJECT);
 		
 		operand = operand.checkVirtual(type, this); //puts in casts where needed
 		Type operandType = operand.getType();

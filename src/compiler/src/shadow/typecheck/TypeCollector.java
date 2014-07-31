@@ -87,7 +87,7 @@ public class TypeCollector extends BaseChecker
 		};
 		
 		//add standard imports		
-		File standard = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" ).getCanonicalFile();
+		File standard = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
 		File[] imports = standard.listFiles( filter );
 		for( File file :  imports )			
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
@@ -95,6 +95,12 @@ public class TypeCollector extends BaseChecker
 		//add io imports
 		File io = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "io" );
 		imports = io.listFiles( filter );
+		for( File file :  imports )			
+			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
+		
+		//add utility imports
+		File utility = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "utility" );
+		imports = utility.listFiles( filter );
 		for( File file :  imports )			
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 						
@@ -321,6 +327,7 @@ public class TypeCollector extends BaseChecker
 				switch( typeName )
 				{
 				//case "AbstractClass":	Type.ABSTRACT_CLASS = (ClassType) type; break;
+				case "AddressMap":		Type.ADDRESS_MAP = (ClassType) type; break;
 				case "Array":			Type.ARRAY = (ClassType) type; break;			
 				//case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
 				case "CanAdd":			Type.CAN_ADD = (InterfaceType)type; break;
@@ -361,6 +368,7 @@ public class TypeCollector extends BaseChecker
 				case "ushort":			Type.USHORT = (ClassType)type; break;
 				}
 			}
+		
 			
 			type.addImportedItems( importedItems );
 			
@@ -484,7 +492,7 @@ public class TypeCollector extends BaseChecker
 		{
 			currentPackage = packageTree;
 			importedItems.clear();
-			importedItems.add("shadow.standard");
+			importedItems.add("shadow.standard");			
 			currentName = "";
 		}
 		

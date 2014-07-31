@@ -622,22 +622,28 @@ public class ClassType extends Type
 		String indent = linePrefix + "\t";		
 		boolean newLine;
 		
-		//only constants were here before
+		//constants		
+		newLine = false;
+		for( Map.Entry<String, ? extends ModifiedType> field : getFields().entrySet() )
+			if( field.getValue().getModifiers().isConstant() )
+			{
+				out.println(indent + "constant " + field.getValue().getType() + " " + field.getKey() + ";");
+				newLine = true;				
+			}
+		if( newLine )
+			out.println();		
+		
 		//now all fields have to be around, just so that generics can figure out how big they need to be
 		//necessary?  perhaps code can be written to compute the size
-		//TODO: try to take this back to constants only
+		//TODO: try to take this back to constants only				
 		newLine = false;
 		for( Map.Entry<String, ? extends ModifiedType> field : sortFields() )
 		{
-	//		if( field.getValue().getModifiers().isConstant() ) 
-	//		{
-			
 			if( !field.getKey().equals("_outer")  )
 			{
 				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
 				newLine = true;
 			}
-	//		}
 		}
 		if( newLine )
 			out.println();		
@@ -648,7 +654,7 @@ public class ClassType extends Type
 			for( MethodSignature signature : list )
 			{
 				Modifiers modifiers = signature.getModifiers();
-				if( modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()  )
+				if( (modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()) && !signature.isCopy() )
 				{				
 					out.println(indent + signature + ";");
 					newLine = true;

@@ -39,7 +39,10 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 	
 
 	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
-	{
+	{	
+		if( getType().isSubtype(type.getType()) && (getType().isPrimitive() || type.getType().isPrimitive()) && getModifiers().isNullable() != type.getModifiers().isNullable() )
+			return new TACCast(node, type, this);
+		
 		if (getType().isStrictSubtype(type.getType()))
 			return new TACCast(node, type, this);
 		

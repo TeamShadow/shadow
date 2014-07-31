@@ -76,6 +76,7 @@ public abstract class Type implements Comparable<Type>
 	public static ClassType USHORT = null;
 	
 	public static ClassType STRING = null;
+	public static ClassType ADDRESS_MAP = null; //used for copying
 	
 	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null);
@@ -190,6 +191,7 @@ public abstract class Type implements Comparable<Type>
 		ULONG = null;
 		USHORT = null;
 		STRING = null;
+		ADDRESS_MAP = null;
 		CAN_COMPARE = null;
 		CAN_EQUAL = null;
 		CAN_INDEX = null;
@@ -1280,7 +1282,7 @@ public abstract class Type implements Comparable<Type>
 				if( importItem instanceof Type )
 				{
 					Type importType = (Type)importItem;
-					if( !importType.hasOuter() && getReferencedTypes().contains(importType))
+					if( !importType.hasOuter() && getReferencedTypes().contains(importType) && !importType.isPrimitive())
 						imports.add(importType.getImportName());
 						
 				}
@@ -1288,7 +1290,7 @@ public abstract class Type implements Comparable<Type>
 				{
 					Package importPackage = (Package)importItem;
 					for( Type referencedType : getReferencedTypes() )
-						if( !referencedType.hasOuter() && referencedType.getPackage().equals( importPackage ) )
+						if( !referencedType.hasOuter() && referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
 							imports.add(referencedType.getImportName());					
 				}
 			}

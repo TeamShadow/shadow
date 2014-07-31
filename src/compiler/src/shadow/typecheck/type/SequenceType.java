@@ -239,8 +239,25 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			return false;		
 	
 		for( int i = 0; i < types.size(); i++ )
-			if( inputTypes.get(i) == null || types.get(i) == null || !inputTypes.get(i).getType().equals(getType(i)) )
-				return false;				
+		{			
+			if( inputTypes.get(i) == null || types.get(i) == null )
+				return false;
+			/*
+			if( get(i).getModifiers().isNullable() != inputTypes.get(i).getModifiers().isNullable() )
+			{	
+				if( get(i).getModifiers().isNullable() && inputTypes.get(i).getType().equals(Type.NULL))
+					continue;
+				
+				if( inputTypes.get(i).getModifiers().isNullable() && get(i).getType().equals(Type.NULL))
+					continue;
+				
+				return false;
+			}
+			*/			
+			
+			if( !inputTypes.get(i).getType().equals(getType(i)) )
+				return false;
+		}
 		
 		return true;		
 	}
