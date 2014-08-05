@@ -155,12 +155,6 @@ public class NegativeTests {
 		enforce(Error.INVALID_MODIFIER);		
 	}
 	
-	@Test public void testParameterPrimitiveNullable() throws Exception
-	{
-		args.add("tests-negative/typechecker/parameter-primitive-nullable/Test.shadow"); 
-		enforce(Error.INVALID_MODIFIER);		
-	}
-	
 	@Test public void testParameterParameterCollision() throws Exception
 	{
 		args.add("tests-negative/typechecker/parameter-parameter-collision/Test.shadow"); 
@@ -177,14 +171,8 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/typechecker/field-constant-parameterized/Test.shadow"); 
 		enforce(Error.INVALID_TYPE_PARAMETERS);		
-	}
-	
-	@Test public void testFieldPrimitiveNullable() throws Exception
-	{
-		args.add("tests-negative/typechecker/field-primitive-nullable/Test.shadow"); 
-		enforce(Error.INVALID_MODIFIER);		
-	}
-	
+	}	
+
 	@Test public void testFieldClassCollision() throws Exception
 	{
 		args.add("tests-negative/typechecker/field-class-collision/Test.shadow"); 

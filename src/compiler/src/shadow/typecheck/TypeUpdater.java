@@ -867,10 +867,7 @@ public class TypeUpdater extends BaseChecker
 		{	
 			//child 0 is Modifiers
 			Type type = node.jjtGetChild(1).getType();			
-			node.setType( type );			
-			
-			if( node.getModifiers().isNullable() && type.isPrimitive() )
-				addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);		
+			node.setType( type );
 		}		
 	
 		return WalkType.POST_CHILDREN;

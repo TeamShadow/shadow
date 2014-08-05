@@ -832,7 +832,7 @@ public class LLVMOutput extends AbstractOutput
 		
 		writer.write(nextTemp() + " = bitcast " + typeSymbol(destination) + " to i8*");
 		writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to i8*");
-		writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(2) + ", i8* " + temp(1) + ", i32 " + symbol(size) + ", i32 1, i1 0)");
+		writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(1) + ", i8* " + temp(0) + ", i32 " + symbol(size) + ", i32 1, i1 0)");
 	}
 
 	@Override

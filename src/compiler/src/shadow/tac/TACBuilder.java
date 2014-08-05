@@ -2280,12 +2280,12 @@ public class TACBuilder implements ShadowParserVisitor
 		{
 			ArrayType arrayType = (ArrayType)type;
 			type = arrayType.getBaseType();
-			TACOperand length = new TACLength(tree, prefix, 0);
+			TACOperand length = new TACLength(tree, array, 0);
 			TACOperand[] dimensions = new TACOperand[arrayType.getDimensions()];
 			dimensions[0] = length;
 			for (int j = 1; j < arrayType.getDimensions(); j++)
 			{
-				dimensions[j] = new TACLength(tree, prefix, j);
+				dimensions[j] = new TACLength(tree, array, j);
 				length = new TACBinary(tree, length, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', dimensions[j], false);
 			}
 			
@@ -2316,6 +2316,8 @@ public class TACBuilder implements ShadowParserVisitor
 					counters[i] = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
 					new TACStore(tree, counters[i], new TACLiteral(tree, "-1")); //starting at -1 allows update and check to happen on the same label
 					labels[i] = new TACLabelRef(tree);
+					
+					new TACBranch(tree, labels[i]);
 					labels[i].new TACLabel(tree);
 					TACLabelRef terminate;
 					TACLabelRef body = new TACLabelRef(tree);
@@ -2328,7 +2330,7 @@ public class TACBuilder implements ShadowParserVisitor
 					new TACStore(tree, counters[i], new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, "1"), false));
 					TACOperand condition = new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true);
 					new TACBranch(tree, condition, body, terminate);					
-					body.new TACLabel();
+					body.new TACLabel(tree);
 					
 					//copy old value into new location
 					TACOperand element = new TACArrayRef(tree, oldArray, counters[i], false); //get value at location
@@ -2365,7 +2367,7 @@ public class TACBuilder implements ShadowParserVisitor
 				new TACStore(tree, counters[i], new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, "1"), false));
 				TACOperand condition = new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true);
 				new TACBranch(tree, condition, body, terminate);					
-				body.new TACLabel();
+				body.new TACLabel(tree);
 				
 				//set up next round
 				oldArray = new TACArrayRef(tree, oldArray, counters[i], false); //get value at location
@@ -2426,7 +2428,7 @@ public class TACBuilder implements ShadowParserVisitor
 				else
 				{
 					method.addParameters(); //address map called "addresses"
-					TACVariableRef this_ = new TACVariableRef(tree, method.getThis());
+					TACOperand this_ = new TACLoad(tree, new TACVariableRef(tree, method.getThis()));
 					TACOperand address = new TACPointerToLong(tree, this_);					
 					
 					TACVariableRef map = new TACVariableRef(tree, method.getParameter("addresses"));
@@ -2438,7 +2440,7 @@ public class TACBuilder implements ShadowParserVisitor
 							returnLabel = new TACLabelRef(tree);
 					
 					new TACBranch(tree, test, copyLabel, returnLabel);
-					copyLabel.new TACLabel();
+					copyLabel.new TACLabel(tree);
 					
 					//allocate a new object
 					TACNewObject object = new TACNewObject(tree, type);
@@ -2469,6 +2471,7 @@ public class TACBuilder implements ShadowParserVisitor
 						
 						TACVariableRef i = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
 						new TACStore(tree, i, new TACLiteral(tree, "0"));
+						new TACBranch(tree, condition);
 						
 						//start loop
 						condition.new TACLabel(tree);
@@ -2496,7 +2499,7 @@ public class TACBuilder implements ShadowParserVisitor
 					else
 					{
 						//perform a memcopy to sweep up all the primitives and immutable data
-						TACOperand size = new TACFieldRef(tree, object.getClassData(), "size");
+						TACOperand size = new TACLoad(tree, new TACFieldRef(tree, object.getClassData(), "size"));
 						new TACCopyMemory(tree, object, this_, size);
 						
 						if( type.equals(Type.OBJECT))
@@ -2519,8 +2522,8 @@ public class TACBuilder implements ShadowParserVisitor
 								!entryType.getType().isPrimitive() )
 							{							
 								//get field references
-								field = new TACFieldRef(tree, this_, entry.getKey());
-								newField = new TACFieldRef(tree, duplicate, entry.getKey());
+								field = new TACFieldRef(tree, this_, entryType, entry.getKey());
+								newField = new TACFieldRef(tree, duplicate, entryType, entry.getKey());
 								
 								//TODO: add something special for Singletons, some day?
 								if( entryType.getType() instanceof ArrayType )
@@ -2550,7 +2553,7 @@ public class TACBuilder implements ShadowParserVisitor
 					
 					new TACReturn(tree, methodSignature.getFullReturnTypes(), duplicate);
 					
-					returnLabel.new TACLabel();
+					returnLabel.new TACLabel(tree);
 					TACOperand existingObject = new TACLongToPointer(tree, index, new SimpleModifiedType(type));
 					new TACReturn(tree, methodSignature.getFullReturnTypes(), existingObject);					
 				}

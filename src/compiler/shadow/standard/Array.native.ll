@@ -152,15 +152,15 @@ define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Ps
 	%23 = bitcast %"_Pshadow_Pstandard_CObject"* %22 to %"_Pshadow_Pstandard_CObject_methods"*	
 	
 	; create new wrapper object
-	%24 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* %10, %"_Pshadow_Pstandard_CObject_methods"* %23)
+	%24 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* %9, %"_Pshadow_Pstandard_CObject_methods"* %23)
 	
 	; copy primitive value into new object
 	%25 = getelementptr inbounds %_Pshadow_Pstandard_CObject* %24, i32 1
 	%26 = bitcast %_Pshadow_Pstandard_CObject* %25 to i8*
 	
-	%27 = call %int @"_Pshadow_Pstandard_CClass_Mwidth"(%"_Pshadow_Pstandard_CClass"* %10)		
+	%27 = call %int @"_Pshadow_Pstandard_CClass_Mwidth"(%"_Pshadow_Pstandard_CClass"* %9)		
 	%28 = mul i32 %1, %27
-	%29 = bitcast %_Pshadow_Pstandard_CObject* %16 to i8*
+	%29 = bitcast %_Pshadow_Pstandard_CObject* %15 to i8*
 	%30 = getelementptr inbounds i8* %29, i32 %28
 	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %26, i8* %30, i32 %27, i32 1, i1 0)
 	ret %_Pshadow_Pstandard_CObject* %24
@@ -197,7 +197,7 @@ define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pst
 	%19 = getelementptr inbounds %_Pshadow_Pstandard_CObject** %18, i32 %1
 	store %_Pshadow_Pstandard_CObject* %2, %_Pshadow_Pstandard_CObject** %19
 	ret void
-	%21 = call %int @"_Pshadow_Pstandard_CClass_Mwidth"(%"_Pshadow_Pstandard_CClass"* %11)	
+	%21 = call %int @"_Pshadow_Pstandard_CClass_Mwidth"(%"_Pshadow_Pstandard_CClass"* %10)	
 	%22 = mul i32 %1, %21
 	%23 = bitcast %_Pshadow_Pstandard_CObject* %16 to i8*
 	%24 = getelementptr inbounds i8* %23, i32 %22

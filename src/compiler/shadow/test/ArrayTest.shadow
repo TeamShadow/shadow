@@ -5,21 +5,21 @@ class shadow.test@ArrayTest
 	public main( String[] args ) => ()
 	{
 		int[] temp = int:create[1];
-		temp[0] = 5; Array<Object> array = Array<Object>:create(temp);
+		temp[0] = 5; Array<Object> array = Object:create[5];
 		temp[0] = 0; array.index(temp, 0);
 		temp[0] = 1; array.index(temp, '2');
 		temp[0] = 2; array.index(temp, "four");
 		temp[0] = 3; array.index(temp, 88);
 		temp[0] = 4; array.index(temp, Object:create());
-		Array<Object> array2 = cast<Array<Object>>(array.copy());
-		Array<Object> array3 = cast<Array<Object>>(array2.subarray(1, 4));
+		//Array<Object> array2 = cast<Array<Object>>(array.copy());
+		Array<Object> array3 = cast<Array<Object>>(array.subarray(1, 4));
 		for ( temp[0] = 0; temp[0] < array->size; temp[0] += 1 )
 			array.index(temp, temp[0]);
 		temp[0] = 0; array3.index(temp, "zero");
 		temp[0] = 1; array3.index(temp, "one");
 		temp[0] = 2; array3.index(temp, "two");
 		Console:instance.printLine(array);
-		Console:instance.printLine(array2);
+		//Console:instance.printLine(array2);
 		Console:instance.printLine(array3);
 		for ( int start = 0; start <= array->size; start += 1 )
 			for ( int end = start; end <= array->size; end += 1 )
