@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import shadow.parser.javacc.*;
 import shadow.tac.nodes.TACArrayRef;
@@ -21,6 +22,7 @@ import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
+import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabelRef;
@@ -29,6 +31,7 @@ import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
@@ -37,6 +40,7 @@ import shadow.tac.nodes.TACNodeRef;
 import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
+import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
@@ -164,11 +168,16 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		Type type = node.getType();
 		module = new TACModule(type);
-
+		
+		//dummy method and block for constant building 
+		method = new TACMethod( new MethodSignature(new MethodType(), "", null));
+		block = new TACBlock(tree, block);
 		for (Node constant : type.getFields().values())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
 						constant.getImage()), constant);
+		block = block.getParent();
+		
 		for (List<MethodSignature> methods : type.getMethodMap().values())
 			for (MethodSignature method : methods)
 				if (method.isCreate() || method.getModifiers().isPrivate())
@@ -424,6 +433,15 @@ public class TACBuilder implements ShadowParserVisitor
 			ClassType thisType = (ClassType)method.getMethod().getOuter();
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(new TACVariableRef(tree, method.getThis()));
+			
+			if( (!isSuper && thisType.hasOuter()) || (isSuper && thisType.getExtendType().hasOuter()) )
+			{
+				//Type outerType = thisType.getOuter();
+				TACVariable outer = method.getParameter("_outer");
+				params.add(new TACVariableRef(tree, outer));
+			}
+			
+			
 			//TODO: test explicit constructor invocations
 			//shouldn't need any special generic stuff, right?
 			/*
@@ -886,7 +904,7 @@ public class TACBuilder implements ShadowParserVisitor
 		if( type.equals(Type.STRING ) )
 			return operand;
 		
-		if (!type.isPrimitive() && !(type instanceof ArrayType))
+		if ( operand.getModifiers().isNullable() )// || !type.isPrimitive() && !(type instanceof ArrayType))
 		{ // TODO: actually check nullable
 			TACLabelRef nullLabel = new TACLabelRef(tree),
 					nonnullLabel = new TACLabelRef(tree),
@@ -900,6 +918,10 @@ public class TACBuilder implements ShadowParserVisitor
 			new TACStore(tree, var, new TACLiteral(tree, "\"null\""));
 			new TACBranch(tree, doneLabel);
 			nonnullLabel.new TACLabel(tree);
+			
+			if( type.isPrimitive() ) //convert non null primitive wrapper to real primitive			
+				operand = new TACCast(tree, new SimpleModifiedType(type), operand);
+			
 			new TACStore(tree, var, new TACCall(tree, block,
 					new TACMethodRef(tree, operand,
 							type.getMatchingMethod("toString", new SequenceType())),
@@ -1056,6 +1078,10 @@ public class TACBuilder implements ShadowParserVisitor
 					"null")), block.getRecover(), continueLabel);
 			continueLabel.new TACLabel(tree);
 			prefix = new TACNodeRef(tree, operand);
+			
+			if( node.getType().isPrimitive() ) //convert from object to primitive form
+				prefix = new TACCast(tree, new SimpleModifiedType(node.getType()), prefix );
+			
 			//prefix = operand;
 		}
 		return POST_CHILDREN;
@@ -2217,6 +2243,140 @@ public class TACBuilder implements ShadowParserVisitor
 		module.addConstant(constantRef);
 		tree = saveTree;
 	}
+	
+	private TACOperand copyArray(TACOperand array, TACVariableRef map)
+	{		
+		Type type = array.getType();
+		int layers = 0;
+		
+		while( type instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType) type;		
+			type = arrayType.getBaseType();
+			layers++;
+		}
+				
+		Type baseType = type;
+		TACMethodRef copyMethod;
+		
+		if( type.isPrimitive() )
+			copyMethod = null;
+		else if( type instanceof InterfaceType )
+			copyMethod = new TACMethodRef(tree, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+		else
+			copyMethod = new TACMethodRef(tree, baseType.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)) );
+
+	
+		TACVariableRef[] counters = new TACVariableRef[layers];			
+		TACLabelRef[] labels = new TACLabelRef[layers];			
+		TACLabelRef done = new TACLabelRef(tree);
+		TACOperand returnValue = null;
+		
+		type = array.getType();		
+		TACOperand oldArray = array;
+		TACVariableRef previousArray = null;
+		
+		for( int i = 0; i < layers; i++ )
+		{
+			ArrayType arrayType = (ArrayType)type;
+			type = arrayType.getBaseType();
+			TACOperand length = new TACLength(tree, prefix, 0);
+			TACOperand[] dimensions = new TACOperand[arrayType.getDimensions()];
+			dimensions[0] = length;
+			for (int j = 1; j < arrayType.getDimensions(); j++)
+			{
+				dimensions[j] = new TACLength(tree, prefix, j);
+				length = new TACBinary(tree, length, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', dimensions[j], false);
+			}
+			
+			TACClass class_ = new TACClass(tree, type);
+			TACVariableRef copiedArray = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(arrayType)));
+			new TACStore(tree, copiedArray, new TACNewArray(tree, arrayType, class_.getClassData(), dimensions));
+			
+			if( i == 0 )
+				returnValue = copiedArray;
+			else
+			{
+				//store current array into its spot in the previous array
+				TACArrayRef location = new TACArrayRef(tree, previousArray, counters[i - 1], false);
+				new TACStore(tree, location, copiedArray);
+			}
+			
+			previousArray = copiedArray;
+			
+			if( i == layers - 1 ) //last layer is either objects or primitives, not more arrays
+			{
+				if( type.isPrimitive() )
+				{
+					TACOperand size = new TACBinary(tree, new TACFieldRef(tree, class_.getClassData(), "size"), Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', length, false);
+					new TACCopyMemory(tree, copiedArray, oldArray, size);
+				}
+				else
+				{					
+					counters[i] = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
+					new TACStore(tree, counters[i], new TACLiteral(tree, "-1")); //starting at -1 allows update and check to happen on the same label
+					labels[i] = new TACLabelRef(tree);
+					labels[i].new TACLabel(tree);
+					TACLabelRef terminate;
+					TACLabelRef body = new TACLabelRef(tree);
+					if( i == 0 )
+						terminate = done;
+					else
+						terminate = labels[i - 1];
+
+					//increment counters[i] by 1
+					new TACStore(tree, counters[i], new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, "1"), false));
+					TACOperand condition = new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true);
+					new TACBranch(tree, condition, body, terminate);					
+					body.new TACLabel();
+					
+					//copy old value into new location
+					TACOperand element = new TACArrayRef(tree, oldArray, counters[i], false); //get value at location
+					
+					if( baseType instanceof InterfaceType )
+						element = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), element);
+					
+					TACOperand copiedElement = new TACCall(tree, block, copyMethod, element, map);
+					
+					if( baseType instanceof InterfaceType )
+						copiedElement = new TACCast(tree, new SimpleModifiedType(baseType), copiedElement);
+					
+					TACArrayRef newElement = new TACArrayRef(tree, copiedArray, counters[i], false);
+					new TACStore(tree, newElement, copiedElement);
+
+					//go back to update and check condition
+					new TACBranch(tree, labels[i]);					
+				}
+			}
+			else
+			{
+				counters[i] = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
+				new TACStore(tree, counters[i], new TACLiteral(tree, "-1"));//starting at -1 allows update and check to happen on the same label
+				labels[i] = new TACLabelRef(tree);
+				labels[i].new TACLabel(tree);				
+				TACLabelRef terminate;
+				TACLabelRef body = new TACLabelRef(tree);
+				if( i == 0 )
+					terminate = done;
+				else
+					terminate = labels[i - 1];
+
+				//increment counters[i] by 1
+				new TACStore(tree, counters[i], new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, "1"), false));
+				TACOperand condition = new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true);
+				new TACBranch(tree, condition, body, terminate);					
+				body.new TACLabel();
+				
+				//set up next round
+				oldArray = new TACArrayRef(tree, oldArray, counters[i], false); //get value at location
+			}
+		}
+		
+		done.new TACLabel(tree);
+		return returnValue;
+	}
+	
+	
 	private void visitMethod(MethodSignature methodSignature)
 			throws ShadowException
 	{
@@ -2253,6 +2413,149 @@ public class TACBuilder implements ShadowParserVisitor
 					if (!field.getModifiers().isConstant())
 						walk(field);
 			}
+			else if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() )
+			{
+				ClassType type = (ClassType) methodSignature.getOuter();	
+				
+				if( type.getModifiers().isImmutable() )
+				{				
+					//for now, just return this
+					new TACReturn(tree, methodSignature.getFullReturnTypes(), new TACVariableRef(
+							tree, method.getThis()));
+				}			
+				else
+				{
+					method.addParameters(); //address map called "addresses"
+					TACVariableRef this_ = new TACVariableRef(tree, method.getThis());
+					TACOperand address = new TACPointerToLong(tree, this_);					
+					
+					TACVariableRef map = new TACVariableRef(tree, method.getParameter("addresses"));
+					TACMethodRef indexMethod = new TACMethodRef(tree, Type.ADDRESS_MAP.getMatchingMethod("index", new SequenceType(Type.ULONG)) );
+					TACCall index = new TACCall(tree, block, indexMethod, map, address );					
+					TACSame test = new TACSame(tree, index, new TACLiteral(tree, "null"));
+					
+					TACLabelRef copyLabel = new TACLabelRef(tree),
+							returnLabel = new TACLabelRef(tree);
+					
+					new TACBranch(tree, test, copyLabel, returnLabel);
+					copyLabel.new TACLabel();
+					
+					//allocate a new object
+					TACNewObject object = new TACNewObject(tree, type);
+					TACOperand duplicate;					
+					
+					//add it to the map of addresses
+					SequenceType arguments = new SequenceType();
+					arguments.add(new SimpleModifiedType(Type.ULONG));  //key
+					arguments.add(new SimpleModifiedType(Type.ULONG));  //value
+					indexMethod = new TACMethodRef(tree, Type.ADDRESS_MAP.getMatchingMethod("index", arguments) );
+					TACOperand newAddress = new TACPointerToLong(tree, object);					
+					new TACCall(tree, block, indexMethod, map, address, newAddress);
+					
+					
+					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) )
+					{
+						//call private create to allocate space
+						TACMethodRef create = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("create", new SequenceType(new ArrayType(Type.INT))));
+						TACFieldRef lengths = new TACFieldRef(tree, this_, "lengths" );
+						duplicate = new TACCall(tree, block, create, object, lengths); //performs cast to Array as well
+						
+						//get size (product of all dimension lengths)
+						TACMethodRef sizeMethod = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("size", new SequenceType()));					
+						TACOperand size = new TACCall(tree, block, sizeMethod, this_);
+						TACLabelRef done = new TACLabelRef(tree);
+						TACLabelRef body = new TACLabelRef(tree);
+						TACLabelRef condition = new TACLabelRef(tree);
+						
+						TACVariableRef i = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
+						new TACStore(tree, i, new TACLiteral(tree, "0"));
+						
+						//start loop
+						condition.new TACLabel(tree);
+						
+						TACOperand loop = new TACBinary(tree, i, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', size, true );
+						new TACBranch(tree, loop, body, done);
+						body.new TACLabel(tree);
+						
+						SequenceType indexArguments = new SequenceType();
+						indexArguments.add(i);					
+						TACMethodRef indexLoad = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("index", indexArguments));
+						indexArguments.add(Type.ARRAY.getTypeParameters().get(0));
+						TACMethodRef indexStore = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("index", indexArguments));
+						TACMethodRef copy = new TACMethodRef(tree, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+						
+						TACOperand value = new TACCall(tree, block, indexLoad, this_, i);
+						value = new TACCall(tree, block, copy, value, map);
+						
+						new TACCall(tree, block, indexStore, duplicate, i, value);
+						new TACStore(tree, i, new TACBinary(tree, i, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, "1"), false ));
+						new TACBranch(tree, condition);					
+						
+						done.new TACLabel(tree);
+					}
+					else
+					{
+						//perform a memcopy to sweep up all the primitives and immutable data
+						TACOperand size = new TACFieldRef(tree, object.getClassData(), "size");
+						new TACCopyMemory(tree, object, this_, size);
+						
+						if( type.equals(Type.OBJECT))
+							duplicate = object;
+						else
+							duplicate = new TACCast(tree, new SimpleModifiedType(type), object); //casts object to type
+						
+						//copy other fields in using their copy methods
+						//arrays need special attention
+						TACMethodRef copyMethod;
+						TACOperand field;
+						TACFieldRef newField;
+						TACOperand copiedField;
+						for( Entry<String, ? extends ModifiedType> entry : type.orderAllFields() )
+						{
+							ModifiedType entryType = entry.getValue();
+							//only copy mutable, non-primitive types
+							if( !entryType.getModifiers().isImmutable() &&
+								!entryType.getType().getModifiers().isImmutable() &&
+								!entryType.getType().isPrimitive() )
+							{							
+								//get field references
+								field = new TACFieldRef(tree, this_, entry.getKey());
+								newField = new TACFieldRef(tree, duplicate, entry.getKey());
+								
+								//TODO: add something special for Singletons, some day?
+								if( entryType.getType() instanceof ArrayType )
+								{
+									copiedField = copyArray(field, map);
+								}
+								else if( entryType.getType() instanceof InterfaceType )
+								{								
+									copyMethod = new TACMethodRef(tree, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+									//cast converts from interface to object
+									field = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), field);
+									copiedField = new TACCall(tree, block, copyMethod, field, map);
+									//and then a cast back to interface
+									copiedField = new TACCast(tree, newField, copiedField);																
+								}
+								else //normal object
+								{
+									copyMethod = new TACMethodRef(tree, entryType.getType().getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+									copiedField = new TACCall(tree, block, copyMethod, field, map);								
+								}
+								
+								//store copied value
+								new TACStore(tree, newField, copiedField);							
+							}
+						}
+					}
+					
+					new TACReturn(tree, methodSignature.getFullReturnTypes(), duplicate);
+					
+					returnLabel.new TACLabel();
+					TACOperand existingObject = new TACLongToPointer(tree, index, new SimpleModifiedType(type));
+					new TACReturn(tree, methodSignature.getFullReturnTypes(), existingObject);					
+				}
+			}
+			
 			if (methodSignature.getNode() == null)
 			{
 				method.addParameters();

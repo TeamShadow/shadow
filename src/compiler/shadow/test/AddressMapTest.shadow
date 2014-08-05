@@ -1,0 +1,46 @@
+import shadow.io@Console;
+
+class shadow.test@AddressMapTest
+{
+	public main( String[] args ) => ()
+	{
+		Console out = Console:instance;
+		out.printLine("Count it off!");
+		AddressMap map = AddressMap:create();
+		
+		ulong value = 0uL;
+		ulong key = 0uL;
+		
+		do
+		{
+			map[key] = value;
+			value += 1uL;
+			
+			key = (key + 47uL) % 53uL;
+			
+			out.printLine("Added key: " # key # " Value: " # value);
+		} while( key != 0uL );
+		
+		
+		if( map.containsKey(43uL) )
+			out.printLine("Contains key 43!");
+		else
+			out.printLine("Does not contains key 43! (but should)");
+			
+		if( map.containsKey(89uL) )
+			out.printLine("Contains 89! (but shouldn't)");
+		else
+			out.printLine("Does not contain 89!");
+			
+		out.printLine("Value at 43 is: " # map[43uL]);		
+		out.printLine("Value at 17 is: " # map[17uL]);
+		out.printLine("Value at 100 is: " # map[100uL]);
+				
+		ulong count = 1uL;
+		foreach(ulong item in map)
+		{
+			out.printLine("#" # count # ": " # item);
+			count += 1uL;
+		}		
+	}
+}

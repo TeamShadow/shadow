@@ -175,10 +175,11 @@ public class Main {
 					if( !config.isCheckOnly() )
 					{
 						File standard = new File( system, "shadow" + File.separator + "standard" );
-						File io = new File( system, "shadow" + File.separator + "io" );
+						File io = new File( system, "shadow" + File.separator + "io" );						
 						
 						//minimum standard files needed for compilation						
 						files.add( getPath( standard, "Array" ));
+						files.add( getPath( standard, "AddressMap" ));
 						//files.add( getPath( standard, "ArrayClass" ));
 						files.add( getPath( standard, "Class" ));						
 						files.add( getPath( standard, "Exception" ));

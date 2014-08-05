@@ -8,12 +8,14 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	{
 		this:lengths = lengths;		
 		this:data = data;		
-	}
-	public create( int[] lengths )
+	}	
+	
+	private create( immutable int[] lengths )
 	{
-		this:lengths = cast<int[]>(cast<Object>(lengths.copy()));
+		this:lengths = lengths;
 		this:data = allocate(T:class, this->size);
-	}
+	}	
+		
 	private immutable native allocate( Class type, int size ) => ( Object );
 
 	public immutable get size() => ( int )
@@ -26,6 +28,9 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	
 	public immutable native get dims() => ( int );
 	
+	//we do need special copying for arrays and interfaces
+	
+	/* //copying dealt with as part of the standard copying tools
 	public immutable copy() => ( Array<T> )
 	{
 		Array<T> copy = Array<T>:create(this->lengths, allocate(T:class, this->size));
@@ -40,12 +45,30 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 		}
 		return copy;
 	}
+	*/
+	
+	
+	/*
+	private immutable copyProxy(AddressMap addresses) => ( Array<T> )
+	{
+		Array<T> duplicate = Array<T>:create( lengths );
+		for( int i = 0; i < this->size; i += 1 )
+			duplicate.index(i, index(i).copy(addresses)));
+				
+		return duplicate;
+	}
+	*/
 	
 	//only makes sense for 1D arrays?
 	public immutable native subarray( int start, int end ) => ( Array<T> );
 
 	public immutable native index( int[] indices ) => (T);
 	public native index( int[] indices, T value ) => ();
+	
+	//private methods that take the final offset after all the dimensions have been computed
+	//unsafe to give to the user, but useful for internals
+	private immutable native index( int index ) => (T);
+	private native index( int index, T value) => ();	
 
 	public immutable getBaseClass() => ( Class )
 	{

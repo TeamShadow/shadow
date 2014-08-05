@@ -7,9 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -69,6 +69,17 @@ public class TACCall extends TACOperand
 	{
 		return methodRef.getReturnType();
 	}
+	
+	@Override
+	public Modifiers getModifiers()
+	{
+		SequenceType returns = methodRef.getReturnTypes();
+		if( returns.size() == 1)
+			return returns.getModifiers(0);
+		
+		return super.getModifiers();
+	}
+	
 	@Override
 	public int getNumOperands()
 	{

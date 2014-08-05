@@ -106,9 +106,10 @@ implements
 	{		
 		return data[location];
 	}
-	public get chars() => ( byte[] )
+	public get chars() => ( immutable byte[] )
 	{
-		return cast<byte[]>(cast<Object>(this:data.copy()));
+		//return cast<byte[]>(cast<Object>(this:data.copy()));
+		return data;
 	}
 	public get size() => ( int )
 	{

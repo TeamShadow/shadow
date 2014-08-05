@@ -253,6 +253,21 @@ implements Number<BigInteger>
 		negative = value < 0;			
 	}
 	
+	public create(ulong magnitude)
+	{		
+		if( magnitude >= BASE )
+		{
+			data = uint:create[2];
+			data[1] = cast<uint>(magnitude / BASE); 
+			data[0] = cast<uint>(magnitude % BASE);					
+		}
+		else
+		{
+			data = uint:create[1];			 
+			data[0] = cast<uint>(magnitude);		
+		}		
+	}
+	
 	public create(long value)
 	{
 		ulong magnitude = value.abs();

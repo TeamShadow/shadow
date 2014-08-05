@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -14,19 +15,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import shadow.interpreter.ShadowBoolean;
-import shadow.interpreter.ShadowByte;
 import shadow.interpreter.ShadowCode;
 import shadow.interpreter.ShadowDouble;
 import shadow.interpreter.ShadowFloat;
-import shadow.interpreter.ShadowInt;
+import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowInterpreter;
-import shadow.interpreter.ShadowLong;
-import shadow.interpreter.ShadowShort;
 import shadow.interpreter.ShadowString;
-import shadow.interpreter.ShadowUByte;
-import shadow.interpreter.ShadowUInt;
-import shadow.interpreter.ShadowULong;
-import shadow.interpreter.ShadowUShort;
 import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
@@ -48,6 +42,7 @@ import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACConstructGeneric;
 import shadow.tac.nodes.TACConversion;
+import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabelRef;
@@ -56,6 +51,7 @@ import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
@@ -63,6 +59,7 @@ import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
+import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
@@ -73,7 +70,6 @@ import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
-import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACVariableRef;
@@ -149,7 +145,7 @@ public class LLVMOutput extends AbstractOutput
 	}
 
 	// Class type flags
-	private static final int INTERFACE = 1, PRIMITIVE = 2, GENERIC = 4, ARRAY = 8, METHOD = 16;
+	private static final int INTERFACE = 1, PRIMITIVE = 2, GENERIC = 4, ARRAY = 8, SINGLETON = 16, METHOD = 32;
 	
 	private void writePrimitiveTypes() throws ShadowException
 	{
@@ -166,6 +162,34 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("%float = type float");
 		writer.write("%double = type double");
 		writer.write();	
+	}
+	
+	private void writeTypeOpaque(Type type) throws ShadowException
+	{
+		StringBuilder sb = new StringBuilder();
+		
+		if( type instanceof InterfaceType )
+		{
+			if( type.isFullyInstantiated() )
+				sb.append('%').append(withGenerics(type, "_methods")).append(" = type opaque");
+			else if( type.isUninstantiated() )
+				sb.append('%').append(raw(type, "_methods")).append(" = type opaque");
+			
+			writer.write(sb.toString());
+		}
+		else if (type instanceof ClassType)
+		{	
+			if( type.isUninstantiated() )
+			{
+				sb.append('%').append(raw(type, "_methods")).append(" = type opaque");
+								
+				sb.setLength(0);
+				//first thing in every object is the class			
+				sb.append('%').append(raw(type)).append(" = type opaque");
+		
+				writer.write(sb.toString());
+			}
+		}	
 	}
 	
 	
@@ -394,6 +418,8 @@ public class LLVMOutput extends AbstractOutput
 		int flags = 0;
 		if (moduleType.isPrimitive())
 			flags |= PRIMITIVE;
+		if( moduleType instanceof SingletonType )
+			flags |= SINGLETON;
 		if (module.isClass())
 		{			
 			ClassType parentType = ((ClassType)moduleType).getExtendType();
@@ -557,10 +583,11 @@ public class LLVMOutput extends AbstractOutput
 						raw(Type.CLASS, "_Mallocate" +
 						Type.INT.getMangledName()) + '(' + type(Type.CLASS) +
 						", " + type(Type.INT) + ')');
-				writer.write("declare " + type(Type.OBJECT) + " @" +
+				/*writer.write("declare " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, "_MinterfaceData" +
 						Type.CLASS.getMangledName()) + '(' + type(Type.CLASS) +
 						", " + type(Type.CLASS) + ')');
+					*/
 			}
 			
 			if( type.equals(Type.GENERIC_CLASS))
@@ -780,6 +807,32 @@ public class LLVMOutput extends AbstractOutput
 	public void visit(TACLabelRef node) throws ShadowException
 	{
 		nextLabel(node);
+	}
+	
+	@Override
+	public void visit(TACLongToPointer node) throws ShadowException
+	{
+		writer.write(nextTemp(node) + " = inttoptr " + type(Type.ULONG) + " " +
+				symbol(node.getOperand(0)) + " to " + type(node.getType())); 
+	}
+	
+	@Override
+	public void visit(TACPointerToLong node) throws ShadowException
+	{		
+		writer.write(nextTemp(node) + " = ptrtoint " + typeSymbol(node.getOperand(0)) +
+				" to " + type(Type.ULONG));
+	}
+	
+	@Override
+	public void visit(TACCopyMemory node) throws ShadowException
+	{
+		TACOperand destination = node.getDestination();
+		TACOperand source = node.getSource();
+		TACOperand size = node.getSize();
+		
+		writer.write(nextTemp() + " = bitcast " + typeSymbol(destination) + " to i8*");
+		writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to i8*");
+		writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(2) + ", i8* " + temp(1) + ", i32 " + symbol(size) + ", i32 1, i1 0)");
 	}
 
 	@Override
@@ -2040,8 +2093,16 @@ public class LLVMOutput extends AbstractOutput
 	}
 	private static String type(ModifiedType type)
 	{
+		if( type.getModifiers().isNullable() && type.getType().isPrimitive() )
+			return primitiveWrapper(type.getType());
 		return type(type.getType());
 	}
+	
+	private static String primitiveWrapper(Type type)
+	{
+		return "%\"" + type.getMangledName() + "\"*";
+	}
+	
 	private static String type(Type type)
 	{
 		if (type == null)
@@ -2086,7 +2147,7 @@ public class LLVMOutput extends AbstractOutput
 	}
 	private static String type(TypeParameter type)
 	{
-		return type(Type.OBJECT);
+		return type(type.getClassBound());
 	}
 
 	private static String raw(ModifiedType type)
@@ -2269,22 +2330,8 @@ public class LLVMOutput extends AbstractOutput
 			return "null";
 		if (value instanceof ShadowBoolean)
 			return literal((boolean)((ShadowBoolean)value).getValue());
-		if (value instanceof ShadowByte)
-			return literal((long)((ShadowByte)value).getValue());
-		if (value instanceof ShadowShort)
-			return literal((long)((ShadowShort)value).getValue());
-		if (value instanceof ShadowInt)
-			return literal((long)((ShadowInt)value).getValue());
-		if (value instanceof ShadowLong)
-			return literal((long)((ShadowLong)value).getValue());
-		if (value instanceof ShadowUByte)
-			return literal((long)((ShadowUByte)value).getValue());
-		if (value instanceof ShadowUShort)
-			return literal((long)((ShadowUShort)value).getValue());
-		if (value instanceof ShadowUInt)
-			return literal((long)((ShadowUInt)value).getValue());
-		if (value instanceof ShadowULong)
-			return literal((long)((ShadowULong)value).getValue());
+		if (value instanceof ShadowInteger)
+			return literal(((ShadowInteger)value).getValue());
 		if (value instanceof ShadowCode)
 			return literal((long)((ShadowCode)value).getValue());
 		if (value instanceof ShadowFloat)
@@ -2303,6 +2350,12 @@ public class LLVMOutput extends AbstractOutput
 	{
 		return Long.toString(value);
 	}
+	
+	private static String literal(BigInteger value)
+	{
+		return value.toString();
+	}
+	
 	private static String literal(double value)
 	{
 		long raw = Double.doubleToRawLongBits(value);
@@ -2398,6 +2451,7 @@ public class LLVMOutput extends AbstractOutput
 		//writeTypeDeclaration(Type.METHOD_CLASS);
 		writeTypeDeclaration(Type.ITERATOR);
 		writeTypeDeclaration(Type.STRING);
+		writeTypeOpaque(Type.ADDRESS_MAP);
 		
 		writeTypeConstants(Type.OBJECT);		
 		writeTypeConstants(Type.CLASS);		
@@ -2406,6 +2460,7 @@ public class LLVMOutput extends AbstractOutput
 		//writeTypeDeclaration(Type.METHOD_CLASS);
 		writeTypeConstants(Type.ITERATOR);
 		writeTypeConstants(Type.STRING);
+		//writeTypeConstants(Type.ADDRESS_MAP);
 		
 		//contains generics, organized in lists with the unparameterized generic as the key
 		Map<String, Set<String>> allGenerics = new HashMap<String, Set<String>>();

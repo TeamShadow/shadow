@@ -127,25 +127,27 @@ public class TypeUpdater extends BaseChecker
 						//note that the node is null for the default create, because nothing was made
 					}
 					
-					//add copy methods
+					//add copy methods					
 					//first, one with no arguments
+					/* //no need for an extra method 
 					ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
 					copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);					
 					MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode);
 					copySignature.addReturn(new SimpleModifiedType(classType));
 					copyNode.setMethodSignature(copySignature);
 					classType.addMethod("copy", copySignature);
+					*/
 					
 					//then, one with a set to hold addresses
-					copyNode = new ASTMethodDeclaration(-1);
+					ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
 					copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);
-					copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode);
+					MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode);
 					copySignature.addParameter("addresses", new SimpleModifiedType(Type.ADDRESS_MAP));
 					copySignature.addReturn(new SimpleModifiedType(classType));					
 					copyNode.setMethodSignature(copySignature);
 					classType.addMethod("copy", copySignature);
 					
-					classType.addReferencedType(Type.ADDRESS_MAP); //so the use of this type is recorded
+					classType.addReferencedType(Type.ADDRESS_MAP); //so the use of AddressMap is recorded
 					
 					//add default getters and setters
 					for( Map.Entry<String, Node> field : classType.getFields().entrySet() )

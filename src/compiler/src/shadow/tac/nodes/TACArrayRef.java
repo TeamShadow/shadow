@@ -25,11 +25,23 @@ public class TACArrayRef extends TACReference
 	
 	public TACArrayRef(TACNode node, TACOperand reference, TACOperand... ops)
 	{
-		this(node, reference, Arrays.asList(ops));
+		this(node, reference, Arrays.asList(ops), true);
+	}
+	
+	//single op, can specify not to check for optimization
+	public TACArrayRef(TACNode node, TACOperand reference, TACOperand op, boolean check)
+	{
+		this(node, reference, Arrays.asList(op), check);
 	}
 	
 	public TACArrayRef(TACNode node, TACOperand reference,
 			Collection<TACOperand> ops)
+	{
+		this(node, reference, ops, true);
+	}
+	
+	public TACArrayRef(TACNode node, TACOperand reference,
+			Collection<TACOperand> ops, boolean check)
 	{
 		super(node);
 		array = check(reference, reference);

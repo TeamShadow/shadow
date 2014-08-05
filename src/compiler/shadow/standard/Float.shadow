@@ -13,9 +13,9 @@ implements
 	constant float INFINITY = 1f / 0f;
 	constant float NEGATIVE_INFINITY = -1f / 0f;
 
-	constant int SIGN_MASK = 0x80000000;
-	constant int EXPONENT_MASK = 0x78000000;
-	constant int SIGNIFICAND_MASK = 0x7ffffff;
+	constant uint SIGN_MASK = 0x80000000u;
+	constant uint EXPONENT_MASK = 0x78000000u;
+	constant uint SIGNIFICAND_MASK = 0x7ffffffu;
 
 	// implement Number
 	public native toByte() => (byte);
@@ -120,8 +120,8 @@ implements
 	// implement CanNegate<float>
 	public native negate() => (float);
 
-	public native get raw() => (int);
-	public get bits() => (int)
+	public native get raw() => (uint);
+	public get bits() => (uint)
 	{
 		if (isNaN())
 			return NaN->raw;

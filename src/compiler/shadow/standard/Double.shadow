@@ -14,9 +14,9 @@ implements
 	constant double INFINITY = 1d / 0d;
 	constant double NEGATIVE_INFINITY = -1d / 0d;
 
-	constant long SIGN_MASK = 0x8000000000000000L;
-	constant long EXPONENT_MASK = 0x7ff0000000000000L;
-	constant long SIGNIFICAND_MASK = 0xfffffffffffffL;
+	constant ulong SIGN_MASK = 0x8000000000000000uL;
+	constant ulong EXPONENT_MASK = 0x7ff0000000000000uL;
+	constant ulong SIGNIFICAND_MASK = 0xfffffffffffffuL;
 
 	// implement Number
 	public native toByte() => (byte);
@@ -131,23 +131,23 @@ sprintf(buffer, "%u%07u%07ue%d", ps[0], ps[1], ps[2], -mk);
 	
 		boolean negative = false;
 		
-		long bits = this->bits;
-		if( (bits & SIGN_MASK) != 0L )
+		ulong bits = this->bits;
+		if( (bits & SIGN_MASK) != 0uL )
 			negative = true;
 							
 		int exponent = cast<int>((bits & EXPONENT_MASK) >> 52);
-		long significand = bits & SIGNIFICAND_MASK;	
+		ulong significand = bits & SIGNIFICAND_MASK;	
 		
 		if( exponent == 0 )
 		{
-			if( significand == 0L )
+			if( significand == 0uL )
 				 return negative ? "-0.0", "0.0";
 									
 			exponent = -1022 - 52; 			
 		}
 		else
 		{
-			significand |= (SIGNIFICAND_MASK + 1L);			
+			significand |= (SIGNIFICAND_MASK + 1uL);			
 			exponent -= (1023 + 52);
 		}
 		
@@ -320,8 +320,8 @@ sprintf(buffer, "%u%07u%07ue%d", ps[0], ps[1], ps[2], -mk);
 			string.delete( index + 1, string->size ); 
 	}
 
-	public native get raw() => (long);
-	public get bits() => (long)
+	public native get raw() => (ulong);
+	public get bits() => (ulong)
 	{
 		if (isNaN())
 			return NaN->raw;

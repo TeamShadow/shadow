@@ -4,8 +4,8 @@ immutable class shadow.standard@Class implements CanHash
 {
 	get String name;
 	get nullable Class parent;
-	get Class[] interfaces = Class:create[0];
-	Object[] data = freeze(Object:create[0]);
+	get Class[] interfaces; // = Class:create[0];
+	Object[] data; // = freeze(Object:create[0]);
 	int flags;
 	get int size;
 		
@@ -33,11 +33,18 @@ immutable class shadow.standard@Class implements CanHash
 	{
 		return (flags & 0b1000) != 0;
 	}
-	public isMethod() => ( boolean )
+	
+	public isSingleton() => ( boolean )
 	{
 		return (flags & 0b10000) != 0;
 	}
+	
+	public isMethod() => ( boolean )
+	{
+		return (flags & 0b100000) != 0;
+	}
 
+	//never actually called
 	protected create(int flags, int size, String name, Class parent, Class[] interfaces, immutable Object[] data ) 
 	{	
 		this:parent = parent;
@@ -78,7 +85,7 @@ immutable class shadow.standard@Class implements CanHash
 			this:name = name;
 	}
 	
-	private interfaceData( Class interfaceClass ) => ( immutable nullable Object )
+	public interfaceData( Class interfaceClass ) => ( immutable nullable Object )
 	{
 	
 		//Console:instance.printLine( this # " is current class");

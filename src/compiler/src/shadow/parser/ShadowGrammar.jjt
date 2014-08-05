@@ -182,10 +182,13 @@ TOKEN :
 TOKEN :
 {
    < BYTE_LITERAL: //can't end with b or B because of hex digits
+	("-")?
+	(	  
         <DECIMAL_LITERAL> ["y","Y"]
       | <HEX_LITERAL> ["y","Y"]
       | <BINARY_LITERAL> ["y","Y"]
       | <OCTAL_LITERAL> ["y","Y"]
+    )
   >
 |
   < UBYTE_LITERAL: //can't end with b or B because of hex digits
@@ -196,10 +199,13 @@ TOKEN :
   >
 |
   < SHORT_LITERAL:
+  	("-")?
+  	(  	  
         <DECIMAL_LITERAL> ["s","S"]
       | <HEX_LITERAL> ["s","S"]
       | <BINARY_LITERAL> ["s","S"]
       | <OCTAL_LITERAL> ["s","S"]
+    )
   >  
 |   
   < USHORT_LITERAL:
@@ -210,10 +216,12 @@ TOKEN :
   >  
 |
   < INT_LITERAL:
+  	("-")?  	(  	   
         <DECIMAL_LITERAL> (["i","I"])?
       | <HEX_LITERAL> (["i","I"])?
       | <BINARY_LITERAL> (["i","I"])?
       | <OCTAL_LITERAL> (["i","I"])?
+   )
   >
 |
   < UINT_LITERAL:
@@ -224,17 +232,23 @@ TOKEN :
   >
 |
   < LONG_LITERAL:
+  	("-")?
+  	(  	   
         <DECIMAL_LITERAL> ["l","L"]
       | <HEX_LITERAL> ["l","L"]
       | <BINARY_LITERAL> ["l","L"]
       | <OCTAL_LITERAL> ["l","L"]
+    )
   >
 |
   < ULONG_LITERAL:
+  	("-")?
+  	(
         <DECIMAL_LITERAL> ["u","U"]["l","L"]
       | <HEX_LITERAL> ["u","U"]["l","L"]
       | <BINARY_LITERAL> ["u","U"]["l","L"]
       | <OCTAL_LITERAL> ["u","U"]["l","L"]
+	)
   >
 |
   < #BINARY_LITERAL: "0" ["b","B"] (["0"-"1"])+ >
@@ -246,17 +260,17 @@ TOKEN :
   < #OCTAL_LITERAL: "0" ["c","C"] (["0"-"7"])* > //doesn't use 0o or 0O because it's hard to read
 |
   < FLOAT_LITERAL:
-        (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
-      | "." (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
-      | (["0"-"9"])+ <EXPONENT> ["f","F"]
-      | (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
+       ("-")? (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
+      | ("-")? "." (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
+      | ("-")? (["0"-"9"])+ <EXPONENT> ["f","F"]
+      | ("-")? (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
   >
 |
   < DOUBLE_LITERAL:
-        (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
-      | "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
-      | (["0"-"9"])+ <EXPONENT> (["d","D"])?
-      | (["0"-"9"])+ (<EXPONENT>)? ["d","D"]
+       ("-")? (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
+      | ("-")? "." (["0"-"9"])+ (<EXPONENT>)? (["d","D"])?
+      | ("-")? (["0"-"9"])+ <EXPONENT> (["d","D"])?
+      | ("-")? (["0"-"9"])+ (<EXPONENT>)? ["d","D"]
   >
 |
   < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
@@ -1178,11 +1192,14 @@ void UnaryExpression():
 {
   //removed unary + since it's useless
   //( "+" { jjtThis.setImage("+"); } | "-" { jjtThis.setImage("-"); } ) UnaryExpression()
-  "-" { jjtThis.setImage("-"); } UnaryExpression()
-| "#" { jjtThis.setImage("#"); } UnaryExpression()
+   
+ "#" { jjtThis.setImage("#"); } UnaryExpression()
 | "~" { jjtThis.setImage("~"); } UnaryExpression()
-| "!" { jjtThis.setImage("!"); } UnaryExpression()  
-| InlineMethodDefinition()
+| "!" { jjtThis.setImage("!"); } UnaryExpression()
+| LOOKAHEAD(Literal()) PrimaryExpression() //covers cases in which literals start with -
+| "-" { jjtThis.setImage("-"); } UnaryExpression()
+| LOOKAHEAD(FormalParameters(true) "=>") InlineMethodDefinition()
+| PrimaryExpression()
 }
 
 /*
@@ -1197,8 +1214,7 @@ void UnaryExpressionNotPlusMinus():
 void InlineMethodDefinition():
 { debugPrint("INLINE METHOD DEFINITION"); }
 {
-  LOOKAHEAD(FormalParameters(true) "=>" ) FormalParameters(true) "=>" InlineResults() //inline method definition
-| PrimaryExpression()
+  FormalParameters(true) "=>" InlineResults() //inline method definition 
 }
 
 void CastExpression():

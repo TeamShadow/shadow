@@ -45,7 +45,7 @@ public class TACLoad extends TACOperand
 	{
 		if (num == 0)
 			return reference;
-		throw new IndexOutOfBoundsException("num");
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

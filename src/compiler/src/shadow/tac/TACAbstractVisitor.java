@@ -14,15 +14,16 @@ import shadow.tac.nodes.TACClass.TACMethodTable;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACConstructGeneric;
 import shadow.tac.nodes.TACConversion;
+import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDestinationPhiRef;
 import shadow.tac.nodes.TACFieldRef;
-import shadow.tac.nodes.TACGenericClass;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
@@ -31,6 +32,7 @@ import shadow.tac.nodes.TACNodeRef;
 import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
+import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
@@ -95,13 +97,13 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	@Override
 	public void visit(TACClassData node) throws ShadowException { }
 	@Override
-	public void visit(TACConstantRef node) throws ShadowException { }
+	public void visit(TACConstantRef node) throws ShadowException { }	
+	@Override
+	public void visit(TACCopyMemory node) throws ShadowException { }
 	@Override
 	public void visit(TACDestinationPhiRef node) throws ShadowException { }
 	@Override
 	public void visit(TACFieldRef node) throws ShadowException { }
-	@Override
-	public void visit(TACGenericClass node) throws ShadowException { }	
 	@Override
 	public void visit(TACLabel node) throws ShadowException { }
 	@Override
@@ -113,7 +115,9 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	@Override
 	public void visit(TACLiteral node) throws ShadowException { }
 	@Override
-	public void visit(TACLoad node) throws ShadowException { }
+	public void visit(TACLoad node) throws ShadowException { }	
+	@Override
+	public void visit(TACLongToPointer node) throws ShadowException { }	
 	@Override
 	public void visit(TACMethodRef node) throws ShadowException { }
 	@Override
@@ -130,6 +134,8 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	public void visit(TACPhi node) throws ShadowException { }
 	@Override
 	public void visit(TACPhiRef node) throws ShadowException { }
+	@Override
+	public void visit(TACPointerToLong node) throws ShadowException { }	
 	@Override
 	public void visit(TACSequenceElement node) throws ShadowException { }	
 	@Override

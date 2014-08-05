@@ -1,10 +1,58 @@
 class shadow.utility@HashSet<V is CanHash and CanEqual<V>>
 	implements Set<V>
 {
+	constant int DEFAULT_INITIAL_CAPACITY = 16;
+	constant int MAXIMUM_CAPACITY = 1 << 30;
+	constant float DEFAULT_LOAD_FACTOR = 0.75f;
+	
 	get int size = 0;
-	Node[] table = Node:create[256];
-	float load;
+	Node[] table;
+	float loadFactor;
+	int threshold;
 	int modifications = 0;
+	
+	public create()
+	{
+		this(DEFAULT_INITIAL_CAPACITY);
+	}
+	
+	public create(int initialCapacity)
+	{
+		this(initialCapacity, DEFAULT_LOAD_FACTOR);
+	}
+	
+	public create(int initialCapacity, float loadFactor)
+	{
+		int capacity = 1;
+		while( capacity < initialCapacity )
+			capacity <<= 1;
+		table = Node:create[capacity];
+		this:loadFactor = loadFactor;
+		threshold = cast<int>(capacity * loadFactor);
+	}
+	
+	public resize(int newCapacity) => ()
+	{		
+		if(table->size == MAXIMUM_CAPACITY)
+		{
+			threshold = int:MAX;
+			return;
+		}
+		
+		Node[] newTable = Node:create[newCapacity];
+		int index;
+		int hash;		
+		
+		foreach( V value in this )
+		{
+			(index, hash) = findIndex( value, newCapacity );				
+			newTable[index] = Node:create(hash, value, newTable[index]);
+		}
+		
+		table = newTable;
+		threshold = cast<int>(newCapacity * loadFactor);		
+	}
+	
 
 	private class Node
 	{
@@ -37,10 +85,17 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>>
 
 	private immutable hash( V value ) => ( int index, int hash )
 	{
-		uint temp = value->hash;
-		int hash = cast<int>(temp ^ temp >> 16 ^ temp >> 8);
-		return ( hash & table->size - 1, hash );
+		return findIndex( value, table->size );
 	}
+	
+	private immutable findIndex( V value, int length ) => ( int index, int hash )
+	{
+		uint temp = value->hash;
+		temp ^= (temp >> 20) ^ (temp >> 12);
+		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
+		return ( hash & (length - 1), hash );	
+	}
+	
 
 	public index( V value ) => ( boolean found )
 	{
@@ -68,6 +123,11 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>>
 		{
 			table[index] = Node:create(hash, value, table[index]);
 			modifications += 1;
+			size += 1;
+			
+			if( size > threshold )
+				resize(2 * table->size);
+			
 			return true;
 		}
 	}
@@ -120,7 +180,9 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>>
 	public clear() => ()
 	{
 		size = 0;
-		table = Node:create[256];
+		table = Node:create[DEFAULT_INITIAL_CAPACITY];
+		threshold = cast<int>(table->size * loadFactor);
+		modifications += 1;
 	}
 	
 	
@@ -133,21 +195,21 @@ class shadow.utility@HashSet<V is CanHash and CanEqual<V>>
 		{
 			current = next(null);
 		}
-		public next( nullable Node current ) => ( nullable Node )
-		{
+		public next( nullable Node position ) => ( nullable Node )
+		{	
 			try
-			{
-				return check(check(current)->next);
+			{				
+				if( position !== null )
+					position = check(position)->next;
 			}
-			recover
-			{
-				while ( current === null and index < table->size )
-				{
-					current = table[index];
-					index += 1;
-				}
-				return current;
+			recover{}
+		
+			while( position === null and index < table->size )
+			{				
+				position = table[index];				
+				index += 1;					
 			}
+			return position; //returns null if nothing left			
 		}
 
 		private readonly checkForModifications() => ()

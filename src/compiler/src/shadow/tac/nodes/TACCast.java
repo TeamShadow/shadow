@@ -1,10 +1,6 @@
 package shadow.tac.nodes;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.tac.nodes.TACConversion.Kind;
 import shadow.typecheck.type.ArrayType;
@@ -60,13 +56,30 @@ public class TACCast extends TACOperand
 			
 			if( op.getType().isPrimitive() != type.isPrimitive())
 			{
-				if( op.getType().isPrimitive() )				
-					op = new TACConversion(this, op, op.getType(), Kind.PRIMITIVE_TO_OBJECT);
+				if( op.getType().isPrimitive() )	
+				{
+					//nullable primitives are already objects
+					if( !op.getModifiers().isNullable() )
+						op = new TACConversion(this, op, op.getType(), Kind.PRIMITIVE_TO_OBJECT);
+				}
 				else
 				{
-					operand = new TACConversion(this, op, type, Kind.OBJECT_TO_PRIMITIVE);
+					if( !modifiers.isNullable() )
+						operand = new TACConversion(this, op, type, Kind.OBJECT_TO_PRIMITIVE);
+					else
+						operand = op;
 					return;
 				}				
+			}
+			
+			if( op.getType().isPrimitive() && type.isPrimitive() && op.getModifiers().isNullable() != modifiers.isNullable() )
+			{
+				if( modifiers.isNullable() )				
+					operand = new TACConversion(this, op, type, Kind.PRIMITIVE_TO_OBJECT );
+				else				
+					operand = new TACConversion(this, op, type, Kind.OBJECT_TO_PRIMITIVE);
+				
+				return;
 			}
 			
 			if( (op.getType() instanceof ArrayType) != (type instanceof ArrayType) )
