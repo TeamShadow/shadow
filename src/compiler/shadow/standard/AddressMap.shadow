@@ -1,0 +1,276 @@
+import shadow.utility@Map;
+import shadow.utility@IllegalModificationException;
+import shadow.io@Console;
+
+
+class shadow.standard@AddressMap
+	implements Map<ulong, ulong>
+{
+	constant int DEFAULT_INITIAL_CAPACITY = 16;
+	constant int MAXIMUM_CAPACITY = 1 << 30;
+	constant float DEFAULT_LOAD_FACTOR = 0.75f;
+	
+	get int size = 0;
+	Node[] table;
+	float loadFactor;
+	int threshold;
+	int modifications = 0;
+	
+	public create()
+	{
+		this(DEFAULT_INITIAL_CAPACITY);
+	}
+	
+	public create(int initialCapacity)
+	{
+		this(initialCapacity, DEFAULT_LOAD_FACTOR);
+	}
+	
+	public create(int initialCapacity, float loadFactor)
+	{
+		int capacity = 1;
+		while( capacity < initialCapacity ) //powers of 2
+			capacity <<= 1;
+		table = Node:create[capacity];
+		this:loadFactor = loadFactor;
+		threshold = cast<int>(capacity * loadFactor);
+	}
+	
+	public resize(int newCapacity) => ()
+	{		
+		if(table->size == MAXIMUM_CAPACITY)
+		{
+			threshold = int:MAX;
+			return;
+		}
+		
+		Node[] newTable = Node:create[newCapacity];
+		int index;
+		int hash;		
+		
+		for( int i = 0; i < table->size; i += 1 )
+		{
+			try
+			{
+				Node node = check(table[i]);
+				while( true )
+				{
+					(index, hash) = findIndex( node->key, newCapacity );
+					newTable[index] = Node:create(hash, node->key, node->value, newTable[index]);
+					node = check(node->next);
+				}
+			}
+			recover  //jumps here when node->next is null
+			{}
+		}
+		
+		table = newTable;
+		threshold = cast<int>(newCapacity * loadFactor);		
+	}
+	
+
+	private class Node
+	{
+		immutable get int hash;
+		get ulong key;
+		get set ulong value;
+		get set nullable Node next;
+		
+		public readonly get value() => (ulong)
+		{
+			return value;
+		}
+		
+		public readonly get next() => (nullable Node)
+		{
+			return next;
+		}
+
+		public create( int hash, ulong key, ulong value )
+		{
+			this(hash, key, value, null);
+		}
+		
+		public create( int hash, ulong key, ulong value, nullable Node after )
+		{
+			this:hash = hash;
+			this:key = key;
+			this:value = value;
+			next = after;
+		}
+	}
+
+	private immutable hash( ulong key ) => ( int index, int hash )
+	{
+		return findIndex( key, table->size );
+	}
+	
+	private immutable findIndex( ulong key, int length ) => ( int index, int hash )
+	{
+		uint temp = key->hash;
+		temp ^= (temp >> 20) ^ (temp >> 12);
+		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
+		return ( hash & (length - 1), hash );	
+	}
+	
+
+	public index( ulong key ) => ( nullable ulong value )
+	{
+		(int index, int hash) = this.hash( key );
+		try
+		{
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->key != key )
+				current = check(current->next);
+			
+			//found correct node
+			return current->value; 
+		}
+		recover //hit null before finding existing value
+		{			
+		}
+		
+		return null;				
+	}
+	
+	
+	public index( ulong key, ulong value ) => ()
+	{
+		( int index, int hash ) = this.hash(key);
+		try
+		{
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->key != key )
+				current = check(current->next);
+			
+			//found correct node
+			current->value = value; 
+		}
+		recover //hit null before finding existing value
+		{
+			table[index] = Node:create(hash, key, value, table[index]);
+			modifications += 1;
+			size += 1;
+			
+			if( size > threshold )
+				resize(2 * table->size);
+		}
+	}
+
+	public remove( ulong key ) => ( nullable ulong value )
+	{	
+		( int index, int hash ) = this.hash(key);
+		try
+		{
+			nullable Node last = null;
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->key != key )
+				( last, current ) = ( current, check(current->next) );
+			try
+			{
+				check(last)->next = current->next;
+			}
+			recover
+			{
+				table[index] = current->next;
+			}
+			modifications += 1;
+			return current->value;
+		}
+		recover
+		{
+			return null;
+		}
+	}
+	public readonly containsKey( ulong key ) => ( boolean found )
+	{		
+		( int index, int hash ) = this.hash(key);
+		try
+		{
+			Node current = check(table[index]);			
+			while ( current->hash != hash and current->key != key )
+				current = check(current->next);
+			return true;
+		}
+		recover
+		{
+			return false;
+		}
+	}
+	
+	public readonly containsValue( ulong value ) => ( boolean found )
+	{		
+		foreach( ulong element in this )
+			if( element == value )
+				return true;
+				
+		return false;
+	}
+
+	public immutable iterator() => ( Iterator<ulong> )
+	{
+		return AddressMapIterator:create();
+	}
+	
+	public clear() => ()
+	{
+		size = 0;
+		table = Node:create[DEFAULT_INITIAL_CAPACITY];
+		threshold = cast<int>(table->size * loadFactor);
+		modifications += 1;
+	}
+	
+	
+	private class AddressMapIterator implements Iterator<ulong>
+	{
+		int index = 0;
+		nullable Node current;
+		int expectedModifications = modifications;
+		public create()
+		{
+			current = next(null);
+		}
+		public next( nullable Node position ) => ( nullable Node )
+		{	
+			try
+			{				
+				if( position !== null )
+					position = check(position)->next;
+			}
+			recover{}
+		
+			while( position === null and index < table->size )
+			{				
+				position = table[index];				
+				index += 1;					
+			}
+			return position; //returns null if nothing left			
+		}
+
+		private readonly checkForModifications() => ()
+		{
+			if ( modifications != expectedModifications )
+				throw IllegalModificationException:create();
+		}
+
+		public readonly hasNext() => ( boolean )
+		{
+			checkForModifications();
+			return current !== null;
+		}
+
+		public next() => ( ulong value )
+		{
+			checkForModifications();
+			try
+			{				 
+				( ulong value, current ) = ( check(current)->value, next(current) );
+				return value;
+			}
+			recover
+			{
+				throw IndexOutOfBoundsException:create();
+			}
+		}
+	}
+}

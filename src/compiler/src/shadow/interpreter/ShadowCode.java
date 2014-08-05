@@ -1,5 +1,7 @@
 package shadow.interpreter;
 
+import java.math.BigInteger;
+
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -27,22 +29,22 @@ public class ShadowCode extends ShadowValue
 	protected ShadowValue cast(Type type) throws ShadowException
 	{
 		if (type.equals(Type.BYTE))
-			return new ShadowByte((byte)getValue());
+			return new ShadowInteger(BigInteger.valueOf(getValue()), 1, true);
 		if (type.equals(Type.SHORT))
-			return new ShadowShort((short)getValue());
+			return new ShadowInteger(BigInteger.valueOf(getValue()), 2, true);
 		if (type.equals(Type.INT))
-			return new ShadowInt((int)getValue());
+			return new ShadowInteger(BigInteger.valueOf(getValue()), 4, true);
 		if (type.equals(Type.LONG))
-			return new ShadowLong((long)getValue());
+			return new ShadowInteger(BigInteger.valueOf(getValue()), 8, true);
 		if (type.equals(Type.UBYTE))
-			return new ShadowUByte((byte)getValue());
+			return new ShadowInteger(BigInteger.valueOf(getValue()), 1, false);
 		if (type.equals(Type.USHORT))
-			return new ShadowUShort((short)getValue());
+			return new ShadowInteger(BigInteger.valueOf(getValue()), 2, false);
 		if (type.equals(Type.UINT))
-			return new ShadowUInt((int)getValue());
+			return new ShadowInteger(BigInteger.valueOf(getValue()), 4, false);
 		if (type.equals(Type.ULONG))
-			return new ShadowULong((long)getValue());
-		return this;
+			return new ShadowInteger(BigInteger.valueOf(getValue()), 8, false);
+		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}
 	@Override
 	public ShadowValue copy() throws ShadowException

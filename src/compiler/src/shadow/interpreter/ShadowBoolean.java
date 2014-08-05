@@ -21,11 +21,16 @@ public class ShadowBoolean extends ShadowValue
 	{
 		return value;
 	}
+	
+	public ShadowBoolean not() throws ShadowException
+	{	
+		return new ShadowBoolean(!value);
+	}
 
 	@Override
 	protected ShadowValue cast(Type type) throws ShadowException
 	{
-		return this;
+		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}
 	@Override
 	public ShadowValue copy() throws ShadowException
