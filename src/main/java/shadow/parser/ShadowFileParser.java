@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
+import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowParser;
 
 /**
