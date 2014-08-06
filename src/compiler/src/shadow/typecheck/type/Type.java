@@ -20,7 +20,9 @@ import shadow.typecheck.BaseChecker;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.Package;
 
-
+/**
+ * A representation of a Shadow type.
+ */
 public abstract class Type implements Comparable<Type>
 {
 	//types should not change after construction

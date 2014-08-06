@@ -5,6 +5,40 @@ import shadow.parser.javacc.ParseException;
 
 /**
  * Class to hold modifiers.
+ * 
+ * <b>Type Modifiers</b>
+ * <ol>
+ * <li>public: only for inner classes</li>
+ * <li>private: only for inner classes</li>
+ * <li>protected: only for inner classes</li>        
+ * <li>abstract: </li>        
+ * <li>immutable: abstract, readonly, and immutable are mutually exclusive</li>
+ * <li>readonly: abstract, readonly, and immutable are mutually exclusive</li>
+ * </ol>
+ * 
+ * <b>Declaration Modifiers</b>
+ * <ul>
+ * <li>public: only for methods</li>
+ * <li>private: only for methods</li>
+ * <li>protected: only for methods</li>
+ * <li>get: only for fields</li>
+ * <li>set: only for fields</li>
+ * <li>constant: only for fields, public constant</li>
+ * <li>weak: reference will not stop GC</li>
+ * <li>native: used to map in C functions</li>
+ * <li>nullable: variables that can be null</li>
+ * <li>immutable: all references to this object are readonly</li>
+ * <li>readonly: no mutable methods can be called on this reference</li>
+ * </ul>
+ * 
+ * <b>Hidden Modifiers</b> <i>(Used in the compiler internally, but cannot be marked by the user)</i>
+ * <ul>
+ * <li>assignable: used to mark variables [lvalues]</li>
+ * <li>type name: used to distinguish between types and values/variables with that type, e.g. int vs. 5 or String vs. "figs"</li>
+ * <li>field: used to mark nodes that are fields, as opposed to local variables, to inform the TAC [methods are NOT marked as fields]</li>
+ * <li>return readonly: returned object will be readonly</li>
+ * <li>return immutable: returned object will be immutable</li>
+ * </ul>
  */
 public final class Modifiers
 {

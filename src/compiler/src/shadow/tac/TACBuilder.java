@@ -83,6 +83,7 @@ public class TACBuilder implements ShadowParserVisitor
 	private boolean explicitSuper, implicitCreate;
 	private TACVariable identifier;
 	private TACBlock block;
+	
 	public Collection<TACModule> build(Node node) throws ShadowException
 	{
 		modules = null;
