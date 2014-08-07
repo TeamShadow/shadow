@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <shadow arch="64" os="Linux">
-  <import>/usr/lib/shadow</import>
-  <system>/usr/lib/shadow</system>
+  <import>.</import>
+  <system>.</system>
 </shadow>
