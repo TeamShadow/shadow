@@ -6,9 +6,9 @@ import shadow.tac.TACVisitor;
 
 /**
  * An abstract class that is the base of all TAC operations.
- * 
+ *
  * Each TACNode is part of a circular doubly-linked list.
- * 
+ *
  * @author Jacob Young
  */
 public abstract class TACNode {
@@ -32,7 +32,7 @@ public abstract class TACNode {
 
     /**
      * Constructor adds current node *before* parameter node
-     * 
+     *
      * @param node
      */
     protected TACNode(TACNode node) {
@@ -50,7 +50,7 @@ public abstract class TACNode {
 
     /**
      * Puts input node after current node
-     * 
+     *
      * @param node
      */
 
@@ -60,7 +60,7 @@ public abstract class TACNode {
 
     /**
      * Puts input node before current node
-     * 
+     *
      * @param node
      */
     public void prepend(TACNode node) {
@@ -83,15 +83,15 @@ public abstract class TACNode {
 
     /**
      * Inserts this node after given node: node <-> this
-     * 
+     *
      * @param node the node to insert this node after
      */
     public void insertAfter(final TACNode node) {
         if (node == this)
             return;
-        
+
         remove();
-        
+
         if (node != null)
             connect(node, this, node.getNext());
     }
@@ -109,7 +109,7 @@ public abstract class TACNode {
      */
     public void remove() {
         connect(prev, next);
-        
+
         // clear(); // ??? this seems more clear, thoughts?
         this.prev = this.next = null;
     }
@@ -121,7 +121,6 @@ public abstract class TACNode {
         connect(this, this);
     }
 
-/*    
     protected final void connect(TACNode first, TACNode second, TACNode third) {
         connect(first, second, second, third);
     }
@@ -130,7 +129,7 @@ public abstract class TACNode {
         connect(first, second);
         connect(third, fourth);
     }
-*/    
+
     /**
      * Connects two nodes together: first <-> second
      * @param first the first node to connect.
@@ -145,11 +144,12 @@ public abstract class TACNode {
      * Connects an arbitrary list of TACNodes together.
      * @param nodes the nodes, in order, to connect.
      */
+/*
     protected final void connect(final TACNode... nodes) {
         for(int i=0; i < nodes.length-1; ++i) {
             connect(nodes[i], nodes[i+1]);
         }
     }
-
+*/
     public abstract void accept(TACVisitor visitor) throws ShadowException;
 }
