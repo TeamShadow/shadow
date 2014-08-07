@@ -1,0 +1,32 @@
+class shadow.test@MutableObject
+{
+	get set int value;
+	get set String name;
+	
+	public create(int value, String name)
+	{
+		this:value = value;
+		this:name = name;
+	}
+	
+	public increase() => ()
+	{
+		value += 1;
+	}
+	
+	public duplicate() => ()
+	{
+		name = name # name;
+	}
+	
+	public readonly toString() => (String)
+	{
+		var string = MutableString:create("(");
+		string.append( #value );
+		string.append(",");
+		string.append( name );
+		string.append( ")" );
+		
+		return string.toString();
+	}
+}

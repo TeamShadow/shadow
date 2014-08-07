@@ -4,13 +4,13 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 {
 	get immutable int[] lengths;
 	Object data;
-	private create( int[] lengths, Object data )	
+	protected create( immutable int[] lengths, Object data )	
 	{
 		this:lengths = lengths;		
 		this:data = data;		
 	}	
 	
-	private create( immutable int[] lengths )
+	protected create( immutable int[] lengths )
 	{
 		this:lengths = lengths;
 		this:data = allocate(T:class, this->size);

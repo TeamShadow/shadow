@@ -85,7 +85,7 @@ public class ArrayType extends ClassType
 	
 	public ArrayType( Type baseType, int dimensions )
 	{
-		super(makeName(baseType, dimensions), baseType.getModifiers(), baseType.getOuter());
+		super(makeName(baseType, dimensions), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getOuter());
 		
 		this.baseType = baseType;
 		this.dimensions = dimensions;
@@ -99,7 +99,7 @@ public class ArrayType extends ClassType
 	}	
 	
 	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index ) {
-		super( makeName(baseType, arrayDimensions, index), baseType.getModifiers(), null );	
+		super( makeName(baseType, arrayDimensions, index), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), null );	
 		setExtendType(Type.ARRAY); // added
 		dimensions = arrayDimensions.get(index);		
 		if( arrayDimensions.size() == index + 1 )

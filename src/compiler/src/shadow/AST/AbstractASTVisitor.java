@@ -765,7 +765,7 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTFreezeExpression node, Boolean data)
+	public Object visit(ASTCopyExpression node, Boolean data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}

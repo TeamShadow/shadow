@@ -16,13 +16,15 @@ implements
 	public create( byte[] data )
 	{		
 		byte ascii = 0y;
-		this:data = byte:create[data->size];
-		for ( int i = 0; i < data->size; i += 1 )
+		byte[] temp = byte:create[data->size];
+		for ( int i = 0; i < temp->size; i += 1 )
 		{
-			this:data[i] = data[i];
+			temp[i] = data[i];
 			ascii |= data[i];
 		}
 		this:ascii = ascii < 0; //change from 0 to 0y for trouble to happen
+		
+		this:data = freeze(temp);
 	}
 	public create( code[] data )
 	{
@@ -40,56 +42,58 @@ implements
 					size += 1;
 			}
 		}
-		this:data = byte:create[size];
+		byte[] temp = byte:create[size];
 		for ( int i = 0, j = 0; i < data->size; i += 1 )
 		{
 			int codePoint = cast<int>(data[i]);
 			if ( codePoint < 1 << 7 )
 			{
-				this:data[j + 0] = cast<byte>(codePoint);
+				temp[j + 0] = cast<byte>(codePoint);
 				j += 1;
 			}
 			else if ( codePoint < 1 << 11 )
 			{
-				this:data[j + 0] = cast<byte>(codePoint >>  6 & 0b00011111 | 0b11000000);
-				this:data[j + 1] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<byte>(codePoint >>  6 & 0b00011111 | 0b11000000);
+				temp[j + 1] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 2;
 			}
 			else if ( codePoint < 1 << 16 )
 			{
-				this:data[j + 0] = cast<byte>(codePoint >> 12 & 0b00001111 | 0b11100000);
-				this:data[j + 1] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
-				this:data[j + 2] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<byte>(codePoint >> 12 & 0b00001111 | 0b11100000);
+				temp[j + 1] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
+				temp[j + 2] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 3;
 			}
 			else if ( codePoint < 1 << 21 )
 			{
-				this:data[j + 0] = cast<byte>(codePoint >> 18 & 0b00000111 | 0b11110000);
-				this:data[j + 1] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
-				this:data[j + 2] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
-				this:data[j + 3] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<byte>(codePoint >> 18 & 0b00000111 | 0b11110000);
+				temp[j + 1] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
+				temp[j + 2] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
+				temp[j + 3] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 4;
 			}
 			else if ( codePoint < 1 << 26 )
 			{
-				this:data[j + 0] = cast<byte>(codePoint >> 24 & 0b00000011 | 0b11111000);
-				this:data[j + 1] = cast<byte>(codePoint >> 18 & 0b00111111 | 0b10000000);
-				this:data[j + 2] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
-				this:data[j + 3] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
-				this:data[j + 4] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<byte>(codePoint >> 24 & 0b00000011 | 0b11111000);
+				temp[j + 1] = cast<byte>(codePoint >> 18 & 0b00111111 | 0b10000000);
+				temp[j + 2] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
+				temp[j + 3] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
+				temp[j + 4] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 5;
 			}
 			else if ( codePoint < 1 << 31 )
 			{
-				this:data[j + 0] = cast<byte>(codePoint >> 30 & 0b00000001 | 0b11111100);
-				this:data[j + 1] = cast<byte>(codePoint >> 24 & 0b00111111 | 0b10000000);
-				this:data[j + 2] = cast<byte>(codePoint >> 18 & 0b00111111 | 0b10000000);
-				this:data[j + 3] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
-				this:data[j + 4] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
-				this:data[j + 5] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<byte>(codePoint >> 30 & 0b00000001 | 0b11111100);
+				temp[j + 1] = cast<byte>(codePoint >> 24 & 0b00111111 | 0b10000000);
+				temp[j + 2] = cast<byte>(codePoint >> 18 & 0b00111111 | 0b10000000);
+				temp[j + 3] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
+				temp[j + 4] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
+				temp[j + 5] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 6;
 			}
-		}
+		}		
+		
+		this:data = freeze(temp);
 	}
 	public create( String other )
 	{
@@ -98,7 +102,7 @@ implements
 	}
 	private create( byte[] data, boolean ascii )
 	{
-		this:data = data;
+		this:data = freeze(data);
 		this:ascii = ascii;
 	}
 

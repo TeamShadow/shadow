@@ -1975,14 +1975,15 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;	
 	}
 	
-	public Object visit(ASTFreezeExpression node, Boolean secondVisit) throws ShadowException 
+	public Object visit(ASTCopyExpression node, Boolean secondVisit) throws ShadowException 
 	{
 		if( secondVisit )
 		{
 			ModifiedType child = node.jjtGetChild(0);
 			child = resolveType( child );
-			node.setModifiers(child.getModifiers());
-			node.addModifier(Modifiers.IMMUTABLE);
+			node.setModifiers(child.getModifiers());			
+			if( node.getImage().equals("freeze"))
+				node.addModifier(Modifiers.IMMUTABLE);
 			node.setType(child.getType());
 		}	
 		

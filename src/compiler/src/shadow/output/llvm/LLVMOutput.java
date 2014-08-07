@@ -826,12 +826,31 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACCopyMemory node) throws ShadowException
 	{
-		TACOperand destination = node.getDestination();
-		TACOperand source = node.getSource();
+		TACOperand destinationNode = node.getDestination();
+		TACOperand sourceNode = node.getSource();
 		TACOperand size = node.getSize();
 		
-		writer.write(nextTemp() + " = bitcast " + typeSymbol(destination) + " to i8*");
-		writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to i8*");
+		String destination = typeSymbol(destinationNode);
+		String source = typeSymbol(sourceNode);
+		
+		if( destinationNode.getType() instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType) destinationNode.getType();
+			writer.write(nextTemp() + " = extractvalue " +
+					destination + ", 0");
+			destination = typeText(arrayType.getBaseType(), temp(0), true);			
+		}
+		
+		if( sourceNode.getType() instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType) sourceNode.getType();
+			writer.write(nextTemp() + " = extractvalue " +
+					source + ", 0");
+			source = typeText(arrayType.getBaseType(), temp(0), true);			
+		}
+		
+		writer.write(nextTemp() + " = bitcast " + destination + " to i8*");
+		writer.write(nextTemp() + " = bitcast " + source + " to i8*");
 		writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(1) + ", i8* " + temp(0) + ", i32 " + symbol(size) + ", i32 1, i1 0)");
 	}
 

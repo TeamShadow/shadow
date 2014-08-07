@@ -182,6 +182,11 @@ public class TACTest {
 		args.add("shadow/test/AddressMapTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testCopy() throws Exception {
+		args.add("shadow/test/CopyTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 
 
 }

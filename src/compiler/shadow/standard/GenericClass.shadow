@@ -5,7 +5,8 @@ immutable class shadow.standard@GenericClass extends Class
 	Object[] parameters; //double the size for class and methods
 	//Class rawClass;
 
-	protected create(int flags, int size, String name, Class parent, Class[] interfaces, immutable Object[] data, immutable Object[] parameters )
+	//never gets called
+	protected create(int flags, int size, String name, Class parent, immutable Class[] interfaces, immutable Object[] data, immutable Object[] parameters )
 	{
 		super(flags, size, name, parent, interfaces, data);
 		//this:rawClass = rawClass;
@@ -43,7 +44,7 @@ immutable class shadow.standard@GenericClass extends Class
 			}
 			else
 			{
-				Class[] interfaces = this->interfaces;
+				readonly Class[] interfaces = this->interfaces;
 			 	for ( int i = 0; i < interfaces->size; i += 1 )
 				{					 
 					if( interfaces[i] === other )

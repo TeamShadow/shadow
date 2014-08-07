@@ -45,7 +45,7 @@ immutable class shadow.standard@Class implements CanHash
 	}
 
 	//never actually called
-	protected create(int flags, int size, String name, Class parent, Class[] interfaces, immutable Object[] data ) 
+	protected create(int flags, int size, String name, Class parent, immutable Class[] interfaces, immutable Object[] data ) 
 	{	
 		this:parent = parent;
 		this:interfaces = interfaces;
