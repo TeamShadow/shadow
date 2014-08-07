@@ -2,9 +2,8 @@ package shadow.interpreter;
 
 import java.math.BigInteger;
 
-import com.sun.corba.se.impl.io.TypeMismatchException;
-
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowTypeMismatchException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
@@ -25,10 +24,10 @@ public class ShadowDouble extends ShadowNumber
 	{
 		return value;
 	}
-	
+
 	@Override
 	public ShadowDouble negate() throws ShadowException
-	{	
+	{
 		return new ShadowDouble(-value);
 	}
 
@@ -36,7 +35,7 @@ public class ShadowDouble extends ShadowNumber
 	protected ShadowValue cast(Type type) throws ShadowException
 	{
 		BigInteger integer = BigInteger.valueOf(Math.round(value));
-		
+
 		if (type.equals(Type.BYTE))
 			return new ShadowInteger(integer, 1, true);
 		if (type.equals(Type.SHORT))
@@ -52,140 +51,140 @@ public class ShadowDouble extends ShadowNumber
 		if (type.equals(Type.UINT))
 			return new ShadowInteger(integer, 4, false);
 		if (type.equals(Type.ULONG))
-			return new ShadowInteger(integer, 8, false);		
+			return new ShadowInteger(integer, 8, false);
 		if (type.equals(Type.FLOAT))
 			return new ShadowFloat((float)getValue());
 		if (type.equals(Type.DOUBLE))
-			return new ShadowDouble((double)getValue());
+			return new ShadowDouble(getValue());
 		return this;
 	}
-	
+
 	@Override
 	public ShadowDouble add(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowDouble(value + input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());		
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowDouble subtract(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowDouble(value - input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowDouble multiply(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowDouble(value * input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowDouble divide(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowDouble(value / input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowDouble modulus(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowDouble(value % input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
-	}	
-	
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+	}
+
 	@Override
 	public ShadowBoolean equal(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowBoolean(value == input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowBoolean lessThan(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowBoolean(value <= input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowBoolean lessThanOrEqual(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowBoolean(value <= input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowBoolean greaterThan(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowBoolean(value > input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws ShadowException
-	{	
+	{
 		if( other instanceof ShadowDouble )
 		{
-			ShadowDouble input = (ShadowDouble) other;			
+			ShadowDouble input = (ShadowDouble) other;
 			return new ShadowBoolean(value >= input.value);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
+
 	@Override
 	public ShadowInteger hash() throws ShadowException
 	{
 		return new ShadowInteger(BigInteger.valueOf(Double.doubleToLongBits(getValue())), 8, false).hash();
 	}
-	
+
 	@Override
 	public ShadowValue copy() throws ShadowException
 	{
@@ -199,7 +198,7 @@ public class ShadowDouble extends ShadowNumber
 	@Override
 	public ShadowDouble abs()
 	{
-		return new ShadowDouble(Math.abs(value));		
+		return new ShadowDouble(Math.abs(value));
 	}
 	@Override
 	public ShadowDouble cos() throws ShadowException {
@@ -211,7 +210,7 @@ public class ShadowDouble extends ShadowNumber
 	}
 	@Override
 	public ShadowDouble power(ShadowNumber number) throws ShadowException {
-		double exponent = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();		
+		double exponent = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowDouble(Math.pow(value, exponent));
 	}
 	@Override
@@ -232,27 +231,27 @@ public class ShadowDouble extends ShadowNumber
 	}
 	@Override
 	public ShadowDouble max(ShadowNumber number) throws ShadowException {
-		double other = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();			
+		double other = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowDouble(Math.max(value, other));
 	}
 	@Override
 	public ShadowDouble min(ShadowNumber number) throws ShadowException {
-		double other = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();			
+		double other = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowDouble(Math.min(value, other));
 	}
-	
-	public ShadowDouble floor() throws ShadowException 
+
+	public ShadowDouble floor() throws ShadowException
 	{
-		return new ShadowDouble(Math.floor(value));		
+		return new ShadowDouble(Math.floor(value));
 	}
-	
-	public ShadowDouble ceiling() throws ShadowException 
+
+	public ShadowDouble ceiling() throws ShadowException
 	{
-		return new ShadowDouble(Math.ceil(value));		
+		return new ShadowDouble(Math.ceil(value));
 	}
-	
-	public ShadowDouble round() throws ShadowException 
+
+	public ShadowDouble round() throws ShadowException
 	{
-		return new ShadowDouble(Math.round(value));		
+		return new ShadowDouble(Math.round(value));
 	}
 }

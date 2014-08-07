@@ -2,27 +2,26 @@ package shadow.interpreter;
 
 import java.math.BigInteger;
 
-import com.sun.corba.se.impl.io.TypeMismatchException;
-
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowTypeMismatchException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 public class ShadowInteger extends ShadowNumber {
-		
+
 	private final int size;  //in bytes
 	private final boolean signed;
 	private BigInteger value;
 	private final BigInteger max;
 	private final BigInteger min;
-	
+
 	public ShadowInteger(BigInteger value, int size, boolean signed)
 	{
 		super(Modifiers.IMMUTABLE);
 		this.value = value;
 		this.size = size;
 		this.signed = signed;
-		
+
 		if( signed )
 		{
 			max = new BigInteger("2").pow(size * 8 - 1);
@@ -33,10 +32,10 @@ public class ShadowInteger extends ShadowNumber {
 			max = new BigInteger("2").pow(size * 8);
 			min = BigInteger.ZERO;
 		}
-		
+
 		fixValue();
 	}
-	
+
 	private void fixValue()
 	{
 		if( signed )
@@ -46,13 +45,13 @@ public class ShadowInteger extends ShadowNumber {
 				if( value.compareTo(max) >= 0 )
 				{
 					value = value.subtract(max);
-					value = value.add(min);					
+					value = value.add(min);
 				}
-				
+
 				if( value.compareTo(min) < 0 )
 				{
 					value = value.subtract(min);
-					value = value.add(max);				
+					value = value.add(max);
 				}
 			}
 		}
@@ -61,7 +60,7 @@ public class ShadowInteger extends ShadowNumber {
 			value = value.mod(max);
 		}
 	}
-	
+
 
 	@Override
 	public Type getType() {
@@ -93,22 +92,22 @@ public class ShadowInteger extends ShadowNumber {
 	{
 		return value;
 	}
-	
+
 	@Override
 	public ShadowInteger negate() throws ShadowException
-	{	
+	{
 		if( signed )
 			return new ShadowInteger(value.negate(), size, signed);
-		
+
 		throw new UnsupportedOperationException("Unsigned values cannot be negated");
 	}
-	
+
 	@Override
 	public ShadowInteger bitwiseComplement() throws ShadowException
-	{	
+	{
 		return new ShadowInteger(value.negate().subtract(BigInteger.ONE), size, signed);
 	}
-	
+
 
 	@Override
 	protected ShadowValue cast(Type type) throws ShadowException
@@ -135,245 +134,263 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowFloat( value.floatValue() );
 		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}
-	
-	public ShadowInteger add(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger add(ShadowValue other) throws ShadowException
+	{
 		if( getType().equals(other.getType()) )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.add(input.value), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.add(input.value), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());		
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger subtract(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger subtract(ShadowValue other) throws ShadowException
+	{
 		if( getType().equals(other.getType()) )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.subtract(input.value), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.subtract(input.value), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger multiply(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger multiply(ShadowValue other) throws ShadowException
+	{
 		if( getType().equals(other.getType()) )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.multiply(input.value), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.multiply(input.value), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger divide(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger divide(ShadowValue other) throws ShadowException
+	{
 		if( getType().equals(other.getType()) )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.divide(input.value), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.divide(input.value), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger modulus(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger modulus(ShadowValue other) throws ShadowException
+	{
 		if( getType().equals(other.getType()) )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.mod(input.value), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.mod(input.value), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger leftShift(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger leftShift(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.shiftLeft(input.value.mod(new BigInteger("64")).intValue()), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.shiftLeft(input.value.mod(new BigInteger("64")).intValue()), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger rightShift(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger rightShift(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.shiftRight(input.value.mod(new BigInteger("64")).intValue()), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.shiftRight(input.value.mod(new BigInteger("64")).intValue()), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger leftRotate(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger leftRotate(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
 			ShadowInteger input = (ShadowInteger)other;
 			int shift = input.value.mod(new BigInteger("64")).intValue();
 			BigInteger result = value.shiftLeft(shift);
-			
+
 			if( signed )
 				result.mod(max.multiply(new BigInteger("2")));
-			
+
 			result = result.or(value.shiftRight(8 * size - shift));
-			
-			return new ShadowInteger( result, size, signed);			
+
+			return new ShadowInteger( result, size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
-		
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
 	}
-	
-	public ShadowInteger rightRotate(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowInteger rightRotate(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
 			ShadowInteger input = (ShadowInteger)other;
 			int shift = input.value.mod(new BigInteger("64")).intValue();
 			BigInteger result = value.shiftLeft(8 * size - shift);
-			
+
 			if( signed )
 				result.mod(max.multiply(new BigInteger("2")));
-			
+
 			result = result.or(value.shiftRight(shift));
-			
-			return new ShadowInteger( result, size, signed);			
+
+			return new ShadowInteger( result, size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowBoolean equal(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowBoolean equal(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
-			ShadowInteger input = (ShadowInteger) other;			
+			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.equals(input.value));
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowBoolean lessThan(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowBoolean lessThan(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
-			ShadowInteger input = (ShadowInteger) other;			
+			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.compareTo(input.value) < 0);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowBoolean lessThanOrEqual(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowBoolean lessThanOrEqual(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
-			ShadowInteger input = (ShadowInteger) other;			
+			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.compareTo(input.value) <= 0);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowBoolean greaterThan(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowBoolean greaterThan(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
-			ShadowInteger input = (ShadowInteger) other;			
+			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.compareTo(input.value) > 0);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws ShadowException
-	{	
+
+	@Override
+    public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws ShadowException
+	{
 		if( other instanceof ShadowInteger )
 		{
-			ShadowInteger input = (ShadowInteger) other;			
+			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.compareTo(input.value) >= 0);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger bitwiseAnd(ShadowValue other) throws ShadowException
+
+	@Override
+    public ShadowInteger bitwiseAnd(ShadowValue other) throws ShadowException
 	{
 		if( getType().equals(other.getType()) )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.and(input.value), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.and(input.value), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger bitwiseOr(ShadowValue other) throws ShadowException
+
+	@Override
+    public ShadowInteger bitwiseOr(ShadowValue other) throws ShadowException
 	{
 		if( getType().equals(other.getType()) )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.or(input.value), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.or(input.value), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
 	}
-	
-	public ShadowInteger bitwiseXor(ShadowValue other) throws ShadowException
+
+	@Override
+    public ShadowInteger bitwiseXor(ShadowValue other) throws ShadowException
 	{
 		if( getType().equals(other.getType()) )
 		{
-			ShadowInteger input = (ShadowInteger)other;			
-			return new ShadowInteger( value.xor(input.value), size, signed);			
+			ShadowInteger input = (ShadowInteger)other;
+			return new ShadowInteger( value.xor(input.value), size, signed);
 		}
-		
-		throw new TypeMismatchException("Type " + getType() + " does not match " + other.getType());
-	}	
-	
-	
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+	}
+
+
 	@Override
 	public ShadowInteger copy() throws ShadowException
 	{
 		return new ShadowInteger(value, size, signed);
 	}
-	
-	public ShadowInteger hash() throws ShadowException
+
+	@Override
+    public ShadowInteger hash() throws ShadowException
 	{
 		if( size < 8 )
 			return (ShadowInteger)cast(Type.UINT);
-		
+
 		ShadowInteger first = (ShadowInteger)cast(Type.UINT);
-		ShadowInteger second = (ShadowInteger)rightShift(new ShadowInteger(BigInteger.valueOf(32), 4, false)).cast(Type.UINT);			
-		
-		return first.bitwiseXor(second);		
+		ShadowInteger second = (ShadowInteger)rightShift(new ShadowInteger(BigInteger.valueOf(32), 4, false)).cast(Type.UINT);
+
+		return first.bitwiseXor(second);
 	}
-	
-	
+
+
 	@Override
 	public String toString()
 	{
 		return value.toString();
 	}
-	
+
 	public String toString(int base)
 	{
 		return value.toString(base);
 	}
-	
+
 	@Override
 	public ShadowInteger abs()
 	{
-		return new ShadowInteger(value.abs(), size, false);		
+		return new ShadowInteger(value.abs(), size, false);
 	}
 
 	@Override
@@ -386,7 +403,7 @@ public class ShadowInteger extends ShadowNumber {
 	}
 	@Override
 	public ShadowDouble power(ShadowNumber number) throws ShadowException {
-		double exponent = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();		
+		double exponent = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowDouble(Math.pow(value.doubleValue(), exponent));
 	}
 	@Override
@@ -407,16 +424,16 @@ public class ShadowInteger extends ShadowNumber {
 	}
 	@Override
 	public ShadowInteger max(ShadowNumber number) throws ShadowException {
-		ShadowInteger other = (ShadowInteger)number;			
+		ShadowInteger other = (ShadowInteger)number;
 		return new ShadowInteger(value.max(other.value), Math.max(size, other.size), signed || other.signed);
 	}
 	@Override
 	public ShadowNumber min(ShadowNumber number) throws ShadowException {
-		ShadowInteger other = (ShadowInteger)number;			
+		ShadowInteger other = (ShadowInteger)number;
 		return new ShadowInteger(value.min(other.value), Math.max(size, other.size), signed || other.signed);
 
 	}
-	
+
 	public ShadowInteger ones() throws ShadowException
 	{
 		int count = 0;
@@ -424,10 +441,10 @@ public class ShadowInteger extends ShadowNumber {
 			count = value.bitLength() + 1 + (value.bitLength() - value.bitCount());
 		else
 			count = value.bitCount();
-		
-		return new ShadowInteger( BigInteger.valueOf(count), size, signed);		
+
+		return new ShadowInteger( BigInteger.valueOf(count), size, signed);
 	}
-	
+
 	public ShadowInteger trailingZeroes() throws ShadowException
 	{
 		int count = 0;
@@ -438,33 +455,33 @@ public class ShadowInteger extends ShadowNumber {
 			for( int i = 0; i < value.bitLength() && !value.testBit(i); i++ )
 				count++;
 		}
-		
-		return new ShadowInteger( BigInteger.valueOf(count), size, signed);		
+
+		return new ShadowInteger( BigInteger.valueOf(count), size, signed);
 	}
-	
+
 	public ShadowInteger leadingZeroes() throws ShadowException
 	{
 		int count = 0;
 		 if( value.compareTo(BigInteger.ZERO) < 0 )
 			count = 0;
 		else
-			count = 8 * size - value.bitLength();		
-		
-		return new ShadowInteger( BigInteger.valueOf(count), size, signed);				
-		
+			count = 8 * size - value.bitLength();
+
+		return new ShadowInteger( BigInteger.valueOf(count), size, signed);
+
 	}
 
 	public ShadowInteger flipEndian() throws ShadowException
 	{
 		BigInteger result = BigInteger.ZERO;
 		BigInteger mask = BigInteger.valueOf(0xFF);
-		
+
 		for( int i = 0; i < size; i++ )
 			result = result.or(value.shiftRight(8*(size - i - 1)).and(mask).shiftLeft(i));
-		
-		
+
+
 		return new ShadowInteger( result, size, signed);
 	}
-	
+
 
 }
