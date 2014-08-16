@@ -336,7 +336,7 @@ public final class Modifiers
 
 	public void checkCreateModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A create", node);
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | NATIVE), "A create", node);
 	}
 
 	public void checkDestroyModifiers(Node node) throws ParseException

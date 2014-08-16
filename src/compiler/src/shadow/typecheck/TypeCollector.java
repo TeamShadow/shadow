@@ -329,7 +329,7 @@ public class TypeCollector extends BaseChecker
 				//case "AbstractClass":	Type.ABSTRACT_CLASS = (ClassType) type; break;
 				case "AddressMap":		Type.ADDRESS_MAP = (ClassType) type; break;
 				case "Array":			Type.ARRAY = (ClassType) type; break;			
-				//case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
+				case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
 				case "CanAdd":			Type.CAN_ADD = (InterfaceType)type; break;
 				case "CanCompare":		Type.CAN_COMPARE = (InterfaceType) type; break;
 				case "CanDivide":		Type.CAN_DIVIDE = (InterfaceType)type; break;

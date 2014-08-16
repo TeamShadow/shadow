@@ -1,0 +1,35 @@
+import shadow.io@Console;
+
+immutable class shadow.standard@ArrayClass extends GenericClass
+{	
+	Class internalParameter;
+	//generic type parameter is for the outside world
+	//internalParameter can be different if it is itself an array
+
+	//never gets called
+	protected create(int flags, int size, String name, Class parent, immutable Class[] interfaces, immutable Object[] data, immutable Object[] parameters, Class internalClass)
+	{
+		super(flags, size, name, parent, interfaces, data, parameters);		
+		this:internalParameter = internalParameter;
+	}
+	
+	private findClass(GenericClass[] classes, Class internal) => (nullable Class)
+	{
+		Console out = Console:instance;		
+			
+		for( int i = 0; i < classes->size; i += 1 )
+		{	
+			try
+			{			
+				readonly ArrayClass arrayClass = cast<ArrayClass>(check(classes[i]));				
+				if( internal.equal(arrayClass:internalParameter) )									
+					return arrayClass;				
+			}
+			recover {}
+		}
+		
+		out.printLine("Type argument <" # internal # "> not found");		
+		
+		return null;
+	}
+}

@@ -53,8 +53,9 @@ public abstract class Type implements Comparable<Type>
 	 */
 	
 	public static ClassType OBJECT = null;
-	public static ClassType CLASS = null;  // meta class for holding normal .class variables
-	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic .class variables	
+	public static ClassType CLASS = null;  // meta class for holding normal :class variables
+	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables	
+	public static ClassType ARRAY_CLASS = null;  // meta class for holding generic array :class variables
 	public static ClassType ARRAY = null;  // class representation of all array types
 	public static ClassType METHOD = null;  // class representation for references with function type
 	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
@@ -173,13 +174,14 @@ public abstract class Type implements Comparable<Type>
 	{
 		OBJECT = null;
 		CLASS = null;		
-		ARRAY = null;		 
+		ARRAY = null;
+		ARRAY_CLASS = null;
 		METHOD = null;				
 		UNBOUND_METHOD = null;
 		ENUM = null;
 		EXCEPTION = null;	
 		ERROR = null;		
-		GENERIC_CLASS = null;
+		GENERIC_CLASS = null;		
 		BOOLEAN = null;
 		BYTE = null;
 		CODE = null;
@@ -249,9 +251,16 @@ public abstract class Type implements Comparable<Type>
 		else
 			return _package.getQualifiedName() + '@' + getTypeName();			
 	}
+	
+	final public String getMangledNameWithGenerics() {
+		if( this instanceof ArrayType || getTypeWithoutTypeArguments().equals(Type.ARRAY) || Type.ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) )
+			return getMangledNameWithGenerics(false);
+		else
+			return getMangledNameWithGenerics(true);		
+	}
 
 			
-	public String getMangledNameWithGenerics() {		
+	protected String getMangledNameWithGenerics(boolean convertArrays) {		
 		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
 		StringBuilder builder;
 		
@@ -266,10 +275,10 @@ public abstract class Type implements Comparable<Type>
 			builder.append("_C").append(className);
 		}
 		else
-			builder = new StringBuilder(getOuter().getMangledNameWithGenerics() + "_I" + className );
+			builder = new StringBuilder(getOuter().getMangledNameWithGenerics(convertArrays) + "_I" + className );
 			
 		if( isParameterized() )		
-			builder.append(getTypeParameters().getMangledNameWithGenerics());
+			builder.append(getTypeParameters().getMangledNameWithGenerics(convertArrays));
 				
 		return builder.toString();
 	}	
@@ -306,7 +315,9 @@ public abstract class Type implements Comparable<Type>
 			return _package.getQualifiedName() + '@' + toString();
 		*/
 		
-		return getMangledNameWithGenerics();
+		//return getMangledNameWithGenerics();
+		
+		return getQualifiedName();
 	}
 	
 	public String getQualifiedName() 
@@ -1136,6 +1147,10 @@ public abstract class Type implements Comparable<Type>
 				ArrayType arrayType = (ArrayType) type;
 				addReferencedType(arrayType.convertToGeneric());
 				//covers Type.ARRAY and all recursive base types
+				
+				Type baseType = arrayType.getBaseType();
+				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
+					referencedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues
 			}
 			else if( type instanceof MethodType )
 			{

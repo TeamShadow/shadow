@@ -923,20 +923,22 @@ public class TACBuilder implements ShadowParserVisitor
 			if( type.isPrimitive() ) //convert non null primitive wrapper to real primitive			
 				operand = new TACCast(tree, new SimpleModifiedType(type), operand);
 			
+			TACMethodRef methodRef = new TACMethodRef(tree, operand,
+					type.getMatchingMethod("toString", new SequenceType())); 
+			
 			new TACStore(tree, var, new TACCall(tree, block,
-					new TACMethodRef(tree, operand,
-							type.getMatchingMethod("toString", new SequenceType())),
-					Collections.singletonList(operand)));
+					methodRef,
+					Collections.singletonList(methodRef.getPrefix())));
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
 			operand = new TACLoad(tree, var);
 		}
 		else
 		{
-			operand = new TACCall(tree, block,
-					new TACMethodRef(tree, operand,
-							type.getMatchingMethod("toString", new SequenceType())),
-					Collections.singletonList(operand));
+			TACMethodRef methodRef = new TACMethodRef(tree, operand,
+					type.getMatchingMethod("toString", new SequenceType())); 
+			operand = new TACCall(tree, block, methodRef,
+					Collections.singletonList(methodRef.getPrefix()));
 		}
 		
 		return operand;
@@ -1428,7 +1430,9 @@ public class TACBuilder implements ShadowParserVisitor
 					tree.getNumChildren());			
 			for (int i = 0; i < tree.getNumChildren(); i++)
 				sizes.add(tree.appendChild(i));
-			prefix = visitArrayAllocation((ArrayType)node.getType(), sizes);
+			ArrayType arrayType = (ArrayType)node.getType();
+			TACClass baseClass = new TACClass(tree, arrayType.getBaseType());
+			prefix = visitArrayAllocation(arrayType, baseClass, sizes);
 		}
 		return POST_CHILDREN;
 	}
@@ -2366,7 +2370,10 @@ public class TACBuilder implements ShadowParserVisitor
 				counters[i] = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
 				new TACStore(tree, counters[i], new TACLiteral(tree, "-1"));//starting at -1 allows update and check to happen on the same label
 				labels[i] = new TACLabelRef(tree);
-				labels[i].new TACLabel(tree);				
+				
+				new TACBranch(tree, labels[i]);
+				labels[i].new TACLabel(tree);	
+				
 				TACLabelRef terminate;
 				TACLabelRef body = new TACLabelRef(tree);
 				if( i == 0 )
@@ -2394,12 +2401,14 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		TACTree saveTree = tree;
-		TACMethod method = this.method = new TACMethod(methodSignature);		
+		TACMethod method = this.method = new TACMethod(methodSignature);
+		implicitCreate = false;
 		if (module.isClass()/* && !methodRef.isNative()*/)
 		{
 			block = new TACBlock(tree = new TACTree(1));
-			if (implicitCreate = methodSignature.isCreate())
+			if (!methodSignature.isNative() && methodSignature.isCreate())
 			{
+				implicitCreate = true;
 				Type type = methodSignature.getOuter();
 				if (type.hasOuter())
 					new TACStore(tree,
@@ -2496,7 +2505,7 @@ public class TACBuilder implements ShadowParserVisitor
 						TACMethodRef indexLoad = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("index", indexArguments));
 						indexArguments.add(Type.ARRAY.getTypeParameters().get(0));
 						TACMethodRef indexStore = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("index", indexArguments));
-						TACMethodRef copy = new TACMethodRef(tree, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+						
 						
 						TACOperand value = new TACCall(tree, block, indexLoad, this_, i);
 						
@@ -2507,7 +2516,9 @@ public class TACBuilder implements ShadowParserVisitor
 						
 						makeCopyLabel.new TACLabel(tree);
 						
-						value = new TACCall(tree, block, copy, value, map);
+						TACMethodRef copy = new TACMethodRef(tree, value, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+						
+						value = new TACCall(tree, block, copy, copy.getPrefix(), map);
 						new TACCall(tree, block, indexStore, duplicate, i, value);						
 						new TACBranch(tree, skipLabel);
 						
@@ -2558,15 +2569,14 @@ public class TACBuilder implements ShadowParserVisitor
 								}
 								else 
 								{	
-									
 									if( entryType.getType() instanceof InterfaceType )
 									{
-										copyMethod = new TACMethodRef(tree, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
 										//cast converts from interface to object
 										field = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), field);
+										copyMethod = new TACMethodRef(tree, field, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
 									}
 									else //normal object
-										copyMethod = new TACMethodRef(tree, entryType.getType().getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+										copyMethod = new TACMethodRef(tree, field, entryType.getType().getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
 									
 									TACOperand nullCondition = new TACSame(tree, field, new TACLiteral(tree, "null"));
 									new TACBranch(tree, nullCondition, skipField, copyField); //if null, skip
@@ -2596,7 +2606,7 @@ public class TACBuilder implements ShadowParserVisitor
 				}
 			}
 			
-			if (methodSignature.getNode() == null)
+			if (methodSignature.getNode() == null) //for gets and sets
 			{
 				method.addParameters();
 				TACFieldRef field = new TACFieldRef(tree, new TACVariableRef(
@@ -2877,11 +2887,11 @@ public class TACBuilder implements ShadowParserVisitor
 		block = block.getParent();
 	}
 
-	private TACOperand visitArrayAllocation(ArrayType type,
+	private TACOperand visitArrayAllocation(ArrayType type, TACClass baseClass,
 			List<TACOperand> sizes)
 	{
-		TACOperand baseClass = new TACClass(tree, type.getBaseType()).getClassData();
-		TACNewArray alloc = new TACNewArray(tree, type, baseClass,
+		TACOperand baseClassData = baseClass.getClassData();
+		TACNewArray alloc = new TACNewArray(tree, type, baseClassData,
 				sizes.subList(0, type.getDimensions()));
 		sizes = sizes.subList(type.getDimensions(), sizes.size());
 		if (!sizes.isEmpty())
@@ -2895,7 +2905,7 @@ public class TACBuilder implements ShadowParserVisitor
 			new TACBranch(tree, condLabel);
 			bodyLabel.new TACLabel(tree);
 			new TACStore(tree, new TACArrayRef(tree, alloc, index),
-					visitArrayAllocation((ArrayType)type.getBaseType(), sizes));
+					visitArrayAllocation((ArrayType)type.getBaseType(), baseClass.getBaseClass(), sizes));
 			new TACStore(tree, index, new TACBinary(tree, index, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+',
 					new TACLiteral(tree, "1")));
 			new TACBranch(tree, condLabel);
@@ -3050,12 +3060,10 @@ public class TACBuilder implements ShadowParserVisitor
 			Type type = node.getType();
 			
 			if( !type.getModifiers().isImmutable() ) //if immutable, do nothing, the old one is fine
-			{
-				
+			{				
 				TACNewObject object = new TACNewObject(tree, Type.ADDRESS_MAP );
 				TACMethodRef create = new TACMethodRef(tree, Type.ADDRESS_MAP.getMatchingMethod("create", new SequenceType()) );
 				TACOperand map = new TACCall(tree, block, create, object);
-					
 				
 				if( type instanceof ArrayType )
 				{
@@ -3066,24 +3074,28 @@ public class TACBuilder implements ShadowParserVisitor
 				{
 					TACMethodRef copyMethod;
 					TACReference result = new TACVariableRef(tree, method.addTempLocal(node));
-					TACOperand data = value;
-				
-					if( type instanceof InterfaceType )				
-					{								
-						copyMethod = new TACMethodRef(tree, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
-						//cast converts from interface to object
-						data = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), data);
-					}
-					else
-						copyMethod  = new TACMethodRef(tree, type.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+					TACOperand data = value;					
 					
-					TACOperand nullCondition = new TACSame(tree, data, new TACLiteral(tree, "null"));
 					TACLabelRef nullLabel = new TACLabelRef(tree);
 					TACLabelRef doneLabel = new TACLabelRef(tree);
 					TACLabelRef copyLabel = new TACLabelRef(tree);
-					new TACBranch(tree, nullCondition, nullLabel, copyLabel);
 					
-					copyLabel.new TACLabel(tree);
+					if( type instanceof InterfaceType )				
+					{	
+						//cast converts from interface to object
+						data = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), data);
+						TACOperand nullCondition = new TACSame(tree, data, new TACLiteral(tree, "null"));
+						new TACBranch(tree, nullCondition, nullLabel, copyLabel);
+						copyLabel.new TACLabel(tree);
+						copyMethod = new TACMethodRef(tree, data, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));						
+					}
+					else
+					{
+						TACOperand nullCondition = new TACSame(tree, data, new TACLiteral(tree, "null"));						
+						new TACBranch(tree, nullCondition, nullLabel, copyLabel);
+						copyLabel.new TACLabel(tree);
+						copyMethod  = new TACMethodRef(tree, data, type.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));						
+					}
 					
 					TACOperand copy = new TACCall(tree, block, copyMethod, data, map);
 

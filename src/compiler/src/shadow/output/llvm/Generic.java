@@ -12,9 +12,10 @@ import shadow.typecheck.type.Type;
 
 public class Generic implements Comparable<Generic>
 {	
-	private String name;
-	private String mangledName;
-	private String mangledGeneric;	
+	protected String name;
+	protected String mangledName;
+	protected String mangledGeneric;
+	
 	boolean isInterface;
 	ArrayList<String> parameters = new ArrayList<String>();
 	ArrayList<String> interfaces = new ArrayList<String>();
@@ -63,8 +64,13 @@ public class Generic implements Comparable<Generic>
 		for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() )
 		{
 			Type parameterType = parameter.getType();
-			
-			if( parameterType instanceof ArrayType )
+
+			//arrays need special treatment
+			//use an array type inside of anything except an array, use the generic version
+			//inside array (or inner classes), leave it as an array
+			if( parameterType instanceof ArrayType &&
+				!type.getTypeWithoutTypeArguments().equals(Type.ARRAY) )// &&
+				//!Type.ARRAY.recursivelyContainsInnerClass(type.getTypeWithoutTypeArguments()) )
 				parameterType = ((ArrayType)parameterType).convertToGeneric();
 				
 			parameters.add(parameterType.getMangledNameWithGenerics());

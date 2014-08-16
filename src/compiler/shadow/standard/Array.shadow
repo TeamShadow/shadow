@@ -10,13 +10,17 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 		this:data = data;		
 	}	
 	
-	protected create( immutable int[] lengths )
+	protected native create( immutable int[] lengths );
+	
+	/*
+	protected native create( immutable int[] lengths )
 	{
 		this:lengths = lengths;
 		this:data = allocate(T:class, this->size);
-	}	
+	}
+	*/	
 		
-	private immutable native allocate( Class type, int size ) => ( Object );
+	//private immutable native allocate( Class type, int size ) => ( Object );
 
 	public immutable get size() => ( int )
 	{
@@ -28,27 +32,8 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	
 	public immutable native get dims() => ( int );
 	
-	//we do need special copying for arrays and interfaces
 	
-	/* //copying dealt with as part of the standard copying tools
-	public immutable copy() => ( Array<T> )
-	{
-		Array<T> copy = Array<T>:create(this->lengths, allocate(T:class, this->size));
-		int[] indices = int:create[this->dims];
-		while ( indices[0] != this->lengths[0] )
-		{
-			copy.index(indices, index(indices));
-			int i = indices->size - 1;
-			for ( indices[i] += 1; i > 0 and indices[i] == this->lengths[i];
-					i -= 1, indices[i] += 1 )
-				indices[i] = 0;
-		}
-		return copy;
-	}
-	*/
-	
-	
-	/*
+	/* //copy implementation based off the following code
 	private immutable copyProxy(AddressMap addresses) => ( Array<T> )
 	{
 		Array<T> duplicate = Array<T>:create( lengths );
@@ -70,22 +55,24 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	private immutable native index( int index ) => (T);
 	private native index( int index, T value) => ();	
 
-	public immutable getBaseClass() => ( Class )
-	{
-		return T:class;
-	}
+	public native immutable getBaseClass() => ( Class );
 
 	public immutable toString() => ( String )
 	{
 		if ( this->size == 0 )
-			return "[]";			
+			return "[]";
 			
-		MutableString string = MutableString:create("[ ");
-		int[] indices = int:create[this->dims];				
+		//Console out = Console:instance;
+		
+		MutableString string = MutableString:create("[ ");						
+		Class baseClass = getBaseClass();
+		
+		//out.printLine("Base class: " # baseClass);
+		//out.printLine("Size: " # size() );
 		
 		boolean first = true;
 		foreach( T value in this )
-		{
+		{	
 			if ( first )
 				first = false;
 			else
@@ -102,20 +89,24 @@ abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	
 	private class ArrayIterator implements Iterator<T>
 	{
-		int[] position = int:create[lengths->size];		
+		int position = 0;
+		int limit = size();
 		
 		public immutable hasNext() => (boolean)
-		{								
-			return position[0] != lengths[0];		
+		{	
+			return position < limit;		
 		}
 		
 		public next() => (T)
 		{
-			T value = index( position );
-			int i = lengths->size - 1;
+			//Console out = Console:instance;
+			if( position >= limit )
+				throw IndexOutOfBoundsException:create();
 			
-			for ( position[i] += 1; i > 0 and position[i] == lengths[i]; i -= 1, position[i] += 1 )
-				position[i] = 0;
+			//out.printLine("Position: " # position);
+			
+			T value = index( position );			
+			position += 1;			
 			
 			return value;  
 		}

@@ -121,7 +121,7 @@ public abstract class TACNode {
         connect(this, this);
     }
 
-/*    
+    
     protected final void connect(TACNode first, TACNode second, TACNode third) {
         connect(first, second, second, third);
     }
@@ -130,7 +130,7 @@ public abstract class TACNode {
         connect(first, second);
         connect(third, fourth);
     }
-*/    
+    
     /**
      * Connects two nodes together: first <-> second
      * @param first the first node to connect.
@@ -145,11 +145,14 @@ public abstract class TACNode {
      * Connects an arbitrary list of TACNodes together.
      * @param nodes the nodes, in order, to connect.
      */
+   
+    /*
     protected final void connect(final TACNode... nodes) {
         for(int i=0; i < nodes.length-1; ++i) {
             connect(nodes[i], nodes[i+1]);
         }
     }
+    */
 
     public abstract void accept(TACVisitor visitor) throws ShadowException;
 }

@@ -38,8 +38,16 @@ public class TACCast extends TACOperand
 			else
 				operand = new TACConversion(this, op, type, Kind.SEQUENCE_TO_OBJECT);
 		}			
-		else if( op.getType().equals(Type.NULL) || destination.equals(Type.NULL) ) //does that second condition ever happen?
-			operand = op;		
+		else if( op.getType().equals(Type.NULL) )//|| destination.equals(Type.NULL) ) //does that second condition ever happen?
+		{
+			
+			if( type instanceof ArrayType )			
+				operand = new TACConversion(this, op, type, Kind.NULL_TO_ARRAY);
+			else if( type instanceof InterfaceType )
+				operand = new TACConversion(this, op, type, Kind.NULL_TO_INTERFACE);
+			else
+				operand = op;
+		}
 		else
 		{		
 			if( op.getType() instanceof InterfaceType )			
@@ -88,7 +96,7 @@ public class TACCast extends TACOperand
 				{
 					ArrayType arrayType = (ArrayType) op.getType();
 					op = new TACConversion(this, op, arrayType.convertToGeneric(), Kind.ARRAY_TO_OBJECT);					
-				}
+				}						
 				else
 				{ 
 					operand = new TACConversion(this, op, type, Kind.OBJECT_TO_ARRAY); 

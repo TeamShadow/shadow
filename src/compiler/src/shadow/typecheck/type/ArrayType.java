@@ -73,9 +73,9 @@ public class ArrayType extends ClassType
 	}
 	
 	@Override
-	public String getMangledNameWithGenerics()
+	public String getMangledNameWithGenerics(boolean convertArrays)
 	{
-		return getBaseType().getMangledNameWithGenerics() + "_A" + dimensions;
+		return getBaseType().getMangledNameWithGenerics(false) + "_A" + dimensions;
 	}
 	
 	public ArrayType(Type baseType)
@@ -161,12 +161,9 @@ public class ArrayType extends ClassType
 		if( t == OBJECT )
 			return true;
 		
-		if( t.getTypeWithoutTypeArguments().equals(Type.ARRAY) )
-		{
-			Type typeArgument = t.getTypeParameters().get(0).getType();
-			return typeArgument.equals(baseType);
-		}
-		
+		if( t.getTypeWithoutTypeArguments().equals(Type.ARRAY) )					
+			return convertToGeneric().equals(t);
+				
 		if( t instanceof ArrayType )
 		{
 			ArrayType type = (ArrayType)this;
@@ -189,22 +186,37 @@ public class ArrayType extends ClassType
 	public ClassType convertToGeneric()
 	{
 		Type base = baseType;
-		
-		if( base instanceof ArrayType )
-			base = ((ArrayType)base).convertToGeneric();
-		
+				
+		//if( base instanceof ArrayType )
+		//	base = ((ArrayType)base).convertToGeneric();
+				
 		return Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));
 	}
+	
 
-
-	public boolean baseIsTypeParameter()
+	@Override
+	public boolean isParameterized()
+	{
+		return baseType.isParameterizedIncludingOuterClasses();
+	}
+	
+	@Override
+	public boolean isFullyInstantiated()
+	{
+		return baseType.isFullyInstantiated();
+	}	
+	
+	public boolean containsUnboundTypeParameters()
 	{
 		if( baseType instanceof TypeParameter )
 			return true;
 		
+		if( baseType.isParameterizedIncludingOuterClasses() && !baseType.isFullyInstantiated() )
+			return true;
+		
 		if( baseType instanceof ArrayType )
-			return ((ArrayType)baseType).baseIsTypeParameter();
-	
-		return false;
+			return ((ArrayType)baseType).containsUnboundTypeParameters();		
+		
+		return false;		
 	}
 }

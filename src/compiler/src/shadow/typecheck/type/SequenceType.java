@@ -142,7 +142,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 	
 	@Override
-	public String getMangledNameWithGenerics()
+	protected String getMangledNameWithGenerics(boolean convertArrays)
 	{
 		StringBuilder builder = new StringBuilder("_L");		
 		
@@ -152,8 +152,15 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			Type type = modifiedType.getType();
 			if( type instanceof TypeParameter ) //always print _T to avoid problems with CanEqual<T> and CanEqual<V>
 				builder.append("_T");
-			else			
-				builder.append(type.getMangledName());
+			else if( type instanceof ArrayType) //only convert the first layer
+			{
+				if( convertArrays )
+					builder.append(((ArrayType)type).convertToGeneric().getMangledNameWithGenerics(false));
+				else
+					builder.append(type.getMangledNameWithGenerics(true));
+			}
+			else
+				builder.append(type.getMangledNameWithGenerics(true));
 			//Type type = modifiedType.getType();
 			//shadow.typecheck.Package _package = type.getPackage();
 			//builder.append(type.getPackage().getMangledName() + type.getMangledNameWithGenerics());
