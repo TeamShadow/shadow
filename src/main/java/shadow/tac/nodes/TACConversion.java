@@ -29,7 +29,9 @@ public class TACConversion extends TACOperand
 		OBJECT_TO_ARRAY,
 		SEQUENCE_TO_SEQUENCE,
 		SEQUENCE_TO_OBJECT,
-		OBJECT_TO_SEQUENCE
+		OBJECT_TO_SEQUENCE,
+		NULL_TO_ARRAY,
+		NULL_TO_INTERFACE
 	}	
 
 	public TACConversion(TACNode node, TACOperand source, Type destination, Kind kind)

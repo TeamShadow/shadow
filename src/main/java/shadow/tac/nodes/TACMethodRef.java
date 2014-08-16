@@ -5,6 +5,7 @@ import java.util.Collections;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -26,10 +27,13 @@ public class TACMethodRef extends TACOperand
 		this(node, null, sig.getMethodType(), sig.getSymbol(),
 				sig.getWrapped());
 	}
+		
 	public TACMethodRef(TACNode node, MethodType methodType, String methodName)
 	{
 		this(node, null, methodType, methodName, (MethodSignature)null);
 	}
+	
+	
 	public TACMethodRef(TACNode node, TACOperand prefixNode,
 			MethodSignature sig)
 	{
@@ -54,8 +58,17 @@ public class TACMethodRef extends TACOperand
 				prefix = check(prefixNode, new SimpleModifiedType(genericArray));
 			}
 			else
+			{
+				//inner class issues
+				while( !prefixNode.getType().isSubtype(methodType.getOuter()) 
+						&& prefixNode.getType().hasOuter()	) //not here, look in outer classes
+				{
+					prefixNode = new TACFieldRef(this, prefixNode, new SimpleModifiedType(prefixNode.getType().getOuter()), "_outer");
+				}
+				
 				prefix = check(prefixNode,
 						new SimpleModifiedType(methodType.getOuter()));
+			}
 		}
 		type = methodType;
 		name = methodName;		

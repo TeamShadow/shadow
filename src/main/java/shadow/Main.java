@@ -23,6 +23,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.Logger;
 
+import shadow.output.llvm.Array;
 import shadow.output.llvm.Generic;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.Node;
@@ -157,7 +158,8 @@ public class Main {
 			File mainFile = config.next();
 			files = null;
 			HashSet<Generic> generics = new HashSet<Generic>();
-
+			HashSet<Array> arrays = new HashSet<Array>();
+			
 			do
 			{
 				File currentFile;
@@ -179,8 +181,8 @@ public class Main {
 						//minimum standard files needed for compilation
 						files.add( getPath( standard, "Array" ));
 						files.add( getPath( standard, "AddressMap" ));
-						//files.add( getPath( standard, "ArrayClass" ));
-						files.add( getPath( standard, "Class" ));
+						files.add( getPath( standard, "ArrayClass" ));
+						files.add( getPath( standard, "Class" ));						
 						files.add( getPath( standard, "Exception" ));
 						files.add( getPath( standard, "GenericClass" ));
 						files.add( getPath( standard, "Iterator" ));
@@ -249,9 +251,10 @@ public class Main {
 						File llvmFile = new File(currentFile.getParent(), name + ".ll");
 						LLVMOutput output = new LLVMOutput(llvmFile);
 						output.build(module);
-
-						generics.addAll(output.getGenerics());
-
+						
+						generics.addAll(output.getGenerics());						
+						arrays.addAll(output.getArrays());
+						
 						if (llvmFile.exists())
 							linkCommand.add(llvmFile.getCanonicalPath());
 						File nativeFile = new File(currentFile.getParent(), name + ".native.ll");
@@ -270,11 +273,11 @@ public class Main {
 				checkedFiles.add( currentPath );
 
 				//after all LLVM generated, make a special generics file
-				if( !config.isCheckOnly() && files.isEmpty() && !generics.isEmpty() )
+				if( !config.isCheckOnly() && files.isEmpty() )
 				{
 					File genericsFile = new File( mainFile.getParent(), mainFile.getName().replace(".shadow", ".generics.shadow"));
 					LLVMOutput interfaceOutput = new LLVMOutput( genericsFile );
-					interfaceOutput.setGenerics(generics);
+					interfaceOutput.setGenerics(generics, arrays);
 					interfaceOutput.buildGenerics();
 
 					linkCommand.add(interfaceOutput.getFile().getCanonicalPath());

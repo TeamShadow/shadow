@@ -4,14 +4,12 @@ immutable class shadow.standard@Class implements CanHash
 {
 	get String name;
 	get nullable Class parent;
-	get Class[] interfaces; // = Class:create[0];
-	Object[] data; // = freeze(Object:create[0]);
+	get Class[] interfaces;
+	Object[] data;
 	int flags;
 	get int size;
-		
-	//private native allocate() => ( Object );
-	private native allocate( int size ) => ( Object );
 	
+	private native allocate( int size ) => ( Object );	
 	
 	public isInterface() => ( boolean )
 	{
@@ -44,8 +42,8 @@ immutable class shadow.standard@Class implements CanHash
 		return (flags & 0b100000) != 0;
 	}
 
-	//never actually called
-	protected create(int flags, int size, String name, Class parent, Class[] interfaces, immutable Object[] data ) 
+	//only called for array classes (and even then, only sometimes)
+	public create(int flags, int size, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] data ) 
 	{	
 		this:parent = parent;
 		this:interfaces = interfaces;
@@ -74,7 +72,7 @@ immutable class shadow.standard@Class implements CanHash
 		}
 		else if( isArray() )
 		{
-			MutableString arrayType = MutableString:create(parent->name);
+			MutableString arrayType = MutableString:create(name);
 			arrayType.append("[");
 			for( int i = 1; i < size; i += 1 )
 				arrayType.append(",");
@@ -85,18 +83,15 @@ immutable class shadow.standard@Class implements CanHash
 			this:name = name;
 	}
 	
-	public interfaceData( Class interfaceClass ) => ( immutable nullable Object )
-	{
-	
-		//Console:instance.printLine( this # " is current class");
+	protected interfaceData( Class interfaceClass ) => ( immutable nullable Object )
+	{	
 		for ( int i = 0; i < interfaces->size; i += 1 )
 		{		
 			if ( interfaces[i] === interfaceClass )
 				return data[i];
 		}
 		
-		//Console:instance.printLine( interfaceClass # " not found!");
-		return null;
+		throw CastException:create("Class " # this # " does not implement interface " # interfaceClass);
 	}
 	
 	public equal( Class other ) => ( boolean )
@@ -111,11 +106,11 @@ immutable class shadow.standard@Class implements CanHash
 		{	
 			if( isArray() )
 			{
-				return size == other:size and check(parent).equal(check(other:parent));			
+				return other.isArray() and size == other:size and check(parent).equal(check(other:parent));			
 			}
 			else if( isMethod() )
 			{
-				if( size != other:size or data->size != other:data->size )
+				if( !other.isMethod() or size != other:size or data->size != other:data->size )
 					return false;
 					
 				for( int i = 0; i < data->size; i += 1 )
@@ -198,10 +193,10 @@ immutable class shadow.standard@Class implements CanHash
 	}
 	
 	public native pointerSize() => ( int );	
-	
+
 	public get size() => ( int )
 	{
-		if( isArray() )		
+		if( isArray() ) //actual size member is # of dimensions		
 			return pointerSize() + 4 * size;		
 		else if( isMethod() )		
 			return 3 * pointerSize() + 4 * size;

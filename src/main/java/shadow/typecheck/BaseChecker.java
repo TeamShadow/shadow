@@ -857,26 +857,45 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	protected static boolean methodIsAccessible( MethodSignature signature, Type type )
 	{		
 		Node node = signature.getNode();
-		if( signature.getMethodType().getModifiers().isPublic() || (node != null && node.getEnclosingType() == type )  ) 
-			return true;		
+		if( signature.getMethodType().getModifiers().isPublic() ) 
+			return true;
 		
-		if( type instanceof ClassType )
+		if(node == null )
+			return false;
+		
+		
+		Type outer = type;
+		
+		while( outer != null )
 		{
-			ClassType parent = ((ClassType)type).getExtendType();
+			if( node.getEnclosingType().equals(outer) )
+				return true;
 			
-			while( parent != null )
+			if( outer instanceof ClassType )
 			{
-				if( node.getEnclosingType() == parent )
-				{
-					if( node.getModifiers().isPrivate())
-						return false;
-					else
-						return true;
-				}
+				ClassType parent = ((ClassType)outer).getExtendType();
 				
-				parent = parent.getExtendType();
+				while( parent != null )
+				{
+					if( node.getEnclosingType().equals(parent) )
+					{
+						if( node.getModifiers().isPrivate())
+							return false;
+						else
+							return true;
+					}
+					
+					parent = parent.getExtendType();
+				}
 			}
+			
+			
+			outer = outer.getOuter();
 		}
+		
+		
+		
+		
 
 		return false;
 	}

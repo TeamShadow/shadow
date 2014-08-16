@@ -56,6 +56,15 @@ public class TACModule {
         add(Type.GENERIC_CLASS);
         // add(Type.ARRAY_CLASS);
         // add(Type.METHOD_CLASS);
+        
+        Type outer = moduleType.getOuter();
+        
+        while( outer != null )
+        {
+        	add(outer);
+        	outer = outer.getOuter();        	
+        }
+        
     }
 
     /**

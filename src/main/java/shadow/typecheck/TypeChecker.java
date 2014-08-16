@@ -7,12 +7,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import shadow.TypeCheckException;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
 public class TypeChecker {
@@ -112,7 +112,7 @@ public class TypeChecker {
 						
 			for( Type type : mainType.getReferencedTypes() )
 			{	
-				if( !type.hasOuter() )
+				if( !type.hasOuter() && !(type instanceof ArrayType) )
 				{				
 					Node node = nodeTable.get(type.getTypeWithoutTypeArguments());
 					File file = node.getFile();
@@ -125,45 +125,7 @@ public class TypeChecker {
 		catch( IOException e )
 		{
 			System.err.println(e.getLocalizedMessage());
-		}
-		
-		/*
-		//this was too complicated, got all the files at once
-		//now, we get the references needed for each class
-		TreeSet<String> files = new TreeSet<String>();
-		Map<Type, Node> nodeTable = collector.getNodeTable();
-		
-		TreeSet<Type> types = new TreeSet<Type>();
-		types.add(mainType);
-				
-		TreeSet<Type> checkedTypes = new TreeSet<Type>();
-		
-		Type type = null;
-		try
-		{			
-			while( !types.isEmpty() )
-			{
-				type = types.first().getTypeWithoutTypeArguments();
-				types.remove(type);
-				Node node = nodeTable.get(type);
-				File file = node.getFile();
-				files.add( BaseChecker.stripExtension(file.getCanonicalPath()) );
-				
-				checkedTypes.add(type);
-				
-				for( Type referencedType : type.getReferencedTypes() )
-					if( !checkedTypes.contains(referencedType.getTypeWithoutTypeArguments()) )
-						types.add(referencedType.getTypeWithoutTypeArguments());
-			}
-		}
-		catch (IOException e)
-		{
-			System.err.println("No file found for type " + type );
-		}
-		
-		return files;
-		*/
-				
+		}		
 	}
 	
 	public File getCurrentFile()

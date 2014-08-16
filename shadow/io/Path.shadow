@@ -1,6 +1,6 @@
 immutable class shadow.io@Path
 {
-	String[] components = String:create[0];
+	String[] components;
 	public create()
 	{
 	}
@@ -16,7 +16,7 @@ immutable class shadow.io@Path
 				start = i + 1;
 			}
 		}
-		components = String:create[count];
+		components = freeze(String:create[count]);
 		start = 0;
 		for ( int i = 0; i < path->size; i += 1 )
 		{

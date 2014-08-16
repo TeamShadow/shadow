@@ -66,7 +66,7 @@ implements Number<BigInteger>
 		return BigInteger:create( unsignedMultiply( data, other:data), negative xor other:negative );	
 	}
 	
-	private unsignedMultiply(uint[] first, uint[] second) => (uint[])
+	private unsignedMultiply(readonly uint[] first, readonly uint[] second) => (readonly uint[])
 	{
 		uint[] result = uint:create[first->size + second->size];
 		for( int i = 0; i < first->size; i += 1 )
@@ -101,7 +101,7 @@ implements Number<BigInteger>
 		if( comparison == 0 )
 			return BigInteger:create( (negative xor other:negative ? -1 , 1) );
 			
-		(uint[] quotient, ) = unsignedDivide( data, other:data );
+		(readonly uint[] quotient, ) = unsignedDivide( data, other:data );
 					
 		return BigInteger:create( quotient, negative xor other:negative );
 	}
@@ -115,7 +115,7 @@ implements Number<BigInteger>
 		if( comparison == 0 )
 			return BigInteger:create( 0 );
 			
-		(, uint[] remainder) = unsignedDivide( data, other:data );
+		(, readonly uint[] remainder) = unsignedDivide( data, other:data );
 		
 		if( remainder->size == 1 and remainder[0] == 0u )
 			return BigInteger:create( 0 );
@@ -134,7 +134,7 @@ implements Number<BigInteger>
 		return zeroes;
 	}
 	
-	private unsignedLeftShift(uint[] data, uint amount) => (uint[])
+	private unsignedLeftShift(readonly uint[] data, uint amount) => (readonly uint[])
 	{	
 		int jump = cast<int>(amount/32u);
 		int shift = cast<int>(amount%32u);
@@ -150,7 +150,7 @@ implements Number<BigInteger>
 		return removeZeroes( result );
 	}
 	
-	private unsignedRightShift(uint[] data, uint amount) => (uint[])
+	private unsignedRightShift(readonly uint[] data, uint amount) => (readonly uint[])
 	{	
 		int jump = cast<int>(amount/32u);
 		int shift = cast<int>(amount%32u);
@@ -166,7 +166,7 @@ implements Number<BigInteger>
 	}
 	
 	//unsignedDivide assumes that first is no smaller than second
-	private unsignedDivide(uint[] first, uint[] second) => (uint[] quotient, uint[] remainder)
+	private unsignedDivide(readonly uint[] first, readonly uint[] second) => (readonly uint[] quotient, readonly uint[] remainder)
 	{
 		uint[] quotient = uint:create[first->size - second->size + 1];
 		int comparison;
@@ -192,11 +192,10 @@ implements Number<BigInteger>
 		}
 		
 		uint zeroes = leadingZeroes(second[second->size - 1]);
-		uint[] normalizedDivisor = 	unsignedLeftShift( second, zeroes );
-		uint[] normalizedData = 	unsignedLeftShift( first, zeroes );
+		readonly uint[] normalizedDivisor = 	unsignedLeftShift( second, zeroes );
+		readonly uint[] normalizedData = 	unsignedLeftShift( first, zeroes );
 		ulong quotientEstimate; 
-		ulong remainderEstimate;
-		uint[] product;
+		ulong remainderEstimate;		
 		long test;
 		long carry;
 		
@@ -248,40 +247,48 @@ implements Number<BigInteger>
 	
 	public create(int value)
 	{
-		data = uint:create[1];
-		data[0] = value.abs();
+		uint[] temp = uint:create[1]; 
+		temp[0] = value.abs();		
+		data = freeze(temp);
 		negative = value < 0;			
 	}
 	
 	public create(ulong magnitude)
-	{		
+	{	
+		uint[] temp;
+		
 		if( magnitude >= BASE )
 		{
-			data = uint:create[2];
-			data[1] = cast<uint>(magnitude / BASE); 
-			data[0] = cast<uint>(magnitude % BASE);					
+			temp = uint:create[2];
+			temp[1] = cast<uint>(magnitude / BASE); 
+			temp[0] = cast<uint>(magnitude % BASE);					
 		}
 		else
 		{
-			data = uint:create[1];			 
-			data[0] = cast<uint>(magnitude);		
+			temp = uint:create[1];			 
+			temp[0] = cast<uint>(magnitude);		
 		}		
+		
+		data = freeze(temp);
 	}
 	
 	public create(long value)
 	{
 		ulong magnitude = value.abs();
+		uint[] temp;
 		if( magnitude >= BASE )
 		{
-			data = uint:create[2];
-			data[1] = cast<uint>(magnitude / BASE); 
-			data[0] = cast<uint>(magnitude % BASE);					
+			temp = uint:create[2];
+			temp[1] = cast<uint>(magnitude / BASE); 
+			temp[0] = cast<uint>(magnitude % BASE);					
 		}
 		else
 		{
-			data = uint:create[1];			 
-			data[0] = cast<uint>(magnitude);		
+			temp = uint:create[1];			 
+			temp[0] = cast<uint>(magnitude);		
 		}
+		
+		data = freeze(temp);
 		negative = value < 0L;		
 	}
 	
@@ -313,11 +320,13 @@ implements Number<BigInteger>
 		}
 		
 		uint[] values;
+		readonly uint[] holder;  //necessary because of readonly issues
 	
 		if( initial < BASE )
 		{
 			values = uint:create[1];
 			values[0] = cast<uint>(initial);
+			holder = values;
 		}
 		else
 		{
@@ -329,18 +338,20 @@ implements Number<BigInteger>
 			values[0] = cast<uint>(initial);
 			uint[] baseRepresentation = uint:create[1];
 			baseRepresentation[0] = base;
-			uint[] digitRepresentation = uint:create[1];		
+			uint[] digitRepresentation = uint:create[1];
+			
+			holder = values;		
 			
 			while( i < value->size )
 			{
-				values = unsignedMultiply( values, baseRepresentation );
+				holder = unsignedMultiply( holder, baseRepresentation );
 				digitRepresentation[0] = digitValue( value[i], base );				
-				values = unsignedAdd( values, digitRepresentation );
+				holder = unsignedAdd( holder, digitRepresentation );
 				i += 1;			
 			}
 		}
 		
-		data = values;	
+		data = freeze(holder);	
 	}
 	
 	private digitValue(byte letter, uint base) => (uint)
@@ -362,7 +373,7 @@ implements Number<BigInteger>
 		return value;
 	}
 	
-	private unsignedCompare(uint[] data, uint[] other) => (int)
+	private unsignedCompare(readonly uint[] data, readonly uint[] other) => (int)
 	{
 		if( data->size < other->size )
 			return -1;
@@ -381,7 +392,7 @@ implements Number<BigInteger>
 		return 0;
 	}
 	
-	private unsignedAdd(uint[] first, uint[] second) => (uint[])
+	private unsignedAdd(readonly uint[] first, readonly uint[] second) => (readonly uint[])
 	{
 		uint[] result = uint:create[first->size.max(second->size) + 1];
 		ulong carry = 0uL;
@@ -401,7 +412,7 @@ implements Number<BigInteger>
 	}
 	
 	//unsigned subtract assumes that second is never larger than first
-	private unsignedSubtract(uint[] first, uint[] second) => (uint[] )
+	private unsignedSubtract(readonly uint[] first, readonly uint[] second) => (readonly uint[] )
 	{
 		uint[] result = uint:create[first->size];
 		ulong borrow = 0uL;
@@ -427,14 +438,14 @@ implements Number<BigInteger>
 	}
 	
 	
-	private create( uint[] data, boolean negative )
+	private create( readonly uint[] data, boolean negative )
 	{
-		this:data = data;
+		this:data = freeze(data);
 		this:negative = negative;	
 	}
 	
 	
-	private removeZeroes( uint[] values ) => ( uint[] )
+	private removeZeroes( readonly uint[] values ) => ( readonly uint[] )
 	{
 		int zeroes = 0;
 		int index = values->size - 1; 
@@ -458,7 +469,7 @@ implements Number<BigInteger>
 		return toString(10u);	
 	}
 	
-	private print(uint[] values, Console out) => ()
+	private print(readonly uint[] values, Console out) => ()
 	{
 		out.print(values->size # ": ["); 
 		for( int i = 0; i < values->size; i += 1 )
@@ -484,9 +495,9 @@ implements Number<BigInteger>
 			
 		BigInteger divisor = BigInteger:create(base.toInt());
 		
-		uint[] number = data;
-		uint[] quotient;		
-		uint[] remainder;		
+		readonly uint[] number = data;
+		readonly uint[] quotient;		
+		readonly uint[] remainder;		
 			
 		Console out = Console:instance;
 				
@@ -507,7 +518,7 @@ implements Number<BigInteger>
 		return buffer.reverse().toString();
 	}
 	
-	public isZero(uint[] data) => (boolean)
+	public isZero(readonly uint[] data) => (boolean)
 	{
 		return data->size == 1 and data[0] == 0u;
 	}

@@ -4,13 +4,13 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTFreezeExpression extends SimpleNode {
-  public ASTFreezeExpression(int id) {
+class ASTCopyExpression extends SimpleNode {
+  public ASTCopyExpression(int id) {
     super(id);
   }
   
 
-  public ASTFreezeExpression(ShadowParser p, int id) {
+  public ASTCopyExpression(ShadowParser p, int id) {
     super(p, id);
   }
 

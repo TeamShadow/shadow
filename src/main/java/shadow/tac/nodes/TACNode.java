@@ -129,7 +129,7 @@ public abstract class TACNode {
         connect(first, second);
         connect(third, fourth);
     }
-
+    
     /**
      * Connects two nodes together: first <-> second
      * @param first the first node to connect.
@@ -151,5 +151,6 @@ public abstract class TACNode {
         }
     }
 */
+
     public abstract void accept(TACVisitor visitor) throws ShadowException;
 }

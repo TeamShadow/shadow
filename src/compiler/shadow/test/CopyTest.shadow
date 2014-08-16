@@ -1,0 +1,78 @@
+import shadow.io@Console;
+
+class shadow.test@CopyTest
+{
+	public main( String[] args ) => ()
+	{	
+		Console out = Console:instance;
+		String s1 = "Walnuts";		
+		String s2 = copy( s1 );
+		
+		out.printLine("s1: " # s1 );
+		out.printLine("s2: " # s2 );		
+		
+		var o1 = MutableObject:create(13, "Stuff");
+		var o2 = copy( o1 );
+		
+		o1.duplicate();
+		out.printLine("o1: " # o1 );
+		
+		
+		o2.increase();
+		out.printLine("o2: " # o2 );
+		
+		
+		Object integer1 = 3;
+		Object integer2 = copy( integer1 );
+		
+		out.printLine("integer1: " # integer1 );
+		out.printLine("integer2: " # integer2 );
+		
+		int[] array1 = int:create[10];
+		
+		for( int i = 0; i < array1->size; i += 1 )
+			array1[i] = i + 1;			
+	
+		int[] array2 = copy( array1 );
+		
+		for( int i = 0; i < array2->size; i += 1 )
+			array2[i] *= 2;			
+		
+		out.printLine("array1: " # array1 );
+		out.printLine("array2: " # array2 );		
+		
+		int[][] array3 = int:create[4][5];
+		
+		for( int i = 0; i < array3->size; i += 1 )
+			for( int j = 0; j < array3[i]->size; j += 1 )
+				array3[i][j] = i * array3[i]->size + j + 1;
+				
+		
+		int[][] array4 = copy( array3 );
+		
+		for( int i = 0; i < array4->size; i += 1 )
+			for( int j = 0; j < array4[i]->size; j += 1 )
+				array4[i][j] += 1;			
+		
+		
+		out.printLine("array3: " # array3 );
+		out.printLine("array4: " # array4 );
+				
+		int[][] array5 = int:create[4][5];
+		
+		for( int i = 0; i < array5->size; i += 1 )
+			for( int j = 0; j < array5[i]->size; j += 1 )
+				array5[i][j] = 10 * i * array5[i]->size + j;
+		
+		Object proxy = array5;
+		Object array6 = copy( proxy );
+		
+		for( int i = 0; i < array5->size; i += 1 )
+			for( int j = 0; j < array5[i]->size; j += 1 )
+				array5[i][j] *= 3;
+			
+			
+		out.printLine("array5: " # array5 );		
+		out.printLine("array6: " # array6 );		
+	}
+}

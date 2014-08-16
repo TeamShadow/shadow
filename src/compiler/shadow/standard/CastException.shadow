@@ -1,0 +1,8 @@
+exception shadow.standard@CastException
+{
+	public create() { }
+	public create( String message )
+	{
+		super(message);
+	}
+}

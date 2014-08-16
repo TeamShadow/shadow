@@ -222,10 +222,10 @@ public class TypeParameter extends Type
 	}
 	
 	@Override
-	public String getMangledNameWithGenerics() {		
+	public String getMangledNameWithGenerics(boolean convertArrays) {		
 		//return "_C" + getTypeName();
 		
-		return getClassBound().getMangledNameWithGenerics();
+		return getClassBound().getMangledNameWithGenerics(true);
 	}	
 	
 	
