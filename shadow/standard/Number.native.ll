@@ -33,8 +33,8 @@ declare double    @llvm.floor.f64(double %Val)
 declare float     @llvm.ceil.f32(float  %Val)
 declare double    @llvm.ceil.f64(double %Val)
 
-declare float     @llvm.round.f32(float  %Val)
-declare double    @llvm.round.f64(double %Val)
+; declare float     @llvm.round.f32(float  %Val)
+; declare double    @llvm.round.f64(double %Val)
 
 declare i16 @llvm.bswap.i16(i16 %Val)
 declare i32 @llvm.bswap.i32(i32 %Val)
@@ -1192,8 +1192,9 @@ define float @_Pshadow_Pstandard_Cfloat_Mceiling(float) #0 {
 }
 
 define float @_Pshadow_Pstandard_Cfloat_Mround(float) #0 {	
-	%2 = call float @llvm.round.f32(float %0)
-	ret float %2
+;	%2 = call float @llvm.round.f32(float %0)
+;	ret float %2
+    ret float %0
 }
 
 ; shadow.standard@Double native methods
@@ -1358,6 +1359,7 @@ define double @_Pshadow_Pstandard_Cdouble_Mceiling(double) #0 {
 }
 
 define double @_Pshadow_Pstandard_Cdouble_Mround(double) #0 {	
-	%2 = call double @llvm.round.f64(double %0)
-	ret double %2
+;	%2 = call double @llvm.round.f64(double %0)
+;	ret double %2
+    ret double %0
 }
