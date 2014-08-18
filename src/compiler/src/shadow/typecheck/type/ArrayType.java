@@ -195,9 +195,9 @@ public class ArrayType extends ClassType
 	
 
 	@Override
-	public boolean isParameterized()
+	public boolean isRecursivelyParameterized()
 	{
-		return baseType.isParameterizedIncludingOuterClasses();
+		return baseType.isRecursivelyParameterized();
 	}
 	
 	@Override

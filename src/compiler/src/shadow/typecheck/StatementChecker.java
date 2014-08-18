@@ -491,9 +491,6 @@ public class StatementChecker extends BaseChecker
 										
 				declarator.setModifiers(node.getModifiers());					
 				addSymbol( declarator.getImage(), declarator ); //add to local scope
-					
-				if( declarator.getType().isPrimitive() && declarator.getModifiers().isNullable() )		
-					addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
 			}
 						
 			checkInitializers( node );
@@ -1499,8 +1496,8 @@ public class StatementChecker extends BaseChecker
 				}
 				
 				if( rightType instanceof GetSetType )
-					rightType = ((GetSetType)rightType).getGetType().getType();
-						
+					rightType = ((GetSetType)rightType).getGetType().getType();				
+		
 				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(rightType)));
 			}
 			else				
@@ -2364,18 +2361,31 @@ public class StatementChecker extends BaseChecker
 					arguments.add(child);
 					
 					MethodSignature signature = setMethodType( node, prefixType, "index", arguments);
-										
-					if( signature != null && (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
-						signature = null;
-												
-					SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
-					node.setType(subscriptType);
 					
-					if( signature != null )					
-						node.setModifiers(subscriptType.getGetType().getModifiers());
+					if( signature == null )
+					{
+						node.setType(Type.UNKNOWN);						
+					}
+					else if( (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
+					{
+						node.setType(Type.UNKNOWN);
+						addError(Error.INVALID_SUBSCRIPT, "Cannot apply mutable subscript to immutable or readonly prefix");						
+					}
+					else
+					{
+						SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
+						node.setType(subscriptType);					
+						node.setModifiers(subscriptType.getGetType().getModifiers());								
 						
-					if( prefixType.hasInterface(Type.CAN_INDEX_STORE) && !(prefixNode.getModifiers().isImmutable() || prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly())  )	
-						node.addModifier(Modifiers.ASSIGNABLE);											
+						if( prefixNode.getModifiers().isImmutable() )
+							node.addModifier(Modifiers.IMMUTABLE);
+						else if( prefixNode.getModifiers().isReadonly() )
+							node.addModifier(Modifiers.READONLY);
+						else if( prefixNode.getModifiers().isTemporaryReadonly() )
+							node.addModifier(Modifiers.TEMPORARY_READONLY);
+						else if( prefixType.hasInterface(Type.CAN_INDEX_STORE) ) 
+							node.addModifier(Modifiers.ASSIGNABLE);
+					}											
 				}
 				else
 				{

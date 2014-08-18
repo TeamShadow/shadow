@@ -12,23 +12,20 @@ class MatrixTest
 		(a[0][0], a[1][1], a[2][2]) = (1, 1, 1);
 		a[1][2] = 4;
 		
-		out.printLine("a: " # a);
+		out.printLine("a:\n" # a);
 				
 		(b[0][0], b[1][1], b[2][2]) = (1, 1, 1);
 		b[2][0] = 3;
 		
-		out.printLine("b: " # b);
+		out.printLine("b:\n" # b);
 		
 		
 		Matrix c = a + b;
 		Matrix d = a - b;
 		Matrix e = a * b;
 		
-		out.printLine("c: " # c);
-		out.printLine("d: " # d);
-		out.printLine("e: " # e);
-		
-		
-		
+		out.printLine("c:\n" # c);
+		out.printLine("d:\n" # d);
+		out.printLine("e:\n" # e);
 	}
 }

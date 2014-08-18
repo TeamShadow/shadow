@@ -1,6 +1,6 @@
 import shadow.io@Console;
 
-class ComplexTest
+class shadow.test@ComplexTest
 {
 	public main() => ()
 	{

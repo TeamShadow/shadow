@@ -37,7 +37,7 @@ public class SimpleTest
 		
 		//add desired files to list
 		//args.add("--compile");
-		args.add("shadow/standard/Byte.shadow"); 		
+		args.add("shadow/test/Matrix.shadow"); 		
 		//args.add("tests/compile/Readonly.shadow");
 		Main.main(args.toArray(new String[] { }));		
 	}

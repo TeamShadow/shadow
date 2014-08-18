@@ -19,40 +19,29 @@ CanIndex<int, double[]>
 		values = double:create[rows][columns];
 	}
 	
-	public index(int row) => (double[])
+	public readonly index(int row) => (double[])
 	{
 		return values[row];	
 	}
 	
-	public immutable add(Matrix other) => (Matrix)
+	public readonly add(Matrix other) => (Matrix)
 	{
-		Console:instance.printLine("Rows: " # rows);
-		Console:instance.printLine("Columns: " # columns);
-	
 		if( other:rows != rows or other:columns != columns )
-			throw IllegalArgumentException:create();
+			throw IllegalArgumentException:create("Mismatched matrix dimensions");
 			
-		Matrix result = Matrix:create(rows, columns);
-		Console:instance.printLine("Created!");
-		
-		
-		for( int i = 0; i < rows; i += 1 )
-		{
-			Console:instance.printLine("Row: " # i);
-			for( int j = 0; j < columns; j += 1 )
-			{
-				Console:instance.printLine("Column: " # j);
+		Matrix result = Matrix:create(rows, columns);	
+
+		for( int i = 0; i < rows; i += 1 )					
+			for( int j = 0; j < columns; j += 1 )		
 				result[i][j] = this[i][j] + other[i][j];
-			}
-		}
 				
 		return result;
 	}
 	
-	public immutable subtract(Matrix other) => (Matrix)
+	public readonly subtract(Matrix other) => (Matrix)
 	{
 		if( other:rows != rows or other:columns != columns )
-			throw IllegalArgumentException:create();
+			throw IllegalArgumentException:create("Mismatched matrix dimensions");
 			
 		Matrix result = Matrix:create(rows, columns);
 		
@@ -63,7 +52,7 @@ CanIndex<int, double[]>
 		return result;
 	}
 	
-	public immutable multiply(Matrix other) => (Matrix)
+	public readonly multiply(Matrix other) => (Matrix)
 	{
 		if( other:rows != columns )
 			throw IllegalArgumentException:create();
@@ -79,7 +68,7 @@ CanIndex<int, double[]>
 	
 	}
 	
-	public immutable negate() => (Matrix)
+	public readonly negate() => (Matrix)
 	{		
 		Matrix result = Matrix:create(rows, columns);
 		
@@ -90,7 +79,7 @@ CanIndex<int, double[]>
 		return result;	
 	}	
 
-	public immutable equal(Matrix other) => (boolean)
+	public readonly equal(Matrix other) => (boolean)
 	{
 		if( rows != other:rows or columns != other:columns )
 			return false;
@@ -103,12 +92,15 @@ CanIndex<int, double[]>
 		return true;
 	}
 	
-	/*
-	public toString() => (String)
+	public readonly toString() => (String)
 	{
-		var output = MutableString:create();
-	
+		var string = MutableString:create();
+		foreach( double[] row in values )
+		{
+			string.append( #row );
+			string.append( "\n" );		
+		}
+		
+		return #string;
 	}
-	*/
-	
 }

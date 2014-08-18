@@ -111,8 +111,7 @@ implements
 		return data[location];
 	}
 	public get chars() => ( immutable byte[] )
-	{
-		//return cast<byte[]>(cast<Object>(this:data.copy()));
+	{		
 		return data;
 	}
 	public get size() => ( int )
@@ -140,6 +139,11 @@ implements
 		for ( int i = 0; i < other->size; i += 1 )
 			data[this->size + i] = other.index(i);
 		return String:create(data, this:ascii and other:ascii);
+	}
+	
+	public concatenate( nullable Object other ) => ( String )
+	{
+		return concatenate( #other );
 	}
 
 	public toLowerCase() => ( String )
