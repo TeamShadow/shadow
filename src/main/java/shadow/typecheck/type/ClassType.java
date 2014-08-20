@@ -13,7 +13,6 @@ import java.util.TreeSet;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.Package;
 
 public class ClassType extends Type
 {

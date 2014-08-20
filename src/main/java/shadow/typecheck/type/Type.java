@@ -349,7 +349,11 @@ public abstract class Type implements Comparable<Type>
 			builder = new StringBuilder(getOuter().toString(withBounds) + ":" + className );
 			
 		if( isParameterized() )		
+		{	
+			if( getTypeParameters() == null )
+				System.out.println("Bleh");
 			builder.append(getTypeParameters().toString("<",">", withBounds));
+		}
 		
 		return builder.toString();
 	}

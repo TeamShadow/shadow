@@ -22,8 +22,8 @@ class shadow.test@FileTest
 			file = File:create(check(args[0]));
 			 			
 			try
-			{				
-				file->exists = true;			
+			{	
+				file->exists = true;
 			}
 			catch ( IOException ex )
 			{
@@ -31,11 +31,12 @@ class shadow.test@FileTest
 			}			
 						
 			(String line, ) = console.readLine();
-			byte[] chars = line->chars;
+			readonly byte[] chars = line->chars;
 			file.write(chars);
 			file->size = file->position;
-			file.read(chars);
-			console.printLine(String:create(chars));			
+			byte[] buffer = byte:create[chars->size];
+			file.read(buffer);
+			console.printLine(String:create(buffer));			
 		}
 		catch ( IOException ex )
 		{

@@ -46,13 +46,29 @@ CanEqual<Complex>
 			
 		String value = "";
 		if( real != 0 )
+		{
 			value #= real;
 			
-		if( imaginary < 0 )
-			value #= " - " # imaginary.abs();
-			
-		if( imaginary > 0 )
-			value #= " + " # imaginary;
+			if( imaginary == 1 )
+				value #= " + i";
+			else if( imaginary == -1 )
+				value #= " - i";
+			else if( imaginary < 0 )
+				value #= " - " # imaginary.abs() # "i";				
+			else if( imaginary > 1 )
+				value #= " + " # imaginary # "i";			
+		}
+		else
+		{
+			if( imaginary == 1 )
+				value #= "i";
+			else if( imaginary == -1 )
+				value #= "-i";
+			else if( imaginary < 0 )
+				value #= "-" # imaginary.abs() # "i";				
+			else if( imaginary > 1 )
+				value #= imaginary # "i";
+		}
 			
 		return value;			
 	}

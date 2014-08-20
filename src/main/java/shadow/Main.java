@@ -32,6 +32,8 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
+import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 
@@ -78,7 +80,7 @@ public class Main {
 		}
 		catch (ShadowException e)
 		{
-			System.err.println("ERROR ON FILE: " + e.getLocalizedMessage());
+			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			System.exit(TYPE_CHECK_ERROR);
 		}
@@ -147,8 +149,8 @@ public class Main {
 		String unwindFile = new File( system, "shadow" + File.separator + "Unwind" + config.getArch() + ".ll" ).getCanonicalPath();
 		linkCommand.add( unwindFile);
 		String OSFile = new File( system, "shadow" + File.separator + config.getOs() + ".ll" ).getCanonicalPath();
-		linkCommand.add( OSFile);
-		String mainClass = null;
+		linkCommand.add( OSFile);		
+		
 		TreeSet<String> files;
 		HashSet<String> checkedFiles = new HashSet<String>();
 
@@ -159,11 +161,14 @@ public class Main {
 			files = null;
 			HashSet<Generic> generics = new HashSet<Generic>();
 			HashSet<Array> arrays = new HashSet<Array>();
+			String mainClass = null;
+			boolean mainArguments = false;
 			
 			do
 			{
 				File currentFile;
 				String currentPath;
+				
 				if( files == null )
 				{
 					currentFile = mainFile;
@@ -235,7 +240,18 @@ public class Main {
 					for(TACModule module : tacBuilder.build(node))
 					{
 						if (mainClass == null)
-							mainClass = module.getType().getMangledName();
+						{
+							Type type = module.getType();
+							mainClass = type.getMangledName();
+							
+							SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
+							if( type.getMatchingMethod("main", arguments) != null )
+								mainArguments = true;
+							else if( type.getMatchingMethod("main", new SequenceType()) != null )
+								mainArguments = false;
+							else
+								throw new ShadowException("File " + currentFile.getName() + " does not contain an appropriate main() method");							
+						}
 						//Debug prints
 						logger.debug(module.toString());
 						//System.out.println(module);
@@ -265,10 +281,8 @@ public class Main {
 					long stopTime = System.currentTimeMillis();
 
 					logger.info("COMPILED " + currentFile.getPath() + " in " + (stopTime - startTime) + "ms");
-				}
-
-
-
+				}					
+				
 				files.remove( currentPath );
 				checkedFiles.add( currentPath );
 
@@ -282,117 +296,113 @@ public class Main {
 
 					linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
 				}
-
-				Type.clearTypes();
-
-			} while( !files.isEmpty() );
-		}
-		if (!config.isCheckOnly() && !config.isNoLink())
-		{
-			// any output after this point is important, avoid getting it mixed in with previous output
-			System.out.println();
-			System.out.flush();
-			try { Thread.sleep(250); }
-			catch (InterruptedException ex) { }
-
-			String target;
-			List<String> assembleCommand = new ArrayList<String>();
-			assembleCommand.add("gcc");
-			//assembleCommand.add("-g");
-			assembleCommand.add("-x");
-			assembleCommand.add("assembler");
-			assembleCommand.add("-");
-			if (config.getOs().equals("Linux")) {
-				target = "x86_64-gnu-linux";
-				assembleCommand.add("-lm");
-				assembleCommand.add("-lrt");
-			}
-			else if( config.getArch() == 32 )
+				
+				Type.clearTypes();		
+				
+			} while( !files.isEmpty() );			
+			
+			if (!config.isCheckOnly() && !config.isNoLink())
 			{
-				//target = "i686-w64-mingw32";
-				target = "i386-unknown-mingw32";
-				//assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
-			}
-			else
-			{
-				//target = "i686-w64-mingw32";
-				target = "x86_64-w64-mingw32";
-			}
-
-			//assembleCommand.add("-m" + config.getArch());
-
-			/*//old
-			 else if (System.getProperty("os.name").equals("Linux")) {
-				target = "i686-w64-mingw32";
-				assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
-			} else {
-				target = "i386-unknown-mingw32";
-			}
-			*/
-
-			if( config.hasOutput() )
-			{
-				assembleCommand.add("-o");
-				assembleCommand.add(config.getOutput().getPath());
-			}
-
-			BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
-			//BufferedReader main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
-
-			logger.debug("Running: " + linkCommand);
-			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-
-                        logger.debug("Running: " + "opt" + "-mtriple" + target + "-O3");
-			Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
-
-	                logger.debug("Running: " + "llc" + "-mtriple" + target + "-O3");
-	                Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
-
-	                logger.debug("Running: " + assembleCommand);
-			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
-
-			try {
-				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
-				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
-				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
-				String line = main.readLine();
-
-				//File replaced = new File("ReplacedMain.ll");
-				//FileOutputStream stream = new FileOutputStream(replaced);
-
-				while (line != null) {
-					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
-					link.getOutputStream().write(line.getBytes());
-					//stream.write(line.getBytes());
-					line = main.readLine();
+				// any output after this point is important, avoid getting it mixed in with previous output
+				System.out.println();
+				System.out.flush();
+				try { Thread.sleep(250); }
+				catch (InterruptedException ex) { }
+				
+				String target;
+				List<String> assembleCommand = new ArrayList<String>();
+				assembleCommand.add("gcc");
+				//assembleCommand.add("-g");
+				assembleCommand.add("-x");
+				assembleCommand.add("assembler");
+				assembleCommand.add("-");
+				if (config.getOs().equals("Linux")) {
+					target = "x86_64-gnu-linux";
+					assembleCommand.add("-lm");
+					assembleCommand.add("-lrt");
 				}
-
-				//stream.close();
+				else if( config.getArch() == 32 )
+				{			 
+					//target = "i686-w64-mingw32";
+					target = "i386-unknown-mingw32";
+					//assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
+				}
+				else 
+				{
+					//target = "i686-w64-mingw32";
+					target = "x86_64-w64-mingw32";
+				}
+				
+				//assembleCommand.add("-m" + config.getArch());
+				
+				/*//old
+				 else if (System.getProperty("os.name").equals("Linux")) {			 
+					target = "i686-w64-mingw32";
+					assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
+				} else {
+					target = "i386-unknown-mingw32";
+				}
+				*/
+				
+				if( config.hasOutput() )
+				{
+					assembleCommand.add("-o");
+					assembleCommand.add(config.getOutput().getPath());
+				}
+				
+				BufferedReader main;
+				
+				if( mainArguments )
+					main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
+				else
+					main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
+				Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
+				Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
+				Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
+				Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 				try {
-					main.close();
-				} catch (IOException ex) { }
-				try {
-					link.getOutputStream().flush();
-				} catch (IOException ex) { }
-				try {
-					link.getOutputStream().close();
-				} catch (IOException ex) { }
-				if (link.waitFor() != 0)
-					throw new CompileException("FAILED TO LINK");
-				if (optimize.waitFor() != 0)
-					throw new CompileException("FAILED TO OPTIMIZE");
-				if (compile.waitFor() != 0)
-					throw new CompileException("FAILED TO COMPILE");
-				if (assemble.waitFor() != 0)
-					throw new CompileException("FAILED TO ASSEMBLE");
-			} catch (InterruptedException ex) {
-			} finally {
-				link.destroy();
-				optimize.destroy();
-				compile.destroy();
-				assemble.destroy();
+					new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
+					new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
+					new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
+					String line = main.readLine();
+					
+					//File replaced = new File("ReplacedMain.ll");
+					//FileOutputStream stream = new FileOutputStream(replaced);
+					
+					while (line != null) {
+						line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
+						link.getOutputStream().write(line.getBytes());
+						//stream.write(line.getBytes());
+						line = main.readLine();
+					}
+					
+					//stream.close();
+					try {
+						main.close();
+					} catch (IOException ex) { }
+					try {
+						link.getOutputStream().flush();
+					} catch (IOException ex) { }
+					try {
+						link.getOutputStream().close();
+					} catch (IOException ex) { }
+					if (link.waitFor() != 0)
+						throw new CompileException("FAILED TO LINK");
+					if (optimize.waitFor() != 0)
+						throw new CompileException("FAILED TO OPTIMIZE");
+					if (compile.waitFor() != 0)
+						throw new CompileException("FAILED TO COMPILE");
+					if (assemble.waitFor() != 0)
+						throw new CompileException("FAILED TO ASSEMBLE");
+				} catch (InterruptedException ex) {
+				} finally {
+					link.destroy();
+					optimize.destroy();
+					compile.destroy();
+					assemble.destroy();
+				}
+				logger.info("SUCCESS");
 			}
-			logger.info("SUCCESS");
 		}
 	}
 

@@ -38,7 +38,7 @@ public class TACConversion extends TACOperand
 	{
 		super(node);
 		type = destination;	
-		modifiers = source.getModifiers();
+		modifiers = new Modifiers(source.getModifiers());
 		operands.add(source);
 		this.kind = kind;
 		
@@ -77,7 +77,15 @@ public class TACConversion extends TACOperand
 		{
 			SequenceType destinationSequence = (SequenceType)type;			
 			operands.add(new TACCast(this, destinationSequence.get(0), source));
-		}		
+		}
+		else if( kind.equals(Kind.PRIMITIVE_TO_OBJECT))
+		{
+			modifiers.addModifier(Modifiers.NULLABLE); //marks the difference between int and shadow.standard.int
+		}
+		else if( kind.equals(Kind.OBJECT_TO_PRIMITIVE))
+		{
+			modifiers.removeModifier(Modifiers.NULLABLE);
+		}
 	}
 	
 	public Kind getKind()

@@ -55,7 +55,7 @@ public class TACCast extends TACOperand
 						
 			if( type instanceof InterfaceType )
 			{				
-				if( op.getType().isPrimitive() )				
+				if( op.getType().isPrimitive() && !op.getModifiers().isNullable() )				
 					op = new TACConversion(this, op, op.getType(), Kind.PRIMITIVE_TO_OBJECT);
 								
 				operand = new TACConversion(this, op, type, Kind.OBJECT_TO_INTERFACE);

@@ -591,7 +591,10 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-		{			
+		{	
+			TACMethodRef methodRef;
+			MethodSignature signature;
+			
 			TACOperand left = tree.appendChild(0);			
 			TACOperand right = tree.appendChild(2);
 			char operation = node.jjtGetChild(1).getImage().charAt(0);
@@ -600,7 +603,8 @@ public class TACBuilder implements ShadowParserVisitor
 			{					
 				GetSetType getSetType = (GetSetType) node.jjtGetChild(0).getType();
 				List<TACOperand> parameters = new ArrayList<TACOperand>();
-				parameters.add(left);  //prefix
+				
+				parameters.add( left );
 				if( getSetType instanceof SubscriptType )
 				{
 					//not pretty, but gets the correct subscript node
@@ -608,21 +612,32 @@ public class TACBuilder implements ShadowParserVisitor
 					parameters.add(subscriptNode.getIndex()); //index (not needed for properties)
 				}
 				
-				TACMethodRef methodRef;
-				MethodSignature signature;
-				
 				if (operation != '=')
 				{	
 					signature = getSetType.getGetter();	
 					methodRef = new TACMethodRef(tree,
 							left, //prefix
 							signature.getMethodType().getTypeWithoutTypeArguments(),
-							signature.getSymbol());					 														
-					TACOperand result = new TACCall(tree, block, methodRef, parameters);
-					right = new TACBinary(tree, result, node.getOperations().get(0), operation, right);
+							signature.getSymbol());					
+					parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)					
+					TACOperand result = new TACCall(tree, block, methodRef, parameters);					
+					
+					//signature for other operation
+					signature = node.getOperations().get(0);
+					
+					if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
+						right = new TACBinary(tree, result, signature, operation, right);
+					else
+					{
+						TACVariableRef temp = new TACVariableRef(tree,
+								method.addTempLocal(signature.getReturnTypes().get(0)));
+						methodRef = new TACMethodRef(tree, result, signature);
+						new TACStore(tree, temp, new TACCall(tree, block, methodRef, methodRef.getPrefix(), right));		
+						right = new TACLoad(tree, temp);						
+					}		
 					
 					parameters = new ArrayList<TACOperand>( parameters );					
-				}
+				}				
 				
 				parameters.add(right); //value to store (possibly updated by code above)
 				
@@ -631,15 +646,26 @@ public class TACBuilder implements ShadowParserVisitor
 						left, //prefix
 						signature.getMethodType().getTypeWithoutTypeArguments(),
 						signature.getSymbol());
-				
+				parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)
 				new TACCall(tree, block, methodRef, parameters);
 			}			
 			else
 			{	
-				
-				TACReference var = (TACReference)left;				
+				TACReference var = (TACReference)left;	
+				signature = node.getOperations().get(0);
 				if (operation != '=')
-					right = new TACBinary(tree, var, node.getOperations().get(0), operation, right);
+				{	
+					if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
+						right = new TACBinary(tree, var, signature, operation, right );
+					else
+					{
+						TACVariableRef temp = new TACVariableRef(tree,
+								method.addTempLocal(signature.getReturnTypes().get(0)));
+						methodRef = new TACMethodRef(tree, left, signature);
+						new TACStore(tree, temp, new TACCall(tree, block, methodRef, methodRef.getPrefix(), right));		
+						right = new TACLoad(tree, temp);						
+					}
+				}
 				new TACStore(tree, var, right);				
 			}
 		}			
@@ -897,7 +923,7 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 	
 	
-	private TACOperand convertToString( TACOperand operand, Node node )
+	private TACOperand convertToString( TACOperand operand )
 	{
 		Type type = operand.getType();
 		if(type instanceof PropertyType )
@@ -911,7 +937,7 @@ public class TACBuilder implements ShadowParserVisitor
 					nonnullLabel = new TACLabelRef(tree),
 					doneLabel = new TACLabelRef(tree);
 			TACReference var = new TACVariableRef(tree,
-					method.addTempLocal(node));
+					method.addTempLocal(new SimpleModifiedType(Type.STRING)));
 			new TACBranch(tree, new TACSame(tree, operand,
 					new TACLiteral(tree, "null")), nullLabel,
 					nonnullLabel);
@@ -955,7 +981,7 @@ public class TACBuilder implements ShadowParserVisitor
 			{
 				TACOperand operand = tree.appendChild(i);
 				
-				operand = convertToString( operand, node );				
+				operand = convertToString( operand );				
 				
 				last = i == 0 ? operand : new TACCall(tree, block,
 						new TACMethodRef(tree,
@@ -1012,7 +1038,7 @@ public class TACBuilder implements ShadowParserVisitor
 			String op = node.getImage(); 
 			if( op.equals("#")) //string is special because of nulls
 			{	
-				convertToString( operand, node );
+				convertToString( operand );
 			}
 			else
 			{
@@ -2745,8 +2771,8 @@ public class TACBuilder implements ShadowParserVisitor
 			MethodSignature signature = node.getOperations().get(index);
 			boolean isCompare = ( op == '<' || op == '>' || op == '{' || op == '}' );
 			Type currentType = current.getType();
-			if( currentType instanceof PropertyType )
-				currentType = ((PropertyType)currentType).getGetType().getType();
+			if( currentType instanceof GetSetType )
+				currentType = ((GetSetType)currentType).getGetType().getType();
 			
 			if( currentType.isPrimitive() && signature.getModifiers().isNative() ) //operation based on method
 				current = new TACBinary(tree, current, signature, op, next, isCompare );

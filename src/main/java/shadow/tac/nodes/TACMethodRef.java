@@ -60,9 +60,10 @@ public class TACMethodRef extends TACOperand
 			else
 			{
 				//inner class issues
-				while( !prefixNode.getType().isSubtype(methodType.getOuter()) 
-						&& prefixNode.getType().hasOuter()	) //not here, look in outer classes
-				{
+				while(  prefixNode.getType() instanceof ClassType &&
+						!prefixNode.getType().isSubtype(methodType.getOuter()) && 
+						 prefixNode.getType().hasOuter()	) //not here, look in outer classes
+				{	
 					prefixNode = new TACFieldRef(this, prefixNode, new SimpleModifiedType(prefixNode.getType().getOuter()), "_outer");
 				}
 				

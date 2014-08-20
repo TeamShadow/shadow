@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
 
 import shadow.interpreter.ShadowBoolean;
 import shadow.interpreter.ShadowCode;
@@ -71,6 +70,7 @@ import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
+import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACVariableRef;
@@ -1924,10 +1924,8 @@ public class LLVMOutput extends AbstractOutput
 			writer.outdent(2);
 		}
 		writer.write("unreachable");
-	}
-
+	}	
 	
-	/*
 	@Override
 	public void visit(TACTypeId node) throws ShadowException
 	{
@@ -1941,8 +1939,7 @@ public class LLVMOutput extends AbstractOutput
 			writer.write(nextTemp(node) + " = tail call i32 " +
 					"@llvm.eh.typeid.for(i8* " + temp(1) + ") nounwind");
 		}
-	}
-	*/
+	}	
 
 	@Override
 	public void visit(TACLandingpad node) throws ShadowException

@@ -178,6 +178,8 @@ public abstract class ShadowValue implements ModifiedType {
             return this;
         
         // ??? why make a copy here?
+        // because an immutable value can't be changed
+        // which would be possible when there are other references to the original
         final ShadowValue copy = copy();
         
         copy.getModifiers().addModifier(Modifiers.IMMUTABLE);
