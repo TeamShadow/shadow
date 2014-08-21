@@ -2283,7 +2283,8 @@ public class StatementChecker extends BaseChecker
 													
 			if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof ArrayType) )
 			{
-				node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );				
+				node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
+				node.addModifier(Modifiers.TYPE_NAME);
 			}
 			else
 			{

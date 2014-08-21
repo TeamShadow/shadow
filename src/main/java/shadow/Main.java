@@ -196,6 +196,8 @@ public class Main {
 						files.add( getPath( standard, "String" ));
 						files.add( getPath( standard, "System" ));
 						files.add( getPath( standard, "OutOfMemoryException" ));
+						files.add( getPath( standard, "CastException" ));
+						files.add( getPath( standard, "IndexOutOfBoundsException" ));
 
 						files.add( getPath( io, "Console" ));
 						files.add( getPath( io, "File" ));

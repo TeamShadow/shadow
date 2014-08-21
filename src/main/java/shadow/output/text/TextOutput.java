@@ -407,7 +407,7 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACArrayRef node) throws ShadowException
 		{
 			visit(visit(sb, node.getArray()).append('['), node.getIndex(0));
-			for (int i = 1; i < node.getNumIndicies(); i++)
+			for (int i = 1; i < node.getNumIndices(); i++)
 				visit(sb.append(", "), node.getIndex(i));
 			sb.append(']');
 		}

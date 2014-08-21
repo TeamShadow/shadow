@@ -3,11 +3,11 @@ exception shadow.standard@IndexOutOfBoundsException
 	public create() { }
 	public create( int index )
 	{
-		super("Index: " # index);
+		super("Index " # index);
 	}
 	
 	public create( int[] indices )
 	{
-		super("Indices: " # indices);
+		super("Indices " # indices);
 	}
 }

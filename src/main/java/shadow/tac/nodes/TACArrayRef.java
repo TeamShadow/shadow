@@ -6,9 +6,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
@@ -17,11 +22,12 @@ import shadow.typecheck.type.Type;
  * TAC representation of array subscript
  * Example: [x, y, z] 
  * @author Jacob Young
+ * @author Barry Wittman
  */
 public class TACArrayRef extends TACReference
 {
 	private TACOperand array, total;
-	private List<TACOperand> indicies;
+	private List<TACOperand> indices;	
 	
 	public TACArrayRef(TACNode node, TACOperand reference, TACOperand... ops)
 	{
@@ -46,33 +52,114 @@ public class TACArrayRef extends TACReference
 		super(node);
 		array = check(reference, reference);
 		Iterator<TACOperand> iter = ops.iterator();
-		indicies = new ArrayList<TACOperand>(ops.size());
-		TACOperand current = check(iter.next(),
-				new SimpleModifiedType(Type.INT));
-		indicies.add(current);
-		while (iter.hasNext())
-		{
-			current = new TACBinary(this, current, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(this,
-					array, indicies.size()));
-			TACOperand next = check(iter.next(),
-					new SimpleModifiedType(Type.INT));
-			indicies.add(next);
-			current = new TACBinary(this, current, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', next);
+		indices = new ArrayList<TACOperand>(ops.size());
+		
+		if( check )
+		{	
+			TACLabelRef throwLabel = new TACLabelRef(this);
+			
+			for( int i = 0; i < ops.size(); i++ )
+			{
+				TACOperand length = check(iter.next(), new SimpleModifiedType(Type.INT));		
+				indices.add(length);
+							
+				TACLength bound = new TACLength(this, array, i);
+				TACOperand condition = new TACBinary(this, length, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', bound, true);
+				
+				TACLabelRef negativeCheck = new TACLabelRef(this);							
+				new TACBranch(this, condition, negativeCheck, throwLabel);				
+				negativeCheck.new TACLabel(this);
+				
+				condition = new TACBinary(this, length, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '}', new TACLiteral(this, "0"), true);
+								
+				
+				TACLabelRef computeOffset = new TACLabelRef(this);
+				new TACBranch(this, condition, computeOffset, throwLabel);
+				computeOffset.new TACLabel(this);				
+				
+				if( i > 0 )
+				{	
+					total = new TACBinary(this, total, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', bound);
+					total = new TACBinary(this, total, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', length);
+				}
+				else
+				{					
+					total = length;
+				}			
+			}
+			
+			TACLabelRef done = new TACLabelRef(this);			
+			new TACBranch(this, done);
+			
+			throwLabel.new TACLabel(this);
+			
+			TACOperand object = new TACNewObject(this, Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
+			List<TACOperand> params = new ArrayList<TACOperand>();
+			params.add(object);			
+			MethodSignature signature;			
+			
+			if( ops.size() > 1 )
+			{			
+				ArrayType intArray = new ArrayType(Type.INT);
+				TACClass intClass = new TACClass(this, Type.INT);
+				TACOperand bounds  = new TACNewArray(this, intArray, intClass.getClassData(), new TACLiteral(this, "" + ops.size()));
+				iter = ops.iterator();
+				
+				//fill the array with the bad indices
+				for( int i = 0; i < ops.size(); i++ )
+				{
+					TACArrayRef arrayRef = new TACArrayRef(this, bounds, new TACLiteral(this, "" + i), false);
+					new TACStore(this, arrayRef, iter.next());
+				}
+				
+				signature = Type.INDEX_OUT_OF_BOUNDS_EXCEPTION.getMatchingMethod("create", new SequenceType(intArray));
+				params.add( bounds );				
+			}
+			else
+			{
+				signature = Type.INDEX_OUT_OF_BOUNDS_EXCEPTION.getMatchingMethod("create", new SequenceType(Type.INT));
+				params.add(ops.iterator().next());				
+			}
+						
+			TACMethodRef methodRef = new TACMethodRef(this, signature);
+			TACBlock block = getBuilder().getBlock();
+			TACCall exception = new TACCall(this, block, methodRef, params);
+						
+			new TACThrow(this, block, exception);						
+			
+			done.new TACLabel(this);	//done label	
+			new TACNodeRef(this, total);
 		}
-		total = current;
+		else
+		{		
+			total = check(iter.next(),
+					new SimpleModifiedType(Type.INT));		
+			indices.add(total);
+			
+			while (iter.hasNext())
+			{
+				total = new TACBinary(this, total, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(this,
+						array, indices.size()));
+				TACOperand next = check(iter.next(),
+						new SimpleModifiedType(Type.INT));
+				indices.add(next);
+				total = new TACBinary(this, total, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', next);
+			}
+		}
 	}
+
 
 	public TACOperand getArray()
 	{
 		return array;
 	}
-	public int getNumIndicies()
+	public int getNumIndices()
 	{
-		return indicies.size();
+		return indices.size();
 	}
 	public TACOperand getIndex(int index)
 	{
-		return indicies.get(index);
+		return indices.get(index);
 	}
 	public TACOperand getTotal()
 	{
@@ -87,7 +174,7 @@ public class TACArrayRef extends TACReference
 	@Override
 	public int getNumOperands()
 	{
-		return 2 + indicies.size();
+		return 2 + indices.size();
 	}
 	@Override
 	public TACOperand getOperand(int num)
@@ -96,7 +183,7 @@ public class TACArrayRef extends TACReference
 			return array;
 		if (num == 1)
 			return total;
-		return indicies.get(num - 2);
+		return indices.get(num - 2);
 	}
 
 	@Override
@@ -109,7 +196,7 @@ public class TACArrayRef extends TACReference
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder(array.toString()).append('[');
-		for (TACOperand node : indicies)
+		for (TACOperand node : indices)
 			sb.append(node).append(", ");
 		return sb.delete(sb.length() - 2, sb.length()).append(']').toString();
 	}

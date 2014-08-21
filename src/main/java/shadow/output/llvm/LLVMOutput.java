@@ -811,7 +811,7 @@ public class LLVMOutput extends AbstractOutput
 
 	@Override
 	public void visit(TACArrayRef node) throws ShadowException
-	{
+	{		
 		writer.write(nextTemp() + " = extractvalue " +
 				typeSymbol(node.getArray()) + ", 0");
 		writer.write(nextTemp(node) + " = getelementptr inbounds " +

@@ -53,6 +53,8 @@ public class TACModule {
         add(Type.DOUBLE);
         add(Type.ARRAY);
         add(Type.EXCEPTION);
+        add(Type.CAST_EXCEPTION);
+        add(Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
         add(Type.GENERIC_CLASS);
         // add(Type.ARRAY_CLASS);
         // add(Type.METHOD_CLASS);

@@ -186,6 +186,11 @@ public class TACTest {
 	@Test public void testCopy() throws Exception {
 		args.add("shadow/test/CopyTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+	}	
+	
+	@Test public void testArrayOutOfBounds() throws Exception {
+		args.add("shadow/test/ArrayOutOfBoundsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
 	}
 
 

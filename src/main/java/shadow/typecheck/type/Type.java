@@ -61,7 +61,9 @@ public abstract class Type implements Comparable<Type>
 	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
 
 	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
-	public static ExceptionType EXCEPTION = null;	
+	public static ExceptionType EXCEPTION = null;
+	public static ExceptionType CAST_EXCEPTION = null;
+	public static ExceptionType INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
 	public static ErrorType ERROR = null;
 		
 	public static ClassType BOOLEAN = null;
@@ -173,6 +175,8 @@ public abstract class Type implements Comparable<Type>
 	public static void clearTypes()				
 	{
 		OBJECT = null;
+		CAST_EXCEPTION = null;
+		INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
 		CLASS = null;		
 		ARRAY = null;
 		ARRAY_CLASS = null;

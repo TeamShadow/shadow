@@ -1,0 +1,100 @@
+import shadow.io@Console;
+
+class shadow.test@ArrayOutOfBoundsTest
+{
+	public main() => ()
+	{
+		Console out = Console:instance;
+	
+		try
+		{
+			
+			int[] temp = int:create[15];
+			
+			for( int i = 0; i < temp->size; i += 1 )
+				temp[i] = 3*i + 1;
+						
+			temp[16] = 5;
+			
+			out.printLine(temp);
+		}
+		catch(Exception e)
+		{
+			out.printLine(e);
+		}		
+		
+		try
+		{
+			
+			int[] temp = int:create[15];
+			
+			for( int i = 0; i < temp->size; i += 1 )
+				temp[i] = 3*i + 1;
+						
+			temp[-1] = 5;
+			
+			out.printLine(temp);
+		}
+		catch(Exception e)
+		{
+			out.printLine(e);
+		}
+		
+		try
+		{
+			
+			int[,] temp = int:create[4,5];
+			
+			for( int i = 0; i < 4; i += 1 )
+				for( int j = 0; j < 5; j += 1 )
+					temp[i,j] = 3*i + j;
+						
+			temp[2,9] = 5;
+			
+			out.printLine(temp);
+		}
+		catch(Exception e)
+		{
+			out.printLine(e);
+		}
+		
+		try
+		{
+			
+			int[][] temp = int:create[4][5];
+			
+			for( int i = 0; i < 4; i += 1 )
+				for( int j = 0; j < 5; j += 1 )
+					temp[i][j] = 3*i + j;
+						
+			temp[2][9] = 5;
+			
+			out.printLine(temp);
+		}
+		catch(Exception e)
+		{
+			out.printLine(e);
+		}
+		
+		try
+		{			
+			int[][] temp = int[]:create[4];						
+			temp[2][9] = 5; //not actually a null pointer in Shadow, since the arrays are structs holding null pointers and zero lengths
+			
+			out.printLine(temp);
+		}
+		catch(Exception e)
+		{
+			out.printLine(e);
+		}
+		
+		/*
+		int[][][] array = int[][]:create[4];
+		array[2] = int[]:create[5];
+		array[2][3] = int:create[10];
+		array[2][3][5] = 31;
+		
+		out.printLine( array[2][3][5] );
+		*/
+	}
+}

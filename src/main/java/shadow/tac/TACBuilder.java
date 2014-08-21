@@ -2832,7 +2832,7 @@ public class TACBuilder implements ShadowParserVisitor
 			bodyLabel.new TACLabel(tree);
 			
 			//put variable update before main body
-			value = new TACArrayRef(tree, collection, new TACLoad(tree, iterator));
+			value = new TACArrayRef(tree, collection, new TACLoad(tree, iterator), false);
 			new TACStore(tree, variable, value);
 			
 			tree.appendChild(1); //body
@@ -2930,7 +2930,7 @@ public class TACBuilder implements ShadowParserVisitor
 					endLabel = new TACLabelRef(tree);
 			new TACBranch(tree, condLabel);
 			bodyLabel.new TACLabel(tree);
-			new TACStore(tree, new TACArrayRef(tree, alloc, index),
+			new TACStore(tree, new TACArrayRef(tree, alloc, index, false),
 					visitArrayAllocation((ArrayType)type.getBaseType(), baseClass.getBaseClass(), sizes));
 			new TACStore(tree, index, new TACBinary(tree, index, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+',
 					new TACLiteral(tree, "1")));

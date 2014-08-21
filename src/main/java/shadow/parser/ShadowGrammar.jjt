@@ -505,25 +505,6 @@ Modifiers Modifiers():
 /*
  * Declaration syntax follows.
  */
-/*
-void TypeDeclaration():
-{
-   Modifiers modifiers;
-   debugPrint("TYPE DECLARATION");
-   
-}
-{
-	modifiers = Modifiers()
-  ( ClassOrInterfaceDeclaration(modifiers)
-  | EnumDeclaration(modifiers)  
-  | ViewDeclaration(modifiers)
-  )
-
-	{	  
-	  jjtThis.setModifiers(modifiers);
-	}
-}
-*/
 
 void ViewDeclaration(Modifiers modifiers):
 {
