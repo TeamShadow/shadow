@@ -88,13 +88,19 @@ class shadow.test@ArrayOutOfBoundsTest
 			out.printLine(e);
 		}
 		
-		/*
-		int[][][] array = int[][]:create[4];
-		array[2] = int[]:create[5];
-		array[2][3] = int:create[10];
-		array[2][3][5] = 31;
 		
-		out.printLine( array[2][3][5] );
-		*/
+		try
+		{		
+			int[][][] temp = int[][]:create[4];
+			temp[2] = int[]:create[5];
+			temp[2][3] = int:create[10];
+			temp[2][3][28] = 31;
+			
+			out.printLine(temp);
+		}
+		catch(Exception e)
+		{		
+			out.printLine( e );
+		}		
 	}
 }

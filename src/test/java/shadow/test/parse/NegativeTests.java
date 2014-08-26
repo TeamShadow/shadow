@@ -17,7 +17,7 @@ public class NegativeTests {
 
 	@Before
 	public void setUp() throws Exception {
-		args.add("--check");
+		args.add("--typecheck");
 		args.add("--config");
 
 		String osName = System.getProperty("os.name");

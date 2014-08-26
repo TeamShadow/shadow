@@ -1153,12 +1153,12 @@ public abstract class Type implements Comparable<Type>
 			if( type instanceof ArrayType )
 			{				
 				ArrayType arrayType = (ArrayType) type;
-				addReferencedType(arrayType.convertToGeneric());
-				//covers Type.ARRAY and all recursive base types
-				
 				Type baseType = arrayType.getBaseType();
 				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
 					referencedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues
+								
+				addReferencedType(arrayType.convertToGeneric());
+				//covers Type.ARRAY and all recursive base types
 			}
 			else if( type instanceof MethodType )
 			{
@@ -1210,7 +1210,7 @@ public abstract class Type implements Comparable<Type>
 				outer = outer.getOuter();
 			}
 			
-			ArrayList<InterfaceType> interfaces = type.getInterfaces(); 
+			ArrayList<InterfaceType> interfaces = type.getInterfaces();
 			
 			//add interfaces
 			for( InterfaceType interfaceType : interfaces )
