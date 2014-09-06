@@ -31,7 +31,7 @@
 %"_Pshadow_Pstandard_CException_methods" = type { %"_Pshadow_Pstandard_CException"* (%"_Pshadow_Pstandard_CException"*, %"_Pshadow_Pstandard_CAddressMap"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)* }
 %"_Pshadow_Pstandard_CException" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CException_methods"* , %"_Pshadow_Pstandard_CString"* }
 %"_Pshadow_Pio_CIOException_methods" = type { %"_Pshadow_Pio_CIOException"* (%"_Pshadow_Pio_CIOException"*, %"_Pshadow_Pstandard_CAddressMap"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)* }
-%"_Pshadow_Pio_CIOException" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pio_CIOException_methods"*
+%"_Pshadow_Pio_CIOException" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pio_CIOException_methods"* }
 
 @"_Pshadow_Pstandard_CClass_methods" = external constant %"_Pshadow_Pstandard_CClass_methods"
 @"_Pshadow_Pstandard_CClass_class" = external constant %"_Pshadow_Pstandard_CClass"
