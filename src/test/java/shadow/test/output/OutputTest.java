@@ -44,7 +44,7 @@ public class OutputTest {
 		if(osName.startsWith("Windows")) {
 			programCommand.add("a.exe");
 		} else {
-			programCommand.add("a.out");
+			programCommand.add("./a.out");
 		}
 		for (String arg : programArgs)
 			programCommand.add(arg);
