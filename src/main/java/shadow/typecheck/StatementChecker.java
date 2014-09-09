@@ -389,6 +389,8 @@ public class StatementChecker extends BaseChecker
 				((ClassType)currentType).addReferencedType(arrayType);
 				node.setType(arrayType);
 			}
+			
+			node.addModifier(Modifiers.TYPE_NAME);
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -1537,6 +1539,14 @@ public class StatementChecker extends BaseChecker
 				addError(Error.MISMATCHED_TYPE, "Supplied type " + t1 + " cannot be compared with type " + t2 + " in an is statement");
 				node.setType(Type.UNKNOWN);
 			}
+			
+			if( node.jjtGetChild(0).getModifiers().isTypeName() )
+				addError(Error.NOT_OBJECT, "Left hand side of is statement cannot be a type name");
+		
+			if( !node.jjtGetChild(1).getModifiers().isTypeName() )
+				addError(Error.NOT_TYPE, "Right hand side of is statement must be a type name");
+			
+			
 		}			
 
 		return WalkType.POST_CHILDREN;
@@ -1604,6 +1614,7 @@ public class StatementChecker extends BaseChecker
 				methodType.addReturn(type);
 			
 			node.setType(methodType);
+			node.addModifier(Modifiers.TYPE_NAME);
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2289,7 +2300,7 @@ public class StatementChecker extends BaseChecker
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(Error.NOT_TYPE, "Can only apply brackets to a type");
+				addError(Error.NOT_TYPE, "Can only apply brackets to a type name");
 			}
 		}
 		
@@ -3135,6 +3146,7 @@ public class StatementChecker extends BaseChecker
 	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {		
 		node.setType(nameToPrimitiveType(node.getImage()));
 		currentType.addReferencedType(node.getType());
+		node.addModifier(Modifiers.TYPE_NAME);
 		return WalkType.NO_CHILDREN;			
 	}	
 		

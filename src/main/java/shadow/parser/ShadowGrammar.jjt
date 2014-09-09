@@ -116,7 +116,6 @@ TOKEN :
 | < CONSTANT: "constant" >
 | < CONTINUE: "continue" >
 | < _DEFAULT: "default" >
-//| < DELETE: "delete" >
 | < DESTROY: "destroy" >
 | < DO: "do" >
 | < DOUBLE: "double" >
@@ -126,7 +125,6 @@ TOKEN :
 | < EXCEPTION: "exception" >
 | < EXTENDS: "extends" >
 | < FALSE: "false" >
-//| < FINAL: "final" >
 | < FINALLY: "finally" >
 | < FLOAT: "float" >
 | < FOR: "for" >
@@ -144,7 +142,6 @@ TOKEN :
 | < INTERFACE: "interface" >
 | < LONG: "long" >
 | < NATIVE: "native" >
-//| < NEW: "new" >
 | < NULL: "null" >
 | < NULLABLE: "nullable" >
 | < OR: "or" >
@@ -164,7 +161,6 @@ TOKEN :
 | < THIS: "this" >
 | < THROW: "throw" >
 | < THROWS: "throws" >
-//| < TRANSIENT: "transient" >
 | < TRUE: "true" >
 | < TRY: "try" >
 | < UBYTE: "ubyte" >

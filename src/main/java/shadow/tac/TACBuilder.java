@@ -71,6 +71,7 @@ import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
 public class TACBuilder implements ShadowParserVisitor
@@ -902,15 +903,40 @@ public class TACBuilder implements ShadowParserVisitor
 	@Override
 	public Object visit(ASTIsExpression node, Boolean secondVisit)
 			throws ShadowException
-	{
-		
+	{		
 		if (secondVisit)
 		{
-			throw new UnsupportedOperationException();
-			//visitBinaryOperation(node);
+			TACOperand value = tree.appendChild(0);
+			Type valueType = value.getType();
+			if(valueType instanceof GetSetType )
+				valueType = ((GetSetType)valueType).getGetType().getType();
+			
+			Type comparisonType = node.jjtGetChild(1).getType();
+			
+			//if they're not both arrays, change the array one to the generic version
+			if( (valueType instanceof ArrayType) != (comparisonType instanceof ArrayType) )
+			{
+				if( valueType instanceof ArrayType )
+				{
+					ArrayType arrayType = (ArrayType) valueType;
+					valueType = arrayType.convertToGeneric();					
+				}
+				else
+				{
+					ArrayType arrayType = (ArrayType) comparisonType;
+					comparisonType = arrayType.convertToGeneric();
+				}				
+			}
+			
+			TACOperand comparisonClass = new TACClass(tree, comparisonType).getClassData();
+			TACOperand valueClass = new TACClass(tree, valueType).getClassData();
+
+			TACMethodRef methodRef = new TACMethodRef(tree, valueClass,
+					Type.CLASS.getMatchingMethod("isSubtype", new SequenceType(Type.CLASS)));
+			
+			new TACCall(tree, block, methodRef, methodRef.getPrefix(), comparisonClass);
 		}
-		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;		
-		//how is an "is" expression done?  repeated comparison of typeid values?		
+		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
 	@Override
@@ -926,8 +952,8 @@ public class TACBuilder implements ShadowParserVisitor
 	private TACOperand convertToString( TACOperand operand )
 	{
 		Type type = operand.getType();
-		if(type instanceof PropertyType )
-			type = ((PropertyType)type).getGetType().getType();
+		if(type instanceof GetSetType )
+			type = ((GetSetType)type).getGetType().getType();
 		if( type.equals(Type.STRING ) )
 			return operand;
 		

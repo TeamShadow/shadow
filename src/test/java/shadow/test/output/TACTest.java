@@ -192,6 +192,12 @@ public class TACTest {
 		args.add("shadow/test/ArrayOutOfBoundsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testIs() throws Exception {
+		args.add("shadow/test/IsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+
 
 
 }
