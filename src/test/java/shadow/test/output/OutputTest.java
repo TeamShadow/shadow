@@ -36,7 +36,7 @@ public class OutputTest {
 		Loggers.SHADOW.setLevel(Level.INFO);
 		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
 		Loggers.PARSER.setLevel(Level.OFF);
-	}	
+	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException {
 		List<String> programCommand = new ArrayList<String>();
@@ -44,7 +44,7 @@ public class OutputTest {
 		if(osName.startsWith("Windows")) {
 			programCommand.add("a.exe");
 		} else {
-			programCommand.add("a.out");
+			programCommand.add("./a.out");
 		}
 		for (String arg : programArgs)
 			programCommand.add(arg);
@@ -58,7 +58,7 @@ public class OutputTest {
 				builder.append(line).append('\n');
 		} while (line != null);
 		String output = builder.toString(); 
-		assertEquals(output, expectedOutput);
+		assertEquals(expectedOutput, output);
 	}
 	
 	@Test public void testTest() throws Exception {
