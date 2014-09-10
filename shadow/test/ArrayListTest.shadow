@@ -10,17 +10,13 @@ class shadow.test@ArrayListTest
 		Console out = Console:instance;
 		
 		try
-		{	
-			out.printLine("Adding stuff");		
+		{			
 			for ( int i = 0; i < args->size; i += 1 )
-				list.add(check(args[i]));
-			out.printLine("Added stuff");
-			
-			out.printLine("Removing stuff");
+				list.add(check(args[i]));		
+						
 			for ( int i = 1; i < args->size; i += 3 )
 				out.printLine(list.remove(check(args[i])));
-			out.printLine("Removed stuff");
-			
+						
 			out.printLine(list.remove(""));
 			
 			for ( int i = 0; i < list->size; i += 1 )

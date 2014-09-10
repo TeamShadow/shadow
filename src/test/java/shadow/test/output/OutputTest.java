@@ -76,42 +76,42 @@ public class OutputTest {
 		args.add("shadow/test/ArrayListTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[] {"all", "good", "men", "shall", "perish"},
-				"shall\n" + 
-				"\n" + 
-				"all\n" + 
-				"good\n" + 
-				"men\n" +
-				"perish\n");
+			"true\n" +
+			"true\n" +
+			"false\n" +
+			"all\n" +
+			"men\n" +
+			"shall\n" +
+			"[all, men, shall]\n");
 	}	
 	
 	@Test public void testArray() throws Exception {
 		args.add("shadow/test/ArrayTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"[ 0, 1, 2, 3, 4 ]\n" +
-				"[ 0, zero, one, two, shadow.standard@Object ]\n" + 
-				"[ zero, one, two ]\n" +
+				"[0, zero, one, two, 4]\n" +
+				"[zero, one, two]\n" +
 				"[]\n" +
-				"[ 0 ]\n" +
-				"[ 0, 1 ]\n" +
-				"[ 0, 1, 2 ]\n" +
-				"[ 0, 1, 2, 3 ]\n" +
-				"[ 0, 1, 2, 3, 4 ]\n" +
+				"[0]\n" +
+				"[0, zero]\n" +
+				"[0, zero, one]\n" +
+				"[0, zero, one, two]\n" +
+				"[0, zero, one, two, 4]\n" +
 				"[]\n" +
-				"[ 1 ]\n" +
-				"[ 1, 2 ]\n" +
-				"[ 1, 2, 3 ]\n" +
-				"[ 1, 2, 3, 4 ]\n" +
+				"[zero]\n" +
+				"[zero, one]\n" +
+				"[zero, one, two]\n" +
+				"[zero, one, two, 4]\n" +
 				"[]\n" +
-				"[ 2 ]\n" +
-				"[ 2, 3 ]\n" +
-				"[ 2, 3, 4 ]\n" +
+				"[one]\n" +
+				"[one, two]\n" +
+				"[one, two, 4]\n" +
 				"[]\n" +
-				"[ 3 ]\n" +
-				"[ 3, 4 ]\n" +
+				"[two]\n" +
+				"[two, 4]\n" +
 				"[]\n" +
-				"[ 4 ]\n" +
-				"[]\n");
+				"[4]\n" +
+				"[]\n");			
 	}	
 	
 	@Test public void testChild() throws Exception {
