@@ -4,7 +4,7 @@ class shadow.test@CastExceptionTest
 {	
 	public main( String[] args ) => ()
 	{	
-		/*Console out = Console:instance;
+		Console out = Console:instance;
 	
 		String s = "Help me";		
 		Object o = cast<Object>(s);
@@ -12,15 +12,9 @@ class shadow.test@CastExceptionTest
 		s = cast<String>(o); //should succeed
 		out.printLine("Cast from String to String");
 		
-		Object o = Object:create();
+		o = Object:create();
 		
-		String s = cast<String>(o); //should fail
-		
-		*/
-		
-		CastException:create(Object:class, String:class);
-		//CastException:create("figs");
-		
-		//out.printLine("Cast from Object to Strong");
+		s = cast<String>(o); //should fail
+		out.printLine("Cast from Object to String");
 	}
 }
