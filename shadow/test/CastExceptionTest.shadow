@@ -14,7 +14,31 @@ class shadow.test@CastExceptionTest
 		
 		o = Object:create();
 		
-		s = cast<String>(o); //should fail
-		out.printLine("Cast from Object to String");
+		try
+		{
+			s = cast<String>(o); //should fail
+			out.printLine("Cast from Object to String");
+		}
+		catch( CastException e )
+		{
+			out.printLine( #e );
+		}
+		
+		CanIterate<code> iterator = cast<CanIterate<code>>(s); //should succeed
+		out.printLine("Cast from String to CanIterate<code>");
+		
+		CanEqual<String> equaller = cast<CanEqual<String>>(s); //should succeed
+		out.printLine("Cast from String to CanEqual<String>");
+		
+		try
+		{
+			iterator = cast<CanIterate<code>>(o); //should fail
+			out.printLine("Cast from Object to CanIterate<code>");
+		}
+		catch( CastException e )
+		{
+			out.printLine( #e );
+		}
+		
 	}
 }

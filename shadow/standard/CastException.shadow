@@ -4,7 +4,7 @@ exception shadow.standard@CastException
 	
 	public create( Class source, Class destination )
 	{
-		this( "Cannot cast " # source # " to " # destination ); 
+		this( "Type " # source # " is not a subtype of " # destination ); 
 	}
 	
 	public create( String message )
