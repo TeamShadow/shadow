@@ -197,6 +197,14 @@ public class TACTest {
 		args.add("shadow/test/IsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	
+	@Test public void testCastException() throws Exception {
+		args.add("shadow/test/CastExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	
 
 
 

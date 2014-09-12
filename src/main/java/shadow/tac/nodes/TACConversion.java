@@ -36,6 +36,11 @@ public class TACConversion extends TACOperand
 
 	public TACConversion(TACNode node, TACOperand source, Type destination, Kind kind)
 	{
+		this(node, source, destination, kind, false);
+	}
+	
+	public TACConversion(TACNode node, TACOperand source, Type destination, Kind kind, boolean check)
+	{
 		super(node);
 		type = destination;	
 		modifiers = new Modifiers(source.getModifiers());
@@ -63,7 +68,7 @@ public class TACConversion extends TACOperand
 			for (ModifiedType destType : destinationSequence)
 			{
 				TACOperand element = new TACSequenceElement(this, source, index);				
-				operands.add(new TACCast(this, destType, element));			
+				operands.add(new TACCast(this, destType, element, check));			
 				index++;
 			}
 		}
@@ -71,12 +76,12 @@ public class TACConversion extends TACOperand
 		{
 			//method returning a sequence with a single thing in it
 			TACSequenceElement element = new TACSequenceElement(this, source, 0);
-			operands.add(new TACCast(this, new SimpleModifiedType(type), element));
+			operands.add(new TACCast(this, new SimpleModifiedType(type), element, check));
 		}
 		else if( kind.equals(Kind.OBJECT_TO_SEQUENCE))
 		{
 			SequenceType destinationSequence = (SequenceType)type;			
-			operands.add(new TACCast(this, destinationSequence.get(0), source));
+			operands.add(new TACCast(this, destinationSequence.get(0), source, check));
 		}
 		else if( kind.equals(Kind.PRIMITIVE_TO_OBJECT))
 		{

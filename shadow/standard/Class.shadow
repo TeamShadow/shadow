@@ -133,6 +133,9 @@ immutable class shadow.standard@Class implements CanHash
 
 	public isSubtype( Class other ) => ( boolean )
 	{
+		var out = Console:instance;
+		out.printLine(name);
+	
 		if ( this === other )
 			return true;
 			
@@ -177,13 +180,17 @@ immutable class shadow.standard@Class implements CanHash
 				}
 				else if( !isInterface() )
 				{
+					out.printLine("About to check parent!");
 					return check(parent).isSubtype(other);
 				}
 			}
 		}
 		recover
-		{}
-				
+		{
+			out.printLine("Recovery!");
+		}
+		
+		out.printLine("Returning false!");		
 		return false;
 	}
 

@@ -1,10 +1,15 @@
 package shadow.tac.nodes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.tac.nodes.TACConversion.Kind;
+import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
@@ -15,9 +20,15 @@ public class TACCast extends TACOperand
 {
 	private Type type;
 	private Modifiers modifiers;
-	private TACOperand operand;	
-
+	private TACOperand operand;
+	
 	public TACCast(TACNode node, ModifiedType destination, TACOperand op)
+	{
+		this( node, destination, op, false);
+	}
+	
+
+	public TACCast(TACNode node, ModifiedType destination, TACOperand op, boolean check)
 	{
 		super(node);
 		if (destination.getType() == Type.NULL)
@@ -32,15 +43,14 @@ public class TACCast extends TACOperand
 		if( type instanceof SequenceType || op.getType() instanceof SequenceType )
 		{
 			if( type instanceof SequenceType && op.getType() instanceof SequenceType )							
-				operand = new TACConversion(this, op, type, Kind.SEQUENCE_TO_SEQUENCE);
+				operand = new TACConversion(this, op, type, Kind.SEQUENCE_TO_SEQUENCE, check);
 			else if( type instanceof SequenceType )			
-				operand = new TACConversion(this, op, type, Kind.OBJECT_TO_SEQUENCE);
+				operand = new TACConversion(this, op, type, Kind.OBJECT_TO_SEQUENCE, check);
 			else
-				operand = new TACConversion(this, op, type, Kind.SEQUENCE_TO_OBJECT);
+				operand = new TACConversion(this, op, type, Kind.SEQUENCE_TO_OBJECT, check);
 		}			
 		else if( op.getType().equals(Type.NULL) )//|| destination.equals(Type.NULL) ) //does that second condition ever happen?
-		{
-			
+		{			
 			if( type instanceof ArrayType )			
 				operand = new TACConversion(this, op, type, Kind.NULL_TO_ARRAY);
 			else if( type instanceof InterfaceType )
@@ -58,7 +68,7 @@ public class TACCast extends TACOperand
 				if( op.getType().isPrimitive() && !op.getModifiers().isNullable() )				
 					op = new TACConversion(this, op, op.getType(), Kind.PRIMITIVE_TO_OBJECT);
 								
-				operand = new TACConversion(this, op, type, Kind.OBJECT_TO_INTERFACE);
+				operand = new TACConversion(this, op, type, Kind.OBJECT_TO_INTERFACE, check);
 				return;
 			}			
 			
@@ -73,7 +83,7 @@ public class TACCast extends TACOperand
 				else
 				{
 					if( !modifiers.isNullable() )
-						operand = new TACConversion(this, op, type, Kind.OBJECT_TO_PRIMITIVE);
+						operand = new TACConversion(this, op, type, Kind.OBJECT_TO_PRIMITIVE, check);
 					else
 						operand = op;
 					return;
@@ -99,13 +109,54 @@ public class TACCast extends TACOperand
 				}						
 				else
 				{ 
-					operand = new TACConversion(this, op, type, Kind.OBJECT_TO_ARRAY); 
+					operand = new TACConversion(this, op, type, Kind.OBJECT_TO_ARRAY, check); 
 					return;					
 				}
 			}
 			
 			operand = op;
-		}		
+		}
+		
+		
+		if( check && !operand.getType().isSubtype(type) )  //subtypes should be safe
+		{			
+			TACBlock block = getBuilder().getBlock();
+			
+			//get class from object
+			TACMethodRef methodRef = new TACMethodRef(this, operand,
+					Type.OBJECT.getMatchingMethod("getClass", new SequenceType()));						
+			
+			TACOperand operandClass = new TACCall(this, block, methodRef, methodRef.getPrefix());
+			TACOperand destinationClass = new TACClass(this, type).getClassData();
+			
+			methodRef = new TACMethodRef(this, operandClass,
+					Type.CLASS.getMatchingMethod("isSubtype", new SequenceType(Type.CLASS)));
+			
+			
+			TACOperand result = new TACCall(this, block, methodRef, methodRef.getPrefix(), destinationClass);
+			TACLabelRef throwLabel = new TACLabelRef(this);
+			TACLabelRef doneLabel = new TACLabelRef(this);
+			
+			new TACBranch(this, result, doneLabel, throwLabel);
+			
+			throwLabel.new TACLabel(this);
+			
+			TACOperand object = new TACNewObject(this, Type.CAST_EXCEPTION);
+			SequenceType params = new SequenceType();			
+			params.add(operandClass);
+			params.add(destinationClass);
+			
+			MethodSignature signature;
+			signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
+						
+			methodRef = new TACMethodRef(this, signature);			
+			TACCall exception = new TACCall(this, block, methodRef, object, operandClass, destinationClass);
+						
+			new TACThrow(this, block, exception);						
+			
+			doneLabel.new TACLabel(this);	//done label	
+			new TACNodeRef(this, operand);
+		}
 	}
 
 	public TACOperand getOperand()
