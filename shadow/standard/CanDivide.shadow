@@ -1,4 +1,4 @@
-interface shadow.standard@
+interface shadow:standard@
 	CanDivide<T>
 {
 	immutable divide(T other) => (T);

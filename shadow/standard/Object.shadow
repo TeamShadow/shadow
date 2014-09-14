@@ -1,4 +1,4 @@
-class shadow.standard@Object
+class shadow:standard@Object
 {
 	public native immutable
 	getClass() => ( Class );

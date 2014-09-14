@@ -1,9 +1,9 @@
-import shadow.utility@Map;
-import shadow.utility@IllegalModificationException;
-import shadow.io@Console;
+import shadow:utility@Map;
+import shadow:utility@IllegalModificationException;
+import shadow:io@Console;
 
 
-class shadow.standard@AddressMap
+class shadow:standard@AddressMap
 	implements Map<ulong, ulong>
 {
 	constant int DEFAULT_INITIAL_CAPACITY = 16;

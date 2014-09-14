@@ -1,4 +1,4 @@
-exception shadow.standard@CastException
+exception shadow:standard@CastException
 {
 	public create() { }
 	

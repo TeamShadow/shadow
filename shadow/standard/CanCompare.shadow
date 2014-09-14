@@ -1,4 +1,4 @@
-interface shadow.standard@
+interface shadow:standard@
 	CanCompare<T>
 extends
 	CanEqual<T>

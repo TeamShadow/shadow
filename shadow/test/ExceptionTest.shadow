@@ -1,7 +1,7 @@
-import shadow.standard@Error;
-import shadow.io@Console;
+import shadow:standard@Error;
+import shadow:io@Console;
 
-immutable class shadow.test@ExceptionTest
+immutable class shadow:test@ExceptionTest
 {
 	public test() => () {		
 		//throw IndexOutOfBoundsException:create();

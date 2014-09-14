@@ -1,7 +1,7 @@
-import shadow.io@Console;
-import shadow.utility@ArrayList;
+import shadow:io@Console;
+import shadow:utility@ArrayList;
 
-class shadow.test@BasicTest
+class shadow:test@BasicTest
 {
 	public main( String[] args ) => ()
 	{

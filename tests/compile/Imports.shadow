@@ -1,4 +1,4 @@
-import shadow.utility@Random;
+import shadow:utility@Random;
 
 class Imports
 {
@@ -10,7 +10,7 @@ class Imports
 		
 		a += r.nextInt();
 		
-		shadow.utility@Random v = shadow.utility@Random:create();
+		shadow:utility@Random v = shadow:utility@Random:create();
 		
 		a *= v.nextInt();
 					

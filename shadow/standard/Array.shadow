@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-abstract class shadow.standard@Array<T> implements CanIndexStore<int[],T>, CanIterate<T>
+abstract class shadow:standard@Array<T> implements CanIndexStore<int[],T>, CanIterate<T>
 {
 	get immutable int[] lengths;
 	Object data;

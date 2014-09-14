@@ -85,7 +85,7 @@ public class TACConversion extends TACOperand
 		}
 		else if( kind.equals(Kind.PRIMITIVE_TO_OBJECT))
 		{
-			modifiers.addModifier(Modifiers.NULLABLE); //marks the difference between int and shadow.standard.int
+			modifiers.addModifier(Modifiers.NULLABLE); //marks the difference between int and shadow:standard.int
 		}
 		else if( kind.equals(Kind.OBJECT_TO_PRIMITIVE))
 		{

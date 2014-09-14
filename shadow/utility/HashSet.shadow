@@ -1,4 +1,4 @@
-class shadow.utility@HashSet<V is CanHash and CanEqual<V>>
+class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 	implements Set<V>
 {
 	constant int DEFAULT_INITIAL_CAPACITY = 16;

@@ -1,4 +1,4 @@
-exception shadow.io@IOException
+exception shadow:io@IOException
 {
 	public create() { }
 	public create(String message) { super(message); }

@@ -1,4 +1,4 @@
-class shadow.standard@Reference<T>
+class shadow:standard@Reference<T>
 {
 	get set nullable T value = null;
 	public create()

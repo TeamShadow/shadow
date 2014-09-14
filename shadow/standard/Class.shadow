@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-immutable class shadow.standard@Class implements CanHash
+immutable class shadow:standard@Class implements CanHash
 {
 	get String name;
 	get nullable Class parent;

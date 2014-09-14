@@ -1,4 +1,4 @@
-class shadow.utility@Random
+class shadow:utility@Random
 {
 	public create()
 	{

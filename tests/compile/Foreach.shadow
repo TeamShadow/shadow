@@ -1,5 +1,5 @@
-import shadow.utility@ArrayList;
-import shadow.utility@LinkedList;
+import shadow:utility@ArrayList;
+import shadow:utility@LinkedList;
 
 class Foreach {
     public test() => () {

@@ -1,4 +1,4 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
 class MatrixTest
 {

@@ -1,4 +1,4 @@
-immutable class shadow.standard@
+immutable class shadow:standard@
 	Int
 implements
 	Integer<int>,

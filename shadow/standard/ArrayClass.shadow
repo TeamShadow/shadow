@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-immutable class shadow.standard@ArrayClass extends GenericClass
+immutable class shadow:standard@ArrayClass extends GenericClass
 {	
 	Class internalParameter;
 	//generic type parameter is for the outside world

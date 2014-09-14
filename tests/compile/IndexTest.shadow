@@ -1,4 +1,4 @@
-import shadow.utility@HashSet;
+import shadow:utility@HashSet;
 
 class IndexTest
 {

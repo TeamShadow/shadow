@@ -1,4 +1,4 @@
-interface shadow.standard@
+interface shadow:standard@
 	CanModulus<T>
 {
 	immutable modulus(T other) => (T);

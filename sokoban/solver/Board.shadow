@@ -1,7 +1,7 @@
-import shadow.utility@List;
-import shadow.utility@Set;
-import shadow.utility@Queue;
-import shadow.utility@ArrayList;
+import shadow:utility@List;
+import shadow:utility@Set;
+import shadow:utility@Queue;
+import shadow:utility@ArrayList;
 
 class sokoban.solver@Board {
 	constant int MAX = 256;

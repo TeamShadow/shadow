@@ -1,2 +1,2 @@
-exception shadow.utility@IllegalModificationException
+exception shadow:utility@IllegalModificationException
 {}

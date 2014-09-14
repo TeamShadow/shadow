@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-exception shadow.standard@Exception
+exception shadow:standard@Exception
 {
 	immutable get String message;
 	public create()

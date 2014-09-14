@@ -1,4 +1,4 @@
-interface shadow.standard@
+interface shadow:standard@
 	Integer<T>
 extends
 	Number<T>

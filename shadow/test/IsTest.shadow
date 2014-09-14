@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-class shadow.test@IsTest
+class shadow:test@IsTest
 {
 	public main() => ()
 	{

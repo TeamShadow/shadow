@@ -1,4 +1,4 @@
-immutable class shadow.io@Path
+immutable class shadow:io@Path
 {
 	String[] components;
 	public create()
