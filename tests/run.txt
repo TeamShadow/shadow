@@ -1,4 +1,0 @@
-# This file describes the shadow files to build (compile & code gen)
-# The fields are separated by ;
-# result; main_file; input (ignored); output (ignored); description
-

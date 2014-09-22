@@ -1,3 +1,0 @@
-This is the testing framework for Shadow. To add a new test, create a directory under the appropriate directory, and add your files. Then add a line to the configuration file for the appropriate directory.
-
-As the compile matures, the compile and build directories will go away and it will just be the run directory/tests.
