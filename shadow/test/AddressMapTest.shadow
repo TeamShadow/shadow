@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-class shadow.test@AddressMapTest
+class shadow:test@AddressMapTest
 {
 	public main( String[] args ) => ()
 	{

@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-immutable class shadow.standard@
+immutable class shadow:standard@
 	Double
 implements
 	Number<double>,

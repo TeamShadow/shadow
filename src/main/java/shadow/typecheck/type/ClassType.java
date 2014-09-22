@@ -585,7 +585,7 @@ public class ClassType extends Type
 				name = getTypeName().substring(0,2).toUpperCase() + getTypeName().substring(2);
 			else
 				name = getTypeName().substring(0,1).toUpperCase() + getTypeName().substring(1);
-			out.print("shadow.standard@" + name);
+			out.print("shadow:standard@" + name);
 		}
 		else if( getOuter() == null ) //outermost class		
 			out.print(getQualifiedName(true));

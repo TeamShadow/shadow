@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-immutable class shadow.test@TryTest
+immutable class shadow:test@TryTest
 {
 	public main( String[] args ) => ( int )
 	{

@@ -118,8 +118,8 @@ public class OutputTest {
 		args.add("shadow/test/ChildTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"shadow.test@ParentTest:create(\"Hello World!\")\n" + 
-				"shadow.test@ChildTest:main([])\n");
+				"shadow:test@ParentTest:create(\"Hello World!\")\n" + 
+				"shadow:test@ChildTest:main([])\n");
 	}
 	
 	@Test public void testConsole() throws Exception {

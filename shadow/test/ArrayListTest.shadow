@@ -1,8 +1,8 @@
-import shadow.utility@List;
-import shadow.utility@ArrayList;
-import shadow.io@Console;
+import shadow:utility@List;
+import shadow:utility@ArrayList;
+import shadow:io@Console;
 
-class shadow.test@ArrayListTest
+class shadow:test@ArrayListTest
 {
 	public main( String[] args ) => ( int )
 	{

@@ -1,4 +1,4 @@
-immutable error shadow.standard@Error //extends Exception happens by default
+immutable error shadow:standard@Error //extends Exception happens by default
 {	
 	public create()
 	{

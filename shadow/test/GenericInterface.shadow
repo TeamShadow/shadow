@@ -1,4 +1,4 @@
-class shadow.test@GenericInterface
+class shadow:test@GenericInterface
 {
 	public main( String[] args ) => ()
 	{

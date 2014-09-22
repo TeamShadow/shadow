@@ -1,4 +1,4 @@
-interface shadow.utility@Queue<E> extends CanIterate<E>
+interface shadow:utility@Queue<E> extends CanIterate<E>
 {
 	immutable get size() => ( int size );
 	add( E element ) => ( boolean success );

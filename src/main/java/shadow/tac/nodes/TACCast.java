@@ -1,12 +1,8 @@
 package shadow.tac.nodes;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.tac.nodes.TACConversion.Kind;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -90,9 +86,40 @@ public class TACCast extends TACOperand
 				}				
 			}
 			
-			if( op.getType().isPrimitive() && type.isPrimitive() && op.getModifiers().isNullable() != modifiers.isNullable() )
+			if( op.getType().isPrimitive() && type.isPrimitive() && (op.getModifiers().isNullable() || modifiers.isNullable()) )
 			{
-				if( modifiers.isNullable() )				
+				if( op.getModifiers().isNullable() && modifiers.isNullable() )
+				{
+					if( !op.getType().equals(type) ) //can't just cast objects if they're different types
+					{
+						TACLabelRef doneLabel = new TACLabelRef(this);
+						TACLabelRef nullLabel = new TACLabelRef(this);
+						TACLabelRef convertLabel = new TACLabelRef(this);
+						
+						TACReference var = new TACVariableRef(this,
+								getBuilder().getMethod().addTempLocal(destination));
+						
+						TACLiteral nullLiteral = new TACLiteral(this, "null");
+						TACOperand compare = new TACSame(this, op, nullLiteral);
+						new TACBranch(this, compare, nullLabel, convertLabel);
+						
+						nullLabel.new TACLabel(this);						
+						new TACStore(this, var, nullLiteral);
+						new TACBranch(this, doneLabel);
+						
+						convertLabel.new TACLabel(this);
+						
+						TACOperand converted = new TACConversion(this, op, op.getType(), Kind.OBJECT_TO_PRIMITIVE);
+						converted = new TACCast(this, new SimpleModifiedType(type), converted, check);
+						converted = new TACConversion(this, converted, type, Kind.PRIMITIVE_TO_OBJECT);
+						new TACStore(this, var, converted);
+						new TACBranch(this, doneLabel);
+						
+						doneLabel.new TACLabel(this);
+						operand = new TACLoad(this, var);
+					}
+				}				
+				else if( modifiers.isNullable() )				
 					operand = new TACConversion(this, op, type, Kind.PRIMITIVE_TO_OBJECT );
 				else				
 					operand = new TACConversion(this, op, type, Kind.OBJECT_TO_PRIMITIVE);
@@ -118,7 +145,9 @@ public class TACCast extends TACOperand
 		}
 		
 		
-		if( check && !operand.getType().isSubtype(type) )  //subtypes should be safe
+		if( check && !operand.getType().isSubtype(type) && !(operand.getType().isPrimitive() && type.isPrimitive()) )
+			//subtypes should be safe
+			//primitive types are freely convertible (except for booleans?)
 		{			
 			TACBlock block = getBuilder().getBlock();
 			

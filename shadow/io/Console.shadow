@@ -1,4 +1,4 @@
-singleton shadow.io@Console
+singleton shadow:io@Console
 {
 	boolean wasLF = false;
 	public create()

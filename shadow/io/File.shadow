@@ -1,4 +1,4 @@
-class shadow.io@File implements CanRead, CanWrite, CanClose
+class shadow:io@File implements CanRead, CanWrite, CanClose
 {
 	long data = -1l, pos = 0;
 	get Path path;

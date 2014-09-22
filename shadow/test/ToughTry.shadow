@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-class shadow.test@ToughTry
+class shadow:test@ToughTry
 {
 	Console console = Console:instance;
 

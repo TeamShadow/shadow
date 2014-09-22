@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-class shadow.test@PrimitiveTest
+class shadow:test@PrimitiveTest
 {
 	public main(String[] args) => ()
 	{

@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-class shadow.test@ParentTest
+class shadow:test@ParentTest
 {
 	public create()
 	{

@@ -1,4 +1,4 @@
-class shadow.test@Property
+class shadow:test@Property
 {
 	get set int x;
 	get double y;

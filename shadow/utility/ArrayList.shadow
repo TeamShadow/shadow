@@ -1,6 +1,6 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-class shadow.utility@
+class shadow:utility@
 ArrayList<V is CanEqual<V>>
 implements List<V>
 {

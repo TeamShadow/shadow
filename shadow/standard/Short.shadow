@@ -1,4 +1,4 @@
-immutable class shadow.standard@
+immutable class shadow:standard@
 	Short
 implements
 	Integer<short>,

@@ -1,4 +1,4 @@
-immutable singleton shadow.standard@System
+immutable singleton shadow:standard@System
 {
 	public native nanoTime() => ( ulong );
 }

@@ -1,12 +1,12 @@
-import shadow.io@CanClose;
-import shadow.io@CanRead;
-import shadow.io@CanWrite;
-import shadow.io@Path;
-import shadow.io@File;
-import shadow.io@IOException;
-import shadow.io@Console;
+import shadow:io@CanClose;
+import shadow:io@CanRead;
+import shadow:io@CanWrite;
+import shadow:io@Path;
+import shadow:io@File;
+import shadow:io@IOException;
+import shadow:io@Console;
 
-class shadow.test@FileTest
+class shadow:test@FileTest
 {
 	public main( String[] args ) => ()
 	{

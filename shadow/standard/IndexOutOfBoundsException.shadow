@@ -1,4 +1,4 @@
-exception shadow.standard@IndexOutOfBoundsException
+exception shadow:standard@IndexOutOfBoundsException
 {
 	public create() { }
 	public create( int index )

@@ -1,4 +1,4 @@
-interface shadow.standard@CanIterate<T>
+interface shadow:standard@CanIterate<T>
 {
 	readonly iterator() => (Iterator<T>);
 }

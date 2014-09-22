@@ -1,7 +1,7 @@
-import shadow.io@Console;
-import shadow.utility@LinkedList;
+import shadow:io@Console;
+import shadow:utility@LinkedList;
 
-class shadow.test@ForeachTest
+class shadow:test@ForeachTest
 {
 	public main( String[] args ) => ()
 	{

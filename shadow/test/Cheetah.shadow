@@ -1,9 +1,9 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-class shadow.test@Cheetah implements CanRun
+class shadow:test@Cheetah implements CanRun
 {
 	public run() => ()
 	{
-		shadow.io@Console:instance.printLine(this # " runs at " # 75 # " mph.");
+		shadow:io@Console:instance.printLine(this # " runs at " # 75 # " mph.");
 	}
 }

@@ -1,4 +1,4 @@
-interface shadow.utility@Map<K,V> extends CanIterate<V>, CanIndexStore<K, V>
+interface shadow:utility@Map<K,V> extends CanIterate<V>, CanIndexStore<K, V>
 {
 	readonly get size() => ( int size );
 	readonly containsValue( V value ) => ( boolean found );

@@ -1,4 +1,4 @@
-interface shadow.standard@
+interface shadow:standard@
 	CanEqual<T>
 {
 	immutable equal(T other) => (boolean);

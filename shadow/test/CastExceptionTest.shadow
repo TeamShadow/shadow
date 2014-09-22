@@ -1,10 +1,10 @@
-import shadow.io@Console;
+import shadow:io@Console;
 
-class shadow.test@CastExceptionTest
+class shadow:test@CastExceptionTest
 {	
 	public main( String[] args ) => ()
 	{	
-		/*Console out = Console:instance;
+		Console out = Console:instance;
 	
 		String s = "Help me";		
 		Object o = cast<Object>(s);
@@ -12,15 +12,33 @@ class shadow.test@CastExceptionTest
 		s = cast<String>(o); //should succeed
 		out.printLine("Cast from String to String");
 		
-		Object o = Object:create();
+		o = Object:create();
 		
-		String s = cast<String>(o); //should fail
+		try
+		{
+			s = cast<String>(o); //should fail
+			out.printLine("Cast from Object to String");
+		}
+		catch( CastException e )
+		{
+			out.printLine( #e );
+		}
 		
-		*/
+		CanIterate<code> iterator = cast<CanIterate<code>>(s); //should succeed
+		out.printLine("Cast from String to CanIterate<code>");
 		
-		CastException:create(Object:class, String:class);
-		//CastException:create("figs");
+		CanEqual<String> equaller = cast<CanEqual<String>>(s); //should succeed
+		out.printLine("Cast from String to CanEqual<String>");
 		
-		//out.printLine("Cast from Object to Strong");
+		try
+		{
+			iterator = cast<CanIterate<code>>(o); //should fail
+			out.printLine("Cast from Object to CanIterate<code>");
+		}
+		catch( CastException e )
+		{
+			out.printLine( #e );
+		}
+		
 	}
 }

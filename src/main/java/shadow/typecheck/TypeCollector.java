@@ -251,7 +251,7 @@ public class TypeCollector extends BaseChecker
 		}		
 		
 		
-		if( currentPackage.getQualifiedName().equals("shadow.standard"))
+		if( currentPackage.getQualifiedName().equals("shadow:standard"))
 		{
 			if( image.equals("Boolean") ||
 				image.equals("Byte") ||
@@ -322,7 +322,7 @@ public class TypeCollector extends BaseChecker
 			}
 			
 			//Special case for system types			
-			if( currentPackage.getQualifiedName().equals("shadow.standard"))
+			if( currentPackage.getQualifiedName().equals("shadow:standard"))
 			{	
 				switch( typeName )
 				{
@@ -396,7 +396,7 @@ public class TypeCollector extends BaseChecker
 		String separator = File.separator; //platform independence, we hope 
 		if( separator.equals("\\"))
 			separator = "\\\\";
-		String path = name.replaceAll("\\.", separator);
+		String path = name.replaceAll(":", separator);
 		List<File> importPaths = Configuration.getInstance().getImports();
 		boolean success = false;				
 		
@@ -494,7 +494,7 @@ public class TypeCollector extends BaseChecker
 		{
 			currentPackage = packageTree;
 			importedItems.clear();
-			importedItems.add("shadow.standard");			
+			importedItems.add("shadow:standard");			
 			currentName = "";
 		}
 		

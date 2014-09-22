@@ -1,4 +1,4 @@
-interface shadow.standard@
+interface shadow:standard@
 	CanAdd<T>
 {
 	immutable add(T other) => (T);

@@ -1,9 +1,9 @@
-import shadow.utility@List;
-import shadow.utility@ArrayList;
-import shadow.utility@LinkedList;
-import shadow.io@Console;
+import shadow:utility@List;
+import shadow:utility@ArrayList;
+import shadow:utility@LinkedList;
+import shadow:io@Console;
 
-class shadow.test@SubscriptTest
+class shadow:test@SubscriptTest
 {
 	public main( String[] args ) => ()
 	{

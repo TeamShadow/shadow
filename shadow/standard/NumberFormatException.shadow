@@ -1,4 +1,4 @@
-exception shadow.standard@NumberFormatException
+exception shadow:standard@NumberFormatException
 {
 	public create()
 	{

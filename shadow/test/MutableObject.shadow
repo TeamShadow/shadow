@@ -1,4 +1,4 @@
-class shadow.test@MutableObject
+class shadow:test@MutableObject
 {
 	get set int value;
 	get set String name;

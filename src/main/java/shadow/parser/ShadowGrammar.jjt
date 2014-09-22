@@ -988,7 +988,7 @@ void UnqualifiedName():
 }
 {
   "default"  { jjtThis.setImage("default");  }
-| t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) "." t = <IDENTIFIER> { sb.append('.').append(t.image); } )*
+| t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) ":" t = <IDENTIFIER> { sb.append(':').append(t.image); } )*
   { jjtThis.setImage(sb.toString()); }
 }
 

@@ -64,7 +64,8 @@ public class Package
 	{
 		if( path.length() > 0 && !path.equals("default") )
 		{
-			String[] folders = path.split("\\.");
+			//String[] folders = path.split("\\.");
+			String[] folders = path.split(":");
 			
 			Package parent = this;
 			
@@ -105,7 +106,7 @@ public class Package
 		if (parent == null || parent.getName().isEmpty())
 			return getName();
 		
-		return parent.getQualifiedName() + '.' + getName();
+		return parent.getQualifiedName() + ':' + getName();
 	}
 	
 	public String getPath()
@@ -137,9 +138,9 @@ public class Package
 	
 	public boolean hasChild(String name)
 	{
-		if( name.contains("."))
+		if( name.contains(":"))
 		{
-			int period = name.indexOf(".");
+			int period = name.indexOf(":");
 			String child = name.substring(0, period);
 			if( children.containsKey(child))
 				return children.get(child).hasChild(name.substring(period + 1));
@@ -152,9 +153,9 @@ public class Package
 	
 	public Package getChild(String name)
 	{
-		if( name.contains("."))
+		if( name.contains(":"))
 		{
-			int period = name.indexOf(".");
+			int period = name.indexOf(":");
 			String child = name.substring(0, period);
 			if( children.containsKey(child))
 				return children.get(child).getChild(name.substring(period + 1));

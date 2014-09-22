@@ -1,4 +1,4 @@
-interface shadow.io@CanWrite
+interface shadow:io@CanWrite
 {
 	write( byte[] buffer ) => ( int );
 }

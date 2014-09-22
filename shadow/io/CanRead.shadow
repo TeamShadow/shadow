@@ -1,4 +1,4 @@
-interface shadow.io@CanRead
+interface shadow:io@CanRead
 {
 	read( byte[] buffer ) => ( int );
 }

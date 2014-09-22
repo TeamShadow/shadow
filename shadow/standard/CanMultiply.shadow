@@ -1,4 +1,4 @@
-interface shadow.standard@
+interface shadow:standard@
 	CanMultiply<T>
 {
 	immutable multiply(T other) => (T);
