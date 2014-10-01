@@ -11,11 +11,9 @@ import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.*;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
-import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
-import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InterfaceType;
@@ -1906,7 +1904,7 @@ public class StatementChecker extends BaseChecker
 		if( secondVisit )
 		{
 			Node child = node.jjtGetChild(0);
-			if( !(child.getType() instanceof ExceptionType) && !(child.getType() instanceof ErrorType)  )
+			if( !(child.getType() instanceof ExceptionType) )
 				addError(Error.INVALID_TYPE, "Supplied type " + child.getType() + " cannot be used in a throw clause, exception or error type required");
 		}
 		

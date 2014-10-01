@@ -4,7 +4,7 @@ class shadow:test@ToughTry
 {
 	Console console = Console:instance;
 
-	public main( String[] args ) => ( int )
+	public main( String[] args ) => ()
 	{		
 		console.printLine("test 1");
 		test1();

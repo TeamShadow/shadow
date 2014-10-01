@@ -157,13 +157,6 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTViewDeclaration node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
-	}
-
-	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node,
 			Boolean secondVisit) throws ShadowException
 	{
@@ -1529,8 +1522,35 @@ public class TACBuilder implements ShadowParserVisitor
 	@Override
 	public Object visit(ASTAssertStatement node, Boolean secondVisit)
 			throws ShadowException
-	{
-		return PRE_CHILDREN;
+	{		
+		if (secondVisit)
+		{
+			TACLabelRef doneLabel = new TACLabelRef(tree),
+					errorLabel = new TACLabelRef(tree);
+			
+			new TACBranch(tree, tree.appendChild(0), doneLabel, errorLabel);			
+			errorLabel.new TACLabel(tree);
+			
+			TACOperand object = new TACNewObject(tree, Type.ASSERT_EXCEPTION);
+			List<TACOperand> params = new ArrayList<TACOperand>();
+			params.add(object);			
+			MethodSignature signature;			
+			
+			if( node.jjtGetNumChildren() > 1 ) { // has message
+				TACOperand message = convertToString( tree.appendChild(1) );
+				signature = Type.ASSERT_EXCEPTION.getMatchingMethod("create", new SequenceType(message));
+				params.add( message );				
+			}
+			else
+				signature = Type.ASSERT_EXCEPTION.getMatchingMethod("create", new SequenceType());
+										
+			TACMethodRef methodRef = new TACMethodRef(tree, signature);
+			TACCall exception = new TACCall(tree, block, methodRef, params);
+			new TACThrow(tree, block, exception);
+			doneLabel.new TACLabel(tree);			
+		}
+	
+		return POST_CHILDREN;
 	}
 
 	@Override
@@ -2919,12 +2939,7 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		return PRE_CHILDREN;
 	}
-	@Override
-	public Object visit(ASTViewBodyDeclaration node, Boolean secondVisit)
-			throws ShadowException
-	{
-		throw new UnsupportedOperationException();
-	}
+
 	@Override
 	public Object visit(ASTCopyExpression node, Boolean secondVisit)
 			throws ShadowException

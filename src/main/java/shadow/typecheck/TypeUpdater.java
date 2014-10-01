@@ -39,14 +39,12 @@ import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTVariableInitializer;
-import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
-import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
@@ -562,7 +560,7 @@ public class TypeUpdater extends BaseChecker
 								else
 									modifiers = node.getModifiers();									
 								
-								if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) && classType != Type.ERROR )
+								if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) )
 									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " differs only by return type from " + parentSignature );
 								//else if( parentModifiers.isImmutable() && !signature.getSymbol().equals("freeze") )
 								//	addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot override immutable method" );
@@ -961,13 +959,6 @@ public class TypeUpdater extends BaseChecker
 				{					
 					if( declarationType instanceof EnumType )
 						classType.setExtendType(Type.ENUM);
-					else if( declarationType instanceof ErrorType )
-					{
-						if( declarationType == Type.ERROR )
-							classType.setExtendType(Type.EXCEPTION);
-						else
-							classType.setExtendType(Type.ERROR);
-					}
 					else if( declarationType instanceof ExceptionType )
 					{
 						if( declarationType == Type.EXCEPTION )
@@ -982,9 +973,7 @@ public class TypeUpdater extends BaseChecker
 				}
 				else
 				{
-					if( declarationType == Type.ERROR )
-						classType.setExtendType(Type.EXCEPTION);
-					else if ( declarationType == Type.EXCEPTION )
+					if ( declarationType == Type.EXCEPTION )
 						classType.setExtendType(Type.OBJECT);
 				}				
 			}
@@ -1022,12 +1011,6 @@ public class TypeUpdater extends BaseChecker
 	
 	@Override
 	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException
-	{			
-		return visitDeclaration( node, secondVisit );
-	}
-	
-	@Override
-	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException
 	{			
 		return visitDeclaration( node, secondVisit );
 	}
@@ -1196,8 +1179,6 @@ public class TypeUpdater extends BaseChecker
 				addError(Error.INVALID_TYPE_PARAMETERS, "Singleton type " + declarationType.getTypeName() + " cannot be parameterized");
 			else if( type instanceof ExceptionType )			
 				addError(Error.INVALID_TYPE_PARAMETERS, "Exception type " + declarationType.getTypeName() + " cannot be parameterized");
-			else if( type instanceof ErrorType )
-				addError(Error.INVALID_TYPE_PARAMETERS, "Error type " + declarationType.getTypeName() + " cannot be parameterized");
 			
 			node.setType(typeParameter);
 			type.addTypeParameter(node);			

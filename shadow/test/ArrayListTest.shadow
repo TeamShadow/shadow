@@ -4,7 +4,7 @@ import shadow:io@Console;
 
 class shadow:test@ArrayListTest
 {
-	public main( String[] args ) => ( int )
+	public main( String[] args ) => ()
 	{
 		ArrayList<String> list = ArrayList<String>:create();
 		Console out = Console:instance;
@@ -28,7 +28,5 @@ class shadow:test@ArrayListTest
 		{
 			out.printLine("Recovery needed.");
 		}
-			
-		return 0;
 	}
 }

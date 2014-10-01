@@ -114,6 +114,28 @@ implements
 	{		
 		return data;
 	}
+	
+	public get codes() => ( code[] )
+	{
+		code[] codes = code:create[data->size];
+		int size = 0;
+		foreach( code character in this )
+		{
+			codes[size] = character;
+			size += 1;
+		}
+		
+		if( size < data->size )
+		{
+			code[] temp = code:create[size];
+			for( int i = 0; i < size; i += 1 )
+				temp[i] = codes[i];
+			codes = temp;
+		}
+		
+		return codes;
+	}
+	
 	public get size() => ( int )
 	{
 		return data->size;

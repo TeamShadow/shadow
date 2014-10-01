@@ -93,11 +93,6 @@ public class StandardLibraryTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 
-	@Test public void testError() throws Exception {
-		args.add("shadow/standard/Error.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-
 	@Test public void testException() throws Exception {
 		args.add("shadow/standard/Exception.shadow");
 		Main.run(args.toArray(new String[] { }));

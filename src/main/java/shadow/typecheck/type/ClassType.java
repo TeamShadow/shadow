@@ -597,7 +597,7 @@ public class ClassType extends Type
 		
 		//extend type
 		Type extendType = getExtendType();
-		if( extendType != null && !(this instanceof SingletonType) && !(this instanceof ErrorType) && !this.equals(Type.EXCEPTION)  )
+		if( extendType != null && !this.equals(Type.EXCEPTION)  )
 			out.print(" extends " + extendType.getQualifiedName() );
 		
 		//interfaces implemented

@@ -7,6 +7,6 @@ class Danger
 	
 	public take(Object object) => ()
 	{
-		object.copy();
+		
 	}
 }

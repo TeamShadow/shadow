@@ -1,0 +1,33 @@
+import shadow:io@Console;
+
+class shadow:test@AssertTest
+{
+	public main( String[] args ) => ()
+	{
+		Console out = Console:instance;
+		int x = 5;
+		String value = "Lettuce";
+		
+		assert x < 10, "Too big!"; //not error		
+		
+		try
+		{
+			assert x > 10, "Too small!";
+		}
+		catch( AssertException e )
+		{
+			out.printLine(e);
+		}
+		
+		assert value == "Lettuce"; //not thrown
+		
+		try
+		{
+			assert value == "Let us";
+		}
+		catch( AssertException e )
+		{
+			out.printLine(e);
+		}		
+	}
+}

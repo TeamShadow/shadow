@@ -1,4 +1,3 @@
-import shadow:standard@Error;
 import shadow:io@Console;
 
 immutable class shadow:test@ExceptionTest
@@ -30,9 +29,8 @@ immutable class shadow:test@ExceptionTest
 			Console:instance.printLine("test3 caught Exception");
 		}
 	}
-	public main( String[] args ) => ( int ) {
+	public main( String[] args ) => () {
 		test3();
-		throw Exception:create();			
-		return 0;
+		throw Exception:create();
 	}
 }

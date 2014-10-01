@@ -190,13 +190,7 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/type-parameter-collision/Test.shadow"); 
 		enforce(Error.MULTIPLY_DEFINED_SYMBOL);		
 	}
-	
-	@Test public void testErrorTypeParameter() throws Exception
-	{
-		args.add("tests-negative/typechecker/error-type-parameter/Test.shadow"); 
-		enforce(Error.INVALID_TYPE_PARAMETERS);		
-	}
-	
+
 	@Test public void testExceptionTypeParameter() throws Exception
 	{
 		args.add("tests-negative/typechecker/exception-type-parameter/Test.shadow"); 

@@ -71,7 +71,6 @@ public class TACArrayRef extends TACReference
 				negativeCheck.new TACLabel(this);
 				
 				condition = new TACBinary(this, length, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '}', new TACLiteral(this, "0"), true);
-								
 				
 				TACLabelRef computeOffset = new TACLabelRef(this);
 				new TACBranch(this, condition, computeOffset, throwLabel);
@@ -82,10 +81,8 @@ public class TACArrayRef extends TACReference
 					total = new TACBinary(this, total, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', bound);
 					total = new TACBinary(this, total, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', length);
 				}
-				else
-				{					
-					total = length;
-				}			
+				else									
+					total = length;					
 			}
 			
 			TACLabelRef done = new TACLabelRef(this);			

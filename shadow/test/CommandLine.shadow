@@ -2,7 +2,7 @@ import shadow:io@Console;
 
 class shadow:test@CommandLine
 {
-	public main( String[] args ) => ( int )
+	public main( String[] args ) => ()
 	{
 		String value = "bleh";
 		String word = "bleh";
@@ -24,8 +24,6 @@ class shadow:test@CommandLine
 					out.printLine("doesn't match!");
 			}
 		}
-		recover {}	
-	
-		return 0;
+		recover {}
 	}
 }

@@ -204,6 +204,11 @@ public class TACTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
+	@Test public void testAssert() throws Exception {
+		args.add("shadow/test/AssertTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
 	
 
 

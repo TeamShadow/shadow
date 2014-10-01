@@ -32,11 +32,11 @@ public class ShadowParser
    	{		
 		CLASS,
 		ENUM,
-		ERROR,
+		//ERROR,
 		EXCEPTION,
 		INTERFACE,
 		SINGLETON,
-		VIEW
+		//VIEW
 	};
 
    private static final Logger logger = Loggers.PARSER;
@@ -121,7 +121,7 @@ TOKEN :
 | < DOUBLE: "double" >
 | < ELSE: "else" >
 | < ENUM: "enum" >
-| < ERROR: "error" >
+//| < ERROR: "error" >
 | < EXCEPTION: "exception" >
 | < EXTENDS: "extends" >
 | < FALSE: "false" >
@@ -168,7 +168,7 @@ TOKEN :
 | < ULONG: "ulong" >
 | < USHORT: "ushort" >
 | < VAR: "var" >
-| < VIEW: "view" >
+//| < VIEW: "view" >
 | < WEAK: "weak" >
 | < WHILE: "while" >
 | < XOR: "xor" >
@@ -406,7 +406,6 @@ TOKEN :
 | < RIGHTROTATEASSIGN: ">>>=" >
 | < LEFTROTATEASSIGN: "<<<=" >
 | < VERSION: "$" >
-//| < ELLIPSIS: "..." >
 }
 
 /* >'s need special attention due to syntax for generics */
@@ -446,7 +445,7 @@ ASTCompilationUnit CompilationUnit():
   modifiers = Modifiers()
   ( ClassOrInterfaceDeclaration(modifiers)
   | EnumDeclaration(modifiers)  
-  | ViewDeclaration(modifiers)
+ // | ViewDeclaration(modifiers)
   )//only one declaration per file 
   <EOF>
 	{
@@ -501,7 +500,7 @@ Modifiers Modifiers():
 /*
  * Declaration syntax follows.
  */
-
+/*
 void ViewDeclaration(Modifiers modifiers):
 {
 	debugPrint("VIEW DECLARATION");
@@ -527,7 +526,7 @@ void ViewBodyDeclaration():
 	( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) t = <IDENTIFIER> ";"
 	{ jjtThis.setImage(t.image);}
 }
-
+*/
 
 void ClassOrInterfaceDeclaration(Modifiers modifiers):
 {
@@ -552,10 +551,10 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers):
  	  jjtThis.setKind(TypeKind.EXCEPTION);
  	  modifiers.checkExceptionModifiers(jjtThis);
  	}
- 	| "error"
+ /*	| "error"
  	{ jjtThis.setKind(TypeKind.ERROR);
  	  modifiers.checkErrorModifiers(jjtThis);
- 	}
+ 	}*/
  	| "interface"
  	{
  	  jjtThis.setKind(TypeKind.INTERFACE);
@@ -585,10 +584,10 @@ void ExtendsList(TypeKind kind):
    {
       if (extendsMoreThanOne && kind != TypeKind.INTERFACE)
          throw new ParseException("A class cannot extend more than one other class",jjtThis);
-      if (kind == TypeKind.ERROR)
+    /*  if (kind == TypeKind.ERROR)
          throw new ParseException("An error cannot extend another type",jjtThis);
       if (kind == TypeKind.SINGLETON)
-         throw new ParseException("A singleton cannot extend another type",jjtThis);
+         throw new ParseException("A singleton cannot extend another type",jjtThis); */
    }
 }
 
@@ -600,8 +599,8 @@ void ImplementsList(TypeKind kind):
    {
       if (kind == TypeKind.INTERFACE)
          throw new ParseException("An interface cannot implement other interfaces",jjtThis);
-      if( kind == TypeKind.ERROR )
-      	throw new ParseException("An error cannot implement interfaces",jjtThis);
+     /* if( kind == TypeKind.ERROR )
+      	throw new ParseException("An error cannot implement interfaces",jjtThis); */
       if( kind == TypeKind.EXCEPTION )
       	throw new ParseException("An exception cannot implement interfaces",jjtThis);
    }
@@ -692,7 +691,7 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
     | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
     | LOOKAHEAD( FieldDeclaration(modifiers) ) FieldDeclaration(modifiers) 
     | MethodDeclaration(modifiers)
-    | ViewDeclaration(modifiers)
+    //| ViewDeclaration(modifiers)
   )
 }
 

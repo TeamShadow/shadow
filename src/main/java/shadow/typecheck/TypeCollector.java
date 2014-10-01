@@ -28,7 +28,6 @@ import shadow.parser.javacc.ASTReferenceType;
 import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
-import shadow.parser.javacc.ASTViewDeclaration;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
@@ -39,13 +38,11 @@ import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
-import shadow.typecheck.type.ErrorType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.ViewType;
 
 public class TypeCollector extends BaseChecker
 {	
@@ -291,10 +288,7 @@ public class TypeCollector extends BaseChecker
 				break;
 			case ENUM:				
 				type = new EnumType(typeName, modifiers, currentType );
-				break;
-			case ERROR:
-				type = new ErrorType(typeName, modifiers, currentType );
-				break;
+				break;			
 			case EXCEPTION:
 				type = new ExceptionType(typeName, modifiers, currentType );
 				break;
@@ -304,9 +298,6 @@ public class TypeCollector extends BaseChecker
 			case SINGLETON:
 				type = new SingletonType(typeName, modifiers, currentType );
 				break;
-			case VIEW:
-				type = new ViewType(typeName, modifiers );
-				break;
 			default:
 				throw new ShadowException("Unsupported type!" );
 			}
@@ -314,8 +305,7 @@ public class TypeCollector extends BaseChecker
 			if( currentType != null && 
 				currentType instanceof ClassType &&					
 				( kind == TypeKind.CLASS ||
-				kind == TypeKind.ENUM ||
-				kind == TypeKind.ERROR  ||
+				kind == TypeKind.ENUM ||				
 				kind == TypeKind.EXCEPTION) )
 			{					
 					((ClassType)currentType).addInnerClass(image, (ClassType)type); 
@@ -330,6 +320,7 @@ public class TypeCollector extends BaseChecker
 				case "AddressMap":		Type.ADDRESS_MAP = (ClassType) type; break;
 				case "Array":			Type.ARRAY = (ClassType) type; break;			
 				case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
+				case "AssertException": Type.ASSERT_EXCEPTION = (ExceptionType) type; break;
 				case "CanAdd":			Type.CAN_ADD = (InterfaceType)type; break;
 				case "CanCompare":		Type.CAN_COMPARE = (InterfaceType) type; break;
 				case "CanDivide":		Type.CAN_DIVIDE = (InterfaceType)type; break;
@@ -347,8 +338,7 @@ public class TypeCollector extends BaseChecker
 				case "byte":			Type.BYTE = (ClassType)type; break;
 				case "code":			Type.CODE = (ClassType)type; break;
 				case "double":			Type.DOUBLE = (ClassType)type; break;
-				case "Enum":			Type.ENUM = (ClassType) type; break;//the base class for enum is not an enum
-				case "Error":			Type.ERROR = (ErrorType) type; break;				
+				case "Enum":			Type.ENUM = (ClassType) type; break;//the base class for enum is not an enum								
 				case "Exception":		Type.EXCEPTION = (ExceptionType) type; break;
 				case "float":			Type.FLOAT = (ClassType)type; break;
 				case "GenericClass":	Type.GENERIC_CLASS = (ClassType) type; break;
@@ -543,19 +533,8 @@ public class TypeCollector extends BaseChecker
 		}
 		else
 			return createType( node, node.getModifiers(), TypeKind.ENUM );
-	}
-	
-	@Override
-	public Object visit(ASTViewDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit )
-		{
-			nodeTable.put(node.getType().getTypeWithoutTypeArguments(), node );
-			return WalkType.POST_CHILDREN;
-		}
-		else
-			return createType( node, node.getModifiers(), TypeKind.VIEW );
-	}
-	
+	}	
+
 	@Override
 	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException
 	{		

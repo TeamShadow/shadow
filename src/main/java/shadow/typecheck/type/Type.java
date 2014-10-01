@@ -64,8 +64,8 @@ public abstract class Type implements Comparable<Type>
 	public static ExceptionType EXCEPTION = null;
 	public static ExceptionType CAST_EXCEPTION = null;
 	public static ExceptionType INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
-	public static ErrorType ERROR = null;
-		
+	public static ExceptionType ASSERT_EXCEPTION = null;
+			
 	public static ClassType BOOLEAN = null;
 	public static ClassType BYTE = null;
 	public static ClassType CODE = null;
@@ -177,14 +177,14 @@ public abstract class Type implements Comparable<Type>
 		OBJECT = null;
 		CAST_EXCEPTION = null;
 		INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
+		ASSERT_EXCEPTION = null;
 		CLASS = null;		
 		ARRAY = null;
 		ARRAY_CLASS = null;
 		METHOD = null;				
 		UNBOUND_METHOD = null;
 		ENUM = null;
-		EXCEPTION = null;	
-		ERROR = null;		
+		EXCEPTION = null;		
 		GENERIC_CLASS = null;		
 		BOOLEAN = null;
 		BYTE = null;
