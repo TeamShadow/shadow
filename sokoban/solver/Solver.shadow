@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class sokoban.solver@Solver {
+class sokoban:solver@Solver {
 	public main(String[] args) => () {
 		System system = System:instance;
 		Console console = Console:instance;
@@ -20,7 +20,7 @@ class sokoban.solver@Solver {
 
 		ulong start = system.nanoTime();
 		Board board = Board:create(rows, cols);
-		State state = board.getInitialState();
+		Board:State state = board.getInitialState();
 		MutableString solution = recurse(state);
 		ulong end = System.nanoTime();
 		if (solution == null)
@@ -48,7 +48,7 @@ class sokoban.solver@Solver {
 		}
 	}
 	int counter = 0;
-	private recurse(State state) => (MutableString) {
+	private recurse(Board:State state) => (MutableString) {
 		if (state == null)
 			return null;
 		if (state.isWinning())

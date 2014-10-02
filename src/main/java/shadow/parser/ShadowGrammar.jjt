@@ -1002,16 +1002,6 @@ void NameList():
  * Expression syntax follows.
  */
 
-/*
-void Expression():
-{ debugPrint("EXPRESSION"); }
-{
-
-	LOOKAHEAD( AllocationExpression() ) AllocationExpression()
-|   ConditionalExpression()
-}
-*/
-
 void AssignmentOperator():
 { debugPrint("ASSIGNMENT OPERATOR"); }
 {
@@ -1112,7 +1102,6 @@ void ConcatenationExpression():
 }
 
 
-//
 // Since shift & rotate are not single characters (see TAC Symbole2Operator code)
 // we are using r & l for right & left shift and
 // R & L for right & left rotate
@@ -1134,11 +1123,7 @@ void RotateExpression():
       AdditiveExpression() )*
 }
 
-//
-// There is a parsing issue here when we have expressions like 1 + 2 - 3 + 4
-// This will come back as everything being +
-// So as a complete hack I'm creating a string of symbols for each pair of expressions
-//
+
 void AdditiveExpression():
 {}
 {
@@ -1156,20 +1141,10 @@ void MultiplicativeExpression():
       "%" { jjtThis.addToImage('%'); } ) UnaryExpression() )*
 }
 
-/*
-void UnaryToString():
-{}
-{
-  [ "#" { jjtThis.setImage("#"); } ] UnaryExpression()
-}
-*/
-
 void UnaryExpression():
 {}
 {
-  //removed unary + since it's useless
-  //( "+" { jjtThis.setImage("+"); } | "-" { jjtThis.setImage("-"); } ) UnaryExpression()
-   
+  //removed unary + since it's useless   
  "#" { jjtThis.setImage("#"); } UnaryExpression()
 | "~" { jjtThis.setImage("~"); } UnaryExpression()
 | "!" { jjtThis.setImage("!"); } UnaryExpression()
@@ -1178,15 +1153,6 @@ void UnaryExpression():
 | LOOKAHEAD(FormalParameters(true) "=>") InlineMethodDefinition()
 | PrimaryExpression()
 }
-
-/*
-void UnaryExpressionNotPlusMinus():
-{ debugPrint("UNARY EXPRESSION NOT PLUS MINUS"); }
-{
-  ( "~" { jjtThis.setImage("~"); } | "!" { jjtThis.setImage("!"); } ) UnaryExpression()
-| InlineMethodDefinition()
-}
-*/
 
 void InlineMethodDefinition():
 { debugPrint("INLINE METHOD DEFINITION"); }
@@ -1490,20 +1456,6 @@ void Arguments():
 {
   "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
 }
-
-/*
- * The third LOOKAHEAD specification below is to parse to PrimarySuffix
- * if there is an expression between the "[...]".
- */
-/*
-void ArrayDimsAndInits():
-{ debugPrint("ARRAY DIMS AND INITS"); }
-{
-  LOOKAHEAD(2)( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions();} )* { jjtThis.pushDimensions();}  "]" )+
-  ( LOOKAHEAD(2) "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )*
-| ( "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+ ArrayInitializer()
-}
-*/
 
 /*
  * Statement syntax follows.

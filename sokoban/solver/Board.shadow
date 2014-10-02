@@ -3,7 +3,7 @@ import shadow:utility@Set;
 import shadow:utility@Queue;
 import shadow:utility@ArrayList;
 
-class sokoban.solver@Board {
+class sokoban:solver@Board {
 	constant int MAX = 256;
 	constant code FLOOR = ' ', WALL = '#', TARGET = '.';
 	constant ushort[] EMPTY = ushort:create[0];
@@ -148,7 +148,8 @@ class sokoban.solver@Board {
 			public next() => (Coordinate) {
 				if (index >= state[0][0])
 					throw NoSuchElementException:create();
-				return Coordinate:create(state[0][++index]);
+				index += 1;
+				return Coordinate:create(state[0][index]);
 			}
 		}
 
@@ -523,7 +524,8 @@ class sokoban.solver@Board {
 				state[1][0] = index;
 			}
 			private setDistance(int dist) => () {
-				if (++dist > 0) {
+				dist += 1;
+				if (dist > 0) {
 					if (dist >= state.length) {
 						ushort[][] newState = ushort:create[dist + 1][];
 						System.arraycopy(state, 0, newState, 0, state.length);
@@ -596,7 +598,7 @@ class sokoban.solver@Board {
 			public moveLeft() => (Coordinate) {
 				return Coordinate:create(index - 1);
 			}
-			public moveRight() => (Coordiante) {
+			public moveRight() => (Coordinate) {
 				return Coordinate:create(index + 1);
 			}
 			public moveUpLeft() => (Coordinate) {

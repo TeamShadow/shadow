@@ -93,8 +93,14 @@ implements
 	public native multiplyAdd(float multiplicand, float addend) => (float);
 	public native floor() => (float);
 	public native ceiling() => (float);
-	public native round() => (float);	
 	
+	public round() => (double)
+	{
+		if( this < 0.0f )
+			return (this - 0.5f).ceiling();
+		else
+			return (this + 0.5f).floor();	
+	}	
 
 	// implement CanHash
 	public get hash() => (uint)

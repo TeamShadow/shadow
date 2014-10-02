@@ -1,4 +1,5 @@
 import shadow:io@Console;
+import shadow:utility@List;
 import shadow:utility@ArrayList;
 
 class shadow:test@BasicTest
@@ -10,5 +11,10 @@ class shadow:test@BasicTest
 		
 		for( int i = 0; i < 3; i += 1 )
 			out.printLine("I say " # i + 1);
+		
+		List<String> list = ArrayList<String>:create();
+		list.add("Help me");	
+		
+		out.printLine( #list );
 	}
 }

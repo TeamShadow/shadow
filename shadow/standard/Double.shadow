@@ -58,7 +58,14 @@ implements
 	public native multiplyAdd(double multiplicand, double addend) => (double);
 	public native floor() => (double);
 	public native ceiling() => (double);
-	public native round() => (double);
+	
+	public round() => (double)
+	{
+		if( this < 0.0 )
+			return (this - 0.5).ceiling();
+		else
+			return (this + 0.5).floor();	
+	}
 
 	// implement CanHash
 	public get hash() => (uint)
@@ -81,36 +88,9 @@ implements
 		return (this->raw & EXPONENT_MASK) != EXPONENT_MASK;
 	}
 	
-/*	
-	
-private cut(ulong f, int e) => (ulong, ulong, ulong)
-{
-	ulong TEN7 = 10000000L;
-	ulong part2 = (f % (TEN7 >> e)) << e;
-	ulong tmp = f / (TEN7 >> e);
-	ulong part1 = tmp % TEN7;
-	ulong part0 = tmp / TEN7;
-	
-	return (part0, part1, part2);
-}
-
-//based on the paper 
-//Printing Floating-Point Numbers Quickly and Accurately with Integers
-//by Florian Loitsch
-void grisu(double v, StringBuilder buffer)
-{ 
- ulong f;
- int e;
- ulong part0, part1, part2;
-int q = 64, alpha = 0, gamma = 3;
-w = normalize diy fp(double2diy fp(v));
- int mk = k comp(w.e + q, alpha, gamma);
-13: diy fp c mk = cached power(mk);
-14: diy fp D = multiply(w, c mk);
-(part0, part1, part2) = cut(D, ps);
-sprintf(buffer, "%u%07u%07ue%d", ps[0], ps[1], ps[2], -mk);
-}
-	
+	/*	
+	Fix this with something not as hacky 
+	Consider: Printing Floating-Point Numbers Quickly and Accurately with Integers by Florian Loitsch
 	*/
 	
 	public  toString() => (String)
@@ -152,15 +132,10 @@ sprintf(buffer, "%u%07u%07ue%d", ps[0], ps[1], ps[2], -mk);
 		}
 		
 		Console out = Console:instance;
-		
-		//out.printLine("Significand: " # significand);
-		//out.printLine("Exponent: " # exponent);
-		
+			
 		//There are faster ways to do double output, but this is a hack for now
 		BigInteger result = BigInteger:create(significand);						
 		int base10Shift = 0;
-		
-		//out.printLine("Result before: " # result);
 		
 		if( exponent < 0 )
 		{				
@@ -175,10 +150,7 @@ sprintf(buffer, "%u%07u%07ue%d", ps[0], ps[1], ps[2], -mk);
 		{
 			base10Shift = 0;
 			result = result.bitShiftLeft(exponent);
-		}
-		
-		//out.printLine("Result after shift: " # result);
-		//out.printLine("Exponent: " # exponent );
+		}	
 		
 		MutableString output = MutableString:create(#result);
 				

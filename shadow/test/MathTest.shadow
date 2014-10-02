@@ -19,6 +19,14 @@ class shadow:test@MathTest
 		out.printLine( "floor(" # a # ") = " # a.floor());
 		out.printLine( "ceil(" # a # ") = " # a.ceiling());
 		out.printLine( a # " rounds to " # a.round());
+		a = 5.4;
+		out.printLine( a # " rounds to " # a.round());
+		a = -5.7;
+		out.printLine( a # " rounds to " # a.round());
+		a = -5.4;
+		out.printLine( a # " rounds to " # a.round());
+		
+		
 		
 		float b = -6.7f;
 		

@@ -1,5 +1,0 @@
-* BUILDING *
-You need JavaCC, recommend the Eclipse plugin.
-
-JAVACC_OPTIONS: -STATIC=false
-JJTREE_OPTIONS: -BUILD_NODE_FILES=false -NODE_USES_PARSER=true -MULTI=true -VISITOR=true -VISITOR_EXCEPTION=ShadowException -JJTREE_OUTPUT_DIRECTORY=javacc
