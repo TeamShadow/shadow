@@ -1451,8 +1451,10 @@ public class TACBuilder implements ShadowParserVisitor
 			MethodType methodType = (MethodType) node.getType();
 			
 			//methodRef doesn't have parameters because the same method gets called no matter what
+			//well, maybe it does for typechecking reasons
 			TACMethodRef methodRef = new TACMethodRef(tree,
-					methodType.getTypeWithoutTypeArguments(), node.getImage());
+			//		methodType.getTypeWithoutTypeArguments(), node.getImage());
+					methodType, node.getImage());
 			
 			ClassType classType = (ClassType)(methodType.getOuter());  //class type needs to be parameterized to get the parameters
 										

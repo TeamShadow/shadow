@@ -1,3 +1,5 @@
+import shadow:io@Console;
+
 immutable class shadow:standard@GenericClass extends Class
 {	
 	get Object[] parameters; //double the size for class and methods
@@ -39,6 +41,9 @@ immutable class shadow:standard@GenericClass extends Class
 	
 	private findClass( GenericClass[] classes, Class[] parameters ) => (nullable Class)
 	{		
+		Console out = Console:instance;
+		out.printLine("FindClass");
+	
 		for( int i = 0; i < classes->size; i += 1 )
 		{
 			boolean matching = true;							
@@ -56,12 +61,17 @@ immutable class shadow:standard@GenericClass extends Class
 				{
 					matching = false;
 				}					
-			}
+			}	
+			
 					
 			if( matching )
+			{
+				out.printLine("Return");
 				return cast<Class>(classes[i]);
+			}
 		}		
 		
+		out.printLine("Fail");
 		
 		MutableString string = MutableString:create("Type arguments not found: <");
 		for( int i = 0; i < parameters->size; i += 1 )
