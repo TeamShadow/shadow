@@ -1242,14 +1242,23 @@ public abstract class Type implements Comparable<Type>
 		return interfaces;
 	}
 	
-	public HashSet<InterfaceType> getAllInterfaces()
+	//must return an ArrayList to preserve order
+	//it is essentially that generic classes list their interfaces in the same order as each other
+	//otherwise the corresponding blocks of methods won't match
+	//the set is used to prevent duplicates
+	public ArrayList<InterfaceType> getAllInterfaces()
 	{		
 		HashSet<InterfaceType> set = new HashSet<InterfaceType>();
-						
-		for( InterfaceType interfaceType : getInterfaces() )
-			set.addAll( interfaceType.getAllInterfaces() );
+		ArrayList<InterfaceType> list = new ArrayList<InterfaceType>();
 		
-		return set;
+		for( InterfaceType interfaceType : getInterfaces() ) {
+			for( InterfaceType type : interfaceType.getAllInterfaces() ) {
+				if( set.add(type) )
+					list.add(type);
+			}
+		}
+		
+		return list;
 	}	
 	
 	public boolean isDescendentOf(Type type)

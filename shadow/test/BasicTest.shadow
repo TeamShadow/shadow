@@ -6,8 +6,7 @@ class shadow:test@BasicTest
 {
 	public main( String[] args ) => ()
 	{
-	/*
-	
+
 		Console out = Console:instance;
 		
 		
@@ -15,19 +14,16 @@ class shadow:test@BasicTest
 		
 		for( int i = 0; i < 3; i += 1 )
 			out.printLine("I say " # i + 1);
-	
-		*/
+
+
 		List<String> list = ArrayList<String>:create();
 		
 		//out.printLine("Before add");
 		
-		list.add("Help me");	
+		list.add("Help me");		
 		
-		
-		/*
 		out.printLine( #list );
 		
-		out.printLine("After to string");
-		*/
+		//out.printLine("After to string");
 	}
 }

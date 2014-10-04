@@ -23,8 +23,17 @@ public class InterfaceType extends Type
 	@Override
 	public boolean hasInterface(InterfaceType type)
 	{	
-		if( this.getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments() ))
+		if( this.getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments() ) ) {
+			SequenceType parameters = this.getTypeParameters();
+			SequenceType otherParameters = type.getTypeParameters();
+			
+			for( int i = 0; i < parameters.size(); ++i )
+				if( !parameters.get(i).getType().equals(otherParameters.get(i).getType()))
+					return false;			
+			
+		//if( this.equals(type))
 			return true;
+		}
 				
 		for( InterfaceType interfaceType : getInterfaces() )
 			if( interfaceType.hasInterface(type) )
@@ -34,22 +43,14 @@ public class InterfaceType extends Type
 	}
 	
 	@Override
-	public HashSet<InterfaceType> getAllInterfaces()
+	public ArrayList<InterfaceType> getAllInterfaces()
 	{	
-		HashSet<InterfaceType> allInterfaces = super.getAllInterfaces();		
-		allInterfaces.add(this);
+		ArrayList<InterfaceType> allInterfaces = super.getAllInterfaces();
+		
+		if( !allInterfaces.contains(this) )
+			allInterfaces.add(this);
 		
 		return allInterfaces;
-		
-		
-		//allows duplicates and needs not to
-		/*
-		
-		ArrayList<InterfaceType> list = super.getAllInterfaces();
-		list.add(this);
-		
-		return list;
-		*/
 	}
 	
 	public boolean isDescendentOf(Type type)

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -361,7 +362,7 @@ public class LLVMOutput extends AbstractOutput
 		writer.write();
 		
 		
-		HashSet<InterfaceType> interfaces = moduleType.getAllInterfaces();
+		ArrayList<InterfaceType> interfaces = moduleType.getAllInterfaces();
 		int interfaceCount = interfaces.size();
 		
 		if( module.isClass() )

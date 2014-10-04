@@ -29,6 +29,20 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 	{
 		return type.toString() + typeArguments.toString(" [", "]", withBounds);
 	}
+	
+	@Override
+	public boolean hasInterface(InterfaceType type)
+	{	
+		try {
+			return instantiate().hasInterface(type);
+		} 
+		catch (InstantiationException e)
+		{}		
+		
+		return false;
+	}
+
+	
 
 	@Override
 	public InterfaceType instantiate() throws InstantiationException
