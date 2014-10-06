@@ -69,4 +69,9 @@ public class ShadowUtilityTest {
 		args.add("shadow/utility/Set.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testArrayDeque() throws Exception {
+		args.add("shadow/utility/ArrayDeque.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

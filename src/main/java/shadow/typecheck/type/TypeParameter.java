@@ -276,5 +276,15 @@ public class TypeParameter extends Type
 				return true;
 		
 		return false;
+	}	
+	
+	@Override
+	public boolean hasUninstantiatedInterface(InterfaceType type)
+	{
+		for(Type bound : bounds)
+			if( bound.hasUninstantiatedInterface(type))
+				return true;
+		
+		return false;
 	}
 }

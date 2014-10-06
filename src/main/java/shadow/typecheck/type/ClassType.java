@@ -499,6 +499,24 @@ public class ClassType extends Type
 		return extendType.isRecursivelyParameterized();
 	}
 	
+	@Override
+	public boolean hasUninstantiatedInterface(InterfaceType type) {
+		ClassType current = this;
+		
+		type = type.getTypeWithoutTypeArguments();
+		
+		while( current != null )
+		{
+			for( InterfaceType interfaceType : current.getInterfaces() )
+			{
+				if( interfaceType.hasUninstantiatedInterface(type) )
+					return true;
+			}
+			current = current.getExtendType();			
+		}
+		return false;
+	}
+	
 	public boolean hasInterface(InterfaceType type)
 	{	
 		ClassType current = this;

@@ -8,6 +8,11 @@ implements List<V>
 	V[] elements = V:create[10];
 	int modifications = 0;
 	
+	public isEmpty() => ( boolean )
+	{
+		return size == 0;
+	}	
+	
 	public readonly index(int index) => (V value)
 	{
 		if( index < 0 or index >= size )
@@ -49,7 +54,7 @@ implements List<V>
 		elements = temp;	
 	}
 
-	public add(V value) => (boolean success)
+	public add(V value) => ( ArrayList<V> )
 	{
 		if( size >= elements->size )
 			grow();
@@ -57,13 +62,14 @@ implements List<V>
 		size += 1;
 		modifications += 1;
 		
-		return true;			
+		return this;			
 	}
 		
-	public clear() => ()
+	public clear() => ( ArrayList<V> )
 	{
 		size = 0;
 		modifications += 1;
+		return this;
 	}
 	
 	public readonly contains(V value) => (boolean found)
@@ -87,7 +93,7 @@ implements List<V>
 		return -1;
 	}
 	
-	public delete(int index) => (V value)
+	public delete(int index) => ( V value )
 	{
 		if( index < 0 or index >= size )
 			throw IndexOutOfBoundsException:create();
@@ -107,7 +113,7 @@ implements List<V>
 		}
 	}	
 	
-	public remove(V value) => (boolean success)
+	public remove( V value ) => (boolean success)
 	{
 		int index = indexOf(value);
 		if( index == -1 )

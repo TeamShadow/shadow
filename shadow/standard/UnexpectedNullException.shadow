@@ -1,2 +1,2 @@
-exception UnexpectedNullException
+exception shadow:standard@UnexpectedNullException
 {}

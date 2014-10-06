@@ -1,0 +1,188 @@
+class shadow:utility@
+ArrayDeque<E>
+implements Deque<E>
+{
+	get int size = 0;
+	int start = 0;
+	E[] elements = E:create[10];
+	int modifications = 0;
+	
+	public isEmpty() => ( boolean )
+	{
+		return size == 0;
+	}
+	
+		
+	private grow() => ()
+	{
+		E[] temp = E:create[elements->size * 2];
+		for( int i = 0; i < elements->size; i += 1 )
+			temp[i] = elements[(start + i) % elements->size];
+		elements = temp;
+		start = 0;	
+	}
+
+	public addFirst( E element ) => ( ArrayDeque<E> )
+	{
+		if( elements->size == size )
+			grow();
+			
+		start -= 1;
+		if( start < 0 )
+			start = elements->size - 1;
+			
+		elements[start] = element;
+		size += 1;
+				
+		modifications += 1; 
+		return this;
+	}
+	
+	public addLast( E element ) => ( ArrayDeque<E> )
+	{
+		if( elements->size == size )
+			grow();
+					
+		elements[(start + size) % elements->size] = element;
+		size += 1;
+				
+		modifications += 1; 
+		return this;
+	}
+	
+	public getFirst() => (E element)
+	{
+		if( size == 0 )
+			throw NoSuchElementException:create();
+		
+		try
+		{
+			return check(elements[start]);
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
+		}
+	}
+	
+	public getLast() => (E element)
+	{
+		if( size == 0 )
+			throw NoSuchElementException:create();
+		
+		try
+		{
+			return check(elements[(start + size - 1) % elements->size]);
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
+		}
+	}
+	
+	public removeFirst() => (E element)
+	{
+		if( size == 0 )
+			throw NoSuchElementException:create();
+		
+		try
+		{		
+			E temp = check(elements[start]); 
+			start += 1;
+			size -= 1;
+			modifications += 1;			
+			return temp;
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
+		}
+	}
+	
+	public removeLast() => ( E element )
+	{
+		if( size == 0 )
+			throw NoSuchElementException:create();
+		try
+		{
+			E temp = check(elements[(start + size - 1) % elements->size]);
+			size -= 1;
+			modifications += 1;			
+			return temp;
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
+		}
+	}
+		
+	public clear() => ( ArrayDeque<E> )
+	{
+		size = 0;
+		modifications += 1;
+		return this;
+	}
+	
+	
+	//change below
+	public readonly toString() => (String)
+	{
+		MutableString string = MutableString:create("[");
+		boolean first = true;
+		try
+		{			
+			foreach( E value in this )
+			{
+				if( first )
+					first = false;
+				else
+					string.append(", ");
+				string.append(#value);
+			}
+		}
+		recover {}
+		
+		return string.append("]").toString();
+	}
+
+	public readonly iterator() => (Iterator<E>)
+	{
+		return ArrayDequeIterator:create();
+	}
+	
+	private class ArrayDequeIterator implements Iterator<E>
+	{
+		int index = 0;
+		int expectedModifications = modifications;
+		
+		private immutable checkForModifications() => ()
+		{
+			if( expectedModifications != modifications )
+				throw IllegalModificationException:create();		
+		}
+	
+		public immutable hasNext() => (boolean)
+		{
+			checkForModifications();
+			return index < size;
+		}
+		
+		public next() => (E)
+		{
+			checkForModifications();
+			if( index >= size )
+				throw IndexOutOfBoundsException:create();
+			try
+			{
+				E temp = check(elements[(start + index) % elements->size]);
+				index += 1;
+				return temp;		
+			}
+			recover
+			{
+				//should never happen
+				throw UnexpectedNullException:create();
+			}
+		}
+	}
+}

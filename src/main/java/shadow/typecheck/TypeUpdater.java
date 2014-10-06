@@ -87,10 +87,27 @@ public class TypeUpdater extends BaseChecker
 		if( errorList.isEmpty() )
 			nodeTable = instantiateTypeParameters( nodeTable );
 		
-		//update extends and implements lists based on updated type parameters
+		//topologically sort classes by extends and implements order
 		//includes a check for circular extends and implements
+		List<Node> nodeList = sortOnExtendsAndImplements(nodeTable);		
+		
+		//update extends and implements lists based on updated type parameters		
+		Map<Type, ClassType> uninstantiatedExtends = new HashMap<Type, ClassType>();
+		Map<Type, ArrayList<InterfaceType>> uninstantiatedImplements = new HashMap<Type, ArrayList<InterfaceType>>(); 
+		
 		if( errorList.isEmpty() )
-			updateExtendsAndImplements( nodeTable );
+			updateExtendsAndImplements( nodeList, uninstantiatedExtends, uninstantiatedImplements, true);
+		
+		//must happen after extends and implements
+		//since generic parameters in the methods could depend on correct extends and implements
+		if( errorList.isEmpty() )
+			updateFieldsAndMethods( nodeTable );
+		
+		//but then the extends and implements can have outdated fields and methods
+		//so they must be updated again, based on their old values stored in 
+		//uninstantiatedExtends and uninstantiatedImplements
+		if( errorList.isEmpty() )
+			updateExtendsAndImplements( nodeList, uninstantiatedExtends, uninstantiatedImplements, false);
 		
 		//now that the types are figured out, make sure all the method overrides are legal
 		if( errorList.isEmpty() )
@@ -103,6 +120,75 @@ public class TypeUpdater extends BaseChecker
 		}
 		
 		return nodeTable;
+	}
+
+	private void updateFieldsAndMethods( Map<Type, Node> nodeTable )
+	{
+		//update fields and methods			
+		for(Node declarationNode : nodeTable.values() )
+		{	
+			Type type = declarationNode.getType();				
+				
+			//update fields					
+			Map<String,Node> fields = type.getFields();					
+			for( Node node : fields.values() )
+			{
+				 Type nodeType = node.getType();
+				 if( nodeType instanceof UninstantiatedType )
+				 {
+					 try 
+					 {
+						node.setType( ((UninstantiatedType)nodeType).instantiate() );
+					 }
+					 catch (InstantiationException e)
+					 {							
+						 addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+					 }							 
+				 }
+			}
+			
+			//update methods					
+			Map<String, List<MethodSignature>> methodTable = type.getMethodMap();					
+			for( String name : methodTable.keySet() )
+			{	
+				for( MethodSignature signature: methodTable.get(name) )
+				{
+					MethodType methodType = signature.getMethodType();
+					updateTypeParameters(methodType, signature.getNode());
+					
+					for( String parameter : methodType.getParameterNames() )
+					{
+						ModifiedType parameterType = methodType.getParameterType(parameter);
+						if( parameterType.getType() instanceof UninstantiatedType )
+						{
+							try
+							{
+								parameterType.setType( ((UninstantiatedType)parameterType.getType()).instantiate() );
+							} 
+							catch (InstantiationException e) 
+							{									
+								addError(signature.getNode(), Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+							}
+						}
+					}
+					
+					for( ModifiedType returnType : methodType.getReturnTypes() )
+					{
+						if( returnType.getType() instanceof UninstantiatedType )
+						{
+							try
+							{
+								returnType.setType( ((UninstantiatedType)returnType.getType()).instantiate() );
+							} 
+							catch (InstantiationException e) 
+							{									
+								addError(signature.getNode(), Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+							}
+						}
+					}						
+				}
+			}
+		}		
 	}
 	
 	private void addConstructorsAndProperties()
@@ -316,73 +402,6 @@ public class TypeUpdater extends BaseChecker
 				//need a new table because types have changed and will hash to different locations
 				updatedNodeTable.put(declarationNode.getType().getTypeWithoutTypeArguments(), declarationNode);
 			}
-			
-			//update fields and methods			
-			for(Node declarationNode : nodeList )
-			{	
-				Type type = declarationNode.getType();				
-					
-				//update fields					
-				Map<String,Node> fields = type.getFields();					
-				for( Node node : fields.values() )
-				{
-					 Type nodeType = node.getType();
-					 if( nodeType instanceof UninstantiatedType )
-					 {
-						 try 
-						 {
-							node.setType( ((UninstantiatedType)nodeType).instantiate() );
-						 }
-						 catch (InstantiationException e)
-						 {							
-							 addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-						 }							 
-					 }
-				}
-				
-				//update methods					
-				Map<String, List<MethodSignature>> methodTable = type.getMethodMap();					
-				for( String name : methodTable.keySet() )
-				{	
-					for( MethodSignature signature: methodTable.get(name) )
-					{
-						MethodType methodType = signature.getMethodType();
-						updateTypeParameters(methodType, signature.getNode());
-						
-						for( String parameter : methodType.getParameterNames() )
-						{
-							ModifiedType parameterType = methodType.getParameterType(parameter);
-							if( parameterType.getType() instanceof UninstantiatedType )
-							{
-								try
-								{
-									parameterType.setType( ((UninstantiatedType)parameterType.getType()).instantiate() );
-								} 
-								catch (InstantiationException e) 
-								{									
-									addError(signature.getNode(), Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-								}
-							}
-						}
-						
-						for( ModifiedType returnType : methodType.getReturnTypes() )
-						{
-							if( returnType.getType() instanceof UninstantiatedType )
-							{
-								try
-								{
-									returnType.setType( ((UninstantiatedType)returnType.getType()).instantiate() );
-								} 
-								catch (InstantiationException e) 
-								{									
-									addError(signature.getNode(), Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-								}
-							}
-						}						
-					}
-				}
-			}
-			
 		}
 		catch( CycleFoundException e )
 		{
@@ -395,8 +414,8 @@ public class TypeUpdater extends BaseChecker
 		return updatedNodeTable;
 	}
 	
-	private void updateExtendsAndImplements(Map<Type,Node> nodeTable/*, Map<Type, Node> uninstantiatedNodes*/)
-	{
+	
+	private List<Node> sortOnExtendsAndImplements(Map<Type,Node> nodeTable) {
 		//now make dependency graph based on extends and implements
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
 		
@@ -433,81 +452,128 @@ public class TypeUpdater extends BaseChecker
 			}
 		}
 		
-		
+		List<Node> nodeList = null;
 		
 		try
-		{			
-			List<Node> nodeList = graph.topologicalSort();
-			
-			for(Node declarationNode : nodeList )
-			{	
-				Type type = declarationNode.getType();
-				if( type instanceof ClassType )
-				{
-					ClassType classType = (ClassType) type;					
-					ClassType parent = classType.getExtendType();
-
-					//update parent
-					if( parent != null && parent instanceof UninstantiatedClassType )
-					{
-						try 
-						{
-							parent = ((UninstantiatedClassType)parent).instantiate();
-							classType.setExtendType(parent);
-						} 
-						catch (InstantiationException e) 
-						{
-							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-						}
-					}
-					
-					//update interfaces
-					ArrayList<InterfaceType> interfaces = classType.getInterfaces() ;					
-					for( int i = 0; i < interfaces.size(); i++ )
-					{ 
-						InterfaceType interfaceType = interfaces.get(i);
-						if( interfaceType instanceof UninstantiatedInterfaceType  )
-						{
-							try 
-							{
-								interfaceType =  ((UninstantiatedInterfaceType)interfaceType).instantiate();
-								interfaces.set(i, interfaceType);
-							} 
-							catch (InstantiationException e) 
-							{
-								addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-							}						
-						}
-					}
-				}
-				else if( type instanceof InterfaceType )
-				{	
-					//update interfaces
-					ArrayList<InterfaceType> interfaces = ((InterfaceType)type).getInterfaces();;					
-					for( int i = 0; i < interfaces.size(); i++ )
-					{ 
-						InterfaceType interfaceType = interfaces.get(i);
-						if( interfaceType instanceof UninstantiatedInterfaceType  )
-						{
-							try 
-							{
-								interfaceType =  ((UninstantiatedInterfaceType)interfaceType).instantiate();
-								interfaces.set(i, interfaceType);
-							} 
-							catch (InstantiationException e) 
-							{
-								addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-							}						
-						}
-					}
-				}			
-			}
-		}
+		{	
+			 nodeList = graph.topologicalSort();
+		}	
 		catch( CycleFoundException e )
 		{
 			Node node = (Node) e.getCycleCause();			
 			addError(node, Error.INVALID_HIERARCHY, "Type " + node.getType() + " contains a circular extends or implements definition");
 		}
+		
+		return nodeList;
+	}
+	
+	private void updateExtendsAndImplements(List<Node> nodeList, Map<Type, ClassType> uninstantiatedExtends, Map<Type, ArrayList<InterfaceType>> uninstantiatedImplements, boolean first)
+	{			
+		if( !first ) {
+			//clear all (partial) instantiations, since they didn't include fields or methods
+			for(Node declarationNode : nodeList ) {
+				Type type = declarationNode.getType();
+				type.clearInstantiatedTypes();				
+			}
+				
+			
+			
+			
+		}
+		
+		
+		for(Node declarationNode : nodeList )
+		{	
+			Type type = declarationNode.getType();
+			if( type instanceof ClassType )
+			{
+				ClassType classType = (ClassType) type;					
+				ClassType parent;
+				
+				if( first ) {
+					parent = classType.getExtendType();
+					uninstantiatedExtends.put(classType, parent);
+				}
+				else
+					parent = uninstantiatedExtends.get(classType);
+
+				//update parent
+				if( parent != null && parent instanceof UninstantiatedClassType )
+				{
+					try 
+					{
+						parent = ((UninstantiatedClassType)parent).instantiate();
+						classType.setExtendType(parent);
+					} 
+					catch (InstantiationException e) 
+					{
+						addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+					}
+				}
+				
+				//update interfaces
+				ArrayList<InterfaceType> interfaces;					
+				
+				if( first ) {
+					interfaces = classType.getInterfaces();
+					uninstantiatedImplements.put( classType, new ArrayList<InterfaceType>(interfaces));
+				}
+				else					
+					interfaces = uninstantiatedImplements.get(classType);					
+				
+				for( int i = 0; i < interfaces.size(); i++ )
+				{ 
+					InterfaceType interfaceType = interfaces.get(i);
+					if( interfaceType instanceof UninstantiatedInterfaceType  )
+					{
+						try 
+						{
+							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).instantiate();
+							interfaces.set(i, interfaceType);
+						} 
+						catch (InstantiationException e) 
+						{
+							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+						}						
+					}
+				}
+				
+				classType.setInterfaces(interfaces);					
+			}
+			else if( type instanceof InterfaceType )
+			{	
+				
+				//update interfaces
+				ArrayList<InterfaceType> interfaces;					
+				
+				if( first ) {
+					interfaces = ((InterfaceType)type).getInterfaces();
+					uninstantiatedImplements.put( type, new ArrayList<InterfaceType>(interfaces));
+				}
+				else					
+					interfaces = uninstantiatedImplements.get(type);
+									
+				for( int i = 0; i < interfaces.size(); i++ )
+				{ 
+					InterfaceType interfaceType = interfaces.get(i);
+					if( interfaceType instanceof UninstantiatedInterfaceType  )
+					{
+						try 
+						{
+							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).instantiate();
+							interfaces.set(i, interfaceType);
+						} 
+						catch (InstantiationException e) 
+						{
+							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+						}						
+					}
+				}
+				
+				type.setInterfaces(interfaces);
+			}			
+		}
+		
 	}
 	
 	private void checkOverrides(Map<Type,Node> nodeTable)

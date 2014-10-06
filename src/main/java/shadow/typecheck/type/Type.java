@@ -34,7 +34,7 @@ public abstract class Type implements Comparable<Type>
 	private boolean parameterized = false;
 	protected Type typeWithoutTypeArguments = this;
 	
-	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();
+	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();	
 		
 	private Map<String, Node> fieldTable = new HashMap<String, Node>();
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
@@ -662,7 +662,7 @@ public abstract class Type implements Comparable<Type>
 			return false;
 		}
 		
-		if( hasInterface(interfaceType) )
+		if( hasUninstantiatedInterface(interfaceType) )
 		{
 			SequenceType argument = new SequenceType(rightType);
 			MethodSignature signature = getMatchingMethod(methodName, argument, null, errors);
@@ -1148,7 +1148,7 @@ public abstract class Type implements Comparable<Type>
 	
 	public void addReferencedType(Type type)
 	{		
-		if( type != null && !(type instanceof UninstantiatedType) )
+		if( type != null && !(type instanceof UninstantiatedType) && !(type instanceof TypeParameter) )
 		{			
 			if( type instanceof ArrayType )
 			{				
@@ -1167,14 +1167,18 @@ public abstract class Type implements Comparable<Type>
 					addReferencedType( parameter.getType() );
 				
 				for( ModifiedType _return : methodType.getReturnTypes() )
-					addReferencedType( _return.getType() );				
+					addReferencedType( _return.getType() );	
+				
+				if( type.isParameterized() && type.isFullyInstantiated() )
+					for( ModifiedType typeParameter : type.getTypeParameters() )						
+						addReferencedType( typeParameter.getType() );
 			}
-			else if (!equals(type) && !(type instanceof TypeParameter) && !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
+			else if (!equals(type) &&  !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
 			{		
 				if( type.isParameterized() )
 				{
-					if( type.isFullyInstantiated() )
-					{				
+					//if( type.isFullyInstantiated() )
+					//{				
 						referencedTypes.add(type);
 						referencedTypes.add(type.typeWithoutTypeArguments);
 						
@@ -1186,7 +1190,10 @@ public abstract class Type implements Comparable<Type>
 							
 							referenceRecursion = false;
 						}						
-					}
+					//}
+					
+					
+					
 				}
 				else
 				{
@@ -1233,6 +1240,11 @@ public abstract class Type implements Comparable<Type>
 		return false;
 	}
 	
+	public boolean hasUninstantiatedInterface(InterfaceType type)
+	{
+		return false;
+	}
+	
 	public void addInterface(InterfaceType implementType) {
 		interfaces.add(implementType);
 	}
@@ -1240,6 +1252,11 @@ public abstract class Type implements Comparable<Type>
 	public ArrayList<InterfaceType> getInterfaces()
 	{
 		return interfaces;
+	}
+	
+	public void setInterfaces(ArrayList<InterfaceType> values)
+	{
+		interfaces = values;
 	}
 	
 	//must return an ArrayList to preserve order
@@ -1333,5 +1350,15 @@ public abstract class Type implements Comparable<Type>
 				out.println(linePrefix + "import " + importType + ";");
 		}
 	}
+	
+	public void clearInstantiatedTypes() {
+		if( instantiatedTypes.children != null ) {
+			instantiatedTypes.children.clear();
+			instantiatedTypes.children = null;
+		}
+		instantiatedTypes.argument = null;
+		instantiatedTypes.instantiatedType = null;
+	}
+	
 	
 }

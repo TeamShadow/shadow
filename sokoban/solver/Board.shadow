@@ -1,7 +1,4 @@
-import shadow:utility@List;
-import shadow:utility@Set;
-import shadow:utility@Queue;
-import shadow:utility@ArrayList;
+import shadow:utility;
 
 class sokoban:solver@Board {
 	constant int MAX = 256;
@@ -9,27 +6,32 @@ class sokoban:solver@Board {
 	constant ushort[] EMPTY = ushort:create[0];
 	ushort width, height, boxCount;
 	code[] board;
-	State initial;
+	nullable State initial;
 	Set<State> stateSet;
 	public create(List<String> rows, int cols) {
 		if (cols <= 0 or cols >= MAX or rows.size() <= 0 or rows.size() >= MAX or (cols == MAX and rows.size() == MAX))
 			throw IllegalArgumentException:create("Invalid size");
 		width = cast<ushort>(cols);
 		height = cast<ushort>(rows.size());
-		ushort boxes = 0, targets = 0;
+		ushort boxes = 0us, targets = 0us;
 		for (int row = 0; row < height; row += 1)
-			for (int col = 0; col < width; col += 1)
-				if (rows[row]->size > col)
-					switch (rows[row][col]) {
-						case ('$', 'o') {
-							boxes += 1;
-						} case ('+', '.') {
-							targets += 1;
-						} case ('*') {
-							boxes += 1;
-							targets += 1;
+			for (int col = 0; col < width; col += 1) {
+				try {
+					String rowText = check(rows[row]);
+					if (rowText->size > col)
+						switch (cast<code>(rowText[col])) {
+							case ('$', 'o') {
+								boxes += 1us;
+							} case ('+', '.') {
+								targets += 1us;
+							} case ('*') {
+								boxes += 1us;
+								targets += 1us;
+							}
 						}
 					}
+					recover {}
+				}
 		if (boxes != targets)
 			throw IllegalArgumentException:create("# boxes != # targets");
 		if (boxes >= MAX * MAX - 1)
@@ -37,83 +39,88 @@ class sokoban:solver@Board {
 		boxCount = boxes;
 		board = code:create[width * height];
 		State first = State:create();
-		foreach (Coordinate coord in first) {
-			if (rows[coord.getRow()]->size <= coord.getCol())
-				coord.setFloor();
-			else switch (rows[coord.getRow()][coord.getCol()]) {
-				case ('#') {
-					coord.setWall();
-				} case (' ') {
+		try {		
+			foreach (State:Coordinate coord in first) {
+				String rowText = check(rows[coord.getRow()]);			
+				if(rowText->size <= coord.getCol())
 					coord.setFloor();
-				} case ('.') {
-					coord.setFloor();
-					coord.setTarget();
-				} case ('$', 'o') {
-					coord.setFloor();
-					coord.addBox();
-				} case ('*') {
-					coord.setFloor();
-					coord.setTarget();
-					coord.addBox();
-				} case ('@') {
-					coord.setFloor();
-					coord.setPlayer();
-				} case ('+') {
-					coord.setTarget();
-					coord.setPlayer();
-				} default {
-					throw IllegalArgumentException:create();
+				else switch (cast<code>(rowText[coord.getCol()])) {
+					case ('#') {
+						coord.setWall();
+					} case (' ') {
+						coord.setFloor();
+					} case ('.') {
+						coord.setFloor();
+						coord.setTarget();
+					} case ('$', 'o') {
+						coord.setFloor();
+						coord.addBox();
+					} case ('*') {
+						coord.setFloor();
+						coord.setTarget();
+						coord.addBox();
+					} case ('@') {
+						coord.setFloor();
+						coord.setPlayer();
+					} case ('+') {
+						coord.setTarget();
+						coord.setPlayer();
+					} default {
+						throw IllegalArgumentException:create();
+					}
 				}
 			}
 		}
+		recover {}
 		stateSet = HashSet<State>:create();
 		initial = first.initialize();
 	}
 
-	public immutable getInitialState() => (State) {
+	public readonly getInitialState() => (nullable State) {
 		return initial;
 	}
-	public immutable getStates() => (Set<State>) {
+	public readonly getStates() => (Set<State>) {
 		return stateSet;
 	}
-	public immutable toString() => (String) {
-		return initial.toString();
+	public readonly toString() => (String) {
+		return #initial;
 	}
 
-	public class State implements CanCompare<State>, CanIterate<Coordinate> {
+	public class State implements CanCompare<State>, CanIterate<Coordinate>, CanHash {
 		int depth;
-		State parent;
+		//State parent;
 		ushort[][] state;
-		private create() {
+		public create() {
 			depth = 0;
-			parent = null;
-			state = ushort:create[2][];
+			//parent = null;
+			state = ushort[]:create[2];
 			state[0] = ushort:create[boxCount + 1];
 			for (int i = 1; i <= boxCount; i += 1)
-				state[0][i] = 0xffff;
+				state[0][i] = 0xffffus;
 			state[1] = ushort:create[1];
 		}
-		private create(State other, Coordinate player) {
-			depth = other.depth + 1;
-			parent = other;
-			state = ushort:create[2][];
+		public create(State other, Coordinate player) {
+			depth = other:depth + 1;
+			//parent = other;
+			state = ushort[]:create[2];
 			state[0] = ushort:create[boxCount + 1];
-			System.arraycopy(other.state[0], 0, state[0], 0, boxCount + 1);
+			for( int i = 0; i < boxCount + 1; i += 1 )
+				state[0][i] = other:state[0][i];
 			state[1] = ushort:create[1];
-			state[1][0] = player.index;
+			state[1][0] = player->index;
 		}
 
-		private initialize(Queue<Coordinate> queue, Coordinate last, Coordinate coord) => () {
+		public initialize(ArrayDeque<Coordinate> queue, Coordinate last, Coordinate coord) => () {
 			if (!coord.isWall() and !coord.hasBox() and coord.getDistance() == -1) {
 				coord.setDistance(last.getDistance() + 1);
-				queue.add(coord);
+				queue.addLast(coord);
 			}
 		}
-		private initialize() => (State) {
-			Queue<Coordinate> queue = ArrayDeque<Coordinate>:create();
-			queue.add(getPlayer());
+		public initialize() => (nullable State) {
+			ArrayDeque<Coordinate> queue = ArrayDeque<Coordinate>:create();
+			queue.addLast(getPlayer());
 			while (!queue.isEmpty()) {
-				Coordinate last = queue.remove();
+				Coordinate last = queue.removeFirst();
 				foreach (Coordinate coord in last)
 					initialize(queue, last, coord);
 			}
@@ -141,14 +148,14 @@ class sokoban:solver@Board {
 			}
 		}
 		private class BoxIterator implements Iterator<Coordinate> {
-			ushort index = 0;
+			ushort index = 0us;
 			public immutable hasNext() => (boolean) {
 				return index < state[0][0];
 			}
 			public next() => (Coordinate) {
 				if (index >= state[0][0])
 					throw NoSuchElementException:create();
-				index += 1;
+				index += 1us;
 				return Coordinate:create(state[0][index]);
 			}
 		}
@@ -331,13 +338,13 @@ class sokoban:solver@Board {
 			}
 			return true;
 		}
-		public immutable isWinning() => (boolean) {
+		public readonly isWinning() => (boolean) {
 			foreach (Coordinate coord in getBoxes())
 				if (!coord.isTarget())
 					return false;
 			return true;
 		}
-		public immutable tryMove(Coordinate from, Coordinate to) => (State) {
+		public tryMove(Coordinate from, Coordinate to) => (nullable State) {
 			if (!to.hasBox())
 				return null;
 			Coordinate next = from.over(to);
@@ -345,26 +352,33 @@ class sokoban:solver@Board {
 				return null;
 			State state = State:create(this, to);
 			state.getPlayer().removeBox();
-			Coordinate box = state.Coordinate:create(next).addBox();
-			state = state.initialize();
-			if (state == null or state.isLosing(box))
+			Coordinate box = state:Coordinate:create(next).addBox();
+			try
+			{
+				state = check(state.initialize());
+				if( state.isLosing(box) )
+					return null;
+			}
+			recover 
+			{
 				return null;
-			stateQueue.add(this);
+			}
+			stateSet.add(this);
 			return state;
 		}
-		public move(Coordinate from, Coordinate to) => (State) {
+		public move(Coordinate from, Coordinate to) => (nullable State) {
 			State state = State:create(this, to);
 			if (to.hasBox()) {
 				Coordinate next = from.over(to);
 				if (next.isWall() or next.hasBox())
 					return null;
 				state.getPlayer().removeBox();
-				state.Coordinate:create(next).addBox();
+				state:Coordinate:create(next).addBox();
 			}
 			return state;
 		}
 		public getPath(MutableString sb, Coordinate from, Coordinate to) => (MutableString) {
-			while (!to.equals(from))
+			while (!to.equal(from))
 				to = getMove(sb, to);
 			return sb;
 		}
@@ -380,10 +394,10 @@ class sokoban:solver@Board {
 			throw Error:create("Where did I come from?");
 		}
 
-		public compare(State other) => (int) {
+		public readonly compare(State other) => (int) {
 			return depth - other.depth;
 		}
-		public equals(Object other) => (boolean) {
+		public readonly equal(Object other) => (boolean) {
 			if (!(other is State))
 				return false;
 			if (state[0] != cast<State>(other).state[0])
@@ -396,8 +410,9 @@ class sokoban:solver@Board {
 			}
 			return true;
 		}
-		public hashCode() => (int) {
-			int hash = 0;
+		
+		public get hash() => ( uint ) {		
+			uint hash = 0u;
 			for (int i = 0; i < state.length; i += 1) {
 				if (i == 1)
 					hash <<= 16;
@@ -406,7 +421,7 @@ class sokoban:solver@Board {
 			}
 			return hash;
 		}
-		public toString() => (String) {
+		public readonly toString() => (String) {
 			MutableString sb = MutableString:create();
 			for (int row = 0; row < height; row += 1) {
 				for (int col = 0; col < width; col += 1) {
@@ -441,41 +456,41 @@ class sokoban:solver@Board {
 			return sb.toString();
 		}
 
-		public class Coordinate implements CanCompare<Coordinate>, CanIterate<Coordinate> {
-			ushort index;
-			private create() {
+		public class Coordinate implements CanCompare<Coordinate>, CanIterate<Coordinate>, CanHash {
+			get ushort index;
+			public create() {
 				index = 0;
 			}
-			private create(int i) {
+			public create(int i) {
 				if (i >= board.length)
 					throw IllegalArgumentException:create();
 				index = cast<ushort>(i);
 			}
-			private create(int row, int col) {
+			public create(int row, int col) {
 				this(row * width + col);
 			}
 			public create(Coordinate other) {
 				this(other.getRow(), other.getCol());
 			}
 
-			private next() => (Coordinate) {
+			public next() => (Coordinate) {
 				try {
 					return Coordinate:create(index + 1);
 				} catch (IllegalArgumentException ex) {
 					return null;
 				}
 			}
-			private over(Coordinate next) => (Coordinate) {
+			public over(Coordinate next) => (Coordinate) {
 				try {
 					return Coordinate:create(2 * next.getRow() - getRow(), 2 * next.getCol() - getCol());
 				} catch (IllegalArgumentException ex) {
 					return null;
 				}
 			}
-			private away(Coordinate from) => (Coordinate) {
+			public away(Coordinate from) => (Coordinate) {
 				return from.over(this);
 			}
-			private findBox() => (int) {
+			public findBox() => (int) {
 				ushort[] boxes = state[0];
 				int value = index, min = 1, max = boxes[0];
 				while (min <= max) {
@@ -490,16 +505,16 @@ class sokoban:solver@Board {
 				return max;
 			}
 
-			private setFloor() => () {
+			public setFloor() => () {
 				board[index] = FLOOR;
 			}
-			private setWall() => () {
+			public setWall() => () {
 				board[index] = WALL;
 			}
-			private setTarget() => () {
+			public setTarget() => () {
 				board[index] = TARGET;
 			}
-			private addBox() => (Coordinate) {
+			public addBox() => (Coordinate) {
 				ushort[] boxes = state[0];
 				int loc = findBox();
 				if (boxes[loc] != index) {
@@ -510,7 +525,7 @@ class sokoban:solver@Board {
 				}
 				return this;
 			}
-			private removeBox() => (Coordinate) {
+			public removeBox() => (Coordinate) {
 				ushort[] boxes = state[0];
 				int loc = findBox();
 				if (boxes[loc] == index) {
@@ -520,10 +535,10 @@ class sokoban:solver@Board {
 				}
 				return this;
 			}
-			private setPlayer() => () {
+			public setPlayer() => () {
 				state[1][0] = index;
 			}
-			private setDistance(int dist) => () {
+			public setDistance(int dist) => () {
 				dist += 1;
 				if (dist > 0) {
 					if (dist >= state.length) {
@@ -539,14 +554,14 @@ class sokoban:solver@Board {
 					state[dist] = newArray;
 				}
 			}
-			private getDistance() => (int) {
+			public getDistance() => (int) {
 				for (int dist = 1; dist < state.length; dist += 1)
 					for (int i = 0; i < state[dist].length; i += 1)
 						if (state[dist][i] == index)
 							return dist - 1;
 				return -1;
 			}
-			private isReachable() => (boolean) {
+			public isReachable() => (boolean) {
 				return getDistance() != -1;
 			}
 
@@ -614,18 +629,18 @@ class sokoban:solver@Board {
 				return Coordinate:create(index + width + 1);
 			}
 
-			public equals(Object other) => (boolean) {
+			public readonly equal(Object other) => (boolean) {
 				if (other is Coordinate)
 					return index == cast<Coordinate>(other).index;
 				return false;
 			}
-			public compare(Coordinate other) => (int) {
+			public readonly compare(Coordinate other) => (int) {
 				return index - other.index;
 			}
-			public hashCode() => (int) {
+			public get hash() => (uint) {
 				return index;
 			}
-			public toString() => (String) {
+			public readonly toString() => (String) {
 				MutableString sb = MutableString:create();
 				for (int row = 0; row < height; row += 1) {
 					for (int col = 0; col < width; col += 1) {

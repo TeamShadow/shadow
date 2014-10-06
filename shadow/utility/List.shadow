@@ -1,10 +1,11 @@
 interface shadow:utility@List<E is CanEqual<E>> extends CanIterate<E>, CanIndexStore<int, E>
 {
-	immutable get size() => ( int size );
-	immutable indexOf(E element) => ( int index );
-	immutable contains(E element) => ( boolean found );
-	add(E element) => ( boolean success );
+	readonly get size() => ( int size );
+	readonly indexOf(E element) => ( int index );
+	readonly contains(E element) => ( boolean found );
+	readonly isEmpty() => ( boolean empty );
+	add(E element) => ( List<E> );
 	delete(int index) => ( E element );
 	remove(E element) => ( boolean success );
-	clear() => ();
+	clear() => ( List<E> );
 }

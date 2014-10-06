@@ -71,6 +71,7 @@ import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
 public class TACBuilder implements ShadowParserVisitor
@@ -1209,7 +1210,20 @@ public class TACBuilder implements ShadowParserVisitor
 				}
 			else			
 				params.add(tree.appendChild(i));
+		
 		prefix = new TACCall(tree, block, methodRef, params);
+					
+		//sometimes a cast is needed when dealing with generic types
+		SequenceType requiredReturnTypes = methodType.getReturnTypes();
+		SequenceType methodReturnTypes = methodRef.getReturnTypes();		
+		
+		if( !methodReturnTypes.matches(requiredReturnTypes) ) {
+			if( requiredReturnTypes.size() == 1 )			
+				prefix = new TACCast(tree, requiredReturnTypes.get(0), prefix);
+			else
+				prefix = new TACCast(tree, new SimpleModifiedType(requiredReturnTypes), prefix);
+		}
+		
 		explicitSuper = false;		
 	}
 
@@ -1451,11 +1465,9 @@ public class TACBuilder implements ShadowParserVisitor
 			MethodType methodType = (MethodType) node.getType();
 			
 			//methodRef doesn't have parameters because the same method gets called no matter what
-			//well, maybe it does for typechecking reasons
 			TACMethodRef methodRef = new TACMethodRef(tree,
-			//		methodType.getTypeWithoutTypeArguments(), node.getImage());
-					methodType, node.getImage());
-			
+					methodType.getTypeWithoutTypeArguments(), node.getImage());
+						
 			ClassType classType = (ClassType)(methodType.getOuter());  //class type needs to be parameterized to get the parameters
 										
 			TACOperand object = new TACNewObject(tree, classType);
@@ -1481,10 +1493,11 @@ public class TACBuilder implements ShadowParserVisitor
 			for (int i = start; i < tree.getNumChildren(); i++)
 					params.add(tree.appendChild(i));
 			
-			TACCall call = new TACCall(tree, block, methodRef, params);
-			//prefix = new TACNodeRef(tree, object);
-			//prefix = new TACNodeRef(tree, call);
-			prefix = call;
+			prefix = new TACCall(tree, block, methodRef, params);
+			
+			//sometimes a cast is needed when dealing with generic types
+			if( !methodRef.getReturnType().equals(classType) )
+				prefix = new TACCast(tree, new SimpleModifiedType(classType), prefix);
 		}
 		return POST_CHILDREN;
 	}

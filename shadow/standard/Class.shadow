@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 immutable class shadow:standard@Class implements CanHash
 {
 	get String name;
@@ -85,25 +83,10 @@ immutable class shadow:standard@Class implements CanHash
 	
 	protected interfaceData( Class interfaceClass ) => ( immutable nullable Object )
 	{	
-	/*
-		Console out = Console:instance;
-		
-		out.printLine("interface data");
-		out.printLine(#interfaceClass);
-	
-		out.printLine(data->size);
-	*/
-	
 		for ( int i = 0; i < interfaces->size; i += 1 )
 		{		
-			//out.printLine("interface class");
-			//out.printLine(#interfaces[i]);
-		
-			if ( interfaces[i] === interfaceClass )
-			{
-				//out.printLine("Found!");
-				return data[i];
-			}
+			if ( interfaces[i] === interfaceClass )					
+				return data[i];			
 		}
 		
 		throw CastException:create("Class " # this # " does not implement interface " # interfaceClass);

@@ -1,4 +1,6 @@
 import shadow:io@Console;
+import shadow:utility@List;
+import shadow:utility@ArrayList;
 
 class sokoban:solver@Solver {
 	public main(String[] args) => () {
@@ -12,7 +14,7 @@ class sokoban:solver@Solver {
 		(line, eof) = console.readLine();
 		try {
 			while (!eof) {
-				rows.add(line);
+				rows.add(check(line));
 				cols = cols.max(check(line)->size);
 				(line, eof) = console.readLine();
 			}
@@ -21,17 +23,17 @@ class sokoban:solver@Solver {
 		ulong start = system.nanoTime();
 		Board board = Board:create(rows, cols);
 		Board:State state = board.getInitialState();
-		MutableString solution = recurse(state);
-		ulong end = System.nanoTime();
-		if (solution == null)
-			console.writeLine("Unsolved after " # (end - start) / 1000000000.0 # " seconds.");
-		else {
-			console.writeLine("Solved in " # solution.length() # " moves and " # (end - start) / 1000000000.0 # " seconds.").
-					writeLine(solution.reverse()).writeLine("Press Enter to view playback.").readLine();
-			for (int i = 0; i < solution.length(); i += 1) {
-				console.writeLine(state);
-				Coordinate player = state.getPlayer();
-				switch (solution[i]) {
+		nullable MutableString nullableSolution = recurse(state);
+		ulong end = system.nanoTime();
+		try
+		{
+			MutableString solution = check(nullableSolution);
+			console.printLine("Solved in " # solution->size # " moves and " # (end - start) / 1000000000.0 # " seconds.").
+					printLine(solution.reverse()).printLine("Press Enter to view playback.").readLine();
+			for (int i = 0; i < solution->size; i += 1) {
+				console.printLine(state);
+				Board:State:Coordinate player = state.getPlayer();
+				switch (cast<code>(solution[i])) {
 					case ('U') {
 						state = state.move(player, player.moveUp());
 					} case ('D') {
@@ -41,33 +43,41 @@ class sokoban:solver@Solver {
 					} case ('R') {
 						state = state.move(player, player.moveRight());
 					}
-				}
-				system.sleep(100);
+				}				
 			}
-			console.writeLine(state).writeLine("Done!");
+			
+			console.printLine(state).printLine("Done!");
+		}
+		recover
+		{
+			console.printLine("Unsolved after " # (end - start) / 1000000000.0 # " seconds.");
 		}
 	}
 	int counter = 0;
-	private recurse(Board:State state) => (MutableString) {
-		if (state == null)
-			return null;
-		if (state.isWinning())
-			return MutableString:create();
-		counter += 1;
-		if (counter >= 0 and counter % 256 == 0)
-			console.write(state);
-		for (int dist = 0; dist <= state.getMaxDistance(); dist += 1) {
-			for (int num = 0; num < state.getNumCoordinates(dist); num += 1) {
-				Coordinate from = state.getCoordinate(dist, num);
-				int index = 0;
-				foreach (Coordinate to in from) {
-					StringBuilder path = recurse(state.tryMove(from, to));
-					if (path != null)
-						return state.getPath(path.append("UDLR"[index]), state.getPlayer(), from);
-					index += 1;
+	private recurse(nullable Board:State nullableState) => (nullable MutableString) {
+		try
+		{				
+			Board:State state = check(nullableState);
+			Console console = Console:instance;
+			if (state.isWinning())
+				return MutableString:create();
+			counter += 1;
+			if (counter >= 0 and counter % 256 == 0)
+				console.print(state);
+			for (int dist = 0; dist <= state.getMaxDistance(); dist += 1) {
+				for (int num = 0; num < state.getNumCoordinates(dist); num += 1) {
+					Board:State:Coordinate from = state.getCoordinate(dist, num);
+					int index = 0;
+					foreach (Board:State:Coordinate to in from) {
+						nullable MutableString path = recurse(state.tryMove(from, to));
+						if (path !== null)
+							return state.getPath(check(path).append("UDLR"[index]), state.getPlayer(), from);
+						index += 1;
+					}
 				}
 			}
 		}
+		recover {}
 		return null;
 	}
 }

@@ -19,21 +19,30 @@ public class InterfaceType extends Type
 	public InterfaceType(String typeName, Modifiers modifiers) {
 		super( typeName, modifiers );
 	}	
+	
+	@Override
+	public boolean hasUninstantiatedInterface(InterfaceType type) {
+		type = type.getTypeWithoutTypeArguments();
+		InterfaceType current = this.getTypeWithoutTypeArguments();
+				
+		if( current.equals(type))
+			return true;		
+				
+		for( InterfaceType interfaceType : current.getInterfaces() ) {
+			interfaceType = interfaceType.getTypeWithoutTypeArguments();
+			
+			if( interfaceType.hasUninstantiatedInterface(type) )
+				return true;
+		}
+		
+		return false;
+	}
 
 	@Override
 	public boolean hasInterface(InterfaceType type)
-	{	
-		if( this.getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments() ) ) {
-			SequenceType parameters = this.getTypeParameters();
-			SequenceType otherParameters = type.getTypeParameters();
-			
-			for( int i = 0; i < parameters.size(); ++i )
-				if( !parameters.get(i).getType().equals(otherParameters.get(i).getType()))
-					return false;			
-			
-		//if( this.equals(type))
-			return true;
-		}
+	{
+		if( this.equals(type))
+			return true;		
 				
 		for( InterfaceType interfaceType : getInterfaces() )
 			if( interfaceType.hasInterface(type) )

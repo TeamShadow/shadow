@@ -520,6 +520,8 @@ public class StatementChecker extends BaseChecker
 	{		
 		if(secondVisit)
 			checkInitializers(node); //check all initializers
+		else
+			currentType.addReferencedType(node.getType());
 
 		return WalkType.POST_CHILDREN;
 	}	
@@ -674,7 +676,7 @@ public class StatementChecker extends BaseChecker
 				case '}': symbol = ">="; break;	
 				}
 				
-				if( result.hasInterface(Type.CAN_COMPARE) )
+				if( result.hasUninstantiatedInterface(Type.CAN_COMPARE) )
 				{
 					SequenceType argument = new SequenceType(currentNode);												
 					 
@@ -765,7 +767,7 @@ public class StatementChecker extends BaseChecker
 						break;
 					}						
 					
-					if( resultType.hasInterface(Type.CAN_EQUAL) )
+					if( resultType.hasUninstantiatedInterface(Type.CAN_EQUAL) )
 					{
 						SequenceType argument = new SequenceType();
 						argument.add(currentNode);							
@@ -863,7 +865,9 @@ public class StatementChecker extends BaseChecker
 			Node currentNode = node.jjtGetChild(i);
 			Type current = currentNode.getType();
 			
-			if( result.hasInterface(interfaceType) )
+			if( result.hasUninstantiatedInterface(interfaceType) )
+			//we can't know which one will work
+			//so we go with an uninstantiated version and then find an appropriate signature
 			{
 				SequenceType argument = new SequenceType(currentNode);											
 				 
@@ -1079,7 +1083,7 @@ public class StatementChecker extends BaseChecker
 	{
 		Type type = node.jjtGetChild(0).getType();
 		
-		if( type.hasInterface(interfaceType) )
+		if( type.hasUninstantiatedInterface(interfaceType) )
 		{
 			MethodSignature signature = setMethodType(node, type, method, new SequenceType() );
 			if( signature != null )
@@ -1350,7 +1354,7 @@ public class StatementChecker extends BaseChecker
 				case '^': methodName = "bitXor"; break;
 				}
 				
-				if( result.hasInterface(Type.INTEGER) )
+				if( result.hasUninstantiatedInterface(Type.INTEGER) )
 				{
 					SequenceType argument = new SequenceType();
 					argument.add(currentNode);							
@@ -1848,7 +1852,7 @@ public class StatementChecker extends BaseChecker
 			ArrayType array = (ArrayType)collectionType;			
 			element = new SimpleModifiedType( array.getBaseType() );
 		}
-		else if( collectionType.hasInterface(Type.CAN_ITERATE) )
+		else if( collectionType.hasUninstantiatedInterface(Type.CAN_ITERATE) )
 		{			
 			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
 				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE))
@@ -2362,7 +2366,7 @@ public class StatementChecker extends BaseChecker
 					addError(Error.INVALID_SUBSCRIPT, "Subscript gives " + node.jjtGetNumChildren() + " indexes but "  + arrayType.getDimensions() + " are required");
 				}				
 			}						
-			else if( prefixType.hasInterface(Type.CAN_INDEX) )
+			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) )
 			{
 				if( node.jjtGetNumChildren() == 1)
 				{
@@ -2374,7 +2378,8 @@ public class StatementChecker extends BaseChecker
 					
 					if( signature == null )
 					{
-						node.setType(Type.UNKNOWN);						
+						node.setType(Type.UNKNOWN);
+						addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " with index of type " + child.getType());
 					}
 					else if( (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
 					{
@@ -3342,11 +3347,11 @@ public class StatementChecker extends BaseChecker
 		SignatureNode parent = (SignatureNode) node.jjtGetParent();
 		MethodSignature signature = parent.getMethodSignature();
 		int index = 0;
+		MethodType methodType = signature.getMethodType();
 		
 		//add type parameters
 		if( node.jjtGetChild(index) instanceof ASTTypeParameters )
-		{
-			MethodType methodType = signature.getMethodType();
+		{			
 			ASTTypeParameters typeParameters = (ASTTypeParameters) node.jjtGetChild(index);
 			for( ModifiedType modifiedType : typeParameters.getType() )
 				methodType.addTypeParameter(modifiedType);
@@ -3367,6 +3372,8 @@ public class StatementChecker extends BaseChecker
 		SequenceNode results = (SequenceNode) node.jjtGetChild(index);
 					
 		for( ModifiedType modifiedType : results.getType() ) 
-			signature.addReturn(new SimpleModifiedType(modifiedType.getType()));		
+			signature.addReturn(new SimpleModifiedType(modifiedType.getType()));
+		
+		currentType.addReferencedType(methodType);
 	}
 }

@@ -1,4 +1,4 @@
-class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>
+class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 {
 	get int size = 0;
 	Node header = Node:create();
@@ -41,7 +41,7 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>
 			throw IndexOutOfBoundsException:create();
 		Node current = header;
 		if ( index < size / 2 )
-			while ( index != 0 )
+			while ( index > 0 )
 			{
 				current = current->next;
 				index -= 1;
@@ -54,7 +54,7 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>
 			}
 		return current;
 	}
-	private findNode( V value ) => ( int index, nullable Node node )
+	private readonly findNode( V value ) => ( int index, nullable Node node )
 	{
 		int index = 0;
 		Node current = header;
@@ -75,23 +75,35 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>
 			throw UnexpectedNullException:create();
 		}
 	}
-
-	public index( int index ) => ( nullable V value )
+	
+	public isEmpty() => ( boolean )
 	{
-		return findIndex(index)->value;
+		return size == 0;
+	}
+
+	public index( int index ) => ( V value )
+	{
+		try
+		{
+			return check(findIndex(index)->value);
+		}
+		recover
+		{
+			throw UnexpectedNullException:create();
+		}
 	}
 	public index( int index, V value ) => ()
 	{
 		if ( index == size )
-			Node:create(value, header);
+			add(value);
 		else
 			findIndex(index)->value = value;
 	}
 
-	public add( V value ) => ( boolean added )
+	public add( V value ) => ( LinkedList<V> )
 	{
 		Node:create(value, header);
-		return true;
+		return this;
 	}
 	public remove( V value ) => ( boolean removed )
 	{
@@ -107,7 +119,7 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>
 			return false;
 		}
 	}
-	public delete( int index ) => (V value)
+	public delete( int index ) => ( V value )
 	{
 		Node node = findIndex(index);
 		try
@@ -121,27 +133,60 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>
 			throw UnexpectedNullException:create();
 		}
 	}
-	public indexOf( V value ) => ( int index )
+	public readonly indexOf( V value ) => ( int index )
 	{
 		int index;
 		(index, ) = findNode(value);
 		return index;
 	}
-	public contains( V value ) => ( boolean found )
+	public readonly contains( V value ) => ( boolean found )
 	{		 
 		return indexOf(value) != -1;
 	}
-	public clear() => ()
+	public clear() => ( LinkedList<V> )
 	{
 		header.clear();
+		return this;
 	}
 
-	public immutable iterator() => ( Iterator<V> )
+	public readonly iterator() => ( Iterator<V> )
 	{
 		return LinkedListIterator:create();
 	}
 	
-	public readonly toString() => (String)
+	public addFirst( V element ) => ( LinkedList<V> )
+	{
+		Node node = findIndex( 0 );
+		Node:create( element, node );
+		return this;
+	}
+	
+	public addLast( V element ) => ( LinkedList<V> )
+	{
+		return add( element );
+	}
+	
+	public getFirst() => (V element )
+	{
+		return index(0);
+	}
+	
+	public getLast() => (V element )
+	{
+		return index(size - 1);
+	}
+	
+	public removeFirst() => (V element )
+	{
+		return delete(0);
+	}
+	
+	public removeLast() => ( V element )
+	{
+		return delete(size - 1);
+	}	
+	
+	public readonly toString() => ( String )
 	{	
 		var string = MutableString:create("[");
 		var i = iterator();				
