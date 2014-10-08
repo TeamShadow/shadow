@@ -471,19 +471,22 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTFormalParameters node, Boolean secondVisit)
 			throws ShadowException
 	{
-		return PRE_CHILDREN;
+		return NO_CHILDREN;
 	}
 	@Override
 	public Object visit(ASTFormalParameter node, Boolean secondVisit)
 			throws ShadowException
 	{	
-		/*
+		//ASTFormalParameters are NOT visited
+		//Parameters for methods are handled separately
+		//The only thing that comes in here are the declarations
+		//in catch blocks
 		if (secondVisit)
 			new TACVariableRef(tree,
 					method.addLocal(node, node.getImage()));
 		return POST_CHILDREN;
-		*/
-		return PRE_CHILDREN;
+		
+		//return PRE_CHILDREN;
 	}
 
 	@Override
