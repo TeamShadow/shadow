@@ -1,3 +1,5 @@
+import shadow:io@Console;
+
 immutable class shadow:standard@GenericClass extends Class
 {	
 	get Object[] parameters; //double the size for class and methods
@@ -38,15 +40,15 @@ immutable class shadow:standard@GenericClass extends Class
 	}
 	
 	private findClass( GenericClass[] classes, Class[] parameters ) => (nullable Class)
-	{
+	{		
 		for( int i = 0; i < classes->size; i += 1 )
-		{
+		{	
 			boolean matching = true;							
 			for( int j = 0; j < parameters->size and matching; j += 1 )
 			{	
 				try
 				{									
-					readonly Class class_ = cast<Class>(check(check(classes[i]):parameters[j * 2]));										
+					readonly Class class_ = cast<Class>(check(check(classes[i]):parameters[j * 2]));												
 					if( !check(parameters[j]).equal(class_) )							
 						matching = false;										
 				}

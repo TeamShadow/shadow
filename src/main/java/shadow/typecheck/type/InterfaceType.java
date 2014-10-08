@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
@@ -183,7 +184,7 @@ public class InterfaceType extends Type
 	}
 	
 	@Override
-	public InterfaceType replace(SequenceType values, SequenceType replacements )
+	public InterfaceType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
 	{		
 		if( isRecursivelyParameterized() )
 		{					
@@ -246,6 +247,76 @@ public class InterfaceType extends Type
 		
 		return this;
 	}
+	
+	@Override
+	public InterfaceType partiallyReplace(SequenceType values, SequenceType replacements )
+	{	
+		if( isRecursivelyParameterized() )
+		{	
+			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
+			if( cached != null )
+				return (InterfaceType)cached;
+			
+			InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers() );
+			replaced.setPackage(getPackage());
+			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
+			
+			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
+						
+			for( InterfaceType _interface : getInterfaces() )
+				replaced.addInterface(_interface.partiallyReplace(values, replacements));		
+						
+			//only constant non-parameterized fields in an interface
+			Map<String, Node> fields = getFields(); 
+			
+			for( String name : fields.keySet() )
+			{
+				SimpleNode field = (SimpleNode)(fields.get(name));
+				field = field.clone();
+				field.setType(field.getType());			
+				replaced.addField(name, field );
+			}
+			
+			Map<String, List<MethodSignature> > methods = getMethodMap();
+			
+			for( String name : methods.keySet() )
+			{
+				List<MethodSignature> signatures = methods.get(name);
+				
+				for( MethodSignature signature : signatures )
+				{
+					MethodSignature replacedSignature = signature.partiallyReplace(values, replacements);
+					replaced.addMethod(name, replacedSignature);					
+				}
+			}			
+			
+			if( isParameterized() )
+				for( ModifiedType modifiedParameter : getTypeParameters() )	
+				{
+					Type parameter = modifiedParameter.getType();
+					replaced.addTypeParameter( new SimpleModifiedType(parameter.partiallyReplace(values, replacements), modifiedParameter.getModifiers()) );
+				}
+			
+			return replaced;
+		}
+		
+		return this;
+	}
+	
+	@Override
+	public void updateFieldsAndMethods() throws InstantiationException
+	{	
+		for( InterfaceType _interface : getInterfaces() )
+			_interface.updateFieldsAndMethods();		
+		
+		for( Entry<String, List<MethodSignature>> entry : getMethodMap().entrySet() )			
+			for( MethodSignature signature : entry.getValue() )			
+				signature.updateFieldsAndMethods();
+		
+		if( isParameterized() )
+			getTypeParameters().updateFieldsAndMethods();
+	}
+	
 	
 	@Override
 	public boolean isRecursivelyParameterized()

@@ -24,4 +24,10 @@ public class UnboundMethodType extends ClassType
 			SequenceType replacements) {		
 		return this;
 	}
+	
+	@Override
+	public UnboundMethodType partiallyReplace(SequenceType values,
+			SequenceType replacements) {		
+		return this;
+	}
 }

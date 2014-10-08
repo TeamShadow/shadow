@@ -65,7 +65,7 @@ public class TypeParameter extends Type
 	}
 	*/
 	
-	public boolean acceptsSubstitution(Type type)
+	public boolean acceptsSubstitution(Type type) 
 	{
 		if( equals(type) )
 			return true;
@@ -74,12 +74,17 @@ public class TypeParameter extends Type
 		SequenceType replacements = new SequenceType(type);		
 		
 		Set<Type> substitutedBounds = new HashSet<Type>();
-		for( Type bound : bounds )
-			substitutedBounds.add( bound.replace(values, replacements));
-		
-		for( Type bound : substitutedBounds )
-			if( !type.isSubtype(bound) )
-				return false;	
+		try
+		{
+			for( Type bound : bounds )
+				substitutedBounds.add( bound.replace(values, replacements));
+			
+			for( Type bound : substitutedBounds )
+				if( !type.isSubtype(bound) )
+					return false;	
+		}
+		catch(InstantiationException e)
+		{}
 		
 		return true;
 	}
@@ -189,6 +194,30 @@ public class TypeParameter extends Type
 		
 		return this;
 	}
+	
+	public Type partiallyReplace(SequenceType values, SequenceType replacements )
+	{
+		return replace( values, replacements );
+	}
+	
+	
+	@Override
+	public void updateFieldsAndMethods() throws InstantiationException
+	{
+		Set<Type> toRemove = new HashSet<Type>();
+		Set<Type> toAdd = new HashSet<Type>();
+		
+		for( Type type : bounds ) {
+			if( type instanceof UninstantiatedType ) {			
+				toRemove.add(type);
+				toAdd.add(((UninstantiatedType)type).instantiate());
+			}
+		}
+		
+		bounds.removeAll(toRemove);
+		bounds.addAll(toAdd);
+	}
+	
 	
 	public String toString() {
 		return toString(false);

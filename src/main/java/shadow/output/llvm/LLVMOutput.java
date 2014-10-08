@@ -1521,11 +1521,34 @@ public class LLVMOutput extends AbstractOutput
 		//String op = type.isIntegral() || !type.isPrimitive() ?
 		//		"icmp eq " : "fcmp oeq ";
 		
-		String op = type.isFloating() ?
-				"fcmp oeq " : "icmp eq " ;
-
-		writer.write(nextTemp(node) + " = " + op + typeSymbol(
-				node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
+		if( type instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType)type;
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand(0)) + ", 0");
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand(1)) + ", 0");
+			writer.write(nextTemp(node) + " = icmp eq" + type(arrayType.getBaseType())
+					+ "* " + temp(2) + ", " + temp(1));			
+		}
+		else if( type instanceof InterfaceType )
+		{			
+			
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand(0)) + ", 1");
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand(0)) + ", 1");				
+			writer.write(nextTemp(node) + " = icmp eq" + type(Type.OBJECT)
+					+ temp(2) + ", " + temp(1));		
+		}
+		else
+		{		
+			String op = type.isFloating() ?
+					"fcmp oeq " : "icmp eq " ;
+	
+			writer.write(nextTemp(node) + " = " + op + typeSymbol(
+					node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
+		}
 	}
 
 	@Override
@@ -2006,7 +2029,7 @@ public class LLVMOutput extends AbstractOutput
 		
 		sb = Type.mangle( sb.append("_M"), method.getName());
 		
-		for (ModifiedType paramType : method.getType().getParameterTypes())
+		for (ModifiedType paramType : method.getType().getTypeWithoutTypeArguments().getParameterTypes())
 		{
 			Type type = paramType.getType();
 			//if( type instanceof ArrayType )

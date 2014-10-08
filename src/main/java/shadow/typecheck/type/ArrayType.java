@@ -145,8 +145,15 @@ public class ArrayType extends ClassType
 	@Override
 	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<TypeCheckException> errors )
 	{
-		ClassType arrayType = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(baseType));
-		return arrayType.getMatchingMethod(methodName, arguments, typeArguments, errors);		
+		try
+		{
+			ClassType arrayType = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(baseType));
+			return arrayType.getMatchingMethod(methodName, arguments, typeArguments, errors);
+		}
+		catch(InstantiationException e)
+		{}
+		
+		return null; //shouldn't happen
 	}
 	
 	@Override
@@ -178,7 +185,8 @@ public class ArrayType extends ClassType
 			return false;
 	}
 	
-	public ArrayType replace(SequenceType values, SequenceType replacements )
+	@Override
+	public ArrayType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
 	{	
 		return new ArrayType( baseType.replace(values, replacements), dimensions  );		
 	}
@@ -189,8 +197,15 @@ public class ArrayType extends ClassType
 				
 		//if( base instanceof ArrayType )
 		//	base = ((ArrayType)base).convertToGeneric();
+		
+		try
+		{
+			return Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));			
+		}
+		catch(InstantiationException e)
+		{}		
 				
-		return Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));
+		return null; //shouldn't happen
 	}
 	
 

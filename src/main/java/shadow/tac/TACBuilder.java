@@ -60,6 +60,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.GetSetType;
+import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -475,11 +476,14 @@ public class TACBuilder implements ShadowParserVisitor
 	@Override
 	public Object visit(ASTFormalParameter node, Boolean secondVisit)
 			throws ShadowException
-	{
+	{	
+		/*
 		if (secondVisit)
 			new TACVariableRef(tree,
 					method.addLocal(node, node.getImage()));
 		return POST_CHILDREN;
+		*/
+		return PRE_CHILDREN;
 	}
 
 	@Override
@@ -1192,7 +1196,8 @@ public class TACBuilder implements ShadowParserVisitor
 		
 		TACMethodRef methodRef = new TACMethodRef(tree,
 				prefix,
-				methodType.getTypeWithoutTypeArguments(),
+				//methodType.getTypeWithoutTypeArguments(),
+				methodType,
 				methodName);		
 		methodRef.setSuper(explicitSuper);
 		List<TACOperand> params = new ArrayList<TACOperand>();
@@ -1260,14 +1265,19 @@ public class TACBuilder implements ShadowParserVisitor
 				if( node.jjtGetNumChildren() > 0 )
 				{
 					ASTTypeArguments arguments = (ASTTypeArguments) node.jjtGetChild(0);
-					type = type.replace(type.getTypeParameters(), arguments.getType());					
+					
+					try {
+						type = type.replace(type.getTypeParameters(), arguments.getType());
+					}
+					catch (InstantiationException e) 
+					{}					
 				}
 				
 				prefix = new TACClass(tree, type).getClassData();
 			}
 			else if( node.getModifiers().isConstant() )
 				prefix = new TACConstantRef(tree, node.getPrefixType(), node.getImage());
-			else				
+			else if( !node.getModifiers().isTypeName() )  //doesn't do anything at this stage if it's just a type name				
 				prefix = new TACFieldRef(tree, prefix, node.getImage());
 		}
 		return POST_CHILDREN;
@@ -1466,24 +1476,36 @@ public class TACBuilder implements ShadowParserVisitor
 			
 			//methodRef doesn't have parameters because the same method gets called no matter what
 			TACMethodRef methodRef = new TACMethodRef(tree,
-					methodType.getTypeWithoutTypeArguments(), node.getImage());
+					//methodType.getTypeWithoutTypeArguments(),
+					methodType,
+					node.getImage());
 						
 			ClassType classType = (ClassType)(methodType.getOuter());  //class type needs to be parameterized to get the parameters
 										
-			TACOperand object = new TACNewObject(tree, classType);
-					
+			TACOperand object = new TACNewObject(tree, classType);					
 			
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(object);
 			
+			//have to pass a reference to outer classes into constructor
 			if (methodRef.getOuterType().hasOuter())
-			{
-				Type outerType = methodRef.getOuterType().getOuter();
-				TACVariable thisRef = method.getThis();
-				if (thisRef.getType().equals(outerType))
-					params.add(new TACVariableRef(tree, thisRef));
+			{				
+				Type methodOuter = methodType.getOuter().getOuter().getTypeWithoutTypeArguments();
+				
+				if( prefix != null && prefix.getType().isSubtype(methodOuter) )
+					params.add(prefix);
 				else
-					throw new UnsupportedOperationException();
+				{					
+					 TACReference outer = new TACVariableRef(tree, method.getThis());
+					 Type outerType = outer.getType().getTypeWithoutTypeArguments();					 
+					 while( !outerType.isSubtype(methodOuter) )
+					 {
+						outer = new TACFieldRef(tree, outer, new SimpleModifiedType(outerType.getOuter()),
+								"_outer");						
+						outerType = outerType.getOuter();				
+					 }					 
+					 params.add(outer);
+				}
 			}
 			
 			int start = 0;
@@ -2538,7 +2560,10 @@ public class TACBuilder implements ShadowParserVisitor
 					new TACReturn(tree, methodSignature.getFullReturnTypes());
 			}	
 			else if (methodSignature.isNative())
+			{
+				method.addParameters();
 				walk(methodSignature.getNode().jjtGetChild(0).jjtGetChild(0));
+			}				
 			else if (methodSignature.isWrapper())
 			{
 				MethodSignature wrapped = methodSignature.getWrapped();
@@ -2569,6 +2594,8 @@ public class TACBuilder implements ShadowParserVisitor
 					
 					if( value.getType() instanceof SequenceType )
 					{
+						/*
+						
 						List<TACOperand> toReturns = new ArrayList<TACOperand>(
 								toTypes.size());
 						//split the sequence apart
@@ -2582,6 +2609,9 @@ public class TACBuilder implements ShadowParserVisitor
 						}
 						
 						value = new TACSequence(tree, toReturns);
+						*/
+						
+						value = new TACCast(tree, new SimpleModifiedType(toTypes), value);
 					}
 					else
 					{
@@ -2589,11 +2619,15 @@ public class TACBuilder implements ShadowParserVisitor
 							value = new TACCast(tree, toTypes.get(0), value);
 					}
 					
+					
 					new TACReturn(tree, toTypes, value);	
 				}
 			}
 			else
+			{
+				method.addParameters();
 				walk(methodSignature.getNode());
+			}
 			if (implicitCreate)
 			{
 				ClassType thisType = (ClassType)methodSignature.getOuter(),
@@ -2749,7 +2783,7 @@ public class TACBuilder implements ShadowParserVisitor
 			ModifiedType iteratorType = signature.getReturnTypes().get(0);
 			iterator = new TACVariableRef(tree, method.addTempLocal(iteratorType));
 			TACMethodRef getIterator = new TACMethodRef(tree, collection, signature);
-			new TACStore(tree, iterator, new TACCall(tree, block, getIterator, collection) );
+			new TACStore(tree, iterator, new TACCall(tree, block, getIterator, getIterator.getPrefix()) );
 			
 			new TACBranch(tree, conditionLabel);  //init is done, jump to condition
 						

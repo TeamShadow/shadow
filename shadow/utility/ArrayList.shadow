@@ -56,12 +56,12 @@ implements List<V>
 
 	public add(V value) => ( ArrayList<V> )
 	{
+		Console out = Console:instance;		
 		if( size >= elements->size )
 			grow();
 		elements[size] = value;
 		size += 1;
-		modifications += 1;
-		
+		modifications += 1;		
 		return this;			
 	}
 		

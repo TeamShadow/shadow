@@ -1,0 +1,20 @@
+import shadow:utility@ArrayDeque;
+import shadow:io@Console;
+
+class shadow:test@ArrayDequeTest
+{
+	public main( String[] args ) => ()
+	{
+		ArrayDeque<String> list = ArrayDeque<String>:create();
+		Console out = Console:instance;
+		
+		list.addFirst("Every");
+		list.addFirst("Good");
+		list.addLast("Boy");
+		list.addFirst("Deserves");
+		list.addLast("Fudge");
+		
+		while( !list.isEmpty() )
+			out.printLine( list.removeFirst() );
+	}
+}

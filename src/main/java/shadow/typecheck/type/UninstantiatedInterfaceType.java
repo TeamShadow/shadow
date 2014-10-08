@@ -63,6 +63,38 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 		return type.replace(type.getTypeParameters(), typeArguments);
 	}
 	
+	//doesn't update members and methods
+	@Override
+	public InterfaceType partiallyInstantiate() throws InstantiationException
+	{		
+		for( int i = 0; i < typeArguments.size(); i++ )
+		{
+			ModifiedType argument = typeArguments.get(i);
+			if( argument.getType() instanceof UninstantiatedType )
+			{
+				UninstantiatedType uninstantiatedArgument = (UninstantiatedType) argument.getType();
+				argument.setType(uninstantiatedArgument.partiallyInstantiate());
+			}
+		}
+		
+		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
+			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
+		
+		return type.partiallyReplace(type.getTypeParameters(), typeArguments);
+	}
+	
+	@Override
+	public UninstantiatedInterfaceType partiallyReplace(SequenceType values, SequenceType replacements )
+	{
+		return new UninstantiatedInterfaceType( type, typeArguments.partiallyReplace(values, replacements) );
+	}
+	
+	@Override
+	public InterfaceType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
+	{
+		return new UninstantiatedInterfaceType( type, typeArguments.replace(values, replacements) ).instantiate();
+	}
+	
 	@Override
 	public InterfaceType getTypeWithoutTypeArguments()
 	{

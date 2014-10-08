@@ -16,6 +16,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.GetSetType;
+import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -2477,7 +2478,14 @@ public class StatementChecker extends BaseChecker
 					{
 						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
 						{					
-							prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
+							try {
+								prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
+							} 
+							catch (InstantiationException e) 
+							{
+								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match type parameters " + prefixType.getTypeParameters() );
+								node.setType(Type.UNKNOWN);
+							}
 							node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
 						}
 						else
@@ -2629,14 +2637,21 @@ public class StatementChecker extends BaseChecker
 				{					
 					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
 					{
-						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
-						signature = setCreateType( node, prefixType, arguments);
-						node.setMethodSignature(signature);
-						parent.setType(prefixType);
-						//TODO: see if something similar can be done for ASTMethodCall
-						
-						//occasionally this type is only seen here and must be added to the referenced types
-						currentType.addReferencedType(prefixType);
+						try {
+							prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
+							signature = setCreateType( node, prefixType, arguments);
+							node.setMethodSignature(signature);
+							parent.setType(prefixType);
+							
+							//occasionally this type is only seen here and must be added to the referenced types
+							currentType.addReferencedType(prefixType);
+
+						}
+						catch (InstantiationException e) 
+						{
+							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());						
+							
+						}
 					}
 					else
 					{
@@ -2720,8 +2735,17 @@ public class StatementChecker extends BaseChecker
 							addError( Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + argumentTypes + " supplied for non-parameterized type " + prefixType);
 						else if( !parameterTypes.canAccept(argumentTypes, SubstitutionKind.TYPE_PARAMETER) )
 							addError( Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
-						else													
-							((ClassType)currentType).addReferencedType(prefixType.replace(parameterTypes, argumentTypes));
+						else		
+						{
+							try
+							{
+								((ClassType)currentType).addReferencedType(prefixType.replace(parameterTypes, argumentTypes));
+							}
+							catch(InstantiationException e)
+							{
+								addError( Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
+							}
+						}
 					}
 					else if( prefixType.isParameterized() )
 						addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
@@ -2997,7 +3021,17 @@ public class StatementChecker extends BaseChecker
 					{						
 						SequenceType parameters = methodType.getTypeParameters();
 						if( parameters.canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER))
-							methodType = methodType.replace(parameters, typeArguments);
+						{
+							try
+							{
+								methodType = methodType.replace(parameters, typeArguments);
+							}
+							catch(InstantiationException e)
+							{
+								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match method type arguments " + typeArguments);
+								node.setType(Type.UNKNOWN);
+							}
+						}
 						else
 						{
 							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match method type arguments " + typeArguments);

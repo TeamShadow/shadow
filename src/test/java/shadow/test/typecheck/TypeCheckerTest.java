@@ -300,7 +300,7 @@ public class TypeCheckerTest {
 	}
 	
 	@Test public void testSokobanBoard() throws Exception {
-		args.add("sokoban/solver/Board.shadow");
+		args.add("sokoban/solver/Solver.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 

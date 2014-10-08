@@ -35,7 +35,13 @@ public class TACTest {
 	@Test public void testArrayList() throws Exception {
 		args.add("shadow/test/ArrayListTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testArrayDeque() throws Exception {
+		args.add("shadow/test/ArrayDequeTest.shadow");
+		Main.run(args.toArray(new String[] { }));
 	}	
+	
 	
 	@Test public void testArray() throws Exception {
 		args.add("shadow/test/ArrayTest.shadow");

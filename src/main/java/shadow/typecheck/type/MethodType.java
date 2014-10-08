@@ -168,7 +168,7 @@ public class MethodType extends ClassType {
 	
 	
 	@Override
-	public MethodType replace(SequenceType values, SequenceType replacements )
+	public MethodType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
 	{	
 		MethodType replaced = new MethodType(getOuter(), getModifiers());	
 		
@@ -180,6 +180,27 @@ public class MethodType extends ClassType {
 				
 		return replaced;
 	}
+	
+	@Override
+	public MethodType partiallyReplace(SequenceType values, SequenceType replacements )
+	{	
+		MethodType replaced = new MethodType(getOuter(), getModifiers());	
+		
+		replaced.parameterNames = parameterNames;
+		replaced.parameterTypes = parameterTypes.partiallyReplace(values, replacements);
+		replaced.returns = returns.partiallyReplace(values, replacements);
+		
+		replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
+				
+		return replaced;
+	}
+	
+	public void updateFieldsAndMethods() throws InstantiationException
+	{
+		parameterTypes.updateFieldsAndMethods();
+		returns.updateFieldsAndMethods();
+	}
+	
 
 	//covariant returns and contravariant parameters
 	public boolean matchesInterface(MethodType type) {

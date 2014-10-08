@@ -5,6 +5,7 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import shadow.Loggers;
+import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
@@ -244,7 +245,14 @@ public class SimpleNode implements Node {
 	}
 	
 	public ModifiedType replace(SequenceType values, SequenceType replacements) {
-		return new SimpleModifiedType( type.replace(values, replacements), modifiers );
+		try {
+			return new SimpleModifiedType( type.replace(values, replacements), modifiers );
+		}
+		catch (InstantiationException e) 
+		{
+		}
+		
+		return this;
 	}
 
 		

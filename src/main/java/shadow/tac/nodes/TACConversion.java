@@ -53,7 +53,7 @@ public class TACConversion extends TACOperand
 			TACMethodRef methodRef = new TACMethodRef(this, srcClass,
 					Type.CLASS.getMethods("interfaceData").get(0));
 			TACClass destClass = new TACClass(this, destination);					
-			operands.add(new TACCall(this, getBuilder().getBlock(), methodRef, srcClass, destClass));
+			operands.add(new TACCall(this, getBuilder().getBlock(), methodRef, methodRef.getPrefix(), destClass));
 		}
 		else if( kind.equals(Kind.ARRAY_TO_OBJECT))
 		{

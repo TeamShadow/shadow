@@ -42,8 +42,11 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 	{	
 		if( getType().isSubtype(type.getType()) && (getType().isPrimitive() || type.getType().isPrimitive()) && getModifiers().isNullable() != type.getModifiers().isNullable() )
 			return new TACCast(node, type, this);
-		
+				
 		if (getType().isStrictSubtype(type.getType()))
+			return new TACCast(node, type, this);
+		
+		if( type.getType().isParameterized() && getType().getTypeWithoutTypeArguments().isStrictSubtype(type.getType()))
 			return new TACCast(node, type, this);
 		
 		//if it got past the typechecker, we need to cast this type parameter into a real thing

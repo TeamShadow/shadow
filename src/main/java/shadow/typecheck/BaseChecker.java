@@ -26,6 +26,7 @@ import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.GetSetType;
+import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -616,8 +617,18 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				if( type.isParameterized() ) 
 				{		
 					SequenceType parameters = type.getTypeParameters();
-					if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER) )					
-						type = type.replace(parameters, arguments);
+					if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER) )
+					{
+						try
+						{
+							type = type.replace(parameters, arguments);
+						}
+						catch (shadow.typecheck.type.InstantiationException e)
+						{
+							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
+							type = Type.UNKNOWN;
+						}
+					}
 					else
 					{						
 						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
@@ -666,8 +677,17 @@ public abstract class BaseChecker extends AbstractASTVisitor
 						if( type.isParameterized() ) 
 						{		
 							SequenceType parameters = type.getTypeParameters();
-							if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER ) )					
-								type = type.replace(parameters, arguments);
+							if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER ) )
+							{
+								try {
+									type = type.replace(parameters, arguments);
+								}
+								catch (InstantiationException e) 
+								{
+									addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
+									type = Type.UNKNOWN;
+								}
+							}
 							else
 							{						
 								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );

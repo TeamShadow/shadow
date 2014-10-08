@@ -138,9 +138,9 @@ public class TACClass extends TACOperand
 				TACLoad classValue = new TACLoad(this, new TACFieldRef(this, _this, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class")); 
 				TACOperand genericClass = new TACCast(this, new SimpleModifiedType(Type.GENERIC_CLASS), classValue);
 				TACOperand generics = new TACFieldRef(this, genericClass, "parameters");
-				TACOperand parameter = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index)));
+				TACOperand parameter = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index)), false);
 				
-				methodTable = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index + 1)) );
+				methodTable = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index + 1)), false );
 				classData = new TACCast(this, new SimpleModifiedType(Type.CLASS), parameter );
 			}
 		}		

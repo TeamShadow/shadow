@@ -42,7 +42,7 @@ public class PropertyType extends GetSetType
 
 	@Override
 	public PropertyType replace(SequenceType values,
-			SequenceType replacements) {
+			SequenceType replacements) throws InstantiationException {
 		
 		MethodSignature replacedGetter = null;
 		MethodSignature replacedSetter = null;
@@ -52,6 +52,30 @@ public class PropertyType extends GetSetType
 			replacedSetter = setter.replace(values, replacements);	
 			
 		return new PropertyType( replacedGetter, replacedSetter );
+	}
+	
+	@Override
+	public PropertyType partiallyReplace(SequenceType values,
+			SequenceType replacements) {
+		
+		MethodSignature replacedGetter = null;
+		MethodSignature replacedSetter = null;
+		if( getter != null )
+			replacedGetter = getter.partiallyReplace(values, replacements);
+		if( setter != null )
+			replacedSetter = setter.partiallyReplace(values, replacements);	
+			
+		return new PropertyType( replacedGetter, replacedSetter );
+	}
+	
+	@Override
+	public void updateFieldsAndMethods() throws InstantiationException
+	{
+		if( getter != null )
+			getter.updateFieldsAndMethods();
+		
+		if( setter != null )
+			setter.updateFieldsAndMethods();
 	}
 	
 	@Override

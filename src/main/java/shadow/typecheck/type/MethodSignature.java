@@ -3,6 +3,9 @@ package shadow.typecheck.type;
 import java.util.Collections;
 import java.util.List;
 
+import shadow.parser.javacc.ASTCreateDeclaration;
+import shadow.parser.javacc.ASTDestroyDeclaration;
+import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.SignatureNode;
 
 public class MethodSignature implements Comparable<MethodSignature> {
@@ -170,10 +173,22 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public MethodSignature replace(SequenceType values,
-			SequenceType replacements) {
+			SequenceType replacements) throws InstantiationException {
 		MethodSignature replaced = new MethodSignature(type.replace(values, replacements), symbol, node);
 		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
 		return replaced;
+	}
+	
+	public MethodSignature partiallyReplace(SequenceType values,
+			SequenceType replacements) {		
+		MethodSignature replaced = new MethodSignature(type.partiallyReplace(values, replacements), symbol, node);
+		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
+		return replaced;
+	}
+	
+
+	public void updateFieldsAndMethods() throws InstantiationException {
+		type.updateFieldsAndMethods();
 	}
 	
 	public MethodSignature getSignatureWithoutTypeArguments()
@@ -258,4 +273,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		MethodType methodType = type.copy(modifiers);		
 		return new MethodSignature(methodType, symbol, node, wrapped);
 	}
+
+
+
 }

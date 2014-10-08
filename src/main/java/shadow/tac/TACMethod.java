@@ -44,12 +44,16 @@ public class TACMethod extends TACNodeList
 			if( prefixType.hasOuter())
 				addLocal(new SimpleModifiedType(prefixType.getOuter()), "_outer");
 		}
-		//Type parameterizedType = methodRef.isCreate() ? prefixType : methodRef.getType();
-		Type parameterizedType = methodSignature.getMethodType();
-		if (parameterizedType.isParameterized())
-			for (ModifiedType typeParam : parameterizedType.getTypeParameters())
+		
+		MethodType methodType = methodSignature.getMethodType();
+		if (methodType.isParameterized())
+			for (ModifiedType typeParam : methodType.getTypeParameters())
 				addLocal(new SimpleModifiedType(Type.CLASS),
 						typeParam.getType().getTypeName());
+		
+		//for( int i = 0; i < methodType.getParameterNames().size(); ++i )		
+		//	addLocal(methodType.getParameterTypes().get(i), methodType.getParameterNames().get(i));
+		
 	}
 	
 	public TACMethod addParameters(boolean isWrapped)

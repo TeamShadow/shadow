@@ -28,6 +28,29 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 		return type;
 	}
 	
+	
+
+	//doesn't update members and methods
+	@Override
+	public ClassType partiallyInstantiate() throws InstantiationException
+	{		
+		for( int i = 0; i < typeArguments.size(); i++ )
+		{
+			ModifiedType argument = typeArguments.get(i);
+			if( argument.getType() instanceof UninstantiatedType )
+			{
+				UninstantiatedType uninstantiatedArgument = (UninstantiatedType) argument.getType();
+				argument.setType(uninstantiatedArgument.partiallyInstantiate());
+			}
+		}
+		
+		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
+			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
+		
+		return type.partiallyReplace(type.getTypeParameters(), typeArguments);
+	}
+	
+	
 	@Override
 	public ClassType instantiate() throws InstantiationException
 	{		
@@ -46,6 +69,19 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 		
 		return type.replace(type.getTypeParameters(), typeArguments);
 	}
+	
+	@Override
+	public UninstantiatedClassType partiallyReplace(SequenceType values, SequenceType replacements )
+	{
+		return new UninstantiatedClassType( type, typeArguments.partiallyReplace(values, replacements) );
+	}
+	
+	@Override
+	public ClassType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
+	{
+		return new UninstantiatedClassType( type, typeArguments.replace(values, replacements) ).instantiate();
+	}
+	
 	
 	@Override
 	public String toString(boolean withBounds)

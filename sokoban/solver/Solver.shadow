@@ -54,10 +54,8 @@ class sokoban:solver@Solver {
 		}
 	}
 	int counter = 0;
-	private recurse(nullable Board:State nullableState) => (nullable MutableString) {
-		try
-		{				
-			Board:State state = check(nullableState);
+	private recurse(Board:State state) => (nullable MutableString) {
+		if( state.isValid() ) {
 			Console console = Console:instance;
 			if (state.isWinning())
 				return MutableString:create();
@@ -70,14 +68,15 @@ class sokoban:solver@Solver {
 					int index = 0;
 					foreach (Board:State:Coordinate to in from) {
 						nullable MutableString path = recurse(state.tryMove(from, to));
-						if (path !== null)
-							return state.getPath(check(path).append("UDLR"[index]), state.getPlayer(), from);
+						if (path !== null) {
+							MutableString empty = MutableString:create("");
+							return state.getPath((path ?? empty).append("UDLR"[index]), state.getPlayer(), from);
+						}
 						index += 1;
 					}
 				}
 			}
-		}
-		recover {}
+		}		
 		return null;
 	}
 }

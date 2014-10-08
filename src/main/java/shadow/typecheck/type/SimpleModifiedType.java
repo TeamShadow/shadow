@@ -41,7 +41,7 @@ public class SimpleModifiedType implements ModifiedType
 	}
 	
 
-	public SimpleModifiedType replace(SequenceType values, SequenceType replacements )
+	public SimpleModifiedType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
 	{	
 		return new SimpleModifiedType( type.replace(values, replacements), modifiers );		
 	}

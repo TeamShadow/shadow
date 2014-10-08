@@ -76,7 +76,7 @@ public class SubscriptType extends GetSetType
 
 	@Override
 	public SubscriptType replace(SequenceType values,
-			SequenceType replacements) {		
+			SequenceType replacements) throws InstantiationException {		
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().replace(values, replacements), index.getModifiers());
 		UnboundMethodType replacedMethod = method.replace(values, replacements);
@@ -90,6 +90,34 @@ public class SubscriptType extends GetSetType
 			replacement.setter = setter.replace(values, replacements);
 			
 		return replacement;
+	}
+	
+	@Override
+	public SubscriptType partiallyReplace(SequenceType values,
+			SequenceType replacements) {		
+		
+		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().partiallyReplace(values, replacements), index.getModifiers());
+		UnboundMethodType replacedMethod = method.partiallyReplace(values, replacements);
+		MethodSignature replacedGetter = null;		
+		if( getter != null )
+			replacedGetter = getter.partiallyReplace(values, replacements);
+		
+		SubscriptType replacement = new SubscriptType( replacedGetter, replacedIndex,  replacedMethod );
+			
+		if( setter != null )					
+			replacement.setter = setter.partiallyReplace(values, replacements);
+			
+		return replacement;
+	}
+	
+	@Override
+	public void updateFieldsAndMethods() throws InstantiationException
+	{
+		if( getter != null )
+			getter.updateFieldsAndMethods();
+		
+		if( setter != null )
+			setter.updateFieldsAndMethods();
 	}
 	
 	@Override

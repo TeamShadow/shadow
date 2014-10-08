@@ -709,14 +709,19 @@ public abstract class Type implements Comparable<Type>
 			{
 				if( hasTypeArguments )
 				{	
-					SequenceType parameters = methodType.getTypeParameters();							
-					if( parameters.canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER))
+					SequenceType parameters = methodType.getTypeParameters();		
+					try
 					{
-						methodType = methodType.replace(parameters, typeArguments);
-						signature = signature.replace(parameters, typeArguments);
+						if( parameters.canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER))
+						{
+							methodType = methodType.replace(parameters, typeArguments);
+							signature = signature.replace(parameters, typeArguments);
+						}
+						else
+							continue;
 					}
-					else
-						continue;
+					catch(InstantiationException e)
+					{}
 				}
 			}				
 			
@@ -1302,8 +1307,9 @@ public abstract class Type implements Comparable<Type>
 	}
 	
 	public abstract boolean isSubtype(Type other);
-	public abstract Type replace(SequenceType values, SequenceType replacements );
-	
+	public abstract Type replace(SequenceType values, SequenceType replacements ) throws InstantiationException;
+	public abstract Type partiallyReplace(SequenceType values, SequenceType replacements );
+	public abstract void updateFieldsAndMethods() throws InstantiationException;	
 	
 	public void addImportedItems( List<Object> items )
 	{

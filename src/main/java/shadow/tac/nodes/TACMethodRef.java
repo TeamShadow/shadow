@@ -46,6 +46,7 @@ public class TACMethodRef extends TACOperand
 		if (prefixNode != null)
 		{	
 			prefix = prefixNode;
+			
 			/*
 			if( prefix.getType() instanceof InterfaceType )
 				_this = check(prefixNode,
@@ -151,7 +152,7 @@ public class TACMethodRef extends TACOperand
 	public SequenceType getParameterTypes()
 	{
 		SequenceType paramTypes = new SequenceType();
-		Type outerType = getOuterType();
+		Type outerType = getOuterType().getTypeWithoutTypeArguments();
 		if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
 			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
 		else
@@ -173,7 +174,7 @@ public class TACMethodRef extends TACOperand
 				paramTypes.add(new SimpleModifiedType(Type.CLASS));
 		//TODO: add twice as many?  class type + method table?
 		
-		MethodType methodType = getType();
+		MethodType methodType = getType().getTypeWithoutTypeArguments();
 				
 		for (ModifiedType parameterType : methodType.getParameterTypes())
 			paramTypes.add(parameterType);	
@@ -210,9 +211,9 @@ public class TACMethodRef extends TACOperand
 	{
 		if (isCreate())
 			return new SequenceType(Collections.<ModifiedType>singletonList(
-					new SimpleModifiedType(getOuterType())));
+					new SimpleModifiedType(getOuterType().getTypeWithoutTypeArguments())));
 			
-		return getType().getReturnTypes();
+		return getType().getTypeWithoutTypeArguments().getReturnTypes();
 	}
 	public int getReturnCount()
 	{

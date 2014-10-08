@@ -88,7 +88,7 @@ implements Deque<E>
 		try
 		{		
 			E temp = check(elements[start]); 
-			start += 1;
+			start = (start + 1) % elements->size;
 			size -= 1;
 			modifications += 1;			
 			return temp;

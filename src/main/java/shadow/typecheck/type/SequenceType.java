@@ -218,7 +218,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 	
 	@Override
-	public SequenceType replace(SequenceType values, SequenceType replacements)
+	public SequenceType replace(SequenceType values, SequenceType replacements) throws InstantiationException
 	{		
 		SequenceType temp = new SequenceType();
 		
@@ -235,6 +235,39 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		}
 		
 		return temp;
+	}
+	
+	
+	@Override
+	public SequenceType partiallyReplace(SequenceType values, SequenceType replacements)
+	{		
+		SequenceType temp = new SequenceType();
+		
+		for( int i = 0; i < types.size(); i++ )
+		{
+			ModifiedType type = types.get(i);
+			if( type != null )
+			{
+				SimpleModifiedType dummy = new SimpleModifiedType( type.getType().partiallyReplace( values, replacements), type.getModifiers() );
+				temp.add( dummy );
+			}
+			else
+				temp.add( null );
+		}
+		
+		return temp;
+	}
+	
+	@Override
+	public void updateFieldsAndMethods() throws InstantiationException
+	{
+		for( int i = 0; i < types.size(); ++i ) {
+			Type type = types.get(i).getType();			
+			if( type instanceof UninstantiatedType ) {
+				type = ((UninstantiatedType)type).instantiate();
+				types.set(i, new SimpleModifiedType(type, types.get(i).getModifiers()));
+			}
+		}
 	}
 		
 	public boolean matches(List<ModifiedType> inputTypes)

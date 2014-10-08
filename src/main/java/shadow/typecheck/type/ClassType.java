@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
 
@@ -370,7 +371,7 @@ public class ClassType extends Type
 	}
 	
 	@Override
-	public ClassType replace(SequenceType values, SequenceType replacements )
+	public ClassType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
 	{	
 		if( isRecursivelyParameterized() )
 		{	
@@ -428,6 +429,122 @@ public class ClassType extends Type
 		}
 		
 		return this;
+	}
+	
+	@Override
+	public ClassType partiallyReplace(SequenceType values, SequenceType replacements )
+	{	
+		if( isRecursivelyParameterized() )
+		{	
+			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
+			if( cached != null )
+				return (ClassType)cached;
+			
+			ClassType replaced = new ClassType( getTypeName(), getModifiers(), (ClassType)getOuter() );
+			replaced.setPackage(getPackage());
+			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
+			
+			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
+			
+			replaced.setExtendType(getExtendType().partiallyReplace(values, replacements));			
+			
+			for( InterfaceType _interface : getInterfaces() )
+				replaced.addInterface(_interface.partiallyReplace(values, replacements));
+			
+			Map<String, Node> fields = getFields(); 
+			
+			for( String name : fields.keySet() )
+			{
+				SimpleNode field = (SimpleNode)(fields.get(name));
+				if( field.getType().isParameterized() ) {
+					field = field.clone();
+					
+					SequenceType typeArguments = new SequenceType();
+					for( ModifiedType typeParameter : field.getType().getTypeParameters() ) {
+						Type type = typeParameter.getType();
+						
+						if( type instanceof TypeParameter || type.isParameterized() )
+							typeArguments.add( new SimpleModifiedType( type.partiallyReplace(values, replacements), typeParameter.getModifiers() ) );
+						else
+							typeArguments.add(typeParameter);
+					}
+					
+					if( field.getType() instanceof InterfaceType )
+						field.setType( new UninstantiatedInterfaceType( (InterfaceType)field.getType(), typeArguments ));
+					else
+						field.setType( new UninstantiatedClassType( (ClassType)field.getType(), typeArguments ));
+				}
+				replaced.addField(name, field );
+			}
+			
+			Map<String, List<MethodSignature> > methods = getMethodMap();
+			
+			for( String name : methods.keySet() )
+			{
+				List<MethodSignature> signatures = methods.get(name);				
+				
+				for( MethodSignature signature : signatures )
+				{	
+					MethodSignature replacedSignature = signature.partiallyReplace(values, replacements);
+					replaced.addMethod(name, replacedSignature);
+					signature.getNode().setMethodSignature(replacedSignature);
+				}
+			}
+			
+			Map<String, ClassType> inners = getInnerClasses();
+			
+			for( String name : inners.keySet() )		
+				replaced.addInnerClass(name, inners.get(name).partiallyReplace(values, replacements));
+			
+			if( isParameterized() )
+				for( ModifiedType modifiedParameter : getTypeParameters() )	
+				{
+					Type parameter = modifiedParameter.getType();
+					replaced.addTypeParameter( new SimpleModifiedType(parameter.partiallyReplace(values, replacements), modifiedParameter.getModifiers()) );
+				}
+			
+			return replaced;
+		}
+		
+		return this;
+	}
+	
+	@Override
+	public void updateFieldsAndMethods() throws InstantiationException
+	{	
+		ClassType parent = getExtendType();
+		
+		if( parent != null )
+			parent.updateFieldsAndMethods();			
+		
+		for( InterfaceType _interface : getInterfaces() )
+			_interface.updateFieldsAndMethods();
+		
+		Map<String, Node> fields = getFields(); 
+		
+		for( String name : fields.keySet() )
+		{
+			ASTVariableDeclarator field = (ASTVariableDeclarator)(fields.get(name));
+			if( field.getType() instanceof UninstantiatedType )
+				field.setType( ((UninstantiatedType)field.getType()).instantiate() );
+		}	
+		
+		
+		Map<String, List<MethodSignature> > methods = getMethodMap();
+		
+		for( String name : methods.keySet() )
+		{
+			List<MethodSignature> signatures = methods.get(name);
+			
+			for( MethodSignature signature : signatures )			
+				signature.updateFieldsAndMethods();
+		}		
+
+		for( ClassType inner : getInnerClasses().values() )		
+			inner.updateFieldsAndMethods();
+		
+		if( isParameterized() )
+			getTypeParameters().updateFieldsAndMethods();
 	}
 	
 	@Override
