@@ -8,7 +8,7 @@ class Test1
     	y = 10;
     }
 
-    immutable public bar() => ()
+    readonly public bar() => ()
     {
     	x.change();    	 	    	 	    	    
     }  

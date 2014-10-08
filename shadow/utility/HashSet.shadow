@@ -83,12 +83,12 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 		}
 	}
 
-	private immutable hash( V value ) => ( int index, int hash )
+	private readonly hash( V value ) => ( int index, int hash )
 	{
 		return findIndex( value, table->size );
 	}
 	
-	private immutable findIndex( V value, int length ) => ( int index, int hash )
+	private readonly findIndex( V value, int length ) => ( int index, int hash )
 	{
 		uint temp = value->hash;
 		temp ^= (temp >> 20) ^ (temp >> 12);
@@ -172,7 +172,7 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 		}
 	}
 
-	public immutable iterator() => ( Iterator<V> )
+	public readonly iterator() => ( Iterator<V> )
 	{
 		return HashSetIterator:create();
 	}

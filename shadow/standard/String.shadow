@@ -408,7 +408,7 @@ implements
 	{
 		int index = 0;
 
-		public immutable hasNext() => ( boolean )
+		public readonly hasNext() => ( boolean )
 		{
 			return index < data->size;
 		}

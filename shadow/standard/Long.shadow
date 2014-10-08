@@ -104,7 +104,7 @@ implements
 	}
 	
 	// implement CanNegate<long>
-	public immutable native negate() => (long);
+	public native negate() => (long);
 	
 	public squareRoot() => (double)
 	{

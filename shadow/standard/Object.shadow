@@ -1,6 +1,6 @@
 class shadow:standard@Object
 {
-	public native immutable
+	public native readonly
 	getClass() => ( Class );
 
 	//public native readonly

@@ -34,7 +34,7 @@ immutable class shadow:io@Path
 			components[index] = path.substring(start);
 	}
 	public native get separator() => ( code );
-	public immutable toString() => ( String )
+	public readonly toString() => ( String )
 	{
 		if ( components->size == 0 )
 			return "";

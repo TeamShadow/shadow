@@ -17,12 +17,12 @@ CanIndex<int, double[]>
 		values = double:create[rows][columns];
 	}
 
-	public immutable index(int row) => (double[])
+	public readonly index(int row) => (double[])
 	{		
 		return values[row];		
 	}
 	
-	public immutable add(Matrix other) => (Matrix)
+	public readonly add(Matrix other) => (Matrix)
 	{
 		if( other:rows != rows or other:columns != columns )
 			throw IllegalArgumentException:create();
@@ -36,7 +36,7 @@ CanIndex<int, double[]>
 		return result;
 	}
 	
-	public immutable subtract(Matrix other) => (Matrix)
+	public readonly subtract(Matrix other) => (Matrix)
 	{
 		if( other:rows != rows or other:columns != columns )
 			throw IllegalArgumentException:create();
@@ -50,7 +50,7 @@ CanIndex<int, double[]>
 		return result;
 	}
 	
-	public immutable multiply(Matrix other) => (Matrix)
+	public readonly multiply(Matrix other) => (Matrix)
 	{
 		if( other:rows != columns )
 			throw IllegalArgumentException:create();
@@ -66,7 +66,7 @@ CanIndex<int, double[]>
 	
 	}
 	
-	public immutable negate() => (Matrix)
+	public readonly negate() => (Matrix)
 	{		
 		Matrix result = Matrix:create(rows, columns);
 		
@@ -77,7 +77,7 @@ CanIndex<int, double[]>
 		return result;	
 	}	
 
-	public immutable equal(Matrix other) => (boolean)
+	public readonly equal(Matrix other) => (boolean)
 	{
 		if( rows != other:rows or columns != other:columns )
 			return false;

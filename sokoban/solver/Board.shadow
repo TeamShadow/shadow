@@ -134,29 +134,29 @@ class sokoban:solver@Board {
 			return stateSet.add(this) ? this, BAD_STATE;
 		}
 
-		public immutable getMaxDistance() => (int) {
+		public readonly getMaxDistance() => (int) {
 			return state->size - 2;
 		}
-		public immutable getNumCoordinates(int dist) => (int) {
+		public readonly getNumCoordinates(int dist) => (int) {
 			return state[dist + 1]->size;
 		}
-		public immutable getCoordinate(int dist, int num) => (Coordinate) {
+		public readonly getCoordinate(int dist, int num) => (Coordinate) {
 			return Coordinate:create(state[dist + 1][num]);
 		}
-		public immutable getPlayer() => (Coordinate) {
+		public readonly getPlayer() => (Coordinate) {
 			return getCoordinate(0, 0);
 		}
-		public immutable getBoxes() => (CanIterate<Coordinate>) {
+		public readonly getBoxes() => (CanIterate<Coordinate>) {
 			return BoxIterable:create();
 		}
 		private immutable class BoxIterable implements CanIterate<Coordinate> {
-			public immutable iterator() => (Iterator<Coordinate>) {
+			public readonly iterator() => (Iterator<Coordinate>) {
 				return BoxIterator:create();
 			}
 		}
 		private class BoxIterator implements Iterator<Coordinate> {
 			ushort index = 0us;
-			public immutable hasNext() => (boolean) {
+			public readonly hasNext() => (boolean) {
 				return index < state[0][0];
 			}
 			public next() => (Coordinate) {
@@ -167,7 +167,7 @@ class sokoban:solver@Board {
 			}
 		}
 
-		public immutable isLosing(Coordinate box) => (boolean) {
+		public readonly isLosing(Coordinate box) => (boolean) {
 			if (!box.isTarget()) {
 				if (box.moveUp().isWall() and box.moveRight().isWall())
 					return true;
@@ -308,7 +308,7 @@ class sokoban:solver@Board {
 				return true;
 			return false;
 		}
-		private immutable isUnreachableArea(Coordinate center, Set<Coordinate> area) => (boolean) {
+		private readonly isUnreachableArea(Coordinate center, Set<Coordinate> area) => (boolean) {
 			if (center.isTarget() or center.isFull() or center.isReachable())
 				return false;
 			if (!area.add(center))
@@ -667,7 +667,7 @@ class sokoban:solver@Board {
 			}
 			private class CoordinateIterator implements Iterator<Coordinate> {
 				int state = 0;
-				public immutable hasNext() => (boolean) {
+				public readonly hasNext() => (boolean) {
 					return state < 4;
 				}
 				public next() => (Coordinate) {
@@ -692,12 +692,12 @@ class sokoban:solver@Board {
 			}
 		}
 
-		public immutable iterator() => (Iterator<Coordinate>) {
+		public readonly iterator() => (Iterator<Coordinate>) {
 			return StateIterator:create();
 		}
 		private class StateIterator implements Iterator<Coordinate> {
 			Coordinate current = Coordinate:create();
-			public immutable hasNext() => (boolean) {
+			public readonly hasNext() => (boolean) {
 				return current.hasNext();
 			}
 			public next() => (Coordinate) {				

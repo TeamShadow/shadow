@@ -259,17 +259,13 @@ public final class Modifiers
 
 	public void checkClassModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE), "A class", node);
-		if( isReadonly() && isImmutable() )
-			throw new ParseException("A class cannot be marked both readonly and immutable", node);
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | IMMUTABLE), "A class", node);		
 	}
 
 
 	public void checkSingletonModifiers(Node node) throws ParseException
 	{		  
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE), "A singleton", node);
-		if( isReadonly() && isImmutable() )
-			throw new ParseException("A singleton cannot be marked both readonly and immutable", node);
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | IMMUTABLE), "A singleton", node);
 	}
 
 	public void checkExceptionModifiers(Node node) throws ParseException
@@ -278,14 +274,6 @@ public final class Modifiers
 		if( isReadonly() && isImmutable() )
 			throw new ParseException("An exception cannot be marked both readonly and immutable", node);
 	}
-
-	public void checkErrorModifiers(Node node) throws ParseException
-	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | READONLY | IMMUTABLE ), "An error", node);
-		if( isReadonly() && isImmutable() )
-			throw new ParseException("An error cannot be marked both readonly and immutable", node);
-	}
-
 
 	public void checkInterfaceModifiers(Node node) throws ParseException
 	{
@@ -319,7 +307,7 @@ public final class Modifiers
 
 	public void checkMethodModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | IMMUTABLE | GET | SET | NATIVE), "A method", node);
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE), "A method", node);
 		if( isGet() &&  isSet() )
 			throw new ParseException("A method cannot be marked both get and set", node);		
 		if( isReadonly() && isImmutable() )
@@ -330,7 +318,7 @@ public final class Modifiers
 
 	public void checkLocalMethodModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(IMMUTABLE), "A local method", node);
+		checkModifiers( new Modifiers(READONLY), "A local method", node);
 	}
 
 

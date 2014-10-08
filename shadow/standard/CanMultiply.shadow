@@ -1,5 +1,5 @@
 interface shadow:standard@
 	CanMultiply<T>
 {
-	immutable multiply(T other) => (T);
+	readonly multiply(T other) => (T);
 }

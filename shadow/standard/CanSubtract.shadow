@@ -1,5 +1,5 @@
 interface shadow:standard@
 	CanSubtract<T>
 {
-	immutable subtract(T other) => (T);
+	readonly subtract(T other) => (T);
 }

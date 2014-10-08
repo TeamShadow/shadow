@@ -149,13 +149,13 @@ implements List<V>
 		int index = 0;
 		int expectedModifications = modifications;
 		
-		private immutable checkForModifications() => ()
+		private readonly checkForModifications() => ()
 		{
 			if( expectedModifications != modifications )
 				throw IllegalModificationException:create();		
 		}
 	
-		public immutable hasNext() => (boolean)
+		public readonly hasNext() => (boolean)
 		{
 			checkForModifications();
 			return index < size;

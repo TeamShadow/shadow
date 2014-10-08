@@ -8,15 +8,15 @@ extends
 	CanModulus<T>,
 	CanCompare<T>
 {
-	immutable toByte() => (byte);
-	immutable toUByte() => (ubyte);
-	immutable toShort() => (short);
-	immutable toUShort() => (ushort);
-	immutable toInt() => (int);
-	immutable toUInt() => (uint);
-	immutable toLong() => (long);
-	immutable toULong() => (ulong);
-	immutable toCode() => (code);
-	immutable toFloat() => (float);
-	immutable toDouble() => (double);
+	readonly toByte() => (byte);
+	readonly toUByte() => (ubyte);
+	readonly toShort() => (short);
+	readonly toUShort() => (ushort);
+	readonly toInt() => (int);
+	readonly toUInt() => (uint);
+	readonly toLong() => (long);
+	readonly toULong() => (ulong);
+	readonly toCode() => (code);
+	readonly toFloat() => (float);
+	readonly toDouble() => (double);
 }

@@ -523,7 +523,7 @@ implements Number<BigInteger>
 		return data->size == 1 and data[0] == 0u;
 	}
 	
-	immutable public toByte() => (byte)
+	public toByte() => (byte)
 	{
 		return cast<byte>(toInt());
 	}

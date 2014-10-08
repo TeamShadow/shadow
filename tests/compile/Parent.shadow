@@ -16,7 +16,7 @@ class Parent {
     	return 5;
     }  
     
-    public immutable stuff() => (int)
+    public readonly stuff() => (int)
     {
     	return 9;
     }

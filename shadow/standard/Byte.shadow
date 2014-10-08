@@ -291,7 +291,7 @@ implements
 	}
 	
 	// implement CanNegate<byte>
-	public immutable native negate() => (byte);
+	public native negate() => (byte);
 	
 	public squareRoot() => (double)
 	{

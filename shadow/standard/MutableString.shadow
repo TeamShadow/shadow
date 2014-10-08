@@ -27,12 +27,12 @@ class shadow:standard@MutableString implements CanIndex<int, byte>
 		}
 		return this;
 	}
-	public immutable get capacity() => ( int )
+	public readonly get capacity() => ( int )
 	{
 		return data->size;
 	}
 
-	public immutable index( int index ) => ( byte value )
+	public readonly index( int index ) => ( byte value )
 	{
 		if ( index < 0 or index > size )
 			throw IndexOutOfBoundsException:create();
@@ -129,7 +129,7 @@ class shadow:standard@MutableString implements CanIndex<int, byte>
 		return this;
 	}
 	
-	public immutable substring(int start, int end) => (String)
+	public readonly substring(int start, int end) => (String)
 	{
 		if ( start < 0 or start >= size )
 			throw IllegalArgumentException:create("Invalid start index");
@@ -140,7 +140,7 @@ class shadow:standard@MutableString implements CanIndex<int, byte>
 		return String:create(cast<byte[]>(cast<Object>(data.subarray(start, end))));	
 	}
 
-	public immutable toString() => ( String )
+	public readonly toString() => ( String )
 	{	
 		byte[] bytes = data;
 		if( data->size != size ) 

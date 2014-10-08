@@ -1,5 +1,5 @@
 interface shadow:standard@
 	CanDivide<T>
 {
-	immutable divide(T other) => (T);
+	readonly divide(T other) => (T);
 }

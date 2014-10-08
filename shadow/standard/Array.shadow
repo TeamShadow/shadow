@@ -22,7 +22,7 @@ abstract class shadow:standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 		
 	//private immutable native allocate( Class type, int size ) => ( Object );
 
-	public immutable get size() => ( int )
+	public readonly get size() => ( int )
 	{
 		int size = lengths[0];
 		for ( int i = 1; i < this->dims; i += 1 )
@@ -30,11 +30,11 @@ abstract class shadow:standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 		return size;
 	}
 	
-	public immutable native get dims() => ( int );
+	public readonly native get dims() => ( int );
 	
 	
 	/* //copy implementation based off the following code
-	private immutable copyProxy(AddressMap addresses) => ( Array<T> )
+	private readonly copyProxy(AddressMap addresses) => ( Array<T> )
 	{
 		Array<T> duplicate = Array<T>:create( lengths );
 		for( int i = 0; i < this->size; i += 1 )
@@ -45,19 +45,19 @@ abstract class shadow:standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 	*/
 	
 	//only makes sense for 1D arrays?
-	public immutable native subarray( int start, int end ) => ( Array<T> );
+	public readonly native subarray( int start, int end ) => ( Array<T> );
 
-	public immutable native index( int[] indices ) => (T);
+	public readonly native index( int[] indices ) => (T);
 	public native index( int[] indices, T value ) => ();
 	
 	//private methods that take the final offset after all the dimensions have been computed
 	//unsafe to give to the user, but useful for internals
-	private immutable native index( int index ) => (T);
+	private readonly native index( int index ) => (T);
 	private native index( int index, T value) => ();	
 
-	public native immutable getBaseClass() => ( Class );
+	public native readonly getBaseClass() => ( Class );
 
-	public immutable toString() => ( String )
+	public readonly toString() => ( String )
 	{
 		if ( this->size == 0 )
 			return "[]";
@@ -87,7 +87,7 @@ abstract class shadow:standard@Array<T> implements CanIndexStore<int[],T>, CanIt
 		int position = 0;
 		int limit = size();
 		
-		public immutable hasNext() => (boolean)
+		public readonly hasNext() => (boolean)
 		{	
 			return position < limit;		
 		}

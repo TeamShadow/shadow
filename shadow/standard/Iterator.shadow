@@ -1,5 +1,5 @@
 interface shadow:standard@Iterator<T>
 {
-	immutable hasNext() => (boolean);
+	readonly hasNext() => (boolean);
 	next() => (T);
 }

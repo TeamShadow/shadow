@@ -8,7 +8,7 @@ class shadow:standard@Reference<T>
 	{
 		this:value = value;
 	}
-	public immutable toString() => ( String )
+	public readonly toString() => ( String )
 	{
 		return #value;
 	}

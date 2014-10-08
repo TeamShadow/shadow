@@ -100,12 +100,12 @@ class shadow:standard@AddressMap
 		}
 	}
 
-	private immutable hash( ulong key ) => ( int index, int hash )
+	private readonly hash( ulong key ) => ( int index, int hash )
 	{
 		return findIndex( key, table->size );
 	}
 	
-	private immutable findIndex( ulong key, int length ) => ( int index, int hash )
+	private readonly findIndex( ulong key, int length ) => ( int index, int hash )
 	{
 		uint temp = key->hash;
 		temp ^= (temp >> 20) ^ (temp >> 12);
@@ -207,7 +207,7 @@ class shadow:standard@AddressMap
 		return false;
 	}
 
-	public immutable iterator() => ( Iterator<ulong> )
+	public readonly iterator() => ( Iterator<ulong> )
 	{
 		return AddressMapIterator:create();
 	}

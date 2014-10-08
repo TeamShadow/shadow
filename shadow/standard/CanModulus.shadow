@@ -1,5 +1,5 @@
 interface shadow:standard@
 	CanModulus<T>
 {
-	immutable modulus(T other) => (T);
+	readonly modulus(T other) => (T);
 }

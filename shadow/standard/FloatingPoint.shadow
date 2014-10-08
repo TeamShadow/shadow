@@ -3,7 +3,7 @@ interface shadow:standard@
 extends
 	Number<T>
 {
-	immutable isNaN() => (boolean);
-	immutable isFinite() => (boolean);
-	immutable isInfinite() => (boolean);
+	readonly isNaN() => (boolean);
+	readonly isFinite() => (boolean);
+	readonly isInfinite() => (boolean);
 }

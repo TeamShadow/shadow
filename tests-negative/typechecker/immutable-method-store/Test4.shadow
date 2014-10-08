@@ -5,7 +5,7 @@ class Test4
     
     int[] array = int:create[100];
 
-    immutable public bar() => ()
+    readonly public bar() => ()
     {    
     	this:y = 7;     	    
     }  

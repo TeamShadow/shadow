@@ -283,9 +283,7 @@ public class TypeUpdater extends BaseChecker
 									methodNode.setType(field.getValue().getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
-									if( modifiers.isImmutable() )
-										methodNode.addModifier(Modifiers.IMMUTABLE);
-									else if( modifiers.isReadonly() )
+									if( modifiers.isImmutable() || modifiers.isReadonly() )
 										methodNode.addModifier(Modifiers.READONLY);
 									modifiers.removeModifier(Modifiers.GET);
 									modifiers.removeModifier(Modifiers.FIELD);
@@ -312,9 +310,7 @@ public class TypeUpdater extends BaseChecker
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
 									//is it even possible to have an immutable or readonly set?
-									if( modifiers.isImmutable() )
-										methodNode.addModifier(Modifiers.IMMUTABLE);
-									else if( modifiers.isReadonly() )
+									if( modifiers.isImmutable() || modifiers.isReadonly() )
 										methodNode.addModifier(Modifiers.READONLY);
 									modifiers.removeModifier(Modifiers.SET);
 									modifiers.removeModifier(Modifiers.FIELD);									
@@ -1197,11 +1193,6 @@ public class TypeUpdater extends BaseChecker
 		{
 			if( currentType.getModifiers().isImmutable() )
 			{
-				node.addModifier(Modifiers.IMMUTABLE);
-				methodDeclarator.addModifier(Modifiers.IMMUTABLE);
-			}
-			else if( currentType.getModifiers().isReadonly() )
-			{
 				node.addModifier(Modifiers.READONLY);
 				methodDeclarator.addModifier(Modifiers.READONLY);
 			}
@@ -1227,9 +1218,6 @@ public class TypeUpdater extends BaseChecker
 		
 		if( currentType.getModifiers().isImmutable() )
 			node.addModifier(Modifiers.IMMUTABLE);
-		
-		if( currentType.getModifiers().isReadonly() )
-			node.addModifier(Modifiers.READONLY);
 		
 		if( currentType instanceof InterfaceType )
 			node.addModifier(Modifiers.CONSTANT); //all interface fields are implicitly constant

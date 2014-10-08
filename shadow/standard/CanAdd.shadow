@@ -1,5 +1,5 @@
 interface shadow:standard@
 	CanAdd<T>
 {
-	immutable add(T other) => (T);
+	readonly add(T other) => (T);
 }

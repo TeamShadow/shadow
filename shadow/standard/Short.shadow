@@ -240,7 +240,7 @@ implements
 	}
 		
 	// implement CanNegate<short>
-	public immutable native negate() => (short);
+	public native negate() => (short);
 	
 	public squareRoot() => (double)
 	{

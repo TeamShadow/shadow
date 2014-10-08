@@ -3,5 +3,5 @@ interface shadow:standard@
 extends
 	CanEqual<T>
 {
-	immutable compare(T other) => (int);
+	readonly compare(T other) => (int);
 }

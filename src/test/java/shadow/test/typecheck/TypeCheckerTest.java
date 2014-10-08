@@ -298,10 +298,4 @@ public class TypeCheckerTest {
 		args.add("tests/compile/View.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
-	
-	@Test public void testSokobanBoard() throws Exception {
-		args.add("sokoban/solver/Solver.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-
 }

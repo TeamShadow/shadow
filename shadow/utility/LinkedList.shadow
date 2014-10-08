@@ -211,12 +211,12 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 		Node current = header->next;
 		int expectedModifications = modifications;
 
-		private immutable checkForModifications() => ()
+		private readonly checkForModifications() => ()
 		{
 			if ( modifications != expectedModifications )
 				throw IllegalModificationException:create();
 		}
-		public immutable hasNext() => ( boolean )
+		public readonly hasNext() => ( boolean )
 		{
 			checkForModifications();
 			return current !== header;
