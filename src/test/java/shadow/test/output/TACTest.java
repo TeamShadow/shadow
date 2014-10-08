@@ -214,9 +214,4 @@ public class TACTest {
 		args.add("shadow/test/AssertTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
-	
-	@Test public void testSokoban() throws Exception {
-		args.add("sokoban/solver/Solver.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
 }

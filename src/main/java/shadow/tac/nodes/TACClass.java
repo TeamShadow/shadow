@@ -6,6 +6,7 @@ import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
@@ -161,7 +162,10 @@ public class TACClass extends TACOperand
 			}
 			else //type is partially instantiated
 			{	
-				Type outer = method.getMethod().getOuter();
+				MethodSignature signature = method.getMethod();
+				if( signature.isWrapper())
+					signature = signature.getWrapped();
+				Type outer = signature.getOuter();
 				
 				if( type instanceof ArrayType )	
 				{

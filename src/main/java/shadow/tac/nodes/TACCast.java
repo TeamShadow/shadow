@@ -56,8 +56,10 @@ public class TACCast extends TACOperand
 		}
 		else
 		{		
-			if( op.getType() instanceof InterfaceType )			
+			if( op.getType() instanceof InterfaceType )
+			{
 				op = new TACConversion(this, op, Type.OBJECT, Kind.INTERFACE_TO_OBJECT);
+			}
 						
 			if( type instanceof InterfaceType )
 			{				

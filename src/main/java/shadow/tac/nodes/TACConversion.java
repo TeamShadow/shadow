@@ -6,11 +6,13 @@ import java.util.List;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public class TACConversion extends TACOperand
 {	
@@ -48,8 +50,26 @@ public class TACConversion extends TACOperand
 		this.kind = kind;
 		
 		if( kind.equals(Kind.OBJECT_TO_INTERFACE) )
-		{
-			TACClass srcClass = new TACClass(this, source.getType());
+		{			
+			TACOperand srcClass;			
+			Type sourceType = source.getType();
+			
+			if( sourceType instanceof ClassType )
+			{
+				ClassType classType = (ClassType) source.getType();
+			
+				TACMethodRef getClass = new TACMethodRef(this, source,
+						classType.getMatchingMethod("getClass", new SequenceType()));
+				
+				srcClass = new TACCall(this, getBuilder().getBlock(), getClass, getClass.getPrefix());
+			}
+			else if( sourceType instanceof TypeParameter )
+			{
+				srcClass = new TACClass(this, sourceType);				
+			}
+			else
+				throw new IllegalArgumentException();
+					
 			TACMethodRef methodRef = new TACMethodRef(this, srcClass,
 					Type.CLASS.getMethods("interfaceData").get(0));
 			TACClass destClass = new TACClass(this, destination);					

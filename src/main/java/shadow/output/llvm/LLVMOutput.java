@@ -1770,12 +1770,11 @@ public class LLVMOutput extends AbstractOutput
 
 	private static String classOf(Type type)
 	{		
-		
-		//if (type instanceof InterfaceType)
+		//if (type instanceof InterfaceType)		
 		if( type.isFullyInstantiated() )
 			return '@' + withGenerics(type, "_class");
 		else
-			return '@' + raw(type, "_class");
+			return '@' + raw(type, "_class");		
 		//return "getelementptr inbounds (%" + raw(type, "_Mclass") + "* @" +
 			//	raw(type, "_Mclass") + ", i32 0, i32 0)";
 	}
@@ -2422,8 +2421,20 @@ public class LLVMOutput extends AbstractOutput
 				
 				if( generic instanceof GenericArray )
 				{
-					GenericArray genericArray = (GenericArray)generic;					
-					parameterNames.add(genericArray.getInternalParameter());				
+					GenericArray genericArray = (GenericArray)generic;
+					String internalParameter = genericArray.getInternalParameter();
+												
+					if( internalParameter.contains("_L_")) //parameters that are themselves generic
+					{
+						String trimmed = internalParameter.substring(0,  internalParameter.indexOf("_L_"));
+						parameterNames.add(trimmed);						
+						internalParameter = " bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + internalParameter + "_class\" to " + type(Type.CLASS) + ")";
+					}	
+					else
+					{
+						parameterNames.add(internalParameter);
+						internalParameter = " @\"" + internalParameter + "_class\"";
+					}
 					
 					writer.write("@\"" + generic.getMangledName() + "_class\"" + " = constant %" +
 							raw(Type.ARRAY_CLASS) + " { " + 		
@@ -2448,7 +2459,7 @@ public class LLVMOutput extends AbstractOutput
 							type(Type.OBJECT) + "]* @_parameters" + generic.getMangledName() + ", i32 0, i32 0), [1 x " +
 							type(Type.INT) + "] [" + typeLiteral(generic.getParameters().size()*2) + "] }" + ", " + //parameters 
 							
-							type(Type.CLASS) + " @\""  + genericArray.getInternalParameter() + "_class\"" + //internal class
+							type(Type.CLASS) + internalParameter + //internal class
 							
 							" }");
 				}
