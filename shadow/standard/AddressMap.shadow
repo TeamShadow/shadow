@@ -3,7 +3,7 @@ import shadow:utility@IllegalModificationException;
 import shadow:io@Console;
 
 
-class shadow:standard@AddressMap
+locked class shadow:standard@AddressMap
 	implements Map<ulong, ulong>
 {
 	constant int DEFAULT_INITIAL_CAPACITY = 16;

@@ -71,6 +71,12 @@ public class NegativeTests {
 		enforce(Error.MULTIPLY_DEFINED_SYMBOL);		
 	}
 	
+	@Test public void testClassExtendsLockedClass() throws Exception
+	{
+		args.add("tests-negative/typechecker/class-extends-locked-class/Test.shadow"); 
+		enforce(Error.INVALID_EXTEND);		
+	}
+	
 	@Test public void testImport() throws Exception
 	{
 		args.add("tests-negative/typechecker/import/Test.shadow");
@@ -353,5 +359,9 @@ public class NegativeTests {
 		enforce(Error.INVALID_METHOD);		
 	}
 	
-	
+	@Test public void testMethodLockedOverride() throws Exception
+	{
+		args.add("tests-negative/typechecker/method-locked-override/Test.shadow"); 
+		enforce(Error.INVALID_OVERRIDE);		
+	}	
 }

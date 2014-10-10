@@ -92,22 +92,13 @@ public class TypeUpdater extends BaseChecker
 		List<Node> nodeList = sortOnExtendsAndImplements(nodeTable);		
 		
 		//update extends and implements lists based on updated type parameters		
-		//Map<Type, ClassType> uninstantiatedExtends = new HashMap<Type, ClassType>();
-		//Map<Type, ArrayList<InterfaceType>> uninstantiatedImplements = new HashMap<Type, ArrayList<InterfaceType>>(); 
-		
 		if( errorList.isEmpty() )
 			updateExtendsAndImplements( nodeList);
 		
 		//must happen after extends and implements
 		//since generic parameters in the methods could depend on correct extends and implements
 		if( errorList.isEmpty() )
-			updateFieldsAndMethods( nodeTable );
-		
-		//but then the extends and implements can have outdated fields and methods
-		//so they must be updated again, based on their old values stored in 
-		//uninstantiatedExtends and uninstantiatedImplements
-		//if( errorList.isEmpty() )
-		//	updateExtendsAndImplements( nodeList, uninstantiatedExtends, uninstantiatedImplements, false);
+			updateFieldsAndMethods( nodeTable );		
 		
 		//now that the types are figured out, make sure all the method overrides are legal
 		if( errorList.isEmpty() )
@@ -223,18 +214,7 @@ public class TypeUpdater extends BaseChecker
 						//note that the node is null for the default create, because nothing was made
 					}
 					
-					//add copy methods					
-					//first, one with no arguments
-					/* //no need for an extra method 
-					ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
-					copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);					
-					MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode);
-					copySignature.addReturn(new SimpleModifiedType(classType));
-					copyNode.setMethodSignature(copySignature);
-					classType.addMethod("copy", copySignature);
-					*/
-					
-					//then, one with a set to hold addresses
+					//add copy method with a set to hold addresses
 					ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
 					copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);
 					MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode);
@@ -283,10 +263,12 @@ public class TypeUpdater extends BaseChecker
 									methodNode.setType(field.getValue().getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
-									if( modifiers.isImmutable() || modifiers.isReadonly() )
-										methodNode.addModifier(Modifiers.READONLY);
 									modifiers.removeModifier(Modifiers.GET);
 									modifiers.removeModifier(Modifiers.FIELD);
+									//default get is readonly
+									methodNode.addModifier(Modifiers.READONLY);
+									if( modifiers.isImmutable() )
+										modifiers.removeModifier(Modifiers.IMMUTABLE);
 									if( modifiers.isSet() )
 										modifiers.removeModifier(Modifiers.SET);
 									if( modifiers.isWeak() )
@@ -310,8 +292,8 @@ public class TypeUpdater extends BaseChecker
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
 									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
 									//is it even possible to have an immutable or readonly set?
-									if( modifiers.isImmutable() || modifiers.isReadonly() )
-										methodNode.addModifier(Modifiers.READONLY);
+									if( modifiers.isImmutable() )
+										addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for an immutable field" );										
 									modifiers.removeModifier(Modifiers.SET);
 									modifiers.removeModifier(Modifiers.FIELD);									
 									modifiers.addModifier(Modifiers.ASSIGNABLE);
@@ -329,50 +311,7 @@ public class TypeUpdater extends BaseChecker
 				}
 			}
 		}
-	}
-	
-	
-	/*
-	private void checkForCircularClassHierarchies(Map<String, Node> files)
-	{
-		for(Node declarationNode : files.values() )
-		{			
-			if( declarationNode.getType() instanceof ClassType )
-			{				
-				ClassType classType = (ClassType) declarationNode.getType();
-				
-				//check for circular class hierarchy				
-				ClassType parent = classType.getExtendType();
-				HashSet<Type> hierarchy = new HashSet<Type>();
-				hierarchy.add(classType.getTypeWithoutTypeArguments());
-				
-				boolean circular = false;
-				
-				while( parent != null && !circular )
-				{
-					if( hierarchy.contains(parent.getTypeWithoutTypeArguments()) )	
-					{
-						addError(declarationNode, Error.INVALID_HIERARCHY, "Class " + classType + " contains a circular extends definition");
-						circular = true;
-					}
-					else
-						hierarchy.add(parent.getTypeWithoutTypeArguments());
-					parent = parent.getExtendType();
-				}
-				
-				//check for circular interface issues
-				for( InterfaceType interfaceType : classType.getInterfaces() )
-				{
-					if( interfaceType.isCircular() )
-					{
-						addError(declarationNode, Error.INVALID_HIERARCHY, "Interface " + interfaceType + " has a circular extends definition" );
-						circular = true;
-					}
-				}				
-			}			
-		}
-	}
-	*/
+	}	
 	
 	private Map<Type,Node> instantiateTypeParameters( Map<Type,Node> nodeTable/*,  Map<Type, Node> uninstantiatedNodes*/  )
 	{		
@@ -547,122 +486,7 @@ public class TypeUpdater extends BaseChecker
 		}
 		
 	}
-	
-	
-	/*
-	
-	private void updateExtendsAndImplements(List<Node> nodeList, Map<Type, ClassType> uninstantiatedExtends, Map<Type, ArrayList<InterfaceType>> uninstantiatedImplements, boolean first)
-	{			
 		
-		
-		
-		if( !first ) {
-			//clear all (partial) instantiations, since they didn't include fields or methods
-			for(Node declarationNode : nodeList ) {
-				Type type = declarationNode.getType();
-				type.clearInstantiatedTypes();				
-			}
-		}
-		
-		
-		
-		
-		for(Node declarationNode : nodeList )
-		{	
-			Type type = declarationNode.getType();
-			if( type instanceof ClassType )
-			{
-				ClassType classType = (ClassType) type;					
-				ClassType parent;
-				
-				if( first ) {
-					parent = classType.getExtendType();
-					uninstantiatedExtends.put(classType, parent);
-				}
-				else
-					parent = uninstantiatedExtends.get(classType);
-
-				//update parent
-				if( parent != null && parent instanceof UninstantiatedClassType )
-				{
-					try 
-					{
-						parent = ((UninstantiatedClassType)parent).instantiate();
-						classType.setExtendType(parent);
-					} 
-					catch (InstantiationException e) 
-					{
-						addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-					}
-				}
-				
-				//update interfaces
-				ArrayList<InterfaceType> interfaces;					
-				
-				if( first ) {
-					interfaces = classType.getInterfaces();
-					uninstantiatedImplements.put( classType, new ArrayList<InterfaceType>(interfaces));
-				}
-				else					
-					interfaces = uninstantiatedImplements.get(classType);					
-				
-				for( int i = 0; i < interfaces.size(); i++ )
-				{ 
-					InterfaceType interfaceType = interfaces.get(i);
-					if( interfaceType instanceof UninstantiatedInterfaceType  )
-					{
-						try 
-						{
-							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).instantiate();
-							interfaces.set(i, interfaceType);
-						} 
-						catch (InstantiationException e) 
-						{
-							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-						}						
-					}
-				}
-				
-				classType.setInterfaces(interfaces);					
-			}
-			else if( type instanceof InterfaceType )
-			{	
-				
-				//update interfaces
-				ArrayList<InterfaceType> interfaces;					
-				
-				if( first ) {
-					interfaces = ((InterfaceType)type).getInterfaces();
-					uninstantiatedImplements.put( type, new ArrayList<InterfaceType>(interfaces));
-				}
-				else					
-					interfaces = uninstantiatedImplements.get(type);
-									
-				for( int i = 0; i < interfaces.size(); i++ )
-				{ 
-					InterfaceType interfaceType = interfaces.get(i);
-					if( interfaceType instanceof UninstantiatedInterfaceType  )
-					{
-						try 
-						{
-							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).instantiate();
-							interfaces.set(i, interfaceType);
-						} 
-						catch (InstantiationException e) 
-						{
-							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-						}						
-					}
-				}
-				
-				type.setInterfaces(interfaces);
-			}			
-		}
-		
-	}
-	
-	*/
-	
 	private void checkOverrides(Map<Type,Node> nodeTable)
 	{	
 		for( Node declarationNode : nodeTable.values() )	
@@ -674,22 +498,22 @@ public class TypeUpdater extends BaseChecker
 			
 				if( parent != null)
 				{
-					
 					//enforce immutability
 					//any mutable parent method must be overridden 
-					if( classType.getModifiers().isImmutable() || classType.getModifiers().isReadonly() )
+					if( classType.getModifiers().isImmutable() )
 					{
 						List<MethodSignature> list = classType.orderAllMethods();
 						for( MethodSignature signature : list )
-							if( !signature.isCreate() && !signature.getModifiers().isImmutable() && !signature.getModifiers().isReadonly() )
-								addError(signature.getNode(), Error.INVALID_METHOD, "Mutable parent method " + signature + " must be overridden by non-mutable method" );
+							if( !signature.isCreate() && !signature.getModifiers().isReadonly() )
+								addError(signature.getNode(), Error.INVALID_METHOD, "Mutable parent method " + signature + " must be overridden by readonly method" );
 					}
 					
 					/* Check overridden methods to make sure:
-					 * 1. All overrides match exactly  (if it matches everything but return type...ambiguous!)
-					 * 2. No immutable methods have been overridden NOT RIGHT NOW... add "locked" keyword?
-					 * 3. Readonly methods cannot be overridden by mutable methods
-					 * 4. No overridden methods have been narrowed in access 
+					 * 1. No locked method has been overridden
+					 * 2. All overrides match exactly  (if it matches everything but return type...ambiguous!)
+					 * 3. No immutable methods have been overridden NOT RIGHT NOW... add "locked" keyword?
+					 * 4. Readonly methods cannot be overridden by mutable methods
+					 * 5. No overridden methods have been narrowed in access
 					 */
 					
 					for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
@@ -698,26 +522,15 @@ public class TypeUpdater extends BaseChecker
 							if( parent.recursivelyContainsIndistinguishableMethod(signature) && !signature.isCreate() )
 							{
 								MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
-								Node parentNode = parentSignature.getNode();
 								Node node = signature.getNode();
-								Modifiers parentModifiers;
-								Modifiers modifiers;
+								Modifiers parentModifiers = parentSignature.getModifiers();
+								Modifiers modifiers = signature.getModifiers();
 								
-								if( parentNode == null )
-									parentModifiers = new Modifiers();
-								else
-									parentModifiers = parentNode.getModifiers();
-								
-								if( node == null )								
-									modifiers = new Modifiers();								
-								else
-									modifiers = node.getModifiers();									
-								
-								if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) )
+								if( parentModifiers.isLocked() )
+									addError( node, Error.INVALID_OVERRIDE, "Method " + signature + " cannot override locked method " + parentSignature );
+								else if( !parentSignature.getReturnTypes().canAccept(signature.getReturnTypes()) )
 									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " differs only by return type from " + parentSignature );
-								//else if( parentModifiers.isImmutable() && !signature.getSymbol().equals("freeze") )
-								//	addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot override immutable method" );
-								else if( !modifiers.isReadonly() && !modifiers.isImmutable() && parentModifiers.isReadonly()  )
+								else if( !modifiers.isReadonly() && parentModifiers.isReadonly()  )
 									addError( node, Error.INVALID_OVERRIDE, "Mutable method " + signature + " cannot override readonly method" );
 								else if( parentModifiers.isPublic() && (modifiers.isPrivate() || modifiers.isProtected()) )
 									addError( node, Error.INVALID_OVERRIDE, "Overriding method " + signature + " cannot reduce visibility of public method " + parentSignature );
@@ -1349,6 +1162,10 @@ public class TypeUpdater extends BaseChecker
 				ClassType classType = (ClassType)declarationType;			
 				Node child = node.jjtGetChild(0); //only one thing in extends lists for classes
 				Type extendType = child.getType();
+				
+				if( extendType.getModifiers().isLocked() )
+					addError(Error.INVALID_EXTEND, "Class type " + declarationType + " cannot extend locked type " + extendType);
+				
 				if( declarationType.getClass() == ClassType.class )
 				{						
 					if( extendType.getClass() == ClassType.class )

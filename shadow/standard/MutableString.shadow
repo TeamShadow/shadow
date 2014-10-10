@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 class shadow:standard@MutableString implements CanIndex<int, byte>
 {
 	get int size = 0;

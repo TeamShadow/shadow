@@ -1,0 +1,7 @@
+class Test extends Thing
+{
+	public shout() => (String)
+	{
+		return "Better stuff!";
+	}
+}

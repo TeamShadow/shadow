@@ -1,0 +1,7 @@
+locked class Thing
+{
+	public shout() => (String)
+	{
+		return "Yo!";
+	}
+}

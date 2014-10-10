@@ -1,6 +1,5 @@
-import shadow:io@Console;
-
-immutable class shadow:standard@GenericClass extends Class
+immutable class shadow:standard@
+	GenericClass extends Class
 {	
 	get Object[] parameters; //double the size for class and methods
 

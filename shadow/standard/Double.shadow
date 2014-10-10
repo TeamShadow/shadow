@@ -1,6 +1,4 @@
-import shadow:io@Console;
-
-immutable class shadow:standard@
+locked immutable class shadow:standard@
 	Double
 implements
 	Number<double>,
@@ -130,9 +128,7 @@ implements
 			significand |= (SIGNIFICAND_MASK + 1uL);			
 			exponent -= (1023 + 52);
 		}
-		
-		Console out = Console:instance;
-			
+				
 		//There are faster ways to do double output, but this is a hack for now
 		BigInteger result = BigInteger:create(significand);						
 		int base10Shift = 0;

@@ -1,4 +1,4 @@
-immutable class shadow:standard@
+locked immutable class shadow:standard@
 	UByte
 implements
 	Integer<ubyte>,
