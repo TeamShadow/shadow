@@ -1,8 +1,11 @@
+import shadow:io@Console;
+
 class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 {
 	get int size = 0;
 	Node header = Node:create();
 	int modifications = 0;
+	Console out = Console:instance;
 
 	private class Node
 	{
@@ -41,17 +44,21 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 			throw IndexOutOfBoundsException:create();
 		Node current = header;
 		if ( index < size / 2 )
-			while ( index > 0 )
+		{
+			while ( index >= 0 )
 			{
 				current = current->next;
 				index -= 1;
 			}
+		}
 		else
+		{
 			while ( index != size )
 			{
 				current = current->prev;
 				index += 1;
 			}
+		}
 		return current;
 	}
 	private readonly findNode( V value ) => ( int index, nullable Node node )
