@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 {
 	get int size = 0;
