@@ -11,9 +11,10 @@ import shadow.parser.javacc.ParseException;
  * <li>public: only for inner classes</li>
  * <li>private: only for inner classes</li>
  * <li>protected: only for inner classes</li>        
- * <li>abstract: </li>        
+ * <li>abstract: cannot instantiate object</li>        
  * <li>immutable: abstract, readonly, and immutable are mutually exclusive</li>
  * <li>readonly: abstract, readonly, and immutable are mutually exclusive</li>
+ * <li>locked: cannot extend class</li>
  * </ol>
  * 
  * <b>Declaration Modifiers</b>
@@ -29,6 +30,7 @@ import shadow.parser.javacc.ParseException;
  * <li>nullable: variables that can be null</li>
  * <li>immutable: all references to this object are readonly</li>
  * <li>readonly: no mutable methods can be called on this reference</li>
+ * <li>locked: method cannot be overridden</li>
  * </ul>
  * 
  * <b>Hidden Modifiers</b> <i>(Used in the compiler internally, but cannot be marked by the user)</i>
@@ -57,12 +59,13 @@ public final class Modifiers
 	public static final int GET				= 0x0200;
 	public static final int SET				= 0x0400;
 	public static final int CONSTANT		= 0x0800;
+	public static final int LOCKED			= 0x1000;
 
-	public static final int ASSIGNABLE   	= 0x1000;
-	public static final int TYPE_NAME   	= 0x2000;
-	public static final int FIELD		   	= 0x4000;
-	public static final int PROPERTY	   	= 0x8000;
-	public static final int TEMPORARY_READONLY	= 0x10000;
+	public static final int ASSIGNABLE   	= 0x2000;
+	public static final int TYPE_NAME   	= 0x4000;
+	public static final int FIELD		   	= 0x8000;
+	public static final int PROPERTY	   	= 0x10000;
+	public static final int TEMPORARY_READONLY	= 0x20000;
 	
 	public static final Modifiers NO_MODIFIERS = new Modifiers();
 
@@ -73,6 +76,7 @@ public final class Modifiers
 		abstract		
 		immutable	(abstract, readonly, and immutable are mutually exclusive)
 		readonly	(abstract, readonly, and immutable are mutually exclusive)
+		locked		(class cannot be extended)
 	 */
 
 
@@ -89,6 +93,7 @@ public final class Modifiers
 		nullable	(variables that can be null)
 		immutable	(all references to this object are readonly)
 		readonly	(no mutable methods can be called on this reference)
+		locked		(method cannot be overridden)
 	 */
 
 	/* Hidden Modifiers: (used in the compiler internally, but cannot be marked by the user)
@@ -157,6 +162,8 @@ public final class Modifiers
 			sb.append("set ");
 		if( isConstant() )
 			sb.append("constant ");
+		if( isLocked() )
+			sb.append("locked ");
 		
 		return sb.toString();
 	}
@@ -195,6 +202,7 @@ public final class Modifiers
 	public boolean isSet() { return (modifiers & SET) != 0; }
 
 	public boolean isConstant() { return (modifiers & CONSTANT) != 0; }
+	public boolean isLocked() { return (modifiers & LOCKED) != 0; }
 
 	public boolean isWeak() { return (modifiers & WEAK) != 0; }
 	public boolean isImmutable() { return (modifiers & IMMUTABLE) != 0; }
@@ -255,11 +263,13 @@ public final class Modifiers
 			throw new ParseException(name + " cannot be marked immutable", node);
 		if( isNullable() && !legal.isNullable()  )
 			throw new ParseException(name + " cannot be marked nullable", node);
+		if( isLocked() && !legal.isLocked()  )
+			throw new ParseException(name + " cannot be marked locked", node);
 	}
 
 	public void checkClassModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | IMMUTABLE), "A class", node);		
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | IMMUTABLE | LOCKED), "A class", node);		
 	}
 
 
@@ -278,11 +288,6 @@ public final class Modifiers
 	public void checkInterfaceModifiers(Node node) throws ParseException
 	{
 		checkModifiers( new Modifiers(), "An interface", node);
-	}
-
-	public void checkViewModifiers(Node node) throws ParseException
-	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "A view", node);
 	}
 
 	public void checkEnumModifiers(Node node) throws ParseException
@@ -307,13 +312,11 @@ public final class Modifiers
 
 	public void checkMethodModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE), "A method", node);
+		checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE | LOCKED), "A method", node);
 		if( isGet() &&  isSet() )
 			throw new ParseException("A method cannot be marked both get and set", node);		
 		if( isReadonly() && isImmutable() )
 			throw new ParseException("A method cannot be marked both readonly and immutable", node);
-		//if( isAbstract() && isImmutable() )
-		//	throw new ParseException("A method cannot be marked both abstract and immutable", node);		
 	}
 
 	public void checkLocalMethodModifiers(Node node) throws ParseException

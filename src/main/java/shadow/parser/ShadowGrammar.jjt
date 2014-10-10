@@ -140,6 +140,7 @@ TOKEN :
 | < IS: "is" >
 | < INT: "int" >
 | < INTERFACE: "interface" >
+| < LOCKED: "locked" >
 | < LONG: "long" >
 | < NATIVE: "native" >
 | < NULL: "null" >
@@ -488,6 +489,7 @@ Modifiers Modifiers():
   |	"get" { modifiers.checkAndAdd(Modifiers.GET, jjtThis); }
   |	"set" { modifiers.checkAndAdd(Modifiers.SET, jjtThis); }
   | "constant" { modifiers.checkAndAdd(Modifiers.CONSTANT, jjtThis); }
+  | "locked" { modifiers.checkAndAdd(Modifiers.LOCKED, jjtThis); }
   )
  )*
 
