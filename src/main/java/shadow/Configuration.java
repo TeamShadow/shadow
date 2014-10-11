@@ -78,26 +78,7 @@ public class Configuration implements Iterator<File> {
 		}
 		else // Look for a config file with a default name
 		{	
-			// Absolute default config name if the platform can't be determined
-			String configName = "shadow.xml";
-			
-			// Get a platform specific name for the default config file
-			if ( System.getProperty("os.name").startsWith("Windows") )
-			{
-				if ( System.getProperty("os.arch").contains("64") )
-					configName = "shadow-windows-64.xml";
-				else // If not 64 bit, should be 32 bit
-					configName = "shadow-windows-32.xml";
-			}
-			else if ( System.getProperty("os.name").startsWith("Linux") )
-			{
-				if ( System.getProperty("os.arch").contains("64") )
-					configName = "shadow-linux-64.xml";
-				else // If not 64 bit, should be 32 bit
-					configName = "shadow-linux-32.xml";
-			}
-			
-			// Begin searching locations for the determined default config file
+			String configName = getDefaultConfigName();
 			URL url = null; 
 			
 			// First, look for the config file in the dir of the .shadow file
@@ -203,22 +184,18 @@ public class Configuration implements Iterator<File> {
 	 * --nolink Compiles the Shadow files but does not link them
 	 * @return Return options used to parse the command line. 
 	 */
-	public static Options createCommandLineOptions() {
+	public static Options createCommandLineOptions()
+	{
 		Options options = new Options();
 		
-		String fileName;
-		
-		if(System.getProperty("os.name").startsWith("Windows"))
-			fileName = "shadow-windows.xml";
-		else
-			fileName = "shadow-linux.xml";
+		String configName = getDefaultConfigName();
 
 		// setup the configuration file option
 		@SuppressWarnings("static-access")
 		Option configOption = OptionBuilder.withLongOpt(CONFIG_LONG)
 										   .hasArg()
 										   .withArgName("config.xml")
-										   .withDescription("Specify configuration file\nDefault is " + fileName + " or shadow.xml")
+										   .withDescription("Specify configuration file\nDefault is " + configName + " or shadow.xml")
 										   .create(CONFIG);
 
 		// create the typecheck option
@@ -251,6 +228,30 @@ public class Configuration implements Iterator<File> {
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
 		
 		return options;
+	}
+	
+	private static String getDefaultConfigName()
+	{
+		// Default config name if the platform can't be determined
+		String configName = "shadow.xml";
+		
+		// Get a platform specific name for the default config file
+		if ( System.getProperty("os.name").startsWith("Windows") )
+		{
+			if ( System.getProperty("os.arch").contains("64") )
+				configName = "shadow-windows-64.xml";
+			else // If not 64 bit, should be 32 bit
+				configName = "shadow-windows-32.xml";
+		}
+		else if ( System.getProperty("os.name").startsWith("Linux") )
+		{
+			if ( System.getProperty("os.arch").contains("64") )
+				configName = "shadow-linux-64.xml";
+			else // If not 64 bit, should be 32 bit
+				configName = "shadow-linux-32.xml";
+		}
+		
+		return configName;
 	}
 	
 	public int getArch() {
