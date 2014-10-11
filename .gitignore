@@ -3,6 +3,7 @@
 *.ll
 !*.native.ll
 *.exe
+*.o
 !Linux.ll
 !Main.ll
 !NoArguments.ll
