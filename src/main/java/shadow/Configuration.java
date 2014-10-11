@@ -11,7 +11,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 public class Configuration implements Iterator<File> {
@@ -31,13 +30,13 @@ public class Configuration implements Iterator<File> {
 	private static final String OUTPUT_LONG		= "output";
 
 
-	private String parentConfig = null; /** The parent configuration from a config file */	
-	private List<File> shadowFiles = null;
+	private String parentConfig = null; // The parent configuration from a config file	
+	private List<File> shadowFiles = null; // All source files given over command line
 	private int currentShadowFile = 0;
-	private File systemPath = null;	/** This is the import path for all the system files */
+	private File systemPath = null;	// This is the import path for all the system files
 	private List<File> importPaths = null;
-	private boolean checkOnly = false;		/** Run only parser & type-checker */
-	private boolean noLink = false;	/** Compile the files on the command line but do not link */
+	private boolean checkOnly = false; // Run only parser & type-checker
+	private boolean noLink = false;	// Compile the files on the command line but do not link
 	private int arch = -1;
 	private String os = null;
 	private File output = null;
@@ -60,72 +59,76 @@ public class Configuration implements Iterator<File> {
 	 * Parses the command line and sets all of the internal variables.
 	 * @param cmdLine The command line passed to the compiler.
 	 * @throws ConfigurationException 
-	 * @throws MalformedURLException 
-	 * @throws ParseException 
+	 * @throws MalformedURLException
 	 */
 	public void parse(CommandLine cmdLine) throws ConfigurationException, MalformedURLException
 	{
-		this.reset();	// resetting the counter in case we parse multiple times
+		this.reset(); // Reset the counter in case we parse multiple times
 		
 		// get all of the files to compile
 		shadowFiles = new ArrayList<File>();
-		for(String shadowFile:cmdLine.getArgs())
+		for ( String shadowFile : cmdLine.getArgs() )
 			shadowFiles.add(new File(shadowFile));
 		
-		if(cmdLine.hasOption(CONFIG))
+		// Receive or find a config file, otherwise the compiler can't continue
+		if ( cmdLine.hasOption(CONFIG) )
 		{
-			// parse the config file on the command line if we have it
+			// Parse the config file on the command line if we have it
 			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG)));
 		}
-		else
-		{
+		else // Look for a config file with a default name
+		{	
+			// Absolute default config name if the platform can't be determined
+			String configName = "shadow.xml";
+			
+			// Get a platform specific name for the default config file
+			if ( System.getProperty("os.name").startsWith("Windows") )
+			{
+				if ( System.getProperty("os.arch").contains("64") )
+					configName = "shadow-windows-64.xml";
+				else // If not 64 bit, should be 32 bit
+					configName = "shadow-windows-32.xml";
+			}
+			else if ( System.getProperty("os.name").startsWith("Linux") )
+			{
+				if ( System.getProperty("os.arch").contains("64") )
+					configName = "shadow-linux-64.xml";
+				else // If not 64 bit, should be 32 bit
+					configName = "shadow-linux-32.xml";
+			}
+			
+			// Begin searching locations for the determined default config file
 			URL url = null; 
 			
-			//first look for a config in the same folder as the file being compiled
-			if( shadowFiles.size() > 0)
+			// First, look for the config file in the dir of the .shadow file
+			if ( shadowFiles.size() > 0 )
 			{
-				File file = shadowFiles.get(0);
-				File configuration;
-								
-				if(System.getProperty("os.name").startsWith("Windows"))
-				{
-					configuration = new File( file, "shadow-windows.xml");
-					if( configuration.exists() )
-						url = configuration.toURI().toURL();
-				}
-				else
-				{
-					configuration = new File( file, "shadow-linux.xml");
-					if( configuration.exists() )
-						url = configuration.toURI().toURL();					
-				}
+				// Get the directory containing the source files and apply it
+				// to the config file.
+				File sourceDir = shadowFiles.get(0).getParentFile();
+				File configFile = new File(sourceDir, configName);
 				
-				if( url == null )
-				{
-					configuration = new File( file, "shadow.xml");
-					if( configuration.exists() )
-						url = configuration.toURI().toURL();
-				}
+				if( configFile.exists() )
+					url = configFile.toURI().toURL();
 			}
 			
-			//next look for one in the compiler home
-			if( url == null )
-			{
-				if(System.getProperty("os.name").startsWith("Windows"))
-					url = Main.class.getResource("/shadow-windows.xml");
-				else
-					url = Main.class.getResource("/shadow-linux.xml");
-				
-				if( url == null )
-					url = Main.class.getResource("/shadow.xml");
-			}
+			// Next, check for the file in the compiler's resources
+			// Retained from previous code - no guarantee that this is useful
+			if ( url == null )
+					url = Main.class.getResource(File.separator + configName);
 			
-			if( url != null )
-				parseConfigFile(url);
-			else if(System.getenv("SHADOW_CONFIG") != null)
-				parseConfigFile(new File(System.getenv("SHADOW_CONFIG")));
+			if ( url == null )
+			{
+				if(System.getenv("SHADOW_CONFIG") != null)
+				{
+					// At this point, use a system-wide file if it exists
+					parseConfigFile(new File(System.getenv("SHADOW_CONFIG")));
+				}
+				else // Game over if we absolutely haven't found a config file
+					throw new ConfigurationException("No configuration file specified!");
+			}
 			else
-				throw new ConfigurationException("No configuration file specified!");			
+				parseConfigFile(url);
 		}
 
 		// print the import paths if we're debugging
