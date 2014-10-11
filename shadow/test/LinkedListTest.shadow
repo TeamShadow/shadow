@@ -1,0 +1,64 @@
+import shadow:utility@LinkedList;
+import shadow:io@Console;
+
+class shadow:test@LinkedListTest
+{
+	public main( String[] args ) => ()
+	{
+		LinkedList<String> list = LinkedList<String>:create();
+		LinkedList<int> numbers = LinkedList<int>:create();
+		Console out = Console:instance;
+		
+		
+		list.add("Fox");
+		list.add("Socks");
+		list.add("Box");
+		list.add("Knox");
+		list.add("Knox in box");
+		list.add("Fox in socks");
+		list.add("Knox on fox in socks in box");
+				
+		out.printLine( #list );
+		
+		
+		list.delete(3);		
+		String value = list.removeFirst();
+		
+		out.printLine( #list );
+		out.printLine( value );
+		
+		out.printLine( list.indexOf("Box") );
+		
+		list.remove("Knox in box");
+		out.printLine( #list );
+		
+		
+		for( int i = 2; i < 100; i += 1 )
+			numbers.add(i);
+			
+		out.printLine( #numbers );
+		
+		out.printLine( numbers.indexOf(17) );
+		
+		for( int i = 2; i < 100; i += 1 )
+			if( !isPrime( i ) )
+				numbers.remove( i );
+				
+		out.printLine( #numbers );
+	}
+	
+	public isPrime(int number) => (boolean)
+	{
+		if( number == 2 )
+			return true;
+	
+		int root = cast<int>(number.squareRoot());
+		boolean prime = number % 2 == 1;
+		
+		for( int i = 3; i <= root and prime; i += 2 )
+			if(  number % i == 0 )
+				prime = false;
+				
+		return prime;
+	} 
+}

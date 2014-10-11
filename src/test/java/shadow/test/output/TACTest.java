@@ -40,6 +40,12 @@ public class TACTest {
 	@Test public void testArrayDeque() throws Exception {
 		args.add("shadow/test/ArrayDequeTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+	}
+	
+	
+	@Test public void testLinkedList() throws Exception {
+		args.add("shadow/test/LinkedListTest.shadow");
+		Main.run(args.toArray(new String[] { }));
 	}	
 	
 	

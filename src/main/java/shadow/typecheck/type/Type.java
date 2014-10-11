@@ -1053,6 +1053,7 @@ public abstract class Type implements Comparable<Type>
 	{
 		int parentSize = methodList.size();
 		List<MethodSignature> result = add ? methodList : new ArrayList<MethodSignature>();
+		List<MethodSignature> original = new ArrayList<MethodSignature>(methodList);
 		for ( List<MethodSignature> methods : new TreeMap<String, List<MethodSignature>>(getMethodMap()).values() )
 			for ( MethodSignature method : methods )
 				if ( !method.getModifiers().isPrivate() )
@@ -1063,38 +1064,41 @@ public abstract class Type implements Comparable<Type>
 			MethodSignature wrapper = method;
 			for ( int i = 0; i < parentSize; i++ )
 			{
-				MethodSignature parentMethod = methodList.get(i);				
-				SequenceType parentParameters = parentMethod.getParameterTypes();
-				SequenceType rawParameters = parentMethod.getMethodType().getTypeWithoutTypeArguments().getParameterTypes();
-				if ( (!method.isCreate() || parentMethod.getOuter() instanceof InterfaceType) &&
-						method.getSymbol().equals(parentMethod.getSymbol()) &&
-						parameters.size() == parentParameters.size() )
+				MethodSignature originalMethod = original.get(i);
+				SequenceType originalParameters = originalMethod.getParameterTypes(), 
+								rawParameters = originalMethod.getMethodType().getTypeWithoutTypeArguments().getParameterTypes();
+				
+				if ( (!method.isCreate() || originalMethod.getOuter() instanceof InterfaceType) &&
+						method.getSymbol().equals(originalMethod.getSymbol()) &&
+						parameters.size() == originalParameters.size() )
 				{
 					boolean replace = true, wrapped = false;
 					if (!method.isCreate() && method.getOuter().isPrimitive())
 						wrapped = true;
 					for ( int j = 0; replace && j < parameters.size(); j++ )
 					{
-						ModifiedType parameter = parameters.get(j),
-								parentParameter = parentParameters.get(j),
+						ModifiedType parameter = parameters.get(j),								
+								originalParameter = originalParameters.get(j),
 								rawParameter = rawParameters.get(j);
 						
-						//if ( !parameter.getType().isSubtype(parentParameter.getType()) )
-						if ( !parentParameter.getType().isSubtype(parameter.getType()) )
+						//can be broader than original types						
+						if ( !originalParameter.getType().isSubtype(parameter.getType()) )
 							replace = false;
 						else if ( getWidth(parameter) != getWidth(rawParameter) )
 							wrapped = true;
 					}
 										
 					//adding wrapping for returns as well
-					SequenceType parentReturns = parentMethod.getReturnTypes();
-					SequenceType rawReturns = parentMethod.getMethodType().getTypeWithoutTypeArguments().getReturnTypes();
+					SequenceType originalReturns = originalMethod.getReturnTypes(),
+						rawReturns = originalMethod.getMethodType().getTypeWithoutTypeArguments().getReturnTypes();
 					for ( int j = 0; replace && j < returns.size(); j++ )
 					{
 						ModifiedType returnValue = returns.get(j),
-								parentReturn = parentReturns.get(j),
+								originalReturn = originalReturns.get(j),
 								rawReturn = rawReturns.get(j);
-						if ( !returnValue.getType().isSubtype(parentReturn.getType()) )
+						//can be narrower than original types
+						if ( !returnValue.getType().isSubtype(originalReturn.getType()) )
+						//if ( !parentReturn.getType().isSubtype(returnValue.getType()) )
 							replace = false;
 						else if ( getWidth(returnValue) != getWidth(rawReturn) )
 							wrapped = true;
@@ -1103,10 +1107,15 @@ public abstract class Type implements Comparable<Type>
 					
 					if ( replace )
 					{
-						replaced = true;
-						if ( wrapped && wrapper == method )
-							wrapper = parentMethod.wrap(method);
-						methodList.set(i, wrapper);
+						//we've found a replacement method, but it has to be the tightest replacement possible
+						MethodSignature currentMethod = methodList.get(i);
+						if( currentMethod == originalMethod || currentMethod.getMethodType().isSubtype(method.getMethodType()) )
+						{						
+							replaced = true;
+							if ( wrapped && wrapper == method )
+								wrapper = originalMethod.wrap(method);
+							methodList.set(i, wrapper);
+						}
 					}
 				}
 			}
