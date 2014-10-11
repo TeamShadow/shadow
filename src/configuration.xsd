@@ -6,7 +6,7 @@ xmlns="http://www.w3schools.com"
 elementFormDefault="qualified">
 
 
-    <xs:element name="system_import" type="xs:string" />
+    <xs:element name="system" type="xs:string" />
     <xs:element name="import" type="xs:string" />
 
     <xs:element name="shadow">
