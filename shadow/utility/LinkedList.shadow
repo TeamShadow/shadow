@@ -3,7 +3,6 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 	get int size = 0;
 	Node header = Node:create();
 	int modifications = 0;
-	Console out = Console:instance;
 
 	private class Node
 	{
