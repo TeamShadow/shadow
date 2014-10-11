@@ -315,17 +315,8 @@ public class Main {
 				catch (InterruptedException ex) { }
 				
 				String target;
-				List<String> assembleCommand = new ArrayList<String>();
-				assembleCommand.add("gcc");
-				//assembleCommand.add("-g");
-				assembleCommand.add("-x");
-				assembleCommand.add("assembler");
-				assembleCommand.add("-");
-				if (config.getOs().equals("Linux")) {
+				if (config.getOs().equals("Linux"))
 					target = "x86_64-gnu-linux";
-					assembleCommand.add("-lm");
-					assembleCommand.add("-lrt");
-				}
 				else if( config.getArch() == 32 )
 				{			 
 					//target = "i686-w64-mingw32";
@@ -338,22 +329,42 @@ public class Main {
 					target = "x86_64-w64-mingw32";
 				}
 				
-				//assembleCommand.add("-m" + config.getArch());
 				
-				/*//old
-				 else if (System.getProperty("os.name").equals("Linux")) {			 
-					target = "i686-w64-mingw32";
-					assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
-				} else {
-					target = "i386-unknown-mingw32";
+				List<String> assembleCommand;
+				
+				if( config.hasLinkCommand() )
+					assembleCommand = config.getLinkCommand();
+				else {					
+					assembleCommand = new ArrayList<String>();							
+					assembleCommand.add("gcc");
+					//assembleCommand.add("-g");
+					assembleCommand.add("-x");
+					assembleCommand.add("assembler");
+					assembleCommand.add("-");					
+					
+					if (config.getOs().equals("Linux")) {
+						assembleCommand.add("-lm");
+						assembleCommand.add("-lrt");
+					}
+					
+					//assembleCommand.add("-m" + config.getArch());
+					
+					/*//old
+					 else if (System.getProperty("os.name").equals("Linux")) {			 
+						target = "i686-w64-mingw32";
+						assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
+					} else {
+						target = "i386-unknown-mingw32";
+					}
+					*/
 				}
-				*/
-				
+					
 				if( config.hasOutput() )
 				{
 					assembleCommand.add("-o");
 					assembleCommand.add(config.getOutput().getPath());
 				}
+				
 				
 				BufferedReader main;
 				

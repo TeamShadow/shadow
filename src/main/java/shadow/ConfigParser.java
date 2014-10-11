@@ -25,7 +25,9 @@ public class ConfigParser {
 		// parse the import paths
 		digester.addCallMethod("shadow/import", "addImport", 1);
 		digester.addCallParam("shadow/import", 0);
-
+		
+		digester.addCallMethod("shadow/link", "setLinkCommand", 1);
+		digester.addCallParam("shadow/link", 0);
 	}
 
 	public void parse(File configFile) {

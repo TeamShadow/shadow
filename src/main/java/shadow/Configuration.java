@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,6 +37,7 @@ public class Configuration implements Iterator<File> {
 	private int currentShadowFile = 0;
 	private File systemPath = null;	// This is the import path for all the system files
 	private List<File> importPaths = null;
+	private List<String> linkCommand = null;
 	private boolean checkOnly = false; // Run only parser & type-checker
 	private boolean noLink = false;	// Compile the files on the command line but do not link
 	private int arch = -1;
@@ -288,6 +291,20 @@ public class Configuration implements Iterator<File> {
 		if(this.systemPath == null)
 			this.systemPath = new File(systemImportPath);
 	}
+	
+	public void setLinkCommand(String linkCommand) {
+		if(this.linkCommand == null)
+			this.linkCommand = Arrays.asList(linkCommand.split("\\s+"));
+	}
+	
+	public List<String> getLinkCommand() {
+		return linkCommand;
+	}
+	
+	public boolean hasLinkCommand() {
+		return linkCommand != null;
+	}
+	
 
 	public void setParent(String parentConfig) {
 		this.parentConfig = parentConfig;
