@@ -128,10 +128,12 @@ public class Main {
 		CommandLineParser cliParser = new PosixParser();
 		CommandLine commandLine = cliParser.parse(options, args);
 
-		// see if we should print the help
-		if(commandLine.hasOption("h"))
+		// Print help if there are no args or options, or if the 'h' option is present
+		if ( commandLine.getArgs().length == 0 
+				&& commandLine.getOptions().length == 0
+				|| commandLine.hasOption("h") )
 		{
-			new HelpFormatter().printHelp("shadow", options);
+			new HelpFormatter().printHelp("shadowc", options);
 			return;
 		}
 
