@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import shadow.Configuration;
+import shadow.ConfigurationException;
 import shadow.TypeCheckException;
 import shadow.TypeCheckException.Error;
 import shadow.AST.ASTWalker;
@@ -64,7 +65,7 @@ public class TypeCollector extends BaseChecker
 		return nodeTable;
 	}				
 		
-	public Node collectTypes(File input) throws ParseException, ShadowException, TypeCheckException, IOException
+	public Node collectTypes(File input) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
 	{			
 		//Create walker
 		ASTWalker walker = new ASTWalker( this );
@@ -82,21 +83,30 @@ public class TypeCollector extends BaseChecker
 				return name.endsWith(".shadow");
 			}
 		};
-		
+				
 		//add standard imports		
 		File standard = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
+		if( !standard.exists() )
+			throw new ConfigurationException("Invalid path to shadow:standard: " + standard.getCanonicalPath());
+			
 		File[] imports = standard.listFiles( filter );
 		for( File file :  imports )			
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add io imports
 		File io = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "io" );
+		if( !io.exists() )
+			throw new ConfigurationException("Invalid path to shadow:io: " + io.getPath());
+		
 		imports = io.listFiles( filter );
 		for( File file :  imports )			
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add utility imports
 		File utility = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "utility" );
+		if( !utility.exists() )
+			throw new ConfigurationException("Invalid path to shadow:utility: " + utility.getPath());
+		
 		imports = utility.listFiles( filter );
 		for( File file :  imports )			
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));

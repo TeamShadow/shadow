@@ -269,7 +269,7 @@ public class Main {
 
 						// write to file
 						String name = module.getName().replace(':', '$');
-						File llvmFile = new File(currentFile.getParent(), name + ".ll");
+						File llvmFile = new File(currentFile.getParentFile(), name + ".ll");
 						LLVMOutput output = new LLVMOutput(llvmFile);
 						output.build(module);
 						
@@ -278,7 +278,7 @@ public class Main {
 						
 						if (llvmFile.exists())
 							linkCommand.add(llvmFile.getCanonicalPath());
-						File nativeFile = new File(currentFile.getParent(), name + ".native.ll");
+						File nativeFile = new File(currentFile.getParentFile(), name + ".native.ll");
 						if (nativeFile.exists())
 							linkCommand.add(nativeFile.getCanonicalPath());
 					}

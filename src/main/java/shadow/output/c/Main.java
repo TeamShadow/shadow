@@ -51,8 +51,9 @@ public class Main {
 	 * 
 	 * @param args Command line arguments to control the compiler
 	 * @throws MalformedURLException 
+	 * @throws ConfigurationException 
 	 */
-	public static void main(String[] args) throws MalformedURLException {
+	public static void main(String[] args) throws MalformedURLException, ConfigurationException {
 		int ret = test(args);
 		
 		if(ret != NO_ERROR)
@@ -64,8 +65,9 @@ public class Main {
 	 * @param args arguments
 	 * @return error
 	 * @throws MalformedURLException 
+	 * @throws ConfigurationException 
 	 */
-	public static int test(String[] args) throws MalformedURLException {
+	public static int test(String[] args) throws MalformedURLException, ConfigurationException {
 		Configuration config = Configuration.getInstance();
 
 		try {

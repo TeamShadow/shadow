@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.ConfigurationException;
 import shadow.TypeCheckException;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -34,8 +35,9 @@ public class TypeChecker {
 	 * @throws ShadowException
 	 * @throws ParseException 
 	 * @throws IOException 
+	 * @throws ConfigurationException 
 	 */
-	public Node typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException
+	public Node typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
 	{	
 		currentFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();

@@ -3,9 +3,9 @@ package shadow;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -13,6 +13,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
 public class Configuration implements Iterator<File> {
@@ -43,6 +44,7 @@ public class Configuration implements Iterator<File> {
 	private int arch = -1;
 	private String os = null;
 	private File output = null;
+	private File configFile = null;
 	
 	private static Configuration config = new Configuration();
 	
@@ -57,6 +59,21 @@ public class Configuration implements Iterator<File> {
 	public static Configuration getInstance() {
 		return config;
 	}
+	
+	public File getExecutableDirectory()
+	{
+		try
+		{		
+			String path = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+			String decodedPath = URLDecoder.decode(path, "UTF-8");			
+			return new File(decodedPath).getParentFile();
+		}
+		catch(Exception e)
+		{}
+		
+		return null;
+	}
+	
 
 	/**
 	 * Parses the command line and sets all of the internal variables.
@@ -66,54 +83,49 @@ public class Configuration implements Iterator<File> {
 	 */
 	public void parse(CommandLine cmdLine) throws ConfigurationException, MalformedURLException
 	{
-		this.reset(); // Reset the counter in case we parse multiple times
-		
+		this.reset(); // Reset the counter in case we parse multiple times		
 		// get all of the files to compile
 		shadowFiles = new ArrayList<File>();
-		for ( String shadowFile : cmdLine.getArgs() )
-			shadowFiles.add(new File(shadowFile));
+		for ( String shadowFile : cmdLine.getArgs() ) {
+				shadowFiles.add(new File(shadowFile));
+		}
 		
 		// Receive or find a config file, otherwise the compiler can't continue
-		if ( cmdLine.hasOption(CONFIG) )
-		{
+		if ( cmdLine.hasOption(CONFIG))		
 			// Parse the config file on the command line if we have it
-			parseConfigFile(new File(cmdLine.getOptionValue(CONFIG)));
-		}
+			configFile = new File(cmdLine.getOptionValue(CONFIG));
 		else // Look for a config file with a default name
 		{	
-			String configName = getDefaultConfigName();
-			URL url = null; 
+			// First, look for the config file in the working directory
+			String configName = getDefaultConfigName();		 
+			configFile = new File(configName);
 			
-			// First, look for the config file in the dir of the .shadow file
-			if ( shadowFiles.size() > 0 )
+			if( !configFile.exists())
+				configFile = new File("shadow.xml");
+					
+			//then look for a system-defined config file
+			if ( !configFile.exists() )
 			{
-				// Get the directory containing the source files and apply it
-				// to the config file.
-				File sourceDir = shadowFiles.get(0).getParentFile();
-				File configFile = new File(sourceDir, configName);
-				
-				if( configFile.exists() )
-					url = configFile.toURI().toURL();
-			}
-			
-			// Next, check for the file in the compiler's resources
-			// Retained from previous code - no guarantee that this is useful
-			if ( url == null )
-					url = Main.class.getResource(File.separator + configName);
-			
-			if ( url == null )
-			{
+				// Use a system-wide file if it exists
 				if(System.getenv("SHADOW_CONFIG") != null)
-				{
-					// At this point, use a system-wide file if it exists
-					parseConfigFile(new File(System.getenv("SHADOW_CONFIG")));
-				}
-				else // Game over if we absolutely haven't found a config file
+					configFile = new File(System.getenv("SHADOW_CONFIG"));
+				
+				if( !configFile.exists() ) //look in shadowc directory
+					configFile = new File(getExecutableDirectory(), configName);
+				
+				
+				if( !configFile.exists() )
+					configFile = new File(getExecutableDirectory(), "shadow.xml");				
+				
+				if( !configFile.exists() )
 					throw new ConfigurationException("No configuration file specified!");
 			}
-			else
-				parseConfigFile(url);
-		}
+		}	
+		
+		if( configFile.exists() )
+			parseConfigFile(configFile);
+		else
+			throw new ConfigurationException("Invalid configuration file specified: " + configFile.getPath());
 
 		// print the import paths if we're debugging
 		if(logger.isDebugEnabled()) {
@@ -241,9 +253,11 @@ public class Configuration implements Iterator<File> {
 		// Get a platform specific name for the default config file
 		if ( System.getProperty("os.name").startsWith("Windows") )
 		{
-			if ( System.getProperty("os.arch").contains("64") )
-				configName = "shadow-windows-64.xml";
-			else // If not 64 bit, should be 32 bit
+			//for now, always default to 32 for Windows
+			
+			//if ( System.getProperty("os.arch").contains("64") )
+				//configName = "shadow-windows-64.xml";
+			//else // If not 64 bit, should be 32 bit
 				configName = "shadow-windows-32.xml";
 		}
 		else if ( System.getProperty("os.name").startsWith("Linux") )
@@ -279,8 +293,12 @@ public class Configuration implements Iterator<File> {
 		return importPaths;
 	}
 
-	public void addImport(String importPath) {
-		this.importPaths.add(new File(importPath));
+	public void addImport(String importPath)
+	{
+		if( FilenameUtils.getPrefixLength(importPath) == 0 ) //relative path
+			this.importPaths.add(new File(configFile.getParentFile(),importPath));
+		else
+			this.importPaths.add(new File(importPath));		
 	}
 
 	public File getSystemImport() {
@@ -289,7 +307,12 @@ public class Configuration implements Iterator<File> {
 
 	public void setSystemImport(String systemImportPath) {
 		if(this.systemPath == null)
-			this.systemPath = new File(systemImportPath);
+		{			
+			if( FilenameUtils.getPrefixLength(systemImportPath) == 0 ) //relative path
+				this.systemPath = new File(configFile.getParentFile(),systemImportPath);
+			else
+				this.systemPath = new File(systemImportPath);			
+		}
 	}
 	
 	public void setLinkCommand(String linkCommand) {

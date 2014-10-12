@@ -20,11 +20,10 @@ public class TACTest {
 		
 		String osName = System.getProperty("os.name");
 		
-		if(osName.startsWith("Windows")) {
-			args.add("src/test_windows_config.xml");
-		} else {
-			args.add("src/test_linux_config.xml");
-		}
+		if(osName.startsWith("Windows"))
+			args.add("shadow-windows-32.xml");
+		else
+			args.add("shadow-linux-64.xml");
 
 		// set the levels of our loggers
 		Loggers.SHADOW.setLevel(Level.INFO);
