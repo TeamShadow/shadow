@@ -21,6 +21,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import shadow.output.llvm.Array;
@@ -93,10 +94,12 @@ public class Main {
 		catch (org.apache.commons.cli.ParseException e)
 		{
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
+			printHelp();
 			System.exit(COMMAND_LINE_ERROR);
 		}
 		catch (ConfigurationException e) {
 			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
+			printHelp();
 			System.exit(CONFIGURATION_ERROR);
 		}
 		catch (TypeCheckException e)
@@ -118,8 +121,10 @@ public class Main {
 		path = path.substring(0, path.lastIndexOf(".")); //strip extension
 		return path;
 	}
-
+	
+	
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException
+	
 	{
 		Configuration config = Configuration.getInstance();
 
@@ -129,11 +134,9 @@ public class Main {
 		CommandLine commandLine = cliParser.parse(options, args);
 
 		// Print help if there are no args or options, or if the 'h' option is present
-		if ( commandLine.getArgs().length == 0 
-				&& commandLine.getOptions().length == 0
-				|| commandLine.hasOption("h") )
+		if ( commandLine.hasOption("h") )
 		{
-			new HelpFormatter().printHelp("shadowc", options);
+			printHelp();
 			return;
 		}
 
@@ -347,16 +350,8 @@ public class Main {
 						assembleCommand.add("-lrt");
 					}
 					
-					//assembleCommand.add("-m" + config.getArch());
-					
-					/*//old
-					 else if (System.getProperty("os.name").equals("Linux")) {			 
-						target = "i686-w64-mingw32";
-						assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
-					} else {
-						target = "i386-unknown-mingw32";
-					}
-					*/
+					//assembleCommand.add("-m" + config.getArch());					
+				
 				}
 					
 				if( config.hasOutput() )
@@ -382,17 +377,12 @@ public class Main {
 					new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
 					String line = main.readLine();
 					
-					//File replaced = new File("ReplacedMain.ll");
-					//FileOutputStream stream = new FileOutputStream(replaced);
-					
 					while (line != null) {
 						line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
 						link.getOutputStream().write(line.getBytes());
-						//stream.write(line.getBytes());
 						line = main.readLine();
-					}
-					
-					//stream.close();
+					}					
+
 					try {
 						main.close();
 					} catch (IOException ex) { }
@@ -453,4 +443,9 @@ public class Main {
 			} catch (IOException ex) { }
 		}
 	}
+	
+	private static void printHelp() {
+		new HelpFormatter().printHelp("shadowc <source.shadow> [-o <output>] [-c <config.xml>]", Configuration.createCommandLineOptions());
+	}	
+	
 }

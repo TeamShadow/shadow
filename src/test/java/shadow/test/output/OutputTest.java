@@ -31,7 +31,7 @@ public class OutputTest {
 		else
 			args.add("shadow-linux-64.xml");		
 
-		// set the levels of our loggers
+		// set the levels of our loggers				
 		Loggers.SHADOW.setLevel(Level.INFO);
 		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
 		Loggers.PARSER.setLevel(Level.OFF);
