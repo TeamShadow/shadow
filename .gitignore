@@ -3,7 +3,7 @@
 *.ll
 !*.native.ll
 *.exe
-*.o
+*.out
 !Linux.ll
 !Main.ll
 !NoArguments.ll
@@ -19,6 +19,5 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 /target
-/a.out
 /dependency-reduced-pom.xml
 /sokoban
