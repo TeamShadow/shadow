@@ -128,7 +128,7 @@ public class TACClass extends TACOperand
 				}
 				
 				if( index == outer.getTypeParameters().size() )
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException("Index " + index + " equal to type parameter size " + outer.getTypeParameters().size());
 				
 				//get class from this
 				//cast class to GenericClass

@@ -26,7 +26,7 @@ public class TACReturn extends TACSimpleNode
 		if (expected.isEmpty())
 		{
 			if (op != null)
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("Operand is not equal to null: " + op);
 		}
 		else if (expected.size() == 1)
 			returnValue = check(op, expected.get(0));

@@ -68,7 +68,7 @@ public class TACConversion extends TACOperand
 				srcClass = new TACClass(this, sourceType);				
 			}
 			else
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("Unknown source type: " + sourceType);
 					
 			TACMethodRef methodRef = new TACMethodRef(this, srcClass,
 					Type.CLASS.getMethods("interfaceData").get(0));

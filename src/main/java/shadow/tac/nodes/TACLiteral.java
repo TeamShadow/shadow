@@ -136,7 +136,7 @@ public class TACLiteral extends TACOperand
 					builder.replace(index, index + 2, "\\");
 					break;
 				default:
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException("Unknown literal character: " + builder.charAt(index + 1));
 			}
 			index++;
 		}

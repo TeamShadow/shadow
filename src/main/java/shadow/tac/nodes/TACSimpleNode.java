@@ -72,7 +72,7 @@ public abstract class TACSimpleNode extends TACNode implements Iterable<TACOpera
                ((SequenceType) operandType).matches(((SequenceType) typeType))) { // replace with subtype? no!
             return operand;
         } else if ((operandType instanceof SequenceType) != (typeType instanceof SequenceType)) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(operandType + " and " + typeType + " are not both sequence types!");
         }
 
         final shadow.typecheck.Package operandPackage = operandType.getPackage();
@@ -84,6 +84,6 @@ public abstract class TACSimpleNode extends TACNode implements Iterable<TACOpera
                operand.getType().getTypeName().equals(type.getType().getTypeName()))
             return operand;
 
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Check of operand " + operand + " of type " + operandType + " and " + type + " of type " + typeType + " couldn't be resolved!");
     }
 }
