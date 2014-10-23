@@ -1,6 +1,3 @@
-/**
- *
- */
 package shadow;
 
 import java.io.BufferedReader;
@@ -37,16 +34,13 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
-
 /**
  * @author Bill Speirs
  * @author Barry Wittman
  * @author Jacob Young
  */
 public class Main {
-	/*
-	 * These are the error codes returned by the compiler
-	 */
+	// These are the error codes returned by the compiler
 	public static final int NO_ERROR				=  0;
 	public static final int FILE_NOT_FOUND_ERROR	= -1;
 	public static final int PARSE_ERROR				= -2;
@@ -318,20 +312,28 @@ public class Main {
 				catch (InterruptedException ex) { }
 				
 				String target;
-				if (config.getOs().equals("Linux"))
-					target = "x86_64-gnu-linux";
-				else if( config.getArch() == 32 )
-				{			 
-					//target = "i686-w64-mingw32";
-					target = "i386-unknown-mingw32";
-					//assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
-				}
-				else 
+				if ( config.getOs().equals("Windows") )
 				{
-					//target = "i686-w64-mingw32";
-					target = "x86_64-w64-mingw32";
+					// For now, always default to 32-bit Windows compilation
+					
+					//if ( config.getArch() == 32 )
+					//	target = "x86_64-w64-mingw32";
+					//else
+						target = "i386-unknown-mingw32";
 				}
-				
+				else if ( config.getOs().equals("Linux") )
+				{
+					// For now, always default to 64 bit Linux compilation
+					
+					//if ( config.getArch() == 64 )
+						target = "x86_64-gnu-linux";
+					//else
+					//	target = "i686-gnu-linux"; // Is this right??
+				}
+				else // If the operating system is unrecognized
+				{
+					throw new ConfigurationException("Unsupported operating system: " + config.getOs());
+				}
 				
 				List<String> assembleCommand;
 				
