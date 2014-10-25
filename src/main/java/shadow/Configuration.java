@@ -31,6 +31,8 @@ public class Configuration implements Iterator<File> {
 	private static final String HELP_LONG		= "help";
 	private static final String OUTPUT			= "o";
 	private static final String OUTPUT_LONG		= "output";
+	private static final String VERBOSE			= "v";
+	private static final String VERBOSE_LONG	= "verbose";
 
 
 	private String parentConfig = null; // The parent configuration from a config file	
@@ -39,8 +41,11 @@ public class Configuration implements Iterator<File> {
 	private File systemPath = null;	// This is the import path for all the system files
 	private List<File> importPaths = null;
 	private List<String> linkCommand = null;
+	
 	private boolean checkOnly = false; // Run only parser & type-checker
 	private boolean noLink = false;	// Compile the files on the command line but do not link
+	private boolean verbose = false;
+	
 	private int arch = -1;
 	private String os = null;
 	private File output = null;
@@ -144,6 +149,9 @@ public class Configuration implements Iterator<File> {
 		// see if we're only compiling files
 		noLink = cmdLine.hasOption(NO_LINK);
 		
+		// See if we're being verbose about compilation
+		verbose = cmdLine.hasOption(VERBOSE);
+		
 		if( cmdLine.hasOption(OUTPUT))
 			output = new File(cmdLine.getOptionValue(OUTPUT));		
 	
@@ -232,12 +240,19 @@ public class Configuration implements Iterator<File> {
 											.withArgName("file")
 										    .withDescription("Place output into <file>")										    
 										    .create(OUTPUT);
+		
+		// Create the verbose option
+		@SuppressWarnings("static-access")
+		Option verboseOption = OptionBuilder.withLongOpt(VERBOSE_LONG)
+											.withDescription("Print detailed information about the compilation process")
+											.create(VERBOSE);
 
 		// add all the options from above
 		options.addOption(configOption);
 		options.addOption(checkOption);
 		options.addOption(compileOption);
 		options.addOption(outputOption);
+		options.addOption(verboseOption);
 
 		// add new simple options
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
@@ -339,6 +354,10 @@ public class Configuration implements Iterator<File> {
 	
 	public boolean isNoLink() {
 		return noLink;
+	}
+	
+	public boolean isVerbose() {
+		return verbose;
 	}
 	
 	public boolean hasOutput()
