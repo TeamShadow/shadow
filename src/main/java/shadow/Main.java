@@ -11,7 +11,6 @@ import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -52,6 +51,10 @@ public class Main {
 
 	private static final Logger logger = Loggers.SHADOW;
 	private static final Configuration config = Configuration.getInstance();
+	
+	private static String mainClass;
+	private static boolean mainArguments;
+	
 
 	/**
 	 * This is the starting point of the compiler.
@@ -110,7 +113,7 @@ public class Main {
 	}
 	
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException
-	{
+	{		
 		// Create our command-line options
 		Options options = Configuration.createCommandLineOptions();
 		CommandLineParser cliParser = new PosixParser();
@@ -143,7 +146,7 @@ public class Main {
 		{
 			long startTime = System.currentTimeMillis();
 			
-			MainClass mainClass = generateLLVM(config.next(), linkCommand, false);
+			generateLLVM(config.next(), linkCommand, false);
 			
 			if (!config.isCheckOnly() && !config.isNoLink())
 			{
@@ -183,7 +186,7 @@ public class Main {
 				
 				BufferedReader main;
 				
-				if ( mainClass.hasArgs )
+				if ( mainArguments )
 					main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
 				else
 					main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
@@ -200,7 +203,7 @@ public class Main {
 					String line = main.readLine();
 					
 					while (line != null) {
-						line = line.replace("_Pshadow_Ptest_CTest", mainClass.name) + System.getProperty("line.separator");
+						line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
 						link.getOutputStream().write(line.getBytes());
 						line = main.readLine();
 					}					
@@ -246,8 +249,8 @@ public class Main {
 	 * @param forceGenerate		Forces all .ll files to be newly generated
 	 * @return					Important metadata about the main method
 	 */
-	private static MainClass generateLLVM(File mainFile, List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
-		LinkedHashSet<String> files = new LinkedHashSet<String>();
+	private static void generateLLVM(File mainFile, List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
+		HashSet<String> files = new HashSet<String>();
 		HashSet<String> checkedFiles = new HashSet<String>();
 		
 		HashSet<Generic> generics = new HashSet<Generic>();
@@ -256,9 +259,9 @@ public class Main {
 		TypeChecker checker = new TypeChecker(false);
 		TACBuilder tacBuilder = new TACBuilder();
 		
-		MainClass mainClass = new MainClass();
+		String mainFileName = stripExt(mainFile.getCanonicalPath()); 
+		files.add(mainFileName);
 		
-		files.add(stripExt(mainFile.getCanonicalPath()));
 
 		// If compiling, add critical dependencies
 		if( !config.isCheckOnly() ) {
@@ -321,17 +324,15 @@ public class Main {
 			}
 			else {
 				for( TACModule module : tacBuilder.build(node) ) {
-					if( !mainClass.wasFound ) {
-						mainClass.wasFound = true;
-						
+					if( currentPath.equals(mainFileName) ) {
 						Type type = module.getType();
-						mainClass.name = type.getMangledName();
+						mainClass = type.getMangledName();
 						
 						SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
 						if( type.getMatchingMethod("main", arguments) != null )
-							mainClass.hasArgs = true;
+							mainArguments= true;
 						else if( type.getMatchingMethod("main", new SequenceType()) != null )
-							mainClass.hasArgs = false;
+							mainArguments = false;
 						else
 							throw new ShadowException("File " + currentFile.getName() + " does not contain an appropriate main() method");							
 					}
@@ -376,30 +377,30 @@ public class Main {
 			
 			Type.clearTypes();
 		}
-		
-		return mainClass;
 	}
 	
 	/** Returns the target platform to be used by the LLVM compiler */
 	private static String getTarget() throws ConfigurationException {
 		// Some reference available here:
 		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
+		// Call 'llc --version' for current target information
 		
 		if( config.getOs().equals("Windows") ) {
 			// For now, always default to 32-bit Windows compilation
 			
-			//if ( config.getArch() == 32 )
+			//if( config.getArch() == 64 )
 			//	return "x86_64-w64-mingw32";
 			//else
 				return "i386-unknown-mingw32";
 		}
 		else if( config.getOs().equals("Linux") ) {
-			// For now, always default to 64 bit Linux compilation
+			// A correct 32-bit linux triple/target has not yet been determined
+			// For now, always default to 64-bit Linux compilation
 			
-			//if ( config.getArch() == 64 )
+			//if( config.getArch() == 64 )
 				return "x86_64-gnu-linux";
 			//else
-			//	return "i686-gnu-linux"; // Is this right?
+			//	return "x86-gnu-linux"; // Is this right?
 		}
 		else { // If the operating system is unrecognized
 			throw new ConfigurationException("Unsupported operating system: " + config.getOs());
@@ -418,12 +419,6 @@ public class Main {
 	
 	private static void printHelp() {
 		new HelpFormatter().printHelp("shadowc <source.shadow> [-o <output>] [-c <config.xml>]", Configuration.createCommandLineOptions());
-	}	
-	
-	private static class MainClass {
-		public String name;
-		public boolean hasArgs;
-		public boolean wasFound;
 	}
 
 	private static class Pipe extends Thread {
