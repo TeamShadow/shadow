@@ -52,7 +52,6 @@ public class Main {
 
 	private static final Logger logger = Loggers.SHADOW;
 	private static final Configuration config = Configuration.getInstance();
-	private static List<String> linkCommand;
 
 	/**
 	 * This is the starting point of the compiler.
@@ -133,7 +132,7 @@ public class Main {
 		String unwindFile = new File( system, "shadow" + File.separator + "Unwind" + config.getArch() + ".ll" ).getCanonicalPath();
 		String OSFile = new File( system, "shadow" + File.separator + config.getOs() + ".ll" ).getCanonicalPath();
 		
-		linkCommand = new ArrayList<String>();
+		List<String> linkCommand = new ArrayList<String>();
 		linkCommand.add("llvm-link");
 		linkCommand.add("-");
 		linkCommand.add(unwindFile);
@@ -144,7 +143,7 @@ public class Main {
 		{
 			long startTime = System.currentTimeMillis();
 			
-			MainClass mainClass = generateLLVM(config.next(), false);
+			MainClass mainClass = generateLLVM(config.next(), linkCommand, false);
 			
 			if (!config.isCheckOnly() && !config.isNoLink())
 			{
@@ -247,8 +246,7 @@ public class Main {
 	 * @param forceGenerate		Forces all .ll files to be newly generated
 	 * @return					Important metadata about the main method
 	 */
-	private static MainClass generateLLVM(File mainFile, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException
-	{
+	private static MainClass generateLLVM(File mainFile, List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
 		LinkedHashSet<String> files = new LinkedHashSet<String>();
 		HashSet<String> checkedFiles = new HashSet<String>();
 		
@@ -258,13 +256,12 @@ public class Main {
 		TypeChecker checker = new TypeChecker(false);
 		TACBuilder tacBuilder = new TACBuilder();
 		
-		MainClass mainClass = new MainClass();;
+		MainClass mainClass = new MainClass();
 		
 		files.add(stripExt(mainFile.getCanonicalPath()));
 
 		// If compiling, add critical dependencies
-		if ( !config.isCheckOnly() )
-		{
+		if( !config.isCheckOnly() ) {
 			File system = config.getSystemImport();
 			
 			File standard = new File(system, "shadow" + File.separator + "standard");
@@ -294,8 +291,7 @@ public class Main {
 		}
 		
 		// Begin generating .ll files
-		while ( !files.isEmpty() )
-		{
+		while( !files.isEmpty() ) {
 			String currentPath = files.iterator().next();
 			File currentFile = new File(currentPath + ".shadow");
 			 
@@ -307,31 +303,25 @@ public class Main {
 			// Type check the AST
 			Node node = null;
 		
-			try
-			{
+			try {
 				node = checker.typeCheck(currentFile);
 				
 				// Get all the other needed files
 				if( !config.isCheckOnly() )
 					checker.addFileDependencies(node.getType(), files, checkedFiles);
 			}
-			catch ( TypeCheckException e )
-			{
+			catch( TypeCheckException e ) {
 				logger.error(currentFile.getPath() + " FAILED TO TYPE CHECK");
 				throw e;
 			}
 		
-			if ( config.isCheckOnly() ) // we are only parsing & type checking
-			{
+			if( config.isCheckOnly() ) { // we are only parsing & type checking
 				long stopTime = System.currentTimeMillis();
 				logger.info("FILE " + currentFile.getPath() + " TYPE CHECKED IN " + (stopTime - startTime) + "ms");
 			}
-			else
-			{
-				for ( TACModule module : tacBuilder.build(node) )
-				{
-					if ( !mainClass.wasFound )
-					{
+			else {
+				for( TACModule module : tacBuilder.build(node) ) {
+					if( !mainClass.wasFound ) {
 						mainClass.wasFound = true;
 						
 						Type type = module.getType();
@@ -358,10 +348,10 @@ public class Main {
 					generics.addAll(output.getGenerics());						
 					arrays.addAll(output.getArrays());
 					
-					if ( llvmFile.exists() )
+					if( llvmFile.exists() )
 						linkCommand.add(llvmFile.getCanonicalPath());
 					
-					if ( nativeFile.exists() )
+					if( nativeFile.exists() )
 						linkCommand.add(nativeFile.getCanonicalPath());
 				}
 		
@@ -375,8 +365,7 @@ public class Main {
 			checkedFiles.add(currentPath);
 			
 			// After all LLVM is generated, make a special generics file
-			if ( !config.isCheckOnly() && files.isEmpty() )
-			{
+			if( !config.isCheckOnly() && files.isEmpty() ) {
 				File genericsFile = new File(mainFile.getParent(), mainFile.getName().replace(".shadow", ".generics.shadow"));
 				LLVMOutput interfaceOutput = new LLVMOutput(genericsFile);
 				interfaceOutput.setGenerics(generics, arrays);
@@ -392,10 +381,11 @@ public class Main {
 	}
 	
 	/** Returns the target platform to be used by the LLVM compiler */
-	private static String getTarget() throws ConfigurationException
-	{
-		if ( config.getOs().equals("Windows") )
-		{
+	private static String getTarget() throws ConfigurationException {
+		// Some reference available here:
+		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
+		
+		if( config.getOs().equals("Windows") ) {
 			// For now, always default to 32-bit Windows compilation
 			
 			//if ( config.getArch() == 32 )
@@ -403,30 +393,26 @@ public class Main {
 			//else
 				return "i386-unknown-mingw32";
 		}
-		else if ( config.getOs().equals("Linux") )
-		{
+		else if( config.getOs().equals("Linux") ) {
 			// For now, always default to 64 bit Linux compilation
 			
 			//if ( config.getArch() == 64 )
 				return "x86_64-gnu-linux";
 			//else
-			//	return "i686-gnu-linux"; // Is this right??
+			//	return "i686-gnu-linux"; // Is this right?
 		}
-		else // If the operating system is unrecognized
-		{
+		else { // If the operating system is unrecognized
 			throw new ConfigurationException("Unsupported operating system: " + config.getOs());
 		}
 	}
 	
-	private static void addShadowFile(File fileDir, String fileName, Collection<String> files) throws IOException
-	{
+	private static void addShadowFile(File fileDir, String fileName, Collection<String> files) throws IOException {
 		File file = new File(fileDir, fileName + ".shadow");
 		
 		files.add(stripExt(file.getCanonicalPath()));
 	}
 
-	public static String stripExt(String filepath)
-	{
+	public static String stripExt(String filepath) {
 		return filepath.substring(0, filepath.lastIndexOf("."));
 	}
 	
@@ -434,8 +420,7 @@ public class Main {
 		new HelpFormatter().printHelp("shadowc <source.shadow> [-o <output>] [-c <config.xml>]", Configuration.createCommandLineOptions());
 	}	
 	
-	private static class MainClass
-	{
+	private static class MainClass {
 		public String name;
 		public boolean hasArgs;
 		public boolean wasFound;
