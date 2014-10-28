@@ -52,10 +52,10 @@ public class Main {
 	private static final Logger logger = Loggers.SHADOW;
 	private static final Configuration config = Configuration.getInstance();
 	
+	// Metadata related to a Shadow program's main class
 	private static String mainClass;
 	private static boolean mainArguments;
 	
-
 	/**
 	 * This is the starting point of the compiler.
 	 *
@@ -141,100 +141,97 @@ public class Main {
 		linkCommand.add(unwindFile);
 		linkCommand.add(OSFile);
 
-		// loop through the source files, compiling them
-		while(config.hasNext())
+		// Begin the checking/compilation process
+		long startTime = System.currentTimeMillis();
+		
+		generateLLVM(linkCommand, false);
+		
+		if (!config.isCheckOnly() && !config.isNoLink())
 		{
-			long startTime = System.currentTimeMillis();
+			// any output after this point is important, avoid getting it mixed in with previous output
+			System.out.println();
+			System.out.flush();
+			try { Thread.sleep(250); }
+			catch (InterruptedException ex) { }
 			
-			generateLLVM(config.next(), linkCommand, false);
+			String target = getTarget();
 			
-			if (!config.isCheckOnly() && !config.isNoLink())
-			{
-				// any output after this point is important, avoid getting it mixed in with previous output
-				System.out.println();
-				System.out.flush();
-				try { Thread.sleep(250); }
-				catch (InterruptedException ex) { }
+			List<String> assembleCommand;
+			
+			if( config.hasLinkCommand() )
+				assembleCommand = config.getLinkCommand();
+			else {					
+				assembleCommand = new ArrayList<String>();							
+				assembleCommand.add("gcc");
+				//assembleCommand.add("-g");
+				assembleCommand.add("-x");
+				assembleCommand.add("assembler");
+				assembleCommand.add("-");					
 				
-				String target = getTarget();
-				
-				List<String> assembleCommand;
-				
-				if( config.hasLinkCommand() )
-					assembleCommand = config.getLinkCommand();
-				else {					
-					assembleCommand = new ArrayList<String>();							
-					assembleCommand.add("gcc");
-					//assembleCommand.add("-g");
-					assembleCommand.add("-x");
-					assembleCommand.add("assembler");
-					assembleCommand.add("-");					
-					
-					if (config.getOs().equals("Linux")) {
-						assembleCommand.add("-lm");
-						assembleCommand.add("-lrt");
-					}
-					
-					//assembleCommand.add("-m" + config.getArch());	
-				}
-					
-				if( config.hasOutput() )
-				{
-					assembleCommand.add("-o");
-					assembleCommand.add(config.getOutput().getPath());
+				if (config.getOs().equals("Linux")) {
+					assembleCommand.add("-lm");
+					assembleCommand.add("-lrt");
 				}
 				
-				BufferedReader main;
-				
-				if ( mainArguments )
-					main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
-				else
-					main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
-				
-				Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-				Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
-				Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
-				Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
-				
-				try {
-					new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
-					new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
-					new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
-					String line = main.readLine();
-					
-					while (line != null) {
-						line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
-						link.getOutputStream().write(line.getBytes());
-						line = main.readLine();
-					}					
-
-					try {
-						main.close();
-					} catch (IOException ex) { }
-					try {
-						link.getOutputStream().flush();
-					} catch (IOException ex) { }
-					try {
-						link.getOutputStream().close();
-					} catch (IOException ex) { }
-					if (link.waitFor() != 0)
-						throw new CompileException("FAILED TO LINK");
-					if (optimize.waitFor() != 0)
-						throw new CompileException("FAILED TO OPTIMIZE");
-					if (compile.waitFor() != 0)
-						throw new CompileException("FAILED TO COMPILE");
-					if (assemble.waitFor() != 0)
-						throw new CompileException("FAILED TO ASSEMBLE");
-				} catch (InterruptedException ex) {
-				} finally {
-					link.destroy();
-					optimize.destroy();
-					compile.destroy();
-					assemble.destroy();
-				}
-				
-				logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
+				//assembleCommand.add("-m" + config.getArch());	
 			}
+				
+			if( config.hasOutput() )
+			{
+				assembleCommand.add("-o");
+				assembleCommand.add(config.getOutput().getPath());
+			}
+			
+			BufferedReader main;
+			
+			if ( mainArguments )
+				main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
+			else
+				main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
+			
+			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
+			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
+			
+			try {
+				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
+				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
+				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
+				String line = main.readLine();
+				
+				while (line != null) {
+					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
+					link.getOutputStream().write(line.getBytes());
+					line = main.readLine();
+				}					
+
+				try {
+					main.close();
+				} catch (IOException ex) { }
+				try {
+					link.getOutputStream().flush();
+				} catch (IOException ex) { }
+				try {
+					link.getOutputStream().close();
+				} catch (IOException ex) { }
+				if (link.waitFor() != 0)
+					throw new CompileException("FAILED TO LINK");
+				if (optimize.waitFor() != 0)
+					throw new CompileException("FAILED TO OPTIMIZE");
+				if (compile.waitFor() != 0)
+					throw new CompileException("FAILED TO COMPILE");
+				if (assemble.waitFor() != 0)
+					throw new CompileException("FAILED TO ASSEMBLE");
+			} catch (InterruptedException ex) {
+			} finally {
+				link.destroy();
+				optimize.destroy();
+				compile.destroy();
+				assemble.destroy();
+			}
+			
+			logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
 		}
 	}
 	
@@ -249,7 +246,7 @@ public class Main {
 	 * @param forceGenerate		Forces all .ll files to be newly generated
 	 * @return					Important metadata about the main method
 	 */
-	private static void generateLLVM(File mainFile, List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
+	private static void generateLLVM(List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
 		HashSet<String> files = new HashSet<String>();
 		HashSet<String> checkedFiles = new HashSet<String>();
 		
@@ -259,7 +256,7 @@ public class Main {
 		TypeChecker checker = new TypeChecker(false);
 		TACBuilder tacBuilder = new TACBuilder();
 		
-		String mainFileName = stripExt(mainFile.getCanonicalPath()); 
+		String mainFileName = stripExt(config.getMainFile().getCanonicalPath()); 
 		files.add(mainFileName);
 		
 
@@ -367,7 +364,8 @@ public class Main {
 			
 			// After all LLVM is generated, make a special generics file
 			if( !config.isCheckOnly() && files.isEmpty() ) {
-				File genericsFile = new File(mainFile.getParent(), mainFile.getName().replace(".shadow", ".generics.shadow"));
+				File genericsFile = new File(config.getMainFile().getParent(), 
+						config.getMainFile().getName().replace(".shadow", ".generics.shadow"));
 				LLVMOutput interfaceOutput = new LLVMOutput(genericsFile);
 				interfaceOutput.setGenerics(generics, arrays);
 				interfaceOutput.buildGenerics();
@@ -418,7 +416,7 @@ public class Main {
 	}
 	
 	private static void printHelp() {
-		new HelpFormatter().printHelp("shadowc <source.shadow> [-o <output>] [-c <config.xml>]", Configuration.createCommandLineOptions());
+		new HelpFormatter().printHelp("shadowc <mainSource.shadow> [-o <output>] [-c <config.xml>]", Configuration.createCommandLineOptions());
 	}
 
 	private static class Pipe extends Thread {

@@ -6,7 +6,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -16,7 +15,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
-public class Configuration implements Iterator<File> {
+public class Configuration {
 	
 	private Logger logger = Loggers.SHADOW;
 	
@@ -36,8 +35,7 @@ public class Configuration implements Iterator<File> {
 
 
 	private String parentConfig = null; // The parent configuration from a config file	
-	private List<File> shadowFiles = null; // All source files given over command line
-	private int currentShadowFile = 0;
+	private File mainFile = null; // The source file given over command line
 	private File systemPath = null;	// This is the import path for all the system files
 	private List<File> importPaths = null;
 	private List<String> linkCommand = null;
@@ -86,14 +84,16 @@ public class Configuration implements Iterator<File> {
 	 * @throws ConfigurationException 
 	 * @throws MalformedURLException
 	 */
-	public void parse(CommandLine cmdLine) throws ConfigurationException, MalformedURLException
-	{
-		this.reset(); // Reset the counter in case we parse multiple times		
-		// get all of the files to compile
-		shadowFiles = new ArrayList<File>();
-		for ( String shadowFile : cmdLine.getArgs() ) {
-				shadowFiles.add(new File(shadowFile));
+	public void parse(CommandLine cmdLine) throws ConfigurationException, MalformedURLException {
+		if( cmdLine.getArgs().length > 1 ) {
+			throw new ConfigurationException("Only one main source file may be specified");
 		}
+		else if( cmdLine.getArgs().length == 0 ) {
+			throw new ConfigurationException("No source file specified to compile");
+		}
+		
+		// Get the main source file for compilation
+		mainFile = new File(cmdLine.getArgs()[0]);
 		
 		// Receive or find a config file, otherwise the compiler can't continue
 		if ( cmdLine.hasOption(CONFIG))		
@@ -154,9 +154,6 @@ public class Configuration implements Iterator<File> {
 		
 		if( cmdLine.hasOption(OUTPUT))
 			output = new File(cmdLine.getOptionValue(OUTPUT));		
-	
-		if(shadowFiles.size() == 0)
-			throw new ConfigurationException("No source files specified to compile");
 
 		// Sanity checks
 		
@@ -369,50 +366,11 @@ public class Configuration implements Iterator<File> {
 	{
 		return output;		
 	}
-
-	/**
-	 * Returns true if there is another Shadow file.
-	 */
-	@Override
-	public boolean hasNext() {
-		if(currentShadowFile == shadowFiles.size())
-			return false;
-		else
-			return true;
-	}
-
-	/**
-	 * Gets the next Shadow file to compile.
-	 */
-	@Override
-	public File next() {
-		return shadowFiles.get(currentShadowFile++);
-	}
 	
-	/**
-	 * Gets the current file to compile.
-	 * <b>Must call next() at least once before calling this</b>
-	 * @return
-	 */
-	public File current() {
-		if(shadowFiles != null)
-			return shadowFiles.get(currentShadowFile == 0 ? currentShadowFile : currentShadowFile - 1);
-		else
-			return null;
-	}
-
-	/**
-	 * This does nothing as you're not allowed to remove files.
-	 */
-	@Override
-	public void remove() {
-	}
-
-	/**
-	 * Resets the internal counter for getting Shadow files
-	 */
-	public void reset() {
-		currentShadowFile = 0;
-		importPaths.clear();
+	public File getMainFile() throws ConfigurationException {
+		if ( mainFile == null )
+			throw new ConfigurationException("No source file available to compile");
+			
+		return mainFile;
 	}
 }
