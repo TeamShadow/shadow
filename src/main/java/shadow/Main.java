@@ -1,6 +1,3 @@
-/**
- *
- */
 package shadow;
 
 import java.io.BufferedReader;
@@ -12,16 +9,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.TreeSet;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import shadow.output.llvm.Array;
@@ -37,16 +33,13 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
-
 /**
  * @author Bill Speirs
  * @author Barry Wittman
  * @author Jacob Young
  */
 public class Main {
-	/*
-	 * These are the error codes returned by the compiler
-	 */
+	// These are the error codes returned by the compiler
 	public static final int NO_ERROR				=  0;
 	public static final int FILE_NOT_FOUND_ERROR	= -1;
 	public static final int PARSE_ERROR				= -2;
@@ -57,7 +50,12 @@ public class Main {
 	public static final int CONFIGURATION_ERROR		= -7;
 
 	private static final Logger logger = Loggers.SHADOW;
-
+	private static final Configuration config = Configuration.getInstance();
+	
+	// Metadata related to a Shadow program's main class
+	private static String mainClass;
+	private static boolean mainArguments;
+	
 	/**
 	 * This is the starting point of the compiler.
 	 *
@@ -113,22 +111,10 @@ public class Main {
 			System.exit(COMPILE_ERROR);
 		}
 	}
-
-	private static String getPath( File directory, String name ) throws IOException
-	{
-		File file = new File( directory, name + ".shadow" );
-		String path = file.getCanonicalPath();
-		path = path.substring(0, path.lastIndexOf(".")); //strip extension
-		return path;
-	}
-	
 	
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException
-	
-	{
-		Configuration config = Configuration.getInstance();
-
-		// create our command-line options
+	{		
+		// Create our command-line options
 		Options options = Configuration.createCommandLineOptions();
 		CommandLineParser cliParser = new PosixParser();
 		CommandLine commandLine = cliParser.parse(options, args);
@@ -146,270 +132,291 @@ public class Main {
 
 		File system = config.getSystemImport();
 
-		TypeChecker checker = new TypeChecker(false);
-		TACBuilder tacBuilder = new TACBuilder();
+		String unwindFile = new File( system, "shadow" + File.separator + "Unwind" + config.getArch() + ".ll" ).getCanonicalPath();
+		String OSFile = new File( system, "shadow" + File.separator + config.getOs() + ".ll" ).getCanonicalPath();
+		
 		List<String> linkCommand = new ArrayList<String>();
 		linkCommand.add("llvm-link");
 		linkCommand.add("-");
-		String unwindFile = new File( system, "shadow" + File.separator + "Unwind" + config.getArch() + ".ll" ).getCanonicalPath();
-		linkCommand.add( unwindFile);
-		String OSFile = new File( system, "shadow" + File.separator + config.getOs() + ".ll" ).getCanonicalPath();
-		linkCommand.add( OSFile);		
+		linkCommand.add(unwindFile);
+		linkCommand.add(OSFile);
+
+		// Begin the checking/compilation process
+		long startTime = System.currentTimeMillis();
 		
-		TreeSet<String> files;
-		HashSet<String> checkedFiles = new HashSet<String>();
-
-		// loop through the source files, compiling them
-		while(config.hasNext())
+		generateLLVM(linkCommand, false);
+		
+		if (!config.isCheckOnly() && !config.isNoLink())
 		{
-			File mainFile = config.next();
-			files = null;
-			HashSet<Generic> generics = new HashSet<Generic>();
-			HashSet<Array> arrays = new HashSet<Array>();
-			String mainClass = null;
-			boolean mainArguments = false;
+			// any output after this point is important, avoid getting it mixed in with previous output
+			System.out.println();
+			System.out.flush();
+			try { Thread.sleep(250); }
+			catch (InterruptedException ex) { }
 			
-			do
-			{
-				File currentFile;
-				String currentPath;
-				
-				if( files == null )
-				{
-					currentFile = mainFile;
-					currentPath = mainFile.getCanonicalPath();
-					//strip extension
-					currentPath = currentPath.substring(0, currentPath.lastIndexOf("."));
-					files = new TreeSet<String>();
-					files.add(currentPath);
-
-					if( !config.isCheckOnly() )
-					{
-						File standard = new File( system, "shadow" + File.separator + "standard" );
-						File io = new File( system, "shadow" + File.separator + "io" );
-
-						//minimum standard files needed for compilation
-						files.add( getPath( standard, "Array" ));
-						files.add( getPath( standard, "AddressMap" ));
-						files.add( getPath( standard, "ArrayClass" ));
-						files.add( getPath( standard, "Class" ));						
-						files.add( getPath( standard, "Exception" ));
-						files.add( getPath( standard, "GenericClass" ));
-						files.add( getPath( standard, "Iterator" ));
-						//files.add( getPath( standard, "MethodClass" ));
-						files.add( getPath( standard, "Object" ));
-						files.add( getPath( standard, "String" ));
-						files.add( getPath( standard, "System" ));
-						files.add( getPath( standard, "OutOfMemoryException" ));
-						files.add( getPath( standard, "CastException" ));
-						files.add( getPath( standard, "IndexOutOfBoundsException" ));
-						files.add( getPath( standard, "AssertException" ));
-
-						files.add( getPath( io, "Console" ));
-						files.add( getPath( io, "File" ));
-						files.add( getPath( io, "IOException" ));
-						files.add( getPath( io, "Path" ));
-					}
-				}
-				else
-				{
-					currentPath = files.first();
-					currentFile = new File(currentPath + ".shadow");
-				}
-
-				logger.info("Compiling " + currentFile.getName());
-
-				// get the start time for the compile
-				long startTime = System.currentTimeMillis();
-
-				// type check the AST
-				Node node = null;
-
-				try
-				{
-					node = checker.typeCheck(currentFile);
-					//get all the other needed files
-					if( !config.isCheckOnly() )
-						checker.addFileDependencies(node.getType(), files, checkedFiles);
-				}
-				catch( TypeCheckException e )
-				{
-					logger.error(currentFile.getPath() + " FAILED TO TYPE CHECK");
-					throw e;
-				}
-
-				if(config.isCheckOnly()) // we are only parsing & type checking
-				{
-					long stopTime = System.currentTimeMillis();
-					logger.info("FILE " + currentFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
-				}
-				else
-				{
-					for(TACModule module : tacBuilder.build(node))
-					{
-						if (mainClass == null)
-						{
-							Type type = module.getType();
-							mainClass = type.getMangledName();
-							
-							SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
-							if( type.getMatchingMethod("main", arguments) != null )
-								mainArguments = true;
-							else if( type.getMatchingMethod("main", new SequenceType()) != null )
-								mainArguments = false;
-							else
-								throw new ShadowException("File " + currentFile.getName() + " does not contain an appropriate main() method");							
-						}
-						//Debug prints
-						logger.debug(module.toString());
-						//System.out.println(module);
-
-						// build the LLVM
-						// LLVMOutput(true).build(module);
-
-						// verify the LLVM
-						//new LLVMOutput(false).build(module);
-
-						// write to file
-						String name = module.getName().replace(':', '$');
-						File llvmFile = new File(currentFile.getParentFile(), name + ".ll");
-						LLVMOutput output = new LLVMOutput(llvmFile);
-						output.build(module);
-						
-						generics.addAll(output.getGenerics());						
-						arrays.addAll(output.getArrays());
-						
-						if (llvmFile.exists())
-							linkCommand.add(llvmFile.getCanonicalPath());
-						File nativeFile = new File(currentFile.getParentFile(), name + ".native.ll");
-						if (nativeFile.exists())
-							linkCommand.add(nativeFile.getCanonicalPath());
-					}
-
-					long stopTime = System.currentTimeMillis();
-
-					logger.info("COMPILED " + currentFile.getPath() + " in " + (stopTime - startTime) + "ms");
-				}					
-				
-				files.remove( currentPath );
-				checkedFiles.add( currentPath );
-
-				//after all LLVM generated, make a special generics file
-				if( !config.isCheckOnly() && files.isEmpty() )
-				{
-					File genericsFile = new File( mainFile.getParent(), mainFile.getName().replace(".shadow", ".generics.shadow"));
-					LLVMOutput interfaceOutput = new LLVMOutput( genericsFile );
-					interfaceOutput.setGenerics(generics, arrays);
-					interfaceOutput.buildGenerics();
-
-					linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
-				}
-				
-				Type.clearTypes();		
-				
-			} while( !files.isEmpty() );			
+			String target = getTarget();
 			
-			if (!config.isCheckOnly() && !config.isNoLink())
-			{
-				// any output after this point is important, avoid getting it mixed in with previous output
-				System.out.println();
-				System.out.flush();
-				try { Thread.sleep(250); }
-				catch (InterruptedException ex) { }
+			List<String> assembleCommand;
+			
+			if( config.hasLinkCommand() )
+				assembleCommand = config.getLinkCommand();
+			else {					
+				assembleCommand = new ArrayList<String>();							
+				assembleCommand.add("gcc");
+				//assembleCommand.add("-g");
+				assembleCommand.add("-x");
+				assembleCommand.add("assembler");
+				assembleCommand.add("-");					
 				
-				String target;
-				if (config.getOs().equals("Linux"))
-					target = "x86_64-gnu-linux";
-				else if( config.getArch() == 32 )
-				{			 
-					//target = "i686-w64-mingw32";
-					target = "i386-unknown-mingw32";
-					//assembleCommand.set(0, System.getProperty("user.home") + "/.wine/drive_c/MinGW/bin/gcc.exe");
-				}
-				else 
-				{
-					//target = "i686-w64-mingw32";
-					target = "x86_64-w64-mingw32";
+				if (config.getOs().equals("Linux")) {
+					assembleCommand.add("-lm");
+					assembleCommand.add("-lrt");
 				}
 				
-				
-				List<String> assembleCommand;
-				
-				if( config.hasLinkCommand() )
-					assembleCommand = config.getLinkCommand();
-				else {					
-					assembleCommand = new ArrayList<String>();							
-					assembleCommand.add("gcc");
-					//assembleCommand.add("-g");
-					assembleCommand.add("-x");
-					assembleCommand.add("assembler");
-					assembleCommand.add("-");					
-					
-					if (config.getOs().equals("Linux")) {
-						assembleCommand.add("-lm");
-						assembleCommand.add("-lrt");
-					}
-					
-					//assembleCommand.add("-m" + config.getArch());					
-				
-				}
-					
-				if( config.hasOutput() )
-				{
-					assembleCommand.add("-o");
-					assembleCommand.add(config.getOutput().getPath());
-				}
-				
-				
-				BufferedReader main;
-				
-				if( mainArguments )
-					main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
-				else
-					main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
-				Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-				Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
-				Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
-				Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
-				try {
-					new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
-					new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
-					new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
-					String line = main.readLine();
-					
-					while (line != null) {
-						line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
-						link.getOutputStream().write(line.getBytes());
-						line = main.readLine();
-					}					
-
-					try {
-						main.close();
-					} catch (IOException ex) { }
-					try {
-						link.getOutputStream().flush();
-					} catch (IOException ex) { }
-					try {
-						link.getOutputStream().close();
-					} catch (IOException ex) { }
-					if (link.waitFor() != 0)
-						throw new CompileException("FAILED TO LINK");
-					if (optimize.waitFor() != 0)
-						throw new CompileException("FAILED TO OPTIMIZE");
-					if (compile.waitFor() != 0)
-						throw new CompileException("FAILED TO COMPILE");
-					if (assemble.waitFor() != 0)
-						throw new CompileException("FAILED TO ASSEMBLE");
-				} catch (InterruptedException ex) {
-				} finally {
-					link.destroy();
-					optimize.destroy();
-					compile.destroy();
-					assemble.destroy();
-				}
-				logger.info("SUCCESS");
+				//assembleCommand.add("-m" + config.getArch());	
 			}
+				
+			if( config.hasOutput() )
+			{
+				assembleCommand.add("-o");
+				assembleCommand.add(config.getOutput().getPath());
+			}
+			
+			BufferedReader main;
+			
+			if ( mainArguments )
+				main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
+			else
+				main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
+			
+			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
+			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
+			
+			try {
+				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
+				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
+				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
+				String line = main.readLine();
+				
+				while (line != null) {
+					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
+					link.getOutputStream().write(line.getBytes());
+					line = main.readLine();
+				}					
+
+				try {
+					main.close();
+				} catch (IOException ex) { }
+				try {
+					link.getOutputStream().flush();
+				} catch (IOException ex) { }
+				try {
+					link.getOutputStream().close();
+				} catch (IOException ex) { }
+				if (link.waitFor() != 0)
+					throw new CompileException("FAILED TO LINK");
+				if (optimize.waitFor() != 0)
+					throw new CompileException("FAILED TO OPTIMIZE");
+				if (compile.waitFor() != 0)
+					throw new CompileException("FAILED TO COMPILE");
+				if (assemble.waitFor() != 0)
+					throw new CompileException("FAILED TO ASSEMBLE");
+			} catch (InterruptedException ex) {
+			} finally {
+				link.destroy();
+				optimize.destroy();
+				compile.destroy();
+				assemble.destroy();
+			}
+			
+			logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
 		}
+	}
+	
+	/* 
+	 * Because no system is in place for reusing existing .ll files,
+	 * forceRegenerate currently has no effect.
+	 */
+	/**
+	 * Ensures that LLVM code exists for all dependencies of a main-method-
+	 * containing class/file.
+	 * 
+	 * @param forceGenerate		Forces all .ll files to be newly generated
+	 * @return					Important metadata about the main method
+	 */
+	private static void generateLLVM(List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
+		HashSet<String> files = new HashSet<String>();
+		HashSet<String> checkedFiles = new HashSet<String>();
+		
+		HashSet<Generic> generics = new HashSet<Generic>();
+		HashSet<Array> arrays = new HashSet<Array>();
+		
+		TypeChecker checker = new TypeChecker(false);
+		TACBuilder tacBuilder = new TACBuilder();
+		
+		String mainFileName = stripExt(config.getMainFile().getCanonicalPath()); 
+		files.add(mainFileName);
+		
+
+		// If compiling, add critical dependencies
+		if( !config.isCheckOnly() ) {
+			File system = config.getSystemImport();
+			
+			File standard = new File(system, "shadow" + File.separator + "standard");
+			File io = new File(system, "shadow" + File.separator + "io");
+			
+			// Necessary standard files
+			addShadowFile(standard, "Array", files);
+			addShadowFile(standard, "AddressMap", files);
+			addShadowFile(standard, "ArrayClass", files);
+			addShadowFile(standard, "Class", files);
+			addShadowFile(standard, "Exception", files);
+			addShadowFile(standard, "GenericClass", files);
+			addShadowFile(standard, "Iterator", files);
+			addShadowFile(standard, "Object", files);
+			addShadowFile(standard, "String", files);
+			addShadowFile(standard, "System", files);
+			addShadowFile(standard, "OutOfMemoryException", files);
+			addShadowFile(standard, "CastException", files);
+			addShadowFile(standard, "IndexOutOfBoundsException", files);
+			addShadowFile(standard, "AssertException", files);
+			
+			// Necessary io files
+			addShadowFile(io, "Console", files);
+			addShadowFile(io, "File", files);
+			addShadowFile(io, "IOException", files);
+			addShadowFile(io, "Path", files);
+		}
+		
+		// Begin generating .ll files
+		while( !files.isEmpty() ) {
+			String currentPath = files.iterator().next();
+			File currentFile = new File(currentPath + ".shadow");
+			 
+			logger.info("Generating LLVM code for " + currentFile.getName());
+		
+			// Get the start time for the compile
+			long startTime = System.currentTimeMillis();
+		
+			// Type check the AST
+			Node node = null;
+		
+			try {
+				node = checker.typeCheck(currentFile);
+				
+				// Get all the other needed files
+				if( !config.isCheckOnly() )
+					checker.addFileDependencies(node.getType(), files, checkedFiles);
+			}
+			catch( TypeCheckException e ) {
+				logger.error(currentFile.getPath() + " FAILED TO TYPE CHECK");
+				throw e;
+			}
+		
+			if( config.isCheckOnly() ) { // we are only parsing & type checking
+				long stopTime = System.currentTimeMillis();
+				logger.info("FILE " + currentFile.getPath() + " TYPE CHECKED IN " + (stopTime - startTime) + "ms");
+			}
+			else {
+				for( TACModule module : tacBuilder.build(node) ) {
+					if( currentPath.equals(mainFileName) ) {
+						Type type = module.getType();
+						mainClass = type.getMangledName();
+						
+						SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
+						if( type.getMatchingMethod("main", arguments) != null )
+							mainArguments= true;
+						else if( type.getMatchingMethod("main", new SequenceType()) != null )
+							mainArguments = false;
+						else
+							throw new ShadowException("File " + currentFile.getName() + " does not contain an appropriate main() method");							
+					}
+					// Debug prints
+					logger.debug(module.toString());
+		
+					// Write to file
+					String name = module.getName().replace(':', '$');
+					File llvmFile = new File(currentFile.getParentFile(), name + ".ll");
+					File nativeFile = new File(currentFile.getParentFile(), name + ".native.ll");
+					LLVMOutput output = new LLVMOutput(llvmFile);
+					output.build(module);
+					
+					generics.addAll(output.getGenerics());						
+					arrays.addAll(output.getArrays());
+					
+					if( llvmFile.exists() )
+						linkCommand.add(llvmFile.getCanonicalPath());
+					
+					if( nativeFile.exists() )
+						linkCommand.add(nativeFile.getCanonicalPath());
+				}
+		
+				long stopTime = System.currentTimeMillis();
+		
+				logger.info("Generated " + currentFile.getPath() + ".ll in " 
+						+ (stopTime - startTime) + "ms");
+			}					
+			
+			files.remove(currentPath);
+			checkedFiles.add(currentPath);
+			
+			// After all LLVM is generated, make a special generics file
+			if( !config.isCheckOnly() && files.isEmpty() ) {
+				File genericsFile = new File(config.getMainFile().getParent(), 
+						config.getMainFile().getName().replace(".shadow", ".generics.shadow"));
+				LLVMOutput interfaceOutput = new LLVMOutput(genericsFile);
+				interfaceOutput.setGenerics(generics, arrays);
+				interfaceOutput.buildGenerics();
+		
+				linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
+			}
+			
+			Type.clearTypes();
+		}
+	}
+	
+	/** Returns the target platform to be used by the LLVM compiler */
+	private static String getTarget() throws ConfigurationException {
+		// Some reference available here:
+		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
+		// Call 'llc --version' for current target information
+		
+		if( config.getOs().equals("Windows") ) {
+			// For now, always default to 32-bit Windows compilation
+			
+			//if( config.getArch() == 64 )
+			//	return "x86_64-w64-mingw32";
+			//else
+				return "i386-unknown-mingw32";
+		}
+		else if( config.getOs().equals("Linux") ) {
+			// A correct 32-bit linux triple/target has not yet been determined
+			// For now, always default to 64-bit Linux compilation
+			
+			//if( config.getArch() == 64 )
+				return "x86_64-gnu-linux";
+			//else
+			//	return "x86-gnu-linux"; // Is this right?
+		}
+		else { // If the operating system is unrecognized
+			throw new ConfigurationException("Unsupported operating system: " + config.getOs());
+		}
+	}
+	
+	private static void addShadowFile(File fileDir, String fileName, Collection<String> files) throws IOException {
+		File file = new File(fileDir, fileName + ".shadow");
+		
+		files.add(stripExt(file.getCanonicalPath()));
+	}
+
+	public static String stripExt(String filepath) {
+		return filepath.substring(0, filepath.lastIndexOf("."));
+	}
+	
+	private static void printHelp() {
+		new HelpFormatter().printHelp("shadowc <mainSource.shadow> [-o <output>] [-c <config.xml>]", Configuration.createCommandLineOptions());
 	}
 
 	private static class Pipe extends Thread {
@@ -443,9 +450,4 @@ public class Main {
 			} catch (IOException ex) { }
 		}
 	}
-	
-	private static void printHelp() {
-		new HelpFormatter().printHelp("shadowc <source.shadow> [-o <output>] [-c <config.xml>]", Configuration.createCommandLineOptions());
-	}	
-	
 }

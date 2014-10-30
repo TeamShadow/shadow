@@ -103,56 +103,54 @@ public class Main {
 			 
 		try
 		{
-			// loop through the source files, compiling them
-			while(config.hasNext())
-			{
-				File shadowFile = config.next();
-				checker.setCurrentFile(shadowFile);
-				
-				FileInputStream sourceStream = new FileInputStream(shadowFile);
-		       
-		        TACBuilder tacBuilder = new TACBuilder();
-		        
-		        logger.info("Compiling " + shadowFile.getName());
-		        
-		        // get the start time for the compile
-		        long startTime = System.currentTimeMillis();
-		        
-		        // type check the AST
-		        Node node = null;
-		        	
-	        	sourceStream.close();
-		        
-		        try
-		        {
-		        	node = checker.typeCheck(shadowFile);
-		        }
-		        catch( TypeCheckException e )
-		        {
-		        	logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");		        	
-		        	return TYPE_CHECK_ERROR;
-		        }
-		        
-		        // we are only parsing & type checking
-		        if(config.isCheckOnly()) 
-		        {
-			        long stopTime = System.currentTimeMillis();
+			// Compile the given, main()-containing source file
+			File shadowFile = config.getMainFile();
+			checker.setCurrentFile(shadowFile);
+			
+			FileInputStream sourceStream = new FileInputStream(shadowFile);
+	       
+	        TACBuilder tacBuilder = new TACBuilder();
+	        
+	        logger.info("Compiling " + shadowFile.getName());
+	        
+	        // get the start time for the compile
+	        long startTime = System.currentTimeMillis();
+	        
+	        // type check the AST
+	        Node node = null;
+	        	
+        	sourceStream.close();
+	        
+	        try
+	        {
+	        	node = checker.typeCheck(shadowFile);
+	        }
+	        catch( TypeCheckException e )
+	        {
+	        	logger.error(shadowFile.getPath() + " FAILED TO TYPE CHECK");		        	
+	        	return TYPE_CHECK_ERROR;
+	        }
+	        
+	        // we are only parsing & type checking
+	        if(config.isCheckOnly()) 
+	        {
+		        long stopTime = System.currentTimeMillis();
 
-			        System.err.println("FILE " + shadowFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
-		        }
-		        else
-		        {
-			        // build the TAC
-			        for(TACModule module : tacBuilder.build(node))
-			            new COutput().build(module);
-		    		
-			        long stopTime = System.currentTimeMillis();
-	
-			        System.err.println("COMPILED " + shadowFile.getPath() + " in " + (stopTime - startTime) + "ms");
-		        }
-		        
-		        Type.clearTypes();
-			}			
+		        System.err.println("FILE " + shadowFile.getPath() + " CHECKED IN " + (stopTime - startTime) + "ms");
+	        }
+	        else
+	        {
+		        // build the TAC
+		        for(TACModule module : tacBuilder.build(node))
+		            new COutput().build(module);
+	    		
+		        long stopTime = System.currentTimeMillis();
+
+		        System.err.println("COMPILED " + shadowFile.getPath() + " in " + (stopTime - startTime) + "ms");
+	        }
+	        
+	        Type.clearTypes();
+	        
 		} catch(FileNotFoundException fnfe) {
 			System.err.println("FILE NOT FOUND: " + fnfe.getLocalizedMessage());
 			return GENERAL_ERROR;
