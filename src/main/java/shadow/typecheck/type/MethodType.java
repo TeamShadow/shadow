@@ -64,11 +64,13 @@ public class MethodType extends ClassType {
 	public void addParameter(String name, ModifiedType type) {
 		parameterNames.add(name);
 		parameterTypes.add(type);
+		invalidateHashName();
 	}
 	
 	public void addParameter(ModifiedType type) {
 		parameterNames.add(null); // have to add to keep in synch
 		parameterTypes.add(type);
+		invalidateHashName();
 	}
 	
 	public ModifiedType getParameterType(String paramName) {
@@ -98,7 +100,8 @@ public class MethodType extends ClassType {
 	}
 	
 	public void addReturn(ModifiedType type) {
-		returns.add(type);		
+		returns.add(type);	
+		invalidateHashName();
 	}
 	
 	public SequenceType getReturnTypes() {
@@ -195,8 +198,7 @@ public class MethodType extends ClassType {
 		return replaced;
 	}
 	
-	public void updateFieldsAndMethods() throws InstantiationException
-	{
+	public void updateFieldsAndMethods() throws InstantiationException {
 		parameterTypes.updateFieldsAndMethods();
 		returns.updateFieldsAndMethods();
 	}

@@ -545,6 +545,8 @@ public class ClassType extends Type
 		
 		if( isParameterized() )
 			getTypeParameters().updateFieldsAndMethods();
+		
+		invalidateHashName();
 	}
 	
 	@Override

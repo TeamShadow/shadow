@@ -121,12 +121,6 @@ public class SubscriptType extends GetSetType
 	}
 	
 	@Override
-	public String toString()
-	{
-		return toString(false);
-	}
-	
-	@Override
 	public String toString(boolean withBounds)
 	{
 		StringBuilder sb = new StringBuilder(getGetType().getType().toString(withBounds));

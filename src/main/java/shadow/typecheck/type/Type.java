@@ -45,7 +45,8 @@ public abstract class Type implements Comparable<Type>
 	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();	
 	private LinkedList<Object> importedItems = new LinkedList<Object>();
 	
-	private static boolean referenceRecursion = false;
+	private static boolean referenceRecursion = false;	
+	private String hashName = null;
 	
 	
 	/*
@@ -321,7 +322,14 @@ public abstract class Type implements Comparable<Type>
 		
 		//return getMangledNameWithGenerics();
 		
-		return getQualifiedName();
+		if( hashName == null )
+			hashName = getQualifiedName();
+		
+		return hashName;
+	}
+	
+	protected final void invalidateHashName() {
+		hashName = null;
 	}
 	
 	public String getQualifiedName() 
@@ -353,11 +361,7 @@ public abstract class Type implements Comparable<Type>
 			builder = new StringBuilder(getOuter().toString(withBounds) + ":" + className );
 			
 		if( isParameterized() )		
-		{	
-			if( getTypeParameters() == null )
-				System.out.println("Bleh");
 			builder.append(getTypeParameters().toString("<",">", withBounds));
-		}
 		
 		return builder.toString();
 	}
@@ -754,6 +758,7 @@ public abstract class Type implements Comparable<Type>
 	public void setPackage(Package p)
 	{
 		_package = p;
+		invalidateHashName();
 	}
 	
 	public SequenceType getTypeParameters()
@@ -768,7 +773,8 @@ public abstract class Type implements Comparable<Type>
 			typeParameters = new SequenceType();
 			parameterized = true;
 		}
-		typeParameters.add(parameter);		
+		typeParameters.add(parameter);
+		invalidateHashName();
 	}	
 	
 	public static StringBuilder mangle(StringBuilder sb, String name)
@@ -823,6 +829,7 @@ public abstract class Type implements Comparable<Type>
 			typeParameters = null;			
 			
 		parameterized = value;
+		invalidateHashName();
 	}
 	
 	public boolean isParameterized()

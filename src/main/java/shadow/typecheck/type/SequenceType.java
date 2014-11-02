@@ -363,7 +363,8 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 
 	@Override
 	public boolean remove(Object o) {		
-		return types.remove(o);
+		invalidateHashName();
+		return types.remove(o);		
 	}
 
 	@Override
@@ -373,41 +374,49 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 
 	@Override
 	public boolean addAll(Collection<? extends ModifiedType> c) {
+		invalidateHashName();
 		return types.addAll(c);
 	}
 
 	@Override
 	public boolean addAll(int index, Collection<? extends ModifiedType> c) {
+		invalidateHashName();
 		return types.addAll(index, c);
 	}
 
 	@Override
-	public boolean removeAll(Collection<?> c) {		
+	public boolean removeAll(Collection<?> c) {
+		invalidateHashName();
 		return types.removeAll(c);
 	}
 
 	@Override
-	public boolean retainAll(Collection<?> c) {		
+	public boolean retainAll(Collection<?> c) {
+		invalidateHashName();
 		return types.retainAll(c);
 	}
 
 	@Override
 	public void clear() {
+		invalidateHashName();
 		types.clear();
 	}
 
 	@Override
-	public ModifiedType set(int index, ModifiedType element) {		
+	public ModifiedType set(int index, ModifiedType element) {
+		invalidateHashName();
 		return types.set(index, element);
 	}
 
 	@Override
 	public void add(int index, ModifiedType element) {
-		types.add(index, element);		
+		types.add(index, element);
+		invalidateHashName();
 	}
 
 	@Override
 	public ModifiedType remove(int index) {		
+		invalidateHashName();
 		return types.remove(index);
 	}
 
