@@ -6,12 +6,15 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -155,6 +158,7 @@ public class Main {
 			catch (InterruptedException ex) { }
 			
 			String target = getTarget();
+			logger.info("Building for target '" + target + "'");
 			
 			List<String> assembleCommand;
 			
@@ -378,30 +382,32 @@ public class Main {
 	}
 	
 	/** Returns the target platform to be used by the LLVM compiler */
-	private static String getTarget() throws ConfigurationException {
+	private static String getTarget() throws ConfigurationException, IOException {
 		// Some reference available here:
 		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
-		// Call 'llc --version' for current target information
 		
-		if( config.getOs().equals("Windows") ) {
-			// For now, always default to 32-bit Windows compilation
-			
-			//if( config.getArch() == 64 )
-			//	return "x86_64-w64-mingw32";
-			//else
-				return "i386-unknown-mingw32";
+		// Calling 'llc --version' for current target information
+		// Note: Most of the LLVM tools also have this option
+		Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+		String versionOutput = "";
+		String line = null;
+		while( (line = reader.readLine()) != null ) {
+		   versionOutput += line + "\n";
 		}
-		else if( config.getOs().equals("Linux") ) {
-			// A correct 32-bit linux triple/target has not yet been determined
-			// For now, always default to 64-bit Linux compilation
-			
-			//if( config.getArch() == 64 )
-				return "x86_64-gnu-linux";
-			//else
-			//	return "x86-gnu-linux"; // Is this right?
+		
+		// Create the regular expression required to find the target "triple"
+		Pattern pattern = Pattern.compile("(Default target:\\s)([\\w\\-]+)");
+		Matcher matcher = pattern.matcher(versionOutput);
+		
+		if( matcher.find() ) {
+			return matcher.group(2);
 		}
-		else { // If the operating system is unrecognized
-			throw new ConfigurationException("Unsupported operating system: " + config.getOs());
+		else {
+			throw new ConfigurationException(
+					"Unable to find target in 'llc --version' output:\n" 
+					+ versionOutput);
 		}
 	}
 	
