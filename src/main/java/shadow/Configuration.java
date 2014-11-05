@@ -39,6 +39,7 @@ public class Configuration {
 	private File systemPath = null;	// This is the import path for all the system files
 	private List<File> importPaths = null;
 	private List<String> linkCommand = null;
+	private String target = null;
 	
 	private boolean checkOnly = false; // Run only parser & type-checker
 	private boolean noLink = false;	// Compile the files on the command line but do not link
@@ -340,6 +341,18 @@ public class Configuration {
 		return linkCommand != null;
 	}
 	
+	public void setTarget(String target) {
+		if( this.target == null )
+			this.target = target;
+	}
+	
+	public String getTarget() {
+		return target;
+	}
+	
+	public boolean hasTarget() {
+		return target != null;
+	}
 
 	public void setParent(String parentConfig) {
 		this.parentConfig = parentConfig;

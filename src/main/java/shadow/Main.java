@@ -157,7 +157,13 @@ public class Main {
 			try { Thread.sleep(250); }
 			catch (InterruptedException ex) { }
 			
-			String target = getTarget();
+			// Get the appropriate LLVM target "triple"
+			String target;
+			if( config.hasTarget() )
+				target = config.getTarget();
+			else
+				target = getTarget();
+			
 			logger.info("Building for target '" + target + "'");
 			
 			List<String> assembleCommand;

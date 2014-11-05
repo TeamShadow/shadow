@@ -28,6 +28,10 @@ public class ConfigParser {
 		
 		digester.addCallMethod("shadow/link", "setLinkCommand", 1);
 		digester.addCallParam("shadow/link", 0);
+		
+		// Parse the LLVM target "triple"
+		digester.addCallMethod("shadow/target", "setTarget", 1);
+		digester.addCallParam("shadow/target", 0);
 	}
 
 	public void parse(File configFile) {
