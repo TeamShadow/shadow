@@ -64,10 +64,9 @@ public class Main {
 	 * Used for unit tests, provides a return value.
 	 * @param args arguments
 	 * @return error
-	 * @throws MalformedURLException 
-	 * @throws ConfigurationException 
+	 * @throws ConfigurationException
 	 */
-	public static int test(String[] args) throws MalformedURLException, ConfigurationException {
+	public static int test(String[] args) throws ConfigurationException {
 		Configuration config = Configuration.getInstance();
 
 		try {
@@ -96,6 +95,11 @@ public class Main {
 		catch (ConfigurationException e) 
 		{	
 			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());			
+			return GENERAL_ERROR;
+		}
+		catch (IOException e)
+		{
+			System.err.println("TARGET FINDING ERROR: " + e.getLocalizedMessage());
 			return GENERAL_ERROR;
 		}
 		

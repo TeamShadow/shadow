@@ -84,10 +84,10 @@ public class TypeCollector extends BaseChecker
 			}
 		};
 				
-		//add standard imports		
+		//add standard imports
 		File standard = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
 		if( !standard.exists() )
-			throw new ConfigurationException("Invalid path to shadow:standard: " + standard.getCanonicalPath());
+			throw new ConfigurationException("Invalid path to shadow:standard: " + standard.getPath());
 			
 		File[] imports = standard.listFiles( filter );
 		for( File file :  imports )			

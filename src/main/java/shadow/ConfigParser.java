@@ -32,6 +32,10 @@ public class ConfigParser {
 		// Parse the LLVM target "triple"
 		digester.addCallMethod("shadow/target", "setTarget", 1);
 		digester.addCallParam("shadow/target", 0);
+		
+		// Parse the OS
+		digester.addCallMethod("shadow/os", "setOs", 1);
+		digester.addCallParam("shadow/os", 0);
 	}
 
 	public void parse(File configFile) {

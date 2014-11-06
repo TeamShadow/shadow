@@ -1,18 +1,21 @@
 package shadow;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
 public class Configuration {
@@ -33,9 +36,9 @@ public class Configuration {
 	private static final String VERBOSE			= "v";
 	private static final String VERBOSE_LONG	= "verbose";
 
-
 	private String parentConfig = null; // The parent configuration from a config file	
 	private File mainFile = null; // The source file given over command line
+	private String mainFileName = null;
 	private File systemPath = null;	// This is the import path for all the system files
 	private List<File> importPaths = null;
 	private List<String> linkCommand = null;
@@ -49,6 +52,8 @@ public class Configuration {
 	private String os = null;
 	private File output = null;
 	private File configFile = null;
+	
+	private static final String defaultFile = "shadow.xml";
 	
 	private static Configuration config = new Configuration();
 	
@@ -78,14 +83,13 @@ public class Configuration {
 		return null;
 	}
 	
-
 	/**
 	 * Parses the command line and sets all of the internal variables.
 	 * @param cmdLine The command line passed to the compiler.
 	 * @throws ConfigurationException 
-	 * @throws MalformedURLException
+	 * @throws IOException 
 	 */
-	public void parse(CommandLine cmdLine) throws ConfigurationException, MalformedURLException {
+	public void parse(CommandLine cmdLine) throws ConfigurationException, IOException {
 		if( cmdLine.getArgs().length > 1 ) {
 			throw new ConfigurationException("Only one main source file may be specified");
 		}
@@ -94,44 +98,50 @@ public class Configuration {
 		}
 		
 		// Get the main source file for compilation
-		mainFile = new File(cmdLine.getArgs()[0]);
+		mainFileName = cmdLine.getArgs()[0];
+		mainFile = new File(mainFileName);
+		
+		// see if all we want is to check the file
+		checkOnly = cmdLine.hasOption(TYPECHECK);
+		
+		// see if we're only compiling files
+		noLink = cmdLine.hasOption(NO_LINK);
+		
+		// See if we're being verbose about compilation
+		verbose = cmdLine.hasOption(VERBOSE);
+		
+		// If the output file specified is not absolute, create it relative to
+		// the main source file.
+		if( cmdLine.hasOption(OUTPUT) )
+			output = makeAbsolute(cmdLine.getOptionValue(OUTPUT), mainFile.getParentFile());
 		
 		// Receive or find a config file, otherwise the compiler can't continue
-		if ( cmdLine.hasOption(CONFIG))		
+		if ( cmdLine.hasOption(CONFIG) )
 			// Parse the config file on the command line if we have it
 			configFile = new File(cmdLine.getOptionValue(CONFIG));
-		else // Look for a config file with a default name
+		else // Look for a default config file
 		{	
-			// First, look for the config file in the working directory
-			String configName = getDefaultConfigName();		 
-			configFile = new File(configName);
+			// First, look for the config file in the working directory 
+			configFile = new File(defaultFile);
 			
-			if( !configFile.exists())
-				configFile = new File("shadow.xml");
-					
-			//then look for a system-defined config file
-			if ( !configFile.exists() )
-			{
+			if( !configFile.exists() )
+				configFile = new File(getExecutableDirectory(), defaultFile);
+			
+			if( !configFile.exists() ) {
 				// Use a system-wide file if it exists
 				if(System.getenv("SHADOW_CONFIG") != null)
 					configFile = new File(System.getenv("SHADOW_CONFIG"));
-				
-				if( !configFile.exists() ) //look in shadowc directory
-					configFile = new File(getExecutableDirectory(), configName);
-				
-				
-				if( !configFile.exists() )
-					configFile = new File(getExecutableDirectory(), "shadow.xml");				
-				
-				if( !configFile.exists() )
-					throw new ConfigurationException("No configuration file specified!");
 			}
-		}	
+			
+			// No worries if we haven't found a file, just autofill the fields
+		}
 		
 		if( configFile.exists() )
 			parseConfigFile(configFile);
-		else
-			throw new ConfigurationException("Invalid configuration file specified: " + configFile.getPath());
+		else {
+			logger.info("No configuration files found, auto-detecting platform details");
+			autoFill();
+		}
 
 		// print the import paths if we're debugging
 		if(logger.isDebugEnabled()) {
@@ -143,36 +153,15 @@ public class Configuration {
 		//
 		// By the time we get here, all configs & parents have been parsed
 		//
-		
-		// see if all we want is to check the file
-		checkOnly = cmdLine.hasOption(TYPECHECK);
-		
-		// see if we're only compiling files
-		noLink = cmdLine.hasOption(NO_LINK);
-		
-		// See if we're being verbose about compilation
-		verbose = cmdLine.hasOption(VERBOSE);
-		
-		if( cmdLine.hasOption(OUTPUT))
-			output = new File(cmdLine.getOptionValue(OUTPUT));		
-
-		// Sanity checks
-		
-		if(arch == -1)
-			throw new ConfigurationException("Architecture not specified");
-		
-		if(os == null)
-			throw new ConfigurationException("OS not specified");
-		
-		if(this.systemPath == null)
-			throw new ConfigurationException("No system import path specified");
 	}
 	
 	/**
 	 * Parse a config file, recursively parsing parents when found.
 	 * @param configFile The config file to parse
+	 * @throws IOException 
+	 * @throws ConfigurationException 
 	 */
-	private <T>void parseConfigFile(T configFile) {
+	private <T>void parseConfigFile(T configFile) throws ConfigurationException, IOException {
 		ConfigParser parser = new ConfigParser(this);
 		
 		if(configFile instanceof File) {
@@ -194,8 +183,65 @@ public class Configuration {
 			// parse the parent
 			parseConfigFile(parent);
 		}
+		
+		autoFill();
 	}
 	
+	/** Automatically fills any empty config fields */
+	private void autoFill() throws ConfigurationException, IOException {
+		if( arch == -1 ) {
+			if( System.getProperty("os.arch").contains("64") )
+				arch = 64;
+			else
+				arch = 32;
+		}
+		
+		if( os == null ) {
+			String fullOs = System.getProperty("os.name");
+			
+			if( fullOs.startsWith("Windows") )
+				os = "Windows";
+			else {
+				logger.info("Non-Windows OS '" + fullOs + "' detected, defaulting to Linux.ll");
+				os = "Linux";
+			}
+		}
+		
+		if( target == null ) {
+			target = getDefaultTarget();
+		}
+		
+		if( output == null ) {
+			if( os == "Windows" )
+				output = new File(Main.stripExt(mainFileName) + ".exe");
+			else
+				output = new File(Main.stripExt(mainFileName));
+		}
+		
+		if( linkCommand == null ) {
+			linkCommand = new ArrayList<String>();							
+			linkCommand.add("gcc");
+			linkCommand.add("-x");
+			linkCommand.add("assembler");
+			linkCommand.add("-");					
+			
+			if(config.getOs().equals("Linux")) {
+				linkCommand.add("-lm");
+				linkCommand.add("-lrt");
+			}
+			
+			linkCommand.add("-o");
+			linkCommand.add(output.getPath());
+		}
+
+		if( systemPath == null ) {
+			systemPath = getExecutableDirectory();
+		}
+		
+		if( importPaths.isEmpty() )
+			importPaths.add(getExecutableDirectory());
+	}
+
 	/**
 	 * Create an Options object to be used to parse the command line.
 	 * 
@@ -208,15 +254,13 @@ public class Configuration {
 	public static Options createCommandLineOptions()
 	{
 		Options options = new Options();
-		
-		String configName = getDefaultConfigName();
 
 		// setup the configuration file option
 		@SuppressWarnings("static-access")
 		Option configOption = OptionBuilder.withLongOpt(CONFIG_LONG)
 										   .hasArg()
 										   .withArgName("config.xml")
-										   .withDescription("Specify configuration file\nDefault is " + configName + " or shadow.xml")
+										   .withDescription("Specify optional configuration file\nIf " + defaultFile + " exists, it will be checked")
 										   .create(CONFIG);
 
 		// create the typecheck option
@@ -258,32 +302,6 @@ public class Configuration {
 		return options;
 	}
 	
-	private static String getDefaultConfigName()
-	{
-		// Default config name if the platform can't be determined
-		String configName = "shadow.xml";
-		
-		// Get a platform specific name for the default config file
-		if ( System.getProperty("os.name").startsWith("Windows") )
-		{
-			//for now, always default to 32 for Windows
-			
-			//if ( System.getProperty("os.arch").contains("64") )
-				//configName = "shadow-windows-64.xml";
-			//else // If not 64 bit, should be 32 bit
-				configName = "shadow-windows-32.xml";
-		}
-		else if ( System.getProperty("os.name").startsWith("Linux") )
-		{
-			if ( System.getProperty("os.arch").contains("64") )
-				configName = "shadow-linux-64.xml";
-			else // If not 64 bit, should be 32 bit
-				configName = "shadow-linux-32.xml";
-		}
-		
-		return configName;
-	}
-	
 	public int getArch() {
 		return arch;
 	}
@@ -308,10 +326,9 @@ public class Configuration {
 
 	public void addImport(String importPath)
 	{
-		if( FilenameUtils.getPrefixLength(importPath) == 0 ) //relative path
-			this.importPaths.add(new File(configFile.getParentFile(),importPath));
-		else
-			this.importPaths.add(new File(importPath));		
+		File importPathFile = makeAbsolute(importPath, getExecutableDirectory());
+		
+		importPaths.add(importPathFile);
 	}
 
 	public File getSystemImport() {
@@ -319,13 +336,8 @@ public class Configuration {
 	}
 
 	public void setSystemImport(String systemImportPath) {
-		if(this.systemPath == null)
-		{			
-			if( FilenameUtils.getPrefixLength(systemImportPath) == 0 ) //relative path
-				this.systemPath = new File(configFile.getParentFile(),systemImportPath);
-			else
-				this.systemPath = new File(systemImportPath);			
-		}
+		if(systemPath == null)
+			systemPath = makeAbsolute(systemImportPath, getExecutableDirectory());
 	}
 	
 	public void setLinkCommand(String linkCommand) {
@@ -337,10 +349,6 @@ public class Configuration {
 		return linkCommand;
 	}
 	
-	public boolean hasLinkCommand() {
-		return linkCommand != null;
-	}
-	
 	public void setTarget(String target) {
 		if( this.target == null )
 			this.target = target;
@@ -348,10 +356,6 @@ public class Configuration {
 	
 	public String getTarget() {
 		return target;
-	}
-	
-	public boolean hasTarget() {
-		return target != null;
 	}
 
 	public void setParent(String parentConfig) {
@@ -370,13 +374,7 @@ public class Configuration {
 		return verbose;
 	}
 	
-	public boolean hasOutput()
-	{
-		return output != null;
-	}
-	
-	public File getOutput()
-	{
+	public File getOutput() {
 		return output;		
 	}
 	
@@ -385,5 +383,48 @@ public class Configuration {
 			throw new ConfigurationException("No source file available to compile");
 			
 		return mainFile;
+	}
+	
+	/** 
+	 * Recreates a relative path in terms of a parent path. Used to ensure
+	 * relative paths stay relative to the correct directory.
+	 */
+	public File makeAbsolute(String path, File parent) {
+		File file = new File(path);
+		
+		if( !file.isAbsolute() )
+			file = new File(parent, path);
+		
+		return file;
+	}
+	
+	/** Returns the target platform to be used by the LLVM compiler */
+	private static String getDefaultTarget() throws ConfigurationException, IOException {
+		// Some reference available here:
+		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
+		
+		// Calling 'llc --version' for current target information
+		// Note: Most of the LLVM tools also have this option
+		Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+		String versionOutput = "";
+		String line = null;
+		while( (line = reader.readLine()) != null ) {
+		   versionOutput += line + "\n";
+		}
+		
+		// Create the regular expression required to find the target "triple"
+		Pattern pattern = Pattern.compile("(Default target:\\s)([\\w\\-]+)");
+		Matcher matcher = pattern.matcher(versionOutput);
+		
+		if( matcher.find() ) {
+			return matcher.group(2);
+		}
+		else {
+			throw new ConfigurationException(
+					"Unable to find target in 'llc --version' output:\n" 
+					+ versionOutput);
+		}
 	}
 }

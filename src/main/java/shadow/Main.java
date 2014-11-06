@@ -6,15 +6,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -132,7 +129,7 @@ public class Main {
 		// parse out the command line
 		// throws exceptions if there are problems
 		config.parse(commandLine);
-
+		
 		File system = config.getSystemImport();
 
 		String unwindFile = new File( system, "shadow" + File.separator + "Unwind" + config.getArch() + ".ll" ).getCanonicalPath();
@@ -157,51 +154,20 @@ public class Main {
 			try { Thread.sleep(250); }
 			catch (InterruptedException ex) { }
 			
-			// Get the appropriate LLVM target "triple"
-			String target;
-			if( config.hasTarget() )
-				target = config.getTarget();
-			else
-				target = getTarget();
+			logger.info("Building for target '" + config.getTarget() + "'");
 			
-			logger.info("Building for target '" + target + "'");
-			
-			List<String> assembleCommand;
-			
-			if( config.hasLinkCommand() )
-				assembleCommand = config.getLinkCommand();
-			else {					
-				assembleCommand = new ArrayList<String>();							
-				assembleCommand.add("gcc");
-				//assembleCommand.add("-g");
-				assembleCommand.add("-x");
-				assembleCommand.add("assembler");
-				assembleCommand.add("-");					
-				
-				if (config.getOs().equals("Linux")) {
-					assembleCommand.add("-lm");
-					assembleCommand.add("-lrt");
-				}
-				
-				//assembleCommand.add("-m" + config.getArch());	
-			}
-				
-			if( config.hasOutput() )
-			{
-				assembleCommand.add("-o");
-				assembleCommand.add(config.getOutput().getPath());
-			}
+			List<String> assembleCommand = config.getLinkCommand();
 			
 			BufferedReader main;
 			
-			if ( mainArguments )
+			if( mainArguments )
 				main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
 			else
 				main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
 			
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-			Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
-			Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder("opt", "-mtriple", config.getTarget(), "-O3").redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder("llc", "-mtriple", config.getTarget(), "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 			
 			try {
@@ -384,36 +350,6 @@ public class Main {
 			}
 			
 			Type.clearTypes();
-		}
-	}
-	
-	/** Returns the target platform to be used by the LLVM compiler */
-	private static String getTarget() throws ConfigurationException, IOException {
-		// Some reference available here:
-		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
-		
-		// Calling 'llc --version' for current target information
-		// Note: Most of the LLVM tools also have this option
-		Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-		String versionOutput = "";
-		String line = null;
-		while( (line = reader.readLine()) != null ) {
-		   versionOutput += line + "\n";
-		}
-		
-		// Create the regular expression required to find the target "triple"
-		Pattern pattern = Pattern.compile("(Default target:\\s)([\\w\\-]+)");
-		Matcher matcher = pattern.matcher(versionOutput);
-		
-		if( matcher.find() ) {
-			return matcher.group(2);
-		}
-		else {
-			throw new ConfigurationException(
-					"Unable to find target in 'llc --version' output:\n" 
-					+ versionOutput);
 		}
 	}
 	
