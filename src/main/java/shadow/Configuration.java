@@ -35,6 +35,8 @@ public class Configuration {
 	private static final String OUTPUT_LONG		= "output";
 	private static final String VERBOSE			= "v";
 	private static final String VERBOSE_LONG	= "verbose";
+	private static final String RECOMPILE		= "f";
+	private static final String RECOMPILE_LONG  = "force-recompile";
 
 	private String parentConfig = null; // The parent configuration from a config file	
 	private File mainFile = null; // The source file given over command line
@@ -47,6 +49,7 @@ public class Configuration {
 	private boolean checkOnly = false; // Run only parser & type-checker
 	private boolean noLink = false;	// Compile the files on the command line but do not link
 	private boolean verbose = false;
+	private boolean forceRecompile = false; // Recompile all source files, even if unneeded
 	
 	private int arch = -1;
 	private String os = null;
@@ -109,6 +112,8 @@ public class Configuration {
 		
 		// See if we're being verbose about compilation
 		verbose = cmdLine.hasOption(VERBOSE);
+		
+		forceRecompile = cmdLine.hasOption(RECOMPILE);
 		
 		// If the output file specified is not absolute, create it relative to
 		// the main source file.
@@ -288,6 +293,12 @@ public class Configuration {
 		Option verboseOption = OptionBuilder.withLongOpt(VERBOSE_LONG)
 											.withDescription("Print detailed information about the compilation process")
 											.create(VERBOSE);
+		
+		// Create the force-recompile option
+		@SuppressWarnings("static-access")
+		Option recompileOption = OptionBuilder.withLongOpt(RECOMPILE_LONG)
+											.withDescription("Recompiles all source files, even if unnecessary")
+											.create(RECOMPILE);
 
 		// add all the options from above
 		options.addOption(configOption);
@@ -295,6 +306,7 @@ public class Configuration {
 		options.addOption(compileOption);
 		options.addOption(outputOption);
 		options.addOption(verboseOption);
+		options.addOption(recompileOption);
 
 		// add new simple options
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
@@ -372,6 +384,10 @@ public class Configuration {
 	
 	public boolean isVerbose() {
 		return verbose;
+	}
+	
+	public boolean isForceRecompile() {
+		return forceRecompile;
 	}
 	
 	public File getOutput() {
