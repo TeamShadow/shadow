@@ -39,6 +39,7 @@ public abstract class Type implements Comparable<Type>
 	private Map<String, Node> fieldTable = new HashMap<String, Node>();
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> referencedTypes = new HashSet<Type>();
+	private List<Type> genericDeclarations = new ArrayList<Type>();
 	private List<Type> typeParameterDependencies = new ArrayList<Type>();
 	
 	
@@ -1251,6 +1252,7 @@ public abstract class Type implements Comparable<Type>
 			*/
 		}
 	}
+
 	public Set<Type> getReferencedTypes()
 	{
 		return referencedTypes;
@@ -1363,7 +1365,7 @@ public abstract class Type implements Comparable<Type>
 				{
 					Package importPackage = (Package)importItem;
 					for( Type referencedType : getReferencedTypes() )
-						if( !referencedType.hasOuter() && referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
+						if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
 							imports.add(referencedType.getImportName());					
 				}
 			}
@@ -1382,5 +1384,11 @@ public abstract class Type implements Comparable<Type>
 		instantiatedTypes.instantiatedType = null;
 	}
 	
+	public void addGenericDeclaration(Type type) {
+		genericDeclarations.add(type);
+	}
 	
+	public List<Type> getGenericDeclarations() {
+		return genericDeclarations;
+	}
 }

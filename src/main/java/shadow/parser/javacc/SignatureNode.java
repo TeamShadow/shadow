@@ -4,6 +4,8 @@ import shadow.typecheck.type.MethodSignature;
 
 public class SignatureNode extends SimpleNode {
 	
+	private boolean hasBlock = false;
+	
 	public SignatureNode(int id) {
     	super(id);
     }
@@ -22,5 +24,13 @@ public class SignatureNode extends SimpleNode {
 	public void setMethodSignature(MethodSignature signature)
 	{
 		this.signature = signature;
+	}
+	
+	public void setBlock(boolean value) {
+		hasBlock = true;
+	}
+	
+	public boolean hasBlock() {
+		return hasBlock;
 	}
 }

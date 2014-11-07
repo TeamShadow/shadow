@@ -99,7 +99,7 @@ public class Main {
 			return GENERAL_ERROR;
 		}
 		
-		TypeChecker checker = new TypeChecker(false);
+		TypeChecker checker = new TypeChecker();
 			 
 		try
 		{

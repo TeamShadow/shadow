@@ -25,6 +25,7 @@ import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
+import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMethodDeclaration;
@@ -38,6 +39,7 @@ import shadow.parser.javacc.ASTTypeArguments;
 import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
+import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -61,23 +63,26 @@ import shadow.typecheck.type.UninstantiatedClassType;
 import shadow.typecheck.type.UninstantiatedInterfaceType;
 import shadow.typecheck.type.UninstantiatedType;
 
-public class TypeUpdater extends BaseChecker
-{
-	public TypeUpdater(boolean debug,
+public class TypeUpdater extends BaseChecker {
+	
+	private boolean isMeta = false;	
+	
+	public TypeUpdater(
 			HashMap<Package, HashMap<String, Type>> typeTable,
 			List<String> importList, Package packageTree) {
-		super(debug, typeTable, importList, packageTree);
+		super(typeTable, importList, packageTree);
 	}	
-	
 	
 	//public void updateTypes(Map<String, Node> files) throws ShadowException, TypeCheckException
 	public Map<Type,Node> update(Map<Type, Node> nodeTable) throws ShadowException, TypeCheckException
 	{	
 		//adds fields and methods
 		ASTWalker walker = new ASTWalker( this );
-		for(Node declarationNode : nodeTable.values() )
+		for(Node declarationNode : nodeTable.values() ) {
+			isMeta = declarationNode.getFile().getPath().endsWith(".meta");
 			if( !declarationNode.getType().hasOuter() ) //only walk outer types, inner ones will get covered automatically
 				walker.walk(declarationNode);
+		}
 		
 		if( errorList.isEmpty() )
 			addConstructorsAndProperties();
@@ -93,7 +98,7 @@ public class TypeUpdater extends BaseChecker
 		
 		//update extends and implements lists based on updated type parameters		
 		if( errorList.isEmpty() )
-			updateExtendsAndImplements( nodeList);
+			updateExtendsAndImplements( nodeList );
 		
 		//must happen after extends and implements
 		//since generic parameters in the methods could depend on correct extends and implements
@@ -102,10 +107,12 @@ public class TypeUpdater extends BaseChecker
 		
 		//now that the types are figured out, make sure all the method overrides are legal
 		if( errorList.isEmpty() )
-			checkOverrides( nodeTable );				
+			checkOverrides( nodeTable );	
+		
+		if( errorList.isEmpty() )
+			updateGenericDeclarations( nodeTable );
 
-		if( errorList.size() > 0 )
-		{
+		if( errorList.size() > 0 ) {
 			printErrors();
 			throw errorList.get(0);
 		}
@@ -113,6 +120,31 @@ public class TypeUpdater extends BaseChecker
 		return nodeTable;
 	}
 
+	private void updateGenericDeclarations(Map<Type, Node> nodeTable) {
+		for(Type type : nodeTable.keySet() )
+			updateGenericDeclarations(type);
+	}
+	
+	private void updateGenericDeclarations(Type type){
+		if( type instanceof ClassType ) {
+			ClassType classType = (ClassType) type;
+			for( Type inner : classType.getInnerClasses().values() )
+				updateGenericDeclarations( inner );
+		}
+		
+		for( Type generic : type.getGenericDeclarations() ) {
+			if( generic instanceof UninstantiatedType ) {
+				UninstantiatedType uninstantiated = (UninstantiatedType) generic;
+				try {
+					generic = uninstantiated.instantiate();
+				} catch (InstantiationException e) {
+					addError(Error.INVALID_TYPE_ARGUMENTS, "Cannot instantiate type " + uninstantiated.getType() + " with type arguments " + uninstantiated.getTypeArguments());
+				}
+			}			
+			type.addReferencedType(generic);
+		}			
+	}
+	
 	private void updateFieldsAndMethods( Map<Type, Node> nodeTable )
 	{
 		//update fields and methods			
@@ -432,12 +464,17 @@ public class TypeUpdater extends BaseChecker
 					{
 						parent = ((UninstantiatedClassType)parent).partiallyInstantiate();
 						classType.setExtendType(parent);
+				
 					} 
 					catch (InstantiationException e) 
 					{
 						addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 					}
 				}
+				
+				if( isMeta )
+					classType.addReferencedType(parent);
+				
 				
 				//update interfaces
 				ArrayList<InterfaceType> interfaces = classType.getInterfaces();
@@ -451,12 +488,16 @@ public class TypeUpdater extends BaseChecker
 						{
 							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).partiallyInstantiate();
 							interfaces.set(i, interfaceType);
+							
 						} 
 						catch (InstantiationException e) 
 						{
 							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 						}						
 					}
+					
+					if( isMeta )
+						classType.addReferencedType(interfaceType);
 				}				
 									
 			}
@@ -481,6 +522,9 @@ public class TypeUpdater extends BaseChecker
 							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 						}						
 					}
+					
+					if( isMeta )
+						type.addReferencedType(interfaceType);
 				}
 			}			
 		}
@@ -705,15 +749,25 @@ public class TypeUpdater extends BaseChecker
 				MethodSignature method = currentType.getIndistinguishableMethod(signature);				
 				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Indistinguishable method already declared on line " + method.getNode().getLine());
 				return WalkType.NO_CHILDREN;
-			}	
-				
-			/*//This shouldn't be a problem, since methods are accessed withi . and inner classes with :
-			if( currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(signature.getSymbol() ) )
-			{
-				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Method name " + signature.getSymbol() + " already declared as inner class" );
-				return WalkType.NO_CHILDREN;
 			}
-			*/
+						
+			if( currentType instanceof ClassType ) {
+			
+				if( isMeta && node.hasBlock() )
+					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
+				
+				if( !isMeta ) {					
+					if( !node.hasBlock() && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() )
+						addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
+					
+					if( node.hasBlock() && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
+						addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
+				}
+			}
+			else if( currentType instanceof InterfaceType ) {
+				if( node.hasBlock() )
+					addError(node, Error.INVALID_STRUCTURE, "Interface method " + signature + " must not define a body");
+			}		
 			
 			// add the method to the current type
 			currentType.addMethod(name, signature);
@@ -878,8 +932,11 @@ public class TypeUpdater extends BaseChecker
 				//shouldn't fail
 				if( type == null )
 					addError(Error.INVALID_IMPORT, "Undefined type " + item + " cannot be imported");
-				else
-					importedItems.set(i, type);	
+				else {
+					importedItems.set(i, type);
+					if( isMeta )
+						node.getType().addReferencedType(type);
+				}
 			}
 			else
 			{
@@ -1151,6 +1208,115 @@ public class TypeUpdater extends BaseChecker
 		return deferredTypeResolution(node, secondVisit);	
 	}
 	
+	private Object deferredTypeResolution(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
+	{	
+		if(!secondVisit)
+			return WalkType.POST_CHILDREN;
+		
+		Node child = node.jjtGetChild(0); 
+		String typeName = child.getImage();
+		int start = 1;
+		
+		if( child instanceof ASTUnqualifiedName )
+		{					
+			child = node.jjtGetChild(start);
+			typeName += "@" + child.getImage();
+			start++;					
+		}
+		
+		Type type = lookupType(typeName);
+				
+		if(type == null)
+		{
+			addError(Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
+			node.setType(Type.UNKNOWN);					
+		}
+		else
+		{			
+			if (currentType instanceof ClassType)
+				((ClassType)currentType).addReferencedType(type);
+		
+			if( !isMeta && !classIsAccessible( type, declarationType  ) )		
+				addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
+			
+			if( child.jjtGetNumChildren() == 1 ) //contains arguments
+			{
+				SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+				if( type.isParameterized() ) 
+				{					
+					if( type instanceof ClassType )						
+						type = new UninstantiatedClassType( (ClassType)type, arguments);
+					else if( type instanceof InterfaceType )
+						type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments);
+				}
+				else
+				{
+					addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
+					type = Type.UNKNOWN;
+				}										
+			}
+			else if( type.isParameterized() ) //parameterized but no parameters!	
+			{
+				addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
+				type = Type.UNKNOWN;
+			}			
+			
+			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
+			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
+			{	
+				Type outer = type;
+				if( outer instanceof UninstantiatedType )
+					outer = ((UninstantiatedType)type).getType();
+				
+				child = node.jjtGetChild(i);
+				type = null;
+				if( outer instanceof ClassType )
+					type = ((ClassType)outer).getInnerClass(child.getImage());
+				
+				if(type == null)
+				{
+					addError(Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in current context");			
+					type = Type.UNKNOWN;					
+				}
+				else
+				{
+					if (currentType instanceof ClassType)
+						((ClassType)currentType).addReferencedType(type);
+				
+					if( !isMeta && !classIsAccessible( type, currentType  ) )		
+						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from current context");
+					
+					if( child.jjtGetNumChildren() == 1 ) //contains arguments
+					{
+						SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+						if( type.isParameterized() ) 
+						{		
+							
+							if( type instanceof ClassType )						
+								type = new UninstantiatedClassType( (ClassType)type, arguments);
+							else if( type instanceof InterfaceType )
+								type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments);
+						}
+						else
+						{
+							addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
+							type = Type.UNKNOWN;
+						}										
+					}
+					else if( type.isParameterized() ) //parameterized but no parameters!	
+					{
+						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
+						type = Type.UNKNOWN;
+					}
+				}
+			}
+			//set the type now that it has type parameters 
+			node.setType(type);	
+		}	
+		
+		return WalkType.POST_CHILDREN;
+	}
+	
 	
 	//add extends list
 	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException
@@ -1301,5 +1467,18 @@ public class TypeUpdater extends BaseChecker
 	
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
 		return pushUpType(node, secondVisit);
+	}
+	
+	@Override
+	public Object visit(ASTGenericDeclaration node, Boolean secondVisit)
+			throws ShadowException {
+		
+		if( secondVisit ) {
+			Node child = node.jjtGetChild(0);
+			node.setType(child.getType());			
+			currentType.addGenericDeclaration(child.getType());
+		}	
+		
+		return WalkType.POST_CHILDREN;
 	}
 }

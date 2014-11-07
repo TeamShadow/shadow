@@ -43,8 +43,7 @@ public class ShadowParser
    	public void debugPrint(String str)
    	{
         logger.trace(str + ": " + token);
-    }
-   	
+    }   	
 }
 
 PARSER_END(ShadowParser)
@@ -447,7 +446,8 @@ ASTCompilationUnit CompilationUnit():
   ( ClassOrInterfaceDeclaration(modifiers)
   | EnumDeclaration(modifiers)  
  // | ViewDeclaration(modifiers)
-  )//only one declaration per file 
+  )//only one declaration per file
+   
   <EOF>
 	{
 	  	jjtThis.setModifiers(modifiers);
@@ -457,10 +457,19 @@ ASTCompilationUnit CompilationUnit():
 
 
 void ImportDeclaration():
-{}
+{
+   debugPrint("IMPORT DECLARATION");
+}
 {
   "import"  Name() ["$" [">" | "<"] < VERSION_LITERAL >] ";" 
 }
+
+void GenericDeclaration():
+{
+   debugPrint("GENERIC DECLARATION");
+}
+{
+  "import" ClassOrInterfaceType() ";"} 
 
 /*
  * Modifiers. We match all modifiers in a single rule to reduce the chances of
@@ -693,6 +702,7 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
     | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
     | LOOKAHEAD( FieldDeclaration(modifiers) ) FieldDeclaration(modifiers) 
     | MethodDeclaration(modifiers)
+    | GenericDeclaration()
     //| ViewDeclaration(modifiers)
   )
 }
@@ -798,7 +808,7 @@ void MethodDeclaration(Modifiers modifiers):
 {
   { jjtThis.setModifiers(modifiers); }  
   MethodDeclarator(false) [ "throws" NameList() ]
-  ( Block() | ";" )
+  ( Block() { jjtThis.setBlock(true); } | ";" )
 }
 
 void CreateDeclaration(Modifiers modifiers):
@@ -810,7 +820,7 @@ void CreateDeclaration(Modifiers modifiers):
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("create"); }  
   // Modifiers matched in the caller
   CreateDeclarator() [ "throws" NameList() ]
-  ( CreateBlock() | ";" )
+  ( CreateBlock() { jjtThis.setBlock(true); } | ";" )
 }
 
 void CreateDeclarator():
@@ -839,7 +849,7 @@ void DestroyDeclaration(Modifiers modifiers):
   { jjtThis.setModifiers(modifiers); jjtThis.setImage("destroy"); }  
   // Modifiers matched in the caller
   "destroy" //no (checked) exceptions from destroys!
-  ( Block() | ";" )
+  ( Block() { jjtThis.setBlock(true); } | ";" )
 }
 
 void ExplicitCreateInvocation():

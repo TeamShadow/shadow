@@ -18,16 +18,10 @@ import shadow.typecheck.type.Type;
 
 public class TypeChecker {
 
-	private File currentFile;
-	protected boolean debug;
-	
+	private File currentFile;	
 	private Package packageTree = null;
 	private TypeCollector collector = null;
-	
-	public TypeChecker(boolean debug) {	
-		this.debug = debug;
-	}
-	
+		
 	/**
 	 * Given the root node of an AST, type-checks the AST.
 	 * @param node The root node of the AST
@@ -45,7 +39,7 @@ public class TypeChecker {
 		ArrayList<String> importList = new ArrayList<String>();
 		
 		//collector looks over all files and creates types for everything needed
-		collector = new TypeCollector(debug, typeTable, importList, packageTree, this);
+		collector = new TypeCollector(typeTable, importList, packageTree, this);
 		//return value is the top node for the class we are compiling		
 		Node node = collector.collectTypes( file );	
 		
@@ -54,20 +48,41 @@ public class TypeChecker {
 		//Type parameters (including necessary instantiations)
 		//All types with type parameters (except for declarations) are UninitializedTypes
 		//Extends and implements lists
-		TypeUpdater updater = new TypeUpdater(debug, typeTable, importList, packageTree);
+		TypeUpdater updater = new TypeUpdater(typeTable, importList, packageTree);
 		Map<Type, Node> nodeTable = collector.getNodeTable();
 		nodeTable = updater.update( nodeTable );
 				
 		collector.setNodeTable( nodeTable );
 		
 		//As an optimization, print .meta files for .shadow files with no .meta files or with out of date ones
-		printMetaFiles( collector.getFiles() );		
+		//printMetaFiles( collector.getFiles() );		
 		
-		//The "real" typechecking happens here as each statement is checked for type safety and other features
-		StatementChecker checker = new StatementChecker(debug, typeTable, importList, packageTree );
-		checker.check(node);		
-	
+		//meta files have already been type checked
+		if( !file.getPath().endsWith(".meta")) {
+			//The "real" typechecking happens here as each statement is checked for type safety and other features
+			StatementChecker checker = new StatementChecker(typeTable, importList, packageTree );
+			checker.check(node);
+			
+			//As an optimization, print .meta file for the .shadow file being checked
+			printMetaFile( node, BaseChecker.stripExtension(file.getCanonicalPath()));		
+		}
 		return node;
+	}
+	
+	protected void printMetaFile( Node node, String file ) {
+		try {					
+			File shadowVersion = new File( file + ".shadow");
+			File metaVersion = new File( file + ".meta");
+			//add meta file if one doesn't exist
+			if( !metaVersion.exists() || (shadowVersion.exists() && shadowVersion.lastModified() >= metaVersion.lastModified()) ) {	
+				PrintWriter out = new PrintWriter(metaVersion);
+				node.getType().printMetaFile(out, "");
+				out.close();						
+			}
+		}
+		catch(IOException e) {
+			System.err.println("Failed to create meta file for " + node.getType() );					
+		}		
 	}
 	
 	protected void printMetaFiles( Map<String, Node> files )
@@ -99,11 +114,6 @@ public class TypeChecker {
 	public Package getPackageTree()
 	{
 		return packageTree;		
-	}
-	
-	public Set<String> getFiles()
-	{
-		return collector.getFiles().keySet();		
 	}
 	
 	public void addFileDependencies(Type mainType, Set<String> files, Set<String> checkedFiles)

@@ -58,8 +58,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();  /** Current method is a stack since Shadow allows methods to be defined inside of methods */
 		
 	protected Type currentType = null;
-	protected Type declarationType = null;
-	protected boolean debug;	
+	protected Type declarationType = null;	
 	
 	public final HashMap<Package, HashMap<String, Type>> getTypeTable() {
 		return typeTable;
@@ -73,8 +72,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		return importList;
 	}
 	
-	public BaseChecker(boolean debug, HashMap<Package, HashMap<String, Type>> hashMap, List<String> importList, Package packageTree  ) {
-		this.debug = debug;
+	public BaseChecker(HashMap<Package, HashMap<String, Type>> hashMap, List<String> importList, Package packageTree  ) {
 		this.typeTable = hashMap;
 		this.importList = importList;
 		this.packageTree = packageTree;
@@ -718,114 +716,6 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		return WalkType.POST_CHILDREN;
 	}
 	
-	protected Object deferredTypeResolution(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
-	{	
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		Node child = node.jjtGetChild(0); 
-		String typeName = child.getImage();
-		int start = 1;
-		
-		if( child instanceof ASTUnqualifiedName )
-		{					
-			child = node.jjtGetChild(start);
-			typeName += "@" + child.getImage();
-			start++;					
-		}
-		
-		Type type = lookupType(typeName);
-				
-		if(type == null)
-		{
-			addError(Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
-			node.setType(Type.UNKNOWN);					
-		}
-		else
-		{			
-			if (currentType instanceof ClassType)
-				((ClassType)currentType).addReferencedType(type);
-		
-			if( !classIsAccessible( type, declarationType  ) )		
-				addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
-			
-			if( child.jjtGetNumChildren() == 1 ) //contains arguments
-			{
-				SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
-				if( type.isParameterized() ) 
-				{					
-					if( type instanceof ClassType )						
-						type = new UninstantiatedClassType( (ClassType)type, arguments);
-					else if( type instanceof InterfaceType )
-						type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments);
-				}
-				else
-				{
-					addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
-					type = Type.UNKNOWN;
-				}										
-			}
-			else if( type.isParameterized() ) //parameterized but no parameters!	
-			{
-				addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
-				type = Type.UNKNOWN;
-			}			
-			
-			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
-			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
-			{	
-				Type outer = type;
-				if( outer instanceof UninstantiatedType )
-					outer = ((UninstantiatedType)type).getType();
-				
-				child = node.jjtGetChild(i);
-				type = null;
-				if( outer instanceof ClassType )
-					type = ((ClassType)outer).getInnerClass(child.getImage());
-				
-				if(type == null)
-				{
-					addError(Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in current context");			
-					type = Type.UNKNOWN;					
-				}
-				else
-				{
-					if (currentType instanceof ClassType)
-						((ClassType)currentType).addReferencedType(type);
-				
-					if( !classIsAccessible( type, currentType  ) )		
-						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from current context");
-					
-					if( child.jjtGetNumChildren() == 1 ) //contains arguments
-					{
-						SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
-						if( type.isParameterized() ) 
-						{		
-							
-							if( type instanceof ClassType )						
-								type = new UninstantiatedClassType( (ClassType)type, arguments);
-							else if( type instanceof InterfaceType )
-								type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments);
-						}
-						else
-						{
-							addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
-							type = Type.UNKNOWN;
-						}										
-					}
-					else if( type.isParameterized() ) //parameterized but no parameters!	
-					{
-						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
-						type = Type.UNKNOWN;
-					}
-				}
-			}
-			//set the type now that it has type parameters 
-			node.setType(type);	
-		}	
-		
-		return WalkType.POST_CHILDREN;
-	}
 	
 	protected static boolean classIsAccessible( Type classType, Type type )
 	{

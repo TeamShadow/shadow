@@ -22,6 +22,7 @@ import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTEnumDeclaration;
+import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimitiveType;
@@ -54,19 +55,16 @@ public class TypeCollector extends BaseChecker
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	public TypeCollector(boolean debug,HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker )
-	{		
-		super(debug, typeTable, importList, p );		
+	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker ){		
+		super(typeTable, importList, p );		
 		this.typeChecker = typeChecker;	
 	}
 	
-	public Map<Type,Node> getNodeTable()
-	{
+	public Map<Type,Node> getNodeTable() {
 		return nodeTable;
 	}				
 		
-	public Node collectTypes(File input) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
-	{			
+	public Node collectTypes(File input) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {			
 		//Create walker
 		ASTWalker walker = new ASTWalker( this );
 		Node resultNode = null;		
@@ -117,7 +115,7 @@ public class TypeCollector extends BaseChecker
 			uncheckedFiles.remove(canonical);								
 							
 			File canonicalFile = new File(canonical + ".shadow");
-			if( !canonicalFile.equals(input.getCanonicalFile()) ) //always read the shadow file for the input file
+			//if( !canonicalFile.equals(input.getCanonicalFile()) ) //always read the shadow file for the input file
 			{
 				if( canonicalFile.exists() )  
 				{											
@@ -142,7 +140,7 @@ public class TypeCollector extends BaseChecker
 		    	resultNode = node;
 		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-			TypeCollector collector = new TypeCollector(debug, otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
+			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
 			walker = new ASTWalker( collector );		
 			walker.walk(node);				
 	
@@ -199,12 +197,6 @@ public class TypeCollector extends BaseChecker
 		
 		//return the node corresponding to the file being compiled
 		return resultNode;
-	}
-
-
-	public Map<String, Node> getFiles()
-	{
-		return files;
 	}
 	
 	private Object createType( SimpleNode node, Modifiers modifiers, TypeKind kind ) throws ShadowException
@@ -689,4 +681,9 @@ public class TypeCollector extends BaseChecker
 		this.nodeTable = nodeTable;		
 	}
 	
+	@Override
+	public Object visit(ASTGenericDeclaration node, Boolean data)
+			throws ShadowException {
+		return WalkType.NO_CHILDREN;
+	}	
 }
