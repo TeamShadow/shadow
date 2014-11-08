@@ -3,8 +3,8 @@ package shadow.typecheck.type;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
 
 public class UninstantiatedClassType extends ClassType implements UninstantiatedType {
-	private ClassType type;
-	private SequenceType typeArguments;	
+	private final ClassType type;
+	private final SequenceType typeArguments;	
 	
 	public SequenceType getTypeArguments()
 	{

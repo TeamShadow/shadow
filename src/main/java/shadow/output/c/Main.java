@@ -103,7 +103,7 @@ public class Main {
 			return GENERAL_ERROR;
 		}
 		
-		TypeChecker checker = new TypeChecker(false, config);
+		TypeChecker checker = new TypeChecker();
 			 
 		try
 		{

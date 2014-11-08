@@ -4,8 +4,8 @@ import shadow.typecheck.BaseChecker.SubstitutionKind;
 
 public class UninstantiatedInterfaceType extends InterfaceType implements UninstantiatedType 
 {	
-	private InterfaceType type;
-	private SequenceType typeArguments;
+	private final InterfaceType type;
+	private final SequenceType typeArguments;
 	
 	public SequenceType getTypeArguments()
 	{

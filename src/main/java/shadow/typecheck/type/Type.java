@@ -39,13 +39,15 @@ public abstract class Type implements Comparable<Type>
 	private Map<String, Node> fieldTable = new HashMap<String, Node>();
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> referencedTypes = new HashSet<Type>();
+	private List<Type> genericDeclarations = new ArrayList<Type>();
 	private List<Type> typeParameterDependencies = new ArrayList<Type>();
 	
 	
 	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();	
 	private LinkedList<Object> importedItems = new LinkedList<Object>();
 	
-	private static boolean referenceRecursion = false;
+	private static boolean referenceRecursion = false;	
+	private String hashName = null;
 	
 	
 	/*
@@ -321,7 +323,14 @@ public abstract class Type implements Comparable<Type>
 		
 		//return getMangledNameWithGenerics();
 		
-		return getQualifiedName();
+		if( hashName == null )
+			hashName = getQualifiedName();
+		
+		return hashName;
+	}
+	
+	protected final void invalidateHashName() {
+		hashName = null;
 	}
 	
 	public String getQualifiedName() 
@@ -353,11 +362,7 @@ public abstract class Type implements Comparable<Type>
 			builder = new StringBuilder(getOuter().toString(withBounds) + ":" + className );
 			
 		if( isParameterized() )		
-		{	
-			if( getTypeParameters() == null )
-				System.out.println("Bleh");
 			builder.append(getTypeParameters().toString("<",">", withBounds));
-		}
 		
 		return builder.toString();
 	}
@@ -754,6 +759,7 @@ public abstract class Type implements Comparable<Type>
 	public void setPackage(Package p)
 	{
 		_package = p;
+		invalidateHashName();
 	}
 	
 	public SequenceType getTypeParameters()
@@ -768,7 +774,8 @@ public abstract class Type implements Comparable<Type>
 			typeParameters = new SequenceType();
 			parameterized = true;
 		}
-		typeParameters.add(parameter);		
+		typeParameters.add(parameter);
+		invalidateHashName();
 	}	
 	
 	public static StringBuilder mangle(StringBuilder sb, String name)
@@ -823,6 +830,7 @@ public abstract class Type implements Comparable<Type>
 			typeParameters = null;			
 			
 		parameterized = value;
+		invalidateHashName();
 	}
 	
 	public boolean isParameterized()
@@ -1244,6 +1252,7 @@ public abstract class Type implements Comparable<Type>
 			*/
 		}
 	}
+
 	public Set<Type> getReferencedTypes()
 	{
 		return referencedTypes;
@@ -1356,7 +1365,7 @@ public abstract class Type implements Comparable<Type>
 				{
 					Package importPackage = (Package)importItem;
 					for( Type referencedType : getReferencedTypes() )
-						if( !referencedType.hasOuter() && referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
+						if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
 							imports.add(referencedType.getImportName());					
 				}
 			}
@@ -1375,5 +1384,11 @@ public abstract class Type implements Comparable<Type>
 		instantiatedTypes.instantiatedType = null;
 	}
 	
+	public void addGenericDeclaration(Type type) {
+		genericDeclarations.add(type);
+	}
 	
+	public List<Type> getGenericDeclarations() {
+		return genericDeclarations;
+	}
 }

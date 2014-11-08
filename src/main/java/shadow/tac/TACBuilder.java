@@ -3064,4 +3064,12 @@ public class TACBuilder implements ShadowParserVisitor
 		
 		return POST_CHILDREN;
 	}
+
+	@Override
+	public Object visit(ASTGenericDeclaration node, Boolean data)
+			throws ShadowException {
+		//should never appear in .shadow file (only .meta file)
+		//never needs to be compiled
+		throw new UnsupportedOperationException();
+	}
 }

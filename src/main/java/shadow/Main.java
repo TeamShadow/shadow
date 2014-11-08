@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 
 import shadow.output.llvm.Array;
 import shadow.output.llvm.Generic;
+import shadow.output.llvm.GenericArray;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -30,8 +31,10 @@ import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.typecheck.TypeChecker;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.UnboundMethodType;
 
 /**
  * @author Bill Speirs
@@ -112,14 +115,14 @@ public class Main {
 		}
 	}
 	
-	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException
-	{		
+	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
+
 		// Create our command-line options
 		Options options = Configuration.createCommandLineOptions();
 		CommandLineParser cliParser = new PosixParser();
 		CommandLine commandLine = cliParser.parse(options, args);
 
-		// Print help if there are no args or options, or if the 'h' option is present
+		// Print help if the 'h' option is present
 		if ( commandLine.hasOption("h") )
 		{
 			printHelp();
@@ -219,8 +222,7 @@ public class Main {
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
 	 * containing class/file.
 	 * 
-	 * @param forceGenerate		Forces all .ll files to be newly generated
-	 * @return					Important metadata about the main method
+	 * @param forceGenerate		Forces all .ll files to be newly generated	
 	 */
 	private static void generateLLVM(List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
 		HashSet<String> files = new HashSet<String>();
@@ -229,7 +231,7 @@ public class Main {
 		HashSet<Generic> generics = new HashSet<Generic>();
 		HashSet<Array> arrays = new HashSet<Array>();
 		
-		TypeChecker checker = new TypeChecker(false, config);
+		TypeChecker checker = new TypeChecker();
 		TACBuilder tacBuilder = new TACBuilder();
 		
 		String mainFileName = stripExt(config.getMainFile().getCanonicalPath()); 
@@ -265,12 +267,25 @@ public class Main {
 			addShadowFile(io, "Path", files);
 		}
 		
+		//Map<Node> existingFiles = new ArrayList<Node>();
+		
 		// Begin generating .ll files
 		while( !files.isEmpty() ) {
+			//clears out standard types
+			Type.clearTypes(); 
 			String currentPath = files.iterator().next();
 			File currentFile = new File(currentPath + ".shadow");
-			 
-			logger.info("Generating LLVM code for " + currentFile.getName());
+			File metaFile = new File(currentPath + ".meta");
+			File llvmFile = new File(currentPath + ".ll");
+			boolean generateLLVM = true;
+			
+			if( !currentPath.equals(mainFileName) && !forceGenerate && metaFile.exists() && llvmFile.exists() && metaFile.lastModified() >= currentFile.lastModified() && llvmFile.lastModified() >= currentFile.lastModified()  ) {
+				generateLLVM = false;
+				logger.info("Using pre-existing LLVM code for " + currentFile.getName());
+				currentFile = metaFile;
+			}
+			else
+				logger.info("Generating LLVM code for " + currentFile.getName());
 		
 			// Get the start time for the compile
 			long startTime = System.currentTimeMillis();
@@ -295,44 +310,49 @@ public class Main {
 				logger.info("FILE " + currentFile.getPath() + " TYPE CHECKED IN " + (stopTime - startTime) + "ms");
 			}
 			else {
-				for( TACModule module : tacBuilder.build(node) ) {
-					if( currentPath.equals(mainFileName) ) {
-						Type type = module.getType();
-						mainClass = type.getMangledName();
+				
+				if( generateLLVM ) {
+					for( TACModule module : tacBuilder.build(node) ) {
+						if( currentPath.equals(mainFileName) && !module.getType().hasOuter() ) {
+							Type type = module.getType();
+							mainClass = type.getMangledName();
+							
+							SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
+							if( type.getMatchingMethod("main", arguments) != null )
+								mainArguments= true;
+							else if( type.getMatchingMethod("main", new SequenceType()) != null )
+								mainArguments = false;
+							else
+								throw new ShadowException("File " + currentFile.getName() + " does not contain an appropriate main() method");							
+						}
+						// Debug prints
+						logger.debug(module.toString());
+			
+						// Write to file
+						String name = module.getName().replace(':', '$');
+						llvmFile = new File(currentFile.getParentFile(), name + ".ll");
+						File nativeFile = new File(currentFile.getParentFile(), name + ".native.ll");
+						LLVMOutput output = new LLVMOutput(llvmFile);
+						output.build(module);
 						
-						SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
-						if( type.getMatchingMethod("main", arguments) != null )
-							mainArguments= true;
-						else if( type.getMatchingMethod("main", new SequenceType()) != null )
-							mainArguments = false;
-						else
-							throw new ShadowException("File " + currentFile.getName() + " does not contain an appropriate main() method");							
+						generics.addAll(output.getGenerics());						
+						arrays.addAll(output.getArrays());
+						
+						if( llvmFile.exists() )
+							linkCommand.add(llvmFile.getCanonicalPath());
+						
+						if( nativeFile.exists() )
+							linkCommand.add(nativeFile.getCanonicalPath());
 					}
-					// Debug prints
-					logger.debug(module.toString());
-		
-					// Write to file
-					String name = module.getName().replace(':', '$');
-					File llvmFile = new File(currentFile.getParentFile(), name + ".ll");
-					File nativeFile = new File(currentFile.getParentFile(), name + ".native.ll");
-					LLVMOutput output = new LLVMOutput(llvmFile);
-					output.build(module);
-					
-					generics.addAll(output.getGenerics());						
-					arrays.addAll(output.getArrays());
-					
-					if( llvmFile.exists() )
-						linkCommand.add(llvmFile.getCanonicalPath());
-					
-					if( nativeFile.exists() )
-						linkCommand.add(nativeFile.getCanonicalPath());
-				}
-		
-				long stopTime = System.currentTimeMillis();
-		
-				logger.info("Generated " + currentFile.getPath() + ".ll in " 
-						+ (stopTime - startTime) + "ms");
-			}					
+			
+					long stopTime = System.currentTimeMillis();
+			
+					logger.info("Generated " + currentFile.getPath() + ".ll in " 
+							+ (stopTime - startTime) + "ms");
+				}			
+				else					
+					addToLink(node.getType(), currentFile, linkCommand, generics, arrays );
+			}				
 			
 			files.remove(currentPath);
 			checkedFiles.add(currentPath);
@@ -347,8 +367,35 @@ public class Main {
 		
 				linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
 			}
-			
-			Type.clearTypes();
+		}
+	}
+	
+	private static void addToLink( Type type, File file, List<String> linkCommand, HashSet<Generic> generics, HashSet<Array> arrays ) throws IOException {
+		String name = type.getTypeName().replace(':', '$');
+		File llvmFile = new File(file.getParentFile(), name + ".ll");
+		File nativeFile = new File(file.getParentFile(), name + ".native.ll");
+				
+		for (Type referenced : type.getReferencedTypes()  ) {
+			if( referenced.isFullyInstantiated() ) {				
+				if( referenced.getTypeWithoutTypeArguments().equals(Type.ARRAY))
+					generics.add(new GenericArray(referenced));
+				else
+					generics.add(new Generic(referenced));
+			}			
+			else if( referenced instanceof ArrayType )
+				arrays.add(new Array((ArrayType)referenced));
+		}		
+		
+		if( llvmFile.exists() )
+			linkCommand.add(llvmFile.getCanonicalPath());
+		
+		if( nativeFile.exists() )
+			linkCommand.add(nativeFile.getCanonicalPath());		
+		
+		if( type instanceof ClassType ) {
+			ClassType classType = (ClassType) type;
+			for( Type inner : classType.getInnerClasses().values() )
+				addToLink( inner, file, linkCommand, generics, arrays );
 		}
 	}
 	

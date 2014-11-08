@@ -38,6 +38,7 @@ public class TypeParameter extends Type
 			bounds.remove(getClassBound());		
 		
 		bounds.add(type);
+		invalidateHashName();
 	}
 	
 	public Set<Type> getBounds()
@@ -48,6 +49,7 @@ public class TypeParameter extends Type
 	public void setBounds(Set<Type> bounds)
 	{
 		this.bounds = bounds;
+		invalidateHashName();
 	}
 
 	/*
@@ -217,12 +219,7 @@ public class TypeParameter extends Type
 		bounds.removeAll(toRemove);
 		bounds.addAll(toAdd);
 	}
-	
-	
-	public String toString() {
-		return toString(false);
-	}
-	
+		
 	public String toString(boolean withBounds) {
 		StringBuilder builder = new StringBuilder(getTypeName());
 		boolean first = true;
@@ -252,8 +249,6 @@ public class TypeParameter extends Type
 	
 	@Override
 	public String getMangledNameWithGenerics(boolean convertArrays) {		
-		//return "_C" + getTypeName();
-		
 		return getClassBound().getMangledNameWithGenerics(true);
 	}	
 	

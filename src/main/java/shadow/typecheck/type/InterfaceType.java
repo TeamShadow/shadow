@@ -346,28 +346,12 @@ public class InterfaceType extends Type
 	}
 	
 	@Override
-	public int getWidth()
-	{
+	public int getWidth() {
 		return OBJECT.getWidth() * 2;
-	}
-	
-	/*
-	@Override
-	public int hashCode() {
-		String name = getImportName();
-		//interfaces must be differentiated by generics
-		//since it is possible for a class to implement
-		//multiple generic versions of the same interface
-		if( isParameterized() )
-			name += getTypeParameters().toString("<", ">");
-		
-		return name.hashCode();
-	}
-	*/
+	}	
 	
 	@Override
-	public InterfaceType getTypeWithoutTypeArguments()
-	{
+	public InterfaceType getTypeWithoutTypeArguments() {
 		return (InterfaceType)super.getTypeWithoutTypeArguments();
 	}
 	
@@ -432,8 +416,19 @@ public class InterfaceType extends Type
 				newLine = true;				
 			}
 		if( newLine )
-			out.println();	
+			out.println();
 		
+		out.println(indent + "// Generics");
+		
+		for( Type type : getReferencedTypes() ) {		
+			if( type.isParameterizedIncludingOuterClasses() ) {		
+				if( type.isFullyInstantiated() ) {						
+					out.println(indent + "import " + type.getQualifiedName() + ";");
+				}
+			}			
+			else if( type instanceof ArrayType )
+				out.println(indent + "import " + type.getQualifiedName());
+		}		
 		
 		out.println(linePrefix + "}\n");	
 	}

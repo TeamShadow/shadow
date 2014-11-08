@@ -11,6 +11,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import shadow.output.llvm.Array;
+import shadow.output.llvm.Generic;
+import shadow.output.llvm.GenericArray;
 import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
@@ -545,6 +548,8 @@ public class ClassType extends Type
 		
 		if( isParameterized() )
 			getTypeParameters().updateFieldsAndMethods();
+		
+		invalidateHashName();
 	}
 	
 	@Override
@@ -802,6 +807,18 @@ public class ClassType extends Type
 		{
 			//if( !_class.getModifiers().isPrivate() )
 				_class.printMetaFile(out, indent);		
+		}
+
+		out.println(indent + "// Generics");
+		
+		for( Type type : getReferencedTypes() ) {		
+			if( type.isParameterizedIncludingOuterClasses() ) {		
+				if( type.isFullyInstantiated() ) {						
+					out.println(indent + "import " + type.getQualifiedName() + ";");
+				}
+			}			
+			else if( type instanceof ArrayType )
+				out.println(indent + "import " + type.getQualifiedName());
 		}
 		
 		out.println(linePrefix + "}");	
