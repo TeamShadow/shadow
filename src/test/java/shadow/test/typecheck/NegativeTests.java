@@ -16,21 +16,13 @@ public class NegativeTests {
 	private ArrayList<String> args = new ArrayList<String>();
 
 	@Before
-	public void setUp() throws Exception {
-		args.add("--typecheck");
-		args.add("--config");
-
-		String osName = System.getProperty("os.name");
-
-		if(osName.startsWith("Windows"))
-			args.add("shadow-windows-32.xml");
-		else
-			args.add("shadow-linux-64.xml");
+	public void setup() throws Exception {
+		// set the levels of our loggers				
+		Loggers.SHADOW.setLevel(Level.INFO);
+		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
+		Loggers.PARSER.setLevel(Level.OFF);
 		
-		// set the levels of our loggers
-		Loggers.SHADOW.setLevel(Level.DEBUG);
-		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
-		Loggers.PARSER.setLevel(Level.INFO);
+		args.add("--typecheck");
 	}
 	
 	private void enforce(Error type) throws Exception

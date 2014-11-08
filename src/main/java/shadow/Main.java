@@ -50,7 +50,7 @@ public class Main {
 	public static final int CONFIGURATION_ERROR		= -7;
 
 	private static final Logger logger = Loggers.SHADOW;
-	private static final Configuration config = Configuration.getInstance();
+	private static Configuration config;
 	
 	// Metadata related to a Shadow program's main class
 	private static String mainClass;
@@ -128,7 +128,7 @@ public class Main {
 
 		// parse out the command line
 		// throws exceptions if there are problems
-		config.parse(commandLine);
+		config = new Configuration(commandLine);
 		
 		File system = config.getSystemImport();
 
@@ -229,12 +229,11 @@ public class Main {
 		HashSet<Generic> generics = new HashSet<Generic>();
 		HashSet<Array> arrays = new HashSet<Array>();
 		
-		TypeChecker checker = new TypeChecker(false);
+		TypeChecker checker = new TypeChecker(false, config);
 		TACBuilder tacBuilder = new TACBuilder();
 		
 		String mainFileName = stripExt(config.getMainFile().getCanonicalPath()); 
 		files.add(mainFileName);
-		
 
 		// If compiling, add critical dependencies
 		if( !config.isCheckOnly() ) {

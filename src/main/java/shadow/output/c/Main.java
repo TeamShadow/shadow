@@ -45,6 +45,7 @@ public class Main {
 	public static final int TAC_ERROR		 = -4;
 	
 	private static final Logger logger = Loggers.SHADOW;
+	private static Configuration config;
 
 	/**
 	 * This is the starting point of the compiler.
@@ -67,7 +68,6 @@ public class Main {
 	 * @throws ConfigurationException
 	 */
 	public static int test(String[] args) throws ConfigurationException {
-		Configuration config = Configuration.getInstance();
 
 		try {
 			// create our command-line options
@@ -85,7 +85,7 @@ public class Main {
 			}
 			
 			// parse out the command line
-			config.parse(commandLine);
+			config = new Configuration(commandLine);
 			
 		} catch (org.apache.commons.cli.ParseException e) {
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
@@ -103,7 +103,7 @@ public class Main {
 			return GENERAL_ERROR;
 		}
 		
-		TypeChecker checker = new TypeChecker(false);
+		TypeChecker checker = new TypeChecker(false, config);
 			 
 		try
 		{

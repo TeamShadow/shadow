@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.TypeCheckException;
 import shadow.parser.javacc.Node;
@@ -20,12 +21,14 @@ public class TypeChecker {
 
 	private File currentFile;
 	protected boolean debug;
+	private Configuration config;
 	
 	private Package packageTree = null;
 	private TypeCollector collector = null;
 	
-	public TypeChecker(boolean debug) {	
+	public TypeChecker(boolean debug, Configuration config) {	
 		this.debug = debug;
+		this.config = config;
 	}
 	
 	/**
@@ -45,7 +48,7 @@ public class TypeChecker {
 		ArrayList<String> importList = new ArrayList<String>();
 		
 		//collector looks over all files and creates types for everything needed
-		collector = new TypeCollector(debug, typeTable, importList, packageTree, this);
+		collector = new TypeCollector(debug, typeTable, importList, packageTree, this, config);
 		//return value is the top node for the class we are compiling		
 		Node node = collector.collectTypes( file );	
 		

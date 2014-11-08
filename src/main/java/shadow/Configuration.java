@@ -37,12 +37,16 @@ public class Configuration {
 	private static final String VERBOSE_LONG	= "verbose";
 	private static final String RECOMPILE		= "f";
 	private static final String RECOMPILE_LONG  = "force-recompile";
+	
+	private static final String defaultFile = "shadow.xml";
+	
+	// Specific to each run of the compiler:
 
 	private String parentConfig = null; // The parent configuration from a config file	
 	private File mainFile = null; // The source file given over command line
 	private String mainFileName = null;
 	private File systemPath = null;	// This is the import path for all the system files
-	private List<File> importPaths = null;
+	private List<File> importPaths = new ArrayList<File>();
 	private List<String> linkCommand = null;
 	private String target = null;
 	
@@ -56,34 +60,8 @@ public class Configuration {
 	private File output = null;
 	private File configFile = null;
 	
-	private static final String defaultFile = "shadow.xml";
-	
-	private static Configuration config = new Configuration();
-	
-	private Configuration() {
-		this.importPaths = new ArrayList<File>();
-	}
-	
-	/**
-	 * Get the singleton instance of the Configuration.
-	 * @return The singleton instance.
-	 */
-	public static Configuration getInstance() {
-		return config;
-	}
-	
-	public File getExecutableDirectory()
-	{
-		try
-		{		
-			String path = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			String decodedPath = URLDecoder.decode(path, "UTF-8");			
-			return new File(decodedPath).getParentFile();
-		}
-		catch(Exception e)
-		{}
-		
-		return null;
+	public Configuration(CommandLine cmdLine) throws ConfigurationException, IOException {
+		parse(cmdLine);
 	}
 	
 	/**
@@ -92,7 +70,7 @@ public class Configuration {
 	 * @throws ConfigurationException 
 	 * @throws IOException 
 	 */
-	public void parse(CommandLine cmdLine) throws ConfigurationException, IOException {
+	private void parse(CommandLine cmdLine) throws ConfigurationException, IOException {
 		if( cmdLine.getArgs().length > 1 ) {
 			throw new ConfigurationException("Only one main source file may be specified");
 		}
@@ -130,7 +108,7 @@ public class Configuration {
 			configFile = new File(defaultFile);
 			
 			if( !configFile.exists() )
-				configFile = new File(getExecutableDirectory(), defaultFile);
+				configFile = new File(getCompilerDirectory(), defaultFile);
 			
 			if( !configFile.exists() ) {
 				// Use a system-wide file if it exists
@@ -145,8 +123,9 @@ public class Configuration {
 			parseConfigFile(configFile);
 		else {
 			logger.info("No configuration files found, auto-detecting platform details");
-			autoFill();
 		}
+		
+		autoFill(); // Fills any gaps in the configuration data (potentially all fields)
 
 		// print the import paths if we're debugging
 		if(logger.isDebugEnabled()) {
@@ -188,8 +167,6 @@ public class Configuration {
 			// parse the parent
 			parseConfigFile(parent);
 		}
-		
-		autoFill();
 	}
 	
 	/** Automatically fills any empty config fields */
@@ -230,7 +207,7 @@ public class Configuration {
 			linkCommand.add("assembler");
 			linkCommand.add("-");					
 			
-			if(config.getOs().equals("Linux")) {
+			if( getOs().equals("Linux") ) {
 				linkCommand.add("-lm");
 				linkCommand.add("-lrt");
 			}
@@ -240,13 +217,102 @@ public class Configuration {
 		}
 
 		if( systemPath == null ) {
-			systemPath = getExecutableDirectory();
+			systemPath = getCompilerDirectory();
 		}
 		
 		if( importPaths.isEmpty() )
-			importPaths.add(getExecutableDirectory());
+			importPaths.add(getCompilerDirectory());
+	}
+	
+	public int getArch() {
+		return arch;
 	}
 
+	public void setArch(int arch) {
+		if(this.arch == -1)
+			this.arch = arch;
+	}
+
+	public String getOs() {
+		return os;
+	}
+
+	public void setOs(String os) {
+		if(this.os == null)
+			this.os = os;
+	}
+
+	public List<File> getImports() {
+		return importPaths;
+	}
+
+	public void addImport(String importPath)
+	{
+		File importPathFile = makeAbsolute(importPath, getCompilerDirectory());
+		
+		importPaths.add(importPathFile);
+	}
+
+	public File getSystemImport() {
+		return systemPath;
+	}
+
+	public void setSystemImport(String systemImportPath) {
+		if(systemPath == null)
+			systemPath = makeAbsolute(systemImportPath, getCompilerDirectory());
+	}
+	
+	public void setLinkCommand(String linkCommand) {
+		if(this.linkCommand == null)
+			this.linkCommand = Arrays.asList(linkCommand.split("\\s+"));
+	}
+	
+	public List<String> getLinkCommand() {
+		return linkCommand;
+	}
+	
+	public void setTarget(String target) {
+		if( this.target == null )
+			this.target = target;
+	}
+	
+	public String getTarget() {
+		return target;
+	}
+
+	public void setParent(String parentConfig) {
+		this.parentConfig = parentConfig;
+	}
+
+	public boolean isCheckOnly() {
+		return checkOnly;
+	}
+	
+	public boolean isNoLink() {
+		return noLink;
+	}
+	
+	public boolean isVerbose() {
+		return verbose;
+	}
+	
+	public boolean isForceRecompile() {
+		return forceRecompile;
+	}
+	
+	public File getOutput() {
+		return output;		
+	}
+	
+	public File getMainFile() throws ConfigurationException {
+		if ( mainFile == null )
+			throw new ConfigurationException("No source file available to compile");
+			
+		return mainFile;
+	}
+	
+	/// Helper methods:
+	
 	/**
 	 * Create an Options object to be used to parse the command line.
 	 * 
@@ -314,104 +380,31 @@ public class Configuration {
 		return options;
 	}
 	
-	public int getArch() {
-		return arch;
-	}
-
-	public void setArch(int arch) {
-		if(this.arch == -1)
-			this.arch = arch;
-	}
-
-	public String getOs() {
-		return os;
-	}
-
-	public void setOs(String os) {
-		if(this.os == null)
-			this.os = os;
-	}
-
-	public List<File> getImports() {
-		return importPaths;
-	}
-
-	public void addImport(String importPath)
-	{
-		File importPathFile = makeAbsolute(importPath, getExecutableDirectory());
-		
-		importPaths.add(importPathFile);
-	}
-
-	public File getSystemImport() {
-		return systemPath;
-	}
-
-	public void setSystemImport(String systemImportPath) {
-		if(systemPath == null)
-			systemPath = makeAbsolute(systemImportPath, getExecutableDirectory());
-	}
-	
-	public void setLinkCommand(String linkCommand) {
-		if(this.linkCommand == null)
-			this.linkCommand = Arrays.asList(linkCommand.split("\\s+"));
-	}
-	
-	public List<String> getLinkCommand() {
-		return linkCommand;
-	}
-	
-	public void setTarget(String target) {
-		if( this.target == null )
-			this.target = target;
-	}
-	
-	public String getTarget() {
-		return target;
-	}
-
-	public void setParent(String parentConfig) {
-		this.parentConfig = parentConfig;
-	}
-
-	public boolean isCheckOnly() {
-		return checkOnly;
-	}
-	
-	public boolean isNoLink() {
-		return noLink;
-	}
-	
-	public boolean isVerbose() {
-		return verbose;
-	}
-	
-	public boolean isForceRecompile() {
-		return forceRecompile;
-	}
-	
-	public File getOutput() {
-		return output;		
-	}
-	
-	public File getMainFile() throws ConfigurationException {
-		if ( mainFile == null )
-			throw new ConfigurationException("No source file available to compile");
-			
-		return mainFile;
-	}
-	
 	/** 
 	 * Recreates a relative path in terms of a parent path. Used to ensure
 	 * relative paths stay relative to the correct directory.
 	 */
-	public File makeAbsolute(String path, File parent) {
+	public static File makeAbsolute(String path, File parent) {
 		File file = new File(path);
 		
 		if( !file.isAbsolute() )
 			file = new File(parent, path);
 		
 		return file;
+	}
+	
+	/** Gets the compiler's parent directory */
+	public static File getCompilerDirectory()
+	{
+		try
+		{		
+			String path = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+			String decodedPath = URLDecoder.decode(path, "UTF-8");			
+			return new File(decodedPath).getParentFile();
+		}
+		catch(Exception e) { }
+		
+		return null;
 	}
 	
 	/** Returns the target platform to be used by the LLVM compiler */
