@@ -146,7 +146,7 @@ public class Main {
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
 		
-		generateLLVM(linkCommand, false);
+		generateLLVM(linkCommand);
 		
 		if (!config.isCheckOnly() && !config.isNoLink())
 		{
@@ -223,7 +223,7 @@ public class Main {
 	 * 
 	 * @param forceGenerate		Forces all .ll files to be newly generated	
 	 */
-	private static void generateLLVM(List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
+	private static void generateLLVM(List<String> linkCommand) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
 		HashSet<String> files = new HashSet<String>();
 		HashSet<String> checkedFiles = new HashSet<String>();
 		
@@ -278,7 +278,7 @@ public class Main {
 			File llvmFile = new File(currentPath + ".ll");
 			boolean generateLLVM = true;
 			
-			if( !currentPath.equals(mainFileName) && !forceGenerate && metaFile.exists() && llvmFile.exists() && metaFile.lastModified() >= currentFile.lastModified() && llvmFile.lastModified() >= currentFile.lastModified()  ) {
+			if( !currentPath.equals(mainFileName) && !config.isForceRecompile() && metaFile.exists() && llvmFile.exists() && metaFile.lastModified() >= currentFile.lastModified() && llvmFile.lastModified() >= currentFile.lastModified()  ) {
 				generateLLVM = false;
 				logger.info("Using pre-existing LLVM code for " + currentFile.getName());
 				currentFile = metaFile;
