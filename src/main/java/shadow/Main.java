@@ -34,7 +34,6 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.UnboundMethodType;
 
 /**
  * @author Bill Speirs
