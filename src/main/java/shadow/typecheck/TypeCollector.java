@@ -57,7 +57,7 @@ public class TypeCollector extends BaseChecker
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
 
-	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker ){		
+	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker, Configuration config ){		
 		super(typeTable, importList, p );
 		this.typeChecker = typeChecker;	
 		this.config = config;
@@ -143,7 +143,7 @@ public class TypeCollector extends BaseChecker
 		    	resultNode = node;
 		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();
-			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
+			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker, config);
 			walker = new ASTWalker( collector );		
 			walker.walk(node);				
 	
