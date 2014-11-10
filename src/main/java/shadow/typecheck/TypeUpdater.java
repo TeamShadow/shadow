@@ -25,6 +25,7 @@ import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
+import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMethodDeclaration;
