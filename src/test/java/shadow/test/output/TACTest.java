@@ -1,35 +1,42 @@
 package shadow.test.output;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import org.apache.log4j.Level;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import shadow.Loggers;
 import shadow.Main;
+import shadow.test.general.Tests;
 
 public class TACTest {
 	
 	private ArrayList<String> args = new ArrayList<String>();
 
+	// To simplify removal, every unit test executable will have the same name
+	private final String executableName = "TACTest";
+	private final File executable = new File(Tests.testDir,
+			Tests.properExecutableName(executableName));
+	
 	@Before
-	public void setUp() throws Exception {
-		//args.add("--check");
-		args.add("--config");
-		
-		String osName = System.getProperty("os.name");
-		
-		if(osName.startsWith("Windows"))
-			args.add("shadow-windows-32.xml");
-		else
-			args.add("shadow-linux-64.xml");
-
-		// set the levels of our loggers
+	public void setup() throws Exception {
+		// set the levels of our loggers				
 		Loggers.SHADOW.setLevel(Level.INFO);
 		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
 		Loggers.PARSER.setLevel(Level.OFF);
-	}	
+		
+		args.add("-o");
+		args.add(executable.getCanonicalPath());
+	}
+	
+	@After
+	public void cleanup() {
+		// Remove the unit test executable
+		executable.delete();
+	}
 		
 	@Test public void testArrayList() throws Exception {
 		args.add("shadow/test/ArrayListTest.shadow");

@@ -52,12 +52,15 @@ public class TypeCollector extends BaseChecker
 	private String currentName = "";
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private TypeChecker typeChecker;
+	private Configuration config;
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker ){		
-		super(typeTable, importList, p );		
+
+	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker, Configuration config ){		
+		super(typeTable, importList, p );
 		this.typeChecker = typeChecker;	
+		this.config = config;
 	}
 	
 	public Map<Type,Node> getNodeTable() {
@@ -82,17 +85,17 @@ public class TypeCollector extends BaseChecker
 			}
 		};
 				
-		//add standard imports		
-		File standard = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
+		//add standard imports
+		File standard = new File( config.getSystemImport(), "shadow" + File.separator + "standard" );
 		if( !standard.exists() )
-			throw new ConfigurationException("Invalid path to shadow:standard: " + standard.getCanonicalPath());
+			throw new ConfigurationException("Invalid path to shadow:standard: " + standard.getPath());
 			
 		File[] imports = standard.listFiles( filter );
 		for( File file :  imports )			
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add io imports
-		File io = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "io" );
+		File io = new File( config.getSystemImport(), "shadow" + File.separator + "io" );
 		if( !io.exists() )
 			throw new ConfigurationException("Invalid path to shadow:io: " + io.getPath());
 		
@@ -101,7 +104,7 @@ public class TypeCollector extends BaseChecker
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add utility imports
-		File utility = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "utility" );
+		File utility = new File( config.getSystemImport(), "shadow" + File.separator + "utility" );
 		if( !utility.exists() )
 			throw new ConfigurationException("Invalid path to shadow:utility: " + utility.getPath());
 		
@@ -139,8 +142,8 @@ public class TypeCollector extends BaseChecker
 		    if( canonical.equals(inputFile) )			    	
 		    	resultNode = node;
 		    
-		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
+		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();
+			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker, config);
 			walker = new ASTWalker( collector );		
 			walker.walk(node);				
 	
@@ -389,7 +392,7 @@ public class TypeCollector extends BaseChecker
 		if( separator.equals("\\"))
 			separator = "\\\\";
 		String path = name.replaceAll(":", separator);
-		List<File> importPaths = Configuration.getInstance().getImports();
+		List<File> importPaths = config.getImports();
 		boolean success = false;				
 		
 		if( importPaths != null && importPaths.size() > 0 )

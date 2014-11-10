@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.TypeCheckException;
 import shadow.parser.javacc.Node;
@@ -21,7 +22,7 @@ public class TypeChecker {
 	private File currentFile;	
 	private Package packageTree = null;
 	private TypeCollector collector = null;
-		
+
 	/**
 	 * Given the root node of an AST, type-checks the AST.
 	 * @param node The root node of the AST
@@ -31,7 +32,7 @@ public class TypeChecker {
 	 * @throws IOException 
 	 * @throws ConfigurationException 
 	 */
-	public Node typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
+	public Node typeCheck(File file, Configuration config) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
 	{	
 		currentFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
@@ -39,7 +40,7 @@ public class TypeChecker {
 		ArrayList<String> importList = new ArrayList<String>();
 		
 		//collector looks over all files and creates types for everything needed
-		collector = new TypeCollector(typeTable, importList, packageTree, this);
+		collector = new TypeCollector(typeTable, importList, packageTree, this, config);
 		//return value is the top node for the class we are compiling		
 		Node node = collector.collectTypes( file );	
 		

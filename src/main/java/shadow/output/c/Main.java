@@ -45,6 +45,7 @@ public class Main {
 	public static final int TAC_ERROR		 = -4;
 	
 	private static final Logger logger = Loggers.SHADOW;
+	private static Configuration config;
 
 	/**
 	 * This is the starting point of the compiler.
@@ -64,11 +65,9 @@ public class Main {
 	 * Used for unit tests, provides a return value.
 	 * @param args arguments
 	 * @return error
-	 * @throws MalformedURLException 
-	 * @throws ConfigurationException 
+	 * @throws ConfigurationException
 	 */
-	public static int test(String[] args) throws MalformedURLException, ConfigurationException {
-		Configuration config = Configuration.getInstance();
+	public static int test(String[] args) throws ConfigurationException {
 
 		try {
 			// create our command-line options
@@ -86,7 +85,7 @@ public class Main {
 			}
 			
 			// parse out the command line
-			config.parse(commandLine);
+			config = new Configuration(commandLine);
 			
 		} catch (org.apache.commons.cli.ParseException e) {
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
@@ -96,6 +95,11 @@ public class Main {
 		catch (ConfigurationException e) 
 		{	
 			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());			
+			return GENERAL_ERROR;
+		}
+		catch (IOException e)
+		{
+			System.err.println("TARGET FINDING ERROR: " + e.getLocalizedMessage());
 			return GENERAL_ERROR;
 		}
 		
