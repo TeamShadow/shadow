@@ -34,7 +34,6 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.UnboundMethodType;
 
 /**
  * @author Bill Speirs
@@ -53,7 +52,7 @@ public class Main {
 	public static final int CONFIGURATION_ERROR		= -7;
 
 	private static final Logger logger = Loggers.SHADOW;
-	private static final Configuration config = Configuration.getInstance();
+	private static Configuration config;
 
 	// Metadata related to a Shadow program's main class
 	private static String mainClass;
@@ -131,8 +130,8 @@ public class Main {
 
 		// parse out the command line
 		// throws exceptions if there are problems
-		config.parse(commandLine);
-
+		config = new Configuration(commandLine);
+		
 		File system = config.getSystemImport();
 
 		String unwindFile = new File( system, "shadow" + File.separator + "Unwind" + config.getArch() + ".ll" ).getCanonicalPath();
@@ -147,7 +146,7 @@ public class Main {
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
 
-		generateLLVM(linkCommand, false);
+		generateLLVM(linkCommand);
 
 		if (!config.isCheckOnly() && !config.isNoLink())
 		{
@@ -157,44 +156,20 @@ public class Main {
 			try { Thread.sleep(250); }
 			catch (InterruptedException ex) { }
 
-			String target = getTarget();
+			logger.info("Building for target '" + config.getTarget() + "'");
 
-			List<String> assembleCommand;
-
-			if( config.hasLinkCommand() )
-				assembleCommand = config.getLinkCommand();
-			else {					
-				assembleCommand = new ArrayList<String>();							
-				assembleCommand.add("gcc");
-				//assembleCommand.add("-g");
-				assembleCommand.add("-x");
-				assembleCommand.add("assembler");
-				assembleCommand.add("-");					
-
-				if (config.getOs().equals("Linux")) {
-					assembleCommand.add("-lm");
-					assembleCommand.add("-lrt");
-				}
-
-				//assembleCommand.add("-m" + config.getArch());	
-			}
-
-			if( config.hasOutput() )
-			{
-				assembleCommand.add("-o");
-				assembleCommand.add(config.getOutput().getPath());
-			}
+			List<String> assembleCommand = config.getLinkCommand();
 
 			BufferedReader main;
 
-			if ( mainArguments )
+			if( mainArguments )
 				main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "Main.ll")));
 			else
 				main = new BufferedReader(new FileReader( new File( system, "shadow" + File.separator + "NoArguments.ll")));
 
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-			Process optimize = new ProcessBuilder("opt", "-mtriple", target, "-O3").redirectError(Redirect.INHERIT).start();
-			Process compile = new ProcessBuilder("llc", "-mtriple", target, "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder("opt", "-mtriple", config.getTarget(), "-O3").redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder("llc", "-mtriple", config.getTarget(), "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
@@ -238,17 +213,13 @@ public class Main {
 		}
 	}
 
-	/* 
-	 * Because no system is in place for reusing existing .ll files,
-	 * forceRegenerate currently has no effect.
-	 */
+
 	/**
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
 	 * containing class/file.
-	 * 
-	 * @param forceGenerate		Forces all .ll files to be newly generated	
+	 * 	
 	 */
-	private static void generateLLVM(List<String> linkCommand, boolean forceGenerate) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
+	private static void generateLLVM(List<String> linkCommand) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
 		Type.clearTypes();
 		HashSet<Generic> generics = new HashSet<Generic>();
 		HashSet<Array> arrays = new HashSet<Array>();
@@ -256,46 +227,14 @@ public class Main {
 		TypeChecker checker = new TypeChecker();
 		TACBuilder tacBuilder = new TACBuilder();
 
-		File mainFile = config.getMainFile();
+		File mainFile = config.getMainFile().getCanonicalFile();
 		String mainFileName = stripExt(mainFile.getCanonicalPath()); 
-
-		/*
-		// If compiling, add critical dependencies
-		if( !config.isCheckOnly() ) {
-			File system = config.getSystemImport();
-
-			File standard = new File(system, "shadow" + File.separator + "standard");
-			File io = new File(system, "shadow" + File.separator + "io");
-
-			// Necessary standard files
-			addShadowFile(standard, "Array", files);
-			addShadowFile(standard, "AddressMap", files);
-			addShadowFile(standard, "ArrayClass", files);
-			addShadowFile(standard, "Class", files);
-			addShadowFile(standard, "Exception", files);
-			addShadowFile(standard, "GenericClass", files);
-			addShadowFile(standard, "Iterator", files);
-			addShadowFile(standard, "Object", files);
-			addShadowFile(standard, "String", files);
-			addShadowFile(standard, "System", files);
-			addShadowFile(standard, "OutOfMemoryException", files);
-			addShadowFile(standard, "CastException", files);
-			addShadowFile(standard, "IndexOutOfBoundsException", files);
-			addShadowFile(standard, "AssertException", files);
-
-			// Necessary io files
-			addShadowFile(io, "Console", files);
-			addShadowFile(io, "File", files);
-			addShadowFile(io, "IOException", files);
-			addShadowFile(io, "Path", files);
-		}
-		 */
 
 		List<Node> nodes;
 
 		try
 		{
-			nodes = checker.typeCheck(mainFile, forceGenerate);
+			nodes = checker.typeCheck(mainFile, config);
 		}
 		catch( TypeCheckException e ) {
 			logger.error(mainFile.getPath() + " FAILED TO TYPE CHECK");
@@ -399,40 +338,7 @@ public class Main {
 		}
 	}
 
-	/** Returns the target platform to be used by the LLVM compiler */
-	private static String getTarget() throws ConfigurationException {
-		// Some reference available here:
-		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
-		// Call 'llc --version' for current target information
-
-		if( config.getOs().equals("Windows") ) {
-			// For now, always default to 32-bit Windows compilation
-
-			//if( config.getArch() == 64 )
-			//	return "x86_64-w64-mingw32";
-			//else
-			return "i386-unknown-mingw32";
-		}
-		else if( config.getOs().equals("Linux") ) {
-			// A correct 32-bit linux triple/target has not yet been determined
-			// For now, always default to 64-bit Linux compilation
-
-			//if( config.getArch() == 64 )
-			return "x86_64-gnu-linux";
-			//else
-			//	return "x86-gnu-linux"; // Is this right?
-		}
-		else { // If the operating system is unrecognized
-			throw new ConfigurationException("Unsupported operating system: " + config.getOs());
-		}
-	}
-
-	private static void addShadowFile(File fileDir, String fileName, Collection<String> files) throws IOException {
-		File file = new File(fileDir, fileName + ".shadow");
-
-		files.add(stripExt(file.getCanonicalPath()));
-	}
-
+	
 	public static String stripExt(String filepath) {
 		return filepath.substring(0, filepath.lastIndexOf("."));
 	}

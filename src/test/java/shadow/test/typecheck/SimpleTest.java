@@ -17,18 +17,9 @@ import shadow.Main;
 public class SimpleTest
 {
 
-	public static void main(String[] unused)
-	{
+	public static void main(String[] unused) {
+		
 		ArrayList<String> args = new ArrayList<String>();
-		args.add("--typecheck");
-		args.add("--config");
-		
-		String osName = System.getProperty("os.name");
-		
-		if(osName.startsWith("Windows"))
-			args.add("shadow-windows-32.xml");
-		else
-			args.add("shadow-linux-64.xml");	
 
 		// set the levels of our loggers
 		Loggers.SHADOW.setLevel(Level.DEBUG);

@@ -53,13 +53,15 @@ public class TypeCollector extends BaseChecker
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private TypeChecker typeChecker;
 	private Type mainType = null;
+	private Configuration config;
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker ){		
+	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker, Configuration config ){		
 		super(typeTable, importList, p );		
-		this.typeChecker = typeChecker;	
-	}
+		this.typeChecker = typeChecker;
+		this.config = config;
+	}	
 	
 	public Map<Type,Node> getNodeTable() {
 		return nodeTable;
@@ -70,13 +72,13 @@ public class TypeCollector extends BaseChecker
 	}
 	
 		
-	public Map<Type, Node> collectTypes(File mainFile, boolean forceGenerate ) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {			
+	public Map<Type, Node> collectTypes(File mainFile) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {			
 		//Create walker
 		ASTWalker walker = new ASTWalker( this );		
 		TreeSet<String> uncheckedFiles = new TreeSet<String>();
 		String main = stripExtension(mainFile.getCanonicalPath());
 		mainFile = mainFile.getCanonicalFile();
-		
+		boolean forceGenerate = config.isForceRecompile();
 		//add file to be checked to list
 		uncheckedFiles.add(main);
 		
@@ -89,7 +91,7 @@ public class TypeCollector extends BaseChecker
 		};
 				
 		//add standard imports		
-		File standard = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "standard" );
+		File standard = new File( config.getSystemImport(), "shadow" + File.separator + "standard" );
 		if( !standard.exists() )
 			throw new ConfigurationException("Invalid path to shadow:standard: " + standard.getCanonicalPath());
 			
@@ -98,7 +100,7 @@ public class TypeCollector extends BaseChecker
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add io imports
-		File io = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "io" );
+		File io = new File( config.getSystemImport(), "shadow" + File.separator + "io" );
 		if( !io.exists() )
 			throw new ConfigurationException("Invalid path to shadow:io: " + io.getPath());
 		
@@ -107,7 +109,7 @@ public class TypeCollector extends BaseChecker
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add utility imports
-		File utility = new File( Configuration.getInstance().getSystemImport(), "shadow" + File.separator + "utility" );
+		File utility = new File( config.getSystemImport(), "shadow" + File.separator + "utility" );
 		if( !utility.exists() )
 			throw new ConfigurationException("Invalid path to shadow:utility: " + utility.getPath());
 		
@@ -138,7 +140,7 @@ public class TypeCollector extends BaseChecker
 		    Node node = parser.CompilationUnit();
 		    		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
+			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker, config);
 			walker = new ASTWalker( collector );		
 			walker.walk(node);	
 			
@@ -393,7 +395,7 @@ public class TypeCollector extends BaseChecker
 		if( separator.equals("\\"))
 			separator = "\\\\";
 		String path = name.replaceAll(":", separator);
-		List<File> importPaths = Configuration.getInstance().getImports();
+		List<File> importPaths = config.getImports();
 		boolean success = false;				
 		
 		if( importPaths != null && importPaths.size() > 0 )

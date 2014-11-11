@@ -3,50 +3,59 @@ package shadow.test.output;
 import static junit.framework.Assert.assertEquals;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Level;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import shadow.Loggers;
 import shadow.Main;
+import shadow.test.general.Tests;
 
 public class OutputTest {
 	
 	private ArrayList<String> args = new ArrayList<String>();
+	
+	// To simplify removal, every unit test executable will have the same name
+	private final String executableName = "OutputTest";
+	private final File executable = new File(Tests.properExecutableName(executableName));
 
 	@Before
-	public void setUp() throws Exception {
-		
-		args.add("--config");
-		
-		String osName = System.getProperty("os.name");
-		
-		if(osName.startsWith("Windows"))
-			args.add("shadow-windows-32.xml");
-		else
-			args.add("shadow-linux-64.xml");		
-
+	public void setup() throws Exception {
 		// set the levels of our loggers				
 		Loggers.SHADOW.setLevel(Level.INFO);
 		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
 		Loggers.PARSER.setLevel(Level.OFF);
+		
+		args.add("-o");
+		args.add(executable.getCanonicalPath());
+		args.add("-c");
+		if( System.getProperty("os.name").contains("Windows"))
+			args.add("windows.xml");
+		else
+			args.add("linux.xml");
+	}
+	
+	@After
+	public void cleanup() {
+		// Remove the unit test executable
+		executable.delete();
 	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException {
 		List<String> programCommand = new ArrayList<String>();
-		String osName = System.getProperty("os.name");
-		if(osName.startsWith("Windows")) {
-			programCommand.add("a.exe");
-		} else {
-			programCommand.add("./a.out");
-		}
+		
+		programCommand.add(executable.getCanonicalPath());
+		
 		for (String arg : programArgs)
 			programCommand.add(arg);
+		
 		Process program = new ProcessBuilder(programCommand).start();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(program.getInputStream()));
 		StringBuilder builder = new StringBuilder();
@@ -61,7 +70,7 @@ public class OutputTest {
 	}
 	
 	@Test public void testTest() throws Exception {
-		args.add(0, "shadow/test/Test.shadow");
+		args.add("shadow/test/Test.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"true\n" + 
