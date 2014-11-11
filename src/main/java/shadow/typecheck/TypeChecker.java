@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import shadow.ConfigurationException;
 import shadow.TypeCheckException;
@@ -23,16 +26,16 @@ public class TypeChecker {
 	private TypeCollector collector = null;
 		
 	/**
-	 * Given the root node of an AST, type-checks the AST.
-	 * @param node The root node of the AST
-	 * @return True if the type-check is OK, false otherwise (errors are printed)
+	 * Given the main file to compile, checks it
+	 * @param file the file to compile
+	 * @return nodes corresponding to all the AST nodes for each class
 	 * @throws ShadowException
 	 * @throws ParseException 
 	 * @throws IOException 
 	 * @throws ConfigurationException 
 	 */
-	public Node typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
-	{	
+	public List<Node> typeCheck(File file, boolean forceGenerate) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
+	{
 		currentFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		packageTree = new Package(typeTable);
@@ -41,36 +44,69 @@ public class TypeChecker {
 		//collector looks over all files and creates types for everything needed
 		collector = new TypeCollector(typeTable, importList, packageTree, this);
 		//return value is the top node for the class we are compiling		
-		Node node = collector.collectTypes( file );	
+		Map<Type, Node> nodeTable = collector.collectTypes( file, forceGenerate );
+		Type mainType = collector.getMainType();
 		
 		//Updates types, adding:
 		//Fields and methods
 		//Type parameters (including necessary instantiations)
 		//All types with type parameters (except for declarations) are UninitializedTypes
 		//Extends and implements lists
-		TypeUpdater updater = new TypeUpdater(typeTable, importList, packageTree);
-		Map<Type, Node> nodeTable = collector.getNodeTable();
-		nodeTable = updater.update( nodeTable );
 				
-		collector.setNodeTable( nodeTable );
+		TypeUpdater updater = new TypeUpdater(typeTable, importList, packageTree);
+		nodeTable = updater.update( nodeTable );
 		
-		//As an optimization, print .meta files for .shadow files with no .meta files or with out of date ones
-		//printMetaFiles( collector.getFiles() );		
 		
-		//meta files have already been type checked
-		if( !file.getPath().endsWith(".meta")) {
-			//The "real" typechecking happens here as each statement is checked for type safety and other features
-			StatementChecker checker = new StatementChecker(typeTable, importList, packageTree );
-			checker.check(node);
-			
-			//As an optimization, print .meta file for the .shadow file being checked
-			printMetaFile( node, BaseChecker.stripExtension(file.getCanonicalPath()));		
+		StatementChecker checker = new StatementChecker(typeTable, importList, packageTree );		
+				
+		List<Node> allNodes = new ArrayList<Node>();
+		
+		//only add nodes for outer types
+		for( Node node : nodeTable.values())
+			if( !node.getType().hasOuter() )
+				allNodes.add(node);
+		
+		// do real typechecking, which updates referenced types
+		for(Node node: allNodes) {	
+			File nodeFile = node.getFile();
+			if( !nodeFile.getPath().endsWith(".meta")) {
+				//The "real" typechecking happens here as each statement is checked for type safety and other features
+				checker.check(node);				
+				//As an optimization, print .meta file for the .shadow file being checked
+				printMetaFile( node, BaseChecker.stripExtension(nodeFile.getCanonicalPath()));
+			}
 		}
-		return node;
+		
+		//now that all the nodes are typechecked, we know which types are referenced by the main type (even indirectly)
+		TreeSet<Type> referencedTypes = new TreeSet<Type>();
+		referencedTypes.add(mainType); // almost everything gets figured out from there
+		addStandardTypes(referencedTypes);
+		
+		Set<Type> neededTypes = new HashSet<Type>();
+		
+		
+		while( !referencedTypes.isEmpty() ) {			
+			Type next = referencedTypes.first();
+			Type simplified = next.getTypeWithoutTypeArguments();
+			
+			if( !(simplified instanceof ArrayType) && !simplified.hasOuter() && neededTypes.add(simplified) )				
+				referencedTypes.addAll(simplified.getReferencedTypes());
+					
+			referencedTypes.remove(next);
+		}
+		
+		//return only those nodes corresponding to needed types
+		List<Node> neededNodes = new ArrayList<Node>();
+		
+		for( Node node : allNodes )
+			if( neededTypes.contains(node.getType()) )
+				neededNodes.add(node);
+		
+		return neededNodes;
 	}
 	
 	protected void printMetaFile( Node node, String file ) {
-		try {					
+		try {
 			File shadowVersion = new File( file + ".shadow");
 			File metaVersion = new File( file + ".meta");
 			//add meta file if one doesn't exist
@@ -79,6 +115,7 @@ public class TypeChecker {
 				node.getType().printMetaFile(out, "");
 				out.close();						
 			}
+
 		}
 		catch(IOException e) {
 			System.err.println("Failed to create meta file for " + node.getType() );					
@@ -109,6 +146,17 @@ public class TypeChecker {
 				System.err.println("Failed to create meta file for " + node.getType() );					
 			}
 		}
+	}
+	
+	private void addStandardTypes(Set<Type> types) {
+		Package standard = Type.OBJECT.getPackage();
+		types.addAll(standard.getTypes());		
+		
+		// a few io classes are absolutely necessary for a console program
+		Package io = standard.getParent().getChild("io");
+		types.add(io.getType("File"));
+		types.add(io.getType("IOException"));
+		types.add(io.getType("Path"));
 	}
 	
 	public Package getPackageTree()

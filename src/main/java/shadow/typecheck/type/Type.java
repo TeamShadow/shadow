@@ -340,7 +340,7 @@ public abstract class Type implements Comparable<Type>
 	
 	public String getQualifiedName(boolean withBounds) 
 	{		
-		if( isPrimitive() )
+		if( isPrimitive() || (this instanceof ArrayType && ((ArrayType)this).getSuperBaseType().isPrimitive()) )
 			return toString(withBounds);
 		else if( _package == null || _package.getQualifiedName().isEmpty())
 			return "default@" + toString(withBounds);
@@ -846,9 +846,14 @@ public abstract class Type implements Comparable<Type>
 			return false;
 		
 		if( parameterized )
-			for( ModifiedType parameter : typeParameters )		
-				if( parameter.getType() instanceof TypeParameter )
+			for( ModifiedType parameter : typeParameters ) {
+				Type parameterType = parameter.getType(); 
+				if( parameterType instanceof TypeParameter )
 					return false;
+				
+				if( parameterType.isParameterizedIncludingOuterClasses() && !parameterType.isFullyInstantiated() )
+					return false;
+			}
 		
 		if( hasOuter() )			
 			return getOuter().isFullyInstantiated();
@@ -1167,6 +1172,11 @@ public abstract class Type implements Comparable<Type>
 		
 		return encloses(outer);
 	}
+
+	//only used by TypeUpdater for meta files
+	public void addReferencedTypeDirectly(Type type ) {
+		referencedTypes.add( type );
+	}
 	
 	public void addReferencedType(Type type)
 	{		
@@ -1370,8 +1380,27 @@ public abstract class Type implements Comparable<Type>
 				}
 			}
 			
+			//also classes from the same package
+			for( Type packageType : getPackage().getTypes() ) {
+				if( packageType != this && !packageType.hasOuter() && getReferencedTypes().contains(packageType) && !packageType.isPrimitive())
+					imports.add(packageType.getImportName());
+			}			
+			
 			for( String importType : imports )			
 				out.println(linePrefix + "import " + importType + ";");
+		}
+	}	
+	
+	protected final void printGenerics(PrintWriter out, String indent ) {
+		out.println(indent + "// Generics");
+		
+		for( Type type : getReferencedTypes() ) {		
+			if( type.isParameterizedIncludingOuterClasses() ) {		
+				if( type.isFullyInstantiated() )						
+					out.println(indent + "import " + type.getQualifiedName() + ";");
+			}			
+			else if( type instanceof ArrayType )
+				out.println(indent + "import " + type.getQualifiedName() + ";");
 		}
 	}
 	

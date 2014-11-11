@@ -1,4 +1,4 @@
-class Test3
+class Test
 { 
     Object x = Object:create();
     set int y = 5;

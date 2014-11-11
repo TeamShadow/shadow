@@ -52,6 +52,7 @@ public class TypeCollector extends BaseChecker
 	private String currentName = "";
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private TypeChecker typeChecker;
+	private Type mainType = null;
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
@@ -63,16 +64,21 @@ public class TypeCollector extends BaseChecker
 	public Map<Type,Node> getNodeTable() {
 		return nodeTable;
 	}				
+	
+	public Type getMainType() {
+		return mainType;
+	}
+	
 		
-	public Node collectTypes(File input) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {			
+	public Map<Type, Node> collectTypes(File mainFile, boolean forceGenerate ) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {			
 		//Create walker
-		ASTWalker walker = new ASTWalker( this );
-		Node resultNode = null;		
+		ASTWalker walker = new ASTWalker( this );		
 		TreeSet<String> uncheckedFiles = new TreeSet<String>();
-		String inputFile = stripExtension(input.getCanonicalPath()); 
+		String main = stripExtension(mainFile.getCanonicalPath());
+		mainFile = mainFile.getCanonicalFile();
 		
 		//add file to be checked to list
-		uncheckedFiles.add(inputFile);
+		uncheckedFiles.add(main);
 		
 		FilenameFilter filter = new FilenameFilter()
 		{
@@ -112,38 +118,33 @@ public class TypeCollector extends BaseChecker
 		while(!uncheckedFiles.isEmpty())
 		{			
 			String canonical = uncheckedFiles.first();
-			uncheckedFiles.remove(canonical);								
+			uncheckedFiles.remove(canonical);	
 							
 			File canonicalFile = new File(canonical + ".shadow");
-			//if( !canonicalFile.equals(input.getCanonicalFile()) ) //always read the shadow file for the input file
-			{
-				if( canonicalFile.exists() )  
-				{											
-					File meta = new File( canonical + ".meta" );
-					if( meta.exists() && meta.lastModified() >= canonicalFile.lastModified() && //check for more recent .meta file 
-						!canonicalFile.getParentFile().equals(standard)  )  //read whole standard files for now, since member information is used for class files
-																																								
-						canonicalFile = meta;
-				}
-				else
-				{
-					canonicalFile  = new File(canonical + ".meta");
-				}
+			if( canonicalFile.exists() ) {											
+				File meta = new File( canonical + ".meta" );
+				File llvm = new File( canonical + ".ll" );
+				if( !forceGenerate &&
+					meta.exists() && meta.lastModified() >= canonicalFile.lastModified() &&
+					llvm.exists() && llvm.lastModified() >= canonicalFile.lastModified() &&
+					!canonicalFile.equals(mainFile) )//check for more recent .meta file
+					canonicalFile = meta;
 			}
+			else		
+				canonicalFile  = new File(canonical + ".meta");		
 			
 			ShadowParser parser = new ShadowFileParser(canonicalFile);				
 			typeChecker.setCurrentFile(canonicalFile);
 		    Node node = parser.CompilationUnit();
-		    
-		    //this node is needed for full type checking and compilation
-		    if( canonical.equals(inputFile) )			    	
-		    	resultNode = node;
-		    
+		    		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
 			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker);
 			walker = new ASTWalker( collector );		
-			walker.walk(node);				
-	
+			walker.walk(node);	
+			
+			if( canonical.equals(main) )
+				mainType = node.getType();
+			
 			files.put(canonical, node);
 			
 			//copy other types into our package tree				
@@ -183,9 +184,12 @@ public class TypeCollector extends BaseChecker
 			
 			//copy tables from other file into our central table
 			Map<Type,Node> otherNodeTable = collector.nodeTable;
-			for( Type type : otherNodeTable.keySet() )
-				if( !nodeTable.containsKey(type) )
-					nodeTable.put(type, otherNodeTable.get(type));				
+			for( Type type : otherNodeTable.keySet() ) {
+				if( !nodeTable.containsKey(type) ) {
+					Node otherNode = otherNodeTable.get(type);					
+					nodeTable.put(type, otherNode);
+				}
+			}
 		}
 				
 		
@@ -196,7 +200,7 @@ public class TypeCollector extends BaseChecker
 		}		
 		
 		//return the node corresponding to the file being compiled
-		return resultNode;
+		return nodeTable;
 	}
 	
 	private Object createType( SimpleNode node, Modifiers modifiers, TypeKind kind ) throws ShadowException
@@ -482,7 +486,7 @@ public class TypeCollector extends BaseChecker
 	
 	@Override
 	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
+		if( !secondVisit )	
 		{
 			currentPackage = packageTree;
 			importedItems.clear();
@@ -519,7 +523,9 @@ public class TypeCollector extends BaseChecker
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
 		if( secondVisit )
 		{
-			nodeTable.put(node.getType().getTypeWithoutTypeArguments(), node );
+			Type type = node.getType().getTypeWithoutTypeArguments();
+			nodeTable.put(type, node );
+			node.jjtGetParent().setType( type );
 			return WalkType.POST_CHILDREN;
 		}
 		else

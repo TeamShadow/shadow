@@ -1,6 +1,8 @@
 package shadow.typecheck;
 
+import java.util.Collection;
 import java.util.HashMap;
+
 import shadow.typecheck.type.Type;
 
 public class Package
@@ -174,6 +176,10 @@ public class Package
 	public Type getType( String name )
 	{
 		return types.get(name);
+	}
+	
+	public Collection<Type> getTypes() {
+		return types.values();
 	}
 
 

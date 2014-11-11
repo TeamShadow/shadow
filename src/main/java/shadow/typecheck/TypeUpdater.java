@@ -68,9 +68,9 @@ public class TypeUpdater extends BaseChecker {
 	private boolean isMeta = false;	
 	
 	public TypeUpdater(
-			HashMap<Package, HashMap<String, Type>> typeTable,
+			HashMap<Package, HashMap<String, Type>> typeTable,			
 			List<String> importList, Package packageTree) {
-		super(typeTable, importList, packageTree);
+		super(typeTable, importList, packageTree);		
 	}	
 	
 	//public void updateTypes(Map<String, Node> files) throws ShadowException, TypeCheckException
@@ -140,8 +140,10 @@ public class TypeUpdater extends BaseChecker {
 				} catch (InstantiationException e) {
 					addError(Error.INVALID_TYPE_ARGUMENTS, "Cannot instantiate type " + uninstantiated.getType() + " with type arguments " + uninstantiated.getTypeArguments());
 				}
-			}			
-			type.addReferencedType(generic);
+			}
+			
+			//add directly to referenced types (not through the method, which dilutes things)
+			type.addReferencedTypeDirectly(generic);
 		}			
 	}
 	

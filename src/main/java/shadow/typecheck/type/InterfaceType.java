@@ -418,17 +418,7 @@ public class InterfaceType extends Type
 		if( newLine )
 			out.println();
 		
-		out.println(indent + "// Generics");
-		
-		for( Type type : getReferencedTypes() ) {		
-			if( type.isParameterizedIncludingOuterClasses() ) {		
-				if( type.isFullyInstantiated() ) {						
-					out.println(indent + "import " + type.getQualifiedName() + ";");
-				}
-			}			
-			else if( type instanceof ArrayType )
-				out.println(indent + "import " + type.getQualifiedName());
-		}		
+		printGenerics(out, indent );		
 		
 		out.println(linePrefix + "}\n");	
 	}

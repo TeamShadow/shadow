@@ -1,6 +1,6 @@
-class Test3
+class Test
 { 
-    Object x = Object:create();
+    Change x = Change:create();
     set int y = 5;
 
     public foo() => () 
@@ -10,7 +10,7 @@ class Test3
 
     readonly public bar() => ()
     {
-    	this.foo();    	 	    	 	    	    
+    	x.change();    	 	    	 	    	    
     }  
     
 }

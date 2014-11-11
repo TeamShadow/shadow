@@ -56,8 +56,6 @@ public class StatementChecker extends BaseChecker
 		
 		if( errorList.size() > 0 )
 		{
-			
-			
 			printErrors();
 			throw errorList.get(0);
 		}	

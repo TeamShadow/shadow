@@ -469,7 +469,7 @@ void GenericDeclaration():
    debugPrint("GENERIC DECLARATION");
 }
 {
-  "import" ClassOrInterfaceType() ";"} 
+  "import" ReferenceType() ";"} 
 
 /*
  * Modifiers. We match all modifiers in a single rule to reduce the chances of

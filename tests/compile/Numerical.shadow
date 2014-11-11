@@ -4,7 +4,7 @@ class Numerical {
         int b = 7;
         int c, d;
         b = a.max( 10 );
-        int length = "stuff"->length;
+        int length = "stuff"->size;
         a = 2.min( b );
         
        c = a / 4;
