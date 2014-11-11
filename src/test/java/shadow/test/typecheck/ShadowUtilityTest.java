@@ -21,6 +21,11 @@ public class ShadowUtilityTest {
 		Loggers.PARSER.setLevel(Level.OFF);
 		
 		args.add("--typecheck");
+		args.add("-c");
+		if( System.getProperty("os.name").contains("Windows"))
+			args.add("windows.xml");
+		else
+			args.add("linux.xml");
 	}
 
 	 @Test public void testArrayList() throws Exception {		

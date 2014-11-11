@@ -46,8 +46,8 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
-public class TypeCollector extends BaseChecker
-{	
+public class TypeCollector extends BaseChecker {
+	
 	private Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors and also resolving type parameters	
 	private String currentName = "";
 	private Map<String, Node> files = new HashMap<String, Node>();	

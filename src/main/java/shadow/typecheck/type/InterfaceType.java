@@ -360,7 +360,7 @@ public class InterfaceType extends Type
 		printImports(out, linePrefix);		
 		
 		//modifiers
-		out.print("\n" + linePrefix + getModifiers());		
+		out.print(System.lineSeparator() + linePrefix + getModifiers());		
 		out.print("interface ");
 		
 		//type name
@@ -420,6 +420,6 @@ public class InterfaceType extends Type
 		
 		printGenerics(out, indent );		
 		
-		out.println(linePrefix + "}\n");	
+		out.println(linePrefix + "}" + System.lineSeparator());	
 	}
 }

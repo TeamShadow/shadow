@@ -39,6 +39,7 @@ import shadow.typecheck.type.Type;
  * @author Bill Speirs
  * @author Barry Wittman
  * @author Jacob Young
+ * @author Brian Stottler
  */
 public class Main {
 	// These are the error codes returned by the compiler
@@ -131,7 +132,7 @@ public class Main {
 		// parse out the command line
 		// throws exceptions if there are problems
 		config = new Configuration(commandLine);
-		
+
 		File system = config.getSystemImport();
 
 		String unwindFile = new File( system, "shadow" + File.separator + "Unwind" + config.getArch() + ".ll" ).getCanonicalPath();
@@ -248,7 +249,7 @@ public class Main {
 				String path = stripExt(file.getCanonicalPath());
 				File llvmFile = new File(path + ".ll");
 
-				//if the LLVM didn't exists, the full .shadow file would have been used
+				//if the LLVM didn't exist, the full .shadow file would have been used
 				if( file.getPath().endsWith(".meta") ) {
 					logger.info("Using pre-existing LLVM code for " + name);
 					addToLink(node.getType(), file, linkCommand, generics, arrays );
@@ -256,10 +257,10 @@ public class Main {
 				else {
 					logger.info("Generating LLVM code for " + name);
 					for( TACModule module : tacBuilder.build(node) ) {
-						if( path.equals(mainFileName) && !module.getType().hasOuter() ) {
-							Type type = module.getType();
-							mainClass = type.getMangledName();
+						Type type = module.getType();
 
+						if( path.equals(mainFileName) && !type.hasOuter() ) {							
+							mainClass = type.getMangledName();
 							SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
 							if( type.getMatchingMethod("main", arguments) != null )
 								mainArguments= true;
@@ -272,7 +273,7 @@ public class Main {
 						logger.debug(module.toString());
 
 						// Write to file
-						String className = module.getName().replace(':', '$');
+						String className = typeToFileName(type);
 						llvmFile = new File(file.getParentFile(), className + ".ll");
 						File nativeFile = new File(file.getParentFile(), className + ".native.ll");
 						LLVMOutput output = new LLVMOutput(llvmFile);
@@ -289,25 +290,21 @@ public class Main {
 						if( nativeFile.exists() )
 							linkCommand.add(nativeFile.getCanonicalPath());
 					}
-
-					long stopTime = System.currentTimeMillis();
 				}
 			}
+
+			// After all LLVM is generated, make a special generics file
+			File genericsFile = new File(mainFile.getParent(), 
+					mainFile.getName().replace(".shadow", ".generics.shadow"));
+			LLVMOutput interfaceOutput = new LLVMOutput(genericsFile);
+			interfaceOutput.setGenerics(generics, arrays);
+			interfaceOutput.buildGenerics();	
+			linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
 		}
-
-		// After all LLVM is generated, make a special generics file
-
-		File genericsFile = new File(mainFile.getParent(), 
-				mainFile.getName().replace(".shadow", ".generics.shadow"));
-		LLVMOutput interfaceOutput = new LLVMOutput(genericsFile);
-		interfaceOutput.setGenerics(generics, arrays);
-		interfaceOutput.buildGenerics();	
-		linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
-
 	}
 
 	private static void addToLink( Type type, File file, List<String> linkCommand, HashSet<Generic> generics, HashSet<Array> arrays ) throws IOException, ShadowException {
-		String name = type.getTypeName().replace(':', '$');
+		String name = typeToFileName(type);
 		File llvmFile = new File(file.getParentFile(), name + ".ll");
 		File nativeFile = new File(file.getParentFile(), name + ".native.ll");
 
@@ -338,7 +335,7 @@ public class Main {
 		}
 	}
 
-	
+
 	public static String stripExt(String filepath) {
 		return filepath.substring(0, filepath.lastIndexOf("."));
 	}
@@ -377,5 +374,16 @@ public class Main {
 				}
 			} catch (IOException ex) { }
 		}
+	}
+
+	private static String typeToFileName(Type type) {
+		String name = type.getTypeName().replace(':', '$');
+		if( type.isPrimitive() ) { // hack to produce Int.ll instead of int.ll
+			if( name.startsWith("u") ) //UShort instead of ushort
+				name = name.substring(0,2).toUpperCase() + name.substring(2);
+			else
+				name = name.substring(0,1).toUpperCase() + name.substring(1);
+		}
+		return name;
 	}
 }

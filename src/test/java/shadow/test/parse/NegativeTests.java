@@ -22,6 +22,11 @@ public class NegativeTests {
 		Loggers.PARSER.setLevel(Level.OFF);
 		
 		args.add("--typecheck");
+		args.add("-c");
+		if( System.getProperty("os.name").contains("Windows"))
+			args.add("windows.xml");
+		else
+			args.add("linux.xml");
 	}
 	
 	private void enforce() throws Exception

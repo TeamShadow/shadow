@@ -713,9 +713,8 @@ public class ClassType extends Type
 		*/
 		
 		//modifiers
-		out.print("\n" + linePrefix + getModifiers());		
+		out.print(System.lineSeparator() + linePrefix + getModifiers());		
 		out.print(kind + " ");
-			
 		
 		//type name
 		String name;
@@ -756,7 +755,7 @@ public class ClassType extends Type
 			}			
 		}
 		
-		out.println("\n" + linePrefix + "{");
+		out.println(System.lineSeparator() + linePrefix + "{");
 		
 		String indent = linePrefix + "\t";		
 		boolean newLine;
@@ -804,10 +803,7 @@ public class ClassType extends Type
 		
 		//inner classes
 		for( Type _class : getInnerClasses().values() )
-		{
-			//if( !_class.getModifiers().isPrivate() )
 				_class.printMetaFile(out, indent);		
-		}
 		
 		printGenerics( out, indent );				
 		out.println(linePrefix + "}");	
