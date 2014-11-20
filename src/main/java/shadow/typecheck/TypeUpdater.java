@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import shadow.TypeCheckException;
-import shadow.TypeCheckException.Error;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTBlock;
@@ -44,6 +42,7 @@ import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
+import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;

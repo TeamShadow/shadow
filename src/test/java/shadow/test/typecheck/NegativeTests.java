@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import shadow.Loggers;
 import shadow.Main;
-import shadow.TypeCheckException;
-import shadow.TypeCheckException.Error;
+import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.TypeCheckException.Error;
 
 public class NegativeTests {
 
@@ -23,11 +23,11 @@ public class NegativeTests {
 		Loggers.PARSER.setLevel(Level.OFF);
 		
 		args.add("--typecheck");
-		args.add("-c");
-		if( System.getProperty("os.name").contains("Windows"))
+
+		if( System.getProperty("os.name").contains("Windows")) {
+			args.add("-c");
 			args.add("windows.xml");
-		else
-			args.add("linux.xml");
+		}
 	}
 	
 	private void enforce(Error type) throws Exception

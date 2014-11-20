@@ -1,4 +1,4 @@
-package shadow;
+package shadow.typecheck;
 
 @SuppressWarnings("serial")
 public class TypeCheckException extends Exception
