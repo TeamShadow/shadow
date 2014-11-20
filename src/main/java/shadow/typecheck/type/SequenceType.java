@@ -6,12 +6,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import shadow.TypeCheckException;
-import shadow.TypeCheckException.Error;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.BaseChecker;
+import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
+import shadow.typecheck.TypeCheckException.Error;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
 {	

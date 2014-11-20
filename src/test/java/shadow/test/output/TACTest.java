@@ -1,6 +1,9 @@
 package shadow.test.output;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import org.apache.log4j.Level;
@@ -8,38 +11,40 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import shadow.Job;
 import shadow.Loggers;
 import shadow.Main;
-import shadow.test.general.Tests;
 
 public class TACTest {
 	
-	private ArrayList<String> args = new ArrayList<String>();
-
 	// To simplify removal, every unit test executable will have the same name
-	private final String executableName = "TACTest";
-	private final File executable = new File(Tests.properExecutableName(executableName));
+	private static final String executableName = Job.properExecutableName("TACTest");
+	private static final Path executable = Paths.get("shadow", "test", executableName);
+	
+	private ArrayList<String> args = new ArrayList<String>();
 	
 	@Before
 	public void setup() throws Exception {
-		// set the levels of our loggers				
+		
+		// Set logger levels			
 		Loggers.SHADOW.setLevel(Level.INFO);
 		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
 		Loggers.PARSER.setLevel(Level.OFF);
 		
 		args.add("-o");
-		args.add(executable.getCanonicalPath());
-		args.add("-c");		
-		if( System.getProperty("os.name").contains("Windows"))
+		args.add(executableName);
+		
+		if( System.getProperty("os.name").contains("Windows") ) {
+			args.add("-c");
 			args.add("windows.xml");
-		else
-			args.add("linux.xml");		
+		}
 	}
 	
 	@After
-	public void cleanup() {
+	public void cleanup() throws IOException {
+		
 		// Remove the unit test executable
-		executable.delete();
+		Files.delete(executable);
 	}
 		
 	@Test public void testArrayList() throws Exception {

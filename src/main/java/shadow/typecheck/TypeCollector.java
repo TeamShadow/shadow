@@ -4,6 +4,7 @@ package shadow.typecheck;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -13,8 +14,7 @@ import java.util.TreeSet;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
-import shadow.TypeCheckException;
-import shadow.TypeCheckException.Error;
+import shadow.Job;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
@@ -38,6 +38,7 @@ import shadow.parser.javacc.ShadowParser;
 import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
+import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
@@ -53,14 +54,16 @@ public class TypeCollector extends BaseChecker {
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private TypeChecker typeChecker;
 	private Type mainType = null;
+	private Job currentJob;
 	private Configuration config;
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker, Configuration config ){		
-		super(typeTable, importList, p );		
+	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker, Job currentJob) throws ConfigurationException {		
+		super(typeTable, importList, p);		
 		this.typeChecker = typeChecker;
-		this.config = config;
+		this.currentJob = currentJob;
+		config = Configuration.getConfiguration();
 	}	
 	
 	public Map<Type,Node> getNodeTable() {
@@ -70,7 +73,6 @@ public class TypeCollector extends BaseChecker {
 	public Type getMainType() {
 		return mainType;
 	}
-	
 		
 	public Map<Type, Node> collectTypes(File mainFile) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {			
 		//Create walker
@@ -78,7 +80,7 @@ public class TypeCollector extends BaseChecker {
 		TreeSet<String> uncheckedFiles = new TreeSet<String>();
 		String main = stripExtension(mainFile.getCanonicalPath());
 		mainFile = mainFile.getCanonicalFile();
-		boolean forceGenerate = config.isForceRecompile();
+		boolean forceGenerate = currentJob.isForceRecompile();
 		//add file to be checked to list
 		uncheckedFiles.add(main);
 		
@@ -91,7 +93,7 @@ public class TypeCollector extends BaseChecker {
 		};
 				
 		//add standard imports		
-		File standard = new File( config.getSystemImport(), "shadow" + File.separator + "standard" );
+		File standard = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "standard" );
 		if( !standard.exists() )
 			throw new ConfigurationException("Invalid path to shadow:standard: " + standard.getCanonicalPath());
 			
@@ -100,7 +102,7 @@ public class TypeCollector extends BaseChecker {
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add io imports
-		File io = new File( config.getSystemImport(), "shadow" + File.separator + "io" );
+		File io = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "io" );
 		if( !io.exists() )
 			throw new ConfigurationException("Invalid path to shadow:io: " + io.getPath());
 		
@@ -109,7 +111,7 @@ public class TypeCollector extends BaseChecker {
 			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
 		
 		//add utility imports
-		File utility = new File( config.getSystemImport(), "shadow" + File.separator + "utility" );
+		File utility = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "utility" );
 		if( !utility.exists() )
 			throw new ConfigurationException("Invalid path to shadow:utility: " + utility.getPath());
 		
@@ -140,7 +142,7 @@ public class TypeCollector extends BaseChecker {
 		    Node node = parser.CompilationUnit();
 		    		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker, config);
+			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker, currentJob);
 			walker = new ASTWalker( collector );		
 			walker.walk(node);	
 			
@@ -391,20 +393,20 @@ public class TypeCollector extends BaseChecker {
 	
 	public boolean addImport( String name )
 	{
-		String separator = File.separator; //platform independence, we hope 
+		String separator = File.separator; // Hopefully platform independent
 		if( separator.equals("\\"))
 			separator = "\\\\";
 		String path = name.replaceAll(":", separator);
-		List<File> importPaths = config.getImports();
+		List<Path> importPaths = config.getImports();
 		boolean success = false;				
 		
 		if( importPaths != null && importPaths.size() > 0 )
 		{
-			for( File importPath : importPaths )
+			for( Path importPath : importPaths )
 			{	
 				if( !path.contains("@"))  //no @, must be a whole package import
 				{		
-					File fullPath = new File( importPath, path );
+					File fullPath = new File( importPath.toFile(), path );
 					if( fullPath.isDirectory() )
 					{
 						File[] matchingShadow = fullPath.listFiles( new FilenameFilter(){							
@@ -453,8 +455,8 @@ public class TypeCollector extends BaseChecker {
 					else
 					{
 						path = path.replaceAll("@", separator);
-						shadowVersion = new File( importPath, path + ".shadow" );
-						metaVersion = new File( importPath, path + ".meta" );
+						shadowVersion = new File( importPath.toFile(), path + ".shadow" );
+						metaVersion = new File( importPath.toFile(), path + ".meta" );
 					}
 					
 					try
