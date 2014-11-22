@@ -3,9 +3,11 @@ package shadow.test.output;
 import static junit.framework.Assert.assertEquals;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,44 +16,53 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import shadow.Configuration;
+import shadow.ConfigurationException;
+import shadow.Job;
 import shadow.Loggers;
 import shadow.Main;
-import shadow.test.general.Tests;
 
 public class OutputTest {
 	
+	// To simplify removal, every unit test executable will have the same name
+	private static final String executableName = Job.properExecutableName("OutputTest");
+	private static final Path executable = Paths.get("shadow", "test", executableName);
+
 	private ArrayList<String> args = new ArrayList<String>();
 	
-	// To simplify removal, every unit test executable will have the same name
-	private final String executableName = "OutputTest";
-	private final File executable = new File(Tests.properExecutableName(executableName));
-
 	@Before
 	public void setup() throws Exception {
-		// set the levels of our loggers				
+		
+		// Set logger levels			
 		Loggers.SHADOW.setLevel(Level.INFO);
 		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
 		Loggers.PARSER.setLevel(Level.OFF);
 		
 		args.add("-o");
-		args.add(executable.getCanonicalPath());
-		args.add("-c");
-		if( System.getProperty("os.name").contains("Windows"))
+		args.add(executableName);
+		
+		if( System.getProperty("os.name").contains("Windows") ) {
+			args.add("-c");
 			args.add("windows.xml");
-		else
-			args.add("linux.xml");
+		}
 	}
 	
 	@After
-	public void cleanup() {
+	public void cleanup() throws IOException {
+		
 		// Remove the unit test executable
-		executable.delete();
+		Files.delete(executable);
 	}
 	
-	private void run(String[] programArgs, String expectedOutput) throws IOException {
-		List<String> programCommand = new ArrayList<String>();
+	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
 		
-		programCommand.add(executable.getCanonicalPath());
+		// Should be initialized at this point by call to Main.run()
+		Configuration config = Configuration.getConfiguration();
+		
+		Path fullExecutable = config.getSystemImport().resolve(executable);
+		
+		List<String> programCommand = new ArrayList<String>();
+		programCommand.add(fullExecutable.toAbsolutePath().toString());
 		
 		for (String arg : programArgs)
 			programCommand.add(arg);
@@ -67,6 +78,7 @@ public class OutputTest {
 		} while (line != null);
 		String output = builder.toString(); 
 		assertEquals(expectedOutput, output);
+		program.waitFor(); //keeps program from being deleted while running
 	}
 	
 	@Test public void testTest() throws Exception {

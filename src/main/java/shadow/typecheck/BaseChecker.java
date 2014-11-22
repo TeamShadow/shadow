@@ -8,8 +8,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import shadow.Loggers;
-import shadow.TypeCheckException;
-import shadow.TypeCheckException.Error;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
@@ -24,6 +22,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
+import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InstantiationException;

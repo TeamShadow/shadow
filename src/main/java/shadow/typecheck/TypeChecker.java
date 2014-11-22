@@ -11,9 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import shadow.Configuration;
 import shadow.ConfigurationException;
-import shadow.TypeCheckException;
+import shadow.Job;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
@@ -35,7 +34,7 @@ public class TypeChecker {
 	 * @throws IOException 
 	 * @throws ConfigurationException 
 	 */
-	public List<Node> typeCheck(File file, Configuration config) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
+	public List<Node> typeCheck(File file, Job currentJob) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
 	{
 		currentFile = file;
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
@@ -43,7 +42,7 @@ public class TypeChecker {
 		ArrayList<String> importList = new ArrayList<String>();
 		
 		//collector looks over all files and creates types for everything needed
-		collector = new TypeCollector(typeTable, importList, packageTree, this, config);
+		collector = new TypeCollector(typeTable, importList, packageTree, this, currentJob);
 		//return value is the top node for the class we are compiling		
 		Map<Type, Node> nodeTable = collector.collectTypes( file );
 		Type mainType = collector.getMainType();

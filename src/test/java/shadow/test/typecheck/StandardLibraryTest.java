@@ -21,11 +21,11 @@ public class StandardLibraryTest {
 		Loggers.PARSER.setLevel(Level.OFF);
 		
 		args.add("--typecheck");
-		args.add("-c");
-		if( System.getProperty("os.name").contains("Windows"))
+		
+		if( System.getProperty("os.name").contains("Windows")) {
+			args.add("-c");
 			args.add("windows.xml");
-		else
-			args.add("linux.xml");
+		}
 	}
 
 	@Test public void testArray() throws Exception {

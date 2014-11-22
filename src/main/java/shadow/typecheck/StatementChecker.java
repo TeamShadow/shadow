@@ -5,12 +5,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import shadow.TypeCheckException;
-import shadow.TypeCheckException.Error;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.*;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
+import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
