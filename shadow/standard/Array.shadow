@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>, CanIterate<T>
 {
 	get immutable int[] lengths;
@@ -64,7 +62,6 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 		
 		MutableString string = MutableString:create("[");						
 		Class baseClass = getBaseClass();
-		
 		boolean first = true;
 		foreach( T value in this )
 		{	
@@ -72,7 +69,8 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 				first = false;
 			else
 				string.append(", ");
-			string.append(value);			
+				
+			string.append(value);
 		}
 		return string.append("]").toString();
 	}
@@ -94,11 +92,8 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 		
 		public next() => (T)
 		{
-			//Console out = Console:instance;
 			if( position >= limit )
 				throw IndexOutOfBoundsException:create();
-			
-			//out.printLine("Position: " # position);
 			
 			T value = index( position );			
 			position += 1;			

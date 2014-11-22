@@ -494,16 +494,25 @@ public class LLVMOutput extends AbstractOutput
 		
 		for (Type type : references )
 		{
-			if (type != null && !(type instanceof ArrayType) &&
-					!(type instanceof UnboundMethodType) &&
-					!type.equals(module.getType()))
-			{				
+			if( type instanceof ArrayType )
+				arrays.add(new Array((ArrayType)type));			
+			else if( !type.equals(module.getType()) ) {				
 				if( (type.isFullyInstantiated() && recordedTypes.add(type.getMangledNameWithGenerics())) ||  
 					(type.isUninstantiated() && recordedTypes.add(type.getMangledName()))	)				
 					writeTypeConstants(type);
-			}
-			else if( type instanceof ArrayType )
-				arrays.add(new Array((ArrayType)type));
+				
+				/*
+				//inner classes (should already be covered)
+				if( type instanceof ClassType ) {
+					ClassType classType = (ClassType) type;
+					for( ClassType inner : classType.getInnerClasses().values() ) {
+						if((inner.isFullyInstantiated() && recordedTypes.add(inner.getMangledNameWithGenerics())) ||  
+						(inner.isUninstantiated() && recordedTypes.add(inner.getMangledName()))	)
+						writeTypeConstants(inner);
+					}					
+				}
+				*/				
+			}			 
 		}
 		
 		if( moduleType.isParameterized() )

@@ -1,0 +1,32 @@
+import shadow:io@Console;
+
+class ArrayInitializerTest
+{
+	int[] values = {1, 4, 9, 16, 25};
+	String[] words = {"donut", "explanation", "story", "book", #25};
+
+	public main() => ()
+	{
+		Console out = Console:instance;
+		code[] letters = {'a', 'e', 'i', 'o', 'u'};
+		int[][] complex = {{9,8,7}, {6,5,4}, {3,2,1}};
+		String[][] alsoComplex = {{"snap","crackle","pop"}, {"tip","top"}, {"taste","the","rainbow"}};
+		
+		letters[4] = 'y';
+		complex[1][0] = 12;
+		
+		out.printLine(values);	
+		out.printLine(words);
+		out.printLine(complex);
+		out.printLine(letters);
+		out.printLine(alsoComplex);
+		
+		Array<String[]> asObject = alsoComplex;
+		
+		String[] more = {"cranberry", "jamboplexy", "in", "place"};
+		int[] offset = {1}; 
+		asObject[offset] = more;
+		
+		out.printLine(alsoComplex);				
+	}
+}

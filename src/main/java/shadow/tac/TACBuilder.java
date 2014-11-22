@@ -71,6 +71,7 @@ import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
 public class TACBuilder implements ShadowParserVisitor
@@ -317,9 +318,27 @@ public class TACBuilder implements ShadowParserVisitor
 
 	@Override
 	public Object visit(ASTArrayInitializer node, Boolean secondVisit)
-			throws ShadowException
-	{
-		return PRE_CHILDREN;
+			throws ShadowException {
+		if( secondVisit ) {
+			
+			List<TACOperand> sizes = new ArrayList<TACOperand>();			
+			sizes.add(new TACLiteral(tree, "" + node.jjtGetNumChildren()));
+			ArrayType arrayType = (ArrayType)node.getType();
+			TACClass baseClass = new TACClass(tree, arrayType.getBaseType());
+			//allocate array
+			prefix = visitArrayAllocation(arrayType, baseClass, sizes);
+			
+			//store each element in initializer into the array
+			for( int i = 0; i < node.jjtGetNumChildren(); ++i ) {
+				// last parameter of false means no array bounds checking needed
+				TACArrayRef ref = new TACArrayRef(tree, prefix, new TACLiteral(tree, "" + i), false); 
+				new TACStore(tree, ref, tree.appendChild(i));				
+			}
+			
+			new TACNodeRef(tree, prefix);
+		}		
+		
+		return POST_CHILDREN;
 	}
 
 	@Override
@@ -1095,8 +1114,6 @@ public class TACBuilder implements ShadowParserVisitor
 			
 			if( node.getType().isPrimitive() ) //convert from object to primitive form
 				prefix = new TACCast(tree, new SimpleModifiedType(node.getType()), prefix );
-			
-			//prefix = operand;
 		}
 		return POST_CHILDREN;
 	}
@@ -2723,13 +2740,10 @@ public class TACBuilder implements ShadowParserVisitor
 	private void visitLoop()
 	{
 		block = new TACBlock(tree, block).addBreak().addContinue();
-	}
+	}	
 	
 	private void visitForeachLoop(ASTForeachStatement node)
-	{
-		TACLabelRef bodyLabel = new TACLabelRef(tree),				
-					endLabel = block.getBreak();
-		
+	{	
 		ASTForeachInit init = (ASTForeachInit) node.jjtGetChild(0);		
 		Type type = init.getCollectionType(); 		
 		TACOperand collection = tree.appendChild(0); //last thing from init
@@ -2737,10 +2751,12 @@ public class TACBuilder implements ShadowParserVisitor
 		TACVariableRef iterator;
 		TACOperand condition;
 		TACOperand value;
+		TACLabelRef bodyLabel = new TACLabelRef(tree),				
+				endLabel = block.getBreak();
 		
 		//optimization for 1D arrays
 		if( type instanceof ArrayType && ((ArrayType)type).getDimensions() == 1 )
-		{
+		{	
 			TACLabelRef updateLabel = block.getContinue(),
 						conditionLabel = new TACLabelRef(tree);
 
@@ -2773,11 +2789,29 @@ public class TACBuilder implements ShadowParserVisitor
 			value = new TACLoad(tree, iterator);
 			TACOperand length = new TACLength(tree, collection, 0);
 			condition = new TACBinary(tree, value, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true );
+			
+			new TACBranch(tree, condition, bodyLabel, endLabel);		
+			endLabel.new TACLabel(tree);
 		}
 		else
-		{
+		{	
 			TACLabelRef conditionLabel = block.getContinue();
 			MethodSignature signature;
+			
+			/*
+			if( type instanceof TypeParameter ) {
+				TACClass class_ = new TACClass(tree, type);
+				TACLabelRef isArrayLabel = new TACLabelRef(tree);
+				TACLabelRef arrayCheckDoneLabel = new TACLabelRef(tree);
+				
+				signature = Type.CLASS.getMatchingMethod("isArray", new SequenceType());
+				TACMethodRef isArrayRef = new TACMethodRef(tree, class_.getClassData(), signature);
+				TACCall isArray = new TACCall(tree, block, isArrayRef, isArrayRef.getPrefix());
+				new TACBranch(tree, isArray, isArrayLabel, arrayCheckDoneLabel);
+				isArrayLabel.new TACLabel(tree);
+				
+				arrayCheckDoneLabel.new TACLabel(tree);
+			}*/
 			
 			//get iterator
 			signature = type.getMatchingMethod("iterator", new SequenceType());
@@ -2804,10 +2838,12 @@ public class TACBuilder implements ShadowParserVisitor
 			signature = iteratorType.getType().getMatchingMethod("hasNext", new SequenceType());
 			TACMethodRef hasNext = new TACMethodRef(tree, iterator, signature);
 			condition = new TACCall(tree, block, hasNext, iterator);
+			
+			new TACBranch(tree, condition, bodyLabel, endLabel);		
+			endLabel.new TACLabel(tree);
 		}	
 		
-		new TACBranch(tree, condition, bodyLabel, endLabel);		
-		endLabel.new TACLabel(tree);
+
 		block = block.getParent();
 	}
 	

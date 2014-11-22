@@ -64,12 +64,14 @@ public class Generic implements Comparable<Generic>
 		for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() )
 		{
 			Type parameterType = parameter.getType();
-
+			Type withoutArguments = type.getTypeWithoutTypeArguments();
+			
 			//arrays need special treatment
 			//use an array type inside of anything except an array, use the generic version
-			//inside array (or inner classes), leave it as an array
+			//inside array (or inner classes of array or iterator), leave it as an array
 			if( parameterType instanceof ArrayType &&
-				!type.getTypeWithoutTypeArguments().equals(Type.ARRAY) )// &&
+				!withoutArguments.equals(Type.ITERATOR) &&
+				!(withoutArguments.equals(Type.ARRAY) || (withoutArguments.hasOuter() && withoutArguments.getOuter().equals(Type.ARRAY))) )// &&
 				//!Type.ARRAY.recursivelyContainsInnerClass(type.getTypeWithoutTypeArguments()) )
 				parameterType = ((ArrayType)parameterType).convertToGeneric();
 				

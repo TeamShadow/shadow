@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import shadow.TypeCheckException;
+import shadow.typecheck.Package;
 
 public class ArrayType extends ClassType
 {	
@@ -25,6 +26,19 @@ public class ArrayType extends ClassType
 		
 		return name.toString();		
 	}
+	
+	@Override
+	public String getQualifiedName(boolean withBounds) {
+		if( getSuperBaseType().isPrimitive() )
+			return toString(withBounds);
+		
+		Package _package = getSuperBaseType().getPackage();		
+		if( _package == null || _package.getQualifiedName().isEmpty())
+			return "default@" + toString(withBounds);
+		else
+			return _package.getQualifiedName() + '@' + toString(withBounds);		
+	}
+
 	
 	
 	private static String makeName(Type baseType, int dimensions )

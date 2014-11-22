@@ -39,7 +39,7 @@ public class TACTest {
 	@After
 	public void cleanup() {
 		// Remove the unit test executable
-		executable.delete();
+		//executable.delete();
 	}
 		
 	@Test public void testArrayList() throws Exception {
@@ -228,6 +228,12 @@ public class TACTest {
 	
 	@Test public void testAssert() throws Exception {
 		args.add("shadow/test/AssertTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+
+	@Test public void testArrayInitializer() throws Exception {
+		args.add("shadow/test/ArrayInitializerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 }
