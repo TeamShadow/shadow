@@ -2754,15 +2754,18 @@ public class TACBuilder implements ShadowParserVisitor
 		TACLabelRef bodyLabel = new TACLabelRef(tree),				
 				endLabel = block.getBreak();
 		
-		//optimization for 1D arrays
-		if( type instanceof ArrayType && ((ArrayType)type).getDimensions() == 1 )
-		{	
+		//optimization for arrays
+		if( type instanceof ArrayType ) {	
+			ArrayType arrayType = (ArrayType) type;
 			TACLabelRef updateLabel = block.getContinue(),
 						conditionLabel = new TACLabelRef(tree);
 
 			//make iterator (int index)
 			iterator = new TACVariableRef(tree,	method.addTempLocal(new SimpleModifiedType(Type.INT)));
 			new TACStore(tree, iterator, new TACLiteral(tree, "0"));
+			TACOperand length = new TACLength(tree, collection, 0);			
+			for (int i = 1; i < arrayType.getDimensions(); i++)
+				length = new TACBinary(tree, length, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(tree, collection, i), false);			
 			
 			new TACBranch(tree, conditionLabel);  //init is done, jump to condition
 			
@@ -2786,8 +2789,7 @@ public class TACBuilder implements ShadowParserVisitor
 			conditionLabel.new TACLabel(tree);
 			
 			//check if iterator < array length
-			value = new TACLoad(tree, iterator);
-			TACOperand length = new TACLength(tree, collection, 0);
+			value = new TACLoad(tree, iterator);			
 			condition = new TACBinary(tree, value, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true );
 			
 			new TACBranch(tree, condition, bodyLabel, endLabel);		

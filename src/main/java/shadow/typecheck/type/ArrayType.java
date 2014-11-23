@@ -170,8 +170,7 @@ public class ArrayType extends ClassType
 	}
 	
 	@Override
-	public boolean isSubtype(Type t)
-	{		
+	public boolean isSubtype(Type t) {		
 		if( t == UNKNOWN )
 			return false;
 	
@@ -181,11 +180,7 @@ public class ArrayType extends ClassType
 		if( t == OBJECT )
 			return true;
 		
-		if( t.getTypeWithoutTypeArguments().equals(Type.ARRAY) )					
-			return convertToGeneric().equals(t);
-				
-		if( t instanceof ArrayType )
-		{
+		if( t instanceof ArrayType ) {
 			ArrayType type = (ArrayType)this;
 			ArrayType other = (ArrayType)t;
 			//invariant subtyping on arrays
@@ -194,8 +189,9 @@ public class ArrayType extends ClassType
 			else
 				return false;
 		}
-		else
-			return false;
+		
+		//check generic version
+		return convertToGeneric().isSubtype(t);
 	}
 	
 	@Override

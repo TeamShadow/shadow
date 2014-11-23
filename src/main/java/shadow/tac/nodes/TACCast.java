@@ -65,6 +65,8 @@ public class TACCast extends TACOperand
 			{				
 				if( op.getType().isPrimitive() && !op.getModifiers().isNullable() )				
 					op = new TACConversion(this, op, op.getType(), Kind.PRIMITIVE_TO_OBJECT);
+				else if( op.getType() instanceof ArrayType )
+					op = new TACConversion(this, op, ((ArrayType)op.getType()).convertToGeneric(), Kind.ARRAY_TO_OBJECT);
 								
 				operand = new TACConversion(this, op, type, Kind.OBJECT_TO_INTERFACE, check);
 				return;
