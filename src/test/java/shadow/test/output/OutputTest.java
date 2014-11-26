@@ -54,7 +54,7 @@ public class OutputTest {
 		Files.delete(executable);
 	}
 	
-	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException {
+	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
 		
 		// Should be initialized at this point by call to Main.run()
 		Configuration config = Configuration.getConfiguration();
@@ -78,6 +78,7 @@ public class OutputTest {
 		} while (line != null);
 		String output = builder.toString(); 
 		assertEquals(expectedOutput, output);
+		program.waitFor(); //keeps program from being deleted while running
 	}
 	
 	@Test public void testTest() throws Exception {

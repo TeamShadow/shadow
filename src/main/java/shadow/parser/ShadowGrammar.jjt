@@ -155,7 +155,6 @@ TOKEN :
 | < SHORT: "short" >
 | < SINGLETON: "singleton" >
 | < _SKIP: "skip" >
-//| < STRICTFP: "strictfp" >
 | < SUPER: "super" >
 | < SWITCH: "switch" >
 | < THIS: "this" >
@@ -168,7 +167,6 @@ TOKEN :
 | < ULONG: "ulong" >
 | < USHORT: "ushort" >
 | < VAR: "var" >
-//| < VIEW: "view" >
 | < WEAK: "weak" >
 | < WHILE: "while" >
 | < XOR: "xor" >

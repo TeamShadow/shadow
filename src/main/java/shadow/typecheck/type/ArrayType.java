@@ -2,7 +2,7 @@ package shadow.typecheck.type;
 
 import java.util.Collections;
 import java.util.List;
-
+import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException;
 
 public class ArrayType extends ClassType
@@ -25,6 +25,19 @@ public class ArrayType extends ClassType
 		
 		return name.toString();		
 	}
+	
+	@Override
+	public String getQualifiedName(boolean withBounds) {
+		if( getSuperBaseType().isPrimitive() )
+			return toString(withBounds);
+		
+		Package _package = getSuperBaseType().getPackage();		
+		if( _package == null || _package.getQualifiedName().isEmpty())
+			return "default@" + toString(withBounds);
+		else
+			return _package.getQualifiedName() + '@' + toString(withBounds);		
+	}
+
 	
 	
 	private static String makeName(Type baseType, int dimensions )
@@ -157,8 +170,7 @@ public class ArrayType extends ClassType
 	}
 	
 	@Override
-	public boolean isSubtype(Type t)
-	{		
+	public boolean isSubtype(Type t) {		
 		if( t == UNKNOWN )
 			return false;
 	
@@ -168,11 +180,7 @@ public class ArrayType extends ClassType
 		if( t == OBJECT )
 			return true;
 		
-		if( t.getTypeWithoutTypeArguments().equals(Type.ARRAY) )					
-			return convertToGeneric().equals(t);
-				
-		if( t instanceof ArrayType )
-		{
+		if( t instanceof ArrayType ) {
 			ArrayType type = (ArrayType)this;
 			ArrayType other = (ArrayType)t;
 			//invariant subtyping on arrays
@@ -181,8 +189,9 @@ public class ArrayType extends ClassType
 			else
 				return false;
 		}
-		else
-			return false;
+		
+		//check generic version
+		return convertToGeneric().isSubtype(t);
 	}
 	
 	@Override

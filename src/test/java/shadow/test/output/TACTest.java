@@ -235,4 +235,10 @@ public class TACTest {
 		args.add("shadow/test/AssertTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+
+	@Test public void testArrayInitializer() throws Exception {
+		args.add("shadow/test/ArrayInitializerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

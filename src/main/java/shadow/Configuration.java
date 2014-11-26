@@ -117,7 +117,7 @@ public class Configuration {
 	private Path locateConfig(Arguments compilerArgs) throws FileNotFoundException, ConfigurationException {
 		
 		// Get the various search directories
-		Path sourceDir = Paths.get(compilerArgs.getMainFileArg()).getParent().toAbsolutePath();
+		Path sourceDir = Paths.get(compilerArgs.getMainFileArg()).toAbsolutePath().getParent().toAbsolutePath();
 		Path workingDir = Paths.get("").toAbsolutePath();
 		Path runningDir = getRunningDirectory().toAbsolutePath();
 		

@@ -3115,9 +3115,10 @@ public class StatementChecker extends BaseChecker
 			}
 		}
 
-			
+		/*//old code assumes that ultimate type is multidimensional array	
 		ArrayList<Integer> dimensions = new ArrayList<Integer>();
-		Type baseType;
+		Type baseType;		
+		
 		if( result instanceof ArrayType )
 		{
 			ArrayType arrayType = (ArrayType)result;
@@ -3128,8 +3129,12 @@ public class StatementChecker extends BaseChecker
 		{
 			dimensions.add(1);
 			baseType = result;
-		}		
-		ArrayType arrayType = new ArrayType( baseType, dimensions );
+		}
+		ArrayType arrayType = new ArrayType(baseType, dimensions);
+		*/		
+		
+		//new code assumes that result is array of arrays
+		ArrayType arrayType = new ArrayType(result, 1);
 		node.setType(arrayType);
 		((ClassType)currentType).addReferencedType(arrayType);
 		

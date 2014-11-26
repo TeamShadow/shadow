@@ -340,8 +340,8 @@ public abstract class Type implements Comparable<Type>
 	
 	public String getQualifiedName(boolean withBounds) 
 	{		
-		if( isPrimitive() || (this instanceof ArrayType && ((ArrayType)this).getSuperBaseType().isPrimitive()) )
-			return toString(withBounds);
+		if( isPrimitive() )
+			return toString(withBounds);		
 		else if( _package == null || _package.getQualifiedName().isEmpty())
 			return "default@" + toString(withBounds);
 		else
@@ -1393,6 +1393,8 @@ public abstract class Type implements Comparable<Type>
 	
 	protected final void printGenerics(PrintWriter out, String indent ) {
 		out.println(indent + "// Generics");
+		
+		//fix referenced types so that they include everything
 		
 		for( Type type : getReferencedTypes() ) {		
 			if( type.isParameterizedIncludingOuterClasses() ) {		

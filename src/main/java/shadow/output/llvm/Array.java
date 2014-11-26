@@ -15,7 +15,7 @@ public class Array implements Comparable<Array>
 		dimensions = type.getDimensions();
 		baseClass = type.getBaseType().getMangledNameWithGenerics();
 		this.type = LLVMOutput.type(type);
-	}	
+	}
 	
 	public String getType()
 	{

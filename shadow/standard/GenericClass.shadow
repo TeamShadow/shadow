@@ -55,8 +55,7 @@ immutable class shadow:standard@
 				{
 					matching = false;
 				}					
-			}	
-			
+			}			
 					
 			if( matching )
 				return cast<Class>(classes[i]);			
