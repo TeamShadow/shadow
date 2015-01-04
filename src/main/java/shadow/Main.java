@@ -135,8 +135,15 @@ public class Main {
 
 		Path unwindFile = Paths.get("shadow", "Unwind" + config.getArch() + ".ll");
 		unwindFile = system.resolve(unwindFile);
+		
+		String systemName;
+		
+		if( config.getOs().equals("Windows"))
+			systemName = "Windows";
+		else
+			systemName = "Linux";  //used for Mac as well
 				
-		Path OsFile = Paths.get("shadow", config.getOs() + ".ll" );
+		Path OsFile = Paths.get("shadow" + File.separator + systemName + ".ll" );
 		OsFile = system.resolve(OsFile);
 
 		List<String> linkCommand = new ArrayList<String>();
