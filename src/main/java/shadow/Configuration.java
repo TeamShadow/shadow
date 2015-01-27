@@ -192,16 +192,19 @@ public class Configuration {
 		}
 		
 		if( os == null ) {
-			String osName = System.getProperty("os.name");
+			String osName = System.getProperty("os.name").toLowerCase();
 			
-			if( osName.contains("Windows") )
+			if( osName.contains("windows") )
 				os = "Windows";
-			else {
+			else if( osName.contains("mac"))
+				os = "Mac";
+			else			
+			{
 				// TODO: Possibly change "Linux.ll" to be more appropriately
 				// named (to something like "NonWindows.ll" or "UnixLike.ll")
 				
-				logger.info("Non-Windows OS '" + System.getProperty("os.name")
-						+ "' detected, defaulting to Linux.ll");
+				//logger.info("Non-Windows OS '" + System.getProperty("os.name")
+						//+ "' detected, defaulting to Linux.ll");
 				os = "Linux";
 			}
 		}
@@ -211,14 +214,26 @@ public class Configuration {
 		
 		if( linkCommand == null ) {		
 			linkCommand = new ArrayList<String>();
-			linkCommand.add("gcc");
-			linkCommand.add("-x");
-			linkCommand.add("assembler");
-			linkCommand.add("-");					
 			
-			if( getOs().equals("Linux") ) {
+			if( getOs().equals("Mac")) {
+				linkCommand.add("clang");				
+				linkCommand.add("-x");
+				linkCommand.add("assembler");
+				linkCommand.add("-");
 				linkCommand.add("-lm");
 				linkCommand.add("-lrt");
+				linkCommand.add("-lSystem");
+			}			
+			else {
+				linkCommand.add("gcc"); //change back to gcc
+				linkCommand.add("-x");
+				linkCommand.add("assembler");
+				linkCommand.add("-");					
+				
+				if( getOs().equals("Linux") ) {
+					linkCommand.add("-lm");
+					linkCommand.add("-lrt");
+				}
 			}
 		}
 

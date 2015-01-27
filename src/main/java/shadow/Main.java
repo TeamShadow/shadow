@@ -126,18 +126,24 @@ public class Main {
 		currentJob = new Job(compilerArgs);
 
 		// Print help if the 'h' option is present
-		if( compilerArgs.hasOption("h") )
-		{
+		if( compilerArgs.hasOption("h") ) {
 			printHelp();
 			return;
 		}
 
 		Path system = config.getSystemImport();
 
-		Path unwindFile = Paths.get("shadow" + File.separator + "Unwind" + config.getArch() + ".ll");
+		Path unwindFile = Paths.get("shadow", "Unwind" + config.getArch() + ".ll");
 		unwindFile = system.resolve(unwindFile);
+		
+		String systemName;
+		
+		if( config.getOs().equals("Windows"))
+			systemName = "Windows";
+		else
+			systemName = "Linux";  //used for Mac as well
 				
-		Path OsFile = Paths.get("shadow" + File.separator + config.getOs() + ".ll" );
+		Path OsFile = Paths.get("shadow" + File.separator + systemName + ".ll" );
 		OsFile = system.resolve(OsFile);
 
 		List<String> linkCommand = new ArrayList<String>();
@@ -166,9 +172,9 @@ public class Main {
 			Path mainLL;
 
 			if( mainArguments )
-				mainLL = Paths.get("shadow" + File.separator + "Main.ll");
+				mainLL = Paths.get("shadow", "Main.ll");
 			else
-				mainLL = Paths.get("shadow" + File.separator + "NoArguments.ll");
+				mainLL = Paths.get("shadow", "NoArguments.ll");
 
 			mainLL = system.resolve(mainLL);
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
