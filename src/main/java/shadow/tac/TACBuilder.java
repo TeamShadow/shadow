@@ -1104,11 +1104,35 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-		{
+		{	
+			TACLabelRef recover;
+			
+			if( node.hasRecover() )
+				recover = block.getRecover();
+			else
+				recover = new TACLabelRef(tree);				
+				
 			TACLabelRef continueLabel = new TACLabelRef(tree);
 			TACOperand operand = tree.appendChild(0);
+			
+			//if there's a recover, things will be handled there if null			
 			new TACBranch(tree, new TACSame(tree, operand, new TACLiteral(tree,
-					"null")), block.getRecover(), continueLabel);
+					"null")), recover, continueLabel);
+			
+			//otherwise, we throw an exception here
+			if( !node.hasRecover() ) {
+				recover.new TACLabel(tree);
+				TACOperand object = new TACNewObject(tree, Type.UNEXPECTED_NULL_EXCEPTION);
+				SequenceType params = new SequenceType();			
+				
+				MethodSignature signature = Type.UNEXPECTED_NULL_EXCEPTION.getMatchingMethod("create", params);
+							
+				TACMethodRef methodRef = new TACMethodRef(tree, signature);			
+				TACCall exception = new TACCall(tree, block, methodRef, object);
+							
+				new TACThrow(tree, block, exception);
+			}	
+			
 			continueLabel.new TACLabel(tree);
 			prefix = new TACNodeRef(tree, operand);
 			

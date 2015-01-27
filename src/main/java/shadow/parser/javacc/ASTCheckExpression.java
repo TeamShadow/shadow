@@ -5,7 +5,18 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTCheckExpression extends SimpleNode {
-  public ASTCheckExpression(int id) {
+
+	private boolean hasRecover = false; 
+	
+	public boolean hasRecover() {
+		return hasRecover;
+	}
+	
+	public void setRecover(boolean value) {
+		hasRecover = value;
+	}
+	
+public ASTCheckExpression(int id) {
     super(id);
   }
 

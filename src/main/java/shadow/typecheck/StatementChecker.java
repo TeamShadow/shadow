@@ -2003,18 +2003,23 @@ public class StatementChecker extends BaseChecker
 		if( secondVisit )
 		{
 			ModifiedType child = node.jjtGetChild(0);
-			child = resolveType( child );			
+			child = resolveType( child );
+			Type type = child.getType();
 			
-			if( child.getModifiers().isNullable() )
-			{
+			if( type instanceof ArrayType && type.getModifiers().isNullable() ) {
+				ArrayType arrayType = (ArrayType) type;
+				type = new ArrayType(arrayType.getBaseType(), arrayType.getDimensions());
+			}			
+			else if( child.getModifiers().isNullable() ) {
 				node.setModifiers(child.getModifiers());
 				node.removeModifier(Modifiers.NULLABLE);
 			}
 			else
 				addError(Error.INVALID_TYPE, "Non-nullable expression cannot be used in a check statement");
 			
-			node.setType(child.getType());
+			node.setType(type);
 		}
+		
 		else
 		{
 			boolean found = false;
@@ -2027,8 +2032,7 @@ public class StatementChecker extends BaseChecker
 				}				
 			}
 			
-			if( !found )
-				addError(Error.INVALID_STRUCTURE, "No recover block supplied for check statement");
+			node.setRecover(found);
 		}
 		
 		return WalkType.POST_CHILDREN;

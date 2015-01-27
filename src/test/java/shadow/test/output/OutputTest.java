@@ -55,6 +55,10 @@ public class OutputTest {
 	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
+		run( programArgs, expectedOutput, "" );
+	}
+	
+	private void run(String[] programArgs, String expectedOutput, String expectedError ) throws IOException, ConfigurationException, InterruptedException {
 		
 		// Should be initialized at this point by call to Main.run()
 		Configuration config = Configuration.getConfiguration();
@@ -68,16 +72,31 @@ public class OutputTest {
 			programCommand.add(arg);
 		
 		Process program = new ProcessBuilder(programCommand).start();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(program.getInputStream()));
+		
+		//regular output
+		BufferedReader reader = new BufferedReader(new InputStreamReader(program.getInputStream()));		
 		StringBuilder builder = new StringBuilder();
 		String line;
 		do {
 			line = reader.readLine();
 			if (line != null)
 				builder.append(line).append('\n');
-		} while (line != null);
-		String output = builder.toString(); 
+		} while (line != null);		
+		String output = builder.toString();
 		assertEquals(expectedOutput, output);
+		
+		//error output
+		reader = new BufferedReader(new InputStreamReader(program.getErrorStream()));
+		builder = new StringBuilder();
+		do {
+			line = reader.readLine();
+			if (line != null)
+				builder.append(line).append('\n');
+		} while (line != null);
+		
+		String error = builder.toString();	
+		assertEquals(expectedError, error);		
+		
 		program.waitFor(); //keeps program from being deleted while running
 	}
 	
@@ -192,5 +211,31 @@ public class OutputTest {
 				"5\n" + 
 				"5\n" +
 				"8\n");
+	}
+	
+	@Test public void testCheck() throws Exception {
+		args.add("shadow/test/PrimitiveTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"5\n" + 
+				"5\n" + 
+				"5\n" + 
+				"5\n" + 
+				"5\n" +
+				"8\n");
+	}
+	
+	@Test public void testNullableWithCheck() throws Exception {
+		args.add("shadow/test/NullableWithCheckTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Recovered!\n");
+	}
+	
+	@Test public void testNullableWithoutCheck() throws Exception {
+		args.add("shadow/test/NullableWithoutCheckTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "",
+				"shadow:standard@UnexpectedNullException\n");
 	}
 }

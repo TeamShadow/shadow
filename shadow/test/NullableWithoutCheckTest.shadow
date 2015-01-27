@@ -1,0 +1,17 @@
+//import shadow:io@Console;
+
+class shadow:test@NullableWithoutCheckTest
+{
+	public main( String[] args ) => ()
+	{
+		//Console out = Console:instance;
+		//nullable Object danger = null; 
+		
+		throw UnexpectedNullException:create();
+		
+		//Object object = check(danger);
+		//out.printLine("Got past null check somehow...");
+		
+		//should print UnexpectedNullException
+	}
+}

@@ -367,6 +367,7 @@ public class TypeCollector extends BaseChecker {
 				case "uint":			Type.UINT = (ClassType)type; break;
 				case "ulong":			Type.ULONG = (ClassType)type; break;
 				case "UnboundMethod":	Type.UNBOUND_METHOD = (ClassType)type; break;
+				case "UnexpectedNullException": Type.UNEXPECTED_NULL_EXCEPTION = (ExceptionType)type; break;
 				case "ushort":			Type.USHORT = (ClassType)type; break;
 				}
 			}
