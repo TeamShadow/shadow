@@ -1799,13 +1799,11 @@ public class TACBuilder implements ShadowParserVisitor
 				}								
 				
 				//then go through and add the executable blocks of code to jump to
-				for( int i = 1; i < node.jjtGetNumChildren(); i += 2 )
-				{	
+				for( int i = 1; i < node.jjtGetNumChildren(); i += 2 ) {	
 					ASTSwitchLabel label = (ASTSwitchLabel) node.jjtGetChild(i);
 					label.getLabel().new TACLabel(tree); //mark start of code
 					
-					tree.appendChild(i + 1); //add block of code (the child after each label)				
-					
+					tree.appendChild(i + 1); //add block of code (the child after each label)
 					new TACBranch(tree, doneLabel);	
 				}
 				

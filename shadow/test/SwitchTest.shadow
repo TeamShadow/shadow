@@ -10,56 +10,51 @@ class shadow:test@SwitchTest
 		{
 			switch( i )
 			{
-				case( 3 )
-				{
-					out.printLine("Three!");					
-				}
-				case( 4s )
-				{
-					out.printLine("Four!");			
-				}
-				case( 5 )
-				{
-					out.printLine("Five");				
-				}
-				case( 7, 8, 9 )
-				{
-					out.printLine("Others!");		
-				}
-				default
-				{
-					out.printLine("Default!");
-				}
-				case( 10 )
-				{
-					out.printLine("Ten!");
-				} 
+				case( 3 ) out.printLine("Three!");					
+				case( 4s ) out.printLine("Four!");			
+				case( 5 ) out.printLine("Five");				
+				case( 7, 8, 9 ) out.printLine("Others!");
+				default	out.printLine("Default!");
+				case( 10 )out.printLine("Ten!");			
 			}
 		}
 		
 		
-		boolean done = false;
+		int position = 0;
 		
-		while( !done )
-		{
-			out.print("Enter the magic word: ");
-			(String s, ) = out.readLine();
-			
-			switch( s )
+		while( position < args->size )
+		{			
+			switch( args[position] )
 			{
 				case( "bedula", "fez", "habib" )
-				{
-					out.printLine("Welcome, " # s);					
-				}
+					out.printLine("Welcome, " # args[position]);					
 				case( "sesame" )
-				{
 					out.printLine("That's the magic word!");
-					done = true;
-				}
 				default
-				{
 					out.printLine("What are you talking about?");					
-				}
+			}
+			
+			position += 1;
+		}
+		
+		int value = 3;
+		
+		switch( value )
+		{
+			case( 1 )
+			{
+				int thing = 4;
+				out.printLine("Easy");					
+			}
+			case( 2 )
+			{
+				int thing = 5;
+				out.printLine("to make");
+			}
+			case( 3 )			
+			{
+				int thing = 6;
+				out.printLine("separate scopes");				
 			}
 		}
 	}

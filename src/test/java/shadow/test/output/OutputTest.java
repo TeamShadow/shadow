@@ -238,4 +238,23 @@ public class OutputTest {
 		run(new String[0], "",
 				"shadow:standard@UnexpectedNullException\n");
 	}
+	
+	@Test public void testSwitch() throws Exception {
+		args.add("shadow/test/SwitchTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[] {"bedula", "sesame"}, 
+				"Default!\n" +
+				"Default!\n" +
+				"Three!\n" +
+				"Four!\n" +
+				"Five\n" +
+				"Default!\n" +
+				"Others!\n" +
+				"Others!\n" +
+				"Others!\n" +
+				"Ten!\n" +
+				"Welcome, bedula\n" +
+				"That's the magic word!\n" +
+				"separate scopes\n");
+	}	
 }

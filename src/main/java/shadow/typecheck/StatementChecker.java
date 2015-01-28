@@ -147,13 +147,12 @@ public class StatementChecker extends BaseChecker
 			Type type = node.jjtGetChild(0).getType();
 			if(!type.isIntegral() && !type.isString() && !(type instanceof EnumType))
 				addError(Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in switch statement, only integral, String, and enum types allowed");
-			for(int i=1;i<node.jjtGetNumChildren();++i) {
+			for(int i=1; i<node.jjtGetNumChildren(); ++i) {
 				Node childNode = node.jjtGetChild(i);
 				if(childNode.getClass() == ASTSwitchLabel.class) {
 					if(childNode.getType() != null){ //default label should have null type 
-						if(!childNode.getType().isSubtype(type)) {
+						if(!childNode.getType().isSubtype(type))
 							addError(childNode,Error.INVALID_LABEL,"Label type " + childNode.getType() + " does not match switch type " + type);
-						}
 					}
 					else
 						defaultCounter++;
