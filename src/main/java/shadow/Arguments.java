@@ -7,6 +7,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.log4j.Level;
 
 /** 
  * Represents any information given on the command line. Parses, processes,
@@ -35,8 +36,6 @@ public class Arguments {
 	
 	private CommandLine commandLine;
 	
-	private String mainFileArg;
-	
 	private static final Options compilerOptions = createOptions();
 	
 	public Arguments(String[] args) throws ParseException, ConfigurationException {
@@ -55,7 +54,9 @@ public class Arguments {
 			throw new ConfigurationException("No source file specified to compile");
 		}
 		
-		mainFileArg = commandLine.getArgs()[0];
+		// Increase logging level unless VERBOSE is set
+		if( !hasOption(VERBOSE) )
+			Loggers.setAllToLevel(Level.ERROR);
 	}
 	
 	public boolean hasOption(String option) {
@@ -65,7 +66,7 @@ public class Arguments {
 
 	public String getMainFileArg() {
 		
-		return mainFileArg;
+		return commandLine.getArgs()[0];
 	}
 	
 	public String getConfigFileArg() {

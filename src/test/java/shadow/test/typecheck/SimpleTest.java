@@ -26,6 +26,8 @@ public class SimpleTest
 		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
 		Loggers.PARSER.setLevel(Level.ALL);	
 		
+		args.add("-v");
+		
 		//add desired files to list
 		//args.add("--compile");
 		args.add("shadow/test/Matrix.shadow"); 		

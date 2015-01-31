@@ -21,6 +21,7 @@ public class NegativeTests {
 		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
 		Loggers.PARSER.setLevel(Level.OFF);
 		
+		args.add("-v");
 		args.add("--typecheck");
 		
 		if( System.getProperty("os.name").contains("Windows")) {

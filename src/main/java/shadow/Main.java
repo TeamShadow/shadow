@@ -125,7 +125,7 @@ public class Main {
 		config = Configuration.buildConfiguration(compilerArgs, false);
 		currentJob = new Job(compilerArgs);
 
-		// Print help if the 'h' option is present
+		// Print help if the HELP option is set
 		if( compilerArgs.hasOption("h") ) {
 			printHelp();
 			return;
