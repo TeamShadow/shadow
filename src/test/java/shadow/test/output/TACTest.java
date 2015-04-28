@@ -242,4 +242,17 @@ public class TACTest {
 		args.add("shadow/test/ArrayInitializerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testNullableWithCheck() throws Exception {
+		args.add("shadow/test/NullableWithCheckTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testNullableWithoutCheck() throws Exception {
+		args.add("shadow/test/NullableWithoutCheckTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	
+	
 }

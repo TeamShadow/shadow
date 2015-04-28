@@ -1,0 +1,20 @@
+import shadow:io@Console;
+
+class shadow:test@NullableWithCheckTest
+{
+	public main( String[] args ) => ()
+	{
+		Console out = Console:instance;
+		nullable Object danger = null; 
+		
+		try 
+		{		
+			Object object = check(danger);
+			out.printLine("Got past null check somehow...");
+		}
+		recover
+		{
+			out.printLine("Recovered!");
+		}
+	}
+}

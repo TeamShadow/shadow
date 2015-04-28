@@ -1590,7 +1590,7 @@ void SwitchStatement():
 { debugPrint("SWITCH STATEMENT"); }
 {
   "switch" "(" ConditionalExpression() ")" "{"
-    ( SwitchLabel() ( Block() ) )+
+    ( SwitchLabel() ( Statement() ) )+
   "}"
 }
 

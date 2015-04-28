@@ -147,13 +147,12 @@ public class StatementChecker extends BaseChecker
 			Type type = node.jjtGetChild(0).getType();
 			if(!type.isIntegral() && !type.isString() && !(type instanceof EnumType))
 				addError(Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in switch statement, only integral, String, and enum types allowed");
-			for(int i=1;i<node.jjtGetNumChildren();++i) {
+			for(int i=1; i<node.jjtGetNumChildren(); ++i) {
 				Node childNode = node.jjtGetChild(i);
 				if(childNode.getClass() == ASTSwitchLabel.class) {
 					if(childNode.getType() != null){ //default label should have null type 
-						if(!childNode.getType().isSubtype(type)) {
+						if(!childNode.getType().isSubtype(type))
 							addError(childNode,Error.INVALID_LABEL,"Label type " + childNode.getType() + " does not match switch type " + type);
-						}
 					}
 					else
 						defaultCounter++;
@@ -2003,18 +2002,23 @@ public class StatementChecker extends BaseChecker
 		if( secondVisit )
 		{
 			ModifiedType child = node.jjtGetChild(0);
-			child = resolveType( child );			
+			child = resolveType( child );
+			Type type = child.getType();
 			
-			if( child.getModifiers().isNullable() )
-			{
+			if( type instanceof ArrayType && type.getModifiers().isNullable() ) {
+				ArrayType arrayType = (ArrayType) type;
+				type = new ArrayType(arrayType.getBaseType(), arrayType.getDimensions());
+			}			
+			else if( child.getModifiers().isNullable() ) {
 				node.setModifiers(child.getModifiers());
 				node.removeModifier(Modifiers.NULLABLE);
 			}
 			else
 				addError(Error.INVALID_TYPE, "Non-nullable expression cannot be used in a check statement");
 			
-			node.setType(child.getType());
+			node.setType(type);
 		}
+		
 		else
 		{
 			boolean found = false;
@@ -2027,8 +2031,7 @@ public class StatementChecker extends BaseChecker
 				}				
 			}
 			
-			if( !found )
-				addError(Error.INVALID_STRUCTURE, "No recover block supplied for check statement");
+			node.setRecover(found);
 		}
 		
 		return WalkType.POST_CHILDREN;

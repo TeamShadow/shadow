@@ -1104,11 +1104,35 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException
 	{
 		if (secondVisit)
-		{
+		{	
+			TACLabelRef recover;
+			
+			if( node.hasRecover() )
+				recover = block.getRecover();
+			else
+				recover = new TACLabelRef(tree);				
+				
 			TACLabelRef continueLabel = new TACLabelRef(tree);
 			TACOperand operand = tree.appendChild(0);
+			
+			//if there's a recover, things will be handled there if null			
 			new TACBranch(tree, new TACSame(tree, operand, new TACLiteral(tree,
-					"null")), block.getRecover(), continueLabel);
+					"null")), recover, continueLabel);
+			
+			//otherwise, we throw an exception here
+			if( !node.hasRecover() ) {
+				recover.new TACLabel(tree);
+				TACOperand object = new TACNewObject(tree, Type.UNEXPECTED_NULL_EXCEPTION);
+				SequenceType params = new SequenceType();			
+				
+				MethodSignature signature = Type.UNEXPECTED_NULL_EXCEPTION.getMatchingMethod("create", params);
+							
+				TACMethodRef methodRef = new TACMethodRef(tree, signature);			
+				TACCall exception = new TACCall(tree, block, methodRef, object);
+							
+				new TACThrow(tree, block, exception);
+			}	
+			
 			continueLabel.new TACLabel(tree);
 			prefix = new TACNodeRef(tree, operand);
 			
@@ -1775,13 +1799,11 @@ public class TACBuilder implements ShadowParserVisitor
 				}								
 				
 				//then go through and add the executable blocks of code to jump to
-				for( int i = 1; i < node.jjtGetNumChildren(); i += 2 )
-				{	
+				for( int i = 1; i < node.jjtGetNumChildren(); i += 2 ) {	
 					ASTSwitchLabel label = (ASTSwitchLabel) node.jjtGetChild(i);
 					label.getLabel().new TACLabel(tree); //mark start of code
 					
-					tree.appendChild(i + 1); //add block of code (the child after each label)				
-					
+					tree.appendChild(i + 1); //add block of code (the child after each label)
 					new TACBranch(tree, doneLabel);	
 				}
 				

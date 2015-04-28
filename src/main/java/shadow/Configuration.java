@@ -91,6 +91,11 @@ public class Configuration {
 		configDigester.addCallMethod("shadow/os", "setOs", 1);
 		configDigester.addCallParam("shadow/os", 0);
 		
+		// Parsing rule for the architecture
+		configDigester.addCallMethod("shadow/arch", "setArch", 1);
+		configDigester.addCallParam("shadow/arch", 0);
+		
+		
 		// Attempt to locate hierarchy of config files
 		configFile = locateConfig(compilerArgs);
 		
@@ -255,7 +260,7 @@ public class Configuration {
 	
 	public void setArch(int arch) {
 		
-		if(this.arch == -1)
+		if(this.arch == 0)
 			this.arch = arch;
 	}
 	
