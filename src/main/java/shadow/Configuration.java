@@ -246,7 +246,6 @@ public class Configuration {
 		try {
 			configDigester.push(this);
 			configDigester.parse(configFile.toFile());
-			configDigester.pop();
 		} 
 		catch(Exception e) {
 			System.err.println("ERROR PARSING CONFIGURATION FILE: " + configFile.toAbsolutePath());
