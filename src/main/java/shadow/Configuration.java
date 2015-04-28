@@ -216,7 +216,6 @@ public class Configuration {
 				linkCommand.add("assembler");
 				linkCommand.add("-");
 				linkCommand.add("-lm");
-				linkCommand.add("-lrt");
 				linkCommand.add("-lSystem");
 			}			
 			else {
