@@ -224,7 +224,7 @@ public class Configuration {
 				linkCommand.add("-lSystem");
 			}			
 			else {
-				linkCommand.add("gcc"); //change back to gcc
+				linkCommand.add("gcc");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
 				linkCommand.add("-");					

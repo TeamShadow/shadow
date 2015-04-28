@@ -4,6 +4,7 @@
 !*.native.ll
 *.exe
 *.out
+!Mac.ll
 !Linux.ll
 !Main.ll
 !NoArguments.ll
