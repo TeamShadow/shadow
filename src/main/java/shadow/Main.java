@@ -138,10 +138,7 @@ public class Main {
 		
 		String systemName;
 		
-		if( config.getOs().equals("Windows"))
-			systemName = "Windows";
-		else
-			systemName = "Linux";  //used for Mac as well
+		systemName = config.getOs(); // Name for the platform's .ll file
 				
 		Path OsFile = Paths.get("shadow" + File.separator + systemName + ".ll" );
 		OsFile = system.resolve(OsFile);

@@ -221,11 +221,10 @@ public class Configuration {
 				linkCommand.add("assembler");
 				linkCommand.add("-");
 				linkCommand.add("-lm");
-				linkCommand.add("-lrt");
 				linkCommand.add("-lSystem");
 			}			
 			else {
-				linkCommand.add("gcc"); //change back to gcc
+				linkCommand.add("gcc");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
 				linkCommand.add("-");					
@@ -252,7 +251,6 @@ public class Configuration {
 		try {
 			configDigester.push(this);
 			configDigester.parse(configFile.toFile());
-			configDigester.pop();
 		} 
 		catch(Exception e) {
 			System.err.println("ERROR PARSING CONFIGURATION FILE: " + configFile.toAbsolutePath());
