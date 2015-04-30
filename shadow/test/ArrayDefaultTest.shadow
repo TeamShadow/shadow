@@ -1,0 +1,17 @@
+import shadow:io@Console;
+
+class shadow:test@ArrayDefaultTest
+{
+	public main() => ()
+	{
+		Console out = Console:instance;
+	
+		String[] a = String:create[5]:default("Wombat");
+		int[] b = int:create[5]:default(42);
+			
+		for( int i = 0; i < a->size; i += 1 )
+			out.printLine("a[" # i # "]: " # a[i]);
+		for( int i = 0; i < b->size; i += 1 )
+			out.printLine("b[" # i # "]: " # b[i]);			
+	}
+}

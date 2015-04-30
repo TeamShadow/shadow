@@ -127,49 +127,6 @@ public class TypeParameter extends Type
 	}
 	
 	
-	/*
-	@Override
-	public boolean equals(Type o)
-	{
-		try
-		{
-			if( o != null && o instanceof TypeParameter )
-			{
-				
-				if( o == this )
-					return true;
-				
-				TypeParameter type = (TypeParameter) o;
-				
-				//in a deeper layer of recursion, things must have worked out!
-				if( recursiveParameterCheck == type )
-					return true;
-				
-				recursiveParameterCheck = type;
-				
-				if( type.getTypeName().equals(getTypeName())  )
-				{
-					if( type.bounds.size() != bounds.size() )
-						return false;
-									
-					for( Type bound : bounds )
-						if( !type.bounds.contains(bound) )
-							return false;
-						
-					return true;
-				}	
-				else
-					return false;				
-			}
-			else
-				return false;
-		}
-		finally
-		{
-			recursiveParameterCheck = null; //always resets, no matter how things are returned
-		}
-	}
-	*/
 	
 	@Override
 	public boolean equals(Type o)

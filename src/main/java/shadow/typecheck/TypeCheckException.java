@@ -11,6 +11,7 @@ public class TypeCheckException extends Exception
 		INVALID_ASSIGNMENT("Invalid assignment", "Right hand side cannot be assigned to left hand side"),
 		INVALID_CAST("Invalid cast", "Result type cannot be cast to specified type"),
 		INVALID_CREATE("Invalid create", "Target cannot be created"),
+		INVALID_DEFAULT("Invalid default", "Can only apply default value to array creation"),
 		INVALID_DEPENDENCY("Invalid dependency", "Type is dependent on an invalid or unavailable type"),
 		INVALID_DEREFERENCE("Invalid dereference", "Nullable reference cannot be dereferenced"),
 		INVALID_DESTROY("Invalid destroy", "Target cannot be destroyed"),

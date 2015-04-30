@@ -1,6 +1,7 @@
 package shadow.test.typecheck;
 
 import java.util.ArrayList;
+
 import org.apache.log4j.Level;
 
 import shadow.Loggers;
@@ -27,11 +28,16 @@ public class SimpleTest
 		Loggers.PARSER.setLevel(Level.ALL);	
 		
 		args.add("-v");
+		args.add("--typecheck");
+
+		if( System.getProperty("os.name").contains("Windows")) {
+			args.add("-c");
+			args.add("windows.xml");
+		}
 		
-		//add desired files to list
-		//args.add("--compile");
-		args.add("shadow/test/Matrix.shadow"); 		
-		//args.add("tests/compile/Readonly.shadow");
+		//add desired files to list		
+		args.add("tests-negative/typechecker/no-default-constructor-for-array/Test.shadow"); 		
+
 		Main.main(args.toArray(new String[] { }));		
 	}
 }

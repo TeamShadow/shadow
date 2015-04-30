@@ -81,7 +81,7 @@ immutable class shadow:standard@Class implements CanHash
 			this:name = name;
 	}
 	
-	protected interfaceData( Class interfaceClass ) => ( immutable nullable Object )
+	protected interfaceData( Class interfaceClass ) => ( immutable Object )
 	{	
 		for ( int i = 0; i < interfaces->size; i += 1 )
 		{		
@@ -113,8 +113,8 @@ immutable class shadow:standard@Class implements CanHash
 					
 				for( int i = 0; i < data->size; i += 1 )
 				{
-					Class parameter = cast<Class>(check(data[i]));
-					Class otherParameter = cast<Class>(check(other:data[i]));
+					Class parameter = cast<Class>(data[i]);
+					Class otherParameter = cast<Class>(other:data[i]);
 					
 					if( !parameter.equal(otherParameter) )
 						return false;				
@@ -147,8 +147,8 @@ immutable class shadow:standard@Class implements CanHash
 			
 				for( int i = 0; i < size; i += 1 )
 				{
-					Class parameter = cast<Class>(check(data[i]));
-					Class otherParameter = cast<Class>(check(other:data[i]));
+					Class parameter = cast<Class>(data[i]);
+					Class otherParameter = cast<Class>(other:data[i]);
 					
 					if( !otherParameter.isSubtype(parameter) )
 						return false;				
@@ -156,8 +156,8 @@ immutable class shadow:standard@Class implements CanHash
 				
 				for( int i = size; i < data->size; i += 1 )
 				{
-					Class return_ = cast<Class>(check(data[i]));
-					Class otherReturn = cast<Class>(check(other:data[i]));
+					Class return_ = cast<Class>(data[i]);
+					Class otherReturn = cast<Class>(other:data[i]);
 					
 					if( !return_.isSubtype(otherReturn) )
 						return false;				

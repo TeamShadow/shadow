@@ -1081,7 +1081,7 @@ public class TypeUpdater extends BaseChecker {
 		
 		// a field declaration has a type followed by an identifier (or a sequence of them)	
 		Type type = node.jjtGetChild(0).getType();
-		
+						
 		node.setType(type);
 		node.setEnclosingType(currentType);
 

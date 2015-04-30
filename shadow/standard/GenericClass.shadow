@@ -18,22 +18,17 @@ immutable class shadow:standard@
 		if ( this === other )
 			return true;
 		
-		try
+		if ( !other.isInterface() )							
+			return check(this->parent).isSubtype(other); //run up parental chain
+		else
 		{
-			if ( !other.isInterface() )							
-				return check(this->parent).isSubtype(other); //run up parental chain
-			else
-			{
-				readonly Class[] interfaces = this->interfaces;
-			 	for ( int i = 0; i < interfaces->size; i += 1 )
-				{					 
-					if( interfaces[i] === other )
-						return true;			
-				}
-			}				
-		}
-		recover
-		{}
+			readonly Class[] interfaces = this->interfaces;
+		 	for ( int i = 0; i < interfaces->size; i += 1 )
+			{					 
+				if( interfaces[i] === other )
+					return true;			
+			}
+		}		
 		
 		return false;
 	}
@@ -45,16 +40,9 @@ immutable class shadow:standard@
 			boolean matching = true;							
 			for( int j = 0; j < parameters->size and matching; j += 1 )
 			{	
-				try
-				{									
-					readonly Class class_ = cast<Class>(check(check(classes[i]):parameters[j * 2]));												
-					if( !check(parameters[j]).equal(class_) )							
-						matching = false;										
-				}
-				recover
-				{
+				readonly Class class_ = cast<Class>(classes[i]:parameters[j * 2]);												
+				if( !parameters[j].equal(class_) )							
 					matching = false;
-				}					
 			}			
 					
 			if( matching )

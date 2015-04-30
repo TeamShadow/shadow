@@ -1,11 +1,9 @@
-import shadow:io@Console;
-
 class shadow:utility@
 ArrayList<V is CanEqual<V>>
 implements List<V>
 {
 	get int size = 0;
-	V[] elements = V:create[10];
+	nullable V[] elements = V:null[10];
 	int modifications = 0;
 	
 	public isEmpty() => ( boolean )
@@ -18,15 +16,7 @@ implements List<V>
 		if( index < 0 or index >= size )
 			throw IndexOutOfBoundsException:create();
 		
-		try
-		{
-			return check(elements[index]);
-		}
-		recover
-		{
-			//should never happen
-			throw UnexpectedNullException:create();
-		}
+		return check(elements[index]);		
 	}
 	
 	
@@ -48,7 +38,7 @@ implements List<V>
 	
 	private grow() => ()
 	{
-		V[] temp = V:create[elements->size * 2];
+		nullable V[] temp = V:null[elements->size * 2];
 		for( int i = 0; i < elements->size; i += 1 )
 			temp[i] = elements[i];
 		elements = temp;	
@@ -56,7 +46,6 @@ implements List<V>
 
 	public add(V value) => ( ArrayList<V> )
 	{
-		Console out = Console:instance;		
 		if( size >= elements->size )
 			grow();
 		elements[size] = value;
@@ -79,17 +68,12 @@ implements List<V>
 	
 	public readonly indexOf(V value) => (int index)
 	{		
-		try
+		for( int i = 0; i < size; i += 1 )
 		{
-			for( int i = 0; i < size; i += 1 )
-			{
-				if( check(elements[i]) == value )
-					return i;
-			}
+			if( check(elements[i]) == value )
+				return i;
 		}
-		recover
-		{}
-		
+	
 		return -1;
 	}
 	
@@ -98,19 +82,12 @@ implements List<V>
 		if( index < 0 or index >= size )
 			throw IndexOutOfBoundsException:create();
 	
-		try
-		{
-			V temp = check(elements[index]);	
-			for( int i = index; i < size - 1; i += 1 )
-				elements[i] = elements[i + 1];
-			size -= 1;
-			modifications += 1;
-			return temp;
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
-		}
+		V temp = check(elements[index]);	
+		for( int i = index; i < size - 1; i += 1 )
+			elements[i] = elements[i + 1];
+		size -= 1;
+		modifications += 1;
+		return temp;
 	}	
 	
 	public remove( V value ) => (boolean success)
@@ -166,18 +143,10 @@ implements List<V>
 			checkForModifications();
 			if( index >= size )
 				throw IndexOutOfBoundsException:create();
-			try
-			{
-				V temp = check(elements[index]);
-				index += 1;
-				return temp;		
-			}
-			recover
-			{
-				//should never happen
-				throw UnexpectedNullException:create();
-			}
+
+			V temp = check(elements[index]);
+			index += 1;
+			return temp;
 		}
 	}
-
 }

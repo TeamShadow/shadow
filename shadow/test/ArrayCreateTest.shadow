@@ -1,0 +1,68 @@
+import shadow:io@Console;
+
+class shadow:test@ArrayCreateTest
+{
+	public class Inner
+	{
+		get int value;
+		
+		public create(int number)
+		{
+			value = number;
+		}
+		
+		public create(Update updater)
+		{
+			value = updater.update();
+		} 
+	}
+	
+	public class Update
+	{
+		int value = 0;
+		public update() => (int)
+		{
+			value += 1;
+			return value;	
+		}
+	}
+
+	public main() => ()
+	{
+		Console out = Console:instance;
+	
+		String[] a = String:create[10];
+		String[] b = String:create[10]:("Test");
+		
+		var updater = Update:create();
+		
+		Inner[] c = Inner:create[10]:(5);
+		Inner[] d = Inner:create[10]:(updater);
+		
+		updater = Update:create();				
+		Inner[][] e = Inner:create[3][5]:(updater);
+		
+		updater = Update:create();
+		Inner[,] f = Inner:create[3,5]:(updater);
+		
+		for( int i = 0; i < a->size; i += 1 )
+			out.printLine("a[" # i # "]: " # a[i]);
+			
+		for( int i = 0; i < b->size; i += 1 )
+			out.printLine("b[" # i # "]: " # b[i]);
+		
+		for( int i = 0; i < c->size; i += 1 )
+			out.printLine("c[" # i # "]: " # c[i]->value);
+			
+		for( int i = 0; i < d->size; i += 1 )
+			out.printLine("d[" # i # "]: " # d[i]->value);
+			
+		for( int i = 0; i < 3; i += 1 )
+			for( int j = 0; j < 5; j += 1 )
+				out.printLine("e[" # i # "][" # j # "]: " # e[i][j]->value);
+			
+		for( int i = 0; i < 3; i += 1 )
+			for( int j = 0; j < 5; j += 1 )
+				out.printLine("f[" # i # "," # j # "]: " # f[i,j]->value);			
+	}
+}

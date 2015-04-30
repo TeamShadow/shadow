@@ -2,6 +2,7 @@ package shadow.typecheck.type;
 
 import java.util.Collections;
 import java.util.List;
+
 import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException;
 
@@ -111,8 +112,14 @@ public class ArrayType extends ClassType
 		this( baseType, arrayDimensions, 0 );
 	}	
 	
+	public String toString(boolean withBounds) {		
+		String brackets = getTypeName().substring(getTypeName().indexOf('['));		
+		
+		return baseType.toString(withBounds) + brackets;
+	}
+	
 	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index ) {
-		super( makeName(baseType, arrayDimensions, index), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), null );	
+		super( makeName(baseType, arrayDimensions, index), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getOuter() );	
 		setExtendType(Type.ARRAY); // added
 		dimensions = arrayDimensions.get(index);		
 		if( arrayDimensions.size() == index + 1 )
@@ -199,7 +206,7 @@ public class ArrayType extends ClassType
 	{	
 		return new ArrayType( baseType.replace(values, replacements), dimensions  );		
 	}
-	
+		
 	public ClassType convertToGeneric()
 	{
 		Type base = baseType;

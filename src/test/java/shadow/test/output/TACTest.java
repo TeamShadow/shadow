@@ -253,6 +253,14 @@ public class TACTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
+	@Test public void testArrayCreate() throws Exception {
+		args.add("shadow/test/ArrayCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 	
+	@Test public void testArrayDefault() throws Exception {
+		args.add("shadow/test/ArrayDefaultTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 	
 }

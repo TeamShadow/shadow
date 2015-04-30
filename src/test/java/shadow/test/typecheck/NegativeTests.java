@@ -313,5 +313,11 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/typechecker/method-locked-override/Test.shadow"); 
 		enforce(Error.INVALID_OVERRIDE);		
+	}
+	
+	@Test public void testNoDefaultCreateForArray() throws Exception
+	{
+		args.add("tests-negative/typechecker/no-default-create-for-array/Test.shadow"); 
+		enforce(Error.INVALID_CREATE);		
 	}	
 }

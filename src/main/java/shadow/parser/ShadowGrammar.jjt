@@ -1325,7 +1325,20 @@ void ArrayCreate():
   Token t;
 }
 {
-  [ TypeArguments() ] ":" "create" ( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); })+
+  [ TypeArguments() ] ":"
+  ("create" { jjtThis.setImage("create"); } | "null" { jjtThis.setImage("null"); } )
+  ArrayDimensions()
+  [LOOKAHEAD(2) ( LOOKAHEAD(2) ":" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")" { jjtThis.setCreate();  } |
+     ":" "default" "(" ConditionalExpression() ")" { jjtThis.setDefault(); })]
+}
+
+void ArrayDimensions():
+{
+  debugPrint("ARRAY DIMENSIONS");
+  Token t;
+}
+{ 
+  ( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); })+
 }
 
 void Subscript():
@@ -1333,7 +1346,7 @@ void Subscript():
   debugPrint("SUBSCRIPT");
   Token t;
 }
-{
+{  
   "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); }
 }
 
