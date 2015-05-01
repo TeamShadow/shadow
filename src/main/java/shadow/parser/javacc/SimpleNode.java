@@ -2,7 +2,7 @@ package shadow.parser.javacc;
 
 import java.io.File;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
 import shadow.typecheck.type.InstantiationException;

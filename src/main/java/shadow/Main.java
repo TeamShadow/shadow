@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.output.llvm.Array;
 import shadow.output.llvm.Generic;

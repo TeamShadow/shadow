@@ -18,7 +18,7 @@ import shadow.AST.ASTWalker;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Modifiers;
 import shadow.Loggers;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Grammar to parse Shadow

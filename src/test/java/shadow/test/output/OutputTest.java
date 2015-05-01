@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +18,6 @@ import org.junit.Test;
 import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Job;
-import shadow.Loggers;
 import shadow.Main;
 
 public class OutputTest {
@@ -31,13 +29,7 @@ public class OutputTest {
 	private ArrayList<String> args = new ArrayList<String>();
 	
 	@Before
-	public void setup() throws Exception {
-		
-		// Set logger levels			
-		Loggers.SHADOW.setLevel(Level.INFO);
-		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
-		Loggers.PARSER.setLevel(Level.OFF);
-		
+	public void setup() throws Exception {		
 		args.add("-v");
 		args.add("-o");
 		args.add(executableName);

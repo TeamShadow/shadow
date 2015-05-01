@@ -2,9 +2,6 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Level;
-
-import shadow.Loggers;
 import shadow.Main;
 
 /**
@@ -22,11 +19,6 @@ public class SimpleTest
 		
 		ArrayList<String> args = new ArrayList<String>();
 
-		// set the levels of our loggers
-		Loggers.SHADOW.setLevel(Level.DEBUG);
-		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
-		Loggers.PARSER.setLevel(Level.ALL);	
-		
 		args.add("-v");
 		args.add("--typecheck");
 
@@ -36,7 +28,7 @@ public class SimpleTest
 		}
 		
 		//add desired files to list		
-		args.add("tests-negative/typechecker/no-default-constructor-for-array/Test.shadow"); 		
+		args.add("tests-negative/typechecker/undeclared-variable/Test.shadow"); 		
 
 		Main.main(args.toArray(new String[] { }));		
 	}

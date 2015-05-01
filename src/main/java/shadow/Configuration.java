@@ -16,7 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.digester3.Digester;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 /** 
  * Represents the current compiler settings/configuration. This is a globally
