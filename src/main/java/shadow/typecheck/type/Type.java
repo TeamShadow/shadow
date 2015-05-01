@@ -741,14 +741,14 @@ public abstract class Type implements Comparable<Type>
 					candidate = signature;
 				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
 				{					
-					BaseChecker.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments);
+					BaseChecker.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments, arguments);
 					return null;
 				}				
 			}			
 		}			
 	
 		if( candidate == null )			
-			BaseChecker.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context");
+			BaseChecker.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context", arguments);
 		
 		return candidate;
 	}	

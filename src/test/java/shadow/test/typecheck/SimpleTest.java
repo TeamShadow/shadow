@@ -28,7 +28,7 @@ public class SimpleTest
 		}
 		
 		//add desired files to list		
-		args.add("tests-negative/typechecker/undeclared-variable/Test.shadow"); 		
+		args.add("shadow/test/Bits.shadow"); 		
 
 		Main.main(args.toArray(new String[] { }));		
 	}

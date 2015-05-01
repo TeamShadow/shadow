@@ -137,7 +137,7 @@ public class TypeUpdater extends BaseChecker {
 				try {
 					generic = uninstantiated.instantiate();
 				} catch (InstantiationException e) {
-					addError(Error.INVALID_TYPE_ARGUMENTS, "Cannot instantiate type " + uninstantiated.getType() + " with type arguments " + uninstantiated.getTypeArguments());
+					addError(Error.INVALID_TYPE_ARGUMENTS, "Cannot instantiate type " + uninstantiated.getType() + " with type arguments " + uninstantiated.getTypeArguments(), uninstantiated.getType());
 				}
 			}
 			
@@ -365,7 +365,7 @@ public class TypeUpdater extends BaseChecker {
 			{
 				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
 				if( dependencyNode == null )
-					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " + declarationNode.getType() + " is dependent on unavailable type " + dependency);
+					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " + declarationNode.getType() + " is dependent on unavailable type " + dependency, dependency);
 				else
 					graph.addEdge(dependencyNode, declarationNode);				
 			}
@@ -386,7 +386,7 @@ public class TypeUpdater extends BaseChecker {
 		catch( CycleFoundException e )
 		{
 			Type type = (Type) e.getCycleCause();			
-			addError(nodeTable.get(type), Error.INVALID_TYPE_PARAMETERS, "Type " + type + " contains a circular type parameter definition");
+			addError(nodeTable.get(type), Error.INVALID_TYPE_PARAMETERS, "Type " + type + " contains a circular type parameter definition", type);
 		}
 		
 		uninstantiatedNodes.clear();
@@ -441,7 +441,7 @@ public class TypeUpdater extends BaseChecker {
 		catch( CycleFoundException e )
 		{
 			Node node = (Node) e.getCycleCause();			
-			addError(node, Error.INVALID_HIERARCHY, "Type " + node.getType() + " contains a circular extends or implements definition");
+			addError(node, Error.INVALID_HIERARCHY, "Type " + node.getType() + " contains a circular extends or implements definition", node.getType());
 		}
 		
 		return nodeList;
@@ -1345,7 +1345,7 @@ public class TypeUpdater extends BaseChecker {
 					if( extendType.getClass() == ExceptionType.class )
 						classType.setExtendType((ClassType) extendType);
 					else
-						addError(Error.INVALID_EXTEND, "Exception type " + declarationType + " cannot extend non-exception type " + extendType);
+						addError(Error.INVALID_EXTEND, "Exception type " + declarationType + " cannot extend non-exception type " + extendType, extendType);
 				}
 			}
 			else if( declarationType instanceof InterfaceType ) 
@@ -1357,7 +1357,7 @@ public class TypeUpdater extends BaseChecker {
 					if( type instanceof InterfaceType )
 						interfaceType.addInterface((InterfaceType)type);
 					else				
-						addError(Error.INVALID_EXTEND, "Interface type " + interfaceType + " cannot extend non-interface type " + type);
+						addError(Error.INVALID_EXTEND, "Interface type " + interfaceType + " cannot extend non-interface type " + type, type);
 				}					
 			}
 		}
@@ -1377,7 +1377,7 @@ public class TypeUpdater extends BaseChecker {
 				if( type instanceof InterfaceType )
 					classType.addInterface((InterfaceType)type);
 				else				
-					addError(Error.INVALID_IMPLEMENT, "Class type " + classType + " cannot implement non-interface type " + type);
+					addError(Error.INVALID_IMPLEMENT, "Class type " + classType + " cannot implement non-interface type " + type, classType, type);
 			}				
 		}
 		
