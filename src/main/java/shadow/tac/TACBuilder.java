@@ -4,10 +4,12 @@ import static shadow.AST.ASTWalker.WalkType.NO_CHILDREN;
 import static shadow.AST.ASTWalker.WalkType.POST_CHILDREN;
 import static shadow.AST.ASTWalker.WalkType.PRE_CHILDREN;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -84,6 +86,7 @@ public class TACBuilder implements ShadowParserVisitor
 	private boolean explicitSuper, implicitCreate;
 	private TACVariable identifier;
 	private TACBlock block;
+	private Deque<List<TACOperand>> indexStack;
 	
 	public Collection<TACModule> build(Node node) throws ShadowException
 	{
@@ -96,6 +99,7 @@ public class TACBuilder implements ShadowParserVisitor
 		implicitCreate = false;
 		identifier = null;
 		block = null;
+		indexStack = new ArrayDeque<List<TACOperand>>();
 		TACNode.setBuilder(this);  //ugly, non-typesafe approach
 		walk(node);
 		return modules;
@@ -624,10 +628,8 @@ public class TACBuilder implements ShadowParserVisitor
 				
 				parameters.add( left );
 				if( getSetType instanceof SubscriptType )
-				{
-					//not pretty, but gets the correct subscript node
-					ASTSubscript subscriptNode = (ASTSubscript) (((ASTPrimaryExpression)node.jjtGetChild(0)).getSuffix().jjtGetChild(0));
-					parameters.addAll(subscriptNode.getIndices()); //there should only be one index in this list (not needed for properties)
+				{					
+					parameters.addAll(indexStack.pop()); //there should only be one index in this list (not needed for properties)
 				}
 				
 				if (operation != '=')
@@ -1346,9 +1348,8 @@ public class TACBuilder implements ShadowParserVisitor
 			if( prefixType instanceof ArrayType ) {
 				List<TACOperand> list = new LinkedList<TACOperand>();
 				for (int i = 0; i < tree.getNumChildren(); i++)
-					list.add(tree.appendChild(i));
-				node.setIndices(list);
-				prefix = new TACArrayRef(tree, prefix, node.getIndices());
+					list.add(tree.appendChild(i));				
+				prefix = new TACArrayRef(tree, prefix, list);
 			}				
 			else if( node.getType() instanceof SubscriptType )
 			{					
@@ -1362,9 +1363,9 @@ public class TACBuilder implements ShadowParserVisitor
 				}
 				else
 				{					
-					List<TACOperand> list = new LinkedList<TACOperand>();
+					List<TACOperand> list = new ArrayList<TACOperand>();
 					list.add(tree.appendChild(0));
-					node.setIndices(list); //gets the index node for future use
+					indexStack.push(list);					
 					tree.append(prefix); //append the prefix as well
 				}
 			}		
@@ -1502,11 +1503,11 @@ public class TACBuilder implements ShadowParserVisitor
 				start++; //skip ahead
 			
 			tree.appendChild(start);			
-			ASTArrayDimensions dimensions = (ASTArrayDimensions) node.jjtGetChild(start);
-			
 			ArrayType arrayType = (ArrayType)node.getType();
 			Type type = arrayType.getBaseType();
 			TACClass baseClass = new TACClass(tree, type);
+			
+			List<TACOperand> indices = indexStack.pop();
 			
 			if( node.getMethodSignature() != null )
 			{	
@@ -1514,14 +1515,14 @@ public class TACBuilder implements ShadowParserVisitor
 				List<TACOperand> arguments = new ArrayList<TACOperand>();
 				for( int i = start + 1; i < node.jjtGetNumChildren(); ++i )
 					arguments.add(tree.appendChild(i));
-				prefix = visitArrayAllocation(arrayType, baseClass, dimensions.getIndices(), createType, arguments);
+				prefix = visitArrayAllocation(arrayType, baseClass, indices, createType, arguments);
 			}
 			else if( node.hasDefault() ) {
 				TACOperand value = tree.appendChild(start + 1);
-				prefix = visitArrayAllocation(arrayType, baseClass, dimensions.getIndices(), value);
+				prefix = visitArrayAllocation(arrayType, baseClass, indices, value);
 			}
 			else //nullable array only
-				prefix = visitArrayAllocation(arrayType, baseClass, dimensions.getIndices());
+				prefix = visitArrayAllocation(arrayType, baseClass, indices);
 		}
 		return POST_CHILDREN;
 	}
@@ -3240,7 +3241,7 @@ public class TACBuilder implements ShadowParserVisitor
 			List<TACOperand> list = new LinkedList<TACOperand>();
 			for (int i = 0; i < tree.getNumChildren(); i++)
 				list.add(tree.appendChild(i));
-			node.setIndices(list);
+			indexStack.push(list);
 		}	
 		
 		return  POST_CHILDREN;

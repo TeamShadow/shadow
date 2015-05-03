@@ -6,8 +6,7 @@ import java.util.List;
 
 import shadow.tac.nodes.TACOperand;
 
-public class DimensionNode extends SimpleNode {
-	private List<TACOperand> indices;
+public class DimensionNode extends SimpleNode {	
     private List<Integer> arrayDimensions = new ArrayList<Integer>();
     private int currentDimensions = 1;	
 	
@@ -18,7 +17,6 @@ public class DimensionNode extends SimpleNode {
     public DimensionNode(ShadowParser sp, int id) {
     	super(sp, id);
     }
-	
     
     public List<Integer> getArrayDimensions() {
   	  return arrayDimensions;
@@ -39,23 +37,4 @@ public class DimensionNode extends SimpleNode {
     		total += value;
     	return total;
     }
-    
-    /* 
-     * There is a reason that this method is not addIndices()
-     * When there are multiple creates, it is possible for
-     * array creations to be walked multiple times,
-     * re-adding indices.
-     * By setting external indices, each set of duplicate
-     * indices will over-write the last.
-     * 
-     */
-    public void setIndices(List<TACOperand> indices)
-	  {
-		  this.indices = indices;
-	  }
-	  
-	  public List<TACOperand> getIndices()
-	  {
-		  return indices;
-	  }
 }
