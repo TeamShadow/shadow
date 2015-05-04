@@ -1366,7 +1366,15 @@ public class TACBuilder implements ShadowParserVisitor
 			if( prefixType instanceof ArrayType ) {
 				List<TACOperand> list = new LinkedList<TACOperand>();
 				for (int i = 0; i < tree.getNumChildren(); i++)
-					list.add(tree.appendChild(i));				
+				{
+					TACOperand index = tree.appendChild(i);
+					//uints, longs, and ulongs can be used as indexes
+					//however, ints are required
+					Type indexType = index.getType();
+					if( indexType.isIntegral() && !indexType.isSubtype(Type.INT))
+						index = new TACCast(tree, new SimpleModifiedType(Type.INT, index.getModifiers()), index);
+					list.add(index);
+				}
 				prefix = new TACArrayRef(tree, prefix, list);
 			}				
 			else if( node.getType() instanceof SubscriptType )

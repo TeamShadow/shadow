@@ -19,7 +19,7 @@ public class SimpleTest
 		
 		ArrayList<String> args = new ArrayList<String>();
 
-		args.add("-v");
+		//args.add("-v");
 		args.add("--typecheck");
 
 		if( System.getProperty("os.name").contains("Windows")) {
@@ -28,7 +28,7 @@ public class SimpleTest
 		}
 		
 		//add desired files to list		
-		args.add("shadow/test/Bits.shadow"); 		
+		args.add("shadow/utility/Random.shadow"); 		
 
 		Main.main(args.toArray(new String[] { }));		
 	}

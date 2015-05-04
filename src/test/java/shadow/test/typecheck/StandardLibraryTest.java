@@ -13,7 +13,7 @@ public class StandardLibraryTest {
 	
 	@Before
 	public void setup() throws Exception {		
-		args.add("-v");
+		//args.add("-v");
 		args.add("--typecheck");
 		
 		if( System.getProperty("os.name").contains("Windows")) {

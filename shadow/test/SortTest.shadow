@@ -4,7 +4,7 @@ import shadow:utility@Random;
 class shadow:test@SortTest {
 	int[] array = int:create[0];
 	int min, max;
-	ulong startTime;
+	long startTime;
 	public create(int size, int min, int max) {
 		int[] array = int:create[size];
 		Random random = Random:create();
@@ -13,7 +13,7 @@ class shadow:test@SortTest {
 		this:array = array;
 		this:min = min;
 		this:max = max;
-		this:startTime = 0UL;
+		this:startTime = 0L;
 	}
 
 	public getArray() => (int[]) {
@@ -81,7 +81,7 @@ class shadow:test@SortTest {
 			Console.printLine(name # ":\t\t" # time # " seconds");
 		else
 			Console.printErrorLine(name # ":\t\t" # time # " seconds");
-		this:startTime = 0UL;
+		this:startTime = 0L;
 	}
 	private checkArray(int[] array) => (boolean) {
 		int last = getMinimum();

@@ -1,28 +1,506 @@
-class shadow:utility@Random
+/**
+ * Based on Sean Luke's Java implementation of 
+ * version MT199937(99/10/29)
+ * of the Mersenne Twister algorithm found at 
+ * <a href="http://www.math.keio.ac.jp/matumoto/emt.html">
+ * The Mersenne Twister Home Page</a>, with the initialization
+ * improved using the new 2002/1/26 initialization algorithm
+ * By Sean Luke, October 2004.
+ * 
+ * <h3>License</h3>
+ *
+ * Copyright (c) 2003 by Sean Luke. <br>
+ * Portions copyright (c) 1993 by Michael Lecuyer. <br>
+ * All rights reserved. <br>
+ *
+ * <p>Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * <ul>
+ * <li> Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * <li> Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * <li> Neither the name of the copyright owners, their employers, nor the 
+ * names of its contributors may be used to endorse or promote products 
+ * derived from this software without specific prior written permission.
+ * </ul>
+ * <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ * DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNERS OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
+ * 
+ */
+
+class shadow:utility@Random implements CanEqual<Random>
 {
-	public create()
+	public create()	
 	{
-		this->seed = System.nanoTime();
+		this(System.nanoTime() / 1000000); //seeds with milliseconds to avoid all zeroes
 	}
-	public create( ulong seed )
+	public create( long seed )
 	{
 		this->seed = seed;
 	}
-
-	public native set seed( ulong seed ) => ();
-
-	public nextInt() => ( int )
-	{
-		return cast<int>(nextUInt());
+	
+	public create( uint[] array )
+	{		
+		setSeed(array);
 	}
-	public native nextUInt() => ( uint );
 
-	public nextInt( int max ) => ( int )
+     // Period parameters
+    constant int N = 624;
+    constant int M = 397;
+    constant uint MATRIX_A = 0x9908b0dfu;   //    private static final * constant vector a
+    constant uint UPPER_MASK = 0x80000000u; // most significant w-r bits
+    constant uint LOWER_MASK = 0x7fffffffu; // least significant r bits
+
+    // Tempering parameters
+    constant uint TEMPERING_MASK_B = 0x9d2c5680u;
+    constant uint TEMPERING_MASK_C = 0xefc60000u;
+    
+    uint[] mt; // the array for the state vector
+    int mti; // mti==N+1 means mt[N] is not initialized
+    uint[] mag01;
+
+    double nextNextGaussian = 0.0;
+    boolean haveNextNextGaussian = false;
+   
+    public equal(Random other) => (boolean)
 	{
-		return cast<int>(nextUInt(cast<uint>(max)));
+        if (other === this)
+        	return true;        
+        if (mti != other:mti) return false;
+        for(int x=0;x < mag01->size; x+=1)
+            if (mag01[x] != other:mag01[x]) return false;
+        for(int x=0;x<mt->size;x+=1)
+            if (mt[x] != other:mt[x]) return false;
+        return true;
 	}
-	public nextUInt( uint max ) => ( uint )
+
+   
+    /**
+     * Initalize the pseudo random number generator.  Don't
+     * pass in a long that's bigger than an int (Mersenne Twister
+     * only uses the first 32 bits for its seed).   
+     */
+
+    public set seed(long seed) => ()
+     {     
+        haveNextNextGaussian = false;
+
+        mt = uint:create[N];
+        
+        mag01 = uint:create[2];
+        mag01[0] = 0x0u;
+        mag01[1] = MATRIX_A;
+       
+        mt[0] = cast<uint>(seed);
+        for (mti=1; mti<N; mti+= 1) 
+        {           
+            mt[mti] = 1812433253u * (mt[mti - 1] ^ (mt[mti - 1] >> 30)) + cast<uint>(mti);
+            /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
+            /* In the previous versions, MSBs of the seed affect   */
+            /* only MSBs of the array mt[].                        */
+            /* 2002/01/09 modified by Makoto Matsumoto             */
+            // mt[mti] &= 0xffffffff;
+            /* for >32 bit machines */
+		}
+	}
+
+
+    /**
+     * Sets the seed using an array of integers.
+     * Your array must have a non-zero length.  Only the first 624 integers
+     * in the array are used; if the array is shorter than this then
+     * integers are repeatedly used in a wrap-around fashion.
+     */
+
+    public setSeed(uint[] array) => ()
+	{		
+        if (array->size == 0)
+            throw IllegalArgumentException:create("Array length must be greater than zero");
+        int i, j, k;
+        this->seed = 19650218L;
+        i=1; j=0;
+        k = (N>array->size ? N , array->size);        
+        for (; k!=0; k -= 1) 
+        {            
+			mt[i] = (mt[i] ^ (( mt[i-1] ^ ( mt[i-1] >> 30 )) * 1664525u)) + cast<uint>(array[j] + j); /* non linear */
+            // mt[i] &= 0xffffffff; /* for WORDSIZE > 32 machines */
+            i+= 1;
+            j+= 1;
+            if (i>=N) { mt[0] = mt[N-1]; i=1; }
+            if (j>=array->size) j=0;
+        }
+        for (k=N-1; k!=0; k -= 1) 
+        {
+            mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941u)) - cast<uint>(i); /* non linear */
+            // mt[i] &= 0xffffffff; /* for WORDSIZE > 32 machines */
+            i+= 1;
+            if (i>=N) 
+            {
+                mt[0] = mt[N-1]; i=1; 
+            }
+		}
+        mt[0] = 0x80000000u; /* MSB is 1; assuring non-zero initial array */
+	}
+
+    /**
+     * Returns an integer with <i>bits</i> bits filled with a random number.
+     */
+    protected next(int bits) => (int)
+    {
+        uint y;
+        
+        if (mti >= N)   // generate N words at one time
+        {
+            int kk;
+            uint[] mt = this:mt; // locals are slightly faster 
+            uint[] mag01 = this:mag01; // locals are slightly faster 
+            
+            for (kk = 0; kk < N - M; kk+= 1)
+            {
+                y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+                mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1];
+            }
+            for (; kk < N-1; kk+= 1)
+			{
+                y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+                mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1];
+			}
+            y = (mt[N-1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
+            mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1];
+
+            mti = 0;
+        }
+  
+  		
+        y = mt[mti];
+        mti += 1;
+        y ^= y >> 11;                          // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= (y >> 18);                        // TEMPERING_SHIFT_L(y)
+
+        return cast<int>(y >> (32 - bits));    // hope that's right!
+    }
+    
+    
+
+    /** This method is missing from jdk 1.0.x and below.  JDK 1.1
+        includes this for us, but what the heck.*/
+    public nextBoolean() => (boolean)
+    {
+    	return next(1) != 0;
+    }
+
+    /** This generates a coin flip with a probability <tt>probability</tt>
+        of returning true, else returning false. <tt>probability</tt> must
+        be between 0.0 and 1.0, inclusive.  Not as precise a random real
+        event as nextBoolean(double), but twice as fast. To explicitly
+        use this, remember you may need to cast to float first. */
+
+    public nextBoolean (float probability) => (boolean)
+    {
+        if (probability < 0.0f or probability > 1.0f)
+            throw IllegalArgumentException:create ("Probability must be between 0.0 and 1.0 inclusive.");
+        if (probability == 0.0f) return false;            // fix half-open issues
+        else if (probability == 1.0f) return true;        // fix half-open issues
+        return nextFloat() < probability; 
+	}
+
+    /** This generates a coin flip with a probability <tt>probability</tt>
+        of returning true, else returning false. <tt>probability</tt> must
+        be between 0.0 and 1.0, inclusive. */
+
+    public nextBoolean (double probability) => (boolean)
 	{
-		return nextUInt() % max; // TODO: use proper algorithm
+        if (probability < 0.0 or probability > 1.0)
+            throw IllegalArgumentException:create ("Probability must be between 0.0 and 1.0 inclusive.");
+        if (probability == 0.0) return false;             // fix half-open issues
+        else if (probability == 1.0) return true; // fix half-open issues
+        return nextDouble() < probability; 
+    }
+        
+    /** This method is missing from JDK 1.1 and below.  JDK 1.2
+        includes this for us, but what the heck. */
+
+    public nextInt(int n) => (int) 
+    {
+        if (n <= 0)
+            throw IllegalArgumentException:create("n must be positive, got: " # n);
+        
+        if ((n & -n) == n) //is that for 1 only?
+            return cast<int>((cast<long>(n) * cast<long>(next(31))) >> 31);
+        
+        int bits, val;
+        do 
+        {
+            bits = next(31);
+            val = bits % n;
+        } 
+        while(bits - val + (n-1) < 0);
+        return val;
+	}
+	
+	
+	
+	public nextInt() => (int)
+	{
+        return cast<int>(nextUInt());
+	}
+	
+	public nextUInt() => (uint)
+	{
+		uint y;
+        
+        if (mti >= N)   // generate N words at one time
+		{
+            int kk;
+            uint[] mt = this:mt; // locals are slightly faster 
+            uint[] mag01 = this:mag01; // locals are slightly faster 
+            
+            for (kk = 0; kk < N - M; kk += 1)
+			{
+                y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+                mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1u];
+            }
+            for (; kk < N-1; kk += 1)
+            {
+                y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+                mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1u];
+            }
+            y = (mt[N-1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
+            mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1u];
+
+            mti = 0;
+		} 		
+  		
+        y = mt[mti];
+        mti += 1;
+        y ^= y >> 11;                          // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= (y >> 18);                        // TEMPERING_SHIFT_L(y)
+
+        return y;
+	}
+	
+	public nextLong() => (long)
+	{
+        uint y;
+        uint z;
+
+        if (mti >= N)   // generate N words at one time
+		{
+            int kk;
+            uint[] mt = this:mt; // locals are slightly faster 
+            uint[] mag01 = this:mag01; // locals are slightly faster 
+            
+            for (kk = 0; kk < N - M; kk+= 1)
+			{
+                y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+                mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1];
+            }
+            for (; kk < N-1; kk+= 1)
+			{
+                y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+                mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1];
+            }
+            y = (mt[N-1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
+            mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1];
+
+            mti = 0;
+		}
+    		
+        y = mt[mti];
+        mti += 1;
+        y ^= y >> 11;                          // TEMPERING_SHIFT_U(y)
+        y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
+        y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
+        y ^= (y >> 18);                        // TEMPERING_SHIFT_L(y)
+
+        if (mti >= N)   // generate N words at one time
+		{
+            int kk;
+            uint[] mt = this:mt; // locals are slightly faster 
+            uint[] mag01 = this:mag01; // locals are slightly faster 
+            
+            for (kk = 0; kk < N - M; kk+= 1)
+			{
+                z = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+                mt[kk] = mt[kk+M] ^ (z >> 1) ^ mag01[z & 0x1];
+            }
+            for (; kk < N-1; kk+= 1)
+            {
+                z = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+                mt[kk] = mt[kk+(M-N)] ^ (z >> 1) ^ mag01[z & 0x1];
+            }
+            z = (mt[N-1] & UPPER_MASK) | (mt[0] & LOWER_MASK);
+            mt[N-1] = mt[M-1] ^ (z >> 1) ^ mag01[z & 0x1];
+            
+            mti = 0;
+		}
+                
+        z = mt[mti];
+        mti += 1;
+        z ^= z >> 11;                          // TEMPERING_SHIFT_U(z)
+        z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
+        z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
+        z ^= (z >> 18);                        // TEMPERING_SHIFT_L(z)
+        
+        return (cast<long>(y) << 32) + cast<long>(z);
+	}
+	
+
+    /** This method is for completness' sake. 
+        Returns a long drawn uniformly from 0 to n-1.  Suffice it to say,
+        n must be > 0, or an IllegalArgumentException is raised. */
+    
+    public nextLong(long n) => (long) 
+	{
+        if(n <= 0)
+            throw IllegalArgumentException:create("n must be positive, got: " # n);
+        
+        long bits, val;
+        do 
+		{
+            bits = cast<long>(cast<ulong>(nextLong()) >> 1);
+            val = bits % n;
+        } 
+        while(bits - val + (n-1) < 0);
+        return val;
+	}
+
+
+    /** A bug fix for versions of JDK 1.1 and below.  JDK 1.2 fixes
+        this for us, but what the heck. */
+    public nextDouble() => (double)
+        {
+        return ((cast<long>(next(26)) << 27) + next(27))
+            / cast<double>(1L << 53);
+        }
+
+    /** Returns a double in the range from 0.0 to 1.0, possibly inclusive of 0.0 and 1.0 themselves.  Thus:
+
+        <p><table border=0>
+        <th><td>Expression<td>Interval
+        <tr><td>nextDouble(false, false)<td>(0.0, 1.0)
+        <tr><td>nextDouble(true, false)<td>[0.0, 1.0)
+        <tr><td>nextDouble(false, true)<td>(0.0, 1.0]
+        <tr><td>nextDouble(true, true)<td>[0.0, 1.0]
+        </table>
+        
+        <p>This version preserves all possible random values in the double range.
+    */
+    public nextDouble(boolean includeZero, boolean includeOne) => (double)
+	{
+        double d = 0.0;
+        do
+		{
+            d = nextDouble();                           // grab a value, initially from half-open [0.0, 1.0)
+            if (includeOne and nextBoolean()) d += 1.0;  // if includeOne, with 1/2 probability, push to [1.0, 2.0)
+        } 
+        while ( (d > 1.0) or                            // everything above 1.0 is always invalid
+            (!includeZero and d == 0.0));            // if we're not including zero, 0.0 is invalid
+        return d;
+    }
+
+    /** A bug fix for versions of JDK 1.1 and below.  JDK 1.2 fixes
+        this for us, but what the heck. */
+
+    public  nextFloat() => (float)
+	{
+        return next(24) / cast<float>(1 << 24);
+    }
+
+    /** Returns a float in the range from 0.0f to 1.0f, possibly inclusive of 0.0f and 1.0f themselves.  Thus:
+
+        <p><table border=0>
+        <th><td>Expression<td>Interval
+        <tr><td>nextFloat(false, false)<td>(0.0f, 1.0f)
+        <tr><td>nextFloat(true, false)<td>[0.0f, 1.0f)
+        <tr><td>nextFloat(false, true)<td>(0.0f, 1.0f]
+        <tr><td>nextFloat(true, true)<td>[0.0f, 1.0f]
+        </table>
+        
+        <p>This version preserves all possible random values in the float range.
+    */
+    public nextFloat(boolean includeZero, boolean includeOne) => (float)
+    {
+        float d = 0.0f;
+        do
+		{
+            d = nextFloat();                            // grab a value, initially from half-open [0.0f, 1.0f)
+            if (includeOne and nextBoolean()) d += 1.0f; // if includeOne, with 1/2 probability, push to [1.0f, 2.0f)
+        } 
+        while ( (d > 1.0f) or                           // everything above 1.0f is always invalid
+            (!includeZero and d == 0.0f));           // if we're not including zero, 0.0f is invalid
+        return d;
+	}
+
+    /** A bug fix for all versions of the JDK.  The JDK appears to
+        use all four bytes in an integer as independent byte values!
+        Totally wrong. I've submitted a bug report. */
+
+    public nextBytes(byte[] bytes) => ()    
+    {
+        for (int x=0; x < bytes->size; x+=1)
+        	bytes[x] = nextByte();
+    }
+
+    /** For completeness' sake, though it's not in java.util.Random. */
+    
+    public nextShort() => (short)
+    {
+        return cast<short>(next(16));
+    }
+    
+    public nextUShort() => (ushort)
+    {
+        return cast<ushort>(next(16));
+    }
+
+    /** For completeness' sake, though it's not in java.util.Random.  */
+
+    public nextByte() => (byte)
+    {
+        return cast<byte>(next(8));
+    }
+    
+     public nextUByte() => (ubyte)
+    {
+        return cast<ubyte>(next(8));
+    }
+
+    public nextGaussian() => (double) 
+    {
+        if (haveNextNextGaussian) 
+		{
+            haveNextNextGaussian = false;
+            return nextNextGaussian;
+		}
+        else 
+        {
+            double v1, v2, s;
+            do 
+			{ 
+                v1 = 2 * nextDouble() - 1; // between -1.0 and 1.0
+                v2 = 2 * nextDouble() - 1; // between -1.0 and 1.0
+                s = v1 * v1 + v2 * v2;
+			} while (s >= 1 or s==0 );
+            double multiplier = (-2 * s.logBaseE()/s).squareRoot();
+            nextNextGaussian = v2 * multiplier;
+            haveNextNextGaussian = true;
+            return v1 * multiplier;
+		}
 	}
 }

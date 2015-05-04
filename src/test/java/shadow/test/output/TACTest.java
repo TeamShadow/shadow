@@ -23,7 +23,7 @@ public class TACTest {
 	
 	@Before
 	public void setup() throws Exception {
-		args.add("-v");
+		//args.add("-v");
 		args.add("-o");
 		args.add(executableName);
 		
@@ -37,7 +37,7 @@ public class TACTest {
 	public void cleanup() throws IOException {
 		
 		// Remove the unit test executable
-		Files.delete(executable);
+		//Files.delete(executable);
 	}
 		
 	@Test public void testArrayList() throws Exception {
@@ -252,6 +252,11 @@ public class TACTest {
 	
 	@Test public void testArrayDefault() throws Exception {
 		args.add("shadow/test/ArrayDefaultTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testRandom() throws Exception {
+		args.add("shadow/test/RandomTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 	

@@ -53,6 +53,11 @@ public class Arguments {
 			
 			throw new ConfigurationException("No source file specified to compile");
 		}
+		
+		// Increase logging level if VERBOSE is set
+		if( hasOption(VERBOSE) )
+			Loggers.setAllToLevel(Level.ALL);
+		
 	}
 	
 	public boolean hasOption(String option) {

@@ -23,6 +23,7 @@ import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.TypeCheckException.Error;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InstantiationException;
@@ -116,13 +117,18 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		if( type == null)
 			return false;
 		if(type == Type.UNKNOWN)
-			return true;		
+			return true;
 		if(type instanceof SequenceType)
 		{
 			SequenceType sequenceType = (SequenceType) type;
 			for(ModifiedType modifiedType : sequenceType)
 				if( modifiedType.getType() == Type.UNKNOWN)
 					return true;
+		}
+		else if( type instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType) type;
+			return containsUnknown(arrayType.getBaseType());			
 		}
 		
 		return false;
