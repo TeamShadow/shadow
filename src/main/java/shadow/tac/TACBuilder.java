@@ -344,7 +344,25 @@ public class TACBuilder implements ShadowParserVisitor
 		
 		return POST_CHILDREN;
 	}
-
+	
+	private void initializeSingletons(SignatureNode node) {
+		for( SingletonType type :  node.getSingletons() ) {		
+			TACLabelRef initLabel = new TACLabelRef(tree),
+					doneLabel = new TACLabelRef(tree);
+			TACReference instance = new TACSingletonRef(tree, type);
+			new TACBranch(tree, new TACSame(tree, instance, new TACLiteral(tree,
+					"null")), initLabel, doneLabel);
+			initLabel.new TACLabel(tree);
+			
+			TACMethodRef methodRef = new TACMethodRef(tree, type.getMethods("create").get(0));
+			TACOperand object = new TACNewObject(tree, type);
+			TACCall call = new TACCall(tree, block, methodRef, object );			
+			new TACStore(tree, instance, call ); 				
+			new TACBranch(tree, doneLabel);
+			doneLabel.new TACLabel(tree);
+		}
+	}
+	
 	@Override
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit)
 			throws ShadowException
@@ -391,6 +409,9 @@ public class TACBuilder implements ShadowParserVisitor
 				}
 			}
 		}
+		else //first visit					
+			initializeSingletons(node);
+		
 		return POST_CHILDREN;
 	}
 	@Override
@@ -414,6 +435,8 @@ public class TACBuilder implements ShadowParserVisitor
 				new TACReturn(tree, method.getMethod().getFullReturnTypes(),
 						new TACVariableRef(tree, method.getThis()));
 		}
+		else
+			initializeSingletons(node);
 		return POST_CHILDREN;
 	}
 	@Override
@@ -427,8 +450,7 @@ public class TACBuilder implements ShadowParserVisitor
 	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit)
 			throws ShadowException
 	{
-		if (secondVisit)
-		{
+		if (secondVisit) {
 			TACNode last = tree.appendAllChildren();
 			if (last instanceof TACLabel &&
 					last.getPrevious() instanceof TACReturn)
@@ -436,6 +458,9 @@ public class TACBuilder implements ShadowParserVisitor
 			else
 				new TACReturn(tree, method.getMethod().getFullReturnTypes());
 		}
+		else
+			initializeSingletons(node);
+		
 		return POST_CHILDREN;
 	}
 
@@ -1072,17 +1097,6 @@ public class TACBuilder implements ShadowParserVisitor
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
-	/*
-	@Override
-	public Object visit(ASTUnaryExpressionNotPlusMinus node,
-			Boolean secondVisit) throws ShadowException
-	{
-		if (secondVisit)
-			visitUnaryOperation(node);
-		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
-	}
-	*/
-
 	@Override
 	public Object visit(ASTInlineMethodDefinition node, Boolean secondVisit)
 			throws ShadowException
@@ -1172,6 +1186,8 @@ public class TACBuilder implements ShadowParserVisitor
 			identifier = new TACVariable(node, node.getImage());
 			if (node.isImageNull())
 				prefix = tree.appendChild(0);
+			else if( node.getType() instanceof SingletonType )
+				prefix = new TACSingletonRef(tree, (SingletonType)node.getType());			
 			else
 			{
 				String name = node.getImage();
@@ -1321,6 +1337,8 @@ public class TACBuilder implements ShadowParserVisitor
 			}
 			else if( node.getModifiers().isConstant() )
 				prefix = new TACConstantRef(tree, node.getPrefixType(), node.getImage());
+			else if( node.getType() instanceof SingletonType)
+				prefix = new TACSingletonRef(tree, (SingletonType)node.getType());
 			else if( !node.getModifiers().isTypeName() )  //doesn't do anything at this stage if it's just a type name				
 				prefix = new TACFieldRef(tree, prefix, node.getImage());
 		}
@@ -1590,6 +1608,7 @@ public class TACBuilder implements ShadowParserVisitor
 		return POST_CHILDREN;
 	}
 
+/*
 	@Override
 	public Object visit(ASTInstance node, Boolean secondVisit)
 			throws ShadowException
@@ -1614,7 +1633,7 @@ public class TACBuilder implements ShadowParserVisitor
 		}
 		return POST_CHILDREN;
 	}
-
+*/
 	@Override
 	public Object visit(ASTStatement node, Boolean secondVisit)
 			throws ShadowException
@@ -2430,7 +2449,7 @@ public class TACBuilder implements ShadowParserVisitor
 												getType().getTypeName())));
 				*/
 				for (Node field : type.getFields().values())
-					if (!field.getModifiers().isConstant())
+					if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType))
 						walk(field);
 			}
 			else if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() )

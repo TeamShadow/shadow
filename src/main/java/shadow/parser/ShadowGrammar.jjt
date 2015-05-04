@@ -135,7 +135,7 @@ TOKEN :
 | < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
 | < IN: "in" >
-| < INSTANCE: "instance" >
+//| < INSTANCE: "instance" >
 | < IS: "is" >
 | < INT: "int" >
 | < INTERFACE: "interface" >
@@ -539,7 +539,7 @@ void ViewBodyDeclaration():
 
 void ClassOrInterfaceDeclaration(Modifiers modifiers):
 {
-   debugPrint("CLASS OR INTERFACE DECLARARTION");
+   debugPrint("CLASS OR INTERFACE DECLARATION");
    Token t;
 }
 {
@@ -1289,8 +1289,8 @@ void Allocation():
   debugPrint("ALLOCATION");
   Token t;}
 {
-  		LOOKAHEAD(2) Instance()
-	|	LOOKAHEAD(ArrayCreate()) ArrayCreate()
+  		//LOOKAHEAD(2) Instance()
+	/*|*/	LOOKAHEAD(ArrayCreate()) ArrayCreate()
 	|   Create()
  }
 
@@ -1359,6 +1359,7 @@ void Create():
   { jjtThis.setImage("create"); debugPrint("create");  } 
 }
 
+/*
 void Instance():
 {
   debugPrint("INSTANCE");
@@ -1366,7 +1367,7 @@ void Instance():
 {
  	":" "instance" { jjtThis.setImage("instance"); debugPrint("instance");} 	
 }
-
+*/
 
 void ScopeSpecifier():
 {

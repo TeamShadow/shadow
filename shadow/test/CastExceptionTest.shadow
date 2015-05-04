@@ -4,7 +4,7 @@ class shadow:test@CastExceptionTest
 {	
 	public main( String[] args ) => ()
 	{	
-		Console out = Console:instance;
+		Console out;
 	
 		String s = "Help me";		
 		Object o = cast<Object>(s);

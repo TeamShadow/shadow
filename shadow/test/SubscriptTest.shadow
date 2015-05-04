@@ -13,7 +13,7 @@ class shadow:test@SubscriptTest
 		
 		ArrayList<int> numbers = ArrayList<int>:create();
 	
-		Console out = Console:instance;
+		Console out;
 		
 		list2.add("Help");
 		list2.add("me");

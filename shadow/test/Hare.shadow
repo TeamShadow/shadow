@@ -1,7 +1,9 @@
+import shadow:io@Console;
+
 class shadow:test@Hare implements CanRun
 {
 	public run() => ()
 	{
-		shadow:io@Console:instance.printLine(this # " runs at " # 40 # " mph.");
+		Console.printLine(this # " runs at " # 40 # " mph.");
 	}
 }

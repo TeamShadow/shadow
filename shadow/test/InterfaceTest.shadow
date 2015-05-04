@@ -4,7 +4,7 @@ class shadow:test@InterfaceTest
 {
 	public main( String[] args ) => ()
 	{
-		Console out = Console:instance;
+		Console out;
 		CanRun cheetah = Cheetah:create();
 		CanRun hare = Hare:create();		
 		CanRun tortoise = Tortoise:create();

@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 locked immutable class shadow:standard@BigInteger
 implements Number<BigInteger>
 {
@@ -468,15 +466,7 @@ implements Number<BigInteger>
 	{
 		return toString(10u);	
 	}
-	
-	private print(readonly uint[] values, Console out) => ()
-	{
-		out.print(values->size # ": ["); 
-		for( int i = 0; i < values->size; i += 1 )
-			out.print(values[i] # " ");	
-		out.printLine("]");	
-	}
-	
+		
 	public toString(uint base) => (String)
 	{
 		if( base < 2u or base > 36u )
@@ -497,9 +487,7 @@ implements Number<BigInteger>
 		
 		readonly uint[] number = data;
 		readonly uint[] quotient;		
-		readonly uint[] remainder;		
-			
-		Console out = Console:instance;
+		readonly uint[] remainder;
 				
 		do
 		{

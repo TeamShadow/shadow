@@ -5,7 +5,7 @@ class GenericTest
 
 	public main(String[] args) => ()
 	{
-		Console out = Console:instance;
+		Console out;
 	
 	
 		Container<String> container1 = Container<String>:create("blub");

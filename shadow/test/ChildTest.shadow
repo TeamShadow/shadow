@@ -17,6 +17,6 @@ class shadow:test@ChildTest extends ParentTest
 
 	public main( String[] args ) => ()
 	{
-		Console:instance.printLine(getClass() # ":main(" # args # ')');
+		Console.printLine(getClass() # ":main(" # args # ')');
 	}
 }

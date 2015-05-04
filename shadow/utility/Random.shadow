@@ -2,7 +2,7 @@ class shadow:utility@Random
 {
 	public create()
 	{
-		this->seed = System:instance.nanoTime();
+		this->seed = System.nanoTime();
 	}
 	public create( ulong seed )
 	{

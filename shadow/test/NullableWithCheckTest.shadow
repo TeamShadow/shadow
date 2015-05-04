@@ -4,7 +4,7 @@ class shadow:test@NullableWithCheckTest
 {
 	public main( String[] args ) => ()
 	{
-		Console out = Console:instance;
+		Console out;
 		nullable Object danger = null; 
 		
 		try 

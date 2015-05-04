@@ -18,17 +18,10 @@ class shadow:test@ArrayTest
 		temp[0] = 0; array3.index(temp, "zero");
 		temp[0] = 1; array3.index(temp, "one");
 		temp[0] = 2; array3.index(temp, "two");
-		Console:instance.printLine(array);
-		//Console:instance.printLine(array2);
-		Console:instance.printLine(array3);
+		Console.printLine(array);		
+		Console.printLine(array3);
 		for ( int start = 0; start <= array->size; start += 1 )
 			for ( int end = start; end <= array->size; end += 1 )
-				Console:instance.printLine(array.subarray(start, end));
-		//Array<String> strings = test<String>(lengths);
+				Console.printLine(array.subarray(start, end));
 	}
-
-	/*private test<T>( int[] lengths ) => ( Array<T> )
-	{
-		Array<T> array = Array<T>:create(lengths);
-	}*/
 }

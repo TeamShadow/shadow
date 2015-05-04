@@ -6,7 +6,7 @@ class shadow:test@CommandLine
 	{
 		String value = "bleh";
 		String word = "bleh";
-		Console out = Console:instance;
+		Console out;
 		
 		if( value == word )
 			out.printLine("Yes!");

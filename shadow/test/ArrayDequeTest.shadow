@@ -6,7 +6,7 @@ class shadow:test@ArrayDequeTest
 	public main( String[] args ) => ()
 	{
 		ArrayDeque<String> list = ArrayDeque<String>:create();
-		Console out = Console:instance;
+		Console out;
 		
 		list.addFirst("Every");
 		list.addFirst("Good");

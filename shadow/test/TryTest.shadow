@@ -4,7 +4,7 @@ immutable class shadow:test@TryTest
 {
 	public main( String[] args ) => ()
 	{
-		Console console = Console:instance;
+		Console console;
 		try
 		{
 			console.printLine("before throw");

@@ -2,7 +2,7 @@ import shadow:io@Console;
 
 class shadow:test@ToughTry
 {
-	Console console = Console:instance;
+	Console console;	
 
 	public main( String[] args ) => ()
 	{		

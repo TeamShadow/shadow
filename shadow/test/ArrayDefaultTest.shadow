@@ -4,7 +4,7 @@ class shadow:test@ArrayDefaultTest
 {
 	public main() => ()
 	{
-		Console out = Console:instance;
+		Console out;
 	
 		String[] a = String:create[5]:default("Wombat");
 		int[] b = int:create[5]:default(42);

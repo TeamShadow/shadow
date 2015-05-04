@@ -10,7 +10,7 @@ class shadow:test@FileTest
 {
 	public main( String[] args ) => ()
 	{
-		Console console = Console:instance;
+		Console console;
 		
 		if( args->size == 0 )
 			throw Exception:create("No file specified!");

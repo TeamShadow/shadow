@@ -1332,13 +1332,16 @@ public class StatementChecker extends BaseChecker
 				node.setType(Type.UNKNOWN);
 			}
 			
-			if( node.jjtGetChild(0).getModifiers().isTypeName() )
-				addError(Error.NOT_OBJECT, "Left hand side of is statement cannot be a type name");
-		
-			if( !node.jjtGetChild(1).getModifiers().isTypeName() )
-				addError(Error.NOT_TYPE, "Right hand side of is statement must be a type name");
+			if( t1 instanceof SingletonType || t2 instanceof SingletonType )
+				addError(Error.MISMATCHED_TYPE, "Cannot use singleton types in an is statement");
+			else
+			{			
+				if( node.jjtGetChild(0).getModifiers().isTypeName() )
+					addError(Error.NOT_OBJECT, "Left hand side of is statement cannot be a type name");
 			
-			
+				if( !node.jjtGetChild(1).getModifiers().isTypeName() )
+					addError(Error.NOT_TYPE, "Right hand side of is statement must be a type name");
+			}
 		}			
 
 		return WalkType.POST_CHILDREN;
@@ -1872,11 +1875,45 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+	private void checkForSingleton(Type type) {
+		//if singleton, add to current method for initialization
+		if( type instanceof SingletonType )
+		{
+			SingletonType singletonType = (SingletonType)type;
+			if( currentMethod.isEmpty() )
+			{
+				//add to all creates (since it must be declared outside a method)
+				for( MethodSignature signature : currentType.getAllMethods("create"))				
+					signature.getNode().addSingleton(singletonType);
+			}
+			else
+			{
+				int i = 0;
+				SignatureNode signatureNode;
+				//find outer method, instead of adding to local or inline methods
+				do
+				{
+					signatureNode = currentMethod.get(i);
+					i++;
+				} while( signatureNode instanceof ASTInlineMethodDefinition || signatureNode instanceof ASTLocalMethodDeclaration );
+				
+				signatureNode.addSingleton(singletonType);				
+			}
+		}
+		else if( type instanceof SequenceType )
+		{
+			SequenceType sequenceType = (SequenceType) type;
+			for(ModifiedType modifiedType : sequenceType )
+				checkForSingleton(modifiedType.getType());
+		}
+		else if( type instanceof ArrayType )		
+			checkForSingleton(((ArrayType)type).getBaseType());
+	}
+	
 	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException 
 	{
 		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-	
+			return WalkType.POST_CHILDREN;	
 		
 		int children = node.jjtGetNumChildren();
 		String image = node.getImage();
@@ -1943,6 +1980,7 @@ public class StatementChecker extends BaseChecker
 			}
 		}
 		
+		checkForSingleton(node.getType());		
 		curPrefix.set(0, node); //so that the suffix can figure out where it's at
 				
 		return WalkType.POST_CHILDREN;
@@ -2015,7 +2053,7 @@ public class StatementChecker extends BaseChecker
 			else
 				pushUpType(node, secondVisit);
 			
-			
+			checkForSingleton(node.getType());
 			curPrefix.set(0, node); //so that a future suffix can figure out where it's at		
 		}
 		
@@ -2345,7 +2383,7 @@ public class StatementChecker extends BaseChecker
 			Type prefixType = prefixNode.getType();
 			String methodName = node.getImage();
 			
-			if( prefixNode.getModifiers().isTypeName() )
+			if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof SingletonType) )
 			{
 				addError(Error.NOT_OBJECT, "Type name cannot be used to call method");				
 			}
@@ -2486,7 +2524,7 @@ public class StatementChecker extends BaseChecker
 	}
 	
 	
-	
+	/*
 	@Override
 	public Object visit(ASTInstance node, Boolean secondVisit)	throws ShadowException
 	{
@@ -2512,7 +2550,7 @@ public class StatementChecker extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
+	*/
 	
 	public Object visit(ASTScopeSpecifier node, Boolean secondVisit) throws ShadowException	
 	{
@@ -2641,8 +2679,7 @@ public class StatementChecker extends BaseChecker
 			prefixNode = resolveType( prefixNode );
 			Type prefixType = prefixNode.getType();
 			String propertyName = node.getImage();
-			boolean isTypeName = prefixNode.getModifiers().isTypeName();
-						
+			boolean isTypeName = prefixNode.getModifiers().isTypeName() && !(prefixType instanceof SingletonType);
 						
 			if( isTypeName )
 			{
@@ -2981,7 +3018,7 @@ public class StatementChecker extends BaseChecker
 			Type type = child.getType();
 			if( type == null )
 				addError(Error.NOT_OBJECT, "Object type required for assert information and no type found");
-			else if( child.getModifiers().isTypeName() )
+			else if( child.getModifiers().isTypeName() && !(type instanceof SingletonType) )
 				addError(Error.NOT_OBJECT, "Object type required for assert information but type name used");
 		}
 		

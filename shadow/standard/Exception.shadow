@@ -14,11 +14,10 @@ exception shadow:standard@Exception
 
 	private terminate() => ( int )
 	{
-		Console console = Console:instance;
-		console.printError(getClass());
+		Console.printError(getClass());
 		if ( !message.isEmpty() )
-			console.printError(": ").printError(message);
-		console.printErrorLine();
+			Console.printError(": ").printError(message);
+		Console.printErrorLine();
 		return 1;
 	}
 

@@ -4,7 +4,7 @@ class shadow:test@PropertyTest
 {
 	public main( String[] args ) => ()
 	{	
-		var out = Console:instance;	
+		Console out;	
 		var property = Property:create();
 		
 		property->x = 17;

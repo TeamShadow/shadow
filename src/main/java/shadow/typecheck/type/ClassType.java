@@ -324,36 +324,12 @@ public class ClassType extends Type
 				}
 			});
 		
+		//constants live in the class
+		//singletons don't need references stored
 		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
-			if (!field.getValue().getModifiers().isConstant())
+			if (!field.getValue().getModifiers().isConstant() && !(field.getValue().getType() instanceof SingletonType))
 				set.add(field);
-		/* //no, type parameters live in the classes now 
-		if (isParameterized())		
-			for (final ModifiedType typeParam : getTypeParameters())
-			{
-				final TypeParameter parameter = (TypeParameter) typeParam.getType();
-				set.add(new Entry<String, ModifiedType>()
-				{
-					@Override
-					public String getKey()
-					{
-						return parameter.getTypeName();
-					}
-					@Override
-					public ModifiedType getValue()
-					{
-						return new SimpleModifiedType(parameter.getClassBound());
-					}
-					@Override
-					public ModifiedType setValue(ModifiedType value)
-					{
-						throw new UnsupportedOperationException();
-					}
-				});
-				
-				//add stuff here to fill out type bounds?
-			}
-		*/
+		
 		return set;
 	}
 

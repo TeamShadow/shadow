@@ -35,16 +35,16 @@ class shadow:test@SortTest {
 		return this:max;
 	}
 	public getTime() => (double) {
-		return (System:instance.nanoTime() - startTime) / 1000000000.0;
+		return (System.nanoTime() - startTime) / 1000000000.0;
 	}
 
 	public run() => () {
-		Console:instance.printLine("Array size:\t\t" # getArrayLength());
+		Console.printLine("Array size:\t\t" # getArrayLength());
 		quickSort();
 		mergeSort();
 		heapSort();
 		bucketSort();
-		Console:instance.printLine();
+		Console.printLine();
 	}
 
 	private quickSort() => () {
@@ -73,14 +73,14 @@ class shadow:test@SortTest {
 	}
 
 	private start() => () {
-		this:startTime = System:instance.nanoTime();
+		this:startTime = System.nanoTime();
 	}
 	private stop(int[] array, String name) => () {
 		double time = getTime();
 		if (checkArray(array))
-			Console:instance.printLine(name # ":\t\t" # time # " seconds");
+			Console.printLine(name # ":\t\t" # time # " seconds");
 		else
-			Console:instance.printErrorLine(name # ":\t\t" # time # " seconds");
+			Console.printErrorLine(name # ":\t\t" # time # " seconds");
 		this:startTime = 0UL;
 	}
 	private checkArray(int[] array) => (boolean) {
@@ -104,34 +104,7 @@ class shadow:test@SortTest {
 			quickSort(array, start, left);
 			quickSort(array, left + 1, end);
 		}
-	}
-
-	/*public mergeSort(int[] array) => () {
-		if (array->size > 1) {
-			int[] left = int:create[array->size >> 1],
-					right = int:create[array->size + 1 >> 1];
-			for (int i = 0; i < left->size; i += 1)
-				left[i] = array[i];
-			for (int i = 0; i < right->size; i += 1)
-				right[i] = array[i + left->size];
-			mergeSort(left);
-			mergeSort(right);
-			for (int index = 0, leftIndex = 0, rightIndex = 0;
-					index < array->size; index += 1)
-				if (leftIndex != left->size and
-						(rightIndex == right->size or
-								left[leftIndex] < right[rightIndex]))
-				{
-					array[index] = left[leftIndex];
-					leftIndex += 1;
-				}
-				else
-				{
-					array[index] = right[rightIndex];
-					rightIndex += 1;
-				}
-		}
-	}*/
+	}	
 
 	public mergeSort(int[] array) => (int[]) {
 		if (array->size > 1) {

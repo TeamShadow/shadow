@@ -4,7 +4,7 @@ class shadow:test@LoopTest
 {
 	public main( String[] args ) => ()
 	{
-		Console console = Console:instance;
+		Console console;
 		console.printLine("return " # test(console));
 	}
 	public test( Console console ) => ( String )

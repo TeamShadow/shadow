@@ -4,7 +4,7 @@ class shadow:test@MathTest
 {
 	public main( String[] args ) => ()
 	{
-		Console out = Console:instance;
+		Console out;
 		double a = 5.7;
 		
 		out.printLine("Square root of " # a # " = " # a.squareRoot());

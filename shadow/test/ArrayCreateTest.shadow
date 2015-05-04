@@ -29,7 +29,7 @@ class shadow:test@ArrayCreateTest
 
 	public main() => ()
 	{
-		Console out = Console:instance;
+		Console out;
 	
 		String[] a = String:create[10];
 		String[] b = String:create[10]:("Test");
