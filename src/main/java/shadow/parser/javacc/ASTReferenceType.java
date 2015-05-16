@@ -32,7 +32,7 @@ class ASTReferenceType extends DimensionNode {
   public void dump(String prefix) {
   	String className = this.getClass().getSimpleName();
 	
-  	logger.debug(prefix + className + "(" + line + ":" + column + "): " + getArrayDimensions());
+  	logger.debug(prefix + className + "(" + lineStart + ":" + columnStart + "): " + getArrayDimensions());
     
 	dumpChildren(prefix);
   }

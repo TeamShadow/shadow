@@ -33,7 +33,7 @@ class ASTModifiers extends SimpleNode {
   }
   
   public void dump(String prefix) {
-	  StringBuilder sb = new StringBuilder(prefix + "ASTModifiers(" + line + ":" + column + "): ");
+	  StringBuilder sb = new StringBuilder(prefix + "ASTModifiers(" + lineStart + ":" + columnStart + "): ");
 		  	  
 	  sb.append(modifiers.toString());	  
 

@@ -1,5 +1,10 @@
 package shadow.typecheck;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -45,6 +50,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	}
 	
 	private static final Logger logger = Loggers.TYPE_CHECKER;
+	protected static String eol = System.getProperty("line.separator", "\n");
 
 	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
 	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
@@ -357,21 +363,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				addError( node, error.getError(), error.getMessage() );
 	}
 	
-	protected void addError(Node node, Error type, String msg, Type... errorTypes)
-	{
+	protected void addError(Node node, Error type, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
 			return; //don't add error if it has an Unknown Type in it
 		
-		String error = "";
-
-		error += "(" + node.getFile().getName() + ")";
-		error += "[" + node.getLine() + ":" + node.getColumn() + "] ";
-		
-		if( type != null )
-			error += type.getName() + ": ";		
-		
-		error += msg;		
-		
+		String error = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
 		errorList.add(new TypeCheckException(type, error));
 	}
 	
@@ -381,25 +377,58 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	 * @param type One of the pre-defined types of errors.
 	 * @param msg The message associated with the error.
 	 */
-	protected void addError(Error type, String msg, Type... errorTypes)
-	{
+	protected void addError(Error type, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
 			return; //don't add error if it has an Unknown Type in it
 				
-		String error = "";
+		String error = makeMessage(type, message, getFile(), getLineStart(), getLineEnd(), getColumnStart(), getColumnEnd());		
+		errorList.add(new TypeCheckException(type, error));
+	}
+	
+	protected static String makeMessage(Error type, String message, File file, int lineStart, int lineEnd, int columnStart, int columnEnd )
+	{
+		StringBuilder error = new StringBuilder();
 		
-		if( getFile() != null )
-		{
-			error += "(" + getFile().getName() + ")";
-			error += "[" + getLine() + ":" + getColumn() + "] ";
-		}
+		if( file != null )
+			error.append("(" + file.getName() + ")");
+		
+		error.append("[" + lineStart + ":" + columnStart + "] ");
 		
 		if( type != null )
-			error += type.getName() + ": ";		
+			error.append(type.getName() + ": ");		
 		
-		error += msg;		
+		error.append(message);
 		
-		errorList.add(new TypeCheckException(type, error));
+		if( file != null) {
+		BufferedReader reader = null;
+		  try {
+			reader = new BufferedReader(new FileReader(file));
+			String line = "";			
+			for( int i = 1; i <= lineStart; ++i )
+				line = reader.readLine();
+			error.append(eol);
+			error.append(line);
+			if( lineStart == lineEnd ) {
+				error.append(eol);
+				for( int i = 1; i <= columnEnd; ++i )
+					if( i >= columnStart )
+						error.append('^');
+					else
+						error.append(' ');
+			}
+		  } 
+		  catch (FileNotFoundException e) {
+			  //do nothing, can't add additional file data
+		  }
+		  catch (IOException e) {}
+		  finally {
+			  if( reader != null )
+				try { reader.close(); }
+			  	catch (IOException e) {}
+		  }
+		}
+		
+		return error.toString();
 	}
 	
 	/**

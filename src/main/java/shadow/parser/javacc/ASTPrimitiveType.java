@@ -56,9 +56,9 @@ class ASTPrimitiveType extends SimpleNode {
     public void dump(String prefix) {
     	String className = this.getClass().getSimpleName();
     	if(type == null)
-    		logger.debug(prefix + className + "(" + line + ":" + column + ")");
+    		logger.debug(prefix + className + "(" + lineStart + ":" + columnStart + ")");
     	else
-    		logger.debug(prefix + className + "(" + line + ":" + column + "): " + type.getTypeName());
+    		logger.debug(prefix + className + "(" + lineStart + ":" + columnStart + "): " + type.getTypeName());
         dumpChildren(prefix);
     }
 

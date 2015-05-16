@@ -61,7 +61,7 @@ public class ParseException extends Exception
   
   /** Constructor with message and node. */
   public ParseException(String message, Node node) {
-    super("(" + node.getFile().getName() + ") [" + node.getLine() + ":" + node.getColumn() + "] " + message);    
+    super("(" + node.getFile().getName() + ") [" + node.getLineStart() + ":" + node.getColumnStart() + "] " + message);    
   }
   
   /** Constructor that adds a file to an existing ParseException */
@@ -81,18 +81,21 @@ public class ParseException extends Exception
 	  try {
 		reader = new BufferedReader(new FileReader(file));
 		String line = "";
-		int lineNumber = exception.currentToken.next.beginLine;
+		int lineStart = exception.currentToken.next.beginLine;
+		int lineEnd = exception.currentToken.next.endLine;
 		int columnStart = exception.currentToken.next.beginColumn;
 		int columnEnd = exception.currentToken.next.endColumn;
-		for( int i = 1; i <= lineNumber; ++i )
+		for( int i = 1; i <= lineStart; ++i )
 			line = reader.readLine();
 		builder.append(line);
-		builder.append(eol);
-		for( int i = 1; i <= columnEnd; ++i )
-			if( i >= columnStart )
-				builder.append('^');
-			else
-				builder.append(' ');
+		if( lineStart == lineEnd ) {
+			builder.append(eol);
+			for( int i = 1; i <= columnEnd; ++i )
+				if( i >= columnStart )
+					builder.append('^');
+				else
+					builder.append(' ');
+		}
 	  } 
 	  catch (FileNotFoundException e) {
 		  //do nothing, can't add additional file data

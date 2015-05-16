@@ -46,15 +46,21 @@ interface Node extends ModifiedType {
 	
 	public void setImage(String image);
 	
-	public int getLine();
+	public int getLineStart();
 	
-	public void setLine(int line);
+	public void setLineStart(int line);
 	
-	public int getColumn();
+	public int getLineEnd();
 	
-	public void setColumn(int column);
+	public void setLineEnd(int line);
 	
-	public String getLocation();
+	public int getColumnStart();
+	
+	public int getColumnEnd();
+	
+	public void setColumnStart(int column);
+	
+	public void setColumnEnd(int column);
 
 	public Type getType();
 	

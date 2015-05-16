@@ -748,7 +748,7 @@ public class TypeUpdater extends BaseChecker {
 			{				
 				// get the first signature
 				MethodSignature method = currentType.getIndistinguishableMethod(signature);				
-				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Indistinguishable method already declared on line " + method.getNode().getLine());
+				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Indistinguishable method already declared on line " + method.getNode().getLineStart());
 				return WalkType.NO_CHILDREN;
 			}
 						
@@ -1127,7 +1127,7 @@ public class TypeUpdater extends BaseChecker {
 			// current choice is to allow methods and fields to collide since they can be disambiguated by colon or dot
 			/*currentType.containsMethod(symbol) ||*/ 
 			if(currentType.containsField(symbol) )						
-				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol + " already declared on line " + currentType.getField(symbol).getLine());
+				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol + " already declared on line " + currentType.getField(symbol).getLineStart());
 			else if(currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(symbol))
 				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol + " already declared as inner class");
 			else
