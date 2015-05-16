@@ -312,5 +312,11 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/typechecker/no-default-create-for-array/Test.shadow"); 
 		enforce(Error.INVALID_CREATE);		
+	}
+	
+	@Test public void testBreakOutsideLoop() throws Exception
+	{
+		args.add("tests-negative/typechecker/break-outside-loop/Test.shadow"); 
+		enforce(Error.INVALID_STRUCTURE);		
 	}	
 }

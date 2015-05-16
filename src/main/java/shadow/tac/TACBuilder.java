@@ -1978,28 +1978,25 @@ public class TACBuilder implements ShadowParserVisitor
 	}
 
 	@Override
-	public Object visit(ASTBreakStatement node, Boolean secondVisit)
+	public Object visit(ASTBreakOrContinueStatement node, Boolean secondVisit)
 			throws ShadowException
 	{
 		if (secondVisit)
 		{
 			TACLabelRef unreachableLabel = new TACLabelRef(tree);
-			TACBlock breakBlock = block.getBreakBlock();
-			visitCleanup(breakBlock, null, breakBlock.getBreak());
-			unreachableLabel.new TACLabel(tree);
-		}
-		return POST_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTContinueStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
-			TACLabelRef unreachableLabel = new TACLabelRef(tree);
-			TACBlock continueBlock = block.getContinueBlock();
-			visitCleanup(continueBlock, null, continueBlock.getContinue());
+			TACBlock exitBlock;
+			
+			if( node.getImage().equals("break") )
+			{
+				exitBlock = block.getBreakBlock();
+				visitCleanup(exitBlock, null, exitBlock.getBreak());
+			}
+			else
+			{
+				exitBlock = block.getContinueBlock();
+				visitCleanup(exitBlock, null, exitBlock.getContinue());
+			}
+			
 			unreachableLabel.new TACLabel(tree);
 		}
 		return POST_CHILDREN;

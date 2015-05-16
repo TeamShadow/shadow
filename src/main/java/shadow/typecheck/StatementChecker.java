@@ -2933,11 +2933,25 @@ public class StatementChecker extends BaseChecker
 		return false;
 	}
 
-	public Object visit(ASTBreakStatement node, Boolean secondVisit) throws ShadowException 
-	{
-		//TODO: Check if break is in loop or switch
-		
-		return WalkType.PRE_CHILDREN;
+	public Object visit(ASTBreakOrContinueStatement node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {			
+			Node parent = node.jjtGetParent();
+			boolean found = false;
+			
+			while( parent != null && !found ) {
+				if( parent instanceof ASTDoStatement || 
+					parent instanceof ASTForeachStatement ||
+					parent instanceof ASTForStatement ||
+					parent instanceof ASTWhileStatement )
+					found = true;
+				else
+					parent = parent.jjtGetParent();
+			}
+			
+			if( !found )
+				addError(node, Error.INVALID_STRUCTURE, node.getImage() + " statement cannot occur outside of a loop body");
+		}		
+		return WalkType.POST_CHILDREN;
 	}	
 	
 	private boolean visitArrayInitializer(Node node)
@@ -3223,17 +3237,6 @@ public class StatementChecker extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	/*
-	public Object visit(ASTInlineMethodDeclarator node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )		
-			visitDeclarator( node );		
-		
-		
-		return WalkType.POST_CHILDREN;
-	}
-	*/
 	
 	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException 
 	{ 

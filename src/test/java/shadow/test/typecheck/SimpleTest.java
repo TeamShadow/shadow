@@ -2,7 +2,10 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
+import org.junit.Test;
+
 import shadow.Main;
+import shadow.typecheck.TypeCheckException.Error;
 
 /**
  * 
@@ -28,7 +31,7 @@ public class SimpleTest
 		}
 		
 		//add desired files to list		
-		args.add("shadow/utility/Random.shadow"); 		
+		args.add("tests-negative/typechecker/break-outside-loop/Test.shadow");
 
 		Main.main(args.toArray(new String[] { }));		
 	}

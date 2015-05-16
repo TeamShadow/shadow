@@ -1490,8 +1490,7 @@ void Statement():
 | DoStatement()
 | ForStatement()
 | ForeachStatement()
-| BreakStatement()
-| ContinueStatement()
+| BreakOrContinueStatement()
 | ReturnStatement()
 | ThrowStatement()
 | FinallyStatement() //includes try/catch/recover/finally
@@ -1678,20 +1677,14 @@ void ForUpdate():
   StatementExpressionList()
 }
 
-void BreakStatement():
-{
-	Token t;
-	debugPrint("BREAK STATEMENT");
-	jjtThis.setImage("");
+void BreakOrContinueStatement():
+{	
+	debugPrint("BREAK OR CONTINUE STATEMENT");	
 }
 {
-  "break" ";"
-}
-
-void ContinueStatement():
-{ debugPrint("CONTINUE STATEMENT"); }
-{
-  "continue" [ ConditionalExpression() ]  ";"
+  (    	"break" { jjtThis.setImage("break"); }    
+    |	"continue" { jjtThis.setImage("continue"); }
+  ) ";"
 }
 
 void ReturnStatement():
