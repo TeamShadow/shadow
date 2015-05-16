@@ -2,7 +2,11 @@
 /* JavaCCOptions:KEEP_LINE_COL=null */
 package shadow.parser.javacc;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
  * This exception is thrown when parse errors are encountered.
@@ -62,11 +66,46 @@ public class ParseException extends Exception
   
   /** Constructor that adds a file to an existing ParseException */
   public ParseException(ParseException other, File file) {
-    super("(" + file.getName() + ") " + other.getLocalizedMessage());
+    super(createMessage(other, file));
     currentToken = other.currentToken;
     expectedTokenSequences = other.expectedTokenSequences;
     tokenImage = other.tokenImage;    
-  }  
+  }
+  
+  private static String createMessage(ParseException exception, File file) {
+	  StringBuilder builder = new StringBuilder("(");
+	  builder.append(file.getName());
+	  builder.append(") ");
+	  builder.append(exception.getLocalizedMessage());
+	  BufferedReader reader = null;
+	  try {
+		reader = new BufferedReader(new FileReader(file));
+		String line = "";
+		int lineNumber = exception.currentToken.next.beginLine;
+		int columnStart = exception.currentToken.next.beginColumn;
+		int columnEnd = exception.currentToken.next.endColumn;
+		for( int i = 1; i <= lineNumber; ++i )
+			line = reader.readLine();
+		builder.append(line);
+		builder.append(eol);
+		for( int i = 1; i <= columnEnd; ++i )
+			if( i >= columnStart )
+				builder.append('^');
+			else
+				builder.append(' ');
+	  } 
+	  catch (FileNotFoundException e) {
+		  //do nothing, can't add additional file data
+	  }
+	  catch (IOException e) {}
+	  finally {
+		  if( reader != null )
+			try { reader.close(); }
+		  	catch (IOException e) {}
+	  }
+	  
+	  return builder.toString();
+  }
 
   /**
    * This is the last token that has been consumed successfully.  If
@@ -132,7 +171,7 @@ public class ParseException extends Exception
     
     //start new
     String retval = "[" + currentToken.next.beginLine + ":" + currentToken.next.beginColumn + "] ";
-    retval += "Encountered \"";
+    retval += "Unexpected ";
     
     Token tok = currentToken.next;
     for (int i = 0; i < maxSize; i++) {
@@ -149,13 +188,19 @@ public class ParseException extends Exception
     //end new
     
     //retval += "\" at line " + currentToken.next.beginLine + ", column " + currentToken.next.beginColumn;
-    retval += "\"" + eol;
+    //retval += "\"" + eol;
+    retval += eol;
+    
+    //remove expected tokens (for now)
+    //mostly useful for debugging compiler
+    /*
     if (expectedTokenSequences.length == 1) {
       retval += "Was expecting:" + eol + "    ";
     } else {
       retval += "Was expecting one of:" + eol + "    ";
     }
     retval += expected.toString();
+    */
     return retval;
   }
 
