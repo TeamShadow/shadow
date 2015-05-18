@@ -61,6 +61,8 @@ interface Node extends ModifiedType {
 	public void setColumnStart(int column);
 	
 	public void setColumnEnd(int column);
+	
+	public void setEndToken(Token t);
 
 	public Type getType();
 	

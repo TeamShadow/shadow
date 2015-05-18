@@ -375,7 +375,7 @@ public class InterfaceType extends Type
 		//extend types		
 		if( getInterfaces().size() > 0 )
 		{
-			out.print("extends " );
+			out.print(" extends " );
 			boolean first = true;
 			for( InterfaceType _interface : getInterfaces() )
 			{
@@ -387,7 +387,7 @@ public class InterfaceType extends Type
 			}			
 		}
 		
-		out.println(linePrefix + "{");
+		out.println(System.lineSeparator() + linePrefix + "{");
 		
 		String indent = linePrefix + "\t";		
 		boolean newLine;

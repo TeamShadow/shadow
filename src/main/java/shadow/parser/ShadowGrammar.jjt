@@ -630,12 +630,14 @@ void EnumDeclaration(Modifiers modifiers):
 }
 
 void EnumBody():
-{ debugPrint("ENUM BODY"); }
+{ debugPrint("ENUM BODY"); Token t; }
 {
    "{"
    EnumConstant() ( "," EnumConstant() )*
    [ ";" ( ClassOrInterfaceBodyDeclaration(TypeKind.ENUM) )* ]
-   "}"
+   t = "}"
+   {
+     jjtThis.setEndToken(t);   }
 }
 
 void EnumConstant():
@@ -648,9 +650,9 @@ void EnumConstant():
 }
 
 void TypeParameters():
-{ debugPrint("TYPE PARAMETERS"); }
+{ debugPrint("TYPE PARAMETERS"); Token t; }
 {
-   "<" TypeParameter() ( "," TypeParameter() )* ">"
+   "<" TypeParameter() ( "," TypeParameter() )* t = ">" { jjtThis.setEndToken(t); }
 }
 
 void TypeParameter():
@@ -671,9 +673,11 @@ void TypeBound():
 }
 
 void ClassOrInterfaceBody(TypeKind kind):
-{ debugPrint("CLASS OR INTERFACE BODY"); }
+{ debugPrint("CLASS OR INTERFACE BODY"); Token t; }
 {
-  "{" ( ClassOrInterfaceBodyDeclaration(kind) )* "}"
+  "{" ( ClassOrInterfaceBodyDeclaration(kind) )* t = "}"
+  {    jjtThis.setEndToken(t);
+  }
 }
 
 void ClassOrInterfaceBodyDeclaration(TypeKind kind):
@@ -681,11 +685,10 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
    Modifiers modifiers;
    debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
-{
-  LOOKAHEAD(2) Initializer() { if (kind == TypeKind.INTERFACE) throw new ParseException("An interface cannot have initializers",jjtThis); }
+{  
 // Just get all the modifiers out of the way. If you want to do
 // more checks, pass the modifiers down to the member  
-| modifiers = Modifiers()
+	modifiers = Modifiers()
   (  ClassOrInterfaceDeclaration(modifiers)
     | EnumDeclaration(modifiers)
     | LOOKAHEAD( "create" ) CreateDeclaration(modifiers)
@@ -727,10 +730,10 @@ void VariableInitializer():
 }
 
 void ArrayInitializer():
-{ debugPrint("ARRAY INITIALIZER"); }
+{ debugPrint("ARRAY INITIALIZER"); Token t; }
 {  	
-  LOOKAHEAD(2) "{" ArrayInitializer() ( LOOKAHEAD(2) "," ArrayInitializer() )*  [ "," ] "}"
-| "{" ConditionalExpression() ( LOOKAHEAD(2) "," ConditionalExpression() )*  [ "," ] "}"
+  LOOKAHEAD(2) "{" ArrayInitializer() ( LOOKAHEAD(2) "," ArrayInitializer() )*  [ "," ] t = "}" { jjtThis.setEndToken(t); }
+| "{" ConditionalExpression() ( LOOKAHEAD(2) "," ConditionalExpression() )*  [ "," ] t = "}" { jjtThis.setEndToken(t); }
 }
 
 void MethodDeclarator(boolean isLocal):
@@ -761,17 +764,21 @@ void InlineResults():
 	Token t;
 }
 {
- "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ]  ")"
+ "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")" {
+   jjtThis.setEndToken(t); }
 }
 
 void FormalParameters(boolean isLocal):
 {
   debugPrint("FORMAL PARAMETERS");
-   
+  Token t;   
  }
 {
 	{ jjtThis.setLocal(isLocal); }
-  "(" [ FormalParameter() ( "," FormalParameter() )* ] ")"
+  "(" [ FormalParameter() ( "," FormalParameter() )* ] t = ")"
+  {
+   jjtThis.setEndToken(t);
+  }
 }
 
 void FormalParameter():
@@ -824,11 +831,14 @@ void CreateDeclarator():
 
 void CreateBlock():
 {
-  debugPrint("CREATE BLOCK");    
+  debugPrint("CREATE BLOCK");
+  Token t;    
 }
 {
 	"{" [ LOOKAHEAD(ExplicitCreateInvocation()) ExplicitCreateInvocation() ]
-    ( BlockStatement() )*  "}" }
+    ( BlockStatement() )*  t = "}"
+    {
+      jjtThis.setEndToken(t);    } }
 
 void DestroyDeclaration(Modifiers modifiers):
 {
@@ -843,21 +853,19 @@ void DestroyDeclaration(Modifiers modifiers):
 }
 
 void ExplicitCreateInvocation():
-{ debugPrint("EXPLICIT CREATE INVOCATION"); }
+{
+  debugPrint("EXPLICIT CREATE INVOCATION");
+Token t;
+}
 {
   ( "this" { jjtThis.setImage("this"); } | "super" { jjtThis.setImage("super"); } )
- "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
- ";"   
+ "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
+ ";"
+	{
+   	jjtThis.setEndToken(t);
+ 	}
+   
 }
-
-
-//do we need initializers at all?
-void Initializer():
-{ debugPrint("INITIALIZER"); }
-{
-  	Block()
-}
-
 
 /*
  * Type, name and expression syntax follows.
@@ -873,10 +881,10 @@ void Type():
 }
 
 void ReferenceType():
-{ debugPrint("REFERENCE TYPE"); }
+{ debugPrint("REFERENCE TYPE"); Token t; }
 {
-    PrimitiveType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } "]" )+
-  | ClassOrInterfaceType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } "]" )*
+    PrimitiveType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } t = "]" { jjtThis.setEndToken(t); }  )+
+  | ClassOrInterfaceType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } t = "]" { jjtThis.setEndToken(t); } )*
 }
 
 void StaticArrayType():
@@ -885,7 +893,7 @@ void StaticArrayType():
 	Token t;
 }
 {
-    PrimitiveType() "[" IntegerLiteral() "]"
+    PrimitiveType() "[" IntegerLiteral() t = "]" { jjtThis.setEndToken(t); }
 }
 
 
@@ -921,9 +929,9 @@ void ClassOrInterfaceTypeSuffix():
 }
 
 void TypeArguments():
-{ debugPrint("TYPE ARGUMENTS"); }
+{ debugPrint("TYPE ARGUMENTS"); Token t;}
 {
-   "<" Type() ( "," Type() )* ">"
+   "<" Type() ( "," Type() )* t = ">" { jjtThis.setEndToken(t); }
 }
 
 
@@ -965,9 +973,15 @@ void ResultType():
 }
 
 void ResultTypes():
-{ debugPrint("RESULT TYPES"); }
 {
-  "(" [ ResultType() ( "," ResultType() )* ] ")"
+  	debugPrint("RESULT TYPES");
+	Token t;
+}
+{
+  "(" [ ResultType() ( "," ResultType() )* ] t = ")"
+  {
+   jjtThis.setEndToken(t);
+ }
 }
 
 void Name():
@@ -1165,24 +1179,33 @@ void InlineMethodDefinition():
 void CastExpression():
 {
     debugPrint("CAST EXPRESSION");
-    jjtThis.setImage("cast< >");   
+    jjtThis.setImage("cast< >");
+    Token t;   
 }
 {
- "cast" "<" Type() ">" "(" ConditionalExpression() ")"
+ "cast" "<" Type() ">" "(" ConditionalExpression() t = ")"
+ {
+   jjtThis.setEndToken(t);
+ }
 }
 
 void CheckExpression():
 {
     debugPrint("CHECK EXPRESSION");
-    jjtThis.setImage("check");   
+    jjtThis.setImage("check");
+    Token t;   
 }
 { 
- "check" "(" ConditionalExpression() ")"
+ "check" "(" ConditionalExpression() t = ")"
+ {
+   jjtThis.setEndToken(t);
+ }
 }
 
 void CopyExpression():
 {
-    debugPrint("COPY EXPRESSION");       
+    debugPrint("COPY EXPRESSION");
+    Token t;        
 }
 {
 
@@ -1190,7 +1213,10 @@ void CopyExpression():
 |    "freeze" { jjtThis.setImage("freeze"); }
 	)
 	
-  "(" ConditionalExpression() ")"
+  "(" ConditionalExpression() t = ")"
+  {
+   jjtThis.setEndToken(t);
+ }
 }
 
 void PrimaryExpression():
@@ -1211,17 +1237,25 @@ void RightSide():
 void SequenceRightSide():
 {
   debugPrint("SEQUENCE RIGHT SIDE");
+  Token t;
 }
 {
- 	"("	ConditionalExpression() (","  ConditionalExpression() )+ ")"
+ 	"("	ConditionalExpression() (","  ConditionalExpression() )+ t = ")"
+ 	{
+	   jjtThis.setEndToken(t);
+	 }
 }
 
 void SequenceLeftSide():
 {
   debugPrint("SEQUENCE LEFT SIDE");
+  Token t;
 }
 {
-  	"(" { { jjtThis.addItem();}	} [ (LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();} ] ("," { { jjtThis.addItem();}	} [(LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();}] )* ")"
+  	"(" { { jjtThis.addItem();}	} [ (LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();} ] ("," { { jjtThis.addItem();}	} [(LOOKAHEAD(SequenceVariable()) SequenceVariable() | PrimaryExpression()) { jjtThis.setUsed();}] )* t = ")"
+  	{
+   jjtThis.setEndToken(t);
+ }
 	
 }
 
@@ -1252,7 +1286,7 @@ void PrimaryPrefix():
 | CheckExpression()
 | CopyExpression()
 | CastExpression()
-| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() ")"
+| LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() t = ")" { jjtThis.setEndToken(t); }
 | PrimitiveType()
 | FunctionType()
 | [LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
@@ -1308,7 +1342,7 @@ void Brackets():
   Token t;
 }
 {
-  ( LOOKAHEAD(2) "[" ("," { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); } )+
+  ( LOOKAHEAD(2) "[" ("," { jjtThis.incrementDimensions(); })* t = "]" { jjtThis.pushDimensions(); jjtThis.setEndToken(t); } )+
 }
 
 void ArrayCreate():
@@ -1320,8 +1354,8 @@ void ArrayCreate():
   [ TypeArguments() ] ":"
   ("create" { jjtThis.setImage("create"); } | "null" { jjtThis.setImage("null"); } )
   ArrayDimensions()
-  [LOOKAHEAD(2) ( LOOKAHEAD(2) ":" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")" { jjtThis.setCreate();  } |
-     ":" "default" "(" ConditionalExpression() ")" { jjtThis.setDefault(); })]
+  [LOOKAHEAD(2) ( LOOKAHEAD(2) ":" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")" { jjtThis.setCreate(); jjtThis.setEndToken(t); } |
+     ":" "default" "(" ConditionalExpression() t = ")" { jjtThis.setDefault(); jjtThis.setEndToken(t); })]
 }
 
 void ArrayDimensions():
@@ -1330,7 +1364,7 @@ void ArrayDimensions():
   Token t;
 }
 { 
-  ( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); })+
+  ( LOOKAHEAD(2) "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* t = "]" { jjtThis.pushDimensions(); jjtThis.setEndToken(t);})+
 }
 
 void Subscript():
@@ -1339,16 +1373,17 @@ void Subscript():
   Token t;
 }
 {  
-  "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* "]" { jjtThis.pushDimensions(); }
+  "[" ConditionalExpression() ("," ConditionalExpression() { jjtThis.incrementDimensions(); })* t = "]" { jjtThis.pushDimensions(); jjtThis.setEndToken(t); }
 }
 
 void Create():
 {
   	debugPrint("CREATE");
+  	Token t;
 }
 {
-  [ TypeArguments() ] ":" "create" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
-  { jjtThis.setImage("create"); debugPrint("create");  } 
+  [ TypeArguments() ] ":" "create" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
+  { jjtThis.setImage("create"); debugPrint("create"); jjtThis.setEndToken(t);  } 
 }
 
 /*
@@ -1403,7 +1438,9 @@ void MethodCall():
 	Token t;
 }
 {
-  [ TypeArguments() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+  [ TypeArguments() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
+  {
+    jjtThis.setEndToken(t);  }
 }
 
 
@@ -1468,9 +1505,13 @@ void NullLiteral():
 }
 
 void Arguments():
-{ debugPrint("ARGUMENTS"); }
+{ debugPrint("ARGUMENTS");
+Token t;
+}
 {
-  "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] ")"
+  "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
+  {	jjtThis.setEndToken(t);
+  }
 }
 
 /*
@@ -1503,9 +1544,11 @@ void AssertStatement():
 }
 
 void Block():
-{ debugPrint("BLOCK"); }
+{ debugPrint("BLOCK"); Token t; }
 {
-  "{" ( BlockStatement() )* "}"
+  "{" ( BlockStatement() )* t = "}"
+  {
+    jjtThis.setEndToken(t);  }
 }
 
 void BlockStatement():
@@ -1592,11 +1635,13 @@ void Expression() :
 }
 
 void SwitchStatement():
-{ debugPrint("SWITCH STATEMENT"); }
+{ debugPrint("SWITCH STATEMENT"); Token t; }
 {
   "switch" "(" ConditionalExpression() ")" "{"
     ( SwitchLabel() ( Statement() ) )+
-  "}"
+  t = "}"
+  {    jjtThis.setEndToken(t);
+  }
 }
 
 void SwitchLabel():
@@ -1604,7 +1649,8 @@ void SwitchLabel():
 	Token t;
 }
 {
-  "case" "(" PrimaryExpression() ("," PrimaryExpression())* ")"
+  "case" "(" PrimaryExpression() ("," PrimaryExpression())* t = ")"  {
+    jjtThis.setEndToken(t);  }
 | "default"
 }
 
@@ -1621,9 +1667,13 @@ void WhileStatement():
 }
 
 void DoStatement():
-{ debugPrint("DO STATEMENT"); }
+{ debugPrint("DO STATEMENT");
+	Token t;
+}
 {
-  "do" Statement() "while" "(" ConditionalExpression() ")" ";"
+  "do" Statement() "while" "(" ConditionalExpression() t = ")" ";"
+  {     jjtThis.setEndToken(t);
+  }
 }
 
 void ForeachStatement():

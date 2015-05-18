@@ -42,9 +42,7 @@ public class SimpleNode implements Node {
     	//parser = sp;
     	image = "";
     	if( sp instanceof ShadowFileParser )
-    		file = ((ShadowFileParser)sp).getFile();    	
-    	//line = sp.token.beginLine;
-    	//column = sp.token.beginColumn;
+    		file = ((ShadowFileParser)sp).getFile();
     	lineStart = sp.token.next.beginLine;
     	lineEnd = sp.token.next.endLine;
     	columnStart = sp.token.next.beginColumn;
@@ -63,6 +61,9 @@ public class SimpleNode implements Node {
 			children = c;
 		}
 		children[i] = n;
+		//updates the ending line and column of the node based on children
+		lineEnd = n.getLineEnd();
+		columnEnd = n.getColumnEnd();		
 	}
 	
 	public void jjtSwapChild(Node n, int i) {
@@ -70,15 +71,6 @@ public class SimpleNode implements Node {
 	}
 
     public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException {
-    	//testing
-    	if( !secondVisit ) {
-    		if( jjtGetNumChildren() > 0 ) {
-    			Node lastChild = jjtGetChild(jjtGetNumChildren() - 1);
-    			setLineEnd(lastChild.getLineEnd());
-    			setColumnEnd(lastChild.getColumnEnd());
-    		}    		
-    	}
-    	
     	return visitor.visit(this, secondVisit);
     }
 
@@ -285,5 +277,11 @@ public class SimpleNode implements Node {
 	@Override
 	public int getColumnEnd() {
 		return columnEnd;
-	}		
+	}
+	
+	@Override
+	public void setEndToken(Token t) {
+		lineEnd = t.endLine;
+		columnEnd = t.endColumn;
+	}
 }
