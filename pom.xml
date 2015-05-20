@@ -8,6 +8,7 @@
   <url>www.shadow-language.org</url>
   <description>A compiler for the Shadow programming language</description>
   <build>
+    <pluginManagement>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -61,7 +62,40 @@
             </execution>
         </executions>
       </plugin>
+      <plugin>
+      	<groupId>org.codehaus.mojo</groupId>
+      	<artifactId>javacc-maven-plugin</artifactId>
+      	<version>2.6</version>
+      	<executions>
+	      <execution>	      
+	       <id>jjtree-javacc</id>
+	        <goals>
+	          <goal>jjtree-javacc</goal>
+	        </goals>
+	        <configuration>
+	        	<buildNodeFiles>false</buildNodeFiles>
+             	<sourceDirectory>${basedir}/src/main/java/shadow/grammar</sourceDirectory>
+             	<interimDirectory>${basedir}/src/main/java</interimDirectory>
+             	<outputDirectory>${basedir}/src/main/java</outputDirectory>
+             	<jdkVersion>1.7</jdkVersion>
+             	<isStatic>false</isStatic>      
+             	<nodeUsesParser>true</nodeUsesParser>
+             	<visitor>true</visitor>
+             	<multi>true</multi>
+             	<visitorException>ShadowException</visitorException>       	
+            </configuration>
+	      </execution>
+	    </executions>
+	      <dependencies>
+	        <dependency>
+	          <groupId>net.java.dev.javacc</groupId>
+	          <artifactId>javacc</artifactId>
+	          <version>5.0</version>
+	        </dependency>
+	      </dependencies>
+      </plugin>
     </plugins>
+    </pluginManagement>
   </build>
   <reporting>
     <plugins>      
