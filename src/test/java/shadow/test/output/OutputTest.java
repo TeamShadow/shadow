@@ -30,7 +30,7 @@ public class OutputTest {
 	
 	@Before
 	public void setup() throws Exception {		
-		//args.add("-v");		
+				
 		args.add("-o");
 		args.add(executableName);
 		

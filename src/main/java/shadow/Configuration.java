@@ -15,8 +15,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.digester3.Digester;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.logging.log4j.Logger;
+
+import shadow.jaxb.Shadow;
 
 /** 
  * Represents the current compiler settings/configuration. This is a globally
@@ -30,7 +34,6 @@ public class Configuration {
 	
 	private static final Logger logger = Loggers.SHADOW;
 	
-	private Digester configDigester;
 	private Path configFile;
 	
 	// Configuration fields
@@ -65,39 +68,9 @@ public class Configuration {
 	/** Hidden constructor for instantiating the Configuration */
 	private Configuration(Arguments compilerArgs) throws ConfigurationException, IOException {
 		
-		// Prepare the XML file digester
-		configDigester = new Digester();
-		
-		configDigester.setValidating(false);
-
-		configDigester.addSetProperties("shadow"); // Root element
-
-		// Parsing rule for the system path
-		configDigester.addCallMethod("shadow/system", "setSystemImport", 1);
-		configDigester.addCallParam("shadow/system", 0);
-
-		// Parsing rule for import paths
-		configDigester.addCallMethod("shadow/import", "addImport", 1);
-		configDigester.addCallParam("shadow/import", 0);
-		
-		configDigester.addCallMethod("shadow/link", "setLinkCommand", 1);
-		configDigester.addCallParam("shadow/link", 0);
-		
-		// Parsing rule for the LLVM target "triple"
-		configDigester.addCallMethod("shadow/target", "setTarget", 1);
-		configDigester.addCallParam("shadow/target", 0);
-		
-		// Parsing rule for the OS
-		configDigester.addCallMethod("shadow/os", "setOs", 1);
-		configDigester.addCallParam("shadow/os", 0);
-		
-		// Parsing rule for the architecture
-		configDigester.addCallMethod("shadow/arch", "setArch", 1);
-		configDigester.addCallParam("shadow/arch", 0);
-		
-		
 		// Attempt to locate hierarchy of config files
 		configFile = locateConfig(compilerArgs);
+		
 		
 		// If a config file was located, parse it
 		if( configFile != null ) 
@@ -249,8 +222,29 @@ public class Configuration {
 	private void parse(Path configFile) {
 		
 		try {
-			configDigester.push(this);
-			configDigester.parse(configFile.toFile());
+			
+			
+			JAXBContext jaxbContext = JAXBContext.newInstance(Shadow.class);
+	 
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			Shadow configuration = (Shadow) jaxbUnmarshaller.unmarshal(configFile.toFile());
+			
+			Integer arch = configuration.getArch();
+			if( arch != null )
+				this.arch = arch;
+			
+			addImports(configuration.getImport());
+			
+			String linkCommand = configuration.getLink(); 
+			if( linkCommand != null )
+				setLinkCommand(linkCommand);
+			
+			os = configuration.getOs();			
+			target = configuration.getTarget();			
+			
+			String systemPath = configuration.getSystem();
+			if( systemPath != null )
+				setSystemImport(systemPath);
 		} 
 		catch(Exception e) {
 			System.err.println("ERROR PARSING CONFIGURATION FILE: " + configFile.toAbsolutePath());
@@ -280,6 +274,11 @@ public class Configuration {
 		return os;
 	}
 
+	public void addImports(List<String> paths) {
+		for( String path : paths )
+			addImport(path);
+	}
+	
 	public void addImport(String importPath) {
 		
 		if ( importPaths == null )
@@ -311,8 +310,10 @@ public class Configuration {
 	
 	public void setLinkCommand(String linkCommand) {
 		
-		if( this.linkCommand == null )
-			this.linkCommand = Arrays.asList(linkCommand.split("\\s+"));
+		if( this.linkCommand == null ) {			
+			this.linkCommand = new ArrayList<String>();
+			this.linkCommand.addAll(Arrays.asList(linkCommand.split("\\s+")));
+		}
 	}
 	
 	public List<String> getLinkCommand(Job currentJob) {
@@ -328,8 +329,7 @@ public class Configuration {
 			this.target = target;
 	}
 	
-	public String getTarget() {
-		
+	public String getTarget() {		
 		return target;
 	}
 	

@@ -191,8 +191,13 @@ public class TACLiteral extends TACOperand
 		}
 		
 		BigInteger integer = new BigInteger(string, base);
-		int length = integer.bitLength(); 
-		if( length > bits )		
+		int length = integer.bitLength();
+		
+		//hack to deal with (-)128, for example
+		if( signed && length > bits && integer.negate().bitLength() > bits )
+			throw new NumberFormatException("Number too big");
+		
+		if( !signed && length > bits )		
 			throw new NumberFormatException("Number too big");
 		
 		if( integer.compareTo(BigInteger.ZERO) < 0 && !signed) //negative	
