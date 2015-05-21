@@ -318,5 +318,11 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/typechecker/break-outside-loop/Test.shadow"); 
 		enforce(Error.INVALID_STRUCTURE);		
-	}	
+	}
+	
+	@Test public void testStoreToSingleton() throws Exception
+	{
+		args.add("tests-negative/typechecker/store-to-singleton/Test.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
 }

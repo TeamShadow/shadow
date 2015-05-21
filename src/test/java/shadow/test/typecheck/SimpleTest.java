@@ -31,7 +31,7 @@ public class SimpleTest
 		}
 		
 		//add desired files to list		
-		args.add("tests-negative/parser/plus-plus/Test.shadow");
+		args.add("tests-negative/typechecker/store-to-singleton/Test.shadow");
 
 		Main.main(args.toArray(new String[] { }));		
 	}

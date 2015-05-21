@@ -38,6 +38,7 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -217,6 +218,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			
 			//Trying this:
 			return sequenceLeft.canAccept(right, substitutionType, errors);
+		}
+		
+		if( leftType instanceof SingletonType ) {
+			addError(errors, Error.INVALID_ASSIGNMENT, "Singleton reference cannot be assigned to");
+			return false;
 		}
 		
 		
