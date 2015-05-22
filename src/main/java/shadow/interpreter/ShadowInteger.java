@@ -35,6 +35,90 @@ public class ShadowInteger extends ShadowNumber {
 
 		fixValue();
 	}
+	
+	public ShadowInteger(int value)
+	{
+		this(BigInteger.valueOf(value), 4, true);		
+	}
+	
+	public static ShadowInteger parseNumber(String string) {
+		return parseNumber(string, false);
+	}
+	
+	public static ShadowInteger parseNumber(String string, boolean negated)
+	{
+		int base = 10;		
+		int bytes = 4;
+		boolean signed = true;
+		int end = 0;
+		string = string.toLowerCase();
+		
+		if( string.endsWith("uy") ) {
+			bytes = 1;
+			signed = false;
+			end = 2;
+		}
+		else if (string.endsWith("y")) {
+			bytes = 1;
+			end = 1;
+		}
+		else if (string.endsWith("us")) {
+			bytes = 2;
+			signed = false;
+			end = 2;
+		}	
+		else if (string.endsWith("s")) {
+			bytes = 2;
+			end = 1;
+		}
+		else if (string.endsWith("ui") ) {
+			bytes = 4;
+			signed = false;
+			end = 2;
+		}
+		else if (string.endsWith("i") ) {
+			bytes = 4;			
+			end = 1;
+		}
+		else if( string.endsWith("u") ) {
+			bytes = 4;
+			signed = false;
+			end = 1;
+		}
+		else if (string.endsWith("ul")) {
+			bytes = 8;
+			signed = false;
+			end = 2;
+		}					
+		else if (string.endsWith("l")) {
+			bytes = 8;
+			end = 1;
+		}
+		
+		string = string.substring(0, string.length() - end);
+		
+		if( string.startsWith("0b")) {
+			base = 2;
+			string = string.substring(2);
+		}
+		else if( string.startsWith("0c")) {
+			base = 8;
+			string = string.substring(2);
+		}
+		else if( string.startsWith("0x")) {
+			base = 16;
+			string = string.substring(2);
+		}
+		
+		BigInteger integer = new BigInteger(string, base);
+		BigInteger test = negated ? integer.negate() : integer;
+		int bits = signed ? bytes * 8 - 1 : bytes * 8; 
+		
+		if( test.bitLength() > bits )
+			throw new NumberFormatException("Value out of range");
+		
+		return new ShadowInteger(integer, bytes, signed);
+	}
 
 	private void fixValue()
 	{

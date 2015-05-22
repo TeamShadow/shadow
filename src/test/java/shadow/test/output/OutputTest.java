@@ -43,8 +43,13 @@ public class OutputTest {
 	@After
 	public void cleanup() throws IOException {
 		
-		// Remove the unit test executable
-		Files.delete(executable);
+		// Try to remove the unit test executable
+		try
+		{
+			Files.delete(executable);
+		}
+		catch(Exception e)
+		{}
 	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {

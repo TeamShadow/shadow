@@ -902,6 +902,8 @@ public class TypeUpdater extends BaseChecker {
 				String parameterName = parameter.getImage();
 				if( node.getParameterNames().contains( parameterName ) )
 					addError(Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + parameterName + " already defined as a parameter name");
+				if( parameter.getType() instanceof SingletonType )
+					addError(parameter, Error.INVALID_PARAMETERS, "Cannot define method with singleton parameter");				
 				node.addParameter(parameterName, parameter);
 			}	
 		}

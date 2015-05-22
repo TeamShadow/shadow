@@ -258,4 +258,9 @@ public class ShadowFloat extends ShadowNumber
 	{
 		return new ShadowFloat(Math.round(value));
 	}
+	
+	public static ShadowFloat parseFloat(String string)
+	{		
+		return new ShadowFloat(Float.parseFloat(string));
+	}
 }

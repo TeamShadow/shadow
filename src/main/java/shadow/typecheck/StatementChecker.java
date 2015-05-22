@@ -7,6 +7,13 @@ import java.util.List;
 
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.interpreter.ShadowBoolean;
+import shadow.interpreter.ShadowCode;
+import shadow.interpreter.ShadowDouble;
+import shadow.interpreter.ShadowFloat;
+import shadow.interpreter.ShadowInteger;
+import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.*;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.TypeCheckException.Error;
@@ -248,6 +255,9 @@ public class StatementChecker extends BaseChecker
 			{
 				Node parameter = node.jjtGetChild(i);
 				node.addParameter(parameter.getImage(), parameter);
+				
+				if( parameter.getType() instanceof SingletonType )
+					addError(parameter, Error.INVALID_PARAMETERS, "Cannot define method with singleton parameter");
 			}
 		}	
 		
@@ -317,7 +327,7 @@ public class StatementChecker extends BaseChecker
 			
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
 				addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
- 
+		
 			addSymbol( node.getImage(), node );
 		}
 	
@@ -3040,12 +3050,72 @@ public class StatementChecker extends BaseChecker
 	}
 	
 	@Override
-	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {						
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+			return WalkType.POST_CHILDREN;
+		
 		Type type = literalToType(node.getLiteral());
 		node.setType(type);
 		if( type != Type.NULL )
 			currentType.addReferencedType(type);
-		return WalkType.NO_CHILDREN;			
+		
+		//ugly but needed to find negation		
+		Node greatGrandparent = node.jjtGetParent().jjtGetParent().jjtGetParent();
+		boolean negated = false;
+
+		if( greatGrandparent instanceof ASTUnaryExpression ) {
+			Node greatGreat = greatGrandparent.jjtGetParent();
+			if( greatGreat instanceof ASTUnaryExpression && greatGreat.getImage().equals("-") )
+				negated = true;
+		}
+		
+		String literal = node.getImage();
+		String lower = literal.toLowerCase();
+		int length = literal.length();
+		
+		try
+		{		
+			if (literal.equals("null"))
+				node.setValue(ShadowValue.NULL);
+			else if (literal.startsWith("\'") && literal.endsWith("\'"))				
+				node.setValue(ShadowCode.parseCode(literal));			
+			else if (literal.startsWith("\"") && literal.endsWith("\""))
+				node.setValue(ShadowString.parseString(literal));
+			else if (literal.equals("true"))
+				node.setValue(new ShadowBoolean(true));
+			else if (literal.equals("false"))
+				node.setValue(new ShadowBoolean(false));
+			else if (lower.endsWith("f") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
+				node.setValue(ShadowFloat.parseFloat(lower.substring(0,  length - 1)));
+			else if (lower.endsWith("d") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
+				node.setValue(ShadowDouble.parseDouble(lower.substring(0, length - 1)));
+			else if (literal.indexOf('.') != -1 || (lower.indexOf('e') != -1 && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") ))
+				node.setValue(ShadowDouble.parseDouble(lower));
+			else
+				node.setValue(ShadowInteger.parseNumber(lower, negated));
+		}
+		catch(NumberFormatException e)
+		{
+			addError(node, Error.INVALID_LITERAL, "Value out of range");
+		}
+		catch(IllegalArgumentException e)
+		{
+			addError(node, Error.INVALID_LITERAL, e.getLocalizedMessage());
+		}
+		
+		return WalkType.POST_CHILDREN;			
+	}
+	
+	@Override
+	public Object visit(ASTNullLiteral node, Boolean secondVisit) throws ShadowException {
+		node.jjtGetParent().setImage(node.getImage());		
+		return WalkType.NO_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTBooleanLiteral node, Boolean secondVisit) throws ShadowException {
+		node.jjtGetParent().setImage(node.getImage());		
+		return WalkType.NO_CHILDREN;
 	}
 	
 	@Override

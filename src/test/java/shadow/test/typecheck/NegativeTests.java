@@ -325,4 +325,9 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/store-to-singleton/Test.shadow"); 
 		enforce(Error.INVALID_ASSIGNMENT);		
 	}
+	
+	@Test public void testInvalidLiteral() throws Exception {
+		args.add("tests-negative/typechecker/invalid-literal/Test.shadow");
+		enforce(Error.INVALID_LITERAL);			
+	}
 }

@@ -1,11 +1,7 @@
 package shadow.test.typecheck;
 
 import java.util.ArrayList;
-
-import org.junit.Test;
-
 import shadow.Main;
-import shadow.typecheck.TypeCheckException.Error;
 
 /**
  * 

@@ -89,4 +89,48 @@ public class ShadowString extends ShadowValue
 	{
 		return getValue();
 	}
+	
+	public static ShadowString parseString(String string)
+	{
+		StringBuilder builder = new StringBuilder(
+				string.substring(1, string.length() - 1));
+		int index = 0; while ((index = builder.indexOf("\\", index)) != -1)
+		{
+			switch (builder.charAt(index + 1))
+			{
+				case 'b':
+					builder.replace(index, index + 2, "\b");
+					break;
+				case 't':
+					builder.replace(index, index + 2, "\t");
+					break;
+				case 'n':
+					builder.replace(index, index + 2, "\n");
+					break;
+				case 'f':
+					builder.replace(index, index + 2, "\f");
+					break;
+				case 'r':
+					builder.replace(index, index + 2, "\r");
+					break;
+				case '\"':
+					builder.replace(index, index + 2, "\"");
+					break;
+				case '\'':
+					builder.replace(index, index + 2, "\'");
+					break;
+				case '\\':
+					builder.replace(index, index + 2, "\\");
+				case 'u':
+					//add in high surrogates and full 32-bit values at some point
+					char code = (char)Integer.parseInt(builder.substring(index + 2, index + 6), 16);
+					builder.replace(index, index + 6, String.valueOf(code));
+					break;
+				default:
+					throw new IllegalArgumentException("Unknown escape sequence \\" + builder.charAt(index + 1));
+			}
+			index++;
+		}
+		return new ShadowString(builder.toString());
+	}	
 }

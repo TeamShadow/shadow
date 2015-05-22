@@ -22,6 +22,7 @@ public class TypeCheckException extends Exception
 		INVALID_IMPORT("Invalid import", "Type or package cannot be imported"),
 		INVALID_INSTANCE("Invalid instance", "Target cannot be instanced"),
 		INVALID_LABEL("Invalid label", "Switch label is invalid"),
+		INVALID_LITERAL("Invalid literal", "Literal is invalid"),
 		INVALID_METHOD("Invalid method", "Method with specified signature is not defined in this context"),
 		INVALID_MODIFIER("Invalid modifier", "Modifier cannot be applied to this declaration"),
 		INVALID_OVERRIDE("Invalid override", "Method cannot override parent method"),

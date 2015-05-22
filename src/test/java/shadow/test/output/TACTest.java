@@ -36,8 +36,13 @@ public class TACTest {
 	@After
 	public void cleanup() throws IOException {
 		
-		// Remove the unit test executable
-		//Files.delete(executable);
+		// To to remove the unit test executable
+		try
+		{
+			Files.delete(executable);
+		}
+		catch(Exception e)
+		{}
 	}
 		
 	@Test public void testArrayList() throws Exception {

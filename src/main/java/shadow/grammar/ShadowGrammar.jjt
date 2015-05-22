@@ -793,7 +793,8 @@ void FormalParameter():
    {
      modifiers.checkParameterAndReturnModifiers(jjtThis);
      jjtThis.setModifiers(modifiers);
-     jjtThis.setImage(t.image);     
+     jjtThis.setImage(t.image);
+     jjtThis.setEndToken(t);     
    }
 }
 
@@ -886,17 +887,6 @@ void ReferenceType():
     PrimitiveType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } t = "]" { jjtThis.setEndToken(t); }  )+
   | ClassOrInterfaceType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } t = "]" { jjtThis.setEndToken(t); } )*
 }
-
-void StaticArrayType():
-{
-	debugPrint("STATIC ARRAY TYPE");
-	Token t;
-}
-{
-    PrimitiveType() "[" IntegerLiteral() t = "]" { jjtThis.setEndToken(t); }
-}
-
-
 
 void FunctionType():
 {
@@ -1469,25 +1459,6 @@ void Literal() :
 | t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.ULONG); }
 | BooleanLiteral() { jjtThis.setLiteral(Literal.BOOLEAN); }
 | NullLiteral() { jjtThis.setLiteral(Literal.NULL); jjtThis.addModifier(Modifiers.NULLABLE); jjtThis.removeModifier(Modifiers.IMMUTABLE); }  )
-}
-
-
-void IntegerLiteral(): //useful for static arrays, etc.
-{
-	debugPrint("INTEGER LITERAL");
-	Token t;
-}
-{
-     (
-		  t = <BYTE_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.BYTE); }
-		| t = <UBYTE_LITERAL > { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UBYTE); }
-		| t = <SHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.SHORT); }
-		| t = <USHORT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.USHORT); }
-		| t = <INT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.INT); }
-		| t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UINT); }
-		| t = <LONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.LONG); }
-		| t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.ULONG); }
-	)
 }
 
 void BooleanLiteral():
