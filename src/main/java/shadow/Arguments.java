@@ -24,6 +24,7 @@ public class Arguments {
 	public static final String OUTPUT			= "o";
 	public static final String VERBOSE			= "v";
 	public static final String RECOMPILE		= "f";
+	public static final String DOCTOOL			= "d";
 	
 	// Recognized long arguments
 	private static final String CONFIG_LONG 	= "config";
@@ -33,6 +34,7 @@ public class Arguments {
 	private static final String OUTPUT_LONG		= "output";
 	private static final String VERBOSE_LONG	= "verbose";
 	private static final String RECOMPILE_LONG  = "force-recompile";
+	private static final String DOCTOOL_LONG	= "doctool";
 	
 	private CommandLine commandLine;
 	
@@ -113,6 +115,7 @@ public class Arguments {
 		options.addOption(new Option(VERBOSE, VERBOSE_LONG, false, "Print detailed information about the compilation process"));
 		options.addOption(new Option(RECOMPILE, RECOMPILE_LONG, false, "Recompiles all source files, even if unnecessary"));
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
+		options.addOption(new Option(DOCTOOL, DOCTOOL_LONG, false, "Generate documentation for the Shadow file"));
 		
 		return options;
 	}

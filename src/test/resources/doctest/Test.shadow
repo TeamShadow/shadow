@@ -1,0 +1,18 @@
+import shadow:io@Console;
+
+class Test
+{
+    int a = 0;
+    int b = 0;
+    int c = 0;
+
+    public main(String[] args) => ()
+    {
+
+    }
+
+    private add(int a, int b, int c) => (int)
+    {
+        return a + b + c;
+    }
+}

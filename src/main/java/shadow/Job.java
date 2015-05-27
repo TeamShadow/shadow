@@ -24,6 +24,7 @@ public class Job {
 	private boolean noLink = false;	// Compile the given file, but do not link
 	private boolean verbose = false; // Print extra compilation info
 	private boolean forceRecompile = false; // Recompile all source files, even if unneeded
+	private boolean generateDocs = false; // Generate documentation from source files (no compilation)
 	
 	public Job(Arguments compilerArgs) throws FileNotFoundException {
 		
@@ -32,6 +33,7 @@ public class Job {
 		noLink = compilerArgs.hasOption(Arguments.NO_LINK);
 		verbose = compilerArgs.hasOption(Arguments.VERBOSE);
 		forceRecompile = compilerArgs.hasOption(Arguments.RECOMPILE);
+		generateDocs = compilerArgs.hasOption(Arguments.DOCTOOL);
 		
 		// Locate main source file
 		mainFile = Paths.get(compilerArgs.getMainFileArg()).toAbsolutePath();
@@ -78,6 +80,11 @@ public class Job {
 	public boolean isForceRecompile() {
 		
 		return forceRecompile;
+	}
+
+	public boolean isGenerateDocs() {
+		
+		return generateDocs;
 	}
 	
 	public Path getMainFile() {

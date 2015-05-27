@@ -21,9 +21,9 @@ import shadow.typecheck.type.Type;
 
 public class TypeChecker {
 
-	private File currentFile;	
-	private Package packageTree = null;
-	private TypeCollector collector = null;
+	protected File currentFile;	
+	protected Package packageTree = null;
+	protected TypeCollector collector = null;
 		
 	/**
 	 * Given the main file to compile, checks it
@@ -148,7 +148,7 @@ public class TypeChecker {
 		}
 	}
 	
-	private void addStandardTypes(Set<Type> types) {
+	protected void addStandardTypes(Set<Type> types) {
 		Package standard = Type.OBJECT.getPackage();
 		types.addAll(standard.getTypes());		
 		
