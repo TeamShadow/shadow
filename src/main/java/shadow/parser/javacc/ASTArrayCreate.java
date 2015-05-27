@@ -4,16 +4,35 @@ package shadow.parser.javacc;
 
 public
 @SuppressWarnings("all")
-class ASTArrayCreate extends DimensionNode {
-  public ASTArrayCreate(int id) {
+class ASTArrayCreate extends SignatureNode {
+	
+	private boolean hasCreate = false;
+	private boolean hasDefault = false;
+	
+	public ASTArrayCreate(int id) {
     super(id);
   }
+	
+	public void setCreate() {
+		hasCreate = true;
+	}
+	
+	public boolean hasCreate() {
+		return hasCreate;
+	}
+	
+	public void setDefault() {
+		hasDefault = true;
+	}
+	
+	public boolean hasDefault() {
+		return hasDefault;
+	}
 
   public ASTArrayCreate(ShadowParser p, int id) {
     super(p, id);
   }
-
-
+  
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
     return visitor.visit(this, data);

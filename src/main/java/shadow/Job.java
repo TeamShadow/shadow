@@ -40,7 +40,7 @@ public class Job {
 		
 		// Ensure that the main source file exists
 		if( !Files.exists(mainFile) )
-			throw new FileNotFoundException("Source file at " + mainFile.toAbsolutePath() + "not found");
+			throw new FileNotFoundException("Source file at " + mainFile.toAbsolutePath() + " not found");
 		
 		Path outputFile;
 		

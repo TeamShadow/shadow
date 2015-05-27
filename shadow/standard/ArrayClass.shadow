@@ -15,13 +15,9 @@ immutable class shadow:standard@ArrayClass extends GenericClass
 	{
 		for( int i = 0; i < classes->size; i += 1 )
 		{	
-			try
-			{			
-				readonly ArrayClass arrayClass = cast<ArrayClass>(check(classes[i]));				
-				if( internal.equal(arrayClass:internalParameter) )									
-					return arrayClass;				
-			}
-			recover {}
+			readonly ArrayClass arrayClass = cast<ArrayClass>(classes[i]);				
+			if( internal.equal(arrayClass:internalParameter) )									
+				return arrayClass;				
 		}
 		
 		throw CastException:create("Array type argument not found: <" # internal # ">");

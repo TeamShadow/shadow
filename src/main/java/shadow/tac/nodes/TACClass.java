@@ -1,5 +1,7 @@
 package shadow.tac.nodes;
 
+import shadow.interpreter.ShadowInteger;
+import shadow.interpreter.ShadowValue;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACMethod;
@@ -139,9 +141,9 @@ public class TACClass extends TACOperand
 				TACLoad classValue = new TACLoad(this, new TACFieldRef(this, _this, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class")); 
 				TACOperand genericClass = new TACCast(this, new SimpleModifiedType(Type.GENERIC_CLASS), classValue);
 				TACOperand generics = new TACFieldRef(this, genericClass, "parameters");
-				TACOperand parameter = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index)), false);
+				TACOperand parameter = new TACArrayRef(this, generics, new TACLiteral( this, new ShadowInteger(2*index)), false);
 				
-				methodTable = new TACArrayRef(this, generics, new TACLiteral( this, "" + (2*index + 1)), false );
+				methodTable = new TACArrayRef(this, generics, new TACLiteral( this, new ShadowInteger(2*index + 1)), false );
 				classData = new TACCast(this, new SimpleModifiedType(Type.CLASS), parameter );
 			}
 		}		
@@ -176,8 +178,8 @@ public class TACClass extends TACOperand
 					baseClass = new TACClass(this, arrayType.getBaseType());
 					TACOperand baseClassData = baseClass.getClassData();
 					
-					TACOperand flags = new TACLiteral(this, "" + LLVMOutput.ARRAY);
-					TACOperand size = new TACLiteral(this, "" + arrayType.getDimensions());
+					TACOperand flags = new TACLiteral(this, new ShadowInteger(LLVMOutput.ARRAY));
+					TACOperand size = new TACLiteral(this, new ShadowInteger(arrayType.getDimensions()));
 					TACOperand name = new TACFieldRef(this, baseClassData, "name");
 					TACOperand arrayClass = new TACNewObject(this, Type.CLASS);
 					
@@ -191,7 +193,7 @@ public class TACClass extends TACOperand
 					
 					TACMethodRef create = new TACMethodRef(this, Type.CLASS.getMatchingMethod("create", arguments));
 					
-					classData = new TACCall(this, block, create, arrayClass, flags, size, name, baseClassData, new TACLiteral(this, "null"), new TACLiteral(this, "null"));												
+					classData = new TACCall(this, block, create, arrayClass, flags, size, name, baseClassData, new TACLiteral(this, ShadowValue.NULL), new TACLiteral(this, ShadowValue.NULL));												
 					methodTable = null; //not needed for arrays				
 				}			
 				else if( type.encloses(outer) ) //we're currently inside this type and can get it from class values

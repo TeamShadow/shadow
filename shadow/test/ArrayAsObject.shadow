@@ -4,7 +4,7 @@ class shadow:test@ArrayAsObject
 {
 	public main( String[] args ) => ( )
 	{
-		Console out = Console:instance;	
+		Console out;	
 		int[] values = int:create[135];
 		int size = values->size;
 		

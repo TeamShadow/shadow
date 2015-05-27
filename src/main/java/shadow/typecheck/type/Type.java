@@ -632,7 +632,7 @@ public abstract class Type implements Comparable<Type>
 		{
 			accepts = rightType.isSubtype(this);
 			if( !accepts )
-				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this);
+				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
 		
 			return accepts;
 		}
@@ -640,7 +640,7 @@ public abstract class Type implements Comparable<Type>
 		{
 			accepts = isString();
 			if( !accepts )
-				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING);
+				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING, this);
 			
 			return accepts;
 		}
@@ -678,7 +678,7 @@ public abstract class Type implements Comparable<Type>
 				Type result = signature.getReturnTypes().getType(0);
 				accepts = result.isSubtype(this);
 				if( !accepts )
-					BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + result + " is not a subtype of " + this);				
+					BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + result + " is not a subtype of " + this, result, this);				
 				return accepts;
 			}
 			else							
@@ -686,7 +686,7 @@ public abstract class Type implements Comparable<Type>
 		}
 		else		
 		{
-			BaseChecker.addError(errors, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType);			
+			BaseChecker.addError(errors, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType, this);			
 			return false;						
 		}
 	}
@@ -741,14 +741,14 @@ public abstract class Type implements Comparable<Type>
 					candidate = signature;
 				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
 				{					
-					BaseChecker.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments);
+					BaseChecker.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments, arguments);
 					return null;
 				}				
 			}			
 		}			
 	
 		if( candidate == null )			
-			BaseChecker.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context");
+			BaseChecker.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context", arguments);
 		
 		return candidate;
 	}	

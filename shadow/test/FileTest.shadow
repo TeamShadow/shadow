@@ -10,7 +10,7 @@ class shadow:test@FileTest
 {
 	public main( String[] args ) => ()
 	{
-		Console console = Console:instance;
+		Console console;
 		
 		if( args->size == 0 )
 			throw Exception:create("No file specified!");
@@ -19,7 +19,7 @@ class shadow:test@FileTest
 		try
 		{
 			
-			file = File:create(check(args[0]));
+			file = File:create(args[0]);
 			 			
 			try
 			{	
@@ -41,11 +41,7 @@ class shadow:test@FileTest
 		catch ( IOException ex )
 		{
 			console.printLine(ex);
-		}
-		recover
-		{
-			console.printLine("Null argument given!");
-		}
+		}		
 		finally
 		{
 			file.close();

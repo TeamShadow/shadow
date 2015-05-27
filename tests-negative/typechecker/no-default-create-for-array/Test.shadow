@@ -1,0 +1,15 @@
+class Test
+{
+	String data;
+
+
+	public main() => ()
+	{
+		Test[] array = Test:create[10];	
+	}
+	
+	public create(String value)
+	{
+		data = value;
+	}	
+}

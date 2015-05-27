@@ -2,7 +2,7 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
 import shadow.typecheck.type.Modifiers;
@@ -33,7 +33,7 @@ class ASTModifiers extends SimpleNode {
   }
   
   public void dump(String prefix) {
-	  StringBuilder sb = new StringBuilder(prefix + "ASTModifiers(" + line + ":" + column + "): ");
+	  StringBuilder sb = new StringBuilder(prefix + "ASTModifiers(" + lineStart + ":" + columnStart + "): ");
 		  	  
 	  sb.append(modifiers.toString());	  
 

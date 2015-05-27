@@ -4,7 +4,7 @@ class shadow:test@IsTest
 {
 	public main() => ()
 	{
-		Console out = Console:instance;
+		Console out;
 		String words = "Hello";
 		Tortoise tortoise = Tortoise:create();
 		Object object  = Object:create();

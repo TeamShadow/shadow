@@ -4,7 +4,7 @@ class shadow:test@StringTest
 {
 	public main( String[] args ) => ()
 	{
-		Console out = Console:instance;
+		Console out;
 		out.printLine("Hello World!");
 		foreach( code letter in "blearghhhh" )
 			out.printLine(letter);

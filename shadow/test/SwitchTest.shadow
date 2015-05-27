@@ -4,7 +4,7 @@ class shadow:test@SwitchTest
 {
 	public main( String[] args ) => ()
 	{
-		Console out = Console:instance;		
+		Console out;		
 		
 		for( int i = 1; i <= 10; i += 1 )
 		{

@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +18,6 @@ import org.junit.Test;
 import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Job;
-import shadow.Loggers;
 import shadow.Main;
 
 public class OutputTest {
@@ -31,14 +29,8 @@ public class OutputTest {
 	private ArrayList<String> args = new ArrayList<String>();
 	
 	@Before
-	public void setup() throws Exception {
-		
-		// Set logger levels			
-		Loggers.SHADOW.setLevel(Level.INFO);
-		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
-		Loggers.PARSER.setLevel(Level.OFF);
-		
-		args.add("-v");
+	public void setup() throws Exception {		
+				
 		args.add("-o");
 		args.add(executableName);
 		
@@ -51,8 +43,13 @@ public class OutputTest {
 	@After
 	public void cleanup() throws IOException {
 		
-		// Remove the unit test executable
-		Files.delete(executable);
+		// Try to remove the unit test executable
+		try
+		{
+			Files.delete(executable);
+		}
+		catch(Exception e)
+		{}
 	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
@@ -257,5 +254,98 @@ public class OutputTest {
 				"Welcome, bedula\n" +
 				"That's the magic word!\n" +
 				"separate scopes\n");
-	}	
+	}
+	
+
+	@Test public void testArrayCreate() throws Exception {
+		args.add("shadow/test/ArrayCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"a[0]: \n" +
+						"a[1]: \n" +
+						"a[2]: \n" +
+						"a[3]: \n" +
+						"a[4]: \n" +
+						"a[5]: \n" +
+						"a[6]: \n" +
+						"a[7]: \n" +
+						"a[8]: \n" +
+						"a[9]: \n" +
+						"b[0]: Test\n" +
+						"b[1]: Test\n" +
+						"b[2]: Test\n" +
+						"b[3]: Test\n" +
+						"b[4]: Test\n" +
+						"b[5]: Test\n" +
+						"b[6]: Test\n" +
+						"b[7]: Test\n" +
+						"b[8]: Test\n" +
+						"b[9]: Test\n" +
+						"c[0]: 5\n" +
+						"c[1]: 5\n" +
+						"c[2]: 5\n" +
+						"c[3]: 5\n" +
+						"c[4]: 5\n" +
+						"c[5]: 5\n" +
+						"c[6]: 5\n" +
+						"c[7]: 5\n" +
+						"c[8]: 5\n" +
+						"c[9]: 5\n" +
+						"d[0]: 1\n" +
+						"d[1]: 2\n" +
+						"d[2]: 3\n" +
+						"d[3]: 4\n" +
+						"d[4]: 5\n" +
+						"d[5]: 6\n" +
+						"d[6]: 7\n" +
+						"d[7]: 8\n" +
+						"d[8]: 9\n" +
+						"d[9]: 10\n" +
+						"e[0][0]: 1\n" +
+						"e[0][1]: 2\n" +
+						"e[0][2]: 3\n" +
+						"e[0][3]: 4\n" +
+						"e[0][4]: 5\n" +
+						"e[1][0]: 6\n" +
+						"e[1][1]: 7\n" +
+						"e[1][2]: 8\n" +
+						"e[1][3]: 9\n" +
+						"e[1][4]: 10\n" +
+						"e[2][0]: 11\n" +
+						"e[2][1]: 12\n" +
+						"e[2][2]: 13\n" +
+						"e[2][3]: 14\n" +
+						"e[2][4]: 15\n" +
+						"f[0,0]: 1\n" +
+						"f[0,1]: 2\n" +
+						"f[0,2]: 3\n" +
+						"f[0,3]: 4\n" +
+						"f[0,4]: 5\n" +
+						"f[1,0]: 6\n" +
+						"f[1,1]: 7\n" +
+						"f[1,2]: 8\n" +
+						"f[1,3]: 9\n" +
+						"f[1,4]: 10\n" +
+						"f[2,0]: 11\n" +
+						"f[2,1]: 12\n" +
+						"f[2,2]: 13\n" +
+						"f[2,3]: 14\n" +
+						"f[2,4]: 15\n");
+	}
+	
+	@Test public void testArrayDefault() throws Exception {
+		args.add("shadow/test/ArrayDefaultTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"a[0]: Wombat\n" +
+						"a[1]: Wombat\n" +
+						"a[2]: Wombat\n" +
+						"a[3]: Wombat\n" +
+						"a[4]: Wombat\n" +
+						"b[0]: 42\n" +
+						"b[1]: 42\n" +
+						"b[2]: 42\n" +
+						"b[3]: 42\n" +
+						"b[4]: 42\n");
+	}
 }

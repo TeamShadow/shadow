@@ -4,7 +4,7 @@ class shadow:test@MethodOperations
 {
 	public main(String[] args) => ()
 	{
-		Console console = Console:instance;
+		Console console;
 	
 		int x = 6;
 		int y = 6;

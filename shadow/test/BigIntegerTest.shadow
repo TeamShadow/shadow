@@ -6,7 +6,7 @@ class BigIntegerTest
 	{
 		BigInteger a = BigInteger:create(1);
 		BigInteger b = BigInteger:create(2);
-		Console out = Console:instance;
+		Console out;
 		
 		for( int i = 0; i < 100; i += 1 )
 		{

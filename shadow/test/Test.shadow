@@ -4,7 +4,7 @@ class shadow:test@Test
 {
 	public main(String[] args) => ()
 	{
-		Console console = Console:instance;
+		Console console;
 		{
 			(int x, int y) = 5;
 			console.printLine(x === y); // is true

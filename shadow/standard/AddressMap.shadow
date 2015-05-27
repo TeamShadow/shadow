@@ -2,7 +2,6 @@ import shadow:utility@Map;
 import shadow:utility@IllegalModificationException;
 import shadow:io@Console;
 
-
 locked class shadow:standard@AddressMap
 	implements Map<ulong, ulong>
 {
@@ -11,7 +10,7 @@ locked class shadow:standard@AddressMap
 	constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	get int size = 0;
-	Node[] table;
+	nullable Node[] table;
 	float loadFactor;
 	int threshold;
 	int modifications = 0;
@@ -31,7 +30,7 @@ locked class shadow:standard@AddressMap
 		int capacity = 1;
 		while( capacity < initialCapacity ) //powers of 2
 			capacity <<= 1;
-		table = Node:create[capacity];
+		table = Node:null[capacity];
 		this:loadFactor = loadFactor;
 		threshold = cast<int>(capacity * loadFactor);
 	}
@@ -44,7 +43,7 @@ locked class shadow:standard@AddressMap
 			return;
 		}
 		
-		Node[] newTable = Node:create[newCapacity];
+		nullable Node[] newTable = Node:null[newCapacity];
 		int index;
 		int hash;		
 		
@@ -215,7 +214,7 @@ locked class shadow:standard@AddressMap
 	public clear() => ()
 	{
 		size = 0;
-		table = Node:create[DEFAULT_INITIAL_CAPACITY];
+		table = Node:null[DEFAULT_INITIAL_CAPACITY];
 		threshold = cast<int>(table->size * loadFactor);
 		modifications += 1;
 	}

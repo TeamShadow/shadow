@@ -1,11 +1,16 @@
 package shadow.typecheck;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
 import shadow.AST.ASTWalker.WalkType;
@@ -23,22 +28,20 @@ import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.TypeCheckException.Error;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InstantiationException;
-import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
-import shadow.typecheck.type.UninstantiatedClassType;
-import shadow.typecheck.type.UninstantiatedInterfaceType;
-import shadow.typecheck.type.UninstantiatedType;
 
 public abstract class BaseChecker extends AbstractASTVisitor
 {	
@@ -48,6 +51,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	}
 	
 	private static final Logger logger = Loggers.TYPE_CHECKER;
+	protected static String eol = System.getProperty("line.separator", "\n");
 
 	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
 	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
@@ -107,8 +111,41 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		}
 	}
 	
-	public static void addError(List<TypeCheckException> errors, Error type, String reason)
+	private static boolean containsUnknown(Type[] types)
 	{
+		for(Type type : types)
+			if( containsUnknown(type) )
+				return true; //don't add error if it has an Unknown Type in it
+		return false;
+	}
+	
+	private static boolean containsUnknown(Type type)
+	{
+		if( type == null)
+			return false;
+		if(type == Type.UNKNOWN)
+			return true;
+		if(type instanceof SequenceType)
+		{
+			SequenceType sequenceType = (SequenceType) type;
+			for(ModifiedType modifiedType : sequenceType)
+				if( modifiedType.getType() == Type.UNKNOWN)
+					return true;
+		}
+		else if( type instanceof ArrayType )
+		{
+			ArrayType arrayType = (ArrayType) type;
+			return containsUnknown(arrayType.getBaseType());			
+		}
+		
+		return false;
+	}
+	
+	public static void addError(List<TypeCheckException> errors, Error type, String reason, Type... errorTypes)
+	{
+		if( containsUnknown(errorTypes) )
+			return; //don't add error if it has an Unknown Type in it
+		
 		if( errors != null )
 			errors.add(new TypeCheckException(type, reason));		
 	}	
@@ -131,7 +168,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			else
 			{
 				String kind = (rightType instanceof PropertyType) ? "Property " : "Subscript ";				
-				addError(errors, Error.INVALID_ASSIGNMENT, kind + getSetType + " is not gettable");
+				addError(errors, Error.INVALID_ASSIGNMENT, kind + getSetType + " is not gettable", rightType);
 				return false;				
 			}
 		}
@@ -157,7 +194,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				return checkAssignment( indexType.getSetType(), right, assignmentType, substitutionType, errors );
 			else
 			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Subscript " + indexType + " cannot store " + rightType);
+				addError(errors, Error.INVALID_ASSIGNMENT, "Subscript " + indexType + " cannot store " + rightType, rightType);
 				return false;
 			}
 		}
@@ -183,6 +220,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			return sequenceLeft.canAccept(right, substitutionType, errors);
 		}
 		
+		if( leftType instanceof SingletonType ) {
+			addError(errors, Error.INVALID_ASSIGNMENT, "Singleton reference cannot be assigned to");
+			return false;
+		}
+		
 		
 		//type parameter binding follows different rules
 		if( substitutionType.equals(SubstitutionKind.TYPE_PARAMETER))
@@ -192,14 +234,14 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				TypeParameter typeParameter = (TypeParameter) leftType;
 				if( !typeParameter.acceptsSubstitution(rightType) )
 				{
-					addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type argument " + leftType);
+					addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type argument " + leftType, rightType);
 					return false;					
 				}					
 			}
 			else
 			{
 				//will this ever happen?
-				addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type " + leftType + " which is not a type parameter");
+				addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type " + leftType + " which is not a type parameter", rightType, leftType);
 				return false;				
 			}			
 		}
@@ -219,7 +261,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() && !leftType.getModifiers().isImmutable() )
 			//never a problem if either type is immutable (though the left could never be if the right isn't)
 			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side");
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side", rightType, leftType);
 				return false;
 			}
 			
@@ -239,7 +281,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			if( rightModifiers.isImmutable() && !leftModifiers.isReadonly() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
 			//never a problem if either type is immutable
 			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable and non-readonly left hand side");
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable and non-readonly left hand side", rightType, leftType);
 				return false;
 			}
 			
@@ -249,7 +291,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() && !rightType.getModifiers().isReadonly() && !leftType.getModifiers().isReadonly() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
 				//never a problem if either type is immutable or readonly
 				{
-					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with readonly value cannot be assigned to non-readonly left hand side");
+					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with readonly value cannot be assigned to non-readonly left hand side", rightType, leftType);
 					return false;
 				}				
 			}
@@ -258,7 +300,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		//nullability
 		if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 		{
-			addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side");			
+			addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);			
 			return false;
 		}		
 
@@ -267,18 +309,18 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			
 			if( leftModifiers.isConstant() )
 			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant");
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant", rightType, leftType);
 				return false;			
 			}
 			else if( !leftModifiers.isAssignable() )
 			{
 				//might be non-assignable due to immutable or readonly references
 				if( leftModifiers.isImmutable() )
-					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned in immutable context of expression " + left);
+					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned in immutable context of expression " + left, rightType, leftType);
 				else if( leftModifiers.isReadonly() )
-					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned in readonly context of expression " + left);
+					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned in readonly context of expression " + left, rightType, leftType);
 				else				
-					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left);
+					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left, rightType, leftType);
 				return false;
 			}
 		}
@@ -327,18 +369,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				addError( node, error.getError(), error.getMessage() );
 	}
 	
-	protected void addError(Node node, Error type, String msg)
-	{
-		String error = "";
-
-		error += "(" + node.getFile().getName() + ")";
-		error += "[" + node.getLine() + ":" + node.getColumn() + "] ";
+	protected void addError(Node node, Error type, String message, Type... errorTypes) {
+		if( containsUnknown(errorTypes) )
+			return; //don't add error if it has an Unknown Type in it
 		
-		if( type != null )
-			error += type.getName() + ": ";		
-		
-		error += msg;		
-		
+		String error = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
 		errorList.add(new TypeCheckException(type, error));
 	}
 	
@@ -348,22 +383,58 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	 * @param type One of the pre-defined types of errors.
 	 * @param msg The message associated with the error.
 	 */
-	protected void addError(Error type, String msg)
+	protected void addError(Error type, String message, Type... errorTypes) {
+		if( containsUnknown(errorTypes) )
+			return; //don't add error if it has an Unknown Type in it
+				
+		String error = makeMessage(type, message, getFile(), getLineStart(), getLineEnd(), getColumnStart(), getColumnEnd());		
+		errorList.add(new TypeCheckException(type, error));
+	}
+	
+	protected static String makeMessage(Error type, String message, File file, int lineStart, int lineEnd, int columnStart, int columnEnd )
 	{
-		String error = "";
+		StringBuilder error = new StringBuilder();
 		
-		if( getFile() != null )
-		{
-			error += "(" + getFile().getName() + ")";
-			error += "[" + getLine() + ":" + getColumn() + "] ";
-		}
+		if( file != null )
+			error.append("(" + file.getName() + ")");
+		
+		error.append("[" + lineStart + ":" + columnStart + "] ");
 		
 		if( type != null )
-			error += type.getName() + ": ";		
+			error.append(type.getName() + ": ");		
 		
-		error += msg;		
+		error.append(message);
 		
-		errorList.add(new TypeCheckException(type, error));
+		if( file != null) {
+		BufferedReader reader = null;
+		  try {
+			reader = new BufferedReader(new FileReader(file));
+			String line = "";			
+			for( int i = 1; i <= lineStart; ++i )
+				line = reader.readLine();
+			error.append(eol);
+			error.append(line);
+			if( lineStart == lineEnd ) {
+				error.append(eol);
+				for( int i = 1; i <= columnEnd; ++i )
+					if( i >= columnStart )
+						error.append('^');
+					else
+						error.append(' ');
+			}
+		  } 
+		  catch (FileNotFoundException e) {
+			  //do nothing, can't add additional file data
+		  }
+		  catch (IOException e) {}
+		  finally {
+			  if( reader != null )
+				try { reader.close(); }
+			  	catch (IOException e) {}
+		  }
+		}
+		
+		return error.toString();
 	}
 	
 	/**
@@ -606,7 +677,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		else
 		{	
 			if( !classIsAccessible( type, declarationType  ) )		
-				addError(Error.ILLEGAL_ACCESS, "Class " + type + " not accessible from current context");
+				addError(Error.ILLEGAL_ACCESS, "Class " + type + " not accessible from current context", type);
 			
 			if( child.jjtGetNumChildren() == 1 ) //contains arguments
 			{
@@ -634,7 +705,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				}
 				else
 				{
-					addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
+					addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type, type);
 					type = Type.UNKNOWN;
 				}										
 			}
@@ -666,7 +737,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				else
 				{
 					if( !classIsAccessible( type, currentType  ) )		
-						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
+						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context", type);
 					
 					if( child.jjtGetNumChildren() == 1 ) //contains arguments
 					{
@@ -693,13 +764,13 @@ public abstract class BaseChecker extends AbstractASTVisitor
 						}
 						else
 						{
-							addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
+							addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type, type);
 							type = Type.UNKNOWN;
 						}										
 					}
 					else if( type.isParameterized() ) //parameterized but no parameters!	
 					{
-						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments are not supplised for parameterized type " + child.getImage());
+						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments are not supplied for parameterized type " + child.getImage());
 						type = Type.UNKNOWN;
 					}
 					

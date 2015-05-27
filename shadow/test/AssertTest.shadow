@@ -4,7 +4,7 @@ class shadow:test@AssertTest
 {
 	public main( String[] args ) => ()
 	{
-		Console out = Console:instance;
+		Console out;
 		int x = 5;
 		String value = "Lettuce";
 		

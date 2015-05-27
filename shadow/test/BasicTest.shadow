@@ -7,7 +7,7 @@ class shadow:test@BasicTest
 	public main( String[] args ) => ()
 	{
 		
-		Console out = Console:instance;		
+		Console out;		
 		
 		out.printLine("Count it off!");
 		

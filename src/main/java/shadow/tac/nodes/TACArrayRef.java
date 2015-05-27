@@ -6,13 +6,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import shadow.parser.javacc.ASTTypeArguments;
+import shadow.interpreter.ShadowInteger;
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -70,7 +67,7 @@ public class TACArrayRef extends TACReference
 				new TACBranch(this, condition, negativeCheck, throwLabel);				
 				negativeCheck.new TACLabel(this);
 				
-				condition = new TACBinary(this, length, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '}', new TACLiteral(this, "0"), true);
+				condition = new TACBinary(this, length, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '}', new TACLiteral(this, new ShadowInteger(0)), true);
 				
 				TACLabelRef computeOffset = new TACLabelRef(this);
 				new TACBranch(this, condition, computeOffset, throwLabel);
@@ -99,13 +96,12 @@ public class TACArrayRef extends TACReference
 			{			
 				ArrayType intArray = new ArrayType(Type.INT);
 				TACClass intClass = new TACClass(this, Type.INT);
-				TACOperand bounds  = new TACNewArray(this, intArray, intClass.getClassData(), new TACLiteral(this, "" + ops.size()));
-				iter = ops.iterator();
+				TACOperand bounds  = new TACNewArray(this, intArray, intClass.getClassData(), new TACLiteral(this, new ShadowInteger(ops.size())));				iter = ops.iterator();
 				
 				//fill the array with the bad indices
 				for( int i = 0; i < ops.size(); i++ )
 				{
-					TACArrayRef arrayRef = new TACArrayRef(this, bounds, new TACLiteral(this, "" + i), false);
+					TACArrayRef arrayRef = new TACArrayRef(this, bounds, new TACLiteral(this, new ShadowInteger(i)), false);
 					new TACStore(this, arrayRef, iter.next());
 				}
 				

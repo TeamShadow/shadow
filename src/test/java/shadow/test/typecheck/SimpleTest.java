@@ -1,9 +1,6 @@
 package shadow.test.typecheck;
 
 import java.util.ArrayList;
-import org.apache.log4j.Level;
-
-import shadow.Loggers;
 import shadow.Main;
 
 /**
@@ -21,17 +18,17 @@ public class SimpleTest
 		
 		ArrayList<String> args = new ArrayList<String>();
 
-		// set the levels of our loggers
-		Loggers.SHADOW.setLevel(Level.DEBUG);
-		Loggers.TYPE_CHECKER.setLevel(Level.INFO);
-		Loggers.PARSER.setLevel(Level.ALL);	
+		//args.add("-v");
+		args.add("--typecheck");
+
+		if( System.getProperty("os.name").contains("Windows")) {
+			args.add("-c");
+			args.add("windows.xml");
+		}
 		
-		args.add("-v");
-		
-		//add desired files to list
-		//args.add("--compile");
-		args.add("shadow/test/Matrix.shadow"); 		
-		//args.add("tests/compile/Readonly.shadow");
+		//add desired files to list		
+		args.add("tests-negative/typechecker/store-to-singleton/Test.shadow");
+
 		Main.main(args.toArray(new String[] { }));		
 	}
 }

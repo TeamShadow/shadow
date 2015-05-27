@@ -19,6 +19,7 @@ import shadow.typecheck.type.Type;
  * @author Jacob Young
  */
 
+//TODO: Add optimization so that initialized arrays don't need to be cleared to all zeroes
 public class TACNewArray extends TACOperand
 {
 	private ArrayType type;

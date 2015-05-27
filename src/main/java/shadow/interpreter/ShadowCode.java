@@ -56,4 +56,50 @@ public class ShadowCode extends ShadowValue
 	{
 		return new StringBuilder(1).appendCodePoint(getValue()).toString();
 	}
+	
+	public static ShadowCode parseCode(String literal) {
+		int value;
+		if (literal.charAt(1) == '\\')
+		{
+			switch (literal.charAt(2))
+			{
+				case '\'':
+					value = '\'';
+					break;
+				case '\"':
+					value = '\"';
+					break;
+				case '\\':
+					value = '\\';
+					break;
+				case 'b':
+					value = '\b';
+					break;
+				case 'f':
+					value = '\f';
+					break;
+				case 'n':
+					value = '\n';
+					break;
+				case 'r':
+					value = '\r';
+					break;
+				case 't':
+					value = '\t';
+					break;
+				case 'u':
+					value = Integer.parseInt(
+							literal.substring(3, literal.length() - 1), 16);	
+					break;
+				default:
+					value = Integer.parseInt(
+							literal.substring(3, literal.length() - 1), 8);
+					break;
+			}
+		}
+		else
+			value = literal.codePointAt(1);
+		
+		return new ShadowCode(value);
+	}
 }

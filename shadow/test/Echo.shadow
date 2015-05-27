@@ -4,20 +4,10 @@ class Echo
 {
 	public main(String[] args) => ()
 	{
-		Console screen = Console:instance;
+		Console io;
 		String input;
 		
-		screen.printLine("Fibonacci of 10: " # fibonacci(10));
-		
-/*		
-		do
-		{
-			screen.print("Say something: ");
-			(input, ) = screen.readLine();
-			screen.printLine(input);		
-		} while( input != "quit" );
-	*/	
-	
+		io.printLine("Fibonacci of 10: " # fibonacci(10));
 	}
 	
 	public fibonacci( int n ) => (int)

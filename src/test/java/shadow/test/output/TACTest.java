@@ -6,13 +6,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import shadow.Job;
-import shadow.Loggers;
 import shadow.Main;
 
 public class TACTest {
@@ -25,13 +23,7 @@ public class TACTest {
 	
 	@Before
 	public void setup() throws Exception {
-		
-		// Set logger levels			
-		Loggers.SHADOW.setLevel(Level.INFO);
-		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
-		Loggers.PARSER.setLevel(Level.OFF);
-		
-		args.add("-v");
+		//args.add("-v");
 		args.add("-o");
 		args.add(executableName);
 		
@@ -44,8 +36,13 @@ public class TACTest {
 	@After
 	public void cleanup() throws IOException {
 		
-		// Remove the unit test executable
-		Files.delete(executable);
+		// To to remove the unit test executable
+		try
+		{
+			Files.delete(executable);
+		}
+		catch(Exception e)
+		{}
 	}
 		
 	@Test public void testArrayList() throws Exception {
@@ -253,6 +250,19 @@ public class TACTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
+	@Test public void testArrayCreate() throws Exception {
+		args.add("shadow/test/ArrayCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 	
+	@Test public void testArrayDefault() throws Exception {
+		args.add("shadow/test/ArrayDefaultTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testRandom() throws Exception {
+		args.add("shadow/test/RandomTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 	
 }

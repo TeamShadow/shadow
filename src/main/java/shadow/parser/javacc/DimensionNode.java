@@ -1,10 +1,14 @@
 package shadow.parser.javacc;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
-public class DimensionNode extends SimpleNode {
+import shadow.tac.nodes.TACOperand;
 
+public class DimensionNode extends SimpleNode {	
+    private List<Integer> arrayDimensions = new ArrayList<Integer>();
+    private int currentDimensions = 1;	
 	
 	public DimensionNode(int id) {
     	super(id);
@@ -13,9 +17,6 @@ public class DimensionNode extends SimpleNode {
     public DimensionNode(ShadowParser sp, int id) {
     	super(sp, id);
     }
-	
-    private List<Integer> arrayDimensions = new ArrayList<Integer>();
-    private int currentDimensions = 1;
     
     public List<Integer> getArrayDimensions() {
   	  return arrayDimensions;
@@ -28,5 +29,12 @@ public class DimensionNode extends SimpleNode {
     public void pushDimensions() {
   	  arrayDimensions.add(currentDimensions);
   	  currentDimensions = 1;
+    }
+    
+    public int getTotalDimensions() {
+    	int total = 0;
+    	for( int value : arrayDimensions )
+    		total += value;
+    	return total;
     }
 }

@@ -5,7 +5,7 @@ class shadow:test@ForeachTest
 {
 	public main( String[] args ) => ()
 	{	
-		Console out = Console:instance;
+		Console out;
 		int[] array = int:create[20];		
 		double[,,] values = double:create[2,4,3];
 	

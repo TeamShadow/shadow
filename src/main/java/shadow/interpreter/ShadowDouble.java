@@ -254,4 +254,9 @@ public class ShadowDouble extends ShadowNumber
 	{
 		return new ShadowDouble(Math.round(value));
 	}
+	
+	public static ShadowDouble parseDouble(String string)
+	{		
+		return new ShadowDouble(Double.parseDouble(string));
+	}
 }

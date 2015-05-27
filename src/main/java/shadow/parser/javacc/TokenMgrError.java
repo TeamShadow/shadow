@@ -3,7 +3,6 @@
 package shadow.parser.javacc;
 
 /** Token Manager Error. */
-@SuppressWarnings("all")
 public class TokenMgrError extends Error
 {
 

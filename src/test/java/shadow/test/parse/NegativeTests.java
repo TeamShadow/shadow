@@ -2,11 +2,9 @@ package shadow.test.parse;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
 
-import shadow.Loggers;
 import shadow.Main;
 import shadow.parser.javacc.ParseException;
 
@@ -16,12 +14,7 @@ public class NegativeTests {
 
 	@Before
 	public void setup() throws Exception {
-		// set the levels of our loggers				
-		Loggers.SHADOW.setLevel(Level.INFO);
-		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
-		Loggers.PARSER.setLevel(Level.OFF);
 		
-		args.add("-v");
 		args.add("--typecheck");
 		
 		if( System.getProperty("os.name").contains("Windows")) {

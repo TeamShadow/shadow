@@ -6,24 +6,20 @@ class shadow:test@CommandLine
 	{
 		String value = "bleh";
 		String word = "bleh";
-		Console out = Console:instance;
+		Console out;
 		
 		if( value == word )
 			out.printLine("Yes!");
 		
-		try
+		for( int i = args->size - 1; i >= 0; i -= 1 )
 		{
-			for( int i = args->size - 1; i >= 0; i -= 1 )
-			{
-				value = check(args[i]);
-				out.printLine(value);
-				
-				if( value == word )
-					out.printLine("matches!");
-				else
-					out.printLine("doesn't match!");
-			}
-		}
-		recover {}
+			value = args[i];
+			out.printLine(value);
+			
+			if( value == word )
+				out.printLine("matches!");
+			else
+				out.printLine("doesn't match!");
+		}		
 	}
 }

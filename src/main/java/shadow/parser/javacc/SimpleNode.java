@@ -2,7 +2,7 @@ package shadow.parser.javacc;
 
 import java.io.File;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
 import shadow.typecheck.type.InstantiationException;
@@ -22,17 +22,17 @@ public class SimpleNode implements Node {
     
     protected String image;
     protected File file;
-    protected int line, column;
+    protected int lineStart, lineEnd, columnStart, columnEnd;
     
     protected Type type;		// used by the type checker    
     protected Modifiers modifiers = new Modifiers(); 	// used by the type checker
     
-	private Type enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
+	private Type enclosingType;	// used by the type checker (refers to the class where the node is used, for private/protected visibility)
 
 	public SimpleNode(int id) {
     	this.id = id;
     	image = "";    	
-    	line = column = -1;
+    	lineStart = columnStart = columnEnd = -1;
     	type = null;    
     	enclosingType = null;
     }
@@ -42,11 +42,11 @@ public class SimpleNode implements Node {
     	//parser = sp;
     	image = "";
     	if( sp instanceof ShadowFileParser )
-    		file = ((ShadowFileParser)sp).getFile();    	
-    	//line = sp.token.beginLine;
-    	//column = sp.token.beginColumn;
-    	line = sp.token.next.beginLine;
-    	column = sp.token.next.beginColumn;
+    		file = ((ShadowFileParser)sp).getFile();
+    	lineStart = sp.token.next.beginLine;
+    	lineEnd = sp.token.next.endLine;
+    	columnStart = sp.token.next.beginColumn;
+    	columnEnd = sp.token.next.endColumn;
     	type = null;    	
     	enclosingType = null;
     }
@@ -61,6 +61,9 @@ public class SimpleNode implements Node {
 			children = c;
 		}
 		children[i] = n;
+		//updates the ending line and column of the node based on children
+		lineEnd = n.getLineEnd();
+		columnEnd = n.getColumnEnd();		
 	}
 	
 	public void jjtSwapChild(Node n, int i) {
@@ -119,26 +122,41 @@ public class SimpleNode implements Node {
 		this.image = image;
 	}
 	
-	public int getLine() {
-		return line;
+	@Override
+	public int getLineStart() {
+		return lineStart;
 	}
 	
-	public void setLine(int line) {
-		this.line = line;
+	@Override
+	public void setLineStart(int line) {
+		this.lineStart = line;
 	}
 	
-	public int getColumn() {
-		return column;
+	@Override
+	public int getLineEnd() {
+		return lineEnd;
+	}
+	
+	@Override
+	public void setLineEnd(int line) {
+		this.lineEnd = line;
+	}
+	
+	@Override
+	public int getColumnStart() {
+		return columnStart;
 	}
 
-	public void setColumn(int column) {
-		this.column = column;
+	@Override
+	public void setColumnStart(int column) {
+		this.columnStart = column;
 	}
 	
-	public String getLocation() {
-		return "(" + getLine() + ":" + getColumn() + ")";
+	@Override
+	public void setColumnEnd(int column) {
+		this.columnEnd = column;
 	}
-	
+
 	public Type getType() {
 		return type;
 	}
@@ -150,9 +168,9 @@ public class SimpleNode implements Node {
     public void dump(String prefix) {
     	String className = this.getClass().getSimpleName();
     	if(image == null || image.length() == 0)
-    		logger.debug(prefix + className + "(" + line + ":" + column + ")");
+    		logger.debug(prefix + className + "(" + lineStart + ":" + columnStart + ")");
     	else
-    		logger.debug(prefix + className + "(" + line + ":" + column + "): " + image);
+    		logger.debug(prefix + className + "(" + lineStart + ":" + columnStart + "): " + image);
         dumpChildren(prefix);
     }
 
@@ -235,8 +253,9 @@ public class SimpleNode implements Node {
 		//node.parser = parser;
 		node.image = image;
 		node.file = file;
-		node.line = line;
-		node.column = column;
+		node.lineStart = lineStart;
+		node.columnStart = columnStart;
+		node.columnEnd = columnEnd;
 	    node.type = type;
 	    node.modifiers = new Modifiers(modifiers);
 	    node.enclosingType = enclosingType;	// used by the type checker (refers to the class were the node is used, for private/protected visibility)
@@ -255,5 +274,14 @@ public class SimpleNode implements Node {
 		return this;
 	}
 
-		
+	@Override
+	public int getColumnEnd() {
+		return columnEnd;
+	}
+	
+	@Override
+	public void setEndToken(Token t) {
+		lineEnd = t.endLine;
+		columnEnd = t.endColumn;
+	}
 }

@@ -1,0 +1,10 @@
+class Test
+{
+	public main() => ()
+	{
+		int a = 5;
+		
+		if( a < 6 )
+			break;
+	}
+}

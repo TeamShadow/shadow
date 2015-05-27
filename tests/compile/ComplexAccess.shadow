@@ -23,15 +23,9 @@ class ComplexAccess {
     	int c;
     	
     	ComplexAccess[] first = ComplexAccess:create[100];
-    	first[0] = ComplexAccess:create();
     	
-    	try
-    	{
-    		c = check(first[0]).stuff().jam(10);    	
-    		ComplexAccess outer = ComplexAccess:create();    	
-    		check(check(outer->i)->o)->i = Inner:create();    		
-    	}
-    	recover
-    	{}
+		c = first[0].stuff().jam(10);    	
+		ComplexAccess outer = ComplexAccess:create();    	
+		check(check(outer->i)->o)->i = Inner:create();    		
     }
 }

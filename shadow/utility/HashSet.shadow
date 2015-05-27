@@ -6,7 +6,7 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 	constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	get int size = 0;
-	Node[] table;
+	nullable Node[] table;
 	float loadFactor;
 	int threshold;
 	int modifications = 0;
@@ -26,7 +26,7 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 		int capacity = 1;
 		while( capacity < initialCapacity )
 			capacity <<= 1;
-		table = Node:create[capacity];
+		table = Node:null[capacity];
 		this:loadFactor = loadFactor;
 		threshold = cast<int>(capacity * loadFactor);
 	}
@@ -39,7 +39,7 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 			return;
 		}
 		
-		Node[] newTable = Node:create[newCapacity];
+		nullable Node[] newTable = Node:null[newCapacity];
 		int index;
 		int hash;		
 		
@@ -180,7 +180,7 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 	public clear() => ()
 	{
 		size = 0;
-		table = Node:create[DEFAULT_INITIAL_CAPACITY];
+		table = Node:null[DEFAULT_INITIAL_CAPACITY];
 		threshold = cast<int>(table->size * loadFactor);
 		modifications += 1;
 	}
@@ -196,19 +196,16 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 			current = next(null);
 		}
 		public next( nullable Node position ) => ( nullable Node )
-		{	
-			try
-			{				
-				if( position !== null )
-					position = check(position)->next;
-			}
-			recover{}
+		{		
+			if( position !== null )
+				position = check(position)->next;
 		
 			while( position === null and index < table->size )
 			{				
 				position = table[index];				
 				index += 1;					
 			}
+			
 			return position; //returns null if nothing left			
 		}
 
@@ -227,15 +224,9 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 		public next() => ( V value )
 		{
 			checkForModifications();
-			try
-			{				 
-				( nullable V value, current ) = ( check(current)->value, next(current) );
-				return check(value);
-			}
-			recover
-			{
-				throw IndexOutOfBoundsException:create();
-			}
+			 
+			( nullable V value, current ) = ( check(current)->value, next(current) );
+			return check(value);
 		}
 	}
 }

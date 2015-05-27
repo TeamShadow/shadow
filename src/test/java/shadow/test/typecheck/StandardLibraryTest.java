@@ -2,11 +2,9 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
 
-import shadow.Loggers;
 import shadow.Main;
 
 public class StandardLibraryTest {
@@ -14,13 +12,8 @@ public class StandardLibraryTest {
 	private ArrayList<String> args = new ArrayList<String>();
 	
 	@Before
-	public void setup() throws Exception {
-		// set the levels of our loggers				
-		Loggers.SHADOW.setLevel(Level.INFO);
-		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
-		Loggers.PARSER.setLevel(Level.OFF);
-		
-		args.add("-v");
+	public void setup() throws Exception {		
+		//args.add("-v");
 		args.add("--typecheck");
 		
 		if( System.getProperty("os.name").contains("Windows")) {

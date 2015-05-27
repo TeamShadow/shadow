@@ -4,7 +4,7 @@ class shadow:test@ComplexTest
 {
 	public main() => ()
 	{
-		Console out = Console:instance;
+		Console out;
 		Complex a = Complex:create(2,-1);
 		out.printLine("a: " # a);				
 		Complex b = Complex:create(3,5);

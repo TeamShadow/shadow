@@ -4,18 +4,17 @@ implements Deque<E>
 {
 	get int size = 0;
 	int start = 0;
-	E[] elements = E:create[10];
+	nullable E[] elements = E:null[10];
 	int modifications = 0;
 	
 	public isEmpty() => ( boolean )
 	{
 		return size == 0;
-	}
-	
+	}	
 		
 	private grow() => ()
 	{
-		E[] temp = E:create[elements->size * 2];
+		nullable E[] temp = E:null[elements->size * 2];
 		for( int i = 0; i < elements->size; i += 1 )
 			temp[i] = elements[(start + i) % elements->size];
 		elements = temp;
@@ -53,31 +52,17 @@ implements Deque<E>
 	public getFirst() => (E element)
 	{
 		if( size == 0 )
-			throw NoSuchElementException:create();
-		
-		try
-		{
-			return check(elements[start]);
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
-		}
+			throw NoSuchElementException:create();		
+
+		return check(elements[start]);		
 	}
 	
 	public getLast() => (E element)
 	{
 		if( size == 0 )
 			throw NoSuchElementException:create();
-		
-		try
-		{
-			return check(elements[(start + size - 1) % elements->size]);
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
-		}
+
+		return check(elements[(start + size - 1) % elements->size]);
 	}
 	
 	public removeFirst() => (E element)
@@ -85,35 +70,22 @@ implements Deque<E>
 		if( size == 0 )
 			throw NoSuchElementException:create();
 		
-		try
-		{		
-			E temp = check(elements[start]); 
-			start = (start + 1) % elements->size;
-			size -= 1;
-			modifications += 1;			
-			return temp;
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
-		}
+		E temp = check(elements[start]); 
+		start = (start + 1) % elements->size;
+		size -= 1;
+		modifications += 1;			
+		return temp;
 	}
 	
 	public removeLast() => ( E element )
 	{
 		if( size == 0 )
 			throw NoSuchElementException:create();
-		try
-		{
-			E temp = check(elements[(start + size - 1) % elements->size]);
-			size -= 1;
-			modifications += 1;			
-			return temp;
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
-		}
+	
+		E temp = check(elements[(start + size - 1) % elements->size]);
+		size -= 1;
+		modifications += 1;			
+		return temp;
 	}
 		
 	public clear() => ( ArrayDeque<E> )
@@ -129,18 +101,15 @@ implements Deque<E>
 	{
 		MutableString string = MutableString:create("[");
 		boolean first = true;
-		try
-		{			
-			foreach( E value in this )
-			{
-				if( first )
-					first = false;
-				else
-					string.append(", ");
-				string.append(#value);
-			}
+			
+		foreach( E value in this )
+		{
+			if( first )
+				first = false;
+			else
+				string.append(", ");
+			string.append(#value);
 		}
-		recover {}
 		
 		return string.append("]").toString();
 	}
@@ -172,17 +141,10 @@ implements Deque<E>
 			checkForModifications();
 			if( index >= size )
 				throw IndexOutOfBoundsException:create();
-			try
-			{
-				E temp = check(elements[(start + index) % elements->size]);
-				index += 1;
-				return temp;		
-			}
-			recover
-			{
-				//should never happen
-				throw UnexpectedNullException:create();
-			}
+	
+			E temp = check(elements[(start + index) % elements->size]);
+			index += 1;
+			return temp;
 		}
 	}
 }

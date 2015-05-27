@@ -4,23 +4,23 @@ class shadow:test@ConsoleTest
 {
 	public main( String[] args ) => ()
 	{
-		Console console = Console:instance;
-		Console:instance.printLine(12345);
+		Console console;
+		console.printLine(12345);
 		console.print('H');
-		Console:instance.print('e');
+		console.print('e');
 		console.print('l');
-		Console:instance.print('l');
+		console.print('l');
 		console.print('o');
-		Console:instance.print(' ');
+		console.print(' ');
 		console.print('W');
-		Console:instance.print('o');
+		console.print('o');
 		console.print('r');
-		Console:instance.print('l');
+		console.print('l');
 		console.print('d');
-		Console:instance.print('!');
+		console.print('!');
 		console.print('\n');
-		Console:instance.printLine();
-		Console:instance.print("Test String\r\n");
+		console.printLine();
+		console.print("Test String\r\n");
 
 		console.printLine();
 		console.print("Enter your name: ");

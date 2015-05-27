@@ -7,7 +7,7 @@ class shadow:test@LinkedListTest
 	{
 		LinkedList<String> list = LinkedList<String>:create();
 		LinkedList<int> numbers = LinkedList<int>:create();
-		Console out = Console:instance;
+		Console out;
 		
 		
 		list.add("Fox");

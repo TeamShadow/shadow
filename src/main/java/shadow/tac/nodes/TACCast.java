@@ -1,5 +1,6 @@
 package shadow.tac.nodes;
 
+import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.tac.nodes.TACConversion.Kind;
@@ -103,7 +104,7 @@ public class TACCast extends TACOperand
 						TACReference var = new TACVariableRef(this,
 								getBuilder().getMethod().addTempLocal(destination));
 						
-						TACLiteral nullLiteral = new TACLiteral(this, "null");
+						TACLiteral nullLiteral = new TACLiteral(this, ShadowValue.NULL);
 						TACOperand compare = new TACSame(this, op, nullLiteral);
 						new TACBranch(this, compare, nullLabel, convertLabel);
 						

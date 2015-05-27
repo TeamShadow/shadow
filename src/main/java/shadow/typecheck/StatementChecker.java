@@ -7,6 +7,13 @@ import java.util.List;
 
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.interpreter.ShadowBoolean;
+import shadow.interpreter.ShadowCode;
+import shadow.interpreter.ShadowDouble;
+import shadow.interpreter.ShadowFloat;
+import shadow.interpreter.ShadowInteger;
+import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.*;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.typecheck.TypeCheckException.Error;
@@ -146,13 +153,13 @@ public class StatementChecker extends BaseChecker
 			int defaultCounter = 0;
 			Type type = node.jjtGetChild(0).getType();
 			if(!type.isIntegral() && !type.isString() && !(type instanceof EnumType))
-				addError(Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in switch statement, only integral, String, and enum types allowed");
+				addError(Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in switch statement, only integral, String, and enum types allowed", type);
 			for(int i=1; i<node.jjtGetNumChildren(); ++i) {
 				Node childNode = node.jjtGetChild(i);
 				if(childNode.getClass() == ASTSwitchLabel.class) {
 					if(childNode.getType() != null){ //default label should have null type 
 						if(!childNode.getType().isSubtype(type))
-							addError(childNode,Error.INVALID_LABEL,"Label type " + childNode.getType() + " does not match switch type " + type);
+							addError(childNode,Error.INVALID_LABEL,"Label type " + childNode.getType() + " does not match switch type " + type, childNode.getType(), type);
 					}
 					else
 						defaultCounter++;
@@ -184,7 +191,7 @@ public class StatementChecker extends BaseChecker
 					result = type;
 				else if( !type.isSubtype(result) ) //neither is subtype of other, panic!
 				{
-					addError(Error.MISMATCHED_TYPE, "Supplied type " + type + " does not match type " + result + " in switch label");
+					addError(Error.MISMATCHED_TYPE, "Supplied type " + type + " does not match type " + result + " in switch label", type, result);
 					result = Type.UNKNOWN;
 					break;
 				}
@@ -248,6 +255,9 @@ public class StatementChecker extends BaseChecker
 			{
 				Node parameter = node.jjtGetChild(i);
 				node.addParameter(parameter.getImage(), parameter);
+				
+				if( parameter.getType() instanceof SingletonType )
+					addError(parameter, Error.INVALID_PARAMETERS, "Cannot define method with singleton parameter");
 			}
 		}	
 		
@@ -317,7 +327,7 @@ public class StatementChecker extends BaseChecker
 			
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
 				addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
- 
+		
 			addSymbol( node.getImage(), node );
 		}
 	
@@ -350,7 +360,7 @@ public class StatementChecker extends BaseChecker
 						}
 					
 						if( !foundDefault )
-							addError(Error.MISSING_CREATE, "Explicit create invocation is missing, and parent class " + parentType + " does not implement the default create");
+							addError(Error.MISSING_CREATE, "Explicit create invocation is missing, and parent class " + parentType + " does not implement the default create", parentType);
 					}					
 				}
 			}
@@ -390,66 +400,7 @@ public class StatementChecker extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	
-	/*
-	private void processDeclaration( Node node )
-	{
-		boolean isLocal = (node instanceof ASTLocalVariableDeclaration);		
-		int start = 0;				
 		
-		if( node.jjtGetChild(start) instanceof ASTType ) //skip type declaration
-			start++;	
-		
-		Type type = node.getType();
-		//type is set for local declarations immediately previously and for fields in the field and method checker
-		//can be a single type or var
-		
-		if(type == null)
-		{			
-			addError(Error.UNDEFINED_TYPE, "Type " + node.jjtGetChild(start).jjtGetChild(0).getImage() + " not defined in this context");
-			return;
-		}		
-		
-		if( type.isPrimitive() && node.getModifiers().isNullable() )		
-			addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);				
-			
-		Node declaration = node.jjtGetChild(start);  //either VariableDeclarator or SequenceDeclarator
-		int last = declaration.jjtGetNumChildren() - 1;
-		Node initializer = declaration.jjtGetChild(last);
-		
-		//check if initializer exists and can be assigned
-		if( initializer instanceof ASTVariableInitializer || initializer instanceof ASTSequenceInitializer )
-		{
-			List<TypeCheckException> errors = isValidInitialization(node, initializer);
-			if( !errors.isEmpty() )		
-			{
-				addErrors(node, errors  );
-				return;
-			}
-		}
-		
-		//set types
-		for( int i = 0; i < declaration.jjtGetNumChildren(); ++i)
-		{
-			Node identifier = declaration.jjtGetChild(i);			
-			
-			if(identifier instanceof ASTVariableDeclaratorId ) //last one might be initializer
-			{
-				if( type instanceof SequenceType )				
-					identifier.setType(((SequenceType)type).getType(i));
-				else
-					identifier.setType(type);
-				identifier.setModifiers(node.getModifiers());
-				
-				if( isLocal ) // add the symbol to the scope table				
-					addSymbol( identifier.getImage(), identifier );
-			}
-		}		
-	}
-	*/
-	
-	
 	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException
 	{		
 		if(secondVisit)
@@ -685,14 +636,14 @@ public class StatementChecker extends BaseChecker
 					}
 					else
 					{
-						addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+						addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current, result, current);
 						result = Type.UNKNOWN;	
 						break;
 					}				
 				}
 				else		
 				{
-					addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
+					addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current, result, current);
 					result = Type.UNKNOWN;
 					break;
 				}
@@ -721,7 +672,7 @@ public class StatementChecker extends BaseChecker
 					Type childType = node.jjtGetChild(i).getType(); 
 					if( childType instanceof SequenceType )
 					{
-						addError(Error.INVALID_TYPE, "Cannot apply operator # to sequence type " + childType);
+						addError(Error.INVALID_TYPE, "Cannot apply operator # to sequence type " + childType, childType);
 						result = Type.UNKNOWN;						
 					}
 				}
@@ -777,21 +728,21 @@ public class StatementChecker extends BaseChecker
 						}
 						else
 						{
-							addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current);
+							addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current, resultType, current);
 							resultType = Type.UNKNOWN;	
 							break;
 						}				
 					}
 					else		
 					{
-						addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current);
+						addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current, resultType, current);
 						resultType = Type.UNKNOWN;
 						break;
 					}			
 				}
 				else if( !resultType.isSubtype(current) && !current.isSubtype(resultType) )
 				{
-					addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current);
+					addError(Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + resultType + " and " + current, resultType, current);
 					resultType = Type.UNKNOWN;	
 					break;
 				}	
@@ -876,91 +827,22 @@ public class StatementChecker extends BaseChecker
 				}
 				else
 				{
-					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current, result, current);
 					node.setType(Type.UNKNOWN);
 					return;
 				}				
 			}
 			else		
 			{
-				addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current);
+				addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + symbol + " to types " + result + " and " + current, result, current);
 				node.setType(Type.UNKNOWN);
 				return;						
 			}				
 		}
 			
 		node.setType(result); //propagates type up if only one child
-		pushUpModifiers(node); //can add ASSIGNABLE (if only one child)
-		
+		pushUpModifiers(node); //can add ASSIGNABLE (if only one child)		
 	}
-	
-	/*
-	public void visitShiftRotate( OperationNode node ) throws ShadowException
-	{			
-		Type result = node.jjtGetChild(0).getType();
-		int symbolIndex = 0;
-		
-		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one, short => int => long is possible
-		{
-			Node currentNode = node.jjtGetChild(i);
-			Type current = currentNode.getType();
-			char operator = node.getImage().charAt(symbolIndex);
-			String methodName = "";
-			String symbol = "";
-			
-			switch( operator )
-			{
-			case 'l':
-				methodName = "bitShiftLeft";
-				symbol = "<<";
-				break;
-			case 'L':
-				methodName = "bitRotateLeft";
-				symbol = "<<<";
-				 break;
-			case 'r':
-				methodName = "bitShiftRight";
-				symbol = ">>";
-				break;
-			case 'R':
-				methodName = "bitRotateRight";
-				symbol = ">>>";
-				break;
-			}			
-		
-			if( result.hasInterface(Type.INTEGER) )
-			{
-				SequenceType argument = new SequenceType();
-				argument.add(currentNode);							
-				 
-				MethodSignature signature = setMethodType(node, result, methodName, argument );
-				if( signature != null )
-				{
-					result = signature.getReturnTypes().getType(0);
-					node.addOperation(signature);
-				}
-				else
-				{
-					addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
-					result = Type.UNKNOWN;	
-					break;
-				}				
-			}
-			else		
-			{
-				addError(Error.INVALID_TYPE, "Operator " + symbol + " not defined on types " + result + " and " + current);
-				result = Type.UNKNOWN;
-				break;
-			}
-			
-			symbolIndex++;
-			
-		}						
-					
-		node.setType(result); //propagates type up if only one child	
-		pushUpModifiers(node);  //can add ASSIGNABLE (if only one child)
-	}
-	*/
 	
 	public Object visit(ASTShiftExpression node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
@@ -976,71 +858,6 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	/*
-	public void visitArithmetic(OperationNode node) throws ShadowException 
-	{
-		Type result = node.jjtGetChild(0).getType();
-		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal one
-		{			
-			char operator = node.getImage().charAt(i - 1);
-			InterfaceType interfaceType = null;
-			String methodName = "";
-			switch( operator )
-			{
-			case '+':
-				methodName = "add";
-				interfaceType = Type.CAN_ADD;
-				break;
-			case '-':
-				methodName = "subtract";
-				interfaceType = Type.CAN_SUBTRACT;
-				break;
-			case '*':
-				methodName = "multiply";
-				interfaceType = Type.CAN_MULTIPLY;
-				break;
-			case '/':
-				methodName = "divide";
-				interfaceType = Type.CAN_DIVIDE;
-				break;
-			case '%':
-				methodName = "modulus";
-				interfaceType = Type.CAN_MODULUS;
-				break;
-			}
-			
-			Node currentNode = node.jjtGetChild(i);
-			Type current = currentNode.getType();
-			
-			if( result.hasInterface(interfaceType) )
-			{
-				SequenceType argument = new SequenceType(currentNode);											
-				 
-				MethodSignature signature = setMethodType(node, result, methodName, argument );
-				if( signature != null )
-				{
-					result = signature.getReturnTypes().getType(0);
-					node.addOperation(signature);
-				}
-				else
-				{
-					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + operator + " to " + result + " and " + current);
-					node.setType(Type.UNKNOWN);
-					return;
-				}				
-			}
-			else		
-			{
-				addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Cannot apply operator " + operator + " to " + result + " and " + current);
-				node.setType(Type.UNKNOWN);
-				return;						
-			}				
-		}
-			
-		node.setType(result); //propagates type up if only one child
-		pushUpModifiers(node); //can add ASSIGNABLE (if only one child)
-	}
-	*/
 	
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
@@ -1055,27 +872,7 @@ public class StatementChecker extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	/*
-	public Object visit(ASTUnaryToString node, Boolean secondVisit) throws ShadowException {
-		if(secondVisit)
-		{				
-			Type type = node.jjtGetChild(0).getType();
-			String symbol = node.getImage();
-			
-			if( symbol.equals("#")  )
-				node.setType(Type.STRING);
-			else
-			{
-				node.setType(type);			
-				pushUpModifiers( node );
-			}
-		}
 		
-		return WalkType.POST_CHILDREN;
-	}
-	*/
-	
 	private Type visitUnary( ASTUnaryExpression node, String method, String operator, InterfaceType interfaceType )
 	{
 		Type type = node.jjtGetChild(0).getType();
@@ -1090,13 +887,13 @@ public class StatementChecker extends BaseChecker
 			}
 			else
 			{
-				addError(Error.INVALID_TYPE, "Cannot apply " + operator + " to type " + type + " which does not implement interface " + interfaceType);
+				addError(Error.INVALID_TYPE, "Cannot apply " + operator + " to type " + type + " which does not implement interface " + interfaceType, type);
 				type = Type.UNKNOWN;						
 			}
 		}
 		else
 		{
-			addError(Error.INVALID_TYPE, "Cannot apply " + operator + " to type " + type + " which does not implement interface " + interfaceType);
+			addError(Error.INVALID_TYPE, "Cannot apply " + operator + " to type " + type + " which does not implement interface " + interfaceType, type);
 			type = Type.UNKNOWN;					
 		}
 		
@@ -1132,7 +929,7 @@ public class StatementChecker extends BaseChecker
 			{
 				if( !type.equals(Type.BOOLEAN)) 
 				{
-					addError(Error.INVALID_TYPE, "Cannot apply operator ! to type " + type + " which is not boolean");
+					addError(Error.INVALID_TYPE, "Cannot apply operator ! to type " + type + " which is not boolean", type);
 					type = Type.UNKNOWN;				
 				}				
 			}
@@ -1208,7 +1005,10 @@ public class StatementChecker extends BaseChecker
 			Type t3 = second.getType();
 						
 			if( first.getModifiers().isNullable() || second.getModifiers().isNullable() )
-				node.addModifier(Modifiers.NULLABLE);		
+				node.addModifier(Modifiers.NULLABLE);
+			
+			if( first.getModifiers().isNullable() != second.getModifiers().isNullable() && (t2 instanceof ArrayType || t3 instanceof ArrayType )  )
+				addError(node, Error.INVALID_MODIFIER, "Cannot mix nullable and non-nullable arrays", t2, t3);
 			
 			if( first.getModifiers().isReadonly() || second.getModifiers().isReadonly() )
 				node.addModifier(Modifiers.READONLY);
@@ -1218,11 +1018,11 @@ public class StatementChecker extends BaseChecker
 			if( first.getModifiers().isImmutable() && second.getModifiers().isImmutable() )			
 				node.addModifier(Modifiers.IMMUTABLE);
 			else if( first.getModifiers().isImmutable() != second.getModifiers().isImmutable()  && !t1.getModifiers().isImmutable() && !t2.getModifiers().isImmutable() )
-				addError(node, Error.INVALID_MODIFIER, "Expressions " + first + " and " + second + " have incompatible levels of mutability");
+				addError(node, Error.INVALID_MODIFIER, "Expressions " + first + " and " + second + " have incompatible levels of mutability", t1, t2);
 			
 			if( !t1.equals(Type.BOOLEAN) ) 
 			{			
-				addError(node.jjtGetChild(0), Error.INVALID_TYPE, "Supplied type " + t1 + " cannot be used in the condition of a ternary operator, boolean type required");
+				addError(node.jjtGetChild(0), Error.INVALID_TYPE, "Supplied type " + t1 + " cannot be used in the condition of a ternary operator, boolean type required", t1);
 				node.setType(Type.UNKNOWN);
 			}
 			else if( t2.isSubtype(t3) )
@@ -1231,7 +1031,7 @@ public class StatementChecker extends BaseChecker
 				node.setType(t2);
 			else 
 			{
-				addError(node, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of ternary operator");
+				addError(node, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of ternary operator", t2, t3);
 				node.setType(Type.UNKNOWN);
 			}
 		}	
@@ -1253,7 +1053,7 @@ public class StatementChecker extends BaseChecker
 			
 				if( result != Type.BOOLEAN )
 				{
-					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Supplied type " + result + " cannot be used with a logical operator, boolean type required");			
+					addError(node.jjtGetChild(i), Error.INVALID_TYPE, "Supplied type " + result + " cannot be used with a logical operator, boolean type required", result);			
 					node.setType(Type.UNKNOWN);
 					return;
 				}					
@@ -1290,13 +1090,16 @@ public class StatementChecker extends BaseChecker
 						}
 					}
 					
+					if( type instanceof ArrayType )
+						addError(child, Error.INVALID_TYPE, "Array type cannot be used in a coalesce expression");
+					
 					if( result == null )
 						result = type;				
 					else if( result.isSubtype(type) )
 						result = type;
 					else if( !type.isSubtype(result) ) //neither is subtype of other, panic!
 					{
-						addError(Error.MISMATCHED_TYPE, "Supplied type " + type + " does not match type " + result + " in coalesce expression");
+						addError(Error.MISMATCHED_TYPE, "Supplied type " + type + " does not match type " + result + " in coalesce expression", type, result);
 						result = Type.UNKNOWN;
 						break;
 					}
@@ -1364,14 +1167,14 @@ public class StatementChecker extends BaseChecker
 					}
 					else
 					{
-						addError(Error.INVALID_TYPE, "Operator " + operator + " not defined on types " + result + " and " + current);
+						addError(Error.INVALID_TYPE, "Operator " + operator + " not defined on types " + result + " and " + current, result, current);
 						node.setType(Type.UNKNOWN);	
 						break;
 					}				
 				}
 				else		
 				{
-					addError(Error.INVALID_TYPE, "Operator " + operator + " not defined on types " + result + " and " + current);
+					addError(Error.INVALID_TYPE, "Operator " + operator + " not defined on types " + result + " and " + current, result, current);
 					node.setType(Type.UNKNOWN);
 					break;
 				}
@@ -1535,17 +1338,20 @@ public class StatementChecker extends BaseChecker
 				node.setType(Type.BOOLEAN);
 			else
 			{
-				addError(Error.MISMATCHED_TYPE, "Supplied type " + t1 + " cannot be compared with type " + t2 + " in an is statement");
+				addError(Error.MISMATCHED_TYPE, "Supplied type " + t1 + " cannot be compared with type " + t2 + " in an is statement", t1, t2);
 				node.setType(Type.UNKNOWN);
 			}
 			
-			if( node.jjtGetChild(0).getModifiers().isTypeName() )
-				addError(Error.NOT_OBJECT, "Left hand side of is statement cannot be a type name");
-		
-			if( !node.jjtGetChild(1).getModifiers().isTypeName() )
-				addError(Error.NOT_TYPE, "Right hand side of is statement must be a type name");
+			if( t1 instanceof SingletonType || t2 instanceof SingletonType )
+				addError(Error.MISMATCHED_TYPE, "Cannot use singleton types in an is statement");
+			else
+			{			
+				if( node.jjtGetChild(0).getModifiers().isTypeName() )
+					addError(Error.NOT_OBJECT, "Left hand side of is statement cannot be a type name");
 			
-			
+				if( !node.jjtGetChild(1).getModifiers().isTypeName() )
+					addError(Error.NOT_TYPE, "Right hand side of is statement must be a type name");
+			}
 		}			
 
 		return WalkType.POST_CHILDREN;
@@ -1712,7 +1518,7 @@ public class StatementChecker extends BaseChecker
 				node.setType(t1);
 			else
 			{
-				addError(Error.MISMATCHED_TYPE, "Supplied type " + t2 + " cannot be cast to type " + t1);
+				addError(Error.MISMATCHED_TYPE, "Supplied type " + t2 + " cannot be cast to type " + t1, t1, t2);
 				node.setType(Type.UNKNOWN);
 			}
 		}			
@@ -1785,7 +1591,7 @@ public class StatementChecker extends BaseChecker
 		Type t = node.jjtGetChild(0).getType(); 
 		
 		if( !t.equals( Type.BOOLEAN ) )
-			addError(Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + t);
+			addError(Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + t, t);
 				
 		return WalkType.POST_CHILDREN;
 	}
@@ -1797,7 +1603,7 @@ public class StatementChecker extends BaseChecker
 		Type t = node.jjtGetChild(0).getType(); 
 		
 		if( !t.equals( Type.BOOLEAN ) )
-			addError(Error.INVALID_TYPE, "Condition of while statement cannot accept non-boolean type " + t);
+			addError(Error.INVALID_TYPE, "Condition of while statement cannot accept non-boolean type " + t, t);
 				
 		return WalkType.POST_CHILDREN;
 	}
@@ -1809,7 +1615,7 @@ public class StatementChecker extends BaseChecker
 		Type t = node.jjtGetChild(1).getType(); //second child, not first like if and while 
 		
 		if( !t.equals( Type.BOOLEAN ) )
-			addError(Error.INVALID_TYPE, "Condition of do statement cannot accept non-boolean type " + t);
+			addError(Error.INVALID_TYPE, "Condition of do statement cannot accept non-boolean type " + t, t);
 				
 		return WalkType.POST_CHILDREN;
 	}
@@ -1860,7 +1666,7 @@ public class StatementChecker extends BaseChecker
 		}
 		else
 		{
-			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach statement");
+			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach statement", collectionType);
 			iterable = false;
 		}		
 		
@@ -1893,7 +1699,7 @@ public class StatementChecker extends BaseChecker
 			Type conditionalType = node.jjtGetChild(start).getType();			
 			
 			if(conditionalType == null || !conditionalType.equals( Type.BOOLEAN ) )
-				addError(Error.INVALID_TYPE, "Supplied type " + conditionalType + " cannot be used in the condition of a for statement, boolean type required");
+				addError(Error.INVALID_TYPE, "Condition of for statement cannot accept non-boolean type " + conditionalType, conditionalType);
 		}
 			
 		return WalkType.POST_CHILDREN;
@@ -1906,7 +1712,7 @@ public class StatementChecker extends BaseChecker
 		{
 			Node child = node.jjtGetChild(0);
 			if( !(child.getType() instanceof ExceptionType) )
-				addError(Error.INVALID_TYPE, "Supplied type " + child.getType() + " cannot be used in a throw clause, exception or error type required");
+				addError(Error.INVALID_TYPE, "Supplied type " + child.getType() + " cannot be used in a throw clause, exception or error type required", child.getType());
 		}
 		
 		return WalkType.POST_CHILDREN;	
@@ -1927,7 +1733,7 @@ public class StatementChecker extends BaseChecker
 				for( Type catchParameter : types )				
 					if( type.isSubtype(catchParameter) )
 					{
-						addError( child, Error.UNREACHABLE_CODE, "Catch block for exception " + type + " cannot be reached" );
+						addError( child, Error.UNREACHABLE_CODE, "Catch block for exception " + type + " cannot be reached", type );
 						break;
 					}
 				
@@ -1948,7 +1754,7 @@ public class StatementChecker extends BaseChecker
 			
 			if( !(type instanceof ExceptionType) )
 			{
-				addError( child, Error.INVALID_TYPE, "Supplied type " + type + " cannot be used as a catch parameter, exception types required");
+				addError( child, Error.INVALID_TYPE, "Supplied type " + type + " cannot be used as a catch parameter, exception types required", type);
 				node.setType(Type.UNKNOWN);				
 			}
 			else
@@ -2005,11 +1811,12 @@ public class StatementChecker extends BaseChecker
 			child = resolveType( child );
 			Type type = child.getType();
 			
+			/*
 			if( type instanceof ArrayType && type.getModifiers().isNullable() ) {
 				ArrayType arrayType = (ArrayType) type;
 				type = new ArrayType(arrayType.getBaseType(), arrayType.getDimensions());
 			}			
-			else if( child.getModifiers().isNullable() ) {
+			else*/ if( child.getModifiers().isNullable() ) {
 				node.setModifiers(child.getModifiers());
 				node.removeModifier(Modifiers.NULLABLE);
 			}
@@ -2078,11 +1885,45 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
+	private void checkForSingleton(Type type) {
+		//if singleton, add to current method for initialization
+		if( type instanceof SingletonType )
+		{
+			SingletonType singletonType = (SingletonType)type;
+			if( currentMethod.isEmpty() )
+			{
+				//add to all creates (since it must be declared outside a method)
+				for( MethodSignature signature : currentType.getAllMethods("create"))				
+					signature.getNode().addSingleton(singletonType);
+			}
+			else
+			{
+				int i = 0;
+				SignatureNode signatureNode;
+				//find outer method, instead of adding to local or inline methods
+				do
+				{
+					signatureNode = currentMethod.get(i);
+					i++;
+				} while( signatureNode instanceof ASTInlineMethodDefinition || signatureNode instanceof ASTLocalMethodDeclaration );
+				
+				signatureNode.addSingleton(singletonType);				
+			}
+		}
+		else if( type instanceof SequenceType )
+		{
+			SequenceType sequenceType = (SequenceType) type;
+			for(ModifiedType modifiedType : sequenceType )
+				checkForSingleton(modifiedType.getType());
+		}
+		else if( type instanceof ArrayType )		
+			checkForSingleton(((ArrayType)type).getBaseType());
+	}
+	
 	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException 
 	{
 		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-	
+			return WalkType.POST_CHILDREN;	
 		
 		int children = node.jjtGetNumChildren();
 		String image = node.getImage();
@@ -2124,7 +1965,7 @@ public class StatementChecker extends BaseChecker
 			{				
 				if( !setTypeFromName( node, image )) //automatically sets type if can
 				{
-					addError(Error.UNDEFINED_TYPE, "Type " + image + " not defined in this context");
+					addError(Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 					node.setType(Type.UNKNOWN);											
 				}
 			}
@@ -2149,6 +1990,7 @@ public class StatementChecker extends BaseChecker
 			}
 		}
 		
+		checkForSingleton(node.getType());		
 		curPrefix.set(0, node); //so that the suffix can figure out where it's at
 				
 		return WalkType.POST_CHILDREN;
@@ -2189,7 +2031,7 @@ public class StatementChecker extends BaseChecker
 		{
 			Node prefixNode = curPrefix.getFirst();		
 			
-			if( prefixNode.getModifiers().isNullable() )
+			if( prefixNode.getModifiers().isNullable() && !(prefixNode.getType() instanceof ArrayType) )
 				addError(Error.INVALID_DEREFERENCE, "Nullable reference cannot be dereferenced");
 			
 			Node child = node.jjtGetChild(0);
@@ -2221,7 +2063,7 @@ public class StatementChecker extends BaseChecker
 			else
 				pushUpType(node, secondVisit);
 			
-			
+			checkForSingleton(node.getType());
 			curPrefix.set(0, node); //so that a future suffix can figure out where it's at		
 		}
 		
@@ -2266,7 +2108,7 @@ public class StatementChecker extends BaseChecker
 								node.getModifiers().addModifier(Modifiers.READONLY);
 						}
 						else
-							addError(Error.INVALID_SELF_REFERENCE, "Type " + prefixType + " does not have a super class");
+							addError(Error.INVALID_SELF_REFERENCE, "Type " + prefixType + " does not have a super class", prefixType);
 					}
 					else				
 						addError(Error.INVALID_SELF_REFERENCE, "Prefix of qualified super is not the current class or an enclosing class");
@@ -2301,19 +2143,17 @@ public class StatementChecker extends BaseChecker
 				node.addModifier(Modifiers.TYPE_NAME);
 			}
 			else
-			{
-				node.setType(Type.UNKNOWN);
+			{				
 				addError(Error.NOT_TYPE, "Can only apply brackets to a type name");
+				node.setType(Type.UNKNOWN);
 			}
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTSubscript node, Boolean secondVisit) throws ShadowException 
-	{
-		if( secondVisit )
-		{			
+	public Object visit(ASTSubscript node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {			
 			ModifiedType prefixNode = curPrefix.getFirst();
 			prefixNode = resolveType( prefixNode );
 			Type prefixType = prefixNode.getType();
@@ -2328,7 +2168,7 @@ public class StatementChecker extends BaseChecker
 					
 					if( !childType.isIntegral() )
 					{
-						addError(node.jjtGetChild(i), Error.INVALID_SUBSCRIPT, "Subscript type " + childType + " is invalid, integral type required");
+						addError(node.jjtGetChild(i), Error.INVALID_SUBSCRIPT, "Subscript type " + childType + " is invalid, integral type required", childType);
 						node.setType(Type.UNKNOWN);
 						return WalkType.POST_CHILDREN;
 					}
@@ -2358,8 +2198,14 @@ public class StatementChecker extends BaseChecker
 					//however, arrays of arrays are not-null
 					//instead, they will be filled with default values, including a length of zero
 					//thus, we don't need to check nullability, but we do need a range check
-					if( !arrayType.getBaseType().isPrimitive() && !(arrayType.getBaseType() instanceof ArrayType)  )
-						node.addModifier(Modifiers.NULLABLE);						
+					
+					//TODO: Make this work.  Depends on the modern interpretation of nullable arrays.
+					//if( !arrayType.getBaseType().isPrimitive() && !(arrayType.getBaseType() instanceof ArrayType)  )
+					//	node.addModifier(Modifiers.NULLABLE);					
+					
+					//nullable array means what you get out is nullable, not the array itself
+					if( prefixNode.getModifiers().isNullable() ) 
+						node.addModifier(Modifiers.NULLABLE);
 				}				
 				else
 				{
@@ -2380,7 +2226,7 @@ public class StatementChecker extends BaseChecker
 					if( signature == null )
 					{
 						node.setType(Type.UNKNOWN);
-						addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " with index of type " + child.getType());
+						addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " with index of type " + child.getType(), prefixType, child.getType());
 					}
 					else if( (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
 					{
@@ -2406,15 +2252,15 @@ public class StatementChecker extends BaseChecker
 				else
 				{
 					node.setType(Type.UNKNOWN);
-					addError(Error.INVALID_SUBSCRIPT, "Subscript supplies multiple indexes into non-array type " + prefixType);
+					addError(Error.INVALID_SUBSCRIPT, "Subscript supplies multiple indexes into non-array type " + prefixType, prefixType);
 				}				
 			}
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX);
-			}	
-			
+				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX, prefixType);
+			}
+						
 		}
 		
 		return WalkType.POST_CHILDREN;
@@ -2441,85 +2287,97 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTArrayCreate node, Boolean secondVisit) throws ShadowException 
-	{
-		if( secondVisit )
-		{			
+	public Object visit(ASTArrayCreate node, Boolean secondVisit) throws ShadowException  {
+		if( secondVisit ) {			
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = prefixNode.getType();			
 			SequenceType typeArguments = null;
 			int start = 0;
 			
-			if( node.jjtGetChild(0) instanceof ASTTypeArguments )
-			{
+			if( node.jjtGetChild(0) instanceof ASTTypeArguments ) {
 				typeArguments = ((ASTTypeArguments) node.jjtGetChild(0)).getType();
 				start = 1;				
 			}
 			
-			
-			for( int i = start; i < node.jjtGetNumChildren(); i++ )
-			{
-				Type childType = node.jjtGetChild(i).getType();
-				
-				if( !childType.isIntegral() )
-				{
-					addError(node.jjtGetChild(i), Error.INVALID_SUBSCRIPT, "Supplied type " +  childType + " cannot be used in this subscript, integral type required");
-					node.setType(Type.UNKNOWN);
-					return WalkType.POST_CHILDREN;
-				}
-			}			
+			ASTArrayDimensions dimensions = (ASTArrayDimensions) node.jjtGetChild(start);
+			start++;			
 			
 			//create array
-			if( prefixNode.getModifiers().isTypeName() )
-			{
-				if( typeArguments != null  )
-				{
-					if( prefixType.isParameterized() )
-					{
-						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
-						{					
+			if( prefixNode.getModifiers().isTypeName() ) {
+				ArrayType arrayType = null;
+				if( typeArguments != null  ) {
+					if( prefixType.isParameterized() ) {
+						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) ) {					
 							try {
 								prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
+								arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions() );
+								node.setType( arrayType );
 							} 
-							catch (InstantiationException e) 
-							{
+							catch (InstantiationException e) {
 								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match type parameters " + prefixType.getTypeParameters() );
 								node.setType(Type.UNKNOWN);
-							}
-							node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
+							}							
 						}
-						else
-						{
+						else {
 							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match type parameters " + prefixType.getTypeParameters() );
 							node.setType(Type.UNKNOWN);
 						}						
 					}
-					else
-					{
-						addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + typeArguments + " supplied for non-parameterized type " + prefixType);						
+					else {
+						addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + typeArguments + " supplied for non-parameterized type " + prefixType, prefixType);						
 						node.setType(Type.UNKNOWN);
-					}
-					
+					}					
 				}
-				else
-				{
-					if( !prefixType.isParameterized() )
-						node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
-					else
-					{
+				else {
+					if( !prefixType.isParameterized() ) {
+						arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions() ); 
+						node.setType( arrayType );
+					}
+					else {
 						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
 						node.setType(Type.UNKNOWN);	
 					}					
-				}				
+				}
+				
+				if( node.getImage().equals("null")  )
+					node.addModifier(Modifiers.NULLABLE);
+								
+				if( node.hasCreate() ) {
+					SequenceType arguments = new SequenceType();
+					for( int i = start; i < node.jjtGetNumChildren(); ++i )
+						arguments.add(node.jjtGetChild(i));
+					
+					MethodSignature signature = prefixType.getMatchingMethod("create", arguments, typeArguments);					
+					if( signature == null || !methodIsAccessible( signature, currentType) )
+						addError(node, Error.INVALID_CREATE, "Cannot create array of type " + prefixType + " with specified create arguments", prefixType);					
+					else
+						node.setMethodSignature(signature);					
+				}
+				else if( node.hasDefault() ) {
+					Node child = node.jjtGetChild(start);				
+					Type baseType = arrayType.getBaseType();
+					if( child.getType().isSubtype(baseType) ) {
+									
+						if( child.getModifiers().isNullable() && !node.getModifiers().isNullable() )
+							addError(child, Error.INVALID_MODIFIER, "Cannot apply nullable default value to non-nullable array", child.getType(), baseType);					
+					}
+					else
+						addError(node, Error.INVALID_TYPE, "Cannot apply type " + child.getType() + " as default value in array of type " + arrayType, child.getType());						
+				}
+				else if( !node.getImage().equals("null") && !prefixType.isPrimitive() && !(prefixType instanceof ArrayType) ) {
+					//try default constructor
+					MethodSignature signature = prefixType.getMatchingMethod("create", new SequenceType(), typeArguments);					
+					if( signature == null || !methodIsAccessible( signature, currentType) )
+						addError(node, Error.INVALID_CREATE, "Cannot create array of type " + prefixType + " which does not implement a default create", prefixType);
+					else
+						node.setMethodSignature(signature);
+				}
 			}
-			else
-			{
-				node.setType(Type.UNKNOWN);
+			else {				
 				addError(Error.NOT_TYPE, "Type name must be used to create an array");
-			}	
-			
-		}
-		
+				node.setType(Type.UNKNOWN);
+			}			
+		}		
 		return WalkType.POST_CHILDREN;
 	}
 
@@ -2535,7 +2393,7 @@ public class StatementChecker extends BaseChecker
 			Type prefixType = prefixNode.getType();
 			String methodName = node.getImage();
 			
-			if( prefixNode.getModifiers().isTypeName() )
+			if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof SingletonType) )
 			{
 				addError(Error.NOT_OBJECT, "Type name cannot be used to call method");				
 			}
@@ -2605,19 +2463,16 @@ public class StatementChecker extends BaseChecker
 			}		
 			else if(!( prefixType instanceof ClassType) )
 			{
-				addError(Error.INVALID_CREATE, "Type " + prefixType + " cannot be created");
-				
+				addError(Error.INVALID_CREATE, "Type " + prefixType + " cannot be created", prefixType);				
 			}
 			else if( !prefixNode.getModifiers().isTypeName() )				
 			{
 				addError(Error.INVALID_CREATE, "Only a type can be created");
-								
 			}
 			else
 			{
 				SequenceType typeArguments = null;
-			
-				
+						
 				int start = 0;
 				if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
 				{
@@ -2631,7 +2486,7 @@ public class StatementChecker extends BaseChecker
 				for( int i = start; i < node.jjtGetNumChildren(); i++ )
 					arguments.add(node.jjtGetChild(i));
 
-				MethodSignature signature;
+				MethodSignature signature;				
 				
 				if( typeArguments != null )
 				{					
@@ -2649,8 +2504,7 @@ public class StatementChecker extends BaseChecker
 						}
 						catch (InstantiationException e) 
 						{
-							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());						
-							
+							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());					
 						}
 					}
 					else
@@ -2668,20 +2522,19 @@ public class StatementChecker extends BaseChecker
 						//TODO: see if something similar can be done for ASTMethodCall
 					}
 					else
-						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
+						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + prefixType);
 				}
-				
 			}
 			
 			if( node.getType() == Type.UNKNOWN )
-				parent.setType(Type.UNKNOWN);			
+				parent.setType(Type.UNKNOWN);
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	
-	
+	/*
 	@Override
 	public Object visit(ASTInstance node, Boolean secondVisit)	throws ShadowException
 	{
@@ -2692,12 +2545,12 @@ public class StatementChecker extends BaseChecker
 			
 			if( !prefixNode.getModifiers().isTypeName() )
 			{
-				addError(Error.INVALID_INSTANCE, "A type is needed to get an instance");
+				addError(Error.INVALID_INSTANCE, "A type name is needed to get an instance");
 				node.setType(Type.UNKNOWN);
 			}
 			else if( !(prefixType instanceof SingletonType) )
 			{
-				addError(Error.INVALID_INSTANCE, "Non-singleton type " + prefixType + " cannot be instanced");
+				addError(Error.INVALID_INSTANCE, "Non-singleton type " + prefixType + " cannot be instanced", prefixType);
 				node.setType(Type.UNKNOWN);
 			}
 			else
@@ -2707,7 +2560,7 @@ public class StatementChecker extends BaseChecker
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
+	*/
 	
 	public Object visit(ASTScopeSpecifier node, Boolean secondVisit) throws ShadowException	
 	{
@@ -2732,7 +2585,7 @@ public class StatementChecker extends BaseChecker
 						SequenceType argumentTypes = arguments.getType();
 						
 						if( !prefixType.isParameterized() )
-							addError( Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + argumentTypes + " supplied for non-parameterized type " + prefixType);
+							addError( Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + argumentTypes + " supplied for non-parameterized type " + prefixType, prefixType);
 						else if( !parameterTypes.canAccept(argumentTypes, SubstitutionKind.TYPE_PARAMETER) )
 							addError( Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
 						else		
@@ -2748,7 +2601,7 @@ public class StatementChecker extends BaseChecker
 						}
 					}
 					else if( prefixType.isParameterized() )
-						addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
+						addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + prefixType, prefixType);
 				}
 				else
 					addError( Error.NOT_TYPE, "Constant class requires type name for access");
@@ -2808,7 +2661,7 @@ public class StatementChecker extends BaseChecker
 				ClassType innerClass = classType.getInnerClass(name);
 				
 				if( !classIsAccessible( innerClass, currentType ) )
-					addError(Error.ILLEGAL_ACCESS, "Class " + innerClass + " is not accessible from this context");
+					addError(Error.ILLEGAL_ACCESS, "Class " + innerClass + " is not accessible from this context", innerClass);
 				else
 				{
 					node.setType( innerClass );						
@@ -2836,8 +2689,7 @@ public class StatementChecker extends BaseChecker
 			prefixNode = resolveType( prefixNode );
 			Type prefixType = prefixNode.getType();
 			String propertyName = node.getImage();
-			boolean isTypeName = prefixNode.getModifiers().isTypeName();
-						
+			boolean isTypeName = prefixNode.getModifiers().isTypeName() && !(prefixType instanceof SingletonType);
 						
 			if( isTypeName )
 			{
@@ -2946,7 +2798,7 @@ public class StatementChecker extends BaseChecker
 			return node;
 	}
 	
-	protected MethodSignature setCreateType( ASTCreate node, Type prefixType, SequenceType arguments)
+	protected MethodSignature setCreateType( SignatureNode node, Type prefixType, SequenceType arguments)
 	{			
 		return setMethodType( node, prefixType, "create", arguments, null);		
 	}
@@ -3028,13 +2880,13 @@ public class StatementChecker extends BaseChecker
 							}
 							catch(InstantiationException e)
 							{
-								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match method type arguments " + typeArguments);
+								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match method type arguments " + parameters, parameters, typeArguments);
 								node.setType(Type.UNKNOWN);
 							}
 						}
 						else
 						{
-							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match method type arguments " + typeArguments);
+							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do not match method type arguments " + parameters, parameters, typeArguments);
 							node.setType(Type.UNKNOWN);
 						}							
 					}
@@ -3051,7 +2903,7 @@ public class StatementChecker extends BaseChecker
 					node.setType(methodType);
 				else 
 				{
-					addError(Error.INVALID_ARGUMENTS, "Supplied method arguments " + arguments + " do not match method parameters " + methodType.getParameterTypes());
+					addError(Error.INVALID_ARGUMENTS, "Supplied method arguments " + arguments + " do not match method parameters " + methodType.getParameterTypes(), arguments, methodType.getParameterTypes());
 					node.setType(Type.UNKNOWN);
 				}
 								
@@ -3063,7 +2915,7 @@ public class StatementChecker extends BaseChecker
 			}			
 			else
 			{									
-				addError(Error.INVALID_METHOD, "Cannot apply arguments to non-method type " + prefixType);
+				addError(Error.INVALID_METHOD, "Cannot apply arguments to non-method type " + prefixType, prefixType);
 				node.setType(Type.UNKNOWN);			
 			}
 		}
@@ -3091,11 +2943,25 @@ public class StatementChecker extends BaseChecker
 		return false;
 	}
 
-	public Object visit(ASTBreakStatement node, Boolean secondVisit) throws ShadowException 
-	{
-		//TODO: Check if break is in loop or switch
-		
-		return WalkType.PRE_CHILDREN;
+	public Object visit(ASTBreakOrContinueStatement node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {			
+			Node parent = node.jjtGetParent();
+			boolean found = false;
+			
+			while( parent != null && !found ) {
+				if( parent instanceof ASTDoStatement || 
+					parent instanceof ASTForeachStatement ||
+					parent instanceof ASTForStatement ||
+					parent instanceof ASTWhileStatement )
+					found = true;
+				else
+					parent = parent.jjtGetParent();
+			}
+			
+			if( !found )
+				addError(node, Error.INVALID_STRUCTURE, node.getImage() + " statement cannot occur outside of a loop body");
+		}		
+		return WalkType.POST_CHILDREN;
 	}	
 	
 	private boolean visitArrayInitializer(Node node)
@@ -3103,10 +2969,15 @@ public class StatementChecker extends BaseChecker
 		Node child = node.jjtGetChild(0);
 		Type result = child.getType();
 		
+		boolean nullable = false;
+		
 		for( int i = 1; i < node.jjtGetNumChildren(); i++ ) //cycle through types, upgrading to broadest legal type
 		{
 			child = node.jjtGetChild(i);
 			Type type = child.getType();
+			
+			if( child.getModifiers().isNullable() )
+				nullable = true;
 							
 			if( result.isSubtype(type) )					
 				result = type;				
@@ -3141,6 +3012,9 @@ public class StatementChecker extends BaseChecker
 		node.setType(arrayType);
 		((ClassType)currentType).addReferencedType(arrayType);
 		
+		if( nullable )
+			node.addModifier(Modifiers.NULLABLE);
+		
 		return true;		
 	}
 	
@@ -3160,7 +3034,7 @@ public class StatementChecker extends BaseChecker
 		Type assertType = node.jjtGetChild(0).getType();
 		
 		if( !assertType.equals(Type.BOOLEAN))
-			addError(Error.INVALID_TYPE, "Supplied type " + assertType + " cannot be used in the condition of an assert, boolean required");
+			addError(Error.INVALID_TYPE, "Supplied type " + assertType + " cannot be used in the condition of an assert, boolean required", assertType);
 		
 		if( node.jjtGetNumChildren() > 1 )
 		{
@@ -3168,7 +3042,7 @@ public class StatementChecker extends BaseChecker
 			Type type = child.getType();
 			if( type == null )
 				addError(Error.NOT_OBJECT, "Object type required for assert information and no type found");
-			else if( child.getModifiers().isTypeName() )
+			else if( child.getModifiers().isTypeName() && !(type instanceof SingletonType) )
 				addError(Error.NOT_OBJECT, "Object type required for assert information but type name used");
 		}
 		
@@ -3176,12 +3050,72 @@ public class StatementChecker extends BaseChecker
 	}
 	
 	@Override
-	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {						
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {
+		if( !secondVisit )
+			return WalkType.POST_CHILDREN;
+		
 		Type type = literalToType(node.getLiteral());
 		node.setType(type);
 		if( type != Type.NULL )
 			currentType.addReferencedType(type);
-		return WalkType.NO_CHILDREN;			
+		
+		//ugly but needed to find negation		
+		Node greatGrandparent = node.jjtGetParent().jjtGetParent().jjtGetParent();
+		boolean negated = false;
+
+		if( greatGrandparent instanceof ASTUnaryExpression ) {
+			Node greatGreat = greatGrandparent.jjtGetParent();
+			if( greatGreat instanceof ASTUnaryExpression && greatGreat.getImage().equals("-") )
+				negated = true;
+		}
+		
+		String literal = node.getImage();
+		String lower = literal.toLowerCase();
+		int length = literal.length();
+		
+		try
+		{		
+			if (literal.equals("null"))
+				node.setValue(ShadowValue.NULL);
+			else if (literal.startsWith("\'") && literal.endsWith("\'"))				
+				node.setValue(ShadowCode.parseCode(literal));			
+			else if (literal.startsWith("\"") && literal.endsWith("\""))
+				node.setValue(ShadowString.parseString(literal));
+			else if (literal.equals("true"))
+				node.setValue(new ShadowBoolean(true));
+			else if (literal.equals("false"))
+				node.setValue(new ShadowBoolean(false));
+			else if (lower.endsWith("f") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
+				node.setValue(ShadowFloat.parseFloat(lower.substring(0,  length - 1)));
+			else if (lower.endsWith("d") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
+				node.setValue(ShadowDouble.parseDouble(lower.substring(0, length - 1)));
+			else if (literal.indexOf('.') != -1 || (lower.indexOf('e') != -1 && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") ))
+				node.setValue(ShadowDouble.parseDouble(lower));
+			else
+				node.setValue(ShadowInteger.parseNumber(lower, negated));
+		}
+		catch(NumberFormatException e)
+		{
+			addError(node, Error.INVALID_LITERAL, "Value out of range");
+		}
+		catch(IllegalArgumentException e)
+		{
+			addError(node, Error.INVALID_LITERAL, e.getLocalizedMessage());
+		}
+		
+		return WalkType.POST_CHILDREN;			
+	}
+	
+	@Override
+	public Object visit(ASTNullLiteral node, Boolean secondVisit) throws ShadowException {
+		node.jjtGetParent().setImage(node.getImage());		
+		return WalkType.NO_CHILDREN;
+	}
+	
+	@Override
+	public Object visit(ASTBooleanLiteral node, Boolean secondVisit) throws ShadowException {
+		node.jjtGetParent().setImage(node.getImage());		
+		return WalkType.NO_CHILDREN;
 	}
 	
 	@Override
@@ -3235,7 +3169,7 @@ public class StatementChecker extends BaseChecker
 					}
 										
 					if( !updatedTypes.isSubtype(node.getType()) )						
-						addError(Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + node.getType() + (node.getType().size() == 1 ? " is" : " are") + " expected" );
+						addError(Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + node.getType() + (node.getType().size() == 1 ? " is" : " are") + " expected", node.getType());
 					
 					for( ModifiedType modifiedType : updatedTypes )
 						if( modifiedType.getModifiers().isTypeName() )
@@ -3255,7 +3189,7 @@ public class StatementChecker extends BaseChecker
 			node.setType(type);
 			
 			if( node.getModifiers().isNullable() && type.isPrimitive() )
-				addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);				
+				addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type, type);				
 		}
 		
 		return WalkType.POST_CHILDREN;	
@@ -3277,14 +3211,14 @@ public class StatementChecker extends BaseChecker
 					if( type.getExtendType() != null )
 						type = type.getExtendType();
 					else
-						addError(Error.INVALID_CREATE, "Class type " + type + " cannot invoke a parent create because it does not extend another type");
+						addError(Error.INVALID_CREATE, "Class type " + type + " cannot invoke a parent create because it does not extend another type", type);
 				}								
 								
 				MethodSignature signature = setMethodType(node, type, "create", arguments, null); //type set inside
 				node.setMethodSignature(signature);
 			}	
 			else
-				addError(Error.INVALID_CREATE, "Non-class type " + currentType + " cannot be created");
+				addError(Error.INVALID_CREATE, "Non-class type " + currentType + " cannot be created", currentType);
 			
 			ASTCreateDeclaration grandparent = (ASTCreateDeclaration) node.jjtGetParent().jjtGetParent();
 			grandparent.setExplicitInvocation(true);
@@ -3357,16 +3291,22 @@ public class StatementChecker extends BaseChecker
 		return WalkType.POST_CHILDREN;
 	}
 	
-	/*
-	public Object visit(ASTInlineMethodDeclarator node, Boolean secondVisit) throws ShadowException
+	public Object visit(ASTArrayDimensions node, Boolean secondVisit) throws ShadowException
 	{
-		if( secondVisit )		
-			visitDeclarator( node );		
-		
+		if( secondVisit ) {
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) {
+				Type childType = node.jjtGetChild(i).getType();
+				
+				if( !childType.isIntegral() ) {
+					addError(node.jjtGetChild(i), Error.INVALID_SUBSCRIPT, "Supplied type " +  childType + " cannot be used in this array creation, integral type required", childType);
+					node.setType(Type.UNKNOWN);
+					return WalkType.POST_CHILDREN;
+				}
+			}
+		}
 		
 		return WalkType.POST_CHILDREN;
 	}
-	*/
 	
 	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException 
 	{ 
@@ -3415,5 +3355,6 @@ public class StatementChecker extends BaseChecker
 		
 		currentType.addReferencedType(methodType);
 	}
+	
 	
 }

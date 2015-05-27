@@ -2,12 +2,13 @@ import shadow:io@Console;
 
 class shadow:test@LoopTest
 {
+	Console console;
+
 	public main( String[] args ) => ()
-	{
-		Console console = Console:instance;
-		console.printLine("return " # test(console));
+	{		
+		console.printLine("return " # test());
 	}
-	public test( Console console ) => ( String )
+	public test() => ( String )
 	{
 		console.printLine("before " # "outer");
 		try

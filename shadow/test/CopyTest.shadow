@@ -4,7 +4,7 @@ class shadow:test@CopyTest
 {
 	public main( String[] args ) => ()
 	{	
-		Console out = Console:instance;
+		Console out;
 		String s1 = "Walnuts";		
 		String s2 = copy( s1 );
 		

@@ -1,0 +1,35 @@
+import shadow:utility@Random;
+import shadow:io@Console;
+
+class RandomTest
+{
+    public main(String[] args) => () 
+    { 
+    	Console out;
+        int j;
+
+        Random r;
+
+        // CORRECTNESS TEST
+        // COMPARE WITH http://www.math.keio.ac.jp/matumoto/CODES/MT2002/mt19937ar.out        
+        uint[] array = {0x123u, 0x234u, 0x345u, 0x456u};
+        r = Random:create(array);        
+        out.printLine("1000 outputs of genrand_int32()");
+        for (j=0;j<1000;j+= 1)
+		{           
+            uint value = r.nextUInt();          
+            String s = #value;
+            while(s->size < 10) s = " " # s;  // buffer
+            out.print(s # " ");
+            if (j%5==4) out.printLine();       
+        }
+               
+        //this part is different since it generates two 32-bit values to make one double
+        out.printLine("\n1000 outputs of genrand_real53()\n");       
+        for (j = 0; j < 1000; j+= 1)
+		{
+            out.print(r.nextDouble() # " ");
+            if (j%5==4) out.printLine();
+        }
+	}
+}

@@ -4,7 +4,7 @@ class shadow:test@ArrayOutOfBoundsTest
 {
 	public main() => ()
 	{
-		Console out = Console:instance;
+		Console out;
 	
 		try
 		{

@@ -2,11 +2,9 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Level;
 import org.junit.Before;
 import org.junit.Test;
 
-import shadow.Loggers;
 import shadow.Main;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeCheckException.Error;
@@ -17,12 +15,7 @@ public class NegativeTests {
 
 	@Before
 	public void setup() throws Exception {
-		// set the levels of our loggers				
-		Loggers.SHADOW.setLevel(Level.INFO);
-		Loggers.TYPE_CHECKER.setLevel(Level.OFF);
-		Loggers.PARSER.setLevel(Level.OFF);
-		
-		args.add("-v");
+		//args.add("-v");
 		args.add("--typecheck");
 
 		if( System.getProperty("os.name").contains("Windows")) {
@@ -313,5 +306,28 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/typechecker/method-locked-override/Test.shadow"); 
 		enforce(Error.INVALID_OVERRIDE);		
-	}	
+	}
+	
+	@Test public void testNoDefaultCreateForArray() throws Exception
+	{
+		args.add("tests-negative/typechecker/no-default-create-for-array/Test.shadow"); 
+		enforce(Error.INVALID_CREATE);		
+	}
+	
+	@Test public void testBreakOutsideLoop() throws Exception
+	{
+		args.add("tests-negative/typechecker/break-outside-loop/Test.shadow"); 
+		enforce(Error.INVALID_STRUCTURE);		
+	}
+	
+	@Test public void testStoreToSingleton() throws Exception
+	{
+		args.add("tests-negative/typechecker/store-to-singleton/Test.shadow"); 
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testInvalidLiteral() throws Exception {
+		args.add("tests-negative/typechecker/invalid-literal/Test.shadow");
+		enforce(Error.INVALID_LITERAL);			
+	}
 }
