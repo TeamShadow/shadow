@@ -1,18 +1,16 @@
 package doctool;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
-import shadow.AST.AbstractASTVisitor;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTEnumDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
-import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 public class DocToolVisitor extends AbstractASTVisitor
