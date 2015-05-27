@@ -20,11 +20,7 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
 public class TypeChecker {
-
-	private File currentFile;	
-	private Package packageTree = null;
-	private TypeCollector collector = null;
-		
+	
 	/**
 	 * Given the main file to compile, checks it
 	 * @param file the file to compile
@@ -35,14 +31,13 @@ public class TypeChecker {
 	 * @throws ConfigurationException 
 	 */
 	public List<Node> typeCheck(File file, Job currentJob) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
-	{
-		currentFile = file;
+	{		
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
-		packageTree = new Package(typeTable);
+		Package packageTree = new Package(typeTable);
 		ArrayList<String> importList = new ArrayList<String>();
 		
 		//collector looks over all files and creates types for everything needed
-		collector = new TypeCollector(typeTable, importList, packageTree, this, currentJob);
+		TypeCollector collector = new TypeCollector(typeTable, importList, packageTree, currentJob);
 		//return value is the top node for the class we are compiling		
 		Map<Type, Node> nodeTable = collector.collectTypes( file );
 		Type mainType = collector.getMainType();
@@ -158,56 +153,4 @@ public class TypeChecker {
 		types.add(io.getType("IOException"));
 		types.add(io.getType("Path"));
 	}
-	
-	public Package getPackageTree()
-	{
-		return packageTree;		
-	}
-	
-	public void addFileDependencies(Type mainType, Set<String> files, Set<String> checkedFiles)
-	{		
-		try
-		{			
-			Map<Type, Node> nodeTable = collector.getNodeTable();			
-						
-			for( Type type : mainType.getReferencedTypes() )
-			{	
-				if( !type.hasOuter() && !(type instanceof ArrayType) )
-				{				
-					Node node = nodeTable.get(type.getTypeWithoutTypeArguments());
-					File file = node.getFile();
-					String fileName = BaseChecker.stripExtension(file.getCanonicalPath());
-					if( !checkedFiles.contains(fileName) )
-							files.add(fileName);
-				}
-			}
-		}
-		catch( IOException e )
-		{
-			System.err.println(e.getLocalizedMessage());
-		}		
-	}
-	
-	public File getCurrentFile()
-	{
-		return currentFile;
-	}
-	
-	public void setCurrentFile(File file )
-	{
-		currentFile = file;
-	}
-	
-	/*
-	
-	public File getMainFile()
-	{
-		return mainFile;
-	}
-	
-	public void setMainFile(File file )
-	{
-		mainFile = file;
-	}
-	*/
 }

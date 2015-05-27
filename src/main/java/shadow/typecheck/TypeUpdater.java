@@ -1456,7 +1456,23 @@ public class TypeUpdater extends BaseChecker {
 	}
 	
 	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { 
-		return pushUpType(node, secondVisit); 
+		if( secondVisit ) {
+			boolean isNullable = node.getModifiers().isNullable();
+			
+			Node child = node.jjtGetChild(0);			
+			node.setModifiers(child.getModifiers());
+			
+			Type type = child.getType();
+			
+			if( isNullable && type instanceof ArrayType ) {
+				ArrayType arrayType = (ArrayType) type;
+				type = arrayType.convertToNullable();
+			}
+			
+			node.setType(type);
+		}		
+		
+		return WalkType.POST_CHILDREN;
 	}
 	
 	

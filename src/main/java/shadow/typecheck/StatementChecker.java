@@ -28,6 +28,7 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -426,17 +427,21 @@ public class StatementChecker extends BaseChecker
 				
 				if( isVar )
 				{
-					if( declarator.jjtGetNumChildren() > 0 ) //has initializer
-						declarator.setType(declarator.jjtGetChild(0).getType());
+					if( declarator.jjtGetNumChildren() > 0 ) //has initializer						
+						type = declarator.jjtGetChild(0).getType();					
 					else
 					{
-						declarator.setType(Type.UNKNOWN);
+						type = Type.UNKNOWN;
 						addError(declarator, Error.UNDEFINED_TYPE, "Variable declared with var has no initializer to infer type from");
 					}
 				}
-				else
-					declarator.setType(type);
-										
+				
+				if( node.getModifiers().isNullable() && type instanceof ArrayType  ) {
+					ArrayType arrayType = (ArrayType) type;
+					type = arrayType.convertToNullable();
+				}				
+				
+				declarator.setType(type);										
 				declarator.setModifiers(node.getModifiers());					
 				addSymbol( declarator.getImage(), declarator ); //add to local scope
 			}
@@ -1253,7 +1258,15 @@ public class StatementChecker extends BaseChecker
 					rightElement = ((SequenceType)rightType).get(i);
 				
 				if( leftElement.getType().equals( Type.VAR ) )
-					leftElement.setType(resolveType( rightElement).getType());				
+				{	
+					Type type = resolveType( rightElement).getType();
+					if( leftElement.getModifiers().isNullable() && type instanceof ArrayType ) {
+						ArrayType arrayType = (ArrayType) type;
+						type = arrayType.convertToNullable();
+					}
+					
+					leftElement.setType(type);
+				}
 							
 				if( leftElement instanceof ASTSequenceVariable ) //declaration	
 				{
@@ -2293,6 +2306,7 @@ public class StatementChecker extends BaseChecker
 			Type prefixType = prefixNode.getType();			
 			SequenceType typeArguments = null;
 			int start = 0;
+			boolean nullable = false;
 			
 			if( node.jjtGetChild(0) instanceof ASTTypeArguments ) {
 				typeArguments = ((ASTTypeArguments) node.jjtGetChild(0)).getType();
@@ -2300,7 +2314,16 @@ public class StatementChecker extends BaseChecker
 			}
 			
 			ASTArrayDimensions dimensions = (ASTArrayDimensions) node.jjtGetChild(start);
-			start++;			
+			start++;
+			
+			if( node.getImage().equals("null")  ) {
+				nullable = true;
+				
+				if( prefixType instanceof ArrayType ) {
+					ArrayType arrayType = (ArrayType) prefixType;
+					prefixType = arrayType.convertToNullable();
+				}
+			}
 			
 			//create array
 			if( prefixNode.getModifiers().isTypeName() ) {
@@ -2310,7 +2333,10 @@ public class StatementChecker extends BaseChecker
 						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) ) {					
 							try {
 								prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
-								arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions() );
+								if( nullable )
+									arrayType = new NullableArrayType( prefixType, dimensions.getArrayDimensions() );
+								else
+									arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions() );
 								node.setType( arrayType );
 							} 
 							catch (InstantiationException e) {
@@ -2330,17 +2356,18 @@ public class StatementChecker extends BaseChecker
 				}
 				else {
 					if( !prefixType.isParameterized() ) {
-						arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions() ); 
+						if( nullable )
+							arrayType = new NullableArrayType( prefixType, dimensions.getArrayDimensions() );
+						else	
+							arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions() ); 
 						node.setType( arrayType );
 					}
 					else {
 						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
 						node.setType(Type.UNKNOWN);	
 					}					
-				}
-				
-				if( node.getImage().equals("null")  )
-					node.addModifier(Modifiers.NULLABLE);
+				}			
+
 								
 				if( node.hasCreate() ) {
 					SequenceType arguments = new SequenceType();
@@ -3005,15 +3032,21 @@ public class StatementChecker extends BaseChecker
 			baseType = result;
 		}
 		ArrayType arrayType = new ArrayType(baseType, dimensions);
-		*/		
+		*/
 		
 		//new code assumes that result is array of arrays
-		ArrayType arrayType = new ArrayType(result, 1);
-		node.setType(arrayType);
-		((ClassType)currentType).addReferencedType(arrayType);
+		ArrayType arrayType;
 		
 		if( nullable )
+		{
 			node.addModifier(Modifiers.NULLABLE);
+			arrayType = new NullableArrayType(result, 1);
+		}
+		else
+			arrayType = new ArrayType(result, 1);
+		
+		node.setType(arrayType);
+		((ClassType)currentType).addReferencedType(arrayType);
 		
 		return true;		
 	}
@@ -3228,7 +3261,25 @@ public class StatementChecker extends BaseChecker
 	}
 	
 
-	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { return pushUpType(node, secondVisit); }
+	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { 
+		if( secondVisit ) {
+			boolean isNullable = node.getModifiers().isNullable();
+			
+			Node child = node.jjtGetChild(0);			
+			node.setModifiers(child.getModifiers());
+			
+			Type type = child.getType();
+			
+			if( isNullable && type instanceof ArrayType ) {
+				ArrayType arrayType = (ArrayType) type;
+				type = arrayType.convertToNullable();
+			}
+			
+			node.setType(type);
+		}		
+		
+		return WalkType.POST_CHILDREN;
+	}
 	
 	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )

@@ -52,16 +52,15 @@ public class TypeCollector extends BaseChecker {
 	private Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors and also resolving type parameters	
 	private String currentName = "";
 	private Map<String, Node> files = new HashMap<String, Node>();	
-	private TypeChecker typeChecker;
+	private File currentFile;
 	private Type mainType = null;
 	private Job currentJob;
 	private Configuration config;
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, TypeChecker typeChecker, Job currentJob) throws ConfigurationException {		
-		super(typeTable, importList, p);		
-		this.typeChecker = typeChecker;
+	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, Job currentJob) throws ConfigurationException {		
+		super(typeTable, importList, p);
 		this.currentJob = currentJob;
 		config = Configuration.getConfiguration();
 	}	
@@ -138,11 +137,11 @@ public class TypeCollector extends BaseChecker {
 				canonicalFile  = new File(canonical + ".meta");		
 			
 			ShadowParser parser = new ShadowFileParser(canonicalFile);				
-			typeChecker.setCurrentFile(canonicalFile);
+			currentFile = canonicalFile;
 		    Node node = parser.CompilationUnit();
 		    		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), typeChecker, currentJob);
+			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), currentJob);
 			walker = new ASTWalker( collector );		
 			walker.walk(node);	
 			
@@ -359,6 +358,7 @@ public class TypeCollector extends BaseChecker {
 				case "long":			Type.LONG = (ClassType)type; break;
 				case "Method":			Type.METHOD = (ClassType)type; break;
 				//case "MethodClass":		Type.METHOD_CLASS = (ClassType) type; break;				
+				case "NullableArray":	Type.NULLABLE_ARRAY = (ClassType) type; break;
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;
@@ -450,8 +450,8 @@ public class TypeCollector extends BaseChecker {
 					if( path.startsWith("default"))
 					{
 						path = path.replaceFirst("default@", "");
-						shadowVersion = new File( typeChecker.getCurrentFile().getParent(),  path + ".shadow");
-						metaVersion = new File( typeChecker.getCurrentFile().getParent(),  path + ".meta");
+						shadowVersion = new File( currentFile.getParent(),  path + ".shadow");
+						metaVersion = new File( currentFile.getParent(),  path + ".meta");
 					}
 					else
 					{

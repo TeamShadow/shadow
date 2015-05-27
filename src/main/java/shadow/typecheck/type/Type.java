@@ -58,9 +58,10 @@ public abstract class Type implements Comparable<Type>
 	public static ClassType CLASS = null;  // meta class for holding normal :class variables
 	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables	
 	public static ClassType ARRAY_CLASS = null;  // meta class for holding generic array :class variables
-	public static ClassType ARRAY = null;  // class representation of all array types
-	public static ClassType METHOD = null;  // class representation for references with function type
-	public static ClassType UNBOUND_METHOD = null; //class representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
+	public static ClassType ARRAY = null;  // object representation of all array types
+	public static ClassType NULLABLE_ARRAY = null;  // object representation of nullable array types
+	public static ClassType METHOD = null;  // object representation for references with function type
+	public static ClassType UNBOUND_METHOD = null; //object representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
 
 	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
 	public static ExceptionType EXCEPTION = null;
@@ -184,6 +185,7 @@ public abstract class Type implements Comparable<Type>
 		ASSERT_EXCEPTION = null;
 		CLASS = null;		
 		ARRAY = null;
+		NULLABLE_ARRAY = null;
 		ARRAY_CLASS = null;
 		METHOD = null;				
 		UNBOUND_METHOD = null;
@@ -261,7 +263,11 @@ public abstract class Type implements Comparable<Type>
 	}
 	
 	final public String getMangledNameWithGenerics() {
-		if( this instanceof ArrayType || getTypeWithoutTypeArguments().equals(Type.ARRAY) || Type.ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) )
+		if( this instanceof ArrayType || 
+			getTypeWithoutTypeArguments().equals(Type.ARRAY) || 
+			getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) ||
+			Type.ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) ||
+			Type.NULLABLE_ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) )
 			return getMangledNameWithGenerics(false);
 		else
 			return getMangledNameWithGenerics(true);		
@@ -1193,6 +1199,7 @@ public abstract class Type implements Comparable<Type>
 								
 				addReferencedType(arrayType.convertToGeneric());
 				//covers Type.ARRAY and all recursive base types
+				//automatically does the right thing for NullableArray
 			}
 			else if( type instanceof MethodType )
 			{
