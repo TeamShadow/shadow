@@ -44,15 +44,13 @@ public class Arguments {
 		CommandLineParser parser = new PosixParser();
 		commandLine = parser.parse(compilerOptions, args);
 		
-		// Ensure exactly one source file is specified
-		if( commandLine.getArgs().length > 1 ) {
-			
+		// Ensure exactly one source file is specified (and that it ends in .shadow)
+		if( commandLine.getArgs().length > 1 )
 			throw new ConfigurationException("Only one main source file may be specified");
-		}
-		else if( commandLine.getArgs().length == 0 ) {
-			
+		else if( commandLine.getArgs().length == 0 )
 			throw new ConfigurationException("No source file specified to compile");
-		}
+		else if( !commandLine.getArgs()[0].endsWith(".shadow") )
+			throw new ConfigurationException("Source files must end in \".shadow\"");
 		
 		// Increase logging level if VERBOSE is set
 		if( hasOption(VERBOSE) )
