@@ -26,3 +26,4 @@ hs_err_pid*
 # Keep these around, they are required to run tests from the command line
 !/target/shadow.xml
 !/target/windows.xml
+/target/
