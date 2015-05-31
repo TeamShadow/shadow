@@ -662,7 +662,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		}
 	}	
 
-	protected static String stripExtension(String file)
+	public static String stripExtension(String file)
 	{
 		return file.substring(0, file.lastIndexOf("."));
 	}
