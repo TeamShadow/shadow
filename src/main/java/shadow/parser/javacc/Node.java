@@ -4,6 +4,7 @@ package shadow.parser.javacc;
 
 import java.io.File;
 
+import shadow.typecheck.type.Documentation;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -79,6 +80,9 @@ interface Node extends ModifiedType {
 	public void setEnclosingType(Type type);
 	public Type getEnclosingType();
 	
+	public Documentation getDocumentation();
+	public void setDocumentation(Documentation documentation);
+	public void addDocumentationLine(String line);
 	
 	public boolean isField();
 

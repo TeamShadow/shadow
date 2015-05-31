@@ -61,6 +61,12 @@ SKIP :
 
 /* COMMENTS */
 
+TOKEN :
+{
+  /* Comes before the other comments to ensure it gets matching priority */
+  < DOCUMENTATION_COMMENT : "///" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") >
+}
+
 MORE :
 {
   "//" : IN_SINGLE_LINE_COMMENT
@@ -428,13 +434,15 @@ TOKEN :
 ASTCompilationUnit CompilationUnit():
 {
 	Modifiers modifiers;
+	Documentation documentation = new Documentation();
 }
 {  
   ( ImportDeclaration() )*
+  ( DocumentationComment(documentation) )*
 
   modifiers = Modifiers()
-  ( ClassOrInterfaceDeclaration(modifiers)
-  | EnumDeclaration(modifiers)  
+  ( ClassOrInterfaceDeclaration(modifiers, documentation)
+  | EnumDeclaration(modifiers, documentation)  
  // | ViewDeclaration(modifiers)
   )//only one declaration per file
    
@@ -499,6 +507,19 @@ Modifiers Modifiers():
 }
 
 /*
+ * Individual lines of a documentation comment are matched by this rule
+ */
+void DocumentationComment(Documentation documentation):
+{
+  debugPrint("DOCUMENTATION COMMENT");
+  Token t;}
+{  t = <DOCUMENTATION_COMMENT>
+  {
+    documentation.addLine(t.image);
+  }
+}
+
+/*
  * Declaration syntax follows.
  */
 /*
@@ -529,13 +550,16 @@ void ViewBodyDeclaration():
 }
 */
 
-void ClassOrInterfaceDeclaration(Modifiers modifiers):
+void ClassOrInterfaceDeclaration(Modifiers modifiers, Documentation documentation):
 {
    debugPrint("CLASS OR INTERFACE DECLARATION");
    Token t;
 }
 {
-  { jjtThis.setModifiers(modifiers); }
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setDocumentation(documentation);
+  }
   ( "class"
   	{
   	  jjtThis.setKind(TypeKind.CLASS);
@@ -613,14 +637,17 @@ void Version():
    "$" < VERSION_LITERAL >
 }
 
-void EnumDeclaration(Modifiers modifiers):
+void EnumDeclaration(Modifiers modifiers, Documentation documentation):
 {
     debugPrint("ENUM DECLARATION");
     Token t;
 	modifiers.checkEnumModifiers(jjtThis);
 }
 {
-{ jjtThis.setModifiers(modifiers); }
+{
+  jjtThis.setModifiers(modifiers);
+  jjtThis.setDocumentation(documentation);
+}
 
   "enum"
   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ]

@@ -5,6 +5,7 @@ import java.io.File;
 import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
+import shadow.typecheck.type.Documentation;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -26,6 +27,9 @@ public class SimpleNode implements Node {
     
     protected Type type;		// used by the type checker    
     protected Modifiers modifiers = new Modifiers(); 	// used by the type checker
+    
+    // Used to hold documentation comments regarding this node
+    protected Documentation documentation = new Documentation();
     
 	private Type enclosingType;	// used by the type checker (refers to the class where the node is used, for private/protected visibility)
 
@@ -208,6 +212,24 @@ public class SimpleNode implements Node {
 	public void removeModifier( int mod )
 	{
 		modifiers.removeModifier(mod);
+	}
+	
+	@Override
+	public Documentation getDocumentation()
+	{
+		return documentation;
+	}
+	
+	@Override
+	public void setDocumentation(Documentation documentation)
+	{
+		this.documentation = documentation;
+	}
+	
+	@Override
+	public void addDocumentationLine(String line)
+	{
+		documentation.addLine(line);
 	}
 	
 	public void setEnclosingType(Type type)
