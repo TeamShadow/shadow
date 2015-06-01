@@ -17,6 +17,7 @@ import shadow.parser.*;
 import shadow.AST.ASTWalker;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.Documentation;
 import shadow.Loggers;
 import org.apache.logging.log4j.Logger;
 
@@ -709,15 +710,17 @@ void ClassOrInterfaceBody(TypeKind kind):
 
 void ClassOrInterfaceBodyDeclaration(TypeKind kind):
 {
-   Modifiers modifiers;
-   debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
+  Documentation documentation = new Documentation();
+  Modifiers modifiers;
+  debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {  
+  ( DocumentationComment(documentation) )*
 // Just get all the modifiers out of the way. If you want to do
-// more checks, pass the modifiers down to the member  
-	modifiers = Modifiers()
-  (  ClassOrInterfaceDeclaration(modifiers)
-    | EnumDeclaration(modifiers)
+// more checks, pass the modifiers down to the member
+  modifiers = Modifiers()
+  (  ClassOrInterfaceDeclaration(modifiers, documentation)
+    | EnumDeclaration(modifiers, documentation)
     | LOOKAHEAD( "create" ) CreateDeclaration(modifiers)
     | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
     | LOOKAHEAD( FieldDeclaration(modifiers) ) FieldDeclaration(modifiers) 

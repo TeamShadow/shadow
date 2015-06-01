@@ -33,7 +33,6 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
-import doctool.DocToolTypeChecker;
 
 /**
  * @author Bill Speirs
@@ -121,7 +120,7 @@ public class Main {
 
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
 
-		// Detect and establush the current settings and arguments
+		// Detect and establish the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
 		config = Configuration.buildConfiguration(compilerArgs, false);
 		currentJob = new Job(compilerArgs);
@@ -150,13 +149,9 @@ public class Main {
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
 
-		// Generate .ll files unless the compiler is in documentation mode
-		if (currentJob.isGenerateDocs())
-			generateDocumentation();
-		else
-			generateLLVM(linkCommand);
+		generateLLVM(linkCommand);
 
-		if (!currentJob.isCheckOnly() && !currentJob.isNoLink() && !currentJob.isGenerateDocs())
+		if (!currentJob.isCheckOnly() && !currentJob.isNoLink())
 		{
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.println();
@@ -223,6 +218,7 @@ public class Main {
 			logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
 		}
 	}
+
 
 	/**
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
@@ -312,28 +308,6 @@ public class Main {
 			linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
 		}
 	}
-	
-	/**
-	 * Builds the documentation for a given source file
-	 */
-	private static void generateDocumentation() throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException 
-	{	
-		Type.clearTypes();
-		DocToolTypeChecker checker = new DocToolTypeChecker();
-
-		Path mainFile = currentJob.getMainFile();
-
-		List<Node> nodes;
-
-		try {
-			nodes = checker.typeCheck(mainFile.toFile(), currentJob);
-		}
-		catch( TypeCheckException e ) {
-			logger.error(mainFile + " FAILED TO TYPE CHECK");
-			throw e;
-		}
-	}
-
 
 	private static void addToLink( Type type, File file, List<String> linkCommand, HashSet<Generic> generics, HashSet<Array> arrays ) throws IOException, ShadowException {
 		
