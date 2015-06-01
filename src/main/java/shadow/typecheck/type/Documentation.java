@@ -21,9 +21,10 @@ public class Documentation
 		lines.add(line);
 	}
 	
-	public String[] getLines()
+	/** Determines if documentation text has actually been added */
+	public boolean hasContent()
 	{
-		return (String[]) lines.toArray();
+		return (lines.size() > 0);
 	}
 	
 	@Override

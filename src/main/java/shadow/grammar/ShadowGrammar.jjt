@@ -721,22 +721,25 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
   modifiers = Modifiers()
   (  ClassOrInterfaceDeclaration(modifiers, documentation)
     | EnumDeclaration(modifiers, documentation)
-    | LOOKAHEAD( "create" ) CreateDeclaration(modifiers)
-    | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
-    | LOOKAHEAD( FieldDeclaration(modifiers) ) FieldDeclaration(modifiers) 
-    | MethodDeclaration(modifiers)
+    | LOOKAHEAD( "create" ) CreateDeclaration(modifiers, documentation)
+    | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers, documentation)
+    | LOOKAHEAD( FieldDeclaration(modifiers, documentation) ) FieldDeclaration(modifiers, documentation) 
+    | MethodDeclaration(modifiers, documentation)
     | GenericDeclaration()
     //| ViewDeclaration(modifiers)
   )
 }
 
-void FieldDeclaration(Modifiers modifiers):
+void FieldDeclaration(Modifiers modifiers, Documentation documentation):
 {
     debugPrint("FIELD DECLARATION");
 	modifiers.checkFieldModifiers(jjtThis);
 }
 {
-  { jjtThis.setModifiers(modifiers); }
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setDocumentation(documentation);
+  }
   Type()
   VariableDeclarator() ("," VariableDeclarator() )*
   ";"
@@ -828,24 +831,31 @@ void FormalParameter():
    }
 }
 
-void MethodDeclaration(Modifiers modifiers):
+void MethodDeclaration(Modifiers modifiers, Documentation documentation):
 {
   debugPrint("METHOD DECLARATION");
-	modifiers.checkMethodModifiers(jjtThis); 
- }
+  modifiers.checkMethodModifiers(jjtThis);
+}
 {
-  { jjtThis.setModifiers(modifiers); }  
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setDocumentation(documentation);
+  }  
   MethodDeclarator(false) [ "throws" NameList() ]
   ( Block() { jjtThis.setBlock(true); } | ";" )
 }
 
-void CreateDeclaration(Modifiers modifiers):
+void CreateDeclaration(Modifiers modifiers, Documentation documentation):
 {
   debugPrint("CREATE DECLARATION");
   modifiers.checkCreateModifiers(jjtThis);  
 }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("create"); }  
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setDocumentation(documentation);
+    jjtThis.setImage("create");
+  }  
   // Modifiers matched in the caller
   CreateDeclarator() [ "throws" NameList() ]
   ( CreateBlock() { jjtThis.setBlock(true); } | ";" )
@@ -871,13 +881,17 @@ void CreateBlock():
     {
       jjtThis.setEndToken(t);    } }
 
-void DestroyDeclaration(Modifiers modifiers):
+void DestroyDeclaration(Modifiers modifiers, Documentation documentation):
 {
   debugPrint("DESTROY DECLARATION");
   modifiers.checkDestroyModifiers(jjtThis);
 }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("destroy"); }  
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setImage("destroy");
+    jjtThis.setDocumentation(documentation);
+  }  
   // Modifiers matched in the caller
   "destroy" //no (checked) exceptions from destroys!
   ( Block() { jjtThis.setBlock(true); } | ";" )

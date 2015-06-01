@@ -83,6 +83,7 @@ interface Node extends ModifiedType {
 	public Documentation getDocumentation();
 	public void setDocumentation(Documentation documentation);
 	public void addDocumentationLine(String line);
+	public boolean hasDocumentation();
 	
 	public boolean isField();
 

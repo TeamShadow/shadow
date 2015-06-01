@@ -232,6 +232,13 @@ public class SimpleNode implements Node {
 		documentation.addLine(line);
 	}
 	
+	/** Indicates whether or not actual text has been added to this node's documentation */
+	@Override
+	public boolean hasDocumentation()
+	{
+		return documentation.hasContent();
+	}
+	
 	public void setEnclosingType(Type type)
 	{
 		enclosingType = type;
