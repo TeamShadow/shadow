@@ -80,5 +80,6 @@ public class DocumentationVisitor extends AbstractASTVisitor
 	{
 		System.out.print(node.getDocumentation());
 		System.out.println(node);
+		System.out.println();
 	}
 }
