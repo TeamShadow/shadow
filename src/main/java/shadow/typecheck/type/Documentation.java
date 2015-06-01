@@ -25,4 +25,17 @@ public class Documentation
 	{
 		return (String[]) lines.toArray();
 	}
+	
+	@Override
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder();
+		
+		for (String line : lines)
+		{
+			builder.append(line);
+		}
+		
+		return builder.toString();
+	}
 }
