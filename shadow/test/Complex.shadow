@@ -1,4 +1,4 @@
-immutable class Complex implements
+immutable class shadow:test@Complex implements
 CanAdd<Complex>,
 CanSubtract<Complex>,
 CanMultiply<Complex>,

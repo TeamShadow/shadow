@@ -202,6 +202,9 @@ public class Package
 	
 	@Override
 	public String toString() {
-		return getQualifiedName();
+		if( parent == null )
+			return "default";
+		else		
+			return getQualifiedName();
 	}	
 }

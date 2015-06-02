@@ -6,6 +6,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -142,6 +143,7 @@ public class TypeCollector extends BaseChecker {
 		    		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
 			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), currentJob);
+			collector.currentFile = currentFile; //for now, so that we have a file whose directory we can check
 			walker = new ASTWalker( collector );		
 			walker.walk(node);	
 			
@@ -157,7 +159,18 @@ public class TypeCollector extends BaseChecker {
 				Package newPackage = packageTree.addQualifiedPackage(p.getQualifiedName(), typeTable);
 				try
 				{	
-					newPackage.addTypes( otherTypes.get(p) );
+					HashMap<String, Type> types = otherTypes.get(p);
+					newPackage.addTypes( types  );					
+					
+					if( mainType != null && newPackage == packageTree && mainType.getPackage() != packageTree  ) {
+						//imported class has default package but the main type doesn't
+						//the only classes without a package that will be imported will be in the same directory as the main type
+						//implication: classes in the same directory have different packages
+						for(Type type : types.values()) {
+							String message = "Type " + type + " belongs to the default package, but types defined in the same directory belong to other packages";
+							addWarning(Error.MISMATCHED_PACKAGE, message);
+						}
+					}											
 				}
 				catch(PackageException e)
 				{
@@ -168,6 +181,10 @@ public class TypeCollector extends BaseChecker {
 			//copy any errors into our error list
 			if( collector.getErrorCount() > 0 )
 				errorList.addAll(collector.errorList);
+			
+			//copy any warnings
+			if( collector.getWarningCount() > 0 )
+				warningList.addAll(collector.warningList);
 			
 			for( String _import : collector.getImportList() )
 			{
@@ -194,18 +211,47 @@ public class TypeCollector extends BaseChecker {
 				}
 			}
 		}
-				
+		
+		checkPackageDirectories(packageTree);
 		
 		if( errorList.size() > 0 )
 		{
 			printErrors();
+			printWarnings();
 			throw errorList.get(0);
-		}		
+		}
+		
+		printWarnings();
 		
 		//return the node corresponding to the file being compiled
 		return nodeTable;
 	}
 	
+	private void checkPackageDirectories(Package _package) {		
+		Collection<Type> types = _package.getTypes();
+		
+		Type firstType = null;
+		File path1 = null;
+		
+		if( types.size() > 1 ) {
+			for( Type type : types ) {
+				if( firstType == null ) {
+					firstType = type;
+					path1 = nodeTable.get(type).getFile().getParentFile();
+				}
+				else {					
+					File path2 = nodeTable.get(type).getFile().getParentFile();					
+					
+					if( !path1.equals(path2))
+						addWarning(Error.MISMATCHED_PACKAGE, "Type " + firstType + " and " + type + " both belong to package " + _package + " but are defined in different directories");
+				}
+			}
+		}
+		
+		for( Package child : _package.getChildren().values()  )
+			checkPackageDirectories(child);
+	}
+
 	private Object createType( SimpleNode node, Modifiers modifiers, TypeKind kind ) throws ShadowException
 	{		 
 		String typeName;
@@ -447,6 +493,7 @@ public class TypeCollector extends BaseChecker {
 				{
 					File shadowVersion;
 					File metaVersion;
+				
 					if( path.startsWith("default"))
 					{
 						path = path.replaceFirst("default@", "");
@@ -476,6 +523,7 @@ public class TypeCollector extends BaseChecker {
 					catch (IOException e)
 					{						
 					}
+					
 				}
 				
 				if( success )

@@ -113,8 +113,11 @@ public class TypeUpdater extends BaseChecker {
 
 		if( errorList.size() > 0 ) {
 			printErrors();
+			printWarnings();
 			throw errorList.get(0);
 		}
+		
+		printWarnings();
 		
 		return nodeTable;
 	}

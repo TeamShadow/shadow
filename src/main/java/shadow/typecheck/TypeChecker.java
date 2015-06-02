@@ -24,6 +24,7 @@ public class TypeChecker {
 	/**
 	 * Given the main file to compile, checks it
 	 * @param file the file to compile
+	 * @param currentJob configuration information about the current compilation
 	 * @return nodes corresponding to all the AST nodes for each class
 	 * @throws ShadowException
 	 * @throws ParseException 

@@ -64,8 +64,12 @@ public class StatementChecker extends BaseChecker
 		if( errorList.size() > 0 )
 		{
 			printErrors();
+			printWarnings();
 			throw errorList.get(0);
 		}	
+		
+		printWarnings();
+		warningList.clear();
 	}
 	
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class

@@ -1,0 +1,75 @@
+abstract locked class shadow:standard@NullableArray<T>
+{
+	get immutable int[] lengths;
+	Object data;
+	protected create( immutable int[] lengths, Object data )	
+	{
+		this:lengths = lengths;		
+		this:data = data;		
+	}	
+	
+	protected native create( immutable int[] lengths );
+	
+	/*
+	protected native create( immutable int[] lengths )
+	{
+		this:lengths = lengths;
+		this:data = allocate(T:class, this->size);
+	}
+	*/	
+		
+	//private immutable native allocate( Class type, int size ) => ( Object );
+
+	public readonly get size() => ( int )
+	{
+		int size = lengths[0];
+		for ( int i = 1; i < this->dims; i += 1 )
+			size *= lengths[i];
+		return size;
+	}
+	
+	public readonly native get dims() => ( int );
+	
+	
+	/* //copy implementation based off the following code
+	private readonly copyProxy(AddressMap addresses) => ( Array<T> )
+	{
+		Array<T> duplicate = Array<T>:create( lengths );
+		for( int i = 0; i < this->size; i += 1 )
+			duplicate.index(i, index(i).copy(addresses)));
+				
+		return duplicate;
+	}
+	*/
+
+	public readonly native index( int[] indices ) => (nullable T);
+	public native index( int[] indices, nullable T value ) => ();
+	
+	//private methods that take the final offset after all the dimensions have been computed
+	//unsafe to give to the user, but useful for internals
+	private readonly native index( int index ) => (nullable T);
+	private native index( int index, nullable T value) => ();	
+
+	public native readonly getBaseClass() => ( Class );
+
+	public readonly toString() => ( String )
+	{
+		int length = this->size;
+		if ( length == 0 )
+			return "[]";
+		
+		MutableString string = MutableString:create("[");
+		boolean first = true;
+		 
+		for( int i = 0; i < length; i += 1 )
+		{	
+			if ( first )
+				first = false;
+			else
+				string.append(", ");
+				
+			string.append(index(i));
+		}
+		return string.append("]").toString();
+	}
+}

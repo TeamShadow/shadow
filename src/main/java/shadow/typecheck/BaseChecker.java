@@ -54,6 +54,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	protected static String eol = System.getProperty("line.separator", "\n");
 
 	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
+	protected ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();
 	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
 	protected List<String> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
@@ -391,6 +392,16 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		errorList.add(new TypeCheckException(type, error));
 	}
 	
+	protected void addWarning(Node node, Error type, String message) {
+		String warning = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+		warningList.add(new TypeCheckException(type, warning));
+	}
+	
+	protected void addWarning(Error type, String message) {
+		String warning = makeMessage(type, message, getFile(), getLineStart(), getLineEnd(), getColumnStart(), getColumnEnd());		
+		warningList.add(new TypeCheckException(type, warning));
+	}
+	
 	protected static String makeMessage(Error type, String message, File file, int lineStart, int lineEnd, int columnStart, int columnEnd )
 	{
 		StringBuilder error = new StringBuilder();
@@ -398,14 +409,15 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		if( file != null )
 			error.append("(" + file.getName() + ")");
 		
-		error.append("[" + lineStart + ":" + columnStart + "] ");
+		if( lineStart != -1 && columnStart != -1 )
+			error.append("[" + lineStart + ":" + columnStart + "] ");
 		
 		if( type != null )
 			error.append(type.getName() + ": ");		
 		
 		error.append(message);
 		
-		if( file != null) {
+		if( file != null && lineStart >= 0 && lineEnd >= lineStart && columnStart >= 0 && columnEnd >= 0 ) {
 		BufferedReader reader = null;
 		  try {
 			reader = new BufferedReader(new FileReader(file));
@@ -447,6 +459,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			logger.error(exception.getMessage());
 	}
 	
+	public void printWarnings() 
+	{
+		for(TypeCheckException exception : warningList)
+			logger.warn(exception.getMessage());
+	}	
 	
 	protected final Type lookupTypeFromCurrentMethod( String name )
 	{		
@@ -593,6 +610,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	public int getErrorCount()
 	{
 		return errorList.size();
+	}
+	
+	public int getWarningCount()
+	{
+		return warningList.size();
 	}
 	
 	public Package getPackageTree()
