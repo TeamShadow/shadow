@@ -8,10 +8,10 @@ import shadow.parser.javacc.*;
 public class AbstractASTVisitor implements ShadowParserVisitor {
 	
 	private File file;
-	private int lineStart;
-	private int lineEnd;
-	private int columnStart;
-	private int columnEnd;
+	private int lineStart = -1;
+	private int lineEnd = -1;
+	private int columnStart = -1;
+	private int columnEnd = -1;
 	
 	public void setLocation(Node node)
 	{

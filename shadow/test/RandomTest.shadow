@@ -1,7 +1,7 @@
 import shadow:utility@Random;
 import shadow:io@Console;
 
-class RandomTest
+class shadow:test@RandomTest
 {
     public main(String[] args) => () 
     { 

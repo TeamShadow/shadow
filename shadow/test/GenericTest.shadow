@@ -1,8 +1,7 @@
 import shadow:io@Console;
 
-class GenericTest
+class shadow:test@GenericTest
 {
-
 	public main(String[] args) => ()
 	{
 		Console out;

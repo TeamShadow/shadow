@@ -143,7 +143,7 @@ public class ArrayType extends ClassType
 		if( type == Type.NULL )
 			return false;
 		
-		if( type instanceof ArrayType )
+		if( type instanceof ArrayType && !(type instanceof NullableArrayType) )
 		{
 			ArrayType other = (ArrayType)type;
 			if( dimensions == other.dimensions )
@@ -187,7 +187,7 @@ public class ArrayType extends ClassType
 		if( t == OBJECT )
 			return true;
 		
-		if( t instanceof ArrayType ) {
+		if( t instanceof ArrayType && !(t instanceof NullableArrayType) ) {
 			ArrayType type = (ArrayType)this;
 			ArrayType other = (ArrayType)t;
 			//invariant subtyping on arrays
@@ -224,6 +224,10 @@ public class ArrayType extends ClassType
 		return null; //shouldn't happen
 	}
 	
+	public NullableArrayType convertToNullable()
+	{
+		return new NullableArrayType( baseType, dimensions );
+	}
 
 	@Override
 	public boolean isRecursivelyParameterized()

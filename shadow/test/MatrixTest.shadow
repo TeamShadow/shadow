@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class MatrixTest
+class shadow:test@MatrixTest
 {
 	public main(String[] args) => ()
 	{	

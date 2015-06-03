@@ -7,7 +7,9 @@ immutable class shadow:standard@Class implements CanHash
 	int flags;
 	get int size;
 	
+	//array allocation methods
 	private native allocate( int size ) => ( Object );	
+	private native allocateNullable( int size ) => ( Object );
 	
 	public isInterface() => ( boolean )
 	{

@@ -1,4 +1,4 @@
-class Container<T>
+class shadow:test@Container<T>
 {
 	T object;
 	

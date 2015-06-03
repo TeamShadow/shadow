@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class ArrayInitializerTest
+class shadow:test@ArrayInitializerTest
 {
 	int[] values = {1, 4, 9, 16, 25};
 	String[] words = {"donut", "explanation", "story", "book", #25};
