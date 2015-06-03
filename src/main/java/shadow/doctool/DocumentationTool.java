@@ -8,7 +8,6 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 
 import shadow.Arguments;
-import shadow.CompileException;
 import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Job;
@@ -26,45 +25,31 @@ public class DocumentationTool
 	
 	public static void main(String[] args)
 	{
-		try
-		{
+		try {
 			document(args);
-		}
-		catch(FileNotFoundException e)
-		{
+		} catch(FileNotFoundException e) {
 			System.err.println("FILE NOT FOUND: " + e.getLocalizedMessage());
 			System.exit(Main.FILE_NOT_FOUND_ERROR);
-		}
-		catch(ParseException e)
-		{
+		} catch(ParseException e) {
 			System.err.println("PARSE ERROR: " + e.getLocalizedMessage());
 			System.exit(Main.PARSE_ERROR);
-		}
-		catch (ShadowException e)
-		{
+		} catch (ShadowException e) {
 			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			System.exit(Main.TYPE_CHECK_ERROR);
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			System.exit(Main.TYPE_CHECK_ERROR);
-		}
-		catch (org.apache.commons.cli.ParseException e)
-		{
+		} catch (org.apache.commons.cli.ParseException e) {
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
 			//printHelp();
 			System.exit(Main.COMMAND_LINE_ERROR);
-		}
-		catch (ConfigurationException e) {
+		} catch (ConfigurationException e) {
 			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
 			//printHelp();
 			System.exit(Main.CONFIGURATION_ERROR);
-		}
-		catch (TypeCheckException e)
-		{
+		} catch (TypeCheckException e) {
 			System.err.println("TYPE CHECK ERROR: " + e.getLocalizedMessage());
 			System.exit(Main.TYPE_CHECK_ERROR);
 		}
@@ -83,13 +68,12 @@ public class DocumentationTool
 		DocumentationTypeChecker checker = new DocumentationTypeChecker();
 		
 		Path mainFile = currentJob.getMainFile();
-
-		List<Node> nodes;
-
+		
+		logger.info("Test");
+		
 		try {
-			nodes = checker.typeCheck(mainFile.toFile(), currentJob);
-		}
-		catch( TypeCheckException e ) {
+			checker.typeCheck(mainFile.toFile(), currentJob);
+		} catch( TypeCheckException e ) {
 			logger.error(mainFile + " FAILED TO TYPE CHECK");
 			throw e;
 		}
