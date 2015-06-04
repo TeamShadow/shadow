@@ -1184,7 +1184,8 @@ public abstract class Type implements Comparable<Type>
 	//only used by TypeUpdater for meta files
 	public void addReferencedTypeDirectly(Type type ) {
 		referencedTypes.add( type );
-	}
+	}	
+	
 	
 	public void addReferencedType(Type type)
 	{		

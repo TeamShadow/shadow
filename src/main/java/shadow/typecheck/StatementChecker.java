@@ -395,7 +395,11 @@ public class StatementChecker extends BaseChecker
 				node.setType(type);
 			else
 			{
-				ArrayType arrayType = new ArrayType(type, dimensions);
+				ArrayType arrayType;
+				if( node.getModifiers().isNullable() )
+					arrayType = new NullableArrayType(type, dimensions);
+				else
+					arrayType = new ArrayType(type, dimensions);
 				((ClassType)currentType).addReferencedType(arrayType);
 				node.setType(arrayType);
 			}

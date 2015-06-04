@@ -1,0 +1,31 @@
+import shadow:io@Console;
+
+class shadow:test@NullablePrimitiveTest
+{
+	public main() => ()
+	{
+		Console out;
+		nullable int x = 6;
+		int y = 5;
+		
+		if( x === y )
+			out.printLine("Equal!");
+		else
+			out.printLine("Not equal!");
+			
+		x = 5;	
+			
+		if( x === y )
+			out.printLine("Equal!");
+		else
+			out.printLine("Not equal!");
+			
+		if( check(x) == y )
+			out.printLine("Equal!");
+		else
+			out.printLine("Not equal!");
+		
+		x = null;		
+		out.printLine(x); //should be null
+	}
+}

@@ -459,7 +459,7 @@ void GenericDeclaration():
    debugPrint("GENERIC DECLARATION");
 }
 {
-  "import" ReferenceType() ";"} 
+  "import" ReferenceType(Modifiers.NO_MODIFIERS) ";"} 
 
 /*
  * Modifiers. We match all modifiers in a single rule to reduce the chances of
@@ -878,14 +878,17 @@ void Type(Modifiers modifiers):
 	jjtThis.setModifiers(modifiers);
 }
 {
-   LOOKAHEAD(ReferenceType()) ReferenceType()
+   LOOKAHEAD(ReferenceType()) ReferenceType(modifiers)
  //   |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
     |   PrimitiveType()
     |	FunctionType()
 }
 
-void ReferenceType():
-{ debugPrint("REFERENCE TYPE"); Token t; }
+void ReferenceType(Modifiers modifiers):
+{ 	debugPrint("REFERENCE TYPE");
+	jjtThis.setModifiers(modifiers);
+	Token t;
+}
 {
     PrimitiveType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } t = "]" { jjtThis.setEndToken(t); }  )+
   | ClassOrInterfaceType() ( LOOKAHEAD(2) "[" ( "," { jjtThis.incrementDimensions(); } )* { jjtThis.pushDimensions(); } t = "]" { jjtThis.setEndToken(t); } )*
@@ -893,7 +896,7 @@ void ReferenceType():
 
 void FunctionType():
 {
-	debugPrint("FUNCTION TYPE");
+	debugPrint("FUNCTION TYPE");	
 }
 {
     ResultTypes() "=>" ResultTypes()
@@ -930,7 +933,7 @@ void TypeArguments():
 
 void PrimitiveType():
 {
-  	debugPrint("PRIMITIVE TYPE");
+  	debugPrint("PRIMITIVE TYPE");  	
 	Token t;
 }
 {

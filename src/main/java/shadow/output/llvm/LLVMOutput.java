@@ -80,6 +80,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
@@ -306,6 +307,7 @@ public class LLVMOutput extends AbstractOutput
 		
 		
 		//Class fields (since the order is all changed)
+		//used for debugging
 		if( moduleType instanceof ClassType )
 		{
 			ClassType classType = (ClassType) moduleType;
@@ -842,11 +844,13 @@ public class LLVMOutput extends AbstractOutput
 
 	@Override
 	public void visit(TACArrayRef node) throws ShadowException
-	{		
+	{	
+		boolean nullable = node.getArray().getType() instanceof NullableArrayType;	
+		
 		writer.write(nextTemp() + " = extractvalue " +
 				typeSymbol(node.getArray()) + ", 0");
 		writer.write(nextTemp(node) + " = getelementptr inbounds " +
-				type(node) + "* " + temp(1) + ", " +
+				type(node.getType(), nullable) + "* " + temp(1) + ", " +
 				typeSymbol(node.getTotal()));
 	}
 
@@ -1034,6 +1038,7 @@ public class LLVMOutput extends AbstractOutput
 		ArrayType arrayType;
 		String dimsType;
 		Type genericArray;
+		String baseType;
 		
 		switch( node.getKind()  )
 		{
@@ -1083,11 +1088,15 @@ public class LLVMOutput extends AbstractOutput
 			break;
 			
 		case ARRAY_TO_OBJECT:
-			arrayType = (ArrayType) srcType;			
-			if( arrayType instanceof NullableArrayType )
-				genericArray = Type.NULLABLE_ARRAY;
-			else
+			arrayType = (ArrayType) srcType;
+			if( arrayType instanceof NullableArrayType ) {
+				genericArray = Type.NULLABLE_ARRAY;				
+				baseType = type(arrayType.getBaseType(), true);
+			}
+			else {
 				genericArray = Type.ARRAY;
+				baseType = type(arrayType.getBaseType());
+			}
 			TACClass arrayClass = (TACClass)node.getOperand(1);			
 			
 			ArrayType intArray = new ArrayType(Type.INT);
@@ -1111,8 +1120,8 @@ public class LLVMOutput extends AbstractOutput
 					typeLiteral(arrayType.getDimensions()) + "] }, " +
 					typeTemp(Type.INT, 1, true) + ", 0");
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(source) + ", 0");
-			writer.write(nextTemp() + " = bitcast " +
-					typeTemp(arrayType.getBaseType(), 1, true) + " to " +
+			writer.write(nextTemp() + " = bitcast " +					
+					combine(baseType, temp(1), true) + " to " +
 					type(Type.OBJECT));
 			writer.write(nextTemp() + " = call noalias " +
 					type(Type.OBJECT) + " @" + raw(Type.CLASS,
@@ -1133,19 +1142,22 @@ public class LLVMOutput extends AbstractOutput
 			String srcName = symbol(source);
 			arrayType = (ArrayType)destType;
 			
-			if( arrayType instanceof NullableArrayType )
+			if( arrayType instanceof NullableArrayType ) {
 				genericArray = Type.NULLABLE_ARRAY;			
-			else			
+				baseType = type(arrayType.getBaseType(), true) + '*';
+			}
+			else {			
 				genericArray = Type.ARRAY;
+				baseType = type(arrayType.getBaseType()) + '*';
+			}
 			
 			if (!srcType.equals(genericArray))
 			{
 				writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to " + type(genericArray));
 				srcType = genericArray;
 				srcName = temp(0);
-			}
+			}			
 			
-			String baseType = type(arrayType.getBaseType()) + '*';
 			dimsType = " [" + arrayType.getDimensions() + " x " +
 							type(Type.INT) + ']';
 			writer.write(nextTemp() + " = getelementptr inbounds " +
@@ -1300,19 +1312,23 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACNewArray node) throws ShadowException
 	{
-		Type type = node.getType(), baseType = node.getType().getBaseType();		
+		Type baseType = node.getType().getBaseType();		
 		String allocationClass = typeSymbol(node.getBaseClass());
 		
+		String allocationMethod = "_Mallocate";
+		if( node.getType() instanceof NullableArrayType )
+			allocationMethod += "Nullable";
+		
 		writer.write(nextTemp() + " = call noalias " + type(Type.OBJECT) +
-				" @" + raw(Type.CLASS, "_Mallocate" + Type.INT.getMangledName()) +
+				" @" + raw(Type.CLASS, allocationMethod + Type.INT.getMangledName()) +
 			 	'(' + allocationClass + ", " +
 				typeSymbol(node.getTotalSize()) + ')');
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
-				temp(1) + " to " + type(baseType) + '*');
-		writer.write(nextTemp() + " = insertvalue " + type(node.getType()) +
-				" undef, " + type(baseType) + "* " + temp(1) + ", 0");
+				temp(1) + " to " + type(baseType, true) + '*');
+		writer.write(nextTemp() + " = insertvalue " + type(node) +
+				" undef, " + type(baseType, true) + "* " + temp(1) + ", 0");
 		for (int i = 0; i < node.getDimensions(); i++)
-			writer.write(nextTemp(node) + " = insertvalue " + type(type) +
+			writer.write(nextTemp(node) + " = insertvalue " + type(node) +
 					' ' + temp(1) + ", " + typeSymbol(node.getDimension(i)) +
 					", 1, " + i);
 	}
@@ -1926,19 +1942,23 @@ public class LLVMOutput extends AbstractOutput
 				" null, i32 1) to i32)";
 	}
 
+	/*
 	private static String type(TACVariable var)
 	{
+		if( var.getModifiers().isNullable() && var.getType().isPrimitive() )
+			return primitiveWrapper(var.getType());
 		return type(var.getType());
 	}
 	private static String type(TACOperand node)
 	{
+		if( node.getModifiers().isNullable() && node.getType().isPrimitive() )
+			return primitiveWrapper(node.getType());
 		return type(node.getType());
 	}
+	*/
 	private static String type(ModifiedType type)
 	{
-		if( type.getModifiers().isNullable() && type.getType().isPrimitive() )
-			return primitiveWrapper(type.getType());
-		return type(type.getType());
+		return type(type.getType(), type.getModifiers().isNullable());
 	}
 	
 	private static String primitiveWrapper(Type type)
@@ -1946,21 +1966,31 @@ public class LLVMOutput extends AbstractOutput
 		return "%\"" + type.getMangledName() + "\"*";
 	}
 	
-	protected static String type(Type type)
-	{
+	protected static String type(Type type) {
+		return type(type, false);
+	}
+	
+	protected static String type(Type type, boolean nullable) {
 		if (type == null)
 			throw new NullPointerException();
+		if (type instanceof NullableArrayType)
+			return type((NullableArrayType)type);
 		if (type instanceof ArrayType)
 			return type((ArrayType)type);
 		if (type instanceof SequenceType)
 			return type((SequenceType)type);
 		if (type instanceof ClassType)
-			return type((ClassType)type);
+			return type((ClassType)type, nullable);
 		if (type instanceof InterfaceType)
 			return type((InterfaceType)type);
 		if (type instanceof TypeParameter)
 			return type((TypeParameter)type);
 		throw new IllegalArgumentException("Unknown type.");
+	}
+	protected static String type(NullableArrayType type)
+	{		
+		return "{ " + type(type.getBaseType(), true) + "*, [" + type.getDimensions() +
+				" x " + type(Type.INT) + "] }";
 	}
 	protected static String type(ArrayType type)
 	{
@@ -1978,9 +2008,9 @@ public class LLVMOutput extends AbstractOutput
 			sb.append(type(each)).append(", ");
 		return sb.replace(sb.length() - 2, sb.length(), " }").toString();
 	}
-	private static String type(ClassType type)
-	{
-		if (type.isPrimitive())
+	private static String type(ClassType type, boolean nullable)
+	{		
+		if (type.isPrimitive() && !nullable)
 			return '%' + type.getTypeName();
 		return "%\"" + type.getMangledName() + "\"*";
 	}

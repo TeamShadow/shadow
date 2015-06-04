@@ -68,5 +68,4 @@ public class Array implements Comparable<Array>
 		else
 			return false;
 	}
-	
 }

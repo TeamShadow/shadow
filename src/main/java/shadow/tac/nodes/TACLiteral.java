@@ -1,13 +1,5 @@
 package shadow.tac.nodes;
 
-import java.math.BigInteger;
-
-import shadow.interpreter.ShadowBoolean;
-import shadow.interpreter.ShadowCode;
-import shadow.interpreter.ShadowDouble;
-import shadow.interpreter.ShadowFloat;
-import shadow.interpreter.ShadowInteger;
-import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
