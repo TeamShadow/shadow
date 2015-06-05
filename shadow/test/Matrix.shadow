@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class Matrix implements
+class shadow:test@Matrix implements
 CanAdd<Matrix>,
 CanSubtract<Matrix>,
 CanMultiply<Matrix>,

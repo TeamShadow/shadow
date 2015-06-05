@@ -2488,15 +2488,22 @@ public class TACBuilder implements ShadowParserVisitor
 					new TACCall(tree, block, indexMethod, map, address, newAddress);
 					
 					
-					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) )
+					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) )
 					{
+						Type genericArray;
+						
+						if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY))
+							genericArray = Type.ARRAY;
+						else
+							genericArray = Type.NULLABLE_ARRAY;
+						
 						//call private create to allocate space
-						TACMethodRef create = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("create", new SequenceType(new SimpleModifiedType( new ArrayType(Type.INT), new Modifiers(Modifiers.IMMUTABLE)))));
+						TACMethodRef create = new TACMethodRef(tree, genericArray.getMatchingMethod("create", new SequenceType(new SimpleModifiedType( new ArrayType(Type.INT), new Modifiers(Modifiers.IMMUTABLE)))));
 						TACFieldRef lengths = new TACFieldRef(tree, this_, "lengths" );
 						duplicate = new TACCall(tree, block, create, object, lengths); //performs cast to Array as well
 						
 						//get size (product of all dimension lengths)
-						TACMethodRef sizeMethod = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("size", new SequenceType()));					
+						TACMethodRef sizeMethod = new TACMethodRef(tree, genericArray.getMatchingMethod("size", new SequenceType()));					
 						TACOperand size = new TACCall(tree, block, sizeMethod, this_);
 						TACLabelRef done = new TACLabelRef(tree);
 						TACLabelRef body = new TACLabelRef(tree);
@@ -2515,9 +2522,9 @@ public class TACBuilder implements ShadowParserVisitor
 						
 						SequenceType indexArguments = new SequenceType();
 						indexArguments.add(i);					
-						TACMethodRef indexLoad = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("index", indexArguments));
-						indexArguments.add(Type.ARRAY.getTypeParameters().get(0));
-						TACMethodRef indexStore = new TACMethodRef(tree, Type.ARRAY.getMatchingMethod("index", indexArguments));
+						TACMethodRef indexLoad = new TACMethodRef(tree, genericArray.getMatchingMethod("index", indexArguments));
+						indexArguments.add(genericArray.getTypeParameters().get(0));
+						TACMethodRef indexStore = new TACMethodRef(tree, genericArray.getMatchingMethod("index", indexArguments));
 						
 						
 						TACOperand value = new TACCall(tree, block, indexLoad, this_, i);
@@ -3021,8 +3028,6 @@ public class TACBuilder implements ShadowParserVisitor
 					endLabel = new TACLabelRef(tree);
 			new TACBranch(tree, condLabel);
 			bodyLabel.new TACLabel(tree);
-			if( !(type.getBaseType() instanceof ArrayType) )
-				System.out.println("Scream!");
 			new TACStore(tree, new TACArrayRef(tree, alloc, index, false),
 					visitArrayAllocation((ArrayType)type.getBaseType(), baseClass.getBaseClass(), sizes, createType, params, defaultValue));
 			new TACStore(tree, index, new TACBinary(tree, index, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+',

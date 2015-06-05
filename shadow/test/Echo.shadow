@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class Echo
+class shadow:test@Echo
 {
 	public main(String[] args) => ()
 	{

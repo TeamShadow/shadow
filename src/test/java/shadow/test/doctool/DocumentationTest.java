@@ -14,7 +14,7 @@ public class DocumentationTest
 	@Before
 	public void setup() throws Exception 
 	{
-		if( System.getProperty("os.name").contains("Windows") ) {
+		if (System.getProperty("os.name").contains("Windows")) {
 			args.add("-c");
 			args.add("windows.xml");
 		}

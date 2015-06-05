@@ -740,7 +740,7 @@ void FieldDeclaration(Modifiers modifiers, Documentation documentation):
     jjtThis.setModifiers(modifiers);
     jjtThis.setDocumentation(documentation);
   }
-  Type()
+  Type(modifiers)
   VariableDeclarator() ("," VariableDeclarator() )*
   ";"
 }
@@ -822,7 +822,7 @@ void FormalParameter():
 }
 {
    modifiers = Modifiers()
-   Type() t = <IDENTIFIER> 
+   Type(modifiers) t = <IDENTIFIER> 
    {
      modifiers.checkParameterAndReturnModifiers(jjtThis);
      jjtThis.setModifiers(modifiers);
@@ -916,8 +916,11 @@ Token t;
  * Type, name and expression syntax follows.
  */
 
-void Type():
-{ debugPrint("TYPE"); }
+void Type(Modifiers modifiers):
+{
+  	debugPrint("TYPE");
+	jjtThis.setModifiers(modifiers);
+}
 {
    LOOKAHEAD(ReferenceType()) ReferenceType()
  //   |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
@@ -965,7 +968,7 @@ void ClassOrInterfaceTypeSuffix():
 void TypeArguments():
 { debugPrint("TYPE ARGUMENTS"); Token t;}
 {
-   "<" Type() ( "," Type() )* t = ">" { jjtThis.setEndToken(t); }
+   "<" Type(Modifiers.NO_MODIFIERS) ( "," Type(Modifiers.NO_MODIFIERS) )* t = ">" { jjtThis.setEndToken(t); }
 }
 
 
@@ -1000,7 +1003,7 @@ void ResultType():
 	Modifiers modifiers;
 }
 {
-	modifiers = Modifiers() Type() [ <IDENTIFIER > ] //optional identifier used only for documentation
+	modifiers = Modifiers() Type(modifiers) [ <IDENTIFIER > ] //optional identifier used only for documentation
 	{
 	  modifiers.checkParameterAndReturnModifiers(jjtThis);
 	  jjtThis.setModifiers(modifiers);	} 
@@ -1132,7 +1135,7 @@ void EqualityExpression():
 void IsExpression():
 {}
 {
-  RelationalExpression() [ "is" { jjtThis.addToImage('i'); } Type() ]
+  RelationalExpression() [ "is" { jjtThis.addToImage('i'); } Type(Modifiers.NO_MODIFIERS) ]
 }
 
 void RelationalExpression():
@@ -1217,7 +1220,7 @@ void CastExpression():
     Token t;   
 }
 {
- "cast" "<" Type() ">" "(" ConditionalExpression() t = ")"
+ "cast" "<" Type(Modifiers.NO_MODIFIERS) ">" "(" ConditionalExpression() t = ")"
  {
    jjtThis.setEndToken(t);
  }
@@ -1299,7 +1302,7 @@ void SequenceVariable() :
   Modifiers modifiers;
   Token t;}
 {
-  modifiers = Modifiers() ( "var" | Type() )  t = <IDENTIFIER>
+  modifiers = Modifiers() ( "var" | Type(modifiers) )  t = <IDENTIFIER>
   {
 	jjtThis.setImage(t.image);
 	modifiers.checkLocalVariableModifiers(jjtThis);
@@ -1617,7 +1620,7 @@ void LocalVariableDeclaration(Modifiers modifiers):
   modifiers.checkLocalVariableModifiers(jjtThis);
 }
 {  
-  (  "var" { jjtThis.setImage("var"); }  | Type() )
+  (  "var" { jjtThis.setImage("var"); }  | Type(modifiers) )
   VariableDeclarator() ("," VariableDeclarator() )*
   {
      jjtThis.setModifiers(modifiers);
@@ -1707,7 +1710,7 @@ void ForeachInit():
 	Modifiers modifiers;	
 }
 {
- 	modifiers = Modifiers() ( "var" | Type() ) t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression()
+ 	modifiers = Modifiers() ( "var" | Type(modifiers) ) t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression()
  	{
  	  modifiers.checkLocalVariableModifiers(jjtThis);
  	  jjtThis.setModifiers(modifiers); 	}

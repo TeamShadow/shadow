@@ -56,18 +56,15 @@ public class TACArrayRef extends TACReference
 			TACLabelRef throwLabel = new TACLabelRef(this);
 			
 			for( int i = 0; i < ops.size(); i++ )
-			{
-				TACOperand length = check(iter.next(), new SimpleModifiedType(Type.INT));		
+			{				
+				TACOperand length = check(iter.next(), new SimpleModifiedType(Type.INT));
+				//by casting to uint (essentially free in LLVM), we don't need to do a negative check
+				TACOperand unsignedLength = new TACCast(this, new SimpleModifiedType(Type.UINT), length);
 				indices.add(length);
 							
-				TACLength bound = new TACLength(this, array, i);
-				TACOperand condition = new TACBinary(this, length, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', bound, true);
-				
-				TACLabelRef negativeCheck = new TACLabelRef(this);							
-				new TACBranch(this, condition, negativeCheck, throwLabel);				
-				negativeCheck.new TACLabel(this);
-				
-				condition = new TACBinary(this, length, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '}', new TACLiteral(this, new ShadowInteger(0)), true);
+				TACOperand bound = new TACLength(this, array, i);
+				TACOperand unsignedBound = new TACCast(this, new SimpleModifiedType(Type.UINT), bound); 
+				TACOperand condition = new TACBinary(this, unsignedLength, Type.UINT.getMatchingMethod("compare", new SequenceType(Type.UINT)), '<', unsignedBound, true);
 				
 				TACLabelRef computeOffset = new TACLabelRef(this);
 				new TACBranch(this, condition, computeOffset, throwLabel);
@@ -92,6 +89,7 @@ public class TACArrayRef extends TACReference
 			params.add(object);			
 			MethodSignature signature;			
 			
+			//TODO: move to method to reduce code bloat?
 			if( ops.size() > 1 )
 			{			
 				ArrayType intArray = new ArrayType(Type.INT);

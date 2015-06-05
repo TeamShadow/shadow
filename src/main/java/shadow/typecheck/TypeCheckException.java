@@ -39,6 +39,7 @@ public class TypeCheckException extends Exception
 		INVALID_TYPE_ARGUMENTS("Invalid type arguments", "Supplied type arguments do not match type parameters"),
 		INVALID_TYPE_PARAMETERS("Invalid type parameters", "Type cannot be parameterized"),
 		MISMATCHED_TYPE("Mismatched type", "Supplied type does not match another type supplied to this language construct"),
+		MISMATCHED_PACKAGE("Mismatched package", "Package for type does not match type directory"),
 		MISSING_CREATE("Missing create invocation", "Explicit create invocation is missing, and parent class does not implement the default create"),
 		MISSING_INTERFACE("Missing interface", "Type does not implement a required interface"),
 		MISSING_TYPE_ARGUMENTS("Missing type arguments", "Type arguments not supplied for parameterized type"),

@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class DoubleTest
+class shadow:test@DoubleTest
 {
 	public main(String[] args) => ()
 	{
