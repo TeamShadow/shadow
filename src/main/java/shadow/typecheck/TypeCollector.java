@@ -15,7 +15,6 @@ import java.util.TreeSet;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
-import shadow.Job;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
@@ -55,14 +54,14 @@ public class TypeCollector extends BaseChecker {
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private File currentFile;
 	private Type mainType = null;
-	private Job currentJob;
 	private Configuration config;
+	private boolean useSourceFiles;
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, Job currentJob) throws ConfigurationException {		
+	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, boolean useSourceFiles) throws ConfigurationException {		
 		super(typeTable, importList, p);
-		this.currentJob = currentJob;
+		this.useSourceFiles = useSourceFiles;
 		config = Configuration.getConfiguration();
 	}	
 	
@@ -80,7 +79,6 @@ public class TypeCollector extends BaseChecker {
 		TreeSet<String> uncheckedFiles = new TreeSet<String>();
 		String main = stripExtension(mainFile.getCanonicalPath());
 		mainFile = mainFile.getCanonicalFile();
-		boolean forceGenerate = currentJob.isForceRecompile();
 		//add file to be checked to list
 		uncheckedFiles.add(main);
 		
@@ -123,26 +121,36 @@ public class TypeCollector extends BaseChecker {
 		{			
 			String canonical = uncheckedFiles.first();
 			uncheckedFiles.remove(canonical);	
-							
+			
 			File canonicalFile = new File(canonical + ".shadow");
-			if( canonicalFile.exists() ) {											
-				File meta = new File( canonical + ".meta" );
-				File llvm = new File( canonical + ".ll" );
-				if( !forceGenerate &&
+			
+			// Depending on the circumstances, the compiler may choose to either
+			// compile/recompile source files, or rely on existing binaries
+			if (canonicalFile.exists()) {											
+				File meta = new File(canonical + ".meta");
+				File llvm = new File(canonical + ".ll");
+				
+				// If source compilation was not requested and the binaries exist
+				// that are newer than the source, use those binaries
+				if (!useSourceFiles &&
 					meta.exists() && meta.lastModified() >= canonicalFile.lastModified() &&
 					llvm.exists() && llvm.lastModified() >= canonicalFile.lastModified() &&
-					!canonicalFile.equals(mainFile) )//check for more recent .meta file
+					!canonicalFile.equals(mainFile)) {
 					canonicalFile = meta;
-			}
-			else		
+				}
+			} else if (!useSourceFiles) {
 				canonicalFile  = new File(canonical + ".meta");		
+			}
+			
+			// TODO: Should a final check occur that fails if the canonical file
+			// cannot be found, or is this handled elegantly elsewhere?
 			
 			ShadowParser parser = new ShadowFileParser(canonicalFile);				
 			currentFile = canonicalFile;
 		    Node node = parser.CompilationUnit();
 		    		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), currentJob);
+			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), useSourceFiles);
 			collector.currentFile = currentFile; //for now, so that we have a file whose directory we can check
 			walker = new ASTWalker( collector );		
 			walker.walk(node);	

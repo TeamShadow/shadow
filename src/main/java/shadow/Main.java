@@ -242,7 +242,7 @@ public class Main {
 
 		try
 		{
-			nodes = checker.typeCheck(mainFile.toFile(), currentJob);
+			nodes = checker.typeCheck(mainFile.toFile(), currentJob.isForceRecompile());
 		}
 		catch( TypeCheckException e ) {
 			logger.error(mainFile + " FAILED TO TYPE CHECK");

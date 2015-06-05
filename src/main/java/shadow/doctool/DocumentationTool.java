@@ -3,7 +3,6 @@ package shadow.doctool;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
 import org.apache.logging.log4j.Logger;
 
@@ -13,7 +12,6 @@ import shadow.ConfigurationException;
 import shadow.Job;
 import shadow.Loggers;
 import shadow.Main;
-import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.TypeCheckException;
@@ -55,7 +53,6 @@ public class DocumentationTool
 		}
 	}
 	
-	// TODO: Handle exceptions more properly, as in the compiler's main method
 	public static void document(String[] args) throws ConfigurationException, IOException, ParseException, ShadowException, TypeCheckException, org.apache.commons.cli.ParseException 
 	{
 		// Detect and establish the current settings and arguments
@@ -72,7 +69,7 @@ public class DocumentationTool
 		logger.info("Test");
 		
 		try {
-			checker.typeCheck(mainFile.toFile(), currentJob);
+			checker.typeCheck(mainFile.toFile());
 		} catch( TypeCheckException e ) {
 			logger.error(mainFile + " FAILED TO TYPE CHECK");
 			throw e;
