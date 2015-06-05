@@ -23,6 +23,6 @@ public class DocumentationTest
 	@Test public void misplacedTest() throws Exception 
 	{
 		args.add("shadow/test/doctool/Misplaced.shadow");
-		DocumentationTool.main(args.toArray(new String[] { }));
+		DocumentationTool.document(args.toArray(new String[] { }));
 	}	
 }
