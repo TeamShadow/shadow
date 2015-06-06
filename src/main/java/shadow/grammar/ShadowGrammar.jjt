@@ -12,10 +12,6 @@ options {
 PARSER_BEGIN(ShadowParser)
 package shadow.parser.javacc;
 
-import java.io.*;
-import shadow.parser.*;
-import shadow.AST.ASTWalker;
-import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Documentation;
 import shadow.Loggers;
@@ -44,6 +40,17 @@ public class ShadowParser
    	public void debugPrint(String str)
    	{
         logger.trace(str + ": " + token);
+    }
+
+    private void processDocumentation(Documentation documentation)    {
+		if (documentation != null)
+		{      	  			Token t = this.token.next;
+			while (t != null)
+			{
+				t = t.specialToken;
+				if(t != null && t.kind == DOCUMENTATION_COMMENT)
+					documentation.addLine(t.image);			}
+		}
     }   	
 }
 
@@ -60,17 +67,24 @@ SKIP :
 | "\f"
 }
 
-/* COMMENTS */
+/* DOCUMENTATION COMMENTS */
 
-TOKEN :
+SPECIAL_TOKEN :
 {
-  /* Comes before the other comments to ensure it gets matching priority */
-  < DOCUMENTATION_COMMENT : "///" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") >
+  < DOCUMENTATION_COMMENT: "///" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") >
 }
 
+//TOKEN :
+//{
+  /* Comes before the other comments to ensure it gets matching priority */
+  //< DOCUMENTATION_COMMENT : "///" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") >
+//}
+
+/* REGULAR COMMENTS */
+
 MORE :
-{
-  "//" : IN_SINGLE_LINE_COMMENT
+{  
+  < "//" ~["/"]>: IN_SINGLE_LINE_COMMENT
 |
   <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
 |
@@ -438,10 +452,8 @@ ASTCompilationUnit CompilationUnit():
 	Documentation documentation = new Documentation();
 }
 {  
-  ( ImportDeclaration() )*
-  ( DocumentationComment(documentation) )*
-
-  modifiers = Modifiers()
+  ( ImportDeclaration() )*  
+  modifiers = Modifiers(documentation)
   ( ClassOrInterfaceDeclaration(modifiers, documentation)
   | EnumDeclaration(modifiers, documentation)  
  // | ViewDeclaration(modifiers)
@@ -476,13 +488,15 @@ void GenericDeclaration():
  * better error messages.
  */
 
-Modifiers Modifiers():
+Modifiers Modifiers(Documentation documentation):
 {
    Modifiers modifiers = new Modifiers();
-   debugPrint("MODIFIERS");
+   debugPrint("MODIFIERS");   
+   processDocumentation(documentation);
+	    
 }
 {
- (
+ ( 
   LOOKAHEAD(2)
   (
     "public" { modifiers.checkAndAdd(Modifiers.PUBLIC, jjtThis); }
@@ -499,25 +513,13 @@ Modifiers Modifiers():
   | "constant" { modifiers.checkAndAdd(Modifiers.CONSTANT, jjtThis); }
   | "locked" { modifiers.checkAndAdd(Modifiers.LOCKED, jjtThis); }
   )
+	
  )*
 
  {
  	jjtThis.setModifiers(modifiers);
     return modifiers;
  }
-}
-
-/*
- * Individual lines of a documentation comment are matched by this rule
- */
-void DocumentationComment(Documentation documentation):
-{
-  debugPrint("DOCUMENTATION COMMENT");
-  Token t;}
-{  t = <DOCUMENTATION_COMMENT>
-  {
-    documentation.addLine(t.image);
-  }
 }
 
 /*
@@ -554,7 +556,7 @@ void ViewBodyDeclaration():
 void ClassOrInterfaceDeclaration(Modifiers modifiers, Documentation documentation):
 {
    debugPrint("CLASS OR INTERFACE DECLARATION");
-   Token t;
+   Token t;   
 }
 {
   {
@@ -642,7 +644,7 @@ void EnumDeclaration(Modifiers modifiers, Documentation documentation):
 {
     debugPrint("ENUM DECLARATION");
     Token t;
-	modifiers.checkEnumModifiers(jjtThis);
+	modifiers.checkEnumModifiers(jjtThis);	
 }
 {
 {
@@ -715,10 +717,9 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
   debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {  
-  ( DocumentationComment(documentation) )*
 // Just get all the modifiers out of the way. If you want to do
 // more checks, pass the modifiers down to the member
-  modifiers = Modifiers()
+  modifiers = Modifiers(documentation)
   (  ClassOrInterfaceDeclaration(modifiers, documentation)
     | EnumDeclaration(modifiers, documentation)
     | LOOKAHEAD( "create" ) CreateDeclaration(modifiers, documentation)
@@ -733,14 +734,14 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
 void FieldDeclaration(Modifiers modifiers, Documentation documentation):
 {
     debugPrint("FIELD DECLARATION");
-	modifiers.checkFieldModifiers(jjtThis);
+	modifiers.checkFieldModifiers(jjtThis);	
 }
 {
   {
     jjtThis.setModifiers(modifiers);
     jjtThis.setDocumentation(documentation);
   }
-  Type(modifiers)
+  Type()
   VariableDeclarator() ("," VariableDeclarator() )*
   ";"
 }
@@ -821,8 +822,8 @@ void FormalParameter():
 	Token t;
 }
 {
-   modifiers = Modifiers()
-   Type(modifiers) t = <IDENTIFIER> 
+   modifiers = Modifiers(null)
+   Type() t = <IDENTIFIER> 
    {
      modifiers.checkParameterAndReturnModifiers(jjtThis);
      jjtThis.setModifiers(modifiers);
@@ -834,7 +835,7 @@ void FormalParameter():
 void MethodDeclaration(Modifiers modifiers, Documentation documentation):
 {
   debugPrint("METHOD DECLARATION");
-  modifiers.checkMethodModifiers(jjtThis);
+  modifiers.checkMethodModifiers(jjtThis);  
 }
 {
   {
@@ -884,7 +885,7 @@ void CreateBlock():
 void DestroyDeclaration(Modifiers modifiers, Documentation documentation):
 {
   debugPrint("DESTROY DECLARATION");
-  modifiers.checkDestroyModifiers(jjtThis);
+  modifiers.checkDestroyModifiers(jjtThis);  
 }
 {
   {
@@ -916,11 +917,8 @@ Token t;
  * Type, name and expression syntax follows.
  */
 
-void Type(Modifiers modifiers):
-{
-  	debugPrint("TYPE");
-	jjtThis.setModifiers(modifiers);
-}
+void Type():
+{ debugPrint("TYPE"); }
 {
    LOOKAHEAD(ReferenceType()) ReferenceType()
  //   |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
@@ -968,7 +966,7 @@ void ClassOrInterfaceTypeSuffix():
 void TypeArguments():
 { debugPrint("TYPE ARGUMENTS"); Token t;}
 {
-   "<" Type(Modifiers.NO_MODIFIERS) ( "," Type(Modifiers.NO_MODIFIERS) )* t = ">" { jjtThis.setEndToken(t); }
+   "<" Type() ( "," Type() )* t = ">" { jjtThis.setEndToken(t); }
 }
 
 
@@ -1003,7 +1001,7 @@ void ResultType():
 	Modifiers modifiers;
 }
 {
-	modifiers = Modifiers() Type(modifiers) [ <IDENTIFIER > ] //optional identifier used only for documentation
+	modifiers = Modifiers(null) Type() [ <IDENTIFIER > ] //optional identifier used only for documentation
 	{
 	  modifiers.checkParameterAndReturnModifiers(jjtThis);
 	  jjtThis.setModifiers(modifiers);	} 
@@ -1135,7 +1133,7 @@ void EqualityExpression():
 void IsExpression():
 {}
 {
-  RelationalExpression() [ "is" { jjtThis.addToImage('i'); } Type(Modifiers.NO_MODIFIERS) ]
+  RelationalExpression() [ "is" { jjtThis.addToImage('i'); } Type() ]
 }
 
 void RelationalExpression():
@@ -1220,7 +1218,7 @@ void CastExpression():
     Token t;   
 }
 {
- "cast" "<" Type(Modifiers.NO_MODIFIERS) ">" "(" ConditionalExpression() t = ")"
+ "cast" "<" Type() ">" "(" ConditionalExpression() t = ")"
  {
    jjtThis.setEndToken(t);
  }
@@ -1302,7 +1300,7 @@ void SequenceVariable() :
   Modifiers modifiers;
   Token t;}
 {
-  modifiers = Modifiers() ( "var" | Type(modifiers) )  t = <IDENTIFIER>
+  modifiers = Modifiers(null) ( "var" | Type() )  t = <IDENTIFIER>
   {
 	jjtThis.setImage(t.image);
 	modifiers.checkLocalVariableModifiers(jjtThis);
@@ -1584,7 +1582,7 @@ void LocalDeclaration():
   debugPrint("LOCAL DECLARATION");
   Modifiers modifiers;}
 {
-  modifiers = Modifiers()    
+  modifiers = Modifiers(null)    
   (
     //LOOKAHEAD(InlineMethodDeclaration(modifiers)) InlineMethodDeclaration(modifiers)
     LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
@@ -1620,7 +1618,7 @@ void LocalVariableDeclaration(Modifiers modifiers):
   modifiers.checkLocalVariableModifiers(jjtThis);
 }
 {  
-  (  "var" { jjtThis.setImage("var"); }  | Type(modifiers) )
+  (  "var" { jjtThis.setImage("var"); }  | Type() )
   VariableDeclarator() ("," VariableDeclarator() )*
   {
      jjtThis.setModifiers(modifiers);
@@ -1710,7 +1708,7 @@ void ForeachInit():
 	Modifiers modifiers;	
 }
 {
- 	modifiers = Modifiers() ( "var" | Type(modifiers) ) t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression()
+ 	modifiers = Modifiers(null) ( "var" | Type() ) t = <IDENTIFIER> { jjtThis.setImage(t.image); } "in" ConditionalExpression()
  	{
  	  modifiers.checkLocalVariableModifiers(jjtThis);
  	  jjtThis.setModifiers(modifiers); 	}
@@ -1729,7 +1727,7 @@ void ForInit():
 	Modifiers modifiers;	
 }
 {
-  LOOKAHEAD( Modifiers() LocalVariableDeclaration(Modifiers.NO_MODIFIERS) ) modifiers = Modifiers() LocalVariableDeclaration(modifiers)
+  LOOKAHEAD( Modifiers(null) LocalVariableDeclaration(Modifiers.NO_MODIFIERS) ) modifiers = Modifiers(null) LocalVariableDeclaration(modifiers)
 | StatementExpressionList()
 }
 

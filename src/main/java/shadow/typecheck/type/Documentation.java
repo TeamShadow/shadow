@@ -1,6 +1,6 @@
 package shadow.typecheck.type;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 
 /**
  * Represents the contents of a Shadow documentation comment. Should be
@@ -9,16 +9,16 @@ import java.util.ArrayList;
  */
 public class Documentation 
 {
-	private ArrayList<String> lines;
+	private ArrayDeque<String> lines;
 	
 	public Documentation()
 	{
-		lines = new ArrayList<String>();
+		lines = new ArrayDeque<String>();
 	}
 	
 	public void addLine(String line)
 	{
-		lines.add(line);
+		lines.addFirst(line);
 	}
 	
 	/** Determines if documentation text has actually been added */
