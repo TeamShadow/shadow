@@ -48,7 +48,7 @@ public class ShadowParser
 			while (t != null)
 			{
 				t = t.specialToken;
-				if(t != null && t.kind == DOCUMENTATION_COMMENT)
+				if(t != null && (t.kind == DOCUMENTATION_LINE_SINGLE || t.kind == DOCUMENTATION_LINE_MULTI))
 					documentation.addLine(t.image);			}
 		}
     }   	
@@ -67,18 +67,29 @@ SKIP :
 | "\f"
 }
 
-/* DOCUMENTATION COMMENTS */
+/* SINGLE LINE DOCUMENTATION COMMENT (TRIPLE SLASH) */
 
-SPECIAL_TOKEN :
+SKIP :
 {
-  < DOCUMENTATION_COMMENT: "///" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") >
+  < "///" ([" ", "\t", "\f"])* > : IN_SINGLE_LINE_DOC
 }
 
-//TOKEN :
-//{
-  /* Comes before the other comments to ensure it gets matching priority */
-  //< DOCUMENTATION_COMMENT : "///" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") >
-//}
+< IN_SINGLE_LINE_DOC > MORE :
+{
+  < ~["\n", "\r"] >
+}
+
+< IN_SINGLE_LINE_DOC > SPECIAL_TOKEN :
+{
+  < DOCUMENTATION_LINE_SINGLE: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+/* MULTI-LINE DOCUMENTATION COMMENT (DOUBLE ASTERISK) */
+
+SKIP :{  < "/**" ([" ", "\t", "\f"])* > : IN_MULTI_LINE_DOC}
+// Collect all characters that are not asterisks, along with all asterisks
+// followed by non-/ characters< IN_MULTI_LINE_DOC > MORE :{  < ~["*"] >
+| < "*" ~["/"] >}< IN_MULTI_LINE_DOC > SPECIAL_TOKEN :{  < DOCUMENTATION_LINE_MULTI: "*/" > : DEFAULT}
 
 /* REGULAR COMMENTS */
 
