@@ -17,6 +17,7 @@ import shadow.parser.*;
 import shadow.AST.ASTWalker;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.Documentation;
 import shadow.Loggers;
 import org.apache.logging.log4j.Logger;
 
@@ -60,6 +61,12 @@ SKIP :
 }
 
 /* COMMENTS */
+
+TOKEN :
+{
+  /* Comes before the other comments to ensure it gets matching priority */
+  < DOCUMENTATION_COMMENT : "///" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") >
+}
 
 MORE :
 {
@@ -428,13 +435,15 @@ TOKEN :
 ASTCompilationUnit CompilationUnit():
 {
 	Modifiers modifiers;
+	Documentation documentation = new Documentation();
 }
 {  
   ( ImportDeclaration() )*
+  ( DocumentationComment(documentation) )*
 
   modifiers = Modifiers()
-  ( ClassOrInterfaceDeclaration(modifiers)
-  | EnumDeclaration(modifiers)  
+  ( ClassOrInterfaceDeclaration(modifiers, documentation)
+  | EnumDeclaration(modifiers, documentation)  
  // | ViewDeclaration(modifiers)
   )//only one declaration per file
    
@@ -499,6 +508,19 @@ Modifiers Modifiers():
 }
 
 /*
+ * Individual lines of a documentation comment are matched by this rule
+ */
+void DocumentationComment(Documentation documentation):
+{
+  debugPrint("DOCUMENTATION COMMENT");
+  Token t;}
+{  t = <DOCUMENTATION_COMMENT>
+  {
+    documentation.addLine(t.image);
+  }
+}
+
+/*
  * Declaration syntax follows.
  */
 /*
@@ -529,13 +551,16 @@ void ViewBodyDeclaration():
 }
 */
 
-void ClassOrInterfaceDeclaration(Modifiers modifiers):
+void ClassOrInterfaceDeclaration(Modifiers modifiers, Documentation documentation):
 {
    debugPrint("CLASS OR INTERFACE DECLARATION");
    Token t;
 }
 {
-  { jjtThis.setModifiers(modifiers); }
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setDocumentation(documentation);
+  }
   ( "class"
   	{
   	  jjtThis.setKind(TypeKind.CLASS);
@@ -613,14 +638,17 @@ void Version():
    "$" < VERSION_LITERAL >
 }
 
-void EnumDeclaration(Modifiers modifiers):
+void EnumDeclaration(Modifiers modifiers, Documentation documentation):
 {
     debugPrint("ENUM DECLARATION");
     Token t;
 	modifiers.checkEnumModifiers(jjtThis);
 }
 {
-{ jjtThis.setModifiers(modifiers); }
+{
+  jjtThis.setModifiers(modifiers);
+  jjtThis.setDocumentation(documentation);
+}
 
   "enum"
   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ]
@@ -682,31 +710,36 @@ void ClassOrInterfaceBody(TypeKind kind):
 
 void ClassOrInterfaceBodyDeclaration(TypeKind kind):
 {
-   Modifiers modifiers;
-   debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
+  Documentation documentation = new Documentation();
+  Modifiers modifiers;
+  debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {  
+  ( DocumentationComment(documentation) )*
 // Just get all the modifiers out of the way. If you want to do
-// more checks, pass the modifiers down to the member  
-	modifiers = Modifiers()
-  (  ClassOrInterfaceDeclaration(modifiers)
-    | EnumDeclaration(modifiers)
-    | LOOKAHEAD( "create" ) CreateDeclaration(modifiers)
-    | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
-    | LOOKAHEAD( FieldDeclaration(modifiers) ) FieldDeclaration(modifiers) 
-    | MethodDeclaration(modifiers)
+// more checks, pass the modifiers down to the member
+  modifiers = Modifiers()
+  (  ClassOrInterfaceDeclaration(modifiers, documentation)
+    | EnumDeclaration(modifiers, documentation)
+    | LOOKAHEAD( "create" ) CreateDeclaration(modifiers, documentation)
+    | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers, documentation)
+    | LOOKAHEAD( FieldDeclaration(modifiers, documentation) ) FieldDeclaration(modifiers, documentation) 
+    | MethodDeclaration(modifiers, documentation)
     | GenericDeclaration()
     //| ViewDeclaration(modifiers)
   )
 }
 
-void FieldDeclaration(Modifiers modifiers):
+void FieldDeclaration(Modifiers modifiers, Documentation documentation):
 {
     debugPrint("FIELD DECLARATION");
 	modifiers.checkFieldModifiers(jjtThis);
 }
 {
-  { jjtThis.setModifiers(modifiers); }
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setDocumentation(documentation);
+  }
   Type(modifiers)
   VariableDeclarator() ("," VariableDeclarator() )*
   ";"
@@ -798,24 +831,31 @@ void FormalParameter():
    }
 }
 
-void MethodDeclaration(Modifiers modifiers):
+void MethodDeclaration(Modifiers modifiers, Documentation documentation):
 {
   debugPrint("METHOD DECLARATION");
-	modifiers.checkMethodModifiers(jjtThis); 
- }
+  modifiers.checkMethodModifiers(jjtThis);
+}
 {
-  { jjtThis.setModifiers(modifiers); }  
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setDocumentation(documentation);
+  }  
   MethodDeclarator(false) [ "throws" NameList() ]
   ( Block() { jjtThis.setBlock(true); } | ";" )
 }
 
-void CreateDeclaration(Modifiers modifiers):
+void CreateDeclaration(Modifiers modifiers, Documentation documentation):
 {
   debugPrint("CREATE DECLARATION");
   modifiers.checkCreateModifiers(jjtThis);  
 }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("create"); }  
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setDocumentation(documentation);
+    jjtThis.setImage("create");
+  }  
   // Modifiers matched in the caller
   CreateDeclarator() [ "throws" NameList() ]
   ( CreateBlock() { jjtThis.setBlock(true); } | ";" )
@@ -841,13 +881,17 @@ void CreateBlock():
     {
       jjtThis.setEndToken(t);    } }
 
-void DestroyDeclaration(Modifiers modifiers):
+void DestroyDeclaration(Modifiers modifiers, Documentation documentation):
 {
   debugPrint("DESTROY DECLARATION");
   modifiers.checkDestroyModifiers(jjtThis);
 }
 {
-  { jjtThis.setModifiers(modifiers); jjtThis.setImage("destroy"); }  
+  {
+    jjtThis.setModifiers(modifiers);
+    jjtThis.setImage("destroy");
+    jjtThis.setDocumentation(documentation);
+  }  
   // Modifiers matched in the caller
   "destroy" //no (checked) exceptions from destroys!
   ( Block() { jjtThis.setBlock(true); } | ";" )

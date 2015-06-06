@@ -59,8 +59,9 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	protected List<String> importList; /** Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
-	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();  /** Current method is a stack since Shadow allows methods to be defined inside of methods */
-		
+	
+	// Current method is a stack since Shadow allows methods to be defined inside of methods
+	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();
 	protected Type currentType = null;
 	protected Type declarationType = null;	
 	
@@ -82,11 +83,13 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		this.packageTree = packageTree;
 	}
 	
+	/** Causes a node to mirror the type of its first child node */
 	protected Object pushUpType(SimpleNode node, Boolean secondVisit)
 	{
 		return pushUpType(node, secondVisit, 0);
 	}
 	
+	/** Causes this node to mirror the type of its given child node */
 	protected Object pushUpType(SimpleNode node, Boolean secondVisit, int child) 
 	{
 		if(secondVisit)
@@ -103,7 +106,11 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		return WalkType.POST_CHILDREN;
 	}
 	
-	protected void pushUpModifiers( SimpleNode node ) //only pushes up modifiers if there is a single child
+	/** 
+	 * Causes a node to mirror the modifiers of its child. This only occurs if
+	 * the node has a single child
+	 */
+	protected void pushUpModifiers( SimpleNode node )
 	{
 		if( node.jjtGetNumChildren() == 1 )
 		{
@@ -116,7 +123,8 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	{
 		for(Type type : types)
 			if( containsUnknown(type) )
-				return true; //don't add error if it has an Unknown Type in it
+				return true;
+		
 		return false;
 	}
 	
@@ -142,31 +150,42 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		return false;
 	}
 	
+	/** 
+	 * Adds an error to the given error list, unless that error refers to 
+	 * unknown types. Unknown type errors are usually symptoms of other errors
+	 * (like undeclared variables), and are thus unnecessary to report.
+	 */
 	public static void addError(List<TypeCheckException> errors, Error type, String reason, Type... errorTypes)
 	{
+		// Don't add an error if it has an Unknown Type in it
 		if( containsUnknown(errorTypes) )
-			return; //don't add error if it has an Unknown Type in it
+			return; 
 		
 		if( errors != null )
 			errors.add(new TypeCheckException(type, reason));		
 	}	
 	
+	// TODO: Break up this method into more manageable pieces
+	/** 
+	 * Determines whether an assignment of a right-hand type to a left-hand
+	 * type is legal 
+	 */
 	public static boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, SubstitutionKind substitutionType, List<TypeCheckException> errors )
 	{
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();		
 		
-		//process property or subscript on right first
+		// If necessary, first process the property or subscript on right type
 		if( rightType instanceof GetSetType )
 		{					
 			GetSetType getSetType = (GetSetType)rightType;					
 			
-			if( getSetType.isGettable() )
+			if( getSetType.isGettable() ) // "Get" from the type, if allowed
 			{
 				right = getSetType.getGetType();
 				rightType = right.getType();
 			}
-			else
+			else // Fail if a get was attempted. but the type wasn't gettable
 			{
 				String kind = (rightType instanceof PropertyType) ? "Property " : "Subscript ";				
 				addError(errors, Error.INVALID_ASSIGNMENT, kind + getSetType + " is not gettable", rightType);
@@ -174,20 +193,20 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			}
 		}
 	
-		
-		//property on left			
+		// If the left type is a property, retrieve its setter			
 		if( leftType instanceof PropertyType )  
 		{					
 			PropertyType propertyType = (PropertyType)leftType;					
 			
 			if( propertyType.isSettable() )
 				return checkAssignment( propertyType.getSetType(), right, assignmentType, substitutionType, errors );
-			else
+			else // Fail if the type was not settable
 			{
 				addError(errors, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not settable");
 				return false;				
 			}
 		}
+		// If the left type is a subscript type, retrieve the type of its contents
 		else if( leftType instanceof SubscriptType )
 		{
 			SubscriptType indexType = (SubscriptType)leftType;
@@ -199,8 +218,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				return false;
 			}
 		}
-	
-		
+
 		//sequence on left
 		if( leftType instanceof SequenceType )
 		{
@@ -221,6 +239,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			return sequenceLeft.canAccept(right, substitutionType, errors);
 		}
 		
+		// Do not allow assignment to singleton references
 		if( leftType instanceof SingletonType ) {
 			addError(errors, Error.INVALID_ASSIGNMENT, "Singleton reference cannot be assigned to");
 			return false;
@@ -351,11 +370,10 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	}
 
 	/**
-	 * Adds an error message to the list errors we keep until the end.
+	 * Adds an error message to the list of errors we keep until the end.
 	 * @param node The node where the error occurred. This will be printed in the standard format.
 	 * @param msg The message to communicate to the user.
 	 */
-	
 	protected void addErrors(List<TypeCheckException> errors)
 	{		
 		if( errors != null )
@@ -624,25 +642,24 @@ public abstract class BaseChecker extends AbstractASTVisitor
 	
 	public static ClassType literalToType( Literal literal )
 	{
-		ClassType type = null;
 		switch( literal )
 		{
-		case BYTE: 		type = Type.BYTE; break;
-		case CODE: 		type = Type.CODE; break;
-		case SHORT: 	type = Type.SHORT; break;
-		case INT: 		type = Type.INT; break;
-		case LONG:		type = Type.LONG; break;
-		case FLOAT: 	type = Type.FLOAT; break;
-		case DOUBLE: 	type = Type.DOUBLE; break;
-		case STRING:	type = Type.STRING; break;
-		case UBYTE: 	type = Type.UBYTE; break;
-		case USHORT: 	type = Type.USHORT; break;
-		case UINT: 		type = Type.UINT; break;
-		case ULONG: 	type = Type.ULONG; break;
-		case BOOLEAN: 	type = Type.BOOLEAN; break;
-		case NULL: 		type = Type.NULL; break;
-		}			
-		return type;
+		case BYTE: 		return Type.BYTE;
+		case CODE: 		return Type.CODE;
+		case SHORT: 	return Type.SHORT;
+		case INT: 		return Type.INT;
+		case LONG:		return Type.LONG;
+		case FLOAT: 	return Type.FLOAT;
+		case DOUBLE: 	return Type.DOUBLE;
+		case STRING:	return Type.STRING;
+		case UBYTE: 	return Type.UBYTE;
+		case USHORT: 	return Type.USHORT;
+		case UINT: 		return Type.UINT;
+		case ULONG: 	return Type.ULONG;
+		case BOOLEAN: 	return Type.BOOLEAN;
+		case NULL: 		return Type.NULL;
+		default:		return null;
+		}
 	}
 	
 	public static ClassType nameToPrimitiveType(String name)
@@ -665,7 +682,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		}
 	}	
 
-	protected static String stripExtension(String file)
+	public static String stripExtension(String file)
 	{
 		return file.substring(0, file.lastIndexOf("."));
 	}

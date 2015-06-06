@@ -1,0 +1,17 @@
+/// A class with some misplaced documentation comments - eventually it should
+/// be no problem.
+class Misplaced
+{
+    public main(String[] args) => ()
+    {
+        /// A documentation comment has no meaning here
+        int a = 5;
+
+        for (int i = 0; i < a; i++)
+        {
+            int b = i;
+        }
+    }
+
+    /// It doesn't mean anything here either
+}

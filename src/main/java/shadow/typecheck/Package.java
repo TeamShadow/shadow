@@ -1,10 +1,15 @@
 package shadow.typecheck;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 
 import shadow.typecheck.type.Type;
 
+/** 
+ * A representation of a Shadow package, with awareness of both its parent and
+ * child packages 
+ */
 public class Package
 {	
 	@SuppressWarnings("serial")
@@ -20,13 +25,11 @@ public class Package
 			super(message);
 		}
 	}
-
-	
 	
 	private final HashMap<String, Package> children = new HashMap<String, Package>();
-	private final HashMap<String, Type> types = new HashMap<String, Type>();
 	private final String name;	
 	private final Package parent;
+	private final HashMap<String, Type> types = new HashMap<String, Type>();
 	
 	public Package(HashMap<Package, HashMap<String, Type>> otherTypes)
 	{
@@ -66,7 +69,6 @@ public class Package
 	{
 		if( path.length() > 0 && !path.equals("default") )
 		{
-			//String[] folders = path.split("\\.");
 			String[] folders = path.split(":");
 			
 			Package parent = this;
@@ -116,7 +118,7 @@ public class Package
 		if (parent == null || parent.getName().isEmpty())
 			return getName();
 		
-		return parent.getQualifiedName() + '/' + getName();
+		return parent.getQualifiedName() + File.separator + getName();
 	}
 	
 	public String getMangledName()
@@ -140,27 +142,17 @@ public class Package
 	
 	public boolean hasChild(String name)
 	{
-		if( name.contains(":"))
-		{
-			int period = name.indexOf(":");
-			String child = name.substring(0, period);
-			if( children.containsKey(child))
-				return children.get(child).hasChild(name.substring(period + 1));
-			else
-				return false;
-		}
-			
-		return children.containsKey(name);
+		return (getChild(name) != null);
 	}
 	
 	public Package getChild(String name)
 	{
 		if( name.contains(":"))
 		{
-			int period = name.indexOf(":");
-			String child = name.substring(0, period);
+			int separator = name.indexOf(":");
+			String child = name.substring(0, separator);
 			if( children.containsKey(child))
-				return children.get(child).getChild(name.substring(period + 1));
+				return children.get(child).getChild(name.substring(separator + 1));
 			else
 				return null;
 		}

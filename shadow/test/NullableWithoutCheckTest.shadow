@@ -7,7 +7,7 @@ class shadow:test@NullableWithoutCheckTest
 		Console out;
 		nullable Object danger = null; 
 		
-		///throw UnexpectedNullException:create();
+		//throw UnexpectedNullException:create();
 		
 		Object object = check(danger);
 		out.printLine("Got past null check somehow...");
