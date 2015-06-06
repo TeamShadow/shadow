@@ -122,7 +122,8 @@ public class Main {
 
 		// Detect and establish the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
-		config = Configuration.buildConfiguration(compilerArgs, false);
+		config = Configuration.buildConfiguration(compilerArgs.getMainFileArg(),
+				compilerArgs.getConfigFileArg(), false);
 		currentJob = new Job(compilerArgs);
 
 		// Print help if the HELP option is set

@@ -2,14 +2,14 @@ package shadow.doctool;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.logging.log4j.Logger;
 
-import shadow.Arguments;
 import shadow.Configuration;
 import shadow.ConfigurationException;
-import shadow.Job;
 import shadow.Loggers;
 import shadow.Main;
 import shadow.parser.javacc.ParseException;
@@ -56,23 +56,29 @@ public class DocumentationTool
 	public static void document(String[] args) throws ConfigurationException, IOException, ParseException, ShadowException, TypeCheckException, org.apache.commons.cli.ParseException 
 	{
 		// Detect and establish the current settings and arguments
-		// TODO: Separate the argument/job system from the one used by the compiler
-		Arguments compilerArgs = new Arguments(args);
-		Configuration.buildConfiguration(compilerArgs, false);
-		Job currentJob = new Job(compilerArgs);
+		DocumentationArguments arguments = new DocumentationArguments(args);
+		Configuration.buildConfiguration(arguments.getMainArguments()[0],
+				arguments.getConfigFileArg(), false);
 		
-		Type.clearTypes();
-		DocumentationTypeChecker checker = new DocumentationTypeChecker();
-		
-		Path mainFile = currentJob.getMainFile();
-		
-		logger.info("Test");
-		
-		try {
-			checker.typeCheck(mainFile.toFile());
-		} catch( TypeCheckException e ) {
-			logger.error(mainFile + " FAILED TO TYPE CHECK");
-			throw e;
+		// Generate documentation for each file/package given on the command line
+		for (String argument : arguments.getMainArguments())
+		{
+			// Locate the file in question
+			Path currentFile = Paths.get(argument).toAbsolutePath();
+			
+			// Ensure that the main source file exists
+			if (!Files.exists(currentFile))
+				throw new FileNotFoundException("File at " + currentFile.toAbsolutePath() + " not found");
+			
+			Type.clearTypes();
+			DocumentationTypeChecker checker = new DocumentationTypeChecker();
+			
+			try {
+				checker.typeCheck(currentFile.toFile());
+			} catch( TypeCheckException e ) {
+				logger.error(currentFile + " FAILED TO TYPE CHECK");
+				throw e;
+			}
 		}
 	}
 }

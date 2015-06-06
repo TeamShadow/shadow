@@ -48,10 +48,10 @@ public class Configuration {
 	 * Builds the Configuration if necessary. Must be run at least once before
 	 * getConfiguration() is called.
 	 */
-	public static Configuration buildConfiguration(Arguments compilerArgs, boolean forceRebuild) throws ConfigurationException, IOException {
+	public static Configuration buildConfiguration(String mainFilePath, String configFilePath, boolean forceRebuild) throws ConfigurationException, IOException {
 		
 		if( globalConfig == null || forceRebuild )
-			globalConfig = new Configuration(compilerArgs);
+			globalConfig = new Configuration(mainFilePath, configFilePath);
 		
 		return globalConfig;
 	}
@@ -66,10 +66,10 @@ public class Configuration {
 	}
 	
 	/** Hidden constructor for instantiating the Configuration */
-	private Configuration(Arguments compilerArgs) throws ConfigurationException, IOException {
+	private Configuration(String mainFilePath, String configFilePath) throws ConfigurationException, IOException {
 		
 		// Attempt to locate hierarchy of config files
-		configFile = locateConfig(compilerArgs);
+		configFile = locateConfig(mainFilePath, configFilePath);
 		
 		
 		// If a config file was located, parse it
@@ -92,10 +92,10 @@ public class Configuration {
 	 * 2. A file in the source directory with the default name
 	 * 3. A file in the running directory with the default name
 	 */
-	private Path locateConfig(Arguments compilerArgs) throws FileNotFoundException, ConfigurationException {
+	private Path locateConfig(String mainFilePath, String configFilePath) throws FileNotFoundException, ConfigurationException {
 		
 		// Get the various search directories
-		Path sourceDir = Paths.get(compilerArgs.getMainFileArg()).toAbsolutePath().getParent().toAbsolutePath();
+		Path sourceDir = Paths.get(mainFilePath).toAbsolutePath().getParent().toAbsolutePath();
 		Path workingDir = Paths.get("").toAbsolutePath();
 		Path runningDir = getRunningDirectory().toAbsolutePath();
 		
@@ -103,9 +103,9 @@ public class Configuration {
 
 		/// 1: Config file specified on the command line
 		
-		if( compilerArgs.getConfigFileArg() != null ) {
+		if( configFilePath != null ) {
 			
-			Path configFile = Paths.get(compilerArgs.getConfigFileArg());
+			Path configFile = Paths.get(configFilePath);
 			
 			// If absolute, no need to resolve
 			if( configFile.isAbsolute() ) {
