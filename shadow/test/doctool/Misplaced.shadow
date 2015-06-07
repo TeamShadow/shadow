@@ -1,5 +1,8 @@
 /// A class with some misplaced documentation comments - eventually it should
 /// be no problem.
+/** Another
+comment
+*/
 class Misplaced
 {
     public main(String[] args) => ()

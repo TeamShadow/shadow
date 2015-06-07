@@ -42,14 +42,15 @@ public class ShadowParser
         logger.trace(str + ": " + token);
     }
 
+
     private void processDocumentation(Documentation documentation)    {
-		if (documentation != null)
-		{      	  			Token t = this.token.next;
-			while (t != null)
+      	if( documentation != null )
+      	{      	  			Token t = this.token.next;
+			while( t != null )
 			{
-				t = t.specialToken;
-				if(t != null && (t.kind == DOCUMENTATION_LINE_SINGLE || t.kind == DOCUMENTATION_LINE_MULTI))
-					documentation.addLine(t.image);			}
+			  t = t.specialToken;
+			  if( t != null && (t.kind == DOCUMENTATION_COMMENT || t.kind == MULTI_LINE_DOCUMENTATION_COMMENT) )
+			  	documentation.addLine(t.image);			}
 		}
     }   	
 }
@@ -67,38 +68,40 @@ SKIP :
 | "\f"
 }
 
-/* SINGLE LINE DOCUMENTATION COMMENT (TRIPLE SLASH) */
+/* COMMENTS */
 
-SKIP :
+SPECIAL_TOKEN :
 {
-  < "///" ([" ", "\t", "\f"])* > : IN_SINGLE_LINE_DOC
+	"///" : IN_DOCUMENTATION_COMMENT
 }
 
-< IN_SINGLE_LINE_DOC > MORE :
+<IN_DOCUMENTATION_COMMENT >
+SPECIAL_TOKEN :
 {
-  < ~["\n", "\r"] >
+  <DOCUMENTATION_COMMENT: (~["\n", "\r"])* ("\n" | "\r" | "\r\n") > : DEFAULT
 }
 
-< IN_SINGLE_LINE_DOC > SPECIAL_TOKEN :
+SPECIAL_TOKEN :
 {
-  < DOCUMENTATION_LINE_SINGLE: "\n" | "\r" | "\r\n" > : DEFAULT
+	<"/**" ~["/"]> { input_stream.backup(1); } : IN_MULTI_LINE_DOCUMENTATION_COMMENT
 }
 
-/* MULTI-LINE DOCUMENTATION COMMENT (DOUBLE ASTERISK) */
+<IN_MULTI_LINE_DOCUMENTATION_COMMENT >
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_DOCUMENTATION_COMMENT: ~[] >: IN_MULTI_LINE_DOCUMENTATION_COMMENT
+}
 
-SKIP :{  < "/**" ([" ", "\t", "\f"])* > : IN_MULTI_LINE_DOC}
-// Collect all characters that are not asterisks, along with all asterisks
-// followed by non-/ characters< IN_MULTI_LINE_DOC > MORE :{  < ~["*"] >
-| < "*" ~["/"] >}< IN_MULTI_LINE_DOC > SPECIAL_TOKEN :{  < DOCUMENTATION_LINE_MULTI: "*/" > : DEFAULT}
-
-/* REGULAR COMMENTS */
+<IN_MULTI_LINE_DOCUMENTATION_COMMENT >
+SPECIAL_TOKEN :
+{
+  "*/" : DEFAULT
+}
 
 MORE :
 {  
   < "//" ~["/"]>: IN_SINGLE_LINE_COMMENT
-|
-  <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
-|
+|  
   "/*" : IN_MULTI_LINE_COMMENT
 }
 
@@ -108,23 +111,18 @@ SPECIAL_TOKEN :
   <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
 }
 
-<IN_FORMAL_COMMENT>
-SPECIAL_TOKEN :
-{
-  <FORMAL_COMMENT: "*/" > : DEFAULT
-}
-
 <IN_MULTI_LINE_COMMENT>
 SPECIAL_TOKEN :
 {
   <MULTI_LINE_COMMENT: "*/" > : DEFAULT
 }
 
-<IN_SINGLE_LINE_COMMENT,IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+<IN_SINGLE_LINE_COMMENT,IN_MULTI_LINE_COMMENT>
 MORE :
 {
   < ~[] >
 }
+
 
 /* RESERVED WORDS AND LITERALS */
 
