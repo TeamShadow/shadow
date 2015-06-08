@@ -70,8 +70,6 @@ public class Documentation
 			i++;
 		}
 		
-		System.out.println(i);
-		
 		return builder.toString();
 	}
 }

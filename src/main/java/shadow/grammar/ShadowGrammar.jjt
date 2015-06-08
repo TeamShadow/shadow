@@ -53,7 +53,7 @@ public class ShadowParser
 				{
 					if (t.kind == DOCUMENTATION_COMMENT)
 						documentation.addLine(t.image);
-					else if (t.kind == MULTI_LINE_DOCUMENTATION_COMMENT)
+					else if (t.kind == BLOCK_DOCUMENTATION_COMMENT)
 						documentation.addBlock(t.image);
 				}			}
 		}
@@ -88,22 +88,22 @@ SPECIAL_TOKEN :
 
 SKIP :
 {
-	<"/**" ~["/"]> { input_stream.backup(1); } : IN_MULTI_LINE_DOCUMENTATION_COMMENT
+	<"/**" ~["/"]> { input_stream.backup(1); } : IN_BLOCK_DOCUMENTATION_COMMENT
 }
 
-<IN_MULTI_LINE_DOCUMENTATION_COMMENT >
+<IN_BLOCK_DOCUMENTATION_COMMENT >
 MORE :
 {
-  < ~[] > : IN_MULTI_LINE_DOCUMENTATION_COMMENT
+  < ~[] > : IN_BLOCK_DOCUMENTATION_COMMENT
 }
 
-<IN_MULTI_LINE_DOCUMENTATION_COMMENT >
+<IN_BLOCK_DOCUMENTATION_COMMENT >
 SPECIAL_TOKEN :
 {
   // This special token allows us to capture all of the preceding MORE
   // characters in one string. The code is used to remove the captured
   // */ from the resulting string.
-  < MULTI_LINE_DOCUMENTATION_COMMENT: "*/" >
+  < BLOCK_DOCUMENTATION_COMMENT: "*/" >
   {
     image.setLength(image.length() - 2);
     matchedToken.image = image.toString();
