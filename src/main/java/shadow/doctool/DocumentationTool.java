@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 
 import org.apache.logging.log4j.Logger;
 
+import shadow.Arguments;
 import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Loggers;
@@ -57,6 +58,11 @@ public class DocumentationTool
 	{
 		// Detect and establish the current settings and arguments
 		DocumentationArguments arguments = new DocumentationArguments(args);
+		
+		// Exit if help was requested (Arguments handles printing)
+		if (arguments.hasOption(Arguments.HELP))
+			return;
+		
 		Configuration.buildConfiguration(arguments.getMainArguments()[0],
 				arguments.getConfigFileArg(), false);
 		

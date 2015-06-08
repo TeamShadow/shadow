@@ -2,6 +2,7 @@ package shadow.doctool;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -28,6 +29,10 @@ public class DocumentationArguments
 	private static final String HELP_LONG		= "help";
 	private static final String VERBOSE_LONG	= "verbose";
 	
+	// The main description printed in response to the help option
+	private static final String HELP_MESSAGE
+		= "shadowdoc <mainSource.shadow> [-c <config.xml>]";
+	
 	private CommandLine commandLine;
 	private static final Options options = createOptions();
 	
@@ -38,9 +43,17 @@ public class DocumentationArguments
 		commandLine = parser.parse(options, args);
 		
 		// Increase logging level if VERBOSE is set
-		if( hasOption(VERBOSE) )
+		if (hasOption(VERBOSE))
 			Loggers.setAllToLevel(Level.ALL);
 		
+		// Don't throw argument exceptions if help was requested
+		if (commandLine.hasOption(HELP)) {
+			printHelp();
+			return;
+		}
+
+		if (commandLine.getArgs().length == 0)
+			throw new ConfigurationException("No files specified to document");
 	}
 	
 	public boolean hasOption(String option) 
@@ -81,5 +94,11 @@ public class DocumentationArguments
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
 		
 		return options;
+	}
+	
+	public static void printHelp() 
+	{
+		new HelpFormatter().printHelp(HELP_MESSAGE,
+			DocumentationArguments.getOptions());
 	}
 }

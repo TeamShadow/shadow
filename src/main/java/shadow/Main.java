@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.logging.log4j.Logger;
 
 import shadow.output.llvm.Array;
@@ -98,12 +97,12 @@ public class Main {
 		catch (org.apache.commons.cli.ParseException e)
 		{
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
-			printHelp();
+			Arguments.printHelp();
 			System.exit(COMMAND_LINE_ERROR);
 		}
 		catch (ConfigurationException e) {
 			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
-			printHelp();
+			Arguments.printHelp();
 			System.exit(CONFIGURATION_ERROR);
 		}
 		catch (TypeCheckException e)
@@ -120,17 +119,18 @@ public class Main {
 
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
 
-		// Detect and establish the current settings and arguments
+		// Process command line input
 		Arguments compilerArgs = new Arguments(args);
+		
+		// Exit if help was requested (Arguments handles printing)
+		if (compilerArgs.hasOption(Arguments.HELP))
+			return;
+		
+		// Detect and establish the current settings based on the arguments
 		config = Configuration.buildConfiguration(compilerArgs.getMainFileArg(),
 				compilerArgs.getConfigFileArg(), false);
 		currentJob = new Job(compilerArgs);
 
-		// Print help if the HELP option is set
-		if( compilerArgs.hasOption("h") ) {
-			printHelp();
-			return;
-		}
 
 		Path system = config.getSystemImport();
 
@@ -347,10 +347,6 @@ public class Main {
 
 	public static String stripExt(String filepath) {
 		return filepath.substring(0, filepath.lastIndexOf("."));
-	}
-
-	private static void printHelp() {
-		new HelpFormatter().printHelp("shadowc <mainSource.shadow> [-o <output>] [-c <config.xml>]", Arguments.getOptions());
 	}
 
 	/** A simple class used to redirect an InputStream into a specified OutputStream */

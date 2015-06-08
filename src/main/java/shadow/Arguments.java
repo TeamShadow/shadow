@@ -2,6 +2,7 @@ package shadow;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -44,6 +45,16 @@ public class Arguments {
 		CommandLineParser parser = new PosixParser();
 		commandLine = parser.parse(compilerOptions, args);
 		
+		// Increase logging level if VERBOSE is set
+		if( hasOption(VERBOSE) )
+			Loggers.setAllToLevel(Level.ALL);
+		
+		// Don't throw argument exceptions if help was requested
+		if (commandLine.hasOption(HELP)) {
+			printHelp();
+			return;
+		}
+
 		// Ensure exactly one source file is specified (and that it ends in .shadow)
 		if( commandLine.getArgs().length > 1 )
 			throw new ConfigurationException("Only one main source file may be specified");
@@ -51,11 +62,6 @@ public class Arguments {
 			throw new ConfigurationException("No source file specified to compile");
 		else if( !commandLine.getArgs()[0].endsWith(".shadow") )
 			throw new ConfigurationException("Source files must end in \".shadow\"");
-		
-		// Increase logging level if VERBOSE is set
-		if( hasOption(VERBOSE) )
-			Loggers.setAllToLevel(Level.ALL);
-		
 	}
 	
 	public boolean hasOption(String option) {
@@ -114,5 +120,10 @@ public class Arguments {
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
 		
 		return options;
+	}
+	
+	public static void printHelp() 
+	{
+		new HelpFormatter().printHelp("shadowc <mainSource.shadow> [-o <output>] [-c <config.xml>]", Arguments.getOptions());
 	}
 }
