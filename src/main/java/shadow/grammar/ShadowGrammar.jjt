@@ -44,13 +44,18 @@ public class ShadowParser
 
 
     private void processDocumentation(Documentation documentation)    {
-      	if( documentation != null )
+      	if (documentation != null)
       	{      	  			Token t = this.token.next;
-			while( t != null )
+			while (t != null)
 			{
-			  t = t.specialToken;
-			  if( t != null && (t.kind == DOCUMENTATION_COMMENT || t.kind == MULTI_LINE_DOCUMENTATION_COMMENT) )
-			  	documentation.addLine(t.image);			}
+				t = t.specialToken;
+				if (t != null)
+				{
+					if (t.kind == DOCUMENTATION_COMMENT)
+						documentation.addLine(t.image);
+					else if (t.kind == MULTI_LINE_DOCUMENTATION_COMMENT)
+						documentation.addBlock(t.image);
+				}			}
 		}
     }   	
 }
@@ -70,7 +75,7 @@ SKIP :
 
 /* COMMENTS */
 
-SPECIAL_TOKEN :
+SKIP :
 {
 	"///" : IN_DOCUMENTATION_COMMENT
 }
@@ -81,21 +86,28 @@ SPECIAL_TOKEN :
   <DOCUMENTATION_COMMENT: (~["\n", "\r"])* ("\n" | "\r" | "\r\n") > : DEFAULT
 }
 
-SPECIAL_TOKEN :
+SKIP :
 {
 	<"/**" ~["/"]> { input_stream.backup(1); } : IN_MULTI_LINE_DOCUMENTATION_COMMENT
 }
 
 <IN_MULTI_LINE_DOCUMENTATION_COMMENT >
-SPECIAL_TOKEN :
+MORE :
 {
-  <MULTI_LINE_DOCUMENTATION_COMMENT: ~[] >: IN_MULTI_LINE_DOCUMENTATION_COMMENT
+  < ~[] > : IN_MULTI_LINE_DOCUMENTATION_COMMENT
 }
 
 <IN_MULTI_LINE_DOCUMENTATION_COMMENT >
 SPECIAL_TOKEN :
 {
-  "*/" : DEFAULT
+  // This special token allows us to capture all of the preceding MORE
+  // characters in one string. The code is used to remove the captured
+  // */ from the resulting string.
+  < MULTI_LINE_DOCUMENTATION_COMMENT: "*/" >
+  {
+    image.setLength(image.length() - 2);
+    matchedToken.image = image.toString();
+  } : DEFAULT
 }
 
 MORE :

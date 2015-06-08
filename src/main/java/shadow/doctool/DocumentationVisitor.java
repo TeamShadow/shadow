@@ -78,7 +78,7 @@ public class DocumentationVisitor extends AbstractASTVisitor
 	
 	private static void printDocumentation(Node node, int depth)
 	{
-		System.out.print(node.getDocumentation());
+		System.out.println(node.getDocumentation());
 		System.out.println(node);
 		System.out.println();
 	}
