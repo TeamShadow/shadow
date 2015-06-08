@@ -37,8 +37,9 @@ public class Documentation
 		{
 			split[i] = split[i].trim();
 			
-			// Remove the leading asterisk, if it exists
-			if (split[i].indexOf('*') == 0)
+			// Remove the leading asterisk, if it exists. The first line of a
+			// multi-line comment (following /**) should be excluded from this
+			if (i != 0 && split[i].indexOf('*') == 0)
 				split[i] = split[i].substring(1).trim();
 			
 			// Only keep non-empty lines
