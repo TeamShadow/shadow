@@ -22,13 +22,15 @@ import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTCompilationUnit;
-import shadow.parser.javacc.ASTEnumDeclaration;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
+import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.typecheck.Package;
+import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InterfaceType;
 
 public class DocumentationVisitor extends AbstractASTVisitor 
 {
@@ -123,33 +125,41 @@ public class DocumentationVisitor extends AbstractASTVisitor
 			// Create a tag using the name associated with this nodes ClassType/TypeKind
 			currentNode = currentNode.appendChild(document.createElement(getClassTag(node.getKind())));
 			((Element) currentNode).setAttribute("name", node.getImage());
+			
+			// Add an attribute if the class extends something
+			ClassType extendType = ((ClassType)node.getType()).getExtendType();
+			if (extendType != null)
+				((Element) currentNode).setAttribute("extends", extendType.getQualifiedName());
+			
+			// Append all interfaces as tags
+			for (InterfaceType currentInterface : node.getType().getAllInterfaces())
+			{
+				Element interfaceElement = document.createElement("implements");
+				interfaceElement.setAttribute("interface", currentInterface.getQualifiedName());
+				
+				currentNode.appendChild(interfaceElement);
+			}
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
+	/** 
+	 * Generates the tags associated with generic type parameters for classes
+	 * and methods
+	 */
 	@Override
-	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException
+	public Object visit(ASTTypeParameter node, Boolean secondVisit) throws ShadowException
 	{
-		if (secondVisit) {
-			
-		} else {
-		}
+		// TODO: Capture/compute the type pattern associated with a type parameter
 		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	// TODO: Figure out what exactly this is and whether or not it will need to
-	// have documentation support
-	@Override
-	public Object visit(ASTGenericDeclaration node, Boolean secondVisit) throws ShadowException 
-	{
-		if (secondVisit) {
-			
-		} else {
-		}
+		currentNode = currentNode.appendChild(document.createElement("generic-parameter"));
 		
-		return WalkType.POST_CHILDREN;
+		((Element) currentNode).setAttribute("name", node.getImage());
+		
+		currentNode = currentNode.getParentNode();
+		
+		return WalkType.NO_CHILDREN;
 	}
 	
 	/** 
