@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import shadow.ConfigurationException;
 import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
@@ -42,9 +44,17 @@ public class DocumentationTypeChecker
 		nodeTable = updater.update(nodeTable);
 		Node mainNode = nodeTable.get(mainType);
 		
-		DocumentationVisitor docVisitor = new DocumentationVisitor();
-		ASTWalker docWalker = new ASTWalker(docVisitor);
-		docWalker.walk(mainNode);
+		DocumentationVisitor docVisitor;
+		try {
+			docVisitor = new DocumentationVisitor();
+			ASTWalker docWalker = new ASTWalker(docVisitor);
+			docWalker.walk(mainNode);
+			
+			docVisitor.OutputDocumentation();
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		return null;
 	}
