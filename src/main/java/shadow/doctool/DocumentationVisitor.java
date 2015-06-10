@@ -15,6 +15,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import shadow.Loggers;
 import shadow.AST.ASTWalker.WalkType;
@@ -26,6 +27,7 @@ import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.typecheck.Package;
 
 public class DocumentationVisitor extends AbstractASTVisitor 
@@ -111,31 +113,15 @@ public class DocumentationVisitor extends AbstractASTVisitor
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException
 	{
 		if (secondVisit) {
-			// Exit the tag for this class
+			// Step out of tag for this class
 			currentNode = currentNode.getParentNode();
 		} else {
 			// Create package tags if this is the outermost class
 			if (node.jjtGetParent() instanceof ASTCompilationUnit)
-			{
-				ArrayDeque<String> packages = new ArrayDeque<String>();
-				
-				// Climb the chain of packages
-				Package currentPackage = node.getType().getPackage();
-				do
-				{
-					packages.addFirst(getPackageName(currentPackage));
-					currentPackage = currentPackage.getParent();
-				}
-				while (currentPackage != null);
-				
-				for (String packageName : packages)
-				{
-					currentNode = currentNode.appendChild(document.createElement("package"));
-					((Element) currentNode).setAttribute("name", packageName);
-				}
-			}
+				currentNode = appendPackages(currentNode, node.getType().getPackage());
 			
-			currentNode = currentNode.appendChild(document.createElement("class"));
+			// Create a tag using the name associated with this nodes ClassType/TypeKind
+			currentNode = currentNode.appendChild(document.createElement(getClassTag(node.getKind())));
 			((Element) currentNode).setAttribute("name", node.getImage());
 		}
 		
@@ -164,6 +150,48 @@ public class DocumentationVisitor extends AbstractASTVisitor
 		}
 		
 		return WalkType.POST_CHILDREN;
+	}
+	
+	/** 
+	 * Climbs the tree of packages and then appends corresponding tags to the
+	 * given document node in top-bottom order. Returns the node corresponding
+	 * to the lowest package.
+	 */
+	private Node appendPackages(Node root, Package lowest)
+	{
+		ArrayDeque<String> packages = new ArrayDeque<String>();
+		
+		// Climb the chain of packages
+		Package currentPackage = lowest;
+		do
+		{
+			packages.addFirst(getPackageName(currentPackage));
+			currentPackage = currentPackage.getParent();
+		}
+		while (currentPackage != null);
+		
+		Node current = root;
+		for (String packageName : packages)
+		{
+			current = current.appendChild(document.createElement("package"));
+			((Element) current).setAttribute("name", packageName);
+		}
+		
+		return current;
+	}
+	
+	/** Returns the proper name for a ClassType tag based on its TypeKind */
+	private static String getClassTag(TypeKind kind)
+	{
+		switch (kind)
+		{
+			case CLASS: 	return "class";
+			case EXCEPTION:	return "exception";
+			case ENUM:		return "enum";
+			case INTERFACE: return "interface";
+			case SINGLETON:	return "singleton";
+			default:		return null; // Shouldn't be possible
+		}
 	}
 	
 	/** Returns the qualified name of a given package */
