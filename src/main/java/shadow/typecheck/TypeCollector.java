@@ -452,13 +452,27 @@ public class TypeCollector extends BaseChecker {
 		if( separator.equals("\\"))
 			separator = "\\\\";
 		String path = name.replaceAll(":", separator);
-		List<Path> importPaths = config.getImports();
+		
+		// Which import paths are used depends on whether the requested package
+		// is in the standard library or not
+		List<Path> importPaths;
+		if (path.startsWith("shadow")) {
+			importPaths = new ArrayList<Path>();
+			importPaths.add(config.getSystemImport());
+		} else {
+			importPaths = config.getImports();
+		}
+		
 		boolean success = false;				
 		
 		if( importPaths != null && importPaths.size() > 0 )
 		{
 			for( Path importPath : importPaths )
 			{	
+				// If an import path is relative, resolve it against the
+				// current source file
+				importPath = currentFile.toPath().getParent().resolve(importPath);
+				
 				if( !path.contains("@"))  //no @, must be a whole package import
 				{		
 					File fullPath = new File( importPath.toFile(), path );

@@ -212,8 +212,13 @@ public class Configuration {
 		
 		if( importPaths == null) {
 			importPaths = new ArrayList<Path>();
-			importPaths.add(getRunningDirectory());
 		}
+		
+		// The import paths list must contain an "empty" path that can later be
+		// resolved against source files
+		importPaths.add(Paths.get("./"));
+		
+		
 	}
 	
 	/** Parses a config file and fills the corresponding fields */
