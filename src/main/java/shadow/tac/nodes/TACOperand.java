@@ -1,5 +1,6 @@
 package shadow.tac.nodes;
 
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -45,7 +46,11 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 			return new TACCast(node, type, this);
 				
 		if (getType().isStrictSubtype(type.getType()))
-			return new TACCast(node, type, this);
+			return new TACCast(node, type, this);		
+		
+		/* allows cast from Object[] to Array<Object>  */		 
+		if(( (type.getType() instanceof ArrayType) && getType().equals(type.getType())  && !(getType() instanceof ArrayType) ))
+			return new TACCast(node, type, this);		
 		
 		if( type.getType().isParameterized() && getType().getTypeWithoutTypeArguments().isStrictSubtype(type.getType()))
 			return new TACCast(node, type, this);

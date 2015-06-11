@@ -78,14 +78,12 @@ define private void @debugPrint(%int) {
 
 declare void @__shadow_throw(%"_Pshadow_Pstandard_CObject"*) noreturn
 
-define i32 @_Pshadow_Pstandard_CArray_Mdims(%_Pshadow_Pstandard_CArray*) {
+define i32 @_Pshadow_Pstandard_CArray_Mdimensions(%_Pshadow_Pstandard_CArray*) {
 	%2 = getelementptr inbounds %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 3
 	%3 = load { i32*, [1 x i32] }* %2
 	%4 = extractvalue { i32*, [1 x i32] } %3, 1, 0
 	ret i32 %4
 }
-
-declare void @abort() noreturn
 
 define private i32 @computeIndex(%"_Pshadow_Pstandard_CArray"*, { i32*, [1 x i32] }) alwaysinline {	
 	%3 = getelementptr inbounds %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 3	
@@ -367,75 +365,79 @@ define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1_Pshadow_
 	ret void
 }
 
-; doesn't really work for multidimensional arrays
 define noalias %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CArray*, i32, i32) {
+	; check sizes first
+	%size = call %int (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_Msize"(%"_Pshadow_Pstandard_CArray"* %0)
+	%test1 = icmp ult i32 %1, %size
+	br i1 %test1, label %_firstLessThanSize, label %throw
+_firstLessThanSize: 	
+	%test2 = icmp ule i32 %2, %size
+	br i1 %test2, label %_secondLessThanSize, label %throw
+_secondLessThanSize:
+	%test3 = icmp ult i32 %1, %2
+	br i1 %test3, label %_secondLessThanFirst, label %throw
+_secondLessThanFirst:
 	; get class from original array
-	%4 = getelementptr inbounds %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 0
-	%5 = load %"_Pshadow_Pstandard_CClass"** %4		
-	; get method table	from original array
-	%6 = getelementptr inbounds %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 1		
-	%7 = load %"_Pshadow_Pstandard_CArray_methods"** %6
-	%8 = bitcast %"_Pshadow_Pstandard_CArray_methods"* %7 to %"_Pshadow_Pstandard_CObject_methods"*
+	%classRef = getelementptr inbounds %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 0
+	%class = load %"_Pshadow_Pstandard_CClass"** %classRef		
+	
+	; get method table from original array
+	%methodsRef = getelementptr inbounds %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 1		
+	%methods = load %"_Pshadow_Pstandard_CArray_methods"** %methodsRef
+	%objMethods = bitcast %"_Pshadow_Pstandard_CArray_methods"* %methods to %"_Pshadow_Pstandard_CObject_methods"*
 	
 	; allocate new array object
-	%9 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%"_Pshadow_Pstandard_CClass"* %5, %"_Pshadow_Pstandard_CObject_methods"* %8)
+	%arrayObj = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%"_Pshadow_Pstandard_CClass"* %class, %"_Pshadow_Pstandard_CObject_methods"* %objMethods)
 
 	; get internal generic class
-	%10 = bitcast %"_Pshadow_Pstandard_CClass"* %5 to %"_Pshadow_Pstandard_CArrayClass"*	
-	%11 = getelementptr inbounds %"_Pshadow_Pstandard_CArrayClass"* %10, i32 0, i32 9	
-	%12 = load %"_Pshadow_Pstandard_CClass"** %11	
-	
-	; get number of dimensions
-	%13 = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 3, i32 1, i32 0
-	%14 = load i32* %13	
-	
-	; create array for dimensions
-	%15 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_Cint_class, i32 %14)
-	%16 = bitcast %_Pshadow_Pstandard_CObject* %15 to i32*
+	%arrayClass = bitcast %"_Pshadow_Pstandard_CClass"* %class to %"_Pshadow_Pstandard_CArrayClass"*	
+	%genericClassRef = getelementptr inbounds %"_Pshadow_Pstandard_CArrayClass"* %arrayClass, i32 0, i32 9	
+	%genericClass = load %"_Pshadow_Pstandard_CClass"** %genericClassRef	
+		
+	; create array for dimensions (only a single element, since the subarray will always be 1D)
+	%dimensionsAsObj = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_Cint_class, i32 1)
+	%dimensions = bitcast %_Pshadow_Pstandard_CObject* %dimensionsAsObj to i32*
 	
 	; get difference between indexes
-	%17 = sub i32 %2, %1
+	%difference = sub i32 %2, %1
 	
-	; store difference (size) in the first position in the new array
-	store i32 %17, i32* %16
-		
-	; get next position in the new array
-	%18 = getelementptr i32* %16, i32 1
+	; store difference (size) in the only position in the new array
+	store i32 %difference, i32* %dimensions
 	
-	; get pointer to the array of integers storing the size of the original array, skipping the first one
-	%19 = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 3, i32 0
-	%20 = load i32** %19
-	%21 = getelementptr i32* %20, i32 1
-	
-	; subtract 1 from the number of dimensions
-	%22 = sub i32 %14, 1	
-	
-	; copy the data from the second dimension size onward
-	call void @llvm.memcpy.p0i32.p0i32.i32(i32* %18, i32* %21, i32 %22, i32 0, i1 0)
-
 	; put new dimension data into array
-	%23 = insertvalue { i32*, [1 x i32] } undef, i32* %16, 0
+	%dimensionsArray1 = insertvalue { i32*, [1 x i32] } undef, i32* %dimensions, 0
 	
-	; put number of dimensions into array
-	%24 = insertvalue { i32*, [1 x i32] } %23, i32 %14, 1, 0
+	; put number of dimensions (1) into array
+	%dimensionsArray2 = insertvalue { i32*, [1 x i32] } %dimensionsArray1, i32 1, 1, 0
 
 	; get array data
-	%25 = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
-	%26 = load %_Pshadow_Pstandard_CObject** %25
+	%arrayDataRef = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
+	%arrayData = load %_Pshadow_Pstandard_CObject** %arrayDataRef
 	
 	; cast to char*
-	%27 = bitcast %_Pshadow_Pstandard_CObject* %26 to i8*
+	%arrayDataAsChar = bitcast %_Pshadow_Pstandard_CObject* %arrayData to i8*
+	
+	
+	;allocate new real array
+	%newArray = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass* %genericClass, i32 %difference)
+	%newArrayAsChar = bitcast %_Pshadow_Pstandard_CObject* %newArray to i8*
 	
 	; get type parameter width
-	%28 = call %int @"_Pshadow_Pstandard_CClass_Mwidth"(%"_Pshadow_Pstandard_CClass"* %12)		
+	%width = call %int @"_Pshadow_Pstandard_CClass_Mwidth"(%"_Pshadow_Pstandard_CClass"* %genericClass)			
 	
 	; multiply starting point by width
-	%29 = mul i32 %1, %28
+	%offset = mul i32 %1, %width
+	%arrayDataAtOffset = getelementptr inbounds i8* %arrayDataAsChar, i32 %offset
+	%total = mul i32 %difference, %width
 	
-	; index into starting location
-	%30 = getelementptr i8* %27, i32 %29
-	%31 = bitcast i8* %30 to %_Pshadow_Pstandard_CObject*
-	%32 = call %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject(%_Pshadow_Pstandard_CObject* %9, { i32*, [1 x i32] } %24, %_Pshadow_Pstandard_CObject* %31)
-		
-	ret %_Pshadow_Pstandard_CArray* %32
+	;copy data
+	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %newArrayAsChar, i8* %primitiveElement, i32 %width, i32 1, i1 0)
+	
+	%initializedArray = call %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject(%_Pshadow_Pstandard_CObject* %arrayObj, { i32*, [1 x i32] } %dimensionsArray2, %_Pshadow_Pstandard_CObject* %newArray)		
+	ret %_Pshadow_Pstandard_CArray* %initializedArray	
+throw:
+	%ex.obj = call %"_Pshadow_Pstandard_CObject"* @_Pshadow_Pstandard_CClass_Mallocate(%"_Pshadow_Pstandard_CClass"* @_Pshadow_Pstandard_CIndexOutOfBoundsException_class, %"_Pshadow_Pstandard_CObject_methods"* bitcast(%"_Pshadow_Pstandard_CIndexOutOfBoundsException_methods"* @"_Pshadow_Pstandard_CIndexOutOfBoundsException_methods" to %"_Pshadow_Pstandard_CObject_methods"*))
+	%ex.ex = call %"_Pshadow_Pstandard_CIndexOutOfBoundsException"* @"_Pshadow_Pstandard_CIndexOutOfBoundsException_Mcreate"(%"_Pshadow_Pstandard_CObject"* %ex.obj)
+	call void @__shadow_throw(%"_Pshadow_Pstandard_CObject"* %ex.obj) noreturn	
+	unreachable
 }

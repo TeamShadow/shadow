@@ -99,9 +99,13 @@ public abstract class Type implements Comparable<Type>
 	public static InterfaceType CAN_COMPARE = null;
 	public static InterfaceType CAN_EQUAL = null;
 	public static InterfaceType CAN_INDEX = null;
+	public static InterfaceType NULLABLE_CAN_INDEX = null;
 	public static InterfaceType CAN_INDEX_STORE = null;
+	public static InterfaceType NULLABLE_CAN_INDEX_STORE = null;
 	public static InterfaceType CAN_ITERATE = null;
+	public static InterfaceType NULLABLE_CAN_ITERATE = null;
 	public static InterfaceType ITERATOR = null;
+	public static InterfaceType NULLABLE_ITERATOR = null;
 	public static InterfaceType NUMBER = null;
 	public static InterfaceType INTEGER = null;
 	public static InterfaceType CAN_ADD = null;
@@ -207,11 +211,15 @@ public abstract class Type implements Comparable<Type>
 		STRING = null;
 		ADDRESS_MAP = null;
 		CAN_COMPARE = null;
-		CAN_EQUAL = null;
+		CAN_EQUAL = null;		
 		CAN_INDEX = null;
+		NULLABLE_CAN_INDEX = null;
 		CAN_INDEX_STORE = null;
+		NULLABLE_CAN_INDEX_STORE = null;
 		CAN_ITERATE = null;
+		NULLABLE_CAN_ITERATE = null;
 		ITERATOR = null;
+		NULLABLE_ITERATOR = null;
 		NUMBER = null;
 		INTEGER = null;
 		CAN_ADD = null;
@@ -636,7 +644,9 @@ public abstract class Type implements Comparable<Type>
 		//equal and cat are separate because they are not dependent on implementing a specific interface
 		if( assignmentType.equals(AssignmentType.EQUAL) )
 		{
-			accepts = rightType.isSubtype(this);
+			accepts = rightType.isSubtype(this) || 
+			( this instanceof ArrayType && this.isSubtype(rightType) );
+			
 			if( !accepts )
 				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
 		

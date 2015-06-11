@@ -1,0 +1,4 @@
+interface shadow:standard@NullableCanIndex<K,V>
+{
+	readonly index(K key) => (nullable V value);	
+}

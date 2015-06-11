@@ -468,7 +468,8 @@ public class TypeUpdater extends BaseChecker {
 	private void checkOverrides(Map<Type,Node> nodeTable)
 	{	
 		for( Node declarationNode : nodeTable.values() )	
-		{			
+		{	
+			setFile(declarationNode.getFile()); //used for error messages
 			if( declarationNode.getType() instanceof ClassType )
 			{					
 				ClassType classType = (ClassType)declarationNode.getType();

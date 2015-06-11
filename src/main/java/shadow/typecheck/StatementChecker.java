@@ -1676,10 +1676,19 @@ public class StatementChecker extends BaseChecker
 			ArrayType array = (ArrayType)collectionType;			
 			element = new SimpleModifiedType( array.getBaseType() );
 		}
-		else if( collectionType.hasUninstantiatedInterface(Type.CAN_ITERATE) )
+		else if( collectionType.hasUninstantiatedInterface(Type.CAN_ITERATE)  )
 		{			
 			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
 				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE))
+				{
+					element = _interface.getTypeParameters().get(0);
+					break;
+				}
+		}
+		else if( collectionType.hasUninstantiatedInterface(Type.NULLABLE_CAN_ITERATE)  )
+		{			
+			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
+				if( _interface.getTypeWithoutTypeArguments().equals(Type.NULLABLE_CAN_ITERATE))
 				{
 					element = _interface.getTypeParameters().get(0);
 					break;
@@ -2234,7 +2243,7 @@ public class StatementChecker extends BaseChecker
 					addError(Error.INVALID_SUBSCRIPT, "Subscript gives " + node.jjtGetNumChildren() + " indexes but "  + arrayType.getDimensions() + " are required");
 				}				
 			}						
-			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) )
+			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.NULLABLE_CAN_INDEX) )
 			{
 				if( node.jjtGetNumChildren() == 1)
 				{
@@ -2266,7 +2275,7 @@ public class StatementChecker extends BaseChecker
 							node.addModifier(Modifiers.READONLY);
 						else if( prefixNode.getModifiers().isTemporaryReadonly() )
 							node.addModifier(Modifiers.TEMPORARY_READONLY);
-						else if( prefixType.hasInterface(Type.CAN_INDEX_STORE) ) 
+						else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.NULLABLE_CAN_INDEX_STORE)  ) 
 							node.addModifier(Modifiers.ASSIGNABLE);
 					}											
 				}
@@ -2279,7 +2288,7 @@ public class StatementChecker extends BaseChecker
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX, prefixType);
+				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX + " or " + Type.NULLABLE_CAN_INDEX, prefixType);
 			}
 						
 		}
@@ -2326,6 +2335,7 @@ public class StatementChecker extends BaseChecker
 			
 			if( node.getImage().equals("null")  ) {
 				nullable = true;
+				node.addModifier(Modifiers.NULLABLE);
 				
 				if( prefixType instanceof ArrayType ) {
 					ArrayType arrayType = (ArrayType) prefixType;

@@ -1,0 +1,32 @@
+import shadow:io@Console;
+
+class shadow:test@GenericArrayTest
+{
+	public main() => ()
+	{
+		Console out;
+		int[] array1 = int:create[10];
+		
+		array1[3] = 4;
+		array1[9] = 10;		
+				
+		out.printLine(array1);
+		
+		String[] array2 = {"one", "two", "three", "four", "five"};
+		nullable String[] array3 = String:null[5];
+		array3[1] = "Hey";
+		array3[4] = "Ho";	
+				
+		
+		Array<int> intArray = array1;
+		Array<String> stringArray = array2;
+		NullableArray<String> otherArray = array3;
+		
+		int[] array4 = intArray;	
+		
+		nullable String[] array5 = otherArray;
+		
+		out.printLine(array4);			
+		out.printLine(array5);
+	}
+}

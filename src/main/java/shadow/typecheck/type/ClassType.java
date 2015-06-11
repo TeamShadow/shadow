@@ -535,7 +535,13 @@ public class ClassType extends Type
 		{
 			ArrayType arrayType = (ArrayType)type;
 			ModifiedType baseType = this.getTypeParameters().get(0);			
-			return baseType != null && arrayType.getBaseType().equals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
+			return baseType != null && arrayType.getBaseType().equals(baseType.getType());
+		}
+		else if( this.getTypeWithoutTypeArguments() == Type.NULLABLE_ARRAY && this.getTypeParameters().size() == 1 && type instanceof NullableArrayType )
+		{
+			NullableArrayType arrayType = (NullableArrayType)type;
+			ModifiedType baseType = this.getTypeParameters().get(0);			
+			return baseType != null && arrayType.getBaseType().equals(baseType.getType());
 		}
 		
 		return super.equals(type);

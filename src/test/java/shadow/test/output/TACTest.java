@@ -275,4 +275,9 @@ public class TACTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
+	@Test public void testGenericArray() throws Exception {
+		args.add("shadow/test/GenericArrayTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
 }

@@ -1,0 +1,4 @@
+interface shadow:standard@NullableCanIndexStore<K,V> extends NullableCanIndex<K,V>
+{
+	index(K key, nullable V value) => ();
+}

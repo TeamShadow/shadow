@@ -405,6 +405,10 @@ public class TypeCollector extends BaseChecker {
 				case "Method":			Type.METHOD = (ClassType)type; break;
 				//case "MethodClass":		Type.METHOD_CLASS = (ClassType) type; break;				
 				case "NullableArray":	Type.NULLABLE_ARRAY = (ClassType) type; break;
+				case "NullableCanIndex":	Type.NULLABLE_CAN_INDEX = (InterfaceType) type; break;
+				case "NullableCanIndexStore":	Type.NULLABLE_CAN_INDEX_STORE = (InterfaceType) type; break;
+				case "NullableCanIterate":	Type.NULLABLE_CAN_ITERATE = (InterfaceType) type; break;
+				case "NullableIterator":	Type.NULLABLE_ITERATOR = (InterfaceType) type; break;
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;

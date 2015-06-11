@@ -71,7 +71,8 @@ public class Generic implements Comparable<Generic>
 			//inside array (or inner classes of array or iterator), leave it as an array
 			if( parameterType instanceof ArrayType &&
 				!withoutArguments.equals(Type.ITERATOR) &&
-				!(withoutArguments.equals(Type.ARRAY) || withoutArguments.equals(Type.NULLABLE_ARRAY) || (withoutArguments.hasOuter() && withoutArguments.getOuter().equals(Type.ARRAY))) )// &&
+				!withoutArguments.equals(Type.NULLABLE_ITERATOR) &&
+				!(withoutArguments.equals(Type.ARRAY) || withoutArguments.equals(Type.NULLABLE_ARRAY) || (withoutArguments.hasOuter() && withoutArguments.getOuter().equals(Type.ARRAY)) || (withoutArguments.hasOuter() && withoutArguments.getOuter().equals(Type.NULLABLE_ARRAY))) )// &&
 				//!Type.ARRAY.recursivelyContainsInnerClass(type.getTypeWithoutTypeArguments()) )
 			{
 				parameterType = ((ArrayType)parameterType).convertToGeneric();

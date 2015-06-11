@@ -439,6 +439,8 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		
 		if( lineStart != -1 && columnStart != -1 )
 			error.append("[" + lineStart + ":" + columnStart + "] ");
+		else
+			error.append(" ");
 		
 		if( type != null )
 			error.append(type.getName() + ": ");		

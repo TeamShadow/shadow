@@ -5,14 +5,7 @@ class Index2<E> implements CanIndexStore<code, E>
 
 	public index(code key) => (E value)
 	{		
-		try
-		{
-			return check(storage);
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
-		}
+		return check(storage);
 	}
 	
 	

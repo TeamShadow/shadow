@@ -135,7 +135,7 @@ class shadow:standard@MutableString implements CanIndex<int, byte>
 		if( end <= start or end > size )
 			throw IllegalArgumentException:create("Invalid end index");
 	
-		return String:create(cast<byte[]>(cast<Object>(data.subarray(start, end))));	
+		return String:create(cast<byte[]>(data.subarray(start, end)));	
 	}
 
 	public readonly toString() => ( String )

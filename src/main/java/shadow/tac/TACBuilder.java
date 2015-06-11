@@ -2421,14 +2421,13 @@ public class TACBuilder implements ShadowParserVisitor
 					TACOperand address = new TACPointerToLong(tree, this_);					
 					
 					TACVariableRef map = new TACVariableRef(tree, method.getParameter("addresses"));
-					TACMethodRef indexMethod = new TACMethodRef(tree, Type.ADDRESS_MAP.getMatchingMethod("index", new SequenceType(Type.ULONG)) );
-					TACCall index = new TACCall(tree, block, indexMethod, map, address );					
-					TACSame test = new TACSame(tree, index, new TACLiteral(tree, ShadowValue.NULL));
+					TACMethodRef indexMethod = new TACMethodRef(tree, Type.ADDRESS_MAP.getMatchingMethod("containsKey", new SequenceType(Type.ULONG)) );
+					TACOperand test = new TACCall(tree, block, indexMethod, map, address );
 					
 					TACLabelRef copyLabel = new TACLabelRef(tree),
 							returnLabel = new TACLabelRef(tree);
 					
-					new TACBranch(tree, test, copyLabel, returnLabel);
+					new TACBranch(tree, test, returnLabel, copyLabel);
 					copyLabel.new TACLabel(tree);
 					
 					//allocate a new object
@@ -2577,6 +2576,9 @@ public class TACBuilder implements ShadowParserVisitor
 					new TACReturn(tree, methodSignature.getFullReturnTypes(), duplicate);
 					
 					returnLabel.new TACLabel(tree);
+					
+					indexMethod = new TACMethodRef(tree, Type.ADDRESS_MAP.getMatchingMethod("index", new SequenceType(Type.ULONG)) );
+					TACOperand index = new TACCall(tree, block, indexMethod, map, address );
 					TACOperand existingObject = new TACLongToPointer(tree, index, new SimpleModifiedType(type));
 					new TACReturn(tree, methodSignature.getFullReturnTypes(), existingObject);					
 				}

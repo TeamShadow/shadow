@@ -3,7 +3,7 @@ import shadow:utility@IllegalModificationException;
 import shadow:io@Console;
 
 locked class shadow:standard@AddressMap
-	implements Map<ulong, ulong>
+	implements Map<ulong, ulong>	
 {
 	constant int DEFAULT_INITIAL_CAPACITY = 16;
 	constant int MAXIMUM_CAPACITY = 1 << 30;
@@ -113,7 +113,7 @@ locked class shadow:standard@AddressMap
 	}
 	
 
-	public index( ulong key ) => ( nullable ulong value )
+	public index( ulong key ) => ( ulong value )
 	{
 		(int index, int hash) = this.hash( key );
 		try
@@ -129,7 +129,8 @@ locked class shadow:standard@AddressMap
 		{			
 		}
 		
-		return null;				
+		//maybe return 0uL instead?
+		throw IllegalArgumentException:create("Invalid key");				
 	}
 	
 	
@@ -193,7 +194,7 @@ locked class shadow:standard@AddressMap
 		}
 		recover
 		{
-			return false;
+			return false;			
 		}
 	}
 	

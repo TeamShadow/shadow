@@ -1314,19 +1314,21 @@ public class LLVMOutput extends AbstractOutput
 	{
 		Type baseType = node.getType().getBaseType();		
 		String allocationClass = typeSymbol(node.getBaseClass());
-		
+		boolean nullable = false;
 		String allocationMethod = "_Mallocate";
-		if( node.getType() instanceof NullableArrayType )
+		if( node.getType() instanceof NullableArrayType ) {
 			allocationMethod += "Nullable";
+			nullable = true;
+		}
 		
 		writer.write(nextTemp() + " = call noalias " + type(Type.OBJECT) +
 				" @" + raw(Type.CLASS, allocationMethod + Type.INT.getMangledName()) +
 			 	'(' + allocationClass + ", " +
 				typeSymbol(node.getTotalSize()) + ')');
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
-				temp(1) + " to " + type(baseType, true) + '*');
+				temp(1) + " to " + type(baseType, nullable) + '*');
 		writer.write(nextTemp() + " = insertvalue " + type(node) +
-				" undef, " + type(baseType, true) + "* " + temp(1) + ", 0");
+				" undef, " + type(baseType, nullable) + "* " + temp(1) + ", 0");
 		for (int i = 0; i < node.getDimensions(); i++)
 			writer.write(nextTemp(node) + " = insertvalue " + type(node) +
 					' ' + temp(1) + ", " + typeSymbol(node.getDimension(i)) +
@@ -1959,12 +1961,7 @@ public class LLVMOutput extends AbstractOutput
 	private static String type(ModifiedType type)
 	{
 		return type(type.getType(), type.getModifiers().isNullable());
-	}
-	
-	private static String primitiveWrapper(Type type)
-	{
-		return "%\"" + type.getMangledName() + "\"*";
-	}
+	}	
 	
 	protected static String type(Type type) {
 		return type(type, false);
@@ -2328,6 +2325,8 @@ public class LLVMOutput extends AbstractOutput
 		writeTypeDeclaration(Type.GENERIC_CLASS);
 		writeTypeDeclaration(Type.ARRAY_CLASS);
 		//writeTypeDeclaration(Type.METHOD_CLASS);
+		//TODO: potentially remove Iterator references?
+		//probably not, since they're in String
 		writeTypeDeclaration(Type.ITERATOR);
 		writeTypeDeclaration(Type.STRING);
 		writeTypeOpaque(Type.ADDRESS_MAP);
