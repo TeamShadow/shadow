@@ -2,6 +2,7 @@ package shadow.doctool;
 
 import java.io.StringWriter;
 import java.util.ArrayDeque;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -23,7 +24,6 @@ import shadow.AST.AbstractASTVisitor;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTFieldDeclaration;
-import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ShadowException;
@@ -31,7 +31,13 @@ import shadow.parser.javacc.ShadowParser.TypeKind;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.SequenceType;
 
+/**
+ * Visits a previously type-checked source file in order to generate
+ * documentation
+ */
 public class DocumentationVisitor extends AbstractASTVisitor 
 {
 	private static final Logger logger = Loggers.DOC_TOOL;
@@ -45,6 +51,7 @@ public class DocumentationVisitor extends AbstractASTVisitor
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		document = builder.newDocument();
+		document.setXmlStandalone(true);
 		currentNode = document.appendChild(document.createElement("shadowdoc"));
 	}
 	
@@ -81,12 +88,6 @@ public class DocumentationVisitor extends AbstractASTVisitor
 		MethodType type = (MethodType)node.getType();
 		
 		System.out.println(type.getReturnTypes());
-
-		for (String parameter : type.getParameterNames())
-		{
-			System.out.println(parameter);
-			System.out.println(type.getParameterType(parameter).getType());
-		}
 		*/
 		
 		Element method = (Element) currentNode.appendChild(document.createElement("method"));
@@ -94,6 +95,24 @@ public class DocumentationVisitor extends AbstractASTVisitor
 		// The first child of an ASTMethodDeclaration is an ASTMethodDeclarator.
 		// We retrieve the method name from this child
 		method.setAttribute("name", node.jjtGetChild(0).getImage());
+		
+		// Create child tags for each parameter
+		MethodType type = (MethodType)node.getType();
+		List<String> parameterNames = type.getParameterNames();
+		SequenceType parameterTypes = type.getParameterTypes();
+		for (int i = 0; i < parameterNames.size(); ++i)
+		{
+			Element parameter = (Element) method.appendChild(document.createElement("parameter"));
+			parameter.setAttribute("name", parameterNames.get(i));
+			parameter.setAttribute("type", parameterTypes.get(i).getType().getQualifiedName());
+		}
+		
+		// Add a description tag if this node has documentation
+		if (node.hasDocumentation())
+		{
+			Node description = method.appendChild(document.createElement("description"));
+			description.setTextContent(node.getDocumentation().toString());
+		}
 		
 		return WalkType.NO_CHILDREN;
 	}
@@ -107,6 +126,13 @@ public class DocumentationVisitor extends AbstractASTVisitor
 		// We retrieve the variable name from this child
 		field.setAttribute("name", node.jjtGetChild(1).getImage());
 		field.setAttribute("type", node.getType().getQualifiedName());
+		
+		// Add a description tag if this node has documentation
+		if (node.hasDocumentation())
+		{
+			Node description = field.appendChild(document.createElement("description"));
+			description.setTextContent(node.getDocumentation().toString());
+		}
 		
 		return WalkType.NO_CHILDREN;
 	}
@@ -138,6 +164,13 @@ public class DocumentationVisitor extends AbstractASTVisitor
 				interfaceElement.setAttribute("interface", currentInterface.getQualifiedName());
 				
 				currentNode.appendChild(interfaceElement);
+			}
+			
+			// Add a description tag if this node has documentation
+			if (node.hasDocumentation())
+			{
+				Node description = currentNode.appendChild(document.createElement("description"));
+				description.setTextContent(node.getDocumentation().toString());
 			}
 		}
 		
@@ -171,7 +204,7 @@ public class DocumentationVisitor extends AbstractASTVisitor
 	{
 		ArrayDeque<String> packages = new ArrayDeque<String>();
 		
-		// Climb the chain of packages
+		// Climb up the chain of packages
 		Package currentPackage = lowest;
 		do
 		{
@@ -180,6 +213,7 @@ public class DocumentationVisitor extends AbstractASTVisitor
 		}
 		while (currentPackage != null);
 		
+		// Create tags for them in top-bottom order
 		Node current = root;
 		for (String packageName : packages)
 		{
