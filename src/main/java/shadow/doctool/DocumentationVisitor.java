@@ -152,6 +152,7 @@ public class DocumentationVisitor extends AbstractASTVisitor
 			currentNode = currentNode.appendChild(document.createElement(getClassTag(node.getKind())));
 			((Element) currentNode).setAttribute("name", node.getImage());
 			
+			// TODO: Figure out how to handle interfaces with multiple extends
 			// Add an attribute if the class extends something
 			ClassType extendType = ((ClassType)node.getType()).getExtendType();
 			if (extendType != null)

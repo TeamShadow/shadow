@@ -4,12 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.logging.log4j.Logger;
+
 import shadow.ConfigurationException;
+import shadow.Loggers;
 import shadow.AST.ASTWalker;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
@@ -23,8 +25,12 @@ import shadow.typecheck.type.Type;
 /** A basic type-checker used to gather enough data for documentation */
 public class DocumentationTypeChecker
 {
-	public List<Node> typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
+	private static final Logger logger = Loggers.DOC_TOOL;
+	
+	public void typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException, ParserConfigurationException
 	{
+		long startTime = System.currentTimeMillis(); // Time the type checking
+		
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		Package packageTree = new Package(typeTable);
 		ArrayList<String> importList = new ArrayList<String>();
@@ -44,18 +50,17 @@ public class DocumentationTypeChecker
 		nodeTable = updater.update(nodeTable);
 		Node mainNode = nodeTable.get(mainType);
 		
-		DocumentationVisitor docVisitor;
-		try {
-			docVisitor = new DocumentationVisitor();
-			ASTWalker docWalker = new ASTWalker(docVisitor);
-			docWalker.walk(mainNode);
-			
-			docVisitor.OutputDocumentation();
-		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		logger.info("Successfully type-checked " + file.toString() + " in "
+				+ (System.currentTimeMillis() - startTime) + "ms");
+		startTime = System.currentTimeMillis(); // Time the documentation process
 		
-		return null;
+		DocumentationVisitor docVisitor = new DocumentationVisitor();
+		ASTWalker docWalker = new ASTWalker(docVisitor);
+		docWalker.walk(mainNode);
+		
+		docVisitor.OutputDocumentation();
+		
+		logger.info("Successfully built documentation for " + file.toString()
+				+ " in " + (System.currentTimeMillis() - startTime) + "ms");
 	}
 }

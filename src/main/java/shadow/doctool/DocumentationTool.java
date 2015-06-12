@@ -2,9 +2,14 @@ package shadow.doctool;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.logging.log4j.Logger;
 
@@ -66,25 +71,65 @@ public class DocumentationTool
 		Configuration.buildConfiguration(arguments.getMainArguments()[0],
 				arguments.getConfigFileArg(), false);
 		
-		// Generate documentation for each file/package given on the command line
+		// Generate a list of source files from the command line arguments.
+		// If packages/directories are specified, they will be searched for
+		// source files
+		List<Path> sourceFiles = new ArrayList<Path>();
 		for (String argument : arguments.getMainArguments())
 		{
-			// Locate the file in question
-			Path currentFile = Paths.get(argument).toAbsolutePath();
+			Path current = Paths.get(argument).toAbsolutePath();
 			
-			// Ensure that the main source file exists
-			if (!Files.exists(currentFile))
-				throw new FileNotFoundException("File at " + currentFile.toAbsolutePath() + " not found");
+			// Ensure that the source file exists
+			if (!Files.exists(current))
+				throw new FileNotFoundException("File at " + current.toAbsolutePath() + " not found");
 			
+			if (Files.isDirectory(current))
+				sourceFiles.addAll(findSourceFiles(current, true));
+			else
+				sourceFiles.add(current);
+		}
+		
+		// Generate documentation for each source file
+		for (Path file : sourceFiles)
+		{
 			Type.clearTypes();
 			DocumentationTypeChecker checker = new DocumentationTypeChecker();
 			
 			try {
-				checker.typeCheck(currentFile.toFile());
+				checker.typeCheck(file.toFile());
 			} catch( TypeCheckException e ) {
-				logger.error(currentFile + " FAILED TO TYPE CHECK");
+				logger.error(file + " FAILED TO TYPE CHECK");
 				throw e;
+			} catch (ParserConfigurationException e) {
+				logger.error(file + " FAILED TO DOCUMENT");
+				e.printStackTrace();
 			}
+		}
+	}
+	
+	/** 
+	 * Finds all Shadow source files within a directory (a package)
+	 * 
+	 * @param recursive Determines whether or not subdirectories/subpackages
+	 * 					are also searched
+	 */
+	public static List<Path> findSourceFiles(Path directory, boolean recursive) throws IOException
+	{
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory))
+		{
+			List<Path> files = new ArrayList<Path>();
+			
+			for (Path file : stream)
+			{
+				// Capture all source files
+				if (file.toString().endsWith(".shadow"))
+					files.add(file);
+				// Recurse into subdirectories if desired
+				else if (recursive && Files.isDirectory(file))
+					files.addAll(findSourceFiles(file, true));
+			}
+			
+			return files;
 		}
 	}
 }
