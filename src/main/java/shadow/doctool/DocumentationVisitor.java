@@ -33,6 +33,7 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.Type;
 
 /**
  * Visits a previously type-checked source file in order to generate
@@ -152,6 +153,10 @@ public class DocumentationVisitor extends AbstractASTVisitor
 			currentNode = currentNode.appendChild(document.createElement(getClassTag(node.getKind())));
 			((Element) currentNode).setAttribute("name", node.getImage());
 			
+			// Deal with create appropriate tags for extends/implements
+			createInheritanceTags(currentNode, node.getType());
+			
+			/*
 			// TODO: Figure out how to handle interfaces with multiple extends
 			// Add an attribute if the class extends something
 			ClassType extendType = ((ClassType)node.getType()).getExtendType();
@@ -166,6 +171,7 @@ public class DocumentationVisitor extends AbstractASTVisitor
 				
 				currentNode.appendChild(interfaceElement);
 			}
+			*/
 			
 			// Add a description tag if this node has documentation
 			if (node.hasDocumentation())
@@ -194,6 +200,46 @@ public class DocumentationVisitor extends AbstractASTVisitor
 		currentNode = currentNode.getParentNode();
 		
 		return WalkType.NO_CHILDREN;
+	}
+	
+	/** Creates the appropriate inheritance tags for a class or interface */
+	private void createInheritanceTags(Node root, Type type) throws ShadowException
+	{
+		if (type instanceof ClassType)
+			createInheritanceTags(root, (ClassType) type);
+		else if (type instanceof InterfaceType)
+			createInheritanceTags(root, (InterfaceType) type);
+		else
+			throw new ShadowException("Inheritance tags can only be created for items of ClassType or InterfaceType");
+	}
+	
+	private void createInheritanceTags(Node root, ClassType type)
+	{
+		// Attach an attribute for the extended type
+		ClassType extendType = type.getExtendType();
+		if (extendType != null)
+			((Element) root).setAttribute("extends", extendType.getQualifiedName());
+		
+		// Append all implemented interfaces as tags
+		for (InterfaceType currentInterface : type.getAllInterfaces())
+		{
+			Element interfaceElement = document.createElement("implements");
+			interfaceElement.setAttribute("interface", currentInterface.getQualifiedName());
+			
+			root.appendChild(interfaceElement);
+		}
+	}
+	
+	private void createInheritanceTags(Node root, InterfaceType type)
+	{
+		// Append all extended interfaces as tags
+		for (InterfaceType currentInterface : type.getAllInterfaces())
+		{
+			Element interfaceElement = document.createElement("extends");
+			interfaceElement.setAttribute("interface", currentInterface.getQualifiedName());
+			
+			root.appendChild(interfaceElement);
+		}
 	}
 	
 	/** 
