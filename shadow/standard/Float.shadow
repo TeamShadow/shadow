@@ -111,12 +111,12 @@ implements
 	public isNaN() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) == EXPONENT_MASK and
-				(this->raw & SIGNIFICAND_MASK) != 0;
+				(this->raw & SIGNIFICAND_MASK) != 0u;
 	}
 	public isInfinite() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) == EXPONENT_MASK and
-				(this->raw & SIGNIFICAND_MASK) == 0;
+				(this->raw & SIGNIFICAND_MASK) == 0u;
 	}
 	public isFinite() => (boolean)
 	{

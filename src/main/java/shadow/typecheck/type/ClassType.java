@@ -531,6 +531,9 @@ public class ClassType extends Type
 	@Override
 	public boolean equals(Type type)
 	{		
+		if( this.getTypeWithoutTypeArguments() == Type.ARRAY && this.getTypeParameters() == null)
+			System.out.println("Yow!");
+		
 		if( this.getTypeWithoutTypeArguments() == Type.ARRAY && this.getTypeParameters().size() == 1 && type instanceof ArrayType )
 		{
 			ArrayType arrayType = (ArrayType)type;

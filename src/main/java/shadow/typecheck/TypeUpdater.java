@@ -797,9 +797,9 @@ public class TypeUpdater extends BaseChecker {
 			//child 0 is Modifiers
 			Type type = node.jjtGetChild(1).getType();			
 			node.setType( type );
-			
+		
 			if( type instanceof SingletonType )
-				addError(node, Error.INVALID_TYPE, "Parameter cannot be defined with singleton type " + type);
+				addError(Error.INVALID_TYPE, "Parameter cannot be defined with singleton type " + type);
 			
 		}		
 	
@@ -1003,6 +1003,7 @@ public class TypeUpdater extends BaseChecker {
 		node.setEnclosingType(currentType);
 
 		node.addModifier(Modifiers.FIELD);
+			
 		
 		if( currentType.getModifiers().isImmutable() )
 			node.addModifier(Modifiers.IMMUTABLE);
@@ -1012,17 +1013,15 @@ public class TypeUpdater extends BaseChecker {
 		
 		if( type instanceof UninstantiatedType && node.getModifiers().isConstant() ) {
 			UninstantiatedType uninstantiatedType = (UninstantiatedType) type;
-			for( ModifiedType argument : uninstantiatedType.getTypeArguments() )
-			{
-				if( argument.getType() instanceof TypeParameter )
-				{
+			for( ModifiedType argument : uninstantiatedType.getTypeArguments() ) {
+				if( argument.getType() instanceof TypeParameter ) {
 					//necessary?
 					addError(Error.INVALID_TYPE_PARAMETERS, "Field marked constant cannot have a type with a type parameter");
 					break;
 				}				
 			}
-		}
-				
+		}	
+						
 		// go through inserting all the identifiers
 		for(int i = 1; i < node.jjtGetNumChildren(); ++i) {
 			Node declarator = node.jjtGetChild(i);			

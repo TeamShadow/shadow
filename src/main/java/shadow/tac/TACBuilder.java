@@ -1340,6 +1340,7 @@ public class TACBuilder implements ShadowParserVisitor
 				prefixType = ((GetSetType)prefixType).getGetType().getType();
 			
 			if( prefixType instanceof ArrayType ) {
+				ArrayType arrayType = (ArrayType) prefixType;
 				List<TACOperand> list = new LinkedList<TACOperand>();
 				for (int i = 0; i < tree.getNumChildren(); i++) {
 					TACOperand index = tree.appendChild(i);
@@ -1350,7 +1351,11 @@ public class TACBuilder implements ShadowParserVisitor
 						index = new TACCast(tree, new SimpleModifiedType(Type.INT, index.getModifiers()), index);
 					list.add(index);
 				}
-				prefix = new TACArrayRef(tree, prefix, list);
+				
+				if( arrayType.getBaseType() instanceof TypeParameter )
+					prefix = new TACGenericArrayRef(tree, prefix, list);
+				else
+					prefix = new TACArrayRef(tree, prefix, list);
 			}				
 			else if( node.getType() instanceof SubscriptType ) {					
 				SubscriptType subscriptType = (SubscriptType) node.getType();

@@ -2,6 +2,8 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 /** 
@@ -18,12 +20,28 @@ public class TACSame extends TACOperand
 			TACOperand secondOperand)
 	{
 		super(node);
-		firstOperand = check(firstOperand, firstOperand);
+		firstOperand = check(firstOperand, firstOperand);		
 		secondOperand = check(secondOperand, secondOperand);
-		if (firstOperand.getType().isSubtype(secondOperand.getType()))
+		Type firstType = firstOperand.getType();
+		Type secondType = secondOperand.getType();
+		
+		
+		if (firstType.isSubtype(secondType))
 			firstOperand = check(firstOperand, secondOperand);
+		else if(secondType.isSubtype(firstType) )
+			secondOperand = check(secondOperand, firstOperand);		
+		//primitive exceptions, since they can be equal to each other with no clear subtype relation
+		else if( firstType.isPrimitive() && secondType.isPrimitive() ) {
+			
+			if( firstType.getWidth() >= secondType.getWidth() )
+				secondOperand = new TACCast(this, firstOperand, secondOperand);
+			else
+				firstOperand = new TACCast(this, secondOperand, firstOperand);			
+		}
 		else
-			secondOperand = check(secondOperand, firstOperand);
+			throw new UnsupportedOperationException();
+			
+			
 		first = firstOperand;
 		second = secondOperand;
 	}

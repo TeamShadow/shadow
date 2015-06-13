@@ -878,7 +878,7 @@ void Type(Modifiers modifiers):
 	jjtThis.setModifiers(modifiers);
 }
 {
-   LOOKAHEAD(ReferenceType()) ReferenceType(modifiers)
+   LOOKAHEAD(ReferenceType(Modifiers.NO_MODIFIERS)) ReferenceType(modifiers)
  //   |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
     |   PrimitiveType()
     |	FunctionType()

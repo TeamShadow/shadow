@@ -447,7 +447,11 @@ public class StatementChecker extends BaseChecker
 				if( node.getModifiers().isNullable() && type instanceof ArrayType  ) {
 					ArrayType arrayType = (ArrayType) type;
 					type = arrayType.convertToNullable();
-				}				
+				}
+				
+				//we're going to allow nullable primitives
+				//if( node.getModifiers().isNullable() && type.isPrimitive() )
+				//	addError(Error.INVALID_MODIFIER, "Primitive type " + type + " cannot be marked nullable");
 				
 				declarator.setType(type);										
 				declarator.setModifiers(node.getModifiers());					
@@ -1278,8 +1282,12 @@ public class StatementChecker extends BaseChecker
 							
 				if( leftElement instanceof ASTSequenceVariable ) //declaration	
 				{
-					if( leftElement.getType().isPrimitive() && leftElement.getModifiers().isNullable() )		
-						addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + leftElement.getType());
+					if( leftElement.getModifiers().isNullable() ) {					
+						/*if( leftElement.getType().isPrimitive() )							
+							addError(Error.INVALID_MODIFIER, "Primitive type " + leftElement.getType() + " cannot be marked nullable");
+						else*/ if( leftElement.getType() instanceof ArrayType && ((ArrayType)leftElement.getType()).getSuperBaseType().isPrimitive() )
+							addError(Error.INVALID_MODIFIER, "Primitive array type " + leftElement.getType() + " cannot be marked nullable");
+					}					
 					
 					addErrors(isValidInitialization(leftElement, rightElement));
 				}
@@ -1696,14 +1704,25 @@ public class StatementChecker extends BaseChecker
 		}
 		else
 		{
-			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach statement", collectionType);
+			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement " + Type.CAN_ITERATE + " or " + Type.NULLABLE_CAN_ITERATE + " and cannot be the target of a foreach statement", collectionType);
 			iterable = false;
 		}		
 		
 		if( iterable )
 		{
-			if( isVar && element != null && element.getType() != null )
-				node.setType(element.getType());
+			if( isVar && element != null && element.getType() != null ) {
+				Type elementType = element.getType();				
+				node.setType(elementType);
+				if( node.getModifiers().isNullable() ) {
+					/*if( elementType.isPrimitive() )
+						addError(Error.INVALID_MODIFIER, "Primitive type " + elementType + " cannot be marked nullable");
+					else*/ if( elementType instanceof ArrayType ) {
+						ArrayType arrayType = (ArrayType) elementType;
+						if( arrayType.getSuperBaseType().isPrimitive() )
+							addError(Error.INVALID_MODIFIER, "Primitive array type " + elementType + " cannot be marked nullable");
+					}
+				}
+			}
 					
 			List<TypeCheckException> errors = isValidInitialization( node, element);
 			if( errors.isEmpty() )
@@ -3288,10 +3307,19 @@ public class StatementChecker extends BaseChecker
 			
 			Type type = child.getType();
 			
-			if( isNullable && type instanceof ArrayType ) {
-				ArrayType arrayType = (ArrayType) type;
-				type = arrayType.convertToNullable();
+			if( isNullable ) { 
+				if( type instanceof ArrayType ) {
+					ArrayType arrayType = (ArrayType) type;
+					type = arrayType.convertToNullable();
+					
+					if( arrayType.getSuperBaseType().isPrimitive() )
+						addError(Error.INVALID_MODIFIER, "Primitive array type " + type + " cannot be marked nullable");
+				}
+				//else if( type.isPrimitive())
+					//addError(Error.INVALID_MODIFIER, "Primitive type " + type + " cannot be marked nullable");
 			}
+			
+			
 			
 			node.setType(type);
 		}		

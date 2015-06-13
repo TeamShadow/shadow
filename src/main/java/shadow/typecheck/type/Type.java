@@ -505,7 +505,7 @@ public abstract class Type implements Comparable<Type>
 			return OBJECT.getWidth(); // nullable makes a primitive type a reference
 		return type.getType().getWidth();
 	}
-	protected int getWidth()
+	public int getWidth()
 	{
 		if( this == NULL )
 			return OBJECT.getWidth();

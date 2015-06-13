@@ -46,6 +46,7 @@ import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
+import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
@@ -80,7 +81,6 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
@@ -302,6 +302,7 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
 		//memcopy
 		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
+		writer.write("declare void @llvm.memcpy.p0i32.p0i32.i32(i32*, i32*, i32, i32, i1)");
 		writer.write("declare noalias void @free(i8*) nounwind");
 		writer.write();
 		
@@ -845,12 +846,11 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACArrayRef node) throws ShadowException
 	{	
-		boolean nullable = node.getArray().getType() instanceof NullableArrayType;	
-		
+		//TODO:doesn't this need to be completely different for generic arrays?		
 		writer.write(nextTemp() + " = extractvalue " +
 				typeSymbol(node.getArray()) + ", 0");
 		writer.write(nextTemp(node) + " = getelementptr inbounds " +
-				type(node.getType(), nullable) + "* " + temp(1) + ", " +
+				type(node.getType()) + "* " + temp(1) + ", " +
 				typeSymbol(node.getTotal()));
 	}
 
@@ -1313,22 +1313,17 @@ public class LLVMOutput extends AbstractOutput
 	public void visit(TACNewArray node) throws ShadowException
 	{
 		Type baseType = node.getType().getBaseType();		
-		String allocationClass = typeSymbol(node.getBaseClass());
-		boolean nullable = false;
-		String allocationMethod = "_Mallocate";
-		if( node.getType() instanceof NullableArrayType ) {
-			allocationMethod += "Nullable";
-			nullable = true;
-		}
+		String allocationClass = typeSymbol(node.getBaseClass());		
+		String allocationMethod = "_Mallocate";	
 		
 		writer.write(nextTemp() + " = call noalias " + type(Type.OBJECT) +
 				" @" + raw(Type.CLASS, allocationMethod + Type.INT.getMangledName()) +
 			 	'(' + allocationClass + ", " +
 				typeSymbol(node.getTotalSize()) + ')');
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
-				temp(1) + " to " + type(baseType, nullable) + '*');
+				temp(1) + " to " + type(baseType) + '*');
 		writer.write(nextTemp() + " = insertvalue " + type(node) +
-				" undef, " + type(baseType, nullable) + "* " + temp(1) + ", 0");
+				" undef, " + type(baseType) + "* " + temp(1) + ", 0");
 		for (int i = 0; i < node.getDimensions(); i++)
 			writer.write(nextTemp(node) + " = insertvalue " + type(node) +
 					' ' + temp(1) + ", " + typeSymbol(node.getDimension(i)) +
@@ -1603,12 +1598,11 @@ public class LLVMOutput extends AbstractOutput
 	}
 	
 	@Override
-	public void visit(TACStore node) throws ShadowException
-	{
+	public void visit(TACStore node) throws ShadowException {
 		TACReference reference = node.getReference();
 		
-		if (reference instanceof TACSequenceRef)
-		{
+		if (reference instanceof TACSequenceRef) {
+			//TODO: What about a sequence filled with TACGenericArrayRefs?
 			TACSequenceRef seq = (TACSequenceRef)reference;
 			String name = typeSymbol(node.getValue());
 			for (int i = 0; i < seq.size(); i++)
@@ -1618,8 +1612,75 @@ public class LLVMOutput extends AbstractOutput
 						", " + typeSymbol(seq.get(i), true));
 			}
 		}
-		else
-		{		
+		else if( reference instanceof TACGenericArrayRef ) {
+			TACGenericArrayRef genericRef = (TACGenericArrayRef) reference;
+			Object flag = genericRef.getFlags().getData();
+			
+			//this code is based on Array.index(int, Object)
+			//labels have an extra % at the front
+			String checkArrayLabel = nextLabel().substring(1);
+			String objectLabel = nextLabel().substring(1);
+			String primitiveLabel = nextLabel().substring(1);
+			String arrayLabel = nextLabel().substring(1);
+			String doneLabel = nextLabel().substring(1);
+			
+			String arrayAsObj = nextTemp();
+			writer.write(arrayAsObj + " = extractvalue " +
+					typeSymbol(genericRef.getArray()) + ", 0");
+		
+			writer.write(nextTemp() + " = and i32 " + flag + ", " + PRIMITIVE); //primitive flag (2)
+			writer.write(nextTemp() + " = icmp eq i32 " + temp(1) + ", 0"); //not primitive
+			writer.write("br i1 " + temp(0) + ", label %" + checkArrayLabel + ", label %" + primitiveLabel);
+			
+			writer.writeLeft(checkArrayLabel + ":");			
+			writer.write(nextTemp() + " = and i32 " + flag + ", " + ARRAY); //array flag (8)
+			writer.write(nextTemp() + " = icmp eq i32 " + temp(1) + ", 0"); //not array
+			writer.write("br i1 " + temp(0) + ", label %" + objectLabel + ", label %" + arrayLabel);
+			
+			writer.writeLeft(objectLabel + ":");			
+			writer.write(nextTemp() + " = getelementptr inbounds " +
+					type(genericRef.getType()) + "* " + arrayAsObj + ", " +
+					typeSymbol(genericRef.getTotal()));
+			writer.write("store " + typeSymbol(node.getValue()) + ", " +
+					typeText(genericRef.getSetType(), temp(0), true));
+			writer.write("br label %" + doneLabel);
+			
+			writer.writeLeft(primitiveLabel + ":");
+			writer.write(nextTemp() + " = call i32 " +
+					name(Type.CLASS.getMatchingMethod("width", new SequenceType())) + 
+					'(' + typeSymbol(genericRef.getClassData()) + ')');
+			writer.write(nextTemp() + " = mul " + typeSymbol(genericRef.getTotal()) + ", " + temp(1));			
+			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT, arrayAsObj, true) + " to i8*");
+			writer.write(nextTemp() + " = getelementptr inbounds i8* " + temp(1) + ", i32 " + temp(2));
+			writer.write(nextTemp() + " = getelementptr inbounds " + typeSymbol(node.getValue()) + ", i32 1");
+			writer.write(nextTemp() + " = bitcast " + typeTemp(Type.OBJECT, 1) + " to i8*");
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(2) + ", i8* " + temp(0) + ", i32 " + temp(5) + ", i32 1, i1 0)");
+			writer.write("br label %" + doneLabel);
+				
+			writer.writeLeft(arrayLabel + ":");
+			writer.write(nextTemp() + " = call i32 " +
+					name(Type.CLASS.getMatchingMethod("width", new SequenceType())) + 
+					'(' + typeSymbol(genericRef.getClassData()) + ')');
+			writer.write(nextTemp() + " = mul " + typeSymbol(genericRef.getTotal()) + ", " + temp(1));
+			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT, arrayAsObj, true) + " to i8*");
+			writer.write(nextTemp() + " = getelementptr inbounds i8* " + temp(1) + ", i32 " + temp(2));			
+			writer.write(nextTemp() + " = bitcast " + typeSymbol(node.getValue()) + " to " + type(Type.ARRAY));
+			writer.write(nextTemp() + " = getelementptr inbounds " + typeTemp(Type.ARRAY, 1) + ", i32 0, i32 2");
+			writer.write(nextTemp() + " = load " + typeTemp(Type.OBJECT, 1, true));			
+			writer.write(nextTemp() + " = bitcast i8* " + temp(4) + " to " + type(Type.OBJECT) + "*");
+			writer.write("store " + typeTemp(Type.OBJECT, 1) + ", " + typeTemp(Type.OBJECT, 0, true));			
+			writer.write(nextTemp() + " = getelementptr inbounds " + typeTemp(Type.ARRAY, 4) + ", i32 0, i32 3, i32 1, i32 0");
+			writer.write(nextTemp() + " = load i32* " + temp(1));
+			writer.write(nextTemp() + " = getelementptr inbounds " + typeTemp(Type.ARRAY, 6) + ", i32 0, i32 3, i32 0");
+			writer.write(nextTemp() + " = load i32** " + temp(1));			
+			writer.write(nextTemp() + " = getelementptr inbounds " + typeTemp(Type.OBJECT, 5, true) + ", i32 1");
+			writer.write(nextTemp() + " = bitcast " + typeTemp(Type.OBJECT, 1, true) + " to i32*");			
+			writer.write("call void @llvm.memcpy.p0i32.p0i32.i32(i32* " + temp(0) + ", i32* " + temp(2) + ", i32 " + temp(4) + ", i32 0, i1 0)");
+			writer.write("br label %" + doneLabel);
+			
+			writer.writeLeft(doneLabel + ":");					
+		}
+		else {		
 			writer.write("store " + typeSymbol(node.getValue()) + ", " +
 				typeSymbol(reference.getSetType(), reference, true));
 		}

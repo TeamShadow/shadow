@@ -4,16 +4,7 @@ class shadow:test@NullableArrayTest
 {
 	public main() => ()
 	{
-		Console out;
-		nullable int[] array1 = int:null[10];
-		
-		array1[3] = 4;
-		array1[9] = 10;		
-		
-		nullable int a = array1[3]; 
-		out.printLine(a);
-		out.printLine(array1);
-		
+		Console out;		
 		nullable String[] array2 = String:null[5];
 		array2[1] = "Hello";
 		array2[3] = "Goodbye";

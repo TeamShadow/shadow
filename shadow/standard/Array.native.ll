@@ -431,7 +431,7 @@ _secondLessThanFirst:
 	%total = mul i32 %difference, %width
 	
 	;copy data
-	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %newArrayAsChar, i8* %primitiveElement, i32 %width, i32 1, i1 0)
+	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %newArrayAsChar, i8* %arrayDataAtOffset, i32 %width, i32 1, i1 0)
 	
 	%initializedArray = call %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject(%_Pshadow_Pstandard_CObject* %arrayObj, { i32*, [1 x i32] } %dimensionsArray2, %_Pshadow_Pstandard_CObject* %newArray)		
 	ret %_Pshadow_Pstandard_CArray* %initializedArray	
