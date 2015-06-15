@@ -119,36 +119,17 @@ public class OutputTest {
 			"all\n" +
 			"men\n" +
 			"shall\n" +
-			"[all, men, shall]\n");
+			"[all, men, shall]\n" + 
+			"[4, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225]\n");
 	}	
 	
 	@Test public void testArray() throws Exception {
 		args.add("shadow/test/ArrayTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"[0, zero, one, two, 4]\n" +
-				"[zero, one, two]\n" +
-				"[]\n" +
-				"[0]\n" +
-				"[0, zero]\n" +
-				"[0, zero, one]\n" +
-				"[0, zero, one, two]\n" +
-				"[0, zero, one, two, 4]\n" +
-				"[]\n" +
-				"[zero]\n" +
-				"[zero, one]\n" +
-				"[zero, one, two]\n" +
-				"[zero, one, two, 4]\n" +
-				"[]\n" +
-				"[one]\n" +
-				"[one, two]\n" +
-				"[one, two, 4]\n" +
-				"[]\n" +
-				"[two]\n" +
-				"[two, 4]\n" +
-				"[]\n" +
-				"[4]\n" +
-				"[]\n");			
+				"[0, 2, four, 88, shadow:standard@Object]\n" + 
+				"[0, 1, 2, 3, 4]\n" + 
+				"[zero, one, two]\n");			
 	}	
 	
 	@Test public void testChild() throws Exception {

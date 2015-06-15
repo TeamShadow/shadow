@@ -143,7 +143,7 @@ public class TACClass extends TACOperand
 				TACOperand generics = new TACFieldRef(this, genericClass, "parameters");
 				TACOperand parameter = new TACArrayRef(this, generics, new TACLiteral( this, new ShadowInteger(2*index)), false);
 				
-				methodTable = new TACArrayRef(this, generics, new TACLiteral( this, new ShadowInteger(2*index + 1)), false );
+				methodTable = new TACLoad(this, new TACArrayRef(this, generics, new TACLiteral( this, new ShadowInteger(2*index + 1)), false ));
 				classData = new TACCast(this, new SimpleModifiedType(Type.CLASS), parameter );
 			}
 		}		

@@ -17,6 +17,7 @@ import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDestinationPhiRef;
 import shadow.tac.nodes.TACFieldRef;
+import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
@@ -62,6 +63,7 @@ public interface TACVisitor
 	public abstract void visit(TACCopyMemory node) throws ShadowException;
 	public abstract void visit(TACDestinationPhiRef node) throws ShadowException;
 	public abstract void visit(TACFieldRef node) throws ShadowException;		
+	public abstract void visit(TACGenericArrayRef node) throws ShadowException;
 	public abstract void visit(TACLabel node) throws ShadowException;
 	public abstract void visit(TACLabelRef node) throws ShadowException;
 	public abstract void visit(TACLandingpad node) throws ShadowException;

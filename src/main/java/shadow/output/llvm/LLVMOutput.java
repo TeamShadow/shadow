@@ -302,10 +302,10 @@ public class LLVMOutput extends AbstractOutput
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
 		//memcopy
 		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
-		writer.write("declare void @llvm.memcpy.p0i32.p0i32.i32(i32*, i32*, i32, i32, i1)");
+		writer.write("declare void @__arrayStore(%\"_Pshadow_Pstandard_CObject\"**, i32, %\"_Pshadow_Pstandard_CObject\"*, %\"_Pshadow_Pstandard_CClass\"*)");
+		writer.write("declare %\"_Pshadow_Pstandard_CObject\"* @__arrayLoad(%\"_Pshadow_Pstandard_CObject\"**, i32, %\"_Pshadow_Pstandard_CClass\"*, %\"_Pshadow_Pstandard_CObject\"*)");
 		writer.write("declare noalias void @free(i8*) nounwind");
-		writer.write();
-		
+		writer.write();		
 		
 		//Class fields (since the order is all changed)
 		//used for debugging
@@ -843,15 +843,21 @@ public class LLVMOutput extends AbstractOutput
 		node.setData( '@' + raw(node.getType(), "_instance"));
 	}
 
+	//visitor pattern doesn't play nicely with inheritance
+	//we have to handle TACGenericArrayRef inside TACArrayRef
 	@Override
-	public void visit(TACArrayRef node) throws ShadowException
-	{	
-		//TODO:doesn't this need to be completely different for generic arrays?		
-		writer.write(nextTemp() + " = extractvalue " +
+	public void visit(TACArrayRef node) throws ShadowException {
+		if( node instanceof TACGenericArrayRef ) {
+			writer.write(nextTemp(node) + " = extractvalue " +
 				typeSymbol(node.getArray()) + ", 0");
-		writer.write(nextTemp(node) + " = getelementptr inbounds " +
+		}
+		else {					
+			writer.write(nextTemp() + " = extractvalue " +
+				typeSymbol(node.getArray()) + ", 0");
+			writer.write(nextTemp(node) + " = getelementptr inbounds " +
 				type(node.getType()) + "* " + temp(1) + ", " +
 				typeSymbol(node.getTotal()));
+		}
 	}
 
 	@Override
@@ -1591,10 +1597,18 @@ public class LLVMOutput extends AbstractOutput
 	@Override
 	public void visit(TACLoad node) throws ShadowException
 	{
-		TACReference reference = node.getReference();
+		TACReference reference = node.getReference();		
 		
-		writer.write(nextTemp(node) + " = load " +
-			typeSymbol(reference.getGetType(), reference, true));
+		if( reference instanceof TACGenericArrayRef ) {
+			TACGenericArrayRef genericRef = (TACGenericArrayRef) reference;			
+			writer.write(nextTemp(node) + " = call " + type(Type.OBJECT) + " @__arrayLoad(" + typeSymbol(Type.OBJECT, genericRef, true) + ", " + 
+					typeSymbol(genericRef.getTotal()) + ", " +
+					typeSymbol(genericRef.getClassData().getClassData()) + ", " +
+					typeSymbol(Type.OBJECT, genericRef.getClassData().getMethodTable()) + ")");
+		}
+		else
+			writer.write(nextTemp(node) + " = load " +
+					typeSymbol(reference.getGetType(), reference, true));
 	}
 	
 	@Override
@@ -1613,11 +1627,16 @@ public class LLVMOutput extends AbstractOutput
 			}
 		}
 		else if( reference instanceof TACGenericArrayRef ) {
-			TACGenericArrayRef genericRef = (TACGenericArrayRef) reference;
-			Object flag = genericRef.getFlags().getData();
+			TACGenericArrayRef genericRef = (TACGenericArrayRef) reference;			
+						
+			writer.write("call void @__arrayStore(" + typeSymbol(Type.OBJECT, genericRef, true) + ", " + 
+					typeSymbol(genericRef.getTotal()) + ", " + typeSymbol(node.getValue()) + ", " +
+					typeSymbol(genericRef.getClassData().getClassData()) + ")");
 			
 			//this code is based on Array.index(int, Object)
 			//labels have an extra % at the front
+			/*
+			
 			String checkArrayLabel = nextLabel().substring(1);
 			String objectLabel = nextLabel().substring(1);
 			String primitiveLabel = nextLabel().substring(1);
@@ -1678,7 +1697,9 @@ public class LLVMOutput extends AbstractOutput
 			writer.write("call void @llvm.memcpy.p0i32.p0i32.i32(i32* " + temp(0) + ", i32* " + temp(2) + ", i32 " + temp(4) + ", i32 0, i1 0)");
 			writer.write("br label %" + doneLabel);
 			
-			writer.writeLeft(doneLabel + ":");					
+			writer.writeLeft(doneLabel + ":");	
+			
+							*/
 		}
 		else {		
 			writer.write("store " + typeSymbol(node.getValue()) + ", " +
@@ -2243,7 +2264,11 @@ public class LLVMOutput extends AbstractOutput
 	}
 	private static String typeSymbol(Type type, TACOperand node)
 	{
-		return typeText(type, symbol(node));
+		return typeSymbol(type, node, false);
+	}
+	private static String typeSymbol(Type type, TACOperand node, boolean reference)
+	{
+		return typeText(type, symbol(node), reference);
 	}
 	private static String typeSymbol(ModifiedType type, TACOperand node)
 	{

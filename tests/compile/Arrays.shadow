@@ -4,17 +4,17 @@ class Arrays {
     int[][][,,,][][,] a = int:create[4][5][8,7,6,5][31][4,2];
 
     // create a single array
-    nullable int[] a1;
+    int[] a1;
  	int[] a2 = int:create[3];
   	int[] a3 = a2;
     
     // multidimensional arrays
-    nullable get set int[][] b1;
+    get set int[][] b1;
     int[][] b2 = int:create[3][4];
     int[][] b3 = b2;
     
     // contiguous arrays    
-    nullable int[,] c1;
+    int[,] c1;
     int[,] c2 = int:create[3,4];
     int[,] c3 = c2;
     
@@ -22,17 +22,17 @@ class Arrays {
         // test the same but in a method
 
 	    // create a single array
-	    nullable int[] a1;
+	    int[] a1;
 	    int[] a2 = int:create[30];
 	    int[] a3 = a2;
 	    
 	    // multidimensional arrays
-	    nullable int[][] b1;
+	    int[][] b1;
 	    int[][] b2 = int:create[3][4];
 	    int[][] b3 = b2;
 	    
 	    // contiguous arrays    
-	    nullable int[,] c1;
+	    int[,] c1;
 	    int[,] c2 = int:create[30,40];
 	    int[,] c3 = c2;
              
