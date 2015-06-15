@@ -32,13 +32,13 @@ class shadow:standard@MutableString implements CanIndex<int, byte>
 
 	public readonly index( int index ) => ( byte value )
 	{
-		if ( index < 0 or index > size )
+		if ( index < 0 or index >= size )
 			throw IndexOutOfBoundsException:create();
 		return data[index];
 	}
 	public index( int index, byte value ) => ()
 	{
-		if ( index < 0 or index > size )
+		if ( index < 0 or index >= size )
 			throw IndexOutOfBoundsException:create();
 		data[index] = value;
 	}
@@ -113,7 +113,7 @@ class shadow:standard@MutableString implements CanIndex<int, byte>
 
 	public append( nullable Object value ) => ( MutableString )
 	{
-		String string = #value;
+		String string = #value;		
 		ensureCapacity( size + string->size );
 		for ( int i = 0; i < string->size; i += 1, size += 1 )
 			data[size] = string.index(i);
@@ -135,14 +135,14 @@ class shadow:standard@MutableString implements CanIndex<int, byte>
 		if( end <= start or end > size )
 			throw IllegalArgumentException:create("Invalid end index");
 	
-		return String:create(cast<byte[]>(cast<Object>(data.subarray(start, end))));	
+		return String:create(cast<byte[]>(data.subarray(start, end)));	
 	}
 
 	public readonly toString() => ( String )
 	{	
 		byte[] bytes = data;
 		if( data->size != size ) 
-			bytes = cast<byte[]>(data.subarray(0, size));
+			bytes = data.subarray(0, size);
 				
 		return String:create(bytes);
 	}

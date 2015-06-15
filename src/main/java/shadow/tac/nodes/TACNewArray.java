@@ -9,6 +9,8 @@ import java.util.List;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
@@ -38,6 +40,8 @@ public class TACNewArray extends TACOperand
 	{
 		super(node);
 		type = arrayType;
+		if( arrayType instanceof NullableArrayType )
+			getModifiers().addModifier(Modifiers.NULLABLE);
 		base = check(baseClass, new SimpleModifiedType(Type.CLASS));
 		dimensions = new ArrayList<TACOperand>(dims.size());
 		Iterator<TACOperand> iter = dims.iterator();

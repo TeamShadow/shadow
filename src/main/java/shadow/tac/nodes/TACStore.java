@@ -21,7 +21,7 @@ public class TACStore extends TACSimpleNode
 	{
 		super(node);
 		reference = ref;
-		value = check(op, ref.getSetType());
+		value = check(op, ref.getSetType());		
 		new TACNodeRef(node, value);
 	}
 

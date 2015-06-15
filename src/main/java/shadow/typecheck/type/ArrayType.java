@@ -38,19 +38,6 @@ public class ArrayType extends ClassType
 		else
 			return _package.getQualifiedName() + '@' + toString(withBounds);		
 	}
-
-	
-	
-	private static String makeName(Type baseType, int dimensions )
-	{
-		StringBuilder name = new StringBuilder(baseType.getTypeName());
-		name.append("[");
-		for( int j = 1; j < dimensions; j++ ) //no extra comma for 1 dimension
-			name.append(",");
-		name.append("]");				
-		
-		return name.toString();		
-	}
 	
 	public int getDimensions()
 	{
@@ -80,6 +67,11 @@ public class ArrayType extends ClassType
 		return baseType;
 	}
 	
+	public void setBaseType(Type type)
+	{
+		baseType = type;
+	}
+	
 	@Override
 	public String getMangledName()
 	{
@@ -92,30 +84,16 @@ public class ArrayType extends ClassType
 		return getBaseType().getMangledNameWithGenerics(false) + "_A" + dimensions;
 	}
 	
-	public ArrayType(Type baseType)
-	{
+	public ArrayType(Type baseType) {
 		this(baseType, Collections.singletonList(1), 0);
 	}
 	
-	public ArrayType( Type baseType, int dimensions )
-	{
-		super(makeName(baseType, dimensions), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getOuter());
-		
-		this.baseType = baseType;
-		this.dimensions = dimensions;
-		
-		if( baseType.isParameterized() )
-			setParameterized(true);
+	public ArrayType( Type baseType, int dimensions ) {
+		this(baseType, Collections.singletonList(dimensions), 0);		
 	}
 	
 	public ArrayType(Type baseType, List<Integer> arrayDimensions ) {
 		this( baseType, arrayDimensions, 0 );
-	}	
-	
-	public String toString(boolean withBounds) {		
-		String brackets = getTypeName().substring(getTypeName().indexOf('['));		
-		
-		return baseType.toString(withBounds) + brackets;
 	}
 	
 	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index ) {
@@ -125,11 +103,19 @@ public class ArrayType extends ClassType
 		if( arrayDimensions.size() == index + 1 )
 			this.baseType = baseType;
 		else
-			this.baseType = new ArrayType( baseType, arrayDimensions, index + 1);
+			this.baseType = new ArrayType( baseType, arrayDimensions, index + 1);		
 		
 		if( baseType.isParameterized() )
 			setParameterized(true);
 	}
+	
+	public String toString(boolean withBounds) {		
+		String brackets = getTypeName().substring(getTypeName().indexOf('['));		
+		
+		return baseType.toString(withBounds) + brackets;
+	}
+	
+	
 	
 	@Override
 	public SequenceType getTypeParameters()

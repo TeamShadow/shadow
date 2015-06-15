@@ -79,8 +79,6 @@ public class DocumentationVisitor extends AbstractASTVisitor
 	@Override
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException
 	{
-		//printDocumentation(node, depth);
-		
 		/*
 		System.out.println(node.getModifiers());
 		System.out.println(getPackageName(node.getType()));
@@ -155,23 +153,6 @@ public class DocumentationVisitor extends AbstractASTVisitor
 			
 			// Deal with create appropriate tags for extends/implements
 			createInheritanceTags(currentNode, node.getType());
-			
-			/*
-			// TODO: Figure out how to handle interfaces with multiple extends
-			// Add an attribute if the class extends something
-			ClassType extendType = ((ClassType)node.getType()).getExtendType();
-			if (extendType != null)
-				((Element) currentNode).setAttribute("extends", extendType.getQualifiedName());
-			
-			// Append all interfaces as tags
-			for (InterfaceType currentInterface : node.getType().getAllInterfaces())
-			{
-				Element interfaceElement = document.createElement("implements");
-				interfaceElement.setAttribute("interface", currentInterface.getQualifiedName());
-				
-				currentNode.appendChild(interfaceElement);
-			}
-			*/
 			
 			// Add a description tag if this node has documentation
 			if (node.hasDocumentation())

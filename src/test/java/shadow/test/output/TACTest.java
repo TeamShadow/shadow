@@ -265,4 +265,25 @@ public class TACTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
+	@Test public void testNullablePrimitive() throws Exception {
+		args.add("shadow/test/NullablePrimitiveTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testNullableArray() throws Exception {
+		args.add("shadow/test/NullableArrayTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testGenericArray() throws Exception {
+		args.add("shadow/test/GenericArrayTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	
+	@Test public void testMutableString() throws Exception {
+		args.add("shadow/test/MutableStringTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
 }

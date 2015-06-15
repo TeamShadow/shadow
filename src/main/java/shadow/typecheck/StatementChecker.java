@@ -395,7 +395,11 @@ public class StatementChecker extends BaseChecker
 				node.setType(type);
 			else
 			{
-				ArrayType arrayType = new ArrayType(type, dimensions);
+				ArrayType arrayType;
+				if( node.getModifiers().isNullable() )
+					arrayType = new NullableArrayType(type, dimensions);
+				else
+					arrayType = new ArrayType(type, dimensions);
 				((ClassType)currentType).addReferencedType(arrayType);
 				node.setType(arrayType);
 			}
@@ -443,7 +447,11 @@ public class StatementChecker extends BaseChecker
 				if( node.getModifiers().isNullable() && type instanceof ArrayType  ) {
 					ArrayType arrayType = (ArrayType) type;
 					type = arrayType.convertToNullable();
-				}				
+				}
+				
+				//we're going to allow nullable primitives
+				//if( node.getModifiers().isNullable() && type.isPrimitive() )
+				//	addError(Error.INVALID_MODIFIER, "Primitive type " + type + " cannot be marked nullable");
 				
 				declarator.setType(type);										
 				declarator.setModifiers(node.getModifiers());					
@@ -1274,8 +1282,12 @@ public class StatementChecker extends BaseChecker
 							
 				if( leftElement instanceof ASTSequenceVariable ) //declaration	
 				{
-					if( leftElement.getType().isPrimitive() && leftElement.getModifiers().isNullable() )		
-						addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + leftElement.getType());
+					if( leftElement.getModifiers().isNullable() ) {					
+						/*if( leftElement.getType().isPrimitive() )							
+							addError(Error.INVALID_MODIFIER, "Primitive type " + leftElement.getType() + " cannot be marked nullable");
+						else*/ if( leftElement.getType() instanceof ArrayType && ((ArrayType)leftElement.getType()).getSuperBaseType().isPrimitive() )
+							addError(Error.INVALID_MODIFIER, "Primitive array type " + leftElement.getType() + " cannot be marked nullable");
+					}					
 					
 					addErrors(isValidInitialization(leftElement, rightElement));
 				}
@@ -1672,7 +1684,7 @@ public class StatementChecker extends BaseChecker
 			ArrayType array = (ArrayType)collectionType;			
 			element = new SimpleModifiedType( array.getBaseType() );
 		}
-		else if( collectionType.hasUninstantiatedInterface(Type.CAN_ITERATE) )
+		else if( collectionType.hasUninstantiatedInterface(Type.CAN_ITERATE)  )
 		{			
 			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
 				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE))
@@ -1681,16 +1693,36 @@ public class StatementChecker extends BaseChecker
 					break;
 				}
 		}
+		else if( collectionType.hasUninstantiatedInterface(Type.NULLABLE_CAN_ITERATE)  )
+		{			
+			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
+				if( _interface.getTypeWithoutTypeArguments().equals(Type.NULLABLE_CAN_ITERATE))
+				{
+					element = _interface.getTypeParameters().get(0);
+					break;
+				}
+		}
 		else
 		{
-			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement CanIterate and cannot be the target of a foreach statement", collectionType);
+			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement " + Type.CAN_ITERATE + " or " + Type.NULLABLE_CAN_ITERATE + " and cannot be the target of a foreach statement", collectionType);
 			iterable = false;
 		}		
 		
 		if( iterable )
 		{
-			if( isVar && element != null && element.getType() != null )
-				node.setType(element.getType());
+			if( isVar && element != null && element.getType() != null ) {
+				Type elementType = element.getType();				
+				node.setType(elementType);
+				if( node.getModifiers().isNullable() ) {
+					/*if( elementType.isPrimitive() )
+						addError(Error.INVALID_MODIFIER, "Primitive type " + elementType + " cannot be marked nullable");
+					else*/ if( elementType instanceof ArrayType ) {
+						ArrayType arrayType = (ArrayType) elementType;
+						if( arrayType.getSuperBaseType().isPrimitive() )
+							addError(Error.INVALID_MODIFIER, "Primitive array type " + elementType + " cannot be marked nullable");
+					}
+				}
+			}
 					
 			List<TypeCheckException> errors = isValidInitialization( node, element);
 			if( errors.isEmpty() )
@@ -2230,7 +2262,7 @@ public class StatementChecker extends BaseChecker
 					addError(Error.INVALID_SUBSCRIPT, "Subscript gives " + node.jjtGetNumChildren() + " indexes but "  + arrayType.getDimensions() + " are required");
 				}				
 			}						
-			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) )
+			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.NULLABLE_CAN_INDEX) )
 			{
 				if( node.jjtGetNumChildren() == 1)
 				{
@@ -2262,7 +2294,7 @@ public class StatementChecker extends BaseChecker
 							node.addModifier(Modifiers.READONLY);
 						else if( prefixNode.getModifiers().isTemporaryReadonly() )
 							node.addModifier(Modifiers.TEMPORARY_READONLY);
-						else if( prefixType.hasInterface(Type.CAN_INDEX_STORE) ) 
+						else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.NULLABLE_CAN_INDEX_STORE)  ) 
 							node.addModifier(Modifiers.ASSIGNABLE);
 					}											
 				}
@@ -2275,7 +2307,7 @@ public class StatementChecker extends BaseChecker
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX, prefixType);
+				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX + " or " + Type.NULLABLE_CAN_INDEX, prefixType);
 			}
 						
 		}
@@ -2322,6 +2354,7 @@ public class StatementChecker extends BaseChecker
 			
 			if( node.getImage().equals("null")  ) {
 				nullable = true;
+				node.addModifier(Modifiers.NULLABLE);
 				
 				if( prefixType instanceof ArrayType ) {
 					ArrayType arrayType = (ArrayType) prefixType;
@@ -3274,10 +3307,19 @@ public class StatementChecker extends BaseChecker
 			
 			Type type = child.getType();
 			
-			if( isNullable && type instanceof ArrayType ) {
-				ArrayType arrayType = (ArrayType) type;
-				type = arrayType.convertToNullable();
+			if( isNullable ) { 
+				if( type instanceof ArrayType ) {
+					ArrayType arrayType = (ArrayType) type;
+					type = arrayType.convertToNullable();
+					
+					if( arrayType.getSuperBaseType().isPrimitive() )
+						addError(Error.INVALID_MODIFIER, "Primitive array type " + type + " cannot be marked nullable");
+				}
+				//else if( type.isPrimitive())
+					//addError(Error.INVALID_MODIFIER, "Primitive type " + type + " cannot be marked nullable");
 			}
+			
+			
 			
 			node.setType(type);
 		}		

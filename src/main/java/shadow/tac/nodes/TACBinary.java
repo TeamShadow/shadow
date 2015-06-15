@@ -5,6 +5,7 @@ import shadow.tac.TACVisitor;
 import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -165,4 +166,10 @@ public class TACBinary extends TACOperand
 		paren = false;
 		return sb.toString();
 	}
+	
+	@Override
+	public Modifiers getModifiers() {
+		return result.getModifiers();
+	}
+	
 }

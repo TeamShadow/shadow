@@ -53,6 +53,7 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
@@ -149,91 +150,21 @@ public class TypeUpdater extends BaseChecker {
 		}			
 	}
 	
-	private void updateFieldsAndMethods( Map<Type, Node> nodeTable )
-	{
+	private void updateFieldsAndMethods( Map<Type, Node> nodeTable ) {
 		//update fields and methods			
-		for(Node declarationNode : nodeTable.values() )
-		{	
-			try
-			{			
+		for(Node declarationNode : nodeTable.values() ) {	
+			try {			
 				Type type = declarationNode.getType();				
 				type.updateFieldsAndMethods();
 			}
-			catch(InstantiationException e)
-			{							
+			catch(InstantiationException e) {							
 				addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-			}			
-			
-			/*
-			//update fields					
-			Map<String,Node> fields = type.getFields();					
-			for( Node node : fields.values() )
-			{
-				 Type nodeType = node.getType();
-				 if( nodeType instanceof UninstantiatedType )
-				 {
-					 try 
-					 {
-						node.setType( ((UninstantiatedType)nodeType).instantiate() );
-					 }
-					 catch (InstantiationException e)
-					 {							
-						 addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-					 }							 
-				 }
 			}
-			
-			//update methods					
-			Map<String, List<MethodSignature>> methodTable = type.getMethodMap();					
-			for( String name : methodTable.keySet() )
-			{	
-				for( MethodSignature signature: methodTable.get(name) )
-				{
-					MethodType methodType = signature.getMethodType();
-					updateTypeParameters(methodType, signature.getNode());
-					
-					for( String parameter : methodType.getParameterNames() )
-					{
-						ModifiedType parameterType = methodType.getParameterType(parameter);
-						if( parameterType.getType() instanceof UninstantiatedType )
-						{
-							try
-							{
-								parameterType.setType( ((UninstantiatedType)parameterType.getType()).instantiate() );
-							} 
-							catch (InstantiationException e) 
-							{									
-								addError(signature.getNode(), Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-							}
-						}
-					}
-					
-					for( ModifiedType returnType : methodType.getReturnTypes() )
-					{
-						if( returnType.getType() instanceof UninstantiatedType )
-						{
-							try
-							{
-								returnType.setType( ((UninstantiatedType)returnType.getType()).instantiate() );
-							} 
-							catch (InstantiationException e) 
-							{									
-								addError(signature.getNode(), Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-							}
-						}
-					}						
-				}
-			}
-			
-			
-			*/
 		}		
 	}
 	
-	private void addConstructorsAndProperties()
-	{
-		for( Package p : typeTable.keySet() )
-		{
+	private void addConstructorsAndProperties() {
+		for( Package p : typeTable.keySet() ) {
 			for( Type type : typeTable.get(p).values() ) 
 			{
 				if( type instanceof ClassType )
@@ -267,8 +198,7 @@ public class TypeUpdater extends BaseChecker {
 						Node node = field.getValue();
 						Modifiers fieldModifiers = node.getModifiers();
 						
-						if( fieldModifiers.isGet() || fieldModifiers.isSet() )
-						{
+						if( fieldModifiers.isGet() || fieldModifiers.isSet() )	{	
 							List<MethodSignature> methods = classType.getMethods(field.getKey());
 							int getterCount = 0;
 							int setterCount = 0;
@@ -296,9 +226,9 @@ public class TypeUpdater extends BaseChecker {
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
 									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET );
 									methodNode.setImage(field.getKey());
-									methodNode.setType(field.getValue().getType());
+									methodNode.setType(node.getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
-									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
+									Modifiers modifiers = new Modifiers(fieldModifiers);
 									modifiers.removeModifier(Modifiers.GET);
 									modifiers.removeModifier(Modifiers.FIELD);
 									//default get is readonly
@@ -324,9 +254,9 @@ public class TypeUpdater extends BaseChecker {
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
 									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
 									methodNode.setImage(field.getKey());
-									methodNode.setType(field.getValue().getType());
+									methodNode.setType(node.getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
-									Modifiers modifiers = new Modifiers(field.getValue().getModifiers());
+									Modifiers modifiers = new Modifiers(fieldModifiers);
 									//is it even possible to have an immutable or readonly set?
 									if( modifiers.isImmutable() )
 										addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for an immutable field" );										
@@ -538,7 +468,8 @@ public class TypeUpdater extends BaseChecker {
 	private void checkOverrides(Map<Type,Node> nodeTable)
 	{	
 		for( Node declarationNode : nodeTable.values() )	
-		{			
+		{	
+			setFile(declarationNode.getFile()); //used for error messages
 			if( declarationNode.getType() instanceof ClassType )
 			{					
 				ClassType classType = (ClassType)declarationNode.getType();
@@ -604,29 +535,6 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}				
 	}
-	
-	
-	/*
-	public void instantiateTypes(Map<Type,Node> nodeTable) throws ShadowException, TypeCheckException
-	{	
-		//nodes before they've had their type parameters instantiated
-		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();		
-		
-		instantiateTypeParameters( nodeTable, uninstantiatedNodes );
-		
-		if( errorList.isEmpty() )
-			updateExtendsAndImplements( nodeTable, uninstantiatedNodes );
-		
-		if( errorList.isEmpty() )
-			checkOverrides( nodeTable );		
-		
-		if( errorList.size() > 0 )
-		{
-			printErrors();
-			throw errorList.get(0);
-		}
-	}
-	*/
 	
 	private void updateTypeParameters(Type type, Node declarationNode)
 	{
@@ -889,6 +797,10 @@ public class TypeUpdater extends BaseChecker {
 			//child 0 is Modifiers
 			Type type = node.jjtGetChild(1).getType();			
 			node.setType( type );
+		
+			if( type instanceof SingletonType )
+				addError(Error.INVALID_TYPE, "Parameter cannot be defined with singleton type " + type);
+			
 		}		
 	
 		return WalkType.POST_CHILDREN;
@@ -1091,6 +1003,7 @@ public class TypeUpdater extends BaseChecker {
 		node.setEnclosingType(currentType);
 
 		node.addModifier(Modifiers.FIELD);
+			
 		
 		if( currentType.getModifiers().isImmutable() )
 			node.addModifier(Modifiers.IMMUTABLE);
@@ -1098,29 +1011,19 @@ public class TypeUpdater extends BaseChecker {
 		if( currentType instanceof InterfaceType )
 			node.addModifier(Modifiers.CONSTANT); //all interface fields are implicitly constant
 		
-		if( type instanceof UninstantiatedType && node.getModifiers().isConstant() )
-		{
+		if( type instanceof UninstantiatedType && node.getModifiers().isConstant() ) {
 			UninstantiatedType uninstantiatedType = (UninstantiatedType) type;
-			for( ModifiedType argument : uninstantiatedType.getTypeArguments() )
-			{
-				if( argument.getType() instanceof TypeParameter )
-				{
+			for( ModifiedType argument : uninstantiatedType.getTypeArguments() ) {
+				if( argument.getType() instanceof TypeParameter ) {
 					//necessary?
 					addError(Error.INVALID_TYPE_PARAMETERS, "Field marked constant cannot have a type with a type parameter");
 					break;
 				}				
 			}
-		}
-		
-		//if( type.isPrimitive() && node.getModifiers().isNullable() )		
-		//	addError(Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to primitive type " + type);
-		
-		//if( type instanceof SingletonType )
-		//	addError(Error.INVALID_TYPE, "Fields cannot be declared with singleton types");
-				
+		}	
+						
 		// go through inserting all the identifiers
-		for(int i = 1; i < node.jjtGetNumChildren(); ++i)
-		{
+		for(int i = 1; i < node.jjtGetNumChildren(); ++i) {
 			Node declarator = node.jjtGetChild(i);			
 						
 			declarator.setType(type);
@@ -1129,14 +1032,28 @@ public class TypeUpdater extends BaseChecker {
 			String symbol = declarator.getImage();
 			
 			// make sure we don't already have this symbol
-			// current choice is to allow methods and fields to collide since they can be disambiguated by colon or dot
-			/*currentType.containsMethod(symbol) ||*/ 
+			// current choice is to allow methods and fields to collide since they can be disambiguated by colon or dot			
 			if(currentType.containsField(symbol) )						
 				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol + " already declared on line " + currentType.getField(symbol).getLineStart());
 			else if(currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(symbol))
 				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol + " already declared as inner class");
 			else
-				currentType.addField(symbol, declarator);			
+				currentType.addField(symbol, declarator);
+			
+			if( type instanceof SingletonType ) {
+				if( node.getModifiers().isGet() )
+					addError(node, Error.INVALID_MODIFIER, "Modifier get cannot be applied to field " + symbol + " with singleton type");
+				if( node.getModifiers().isImmutable() )
+					addError(node, Error.INVALID_MODIFIER, "Modifier immutable cannot be applied to field " + symbol + " with singleton type");
+				if( node.getModifiers().isNullable() )
+					addError(node, Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to field " + symbol + " with singleton type");
+				if( node.getModifiers().isReadonly() )
+					addError(node, Error.INVALID_MODIFIER, "Modifier readonly cannot be applied to field " + symbol + " with singleton type");
+				if( node.getModifiers().isSet() )
+					addError(node, Error.INVALID_MODIFIER, "Modifier set cannot be applied to field " + symbol + " with singleton type");
+				if( node.getModifiers().isWeak() )
+					addError(node, Error.INVALID_MODIFIER, "Modifier weak cannot be applied to field " + symbol + " with singleton type");				
+			}			
 		}		
 			
 		return WalkType.POST_CHILDREN;
@@ -1414,8 +1331,14 @@ public class TypeUpdater extends BaseChecker {
 			
 			if( dimensions.size() == 0 )
 				node.setType(type);
-			else
-				node.setType(new ArrayType(type, dimensions));
+			else {				
+				ArrayType arrayType;
+				if( node.getModifiers().isNullable() )
+					arrayType = new NullableArrayType(type, dimensions);
+				else
+					arrayType = new ArrayType(type, dimensions);
+				node.setType(arrayType);
+			}
 		}
 	
 		return WalkType.POST_CHILDREN;

@@ -2,6 +2,7 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 {
 	get immutable int[] lengths;
 	Object data;
+	
 	protected create( immutable int[] lengths, Object data )	
 	{
 		this:lengths = lengths;		
@@ -9,26 +10,16 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 	}	
 	
 	protected native create( immutable int[] lengths );
-	
-	/*
-	protected native create( immutable int[] lengths )
-	{
-		this:lengths = lengths;
-		this:data = allocate(T:class, this->size);
-	}
-	*/	
-		
-	//private immutable native allocate( Class type, int size ) => ( Object );
 
 	public readonly get size() => ( int )
 	{
 		int size = lengths[0];
-		for ( int i = 1; i < this->dims; i += 1 )
+		for ( int i = 1; i < this->dimensions; i += 1 )
 			size *= lengths[i];
 		return size;
 	}
 	
-	public readonly native get dims() => ( int );
+	public readonly native get dimensions() => ( int );
 	
 	
 	/* //copy implementation based off the following code

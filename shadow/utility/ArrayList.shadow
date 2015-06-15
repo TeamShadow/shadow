@@ -30,8 +30,7 @@ implements List<V>
 			if( size >= elements->size )
 				grow();
 			size += 1;		
-		}
-			
+		}			
 		elements[index] = value;
 		modifications += 1;	
 	}

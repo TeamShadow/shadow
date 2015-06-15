@@ -25,6 +25,10 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	public void setFile(File file)
 	{
 		this.file = file;
+		lineStart = -1;
+		lineEnd = -1;
+		columnStart = -1;
+		columnEnd = -1;
 	}
 	
 	public File getFile()

@@ -20,6 +20,6 @@ class VariableDeclaration {
     
     public arrays() => () {
         int[] a = int:create[10];
-        nullable int[,,,][][,][] b;    
+        int[,,,][][,][] b;    
     }
 }

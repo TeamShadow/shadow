@@ -14,17 +14,12 @@ implements
 		this:ascii = true;
 	}
 	public create( byte[] data )
-	{		
+	{
 		byte ascii = 0y;
-		byte[] temp = byte:create[data->size];
-		for ( int i = 0; i < temp->size; i += 1 )
-		{
-			temp[i] = data[i];
-			ascii |= data[i];
-		}
-		this:ascii = ascii < 0; //change from 0 to 0y for trouble to happen
-		
-		this:data = freeze(temp);
+		for ( int i = 0; i < data->size and ascii >= 0y; i += 1 )		
+			ascii |= data[i];		
+		this:ascii = ascii >= 0y; //will be negative if the MSB is set
+		this:data = freeze(data);
 	}
 	public create( code[] data )
 	{

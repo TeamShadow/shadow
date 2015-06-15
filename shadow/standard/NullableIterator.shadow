@@ -1,0 +1,5 @@
+interface shadow:standard@NullableIterator<T>
+{
+	readonly hasNext() => (boolean);
+	next() => (nullable T);
+}

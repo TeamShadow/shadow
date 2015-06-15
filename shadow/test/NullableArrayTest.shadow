@@ -1,0 +1,15 @@
+import shadow:io@Console;
+
+class shadow:test@NullableArrayTest
+{
+	public main() => ()
+	{
+		Console out;		
+		nullable String[] array2 = String:null[5];
+		array2[1] = "Hello";
+		array2[3] = "Goodbye";
+		
+		out.printLine(array2[1]);
+		out.printLine(array2);		
+	}
+}

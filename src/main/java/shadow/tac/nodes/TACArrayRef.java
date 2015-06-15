@@ -11,6 +11,8 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.MethodSignature;
+import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
@@ -155,6 +157,13 @@ public class TACArrayRef extends TACReference
 	public TACOperand getTotal()
 	{
 		return total;
+	}
+	
+	@Override
+	public Modifiers getModifiers() {
+		if( array.getType() instanceof NullableArrayType )
+			return new Modifiers(Modifiers.NULLABLE);
+		return super.getModifiers();
 	}
 
 	@Override

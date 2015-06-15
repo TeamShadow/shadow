@@ -316,13 +316,41 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				}				
 			}
 		}
-		
+
 		//nullability
-		if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
-		{
-			addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);			
-			return false;
-		}		
+		boolean leftArray = leftType instanceof ArrayType;
+		boolean rightArray = rightType instanceof ArrayType;
+		
+		//arrays (and their object forms) are tricky
+		if( leftArray && rightArray ) {
+			if( leftModifiers.isNullable() && !rightModifiers.isNullable() )
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);
+			else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
+		}
+		else if( leftArray ) {
+			if( leftModifiers.isNullable() &&  !rightType.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) )
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);
+			else if( !leftModifiers.isNullable() && rightType.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) )
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
+			else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
+				//weird case:
+				//nullable NullableArray<int> x = method();
+				//nullable int[] array = x;  
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable object value cannot be assigned to nullable array left hand side without a check", rightType, leftType);
+		}
+		else if( rightArray ) {
+			if( leftType.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) && !rightModifiers.isNullable() )
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);
+			else if( !leftType.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) && rightModifiers.isNullable() )
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
+		}
+		else { //no arrays (easy)			
+			if( !leftModifiers.isNullable() && rightModifiers.isNullable() ) {
+				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);			
+				return false;
+			}			
+		}				
 
 		if( substitutionType.equals(SubstitutionKind.ASSIGNMENT) ) //only differences between initializations and assignments
 		{
@@ -429,6 +457,8 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		
 		if( lineStart != -1 && columnStart != -1 )
 			error.append("[" + lineStart + ":" + columnStart + "] ");
+		else
+			error.append(" ");
 		
 		if( type != null )
 			error.append(type.getName() + ": ");		
