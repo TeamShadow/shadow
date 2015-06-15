@@ -120,8 +120,8 @@ public class Main {
 
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
 
+		// Detect and establush the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
-		
 		config = Configuration.buildConfiguration(compilerArgs, false);
 		currentJob = new Job(compilerArgs);
 
@@ -136,11 +136,8 @@ public class Main {
 		Path unwindFile = Paths.get("shadow", "Unwind" + config.getArch() + ".ll");
 		unwindFile = system.resolve(unwindFile);
 		
-		String systemName;
-		
-		systemName = config.getOs(); // Name for the platform's .ll file
-				
-		Path OsFile = Paths.get("shadow" + File.separator + systemName + ".ll" );
+		// Locate the file defining platform-specific system calls
+		Path OsFile = Paths.get("shadow" + File.separator + config.getOs() + ".ll" );
 		OsFile = system.resolve(OsFile);
 
 		List<String> linkCommand = new ArrayList<String>();
@@ -162,7 +159,7 @@ public class Main {
 			try { Thread.sleep(250); }
 			catch (InterruptedException ex) { }
 
-			logger.info("Building for target '" + config.getTarget() + "'");
+			logger.info("Building for target \"" + config.getTarget() + "\"");
 
 			List<String> assembleCommand = config.getLinkCommand(currentJob);
 
@@ -225,8 +222,9 @@ public class Main {
 
 	/**
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
-	 * containing class/file.
-	 * 	
+	 * containing class/file.This involves either finding an existing .ll file
+	 * (which has been updated more recently than the corresponding source file
+	 * or building a new one
 	 */
 	private static void generateLLVM(List<String> linkCommand) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
 		
@@ -354,6 +352,7 @@ public class Main {
 		new HelpFormatter().printHelp("shadowc <mainSource.shadow> [-o <output>] [-c <config.xml>]", Arguments.getOptions());
 	}
 
+	/** A simple class used to redirect an InputStream into a specified OutputStream */
 	private static class Pipe extends Thread {
 		private InputStream input;
 		private OutputStream output;
@@ -385,7 +384,11 @@ public class Main {
 			} catch (IOException ex) { }
 		}
 	}
-
+	
+	/** 
+	 * Finds the standard file/class name for a primitive type (e.g. uint to 
+	 * UInt) 
+	 */
 	private static String typeToFileName(Type type) {
 		
 		String name = type.getTypeName().replace(':', '$');
