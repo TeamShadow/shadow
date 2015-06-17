@@ -941,7 +941,7 @@ Token t;
 void Type():
 { debugPrint("TYPE"); }
 {
-   LOOKAHEAD(ReferenceType(Modifiers.NO_MODIFIERS)) ReferenceType(modifiers)
+   LOOKAHEAD(ReferenceType(Modifiers.NO_MODIFIERS)) ReferenceType(Modifiers.NO_MODIFIERS)
  //   |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
     |   PrimitiveType()
     |	FunctionType()
