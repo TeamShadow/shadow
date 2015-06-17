@@ -2,6 +2,10 @@ package shadow.typecheck.type;
 
 import java.util.ArrayDeque;
 
+import org.apache.logging.log4j.Logger;
+
+import shadow.Loggers;
+
 /**
  * Represents the contents of a Shadow documentation comment. Should be
  * associated with a class/interface/exception/singleton declaration or
@@ -9,6 +13,8 @@ import java.util.ArrayDeque;
  */
 public class Documentation 
 {
+	private static Logger logger = Loggers.DOC_TOOL;
+	
 	private ArrayDeque<String> lines;
 	
 	public Documentation()
