@@ -1,10 +1,16 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
+import shadow.doctool.DirectiveParser;
+import shadow.doctool.DirectiveParser.Directive;
+import shadow.doctool.ProcessedDocumentation;
+import shadow.parser.javacc.ShadowException;
 
 /**
  * Represents the contents of a Shadow documentation comment. Should be
@@ -58,6 +64,18 @@ public class Documentation
 	public boolean hasContent()
 	{
 		return (lines.size() > 0);
+	}
+	
+	/** 
+	 * Parses and processes the directives present in the documentation text,
+	 * returning a ProcessedDocumentation containing the results
+	 */
+	public ProcessedDocumentation process() throws ShadowException
+	{
+		List<Directive>	directives = new ArrayList<Directive>();
+		String mainText = DirectiveParser.parse(this.toString(), directives);
+		
+		return new ProcessedDocumentation(mainText, directives);
 	}
 	
 	@Override

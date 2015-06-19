@@ -21,15 +21,17 @@ public class DirectiveParser
 	 */
 	public enum DirectiveType
 	{
-		// Regular, user-placed
-		
+		// Regular, user-placed directives
 		PARAM(1, true),
 		THROWS(1, true),
 		
 		// Special directives
-		
 		MAIN_CONTENT(0, false), // This is a "hidden" directive for main comment text
 		INVALID_DIRECTIVE(0, false);
+		
+		// Text representations
+		private static final String textParam = 		"param";
+		private static final String textThrows =		"throws";
 		
 		private final int arguments;
 		private final boolean endsWithDescription;
@@ -39,9 +41,6 @@ public class DirectiveParser
 			this.arguments = arguments;
 			this.endsWithDescription = endsWithDescription;
 		}
-		
-		private static final String textParam = 		"param";
-		private static final String textThrows =		"throws";
 		
 		public int getArgumentCount()
 		{
@@ -240,7 +239,10 @@ public class DirectiveParser
 				}
 			}
 			
+			// Retrieve and clean up the description
 			String leftoverText = text.get(i).substring(endOfLastArgument).trim();
+			leftoverText = leftoverText.replaceAll("\\n|\\r\\n?", " ");
+			leftoverText.replaceAll("\\s+", " ");
 			
 			// Capture a description if desired. It is acceptable for the
 			// description to be an empty String

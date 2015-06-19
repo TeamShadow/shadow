@@ -55,13 +55,11 @@ public class DocumentationTest
 		
 		// Directive content assertions
 		assertEquals("example", directives.get(0).getArgument(0));
-		assertEquals("An important parameter that\n" +
-				"is crucial to this method.",
+		assertEquals("An important parameter that is crucial to this method.",
 				directives.get(0).getDescription());
 		assertEquals("fakeException", directives.get(1).getArgument(0));
-		assertEquals("This indicates a serious failure\n" +
-				"@fake this isn't a real directive!\n" +
-				"@numbers1234 isn't real either",
+		assertEquals("This indicates a serious failure @fake this isn't a real "
+				+ "directive! @numbers1234 isn't real either",
 				directives.get(1).getDescription());
 	}
 }
