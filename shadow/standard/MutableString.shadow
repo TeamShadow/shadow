@@ -142,7 +142,7 @@ class shadow:standard@MutableString implements CanIndex<int, byte>
 	{	
 		byte[] bytes = data;
 		if( data->size != size ) 
-			bytes = data.subarray(0, size);
+			bytes = cast<byte[]>(data.subarray(0, size));
 				
 		return String:create(bytes);
 	}

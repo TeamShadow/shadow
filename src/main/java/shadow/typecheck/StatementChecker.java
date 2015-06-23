@@ -519,7 +519,9 @@ public class StatementChecker extends BaseChecker
 			if( !currentMethod.isEmpty() )
 				methodModifiers = currentMethod.getFirst().getModifiers();
 			
-			if( context instanceof ArrayType )
+			if( context instanceof NullableArrayType )
+				classType = Type.NULLABLE_ARRAY;
+			else if( context instanceof ArrayType )
 				classType = Type.ARRAY;
 			else
 				classType = (ClassType)context;
@@ -1490,6 +1492,12 @@ public class StatementChecker extends BaseChecker
 			node.setModifiers(node.jjtGetChild(1).getModifiers());
 			node.removeModifier(Modifiers.ASSIGNABLE);			
 			
+			//special case because there is no way to cast to nullable Object[]
+			if( t1 instanceof ArrayType && t2.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) ) {
+				t1 = ((ArrayType)t1).convertToNullable();
+				node.addModifier(Modifiers.NULLABLE);
+			}
+			
 			if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) //casting methods
 			{
 				MethodType method = (MethodType)t1;
@@ -1544,7 +1552,7 @@ public class StatementChecker extends BaseChecker
 															//for convenience, all numerical types should be castable
 				node.setType(t1);
 			else if( t1.isSubtype(t2) || t2.isSubtype(t1) )
-				node.setType(t1);
+				node.setType(t1);			
 			else
 			{
 				addError(Error.MISMATCHED_TYPE, "Supplied type " + t2 + " cannot be cast to type " + t1, t1, t2);

@@ -135,6 +135,7 @@ public class ArrayType extends ClassType
 			if( dimensions == other.dimensions )
 				return baseType.equals(other.baseType);			
 		}
+		/*  //this allows generic arrays to be assigned directly
 		else if( type instanceof ClassType )
 		{
 			ClassType other = (ClassType)type;
@@ -143,7 +144,7 @@ public class ArrayType extends ClassType
 				ModifiedType baseType = other.getTypeParameters().get(0);			
 				return baseType != null && this.getBaseType().equals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
 			}
-		}	
+		}	*/
 		
 		return false;
 	}

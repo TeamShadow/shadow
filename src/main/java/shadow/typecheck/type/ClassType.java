@@ -530,10 +530,9 @@ public class ClassType extends Type
 	
 	@Override
 	public boolean equals(Type type)
-	{		
-		if( this.getTypeWithoutTypeArguments() == Type.ARRAY && this.getTypeParameters() == null)
-			System.out.println("Yow!");
+	{
 		
+		/*
 		if( this.getTypeWithoutTypeArguments() == Type.ARRAY && this.getTypeParameters().size() == 1 && type instanceof ArrayType )
 		{
 			ArrayType arrayType = (ArrayType)type;
@@ -546,6 +545,7 @@ public class ClassType extends Type
 			ModifiedType baseType = this.getTypeParameters().get(0);			
 			return baseType != null && arrayType.getBaseType().equals(baseType.getType());
 		}
+		*/
 		
 		return super.equals(type);
 	}
@@ -557,7 +557,7 @@ public class ClassType extends Type
 		if( t == UNKNOWN || this == UNKNOWN )
 			return false;
 	
-		if( this == NULL || equals(t) || t == Type.OBJECT || t == Type.VAR )
+		if( this == NULL || t == Type.OBJECT || t == Type.VAR || equals(t) )
 			return true;
 		
 		if( t instanceof TypeParameter )
