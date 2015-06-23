@@ -53,7 +53,6 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
@@ -1332,11 +1331,7 @@ public class TypeUpdater extends BaseChecker {
 			if( dimensions.size() == 0 )
 				node.setType(type);
 			else {				
-				ArrayType arrayType;
-				if( node.getModifiers().isNullable() )
-					arrayType = new NullableArrayType(type, dimensions);
-				else
-					arrayType = new ArrayType(type, dimensions);
+				ArrayType arrayType = new ArrayType(type, dimensions, node.getModifiers().isNullable());
 				node.setType(arrayType);
 			}
 		}

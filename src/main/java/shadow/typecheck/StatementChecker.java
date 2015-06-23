@@ -28,7 +28,6 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -38,8 +37,7 @@ import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
-public class StatementChecker extends BaseChecker 
-{
+public class StatementChecker extends BaseChecker {
 	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
 	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
 	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
@@ -395,11 +393,7 @@ public class StatementChecker extends BaseChecker
 				node.setType(type);
 			else
 			{
-				ArrayType arrayType;
-				if( node.getModifiers().isNullable() )
-					arrayType = new NullableArrayType(type, dimensions);
-				else
-					arrayType = new ArrayType(type, dimensions);
+				ArrayType arrayType = new ArrayType(type, dimensions, node.getModifiers().isNullable());
 				((ClassType)currentType).addReferencedType(arrayType);
 				node.setType(arrayType);
 			}
@@ -519,11 +513,13 @@ public class StatementChecker extends BaseChecker
 			if( !currentMethod.isEmpty() )
 				methodModifiers = currentMethod.getFirst().getModifiers();
 			
+			/*//maybe not necessary?  since arrays "extend" Array or NullableArray
 			if( context instanceof NullableArrayType )
 				classType = Type.NULLABLE_ARRAY;
 			else if( context instanceof ArrayType )
 				classType = Type.ARRAY;
 			else
+			*/
 				classType = (ClassType)context;
 					
 			if(classType.recursivelyContainsField(name))
@@ -2196,7 +2192,7 @@ public class StatementChecker extends BaseChecker
 													
 			if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof ArrayType) )
 			{
-				node.setType(new ArrayType( prefixType, node.getArrayDimensions() ) );
+				node.setType(new ArrayType( prefixType, node.getArrayDimensions(), false) );
 				node.addModifier(Modifiers.TYPE_NAME);
 			}
 			else
@@ -2378,10 +2374,7 @@ public class StatementChecker extends BaseChecker
 						if( prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) ) {					
 							try {
 								prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
-								if( nullable )
-									arrayType = new NullableArrayType( prefixType, dimensions.getArrayDimensions() );
-								else
-									arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions() );
+								arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions(), nullable );
 								node.setType( arrayType );
 							} 
 							catch (InstantiationException e) {
@@ -2400,11 +2393,8 @@ public class StatementChecker extends BaseChecker
 					}					
 				}
 				else {
-					if( !prefixType.isParameterized() ) {
-						if( nullable )
-							arrayType = new NullableArrayType( prefixType, dimensions.getArrayDimensions() );
-						else	
-							arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions() ); 
+					if( !prefixType.isParameterized() ) {							
+						arrayType = new ArrayType( prefixType, dimensions.getArrayDimensions(), nullable ); 
 						node.setType( arrayType );
 					}
 					else {
@@ -3085,10 +3075,10 @@ public class StatementChecker extends BaseChecker
 		if( nullable )
 		{
 			node.addModifier(Modifiers.NULLABLE);
-			arrayType = new NullableArrayType(result, 1);
+			arrayType = new ArrayType(result, 1, nullable);
 		}
 		else
-			arrayType = new ArrayType(result, 1);
+			arrayType = new ArrayType(result, 1, nullable);
 		
 		node.setType(arrayType);
 		((ClassType)currentType).addReferencedType(arrayType);
