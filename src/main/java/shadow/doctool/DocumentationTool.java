@@ -169,6 +169,7 @@ public class DocumentationTool
 			throw new DocumentationException("Could not load \"" + resource 
 					+ "\" from JAR");
 		
+		Files.deleteIfExists(targetFile);
 		Files.copy(input, targetFile);
 	}
 }

@@ -2,18 +2,23 @@ package shadow.test.doctool;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import shadow.doctool.DirectiveParser;
 import shadow.doctool.DocumentationTool;
 import shadow.doctool.ProcessedDocumentation;
 import shadow.typecheck.type.Documentation;
 
 public class DocumentationTest 
 {
+	private static final Path outputDirectory = Paths.get("shadow", "test", "doctool", "docs");
 	private ArrayList<String> args = new ArrayList<String>();
 	
 	@Before
@@ -25,7 +30,17 @@ public class DocumentationTest
 		}
 		
 		args.add("-o");
-		args.add("shadow/test/doctool/docs");
+		System.out.println(outputDirectory.toString());
+		args.add(outputDirectory.toString());
+	}
+	
+	@After
+	public void cleanup()
+	{	
+		// Try to remove the documentation directory
+		try {
+			FileUtils.deleteDirectory(outputDirectory.toFile());
+		} catch(Exception e) {}
 	}
 	
 	/**
