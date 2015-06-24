@@ -1,8 +1,15 @@
 package shadow.doctool.output;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.List;
 
 import shadow.doctool.DocumentationException;
+import shadow.output.TabbedLineWriter;
+import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.Package;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
@@ -11,12 +18,14 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
-public class ClassOrInterfacePage extends Page
+public class ClassOrInterfacePage
 {
+	private static final String extension = ".html";
+	
 	private Type type;
 	private String typeKind;
 	
-	public ClassOrInterfacePage(Type type) throws DocumentationException
+	public ClassOrInterfacePage(Type type, List<Type> linkableTypes) throws DocumentationException
 	{
 		if (type instanceof ClassType)
 			typeKind = "Class";
@@ -34,47 +43,92 @@ public class ClassOrInterfacePage extends Page
 		this.type = type;
 	}
 	
-	private String makeHeader()
+	public void make(Path root) throws IOException, ShadowException
 	{
-		StringBuilder builder = new StringBuilder();
-		String packageName = type.getPackage().getQualifiedName();
-		if (!packageName.isEmpty())
-			builder.append("<p>" + type.getPackage().getQualifiedName() + "</p>\n");
-		builder.append("<h2>" + typeKind + " " + type.getTypeName() + "</h2>\n");
-		builder.append("<hr>\n");
+		// Find/create the subdirectory chain where the document will reside
+		Path outputDirectory = constructOutputPath(root);
+		outputDirectory.toFile().mkdirs();
 		
-		return builder.toString();
+		// Begin writing to the document itself
+		Path output = outputDirectory.resolve(type.getTypeName() + extension);
+		FileWriter fileWriter = new FileWriter(output.toFile());
+		TabbedLineWriter out = new TabbedLineWriter(fileWriter);
+		
+		out.write("<!DOCTYPE html>");
+		out.write("<html>");
+		out.write("<head>");
+		out.indent();
+		out.write("<title>" + type.getTypeName() + "</title>");
+		out.outdent();
+		out.write("</head>");
+		out.write("<body>");
+		out.indent();
+		
+		makeHeader(out);
+		makeMethodSummaryTable(out);
+		makeMethodDetailSection(out);
+		
+		out.outdent();
+		out.write("</body>");
+		out.write("</html>");
+		
+		fileWriter.close();
 	}
 	
-	private String generateMethodSummaryTable()
+	private void makeHeader(TabbedLineWriter out) throws ShadowException
 	{
-		StringBuilder builder = new StringBuilder();
-		builder.append("<h3>Method Summary</h3>\n");
-		builder.append("<table class=\"summarytable\">\n<tr>\n");
-		builder.append("<th>Modifiers</th>\n");
-		builder.append("<th>Return Type</th>\n");
-		builder.append("<th>Method and Description</th>\n");
-		builder.append("</tr>");
+		String packageName = type.getPackage().getQualifiedName();
+		if (!packageName.isEmpty())
+			out.write("<p>" + type.getPackage().getQualifiedName() + "</p>");
+		
+		out.write("<h2>" + typeKind + " " + type.getTypeName() + "</h2>");
+		out.write("<hr>");
+	}
+	
+	private void makeMethodSummaryTable(TabbedLineWriter out) throws ShadowException
+	{
+		out.write("<h3>Method Summary</h3>");
+		out.write("<table class=\"summarytable\">");
+		out.indent();
+		
+		makeTableRow(out, "Modifiers", "Return Type", "Method and Description");
+		for (List<MethodSignature> overloadList : type.getMethodMap().values())
+			for (MethodSignature method : overloadList)
+				makeTableRow(out, method.getModifiers().toString().trim(),
+						method.getReturnTypes().toString(), method.getSymbol()
+						+ getMethodParameterList(method, true));
+		
+		out.outdent();
+		out.write("</table>");
+	}
+	
+	private void makeMethodDetailSection(TabbedLineWriter out) throws ShadowException
+	{
+		out.write("<h3>Method Detail</h3>");
+		out.write("<div class=\"detailsection\">");
+		out.indent();
 		
 		for (List<MethodSignature> overloadList : type.getMethodMap().values())
 			for (MethodSignature method : overloadList)
-				builder.append(makeMethodSummary(method));
+				makeMethodDetail(method, out);
 		
-		builder.append("</table>\n");
-		return builder.toString();
+		out.outdent();
+		out.write("</div>");
 	}
 	
-	private static String makeMethodSummary(MethodSignature method)
+	private static void makeMethodDetail(MethodSignature method, 
+			TabbedLineWriter out) throws ShadowException
 	{
-		StringBuilder builder = new StringBuilder();
-		builder.append("<tr>\n");
-		builder.append("<th>" + method.getModifiers().toString().trim() 
-				+ "</th>\n");
-		builder.append("<th>" + method.getReturnTypes() + "</th>\n");
-		builder.append("<th>" + method.getSymbol() 
-				+ getMethodParameterList(method, true) + "</th>\n");
-		builder.append("</tr>\n");
-		return builder.toString();
+		out.write("<div class=\"methoddetail\">");
+		out.indent();
+		
+		out.write("<h4>" + method.getSymbol() + "</h4>");
+		out.write("<p>" + method.getModifiers().toString().trim() + " "
+				+ method.getSymbol() + getMethodParameterList(method, true)
+				+ " => " + method.getReturnTypes() + "</p>");
+		
+		out.outdent();
+		out.write("</div>");
 	}
 	
 	private static String getMethodParameterList(MethodSignature method, boolean parameterNames)
@@ -84,8 +138,9 @@ public class ClassOrInterfacePage extends Page
 		int parameterCount = method.getParameterNames().size();
 		for (int i = 0; i < parameterCount; ++i)
 		{
-			builder.append(method.getParameterNames().get(i));
 			builder.append(method.getParameterTypes().get(i).getType().getQualifiedName());
+			builder.append(' ');
+			builder.append(method.getParameterNames().get(i));
 			
 			if (i < parameterCount - 1)
 				builder.append(", ");
@@ -94,18 +149,35 @@ public class ClassOrInterfacePage extends Page
 		return builder.toString();
 	}
 	
-	@Override
-	public String toString()
+	private static void makeTableRow(TabbedLineWriter out, String ... columns) throws ShadowException
 	{
-		StringBuilder builder = new StringBuilder();
-		builder.append("<!DOCTYPE html>\n<html>\n<head>\n");
-		builder.append("<title>" + type.getTypeName() + "</title>\n");
-		builder.append("</head>\n<body>\n");
+		out.write("<tr>");
+		out.indent();
 		
-		builder.append(makeHeader());
-		builder.append(generateMethodSummaryTable());
+		for (String column : columns)
+			out.write("<th>" + column + "</th>");
 		
-		builder.append("</body>\n</html>");
-		return builder.toString();
+		out.outdent();
+		out.write("</tr>");
+	}
+
+	private Path constructOutputPath(Path root)
+	{
+		ArrayDeque<String> packages = new ArrayDeque<String>();
+		
+		// Climb up the chain of packages
+		Package currentPackage = type.getPackage();
+		do
+		{
+			packages.addFirst(currentPackage.getName());
+			currentPackage = currentPackage.getParent();
+		}
+		while (currentPackage != null);
+		
+		// Descend into corresponding directories
+		for (String packageName : packages)
+			root = root.resolve(packageName);
+		
+		return root;
 	}
 }

@@ -23,15 +23,17 @@ public class DocumentationArguments
 	public static final String CONFIG 			= "c";
 	public static final String HELP				= "h";
 	public static final String VERBOSE			= "v";
+	public static final String OUTPUT			= "o";
 	
 	// Recognized long-name options
 	private static final String CONFIG_LONG 	= "config";
 	private static final String HELP_LONG		= "help";
 	private static final String VERBOSE_LONG	= "verbose";
+	private static final String	OUTPUT_LONG		= "output-dir";
 	
 	// The main description printed in response to the help option
 	private static final String HELP_MESSAGE
-		= "shadowdoc <mainSource.shadow> [-c <config.xml>]";
+		= "shadowdoc [ source-files ] [ packages ] [ options ]";
 	
 	private CommandLine commandLine;
 	private static final Options options = createOptions();
@@ -71,6 +73,11 @@ public class DocumentationArguments
 		return commandLine.getOptionValue(CONFIG);
 	}
 	
+	public String getOutputDirectory()
+	{
+		return commandLine.getOptionValue(OUTPUT);
+	}
+	
 	public static Options getOptions() 
 	{	
 		return options;
@@ -89,6 +96,14 @@ public class DocumentationArguments
 										   .create(CONFIG);
 		options.addOption(configOption);
 		
+		@SuppressWarnings("static-access")
+		Option outputOption = OptionBuilder.withLongOpt(OUTPUT_LONG)
+										   .hasArg()
+										   .withArgName("directory/")
+										   .withDescription("Specify a directory for the documentation ouput\nBy default, doc/ will be created/used within the current working directory")
+										   .create(OUTPUT);
+		options.addOption(outputOption);
+
 		// Build/add simple options
 		options.addOption(new Option(VERBOSE, VERBOSE_LONG, false, "Print detailed information about the documentation process"));
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));

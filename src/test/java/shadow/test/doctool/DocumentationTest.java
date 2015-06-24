@@ -23,6 +23,9 @@ public class DocumentationTest
 			args.add("-c");
 			args.add("windows.xml");
 		}
+		
+		args.add("-o");
+		args.add("shadow/test/doctool/docs");
 	}
 	
 	/**

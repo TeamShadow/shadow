@@ -2,15 +2,12 @@ package shadow.doctool;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.logging.log4j.Logger;
 
@@ -19,7 +16,7 @@ import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
-import shadow.doctool.output.Page;
+import shadow.doctool.output.ClassOrInterfacePage;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.TypeCheckException;
@@ -49,19 +46,22 @@ public class DocumentationTool
 			System.exit(Main.TYPE_CHECK_ERROR);
 		} catch (org.apache.commons.cli.ParseException e) {
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
-			//printHelp();
+			DocumentationArguments.printHelp();
 			System.exit(Main.COMMAND_LINE_ERROR);
 		} catch (ConfigurationException e) {
 			System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
-			//printHelp();
+			DocumentationArguments.printHelp();
 			System.exit(Main.CONFIGURATION_ERROR);
 		} catch (TypeCheckException e) {
 			System.err.println("TYPE CHECK ERROR: " + e.getLocalizedMessage());
 			System.exit(Main.TYPE_CHECK_ERROR);
+		} catch (DocumentationException e) {
+			System.err.println("DOCUMENTATION ERROR: " + e.getLocalizedMessage());
+			e.printStackTrace();
 		}
 	}
 	
-	public static void document(String[] args) throws ConfigurationException, IOException, ParseException, ShadowException, TypeCheckException, org.apache.commons.cli.ParseException 
+	public static void document(String[] args) throws org.apache.commons.cli.ParseException, ConfigurationException, IOException, ShadowException, TypeCheckException, ParseException, DocumentationException
 	{
 		// Detect and establish the current settings and arguments
 		DocumentationArguments arguments = new DocumentationArguments(args);
@@ -73,49 +73,62 @@ public class DocumentationTool
 		Configuration.buildConfiguration(arguments.getMainArguments()[0],
 				arguments.getConfigFileArg(), false);
 		
+		///// BEGIN TYPECHECKING AND DOCUMENTING
+		
 		// Generate a list of source files from the command line arguments.
 		// If packages/directories are specified, they will be searched for
 		// source files
-		List<Path> sourceFiles = new ArrayList<Path>();
-		for (String argument : arguments.getMainArguments())
+		List<Path> sourceFiles = getRequestedFiles(arguments.getMainArguments());
+		List<Type> compilationUnits = new ArrayList<Type>();
+		
+		// Perform basic type-checking on each source file
+		for (Path file : sourceFiles)
 		{
-			Path current = Paths.get(argument).toAbsolutePath();
+			Type.clearTypes();
+			compilationUnits.add(DocumentationTypeChecker
+					.typeCheck(file.toFile()));
+		}
+		
+		// If a directory was provided use it. Otherwise, create docs/ in the
+		// current working directory
+		Path outputDirectory;
+		if (arguments.hasOption(DocumentationArguments.OUTPUT))
+			outputDirectory = Paths.get(arguments.getOutputDirectory())
+			.toAbsolutePath();
+		else
+			outputDirectory = Paths.get("docs").toAbsolutePath();
+		
+		// Document each class or interface
+		for (Type compilationUnit : compilationUnits)
+		{
+			ClassOrInterfacePage page = 
+					new ClassOrInterfacePage(compilationUnit, compilationUnits);
+			page.make(outputDirectory);
+		}
+	}
+	
+	/**
+	 * Locates all given source files, either specified directly or within 
+	 * packages/directories. Verifies that the files actually exist
+	 */
+	public static List<Path> getRequestedFiles(String[] givenPaths) throws IOException
+	{
+		List<Path> sourceFiles = new ArrayList<Path>();
+		for (String path : givenPaths)
+		{
+			Path current = Paths.get(path).toAbsolutePath();
 			
 			// Ensure that the source file exists
 			if (!Files.exists(current))
 				throw new FileNotFoundException("File at " + current.toAbsolutePath() + " not found");
 			
+			// If the file is a directory, process it as a package
 			if (Files.isDirectory(current))
-				sourceFiles.addAll(findSourceFiles(current, true));
+				sourceFiles.addAll(getPackageFiles(current, true));
 			else
 				sourceFiles.add(current);
 		}
-		
-		// Generate documentation for each source file
-		for (Path file : sourceFiles)
-		{
-			Type.clearTypes();
-			
-			try {
-				Page page = DocumentationTypeChecker.typeCheck(file.toFile());
-				Path pageFile = Paths.get(file.toString().replace(".shadow", ".html"));
-				PrintWriter writer = new PrintWriter(pageFile.toFile());
-				writer.write(page.toString());
-				writer.close();
-			} catch( TypeCheckException e ) {
-				logger.error(file + " FAILED TO TYPE CHECK");
-				throw e;
-			} catch (ParserConfigurationException e) {
-				logger.error(file + " FAILED TO DOCUMENT");
-				e.printStackTrace();
-			} catch (DocumentationException e) {
-				logger.error(file + " FAILED TO DOCUMENT");
-				e.printStackTrace();
-			} catch (IOException e) {
-				logger.error(file + " FAILED TO DOCUMENT");
-				e.printStackTrace();
-			}
-		}
+		return sourceFiles;
 	}
 	
 	/** 
@@ -124,7 +137,7 @@ public class DocumentationTool
 	 * @param recursive Determines whether or not subdirectories/subpackages
 	 * 					are also searched
 	 */
-	public static List<Path> findSourceFiles(Path directory, boolean recursive) throws IOException
+	public static List<Path> getPackageFiles(Path directory, boolean recursive) throws IOException
 	{
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory))
 		{
@@ -137,7 +150,7 @@ public class DocumentationTool
 					files.add(file);
 				// Recurse into subdirectories if desired
 				else if (recursive && Files.isDirectory(file))
-					files.addAll(findSourceFiles(file, true));
+					files.addAll(getPackageFiles(file, true));
 			}
 			
 			return files;
