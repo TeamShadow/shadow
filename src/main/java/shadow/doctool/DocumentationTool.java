@@ -2,6 +2,7 @@ package shadow.doctool;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -105,6 +106,10 @@ public class DocumentationTool
 					new ClassOrInterfacePage(compilationUnit, compilationUnits);
 			page.make(outputDirectory);
 		}
+		
+		// Export the stylesheet
+		exportResource(outputDirectory.resolve("stylesheet.css"), 
+				"/doctool/stylesheet.css");
 	}
 	
 	/**
@@ -155,5 +160,15 @@ public class DocumentationTool
 			
 			return files;
 		}
+	}
+	
+	private static void exportResource(Path targetFile, String resource) throws DocumentationException, IOException
+	{
+		InputStream input = DocumentationTool.class.getResourceAsStream(resource);
+		if (input == null)
+			throw new DocumentationException("Could not load \"" + resource 
+					+ "\" from JAR");
+		
+		Files.copy(input, targetFile);
 	}
 }
