@@ -1,5 +1,7 @@
 package shadow.tac.nodes;
 
+import shadow.interpreter.ShadowInteger;
+import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
@@ -141,6 +143,42 @@ public class TACCast extends TACOperand
 				}						
 				else
 				{ 
+					if( check ) {
+						
+						ArrayType arrayType = (ArrayType) type;
+						
+						TACBlock block = getBuilder().getBlock();
+						
+						//get dimensions from object
+						TACMethodRef methodRef = new TACMethodRef(this, op,
+								op.getType().getMatchingMethod("dimensions", new SequenceType()));						
+						
+						TACOperand dimensions = new TACCall(this, block, methodRef, methodRef.getPrefix());
+						
+						TACOperand condition = new TACBinary(this, dimensions, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '=', new TACLiteral(this, new ShadowInteger(arrayType.getDimensions())), true);
+						
+						TACLabelRef throwLabel = new TACLabelRef(this);
+						TACLabelRef doneLabel = new TACLabelRef(this);
+						
+						new TACBranch(this, condition, doneLabel, throwLabel);
+						
+						throwLabel.new TACLabel(this);
+						
+						TACOperand object = new TACNewObject(this, Type.CAST_EXCEPTION);
+						SequenceType params = new SequenceType();
+						TACOperand message = new TACLiteral(this, new ShadowString("Array dimensions do not match")); 
+						params.add(message);
+												
+						MethodSignature signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
+									
+						methodRef = new TACMethodRef(this, signature);			
+						TACCall exception = new TACCall(this, block, methodRef, object, message);
+									
+						new TACThrow(this, block, exception);
+						doneLabel.new TACLabel(this);	//done label						
+					}
+					
+					
 					operand = new TACConversion(this, op, type, Kind.OBJECT_TO_ARRAY, check); 
 					return;					
 				}

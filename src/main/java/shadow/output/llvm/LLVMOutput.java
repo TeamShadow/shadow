@@ -1102,7 +1102,7 @@ public class LLVMOutput extends AbstractOutput
 				genericArray = Type.ARRAY;
 				baseType = type(arrayType.getBaseType());
 			}
-			TACClass arrayClass = (TACClass)node.getOperand(1);			
+			TACClass arrayClass = (TACClass)node.getOperand(1);
 			
 			ArrayType intArray = new ArrayType(Type.INT, false);
 			dimsType = " [" + arrayType.getDimensions() + " x " +

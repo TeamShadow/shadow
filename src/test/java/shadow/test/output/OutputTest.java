@@ -329,4 +329,13 @@ public class OutputTest {
 						"b[3]: 42\n" +
 						"b[4]: 42\n");
 	}
+	
+	@Test public void testArrayCastException() throws Exception {
+		args.add("shadow/test/ArrayCastExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 				
+				"Passed\n" + 
+				"Passed: shadow:standard@CastException: Array dimensions do not match\n" +
+				"Passed: shadow:standard@CastException: Array dimensions do not match\n");
+	}	
 }
