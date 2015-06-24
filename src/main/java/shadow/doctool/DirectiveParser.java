@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.type.Documentation;
 
 /** Used to parse the '@' directives in documentation comments */
 public class DirectiveParser 
@@ -77,31 +78,17 @@ public class DirectiveParser
 	}
 	
 	/** Processes the directives in the documentation */
-	public static String parse(String text, List<Directive> directives) throws ShadowException
+	public static ProcessedDocumentation process(Documentation documentation) throws ShadowException
 	{
+		String fullText = documentation.toString();
 		List<String> contents = new ArrayList<String>();
 		List<DirectiveType> directiveTypes = new ArrayList<DirectiveType>();
-		splitOnDirectives(text, contents, directiveTypes);
+		splitOnDirectives(fullText, contents, directiveTypes);
 		
-		directives.clear();
-		String mainContent = parseDirectives(directives, contents, directiveTypes);
+		List<Directive> directives = new ArrayList<Directive>();
+		String description = parseDirectives(directives, contents, directiveTypes);
 		
-		/*
-		System.out.println(mainContent);
-		
-		for (Directive directive : directives) {
-			for (int i = 0; i < directive.getType().getArgumentCount(); ++i) {
-				System.out.print(" {" + directive.getArgument(i) + "}");
-			}
-			
-			if (directive.getType().endsWithDescription())
-				System.out.print(" \"" + directive.getDescription() + "\"");
-			
-			System.out.println();
-		}
-		*/
-		
-		return mainContent;
+		return new ProcessedDocumentation(description, directives);
 	}
 	
 	/** 

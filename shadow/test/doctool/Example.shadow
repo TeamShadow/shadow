@@ -1,0 +1,17 @@
+import shadow:io@File;
+import local@Dummy;
+import local@TestInterface;
+
+class Example<A, B> implements TestInterface
+{
+    /// A very important value
+    /// - no, really!
+    int a;
+    Dummy dummy;
+
+    /** The most crucial method that ever was */
+    public test(String a, int b) => (int a, String b)
+    {
+        return (4, "Hello");
+    }
+}

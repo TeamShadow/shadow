@@ -72,10 +72,7 @@ public class Documentation
 	 */
 	public ProcessedDocumentation process() throws ShadowException
 	{
-		List<Directive>	directives = new ArrayList<Directive>();
-		String mainText = DirectiveParser.parse(this.toString(), directives);
-		
-		return new ProcessedDocumentation(mainText, directives);
+		return DirectiveParser.process(this);
 	}
 	
 	@Override

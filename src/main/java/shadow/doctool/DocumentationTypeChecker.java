@@ -12,7 +12,8 @@ import org.apache.logging.log4j.Logger;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
-import shadow.AST.ASTWalker;
+import shadow.doctool.output.ClassOrInterfacePage;
+import shadow.doctool.output.Page;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
@@ -20,6 +21,7 @@ import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeCollector;
 import shadow.typecheck.TypeUpdater;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
 /** A basic type-checker used to gather enough data for documentation */
@@ -27,9 +29,11 @@ public class DocumentationTypeChecker
 {
 	private static final Logger logger = Loggers.DOC_TOOL;
 	
-	public void typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException, ParserConfigurationException
+	public static Page typeCheck(File file) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException, ParserConfigurationException, DocumentationException
 	{
 		long startTime = System.currentTimeMillis(); // Time the type checking
+		
+		Page page = new Page();
 		
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		Package packageTree = new Package(typeTable);
@@ -54,13 +58,19 @@ public class DocumentationTypeChecker
 				+ (System.currentTimeMillis() - startTime) + "ms");
 		startTime = System.currentTimeMillis(); // Time the documentation process
 		
+		/*
 		DocumentationVisitor docVisitor = new DocumentationVisitor();
 		ASTWalker docWalker = new ASTWalker(docVisitor);
 		docWalker.walk(mainNode);
 		
 		docVisitor.OutputDocumentation();
+		*/
+		
+		page = new ClassOrInterfacePage(mainNode.getType());
 		
 		logger.info("Successfully built documentation for " + file.toString()
 				+ " in " + (System.currentTimeMillis() - startTime) + "ms");
+		
+		return page;
 	}
 }

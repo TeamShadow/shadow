@@ -2,6 +2,7 @@ package shadow.doctool;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +19,7 @@ import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
+import shadow.doctool.output.Page;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.TypeCheckException;
@@ -93,14 +95,23 @@ public class DocumentationTool
 		for (Path file : sourceFiles)
 		{
 			Type.clearTypes();
-			DocumentationTypeChecker checker = new DocumentationTypeChecker();
 			
 			try {
-				checker.typeCheck(file.toFile());
+				Page page = DocumentationTypeChecker.typeCheck(file.toFile());
+				Path pageFile = Paths.get(file.toString().replace(".shadow", ".html"));
+				PrintWriter writer = new PrintWriter(pageFile.toFile());
+				writer.write(page.toString());
+				writer.close();
 			} catch( TypeCheckException e ) {
 				logger.error(file + " FAILED TO TYPE CHECK");
 				throw e;
 			} catch (ParserConfigurationException e) {
+				logger.error(file + " FAILED TO DOCUMENT");
+				e.printStackTrace();
+			} catch (DocumentationException e) {
+				logger.error(file + " FAILED TO DOCUMENT");
+				e.printStackTrace();
+			} catch (IOException e) {
 				logger.error(file + " FAILED TO DOCUMENT");
 				e.printStackTrace();
 			}
