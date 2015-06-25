@@ -1,0 +1,45 @@
+import shadow:io@Console;
+
+class shadow:test@ArrayCastExceptionTest
+{
+	public main() => ()
+	{
+		Console out;
+		
+		try
+		{
+			int[] a = int:create[10];
+			Array<int> b = a;
+			int[] c = cast<int[]>(b);			
+			out.printLine("Passed");
+		}
+		catch(CastException e)
+		{
+			out.printLine("Failed: " # e);		
+		}
+		
+		try
+		{
+			int[] a = int:create[10];
+			Array<int> b = a;
+			int[,] c = cast<int[,]>(b);
+			out.printLine("Failed");
+		}
+		catch(CastException e)
+		{
+			out.printLine("Passed: " # e);		
+		}
+		
+		try
+		{
+			int[,] a = int:create[5,5];
+			Array<int> b = a;
+			int[] c = cast<int[]>(b);
+			out.printLine("Failed");
+		}
+		catch(CastException e)
+		{
+			out.printLine("Passed: " # e);		
+		}		
+	}
+}

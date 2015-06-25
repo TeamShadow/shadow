@@ -18,7 +18,7 @@ public class TACConversion extends TACOperand
 {	
 	Type type;
 	Modifiers modifiers;
-	Kind kind;
+	Kind kind;	
 	List<TACOperand> operands = new ArrayList<TACOperand>();
 	
 	public enum Kind

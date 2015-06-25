@@ -322,6 +322,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		boolean rightArray = rightType instanceof ArrayType;
 		
 		//arrays (and their object forms) are tricky
+		//TODO: Simplify this!  Probably not necessary.
 		if( leftArray && rightArray ) {
 			if( leftModifiers.isNullable() && !rightModifiers.isNullable() )
 				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);

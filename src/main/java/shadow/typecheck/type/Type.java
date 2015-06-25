@@ -649,8 +649,8 @@ public abstract class Type implements Comparable<Type>
 		//equal and cat are separate because they are not dependent on implementing a specific interface
 		if( assignmentType.equals(AssignmentType.EQUAL) )
 		{
-			accepts = rightType.isSubtype(this) || 
-			( this instanceof ArrayType && this.isSubtype(rightType) );
+			accepts = rightType.isSubtype(this);/* ||  //no! don't accept Array<int> inside int[] without explicit cast
+			( this instanceof ArrayType && this.isSubtype(rightType) ); */
 			
 			if( !accepts )
 				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);

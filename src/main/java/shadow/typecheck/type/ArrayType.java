@@ -8,8 +8,9 @@ import shadow.typecheck.TypeCheckException;
 
 public class ArrayType extends ClassType
 {	
-	private int dimensions;
-	private Type baseType;
+	private final int dimensions;
+	private final Type baseType;
+	private final boolean nullable;
 	
 	private static String makeName(Type baseType, List<Integer> arrayDimensions, int index )
 	{
@@ -67,11 +68,6 @@ public class ArrayType extends ClassType
 		return baseType;
 	}
 	
-	public void setBaseType(Type type)
-	{
-		baseType = type;
-	}
-	
 	@Override
 	public String getMangledName()
 	{
@@ -85,28 +81,37 @@ public class ArrayType extends ClassType
 	}
 	
 	public ArrayType(Type baseType) {
-		this(baseType, Collections.singletonList(1), 0);
+		this(baseType, Collections.singletonList(1), 0, false);
+	}
+
+	public ArrayType(Type baseType, boolean nullable ) {
+		this(baseType, Collections.singletonList(1), 0, nullable);
+	}	
+
+	public ArrayType( Type baseType, int dimensions, boolean nullable ) {
+		this(baseType, Collections.singletonList(dimensions), 0, nullable);		
 	}
 	
-	public ArrayType( Type baseType, int dimensions ) {
-		this(baseType, Collections.singletonList(dimensions), 0);		
+	public ArrayType(Type baseType, List<Integer> arrayDimensions, boolean nullable ) {
+		this( baseType, arrayDimensions, 0, nullable );
 	}
 	
-	public ArrayType(Type baseType, List<Integer> arrayDimensions ) {
-		this( baseType, arrayDimensions, 0 );
-	}
-	
-	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index ) {
+	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index, boolean nullable ) {
 		super( makeName(baseType, arrayDimensions, index), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getOuter() );	
-		setExtendType(Type.ARRAY); // added
+		if( nullable )		
+			setExtendType(Type.NULLABLE_ARRAY);
+		else
+			setExtendType(Type.ARRAY);
 		dimensions = arrayDimensions.get(index);		
 		if( arrayDimensions.size() == index + 1 )
 			this.baseType = baseType;
 		else
-			this.baseType = new ArrayType( baseType, arrayDimensions, index + 1);		
+			this.baseType = new ArrayType( baseType, arrayDimensions, index + 1, nullable);		
 		
 		if( baseType.isParameterized() )
 			setParameterized(true);
+		
+		this.nullable = nullable;
 	}
 	
 	public String toString(boolean withBounds) {		
@@ -114,7 +119,6 @@ public class ArrayType extends ClassType
 		
 		return baseType.toString(withBounds) + brackets;
 	}
-	
 	
 	
 	@Override
@@ -129,12 +133,13 @@ public class ArrayType extends ClassType
 		if( type == Type.NULL )
 			return false;
 		
-		if( type instanceof ArrayType && !(type instanceof NullableArrayType) )
+		if( type instanceof ArrayType )
 		{
 			ArrayType other = (ArrayType)type;
-			if( dimensions == other.dimensions )
+			if( dimensions == other.dimensions && nullable == other.nullable )
 				return baseType.equals(other.baseType);			
 		}
+		/*  //this allows generic arrays to be assigned directly
 		else if( type instanceof ClassType )
 		{
 			ClassType other = (ClassType)type;
@@ -143,23 +148,14 @@ public class ArrayType extends ClassType
 				ModifiedType baseType = other.getTypeParameters().get(0);			
 				return baseType != null && this.getBaseType().equals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
 			}
-		}	
+		}	*/
 		
 		return false;
 	}
 	
 	@Override
-	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<TypeCheckException> errors )
-	{
-		try
-		{
-			ClassType arrayType = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(baseType));
-			return arrayType.getMatchingMethod(methodName, arguments, typeArguments, errors);
-		}
-		catch(InstantiationException e)
-		{}
-		
-		return null; //shouldn't happen
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<TypeCheckException> errors ) {		
+		return convertToGeneric().getMatchingMethod(methodName, arguments, typeArguments, errors);		
 	}
 	
 	@Override
@@ -173,11 +169,11 @@ public class ArrayType extends ClassType
 		if( t == OBJECT )
 			return true;
 		
-		if( t instanceof ArrayType && !(t instanceof NullableArrayType) ) {
+		if( t instanceof ArrayType ) {
 			ArrayType type = (ArrayType)this;
 			ArrayType other = (ArrayType)t;
 			//invariant subtyping on arrays
-			if( type.getDimensions() == other.getDimensions() )
+			if( type.getDimensions() == other.getDimensions() && type.nullable == other.nullable )
 				return type.getBaseType().equals(other.getBaseType());
 			else
 				return false;
@@ -190,7 +186,7 @@ public class ArrayType extends ClassType
 	@Override
 	public ArrayType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
 	{	
-		return new ArrayType( baseType.replace(values, replacements), dimensions  );		
+		return new ArrayType( baseType.replace(values, replacements), dimensions, nullable);		
 	}
 		
 	public ClassType convertToGeneric()
@@ -202,7 +198,10 @@ public class ArrayType extends ClassType
 		
 		try
 		{
-			return Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));			
+			if( nullable )
+				return Type.NULLABLE_ARRAY.replace(Type.NULLABLE_ARRAY.getTypeParameters(), new SequenceType(base));
+			else
+				return Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));
 		}
 		catch(InstantiationException e)
 		{}		
@@ -210,9 +209,16 @@ public class ArrayType extends ClassType
 		return null; //shouldn't happen
 	}
 	
-	public NullableArrayType convertToNullable()
+	public ArrayType convertToNullable()
 	{
-		return new NullableArrayType( baseType, dimensions );
+		if( nullable )
+			return this;
+		else		
+			return new ArrayType( baseType, dimensions, true);
+	}
+	
+	public boolean isNullable() {
+		return nullable;
 	}
 
 	@Override

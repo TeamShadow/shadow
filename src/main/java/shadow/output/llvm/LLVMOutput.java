@@ -81,7 +81,6 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.NullableArrayType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
@@ -1095,7 +1094,7 @@ public class LLVMOutput extends AbstractOutput
 			
 		case ARRAY_TO_OBJECT:
 			arrayType = (ArrayType) srcType;
-			if( arrayType instanceof NullableArrayType ) {
+			if( arrayType.isNullable() ) {
 				genericArray = Type.NULLABLE_ARRAY;				
 				baseType = type(arrayType.getBaseType(), true);
 			}
@@ -1103,9 +1102,9 @@ public class LLVMOutput extends AbstractOutput
 				genericArray = Type.ARRAY;
 				baseType = type(arrayType.getBaseType());
 			}
-			TACClass arrayClass = (TACClass)node.getOperand(1);			
+			TACClass arrayClass = (TACClass)node.getOperand(1);
 			
-			ArrayType intArray = new ArrayType(Type.INT);
+			ArrayType intArray = new ArrayType(Type.INT, false);
 			dimsType = " [" + arrayType.getDimensions() + " x " +
 					type(Type.INT) + ']';
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(source) + ", 1");				
@@ -1148,7 +1147,7 @@ public class LLVMOutput extends AbstractOutput
 			String srcName = symbol(source);
 			arrayType = (ArrayType)destType;
 			
-			if( arrayType instanceof NullableArrayType ) {
+			if( arrayType.isNullable()  ) {
 				genericArray = Type.NULLABLE_ARRAY;			
 				baseType = type(arrayType.getBaseType(), true) + '*';
 			}
@@ -2052,8 +2051,6 @@ public class LLVMOutput extends AbstractOutput
 	protected static String type(Type type, boolean nullable) {
 		if (type == null)
 			throw new NullPointerException();
-		if (type instanceof NullableArrayType)
-			return type((NullableArrayType)type);
 		if (type instanceof ArrayType)
 			return type((ArrayType)type);
 		if (type instanceof SequenceType)
@@ -2065,11 +2062,6 @@ public class LLVMOutput extends AbstractOutput
 		if (type instanceof TypeParameter)
 			return type((TypeParameter)type);
 		throw new IllegalArgumentException("Unknown type.");
-	}
-	protected static String type(NullableArrayType type)
-	{		
-		return "{ " + type(type.getBaseType(), true) + "*, [" + type.getDimensions() +
-				" x " + type(Type.INT) + "] }";
 	}
 	protected static String type(ArrayType type)
 	{

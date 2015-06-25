@@ -42,9 +42,9 @@ class shadow:test@GenericArrayTest
 		Array<String> stringArray = array2;
 		NullableArray<String> otherArray = array3;
 		
-		int[] array4 = intArray;	
+		int[] array4 = cast<int[]>(intArray);	
 		
-		nullable String[] array5 = otherArray;
+		nullable String[] array5 = cast<String[]>(otherArray);
 		
 		out.printLine(array4);			
 		out.printLine(array5);
