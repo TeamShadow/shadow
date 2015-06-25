@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
 
@@ -80,7 +82,7 @@ public class DocumentationTool
 		// If packages/directories are specified, they will be searched for
 		// source files
 		List<Path> sourceFiles = getRequestedFiles(arguments.getMainArguments());
-		List<Type> compilationUnits = new ArrayList<Type>();
+		Set<Type> compilationUnits = new HashSet<Type>();
 		
 		// Perform basic type-checking on each source file
 		for (Path file : sourceFiles)

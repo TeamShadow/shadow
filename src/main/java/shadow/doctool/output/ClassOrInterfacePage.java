@@ -3,8 +3,11 @@ package shadow.doctool.output;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import shadow.doctool.DocumentationException;
 import shadow.output.TabbedLineWriter;
@@ -24,9 +27,11 @@ public class ClassOrInterfacePage
 	
 	private Type type;
 	private String typeKind;
+	private Set<Type> linkableTypes;
+	private boolean makeLinks = true;
 	private int packageDepth = 0;
 	
-	public ClassOrInterfacePage(Type type, List<Type> linkableTypes) throws DocumentationException
+	public ClassOrInterfacePage(Type type, Set<Type> linkableTypes) throws DocumentationException
 	{
 		if (type instanceof ClassType)
 			typeKind = "Class";
@@ -42,11 +47,12 @@ public class ClassOrInterfacePage
 			throw new DocumentationException("Unexpected type: " + type.getQualifiedName());
 		
 		this.type = type;
+		this.linkableTypes = linkableTypes;
 	}
 	
 	public void make(Path root) throws IOException, ShadowException
 	{
-		// Find/create the subdirectory chain where the document will reside
+		// Find/create the directory chain where the document will reside
 		Path outputDirectory = constructOutputPath(root);
 		outputDirectory.toFile().mkdirs();
 		
@@ -90,6 +96,9 @@ public class ClassOrInterfacePage
 			out.write("<p>" + type.getPackage().getQualifiedName() + "</p>");
 		
 		out.write("<h2>" + typeKind + " " + type.getTypeName() + "</h2>");
+		
+		makeInheritanceSection(out);
+
 		out.write("<hr>");
 	}
 	
@@ -104,7 +113,7 @@ public class ClassOrInterfacePage
 			for (MethodSignature method : overloadList)
 				makeTableRow(out, false, method.getModifiers().toString().trim(),
 						method.getReturnTypes().toString(), method.getSymbol()
-						+ getMethodParameterList(method, true));
+						+ getMethodParameterList(method, true, true));
 		
 		out.outdent(); out.write("</table>");
 		out.outdent(); out.write("</div>");
@@ -122,27 +131,36 @@ public class ClassOrInterfacePage
 		out.outdent(); out.write("</div>");
 	}
 	
-	private static void makeMethodDetail(MethodSignature method, 
+	private void makeMethodDetail(MethodSignature method, 
 			TabbedLineWriter out) throws ShadowException
 	{
 		out.write("<div class=\"methoddetail\">"); out.indent();
 		
 		out.write("<h4>" + method.getSymbol() + "</h4>");
 		out.write("<p>" + method.getModifiers().toString().trim() + " "
-				+ method.getSymbol() + getMethodParameterList(method, true)
+				+ method.getSymbol() + getMethodParameterList(method, true, true)
 				+ " => " + method.getReturnTypes() + "</p>");
 		
 		out.outdent(); out.write("</div>");
 	}
 	
-	private static String getMethodParameterList(MethodSignature method, boolean parameterNames)
+	private String getMethodParameterList(MethodSignature method, 
+			boolean parameterNames, boolean link)
 	{
 		StringBuilder builder = new StringBuilder();
 		builder.append('(');
 		int parameterCount = method.getParameterNames().size();
 		for (int i = 0; i < parameterCount; ++i)
 		{
-			builder.append(method.getParameterTypes().get(i).getType().getQualifiedName());
+			Type parameter = method.getParameterTypes().get(i).getType();
+			
+			if (link)
+				builder.append(linkToType(parameter, 
+						parameter.getQualifiedName()));
+			else
+				builder.append(parameter.getQualifiedName());
+			
+			
 			builder.append(' ');
 			builder.append(method.getParameterNames().get(i));
 			
@@ -151,6 +169,78 @@ public class ClassOrInterfacePage
 		}
 		builder.append(')');
 		return builder.toString();
+	}
+	
+	private void makeInheritanceSection(TabbedLineWriter out) throws ShadowException
+	{
+		List<Type> extendsList = new ArrayList<Type>();
+		List<Type> implementsList = new ArrayList<Type>();
+
+		// TODO: Should getAllInterfaces() be used here?
+		if (type instanceof InterfaceType) {
+			extendsList.addAll(type.getInterfaces());
+		} else {
+			Type extendType = ((ClassType)type).getExtendType();
+			if (extendType != null)
+				extendsList.add(extendType);
+			implementsList.addAll(type.getInterfaces());
+		}
+		
+		if (extendsList.size() > 0) {
+			StringBuilder builder = new StringBuilder();
+			out.write("<h4>Extends</h4>");
+			builder.append("<p>");
+			for (int i = 0; i < extendsList.size(); ++i) {
+				if (i > 0)
+					builder.append(", ");
+				
+				// List the name, optionally attempting a link
+				Type current = extendsList.get(i);
+				if (makeLinks)
+					builder.append(linkToType(current, 
+							current.getQualifiedName()));
+				else
+					builder.append(current.getQualifiedName());
+			}
+			builder.append("</p>");
+			out.write(builder.toString());
+		}
+		
+		if (implementsList.size() > 0) {
+			StringBuilder builder = new StringBuilder();
+			out.write("<h4>Implements</h4>");
+			builder.append("<p>");
+			for (int i = 0; i < implementsList.size(); ++i) {
+				if (i > 0)
+					builder.append(", ");
+				
+				// List the name, optionally attempting a link
+				Type current = implementsList.get(i);
+				if (makeLinks)
+					builder.append(linkToType(current, 
+							current.getQualifiedName()));
+				else
+					builder.append(current.getQualifiedName());
+			}
+			builder.append("</p>");
+			out.write(builder.toString());
+		}
+	}
+	
+	/* Helper methods */
+	
+	private String linkToType(Type to, String text)
+	{
+		if (linkableTypes.contains(to))
+			return makeLink(getRelativePath(type, to) + "/"
+					+ to.getTypeName() + extension, text);
+		else
+			return text;
+	}
+	
+	private static String makeLink(String href, String text)
+	{
+		return "<a href=\"" + href + "\">" + text + "</a>";
 	}
 	
 	private static void makeTableRow(TabbedLineWriter out, boolean header,
@@ -168,6 +258,10 @@ public class ClassOrInterfacePage
 		out.outdent(); out.write("</tr>");
 	}
 
+	/**
+	 * Determines where this page should be output based on its package and
+	 * a given root directory
+	 */
 	private Path constructOutputPath(Path root)
 	{
 		ArrayDeque<String> packages = new ArrayDeque<String>();
@@ -189,11 +283,20 @@ public class ClassOrInterfacePage
 		return root;
 	}
 	
+	/** Creates the requested number of repetitions of '../' */
 	private static String upDir(int count)
 	{
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < count; ++i)
 			builder.append("../");
 		return builder.toString();
+	}
+	
+	public static String getRelativePath(Type from, Type to)
+	{
+		Path start = Paths.get(from.getPackage().getPath());
+		Path target = Paths.get(to.getPackage().getPath());
+		
+		return start.relativize(target).toString();
 	}
 }

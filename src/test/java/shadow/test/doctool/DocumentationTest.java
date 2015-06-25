@@ -24,6 +24,10 @@ public class DocumentationTest
 	@Before
 	public void setup() throws Exception 
 	{
+		try {
+			FileUtils.deleteDirectory(outputDirectory.toFile());
+		} catch(Exception e) {}
+		
 		if (System.getProperty("os.name").contains("Windows")) {
 			args.add("-c");
 			args.add("windows.xml");
