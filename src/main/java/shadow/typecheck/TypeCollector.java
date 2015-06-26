@@ -8,9 +8,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import shadow.Configuration;
@@ -54,6 +56,7 @@ public class TypeCollector extends BaseChecker {
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private File currentFile;
 	private Type mainType = null;
+	private Set<Type> initialFileTypes = new HashSet<Type>();
 	private Configuration config;
 	private boolean useSourceFiles;
 	
@@ -72,6 +75,14 @@ public class TypeCollector extends BaseChecker {
 	public Type getMainType() {
 		return mainType;
 	}
+	
+	/** 
+	 * @return	The set of Types stemming directly from the provided source 
+	 * 			files. Mainly useful for documentation purposes
+	 */
+	public Set<Type> getInitialFileTypes() {
+		return initialFileTypes;
+	}
 		
     /** Proxy for calling collectTypes() with one main file */
     public Map<Type, Node> collectTypes(File mainFile) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
@@ -89,7 +100,11 @@ public class TypeCollector extends BaseChecker {
    
     private Map<Type, Node> collectTypes(List<File> initialFiles, boolean hasMain) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
     {
-        // Establish the initial set of files to be checked
+        // Keep track of the initial files (as canonical paths) so that their
+        // resulting types may be linked back to them
+        HashSet<String> initialFilesCanonical = new HashSet<String>();
+        
+        // Create and fill the initial set of files to be checked
         TreeSet<String> uncheckedFiles = new TreeSet<String>();
         String main = null; // May or may not be null, based on hasMain
         if (initialFiles.isEmpty()) {
@@ -99,10 +114,13 @@ public class TypeCollector extends BaseChecker {
             main = stripExtension(initialFiles.get(0).getCanonicalPath());
             uncheckedFiles.add(main);
         } else {
-            for (File file : initialFiles)
-                uncheckedFiles.add(file.getCanonicalPath());
+            for (File file : initialFiles) {
+            	String path = stripExtension(file.getCanonicalPath());
+            	uncheckedFiles.add(path);
+            	initialFilesCanonical.add(path);
+            }
         }
-       
+        
         ASTWalker walker = new ASTWalker( this );
        
         FilenameFilter filter = new FilenameFilter()
@@ -180,6 +198,10 @@ public class TypeCollector extends BaseChecker {
 			
 			if( canonical.equals(main) )
 				mainType = node.getType();
+			
+			// Associate resulting types with the initial files
+			if (initialFilesCanonical.contains(canonical))
+				initialFileTypes.add(node.getType());
 			
 			files.put(canonical, node);
 			

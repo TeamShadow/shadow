@@ -1,5 +1,6 @@
 package shadow.doctool;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -61,6 +61,7 @@ public class DocumentationTool
 		} catch (DocumentationException e) {
 			System.err.println("DOCUMENTATION ERROR: " + e.getLocalizedMessage());
 			e.printStackTrace();
+			System.exit(-1);
 		}
 	}
 	
@@ -76,21 +77,24 @@ public class DocumentationTool
 		Configuration.buildConfiguration(arguments.getMainArguments()[0],
 				arguments.getConfigFileArg(), false);
 		
-		///// BEGIN TYPECHECKING AND DOCUMENTING
+		/* TYPECHECKING */
+		
+		long startTime = System.currentTimeMillis(); // Time the type checking
 		
 		// Generate a list of source files from the command line arguments.
 		// If packages/directories are specified, they will be searched for
 		// source files
-		List<Path> sourceFiles = getRequestedFiles(arguments.getMainArguments());
-		Set<Type> compilationUnits = new HashSet<Type>();
+		List<File> sourceFiles = getRequestedFiles(arguments.getMainArguments());
 		
 		// Perform basic type-checking on each source file
-		for (Path file : sourceFiles)
-		{
-			Type.clearTypes();
-			compilationUnits.add(DocumentationTypeChecker
-					.typeCheck(file.toFile()));
-		}
+		Set<Type> toDocument = DocumentationTypeChecker.typeCheck(sourceFiles);
+		
+		logger.info("Successfully type-checked all files in "
+				+ (System.currentTimeMillis() - startTime) + "ms");
+		
+		/* FORMATTED DOCUMENTATION GENERATION */
+		
+		startTime = System.currentTimeMillis(); // Time the documentation
 		
 		// If a directory was provided use it. Otherwise, create docs/ in the
 		// current working directory
@@ -102,25 +106,28 @@ public class DocumentationTool
 			outputDirectory = Paths.get("docs").toAbsolutePath();
 		
 		// Document each class or interface
-		for (Type compilationUnit : compilationUnits)
+		for (Type type : toDocument)
 		{
 			ClassOrInterfacePage page = 
-					new ClassOrInterfacePage(compilationUnit, compilationUnits);
+					new ClassOrInterfacePage(type, toDocument);
 			page.make(outputDirectory);
 		}
 		
-		// Export the stylesheet
+		// Export the style-sheet
 		exportResource(outputDirectory.resolve("stylesheet.css"), 
 				"/doctool/stylesheet.css");
+		
+		logger.info("Successfully generated all documentation in "
+				+ (System.currentTimeMillis() - startTime) + "ms");
 	}
 	
 	/**
 	 * Locates all given source files, either specified directly or within 
 	 * packages/directories. Verifies that the files actually exist
 	 */
-	public static List<Path> getRequestedFiles(String[] givenPaths) throws IOException
+	public static List<File> getRequestedFiles(String[] givenPaths) throws IOException
 	{
-		List<Path> sourceFiles = new ArrayList<Path>();
+		List<File> sourceFiles = new ArrayList<File>();
 		for (String path : givenPaths)
 		{
 			Path current = Paths.get(path).toAbsolutePath();
@@ -133,7 +140,7 @@ public class DocumentationTool
 			if (Files.isDirectory(current))
 				sourceFiles.addAll(getPackageFiles(current, true));
 			else
-				sourceFiles.add(current);
+				sourceFiles.add(current.toFile());
 		}
 		return sourceFiles;
 	}
@@ -144,20 +151,20 @@ public class DocumentationTool
 	 * @param recursive Determines whether or not subdirectories/subpackages
 	 * 					are also searched
 	 */
-	public static List<Path> getPackageFiles(Path directory, boolean recursive) throws IOException
+	public static List<File> getPackageFiles(Path directory, boolean recursive) throws IOException
 	{
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory))
 		{
-			List<Path> files = new ArrayList<Path>();
+			List<File> files = new ArrayList<File>();
 			
-			for (Path file : stream)
+			for (Path filePath : stream)
 			{
 				// Capture all source files
-				if (file.toString().endsWith(".shadow"))
-					files.add(file);
+				if (filePath.toString().endsWith(".shadow"))
+					files.add(filePath.toFile());
 				// Recurse into subdirectories if desired
-				else if (recursive && Files.isDirectory(file))
-					files.addAll(getPackageFiles(file, true));
+				else if (recursive && Files.isDirectory(filePath))
+					files.addAll(getPackageFiles(filePath, true));
 			}
 			
 			return files;
