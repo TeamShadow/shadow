@@ -40,7 +40,7 @@ class shadow:test@GenericArrayTest
 		
 		Array<int> intArray = array1;
 		Array<String> stringArray = array2;
-		NullableArray<String> otherArray = array3;
+		ArrayNullable<String> otherArray = array3;
 		
 		int[] array4 = cast<int[]>(intArray);	
 		

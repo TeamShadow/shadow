@@ -251,7 +251,7 @@ public class LLVMOutput extends AbstractOutput
 				writer.write('@' + withGenerics(type, "_class") +
 						" = external constant %" + raw(Type.CLASS));				
 				
-				if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) )
+				if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
 					generics.add(new GenericArray(type));
 				else
 					generics.add(new Generic(type));
@@ -599,22 +599,14 @@ public class LLVMOutput extends AbstractOutput
 					!(type instanceof UnboundMethodType) &&
 					!type.equals(module.getType()))
 		{
-			if (type.equals(Type.CLASS))  //add in private methods 
-			{
+			if (type.equals(Type.CLASS))  { //add in private methods
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, "_Mallocate") + '(' +
 						type(Type.CLASS) + ", %" + raw(Type.OBJECT, "_methods") +  "*)");				
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, "_Mallocate" +
 						Type.INT.getMangledName()) + '(' + type(Type.CLASS) +
-						", " + type(Type.INT) + ')');	
-				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
-						raw(Type.CLASS, "_MallocateNullable" +
-						Type.INT.getMangledName()) + '(' + type(Type.CLASS) +
-						", " + type(Type.INT) + ')');	
-				
-				//writer.write("declare " + methodToString(
-				//		type.getAllMethods("create").get(0)));					
+						", " + type(Type.INT) + ')');
 			}
 			
 			if( type.equals(Type.GENERIC_CLASS))
@@ -657,9 +649,9 @@ public class LLVMOutput extends AbstractOutput
 						type(Type.OBJECT) + ')');
 			
 			//TODO: May not be necessary
-			if (type.equals(Type.NULLABLE_ARRAY) && !((ClassType)type).recursivelyContainsInnerClass(module.getType())) //add in private method
-				writer.write("declare " + type(Type.NULLABLE_ARRAY) + " @" +
-						raw(Type.NULLABLE_ARRAY, "_Mcreate" + new ArrayType(Type.INT).
+			if (type.equals(Type.ARRAY_NULLABLE) && !((ClassType)type).recursivelyContainsInnerClass(module.getType())) //add in private method
+				writer.write("declare " + type(Type.ARRAY_NULLABLE) + " @" +
+						raw(Type.ARRAY_NULLABLE, "_Mcreate" + new ArrayType(Type.INT).
 						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
 						type(Type.OBJECT) + ", " + 
 						//type(Type.CLASS) + ", " +
@@ -1095,7 +1087,7 @@ public class LLVMOutput extends AbstractOutput
 		case ARRAY_TO_OBJECT:
 			arrayType = (ArrayType) srcType;
 			if( arrayType.isNullable() ) {
-				genericArray = Type.NULLABLE_ARRAY;				
+				genericArray = Type.ARRAY_NULLABLE;				
 				baseType = type(arrayType.getBaseType(), true);
 			}
 			else {
@@ -1148,7 +1140,7 @@ public class LLVMOutput extends AbstractOutput
 			arrayType = (ArrayType)destType;
 			
 			if( arrayType.isNullable()  ) {
-				genericArray = Type.NULLABLE_ARRAY;			
+				genericArray = Type.ARRAY_NULLABLE;			
 				baseType = type(arrayType.getBaseType(), true) + '*';
 			}
 			else {			
@@ -2025,20 +2017,6 @@ public class LLVMOutput extends AbstractOutput
 				" null, i32 1) to i32)";
 	}
 
-	/*
-	private static String type(TACVariable var)
-	{
-		if( var.getModifiers().isNullable() && var.getType().isPrimitive() )
-			return primitiveWrapper(var.getType());
-		return type(var.getType());
-	}
-	private static String type(TACOperand node)
-	{
-		if( node.getModifiers().isNullable() && node.getType().isPrimitive() )
-			return primitiveWrapper(node.getType());
-		return type(node.getType());
-	}
-	*/
 	private static String type(ModifiedType type)
 	{
 		return type(type.getType(), type.getModifiers().isNullable());
@@ -2425,7 +2403,7 @@ public class LLVMOutput extends AbstractOutput
 		Set<String> types = new HashSet<String>();
 	
 		parameterNames.add(Type.ARRAY.getMangledName());
-		parameterNames.add(Type.NULLABLE_ARRAY.getMangledName());
+		parameterNames.add(Type.ARRAY_NULLABLE.getMangledName());
 		
 		
 		types.add(Type.OBJECT.getMangledNameWithGenerics());
@@ -2509,9 +2487,9 @@ public class LLVMOutput extends AbstractOutput
 						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.ARRAY_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
 						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + trimmed + "_methods\"* @\"" + trimmed + "_methods\" to " + type(Type.OBJECT) + ")" );
 					}
-					else if( parameter.matches(Type.NULLABLE_ARRAY.getMangledName() + ".*")) //generic arrays
+					else if( parameter.matches(Type.ARRAY_NULLABLE.getMangledName() + ".*")) //generic arrays
 					{
-						String trimmed = Type.NULLABLE_ARRAY.getMangledName();
+						String trimmed = Type.ARRAY_NULLABLE.getMangledName();
 						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.ARRAY_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
 						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + trimmed + "_methods\"* @\"" + trimmed + "_methods\" to " + type(Type.OBJECT) + ")" );
 					}
@@ -2554,11 +2532,9 @@ public class LLVMOutput extends AbstractOutput
 							type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) + "] }, ";
 					size = typeText(Type.INT, sizeof('%' + generic.getMangledGeneric() + '*')) + ", ";
 				}	
+								
 				
-				
-				//TODO: Update for NullableArray?
-				if( generic instanceof GenericArray )
-				{
+				if( generic instanceof GenericArray ) {
 					GenericArray genericArray = (GenericArray)generic;
 					String internalParameter = genericArray.getInternalParameter();
 												
@@ -2654,7 +2630,7 @@ public class LLVMOutput extends AbstractOutput
 					
 					sb.append(type(Type.GENERIC_CLASS));
 					
-					if( entry.getKey().equals(Type.ARRAY.getMangledName()) || entry.getKey().equals(Type.NULLABLE_ARRAY.getMangledName()) )
+					if( entry.getKey().equals(Type.ARRAY.getMangledName()) || entry.getKey().equals(Type.ARRAY_NULLABLE.getMangledName()) )
 					{
 						sb.append(" bitcast( " + type(Type.ARRAY_CLASS) + " ");
 						sb.append(" @\"" + parameterized + "_class\"");

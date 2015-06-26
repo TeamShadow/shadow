@@ -99,7 +99,7 @@ public class ArrayType extends ClassType
 	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index, boolean nullable ) {
 		super( makeName(baseType, arrayDimensions, index), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getOuter() );	
 		if( nullable )		
-			setExtendType(Type.NULLABLE_ARRAY);
+			setExtendType(Type.ARRAY_NULLABLE);
 		else
 			setExtendType(Type.ARRAY);
 		dimensions = arrayDimensions.get(index);		
@@ -162,11 +162,11 @@ public class ArrayType extends ClassType
 	public boolean isSubtype(Type t) {		
 		if( t == UNKNOWN )
 			return false;
+		
+		if( t == OBJECT )
+			return true;
 	
 		if( equals(t) )
-			return true;
-			
-		if( t == OBJECT )
 			return true;
 		
 		if( t instanceof ArrayType ) {
@@ -199,7 +199,7 @@ public class ArrayType extends ClassType
 		try
 		{
 			if( nullable )
-				return Type.NULLABLE_ARRAY.replace(Type.NULLABLE_ARRAY.getTypeParameters(), new SequenceType(base));
+				return Type.ARRAY_NULLABLE.replace(Type.ARRAY_NULLABLE.getTypeParameters(), new SequenceType(base));
 			else
 				return Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));
 		}

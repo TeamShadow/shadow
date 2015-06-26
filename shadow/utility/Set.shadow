@@ -1,4 +1,4 @@
-interface shadow:utility@Set<E> extends CanIterate<E>, CanIndexStore<E, boolean>
+interface shadow:utility@Set<E> extends CanIterate<E>, CanIndex<E, boolean>, CanIndexStore<E, boolean>
 {
 	readonly get size() => ( int size );
 	readonly contains( E element ) => ( boolean found );

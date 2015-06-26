@@ -1489,7 +1489,7 @@ public class StatementChecker extends BaseChecker {
 			node.removeModifier(Modifiers.ASSIGNABLE);			
 			
 			//special case because there is no way to cast to nullable Object[]
-			if( t1 instanceof ArrayType && t2.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) ) {
+			if( t1 instanceof ArrayType && t2.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ) {
 				t1 = ((ArrayType)t1).convertToNullable();
 				node.addModifier(Modifiers.NULLABLE);
 			}
@@ -1697,10 +1697,10 @@ public class StatementChecker extends BaseChecker {
 					break;
 				}
 		}
-		else if( collectionType.hasUninstantiatedInterface(Type.NULLABLE_CAN_ITERATE)  )
+		else if( collectionType.hasUninstantiatedInterface(Type.CAN_ITERATE_NULLABLE)  )
 		{			
 			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
-				if( _interface.getTypeWithoutTypeArguments().equals(Type.NULLABLE_CAN_ITERATE))
+				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE_NULLABLE))
 				{
 					element = _interface.getTypeParameters().get(0);
 					break;
@@ -1708,7 +1708,7 @@ public class StatementChecker extends BaseChecker {
 		}
 		else
 		{
-			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement " + Type.CAN_ITERATE + " or " + Type.NULLABLE_CAN_ITERATE + " and cannot be the target of a foreach statement", collectionType);
+			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement " + Type.CAN_ITERATE + " or " + Type.CAN_ITERATE_NULLABLE + " and cannot be the target of a foreach statement", collectionType);
 			iterable = false;
 		}		
 		
@@ -2250,14 +2250,10 @@ public class StatementChecker extends BaseChecker {
 					//non-primitive array elements could be null
 					//however, arrays of arrays are not-null
 					//instead, they will be filled with default values, including a length of zero
-					//thus, we don't need to check nullability, but we do need a range check
-					
-					//TODO: Make this work.  Depends on the modern interpretation of nullable arrays.
-					//if( !arrayType.getBaseType().isPrimitive() && !(arrayType.getBaseType() instanceof ArrayType)  )
-					//	node.addModifier(Modifiers.NULLABLE);					
+					//thus, we don't need to check nullability, but we do need a range check				
 					
 					//nullable array means what you get out is nullable, not the array itself
-					if( prefixNode.getModifiers().isNullable() ) 
+					if( arrayType.isNullable() ) 
 						node.addModifier(Modifiers.NULLABLE);
 				}				
 				else
@@ -2266,8 +2262,8 @@ public class StatementChecker extends BaseChecker {
 					addError(Error.INVALID_SUBSCRIPT, "Subscript gives " + node.jjtGetNumChildren() + " indexes but "  + arrayType.getDimensions() + " are required");
 				}				
 			}						
-			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.NULLABLE_CAN_INDEX) )
-			{
+			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_NULLABLE) ||
+					 prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)) {
 				if( node.jjtGetNumChildren() == 1)
 				{
 					SequenceType arguments = new SequenceType();
@@ -2276,21 +2272,18 @@ public class StatementChecker extends BaseChecker {
 					
 					MethodSignature signature = setMethodType( node, prefixType, "index", arguments);
 					
-					if( signature == null )
-					{
-						node.setType(Type.UNKNOWN);
-						addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " with index of type " + child.getType(), prefixType, child.getType());
-					}
-					else if( (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
+					if( signature != null && (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
 					{
 						node.setType(Type.UNKNOWN);
 						addError(Error.INVALID_SUBSCRIPT, "Cannot apply mutable subscript to immutable or readonly prefix");						
 					}
 					else
 					{
+						//if signature is null, then it is not a load
 						SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
-						node.setType(subscriptType);					
-						node.setModifiers(subscriptType.getGetType().getModifiers());								
+						node.setType(subscriptType);
+						if( signature != null )
+							node.setModifiers(subscriptType.getGetType().getModifiers());								
 						
 						if( prefixNode.getModifiers().isImmutable() )
 							node.addModifier(Modifiers.IMMUTABLE);
@@ -2298,7 +2291,7 @@ public class StatementChecker extends BaseChecker {
 							node.addModifier(Modifiers.READONLY);
 						else if( prefixNode.getModifiers().isTemporaryReadonly() )
 							node.addModifier(Modifiers.TEMPORARY_READONLY);
-						else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.NULLABLE_CAN_INDEX_STORE)  ) 
+						else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)  ) 
 							node.addModifier(Modifiers.ASSIGNABLE);
 					}											
 				}
@@ -2307,11 +2300,11 @@ public class StatementChecker extends BaseChecker {
 					node.setType(Type.UNKNOWN);
 					addError(Error.INVALID_SUBSCRIPT, "Subscript supplies multiple indexes into non-array type " + prefixType, prefixType);
 				}				
-			}
+			}			
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX + " or " + Type.NULLABLE_CAN_INDEX, prefixType);
+				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX + " or " + Type.CAN_INDEX_NULLABLE, prefixType);
 			}
 						
 		}
@@ -2788,20 +2781,6 @@ public class StatementChecker extends BaseChecker {
 					}
 					
 					boolean setterOrGetter = setter != null || getter != null;
-					
-					/*
-					if( getter != null && prefixNode.getModifiers().isImmutable() && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
-						addError(Error.ILLEGAL_ACCESS, "Mutable get property cannot be called from an immutable reference");
-					
-					if( setter != null && prefixNode.getModifiers().isImmutable() && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
-						addError(Error.ILLEGAL_ACCESS, "Mutable set property cannot be called from an immutable reference");
-					
-					if( getter != null && prefixNode.getModifiers().isReadonly() && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
-						addError(Error.ILLEGAL_ACCESS, "Mutable get property cannot be called from a readonly reference");
-					
-					if( setter != null && prefixNode.getModifiers().isReadonly() && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
-						addError(Error.ILLEGAL_ACCESS, "Mutable set property cannot be called from a readonly reference");
-					*/
 					
 					if( getter != null && !prefixNode.getModifiers().isMutable() && getter.getModifiers().isMutable()  )
 						getter = null;

@@ -8,5 +8,5 @@ interface shadow:utility@Deque<E> extends CanIterate<E>
 	getLast() => (E element);
 	removeFirst() => (E element);
 	removeLast() => ( E element);	
-	clear() => ( Deque<E>  );
+	clear() => ( Deque<E> );
 }

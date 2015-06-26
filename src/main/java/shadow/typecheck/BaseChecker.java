@@ -330,9 +330,9 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
 		}
 		else if( leftArray ) {
-			if( leftModifiers.isNullable() &&  !rightType.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) )
+			if( leftModifiers.isNullable() &&  !rightType.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
 				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);
-			else if( !leftModifiers.isNullable() && rightType.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) )
+			else if( !leftModifiers.isNullable() && rightType.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
 				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
 			else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
 				//weird case:
@@ -341,9 +341,9 @@ public abstract class BaseChecker extends AbstractASTVisitor
 				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable object value cannot be assigned to nullable array left hand side without a check", rightType, leftType);
 		}
 		else if( rightArray ) {
-			if( leftType.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) && !rightModifiers.isNullable() )
+			if( leftType.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) && !rightModifiers.isNullable() )
 				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);
-			else if( !leftType.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) && rightModifiers.isNullable() )
+			else if( !leftType.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) && rightModifiers.isNullable() )
 				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
 		}
 		else { //no arrays (easy)			

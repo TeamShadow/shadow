@@ -59,7 +59,7 @@ public abstract class Type implements Comparable<Type>
 	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables	
 	public static ClassType ARRAY_CLASS = null;  // meta class for holding generic array :class variables
 	public static ClassType ARRAY = null;  // object representation of all array types
-	public static ClassType NULLABLE_ARRAY = null;  // object representation of nullable array types
+	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types
 	public static ClassType METHOD = null;  // object representation for references with function type
 	public static ClassType UNBOUND_METHOD = null; //object representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
 
@@ -99,13 +99,13 @@ public abstract class Type implements Comparable<Type>
 	public static InterfaceType CAN_COMPARE = null;
 	public static InterfaceType CAN_EQUAL = null;
 	public static InterfaceType CAN_INDEX = null;
-	public static InterfaceType NULLABLE_CAN_INDEX = null;
+	public static InterfaceType CAN_INDEX_NULLABLE = null;
 	public static InterfaceType CAN_INDEX_STORE = null;
-	public static InterfaceType NULLABLE_CAN_INDEX_STORE = null;
+	public static InterfaceType CAN_INDEX_STORE_NULLABLE = null;
 	public static InterfaceType CAN_ITERATE = null;
-	public static InterfaceType NULLABLE_CAN_ITERATE = null;
+	public static InterfaceType CAN_ITERATE_NULLABLE = null;
 	public static InterfaceType ITERATOR = null;
-	public static InterfaceType NULLABLE_ITERATOR = null;
+	public static InterfaceType ITERATOR_NULLABLE = null;
 	public static InterfaceType NUMBER = null;
 	public static InterfaceType INTEGER = null;
 	public static InterfaceType CAN_ADD = null;
@@ -189,7 +189,7 @@ public abstract class Type implements Comparable<Type>
 		ASSERT_EXCEPTION = null;
 		CLASS = null;		
 		ARRAY = null;
-		NULLABLE_ARRAY = null;
+		ARRAY_NULLABLE = null;
 		ARRAY_CLASS = null;
 		METHOD = null;				
 		UNBOUND_METHOD = null;
@@ -213,13 +213,13 @@ public abstract class Type implements Comparable<Type>
 		CAN_COMPARE = null;
 		CAN_EQUAL = null;		
 		CAN_INDEX = null;
-		NULLABLE_CAN_INDEX = null;
+		CAN_INDEX_NULLABLE = null;
 		CAN_INDEX_STORE = null;
-		NULLABLE_CAN_INDEX_STORE = null;
+		CAN_INDEX_STORE_NULLABLE = null;
 		CAN_ITERATE = null;
-		NULLABLE_CAN_ITERATE = null;
+		CAN_ITERATE_NULLABLE = null;
 		ITERATOR = null;
-		NULLABLE_ITERATOR = null;
+		ITERATOR_NULLABLE = null;
 		NUMBER = null;
 		INTEGER = null;
 		CAN_ADD = null;
@@ -273,9 +273,9 @@ public abstract class Type implements Comparable<Type>
 	final public String getMangledNameWithGenerics() {
 		if( this instanceof ArrayType || 
 			getTypeWithoutTypeArguments().equals(Type.ARRAY) || 
-			getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) ||
+			getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ||
 			Type.ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) ||
-			Type.NULLABLE_ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) )
+			Type.ARRAY_NULLABLE.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) )
 			return getMangledNameWithGenerics(false);
 		else
 			return getMangledNameWithGenerics(true);		

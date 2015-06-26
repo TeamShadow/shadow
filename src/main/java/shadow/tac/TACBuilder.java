@@ -2448,14 +2448,14 @@ public class TACBuilder implements ShadowParserVisitor
 					new TACCall(tree, block, indexMethod, map, address, newAddress);
 					
 					
-					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) )
+					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
 					{
 						Type genericArray;
 						
 						if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY))
 							genericArray = Type.ARRAY;
 						else
-							genericArray = Type.NULLABLE_ARRAY;
+							genericArray = Type.ARRAY_NULLABLE;
 						
 						//call private create to allocate space
 						TACMethodRef create = new TACMethodRef(tree, genericArray.getMatchingMethod("create", new SequenceType(new SimpleModifiedType( new ArrayType(Type.INT), new Modifiers(Modifiers.IMMUTABLE)))));

@@ -51,12 +51,16 @@ public class SubscriptType extends GetSetType
 		if( other instanceof SubscriptType )
 		{
 			SubscriptType otherIndex = (SubscriptType)other;
-			//contravariant on index type			
+			//contravariant on index type		
+			
 			if( !otherIndex.index.getType().isSubtype(index.getType()))
 				return false;
 			
+			if( (getGetter() == null) != (otherIndex.getGetter() == null) )
+				return false;
+			
 			//covariant on get
-			if( !getGetType().getType().isSubtype(otherIndex.getGetType().getType()) )
+			if( getGetter() != null && !getGetType().getType().isSubtype(otherIndex.getGetType().getType()) )
 				return false;
 			
 			if( otherIndex.getSetType() != null )

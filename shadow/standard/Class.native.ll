@@ -93,32 +93,6 @@ _label3:
 	ret %_Pshadow_Pstandard_CObject* %5
 }
 
-define noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_MallocateNullable_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass*, i32) {
-	%3 = call %boolean @"_Pshadow_Pstandard_CClass_MisArray"(%"_Pshadow_Pstandard_CClass"* %0)			
-	br i1 %3, label %_label2, label %_label3
-_label2: 
-	; is array
-	%4 = call %int @"_Pshadow_Pstandard_CClass_Msize"(%"_Pshadow_Pstandard_CClass"* %0)
-	br label %_label4
-_label3: 
-	; is anything else (always stored as an Object*)
-	%5 = call %int @"_Pshadow_Pstandard_CClass_MpointerSize"(%"_Pshadow_Pstandard_CClass"* %0)
-	br label %_label4
-_label4:
-	%6 = phi %int [%4, %_label2], [%5, %_label3]
-	%7 = call noalias i8* @calloc(i32 %1, i32 %6)	
-	%8 = bitcast i8* %7 to %_Pshadow_Pstandard_CObject*
-	%9 = icmp eq %_Pshadow_Pstandard_CObject* %8, null
-	br i1 %9, label %_label5, label %_label6
-_label5:
-	%10 = bitcast %"_Pshadow_Pstandard_COutOfMemoryException"* @_OutOfMemoryException to %"_Pshadow_Pstandard_CObject"*
-	call void @__shadow_throw(%"_Pshadow_Pstandard_CObject"* %10) noreturn
-	unreachable	
-_label6:
-	ret %_Pshadow_Pstandard_CObject* %8
-}
-
-
 define %int @"_Pshadow_Pstandard_CClass_MpointerSize"(%"_Pshadow_Pstandard_CClass"*) {
 		%2 = ptrtoint %"_Pshadow_Pstandard_CObject"** getelementptr (%"_Pshadow_Pstandard_CObject"** null, i32 1) to i32
 		ret %int %2

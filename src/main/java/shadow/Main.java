@@ -318,7 +318,7 @@ public class Main {
 		for (Type referenced : type.getReferencedTypes()  ) {
 			if( referenced.isFullyInstantiated() ) {				
 				if( referenced.getTypeWithoutTypeArguments().equals(Type.ARRAY) ||
-					referenced.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY))
+					referenced.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE))
 					generics.add(new GenericArray(referenced));
 				else
 					generics.add(new Generic(referenced));

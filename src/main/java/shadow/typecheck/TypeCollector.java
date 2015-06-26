@@ -373,8 +373,9 @@ public class TypeCollector extends BaseChecker {
 				{
 				//case "AbstractClass":	Type.ABSTRACT_CLASS = (ClassType) type; break;
 				case "AddressMap":		Type.ADDRESS_MAP = (ClassType) type; break;
-				case "Array":			Type.ARRAY = (ClassType) type; break;			
+				case "Array":			Type.ARRAY = (ClassType) type; break;
 				case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
+				case "ArrayNullable":	Type.ARRAY_NULLABLE = (ClassType) type; break;
 				case "AssertException": Type.ASSERT_EXCEPTION = (ExceptionType) type; break;
 				case "CanAdd":			Type.CAN_ADD = (InterfaceType)type; break;
 				case "CanCompare":		Type.CAN_COMPARE = (InterfaceType) type; break;
@@ -385,8 +386,11 @@ public class TypeCollector extends BaseChecker {
 				case "CanNegate":		Type.CAN_NEGATE = (InterfaceType)type; break;
 				case "CanSubtract":		Type.CAN_SUBTRACT = (InterfaceType)type; break;
 				case "CanIndex":		Type.CAN_INDEX = (InterfaceType) type; break;
+				case "CanIndexNullable":	Type.CAN_INDEX_NULLABLE = (InterfaceType) type; break;				
 				case "CanIndexStore":	Type.CAN_INDEX_STORE = (InterfaceType) type; break;
+				case "CanIndexStoreNullable":	Type.CAN_INDEX_STORE_NULLABLE = (InterfaceType) type; break;
 				case "CanIterate":		Type.CAN_ITERATE = (InterfaceType) type; break;
+				case "CanIterateNullable":	Type.CAN_ITERATE_NULLABLE = (InterfaceType) type; break;
 				case "CastException":	Type.CAST_EXCEPTION = (ExceptionType) type; break;
 				case "Class":			Type.CLASS = (ClassType) type; break;				
 				case "boolean":			Type.BOOLEAN = (ClassType)type; break;
@@ -401,14 +405,10 @@ public class TypeCollector extends BaseChecker {
 				case "int":				Type.INT = (ClassType) type; break;
 				case "Integer":			Type.INTEGER = (InterfaceType) type; break;
 				case "Iterator":		Type.ITERATOR = (InterfaceType) type; break;
+				case "IteratorNullable":	Type.ITERATOR_NULLABLE = (InterfaceType) type; break;
 				case "long":			Type.LONG = (ClassType)type; break;
 				case "Method":			Type.METHOD = (ClassType)type; break;
-				//case "MethodClass":		Type.METHOD_CLASS = (ClassType) type; break;				
-				case "NullableArray":	Type.NULLABLE_ARRAY = (ClassType) type; break;
-				case "NullableCanIndex":	Type.NULLABLE_CAN_INDEX = (InterfaceType) type; break;
-				case "NullableCanIndexStore":	Type.NULLABLE_CAN_INDEX_STORE = (InterfaceType) type; break;
-				case "NullableCanIterate":	Type.NULLABLE_CAN_ITERATE = (InterfaceType) type; break;
-				case "NullableIterator":	Type.NULLABLE_ITERATOR = (InterfaceType) type; break;
+				//case "MethodClass":		Type.METHOD_CLASS = (ClassType) type; break;
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;

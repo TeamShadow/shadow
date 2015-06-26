@@ -1,4 +1,4 @@
-abstract locked class shadow:standard@NullableArray<T> implements NullableCanIndexStore<int[],T>, NullableCanIterate<T>
+abstract locked class shadow:standard@ArrayNullable<T> implements CanIndexNullable<int[],T>, CanIndexStoreNullable<int[],T>, CanIterateNullable<T>
 {
 	get immutable int[] lengths;
 	Object data;
@@ -17,12 +17,12 @@ abstract locked class shadow:standard@NullableArray<T> implements NullableCanInd
 	public native readonly getBaseClass() => ( Class );
 	public native readonly toString() => ( String );
 	
-	public readonly iterator() => (NullableIterator<T>)
+	public readonly iterator() => (IteratorNullable<T>)
 	{
 		return ArrayIterator:create();
 	} 
 	
-	private class ArrayIterator implements NullableIterator<T>
+	private class ArrayIterator implements IteratorNullable<T>
 	{
 		int position = 0;
 		int limit = size();
