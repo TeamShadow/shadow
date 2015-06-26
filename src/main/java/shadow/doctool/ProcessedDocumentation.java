@@ -8,12 +8,14 @@ import shadow.doctool.DirectiveParser.Directive;
 public class ProcessedDocumentation 
 {
 	private final String mainText;
+	private final String brief;
 	private final HashMap<String, String> exceptionDescriptions;
 	private final HashMap<String, String> parameterDescriptions;
 	
-	public ProcessedDocumentation(String mainText, List<Directive> directives)
+	public ProcessedDocumentation(String mainText, String brief, List<Directive> directives)
 	{
 		this.mainText = mainText;
+		this.brief = brief;
 		parameterDescriptions = new HashMap<String, String>();
 		exceptionDescriptions = new HashMap<String, String>();
 		
@@ -38,6 +40,12 @@ public class ProcessedDocumentation
 	public String getMainText()
 	{
 		return mainText;
+	}
+	
+	/** @return The first sentence of the main documentation text */
+	public String getSummary()
+	{
+		return brief;
 	}
 	
 	/** 

@@ -86,11 +86,25 @@ public class DirectiveParser
 		splitOnDirectives(fullText, contents, directiveTypes);
 		
 		List<Directive> directives = new ArrayList<Directive>();
-		String description = parseDirectives(directives, contents, directiveTypes);
+		String mainText = parseDirectives(directives, contents, directiveTypes);
 		
-		return new ProcessedDocumentation(description, directives);
+		String brief = getFirstSentence(mainText);
+		
+		return new ProcessedDocumentation(mainText, brief, directives);
 	}
 	
+	private static final Pattern sentenceEnd = Pattern.compile("\\.\\s");
+	
+	private static String getFirstSentence(String mainText) 
+	{
+		Matcher matcher = sentenceEnd.matcher(mainText);
+		
+		if (matcher.find())
+			return mainText.substring(0, matcher.start() - 1);
+		else
+			return mainText;
+	}
+
 	/** 
 	 * A generic directive wrapper, containing its type and any arguments or
 	 * description it may have

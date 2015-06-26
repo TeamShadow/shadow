@@ -9,6 +9,7 @@ import shadow.doctool.DocumentationException;
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.ShadowException;
 
+// TODO: Write doc-comments for all methods
 /** 
  * Provides some basic assistance in creating HTML-style documents. Constraints
  * are based upon the syntax defined within the W3C HTML5 Recommendation found
@@ -132,7 +133,7 @@ public class Html5Writer
 		out.write();
 	}
 	
-	public void openLineTab(String tagName, Attribute ... attributes) 
+	public void openTab(String tagName, Attribute ... attributes) 
 			throws DocumentationException, ShadowException
 	{
 		openLine(tagName, attributes);
@@ -156,7 +157,7 @@ public class Html5Writer
 		out.write();
 	}
 	
-	public void closeLineUntab() 
+	public void closeUntab() 
 			throws DocumentationException, ShadowException
 	{
 		// Just to make sure outdent() doesn't happen without close

@@ -18,6 +18,7 @@ import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
@@ -30,6 +31,12 @@ public class ClassOrInterfacePage
 	private Set<Type> linkableTypes;
 	private boolean makeLinks = true;
 	private int packageDepth = 0;
+	
+	
+	private List<MethodSignature> constructors = new ArrayList<MethodSignature>();
+	private List<MethodSignature> destructors = new ArrayList<MethodSignature>();
+	private List<MethodSignature> methods = new ArrayList<MethodSignature>();
+	private List<MethodSignature> properties = new ArrayList<MethodSignature>();
 	
 	public ClassOrInterfacePage(Type type, Set<Type> linkableTypes) throws DocumentationException
 	{
@@ -48,9 +55,29 @@ public class ClassOrInterfacePage
 		
 		this.type = type;
 		this.linkableTypes = linkableTypes;
+		
+		fillMethodLists();
 	}
 	
-	public void make(Path root) throws IOException, ShadowException, DocumentationException
+	private void fillMethodLists()
+	{
+		for (List<MethodSignature> overloadList : type.getMethodMap().values()) {
+			for (MethodSignature method : overloadList) {
+				Modifiers modifiers = method.getModifiers();
+				if (modifiers.hasModifier(Modifiers.GET) 
+						|| modifiers.hasModifier(Modifiers.SET))
+					properties.add(method);
+				else if (method.getSymbol() == "create")
+					constructors.add(method);
+				else if (method.getSymbol() == "destroy")
+					destructors.add(method);
+				else
+					methods.add(method);
+			}
+		}
+	}
+	
+	public void write(Path root) throws IOException, ShadowException, DocumentationException
 	{
 		// Find/create the directory chain where the document will reside
 		Path outputDirectory = constructOutputPath(root);
@@ -61,35 +88,33 @@ public class ClassOrInterfacePage
 		FileWriter fileWriter = new FileWriter(output.toFile());
 		Html5Writer out = new Html5Writer(fileWriter);
 		
-		out.openLineTab("html");
+		out.openTab("html");
+		writeHtmlHead(out);
+		out.openTab("body");
 		
-		makeHtmlHead(out);
+		writeHeader(out);
+		writeAllMethodTables(out);
+		writeAllMethodDetails(out);
 		
-		out.openLineTab("body");
-		
-		makeHeader(out);
-		makeMethodSummaryTable(out);
-		makeMethodDetailSection(out);
-		
-		out.closeLineUntab();
-		out.closeLineUntab();
+		out.closeUntab();
+		out.closeUntab();
 		
 		fileWriter.close();
 	}
-	
-	private void makeHtmlHead(Html5Writer out) throws ShadowException, DocumentationException
+
+	private void writeHtmlHead(Html5Writer out) throws ShadowException, DocumentationException
 	{
-		out.openLineTab("head");
+		out.openTab("head");
 		
 		out.fullLine("title", type.getTypeName());
 		out.voidLine("link", 
 				new Attribute("rel", "stylesheet"),
 				new Attribute("href", upDir(packageDepth) + "stylesheet.css"));
 		
-		out.closeLineUntab();
+		out.closeUntab();
 	}
 	
-	private void makeHeader(Html5Writer out) throws ShadowException, DocumentationException
+	private void writeHeader(Html5Writer out) throws ShadowException, DocumentationException
 	{
 		String packageName = type.getPackage().getQualifiedName();
 		if (!packageName.isEmpty())
@@ -97,64 +122,108 @@ public class ClassOrInterfacePage
 		
 		out.fullLine("h2", typeKind + " " + type.getTypeName());
 		
-		makeInheritanceSection(out);
+		writeInheritanceSection(out);
 
 		out.voidLine("hr");
 	}
 	
-	private void makeMethodSummaryTable(Html5Writer out) throws ShadowException, DocumentationException
+	private void writeAllMethodTables(Html5Writer out) 
+			throws ShadowException, DocumentationException
 	{
-		out.openLineTab("div", new Attribute("class", "block"));		
-		out.fullLine("h3", "Method Summaries");
-		out.openLineTab("table", new Attribute("class", "summarytable"));
+		if (!constructors.isEmpty())
+			writeMethodTable("Constructor Summary", constructors, out);
+		if (!destructors.isEmpty())
+			writeMethodTable("Destructor Summary", destructors, out);
+		if (!methods.isEmpty())
+			writeMethodTable("Method Summary", methods, out);
+		if (!properties.isEmpty())
+			writeMethodTable("Property Summary", properties, out);
+	}
+	
+	private void writeMethodTable(String name, 
+			List<MethodSignature> methods, Html5Writer out) 
+					throws ShadowException, DocumentationException
+	{
+		out.openTab("div", new Attribute("class", "block"));		
+		out.fullLine("h3", name);
+		out.openTab("table", new Attribute("class", "summarytable"));
 		
-		makeTableRow(out, true, "Modifiers", "Return Type", "Method and Description");
-		for (List<MethodSignature> overloadList : type.getMethodMap().values()) {
-			for (MethodSignature method : overloadList) {
-				out.openLineTab("tr");
-				out.fullLine("td", method.getModifiers().toString().trim());
-				out.fullLine("td", method.getReturnTypes().toString());
+		writeTableRow(out, true, "Modifiers", "Return Type", "Method and Description");
+		for (MethodSignature method : methods) {
+			out.openTab("tr");
 				out.open("td");
-				getMethodParameterList(method, true, true, out);
+					out.full("code", method.getModifiers().toString().trim());
 				out.closeLine();
-				out.closeLineUntab();
-			}
+				out.open("td");
+					out.full("code", method.getReturnTypes().toString());
+				out.closeLine();
+				out.open("td");
+					out.open("code");
+						writeMethodName(method, true, out);
+						writeParameters(method, true, true, out);
+					out.close();
+				out.closeLine();
+			out.closeUntab();
 		}
 		
-		out.closeLineUntab();
-		out.closeLineUntab();
+		out.closeUntab();
+		out.closeUntab();
 	}
 	
-	private void makeMethodDetailSection(Html5Writer out) throws ShadowException, DocumentationException
+	private void writeAllMethodDetails(Html5Writer out)
+			throws ShadowException, DocumentationException 
 	{
-		out.openLineTab("div", new Attribute("class", "block"));		
-		out.fullLine("h3", "Method Details");
-		
-		for (List<MethodSignature> overloadList : type.getMethodMap().values())
-			for (MethodSignature method : overloadList)
-				makeMethodDetail(method, out);
-		
-		out.closeLineUntab();
+		if (!constructors.isEmpty())
+			writeMethodDetailSection("Constructor Details", constructors, out);
+		if (!destructors.isEmpty())
+			writeMethodDetailSection("Destructor Details", destructors, out);
+		if (!methods.isEmpty())
+			writeMethodDetailSection("Method Details", methods, out);
+		if (!properties.isEmpty())
+			writeMethodDetailSection("Property Details", properties, out);
 	}
 	
-	private void makeMethodDetail(MethodSignature method, 
+	private void writeMethodDetailSection(String name, 
+			List<MethodSignature> methods, Html5Writer out) 
+					throws ShadowException, DocumentationException
+	{
+		out.openTab("div", new Attribute("class", "block"));		
+		out.fullLine("h3", name);
+		
+		for (MethodSignature method : methods)
+			writeMethodDetail(method, out);
+		
+		out.closeUntab();
+	}
+	
+	private void writeMethodDetail(MethodSignature method, 
 			Html5Writer out) throws ShadowException, DocumentationException
 	{
-		out.openLineTab("div", new Attribute("class", "methoddetail"));
+		out.openTab("div", new Attribute("class", "methoddetail"));
 		
-		out.fullLine("h4", method.getSymbol());
+		out.fullLine("h4", method.getSymbol(),
+				new Attribute("id", getUniqueID(method)));
 		
-		out.open("p");
+		out.open("code");
 		out.add(method.getModifiers().toString().trim() + " "
 				+ method.getSymbol());
-		getMethodParameterList(method, true, true, out);
+		writeParameters(method, true, true, out);
 		out.add(" => " + method.getReturnTypes());
 		out.closeLine();
 		
-		out.closeLineUntab();
+		out.closeUntab();
 	}
 	
-	private void getMethodParameterList(MethodSignature method, 
+	private void writeMethodName(MethodSignature method, boolean linkToDetail,
+			Html5Writer out) throws DocumentationException, ShadowException
+	{
+		if (linkToDetail)
+			writeLink("#" + getUniqueID(method), method.getSymbol(), out);
+		else
+			out.add(method.getSymbol());
+	}
+	
+	private void writeParameters(MethodSignature method, 
 			boolean parameterNames, boolean link, Html5Writer out) 
 					throws DocumentationException, ShadowException
 	{
@@ -165,7 +234,7 @@ public class ClassOrInterfacePage
 			Type parameter = method.getParameterTypes().get(i).getType();
 			
 			if (link)
-				linkToType(parameter, parameter.getQualifiedName(), out);
+				writeCrossLink(parameter, parameter.getQualifiedName(), out);
 			else
 				out.add(parameter.getQualifiedName());
 			
@@ -178,7 +247,7 @@ public class ClassOrInterfacePage
 		out.add(")");
 	}
 	
-	private void makeInheritanceSection(Html5Writer out) throws ShadowException, DocumentationException
+	private void writeInheritanceSection(Html5Writer out) throws ShadowException, DocumentationException
 	{
 		List<Type> extendsList = new ArrayList<Type>();
 		List<Type> implementsList = new ArrayList<Type>();
@@ -203,7 +272,7 @@ public class ClassOrInterfacePage
 				// List the name, optionally attempting a link
 				Type current = extendsList.get(i);
 				if (makeLinks)
-					linkToType(current, current.getQualifiedName(), out);
+					writeCrossLink(current, current.getQualifiedName(), out);
 				else
 					builder.append(current.getQualifiedName());
 			}
@@ -220,7 +289,7 @@ public class ClassOrInterfacePage
 				// List the name, optionally attempting a link
 				Type current = implementsList.get(i);
 				if (makeLinks)
-					linkToType(current, current.getQualifiedName(), out);
+					writeCrossLink(current, current.getQualifiedName(), out);
 				else
 					builder.append(current.getQualifiedName());
 			}
@@ -228,28 +297,26 @@ public class ClassOrInterfacePage
 		}
 	}
 	
-	/* Helper methods */
-	
-	private void linkToType(Type to, String text, Html5Writer out) 
+	private void writeCrossLink(Type to, String text, Html5Writer out) 
 			throws DocumentationException, ShadowException
 	{
 		if (linkableTypes.contains(to))
-			makeLink(getRelativePath(type, to) + "/" 
+			writeLink(getRelativePath(type, to) + "/" 
 					+ to.getTypeName() + extension, text, out);
 		else
 			out.add(text);
 	}
 	
-	private static void makeLink(String href, String text, Html5Writer out) 
+	private static void writeLink(String href, String text, Html5Writer out) 
 			throws DocumentationException, ShadowException
 	{
 		out.full("a", text, new Attribute("href", href));
 	}
 	
-	private static void makeTableRow(Html5Writer out, boolean header,
+	private static void writeTableRow(Html5Writer out, boolean header,
 			String ... columns) throws ShadowException, DocumentationException
 	{
-		out.openLineTab("tr");
+		out.openTab("tr");
 		
 		for (String column : columns) {
 			if (header)
@@ -258,8 +325,10 @@ public class ClassOrInterfacePage
 				out.fullLine("td", column);
 		}
 		
-		out.closeLineUntab();
+		out.closeUntab();
 	}
+	
+	/* Helper methods */
 
 	/**
 	 * Determines where this page should be output based on its package and
@@ -301,5 +370,15 @@ public class ClassOrInterfacePage
 		Path target = Paths.get(to.getPackage().getPath());
 		
 		return start.relativize(target).toString();
+	}
+	
+	/** 
+	 * Creates a unique ID based on a method's signature which can be used as
+	 * an HTML bookmark
+	 */
+	private static String getUniqueID(MethodSignature method)
+	{
+		return method.getSymbol() 
+				+ method.getParameterTypes().toString().replaceAll("\\s", "");
 	}
 }

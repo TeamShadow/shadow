@@ -110,7 +110,7 @@ public class DocumentationTool
 		{
 			ClassOrInterfacePage page = 
 					new ClassOrInterfacePage(type, toDocument);
-			page.make(outputDirectory);
+			page.write(outputDirectory);
 		}
 		
 		// Export the style-sheet
