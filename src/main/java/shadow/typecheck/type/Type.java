@@ -431,11 +431,6 @@ public abstract class Type implements Comparable<Type>
 			if( type == this )
 				return true;
 			
-			// Prevent null pointer problem on getPackage.equals()
-			//if (getPackage() == null && type.getPackage() != null)
-			//	return false;
-						
-			//if( getPackage().equals(type.getPackage()) && type.getTypeName().equals(getTypeName()) )
 			if( getPackage() == type.getPackage() && type.getTypeName().equals(getTypeName()) )
 			{				
 				if( isParameterizedIncludingOuterClasses() )

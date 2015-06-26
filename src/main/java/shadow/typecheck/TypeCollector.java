@@ -73,22 +73,45 @@ public class TypeCollector extends BaseChecker {
 		return mainType;
 	}
 		
-	public Map<Type, Node> collectTypes(File mainFile) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {			
-		//Create walker
-		ASTWalker walker = new ASTWalker( this );		
-		TreeSet<String> uncheckedFiles = new TreeSet<String>();
-		String main = stripExtension(mainFile.getCanonicalPath());
-		mainFile = mainFile.getCanonicalFile();
-		//add file to be checked to list
-		uncheckedFiles.add(main);
-		
-		FilenameFilter filter = new FilenameFilter()
-		{
-			public boolean accept(File dir, String name)
-			{
-				return name.endsWith(".shadow");
-			}
-		};
+    /** Proxy for calling collectTypes() with one main file */
+    public Map<Type, Node> collectTypes(File mainFile) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
+    {
+        List<File> initialFiles = new ArrayList<File>();
+        initialFiles.add(mainFile);
+        return collectTypes(initialFiles, true);
+    }
+   
+    /** Proxy for calling collectTypes with multiple, non-main files */
+    public Map<Type, Node> collectTypes(List<File> initialFiles) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
+    {
+        return collectTypes(initialFiles, false);
+    }
+   
+    private Map<Type, Node> collectTypes(List<File> initialFiles, boolean hasMain) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
+    {
+        // Establish the initial set of files to be checked
+        TreeSet<String> uncheckedFiles = new TreeSet<String>();
+        String main = null; // May or may not be null, based on hasMain
+        if (initialFiles.isEmpty()) {
+            throw new ConfigurationException("No files provided for typechecking");
+        } else if (hasMain) {
+            // Assume the main file is the first and only file
+            main = stripExtension(initialFiles.get(0).getCanonicalPath());
+            uncheckedFiles.add(main);
+        } else {
+            for (File file : initialFiles)
+                uncheckedFiles.add(file.getCanonicalPath());
+        }
+       
+        ASTWalker walker = new ASTWalker( this );
+       
+        FilenameFilter filter = new FilenameFilter()
+        {
+            public boolean accept(File dir, String name)
+            {
+                return name.endsWith(".shadow");
+            }
+        };
 				
 		//add standard imports		
 		File standard = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "standard" );
@@ -135,7 +158,7 @@ public class TypeCollector extends BaseChecker {
 				if (!useSourceFiles &&
 					meta.exists() && meta.lastModified() >= canonicalFile.lastModified() &&
 					llvm.exists() && llvm.lastModified() >= canonicalFile.lastModified() &&
-					!canonicalFile.equals(mainFile)) {
+					!canonical.equals(main)) {
 					canonicalFile = meta;
 				}
 			} else if (!useSourceFiles) {
