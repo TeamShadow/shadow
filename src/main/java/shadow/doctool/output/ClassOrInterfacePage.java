@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import shadow.doctool.DocumentationException;
-import shadow.output.TabbedLineWriter;
+import shadow.doctool.output.Html5Writer.Attribute;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.ClassType;
@@ -50,7 +50,7 @@ public class ClassOrInterfacePage
 		this.linkableTypes = linkableTypes;
 	}
 	
-	public void make(Path root) throws IOException, ShadowException
+	public void make(Path root) throws IOException, ShadowException, DocumentationException
 	{
 		// Find/create the directory chain where the document will reside
 		Path outputDirectory = constructOutputPath(root);
@@ -59,119 +59,126 @@ public class ClassOrInterfacePage
 		// Begin writing to the document itself
 		Path output = outputDirectory.resolve(type.getTypeName() + extension);
 		FileWriter fileWriter = new FileWriter(output.toFile());
-		TabbedLineWriter out = new TabbedLineWriter(fileWriter);
+		Html5Writer out = new Html5Writer(fileWriter);
 		
-		out.write("<!DOCTYPE html>");
-		out.write("<html>"); out.indent();
+		out.openLineTab("html");
 		
 		makeHtmlHead(out);
 		
-		out.write("<body>"); out.indent();
+		out.openLineTab("body");
 		
 		makeHeader(out);
 		makeMethodSummaryTable(out);
 		makeMethodDetailSection(out);
 		
-		out.outdent(); out.write("</body>");
-		out.outdent(); out.write("</html>");
+		out.closeLineUntab();
+		out.closeLineUntab();
 		
 		fileWriter.close();
 	}
 	
-	private void makeHtmlHead(TabbedLineWriter out) throws ShadowException
+	private void makeHtmlHead(Html5Writer out) throws ShadowException, DocumentationException
 	{
-		out.write("<head>"); out.indent();
+		out.openLineTab("head");
 		
-		out.write("<title>" + type.getTypeName() + "</title>");
-		out.write("<link rel=\"stylesheet\" href=\"" + upDir(packageDepth)
-				+ "stylesheet.css\">");
+		out.fullLine("title", type.getTypeName());
+		out.voidLine("link", 
+				new Attribute("rel", "stylesheet"),
+				new Attribute("href", upDir(packageDepth) + "stylesheet.css"));
 		
-		out.outdent(); out.write("</head>");
+		out.closeLineUntab();
 	}
 	
-	private void makeHeader(TabbedLineWriter out) throws ShadowException
+	private void makeHeader(Html5Writer out) throws ShadowException, DocumentationException
 	{
 		String packageName = type.getPackage().getQualifiedName();
 		if (!packageName.isEmpty())
-			out.write("<p>" + type.getPackage().getQualifiedName() + "</p>");
+			out.fullLine("p", type.getPackage().getQualifiedName());
 		
-		out.write("<h2>" + typeKind + " " + type.getTypeName() + "</h2>");
+		out.fullLine("h2", typeKind + " " + type.getTypeName());
 		
 		makeInheritanceSection(out);
 
-		out.write("<hr>");
+		out.voidLine("hr");
 	}
 	
-	private void makeMethodSummaryTable(TabbedLineWriter out) throws ShadowException
+	private void makeMethodSummaryTable(Html5Writer out) throws ShadowException, DocumentationException
 	{
-		out.write("<div class=\"block\">"); out.indent();
-		out.write("<h3>Method Summary</h3>");
-		out.write("<table class=\"summarytable\">"); out.indent();
+		out.openLineTab("div", new Attribute("class", "block"));		
+		out.fullLine("h3", "Method Summaries");
+		out.openLineTab("table", new Attribute("class", "summarytable"));
 		
 		makeTableRow(out, true, "Modifiers", "Return Type", "Method and Description");
-		for (List<MethodSignature> overloadList : type.getMethodMap().values())
-			for (MethodSignature method : overloadList)
-				makeTableRow(out, false, method.getModifiers().toString().trim(),
-						method.getReturnTypes().toString(), method.getSymbol()
-						+ getMethodParameterList(method, true, true));
+		for (List<MethodSignature> overloadList : type.getMethodMap().values()) {
+			for (MethodSignature method : overloadList) {
+				out.openLineTab("tr");
+				out.fullLine("td", method.getModifiers().toString().trim());
+				out.fullLine("td", method.getReturnTypes().toString());
+				out.open("td");
+				getMethodParameterList(method, true, true, out);
+				out.closeLine();
+				out.closeLineUntab();
+			}
+		}
 		
-		out.outdent(); out.write("</table>");
-		out.outdent(); out.write("</div>");
+		out.closeLineUntab();
+		out.closeLineUntab();
 	}
 	
-	private void makeMethodDetailSection(TabbedLineWriter out) throws ShadowException
+	private void makeMethodDetailSection(Html5Writer out) throws ShadowException, DocumentationException
 	{
-		out.write("<div class=\"block\">"); out.indent();
-		out.write("<h3>Method Detail</h3>");
+		out.openLineTab("div", new Attribute("class", "block"));		
+		out.fullLine("h3", "Method Details");
 		
 		for (List<MethodSignature> overloadList : type.getMethodMap().values())
 			for (MethodSignature method : overloadList)
 				makeMethodDetail(method, out);
 		
-		out.outdent(); out.write("</div>");
+		out.closeLineUntab();
 	}
 	
 	private void makeMethodDetail(MethodSignature method, 
-			TabbedLineWriter out) throws ShadowException
+			Html5Writer out) throws ShadowException, DocumentationException
 	{
-		out.write("<div class=\"methoddetail\">"); out.indent();
+		out.openLineTab("div", new Attribute("class", "methoddetail"));
 		
-		out.write("<h4>" + method.getSymbol() + "</h4>");
-		out.write("<p>" + method.getModifiers().toString().trim() + " "
-				+ method.getSymbol() + getMethodParameterList(method, true, true)
-				+ " => " + method.getReturnTypes() + "</p>");
+		out.fullLine("h4", method.getSymbol());
 		
-		out.outdent(); out.write("</div>");
+		out.open("p");
+		out.add(method.getModifiers().toString().trim() + " "
+				+ method.getSymbol());
+		getMethodParameterList(method, true, true, out);
+		out.add(" => " + method.getReturnTypes());
+		out.closeLine();
+		
+		out.closeLineUntab();
 	}
 	
-	private String getMethodParameterList(MethodSignature method, 
-			boolean parameterNames, boolean link)
+	private void getMethodParameterList(MethodSignature method, 
+			boolean parameterNames, boolean link, Html5Writer out) 
+					throws DocumentationException, ShadowException
 	{
-		StringBuilder builder = new StringBuilder();
-		builder.append('(');
+		out.add("(");
 		int parameterCount = method.getParameterNames().size();
 		for (int i = 0; i < parameterCount; ++i)
 		{
 			Type parameter = method.getParameterTypes().get(i).getType();
 			
 			if (link)
-				builder.append(linkToType(parameter, 
-						parameter.getQualifiedName()));
+				linkToType(parameter, parameter.getQualifiedName(), out);
 			else
-				builder.append(parameter.getQualifiedName());
+				out.add(parameter.getQualifiedName());
 			
 			
-			builder.append(' ');
-			builder.append(method.getParameterNames().get(i));
+			out.add(" " + method.getParameterNames().get(i));
 			
 			if (i < parameterCount - 1)
-				builder.append(", ");
+				out.add(", ");
 		}
-		builder.append(')');
-		return builder.toString();
+		out.add(")");
 	}
 	
-	private void makeInheritanceSection(TabbedLineWriter out) throws ShadowException
+	private void makeInheritanceSection(Html5Writer out) throws ShadowException, DocumentationException
 	{
 		List<Type> extendsList = new ArrayList<Type>();
 		List<Type> implementsList = new ArrayList<Type>();
@@ -187,9 +194,8 @@ public class ClassOrInterfacePage
 		}
 		
 		if (extendsList.size() > 0) {
+			out.fullLine("h4", "Extends");
 			StringBuilder builder = new StringBuilder();
-			out.write("<h4>Extends</h4>");
-			builder.append("<p>");
 			for (int i = 0; i < extendsList.size(); ++i) {
 				if (i > 0)
 					builder.append(", ");
@@ -197,19 +203,16 @@ public class ClassOrInterfacePage
 				// List the name, optionally attempting a link
 				Type current = extendsList.get(i);
 				if (makeLinks)
-					builder.append(linkToType(current, 
-							current.getQualifiedName()));
+					linkToType(current, current.getQualifiedName(), out);
 				else
 					builder.append(current.getQualifiedName());
 			}
-			builder.append("</p>");
-			out.write(builder.toString());
+			out.fullLine("p", builder.toString());
 		}
 		
 		if (implementsList.size() > 0) {
+			out.fullLine("h4", "Implements");
 			StringBuilder builder = new StringBuilder();
-			out.write("<h4>Implements</h4>");
-			builder.append("<p>");
 			for (int i = 0; i < implementsList.size(); ++i) {
 				if (i > 0)
 					builder.append(", ");
@@ -217,45 +220,45 @@ public class ClassOrInterfacePage
 				// List the name, optionally attempting a link
 				Type current = implementsList.get(i);
 				if (makeLinks)
-					builder.append(linkToType(current, 
-							current.getQualifiedName()));
+					linkToType(current, current.getQualifiedName(), out);
 				else
 					builder.append(current.getQualifiedName());
 			}
-			builder.append("</p>");
-			out.write(builder.toString());
+			out.fullLine("p", builder.toString());
 		}
 	}
 	
 	/* Helper methods */
 	
-	private String linkToType(Type to, String text)
+	private void linkToType(Type to, String text, Html5Writer out) 
+			throws DocumentationException, ShadowException
 	{
 		if (linkableTypes.contains(to))
-			return makeLink(getRelativePath(type, to) + "/"
-					+ to.getTypeName() + extension, text);
+			makeLink(getRelativePath(type, to) + "/" 
+					+ to.getTypeName() + extension, text, out);
 		else
-			return text;
+			out.add(text);
 	}
 	
-	private static String makeLink(String href, String text)
+	private static void makeLink(String href, String text, Html5Writer out) 
+			throws DocumentationException, ShadowException
 	{
-		return "<a href=\"" + href + "\">" + text + "</a>";
+		out.full("a", text, new Attribute("href", href));
 	}
 	
-	private static void makeTableRow(TabbedLineWriter out, boolean header,
-			String ... columns) throws ShadowException
+	private static void makeTableRow(Html5Writer out, boolean header,
+			String ... columns) throws ShadowException, DocumentationException
 	{
-		out.write("<tr>"); out.indent();
+		out.openLineTab("tr");
 		
 		for (String column : columns) {
 			if (header)
-				out.write("<th>" + column + "</th>");
+				out.fullLine("th", column);
 			else
-				out.write("<td>" + column + "</td>");
+				out.fullLine("td", column);
 		}
 		
-		out.outdent(); out.write("</tr>");
+		out.closeLineUntab();
 	}
 
 	/**

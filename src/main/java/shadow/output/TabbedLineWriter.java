@@ -15,6 +15,7 @@ public class TabbedLineWriter
 	private boolean lineNumbers;
 	private int indent, line;
 	private Writer out;
+	private boolean atLineStart = true;
 	public TabbedLineWriter(BufferedWriter writer) throws ShadowException
 	{
 		out = writer;
@@ -115,6 +116,8 @@ public class TabbedLineWriter
 			newline = nl = System.getProperty("line.separator");
 		out.write(nl);
 		out.flush();
+		
+		atLineStart = true;
 	}
 	public void write() throws ShadowException
 	{
@@ -163,6 +166,40 @@ public class TabbedLineWriter
 			writeIndent();
 			out.write(c);
 			writeNewline();
+		}
+		catch (IOException ex)
+		{
+			throw new ShadowException(ex.getLocalizedMessage());
+		}
+	}
+	public void writeNoLine(String string) throws ShadowException
+	{
+		try
+		{
+			if (atLineStart) {
+				writeLine();
+				writeIndent();
+				atLineStart = false;
+			}
+			
+			out.write(string);
+		}
+		catch (IOException ex)
+		{
+			throw new ShadowException(ex.getLocalizedMessage());
+		}
+	}
+	public void writeNoLine(char c) throws ShadowException
+	{
+		try
+		{
+			if (atLineStart) {
+				writeLine();
+				writeIndent();
+				atLineStart = false;
+			}
+			
+			out.write(c);
 		}
 		catch (IOException ex)
 		{

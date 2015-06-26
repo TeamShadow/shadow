@@ -18,47 +18,6 @@ import shadow.parser.javacc.ShadowException;
  */
 public class Html5Writer
 {
-	/** The contents of an HTML element, containing only legal characters */
-	public static class Element
-	{
-		private final String text;
-		
-		public Element(String text)
-		{
-			this.text = process(text);
-		}
-		
-		/** Replaces illegal characters with legal escape text */
-		private static String process(String text)
-		{
-			StringBuilder builder = new StringBuilder();
-			
-			for (int i = 0; i < text.length(); ++i) {
-				switch (text.charAt(i)) {
-					case '<':
-						builder.append("&lt;");
-						break;
-					case '>': // Not strictly illegal, but arguably confusing
-						builder.append("&gt;");
-						break;
-					case '&':
-						builder.append("&amp;");
-						break;
-					default:
-						builder.append(text.charAt(i));
-				}
-			}
-			
-			return builder.toString();
-		}
-		
-		@Override
-		public String toString()
-		{
-			return text;
-		}
-	}
-	
 	/** A standard HTML attribute with its value in double quotes */
 	public static class Attribute
 	{
@@ -104,148 +63,239 @@ public class Html5Writer
 		}
 	}
 	
-	public static class Tag
-	{
-		private static final Pattern illegal = Pattern.compile("[^A-Za-z]");
-		
-		private final String name;
-		
-		public Tag(String name) throws DocumentationException
-		{
-			Matcher matcher = illegal.matcher(name);
-			if (matcher.find())
-				throw new DocumentationException("Non-alphabetic characters present in tag name");
-			
-			this.name = name;
-		}
-		
-		@Override
-		public String toString()
-		{
-			return name;
-		}
-	}
-	
 	private TabbedLineWriter out;
-	private Stack<Tag> openTags = new Stack<Tag>();
-	private StringBuilder buffer = new StringBuilder();
+	private Stack<String> openTags = new Stack<String>();
 	
-	public Html5Writer(Writer writer) throws ShadowException
+	public Html5Writer(Writer writer) 
+			throws ShadowException, DocumentationException
 	{
 		out = new TabbedLineWriter(writer);
 		writeDoctype("html");
 	}
 	
-	/** Opens a new tag, but does not append newlines or alter indentation */
-	public void openTag(Tag tag, Attribute ...attributes)
+	/* Output methods */
+	
+	public void full(String tagName, String text, Attribute ... attributes) 
+			throws DocumentationException, ShadowException
 	{
-		openTags.push(tag);
-		buffer = new StringBuilder();
-		buffer.append("<" + tag);
+		String tag = processTag(tagName);
+		String content = processContent(text);
 		
+		out.writeNoLine("<" + tag);
 		for (Attribute attribute : attributes)
-			buffer.append(" " + attribute);
-		
-		buffer.append('>');
+			out.writeNoLine(" " + attribute);
+		out.writeNoLine(">" + content + "</" + tag + ">");
 	}
 	
-	/** Adds textual content to the currently open tag */
-	public void addContent(Element content) throws DocumentationException
+	public void fullLine(String tagName, String text, Attribute ... attributes) 
+			throws DocumentationException, ShadowException
 	{
-		if (openTags.isEmpty())
-			throw new DocumentationException("No open tags present to write within");
-		
-		buffer.append(content);
+		full(tagName, text, attributes);
+		out.write();
 	}
 	
-	/** Adds textual content to the currently open tag, followed by a newline */
-	public void addContentLine(Element content)throws DocumentationException, ShadowException
+	public void voidTag(String tagName, Attribute ...attributes)
+		throws DocumentationException, ShadowException
 	{
-		if (openTags.isEmpty())
-			throw new DocumentationException("No open tags present to write within");
+		String tag = processTag(tagName);
 		
-		if (buffer.length() > 0) {
-			buffer.append(content);
-			out.write(buffer.toString());
-			buffer = new StringBuilder();
-		} else {
-			out.write(content.toString());
-		}
+		out.writeNoLine("<" + tag);
+		for (Attribute attribute : attributes)
+			out.writeNoLine(" " + attribute);
+		out.writeNoLine('>');
 	}
 	
-	/** Closes the most recently opened tag, writing a newline */
-	public void closeLastTag() throws DocumentationException, ShadowException
+	public void voidLine(String tagName, Attribute ... attributes)
+			throws DocumentationException, ShadowException
 	{
-		if (openTags.isEmpty())
-			throw new DocumentationException("No closable tags present");
-		
-		Tag tag = openTags.pop();
-		if (buffer.length() > 0) {
-			out.write(buffer.toString() + "</" + tag + ">");
-			buffer = new StringBuilder();
-		} else {
-			out.write("</" + tag + ">");
-		}
+		voidTag(tagName, attributes);
+		out.write();
 	}
 	
-	/** 
-	 * Creates an opening tag on its own line, followed by a newline.
-	 * Indentation level is then incremented
-	 */
-	public void openBlockTag(Tag tag, Attribute ... attributes) throws ShadowException
+	public void open(String tagName, Attribute ... attributes) 
+			throws DocumentationException, ShadowException
+	{
+		String tag = processTag(tagName);
+		
+		out.writeNoLine("<" + tag);
+		for (Attribute attribute : attributes)
+			out.writeNoLine(" " + attribute);
+		out.writeNoLine('>');
+		
+		openTags.push(tag);
+	}
+	
+	public void openLine(String tagName, Attribute ... attributes) 
+			throws DocumentationException, ShadowException
+	{
+		open(tagName, attributes);
+		out.write();
+	}
+	
+	public void openLineTab(String tagName, Attribute ... attributes) 
+			throws DocumentationException, ShadowException
+	{
+		openLine(tagName, attributes);
+		out.indent();
+	}
+	
+	public void close()
+			throws DocumentationException, ShadowException
+	{
+		if(openTags.isEmpty())
+			throw new DocumentationException("Cannot perform close - no currently open tags");
+		
+		String tag = openTags.pop();
+		out.writeNoLine("</" + tag + ">");
+	}
+	
+	public void closeLine()
+			throws DocumentationException, ShadowException
+	{
+		close();
+		out.write();
+	}
+	
+	public void closeLineUntab() 
+			throws DocumentationException, ShadowException
+	{
+		// Just to make sure outdent() doesn't happen without close
+		if(openTags.isEmpty())
+			throw new DocumentationException("Cannot perform close - no currently open tags");
+		
+		out.outdent();
+		closeLine();
+	}
+
+	public void add(String text) 
+			throws DocumentationException, ShadowException
+	{
+		if(openTags.isEmpty())
+			throw new DocumentationException("Cannot add content - no currently open tags");
+		
+		String content = processContent(text);
+		out.writeNoLine(content);
+	}
+	
+	public void addLine(String text) 
+			throws DocumentationException, ShadowException
+	{
+		add(text);
+		out.write();
+	}
+	
+	public void commentLine(String text)
+			throws DocumentationException, ShadowException
+	{
+		String content = processContent(text);
+		out.write("<!-- " + content + "-->");
+	}
+	
+	/* Proxy methods for convenience */
+	
+	public void full(String tagName, String text) 
+			throws DocumentationException, ShadowException
+	{
+		full(tagName, text, new Attribute[0]);
+	}
+	
+	public void full(String tagName) 
+			throws DocumentationException, ShadowException
+	{
+		full(tagName, "", new Attribute[0]);
+	}
+	
+	public void full(String tagName, Attribute ... attributes) 
+			throws DocumentationException, ShadowException
+	{
+		full(tagName, "", attributes);
+	}
+	
+	public void fullLine(String tagName, String text) 
+			throws DocumentationException, ShadowException
+	{
+		fullLine(tagName, text, new Attribute[0]);
+	}
+	
+	public void fullLine(String tagName) 
+			throws DocumentationException, ShadowException
+	{
+		fullLine(tagName, "", new Attribute[0]);
+	}
+	
+	public void fullLine(String tagName, Attribute ... attributes) 
+			throws DocumentationException, ShadowException
+	{
+		fullLine(tagName, "", attributes);
+	}
+	
+	public void voidTag(String tagName)
+			throws DocumentationException, ShadowException
+	{
+		voidTag(tagName, new Attribute[0]);
+	}
+	
+	public void voidLine(String tagName) 
+			throws DocumentationException, ShadowException
+	{
+		voidLine(tagName, new Attribute[0]);
+	}
+	
+	public void open(String tagName)
+			throws DocumentationException, ShadowException
+	{
+		open(tagName, new Attribute[0]);
+	}
+	
+	public void openLine(String tagName)
+			throws DocumentationException, ShadowException
+	{
+		openLine(tagName, new Attribute[0]);
+	}
+	
+	/* Helper methods */
+	
+	private void writeDoctype(String doctype)
+			throws ShadowException, DocumentationException
+	{
+		out.write("<!DOCTYPE " + processTag(doctype) + ">");
+	}
+	
+	/* Text processing methods and classes */
+	
+	/** Replaces illegal content characters with legal escape text */
+	private static String processContent(String text)
 	{
 		StringBuilder builder = new StringBuilder();
 		
-		if (buffer.length() > 0) {
-			out.write(buffer.toString());
-			buffer = new StringBuilder();
+		for (int i = 0; i < text.length(); ++i) {
+			switch (text.charAt(i)) {
+				case '<':
+					builder.append("&lt;");
+					break;
+				case '>': // Not strictly illegal, but arguably confusing
+					builder.append("&gt;");
+					break;
+				case '&':
+					builder.append("&amp;");
+					break;
+				default:
+					builder.append(text.charAt(i));
+			}
 		}
 		
-		builder.append("<" + tag);
-		for (Attribute attribute : attributes)
-			builder.append(" " + attribute);
-		builder.append('>');
-		
-		out.write(builder.toString());
-		out.indent();
-		
-		openTags.add(tag);
+		return builder.toString();
 	}
 	
-	/** 
-	 * Creates a closing tag on its own line, followed by a newline.
-	 * Indentation level is then decremented
-	 */
-	public void closeBlockTag(String name) throws ShadowException
+	private static final Pattern illegalTag = Pattern.compile("[^\\w]");
+	
+	/** Replaces illegal content characters with legal escape text */
+	private static String processTag(String name) throws DocumentationException
 	{
-		if (buffer.length() > 0) {
-			out.write(buffer.toString());
-			buffer = new StringBuilder();
-		}
+		Matcher matcher = illegalTag.matcher(name);
+		if (matcher.find())
+			throw new DocumentationException("Non-alphabetic characters present in tag name");
 		
-		out.write("</" + name + ">");
-		out.outdent();
-	}
-	
-	/** Creates a single, one-off tag which is considered closed */
-	public void voidElement(Tag tag) throws ShadowException
-	{
-		buffer.append("<" + tag + ">");
-	}
-	
-	/** Creates a void element on its own line */
-	public void voidElementLine(Tag tag) throws ShadowException
-	{
-		if (buffer.length() > 0) {
-			out.write(buffer.toString());
-			buffer = new StringBuilder();
-		}
-		
-		out.write("<" + tag + ">");
-	}
-	
-	private void writeDoctype(String doctype) throws ShadowException
-	{
-		out.write("<!DOCTYPE " + doctype + ">");
+		return name;
 	}
 }
