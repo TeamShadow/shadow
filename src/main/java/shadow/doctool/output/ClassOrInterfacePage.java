@@ -116,6 +116,8 @@ public class ClassOrInterfacePage
 	
 	private void writeHeader(Html5Writer out) throws ShadowException, DocumentationException
 	{
+		out.openTab("div", new Attribute("class", "header"));
+		
 		String packageName = type.getPackage().getQualifiedName();
 		if (!packageName.isEmpty())
 			out.fullLine("p", type.getPackage().getQualifiedName());
@@ -123,7 +125,8 @@ public class ClassOrInterfacePage
 		out.fullLine("h2", typeKind + " " + type.getTypeName());
 		
 		writeInheritanceSection(out);
-
+		out.closeUntab();
+		
 		out.voidLine("hr");
 	}
 	
@@ -264,36 +267,36 @@ public class ClassOrInterfacePage
 		
 		if (extendsList.size() > 0) {
 			out.fullLine("h4", "Extends");
-			StringBuilder builder = new StringBuilder();
+			out.open("p");
 			for (int i = 0; i < extendsList.size(); ++i) {
 				if (i > 0)
-					builder.append(", ");
+					out.add(", ");
 				
 				// List the name, optionally attempting a link
 				Type current = extendsList.get(i);
 				if (makeLinks)
 					writeCrossLink(current, current.getQualifiedName(), out);
 				else
-					builder.append(current.getQualifiedName());
+					out.add(current.getQualifiedName());
 			}
-			out.fullLine("p", builder.toString());
+			out.closeLine();
 		}
 		
 		if (implementsList.size() > 0) {
 			out.fullLine("h4", "Implements");
-			StringBuilder builder = new StringBuilder();
+			out.open("p");
 			for (int i = 0; i < implementsList.size(); ++i) {
 				if (i > 0)
-					builder.append(", ");
+					out.add(", ");
 				
 				// List the name, optionally attempting a link
 				Type current = implementsList.get(i);
 				if (makeLinks)
 					writeCrossLink(current, current.getQualifiedName(), out);
 				else
-					builder.append(current.getQualifiedName());
+					out.add(current.getQualifiedName());
 			}
-			out.fullLine("p", builder.toString());
+			out.closeLine();
 		}
 	}
 	

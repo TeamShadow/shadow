@@ -1,11 +1,31 @@
 import shadow:io@File;
 import local@Dummy;
-import local@TestInterface;
+import local@TestInterfaceA;
+import local@TestInterfaceB;
 
-class Example<A, B> implements TestInterface
+/** A class to test/demonstrate the documentation tool */
+class Example<T, U> 
+        extends Dummy implements TestInterfaceA, TestInterfaceB
 {
-    /// A very important value
-    /// - no, really!
+    /// Documenting public/protected inner classes
+    /// should be possible
+    public class Inner
+    {
+        /**
+         * Documenting their methods should also
+         * be possible
+         */
+        public innerMethod(Dummy dummy) => ()
+        {
+
+        }
+    }
+
+    /// Certain types of constants should be visible
+    constant String testConstant = "Placeholder";
+
+    /// Under normal circumstances, documentation for fields
+    /// will not be made visible
     int a;
     Dummy dummy;
 
@@ -13,5 +33,20 @@ class Example<A, B> implements TestInterface
     public test(String a, int b) => (int a, String b)
     {
         return (4, "Hello");
+    }
+
+    /**
+     * Another example method
+     *
+     * @param value Testing the param directive
+     */
+    protected secondTest(int value) => (File file)
+    {
+        // Incomplete methods should be documentable
+    }
+
+    public foo(String string) => ()
+    {
+
     }
 }

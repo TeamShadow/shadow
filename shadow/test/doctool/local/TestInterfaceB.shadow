@@ -1,0 +1,5 @@
+interface local@TestInterfaceB
+{
+    /// A method that is not implemented here
+    foo(String string) => ();
+}
