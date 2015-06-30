@@ -11,14 +11,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import shadow.doctool.Documentation;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
-import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.Package;
+import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.TypeCheckException.Error;
 
 /**
  * A representation of a Shadow type.
@@ -33,6 +34,7 @@ public abstract class Type implements Comparable<Type>
 	private SequenceType typeParameters = null;	
 	private boolean parameterized = false;
 	protected Type typeWithoutTypeArguments = this;
+	private Documentation documentation = null;
 	
 	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();	
 		
@@ -87,8 +89,8 @@ public abstract class Type implements Comparable<Type>
 	public static ClassType STRING = null;
 	public static ClassType ADDRESS_MAP = null; //used for copying
 	
-	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
-	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null);
+	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
+	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
 	public static final VarType VAR = new VarType(); //VAR type used for placeholder for variables declared with var, until type is known
 	
 	
@@ -234,22 +236,35 @@ public abstract class Type implements Comparable<Type>
 	 * Constructors
 	 */
 	
-	public Type(String typeName) {
-		this( typeName, new Modifiers() );
+	public Type(String typeName) 
+	{
+		this(typeName, new Modifiers());
 	}
 	
-	public Type(String typeName, Modifiers modifiers) {
-		this( typeName, modifiers, null );
-	}	
+	public Type(String typeName, Modifiers modifiers) 
+	{
+		this(typeName, modifiers, null);
+	}
+	
+	public Type(String typeName, Modifiers modifiers,
+			Documentation documentation)
+	{
+		this(typeName, modifiers, documentation, null);
+	}
 
-	public Type(String typeName, Modifiers modifiers, Type outer) {
-		this( typeName, modifiers, outer, (outer == null ? null : outer._package ) );
+	public Type(String typeName, Modifiers modifiers, 
+			Documentation documentation, Type outer) 
+	{
+		this(typeName, modifiers, documentation, outer,
+				(outer == null ? null : outer._package));
 	}
 	
-	public Type(String typeName, Modifiers modifiers, Type outer, Package _package )
+	public Type(String typeName, Modifiers modifiers, 
+			Documentation documentation, Type outer, Package _package)
 	{
 		this.typeName = typeName;
 		this.modifiers = modifiers;
+		this.documentation = documentation;
 		this.outer = outer;		
 		this._package = _package;
 	}
@@ -1441,5 +1456,15 @@ public abstract class Type implements Comparable<Type>
 	
 	public List<Type> getGenericDeclarations() {
 		return genericDeclarations;
+	}
+	
+	public boolean hasDocumentation()
+	{
+		return (documentation != null);
+	}
+	
+	public Documentation getDocumentation()
+	{
+		return documentation;
 	}
 }

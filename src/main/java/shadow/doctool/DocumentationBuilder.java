@@ -1,15 +1,7 @@
-package shadow.typecheck.type;
+package shadow.doctool;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.logging.log4j.Logger;
-
-import shadow.Loggers;
-import shadow.doctool.DirectiveParser;
-import shadow.doctool.DirectiveParser.Directive;
-import shadow.doctool.ProcessedDocumentation;
 import shadow.parser.javacc.ShadowException;
 
 /**
@@ -17,13 +9,11 @@ import shadow.parser.javacc.ShadowException;
  * associated with a class/interface/exception/singleton declaration or
  * a field/method declaration.
  */
-public class Documentation 
+public class DocumentationBuilder 
 {
-	private static Logger logger = Loggers.DOC_TOOL;
-	
 	private ArrayDeque<String> lines;
 	
-	public Documentation()
+	public DocumentationBuilder()
 	{
 		lines = new ArrayDeque<String>();
 	}
@@ -68,9 +58,9 @@ public class Documentation
 	
 	/** 
 	 * Parses and processes the directives present in the documentation text,
-	 * returning a ProcessedDocumentation containing the results
+	 * returning a Documentation object containing the results
 	 */
-	public ProcessedDocumentation process() throws ShadowException
+	public Documentation process() throws ShadowException
 	{
 		return DirectiveParser.process(this);
 	}

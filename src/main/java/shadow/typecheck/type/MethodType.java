@@ -3,6 +3,8 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.doctool.Documentation;
+
 public class MethodType extends ClassType {
 	protected List<String> parameterNames; /** List of parameter names */
 	protected SequenceType parameterTypes; /** List of parameter types */
@@ -10,11 +12,11 @@ public class MethodType extends ClassType {
 	protected boolean inline = false; /** Whether the method is defined inline */ 
 	
 	public MethodType() {
-		this(null, new Modifiers());
+		this(null, new Modifiers(), null);
 	}
 
-	public MethodType(Type outer, Modifiers modifiers) {
-		super(null, modifiers, outer);
+	public MethodType(Type outer, Modifiers modifiers, Documentation documentation) {
+		super(null, modifiers, documentation, outer);
 		parameterNames = new ArrayList<String>();
 		parameterTypes = new SequenceType();
 		returns = new SequenceType();
@@ -26,7 +28,7 @@ public class MethodType extends ClassType {
 	//used to copy a MethodType with different modifiers
 	public MethodType copy(Modifiers modifiers)
 	{
-		MethodType copiedType = new MethodType(getOuter(), modifiers);
+		MethodType copiedType = new MethodType(getOuter(), modifiers, getDocumentation());
 		copiedType.parameterNames.addAll(parameterNames);
 		copiedType.parameterTypes.addAll(parameterTypes);
 		copiedType.returns.addAll(returns);
@@ -173,7 +175,7 @@ public class MethodType extends ClassType {
 	@Override
 	public MethodType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
 	{	
-		MethodType replaced = new MethodType(getOuter(), getModifiers());	
+		MethodType replaced = new MethodType(getOuter(), getModifiers(), getDocumentation());	
 		
 		replaced.parameterNames = parameterNames;
 		replaced.parameterTypes = parameterTypes.replace(values, replacements);
@@ -187,7 +189,7 @@ public class MethodType extends ClassType {
 	@Override
 	public MethodType partiallyReplace(SequenceType values, SequenceType replacements )
 	{	
-		MethodType replaced = new MethodType(getOuter(), getModifiers());	
+		MethodType replaced = new MethodType(getOuter(), getModifiers(), getDocumentation());	
 		
 		replaced.parameterNames = parameterNames;
 		replaced.parameterTypes = parameterTypes.partiallyReplace(values, replacements);

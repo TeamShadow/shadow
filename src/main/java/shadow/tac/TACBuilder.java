@@ -23,12 +23,67 @@ import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.*;
-import shadow.tac.nodes.*;
-import shadow.tac.nodes.TACConversion.Kind;
+import shadow.tac.nodes.TACArrayRef;
+import shadow.tac.nodes.TACBinary;
+import shadow.tac.nodes.TACBlock;
+import shadow.tac.nodes.TACBranch;
+import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACClass;
+import shadow.tac.nodes.TACConstantRef;
+import shadow.tac.nodes.TACCopyMemory;
+import shadow.tac.nodes.TACDestination;
+import shadow.tac.nodes.TACFieldRef;
+import shadow.tac.nodes.TACGenericArrayRef;
+import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
+import shadow.tac.nodes.TACLandingpad;
+import shadow.tac.nodes.TACLength;
+import shadow.tac.nodes.TACLiteral;
+import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLongToPointer;
+import shadow.tac.nodes.TACMethodRef;
+import shadow.tac.nodes.TACNewArray;
+import shadow.tac.nodes.TACNewObject;
+import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACNodeRef;
+import shadow.tac.nodes.TACNot;
+import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.typecheck.type.*;
+import shadow.tac.nodes.TACPointerToLong;
+import shadow.tac.nodes.TACReference;
+import shadow.tac.nodes.TACResume;
+import shadow.tac.nodes.TACReturn;
+import shadow.tac.nodes.TACSame;
+import shadow.tac.nodes.TACSequence;
+import shadow.tac.nodes.TACSequenceRef;
+import shadow.tac.nodes.TACSingletonRef;
+import shadow.tac.nodes.TACStore;
+import shadow.tac.nodes.TACThrow;
+import shadow.tac.nodes.TACTypeId;
+import shadow.tac.nodes.TACUnary;
+import shadow.tac.nodes.TACUnwind;
+import shadow.tac.nodes.TACVariableRef;
+import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.EnumType;
+import shadow.typecheck.type.ExceptionType;
+import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InstantiationException;
+import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
+import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.PropertyType;
+import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
+import shadow.typecheck.type.SingletonType;
+import shadow.typecheck.type.SubscriptType;
+import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
+import shadow.typecheck.type.UnboundMethodType;
 
 
 public class TACBuilder implements ShadowParserVisitor
@@ -2683,7 +2738,7 @@ public class TACBuilder implements ShadowParserVisitor
 						superType = thisType.getExtendType();
 				if (superType != null)
 					new TACCall(method, block, new TACMethodRef(method,
-							new MethodType(superType, new Modifiers()),
+							new MethodType(superType, new Modifiers(), null),
 							"create"), new TACVariableRef(method,
 							method.getThis()));
 			}

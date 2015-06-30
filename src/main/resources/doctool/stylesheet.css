@@ -47,6 +47,11 @@ code
 	margin: 0px 8px;
 }
 
+.header p
+{
+    margin 4px 0px 18px;
+}
+
 .block
 {
     border: 1px solid gray;
@@ -58,7 +63,7 @@ code
 .block h3
 {
     margin: 15px 0px;
-    font-size: 26px;
+    font-size: 26;
 }
 
 .methoddetail

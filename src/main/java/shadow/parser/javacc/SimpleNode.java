@@ -5,8 +5,8 @@ import java.io.File;
 import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
-import shadow.doctool.ProcessedDocumentation;
-import shadow.typecheck.type.Documentation;
+import shadow.doctool.Documentation;
+import shadow.doctool.DocumentationBuilder;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -30,7 +30,7 @@ public class SimpleNode implements Node {
     protected Modifiers modifiers = new Modifiers(); 	// used by the type checker
     
     // Used to hold documentation comments regarding this node
-    protected ProcessedDocumentation documentation;
+    protected Documentation documentation = null;
     
 	private Type enclosingType;	// used by the type checker (refers to the class where the node is used, for private/protected visibility)
 
@@ -216,13 +216,13 @@ public class SimpleNode implements Node {
 	}
 	
 	@Override
-	public ProcessedDocumentation getDocumentation()
+	public Documentation getDocumentation()
 	{
 		return documentation;
 	}
 	
 	@Override
-	public void setDocumentation(Documentation documentation) throws ShadowException
+	public void setDocumentation(DocumentationBuilder documentation) throws ShadowException
 	{
 		this.documentation = documentation.process();
 	}

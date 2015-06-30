@@ -2,17 +2,23 @@ package shadow.typecheck.type;
 
 import java.io.PrintWriter;
 
+import shadow.doctool.Documentation;
+
 
 
 public class ExceptionType extends ClassType
 {
-	public ExceptionType(String typeName, Modifiers modifiers, Type outer ) {
-		this( typeName, modifiers, outer, Type.EXCEPTION );
+	public ExceptionType(String typeName, Modifiers modifiers, 
+			Documentation documentation, Type outer) 
+	{
+		this( typeName, modifiers, documentation, outer, Type.EXCEPTION);
 	}
 	
-	public ExceptionType(String typeName, Modifiers modifiers, Type outer, ClassType extendType ) {
-		super( typeName, modifiers, outer );
-		setExtendType( extendType );
+	public ExceptionType(String typeName, Modifiers modifiers, 
+			Documentation documentation, Type outer, ClassType extendType ) 
+	{
+		super(typeName, modifiers, documentation, outer);
+		setExtendType(extendType);
 	}
 	
 	public boolean isSubtype(Type t)

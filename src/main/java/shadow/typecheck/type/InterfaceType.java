@@ -2,23 +2,25 @@ package shadow.typecheck.type;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import shadow.doctool.Documentation;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.Package;
 
 public class InterfaceType extends Type 
 {
-	public InterfaceType(String typeName) {
-		this( typeName, new Modifiers() );
+	public InterfaceType(String typeName) 
+	{
+		this(typeName, new Modifiers(), null);
 	}
 	
-	public InterfaceType(String typeName, Modifiers modifiers) {
-		super( typeName, modifiers );
+	public InterfaceType(String typeName, Modifiers modifiers, 
+			Documentation documentation) 
+	{
+		super(typeName, modifiers, documentation);
 	}	
 	
 	@Override
@@ -192,7 +194,7 @@ public class InterfaceType extends Type
 			if( cached != null )
 				return (InterfaceType)cached;
 			
-			InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers() );
+			InterfaceType replaced = new InterfaceType(getTypeName(), getModifiers(), getDocumentation());
 			replaced.setPackage(getPackage());
 			
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;			
@@ -257,7 +259,7 @@ public class InterfaceType extends Type
 			if( cached != null )
 				return (InterfaceType)cached;
 			
-			InterfaceType replaced = new InterfaceType( getTypeName(), getModifiers() );
+			InterfaceType replaced = new InterfaceType(getTypeName(), getModifiers(), getDocumentation());
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			

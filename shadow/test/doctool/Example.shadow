@@ -36,7 +36,7 @@ class Example<T, U>
     }
 
     /**
-     * Another example method
+     * Another example method. This sentence takes place after the summary.
      *
      * @param value Testing the param directive
      */

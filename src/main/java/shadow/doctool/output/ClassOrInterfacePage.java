@@ -32,7 +32,6 @@ public class ClassOrInterfacePage
 	private boolean makeLinks = true;
 	private int packageDepth = 0;
 	
-	
 	private List<MethodSignature> constructors = new ArrayList<MethodSignature>();
 	private List<MethodSignature> destructors = new ArrayList<MethodSignature>();
 	private List<MethodSignature> methods = new ArrayList<MethodSignature>();
@@ -125,8 +124,12 @@ public class ClassOrInterfacePage
 		out.fullLine("h2", typeKind + " " + type.getTypeName());
 		
 		writeInheritanceSection(out);
-		out.closeUntab();
 		
+		// Documentation text
+		if (type.hasDocumentation())
+			out.fullLine("p", type.getDocumentation().getMainText());
+		
+		out.closeUntab();
 		out.voidLine("hr");
 	}
 	
@@ -165,6 +168,8 @@ public class ClassOrInterfacePage
 						writeMethodName(method, true, out);
 						writeParameters(method, true, true, out);
 					out.close();
+					if (method.hasDocumentation())
+						out.full("p", method.getDocumentation().getSummary());
 				out.closeLine();
 			out.closeUntab();
 		}
@@ -213,6 +218,10 @@ public class ClassOrInterfacePage
 		writeParameters(method, true, true, out);
 		out.add(" => " + method.getReturnTypes());
 		out.closeLine();
+		
+		// Documentation text
+		if (method.hasDocumentation())
+			out.fullLine("p", method.getDocumentation().getMainText());
 		
 		out.closeUntab();
 	}

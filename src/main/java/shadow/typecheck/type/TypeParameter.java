@@ -6,9 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.typecheck.Package;
-
 
 public class TypeParameter extends Type
 {
@@ -18,7 +15,7 @@ public class TypeParameter extends Type
 
 	public TypeParameter(String typeName, Type outer)
 	{
-		super(typeName, new Modifiers(), outer);
+		super(typeName, new Modifiers(), null, outer);
 		bounds.add(Type.OBJECT);
 	}
 	

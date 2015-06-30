@@ -19,6 +19,7 @@ import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.doctool.Documentation;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -305,7 +306,8 @@ public class TypeCollector extends BaseChecker {
 			checkPackageDirectories(child);
 	}
 
-	private Object createType( SimpleNode node, Modifiers modifiers, TypeKind kind ) throws ShadowException
+	private Object createType(SimpleNode node, Modifiers modifiers, 
+			Documentation documentation, TypeKind kind) throws ShadowException
 	{		 
 		String typeName;
 		
@@ -392,19 +394,19 @@ public class TypeCollector extends BaseChecker {
 			switch( kind )
 			{			
 			case CLASS:
-				type = new ClassType(typeName, modifiers, currentType );				
+				type = new ClassType(typeName, modifiers, documentation, currentType);				
 				break;
 			case ENUM:				
-				type = new EnumType(typeName, modifiers, currentType );
+				type = new EnumType(typeName, modifiers, documentation, currentType);
 				break;			
 			case EXCEPTION:
-				type = new ExceptionType(typeName, modifiers, currentType );
+				type = new ExceptionType(typeName, modifiers, documentation, currentType);
 				break;
 			case INTERFACE:
-				type = new InterfaceType(typeName, modifiers);
+				type = new InterfaceType(typeName, modifiers, documentation);
 				break;
 			case SINGLETON:
-				type = new SingletonType(typeName, modifiers, currentType );
+				type = new SingletonType(typeName, modifiers, documentation, currentType);
 				break;
 			default:
 				throw new ShadowException("Unsupported type!" );
@@ -653,7 +655,8 @@ public class TypeCollector extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		}
 		else
-			return createType( node, node.getModifiers(), node.getKind() );
+			return createType(node, node.getModifiers(), 
+					node.getDocumentation(), node.getKind());
 	}
 	
 	@Override
@@ -664,7 +667,8 @@ public class TypeCollector extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		}
 		else
-			return createType( node, node.getModifiers(), TypeKind.ENUM );
+			return createType(node, node.getModifiers(),
+					node.getDocumentation(), TypeKind.ENUM);
 	}	
 
 	@Override

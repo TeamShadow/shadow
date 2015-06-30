@@ -174,7 +174,7 @@ public class TypeUpdater extends BaseChecker {
 						//if no creates, add the default one
 						ASTCreateDeclaration createNode = new ASTCreateDeclaration(-1);
 						createNode.setModifiers(Modifiers.PUBLIC);
-						MethodSignature createSignature = new MethodSignature(classType, "create", createNode.getModifiers(), createNode);
+						MethodSignature createSignature = new MethodSignature(classType, "create", createNode.getModifiers(), createNode.getDocumentation(), createNode);
 						createNode.setMethodSignature(createSignature);
 						classType.addMethod("create", createSignature);
 						//note that the node is null for the default create, because nothing was made
@@ -183,7 +183,7 @@ public class TypeUpdater extends BaseChecker {
 					//add copy method with a set to hold addresses
 					ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
 					copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);
-					MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode);
+					MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode.getDocumentation(), copyNode);
 					copySignature.addParameter("addresses", new SimpleModifiedType(Type.ADDRESS_MAP));
 					copySignature.addReturn(new SimpleModifiedType(classType));					
 					copyNode.setMethodSignature(copySignature);
@@ -226,7 +226,7 @@ public class TypeUpdater extends BaseChecker {
 									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET );
 									methodNode.setImage(field.getKey());
 									methodNode.setType(node.getType());
-									MethodType methodType = new MethodType(classType, methodNode.getModifiers() );
+									MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
 									Modifiers modifiers = new Modifiers(fieldModifiers);
 									modifiers.removeModifier(Modifiers.GET);
 									modifiers.removeModifier(Modifiers.FIELD);
@@ -254,7 +254,7 @@ public class TypeUpdater extends BaseChecker {
 									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
 									methodNode.setImage(field.getKey());
 									methodNode.setType(node.getType());
-									MethodType methodType = new MethodType(classType, methodNode.getModifiers());
+									MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
 									Modifiers modifiers = new Modifiers(fieldModifiers);
 									//is it even possible to have an immutable or readonly set?
 									if( modifiers.isImmutable() )
@@ -686,7 +686,7 @@ public class TypeUpdater extends BaseChecker {
 		}
 		else
 		{
-			signature = new MethodSignature( currentType, name, node.getModifiers(), node);
+			signature = new MethodSignature( currentType, name, node.getModifiers(), node.getDocumentation(), node);
 			node.setMethodSignature(signature);
 			MethodType methodType = signature.getMethodType();
 			node.setType(methodType);

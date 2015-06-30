@@ -11,9 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
-import shadow.output.llvm.Array;
-import shadow.output.llvm.Generic;
-import shadow.output.llvm.GenericArray;
+import shadow.doctool.Documentation;
 import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SimpleNode;
@@ -23,13 +21,15 @@ public class ClassType extends Type
 	private ClassType extendType;	
 	private HashMap<String, ClassType> innerClasses;
 	
-	public ClassType(String typeName, ClassType parent ) {
-		this( typeName, new Modifiers(), null );
-		setExtendType( parent );
+	public ClassType(String typeName, ClassType parent) {
+		this(typeName, new Modifiers(), null, null);
+		setExtendType(parent);
 	}
 	
-	public ClassType(String typeName, Modifiers modifiers, Type outer ) {		
-		super( typeName, modifiers, outer );
+	public ClassType(String typeName, Modifiers modifiers, 
+			Documentation documentation, Type outer) 
+	{		
+		super(typeName, modifiers, documentation, outer);
 		
 		innerClasses = new HashMap<String, ClassType>();
 	}
@@ -358,7 +358,8 @@ public class ClassType extends Type
 			if( cached != null )
 				return (ClassType)cached;
 			
-			ClassType replaced = new ClassType( getTypeName(), getModifiers(), (ClassType)getOuter() );
+			ClassType replaced = new ClassType(getTypeName(), getModifiers(), 
+					getDocumentation(), (ClassType)getOuter());
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			
@@ -419,7 +420,8 @@ public class ClassType extends Type
 			if( cached != null )
 				return (ClassType)cached;
 			
-			ClassType replaced = new ClassType( getTypeName(), getModifiers(), (ClassType)getOuter() );
+			ClassType replaced = new ClassType(getTypeName(), getModifiers(),
+					getDocumentation(), (ClassType)getOuter() );
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			

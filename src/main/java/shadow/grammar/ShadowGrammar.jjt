@@ -13,7 +13,7 @@ PARSER_BEGIN(ShadowParser)
 package shadow.parser.javacc;
 
 import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.Documentation;
+import shadow.doctool.DocumentationBuilder;
 import shadow.Loggers;
 import org.apache.logging.log4j.Logger;
 
@@ -43,8 +43,8 @@ public class ShadowParser
     }
 
 
-    private void processDocumentation(Documentation documentation)    {
-      	if (documentation != null)
+    private void appendDocumentation(DocumentationBuilder docBuilder)    {
+      	if (docBuilder != null)
       	{      	  			Token t = this.token.next;
 			while (t != null)
 			{
@@ -52,9 +52,9 @@ public class ShadowParser
 				if (t != null)
 				{
 					if (t.kind == DOCUMENTATION_COMMENT)
-						documentation.addLine(t.image);
+						docBuilder.addLine(t.image);
 					else if (t.kind == BLOCK_DOCUMENTATION_COMMENT)
-						documentation.addBlock(t.image);
+						docBuilder.addBlock(t.image);
 				}			}
 		}
     }   	
@@ -470,13 +470,13 @@ TOKEN :
 ASTCompilationUnit CompilationUnit():
 {
 	Modifiers modifiers;
-	Documentation documentation = new Documentation();
+	DocumentationBuilder docBuilder = new DocumentationBuilder();
 }
 {  
   ( ImportDeclaration() )*  
-  modifiers = Modifiers(documentation)
-  ( ClassOrInterfaceDeclaration(modifiers, documentation)
-  | EnumDeclaration(modifiers, documentation)  
+  modifiers = Modifiers(docBuilder)
+  ( ClassOrInterfaceDeclaration(modifiers, docBuilder)
+  | EnumDeclaration(modifiers, docBuilder)  
  // | ViewDeclaration(modifiers)
   )//only one declaration per file
    
@@ -509,11 +509,11 @@ void GenericDeclaration():
  * better error messages.
  */
 
-Modifiers Modifiers(Documentation documentation):
+Modifiers Modifiers(DocumentationBuilder docBuilder):
 {
    Modifiers modifiers = new Modifiers();
    debugPrint("MODIFIERS");   
-   processDocumentation(documentation);
+   appendDocumentation(docBuilder);
 	    
 }
 {
@@ -574,7 +574,7 @@ void ViewBodyDeclaration():
 }
 */
 
-void ClassOrInterfaceDeclaration(Modifiers modifiers, Documentation documentation):
+void ClassOrInterfaceDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
    debugPrint("CLASS OR INTERFACE DECLARATION");
    Token t;   
@@ -582,7 +582,7 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers, Documentation documentatio
 {
   {
     jjtThis.setModifiers(modifiers);
-    jjtThis.setDocumentation(documentation);
+    jjtThis.setDocumentation(docBuilder);
   }
   ( "class"
   	{
@@ -661,7 +661,7 @@ void Version():
    "$" < VERSION_LITERAL >
 }
 
-void EnumDeclaration(Modifiers modifiers, Documentation documentation):
+void EnumDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
     debugPrint("ENUM DECLARATION");
     Token t;
@@ -670,7 +670,7 @@ void EnumDeclaration(Modifiers modifiers, Documentation documentation):
 {
 {
   jjtThis.setModifiers(modifiers);
-  jjtThis.setDocumentation(documentation);
+  jjtThis.setDocumentation(docBuilder);
 }
 
   "enum"
@@ -733,26 +733,26 @@ void ClassOrInterfaceBody(TypeKind kind):
 
 void ClassOrInterfaceBodyDeclaration(TypeKind kind):
 {
-  Documentation documentation = new Documentation();
+  DocumentationBuilder docBuilder = new DocumentationBuilder();
   Modifiers modifiers;
   debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {  
 // Just get all the modifiers out of the way. If you want to do
 // more checks, pass the modifiers down to the member
-  modifiers = Modifiers(documentation)
-  (  ClassOrInterfaceDeclaration(modifiers, documentation)
-    | EnumDeclaration(modifiers, documentation)
-    | LOOKAHEAD( "create" ) CreateDeclaration(modifiers, documentation)
-    | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers, documentation)
-    | LOOKAHEAD( FieldDeclaration(modifiers, documentation) ) FieldDeclaration(modifiers, documentation) 
-    | MethodDeclaration(modifiers, documentation)
+  modifiers = Modifiers(docBuilder)
+  (  ClassOrInterfaceDeclaration(modifiers, docBuilder)
+    | EnumDeclaration(modifiers, docBuilder)
+    | LOOKAHEAD( "create" ) CreateDeclaration(modifiers, docBuilder)
+    | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers, docBuilder)
+    | LOOKAHEAD( FieldDeclaration(modifiers, docBuilder) ) FieldDeclaration(modifiers, docBuilder) 
+    | MethodDeclaration(modifiers, docBuilder)
     | GenericDeclaration()
     //| ViewDeclaration(modifiers)
   )
 }
 
-void FieldDeclaration(Modifiers modifiers, Documentation documentation):
+void FieldDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
     debugPrint("FIELD DECLARATION");
 	modifiers.checkFieldModifiers(jjtThis);	
@@ -760,7 +760,7 @@ void FieldDeclaration(Modifiers modifiers, Documentation documentation):
 {
   {
     jjtThis.setModifiers(modifiers);
-    jjtThis.setDocumentation(documentation);
+    jjtThis.setDocumentation(docBuilder);
   }
   Type()
   VariableDeclarator() ("," VariableDeclarator() )*
@@ -853,7 +853,7 @@ void FormalParameter():
    }
 }
 
-void MethodDeclaration(Modifiers modifiers, Documentation documentation):
+void MethodDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
   debugPrint("METHOD DECLARATION");
   modifiers.checkMethodModifiers(jjtThis);  
@@ -861,13 +861,13 @@ void MethodDeclaration(Modifiers modifiers, Documentation documentation):
 {
   {
     jjtThis.setModifiers(modifiers);
-    jjtThis.setDocumentation(documentation);
+    jjtThis.setDocumentation(docBuilder);
   }  
   MethodDeclarator(false) [ "throws" NameList() ]
   ( Block() { jjtThis.setBlock(true); } | ";" )
 }
 
-void CreateDeclaration(Modifiers modifiers, Documentation documentation):
+void CreateDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
   debugPrint("CREATE DECLARATION");
   modifiers.checkCreateModifiers(jjtThis);  
@@ -875,7 +875,7 @@ void CreateDeclaration(Modifiers modifiers, Documentation documentation):
 {
   {
     jjtThis.setModifiers(modifiers);
-    jjtThis.setDocumentation(documentation);
+    jjtThis.setDocumentation(docBuilder);
     jjtThis.setImage("create");
   }  
   // Modifiers matched in the caller
@@ -903,7 +903,7 @@ void CreateBlock():
     {
       jjtThis.setEndToken(t);    } }
 
-void DestroyDeclaration(Modifiers modifiers, Documentation documentation):
+void DestroyDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
   debugPrint("DESTROY DECLARATION");
   modifiers.checkDestroyModifiers(jjtThis);  
@@ -912,7 +912,7 @@ void DestroyDeclaration(Modifiers modifiers, Documentation documentation):
   {
     jjtThis.setModifiers(modifiers);
     jjtThis.setImage("destroy");
-    jjtThis.setDocumentation(documentation);
+    jjtThis.setDocumentation(docBuilder);
   }  
   // Modifiers matched in the caller
   "destroy" //no (checked) exceptions from destroys!

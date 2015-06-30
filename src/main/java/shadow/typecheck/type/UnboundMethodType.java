@@ -1,16 +1,19 @@
 package shadow.typecheck.type;
 
+import shadow.doctool.Documentation;
+
 
 public class UnboundMethodType extends ClassType
 {
-	public UnboundMethodType(String typeName, Type outer )
+	public UnboundMethodType(String typeName, Type outer)
 	{
-		this(typeName, outer, new Modifiers());		
+		this(typeName, outer, new Modifiers(), null);		
 	}
 	
-	public UnboundMethodType(String typeName, Type outer, Modifiers modifiers)
+	public UnboundMethodType(String typeName, Type outer, Modifiers modifiers, 
+			Documentation documentation)
 	{
-		super( typeName, modifiers, outer);
+		super(typeName, modifiers, documentation, outer);
 		setExtendType(Type.UNBOUND_METHOD); // added
 	}
 	

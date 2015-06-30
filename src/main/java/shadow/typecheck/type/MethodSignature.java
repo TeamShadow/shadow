@@ -3,9 +3,7 @@ package shadow.typecheck.type;
 import java.util.Collections;
 import java.util.List;
 
-import shadow.parser.javacc.ASTCreateDeclaration;
-import shadow.parser.javacc.ASTDestroyDeclaration;
-import shadow.parser.javacc.ASTMethodDeclaration;
+import shadow.doctool.Documentation;
 import shadow.parser.javacc.SignatureNode;
 
 public class MethodSignature implements Comparable<MethodSignature> {
@@ -15,20 +13,25 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private final MethodSignature wrapped;
 	private MethodSignature signatureWithoutTypeArguments;
 
-	private MethodSignature(MethodType type, String symbol, SignatureNode node, MethodSignature wrapped) {
+	public MethodSignature(MethodType type, String symbol, SignatureNode node) 
+	{
+		this(type, symbol, node, null);
+	}
+	
+	public MethodSignature(Type enclosingType, String symbol, 
+			Modifiers modifiers, Documentation documentation, 
+			SignatureNode node)
+	{		
+		this(new MethodType(enclosingType, modifiers, documentation), symbol, node);
+	}
+	
+	private MethodSignature(MethodType type, String symbol, SignatureNode node, MethodSignature wrapped) 
+	{
 		this.type = type;
 		this.symbol = symbol;
 		this.node = node;
 		this.wrapped = wrapped;
 		signatureWithoutTypeArguments = this;
-	}
-
-	public MethodSignature(MethodType type, String symbol, SignatureNode node) {
-		this(type, symbol, node, null);
-	}
-	
-	public MethodSignature(Type enclosingType, String symbol, Modifiers modifiers, SignatureNode node) {		
-		this(new MethodType(enclosingType, modifiers), symbol, node);
 	}
 	
 	public void addParameter(String name, ModifiedType node) {
@@ -266,7 +269,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return wrapped;
 	}
 
-	
 	public MethodSignature wrap(MethodSignature wrapped) {		
 		Modifiers modifiers = new Modifiers(wrapped.getModifiers().getModifiers());
 		modifiers.removeModifier(Modifiers.NATIVE);		
@@ -274,6 +276,14 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return new MethodSignature(methodType, symbol, node, wrapped);
 	}
 
-
+	public boolean hasDocumentation()
+	{
+		return type.hasDocumentation();
+	}
+	
+	public Documentation getDocumentation()
+	{
+		return type.getDocumentation();
+	}
 
 }

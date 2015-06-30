@@ -97,7 +97,7 @@ public class ArrayType extends ClassType
 	}
 	
 	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index, boolean nullable ) {
-		super( makeName(baseType, arrayDimensions, index), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getOuter() );	
+		super(makeName(baseType, arrayDimensions, index), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getDocumentation(), baseType.getOuter() );	
 		if( nullable )		
 			setExtendType(Type.NULLABLE_ARRAY);
 		else

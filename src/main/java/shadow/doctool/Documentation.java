@@ -5,14 +5,14 @@ import java.util.List;
 
 import shadow.doctool.DirectiveParser.Directive;
 
-public class ProcessedDocumentation 
+public class Documentation 
 {
 	private final String mainText;
 	private final String brief;
 	private final HashMap<String, String> exceptionDescriptions;
 	private final HashMap<String, String> parameterDescriptions;
 	
-	public ProcessedDocumentation(String mainText, String brief, List<Directive> directives)
+	public Documentation(String mainText, String brief, List<Directive> directives)
 	{
 		this.mainText = mainText;
 		this.brief = brief;

@@ -4,8 +4,8 @@ package shadow.parser.javacc;
 
 import java.io.File;
 
-import shadow.doctool.ProcessedDocumentation;
-import shadow.typecheck.type.Documentation;
+import shadow.doctool.Documentation;
+import shadow.doctool.DocumentationBuilder;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -81,8 +81,8 @@ interface Node extends ModifiedType {
 	public void setEnclosingType(Type type);
 	public Type getEnclosingType();
 	
-	public ProcessedDocumentation getDocumentation();
-	public void setDocumentation(Documentation documentation) throws ShadowException;
+	public Documentation getDocumentation();
+	public void setDocumentation(DocumentationBuilder documentation) throws ShadowException;
 	public boolean hasDocumentation();
 	
 	public boolean isField();

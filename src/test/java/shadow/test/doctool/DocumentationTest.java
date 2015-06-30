@@ -12,9 +12,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import shadow.doctool.DocumentationBuilder;
 import shadow.doctool.DocumentationTool;
-import shadow.doctool.ProcessedDocumentation;
-import shadow.typecheck.type.Documentation;
+import shadow.doctool.Documentation;
 
 public class DocumentationTest 
 {
@@ -65,10 +65,10 @@ public class DocumentationTest
 						"@throws fakeException This indicates a serious failure\n" +
 						"@fake this isn't a real directive!\n" +
 						"@numbers1234 isn't real either";
-		Documentation documentation = new Documentation();
+		DocumentationBuilder documentation = new DocumentationBuilder();
 		documentation.addBlock(text);
 		
-		ProcessedDocumentation result = documentation.process();
+		Documentation result = documentation.process();
 		String mainText = result.getMainText();
 		
 		assertEquals("This method accomplishes meaningful tasks", mainText);

@@ -9,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
 import shadow.parser.javacc.ShadowException;
-import shadow.typecheck.type.Documentation;
 
 /** Used to parse the '@' directives in documentation comments */
 public class DirectiveParser 
@@ -78,7 +77,7 @@ public class DirectiveParser
 	}
 	
 	/** Processes the directives in the documentation */
-	public static ProcessedDocumentation process(Documentation documentation) throws ShadowException
+	public static Documentation process(DocumentationBuilder documentation) throws ShadowException
 	{
 		String fullText = documentation.toString();
 		List<String> contents = new ArrayList<String>();
@@ -90,7 +89,7 @@ public class DirectiveParser
 		
 		String brief = getFirstSentence(mainText);
 		
-		return new ProcessedDocumentation(mainText, brief, directives);
+		return new Documentation(mainText, brief, directives);
 	}
 	
 	private static final Pattern sentenceEnd = Pattern.compile("\\.\\s");
@@ -100,7 +99,7 @@ public class DirectiveParser
 		Matcher matcher = sentenceEnd.matcher(mainText);
 		
 		if (matcher.find())
-			return mainText.substring(0, matcher.start() - 1);
+			return mainText.substring(0, matcher.start());
 		else
 			return mainText;
 	}
