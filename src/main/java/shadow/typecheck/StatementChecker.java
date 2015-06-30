@@ -21,7 +21,6 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
-import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -1314,9 +1313,9 @@ public class StatementChecker extends BaseChecker {
 				Type leftType = left.getType();
 				Type rightType = right.getType();
 				
-				if( leftType instanceof GetSetType )
+				if( leftType instanceof PropertyType )
 				{
-					GetSetType getSetType = (GetSetType) leftType;
+					PropertyType getSetType = (PropertyType) leftType;
 					//here we have a chance to tell the type whether it will only be storing or doing both
 					if( assignment.getAssignmentType() == AssignmentType.EQUAL )
 						getSetType.setStoreOnly();
@@ -1326,8 +1325,8 @@ public class StatementChecker extends BaseChecker {
 					leftType = getSetType.getSetType().getType();
 				}
 				
-				if( rightType instanceof GetSetType )
-					rightType = ((GetSetType)rightType).getGetType().getType();				
+				if( rightType instanceof PropertyType )
+					rightType = ((PropertyType)rightType).getGetType().getType();				
 		
 				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(rightType)));
 			}
@@ -2280,7 +2279,7 @@ public class StatementChecker extends BaseChecker {
 					else
 					{
 						//if signature is null, then it is not a load
-						SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
+						SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType), prefixNode, currentType);
 						node.setType(subscriptType);
 						if( signature != null )
 							node.setModifiers(subscriptType.getGetType().getModifiers());								
@@ -2764,50 +2763,45 @@ public class StatementChecker extends BaseChecker {
 				if( methods != null && methods.size() > 0 )
 				{
 					MethodSignature getter = null;
-					MethodSignature setter = null;
+					UnboundMethodType setterName = null;
 					
 					for( MethodSignature signature : methods )
 					{
 						if( signature.getModifiers().isGet() )
 							getter = signature;
-						else if( signature.getModifiers().isSet() )
-						{
-							setter = signature;
-							
-							//never checked, it seems
-							//if( !prefixNode.getModifiers().isImmutable() && !prefixNode.getModifiers().isReadonly() )
-							//	node.addModifier(Modifiers.ASSIGNABLE);
-						}
+						else if( setterName == null && signature.getModifiers().isSet() )
+							setterName = new UnboundMethodType( signature.getSymbol(), signature.getOuter());
+					}					
+					
+					boolean mutableProblem = false;
+					boolean accessibleProblem = false;
+					
+					if( getter != null && !methodIsAccessible(getter, currentType)) {
+						accessibleProblem = true;
+						getter = null;
 					}
 					
-					boolean setterOrGetter = setter != null || getter != null;
-					
-					if( getter != null && !prefixNode.getModifiers().isMutable() && getter.getModifiers().isMutable()  )
+					if( getter != null && !prefixNode.getModifiers().isMutable() && getter.getModifiers().isMutable()  ) {
+						mutableProblem = true;
 						getter = null;
-					
-					if( getter != null && !methodIsAccessible(getter, currentType))
-						getter = null;
-					
-					if( setter != null && !prefixNode.getModifiers().isMutable() && setter.getModifiers().isMutable() )
-						setter = null;
-					
-					if( setter != null && !methodIsAccessible(setter, currentType))
-						setter = null;
-					
-					if( setter == null && getter == null )
-					{
-						if( setterOrGetter )
-							addError(node, Error.INVALID_PROPERTY, "Mutable property " + propertyName + " cannot be called from " + (prefixNode.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
-						else
-							addError(node, Error.INVALID_PROPERTY, "Property " + propertyName + " not defined in this context");
-						node.setType( Type.UNKNOWN );	
+					}
+				
+					if( setterName == null  ) {
+						node.setType( Type.UNKNOWN ); //assume bad						
+						if( mutableProblem  )
+							addError(node, Error.ILLEGAL_ACCESS, "Mutable property " + propertyName + " cannot be called from " + (prefixNode.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
+						else if( accessibleProblem )
+							addError(node, Error.ILLEGAL_ACCESS, "Property " + propertyName + " is not accessible in this context");
+						else if( getter == null )
+							addError(node, Error.INVALID_PROPERTY, "Property " + propertyName + " is not defined in this context");
+						else //only case where it works out
+							node.setType( new PropertyType( getter, setterName, prefixNode, currentType) );
 					}
 					else
-						node.setType( new PropertyType( getter, setter ) );
+						node.setType( new PropertyType( getter, setterName, prefixNode, currentType) );
 				}
-				else
-				{
-					addError(node, Error.UNDEFINED_SYMBOL, "Property " + propertyName + " not defined in this context");
+				else {
+					addError(node, Error.INVALID_PROPERTY, "Property " + propertyName + " not defined in this context");
 					node.setType( Type.UNKNOWN ); //if got here, some error
 				}				
 			}
@@ -2817,20 +2811,14 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private ModifiedType resolveType( ModifiedType node ) //dereferences into PropertyType or IndexType for getter, if needed
-	{
-		Type type = node.getType();
-		
-		if( type instanceof GetSetType )
-		{
-			GetSetType getSetType = (GetSetType) type;
-			if( getSetType.isGettable() )
-			{			
-				return getSetType.getGetType();
-			}
-			else
-			{
-				String kind = (type instanceof PropertyType) ? "Property " : "Subscript ";
+	private ModifiedType resolveType( ModifiedType node ) { //dereferences into PropertyType or IndexType for getter, if needed	
+		Type type = node.getType();		
+		if( type instanceof PropertyType ) { //includes SubscriptType as well		
+			PropertyType getSetType = (PropertyType) type;
+			if( getSetType.isGettable() )						
+				return getSetType.getGetType();			
+			else {
+				String kind = (type instanceof SubscriptType) ? "Subscript " : "Property ";
 				addError(Error.ILLEGAL_ACCESS, kind + node + " does not have appropriate get access");
 				return new SimpleModifiedType( Type.UNKNOWN );
 			}				

@@ -1,4 +1,8 @@
 class Test
 {
-	method() => ();
+	method() => (int)
+	{
+		int a = 6;
+		return a;
+	}
 }

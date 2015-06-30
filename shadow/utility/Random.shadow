@@ -52,7 +52,7 @@ class shadow:utility@Random implements CanEqual<Random>
 	
 	public create( uint[] array )
 	{		
-		setSeed(array);
+		this->seed = array;
 	}
 
      // Period parameters
@@ -123,7 +123,7 @@ class shadow:utility@Random implements CanEqual<Random>
      * integers are repeatedly used in a wrap-around fashion.
      */
 
-    public setSeed(uint[] array) => ()
+    public set seed(uint[] array) => ()
 	{		
         if (array->size == 0)
             throw IllegalArgumentException:create("Array length must be greater than zero");

@@ -30,7 +30,6 @@ import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -43,10 +42,9 @@ import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
-public abstract class BaseChecker extends AbstractASTVisitor
-{	
-	public enum SubstitutionKind
-	{
+public abstract class BaseChecker extends AbstractASTVisitor {
+	
+	public enum SubstitutionKind {
 		ASSIGNMENT, BINDING, TYPE_PARAMETER, INITIALIZATION;
 	}
 	
@@ -55,8 +53,8 @@ public abstract class BaseChecker extends AbstractASTVisitor
 
 	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
 	protected ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();
-	protected HashMap<Package, HashMap<String, Type>> typeTable; /** Holds all of the types we know about */
-	protected List<String> importList; /** Holds all of the imports we know about */
+	protected HashMap<Package, HashMap<String, Type>> typeTable; /* Holds all of the types we know about */
+	protected List<String> importList; /* Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
 	
@@ -176,66 +174,43 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		Type rightType = right.getType();		
 		
 		// If necessary, first process the property or subscript on right type
-		if( rightType instanceof GetSetType )
+		if( rightType instanceof PropertyType )
 		{					
-			GetSetType getSetType = (GetSetType)rightType;					
+			PropertyType getSetType = (PropertyType)rightType;					
 			
 			if( getSetType.isGettable() ) // "Get" from the type, if allowed
 			{
 				right = getSetType.getGetType();
 				rightType = right.getType();
 			}
-			else // Fail if a get was attempted. but the type wasn't gettable
-			{
-				String kind = (rightType instanceof PropertyType) ? "Property " : "Subscript ";				
-				addError(errors, Error.INVALID_ASSIGNMENT, kind + getSetType + " is not gettable", rightType);
+			else { // Fail if a get was attempted. but the type wasn't gettable			
+				String kind = (rightType instanceof SubscriptType) ? "Subscript " : "Property ";				
+				addError(errors, Error.INVALID_ASSIGNMENT, kind + getSetType + " cannot be loaded", rightType);
 				return false;				
 			}
 		}
 	
-		// If the left type is a property, retrieve its setter			
-		if( leftType instanceof PropertyType )  
-		{					
-			PropertyType propertyType = (PropertyType)leftType;					
+		// If the left type is a property or subscript, retrieve its setter			
+		if( leftType instanceof PropertyType )  {			
+			PropertyType propertyType = (PropertyType)leftType;
+			List<TypeCheckException> errorList = propertyType.applyInput(right);
 			
-			if( propertyType.isSettable() )
+			if( errorList.isEmpty() )
 				return checkAssignment( propertyType.getSetType(), right, assignmentType, substitutionType, errors );
-			else // Fail if the type was not settable
-			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Property " + propertyType + " is not settable");
-				return false;				
-			}
-		}
-		// If the left type is a subscript type, retrieve the type of its contents
-		else if( leftType instanceof SubscriptType )
-		{
-			SubscriptType indexType = (SubscriptType)leftType;
-			if( indexType.applyInput(right) )
-				return checkAssignment( indexType.getSetType(), right, assignmentType, substitutionType, errors );
-			else
-			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Subscript " + indexType + " cannot store " + rightType, rightType);
+			else {
+				errors.addAll(errorList);
 				return false;
-			}
+			}		
 		}
 
 		//sequence on left
-		if( leftType instanceof SequenceType )
-		{
-			SequenceType sequenceLeft = (SequenceType) leftType;
-			
-			if( !assignmentType.equals(AssignmentType.EQUAL))
-			{
+		if( leftType instanceof SequenceType ) {
+			SequenceType sequenceLeft = (SequenceType) leftType;			
+			if( !assignmentType.equals(AssignmentType.EQUAL)) {
 				addError(errors, Error.INVALID_ASSIGNMENT, "Sequence type " + sequenceLeft + " cannot be assigned with any operator other than =");
 				return false;
 			}			
-			
-			//if( !sequenceLeft.canAccept(right, substitutionType, errors) )
-			//	return false;
-			
-			//should this return either way?
-			
-			//Trying this:
+
 			return sequenceLeft.canAccept(right, substitutionType, errors);
 		}
 		
@@ -243,17 +218,13 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		if( leftType instanceof SingletonType ) {
 			addError(errors, Error.INVALID_ASSIGNMENT, "Singleton reference cannot be assigned to");
 			return false;
-		}
-		
+		}		
 		
 		//type parameter binding follows different rules
-		if( substitutionType.equals(SubstitutionKind.TYPE_PARAMETER))
-		{			
-			if( leftType instanceof TypeParameter )
-			{
+		if( substitutionType.equals(SubstitutionKind.TYPE_PARAMETER)) {			
+			if( leftType instanceof TypeParameter ) {
 				TypeParameter typeParameter = (TypeParameter) leftType;
-				if( !typeParameter.acceptsSubstitution(rightType) )
-				{
+				if( !typeParameter.acceptsSubstitution(rightType) ) {
 					addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type argument " + leftType, rightType);
 					return false;					
 				}					
@@ -904,7 +875,7 @@ public abstract class BaseChecker extends AbstractASTVisitor
 		return false;
 	}
 	
-	protected static boolean methodIsAccessible( MethodSignature signature, Type type )
+	public static boolean methodIsAccessible( MethodSignature signature, Type type )
 	{		
 		Node node = signature.getNode();
 		if( signature.getMethodType().getModifiers().isPublic() ) 
@@ -942,10 +913,6 @@ public abstract class BaseChecker extends AbstractASTVisitor
 			
 			outer = outer.getOuter();
 		}
-		
-		
-		
-		
 
 		return false;
 	}

@@ -2,10 +2,10 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -64,10 +64,10 @@ public class TACBinary extends TACOperand
 	{
 		super(node);
 		
-		if (firstType.getType() instanceof GetSetType)
-			firstType = ((GetSetType)firstType.getType()).getGetType();
-		if (secondType.getType() instanceof GetSetType)
-			secondType = ((GetSetType)secondType.getType()).getGetType();
+		if (firstType.getType() instanceof PropertyType)
+			firstType = ((PropertyType)firstType.getType()).getGetType();
+		if (secondType.getType() instanceof PropertyType)
+			secondType = ((PropertyType)secondType.getType()).getGetType();
 		
 		operation = op;		
 		first = check(firstOperand, firstType);

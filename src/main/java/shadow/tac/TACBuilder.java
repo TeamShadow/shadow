@@ -115,6 +115,13 @@ public class TACBuilder implements ShadowParserVisitor
 	{
 		return PRE_CHILDREN;
 	}
+	
+	private static Type resolveType(Type type) {
+		if( type instanceof PropertyType )
+			return ((PropertyType)type).getGetType().getType();
+		else
+			return type;
+	}
 
 	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node,
@@ -582,20 +589,20 @@ public class TACBuilder implements ShadowParserVisitor
 			TACOperand right = tree.appendChild(2);
 			char operation = node.jjtGetChild(1).getImage().charAt(0);
 			
-			if( node.jjtGetChild(0).getType() instanceof GetSetType )
+			if( node.jjtGetChild(0).getType() instanceof PropertyType )
 			{					
-				GetSetType getSetType = (GetSetType) node.jjtGetChild(0).getType();
+				PropertyType propertyType = (PropertyType) node.jjtGetChild(0).getType();
 				List<TACOperand> parameters = new ArrayList<TACOperand>();
 				
 				parameters.add( left );
-				if( getSetType instanceof SubscriptType )
+				if( propertyType instanceof SubscriptType )
 				{					
 					parameters.addAll(indexStack.pop()); //there should only be one index in this list (not needed for properties)
 				}
 				
 				if (operation != '=')
 				{	
-					signature = getSetType.getGetter();	
+					signature = propertyType.getGetter();	
 					methodRef = new TACMethodRef(tree,
 							left, //prefix
 							signature.getMethodType().getTypeWithoutTypeArguments(),
@@ -622,7 +629,7 @@ public class TACBuilder implements ShadowParserVisitor
 				
 				parameters.add(right); //value to store (possibly updated by code above)
 				
-				signature = getSetType.getSetter();	
+				signature = propertyType.getSetter();	
 				methodRef = new TACMethodRef(tree,
 						left, //prefix
 						signature.getMethodType().getTypeWithoutTypeArguments(),
@@ -823,9 +830,7 @@ public class TACBuilder implements ShadowParserVisitor
 						//no nullables allowed
 						TACVariableRef var = new TACVariableRef(tree,
 								method.addTempLocal(node));
-						Type valueType = value.getType();
-						if( valueType instanceof PropertyType )
-							valueType = ((PropertyType)valueType).getGetType().getType();
+						Type valueType = resolveType(value.getType());
 						MethodSignature signature = valueType.getMatchingMethod("equal", new SequenceType(other));												
 						new TACStore(tree, var, new TACCall(tree, block,
 								new TACMethodRef(tree, value, signature),
@@ -908,11 +913,7 @@ public class TACBuilder implements ShadowParserVisitor
 	{		
 		if (secondVisit)
 		{
-			TACOperand value = tree.appendChild(0);
-			Type valueType = value.getType();
-			if(valueType instanceof GetSetType )
-				valueType = ((GetSetType)valueType).getGetType().getType();
-			
+			TACOperand value = tree.appendChild(0);						
 			Type comparisonType = node.jjtGetChild(1).getType();
 			
 			if( comparisonType instanceof ArrayType )
@@ -948,9 +949,7 @@ public class TACBuilder implements ShadowParserVisitor
 	
 	private TACOperand convertToString( TACOperand operand )
 	{
-		Type type = operand.getType();
-		if(type instanceof GetSetType )
-			type = ((GetSetType)type).getGetType().getType();
+		Type type = resolveType(operand.getType());
 		if( type.equals(Type.STRING ) )
 			return operand;
 		
@@ -1065,10 +1064,7 @@ public class TACBuilder implements ShadowParserVisitor
 			}
 			else
 			{
-				Type type = operand.getType();
-				if( type instanceof PropertyType )
-					type = ((PropertyType)type).getGetType().getType();
-					
+				Type type = resolveType(operand.getType());					
 				if( op.equals("!") )
 					new TACUnary(tree, "!", operand);
 				else
@@ -1335,9 +1331,7 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException {
 		//subscripts index into arrays or subscriptable types
 		if (secondVisit) {
-			Type prefixType = prefix.getType();
-			if( prefixType instanceof GetSetType )
-				prefixType = ((GetSetType)prefixType).getGetType().getType();
+			Type prefixType = resolveType(prefix.getType());
 			
 			if( prefixType instanceof ArrayType ) {
 				ArrayType arrayType = (ArrayType) prefixType;
@@ -1383,9 +1377,7 @@ public class TACBuilder implements ShadowParserVisitor
 			throws ShadowException {
 		if (secondVisit) {
 			//prefix should never be null			
-			Type prefixType = prefix.getType();
-			if( prefixType instanceof GetSetType )
-				prefixType = ((GetSetType)prefixType).getGetType().getType();
+			Type prefixType = resolveType(prefix.getType());
 			
 			if( prefixType instanceof ArrayType && node.getImage().equals("size")) {
 				//optimization to avoid creating an Array object			
@@ -2739,10 +2731,7 @@ public class TACBuilder implements ShadowParserVisitor
 			//BinaryOperation operation = new BinaryOperation( current, next, c );
 			MethodSignature signature = node.getOperations().get(index);
 			boolean isCompare = ( op == '<' || op == '>' || op == '{' || op == '}' );
-			Type currentType = current.getType();
-			if( currentType instanceof GetSetType )
-				currentType = ((GetSetType)currentType).getGetType().getType();
-			
+			Type currentType = resolveType(current.getType());
 			if( currentType.isPrimitive() && signature.getModifiers().isNative() ) //operation based on method
 				current = new TACBinary(tree, current, signature, op, next, isCompare );
 			else

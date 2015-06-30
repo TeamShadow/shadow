@@ -1,0 +1,8 @@
+class Test
+{
+    public foo() => () 
+    {
+    	Property p = Property:create();
+    	p->x = 4;    	    	
+    }  
+}
