@@ -23,6 +23,7 @@ import shadow.doctool.output.ClassOrInterfacePage;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
 public class DocumentationTool 
@@ -104,6 +105,14 @@ public class DocumentationTool
 			.toAbsolutePath();
 		else
 			outputDirectory = Paths.get("docs").toAbsolutePath();
+		
+		// Capture visible inner classes for documentation
+		List<Type> outerClasses = new ArrayList<Type>(toDocument);
+		for (Type outer : outerClasses)
+			if (outer instanceof ClassType)
+				for (Type inner : ((ClassType)outer).getInnerClasses().values())
+					if (inner.getModifiers().isPublic() || inner.getModifiers().isProtected())
+						toDocument.add(inner);
 		
 		// Document each class or interface
 		for (Type type : toDocument)

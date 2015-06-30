@@ -49,7 +49,7 @@ code
 
 .header p
 {
-    margin 4px 0px 18px;
+    margin: 4px 0px 18px;
 }
 
 .block
@@ -64,6 +64,11 @@ code
 {
     margin: 15px 0px;
     font-size: 26;
+}
+
+.block p
+{
+	margin: 10px 0px 0px;
 }
 
 .methoddetail

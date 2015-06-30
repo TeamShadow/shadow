@@ -4,7 +4,7 @@ import local@TestInterfaceA;
 import local@TestInterfaceB;
 
 /** A class to test/demonstrate the documentation tool */
-class Example<T, U> 
+class Example<T, U is Dummy> 
         extends Dummy implements TestInterfaceA, TestInterfaceB
 {
     /// Documenting public/protected inner classes

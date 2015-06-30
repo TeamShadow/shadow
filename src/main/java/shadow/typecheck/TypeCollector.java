@@ -57,7 +57,7 @@ public class TypeCollector extends BaseChecker {
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private File currentFile;
 	private Type mainType = null;
-	private Set<Type> initialFileTypes = new HashSet<Type>();
+	private Set<Type> initialFileTypes = new TreeSet<Type>();
 	private Configuration config;
 	private boolean useSourceFiles;
 	
