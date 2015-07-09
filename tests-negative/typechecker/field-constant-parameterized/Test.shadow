@@ -1,4 +1,4 @@
 class Test<T>
 {
-	constant Parameter<T> p;
+	public constant Parameter<T> p;
 }

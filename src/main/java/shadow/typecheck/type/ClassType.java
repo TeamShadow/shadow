@@ -747,12 +747,14 @@ public class ClassType extends Type
 		
 		//constants		
 		newLine = false;
-		for( Map.Entry<String, ? extends ModifiedType> field : getFields().entrySet() )
-			if( field.getValue().getModifiers().isConstant() )
-			{
-				out.println(indent + "constant " + field.getValue().getType() + " " + field.getKey() + ";");
+		for( Map.Entry<String, ? extends ModifiedType> field : getFields().entrySet() ) {
+			Modifiers modifiers = field.getValue().getModifiers(); 
+			if( modifiers.isConstant() && (modifiers.isPublic() || modifiers.isProtected())) {
+				String visibility = modifiers.isPublic() ? "public" : "protected";
+				out.println(indent + visibility + " constant " + field.getValue().getType() + " " + field.getKey() + ";");
 				newLine = true;				
 			}
+		}
 		if( newLine )
 			out.println();		
 		

@@ -8,8 +8,8 @@ implements
 	CanNegate<int>,
 	CanHash
 {
-	constant int MAX =  2147483647;
-	constant int MIN =  -2147483648;
+	public constant int MAX =  2147483647;
+	public constant int MIN =  -2147483648;
 
 	// implement Integer
 	public native bitComplement() => (int);

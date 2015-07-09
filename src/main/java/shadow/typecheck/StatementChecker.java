@@ -2952,22 +2952,30 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public static boolean fieldIsAccessible( Node field, Type type )
-	{
-		//inside class or constant
-		if ( field.getModifiers().isConstant() ) 
+	public static boolean fieldIsAccessible( Node field, Type type ) {
+		//constants are no longer all public
+		if ( field.getModifiers().isPublic() ) 
 			return true;		
 		
-		type = type.getTypeWithoutTypeArguments();
+		//if inside class		
+		Type checkedType = type.getTypeWithoutTypeArguments();
 		Type enclosing = field.getEnclosingType().getTypeWithoutTypeArguments();
 		
-		while( type != null )
-		{
-			if( enclosing.equals(type) )
-				return true;
-			
-			type = type.getOuter();
+		while( checkedType != null ) {
+			if( enclosing.equals(checkedType) )
+				return true;			
+			checkedType = checkedType.getOuter();
 		}
+		
+		checkedType = type.getTypeWithoutTypeArguments();
+		if( field.getModifiers().isProtected() && checkedType instanceof ClassType ) {
+			ClassType classType = ((ClassType) checkedType).getExtendType();
+			while( classType != null ) {
+				if( enclosing.equals(classType))
+					return true;
+				classType = classType.getExtendType();
+			}			
+		}		
 
 		return false;
 	}

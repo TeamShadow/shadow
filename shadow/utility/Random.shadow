@@ -56,15 +56,15 @@ class shadow:utility@Random implements CanEqual<Random>
 	}
 
      // Period parameters
-    constant int N = 624;
-    constant int M = 397;
-    constant uint MATRIX_A = 0x9908b0dfu;   //    private static final * constant vector a
-    constant uint UPPER_MASK = 0x80000000u; // most significant w-r bits
-    constant uint LOWER_MASK = 0x7fffffffu; // least significant r bits
+    private constant int N = 624;
+    private constant int M = 397;
+    private constant uint MATRIX_A = 0x9908b0dfu;   //    private static final * constant vector a
+    private constant uint UPPER_MASK = 0x80000000u; // most significant w-r bits
+    private constant uint LOWER_MASK = 0x7fffffffu; // least significant r bits
 
     // Tempering parameters
-    constant uint TEMPERING_MASK_B = 0x9d2c5680u;
-    constant uint TEMPERING_MASK_C = 0xefc60000u;
+    private constant uint TEMPERING_MASK_B = 0x9d2c5680u;
+    private constant uint TEMPERING_MASK_C = 0xefc60000u;
     
     uint[] mt; // the array for the state vector
     int mti; // mti==N+1 means mt[N] is not initialized

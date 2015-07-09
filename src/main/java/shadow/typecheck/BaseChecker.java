@@ -875,31 +875,25 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return false;
 	}
 	
-	public static boolean methodIsAccessible( MethodSignature signature, Type type )
-	{		
+	public static boolean methodIsAccessible( MethodSignature signature, Type type ) {		
 		Node node = signature.getNode();
 		if( signature.getMethodType().getModifiers().isPublic() ) 
 			return true;
 		
 		if(node == null )
-			return false;
-		
+			return false;		
 		
 		Type outer = type;
 		
-		while( outer != null )
-		{
+		while( outer != null ) {
 			if( node.getEnclosingType().equals(outer) )
 				return true;
 			
-			if( outer instanceof ClassType )
-			{
+			if( outer instanceof ClassType ) {
 				ClassType parent = ((ClassType)outer).getExtendType();
 				
-				while( parent != null )
-				{
-					if( node.getEnclosingType().equals(parent) )
-					{
+				while( parent != null ) {
+					if( node.getEnclosingType().equals(parent) ) {
 						if( node.getModifiers().isPrivate())
 							return false;
 						else
@@ -908,8 +902,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 					
 					parent = parent.getExtendType();
 				}
-			}
-			
+			}			
 			
 			outer = outer.getOuter();
 		}

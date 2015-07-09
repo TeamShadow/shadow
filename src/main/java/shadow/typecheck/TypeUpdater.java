@@ -596,7 +596,10 @@ public class TypeUpdater extends BaseChecker {
 		
 		return super.lookupType(name);
 	}
-			
+	
+	
+	
+	
 		
 	/**
 	 * Checks method and field modifiers to see if they are legal
@@ -606,9 +609,10 @@ public class TypeUpdater extends BaseChecker {
 	 * @return
 	 */
 
-	public boolean checkMethodModifiers( Node node, Modifiers modifiers )
+	public boolean checkModifiers( Node node, String kind )
 	{
 		int visibilityModifiers = 0;
+		Modifiers modifiers = node.getModifiers();
 		boolean success = true;
 		
 		//modifiers are set, but we have to check them
@@ -629,7 +633,7 @@ public class TypeUpdater extends BaseChecker {
 		{
 			if( visibilityModifiers > 0 )
 			{			
-				addError(Error.INVALID_MODIFIER, "Interface methods cannot be marked public, private, or protected since they are all public by definition" );
+				addError(Error.INVALID_MODIFIER, "Interface " + kind + "s cannot be marked public, private, or protected since they are all public by definition" );
 				success = false;
 			}			
 			
@@ -638,7 +642,7 @@ public class TypeUpdater extends BaseChecker {
 		}
 		else if( visibilityModifiers == 0 )
 		{			
-			addError(Error.INVALID_MODIFIER, "Every class method must be specified as public, private, or protected" );
+			addError(Error.INVALID_MODIFIER, "Every class " + kind + " must be specified as public, private, or protected" );
 			success = false;
 		}
 		
@@ -691,7 +695,7 @@ public class TypeUpdater extends BaseChecker {
 			MethodType methodType = signature.getMethodType();
 			node.setType(methodType);
 			node.setEnclosingType(currentType);
-			checkMethodModifiers( node, node.getModifiers() );
+			checkModifiers( node, "method" );
 			currentMethod.addFirst(node);
 		}		
 		
@@ -1002,13 +1006,18 @@ public class TypeUpdater extends BaseChecker {
 		node.setEnclosingType(currentType);
 
 		node.addModifier(Modifiers.FIELD);
-			
+		
+		//constants must be public, private, or protected, unlike regular fields which are implicitly private
+		if( node.getModifiers().isConstant() )
+			checkModifiers( node, "constant");
 		
 		if( currentType.getModifiers().isImmutable() )
 			node.addModifier(Modifiers.IMMUTABLE);
 		
-		if( currentType instanceof InterfaceType )
-			node.addModifier(Modifiers.CONSTANT); //all interface fields are implicitly constant
+		if( currentType instanceof InterfaceType ) {
+			node.addModifier(Modifiers.CONSTANT); //all interface fields are implicitly public and constant
+			node.addModifier(Modifiers.PUBLIC);
+		}
 		
 		if( type instanceof UninstantiatedType && node.getModifiers().isConstant() ) {
 			UninstantiatedType uninstantiatedType = (UninstantiatedType) type;

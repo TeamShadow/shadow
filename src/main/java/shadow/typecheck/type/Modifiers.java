@@ -24,7 +24,7 @@ import shadow.parser.javacc.ParseException;
  * <li>protected: only for methods</li>
  * <li>get: only for fields</li>
  * <li>set: only for fields</li>
- * <li>constant: only for fields, public constant</li>
+ * <li>constant: only for fields, constant</li>
  * <li>weak: reference will not stop GC</li>
  * <li>native: used to map in C functions</li>
  * <li>nullable: variables that can be null</li>
@@ -38,8 +38,7 @@ import shadow.parser.javacc.ParseException;
  * <li>assignable: used to mark variables [lvalues]</li>
  * <li>type name: used to distinguish between types and values/variables with that type, e.g. int vs. 5 or String vs. "figs"</li>
  * <li>field: used to mark nodes that are fields, as opposed to local variables, to inform the TAC [methods are NOT marked as fields]</li>
- * <li>return readonly: returned object will be readonly</li>
- * <li>return immutable: returned object will be immutable</li>
+ * <li>temporary readonly: returned object will be readonly</li> 
  * </ul>
  */
 public final class Modifiers
@@ -297,7 +296,7 @@ public final class Modifiers
 
 	public void checkFieldModifiers(Node node) throws ParseException
 	{
-		checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE), "A field", node);
+		checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE | PUBLIC | PRIVATE | PROTECTED), "A field", node);
 		if( isReadonly() && isImmutable() )
 			throw new ParseException("A field cannot be marked both readonly and immutable", node);
 		if( isSet() && isImmutable() )
@@ -308,6 +307,15 @@ public final class Modifiers
 			throw new ParseException("A field cannot be marked both constant and immutable", node);
 		if( isConstant() && isReadonly() )
 			throw new ParseException("A field cannot be marked both constant and readonly", node);
+		if( !isConstant() ) {
+			if( isPublic() )
+				throw new ParseException("Only a constant field can be marked public", node);
+			else if( isProtected() )
+				throw new ParseException("Only a constant field can be marked protected", node);
+			else if( isPrivate() )
+				throw new ParseException("Only a constant field can be marked private", node);
+		}
+		
 	}
 
 	public void checkMethodModifiers(Node node) throws ParseException

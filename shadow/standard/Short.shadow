@@ -9,8 +9,8 @@ implements
 	CanNegate<short>,
 	CanHash
 {
-	constant short MAX = 32767s;
-	constant short MIN = -32768s;	
+	public constant short MAX = 32767s;
+	public constant short MIN = -32768s;	
 	// implement Bitwise
 	public native bitComplement() => (short);
 	public native bitShiftLeft(uint amount) => (short);

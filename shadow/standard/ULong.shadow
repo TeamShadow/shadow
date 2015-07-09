@@ -5,8 +5,8 @@ implements
 	Number<double>,
 	CanHash
 {
-	constant ulong MAX = 18446744073709551615ul;
-	constant ulong MIN = 0ul;
+	public constant ulong MAX = 18446744073709551615ul;
+	public constant ulong MIN = 0ul;
 	// implement Bitwise
 	public native bitComplement() => (ulong);
 	public native bitShiftLeft(uint amount) => (ulong);

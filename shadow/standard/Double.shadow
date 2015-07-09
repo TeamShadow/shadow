@@ -5,16 +5,16 @@ implements
 	CanNegate<double>,	
 	CanHash
 {
-	constant double PI = 3.141592653589793;
-	constant double E = 2.718281828459045;
+	public constant double PI = 3.141592653589793;
+	public constant double E = 2.718281828459045;
 
-	constant double NaN = 0d / 0d;
-	constant double INFINITY = 1d / 0d;
-	constant double NEGATIVE_INFINITY = -1d / 0d;
+	public constant double NaN = 0d / 0d;
+	public constant double INFINITY = 1d / 0d;
+	public constant double NEGATIVE_INFINITY = -1d / 0d;
 
-	constant ulong SIGN_MASK = 0x8000000000000000uL;
-	constant ulong EXPONENT_MASK = 0x7ff0000000000000uL;
-	constant ulong SIGNIFICAND_MASK = 0xfffffffffffffuL;
+	private constant ulong SIGN_MASK = 0x8000000000000000uL;
+	private constant ulong EXPONENT_MASK = 0x7ff0000000000000uL;
+	private constant ulong SIGNIFICAND_MASK = 0xfffffffffffffuL;
 
 	// implement Number
 	public native toByte() => (byte);

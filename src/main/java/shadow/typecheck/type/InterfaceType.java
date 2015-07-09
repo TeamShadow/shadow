@@ -395,9 +395,8 @@ public class InterfaceType extends Type
 		//constants are the only fields in interfaces
 		newLine = false;
 		for( Map.Entry<String, Node> field : getFields().entrySet() )
-			if( field.getValue().getModifiers().isConstant() )
-			{
-				out.println(indent + "constant " + field.getValue().getType() + " " + field.getKey() + ";");
+			if( field.getValue().getModifiers().isConstant() ) {
+				out.println(indent + field.getValue().getType() + " " + field.getKey() + ";");
 				newLine = true;
 			}
 		if( newLine )
