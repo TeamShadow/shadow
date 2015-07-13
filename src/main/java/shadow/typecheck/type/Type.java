@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import shadow.parser.javacc.ASTAssignmentOperator;
+import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.BaseChecker;
@@ -995,8 +996,7 @@ public abstract class Type implements Comparable<Type>
 	}
 	
 	
-	public boolean containsMethod(MethodSignature signature, Modifiers modifiers ) //must have certain modifiers (usually public)
-	{
+	public boolean containsMethod(MethodSignature signature, Modifiers modifiers ) { //must have certain modifiers (usually public)
 		List<MethodSignature> list = methodTable.get(signature.getSymbol());
 		
 		if( list != null )
@@ -1007,8 +1007,7 @@ public abstract class Type implements Comparable<Type>
 		return false;
 	}	
 	
-	public boolean containsIndistinguishableMethod(MethodSignature signature) //not identical, but indistinguishable at call time
-	{
+	public boolean containsIndistinguishableMethod(MethodSignature signature) { //not identical, but indistinguishable at call time
 		List<MethodSignature> list = methodTable.get(signature.getSymbol());
 		
 		if( list != null )
@@ -1019,12 +1018,14 @@ public abstract class Type implements Comparable<Type>
 		return false;
 	}
 	
-	public void addMethod(String name, MethodSignature signature) {
-		signature.getMethodType().setOuter(this);		
+	public void addMethod(MethodSignature signature) {
+		//makes copy so that changing the outer type doesn't cause a problem
+		signature.setOuter(this);
+		String name = signature.getSymbol();
+						
 		if( methodTable.containsKey(name) )		
 			methodTable.get(name).add(signature);
-		else
-		{
+		else {
 			List<MethodSignature> list = new LinkedList<MethodSignature>();
 			list.add(signature);
 			methodTable.put(name, list);
@@ -1097,7 +1098,7 @@ public abstract class Type implements Comparable<Type>
 			{
 				MethodSignature originalMethod = original.get(i);
 				SequenceType originalParameters = originalMethod.getParameterTypes(), 
-								rawParameters = originalMethod.getMethodType().getTypeWithoutTypeArguments().getParameterTypes();
+								rawParameters = originalMethod.getSignatureWithoutTypeArguments().getMethodType().getParameterTypes();
 				
 				if ( (!method.isCreate() || originalMethod.getOuter() instanceof InterfaceType) &&
 						method.getSymbol().equals(originalMethod.getSymbol()) &&

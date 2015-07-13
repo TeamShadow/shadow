@@ -58,9 +58,9 @@ public class TACMethod extends TACNodeList
 	
 	public TACMethod addParameters(boolean isWrapped)
 	{
-		MethodType type = getMethod().getMethodType();		
+		MethodType type = method.getMethodType();		
 		if( isWrapped )
-			type = type.getTypeWithoutTypeArguments();
+			type = method.getSignatureWithoutTypeArguments().getMethodType();
 		
 		for (String name : type.getParameterNames())
 			addLocal(type.getParameterType(name), name);
@@ -188,7 +188,7 @@ public class TACMethod extends TACNodeList
 		StringWriter writer = new StringWriter();
 		try
 		{
-			new TextOutput(writer).build(this);
+			new TextOutput(writer).build(this, null);
 		}
 		catch (ShadowException ex)
 		{

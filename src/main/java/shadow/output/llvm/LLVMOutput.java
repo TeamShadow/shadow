@@ -87,34 +87,28 @@ import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
-public class LLVMOutput extends AbstractOutput
-{
+public class LLVMOutput extends AbstractOutput {
 	private Process process = null;
 	private int tempCounter = 0, labelCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();
 	private HashSet<Generic> generics = new HashSet<Generic>();	
 	private HashSet<Array> arrays = new HashSet<Array>();
-	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();
-	private TACModule module;
+	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();	
 	private TACMethod method;
+	private int classCounter = 0;
 	
-	public LLVMOutput(File file) throws ShadowException
-	{		
+	public LLVMOutput(File file) throws ShadowException {		
 		super(new File(file.getParent(),
 				file.getName().replace(".shadow", ".ll")));
 	}
 	
 	//used to do an LLVM check pass for debugging
-	public LLVMOutput(boolean mode) throws ShadowException
-	{
-		if (!mode)
-		{
-			try
-			{
+	public LLVMOutput(boolean mode) throws ShadowException {
+		if (!mode) {
+			try {
 				process = new ProcessBuilder("opt", "-S", "-O3").start();
 			}
-			catch (IOException ex)
-			{
+			catch (IOException ex) {
 				throw new ShadowException(ex.getLocalizedMessage());
 			}
 			writer = new TabbedLineWriter(process.getOutputStream());
@@ -201,8 +195,7 @@ public class LLVMOutput extends AbstractOutput
 	{
 		StringBuilder sb = new StringBuilder();
 		
-		if( type instanceof InterfaceType )
-		{
+		if( type instanceof InterfaceType ) {
 			if( type.isFullyInstantiated() )
 				sb.append('%').append(withGenerics(type, "_methods")).append(" = type { ");
 			else if( type.isUninstantiated() )
@@ -211,10 +204,8 @@ public class LLVMOutput extends AbstractOutput
 			writer.write(sb.append(methodList(type.orderAllMethods(), false)).
 					append(" }").toString());
 		}
-		else if (type instanceof ClassType)
-		{	
-			if( type.isUninstantiated() )
-			{
+		else if (type instanceof ClassType) {	
+			if( type.isUninstantiated() ) {
 				sb.append('%').append(raw(type, "_methods")).append(" = type { ");
 				
 				writer.write(sb.append(methodList(type.orderAllMethods(), false)).
@@ -240,14 +231,11 @@ public class LLVMOutput extends AbstractOutput
 		}	
 	}
 	
-	private void writeTypeConstants(Type type) throws ShadowException
-	{	
-		if( type.isParameterizedIncludingOuterClasses() )
-		{
+	private void writeTypeConstants(Type type) throws ShadowException {	
+		if( type.isParameterizedIncludingOuterClasses() ) {
 			unparameterizedGenerics.add(type.getTypeWithoutTypeArguments());
 		
-			if( type.isFullyInstantiated() )
-			{	
+			if( type.isFullyInstantiated() ) {	
 				writer.write('@' + withGenerics(type, "_class") +
 						" = external constant %" + raw(Type.CLASS));				
 				
@@ -256,20 +244,17 @@ public class LLVMOutput extends AbstractOutput
 				else
 					generics.add(new Generic(type));
 			}
-			else if( type instanceof ClassType && type.isUninstantiated() )
-			{
+			else if( type instanceof ClassType && type.isUninstantiated() ) {
 				//methods recorded for classes with no type parameters and for the raw class of those that do
 				writer.write('@' + raw(type, "_methods") +
 					" = external constant %" + raw(type, "_methods"));
 			}
 		}
-		else
-		{
+		else {
 			writer.write('@' + raw(type, "_class") +
 					" = external constant %" + raw(Type.CLASS));
 			
-			if( type instanceof ClassType )
-			{
+			if( type instanceof ClassType ) {
 				//methods recorded for classes with no type parameters and for the raw class of those that do
 				writer.write('@' + raw(type, "_methods") +
 					" = external constant %" + raw(type, "_methods"));
@@ -282,41 +267,21 @@ public class LLVMOutput extends AbstractOutput
 		}	
 	}
 	
-
-	@Override
-	public void startFile(TACModule module) throws ShadowException
-	{
-		this.module = module;
+	
+	protected void writeModuleDefinition(TACModule module) throws ShadowException {		
 		Type moduleType = module.getType();
-
 		writer.write("; " + module.getQualifiedName());
 		writer.write();
-
-		writePrimitiveTypes();
-		
-		// Methods for exception handling
-		writer.write("declare i32 @__shadow_personality_v0(...)");
-		writer.write("declare void @__shadow_throw(" + type(Type.OBJECT) + ") noreturn");
-		writer.write("declare " + type(Type.EXCEPTION) + " @__shadow_catch(i8* nocapture) nounwind");
-		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
-		//memcopy
-		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
-		writer.write("declare void @__arrayStore(%\"_Pshadow_Pstandard_CObject\"**, i32, %\"_Pshadow_Pstandard_CObject\"*, %\"_Pshadow_Pstandard_CClass\"*)");
-		writer.write("declare %\"_Pshadow_Pstandard_CObject\"* @__arrayLoad(%\"_Pshadow_Pstandard_CObject\"**, i32, %\"_Pshadow_Pstandard_CClass\"*, %\"_Pshadow_Pstandard_CObject\"*)");
-		writer.write("declare noalias void @free(i8*) nounwind");
-		writer.write();		
 		
 		//Class fields (since the order is all changed)
 		//used for debugging
-		if( moduleType instanceof ClassType )
-		{
+		if( moduleType instanceof ClassType ) {
 			ClassType classType = (ClassType) moduleType;
 			writer.write("; 0: class (Class)");
 			writer.write("; 1: _methods");
 			int counter = 2;			
 			for (Entry<String, ? extends ModifiedType> field :
-				(classType).orderAllFields())
-			{	
+				(classType).orderAllFields()) {	
 				
 				writer.write("; " + counter + ": " + field.getKey() + " (" + field.getValue().getType() + ")" );
 				++counter;				
@@ -325,10 +290,11 @@ public class LLVMOutput extends AbstractOutput
 			writer.write();
 		}
 		
+		//fields
 		writeTypeDeclaration(moduleType);
 		
-		for (TACConstant constant : module.getConstants())
-		{
+		//constants
+		for (TACConstant constant : module.getConstants()) {
 			ShadowInterpreter interpreter = new ShadowInterpreter();
 			interpreter.walk(constant);
 			Object result = constant.getValue().getData();
@@ -340,77 +306,46 @@ public class LLVMOutput extends AbstractOutput
 			Cleanup.getInstance().walk(constant);
 		}
 		
-		HashSet<Type> definedGenerics = new HashSet<Type>();
-		for (Type type : module.getReferences())
-		{
-			if(type != null && !type.equals(module.getType()))		
-			{	
-				if( !type.isParameterized() )
-					writeTypeDeclaration(type);	
-				else
-				{
-					Type unparameterizedType = type.getTypeWithoutTypeArguments();
-					
-					//write all parameterized interfaces
-					if( type.isFullyInstantiated() && type instanceof InterfaceType ) 
-						writeTypeDeclaration(type);
-					//if unparameterized version has not been declared yet, do it
-					if( definedGenerics.add(unparameterizedType) &&
-						//keep as mangles the same as?
-						!unparameterizedType.equals(module.getType()))
-						writeTypeDeclaration(unparameterizedType);
-				}
-			}
-		}
-		writer.write();
-		
-		
+		//interfaces implemented (because a special object is used to map the methods correctly)
 		ArrayList<InterfaceType> interfaces = moduleType.getAllInterfaces();
 		int interfaceCount = interfaces.size();
 		
-		if( module.isClass() )
-		//no need to write interface data for interfaces
-		{		
-			StringBuilder interfaceData;
-			
+		if( module.isClass() ) {
+		//no need to write interface data for interfaces				
+			StringBuilder interfaceData = new StringBuilder( "@_interfaceData" + moduleType.getMangledName() + " = ");			
+
+			if( !moduleType.isParameterizedIncludingOuterClasses() )
+				interfaceData.append("private " );			
+					
 			//generic classes don't list interfaces (because their parameterized versions have those)
 			//but they do share interfaceData (the actual methods)
-			if( moduleType.isParameterizedIncludingOuterClasses() )
-				interfaceData = new StringBuilder( "@_interfaceData" + moduleType.getMangledName() + " = " );
-			else
-				interfaceData = new StringBuilder( "@_interfaceData = private " );
-					
 			interfaceData.append("unnamed_addr constant [").
 					append(interfaceCount).append(" x ").
 					append(type(Type.OBJECT)).append("] [");
-			StringBuilder interfaceClasses = new StringBuilder("@_interfaces = private ");
-		
+			StringBuilder interfaceClasses = new StringBuilder("@_interfaces" + moduleType.getMangledName() + " = private ");
 			
 			interfaceClasses.append("unnamed_addr constant [").
 				append(interfaceCount).append(" x ").
 				append(type(Type.CLASS)).append("] [");
-				
-			int i = 0;
-			for(InterfaceType type : interfaces)
-			{			
-				if (module.isClass())
-				{
+			
+			for(InterfaceType type : interfaces) {			
+				if (module.isClass()) {
 					List<MethodSignature> methods = type.orderAllMethods(module.
 							getClassType());
+					
 					String methodsType = methodList(methods, false);
-					writer.write("@_class" + i +
+					writer.write("@_class" + classCounter +
 							" = private unnamed_addr constant { " + methodsType +
 							" } { " + methodList(methods, true) + " }");
 					interfaceData.append(type(Type.OBJECT)).append(" bitcast ({ ").
-							append(methodsType).append(" }* @_class").append(i).
+							append(methodsType).append(" }* @_class").append(classCounter).
 							append(" to ").append(type(Type.OBJECT)).append("), ");
 				}				
 				interfaceClasses.append(typeText(Type.CLASS, classOf(type))).
 						append(", ");
-				i++;
+				classCounter++;
 			}
-			if (interfaceCount > 0)
-			{
+			if (interfaceCount > 0) {
 				interfaceData.delete(interfaceData.length() - 2,
 						interfaceData.length());
 				interfaceClasses.delete(interfaceClasses.length() - 2,
@@ -423,6 +358,7 @@ public class LLVMOutput extends AbstractOutput
 				writer.write(interfaceClasses.append(']').toString());
 		}
 
+		//method declarations (but not definitions)
 		List<MethodSignature> methods = moduleType.orderAllMethods();
 		int flags = 0;
 		if (moduleType.isPrimitive())
@@ -451,13 +387,13 @@ public class LLVMOutput extends AbstractOutput
 					type(new ArrayType(Type.OBJECT)) + " { " +   //data
 					type(Type.OBJECT) + "* getelementptr inbounds ([" +
 					interfaceCount + " x " + type(Type.OBJECT) +
-					"]* @_interfaceData, i32 0, i32 0), [1 x " + 
+					"]* @_interfaceData" + moduleType.getMangledName() + ", i32 0, i32 0), [1 x " + 
 					type(Type.INT) + "] [" + typeLiteral(interfaceCount) +
 					"] }, " + 
 					type(new ArrayType(Type.CLASS)) + " { " + //interfaces
 					type(Type.CLASS) + "* getelementptr inbounds ([" +
 					interfaceCount + " x " + type(Type.CLASS) +
-					"]* @_interfaces, i32 0, i32 0), [1 x " + type(Type.INT) +
+					"]* @_interfaces" + moduleType.getMangledName() + ", i32 0, i32 0), [1 x " + type(Type.INT) +
 					"] [" + typeLiteral(interfaceCount) + "] }, " +
 					
 					typeLiteral(flags) + ", " +			//flags
@@ -491,6 +427,56 @@ public class LLVMOutput extends AbstractOutput
 					type(moduleType) + " null");
 		
 		writer.write();
+		
+		if( moduleType.isParameterizedIncludingOuterClasses() )
+			unparameterizedGenerics.add(moduleType.getTypeWithoutTypeArguments());		
+		
+		//recursively do inner classes
+		for( TACModule innerClass : module.getInnerClasses() )
+			writeModuleDefinition(innerClass);
+	}
+	
+
+	@Override
+	public void startFile(TACModule module) throws ShadowException {		
+		Type moduleType = module.getType();
+
+		//boiler plate for all types
+		writePrimitiveTypes();
+		
+		// Methods for exception handling
+		writer.write("declare i32 @__shadow_personality_v0(...)");
+		writer.write("declare void @__shadow_throw(" + type(Type.OBJECT) + ") noreturn");
+		writer.write("declare " + type(Type.EXCEPTION) + " @__shadow_catch(i8* nocapture) nounwind");
+		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
+		//memcopy
+		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
+		writer.write("declare void @__arrayStore(%\"_Pshadow_Pstandard_CObject\"**, i32, %\"_Pshadow_Pstandard_CObject\"*, %\"_Pshadow_Pstandard_CClass\"*)");
+		writer.write("declare %\"_Pshadow_Pstandard_CObject\"* @__arrayLoad(%\"_Pshadow_Pstandard_CObject\"**, i32, %\"_Pshadow_Pstandard_CClass\"*, %\"_Pshadow_Pstandard_CObject\"*)");
+		writer.write("declare noalias void @free(i8*) nounwind");
+		writer.write();
+		
+		//type references
+		HashSet<Type> definedGenerics = new HashSet<Type>();
+		for (Type type : module.getReferences()) {
+			if(type != null && !moduleType.encloses(type)) {	
+				if( !type.isParameterized() )
+					writeTypeDeclaration(type);	
+				else {
+					Type unparameterizedType = type.getTypeWithoutTypeArguments();
+					
+					//write all parameterized interfaces
+					if( type.isFullyInstantiated() && type instanceof InterfaceType ) 
+						writeTypeDeclaration(type);
+					//if unparameterized version has not been declared yet, do it
+					if( definedGenerics.add(unparameterizedType) &&		
+						!unparameterizedType.equals(module.getType()))
+						writeTypeDeclaration(unparameterizedType);
+				}
+			}
+		}
+		writer.write();
+		
 
 		HashSet<String> recordedTypes = new HashSet<String>();
 		Set<Type> references = module.getReferences(); 
@@ -499,7 +485,7 @@ public class LLVMOutput extends AbstractOutput
 		{
 			if( type instanceof ArrayType )
 				arrays.add(new Array((ArrayType)type));			
-			else if( !type.equals(module.getType()) ) {				
+			else if( !moduleType.encloses(type) ) {				
 				if( (type.isFullyInstantiated() && recordedTypes.add(type.getMangledNameWithGenerics())) ||  
 					(type.isUninstantiated() && recordedTypes.add(type.getMangledName()))	)				
 					writeTypeConstants(type);
@@ -516,13 +502,11 @@ public class LLVMOutput extends AbstractOutput
 				}
 				*/				
 			}			 
-		}
+		}		
+		writer.write();	
 		
-		if( moduleType.isParameterized() )
-			unparameterizedGenerics.add(moduleType.getTypeWithoutTypeArguments());
-		
-		writer.write();		
-		
+		//defines class and recursively defines inner classes  
+		writeModuleDefinition(module);		
 	}
 
 
@@ -597,7 +581,7 @@ public class LLVMOutput extends AbstractOutput
 		for (Type type : module.getReferences())
 			if (type instanceof ClassType && !(type instanceof ArrayType) &&
 					!(type instanceof UnboundMethodType) &&
-					!type.equals(module.getType()))
+					!module.getType().encloses(type))
 		{
 			if (type.equals(Type.CLASS))  { //add in private methods
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
@@ -658,7 +642,7 @@ public class LLVMOutput extends AbstractOutput
 						type(new ArrayType(Type.INT)) + ", " +
 						type(Type.OBJECT) + ')');
 			
-			
+			//TODO: fix this so that only used methods are included
 			if( type.isUninstantiated() && recordedClasses.add(type.getMangledName()) )
 			{
 				for (List<MethodSignature> methodList :
@@ -708,11 +692,8 @@ public class LLVMOutput extends AbstractOutput
 		writer.write();
 		
 		//print array type possibilities (only those arrays that can show up as generic parameters)
-		for( Array array : arrays )
-		{
+		for( Array array : arrays )		
 			writer.write("@\"" + array.getMangledName() + "_class\" = external constant %" + raw(Type.CLASS)); 
-		}
-		
 		
 		writer.write();
 
@@ -758,21 +739,19 @@ public class LLVMOutput extends AbstractOutput
 	}
 
 	@Override
-	public void startMethod(TACMethod method) throws ShadowException
+	public void startMethod(TACMethod method, TACModule module) throws ShadowException
 	{
-		this.method = method;
-		if (module.isInterface())
-			return;
+		this.method = method;		
 		MethodSignature signature = method.getMethod();
+		if (module.getType() instanceof InterfaceType)
+			return;
 		SequenceType parameters = signature.getFullParameterTypes();
 		tempCounter = parameters.size() + 1;
-		if (signature.isNative())
-		{
+		if (signature.isNative()) {
 			writer.write("declare " + methodToString(method));
 			writer.indent();
 		}
-		else
-		{
+		else {
 			writer.write("define " + methodToString(method) + " {");
 			writer.indent();
 			for (TACVariable local : method.getLocals())
@@ -813,10 +792,10 @@ public class LLVMOutput extends AbstractOutput
 	}
 
 	@Override
-	public void endMethod(TACMethod method) throws ShadowException
-	{
+	public void endMethod(TACMethod method, TACModule module) throws ShadowException {
 		writer.outdent();
-		if (!method.getMethod().isNative() && !module.isInterface())
+		MethodSignature signature = method.getMethod();
+		if (!signature.isNative() && !(module.getType() instanceof InterfaceType))
 			writer.write('}');
 		writer.write();
 		method = null;

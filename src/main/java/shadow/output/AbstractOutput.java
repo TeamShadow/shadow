@@ -40,14 +40,14 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 	{
 		startFile(module);
 		for (TACMethod method : module.getMethods())
-			build(method);
+			build(method, module);
 		endFile(module);
 	}
-	public void build(TACMethod method) throws ShadowException
+	public void build(TACMethod method, TACModule module) throws ShadowException
 	{
-		startMethod(method);
+		startMethod(method, module);
 		walk(method);
-		endMethod(method);
+		endMethod(method, module);
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 	@Override
 	public void endFile(TACModule module) throws ShadowException { }
 	@Override
-	public void startMethod(TACMethod method) throws ShadowException { }
+	public void startMethod(TACMethod method, TACModule module) throws ShadowException { }
 	@Override
-	public void endMethod(TACMethod method) throws ShadowException { }
+	public void endMethod(TACMethod method, TACModule module) throws ShadowException { }
 }

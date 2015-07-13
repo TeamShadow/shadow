@@ -41,8 +41,10 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 	
 	//private methods that take the final offset after all the dimensions have been computed
 	//unsafe to give to the user, but useful for internals
-	private readonly native index( int index ) => (T);
-	private native index( int index, T value) => ();	
+	//by keeping them protected, they are not accessible to the user
+	//but they still appear in .meta files and are accessible to the compiler
+	protected readonly native index( int index ) => (T);
+	protected native index( int index, T value) => ();	
 
 	public native readonly getBaseClass() => ( Class );
 

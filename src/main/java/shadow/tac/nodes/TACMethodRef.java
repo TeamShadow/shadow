@@ -16,32 +16,36 @@ import shadow.typecheck.type.Type;
 
 public class TACMethodRef extends TACOperand
 {
-	private TACOperand prefix;	
-	private MethodType type;
-	private String name;
+	private TACOperand prefix;
 	private TACMethodRef wrapped;
+	private MethodSignature signature;
 	private boolean isSuper = false;
 
 	public TACMethodRef(TACNode node, MethodSignature sig)
 	{
-		this(node, null, sig.getMethodType(), sig.getSymbol(),
-				sig.getWrapped());
-	}
-		
-	public TACMethodRef(TACNode node, MethodType methodType, String methodName)
-	{
-		this(node, null, methodType, methodName, (MethodSignature)null);
-	}
-	
+		this(node, null, sig);
+	}	
 	
 	public TACMethodRef(TACNode node, TACOperand prefixNode,
 			MethodSignature sig)
 	{
-		this(node, prefixNode, sig.getMethodType(), sig.getSymbol(),
+	/*	this(node, prefixNode, sig.getMethodType(), sig.getSymbol(),
 				sig.isWrapper() ? sig.getWrapped() : null);
 	}
 	
-	private void initialize(TACOperand prefixNode, MethodType methodType, String methodName)
+	private TACMethodRef(TACNode node, TACOperand prefixNode,
+			MethodType methodType, String methodName,
+			MethodSignature wrappedSignature)
+	{
+	*/
+		super(node);
+		initialize(prefixNode, sig);
+		
+		if (sig.isWrapper())
+			wrapped = new TACMethodRef((TACNode)this, sig.getWrapped());		
+	}
+	
+	private void initialize(TACOperand prefixNode, MethodSignature sig)
 	{
 		if (prefixNode != null)
 		{	
@@ -62,46 +66,30 @@ public class TACMethodRef extends TACOperand
 			{
 				//inner class issues
 				while(  prefixNode.getType() instanceof ClassType &&
-						!prefixNode.getType().isSubtype(methodType.getOuter()) && 
+						!prefixNode.getType().isSubtype(sig.getOuter()) && 
 						 prefixNode.getType().hasOuter()	) //not here, look in outer classes
 				{	
 					prefixNode = new TACFieldRef(this, prefixNode, new SimpleModifiedType(prefixNode.getType().getOuter()), "_outer");
 				}
 				
 				prefix = check(prefixNode,
-						new SimpleModifiedType(methodType.getOuter()));
+						new SimpleModifiedType(sig.getOuter()));
 			}
 		}
-		type = methodType;
-		name = methodName;		
+		signature = sig;
 	}
 	
-	private TACMethodRef(TACNode node, TACOperand prefixNode,
-			MethodType methodType, String methodName,
-			MethodSignature wrappedSignature)
-	{
-		super(node);
-		initialize( prefixNode, methodType, methodName);
-		
-		if (wrappedSignature != null)
-			wrapped = new TACMethodRef((TACNode)this, wrappedSignature);		
-	}
-
 	public TACMethodRef(TACNode node, TACMethodRef other)
 	{
-		this(node, null, other.getType(), other.getName(), other.getWrapped());
+		this(node, null, other.signature);
 	}	
-	public TACMethodRef(TACNode node, TACOperand prefixNode,
-			MethodType methodType, String methodName)
-	{
-		this(node, prefixNode, methodType, methodName, (TACMethodRef)null);
-	}
+
 	private TACMethodRef(TACNode node, TACOperand prefixNode,
-			MethodType methodType, String methodName,
+			MethodSignature sig,
 			TACMethodRef otherWrapped)
 	{
 		super(node);
-		initialize( prefixNode, methodType, methodName);		
+		initialize( prefixNode, sig);		
 		
 		if (otherWrapped != null)
 			wrapped = new TACMethodRef((TACNode)this, otherWrapped);
@@ -109,7 +97,7 @@ public class TACMethodRef extends TACOperand
 
 	public Type getOuterType()
 	{
-		return type.getOuter();
+		return signature.getOuter();
 	}
 	public boolean hasPrefix()
 	{
@@ -122,8 +110,7 @@ public class TACMethodRef extends TACOperand
 	}
 	public int getIndex()
 	{
-		int index = type.getOuter().getMethodIndex(
-				new MethodSignature(type, name, null));
+		int index = signature.getOuter().getMethodIndex(signature);
 		if (index == -1 || prefix == null)
 			throw new UnsupportedOperationException();
 		return index;
@@ -132,13 +119,13 @@ public class TACMethodRef extends TACOperand
 	public MethodType getType()
 	{		
 		if( isWrapper() || getOuterType() instanceof InterfaceType )
-			return type.getTypeWithoutTypeArguments();
+			return signature.getSignatureWithoutTypeArguments().getMethodType();
 		else
-			return type;
+			return signature.getMethodType();
 	}
 	public String getName()
 	{
-		return name;
+		return signature.getSymbol();
 	}
 	public boolean isWrapper()
 	{
@@ -267,28 +254,28 @@ public class TACMethodRef extends TACOperand
 
 	public boolean isNative()
 	{
-		return type.getModifiers().isNative();
+		return getType().getModifiers().isNative();
 	}
 
 	public boolean isCreate()
 	{
-		return name.equals("create");
+		return getName().equals("create");
 	}
 	public boolean isDestroy()
 	{
-		return name.equals("destroy") && !hasExplicitParameters();
+		return getName().equals("destroy") && !hasExplicitParameters();
 	}
 	public boolean isGetClass()
 	{
-		return name.equals("getClass") && !hasExplicitParameters();
+		return getName().equals("getClass") && !hasExplicitParameters();
 	}
 	public boolean isGet()
 	{
-		return type.getModifiers().isGet() && !hasExplicitParameters();
+		return getType().getModifiers().isGet() && !hasExplicitParameters();
 	}
 	public boolean isSet()
 	{
-		return type.getModifiers().isSet() && getExplicitParameterCount() == 1;
+		return getType().getModifiers().isSet() && getExplicitParameterCount() == 1;
 	}
 
 	@Override
@@ -313,7 +300,7 @@ public class TACMethodRef extends TACOperand
 	@Override
 	public String toString()
 	{
-		return name + type;
+		return getName() + getType();
 	}
 	
 	public void setSuper(boolean value)

@@ -12,8 +12,12 @@ abstract locked class shadow:standard@ArrayNullable<T> implements CanIndexNullab
 	public native readonly subarray( int start, int end ) => ( Array<T> );
 	public native readonly index( int[] indices ) => (nullable T);
 	public native index( int[] indices, nullable T value ) => ();
-	private readonly native index( int index ) => (T);
-	private native index( int index, nullable T value) => ();
+	
+	//by keeping them protected, they are not accessible to the user
+	//but they still appear in .meta files and are accessible to the compiler
+	protected readonly native index( int index ) => (T);
+	protected native index( int index, nullable T value) => ();
+	
 	public native readonly getBaseClass() => ( Class );
 	public native readonly toString() => ( String );
 	

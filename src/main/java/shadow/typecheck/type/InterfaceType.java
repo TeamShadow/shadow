@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.Package;
 
@@ -204,39 +205,20 @@ public class InterfaceType extends Type
 			//only constant non-parameterized fields in an interface
 			Map<String, Node> fields = getFields(); 
 			
-			for( String name : fields.keySet() )
-			{
+			for( String name : fields.keySet() ) {
 				SimpleNode field = (SimpleNode)(fields.get(name));
 				field = field.clone();
 				field.setType(field.getType());			
 				replaced.addField(name, field );
 			}
 			
-			Map<String, List<MethodSignature> > methods = getMethodMap();
-			
-			for( String name : methods.keySet() )
-			{
-				List<MethodSignature> signatures = methods.get(name);
-				
-				for( MethodSignature signature : signatures )
-				{
+			for( List<MethodSignature> signatures : getMethodMap().values() )
+				for( MethodSignature signature : signatures ) {
 					MethodSignature replacedSignature = signature.replace(values, replacements);					
-					replaced.addMethod(name, replacedSignature);
+					replaced.addMethod(replacedSignature);
 				}
-			}
-			
-			//should have no inner interfaces in an interface		
-			/*
-			Map<String, Type> inners = getInnerClasses();
-			
-			for( String name : inners.keySet() )		
-				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
-			*/
-			
-			//replaced.setTypeArguments( new SequenceType(replacements) );
 						
-			for( ModifiedType modifiedParameter : getTypeParameters() )
-			{
+			for( ModifiedType modifiedParameter : getTypeParameters() ) {
 				Type parameter = modifiedParameter.getType();
 				replaced.addTypeParameter(new SimpleModifiedType(parameter.replace(values, replacements), modifiedParameter.getModifiers() ));
 			}
@@ -269,30 +251,21 @@ public class InterfaceType extends Type
 			//only constant non-parameterized fields in an interface
 			Map<String, Node> fields = getFields(); 
 			
-			for( String name : fields.keySet() )
-			{
+			for( String name : fields.keySet() ) {
 				SimpleNode field = (SimpleNode)(fields.get(name));
 				field = field.clone();
 				field.setType(field.getType());			
 				replaced.addField(name, field );
 			}
 			
-			Map<String, List<MethodSignature> > methods = getMethodMap();
-			
-			for( String name : methods.keySet() )
-			{
-				List<MethodSignature> signatures = methods.get(name);
-				
-				for( MethodSignature signature : signatures )
-				{
+			for(List<MethodSignature> signatures : getMethodMap().values() )
+				for( MethodSignature signature : signatures ) {
 					MethodSignature replacedSignature = signature.partiallyReplace(values, replacements);
-					replaced.addMethod(name, replacedSignature);					
+					replaced.addMethod(replacedSignature);					
 				}
-			}			
 			
 			if( isParameterized() )
-				for( ModifiedType modifiedParameter : getTypeParameters() )	
-				{
+				for( ModifiedType modifiedParameter : getTypeParameters() )	{
 					Type parameter = modifiedParameter.getType();
 					replaced.addTypeParameter( new SimpleModifiedType(parameter.partiallyReplace(values, replacements), modifiedParameter.getModifiers()) );
 				}
@@ -309,9 +282,13 @@ public class InterfaceType extends Type
 		for( InterfaceType _interface : getInterfaces() )
 			_interface.updateFieldsAndMethods();		
 		
-		for( Entry<String, List<MethodSignature>> entry : getMethodMap().entrySet() )			
-			for( MethodSignature signature : entry.getValue() )			
+		for( List<MethodSignature> signatures : getMethodMap().values() )			
+			for( MethodSignature signature : signatures )	{		
 				signature.updateFieldsAndMethods();
+				SignatureNode node = signature.getNode(); 
+				if( node != null )
+					node.setType(signature.getMethodType());				
+			}
 		
 		if( isParameterized() )
 			getTypeParameters().updateFieldsAndMethods();

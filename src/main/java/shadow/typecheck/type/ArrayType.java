@@ -115,7 +115,8 @@ public class ArrayType extends ClassType
 	}
 	
 	public String toString(boolean withBounds) {		
-		String brackets = getTypeName().substring(getTypeName().indexOf('['));		
+		//peels off last set of brackets, important for arrays of arrays
+		String brackets = getTypeName().substring(getTypeName().lastIndexOf('['));		
 		
 		return baseType.toString(withBounds) + brackets;
 	}

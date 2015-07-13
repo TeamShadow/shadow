@@ -22,11 +22,15 @@ public class MethodType extends ClassType {
 		setExtendType(Type.METHOD); // added
 	}
 	
+	@Override
+	public Type getOuter() {
+		throw new UnsupportedOperationException();
+	}
 	
 	//used to copy a MethodType with different modifiers
 	public MethodType copy(Modifiers modifiers)
 	{
-		MethodType copiedType = new MethodType(getOuter(), modifiers);
+		MethodType copiedType = new MethodType(super.getOuter(), modifiers);
 		copiedType.parameterNames.addAll(parameterNames);
 		copiedType.parameterTypes.addAll(parameterTypes);
 		copiedType.returns.addAll(returns);
@@ -173,7 +177,7 @@ public class MethodType extends ClassType {
 	@Override
 	public MethodType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
 	{	
-		MethodType replaced = new MethodType(getOuter(), getModifiers());	
+		MethodType replaced = new MethodType(super.getOuter(), getModifiers());	
 		
 		replaced.parameterNames = parameterNames;
 		replaced.parameterTypes = parameterTypes.replace(values, replacements);
@@ -187,7 +191,7 @@ public class MethodType extends ClassType {
 	@Override
 	public MethodType partiallyReplace(SequenceType values, SequenceType replacements )
 	{	
-		MethodType replaced = new MethodType(getOuter(), getModifiers());	
+		MethodType replaced = new MethodType(super.getOuter(), getModifiers());	
 		
 		replaced.parameterNames = parameterNames;
 		replaced.parameterTypes = parameterTypes.partiallyReplace(values, replacements);
@@ -200,7 +204,8 @@ public class MethodType extends ClassType {
 	
 	public void updateFieldsAndMethods() throws InstantiationException {
 		parameterTypes.updateFieldsAndMethods();
-		returns.updateFieldsAndMethods();
+		returns.updateFieldsAndMethods();		
+		typeWithoutTypeArguments = this;		
 	}
 	
 

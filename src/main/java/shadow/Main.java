@@ -30,7 +30,6 @@ import shadow.tac.TACModule;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -67,36 +66,29 @@ public class Main {
 	 *
 	 * @param args Command line arguments to control the compiler
 	 */
-	public static void main(String[] args)
-	{
-		try
-		{
+	public static void main(String[] args) {
+		try {
 			run(args);
 		}
-		catch(FileNotFoundException e)
-		{
+		catch(FileNotFoundException e) {
 			System.err.println("FILE NOT FOUND: " + e.getLocalizedMessage());
 			System.exit(FILE_NOT_FOUND_ERROR);
 		}
-		catch(ParseException e)
-		{
+		catch(ParseException e) {
 			System.err.println("PARSE ERROR: " + e.getLocalizedMessage());
 			System.exit(PARSE_ERROR);
 		}
-		catch (ShadowException e)
-		{
+		catch (ShadowException e) {
 			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			System.exit(TYPE_CHECK_ERROR);
 		}
-		catch (IOException e)
-		{
+		catch (IOException e) {
 			System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			System.exit(TYPE_CHECK_ERROR);
 		}
-		catch (org.apache.commons.cli.ParseException e)
-		{
+		catch (org.apache.commons.cli.ParseException e) {
 			System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
 			printHelp();
 			System.exit(COMMAND_LINE_ERROR);
@@ -106,21 +98,18 @@ public class Main {
 			printHelp();
 			System.exit(CONFIGURATION_ERROR);
 		}
-		catch (TypeCheckException e)
-		{
+		catch (TypeCheckException e) {
 			System.err.println("TYPE CHECK ERROR: " + e.getLocalizedMessage());
 			System.exit(TYPE_CHECK_ERROR);
 		}
-		catch (CompileException e)
-		{
+		catch (CompileException e) {
 			System.err.println("COMPILATION ERROR: " + e.getLocalizedMessage());
 			System.exit(COMPILE_ERROR);
 		}
 	}
 
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
-
-		// Detect and establush the current settings and arguments
+		// Detect and establish the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
 		config = Configuration.buildConfiguration(compilerArgs, false);
 		currentJob = new Job(compilerArgs);
@@ -151,12 +140,11 @@ public class Main {
 
 		generateLLVM(linkCommand);
 
-		if (!currentJob.isCheckOnly() && !currentJob.isNoLink())
-		{
+		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.println();
 			System.out.flush();
-			try { Thread.sleep(250); }
+			try { Thread.sleep(500); }
 			catch (InterruptedException ex) { }
 
 			logger.info("Building for target \"" + config.getTarget() + "\"");
@@ -226,14 +214,12 @@ public class Main {
 	 * (which has been updated more recently than the corresponding source file
 	 * or building a new one
 	 */
-	private static void generateLLVM(List<String> linkCommand) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {
-		
+	private static void generateLLVM(List<String> linkCommand) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {		
 		Type.clearTypes();
 		HashSet<Generic> generics = new HashSet<Generic>();
 		HashSet<Array> arrays = new HashSet<Array>();
 
 		TypeChecker checker = new TypeChecker();
-		TACBuilder tacBuilder = new TACBuilder();
 
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = stripExt(mainFile.toString()); 
@@ -256,47 +242,47 @@ public class Main {
 				String path = stripExt(file.getCanonicalPath());
 				File llvmFile = new File(path + ".ll");
 
-				//if the LLVM didn't exist, the full .shadow file would have been used
+				//if the LLVM didn't exist, the full .shadow file would have been used				
 				if( file.getPath().endsWith(".meta") ) {
 					logger.info("Using pre-existing LLVM code for " + name);
-					addToLink(node.getType(), file, linkCommand, generics, arrays );
+					addToLink(node.getType(), file, linkCommand, generics, arrays );					
 				}
 				else {
 					logger.info("Generating LLVM code for " + name);
-					for( TACModule module : tacBuilder.build(node) ) {
-						Type type = module.getType();
+					//gets top level class
+					TACModule module = new TACBuilder().build(node);
+					Type type = module.getType();
 
-						if( path.equals(mainFileName) && !type.hasOuter() ) {							
-							mainClass = type.getMangledName();
-							SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
-							if( type.getMatchingMethod("main", arguments) != null )
-								mainArguments= true;
-							else if( type.getMatchingMethod("main", new SequenceType()) != null )
-								mainArguments = false;
-							else
-								throw new ShadowException("File " + file.getPath() + " does not contain an appropriate main() method");							
-						}
-						// Debug prints
-						logger.debug(module.toString());
-
-						// Write to file
-						String className = typeToFileName(type);
-						llvmFile = new File(file.getParentFile(), className + ".ll");
-						File nativeFile = new File(file.getParentFile(), className + ".native.ll");
-						LLVMOutput output = new LLVMOutput(llvmFile);
-						output.build(module);
-
-						generics.addAll(output.getGenerics());						
-						arrays.addAll(output.getArrays());
-
-						if( llvmFile.exists() )
-							linkCommand.add(llvmFile.getCanonicalPath());
+					if( path.equals(mainFileName) ) {							
+						mainClass = type.getMangledName();
+						SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
+						if( type.getMatchingMethod("main", arguments) != null )
+							mainArguments = true;
+						else if( type.getMatchingMethod("main", new SequenceType()) != null )
+							mainArguments = false;
 						else
-							throw new ShadowException("Failed to generate " + llvmFile.getPath());
-
-						if( nativeFile.exists() )
-							linkCommand.add(nativeFile.getCanonicalPath());
+							throw new ShadowException("File " + file.getPath() + " does not contain an appropriate main() method");							
 					}
+					// Debug prints
+					logger.debug(module.toString());
+
+					// Write to file
+					String className = typeToFileName(type);
+					llvmFile = new File(file.getParentFile(), className + ".ll");
+					File nativeFile = new File(file.getParentFile(), className + ".native.ll");
+					LLVMOutput output = new LLVMOutput(llvmFile);
+					output.build(module);
+
+					generics.addAll(output.getGenerics());						
+					arrays.addAll(output.getArrays());
+
+					if( llvmFile.exists() )
+						linkCommand.add(llvmFile.getCanonicalPath());
+					else
+						throw new ShadowException("Failed to generate " + llvmFile.getPath());
+
+					if( nativeFile.exists() )
+						linkCommand.add(nativeFile.getCanonicalPath());					
 				}
 			}
 
@@ -334,13 +320,7 @@ public class Main {
 
 
 		if( nativeFile.exists() )
-			linkCommand.add(nativeFile.getCanonicalPath());		
-
-		if( type instanceof ClassType ) {
-			ClassType classType = (ClassType) type;
-			for( Type inner : classType.getInnerClasses().values() )
-				addToLink( inner, file, linkCommand, generics, arrays );
-		}
+			linkCommand.add(nativeFile.getCanonicalPath());
 	}
 
 

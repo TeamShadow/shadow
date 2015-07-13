@@ -11,11 +11,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
-import shadow.output.llvm.Array;
-import shadow.output.llvm.Generic;
-import shadow.output.llvm.GenericArray;
 import shadow.parser.javacc.ASTVariableDeclarator;
 import shadow.parser.javacc.Node;
+import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
 
 public class ClassType extends Type
@@ -350,10 +348,8 @@ public class ClassType extends Type
 	}
 	
 	@Override
-	public ClassType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
-	{	
-		if( isRecursivelyParameterized() )
-		{	
+	public ClassType replace(SequenceType values, SequenceType replacements ) throws InstantiationException {	
+		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )
 				return (ClassType)cached;
@@ -369,37 +365,26 @@ public class ClassType extends Type
 			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.replace(values, replacements));
 			
-			Map<String, Node> fields = getFields(); 
-			
-			for( String name : fields.keySet() )
-			{
+			Map<String, Node> fields = getFields();
+			for( String name : fields.keySet() ) {
 				SimpleNode field = (SimpleNode)(fields.get(name));
 				field = field.clone();
 				field.setType(field.getType().replace(values, replacements));			
 				replaced.addField(name, field );
 			}
 			
-			Map<String, List<MethodSignature> > methods = getMethodMap();
-			
-			for( String name : methods.keySet() )
-			{
-				List<MethodSignature> signatures = methods.get(name);
-				
-				for( MethodSignature signature : signatures )
-				{
+			for( List<MethodSignature> signatures : getMethodMap().values() )
+				for( MethodSignature signature : signatures ) {
 					MethodSignature replacedSignature = signature.replace(values, replacements);
-					replaced.addMethod(name, replacedSignature);					
-				}
-			}
+					replaced.addMethod(replacedSignature);					
+				}			
 			
-			Map<String, ClassType> inners = getInnerClasses();
-			
+			Map<String, ClassType> inners = getInnerClasses();			
 			for( String name : inners.keySet() )		
 				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
 			
 			if( isParameterized() )
-				for( ModifiedType modifiedParameter : getTypeParameters() )	
-				{
+				for( ModifiedType modifiedParameter : getTypeParameters() )	{
 					Type parameter = modifiedParameter.getType();
 					replaced.addTypeParameter( new SimpleModifiedType(parameter.replace(values, replacements), modifiedParameter.getModifiers()) );
 				}
@@ -411,10 +396,8 @@ public class ClassType extends Type
 	}
 	
 	@Override
-	public ClassType partiallyReplace(SequenceType values, SequenceType replacements )
-	{	
-		if( isRecursivelyParameterized() )
-		{	
+	public ClassType partiallyReplace(SequenceType values, SequenceType replacements ) {	
+		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )
 				return (ClassType)cached;
@@ -432,12 +415,10 @@ public class ClassType extends Type
 			
 			Map<String, Node> fields = getFields(); 
 			
-			for( String name : fields.keySet() )
-			{
+			for( String name : fields.keySet() ) {
 				SimpleNode field = (SimpleNode)(fields.get(name));
 				if( field.getType().isParameterized() ) {
-					field = field.clone();
-					
+					field = field.clone();					
 					SequenceType typeArguments = new SequenceType();
 					for( ModifiedType typeParameter : field.getType().getTypeParameters() ) {
 						Type type = typeParameter.getType();
@@ -456,19 +437,12 @@ public class ClassType extends Type
 				replaced.addField(name, field );
 			}
 			
-			Map<String, List<MethodSignature> > methods = getMethodMap();
-			
-			for( String name : methods.keySet() )
-			{
-				List<MethodSignature> signatures = methods.get(name);				
-				
-				for( MethodSignature signature : signatures )
-				{	
+			for( List<MethodSignature> signatures : getMethodMap().values() )
+				for( MethodSignature signature : signatures ) {	
 					MethodSignature replacedSignature = signature.partiallyReplace(values, replacements);
-					replaced.addMethod(name, replacedSignature);
+					replaced.addMethod(replacedSignature);
 					signature.getNode().setMethodSignature(replacedSignature);
-				}
-			}
+				}			
 			
 			Map<String, ClassType> inners = getInnerClasses();
 			
@@ -476,8 +450,7 @@ public class ClassType extends Type
 				replaced.addInnerClass(name, inners.get(name).partiallyReplace(values, replacements));
 			
 			if( isParameterized() )
-				for( ModifiedType modifiedParameter : getTypeParameters() )	
-				{
+				for( ModifiedType modifiedParameter : getTypeParameters() )	{
 					Type parameter = modifiedParameter.getType();
 					replaced.addTypeParameter( new SimpleModifiedType(parameter.partiallyReplace(values, replacements), modifiedParameter.getModifiers()) );
 				}
@@ -501,23 +474,19 @@ public class ClassType extends Type
 		
 		Map<String, Node> fields = getFields(); 
 		
-		for( String name : fields.keySet() )
-		{
+		for( String name : fields.keySet() ) {
 			ASTVariableDeclarator field = (ASTVariableDeclarator)(fields.get(name));
 			if( field.getType() instanceof UninstantiatedType )
 				field.setType( ((UninstantiatedType)field.getType()).instantiate() );
 		}	
 		
-		
-		Map<String, List<MethodSignature> > methods = getMethodMap();
-		
-		for( String name : methods.keySet() )
-		{
-			List<MethodSignature> signatures = methods.get(name);
-			
-			for( MethodSignature signature : signatures )			
+		for( List<MethodSignature> signatures : getMethodMap().values() )
+			for( MethodSignature signature : signatures ) {			
 				signature.updateFieldsAndMethods();
-		}		
+				SignatureNode node = signature.getNode(); 
+				if( node != null )
+					node.setType(signature.getMethodType());
+			}
 
 		for( ClassType inner : getInnerClasses().values() )		
 			inner.updateFieldsAndMethods();

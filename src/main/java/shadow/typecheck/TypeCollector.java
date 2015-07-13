@@ -130,7 +130,7 @@ public class TypeCollector extends BaseChecker {
 				File llvm = new File( canonical + ".ll" );
 				if( !forceGenerate &&
 					meta.exists() && meta.lastModified() >= canonicalFile.lastModified() &&
-					llvm.exists() && llvm.lastModified() >= canonicalFile.lastModified() &&
+					llvm.exists() && llvm.lastModified() >= meta.lastModified() &&
 					!canonicalFile.equals(mainFile) )//check for more recent .meta file
 					canonicalFile = meta;
 			}

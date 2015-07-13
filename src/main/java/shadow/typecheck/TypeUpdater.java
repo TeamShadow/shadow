@@ -154,7 +154,7 @@ public class TypeUpdater extends BaseChecker {
 		for(Node declarationNode : nodeTable.values() ) {	
 			try {			
 				Type type = declarationNode.getType();				
-				type.updateFieldsAndMethods();
+				type.updateFieldsAndMethods();				
 			}
 			catch(InstantiationException e) {							
 				addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
@@ -176,7 +176,7 @@ public class TypeUpdater extends BaseChecker {
 						createNode.setModifiers(Modifiers.PUBLIC);
 						MethodSignature createSignature = new MethodSignature(classType, "create", createNode.getModifiers(), createNode);
 						createNode.setMethodSignature(createSignature);
-						classType.addMethod("create", createSignature);
+						classType.addMethod(createSignature);
 						//note that the node is null for the default create, because nothing was made
 					}
 					
@@ -187,7 +187,7 @@ public class TypeUpdater extends BaseChecker {
 					copySignature.addParameter("addresses", new SimpleModifiedType(Type.ADDRESS_MAP));
 					copySignature.addReturn(new SimpleModifiedType(classType));					
 					copyNode.setMethodSignature(copySignature);
-					classType.addMethod("copy", copySignature);
+					classType.addMethod(copySignature);
 					
 					classType.addReferencedType(Type.ADDRESS_MAP); //so the use of AddressMap is recorded
 					
@@ -240,7 +240,7 @@ public class TypeUpdater extends BaseChecker {
 										modifiers.removeModifier(Modifiers.WEAK);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
 									methodType.addReturn(modifiedType);									
-									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), null));
+									classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
 								}								
 							}
 							
@@ -268,7 +268,7 @@ public class TypeUpdater extends BaseChecker {
 										modifiers.removeModifier(Modifiers.WEAK);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
 									methodType.addParameter("value", modifiedType );									
-									classType.addMethod(field.getKey(), new MethodSignature(methodType, field.getKey(), null));
+									classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
 								}								
 							}
 						}						
@@ -649,25 +649,21 @@ public class TypeUpdater extends BaseChecker {
 		return success;
 	}	
 	
-	private Object visitMethod( String name, SignatureNode node, Boolean secondVisit )
-	{	
+	private Object visitMethod( String name, SignatureNode node, Boolean secondVisit ) {	
 		MethodSignature signature;
 		
-		if( secondVisit )
-		{
+		if( secondVisit ) {
 			signature = node.getMethodSignature();			
 			
 			// make sure we don't already have an indistinguishable method
-			if( currentType.containsIndistinguishableMethod(signature) )
-			{				
+			if( currentType.containsIndistinguishableMethod(signature) ) {				
 				// get the first signature
 				MethodSignature method = currentType.getIndistinguishableMethod(signature);				
 				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Indistinguishable method already declared on line " + method.getNode().getLineStart());
 				return WalkType.NO_CHILDREN;
 			}
 						
-			if( currentType instanceof ClassType ) {
-			
+			if( currentType instanceof ClassType ) {			
 				if( isMeta && node.hasBlock() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
 				
@@ -685,11 +681,10 @@ public class TypeUpdater extends BaseChecker {
 			}		
 			
 			// add the method to the current type
-			currentType.addMethod(name, signature);
+			currentType.addMethod(signature);
 			currentMethod.removeFirst();
 		}
-		else
-		{
+		else {
 			signature = new MethodSignature( currentType, name, node.getModifiers(), node);
 			node.setMethodSignature(signature);
 			MethodType methodType = signature.getMethodType();
@@ -739,12 +734,10 @@ public class TypeUpdater extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private void visitDeclarator( Node node, MethodSignature signature )
-	{	
+	private void visitDeclarator( Node node, MethodSignature signature ) {	
 		//ASTCreateDeclarator will never have type parameters 
 		int index = 0;		
-		if( node.jjtGetChild(index) instanceof ASTTypeParameters )
-		{
+		if( node.jjtGetChild(index) instanceof ASTTypeParameters ) {
 			Type methodType = signature.getMethodType();
 			methodType.setParameterized(true);
 			index++;
@@ -758,35 +751,30 @@ public class TypeUpdater extends BaseChecker {
 		for( int i = 0; i < parameterNames.size(); ++i )				
 			signature.addParameter(parameterNames.get(i), parameterTypes.get(i));
 		
-		if( signature.getModifiers().isSet() )
-		{				
+		if( signature.getModifiers().isSet() ) {				
 			if( parameterTypes.size() != 1 )
 				addError(Error.INVALID_MODIFIER, "Methods marked with set must have exactly one parameter");
 			else
 				signature.getParameterTypes().get(0).getModifiers().addModifier(Modifiers.ASSIGNABLE);
 		}			
-		else if( signature.getModifiers().isGet() )
-		{
+		else if( signature.getModifiers().isGet() ) {
 			if( parameterTypes.size() != 0 )
 				addError(Error.INVALID_MODIFIER, "Methods marked with get cannot have any parameters");
 		}		
 
 		//add return types
 		index++;
-		if( node.jjtGetNumChildren() > index ) //creates have no results
-		{		
+		if( node.jjtGetNumChildren() > index ) { //creates have no results		
 			ASTResultTypes results = (ASTResultTypes) node.jjtGetChild(index);
 					
 			for( ModifiedType modifiedType : results.getType() ) 
 				signature.addReturn(modifiedType);
 		
-			if( signature.getModifiers().isSet() )
-			{				
+			if( signature.getModifiers().isSet() ) {				
 				if( signature.getReturnTypes().size() != 0 )
 					addError(Error.INVALID_MODIFIER, "Methods marked with set cannot have return values");				
 			}			
-			else if( signature.getModifiers().isGet() )
-			{
+			else if( signature.getModifiers().isGet() ) {
 				if( signature.getReturnTypes().size() != 1 )
 					addError(Error.INVALID_MODIFIER, "Methods marked with get must have exactly one return value");
 			}
