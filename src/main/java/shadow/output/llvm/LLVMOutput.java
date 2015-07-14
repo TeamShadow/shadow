@@ -96,6 +96,9 @@ public class LLVMOutput extends AbstractOutput {
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();	
 	private TACMethod method;
 	private int classCounter = 0;
+	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
+	private HashSet<TACConstant> usedConstants = new HashSet<TACConstant>();
+	private TACModule module;
 	
 	public LLVMOutput(File file) throws ShadowException {		
 		super(new File(file.getParent(),
@@ -360,13 +363,18 @@ public class LLVMOutput extends AbstractOutput {
 
 		//method declarations (but not definitions)
 		List<MethodSignature> methods = moduleType.orderAllMethods();
+		
 		int flags = 0;
 		if (moduleType.isPrimitive())
 			flags |= PRIMITIVE;
 		if( moduleType instanceof SingletonType )
 			flags |= SINGLETON;
-		if (module.isClass())
-		{			
+		if (module.isClass()) {
+			//add in methods that are inherited from parent classes
+			for( MethodSignature signature : methods)			
+				if( (signature.getOuter() instanceof ClassType) && !module.getType().encloses(signature.getOuter()) && !signature.isWrapper() )
+					usedSignatures.add(signature);
+			
 			ClassType parentType = ((ClassType)moduleType).getExtendType();
 			writer.write('@' + raw(moduleType, "_methods") + " = constant %" +
 					raw(moduleType, "_methods") + " { " +					
@@ -439,6 +447,7 @@ public class LLVMOutput extends AbstractOutput {
 
 	@Override
 	public void startFile(TACModule module) throws ShadowException {		
+		this.module = module;		
 		Type moduleType = module.getType();
 
 		//boiler plate for all types
@@ -488,19 +497,7 @@ public class LLVMOutput extends AbstractOutput {
 			else if( !moduleType.encloses(type) ) {				
 				if( (type.isFullyInstantiated() && recordedTypes.add(type.getMangledNameWithGenerics())) ||  
 					(type.isUninstantiated() && recordedTypes.add(type.getMangledName()))	)				
-					writeTypeConstants(type);
-				
-				/*
-				//inner classes (should already be covered)
-				if( type instanceof ClassType ) {
-					ClassType classType = (ClassType) type;
-					for( ClassType inner : classType.getInnerClasses().values() ) {
-						if((inner.isFullyInstantiated() && recordedTypes.add(inner.getMangledNameWithGenerics())) ||  
-						(inner.isUninstantiated() && recordedTypes.add(inner.getMangledName()))	)
-						writeTypeConstants(inner);
-					}					
-				}
-				*/				
+					writeTypeConstants(type);			
 			}			 
 		}		
 		writer.write();	
@@ -511,11 +508,9 @@ public class LLVMOutput extends AbstractOutput {
 
 
 	private String methodList(Iterable<MethodSignature> methods, boolean name)
-			throws ShadowException
-	{
+			throws ShadowException {
 		StringBuilder sb = new StringBuilder();
-		for (MethodSignature method : methods)
-		{
+		for (MethodSignature method : methods) {
 			//TACMethodRef methodRef = new TACMethodRef(method);
 			sb.append(", ").append(methodType(method));
 			if (name)
@@ -645,6 +640,8 @@ public class LLVMOutput extends AbstractOutput {
 			//TODO: fix this so that only used methods are included
 			if( type.isUninstantiated() && recordedClasses.add(type.getMangledName()) )
 			{
+				
+				/*
 				for (List<MethodSignature> methodList :
 						type.getMethodMap().values())
 					for (MethodSignature method : methodList)
@@ -654,6 +651,7 @@ public class LLVMOutput extends AbstractOutput {
 							writer.write("declare " + methodToString(
 									//new TACMethod(method).addParameters()));
 									method));
+				*/
 				
 				for( Entry<String, Node> entry : type.getFields().entrySet())
 				{
@@ -669,6 +667,10 @@ public class LLVMOutput extends AbstractOutput {
 			}
 			writer.write();
 		}
+		
+		//print only the (mostly private) methods that are call directly used
+		for (MethodSignature method : usedSignatures)
+				writer.write("declare " + methodToString(method));
 		
 		//one special-case hack for the Class class
 		//this method is not listed as a native method in the class
@@ -714,7 +716,7 @@ public class LLVMOutput extends AbstractOutput {
 
 				try
 				{
-					Thread.sleep(11);
+					Thread.sleep(11); //why is this 11?
 				} catch (InterruptedException ex)
 				{
 				}
@@ -898,8 +900,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACMethodRef node) throws ShadowException
 	{
-		if (node.getOuterType() instanceof InterfaceType)
-		{
+		if (node.getOuterType() instanceof InterfaceType) {
 			writer.write(nextTemp() + " = extractvalue " +
 					type(node.getOuterType()) + " " + symbol(node.getPrefix()) + ", 0");
 			writer.write(nextTemp() + " = getelementptr %" +
@@ -912,9 +913,9 @@ public class LLVMOutput extends AbstractOutput {
 		else if (node.hasPrefix() && 
 				//TODO: Change to locked (devirtualization)
 				!node.getOuterType().isPrimitive() &&
+				!node.getOuterType().getModifiers().isLocked() &&
+				!node.getType().getModifiers().isLocked() &&
 				!(node.getOuterType() instanceof SingletonType) &&
-				//!node.getOuterType().getModifiers().isImmutable() &&
-				//!node.getType().getModifiers().isFinal() && //replace with Readonly?
 				!node.getType().getModifiers().isPrivate() &&
 				!node.isSuper() )
 		{	
@@ -931,8 +932,15 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp(node) + " = load " + methodType(node) +
 					"* " + temp(1));
 		}
-		else
+		else {			
 			node.setData(name(node));
+			MethodSignature signature = node.getSignature();
+			if( !module.getType().encloses(signature.getOuter()) && !signature.isWrapper()  )
+				usedSignatures.add(signature);
+		}
+		
+		
+		
 	}
 
 	@Override
@@ -942,17 +950,8 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACClass node) throws ShadowException
-	{
-		
+	public void visit(TACClass node) throws ShadowException {		
 		node.setData(node.getClassData().getData());
-		
-		/*
-		if (node.hasOperand())
-			node.setData(symbol(node.getOperand()));
-		else
-			node.setData(classOf(node.getClassType()));
-		*/
 	}
 	
 	@Override
@@ -1719,8 +1718,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACCall node) throws ShadowException
-	{
+	public void visit(TACCall node) throws ShadowException {
 		TACMethodRef method = node.getMethod();
 		StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
 				"invoke" : "call").append(' ').
@@ -1728,8 +1726,7 @@ public class LLVMOutput extends AbstractOutput {
 				append(symbol(method)).append('(');
 		boolean first = true;
 		for (TACOperand param : node.getParameters())
-			if (first)
-			{
+			if (first) {
 				first = false;			
 				sb.append(typeSymbol(param));
 			}
@@ -1738,8 +1735,7 @@ public class LLVMOutput extends AbstractOutput {
 		if (!method.getReturnTypes().isEmpty())
 			sb.insert(0, nextTemp(node) + " = ");
 		writer.write(sb.append(')').toString());
-		if (node.getBlock().hasLandingpad())
-		{
+		if (node.getBlock().hasLandingpad()) {
 			TACLabelRef label = new TACLabelRef();
 			visit(label);
 			writer.indent(2);

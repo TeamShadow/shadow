@@ -1,6 +1,6 @@
 class shadow:standard@Object
 {
-	public native readonly
+	public native readonly locked
 	getClass() => ( Class );
 
 	//public native readonly
