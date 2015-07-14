@@ -22,14 +22,13 @@ public class ParserManager
 		
 		private static final Pattern argumentPattern = Pattern.compile("[^\\s]+");
 		
-		public ArgDescriptionParser(int argCount,
-				boolean hasDescription) throws DocumentationException
+		public ArgDescriptionParser(int argCount, boolean hasDescription)
 		{
 			this.argCount = argCount;
 			this.hasDescription = hasDescription;
 			
 			if (argCount < 0)
-				throw new DocumentationException("Expected the number of arguments to be zero or greater");
+				throw new IllegalArgumentException("Expected the number of arguments to be zero or greater");
 		}
 		
 		public List<String> parse(String text) throws DocumentationException
@@ -68,12 +67,12 @@ public class ParserManager
 	{
 		private final char delimiter;
 		
-		public DelimitedParser(char delimiter) throws DocumentationException
+		public DelimitedParser(char delimiter)
 		{
 			this.delimiter = delimiter;
 			
 			if (Character.isWhitespace(delimiter))
-				throw new DocumentationException("Whitespace characters cannot be used as delimiters");
+				throw new IllegalArgumentException("Whitespace characters cannot be used as delimiters");
 		}
 		
 		public List<String> parse(String text) throws DocumentationException

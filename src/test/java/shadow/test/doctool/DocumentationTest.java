@@ -19,6 +19,9 @@ import shadow.doctool.DocumentationTool;
 import shadow.doctool.tag.ParserManager.ArgDescriptionParser;
 import shadow.doctool.tag.ParserManager.DelimitedParser;
 import shadow.doctool.tag.ParserManager.TagParser;
+import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.doctool.tag.TagManager.InlineTagType;
+import shadow.doctool.tag.TagManager.TagType;
 
 public class DocumentationTest 
 {
@@ -130,6 +133,23 @@ public class DocumentationTest
 		try {
 			parser = new DelimitedParser(' ');
 			throw new Exception("Whitespace delimiter was not caught");
-		} catch (DocumentationException e) { }
+		} catch (IllegalArgumentException e) { }
+	}
+	
+	@Test public void typeRetrievalTest() throws Exception
+	{
+		TagType type = BlockTagType.getType("author");
+		assertEquals(BlockTagType.AUTHOR, type);
+		type = BlockTagType.getType("param");
+		assertEquals(BlockTagType.PARAM, type);
+		type = BlockTagType.getType("throws");
+		assertEquals(BlockTagType.THROWS, type);
+		type = BlockTagType.getType("FAKE_TAG");
+		assertEquals(BlockTagType.INVALID_BLOCK_TAG, type);
+		
+		type = InlineTagType.getType("see");
+		assertEquals(InlineTagType.SEE, type);
+		type = InlineTagType.getType("FAKE_TAG");
+		assertEquals(InlineTagType.INVALID_INLINE_TAG, type);
 	}
 }
