@@ -2,19 +2,23 @@ package shadow.test.doctool;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import shadow.doctool.DocumentationBuilder;
-import shadow.doctool.DocumentationTool;
 import shadow.doctool.Documentation;
+import shadow.doctool.DocumentationBuilder;
+import shadow.doctool.DocumentationException;
+import shadow.doctool.DocumentationTool;
+import shadow.doctool.tag.ParserManager.ArgDescriptionParser;
+import shadow.doctool.tag.ParserManager.DelimitedParser;
+import shadow.doctool.tag.ParserManager.TagParser;
 
 public class DocumentationTest 
 {
@@ -87,5 +91,45 @@ public class DocumentationTest
 				+ "directive! @numbers1234 isn't real either",
 				directives.get(1).getDescription());
 		*/
+	}
+	
+	@Test public void argDescriptionParserTest() throws Exception
+	{
+		TagParser parser = new ArgDescriptionParser(3, true);
+		
+		List<String> results = parser.parse("\tfirstArg secondOne \tthirdOne and a \tdescription!    ");
+		assertEquals(4, results.size());
+		assertEquals("firstArg", results.get(0));
+		assertEquals("secondOne", results.get(1));
+		assertEquals("thirdOne", results.get(2));
+		assertEquals("and a description!", results.get(3));
+		
+		parser = new ArgDescriptionParser(2, false);
+		
+		try {
+			results = parser.parse("this won't work");
+			throw new Exception("Excess text was not caught");
+		} catch (DocumentationException e) { }
+		
+		results = parser.parse("one-and-a \ttwo");
+		assertEquals(2, results.size());
+		assertEquals("one-and-a", results.get(0));
+		assertEquals("two", results.get(1));
+	}
+	
+	@Test public void delimitedParserTest() throws Exception
+	{
+		TagParser parser = new DelimitedParser(',');
+		
+		List<String> results = parser.parse(" John Doe, Jane Eyre  , Mary\tShelly,,,\t");
+		assertEquals(3, results.size());
+		assertEquals("John Doe", results.get(0));
+		assertEquals("Jane Eyre", results.get(1));
+		assertEquals("Mary Shelly", results.get(2));
+		
+		try {
+			parser = new DelimitedParser(' ');
+			throw new Exception("Whitespace delimiter was not caught");
+		} catch (DocumentationException e) { }
 	}
 }
