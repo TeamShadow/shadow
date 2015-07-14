@@ -1186,7 +1186,7 @@ public abstract class Type implements Comparable<Type>
 			return true;
 		
 		Type outer = type.getOuter();
-		if( outer == null )
+		if( outer == null || type instanceof ArrayType )
 			return false;		
 		
 		return encloses(outer);

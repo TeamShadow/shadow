@@ -26,7 +26,6 @@ import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
 import shadow.output.TabbedLineWriter;
-import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
@@ -85,7 +84,6 @@ import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
-import shadow.typecheck.type.UnboundMethodType;
 
 public class LLVMOutput extends AbstractOutput {
 	private Process process = null;
@@ -98,6 +96,9 @@ public class LLVMOutput extends AbstractOutput {
 	private int classCounter = 0;
 	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
 	private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
+	private HashSet<Type> usedMethodTables = new HashSet<Type>();
+	private HashSet<Type> usedClasses = new HashSet<Type>();
+	
 	private TACModule module;
 	
 	public LLVMOutput(File file) throws ShadowException {		
@@ -236,16 +237,18 @@ public class LLVMOutput extends AbstractOutput {
 	
 	private void writeTypeConstants(Type type) throws ShadowException {	
 		if( type.isParameterizedIncludingOuterClasses() ) {
-			unparameterizedGenerics.add(type.getTypeWithoutTypeArguments());
+			//unparameterizedGenerics.add(type.getTypeWithoutTypeArguments());
 		
 			if( type.isFullyInstantiated() ) {	
 				writer.write('@' + withGenerics(type, "_class") +
 						" = external constant %" + raw(Type.CLASS));				
 				
+				/*
 				if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
 					generics.add(new GenericArray(type));
 				else
 					generics.add(new Generic(type));
+				*/
 			}
 			else if( type instanceof ClassType && type.isUninstantiated() ) {
 				//methods recorded for classes with no type parameters and for the raw class of those that do
@@ -346,6 +349,8 @@ public class LLVMOutput extends AbstractOutput {
 				}				
 				interfaceClasses.append(typeText(Type.CLASS, classOf(type))).
 						append(", ");
+				
+				usedClasses.add(type);
 				classCounter++;
 			}
 			if (interfaceCount > 0) {
@@ -381,7 +386,7 @@ public class LLVMOutput extends AbstractOutput {
 					methodList(methods, true) + " }");
 			
 			//nothing will ever be the raw, unparameterized class
-			if( !moduleType.isParameterizedIncludingOuterClasses() )
+			if( !moduleType.isParameterizedIncludingOuterClasses() ) {
 				writer.write('@' + raw(moduleType, "_class") + " = constant %" +
 					raw(Type.CLASS) + " { " + 		
 					
@@ -407,9 +412,13 @@ public class LLVMOutput extends AbstractOutput {
 					typeLiteral(flags) + ", " +			//flags
 					typeText(Type.INT, sizeof('%' + raw(moduleType) + '*')) + //size 
 					" }" );
+				
+				//class definition above includes parent Class
+				if( parentType != null )
+					usedClasses.add(parentType);
+			}
 		}
-		else
-		{
+		else {
 			flags |= INTERFACE;
 			
 			//nothing will ever be the raw, unparameterized class
@@ -430,6 +439,13 @@ public class LLVMOutput extends AbstractOutput {
 					typeLiteral(-1) + //size (unknown for interfaces) 
 					" }");
 		}
+		
+		//all module class definitions need Class class and methods
+		if( !module.getType().encloses(Type.CLASS)) {
+			usedClasses.add(Type.CLASS);
+			usedMethodTables.add(Type.CLASS);
+		}
+		
 		if (moduleType instanceof SingletonType)
 			writer.write('@' + raw(moduleType, "_instance") + " = global " +
 					type(moduleType) + " null");
@@ -449,7 +465,7 @@ public class LLVMOutput extends AbstractOutput {
 	public void startFile(TACModule module) throws ShadowException {		
 		this.module = module;		
 		Type moduleType = module.getType();
-
+			
 		//boiler plate for all types
 		writePrimitiveTypes();
 		
@@ -467,40 +483,38 @@ public class LLVMOutput extends AbstractOutput {
 		
 		//type references
 		HashSet<Type> definedGenerics = new HashSet<Type>();
-		for (Type type : module.getReferences()) {
+		for (Type type : module.getReferences()) {			
+			//write type declarations
 			if(type != null && !moduleType.encloses(type)) {	
 				if( !type.isParameterized() )
 					writeTypeDeclaration(type);	
 				else {
-					Type unparameterizedType = type.getTypeWithoutTypeArguments();
-					
-					//write all parameterized interfaces
-					if( type.isFullyInstantiated() && type instanceof InterfaceType ) 
-						writeTypeDeclaration(type);
 					//if unparameterized version has not been declared yet, do it
+					Type unparameterizedType = type.getTypeWithoutTypeArguments();
 					if( definedGenerics.add(unparameterizedType) &&		
 						!unparameterizedType.equals(module.getType()))
 						writeTypeDeclaration(unparameterizedType);
 				}
 			}
-		}
-		writer.write();
-		
-
-		HashSet<String> recordedTypes = new HashSet<String>();
-		Set<Type> references = module.getReferences(); 
-		
-		for (Type type : references )
-		{
+			
+			//record generics
 			if( type instanceof ArrayType )
 				arrays.add(new Array((ArrayType)type));			
 			else if( !moduleType.encloses(type) ) {				
-				if( (type.isFullyInstantiated() && recordedTypes.add(type.getMangledNameWithGenerics())) ||  
-					(type.isUninstantiated() && recordedTypes.add(type.getMangledName()))	)				
-					writeTypeConstants(type);			
-			}			 
-		}		
-		writer.write();	
+				if( type.isFullyInstantiated() ) {//&& recordedTypes.add(type.getMangledNameWithGenerics())) ){ //||  
+					//(type.isUninstantiated() && recordedTypes.add(type.getMangledName()))	)				
+					//writeTypeConstants(type);	
+					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
+						generics.add(new GenericArray(type));
+					else
+						generics.add(new Generic(type));
+				}
+				
+				if( type.isParameterizedIncludingOuterClasses() )
+					unparameterizedGenerics.add(type.getTypeWithoutTypeArguments());
+			}	
+		}
+		writer.write();
 		
 		//defines class and recursively defines inner classes  
 		writeModuleDefinition(module);		
@@ -624,41 +638,32 @@ public class LLVMOutput extends AbstractOutput {
 						type(Type.OBJECT) + ", " +
 						type(new ArrayType(Type.INT)) + ", " +
 						type(Type.OBJECT) + ')');
-			
-			/*
-			if( type.isUninstantiated() && recordedClasses.add(type.getMangledName()) )
-			{
-				
-				
-				for (List<MethodSignature> methodList :
-						type.getMethodMap().values())
-					for (MethodSignature method : methodList)
-						if (method.getModifiers().isPublic() ||
-							(type instanceof ClassType && ((ClassType)type).recursivelyContainsInnerClass(module.getType())) ||
-							(module.getType().isSubtype(type)  && method.getModifiers().isProtected()))
-							writer.write("declare " + methodToString(
-									//new TACMethod(method).addParameters()));
-									method));
-				
-				
-				for( Entry<String, Node> entry : type.getFields().entrySet())
-				{
-					Node field = entry.getValue();
-					String name = entry.getKey();
-					if( field.getModifiers().isConstant() )
-					{
-						writer.write("@\"" + 				
-						field.getEnclosingType().getMangledName() + "_M" + 
-						name + "\" = external constant " + type(field.getType()));
-					}
-				}
-				
-			}
-			*/
-			//writer.write();			
 		}
 		
-		//print only the constants that are used
+		//print the method tables that are used		
+		for( Type type : usedMethodTables )
+			if( type instanceof ClassType && type.isUninstantiated() )				
+				writer.write('@' + raw(type, "_methods") +
+					" = external constant %" + raw(type, "_methods"));
+		writer.write();
+		
+		
+		//print the class constants that are used		
+		for( Type type : usedClasses ) {
+			if( type.isFullyInstantiated() )
+				writer.write('@' + withGenerics(type, "_class") +
+						" = external constant %" + raw(Type.CLASS));
+			else if( type.isUninstantiated() )
+				writer.write('@' + raw(type, "_class") +
+					" = external constant %" + raw(Type.CLASS));
+			
+			if (type instanceof SingletonType) //never parameterized
+				writer.write('@' + raw(type, "_instance") +
+						" = external global " + type(type));
+		}
+		writer.write();
+		
+		//print only the constant fields that are used
 		for( TACConstantRef constant : usedConstants )
 			writer.write("@\"" + 				
 				constant.getPrefixType().getMangledName() + "_M" + 
@@ -684,10 +689,12 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write("@_generics" + type.getMangledName() +	" = external constant " + type(genericClassArray));			
 		writer.write();
 		
+		/* //seem to be covered by usedClasses
 		//print array type possibilities (only those arrays that can show up as generic parameters)
 		for( Array array : arrays )		
 			writer.write("@\"" + array.getMangledName() + "_class\" = external constant %" + raw(Type.CLASS));
 		writer.write();
+		*/
 
 		writeStringLiterals();
 
@@ -914,6 +921,8 @@ public class LLVMOutput extends AbstractOutput {
 			
 			writer.write(nextTemp() + " = load %" +
 					raw(node.getPrefix().getType(), "_methods") + "** " + temp(1));
+			if( !module.getType().encloses(node.getPrefix().getType()) )
+				usedMethodTables.add(node.getPrefix().getType());
 			
 			writer.write(nextTemp() + " = getelementptr %" +
 					raw(node.getPrefix().getType(), "_methods") + "* " +
@@ -942,16 +951,17 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void visit(TACClass.TACClassData node) throws ShadowException
-	{
+	public void visit(TACClass.TACClassData node) throws ShadowException {
 		Type type = node.getClassType();		
 		node.setData(classOf(type));
 	}
 	
 	@Override
-	public void visit(TACClass.TACMethodTable node) throws ShadowException
-	{
-		node.setData("@" + raw(node.getClassType().getTypeWithoutTypeArguments(), "_methods"));
+	public void visit(TACClass.TACMethodTable node) throws ShadowException {
+		Type type = node.getClassType().getTypeWithoutTypeArguments();
+		node.setData("@" + raw(type, "_methods"));
+		if( !module.getType().encloses(type))
+			usedMethodTables.add(type);
 	}	
 
 	@Override
@@ -966,30 +976,6 @@ public class LLVMOutput extends AbstractOutput {
 		}
 		node.setData(current);
 	}
-	
-	
-	/*
-	private String allocatePrimitive(TACOperand node, Type srcType, String srcName) throws ShadowException
-	{
-		writer.write(nextTemp(node) + " = call noalias " +
-				type(Type.OBJECT) + " @" + raw(Type.CLASS,
-				"_Mallocate") + '(' + type(Type.CLASS) +
-				" @" + raw(srcType, "_class") + ", %" + 
-				raw(Type.OBJECT, "_methods") + "* bitcast(%" +
-				raw(srcType, "_methods") + "* @" +	raw(srcType, "_methods") +
-				" to %" + raw(Type.OBJECT, "_methods") + "*)" +
-				")");		
-		
-		writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT,
-				temp(1)) + " to %" + raw(srcType) + "*");		
-		
-		writer.write(nextTemp() + " = getelementptr inbounds %" +
-				raw(srcType) + "* " + temp(1) + ", i32 0, i32 2");
-		writer.write("store " + typeText(srcType, srcName) + ", " +
-				typeText(srcType, temp(0), true));
-		return temp(2);
-	}
-	*/
 	
 	@Override
 	public void visit(TACConversion node) throws ShadowException
@@ -1027,11 +1013,14 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = call noalias " +
 					type(Type.OBJECT) + " @" + raw(Type.CLASS,
 					"_Mallocate") + '(' + type(Type.CLASS) +
-					" @" + raw(srcType, "_class") + ", %" + 
+					" " + classOf(srcType) + ", %" + 
 					raw(Type.OBJECT, "_methods") + "* bitcast(%" +
 					raw(srcType, "_methods") + "* @" +	raw(srcType, "_methods") +
 					" to %" + raw(Type.OBJECT, "_methods") + "*)" +
-					")");		
+					")");
+			
+			if( !module.getType().encloses(srcType) )
+				usedMethodTables.add(srcType);
 			
 			writer.write(nextTemp(node) + " = bitcast " + typeText(Type.OBJECT,
 					temp(1)) + " to %" + raw(srcType) + "*");		
@@ -1845,15 +1834,15 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("resume { i8*, i32 } " + temp(0));
 	}
 
-	private static String classOf(Type type)
-	{		
-		//if (type instanceof InterfaceType)		
+	private String classOf(Type type) {
+		//module is null when building generics
+		if( module != null && !module.getType().encloses(type) )
+			usedClasses.add(type);		
+		
 		if( type.isFullyInstantiated() )
 			return '@' + withGenerics(type, "_class");
 		else
-			return '@' + raw(type, "_class");		
-		//return "getelementptr inbounds (%" + raw(type, "_Mclass") + "* @" +
-			//	raw(type, "_Mclass") + ", i32 0, i32 0)";
+			return '@' + raw(type, "_class");
 	}
 	
 	private static String methodType(TACMethodRef method)
@@ -2252,13 +2241,17 @@ public class LLVMOutput extends AbstractOutput {
 			sb.append(Character.forDigit((int)(raw >> 60) & 15, 16));
 		return sb.toString();
 	}
-	private String literal(String value)
-	{
+	private String literal(String value) {
 		int index = stringLiterals.indexOf(value);
-		if (index == -1)
-		{
+		if (index == -1) {
 			index = stringLiterals.size();
 			stringLiterals.add(value);
+			
+			//module is null when generics are being built
+			if( module != null && !module.getType().encloses(Type.STRING)) {
+				usedClasses.add(Type.STRING);
+				usedMethodTables.add(Type.STRING);
+			}
 		}
 		return "@_string" + index;
 	}
@@ -2353,10 +2346,8 @@ public class LLVMOutput extends AbstractOutput {
 		writeTypeConstants(Type.CLASS);
 		writeTypeConstants(Type.GENERIC_CLASS);
 		writeTypeConstants(Type.ARRAY_CLASS);
-		//writeTypeDeclaration(Type.METHOD_CLASS);
 		writeTypeConstants(Type.ITERATOR);
 		writeTypeConstants(Type.STRING);
-		//writeTypeConstants(Type.ADDRESS_MAP);
 		
 		//contains generics, organized in lists with the unparameterized generic as the key
 		Map<String, Set<String>> allGenerics = new HashMap<String, Set<String>>();
