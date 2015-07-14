@@ -97,7 +97,7 @@ public class LLVMOutput extends AbstractOutput {
 	private TACMethod method;
 	private int classCounter = 0;
 	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
-	private HashSet<TACConstant> usedConstants = new HashSet<TACConstant>();
+	private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
 	private TACModule module;
 	
 	public LLVMOutput(File file) throws ShadowException {		
@@ -569,16 +569,12 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void endFile(TACModule module) throws ShadowException
-	{
-		HashSet<String> recordedClasses = new HashSet<String>();
+	public void endFile(TACModule module) throws ShadowException {
+		Type moduleType = module.getType();
 		
-		for (Type type : module.getReferences())
-			if (type instanceof ClassType && !(type instanceof ArrayType) &&
-					!(type instanceof UnboundMethodType) &&
-					!module.getType().encloses(type))
-		{
-			if (type.equals(Type.CLASS))  { //add in private methods
+		//declare in a few strange methods that are not called through normal channels  
+		if (moduleType instanceof ClassType ) {
+			if (!moduleType.encloses(Type.CLASS))  {
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, "_Mallocate") + '(' +
 						type(Type.CLASS) + ", %" + raw(Type.OBJECT, "_methods") +  "*)");				
@@ -588,25 +584,20 @@ public class LLVMOutput extends AbstractOutput {
 						", " + type(Type.INT) + ')');
 			}
 			
-			if( type.equals(Type.GENERIC_CLASS))
-			{
+			if( !moduleType.encloses(Type.GENERIC_CLASS)){
 				ArrayType genericClassArray = new ArrayType(Type.GENERIC_CLASS);
-				ArrayType classArray = new ArrayType(Type.CLASS);
-				
+				ArrayType classArray = new ArrayType(Type.CLASS);				
 				writer.write("declare " + type(Type.CLASS) + " @" +
 						raw(Type.GENERIC_CLASS, "_MfindClass" + 
 						genericClassArray.getMangledName() +						
 						classArray.getMangledName()) + '(' + 
 						type(Type.GENERIC_CLASS) + ", " +
 						type(genericClassArray) + ", " +
-						type(classArray) + ')');
-				
+						type(classArray) + ')');				
 			}
 			
-			if( type.equals(Type.ARRAY_CLASS))
-			{
-				ArrayType genericClassArray = new ArrayType(Type.GENERIC_CLASS);				
-				
+			if( !moduleType.encloses(Type.ARRAY_CLASS)) {
+				ArrayType genericClassArray = new ArrayType(Type.GENERIC_CLASS);
 				writer.write("declare " + type(Type.CLASS) + " @" +
 						raw(Type.ARRAY_CLASS, "_MfindClass" + 
 						genericClassArray.getMangledName() +						
@@ -615,33 +606,30 @@ public class LLVMOutput extends AbstractOutput {
 						type(genericClassArray) + ", " +
 						type(Type.CLASS) + ", " +
 						type(Type.CLASS) +')');
-			}
+			}			
 			
-			
-			if (type.equals(Type.ARRAY) && !((ClassType)type).recursivelyContainsInnerClass(module.getType())) //add in private method
+			if( !moduleType.encloses(Type.ARRAY) )
 				writer.write("declare " + type(Type.ARRAY) + " @" +
 						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
 						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
-						type(Type.OBJECT) + ", " + 
-						//type(Type.CLASS) + ", " +
+						type(Type.OBJECT) + ", " +
 						type(new ArrayType(Type.INT)) + ", " +
 						type(Type.OBJECT) + ')');
 			
-			//TODO: May not be necessary
-			if (type.equals(Type.ARRAY_NULLABLE) && !((ClassType)type).recursivelyContainsInnerClass(module.getType())) //add in private method
+
+			if( !moduleType.encloses(Type.ARRAY_NULLABLE) )
 				writer.write("declare " + type(Type.ARRAY_NULLABLE) + " @" +
 						raw(Type.ARRAY_NULLABLE, "_Mcreate" + new ArrayType(Type.INT).
 						getMangledName() + Type.OBJECT.getMangledName()) + '(' +
-						type(Type.OBJECT) + ", " + 
-						//type(Type.CLASS) + ", " +
+						type(Type.OBJECT) + ", " +
 						type(new ArrayType(Type.INT)) + ", " +
 						type(Type.OBJECT) + ')');
 			
-			//TODO: fix this so that only used methods are included
+			/*
 			if( type.isUninstantiated() && recordedClasses.add(type.getMangledName()) )
 			{
 				
-				/*
+				
 				for (List<MethodSignature> methodList :
 						type.getMethodMap().values())
 					for (MethodSignature method : methodList)
@@ -651,7 +639,7 @@ public class LLVMOutput extends AbstractOutput {
 							writer.write("declare " + methodToString(
 									//new TACMethod(method).addParameters()));
 									method));
-				*/
+				
 				
 				for( Entry<String, Node> entry : type.getFields().entrySet())
 				{
@@ -664,39 +652,41 @@ public class LLVMOutput extends AbstractOutput {
 						name + "\" = external constant " + type(field.getType()));
 					}
 				}
+				
 			}
-			writer.write();
+			*/
+			//writer.write();			
 		}
 		
-		//print only the (mostly private) methods that are call directly used
-		for (MethodSignature method : usedSignatures)
-				writer.write("declare " + methodToString(method));
+		//print only the constants that are used
+		for( TACConstantRef constant : usedConstants )
+			writer.write("@\"" + 				
+				constant.getPrefixType().getMangledName() + "_M" + 
+				constant.getName() + "\" = external constant " + type(constant.getType()));
+		writer.write();
+		
+		//print only the (mostly private) methods that are called directly
+		for( MethodSignature method : usedSignatures )
+			writer.write("declare " + methodToString(method));
+		writer.write();
 		
 		//one special-case hack for the Class class
 		//this method is not listed as a native method in the class
 		//because its second parameter has no shadow type
-		if( module.getType().equals(Type.CLASS))
-		{
+		if( moduleType.equals(Type.CLASS))
 			writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 					raw(Type.CLASS, "_Mallocate") + '(' +
 					type(Type.CLASS) + ", %" + raw(Type.OBJECT, "_methods") +  "*)");
-		}
-		
 		
 		//print generic possibilities
 		Type genericClassArray = new ArrayType(Type.GENERIC_CLASS);
 		for( Type type : unparameterizedGenerics )
-		{			
-			writer.write("@_generics" + type.getMangledName() + 
-					" = external constant " + type(genericClassArray));			
-		}
-		
+			writer.write("@_generics" + type.getMangledName() +	" = external constant " + type(genericClassArray));			
 		writer.write();
 		
 		//print array type possibilities (only those arrays that can show up as generic parameters)
 		for( Array array : arrays )		
-			writer.write("@\"" + array.getMangledName() + "_class\" = external constant %" + raw(Type.CLASS)); 
-		
+			writer.write("@\"" + array.getMangledName() + "_class\" = external constant %" + raw(Type.CLASS));
 		writer.write();
 
 		writeStringLiterals();
@@ -833,9 +823,10 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACConstantRef node) throws ShadowException
-	{
+	public void visit(TACConstantRef node) throws ShadowException {
 		node.setData(name(node));
+		if( !module.getType().encloses(node.getPrefixType()) )
+			usedConstants.add(node);			
 	}
 
 	@Override
@@ -911,14 +902,13 @@ public class LLVMOutput extends AbstractOutput {
 					"* " + temp(1));
 		}
 		else if (node.hasPrefix() && 
-				//TODO: Change to locked (devirtualization)
+				//Devirtualization conditions below
 				!node.getOuterType().isPrimitive() &&
 				!node.getOuterType().getModifiers().isLocked() &&
 				!node.getType().getModifiers().isLocked() &&
 				!(node.getOuterType() instanceof SingletonType) &&
 				!node.getType().getModifiers().isPrivate() &&
-				!node.isSuper() )
-		{	
+				!node.isSuper() ) {	
 			writer.write(nextTemp() + " = getelementptr " +
 					typeSymbol(node.getPrefix()) + ", i32 0, i32 1");
 			
@@ -938,9 +928,6 @@ public class LLVMOutput extends AbstractOutput {
 			if( !module.getType().encloses(signature.getOuter()) && !signature.isWrapper()  )
 				usedSignatures.add(signature);
 		}
-		
-		
-		
 	}
 
 	@Override
