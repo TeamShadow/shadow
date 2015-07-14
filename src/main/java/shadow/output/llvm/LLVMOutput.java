@@ -926,7 +926,7 @@ public class LLVMOutput extends AbstractOutput {
 			node.setData(name(node));
 			MethodSignature signature = node.getSignature();
 			if( !module.getType().encloses(signature.getOuter()) && !signature.isWrapper()  )
-				usedSignatures.add(signature);
+				usedSignatures.add(signature.getSignatureWithoutTypeArguments());
 		}
 	}
 
