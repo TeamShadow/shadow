@@ -38,7 +38,6 @@ import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
-import shadow.parser.javacc.ASTVariableInitializer;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
@@ -1400,10 +1399,6 @@ public class TypeUpdater extends BaseChecker {
 	
 	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException {
 		return WalkType.NO_CHILDREN; //skip all blocks
-	}
-	
-	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
-		return pushUpType(node, secondVisit);
 	}
 	
 	@Override

@@ -1939,22 +1939,18 @@ public class StatementChecker extends BaseChecker {
 	
 	private void checkForSingleton(Type type) {
 		//if singleton, add to current method for initialization
-		if( type instanceof SingletonType )
-		{
+		if( type instanceof SingletonType ) {
 			SingletonType singletonType = (SingletonType)type;
-			if( currentMethod.isEmpty() )
-			{
+			if( currentMethod.isEmpty() ) {
 				//add to all creates (since it must be declared outside a method)
 				for( MethodSignature signature : currentType.getAllMethods("create"))				
 					signature.getNode().addSingleton(singletonType);
 			}
-			else
-			{
+			else {
 				int i = 0;
 				SignatureNode signatureNode;
 				//find outer method, instead of adding to local or inline methods
-				do
-				{
+				do {
 					signatureNode = currentMethod.get(i);
 					i++;
 				} while( signatureNode instanceof ASTInlineMethodDefinition || signatureNode instanceof ASTLocalMethodDeclaration );
@@ -1962,8 +1958,7 @@ public class StatementChecker extends BaseChecker {
 				signatureNode.addSingleton(singletonType);				
 			}
 		}
-		else if( type instanceof SequenceType )
-		{
+		else if( type instanceof SequenceType ) {
 			SequenceType sequenceType = (SequenceType) type;
 			for(ModifiedType modifiedType : sequenceType )
 				checkForSingleton(modifiedType.getType());
@@ -1972,32 +1967,24 @@ public class StatementChecker extends BaseChecker {
 			checkForSingleton(((ArrayType)type).getBaseType());
 	}
 	
-	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException 
-	{
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;	
 		
 		int children = node.jjtGetNumChildren();
 		String image = node.getImage();
 		
-		if(  children == 0 )
-		{
-			if( image.equals("this") || image.equals("super") ) //this or super
-			{	
-				if( currentType instanceof InterfaceType )
-				{
+		if(  children == 0 ) {
+			if( image.equals("this") || image.equals("super") ) { //this or super				
+				if( currentType instanceof InterfaceType ) {
 					addError(Error.INVALID_SELF_REFERENCE, "Reference " + image + " invalid for interfaces");
 					node.setType(Type.UNKNOWN);
 				}
-				else
-				{
+				else {
 					if( image.equals("this") )					
 						node.setType(currentType);
-					else
-					{
-						ClassType classType = (ClassType) currentType;					
-						node.setType(classType.getExtendType());						
-					}
+					else											
+						node.setType(((ClassType) currentType).getExtendType());
 					
 					if( currentType.getModifiers().isImmutable() )
 						node.getModifiers().addModifier(Modifiers.IMMUTABLE);
@@ -2013,31 +2000,25 @@ public class StatementChecker extends BaseChecker {
 						node.getModifiers().upgradeToTemporaryReadonly();					
 				}
 			}	
-			else //just a name
-			{				
-				if( !setTypeFromName( node, image )) //automatically sets type if can
-				{
+			else { //just a name				
+				if( !setTypeFromName( node, image )) { //automatically sets type if can				
 					addError(Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 					node.setType(Type.UNKNOWN);											
 				}
 			}
 		}
-		else if( children == 1 )
-		{
+		else if( children == 1 ) {
 			Node child = node.jjtGetChild(0); 
 			
-			if( child instanceof ASTUnqualifiedName )
-			{
+			if( child instanceof ASTUnqualifiedName ) {
 				node.setImage(child.getImage() + "@" + node.getImage());				
-				if( !setTypeFromName( node, node.getImage() )) //automatically sets type if can
-				{
+				if( !setTypeFromName( node, node.getImage() )) { //automatically sets type if can				
 					addError(Error.UNDEFINED_TYPE, "Type " + image + " not defined in this context");
 					node.setType(Type.UNKNOWN);											
 				}
 			}
-			else
-			{
-				node.setType( child.getType() ); 	//literal, conditional expression, check expression, freeze expression, cast expression, primitive and function types
+			else {
+				node.setType( child.getType() ); 	//literal, check expression, copy expression, cast expression, (conditional expression), primitive and function types, and array initializer
 				pushUpModifiers( node ); 			
 			}
 		}
@@ -2048,47 +2029,40 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
-	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException
-	{
+	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException {	
 		return WalkType.PRE_CHILDREN;		
 	}
 	
-	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{	
+	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )			
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				node.addType(node.jjtGetChild(i));
-		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	
-	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException 
-	{
+	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException {
 		/*
 		  QualifiedKeyword()
 		| Brackets()
 		| Subscript()
-		| Method()
+		| Destroy()
+		| Method() //method name, not the call
 		| Allocation()
 		| ScopeSpecifier()
 		| Property()
 		| MethodCall()
 		*/
 		
-		if(secondVisit)
-		{
+		if(secondVisit) {
 			Node prefixNode = curPrefix.getFirst();		
 			
 			if( prefixNode.getModifiers().isNullable() && !(prefixNode.getType() instanceof ArrayType) )
 				addError(Error.INVALID_DEREFERENCE, "Nullable reference cannot be dereferenced");
 			
 			Node child = node.jjtGetChild(0);
-			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall) ||  (child instanceof ASTAllocation))
-			{
+			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall) ||  (child instanceof ASTAllocation)) {
 				ASTPrimaryExpression parent = (ASTPrimaryExpression) node.jjtGetParent();
 				parent.setAction(true);
 			}	
@@ -2099,12 +2073,10 @@ public class StatementChecker extends BaseChecker {
 			if( child instanceof ASTScopeSpecifier && child.getImage().equals("class"))
 				node.setImage(child.getImage()); //"class"
 			
-			if( child instanceof ASTMethodCall )
-			{
+			if( child instanceof ASTMethodCall ) {
 				Type childType = child.getType();
 							
-				if( childType instanceof MethodType )
-				{
+				if( childType instanceof MethodType ) {
 					MethodType methodType = (MethodType) childType;
 					SequenceType returnTypes = methodType.getReturnTypes();
 					returnTypes.setNodeType( node ); //used instead of setType
@@ -3287,29 +3259,13 @@ public class StatementChecker extends BaseChecker {
 					
 					if( arrayType.getSuperBaseType().isPrimitive() )
 						addError(Error.INVALID_MODIFIER, "Primitive array type " + type + " cannot be marked nullable");
-				}
-				//else if( type.isPrimitive())
-					//addError(Error.INVALID_MODIFIER, "Primitive type " + type + " cannot be marked nullable");
+				}				
 			}
-			
-			
 			
 			node.setType(type);
 		}		
 		
 		return WalkType.POST_CHILDREN;
-	}
-	
-	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
-			return WalkType.POST_CHILDREN;
-		
-		Node child = node.jjtGetChild(0);		
-		ModifiedType modifiedType = resolveType( child );
-		node.setType(modifiedType.getType());
-		node.setModifiers(modifiedType.getModifiers());		
-		
-		return WalkType.POST_CHILDREN; 
 	}
 	
 	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException {
