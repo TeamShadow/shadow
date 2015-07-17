@@ -19,10 +19,6 @@ public class TagManager
 	
 	public enum BlockTagType implements TagType
 	{
-		// Special tags (no name String, null parser)
-		PLAIN_TEXT_BLOCK,
-		
-		// Regular block tags
 		AUTHOR("author", new DelimitedParser(',')),
 		PARAM("param", new ArgDescriptionParser(1, true)),
 		THROWS("throws", new ArgDescriptionParser(1, true)),
@@ -79,7 +75,7 @@ public class TagManager
 	
 	public enum InlineTagType implements TagType
 	{
-		// Special tags (no name String, null parser)
+		// This is a special tag representing normal text
 		PLAIN_TEXT_INLINE,
 		
 		// Regular inline tags

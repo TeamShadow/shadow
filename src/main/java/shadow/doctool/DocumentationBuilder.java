@@ -53,7 +53,7 @@ public class DocumentationBuilder
 	}
 	
 	/** Converts all whitespace chunks into single spaces */
-	private static String clean(String value)
+	static String clean(String value)
 	{
 		return value.replaceAll("\\s+", " ");
 	}

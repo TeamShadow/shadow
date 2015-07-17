@@ -156,6 +156,52 @@ public class DocumentationTest
 		assertEquals(null, type);
 	}
 	
+	@Test public void tagTest() throws Exception
+	{
+		DocumentationBuilder builder = new DocumentationBuilder();
+		builder.addBlock("This is a documentation comment {@code this is\n"
+					+ "some literal code} here is some more content and\n"
+					+ "{@code here is some more}.\n"
+					+ "@author now for block, tags\n"
+					+ "@param fake these should be ignored");
+		Documentation documentation = new Documentation(builder);
+		List<CapturedTag> summary = documentation.getSummary();
+		List<CapturedTag> inline = documentation.getInlineTags();
+		List<CapturedTag> author = documentation.getBlockTags(BlockTagType.AUTHOR);
+		List<CapturedTag> param = documentation.getBlockTags(BlockTagType.PARAM);
+		
+		// Summary
+		assertEquals(4, summary.size());
+		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, summary.get(0).getType());
+		assertEquals("This is a documentation comment", summary.get(0).getArg(0));
+		assertEquals(InlineTagType.CODE, summary.get(1).getType());
+		assertEquals("this is some literal code", summary.get(1).getArg(0));
+		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, summary.get(2).getType());
+		assertEquals("here is some more content and", summary.get(2).getArg(0));
+		assertEquals(InlineTagType.CODE, summary.get(3).getType());
+		assertEquals("here is some more", summary.get(3).getArg(0));
+		
+		// Inline
+		assertEquals(5, inline.size());
+		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, inline.get(0).getType());
+		assertEquals("This is a documentation comment", inline.get(0).getArg(0));
+		assertEquals(InlineTagType.CODE, inline.get(1).getType());
+		assertEquals("this is some literal code", inline.get(1).getArg(0));
+		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, inline.get(2).getType());
+		assertEquals("here is some more content and", inline.get(2).getArg(0));
+		assertEquals(InlineTagType.CODE, inline.get(3).getType());
+		assertEquals("here is some more", inline.get(3).getArg(0));
+		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, inline.get(4).getType());
+		assertEquals(".", inline.get(4).getArg(0));
+		
+		// Author tags
+		assertEquals(1, author.size());
+	
+		// Param tags
+		assertEquals(1, param.size());
+	}
+	
+	/*
 	@Test public void inlineParseTest() throws Exception
 	{
 		List<CapturedTag> inlineTags = new ArrayList<CapturedTag>();
@@ -183,4 +229,5 @@ public class DocumentationTest
 		
 		System.out.println();
 	}
+	*/
 }

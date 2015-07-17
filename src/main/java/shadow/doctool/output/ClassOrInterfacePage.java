@@ -264,7 +264,7 @@ public class ClassOrInterfacePage
 						writeParameters(method, true, true, out);
 					out.close();
 					if (method.hasDocumentation())
-						out.full("p", method.getDocumentation().getSummary());
+						out.full("p", method.getDocumentation().getBrief());
 				out.closeLine();
 			out.closeUntab();
 		}
