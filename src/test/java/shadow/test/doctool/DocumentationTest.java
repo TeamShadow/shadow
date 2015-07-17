@@ -5,9 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -65,38 +63,6 @@ public class DocumentationTest
 	{
 		args.add("shadow/test/doctool/Misplaced.shadow");
 		DocumentationTool.document(args.toArray(new String[] { }));
-	}
-
-	@Test public void directiveParsingTest() throws Exception
-	{
-		String text = 	"This method accomplishes meaningful tasks\n" +
-						"@param example An important parameter that\n" +
-						"is crucial to this method.\n" +
-						"@throws fakeException This indicates a serious failure\n" +
-						"@fake this isn't a real directive!\n" +
-						"@numbers1234 isn't real either";
-		DocumentationBuilder documentation = new DocumentationBuilder();
-		documentation.addBlock(text);
-		
-		Documentation result = documentation.process();
-		String mainText = result.getMainText();
-		
-		assertEquals("This method accomplishes meaningful tasks", mainText);
-		
-		/*
-		// Directive type assertions
-		assertEquals(DirectiveParser.DirectiveType.PARAM, directives.get(0).getType());
-		assertEquals(DirectiveParser.DirectiveType.THROWS, directives.get(1).getType());
-		
-		// Directive content assertions
-		assertEquals("example", directives.get(0).getArgument(0));
-		assertEquals("An important parameter that is crucial to this method.",
-				directives.get(0).getDescription());
-		assertEquals("fakeException", directives.get(1).getArgument(0));
-		assertEquals("This indicates a serious failure @fake this isn't a real "
-				+ "directive! @numbers1234 isn't real either",
-				directives.get(1).getDescription());
-		*/
 	}
 	
 	@Test public void argDescriptionParserTest() throws Exception
@@ -172,26 +138,26 @@ public class DocumentationTest
 		
 		// Summary
 		assertEquals(4, summary.size());
-		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, summary.get(0).getType());
+		assertEquals(InlineTagType.PLAIN_TEXT, summary.get(0).getType());
 		assertEquals("This is a documentation comment", summary.get(0).getArg(0));
 		assertEquals(InlineTagType.CODE, summary.get(1).getType());
 		assertEquals("this is some literal code", summary.get(1).getArg(0));
-		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, summary.get(2).getType());
+		assertEquals(InlineTagType.PLAIN_TEXT, summary.get(2).getType());
 		assertEquals("here is some more content and", summary.get(2).getArg(0));
 		assertEquals(InlineTagType.CODE, summary.get(3).getType());
 		assertEquals("here is some more", summary.get(3).getArg(0));
 		
 		// Inline
 		assertEquals(5, inline.size());
-		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, inline.get(0).getType());
+		assertEquals(InlineTagType.PLAIN_TEXT, inline.get(0).getType());
 		assertEquals("This is a documentation comment", inline.get(0).getArg(0));
 		assertEquals(InlineTagType.CODE, inline.get(1).getType());
 		assertEquals("this is some literal code", inline.get(1).getArg(0));
-		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, inline.get(2).getType());
+		assertEquals(InlineTagType.PLAIN_TEXT, inline.get(2).getType());
 		assertEquals("here is some more content and", inline.get(2).getArg(0));
 		assertEquals(InlineTagType.CODE, inline.get(3).getType());
 		assertEquals("here is some more", inline.get(3).getArg(0));
-		assertEquals(InlineTagType.PLAIN_TEXT_INLINE, inline.get(4).getType());
+		assertEquals(InlineTagType.PLAIN_TEXT, inline.get(4).getType());
 		assertEquals(".", inline.get(4).getArg(0));
 		
 		// Author tags

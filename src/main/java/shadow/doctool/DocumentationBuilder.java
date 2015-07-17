@@ -68,9 +68,9 @@ public class DocumentationBuilder
 	 * Parses and processes the directives present in the documentation text,
 	 * returning a Documentation object containing the results
 	 */
-	public Documentation process() throws ShadowException
+	public Documentation process() throws ShadowException, DocumentationException
 	{
-		return DirectiveParser.process(this);
+		return new Documentation(this);
 	}
 	
 	@Override

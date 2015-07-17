@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
-import shadow.doctool.DirectiveParser.Directive;
 import shadow.doctool.tag.CapturedTag;
 import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.doctool.tag.TagManager.InlineTagType;
@@ -19,22 +18,13 @@ public class Documentation
 {
 	private static Logger logger = Loggers.DOC_TOOL;
 	
-	// TODO: Remove the old constructor and make these members final
-	private String mainText;
-	private String brief;
-	private ArrayList<CapturedTag> summaryTags; // A subset of inlineTags
-	private ArrayList<CapturedTag> inlineTags;
-	private Map<BlockTagType, ArrayList<CapturedTag>> blockTags;
+	private final ArrayList<CapturedTag> summaryTags; // A subset of inlineTags
+	private final ArrayList<CapturedTag> inlineTags;
+	private final Map<BlockTagType, ArrayList<CapturedTag>> blockTags;
 	
 	private static final Pattern blockTagPattern = Pattern.compile("(^|\n|\r\n?)(@)(\\w*)");
 	private static final Pattern inlineTagPattern = Pattern.compile("\\{@(\\w+)");
 	private static final Pattern sentenceEnd = Pattern.compile("\\.($|\\s)");
-	
-	public Documentation(String mainText, String brief, List<Directive> directives)
-	{
-		this.mainText = mainText;
-		this.brief = brief;
-	}
 	
 	public Documentation(DocumentationBuilder builder) throws DocumentationException
 	{
@@ -48,13 +38,13 @@ public class Documentation
 		// Build the documentation summary out of inlineTags
 		summaryTags = new ArrayList<CapturedTag>();
 		for (CapturedTag tag : inlineTags) {
-			if (tag.getType() == InlineTagType.PLAIN_TEXT_INLINE) {
+			if (tag.getType() == InlineTagType.PLAIN_TEXT) {
 				String plain = tag.getArg(0);
 				Matcher matcher = sentenceEnd.matcher(plain);
 				if (matcher.find()) {
 					plain = plain.substring(0, matcher.start());
 					if (!plain.isEmpty())
-						summaryTags.add(InlineTagType.PLAIN_TEXT_INLINE.parse(plain));
+						summaryTags.add(InlineTagType.PLAIN_TEXT.parse(plain));
 					break; // Leave the loop once the end of the summary is found
 				} else {
 					summaryTags.add(tag);
@@ -92,7 +82,7 @@ public class Documentation
 				// Capture everything before that tag as a plain-text tag
 				String plain = text.substring(nextTagStart, tagMatcher.start()).trim();
 				if (!plain.isEmpty())
-					inlineTags.add(InlineTagType.PLAIN_TEXT_INLINE.parse(plain));
+					inlineTags.add(InlineTagType.PLAIN_TEXT.parse(plain));
 				// Capture the discovered tag
 				inlineTags.add(type.parse(DocumentationBuilder.clean(
 						text.substring(tagMatcher.end(), tagEnd).trim())));
@@ -105,7 +95,7 @@ public class Documentation
 		// Capture any remaining text as a plain-text tag
 		String leftover = text.substring(nextTagStart).trim();
 		if (!leftover.isEmpty())
-			inlineTags.add(InlineTagType.PLAIN_TEXT_INLINE.parse(leftover));
+			inlineTags.add(InlineTagType.PLAIN_TEXT.parse(leftover));
 	}
 	
 	private void parseBlockSection(String blockSection) 
@@ -157,6 +147,7 @@ public class Documentation
 		return (List<CapturedTag>) summaryTags.clone();
 	}
 	
+	// TODO: Return an empty list instead of null?
 	public List<CapturedTag> getBlockTags(BlockTagType type)
 	{
 		ArrayList<CapturedTag> result = blockTags.get(type);
@@ -164,22 +155,5 @@ public class Documentation
 			return (List<CapturedTag>) result.clone();
 		else
 			return null;
-	}
-	
-	/** 
-	 * Returns the main text (excluding directives) of the original
-	 * documentation comment 
-	 */
-	@Deprecated
-	public String getMainText()
-	{
-		return mainText;
-	}
-	
-	/** @return The first sentence of the main documentation text */
-	@Deprecated
-	public String getBrief()
-	{
-		return brief;
 	}
 }

@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import shadow.Loggers;
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
+import shadow.doctool.DocumentationException;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -222,7 +223,8 @@ public class SimpleNode implements Node {
 	}
 	
 	@Override
-	public void setDocumentation(DocumentationBuilder documentation) throws ShadowException
+	public void setDocumentation(DocumentationBuilder documentation) 
+			throws ShadowException, DocumentationException
 	{
 		this.documentation = documentation.process();
 	}

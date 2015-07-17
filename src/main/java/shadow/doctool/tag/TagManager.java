@@ -76,7 +76,7 @@ public class TagManager
 	public enum InlineTagType implements TagType
 	{
 		// This is a special tag representing normal text
-		PLAIN_TEXT_INLINE,
+		PLAIN_TEXT,
 		
 		// Regular inline tags
 		CODE("code"),

@@ -29,7 +29,10 @@ class Example<T, U is Dummy>
     int a;
     Dummy dummy;
 
-    /** The most crucial method that ever was */
+    /**
+     * The most crucial method that ever was. {@code this is an example of the
+     * code tag} 
+     */
     public test(String a, int b) => (int a, String b)
     {
         return (4, "Hello");

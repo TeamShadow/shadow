@@ -6,6 +6,7 @@ import java.io.File;
 
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
+import shadow.doctool.DocumentationException;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -82,7 +83,7 @@ interface Node extends ModifiedType {
 	public Type getEnclosingType();
 	
 	public Documentation getDocumentation();
-	public void setDocumentation(DocumentationBuilder documentation) throws ShadowException;
+	public void setDocumentation(DocumentationBuilder documentation) throws ShadowException, DocumentationException;
 	public boolean hasDocumentation();
 	
 	public boolean isField();

@@ -11,8 +11,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.Html5Writer.Attribute;
+import shadow.doctool.tag.CapturedTag;
+import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.doctool.tag.TagManager.InlineTagType;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.ClassType;
@@ -137,8 +141,10 @@ public class ClassOrInterfacePage
 		writeInheritanceSection(out);
 		
 		// Documentation text
-		if (type.hasDocumentation())
-			out.fullLine("p", type.getDocumentation().getMainText());
+		if (type.hasDocumentation()) {
+			writeInlineTags(type.getDocumentation().getInlineTags(), out);
+			writeBlockTags(type.getDocumentation(), out);
+		}
 		
 		out.closeUntab();
 		out.voidLine("hr");
@@ -264,7 +270,7 @@ public class ClassOrInterfacePage
 						writeParameters(method, true, true, out);
 					out.close();
 					if (method.hasDocumentation())
-						out.full("p", method.getDocumentation().getBrief());
+						writeInlineTags(method.getDocumentation().getSummary(), out);
 				out.closeLine();
 			out.closeUntab();
 		}
@@ -315,8 +321,10 @@ public class ClassOrInterfacePage
 		out.closeLine();
 		
 		// Documentation text
-		if (method.hasDocumentation())
-			out.fullLine("p", method.getDocumentation().getMainText());
+		if (method.hasDocumentation()) {
+			writeInlineTags(method.getDocumentation().getInlineTags(), out);
+			writeBlockTags(method.getDocumentation(), out);
+		}
 		
 		out.closeUntab();
 	}
@@ -354,6 +362,65 @@ public class ClassOrInterfacePage
 		out.add(")");
 	}
 	
+	private void writeInlineTags(List<CapturedTag> inlineTags, 
+			Html5Writer out) throws DocumentationException, ShadowException
+	{
+		if (inlineTags.size() > 0) {
+			out.open("p");
+			for (CapturedTag tag : inlineTags) {
+				switch ((InlineTagType) tag.getType()) {
+					case PLAIN_TEXT:
+						out.add(tag.getArg(0));
+						break;
+					case CODE:
+						out.full("code", tag.getArg(0));
+						break;
+				}
+			}
+			out.closeLine();
+		}
+	}
+	
+	private void writeBlockTags(Documentation documentation,
+			Html5Writer out) throws DocumentationException, ShadowException
+	{
+		List<CapturedTag> authorTags = documentation.getBlockTags(BlockTagType.AUTHOR);
+		if (authorTags != null)
+			writeAuthorSection(authorTags, out);
+		
+		List<CapturedTag> paramTags = documentation.getBlockTags(BlockTagType.PARAM);
+		if (paramTags != null)
+			writeParamSection(paramTags, out);
+	}
+	
+	private void writeAuthorSection(List<CapturedTag> authorTags,
+			Html5Writer out) throws DocumentationException, ShadowException
+	{
+		if (authorTags.size() > 0) {
+			out.fullLine("h4", "Authors");
+			for (CapturedTag tag : authorTags) {
+				for (String author : tag.getArgs()) {
+					out.fullLine("p", author);
+				}
+			}
+		}
+	}
+	
+	private void writeParamSection(List<CapturedTag> paramTags,
+			Html5Writer out) throws DocumentationException, ShadowException
+	{
+		if (paramTags.size() > 0) {
+			out.fullLine("h4", "Parameters");
+			for (CapturedTag tag : paramTags) {
+				out.open("p");
+				out.full("code", tag.getArg(0));
+				if (tag.size() > 1)
+					out.add(" - " + tag.getArg(1));
+				out.closeLine();
+			}
+		}
+	}
+
 	private void writeCrossLink(Type to, String text, Html5Writer out) 
 			throws DocumentationException, ShadowException
 	{
