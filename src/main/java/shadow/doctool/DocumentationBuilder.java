@@ -7,7 +7,8 @@ import shadow.parser.javacc.ShadowException;
 /**
  * Represents the contents of a Shadow documentation comment. Should be
  * associated with a class/interface/exception/singleton declaration or
- * a field/method declaration.
+ * a field/method declaration. Note that whitespace in documentation
+ * comments is not guaranteed to be preserved
  */
 public class DocumentationBuilder 
 {
@@ -21,7 +22,9 @@ public class DocumentationBuilder
 	/** Parses a single line comment, removing leading/trailing whitespace */
 	public void addLine(String line)
 	{
-		lines.addFirst(line.trim());
+		line = line.trim();
+		if (!line.isEmpty())
+			lines.addFirst(clean(line));
 	}
 	
 	/**
@@ -35,19 +38,24 @@ public class DocumentationBuilder
 		// This loop runs backwards so that the block can be added to the
 		// front of the deque, but that the individual lines remain in correct
 		// order
-		for (int i = split.length - 1; i >= 0; --i)
-		{
-			split[i] = split[i].trim();
+		for (int i = split.length - 1; i >= 0; --i) {
+			String line = split[i].trim();
 			
 			// Remove the leading asterisk, if it exists. The first line of a
 			// multi-line comment (following /**) should be excluded from this
-			if (i != 0 && split[i].indexOf('*') == 0)
-				split[i] = split[i].substring(1).trim();
+			if (i != 0 && line.indexOf('*') == 0)
+				line = line.substring(1).trim();
 			
 			// Only keep non-empty lines
-			if (!split[i].equals(""))
-				lines.addFirst(split[i]);
+			if (!line.equals(""))
+				lines.addFirst(clean(line));
 		}
+	}
+	
+	/** Converts all whitespace chunks into single spaces */
+	private static String clean(String value)
+	{
+		return value.replaceAll("\\s+", " ");
 	}
 	
 	/** Determines if documentation text has actually been added */

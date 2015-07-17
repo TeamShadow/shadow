@@ -8,6 +8,7 @@ import shadow.doctool.tag.ParserManager.ArgDescriptionParser;
 import shadow.doctool.tag.ParserManager.DelimitedParser;
 import shadow.doctool.tag.ParserManager.TagParser;
 
+/** A collection of tags for use within documentation comments */
 public class TagManager 
 {
 	public interface TagType
@@ -20,12 +21,11 @@ public class TagManager
 	{
 		// Special tags (no name String, null parser)
 		PLAIN_TEXT_BLOCK,
-		INVALID_BLOCK_TAG,
 		
 		// Regular block tags
+		AUTHOR("author", new DelimitedParser(',')),
 		PARAM("param", new ArgDescriptionParser(1, true)),
 		THROWS("throws", new ArgDescriptionParser(1, true)),
-		AUTHOR("author", new DelimitedParser(',')),
 		
 		/* End of tag list */ ;
 		
@@ -42,13 +42,18 @@ public class TagManager
 			if (tagNames.containsKey(name))
 				return tagNames.get(name);
 			else
-				return INVALID_BLOCK_TAG;
+				return null;
 		}
 		
 		private String name = null;
 		private TagParser parser = null; // No parser by default
 		
 		private BlockTagType() {}
+		
+		private BlockTagType(String name)
+		{
+			this.name = name;
+		}
 		
 		private BlockTagType(String name, TagParser parser)
 		{
@@ -60,10 +65,9 @@ public class TagManager
 		public CapturedTag parse(String text) throws DocumentationException
 		{
 			if (parser == null)
-				return new CapturedTag(this);
+				return new CapturedTag(this, text);
 			
-			// TODO Auto-generated method stub
-			return null;
+			return new CapturedTag(this, parser.parse(text));
 		}
 		
 		@Override
@@ -77,10 +81,9 @@ public class TagManager
 	{
 		// Special tags (no name String, null parser)
 		PLAIN_TEXT_INLINE,
-		INVALID_INLINE_TAG,
 		
 		// Regular inline tags
-		SEE("see", new ArgDescriptionParser(1, false)),
+		CODE("code"),
 		
 		/* End of tag list */ ;
 		
@@ -97,13 +100,18 @@ public class TagManager
 			if (tagNames.containsKey(name))
 				return tagNames.get(name);
 			else
-				return INVALID_INLINE_TAG;
+				return null;
 		}
 		
 		private String name = null;
 		private TagParser parser = null; // No parser by default
 		
 		private InlineTagType() {}
+		
+		private InlineTagType(String name)
+		{
+			this.name = name;
+		}
 		
 		private InlineTagType(String name, TagParser parser)
 		{
@@ -115,10 +123,9 @@ public class TagManager
 		public CapturedTag parse(String text) throws DocumentationException 
 		{
 			if (parser == null)
-				return new CapturedTag(this);
+				return new CapturedTag(this, text);
 			
-			// TODO Auto-generated method stub
-			return null;
+			return new CapturedTag(this, parser.parse(text));
 		}
 		
 		@Override

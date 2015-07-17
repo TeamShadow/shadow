@@ -5,7 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -16,6 +18,7 @@ import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.DocumentationTool;
+import shadow.doctool.tag.CapturedTag;
 import shadow.doctool.tag.ParserManager.ArgDescriptionParser;
 import shadow.doctool.tag.ParserManager.DelimitedParser;
 import shadow.doctool.tag.ParserManager.TagParser;
@@ -145,11 +148,39 @@ public class DocumentationTest
 		type = BlockTagType.getType("throws");
 		assertEquals(BlockTagType.THROWS, type);
 		type = BlockTagType.getType("FAKE_TAG");
-		assertEquals(BlockTagType.INVALID_BLOCK_TAG, type);
+		assertEquals(null, type);
 		
-		type = InlineTagType.getType("see");
-		assertEquals(InlineTagType.SEE, type);
+		type = InlineTagType.getType("code");
+		assertEquals(InlineTagType.CODE, type);
 		type = InlineTagType.getType("FAKE_TAG");
-		assertEquals(InlineTagType.INVALID_INLINE_TAG, type);
+		assertEquals(null, type);
+	}
+	
+	@Test public void inlineParseTest() throws Exception
+	{
+		List<CapturedTag> inlineTags = new ArrayList<CapturedTag>();
+		String text = "This is a documentation comment {@code this is\n"
+					+ "some literal code} here is some more content and\n"
+					+ "{@code here is some more}.\n"
+					+ "@author now for block, tags\n"
+					+ "@param fake these should be ignored";
+		
+		Documentation.parseBody(text, inlineTags);
+		
+		System.out.println();
+	}
+	
+	@Test public void blockParseTest() throws Exception
+	{
+		Map<BlockTagType, CapturedTag> blockTags = new HashMap<BlockTagType, CapturedTag>();
+		String text = "This is a documentation comment {@code this is\n"
+					+ "some literal code} here is some more content and\n"
+					+ "{@code here is some more}.\n"
+					+ "@author now for block, tags\n"
+					+ "@param fake these should be ignored";
+		
+		Documentation.parseBlockSection(text, blockTags);
+		
+		System.out.println();
 	}
 }

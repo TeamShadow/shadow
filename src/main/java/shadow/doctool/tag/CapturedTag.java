@@ -22,6 +22,12 @@ public class CapturedTag
 		this.arguments.addAll(arguments);
 	}
 	
+	public CapturedTag(TagType type, String text)
+	{
+		this.type = type;
+		arguments.add(text);
+	}
+	
 	public CapturedTag(TagType type)
 	{
 		this.type = type;
@@ -35,5 +41,10 @@ public class CapturedTag
 	public String getArg(int index)
 	{
 		return arguments.get(index);
+	}
+	
+	public int size()
+	{
+		return arguments.size();
 	}
 }
