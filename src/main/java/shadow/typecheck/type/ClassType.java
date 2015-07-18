@@ -680,7 +680,7 @@ public class ClassType extends Type
 				name = getTypeName().substring(0,1).toUpperCase() + getTypeName().substring(1);
 			out.print("shadow:standard@" + name);
 		}
-		else if( getOuter() == null ) //outermost class		
+		else if( !hasOuter() ) //outermost class		
 			out.print(getQualifiedName(true));
 		else
 		{	
@@ -761,7 +761,8 @@ public class ClassType extends Type
 		for( Type _class : getInnerClasses().values() )
 				_class.printMetaFile(out, indent);		
 		
-		printGenerics( out, indent );				
+		if( !hasOuter() )
+			printGenerics( out, indent );				
 		out.println(linePrefix + "}");	
 	}
 }

@@ -289,4 +289,9 @@ public class TACTest {
 		args.add("shadow/test/ArrayCastExceptionTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testCanCreate() throws Exception {
+		args.add("shadow/test/CanCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

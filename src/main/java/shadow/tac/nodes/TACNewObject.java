@@ -14,11 +14,11 @@ import shadow.typecheck.type.Type;
 
 public class TACNewObject extends TACOperand
 {
-	private ClassType type;	
+	private Type type;	
 	private TACOperand classData;
 	private TACOperand methodTable;	
 
-	public TACNewObject(TACNode node, ClassType type)
+	public TACNewObject(TACNode node, Type type)
 	{
 		super(node);		
 		this.type = type;
@@ -41,7 +41,7 @@ public class TACNewObject extends TACOperand
 		return methodTable;
 	}
 	
-	public ClassType getClassType()
+	public Type getClassType()
 	{
 		return type;
 	}

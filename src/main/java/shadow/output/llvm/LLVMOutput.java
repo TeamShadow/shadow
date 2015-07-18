@@ -1247,12 +1247,17 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACNewObject node) throws ShadowException
 	{				
-		ClassType type = node.getClassType();	
+		Type type = node.getClassType();	
 		
 		TACOperand _class = node.getClassData();
 		TACOperand methods = node.getMethodTable();	
 		
-		writer.write(nextTemp() + " = bitcast %" + raw(type.getTypeWithoutTypeArguments(), "_methods") + "* " +  symbol(methods) +  " to %"  + raw(Type.OBJECT, "_methods") + "*");
+		//this is pretty ugly, but if we retrieved a generic type parameter's method table, it'll be stored as an Object*, not an Object_methods*
+		if( type instanceof TypeParameter )
+			writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + " " +  symbol(methods) +  " to %"  + raw(Type.OBJECT, "_methods") + "*");
+		//any other method table will be of the correct type but needs cast to Object_methods* for compatibility with allocate()
+		else 
+			writer.write(nextTemp() + " = bitcast %" + raw(type.getTypeWithoutTypeArguments(), "_methods") + "* " +  symbol(methods) +  " to %"  + raw(Type.OBJECT, "_methods") + "*");
 		writer.write(nextTemp(node) + " = call noalias " + type(Type.OBJECT) +
 				" @" + raw(Type.CLASS, "_Mallocate") + '(' + type(Type.CLASS) +
 				" " + symbol(_class) + ", %" + raw(Type.OBJECT, "_methods") + "* " + temp(1) +

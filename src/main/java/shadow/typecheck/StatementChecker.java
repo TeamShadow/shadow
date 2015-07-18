@@ -2487,7 +2487,7 @@ public class StatementChecker extends BaseChecker {
 				addError(Error.INVALID_CREATE, "Singletons cannot be created");
 							
 			}		
-			else if(!( prefixType instanceof ClassType) )
+			else if(!( prefixType instanceof ClassType) && !(prefixType instanceof TypeParameter && !prefixType.getAllMethods("create").isEmpty()))
 			{
 				addError(Error.INVALID_CREATE, "Type " + prefixType + " cannot be created", prefixType);				
 			}
@@ -3184,7 +3184,7 @@ public class StatementChecker extends BaseChecker {
 					}
 										
 					if( !updatedTypes.isSubtype(node.getType()) )						
-						addError(Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + node.getType() + (node.getType().size() == 1 ? " is" : " are") + " expected", node.getType());
+						addError(Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + node.getType() + (node.getType().size() == 1 ? " is" : " are") + " expected", node.getType(), updatedTypes);
 					
 					for( ModifiedType modifiedType : updatedTypes )
 						if( modifiedType.getModifiers().isTypeName() )

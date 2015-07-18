@@ -308,8 +308,7 @@ public class InterfaceType extends Type
 		return false;
 	}
 	
-	public boolean isSubtype(Type t)
-	{
+	public boolean isSubtype(Type t) {
 		if( t == UNKNOWN )
 			return false;
 	
@@ -332,8 +331,7 @@ public class InterfaceType extends Type
 		return (InterfaceType)super.getTypeWithoutTypeArguments();
 	}
 	
-	public void printMetaFile(PrintWriter out, String linePrefix )
-	{
+	public void printMetaFile(PrintWriter out, String linePrefix ) {
 		printImports(out, linePrefix);		
 		
 		//modifiers
@@ -341,21 +339,18 @@ public class InterfaceType extends Type
 		out.print("interface ");
 		
 		//type name
-		if( getOuter() == null ) //outermost interface		
+		if( !hasOuter() ) //outermost interface ...are inner interfaces even allowed?	
 			out.print(getQualifiedName(true));
-		else
-		{
+		else {
 			String name = toString(true); 
 			out.print(name.substring(name.lastIndexOf(':') + 1));
 		}
 		
 		//extend types		
-		if( getInterfaces().size() > 0 )
-		{
+		if( getInterfaces().size() > 0 ) {
 			out.print(" extends " );
 			boolean first = true;
-			for( InterfaceType _interface : getInterfaces() )
-			{
+			for( InterfaceType _interface : getInterfaces() ) {
 				if(!first)
 					out.print(", ");
 				else
@@ -382,8 +377,7 @@ public class InterfaceType extends Type
 		//methods
 		newLine = false;
 		for( List<MethodSignature> list: getMethodMap().values() )		
-			for( MethodSignature signature : list )
-			{
+			for( MethodSignature signature : list ) {
 				Modifiers modifiers = signature.getModifiers();
 				//hack because interface methods are public inside the compiler but cannot be specified that way
 				modifiers.removeModifier(Modifiers.PUBLIC);
@@ -394,7 +388,8 @@ public class InterfaceType extends Type
 		if( newLine )
 			out.println();
 		
-		printGenerics(out, indent );		
+		if( !hasOuter() )
+			printGenerics(out, indent );		
 		
 		out.println(linePrefix + "}" + System.lineSeparator());	
 	}

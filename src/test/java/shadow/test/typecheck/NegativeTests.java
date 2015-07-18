@@ -350,5 +350,10 @@ public class NegativeTests {
 	@Test public void testReadonlyPropertySet() throws Exception {
 		args.add("tests-negative/typechecker/readonly-property-set/Test.shadow");
 		enforce(Error.ILLEGAL_ACCESS);			
-	}	
+	}
+	
+	@Test public void testInnerClassImplementsCreate() throws Exception {
+		args.add("tests-negative/typechecker/inner-class-implements-create/Test.shadow");
+		enforce(Error.INVALID_IMPLEMENT);			
+	}
 }

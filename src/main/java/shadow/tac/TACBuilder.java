@@ -1507,21 +1507,15 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 	
 	
-	private TACOperand callCreate(MethodSignature signature, List<TACOperand> params) {
-		//methodRef doesn't have parameters because the same method gets called no matter what
-		TACMethodRef methodRef = new TACMethodRef(tree,
-				//methodType.getTypeWithoutTypeArguments(),
-				signature);
-					
-		ClassType classType = (ClassType)(signature.getOuter());  //class type needs to be parameterized to get the parameters
-		TACOperand object = new TACNewObject(tree, classType);					
+	private TACOperand callCreate(MethodSignature signature, List<TACOperand> params, Type prefixType) {
+		TACOperand object = new TACNewObject(tree, prefixType);					
 				
 		params.add(0, object); //put object in front of other things
 		
 		//have to pass a reference to outer classes into constructor
-		if (methodRef.getOuterType().hasOuter())
+		if( !(prefixType instanceof TypeParameter) && prefixType.hasOuter() )
 		{				
-			Type methodOuter = signature.getOuter().getOuter().getTypeWithoutTypeArguments();
+			Type methodOuter = prefixType.getOuter().getTypeWithoutTypeArguments();
 			
 			if( prefix != null && prefix.getType().isSubtype(methodOuter) )
 				params.add(1, prefix); //after object, before args
@@ -1539,13 +1533,18 @@ public class TACBuilder implements ShadowParserVisitor {
 			}
 		}
 		
-		//LinkedList<Object>:create[35]
+
+		TACMethodRef methodRef;		
+		if( signature.getOuter() instanceof InterfaceType )
+			methodRef = new TACMethodRef(tree, new TACCast(tree, new SimpleModifiedType(signature.getOuter()), object), signature);
+		else
+			methodRef = new TACMethodRef(tree, signature);
 				
 		prefix = new TACCall(tree, block, methodRef, params);
 		
 		//sometimes a cast is needed when dealing with generic types
-		if( !methodRef.getReturnType().equals(classType) )
-			prefix = new TACCast(tree, new SimpleModifiedType(classType), prefix);
+		if( !methodRef.getReturnType().equals(prefixType) )
+			prefix = new TACCast(tree, new SimpleModifiedType(prefixType), prefix);
 		
 		return prefix;
 	}	
@@ -1561,8 +1560,12 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			for( int i = start; i < tree.getNumChildren(); i++)
 					params.add(tree.appendChild(i));			
-									
-			callCreate(node.getMethodSignature(), params);
+			
+			MethodSignature signature = node.getMethodSignature();
+			if( signature.getOuter() instanceof InterfaceType )
+				callCreate(signature, params, node.jjtGetParent().getType() );
+			else
+				callCreate(signature, params, signature.getOuter());
 		}
 		return POST_CHILDREN;
 	}
@@ -2708,7 +2711,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		TACArrayRef location = new TACArrayRef(tree, array, new TACLoad(tree, iterator), false);		
 				
 		if( create != null)
-			new TACStore(tree, location, callCreate( create, params));
+			new TACStore(tree, location, callCreate( create, params, create.getOuter()));
 		else
 			new TACStore(tree, location, defaultValue);		
 		

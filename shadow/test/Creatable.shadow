@@ -1,0 +1,9 @@
+class shadow:test@Creatable implements CanCreate
+{
+	get long value;
+	
+	public create()
+	{
+		value = System.nanoTime();
+	}
+}

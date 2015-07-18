@@ -150,7 +150,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getModifiers().toString());
-		sb.append(" ").append(symbol);		
+		sb.append(symbol);		
 		
 		//nothing more for destroy
 		if( !symbol.equals("destroy") ) {			

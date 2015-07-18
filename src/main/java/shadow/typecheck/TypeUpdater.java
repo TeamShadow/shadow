@@ -463,22 +463,17 @@ public class TypeUpdater extends BaseChecker {
 		
 	}
 		
-	private void checkOverrides(Map<Type,Node> nodeTable)
-	{	
-		for( Node declarationNode : nodeTable.values() )	
-		{	
+	private void checkOverrides(Map<Type,Node> nodeTable) {	
+		for( Node declarationNode : nodeTable.values() ) {	
 			setFile(declarationNode.getFile()); //used for error messages
-			if( declarationNode.getType() instanceof ClassType )
-			{					
+			if( declarationNode.getType() instanceof ClassType ) {					
 				ClassType classType = (ClassType)declarationNode.getType();
 				ClassType parent = classType.getExtendType();			
 			
-				if( parent != null)
-				{
+				if( parent != null) {
 					//enforce immutability
 					//any mutable parent method must be overridden 
-					if( classType.getModifiers().isImmutable() )
-					{
+					if( classType.getModifiers().isImmutable() ) {
 						List<MethodSignature> list = classType.orderAllMethods();
 						for( MethodSignature signature : list )
 							if( !signature.isCreate() && !signature.getModifiers().isReadonly() )
@@ -494,10 +489,8 @@ public class TypeUpdater extends BaseChecker {
 					 */
 					
 					for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
-						for( MethodSignature signature : signatures )
-						{
-							if( parent.recursivelyContainsIndistinguishableMethod(signature) && !signature.isCreate() )
-							{
+						for( MethodSignature signature : signatures ) {
+							if( parent.recursivelyContainsIndistinguishableMethod(signature) && !signature.isCreate() ) {
 								MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
 								Node node = signature.getNode();
 								Modifiers parentModifiers = parentSignature.getModifiers();
@@ -518,17 +511,18 @@ public class TypeUpdater extends BaseChecker {
 				}
 				
 				//check to see if all interfaces are satisfied				
-				for( InterfaceType interfaceType : classType.getInterfaces() )
-				{	
+				for( InterfaceType interfaceType : classType.getInterfaces() )  {	
 					ArrayList<String> reasons = new ArrayList<String>();
 					
-					if( !classType.satisfiesInterface(interfaceType, reasons) )
-					{
+					if( !classType.satisfiesInterface(interfaceType, reasons) ) {
 						String message = "Type " + classType + " does not implement interface " + interfaceType;
 						for( String reason : reasons )
 							message += "\n\t" + reason;
 						addError(Error.MISSING_INTERFACE, message );
 					}
+					
+					if( classType.hasOuter() && interfaceType.recursivelyContainsMethod("create") )
+						addError(Error.INVALID_IMPLEMENT, "Inner class " + classType + " cannot implement interface " + interfaceType + " because it contains a create method");
 				}
 			}
 		}				

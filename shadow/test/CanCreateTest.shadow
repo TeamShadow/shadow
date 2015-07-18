@@ -1,0 +1,30 @@
+import shadow:io@Console;
+
+class shadow:test@CanCreateTest
+{
+    public main(String[] args) => () 
+    { 
+    	Console out;
+        CanCreateFactory<Creatable> factory = CanCreateFactory<Creatable>:create();
+        double sum = 0.0;
+        
+        Creatable a = factory.generate();
+        
+        //loop to create a delay
+        for( int i = 0; i < 1000000; i += 1 )
+        	sum += i.sin();
+        	
+        Creatable b = factory.generate();
+        
+        //loop to create a delay
+        for( int i = 0; i < 1000000; i += 1 )
+        	sum += i.sin();
+        	
+        Creatable c = factory.generate();
+        
+        out.printLine("a: " # a->value);
+        out.printLine("b: " # b->value);
+        out.printLine("c: " # c->value);
+        out.printLine("sum: " # sum);
+	}
+}

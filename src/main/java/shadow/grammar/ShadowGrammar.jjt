@@ -1291,8 +1291,7 @@ void Allocation():
   debugPrint("ALLOCATION");
   Token t;}
 {
-  		//LOOKAHEAD(2) Instance()
-	/*|*/	LOOKAHEAD(ArrayCreate()) ArrayCreate()
+  		LOOKAHEAD(ArrayCreate()) ArrayCreate()
 	|   Create()
  }
 
@@ -1361,16 +1360,6 @@ void Create():
   [ TypeArguments() ] ":" "create" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
   { jjtThis.setImage("create"); debugPrint("create"); jjtThis.setEndToken(t);  } 
 }
-
-/*
-void Instance():
-{
-  debugPrint("INSTANCE");
-}
-{
- 	":" "instance" { jjtThis.setImage("instance"); debugPrint("instance");} 	
-}
-*/
 
 void ScopeSpecifier():
 {
