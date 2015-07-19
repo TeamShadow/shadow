@@ -1359,39 +1359,39 @@ public abstract class Type implements Comparable<Type> {
 		return getHashName().compareTo(other.getHashName());		
 	}
 	
-	protected final void printImports(PrintWriter out, String linePrefix )
-	{		
-		if( getOuter() == null )
-		{
+	protected final void printImports(PrintWriter out, String linePrefix ) {		
+		if( getOuter() == null ) {
 			HashSet<String> imports = new HashSet<String>();
-			
+						
 			//imported items come from import statements and fully qualified classes
-			for( Object importItem : getImportedItems() )
-			{
-				if( importItem instanceof Type )
-				{
+			for( Object importItem : getImportedItems() ) {
+				if( importItem instanceof Type ) {
 					Type importType = (Type)importItem;
-					if( !importType.hasOuter() && getReferencedTypes().contains(importType) && !importType.isPrimitive())
+					if( !importType.hasOuter() && getReferencedTypes().contains(importType) && !importType.getPackage().toString().equals("shadow:standard"))
 						imports.add(importType.getImportName());
 						
 				}
 				else if( importItem instanceof Package )
 				{
 					Package importPackage = (Package)importItem;
-					for( Type referencedType : getReferencedTypes() )
-						if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
-							imports.add(referencedType.getImportName());					
+					if( !importPackage.toString().equals("shadow:standard"))
+						for( Type referencedType : getReferencedTypes() )
+							if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
+								imports.add(referencedType.getImportName());					
 				}
 			}
 			
 			//also classes from the same package
-			for( Type packageType : getPackage().getTypes() ) {
-				if( packageType != this && !packageType.hasOuter() && getReferencedTypes().contains(packageType) && !packageType.isPrimitive())
-					imports.add(packageType.getImportName());
-			}			
+			if( !getPackage().toString().equals("shadow:standard") )
+				for( Type packageType : getPackage().getTypes() )
+					if( packageType != this && !packageType.hasOuter() && getReferencedTypes().contains(packageType) && !packageType.isPrimitive())
+						imports.add(packageType.getImportName());			
 			
 			for( String importType : imports )			
 				out.println(linePrefix + "import " + importType + ";");
+			
+			if( imports.size() > 0 )
+				out.println(); 
 		}
 	}	
 	
