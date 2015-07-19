@@ -2,15 +2,13 @@ package shadow.typecheck.type;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.Package;
+
 
 public class InterfaceType extends Type 
 {

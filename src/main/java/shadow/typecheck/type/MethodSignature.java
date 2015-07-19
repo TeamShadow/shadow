@@ -3,9 +3,6 @@ package shadow.typecheck.type;
 import java.util.Collections;
 import java.util.List;
 
-import shadow.parser.javacc.ASTCreateDeclaration;
-import shadow.parser.javacc.ASTDestroyDeclaration;
-import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.SignatureNode;
 
 public class MethodSignature implements Comparable<MethodSignature> {
@@ -87,18 +84,29 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			return false;
 	}
 	
-	public SequenceType getFullReturnTypes()
-	{	
-		if (isCreate())
-			return new SequenceType(Collections.<ModifiedType>singletonList(
-					new SimpleModifiedType(getOuter())));
+	// These are the true return types that the compiler will use	
+	public SequenceType getFullReturnTypes() {	
+		Type outerType = getOuter();
+		if (isCreate()) {
+			SimpleModifiedType modified;				
+			if( outerType instanceof InterfaceType )
+				modified = new SimpleModifiedType(Type.OBJECT);
+			else
+				modified = new SimpleModifiedType(outerType);
+			
+			if( outerType.isPrimitive() )
+				modified.getModifiers().addModifier(Modifiers.NULLABLE);
+			
+			return new SequenceType(Collections.<ModifiedType>singletonList(modified));
+		}
 		
-		if( isWrapper() || getOuter() instanceof InterfaceType )
+		//if( isWrapper() || outerType instanceof InterfaceType )
 			return signatureWithoutTypeArguments.type.getReturnTypes();
-		else
-			return type.getReturnTypes();
+		//else
+			//return type.getReturnTypes();
 	}
 	
+	// These are the true parameter types that the compiler will use
 	public SequenceType getFullParameterTypes() {
 		SequenceType paramTypes = new SequenceType();
 		Type outerType = getOuter();
@@ -109,16 +117,13 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			
 		if( isCreate() && getOuter().hasOuter() )
 				paramTypes.add(new SimpleModifiedType(getOuter().getOuter()));			
-			
-		//type parameters no longer passed to method for generic objects, only for purely parameterized methods
-		//Type parameterizedType = isCreate() ? getOuterType() : getType();
 		
 		MethodType methodType;
 		
-		if( isWrapper() || getOuter() instanceof InterfaceType )
+		//if( isWrapper() || getOuter() instanceof InterfaceType )
 			methodType = signatureWithoutTypeArguments.type;
-		else
-			methodType = type;		
+		//else
+			//methodType = type;		
 		 
 		if (methodType.isParameterized())
 			for (int i = methodType.getTypeParameters().size(); i > 0; i--)

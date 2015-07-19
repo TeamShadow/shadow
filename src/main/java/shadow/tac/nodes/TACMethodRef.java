@@ -1,7 +1,5 @@
 package shadow.tac.nodes;
 
-import java.util.Collections;
-
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
@@ -9,7 +7,6 @@ import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
@@ -103,6 +100,9 @@ public class TACMethodRef extends TACOperand
 	}
 
 	public SequenceType getParameterTypes() {
+		
+		return signature.getFullParameterTypes();
+		/*
 		SequenceType paramTypes = new SequenceType();
 		Type outerType = getOuterType().getTypeWithoutTypeArguments();
 		if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
@@ -127,33 +127,20 @@ public class TACMethodRef extends TACOperand
 			paramTypes.add(parameterType);	
 			
 		return paramTypes;
-	}
-	public ModifiedType getParameterType(int index) {
-		return getParameterTypes().get(index);
-	}
-	public int getParameterCount() {
-		return getParameterTypes().size();
-	}
-	public boolean hasParameters() {
-		return !getParameterTypes().isEmpty();
-	}
-
-	public SequenceType getExplicitParameterTypes() {
-		return getType().getParameterTypes();
-	}
-	public int getExplicitParameterCount() {
-		return getExplicitParameterTypes().size();
-	}
-	public boolean hasExplicitParameters() {
-		return !getExplicitParameterTypes().isEmpty();
+		*/
 	}
 
 	public SequenceType getReturnTypes() {
+		
+		return signature.getFullReturnTypes();
+		
+		/*
 		if (isCreate())
 			return new SequenceType(Collections.<ModifiedType>singletonList(
 					new SimpleModifiedType(getOuterType().getTypeWithoutTypeArguments())));
 			
 		return getType().getTypeWithoutTypeArguments().getReturnTypes();
+		*/
 	}
 	public int getReturnCount() {
 		return getReturnTypes().size();
@@ -161,61 +148,15 @@ public class TACMethodRef extends TACOperand
 	public boolean isVoid() {
 		return getReturnCount() == 0;
 	}
-	public Type getVoidReturnType() {
-		if (!isVoid())
-			throw new IllegalStateException();
-		return null;
-	}
-	public boolean isSingle() {
-		return getReturnCount() == 1;
-	}
-	public ModifiedType getSingleReturnType() {
-		if (!isSingle())
-			throw new IllegalStateException();
-		return getReturnTypes().get(0);
-	}
-	public boolean isSequence() {
-		return getReturnCount() > 1;
-	}
-	public SequenceType getSequenceReturnTypes() {
-		if (!isSequence())
-			throw new IllegalStateException();
-		return getReturnTypes();
-	}
-
 	public Type getReturnType() {
-		if (isVoid())
-			return getVoidReturnType();
-		if (isSingle())
-			return getSingleReturnType().getType();
-		if (isSequence())
-			return getSequenceReturnTypes();
-		throw new IllegalStateException();
+		SequenceType returnTypes = signature.getFullReturnTypes();
+		if( returnTypes.isEmpty() )
+			return null;
+		else if( returnTypes.size() == 1 )
+			return returnTypes.get(0).getType();
+		else
+			return returnTypes;		
 	}
-	public ModifiedType getReturnType(int index) {
-		return getReturnTypes().get(index);
-	}
-
-	public boolean isNative() {
-		return getType().getModifiers().isNative();
-	}
-
-	public boolean isCreate() {
-		return getName().equals("create");
-	}
-	public boolean isDestroy() {
-		return getName().equals("destroy") && !hasExplicitParameters();
-	}
-	public boolean isGetClass() {
-		return getName().equals("getClass") && !hasExplicitParameters();
-	}
-	public boolean isGet() {
-		return getType().getModifiers().isGet() && !hasExplicitParameters();
-	}
-	public boolean isSet() {
-		return getType().getModifiers().isSet() && getExplicitParameterCount() == 1;
-	}
-
 	@Override
 	public int getNumOperands() {
 		return hasPrefix() ? 1 : 0;

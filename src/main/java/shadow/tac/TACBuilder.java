@@ -1543,7 +1543,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		prefix = new TACCall(tree, block, methodRef, params);
 		
 		//sometimes a cast is needed when dealing with generic types
-		if( !methodRef.getReturnType().equals(prefixType) )
+		if( !prefix.getType().equals(prefixType) )
 			prefix = new TACCast(tree, new SimpleModifiedType(prefixType), prefix);
 		
 		return prefix;

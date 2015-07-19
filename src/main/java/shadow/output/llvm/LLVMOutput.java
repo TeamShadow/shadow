@@ -1875,10 +1875,18 @@ public class LLVMOutput extends AbstractOutput {
 		StringBuilder sb = new StringBuilder();
 		if (name && (/*signature.getModifiers().isPrivate() ||*/ signature.isWrapper()))
 			sb.append("private ");
-		boolean primitiveCreate = !signature.getOuter().isSimpleReference() &&
+		boolean primitiveOrInterfaceCreate = !signature.getOuter().isSimpleReference() &&
 				signature.isCreate();
-		if (primitiveCreate)
+		
+		if( primitiveOrInterfaceCreate ) {			
+			if( signature.getOuter() instanceof InterfaceType ) //in situations were an interface contains a create
+				sb.append(type(Type.OBJECT));
+			else
+				sb.append(type(signature.getOuter(), true)); //the nullable looks odd, but it gets the Object version of the primitive
+		}		
+		/*if (primitiveCreate)
 			sb.append('%').append(raw(signature.getOuter())).append('*');
+		*/
 		else
 		{
 			SequenceType returnTypes = signature.getFullReturnTypes();
@@ -1898,16 +1906,10 @@ public class LLVMOutput extends AbstractOutput {
 			boolean first = true;
 			SequenceType parameterTypes = signature.getFullParameterTypes();
 			
-			for (int i = 0; i < parameterTypes.size(); i++)
-			{
-				if (first)
-				{
+			for (int i = 0; i < parameterTypes.size(); i++) {
+				if (first) {
 					first = false;
-					if (primitiveCreate)
-						sb.append('%').append(raw(parameterTypes.get(i))).
-								append('*');
-					else
-						sb.append(type(parameterTypes.get(i)));
+					sb.append(type(parameterTypes.get(i)));
 					if (name && signature.isCreate())
 						sb.append(" returned");
 				}
@@ -1921,17 +1923,22 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	private static String methodToString(TACMethodRef method, boolean name,
-			boolean parameters)
-	{
+			boolean parameters) {
+		
+		return methodToString(method.getSignature(), name, parameters);
+		/*
 		StringBuilder sb = new StringBuilder();
 		if (name && (method.getModifiers().isPrivate() || method.isWrapper()))
 			sb.append("private ");
-		boolean primitiveCreate = !method.getOuterType().isSimpleReference() &&
+		boolean primitiveOrInterfaceCreate = !method.getOuterType().isSimpleReference() &&
 				method.isCreate();
-		if (primitiveCreate)
-			sb.append('%').append(raw(method.getOuterType())).append('*');
-		else
-		{			
+		if( primitiveOrInterfaceCreate ) {			
+			if( method.getOuterType() instanceof InterfaceType ) //in situations were an interface contains a create
+				sb.append(type(Type.OBJECT));
+			else
+				sb.append(type(method.getOuterType(), true)); //the nullable looks odd, but it gets the Object version of the primitive
+		}
+		else {			
 			if (method.isVoid())
 				sb.append("void");
 			else if (method.isSingle())
@@ -1951,7 +1958,7 @@ public class LLVMOutput extends AbstractOutput {
 				if (first)
 				{
 					first = false;
-					if (primitiveCreate)
+					if (primitiveOrInterfaceCreate)
 						sb.append('%').append(raw(method.getParameterType(0))).
 								append('*');
 					else
@@ -1965,6 +1972,7 @@ public class LLVMOutput extends AbstractOutput {
 			sb.append(')');
 		}
 		return sb.toString();
+		*/
 	}
 
 	private static String sizeof(String type)
@@ -2026,11 +2034,6 @@ public class LLVMOutput extends AbstractOutput {
 	private static String type(TypeParameter type)
 	{
 		return type(type.getClassBound());
-	}
-
-	private static String raw(ModifiedType type)
-	{
-		return raw(type.getType(), "");
 	}
 	private static String raw(Type type)
 	{

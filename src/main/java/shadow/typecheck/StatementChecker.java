@@ -1462,14 +1462,11 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTInlineResults node, Boolean secondVisit) throws ShadowException 
-	{
+	public Object visit(ASTInlineResults node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
-		{	
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				node.addType(node.jjtGetChild(i));
-		}
-	
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -1479,8 +1476,7 @@ public class StatementChecker extends BaseChecker {
 		
 		if( node.jjtGetNumChildren() == 1 )
 			pushUpType(node, secondVisit);
-		else
-		{
+		else {
 			Type t1 = node.jjtGetChild(0).getType();  //type
 			Type t2 = node.jjtGetChild(1).getType();  //expression
 			
@@ -1493,8 +1489,7 @@ public class StatementChecker extends BaseChecker {
 				node.addModifier(Modifiers.NULLABLE);
 			}
 			
-			if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) //casting methods
-			{
+			if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) { //casting methods
 				MethodType method = (MethodType)t1;
 				UnboundMethodType unboundMethod = (UnboundMethodType)t2;				
 				
@@ -1502,8 +1497,7 @@ public class StatementChecker extends BaseChecker {
 				MethodSignature candidate = null;
 				Type outer = unboundMethod.getOuter();			
 				
-				for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) ) 
-				{				
+				for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) ) {				
 					MethodType methodType = signature.getMethodType();			
 					//no type arguments for method pointers?
 					/*
@@ -1526,12 +1520,10 @@ public class StatementChecker extends BaseChecker {
 					//the list of method signatures starts with the closest (current class) and then adds parents and outer classes
 					//always stick with the current if you can
 					//(only replace if signature is a subtype of candidate but candidate is not a subtype of signature)					
-					if( signature.getMethodType().isSubtype(method))
-					{	
-						if( candidate == null || (candidate.getMethodType().isSubtype(signature.getMethodType()) )) //take the broadest method possible that matches the cast target
+					if( methodType.isSubtype(method)) {	
+						if( candidate == null || (candidate.getMethodType().isSubtype(methodType) )) //take the broadest method possible that matches the cast target
 							candidate = signature;
-						else if( !signature.getMethodType().isSubtype(candidate.getMethodType()) ) //then two acceptable signatures are not subtypes of each other
-						{					
+						else if( !methodType.isSubtype(candidate.getMethodType()) ) { //then two acceptable signatures are not subtypes of each other					
 							addError(Error.INVALID_ARGUMENTS, "Ambiguous cast from " + unboundMethod.getTypeName() + " to " + method);
 							break;
 						}				
@@ -1548,8 +1540,7 @@ public class StatementChecker extends BaseChecker {
 				node.setType(t1);
 			else if( t1.isSubtype(t2) || t2.isSubtype(t1) )
 				node.setType(t1);			
-			else
-			{
+			else {
 				addError(Error.MISMATCHED_TYPE, "Supplied type " + t2 + " cannot be cast to type " + t1, t1, t2);
 				node.setType(Type.UNKNOWN);
 			}

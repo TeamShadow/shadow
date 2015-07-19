@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.BaseChecker;
@@ -24,9 +23,7 @@ import shadow.typecheck.Package;
 /**
  * A representation of a Shadow type.
  */
-public abstract class Type implements Comparable<Type>
-{
-	//types should not change after construction
+public abstract class Type implements Comparable<Type> {
 	private final String typeName;	/** A string that represents the type */
 	private Modifiers modifiers;
 	private Type outer; //outer class or interface
@@ -1198,12 +1195,14 @@ public abstract class Type implements Comparable<Type>
 	}	
 	
 	
-	public void addReferencedType(Type type)
-	{		
-		if( type != null && !(type instanceof UninstantiatedType) && !(type instanceof TypeParameter) )
-		{			
-			if( type instanceof ArrayType )
-			{				
+	public void addReferencedType(Type type) {		
+		if( type != null && !(type instanceof UninstantiatedType) ) {
+			if( type instanceof TypeParameter ) {
+				TypeParameter typeParameter = (TypeParameter) type;
+				for( Type bound : typeParameter.getBounds() )
+					addReferencedType(bound);
+			}			
+			else if( type instanceof ArrayType ) {				
 				ArrayType arrayType = (ArrayType) type;
 				Type baseType = arrayType.getBaseType();
 				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
@@ -1213,8 +1212,7 @@ public abstract class Type implements Comparable<Type>
 				//covers Type.ARRAY and all recursive base types
 				//automatically does the right thing for NullableArray
 			}
-			else if( type instanceof MethodType )
-			{
+			else if( type instanceof MethodType ) {
 				MethodType methodType = (MethodType) type;
 				for( ModifiedType parameter : methodType.getParameterTypes() )
 					addReferencedType( parameter.getType() );
@@ -1226,10 +1224,8 @@ public abstract class Type implements Comparable<Type>
 					for( ModifiedType typeParameter : type.getTypeParameters() )						
 						addReferencedType( typeParameter.getType() );
 			}
-			else if (!equals(type) &&  !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
-			{		
-				if( type.isParameterized() )
-				{
+			else if (!equals(type) &&  !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/) {		
+				if( type.isParameterized() ) {
 					//if( type.isFullyInstantiated() )
 					//{				
 						referencedTypes.add(type);
@@ -1244,19 +1240,13 @@ public abstract class Type implements Comparable<Type>
 							referenceRecursion = false;
 						}						
 					//}
-					
-					
-					
 				}
 				else
-				{
-					referencedTypes.add(type);					
-				}
+					referencedTypes.add(type);
 			}
 			
 			//add inner types, since their instantiations must be recorded
-			if( type instanceof ClassType )
-			{
+			if( type instanceof ClassType ) {
 				ClassType classType = (ClassType) type;
 				for( ClassType inner : classType.getInnerClasses().values() )
 					addReferencedType( inner );				
@@ -1264,8 +1254,7 @@ public abstract class Type implements Comparable<Type>
 			
 			//add reference to outer types					
 			Type outer = getOuter();
-			while( outer != null )
-			{
+			while( outer != null ) {
 				outer.addReferencedType(type);
 				outer = outer.getOuter();
 			}
@@ -1275,12 +1264,6 @@ public abstract class Type implements Comparable<Type>
 			//add interfaces
 			for( InterfaceType interfaceType : interfaces )
 				addReferencedType(interfaceType);
-			
-			/* 
-			//add extend types (recursively) needed?
-			if( type instanceof ClassType )
-				addReferencedType( ((ClassType)type).getExtendType() );
-			*/
 		}
 	}
 

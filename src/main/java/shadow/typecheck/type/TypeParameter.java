@@ -6,10 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.typecheck.Package;
-
-
 public class TypeParameter extends Type
 {
 	private Set<Type> bounds = new HashSet<Type>();	

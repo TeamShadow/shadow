@@ -277,23 +277,20 @@ public class TypeUpdater extends BaseChecker {
 		}
 	}	
 	
-	private Map<Type,Node> instantiateTypeParameters( Map<Type,Node> nodeTable/*,  Map<Type, Node> uninstantiatedNodes*/  )
-	{		
+	private Map<Type,Node> instantiateTypeParameters( Map<Type,Node> nodeTable ) {		
 		//first build graph of type parameter dependencies
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
 		Map<Type, Node> updatedNodeTable = new HashMap<Type,Node>();
 		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();
 		
-		for(Node declarationNode : nodeTable.values() )
-		{
+		for(Node declarationNode : nodeTable.values() ) {
 			graph.addNode( declarationNode );
 			Type typeWithoutArguments = declarationNode.getType().getTypeWithoutTypeArguments(); 
 			uninstantiatedNodes.put(typeWithoutArguments, declarationNode);
 		}
 		
 		for(Node declarationNode : nodeTable.values() )
-			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  )
-			{
+			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  ) {
 				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " + declarationNode.getType() + " is dependent on unavailable type " + dependency, dependency);
@@ -302,26 +299,29 @@ public class TypeUpdater extends BaseChecker {
 			}
 		
 		//update parameters based on topological sort of type parameter dependencies
-		try
-		{					
+		try {					
 			List<Node> nodeList = graph.topologicalSort();
 			//update type parameters
-			for(Node declarationNode : nodeList )
-			{	
+			for(Node declarationNode : nodeList ) {	
 				Type type = declarationNode.getType();				
 				updateTypeParameters( type, declarationNode );
 				//need a new table because types have changed and will hash to different locations
-				updatedNodeTable.put(declarationNode.getType().getTypeWithoutTypeArguments(), declarationNode);
+				
+				Type cleanType = declarationNode.getType().getTypeWithoutTypeArguments();				
+				updatedNodeTable.put(cleanType, declarationNode);
+				
+				//add references to type parameters
+				if( cleanType.isParameterized() )
+					for(ModifiedType parameter : cleanType.getTypeParameters() )
+						cleanType.addReferencedType(parameter.getType());
 			}
 		}
-		catch( CycleFoundException e )
-		{
+		catch( CycleFoundException e ) {
 			Type type = (Type) e.getCycleCause();			
 			addError(nodeTable.get(type), Error.INVALID_TYPE_PARAMETERS, "Type " + type + " contains a circular type parameter definition", type);
 		}
 		
-		uninstantiatedNodes.clear();
-		
+		uninstantiatedNodes.clear();		
 		return updatedNodeTable;
 	}
 	
