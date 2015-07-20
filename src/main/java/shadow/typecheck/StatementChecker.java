@@ -2356,8 +2356,7 @@ public class StatementChecker extends BaseChecker {
 						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
 						node.setType(Type.UNKNOWN);	
 					}					
-				}			
-
+				}
 								
 				if( node.hasCreate() ) {
 					SequenceType arguments = new SequenceType();
@@ -2366,7 +2365,9 @@ public class StatementChecker extends BaseChecker {
 					
 					MethodSignature signature = prefixType.getMatchingMethod("create", arguments, typeArguments);					
 					if( signature == null || !methodIsAccessible( signature, currentType) )
-						addError(node, Error.INVALID_CREATE, "Cannot create array of type " + prefixType + " with specified create arguments", prefixType);					
+						addError(node, Error.INVALID_CREATE, "Cannot create array of type " + prefixType + " with specified create arguments", prefixType);
+					else if( prefixType instanceof InterfaceType )
+						addError(node, Error.INVALID_CREATE, "Cannot create non-nullable array of interface type " + prefixType, prefixType);
 					else
 						node.setMethodSignature(signature);					
 				}
@@ -2386,6 +2387,8 @@ public class StatementChecker extends BaseChecker {
 					MethodSignature signature = prefixType.getMatchingMethod("create", new SequenceType(), typeArguments);					
 					if( signature == null || !methodIsAccessible( signature, currentType) )
 						addError(node, Error.INVALID_CREATE, "Cannot create array of type " + prefixType + " which does not implement a default create", prefixType);
+					else if( prefixType instanceof InterfaceType )
+						addError(node, Error.INVALID_CREATE, "Cannot create non-nullable array of interface type " + prefixType, prefixType);
 					else
 						node.setMethodSignature(signature);
 				}
@@ -2459,56 +2462,39 @@ public class StatementChecker extends BaseChecker {
 	
 	
 	@Override
-	public Object visit(ASTCreate node, Boolean secondVisit)	throws ShadowException
-	{
-		if( secondVisit )
-		{
+	public Object visit(ASTCreate node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = prefixNode.getType();
 			node.setType(Type.UNKNOWN);
 			Node parent = node.jjtGetParent();
 			
-			if( prefixType instanceof InterfaceType )
-			{
-				addError(Error.INVALID_CREATE, "Interfaces cannot be created");
-							
-			}
-			else if( prefixType instanceof SingletonType )
-			{
+			if( prefixType instanceof InterfaceType )			
+				addError(Error.INVALID_CREATE, "Interfaces cannot be created");						
+			else if( prefixType instanceof SingletonType )			
 				addError(Error.INVALID_CREATE, "Singletons cannot be created");
-							
-			}		
 			else if(!( prefixType instanceof ClassType) && !(prefixType instanceof TypeParameter && !prefixType.getAllMethods("create").isEmpty()))
-			{
 				addError(Error.INVALID_CREATE, "Type " + prefixType + " cannot be created", prefixType);				
-			}
 			else if( !prefixNode.getModifiers().isTypeName() )				
-			{
 				addError(Error.INVALID_CREATE, "Only a type can be created");
-			}
-			else
-			{
+			else {
 				SequenceType typeArguments = null;
 						
 				int start = 0;
-				if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
-				{
+				if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) ) {
 					typeArguments = ((ASTTypeArguments) node.jjtGetChild(0)).getType();
 					start = 1;
 				}
 				
 				SequenceType arguments = new SequenceType();
 				
-				
 				for( int i = start; i < node.jjtGetNumChildren(); i++ )
 					arguments.add(node.jjtGetChild(i));
 
 				MethodSignature signature;				
 				
-				if( typeArguments != null )
-				{					
-					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
-					{
+				if( typeArguments != null ) {					
+					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) ) {
 						try {
 							prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
 							signature = setCreateType( node, prefixType, arguments);
@@ -2517,22 +2503,16 @@ public class StatementChecker extends BaseChecker {
 							
 							//occasionally this type is only seen here and must be added to the referenced types
 							currentType.addReferencedType(prefixType);
-
 						}
-						catch (InstantiationException e) 
-						{
+						catch (InstantiationException e) {
 							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());					
 						}
 					}
 					else
-					{
-						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());
-					}					
+						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());										
 				}
-				else
-				{
-					if( !prefixType.isParameterized() )
-					{
+				else {
+					if( !prefixType.isParameterized() ) {
 						signature = setCreateType( node, prefixType, arguments);
 						node.setMethodSignature(signature);
 						parent.setType(prefixType);
@@ -2549,35 +2529,6 @@ public class StatementChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	
-	/*
-	@Override
-	public Object visit(ASTInstance node, Boolean secondVisit)	throws ShadowException
-	{
-		if(secondVisit)
-		{
-			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = prefixNode.getType();
-			
-			if( !prefixNode.getModifiers().isTypeName() )
-			{
-				addError(Error.INVALID_INSTANCE, "A type name is needed to get an instance");
-				node.setType(Type.UNKNOWN);
-			}
-			else if( !(prefixType instanceof SingletonType) )
-			{
-				addError(Error.INVALID_INSTANCE, "Non-singleton type " + prefixType + " cannot be instanced", prefixType);
-				node.setType(Type.UNKNOWN);
-			}
-			else
-				node.setType(prefixType);
-			
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	*/
 	
 	public Object visit(ASTScopeSpecifier node, Boolean secondVisit) throws ShadowException	
 	{

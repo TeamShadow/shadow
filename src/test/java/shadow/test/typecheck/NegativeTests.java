@@ -356,4 +356,14 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/inner-class-implements-create/Test.shadow");
 		enforce(Error.INVALID_IMPLEMENT);			
 	}
+	
+	@Test public void testInterfaceArrayCreate() throws Exception {
+		args.add("tests-negative/typechecker/interface-array-create/Test.shadow");
+		enforce(Error.INVALID_CREATE);			
+	}
+	
+	@Test public void testInterfaceCreate() throws Exception {
+		args.add("tests-negative/typechecker/interface-create/Test.shadow");
+		enforce(Error.INVALID_CREATE);			
+	}
 }
