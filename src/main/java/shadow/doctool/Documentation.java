@@ -15,7 +15,12 @@ import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
 
-public class Documentation 
+/**
+ * The processed contents of a documentation comment. Provides access to the
+ * parsed contents of inline and block tags, alongside a brief summary of the
+ * original comment.
+ */
+public class Documentation
 {
 	private static Logger logger = Loggers.DOC_TOOL;
 	
@@ -81,7 +86,7 @@ public class Documentation
 					throw new DocumentationException("No closing bracket for tag \""
 							+ tagMatcher.group(1) + "\"");
 				// Capture everything before that tag as a plain-text tag
-				String plain = text.substring(nextTagStart, tagMatcher.start()).trim();
+				String plain = DocumentationBuilder.clean(text.substring(nextTagStart, tagMatcher.start()));
 				if (!plain.isEmpty())
 					inlineTags.add(InlineTagType.PLAIN_TEXT.build(plain));
 				// Capture the discovered tag
@@ -99,6 +104,10 @@ public class Documentation
 			inlineTags.add(InlineTagType.PLAIN_TEXT.build(leftover));
 	}
 	
+	/**
+	 * Parses and stores all block tags that follow the body of a documentation 
+	 * comment
+	 */
 	private void parseBlockSection(String blockSection) 
 			throws DocumentationException
 	{

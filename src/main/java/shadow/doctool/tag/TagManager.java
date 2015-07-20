@@ -11,7 +11,9 @@ import shadow.doctool.tag.ParserManager.ArgDescriptionParser;
 import shadow.doctool.tag.ParserManager.DelimitedParser;
 import shadow.doctool.tag.ParserManager.TagParser;
 
-/** A collection of tags for use within documentation comments */
+/** 
+ * Contains all recognized tag types and their associated properties
+ */
 public class TagManager 
 {
 	public static class InlineTag

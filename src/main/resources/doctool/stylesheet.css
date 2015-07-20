@@ -66,9 +66,15 @@ code
     font-size: 26;
 }
 
-.block p
+.block p 
 {
-	margin: 10px 0px 0px;
+    font-size: 20px;
+    margin: 10px 0px 0px;
+}
+
+.block code.inline
+{
+    font-size: 18px;
 }
 
 .methoddetail
@@ -83,4 +89,14 @@ code
 {
     margin: 10px 0px;
     font-size: 22px;
+}
+
+.methoddetail h5
+{
+    margin: 14px 0px 10px;
+}
+
+.blocktagcontent
+{
+    margin: 0px 0px 0px 16px;
 }

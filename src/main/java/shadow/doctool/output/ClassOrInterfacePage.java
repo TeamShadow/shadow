@@ -353,7 +353,6 @@ public class ClassOrInterfacePage
 			else
 				out.add(parameter.getQualifiedName());
 			
-			
 			out.add(" " + method.getParameterNames().get(i));
 			
 			if (i < parameterCount - 1)
@@ -373,7 +372,7 @@ public class ClassOrInterfacePage
 						out.add(tag.getArg(0));
 						break;
 					case CODE:
-						out.full("code", tag.getArg(0));
+						out.full("code", tag.getArg(0), new Attribute("class", "inline"));
 						break;
 				}
 			}
@@ -397,12 +396,14 @@ public class ClassOrInterfacePage
 			Html5Writer out) throws DocumentationException, ShadowException
 	{
 		if (authorTags.size() > 0) {
-			out.fullLine("h4", "Authors");
+			out.fullLine("h5", "Authors");
+			out.openTab("div", new Attribute("class", "blocktagcontent"));
 			for (List<String> tag : authorTags) {
 				for (String author : tag) {
 					out.fullLine("p", author);
 				}
 			}
+			out.closeUntab();
 		}
 	}
 	
@@ -410,14 +411,16 @@ public class ClassOrInterfacePage
 			Html5Writer out) throws DocumentationException, ShadowException
 	{
 		if (paramTags.size() > 0) {
-			out.fullLine("h4", "Parameters");
+			out.fullLine("h5", "Parameters");
+			out.openTab("div", new Attribute("class", "blocktagcontent"));
 			for (List<String> tag : paramTags) {
 				out.open("p");
-				out.full("code", tag.get(0));
+				out.full("code", tag.get(0), new Attribute("class", "inline"));
 				if (tag.size() > 1)
 					out.add(" - " + tag.get(1));
 				out.closeLine();
 			}
+			out.closeUntab();
 		}
 	}
 

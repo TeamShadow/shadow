@@ -30,8 +30,10 @@ class Example<T, U is Dummy>
     Dummy dummy;
 
     /**
-     * The most crucial method that ever was. {@code this is an example of the
-     * code tag} 
+     * The most crucial method that ever was.
+     * {@code this is an example of the code tag} 
+     *
+     * @author Author #1, Author #2, Author #3
      */
     public test(String a, int b) => (int a, String b)
     {
