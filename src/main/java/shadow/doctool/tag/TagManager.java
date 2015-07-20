@@ -1,6 +1,9 @@
 package shadow.doctool.tag;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import shadow.doctool.DocumentationException;
@@ -11,13 +14,34 @@ import shadow.doctool.tag.ParserManager.TagParser;
 /** A collection of tags for use within documentation comments */
 public class TagManager 
 {
-	public interface TagType
+	public static class InlineTag
 	{
-		public CapturedTag parse(String text) throws DocumentationException;
-		public String getName();
+		private final InlineTagType type;
+		private final List<String> arguments;
+		
+		public InlineTag(InlineTagType type, List<String> arguments)
+		{
+			this.type = type;
+			this.arguments = new ArrayList<String>(arguments);
+		}
+		
+		public InlineTagType getType()
+		{
+			return type;
+		}
+		
+		public List<String> getArgs()
+		{
+			return Collections.unmodifiableList(arguments);
+		}
+		
+		public String getArg(int index)
+		{
+			return arguments.get(index);
+		}
 	}
 	
-	public enum BlockTagType implements TagType
+	public enum BlockTagType
 	{
 		AUTHOR("author", new DelimitedParser(',')),
 		PARAM("param", new ArgDescriptionParser(1, true)),
@@ -57,23 +81,25 @@ public class TagManager
 			this.parser = parser;
 		}
 		
-		@Override
-		public CapturedTag parse(String text) throws DocumentationException
+		public List<String> parse(String text) throws DocumentationException
 		{
-			if (parser == null)
-				return new CapturedTag(this, text);
-			
-			return new CapturedTag(this, parser.parse(text));
+			if (parser == null) {
+				List<String> list = new ArrayList<String>();
+				list.add(text);
+				return list;
+			}
+			else {
+				return parser.parse(text);
+			}
 		}
 		
-		@Override
 		public String getName()
 		{
 			return name;
 		}
 	}
 	
-	public enum InlineTagType implements TagType
+	public enum InlineTagType
 	{
 		// This is a special tag representing normal text
 		PLAIN_TEXT,
@@ -115,16 +141,23 @@ public class TagManager
 			this.name = name;
 		}
 		
-		@Override
-		public CapturedTag parse(String text) throws DocumentationException 
+		public List<String> parse(String text) throws DocumentationException 
 		{
-			if (parser == null)
-				return new CapturedTag(this, text);
-			
-			return new CapturedTag(this, parser.parse(text));
+			if (parser == null) {
+				List<String> list = new ArrayList<String>();
+				list.add(text);
+				return list;
+			}
+			else {
+				return parser.parse(text);
+			}
 		}
 		
-		@Override
+		public InlineTag build(String text) throws DocumentationException
+		{
+			return new InlineTag(this, parse(text));
+		}
+		
 		public String getName()
 		{
 			return name;

@@ -16,13 +16,12 @@ import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.DocumentationTool;
-import shadow.doctool.tag.CapturedTag;
 import shadow.doctool.tag.ParserManager.ArgDescriptionParser;
 import shadow.doctool.tag.ParserManager.DelimitedParser;
 import shadow.doctool.tag.ParserManager.TagParser;
 import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
-import shadow.doctool.tag.TagManager.TagType;
 
 public class DocumentationTest 
 {
@@ -107,19 +106,19 @@ public class DocumentationTest
 	
 	@Test public void typeRetrievalTest() throws Exception
 	{
-		TagType type = BlockTagType.getType("author");
-		assertEquals(BlockTagType.AUTHOR, type);
-		type = BlockTagType.getType("param");
-		assertEquals(BlockTagType.PARAM, type);
-		type = BlockTagType.getType("throws");
-		assertEquals(BlockTagType.THROWS, type);
-		type = BlockTagType.getType("FAKE_TAG");
-		assertEquals(null, type);
+		BlockTagType blockType = BlockTagType.getType("author");
+		assertEquals(BlockTagType.AUTHOR, blockType);
+		blockType = BlockTagType.getType("param");
+		assertEquals(BlockTagType.PARAM, blockType);
+		blockType = BlockTagType.getType("throws");
+		assertEquals(BlockTagType.THROWS, blockType);
+		blockType = BlockTagType.getType("FAKE_TAG");
+		assertEquals(null, blockType);
 		
-		type = InlineTagType.getType("code");
-		assertEquals(InlineTagType.CODE, type);
-		type = InlineTagType.getType("FAKE_TAG");
-		assertEquals(null, type);
+		InlineTagType inlineType = InlineTagType.getType("code");
+		assertEquals(InlineTagType.CODE, inlineType);
+		inlineType = InlineTagType.getType("FAKE_TAG");
+		assertEquals(null, inlineType);
 	}
 	
 	@Test public void tagTest() throws Exception
@@ -131,10 +130,10 @@ public class DocumentationTest
 					+ "@author now for block, tags\n"
 					+ "@param fake these should be ignored");
 		Documentation documentation = new Documentation(builder);
-		List<CapturedTag> summary = documentation.getSummary();
-		List<CapturedTag> inline = documentation.getInlineTags();
-		List<CapturedTag> author = documentation.getBlockTags(BlockTagType.AUTHOR);
-		List<CapturedTag> param = documentation.getBlockTags(BlockTagType.PARAM);
+		List<InlineTag> summary = documentation.getSummary();
+		List<InlineTag> inline = documentation.getInlineTags();
+		List<List<String>> author = documentation.getBlockTags(BlockTagType.AUTHOR);
+		List<List<String>> param = documentation.getBlockTags(BlockTagType.PARAM);
 		
 		// Summary
 		assertEquals(4, summary.size());
@@ -166,34 +165,4 @@ public class DocumentationTest
 		// Param tags
 		assertEquals(1, param.size());
 	}
-	
-	/*
-	@Test public void inlineParseTest() throws Exception
-	{
-		List<CapturedTag> inlineTags = new ArrayList<CapturedTag>();
-		String text = "This is a documentation comment {@code this is\n"
-					+ "some literal code} here is some more content and\n"
-					+ "{@code here is some more}.\n"
-					+ "@author now for block, tags\n"
-					+ "@param fake these should be ignored";
-		
-		Documentation.parseBody(text, inlineTags);
-		
-		System.out.println();
-	}
-	
-	@Test public void blockParseTest() throws Exception
-	{
-		Map<BlockTagType, CapturedTag> blockTags = new HashMap<BlockTagType, CapturedTag>();
-		String text = "This is a documentation comment {@code this is\n"
-					+ "some literal code} here is some more content and\n"
-					+ "{@code here is some more}.\n"
-					+ "@author now for block, tags\n"
-					+ "@param fake these should be ignored";
-		
-		Documentation.parseBlockSection(text, blockTags);
-		
-		System.out.println();
-	}
-	*/
 }

@@ -14,8 +14,8 @@ import java.util.List;
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.Html5Writer.Attribute;
-import shadow.doctool.tag.CapturedTag;
 import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
@@ -362,12 +362,12 @@ public class ClassOrInterfacePage
 		out.add(")");
 	}
 	
-	private void writeInlineTags(List<CapturedTag> inlineTags, 
-			Html5Writer out) throws DocumentationException, ShadowException
+	private void writeInlineTags(List<InlineTag> inlineTags, Html5Writer out)
+			throws DocumentationException, ShadowException
 	{
 		if (inlineTags.size() > 0) {
 			out.open("p");
-			for (CapturedTag tag : inlineTags) {
+			for (InlineTag tag : inlineTags) {
 				switch ((InlineTagType) tag.getType()) {
 					case PLAIN_TEXT:
 						out.add(tag.getArg(0));
@@ -384,38 +384,38 @@ public class ClassOrInterfacePage
 	private void writeBlockTags(Documentation documentation,
 			Html5Writer out) throws DocumentationException, ShadowException
 	{
-		List<CapturedTag> authorTags = documentation.getBlockTags(BlockTagType.AUTHOR);
-		if (authorTags != null)
+		List<List<String>> authorTags = documentation.getBlockTags(BlockTagType.AUTHOR);
+		if (!authorTags.isEmpty())
 			writeAuthorSection(authorTags, out);
 		
-		List<CapturedTag> paramTags = documentation.getBlockTags(BlockTagType.PARAM);
-		if (paramTags != null)
+		List<List<String>> paramTags = documentation.getBlockTags(BlockTagType.PARAM);
+		if (!paramTags.isEmpty())
 			writeParamSection(paramTags, out);
 	}
 	
-	private void writeAuthorSection(List<CapturedTag> authorTags,
+	private void writeAuthorSection(List<List<String>> authorTags, 
 			Html5Writer out) throws DocumentationException, ShadowException
 	{
 		if (authorTags.size() > 0) {
 			out.fullLine("h4", "Authors");
-			for (CapturedTag tag : authorTags) {
-				for (String author : tag.getArgs()) {
+			for (List<String> tag : authorTags) {
+				for (String author : tag) {
 					out.fullLine("p", author);
 				}
 			}
 		}
 	}
 	
-	private void writeParamSection(List<CapturedTag> paramTags,
+	private void writeParamSection(List<List<String>>  paramTags,
 			Html5Writer out) throws DocumentationException, ShadowException
 	{
 		if (paramTags.size() > 0) {
 			out.fullLine("h4", "Parameters");
-			for (CapturedTag tag : paramTags) {
+			for (List<String> tag : paramTags) {
 				out.open("p");
-				out.full("code", tag.getArg(0));
+				out.full("code", tag.get(0));
 				if (tag.size() > 1)
-					out.add(" - " + tag.getArg(1));
+					out.add(" - " + tag.get(1));
 				out.closeLine();
 			}
 		}

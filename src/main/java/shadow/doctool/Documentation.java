@@ -1,6 +1,7 @@
 package shadow.doctool;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,17 +11,17 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
-import shadow.doctool.tag.CapturedTag;
 import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
 
 public class Documentation 
 {
 	private static Logger logger = Loggers.DOC_TOOL;
 	
-	private final ArrayList<CapturedTag> summaryTags; // A subset of inlineTags
-	private final ArrayList<CapturedTag> inlineTags;
-	private final Map<BlockTagType, ArrayList<CapturedTag>> blockTags;
+	private final List<InlineTag> inlineTags;
+	private final Map<BlockTagType, List<List<String>>> blockTags;
+	private final List<InlineTag> summaryTags; // A subset of inlineTags
 	
 	private static final Pattern blockTagPattern = Pattern.compile("(^|\n|\r\n?)(@)(\\w*)");
 	private static final Pattern inlineTagPattern = Pattern.compile("\\{@(\\w+)");
@@ -28,23 +29,23 @@ public class Documentation
 	
 	public Documentation(DocumentationBuilder builder) throws DocumentationException
 	{
-		inlineTags = new ArrayList<CapturedTag>();
-		blockTags = new HashMap<BlockTagType, ArrayList<CapturedTag>>();
+		inlineTags = new ArrayList<InlineTag>();
+		blockTags = new HashMap<BlockTagType, List<List<String>>>();
 		
 		String text = builder.toString();
 		parseInlineSection(text);
 		parseBlockSection(text);
 		
 		// Build the documentation summary out of inlineTags
-		summaryTags = new ArrayList<CapturedTag>();
-		for (CapturedTag tag : inlineTags) {
+		summaryTags = new ArrayList<InlineTag>();
+		for (InlineTag tag : inlineTags) {
 			if (tag.getType() == InlineTagType.PLAIN_TEXT) {
 				String plain = tag.getArg(0);
 				Matcher matcher = sentenceEnd.matcher(plain);
 				if (matcher.find()) {
 					plain = plain.substring(0, matcher.start());
 					if (!plain.isEmpty())
-						summaryTags.add(InlineTagType.PLAIN_TEXT.parse(plain));
+						summaryTags.add(InlineTagType.PLAIN_TEXT.build(plain));
 					break; // Leave the loop once the end of the summary is found
 				} else {
 					summaryTags.add(tag);
@@ -82,9 +83,9 @@ public class Documentation
 				// Capture everything before that tag as a plain-text tag
 				String plain = text.substring(nextTagStart, tagMatcher.start()).trim();
 				if (!plain.isEmpty())
-					inlineTags.add(InlineTagType.PLAIN_TEXT.parse(plain));
+					inlineTags.add(InlineTagType.PLAIN_TEXT.build(plain));
 				// Capture the discovered tag
-				inlineTags.add(type.parse(DocumentationBuilder.clean(
+				inlineTags.add(type.build(DocumentationBuilder.clean(
 						text.substring(tagMatcher.end(), tagEnd).trim())));
 				nextTagStart = tagEnd + 1;
 			} else {
@@ -95,7 +96,7 @@ public class Documentation
 		// Capture any remaining text as a plain-text tag
 		String leftover = text.substring(nextTagStart).trim();
 		if (!leftover.isEmpty())
-			inlineTags.add(InlineTagType.PLAIN_TEXT.parse(leftover));
+			inlineTags.add(InlineTagType.PLAIN_TEXT.build(leftover));
 	}
 	
 	private void parseBlockSection(String blockSection) 
@@ -129,31 +130,30 @@ public class Documentation
 	}
 	
 	/** Safely handles the addition of block tags to the central map */
-	private void addBlockTag(BlockTagType type, CapturedTag tag)
+	private void addBlockTag(BlockTagType type, List<String> arguments)
 	{
 		if (!blockTags.containsKey(type))
-			blockTags.put(type, new ArrayList<CapturedTag>());
+			blockTags.put(type, new ArrayList<List<String>>());
 		
-		blockTags.get(type).add(tag);
+		blockTags.get(type).add(arguments);
 	}
 	
-	public List<CapturedTag> getInlineTags()
+	public List<InlineTag> getInlineTags()
 	{
-		return (List<CapturedTag>) inlineTags.clone();
+		return Collections.unmodifiableList(inlineTags);
 	}
 	
-	public List<CapturedTag> getSummary()
+	public List<InlineTag> getSummary()
 	{
-		return (List<CapturedTag>) summaryTags.clone();
+		return Collections.unmodifiableList(summaryTags);
 	}
 	
-	// TODO: Return an empty list instead of null?
-	public List<CapturedTag> getBlockTags(BlockTagType type)
+	public List<List<String>> getBlockTags(BlockTagType type)
 	{
-		ArrayList<CapturedTag> result = blockTags.get(type);
+		List<List<String>> result = blockTags.get(type);
 		if (result != null)
-			return (List<CapturedTag>) result.clone();
+			return Collections.unmodifiableList(result);
 		else
-			return null;
+			return Collections.unmodifiableList(new ArrayList<List<String>>());
 	}
 }
