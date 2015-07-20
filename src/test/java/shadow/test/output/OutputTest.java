@@ -46,7 +46,7 @@ public class OutputTest {
 		// Try to remove the unit test executable
 		try
 		{
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e)
 		{}
@@ -364,5 +364,12 @@ public class OutputTest {
 				"\n" +
 				"matrix2: [0.0, 2.0, 0.0]\n" +
 				"[0.0, 0.0, 5.0]\n\n");
+	}
+	
+	@Test public void testInterfaceCreate() throws Exception {
+		args.add("shadow/test/InterfaceCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 	"", 			
+				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n");
 	}
 }

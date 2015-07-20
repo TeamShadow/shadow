@@ -1,10 +1,14 @@
 package shadow.tac.nodes;
 
+import shadow.interpreter.ShadowInteger;
+import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.MethodSignature;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 /** 
  * TAC representation of object allocation
@@ -18,17 +22,37 @@ public class TACNewObject extends TACOperand
 	private TACOperand classData;
 	private TACOperand methodTable;	
 
-	public TACNewObject(TACNode node, Type type)
-	{
+	public TACNewObject(TACNode node, Type type) {
 		super(node);		
 		this.type = type;
-		//for most intents and purposes, we will treat a type with arguments like the generic 		
 
-		//TODO: do we really need a separate TACClass object? refactor?
 		//class needs real type
 		TACClass _class = new TACClass(this, type);
 		this.classData = _class.getClassData();
 		this.methodTable = _class.getMethodTable();
+		
+		//there's a chance that it could be an interface, which isn't allowed
+		if( type instanceof TypeParameter ) {
+			TACFieldRef flags = new TACFieldRef(this, classData, "flags" );
+			TACLiteral interfaceFlag = new TACLiteral(this, new ShadowInteger(LLVMOutput.INTERFACE) );			
+			TACOperand value = new TACBinary(this, flags, Type.INT.getMatchingMethod("bitAnd", new SequenceType(interfaceFlag)), '&', interfaceFlag);
+			MethodSignature signature = Type.INT.getMatchingMethod("equal", new SequenceType(value));
+			TACOperand test = new TACBinary(this, value, signature, '=', new TACLiteral(this, new ShadowInteger(0)));
+			
+			TACLabelRef throwLabel = new TACLabelRef(this);
+			TACLabelRef doneLabel = new TACLabelRef(this);			
+			new TACBranch(this, test, doneLabel, throwLabel);			
+			
+			throwLabel.new TACLabel(this);					
+			TACOperand object = new TACNewObject(this, Type.INTERFACE_CREATE_EXCEPTION);
+			TACFieldRef name = new TACFieldRef(this, classData, "name");
+			signature = Type.INTERFACE_CREATE_EXCEPTION.getMatchingMethod("create", new SequenceType(name));
+			TACBlock block = getBuilder().getBlock();
+			TACCall exception = new TACCall(this, block, new TACMethodRef(this, signature), object, name);
+			new TACThrow(this, block, exception);
+			
+			doneLabel.new TACLabel(this);
+		}		
 	}
 	
 	public TACOperand getClassData()

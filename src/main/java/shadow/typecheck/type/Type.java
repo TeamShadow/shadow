@@ -67,6 +67,7 @@ public abstract class Type implements Comparable<Type> {
 	public static ExceptionType INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
 	public static ExceptionType ASSERT_EXCEPTION = null;
 	public static ExceptionType UNEXPECTED_NULL_EXCEPTION = null;
+	public static ExceptionType INTERFACE_CREATE_EXCEPTION = null;
 			
 	public static ClassType BOOLEAN = null;
 	public static ClassType BYTE = null;
@@ -178,12 +179,12 @@ public abstract class Type implements Comparable<Type> {
 	
 	//used to clear out types between runs of the JUnit tests
 	//otherwise, types can become mixed between two different runs of the type checker
-	public static void clearTypes()				
-	{
+	public static void clearTypes()	{
 		OBJECT = null;
 		CAST_EXCEPTION = null;
 		INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
 		UNEXPECTED_NULL_EXCEPTION = null;
+		INTERFACE_CREATE_EXCEPTION = null;
 		ASSERT_EXCEPTION = null;
 		CLASS = null;		
 		ARRAY = null;

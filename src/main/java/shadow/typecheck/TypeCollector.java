@@ -404,6 +404,7 @@ public class TypeCollector extends BaseChecker {
 				case "IndexOutOfBoundsException": Type.INDEX_OUT_OF_BOUNDS_EXCEPTION = (ExceptionType) type; break;
 				case "int":				Type.INT = (ClassType) type; break;
 				case "Integer":			Type.INTEGER = (InterfaceType) type; break;
+				case "InterfaceCreateException": Type.INTERFACE_CREATE_EXCEPTION = (ExceptionType) type; break;
 				case "Iterator":		Type.ITERATOR = (InterfaceType) type; break;
 				case "IteratorNullable":	Type.ITERATOR_NULLABLE = (InterfaceType) type; break;
 				case "long":			Type.LONG = (ClassType)type; break;

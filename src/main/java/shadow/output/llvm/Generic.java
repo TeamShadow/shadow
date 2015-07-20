@@ -77,8 +77,12 @@ public class Generic implements Comparable<Generic>
 			{
 				parameterType = ((ArrayType)parameterType).convertToGeneric();
 			}
-				
-			parameters.add(parameterType.getMangledNameWithGenerics());
+			
+			//ugly hack, we put a space and a null after type name to mark interface type generics, since they have no methods 
+			if( parameterType instanceof InterfaceType )				
+				parameters.add(parameterType.getMangledNameWithGenerics() + " null");
+			else
+				parameters.add(parameterType.getMangledNameWithGenerics());
 		}		
 	}
 	

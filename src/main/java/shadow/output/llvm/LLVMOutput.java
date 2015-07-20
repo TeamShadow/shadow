@@ -2436,7 +2436,27 @@ public class LLVMOutput extends AbstractOutput {
 					else
 						sb.append(", ");
 					
-					if( parameter.matches(".*_A\\d+")) //"real" arrays... should never happen now?
+					//interfaces first, because they contain a space followed by a null (to show they have no method table)
+					if( parameter.contains(" "))
+					{
+						String[] parts = parameter.split(" ");
+						parameter = parts[0];						
+						
+						if( parts[0].contains("_L_"))
+						{
+							String trimmed = parameter.substring(0,  parameter.indexOf("_L_"));
+							sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
+							sb.append(type(Type.OBJECT)).append(" null" );
+							parameterNames.add(trimmed + " null");
+						}
+						else
+						{
+							sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
+							sb.append(type(Type.OBJECT)).append(" null" );
+							parameterNames.add(parameter + " null");							
+						}
+					}
+					else if( parameter.matches(".*_A\\d+")) //"real" arrays... should never happen now?
 					{
 						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
 						sb.append(type(Type.OBJECT)).append(" null" );
@@ -2636,11 +2656,24 @@ public class LLVMOutput extends AbstractOutput {
 		
 		for( String parameter : parameterNames)
 		{
-			if( !types.contains(parameter) )
+			if( parameter.contains(" ")) //interface
 			{
-				writer.write("@\"" + parameter + "_class\" = external constant %" + raw(Type.CLASS));
-				writer.write("%\"" + parameter + "_methods\" = type opaque");				
-				writer.write("@\"" + parameter + "_methods\" = external constant %\"" + parameter + "_methods\"");
+				String[] parts = parameter.split(" ");
+				parameter = parts[0];
+				if( !types.contains(parameter) )
+				{					
+					writer.write("@\"" + parameter + "_class\" = external constant %" + raw(Type.CLASS));
+					writer.write("%\"" + parameter + "_methods\" = type opaque");
+				}				
+			}
+			else
+			{				
+				if( !types.contains(parameter) )
+				{					
+					writer.write("@\"" + parameter + "_class\" = external constant %" + raw(Type.CLASS));
+					writer.write("%\"" + parameter + "_methods\" = type opaque");				
+					writer.write("@\"" + parameter + "_methods\" = external constant %\"" + parameter + "_methods\"");
+				}
 			}
 		}
 		

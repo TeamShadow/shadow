@@ -294,4 +294,9 @@ public class TACTest {
 		args.add("shadow/test/CanCreateTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testInterfaceCreate() throws Exception {
+		args.add("shadow/test/InterfaceCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

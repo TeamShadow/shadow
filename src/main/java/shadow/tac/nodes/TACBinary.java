@@ -22,46 +22,39 @@ public class TACBinary extends TACOperand
 	private TACOperand first, second;
 	private ModifiedType result;
 	
-	public enum Boolean 
-	{ 
+	public enum Boolean { 
 		AND("and"),
 		OR("or"),
 		XOR("xor");
 		
 		private final String name;
 		
-		Boolean(String name)
-		{
+		Boolean(String name) {
 			this.name = name;
 		}
 		
-		public String getName()
-		{
+		public String getName() {
 			return name;
 		}		
 	}
 	
 	public TACBinary(TACNode node, TACOperand firstOperand, Boolean op,
-			TACOperand secondOperand)
-	{
+			TACOperand secondOperand) {
 		this(node, firstOperand, new SimpleModifiedType(Type.BOOLEAN), op.getName(), secondOperand, new SimpleModifiedType(Type.BOOLEAN), new SimpleModifiedType(Type.BOOLEAN));
 	}	
 	
 	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, char op,
-			TACOperand secondOperand)
-	{
+			TACOperand secondOperand) {
 		this( node, firstOperand, signature, op, secondOperand, false);
 	}
 	
 	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, char op,
-			TACOperand secondOperand, boolean isCompare)
-	{		
+			TACOperand secondOperand, boolean isCompare) {		
 		this( node, firstOperand, new SimpleModifiedType(signature.getOuter()), stringVersion(op), secondOperand, signature.getParameterTypes().get(0), isCompare ? new SimpleModifiedType(Type.BOOLEAN) : signature.getReturnTypes().get(0));	
 	}
 	
 	private TACBinary(TACNode node, TACOperand firstOperand, ModifiedType firstType, String op,
-			TACOperand secondOperand, ModifiedType secondType, ModifiedType resultType)
-	{
+			TACOperand secondOperand, ModifiedType secondType, ModifiedType resultType) {
 		super(node);
 		
 		if (firstType.getType() instanceof PropertyType)
@@ -75,24 +68,16 @@ public class TACBinary extends TACOperand
 		//shifts and rotates have weird issues
 		//LLVM insists that you rotate a byte with a byte
 		//so we have to throw in explicit casts
-		if( (op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>")) && !firstType.getType().equals(secondType.getType()))
-		{
-			//second = check(secondOperand, secondType);
-			//node.append(secondOperand);
+		if( (op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>")) && !firstType.getType().equals(secondType.getType()))		
 			second = new TACCast(this, firstType, secondOperand);
-			//second = check(secondOperand, secondType, true);
-			//second = check(secondOperand, secondType);
-		}
 		else
 			second = check(secondOperand, secondType);
 		result = resultType;
 	}
 	
-	private static String stringVersion(char op)
-	{
+	private static String stringVersion(char op) {
 		String version = String.valueOf(op);
-		switch( op )
-		{		
+		switch( op ) {		
 		case 'l': version = "<<"; break;
 		case 'r': version = ">>";  break;
 		case 'L': version  = "<<<"; break;
@@ -110,32 +95,26 @@ public class TACBinary extends TACOperand
 	}
 	
 	
-	public TACOperand getFirst()
-	{
+	public TACOperand getFirst() {
 		return first;
 	}
-	public String getOperation()
-	{
+	public String getOperation() {
 		return operation;
 	}	
-	public TACOperand getSecond()
-	{
+	public TACOperand getSecond() {
 		return second;
 	}
 
 	@Override
-	public Type getType()
-	{
+	public Type getType() {
 		return result.getType();
 	}
 	@Override
-	public int getNumOperands()
-	{
+	public int getNumOperands() {
 		return 2;
 	}
 	@Override
-	public TACOperand getOperand(int num)
-	{
+	public TACOperand getOperand(int num) {
 		if (num == 0)
 			return first;
 		if (num == 1)
@@ -144,15 +123,13 @@ public class TACBinary extends TACOperand
 	}
 
 	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
-	{
+	public void accept(TACVisitor visitor) throws ShadowException {
 		visitor.visit(this);
 	}
 
 	private static boolean paren = false;
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		boolean isParen = paren;
 		if (isParen)
@@ -171,5 +148,4 @@ public class TACBinary extends TACOperand
 	public Modifiers getModifiers() {
 		return result.getModifiers();
 	}
-	
 }
