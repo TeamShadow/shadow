@@ -216,8 +216,8 @@ public class Main {
 	 */
 	private static void generateLLVM(List<String> linkCommand) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {		
 		Type.clearTypes();
-		HashSet<Generic> generics = new HashSet<Generic>();
-		HashSet<Array> arrays = new HashSet<Array>();
+		HashSet<Type> generics = new HashSet<Type>();
+		HashSet<ArrayType> arrays = new HashSet<ArrayType>();
 
 		TypeChecker checker = new TypeChecker();
 
@@ -295,22 +295,17 @@ public class Main {
 		}
 	}
 
-	private static void addToLink( Type type, File file, List<String> linkCommand, HashSet<Generic> generics, HashSet<Array> arrays ) throws IOException, ShadowException {
+	private static void addToLink( Type type, File file, List<String> linkCommand, HashSet<Type> generics, HashSet<ArrayType> arrays ) throws IOException, ShadowException {
 		
 		String name = typeToFileName(type);
 		File llvmFile = new File(file.getParentFile(), name + ".ll");
 		File nativeFile = new File(file.getParentFile(), name + ".native.ll");
 
 		for (Type referenced : type.getReferencedTypes()  ) {
-			if( referenced.isFullyInstantiated() ) {				
-				if( referenced.getTypeWithoutTypeArguments().equals(Type.ARRAY) ||
-					referenced.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE))
-					generics.add(new GenericArray(referenced));
-				else
-					generics.add(new Generic(referenced));
-			}			
+			if( referenced.isFullyInstantiated() )
+				generics.add(referenced);
 			else if( referenced instanceof ArrayType )
-				arrays.add(new Array((ArrayType)referenced));
+				arrays.add((ArrayType)referenced);
 		}		
 
 		if( llvmFile.exists() )
