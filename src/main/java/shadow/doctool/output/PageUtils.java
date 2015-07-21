@@ -1,5 +1,7 @@
 package shadow.doctool.output;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import shadow.doctool.DocumentationException;
@@ -8,9 +10,12 @@ import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.Package;
 
 public class PageUtils 
 {
+	public static String EXTENSION = ".html";
+	
 	public static void writeTableRow(Html5Writer out, boolean header,
 			String ... columns) throws ShadowException, DocumentationException
 	{
@@ -49,5 +54,35 @@ public class PageUtils
 			throws DocumentationException, ShadowException
 	{
 		out.full("a", text, new Attribute("href", href));
+	}
+
+	public static String getRelativePath(Package from, Package to, String file)
+	{
+		Path start = Paths.get(from.getPath());
+		Path target = Paths.get(to.getPath());
+		
+		Path result = start.relativize(target);
+		
+		return result.resolve(file).toString();
+	}
+	
+	public static String getRelativePath(Package from, Package to)
+	{
+		return getRelativePath(from, to, PackagePage.PAGE_NAME + EXTENSION);
+	}
+	
+	public static String getRelativePath(Package from, Type to)
+	{
+		return getRelativePath(from, to.getPackage(), to.getTypeName() + EXTENSION);
+	}
+	
+	public static String getRelativePath(Type from, Package to)
+	{
+		return getRelativePath(from.getPackage(), to, PackagePage.PAGE_NAME + EXTENSION);
+	}
+	
+	public static String getRelativePath(Type from, Type to)
+	{
+		return getRelativePath(from.getPackage(), to.getPackage(), to.getTypeName() + EXTENSION);
 	}
 }

@@ -22,7 +22,7 @@ import shadow.typecheck.type.Type;
 
 public class PackagePage 
 {
-	private static final String extension = ".html";
+	public static final String PAGE_NAME = "package-summary";
 
 	private final Package self;
 	private String qualifiedName;
@@ -74,7 +74,7 @@ public class PackagePage
 		outputDirectory.toFile().mkdirs();
 		
 		// Begin writing to the document itself
-		Path output = outputDirectory.resolve("package-summary" + extension);
+		Path output = outputDirectory.resolve(PAGE_NAME + PageUtils.EXTENSION);
 		FileWriter fileWriter = new FileWriter(output.toFile());
 		Html5Writer out = new Html5Writer(fileWriter);
 		
@@ -114,7 +114,7 @@ public class PackagePage
 			parentName = self.getParent().getQualifiedName();
 		if (!parentName.isEmpty()) {
 			out.open("p");
-			PageUtils.writeLink("../package-summary" + extension, 
+			PageUtils.writeLink("../" + PAGE_NAME + PageUtils.EXTENSION, 
 					parentName, out);
 			out.closeLine();
 		}
@@ -189,7 +189,7 @@ public class PackagePage
 	{
 		if (linkableTypes.contains(type))
 			PageUtils.writeLink(type.getTypeName().replaceAll(":", "\\$")
-					+ extension, type.getTypeName(), out);
+					+ PageUtils.EXTENSION, type.getTypeName(), out);
 		else
 			out.add(type.getTypeName());
 	}

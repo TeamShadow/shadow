@@ -4,13 +4,17 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 
+import shadow.doctool.Documentation;
+import shadow.doctool.DocumentationBuilder;
+import shadow.doctool.DocumentationException;
+import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.Type;
 
 /** 
  * A representation of a Shadow package, with awareness of both its parent and
  * child packages 
  */
-public class Package
+public class Package implements Comparable<Package>
 {	
 	@SuppressWarnings("serial")
 	public static class PackageException extends Exception
@@ -30,6 +34,7 @@ public class Package
 	private final String name;	
 	private final Package parent;
 	private final HashMap<String, Type> types = new HashMap<String, Type>();
+	private Documentation documentation;
 	
 	public Package(HashMap<Package, HashMap<String, Type>> otherTypes)
 	{
@@ -187,6 +192,26 @@ public class Package
 		return types.values();
 	}
 
+	public void setDocumentationBuilder(DocumentationBuilder builder)
+			throws ShadowException, DocumentationException
+	{
+		this.documentation = builder.process();
+	}
+	
+	public void setDocumentation(Documentation documentation)
+	{
+		this.documentation = documentation;
+	}
+	
+	public Documentation getDocumentation()
+	{
+		return documentation;
+	}
+	
+	public boolean hasDocumentation()
+	{
+		return (documentation != null);
+	}
 
 	@Override
 	public int hashCode() {		
@@ -204,6 +229,14 @@ public class Package
 
 		return false;
 	}
+
+
+	@Override
+	/** Alphabetically compares qualified names */
+	public int compareTo(Package o) 
+	{
+		return this.getQualifiedName().compareTo(o.getQualifiedName());
+	}	
 	
 	@Override
 	public String toString() {
@@ -211,5 +244,5 @@ public class Package
 			return "default";
 		else		
 			return getQualifiedName();
-	}	
+	}
 }

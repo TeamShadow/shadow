@@ -3,7 +3,6 @@ package shadow.doctool.output;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,8 +32,6 @@ import shadow.typecheck.type.TypeParameter;
 
 public class ClassOrInterfacePage
 {
-	private static final String extension = ".html";
-	
 	private Type type;
 	private String typeKind;
 	private HashSet<Type> linkableTypes;
@@ -115,7 +112,7 @@ public class ClassOrInterfacePage
 		// Note: All colons in class names are replaced with dashes to avoid
 		// browser issues (i.e. relative paths being interpreted as protocols)
 		Path output = outputDirectory
-				.resolve(type.getTypeName().replaceAll(":", "\\$") + extension);
+				.resolve(type.getTypeName().replaceAll(":", "\\$") + PageUtils.EXTENSION);
 		FileWriter fileWriter = new FileWriter(output.toFile());
 		Html5Writer out = new Html5Writer(fileWriter);
 		
@@ -159,10 +156,11 @@ public class ClassOrInterfacePage
 		// Create a link to this class/interface's package
 		out.open("p");
 		if (!packageName.isEmpty())
-			PageUtils.writeLink("package-summary" + extension, 
+			PageUtils.writeLink(PackagePage.PAGE_NAME +  PageUtils.EXTENSION, 
 					type.getPackage().getQualifiedName(), out);
 		else
-			PageUtils.writeLink("package-summary" + extension, "default", out);
+			PageUtils.writeLink(PackagePage.PAGE_NAME +  PageUtils.EXTENSION, 
+					"default", out);
 		out.closeLine();
 		
 		out.fullLine("h2", typeKind + " " + type.getTypeName());
@@ -564,7 +562,8 @@ public class ClassOrInterfacePage
 	{
 		if (linkableTypes.contains(to))
 			// Replace colons in class names with dashes
-			PageUtils.writeLink(getRelativePath(type, to).replaceAll(":", "\\$"), text, out);
+			PageUtils.writeLink(PageUtils.getRelativePath(type, to)
+					.replaceAll(":", "\\$"), text, out);
 		else
 			out.add(text);
 	}
@@ -600,16 +599,6 @@ public class ClassOrInterfacePage
 		for (int i = 0; i < count; ++i)
 			builder.append("../");
 		return builder.toString();
-	}
-	
-	public static String getRelativePath(Type from, Type to)
-	{
-		Path start = Paths.get(from.getPackage().getPath());
-		Path target = Paths.get(to.getPackage().getPath());
-		
-		Path result = start.relativize(target);
-		
-		return result.resolve(to.getTypeName() + extension).toString();
 	}
 	
 	/** 

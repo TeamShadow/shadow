@@ -21,6 +21,7 @@ import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
 import shadow.doctool.output.ClassOrInterfacePage;
+import shadow.doctool.output.OverviewPage;
 import shadow.doctool.output.PackagePage;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
@@ -132,6 +133,9 @@ public class DocumentationTool
 			PackagePage page = new PackagePage(current, packagesToDocument, typesToDocument);
 			page.write(outputDirectory);
 		}
+		
+		// Create an overview page that links to every package
+		OverviewPage.write(outputDirectory, packagesToDocument);
 		
 		// Export the style-sheet
 		exportResource(outputDirectory.resolve("stylesheet.css"), 
