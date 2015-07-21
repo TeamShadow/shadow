@@ -17,6 +17,7 @@ import shadow.doctool.output.Html5Writer.Attribute;
 import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
+import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.ClassType;
@@ -44,6 +45,9 @@ public class ClassOrInterfacePage
 	private List<MethodSignature> methods = new ArrayList<MethodSignature>();
 	private List<MethodSignature> properties = new ArrayList<MethodSignature>();
 	
+	// Public and protected constants
+	private List<Node> visibleConstants = new ArrayList<Node>();
+	
 	public ClassOrInterfacePage(Type type, Collection<Type> linkableTypes) throws DocumentationException
 	{
 		if (type instanceof ClassType)
@@ -63,8 +67,10 @@ public class ClassOrInterfacePage
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
 		
 		fillMethodLists();
+		getVisibleConstants();
 	}
 	
+	/** Sorts all methods into lists based upon their type and visibility */
 	private void fillMethodLists()
 	{
 		for (List<MethodSignature> overloadList : type.getMethodMap().values()) {
@@ -90,6 +96,15 @@ public class ClassOrInterfacePage
 		Collections.sort(properties);
 	}
 	
+	private void getVisibleConstants()
+	{
+		for (Node field : type.getFields().values())
+		{
+			if (field.getModifiers().isConstant() && !field.getModifiers().isPrivate())
+				visibleConstants.add(field);
+		}
+	}
+	
 	public void write(Path root) throws IOException, ShadowException, DocumentationException
 	{
 		// Find/create the directory chain where the document will reside
@@ -97,7 +112,10 @@ public class ClassOrInterfacePage
 		outputDirectory.toFile().mkdirs();
 		
 		// Begin writing to the document itself
-		Path output = outputDirectory.resolve(type.getTypeName() + extension);
+		// Note: All colons in class names are replaced with dashes to avoid
+		// browser issues (i.e. relative paths being interpreted as protocols)
+		Path output = outputDirectory
+				.resolve(type.getTypeName().replaceAll(":", "-") + extension);
 		FileWriter fileWriter = new FileWriter(output.toFile());
 		Html5Writer out = new Html5Writer(fileWriter);
 		
@@ -106,8 +124,11 @@ public class ClassOrInterfacePage
 		out.openTab("body");
 		
 		writeHeader(out);
-		writeAllMethodTables(out);
-		writeAllMethodDetails(out);
+		writeConstantSummaries(out);
+		writeMethodSummaries(out);
+		
+		writeConstantDetails(out);
+		writeMethodDetails(out);
 		
 		out.closeUntab();
 		out.closeUntab();
@@ -120,8 +141,7 @@ public class ClassOrInterfacePage
 		out.openTab("head");
 		
 		out.fullLine("title", type.getTypeName());
-		out.voidLine("link", 
-				new Attribute("rel", "stylesheet"),
+		out.voidLine("link", new Attribute("rel", "stylesheet"),
 				new Attribute("href", upDir(packageDepth) + "stylesheet.css"));
 		
 		out.closeUntab();
@@ -234,7 +254,39 @@ public class ClassOrInterfacePage
 		}
 	}
 	
-	private void writeAllMethodTables(Html5Writer out) 
+	private void writeConstantSummaries(Html5Writer out)
+			throws ShadowException, DocumentationException
+	{
+		if (!visibleConstants.isEmpty()) {
+			out.openTab("div", new Attribute("class", "block"));		
+			out.fullLine("h3", "Constant Summary");
+			out.openTab("table", new Attribute("class", "summarytable"));
+			
+			writeTableRow(out, true, "Modifiers", "Type", "Name and Description");
+			for (Node constant : visibleConstants) {
+				out.openTab("tr");
+					out.open("td");
+						out.full("code", constant.getModifiers().toString().trim());
+					out.closeLine();
+					out.open("td");
+						out.full("code", constant.toString());
+					out.closeLine();
+					out.open("td");
+						out.open("code");
+							writeNodeName(constant, true, out);
+						out.close();
+						if (constant.hasDocumentation())
+							writeInlineTags(constant.getDocumentation().getSummary(), out);
+					out.closeLine();
+				out.closeUntab();
+			}
+			
+			out.closeUntab();
+			out.closeUntab();
+		}
+	}
+	
+	private void writeMethodSummaries(Html5Writer out) 
 			throws ShadowException, DocumentationException
 	{
 		if (!constructors.isEmpty())
@@ -279,17 +331,51 @@ public class ClassOrInterfacePage
 		out.closeUntab();
 	}
 	
-	private void writeAllMethodDetails(Html5Writer out)
+	private void writeConstantDetails(Html5Writer out)
+			throws ShadowException, DocumentationException
+	{
+		out.openTab("div", new Attribute("class", "block"));		
+		out.fullLine("h3", "Constant Detail");
+		
+		for (Node constant : visibleConstants)
+			writeConstantDetail(constant, out);
+		
+		out.closeUntab();
+	}
+	
+	private void writeConstantDetail(Node constant, Html5Writer out)
+			throws ShadowException, DocumentationException
+	{
+		out.openTab("div", new Attribute("class", "methoddetail"));
+		
+		out.fullLine("h4", constant.toString(),
+				new Attribute("id", constant.toString()));
+		
+		out.open("code");
+		out.add(constant.getModifiers().toString().trim() + " "
+				+ constant.toString());
+		out.closeLine();
+		
+		// Documentation text
+		if (constant.hasDocumentation()) {
+			writeInlineTags(constant.getDocumentation().getInlineTags(), out);
+			writeBlockTags(constant.getDocumentation(), out);
+		}
+		
+		out.closeUntab();
+	}
+	
+	private void writeMethodDetails(Html5Writer out)
 			throws ShadowException, DocumentationException 
 	{
 		if (!constructors.isEmpty())
-			writeMethodDetailSection("Constructor Details", constructors, out);
+			writeMethodDetailSection("Constructor Detail", constructors, out);
 		if (!destructors.isEmpty())
-			writeMethodDetailSection("Destructor Details", destructors, out);
+			writeMethodDetailSection("Destructor Detail", destructors, out);
 		if (!methods.isEmpty())
-			writeMethodDetailSection("Method Details", methods, out);
+			writeMethodDetailSection("Method Detail", methods, out);
 		if (!properties.isEmpty())
-			writeMethodDetailSection("Property Details", properties, out);
+			writeMethodDetailSection("Property Detail", properties, out);
 	}
 	
 	private void writeMethodDetailSection(String name, 
@@ -329,6 +415,15 @@ public class ClassOrInterfacePage
 		out.closeUntab();
 	}
 	
+	private void writeNodeName(Node node, boolean linkToDetail,
+			Html5Writer out) throws DocumentationException, ShadowException
+	{
+		if (linkToDetail)
+			writeLink("#" + node.toString(), node.toString(), out);
+		else
+			out.add(node.toString());
+	}
+	
 	private void writeMethodName(MethodSignature method, boolean linkToDetail,
 			Html5Writer out) throws DocumentationException, ShadowException
 	{
@@ -347,6 +442,9 @@ public class ClassOrInterfacePage
 		for (int i = 0; i < parameterCount; ++i)
 		{
 			Type parameter = method.getParameterTypes().get(i).getType();
+			
+			// TODO: Limit which modifiers appear (i.e. not 'immutable locked')
+			//out.add(parameter.getModifiers().toString().trim() + " ");
 			
 			if (link)
 				writeCrossLink(parameter, parameter.getQualifiedName(), out);
@@ -428,8 +526,8 @@ public class ClassOrInterfacePage
 			throws DocumentationException, ShadowException
 	{
 		if (linkableTypes.contains(to))
-			writeLink(getRelativePath(type, to) /*+ "/" 
-					+ to.getTypeName() + extension*/, text, out);
+			// Replace colons in class names with dashes
+			writeLink(getRelativePath(type, to).replaceAll(":", "-"), text, out);
 		else
 			out.add(text);
 	}
@@ -498,7 +596,7 @@ public class ClassOrInterfacePage
 		
 		Path result = start.relativize(target);
 		
-		return "./" + result.resolve(to.getTypeName() + extension).toString();
+		return result.resolve(to.getTypeName() + extension).toString();
 	}
 	
 	/** 

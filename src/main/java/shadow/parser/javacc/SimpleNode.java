@@ -217,16 +217,22 @@ public class SimpleNode implements Node {
 	}
 	
 	@Override
-	public Documentation getDocumentation()
+	public void setDocumentationBuilder(DocumentationBuilder builder) 
+			throws ShadowException, DocumentationException
 	{
-		return documentation;
+		this.documentation = builder.process();
 	}
 	
 	@Override
-	public void setDocumentation(DocumentationBuilder documentation) 
-			throws ShadowException, DocumentationException
+	public void setDocumentation(Documentation documentation)
 	{
-		this.documentation = documentation.process();
+		this.documentation = documentation;
+	}
+	
+	@Override
+	public Documentation getDocumentation()
+	{
+		return documentation;
 	}
 	
 	@Override

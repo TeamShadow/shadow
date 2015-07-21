@@ -82,8 +82,9 @@ interface Node extends ModifiedType {
 	public void setEnclosingType(Type type);
 	public Type getEnclosingType();
 	
+	public void setDocumentationBuilder(DocumentationBuilder documentation) throws ShadowException, DocumentationException;
+	public void setDocumentation(Documentation documentation);
 	public Documentation getDocumentation();
-	public void setDocumentation(DocumentationBuilder documentation) throws ShadowException, DocumentationException;
 	public boolean hasDocumentation();
 	
 	public boolean isField();

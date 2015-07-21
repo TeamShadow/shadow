@@ -578,7 +578,7 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers, DocumentationBuilder docBu
 {
   {
     jjtThis.setModifiers(modifiers);
-    jjtThis.setDocumentation(docBuilder);
+    jjtThis.setDocumentationBuilder(docBuilder);
   }
   ( "class"
   	{
@@ -656,7 +656,7 @@ void EnumDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
 {
   jjtThis.setModifiers(modifiers);
-  jjtThis.setDocumentation(docBuilder);
+  jjtThis.setDocumentationBuilder(docBuilder);
 }
 
   "enum"
@@ -746,7 +746,7 @@ void FieldDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
   {
     jjtThis.setModifiers(modifiers);
-    jjtThis.setDocumentation(docBuilder);
+    jjtThis.setDocumentationBuilder(docBuilder);
   }
   Type()
   VariableDeclarator() ("," VariableDeclarator() )*
@@ -840,7 +840,7 @@ void MethodDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
   {
     jjtThis.setModifiers(modifiers);
-    jjtThis.setDocumentation(docBuilder);
+    jjtThis.setDocumentationBuilder(docBuilder);
   }  
   MethodDeclarator(false) [ "throws" NameList() ]
   ( Block() { jjtThis.setBlock(true); } | ";" )
@@ -854,7 +854,7 @@ void CreateDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
   {
     jjtThis.setModifiers(modifiers);
-    jjtThis.setDocumentation(docBuilder);
+    jjtThis.setDocumentationBuilder(docBuilder);
     jjtThis.setImage("create");
   }  
   // Modifiers matched in the caller
@@ -891,7 +891,7 @@ void DestroyDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
   {
     jjtThis.setModifiers(modifiers);
     jjtThis.setImage("destroy");
-    jjtThis.setDocumentation(docBuilder);
+    jjtThis.setDocumentationBuilder(docBuilder);
   }  
   // Modifiers matched in the caller
   "destroy" //no (checked) exceptions from destroys!

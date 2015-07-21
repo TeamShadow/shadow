@@ -1016,6 +1016,7 @@ public class TypeUpdater extends BaseChecker {
 						
 			declarator.setType(type);
 			declarator.setModifiers(node.getModifiers());
+			declarator.setDocumentation(node.getDocumentation());
 			declarator.setEnclosingType(currentType);
 			String symbol = declarator.getImage();
 			
