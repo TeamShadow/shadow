@@ -135,6 +135,19 @@ public class Package
 		return parent;
 	}
 	
+	/** The number of parents this package has */
+	public int getDepth()
+	{
+		int depth = 0;
+		Package current = this.parent;
+		while (current != null) {
+			depth++;
+			current = current.getParent();
+		}
+		
+		return depth;
+	}
+	
 	public String getName()
 	{
 		return name;

@@ -66,12 +66,12 @@ public class ClassOrInterfacePage
 		this.type = type;
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
 		
-		fillMethodLists();
+		getVisibleMethods();
 		getVisibleConstants();
 	}
 	
 	/** Sorts all methods into lists based upon their type and visibility */
-	private void fillMethodLists()
+	private void getVisibleMethods()
 	{
 		for (List<MethodSignature> overloadList : type.getMethodMap().values()) {
 			for (MethodSignature method : overloadList) {
@@ -152,8 +152,14 @@ public class ClassOrInterfacePage
 		out.openTab("div", new Attribute("class", "header"));
 		
 		String packageName = type.getPackage().getQualifiedName();
+		
+		out.open("p");
 		if (!packageName.isEmpty())
-			out.fullLine("p", type.getPackage().getQualifiedName());
+			writeLink("package-summary" + extension, 
+					type.getPackage().getQualifiedName(), out);
+		else
+			writeLink("package-summary" + extension, "default", out);
+		out.closeLine();
 		
 		out.fullLine("h2", typeKind + " " + type.getTypeName());
 		
@@ -565,8 +571,7 @@ public class ClassOrInterfacePage
 		
 		// Climb up the chain of packages
 		Package currentPackage = type.getPackage();
-		while (currentPackage != null && !currentPackage.getName().isEmpty())
-		{
+		while (currentPackage != null && !currentPackage.getName().isEmpty()) {
 			packages.addFirst(currentPackage.getName());
 			currentPackage = currentPackage.getParent();
 			
@@ -581,7 +586,7 @@ public class ClassOrInterfacePage
 	}
 	
 	/** Creates the requested number of repetitions of '../' */
-	private static String upDir(int count)
+	public static String upDir(int count)
 	{
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < count; ++i)

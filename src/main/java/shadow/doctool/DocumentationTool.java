@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -20,8 +21,10 @@ import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
 import shadow.doctool.output.ClassOrInterfacePage;
+import shadow.doctool.output.PackagePage;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
@@ -88,7 +91,8 @@ public class DocumentationTool
 		List<File> sourceFiles = getRequestedFiles(arguments.getMainArguments());
 		
 		// Perform basic type-checking on each source file
-		Set<Type> toDocument = DocumentationTypeChecker.typeCheck(sourceFiles);
+		Set<Type> classesToDocument = DocumentationTypeChecker.typeCheck(sourceFiles);
+		Set<Package> packagesToDocument = new HashSet<Package>();
 		
 		logger.info("Successfully type-checked all files in "
 				+ (System.currentTimeMillis() - startTime) + "ms");
@@ -107,18 +111,25 @@ public class DocumentationTool
 			outputDirectory = Paths.get("docs").toAbsolutePath();
 		
 		// Capture visible inner classes for documentation
-		List<Type> outerClasses = new ArrayList<Type>(toDocument);
+		List<Type> outerClasses = new ArrayList<Type>(classesToDocument);
 		for (Type outer : outerClasses)
 			if (outer instanceof ClassType)
 				for (Type inner : ((ClassType)outer).getInnerClasses().values())
 					if (inner.getModifiers().isPublic() || inner.getModifiers().isProtected())
-						toDocument.add(inner);
+						classesToDocument.add(inner);
 		
 		// Document each class or interface
-		for (Type type : toDocument)
-		{
+		for (Type type : classesToDocument) {
+			packagesToDocument.addAll(type.getAllPackages());
+			
 			ClassOrInterfacePage page = 
-					new ClassOrInterfacePage(type, toDocument);
+					new ClassOrInterfacePage(type, classesToDocument);
+			page.write(outputDirectory);
+		}
+		
+		// Create a page for each package
+		for (Package current : packagesToDocument) {
+			PackagePage page = new PackagePage(current, packagesToDocument);
 			page.write(outputDirectory);
 		}
 		

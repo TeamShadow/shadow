@@ -781,11 +781,23 @@ public abstract class Type implements Comparable<Type> {
 			BaseChecker.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context", arguments);
 		
 		return candidate;
-	}	
+	}
 	
 	public Package getPackage()
 	{
 		return _package;
+	}
+	
+	public List<Package> getAllPackages()
+	{
+		List<Package> packages = new ArrayList<Package>();
+		Package current = _package;
+		while (current != null) {
+			packages.add(current);
+			current = current.getParent();
+		}
+		
+		return packages;
 	}
 	
 	public void setPackage(Package p)
