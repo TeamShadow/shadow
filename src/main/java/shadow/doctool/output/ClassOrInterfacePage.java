@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
@@ -23,9 +24,12 @@ import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
+import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.TypeParameter;
 
 public class ClassOrInterfacePage
 {
@@ -166,6 +170,15 @@ public class ClassOrInterfacePage
 		writeInnerClassSection(out);
 		writeInheritanceSection(out);
 		
+		out.voidLine("hr");
+		
+		// Full, "in code" declaration
+		out.open("code");
+		out.add(type.getModifiers().toString() + typeKind.toLowerCase()
+				+ " " + type.getTypeName());
+		writeTypeParameters(type, true, out);
+		out.closeLine();
+		
 		// Documentation text
 		if (type.hasDocumentation()) {
 			PageUtils.writeInlineTags(type.getDocumentation().getInlineTags(), out);
@@ -173,7 +186,40 @@ public class ClassOrInterfacePage
 		}
 		
 		out.closeUntab();
-		out.voidLine("hr");
+	}
+	
+	// TODO: Support recursion of type constraints?
+	private void writeTypeParameters(Type parent, boolean link, 
+			Html5Writer out) throws ShadowException, DocumentationException
+	{
+		SequenceType typeParams = parent.getTypeParameters();
+		if (typeParams != null && typeParams.size() > 0) {
+			out.add("<");
+			int i = 0;
+			for (ModifiedType modifiedParam : typeParams) {
+				if (i != 0)
+					out.add(", ");
+				TypeParameter param = (TypeParameter)modifiedParam.getType();
+				out.add(param.getTypeName());
+				Set<Type> bounds = param.getBounds();
+				int j = 0;
+				for (Type constraint : bounds) {
+					if (j == 0) {
+						out.add(" is ");
+					} else {
+						out.add(" and ");
+					}
+					if (link) {
+						writeCrossLink(constraint, constraint.getTypeName(), out);
+					} else {
+						out.add(constraint.getTypeName());
+					}
+					j++;
+				}
+				i++;
+			}
+			out.add(">");
+		}
 	}
 	
 	private void writeInnerClassSection(Html5Writer out)
@@ -342,13 +388,15 @@ public class ClassOrInterfacePage
 	private void writeConstantDetails(Html5Writer out)
 			throws ShadowException, DocumentationException
 	{
-		out.openTab("div", new Attribute("class", "block"));		
-		out.fullLine("h3", "Constant Detail");
-		
-		for (Node constant : visibleConstants)
-			writeConstantDetail(constant, out);
-		
-		out.closeUntab();
+		if (!visibleConstants.isEmpty()) {
+			out.openTab("div", new Attribute("class", "block"));		
+			out.fullLine("h3", "Constant Detail");
+			
+			for (Node constant : visibleConstants)
+				writeConstantDetail(constant, out);
+			
+			out.closeUntab();
+		}
 	}
 	
 	private void writeConstantDetail(Node constant, Html5Writer out)

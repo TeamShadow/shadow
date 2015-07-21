@@ -41,7 +41,6 @@ public class DocumentationTest
 		}
 		
 		args.add("-o");
-		System.out.println(outputDirectory.toString());
 		args.add(outputDirectory.toString());
 	}
 	

@@ -4,7 +4,7 @@ import tier1A@TestInterfaceA;
 import tier1A@TestInterfaceB;
 
 /** A class to test/demonstrate the documentation tool */
-class Example<T, U is Dummy> 
+class Example<T, U is Dummy and TestInterfaceA and TestInterfaceB> 
         extends Dummy implements TestInterfaceA, TestInterfaceB
 {
     /// Documenting public/protected inner classes

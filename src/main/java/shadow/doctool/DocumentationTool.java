@@ -91,7 +91,7 @@ public class DocumentationTool
 		List<File> sourceFiles = getRequestedFiles(arguments.getMainArguments());
 		
 		// Perform basic type-checking on each source file
-		Set<Type> classesToDocument = DocumentationTypeChecker.typeCheck(sourceFiles);
+		Set<Type> typesToDocument = DocumentationTypeChecker.typeCheck(sourceFiles);
 		Set<Package> packagesToDocument = new HashSet<Package>();
 		
 		logger.info("Successfully type-checked all files in "
@@ -111,25 +111,25 @@ public class DocumentationTool
 			outputDirectory = Paths.get("docs").toAbsolutePath();
 		
 		// Capture visible inner classes for documentation
-		List<Type> outerClasses = new ArrayList<Type>(classesToDocument);
+		List<Type> outerClasses = new ArrayList<Type>(typesToDocument);
 		for (Type outer : outerClasses)
 			if (outer instanceof ClassType)
 				for (Type inner : ((ClassType)outer).getInnerClasses().values())
 					if (inner.getModifiers().isPublic() || inner.getModifiers().isProtected())
-						classesToDocument.add(inner);
+						typesToDocument.add(inner);
 		
 		// Document each class or interface
-		for (Type type : classesToDocument) {
+		for (Type type : typesToDocument) {
 			packagesToDocument.addAll(type.getAllPackages());
 			
 			ClassOrInterfacePage page = 
-					new ClassOrInterfacePage(type, classesToDocument);
+					new ClassOrInterfacePage(type, typesToDocument);
 			page.write(outputDirectory);
 		}
 		
 		// Create a page for each package
 		for (Package current : packagesToDocument) {
-			PackagePage page = new PackagePage(current, packagesToDocument, classesToDocument);
+			PackagePage page = new PackagePage(current, packagesToDocument, typesToDocument);
 			page.write(outputDirectory);
 		}
 		
