@@ -6,8 +6,8 @@ implements
 	CanNegate<long>,
 	CanHash
 {
-    constant long MAX = 9223372036854775807L;
-    constant long MIN = -9223372036854775808L; 
+    public constant long MAX = 9223372036854775807L;
+    public constant long MIN = -9223372036854775808L; 
 
 	// implement Bitwise
 	public native bitComplement() => (long);

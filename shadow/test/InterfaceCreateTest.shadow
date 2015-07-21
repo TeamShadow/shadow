@@ -1,0 +1,15 @@
+import shadow:io@Console;
+
+class shadow:test@InterfaceCreateTest
+{
+    public main(String[] args) => () 
+    { 
+    	Console out;
+        CanCreateFactory<CanCreate> factory = CanCreateFactory<CanCreate>:create();
+        double sum = 0.0;
+        
+        CanCreate a = factory.generate();
+        
+        out.printLine("Test failed: Trying to create an interface should have thrown an exception");
+	}
+}

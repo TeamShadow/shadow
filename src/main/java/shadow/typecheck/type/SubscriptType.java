@@ -1,47 +1,23 @@
 package shadow.typecheck.type;
 
-public class SubscriptType extends GetSetType
+import java.util.ArrayList;
+import java.util.List;
+
+import shadow.typecheck.BaseChecker;
+import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.TypeCheckException.Error;
+
+public class SubscriptType extends PropertyType
 {	
-	private ModifiedType index;
-	private UnboundMethodType method;		
+	private ModifiedType index;			
 	
-	public SubscriptType(MethodSignature getter, ModifiedType index, UnboundMethodType method)
-	{	
+	public SubscriptType(MethodSignature getter, ModifiedType index, UnboundMethodType method, ModifiedType prefix, Type context) {	
+		super(getter, method, prefix, context);
 		this.index = index;			
-		this.method = method;
-		this.getter = getter;
 	}
 	
-	public boolean canAccept(ModifiedType input)
-	{		
-		Type outer = method.getOuter();
-		String name = method.getTypeName();
-		SequenceType arguments = new SequenceType();
-		arguments.add(index);
-		arguments.add(input);			
-		
-		if( outer.getMatchingMethod(name, arguments) != null )
-			return true;		
-		
-		return false;
-	}
-	
-	public boolean applyInput(ModifiedType input)
-	{		
-		Type outer = method.getOuter();
-		String name = method.getTypeName();
-		SequenceType arguments = new SequenceType();
-		arguments.add(index);
-		arguments.add(input);			
-		
-		MethodSignature signature = outer.getMatchingMethod(name, arguments); 
-		if( signature != null )
-		{			
-			setter = signature;
-			return true;
-		}		
-		
-		return false;
+	public ModifiedType getIndex() {
+		return index;
 	}
 	
 	//this will probably never be used
@@ -51,27 +27,45 @@ public class SubscriptType extends GetSetType
 		if( other instanceof SubscriptType )
 		{
 			SubscriptType otherIndex = (SubscriptType)other;
-			//contravariant on index type			
+			//contravariant on index type		
+			
 			if( !otherIndex.index.getType().isSubtype(index.getType()))
 				return false;
 			
-			//covariant on get
-			if( !getGetType().getType().isSubtype(otherIndex.getGetType().getType()) )
-				return false;
-			
-			if( otherIndex.getSetType() != null )
-			{
-				if( getSetType() == null )
-					return false;
-				//contravariant on store
-				if( !otherIndex.getSetType().getType().isSubtype(getSetType().getType()) )
-					return false;
-			}			
-			
-			return true;
+			return super.isSubtype(other);
 		}
 		
 		return false;
+	}
+	
+	@Override
+	public List<TypeCheckException> applyInput(ModifiedType input) {
+		
+		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		UnboundMethodType method = getMethod();
+		Type outer = method.getOuter();
+		String name = method.getTypeName();
+		SequenceType arguments = new SequenceType();	
+		arguments.add(index);
+		arguments.add(input);
+		Type context = getContext();
+		
+		ModifiedType prefix = getPrefix();
+		
+		MethodSignature signature = outer.getMatchingMethod(name, arguments);
+		
+		if( signature == null )
+			BaseChecker.addError(errors, Error.INVALID_SUBSCRIPT, "Subscript cannot accept input of type " + input.getType(), input.getType());
+		else {			
+			setSetter(signature);			
+			if( !BaseChecker.methodIsAccessible(signature, context) )
+				BaseChecker.addError(errors, Error.ILLEGAL_ACCESS, "Subscript is not accessible from this context");
+			
+			if( !prefix.getModifiers().isMutable() && signature.getModifiers().isMutable()  )			
+				BaseChecker.addError(errors, Error.ILLEGAL_ACCESS, "Mutable subscript cannot be called from " + (prefix.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
+		}		
+		
+		return errors;
 	}
 
 	@Override
@@ -79,15 +73,15 @@ public class SubscriptType extends GetSetType
 			SequenceType replacements) throws InstantiationException {		
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().replace(values, replacements), index.getModifiers());
-		UnboundMethodType replacedMethod = method.replace(values, replacements);
+		UnboundMethodType replacedMethod = getMethod().replace(values, replacements);
 		MethodSignature replacedGetter = null;		
-		if( getter != null )
-			replacedGetter = getter.replace(values, replacements);
+		if( getGetter() != null )
+			replacedGetter = getGetter().replace(values, replacements);
 		
-		SubscriptType replacement = new SubscriptType( replacedGetter, replacedIndex,  replacedMethod );
+		SubscriptType replacement = new SubscriptType( replacedGetter, replacedIndex, replacedMethod, getPrefix(), getContext());
 			
-		if( setter != null )					
-			replacement.setter = setter.replace(values, replacements);
+		if( getSetter() != null )					
+			replacement.setSetter(getSetter().replace(values, replacements));
 			
 		return replacement;
 	}
@@ -97,27 +91,17 @@ public class SubscriptType extends GetSetType
 			SequenceType replacements) {		
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().partiallyReplace(values, replacements), index.getModifiers());
-		UnboundMethodType replacedMethod = method.partiallyReplace(values, replacements);
+		UnboundMethodType replacedMethod = getMethod().partiallyReplace(values, replacements);
 		MethodSignature replacedGetter = null;		
-		if( getter != null )
-			replacedGetter = getter.partiallyReplace(values, replacements);
+		if( getGetter() != null )
+			replacedGetter = getGetter().partiallyReplace(values, replacements);
 		
-		SubscriptType replacement = new SubscriptType( replacedGetter, replacedIndex,  replacedMethod );
+		SubscriptType replacement = new SubscriptType( replacedGetter, replacedIndex,  replacedMethod, getPrefix(), getContext());
 			
-		if( setter != null )					
-			replacement.setter = setter.partiallyReplace(values, replacements);
+		if( getSetter() != null )					
+			replacement.setSetter(getSetter().partiallyReplace(values, replacements));
 			
 		return replacement;
-	}
-	
-	@Override
-	public void updateFieldsAndMethods() throws InstantiationException
-	{
-		if( getter != null )
-			getter.updateFieldsAndMethods();
-		
-		if( setter != null )
-			setter.updateFieldsAndMethods();
 	}
 	
 	@Override

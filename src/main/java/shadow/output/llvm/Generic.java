@@ -71,14 +71,18 @@ public class Generic implements Comparable<Generic>
 			//inside array (or inner classes of array or iterator), leave it as an array
 			if( parameterType instanceof ArrayType &&
 				!withoutArguments.equals(Type.ITERATOR) &&
-				!withoutArguments.equals(Type.NULLABLE_ITERATOR) &&
-				!(withoutArguments.equals(Type.ARRAY) || withoutArguments.equals(Type.NULLABLE_ARRAY) || (withoutArguments.hasOuter() && withoutArguments.getOuter().equals(Type.ARRAY)) || (withoutArguments.hasOuter() && withoutArguments.getOuter().equals(Type.NULLABLE_ARRAY))) )// &&
+				!withoutArguments.equals(Type.ITERATOR_NULLABLE) &&
+				!(withoutArguments.equals(Type.ARRAY) || withoutArguments.equals(Type.ARRAY_NULLABLE) || (withoutArguments.hasOuter() && withoutArguments.getOuter().equals(Type.ARRAY)) || (withoutArguments.hasOuter() && withoutArguments.getOuter().equals(Type.ARRAY_NULLABLE))) )// &&
 				//!Type.ARRAY.recursivelyContainsInnerClass(type.getTypeWithoutTypeArguments()) )
 			{
 				parameterType = ((ArrayType)parameterType).convertToGeneric();
 			}
-				
-			parameters.add(parameterType.getMangledNameWithGenerics());
+			
+			//ugly hack, we put a space and a null after type name to mark interface type generics, since they have no methods 
+			if( parameterType instanceof InterfaceType )				
+				parameters.add(parameterType.getMangledNameWithGenerics() + " null");
+			else
+				parameters.add(parameterType.getMangledNameWithGenerics());
 		}		
 	}
 	

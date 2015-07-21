@@ -12,8 +12,8 @@ implements
 	Number<double>,
 	CanHash
 {
-	constant ubyte MAX = 255uy;
-	constant ubyte MIN = 0uy;
+	public constant ubyte MAX = 255uy;
+	public constant ubyte MIN = 0uy;
 	// implement Bitwise
 	public native bitComplement() => (ubyte);
 	public native bitShiftLeft(uint amount) => (ubyte);

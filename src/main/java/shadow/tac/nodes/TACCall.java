@@ -19,13 +19,12 @@ public class TACCall extends TACOperand
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
 
-	public TACCall(TACNode node, TACBlock block, TACMethodRef methodRef, TACOperand... params)
-	{
+	public TACCall(TACNode node, TACBlock block, TACMethodRef methodRef, TACOperand... params) {
 		this(node, block, methodRef, Arrays.asList(params));
 	}
+	
 	public TACCall(TACNode node, TACBlock block, TACMethodRef methodRef,
-			Collection<? extends TACOperand> params)
-	{
+			Collection<? extends TACOperand> params) {
 		super(node);
 		blockRef = block;
 		this.methodRef = methodRef;
@@ -39,40 +38,32 @@ public class TACCall extends TACOperand
 			parameters.add(check(paramIter.next(), typeIter.next()));
 	}
 
-	public TACBlock getBlock()
-	{
+	public TACBlock getBlock() {
 		return blockRef;
 	}
-	public TACMethodRef getMethod()
-	{
+	public TACMethodRef getMethod() {
 		return methodRef;
 	}
-	public TACOperand getPrefix()
-	{
+	public TACOperand getPrefix() {
 		return parameters.get(0);
 	}
-	public int getNumParameters()
-	{
+	public int getNumParameters() {
 		return parameters.size();
 	}
-	public TACOperand getParameter(int index)
-	{
+	public TACOperand getParameter(int index) {
 		return parameters.get(index);
 	}
-	public List<TACOperand> getParameters()
-	{
+	public List<TACOperand> getParameters() {
 		return new ArrayList<TACOperand>(parameters);
 	}
 
 	@Override
-	public Type getType()
-	{
+	public Type getType() {
 		return methodRef.getReturnType();
 	}
 	
 	@Override
-	public Modifiers getModifiers()
-	{
+	public Modifiers getModifiers() {
 		SequenceType returns = methodRef.getReturnTypes();
 		if( returns.size() == 1)
 			return returns.getModifiers(0);
@@ -81,13 +72,11 @@ public class TACCall extends TACOperand
 	}
 	
 	@Override
-	public int getNumOperands()
-	{
+	public int getNumOperands() {
 		return 2 + parameters.size();
 	}
 	@Override
-	public TACOperand getOperand(int num)
-	{
+	public TACOperand getOperand(int num) {
 		if (num == 0)
 			return blockRef;
 		if (num == 1)
@@ -96,14 +85,12 @@ public class TACCall extends TACOperand
 	}
 
 	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
-	{
+	public void accept(TACVisitor visitor) throws ShadowException {
 		visitor.visit(this);
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		TACMethodRef method = getMethod();
 		sb.append(method.getOuterType()).append('.').append(method.getName()).

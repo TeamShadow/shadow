@@ -73,6 +73,52 @@ class shadow:test@CopyTest
 			
 			
 		out.printLine("array5: " # array5 );		
-		out.printLine("array6: " # array6 );		
+		out.printLine("array6: " # array6 );
+		
+		//3D array
+		int[][][] array7 = int:create[1][2][3];
+		for( int i = 0; i < 2; i += 1 )
+			for( int j = 0; j < 3; j += 1 )
+				array7[0][i][j] = i * 3 + j;
+				
+		int[][][] array8 = copy( array7 );
+		for( int i = 0; i < 2; i += 1 )
+			for( int j = 0; j < 3; j += 1 )
+				array7[0][i][j] *= 2;
+				
+		out.printLine("array7: " # array7 );		
+		out.printLine("array8: " # array8 );
+		
+		//ragged
+		int[][] array9 = int[]:create[2];
+		array9[0] = int:create[3];
+		array9[1] = int:create[4];
+		
+		for( int i = 0; i < 2; i += 1 )
+			for( int j = 0; j < array9[i]->size; j += 1 )
+				array9[i][j] = 3 * i + j;
+				
+		int[][] array10 = copy(array9);
+		for( int i = 0; i < 2; i += 1 )
+			for( int j = 0; j < array9[i]->size; j += 1 )
+				array9[i][j] *= 2;
+				
+		out.printLine("array9: " # array9 );		
+		out.printLine("array10: " # array10 );		
+		
+		var matrix1 = Matrix:create(2,3);
+		
+		matrix1[0][1] = 2.0;
+		matrix1[1][2] = 5.0;
+		
+		Matrix matrix2 = copy(matrix1);
+		
+		matrix1[0][0] = 3.0;
+		matrix1[1][2] = 7.0;
+		
+		out.printLine("matrix1: " # matrix1);
+		out.printLine("matrix2: " # matrix2);
+		 
+				
 	}
 }

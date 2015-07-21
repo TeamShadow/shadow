@@ -46,7 +46,7 @@ public class OutputTest {
 		// Try to remove the unit test executable
 		try
 		{
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e)
 		{}
@@ -337,5 +337,39 @@ public class OutputTest {
 				"Passed\n" + 
 				"Passed: shadow:standard@CastException: Array dimensions do not match\n" +
 				"Passed: shadow:standard@CastException: Array dimensions do not match\n");
-	}	
+	}
+	
+	@Test public void testCopy() throws Exception {
+		args.add("shadow/test/CopyTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 				
+				"s1: Walnuts\n" + 
+				"s2: Walnuts\n" +
+				"o1: (13,StuffStuff)\n" +
+				"o2: (14,Stuff)\n" +
+				"integer1: 3\n" +
+				"integer2: 3\n" +
+				"array1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n" +
+				"array2: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]\n" +
+				"array3: [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]\n" +
+				"array4: [[2, 3, 4, 5, 6], [7, 8, 9, 10, 11], [12, 13, 14, 15, 16], [17, 18, 19, 20, 21]]\n" +
+				"array5: [[0, 3, 6, 9, 12], [150, 153, 156, 159, 162], [300, 303, 306, 309, 312], [450, 453, 456, 459, 462]]\n" +
+				"array6: [[0, 1, 2, 3, 4], [50, 51, 52, 53, 54], [100, 101, 102, 103, 104], [150, 151, 152, 153, 154]]\n" +
+				"array7: [[[0, 2, 4], [6, 8, 10]]]\n" +
+				"array8: [[[0, 1, 2], [3, 4, 5]]]\n" +
+				"array9: [[0, 2, 4], [6, 8, 10, 12]]\n" +
+				"array10: [[0, 1, 2], [3, 4, 5, 6]]\n" +
+				"matrix1: [3.0, 2.0, 0.0]\n" +
+				"[0.0, 0.0, 7.0]\n" +
+				"\n" +
+				"matrix2: [0.0, 2.0, 0.0]\n" +
+				"[0.0, 0.0, 5.0]\n\n");
+	}
+	
+	@Test public void testInterfaceCreate() throws Exception {
+		args.add("shadow/test/InterfaceCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 	"", 			
+				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n");
+	}
 }

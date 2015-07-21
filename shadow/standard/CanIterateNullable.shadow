@@ -1,0 +1,4 @@
+interface shadow:standard@CanIterateNullable<T>
+{
+	readonly iterator() => (IteratorNullable<T>);
+}

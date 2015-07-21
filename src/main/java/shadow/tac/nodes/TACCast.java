@@ -170,9 +170,7 @@ public class TACCast extends TACOperand
 						params.add(message);
 												
 						MethodSignature signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
-									
-						methodRef = new TACMethodRef(this, signature);			
-						TACCall exception = new TACCall(this, block, methodRef, object, message);
+						TACCall exception = new TACCall(this, block, new TACMethodRef(this, signature), object, message);
 									
 						new TACThrow(this, block, exception);
 						doneLabel.new TACLabel(this);	//done label						

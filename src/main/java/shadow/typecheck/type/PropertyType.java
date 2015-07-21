@@ -1,33 +1,156 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
+import java.util.List;
 
-public class PropertyType extends GetSetType
+import shadow.typecheck.BaseChecker;
+import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.TypeCheckException.Error;
+
+public class PropertyType extends Type
 {	
-	public PropertyType(MethodSignature getter, MethodSignature setter)
-	{			
+	private MethodSignature getter;
+	private MethodSignature setter;
+	private UnboundMethodType method;
+	private ModifiedType prefix;
+	private Type context;
+	private boolean isLoad = true;
+	private boolean isStore = false;
+		
+	public List<TypeCheckException> applyInput(ModifiedType input) {
+		
+		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();		
+		Type outer = method.getOuter();
+		String name = method.getTypeName();
+		SequenceType arguments = new SequenceType();		
+		arguments.add(input);		
+		
+		MethodSignature signature = outer.getMatchingMethod(name, arguments);
+		
+		if( signature == null )
+			BaseChecker.addError(errors, Error.INVALID_PROPERTY, "Property " + name + " cannot accept input of type " + input.getType(), input.getType());
+		else {			
+			setSetter(signature);			
+			if( !BaseChecker.methodIsAccessible(signature, context) )
+				BaseChecker.addError(errors, Error.ILLEGAL_ACCESS, "Property " + name + " is not accessible from this context");
+			
+			if( !prefix.getModifiers().isMutable() && signature.getModifiers().isMutable()  )			
+				BaseChecker.addError(errors, Error.ILLEGAL_ACCESS, "Mutable property " + name + " cannot be called from " + (prefix.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
+		}		
+		
+		return errors;
+	}
+	
+	public PropertyType(MethodSignature getter, UnboundMethodType method, ModifiedType prefix, Type context)
+	{
+		super(null);
 		this.getter = getter;
-		this.setter = setter;	
-	}	
+		this.method = method;
+		this.prefix = prefix;
+		this.context = context;
+	}
+	
+	public ModifiedType getPrefix() {
+		return prefix;
+	}
+	
+	public Type getContext() {
+		return context;
+	}
+
+	public MethodSignature getGetter()
+	{
+		return getter;
+	}
+	
+	public UnboundMethodType getMethod() {
+		return method;
+	}
+	
+	protected void setSetter(MethodSignature setter) {
+		this.setter = setter;
+	}
+	
+	public MethodSignature getSetter()
+	{
+		return setter;
+	}
+	
+	public ModifiedType getGetType()
+	{
+		if( getter == null )
+			return null;
+		
+		return getter.getReturnTypes().get(0);
+	}
+	
+	public ModifiedType getSetType()
+	{
+		if( setter == null )
+			return null;
+		
+		//last input parameter, works for both indexing and properties
+		ModifiedType input = setter.getParameterTypes().get(setter.getParameterTypes().size() - 1);
+		ModifiedType type = new SimpleModifiedType(input.getType(), input.getModifiers());
+		type.getModifiers().addModifier(Modifiers.ASSIGNABLE);
+		return type;
+	}
+	
+	public boolean isGettable()
+	{
+		return getter != null;		
+	}
+	
+	public boolean isSettable()
+	{
+		return setter != null;
+	}
+	
+	public void setLoadOnly()
+	{
+		isLoad = true;
+		isStore = false;
+	}
+	
+	public void setStoreOnly()
+	{
+		isLoad = false;
+		isStore = true;
+	}
+	
+	public void setLoadStore()
+	{
+		isLoad = isStore = true;
+	}
+	
+	public boolean isLoad()
+	{
+		return isLoad;
+	}
+	
+	public boolean isStore()
+	{
+		return isStore;
+	}
 	
 	@Override
 	//probably never gets used
 	public boolean isSubtype(Type other) {
-
-		if( other instanceof PropertyType )
+		if( other instanceof PropertyType && this.getClass().equals(other.getClass()) )
 		{
 			PropertyType otherProperty = (PropertyType)other;
 			if( otherProperty.getter != null )
 			{
-				if( getter == null )
+				if( getGetter() == null )
 					return false;
 				//covariant on get
 				if( !getGetType().getType().isSubtype(otherProperty.getGetType().getType()) )
 					return false;
 			}
 			
-			if( otherProperty.setter != null )
+			if( otherProperty.getSetter() != null )
 			{
-				if( setter == null )
+				if( getSetter() == null )
 					return false;
 				//contravariant on set
 				if( !otherProperty.getGetType().getType().isSubtype(getGetType().getType()) )
@@ -39,44 +162,52 @@ public class PropertyType extends GetSetType
 		
 		return false;
 	}
+	
+	@Override
+	public void updateFieldsAndMethods() throws InstantiationException
+	{
+		if( getGetter() != null )
+			getGetter().updateFieldsAndMethods();
+		
+		if( getSetter() != null )
+			getSetter().updateFieldsAndMethods();
+	}
 
 	@Override
 	public PropertyType replace(SequenceType values,
 			SequenceType replacements) throws InstantiationException {
 		
-		MethodSignature replacedGetter = null;
-		MethodSignature replacedSetter = null;
-		if( getter != null )
-			replacedGetter = getter.replace(values, replacements);
-		if( setter != null )
-			replacedSetter = setter.replace(values, replacements);	
+		MethodSignature replacedGetter = null;		
+		UnboundMethodType replacedMethod = getMethod().replace(values, replacements);
+		if( getMethod() != null )
+			replacedGetter = getGetter().replace(values, replacements);		
 			
-		return new PropertyType( replacedGetter, replacedSetter );
+		PropertyType replacement = new PropertyType( replacedGetter, replacedMethod, prefix, context);
+		
+		if( getSetter() != null )
+			replacement.setSetter( getSetter().replace(values, replacements));
+		
+		return replacement;
 	}
 	
 	@Override
 	public PropertyType partiallyReplace(SequenceType values,
 			SequenceType replacements) {
 		
-		MethodSignature replacedGetter = null;
-		MethodSignature replacedSetter = null;
-		if( getter != null )
-			replacedGetter = getter.partiallyReplace(values, replacements);
-		if( setter != null )
-			replacedSetter = setter.partiallyReplace(values, replacements);	
+		MethodSignature replacedGetter = null;		
+		UnboundMethodType replacedMethod = getMethod().partiallyReplace(values, replacements);
+		if( getGetter() != null )
+			replacedGetter = getGetter().partiallyReplace(values, replacements);		
 			
-		return new PropertyType( replacedGetter, replacedSetter );
+		PropertyType replacement = new PropertyType( replacedGetter, replacedMethod, prefix, context);
+		
+		if( getSetter() != null )
+			replacement.setSetter(getSetter().partiallyReplace(values, replacements));
+		
+		return replacement;
 	}
 	
-	@Override
-	public void updateFieldsAndMethods() throws InstantiationException
-	{
-		if( getter != null )
-			getter.updateFieldsAndMethods();
-		
-		if( setter != null )
-			setter.updateFieldsAndMethods();
-	}
+
 	
 	@Override
 	public String toString(boolean withBounds)

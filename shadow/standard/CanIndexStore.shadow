@@ -1,4 +1,4 @@
-interface shadow:standard@CanIndexStore<K,V> extends CanIndex<K,V>
+interface shadow:standard@CanIndexStore<K,V>
 {
 	index(K key, V value) => ();
 }

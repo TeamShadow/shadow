@@ -23,13 +23,10 @@ import org.apache.logging.log4j.Logger;
  * @author Barry Wittman
  * @author Jacob Young
  */
-public class ShadowParser
-{
-   	public static enum TypeKind
-   	{		
+public class ShadowParser {
+   	public static enum TypeKind {		
 		CLASS,
 		ENUM,
-		//ERROR,
 		EXCEPTION,
 		INTERFACE,
 		SINGLETON,
@@ -37,8 +34,7 @@ public class ShadowParser
 	};
 
    private static final Logger logger = Loggers.PARSER;
-   	public void debugPrint(String str)
-   	{
+   	public void debugPrint(String str) {
         logger.trace(str + ": " + token);
     }
 
@@ -600,10 +596,6 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers, DocumentationBuilder docBu
  	  jjtThis.setKind(TypeKind.EXCEPTION);
  	  modifiers.checkExceptionModifiers(jjtThis);
  	}
- /*	| "error"
- 	{ jjtThis.setKind(TypeKind.ERROR);
- 	  modifiers.checkErrorModifiers(jjtThis);
- 	}*/
  	| "interface"
  	{
  	  jjtThis.setKind(TypeKind.INTERFACE);
@@ -633,10 +625,6 @@ void ExtendsList(TypeKind kind):
    {
       if (extendsMoreThanOne && kind != TypeKind.INTERFACE)
          throw new ParseException("A class cannot extend more than one other class",jjtThis);
-    /*  if (kind == TypeKind.ERROR)
-         throw new ParseException("An error cannot extend another type",jjtThis);
-      if (kind == TypeKind.SINGLETON)
-         throw new ParseException("A singleton cannot extend another type",jjtThis); */
    }
 }
 
@@ -647,9 +635,7 @@ void ImplementsList(TypeKind kind):
    ( "," ClassOrInterfaceType() )*
    {
       if (kind == TypeKind.INTERFACE)
-         throw new ParseException("An interface cannot implement other interfaces",jjtThis);
-     /* if( kind == TypeKind.ERROR )
-      	throw new ParseException("An error cannot implement interfaces",jjtThis); */
+         throw new ParseException("An interface cannot implement other interfaces",jjtThis);     
       if( kind == TypeKind.EXCEPTION )
       	throw new ParseException("An exception cannot implement interfaces",jjtThis);
    }
@@ -773,15 +759,8 @@ void VariableDeclarator():
   Token t;
 }
 {
-   t = <IDENTIFIER> [ "=" VariableInitializer() ]
+   t = <IDENTIFIER> [ "=" ConditionalExpression() ]
    { jjtThis.setImage(t.image); }
-}
-
-void VariableInitializer():
-{ debugPrint("VARIABLE INITIALIZER"); }
-{ 
-  ArrayInitializer()
-| ConditionalExpression()
 }
 
 void ArrayInitializer():
@@ -1348,6 +1327,7 @@ void PrimaryPrefix():
 | LOOKAHEAD( "(" ConditionalExpression() ")" ) "(" ConditionalExpression() t = ")" { jjtThis.setEndToken(t); }
 | PrimitiveType()
 | FunctionType()
+| ArrayInitializer()
 | [LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { jjtThis.setImage(t.image); debugPrint(t.image); }
 //last production catches class types and identifiers
 }
@@ -1374,8 +1354,7 @@ void Allocation():
   debugPrint("ALLOCATION");
   Token t;}
 {
-  		//LOOKAHEAD(2) Instance()
-	/*|*/	LOOKAHEAD(ArrayCreate()) ArrayCreate()
+  		LOOKAHEAD(ArrayCreate()) ArrayCreate()
 	|   Create()
  }
 
@@ -1444,16 +1423,6 @@ void Create():
   [ TypeArguments() ] ":" "create" "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
   { jjtThis.setImage("create"); debugPrint("create"); jjtThis.setEndToken(t);  } 
 }
-
-/*
-void Instance():
-{
-  debugPrint("INSTANCE");
-}
-{
- 	":" "instance" { jjtThis.setImage("instance"); debugPrint("instance");} 	
-}
-*/
 
 void ScopeSpecifier():
 {
@@ -1562,9 +1531,7 @@ void Statement():
 { debugPrint("STATEMENT"); }
 {  
   AssertStatement()
-| Block()
 | EmptyStatement()
-| StatementExpression() ";"
 | SwitchStatement()
 | IfStatement()
 | WhileStatement()
@@ -1575,6 +1542,8 @@ void Statement():
 | ReturnStatement()
 | ThrowStatement()
 | FinallyStatement() //includes try/catch/recover/finally
+| LOOKAHEAD(StatementExpression()) StatementExpression() ";"
+| Block()
 }
 
 void AssertStatement():

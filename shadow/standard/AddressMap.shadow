@@ -5,9 +5,9 @@ import shadow:io@Console;
 locked class shadow:standard@AddressMap
 	implements Map<ulong, ulong>	
 {
-	constant int DEFAULT_INITIAL_CAPACITY = 16;
-	constant int MAXIMUM_CAPACITY = 1 << 30;
-	constant float DEFAULT_LOAD_FACTOR = 0.75f;
+	private constant int DEFAULT_INITIAL_CAPACITY = 16;
+	private constant int MAXIMUM_CAPACITY = 1 << 30;
+	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	get int size = 0;
 	nullable Node[] table;
@@ -113,7 +113,7 @@ locked class shadow:standard@AddressMap
 	}
 	
 
-	public index( ulong key ) => ( ulong value )
+	public index( ulong key ) => ( nullable ulong value )
 	{
 		(int index, int hash) = this.hash( key );
 		try
@@ -129,8 +129,7 @@ locked class shadow:standard@AddressMap
 		{			
 		}
 		
-		//maybe return 0uL instead?
-		throw IllegalArgumentException:create("Invalid key");				
+		return null;				
 	}
 	
 	

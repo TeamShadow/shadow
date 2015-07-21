@@ -11,8 +11,8 @@ implements
 	CanHash
 {
 
-	constant ushort MAX = 65535us;
-	constant ushort MIN = 0us;
+	public constant ushort MAX = 65535us;
+	public constant ushort MIN = 0us;
 
 	// implement Bitwise
 	public native bitComplement() => (ushort);

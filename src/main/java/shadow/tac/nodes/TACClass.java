@@ -116,6 +116,7 @@ public class TACClass extends TACOperand
 			if (var != null)
 			{
 				//TODO: Add in support for generic methods
+				
 				//op = check(new TACVariableRef(this, var), this);
 			}
 			else

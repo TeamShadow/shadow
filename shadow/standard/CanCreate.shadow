@@ -1,0 +1,5 @@
+interface shadow:standard@
+	CanCreate
+{
+	create();
+}

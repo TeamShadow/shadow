@@ -1,9 +1,9 @@
 class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 	implements Set<V>
 {
-	constant int DEFAULT_INITIAL_CAPACITY = 16;
-	constant int MAXIMUM_CAPACITY = 1 << 30;
-	constant float DEFAULT_LOAD_FACTOR = 0.75f;
+	protected constant int DEFAULT_INITIAL_CAPACITY = 16;
+	protected constant int MAXIMUM_CAPACITY = 1 << 30;
+	protected constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	get int size = 0;
 	nullable Node[] table;

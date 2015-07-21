@@ -1,0 +1,4 @@
+interface shadow:standard@CanIndexStoreNullable<K,V>
+{
+	index(K key, nullable V value) => ();
+}

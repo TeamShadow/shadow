@@ -281,7 +281,7 @@ public class NegativeTests {
 	@Test public void testReadonlyMethodCall4() throws Exception
 	{
 		args.add("tests-negative/typechecker/readonly-method-call4/Test.shadow"); 
-		enforce(Error.INVALID_PROPERTY);		
+		enforce(Error.ILLEGAL_ACCESS);		
 	}
 	
 	@Test public void testImmutableStore() throws Exception
@@ -329,5 +329,41 @@ public class NegativeTests {
 	@Test public void testInvalidLiteral() throws Exception {
 		args.add("tests-negative/typechecker/invalid-literal/Test.shadow");
 		enforce(Error.INVALID_LITERAL);			
+	}
+	
+	
+	@Test public void testPropertyGetVisibility() throws Exception {
+		args.add("tests-negative/typechecker/property-get-visibility/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);			
+	}	
+	
+	@Test public void testPropertySetVisibility() throws Exception {
+		args.add("tests-negative/typechecker/property-set-visibility/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);			
+	}
+	
+	@Test public void testReadonlyPropertyGet() throws Exception {
+		args.add("tests-negative/typechecker/readonly-property-get/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);			
+	}
+	
+	@Test public void testReadonlyPropertySet() throws Exception {
+		args.add("tests-negative/typechecker/readonly-property-set/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);			
+	}
+	
+	@Test public void testInnerClassImplementsCreate() throws Exception {
+		args.add("tests-negative/typechecker/inner-class-implements-create/Test.shadow");
+		enforce(Error.INVALID_IMPLEMENT);			
+	}
+	
+	@Test public void testInterfaceArrayCreate() throws Exception {
+		args.add("tests-negative/typechecker/interface-array-create/Test.shadow");
+		enforce(Error.INVALID_CREATE);			
+	}
+	
+	@Test public void testInterfaceCreate() throws Exception {
+		args.add("tests-negative/typechecker/interface-create/Test.shadow");
+		enforce(Error.INVALID_CREATE);			
 	}
 }

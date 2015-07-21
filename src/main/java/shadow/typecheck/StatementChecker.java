@@ -21,7 +21,6 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
-import shadow.typecheck.type.GetSetType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -1314,9 +1313,9 @@ public class StatementChecker extends BaseChecker {
 				Type leftType = left.getType();
 				Type rightType = right.getType();
 				
-				if( leftType instanceof GetSetType )
+				if( leftType instanceof PropertyType )
 				{
-					GetSetType getSetType = (GetSetType) leftType;
+					PropertyType getSetType = (PropertyType) leftType;
 					//here we have a chance to tell the type whether it will only be storing or doing both
 					if( assignment.getAssignmentType() == AssignmentType.EQUAL )
 						getSetType.setStoreOnly();
@@ -1326,8 +1325,8 @@ public class StatementChecker extends BaseChecker {
 					leftType = getSetType.getSetType().getType();
 				}
 				
-				if( rightType instanceof GetSetType )
-					rightType = ((GetSetType)rightType).getGetType().getType();				
+				if( rightType instanceof PropertyType )
+					rightType = ((PropertyType)rightType).getGetType().getType();				
 		
 				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(rightType)));
 			}
@@ -1463,14 +1462,11 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTInlineResults node, Boolean secondVisit) throws ShadowException 
-	{
+	public Object visit(ASTInlineResults node, Boolean secondVisit) throws ShadowException {
 		if(secondVisit)
-		{	
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				node.addType(node.jjtGetChild(i));
-		}
-	
+		
 		return WalkType.POST_CHILDREN;
 	}
 	
@@ -1480,8 +1476,7 @@ public class StatementChecker extends BaseChecker {
 		
 		if( node.jjtGetNumChildren() == 1 )
 			pushUpType(node, secondVisit);
-		else
-		{
+		else {
 			Type t1 = node.jjtGetChild(0).getType();  //type
 			Type t2 = node.jjtGetChild(1).getType();  //expression
 			
@@ -1489,13 +1484,12 @@ public class StatementChecker extends BaseChecker {
 			node.removeModifier(Modifiers.ASSIGNABLE);			
 			
 			//special case because there is no way to cast to nullable Object[]
-			if( t1 instanceof ArrayType && t2.getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) ) {
+			if( t1 instanceof ArrayType && t2.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ) {
 				t1 = ((ArrayType)t1).convertToNullable();
 				node.addModifier(Modifiers.NULLABLE);
 			}
 			
-			if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) //casting methods
-			{
+			if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) { //casting methods
 				MethodType method = (MethodType)t1;
 				UnboundMethodType unboundMethod = (UnboundMethodType)t2;				
 				
@@ -1503,8 +1497,7 @@ public class StatementChecker extends BaseChecker {
 				MethodSignature candidate = null;
 				Type outer = unboundMethod.getOuter();			
 				
-				for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) ) 
-				{				
+				for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) ) {				
 					MethodType methodType = signature.getMethodType();			
 					//no type arguments for method pointers?
 					/*
@@ -1527,12 +1520,10 @@ public class StatementChecker extends BaseChecker {
 					//the list of method signatures starts with the closest (current class) and then adds parents and outer classes
 					//always stick with the current if you can
 					//(only replace if signature is a subtype of candidate but candidate is not a subtype of signature)					
-					if( signature.getMethodType().isSubtype(method))
-					{	
-						if( candidate == null || (candidate.getMethodType().isSubtype(signature.getMethodType()) )) //take the broadest method possible that matches the cast target
+					if( methodType.isSubtype(method)) {	
+						if( candidate == null || (candidate.getMethodType().isSubtype(methodType) )) //take the broadest method possible that matches the cast target
 							candidate = signature;
-						else if( !signature.getMethodType().isSubtype(candidate.getMethodType()) ) //then two acceptable signatures are not subtypes of each other
-						{					
+						else if( !methodType.isSubtype(candidate.getMethodType()) ) { //then two acceptable signatures are not subtypes of each other					
 							addError(Error.INVALID_ARGUMENTS, "Ambiguous cast from " + unboundMethod.getTypeName() + " to " + method);
 							break;
 						}				
@@ -1549,8 +1540,7 @@ public class StatementChecker extends BaseChecker {
 				node.setType(t1);
 			else if( t1.isSubtype(t2) || t2.isSubtype(t1) )
 				node.setType(t1);			
-			else
-			{
+			else {
 				addError(Error.MISMATCHED_TYPE, "Supplied type " + t2 + " cannot be cast to type " + t1, t1, t2);
 				node.setType(Type.UNKNOWN);
 			}
@@ -1697,10 +1687,10 @@ public class StatementChecker extends BaseChecker {
 					break;
 				}
 		}
-		else if( collectionType.hasUninstantiatedInterface(Type.NULLABLE_CAN_ITERATE)  )
+		else if( collectionType.hasUninstantiatedInterface(Type.CAN_ITERATE_NULLABLE)  )
 		{			
 			for(InterfaceType _interface : collectionType.getAllInterfaces() )				
-				if( _interface.getTypeWithoutTypeArguments().equals(Type.NULLABLE_CAN_ITERATE))
+				if( _interface.getTypeWithoutTypeArguments().equals(Type.CAN_ITERATE_NULLABLE))
 				{
 					element = _interface.getTypeParameters().get(0);
 					break;
@@ -1708,7 +1698,7 @@ public class StatementChecker extends BaseChecker {
 		}
 		else
 		{
-			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement " + Type.CAN_ITERATE + " or " + Type.NULLABLE_CAN_ITERATE + " and cannot be the target of a foreach statement", collectionType);
+			addError(Error.INVALID_TYPE, "Supplied type " + collectionType + " does not implement " + Type.CAN_ITERATE + " or " + Type.CAN_ITERATE_NULLABLE + " and cannot be the target of a foreach statement", collectionType);
 			iterable = false;
 		}		
 		
@@ -1940,22 +1930,18 @@ public class StatementChecker extends BaseChecker {
 	
 	private void checkForSingleton(Type type) {
 		//if singleton, add to current method for initialization
-		if( type instanceof SingletonType )
-		{
+		if( type instanceof SingletonType ) {
 			SingletonType singletonType = (SingletonType)type;
-			if( currentMethod.isEmpty() )
-			{
+			if( currentMethod.isEmpty() ) {
 				//add to all creates (since it must be declared outside a method)
 				for( MethodSignature signature : currentType.getAllMethods("create"))				
 					signature.getNode().addSingleton(singletonType);
 			}
-			else
-			{
+			else {
 				int i = 0;
 				SignatureNode signatureNode;
 				//find outer method, instead of adding to local or inline methods
-				do
-				{
+				do {
 					signatureNode = currentMethod.get(i);
 					i++;
 				} while( signatureNode instanceof ASTInlineMethodDefinition || signatureNode instanceof ASTLocalMethodDeclaration );
@@ -1963,8 +1949,7 @@ public class StatementChecker extends BaseChecker {
 				signatureNode.addSingleton(singletonType);				
 			}
 		}
-		else if( type instanceof SequenceType )
-		{
+		else if( type instanceof SequenceType ) {
 			SequenceType sequenceType = (SequenceType) type;
 			for(ModifiedType modifiedType : sequenceType )
 				checkForSingleton(modifiedType.getType());
@@ -1973,32 +1958,24 @@ public class StatementChecker extends BaseChecker {
 			checkForSingleton(((ArrayType)type).getBaseType());
 	}
 	
-	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException 
-	{
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;	
 		
 		int children = node.jjtGetNumChildren();
 		String image = node.getImage();
 		
-		if(  children == 0 )
-		{
-			if( image.equals("this") || image.equals("super") ) //this or super
-			{	
-				if( currentType instanceof InterfaceType )
-				{
+		if(  children == 0 ) {
+			if( image.equals("this") || image.equals("super") ) { //this or super				
+				if( currentType instanceof InterfaceType ) {
 					addError(Error.INVALID_SELF_REFERENCE, "Reference " + image + " invalid for interfaces");
 					node.setType(Type.UNKNOWN);
 				}
-				else
-				{
+				else {
 					if( image.equals("this") )					
 						node.setType(currentType);
-					else
-					{
-						ClassType classType = (ClassType) currentType;					
-						node.setType(classType.getExtendType());						
-					}
+					else											
+						node.setType(((ClassType) currentType).getExtendType());
 					
 					if( currentType.getModifiers().isImmutable() )
 						node.getModifiers().addModifier(Modifiers.IMMUTABLE);
@@ -2014,31 +1991,25 @@ public class StatementChecker extends BaseChecker {
 						node.getModifiers().upgradeToTemporaryReadonly();					
 				}
 			}	
-			else //just a name
-			{				
-				if( !setTypeFromName( node, image )) //automatically sets type if can
-				{
+			else { //just a name				
+				if( !setTypeFromName( node, image )) { //automatically sets type if can				
 					addError(Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 					node.setType(Type.UNKNOWN);											
 				}
 			}
 		}
-		else if( children == 1 )
-		{
+		else if( children == 1 ) {
 			Node child = node.jjtGetChild(0); 
 			
-			if( child instanceof ASTUnqualifiedName )
-			{
+			if( child instanceof ASTUnqualifiedName ) {
 				node.setImage(child.getImage() + "@" + node.getImage());				
-				if( !setTypeFromName( node, node.getImage() )) //automatically sets type if can
-				{
+				if( !setTypeFromName( node, node.getImage() )) { //automatically sets type if can				
 					addError(Error.UNDEFINED_TYPE, "Type " + image + " not defined in this context");
 					node.setType(Type.UNKNOWN);											
 				}
 			}
-			else
-			{
-				node.setType( child.getType() ); 	//literal, conditional expression, check expression, freeze expression, cast expression, primitive and function types
+			else {
+				node.setType( child.getType() ); 	//literal, check expression, copy expression, cast expression, (conditional expression), primitive and function types, and array initializer
 				pushUpModifiers( node ); 			
 			}
 		}
@@ -2049,47 +2020,40 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
-	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException
-	{
+	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit) throws ShadowException {	
 		return WalkType.PRE_CHILDREN;		
 	}
 	
-	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{	
+	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit )			
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				node.addType(node.jjtGetChild(i));
-		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	
-	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException 
-	{
+	public Object visit(ASTPrimarySuffix node, Boolean secondVisit) throws ShadowException {
 		/*
 		  QualifiedKeyword()
 		| Brackets()
 		| Subscript()
-		| Method()
+		| Destroy()
+		| Method() //method name, not the call
 		| Allocation()
 		| ScopeSpecifier()
 		| Property()
 		| MethodCall()
 		*/
 		
-		if(secondVisit)
-		{
+		if(secondVisit) {
 			Node prefixNode = curPrefix.getFirst();		
 			
 			if( prefixNode.getModifiers().isNullable() && !(prefixNode.getType() instanceof ArrayType) )
 				addError(Error.INVALID_DEREFERENCE, "Nullable reference cannot be dereferenced");
 			
 			Node child = node.jjtGetChild(0);
-			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall) ||  (child instanceof ASTAllocation))
-			{
+			if( (child instanceof ASTProperty) || (child instanceof ASTMethodCall) ||  (child instanceof ASTAllocation)) {
 				ASTPrimaryExpression parent = (ASTPrimaryExpression) node.jjtGetParent();
 				parent.setAction(true);
 			}	
@@ -2100,12 +2064,10 @@ public class StatementChecker extends BaseChecker {
 			if( child instanceof ASTScopeSpecifier && child.getImage().equals("class"))
 				node.setImage(child.getImage()); //"class"
 			
-			if( child instanceof ASTMethodCall )
-			{
+			if( child instanceof ASTMethodCall ) {
 				Type childType = child.getType();
 							
-				if( childType instanceof MethodType )
-				{
+				if( childType instanceof MethodType ) {
 					MethodType methodType = (MethodType) childType;
 					SequenceType returnTypes = methodType.getReturnTypes();
 					returnTypes.setNodeType( node ); //used instead of setType
@@ -2250,14 +2212,10 @@ public class StatementChecker extends BaseChecker {
 					//non-primitive array elements could be null
 					//however, arrays of arrays are not-null
 					//instead, they will be filled with default values, including a length of zero
-					//thus, we don't need to check nullability, but we do need a range check
-					
-					//TODO: Make this work.  Depends on the modern interpretation of nullable arrays.
-					//if( !arrayType.getBaseType().isPrimitive() && !(arrayType.getBaseType() instanceof ArrayType)  )
-					//	node.addModifier(Modifiers.NULLABLE);					
+					//thus, we don't need to check nullability, but we do need a range check				
 					
 					//nullable array means what you get out is nullable, not the array itself
-					if( prefixNode.getModifiers().isNullable() ) 
+					if( arrayType.isNullable() ) 
 						node.addModifier(Modifiers.NULLABLE);
 				}				
 				else
@@ -2266,8 +2224,8 @@ public class StatementChecker extends BaseChecker {
 					addError(Error.INVALID_SUBSCRIPT, "Subscript gives " + node.jjtGetNumChildren() + " indexes but "  + arrayType.getDimensions() + " are required");
 				}				
 			}						
-			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.NULLABLE_CAN_INDEX) )
-			{
+			else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_NULLABLE) ||
+					 prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)) {
 				if( node.jjtGetNumChildren() == 1)
 				{
 					SequenceType arguments = new SequenceType();
@@ -2276,21 +2234,18 @@ public class StatementChecker extends BaseChecker {
 					
 					MethodSignature signature = setMethodType( node, prefixType, "index", arguments);
 					
-					if( signature == null )
-					{
-						node.setType(Type.UNKNOWN);
-						addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " with index of type " + child.getType(), prefixType, child.getType());
-					}
-					else if( (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
+					if( signature != null && (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() )
 					{
 						node.setType(Type.UNKNOWN);
 						addError(Error.INVALID_SUBSCRIPT, "Cannot apply mutable subscript to immutable or readonly prefix");						
 					}
 					else
 					{
-						SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType));
-						node.setType(subscriptType);					
-						node.setModifiers(subscriptType.getGetType().getModifiers());								
+						//if signature is null, then it is not a load
+						SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType), prefixNode, currentType);
+						node.setType(subscriptType);
+						if( signature != null )
+							node.setModifiers(subscriptType.getGetType().getModifiers());								
 						
 						if( prefixNode.getModifiers().isImmutable() )
 							node.addModifier(Modifiers.IMMUTABLE);
@@ -2298,7 +2253,7 @@ public class StatementChecker extends BaseChecker {
 							node.addModifier(Modifiers.READONLY);
 						else if( prefixNode.getModifiers().isTemporaryReadonly() )
 							node.addModifier(Modifiers.TEMPORARY_READONLY);
-						else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.NULLABLE_CAN_INDEX_STORE)  ) 
+						else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)  ) 
 							node.addModifier(Modifiers.ASSIGNABLE);
 					}											
 				}
@@ -2307,11 +2262,11 @@ public class StatementChecker extends BaseChecker {
 					node.setType(Type.UNKNOWN);
 					addError(Error.INVALID_SUBSCRIPT, "Subscript supplies multiple indexes into non-array type " + prefixType, prefixType);
 				}				
-			}
+			}			
 			else
 			{
 				node.setType(Type.UNKNOWN);
-				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX + " or " + Type.NULLABLE_CAN_INDEX, prefixType);
+				addError(Error.INVALID_SUBSCRIPT, "Subscript is not permitted for type " + prefixType + " because it does not implement " + Type.CAN_INDEX + " or " + Type.CAN_INDEX_NULLABLE, prefixType);
 			}
 						
 		}
@@ -2401,8 +2356,7 @@ public class StatementChecker extends BaseChecker {
 						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for paramterized type " + prefixType);
 						node.setType(Type.UNKNOWN);	
 					}					
-				}			
-
+				}
 								
 				if( node.hasCreate() ) {
 					SequenceType arguments = new SequenceType();
@@ -2411,7 +2365,9 @@ public class StatementChecker extends BaseChecker {
 					
 					MethodSignature signature = prefixType.getMatchingMethod("create", arguments, typeArguments);					
 					if( signature == null || !methodIsAccessible( signature, currentType) )
-						addError(node, Error.INVALID_CREATE, "Cannot create array of type " + prefixType + " with specified create arguments", prefixType);					
+						addError(node, Error.INVALID_CREATE, "Cannot create array of type " + prefixType + " with specified create arguments", prefixType);
+					else if( prefixType instanceof InterfaceType )
+						addError(node, Error.INVALID_CREATE, "Cannot create non-nullable array of interface type " + prefixType, prefixType);
 					else
 						node.setMethodSignature(signature);					
 				}
@@ -2431,6 +2387,8 @@ public class StatementChecker extends BaseChecker {
 					MethodSignature signature = prefixType.getMatchingMethod("create", new SequenceType(), typeArguments);					
 					if( signature == null || !methodIsAccessible( signature, currentType) )
 						addError(node, Error.INVALID_CREATE, "Cannot create array of type " + prefixType + " which does not implement a default create", prefixType);
+					else if( prefixType instanceof InterfaceType )
+						addError(node, Error.INVALID_CREATE, "Cannot create non-nullable array of interface type " + prefixType, prefixType);
 					else
 						node.setMethodSignature(signature);
 				}
@@ -2504,56 +2462,39 @@ public class StatementChecker extends BaseChecker {
 	
 	
 	@Override
-	public Object visit(ASTCreate node, Boolean secondVisit)	throws ShadowException
-	{
-		if( secondVisit )
-		{
+	public Object visit(ASTCreate node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
 			Node prefixNode = curPrefix.getFirst();
 			Type prefixType = prefixNode.getType();
 			node.setType(Type.UNKNOWN);
 			Node parent = node.jjtGetParent();
 			
-			if( prefixType instanceof InterfaceType )
-			{
-				addError(Error.INVALID_CREATE, "Interfaces cannot be created");
-							
-			}
-			else if( prefixType instanceof SingletonType )
-			{
+			if( prefixType instanceof InterfaceType )			
+				addError(Error.INVALID_CREATE, "Interfaces cannot be created");						
+			else if( prefixType instanceof SingletonType )			
 				addError(Error.INVALID_CREATE, "Singletons cannot be created");
-							
-			}		
-			else if(!( prefixType instanceof ClassType) )
-			{
+			else if(!( prefixType instanceof ClassType) && !(prefixType instanceof TypeParameter && !prefixType.getAllMethods("create").isEmpty()))
 				addError(Error.INVALID_CREATE, "Type " + prefixType + " cannot be created", prefixType);				
-			}
 			else if( !prefixNode.getModifiers().isTypeName() )				
-			{
 				addError(Error.INVALID_CREATE, "Only a type can be created");
-			}
-			else
-			{
+			else {
 				SequenceType typeArguments = null;
 						
 				int start = 0;
-				if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) )
-				{
+				if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTTypeArguments) ) {
 					typeArguments = ((ASTTypeArguments) node.jjtGetChild(0)).getType();
 					start = 1;
 				}
 				
 				SequenceType arguments = new SequenceType();
 				
-				
 				for( int i = start; i < node.jjtGetNumChildren(); i++ )
 					arguments.add(node.jjtGetChild(i));
 
 				MethodSignature signature;				
 				
-				if( typeArguments != null )
-				{					
-					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
-					{
+				if( typeArguments != null ) {					
+					if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) ) {
 						try {
 							prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
 							signature = setCreateType( node, prefixType, arguments);
@@ -2562,22 +2503,16 @@ public class StatementChecker extends BaseChecker {
 							
 							//occasionally this type is only seen here and must be added to the referenced types
 							currentType.addReferencedType(prefixType);
-
 						}
-						catch (InstantiationException e) 
-						{
+						catch (InstantiationException e) {
 							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());					
 						}
 					}
 					else
-					{
-						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());
-					}					
+						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());										
 				}
-				else
-				{
-					if( !prefixType.isParameterized() )
-					{
+				else {
+					if( !prefixType.isParameterized() ) {
 						signature = setCreateType( node, prefixType, arguments);
 						node.setMethodSignature(signature);
 						parent.setType(prefixType);
@@ -2594,35 +2529,6 @@ public class StatementChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	
-	/*
-	@Override
-	public Object visit(ASTInstance node, Boolean secondVisit)	throws ShadowException
-	{
-		if(secondVisit)
-		{
-			Node prefixNode = curPrefix.getFirst();
-			Type prefixType = prefixNode.getType();
-			
-			if( !prefixNode.getModifiers().isTypeName() )
-			{
-				addError(Error.INVALID_INSTANCE, "A type name is needed to get an instance");
-				node.setType(Type.UNKNOWN);
-			}
-			else if( !(prefixType instanceof SingletonType) )
-			{
-				addError(Error.INVALID_INSTANCE, "Non-singleton type " + prefixType + " cannot be instanced", prefixType);
-				node.setType(Type.UNKNOWN);
-			}
-			else
-				node.setType(prefixType);
-			
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	*/
 	
 	public Object visit(ASTScopeSpecifier node, Boolean secondVisit) throws ShadowException	
 	{
@@ -2771,64 +2677,45 @@ public class StatementChecker extends BaseChecker {
 				if( methods != null && methods.size() > 0 )
 				{
 					MethodSignature getter = null;
-					MethodSignature setter = null;
+					UnboundMethodType setterName = null;
 					
 					for( MethodSignature signature : methods )
 					{
 						if( signature.getModifiers().isGet() )
 							getter = signature;
-						else if( signature.getModifiers().isSet() )
-						{
-							setter = signature;
-							
-							//never checked, it seems
-							//if( !prefixNode.getModifiers().isImmutable() && !prefixNode.getModifiers().isReadonly() )
-							//	node.addModifier(Modifiers.ASSIGNABLE);
-						}
+						else if( setterName == null && signature.getModifiers().isSet() )
+							setterName = new UnboundMethodType( signature.getSymbol(), signature.getOuter());
+					}					
+					
+					boolean mutableProblem = false;
+					boolean accessibleProblem = false;
+					
+					if( getter != null && !methodIsAccessible(getter, currentType)) {
+						accessibleProblem = true;
+						getter = null;
 					}
 					
-					boolean setterOrGetter = setter != null || getter != null;
-					
-					/*
-					if( getter != null && prefixNode.getModifiers().isImmutable() && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
-						addError(Error.ILLEGAL_ACCESS, "Mutable get property cannot be called from an immutable reference");
-					
-					if( setter != null && prefixNode.getModifiers().isImmutable() && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
-						addError(Error.ILLEGAL_ACCESS, "Mutable set property cannot be called from an immutable reference");
-					
-					if( getter != null && prefixNode.getModifiers().isReadonly() && !getter.getModifiers().isImmutable() && !getter.getModifiers().isReadonly()  )
-						addError(Error.ILLEGAL_ACCESS, "Mutable get property cannot be called from a readonly reference");
-					
-					if( setter != null && prefixNode.getModifiers().isReadonly() && !setter.getModifiers().isImmutable() && !setter.getModifiers().isReadonly()  )
-						addError(Error.ILLEGAL_ACCESS, "Mutable set property cannot be called from a readonly reference");
-					*/
-					
-					if( getter != null && !prefixNode.getModifiers().isMutable() && getter.getModifiers().isMutable()  )
+					if( getter != null && !prefixNode.getModifiers().isMutable() && getter.getModifiers().isMutable()  ) {
+						mutableProblem = true;
 						getter = null;
-					
-					if( getter != null && !methodIsAccessible(getter, currentType))
-						getter = null;
-					
-					if( setter != null && !prefixNode.getModifiers().isMutable() && setter.getModifiers().isMutable() )
-						setter = null;
-					
-					if( setter != null && !methodIsAccessible(setter, currentType))
-						setter = null;
-					
-					if( setter == null && getter == null )
-					{
-						if( setterOrGetter )
-							addError(node, Error.INVALID_PROPERTY, "Mutable property " + propertyName + " cannot be called from " + (prefixNode.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
-						else
-							addError(node, Error.INVALID_PROPERTY, "Property " + propertyName + " not defined in this context");
-						node.setType( Type.UNKNOWN );	
+					}
+				
+					if( setterName == null  ) {
+						node.setType( Type.UNKNOWN ); //assume bad						
+						if( mutableProblem  )
+							addError(node, Error.ILLEGAL_ACCESS, "Mutable property " + propertyName + " cannot be called from " + (prefixNode.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
+						else if( accessibleProblem )
+							addError(node, Error.ILLEGAL_ACCESS, "Property " + propertyName + " is not accessible in this context");
+						else if( getter == null )
+							addError(node, Error.INVALID_PROPERTY, "Property " + propertyName + " is not defined in this context");
+						else //only case where it works out
+							node.setType( new PropertyType( getter, setterName, prefixNode, currentType) );
 					}
 					else
-						node.setType( new PropertyType( getter, setter ) );
+						node.setType( new PropertyType( getter, setterName, prefixNode, currentType) );
 				}
-				else
-				{
-					addError(node, Error.UNDEFINED_SYMBOL, "Property " + propertyName + " not defined in this context");
+				else {
+					addError(node, Error.INVALID_PROPERTY, "Property " + propertyName + " not defined in this context");
 					node.setType( Type.UNKNOWN ); //if got here, some error
 				}				
 			}
@@ -2838,20 +2725,14 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private ModifiedType resolveType( ModifiedType node ) //dereferences into PropertyType or IndexType for getter, if needed
-	{
-		Type type = node.getType();
-		
-		if( type instanceof GetSetType )
-		{
-			GetSetType getSetType = (GetSetType) type;
-			if( getSetType.isGettable() )
-			{			
-				return getSetType.getGetType();
-			}
-			else
-			{
-				String kind = (type instanceof PropertyType) ? "Property " : "Subscript ";
+	private ModifiedType resolveType( ModifiedType node ) { //dereferences into PropertyType or IndexType for getter, if needed	
+		Type type = node.getType();		
+		if( type instanceof PropertyType ) { //includes SubscriptType as well		
+			PropertyType getSetType = (PropertyType) type;
+			if( getSetType.isGettable() )						
+				return getSetType.getGetType();			
+			else {
+				String kind = (type instanceof SubscriptType) ? "Subscript " : "Property ";
 				addError(Error.ILLEGAL_ACCESS, kind + node + " does not have appropriate get access");
 				return new SimpleModifiedType( Type.UNKNOWN );
 			}				
@@ -2985,22 +2866,30 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public static boolean fieldIsAccessible( Node field, Type type )
-	{
-		//inside class or constant
-		if ( field.getModifiers().isConstant() ) 
+	public static boolean fieldIsAccessible( Node field, Type type ) {
+		//constants are no longer all public
+		if ( field.getModifiers().isPublic() ) 
 			return true;		
 		
-		type = type.getTypeWithoutTypeArguments();
+		//if inside class		
+		Type checkedType = type.getTypeWithoutTypeArguments();
 		Type enclosing = field.getEnclosingType().getTypeWithoutTypeArguments();
 		
-		while( type != null )
-		{
-			if( enclosing.equals(type) )
-				return true;
-			
-			type = type.getOuter();
+		while( checkedType != null ) {
+			if( enclosing.equals(checkedType) )
+				return true;			
+			checkedType = checkedType.getOuter();
 		}
+		
+		checkedType = type.getTypeWithoutTypeArguments();
+		if( field.getModifiers().isProtected() && checkedType instanceof ClassType ) {
+			ClassType classType = ((ClassType) checkedType).getExtendType();
+			while( classType != null ) {
+				if( enclosing.equals(classType))
+					return true;
+				classType = classType.getExtendType();
+			}			
+		}		
 
 		return false;
 	}
@@ -3237,7 +3126,7 @@ public class StatementChecker extends BaseChecker {
 					}
 										
 					if( !updatedTypes.isSubtype(node.getType()) )						
-						addError(Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + node.getType() + (node.getType().size() == 1 ? " is" : " are") + " expected", node.getType());
+						addError(Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + node.getType() + (node.getType().size() == 1 ? " is" : " are") + " expected", node.getType(), updatedTypes);
 					
 					for( ModifiedType modifiedType : updatedTypes )
 						if( modifiedType.getModifiers().isTypeName() )
@@ -3312,29 +3201,13 @@ public class StatementChecker extends BaseChecker {
 					
 					if( arrayType.getSuperBaseType().isPrimitive() )
 						addError(Error.INVALID_MODIFIER, "Primitive array type " + type + " cannot be marked nullable");
-				}
-				//else if( type.isPrimitive())
-					//addError(Error.INVALID_MODIFIER, "Primitive type " + type + " cannot be marked nullable");
+				}				
 			}
-			
-			
 			
 			node.setType(type);
 		}		
 		
 		return WalkType.POST_CHILDREN;
-	}
-	
-	public Object visit(ASTVariableInitializer node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
-			return WalkType.POST_CHILDREN;
-		
-		Node child = node.jjtGetChild(0);		
-		ModifiedType modifiedType = resolveType( child );
-		node.setType(modifiedType.getType());
-		node.setModifiers(modifiedType.getModifiers());		
-		
-		return WalkType.POST_CHILDREN; 
 	}
 	
 	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException {

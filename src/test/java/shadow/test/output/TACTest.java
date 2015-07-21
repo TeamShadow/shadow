@@ -39,7 +39,7 @@ public class TACTest {
 		// To to remove the unit test executable
 		try
 		{
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e)
 		{}
@@ -287,6 +287,16 @@ public class TACTest {
 	
 	@Test public void testArrayCastException() throws Exception {
 		args.add("shadow/test/ArrayCastExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testCanCreate() throws Exception {
+		args.add("shadow/test/CanCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testInterfaceCreate() throws Exception {
+		args.add("shadow/test/InterfaceCreateTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 }

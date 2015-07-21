@@ -6,16 +6,16 @@ implements
 	CanNegate<float>,
 	CanHash
 {
-	constant float PI = 3.1415927f;
-	constant float E = 2.7182817f;
+	public constant float PI = 3.1415927f;
+	public constant float E = 2.7182817f;
 
-	constant float NaN = 0f / 0f;
-	constant float INFINITY = 1f / 0f;
-	constant float NEGATIVE_INFINITY = -1f / 0f;
+	public constant float NaN = 0f / 0f;
+	public constant float INFINITY = 1f / 0f;
+	public constant float NEGATIVE_INFINITY = -1f / 0f;
 
-	constant uint SIGN_MASK = 0x80000000u;
-	constant uint EXPONENT_MASK = 0x78000000u;
-	constant uint SIGNIFICAND_MASK = 0x7ffffffu;
+	private constant uint SIGN_MASK = 0x80000000u;
+	private constant uint EXPONENT_MASK = 0x78000000u;
+	private constant uint SIGNIFICAND_MASK = 0x7ffffffu;
 
 	// implement Number
 	public native toByte() => (byte);

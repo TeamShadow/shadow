@@ -1,0 +1,7 @@
+class Property
+{
+    private get x() => (int) 
+    {
+    	return 5;    	    	
+    }  
+}

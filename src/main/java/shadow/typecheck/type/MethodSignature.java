@@ -12,29 +12,30 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private final SignatureNode node;	/** The AST node that corresponds to the branch of the tree for this method */
 	private final MethodSignature wrapped;
 	private MethodSignature signatureWithoutTypeArguments;
+	private Type outer;
 
-	public MethodSignature(MethodType type, String symbol, SignatureNode node) 
-	{
-		this(type, symbol, node, null);
-	}
-	
-	public MethodSignature(Type enclosingType, String symbol, 
-			Modifiers modifiers, Documentation documentation, 
-			SignatureNode node)
-	{		
-		this(new MethodType(enclosingType, modifiers, documentation), symbol, node);
-	}
-	
-	private MethodSignature(MethodType type, String symbol, SignatureNode node, MethodSignature wrapped) 
+	private MethodSignature(MethodType type, String symbol, Type outer, SignatureNode node, MethodSignature wrapped) 
 	{
 		this.type = type;
 		this.symbol = symbol;
 		this.node = node;
 		this.wrapped = wrapped;
+		this.outer = outer;
 		signatureWithoutTypeArguments = this;
 	}
+	public MethodSignature(MethodType type, String symbol, Type outer, SignatureNode node) 
+	{
+		this(type, symbol, outer, node, null);
+	}
 	
-	public void addParameter(String name, ModifiedType node) {
+	public MethodSignature(Type enclosingType, String symbol, 
+			Modifiers modifiers, Documentation documentation, SignatureNode node) 
+	{		
+		this(new MethodType(enclosingType, modifiers, documentation), symbol, enclosingType, node);
+	}
+	
+	public void addParameter(String name, ModifiedType node) 
+	{
 		this.type.addParameter(name, node);
 	}
 	
@@ -73,7 +74,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		if( o != null && o instanceof MethodSignature )
 		{
 			MethodSignature ms = (MethodSignature)o;			
-			return ms.symbol.equals(symbol) && ms.type.equals(type);
+			return ms.symbol.equals(symbol) && ms.type.equals(type) && ms.outer.equals(outer);
 		}
 		else
 			return false;
@@ -88,20 +89,30 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			return false;
 	}
 	
-	public SequenceType getFullReturnTypes()
-	{	
-		if (isCreate())
-			return new SequenceType(Collections.<ModifiedType>singletonList(
-					new SimpleModifiedType(getOuter())));
+	// These are the true return types that the compiler will use	
+	public SequenceType getFullReturnTypes() {	
+		Type outerType = getOuter();
+		if (isCreate()) {
+			SimpleModifiedType modified;				
+			if( outerType instanceof InterfaceType )
+				modified = new SimpleModifiedType(Type.OBJECT);
+			else
+				modified = new SimpleModifiedType(outerType);
+			
+			if( outerType.isPrimitive() )
+				modified.getModifiers().addModifier(Modifiers.NULLABLE);
+			
+			return new SequenceType(Collections.<ModifiedType>singletonList(modified));
+		}
 		
-		if( isWrapper() || getOuter() instanceof InterfaceType )
-			return type.getTypeWithoutTypeArguments().getReturnTypes();
-		else
-			return type.getReturnTypes();
+		//if( isWrapper() || outerType instanceof InterfaceType )
+			return signatureWithoutTypeArguments.type.getReturnTypes();
+		//else
+			//return type.getReturnTypes();
 	}
 	
-	public SequenceType getFullParameterTypes()
-	{
+	// These are the true parameter types that the compiler will use
+	public SequenceType getFullParameterTypes() {
 		SequenceType paramTypes = new SequenceType();
 		Type outerType = getOuter();
 		if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
@@ -111,16 +122,13 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			
 		if( isCreate() && getOuter().hasOuter() )
 				paramTypes.add(new SimpleModifiedType(getOuter().getOuter()));			
-			
-		//type parameters no longer passed to method for generic objects, only for purely parameterized methods
-		//Type parameterizedType = isCreate() ? getOuterType() : getType();
 		
 		MethodType methodType;
 		
-		if( isWrapper() || getOuter() instanceof InterfaceType )
-			methodType = type.getTypeWithoutTypeArguments();
-		else
-			methodType = type;		
+		//if( isWrapper() || getOuter() instanceof InterfaceType )
+			methodType = signatureWithoutTypeArguments.type;
+		//else
+			//methodType = type;		
 		 
 		if (methodType.isParameterized())
 			for (int i = methodType.getTypeParameters().size(); i > 0; i--)
@@ -132,19 +140,43 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			
 		return paramTypes;
 	}
-
-	public String toString() {		
-		if( symbol.equals("create") )
-			return getModifiers() + symbol + type.parametersToString();
-		else if( symbol.equals("destroy") )
-			return getModifiers() + symbol;
+	
+	//like toString() but includes outer type to differentiate
+	public String hashString() {
+		StringBuilder sb = new StringBuilder(getModifiers().toString());
+		sb.append(" ").append("" + outer).append(":").append(symbol);		
 		
-		return getModifiers() + symbol + type.parametersToString() + " => " + type.getReturnTypes();
+		//nothing more for destroy
+		if( !symbol.equals("destroy") ) {			
+			sb.append(type.parametersToString());
+			
+			//no return types for create
+			if( !symbol.equals("create") )
+				sb.append(" => ").append(type.getReturnTypes());
+		}
+		
+		return sb.toString();
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder(getModifiers().toString());
+		sb.append(symbol);		
+		
+		//nothing more for destroy
+		if( !symbol.equals("destroy") ) {			
+			sb.append(type.parametersToString());
+			
+			//no return types for create
+			if( !symbol.equals("create") )
+				sb.append(" => ").append(type.getReturnTypes());
+		}
+		
+		return sb.toString();
 	}
 	
 	@Override
 	public int hashCode() {
-		return toString().hashCode();
+		return hashString().hashCode();
 	}
 	
 	public String getMangledName() {
@@ -168,7 +200,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	public Type getOuter()
 	{
-		return type.getOuter();
+		return outer;
 	}
 	
 	public MethodType getMethodType() {
@@ -177,14 +209,15 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	public MethodSignature replace(SequenceType values,
 			SequenceType replacements) throws InstantiationException {
-		MethodSignature replaced = new MethodSignature(type.replace(values, replacements), symbol, node);
+		MethodSignature replaced = new MethodSignature(type.replace(values, replacements), symbol, outer.replace(values, replacements), node);
 		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
+		
 		return replaced;
 	}
 	
 	public MethodSignature partiallyReplace(SequenceType values,
 			SequenceType replacements) {		
-		MethodSignature replaced = new MethodSignature(type.partiallyReplace(values, replacements), symbol, node);
+		MethodSignature replaced = new MethodSignature(type.partiallyReplace(values, replacements), symbol, outer.partiallyReplace(values, replacements), node);
 		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
 		return replaced;
 	}
@@ -206,7 +239,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	@Override
 	public int compareTo(MethodSignature o) {
-		return toString().compareTo(o.toString());
+		return hashString().compareTo(o.hashString());
 	}
 
 	public boolean isCreate() {		
@@ -272,8 +305,23 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	public MethodSignature wrap(MethodSignature wrapped) {		
 		Modifiers modifiers = new Modifiers(wrapped.getModifiers().getModifiers());
 		modifiers.removeModifier(Modifiers.NATIVE);		
-		MethodType methodType = type.copy(modifiers);		
-		return new MethodSignature(methodType, symbol, node, wrapped);
+		MethodType methodType;
+		/*if( outer instanceof InterfaceType )		
+			methodType = signatureWithoutTypeArguments.type.copy(modifiers);
+		else*/
+			methodType = type.copy(modifiers);
+		MethodSignature wrapper = new MethodSignature(methodType, symbol, outer, node, wrapped);
+		wrapper.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
+		return wrapper;
+	}
+
+	//makes a copy of the method signature with a different outer type	 
+	public MethodSignature copy(Type newOuter) {
+		return new MethodSignature(type, symbol, newOuter, node, wrapped);		
+	}
+
+	public void setOuter(Type outer) {
+		this.outer = outer;
 	}
 
 	public boolean hasDocumentation()

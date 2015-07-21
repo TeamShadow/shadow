@@ -8,8 +8,8 @@ implements
 	Number<double>,
 	CanHash
 {
-	constant uint MAX =  4294967295u;
-	constant uint MIN =  0u;
+	public constant uint MAX =  4294967295u;
+	public constant uint MIN =  0u;
 	// implement Bitwise
 	public native bitComplement() => (uint);
 	public native bitShiftLeft(uint amount) => (uint);

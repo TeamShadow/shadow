@@ -1,0 +1,9 @@
+class Test
+{
+	readonly Property p = Property:create();
+
+    public foo() => () 
+    {
+    	int a = p->x; //illegal    	    	
+    }  
+}

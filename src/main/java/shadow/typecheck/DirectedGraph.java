@@ -78,8 +78,6 @@ public class DirectedGraph<T> implements Iterable<T> {
 		
 		for( GraphNode node : nodes.values() )
 		{
-			String data = node.toString();
-			
 			if( node.incoming.isEmpty())
 				S.add(node);
 			else

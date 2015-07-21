@@ -24,9 +24,7 @@ import shadow.typecheck.TypeCheckException.Error;
 /**
  * A representation of a Shadow type.
  */
-public abstract class Type implements Comparable<Type>
-{
-	//types should not change after construction
+public abstract class Type implements Comparable<Type> {
 	private final String typeName;	/** A string that represents the type */
 	private Modifiers modifiers;
 	private Type outer; //outer class or interface
@@ -61,7 +59,7 @@ public abstract class Type implements Comparable<Type>
 	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables	
 	public static ClassType ARRAY_CLASS = null;  // meta class for holding generic array :class variables
 	public static ClassType ARRAY = null;  // object representation of all array types
-	public static ClassType NULLABLE_ARRAY = null;  // object representation of nullable array types
+	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types
 	public static ClassType METHOD = null;  // object representation for references with function type
 	public static ClassType UNBOUND_METHOD = null; //object representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
 
@@ -71,6 +69,7 @@ public abstract class Type implements Comparable<Type>
 	public static ExceptionType INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
 	public static ExceptionType ASSERT_EXCEPTION = null;
 	public static ExceptionType UNEXPECTED_NULL_EXCEPTION = null;
+	public static ExceptionType INTERFACE_CREATE_EXCEPTION = null;
 			
 	public static ClassType BOOLEAN = null;
 	public static ClassType BYTE = null;
@@ -101,13 +100,13 @@ public abstract class Type implements Comparable<Type>
 	public static InterfaceType CAN_COMPARE = null;
 	public static InterfaceType CAN_EQUAL = null;
 	public static InterfaceType CAN_INDEX = null;
-	public static InterfaceType NULLABLE_CAN_INDEX = null;
+	public static InterfaceType CAN_INDEX_NULLABLE = null;
 	public static InterfaceType CAN_INDEX_STORE = null;
-	public static InterfaceType NULLABLE_CAN_INDEX_STORE = null;
+	public static InterfaceType CAN_INDEX_STORE_NULLABLE = null;
 	public static InterfaceType CAN_ITERATE = null;
-	public static InterfaceType NULLABLE_CAN_ITERATE = null;
+	public static InterfaceType CAN_ITERATE_NULLABLE = null;
 	public static InterfaceType ITERATOR = null;
-	public static InterfaceType NULLABLE_ITERATOR = null;
+	public static InterfaceType ITERATOR_NULLABLE = null;
 	public static InterfaceType NUMBER = null;
 	public static InterfaceType INTEGER = null;
 	public static InterfaceType CAN_ADD = null;
@@ -182,16 +181,16 @@ public abstract class Type implements Comparable<Type>
 	
 	//used to clear out types between runs of the JUnit tests
 	//otherwise, types can become mixed between two different runs of the type checker
-	public static void clearTypes()				
-	{
+	public static void clearTypes()	{
 		OBJECT = null;
 		CAST_EXCEPTION = null;
 		INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
 		UNEXPECTED_NULL_EXCEPTION = null;
+		INTERFACE_CREATE_EXCEPTION = null;
 		ASSERT_EXCEPTION = null;
 		CLASS = null;		
 		ARRAY = null;
-		NULLABLE_ARRAY = null;
+		ARRAY_NULLABLE = null;
 		ARRAY_CLASS = null;
 		METHOD = null;				
 		UNBOUND_METHOD = null;
@@ -215,13 +214,13 @@ public abstract class Type implements Comparable<Type>
 		CAN_COMPARE = null;
 		CAN_EQUAL = null;		
 		CAN_INDEX = null;
-		NULLABLE_CAN_INDEX = null;
+		CAN_INDEX_NULLABLE = null;
 		CAN_INDEX_STORE = null;
-		NULLABLE_CAN_INDEX_STORE = null;
+		CAN_INDEX_STORE_NULLABLE = null;
 		CAN_ITERATE = null;
-		NULLABLE_CAN_ITERATE = null;
+		CAN_ITERATE_NULLABLE = null;
 		ITERATOR = null;
-		NULLABLE_ITERATOR = null;
+		ITERATOR_NULLABLE = null;
 		NUMBER = null;
 		INTEGER = null;
 		CAN_ADD = null;
@@ -288,9 +287,9 @@ public abstract class Type implements Comparable<Type>
 	final public String getMangledNameWithGenerics() {
 		if( this instanceof ArrayType || 
 			getTypeWithoutTypeArguments().equals(Type.ARRAY) || 
-			getTypeWithoutTypeArguments().equals(Type.NULLABLE_ARRAY) ||
+			getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ||
 			Type.ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) ||
-			Type.NULLABLE_ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) )
+			Type.ARRAY_NULLABLE.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) )
 			return getMangledNameWithGenerics(false);
 		else
 			return getMangledNameWithGenerics(true);		
@@ -1010,8 +1009,7 @@ public abstract class Type implements Comparable<Type>
 	}
 	
 	
-	public boolean containsMethod(MethodSignature signature, Modifiers modifiers ) //must have certain modifiers (usually public)
-	{
+	public boolean containsMethod(MethodSignature signature, Modifiers modifiers ) { //must have certain modifiers (usually public)
 		List<MethodSignature> list = methodTable.get(signature.getSymbol());
 		
 		if( list != null )
@@ -1022,8 +1020,7 @@ public abstract class Type implements Comparable<Type>
 		return false;
 	}	
 	
-	public boolean containsIndistinguishableMethod(MethodSignature signature) //not identical, but indistinguishable at call time
-	{
+	public boolean containsIndistinguishableMethod(MethodSignature signature) { //not identical, but indistinguishable at call time
 		List<MethodSignature> list = methodTable.get(signature.getSymbol());
 		
 		if( list != null )
@@ -1034,12 +1031,14 @@ public abstract class Type implements Comparable<Type>
 		return false;
 	}
 	
-	public void addMethod(String name, MethodSignature signature) {
-		signature.getMethodType().setOuter(this);		
+	public void addMethod(MethodSignature signature) {
+		//makes copy so that changing the outer type doesn't cause a problem
+		signature.setOuter(this);
+		String name = signature.getSymbol();
+						
 		if( methodTable.containsKey(name) )		
 			methodTable.get(name).add(signature);
-		else
-		{
+		else {
 			List<MethodSignature> list = new LinkedList<MethodSignature>();
 			list.add(signature);
 			methodTable.put(name, list);
@@ -1112,7 +1111,7 @@ public abstract class Type implements Comparable<Type>
 			{
 				MethodSignature originalMethod = original.get(i);
 				SequenceType originalParameters = originalMethod.getParameterTypes(), 
-								rawParameters = originalMethod.getMethodType().getTypeWithoutTypeArguments().getParameterTypes();
+								rawParameters = originalMethod.getSignatureWithoutTypeArguments().getMethodType().getParameterTypes();
 				
 				if ( (!method.isCreate() || originalMethod.getOuter() instanceof InterfaceType) &&
 						method.getSymbol().equals(originalMethod.getSymbol()) &&
@@ -1200,7 +1199,7 @@ public abstract class Type implements Comparable<Type>
 			return true;
 		
 		Type outer = type.getOuter();
-		if( outer == null )
+		if( outer == null || type instanceof ArrayType )
 			return false;		
 		
 		return encloses(outer);
@@ -1212,12 +1211,14 @@ public abstract class Type implements Comparable<Type>
 	}	
 	
 	
-	public void addReferencedType(Type type)
-	{		
-		if( type != null && !(type instanceof UninstantiatedType) && !(type instanceof TypeParameter) )
-		{			
-			if( type instanceof ArrayType )
-			{				
+	public void addReferencedType(Type type) {		
+		if( type != null && !(type instanceof UninstantiatedType) ) {
+			if( type instanceof TypeParameter ) {
+				TypeParameter typeParameter = (TypeParameter) type;
+				for( Type bound : typeParameter.getBounds() )
+					addReferencedType(bound);
+			}			
+			else if( type instanceof ArrayType ) {				
 				ArrayType arrayType = (ArrayType) type;
 				Type baseType = arrayType.getBaseType();
 				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
@@ -1227,8 +1228,7 @@ public abstract class Type implements Comparable<Type>
 				//covers Type.ARRAY and all recursive base types
 				//automatically does the right thing for NullableArray
 			}
-			else if( type instanceof MethodType )
-			{
+			else if( type instanceof MethodType ) {
 				MethodType methodType = (MethodType) type;
 				for( ModifiedType parameter : methodType.getParameterTypes() )
 					addReferencedType( parameter.getType() );
@@ -1240,10 +1240,8 @@ public abstract class Type implements Comparable<Type>
 					for( ModifiedType typeParameter : type.getTypeParameters() )						
 						addReferencedType( typeParameter.getType() );
 			}
-			else if (!equals(type) &&  !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/)
-			{		
-				if( type.isParameterized() )
-				{
+			else if (!equals(type) &&  !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/) {		
+				if( type.isParameterized() ) {
 					//if( type.isFullyInstantiated() )
 					//{				
 						referencedTypes.add(type);
@@ -1258,19 +1256,13 @@ public abstract class Type implements Comparable<Type>
 							referenceRecursion = false;
 						}						
 					//}
-					
-					
-					
 				}
 				else
-				{
-					referencedTypes.add(type);					
-				}
+					referencedTypes.add(type);
 			}
 			
 			//add inner types, since their instantiations must be recorded
-			if( type instanceof ClassType )
-			{
+			if( type instanceof ClassType ) {
 				ClassType classType = (ClassType) type;
 				for( ClassType inner : classType.getInnerClasses().values() )
 					addReferencedType( inner );				
@@ -1278,8 +1270,7 @@ public abstract class Type implements Comparable<Type>
 			
 			//add reference to outer types					
 			Type outer = getOuter();
-			while( outer != null )
-			{
+			while( outer != null ) {
 				outer.addReferencedType(type);
 				outer = outer.getOuter();
 			}
@@ -1289,12 +1280,6 @@ public abstract class Type implements Comparable<Type>
 			//add interfaces
 			for( InterfaceType interfaceType : interfaces )
 				addReferencedType(interfaceType);
-			
-			/* 
-			//add extend types (recursively) needed?
-			if( type instanceof ClassType )
-				addReferencedType( ((ClassType)type).getExtendType() );
-			*/
 		}
 	}
 
@@ -1390,39 +1375,39 @@ public abstract class Type implements Comparable<Type>
 		return getHashName().compareTo(other.getHashName());		
 	}
 	
-	protected final void printImports(PrintWriter out, String linePrefix )
-	{		
-		if( getOuter() == null )
-		{
+	protected final void printImports(PrintWriter out, String linePrefix ) {		
+		if( getOuter() == null ) {
 			HashSet<String> imports = new HashSet<String>();
-			
+						
 			//imported items come from import statements and fully qualified classes
-			for( Object importItem : getImportedItems() )
-			{
-				if( importItem instanceof Type )
-				{
+			for( Object importItem : getImportedItems() ) {
+				if( importItem instanceof Type ) {
 					Type importType = (Type)importItem;
-					if( !importType.hasOuter() && getReferencedTypes().contains(importType) && !importType.isPrimitive())
+					if( !importType.hasOuter() && getReferencedTypes().contains(importType) && !importType.getPackage().toString().equals("shadow:standard"))
 						imports.add(importType.getImportName());
 						
 				}
 				else if( importItem instanceof Package )
 				{
 					Package importPackage = (Package)importItem;
-					for( Type referencedType : getReferencedTypes() )
-						if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
-							imports.add(referencedType.getImportName());					
+					if( !importPackage.toString().equals("shadow:standard"))
+						for( Type referencedType : getReferencedTypes() )
+							if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
+								imports.add(referencedType.getImportName());					
 				}
 			}
 			
 			//also classes from the same package
-			for( Type packageType : getPackage().getTypes() ) {
-				if( packageType != this && !packageType.hasOuter() && getReferencedTypes().contains(packageType) && !packageType.isPrimitive())
-					imports.add(packageType.getImportName());
-			}			
+			if( !getPackage().toString().equals("shadow:standard") )
+				for( Type packageType : getPackage().getTypes() )
+					if( packageType != this && !packageType.hasOuter() && getReferencedTypes().contains(packageType) && !packageType.isPrimitive())
+						imports.add(packageType.getImportName());			
 			
 			for( String importType : imports )			
 				out.println(linePrefix + "import " + importType + ";");
+			
+			if( imports.size() > 0 )
+				out.println(); 
 		}
 	}	
 	

@@ -4,7 +4,7 @@ implements Number<BigInteger>
 	uint[] data;
 	boolean negative;
 	
-	constant ulong BASE = 4294967296uL;
+	private constant ulong BASE = 4294967296uL;
 	
 	public equal(BigInteger other) => (boolean)
 	{

@@ -1,0 +1,9 @@
+class Property
+{	
+	int data;
+
+    private set x(int value) => () 
+    {
+    	data = value;    	    	
+    }  
+}

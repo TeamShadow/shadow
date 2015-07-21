@@ -139,7 +139,7 @@ public class TextOutput extends AbstractOutput
 	}
 
 	@Override
-	public void startMethod(TACMethod method) throws ShadowException
+	public void startMethod(TACMethod method, TACModule module) throws ShadowException
 	{
 		tempCounter = 0;
 		MethodSignature signature = method.getMethod();
@@ -169,7 +169,7 @@ public class TextOutput extends AbstractOutput
 	}
 
 	@Override
-	public void endMethod(TACMethod method) throws ShadowException
+	public void endMethod(TACMethod method, TACModule module) throws ShadowException
 	{
 		startBlock(defaultBlock);
 		if (!method.getMethod().isNative())

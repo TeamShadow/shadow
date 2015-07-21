@@ -1,0 +1,12 @@
+class Test
+{
+	public class Inner implements CanCreate
+	{
+		int x;
+		
+		public create()
+		{
+			x = 7;
+		}	
+	}
+}

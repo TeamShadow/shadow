@@ -111,12 +111,10 @@ public class TACArrayRef extends TACReference
 			{
 				signature = Type.INDEX_OUT_OF_BOUNDS_EXCEPTION.getMatchingMethod("create", new SequenceType(Type.INT));
 				params.add(ops.iterator().next());				
-			}
-						
-			TACMethodRef methodRef = new TACMethodRef(this, signature);
+			}						
+			
 			TACBlock block = getBuilder().getBlock();
-			TACCall exception = new TACCall(this, block, methodRef, params);
-						
+			TACCall exception = new TACCall(this, block, new TACMethodRef(this, signature), params);						
 			new TACThrow(this, block, exception);						
 			
 			done.new TACLabel(this);	//done label	

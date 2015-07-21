@@ -1,0 +1,7 @@
+exception shadow:standard@InterfaceCreateException
+{
+	public create( String interfaceName )
+	{
+		super("Cannot create interface " # interfaceName);
+	}
+}

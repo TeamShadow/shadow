@@ -1,9 +1,23 @@
 class Property
-{
-	
+{	
 	get int a;
 	set int b;
 	get set String c = "sandwich";
+	
+	public get value() => (int) {
+		return 5;
+	}
+	
+	String data;	
+	
+	//multiple sets
+	public set value(code letter) => () {
+		data = #letter;
+	}
+	
+	public set value(String text)  => () {
+		data = text;
+	}
 		
 	
 	public stuff() => ()
@@ -19,6 +33,11 @@ class Property
 		
 		this:a = 10;
 		this:b = 500;
-		this:c = "change";		 
+		this:c = "change";	
+		
+		int stuff = this->value;
+		
+		this->value = 'R';
+		this->value = "word"; 	 
 	}
 }

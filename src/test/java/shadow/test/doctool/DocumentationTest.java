@@ -138,22 +138,22 @@ public class DocumentationTest
 		// Summary
 		assertEquals(4, summary.size());
 		assertEquals(InlineTagType.PLAIN_TEXT, summary.get(0).getType());
-		assertEquals("This is a documentation comment", summary.get(0).getArg(0));
+		assertEquals("This is a documentation comment ", summary.get(0).getArg(0));
 		assertEquals(InlineTagType.CODE, summary.get(1).getType());
 		assertEquals("this is some literal code", summary.get(1).getArg(0));
 		assertEquals(InlineTagType.PLAIN_TEXT, summary.get(2).getType());
-		assertEquals("here is some more content and", summary.get(2).getArg(0));
+		assertEquals(" here is some more content and ", summary.get(2).getArg(0));
 		assertEquals(InlineTagType.CODE, summary.get(3).getType());
 		assertEquals("here is some more", summary.get(3).getArg(0));
 		
 		// Inline
 		assertEquals(5, inline.size());
 		assertEquals(InlineTagType.PLAIN_TEXT, inline.get(0).getType());
-		assertEquals("This is a documentation comment", inline.get(0).getArg(0));
+		assertEquals("This is a documentation comment ", inline.get(0).getArg(0));
 		assertEquals(InlineTagType.CODE, inline.get(1).getType());
 		assertEquals("this is some literal code", inline.get(1).getArg(0));
 		assertEquals(InlineTagType.PLAIN_TEXT, inline.get(2).getType());
-		assertEquals("here is some more content and", inline.get(2).getArg(0));
+		assertEquals(" here is some more content and ", inline.get(2).getArg(0));
 		assertEquals(InlineTagType.CODE, inline.get(3).getType());
 		assertEquals("here is some more", inline.get(3).getArg(0));
 		assertEquals(InlineTagType.PLAIN_TEXT, inline.get(4).getType());

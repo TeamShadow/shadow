@@ -1,0 +1,10 @@
+class Property
+{	
+	int data = 0;
+
+    private get x() => (int ) 
+    {
+    	data += 1;
+    	return data;    	    	
+    }  
+}

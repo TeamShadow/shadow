@@ -22,7 +22,9 @@ class Example<T, U is Dummy>
     }
 
     /// Certain types of constants should be visible
-    constant String testConstant = "Placeholder";
+    public constant String testConstant = "Placeholder";
+    protected constant int protectedConstant = 13;
+    private constant code privateConstant = 'R';
 
     /// Under normal circumstances, documentation for fields
     /// will not be made visible
