@@ -129,7 +129,7 @@ public class DocumentationTool
 		
 		// Create a page for each package
 		for (Package current : packagesToDocument) {
-			PackagePage page = new PackagePage(current, packagesToDocument);
+			PackagePage page = new PackagePage(current, packagesToDocument, classesToDocument);
 			page.write(outputDirectory);
 		}
 		

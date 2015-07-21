@@ -1,7 +1,7 @@
 import shadow:io@File;
-import local@Dummy;
-import local@TestInterfaceA;
-import local@TestInterfaceB;
+import tier1A@Dummy;
+import tier1A@TestInterfaceA;
+import tier1A@TestInterfaceB;
 
 /** A class to test/demonstrate the documentation tool */
 class Example<T, U is Dummy> 

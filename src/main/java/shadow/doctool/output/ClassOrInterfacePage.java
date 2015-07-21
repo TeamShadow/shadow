@@ -15,8 +15,6 @@ import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.Html5Writer.Attribute;
 import shadow.doctool.tag.TagManager.BlockTagType;
-import shadow.doctool.tag.TagManager.InlineTag;
-import shadow.doctool.tag.TagManager.InlineTagType;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
@@ -37,7 +35,6 @@ public class ClassOrInterfacePage
 	private String typeKind;
 	private HashSet<Type> linkableTypes;
 	private boolean makeLinks = true;
-	private int packageDepth = 0;
 	
 	// Method categories
 	private List<MethodSignature> constructors = new ArrayList<MethodSignature>();
@@ -99,13 +96,12 @@ public class ClassOrInterfacePage
 	private void getVisibleConstants()
 	{
 		for (Node field : type.getFields().values())
-		{
 			if (field.getModifiers().isConstant() && !field.getModifiers().isPrivate())
 				visibleConstants.add(field);
-		}
 	}
 	
-	public void write(Path root) throws IOException, ShadowException, DocumentationException
+	public void write(Path root) 
+			throws IOException, ShadowException, DocumentationException
 	{
 		// Find/create the directory chain where the document will reside
 		Path outputDirectory = constructOutputPath(root);
@@ -115,7 +111,7 @@ public class ClassOrInterfacePage
 		// Note: All colons in class names are replaced with dashes to avoid
 		// browser issues (i.e. relative paths being interpreted as protocols)
 		Path output = outputDirectory
-				.resolve(type.getTypeName().replaceAll(":", "-") + extension);
+				.resolve(type.getTypeName().replaceAll(":", "\\$") + extension);
 		FileWriter fileWriter = new FileWriter(output.toFile());
 		Html5Writer out = new Html5Writer(fileWriter);
 		
@@ -136,29 +132,33 @@ public class ClassOrInterfacePage
 		fileWriter.close();
 	}
 
-	private void writeHtmlHead(Html5Writer out) throws ShadowException, DocumentationException
+	private void writeHtmlHead(Html5Writer out) 
+			throws ShadowException, DocumentationException
 	{
 		out.openTab("head");
 		
 		out.fullLine("title", type.getTypeName());
 		out.voidLine("link", new Attribute("rel", "stylesheet"),
-				new Attribute("href", upDir(packageDepth) + "stylesheet.css"));
+				new Attribute("href", upDir(type.getPackage().getDepth()) 
+						+ "stylesheet.css"));
 		
 		out.closeUntab();
 	}
 	
-	private void writeHeader(Html5Writer out) throws ShadowException, DocumentationException
+	private void writeHeader(Html5Writer out) 
+			throws ShadowException, DocumentationException
 	{
 		out.openTab("div", new Attribute("class", "header"));
 		
 		String packageName = type.getPackage().getQualifiedName();
 		
+		// Create a link to this class/interface's package
 		out.open("p");
 		if (!packageName.isEmpty())
-			writeLink("package-summary" + extension, 
+			PageUtils.writeLink("package-summary" + extension, 
 					type.getPackage().getQualifiedName(), out);
 		else
-			writeLink("package-summary" + extension, "default", out);
+			PageUtils.writeLink("package-summary" + extension, "default", out);
 		out.closeLine();
 		
 		out.fullLine("h2", typeKind + " " + type.getTypeName());
@@ -168,7 +168,7 @@ public class ClassOrInterfacePage
 		
 		// Documentation text
 		if (type.hasDocumentation()) {
-			writeInlineTags(type.getDocumentation().getInlineTags(), out);
+			PageUtils.writeInlineTags(type.getDocumentation().getInlineTags(), out);
 			writeBlockTags(type.getDocumentation(), out);
 		}
 		
@@ -268,7 +268,8 @@ public class ClassOrInterfacePage
 			out.fullLine("h3", "Constant Summary");
 			out.openTab("table", new Attribute("class", "summarytable"));
 			
-			writeTableRow(out, true, "Modifiers", "Type", "Name and Description");
+			PageUtils.writeTableRow(out, true, "Modifiers", "Type", 
+					"Name and Description");
 			for (Node constant : visibleConstants) {
 				out.openTab("tr");
 					out.open("td");
@@ -282,7 +283,7 @@ public class ClassOrInterfacePage
 							writeNodeName(constant, true, out);
 						out.close();
 						if (constant.hasDocumentation())
-							writeInlineTags(constant.getDocumentation().getSummary(), out);
+							PageUtils.writeInlineTags(constant.getDocumentation().getSummary(), out);
 					out.closeLine();
 				out.closeUntab();
 			}
@@ -313,7 +314,8 @@ public class ClassOrInterfacePage
 		out.fullLine("h3", name);
 		out.openTab("table", new Attribute("class", "summarytable"));
 		
-		writeTableRow(out, true, "Modifiers", "Return Type", "Method and Description");
+		PageUtils.writeTableRow(out, true, "Modifiers", "Return Type", 
+				"Method and Description");
 		for (MethodSignature method : methods) {
 			out.openTab("tr");
 				out.open("td");
@@ -328,7 +330,7 @@ public class ClassOrInterfacePage
 						writeParameters(method, true, true, out);
 					out.close();
 					if (method.hasDocumentation())
-						writeInlineTags(method.getDocumentation().getSummary(), out);
+						PageUtils.writeInlineTags(method.getDocumentation().getSummary(), out);
 				out.closeLine();
 			out.closeUntab();
 		}
@@ -364,7 +366,7 @@ public class ClassOrInterfacePage
 		
 		// Documentation text
 		if (constant.hasDocumentation()) {
-			writeInlineTags(constant.getDocumentation().getInlineTags(), out);
+			PageUtils.writeInlineTags(constant.getDocumentation().getInlineTags(), out);
 			writeBlockTags(constant.getDocumentation(), out);
 		}
 		
@@ -414,7 +416,7 @@ public class ClassOrInterfacePage
 		
 		// Documentation text
 		if (method.hasDocumentation()) {
-			writeInlineTags(method.getDocumentation().getInlineTags(), out);
+			PageUtils.writeInlineTags(method.getDocumentation().getInlineTags(), out);
 			writeBlockTags(method.getDocumentation(), out);
 		}
 		
@@ -425,7 +427,7 @@ public class ClassOrInterfacePage
 			Html5Writer out) throws DocumentationException, ShadowException
 	{
 		if (linkToDetail)
-			writeLink("#" + node.toString(), node.toString(), out);
+			PageUtils.writeLink("#" + node.toString(), node.toString(), out);
 		else
 			out.add(node.toString());
 	}
@@ -434,7 +436,7 @@ public class ClassOrInterfacePage
 			Html5Writer out) throws DocumentationException, ShadowException
 	{
 		if (linkToDetail)
-			writeLink("#" + getUniqueID(method), method.getSymbol(), out);
+			PageUtils.writeLink("#" + getUniqueID(method), method.getSymbol(), out);
 		else
 			out.add(method.getSymbol());
 	}
@@ -463,25 +465,6 @@ public class ClassOrInterfacePage
 				out.add(", ");
 		}
 		out.add(")");
-	}
-	
-	private void writeInlineTags(List<InlineTag> inlineTags, Html5Writer out)
-			throws DocumentationException, ShadowException
-	{
-		if (inlineTags.size() > 0) {
-			out.open("p");
-			for (InlineTag tag : inlineTags) {
-				switch ((InlineTagType) tag.getType()) {
-					case PLAIN_TEXT:
-						out.add(tag.getArg(0));
-						break;
-					case CODE:
-						out.full("code", tag.getArg(0), new Attribute("class", "inline"));
-						break;
-				}
-			}
-			out.closeLine();
-		}
 	}
 	
 	private void writeBlockTags(Documentation documentation,
@@ -533,30 +516,9 @@ public class ClassOrInterfacePage
 	{
 		if (linkableTypes.contains(to))
 			// Replace colons in class names with dashes
-			writeLink(getRelativePath(type, to).replaceAll(":", "-"), text, out);
+			PageUtils.writeLink(getRelativePath(type, to).replaceAll(":", "\\$"), text, out);
 		else
 			out.add(text);
-	}
-	
-	private static void writeLink(String href, String text, Html5Writer out) 
-			throws DocumentationException, ShadowException
-	{
-		out.full("a", text, new Attribute("href", href));
-	}
-	
-	private static void writeTableRow(Html5Writer out, boolean header,
-			String ... columns) throws ShadowException, DocumentationException
-	{
-		out.openTab("tr");
-		
-		for (String column : columns) {
-			if (header)
-				out.fullLine("th", column);
-			else
-				out.fullLine("td", column);
-		}
-		
-		out.closeUntab();
 	}
 	
 	/* Helper methods */
@@ -574,8 +536,6 @@ public class ClassOrInterfacePage
 		while (currentPackage != null && !currentPackage.getName().isEmpty()) {
 			packages.addFirst(currentPackage.getName());
 			currentPackage = currentPackage.getParent();
-			
-			packageDepth++; // TODO: Put this somewhere more appropriate
 		}
 		
 		// Descend into corresponding directories

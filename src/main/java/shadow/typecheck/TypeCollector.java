@@ -200,8 +200,10 @@ public class TypeCollector extends BaseChecker {
 			if( canonical.equals(main) )
 				mainType = node.getType();
 			
-			// Associate resulting types with the initial files
-			if (initialFilesCanonical.contains(canonical))
+			// Associate resulting types with the initial files.
+			// A null Type indicates a prior error, but adding it to the list 
+			// will cause its own exception and should not be done
+			if (node.getType() != null && initialFilesCanonical.contains(canonical))
 				initialFileTypes.add(node.getType());
 			
 			files.put(canonical, node);

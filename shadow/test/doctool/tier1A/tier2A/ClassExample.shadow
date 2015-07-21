@@ -1,0 +1,5 @@
+/// This is a {@code class}.
+class tier1A:tier2A@ClassExample
+{
+
+}
