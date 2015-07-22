@@ -18,9 +18,6 @@ import java.util.List;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.logging.log4j.Logger;
 
-import shadow.output.llvm.Array;
-import shadow.output.llvm.Generic;
-import shadow.output.llvm.GenericArray;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
