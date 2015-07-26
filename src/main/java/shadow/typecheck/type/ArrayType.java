@@ -185,7 +185,7 @@ public class ArrayType extends ClassType
 	}
 	
 	@Override
-	public ArrayType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
+	public ArrayType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{	
 		return new ArrayType( baseType.replace(values, replacements), dimensions, nullable);		
 	}

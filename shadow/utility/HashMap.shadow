@@ -1,0 +1,275 @@
+class shadow:utility@HashMap<K is CanHash and CanEqual<K>, V is CanEqual<V>>
+	implements Map<K,V>
+{
+	protected constant int DEFAULT_INITIAL_CAPACITY = 16;
+	protected constant int MAXIMUM_CAPACITY = 1 << 30;
+	protected constant float DEFAULT_LOAD_FACTOR = 0.75f;
+	
+	get int size = 0;
+	nullable Node[] table;
+	float loadFactor;
+	int threshold;
+	int modifications = 0;
+	
+	public create()
+	{
+		this(DEFAULT_INITIAL_CAPACITY);
+	}
+	
+	public create(int initialCapacity)
+	{
+		this(initialCapacity, DEFAULT_LOAD_FACTOR);
+	}
+	
+	public create(int initialCapacity, float loadFactor)
+	{
+		int capacity = 1;
+		while( capacity < initialCapacity and capacity < MAXIMUM_CAPACITY)
+			capacity <<= 1;
+		table = Node:null[capacity];
+		this:loadFactor = loadFactor;
+		threshold = cast<int>(capacity * loadFactor);
+	}
+	
+	protected resize(int newCapacity) => ()
+	{		
+		if(table->size == MAXIMUM_CAPACITY)
+		{
+			threshold = int:MAX;
+			return;
+		}
+		
+		nullable Node[] newTable = Node:null[newCapacity];
+		int index;
+		int hash;		
+		
+		for( int i = 0; i < table->size; i += 1 )
+		{
+			if( table[i] !== null )
+			{ 
+				nullable Node next = table[i];
+				while( next !== null )
+				{
+					Node node = check(next);
+					(index, hash) = findIndex( node->key, newCapacity );				
+					newTable[index] = Node:create(hash, node->key, node->value, newTable[index]);
+					next = node->next;
+				}
+			}
+		}
+		
+		table = newTable;
+		threshold = cast<int>(newCapacity * loadFactor);		
+	}
+	
+
+	private class Node
+	{
+		immutable get int hash;
+		get K key;
+		get set V value;
+		get set nullable Node next = null;
+
+		public create( int initialHash, K initialKey, V initialValue )
+		{
+			this( initialHash, initialKey, initialValue, null);
+		}
+		
+		public create( int initialHash, K initialKey, V initialValue, nullable Node after )
+		{
+			hash = initialHash;
+			key = initialKey;
+			value = initialValue;			
+			next = after;
+		}
+		
+		public readonly toString() => (String)
+		{
+			return key # "=" # value;		
+		}
+	}
+	
+	private readonly findIndex( K key, int length ) => ( int index, int hash )
+	{
+		uint temp = key->hash;
+		temp ^= (temp >> 20) ^ (temp >> 12);
+		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
+		return ( hash & (length - 1), hash );	
+	}	
+
+	public index( K key ) => ( nullable V value )
+	{		
+		try
+		{
+			nullable Node node = findKey(key);
+			return check(node)->value;
+		}
+		recover
+		{			
+			return null;
+		}
+	}
+	
+	public index( K key, V value ) => ()
+	{
+		add(key, value);
+	}
+
+	public add( K key, V value ) => ( nullable V existing )
+	{	
+		( int index, int hash ) = findIndex(key, table->size);
+		try
+		{
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->key != key )
+				current = check(current->next);
+			V existing = current->value;
+			current->value = value;
+			return existing;
+		}
+		recover
+		{
+			table[index] = Node:create(hash, key, value, table[index]);
+			modifications += 1;
+			size += 1;			
+			if( size > threshold )
+				resize(2 * table->size);			
+			return null;
+		}
+	}
+	
+	private readonly findKey( K key ) => ( nullable Node )
+	{
+		( int index, int hash ) = findIndex(key, table->size);
+		try
+		{
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->key != key )
+				current = check(current->next);
+			return current;
+		}
+		recover
+		{			
+			return null;
+		}
+	}
+	
+	public remove( K key ) => ( nullable V removed )
+	{	
+		( int index, int hash ) = findIndex(key, table->size);
+		try
+		{
+			nullable Node last = null;
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->key != key )
+				( last, current ) = ( current, check(current->next) );				
+			V removed = current->value;
+			try
+			{
+				check(last)->next = current->next;
+			}
+			recover
+			{
+				table[index] = current->next;
+			}
+			modifications += 1;
+			return removed;
+		}
+		recover
+		{
+			return null;
+		}
+	}
+	public readonly containsKey( K key ) => ( boolean found )
+	{		
+		return findKey(key) !== null;
+	}
+	
+	public readonly containsValue( V value ) => ( boolean found )
+	{		
+		foreach(V element in this)
+		{
+			if( value == element )
+				return true;
+		}
+		return false;
+	}
+
+	public readonly iterator() => ( Iterator<V> )
+	{
+		return HashMapIterator:create();
+	}
+	
+	public clear() => ()
+	{
+		size = 0;
+		table = Node:null[DEFAULT_INITIAL_CAPACITY];
+		threshold = cast<int>(table->size * loadFactor);
+		modifications += 1;
+	}
+	
+	public readonly toString() => (String)
+	{
+		var output = MutableString:create("{");
+		boolean first = true;
+		for( int i = 0; i < table->size; i += 1 )
+		{
+			nullable Node node = table[i];
+			while( node !== null )
+			{
+				if( first )
+					first = false;
+				else
+					output.append(", ");
+				output.append(node);
+				
+				node = check(node)->next;							
+			}
+		}		
+		output.append("}");
+		return output.toString();
+	}	
+	
+	private class HashMapIterator implements Iterator<V>
+	{
+		int index = 0;
+		nullable Node current;
+		int expectedModifications = modifications;
+		public create()
+		{
+			current = next(null);
+		}
+		private next( nullable Node position ) => ( nullable Node )
+		{		
+			if( position !== null )
+				position = check(position)->next;
+		
+			while( position === null and index < table->size )
+			{				
+				position = table[index];				
+				index += 1;					
+			}
+			
+			return position; //returns null if nothing left			
+		}
+
+		private readonly checkForModifications() => ()
+		{
+			if ( modifications != expectedModifications )
+				throw IllegalModificationException:create();
+		}
+
+		public readonly hasNext() => ( boolean )
+		{
+			checkForModifications();
+			return current !== null;
+		}
+
+		public next() => ( V value )
+		{
+			checkForModifications();			 
+			(V value, current) = ( check(current)->value, next(current) );
+			return value;
+		}
+	}
+}

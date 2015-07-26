@@ -6,20 +6,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class TypeParameter extends Type
-{
+public class TypeParameter extends Type {
 	private Set<Type> bounds = new HashSet<Type>();	
 	private boolean toStringRecursion = false; //keeps type parameters that have bounds containing themselves from infinitely recursing
-	//private TypeParameter recursiveParameterCheck = null; //keeps infinite type parameters checking from happening
 
-	public TypeParameter(String typeName, Type outer)
-	{
+	public TypeParameter(String typeName, Type outer) {
 		super(typeName, new Modifiers(), outer);
 		bounds.add(Type.OBJECT);
 	}
 	
-	public ClassType getClassBound()
-	{
+	public ClassType getClassBound() {
 		for( Type bound : bounds )
 			if( bound instanceof ClassType )
 				return (ClassType)bound;
@@ -37,34 +33,16 @@ public class TypeParameter extends Type
 		invalidateHashName();
 	}
 	
-	public Set<Type> getBounds()
-	{
+	public Set<Type> getBounds() {
 		return bounds;
 	}
 	
-	public void setBounds(Set<Type> bounds)
-	{
+	public void setBounds(Set<Type> bounds) {
 		this.bounds = bounds;
 		invalidateHashName();
 	}
-
-	/*
-	@Override
-	public boolean acceptsAssignment(Type type, ASTAssignmentOperator.AssignmentType assignmentType, List<String> reasons)
-	{	
-		if( equals(type) )
-			return true;
-		
-		for( Type bound : bounds )
-			if( !type.isSubtype(bound) )
-				return false;		
-		
-		return true;
-	}
-	*/
 	
-	public boolean acceptsSubstitution(Type type) 
-	{
+	public boolean acceptsSubstitution(Type type) {
 		if( equals(type) )
 			return true;
 		
@@ -72,8 +50,7 @@ public class TypeParameter extends Type
 		SequenceType replacements = new SequenceType(type);		
 		
 		Set<Type> substitutedBounds = new HashSet<Type>();
-		try
-		{
+		try {
 			for( Type bound : bounds )
 				substitutedBounds.add( bound.replace(values, replacements));
 			
@@ -81,43 +58,23 @@ public class TypeParameter extends Type
 				if( !type.isSubtype(bound) )
 					return false;	
 		}
-		catch(InstantiationException e)
-		{}
+		catch(InstantiationException e)	{}
 		
 		return true;
 	}
 	
-	public boolean isSubtype(Type type)
-	{		
+	public boolean isSubtype(Type type) {		
 		if( equals(type) || type == Type.OBJECT )
 			return true;
 		
+		//one type parameter is a subtype of another only if they're identical
+		if( type instanceof TypeParameter )
+			return false;
+		
+		//but it can still stand in for another type, with the correct bounds
 		for( Type bound : bounds )
 			if( bound.isSubtype(type) )
-				return true;
-		
-		if( type instanceof TypeParameter )
-		{
-			TypeParameter other = (TypeParameter) type;
-			//every bound must be met by us
-			for( Type otherBound : other.bounds )
-			{
-				boolean met = false;
-				for( Type bound : bounds  )
-				{
-					if( bound.isSubtype(otherBound) )
-					{
-						met = true;
-						break;
-					}					
-				}
-				
-				if( !met )
-					return false;				
-			}
-			
-			return true;			
-		}
+				return true;		
 		
 		return false;
 	}
@@ -125,10 +82,8 @@ public class TypeParameter extends Type
 	
 	
 	@Override
-	public boolean equals(Type o)
-	{
-		if( o != null && o instanceof TypeParameter )
-		{				
+	public boolean equals(Type o) {
+		if( o != null && o instanceof TypeParameter ) {				
 			if( o == this )
 				return true;
 			
@@ -139,26 +94,23 @@ public class TypeParameter extends Type
 			return false;	
 	}
 	
-	public Type replace(SequenceType values, SequenceType replacements )
-	{
-		for( int i = 0; i < values.size(); i++ )
-		{
+	@Override
+	public Type replace(List<ModifiedType> values, List<ModifiedType> replacements ) {
+		for( int i = 0; i < values.size(); i++ )		
 			if( values.get(i).getType().getTypeName().equals(getTypeName()))
-				return replacements.get(i).getType();
-		}
+				return replacements.get(i).getType();		
 		
 		return this;
 	}
 	
-	public Type partiallyReplace(SequenceType values, SequenceType replacements )
-	{
+	@Override
+	public Type partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {
 		return replace( values, replacements );
 	}
 	
 	
 	@Override
-	public void updateFieldsAndMethods() throws InstantiationException
-	{
+	public void updateFieldsAndMethods() throws InstantiationException {
 		Set<Type> toRemove = new HashSet<Type>();
 		Set<Type> toAdd = new HashSet<Type>();
 		
@@ -177,22 +129,18 @@ public class TypeParameter extends Type
 		StringBuilder builder = new StringBuilder(getTypeName());
 		boolean first = true;
 		
-		if( !toStringRecursion && withBounds && bounds.size() > 1 ) //always contains Object
-		{	
+		if( !toStringRecursion && withBounds && bounds.size() > 1 ) { //always contains Object			
 			toStringRecursion = true;			
 			builder.append(" is ");
 			
-			for(Type bound : bounds )
-			{	
-				if( bound != Type.OBJECT )
-				{			
+			for(Type bound : bounds )				
+				if( bound != Type.OBJECT ) {			
 					if( !first )
 						builder.append(" and ");
 					
 					builder.append(bound.toString(withBounds));				
 					first = false;
-				}
-			}
+				}			
 			
 			toStringRecursion = false;
 		}
@@ -207,21 +155,17 @@ public class TypeParameter extends Type
 	
 	
 	
-	public String getMangledName()
-	{
-		//return "_C" + getTypeName();
-		return getClassBound().getMangledName();
+	public String getMangledName() {		
+		return getClassBound().getMangledName(); //often Object, but can be others
 	}
 	
 	
 	
-	public List<MethodSignature> getAllMethods(String methodName)
-	{
+	public List<MethodSignature> getAllMethods(String methodName) {
 		return getMethods(methodName);
 	}
 	
-	public List<MethodSignature> getMethods(String methodName)
-	{
+	public List<MethodSignature> getMethods(String methodName) {
 		Set<MethodSignature> signatures = new HashSet<MethodSignature>();
 		for(Type bound : bounds )					
 			signatures.addAll(bound.getMethods(methodName));
@@ -246,8 +190,7 @@ public class TypeParameter extends Type
 	}
 
 	@Override
-	public boolean hasInterface(InterfaceType type)
-	{
+	public boolean hasInterface(InterfaceType type) {
 		for(Type bound : bounds)
 			if( bound.hasInterface(type))
 				return true;
@@ -256,8 +199,7 @@ public class TypeParameter extends Type
 	}	
 	
 	@Override
-	public boolean hasUninstantiatedInterface(InterfaceType type)
-	{
+	public boolean hasUninstantiatedInterface(InterfaceType type) {
 		for(Type bound : bounds)
 			if( bound.hasUninstantiatedInterface(type))
 				return true;

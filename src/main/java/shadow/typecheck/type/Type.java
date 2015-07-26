@@ -30,13 +30,14 @@ public abstract class Type implements Comparable<Type> {
 	private Package _package;
 	private SequenceType typeParameters = null;	
 	private boolean parameterized = false;
-	protected Type typeWithoutTypeArguments = this;
+	protected Type typeWithoutTypeArguments = this;	
 	
 	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();	
 		
 	private Map<String, Node> fieldTable = new HashMap<String, Node>();
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> referencedTypes = new HashSet<Type>();
+	private Set<Type> partiallyInstantiatedGenerics = new HashSet<Type>();
 	private List<Type> genericDeclarations = new ArrayList<Type>();
 	private List<Type> typeParameterDependencies = new ArrayList<Type>();
 	
@@ -122,7 +123,7 @@ public abstract class Type implements Comparable<Type> {
 		public List<TypeArgumentCache> children;
 	}
 	
-	public Type getInstantiation( SequenceType typeArguments  )
+	public Type getInstantiation( List<ModifiedType> typeArguments  )
 	{
 		return getInstantiation(instantiatedTypes, typeArguments, 0 );
 	}
@@ -132,7 +133,7 @@ public abstract class Type implements Comparable<Type> {
 		return typeWithoutTypeArguments;
 	}
 	
-	private static Type getInstantiation(TypeArgumentCache types, SequenceType typeArguments, int index  )
+	private static Type getInstantiation(TypeArgumentCache types, List<ModifiedType> typeArguments, int index  )
 	{
 		if( index == typeArguments.size() )
 			return types.instantiatedType;
@@ -148,12 +149,12 @@ public abstract class Type implements Comparable<Type> {
 		return null;
 	}
 	
-	public void addInstantiation( SequenceType typeArguments, Type type  )
+	public void addInstantiation( List<ModifiedType> typeArguments, Type type  )
 	{
 		addInstantiation(instantiatedTypes, typeArguments, 0, type );
 	}
 	
-	private static void addInstantiation(TypeArgumentCache types, SequenceType typeArguments, int index, Type type  )
+	private static void addInstantiation(TypeArgumentCache types, List<ModifiedType> typeArguments, int index, Type type  )
 	{		
 		if( index == typeArguments.size() )		
 			types.instantiatedType = type;			
@@ -643,8 +644,9 @@ public abstract class Type implements Comparable<Type> {
 		//equal and cat are separate because they are not dependent on implementing a specific interface
 		if( assignmentType.equals(AssignmentType.EQUAL) )
 		{
-			accepts = rightType.isSubtype(this);/* ||  //no! don't accept Array<int> inside int[] without explicit cast
-			( this instanceof ArrayType && this.isSubtype(rightType) ); */
+			//type parameters are different because the definition of subtype is weak: dependent only on the bounds
+			//real type parameter assignment requires the same type					
+			accepts = rightType.isSubtype(this);
 			
 			if( !accepts )
 				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
@@ -1226,16 +1228,19 @@ public abstract class Type implements Comparable<Type> {
 						addReferencedType( typeParameter.getType() );
 			}
 			else if (!equals(type) &&  !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/) {		
-				if( type.isParameterized() ) {
+				if( type.isParameterizedIncludingOuterClasses() ) {
 					//if( type.isFullyInstantiated() )
 					//{				
 						referencedTypes.add(type);
 						referencedTypes.add(type.typeWithoutTypeArguments);
 						
+						if( !type.isFullyInstantiated() )
+							partiallyInstantiatedGenerics.add(type);
+						
 						if( !referenceRecursion )
 						{
 							referenceRecursion = true; //prevents rabbit hole recursion on type parameters								
-							for( ModifiedType typeParameter : type.getTypeParameters() )						
+							for( ModifiedType typeParameter : type.getTypeParametersIncludingOuterClasses() )						
 								addReferencedType( typeParameter.getType() );
 							
 							referenceRecursion = false;
@@ -1268,9 +1273,12 @@ public abstract class Type implements Comparable<Type> {
 		}
 	}
 
-	public Set<Type> getReferencedTypes()
-	{
+	public Set<Type> getReferencedTypes() {
 		return referencedTypes;
+	}
+	
+	public Set<Type> getPartiallyInstantiatedGenerics() {
+		return partiallyInstantiatedGenerics;
 	}
 
 	public boolean hasInterface(InterfaceType type)
@@ -1340,8 +1348,8 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	public abstract boolean isSubtype(Type other);
-	public abstract Type replace(SequenceType values, SequenceType replacements ) throws InstantiationException;
-	public abstract Type partiallyReplace(SequenceType values, SequenceType replacements );
+	public abstract Type replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException;
+	public abstract Type partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements );
 	public abstract void updateFieldsAndMethods() throws InstantiationException;	
 	
 	public void addImportedItems( List<Object> items )
@@ -1403,12 +1411,29 @@ public abstract class Type implements Comparable<Type> {
 		
 		for( Type type : getReferencedTypes() ) {		
 			if( type.isParameterizedIncludingOuterClasses() ) {		
-				if( type.isFullyInstantiated() )						
+				if( type.isFullyInstantiated() || (this.isParameterized() && type.containsTypeArguments(this.getTypeParameters()) ) )						
 					out.println(indent + "import " + type.getQualifiedName() + ";");
 			}			
 			else if( type instanceof ArrayType )
 				out.println(indent + "import " + type.getQualifiedName() + ";");
 		}
+	}
+	
+	private boolean containsTypeArguments(List<ModifiedType> arguments) {
+		if( !(this instanceof TypeParameter) && isParameterizedIncludingOuterClasses() ) {
+			List<ModifiedType> existingArguments = getTypeParametersIncludingOuterClasses();
+			for( ModifiedType existingArgument : existingArguments )
+				for( ModifiedType argument : arguments ) {
+					Type existingType = existingArgument.getType(); 
+					if( existingType.equals(argument.getType()))
+						return true;
+					
+					if( existingType.containsTypeArguments(arguments) )
+						return true;
+				}
+		}
+
+		return false;
 	}
 	
 	public void clearInstantiatedTypes() {

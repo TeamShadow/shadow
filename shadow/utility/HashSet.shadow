@@ -1,15 +1,10 @@
 class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 	implements Set<V>
 {
-	protected constant int DEFAULT_INITIAL_CAPACITY = 16;
-	protected constant int MAXIMUM_CAPACITY = 1 << 30;
-	protected constant float DEFAULT_LOAD_FACTOR = 0.75f;
+	HashMap<V,V> map;
 	
-	get int size = 0;
-	nullable Node[] table;
-	float loadFactor;
-	int threshold;
-	int modifications = 0;
+	protected constant int DEFAULT_INITIAL_CAPACITY = 16;	
+	protected constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	public create()
 	{
@@ -23,210 +18,66 @@ class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
 	
 	public create(int initialCapacity, float loadFactor)
 	{
-		int capacity = 1;
-		while( capacity < initialCapacity )
-			capacity <<= 1;
-		table = Node:null[capacity];
-		this:loadFactor = loadFactor;
-		threshold = cast<int>(capacity * loadFactor);
-	}
-	
-	public resize(int newCapacity) => ()
-	{		
-		if(table->size == MAXIMUM_CAPACITY)
-		{
-			threshold = int:MAX;
-			return;
-		}
-		
-		nullable Node[] newTable = Node:null[newCapacity];
-		int index;
-		int hash;		
-		
-		foreach( V value in this )
-		{
-			(index, hash) = findIndex( value, newCapacity );				
-			newTable[index] = Node:create(hash, value, newTable[index]);
-		}
-		
-		table = newTable;
-		threshold = cast<int>(newCapacity * loadFactor);		
-	}
-	
-
-	private class Node
-	{
-		immutable get int hash;
-		get V value;
-		get set nullable Node next = null;
-		
-		public readonly get next() => (nullable Node)
-		{
-			return this:next;
-		}
-		
-		public readonly get value() => (V)
-		{
-			return this:value;
-		}
-
-		public create( int initialHash, V initialValue )
-		{
-			hash = initialHash;
-			value = initialValue;
-		}
-		public create( int initialHash, V initialValue, nullable Node after )
-		{
-			hash = initialHash;
-			value = initialValue;
-			next = after;
-		}
-	}
-
-	private readonly hash( V value ) => ( int index, int hash )
-	{
-		return findIndex( value, table->size );
-	}
-	
-	private readonly findIndex( V value, int length ) => ( int index, int hash )
-	{
-		uint temp = value->hash;
-		temp ^= (temp >> 20) ^ (temp >> 12);
-		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
-		return ( hash & (length - 1), hash );	
-	}
-	
+		map = HashMap<V,V>:create(initialCapacity, loadFactor);		
+	}	
 
 	public index( V value ) => ( boolean found )
 	{
-		return contains(value);
+		return map.containsKey(value);
 	}
 	public index( V value, boolean add ) => ()
 	{
 		if ( add )
-			this.add(value);
+			map[value] = value;
 		else
-			remove(value);
+			map.remove(value);
 	}
 
 	public add( V value ) => ( boolean added )
 	{		
-		( int index, int hash ) = this.hash(value);
-		try
-		{
-			Node current = check(table[index]);
-			while ( current->hash != hash and current->value != value )
-				current = check(current->next);
-			return false;
-		}
-		recover
-		{
-			table[index] = Node:create(hash, value, table[index]);
-			modifications += 1;
-			size += 1;
-			
-			if( size > threshold )
-				resize(2 * table->size);
-			
-			return true;
-		}
+		//returns true if item newly added (no old item)
+		return map.add( value, value ) === null;
 	}
+	
 	public remove( V value ) => ( boolean removed )
 	{	
-		( int index, int hash ) = this.hash(value);
-		try
-		{
-			nullable Node last = null;
-			Node current = check(table[index]);
-			while ( current->hash != hash and current->value != value )
-				( last, current ) = ( current, check(current->next) );
-			try
-			{
-				check(last)->next = current->next;
-			}
-			recover
-			{
-				table[index] = current->next;
-			}
-			modifications += 1;
-			return true;
-		}
-		recover
-		{
-			return false;
-		}
+		//returns true if item was present in the set (some existing item)
+		return map.remove(value) !== null;
 	}
+	
 	public readonly contains( V value ) => ( boolean found )
 	{		
-		( int index, int hash ) = this.hash(value);
-		try
-		{
-			readonly Node current = check(table[index]);			
-			while ( current->hash != hash and current->value != value )
-				current = check(current->next);
-			return true;
-		}
-		recover
-		{
-			return false;
-		}
+		return map.containsKey(value);
 	}
 
 	public readonly iterator() => ( Iterator<V> )
 	{
-		return HashSetIterator:create();
+		return map.iterator();
 	}
 	
 	public clear() => ()
 	{
-		size = 0;
-		table = Node:null[DEFAULT_INITIAL_CAPACITY];
-		threshold = cast<int>(table->size * loadFactor);
-		modifications += 1;
+		map.clear();
 	}
 	
-	
-	private class HashSetIterator implements Iterator<V>
+	public readonly get size() => (int)
 	{
-		int index = 0;
-		nullable Node current;
-		int expectedModifications = modifications;
-		public create()
-		{
-			current = next(null);
-		}
-		public next( nullable Node position ) => ( nullable Node )
-		{		
-			if( position !== null )
-				position = check(position)->next;
-		
-			while( position === null and index < table->size )
-			{				
-				position = table[index];				
-				index += 1;					
-			}
-			
-			return position; //returns null if nothing left			
-		}
-
-		private readonly checkForModifications() => ()
-		{
-			if ( modifications != expectedModifications )
-				throw IllegalModificationException:create();
-		}
-
-		public readonly hasNext() => ( boolean )
-		{
-			checkForModifications();
-			return current !== null;
-		}
-
-		public next() => ( V value )
-		{
-			checkForModifications();
-			 
-			( nullable V value, current ) = ( check(current)->value, next(current) );
-			return check(value);
-		}
+		return map.size();	
 	}
+	
+	public readonly toString() => (String)
+	{
+		var output = MutableString:create("{");
+		boolean first = true;
+		foreach(V value in map)
+		{			
+			if( first )
+				first = false;
+			else
+				output.append(", ");
+			output.append(value);
+		}		
+		output.append("}");
+		return output.toString();
+	}	
 }

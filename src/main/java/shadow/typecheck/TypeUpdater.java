@@ -101,14 +101,17 @@ public class TypeUpdater extends BaseChecker {
 		//must happen after extends and implements
 		//since generic parameters in the methods could depend on correct extends and implements
 		if( errorList.isEmpty() )
-			updateFieldsAndMethods( nodeTable );		
+			updateFieldsAndMethods( nodeList );		
 		
 		//now that the types are figured out, make sure all the method overrides are legal
 		if( errorList.isEmpty() )
-			checkOverrides( nodeTable );	
+			checkOverrides( nodeList );	
 		
 		if( errorList.isEmpty() )
 			updateGenericDeclarations( nodeTable );
+		
+		if( errorList.isEmpty() )
+			updateReferencesInMetaFiles( nodeList );
 
 		if( errorList.size() > 0 ) {
 			printErrors();
@@ -119,6 +122,34 @@ public class TypeUpdater extends BaseChecker {
 		printWarnings();
 		
 		return nodeTable;
+	}
+	
+	private void updateReferencesInMetaFiles(List<Node> nodeList) {
+		for(Node declarationNode : nodeList ) {			
+			//if meta
+			if( declarationNode.getFile().getPath().endsWith(".meta") ) {
+				Type type = declarationNode.getType();
+				//update imports for meta files, since they won't have statement checking
+				for(Object item : type.getImportedItems())
+					if( item instanceof Type ) {
+						Type importType = (Type) item;
+						type.addReferencedType(importType);
+					}
+				
+				//add extends
+				if( type instanceof ClassType ) {
+					ClassType parent = ((ClassType) type).getExtendType();
+					while( parent != null ) {
+						type.addReferencedType(parent);
+						parent = parent.getExtendType();
+					}
+				}
+				
+				//add interfaces
+				for( InterfaceType _interface : type.getInterfaces() )
+					type.addReferencedType(_interface);
+			}				
+		}
 	}
 
 	private void updateGenericDeclarations(Map<Type, Node> nodeTable) {
@@ -148,9 +179,9 @@ public class TypeUpdater extends BaseChecker {
 		}			
 	}
 	
-	private void updateFieldsAndMethods( Map<Type, Node> nodeTable ) {
+	private void updateFieldsAndMethods( List<Node> nodeList ) {
 		//update fields and methods			
-		for(Node declarationNode : nodeTable.values() ) {	
+		for(Node declarationNode : nodeList ) {	
 			try {			
 				Type type = declarationNode.getType();				
 				type.updateFieldsAndMethods();				
@@ -404,8 +435,8 @@ public class TypeUpdater extends BaseChecker {
 					}
 				}
 				
-				if( isMeta )
-					classType.addReferencedType(parent);
+				//if( isMeta )
+					//classType.addReferencedType(parent);
 				
 				
 				//update interfaces
@@ -428,8 +459,8 @@ public class TypeUpdater extends BaseChecker {
 						}						
 					}
 					
-					if( isMeta )
-						classType.addReferencedType(interfaceType);
+					//if( isMeta )
+						//classType.addReferencedType(interfaceType);
 				}				
 									
 			}
@@ -463,8 +494,8 @@ public class TypeUpdater extends BaseChecker {
 		
 	}
 		
-	private void checkOverrides(Map<Type,Node> nodeTable) {	
-		for( Node declarationNode : nodeTable.values() ) {	
+	private void checkOverrides(List<Node> nodeList) {	
+		for( Node declarationNode : nodeList ) {	
 			setFile(declarationNode.getFile()); //used for error messages
 			if( declarationNode.getType() instanceof ClassType ) {					
 				ClassType classType = (ClassType)declarationNode.getType();
@@ -834,11 +865,8 @@ public class TypeUpdater extends BaseChecker {
 				//shouldn't fail
 				if( type == null )
 					addError(Error.INVALID_IMPORT, "Undefined type " + item + " cannot be imported");
-				else {
+				else 
 					importedItems.set(i, type);
-					if( isMeta )
-						node.getType().addReferencedType(type);
-				}
 			}
 			else
 			{

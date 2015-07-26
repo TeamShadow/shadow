@@ -299,4 +299,14 @@ public class TACTest {
 		args.add("shadow/test/InterfaceCreateTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testHashMap() throws Exception {
+		args.add("shadow/test/HashMapTest.shadow");
+		Main.run(args.toArray(new String[] { }));		
+	}
+	
+	@Test public void testHashSet() throws Exception {
+		args.add("shadow/test/HashSetTest.shadow");
+		Main.run(args.toArray(new String[] { }));		
+	}
 }

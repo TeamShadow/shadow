@@ -63,4 +63,9 @@ public class ShadowUtilityTest {
 		args.add("shadow/utility/ArrayDeque.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testHashMap() throws Exception {
+		args.add("shadow/utility/HashMap.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

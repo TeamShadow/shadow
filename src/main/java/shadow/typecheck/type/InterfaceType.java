@@ -135,7 +135,7 @@ public class InterfaceType extends Type {
 	}
 	
 	@Override
-	public InterfaceType replace(SequenceType values, SequenceType replacements ) throws InstantiationException {		
+	public InterfaceType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {		
 		if( isRecursivelyParameterized() ) {					
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )
@@ -178,7 +178,7 @@ public class InterfaceType extends Type {
 	}
 	
 	@Override
-	public InterfaceType partiallyReplace(SequenceType values, SequenceType replacements ) {	
+	public InterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )

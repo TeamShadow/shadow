@@ -77,6 +77,7 @@ import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -501,8 +502,7 @@ public class LLVMOutput extends AbstractOutput {
 			}
 			
 			//record generics
-			if( type instanceof ArrayType )
-				//arrays.add(new Array((ArrayType)type));			
+			if( type instanceof ArrayType )							
 				arrays.add((ArrayType)type);
 			else if( !moduleType.encloses(type) ) {				
 				if( type.isFullyInstantiated() ) {//&& recordedTypes.add(type.getMangledNameWithGenerics())) ){ //||  
@@ -515,7 +515,8 @@ public class LLVMOutput extends AbstractOutput {
 						generics.add(new Generic(type));
 					*/
 					
-					generics.add(type);
+					addInstantiations(type);
+					//generics.add(type);
 				}
 				
 				if( type.isParameterizedIncludingOuterClasses() )
@@ -528,6 +529,19 @@ public class LLVMOutput extends AbstractOutput {
 		writeModuleDefinition(module);		
 	}
 
+
+	private void addInstantiations(Type type) {
+		if( generics.add(type) ) {
+			Type noArguments = type.getTypeWithoutTypeArguments();			
+			for(Type partiallyInstantiated : noArguments.getPartiallyInstantiatedGenerics() ) {				
+				try {
+					Type instantiated = partiallyInstantiated.replace(noArguments.getTypeParametersIncludingOuterClasses(), type.getTypeParametersIncludingOuterClasses());
+					if( instantiated.isFullyInstantiated() )
+						addInstantiations(instantiated);
+				} catch (InstantiationException e) {}				
+			}			
+		}
+	}
 
 	private String methodList(Iterable<MethodSignature> methods, boolean name)
 			throws ShadowException {
@@ -2367,19 +2381,14 @@ public class LLVMOutput extends AbstractOutput {
 		Map<Type, Set<Type>> allGenerics = new HashMap<Type, Set<Type>>();
 		
 		Set<Type> parameterNames = new HashSet<Type>();
-		Set<Type> types = new HashSet<Type>();
-	
-		//parameterNames.add(Type.ARRAY);
-		//parameterNames.add(Type.ARRAY_NULLABLE);		
+		Set<Type> types = new HashSet<Type>();	
 		
 		types.add(Type.OBJECT);
 		types.add(Type.CLASS);
 		types.add(Type.GENERIC_CLASS);
 		types.add(Type.ARRAY_CLASS);
 		types.add(Type.ITERATOR);
-		types.add(Type.STRING);
-		
-	
+		types.add(Type.STRING);	
 				
 		for( Type generic : generics )
 		{				
@@ -2473,60 +2482,6 @@ public class LLVMOutput extends AbstractOutput {
 						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + parameterWithoutArguments.getMangledName() + "_methods\"* @\"" + parameterWithoutArguments.getMangledName() + "_methods\" to " + type(Type.OBJECT) + ")" );
 					
 					parameterNames.add(parameterWithoutArguments);
-					
-					/*
-					//interfaces first, because they contain a space followed by a null (to show they have no method table)
-					if( parameter.contains(" "))
-					{
-						String[] parts = parameter.split(" ");
-						parameter = parts[0];						
-						
-						if( parts[0].contains("_L_"))
-						{
-							String trimmed = parameter.substring(0,  parameter.indexOf("_L_"));
-							sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-							sb.append(type(Type.OBJECT)).append(" null" );
-							parameterNames.add(trimmed + " null");
-						}
-						else
-						{
-							sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-							sb.append(type(Type.OBJECT)).append(" null" );
-							parameterNames.add(parameter + " null");							
-						}
-					}
-					else if( parameter.matches(".*_A\\d+")) //"real" arrays... should never happen now?
-					{
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" null" );
-						parameterNames.add(parameter);
-					}
-					else if( parameter.matches(Type.ARRAY.getMangledName() + ".*")) //generic arrays
-					{
-						String trimmed = Type.ARRAY.getMangledName();
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.ARRAY_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + trimmed + "_methods\"* @\"" + trimmed + "_methods\" to " + type(Type.OBJECT) + ")" );
-					}
-					else if( parameter.matches(Type.ARRAY_NULLABLE.getMangledName() + ".*")) //generic arrays
-					{
-						String trimmed = Type.ARRAY_NULLABLE.getMangledName();
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.ARRAY_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + trimmed + "_methods\"* @\"" + trimmed + "_methods\" to " + type(Type.OBJECT) + ")" );
-					}
-					else if( parameter.contains("_L_")) //parameters that are themselves generic
-					{
-						String trimmed = parameter.substring(0,  parameter.indexOf("_L_"));
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + trimmed + "_methods\"* @\"" + trimmed + "_methods\" to " + type(Type.OBJECT) + ")" );
-						parameterNames.add(trimmed);
-					}						
-					else
-					{
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + parameter + "_methods\"* @\"" + parameter + "_methods\" to " + type(Type.OBJECT) + ")" );
-						parameterNames.add(parameter);
-					}
-					*/
 				}
 				
 				sb.append("]");	
@@ -2558,7 +2513,7 @@ public class LLVMOutput extends AbstractOutput {
 				if( generic instanceof ClassType  ) {
 					ClassType parent = ((ClassType) generic).getExtendType();					
 					if( parent.isFullyInstantiated() )
-						parentClass = type(Type.CLASS) + " (" + type(Type.GENERIC_CLASS) + " @\"" + parent.getMangledName() + "_class\" to " + type(Type.CLASS) + ")";
+						parentClass = type(Type.CLASS) + " (" + type(Type.GENERIC_CLASS) + " @\"" + parent.getMangledNameWithGenerics() + "_class\" to " + type(Type.CLASS) + ")";
 					else
 						parentClass = type(Type.CLASS) + " @\"" + parent.getMangledName() + "_class\"";
 				}
@@ -2572,7 +2527,7 @@ public class LLVMOutput extends AbstractOutput {
 					if( parameter.isFullyInstantiated() ) //parameters that are themselves generic
 					{						
 						parameterNames.add(parameter.getTypeWithoutTypeArguments());						
-						parameterClass = " bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + parameter.getMangledName() + "_class\" to " + type(Type.CLASS) + ")";
+						parameterClass = " bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + parameter.getMangledNameWithGenerics() + "_class\" to " + type(Type.CLASS) + ")";
 					}	
 					else
 					{
@@ -2705,7 +2660,9 @@ public class LLVMOutput extends AbstractOutput {
 		
 		for( Type parameter : parameterNames) {			
 			if( !types.contains(parameter) ) {
-				writer.write(classOf(parameter) + " = external constant %" + raw(Type.CLASS));
+				//no class object for the unparameterized class
+				if( !parameter.isParameterized() )
+					writer.write(classOf(parameter) + " = external constant %" + raw(Type.CLASS));
 				writer.write("%" + raw(parameter, "_methods") + " = type opaque");				
 				if( !(parameter instanceof InterfaceType) )
 					writer.write("@" + raw(parameter, "_methods") + " = external constant %" + raw(parameter, "_methods"));							

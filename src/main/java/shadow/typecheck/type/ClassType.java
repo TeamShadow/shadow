@@ -295,7 +295,7 @@ public class ClassType extends Type {
 	}
 	
 	@Override
-	public ClassType replace(SequenceType values, SequenceType replacements ) throws InstantiationException {	
+	public ClassType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )
@@ -343,7 +343,7 @@ public class ClassType extends Type {
 	}
 	
 	@Override
-	public ClassType partiallyReplace(SequenceType values, SequenceType replacements ) {	
+	public ClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )

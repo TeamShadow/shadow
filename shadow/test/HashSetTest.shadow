@@ -1,0 +1,69 @@
+import shadow:utility@HashSet;
+import shadow:io@Console;
+
+class shadow:test@HashSetTest
+{
+	public main() => ()
+	{
+		Console out;
+	
+		var set1 = HashSet<int>:create();
+		var set2 = HashSet<String>:create();		
+		
+		set1[4] = true;
+		set1[13] = true;
+		
+		set2["Bozo"] = true;
+		set2["the"] = true;
+		set2["Clown"] = true;
+		
+		if( set1.contains(4) )
+			out.printLine("Passed 1");
+		else
+			out.printLine("Failed 1");
+			
+		if( !set1.contains(90) )
+			out.printLine("Passed 2");
+		else
+			out.printLine("Failed 2");
+			
+		if( set2.contains("Bozo") )
+			out.printLine("Passed 3");
+		else
+			out.printLine("Failed 3");
+			
+		if( set2.contains("Frozo") )
+			out.printLine("Passed 4");
+		else
+			out.printLine("Failed 4");			
+		
+		out.printLine(set2["the"]);		
+		out.printLine(set2);
+			
+		set2["the"] = false;
+		
+		if( !set2["the"] )
+			out.printLine("Passed 5");
+		else
+			out.printLine("Failed 5");		
+		
+		//resize test
+		var set3 = HashSet<int>:create();
+		for( int i = 0; i < 20; i += 1 )
+			set3[i*i] = true;
+			
+		if(set3[4])
+			out.printLine("Passed 6");
+		else 
+			out.printLine("Failed 6");			
+			
+		set3[4] = false;
+		
+		if(!set3.contains(4))
+			out.printLine("Passed 7");
+		else 
+			out.printLine("Failed 7");
+			
+		out.printLine(set3);
+	}
+}

@@ -46,7 +46,7 @@ public class OutputTest {
 		// Try to remove the unit test executable
 		try
 		{			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e)
 		{}
@@ -371,5 +371,24 @@ public class OutputTest {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 	"", 			
 				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n");
+	}
+	
+	@Test public void testHashMap() throws Exception {
+		args.add("shadow/test/HashMapTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Passed 1\n" + 
+				"Passed 2\n" +
+				"Passed 3\n" +
+				"Bozo\n" +
+				"{Sandwich=20, Clothes=58}\n" +
+				"Deal\n" +
+				"Passed 4\n" +
+				"Passed 5\n" +
+				"Passed 6\n" +
+				"Passed 7\n" +
+				"Passed 8\n" +
+				"Passed 9\n" +
+				"Passed 10\n");
 	}
 }

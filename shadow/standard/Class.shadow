@@ -8,35 +8,35 @@ immutable class shadow:standard@Class implements CanHash
 	get int size;
 	
 	//array allocation methods
-	private native allocate( int size ) => ( Object );
+	private locked native allocate( int size ) => ( Object );
 	
-	public isInterface() => ( boolean )
+	public locked isInterface() => ( boolean )
 	{
 		return (flags & 0b01) != 0;
 	}
-	public isPrimitive() => ( boolean )
+	public locked isPrimitive() => ( boolean )
 	{
 		return (flags & 0b10) != 0;
 	}
-	public isNormal() => ( boolean )
+	public locked isNormal() => ( boolean )
 	{
 		return !isGeneric() and !isArray() and !isMethod();
 	}
-	public isGeneric() => ( boolean )
+	public locked isGeneric() => ( boolean )
 	{
 		return (flags & 0b100) != 0;
 	}
-	public isArray() => ( boolean )
+	public locked isArray() => ( boolean )
 	{
 		return (flags & 0b1000) != 0;
 	}
 	
-	public isSingleton() => ( boolean )
+	public locked isSingleton() => ( boolean )
 	{
 		return (flags & 0b10000) != 0;
 	}
 	
-	public isMethod() => ( boolean )
+	public locked isMethod() => ( boolean )
 	{
 		return (flags & 0b100000) != 0;
 	}
@@ -82,13 +82,11 @@ immutable class shadow:standard@Class implements CanHash
 			this:name = name;
 	}
 	
-	protected interfaceData( Class interfaceClass ) => ( immutable Object )
-	{	
+	protected locked interfaceData( Class interfaceClass ) => ( immutable Object )
+	{
 		for ( int i = 0; i < interfaces->size; i += 1 )
-		{		
-			if ( interfaces[i] === interfaceClass )					
-				return data[i];			
-		}
+			if ( interfaces[i] === interfaceClass )
+				return data[i];
 		
 		throw CastException:create("Class " # this # " does not implement interface " # interfaceClass);
 	}
@@ -192,9 +190,9 @@ immutable class shadow:standard@Class implements CanHash
 		return name;
 	}
 	
-	public native pointerSize() => ( int );	
+	public locked native pointerSize() => ( int );	
 
-	public get size() => ( int )
+	public locked get size() => ( int )
 	{
 		if( isArray() ) //actual size member is # of dimensions		
 			return pointerSize() + 4 * size;		
@@ -223,7 +221,7 @@ immutable class shadow:standard@Class implements CanHash
 			return size;			
 	}
 	
-	public get width() => ( int )
+	public locked get width() => ( int )
 	{		
 		if( isArray() or isMethod() or isPrimitive() or isInterface() )							
 			return this.size();
@@ -231,7 +229,7 @@ immutable class shadow:standard@Class implements CanHash
 			return pointerSize();		
 	}
 	
-	public get hash() => ( uint )
+	public locked get hash() => ( uint )
 	{
 		return toString().hash();
 	}	

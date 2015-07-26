@@ -69,8 +69,8 @@ public class SubscriptType extends PropertyType
 	}
 
 	@Override
-	public SubscriptType replace(SequenceType values,
-			SequenceType replacements) throws InstantiationException {		
+	public SubscriptType replace(List<ModifiedType> values,
+			List<ModifiedType> replacements) throws InstantiationException {		
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().replace(values, replacements), index.getModifiers());
 		UnboundMethodType replacedMethod = getMethod().replace(values, replacements);
@@ -87,8 +87,8 @@ public class SubscriptType extends PropertyType
 	}
 	
 	@Override
-	public SubscriptType partiallyReplace(SequenceType values,
-			SequenceType replacements) {		
+	public SubscriptType partiallyReplace(List<ModifiedType> values,
+			List<ModifiedType> replacements) {		
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().partiallyReplace(values, replacements), index.getModifiers());
 		UnboundMethodType replacedMethod = getMethod().partiallyReplace(values, replacements);

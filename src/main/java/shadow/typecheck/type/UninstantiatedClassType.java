@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import java.util.List;
+
 import shadow.typecheck.BaseChecker.SubstitutionKind;
 
 public class UninstantiatedClassType extends ClassType implements UninstantiatedType {
@@ -71,13 +73,13 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 	}
 	
 	@Override
-	public UninstantiatedClassType partiallyReplace(SequenceType values, SequenceType replacements )
+	public UninstantiatedClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements )
 	{
 		return new UninstantiatedClassType( type, typeArguments.partiallyReplace(values, replacements) );
 	}
 	
 	@Override
-	public ClassType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
+	public ClassType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{
 		return new UninstantiatedClassType( type, typeArguments.replace(values, replacements) ).instantiate();
 	}

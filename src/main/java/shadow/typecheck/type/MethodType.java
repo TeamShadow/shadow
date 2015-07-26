@@ -175,7 +175,7 @@ public class MethodType extends ClassType {
 	
 	
 	@Override
-	public MethodType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
+	public MethodType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{	
 		MethodType replaced = new MethodType(super.getOuter(), getModifiers());	
 		
@@ -189,7 +189,7 @@ public class MethodType extends ClassType {
 	}
 	
 	@Override
-	public MethodType partiallyReplace(SequenceType values, SequenceType replacements )
+	public MethodType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements )
 	{	
 		MethodType replaced = new MethodType(super.getOuter(), getModifiers());	
 		

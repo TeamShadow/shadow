@@ -1,5 +1,7 @@
 package shadow.typecheck.type;
 
+import java.util.List;
+
 import shadow.typecheck.BaseChecker.SubstitutionKind;
 
 public class UninstantiatedInterfaceType extends InterfaceType implements UninstantiatedType 
@@ -84,13 +86,13 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 	}
 	
 	@Override
-	public UninstantiatedInterfaceType partiallyReplace(SequenceType values, SequenceType replacements )
+	public UninstantiatedInterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements )
 	{
 		return new UninstantiatedInterfaceType( type, typeArguments.partiallyReplace(values, replacements) );
 	}
 	
 	@Override
-	public InterfaceType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
+	public InterfaceType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{
 		return new UninstantiatedInterfaceType( type, typeArguments.replace(values, replacements) ).instantiate();
 	}
