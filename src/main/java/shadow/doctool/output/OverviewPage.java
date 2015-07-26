@@ -20,10 +20,12 @@ public class OverviewPage implements Page
 	public static final String PAGE_NAME = "$overview";
 	private static final Path relativePath = Paths.get(PAGE_NAME + PageUtils.EXTENSION);
 	
+	private final StandardTemplate master;
 	private final Set<Package> packages;
 	
-	public OverviewPage(Set<Package> packages)
+	public OverviewPage(StandardTemplate master, Set<Package> packages)
 	{
+		this.master = master;
 		this.packages = packages;
 	}
 	
@@ -42,6 +44,9 @@ public class OverviewPage implements Page
 		out.openTab("html");
 		writeHtmlHead(out);
 		out.openTab("body");
+		
+		StandardTemplate.writeNavBar(this, master.getOverviewPage(), 
+				null, null, out);
 		
 		writeHeader(out);
 		writeTable(packages, out);

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import shadow.doctool.DocumentationException;
 import shadow.doctool.DocumentationTool;
+import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.Type;
@@ -31,17 +32,19 @@ public class StandardTemplate implements DocumentationTemplate
 	public StandardTemplate(Set<Type> typesToDocument, Set<Package> packagesToDocument) 
 			throws DocumentationException
 	{
-		overviewPage = new OverviewPage(packagesToDocument);
+		overviewPage = new OverviewPage(this, packagesToDocument);
 		packagePages = new HashMap<Package, PackagePage>();
 		typePages = new HashMap<Type, ClassOrInterfacePage>();
 		
 		for (Package current : packagesToDocument) {
-			PackagePage page = new PackagePage(current, packagesToDocument, typesToDocument);
+			PackagePage page = new PackagePage(this, current, 
+					packagesToDocument, typesToDocument);
 			packagePages.put(current, page);
 		}
 		
 		for (Type current : typesToDocument) {
-			ClassOrInterfacePage page = new ClassOrInterfacePage(current, typesToDocument);
+			ClassOrInterfacePage page = new ClassOrInterfacePage(this, current, 
+					typesToDocument);
 			typePages.put(current, page);
 		}
 	}
@@ -62,21 +65,69 @@ public class StandardTemplate implements DocumentationTemplate
 				"/doctool/stylesheet.css");
 	}
 	
+	public PackagePage getPackagePage(Package given)
+	{
+		return packagePages.get(given);
+	}
+	
+	public OverviewPage getOverviewPage()
+	{
+		return overviewPage;
+	}
+	
+	public ClassOrInterfacePage getTypePage(Type type)
+	{
+		return typePages.get(type);
+	}
+	
 	/** 
 	 * Creates a navbar for use at the top of a documentation page. Fields
 	 * that are not relevant for a given page should be left as null.
 	 */
-	public static void writeNavBar(Page overview, Page packagePage, Page type)
+	public static void writeNavBar(Page current, Page overview, 
+			Page packagePage, Page type, HtmlWriter out) 
 			throws ShadowException, DocumentationException
 	{
-		// TODO: Implement
+		out.openTab("div", new Attribute("class", "navlist"));
+		out.openTab("ul");
+		
+		out.open("li");
+		if (overview != null)
+			PageUtils.writeLink(linkToPage(current, overview).toString(), "Overview", out);
+		else
+			out.add("Overview");
+		out.closeLine();
+		
+		out.open("li");
+		if (packagePage != null)
+			PageUtils.writeLink(linkToPage(current, packagePage).toString(), "Package", out);
+		else
+			out.add("Package");
+		out.closeLine();
+		
+		out.open("li");
+		if (type != null)
+			PageUtils.writeLink(linkToPage(current, type).toString(), "Type", out);
+		else
+			out.add("Type");
+		out.closeLine();
+		
+		out.closeUntab();
+		out.closeUntab();
 	}
 	
 	/** Creates a relative path from one Page to another */
-	public static Path linkToPage(Page to, Page from)
+	public static Path linkToPage(Page from, Page to)
 	{
 		Path toPath = Paths.get("/").resolve(to.getRelativePath());
-		Path fromPath = Paths.get("/").resolve(from.getRelativePath());
+		
+		// For some reason, Path.relativize() will only work from the directory
+		// above the start file
+		Path fromPath = from.getRelativePath().getParent();
+		if (fromPath == null)
+			fromPath = Paths.get("/");
+		else
+			fromPath = Paths.get("/").resolve(fromPath);
 		
 		return fromPath.relativize(toPath);
 	}

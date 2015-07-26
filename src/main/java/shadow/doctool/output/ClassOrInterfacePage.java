@@ -33,6 +33,7 @@ import shadow.typecheck.type.TypeParameter;
 
 public class ClassOrInterfacePage implements Page
 {
+	private StandardTemplate master;
 	private Type type;
 	private String typeKind;
 	private HashSet<Type> linkableTypes;
@@ -48,7 +49,8 @@ public class ClassOrInterfacePage implements Page
 	// Public and protected constants
 	private List<Node> visibleConstants = new ArrayList<Node>();
 	
-	public ClassOrInterfacePage(Type type, Collection<Type> linkableTypes) throws DocumentationException
+	public ClassOrInterfacePage(StandardTemplate master, Type type, 
+			Collection<Type> linkableTypes) throws DocumentationException
 	{
 		if (type instanceof ClassType)
 			typeKind = "Class";
@@ -63,9 +65,10 @@ public class ClassOrInterfacePage implements Page
 		else
 			throw new DocumentationException("Unexpected type: " + type.getQualifiedName());
 		
+		this.master = master;
 		this.type = type;
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
-		this.relativePath = constructOutputPath();
+		this.relativePath = constructOutputPath().resolve(type.getTypeName().replaceAll(":", "\\$") + PageUtils.EXTENSION);
 		
 		getVisibleMethods();
 		getVisibleConstants();
@@ -122,6 +125,9 @@ public class ClassOrInterfacePage implements Page
 		out.openTab("html");
 		writeHtmlHead(out);
 		out.openTab("body");
+		
+		StandardTemplate.writeNavBar(this, master.getOverviewPage(), 
+				master.getPackagePage(type.getPackage()), this, out);
 		
 		writeHeader(out);
 		writeConstantSummaries(out);

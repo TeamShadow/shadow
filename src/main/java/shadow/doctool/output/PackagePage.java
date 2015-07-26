@@ -23,10 +23,11 @@ import shadow.typecheck.type.Type;
 
 public class PackagePage implements Page
 {
-	public static final String PAGE_NAME = "package-summary";
-
+	public static final String PAGE_NAME = "$package-summary";
+	
+	private final StandardTemplate master;
 	private final Package self;
-	private final Path relativePath;
+	private final Path relativePath = constructOutputPath().resolve(PAGE_NAME + PageUtils.EXTENSION);
 	private String qualifiedName;
 	private final Set<Package> linkablePackages;
 	private final Set<Type> linkableTypes;
@@ -37,11 +38,11 @@ public class PackagePage implements Page
 	private final List<InterfaceType> interfaces = new ArrayList<InterfaceType>();
 	private final List<SingletonType> singletons = new ArrayList<SingletonType>();
 	
-	public PackagePage(Package self, Set<Package> linkablePackages,
-			Set<Type> linkableTypes)
+	public PackagePage(StandardTemplate master, Package self,
+			Set<Package> linkablePackages, Set<Type> linkableTypes)
 	{
+		this.master = master;
 		this.self = self;
-		this.relativePath = constructOutputPath().resolve(PAGE_NAME + PageUtils.EXTENSION);
 		this.linkablePackages = linkablePackages;
 		this.linkableTypes = linkableTypes;
 		
@@ -84,6 +85,9 @@ public class PackagePage implements Page
 		out.openTab("html");
 		writeHtmlHead(out);
 		out.openTab("body");
+		
+		StandardTemplate.writeNavBar(this, master.getOverviewPage(), 
+				this, null, out);
 		
 		writeHeader(out);
 		writeAllSummaries(out);

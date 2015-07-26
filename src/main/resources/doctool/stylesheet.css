@@ -49,7 +49,17 @@ code
 
 .header p
 {
-    margin: 4px 0px 18px;
+    margin: 4px 0px;
+}
+
+.header h2
+{
+    margin: 10px 0px 22px;
+}
+
+.header h4
+{
+    margin: 22px 0px 4px;
 }
 
 .block
@@ -99,4 +109,23 @@ code
 .blocktagcontent
 {
     margin: 0px 0px 0px 16px;
+}
+
+.navlist
+{
+    border: 1px solid gray;
+    background-color: lightgray;
+    margin-bottom: 10px;
+}
+
+.navlist ul
+{
+    margin: 4px;
+    padding: 0px;
+}
+
+.navlist li
+{
+    display: inline;
+    padding-right: 6px;
 }

@@ -136,8 +136,7 @@ public class DocumentationTool
 	public static List<File> getRequestedFiles(String[] givenPaths) throws IOException
 	{
 		List<File> sourceFiles = new ArrayList<File>();
-		for (String path : givenPaths)
-		{
+		for (String path : givenPaths) {
 			Path current = Paths.get(path).toAbsolutePath();
 			
 			// Ensure that the source file exists
@@ -161,12 +160,10 @@ public class DocumentationTool
 	 */
 	public static List<File> getPackageFiles(Path directory, boolean recursive) throws IOException
 	{
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory))
-		{
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
 			List<File> files = new ArrayList<File>();
 			
-			for (Path filePath : stream)
-			{
+			for (Path filePath : stream) {
 				// Capture all source files
 				if (filePath.toString().endsWith(".shadow"))
 					files.add(filePath.toFile());
