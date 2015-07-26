@@ -3,7 +3,6 @@ package shadow.doctool;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,9 +19,8 @@ import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
-import shadow.doctool.output.ClassOrInterfacePage;
-import shadow.doctool.output.OverviewPage;
-import shadow.doctool.output.PackagePage;
+import shadow.doctool.output.DocumentationTemplate;
+import shadow.doctool.output.StandardTemplate;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
@@ -119,27 +117,13 @@ public class DocumentationTool
 					if (inner.getModifiers().isPublic() || inner.getModifiers().isProtected())
 						typesToDocument.add(inner);
 		
-		// Document each class or interface
-		for (Type type : typesToDocument) {
+		// Capture all packages of classes being documented
+		for (Type type : typesToDocument)
 			packagesToDocument.addAll(type.getAllPackages());
-			
-			ClassOrInterfacePage page = 
-					new ClassOrInterfacePage(type, typesToDocument);
-			page.write(outputDirectory);
-		}
 		
-		// Create a page for each package
-		for (Package current : packagesToDocument) {
-			PackagePage page = new PackagePage(current, packagesToDocument, typesToDocument);
-			page.write(outputDirectory);
-		}
-		
-		// Create an overview page that links to every package
-		OverviewPage.write(outputDirectory, packagesToDocument);
-		
-		// Export the style-sheet
-		exportResource(outputDirectory.resolve("stylesheet.css"), 
-				"/doctool/stylesheet.css");
+		DocumentationTemplate template 
+				= new StandardTemplate(typesToDocument, packagesToDocument);
+		template.write(outputDirectory);
 		
 		logger.info("Successfully generated all documentation in "
 				+ (System.currentTimeMillis() - startTime) + "ms");
@@ -193,16 +177,5 @@ public class DocumentationTool
 			
 			return files;
 		}
-	}
-	
-	private static void exportResource(Path targetFile, String resource) throws DocumentationException, IOException
-	{
-		InputStream input = DocumentationTool.class.getResourceAsStream(resource);
-		if (input == null)
-			throw new DocumentationException("Could not load \"" + resource 
-					+ "\" from JAR");
-		
-		Files.deleteIfExists(targetFile);
-		Files.copy(input, targetFile);
 	}
 }

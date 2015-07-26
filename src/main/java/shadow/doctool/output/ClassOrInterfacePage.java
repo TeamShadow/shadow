@@ -3,6 +3,7 @@ package shadow.doctool.output;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
-import shadow.doctool.output.Html5Writer.Attribute;
+import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
@@ -30,11 +31,12 @@ import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
-public class ClassOrInterfacePage
+public class ClassOrInterfacePage implements Page
 {
 	private Type type;
 	private String typeKind;
 	private HashSet<Type> linkableTypes;
+	private final Path relativePath;
 	private boolean makeLinks = true;
 	
 	// Method categories
@@ -63,6 +65,7 @@ public class ClassOrInterfacePage
 		
 		this.type = type;
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
+		this.relativePath = constructOutputPath();
 		
 		getVisibleMethods();
 		getVisibleConstants();
@@ -114,7 +117,7 @@ public class ClassOrInterfacePage
 		Path output = outputDirectory
 				.resolve(type.getTypeName().replaceAll(":", "\\$") + PageUtils.EXTENSION);
 		FileWriter fileWriter = new FileWriter(output.toFile());
-		Html5Writer out = new Html5Writer(fileWriter);
+		HtmlWriter out = new HtmlWriter(fileWriter);
 		
 		out.openTab("html");
 		writeHtmlHead(out);
@@ -133,7 +136,7 @@ public class ClassOrInterfacePage
 		fileWriter.close();
 	}
 
-	private void writeHtmlHead(Html5Writer out) 
+	private void writeHtmlHead(HtmlWriter out) 
 			throws ShadowException, DocumentationException
 	{
 		out.openTab("head");
@@ -146,7 +149,7 @@ public class ClassOrInterfacePage
 		out.closeUntab();
 	}
 	
-	private void writeHeader(Html5Writer out) 
+	private void writeHeader(HtmlWriter out) 
 			throws ShadowException, DocumentationException
 	{
 		out.openTab("div", new Attribute("class", "header"));
@@ -188,7 +191,7 @@ public class ClassOrInterfacePage
 	
 	// TODO: Support recursion of type constraints?
 	private void writeTypeParameters(Type parent, boolean link, 
-			Html5Writer out) throws ShadowException, DocumentationException
+			HtmlWriter out) throws ShadowException, DocumentationException
 	{
 		SequenceType typeParams = parent.getTypeParameters();
 		if (typeParams != null && typeParams.size() > 0) {
@@ -220,7 +223,7 @@ public class ClassOrInterfacePage
 		}
 	}
 	
-	private void writeInnerClassSection(Html5Writer out)
+	private void writeInnerClassSection(HtmlWriter out)
 			throws ShadowException, DocumentationException
 	{
 		// Link to outer class, if any
@@ -253,7 +256,7 @@ public class ClassOrInterfacePage
 		}
 	}
 
-	private void writeInheritanceSection(Html5Writer out) 
+	private void writeInheritanceSection(HtmlWriter out) 
 			throws ShadowException, DocumentationException
 	{
 		List<Type> extendsList = new ArrayList<Type>();
@@ -304,7 +307,7 @@ public class ClassOrInterfacePage
 		}
 	}
 	
-	private void writeConstantSummaries(Html5Writer out)
+	private void writeConstantSummaries(HtmlWriter out)
 			throws ShadowException, DocumentationException
 	{
 		if (!visibleConstants.isEmpty()) {
@@ -320,7 +323,7 @@ public class ClassOrInterfacePage
 						out.full("code", constant.getModifiers().toString().trim());
 					out.closeLine();
 					out.open("td");
-						out.full("code", constant.toString());
+						out.full("code", constant.getType().getTypeName());
 					out.closeLine();
 					out.open("td");
 						out.open("code");
@@ -337,7 +340,7 @@ public class ClassOrInterfacePage
 		}
 	}
 	
-	private void writeMethodSummaries(Html5Writer out) 
+	private void writeMethodSummaries(HtmlWriter out) 
 			throws ShadowException, DocumentationException
 	{
 		if (!constructors.isEmpty())
@@ -351,7 +354,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeMethodTable(String name, 
-			List<MethodSignature> methods, Html5Writer out) 
+			List<MethodSignature> methods, HtmlWriter out) 
 					throws ShadowException, DocumentationException
 	{
 		out.openTab("div", new Attribute("class", "block"));		
@@ -383,7 +386,7 @@ public class ClassOrInterfacePage
 		out.closeUntab();
 	}
 	
-	private void writeConstantDetails(Html5Writer out)
+	private void writeConstantDetails(HtmlWriter out)
 			throws ShadowException, DocumentationException
 	{
 		if (!visibleConstants.isEmpty()) {
@@ -397,7 +400,7 @@ public class ClassOrInterfacePage
 		}
 	}
 	
-	private void writeConstantDetail(Node constant, Html5Writer out)
+	private void writeConstantDetail(Node constant, HtmlWriter out)
 			throws ShadowException, DocumentationException
 	{
 		out.openTab("div", new Attribute("class", "methoddetail"));
@@ -419,7 +422,7 @@ public class ClassOrInterfacePage
 		out.closeUntab();
 	}
 	
-	private void writeMethodDetails(Html5Writer out)
+	private void writeMethodDetails(HtmlWriter out)
 			throws ShadowException, DocumentationException 
 	{
 		if (!constructors.isEmpty())
@@ -433,7 +436,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeMethodDetailSection(String name, 
-			List<MethodSignature> methods, Html5Writer out) 
+			List<MethodSignature> methods, HtmlWriter out) 
 					throws ShadowException, DocumentationException
 	{
 		out.openTab("div", new Attribute("class", "block"));		
@@ -446,7 +449,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeMethodDetail(MethodSignature method, 
-			Html5Writer out) throws ShadowException, DocumentationException
+			HtmlWriter out) throws ShadowException, DocumentationException
 	{
 		out.openTab("div", new Attribute("class", "methoddetail"));
 		
@@ -470,7 +473,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeNodeName(Node node, boolean linkToDetail,
-			Html5Writer out) throws DocumentationException, ShadowException
+			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (linkToDetail)
 			PageUtils.writeLink("#" + node.toString(), node.toString(), out);
@@ -479,7 +482,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeMethodName(MethodSignature method, boolean linkToDetail,
-			Html5Writer out) throws DocumentationException, ShadowException
+			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (linkToDetail)
 			PageUtils.writeLink("#" + getUniqueID(method), method.getSymbol(), out);
@@ -488,7 +491,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeParameters(MethodSignature method, 
-			boolean parameterNames, boolean link, Html5Writer out) 
+			boolean parameterNames, boolean link, HtmlWriter out) 
 					throws DocumentationException, ShadowException
 	{
 		out.add("(");
@@ -497,8 +500,8 @@ public class ClassOrInterfacePage
 		{
 			Type parameter = method.getParameterTypes().get(i).getType();
 			
-			// TODO: Limit which modifiers appear (i.e. not 'immutable locked')
-			//out.add(parameter.getModifiers().toString().trim() + " ");
+			// TODO: Limit which modifiers appear? (i.e. not 'immutable locked')
+			out.add(parameter.getModifiers().toString().trim() + " ");
 			
 			if (link)
 				writeCrossLink(parameter, parameter.getQualifiedName(), out);
@@ -514,7 +517,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeBlockTags(Documentation documentation,
-			Html5Writer out) throws DocumentationException, ShadowException
+			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		List<List<String>> authorTags = documentation.getBlockTags(BlockTagType.AUTHOR);
 		if (!authorTags.isEmpty())
@@ -526,7 +529,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeAuthorSection(List<List<String>> authorTags, 
-			Html5Writer out) throws DocumentationException, ShadowException
+			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (authorTags.size() > 0) {
 			out.fullLine("h5", "Authors");
@@ -541,7 +544,7 @@ public class ClassOrInterfacePage
 	}
 	
 	private void writeParamSection(List<List<String>>  paramTags,
-			Html5Writer out) throws DocumentationException, ShadowException
+			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (paramTags.size() > 0) {
 			out.fullLine("h5", "Parameters");
@@ -557,7 +560,7 @@ public class ClassOrInterfacePage
 		}
 	}
 
-	private void writeCrossLink(Type to, String text, Html5Writer out) 
+	private void writeCrossLink(Type to, String text, HtmlWriter out) 
 			throws DocumentationException, ShadowException
 	{
 		if (linkableTypes.contains(to))
@@ -576,23 +579,27 @@ public class ClassOrInterfacePage
 	 */
 	private Path constructOutputPath(Path root)
 	{
-		ArrayDeque<String> packages = new ArrayDeque<String>();
-		
+		return root.resolve(constructOutputPath());
+	}
+	
+	private Path constructOutputPath()
+	{
 		// Climb up the chain of packages
+		ArrayDeque<String> packages = new ArrayDeque<String>();
 		Package currentPackage = type.getPackage();
 		while (currentPackage != null && !currentPackage.getName().isEmpty()) {
 			packages.addFirst(currentPackage.getName());
 			currentPackage = currentPackage.getParent();
 		}
-		
-		// Descend into corresponding directories
+
+		Path outputPath = Paths.get("");
 		for (String packageName : packages)
-			root = root.resolve(packageName);
+			outputPath = outputPath.resolve(packageName);
 		
-		return root;
+		return outputPath;
 	}
 	
-	/** Creates the requested number of repetitions of '../' */
+	/** Creates the requested number of repetitions of "../" */
 	public static String upDir(int count)
 	{
 		StringBuilder builder = new StringBuilder();
@@ -602,12 +609,17 @@ public class ClassOrInterfacePage
 	}
 	
 	/** 
-	 * Creates a unique ID based on a method's signature which can be used as
-	 * an HTML bookmark
+	 * Creates a unique ID based on a method's signature, which can then be used 
+	 * as an HTML bookmark
 	 */
 	private static String getUniqueID(MethodSignature method)
 	{
 		return method.getSymbol() 
 				+ method.getParameterTypes().toString().replaceAll("\\s", "");
+	}
+
+	public Path getRelativePath() 
+	{
+		return relativePath;
 	}
 }

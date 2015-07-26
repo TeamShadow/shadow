@@ -3,6 +3,7 @@ package shadow.doctool.output;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import shadow.doctool.DocumentationException;
-import shadow.doctool.output.Html5Writer.Attribute;
+import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.ClassType;
@@ -20,11 +21,12 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
-public class PackagePage 
+public class PackagePage implements Page
 {
 	public static final String PAGE_NAME = "package-summary";
 
 	private final Package self;
+	private final Path relativePath;
 	private String qualifiedName;
 	private final Set<Package> linkablePackages;
 	private final Set<Type> linkableTypes;
@@ -39,6 +41,7 @@ public class PackagePage
 			Set<Type> linkableTypes)
 	{
 		this.self = self;
+		this.relativePath = constructOutputPath().resolve(PAGE_NAME + PageUtils.EXTENSION);
 		this.linkablePackages = linkablePackages;
 		this.linkableTypes = linkableTypes;
 		
@@ -76,7 +79,7 @@ public class PackagePage
 		// Begin writing to the document itself
 		Path output = outputDirectory.resolve(PAGE_NAME + PageUtils.EXTENSION);
 		FileWriter fileWriter = new FileWriter(output.toFile());
-		Html5Writer out = new Html5Writer(fileWriter);
+		HtmlWriter out = new HtmlWriter(fileWriter);
 		
 		out.openTab("html");
 		writeHtmlHead(out);
@@ -91,7 +94,7 @@ public class PackagePage
 		fileWriter.close();
 	}
 	
-	private void writeHtmlHead(Html5Writer out) throws ShadowException, DocumentationException
+	private void writeHtmlHead(HtmlWriter out) throws ShadowException, DocumentationException
 	{
 		out.openTab("head");
 		
@@ -102,7 +105,7 @@ public class PackagePage
 		out.closeUntab();
 	}
 	
-	private void writeHeader(Html5Writer out) 
+	private void writeHeader(HtmlWriter out) 
 			throws ShadowException, DocumentationException
 	{	
 		out.openTab("div", new Attribute("class", "header"));
@@ -125,7 +128,7 @@ public class PackagePage
 		out.voidLine("hr");
 	}
 	
-	private void writeAllSummaries(Html5Writer out) 
+	private void writeAllSummaries(HtmlWriter out) 
 			throws ShadowException, DocumentationException
 	{
 		writeSummaryTable("Singleton", singletons, out);
@@ -136,7 +139,7 @@ public class PackagePage
 	}
 	
 	private void writeSummaryTable(String typeKind, List<? extends Type> contents,
-			Html5Writer out) throws ShadowException, DocumentationException
+			HtmlWriter out) throws ShadowException, DocumentationException
 	{
 		if (!contents.isEmpty()) {
 			out.openTab("div", new Attribute("class", "block"));		
@@ -160,6 +163,11 @@ public class PackagePage
 		}
 	}
 	
+	public Path getRelativePath()
+	{
+		return relativePath;
+	}
+	
 	/* Helper methods */
 
 	/**
@@ -168,9 +176,13 @@ public class PackagePage
 	 */
 	private Path constructOutputPath(Path root)
 	{
-		ArrayDeque<String> packages = new ArrayDeque<String>();
-		
+		return root.resolve(constructOutputPath());
+	}
+	
+	private Path constructOutputPath()
+	{
 		// Climb up the chain of packages
+		ArrayDeque<String> packages = new ArrayDeque<String>();
 		Package currentPackage = self;
 		while (currentPackage != null && !currentPackage.getName().isEmpty()) {
 			packages.addFirst(currentPackage.getName());
@@ -178,13 +190,14 @@ public class PackagePage
 		}
 		
 		// Descend into corresponding directories
+		Path outputPath = Paths.get("");
 		for (String packageName : packages)
-			root = root.resolve(packageName);
+			outputPath = outputPath.resolve(packageName);
 		
-		return root;
+		return outputPath;
 	}
 
-	private void writeTypeName(Type type, Html5Writer out) 
+	private void writeTypeName(Type type, HtmlWriter out) 
 			throws DocumentationException, ShadowException
 	{
 		if (linkableTypes.contains(type))

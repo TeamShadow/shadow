@@ -3,39 +3,48 @@ package shadow.doctool.output;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import shadow.doctool.DocumentationException;
-import shadow.doctool.output.Html5Writer.Attribute;
+import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 
 /** Displays a list of all known packages and their descripitons */
-public class OverviewPage
+public class OverviewPage implements Page
 {
-	public static String PAGE_NAME = "$overview";
+	public static final String PAGE_NAME = "$overview";
+	private static final Path relativePath = Paths.get(PAGE_NAME + PageUtils.EXTENSION);
 	
-	public static void write(Path root, Set<Package> knownPackages)
-			throws DocumentationException, ShadowException, IOException
+	private final Set<Package> packages;
+	
+	public OverviewPage(Set<Package> packages)
+	{
+		this.packages = packages;
+	}
+	
+	public void write(Path root) throws DocumentationException, 
+			ShadowException, IOException
 	{
 		// Find/create the directory chain where the document will reside
 		Path outputDirectory = root;
 		outputDirectory.toFile().mkdirs();
 		
 		// Begin writing to the document itself
-		Path output = outputDirectory.resolve(PAGE_NAME + PageUtils.EXTENSION);
+		Path output = outputDirectory.resolve(relativePath);
 		FileWriter fileWriter = new FileWriter(output.toFile());
-		Html5Writer out = new Html5Writer(fileWriter);
+		HtmlWriter out = new HtmlWriter(fileWriter);
 		
 		out.openTab("html");
 		writeHtmlHead(out);
 		out.openTab("body");
 		
 		writeHeader(out);
-		writeTable(knownPackages, out);
+		writeTable(packages, out);
 		
 		out.closeUntab();
 		out.closeUntab();
@@ -43,7 +52,7 @@ public class OverviewPage
 		fileWriter.close();
 	}
 	
-	private static void writeHtmlHead(Html5Writer out)
+	private static void writeHtmlHead(HtmlWriter out)
 			throws ShadowException, DocumentationException
 	{
 		out.openTab("head");
@@ -55,7 +64,7 @@ public class OverviewPage
 		out.closeUntab();
 	}
 	
-	private static void writeHeader(Html5Writer out) 
+	private static void writeHeader(HtmlWriter out) 
 			throws ShadowException, DocumentationException
 	{	
 		out.openTab("div", new Attribute("class", "header"));
@@ -67,7 +76,7 @@ public class OverviewPage
 	}
 	
 	private static void writeTable(Set<Package> knownPackages, 
-			Html5Writer out) throws DocumentationException, ShadowException
+			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (!knownPackages.isEmpty()) {
 			// List packages in alphabetical order, documenting only those that
@@ -93,7 +102,7 @@ public class OverviewPage
 	}
 	
 	private static void writeTableEntry(Package current, Set<Package> linkablePackages, 
-			Html5Writer out) throws DocumentationException, ShadowException
+			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		out.openTab("tr");
 			out.open("td");
@@ -107,7 +116,7 @@ public class OverviewPage
 	}
 	
 	private static void writePackageName(Package pkg, Set<Package> linkablePackages, 
-			Html5Writer out) throws DocumentationException, ShadowException
+			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		String packageName = pkg.getQualifiedName();
 		if (packageName.isEmpty())
@@ -123,5 +132,10 @@ public class OverviewPage
 						packageName, out);
 		else
 			out.add(packageName);
+	}
+
+	public Path getRelativePath() 
+	{
+		return relativePath;
 	}
 }

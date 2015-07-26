@@ -5,7 +5,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import shadow.doctool.DocumentationException;
-import shadow.doctool.output.Html5Writer.Attribute;
+import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
 import shadow.parser.javacc.ShadowException;
@@ -16,7 +16,7 @@ public class PageUtils
 {
 	public static String EXTENSION = ".html";
 	
-	public static void writeTableRow(Html5Writer out, boolean header,
+	public static void writeTableRow(HtmlWriter out, boolean header,
 			String ... columns) throws ShadowException, DocumentationException
 	{
 		out.openTab("tr");
@@ -31,7 +31,7 @@ public class PageUtils
 		out.closeUntab();
 	}
 	
-	public static void writeInlineTags(List<InlineTag> inlineTags, Html5Writer out)
+	public static void writeInlineTags(List<InlineTag> inlineTags, HtmlWriter out)
 			throws DocumentationException, ShadowException
 	{
 		if (inlineTags.size() > 0) {
@@ -50,7 +50,7 @@ public class PageUtils
 		}
 	}
 	
-	public static void writeLink(String href, String text, Html5Writer out) 
+	public static void writeLink(String href, String text, HtmlWriter out) 
 			throws DocumentationException, ShadowException
 	{
 		out.full("a", text, new Attribute("href", href));

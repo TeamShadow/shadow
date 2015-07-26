@@ -17,7 +17,7 @@ import shadow.parser.javacc.ShadowException;
  * 
  * Some arbitrary formatting choices have been made in the name of cleanliness
  */
-public class Html5Writer
+public class HtmlWriter
 {
 	/** A standard HTML attribute with its value in double quotes */
 	public static class Attribute
@@ -67,7 +67,7 @@ public class Html5Writer
 	private TabbedLineWriter out;
 	private Stack<String> openTags = new Stack<String>();
 	
-	public Html5Writer(Writer writer) 
+	public HtmlWriter(Writer writer) 
 			throws ShadowException, DocumentationException
 	{
 		out = new TabbedLineWriter(writer);
