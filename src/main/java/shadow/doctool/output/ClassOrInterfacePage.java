@@ -31,9 +31,8 @@ import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
-public class ClassOrInterfacePage implements Page
+public class ClassOrInterfacePage extends Page
 {
-	private StandardTemplate master;
 	private Type type;
 	private String typeKind;
 	private HashSet<Type> linkableTypes;
@@ -52,6 +51,8 @@ public class ClassOrInterfacePage implements Page
 	public ClassOrInterfacePage(StandardTemplate master, Type type, 
 			Collection<Type> linkableTypes) throws DocumentationException
 	{
+		super(master);
+		
 		if (type instanceof ClassType)
 			typeKind = "Class";
 		else if (type instanceof EnumType)
@@ -65,7 +66,6 @@ public class ClassOrInterfacePage implements Page
 		else
 			throw new DocumentationException("Unexpected type: " + type.getQualifiedName());
 		
-		this.master = master;
 		this.type = type;
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
 		this.relativePath = constructOutputPath().resolve(type.getTypeName().replaceAll(":", "\\$") + PageUtils.EXTENSION);
@@ -126,8 +126,7 @@ public class ClassOrInterfacePage implements Page
 		writeHtmlHead(out);
 		out.openTab("body");
 		
-		StandardTemplate.writeNavBar(this, master.getOverviewPage(), 
-				master.getPackagePage(type.getPackage()), this, out);
+		writeNavBar(master.getPackagePage(type.getPackage()), out);
 		
 		writeHeader(out);
 		writeConstantSummaries(out);

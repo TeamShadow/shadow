@@ -8,6 +8,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import shadow.doctool.DocumentationException;
@@ -21,13 +22,12 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
-public class PackagePage implements Page
+public class PackagePage extends Page
 {
 	public static final String PAGE_NAME = "$package-summary";
 	
-	private final StandardTemplate master;
 	private final Package self;
-	private final Path relativePath = constructOutputPath().resolve(PAGE_NAME + PageUtils.EXTENSION);
+	private final Path relativePath;
 	private String qualifiedName;
 	private final Set<Package> linkablePackages;
 	private final Set<Type> linkableTypes;
@@ -41,7 +41,8 @@ public class PackagePage implements Page
 	public PackagePage(StandardTemplate master, Package self,
 			Set<Package> linkablePackages, Set<Type> linkableTypes)
 	{
-		this.master = master;
+		super(master);
+		
 		this.self = self;
 		this.linkablePackages = linkablePackages;
 		this.linkableTypes = linkableTypes;
@@ -51,6 +52,8 @@ public class PackagePage implements Page
 			qualifiedName = "default";
 		
 		sortTypes();
+		
+		relativePath = constructOutputPath().resolve(PAGE_NAME + PageUtils.EXTENSION);
 	}
 	
 	private void sortTypes()
@@ -86,8 +89,7 @@ public class PackagePage implements Page
 		writeHtmlHead(out);
 		out.openTab("body");
 		
-		StandardTemplate.writeNavBar(this, master.getOverviewPage(), 
-				this, null, out);
+		writeNavBar(null, out);
 		
 		writeHeader(out);
 		writeAllSummaries(out);
@@ -114,7 +116,6 @@ public class PackagePage implements Page
 	{	
 		out.openTab("div", new Attribute("class", "header"));
 		
-		
 		// Create a link to this package's parent
 		String parentName = "";
 		if (self.getParent() != null)
@@ -140,8 +141,10 @@ public class PackagePage implements Page
 		writeSummaryTable("Class", classes, out);
 		writeSummaryTable("Enumeration", enums, out);
 		writeSummaryTable("Exception", exceptions, out);
+		writeSubpackageTable(out);
 	}
 	
+	// TODO: Only list linkable types?
 	private void writeSummaryTable(String typeKind, List<? extends Type> contents,
 			HtmlWriter out) throws ShadowException, DocumentationException
 	{
@@ -157,7 +160,36 @@ public class PackagePage implements Page
 						writeTypeName(type, out);
 					out.closeLine();
 					out.open("td");
-						PageUtils.writeInlineTags(type.getDocumentation().getSummary(), out);
+						if (type.hasDocumentation())
+							PageUtils.writeInlineTags(type.getDocumentation().getSummary(), out);
+					out.closeLine();
+				out.closeUntab();
+			}
+			
+			out.closeUntab();
+			out.closeUntab();
+		}
+	}
+	
+	// TODO: Make this only list "linkable" (explicitly requested for documentation) packages?
+	private void writeSubpackageTable(HtmlWriter out) throws ShadowException, DocumentationException
+	{
+		Map<String, Package> children = self.getChildren();
+		
+		if (!children.isEmpty()) {
+			out.openTab("div", new Attribute("class", "block"));		
+			out.fullLine("h3", "Subpackage Summary");
+			out.openTab("table", new Attribute("class", "summarytable"));
+			
+			PageUtils.writeTableRow(out, true, "Name", "Description");
+			for (Package subpkg : children.values()) {
+				out.openTab("tr");
+					out.open("td");
+						writePackageName(subpkg, out);
+					out.closeLine();
+					out.open("td");
+						if (subpkg.hasDocumentation())
+							PageUtils.writeInlineTags(subpkg.getDocumentation().getSummary(), out);
 					out.closeLine();
 				out.closeUntab();
 			}
@@ -209,5 +241,16 @@ public class PackagePage implements Page
 					+ PageUtils.EXTENSION, type.getTypeName(), out);
 		else
 			out.add(type.getTypeName());
+	}
+	
+	private void writePackageName(Package pkg, HtmlWriter out) 
+			throws DocumentationException, ShadowException
+	{
+		if (linkablePackages.contains(pkg))
+			PageUtils.writeLink(StandardTemplate.linkToPage(this,
+					master.getPackagePage(pkg)).toString(), 
+					pkg.getQualifiedName(), out);
+		else
+			out.add(pkg.getQualifiedName());
 	}
 }

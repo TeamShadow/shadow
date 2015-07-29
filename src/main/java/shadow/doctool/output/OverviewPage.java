@@ -15,17 +15,16 @@ import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 
 /** Displays a list of all known packages and their descripitons */
-public class OverviewPage implements Page
+public class OverviewPage extends Page
 {
 	public static final String PAGE_NAME = "$overview";
 	private static final Path relativePath = Paths.get(PAGE_NAME + PageUtils.EXTENSION);
 	
-	private final StandardTemplate master;
 	private final Set<Package> packages;
 	
 	public OverviewPage(StandardTemplate master, Set<Package> packages)
 	{
-		this.master = master;
+		super(master);
 		this.packages = packages;
 	}
 	
@@ -45,8 +44,7 @@ public class OverviewPage implements Page
 		writeHtmlHead(out);
 		out.openTab("body");
 		
-		StandardTemplate.writeNavBar(this, master.getOverviewPage(), 
-				null, null, out);
+		writeNavBar(null, out);
 		
 		writeHeader(out);
 		writeTable(packages, out);

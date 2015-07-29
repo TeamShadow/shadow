@@ -28,6 +28,7 @@ public class StandardTemplate implements DocumentationTemplate
 	private final OverviewPage overviewPage;
 	private final Map<Package, PackagePage> packagePages;
 	private final Map<Type, ClassOrInterfacePage> typePages;
+	public static final String docTitle = "Test Documentation";
 	
 	public StandardTemplate(Set<Type> typesToDocument, Set<Package> packagesToDocument) 
 			throws DocumentationException
@@ -78,42 +79,6 @@ public class StandardTemplate implements DocumentationTemplate
 	public ClassOrInterfacePage getTypePage(Type type)
 	{
 		return typePages.get(type);
-	}
-	
-	/** 
-	 * Creates a navbar for use at the top of a documentation page. Fields
-	 * that are not relevant for a given page should be left as null.
-	 */
-	public static void writeNavBar(Page current, Page overview, 
-			Page packagePage, Page type, HtmlWriter out) 
-			throws ShadowException, DocumentationException
-	{
-		out.openTab("div", new Attribute("class", "navlist"));
-		out.openTab("ul");
-		
-		out.open("li");
-		if (overview != null)
-			PageUtils.writeLink(linkToPage(current, overview).toString(), "Overview", out);
-		else
-			out.add("Overview");
-		out.closeLine();
-		
-		out.open("li");
-		if (packagePage != null)
-			PageUtils.writeLink(linkToPage(current, packagePage).toString(), "Package", out);
-		else
-			out.add("Package");
-		out.closeLine();
-		
-		out.open("li");
-		if (type != null)
-			PageUtils.writeLink(linkToPage(current, type).toString(), "Type", out);
-		else
-			out.add("Type");
-		out.closeLine();
-		
-		out.closeUntab();
-		out.closeUntab();
 	}
 	
 	/** Creates a relative path from one Page to another */

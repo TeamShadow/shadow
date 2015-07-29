@@ -73,7 +73,7 @@ code
 .block h3
 {
     margin: 15px 0px;
-    font-size: 26;
+    font-size: 26px;
 }
 
 .block p 
@@ -120,6 +120,7 @@ code
 
 .navlist ul
 {
+	float: left;
     margin: 4px;
     padding: 0px;
 }
@@ -128,4 +129,11 @@ code
 {
     display: inline;
     padding-right: 6px;
+}
+
+.navlist span
+{
+	float: right;
+	padding-right: 0px;
+	margin: 4px;
 }
