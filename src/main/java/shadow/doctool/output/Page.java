@@ -19,6 +19,20 @@ public abstract class Page
 	public abstract Path getRelativePath();
 	public abstract void write(Path root) throws IOException, ShadowException, DocumentationException;
 	
+	protected void writeHtmlHead(String title, HtmlWriter out) 
+			throws ShadowException, DocumentationException
+	{
+		master.writeTimestampComment(out);
+		out.openTab("head");
+		
+		out.fullLine("title", title);
+		out.voidLine("link", new Attribute("rel", "stylesheet"),
+				new Attribute("href", StandardTemplate.linkToCss(this)
+						.toString()));
+		
+		out.closeUntab();
+	}
+	
 	/** 
 	 * Creates a navbar for use at the top of a documentation page. Fields
 	 * that are not relevant for a given page should be left as null.

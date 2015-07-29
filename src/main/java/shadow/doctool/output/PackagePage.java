@@ -86,7 +86,7 @@ public class PackagePage extends Page
 		HtmlWriter out = new HtmlWriter(fileWriter);
 		
 		out.openTab("html");
-		writeHtmlHead(out);
+		writeHtmlHead(qualifiedName, out);
 		out.openTab("body");
 		
 		writeNavBar(null, out);
@@ -98,17 +98,6 @@ public class PackagePage extends Page
 		out.closeUntab();
 		
 		fileWriter.close();
-	}
-	
-	private void writeHtmlHead(HtmlWriter out) throws ShadowException, DocumentationException
-	{
-		out.openTab("head");
-		
-		out.fullLine("title", qualifiedName);
-		out.voidLine("link", new Attribute("rel", "stylesheet"),
-				new Attribute("href", ClassOrInterfacePage.upDir(self.getDepth()) + "stylesheet.css"));
-		
-		out.closeUntab();
 	}
 	
 	private void writeHeader(HtmlWriter out) 

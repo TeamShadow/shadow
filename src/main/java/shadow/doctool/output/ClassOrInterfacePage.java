@@ -123,7 +123,7 @@ public class ClassOrInterfacePage extends Page
 		HtmlWriter out = new HtmlWriter(fileWriter);
 		
 		out.openTab("html");
-		writeHtmlHead(out);
+		writeHtmlHead(type.getTypeName(), out);
 		out.openTab("body");
 		
 		writeNavBar(master.getPackagePage(type.getPackage()), out);
@@ -139,19 +139,6 @@ public class ClassOrInterfacePage extends Page
 		out.closeUntab();
 		
 		fileWriter.close();
-	}
-
-	private void writeHtmlHead(HtmlWriter out) 
-			throws ShadowException, DocumentationException
-	{
-		out.openTab("head");
-		
-		out.fullLine("title", type.getTypeName());
-		out.voidLine("link", new Attribute("rel", "stylesheet"),
-				new Attribute("href", upDir(type.getPackage().getDepth()) 
-						+ "stylesheet.css"));
-		
-		out.closeUntab();
 	}
 	
 	private void writeHeader(HtmlWriter out) 

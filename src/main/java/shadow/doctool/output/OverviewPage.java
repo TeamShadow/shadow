@@ -41,7 +41,7 @@ public class OverviewPage extends Page
 		HtmlWriter out = new HtmlWriter(fileWriter);
 		
 		out.openTab("html");
-		writeHtmlHead(out);
+		writeHtmlHead("Overview", out);
 		out.openTab("body");
 		
 		writeNavBar(null, out);
@@ -53,18 +53,6 @@ public class OverviewPage extends Page
 		out.closeUntab();
 		
 		fileWriter.close();
-	}
-	
-	private static void writeHtmlHead(HtmlWriter out)
-			throws ShadowException, DocumentationException
-	{
-		out.openTab("head");
-		
-		out.fullLine("title", "Overview");
-		out.voidLine("link", new Attribute("rel", "stylesheet"),
-				new Attribute("href", "stylesheet.css"));
-		
-		out.closeUntab();
 	}
 	
 	private static void writeHeader(HtmlWriter out) 
