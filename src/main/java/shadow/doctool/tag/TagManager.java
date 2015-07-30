@@ -47,6 +47,9 @@ public class TagManager
 	{
 		AUTHOR("author", new DelimitedParser(',')),
 		PARAM("param", new ArgDescriptionParser(1, true)),
+		RETURN("return", new ArgDescriptionParser(1, true)),
+		SEE_DOC("seeDoc", new ArgDescriptionParser(1, true)),
+		SEE_URL("seeUrl", new ArgDescriptionParser(1, true)),
 		THROWS("throws", new ArgDescriptionParser(1, true)),
 		
 		/* End of tag list */ ;
@@ -101,6 +104,9 @@ public class TagManager
 		}
 	}
 	
+	// CODE: Takes any amount and type of text, places it all within HTML code tags
+	// LINK: Takes a URL or other linkable path, followed by any amount of display text
+	// DOCLINK: Takes a qualified type or package name, followed by any amount of display text
 	public enum InlineTagType
 	{
 		// This is a special tag representing normal text
@@ -108,6 +114,8 @@ public class TagManager
 		
 		// Regular inline tags
 		CODE("code"),
+		LINK_URL("linkUrl", new ArgDescriptionParser(1, true)), // TODO: Support mouseover text
+		LINK_DOC("linkDoc", new ArgDescriptionParser(1, true)), // TODO: Support mouseover text
 		
 		/* End of tag list */ ;
 		

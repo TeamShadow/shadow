@@ -2,13 +2,29 @@ package shadow.doctool.output;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
+import org.apache.logging.log4j.Logger;
+
+import shadow.Loggers;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.HtmlWriter.Attribute;
+import shadow.doctool.tag.TagManager.InlineTag;
+import shadow.doctool.tag.TagManager.InlineTagType;
 import shadow.parser.javacc.ShadowException;
+import shadow.typecheck.Package;
+import shadow.typecheck.type.Type;
 
 public abstract class Page 
 {
+	protected final Logger logger = Loggers.DOC_TOOL;
+	
+	// Interface to which all Pages must conform
+	public abstract Path getRelativePath();
+	public abstract void write(Path root) throws IOException, ShadowException, DocumentationException;
+	
+	protected static final String EXTENSION = ".html";
 	protected final StandardTemplate master;
 	
 	public Page(StandardTemplate master)
@@ -16,8 +32,7 @@ public abstract class Page
 		this.master = master;
 	}
 	
-	public abstract Path getRelativePath();
-	public abstract void write(Path root) throws IOException, ShadowException, DocumentationException;
+	/* Helper methods */
 	
 	protected void writeHtmlHead(String title, HtmlWriter out) 
 			throws ShadowException, DocumentationException
@@ -47,7 +62,7 @@ public abstract class Page
 		if (this instanceof OverviewPage)
 			out.full("b", "Overview");
 		else
-			PageUtils.writeLink(StandardTemplate.linkToPage(this, 
+			writeLink(StandardTemplate.linkToPage(this, 
 					master.getOverviewPage()).toString(), "Overview", out);
 		out.closeLine();
 		
@@ -57,7 +72,7 @@ public abstract class Page
 		else if (this instanceof OverviewPage || packagePage == null)
 			out.add("Package");
 		else
-			PageUtils.writeLink(StandardTemplate.linkToPage(this, 
+			writeLink(StandardTemplate.linkToPage(this, 
 					packagePage).toString(), "Package", out);
 		out.closeLine();
 		
@@ -74,5 +89,95 @@ public abstract class Page
 		// Makes the outer div size itself properly
 		out.fullLine("div", new Attribute("style", "clear:both;"));
 		out.closeUntab();
+	}
+	
+	/** 
+	 * All inline tags should be available in any context (i.e. for all pages
+	 * and all types)
+	 */
+	protected final void writeInlineTags(List<InlineTag> inlineTags,
+			HtmlWriter out) throws DocumentationException, ShadowException
+	{
+		
+		if (inlineTags.size() > 0) {
+			out.open("p");
+			for (InlineTag tag : inlineTags) {
+				switch ((InlineTagType) tag.getType()) {
+					case CODE:
+						out.full("code", tag.getArg(0), new Attribute("class", "inline"));
+						break;
+					case LINK_DOC:
+						Path link = master.linkByName(this, tag.getArg(0));
+						if (link != null) {
+							out.full("a", tag.getArg(1), new Attribute("href", 
+									link.toString()));
+						} else {
+							logger.warn("On page " + getRelativePath() + " - "
+									+ "Could not link to type or package " +
+									tag.getArg(0));
+							out.add(tag.getArg(1));
+						}
+						break;
+					case LINK_URL:
+						out.full("a", tag.getArg(1), new Attribute("href", tag.getArg(0)));
+						break;
+					case PLAIN_TEXT:
+						out.add(tag.getArg(0));
+						break;
+				}
+			}
+			out.closeLine();
+		}
+	}
+	
+	protected static void writeTableRow(HtmlWriter out, boolean header,
+			String ... columns) throws ShadowException, DocumentationException
+	{
+		out.openTab("tr");
+		
+		for (String column : columns) {
+			if (header)
+				out.fullLine("th", column);
+			else
+				out.fullLine("td", column);
+		}
+		
+		out.closeUntab();
+	}
+	
+	protected static void writeLink(String href, String text, HtmlWriter out) 
+			throws DocumentationException, ShadowException
+	{
+		out.full("a", text, new Attribute("href", href));
+	}
+
+	protected static String getRelativePath(Package from, Package to, String file)
+	{
+		Path start = Paths.get(from.getPath());
+		Path target = Paths.get(to.getPath());
+		
+		Path result = start.relativize(target);
+		
+		return result.resolve(file).toString();
+	}
+	
+	protected static String getRelativePath(Package from, Package to)
+	{
+		return getRelativePath(from, to, PackagePage.PAGE_NAME + EXTENSION);
+	}
+	
+	protected static String getRelativePath(Package from, Type to)
+	{
+		return getRelativePath(from, to.getPackage(), to.getTypeName() + EXTENSION);
+	}
+	
+	protected static String getRelativePath(Type from, Package to)
+	{
+		return getRelativePath(from.getPackage(), to, PackagePage.PAGE_NAME + EXTENSION);
+	}
+	
+	protected static String getRelativePath(Type from, Type to)
+	{
+		return getRelativePath(from.getPackage(), to.getPackage(), to.getTypeName() + EXTENSION);
 	}
 }

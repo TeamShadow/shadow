@@ -37,7 +37,7 @@ public class ClassOrInterfacePage extends Page
 	private String typeKind;
 	private HashSet<Type> linkableTypes;
 	private final Path relativePath;
-	private boolean makeLinks = true;
+	public final String qualifiedName;
 	
 	// Method categories
 	private List<MethodSignature> constructors = new ArrayList<MethodSignature>();
@@ -68,7 +68,13 @@ public class ClassOrInterfacePage extends Page
 		
 		this.type = type;
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
-		this.relativePath = constructOutputPath().resolve(type.getTypeName().replaceAll(":", "\\$") + PageUtils.EXTENSION);
+		this.relativePath = constructOutputPath().resolve(type.getTypeName().replaceAll(":", "\\$") + EXTENSION);
+		
+		// The qualified name should not contain type parameters
+		String pkg = type.getPackage().getQualifiedName();
+		if (pkg.isEmpty())
+			pkg = "default";
+		this.qualifiedName = pkg + "@" + type.getTypeName();
 		
 		getVisibleMethods();
 		getVisibleConstants();
@@ -118,7 +124,7 @@ public class ClassOrInterfacePage extends Page
 		// Note: All colons in class names are replaced with dashes to avoid
 		// browser issues (i.e. relative paths being interpreted as protocols)
 		Path output = outputDirectory
-				.resolve(type.getTypeName().replaceAll(":", "\\$") + PageUtils.EXTENSION);
+				.resolve(type.getTypeName().replaceAll(":", "\\$") + EXTENSION);
 		FileWriter fileWriter = new FileWriter(output.toFile());
 		HtmlWriter out = new HtmlWriter(fileWriter);
 		
@@ -151,10 +157,10 @@ public class ClassOrInterfacePage extends Page
 		// Create a link to this class/interface's package
 		out.open("p");
 		if (!packageName.isEmpty())
-			PageUtils.writeLink(PackagePage.PAGE_NAME +  PageUtils.EXTENSION, 
+			writeLink(PackagePage.PAGE_NAME +  EXTENSION, 
 					type.getPackage().getQualifiedName(), out);
 		else
-			PageUtils.writeLink(PackagePage.PAGE_NAME +  PageUtils.EXTENSION, 
+			writeLink(PackagePage.PAGE_NAME +  EXTENSION, 
 					"default", out);
 		out.closeLine();
 		
@@ -174,7 +180,7 @@ public class ClassOrInterfacePage extends Page
 		
 		// Documentation text
 		if (type.hasDocumentation()) {
-			PageUtils.writeInlineTags(type.getDocumentation().getInlineTags(), out);
+			writeInlineTags(type.getDocumentation().getInlineTags(), out);
 			writeBlockTags(type.getDocumentation(), out);
 		}
 		
@@ -238,10 +244,7 @@ public class ClassOrInterfacePage extends Page
 					out.add(", ");
 				
 				// List the name, optionally attempting a link
-				if (makeLinks)
-					writeCrossLink(current, current.getQualifiedName(), out);
-				else
-					out.add(current.getQualifiedName());
+				writeCrossLink(current, current.getQualifiedName(), out);
 				i++;
 			}
 			out.closeLine();
@@ -273,10 +276,7 @@ public class ClassOrInterfacePage extends Page
 				
 				// List the name, optionally attempting a link
 				Type current = extendsList.get(i);
-				if (makeLinks)
-					writeCrossLink(current, current.getQualifiedName(), out);
-				else
-					out.add(current.getQualifiedName());
+				writeCrossLink(current, current.getQualifiedName(), out);
 			}
 			out.closeLine();
 		}
@@ -290,10 +290,7 @@ public class ClassOrInterfacePage extends Page
 				
 				// List the name, optionally attempting a link
 				Type current = implementsList.get(i);
-				if (makeLinks)
-					writeCrossLink(current, current.getQualifiedName(), out);
-				else
-					out.add(current.getQualifiedName());
+				writeCrossLink(current, current.getQualifiedName(), out);
 			}
 			out.closeLine();
 		}
@@ -307,7 +304,7 @@ public class ClassOrInterfacePage extends Page
 			out.fullLine("h3", "Constant Summary");
 			out.openTab("table", new Attribute("class", "summarytable"));
 			
-			PageUtils.writeTableRow(out, true, "Modifiers", "Type", 
+			writeTableRow(out, true, "Modifiers", "Type", 
 					"Name and Description");
 			for (Node constant : visibleConstants) {
 				out.openTab("tr");
@@ -322,7 +319,7 @@ public class ClassOrInterfacePage extends Page
 							writeNodeName(constant, true, out);
 						out.close();
 						if (constant.hasDocumentation())
-							PageUtils.writeInlineTags(constant.getDocumentation().getSummary(), out);
+							writeInlineTags(constant.getDocumentation().getSummary(), out);
 					out.closeLine();
 				out.closeUntab();
 			}
@@ -353,7 +350,7 @@ public class ClassOrInterfacePage extends Page
 		out.fullLine("h3", name);
 		out.openTab("table", new Attribute("class", "summarytable"));
 		
-		PageUtils.writeTableRow(out, true, "Modifiers", "Return Type", 
+		writeTableRow(out, true, "Modifiers", "Return Type", 
 				"Method and Description");
 		for (MethodSignature method : methods) {
 			out.openTab("tr");
@@ -369,7 +366,7 @@ public class ClassOrInterfacePage extends Page
 						writeParameters(method, true, true, out);
 					out.close();
 					if (method.hasDocumentation())
-						PageUtils.writeInlineTags(method.getDocumentation().getSummary(), out);
+						writeInlineTags(method.getDocumentation().getSummary(), out);
 				out.closeLine();
 			out.closeUntab();
 		}
@@ -407,7 +404,7 @@ public class ClassOrInterfacePage extends Page
 		
 		// Documentation text
 		if (constant.hasDocumentation()) {
-			PageUtils.writeInlineTags(constant.getDocumentation().getInlineTags(), out);
+			writeInlineTags(constant.getDocumentation().getInlineTags(), out);
 			writeBlockTags(constant.getDocumentation(), out);
 		}
 		
@@ -457,7 +454,7 @@ public class ClassOrInterfacePage extends Page
 		
 		// Documentation text
 		if (method.hasDocumentation()) {
-			PageUtils.writeInlineTags(method.getDocumentation().getInlineTags(), out);
+			writeInlineTags(method.getDocumentation().getInlineTags(), out);
 			writeBlockTags(method.getDocumentation(), out);
 		}
 		
@@ -468,7 +465,7 @@ public class ClassOrInterfacePage extends Page
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (linkToDetail)
-			PageUtils.writeLink("#" + node.toString(), node.toString(), out);
+			writeLink("#" + node.toString(), node.toString(), out);
 		else
 			out.add(node.toString());
 	}
@@ -477,7 +474,7 @@ public class ClassOrInterfacePage extends Page
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (linkToDetail)
-			PageUtils.writeLink("#" + getUniqueID(method), method.getSymbol(), out);
+			writeLink("#" + getUniqueID(method), method.getSymbol(), out);
 		else
 			out.add(method.getSymbol());
 	}
@@ -511,13 +508,18 @@ public class ClassOrInterfacePage extends Page
 	private void writeBlockTags(Documentation documentation,
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
-		List<List<String>> authorTags = documentation.getBlockTags(BlockTagType.AUTHOR);
-		if (!authorTags.isEmpty())
-			writeAuthorSection(authorTags, out);
-		
-		List<List<String>> paramTags = documentation.getBlockTags(BlockTagType.PARAM);
-		if (!paramTags.isEmpty())
-			writeParamSection(paramTags, out);
+		if (documentation.hasBlockTags(BlockTagType.AUTHOR))
+			writeAuthorSection(documentation.getBlockTags(BlockTagType.AUTHOR), out);
+		if (documentation.hasBlockTags(BlockTagType.PARAM))
+			writeParamSection(documentation.getBlockTags(BlockTagType.PARAM), out);
+		if (documentation.hasBlockTags(BlockTagType.SEE_DOC) 
+				|| documentation.hasBlockTags(BlockTagType.SEE_URL))
+			writeSeeSection(documentation.getBlockTags(BlockTagType.SEE_DOC),
+					documentation.getBlockTags(BlockTagType.SEE_URL), out);
+		if (documentation.hasBlockTags(BlockTagType.THROWS))
+			writeThrowsSection(documentation.getBlockTags(BlockTagType.THROWS), out);
+		if (documentation.hasBlockTags(BlockTagType.RETURN))
+			writeReturnSection(documentation.getBlockTags(BlockTagType.RETURN), out);
 	}
 	
 	private void writeAuthorSection(List<List<String>> authorTags, 
@@ -535,7 +537,7 @@ public class ClassOrInterfacePage extends Page
 		}
 	}
 	
-	private void writeParamSection(List<List<String>>  paramTags,
+	private void writeParamSection(List<List<String>> paramTags,
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (paramTags.size() > 0) {
@@ -551,13 +553,78 @@ public class ClassOrInterfacePage extends Page
 			out.closeUntab();
 		}
 	}
-
+	
+	private void writeSeeSection(List<List<String>> seeDocTags, 
+			List<List<String>> seeUrlTags, HtmlWriter out) 
+			throws DocumentationException, ShadowException
+	{
+		if (seeUrlTags.size() > 0 || seeDocTags.size() > 0) {
+			out.fullLine("h5", "See Also");
+			out.openTab("div", new Attribute("class", "blocktagcontent"));
+			for (List<String> tag : seeDocTags) {
+				out.open("p");
+				// TODO: Move the linking code into a method?
+				Path link = master.linkByName(this, tag.get(0));
+				if (link != null) {
+					out.full("a", tag.get(1), new Attribute("href", 
+							link.toString()));
+				} else {
+					logger.warn("On page " + getRelativePath() + " - "
+							+ "Could not link to type or package " +
+							tag.get(0));
+					out.add(tag.get(1));
+				}
+				out.closeLine();
+			}
+			for (List<String> tag : seeUrlTags) {
+				out.open("p");
+				out.full("a", tag.get(1), new Attribute("href", tag.get(0)));
+				out.closeLine();
+			}
+			out.closeUntab();
+		}
+	}
+	
+	private void writeThrowsSection(List<List<String>> throwsTags,
+			HtmlWriter out) throws DocumentationException, ShadowException
+	{
+		if (throwsTags.size() > 0) {
+			out.fullLine("h5", "Throws");
+			out.openTab("div", new Attribute("class", "blocktagcontent"));
+			for (List<String> tag : throwsTags) {
+				out.open("p");
+				out.full("code", tag.get(0), new Attribute("class", "inline"));
+				if (tag.size() > 1)
+					out.add(" - " + tag.get(1));
+				out.closeLine();
+			}
+			out.closeUntab();
+		}
+	}
+	
+	private void writeReturnSection(List<List<String>> throwsTags,
+			HtmlWriter out) throws DocumentationException, ShadowException
+	{
+		if (throwsTags.size() > 0) {
+			out.fullLine("h5", "Returns");
+			out.openTab("div", new Attribute("class", "blocktagcontent"));
+			for (List<String> tag : throwsTags) {
+				out.open("p");
+				out.full("code", tag.get(0), new Attribute("class", "inline"));
+				if (tag.size() > 1)
+					out.add(" - " + tag.get(1));
+				out.closeLine();
+			}
+			out.closeUntab();
+		}
+	}
+	
 	private void writeCrossLink(Type to, String text, HtmlWriter out) 
 			throws DocumentationException, ShadowException
 	{
 		if (linkableTypes.contains(to))
 			// Replace colons in class names with dashes
-			PageUtils.writeLink(PageUtils.getRelativePath(type, to)
+			writeLink(getRelativePath(type, to)
 					.replaceAll(":", "\\$"), text, out);
 		else
 			out.add(text);

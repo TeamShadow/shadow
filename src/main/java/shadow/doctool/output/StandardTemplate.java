@@ -28,13 +28,14 @@ import shadow.typecheck.type.Type;
 public class StandardTemplate implements DocumentationTemplate
 {
 	private static final String CSS_FILE = "stylesheet.css";
+	public static final String docTitle = "Test Documentation";
 	
 	private final OverviewPage overviewPage;
 	private final Map<Package, PackagePage> packagePages;
 	private final Map<Type, ClassOrInterfacePage> typePages;
-	
-	public static final String docTitle = "Test Documentation";
-	public final String timestamp;
+	private final String timestamp;
+	private final Map<String, PackagePage> pkgNameToPage;
+	private final Map<String, ClassOrInterfacePage> typeNameToPage;
 	
 	public StandardTemplate(Set<Type> typesToDocument, Set<Package> packagesToDocument) 
 			throws DocumentationException
@@ -45,17 +46,24 @@ public class StandardTemplate implements DocumentationTemplate
 		packagePages = new HashMap<Package, PackagePage>();
 		typePages = new HashMap<Type, ClassOrInterfacePage>();
 		
+		pkgNameToPage = new HashMap<String, PackagePage>();
+		typeNameToPage = new HashMap<String, ClassOrInterfacePage>();
+		
 		for (Package current : packagesToDocument) {
 			PackagePage page = new PackagePage(this, current, 
 					packagesToDocument, typesToDocument);
 			packagePages.put(current, page);
+			pkgNameToPage.put(page.qualifiedName, page);
 		}
 		
 		for (Type current : typesToDocument) {
 			ClassOrInterfacePage page = new ClassOrInterfacePage(this, current, 
 					typesToDocument);
 			typePages.put(current, page);
+			typeNameToPage.put(page.qualifiedName, page);
 		}
+		
+		
 	}
 	
 	public void write(Path outputDirectory) 
@@ -74,19 +82,29 @@ public class StandardTemplate implements DocumentationTemplate
 				"/doctool/stylesheet.css");
 	}
 	
-	public PackagePage getPackagePage(Package given)
-	{
-		return packagePages.get(given);
-	}
-	
 	public OverviewPage getOverviewPage()
 	{
 		return overviewPage;
 	}
 	
+	public PackagePage getPackagePage(Package given)
+	{
+		return packagePages.get(given);
+	}
+	
+	public PackagePage getPackagePage(String packageName)
+	{
+		return pkgNameToPage.get(packageName);
+	}
+	
 	public ClassOrInterfacePage getTypePage(Type type)
 	{
 		return typePages.get(type);
+	}
+	
+	public ClassOrInterfacePage getTypePage(String typeName)
+	{
+		return typeNameToPage.get(typeName);
 	}
 	
 	/** Creates a relative path from one Page to another */
@@ -103,6 +121,24 @@ public class StandardTemplate implements DocumentationTemplate
 			fromPath = Paths.get("/").resolve(fromPath);
 		
 		return fromPath.relativize(toPath);
+	}
+	
+	/** 
+	 * Attempts to create a relative path to another page based on the
+	 * qualified name of its associated package or type
+	 */
+	public Path linkByName(Page from, String toName)
+	{
+		Page to = null;
+		if (toName.contains("@"))
+			to = getTypePage(toName);
+		else
+			to = getPackagePage(toName);
+		
+		if (to != null)
+			return linkToPage(from, to);
+		else
+			return null;
 	}
 	
 	/** Creates a relative link to the master stylesheet */

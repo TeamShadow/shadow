@@ -28,7 +28,7 @@ public class PackagePage extends Page
 	
 	private final Package self;
 	private final Path relativePath;
-	private String qualifiedName;
+	public final String qualifiedName;
 	private final Set<Package> linkablePackages;
 	private final Set<Type> linkableTypes;
 	
@@ -47,13 +47,14 @@ public class PackagePage extends Page
 		this.linkablePackages = linkablePackages;
 		this.linkableTypes = linkableTypes;
 		
-		qualifiedName = self.getQualifiedName();
+		String qualifiedName = self.getQualifiedName();
 		if (qualifiedName.isEmpty())
 			qualifiedName = "default";
+		this.qualifiedName = qualifiedName;
 		
 		sortTypes();
 		
-		relativePath = constructOutputPath().resolve(PAGE_NAME + PageUtils.EXTENSION);
+		relativePath = constructOutputPath().resolve(PAGE_NAME + EXTENSION);
 	}
 	
 	private void sortTypes()
@@ -81,7 +82,7 @@ public class PackagePage extends Page
 		outputDirectory.toFile().mkdirs();
 		
 		// Begin writing to the document itself
-		Path output = outputDirectory.resolve(PAGE_NAME + PageUtils.EXTENSION);
+		Path output = outputDirectory.resolve(PAGE_NAME + EXTENSION);
 		FileWriter fileWriter = new FileWriter(output.toFile());
 		HtmlWriter out = new HtmlWriter(fileWriter);
 		
@@ -111,7 +112,7 @@ public class PackagePage extends Page
 			parentName = self.getParent().getQualifiedName();
 		if (!parentName.isEmpty()) {
 			out.open("p");
-			PageUtils.writeLink("../" + PAGE_NAME + PageUtils.EXTENSION, 
+			writeLink("../" + PAGE_NAME + EXTENSION, 
 					parentName, out);
 			out.closeLine();
 		}
@@ -142,7 +143,7 @@ public class PackagePage extends Page
 			out.fullLine("h3", typeKind + " Summary");
 			out.openTab("table", new Attribute("class", "summarytable"));
 			
-			PageUtils.writeTableRow(out, true, typeKind, "Description");
+			writeTableRow(out, true, typeKind, "Description");
 			for (Type type : contents) {
 				out.openTab("tr");
 					out.open("td");
@@ -150,7 +151,7 @@ public class PackagePage extends Page
 					out.closeLine();
 					out.open("td");
 						if (type.hasDocumentation())
-							PageUtils.writeInlineTags(type.getDocumentation().getSummary(), out);
+							writeInlineTags(type.getDocumentation().getSummary(), out);
 					out.closeLine();
 				out.closeUntab();
 			}
@@ -170,7 +171,7 @@ public class PackagePage extends Page
 			out.fullLine("h3", "Subpackage Summary");
 			out.openTab("table", new Attribute("class", "summarytable"));
 			
-			PageUtils.writeTableRow(out, true, "Name", "Description");
+			writeTableRow(out, true, "Name", "Description");
 			for (Package subpkg : children.values()) {
 				out.openTab("tr");
 					out.open("td");
@@ -178,7 +179,7 @@ public class PackagePage extends Page
 					out.closeLine();
 					out.open("td");
 						if (subpkg.hasDocumentation())
-							PageUtils.writeInlineTags(subpkg.getDocumentation().getSummary(), out);
+							writeInlineTags(subpkg.getDocumentation().getSummary(), out);
 					out.closeLine();
 				out.closeUntab();
 			}
@@ -226,8 +227,8 @@ public class PackagePage extends Page
 			throws DocumentationException, ShadowException
 	{
 		if (linkableTypes.contains(type))
-			PageUtils.writeLink(type.getTypeName().replaceAll(":", "\\$")
-					+ PageUtils.EXTENSION, type.getTypeName(), out);
+			writeLink(type.getTypeName().replaceAll(":", "\\$")
+					+ EXTENSION, type.getTypeName(), out);
 		else
 			out.add(type.getTypeName());
 	}
@@ -236,7 +237,7 @@ public class PackagePage extends Page
 			throws DocumentationException, ShadowException
 	{
 		if (linkablePackages.contains(pkg))
-			PageUtils.writeLink(StandardTemplate.linkToPage(this,
+			writeLink(StandardTemplate.linkToPage(this,
 					master.getPackagePage(pkg)).toString(), 
 					pkg.getQualifiedName(), out);
 		else

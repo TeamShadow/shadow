@@ -18,7 +18,7 @@ import shadow.typecheck.Package;
 public class OverviewPage extends Page
 {
 	public static final String PAGE_NAME = "$overview";
-	private static final Path relativePath = Paths.get(PAGE_NAME + PageUtils.EXTENSION);
+	private static final Path relativePath = Paths.get(PAGE_NAME + EXTENSION);
 	
 	private final Set<Package> packages;
 	
@@ -66,7 +66,7 @@ public class OverviewPage extends Page
 		out.voidLine("hr");
 	}
 	
-	private static void writeTable(Set<Package> knownPackages, 
+	private void writeTable(Set<Package> knownPackages, 
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (!knownPackages.isEmpty()) {
@@ -83,7 +83,7 @@ public class OverviewPage extends Page
 			out.fullLine("h3", "Package Summary");
 			out.openTab("table", new Attribute("class", "summarytable"));
 			
-			PageUtils.writeTableRow(out, true, "Package", "Description");
+			writeTableRow(out, true, "Package", "Description");
 			for (Package current : documentList)
 				writeTableEntry(current, knownPackages, out);
 			
@@ -92,7 +92,7 @@ public class OverviewPage extends Page
 		}
 	}
 	
-	private static void writeTableEntry(Package current, Set<Package> linkablePackages, 
+	private void writeTableEntry(Package current, Set<Package> linkablePackages, 
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		out.openTab("tr");
@@ -101,7 +101,7 @@ public class OverviewPage extends Page
 			out.closeLine();
 			out.open("td");
 				if (current.hasDocumentation())
-					PageUtils.writeInlineTags(current.getDocumentation().getSummary(), out);
+					writeInlineTags(current.getDocumentation().getSummary(), out);
 			out.closeLine();
 		out.closeUntab();
 	}
@@ -115,11 +115,11 @@ public class OverviewPage extends Page
 		
 		if (linkablePackages.contains(pkg))
 			if (pkg.getQualifiedName().isEmpty())
-				PageUtils.writeLink(PackagePage.PAGE_NAME + PageUtils.EXTENSION,
+				writeLink(PackagePage.PAGE_NAME + EXTENSION,
 						"default", out);
 			else
-				PageUtils.writeLink(pkg.getQualifiedName().replaceAll(":", "/") 
-						+ "/" + PackagePage.PAGE_NAME + PageUtils.EXTENSION, 
+				writeLink(pkg.getQualifiedName().replaceAll(":", "/") 
+						+ "/" + PackagePage.PAGE_NAME + EXTENSION, 
 						packageName, out);
 		else
 			out.add(packageName);

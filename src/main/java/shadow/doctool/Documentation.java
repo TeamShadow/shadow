@@ -157,11 +157,15 @@ public class Documentation
 		return Collections.unmodifiableList(summaryTags);
 	}
 	
+	public boolean hasBlockTags(BlockTagType type)
+	{
+		return blockTags.containsKey(type);
+	}
+	
 	public List<List<String>> getBlockTags(BlockTagType type)
 	{
-		List<List<String>> result = blockTags.get(type);
-		if (result != null)
-			return Collections.unmodifiableList(result);
+		if (blockTags.containsKey(type))
+			return Collections.unmodifiableList(blockTags.get(type));
 		else
 			return Collections.unmodifiableList(new ArrayList<List<String>>());
 	}
