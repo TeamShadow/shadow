@@ -37,8 +37,8 @@ public class StandardTemplate implements DocumentationTemplate
 	private final Map<String, PackagePage> pkgNameToPage;
 	private final Map<String, ClassOrInterfacePage> typeNameToPage;
 	
-	public StandardTemplate(Set<Type> typesToDocument, Set<Package> packagesToDocument) 
-			throws DocumentationException
+	public StandardTemplate(String[] args, Set<Type> typesToDocument, 
+			Set<Package> packagesToDocument) throws DocumentationException
 	{
 		timestamp = new SimpleDateFormat("MMM dd, yyyy 'at' HH:mm:ss z").format(new Date());
 		
@@ -62,8 +62,6 @@ public class StandardTemplate implements DocumentationTemplate
 			typePages.put(current, page);
 			typeNameToPage.put(page.qualifiedName, page);
 		}
-		
-		
 	}
 	
 	public void write(Path outputDirectory) 

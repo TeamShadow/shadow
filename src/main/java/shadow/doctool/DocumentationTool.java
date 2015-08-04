@@ -77,6 +77,7 @@ public class DocumentationTool
 		}
 	}
 	
+	// TODO: Subdivide this into more manageable pieces
 	public static void document(String[] args) throws org.apache.commons.cli.ParseException, ConfigurationException, IOException, ShadowException, TypeCheckException, ParseException, DocumentationException
 	{
 		// Detect and establish the current settings and arguments
@@ -141,9 +142,10 @@ public class DocumentationTool
 		}
 		
 		/* FORMATTED DOCUMENTATION GENERATION */
-		
+			
 		DocumentationTemplate template 
-				= new StandardTemplate(typesToDocument, packagesToDocument);
+			= new StandardTemplate(arguments.getTemplateArgs(), typesToDocument,
+					packagesToDocument);
 		template.write(outputDirectory);
 		
 		logger.info("Successfully generated all documentation in "
