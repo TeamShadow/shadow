@@ -1,0 +1,4 @@
+This package is useful for lots of things!
+@author Alpha, Beta
+
+package tier1A:tier2A;

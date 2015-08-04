@@ -522,21 +522,6 @@ public class ClassOrInterfacePage extends Page
 			writeReturnSection(documentation.getBlockTags(BlockTagType.RETURN), out);
 	}
 	
-	private void writeAuthorSection(List<List<String>> authorTags, 
-			HtmlWriter out) throws DocumentationException, ShadowException
-	{
-		if (authorTags.size() > 0) {
-			out.fullLine("h5", "Authors");
-			out.openTab("div", new Attribute("class", "blocktagcontent"));
-			for (List<String> tag : authorTags) {
-				for (String author : tag) {
-					out.fullLine("p", author);
-				}
-			}
-			out.closeUntab();
-		}
-	}
-	
 	private void writeParamSection(List<List<String>> paramTags,
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
@@ -548,37 +533,6 @@ public class ClassOrInterfacePage extends Page
 				out.full("code", tag.get(0), new Attribute("class", "inline"));
 				if (tag.size() > 1)
 					out.add(" - " + tag.get(1));
-				out.closeLine();
-			}
-			out.closeUntab();
-		}
-	}
-	
-	private void writeSeeSection(List<List<String>> seeDocTags, 
-			List<List<String>> seeUrlTags, HtmlWriter out) 
-			throws DocumentationException, ShadowException
-	{
-		if (seeUrlTags.size() > 0 || seeDocTags.size() > 0) {
-			out.fullLine("h5", "See Also");
-			out.openTab("div", new Attribute("class", "blocktagcontent"));
-			for (List<String> tag : seeDocTags) {
-				out.open("p");
-				// TODO: Move the linking code into a method?
-				Path link = master.linkByName(this, tag.get(0));
-				if (link != null) {
-					out.full("a", tag.get(1), new Attribute("href", 
-							link.toString()));
-				} else {
-					logger.warn("On page " + getRelativePath() + " - "
-							+ "Could not link to type or package " +
-							tag.get(0));
-					out.add(tag.get(1));
-				}
-				out.closeLine();
-			}
-			for (List<String> tag : seeUrlTags) {
-				out.open("p");
-				out.full("a", tag.get(1), new Attribute("href", tag.get(0)));
 				out.closeLine();
 			}
 			out.closeUntab();

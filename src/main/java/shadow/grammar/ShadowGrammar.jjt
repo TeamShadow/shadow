@@ -48,7 +48,7 @@ public class ShadowParser {
 				if (t != null)
 				{
 					if (t.kind == DOCUMENTATION_COMMENT)
-						docBuilder.addLine(t.image);
+						docBuilder.prependLine(t.image);
 					else if (t.kind == BLOCK_DOCUMENTATION_COMMENT)
 						docBuilder.addBlock(t.image);
 				}			}

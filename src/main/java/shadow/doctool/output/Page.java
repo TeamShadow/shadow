@@ -8,8 +8,10 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
+import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.HtmlWriter.Attribute;
+import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
 import shadow.parser.javacc.ShadowException;
@@ -149,6 +151,63 @@ public abstract class Page
 			throws DocumentationException, ShadowException
 	{
 		out.full("a", text, new Attribute("href", href));
+	}
+	
+	protected void writeUniversalBlockTags(Documentation documentation,
+			HtmlWriter out) throws DocumentationException, ShadowException
+	{
+		if (documentation.hasBlockTags(BlockTagType.AUTHOR))
+			writeAuthorSection(documentation.getBlockTags(BlockTagType.AUTHOR), out);
+		if (documentation.hasBlockTags(BlockTagType.SEE_DOC) 
+				|| documentation.hasBlockTags(BlockTagType.SEE_URL))
+			writeSeeSection(documentation.getBlockTags(BlockTagType.SEE_DOC),
+					documentation.getBlockTags(BlockTagType.SEE_URL), out);
+	}
+	
+	protected static void writeAuthorSection(List<List<String>> authorTags, 
+			HtmlWriter out) throws DocumentationException, ShadowException
+	{
+		if (authorTags.size() > 0) {
+			out.fullLine("h5", "Authors");
+			out.openTab("div", new Attribute("class", "blocktagcontent"));
+			for (List<String> tag : authorTags) {
+				for (String author : tag) {
+					out.fullLine("p", author);
+				}
+			}
+			out.closeUntab();
+		}
+	}
+	
+	protected void writeSeeSection(List<List<String>> seeDocTags, 
+			List<List<String>> seeUrlTags, HtmlWriter out) 
+			throws DocumentationException, ShadowException
+	{
+		if (seeUrlTags.size() > 0 || seeDocTags.size() > 0) {
+			out.fullLine("h5", "See Also");
+			out.openTab("div", new Attribute("class", "blocktagcontent"));
+			for (List<String> tag : seeDocTags) {
+				out.open("p");
+				// TODO: Move the linking code into a method?
+				Path link = master.linkByName(this, tag.get(0));
+				if (link != null) {
+					out.full("a", tag.get(1), new Attribute("href", 
+							link.toString()));
+				} else {
+					logger.warn("On page " + getRelativePath() + " - "
+							+ "Could not link to type or package " +
+							tag.get(0));
+					out.add(tag.get(1));
+				}
+				out.closeLine();
+			}
+			for (List<String> tag : seeUrlTags) {
+				out.open("p");
+				out.full("a", tag.get(1), new Attribute("href", tag.get(0)));
+				out.closeLine();
+			}
+			out.closeUntab();
+		}
 	}
 
 	protected static String getRelativePath(Package from, Package to, String file)

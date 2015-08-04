@@ -20,7 +20,13 @@ public class DocumentationBuilder
 	}
 	
 	/** Parses a single line comment, removing leading/trailing whitespace */
-	public void addLine(String line)
+	public void appendLine(String line)
+	{
+		lines.add(clean(line));
+	}
+	
+	/** Parses a single line comment, removing leading/trailing whitespace */
+	public void prependLine(String line)
 	{
 		line = line.trim();
 		if (!line.isEmpty())

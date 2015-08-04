@@ -121,6 +121,12 @@ public class PackagePage extends Page
 		
 		out.closeUntab();
 		out.voidLine("hr");
+		
+		// Documentation text
+		if (self.hasDocumentation()) {
+			writeInlineTags(self.getDocumentation().getInlineTags(), out);
+			writeUniversalBlockTags(self.getDocumentation(), out);
+		}
 	}
 	
 	private void writeAllSummaries(HtmlWriter out) 
