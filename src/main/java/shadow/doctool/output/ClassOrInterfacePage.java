@@ -363,7 +363,7 @@ public class ClassOrInterfacePage extends Page
 				out.open("td");
 					out.open("code");
 						writeMethodName(method, true, out);
-						writeParameters(method, true, true, out);
+						writeParameters(method, out);
 					out.close();
 					if (method.hasDocumentation())
 						writeInlineTags(method.getDocumentation().getSummary(), out);
@@ -448,7 +448,7 @@ public class ClassOrInterfacePage extends Page
 		out.open("code");
 		out.add(method.getModifiers().toString().trim() + " "
 				+ method.getSymbol());
-		writeParameters(method, true, true, out);
+		writeParameters(method, out);
 		out.add(" => " + method.getReturnTypes());
 		out.closeLine();
 		
@@ -479,28 +479,21 @@ public class ClassOrInterfacePage extends Page
 			out.add(method.getSymbol());
 	}
 	
-	private void writeParameters(MethodSignature method, 
-			boolean parameterNames, boolean link, HtmlWriter out) 
+	private void writeParameters(MethodSignature method, HtmlWriter out) 
 					throws DocumentationException, ShadowException
 	{
 		out.add("(");
 		int parameterCount = method.getParameterNames().size();
 		for (int i = 0; i < parameterCount; ++i)
 		{
-			Type parameter = method.getParameterTypes().get(i).getType();
+			if (i != 0)
+				out.add(". ");
 			
-			// TODO: Limit which modifiers appear? (i.e. not 'immutable locked')
-			out.add(parameter.getModifiers().toString().trim() + " ");
-			
-			if (link)
-				writeCrossLink(parameter, parameter.getQualifiedName(), out);
-			else
-				out.add(parameter.getQualifiedName());
-			
+			ModifiedType parameter = method.getParameterTypes().get(i);
+			out.add(parameter.getModifiers().toString());
+			writeCrossLink(parameter.getType(),
+					parameter.getType().getQualifiedName(), out);
 			out.add(" " + method.getParameterNames().get(i));
-			
-			if (i < parameterCount - 1)
-				out.add(", ");
 		}
 		out.add(")");
 	}

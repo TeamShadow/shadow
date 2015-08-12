@@ -37,7 +37,7 @@ class Example<T, U is Dummy and TestInterfaceA and TestInterfaceB>
      *
      * @author Author #1, Author #2, Author #3
      */
-    public test(String a, int b) => (int a, String b)
+    public test(readonly String a, int b) => (int a, String b)
     {
         return (4, "Hello");
     }

@@ -100,7 +100,9 @@ public class DocumentationArguments
 	
 	public String[] getTemplateArgs()
 	{
-		return (String[]) templateArgs.toArray();
+		// TODO: Handle this correctly
+		//return (String[]) templateArgs.toArray();
+		return null;
 	}
 	
 	public static Options getOptions() 
