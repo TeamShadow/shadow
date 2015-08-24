@@ -86,7 +86,7 @@ public abstract class Page
 		out.closeLine();
 		
 		out.closeUntab();
-		out.fullLine("span", StandardTemplate.docTitle);
+		out.fullLine("span", master.getTitle());
 		
 		// Makes the outer div size itself properly
 		out.fullLine("div", new Attribute("style", "clear:both;"));

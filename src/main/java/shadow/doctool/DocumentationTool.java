@@ -74,11 +74,16 @@ public class DocumentationTool
 			System.err.println("DOCUMENTATION ERROR: " + e.getLocalizedMessage());
 			e.printStackTrace();
 			System.exit(-1);
+		} catch (HelpRequestedException e) {
+			return;
 		}
 	}
 	
 	// TODO: Subdivide this into more manageable pieces
-	public static void document(String[] args) throws org.apache.commons.cli.ParseException, ConfigurationException, IOException, ShadowException, TypeCheckException, ParseException, DocumentationException
+	public static void document(String[] args) 
+			throws org.apache.commons.cli.ParseException, ConfigurationException,
+			IOException, ShadowException, TypeCheckException, ParseException, 
+			DocumentationException, HelpRequestedException
 	{
 		// Detect and establish the current settings and arguments
 		DocumentationArguments arguments = new DocumentationArguments(args);
@@ -115,7 +120,7 @@ public class DocumentationTool
 		// If a directory was provided use it. Otherwise, create docs/ in the
 		// current working directory
 		Path outputDirectory;
-		if (arguments.hasOption(DocumentationArguments.OUTPUT))
+		if (arguments.hasOption(DocumentationArguments.OUTPUT_DIR))
 			outputDirectory = Paths.get(arguments.getOutputDirectory())
 			.toAbsolutePath();
 		else
