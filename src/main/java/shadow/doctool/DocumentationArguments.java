@@ -101,6 +101,7 @@ public class DocumentationArguments
 			}
 		}
 		
+		// TODO: Make this work with non-standard documentation templates
 		if (templateArgs.containsKey(StandardTemplate.ARG_HELP)) {
 			StandardTemplate.printHelp();
 			throw new HelpRequestedException();

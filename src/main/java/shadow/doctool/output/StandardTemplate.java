@@ -50,7 +50,6 @@ public class StandardTemplate implements DocumentationTemplate
 			Set<Type> typesToDocument, Set<Package> packagesToDocument)
 			throws DocumentationException, ParseException
 	{
-		buildArguments();
 		this.arguments = args;
 		readArguments();
 		
@@ -197,12 +196,16 @@ public class StandardTemplate implements DocumentationTemplate
 	public final static String ARG_TITLE		= "title";
 	public final static String ARG_HELP 		= "help";
 	
-	private final Set<String> validArgs = new HashSet<String>();
+	private static final Set<String> validArgs =  buildArguments();
 	
-	private void buildArguments()
+	private static Set<String> buildArguments()
 	{
+		Set<String> validArgs = new HashSet<String>();
+		
 		validArgs.add(ARG_TITLE);
 		validArgs.add(ARG_HELP);
+		
+		return validArgs;
 	}
 	
 	// Default values for arguments
@@ -212,6 +215,10 @@ public class StandardTemplate implements DocumentationTemplate
 	 * @throws DocumentationException */
 	private void readArguments() throws DocumentationException
 	{
+		for (String arg : arguments.keySet())
+			if (!validArgs.contains(arg))
+				throw new DocumentationException("Unrecognized option: \"" + arg + "\"");
+		
 		if (arguments.containsKey(ARG_TITLE))
 			docTitle = arguments.get(ARG_TITLE);
 	}
