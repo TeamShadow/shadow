@@ -8,7 +8,6 @@
   <url>www.shadow-language.org</url>
   <description>A compiler for the Shadow programming language</description>
   <build>
-    <pluginManagement>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -43,59 +42,90 @@
         </executions>
       </plugin>
       <plugin>
-      	<groupId>org.codehaus.mojo</groupId>
-      	<artifactId>jaxb2-maven-plugin</artifactId>
-      	<version>1.6</version>
-      	 <executions>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>1.6</version>
+         <executions>
             <execution>
                 <id>xjc</id>
                 <goals>
-                    <goal>xjc</goal>
+                  <goal>xjc</goal>
                 </goals>
                 <configuration>
-                	<outputDirectory>src/main/java</outputDirectory>
-                	<schemaDirectory>src/main/resources</schemaDirectory>
-                    <schemaFiles>configuration.xsd</schemaFiles>
-                    <packageName>shadow.jaxb</packageName>
-                    <clearOutputDir>false</clearOutputDir>
+                  <outputDirectory>src/main/java</outputDirectory>
+                  <schemaDirectory>src/main/resources</schemaDirectory>
+                  <schemaFiles>configuration.xsd</schemaFiles>
+                  <packageName>shadow.jaxb</packageName>
+                  <clearOutputDir>false</clearOutputDir>
                 </configuration>
             </execution>
         </executions>
       </plugin>
       <plugin>
-      	<groupId>org.codehaus.mojo</groupId>
-      	<artifactId>javacc-maven-plugin</artifactId>
-      	<version>2.6</version>
-      	<executions>
-	      <execution>	      
-	       <id>jjtree-javacc</id>
-	        <goals>
-	          <goal>jjtree-javacc</goal>
-	        </goals>
-	        <configuration>
-	        	<buildNodeFiles>false</buildNodeFiles>
-             	<sourceDirectory>${basedir}/src/main/java/shadow/grammar</sourceDirectory>
-             	<interimDirectory>${basedir}/src/main/java</interimDirectory>
-             	<outputDirectory>${basedir}/src/main/java</outputDirectory>
-             	<jdkVersion>1.7</jdkVersion>
-             	<isStatic>false</isStatic>      
-             	<nodeUsesParser>true</nodeUsesParser>
-             	<visitor>true</visitor>
-             	<multi>true</multi>
-             	<visitorException>ShadowException</visitorException>       	
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>javacc-maven-plugin</artifactId>
+        <version>2.6</version>
+        <executions>
+        <execution>        
+         <id>jjtree-javacc</id>
+          <goals>
+            <goal>jjtree-javacc</goal>
+          </goals>
+          <configuration>
+            <buildNodeFiles>false</buildNodeFiles>
+               <sourceDirectory>${basedir}/src/main/java/shadow/grammar</sourceDirectory>
+               <interimDirectory>${basedir}/src/main/java</interimDirectory>
+               <outputDirectory>${basedir}/src/main/java</outputDirectory>
+               <jdkVersion>1.7</jdkVersion>
+               <isStatic>false</isStatic>      
+               <nodeUsesParser>true</nodeUsesParser>
+               <visitor>true</visitor>
+               <multi>true</multi>
+               <visitorException>ShadowException</visitorException>         
             </configuration>
-	      </execution>
-	    </executions>
-	      <dependencies>
-	        <dependency>
-	          <groupId>net.java.dev.javacc</groupId>
-	          <artifactId>javacc</artifactId>
-	          <version>5.0</version>
-	        </dependency>
-	      </dependencies>
+        </execution>
+      </executions>
+        <dependencies>
+          <dependency>
+            <groupId>net.java.dev.javacc</groupId>
+            <artifactId>javacc</artifactId>
+            <version>5.0</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
-    </pluginManagement>
+    <!-- The contents of this pluginManagement section are Unfortunate nonsense that m2e requires to work -->
+    <!-- Do NOT confuse this with the normal plugin section, it is completely ignored by Maven -->
+    <pluginManagement>
+      <plugins>
+        <plugin>
+         <groupId>org.eclipse.m2e</groupId>
+         <artifactId>lifecycle-mapping</artifactId>
+         <version>1.0.0</version>
+         <configuration>
+           <lifecycleMappingMetadata>
+             <pluginExecutions>
+               <pluginExecution>
+                 <pluginExecutionFilter>
+                   <groupId>org.codehaus.mojo</groupId>
+                   <artifactId>javacc-maven-plugin</artifactId>
+                   <versionRange>[1.0.0,)</versionRange>
+                   <goals>
+                     <goal>jjtree-javacc</goal>
+                   </goals>
+                 </pluginExecutionFilter>
+                 <action>
+                   <execute>
+                     <runOnIncremental>true</runOnIncremental>
+                   </execute>
+                 </action>
+               </pluginExecution>
+             </pluginExecutions>
+           </lifecycleMappingMetadata>
+         </configuration>
+        </plugin>
+      </plugins>
+  </pluginManagement>
   </build>
   <reporting>
     <plugins>      
@@ -124,19 +154,19 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>commons-io</groupId>
-    	<artifactId>commons-io</artifactId>
-    	<version>2.4</version>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
     </dependency>
     <dependency>
-    	<groupId>org.apache.logging.log4j</groupId>
-    	<artifactId>log4j-api</artifactId>
-    	<version>2.2</version>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.2</version>
     </dependency>
     <dependency>
-    	<groupId>org.apache.logging.log4j</groupId>
-    	<artifactId>log4j-core</artifactId>
-    	<version>2.2</version>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.2</version>
     </dependency>
   </dependencies>
 </project>
