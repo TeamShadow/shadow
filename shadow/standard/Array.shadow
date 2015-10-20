@@ -1,4 +1,4 @@
-abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>, CanIterate<T>
+abstract locked class shadow:standard@Array<T> implements CanIndex<int[],T>, CanIndexStore<int[],T>, CanIterate<T>
 {
 	get immutable int[] lengths;
 	Object data;

@@ -3,20 +3,27 @@ immutable class shadow:standard@Class implements CanHash
 	get String name;
 	get nullable Class parent;
 	get Class[] interfaces;
-	Object[] data;
-	int flags;
+	get Object[] data;
+	get int flags;
 	get int size;
+	
+	public constant int INTERFACE 	= 0b01;
+	public constant int PRIMITIVE 	= 0b10;  
+	public constant int GENERIC		= 0b100;
+	public constant int ARRAY 		= 0b1000;
+	public constant int SINGLETON 	= 0b10000;
+	public constant int METHOD		= 0b100000;
 	
 	//array allocation methods
 	private locked native allocate( int size ) => ( Object );
 	
 	public locked isInterface() => ( boolean )
 	{
-		return (flags & 0b01) != 0;
+		return (flags & INTERFACE) != 0;
 	}
 	public locked isPrimitive() => ( boolean )
 	{
-		return (flags & 0b10) != 0;
+		return (flags & PRIMITIVE) != 0;
 	}
 	public locked isNormal() => ( boolean )
 	{
@@ -24,31 +31,31 @@ immutable class shadow:standard@Class implements CanHash
 	}
 	public locked isGeneric() => ( boolean )
 	{
-		return (flags & 0b100) != 0;
+		return (flags & GENERIC) != 0;
 	}
 	public locked isArray() => ( boolean )
 	{
-		return (flags & 0b1000) != 0;
+		return (flags & ARRAY) != 0;
 	}
 	
 	public locked isSingleton() => ( boolean )
 	{
-		return (flags & 0b10000) != 0;
+		return (flags & SINGLETON) != 0;
 	}
 	
 	public locked isMethod() => ( boolean )
 	{
-		return (flags & 0b100000) != 0;
+		return (flags & METHOD) != 0;
 	}
 
-	//only called for array classes (and even then, only sometimes)
-	public create(int flags, int size, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] data ) 
+	//only called for array and generic classes
+	public create(String name, int flags, int size, immutable nullable Class parent, immutable Class[] interfaces, immutable Object[] data) 
 	{	
 		this:parent = parent;
-		this:interfaces = interfaces;
-		this:data = data;
 		this:flags = flags;
 		this:size = size;
+		this:interfaces = interfaces;
+		this:data = data;
 		
 		if( isMethod() )
 		{
@@ -185,7 +192,7 @@ immutable class shadow:standard@Class implements CanHash
 		return false;
 	}
 
-	public toString() => ( String )
+	public locked toString() => ( String )
 	{
 		return name;
 	}
@@ -221,6 +228,11 @@ immutable class shadow:standard@Class implements CanHash
 			return size;			
 	}
 	
+	protected locked get sizeValue() => (int)
+	{
+		return size;
+	}
+	
 	public locked get width() => ( int )
 	{		
 		if( isArray() or isMethod() or isPrimitive() or isInterface() )							
@@ -232,5 +244,19 @@ immutable class shadow:standard@Class implements CanHash
 	public locked get hash() => ( uint )
 	{
 		return toString().hash();
+	}
+	
+	public locked makeName(Object[] parameters) => (String)
+	{
+		var name = MutableString:create(#this);
+		name.append('<');
+		for( int i = 0; i < parameters->size; i += 2 ) //skip method tables
+		{
+			if( i != 0 )
+				name.append(',');
+			name.append(parameters[i]);		
+		}		 
+		name.append('>');
+		return #name;		
 	}	
 }

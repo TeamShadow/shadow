@@ -3,6 +3,7 @@ package shadow;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.logging.log4j.Logger;
@@ -135,7 +137,10 @@ public class Main {
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
 
-		generateLLVM(linkCommand);
+		Set<Type> generics = new HashSet<Type>();
+		Set<ArrayType> arrays = new HashSet<ArrayType>();
+		
+		generateLLVM(linkCommand, generics, arrays);
 
 		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {
 			// any output after this point is important, avoid getting it mixed in with previous output
@@ -168,12 +173,71 @@ public class Main {
 				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
 				String line = main.readLine();
+				
+				final OutputStream linkOut = link.getOutputStream();
+				
+				File file = new File(currentJob.getMainFile().toString() + ".debug");
+				final FileOutputStream fileOut = new FileOutputStream(file);
+				
+				OutputStream out = new OutputStream() {
+
+					@Override
+					public void write(int b) throws IOException {
+						linkOut.write(b);
+						fileOut.write(b);						
+					}
+					
+					@Override
+					public void write(byte[] b) throws IOException {
+						linkOut.write(b);
+						fileOut.write(b);	
+					}
+					
+					@Override
+					public void	write(byte[] b, int off, int len) throws IOException {
+						linkOut.write(b, off, len);
+						fileOut.write(b, off, len);	
+					}
+					
+					@Override
+					public void close() throws IOException {
+						fileOut.close();
+					}				
+				};
+				
 
 				while (line != null) {
-					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.getProperty("line.separator");
-					link.getOutputStream().write(line.getBytes());
+					
+					if( line.contains("@main")) { //declare externally defined generics
+						for( Type generic : generics )
+							out.write(LLVMOutput.declareGeneric(generic).getBytes());
+						for( ArrayType array : arrays )
+							out.write(LLVMOutput.declareGeneric(array).getBytes());	
+						
+						out.write(System.lineSeparator().getBytes());
+					}
+					else if( line.trim().startsWith("%genericSet"))
+						line = line.replace("%genericSize", "" + generics.size()*2);
+					else if( line.trim().startsWith("%arraySet"))
+						line = line.replace("%arraySize", "" + arrays.size()*2);
+					else if( line.trim().startsWith("invoke")) { //add in all externally declared generics
+						
+						LLVMOutput.addGenerics("%genericSet", generics, out);
+						LLVMOutput.addGenerics("%arraySet", arrays, out);
+						/*for( Type generic : generics )
+							out.write(LLVMOutput.addGeneric("%genericSet", generic).getBytes());
+						for( ArrayType array : arrays )
+							out.write(LLVMOutput.addGeneric("%arraySet", array).getBytes());
+						*/							
+					}					
+					
+					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.lineSeparator();
+					out.write(line.getBytes());
 					line = main.readLine();
-				}					
+				}		
+				
+				
+				out.close(); //remove this after debugging
 
 				try {
 					main.close();
@@ -211,11 +275,8 @@ public class Main {
 	 * (which has been updated more recently than the corresponding source file
 	 * or building a new one
 	 */
-	private static void generateLLVM(List<String> linkCommand) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {		
+	private static void generateLLVM(List<String> linkCommand, Set<Type> generics, Set<ArrayType> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {		
 		Type.clearTypes();
-		HashSet<Type> generics = new HashSet<Type>();
-		HashSet<ArrayType> arrays = new HashSet<ArrayType>();
-
 		TypeChecker checker = new TypeChecker();
 
 		Path mainFile = currentJob.getMainFile();
@@ -231,6 +292,12 @@ public class Main {
 			logger.error(mainFile + " FAILED TO TYPE CHECK");
 			throw e;
 		}
+		
+		
+		//after typechecking, only include relevant files
+		//Set<Type> usedTypes = getAllReferencedTypes(checker.)
+		
+		
 
 		if( !currentJob.isCheckOnly() ) {		
 			for( Node node : nodes ) {
@@ -238,17 +305,21 @@ public class Main {
 				String name = stripExt(file.getName());
 				String path = stripExt(file.getCanonicalPath());
 				File llvmFile = new File(path + ".ll");
+				
+				Type type = node.getType();				
+				generics.addAll(type.getGenericClasses());						
+				arrays.addAll(type.getArrayClasses());
 
 				//if the LLVM didn't exist, the full .shadow file would have been used				
 				if( file.getPath().endsWith(".meta") ) {
 					logger.info("Using pre-existing LLVM code for " + name);
-					addToLink(node.getType(), file, linkCommand, generics, arrays );					
+					addToLink(node.getType(), file, linkCommand);					
 				}
 				else {
 					logger.info("Generating LLVM code for " + name);
 					//gets top level class
 					TACModule module = new TACBuilder().build(node);
-					Type type = module.getType();
+					
 
 					if( path.equals(mainFileName) ) {							
 						mainClass = type.getMangledName();
@@ -268,10 +339,7 @@ public class Main {
 					llvmFile = new File(file.getParentFile(), className + ".ll");
 					File nativeFile = new File(file.getParentFile(), className + ".native.ll");
 					LLVMOutput output = new LLVMOutput(llvmFile);
-					output.build(module);
-
-					generics.addAll(output.getGenerics());						
-					arrays.addAll(output.getArrays());
+					output.build(module);					
 
 					if( llvmFile.exists() )
 						linkCommand.add(llvmFile.getCanonicalPath());
@@ -282,28 +350,25 @@ public class Main {
 						linkCommand.add(nativeFile.getCanonicalPath());					
 				}
 			}
-
-			// After all LLVM is generated, make a special generics file
-			Path genericsFile = Paths.get(mainFile.toString().replace(".shadow", ".generics.shadow"));
-			LLVMOutput interfaceOutput = new LLVMOutput(genericsFile.toFile());
-			interfaceOutput.setGenerics(generics, arrays);
-			interfaceOutput.buildGenerics();	
-			linkCommand.add(interfaceOutput.getFile().getCanonicalPath());
 		}
 	}
+	
+	//private static Set<Type> getAllReferencedTypes()
 
-	private static void addToLink( Type type, File file, List<String> linkCommand, HashSet<Type> generics, HashSet<ArrayType> arrays ) throws IOException, ShadowException {
+	private static void addToLink( Type type, File file, List<String> linkCommand ) throws IOException, ShadowException {
 		
 		String name = typeToFileName(type);
 		File llvmFile = new File(file.getParentFile(), name + ".ll");
 		File nativeFile = new File(file.getParentFile(), name + ".native.ll");
-
+		
+		/*
 		for (Type referenced : type.getReferencedTypes()  ) {
 			if( referenced.isFullyInstantiated() )
 				generics.add(referenced);
 			else if( referenced instanceof ArrayType )
 				arrays.add((ArrayType)referenced);
-		}		
+		}
+		*/		
 
 		if( llvmFile.exists() )
 			linkCommand.add(llvmFile.getCanonicalPath());

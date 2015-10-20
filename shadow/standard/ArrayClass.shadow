@@ -1,15 +1,14 @@
 immutable class shadow:standard@ArrayClass extends GenericClass
 {	
-	Class internalParameter;
+	get Class internalParameter;
 	//generic type parameter is for the outside world
 	//internalParameter can be different if it is itself an array
-
-	//never gets called
-	protected create(int flags, int size, String name, Class parent, immutable Class[] interfaces, immutable Object[] data, immutable Object[] parameters, Class internalClass)
+	
+	public create(String name, immutable Class[] interfaces, immutable Object[] parameters, Class internalParameter)
 	{
-		super(flags, size, name, parent, interfaces, data, parameters);		
+		super(Array:class, name, Object:class, interfaces, parameters);		
 		this:internalParameter = internalParameter;
-	}
+	}	
 	
 	private findClass(GenericClass[] classes, Class internal) => (nullable Class)
 	{

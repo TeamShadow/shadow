@@ -3,6 +3,7 @@ package shadow.typecheck.type;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -37,8 +38,7 @@ public abstract class Type implements Comparable<Type> {
 	private Map<String, Node> fieldTable = new HashMap<String, Node>();
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> referencedTypes = new HashSet<Type>();
-	private Set<Type> partiallyInstantiatedGenerics = new HashSet<Type>();
-	private List<Type> genericDeclarations = new ArrayList<Type>();
+	private Set<Type> partiallyInstantiatedGenerics = new HashSet<Type>();	
 	private List<Type> typeParameterDependencies = new ArrayList<Type>();
 	
 	
@@ -48,6 +48,8 @@ public abstract class Type implements Comparable<Type> {
 	private static boolean referenceRecursion = false;	
 	private String hashName = null;
 	
+	private Set<Type> genericClasses = new HashSet<Type>();
+	private Set<ArrayType> arrayClasses = new HashSet<ArrayType>();	
 	
 	/*
 	 * Predefined system types needed for Shadow
@@ -58,7 +60,7 @@ public abstract class Type implements Comparable<Type> {
 	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables	
 	public static ClassType ARRAY_CLASS = null;  // meta class for holding generic array :class variables
 	public static ClassType ARRAY = null;  // object representation of all array types
-	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types
+	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types	
 	public static ClassType METHOD = null;  // object representation for references with function type
 	public static ClassType UNBOUND_METHOD = null; //object representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
 
@@ -86,6 +88,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static ClassType STRING = null;
 	public static ClassType ADDRESS_MAP = null; //used for copying
+	public static ClassType CLASS_SET = null;	//used to store generic Class objects
 	
 	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null);
@@ -210,6 +213,7 @@ public abstract class Type implements Comparable<Type> {
 		USHORT = null;
 		STRING = null;
 		ADDRESS_MAP = null;
+		CLASS_SET = null;
 		CAN_COMPARE = null;
 		CAN_EQUAL = null;		
 		CAN_INDEX = null;
@@ -1054,6 +1058,7 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	private Map<MethodSignature, Integer> methodIndexCache;
+	
 	public int getMethodIndex( MethodSignature method )
 	{
 		// Lazily load cache
@@ -1306,7 +1311,7 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	//must return an ArrayList to preserve order
-	//it is essentially that generic classes list their interfaces in the same order as each other
+	//it is essential that generic classes list their interfaces in the same order as each other
 	//otherwise the corresponding blocks of methods won't match
 	//the set is used to prevent duplicates
 	public ArrayList<InterfaceType> getAllInterfaces()
@@ -1404,6 +1409,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 	}	
 	
+	/*
 	protected final void printGenerics(PrintWriter out, String indent ) {
 		out.println(indent + "// Generics");
 		
@@ -1418,23 +1424,8 @@ public abstract class Type implements Comparable<Type> {
 				out.println(indent + "import " + type.getQualifiedName() + ";");
 		}
 	}
-	
-	private boolean containsTypeArguments(List<ModifiedType> arguments) {
-		if( !(this instanceof TypeParameter) && isParameterizedIncludingOuterClasses() ) {
-			List<ModifiedType> existingArguments = getTypeParametersIncludingOuterClasses();
-			for( ModifiedType existingArgument : existingArguments )
-				for( ModifiedType argument : arguments ) {
-					Type existingType = existingArgument.getType(); 
-					if( existingType.equals(argument.getType()))
-						return true;
-					
-					if( existingType.containsTypeArguments(arguments) )
-						return true;
-				}
-		}
+	*/
 
-		return false;
-	}
 	
 	public void clearInstantiatedTypes() {
 		if( instantiatedTypes.children != null ) {
@@ -1445,11 +1436,56 @@ public abstract class Type implements Comparable<Type> {
 		instantiatedTypes.instantiatedType = null;
 	}
 	
-	public void addGenericDeclaration(Type type) {
-		genericDeclarations.add(type);
+	public Set<Type> getGenericClasses() {
+		return genericClasses;
 	}
 	
-	public List<Type> getGenericDeclarations() {
-		return genericDeclarations;
+	public Set<ArrayType> getArrayClasses() {
+		return arrayClasses;
+	}	
+
+	public void addGenericClass(Type type) {		
+		//tricky short-circuit logic only adds type to the set if it is fully instantiated
+		if( !type.isFullyInstantiated() || genericClasses.add(type) ) {					
+			if( type instanceof ClassType ) {
+				ClassType classType = (ClassType) type;
+				if( classType.getExtendType() != null )
+					addGenericClass( classType.getExtendType() );
+			}
+			
+			for( Type interfaceType : type.getInterfaces() )
+					addGenericClass( interfaceType );
+			
+			for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() ) {
+				Type parameterType = parameter.getType();				
+				if( parameterType instanceof ArrayType )
+					addArrayClass((ArrayType)parameterType);
+				else 
+					addGenericClass( parameterType );
+			}
+			
+			if( getOuter() != null )
+				getOuter().addGenericClass(type);			
+		}
+	}
+	
+	public void addArrayClass(ArrayType type) {
+		boolean addBaseClass = true;
+		if( type.isFullyInstantiated() || !type.isParameterizedIncludingOuterClasses() ) 
+			addBaseClass = arrayClasses.add(type); //sets to false if already added 
+		
+		if( addBaseClass ) {
+			addGenericClass(type.convertToGeneric());
+			Type baseType = type.getBaseType();			
+			if( baseType instanceof ArrayType ) {
+				addArrayClass((ArrayType)baseType);
+				addGenericClass(((ArrayType)baseType).convertToGeneric());
+			}
+			else 
+				addGenericClass( baseType );
+			
+			if( getOuter() != null )
+				getOuter().addArrayClass(type);
+		}
 	}
 }

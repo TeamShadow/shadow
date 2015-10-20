@@ -392,8 +392,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		if( containsUnknown(errorTypes) )
 			return; //don't add error if it has an Unknown Type in it
 		
-		String error = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-		errorList.add(new TypeCheckException(type, error));
+		if( node == null )
+			addError(type, message, errorTypes);
+		else {			
+			String error = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+			errorList.add(new TypeCheckException(type, error));
+		}
 	}
 	
 	/**
@@ -411,8 +415,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	protected void addWarning(Node node, Error type, String message) {
-		String warning = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-		warningList.add(new TypeCheckException(type, warning));
+		if( node == null )
+			addWarning(type, message);
+		else {		
+			String warning = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+			warningList.add(new TypeCheckException(type, warning));
+		}
 	}
 	
 	protected void addWarning(Error type, String message) {

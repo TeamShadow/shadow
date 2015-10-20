@@ -177,16 +177,16 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		
 		for(ModifiedType type: types)
 		{			
-			if( !first )
-				builder.append(", ");								
+			if( first )
+				first = false;
+			else
+				builder.append(",");								
 			
 			if( type != null )
 			{
 				builder.append(type.getModifiers().toString());
 				builder.append(type.getType().toString(withBounds));
 			}
-			
-			first = false;
 		}
 		
 		builder.append(end);

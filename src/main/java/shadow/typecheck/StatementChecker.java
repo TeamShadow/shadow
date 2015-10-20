@@ -347,9 +347,10 @@ public class StatementChecker extends BaseChecker {
 				
 				if( parentType != null )
 				{	
-					if( !node.hasExplicitInvocation() ) 
+					if( !node.hasExplicitInvocation() && !node.getModifiers().isNative() ) 
 						//only worry if there is no explicit invocation
 						//explicit invocations are handled separately
+						//for native creates, we have to trust the author of the native code
 					{
 						boolean foundDefault = false;						
 						for( MethodSignature method : parentType.getMethods("create") )
@@ -2568,8 +2569,9 @@ public class StatementChecker extends BaseChecker {
 							}
 						}
 					}
-					else if( prefixType.isParameterized() )
-						addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + prefixType, prefixType);
+					//allow "raw" classes
+					//else if( prefixType.isParameterized() )
+						//addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + prefixType, prefixType);
 				}
 				else
 					addError( Error.NOT_TYPE, "Constant class requires type name for access");

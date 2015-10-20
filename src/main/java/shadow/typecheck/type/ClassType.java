@@ -228,7 +228,7 @@ public class ClassType extends Type {
 		if ( getExtendType() == null )
 			return 0;
 		return getExtendType().recursivelyCountParentFields() +
-				getExtendType().getFields().size();
+				getExtendType().sortFields().size();
 	}
 
 	public List<Entry<String, ? extends ModifiedType>> orderAllFields() {
@@ -648,15 +648,15 @@ public class ClassType extends Type {
 					newLine = true;
 				}
 			}
-		if( newLine )
+		if( newLine && getInnerClasses().size() > 0 )
 			out.println();
 		
 		//inner classes
 		for( Type _class : getInnerClasses().values() )
 				_class.printMetaFile(out, indent);		
 		
-		if( !hasOuter() )
-			printGenerics( out, indent );				
+		//if( !hasOuter() )
+			//printGenerics( out, indent );				
 		out.println(linePrefix + "}");	
 	}
 }

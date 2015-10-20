@@ -27,7 +27,7 @@ public class SimpleTest
 		}
 		
 		//add desired files to list		
-		args.add("tests-negative/typechecker/store-to-singleton/Test.shadow");
+		args.add("shadow/standard/ClassSet.shadow");
 
 		Main.main(args.toArray(new String[] { }));		
 	}

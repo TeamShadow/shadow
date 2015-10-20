@@ -327,12 +327,9 @@ public class InterfaceType extends Type {
 				out.println(indent + signature + ";");
 				modifiers.addModifier(Modifiers.PUBLIC);
 				newLine = true;				
-			}
-		if( newLine )
-			out.println();
-		
-		if( !hasOuter() )
-			printGenerics(out, indent );		
+			}		
+		//if( !hasOuter() )
+			//printGenerics(out, indent );		
 		
 		out.println(linePrefix + "}" + System.lineSeparator());	
 	}

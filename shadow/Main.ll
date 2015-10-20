@@ -28,6 +28,15 @@
 %"_Pshadow_Pstandard_CAddressMap_methods" = type opaque
 %"_Pshadow_Pstandard_CAddressMap" = type opaque
 
+%"_Pshadow_Pstandard_CClassSet_methods" = type { %"_Pshadow_Pstandard_CClassSet"* (%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CAddressMap"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %boolean (%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CClass"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CString"*, %"_Pshadow_Pstandard_CClass"*, { %"_Pshadow_Pstandard_CClass"**, [1 x %int] }, { %"_Pshadow_Pstandard_CObject"**, [1 x %int] })*, void (%"_Pshadow_Pstandard_CClassSet"*)*, %boolean (%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CClass"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CString"*, { %"_Pshadow_Pstandard_CObject"**, [1 x %int] })*, %boolean (%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CClass"*)*, void (%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CClass"*, %boolean)*, { %"_Pshadow_Pstandard_CIterator_methods"*, %"_Pshadow_Pstandard_CObject"* } (%"_Pshadow_Pstandard_CClassSet"*)*, %boolean (%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CClass"*)*, void (%"_Pshadow_Pstandard_CClassSet"*, %int)*, %int (%"_Pshadow_Pstandard_CClassSet"*)* }
+%"_Pshadow_Pstandard_CClassSet" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClassSet_methods"* , { %"_Pshadow_Pstandard_CClassSet_INode"**, [1 x %int] }, %float, %int, %int, %int }
+%"_Pshadow_Pstandard_CClassSet_INode_methods" = type { %"_Pshadow_Pstandard_CClassSet_INode"* (%"_Pshadow_Pstandard_CClassSet_INode"*, %"_Pshadow_Pstandard_CAddressMap"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, %int (%"_Pshadow_Pstandard_CClassSet_INode"*)*, %"_Pshadow_Pstandard_CClassSet_INode"* (%"_Pshadow_Pstandard_CClassSet_INode"*)*, void (%"_Pshadow_Pstandard_CClassSet_INode"*, %"_Pshadow_Pstandard_CClassSet_INode"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CClassSet_INode"*)* }
+%"_Pshadow_Pstandard_CClassSet_INode" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClassSet_INode_methods"* , %"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CClassSet_INode"*, %"_Pshadow_Pstandard_CClass"*, %int }
+@"_Pshadow_Pstandard_CClassSet_methods" = external constant %"_Pshadow_Pstandard_CClassSet_methods"
+@"_Pshadow_Pstandard_CClassSet_class" = external constant %"_Pshadow_Pstandard_CClass"
+declare %boolean @"_Pshadow_Pstandard_CClassSet_Madd_Pshadow_Pstandard_CClass"(%"_Pshadow_Pstandard_CClassSet"*, %"_Pshadow_Pstandard_CClass"*)
+declare %"_Pshadow_Pstandard_CClassSet"* @"_Pshadow_Pstandard_CClassSet_Mcreate_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CObject"* returned, %int)
+
 %"_Pshadow_Pstandard_CException_methods" = type { %"_Pshadow_Pstandard_CException"* (%"_Pshadow_Pstandard_CException"*)*, %"_Pshadow_Pstandard_CException"* (%"_Pshadow_Pstandard_CException"*, %"_Pshadow_Pstandard_CAddressMap"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)* }
 %"_Pshadow_Pstandard_CException" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CException_methods"* , %"_Pshadow_Pstandard_CString"* }
 %"_Pshadow_Pstandard_COutOfMemoryException_methods" = type { %"_Pshadow_Pstandard_COutOfMemoryException"* (%"_Pshadow_Pstandard_COutOfMemoryException"*)*, %"_Pshadow_Pstandard_COutOfMemoryException"* (%"_Pshadow_Pstandard_COutOfMemoryException"*, %"_Pshadow_Pstandard_CAddressMap"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CException"*)* }
@@ -69,48 +78,56 @@ declare void @_Pshadow_Ptest_CTest_Mmain_Pshadow_Pstandard_CString_A1(%_Pshadow_
 declare i32 @__shadow_personality_v0(...)
 declare %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture) nounwind
 
-define void @consoleInitialize() {
-	%1 = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pio_CConsole_class", %"_Pshadow_Pstandard_CObject_methods"* bitcast(%"_Pshadow_Pio_CConsole_methods"* @"_Pshadow_Pio_CConsole_methods" to %"_Pshadow_Pstandard_CObject_methods"*))
-    %2 = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pstandard_CObject"* %1)
-    store %"_Pshadow_Pio_CConsole"* %2, %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_instance"
-	ret void
-}
+@_genericSet = global %"_Pshadow_Pstandard_CClassSet"* null
+@_arraySet = global %"_Pshadow_Pstandard_CClassSet"* null
 
-define i32 @main(i32, i8**) {
-	call void @consoleInitialize()
-	%3 = sub i32 %0, 1	
-	%4 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_CString_class, i32 %3)
-	%5 = bitcast %_Pshadow_Pstandard_CObject* %4 to %_Pshadow_Pstandard_CString**
-	br label %13
-	%7 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_CString_class, %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Pstandard_CString_methods* @_Pshadow_Pstandard_CString_methods to %_Pshadow_Pstandard_CObject_methods*))	
-	%8 = insertvalue { i8*, [1 x i32] } undef, i8* %17, 0
-	%9 = call i32 @strlen(i8* nocapture %17)	
-	%10 = insertvalue { i8*, [1 x i32] } %8, i32 %9, 1, 0	
-	%11 = call %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1"(%"_Pshadow_Pstandard_CObject"* %7, { %byte*, [1 x %int] } %10)
-	store %_Pshadow_Pstandard_CString* %11, %_Pshadow_Pstandard_CString** %15
-	%12 = getelementptr inbounds %_Pshadow_Pstandard_CString** %15, i32 1
-	br label %13
-	%14 = phi i8** [ %1, %2 ], [ %16, %6 ]
-	%15 = phi %_Pshadow_Pstandard_CString** [ %5, %2 ], [ %12, %6 ]
-	%16 = getelementptr i8** %14, i32 1
-	%17 = load i8** %16
-	%18 = icmp eq i8* %17, null
-	br i1 %18, label %19, label %6
-	
-	%20 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Ptest_CTest_class, %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Ptest_CTest_methods* @_Pshadow_Ptest_CTest_methods to %_Pshadow_Pstandard_CObject_methods*))		
-	%21 = call %_Pshadow_Ptest_CTest* @_Pshadow_Ptest_CTest_Mcreate(%_Pshadow_Pstandard_CObject* %20)
-	%22 = insertvalue { %_Pshadow_Pstandard_CString**, [1 x i32] } undef, %_Pshadow_Pstandard_CString** %5, 0
-	%23 = insertvalue { %_Pshadow_Pstandard_CString**, [1 x i32] } %22, i32 %3, 1, 0
-	invoke void @_Pshadow_Ptest_CTest_Mmain_Pshadow_Pstandard_CString_A1(%_Pshadow_Ptest_CTest* %21, { %_Pshadow_Pstandard_CString**, [1 x i32] } %23)
-			to label %24 unwind label %25
+define i32 @main(i32 %argc, i8** %argv) {
+_start:	
+	%uninitializedConsole = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pio_CConsole_class", %"_Pshadow_Pstandard_CObject_methods"* bitcast(%"_Pshadow_Pio_CConsole_methods"* @"_Pshadow_Pio_CConsole_methods" to %"_Pshadow_Pstandard_CObject_methods"*) )
+    %console = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pstandard_CObject"* %uninitializedConsole)
+    store %"_Pshadow_Pio_CConsole"* %console, %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_instance"	
+	%count = sub i32 %argc, 1	
+	%array = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_CString_class, i32 %count)
+	%stringArray = bitcast %_Pshadow_Pstandard_CObject* %array to %_Pshadow_Pstandard_CString**
+	br label %_loopTest
+_loopStart:
+	%allocatedString = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_CString_class, %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Pstandard_CString_methods* @_Pshadow_Pstandard_CString_methods to %_Pshadow_Pstandard_CObject_methods*))	
+	%uninitializedArgAsArray = insertvalue { i8*, [1 x i32] } undef, i8* %nextArg, 0
+	%length = call i32 @strlen(i8* nocapture %nextArg)	
+	%argAsArray = insertvalue { i8*, [1 x i32] } %uninitializedArgAsArray, i32 %length, 1, 0	
+	%string = call %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1"(%"_Pshadow_Pstandard_CObject"* %allocatedString, { %byte*, [1 x %int] } %argAsArray)
+	store %_Pshadow_Pstandard_CString* %string, %_Pshadow_Pstandard_CString** %stringPhi
+	%nextString = getelementptr inbounds %_Pshadow_Pstandard_CString** %stringPhi, i32 1
+	br label %_loopTest
+_loopTest:
+	%argPhi = phi i8** [ %argv, %_start ], [ %nextArgPointer, %_loopStart ]
+	%stringPhi = phi %_Pshadow_Pstandard_CString** [ %stringArray, %_start ], [ %nextString, %_loopStart ]
+	%nextArgPointer = getelementptr i8** %argPhi, i32 1
+	%nextArg = load i8** %nextArgPointer
+	%done = icmp eq i8* %nextArg, null
+	br i1 %done, label %_loopEnd, label %_loopStart	
+_loopEnd:
+	%object = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Ptest_CTest_class, %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Ptest_CTest_methods* @_Pshadow_Ptest_CTest_methods to %_Pshadow_Pstandard_CObject_methods*))		
+	%initialized = call %_Pshadow_Ptest_CTest* @_Pshadow_Ptest_CTest_Mcreate(%_Pshadow_Pstandard_CObject* %object)
+	%undefinedArgs = insertvalue { %_Pshadow_Pstandard_CString**, [1 x i32] } undef, %_Pshadow_Pstandard_CString** %stringArray, 0
+	%args = insertvalue { %_Pshadow_Pstandard_CString**, [1 x i32] } %undefinedArgs, i32 %count, 1, 0	
+	%uninitializedGenericSet = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_CClassSet_class, %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Pstandard_CClassSet_methods* @_Pshadow_Pstandard_CClassSet_methods to %_Pshadow_Pstandard_CObject_methods*))		
+	%genericSet = call %_Pshadow_Pstandard_CClassSet* @_Pshadow_Pstandard_CClassSet_Mcreate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CObject* %uninitializedGenericSet, %int %genericSize)
+	store %_Pshadow_Pstandard_CClassSet* %genericSet, %_Pshadow_Pstandard_CClassSet** @_genericSet	
+	%uninitializedArraySet = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_CClassSet_class, %_Pshadow_Pstandard_CObject_methods* bitcast(%_Pshadow_Pstandard_CClassSet_methods* @_Pshadow_Pstandard_CClassSet_methods to %_Pshadow_Pstandard_CObject_methods*))		
+	%arraySet = call %_Pshadow_Pstandard_CClassSet* @_Pshadow_Pstandard_CClassSet_Mcreate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CObject* %uninitializedArraySet, %int %arraySize)
+	store %_Pshadow_Pstandard_CClassSet* %arraySet, %_Pshadow_Pstandard_CClassSet** @_arraySet	
+	invoke void @_Pshadow_Ptest_CTest_Mmain_Pshadow_Pstandard_CString_A1(%_Pshadow_Ptest_CTest* %initialized, { %_Pshadow_Pstandard_CString**, [1 x i32] } %args)
+			to label %_success unwind label %_exception
+_success:
 	ret i32 0
-	%26 = landingpad { i8*, i32 } personality i32 (...)* @__shadow_personality_v0
+_exception:
+	%caught = landingpad { i8*, i32 } personality i32 (...)* @__shadow_personality_v0
             catch %"_Pshadow_Pstandard_CClass"* @_Pshadow_Pstandard_CException_class
-	%27 = extractvalue { i8*, i32 } %26, 0
-	%28 = call %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture %27) nounwind
-	; Console always initialized	
-	%29 = load %_Pshadow_Pio_CConsole** @_Pshadow_Pio_CConsole_instance	
-	%30 = bitcast %_Pshadow_Pstandard_CException* %28 to %_Pshadow_Pstandard_CObject*	
-	%31 = call %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintErrorLine_Pshadow_Pstandard_CObject(%_Pshadow_Pio_CConsole* %29, %_Pshadow_Pstandard_CObject* %30 )
+	%data = extractvalue { i8*, i32 } %caught, 0
+	%exception = call %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture %data) nounwind
+	; Console already initialized		
+	%exceptionAsObject = bitcast %_Pshadow_Pstandard_CException* %exception to %_Pshadow_Pstandard_CObject*	
+	call %_Pshadow_Pio_CConsole* @_Pshadow_Pio_CConsole_MprintErrorLine_Pshadow_Pstandard_CObject(%_Pshadow_Pio_CConsole* %console, %_Pshadow_Pstandard_CObject* %exceptionAsObject )
 	ret i32 1
 }

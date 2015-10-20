@@ -1301,6 +1301,9 @@ public class TACBuilder implements ShadowParserVisitor {
 		if (secondVisit) {			
 			if( node.getImage().equals("class")) {
 				Type type = identifier.getType();
+				
+				boolean raw = false;
+				
 				if( node.jjtGetNumChildren() > 0 ) {
 					ASTTypeArguments arguments = (ASTTypeArguments) node.jjtGetChild(0);
 					
@@ -1310,8 +1313,10 @@ public class TACBuilder implements ShadowParserVisitor {
 					catch (InstantiationException e) 
 					{}					
 				}
+				else if( type.isParameterized() ) //parameterized, but no type arguments given
+					raw = true;					
 				
-				prefix = new TACClass(tree, type).getClassData();
+				prefix = new TACClass(tree, type, raw).getClassData();
 			}
 			else if( node.getModifiers().isConstant() )
 				prefix = new TACConstantRef(tree, node.getPrefixType(), node.getImage());
@@ -2339,9 +2344,9 @@ public class TACBuilder implements ShadowParserVisitor {
 	private void visitMethod(MethodSignature methodSignature)
 			throws ShadowException {
 		TACTree saveTree = tree;
-		TACMethod method = this.method = new TACMethod(methodSignature);
+		TACMethod method = this.method = new TACMethod(methodSignature);		
 		implicitCreate = false;
-		if (moduleStack.peek().isClass()) {
+		if (moduleStack.peek().isClass()) {						
 			block = new TACBlock(tree = new TACTree(1));
 			if (!methodSignature.isNative() && methodSignature.isCreate()) {
 				implicitCreate = true;
@@ -2353,10 +2358,12 @@ public class TACBuilder implements ShadowParserVisitor {
 									new SimpleModifiedType(type.getOuter()),
 									"_outer"),
 							new TACVariableRef(tree,
-									method.getParameter("_outer")));			
+									method.getParameter("_outer")));
+				method.enterScope(); //needed to protect parameters from temporary variables that might be added
 				for (Node field : type.getFields().values())
 					if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType))
 						walk(field);
+				method.exitScope();
 			}
 			else if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
 				ClassType type = (ClassType) methodSignature.getOuter();	
@@ -2879,7 +2886,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			new TACBranch(tree, condLabel);
 			bodyLabel.new TACLabel(tree);
 			new TACStore(tree, new TACArrayRef(tree, alloc, index, false),
-					visitArrayAllocation((ArrayType)type.getBaseType(), baseClass.getBaseClass(), sizes, create, params, defaultValue));
+					visitArrayAllocation((ArrayType)type.getBaseType(), new TACClass(tree, (ArrayType)type.getBaseType()), sizes, create, params, defaultValue));
 			new TACStore(tree, index, new TACBinary(tree, index, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+',
 					new TACLiteral(tree, new ShadowInteger(1))));
 			new TACBranch(tree, condLabel);
@@ -3089,14 +3096,6 @@ public class TACBuilder implements ShadowParserVisitor {
 		
 		
 		return POST_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTGenericDeclaration node, Boolean data)
-			throws ShadowException {
-		//should never appear in .shadow file (only .meta file)
-		//never needs to be compiled
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

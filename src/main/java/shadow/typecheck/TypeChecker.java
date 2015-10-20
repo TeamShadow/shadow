@@ -20,7 +20,6 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
 public class TypeChecker {
-	
 	/**
 	 * Given the main file to compile, checks it
 	 * @param file the file to compile
@@ -59,8 +58,11 @@ public class TypeChecker {
 		
 		//only add nodes for outer types
 		for( Node node : nodeTable.values())
-			if( !node.getType().hasOuter() )
+			if( !node.getType().hasOuter() ) {
 				allNodes.add(node);
+				//genericClasses.addAll(node.getType().getGenericClasses());
+				//arrayClasses.addAll(node.getType().getArrayClasses());
+			}
 		
 		// do real typechecking, which updates referenced types
 		for(Node node: allNodes) {	

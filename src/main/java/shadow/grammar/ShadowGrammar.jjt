@@ -450,13 +450,6 @@ void ImportDeclaration():
   "import"  Name() ["$" [">" | "<"] < VERSION_LITERAL >] ";" 
 }
 
-void GenericDeclaration():
-{
-   debugPrint("GENERIC DECLARATION");
-}
-{
-  "import" ReferenceType(Modifiers.NO_MODIFIERS) ";"} 
-
 /*
  * Modifiers. We match all modifiers in a single rule to reduce the chances of
  * syntax errors for simple modifier mistakes. It will also enable us to give
@@ -680,8 +673,7 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
     | LOOKAHEAD( "create" ) CreateDeclaration(modifiers)
     | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers)
     | LOOKAHEAD( FieldDeclaration(modifiers) ) FieldDeclaration(modifiers) 
-    | MethodDeclaration(modifiers)
-    | GenericDeclaration()
+    | MethodDeclaration(modifiers)    
     //| ViewDeclaration(modifiers)
   )
 }
