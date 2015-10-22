@@ -283,9 +283,9 @@ public class InterfaceType extends Type {
 		
 		//type name
 		if( !hasOuter() ) //outermost interface ...are inner interfaces even allowed?	
-			out.print(getQualifiedName(true));
+			out.print(toString(true, true));
 		else {
-			String name = toString(true); 
+			String name = toString(false, true); 
 			out.print(name.substring(name.lastIndexOf(':') + 1));
 		}
 		
@@ -298,7 +298,7 @@ public class InterfaceType extends Type {
 					out.print(", ");
 				else
 					first = false;
-				out.print(_interface.getQualifiedName());				
+				out.print(_interface.toString(true, false));				
 			}			
 		}
 		

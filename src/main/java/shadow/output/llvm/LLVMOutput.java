@@ -235,7 +235,7 @@ public class LLVMOutput extends AbstractOutput {
 	
 	protected void writeModuleDefinition(TACModule module) throws ShadowException {		
 		Type moduleType = module.getType();
-		writer.write("; " + module.getQualifiedName());
+		writer.write("; " + moduleType.toString(true, false));
 		writer.write();
 		
 		//Class fields (since the order is all changed)
@@ -356,7 +356,7 @@ public class LLVMOutput extends AbstractOutput {
 					
 					type(Type.CLASS) + " @" + raw(Type.CLASS, "_class") + ", " + //class
 					"%" + raw(Type.CLASS, "_methods") + "* @" + raw(Type.CLASS, "_methods") + ", " + //methods
-					typeLiteral(moduleType.getQualifiedName()) + ", " +  //name
+					typeLiteral(moduleType.toString(true, false)) + ", " +  //name
 					
 					typeText(Type.CLASS, parentType != null ?  //parent class
 							classOf(parentType) : null) + ", " +
@@ -398,7 +398,7 @@ public class LLVMOutput extends AbstractOutput {
 					type(Type.CLASS) + " @" + raw(Type.CLASS, "_class") + ", " + //class
 					"%" + raw(Type.CLASS, "_methods") + "* @" + raw(Type.CLASS, "_methods") + ", " + //methods
 					
-					typeLiteral(moduleType.getQualifiedName()) + ", " + //name 
+					typeLiteral(moduleType.toString(true, false)) + ", " + //name 
 					type(Type.CLASS) + " null, " + //parent 					
 					
 					type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " + //data
@@ -2441,7 +2441,7 @@ public class LLVMOutput extends AbstractOutput {
 					type(Type.CLASS) + " @" + raw(Type.ARRAY_CLASS, "_class") + ", " + //class
 					"%" + raw(Type.ARRAY_CLASS, "_methods") + "* @" + raw(Type.ARRAY_CLASS, "_methods") + ", " + //methods
 					
-					typeLiteral(generic.toString()) + ", " + //name 
+					typeLiteral(generic.toString(true, false)) + ", " + //name 
 					parentClass + ", "  +//parent 					
 					
 					typeText(new ArrayType(Type.OBJECT), interfaceData) + //data												

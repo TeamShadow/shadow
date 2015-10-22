@@ -219,25 +219,21 @@ public class PropertyType extends Type
 
 	
 	@Override
-	public String toString(boolean withBounds)
-	{
+	public String toString(boolean withPackages, boolean withBounds) {
 		StringBuilder sb = new StringBuilder("[");
 		
-		if( isGettable() )
-		{
+		if( isGettable() ) {
 			sb.append("get: ");
-			sb.append(getGetType().getType().toString(withBounds));
+			sb.append(getGetType().getType().toString(withPackages, withBounds));
 		}
 		
-		if( isGettable() && isSettable() )
-		{
+		if( isGettable() && isSettable() ) {
 			sb.append(", ");
 		}
 		
-		if( isSettable() )
-		{
+		if( isSettable() ) {
 			sb.append("set: ");
-			sb.append(getSetType().getType().toString(withBounds));
+			sb.append(getSetType().getType().toString(withPackages, withBounds));
 		}
 		sb.append("]");
 		return sb.toString();		

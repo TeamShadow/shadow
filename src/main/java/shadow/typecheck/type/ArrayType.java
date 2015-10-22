@@ -28,6 +28,8 @@ public class ArrayType extends ClassType
 		return name.toString();		
 	}
 	
+	
+	/*
 	@Override
 	public String getQualifiedName(boolean withBounds) {
 		if( getSuperBaseType().isPrimitive() )
@@ -37,8 +39,9 @@ public class ArrayType extends ClassType
 		if( _package == null || _package.getQualifiedName().isEmpty())
 			return "default@" + toString(withBounds);
 		else
-			return _package.getQualifiedName() + '@' + toString(withBounds);		
+			return _package.getQualifiedName() + '@' + toStringWithQualifiedParameters(withBounds);		
 	}
+	*/
 	
 	public int getDimensions()
 	{
@@ -114,11 +117,11 @@ public class ArrayType extends ClassType
 		this.nullable = nullable;
 	}
 	
-	public String toString(boolean withBounds) {		
+	public String toString(boolean withPackages, boolean withBounds) {		
 		//peels off last set of brackets, important for arrays of arrays
 		String brackets = getTypeName().substring(getTypeName().lastIndexOf('['));		
 		
-		return baseType.toString(withBounds) + brackets;
+		return baseType.toString(withPackages, withBounds) + brackets;
 	}
 	
 	

@@ -136,9 +136,10 @@ public class MethodType extends ClassType {
 		return returns.matches(other.returns);
 	}
 
-	public String toString(boolean withBounds)
+	@Override
+	public String toString(boolean withPackages, boolean withBounds)
 	{		
-		return parameterTypes.toString(withBounds) + " => " + returns.toString(withBounds);
+		return parameterTypes.toString(withPackages, withBounds) + " => " + returns.toString(withPackages, withBounds);
 	}
 	
 	public String parametersToString()

@@ -127,19 +127,21 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		}
 	}
 	
-	public String toString()
+	public String toString(boolean withPackages, boolean withBounds)
 	{
-		return toString("(", ")", false);		
-	}
-	
-	public String toString(boolean withBounds)
-	{
-		return toString("(", ")", withBounds);		
+		return toString("(", ")", withPackages, withBounds);		
 	}
 	
 	public String toString(String begin, String end) {
-		return toString(begin, end, false);
+		return toString(begin, end, false, false);
+	}	
+	
+	/*
+	public String getQualifiedName(boolean withBounds) 
+	{		
+		return toStringWithQualifiedParameters(withBounds);
 	}
+	*/
 	
 	@Override
 	protected String getMangledNameWithGenerics(boolean convertArrays)
@@ -171,7 +173,8 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return builder.toString();
 	}
 	
-	public String toString(String begin, String end, boolean withBounds ) {
+	/*
+	public String toStringWithQualifiedParameters(String begin,	String end, boolean withBounds) {
 		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;
 		
@@ -185,7 +188,29 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			if( type != null )
 			{
 				builder.append(type.getModifiers().toString());
-				builder.append(type.getType().toString(withBounds));
+				builder.append(type.getType().toStringWithQualifiedParameters(withBounds));
+			}
+		}
+		
+		builder.append(end);
+		
+		return builder.toString();
+	}
+	*/
+	
+	public String toString(String begin, String end, boolean withPackages, boolean withBounds ) {
+		StringBuilder builder = new StringBuilder(begin);
+		boolean first = true;
+		
+		for(ModifiedType type: types) {			
+			if( first )
+				first = false;
+			else
+				builder.append(",");								
+			
+			if( type != null ) {
+				builder.append(type.getModifiers().toString());
+				builder.append(type.getType().toString(withPackages, withBounds));
 			}
 		}
 		
@@ -499,4 +524,6 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		else
 			return false;
 	}
+
+	
 }

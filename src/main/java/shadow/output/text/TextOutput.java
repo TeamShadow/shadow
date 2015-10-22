@@ -111,19 +111,19 @@ public class TextOutput extends AbstractOutput
 	{
 		Type type = module.getType();
 		StringBuilder sb = new StringBuilder(type.getModifiers().toString()).
-				append("class ").append(type.getQualifiedName());
+				append("class ").append(type.toString(true, false));
 		if (type instanceof ClassType)
 		{
 			ClassType classType = module.getClassType();
 			if (classType.getExtendType() != null)
 				sb.append(" extends ").
-						append(classType.getExtendType().getQualifiedName());
+						append(classType.getExtendType().toString(true, false));
 			List<InterfaceType> interfaceTypes = classType.getInterfaces();
 			if (!interfaceTypes.isEmpty())
 			{
 				sb.append(" implements ");
 				for (InterfaceType interfaceType : interfaceTypes)
-					sb.append(interfaceType.getQualifiedName()).append(", ");
+					sb.append(interfaceType.toString(true, false)).append(", ");
 				sb.delete(sb.length() - 2, sb.length());
 			}
 		}
@@ -147,13 +147,13 @@ public class TextOutput extends AbstractOutput
 				signature.getModifiers().toString()).
 				append(signature.getSymbol()).append('(');
 		for (TACVariable param : method.getParameters())
-			sb.append(param.getType().getQualifiedName()).append(' ').
+			sb.append(param.getType().toString(true, false)).append(' ').
 					append(param.getName()).append(", ");
 		if (!method.getParameters().isEmpty())
 			sb.delete(sb.length() - 2, sb.length());
 		sb.append(") => (");
 		for (ModifiedType retType : signature.getFullReturnTypes())
-			sb.append(retType.getType().getQualifiedName());
+			sb.append(retType.getType().toString(true, false));
 		sb.append(')');
 		if (signature.isNative())
 			writer.write(sb.append(';').toString());
@@ -163,7 +163,7 @@ public class TextOutput extends AbstractOutput
 			writer.indent();
 			for (TACVariable param : method.getLocals())
 				if (!method.getParameters().contains(param))
-					writer.write(param.getType().getQualifiedName() + ' ' +
+					writer.write(param.getType().toString(true, false) + ' ' +
 							param.getName() + ';');
 		}
 	}
@@ -381,7 +381,7 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACCall node) throws ShadowException
 		{
 			TACMethodRef method = node.getMethod();
-			sb.append(method.getOuterType().getQualifiedName()).append(':').
+			sb.append(method.getOuterType().toString(true, false)).append(':').
 					append(method.getName()).append('(');
 			for (TACOperand param : node.getParameters())
 				visit(sb, param).append(", ");
@@ -393,7 +393,7 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACCast node) throws ShadowException
 		{
-			visit(sb.append("cast<").append(node.getType().getQualifiedName()).
+			visit(sb.append("cast<").append(node.getType().toString(true, false)).
 					append(">("), node.getOperand()).append(')');
 		}
 
@@ -445,13 +445,13 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACNewObject node) throws ShadowException
 		{
-			sb.append(node.getType().getQualifiedName()).append(":create");
+			sb.append(node.getType().toString(true, false)).append(":create");
 		}
 
 		@Override
 		public void visit(TACNewArray node) throws ShadowException
 		{
-			sb.append(node.getType().getBaseType().getQualifiedName()).
+			sb.append(node.getType().getBaseType().toString(true, false)).
 					append(":create[").append(node.getDimension(0));
 			for (int i = 1; i < node.getDimensions(); i++)
 				visit(sb.append(", "), node.getDimension(i));
@@ -461,7 +461,7 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACSingletonRef node) throws ShadowException
 		{
-			sb.append(node.getType().getQualifiedName()).append(":instance");
+			sb.append(node.getType().toString(true, false)).append(":instance");
 		}
 
 		@Override
@@ -491,7 +491,7 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACCatch node) throws ShadowException
 		{
-			sb.append("catch ").append(node.getType().getQualifiedName());
+			sb.append("catch ").append(node.getType().toString(true, false));
 		}
 	}
 }
