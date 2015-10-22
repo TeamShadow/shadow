@@ -27,7 +27,3 @@ hs_err_pid*
 !/target/shadow.xml
 !/target/windows.xml
 /target/
-
-
-#JAXB generated Java files
-/src/main/java/jaxb
