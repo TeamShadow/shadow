@@ -124,13 +124,14 @@ public class TypeParameter extends Type {
 		bounds.removeAll(toRemove);
 		bounds.addAll(toAdd);
 	}
-		
-	public String toString(boolean withBounds) {
+	
+	@Override
+	public String toString(boolean withPackages, boolean withBounds) {
 		StringBuilder builder = new StringBuilder(getTypeName());
 		boolean first = true;
 		
-		if( !toStringRecursion && withBounds && bounds.size() > 1 ) { //always contains Object			
-			toStringRecursion = true;			
+		if(/* !toStringRecursion && */withBounds && bounds.size() > 1 ) { //always contains Object			
+			//toStringRecursion = true;			
 			builder.append(" is ");
 			
 			for(Type bound : bounds )				
@@ -138,15 +139,38 @@ public class TypeParameter extends Type {
 					if( !first )
 						builder.append(" and ");
 					
-					builder.append(bound.toString(withBounds));				
+					builder.append(bound.toString(withPackages, false));				
 					first = false;
 				}			
 			
-			toStringRecursion = false;
+			//toStringRecursion = false;
 		}
 		
 		return builder.toString();
 	}
+	
+	/*
+	public String toStringWithQualifiedParameters(boolean withBounds) {
+		StringBuilder builder = new StringBuilder(getTypeName());
+		boolean first = true;
+		
+		if( withBounds && bounds.size() > 1 ) { //always contains Object			
+						
+			builder.append(" is ");
+			
+			for(Type bound : bounds )				
+				if( bound != Type.OBJECT ) {			
+					if( !first )
+						builder.append(" and ");
+					
+					builder.append(bound.toStringWithQualifiedParameters(false));				
+					first = false;
+				}
+		}
+		
+		return builder.toString();
+	}
+	*/
 	
 	@Override
 	public String getMangledNameWithGenerics(boolean convertArrays) {		

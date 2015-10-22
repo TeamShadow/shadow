@@ -1,3 +1,6 @@
+import shadow:io@Console;
+
+
 immutable class shadow:standard@Class implements CanHash
 {
 	get String name;
@@ -91,9 +94,13 @@ immutable class shadow:standard@Class implements CanHash
 	
 	protected locked interfaceData( Class interfaceClass ) => ( immutable Object )
 	{
-		for ( int i = 0; i < interfaces->size; i += 1 )
+		Console out;
+		out.printLine("Looking for: " # interfaceClass);
+		for ( int i = 0; i < interfaces->size; i += 1 ) {
+			out.printLine("Has: " # interfaces[i]);
 			if ( interfaces[i] === interfaceClass )
 				return data[i];
+		}
 		
 		throw CastException:create("Class " # this # " does not implement interface " # interfaceClass);
 	}
@@ -245,7 +252,7 @@ immutable class shadow:standard@Class implements CanHash
 	{
 		return toString().hash();
 	}
-	
+		
 	public locked makeName(Object[] parameters) => (String)
 	{
 		var name = MutableString:create(#this);

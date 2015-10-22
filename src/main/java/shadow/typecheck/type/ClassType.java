@@ -581,16 +581,16 @@ public class ClassType extends Type {
 			out.print("shadow:standard@" + name);
 		}
 		else if( !hasOuter() ) //outermost class		
-			out.print(getQualifiedName(true));
+			out.print(toString(true, true));
 		else {	
-			name = toString(true);
+			name = toString(false, true);
 			out.print(name.substring(name.lastIndexOf(':') + 1));
 		}
 		
 		//extend type
 		Type extendType = getExtendType();
 		if( extendType != null && !this.equals(Type.EXCEPTION)  )
-			out.print(" extends " + extendType.getQualifiedName() );
+			out.print(" extends " + extendType.toString(true, false) );
 		
 		//interfaces implemented
 		List<InterfaceType> interfaces = getInterfaces();
@@ -602,7 +602,7 @@ public class ClassType extends Type {
 					out.print(", ");
 				else
 					first = false;
-				out.print(_interface.getQualifiedName());				
+				out.print(_interface.toString(true, false));				
 			}			
 		}
 		

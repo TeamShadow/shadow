@@ -344,7 +344,7 @@ public abstract class Type implements Comparable<Type> {
 		//return getMangledNameWithGenerics();
 		
 		if( hashName == null )
-			hashName = getQualifiedName();
+			hashName = toString(true, false); //with packages but without type parameter bounds
 		
 		return hashName;
 	}
@@ -353,36 +353,62 @@ public abstract class Type implements Comparable<Type> {
 		hashName = null;
 	}
 	
+	/*
 	public String getQualifiedName() 
 	{		
 		return getQualifiedName(false);			
 	}
 	
-	public String getQualifiedName(boolean withBounds) 
-	{		
-		if( isPrimitive() )
-			return toString(withBounds);		
-		else if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + toString(withBounds);
-		else
-			return _package.getQualifiedName() + '@' + toString(withBounds);			
-	}
-	
-	public String toString() {
-		return toString(false);
-	}
-	
-	public String toString(boolean withBounds) {		
+	protected String toStringWithQualifiedParameters(boolean withBounds) {				
 		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
 		StringBuilder builder;
 		
 		if( getOuter() == null )		
 			builder = new StringBuilder(className);
 		else
-			builder = new StringBuilder(getOuter().toString(withBounds) + ":" + className );
+			builder = new StringBuilder(getOuter().toStringWithQualifiedParameters(withBounds) + ":" + className );
 			
 		if( isParameterized() )		
-			builder.append(getTypeParameters().toString("<",">", withBounds));
+			builder.append(getTypeParameters().toStringWithQualifiedParameters("<",">", withBounds));
+		
+		return builder.toString();		
+	}
+	*/
+
+	/*
+	public String getQualifiedName(boolean withBounds) 
+	{		
+		if( isPrimitive() )
+			return toString(withBounds);		
+		else if( _package == null || _package.getQualifiedName().isEmpty())
+			return "default@" + toStringWithQualifiedParameters(withBounds);
+		else
+			return _package.getQualifiedName() + '@' + toStringWithQualifiedParameters(withBounds);			
+	}
+	*/
+	
+	final public String toString() {
+		return toString(false, false);
+	}
+	
+	public String toString(boolean withPackages, boolean withBounds) {		
+		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
+		StringBuilder builder = new StringBuilder();
+		
+		if( getOuter() == null ) {
+			if( withPackages && !isPrimitive() ) {
+				if( _package == null || _package.getQualifiedName().isEmpty())
+					builder.append("default@");
+				else
+					builder.append(_package.getQualifiedName()).append('@');
+			}			
+			builder.append(className);
+		}
+		else
+			builder.append(getOuter().toString(withPackages, withBounds)).append(':').append(className);
+			
+		if( isParameterized() )		
+			builder.append(getTypeParameters().toString("<",">", withPackages, withBounds));
 		
 		return builder.toString();
 	}

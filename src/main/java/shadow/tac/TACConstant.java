@@ -60,7 +60,7 @@ public class TACConstant extends TACNodeList implements ModifiedType
 	{
 		StringWriter writer = new StringWriter();
 		writer.write(getModifiers().toString());
-		writer.write(getType().toString(true));
+		writer.write(getType().toString(false, true));
 		writer.write(' ');
 		try
 		{
