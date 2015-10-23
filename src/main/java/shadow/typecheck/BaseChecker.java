@@ -742,13 +742,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						}
 						catch (shadow.typecheck.type.InstantiationException e)
 						{
-							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true, true) + " do not match type parameters " + parameters.toString(true, true) );
+							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
 							type = Type.UNKNOWN;
 						}
 					}
 					else
 					{						
-						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true, true) + " do not match type parameters " + parameters.toString(true, true) );
+						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
 						type = Type.UNKNOWN;
 					}
 				}
@@ -801,13 +801,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 								}
 								catch (InstantiationException e) 
 								{
-									addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true, true) + " do not match type parameters " + parameters.toString(true, true) );
+									addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
 									type = Type.UNKNOWN;
 								}
 							}
 							else
 							{						
-								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true, true) + " do not match type parameters " + parameters.toString(true, true) );
+								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
 								type = Type.UNKNOWN;
 							}
 						}

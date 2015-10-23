@@ -176,7 +176,7 @@ public class Main {
 				
 				final OutputStream linkOut = link.getOutputStream();
 				
-				File file = new File(currentJob.getMainFile().toString() + ".debug");
+				File file = new File(currentJob.getMainFile().toString() + ".debug.ll");
 				final FileOutputStream fileOut = new FileOutputStream(file);
 				
 				OutputStream out = new OutputStream() {

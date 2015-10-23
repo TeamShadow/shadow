@@ -86,14 +86,12 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 	
 	
 	@Override
-	public String toString(boolean withPackages, boolean withBounds)
-	{
-		return type.toString() + typeArguments.toString(" [", "]", withPackages, withBounds);
+	public String toString(int options) {
+		return type.toString() + typeArguments.toString(" [", "]", options);
 	}
 	
 	@Override
-	public ClassType getTypeWithoutTypeArguments()
-	{
+	public ClassType getTypeWithoutTypeArguments() {
 		return type.getTypeWithoutTypeArguments();		
 	}
 	

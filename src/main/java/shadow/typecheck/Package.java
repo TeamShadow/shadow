@@ -82,11 +82,9 @@ public class Package
 			return this;
 	}
 	
-	public void addType(Type type ) throws PackageException
-	{	
-		if(!types.containsKey(type.getTypeName()))
-		{
-			types.put(type.getTypeName(), type);
+	public void addType(Type type ) throws PackageException {	
+		if(!types.containsKey(type.toString(Type.NO_OPTIONS))) { //no package name or type parameters		
+			types.put(type.toString(Type.NO_OPTIONS), type);
 			type.setPackage(this);
 		}
 		else

@@ -56,11 +56,10 @@ public class TACConstant extends TACNodeList implements ModifiedType
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		StringWriter writer = new StringWriter();
 		writer.write(getModifiers().toString());
-		writer.write(getType().toString(false, true));
+		writer.write(getType().toString(Type.TYPE_PARAMETERS));
 		writer.write(' ');
 		try
 		{

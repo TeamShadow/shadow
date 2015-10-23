@@ -216,15 +216,13 @@ public class PropertyType extends Type
 		return replacement;
 	}
 	
-
-	
 	@Override
-	public String toString(boolean withPackages, boolean withBounds) {
+	public String toString(int options) {
 		StringBuilder sb = new StringBuilder("[");
 		
 		if( isGettable() ) {
 			sb.append("get: ");
-			sb.append(getGetType().getType().toString(withPackages, withBounds));
+			sb.append(getGetType().getType().toString(options));
 		}
 		
 		if( isGettable() && isSettable() ) {
@@ -233,7 +231,7 @@ public class PropertyType extends Type
 		
 		if( isSettable() ) {
 			sb.append("set: ");
-			sb.append(getSetType().getType().toString(withPackages, withBounds));
+			sb.append(getSetType().getType().toString(options));
 		}
 		sb.append("]");
 		return sb.toString();		

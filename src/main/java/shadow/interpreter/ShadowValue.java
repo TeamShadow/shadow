@@ -189,7 +189,7 @@ public abstract class ShadowValue implements ModifiedType {
 
     @Override
     public String toString() {
-        return getType().toString(true, false);
+        return getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS);
     }
 
     /**

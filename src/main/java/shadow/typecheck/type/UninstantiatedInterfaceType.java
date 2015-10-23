@@ -27,9 +27,8 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 	}
 	
 	@Override
-	public String toString(boolean withPackages, boolean withBounds)
-	{
-		return type.toString() + typeArguments.toString(" [", "]", withPackages, withBounds);
+	public String toString(int options) {
+		return type.toString() + typeArguments.toString(" [", "]", options);
 	}
 	
 	@Override

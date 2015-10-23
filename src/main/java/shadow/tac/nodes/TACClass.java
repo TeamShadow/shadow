@@ -266,10 +266,12 @@ public class TACClass extends TACOperand
 		TACOperand name;
 		
 		if( type.isFullyInstantiated() )
-			name = new TACLiteral(this, new ShadowString(type.toString()));
+			name = new TACLiteral(this, new ShadowString(type.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)));
 		else {
+			//this doesn't handle inner classes where the outer classes also have type parameters
+			
 			SequenceType parameters = new SequenceType();
-			TACOperand baseType = new TACLiteral(this, new ShadowString(type.getTypeName()));
+			TACOperand baseType = new TACLiteral(this, new ShadowString(type.toString(Type.PACKAGES)));
 			parameters.add(baseType);
 			parameters.add(parameterArray);
 			

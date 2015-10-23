@@ -105,18 +105,16 @@ public class SubscriptType extends PropertyType
 	}
 	
 	@Override
-	public String toString(boolean withPackages, boolean withBounds)
-	{
-		StringBuilder sb = new StringBuilder(getGetType().getType().toString(withPackages, withBounds));
+	public String toString(int options) {
+		StringBuilder sb = new StringBuilder(getGetType().getType().toString(options));
 					
 		sb.append(" <= [");
-		sb.append(index.getType().toString(withPackages, withBounds));
+		sb.append(index.getType().toString(options));
 		sb.append("]");
 				
-		if( isSettable() )
-		{
+		if( isSettable() ) {
 			sb.append(" <= ");
-			sb.append(getSetType().getType().toString(withPackages, withBounds));
+			sb.append(getSetType().getType().toString(options));
 		}		
 		return sb.toString();		
 	}

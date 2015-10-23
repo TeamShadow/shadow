@@ -26,8 +26,7 @@ public class ClassType extends Type {
 	}
 	
 	public ClassType(String typeName, Modifiers modifiers, Type outer ) {		
-		super( typeName, modifiers, outer );
-		
+		super( typeName, modifiers, outer );		
 		innerClasses = new HashMap<String, ClassType>();
 	}
 	
@@ -581,16 +580,16 @@ public class ClassType extends Type {
 			out.print("shadow:standard@" + name);
 		}
 		else if( !hasOuter() ) //outermost class		
-			out.print(toString(true, true));
+			out.print(toString(PACKAGES | TYPE_PARAMETERS | PARAMETER_BOUNDS ));
 		else {	
-			name = toString(false, true);
+			name = toString(TYPE_PARAMETERS | PARAMETER_BOUNDS);
 			out.print(name.substring(name.lastIndexOf(':') + 1));
 		}
 		
 		//extend type
 		Type extendType = getExtendType();
 		if( extendType != null && !this.equals(Type.EXCEPTION)  )
-			out.print(" extends " + extendType.toString(true, false) );
+			out.print(" extends " + extendType.toString(PACKAGES | TYPE_PARAMETERS) );
 		
 		//interfaces implemented
 		List<InterfaceType> interfaces = getInterfaces();
@@ -602,7 +601,7 @@ public class ClassType extends Type {
 					out.print(", ");
 				else
 					first = false;
-				out.print(_interface.toString(true, false));				
+				out.print(_interface.toString(PACKAGES | TYPE_PARAMETERS));				
 			}			
 		}
 		

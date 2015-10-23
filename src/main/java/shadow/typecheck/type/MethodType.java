@@ -137,9 +137,9 @@ public class MethodType extends ClassType {
 	}
 
 	@Override
-	public String toString(boolean withPackages, boolean withBounds)
+	public String toString(int options)
 	{		
-		return parameterTypes.toString(withPackages, withBounds) + " => " + returns.toString(withPackages, withBounds);
+		return parameterTypes.toString(options) + " => " + returns.toString(options);
 	}
 	
 	public String parametersToString()

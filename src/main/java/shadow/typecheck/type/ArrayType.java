@@ -11,38 +11,16 @@ public class ArrayType extends ClassType
 	private final int dimensions;
 	private final Type baseType;
 	private final boolean nullable;
+	private final String brackets;
 	
-	private static String makeName(Type baseType, List<Integer> arrayDimensions, int index )
-	{
-		StringBuilder name = new StringBuilder(baseType.getTypeName());
-		int i;
-		for( ; index < arrayDimensions.size(); index++ )
-		{		
-			i = arrayDimensions.get(index);
-			name.append("[");
-			for( int j = 1; j < i; j++ ) //no extra comma for 1 dimension
-				name.append(",");
-			name.append("]");				
-		}
-		
-		return name.toString();		
+	private static String makeBrackets(int dimensions ) {
+		StringBuilder brackets = new StringBuilder("[");		
+		for( int i = 1; i < dimensions; i++) //no extra comma for 1 dimension 
+			brackets.append(",");
+		brackets.append("]");
+		return brackets.toString();		
 	}
-	
-	
-	/*
-	@Override
-	public String getQualifiedName(boolean withBounds) {
-		if( getSuperBaseType().isPrimitive() )
-			return toString(withBounds);
-		
-		Package _package = getSuperBaseType().getPackage();		
-		if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + toString(withBounds);
-		else
-			return _package.getQualifiedName() + '@' + toStringWithQualifiedParameters(withBounds);		
-	}
-	*/
-	
+
 	public int getDimensions()
 	{
 		return dimensions;
@@ -58,16 +36,14 @@ public class ArrayType extends ClassType
 		//also, arrays are never the same width as objects or primitives for overriding purposes
 	}
 	
-	public Type getSuperBaseType()
-	{
+	public Type recursivelyGetBaseType() {
 		if (baseType instanceof ArrayType)
-			return ((ArrayType)baseType).getSuperBaseType();
+			return ((ArrayType)baseType).recursivelyGetBaseType();
 		
 		return baseType;
 	}
 	
-	public Type getBaseType()
-	{
+	public Type getBaseType() {
 		return baseType;
 	}
 	
@@ -99,13 +75,20 @@ public class ArrayType extends ClassType
 		this( baseType, arrayDimensions, 0, nullable );
 	}
 	
+	protected static Type getLowestBase(Type type) {
+		if( type instanceof ArrayType )
+			return ((ArrayType)type).getBaseType();
+		return type;		
+	}
+	
 	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index, boolean nullable ) {
-		super( makeName(baseType, arrayDimensions, index), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getOuter() );	
+		super( getLowestBase(baseType).getTypeName(), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getOuter() );		
 		if( nullable )		
 			setExtendType(Type.ARRAY_NULLABLE);
 		else
 			setExtendType(Type.ARRAY);
-		dimensions = arrayDimensions.get(index);		
+		dimensions = arrayDimensions.get(index);
+		brackets = makeBrackets(dimensions);
 		if( arrayDimensions.size() == index + 1 )
 			this.baseType = baseType;
 		else
@@ -117,23 +100,18 @@ public class ArrayType extends ClassType
 		this.nullable = nullable;
 	}
 	
-	public String toString(boolean withPackages, boolean withBounds) {		
-		//peels off last set of brackets, important for arrays of arrays
-		String brackets = getTypeName().substring(getTypeName().lastIndexOf('['));		
-		
-		return baseType.toString(withPackages, withBounds) + brackets;
+	public String toString(int options) {
+		return baseType.toString(options) + brackets;
 	}
 	
 	
 	@Override
-	public SequenceType getTypeParameters()
-	{
+	public SequenceType getTypeParameters() {
 		return baseType.getTypeParameters();		
 	}
 	
 	@Override
-	public boolean equals(Type type)
-	{		
+	public boolean equals(Type type) {		
 		if( type == Type.NULL )
 			return false;
 		
@@ -143,17 +121,6 @@ public class ArrayType extends ClassType
 			if( dimensions == other.dimensions && nullable == other.nullable )
 				return baseType.equals(other.baseType);			
 		}
-		/*  //this allows generic arrays to be assigned directly
-		else if( type instanceof ClassType )
-		{
-			ClassType other = (ClassType)type;
-			if( other.getTypeWithoutTypeArguments() == Type.ARRAY && other.getTypeParameters().size() == 1 )	
-			{
-				ModifiedType baseType = other.getTypeParameters().get(0);			
-				return baseType != null && this.getBaseType().equals(baseType.getType()) && baseType.getModifiers().getModifiers() == 0;
-			}
-		}	*/
-		
 		return false;
 	}
 	
@@ -193,15 +160,10 @@ public class ArrayType extends ClassType
 		return new ArrayType( baseType.replace(values, replacements), dimensions, nullable);		
 	}
 		
-	public ClassType convertToGeneric()
-	{
-		Type base = baseType;
-				
-		//if( base instanceof ArrayType )
-		//	base = ((ArrayType)base).convertToGeneric();
+	public ClassType convertToGeneric() {
+		Type base = baseType;				
 		
-		try
-		{
+		try {
 			if( nullable )
 				return Type.ARRAY_NULLABLE.replace(Type.ARRAY_NULLABLE.getTypeParameters(), new SequenceType(base));
 			else
@@ -213,8 +175,7 @@ public class ArrayType extends ClassType
 		return null; //shouldn't happen
 	}
 	
-	public ArrayType convertToNullable()
-	{
+	public ArrayType convertToNullable() {
 		if( nullable )
 			return this;
 		else		
@@ -226,19 +187,16 @@ public class ArrayType extends ClassType
 	}
 
 	@Override
-	public boolean isRecursivelyParameterized()
-	{
+	public boolean isRecursivelyParameterized() {
 		return baseType.isRecursivelyParameterized();
 	}
 	
 	@Override
-	public boolean isFullyInstantiated()
-	{
+	public boolean isFullyInstantiated() {
 		return baseType.isFullyInstantiated();
 	}	
 	
-	public boolean containsUnboundTypeParameters()
-	{
+	public boolean containsUnboundTypeParameters() {
 		if( baseType instanceof TypeParameter )
 			return true;
 		

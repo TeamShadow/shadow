@@ -338,19 +338,19 @@ public class TypeCollector extends BaseChecker {
 			switch( kind )
 			{			
 			case CLASS:
-				type = new ClassType(typeName, modifiers, currentType );				
+				type = new ClassType(image, modifiers, currentType );				
 				break;
 			case ENUM:				
-				type = new EnumType(typeName, modifiers, currentType );
+				type = new EnumType(image, modifiers, currentType );
 				break;			
 			case EXCEPTION:
-				type = new ExceptionType(typeName, modifiers, currentType );
+				type = new ExceptionType(image, modifiers, currentType );
 				break;
 			case INTERFACE:
-				type = new InterfaceType(typeName, modifiers);
+				type = new InterfaceType(image, modifiers);
 				break;
 			case SINGLETON:
-				type = new SingletonType(typeName, modifiers, currentType );
+				type = new SingletonType(image, modifiers, currentType );
 				break;
 			default:
 				throw new ShadowException("Unsupported type!" );

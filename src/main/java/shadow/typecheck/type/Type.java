@@ -119,20 +119,23 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_NEGATE = null;	
 	
 	
-	private static class TypeArgumentCache
-	{
+	//constants used for options in toString()
+	public static final int NO_OPTIONS = 0;
+	public static final int PACKAGES =  1;
+	public static final int TYPE_PARAMETERS =  2;
+	public static final int PARAMETER_BOUNDS =  4;	
+	
+	private static class TypeArgumentCache {
 		public ModifiedType argument;
 		public Type instantiatedType;
 		public List<TypeArgumentCache> children;
 	}
 	
-	public Type getInstantiation( List<ModifiedType> typeArguments  )
-	{
+	public Type getInstantiation( List<ModifiedType> typeArguments  ) {
 		return getInstantiation(instantiatedTypes, typeArguments, 0 );
 	}
 	
-	public Type getTypeWithoutTypeArguments()
-	{		
+	public Type getTypeWithoutTypeArguments() {		
 		return typeWithoutTypeArguments;
 	}
 	
@@ -250,28 +253,15 @@ public abstract class Type implements Comparable<Type> {
 		this( typeName, modifiers, outer, (outer == null ? null : outer._package ) );
 	}
 	
-	public Type(String typeName, Modifiers modifiers, Type outer, Package _package )
-	{
-		this.typeName = typeName;
+	public Type(String typeName, Modifiers modifiers, Type outer, Package _package ) {
+		this.typeName = typeName;	
 		this.modifiers = modifiers;
 		this.outer = outer;		
 		this._package = _package;
 	}
 	
-	public String getTypeName() 
-	{
+	public String getTypeName() {
 		return typeName;
-	}
-	
-	
-	public String getImportName() //does not include parameters
-	{		
-		if( isPrimitive() )
-			return getTypeName();
-		else if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + getTypeName();
-		else
-			return _package.getQualifiedName() + '@' + getTypeName();			
 	}
 	
 	final public String getMangledNameWithGenerics() {
@@ -332,19 +322,9 @@ public abstract class Type implements Comparable<Type> {
 		return builder.toString();	
 	}
 	
-	public final String getHashName()
-	{
-		/*
-		if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + toString();
-		else
-			return _package.getQualifiedName() + '@' + toString();
-		*/
-		
-		//return getMangledNameWithGenerics();
-		
+	public final String getHashName() {	
 		if( hashName == null )
-			hashName = toString(true, false); //with packages but without type parameter bounds
+			hashName = toString(); //with packages but without type parameter bounds
 		
 		return hashName;
 	}
@@ -388,37 +368,28 @@ public abstract class Type implements Comparable<Type> {
 	*/
 	
 	final public String toString() {
-		return toString(false, false);
+		return toString(PACKAGES | TYPE_PARAMETERS); //no bounds
 	}
 	
-	public String toString(boolean withPackages, boolean withBounds) {		
-		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
+	public String toString(int options) {
 		StringBuilder builder = new StringBuilder();
 		
 		if( getOuter() == null ) {
-			if( withPackages && !isPrimitive() ) {
+			if( !isPrimitive() && (options & PACKAGES) != 0 ) {
 				if( _package == null || _package.getQualifiedName().isEmpty())
 					builder.append("default@");
 				else
 					builder.append(_package.getQualifiedName()).append('@');
 			}			
-			builder.append(className);
+			builder.append(typeName);
 		}
 		else
-			builder.append(getOuter().toString(withPackages, withBounds)).append(':').append(className);
+			builder.append(getOuter().toString(options)).append(':').append(typeName);
 			
-		if( isParameterized() )		
-			builder.append(getTypeParameters().toString("<",">", withPackages, withBounds));
+		if( isParameterized() && (options & TYPE_PARAMETERS) != 0 )		
+			builder.append(getTypeParameters().toString("<",">", options));
 		
 		return builder.toString();
-	}
-	
-	public String getPath()
-	{
-		if( _package == null || _package.getPath().isEmpty() )
-			return typeName;
-		else
-			return _package.getPath() + File.separator + typeName;	
 	}
 	
 	public Modifiers getModifiers()
@@ -434,11 +405,6 @@ public abstract class Type implements Comparable<Type> {
 	public void addModifier( int modifier )
 	{
 		modifiers.addModifier(modifier);		
-	}
-	
-	public final boolean manglesTheSameAs(Type type)
-	{
-		return getMangledName().equals(type.getMangledName());		
 	}
 	
 	@Override
@@ -1408,7 +1374,7 @@ public abstract class Type implements Comparable<Type> {
 				if( importItem instanceof Type ) {
 					Type importType = (Type)importItem;
 					if( !importType.hasOuter() && getReferencedTypes().contains(importType) && !importType.getPackage().toString().equals("shadow:standard"))
-						imports.add(importType.getImportName());
+						imports.add(importType.toString(PACKAGES));
 						
 				}
 				else if( importItem instanceof Package )
@@ -1417,7 +1383,7 @@ public abstract class Type implements Comparable<Type> {
 					if( !importPackage.toString().equals("shadow:standard"))
 						for( Type referencedType : getReferencedTypes() )
 							if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
-								imports.add(referencedType.getImportName());					
+								imports.add(referencedType.toString(PACKAGES));					
 				}
 			}
 			
@@ -1425,7 +1391,7 @@ public abstract class Type implements Comparable<Type> {
 			if( !getPackage().toString().equals("shadow:standard") )
 				for( Type packageType : getPackage().getTypes() )
 					if( packageType != this && !packageType.hasOuter() && getReferencedTypes().contains(packageType) && !packageType.isPrimitive())
-						imports.add(packageType.getImportName());			
+						imports.add(packageType.toString(PACKAGES));			
 			
 			for( String importType : imports )			
 				out.println(linePrefix + "import " + importType + ";");

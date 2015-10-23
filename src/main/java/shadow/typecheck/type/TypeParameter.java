@@ -126,11 +126,11 @@ public class TypeParameter extends Type {
 	}
 	
 	@Override
-	public String toString(boolean withPackages, boolean withBounds) {
+	public String toString(int options) {
 		StringBuilder builder = new StringBuilder(getTypeName());
 		boolean first = true;
 		
-		if(/* !toStringRecursion && */withBounds && bounds.size() > 1 ) { //always contains Object			
+		if(/* !toStringRecursion && */(options & PARAMETER_BOUNDS) != 0 && bounds.size() > 1 ) { //always contains Object			
 			//toStringRecursion = true;			
 			builder.append(" is ");
 			
@@ -139,7 +139,7 @@ public class TypeParameter extends Type {
 					if( !first )
 						builder.append(" and ");
 					
-					builder.append(bound.toString(withPackages, false));				
+					builder.append(bound.toString(options & ~PARAMETER_BOUNDS));				
 					first = false;
 				}			
 			
