@@ -1,4 +1,5 @@
-class shadow:standard@MutableString implements CanIndex<int, byte>
+class shadow:standard@MutableString
+	implements CanIndex<int, byte>
 {
 	get int size = 0;
 	byte[] data = byte:create[10];

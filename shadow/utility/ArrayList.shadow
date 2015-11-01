@@ -65,11 +65,11 @@ implements List<V>
 		return indexOf(value) != -1;	
 	}
 	
-	public readonly indexOf(V value) => (int index)
-	{		
+	public readonly indexOf(CanEqual<V> value) => (int index)
+	{	
 		for( int i = 0; i < size; i += 1 )
 		{
-			if( check(elements[i]) == value )
+			if( value == check(elements[i]) )
 				return i;
 		}
 	
@@ -104,11 +104,12 @@ implements List<V>
 		MutableString string = MutableString:create("[");
 		boolean first = true;
 		for( int i = 0; i < size; i += 1 )
-		{
+		{			
 			if( first )
 				first = false;
 			else
 				string.append(", ");
+			
 			string.append(#index(i));
 		}
 		

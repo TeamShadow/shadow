@@ -408,8 +408,8 @@ public class TypeUpdater extends BaseChecker {
 						}						
 					}
 					
-					if( interfaceType.isFullyInstantiated() )
-						type.addGenericClass(interfaceType);
+					//if( interfaceType.isParameterized() )
+					type.addGenericClass(interfaceType);
 				}					
 			}
 			else if( type instanceof InterfaceType ) {	
@@ -429,8 +429,8 @@ public class TypeUpdater extends BaseChecker {
 						}						
 					}
 					
-					if( interfaceType.isFullyInstantiated() )
-						type.addGenericClass(interfaceType);
+					//if( interfaceType.isParameterized() )
+					type.addGenericClass(interfaceType);
 					
 					//if( isMeta )
 						//type.addReferencedType(interfaceType);

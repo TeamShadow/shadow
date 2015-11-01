@@ -58,10 +58,10 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 		}
 		return current;
 	}
-	private readonly findNode( V value ) => ( int index, nullable Node node )
+	private readonly findNode( CanEqual<V> value ) => ( int index, nullable Node node )
 	{
 		int index = 0;
-		Node current = header;
+		Node current = header;		
 		try
 		{
 			while (true)
@@ -69,7 +69,7 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 				current = current->next;
 				if ( current === header )
 					return ( -1, null );
-				if ( check(current->value) == value )
+				if ( value == check(current->value) )
 					return ( index, current );
 				index += 1;
 			}

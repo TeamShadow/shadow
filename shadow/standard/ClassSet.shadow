@@ -270,40 +270,8 @@ locked class shadow:standard@ClassSet
 		}
 	}
 	
-	//regular array name
-	public locked makeName(String baseType, readonly Object[] parameters) => (String)
-	{
-		MutableString name = MutableString:create(baseType);
-		boolean first = true;
-		name.append('<');
-		for( int i = 0; i < parameters->size; i += 2 )
-		{
-			if( first )
-				first = false;
-			else
-				name.append(",");
-		
-			name.append(#parameters[i]);
-		}
-		name.append('>');
-		
-		return #name;
-	}
-	
-	//generic array name
-	public locked makeName(String arrayType, Class parameter) => (String)
-	{
-		MutableString name = MutableString:create(arrayType);
-		boolean first = true;
-		name.append('<');
-		name.append(#parameter);
-		name.append('>');		
-		return #name;
-	}
-	
-	
 	//this method assumes that it will only ever be run on a set containing all generic classes  
-	public findGeneric(String name, immutable Object[] parameters) => (nullable GenericClass)
+	locked public findGeneric(String name, immutable Object[] parameters) => (nullable GenericClass)
 	{
 		(int index, int hash) = findIndex( name, table->size );
 		try
@@ -319,44 +287,20 @@ locked class shadow:standard@ClassSet
 						int i;
 						for( i = 0; i < parameters->size and parameters[i] === other->parameters[i]; i += 2 )
 							skip;
-						if( i >= parameters->size and name == other->name )
-							return other;
+						if( i >= parameters->size and name == other->name )							
+							return other;					
 					}
 				}
 				current = check(current->next);
 			}			
 		}
 		recover
-		{						
-		}
-		return null;		
-	}
-		  
-	public findGenericArray(String name, Class parameter) => (nullable ArrayClass)
-	{
-		(int index, int hash) = findIndex( name, table->size );
-		try
-		{
-			Node current = check(table[index]);			
-			while ( true )
-			{
-				if( current->hash == hash and current->value is ArrayClass )
-				{
-					ArrayClass other = cast<ArrayClass>(current->value);
-					if( parameter === other->internalParameter )					
-							return other;
-				}
-				current = check(current->next);
-			}			
-		}
-		recover
-		{						
-		}
+		{ }		
 		return null;		
 	}
 	
 	//this method assumes that it will only ever be run on a set containing all array classes
-	public findArray(String name, Class base, int dimensions) => (nullable Class)
+	locked public findArray(String name, Class base, int dimensions) => (nullable Class)
 	{
 		(int index, int hash) = findIndex( name, table->size );
 		try
@@ -374,13 +318,12 @@ locked class shadow:standard@ClassSet
 			}			
 		}
 		recover
-		{						
-		}
+		{ }
 		return null;		
 	}
 	
 	//assumes class already not found
-	public addGeneric(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters) => (GenericClass)
+	locked public addGeneric(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters) => (GenericClass)
 	{
 		GenericClass newGeneric = GenericClass:create(base, name, parent, interfaces, parameters);
 		(int index, int hash) = findIndex( name, table->size );		
@@ -389,117 +332,77 @@ locked class shadow:standard@ClassSet
 		size += 1;
 		
 		if( size > threshold )
-			resize(2 * table->size);
-			
+			resize(2 * table->size);		
+		
 		return newGeneric;			
 	}
-	
-	private native getArrayMethods() => (Object);	
+			
 	private native getIntArrayClass() => (Class);
 	private native getEmptyObjectArray() => (immutable Object[]);
-	private native makeObjectArray(nullable Object object0, nullable Object object1, nullable Object object2, nullable Object object3) => (immutable Object[]);
-	private native makeObjectArray(nullable Object object0, nullable Object object1) => (immutable Object[]);
+	private native makeObjectArray(nullable readonly Object object0, nullable readonly Object object1, nullable readonly Object object2, nullable readonly Object object3) => (immutable Object[]);
 	private native getEmptyClassArray() => (immutable Class[]);
 	private native makeClassArray(nullable Class class0, nullable Class class1, nullable Class class2) => (immutable Class[]);
 	
-	
-	public getGenericArray(String name, Class parameter, Object parameterMethods, boolean isNull) => (ArrayClass)
-	{
+	locked public getGenericArray(String name, immutable Object[] parameters, boolean isNull) => (GenericClass)
+	{		
 		try
-		{
-			return check(findGenericArray(name, parameter));
+		{	
+			return check(findGeneric(name, parameters));
 		}
 		recover
-		{
-			Class genericParameter = parameter;
-			Object genericMethods = parameterMethods;
-			if( (parameter->flags & Class:ARRAY) != 0 )
-			{
-				Class base = check(parameter->parent);
-				String baseName;
-				if( isNull )
-					baseName = makeName("ArrayNullable", base);
-				else
-					baseName = makeName("Array", base);				
-				genericParameter = getGenericArray( baseName, base, getArrayMethods(), isNull );
-				genericMethods = getArrayMethods();
-			}
-			
+		{	
 			//CanIndex			
 			//immutable Object[] canIndexParameters = freeze({ getIntArrayClass(), getNull(), parameter, parameterMethods });
-			immutable Object[] canIndexParameters = makeObjectArray(getIntArrayClass(), null, parameter, parameterMethods);
+			immutable Object[] canIndexParameters = makeObjectArray(getIntArrayClass(), null, parameters[0], parameters[1]);
 			//same parameters used for CanIndex and CanIndexStore 
 			Class base;
 			String canIndexName;
 			if( isNull )
-			{
 				base = CanIndexNullable:class;
-				canIndexName = makeName("CanIndexNullable", canIndexParameters );
-			}
 			else
-			{
 				base = CanIndex:class;
-				canIndexName = makeName("CanIndex", canIndexParameters );
-			}
+				
+			canIndexName = base.makeName(#base, canIndexParameters, 0, 4);
 			nullable GenericClass canIndex = findGeneric(canIndexName, canIndexParameters);
 			if( canIndex === null )
 				canIndex = addGeneric(base, canIndexName, null, getEmptyClassArray(), canIndexParameters);
 			
 			//CanIndexStore						
 			String canIndexStoreName;
-			if( isNull )
-			{
+			if( isNull )			
 				base = CanIndexStoreNullable:class;
-				canIndexStoreName = makeName("CanIndexStoreNullable", canIndexParameters );
-			}
 			else
-			{
 				base = CanIndexStore:class;
-				canIndexStoreName = makeName("CanIndexStore", canIndexParameters );
-			}
+
+			canIndexStoreName = base.makeName(#base, canIndexParameters, 0, 4);
 			nullable GenericClass canIndexStore = findGeneric(canIndexStoreName, canIndexParameters);
 			if( canIndexStore === null )
 				canIndexStore = addGeneric(base, canIndexStoreName, null, getEmptyClassArray(), canIndexParameters);
 
 			//CanIterate
-			immutable Object[] canIterateParameters = makeObjectArray(parameter, parameterMethods);			
 			String canIterateName;
-			if( isNull )
-			{
+			if( isNull )			
 				base = CanIterateNullable:class;
-				canIterateName = makeName("CanIterateNullable", canIterateParameters );
-			}
 			else
-			{
 				base = CanIterate:class;
-				canIterateName = makeName("CanIterate", canIterateParameters );
-			}
-			nullable GenericClass canIterate = findGeneric(canIterateName, canIterateParameters);
+			canIterateName = base.makeName(#base, parameters, 0, 2);
+			
+			nullable GenericClass canIterate = findGeneric(canIterateName, parameters);
 			if( canIterate === null )
-				canIterate = addGeneric(base, canIterateName, null, getEmptyClassArray(), canIterateParameters);
+				canIterate = addGeneric(base, canIterateName, null, getEmptyClassArray(), parameters);
 									
 			//return addGenericArray(name, parameter, freeze({cast<Class>(check(canIndex)), check(canIndexStore), check(canIterate)}), freeze({genericParameter, genericMethods}));
-			return addGenericArray(name, parameter, makeClassArray(canIndex, canIndexStore, canIterate), makeObjectArray(genericParameter, genericMethods));
-		}	
-	}
-	
-	//assumes generic array already not found
-	public addGenericArray(String name, Class internalParameter, immutable Class[] interfaces, immutable Object[] parameters) => (ArrayClass)
-	{		
-		ArrayClass newGenericArray = ArrayClass:create(name, interfaces, parameters, internalParameter);
-		(int index, int hash) = findIndex( name, table->size );		
-		table[index] = Node:create(hash, newGenericArray, table[index]);
-		modifications += 1;
-		size += 1;
-		
-		if( size > threshold )
-			resize(2 * table->size);
+			if( isNull )
+				base = ArrayNullable:class;
+			else
+				base = Array:class;			
 			
-		return newGenericArray;			
-	}
-	
+			return addGeneric(base, name, Object:class, makeClassArray(canIndex, canIndexStore, canIterate), parameters);
+		}	
+	}	
+
 	//assumes array already not found
-	public addArray(String name, Class base, int dimensions) => (Class)
+	locked public addArray(String name, Class base, int dimensions) => (Class)
 	{
 		immutable Class[] interfaces = getEmptyClassArray();
 		immutable Object[] data = getEmptyObjectArray();

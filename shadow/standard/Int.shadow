@@ -270,7 +270,7 @@ implements
 		return toString(10u);
 	}
 	public toString(uint base) => (String)
-	{		
+	{				
 		String string = abs().toString(base);			
 		return this >= 0 ? string, '-' # string;
 	}	

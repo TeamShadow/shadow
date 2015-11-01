@@ -1143,7 +1143,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			}	
 			
 			continueLabel.new TACLabel(tree);
-			prefix = new TACNodeRef(tree, operand);
+			prefix = new TACNodeRef(tree, operand, new SimpleModifiedType(operand.getType(), new Modifiers(operand.getModifiers().getModifiers() & ~Modifiers.NULLABLE)));
 			
 			if( node.getType().isPrimitive() ) //convert from object to primitive form
 				prefix = new TACCast(tree, new SimpleModifiedType(node.getType()), prefix );

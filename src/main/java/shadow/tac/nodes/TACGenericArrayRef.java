@@ -6,6 +6,7 @@ import java.util.Collection;
 import shadow.interpreter.ShadowBoolean;
 import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowValue;
 import shadow.output.llvm.LLVMOutput;
 import shadow.tac.TACMethod;
 import shadow.typecheck.type.ArrayType;
@@ -21,17 +22,10 @@ public class TACGenericArrayRef extends TACArrayRef {
 	//e.g. if T is Wombat[], then T[] is Wombat[][]
 	//internalParameter would be Wombat[]
 	//genericParameter would be Array<Wombat>
-	private TACClass internalParameter;
-	private TACOperand genericParameter;
-	
-	public TACGenericArrayRef(TACNode node, TACOperand reference, TACOperand... ops) {
-		this(node, reference, Arrays.asList(ops), true);
-	}	
+	//private TACOperand internalParameter;
+	private TACClass genericParameter;
+	private boolean isNullable;
 
-	public TACGenericArrayRef(TACNode node, TACOperand reference, TACOperand op, boolean check) {
-		this(node, reference, Arrays.asList(op), check);
-	}
-	
 	public TACGenericArrayRef(TACNode node, TACOperand reference,
 			Collection<TACOperand> ops) {
 		this(node, reference, ops, true);
@@ -43,8 +37,11 @@ public class TACGenericArrayRef extends TACArrayRef {
 		
 		ArrayType arrayType = (ArrayType) reference.getType();
 		Type baseType = arrayType.getBaseType();
-		internalParameter = new TACClass(this, baseType); 
-		TACOperand internalClass = internalParameter.getClassData();
+		genericParameter = new TACClass(this, baseType);		
+		isNullable =  reference.getModifiers().isNullable(); 
+		
+		/*
+		
 		if( baseType instanceof ArrayType ) {
 			ArrayType arrayBase = (ArrayType)baseType;
 			if( reference.getModifiers().isNullable() )
@@ -76,18 +73,18 @@ public class TACGenericArrayRef extends TACArrayRef {
 			TACOperand arrayName;
 			TACOperand isNull;
 			if( reference.getModifiers().isNullable() ) {			
-				arrayName = new TACLiteral(this, new ShadowString("ArrayNullable"));
+				arrayName = new TACLiteral(this, new ShadowString(Type.ARRAY_NULLABLE.toString(Type.PACKAGES)));
 				isNull = new TACLiteral(this, new ShadowBoolean(true));
 			}
 			else {
-				arrayName = new TACLiteral(this, new ShadowString("Array"));
+				arrayName = new TACLiteral(this, new ShadowString(Type.ARRAY.toString(Type.PACKAGES)));
 				isNull = new TACLiteral(this, new ShadowBoolean(false));
 			}
 			parameters.add(arrayName);
 			parameters.add(new SimpleModifiedType(baseClass.getType())); //removes nullable modifier
 			
-			TACMethodRef makeName = new TACMethodRef(this, Type.CLASS_SET.getMatchingMethod("makeName", parameters));
-			TACOperand name = new TACCall(this, block, makeName, classSet, arrayName, baseClass);			
+			TACMethodRef makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
+			TACOperand name = new TACCall(this, block, makeName, new TACLiteral(this, ShadowValue.NULL), arrayName, baseClass);			
 			
 			SequenceType arguments = new SequenceType();
 			arguments.add(name);		
@@ -109,19 +106,16 @@ public class TACGenericArrayRef extends TACArrayRef {
 		}
 		
 		new TACNodeRef(this, getTotal());
+		*/
 	}
+
 	
-	public TACClass getInternalParameter() {		
-		return internalParameter;
-	}
-	
-	
-	public TACOperand getGenericParameter() {
+	public TACClass getGenericParameter() {
 		return genericParameter;
 	}
 	
-	
-	
-	
+	public boolean isNullable() {
+		return isNullable;
+	}
 	
 }

@@ -21,15 +21,16 @@ class shadow:test@ArrayListTest
 			out.printLine(list.index(i));
 		
 		out.printLine(list);
-		
+	
 		ArrayList<int> list2 = ArrayList<int>:create();
 		
 		for( int i = 1; i <= 15; i += 1 )
-			list2.add(i*i);
-			
-		list2.remove(9);		
-		list2.delete(0);
+			list2.add(i*i);		
 		
-		out.printLine(list2);				
+		list2.remove(9);		
+		list2.delete(0);	
+		
+		out.printLine(list2);
+						
 	}
 }

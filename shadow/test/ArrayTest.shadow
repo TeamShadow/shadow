@@ -2,23 +2,24 @@ import shadow:io@Console;
 
 class shadow:test@ArrayTest
 {
-	public main( String[] args ) => ()
+	public main() => ()
 	{
-		int[] temp = int:create[1];
+		int[] temp = int:create[1];						
 		Array<Object> array = Object:create[5];
+		
 		temp[0] = 0; array.index(temp, 0);
-		temp[0] = 1; array.index(temp, '2');
-		temp[0] = 2; array.index(temp, "four");
-		temp[0] = 3; array.index(temp, 88);
-		temp[0] = 4; array.index(temp, Object:create());
+		temp[0] = 1; array.index(temp, '2');		
+		temp[0] = 2; array.index(temp, "four");		
+		temp[0] = 3; array.index(temp, 88);		
+		temp[0] = 4; array.index(temp, Object:create());		
 		Console.printLine(array);
 		Array<Object> array3 = array.subarray(1, 4);
 		for ( temp[0] = 0; temp[0] < array->size; temp[0] += 1 )
 			array.index(temp, temp[0]);
 		temp[0] = 0; array3.index(temp, "zero");
 		temp[0] = 1; array3.index(temp, "one");
-		temp[0] = 2; array3.index(temp, "two");
-		Console.printLine(array);		
+		temp[0] = 2; array3.index(temp, "two");		
+		Console.printLine(array);
 		Console.printLine(array3);
 	}
 }

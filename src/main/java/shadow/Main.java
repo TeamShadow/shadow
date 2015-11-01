@@ -307,9 +307,7 @@ public class Main {
 				File llvmFile = new File(path + ".ll");
 				
 				Type type = node.getType();				
-				generics.addAll(type.getGenericClasses());						
-				arrays.addAll(type.getArrayClasses());
-
+			
 				//if the LLVM didn't exist, the full .shadow file would have been used				
 				if( file.getPath().endsWith(".meta") ) {
 					logger.info("Using pre-existing LLVM code for " + name);
@@ -349,6 +347,11 @@ public class Main {
 					if( nativeFile.exists() )
 						linkCommand.add(nativeFile.getCanonicalPath());					
 				}
+				
+				//it's important to add generics after generating the LLVM, since more are made
+				generics.addAll(type.getGenericClasses());						
+				arrays.addAll(type.getArrayClasses());
+
 			}
 		}
 	}

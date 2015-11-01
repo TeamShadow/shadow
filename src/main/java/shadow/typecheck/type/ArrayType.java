@@ -3,7 +3,6 @@ package shadow.typecheck.type;
 import java.util.Collections;
 import java.util.List;
 
-import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException;
 
 public class ArrayType extends ClassType

@@ -1,10 +1,11 @@
-abstract locked class shadow:standard@Array<T> implements CanIndex<int[],T>, CanIndexStore<int[],T>, CanIterate<T>
+abstract locked class shadow:standard@Array<T>
+	implements CanIndex<int[],T>, CanIndexStore<int[],T>, CanIterate<T>
 {
 	get immutable int[] lengths;
 	Object data;
 	
 	protected create( immutable int[] lengths, Object data )	
-	{
+	{		
 		this:lengths = lengths;		
 		this:data = data;		
 	}	
@@ -14,12 +15,15 @@ abstract locked class shadow:standard@Array<T> implements CanIndex<int[],T>, Can
 	public readonly get size() => ( int )
 	{
 		int size = lengths[0];
-		for ( int i = 1; i < this->dimensions; i += 1 )
+		for ( int i = 1; i < lengths->size; i += 1 )
 			size *= lengths[i];
 		return size;
 	}
 	
-	public readonly native get dimensions() => ( int );
+	public readonly get dimensions() => ( int )
+	{
+		return lengths->size;
+	}
 	
 	
 	/* //copy implementation based off the following code
@@ -53,8 +57,7 @@ abstract locked class shadow:standard@Array<T> implements CanIndex<int[],T>, Can
 		if ( this->size == 0 )
 			return "[]";
 		
-		MutableString string = MutableString:create("[");						
-		Class baseClass = getBaseClass();
+		MutableString string = MutableString:create("[");
 		boolean first = true;
 		foreach( T value in this )
 		{	

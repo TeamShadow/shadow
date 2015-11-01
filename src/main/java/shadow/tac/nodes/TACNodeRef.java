@@ -10,11 +10,18 @@ import shadow.typecheck.type.Type;
 public class TACNodeRef extends TACOperand
 {
 	private TACOperand reference;
+	private ModifiedType type;
 
 	public TACNodeRef(TACNode node, TACOperand op)
 	{
+		this(node, op, op);		
+	}
+	
+	public TACNodeRef(TACNode node, TACOperand op, ModifiedType type)
+	{
 		super(node);
 		reference = op;
+		this.type = type;
 	}
 
 	public TACOperand getReference()
@@ -35,17 +42,17 @@ public class TACNodeRef extends TACOperand
 	@Override
 	public Modifiers getModifiers()
 	{
-		return reference.getModifiers();
+		return type.getModifiers();
 	}
 	@Override
 	public Type getType()
 	{
-		return reference.getType();
+		return type.getType();
 	}
 	@Override
 	public void setType(Type newType)
 	{
-		reference.setType(newType);
+		type.setType(newType);
 	}
 	@Override
 	public int getNumOperands()

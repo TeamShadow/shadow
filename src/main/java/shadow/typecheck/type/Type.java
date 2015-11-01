@@ -57,8 +57,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static ClassType OBJECT = null;
 	public static ClassType CLASS = null;  // meta class for holding normal :class variables
-	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables	
-	public static ClassType ARRAY_CLASS = null;  // meta class for holding generic array :class variables
+	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables
 	public static ClassType ARRAY = null;  // object representation of all array types
 	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types	
 	public static ClassType METHOD = null;  // object representation for references with function type
@@ -196,7 +195,6 @@ public abstract class Type implements Comparable<Type> {
 		CLASS = null;		
 		ARRAY = null;
 		ARRAY_NULLABLE = null;
-		ARRAY_CLASS = null;
 		METHOD = null;				
 		UNBOUND_METHOD = null;
 		ENUM = null;
@@ -1179,7 +1177,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	public boolean encloses(Type type)
 	{
-		if( equals(type) )
+		if( getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments()) )
 			return true;
 		
 		Type outer = type.getOuter();
@@ -1435,30 +1433,43 @@ public abstract class Type implements Comparable<Type> {
 	public Set<ArrayType> getArrayClasses() {
 		return arrayClasses;
 	}	
-
-	public void addGenericClass(Type type) {		
-		//tricky short-circuit logic only adds type to the set if it is fully instantiated
-		if( !type.isFullyInstantiated() || genericClasses.add(type) ) {					
-			if( type instanceof ClassType ) {
-				ClassType classType = (ClassType) type;
-				if( classType.getExtendType() != null )
-					addGenericClass( classType.getExtendType() );
+	
+	public void addGenericClass(Type type) {
+		if( type instanceof TypeParameter ) {
+			TypeParameter parameter = (TypeParameter) type;
+			for( Type bound : parameter.getBounds() )
+				if( bound.isFullyInstantiated() ) {
+					if( bound instanceof ArrayType ) {
+						addArrayClass((ArrayType)bound);
+						addGenericClass(((ArrayType)bound).convertToGeneric());
+					}
+					else
+						addGenericClass(bound);
+				}					
+		}		
+		else if( type.isParameterizedIncludingOuterClasses() )
+			//tricky short-circuit logic only adds type to the set if it is fully instantiated
+			if( !type.isFullyInstantiated() || genericClasses.add(type) ) {					
+				if( type instanceof ClassType ) {
+					ClassType classType = (ClassType) type;
+					if( classType.getExtendType() != null )
+						addGenericClass( classType.getExtendType() );
+				}
+				
+				for( Type interfaceType : type.getInterfaces() )					
+						addGenericClass( interfaceType );
+				
+				for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() ) {
+					Type parameterType = parameter.getType();				
+					if( parameterType instanceof ArrayType )
+						addArrayClass((ArrayType)parameterType);
+					else 
+						addGenericClass( parameterType );
+				}
+				
+				if( getOuter() != null )
+					getOuter().addGenericClass(type);			
 			}
-			
-			for( Type interfaceType : type.getInterfaces() )
-					addGenericClass( interfaceType );
-			
-			for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() ) {
-				Type parameterType = parameter.getType();				
-				if( parameterType instanceof ArrayType )
-					addArrayClass((ArrayType)parameterType);
-				else 
-					addGenericClass( parameterType );
-			}
-			
-			if( getOuter() != null )
-				getOuter().addGenericClass(type);			
-		}
 	}
 	
 	public void addArrayClass(ArrayType type) {
