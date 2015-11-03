@@ -1993,7 +1993,7 @@ public class LLVMOutput extends AbstractOutput {
 			variable = "%a";
 		else
 			variable = "%g";
-		String prefix = "call " + methodType(signature) + " " + name(signature) + "(" + typeText(Type.CLASS_SET, set) + ", "; 
+		String prefix = "call " + type(signature.getSingleReturnType()) + " " + name(signature) + "(" + typeText(Type.CLASS_SET, set) + ", "; 
 		for( Type generic : generics ) {			
 			StringBuilder sb = new StringBuilder("\t" + variable + index + " = ").append(prefix);
 			index++;

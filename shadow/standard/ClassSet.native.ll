@@ -59,11 +59,11 @@ define {%"_Pshadow_Pstandard_CObject"**, [1 x %int]} @"_Pshadow_Pstandard_CClass
 	%memory = call %"_Pshadow_Pstandard_CObject"* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass* @"_Pshadow_Pstandard_CObject_class", i32 4)
 	%pointer = bitcast %"_Pshadow_Pstandard_CObject"* %memory to %"_Pshadow_Pstandard_CObject"**
 	store %"_Pshadow_Pstandard_CObject"* %1, %"_Pshadow_Pstandard_CObject"** %pointer
-	%spot2 = getelementptr %"_Pshadow_Pstandard_CObject"** %pointer, %int 1
+	%spot2 = getelementptr %"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"** %pointer, %int 1
 	store %"_Pshadow_Pstandard_CObject"* %2, %"_Pshadow_Pstandard_CObject"** %spot2
-	%spot3 = getelementptr %"_Pshadow_Pstandard_CObject"** %pointer, %int 2
+	%spot3 = getelementptr %"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"** %pointer, %int 2
 	store %"_Pshadow_Pstandard_CObject"* %3, %"_Pshadow_Pstandard_CObject"** %spot3
-	%spot4 = getelementptr %"_Pshadow_Pstandard_CObject"** %pointer, %int 3
+	%spot4 = getelementptr %"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"** %pointer, %int 3
 	store %"_Pshadow_Pstandard_CObject"* %4, %"_Pshadow_Pstandard_CObject"** %spot4
 	%array1 = insertvalue {%"_Pshadow_Pstandard_CObject"**, [1 x %int]} zeroinitializer, %"_Pshadow_Pstandard_CObject"** %pointer, 0
 	%array2 = insertvalue {%"_Pshadow_Pstandard_CObject"**, [1 x %int]} %array1, %int 4, 1, 0
@@ -79,9 +79,9 @@ define {%"_Pshadow_Pstandard_CClass"**, [1 x %int]} @"_Pshadow_Pstandard_CClassS
 	%memory = call %"_Pshadow_Pstandard_CObject"* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass* @"_Pshadow_Pstandard_CClass_class", i32 3)
 	%pointer = bitcast %"_Pshadow_Pstandard_CObject"* %memory to %"_Pshadow_Pstandard_CClass"**
 	store %"_Pshadow_Pstandard_CClass"* %1, %"_Pshadow_Pstandard_CClass"** %pointer
-	%spot2 = getelementptr %"_Pshadow_Pstandard_CClass"** %pointer, %int 1
+	%spot2 = getelementptr %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass"** %pointer, %int 1
 	store %"_Pshadow_Pstandard_CClass"* %2, %"_Pshadow_Pstandard_CClass"** %spot2
-	%spot3 = getelementptr %"_Pshadow_Pstandard_CClass"** %pointer, %int 2
+	%spot3 = getelementptr %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass"** %pointer, %int 2
 	store %"_Pshadow_Pstandard_CClass"* %3, %"_Pshadow_Pstandard_CClass"** %spot3
 	%array1 = insertvalue {%"_Pshadow_Pstandard_CClass"**, [1 x %int]} zeroinitializer, %"_Pshadow_Pstandard_CClass"** %pointer, 0
 	%array2 = insertvalue {%"_Pshadow_Pstandard_CClass"**, [1 x %int]} %array1, %int 3, 1, 0

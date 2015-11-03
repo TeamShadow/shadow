@@ -81,7 +81,7 @@ declare %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture) nounwind
 @_genericSet = global %"_Pshadow_Pstandard_CClassSet"* null
 @_arraySet = global %"_Pshadow_Pstandard_CClassSet"* null
 
-define i32 @main(i32 %argc, i8** %argv) {
+define i32 @main(i32 %argc, i8** %argv) personality i32 (...)* @__shadow_personality_v0 {
 _start:	
 	%uninitializedConsole = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pio_CConsole_class", %"_Pshadow_Pstandard_CObject_methods"* bitcast(%"_Pshadow_Pio_CConsole_methods"* @"_Pshadow_Pio_CConsole_methods" to %"_Pshadow_Pstandard_CObject_methods"*) )
     %console = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pstandard_CObject"* %uninitializedConsole)
@@ -97,13 +97,13 @@ _loopStart:
 	%argAsArray = insertvalue { i8*, [1 x i32] } %uninitializedArgAsArray, i32 %length, 1, 0	
 	%string = call %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CString_Mcreate_Pshadow_Pstandard_Cbyte_A1"(%"_Pshadow_Pstandard_CObject"* %allocatedString, { %byte*, [1 x %int] } %argAsArray)
 	store %_Pshadow_Pstandard_CString* %string, %_Pshadow_Pstandard_CString** %stringPhi
-	%nextString = getelementptr inbounds %_Pshadow_Pstandard_CString** %stringPhi, i32 1
+	%nextString = getelementptr %_Pshadow_Pstandard_CString*, %_Pshadow_Pstandard_CString** %stringPhi, i32 1
 	br label %_loopTest
 _loopTest:
 	%argPhi = phi i8** [ %argv, %_start ], [ %nextArgPointer, %_loopStart ]
 	%stringPhi = phi %_Pshadow_Pstandard_CString** [ %stringArray, %_start ], [ %nextString, %_loopStart ]
-	%nextArgPointer = getelementptr i8** %argPhi, i32 1
-	%nextArg = load i8** %nextArgPointer
+	%nextArgPointer = getelementptr i8*, i8** %argPhi, i32 1
+	%nextArg = load i8*, i8** %nextArgPointer
 	%done = icmp eq i8* %nextArg, null
 	br i1 %done, label %_loopEnd, label %_loopStart	
 _loopEnd:
@@ -122,7 +122,7 @@ _loopEnd:
 _success:
 	ret i32 0
 _exception:
-	%caught = landingpad { i8*, i32 } personality i32 (...)* @__shadow_personality_v0
+	%caught = landingpad { i8*, i32 }
             catch %"_Pshadow_Pstandard_CClass"* @_Pshadow_Pstandard_CException_class
 	%data = extractvalue { i8*, i32 } %caught, 0
 	%exception = call %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture %data) nounwind

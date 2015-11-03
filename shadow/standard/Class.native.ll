@@ -58,8 +58,8 @@ declare void @"_Pshadow_Pio_CConsole_MdebugPrint_Pshadow_Pstandard_Cint"(%"_Psha
 
 
 define noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate(%_Pshadow_Pstandard_CClass*, %"_Pshadow_Pstandard_CObject_methods"*) {
-	%3 = getelementptr inbounds %_Pshadow_Pstandard_CClass* %0, i32 0, i32 7
-	%4 = load i32* %3
+	%3 = getelementptr inbounds %_Pshadow_Pstandard_CClass, %_Pshadow_Pstandard_CClass* %0, i32 0, i32 7
+	%4 = load i32, i32* %3
 	%5 = call noalias i8* @malloc(i32 %4) nounwind
 	%6 = bitcast i8* %5 to %_Pshadow_Pstandard_CObject*
 	%7 = icmp eq %_Pshadow_Pstandard_CObject* %6, null
@@ -69,9 +69,9 @@ _label0:
 	call void @__shadow_throw(%"_Pshadow_Pstandard_CObject"* %8) noreturn
     unreachable	
 _label1:	
-	%9 = getelementptr inbounds %"_Pshadow_Pstandard_CObject"* %6, i32 0, i32 0
+	%9 = getelementptr inbounds %"_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CObject"* %6, i32 0, i32 0
     store %"_Pshadow_Pstandard_CClass"* %0, %"_Pshadow_Pstandard_CClass"** %9
-    %10 = getelementptr inbounds %"_Pshadow_Pstandard_CObject"* %6, i32 0, i32 1
+    %10 = getelementptr inbounds %"_Pshadow_Pstandard_CObject", %"_Pshadow_Pstandard_CObject"* %6, i32 0, i32 1
     store %"_Pshadow_Pstandard_CObject_methods"* %1, %"_Pshadow_Pstandard_CObject_methods"** %10	
 	ret %_Pshadow_Pstandard_CObject* %6
 }
@@ -91,10 +91,10 @@ _label3:
 }
 
 define %int @"_Pshadow_Pstandard_CClass_MpointerSize"(%"_Pshadow_Pstandard_CClass"*) {
-		%2 = ptrtoint %"_Pshadow_Pstandard_CObject"** getelementptr (%"_Pshadow_Pstandard_CObject"** null, i32 1) to i32
+		%2 = ptrtoint %"_Pshadow_Pstandard_CObject"** getelementptr (%"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"** null, i32 1) to i32
 		ret %int %2
 }
 
 @_array0 = private unnamed_addr constant [20 x %byte] c"Heap space exhausted"
-@_string0 = private unnamed_addr constant %"_Pshadow_Pstandard_CString" { %"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_CString_class", %"_Pshadow_Pstandard_CString_methods"* @"_Pshadow_Pstandard_CString_methods", { %byte*, [1 x %int] } { %byte* getelementptr inbounds ([20 x %byte]* @_array0, i32 0, i32 0), [1 x %int] [%int 20] }, %boolean true }
+@_string0 = private unnamed_addr constant %"_Pshadow_Pstandard_CString" { %"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_CString_class", %"_Pshadow_Pstandard_CString_methods"* @"_Pshadow_Pstandard_CString_methods", { %byte*, [1 x %int] } { %byte* getelementptr inbounds ([20 x %byte], [20 x %byte]* @_array0, i32 0, i32 0), [1 x %int] [%int 20] }, %boolean true }
 @_OutOfMemoryException = private constant %"_Pshadow_Pstandard_COutOfMemoryException" { %"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_COutOfMemoryException_class", %"_Pshadow_Pstandard_COutOfMemoryException_methods"* @"_Pshadow_Pstandard_COutOfMemoryException_methods", %"_Pshadow_Pstandard_CString"* @_string0 }

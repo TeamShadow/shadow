@@ -36,7 +36,7 @@ define i1 @_Pshadow_Pstandard_CObject_MreferenceEquals_Pshadow_Pstandard_CObject
 }
 
 define %_Pshadow_Pstandard_CClass* @_Pshadow_Pstandard_CObject_MgetClass(%_Pshadow_Pstandard_CObject*) {
-	%2 = getelementptr %_Pshadow_Pstandard_CObject* %0, i32 0, i32 0
-	%3 = load %_Pshadow_Pstandard_CClass** %2	
+	%2 = getelementptr %_Pshadow_Pstandard_CObject, %_Pshadow_Pstandard_CObject* %0, i32 0, i32 0
+	%3 = load %_Pshadow_Pstandard_CClass*, %_Pshadow_Pstandard_CClass** %2	
 	ret %_Pshadow_Pstandard_CClass* %3
 }

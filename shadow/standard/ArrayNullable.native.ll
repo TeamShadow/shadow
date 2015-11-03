@@ -73,26 +73,26 @@ declare void @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1_Pshado
 declare %_Pshadow_Pstandard_CObject* @__arrayLoad(%"_Pshadow_Pstandard_CObject"**, i32, %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CObject"*, %boolean)
 define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CArray*, i32 ) {
 	; get array data
-	%arrayRef = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
-	%arrayAsObj = load %_Pshadow_Pstandard_CObject** %arrayRef	
+	%arrayRef = getelementptr inbounds %_Pshadow_Pstandard_CArray, %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
+	%arrayAsObj = load %_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject** %arrayRef	
 	%array = bitcast %_Pshadow_Pstandard_CObject* %arrayAsObj to %_Pshadow_Pstandard_CObject**
 
 	; get array class
-	%classRef = getelementptr inbounds %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 0
-	%class = load %"_Pshadow_Pstandard_CClass"** %classRef
+	%classRef = getelementptr inbounds %"_Pshadow_Pstandard_CArray", %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 0
+	%class = load %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass"** %classRef
 	%arrayClass = bitcast %"_Pshadow_Pstandard_CClass"* %class to %"_Pshadow_Pstandard_CGenericClass"*	
 	
 	; get base class
-	%typeParametersArrayRef = getelementptr inbounds %"_Pshadow_Pstandard_CGenericClass"* %arrayClass, i32 0, i32 8	
-	%typeParametersArray = load { %"_Pshadow_Pstandard_CObject"**, [1 x %int] }* %typeParametersArrayRef
+	%typeParametersArrayRef = getelementptr inbounds %"_Pshadow_Pstandard_CGenericClass", %"_Pshadow_Pstandard_CGenericClass"* %arrayClass, i32 0, i32 8	
+	%typeParametersArray = load { %"_Pshadow_Pstandard_CObject"**, [1 x %int] }, { %"_Pshadow_Pstandard_CObject"**, [1 x %int] }* %typeParametersArrayRef
 	%typeParameters = extractvalue { %"_Pshadow_Pstandard_CObject"**, [1 x %int] } %typeParametersArray, 0	
 	; because the class is the first element, we can skip the getelementptr 0 stuff
-	%baseClassAsObj = load %"_Pshadow_Pstandard_CObject"** %typeParameters
+	%baseClassAsObj = load %"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"** %typeParameters
 	%baseClass = bitcast %"_Pshadow_Pstandard_CObject"* %baseClassAsObj to %"_Pshadow_Pstandard_CClass"*
 	
 	; get base class method table (might be base of base of base... methods if base class is an array class)
-	%methodsRef = getelementptr inbounds %"_Pshadow_Pstandard_CObject"** %typeParameters, i32 1
-	%methods = load %"_Pshadow_Pstandard_CObject"** %methodsRef
+	%methodsRef = getelementptr inbounds %"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"** %typeParameters, i32 1
+	%methods = load %"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"** %methodsRef
 	
 	%result = call %_Pshadow_Pstandard_CObject* @__arrayLoad(%"_Pshadow_Pstandard_CObject"** %array, i32 %1, %"_Pshadow_Pstandard_CClass"* %baseClass, %"_Pshadow_Pstandard_CObject"* %methods, %boolean 1)
 	ret %_Pshadow_Pstandard_CObject* %result
