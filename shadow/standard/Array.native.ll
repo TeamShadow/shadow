@@ -71,6 +71,14 @@ declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CClass_MmakeName_Psh
 
 @_genericSet = external global %"_Pshadow_Pstandard_CClassSet"*
 
+; aliases used by ArrayNullable
+@"_Pshadow_Pstandard_CArrayNullable_Mcreate_Pshadow_Pstandard_Cint_A1" = alias %"_Pshadow_Pstandard_CArray"* (%"_Pshadow_Pstandard_CObject"*, { %int*, [1 x %int] })* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1"
+@"_Pshadow_Pstandard_CArrayNullable_Mdimensions" = alias %int (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_Mdimensions"
+@"_Pshadow_Pstandard_CArrayNullable_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint" = alias %"_Pshadow_Pstandard_CArray"* (%"_Pshadow_Pstandard_CArray"*, %int, %int)* @"_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"
+@"_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject" = alias void (%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] }, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"
+@"_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject" = alias void (%"_Pshadow_Pstandard_CArray"*, %int, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject"
+@"_Pshadow_Pstandard_CArrayNullable_MgetBaseClass" = alias %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_MgetBaseClass"
+
 ; debug
 %"_Pshadow_Pio_CConsole_methods" = type { %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CObject"*)*, void (%"_Pshadow_Pio_CConsole"*, %int)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CString"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*, %"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pio_CConsole"* (%"_Pshadow_Pio_CConsole"*)*, { %byte, %boolean } (%"_Pshadow_Pio_CConsole"*)*, { %code, %boolean } (%"_Pshadow_Pio_CConsole"*)*, { %"_Pshadow_Pstandard_CString"*, %boolean } (%"_Pshadow_Pio_CConsole"*)* }
 %"_Pshadow_Pio_CConsole" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pio_CConsole_methods"* , %boolean }
@@ -133,7 +141,7 @@ define %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow
     store { %int*, [1 x %int] } %1, { %int*, [1 x %int] }* %lengths
     %4 = load %"_Pshadow_Pstandard_CArray"*, %"_Pshadow_Pstandard_CArray"** %this
     %5 = bitcast %"_Pshadow_Pstandard_CArray"* %4 to %"_Pshadow_Pstandard_CObject"*
-    %6 = call %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CObject_Mcreate"(%"_Pshadow_Pstandard_CObject"* %5)
+    %6 = call %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CObject_Mcreate"(%"_Pshadow_Pstandard_CObject"* %5)
     %7 = load %"_Pshadow_Pstandard_CArray"*, %"_Pshadow_Pstandard_CArray"** %this		
     %8 = getelementptr inbounds %"_Pshadow_Pstandard_CArray", %"_Pshadow_Pstandard_CArray"* %7, i32 0, i32 2
     store %"_Pshadow_Pstandard_CObject"* null, %"_Pshadow_Pstandard_CObject"** %8
@@ -156,7 +164,7 @@ define %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow
 	%23 = extractvalue { %"_Pshadow_Pstandard_CObject"**, [1 x %int] } %22, 0
 	%24 = load %"_Pshadow_Pstandard_CObject"*, %"_Pshadow_Pstandard_CObject"** %23
 	%25 = bitcast %"_Pshadow_Pstandard_CObject"* %24 to %"_Pshadow_Pstandard_CClass"*	    
-    %26 = call %int (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_Msize"(%"_Pshadow_Pstandard_CArray"* %17)
+    %26 = call %int @"_Pshadow_Pstandard_CArray_Msize"(%"_Pshadow_Pstandard_CArray"* %17)
 	%27 = call noalias %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CClass_Mallocate_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CClass* %25, i32 %26)		
     store %"_Pshadow_Pstandard_CObject"* %27, %"_Pshadow_Pstandard_CObject"** %16
     %28 = bitcast %"_Pshadow_Pstandard_CObject"* %0 to %"_Pshadow_Pstandard_CArray"*
@@ -182,17 +190,17 @@ define %"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_CArray_MgetBaseClass"(
 
 define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CArray*, i32 ) {
 	; get array data
-	%arrayRef = getelementptr inbounds %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
+	%arrayRef = getelementptr inbounds %_Pshadow_Pstandard_CArray, %_Pshadow_Pstandard_CArray* %0, i32 0, i32 2
 	%arrayAsObj = load %_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject** %arrayRef	
 	%array = bitcast %_Pshadow_Pstandard_CObject* %arrayAsObj to %_Pshadow_Pstandard_CObject**
 
 	; get array class
-	%classRef = getelementptr inbounds %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 0
+	%classRef = getelementptr inbounds %"_Pshadow_Pstandard_CArray", %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 0
 	%class = load %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass"** %classRef
 	%arrayClass = bitcast %"_Pshadow_Pstandard_CClass"* %class to %"_Pshadow_Pstandard_CGenericClass"*	
 	
 	; get base class
-	%typeParametersArrayRef = getelementptr inbounds %"_Pshadow_Pstandard_CGenericClass"* %arrayClass, i32 0, i32 8	
+	%typeParametersArrayRef = getelementptr inbounds %"_Pshadow_Pstandard_CGenericClass", %"_Pshadow_Pstandard_CGenericClass"* %arrayClass, i32 0, i32 8	
 	%typeParametersArray = load { %"_Pshadow_Pstandard_CObject"**, [1 x %int] }, { %"_Pshadow_Pstandard_CObject"**, [1 x %int] }* %typeParametersArrayRef
 	%typeParameters = extractvalue { %"_Pshadow_Pstandard_CObject"**, [1 x %int] } %typeParametersArray, 0	
 	; because the class is the first element, we can skip the getelementptr 0 stuff
@@ -228,7 +236,7 @@ _checkArray:
 
 _object:		
 	%elementRef = getelementptr inbounds %_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject** %0, i32 %1
-	%element = load %_Pshadow_Pstandard_CObject*. %_Pshadow_Pstandard_CObject** %elementRef
+	%element = load %_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject** %elementRef
 	ret %_Pshadow_Pstandard_CObject* %element	
 
 _primitive:
@@ -304,7 +312,7 @@ _name:
 	
 	; cast to object*** because an array is { Object**, [dimensions x int] }
 	%arrayElementAsBytes = bitcast i8* %arrayElement to %_Pshadow_Pstandard_CObject***
-	%arrayDataRef = load %_Pshadow_Pstandard_CObject**, load %_Pshadow_Pstandard_CObject*** %arrayElementAsBytes
+	%arrayDataRef = load %_Pshadow_Pstandard_CObject**, %_Pshadow_Pstandard_CObject*** %arrayElementAsBytes
 	%arrayDataAsObj = bitcast %_Pshadow_Pstandard_CObject** %arrayDataRef to %_Pshadow_Pstandard_CObject*
 	
 	; skip past object pointer to dimensions
@@ -424,7 +432,7 @@ define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1_Pshadow_
 
 define noalias %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CArray*, i32, i32) {
 	; check sizes first
-	%size = call %int (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_Msize"(%"_Pshadow_Pstandard_CArray"* %0)
+	%size = call %int @"_Pshadow_Pstandard_CArray_Msize"(%"_Pshadow_Pstandard_CArray"* %0)
 	%test1 = icmp ult i32 %1, %size
 	br i1 %test1, label %_firstLessThanSize, label %throw
 _firstLessThanSize: 	
@@ -502,3 +510,11 @@ throw:
 	call void @__shadow_throw(%"_Pshadow_Pstandard_CObject"* %ex.obj) noreturn	
 	unreachable
 }
+
+define %int @"_Pshadow_Pstandard_CArray_Mdimensions"(%"_Pshadow_Pstandard_CArray"*) {
+    %2 = getelementptr inbounds %"_Pshadow_Pstandard_CArray", %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 3
+    %3 = load { %int*, [1 x %int] } , { %int*, [1 x %int] }* %2
+    %4 = extractvalue { %int*, [1 x %int] } %3, 1, 0
+    ret %int %4
+}
+

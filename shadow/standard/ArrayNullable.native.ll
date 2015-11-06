@@ -37,24 +37,7 @@
 %"_Pshadow_Pstandard_CArray_methods" = type { %"_Pshadow_Pstandard_CArray"* (%"_Pshadow_Pstandard_CArray"*, %"_Pshadow_Pstandard_CAddressMap"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CObject"*)*, %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CArray"*)*, %int (%"_Pshadow_Pstandard_CArray"*)*, %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CArray"*)*, %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] })*, void (%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] }, %"_Pshadow_Pstandard_CObject"*)*, { %"_Pshadow_Pstandard_CIterator_methods"*, %"_Pshadow_Pstandard_CObject"* } (%"_Pshadow_Pstandard_CArray"*)*, { %int*, [1 x %int] } (%"_Pshadow_Pstandard_CArray"*)*, %int (%"_Pshadow_Pstandard_CArray"*)*, %"_Pshadow_Pstandard_CArray"* (%"_Pshadow_Pstandard_CArray"*, %int, %int)* }
 %"_Pshadow_Pstandard_CArray" = type { %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CArray_methods"* , %"_Pshadow_Pstandard_CObject"*, { %int*, [1 x %int] } }
 
-;array methods getting aliased
-declare %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CObject"* returned, { %int*, [1 x %int] }, %"_Pshadow_Pstandard_CObject"*)
-@"_Pshadow_Pstandard_CArrayNullable_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject" = alias %"_Pshadow_Pstandard_CArray"* (%"_Pshadow_Pstandard_CObject"*, { %int*, [1 x %int] }, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"
-
-declare %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1"(%"_Pshadow_Pstandard_CObject"* returned, { %int*, [1 x %int] })
-@"_Pshadow_Pstandard_CArrayNullable_Mcreate_Pshadow_Pstandard_Cint_A1" = alias %"_Pshadow_Pstandard_CArray"* (%"_Pshadow_Pstandard_CObject"*, { %int*, [1 x %int] })* @"_Pshadow_Pstandard_CArray_Mcreate_Pshadow_Pstandard_Cint_A1"
-
-declare %int @"_Pshadow_Pstandard_CArray_Msize"(%"_Pshadow_Pstandard_CArray"*)
-@"_Pshadow_Pstandard_CArrayNullable_Msize" = alias %int (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_Msize"
-
-declare %int @"_Pshadow_Pstandard_CArray_Mdimensions"(%"_Pshadow_Pstandard_CArray"*)
-@"_Pshadow_Pstandard_CArrayNullable_Mdimensions" = alias %int (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_Mdimensions"
-
-declare %"_Pshadow_Pstandard_CArray"* @"_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CArray"*, %int, %int)
-@"_Pshadow_Pstandard_CArrayNullable_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint" = alias %"_Pshadow_Pstandard_CArray"* (%"_Pshadow_Pstandard_CArray"*, %int, %int)* @"_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint"
-
-;declare %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1"(%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] })
-;@"_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint_A1" = alias %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] })* @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1"
+;aliases are in Array.native.ll
 
 declare i32 @__computeIndex(%"_Pshadow_Pstandard_CArray"*, { i32*, [1 x i32] })	
 define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint_A1(%_Pshadow_Pstandard_CArray*, { i32*, [1 x i32] }) alwaysinline {
@@ -62,13 +45,6 @@ define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArrayNullable_Mindex_Ps
 	%4 = call %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CArray* %0, i32 %3)
 	ret %_Pshadow_Pstandard_CObject* %4
 }
-
-declare void @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] }, %"_Pshadow_Pstandard_CObject"*)
-@"_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject" = alias void (%"_Pshadow_Pstandard_CArray"*, { %int*, [1 x %int] }, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1_Pshadow_Pstandard_CObject"
-
-;declare %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint"(%"_Pshadow_Pstandard_CArray"*, %int)
-;@"_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint" = alias %"_Pshadow_Pstandard_CObject"* (%"_Pshadow_Pstandard_CArray"*, %int)* @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint"
-
 
 declare %_Pshadow_Pstandard_CObject* @__arrayLoad(%"_Pshadow_Pstandard_CObject"**, i32, %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CObject"*, %boolean)
 define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CArray*, i32 ) {
@@ -97,13 +73,3 @@ define %_Pshadow_Pstandard_CObject* @_Pshadow_Pstandard_CArrayNullable_Mindex_Ps
 	%result = call %_Pshadow_Pstandard_CObject* @__arrayLoad(%"_Pshadow_Pstandard_CObject"** %array, i32 %1, %"_Pshadow_Pstandard_CClass"* %baseClass, %"_Pshadow_Pstandard_CObject"* %methods, %boolean 1)
 	ret %_Pshadow_Pstandard_CObject* %result
 }
-
-
-declare void @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject"(%"_Pshadow_Pstandard_CArray"*, %int, %"_Pshadow_Pstandard_CObject"*)
-@"_Pshadow_Pstandard_CArrayNullable_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject" = alias void (%"_Pshadow_Pstandard_CArray"*, %int, %"_Pshadow_Pstandard_CObject"*)* @"_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_Pshadow_Pstandard_CObject"
-
-declare %"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_CArray_MgetBaseClass"(%"_Pshadow_Pstandard_CArray"*)
-@"_Pshadow_Pstandard_CArrayNullable_MgetBaseClass" = alias %"_Pshadow_Pstandard_CClass"* (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_MgetBaseClass"
-
-declare %"_Pshadow_Pstandard_CString"* @"_Pshadow_Pstandard_CArray_MtoString"(%"_Pshadow_Pstandard_CArray"*)
-@"_Pshadow_Pstandard_CArrayNullable_MtoString" = alias %"_Pshadow_Pstandard_CString"* (%"_Pshadow_Pstandard_CArray"*)* @"_Pshadow_Pstandard_CArray_MtoString"

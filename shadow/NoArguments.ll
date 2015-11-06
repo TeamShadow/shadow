@@ -81,7 +81,7 @@ declare %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture) nounwind
 @_genericSet = global %"_Pshadow_Pstandard_CClassSet"* null;
 @_arraySet = global %"_Pshadow_Pstandard_CClassSet"* null;
 
-define i32 @main(i32, i8**) {	
+define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {	
 	%uninitializedConsole = call noalias %"_Pshadow_Pstandard_CObject"* @"_Pshadow_Pstandard_CClass_Mallocate"(%"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pio_CConsole_class", %"_Pshadow_Pstandard_CObject_methods"* bitcast(%"_Pshadow_Pio_CConsole_methods"* @"_Pshadow_Pio_CConsole_methods" to %"_Pshadow_Pstandard_CObject_methods"*) )
     %console = call %"_Pshadow_Pio_CConsole"* @"_Pshadow_Pio_CConsole_Mcreate"(%"_Pshadow_Pstandard_CObject"* %uninitializedConsole)
     store %"_Pshadow_Pio_CConsole"* %console, %"_Pshadow_Pio_CConsole"** @"_Pshadow_Pio_CConsole_instance"	
@@ -98,7 +98,7 @@ define i32 @main(i32, i8**) {
 _success:
 	ret i32 0
 _exception:
-	%caught = landingpad { i8*, i32 } personality i32 (...)* @__shadow_personality_v0
+	%caught = landingpad { i8*, i32 }
             catch %"_Pshadow_Pstandard_CClass"* @_Pshadow_Pstandard_CException_class
 	%data = extractvalue { i8*, i32 } %caught, 0
 	%exception = call %_Pshadow_Pstandard_CException* @__shadow_catch(i8* nocapture %data) nounwind

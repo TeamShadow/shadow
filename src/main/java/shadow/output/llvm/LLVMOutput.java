@@ -365,6 +365,8 @@ public class LLVMOutput extends AbstractOutput {
 					type(new ArrayType(Type.OBJECT)) + " { " +   //data
 					type(Type.OBJECT) + "* getelementptr inbounds ([" +
 					interfaceCount + " x " + type(Type.OBJECT) +
+					"], [" +
+					interfaceCount + " x " + type(Type.OBJECT) +
 					"]* @_interfaceData" + moduleType.getMangledName() + ", i32 0, i32 0), [1 x " + 
 					type(Type.INT) + "] [" + typeLiteral(interfaceCount) +
 					"] }, " + 
@@ -375,6 +377,8 @@ public class LLVMOutput extends AbstractOutput {
 							
 					" { " + 
 					type(Type.CLASS) + "* getelementptr inbounds ([" +
+					interfaceCount + " x " + type(Type.CLASS) +
+					"], [" +
 					interfaceCount + " x " + type(Type.CLASS) +
 					"]* @_interfaces" + moduleType.getMangledName() + ", i32 0, i32 0), [1 x " + type(Type.INT) +
 					"] [" + typeLiteral(interfaceCount) + "] }, " )	+
@@ -460,7 +464,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
 		writer.write("declare void @__arrayStore(" + type(Type.OBJECT) + "*, %int, " + type(Type.OBJECT) + ", " + type(Type.CLASS) + ")");
 		writer.write("declare " + type(Type.OBJECT) + " @__arrayLoad(" + type(Type.OBJECT) + "*, %int, " + type(Type.CLASS) + ", " +  type(Type.OBJECT) + ", %boolean)");
-		writer.write("declare noalias void @free(i8*) nounwind");
+		writer.write("declare void @free(i8*) nounwind");
 		writer.write();
 		
 		//type references
@@ -560,6 +564,7 @@ public class LLVMOutput extends AbstractOutput {
 					"%" + raw(Type.STRING, "_methods") + "* @" + raw(Type.STRING, "_methods") + ", " +					
 					type(new ArrayType(Type.BYTE)) + " { " + type(Type.BYTE) +
 					"* getelementptr inbounds ([" +
+					data.length + " x " + type(Type.BYTE) + "], [" +
 					data.length + " x " + type(Type.BYTE) + "]* @_array" +
 					stringIndex + ", i32 0, i32 0), [1 x " + type(Type.INT) +
 					"] [" + typeLiteral(data.length) + "] }, " +
@@ -745,7 +750,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.indent();
 		}
 		else {
-			writer.write("define " + methodToString(method) + " {");
+			writer.write("define " + methodToString(method) + (method.hasLandingpad() ? " personality i32 (...)* @__shadow_personality_v0 {" : " {"  ));
 			writer.indent();
 			for (TACVariable local : method.getLocals())
 				writer.write('%' + name(local) + " = alloca " + type(local));
@@ -772,9 +777,10 @@ public class LLVMOutput extends AbstractOutput {
 					{
 						writer.write(nextTemp() +
 								" = getelementptr inbounds %" +
+								raw(param.getType()) + ", %" +
 								raw(param.getType()) + "* " + symbol +
 								", i32 0, i32 2");
-						writer.write(nextTemp() + " = load " +
+						writer.write(nextTemp() + " = load " + type(param) + ", " +
 								type(param) + "* " + temp(1));
 						symbol = temp(0);
 					}
@@ -819,6 +825,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = extractvalue " +
 				typeSymbol(node.getArray()) + ", 0");
 			writer.write(nextTemp(node) + " = getelementptr inbounds " +
+				type(node.getType()) + ", " +
 				type(node.getType()) + "* " + temp(1) + ", " +
 				typeSymbol(node.getTotal()));
 		}
@@ -835,6 +842,7 @@ public class LLVMOutput extends AbstractOutput {
 	public void visit(TACFieldRef node) throws ShadowException
 	{		
 		writer.write(nextTemp(node) + " = getelementptr inbounds " +
+				"%" + raw(node.getPrefix().getType()) + ", " + 
 				typeSymbol(node.getPrefix()) + ", i32 0, i32 " +
 				(node.getIndex())); 
 	}
@@ -897,10 +905,11 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = extractvalue " +
 					type(node.getOuterType()) + " " + symbol(node.getPrefix()) + ", 0");
 			writer.write(nextTemp() + " = getelementptr %" +
-					raw(node.getOuterType(), "_methods") + "* " +
+					raw(node.getOuterType(), "_methods") +
+					", %" +	raw(node.getOuterType(), "_methods") + "* " +
 					//raw(node.getPrefix(), "_methods") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex());
-			writer.write(nextTemp(node) + " = load " + methodType(node) +
+			writer.write(nextTemp(node) + " = load " + methodType(node) + ", " + methodType(node) +
 					"* " + temp(1));
 		}
 		else if (node.hasPrefix() && 
@@ -911,19 +920,21 @@ public class LLVMOutput extends AbstractOutput {
 				!(node.getOuterType() instanceof SingletonType) &&
 				!node.getType().getModifiers().isPrivate() &&
 				!node.isSuper() ) {	
-			writer.write(nextTemp() + " = getelementptr " +
+			writer.write(nextTemp() + " = getelementptr %" +
+					raw(node.getPrefix().getType()) + ", " + 					
 					typeSymbol(node.getPrefix()) + ", i32 0, i32 1");
 			
-			writer.write(nextTemp() + " = load %" +
+			writer.write(nextTemp() + " = load %" + raw(node.getPrefix().getType(), "_methods") + "*, %" +
 					raw(node.getPrefix().getType(), "_methods") + "** " + temp(1));
 			if( !module.getType().encloses(node.getPrefix().getType()) )
 				usedMethodTables.add(node.getPrefix().getType());
 			
 			writer.write(nextTemp() + " = getelementptr %" +
+					raw(node.getPrefix().getType(), "_methods") + ", %" + 
 					raw(node.getPrefix().getType(), "_methods") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex()); //may need to + 1 to the node.getIndex() if a parent method table is added	
 			
-			writer.write(nextTemp(node) + " = load " + methodType(node) +
+			writer.write(nextTemp(node) + " = load " + methodType(node) + ", " + methodType(node) +
 					"* " + temp(1));
 		}
 		else {			
@@ -1028,7 +1039,7 @@ public class LLVMOutput extends AbstractOutput {
 					temp(1)) + " to %" + raw(srcType) + "*");		
 			
 			writer.write(nextTemp() + " = getelementptr inbounds %" +
-					raw(srcType) + "* " + temp(1) + ", i32 0, i32 2");
+					raw(srcType) + ", %" + raw(srcType) + "* " + temp(1) + ", i32 0, i32 2");
 			writer.write("store " + typeSymbol(source) + ", " +
 					typeText(srcType, temp(0), true));
 			break;
@@ -1036,8 +1047,9 @@ public class LLVMOutput extends AbstractOutput {
 		case OBJECT_TO_PRIMITIVE:
 			writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to %" + raw(destType) +  "*");
 			writer.write(nextTemp() + " = getelementptr inbounds %" +
+					raw(destType) + ", %" + 
 					raw(destType) + "* " + temp(1) + ", i32 0, i32 2");
-			writer.write(nextTemp(node) + " = load " + typeTemp(destType, 1, true));			
+			writer.write(nextTemp(node) + " = load " +  type(destType) + ", " + typeTemp(destType, 1, true));			
 			break;
 			
 		case ARRAY_TO_OBJECT:
@@ -1066,7 +1078,7 @@ public class LLVMOutput extends AbstractOutput {
 			//cleverly copies all the dimensions at once
 			writer.write("store" + dimsType + ' ' + temp(2) + ',' +
 					dimsType + "* " + temp(0));
-			writer.write(nextTemp() + " = getelementptr inbounds" +
+			writer.write(nextTemp() + " = getelementptr inbounds" + dimsType + ", " + 
 					dimsType + "* " + temp(1) + ", i32 0, i32 0");
 			writer.write(nextTemp() + " = insertvalue " + type(intArray) +
 					" { " + type(Type.INT) + "* null, [1 x " +
@@ -1116,21 +1128,21 @@ public class LLVMOutput extends AbstractOutput {
 			
 			dimsType = " [" + arrayType.getDimensions() + " x " +
 							type(Type.INT) + ']';
-			writer.write(nextTemp() + " = getelementptr inbounds " +
+			writer.write(nextTemp() + " = getelementptr inbounds %" + raw(srcType) + ", " +
 							typeText(srcType, srcName) + ", i32 0, i32 2");
-			writer.write(nextTemp() + " = load " + type(Type.OBJECT) +
+			writer.write(nextTemp() + " = load " +  type(Type.OBJECT) + ", " + type(Type.OBJECT) +
 					"* " + temp(1));
 			writer.write(nextTemp() + " = bitcast " + typeTemp(Type.OBJECT,
 					1) + " to " + baseType);
 			writer.write(nextTemp() + " = insertvalue " + type(destType) +
 					" undef, " + baseType + ' ' + temp(1) + ", 0");
-			writer.write(nextTemp() + " = getelementptr inbounds " +
+			writer.write(nextTemp() + " = getelementptr inbounds %" + raw(srcType) + ", " + 
 					typeText(srcType, srcName) + ", i32 0, i32 3, i32 0");
-			writer.write(nextTemp() + " = load " + type(Type.INT) + "** " +
+			writer.write(nextTemp() + " = load " + type(Type.INT) + "*, " + type(Type.INT) + "** " +
 					temp(1));
 			writer.write(nextTemp() + " = bitcast " + type(Type.INT) +
 					"* " + temp(1) + " to" + dimsType + '*');
-			writer.write(nextTemp() + " = load" + dimsType + "* " +
+			writer.write(nextTemp() + " = load" + dimsType + ", " + dimsType + "* " +
 					temp(1));
 			writer.write(nextTemp(node) + " = insertvalue " + typeTemp(destType,
 					5) + ',' + dimsType + ' ' + temp(1) + ", 1");
@@ -1455,7 +1467,7 @@ public class LLVMOutput extends AbstractOutput {
 				second = symbol(node.getSecond());
 		writer.write(nextTemp() + " = " + dir + _type_ + first + ", " + second);
 		writer.write(nextTemp() + " = sub" + _type_ + "mul (" + type +
-				" ptrtoint (" + type + "* getelementptr (" + type +
+				" ptrtoint (" + type + "* getelementptr (" + type + ", " + type +
 				"* null, i32 1) to " + type + ")," + _type_ + "8), " + second);
 		writer.write(nextTemp() + " = " + otherDir + _type_ + first + ", " +
 				temp(1));
@@ -1465,7 +1477,7 @@ public class LLVMOutput extends AbstractOutput {
 	
 	@Override
 	public void visit(TACGlobal node) throws ShadowException {
-		writer.write(nextTemp(node) + " = load " + type(node) + "* " + node.getName());
+		writer.write(nextTemp(node) + " = load " + type(node) + ", " + type(node) + "* " + node.getName());
 	}
 	
 	@Override
@@ -1526,7 +1538,7 @@ public class LLVMOutput extends AbstractOutput {
 					typeLiteral(genericRef.isNullable()) + ")");
 		}
 		else
-			writer.write(nextTemp(node) + " = load " +
+			writer.write(nextTemp(node) + " = load " + typeText(reference.getGetType(), ", ", false) +
 					typeSymbol(reference.getGetType(), reference, true));
 	}
 	
@@ -1604,8 +1616,7 @@ public class LLVMOutput extends AbstractOutput {
 		TACMethodRef method = node.getMethod();
 		StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
 				"invoke" : "call").append(' ').
-				append(methodType(method)).append(' ').
-				append(symbol(method)).append('(');
+				append(methodToString(method, false, false)).append(symbol(method)).append('(');
 		boolean first = true;
 		for (TACOperand param : node.getParameters())
 			if (first) {
@@ -1682,8 +1693,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACLandingpad node) throws ShadowException
 	{
-		writer.write(nextTemp() + " = landingpad { i8*, i32 } " +
-				"personality i32 (...)* @__shadow_personality_v0");
+		writer.write(nextTemp() + " = landingpad { i8*, i32 }");
 		writer.indent(2);
 		if (node.getBlock().hasCleanup())
 			writer.write("cleanup");
@@ -1700,7 +1710,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACUnwind node) throws ShadowException
 	{
-		writer.write(nextTemp(node) + " = load { i8*, i32 }* %_exception");
+		writer.write(nextTemp(node) + " = load { i8*, i32 }, { i8*, i32 }* %_exception");
 		String type = nextTemp();
 		writer.write(type + " = extractvalue { i8*, i32 } " + temp(1) + ", 0");
 		TACLabelRef label = node.getBlock().getLandingpad();
@@ -1724,9 +1734,9 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACCatch node) throws ShadowException
 	{
-		writer.write(nextTemp() + " = getelementptr inbounds { i8*, i32 }* " +
+		writer.write(nextTemp() + " = getelementptr inbounds { i8*, i32 }, { i8*, i32 }* " +
 				"%_exception, i32 0, i32 0");
-		writer.write(nextTemp() + " = load i8** " + temp(1));
+		writer.write(nextTemp() + " = load i8*, i8** " + temp(1));
 		writer.write(nextTemp() + " = call " + type(Type.EXCEPTION) +
 				" @__shadow_catch(i8* " + temp(1) + ") nounwind");
 		writer.write(nextTemp(node) + " = bitcast " + type(Type.EXCEPTION) +
@@ -1736,7 +1746,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACResume node) throws ShadowException
 	{
-		writer.write(nextTemp() + " = load { i8*, i32 }* %_exception");
+		writer.write(nextTemp() + " = load { i8*, i32 }, { i8*, i32 }* %_exception");
 		writer.write("resume { i8*, i32 } " + temp(0));
 	}
 
@@ -1880,7 +1890,7 @@ public class LLVMOutput extends AbstractOutput {
 
 	private static String sizeof(String type)
 	{
-		return "ptrtoint (" + type + " getelementptr (" + type +
+		return "ptrtoint (" + type + " getelementptr (" + type.substring(0, type.length() - 1) + ", " + type +
 				" null, i32 1) to i32)";
 	}
 
@@ -2406,9 +2416,10 @@ public class LLVMOutput extends AbstractOutput {
 						" = external constant [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
 			}
 			
-			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* @_interfaceData" + noArguments.getMangledName() + ", i32 0, i32 0), [1 x " +
+			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "], [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* @_interfaceData" + noArguments.getMangledName() + ", i32 0, i32 0), [1 x " +
 					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) +	"] }, ";
 			interfaces = "{ " + type(Type.CLASS) + "* getelementptr inbounds ([" + generic.getInterfaces().size() + " x " +
+					type(Type.CLASS) + "], [" + generic.getInterfaces().size() + " x " +
 					type(Type.CLASS) + "]* @_interfaces" + generic.getMangledNameWithGenerics() + ", i32 0, i32 0), [1 x " +
 					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) + "] }, ";
 			size = typeText(Type.INT, sizeof('%' + noArguments.getMangledName() + '*')) + ", ";
@@ -2445,6 +2456,7 @@ public class LLVMOutput extends AbstractOutput {
 				
 				type(new ArrayType(Type.OBJECT)) + 
 				" { " + type(Type.OBJECT) + "* getelementptr inbounds ([" + parameterList.size()*2 + " x " +
+				type(Type.OBJECT) + "], [" + parameterList.size()*2 + " x " +
 				type(Type.OBJECT) + "]* @_parameters" + generic.getMangledNameWithGenerics() + ", i32 0, i32 0), [1 x " +
 				type(Type.INT) + "] [" + typeLiteral(parameterList.size()*2) + "] }" + //parameters
 				

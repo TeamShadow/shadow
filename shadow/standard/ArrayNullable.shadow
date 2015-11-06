@@ -3,11 +3,24 @@ abstract locked class shadow:standard@ArrayNullable<T> implements CanIndexNullab
 	get immutable int[] lengths;
 	Object data;
 	
+	
+	protected create( immutable int[] lengths, Object data )	
+	{		
+		this:lengths = lengths;		
+		this:data = data;		
+	}
+	
+	public readonly get size() => ( int )
+	{
+		int size = lengths[0];
+		for ( int i = 1; i < lengths->size; i += 1 )
+			size *= lengths[i];
+		return size;
+	}	
+	
 	//All these methods are implemented with the same code as Array<T>
 	//It's essentially simulating inheritance
-	protected native create( immutable int[] lengths, Object data );
 	protected native create( immutable int[] lengths );
-	public native readonly get size() => ( int );	
 	public native readonly get dimensions() => ( int );	
 	public native readonly subarray( int start, int end ) => ( Array<T> );
 	public native readonly index( int[] indices ) => (nullable T);
@@ -19,7 +32,26 @@ abstract locked class shadow:standard@ArrayNullable<T> implements CanIndexNullab
 	protected native index( int index, nullable T value) => ();
 	
 	public native readonly getBaseClass() => ( Class );
-	public native readonly toString() => ( String );
+	
+	public readonly toString() => ( String )
+	{
+		if ( this->size == 0 )
+			return "[]";
+		
+		MutableString string = MutableString:create("[");
+		boolean first = true;
+		foreach( nullable T value in this )
+		{	
+			if ( first )
+				first = false;
+			else
+				string.append(", ");
+				
+			string.append(value);
+		}
+		return string.append("]").toString();
+	}
+	
 	
 	public readonly iterator() => (IteratorNullable<T>)
 	{

@@ -20,10 +20,7 @@ abstract locked class shadow:standard@Array<T>
 		return size;
 	}
 	
-	public readonly get dimensions() => ( int )
-	{
-		return lengths->size;
-	}
+	public readonly native get dimensions() => ( int );
 	
 	
 	/* //copy implementation based off the following code
