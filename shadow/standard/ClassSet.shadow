@@ -28,7 +28,7 @@ locked class shadow:standard@ClassSet
 	{
 		int capacity = 1;
 		while( capacity < initialCapacity ) //powers of 2
-			capacity <<= 1;
+			capacity <<= 1;		
 		table = Node:null[capacity];
 		this:loadFactor = loadFactor;
 		threshold = cast<int>(capacity * loadFactor);
@@ -73,6 +73,12 @@ locked class shadow:standard@ClassSet
 		get Class value;
 		get set nullable Node next;
 		
+		
+		public readonly get hash() => (int) 
+		{
+			return hash;
+		}
+		
 		public readonly get value() => (Class)
 		{
 			return value;
@@ -103,7 +109,7 @@ locked class shadow:standard@ClassSet
 	
 	private readonly findIndex( String value, int length ) => ( int index, int hash )
 	{
-		uint temp = value->hash;
+		uint temp = value->hash;			
 		temp ^= (temp >> 20) ^ (temp >> 12);
 		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
 		return ( hash & (length - 1), hash );	
@@ -145,7 +151,6 @@ locked class shadow:standard@ClassSet
 			Node current = check(table[index]);
 			while ( current->hash != hash and current->value !== value )
 				current = check(current->next);
-			
 			//node already present
 			return false; 
 		}

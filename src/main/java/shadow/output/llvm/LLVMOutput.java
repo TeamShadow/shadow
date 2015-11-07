@@ -1296,7 +1296,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
 				temp(1) + " to " + type(baseType) + '*');
 		writer.write(nextTemp() + " = insertvalue " + type(node) +
-				" undef, " + type(baseType) + "* " + temp(1) + ", 0");
+				" zeroinitializer, " + type(baseType) + "* " + temp(1) + ", 0");
 		for (int i = 0; i < node.getDimensions(); i++)
 			writer.write(nextTemp(node) + " = insertvalue " + type(node) +
 					' ' + temp(1) + ", " + typeSymbol(node.getDimension(i)) +
@@ -1538,7 +1538,7 @@ public class LLVMOutput extends AbstractOutput {
 					typeLiteral(genericRef.isNullable()) + ")");
 		}
 		else
-			writer.write(nextTemp(node) + " = load " + typeText(reference.getGetType(), ", ", false) +
+			writer.write(nextTemp(node) + " = load " + type(reference.getGetType()) + ", " +
 					typeSymbol(reference.getGetType(), reference, true));
 	}
 	

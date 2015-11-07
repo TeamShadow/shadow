@@ -163,8 +163,15 @@ public class Main {
 			mainLL = system.resolve(mainLL);
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
 			
+			String endian = "e"; //little Endian	
+			String pointerAlignment = "p:" + config.getArch() + ":" + config.getArch();
+			String dataAlignment = "i1:8:8-i8:8:8-i16:16:16-i64:32:64-f16:16:16-f32:32:32-f64:64:64";
+			String aggregateAlignment = "a:0:" + config.getArch();
+			String nativeIntegers = "n8:16:32:64";
+			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
+			
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-			Process optimize = new ProcessBuilder("opt", "-mtriple", config.getTarget(), "-O3").redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder("opt", "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
 			Process compile = new ProcessBuilder("llc", "-mtriple", config.getTarget(), "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
