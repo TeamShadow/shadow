@@ -433,15 +433,12 @@ define void @_Pshadow_Pstandard_CArray_Mindex_Pshadow_Pstandard_Cint_A1_Pshadow_
 define noalias %_Pshadow_Pstandard_CArray* @_Pshadow_Pstandard_CArray_Msubarray_Pshadow_Pstandard_Cint_Pshadow_Pstandard_Cint(%_Pshadow_Pstandard_CArray*, i32, i32) {
 	; check sizes first
 	%size = call %int @"_Pshadow_Pstandard_CArray_Msize"(%"_Pshadow_Pstandard_CArray"* %0)
-	%test1 = icmp ult i32 %1, %size
-	br i1 %test1, label %_firstLessThanSize, label %throw
-_firstLessThanSize: 	
-	%test2 = icmp ule i32 %2, %size
-	br i1 %test2, label %_secondLessThanSize, label %throw
+	%test1 = icmp ule i32 %2, %size
+	br i1 %test1, label %_secondLessThanSize, label %throw
 _secondLessThanSize:
-	%test3 = icmp ult i32 %1, %2
-	br i1 %test3, label %_secondLessThanFirst, label %throw
-_secondLessThanFirst:
+	%test2 = icmp ule i32 %1, %2
+	br i1 %test2, label %_firstLessThanSecond, label %throw
+_firstLessThanSecond:
 	; get class from original array
 	%classRef = getelementptr inbounds %"_Pshadow_Pstandard_CArray", %"_Pshadow_Pstandard_CArray"* %0, i32 0, i32 0
 	%class = load %"_Pshadow_Pstandard_CClass"*, %"_Pshadow_Pstandard_CClass"** %classRef		
