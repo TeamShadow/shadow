@@ -164,8 +164,8 @@ public class Main {
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
 			
 			String endian = "e"; //little Endian	
-			String pointerAlignment = "p:" + config.getArch() + ":" + config.getArch();
-			String dataAlignment = "i1:8:8-i8:8:8-i16:16:16-i64:32:64-f16:16:16-f32:32:32-f64:64:64";
+			String pointerAlignment = "p:" + config.getArch() + ":" + config.getArch() + ":" + config.getArch();
+			String dataAlignment = "i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f16:16:16-f32:32:32-f64:64:64";
 			String aggregateAlignment = "a:0:" + config.getArch();
 			String nativeIntegers = "n8:16:32:64";
 			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;

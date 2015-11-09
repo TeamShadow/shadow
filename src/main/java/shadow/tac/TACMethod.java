@@ -13,7 +13,6 @@ import java.util.NoSuchElementException;
 
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.nodes.TACMethodRef;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
