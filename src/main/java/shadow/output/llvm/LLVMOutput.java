@@ -1997,16 +1997,9 @@ public class LLVMOutput extends AbstractOutput {
 	
 	public static void addGenerics(String set, Set<? extends Type> generics, OutputStream out) throws IOException {
 		MethodSignature signature = Type.CLASS_SET.getMatchingMethod("add", new SequenceType(Type.CLASS));
-		int index = 0;
-		String variable;
-		if( set.contains("array"))
-			variable = "%a";
-		else
-			variable = "%g";
 		String prefix = "call " + type(signature.getSingleReturnType()) + " " + name(signature) + "(" + typeText(Type.CLASS_SET, set) + ", "; 
-		for( Type generic : generics ) {			
-			StringBuilder sb = new StringBuilder("\t" + variable + index + " = ").append(prefix);
-			index++;
+		for( Type generic : generics ) {
+			StringBuilder sb = new StringBuilder("\t" + prefix);
 			if( generic instanceof ArrayType )
 				sb.append(type(Type.CLASS)).append(" @" + withGenerics(generic, "_class")).append(")");
 			else

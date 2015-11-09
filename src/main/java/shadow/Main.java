@@ -179,40 +179,8 @@ public class Main {
 				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
 				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
-				String line = main.readLine();
-				
-				final OutputStream linkOut = link.getOutputStream();
-				
-				File file = new File(currentJob.getMainFile().toString() + ".debug.ll");
-				final FileOutputStream fileOut = new FileOutputStream(file);
-				
-				OutputStream out = new OutputStream() {
-
-					@Override
-					public void write(int b) throws IOException {
-						linkOut.write(b);
-						fileOut.write(b);						
-					}
-					
-					@Override
-					public void write(byte[] b) throws IOException {
-						linkOut.write(b);
-						fileOut.write(b);	
-					}
-					
-					@Override
-					public void	write(byte[] b, int off, int len) throws IOException {
-						linkOut.write(b, off, len);
-						fileOut.write(b, off, len);	
-					}
-					
-					@Override
-					public void close() throws IOException {
-						fileOut.close();
-					}				
-				};
-				
-
+				String line = main.readLine();				
+				final OutputStream out = link.getOutputStream();				
 				while (line != null) {
 					
 					if( line.contains("@main")) { //declare externally defined generics
@@ -227,24 +195,16 @@ public class Main {
 						line = line.replace("%genericSize", "" + generics.size()*2);
 					else if( line.trim().startsWith("%arraySet"))
 						line = line.replace("%arraySize", "" + arrays.size()*2);
-					else if( line.trim().startsWith("invoke")) { //add in all externally declared generics
-						
+					else if( line.trim().startsWith("invoke")) { 
+						//add in all externally declared generics
 						LLVMOutput.addGenerics("%genericSet", generics, out);
-						LLVMOutput.addGenerics("%arraySet", arrays, out);
-						/*for( Type generic : generics )
-							out.write(LLVMOutput.addGeneric("%genericSet", generic).getBytes());
-						for( ArrayType array : arrays )
-							out.write(LLVMOutput.addGeneric("%arraySet", array).getBytes());
-						*/							
+						LLVMOutput.addGenerics("%arraySet", arrays, out);						
 					}					
 					
 					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.lineSeparator();
 					out.write(line.getBytes());
 					line = main.readLine();
-				}		
-				
-				
-				out.close(); //remove this after debugging
+				}
 
 				try {
 					main.close();
