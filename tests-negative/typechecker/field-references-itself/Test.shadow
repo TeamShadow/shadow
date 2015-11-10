@@ -1,0 +1,25 @@
+class Test
+{
+        private class Dummy
+        {
+                get set Dummy field;
+
+                public create() 
+                { 
+                	field = this;                
+                }
+
+                public spawn() => (Dummy)
+                {
+                   return Dummy:create();
+                }
+        }
+
+        Dummy a = a.spawn();
+        Dummy b = b->field;
+
+        public main(String[] args) => ()
+        {
+
+        }
+}

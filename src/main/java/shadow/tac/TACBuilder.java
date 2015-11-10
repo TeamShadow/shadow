@@ -2339,8 +2339,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		done.new TACLabel(tree);
 		return returnValue;
 	}
-	
-	
+
 	private void visitMethod(MethodSignature methodSignature)
 			throws ShadowException {
 		TACTree saveTree = tree;
@@ -2359,8 +2358,11 @@ public class TACBuilder implements ShadowParserVisitor {
 									"_outer"),
 							new TACVariableRef(tree,
 									method.getParameter("_outer")));
+
 				method.enterScope(); //needed to protect parameters from temporary variables that might be added
-				for (Node field : type.getFields().values())
+				//We need to visit the fields in *exactly* the order they were declared
+				//some fields depend on prior fields				
+				for( Node field : ((ClassType)type).getFieldList() ) 
 					if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType))
 						walk(field);
 				method.exitScope();

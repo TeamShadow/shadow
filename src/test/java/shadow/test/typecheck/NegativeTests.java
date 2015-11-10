@@ -366,4 +366,11 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/interface-create/Test.shadow");
 		enforce(Error.INVALID_CREATE);			
 	}
+	
+	/*//compiler can't handle this one yet
+	@Test public void testFieldReferencesItself() throws Exception {
+		args.add("tests-negative/typechecker/field-references-itself/Test.shadow");
+		enforce(Error.UNDEFINED_SYMBOL);			
+	}
+	*/
 }

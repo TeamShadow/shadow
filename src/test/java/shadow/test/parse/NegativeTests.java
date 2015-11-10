@@ -52,5 +52,11 @@ public class NegativeTests {
 		args.add("tests-negative/parser/member-visibility/Test.shadow");
 		enforce();
 	}
+	
+	@Test public void testNewlineInString() throws Exception
+	{
+		args.add("tests-negative/parser/newline-in-string/Test.shadow");
+		enforce();
+	}
 
 }

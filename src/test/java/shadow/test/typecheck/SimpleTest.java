@@ -27,7 +27,7 @@ public class SimpleTest
 		}
 		
 		//add desired files to list		
-		args.add("shadow/standard/ClassSet.shadow");
+		args.add("tests-negative/parser/plus-plus/Test.shadow");
 
 		Main.main(args.toArray(new String[] { }));		
 	}
