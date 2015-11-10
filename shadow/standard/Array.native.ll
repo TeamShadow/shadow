@@ -284,7 +284,7 @@ _name:
 	store %"_Pshadow_Pstandard_CObject"* %baseClassAsObj, %"_Pshadow_Pstandard_CObject"** %parametersClass
 	
 	%parametersMethodTable = getelementptr inbounds %_Pshadow_Pstandard_CObject*, %_Pshadow_Pstandard_CObject** %parametersArrayRef, i32 1
-	store %"_Pshadow_Pstandard_CObject"* %3, %"_Pshadow_Pstandard_CObject"** %parametersClass
+	store %"_Pshadow_Pstandard_CObject"* %3, %"_Pshadow_Pstandard_CObject"** %parametersMethodTable
 	
 	%uninitializedParameters = insertvalue { %"_Pshadow_Pstandard_CObject"**, [1 x i32] } undef, %"_Pshadow_Pstandard_CObject"** %parametersArrayRef, 0
 	%parameters = insertvalue { %"_Pshadow_Pstandard_CObject"**, [1 x i32] } %uninitializedParameters, i32 2, 1, 0

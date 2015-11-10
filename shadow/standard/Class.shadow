@@ -58,7 +58,7 @@ immutable class shadow:standard@Class
 		this:interfaces = interfaces;
 		this:data = data;
 		
-		if( isMethod() )
+		if( isMethod() ) //not yet used
 		{
 			MutableString methodType = MutableString:create("(");
 			for( int i = 0; i < size; i += 1 )
@@ -77,6 +77,7 @@ immutable class shadow:standard@Class
 			methodType.append(")");
 			this:name = methodType.toString();		
 		}
+		/*		
 		else if( isArray() )
 		{
 			MutableString arrayType = MutableString:create(name);
@@ -86,6 +87,7 @@ immutable class shadow:standard@Class
 			arrayType.append("]");
 			this:name = arrayType.toString();		
 		}
+		*/
 		else		
 			this:name = name;
 	}
@@ -229,7 +231,7 @@ immutable class shadow:standard@Class
 			return size;			
 	}
 	
-	protected locked get sizeValue() => (int)
+	public locked get sizeValue() => (int)
 	{
 		return size;
 	}

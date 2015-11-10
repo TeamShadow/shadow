@@ -312,11 +312,11 @@ locked class shadow:standard@ClassSet
 		{
 			Node current = check(table[index]);			
 			while ( true )
-			{
+			{	
 				if( current->hash == hash )
 				{
-					Class other = current->value;
-					if( other->size == dimensions and other->parent === base and (other->flags | Class:ARRAY) != 0)					
+					Class other = current->value;					
+					if( other->sizeValue == dimensions and other->parent === base and (other->flags & Class:ARRAY) != 0)
 						return other;
 				}
 				current = check(current->next);
@@ -324,6 +324,7 @@ locked class shadow:standard@ClassSet
 		}
 		recover
 		{ }
+
 		return null;		
 	}
 	
@@ -338,7 +339,7 @@ locked class shadow:standard@ClassSet
 		
 		if( size > threshold )
 			resize(2 * table->size);		
-		
+
 		return newGeneric;			
 	}
 			
@@ -411,7 +412,8 @@ locked class shadow:standard@ClassSet
 	{
 		immutable Class[] interfaces = getEmptyClassArray();
 		immutable Object[] data = getEmptyObjectArray();
-		Class newArray = Class:create(name, dimensions, Class:ARRAY, base, interfaces, data);
+
+		Class newArray = Class:create(name, Class:ARRAY, dimensions, base, interfaces, data);
 		(int index, int hash) = findIndex( name, table->size );		
 		table[index] = Node:create(hash, newArray, table[index]);
 		modifications += 1;

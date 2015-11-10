@@ -6,7 +6,7 @@ abstract locked class shadow:standard@Array<T>
 	
 	protected create( immutable int[] lengths, Object data )	
 	{		
-		this:lengths = lengths;		
+		this:lengths = lengths;	
 		this:data = data;		
 	}	
 	
@@ -53,7 +53,7 @@ abstract locked class shadow:standard@Array<T>
 	{
 		if ( this->size == 0 )
 			return "[]";
-		
+
 		MutableString string = MutableString:create("[");
 		boolean first = true;
 		foreach( T value in this )
@@ -62,7 +62,6 @@ abstract locked class shadow:standard@Array<T>
 				first = false;
 			else
 				string.append(", ");
-				
 			string.append(value);
 		}
 		return string.append("]").toString();
@@ -84,11 +83,10 @@ abstract locked class shadow:standard@Array<T>
 		}
 		
 		public next() => (T)
-		{
+		{			
 			if( position >= limit )
-				throw IndexOutOfBoundsException:create();
-			
-			T value = index( position );			
+				throw IndexOutOfBoundsException:create();			
+			T value = index( position );						
 			position += 1;			
 			
 			return value;  
