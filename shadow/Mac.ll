@@ -185,7 +185,7 @@ define void @_Pshadow_Pio_CFile_Mexists_Pshadow_Pstandard_Cboolean(%_Pshadow_Pio
 	tail call void @_Pshadow_Pio_CFile_Mclose(%_Pshadow_Pio_CFile* %0)
 	%3 = tail call i8* @filepath(%_Pshadow_Pio_CFile* %0)
 	br i1 %1, label %4, label %10
-	%5 = tail call i32 (i8*, i32, ...)* @open(i8* %3, i32 193, i32 420)
+	%5 = tail call i32 (i8*, i32, ...) @open(i8* %3, i32 193, i32 420)
 	tail call void @free(i8* %3)
 	%6 = icmp sge i32 %5, 0
 	br i1 %6, label %7, label %14
@@ -271,7 +271,7 @@ define i32 @_Pshadow_Pio_CFile_Mread_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pio_CF
 	br label %20
 	%21 = phi i32 [ 0, %17 ], [ 2, %19 ]
 	%22 = tail call i8* @filepath(%_Pshadow_Pio_CFile* %0)
-	%23 = tail call i32 (i8*, i32, ...)* @open(i8* %22, i32 %21)
+	%23 = tail call i32 (i8*, i32, ...) @open(i8* %22, i32 %21)
 	tail call void @free(i8* %22)
 	%24 = sext i32 %23 to i64
 	store i64 %24, i64* %3
@@ -302,7 +302,7 @@ define i32 @_Pshadow_Pio_CFile_Mwrite_Pshadow_Pstandard_Cbyte_A1(%_Pshadow_Pio_C
 	br label %20
 	%21 = phi i32 [ 1, %17 ], [ 2, %19 ]
 	%22 = tail call i8* @filepath(%_Pshadow_Pio_CFile* %0)
-	%23 = tail call i32 (i8*, i32, ...)* @open(i8* %22, i32 %21)
+	%23 = tail call i32 (i8*, i32, ...) @open(i8* %22, i32 %21)
 	tail call void @free(i8* %22)
 	%24 = sext i32 %23 to i64
 	store i64 %24, i64* %3
