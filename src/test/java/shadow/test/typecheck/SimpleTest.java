@@ -20,7 +20,7 @@ public class SimpleTest
 		ArrayList<String> args = new ArrayList<String>();
 
 		//args.add("-v");
-		args.add("--typecheck");
+		//args.add("--typecheck");
 
 		String os = System.getProperty("os.name").toLowerCase();
 		
@@ -34,7 +34,7 @@ public class SimpleTest
 		}
 		
 		//add desired files to list		
-		args.add("tests-negative/parser/plus-plus/Test.shadow");
+		args.add("tests-negative/compile/constant-initialization-failure/Test.shadow");
 
 		Main.main(args.toArray(new String[] { }));		
 	}

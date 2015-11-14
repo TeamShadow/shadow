@@ -44,11 +44,10 @@ public class Main {
 	public static final int NO_ERROR				=  0;
 	public static final int FILE_NOT_FOUND_ERROR	= -1;
 	public static final int PARSE_ERROR				= -2;
-	public static final int TYPE_CHECK_ERROR		= -3;
-	public static final int TAC_ERROR				= -4;
-	public static final int COMPILE_ERROR	 		= -5;
-	public static final int COMMAND_LINE_ERROR		= -6;
-	public static final int CONFIGURATION_ERROR		= -7;
+	public static final int TYPE_CHECK_ERROR		= -3;	
+	public static final int COMPILE_ERROR	 		= -4;
+	public static final int COMMAND_LINE_ERROR		= -5;
+	public static final int CONFIGURATION_ERROR		= -6;
 
 	private static final Logger logger = Loggers.SHADOW;
 	private static Configuration config;
@@ -241,8 +240,9 @@ public class Main {
 	 * containing class/file.This involves either finding an existing .ll file
 	 * (which has been updated more recently than the corresponding source file
 	 * or building a new one
+	 * @throws CompileException 
 	 */
-	private static void generateLLVM(List<String> linkCommand, Set<Type> generics, Set<ArrayType> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException {		
+	private static void generateLLVM(List<String> linkCommand, Set<Type> generics, Set<ArrayType> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
 		Type.clearTypes();
 		TypeChecker checker = new TypeChecker();
 
@@ -284,7 +284,6 @@ public class Main {
 					logger.info("Generating LLVM code for " + name);
 					//gets top level class
 					TACModule module = new TACBuilder().build(node);
-					
 
 					if( path.equals(mainFileName) ) {							
 						mainClass = type.getMangledName();
@@ -304,7 +303,13 @@ public class Main {
 					llvmFile = new File(file.getParentFile(), className + ".ll");
 					File nativeFile = new File(file.getParentFile(), className + ".native.ll");
 					LLVMOutput output = new LLVMOutput(llvmFile);
-					output.build(module);					
+					try {					
+						output.build(module);
+					}
+					catch(ShadowException e) {
+						logger.error(file + " FAILED TO COMPILE");
+						throw new CompileException(e.getMessage());
+					}				
 
 					if( llvmFile.exists() )
 						linkCommand.add(llvmFile.getCanonicalPath());

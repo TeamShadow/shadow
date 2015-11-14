@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import shadow.CompileException;
 import shadow.interpreter.ShadowBoolean;
 import shadow.interpreter.ShadowCode;
 import shadow.interpreter.ShadowDouble;
@@ -25,6 +26,7 @@ import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
 import shadow.output.TabbedLineWriter;
+import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
@@ -74,6 +76,7 @@ import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACVariableRef;
+import shadow.typecheck.BaseChecker;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InstantiationException;
@@ -262,13 +265,24 @@ public class LLVMOutput extends AbstractOutput {
 		//constants
 		for (TACConstant constant : module.getConstants()) {
 			ShadowInterpreter interpreter = new ShadowInterpreter();
-			interpreter.walk(constant);
-			Object result = constant.getValue().getData();
-			if (!(result instanceof ShadowValue))
-				throw new UnsupportedOperationException(
-						"Could not interpret constant initializer");
-			writer.write(name(constant) + " = constant " +
-					typeLiteral((ShadowValue)result));
+			String name = constant.getName();
+			Node node = module.getType().getField(name);
+			try {
+				interpreter.walk(constant);
+				Object result = constant.getValue().getData();
+				if (!(result instanceof ShadowValue))
+					throw new ShadowException(
+							BaseChecker.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
+				
+				writer.write(name(constant) + " = constant " +
+						typeLiteral((ShadowValue)result));
+				
+			}
+			catch(ShadowException e) {
+				String message = BaseChecker.makeMessage(null, "Could not initialize constant " + name + ": " + e.getMessage(), node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+				throw new ShadowException(message);
+			}
+			
 			Cleanup.getInstance().walk(constant);
 		}
 		

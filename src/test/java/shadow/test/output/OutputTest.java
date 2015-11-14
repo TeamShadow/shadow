@@ -5,6 +5,7 @@ import static junit.framework.Assert.assertEquals;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ public class OutputTest {
 		// Try to remove the unit test executable
 		try
 		{			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e)
 		{}
@@ -457,5 +458,11 @@ public class OutputTest {
 		args.add("shadow/test/SimpleTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "Hello, world!\n");
+	}
+	
+	@Test public void testCreateStringInConstant() throws Exception {
+		args.add("shadow/test/CreateStringInConstantTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "Empty: \nNon-empty: Hello!\n");
 	}
 }

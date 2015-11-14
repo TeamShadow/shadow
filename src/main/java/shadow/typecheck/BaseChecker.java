@@ -428,7 +428,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		warningList.add(new TypeCheckException(type, warning));
 	}
 	
-	protected static String makeMessage(Error type, String message, File file, int lineStart, int lineEnd, int columnStart, int columnEnd )
+	public static String makeMessage(Error type, String message, File file, int lineStart, int lineEnd, int columnStart, int columnEnd )
 	{
 		StringBuilder error = new StringBuilder();
 		

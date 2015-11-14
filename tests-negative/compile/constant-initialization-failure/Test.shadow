@@ -1,0 +1,14 @@
+class Test
+{
+        private constant Test test = Test:create();
+
+        public create()
+        {
+
+        }
+
+        public main(String[] args) => ()
+        {
+
+        }
+}
