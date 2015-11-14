@@ -1,6 +1,7 @@
 package shadow.test.typecheck;
 
 import java.util.ArrayList;
+
 import shadow.Main;
 
 /**
@@ -21,9 +22,15 @@ public class SimpleTest
 		//args.add("-v");
 		args.add("--typecheck");
 
-		if( System.getProperty("os.name").contains("Windows")) {
+		String os = System.getProperty("os.name").toLowerCase();
+		
+		if( os.contains("windows") ) {
 			args.add("-c");
 			args.add("windows.xml");
+		}
+		else if( os.contains("mac") ) {
+			args.add("-c");
+			args.add("mac.xml");
 		}
 		
 		//add desired files to list		
