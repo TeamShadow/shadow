@@ -1,0 +1,5 @@
+/// {@linkDoc pkg1 This is a link to my parent package}.
+class pkg1@ClassB
+{
+
+}

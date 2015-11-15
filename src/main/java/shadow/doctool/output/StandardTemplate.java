@@ -232,6 +232,5 @@ public class StandardTemplate extends DocumentationTemplate
 		System.out.println("pages describing Shadow source files.");
 		System.out.println("  help - Prints out usage information");
 		System.out.println("  title - Descriptor to appear at the top of each page");
-		// TODO: Implement
 	}
 }

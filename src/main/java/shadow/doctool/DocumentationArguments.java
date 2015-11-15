@@ -154,7 +154,7 @@ public class DocumentationArguments
 		Option outputOption = OptionBuilder.withLongOpt(OUTPUT_DIR_LONG)
 				.hasArg()
 				.withArgName("directory/")
-				.withDescription("Specify a directory for the documentation ouput\nBy default, doc/ will be created/used within the current working directory")
+				.withDescription("Specify a root directory for the documentation ouput\nBy default, doc/ will be created/used within the current working directory")
 				.create(OUTPUT_DIR);
 
 		/*
