@@ -29,7 +29,8 @@ public class DocumentationArguments
 	public static final String HELP				= "h";
 	public static final String VERBOSE			= "v";
 	public static final String OUTPUT_DIR		= "d";
-	public static final String TEMPLATE			= "t";
+	// Loading external documentation templates will be supported someday
+	//public static final String TEMPLATE			= "t";
 	public static final String TEMPLATE_OPTS	= "o";
 	
 	// Recognized long-name options
@@ -37,7 +38,7 @@ public class DocumentationArguments
 	private static final String HELP_LONG			= "help";
 	private static final String VERBOSE_LONG		= "verbose";
 	private static final String	OUTPUT_DIR_LONG		= "directory";
-	private static final String TEMPLATE_LONG		= "template";
+	//private static final String TEMPLATE_LONG		= "template";
 	private static final String TEMPLATE_OPTS_LONG	= "options";
 	
 	// The main description printed in response to the help option
@@ -156,12 +157,14 @@ public class DocumentationArguments
 				.withDescription("Specify a directory for the documentation ouput\nBy default, doc/ will be created/used within the current working directory")
 				.create(OUTPUT_DIR);
 
+		/*
 		@SuppressWarnings("static-access")
 		Option templateOption = OptionBuilder.withLongOpt(TEMPLATE_LONG)
 				.hasArg()
 				.withArgName("TemplateClass")
 				.withDescription("Specify a Java class to generate documentation with. This class must be a subclass of shadow.doctool.output.DocumentationTemplate.java")
 				.create(TEMPLATE);
+		*/
 		
 		@SuppressWarnings("static-access")
 		Option argsOption = OptionBuilder.withLongOpt(TEMPLATE_OPTS_LONG)
@@ -175,7 +178,7 @@ public class DocumentationArguments
 		options.addOption(configOption);
 		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
 		options.addOption(outputOption);
-		options.addOption(templateOption);
+		//options.addOption(templateOption);
 		options.addOption(new Option(VERBOSE, VERBOSE_LONG, false, "Print detailed information about the documentation process"));
 		
 		return options;

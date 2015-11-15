@@ -28,7 +28,7 @@ import shadow.typecheck.type.Type;
  * 
  * @author Brian Stottler
  */
-public class StandardTemplate implements DocumentationTemplate
+public class StandardTemplate extends DocumentationTemplate
 {
 	private static final String CSS_FILE = "stylesheet.css";
 	
@@ -43,14 +43,12 @@ public class StandardTemplate implements DocumentationTemplate
 	private final Map<String, PackagePage> pkgNameToPage;
 	private final Map<String, ClassOrInterfacePage> typeNameToPage;
 	
-	// External arguments
-	private final Map<String, String> arguments;
-	
 	public StandardTemplate(Map<String, String> args,
 			Set<Type> typesToDocument, Set<Package> packagesToDocument)
 			throws DocumentationException, ParseException
 	{
-		this.arguments = args;
+		super(args, typesToDocument, packagesToDocument);
+
 		readArguments();
 		
 		timestamp = new SimpleDateFormat("MMM dd, yyyy 'at' HH:mm:ss z")
