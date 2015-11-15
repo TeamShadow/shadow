@@ -65,14 +65,14 @@ public class TACConversion extends TACOperand
 			}
 			else if( sourceType instanceof TypeParameter )
 			{
-				srcClass = new TACClass(this, sourceType);				
+				srcClass = new TACClass(this, sourceType).getClassData();				
 			}
 			else
 				throw new IllegalArgumentException("Unknown source type: " + sourceType);
 					
 			TACMethodRef methodRef = new TACMethodRef(this, srcClass,
 					Type.CLASS.getMethods("interfaceData").get(0));
-			TACClass destClass = new TACClass(this, destination);					
+			TACOperand destClass = new TACClass(this, destination).getClassData();					
 			operands.add(new TACCall(this, getBuilder().getBlock(), methodRef, methodRef.getPrefix(), destClass));
 		}
 		else if( kind.equals(Kind.ARRAY_TO_OBJECT))

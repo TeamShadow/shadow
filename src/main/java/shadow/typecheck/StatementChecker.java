@@ -347,9 +347,10 @@ public class StatementChecker extends BaseChecker {
 				
 				if( parentType != null )
 				{	
-					if( !node.hasExplicitInvocation() ) 
+					if( !node.hasExplicitInvocation() && !node.getModifiers().isNative() ) 
 						//only worry if there is no explicit invocation
 						//explicit invocations are handled separately
+						//for native creates, we have to trust the author of the native code
 					{
 						boolean foundDefault = false;						
 						for( MethodSignature method : parentType.getMethods("create") )
@@ -1282,7 +1283,7 @@ public class StatementChecker extends BaseChecker {
 					if( leftElement.getModifiers().isNullable() ) {					
 						/*if( leftElement.getType().isPrimitive() )							
 							addError(Error.INVALID_MODIFIER, "Primitive type " + leftElement.getType() + " cannot be marked nullable");
-						else*/ if( leftElement.getType() instanceof ArrayType && ((ArrayType)leftElement.getType()).getSuperBaseType().isPrimitive() )
+						else*/ if( leftElement.getType() instanceof ArrayType && ((ArrayType)leftElement.getType()).recursivelyGetBaseType().isPrimitive() )
 							addError(Error.INVALID_MODIFIER, "Primitive array type " + leftElement.getType() + " cannot be marked nullable");
 					}					
 					
@@ -1712,7 +1713,7 @@ public class StatementChecker extends BaseChecker {
 						addError(Error.INVALID_MODIFIER, "Primitive type " + elementType + " cannot be marked nullable");
 					else*/ if( elementType instanceof ArrayType ) {
 						ArrayType arrayType = (ArrayType) elementType;
-						if( arrayType.getSuperBaseType().isPrimitive() )
+						if( arrayType.recursivelyGetBaseType().isPrimitive() )
 							addError(Error.INVALID_MODIFIER, "Primitive array type " + elementType + " cannot be marked nullable");
 					}
 				}
@@ -2568,8 +2569,9 @@ public class StatementChecker extends BaseChecker {
 							}
 						}
 					}
-					else if( prefixType.isParameterized() )
-						addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + prefixType, prefixType);
+					//allow "raw" classes
+					//else if( prefixType.isParameterized() )
+						//addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + prefixType, prefixType);
 				}
 				else
 					addError( Error.NOT_TYPE, "Constant class requires type name for access");
@@ -3199,7 +3201,7 @@ public class StatementChecker extends BaseChecker {
 					ArrayType arrayType = (ArrayType) type;
 					type = arrayType.convertToNullable();
 					
-					if( arrayType.getSuperBaseType().isPrimitive() )
+					if( arrayType.recursivelyGetBaseType().isPrimitive() )
 						addError(Error.INVALID_MODIFIER, "Primitive array type " + type + " cannot be marked nullable");
 				}				
 			}

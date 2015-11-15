@@ -69,8 +69,8 @@ public class SubscriptType extends PropertyType
 	}
 
 	@Override
-	public SubscriptType replace(SequenceType values,
-			SequenceType replacements) throws InstantiationException {		
+	public SubscriptType replace(List<ModifiedType> values,
+			List<ModifiedType> replacements) throws InstantiationException {		
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().replace(values, replacements), index.getModifiers());
 		UnboundMethodType replacedMethod = getMethod().replace(values, replacements);
@@ -87,8 +87,8 @@ public class SubscriptType extends PropertyType
 	}
 	
 	@Override
-	public SubscriptType partiallyReplace(SequenceType values,
-			SequenceType replacements) {		
+	public SubscriptType partiallyReplace(List<ModifiedType> values,
+			List<ModifiedType> replacements) {		
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().partiallyReplace(values, replacements), index.getModifiers());
 		UnboundMethodType replacedMethod = getMethod().partiallyReplace(values, replacements);
@@ -105,18 +105,16 @@ public class SubscriptType extends PropertyType
 	}
 	
 	@Override
-	public String toString(boolean withBounds)
-	{
-		StringBuilder sb = new StringBuilder(getGetType().getType().toString(withBounds));
+	public String toString(int options) {
+		StringBuilder sb = new StringBuilder(getGetType().getType().toString(options));
 					
 		sb.append(" <= [");
-		sb.append(index.getType().toString(withBounds));
+		sb.append(index.getType().toString(options));
 		sb.append("]");
 				
-		if( isSettable() )
-		{
+		if( isSettable() ) {
 			sb.append(" <= ");
-			sb.append(getSetType().getType().toString(withBounds));
+			sb.append(getSetType().getType().toString(options));
 		}		
 		return sb.toString();		
 	}

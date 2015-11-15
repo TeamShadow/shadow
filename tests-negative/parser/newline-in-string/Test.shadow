@@ -1,0 +1,8 @@
+class Test
+{
+	public main() => ()
+	{
+		String value = "here
+		it is";
+	}
+}

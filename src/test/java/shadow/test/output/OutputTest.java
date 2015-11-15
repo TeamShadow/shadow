@@ -34,9 +34,15 @@ public class OutputTest {
 		args.add("-o");
 		args.add(executableName);
 		
-		if( System.getProperty("os.name").contains("Windows") ) {
+		String os = System.getProperty("os.name").toLowerCase();
+		
+		if( os.contains("windows") ) {
 			args.add("-c");
 			args.add("windows.xml");
+		}
+		else if( os.contains("mac") ) {
+			args.add("-c");
+			args.add("mac.xml");
 		}
 	}
 	
@@ -45,8 +51,8 @@ public class OutputTest {
 		
 		// Try to remove the unit test executable
 		try
-		{
-			//Files.delete(executable);
+		{			
+			Files.delete(executable);
 		}
 		catch(Exception e)
 		{}
@@ -72,7 +78,8 @@ public class OutputTest {
 		Process program = new ProcessBuilder(programCommand).start();
 		
 		//regular output
-		BufferedReader reader = new BufferedReader(new InputStreamReader(program.getInputStream()));		
+		BufferedReader reader = new BufferedReader(new InputStreamReader(program.getInputStream()));
+		BufferedReader errorReader = new BufferedReader(new InputStreamReader(program.getErrorStream()));
 		StringBuilder builder = new StringBuilder();
 		String line;
 		do {
@@ -83,11 +90,10 @@ public class OutputTest {
 		String output = builder.toString();
 		assertEquals(expectedOutput, output);
 		
-		//error output
-		reader = new BufferedReader(new InputStreamReader(program.getErrorStream()));
+		//error output		
 		builder = new StringBuilder();
 		do {
-			line = reader.readLine();
+			line = errorReader.readLine();
 			if (line != null)
 				builder.append(line).append('\n');
 		} while (line != null);
@@ -143,41 +149,97 @@ public class OutputTest {
 	@Test public void testConsole() throws Exception {
 		args.add("shadow/test/ConsoleTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		//can't test this one because it requires user input
 	}
 	
 	@Test public void testException() throws Exception {
 		args.add("shadow/test/ExceptionTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"test2 caught ExceptionB\n", 
+				"shadow:standard@Exception\n");
 	}
 	
 	@Test public void testFile() throws Exception {
 		args.add("shadow/test/FileTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		//can't test this without a file
 	}
 	
 	@Test public void testInterface() throws Exception {
 		args.add("shadow/test/InterfaceTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		run(new String[0],		
+			"shadow:test@Cheetah runs at 75 mph.\n" + 
+			"shadow:test@Hare runs at 40 mph.\n" +
+			"shadow:test@Tortoise runs slow and steady.\n" +
+			"shadow:test@Tortoise runs slow and steady.\n" +
+			"shadow:test@Cheetah runs at 75 mph.\n" +
+			"shadow:test@Hare runs at 40 mph.\n");
 	}
 	
 	@Test public void testLoop() throws Exception {
 		args.add("shadow/test/LoopTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		run(new String[0],	
+			"before outer\n" +
+			"try before outer\n" +
+			"loop before skip\n" +
+			"try before skip\n" +
+			"try after skip\n" +
+			"finally skip\n" +
+			"loop after skip\n" +
+			"loop before skip\n" +
+			"try before skip\n" +
+			"try after skip\n" +
+			"finally skip\n" +
+			"loop after skip\n" +
+			"loop before continue\n" +
+			"try before continue\n" +
+			"finally continue\n" +
+			"loop before continue\n" +
+			"try before continue\n" +
+			"finally continue\n" +
+			"loop before break\n" +
+			"try before break\n" +
+			"finally break\n" +
+			"try after outer\n" +
+			"before return first\n" +
+			"finally outer\n" +
+			"before return second\n" +
+			"after return second\n" +
+			"return first\n");
 	}
 	
 	@Test public void testSort() throws Exception {
 		args.add("shadow/test/SortMain.shadow");
 		Main.run(args.toArray(new String[] { }));
+		//can't put test in because of timing data
 	}
 	
 	@Test public void testTry() throws Exception {
 		args.add("shadow/test/TryTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"before throw\n" + 
+				"catch (shadow:standard@Exception: message)\n" +
+				"finally\n"
+				);
 	}
 	
 	@Test public void testToughTry() throws Exception {
 		args.add("shadow/test/ToughTry.shadow");
 		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"test 1\n" + 
+			"16\n" +
+			"finally\n" +
+			"test 2\n" +
+			"catch (shadow:standard@Exception)\n" +
+			"finally\n" +
+			"test 3\n" +
+			"finally\n" +
+			"Result: 3\n");
 	}
 	
 	@Test public void testPrimitive() throws Exception {
@@ -371,5 +433,36 @@ public class OutputTest {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 	"", 			
 				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n");
+	}
+	
+	@Test public void testHashMap() throws Exception {
+		args.add("shadow/test/HashMapTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Passed 1\n" + 
+				"Passed 2\n" +
+				"Passed 3\n" +
+				"Bozo\n" +
+				"{Sandwich=20, Clothes=58}\n" +
+				"Deal\n" +
+				"Passed 4\n" +
+				"Passed 5\n" +
+				"Passed 6\n" +
+				"Passed 7\n" +
+				"Passed 8\n" +
+				"Passed 9\n" +
+				"Passed 10\n");
+	}
+	
+	@Test public void testSimple() throws Exception {
+		args.add("shadow/test/SimpleTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "Hello, world!\n");
+	}
+	
+	@Test public void testCreateStringInConstant() throws Exception {
+		args.add("shadow/test/CreateStringInConstantTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "Empty: \nNon-empty: Hello!\n");
 	}
 }

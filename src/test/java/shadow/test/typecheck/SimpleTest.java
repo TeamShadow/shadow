@@ -1,6 +1,7 @@
 package shadow.test.typecheck;
 
 import java.util.ArrayList;
+
 import shadow.Main;
 
 /**
@@ -19,15 +20,21 @@ public class SimpleTest
 		ArrayList<String> args = new ArrayList<String>();
 
 		//args.add("-v");
-		args.add("--typecheck");
+		//args.add("--typecheck");
 
-		if( System.getProperty("os.name").contains("Windows")) {
+		String os = System.getProperty("os.name").toLowerCase();
+		
+		if( os.contains("windows") ) {
 			args.add("-c");
 			args.add("windows.xml");
 		}
+		else if( os.contains("mac") ) {
+			args.add("-c");
+			args.add("mac.xml");
+		}
 		
 		//add desired files to list		
-		args.add("tests-negative/typechecker/store-to-singleton/Test.shadow");
+		args.add("tests-negative/compile/constant-initialization-failure/Test.shadow");
 
 		Main.main(args.toArray(new String[] { }));		
 	}

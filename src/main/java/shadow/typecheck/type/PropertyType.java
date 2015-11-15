@@ -19,7 +19,16 @@ public class PropertyType extends Type
 		
 	public List<TypeCheckException> applyInput(ModifiedType input) {
 		
-		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();		
+		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		
+		if( method == null ) {
+			if( isGettable() )
+				BaseChecker.addError(errors, Error.INVALID_PROPERTY, "Cannot assign to non-set property " + getter.getSymbol());
+			else
+				BaseChecker.addError(errors, Error.INVALID_PROPERTY, "Cannot assign to non-set property"); //should never happen, but...
+			return errors;
+		}
+		
 		Type outer = method.getOuter();
 		String name = method.getTypeName();
 		SequenceType arguments = new SequenceType();		
@@ -174,8 +183,8 @@ public class PropertyType extends Type
 	}
 
 	@Override
-	public PropertyType replace(SequenceType values,
-			SequenceType replacements) throws InstantiationException {
+	public PropertyType replace(List<ModifiedType> values,
+			List<ModifiedType> replacements) throws InstantiationException {
 		
 		MethodSignature replacedGetter = null;		
 		UnboundMethodType replacedMethod = getMethod().replace(values, replacements);
@@ -191,8 +200,8 @@ public class PropertyType extends Type
 	}
 	
 	@Override
-	public PropertyType partiallyReplace(SequenceType values,
-			SequenceType replacements) {
+	public PropertyType partiallyReplace(List<ModifiedType> values,
+			List<ModifiedType> replacements) {
 		
 		MethodSignature replacedGetter = null;		
 		UnboundMethodType replacedMethod = getMethod().partiallyReplace(values, replacements);
@@ -207,28 +216,22 @@ public class PropertyType extends Type
 		return replacement;
 	}
 	
-
-	
 	@Override
-	public String toString(boolean withBounds)
-	{
+	public String toString(int options) {
 		StringBuilder sb = new StringBuilder("[");
 		
-		if( isGettable() )
-		{
+		if( isGettable() ) {
 			sb.append("get: ");
-			sb.append(getGetType().getType().toString(withBounds));
+			sb.append(getGetType().getType().toString(options));
 		}
 		
-		if( isGettable() && isSettable() )
-		{
+		if( isGettable() && isSettable() ) {
 			sb.append(", ");
 		}
 		
-		if( isSettable() )
-		{
+		if( isSettable() ) {
 			sb.append("set: ");
-			sb.append(getSetType().getType().toString(withBounds));
+			sb.append(getSetType().getType().toString(options));
 		}
 		sb.append("]");
 		return sb.toString();		

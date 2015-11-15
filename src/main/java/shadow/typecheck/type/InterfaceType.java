@@ -139,7 +139,7 @@ public class InterfaceType extends Type
 	}
 	
 	@Override
-	public InterfaceType replace(SequenceType values, SequenceType replacements ) throws InstantiationException {		
+	public InterfaceType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {		
 		if( isRecursivelyParameterized() ) {					
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )
@@ -182,7 +182,7 @@ public class InterfaceType extends Type
 	}
 	
 	@Override
-	public InterfaceType partiallyReplace(SequenceType values, SequenceType replacements ) {	
+	public InterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )
@@ -287,9 +287,9 @@ public class InterfaceType extends Type
 		
 		//type name
 		if( !hasOuter() ) //outermost interface ...are inner interfaces even allowed?	
-			out.print(getQualifiedName(true));
+			out.print(toString(PACKAGES | TYPE_PARAMETERS | PARAMETER_BOUNDS));
 		else {
-			String name = toString(true); 
+			String name = toString(TYPE_PARAMETERS | PARAMETER_BOUNDS); 
 			out.print(name.substring(name.lastIndexOf(':') + 1));
 		}
 		
@@ -302,7 +302,7 @@ public class InterfaceType extends Type
 					out.print(", ");
 				else
 					first = false;
-				out.print(_interface.getQualifiedName());				
+				out.print(_interface.toString(PACKAGES | TYPE_PARAMETERS));				
 			}			
 		}
 		
@@ -331,12 +331,9 @@ public class InterfaceType extends Type
 				out.println(indent + signature + ";");
 				modifiers.addModifier(Modifiers.PUBLIC);
 				newLine = true;				
-			}
-		if( newLine )
-			out.println();
-		
-		if( !hasOuter() )
-			printGenerics(out, indent );		
+			}		
+		//if( !hasOuter() )
+			//printGenerics(out, indent );		
 		
 		out.println(linePrefix + "}" + System.lineSeparator());	
 	}

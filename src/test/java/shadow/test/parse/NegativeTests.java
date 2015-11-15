@@ -17,9 +17,15 @@ public class NegativeTests {
 		
 		args.add("--typecheck");
 		
-		if( System.getProperty("os.name").contains("Windows")) {
+		String os = System.getProperty("os.name").toLowerCase();
+		
+		if( os.contains("windows") ) {
 			args.add("-c");
 			args.add("windows.xml");
+		}
+		else if( os.contains("mac") ) {
+			args.add("-c");
+			args.add("mac.xml");
 		}
 	}
 	
@@ -50,6 +56,12 @@ public class NegativeTests {
 	@Test public void testMemberVisibility() throws Exception
 	{
 		args.add("tests-negative/parser/member-visibility/Test.shadow");
+		enforce();
+	}
+	
+	@Test public void testNewlineInString() throws Exception
+	{
+		args.add("tests-negative/parser/newline-in-string/Test.shadow");
 		enforce();
 	}
 

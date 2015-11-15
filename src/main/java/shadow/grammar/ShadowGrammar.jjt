@@ -325,7 +325,20 @@ TOKEN :
       )*
       "\""
   >
-|	
+|
+  < BAD_STRING_LITERAL:
+      "\""
+      (   (~["\"","\\"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+|
   < VERSION_LITERAL:  (["0"-"9"])+ "." (["0"-"9"])+ "." (["0"-"9"])+ >
 }
 
@@ -491,13 +504,6 @@ void ImportDeclaration():
 {
   "import"  Name() ["$" [">" | "<"] < VERSION_LITERAL >] ";" 
 }
-
-void GenericDeclaration():
-{
-   debugPrint("GENERIC DECLARATION");
-}
-{
-  "import" ReferenceType(Modifiers.NO_MODIFIERS) ";"} 
 
 /*
  * Modifiers. We match all modifiers in a single rule to reduce the chances of
@@ -733,7 +739,6 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
     | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers, docBuilder)
     | LOOKAHEAD( FieldDeclaration(modifiers, docBuilder) ) FieldDeclaration(modifiers, docBuilder) 
     | MethodDeclaration(modifiers, docBuilder)
-    | GenericDeclaration()
     //| ViewDeclaration(modifiers)
   )
 }
@@ -1209,6 +1214,8 @@ void UnaryExpression():
 | "-" { jjtThis.setImage("-"); } UnaryExpression()
 | LOOKAHEAD(FormalParameters(true) "=>") InlineMethodDefinition()
 | PrimaryExpression()
+| "++" {throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
+//ironically, -- is allowed, because it's the negation of a negation
 }
 
 void InlineMethodDefinition():
@@ -1350,6 +1357,8 @@ void PrimarySuffix():
 | LOOKAHEAD(ScopeSpecifier()) ScopeSpecifier()
 | Property()
 | LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
+| "++" {throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
+| "--" {throw new ParseException("-- is not a legal Shadow operator", jjtThis);  }
 }
 
 void Allocation():
@@ -1499,7 +1508,8 @@ void Literal() :
 | t = <UINT_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.UINT); }
 | t = <ULONG_LITERAL> { jjtThis.setImage(t.image); jjtThis.setLiteral(Literal.ULONG); }
 | BooleanLiteral() { jjtThis.setLiteral(Literal.BOOLEAN); }
-| NullLiteral() { jjtThis.setLiteral(Literal.NULL); jjtThis.addModifier(Modifiers.NULLABLE); jjtThis.removeModifier(Modifiers.IMMUTABLE); }  )
+| NullLiteral() { jjtThis.setLiteral(Literal.NULL); jjtThis.addModifier(Modifiers.NULLABLE); jjtThis.removeModifier(Modifiers.IMMUTABLE); }
+| <BAD_STRING_LITERAL > { throw new ParseException("String literals cannot contain newline characters", jjtThis); } )
 }
 
 void BooleanLiteral():

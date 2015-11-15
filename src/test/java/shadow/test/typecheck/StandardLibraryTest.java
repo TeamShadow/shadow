@@ -16,9 +16,15 @@ public class StandardLibraryTest {
 		//args.add("-v");
 		args.add("--typecheck");
 		
-		if( System.getProperty("os.name").contains("Windows")) {
+		String os = System.getProperty("os.name").toLowerCase();
+		
+		if( os.contains("windows") ) {
 			args.add("-c");
 			args.add("windows.xml");
+		}
+		else if( os.contains("mac") ) {
+			args.add("-c");
+			args.add("mac.xml");
 		}
 	}
 

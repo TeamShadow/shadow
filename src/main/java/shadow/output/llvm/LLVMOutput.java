@@ -4,14 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -26,6 +25,7 @@ import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
 import shadow.output.TabbedLineWriter;
+import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
@@ -40,12 +40,12 @@ import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
-import shadow.tac.nodes.TACConstructGeneric;
 import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
+import shadow.tac.nodes.TACGlobal;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
@@ -75,10 +75,13 @@ import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACVariableRef;
+import shadow.typecheck.BaseChecker;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
+import shadow.typecheck.type.MethodTableType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
@@ -88,9 +91,7 @@ import shadow.typecheck.type.TypeParameter;
 public class LLVMOutput extends AbstractOutput {
 	private Process process = null;
 	private int tempCounter = 0, labelCounter = 0;
-	private List<String> stringLiterals = new LinkedList<String>();
-	private HashSet<Generic> generics = new HashSet<Generic>();	
-	private HashSet<Array> arrays = new HashSet<Array>();
+	private List<String> stringLiterals = new LinkedList<String>();	
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();	
 	private TACMethod method;
 	private int classCounter = 0;
@@ -166,35 +167,6 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write();	
 	}
 	
-	private void writeTypeOpaque(Type type) throws ShadowException
-	{
-		StringBuilder sb = new StringBuilder();
-		
-		if( type instanceof InterfaceType )
-		{
-			if( type.isFullyInstantiated() )
-				sb.append('%').append(withGenerics(type, "_methods")).append(" = type opaque");
-			else if( type.isUninstantiated() )
-				sb.append('%').append(raw(type, "_methods")).append(" = type opaque");
-			
-			writer.write(sb.toString());
-		}
-		else if (type instanceof ClassType)
-		{	
-			if( type.isUninstantiated() )
-			{
-				sb.append('%').append(raw(type, "_methods")).append(" = type opaque");
-								
-				sb.setLength(0);
-				//first thing in every object is the class			
-				sb.append('%').append(raw(type)).append(" = type opaque");
-		
-				writer.write(sb.toString());
-			}
-		}	
-	}
-	
-	
 	private void writeTypeDeclaration(Type type) throws ShadowException
 	{
 		StringBuilder sb = new StringBuilder();
@@ -235,48 +207,9 @@ public class LLVMOutput extends AbstractOutput {
 		}	
 	}
 	
-	private void writeTypeConstants(Type type) throws ShadowException {	
-		if( type.isParameterizedIncludingOuterClasses() ) {
-			//unparameterizedGenerics.add(type.getTypeWithoutTypeArguments());
-		
-			if( type.isFullyInstantiated() ) {	
-				writer.write('@' + withGenerics(type, "_class") +
-						" = external constant %" + raw(Type.CLASS));				
-				
-				/*
-				if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
-					generics.add(new GenericArray(type));
-				else
-					generics.add(new Generic(type));
-				*/
-			}
-			else if( type instanceof ClassType && type.isUninstantiated() ) {
-				//methods recorded for classes with no type parameters and for the raw class of those that do
-				writer.write('@' + raw(type, "_methods") +
-					" = external constant %" + raw(type, "_methods"));
-			}
-		}
-		else {
-			writer.write('@' + raw(type, "_class") +
-					" = external constant %" + raw(Type.CLASS));
-			
-			if( type instanceof ClassType ) {
-				//methods recorded for classes with no type parameters and for the raw class of those that do
-				writer.write('@' + raw(type, "_methods") +
-					" = external constant %" + raw(type, "_methods"));
-			}	
-			
-			
-			if (type instanceof SingletonType) //never parameterized
-				writer.write('@' + raw(type, "_instance") +
-						" = external global " + type(type));
-		}	
-	}
-	
-	
 	protected void writeModuleDefinition(TACModule module) throws ShadowException {		
 		Type moduleType = module.getType();
-		writer.write("; " + module.getQualifiedName());
+		writer.write("; " + moduleType.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS));
 		writer.write();
 		
 		//Class fields (since the order is all changed)
@@ -302,13 +235,24 @@ public class LLVMOutput extends AbstractOutput {
 		//constants
 		for (TACConstant constant : module.getConstants()) {
 			ShadowInterpreter interpreter = new ShadowInterpreter();
-			interpreter.walk(constant);
-			Object result = constant.getValue().getData();
-			if (!(result instanceof ShadowValue))
-				throw new UnsupportedOperationException(
-						"Could not interpret constant initializer");
-			writer.write(name(constant) + " = constant " +
-					typeLiteral((ShadowValue)result));
+			String name = constant.getName();
+			Node node = module.getType().getField(name);
+			try {
+				interpreter.walk(constant);
+				Object result = constant.getValue().getData();
+				if (!(result instanceof ShadowValue))
+					throw new ShadowException(
+							BaseChecker.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
+				
+				writer.write(name(constant) + " = constant " +
+						typeLiteral((ShadowValue)result));
+				
+			}
+			catch(ShadowException e) {
+				String message = BaseChecker.makeMessage(null, "Could not initialize constant " + name + ": " + e.getMessage(), node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+				throw new ShadowException(message);
+			}
+			
 			Cleanup.getInstance().walk(constant);
 		}
 		
@@ -320,8 +264,8 @@ public class LLVMOutput extends AbstractOutput {
 		//no need to write interface data for interfaces				
 			StringBuilder interfaceData = new StringBuilder( "@_interfaceData" + moduleType.getMangledName() + " = ");			
 
-			if( !moduleType.isParameterizedIncludingOuterClasses() )
-				interfaceData.append("private " );			
+			//if( !moduleType.isParameterizedIncludingOuterClasses() )
+				//interfaceData.append("private " );			
 					
 			//generic classes don't list interfaces (because their parameterized versions have those)
 			//but they do share interfaceData (the actual methods)
@@ -334,8 +278,11 @@ public class LLVMOutput extends AbstractOutput {
 				append(interfaceCount).append(" x ").
 				append(type(Type.CLASS)).append("] [");
 			
+			boolean firstData = true;
+			boolean firstClass = true;
+			
 			for(InterfaceType type : interfaces) {			
-				if (module.isClass()) {
+				if( module.isClass() ) {
 					List<MethodSignature> methods = type.orderAllMethods(module.
 							getClassType());
 					
@@ -343,23 +290,25 @@ public class LLVMOutput extends AbstractOutput {
 					writer.write("@_class" + classCounter +
 							" = private unnamed_addr constant { " + methodsType +
 							" } { " + methodList(methods, true) + " }");
+					if( firstData )
+						firstData = false;
+					else
+						interfaceData.append(", ");
 					interfaceData.append(type(Type.OBJECT)).append(" bitcast ({ ").
 							append(methodsType).append(" }* @_class").append(classCounter).
-							append(" to ").append(type(Type.OBJECT)).append("), ");
+							append(" to ").append(type(Type.OBJECT)).append(")");
 				}				
-				interfaceClasses.append(typeText(Type.CLASS, classOf(type))).
-						append(", ");
 				
-				usedClasses.add(type);
+				if( firstClass )
+					firstClass = false;
+				else
+					interfaceClasses.append(", ");
+				if( type.isFullyInstantiated() )
+					interfaceClasses.append(typeText(Type.CLASS, "bitcast (" + type(Type.GENERIC_CLASS) + " " + classOf(type) + " to " + type(Type.CLASS) + ")"));
+				else
+					interfaceClasses.append(typeText(Type.CLASS, classOf(type)));
 				classCounter++;
 			}
-			if (interfaceCount > 0) {
-				interfaceData.delete(interfaceData.length() - 2,
-						interfaceData.length());
-				interfaceClasses.delete(interfaceClasses.length() - 2,
-						interfaceClasses.length());
-			}
-			
 			writer.write(interfaceData.append(']').toString());
 			
 			if( !moduleType.isParameterizedIncludingOuterClasses() )	
@@ -384,15 +333,15 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write('@' + raw(moduleType, "_methods") + " = constant %" +
 					raw(moduleType, "_methods") + " { " +					
 					methodList(methods, true) + " }");
-			
-			//nothing will ever be the raw, unparameterized class
-			if( !moduleType.isParameterizedIncludingOuterClasses() ) {
+					
+			//nothing will ever be the raw, unparameterized class ...now they will!
+			//if( !moduleType.isParameterizedIncludingOuterClasses() ) {
 				writer.write('@' + raw(moduleType, "_class") + " = constant %" +
 					raw(Type.CLASS) + " { " + 		
 					
 					type(Type.CLASS) + " @" + raw(Type.CLASS, "_class") + ", " + //class
 					"%" + raw(Type.CLASS, "_methods") + "* @" + raw(Type.CLASS, "_methods") + ", " + //methods
-					typeLiteral(moduleType.getQualifiedName()) + ", " +  //name
+					typeLiteral(moduleType.toString(moduleType.hasOuter() ? Type.NO_OPTIONS : Type.PACKAGES )) + ", " +  //name
 					
 					typeText(Type.CLASS, parentType != null ?  //parent class
 							classOf(parentType) : null) + ", " +
@@ -400,14 +349,23 @@ public class LLVMOutput extends AbstractOutput {
 					type(new ArrayType(Type.OBJECT)) + " { " +   //data
 					type(Type.OBJECT) + "* getelementptr inbounds ([" +
 					interfaceCount + " x " + type(Type.OBJECT) +
+					"], [" +
+					interfaceCount + " x " + type(Type.OBJECT) +
 					"]* @_interfaceData" + moduleType.getMangledName() + ", i32 0, i32 0), [1 x " + 
 					type(Type.INT) + "] [" + typeLiteral(interfaceCount) +
 					"] }, " + 
-					type(new ArrayType(Type.CLASS)) + " { " + //interfaces
+					type(new ArrayType(Type.CLASS)) + //interfaces 
+					
+					( moduleType.isParameterizedIncludingOuterClasses() ?							
+					" zeroinitializer, " :		
+							
+					" { " + 
 					type(Type.CLASS) + "* getelementptr inbounds ([" +
 					interfaceCount + " x " + type(Type.CLASS) +
+					"], [" +
+					interfaceCount + " x " + type(Type.CLASS) +
 					"]* @_interfaces" + moduleType.getMangledName() + ", i32 0, i32 0), [1 x " + type(Type.INT) +
-					"] [" + typeLiteral(interfaceCount) + "] }, " +
+					"] [" + typeLiteral(interfaceCount) + "] }, " )	+
 					
 					typeLiteral(flags) + ", " +			//flags
 					typeText(Type.INT, sizeof('%' + raw(moduleType) + '*')) + //size 
@@ -416,20 +374,20 @@ public class LLVMOutput extends AbstractOutput {
 				//class definition above includes parent Class
 				if( parentType != null )
 					usedClasses.add(parentType);
-			}
+			//}
 		}
 		else {
 			flags |= INTERFACE;
 			
-			//nothing will ever be the raw, unparameterized class
-			if( !moduleType.isParameterizedIncludingOuterClasses() )
+			//nothing will ever be the raw, unparameterized class...NOW THEY Will!
+			//if( !moduleType.isParameterizedIncludingOuterClasses() )
 				writer.write('@' + raw(moduleType, "_class") + " = constant %" +
 					raw(Type.CLASS) + " { " + 		
 					
 					type(Type.CLASS) + " @" + raw(Type.CLASS, "_class") + ", " + //class
 					"%" + raw(Type.CLASS, "_methods") + "* @" + raw(Type.CLASS, "_methods") + ", " + //methods
 					
-					typeLiteral(moduleType.getQualifiedName()) + ", " + //name 
+					typeLiteral(moduleType.toString(moduleType.hasOuter() ? Type.NO_OPTIONS :  Type.PACKAGES)) + ", " + //name 
 					type(Type.CLASS) + " null, " + //parent 					
 					
 					type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " + //data
@@ -444,6 +402,18 @@ public class LLVMOutput extends AbstractOutput {
 		if( !module.getType().encloses(Type.CLASS)) {
 			usedClasses.add(Type.CLASS);
 			usedMethodTables.add(Type.CLASS);
+		}
+		
+		//almost all module class definitions need GenericClass class and methods
+		if( !module.getType().encloses(Type.GENERIC_CLASS)) {
+			usedClasses.add(Type.GENERIC_CLASS);
+			usedMethodTables.add(Type.GENERIC_CLASS);
+		}		
+		
+		//almost all module class definitions need Array class and methods
+		if( !module.getType().encloses(Type.ARRAY)) {
+			usedClasses.add(Type.ARRAY);
+			usedMethodTables.add(Type.ARRAY);
 		}
 		
 		if (moduleType instanceof SingletonType)
@@ -476,16 +446,16 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
 		//memcopy
 		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
-		writer.write("declare void @__arrayStore(%\"_Pshadow_Pstandard_CObject\"**, i32, %\"_Pshadow_Pstandard_CObject\"*, %\"_Pshadow_Pstandard_CClass\"*)");
-		writer.write("declare %\"_Pshadow_Pstandard_CObject\"* @__arrayLoad(%\"_Pshadow_Pstandard_CObject\"**, i32, %\"_Pshadow_Pstandard_CClass\"*, %\"_Pshadow_Pstandard_CObject\"*)");
-		writer.write("declare noalias void @free(i8*) nounwind");
+		writer.write("declare void @__arrayStore(" + type(Type.OBJECT) + "*, %int, " + type(Type.OBJECT) + ", " + type(Type.CLASS) + ")");
+		writer.write("declare " + type(Type.OBJECT) + " @__arrayLoad(" + type(Type.OBJECT) + "*, %int, " + type(Type.CLASS) + ", " +  type(Type.OBJECT) + ", %boolean)");
+		writer.write("declare void @free(i8*) nounwind");
 		writer.write();
 		
 		//type references
 		HashSet<Type> definedGenerics = new HashSet<Type>();
 		for (Type type : module.getReferences()) {			
 			//write type declarations
-			if(type != null && !moduleType.encloses(type)) {	
+			if(type != null && !moduleType.encloses(type) && !(type instanceof ArrayType)  ) {	
 				if( !type.isParameterized() )
 					writeTypeDeclaration(type);	
 				else {
@@ -498,28 +468,32 @@ public class LLVMOutput extends AbstractOutput {
 			}
 			
 			//record generics
-			if( type instanceof ArrayType )
-				arrays.add(new Array((ArrayType)type));			
-			else if( !moduleType.encloses(type) ) {				
-				if( type.isFullyInstantiated() ) {//&& recordedTypes.add(type.getMangledNameWithGenerics())) ){ //||  
+			//if( type instanceof ArrayType )							
+			//	arrays.add((ArrayType)type);
+			//else if( !moduleType.encloses(type) ) {				
+			//	if( type.isFullyInstantiated() ) {//&& recordedTypes.add(type.getMangledNameWithGenerics())) ){ //||  
 					//(type.isUninstantiated() && recordedTypes.add(type.getMangledName()))	)				
-					//writeTypeConstants(type);	
+					//writeTypeConstants(type);
+					/*
 					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
 						generics.add(new GenericArray(type));
 					else
 						generics.add(new Generic(type));
-				}
+					*/
+					
+					//addInstantiations(type);
+					//generics.add(type);
+				//}
 				
-				if( type.isParameterizedIncludingOuterClasses() )
-					unparameterizedGenerics.add(type.getTypeWithoutTypeArguments());
-			}	
+				//if( type.isParameterizedIncludingOuterClasses() )
+					//unparameterizedGenerics.add(type.getTypeWithoutTypeArguments());
+			//}	
 		}
 		writer.write();
 		
 		//defines class and recursively defines inner classes  
 		writeModuleDefinition(module);		
 	}
-
 
 	private String methodList(Iterable<MethodSignature> methods, boolean name)
 			throws ShadowException {
@@ -574,6 +548,7 @@ public class LLVMOutput extends AbstractOutput {
 					"%" + raw(Type.STRING, "_methods") + "* @" + raw(Type.STRING, "_methods") + ", " +					
 					type(new ArrayType(Type.BYTE)) + " { " + type(Type.BYTE) +
 					"* getelementptr inbounds ([" +
+					data.length + " x " + type(Type.BYTE) + "], [" +
 					data.length + " x " + type(Type.BYTE) + "]* @_array" +
 					stringIndex + ", i32 0, i32 0), [1 x " + type(Type.INT) +
 					"] [" + typeLiteral(data.length) + "] }, " +
@@ -586,7 +561,7 @@ public class LLVMOutput extends AbstractOutput {
 	public void endFile(TACModule module) throws ShadowException {
 		Type moduleType = module.getType();
 		
-		//declare in a few strange methods that are not called through normal channels  
+		//declare a few strange methods that are not called through normal channels  
 		if (moduleType instanceof ClassType ) {
 			if (!moduleType.encloses(Type.CLASS))  {
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
@@ -597,31 +572,7 @@ public class LLVMOutput extends AbstractOutput {
 						Type.INT.getMangledName()) + '(' + type(Type.CLASS) +
 						", " + type(Type.INT) + ')');
 			}
-			
-			if( !moduleType.encloses(Type.GENERIC_CLASS)){
-				ArrayType genericClassArray = new ArrayType(Type.GENERIC_CLASS);
-				ArrayType classArray = new ArrayType(Type.CLASS);				
-				writer.write("declare " + type(Type.CLASS) + " @" +
-						raw(Type.GENERIC_CLASS, "_MfindClass" + 
-						genericClassArray.getMangledName() +						
-						classArray.getMangledName()) + '(' + 
-						type(Type.GENERIC_CLASS) + ", " +
-						type(genericClassArray) + ", " +
-						type(classArray) + ')');				
-			}
-			
-			if( !moduleType.encloses(Type.ARRAY_CLASS)) {
-				ArrayType genericClassArray = new ArrayType(Type.GENERIC_CLASS);
-				writer.write("declare " + type(Type.CLASS) + " @" +
-						raw(Type.ARRAY_CLASS, "_MfindClass" + 
-						genericClassArray.getMangledName() +						
-						Type.CLASS.getMangledName() + Type.CLASS.getMangledName()) + '(' + 
-						type(Type.GENERIC_CLASS) + ", " +
-						type(genericClassArray) + ", " +
-						type(Type.CLASS) + ", " +
-						type(Type.CLASS) +')');
-			}			
-			
+	
 			if( !moduleType.encloses(Type.ARRAY) )
 				writer.write("declare " + type(Type.ARRAY) + " @" +
 						raw(Type.ARRAY, "_Mcreate" + new ArrayType(Type.INT).
@@ -640,26 +591,54 @@ public class LLVMOutput extends AbstractOutput {
 						type(Type.OBJECT) + ')');
 		}
 		
+		
+		//create the two sets used to keep track of all generic classes and array classes
+		writer.write();
+		writer.write("@_genericSet = external global " + type(Type.CLASS_SET));
+		writer.write("@_arraySet = external global " + type(Type.CLASS_SET));
+		writer.write();
+		
+
+		Set<Type> rawTypes = new HashSet<Type>();
+		
+		Type arrayOfBytes = null;
+		try {
+			arrayOfBytes = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(Type.BYTE));
+		} catch (InstantiationException e) {
+			// should never happen
+			e.printStackTrace();
+		}
+		//hack for now
+		//we'll always need Array<byte> for some String manipulations
+		moduleType.addGenericClass(arrayOfBytes);		
+		
+		//print the externally visible generic classes that are used (extended types and implemented interfaces)
+		for( Type type : moduleType.getGenericClasses() )
+			writeGenericClass( type, rawTypes );
+		
+		//print the externally visible array classes that are used (extended types and implemented interfaces)
+		for( ArrayType type : moduleType.getArrayClasses() )
+			writeArrayClass( type );
+		
+		
 		//print the method tables that are used		
 		for( Type type : usedMethodTables )
-			if( type instanceof ClassType && type.isUninstantiated() )				
+			if( !moduleType.encloses(type) && type instanceof ClassType && type.isUninstantiated() )				
 				writer.write('@' + raw(type, "_methods") +
 					" = external constant %" + raw(type, "_methods"));
 		writer.write();
 		
-		
 		//print the class constants that are used		
 		for( Type type : usedClasses ) {
-			if( type.isFullyInstantiated() )
-				writer.write('@' + withGenerics(type, "_class") +
-						" = external constant %" + raw(Type.CLASS));
-			else if( type.isUninstantiated() )
-				writer.write('@' + raw(type, "_class") +
-					" = external constant %" + raw(Type.CLASS));
-			
-			if (type instanceof SingletonType) //never parameterized
-				writer.write('@' + raw(type, "_instance") +
-						" = external global " + type(type));
+			if( !moduleType.encloses(type) && !moduleType.getArrayClasses().contains(type) ) {
+				if( /*type.isFullyInstantiated() || */ type.isUninstantiated() )
+					writer.write(classOf(type) +
+							" = external constant %" + raw(Type.CLASS)); //a lie, sometimes it's a GenericClass, but that doesn't matter
+				
+				if (type instanceof SingletonType) //never parameterized
+					writer.write('@' + raw(type, "_instance") +
+							" = external global " + type(type));
+			} 
 		}
 		writer.write();
 		
@@ -683,11 +662,14 @@ public class LLVMOutput extends AbstractOutput {
 					raw(Type.CLASS, "_Mallocate") + '(' +
 					type(Type.CLASS) + ", %" + raw(Type.OBJECT, "_methods") +  "*)");
 		
-		//print generic possibilities
+		
+		/*
+		//print generic possibilities		
 		Type genericClassArray = new ArrayType(Type.GENERIC_CLASS);
 		for( Type type : unparameterizedGenerics )
 			writer.write("@_generics" + type.getMangledName() +	" = external constant " + type(genericClassArray));			
 		writer.write();
+		*/
 		
 		/* //seem to be covered by usedClasses
 		//print array type possibilities (only those arrays that can show up as generic parameters)
@@ -737,6 +719,7 @@ public class LLVMOutput extends AbstractOutput {
 			}
 	}
 
+
 	@Override
 	public void startMethod(TACMethod method, TACModule module) throws ShadowException
 	{
@@ -751,12 +734,13 @@ public class LLVMOutput extends AbstractOutput {
 			writer.indent();
 		}
 		else {
-			writer.write("define " + methodToString(method) + " {");
+			writer.write("define " + methodToString(method) + (method.hasLandingpad() ? " personality i32 (...)* @__shadow_personality_v0 {" : " {"  ));
 			writer.indent();
 			for (TACVariable local : method.getLocals())
 				writer.write('%' + name(local) + " = alloca " + type(local));
 			if (method.hasLandingpad())
-				writer.write("%_exception = alloca { i8*, i32 }");
+				writer.write("%_exception = alloca { i8*, i32 }");			
+			
 			boolean primitiveCreate = !signature.getOuter().
 					isSimpleReference() && signature.isCreate(), first = true;
 			int paramIndex = 0;
@@ -777,9 +761,10 @@ public class LLVMOutput extends AbstractOutput {
 					{
 						writer.write(nextTemp() +
 								" = getelementptr inbounds %" +
+								raw(param.getType()) + ", %" +
 								raw(param.getType()) + "* " + symbol +
 								", i32 0, i32 2");
-						writer.write(nextTemp() + " = load " +
+						writer.write(nextTemp() + " = load " + type(param) + ", " +
 								type(param) + "* " + temp(1));
 						symbol = temp(0);
 					}
@@ -824,6 +809,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = extractvalue " +
 				typeSymbol(node.getArray()) + ", 0");
 			writer.write(nextTemp(node) + " = getelementptr inbounds " +
+				type(node.getType()) + ", " +
 				type(node.getType()) + "* " + temp(1) + ", " +
 				typeSymbol(node.getTotal()));
 		}
@@ -840,6 +826,7 @@ public class LLVMOutput extends AbstractOutput {
 	public void visit(TACFieldRef node) throws ShadowException
 	{		
 		writer.write(nextTemp(node) + " = getelementptr inbounds " +
+				"%" + raw(node.getPrefix().getType()) + ", " + 
 				typeSymbol(node.getPrefix()) + ", i32 0, i32 " +
 				(node.getIndex())); 
 	}
@@ -902,10 +889,11 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = extractvalue " +
 					type(node.getOuterType()) + " " + symbol(node.getPrefix()) + ", 0");
 			writer.write(nextTemp() + " = getelementptr %" +
-					raw(node.getOuterType(), "_methods") + "* " +
+					raw(node.getOuterType(), "_methods") +
+					", %" +	raw(node.getOuterType(), "_methods") + "* " +
 					//raw(node.getPrefix(), "_methods") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex());
-			writer.write(nextTemp(node) + " = load " + methodType(node) +
+			writer.write(nextTemp(node) + " = load " + methodType(node) + ", " + methodType(node) +
 					"* " + temp(1));
 		}
 		else if (node.hasPrefix() && 
@@ -916,19 +904,21 @@ public class LLVMOutput extends AbstractOutput {
 				!(node.getOuterType() instanceof SingletonType) &&
 				!node.getType().getModifiers().isPrivate() &&
 				!node.isSuper() ) {	
-			writer.write(nextTemp() + " = getelementptr " +
+			writer.write(nextTemp() + " = getelementptr %" +
+					raw(node.getPrefix().getType()) + ", " + 					
 					typeSymbol(node.getPrefix()) + ", i32 0, i32 1");
 			
-			writer.write(nextTemp() + " = load %" +
+			writer.write(nextTemp() + " = load %" + raw(node.getPrefix().getType(), "_methods") + "*, %" +
 					raw(node.getPrefix().getType(), "_methods") + "** " + temp(1));
 			if( !module.getType().encloses(node.getPrefix().getType()) )
 				usedMethodTables.add(node.getPrefix().getType());
 			
 			writer.write(nextTemp() + " = getelementptr %" +
+					raw(node.getPrefix().getType(), "_methods") + ", %" + 
 					raw(node.getPrefix().getType(), "_methods") + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex()); //may need to + 1 to the node.getIndex() if a parent method table is added	
 			
-			writer.write(nextTemp(node) + " = load " + methodType(node) +
+			writer.write(nextTemp(node) + " = load " + methodType(node) + ", " + methodType(node) +
 					"* " + temp(1));
 		}
 		else {			
@@ -959,9 +949,16 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACClass.TACMethodTable node) throws ShadowException {
 		Type type = node.getClassType().getTypeWithoutTypeArguments();
-		node.setData("@" + raw(type, "_methods"));
-		if( !module.getType().encloses(type))
-			usedMethodTables.add(type);
+		if( type instanceof ArrayType )
+			type = ((ArrayType)type).recursivelyGetBaseType();
+			
+		if( type instanceof InterfaceType )
+			node.setData("null");
+		else {			
+			node.setData("@" + raw(type, "_methods"));
+			if( !module.getType().encloses(type))
+				usedMethodTables.add(type);
+		}
 	}	
 
 	@Override
@@ -1026,7 +1023,7 @@ public class LLVMOutput extends AbstractOutput {
 					temp(1)) + " to %" + raw(srcType) + "*");		
 			
 			writer.write(nextTemp() + " = getelementptr inbounds %" +
-					raw(srcType) + "* " + temp(1) + ", i32 0, i32 2");
+					raw(srcType) + ", %" + raw(srcType) + "* " + temp(1) + ", i32 0, i32 2");
 			writer.write("store " + typeSymbol(source) + ", " +
 					typeText(srcType, temp(0), true));
 			break;
@@ -1034,8 +1031,9 @@ public class LLVMOutput extends AbstractOutput {
 		case OBJECT_TO_PRIMITIVE:
 			writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to %" + raw(destType) +  "*");
 			writer.write(nextTemp() + " = getelementptr inbounds %" +
+					raw(destType) + ", %" + 
 					raw(destType) + "* " + temp(1) + ", i32 0, i32 2");
-			writer.write(nextTemp(node) + " = load " + typeTemp(destType, 1, true));			
+			writer.write(nextTemp(node) + " = load " +  type(destType) + ", " + typeTemp(destType, 1, true));			
 			break;
 			
 		case ARRAY_TO_OBJECT:
@@ -1061,9 +1059,10 @@ public class LLVMOutput extends AbstractOutput {
 					typeLiteral(arrayType.getDimensions()) + ')');
 			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT,
 					temp(1)) + " to" + dimsType + '*');
+			//cleverly copies all the dimensions at once
 			writer.write("store" + dimsType + ' ' + temp(2) + ',' +
 					dimsType + "* " + temp(0));
-			writer.write(nextTemp() + " = getelementptr inbounds" +
+			writer.write(nextTemp() + " = getelementptr inbounds" + dimsType + ", " + 
 					dimsType + "* " + temp(1) + ", i32 0, i32 0");
 			writer.write(nextTemp() + " = insertvalue " + type(intArray) +
 					" { " + type(Type.INT) + "* null, [1 x " +
@@ -1074,10 +1073,12 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = bitcast " +					
 					combine(baseType, temp(1), true) + " to " +
 					type(Type.OBJECT));
+			
+			writer.write(nextTemp() + " = bitcast " + typeText(Type.GENERIC_CLASS, symbol(arrayClass.getClassData())) + " to " + type(Type.CLASS));
+			
 			writer.write(nextTemp() + " = call noalias " +
 					type(Type.OBJECT) + " @" + raw(Type.CLASS,
-					"_Mallocate") + '(' + typeText(Type.CLASS,
-					symbol(arrayClass.getClassData())) + ", %" +
+					"_Mallocate") + '(' + typeTemp(Type.CLASS,1) + ", %" +
 					raw(Type.OBJECT, "_methods") + "* bitcast(%" + raw(genericArray, "_methods") + "* " +  symbol(arrayClass.getMethodTable()) + " to %" + raw(Type.OBJECT, "_methods") + "*)" + 
 					')');
 							
@@ -1085,8 +1086,8 @@ public class LLVMOutput extends AbstractOutput {
 					raw(genericArray, "_Mcreate" + new ArrayType(Type.INT).
 					getMangledName() + Type.OBJECT.getMangledName()) + '(' +
 					typeTemp(Type.OBJECT, 1) + ", " +						
-					typeTemp(new ArrayType(Type.INT), 4) + ", " +
-					typeTemp(Type.OBJECT, 2) + ')');
+					typeTemp(new ArrayType(Type.INT), 5) + ", " +
+					typeTemp(Type.OBJECT, 3) + ')');
 			break;
 			
 		case OBJECT_TO_ARRAY:
@@ -1111,21 +1112,21 @@ public class LLVMOutput extends AbstractOutput {
 			
 			dimsType = " [" + arrayType.getDimensions() + " x " +
 							type(Type.INT) + ']';
-			writer.write(nextTemp() + " = getelementptr inbounds " +
+			writer.write(nextTemp() + " = getelementptr inbounds %" + raw(srcType) + ", " +
 							typeText(srcType, srcName) + ", i32 0, i32 2");
-			writer.write(nextTemp() + " = load " + type(Type.OBJECT) +
+			writer.write(nextTemp() + " = load " +  type(Type.OBJECT) + ", " + type(Type.OBJECT) +
 					"* " + temp(1));
 			writer.write(nextTemp() + " = bitcast " + typeTemp(Type.OBJECT,
 					1) + " to " + baseType);
 			writer.write(nextTemp() + " = insertvalue " + type(destType) +
 					" undef, " + baseType + ' ' + temp(1) + ", 0");
-			writer.write(nextTemp() + " = getelementptr inbounds " +
+			writer.write(nextTemp() + " = getelementptr inbounds %" + raw(srcType) + ", " + 
 					typeText(srcType, srcName) + ", i32 0, i32 3, i32 0");
-			writer.write(nextTemp() + " = load " + type(Type.INT) + "** " +
+			writer.write(nextTemp() + " = load " + type(Type.INT) + "*, " + type(Type.INT) + "** " +
 					temp(1));
 			writer.write(nextTemp() + " = bitcast " + type(Type.INT) +
 					"* " + temp(1) + " to" + dimsType + '*');
-			writer.write(nextTemp() + " = load" + dimsType + "* " +
+			writer.write(nextTemp() + " = load" + dimsType + ", " + dimsType + "* " +
 					temp(1));
 			writer.write(nextTemp(node) + " = insertvalue " + typeTemp(destType,
 					5) + ',' + dimsType + ' ' + temp(1) + ", 1");
@@ -1234,10 +1235,10 @@ public class LLVMOutput extends AbstractOutput {
 			
 			//primitive types are in their object forms
 			if( srcType.isPrimitive() )
-				srcTypeName = "%\"" + srcType.getMangledName() + "\"*";
+				srcTypeName = type(srcType, true);
 			
 			if( destType.isPrimitive() )
-				destTypeName = "%\"" + destType.getMangledName() + "\"*";			
+				destTypeName = type(destType, true);			
 		}
 		
 		writer.write(nextTemp(node) + " = " + instruction + ' ' +
@@ -1279,7 +1280,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
 				temp(1) + " to " + type(baseType) + '*');
 		writer.write(nextTemp() + " = insertvalue " + type(node) +
-				" undef, " + type(baseType) + "* " + temp(1) + ", 0");
+				" zeroinitializer, " + type(baseType) + "* " + temp(1) + ", 0");
 		for (int i = 0; i < node.getDimensions(); i++)
 			writer.write(nextTemp(node) + " = insertvalue " + type(node) +
 					' ' + temp(1) + ", " + typeSymbol(node.getDimension(i)) +
@@ -1450,7 +1451,7 @@ public class LLVMOutput extends AbstractOutput {
 				second = symbol(node.getSecond());
 		writer.write(nextTemp() + " = " + dir + _type_ + first + ", " + second);
 		writer.write(nextTemp() + " = sub" + _type_ + "mul (" + type +
-				" ptrtoint (" + type + "* getelementptr (" + type +
+				" ptrtoint (" + type + "* getelementptr (" + type + ", " + type +
 				"* null, i32 1) to " + type + ")," + _type_ + "8), " + second);
 		writer.write(nextTemp() + " = " + otherDir + _type_ + first + ", " +
 				temp(1));
@@ -1459,47 +1460,10 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void visit(TACConstructGeneric node) throws ShadowException
-	{ 
-		int size = node.getNumOperands();
-		Type genericClassArray = new ArrayType(Type.GENERIC_CLASS);
-		Type classArray = new ArrayType(Type.CLASS);
-				
-		writer.write(nextTemp() + " = call " + 
-				type(Type.OBJECT) + " @" +
-				raw(Type.CLASS, "_Mallocate" + 
-				Type.INT.getMangledName()) + '(' +
-				type(Type.CLASS) + " " + classOf(Type.CLASS) + ", " +
-				type(Type.INT) + " " + size + ')');
-		
-		String start = nextTemp();
-		writer.write(start + " = bitcast " + 
-				type(Type.OBJECT) + " " + temp(1) + " to " +
-				type(Type.CLASS) + "*");
-				
-		
-		for( int i = 0; i < size; i++ )
-		{
-			writer.write(nextTemp() + " = getelementptr " + type(Type.CLASS) + "* " + start + ", i32 " + i);  			
-			writer.write("store " + type(Type.CLASS) + " " + symbol(node.getOperand(i)) + ", " + type(Type.CLASS) + "* " + temp(0));			
-		}		
-		
-		writer.write(nextTemp() + " = insertvalue " + type(new ArrayType(Type.CLASS)) + " undef, " + type(Type.CLASS) + "* " + start + ", 0");
-		writer.write(nextTemp() + " = insertvalue " + type(new ArrayType(Type.CLASS)) + " " + temp(1) + ", " + typeLiteral(size) + ", 1, 0" );
-		writer.write(nextTemp() + " = load " + type(genericClassArray) + "*  @_generics" + node.getClassType().getMangledName());
-		writer.write(nextTemp(node) + " = call " + 
-				type(Type.CLASS) + " @" +
-				raw(Type.GENERIC_CLASS, "_MfindClass" + 
-				genericClassArray.getMangledName() + 
-				classArray.getMangledName()) + '(' +
-				type(Type.GENERIC_CLASS) + " null, " +
-				type(genericClassArray) + " " +  temp(1) + ", " +
-				type(classArray) + " " + temp(2) + ')');
-		writer.write(nextTemp() + " = bitcast " + 
-				type(Type.CLASS) + "* " + start + " to i8*");
-		writer.write("call void @free(i8* " + temp(0) + ")");		
+	public void visit(TACGlobal node) throws ShadowException {
+		writer.write(nextTemp(node) + " = load " + type(node) + ", " + type(node) + "* " + node.getName());
 	}
-
+	
 	@Override
 	public void visit(TACNot node) throws ShadowException
 	{
@@ -1553,11 +1517,12 @@ public class LLVMOutput extends AbstractOutput {
 			TACGenericArrayRef genericRef = (TACGenericArrayRef) reference;			
 			writer.write(nextTemp(node) + " = call " + type(Type.OBJECT) + " @__arrayLoad(" + typeSymbol(Type.OBJECT, genericRef, true) + ", " + 
 					typeSymbol(genericRef.getTotal()) + ", " +
-					typeSymbol(genericRef.getClassData().getClassData()) + ", " +
-					typeSymbol(Type.OBJECT, genericRef.getClassData().getMethodTable()) + ")");
+					typeSymbol(genericRef.getGenericParameter().getClassData()) + ", " +
+					typeSymbol(Type.OBJECT, genericRef.getGenericParameter().getMethodTable()) + ", " +
+					typeLiteral(genericRef.isNullable()) + ")");
 		}
 		else
-			writer.write(nextTemp(node) + " = load " +
+			writer.write(nextTemp(node) + " = load " + type(reference.getGetType()) + ", " +
 					typeSymbol(reference.getGetType(), reference, true));
 	}
 	
@@ -1581,75 +1546,7 @@ public class LLVMOutput extends AbstractOutput {
 						
 			writer.write("call void @__arrayStore(" + typeSymbol(Type.OBJECT, genericRef, true) + ", " + 
 					typeSymbol(genericRef.getTotal()) + ", " + typeSymbol(node.getValue()) + ", " +
-					typeSymbol(genericRef.getClassData().getClassData()) + ")");
-			
-			//this code is based on Array.index(int, Object)
-			//labels have an extra % at the front
-			/*
-			
-			String checkArrayLabel = nextLabel().substring(1);
-			String objectLabel = nextLabel().substring(1);
-			String primitiveLabel = nextLabel().substring(1);
-			String arrayLabel = nextLabel().substring(1);
-			String doneLabel = nextLabel().substring(1);
-			
-			String arrayAsObj = nextTemp();
-			writer.write(arrayAsObj + " = extractvalue " +
-					typeSymbol(genericRef.getArray()) + ", 0");
-		
-			writer.write(nextTemp() + " = and i32 " + flag + ", " + PRIMITIVE); //primitive flag (2)
-			writer.write(nextTemp() + " = icmp eq i32 " + temp(1) + ", 0"); //not primitive
-			writer.write("br i1 " + temp(0) + ", label %" + checkArrayLabel + ", label %" + primitiveLabel);
-			
-			writer.writeLeft(checkArrayLabel + ":");			
-			writer.write(nextTemp() + " = and i32 " + flag + ", " + ARRAY); //array flag (8)
-			writer.write(nextTemp() + " = icmp eq i32 " + temp(1) + ", 0"); //not array
-			writer.write("br i1 " + temp(0) + ", label %" + objectLabel + ", label %" + arrayLabel);
-			
-			writer.writeLeft(objectLabel + ":");			
-			writer.write(nextTemp() + " = getelementptr inbounds " +
-					type(genericRef.getType()) + "* " + arrayAsObj + ", " +
-					typeSymbol(genericRef.getTotal()));
-			writer.write("store " + typeSymbol(node.getValue()) + ", " +
-					typeText(genericRef.getSetType(), temp(0), true));
-			writer.write("br label %" + doneLabel);
-			
-			writer.writeLeft(primitiveLabel + ":");
-			writer.write(nextTemp() + " = call i32 " +
-					name(Type.CLASS.getMatchingMethod("width", new SequenceType())) + 
-					'(' + typeSymbol(genericRef.getClassData()) + ')');
-			writer.write(nextTemp() + " = mul " + typeSymbol(genericRef.getTotal()) + ", " + temp(1));			
-			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT, arrayAsObj, true) + " to i8*");
-			writer.write(nextTemp() + " = getelementptr inbounds i8* " + temp(1) + ", i32 " + temp(2));
-			writer.write(nextTemp() + " = getelementptr inbounds " + typeSymbol(node.getValue()) + ", i32 1");
-			writer.write(nextTemp() + " = bitcast " + typeTemp(Type.OBJECT, 1) + " to i8*");
-			writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(2) + ", i8* " + temp(0) + ", i32 " + temp(5) + ", i32 1, i1 0)");
-			writer.write("br label %" + doneLabel);
-				
-			writer.writeLeft(arrayLabel + ":");
-			writer.write(nextTemp() + " = call i32 " +
-					name(Type.CLASS.getMatchingMethod("width", new SequenceType())) + 
-					'(' + typeSymbol(genericRef.getClassData()) + ')');
-			writer.write(nextTemp() + " = mul " + typeSymbol(genericRef.getTotal()) + ", " + temp(1));
-			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT, arrayAsObj, true) + " to i8*");
-			writer.write(nextTemp() + " = getelementptr inbounds i8* " + temp(1) + ", i32 " + temp(2));			
-			writer.write(nextTemp() + " = bitcast " + typeSymbol(node.getValue()) + " to " + type(Type.ARRAY));
-			writer.write(nextTemp() + " = getelementptr inbounds " + typeTemp(Type.ARRAY, 1) + ", i32 0, i32 2");
-			writer.write(nextTemp() + " = load " + typeTemp(Type.OBJECT, 1, true));			
-			writer.write(nextTemp() + " = bitcast i8* " + temp(4) + " to " + type(Type.OBJECT) + "*");
-			writer.write("store " + typeTemp(Type.OBJECT, 1) + ", " + typeTemp(Type.OBJECT, 0, true));			
-			writer.write(nextTemp() + " = getelementptr inbounds " + typeTemp(Type.ARRAY, 4) + ", i32 0, i32 3, i32 1, i32 0");
-			writer.write(nextTemp() + " = load i32* " + temp(1));
-			writer.write(nextTemp() + " = getelementptr inbounds " + typeTemp(Type.ARRAY, 6) + ", i32 0, i32 3, i32 0");
-			writer.write(nextTemp() + " = load i32** " + temp(1));			
-			writer.write(nextTemp() + " = getelementptr inbounds " + typeTemp(Type.OBJECT, 5, true) + ", i32 1");
-			writer.write(nextTemp() + " = bitcast " + typeTemp(Type.OBJECT, 1, true) + " to i32*");			
-			writer.write("call void @llvm.memcpy.p0i32.p0i32.i32(i32* " + temp(0) + ", i32* " + temp(2) + ", i32 " + temp(4) + ", i32 0, i1 0)");
-			writer.write("br label %" + doneLabel);
-			
-			writer.writeLeft(doneLabel + ":");	
-			
-							*/
+					typeSymbol(genericRef.getGenericParameter().getClassData()) + ")");
 		}
 		else {		
 			writer.write("store " + typeSymbol(node.getValue()) + ", " +
@@ -1703,8 +1600,7 @@ public class LLVMOutput extends AbstractOutput {
 		TACMethodRef method = node.getMethod();
 		StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
 				"invoke" : "call").append(' ').
-				append(methodType(method)).append(' ').
-				append(symbol(method)).append('(');
+				append(methodToString(method, false, false)).append(symbol(method)).append('(');
 		boolean first = true;
 		for (TACOperand param : node.getParameters())
 			if (first) {
@@ -1781,8 +1677,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACLandingpad node) throws ShadowException
 	{
-		writer.write(nextTemp() + " = landingpad { i8*, i32 } " +
-				"personality i32 (...)* @__shadow_personality_v0");
+		writer.write(nextTemp() + " = landingpad { i8*, i32 }");
 		writer.indent(2);
 		if (node.getBlock().hasCleanup())
 			writer.write("cleanup");
@@ -1799,7 +1694,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACUnwind node) throws ShadowException
 	{
-		writer.write(nextTemp(node) + " = load { i8*, i32 }* %_exception");
+		writer.write(nextTemp(node) + " = load { i8*, i32 }, { i8*, i32 }* %_exception");
 		String type = nextTemp();
 		writer.write(type + " = extractvalue { i8*, i32 } " + temp(1) + ", 0");
 		TACLabelRef label = node.getBlock().getLandingpad();
@@ -1823,9 +1718,9 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACCatch node) throws ShadowException
 	{
-		writer.write(nextTemp() + " = getelementptr inbounds { i8*, i32 }* " +
+		writer.write(nextTemp() + " = getelementptr inbounds { i8*, i32 }, { i8*, i32 }* " +
 				"%_exception, i32 0, i32 0");
-		writer.write(nextTemp() + " = load i8** " + temp(1));
+		writer.write(nextTemp() + " = load i8*, i8** " + temp(1));
 		writer.write(nextTemp() + " = call " + type(Type.EXCEPTION) +
 				" @__shadow_catch(i8* " + temp(1) + ") nounwind");
 		writer.write(nextTemp(node) + " = bitcast " + type(Type.EXCEPTION) +
@@ -1835,15 +1730,17 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACResume node) throws ShadowException
 	{
-		writer.write(nextTemp() + " = load { i8*, i32 }* %_exception");
+		writer.write(nextTemp() + " = load { i8*, i32 }, { i8*, i32 }* %_exception");
 		writer.write("resume { i8*, i32 } " + temp(0));
 	}
 
 	private String classOf(Type type) {
 		//module is null when building generics
-		if( module != null && !module.getType().encloses(type) )
+		//TODO: Simplify this, since we're no longer building generics
+		if( module != null && !module.getType().encloses(type) && !(type instanceof ArrayType) )
 			usedClasses.add(type);		
 		
+		//may need something for ArrayType, but maybe not
 		if( type.isFullyInstantiated() )
 			return '@' + withGenerics(type, "_class");
 		else
@@ -1977,7 +1874,7 @@ public class LLVMOutput extends AbstractOutput {
 
 	private static String sizeof(String type)
 	{
-		return "ptrtoint (" + type + " getelementptr (" + type +
+		return "ptrtoint (" + type + " getelementptr (" + type.substring(0, type.length() - 1) + ", " + type +
 				" null, i32 1) to i32)";
 	}
 
@@ -2003,6 +1900,8 @@ public class LLVMOutput extends AbstractOutput {
 			return type((InterfaceType)type);
 		if (type instanceof TypeParameter)
 			return type((TypeParameter)type);
+		if( type instanceof MethodTableType )
+			return type((MethodTableType)type);
 		throw new IllegalArgumentException("Unknown type.");
 	}
 	protected static String type(ArrayType type)
@@ -2035,6 +1934,12 @@ public class LLVMOutput extends AbstractOutput {
 	{
 		return type(type.getClassBound());
 	}
+	
+	private static String type(MethodTableType type)
+	{
+		return "%\"" + type.getMangledName() + "\"*";
+	}
+	
 	private static String raw(Type type)
 	{
 		return raw(type, "");
@@ -2047,6 +1952,47 @@ public class LLVMOutput extends AbstractOutput {
 	private static String withGenerics(Type type, String extra)
 	{
 		return '\"' + type.getMangledNameWithGenerics() + extra + '\"';
+	}
+	
+	public static String declareGeneric(Type type) {
+		if( type instanceof ArrayType )
+			return "@" + withGenerics(type, "_class") + " = external constant %" + raw(Type.CLASS) + System.lineSeparator();
+		else
+			return "@" + withGenerics(type, "_class") + " = external constant %" + raw(Type.GENERIC_CLASS) + System.lineSeparator();
+	}
+	
+	/*
+	public static String addGeneric(String set, Type generic) {
+		MethodSignature signature = Type.CLASS_SET.getMatchingMethod("add", new SequenceType(Type.CLASS));		
+		StringBuilder sb = new StringBuilder("call ").
+				append(methodType(signature)).append(' ').
+				append(name(signature)).append('(');		
+		sb.append(set).append(", ");
+		
+		Type type;
+		if( generic instanceof ArrayType )
+			type = Type.ARRAY_CLASS;
+		else
+			type = Type.GENERIC_CLASS;		
+		sb.append(type(Type.CLASS) + " bitcast (" + typeText(type, '@' + withGenerics(type, "_class")) + " to " + type(Type.CLASS) + "))");		
+		return sb.toString();
+	}
+	*/
+	
+	public static void addGenerics(String set, Set<? extends Type> generics, OutputStream out) throws IOException {
+		MethodSignature signature = Type.CLASS_SET.getMatchingMethod("add", new SequenceType(Type.CLASS));
+		String prefix = "call " + type(signature.getSingleReturnType()) + " " + name(signature) + "(" + typeText(Type.CLASS_SET, set) + ", "; 
+		for( Type generic : generics ) {
+			StringBuilder sb = new StringBuilder("\t" + prefix);
+			if( generic instanceof ArrayType )
+				sb.append(type(Type.CLASS)).append(" @" + withGenerics(generic, "_class")).append(")");
+			else
+				sb.append(type(Type.CLASS)).append(" bitcast (").append(typeText(Type.GENERIC_CLASS, '@' + withGenerics(generic, "_class"))).append(" to ").append(type(Type.CLASS) + "))");		
+			
+			sb.append(System.lineSeparator());
+			
+			out.write(sb.toString().getBytes());			
+		}		
 	}
 
 
@@ -2315,374 +2261,187 @@ public class LLVMOutput extends AbstractOutput {
 		return sb.append(' ').append(name).toString();
 	}
 	
-	public HashSet<Generic> getGenerics()
-	{
-		return generics;
-	}
+	private void writeArrayClass( ArrayType type ) throws ShadowException {
+		Type baseType = type.getBaseType();
+		String baseClass;
+		if( baseType.isFullyInstantiated() )
+			baseClass = typeText(Type.CLASS, "(" + type(Type.GENERIC_CLASS) + " " + classOf(baseType) + " to " + type(Type.CLASS) + ")");
+		else
+			baseClass = typeText(Type.CLASS, classOf(baseType));
 	
-	public HashSet<Array> getArrays()
-	{
-		return arrays;
-	}
-
-	public void setGenerics(HashSet<Generic> generics, HashSet<Array> arrays)
-	{
-		this.generics = generics;
-		this.arrays = arrays;
-	}
-	
-	
-	public void buildGenerics() throws ShadowException
-	{
-		writer.write("; Generics");
-		writer.write();
-
-		writePrimitiveTypes();
-		
-		writeTypeDeclaration(Type.OBJECT);		
-		writeTypeDeclaration(Type.CLASS);
-		writeTypeDeclaration(Type.GENERIC_CLASS);
-		writeTypeDeclaration(Type.ARRAY_CLASS);
-		//writeTypeDeclaration(Type.METHOD_CLASS);
-		//TODO: potentially remove Iterator references?
-		//probably not, since they're in String
-		writeTypeDeclaration(Type.ITERATOR);
-		writeTypeDeclaration(Type.STRING);
-		writeTypeOpaque(Type.ADDRESS_MAP);
-		
-		writeTypeConstants(Type.OBJECT);		
-		writeTypeConstants(Type.CLASS);
-		writeTypeConstants(Type.GENERIC_CLASS);
-		writeTypeConstants(Type.ARRAY_CLASS);
-		writeTypeConstants(Type.ITERATOR);
-		writeTypeConstants(Type.STRING);
-		
-		//contains generics, organized in lists with the unparameterized generic as the key
-		Map<String, Set<String>> allGenerics = new HashMap<String, Set<String>>();
-		
-		Set<String> parameterNames = new HashSet<String>();
-		Set<String> types = new HashSet<String>();
-	
-		parameterNames.add(Type.ARRAY.getMangledName());
-		parameterNames.add(Type.ARRAY_NULLABLE.getMangledName());
-		
-		
-		types.add(Type.OBJECT.getMangledNameWithGenerics());
-		types.add(Type.CLASS.getMangledNameWithGenerics());
-		types.add(Type.GENERIC_CLASS.getMangledNameWithGenerics());
-		types.add(Type.ARRAY_CLASS.getMangledNameWithGenerics());
-		types.add(Type.ITERATOR.getMangledNameWithGenerics());
-		types.add(Type.STRING.getMangledNameWithGenerics());
-		
-	
+		writer.write("@\"" + type.getMangledNameWithGenerics() + "_class\" = linkonce unnamed_addr constant  %" +
+				raw(Type.CLASS) + " { " + 		
 				
-		for( Generic generic : generics )
-		{				
-			if( types.add(generic.getMangledName()) )
-			{	
-				StringBuilder sb; 
-				boolean first;
+				typeText(Type.CLASS, classOf(Type.CLASS)) + ", " + //class
+				"%" + raw(Type.CLASS, "_methods") + "* @" + raw(Type.CLASS, "_methods") + ", " + //methods
 				
-				if( !generic.isInterface() )
-				{
-					if( !allGenerics.containsKey(generic.getMangledGeneric()) )					
-					{
-						allGenerics.put(generic.getMangledGeneric(), new HashSet<String>());
-						writer.write("@_interfaceData" + generic.getMangledGeneric() + " = external constant [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
-						writer.write(generic.getTypeLayout());
-					}
-					
-					sb = new StringBuilder("[");
-					first = true;
-					
-					for(String _interface : generic.getInterfaces() )
-					{		
-						if( first )
-							first = false;
-						else
-							sb.append(", ");
-
-						sb.append(type(Type.CLASS)).append(" ");
-
-						if( _interface.contains("_L_"))	
-							sb.append("bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + _interface + "_class\" to " + type(Type.CLASS) + ")");
-						else
-							sb.append("@\"" + _interface + "_class\"");							
-					}
-					
-					sb.append("]");					
-					
-					writer.write("@_interfaces" + generic.getMangledName() +
-							" = private constant [" + generic.getInterfaces().size() + " x " + type(Type.CLASS) + "] " + sb.toString());
-				}
-				else
-				{
-					if( !allGenerics.containsKey(generic.getMangledGeneric()) )
-						allGenerics.put(generic.getMangledGeneric(), new HashSet<String>());					
-				}
+				typeLiteral(type.toString()) + ", " + //name 
+				baseClass + ", "  +//parent 					
 				
-				allGenerics.get(generic.getMangledGeneric()).add(generic.getMangledName());
-				
-				
-				//write type parameters
-				sb = new StringBuilder("[");					
-				first = true;	
-												
-				
-				for(String parameter : generic.getParameters() )
-				{		
-					if( first )
-						first = false;
-					else
-						sb.append(", ");
-					
-					//interfaces first, because they contain a space followed by a null (to show they have no method table)
-					if( parameter.contains(" "))
-					{
-						String[] parts = parameter.split(" ");
-						parameter = parts[0];						
-						
-						if( parts[0].contains("_L_"))
-						{
-							String trimmed = parameter.substring(0,  parameter.indexOf("_L_"));
-							sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-							sb.append(type(Type.OBJECT)).append(" null" );
-							parameterNames.add(trimmed + " null");
-						}
-						else
-						{
-							sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-							sb.append(type(Type.OBJECT)).append(" null" );
-							parameterNames.add(parameter + " null");							
-						}
-					}
-					else if( parameter.matches(".*_A\\d+")) //"real" arrays... should never happen now?
-					{
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" null" );
-						parameterNames.add(parameter);
-					}
-					else if( parameter.matches(Type.ARRAY.getMangledName() + ".*")) //generic arrays
-					{
-						String trimmed = Type.ARRAY.getMangledName();
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.ARRAY_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + trimmed + "_methods\"* @\"" + trimmed + "_methods\" to " + type(Type.OBJECT) + ")" );
-					}
-					else if( parameter.matches(Type.ARRAY_NULLABLE.getMangledName() + ".*")) //generic arrays
-					{
-						String trimmed = Type.ARRAY_NULLABLE.getMangledName();
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.ARRAY_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + trimmed + "_methods\"* @\"" + trimmed + "_methods\" to " + type(Type.OBJECT) + ")" );
-					}
-					else if( parameter.contains("_L_")) //parameters that are themselves generic
-					{
-						String trimmed = parameter.substring(0,  parameter.indexOf("_L_"));
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + trimmed + "_methods\"* @\"" + trimmed + "_methods\" to " + type(Type.OBJECT) + ")" );
-						parameterNames.add(trimmed);
-					}						
-					else
-					{
-						sb.append(type(Type.OBJECT)).append(" bitcast (" + type(Type.CLASS) + " @\"" + parameter + "_class\" to " + type(Type.OBJECT) + "), " );
-						sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + parameter + "_methods\"* @\"" + parameter + "_methods\" to " + type(Type.OBJECT) + ")" );
-						parameterNames.add(parameter);
-					}
-					
-				}
-				
-				sb.append("]");	
-				
-				writer.write("@_parameters" + generic.getMangledName() +
-						" = private constant [" + generic.getParameters().size()*2 + " x " + type(Type.OBJECT) + "] " + sb.toString());
-									
-				String interfaceData;
-				String interfaces;
-				String size;
-				
-				if( generic.isInterface() )
-				{
-					interfaceData = interfaces = " zeroinitializer, ";
-					size = typeLiteral(-1) + ", ";
-				}
-				else
-				{
-					interfaceData = " { " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* @_interfaceData" + generic.getMangledGeneric() + ", i32 0, i32 0), [1 x " +
-							type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) +	"] }, ";
-					interfaces = " { " + type(Type.CLASS) + "* getelementptr inbounds ([" + generic.getInterfaces().size() + " x " +
-							type(Type.CLASS) + "]* @_interfaces" + generic.getMangledName() + ", i32 0, i32 0), [1 x " +
-							type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) + "] }, ";
-					size = typeText(Type.INT, sizeof('%' + generic.getMangledGeneric() + '*')) + ", ";
-				}	
-								
-				
-				if( generic instanceof GenericArray ) {
-					GenericArray genericArray = (GenericArray)generic;
-					String internalParameter = genericArray.getInternalParameter();
-												
-					if( internalParameter.contains("_L_")) //parameters that are themselves generic
-					{
-						String trimmed = internalParameter.substring(0,  internalParameter.indexOf("_L_"));
-						parameterNames.add(trimmed);						
-						internalParameter = " bitcast (" + type(Type.GENERIC_CLASS) + " @\"" + internalParameter + "_class\" to " + type(Type.CLASS) + ")";
-					}	
-					else
-					{
-						parameterNames.add(internalParameter);
-						internalParameter = " @\"" + internalParameter + "_class\"";
-					}
-					
-					writer.write("@\"" + generic.getMangledName() + "_class\"" + " = constant %" +
-							raw(Type.ARRAY_CLASS) + " { " + 		
-							
-							type(Type.CLASS) + " @" + raw(Type.ARRAY_CLASS, "_class") + ", " + //class
-							"%" + raw(Type.ARRAY_CLASS, "_methods") + "* @" + raw(Type.ARRAY_CLASS, "_methods") + ", " + //methods
-							
-							typeLiteral(generic.getName()) + ", " + //name 
-							type(Type.CLASS) +  " " + generic.getParent() + ", "  +//parent 					
-							
-							type(new ArrayType(Type.OBJECT)) + 
-							interfaceData + //data
-														
-							type(new ArrayType(Type.CLASS)) + 
-							interfaces + //interfaces
-						
-							typeLiteral(GENERIC) + ", " + //flags							
-							size + //size
-							
-							type(new ArrayType(Type.OBJECT)) + 
-							" { " + type(Type.OBJECT) + "* getelementptr inbounds ([" + generic.getParameters().size()*2 + " x " +
-							type(Type.OBJECT) + "]* @_parameters" + generic.getMangledName() + ", i32 0, i32 0), [1 x " +
-							type(Type.INT) + "] [" + typeLiteral(generic.getParameters().size()*2) + "] }" + ", " + //parameters 
-							
-							type(Type.CLASS) + internalParameter + //internal class
-							
-							" }");
-				}
-				else //regular generic
-				{
-				
-					writer.write("@\"" + generic.getMangledName() + "_class\"" + " = constant %" +
-							raw(Type.GENERIC_CLASS) + " { " + 		
-							
-							type(Type.CLASS) + " @" + raw(Type.GENERIC_CLASS, "_class") + ", " + //class
-							"%" + raw(Type.GENERIC_CLASS, "_methods") + "* @" + raw(Type.GENERIC_CLASS, "_methods") + ", " + //methods
-							
-							typeLiteral(generic.getName()) + ", " + //name 
-							type(Type.CLASS) +  " " + generic.getParent() + ", "  +//parent 					
-							
-							type(new ArrayType(Type.OBJECT)) + 
-							interfaceData + //data
-														
-							type(new ArrayType(Type.CLASS)) + 
-							interfaces + //interfaces
-						
-							typeLiteral(GENERIC) + ", " + //flags							
-							size + //size
-							
-							type(new ArrayType(Type.OBJECT)) + 
-							" { " + type(Type.OBJECT) + "* getelementptr inbounds ([" + generic.getParameters().size()*2 + " x " +
-							type(Type.OBJECT) + "]* @_parameters" + generic.getMangledName() + ", i32 0, i32 0), [1 x " +
-							type(Type.INT) + "] [" + typeLiteral(generic.getParameters().size()*2) + "] }" + //parameters
-							
-							" }");
-				}
-			}
-		}		
-		
-		writer.write();
-		
-		
-		for( Entry<String, Set<String>> entry : allGenerics.entrySet() )
-		{
-			int size = entry.getValue().size();
-			if( size > 0 )
-			{
-				StringBuilder sb = new StringBuilder("@_data" + entry.getKey() +
-						" = private constant [" + size + " x " + type(Type.GENERIC_CLASS) + "] [");
-				
-				boolean first = true;
-				
-				for( String parameterized : entry.getValue() )
-				{
-					if( first )
-						first = false;
-					else
-						sb.append(", ");
-					
-					sb.append(type(Type.GENERIC_CLASS));
-					
-					if( entry.getKey().equals(Type.ARRAY.getMangledName()) || entry.getKey().equals(Type.ARRAY_NULLABLE.getMangledName()) )
-					{
-						sb.append(" bitcast( " + type(Type.ARRAY_CLASS) + " ");
-						sb.append(" @\"" + parameterized + "_class\"");
-						sb.append(" to " + type(Type.GENERIC_CLASS) + ")");
-					}
-					else
-						sb.append(" @\"" + parameterized + "_class\"");				
-				}
-				
-				sb.append("]");						
-						
-				
-				writer.write(sb.toString());
-				writer.write("@_generics" + entry.getKey() +
-						" = constant " + type(new ArrayType(Type.GENERIC_CLASS)) +
-						" { " + type(Type.GENERIC_CLASS) +  "* getelementptr inbounds ([" + size + " x "  + type(Type.GENERIC_CLASS) + "]* " +
-						"@_data" + entry.getKey() + ", i32 0, i32 0), [1 x " + type(Type.INT) + "] [" + type(Type.INT) + " " + size + "] }");
-			}
-		}
-		
-		writer.write();
-		writer.write("; Arrays");
-		
-		for( Array array : arrays )
-		{
-			writer.write("@\"" + array.getMangledName() + "_class\" = constant %" + raw(Type.CLASS) + " {" + 
+				typeText(new ArrayType(Type.OBJECT), "zeroinitializer, ") + //data											
+				typeText(new ArrayType(Type.CLASS), "zeroinitializer, ") + //interfaces
 			
-			type(Type.CLASS) + " " + classOf(Type.CLASS) + ", " + 
-			"%" + raw(Type.CLASS, "_methods") + "* @" + raw(Type.CLASS, "_methods") + ", " + 
-			typeLiteral(array.getName()) + ", " + 
-			type(Type.CLASS) + " @\"" + array.getBaseClass() + "_class\", " + 
-			type(new ArrayType(Type.OBJECT)) + " zeroinitializer, " +
-			type(new ArrayType(Type.CLASS)) + " zeroinitializer, " +
-			typeLiteral(ARRAY) + ", " +
-			//type(Type.INT) + " ptrtoint ( " + array.getType() + "* getelementptr (" + array.getType() +"* null, i32 1) to i32) }");
-			typeLiteral(array.getDimensions()) + " }");
+				typeLiteral(ARRAY) + ", " + //flags							
+				typeLiteral(type.getDimensions()) + //size
+
+				" }");		
+		
+		//@"_Pshadow_Pstandard_Cdouble_A1_class" = constant %"_Pshadow_Pstandard_CClass" {%"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_CClass_class", %"_Pshadow_Pstandard_CClass_methods"* @"_Pshadow_Pstandard_CClass_methods", %"_Pshadow_Pstandard_CString"* @_string248, %"_Pshadow_Pstandard_CClass"* @"_Pshadow_Pstandard_Cdouble_class", { %"_Pshadow_Pstandard_CObject"**, [1 x %int] } zeroinitializer, { %"_Pshadow_Pstandard_CClass"**, [1 x %int] } zeroinitializer, %int 8, %int 1 }
+		
+	}
+
+	private void writeGenericClass(Type generic, Set<Type> rawTypes) throws ShadowException {				
+		StringBuilder sb; 
+		boolean first;
+		Type noArguments = generic.getTypeWithoutTypeArguments();
+		
+		if( !(generic instanceof InterfaceType) ) {			
+			sb = new StringBuilder("[");
+			first = true;
 			
-			types.add(array.getMangledName());
-		}
-		
-		writer.write();		
-		
-		for( String parameter : parameterNames)
-		{
-			if( parameter.contains(" ")) //interface
-			{
-				String[] parts = parameter.split(" ");
-				parameter = parts[0];
-				if( !types.contains(parameter) )
-				{					
-					writer.write("@\"" + parameter + "_class\" = external constant %" + raw(Type.CLASS));
-					writer.write("%\"" + parameter + "_methods\" = type opaque");
-				}				
+			for(InterfaceType _interface : generic.getInterfaces() ) {		
+				if( first )
+					first = false;
+				else
+					sb.append(", ");
+				if( _interface.isFullyInstantiated() )
+					sb.append(type(Type.CLASS) + " bitcast (" + typeText(Type.GENERIC_CLASS, classOf(_interface) + " to " + type(Type.CLASS) + ")"));
+				else
+					sb.append(typeText(Type.CLASS, classOf(_interface)));							
 			}
+			
+			sb.append("]");					
+			
+			writer.write("@_interfaces" + generic.getMangledNameWithGenerics() +
+					" = linkonce unnamed_addr constant [" + generic.getInterfaces().size() + " x " + type(Type.CLASS) + "] " + sb.toString());
+		}				
+		
+		//write definitions of type parameters
+		sb = new StringBuilder("[");					
+		first = true;			
+		
+		List<ModifiedType> parameterList = generic.getTypeParametersIncludingOuterClasses(); 
+		for( ModifiedType parameter : parameterList ) {	
+			Type parameterType = parameter.getType();
+			Type parameterWithoutArguments = parameterType.getTypeWithoutTypeArguments();
+						
+			
+			
+			if( first )
+				first = false;
 			else
-			{				
-				if( !types.contains(parameter) )
-				{					
-					writer.write("@\"" + parameter + "_class\" = external constant %" + raw(Type.CLASS));
-					writer.write("%\"" + parameter + "_methods\" = type opaque");				
-					writer.write("@\"" + parameter + "_methods\" = external constant %\"" + parameter + "_methods\"");
-				}
+				sb.append(", ");
+			
+			
+			//arrays need special treatment
+			//use an Array<T> type inside of anything except an array
+			//inside array (or inner classes of array or iterator), leave it as an array
+			if( parameterType instanceof ArrayType &&
+				!parameterWithoutArguments.equals(Type.ITERATOR) &&
+				!parameterWithoutArguments.equals(Type.ITERATOR_NULLABLE) &&
+				!(isArray(parameterWithoutArguments)) )
+			{
+				parameterType = ((ArrayType)parameterType).convertToGeneric();
+				parameterWithoutArguments = parameterType.getTypeWithoutTypeArguments();
 			}
+			
+			if( !module.getType().encloses(parameterType) ) {				
+				if( parameterType instanceof ArrayType ) {
+					usedMethodTables.add(((ArrayType)parameterType).recursivelyGetBaseType());					
+				}
+				else {
+					usedClasses.add(parameterType);
+					usedMethodTables.add(parameterType);
+				}
+			}			
+			
+			//first put in the class
+			sb.append(type(Type.OBJECT)).append(" bitcast (");
+			if( parameterType.isFullyInstantiated() )
+				sb.append(type(Type.GENERIC_CLASS));
+			else
+				sb.append(type(Type.CLASS));
+			
+			sb.append(" ").append(classOf(parameterType)).append(" to ").append(type(Type.OBJECT)).append("), ");
+			
+			
+			//then the method table
+			if( parameter instanceof ArrayType )
+				sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + ((ArrayType)parameter).recursivelyGetBaseType().getMangledName() + "_methods\"* @\"" + ((ArrayType)parameter).recursivelyGetBaseType().getMangledName() + "_methods\" to " + type(Type.OBJECT) + ")" );
+			else if( parameterType instanceof InterfaceType )
+				sb.append(type(Type.OBJECT)).append(" null"); //no method table for interfaces			
+			else
+				sb.append(type(Type.OBJECT)).append(" bitcast (%\"" + parameterWithoutArguments.getMangledName() + "_methods\"* @\"" + parameterWithoutArguments.getMangledName() + "_methods\" to " + type(Type.OBJECT) + ")" );			
 		}
 		
+		sb.append("]");	
+		
+		writer.write("@_parameters" + generic.getMangledNameWithGenerics() +
+				" = linkonce unnamed_addr constant [" + parameterList.size()*2 + " x " + type(Type.OBJECT) + "] " + sb.toString());
+							
+		String interfaceData;
+		String interfaces;
+		String size;
+		
+		if( generic instanceof InterfaceType ) {
+			interfaceData = interfaces = " zeroinitializer, ";
+			size = typeLiteral(-1) + ", ";
+		}
+		else {
+			if( !module.getType().encloses(noArguments) && rawTypes.add(noArguments) ) {
+				writer.write("@_interfaceData" + noArguments.getMangledName() +
+						" = external constant [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
+			}
+			
+			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "], [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* @_interfaceData" + noArguments.getMangledName() + ", i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) +	"] }, ";
+			interfaces = "{ " + type(Type.CLASS) + "* getelementptr inbounds ([" + generic.getInterfaces().size() + " x " +
+					type(Type.CLASS) + "], [" + generic.getInterfaces().size() + " x " +
+					type(Type.CLASS) + "]* @_interfaces" + generic.getMangledNameWithGenerics() + ", i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) + "] }, ";
+			size = typeText(Type.INT, sizeof('%' + noArguments.getMangledName() + '*')) + ", ";
+		}	
+		
+		//get parent class
+		String parentClass;
+		if( generic instanceof ClassType  ) {
+			ClassType parent = ((ClassType) generic).getExtendType();					
+			if( parent.isFullyInstantiated() )
+				parentClass = type(Type.CLASS) + " (" + typeText(Type.GENERIC_CLASS, classOf(parent)) + " to " + type(Type.CLASS) + ")";
+			else
+				parentClass = typeText(Type.CLASS, classOf(parent));			
+		}
+		else				
+			parentClass = type(Type.CLASS) +  " null";				
+		
 
+		writer.write("@\"" + generic.getMangledNameWithGenerics() + "_class\" = linkonce unnamed_addr constant  %" +
+				raw(Type.GENERIC_CLASS) + " { " + 		
+				
+				typeText(Type.CLASS, classOf(Type.GENERIC_CLASS)) + ", " + //class
+				"%" + raw(Type.GENERIC_CLASS, "_methods") + "* @" + raw(Type.GENERIC_CLASS, "_methods") + ", " + //methods
+				
+				typeLiteral(generic.toString()) + ", " + //name 
+				parentClass + ", "  +//parent 					
+				
+				typeText(new ArrayType(Type.OBJECT), interfaceData) + //data
+											
+				typeText(new ArrayType(Type.CLASS), interfaces) + //interfaces
+			
+				typeLiteral(GENERIC) + ", " + //flags							
+				size + //size
+				
+				type(new ArrayType(Type.OBJECT)) + 
+				" { " + type(Type.OBJECT) + "* getelementptr inbounds ([" + parameterList.size()*2 + " x " +
+				type(Type.OBJECT) + "], [" + parameterList.size()*2 + " x " +
+				type(Type.OBJECT) + "]* @_parameters" + generic.getMangledNameWithGenerics() + ", i32 0, i32 0), [1 x " +
+				type(Type.INT) + "] [" + typeLiteral(parameterList.size()*2) + "] }" + //parameters
+				
+				" }");
 		
-		
-		writer.write();	
-		
-		
-		writeStringLiterals();		
-	}	
+	}
+	
+	private static boolean isArray(Type type) {
+		return Type.ARRAY.equals(type.getTypeWithoutTypeArguments()) || Type.ARRAY_NULLABLE.equals(type.getTypeWithoutTypeArguments());
+	}
 }

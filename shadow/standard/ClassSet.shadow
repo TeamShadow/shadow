@@ -1,0 +1,427 @@
+import shadow:utility@Set;
+import shadow:utility@IllegalModificationException;
+
+locked class shadow:standard@ClassSet
+	implements Set<Class>	
+{
+	private constant int DEFAULT_INITIAL_CAPACITY = 16;
+	private constant int MAXIMUM_CAPACITY = 1 << 30;
+	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
+	
+	get int size = 0;
+	nullable Node[] table;
+	float loadFactor;
+	int threshold;
+	int modifications = 0;
+	
+	public create()
+	{
+		this(DEFAULT_INITIAL_CAPACITY);
+	}
+	
+	public create(int initialCapacity)
+	{
+		this(initialCapacity, DEFAULT_LOAD_FACTOR);
+	}
+	
+	public create(int initialCapacity, float loadFactor)
+	{
+		int capacity = 1;
+		while( capacity < initialCapacity ) //powers of 2
+			capacity <<= 1;		
+		table = Node:null[capacity];
+		this:loadFactor = loadFactor;
+		threshold = cast<int>(capacity * loadFactor);
+	}
+	
+	public resize(int newCapacity) => ()
+	{		
+		if(table->size == MAXIMUM_CAPACITY)
+		{
+			threshold = int:MAX;
+			return;
+		}
+		
+		nullable Node[] newTable = Node:null[newCapacity];
+		int index;
+		int hash;		
+		
+		for( int i = 0; i < table->size; i += 1 )
+		{
+			try
+			{
+				Node node = check(table[i]);
+				while( true )
+				{
+					(index, hash) = findIndex( node->value->name, newCapacity );
+					newTable[index] = Node:create(hash, node->value, newTable[index]);
+					node = check(node->next);
+				}
+			}
+			recover  //jumps here when node->next is null
+			{}
+		}
+		
+		table = newTable;
+		threshold = cast<int>(newCapacity * loadFactor);		
+	}
+	
+
+	private class Node
+	{
+		immutable get int hash;		
+		get Class value;
+		get set nullable Node next;
+		
+		
+		public readonly get hash() => (int) 
+		{
+			return hash;
+		}
+		
+		public readonly get value() => (Class)
+		{
+			return value;
+		}
+		
+		public readonly get next() => (nullable Node)
+		{
+			return next;
+		}
+
+		public create( int hash, Class value )
+		{
+			this(hash, value, null);
+		}
+		
+		public create( int hash, Class value, nullable Node after )
+		{
+			this:hash = hash;			
+			this:value = value;
+			next = after;
+		}
+	}
+
+	private readonly hash( Class value ) => ( int index, int hash )
+	{
+		return findIndex( #value, table->size );
+	}
+	
+	private readonly findIndex( String value, int length ) => ( int index, int hash )
+	{
+		uint temp = value->hash;			
+		temp ^= (temp >> 20) ^ (temp >> 12);
+		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
+		return ( hash & (length - 1), hash );	
+	}	
+
+	public index( Class value ) => ( boolean )
+	{
+		(int index, int hash) = this.hash( value );
+		try
+		{
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->value !== value )
+				current = check(current->next);
+			
+			//found correct node
+			return true; 
+		}
+		recover //hit null before finding existing value
+		{			
+		}
+		
+		return false;				
+	}
+	
+	
+	public index( Class value, boolean add ) => ()
+	{
+		if( add )
+			this.add( value );
+		else
+			remove( value );	
+	}
+	
+	public add( Class value ) => (boolean success)
+	{
+		( int index, int hash ) = this.hash(value);
+		try
+		{
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->value !== value )
+				current = check(current->next);
+			//node already present
+			return false; 
+		}
+		recover //hit null before finding existing value
+		{
+			table[index] = Node:create(hash, value, table[index]);
+			modifications += 1;
+			size += 1;
+			
+			if( size > threshold )
+				resize(2 * table->size);
+				
+			return true;
+		}
+	}
+
+	public remove( Class value ) => ( boolean success )
+	{	
+		( int index, int hash ) = this.hash(value);
+		try
+		{
+			nullable Node last = null;
+			Node current = check(table[index]);
+			while ( current->hash != hash and current->value !== value )
+				( last, current ) = ( current, check(current->next) );
+			try
+			{
+				check(last)->next = current->next;
+			}
+			recover
+			{
+				table[index] = current->next;
+			}
+			modifications += 1;
+			return true;
+		}
+		recover
+		{
+			return false;
+		}
+	}
+	public readonly contains( Class value ) => ( boolean found )
+	{		
+		( int index, int hash ) = this.hash(value);
+		try
+		{
+			Node current = check(table[index]);			
+			while ( current->hash != hash and current->value !== value )
+				current = check(current->next);
+			return true;
+		}
+		recover
+		{
+			return false;			
+		}
+	}	
+
+	public readonly iterator() => ( Iterator<Class> )
+	{
+		return ClassSetIterator:create();
+	}
+	
+	public clear() => ()
+	{
+		size = 0;
+		table = Node:null[DEFAULT_INITIAL_CAPACITY];
+		threshold = cast<int>(table->size * loadFactor);
+		modifications += 1;
+	}
+	
+	
+	private class ClassSetIterator implements Iterator<Class>
+	{
+		int index = 0;
+		nullable Node current;
+		int expectedModifications = modifications;
+		public create()
+		{
+			current = next(null);
+		}
+		public next( nullable Node position ) => ( nullable Node )
+		{	
+			try
+			{				
+				if( position !== null )
+					position = check(position)->next;
+			}
+			recover{}
+		
+			while( position === null and index < table->size )
+			{				
+				position = table[index];				
+				index += 1;					
+			}
+			return position; //returns null if nothing left			
+		}
+
+		private readonly checkForModifications() => ()
+		{
+			if ( modifications != expectedModifications )
+				throw IllegalModificationException:create();
+		}
+
+		public readonly hasNext() => ( boolean )
+		{
+			checkForModifications();
+			return current !== null;
+		}
+
+		public next() => ( Class value )
+		{
+			checkForModifications();
+			try
+			{				 
+				(Class value, current ) = ( check(current)->value, next(current) );
+				return value;
+			}
+			recover
+			{
+				throw IndexOutOfBoundsException:create();
+			}
+		}
+	}
+	
+	//this method assumes that it will only ever be run on a set containing all generic classes  
+	locked public findGeneric(String name, immutable Object[] parameters) => (nullable GenericClass)
+	{
+		(int index, int hash) = findIndex( name, table->size );
+		try
+		{
+			Node current = check(table[index]);			
+			while ( true )
+			{
+				if( current->hash == hash )
+				{
+					GenericClass other = cast<GenericClass>(current->value);
+					if( other->parameters->size == parameters->size )
+					{
+						int i;
+						for( i = 0; i < parameters->size and parameters[i] === other->parameters[i]; i += 2 )
+							skip;
+						if( i >= parameters->size and name == other->name )							
+							return other;					
+					}
+				}
+				current = check(current->next);
+			}			
+		}
+		recover
+		{ }		
+		return null;		
+	}
+	
+	//this method assumes that it will only ever be run on a set containing all array classes
+	locked public findArray(String name, Class base, int dimensions) => (nullable Class)
+	{
+		(int index, int hash) = findIndex( name, table->size );
+		try
+		{
+			Node current = check(table[index]);			
+			while ( true )
+			{	
+				if( current->hash == hash )
+				{
+					Class other = current->value;					
+					if( other->size == dimensions and other->parent === base and (other->flags & Class:ARRAY) != 0)
+						return other;
+				}
+				current = check(current->next);
+			}			
+		}
+		recover
+		{ }
+
+		return null;		
+	}
+	
+	//assumes class already not found
+	locked public addGeneric(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters) => (GenericClass)
+	{
+		GenericClass newGeneric = GenericClass:create(base, name, parent, interfaces, parameters);
+		(int index, int hash) = findIndex( name, table->size );		
+		table[index] = Node:create(hash, newGeneric, table[index]);
+		modifications += 1;
+		size += 1;
+		
+		if( size > threshold )
+			resize(2 * table->size);		
+
+		return newGeneric;			
+	}
+			
+	private native getIntArrayClass() => (Class);
+	private native getEmptyObjectArray() => (immutable Object[]);
+	private native makeObjectArray(nullable readonly Object object0, nullable readonly Object object1, nullable readonly Object object2, nullable readonly Object object3) => (immutable Object[]);
+	private native getEmptyClassArray() => (immutable Class[]);
+	private native makeClassArray(nullable Class class0, nullable Class class1, nullable Class class2) => (immutable Class[]);
+	
+	locked public getGenericArray(String name, immutable Object[] parameters, boolean isNull) => (GenericClass)
+	{		
+		try
+		{	
+			return check(findGeneric(name, parameters));
+		}
+		recover
+		{	
+			//CanIndex			
+			//immutable Object[] canIndexParameters = freeze({ getIntArrayClass(), getNull(), parameter, parameterMethods });
+			immutable Object[] canIndexParameters = makeObjectArray(getIntArrayClass(), null, parameters[0], parameters[1]);
+			//same parameters used for CanIndex and CanIndexStore 
+			Class base;
+			String canIndexName;
+			if( isNull )
+				base = CanIndexNullable:class;
+			else
+				base = CanIndex:class;
+				
+			canIndexName = base.makeName(#base, canIndexParameters, 0, 4);
+			nullable GenericClass canIndex = findGeneric(canIndexName, canIndexParameters);
+			if( canIndex === null )
+				canIndex = addGeneric(base, canIndexName, null, getEmptyClassArray(), canIndexParameters);
+			
+			//CanIndexStore						
+			String canIndexStoreName;
+			if( isNull )			
+				base = CanIndexStoreNullable:class;
+			else
+				base = CanIndexStore:class;
+
+			canIndexStoreName = base.makeName(#base, canIndexParameters, 0, 4);
+			nullable GenericClass canIndexStore = findGeneric(canIndexStoreName, canIndexParameters);
+			if( canIndexStore === null )
+				canIndexStore = addGeneric(base, canIndexStoreName, null, getEmptyClassArray(), canIndexParameters);
+
+			//CanIterate
+			String canIterateName;
+			if( isNull )			
+				base = CanIterateNullable:class;
+			else
+				base = CanIterate:class;
+			canIterateName = base.makeName(#base, parameters, 0, 2);
+			
+			nullable GenericClass canIterate = findGeneric(canIterateName, parameters);
+			if( canIterate === null )
+				canIterate = addGeneric(base, canIterateName, null, getEmptyClassArray(), parameters);
+									
+			//return addGenericArray(name, parameter, freeze({cast<Class>(check(canIndex)), check(canIndexStore), check(canIterate)}), freeze({genericParameter, genericMethods}));
+			if( isNull )
+				base = ArrayNullable:class;
+			else
+				base = Array:class;			
+			
+			return addGeneric(base, name, Object:class, makeClassArray(canIndex, canIndexStore, canIterate), parameters);
+		}	
+	}	
+
+	//assumes array already not found
+	locked public addArray(String name, Class base, int dimensions) => (Class)
+	{
+		immutable Class[] interfaces = getEmptyClassArray();
+		immutable Object[] data = getEmptyObjectArray();
+
+		Class newArray = Class:create(name, Class:ARRAY, dimensions, base, interfaces, data);
+		(int index, int hash) = findIndex( name, table->size );		
+		table[index] = Node:create(hash, newArray, table[index]);
+		modifications += 1;
+		size += 1;
+		
+		if( size > threshold )
+			resize(2 * table->size);
+			
+		return newArray;			
+	}
+}

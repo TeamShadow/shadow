@@ -2,12 +2,16 @@ immutable class shadow:standard@
 	GenericClass extends Class
 {	
 	get Object[] parameters; //double the size for class and methods
-
-	//never gets called
-	protected create(int flags, int size, String name, Class parent, immutable Class[] interfaces, immutable Object[] data, immutable Object[] parameters )
+	
+	public create(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters )
 	{
-		super(flags, size, name, parent, interfaces, data);
-		this:parameters = parameters;
+		this(name, base->flags | Class:GENERIC, base->size, parent, interfaces, base->data, parameters);		
+	}
+	
+	protected create(String name, int flags, int size, nullable Class parent, immutable Class[] interfaces, immutable Object[] data, immutable Object[] parameters )
+	{
+		super(name, flags, size, parent, interfaces, data);
+		this:parameters = parameters;	
 	}
 
 	public isSubtype( Class other ) => ( boolean )
@@ -31,33 +35,5 @@ immutable class shadow:standard@
 		}		
 		
 		return false;
-	}
-	
-	private findClass( GenericClass[] classes, Class[] parameters ) => (nullable Class)
-	{		
-		for( int i = 0; i < classes->size; i += 1 )
-		{	
-			boolean matching = true;							
-			for( int j = 0; j < parameters->size and matching; j += 1 )
-			{	
-				readonly Class class_ = cast<Class>(classes[i]:parameters[j * 2]);												
-				if( !parameters[j].equal(class_) )							
-					matching = false;
-			}			
-					
-			if( matching )
-				return cast<Class>(classes[i]);			
-		}		
-		
-		MutableString string = MutableString:create("Type arguments not found: <");
-		for( int i = 0; i < parameters->size; i += 1 )
-		{
-			if( i > 0 )
-				string.append(", ");
-			string.append( #parameters[i] );
-		}
-		string.append(">");
-		
-		throw CastException:create(string.toString());
 	}
 }

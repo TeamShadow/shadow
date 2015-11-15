@@ -16,9 +16,15 @@ public class ShadowUtilityTest {
 		//args.add("-v");
 		args.add("--typecheck");
 		
-		if( System.getProperty("os.name").contains("Windows")) {
+		String os = System.getProperty("os.name").toLowerCase();
+		
+		if( os.contains("windows") ) {
 			args.add("-c");
 			args.add("windows.xml");
+		}
+		else if( os.contains("mac") ) {
+			args.add("-c");
+			args.add("mac.xml");
 		}
 	}
 
@@ -61,6 +67,11 @@ public class ShadowUtilityTest {
 	
 	@Test public void testArrayDeque() throws Exception {
 		args.add("shadow/utility/ArrayDeque.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	@Test public void testHashMap() throws Exception {
+		args.add("shadow/utility/HashMap.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 }

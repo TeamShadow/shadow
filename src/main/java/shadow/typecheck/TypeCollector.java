@@ -25,7 +25,6 @@ import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
 import shadow.parser.javacc.ASTEnumDeclaration;
-import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTName;
 import shadow.parser.javacc.ASTPrimaryPrefix;
 import shadow.parser.javacc.ASTPrimitiveType;
@@ -396,19 +395,20 @@ public class TypeCollector extends BaseChecker {
 			switch( kind )
 			{			
 			case CLASS:
-				type = new ClassType(typeName, modifiers, documentation, currentType);				
+				type = new ClassType(image, modifiers, documentation, currentType );				
 				break;
 			case ENUM:				
-				type = new EnumType(typeName, modifiers, documentation, currentType);
+				type = new EnumType(image, modifiers, documentation, currentType );
 				break;			
 			case EXCEPTION:
-				type = new ExceptionType(typeName, modifiers, documentation, currentType);
+				type = new ExceptionType(image, modifiers, documentation, currentType );
 				break;
 			case INTERFACE:
-				type = new InterfaceType(typeName, modifiers, documentation);
+				type = new InterfaceType(image, modifiers, documentation);
 				break;
+
 			case SINGLETON:
-				type = new SingletonType(typeName, modifiers, documentation, currentType);
+				type = new SingletonType(image, modifiers, documentation, currentType );
 				break;
 			default:
 				throw new ShadowException("Unsupported type!" );
@@ -431,7 +431,6 @@ public class TypeCollector extends BaseChecker {
 				//case "AbstractClass":	Type.ABSTRACT_CLASS = (ClassType) type; break;
 				case "AddressMap":		Type.ADDRESS_MAP = (ClassType) type; break;
 				case "Array":			Type.ARRAY = (ClassType) type; break;
-				case "ArrayClass":		Type.ARRAY_CLASS = (ClassType) type; break;
 				case "ArrayNullable":	Type.ARRAY_NULLABLE = (ClassType) type; break;
 				case "AssertException": Type.ASSERT_EXCEPTION = (ExceptionType) type; break;
 				case "CanAdd":			Type.CAN_ADD = (InterfaceType)type; break;
@@ -450,6 +449,7 @@ public class TypeCollector extends BaseChecker {
 				case "CanIterateNullable":	Type.CAN_ITERATE_NULLABLE = (InterfaceType) type; break;
 				case "CastException":	Type.CAST_EXCEPTION = (ExceptionType) type; break;
 				case "Class":			Type.CLASS = (ClassType) type; break;				
+				case "ClassSet":		Type.CLASS_SET = (ClassType) type; break;
 				case "boolean":			Type.BOOLEAN = (ClassType)type; break;
 				case "byte":			Type.BYTE = (ClassType)type; break;
 				case "code":			Type.CODE = (ClassType)type; break;
@@ -817,10 +817,4 @@ public class TypeCollector extends BaseChecker {
 	public void setNodeTable(Map<Type, Node> nodeTable) {
 		this.nodeTable = nodeTable;		
 	}
-	
-	@Override
-	public Object visit(ASTGenericDeclaration node, Boolean data)
-			throws ShadowException {
-		return WalkType.NO_CHILDREN;
-	}	
 }

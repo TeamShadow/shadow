@@ -110,7 +110,7 @@ public class TACNewArray extends TACOperand
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder(getType().
-				getSuperBaseType().toString()).append(":create");
+				recursivelyGetBaseType().toString()).append(":create");
 		Iterator<TACOperand> dims = dimensionIterator();
 		Type current = getType();
 		while (current instanceof ArrayType)

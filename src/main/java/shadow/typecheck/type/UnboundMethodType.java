@@ -1,6 +1,7 @@
 package shadow.typecheck.type;
 
 import shadow.doctool.Documentation;
+import java.util.List;
 
 
 public class UnboundMethodType extends ClassType
@@ -23,14 +24,14 @@ public class UnboundMethodType extends ClassType
 	}
 
 	@Override
-	public UnboundMethodType replace(SequenceType values,
-			SequenceType replacements) {		
+	public UnboundMethodType replace(List<ModifiedType> values,
+			List<ModifiedType> replacements) {		
 		return this;
 	}
 	
 	@Override
-	public UnboundMethodType partiallyReplace(SequenceType values,
-			SequenceType replacements) {		
+	public UnboundMethodType partiallyReplace(List<ModifiedType> values,
+			List<ModifiedType> replacements) {		
 		return this;
 	}
 }

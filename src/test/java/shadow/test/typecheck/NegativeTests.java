@@ -18,9 +18,15 @@ public class NegativeTests {
 		//args.add("-v");
 		args.add("--typecheck");
 
-		if( System.getProperty("os.name").contains("Windows")) {
+		String os = System.getProperty("os.name").toLowerCase();
+		
+		if( os.contains("windows") ) {
 			args.add("-c");
 			args.add("windows.xml");
+		}
+		else if( os.contains("mac") ) {
+			args.add("-c");
+			args.add("mac.xml");
 		}
 	}
 	
@@ -366,4 +372,11 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/interface-create/Test.shadow");
 		enforce(Error.INVALID_CREATE);			
 	}
+	
+	/*//compiler can't handle this one yet
+	@Test public void testFieldReferencesItself() throws Exception {
+		args.add("tests-negative/typechecker/field-references-itself/Test.shadow");
+		enforce(Error.UNDEFINED_SYMBOL);			
+	}
+	*/
 }

@@ -1,0 +1,16 @@
+import shadow:io@Console;
+
+class shadow:test@CreateStringInConstantTest
+{
+	public constant String EMPTY = String:create();
+	public constant String NON_EMPTY = String:create("Hello!");
+
+
+	public main( String[] args ) => ()
+	{
+		Console console;
+		
+		console.printLine("Empty: " # EMPTY);
+		console.printLine("Non-empty: " # NON_EMPTY);
+	}
+}

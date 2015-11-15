@@ -1,11 +1,12 @@
-abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>, CanIterate<T>
+abstract locked class shadow:standard@Array<T>
+	implements CanIndex<int[],T>, CanIndexStore<int[],T>, CanIterate<T>
 {
 	get immutable int[] lengths;
 	Object data;
 	
 	protected create( immutable int[] lengths, Object data )	
-	{
-		this:lengths = lengths;		
+	{		
+		this:lengths = lengths;	
 		this:data = data;		
 	}	
 	
@@ -14,7 +15,7 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 	public readonly get size() => ( int )
 	{
 		int size = lengths[0];
-		for ( int i = 1; i < this->dimensions; i += 1 )
+		for ( int i = 1; i < lengths->size; i += 1 )
 			size *= lengths[i];
 		return size;
 	}
@@ -52,9 +53,8 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 	{
 		if ( this->size == 0 )
 			return "[]";
-		
-		MutableString string = MutableString:create("[");						
-		Class baseClass = getBaseClass();
+
+		MutableString string = MutableString:create("[");
 		boolean first = true;
 		foreach( T value in this )
 		{	
@@ -62,7 +62,6 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 				first = false;
 			else
 				string.append(", ");
-				
 			string.append(value);
 		}
 		return string.append("]").toString();
@@ -84,11 +83,10 @@ abstract locked class shadow:standard@Array<T> implements CanIndexStore<int[],T>
 		}
 		
 		public next() => (T)
-		{
+		{			
 			if( position >= limit )
-				throw IndexOutOfBoundsException:create();
-			
-			T value = index( position );			
+				throw IndexOutOfBoundsException:create();			
+			T value = index( position );						
 			position += 1;			
 			
 			return value;  

@@ -54,6 +54,7 @@ public class TACModule {
 	        add(Type.FLOAT);
 	        add(Type.DOUBLE);
 	        add(Type.ARRAY);
+	        add(Type.ARRAY_NULLABLE);
 	        add(Type.EXCEPTION);
 	        add(Type.CAST_EXCEPTION);
 	        add(Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
@@ -61,6 +62,7 @@ public class TACModule {
 	        add(Type.UNEXPECTED_NULL_EXCEPTION);
 	        add(Type.INTERFACE_CREATE_EXCEPTION);
 	        add(Type.GENERIC_CLASS);
+	        add(Type.CLASS_SET);
 	        // add(Type.ARRAY_CLASS);
 	        // add(Type.METHOD_CLASS);
         }
@@ -135,14 +137,6 @@ public class TACModule {
 
     public InterfaceType getInterfaceType() {
         return (InterfaceType) type;
-    }
-
-    public String getName() {
-        return type.getTypeName();
-    }
-
-    public String getQualifiedName() {
-        return type.getQualifiedName();
     }
 
     public Set<Type> getReferences() {

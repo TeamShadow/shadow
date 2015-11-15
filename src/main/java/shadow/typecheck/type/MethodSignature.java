@@ -207,16 +207,16 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type;
 	}
 	
-	public MethodSignature replace(SequenceType values,
-			SequenceType replacements) throws InstantiationException {
+	public MethodSignature replace(List<ModifiedType> values,
+			List<ModifiedType> replacements) throws InstantiationException {
 		MethodSignature replaced = new MethodSignature(type.replace(values, replacements), symbol, outer.replace(values, replacements), node);
 		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
 		
 		return replaced;
 	}
 	
-	public MethodSignature partiallyReplace(SequenceType values,
-			SequenceType replacements) {		
+	public MethodSignature partiallyReplace(List<ModifiedType> values,
+			List<ModifiedType> replacements) {		
 		MethodSignature replaced = new MethodSignature(type.partiallyReplace(values, replacements), symbol, outer.partiallyReplace(values, replacements), node);
 		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
 		return replaced;

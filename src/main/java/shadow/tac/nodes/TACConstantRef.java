@@ -38,7 +38,7 @@ public class TACConstantRef extends TACReference {
 	
 	@Override
 	public String toString() {
-		return prefix.getImportName() + ":" + name;
+		return prefix.toString(Type.PACKAGES) + ":" + name;
 	}
 	
 	@Override

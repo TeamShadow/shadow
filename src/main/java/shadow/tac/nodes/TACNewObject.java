@@ -7,6 +7,7 @@ import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
@@ -28,8 +29,10 @@ public class TACNewObject extends TACOperand
 
 		//class needs real type
 		TACClass _class = new TACClass(this, type);
-		this.classData = _class.getClassData();
-		this.methodTable = _class.getMethodTable();
+		classData = _class.getClassData();
+		if( !classData.getType().equals(Type.CLASS) )
+			classData = new TACCast(this, new SimpleModifiedType(Type.CLASS), classData);
+		methodTable = _class.getMethodTable();
 		
 		//there's a chance that it could be an interface, which isn't allowed
 		if( type instanceof TypeParameter ) {

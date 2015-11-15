@@ -23,7 +23,6 @@ import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
-import shadow.parser.javacc.ASTGenericDeclaration;
 import shadow.parser.javacc.ASTImplementsList;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMethodDeclaration;
@@ -101,14 +100,14 @@ public class TypeUpdater extends BaseChecker {
 		//must happen after extends and implements
 		//since generic parameters in the methods could depend on correct extends and implements
 		if( errorList.isEmpty() )
-			updateFieldsAndMethods( nodeTable );		
+			updateFieldsAndMethods( nodeList );		
 		
 		//now that the types are figured out, make sure all the method overrides are legal
 		if( errorList.isEmpty() )
-			checkOverrides( nodeTable );	
+			checkOverrides( nodeList );
 		
 		if( errorList.isEmpty() )
-			updateGenericDeclarations( nodeTable );
+			updateReferencesInMetaFiles( nodeList );
 
 		if( errorList.size() > 0 ) {
 			printErrors();
@@ -120,37 +119,38 @@ public class TypeUpdater extends BaseChecker {
 		
 		return nodeTable;
 	}
-
-	private void updateGenericDeclarations(Map<Type, Node> nodeTable) {
-		for(Type type : nodeTable.keySet() )
-			updateGenericDeclarations(type);
-	}
 	
-	private void updateGenericDeclarations(Type type){
-		if( type instanceof ClassType ) {
-			ClassType classType = (ClassType) type;
-			for( Type inner : classType.getInnerClasses().values() )
-				updateGenericDeclarations( inner );
-		}
-		
-		for( Type generic : type.getGenericDeclarations() ) {
-			if( generic instanceof UninstantiatedType ) {
-				UninstantiatedType uninstantiated = (UninstantiatedType) generic;
-				try {
-					generic = uninstantiated.instantiate();
-				} catch (InstantiationException e) {
-					addError(Error.INVALID_TYPE_ARGUMENTS, "Cannot instantiate type " + uninstantiated.getType() + " with type arguments " + uninstantiated.getTypeArguments(), uninstantiated.getType());
+	private void updateReferencesInMetaFiles(List<Node> nodeList) {
+		for(Node declarationNode : nodeList ) {			
+			//if meta
+			if( declarationNode.getFile().getPath().endsWith(".meta") ) {
+				Type type = declarationNode.getType();
+				//update imports for meta files, since they won't have statement checking
+				for(Object item : type.getImportedItems())
+					if( item instanceof Type ) {
+						Type importType = (Type) item;
+						type.addReferencedType(importType);
+					}
+				
+				//add extends
+				if( type instanceof ClassType ) {
+					ClassType parent = ((ClassType) type).getExtendType();
+					while( parent != null ) {
+						type.addReferencedType(parent);
+						parent = parent.getExtendType();
+					}
 				}
-			}
-			
-			//add directly to referenced types (not through the method, which dilutes things)
-			type.addReferencedTypeDirectly(generic);
-		}			
+				
+				//add interfaces
+				for( InterfaceType _interface : type.getInterfaces() )
+					type.addReferencedType(_interface);
+			}				
+		}
 	}
 	
-	private void updateFieldsAndMethods( Map<Type, Node> nodeTable ) {
+	private void updateFieldsAndMethods( List<Node> nodeList ) {
 		//update fields and methods			
-		for(Node declarationNode : nodeTable.values() ) {	
+		for(Node declarationNode : nodeList ) {	
 			try {			
 				Type type = declarationNode.getType();				
 				type.updateFieldsAndMethods();				
@@ -163,13 +163,10 @@ public class TypeUpdater extends BaseChecker {
 	
 	private void addConstructorsAndProperties() {
 		for( Package p : typeTable.keySet() ) {
-			for( Type type : typeTable.get(p).values() ) 
-			{
-				if( type instanceof ClassType )
-				{
+			for( Type type : typeTable.get(p).values() ) {
+				if( type instanceof ClassType ) {
 					ClassType classType = (ClassType)type;
-					if (classType.getMethods("create").isEmpty())
-					{
+					if (classType.getMethods("create").isEmpty()) {
 						//if no creates, add the default one
 						ASTCreateDeclaration createNode = new ASTCreateDeclaration(-1);
 						createNode.setModifiers(Modifiers.PUBLIC);
@@ -191,8 +188,7 @@ public class TypeUpdater extends BaseChecker {
 					classType.addReferencedType(Type.ADDRESS_MAP); //so the use of AddressMap is recorded
 					
 					//add default getters and setters
-					for( Map.Entry<String, Node> field : classType.getFields().entrySet() )
-					{
+					for( Map.Entry<String, Node> field : classType.getFields().entrySet() ) {
 						Node node = field.getValue();
 						Modifiers fieldModifiers = node.getModifiers();
 						
@@ -203,8 +199,7 @@ public class TypeUpdater extends BaseChecker {
 							int getterCollision = 0;
 							int setterCollision = 0;
 							
-							for( MethodSignature signature : methods)
-							{
+							for( MethodSignature signature : methods) {
 								if( signature.getModifiers().isGet() )
 									getterCount++;
 								else if( signature.getModifiers().isSet() )
@@ -215,28 +210,23 @@ public class TypeUpdater extends BaseChecker {
 									setterCollision++;
 							}
 							
-							if( fieldModifiers.isGet() && getterCount == 0 )
-							{
+							if( fieldModifiers.isGet() && getterCount == 0 ) {
 								if( getterCollision > 0 )								
 									addError(node, Error.INVALID_MODIFIER, "Default get property " +  field.getKey() + " cannot replace a non-get method with an indistinguishable signature" );
-								else
-								{
+								else {
 									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET );
+									//default get is readonly
+									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);														
 									methodNode.setImage(field.getKey());
 									methodNode.setType(node.getType());
 									MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
 									Modifiers modifiers = new Modifiers(fieldModifiers);
 									modifiers.removeModifier(Modifiers.GET);
-									modifiers.removeModifier(Modifiers.FIELD);
-									//default get is readonly
-									methodNode.addModifier(Modifiers.READONLY);
+									modifiers.removeModifier(Modifiers.FIELD);									
 									if( modifiers.isImmutable() )
-										modifiers.removeModifier(Modifiers.IMMUTABLE);
+										modifiers.addModifier(Modifiers.IMMUTABLE);																		
 									if( modifiers.isSet() )
 										modifiers.removeModifier(Modifiers.SET);
-									if( modifiers.isWeak() )
-										modifiers.removeModifier(Modifiers.WEAK);
 									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
 									methodType.addReturn(modifiedType);									
 									classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
@@ -381,90 +371,77 @@ public class TypeUpdater extends BaseChecker {
 	
 	private void updateExtendsAndImplements(List<Node> nodeList)
 	{	
-		for(Node declarationNode : nodeList )
-		{	
+		for(Node declarationNode : nodeList ) {	
 			Type type = declarationNode.getType();
-			if( type instanceof ClassType )
-			{
+			if( type instanceof ClassType ) {
 				ClassType classType = (ClassType) type;					
 				ClassType parent = classType.getExtendType();
 
 				//update parent
-				if( parent != null && parent instanceof UninstantiatedClassType )
-				{
-					try 
-					{
+				if( parent != null && parent instanceof UninstantiatedClassType ) {
+					try {
 						parent = ((UninstantiatedClassType)parent).partiallyInstantiate();
 						classType.setExtendType(parent);
 				
 					} 
-					catch (InstantiationException e) 
-					{
+					catch (InstantiationException e) {
 						addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 					}
 				}
 				
-				if( isMeta )
-					classType.addReferencedType(parent);
-				
+				if( parent != null )
+					type.addGenericClass(parent);
 				
 				//update interfaces
 				ArrayList<InterfaceType> interfaces = classType.getInterfaces();
 				
-				for( int i = 0; i < interfaces.size(); i++ )
-				{ 
+				for( int i = 0; i < interfaces.size(); i++ ) { 
 					InterfaceType interfaceType = interfaces.get(i);
-					if( interfaceType instanceof UninstantiatedInterfaceType  )
-					{
-						try 
-						{
+					if( interfaceType instanceof UninstantiatedInterfaceType  ) {
+						try {
 							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).partiallyInstantiate();
 							interfaces.set(i, interfaceType);
 							
 						} 
-						catch (InstantiationException e) 
-						{
+						catch (InstantiationException e) {
 							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 						}						
 					}
 					
-					if( isMeta )
-						classType.addReferencedType(interfaceType);
-				}				
-									
+					//if( interfaceType.isParameterized() )
+					type.addGenericClass(interfaceType);
+				}					
 			}
-			else if( type instanceof InterfaceType )
-			{	
+			else if( type instanceof InterfaceType ) {	
 				
 				//update interfaces
 				ArrayList<InterfaceType> interfaces = ((InterfaceType)type).getInterfaces();
 									
-				for( int i = 0; i < interfaces.size(); i++ )
-				{ 
+				for( int i = 0; i < interfaces.size(); i++ ) { 
 					InterfaceType interfaceType = interfaces.get(i);
-					if( interfaceType instanceof UninstantiatedInterfaceType  )
-					{
-						try 
-						{
+					if( interfaceType instanceof UninstantiatedInterfaceType  ) {
+						try {
 							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).partiallyInstantiate();
 							interfaces.set(i, interfaceType);
 						} 
-						catch (InstantiationException e) 
-						{
+						catch (InstantiationException e)  {
 							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 						}						
 					}
 					
-					if( isMeta )
-						type.addReferencedType(interfaceType);
+					//if( interfaceType.isParameterized() )
+					type.addGenericClass(interfaceType);
+					
+					//if( isMeta )
+						//type.addReferencedType(interfaceType);
 				}
 			}			
 		}
 		
 	}
 		
-	private void checkOverrides(Map<Type,Node> nodeTable) {	
-		for( Node declarationNode : nodeTable.values() ) {	
+	private void checkOverrides(List<Node> nodeList) {	
+		for( Node declarationNode : nodeList ) {	
 			setFile(declarationNode.getFile()); //used for error messages
 			if( declarationNode.getType() instanceof ClassType ) {					
 				ClassType classType = (ClassType)declarationNode.getType();
@@ -833,11 +810,8 @@ public class TypeUpdater extends BaseChecker {
 				//shouldn't fail
 				if( type == null )
 					addError(Error.INVALID_IMPORT, "Undefined type " + item + " cannot be imported");
-				else {
+				else 
 					importedItems.set(i, type);
-					if( isMeta )
-						node.getType().addReferencedType(type);
-				}
 			}
 			else
 			{
@@ -1393,18 +1367,5 @@ public class TypeUpdater extends BaseChecker {
 	
 	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException {
 		return WalkType.NO_CHILDREN; //skip all blocks
-	}
-	
-	@Override
-	public Object visit(ASTGenericDeclaration node, Boolean secondVisit)
-			throws ShadowException {
-		
-		if( secondVisit ) {
-			Node child = node.jjtGetChild(0);
-			node.setType(child.getType());			
-			currentType.addGenericDeclaration(child.getType());
-		}	
-		
-		return WalkType.POST_CHILDREN;
 	}
 }

@@ -20,6 +20,8 @@ import shadow.parser.javacc.SimpleNode;
 public class ClassType extends Type {
 	private ClassType extendType;	
 	private HashMap<String, ClassType> innerClasses;
+	//needed to keep the fields in order for walking them in constructors
+	private ArrayList<Node> fieldList = new ArrayList<Node>();
 	
 	public ClassType(String typeName, ClassType parent) {
 		this(typeName, new Modifiers(), null, null);
@@ -231,7 +233,7 @@ public class ClassType extends Type {
 		if ( getExtendType() == null )
 			return 0;
 		return getExtendType().recursivelyCountParentFields() +
-				getExtendType().getFields().size();
+				getExtendType().sortFields().size();
 	}
 
 	public List<Entry<String, ? extends ModifiedType>> orderAllFields() {
@@ -298,7 +300,7 @@ public class ClassType extends Type {
 	}
 	
 	@Override
-	public ClassType replace(SequenceType values, SequenceType replacements ) throws InstantiationException {	
+	public ClassType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )
@@ -347,7 +349,7 @@ public class ClassType extends Type {
 	}
 	
 	@Override
-	public ClassType partiallyReplace(SequenceType values, SequenceType replacements ) {	
+	public ClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
 			if( cached != null )
@@ -586,16 +588,16 @@ public class ClassType extends Type {
 			out.print("shadow:standard@" + name);
 		}
 		else if( !hasOuter() ) //outermost class		
-			out.print(getQualifiedName(true));
+			out.print(toString(PACKAGES | TYPE_PARAMETERS | PARAMETER_BOUNDS ));
 		else {	
-			name = toString(true);
+			name = toString(TYPE_PARAMETERS | PARAMETER_BOUNDS);
 			out.print(name.substring(name.lastIndexOf(':') + 1));
 		}
 		
 		//extend type
 		Type extendType = getExtendType();
 		if( extendType != null && !this.equals(Type.EXCEPTION)  )
-			out.print(" extends " + extendType.getQualifiedName() );
+			out.print(" extends " + extendType.toString(PACKAGES | TYPE_PARAMETERS) );
 		
 		//interfaces implemented
 		List<InterfaceType> interfaces = getInterfaces();
@@ -607,7 +609,7 @@ public class ClassType extends Type {
 					out.print(", ");
 				else
 					first = false;
-				out.print(_interface.getQualifiedName());				
+				out.print(_interface.toString(PACKAGES | TYPE_PARAMETERS));				
 			}			
 		}
 		
@@ -653,15 +655,26 @@ public class ClassType extends Type {
 					newLine = true;
 				}
 			}
-		if( newLine )
+		if( newLine && getInnerClasses().size() > 0 )
 			out.println();
 		
 		//inner classes
 		for( Type _class : getInnerClasses().values() )
 				_class.printMetaFile(out, indent);		
 		
-		if( !hasOuter() )
-			printGenerics( out, indent );				
+		//if( !hasOuter() )
+			//printGenerics( out, indent );				
 		out.println(linePrefix + "}");	
 	}
+
+	@Override
+	public void addField(String fieldName, Node node) {
+		super.addField(fieldName, node);
+		fieldList.add(node);
+	}
+	
+	public List<Node> getFieldList() {
+		return fieldList;
+	}
+	
 }

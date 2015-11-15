@@ -127,19 +127,21 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		}
 	}
 	
-	public String toString()
+	public String toString(int options)
 	{
-		return toString("(", ")", false);		
-	}
-	
-	public String toString(boolean withBounds)
-	{
-		return toString("(", ")", withBounds);		
+		return toString("(", ")", options);		
 	}
 	
 	public String toString(String begin, String end) {
-		return toString(begin, end, false);
+		return toString(begin, end, 0);
+	}	
+	
+	/*
+	public String getQualifiedName(boolean withBounds) 
+	{		
+		return toStringWithQualifiedParameters(withBounds);
 	}
+	*/
 	
 	@Override
 	protected String getMangledNameWithGenerics(boolean convertArrays)
@@ -171,22 +173,45 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return builder.toString();
 	}
 	
-	public String toString(String begin, String end, boolean withBounds ) {
+	/*
+	public String toStringWithQualifiedParameters(String begin,	String end, boolean withBounds) {
 		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;
 		
 		for(ModifiedType type: types)
 		{			
-			if( !first )
-				builder.append(", ");								
+			if( first )
+				first = false;
+			else
+				builder.append(",");								
 			
 			if( type != null )
 			{
 				builder.append(type.getModifiers().toString());
-				builder.append(type.getType().toString(withBounds));
+				builder.append(type.getType().toStringWithQualifiedParameters(withBounds));
 			}
+		}
+		
+		builder.append(end);
+		
+		return builder.toString();
+	}
+	*/
+	
+	public String toString(String begin, String end, int options ) {
+		StringBuilder builder = new StringBuilder(begin);
+		boolean first = true;
+		
+		for(ModifiedType type: types) {			
+			if( first )
+				first = false;
+			else
+				builder.append(",");								
 			
-			first = false;
+			if( type != null ) {
+				builder.append(type.getModifiers().toString());
+				builder.append(type.getType().toString(options));
+			}
 		}
 		
 		builder.append(end);
@@ -218,7 +243,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	}
 	
 	@Override
-	public SequenceType replace(SequenceType values, SequenceType replacements) throws InstantiationException
+	public SequenceType replace(List<ModifiedType> values, List<ModifiedType> replacements) throws InstantiationException
 	{		
 		SequenceType temp = new SequenceType();
 		
@@ -239,7 +264,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	
 	
 	@Override
-	public SequenceType partiallyReplace(SequenceType values, SequenceType replacements)
+	public SequenceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements)
 	{		
 		SequenceType temp = new SequenceType();
 		
@@ -499,4 +524,6 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		else
 			return false;
 	}
+
+	
 }

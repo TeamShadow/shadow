@@ -138,9 +138,10 @@ public class MethodType extends ClassType {
 		return returns.matches(other.returns);
 	}
 
-	public String toString(boolean withBounds)
+	@Override
+	public String toString(int options)
 	{		
-		return parameterTypes.toString(withBounds) + " => " + returns.toString(withBounds);
+		return parameterTypes.toString(options) + " => " + returns.toString(options);
 	}
 	
 	public String parametersToString()
@@ -177,7 +178,7 @@ public class MethodType extends ClassType {
 	
 	
 	@Override
-	public MethodType replace(SequenceType values, SequenceType replacements ) throws InstantiationException
+	public MethodType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{	
 		MethodType replaced = new MethodType(super.getOuter(), getModifiers(), getDocumentation());	
 		
@@ -191,7 +192,7 @@ public class MethodType extends ClassType {
 	}
 	
 	@Override
-	public MethodType partiallyReplace(SequenceType values, SequenceType replacements )
+	public MethodType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements )
 	{	
 		MethodType replaced = new MethodType(super.getOuter(), getModifiers(), getDocumentation());	
 		

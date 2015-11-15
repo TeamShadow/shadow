@@ -12,12 +12,12 @@ import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACClass.TACClassData;
 import shadow.tac.nodes.TACClass.TACMethodTable;
 import shadow.tac.nodes.TACConstantRef;
-import shadow.tac.nodes.TACConstructGeneric;
 import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDestinationPhiRef;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
+import shadow.tac.nodes.TACGlobal;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
@@ -168,7 +168,7 @@ public abstract class TACAbstractVisitor implements TACVisitor
 	@Override
 	public void visit(TACVariableRef node) throws ShadowException { }
 	@Override
-	public void visit(TACConstructGeneric node) throws ShadowException { }
+	public void visit(TACConversion node) throws ShadowException { }	
 	@Override
-	public void visit(TACConversion node) throws ShadowException { }
+	public void visit(TACGlobal node) throws ShadowException { }
 }

@@ -1,13 +1,13 @@
 class Pig<T>
 {
-	nullable T value;
+	T value;
 	
 	public setValue(T input) => ()
 	{
 		value = input;
 	}
 	
-    public getValue() => (nullable T) {
+    public getValue() => (T) {
 		return value;
 	}	
 }

@@ -392,8 +392,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		if( containsUnknown(errorTypes) )
 			return; //don't add error if it has an Unknown Type in it
 		
-		String error = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-		errorList.add(new TypeCheckException(type, error));
+		if( node == null )
+			addError(type, message, errorTypes);
+		else {			
+			String error = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+			errorList.add(new TypeCheckException(type, error));
+		}
 	}
 	
 	/**
@@ -411,8 +415,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	protected void addWarning(Node node, Error type, String message) {
-		String warning = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-		warningList.add(new TypeCheckException(type, warning));
+		if( node == null )
+			addWarning(type, message);
+		else {		
+			String warning = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+			warningList.add(new TypeCheckException(type, warning));
+		}
 	}
 	
 	protected void addWarning(Error type, String message) {
@@ -420,7 +428,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		warningList.add(new TypeCheckException(type, warning));
 	}
 	
-	protected static String makeMessage(Error type, String message, File file, int lineStart, int lineEnd, int columnStart, int columnEnd )
+	public static String makeMessage(Error type, String message, File file, int lineStart, int lineEnd, int columnStart, int columnEnd )
 	{
 		StringBuilder error = new StringBuilder();
 		
@@ -734,13 +742,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						}
 						catch (shadow.typecheck.type.InstantiationException e)
 						{
-							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
+							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
 							type = Type.UNKNOWN;
 						}
 					}
 					else
 					{						
-						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
+						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
 						type = Type.UNKNOWN;
 					}
 				}
@@ -793,13 +801,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 								}
 								catch (InstantiationException e) 
 								{
-									addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
+									addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
 									type = Type.UNKNOWN;
 								}
 							}
 							else
 							{						
-								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(true) + " do not match type parameters " + parameters.toString(true) );
+								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
 								type = Type.UNKNOWN;
 							}
 						}

@@ -1,0 +1,95 @@
+import shadow:utility@HashMap;
+import shadow:io@Console;
+
+class shadow:test@HashMapTest
+{
+	public main() => ()
+	{
+		Console out;
+	
+		var map1 = HashMap<int,int>:create();
+		var map2 = HashMap<int,String>:create();
+		var map3 = HashMap<String,int>:create();
+		var map4 = HashMap<String,String>:create();		
+		
+		map1[4] = 7;
+		map1[13] = 5;
+		
+		map2[10] = "Bozo";
+		map2[14] = "the";
+		map2[-3] = "Clown";
+		
+		map3["Sandwich"] = 141;
+		map3["Clothes"] = 58;
+		map3["Sandwich"] = 20;
+		
+		map4["Tank"] = "Man";
+		map4["Raw"] = "Deal";
+		
+		if( map1.containsKey(4) )
+			out.printLine("Passed 1");
+		else
+			out.printLine("Failed 1");
+			
+		if( !map1.containsKey(90) )
+			out.printLine("Passed 2");
+		else
+			out.printLine("Failed 2");
+			
+		if( map2.containsKey(14) )
+			out.printLine("Passed 3");
+		else
+			out.printLine("Failed 3");			
+		
+		out.printLine(map2[10]);
+		
+		out.printLine(map3);
+		
+		out.printLine(map4["Raw"]);
+		
+		if( map3.containsValue(58) )
+			out.printLine("Passed 4");
+		else
+			out.printLine("Failed 4");
+			
+		if( !map3.containsValue(99) )
+			out.printLine("Passed 5");
+		else
+			out.printLine("Failed 5");		
+			
+		if( map4.containsValue("Man") )
+			out.printLine("Passed 6");
+		else
+			out.printLine("Failed 6");
+			
+		if( !map4.containsValue("Nam") )
+			out.printLine("Passed 7");
+		else
+			out.printLine("Failed 7");
+			
+		map3["Sandwich"] = 13;
+		map3["Help"] = 51;
+		
+		if( check(map3["Sandwich"]) == 13 )
+			out.printLine("Passed 8");
+		else
+			out.printLine("Failed 8");		
+		
+		//resize test
+		var map5 = HashMap<int,int>:create();
+		for( int i = 0; i < 20; i += 1 )
+			map5[i] = i * i;
+			
+		if(map5.containsKey(3))
+			out.printLine("Passed 9");
+		else 
+			out.printLine("Failed 9");			
+			
+		map5.remove(3);
+		
+		if(!map5.containsKey(3))
+			out.printLine("Passed 10");
+		else 
+			out.printLine("Failed 10");
+	}
+}

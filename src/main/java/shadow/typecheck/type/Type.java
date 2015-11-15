@@ -3,6 +3,7 @@ package shadow.typecheck.type;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -39,7 +40,7 @@ public abstract class Type implements Comparable<Type> {
 	private Map<String, Node> fieldTable = new HashMap<String, Node>();
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> referencedTypes = new HashSet<Type>();
-	private List<Type> genericDeclarations = new ArrayList<Type>();
+	private Set<Type> partiallyInstantiatedGenerics = new HashSet<Type>();	
 	private List<Type> typeParameterDependencies = new ArrayList<Type>();
 	
 	
@@ -49,6 +50,8 @@ public abstract class Type implements Comparable<Type> {
 	private static boolean referenceRecursion = false;	
 	private String hashName = null;
 	
+	private Set<Type> genericClasses = new HashSet<Type>();
+	private Set<ArrayType> arrayClasses = new HashSet<ArrayType>();	
 	
 	/*
 	 * Predefined system types needed for Shadow
@@ -56,10 +59,9 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static ClassType OBJECT = null;
 	public static ClassType CLASS = null;  // meta class for holding normal :class variables
-	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables	
-	public static ClassType ARRAY_CLASS = null;  // meta class for holding generic array :class variables
+	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables
 	public static ClassType ARRAY = null;  // object representation of all array types
-	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types
+	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types	
 	public static ClassType METHOD = null;  // object representation for references with function type
 	public static ClassType UNBOUND_METHOD = null; //object representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
 
@@ -87,6 +89,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static ClassType STRING = null;
 	public static ClassType ADDRESS_MAP = null; //used for copying
+	public static ClassType CLASS_SET = null;	//used to store generic Class objects
 	
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
@@ -117,24 +120,27 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_NEGATE = null;	
 	
 	
-	private static class TypeArgumentCache
-	{
+	//constants used for options in toString()
+	public static final int NO_OPTIONS = 0;
+	public static final int PACKAGES =  1;
+	public static final int TYPE_PARAMETERS =  2;
+	public static final int PARAMETER_BOUNDS =  4;	
+	
+	private static class TypeArgumentCache {
 		public ModifiedType argument;
 		public Type instantiatedType;
 		public List<TypeArgumentCache> children;
 	}
 	
-	public Type getInstantiation( SequenceType typeArguments  )
-	{
+	public Type getInstantiation( List<ModifiedType> typeArguments  ) {
 		return getInstantiation(instantiatedTypes, typeArguments, 0 );
 	}
 	
-	public Type getTypeWithoutTypeArguments()
-	{		
+	public Type getTypeWithoutTypeArguments() {		
 		return typeWithoutTypeArguments;
 	}
 	
-	private static Type getInstantiation(TypeArgumentCache types, SequenceType typeArguments, int index  )
+	private static Type getInstantiation(TypeArgumentCache types, List<ModifiedType> typeArguments, int index  )
 	{
 		if( index == typeArguments.size() )
 			return types.instantiatedType;
@@ -150,12 +156,12 @@ public abstract class Type implements Comparable<Type> {
 		return null;
 	}
 	
-	public void addInstantiation( SequenceType typeArguments, Type type  )
+	public void addInstantiation( List<ModifiedType> typeArguments, Type type  )
 	{
 		addInstantiation(instantiatedTypes, typeArguments, 0, type );
 	}
 	
-	private static void addInstantiation(TypeArgumentCache types, SequenceType typeArguments, int index, Type type  )
+	private static void addInstantiation(TypeArgumentCache types, List<ModifiedType> typeArguments, int index, Type type  )
 	{		
 		if( index == typeArguments.size() )		
 			types.instantiatedType = type;			
@@ -191,7 +197,6 @@ public abstract class Type implements Comparable<Type> {
 		CLASS = null;		
 		ARRAY = null;
 		ARRAY_NULLABLE = null;
-		ARRAY_CLASS = null;
 		METHOD = null;				
 		UNBOUND_METHOD = null;
 		ENUM = null;
@@ -211,6 +216,7 @@ public abstract class Type implements Comparable<Type> {
 		USHORT = null;
 		STRING = null;
 		ADDRESS_MAP = null;
+		CLASS_SET = null;
 		CAN_COMPARE = null;
 		CAN_EQUAL = null;		
 		CAN_INDEX = null;
@@ -268,20 +274,8 @@ public abstract class Type implements Comparable<Type> {
 		this._package = _package;
 	}
 	
-	public String getTypeName() 
-	{
+	public String getTypeName() {
 		return typeName;
-	}
-	
-	
-	public String getImportName() //does not include parameters
-	{		
-		if( isPrimitive() )
-			return getTypeName();
-		else if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + getTypeName();
-		else
-			return _package.getQualifiedName() + '@' + getTypeName();			
 	}
 	
 	final public String getMangledNameWithGenerics() {
@@ -342,19 +336,9 @@ public abstract class Type implements Comparable<Type> {
 		return builder.toString();	
 	}
 	
-	public final String getHashName()
-	{
-		/*
-		if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + toString();
-		else
-			return _package.getQualifiedName() + '@' + toString();
-		*/
-		
-		//return getMangledNameWithGenerics();
-		
+	public final String getHashName() {	
 		if( hashName == null )
-			hashName = getQualifiedName();
+			hashName = toString(); //with packages but without type parameter bounds
 		
 		return hashName;
 	}
@@ -363,46 +347,63 @@ public abstract class Type implements Comparable<Type> {
 		hashName = null;
 	}
 	
+	/*
 	public String getQualifiedName() 
 	{		
 		return getQualifiedName(false);			
 	}
 	
-	public String getQualifiedName(boolean withBounds) 
-	{		
-		if( isPrimitive() )
-			return toString(withBounds);		
-		else if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + toString(withBounds);
-		else
-			return _package.getQualifiedName() + '@' + toString(withBounds);			
-	}
-	
-	public String toString() {
-		return toString(false);
-	}
-	
-	public String toString(boolean withBounds) {		
+	protected String toStringWithQualifiedParameters(boolean withBounds) {				
 		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
 		StringBuilder builder;
 		
 		if( getOuter() == null )		
 			builder = new StringBuilder(className);
 		else
-			builder = new StringBuilder(getOuter().toString(withBounds) + ":" + className );
+			builder = new StringBuilder(getOuter().toStringWithQualifiedParameters(withBounds) + ":" + className );
 			
 		if( isParameterized() )		
-			builder.append(getTypeParameters().toString("<",">", withBounds));
+			builder.append(getTypeParameters().toStringWithQualifiedParameters("<",">", withBounds));
 		
-		return builder.toString();
+		return builder.toString();		
+	}
+	*/
+
+	/*
+	public String getQualifiedName(boolean withBounds) 
+	{		
+		if( isPrimitive() )
+			return toString(withBounds);		
+		else if( _package == null || _package.getQualifiedName().isEmpty())
+			return "default@" + toStringWithQualifiedParameters(withBounds);
+		else
+			return _package.getQualifiedName() + '@' + toStringWithQualifiedParameters(withBounds);			
+	}
+	*/
+	
+	final public String toString() {
+		return toString(PACKAGES | TYPE_PARAMETERS); //no bounds
 	}
 	
-	public String getPath()
-	{
-		if( _package == null || _package.getPath().isEmpty() )
-			return typeName;
+	public String toString(int options) {
+		StringBuilder builder = new StringBuilder();
+		
+		if( getOuter() == null ) {
+			if( !isPrimitive() && (options & PACKAGES) != 0 ) {
+				if( _package == null || _package.getQualifiedName().isEmpty())
+					builder.append("default@");
+				else
+					builder.append(_package.getQualifiedName()).append('@');
+			}			
+			builder.append(typeName);
+		}
 		else
-			return _package.getPath() + File.separator + typeName;	
+			builder.append(getOuter().toString(options)).append(':').append(typeName);
+			
+		if( isParameterized() && (options & TYPE_PARAMETERS) != 0 )		
+			builder.append(getTypeParameters().toString("<",">", options));
+		
+		return builder.toString();
 	}
 	
 	public Modifiers getModifiers()
@@ -418,11 +419,6 @@ public abstract class Type implements Comparable<Type> {
 	public void addModifier( int modifier )
 	{
 		modifiers.addModifier(modifier);		
-	}
-	
-	public final boolean manglesTheSameAs(Type type)
-	{
-		return getMangledName().equals(type.getMangledName());		
 	}
 	
 	@Override
@@ -658,8 +654,9 @@ public abstract class Type implements Comparable<Type> {
 		//equal and cat are separate because they are not dependent on implementing a specific interface
 		if( assignmentType.equals(AssignmentType.EQUAL) )
 		{
-			accepts = rightType.isSubtype(this);/* ||  //no! don't accept Array<int> inside int[] without explicit cast
-			( this instanceof ArrayType && this.isSubtype(rightType) ); */
+			//type parameters are different because the definition of subtype is weak: dependent only on the bounds
+			//real type parameter assignment requires the same type					
+			accepts = rightType.isSubtype(this);
 			
 			if( !accepts )
 				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
@@ -1079,6 +1076,7 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	private Map<MethodSignature, Integer> methodIndexCache;
+	
 	public int getMethodIndex( MethodSignature method )
 	{
 		// Lazily load cache
@@ -1207,7 +1205,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	public boolean encloses(Type type)
 	{
-		if( equals(type) )
+		if( getTypeWithoutTypeArguments().equals(type.getTypeWithoutTypeArguments()) )
 			return true;
 		
 		Type outer = type.getOuter();
@@ -1253,16 +1251,19 @@ public abstract class Type implements Comparable<Type> {
 						addReferencedType( typeParameter.getType() );
 			}
 			else if (!equals(type) &&  !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/) {		
-				if( type.isParameterized() ) {
+				if( type.isParameterizedIncludingOuterClasses() ) {
 					//if( type.isFullyInstantiated() )
 					//{				
 						referencedTypes.add(type);
 						referencedTypes.add(type.typeWithoutTypeArguments);
 						
+						if( !type.isFullyInstantiated() )
+							partiallyInstantiatedGenerics.add(type);
+						
 						if( !referenceRecursion )
 						{
 							referenceRecursion = true; //prevents rabbit hole recursion on type parameters								
-							for( ModifiedType typeParameter : type.getTypeParameters() )						
+							for( ModifiedType typeParameter : type.getTypeParametersIncludingOuterClasses() )						
 								addReferencedType( typeParameter.getType() );
 							
 							referenceRecursion = false;
@@ -1295,9 +1296,12 @@ public abstract class Type implements Comparable<Type> {
 		}
 	}
 
-	public Set<Type> getReferencedTypes()
-	{
+	public Set<Type> getReferencedTypes() {
 		return referencedTypes;
+	}
+	
+	public Set<Type> getPartiallyInstantiatedGenerics() {
+		return partiallyInstantiatedGenerics;
 	}
 
 	public boolean hasInterface(InterfaceType type)
@@ -1325,7 +1329,7 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	//must return an ArrayList to preserve order
-	//it is essentially that generic classes list their interfaces in the same order as each other
+	//it is essential that generic classes list their interfaces in the same order as each other
 	//otherwise the corresponding blocks of methods won't match
 	//the set is used to prevent duplicates
 	public ArrayList<InterfaceType> getAllInterfaces()
@@ -1367,8 +1371,8 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	public abstract boolean isSubtype(Type other);
-	public abstract Type replace(SequenceType values, SequenceType replacements ) throws InstantiationException;
-	public abstract Type partiallyReplace(SequenceType values, SequenceType replacements );
+	public abstract Type replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException;
+	public abstract Type partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements );
 	public abstract void updateFieldsAndMethods() throws InstantiationException;	
 	
 	public void addImportedItems( List<Object> items )
@@ -1396,7 +1400,7 @@ public abstract class Type implements Comparable<Type> {
 				if( importItem instanceof Type ) {
 					Type importType = (Type)importItem;
 					if( !importType.hasOuter() && getReferencedTypes().contains(importType) && !importType.getPackage().toString().equals("shadow:standard"))
-						imports.add(importType.getImportName());
+						imports.add(importType.toString(PACKAGES));
 						
 				}
 				else if( importItem instanceof Package )
@@ -1405,7 +1409,7 @@ public abstract class Type implements Comparable<Type> {
 					if( !importPackage.toString().equals("shadow:standard"))
 						for( Type referencedType : getReferencedTypes() )
 							if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
-								imports.add(referencedType.getImportName());					
+								imports.add(referencedType.toString(PACKAGES));					
 				}
 			}
 			
@@ -1413,7 +1417,7 @@ public abstract class Type implements Comparable<Type> {
 			if( !getPackage().toString().equals("shadow:standard") )
 				for( Type packageType : getPackage().getTypes() )
 					if( packageType != this && !packageType.hasOuter() && getReferencedTypes().contains(packageType) && !packageType.isPrimitive())
-						imports.add(packageType.getImportName());			
+						imports.add(packageType.toString(PACKAGES));			
 			
 			for( String importType : imports )			
 				out.println(linePrefix + "import " + importType + ";");
@@ -1423,6 +1427,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 	}	
 	
+	/*
 	protected final void printGenerics(PrintWriter out, String indent ) {
 		out.println(indent + "// Generics");
 		
@@ -1430,13 +1435,15 @@ public abstract class Type implements Comparable<Type> {
 		
 		for( Type type : getReferencedTypes() ) {		
 			if( type.isParameterizedIncludingOuterClasses() ) {		
-				if( type.isFullyInstantiated() )						
+				if( type.isFullyInstantiated() || (this.isParameterized() && type.containsTypeArguments(this.getTypeParameters()) ) )						
 					out.println(indent + "import " + type.getQualifiedName() + ";");
 			}			
 			else if( type instanceof ArrayType )
 				out.println(indent + "import " + type.getQualifiedName() + ";");
 		}
 	}
+	*/
+
 	
 	public void clearInstantiatedTypes() {
 		if( instantiatedTypes.children != null ) {
@@ -1447,12 +1454,70 @@ public abstract class Type implements Comparable<Type> {
 		instantiatedTypes.instantiatedType = null;
 	}
 	
-	public void addGenericDeclaration(Type type) {
-		genericDeclarations.add(type);
+	public Set<Type> getGenericClasses() {
+		return genericClasses;
 	}
 	
-	public List<Type> getGenericDeclarations() {
-		return genericDeclarations;
+	public Set<ArrayType> getArrayClasses() {
+		return arrayClasses;
+	}	
+	
+	public void addGenericClass(Type type) {
+		if( type instanceof TypeParameter ) {
+			TypeParameter parameter = (TypeParameter) type;
+			for( Type bound : parameter.getBounds() )
+				if( bound.isFullyInstantiated() ) {
+					if( bound instanceof ArrayType ) {
+						addArrayClass((ArrayType)bound);
+						addGenericClass(((ArrayType)bound).convertToGeneric());
+					}
+					else
+						addGenericClass(bound);
+				}					
+		}		
+		else if( type.isParameterizedIncludingOuterClasses() )
+			//tricky short-circuit logic only adds type to the set if it is fully instantiated
+			if( !type.isFullyInstantiated() || genericClasses.add(type) ) {					
+				if( type instanceof ClassType ) {
+					ClassType classType = (ClassType) type;
+					if( classType.getExtendType() != null )
+						addGenericClass( classType.getExtendType() );
+				}
+				
+				for( Type interfaceType : type.getInterfaces() )					
+						addGenericClass( interfaceType );
+				
+				for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() ) {
+					Type parameterType = parameter.getType();				
+					if( parameterType instanceof ArrayType )
+						addArrayClass((ArrayType)parameterType);
+					else 
+						addGenericClass( parameterType );
+				}
+				
+				if( getOuter() != null )
+					getOuter().addGenericClass(type);			
+			}
+	}
+	
+	public void addArrayClass(ArrayType type) {
+		boolean addBaseClass = true;
+		if( type.isFullyInstantiated() || !type.isParameterizedIncludingOuterClasses() ) 
+			addBaseClass = arrayClasses.add(type); //sets to false if already added 
+		
+		if( addBaseClass ) {
+			addGenericClass(type.convertToGeneric());
+			Type baseType = type.getBaseType();			
+			if( baseType instanceof ArrayType ) {
+				addArrayClass((ArrayType)baseType);
+				addGenericClass(((ArrayType)baseType).convertToGeneric());
+			}
+			else 
+				addGenericClass( baseType );
+			
+			if( getOuter() != null )
+				getOuter().addArrayClass(type);
+		}
 	}
 	
 	public boolean hasDocumentation()

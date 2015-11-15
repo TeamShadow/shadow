@@ -1,0 +1,9 @@
+import shadow:io@Console;
+
+class shadow:test@SimpleTest
+{
+	public main() => ()
+	{
+		Console.printLine("Hello, world!");		
+	}
+}
