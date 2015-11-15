@@ -204,6 +204,11 @@ immutable class shadow:standard@Class
 
 	public locked get size() => ( int )
 	{
+		return size;				
+	}
+	
+	public locked get width() => ( int )
+	{		
 		if( isArray() ) //actual size member is # of dimensions		
 			return pointerSize() + 4 * size;		
 		else if( isMethod() )		
@@ -227,20 +232,7 @@ immutable class shadow:standard@Class
 			else
 				return 8; 
 		}
-		else
-			return size;			
-	}
-	
-	public locked get sizeValue() => (int)
-	{
-		return size;
-	}
-	
-	public locked get width() => ( int )
-	{		
-		if( isArray() or isMethod() or isPrimitive() or isInterface() )							
-			return this.size();
-		else		
+		else					
 			return pointerSize();		
 	}
 	

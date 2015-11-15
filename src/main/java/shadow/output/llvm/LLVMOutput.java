@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import shadow.CompileException;
 import shadow.interpreter.ShadowBoolean;
 import shadow.interpreter.ShadowCode;
 import shadow.interpreter.ShadowDouble;
@@ -167,35 +166,6 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("%double = type double");
 		writer.write();	
 	}
-	
-	private void writeTypeOpaque(Type type) throws ShadowException
-	{
-		StringBuilder sb = new StringBuilder();
-		
-		if( type instanceof InterfaceType )
-		{
-			if( type.isFullyInstantiated() )
-				sb.append('%').append(withGenerics(type, "_methods")).append(" = type opaque");
-			else if( type.isUninstantiated() )
-				sb.append('%').append(raw(type, "_methods")).append(" = type opaque");
-			
-			writer.write(sb.toString());
-		}
-		else if (type instanceof ClassType)
-		{	
-			if( type.isUninstantiated() )
-			{
-				sb.append('%').append(raw(type, "_methods")).append(" = type opaque");
-								
-				sb.setLength(0);
-				//first thing in every object is the class			
-				sb.append('%').append(raw(type)).append(" = type opaque");
-		
-				writer.write(sb.toString());
-			}
-		}	
-	}
-	
 	
 	private void writeTypeDeclaration(Type type) throws ShadowException
 	{

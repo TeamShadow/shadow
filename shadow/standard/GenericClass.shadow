@@ -5,7 +5,7 @@ immutable class shadow:standard@
 	
 	public create(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters )
 	{
-		this(name, base->flags | Class:GENERIC, base->sizeValue, parent, interfaces, base->data, parameters);		
+		this(name, base->flags | Class:GENERIC, base->size, parent, interfaces, base->data, parameters);		
 	}
 	
 	protected create(String name, int flags, int size, nullable Class parent, immutable Class[] interfaces, immutable Object[] data, immutable Object[] parameters )

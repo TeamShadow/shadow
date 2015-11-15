@@ -316,7 +316,7 @@ locked class shadow:standard@ClassSet
 				if( current->hash == hash )
 				{
 					Class other = current->value;					
-					if( other->sizeValue == dimensions and other->parent === base and (other->flags & Class:ARRAY) != 0)
+					if( other->size == dimensions and other->parent === base and (other->flags & Class:ARRAY) != 0)
 						return other;
 				}
 				current = check(current->next);
