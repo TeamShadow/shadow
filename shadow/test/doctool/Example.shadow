@@ -1,0 +1,59 @@
+import shadow:io@File;
+import tier1A@Dummy;
+import tier1A@TestInterfaceA;
+import tier1A@TestInterfaceB;
+
+/** A class to test/demonstrate the documentation tool */
+class Example<T, U is Dummy and TestInterfaceA and TestInterfaceB> 
+        extends Dummy implements TestInterfaceA, TestInterfaceB
+{
+    /// Documenting public/protected inner classes
+    /// should be possible
+    public class Inner
+    {
+        /**
+         * Documenting their methods should also
+         * be possible
+         */
+        public innerMethod(Dummy dummy) => ()
+        {
+
+        }
+    }
+
+    /// Certain types of constants should be visible
+    public constant String testConstant = "Placeholder";
+    protected constant int protectedConstant = 13;
+    private constant code privateConstant = 'R';
+
+    /// Under normal circumstances, documentation for fields
+    /// will not be made visible
+    int a;
+    Dummy dummy;
+
+    /**
+     * The most crucial method that ever was.
+     * {@code this is an example of the code tag} 
+     *
+     * @author Author #1, Author #2, Author #3
+     */
+    public test(readonly String a, int b) => (int a, String b)
+    {
+        return (4, "Hello");
+    }
+
+    /**
+     * Another example method. This sentence takes place after the summary.
+     *
+     * @param value Testing the param directive
+     */
+    protected secondTest(int value) => (File file)
+    {
+        // Incomplete methods should be documentable
+    }
+
+    public foo(String string) => ()
+    {
+
+    }
+}

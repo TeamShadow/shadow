@@ -1,0 +1,4 @@
+interface tier1A:tier2A@InterfaceExample
+{
+
+}

@@ -1,0 +1,139 @@
+html 
+{ 
+    height: 100%; 
+    width: 100%; 
+    margin: 0; 
+    padding: 0;
+}
+
+body 
+{
+    width: 100%; 
+    height: 100%; 
+    margin: 0; 
+    padding: 0; 
+    min-width: 60em; 
+    font-family: Verdana, Helvetica, Arial, sans-serif;
+}
+
+h4
+{
+    margin: 10px 0px 4px;
+}
+
+table, th, td
+{
+    border: 1px solid black;
+    background-color: white;
+}
+
+th, td
+{
+    padding: 2px 8px;
+}
+
+table
+{
+    border-collapse: collapse;
+}
+
+code
+{
+    font-size: 16px;
+}
+
+.header
+{
+	margin: 0px 8px;
+}
+
+.header p
+{
+    margin: 4px 0px;
+}
+
+.header h2
+{
+    margin: 10px 0px 22px;
+}
+
+.header h4
+{
+    margin: 22px 0px 4px;
+}
+
+.block
+{
+    border: 1px solid gray;
+    background-color: #EEEEEF;
+    padding: 0px 8px 8px 8px;
+    margin: 8px;
+}
+
+.block h3
+{
+    margin: 15px 0px;
+    font-size: 26px;
+}
+
+.block p 
+{
+    font-size: 20px;
+    margin: 10px 0px 0px;
+}
+
+.block code.inline
+{
+    font-size: 18px;
+}
+
+.methoddetail
+{
+    border: 1px solid black;
+    background-color: white;
+    padding: 0px 8px 8px;
+    margin: 0px 0px 8px;
+}
+
+.methoddetail h4
+{
+    margin: 10px 0px;
+    font-size: 22px;
+}
+
+.methoddetail h5
+{
+    margin: 14px 0px 10px;
+}
+
+.blocktagcontent
+{
+    margin: 0px 0px 0px 16px;
+}
+
+.navlist
+{
+    border: 1px solid gray;
+    background-color: lightgray;
+    margin-bottom: 10px;
+}
+
+.navlist ul
+{
+	float: left;
+    margin: 4px;
+    padding: 0px;
+}
+
+.navlist li
+{
+    display: inline;
+    padding-right: 6px;
+}
+
+.navlist span
+{
+	float: right;
+	padding-right: 0px;
+	margin: 4px;
+}

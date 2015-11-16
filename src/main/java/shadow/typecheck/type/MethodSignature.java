@@ -3,6 +3,7 @@ package shadow.typecheck.type;
 import java.util.Collections;
 import java.util.List;
 
+import shadow.doctool.Documentation;
 import shadow.parser.javacc.SignatureNode;
 
 public class MethodSignature implements Comparable<MethodSignature> {
@@ -13,7 +14,8 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private MethodSignature signatureWithoutTypeArguments;
 	private Type outer;
 
-	private MethodSignature(MethodType type, String symbol, Type outer, SignatureNode node, MethodSignature wrapped) {
+	private MethodSignature(MethodType type, String symbol, Type outer, SignatureNode node, MethodSignature wrapped) 
+	{
 		this.type = type;
 		this.symbol = symbol;
 		this.node = node;
@@ -21,16 +23,19 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		this.outer = outer;
 		signatureWithoutTypeArguments = this;
 	}
-
-	public MethodSignature(MethodType type, String symbol, Type outer, SignatureNode node) {
+	public MethodSignature(MethodType type, String symbol, Type outer, SignatureNode node) 
+	{
 		this(type, symbol, outer, node, null);
 	}
 	
-	public MethodSignature(Type enclosingType, String symbol, Modifiers modifiers, SignatureNode node) {		
-		this(new MethodType(enclosingType, modifiers), symbol, enclosingType, node);
+	public MethodSignature(Type enclosingType, String symbol, 
+			Modifiers modifiers, Documentation documentation, SignatureNode node) 
+	{		
+		this(new MethodType(enclosingType, modifiers, documentation), symbol, enclosingType, node);
 	}
 	
-	public void addParameter(String name, ModifiedType node) {
+	public void addParameter(String name, ModifiedType node) 
+	{
 		this.type.addParameter(name, node);
 	}
 	
@@ -297,7 +302,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return wrapped;
 	}
 
-	
 	public MethodSignature wrap(MethodSignature wrapped) {		
 		Modifiers modifiers = new Modifiers(wrapped.getModifiers().getModifiers());
 		modifiers.removeModifier(Modifiers.NATIVE);		
@@ -320,6 +324,14 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		this.outer = outer;
 	}
 
-
+	public boolean hasDocumentation()
+	{
+		return type.hasDocumentation();
+	}
+	
+	public Documentation getDocumentation()
+	{
+		return type.getDocumentation();
+	}
 
 }

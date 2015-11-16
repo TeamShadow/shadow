@@ -8,16 +8,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
-import shadow.Job;
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
+import shadow.doctool.Documentation;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
@@ -54,14 +56,15 @@ public class TypeCollector extends BaseChecker {
 	private Map<String, Node> files = new HashMap<String, Node>();	
 	private File currentFile;
 	private Type mainType = null;
-	private Job currentJob;
+	private Set<Type> initialFileTypes = new TreeSet<Type>();
 	private Configuration config;
+	private boolean useSourceFiles;
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, Job currentJob) throws ConfigurationException {		
+	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, boolean useSourceFiles) throws ConfigurationException {		
 		super(typeTable, importList, p);
-		this.currentJob = currentJob;
+		this.useSourceFiles = useSourceFiles;
 		config = Configuration.getConfiguration();
 	}	
 	
@@ -72,24 +75,61 @@ public class TypeCollector extends BaseChecker {
 	public Type getMainType() {
 		return mainType;
 	}
+	
+	/** 
+	 * @return	The set of Types stemming directly from the provided source 
+	 * 			files. Mainly useful for documentation purposes
+	 */
+	public Set<Type> getInitialFileTypes() {
+		return initialFileTypes;
+	}
 		
-	public Map<Type, Node> collectTypes(File mainFile) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {			
-		//Create walker
-		ASTWalker walker = new ASTWalker( this );		
-		TreeSet<String> uncheckedFiles = new TreeSet<String>();
-		String main = stripExtension(mainFile.getCanonicalPath());
-		mainFile = mainFile.getCanonicalFile();
-		boolean forceGenerate = currentJob.isForceRecompile();
-		//add file to be checked to list
-		uncheckedFiles.add(main);
-		
-		FilenameFilter filter = new FilenameFilter()
-		{
-			public boolean accept(File dir, String name)
-			{
-				return name.endsWith(".shadow");
-			}
-		};
+    /** Proxy for calling collectTypes() with one main file */
+    public Map<Type, Node> collectTypes(File mainFile) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
+    {
+        List<File> initialFiles = new ArrayList<File>();
+        initialFiles.add(mainFile);
+        return collectTypes(initialFiles, true);
+    }
+   
+    /** Proxy for calling collectTypes with multiple, non-main files */
+    public Map<Type, Node> collectTypes(List<File> initialFiles) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
+    {
+        return collectTypes(initialFiles, false);
+    }
+   
+    private Map<Type, Node> collectTypes(List<File> initialFiles, boolean hasMain) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException
+    {
+        // Keep track of the initial files (as canonical paths) so that their
+        // resulting types may be linked back to them
+        HashSet<String> initialFilesCanonical = new HashSet<String>();
+        
+        // Create and fill the initial set of files to be checked
+        TreeSet<String> uncheckedFiles = new TreeSet<String>();
+        String main = null; // May or may not be null, based on hasMain
+        if (initialFiles.isEmpty()) {
+            throw new ConfigurationException("No files provided for typechecking");
+        } else if (hasMain) {
+            // Assume the main file is the first and only file
+            main = stripExtension(initialFiles.get(0).getCanonicalPath());
+            uncheckedFiles.add(main);
+        } else {
+            for (File file : initialFiles) {
+            	String path = stripExtension(file.getCanonicalPath());
+            	uncheckedFiles.add(path);
+            	initialFilesCanonical.add(path);
+            }
+        }
+        
+        ASTWalker walker = new ASTWalker( this );
+       
+        FilenameFilter filter = new FilenameFilter()
+        {
+            public boolean accept(File dir, String name)
+            {
+                return name.endsWith(".shadow");
+            }
+        };
 				
 		//add standard imports		
 		File standard = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "standard" );
@@ -122,32 +162,48 @@ public class TypeCollector extends BaseChecker {
 		{			
 			String canonical = uncheckedFiles.first();
 			uncheckedFiles.remove(canonical);	
-							
+			
 			File canonicalFile = new File(canonical + ".shadow");
-			if( canonicalFile.exists() ) {											
-				File meta = new File( canonical + ".meta" );
-				File llvm = new File( canonical + ".ll" );
-				if( !forceGenerate &&
+			
+			// Depending on the circumstances, the compiler may choose to either
+			// compile/recompile source files, or rely on existing binaries
+			if (canonicalFile.exists()) {											
+				File meta = new File(canonical + ".meta");
+				File llvm = new File(canonical + ".ll");
+				
+				// If source compilation was not requested and the binaries exist
+				// that are newer than the source, use those binaries
+				if (!useSourceFiles &&
 					meta.exists() && meta.lastModified() >= canonicalFile.lastModified() &&
 					llvm.exists() && llvm.lastModified() >= meta.lastModified() &&
-					!canonicalFile.equals(mainFile) )//check for more recent .meta file
+					!canonical.equals(main)) {
 					canonicalFile = meta;
-			}
-			else		
+				}
+			} else if (!useSourceFiles) {
 				canonicalFile  = new File(canonical + ".meta");		
+			}
+			
+			// TODO: Should a final check occur that fails if the canonical file
+			// cannot be found, or is this handled elegantly elsewhere?
 			
 			ShadowParser parser = new ShadowFileParser(canonicalFile);				
 			currentFile = canonicalFile;
 		    Node node = parser.CompilationUnit();
 		    		    
 		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), currentJob);
+			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), useSourceFiles);
 			collector.currentFile = currentFile; //for now, so that we have a file whose directory we can check
 			walker = new ASTWalker( collector );		
 			walker.walk(node);	
 			
 			if( canonical.equals(main) )
 				mainType = node.getType();
+			
+			// Associate resulting types with the initial files.
+			// A null Type indicates a prior error, but adding it to the list 
+			// will cause its own exception and should not be done
+			if (node.getType() != null && initialFilesCanonical.contains(canonical))
+				initialFileTypes.add(node.getType());
 			
 			files.put(canonical, node);
 			
@@ -251,7 +307,8 @@ public class TypeCollector extends BaseChecker {
 			checkPackageDirectories(child);
 	}
 
-	private Object createType( SimpleNode node, Modifiers modifiers, TypeKind kind ) throws ShadowException
+	private Object createType(SimpleNode node, Modifiers modifiers, 
+			Documentation documentation, TypeKind kind) throws ShadowException
 	{		 
 		String typeName;
 		
@@ -338,19 +395,20 @@ public class TypeCollector extends BaseChecker {
 			switch( kind )
 			{			
 			case CLASS:
-				type = new ClassType(image, modifiers, currentType );				
+				type = new ClassType(image, modifiers, documentation, currentType );				
 				break;
 			case ENUM:				
-				type = new EnumType(image, modifiers, currentType );
+				type = new EnumType(image, modifiers, documentation, currentType );
 				break;			
 			case EXCEPTION:
-				type = new ExceptionType(image, modifiers, currentType );
+				type = new ExceptionType(image, modifiers, documentation, currentType );
 				break;
 			case INTERFACE:
-				type = new InterfaceType(image, modifiers);
+				type = new InterfaceType(image, modifiers, documentation);
 				break;
+
 			case SINGLETON:
-				type = new SingletonType(image, modifiers, currentType );
+				type = new SingletonType(image, modifiers, documentation, currentType );
 				break;
 			default:
 				throw new ShadowException("Unsupported type!" );
@@ -600,7 +658,8 @@ public class TypeCollector extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		}
 		else
-			return createType( node, node.getModifiers(), node.getKind() );
+			return createType(node, node.getModifiers(), 
+					node.getDocumentation(), node.getKind());
 	}
 	
 	@Override
@@ -611,7 +670,8 @@ public class TypeCollector extends BaseChecker {
 			return WalkType.POST_CHILDREN;
 		}
 		else
-			return createType( node, node.getModifiers(), TypeKind.ENUM );
+			return createType(node, node.getModifiers(),
+					node.getDocumentation(), TypeKind.ENUM);
 	}	
 
 	@Override

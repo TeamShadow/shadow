@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import shadow.ConfigurationException;
-import shadow.Job;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
@@ -23,21 +22,22 @@ public class TypeChecker {
 	/**
 	 * Given the main file to compile, checks it
 	 * @param file the file to compile
-	 * @param currentJob configuration information about the current compilation
+	 * @param useSourceFiles Specifies that source files should be recompiled, if possible
+	 * 
 	 * @return nodes corresponding to all the AST nodes for each class
 	 * @throws ShadowException
 	 * @throws ParseException 
 	 * @throws IOException 
 	 * @throws ConfigurationException 
 	 */
-	public List<Node> typeCheck(File file, Job currentJob) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
+	public List<Node> typeCheck(File file, boolean useSourceFiles) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
 	{		
 		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
 		Package packageTree = new Package(typeTable);
 		ArrayList<String> importList = new ArrayList<String>();
 		
 		//collector looks over all files and creates types for everything needed
-		TypeCollector collector = new TypeCollector(typeTable, importList, packageTree, currentJob);
+		TypeCollector collector = new TypeCollector(typeTable, importList, packageTree, useSourceFiles);
 		//return value is the top node for the class we are compiling		
 		Map<Type, Node> nodeTable = collector.collectTypes( file );
 		Type mainType = collector.getMainType();
@@ -146,7 +146,7 @@ public class TypeChecker {
 		}
 	}
 	
-	private void addStandardTypes(Set<Type> types) {
+	protected void addStandardTypes(Set<Type> types) {
 		Package standard = Type.OBJECT.getPackage();
 		types.addAll(standard.getTypes());		
 		

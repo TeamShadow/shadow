@@ -10,8 +10,9 @@ public class TypeParameter extends Type {
 	private Set<Type> bounds = new HashSet<Type>();	
 	private boolean toStringRecursion = false; //keeps type parameters that have bounds containing themselves from infinitely recursing
 
-	public TypeParameter(String typeName, Type outer) {
-		super(typeName, new Modifiers(), outer);
+	public TypeParameter(String typeName, Type outer)
+	{
+		super(typeName, new Modifiers(), null, outer);
 		bounds.add(Type.OBJECT);
 	}
 	

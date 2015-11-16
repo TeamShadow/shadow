@@ -99,9 +99,9 @@ public class StatementChecker extends BaseChecker {
 			if( node instanceof ASTLocalMethodDeclaration || /*node instanceof ASTInlineMethodDeclaration ||*/ node instanceof ASTInlineMethodDefinition )
 			{	
 				if( node instanceof ASTInlineMethodDefinition )
-					signature = new MethodSignature( currentType, "", node.getModifiers(), node);
+					signature = new MethodSignature( currentType, "", node.getModifiers(), node.getDocumentation(), node);
 				else
-					signature = new MethodSignature( currentType, node.jjtGetChild(0).getImage(), node.getModifiers(), node);
+					signature = new MethodSignature( currentType, node.jjtGetChild(0).getImage(), node.getModifiers(), node.getDocumentation(), node);
 				node.setMethodSignature(signature);
 				MethodType methodType = signature.getMethodType();
 

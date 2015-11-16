@@ -12,14 +12,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import shadow.doctool.Documentation;
 import shadow.parser.javacc.ASTAssignmentOperator;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
-import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.Package;
+import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.TypeCheckException.Error;
 
 /**
  * A representation of a Shadow type.
@@ -31,7 +32,8 @@ public abstract class Type implements Comparable<Type> {
 	private Package _package;
 	private SequenceType typeParameters = null;	
 	private boolean parameterized = false;
-	protected Type typeWithoutTypeArguments = this;	
+	protected Type typeWithoutTypeArguments = this;
+	private Documentation documentation = null;
 	
 	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();	
 		
@@ -89,8 +91,8 @@ public abstract class Type implements Comparable<Type> {
 	public static ClassType ADDRESS_MAP = null; //used for copying
 	public static ClassType CLASS_SET = null;	//used to store generic Class objects
 	
-	public static final ClassType UNKNOWN = new ClassType( "Unknown Type", new Modifiers(), null); //UNKNOWN type used for placeholder when typechecking goes wrong
-	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null);
+	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
+	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
 	public static final VarType VAR = new VarType(); //VAR type used for placeholder for variables declared with var, until type is known
 	
 	
@@ -239,21 +241,35 @@ public abstract class Type implements Comparable<Type> {
 	 * Constructors
 	 */
 	
-	public Type(String typeName) {
-		this( typeName, new Modifiers() );
+	public Type(String typeName) 
+	{
+		this(typeName, new Modifiers());
 	}
 	
-	public Type(String typeName, Modifiers modifiers) {
-		this( typeName, modifiers, null );
-	}	
+	public Type(String typeName, Modifiers modifiers) 
+	{
+		this(typeName, modifiers, null);
+	}
+	
+	public Type(String typeName, Modifiers modifiers,
+			Documentation documentation)
+	{
+		this(typeName, modifiers, documentation, null);
+	}
 
-	public Type(String typeName, Modifiers modifiers, Type outer) {
-		this( typeName, modifiers, outer, (outer == null ? null : outer._package ) );
+	public Type(String typeName, Modifiers modifiers, 
+			Documentation documentation, Type outer) 
+	{
+		this(typeName, modifiers, documentation, outer,
+				(outer == null ? null : outer._package));
 	}
 	
-	public Type(String typeName, Modifiers modifiers, Type outer, Package _package ) {
-		this.typeName = typeName;	
+	public Type(String typeName, Modifiers modifiers, 
+			Documentation documentation, Type outer, Package _package)
+	{
+		this.typeName = typeName;
 		this.modifiers = modifiers;
+		this.documentation = documentation;
 		this.outer = outer;		
 		this._package = _package;
 	}
@@ -424,8 +440,8 @@ public abstract class Type implements Comparable<Type> {
 		{
 			if( type == this )
 				return true;
-						
-			if( type.getPackage() == getPackage() && type.getTypeName().equals(getTypeName()) )
+			
+			if( getPackage() == type.getPackage() && type.getTypeName().equals(getTypeName()) )
 			{				
 				if( isParameterizedIncludingOuterClasses() )
 				{
@@ -762,11 +778,23 @@ public abstract class Type implements Comparable<Type> {
 			BaseChecker.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context", arguments);
 		
 		return candidate;
-	}	
+	}
 	
 	public Package getPackage()
 	{
 		return _package;
+	}
+	
+	public List<Package> getAllPackages()
+	{
+		List<Package> packages = new ArrayList<Package>();
+		Package current = _package;
+		while (current != null) {
+			packages.add(current);
+			current = current.getParent();
+		}
+		
+		return packages;
 	}
 	
 	public void setPackage(Package p)
@@ -1490,5 +1518,15 @@ public abstract class Type implements Comparable<Type> {
 			if( getOuter() != null )
 				getOuter().addArrayClass(type);
 		}
+	}
+	
+	public boolean hasDocumentation()
+	{
+		return (documentation != null);
+	}
+	
+	public Documentation getDocumentation()
+	{
+		return documentation;
 	}
 }
