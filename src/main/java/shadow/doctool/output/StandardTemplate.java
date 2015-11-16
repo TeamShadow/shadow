@@ -212,7 +212,7 @@ public class StandardTemplate extends DocumentationTemplate
 	/** Returns true if documentation can safely continue 
 	 * @throws DocumentationException */
 	private void readArguments() throws DocumentationException
-	{
+	{		
 		for (String arg : arguments.keySet())
 			if (!validArgs.contains(arg))
 				throw new DocumentationException("Unrecognized option: \"" + arg + "\"");

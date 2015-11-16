@@ -64,7 +64,7 @@ public class ClassOrInterfacePage extends Page
 		else if (type instanceof SingletonType)
 			typeKind = "Singleton";
 		else
-			throw new DocumentationException("Unexpected type: " + type.getQualifiedName());
+			throw new DocumentationException("Unexpected type: " + type.toString(Type.PACKAGES | Type.TYPE_PARAMETERS));
 		
 		this.type = type;
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
@@ -228,7 +228,7 @@ public class ClassOrInterfacePage extends Page
 		if (type.hasOuter()) {
 			out.fullLine("h4", "Outer class");
 			out.open("p");
-			writeCrossLink(type.getOuter(), type.getOuter().getQualifiedName(), out);
+			writeCrossLink(type.getOuter(), type.getOuter().toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
 			out.closeLine();
 		}
 		
@@ -244,7 +244,7 @@ public class ClassOrInterfacePage extends Page
 					out.add(", ");
 				
 				// List the name, optionally attempting a link
-				writeCrossLink(current, current.getQualifiedName(), out);
+				writeCrossLink(current, current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
 				i++;
 			}
 			out.closeLine();
@@ -276,7 +276,7 @@ public class ClassOrInterfacePage extends Page
 				
 				// List the name, optionally attempting a link
 				Type current = extendsList.get(i);
-				writeCrossLink(current, current.getQualifiedName(), out);
+				writeCrossLink(current, current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
 			}
 			out.closeLine();
 		}
@@ -290,7 +290,7 @@ public class ClassOrInterfacePage extends Page
 				
 				// List the name, optionally attempting a link
 				Type current = implementsList.get(i);
-				writeCrossLink(current, current.getQualifiedName(), out);
+				writeCrossLink(current, current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
 			}
 			out.closeLine();
 		}
@@ -492,7 +492,7 @@ public class ClassOrInterfacePage extends Page
 			ModifiedType parameter = method.getParameterTypes().get(i);
 			out.add(parameter.getModifiers().toString());
 			writeCrossLink(parameter.getType(),
-					parameter.getType().getQualifiedName(), out);
+					parameter.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
 			out.add(" " + method.getParameterNames().get(i));
 		}
 		out.add(")");
