@@ -46,7 +46,7 @@ public class DocumentationTest
 			args.add("mac.xml");
 		}
 		
-		args.add("-o");
+		args.add("-d");
 		args.add(outputDirectory.toString());
 	}
 	

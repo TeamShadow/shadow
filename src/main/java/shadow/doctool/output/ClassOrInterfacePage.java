@@ -358,7 +358,7 @@ public class ClassOrInterfacePage extends Page
 					out.full("code", method.getModifiers().toString().trim());
 				out.closeLine();
 				out.open("td");
-					out.full("code", method.getReturnTypes().toString());
+					out.full("code", method.getReturnTypes().toString( Type.TYPE_PARAMETERS ));
 				out.closeLine();
 				out.open("td");
 					out.open("code");
@@ -487,12 +487,12 @@ public class ClassOrInterfacePage extends Page
 		for (int i = 0; i < parameterCount; ++i)
 		{
 			if (i != 0)
-				out.add(". ");
+				out.add(", ");
 			
 			ModifiedType parameter = method.getParameterTypes().get(i);
 			out.add(parameter.getModifiers().toString());
 			writeCrossLink(parameter.getType(),
-					parameter.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
+					parameter.getType().toString(Type.TYPE_PARAMETERS), out);
 			out.add(" " + method.getParameterNames().get(i));
 		}
 		out.add(")");
