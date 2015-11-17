@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
@@ -70,11 +71,8 @@ public class ClassOrInterfacePage extends Page
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
 		this.relativePath = constructOutputPath().resolve(type.getTypeName().replaceAll(":", "\\$") + EXTENSION);
 		
-		// The qualified name should not contain type parameters
-		String pkg = type.getPackage().getQualifiedName();
-		if (pkg.isEmpty())
-			pkg = "default";
-		this.qualifiedName = pkg + "@" + type.getTypeName();
+		// The qualified name should not contain type parameters		
+		this.qualifiedName = type.toString(Type.PACKAGES);
 		
 		getVisibleMethods();
 		getVisibleConstants();
@@ -172,10 +170,12 @@ public class ClassOrInterfacePage extends Page
 		out.voidLine("hr");
 		
 		// Full, "in code" declaration
-		out.open("code");
-		out.add(type.getModifiers().toString() + typeKind.toLowerCase()
-				+ " " + type.getTypeName());
-		writeTypeParameters(type, true, out);
+		out.open("p");
+			out.open("code");
+			out.add(type.getModifiers().toString() + typeKind.toLowerCase()
+					+ " " + type.getTypeName());
+			writeTypeParameters(type, true, out);
+			out.close();
 		out.closeLine();
 		
 		// Documentation text
@@ -233,8 +233,13 @@ public class ClassOrInterfacePage extends Page
 		}
 		
 		if (type instanceof ClassType) {
-			Collection<ClassType> innerClasses 
-					= ((ClassType)type).getInnerClasses().values();
+			TreeSet<ClassType> innerClasses = new TreeSet<ClassType>();
+			for( ClassType current : ((ClassType)type).getInnerClasses().values() ) {
+				if( !current.getModifiers().isPrivate() )
+					innerClasses.add(current);
+			}			
+			
+			
 			if (!innerClasses.isEmpty())
 				out.fullLine("h4", "Visible inner classes");
 			out.open("p");
@@ -253,43 +258,32 @@ public class ClassOrInterfacePage extends Page
 
 	private void writeInheritanceSection(HtmlWriter out) 
 			throws ShadowException, DocumentationException
-	{
-		List<Type> extendsList = new ArrayList<Type>();
-		List<Type> implementsList = new ArrayList<Type>();
+	{		
+		List<Type> interfaceList = new ArrayList<Type>();
+		interfaceList.addAll(type.getInterfaces());
+		
+		Type extendType = null;
 
 		// TODO: Should getAllInterfaces() be used here?
-		if (type instanceof InterfaceType) {
-			extendsList.addAll(type.getInterfaces());
-		} else {
-			Type extendType = ((ClassType)type).getExtendType();
-			if (extendType != null)
-				extendsList.add(extendType);
-			implementsList.addAll(type.getInterfaces());
-		}
+		if (type instanceof ClassType)	
+			extendType = ((ClassType)type).getExtendType();
 		
-		if (extendsList.size() > 0) {
-			out.fullLine("h4", "Extends");
-			out.open("p");
-			for (int i = 0; i < extendsList.size(); ++i) {
-				if (i > 0)
-					out.add(", ");
-				
-				// List the name, optionally attempting a link
-				Type current = extendsList.get(i);
-				writeCrossLink(current, current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
-			}
+		if (extendType != null) {			
+			out.fullLine("h4", "Parent class");
+			out.open("p");			
+			writeCrossLink(extendType, extendType.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
 			out.closeLine();
 		}
 		
-		if (implementsList.size() > 0) {
-			out.fullLine("h4", "Implements");
+		if (interfaceList.size() > 0) {
+			out.fullLine("h4", "Interfaces");
 			out.open("p");
-			for (int i = 0; i < implementsList.size(); ++i) {
+			for (int i = 0; i < interfaceList.size(); ++i) {
 				if (i > 0)
 					out.add(", ");
 				
 				// List the name, optionally attempting a link
-				Type current = implementsList.get(i);
+				Type current = interfaceList.get(i);
 				writeCrossLink(current, current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
 			}
 			out.closeLine();
@@ -306,13 +300,20 @@ public class ClassOrInterfacePage extends Page
 			
 			writeTableRow(out, true, "Modifiers", "Type", 
 					"Name and Description");
+			boolean shaded = false;
 			for (Node constant : visibleConstants) {
-				out.openTab("tr");
+				if( shaded )
+					out.openTab("tr", new Attribute("class", "shaded"));
+				else
+					out.openTab("tr");
 					out.open("td");
 						out.full("code", constant.getModifiers().toString().trim());
 					out.closeLine();
 					out.open("td");
-						out.full("code", constant.getType().getTypeName());
+						out.open("code");
+						writeCrossLink(constant.getType(),
+								constant.getType().toString(Type.TYPE_PARAMETERS), out);	
+						out.close();
 					out.closeLine();
 					out.open("td");
 						out.open("code");
@@ -322,6 +323,7 @@ public class ClassOrInterfacePage extends Page
 							writeInlineTags(constant.getDocumentation().getSummary(), out);
 					out.closeLine();
 				out.closeUntab();
+				shaded = !shaded;
 			}
 			
 			out.closeUntab();
@@ -352,13 +354,19 @@ public class ClassOrInterfacePage extends Page
 		
 		writeTableRow(out, true, "Modifiers", "Return Type", 
 				"Method and Description");
+		boolean shaded = false;
 		for (MethodSignature method : methods) {
-			out.openTab("tr");
+			if( shaded )
+				out.openTab("tr", new Attribute("class", "shaded"));
+			else
+				out.openTab("tr");			
 				out.open("td");
 					out.full("code", method.getModifiers().toString().trim());
 				out.closeLine();
 				out.open("td");
-					out.full("code", method.getReturnTypes().toString( Type.TYPE_PARAMETERS ));
+					out.open("code");
+						writeReturns(method, out);
+					out.close();
 				out.closeLine();
 				out.open("td");
 					out.open("code");
@@ -369,6 +377,7 @@ public class ClassOrInterfacePage extends Page
 						writeInlineTags(method.getDocumentation().getSummary(), out);
 				out.closeLine();
 			out.closeUntab();
+			shaded = !shaded;
 		}
 		
 		out.closeUntab();
@@ -398,8 +407,9 @@ public class ClassOrInterfacePage extends Page
 				new Attribute("id", constant.toString()));
 		
 		out.open("code");
-		out.add(constant.getModifiers().toString().trim() + " "
-				+ constant.toString());
+		out.add(constant.getModifiers().toString().trim() + " ");
+		writeCrossLink(constant.getType(), constant.getType().toString(Type.TYPE_PARAMETERS), out);
+		out.add(" "	+ constant.toString());
 		out.closeLine();
 		
 		// Documentation text
@@ -449,7 +459,8 @@ public class ClassOrInterfacePage extends Page
 		out.add(method.getModifiers().toString().trim() + " "
 				+ method.getSymbol());
 		writeParameters(method, out);
-		out.add(" => " + method.getReturnTypes());
+		out.add(" => " );
+		writeReturns(method, out);
 		out.closeLine();
 		
 		// Documentation text
@@ -496,6 +507,24 @@ public class ClassOrInterfacePage extends Page
 			out.add(" " + method.getParameterNames().get(i));
 		}
 		out.add(")");
+	}
+	
+	private void writeReturns(MethodSignature method, HtmlWriter out) 
+			throws DocumentationException, ShadowException
+	{
+	out.add("(");
+	int returnCount = method.getReturnTypes().size();
+	for (int i = 0; i < returnCount; ++i)
+	{
+		if (i != 0)
+			out.add(", ");
+		
+		ModifiedType returnType = method.getReturnTypes().get(i);
+		out.add(returnType.getModifiers().toString());
+		writeCrossLink(returnType.getType(),
+				returnType.getType().toString(Type.TYPE_PARAMETERS), out);		
+	}
+	out.add(")");
 	}
 	
 	private void writeBlockTags(Documentation documentation,
@@ -572,7 +601,7 @@ public class ClassOrInterfacePage extends Page
 		if (linkableTypes.contains(to))
 			// Replace colons in class names with dashes
 			writeLink(getRelativePath(type, to)
-					.replaceAll(":", "\\$"), text, out);
+					.replaceAll(":", "\\$"), text, new Attribute("title", to.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)), out);
 		else
 			out.add(text);
 	}

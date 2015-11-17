@@ -43,7 +43,7 @@ public class DocumentationArguments
 	
 	// The main description printed in response to the help option
 	private static final String HELP_MESSAGE
-		= "shadowdoc [ source-files ] [ packages ] [ options ]";
+		= "shadox [ source-files ] [ packages ] [ options ]";
 
 	private static final Options options = createOptions();
 	private CommandLine commandLine;

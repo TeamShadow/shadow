@@ -84,8 +84,11 @@ public class OverviewPage extends Page
 			out.openTab("table", new Attribute("class", "summarytable"));
 			
 			writeTableRow(out, true, "Package", "Description");
-			for (Package current : documentList)
-				writeTableEntry(current, knownPackages, out);
+			boolean shaded = false;
+			for (Package current : documentList) {
+				writeTableEntry(current, knownPackages, out, shaded);
+				shaded = !shaded;
+			}
 			
 			out.closeUntab();
 			out.closeUntab();
@@ -93,9 +96,12 @@ public class OverviewPage extends Page
 	}
 	
 	private void writeTableEntry(Package current, Set<Package> linkablePackages, 
-			HtmlWriter out) throws DocumentationException, ShadowException
+			HtmlWriter out, boolean shaded) throws DocumentationException, ShadowException
 	{
-		out.openTab("tr");
+		if( shaded )
+			out.openTab("tr", new Attribute("class", "shaded"));
+		else
+			out.openTab("tr");		
 			out.open("td");
 				writePackageName(current, linkablePackages, out);
 			out.closeLine();

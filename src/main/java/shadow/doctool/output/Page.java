@@ -147,6 +147,12 @@ public abstract class Page
 		out.closeUntab();
 	}
 	
+	protected static void writeLink(String href, String text, Attribute attribute, HtmlWriter out) 
+			throws DocumentationException, ShadowException
+	{
+		out.full("a", text, new Attribute("href", href), attribute);
+	}
+	
 	protected static void writeLink(String href, String text, HtmlWriter out) 
 			throws DocumentationException, ShadowException
 	{

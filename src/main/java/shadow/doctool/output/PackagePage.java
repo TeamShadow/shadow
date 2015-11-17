@@ -62,16 +62,19 @@ public class PackagePage extends Page
 		Collection<Type> types = self.getTypes();
 		
 		for (Type type : types) {
-			if (type instanceof EnumType)
-				enums.add((EnumType)type);
-			else if (type instanceof ExceptionType)
-				exceptions.add((ExceptionType)type);
-			else if (type instanceof SingletonType)
-				singletons.add((SingletonType)type);
-			else if (type instanceof ClassType)
-				classes.add((ClassType)type);
-			else if (type instanceof InterfaceType)
-				interfaces.add((InterfaceType)type);
+			
+			if( !type.getModifiers().isPrivate() ) {			
+				if (type instanceof EnumType)
+					enums.add((EnumType)type);
+				else if (type instanceof ExceptionType)
+					exceptions.add((ExceptionType)type);
+				else if (type instanceof SingletonType)
+					singletons.add((SingletonType)type);
+				else if (type instanceof ClassType)
+					classes.add((ClassType)type);
+				else if (type instanceof InterfaceType)
+					interfaces.add((InterfaceType)type);
+			}
 		}
 	}
 	
@@ -150,8 +153,12 @@ public class PackagePage extends Page
 			out.openTab("table", new Attribute("class", "summarytable"));
 			
 			writeTableRow(out, true, typeKind, "Description");
+			boolean shaded = false;
 			for (Type type : contents) {
-				out.openTab("tr");
+				if( shaded )
+					out.openTab("tr", new Attribute("class", "shaded"));
+				else
+					out.openTab("tr");
 					out.open("td");
 						writeTypeName(type, out);
 					out.closeLine();
@@ -160,6 +167,7 @@ public class PackagePage extends Page
 							writeInlineTags(type.getDocumentation().getSummary(), out);
 					out.closeLine();
 				out.closeUntab();
+				shaded = !shaded;
 			}
 			
 			out.closeUntab();
@@ -178,8 +186,12 @@ public class PackagePage extends Page
 			out.openTab("table", new Attribute("class", "summarytable"));
 			
 			writeTableRow(out, true, "Name", "Description");
+			boolean shaded = false;
 			for (Package subpkg : children.values()) {
-				out.openTab("tr");
+				if( shaded )
+					out.openTab("tr", new Attribute("class", "shaded"));
+				else
+					out.openTab("tr");
 					out.open("td");
 						writePackageName(subpkg, out);
 					out.closeLine();
@@ -188,6 +200,7 @@ public class PackagePage extends Page
 							writeInlineTags(subpkg.getDocumentation().getSummary(), out);
 					out.closeLine();
 				out.closeUntab();
+				shaded = !shaded;
 			}
 			
 			out.closeUntab();

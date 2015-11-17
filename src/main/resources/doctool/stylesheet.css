@@ -14,22 +14,60 @@ body
     padding: 0; 
     min-width: 60em; 
     font-family: Verdana, Helvetica, Arial, sans-serif;
+	background-color: lightgray;
+	background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.25) 35px, rgba(255,255,255,.25) 70px);
+	font-size: 90%;
+}
+
+h2
+{  
+	font-size: 2.2em;
+}
+
+h3
+{  
+	font-size: 1.6em;
 }
 
 h4
-{
-    margin: 10px 0px 4px;
+{    
+	font-size: 1.3em;
 }
 
-table, th, td
+hr
 {
-    border: 1px solid black;
+	color: white;
+	border-color: white;
+	background-color: white;
+	border-style: solid;
+}
+
+th
+{
+	border: 1px solid white;
+	background-color: rgb(0,170,251);
+	color: white;
+}
+
+table
+{
+    border: 1px solid white;
     background-color: white;
+}
+
+td
+{
+	border: 1px solid white;	
 }
 
 th, td
 {
-    padding: 2px 8px;
+    padding: .5em .5em; 
+}
+
+tr.shaded
+{
+	background-color: rgb(229, 247, 255);
 }
 
 table
@@ -37,103 +75,112 @@ table
     border-collapse: collapse;
 }
 
-code
-{
-    font-size: 16px;
-}
-
 .header
 {
-	margin: 0px 8px;
+	margin: 0em .5em;	
 }
 
 .header p
 {
-    margin: 4px 0px;
+    margin: .5em 0em;
 }
 
 .header h2
 {
-    margin: 10px 0px 22px;
+    margin: .5em 0em .5em;
 }
 
 .header h4
 {
-    margin: 22px 0px 4px;
+    margin: 1.25em 0 .25em;
+}
+
+.header code
+{
+	font-size: 150%;	
 }
 
 .block
 {
-    border: 1px solid gray;
-    background-color: #EEEEEF;
-    padding: 0px 8px 8px 8px;
-    margin: 8px;
+    border: 1px solid white;   
+    padding: 0 .5em .5em .5em;
+    margin: .5em;
+	
+	background-color: rgb(192, 235, 255);
+	
 }
 
 .block h3
 {
-    margin: 15px 0px;
-    font-size: 26px;
+    margin: .75em 0em;    
 }
 
 .block p 
-{
-    font-size: 20px;
-    margin: 10px 0px 0px;
+{    
+    margin: .5em 0 0;
 }
 
-.block code.inline
+code
 {
-    font-size: 18px;
+    font-size: 125%;
 }
 
 .methoddetail
 {
-    border: 1px solid black;
+    border: 1px solid white;
     background-color: white;
-    padding: 0px 8px 8px;
-    margin: 0px 0px 8px;
+    padding: 0 .5em .5em;
+    margin: 0 0 .5em;
 }
 
 .methoddetail h4
 {
-    margin: 10px 0px;
-    font-size: 22px;
+    margin: .5em 0;    
 }
 
 .methoddetail h5
 {
-    margin: 14px 0px 10px;
+    margin: .75em 0 .5em;
 }
 
 .blocktagcontent
 {
-    margin: 0px 0px 0px 16px;
+    margin: 0 0 0 .75em;
 }
 
 .navlist
 {
-    border: 1px solid gray;
-    background-color: lightgray;
-    margin-bottom: 10px;
+    border-bottom: 1px solid white;
+    background-color: rgb( 246, 37, 130 );
+    margin-bottom: .5em;
+	color: white;
+}
+
+.navlist a
+{
+	color: white;	
 }
 
 .navlist ul
 {
 	float: left;
-    margin: 4px;
-    padding: 0px;
+    margin: .25em;
+    padding: 0;
 }
 
 .navlist li
 {
     display: inline;
-    padding-right: 6px;
+    padding-right: .3em;
 }
 
 .navlist span
 {
 	float: right;
-	padding-right: 0px;
-	margin: 4px;
+	padding-right: 0;
+	margin: .25em;
 }
+
+
+a { text-decoration: none; color:inherit;  }
+a:hover { text-decoration: underline; }
