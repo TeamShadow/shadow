@@ -70,7 +70,7 @@ public class ClassOrInterfacePage extends Page
 		
 		this.type = type;
 		this.linkableTypes = new HashSet<Type>(linkableTypes);
-		this.relativePath = constructOutputPath().resolve(type.getTypeName().replaceAll(":", "\\$") + EXTENSION);
+		this.relativePath = constructOutputPath().resolve(type.toString(Type.NO_OPTIONS).replaceAll(":", "\\$") + EXTENSION);
 		
 		// The qualified name should not contain type parameters		
 		this.qualifiedName = type.toString(Type.PACKAGES);
@@ -129,7 +129,7 @@ public class ClassOrInterfacePage extends Page
 		// Note: All colons in class names are replaced with dashes to avoid
 		// browser issues (i.e. relative paths being interpreted as protocols)
 		Path output = outputDirectory
-				.resolve(type.getTypeName().replaceAll(":", "\\$") + EXTENSION);
+				.resolve(type.toString(Type.NO_OPTIONS).replaceAll(":", "\\$") + EXTENSION);
 		FileWriter fileWriter = new FileWriter(output.toFile());
 		HtmlWriter out = new HtmlWriter(fileWriter);
 		
@@ -169,7 +169,7 @@ public class ClassOrInterfacePage extends Page
 					"default", out);
 		out.closeLine();
 		
-		out.fullLine("h2", typeKind + " " + type.getTypeName());
+		out.fullLine("h2", typeKind + " " + type.toString(Type.TYPE_PARAMETERS));
 		
 		writeInnerClassSection(out);
 		writeInheritanceSection(out);
@@ -623,13 +623,16 @@ public class ClassOrInterfacePage extends Page
 			
 			boolean first = true;			
 			while( !types.isEmpty() ) {
-				if( first )
+				current = types.pop();				
+				if( first ) {
 					first = false;
-				else
+					writeCrossLink(current.getTypeWithoutTypeArguments(), options & ~Type.TYPE_PARAMETERS, out);
+				}
+				else {
 					options = options & ~Type.PACKAGES;
+					writeCrossLink(current.getTypeWithoutTypeArguments(), current.getTypeName(), out);
+				}
 				
-				current = types.pop();
-				writeCrossLink(current.getTypeWithoutTypeArguments(), options & ~Type.TYPE_PARAMETERS, out);
 				if( current.isParameterized() ) {
 					out.add("<");
 					boolean comma = false;
@@ -650,6 +653,16 @@ public class ClassOrInterfacePage extends Page
 					.replaceAll(":", "\\$"), to.toString(options), new Attribute("title", to.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)), out);
 		else
 			out.add(to.toString(options));
+	}
+	
+	private void writeCrossLink(Type to, String text, HtmlWriter out) 
+			throws DocumentationException, ShadowException {
+		if (linkableTypes.contains(to))
+			// Replace colons in class names with dashes
+			writeLink(getRelativePath(type, to)
+					.replaceAll(":", "\\$"), text, new Attribute("title", to.toString(Type.PACKAGES)), out);
+		else
+			out.add(text);
 	}
 	
 	/* Helper methods */

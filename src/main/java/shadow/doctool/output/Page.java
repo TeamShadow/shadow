@@ -233,7 +233,7 @@ public abstract class Page
 	
 	protected static String getRelativePath(Package from, Type to)
 	{
-		return getRelativePath(from, to.getPackage(), to.getTypeName() + EXTENSION);
+		return getRelativePath(from, to.getPackage(), to.toString(Type.NO_OPTIONS).replaceAll(":", "\\$") + EXTENSION);
 	}
 	
 	protected static String getRelativePath(Type from, Package to)
@@ -243,6 +243,6 @@ public abstract class Page
 	
 	protected static String getRelativePath(Type from, Type to)
 	{
-		return getRelativePath(from.getPackage(), to.getPackage(), to.getTypeName() + EXTENSION);
+		return getRelativePath(from.getPackage(), to.getPackage(), to.toString(Type.NO_OPTIONS).replaceAll(":", "\\$") + EXTENSION);
 	}
 }

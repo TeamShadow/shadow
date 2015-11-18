@@ -65,7 +65,7 @@ public class PackagePage extends Page
 		Collections.sort(sortedTypes);
 		
 		for (Type type : sortedTypes) {			
-			if( !type.getModifiers().isPrivate() ) {			
+			if( !type.getModifiers().isPrivate() && !type.hasOuter() ) {			
 				if (type instanceof EnumType)
 					enums.add((EnumType)type);
 				else if (type instanceof ExceptionType)
@@ -248,7 +248,7 @@ public class PackagePage extends Page
 			throws DocumentationException, ShadowException
 	{
 		if (linkableTypes.contains(type))
-			writeLink(type.getTypeName().replaceAll(":", "\\$")
+			writeLink(type.toString(Type.NO_OPTIONS).replaceAll(":", "\\$")
 					+ EXTENSION, type.getTypeName(), out);
 		else
 			out.add(type.getTypeName());
