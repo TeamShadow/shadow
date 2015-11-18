@@ -206,8 +206,17 @@ public class ClassOrInterfacePage extends Page
 				if (i != 0)
 					out.add(", ");
 				TypeParameter param = (TypeParameter)modifiedParam.getType();
-				out.add(param.getTypeName());
-				Set<Type> bounds = param.getBounds();
+				out.add(param.getTypeName());			
+				
+				ArrayList<Type> bounds = new ArrayList<Type>();
+				//only put in class bound if not Object 
+				ClassType classType = param.getClassBound();
+				if( !classType.equals(Type.OBJECT))
+					bounds.add(classType);				
+				for( Type bound : param.getBounds() )
+					if( bound instanceof InterfaceType )
+						bounds.add(bound);
+				
 				int j = 0;
 				for (Type constraint : bounds) {
 					if (j == 0) {
@@ -216,9 +225,9 @@ public class ClassOrInterfacePage extends Page
 						out.add(" and ");
 					}
 					if (link) {
-						writeCrossLink(constraint, constraint.getTypeName(), out);
+						writeCrossLink(constraint, Type.TYPE_PARAMETERS, out);
 					} else {
-						out.add(constraint.getTypeName());
+						out.add(constraint.toString(Type.TYPE_PARAMETERS));
 					}
 					j++;
 				}
@@ -235,7 +244,7 @@ public class ClassOrInterfacePage extends Page
 		if (type.hasOuter()) {
 			out.fullLine("h4", "Outer class");
 			out.open("p");
-			writeCrossLink(type.getOuter(), type.getOuter().toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
+			writeCrossLink(type.getOuter(), Type.PACKAGES | Type.TYPE_PARAMETERS, out);
 			out.closeLine();
 		}
 		
@@ -256,7 +265,7 @@ public class ClassOrInterfacePage extends Page
 					out.add(", ");
 				
 				// List the name, optionally attempting a link
-				writeCrossLink(current, current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
+				writeCrossLink(current, Type.PACKAGES | Type.TYPE_PARAMETERS, out);
 				i++;
 			}
 			out.closeLine();
@@ -278,7 +287,7 @@ public class ClassOrInterfacePage extends Page
 		if (extendType != null) {			
 			out.fullLine("h4", "Parent class");
 			out.open("p");			
-			writeCrossLink(extendType, extendType.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
+			writeCrossLink(extendType, Type.PACKAGES | Type.TYPE_PARAMETERS, out);
 			out.closeLine();
 		}
 		
@@ -291,7 +300,7 @@ public class ClassOrInterfacePage extends Page
 				
 				// List the name, optionally attempting a link
 				Type current = interfaceList.get(i);
-				writeCrossLink(current, current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS), out);
+				writeCrossLink(current, Type.PACKAGES | Type.TYPE_PARAMETERS, out);
 			}
 			out.closeLine();
 		}
@@ -318,8 +327,7 @@ public class ClassOrInterfacePage extends Page
 					out.closeLine();
 					out.open("td");
 						out.open("code");
-						writeCrossLink(constant.getType(),
-								constant.getType().toString(Type.TYPE_PARAMETERS), out);	
+						writeCrossLink(constant.getType(), Type.TYPE_PARAMETERS, out);	
 						out.close();
 					out.closeLine();
 					out.open("td");
@@ -415,7 +423,7 @@ public class ClassOrInterfacePage extends Page
 		
 		out.open("code");
 		out.add(constant.getModifiers().toString().trim() + " ");
-		writeCrossLink(constant.getType(), constant.getType().toString(Type.TYPE_PARAMETERS), out);
+		writeCrossLink(constant.getType(), Type.TYPE_PARAMETERS, out);
 		out.add(" "	+ constant.toString());
 		out.closeLine();
 		
@@ -509,8 +517,7 @@ public class ClassOrInterfacePage extends Page
 			
 			ModifiedType parameter = method.getParameterTypes().get(i);
 			out.add(parameter.getModifiers().toString());
-			writeCrossLink(parameter.getType(),
-					parameter.getType().toString(Type.TYPE_PARAMETERS), out);
+			writeCrossLink(parameter.getType(),Type.TYPE_PARAMETERS, out);
 			out.add(" " + method.getParameterNames().get(i));
 		}
 		out.add(")");
@@ -528,8 +535,7 @@ public class ClassOrInterfacePage extends Page
 		
 		ModifiedType returnType = method.getReturnTypes().get(i);
 		out.add(returnType.getModifiers().toString());
-		writeCrossLink(returnType.getType(),
-				returnType.getType().toString(Type.TYPE_PARAMETERS), out);		
+		writeCrossLink(returnType.getType(),Type.TYPE_PARAMETERS, out);		
 	}
 	out.add(")");
 	}
@@ -602,15 +608,48 @@ public class ClassOrInterfacePage extends Page
 		}
 	}
 	
-	private void writeCrossLink(Type to, String text, HtmlWriter out) 
+	private void writeCrossLink(Type to, int options, HtmlWriter out) 
 			throws DocumentationException, ShadowException
 	{
-		if (linkableTypes.contains(to))
+		
+		if( to.isParameterizedIncludingOuterClasses() && linkableTypes.contains(to.getTypeWithoutTypeArguments()) && (options & Type.TYPE_PARAMETERS) != 0) {
+			Type current = to;
+			ArrayDeque<Type> types = new ArrayDeque<Type>();
+			types.push(current);
+			while( current.hasOuter() ) {
+				current = current.getOuter();
+				types.push(current);
+			}
+			
+			boolean first = true;			
+			while( !types.isEmpty() ) {
+				if( first )
+					first = false;
+				else
+					options = options & ~Type.PACKAGES;
+				
+				current = types.pop();
+				writeCrossLink(current.getTypeWithoutTypeArguments(), options & ~Type.TYPE_PARAMETERS, out);
+				if( current.isParameterized() ) {
+					out.add("<");
+					boolean comma = false;
+					for( ModifiedType parameter : current.getTypeParameters() ) {
+						if( comma )
+							out.add(",");
+						else
+							comma = true;
+						writeCrossLink(parameter.getType(), options, out);
+					}						
+					out.add(">");
+				}				
+			}
+		}		
+		else if (linkableTypes.contains(to))
 			// Replace colons in class names with dashes
 			writeLink(getRelativePath(type, to)
-					.replaceAll(":", "\\$"), text, new Attribute("title", to.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)), out);
+					.replaceAll(":", "\\$"), to.toString(options), new Attribute("title", to.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)), out);
 		else
-			out.add(text);
+			out.add(to.toString(options));
 	}
 	
 	/* Helper methods */
