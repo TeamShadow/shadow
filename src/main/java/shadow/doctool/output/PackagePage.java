@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,10 +60,11 @@ public class PackagePage extends Page
 	
 	private void sortTypes()
 	{
-		Collection<Type> types = self.getTypes();
+		Collection<Type> types = self.getTypes();		
+		ArrayList<Type> sortedTypes = new ArrayList<Type>(types);
+		Collections.sort(sortedTypes);
 		
-		for (Type type : types) {
-			
+		for (Type type : sortedTypes) {			
 			if( !type.getModifiers().isPrivate() ) {			
 				if (type instanceof EnumType)
 					enums.add((EnumType)type);

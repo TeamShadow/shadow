@@ -143,8 +143,9 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	//like toString() but includes outer type to differentiate
 	public String hashString() {
-		StringBuilder sb = new StringBuilder(getModifiers().toString());
-		sb.append(" ").append("" + outer).append(":").append(symbol);		
+		//StringBuilder sb = new StringBuilder(getModifiers().toString());
+		//sb.append(" ").append("" + outer).append(":").append(symbol);
+		StringBuilder sb = new StringBuilder("" + outer).append(":").append(symbol);
 		
 		//nothing more for destroy
 		if( !symbol.equals("destroy") ) {			

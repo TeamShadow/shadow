@@ -8,6 +8,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -109,6 +110,12 @@ public class ClassOrInterfacePage extends Page
 		for (Node field : type.getFields().values())
 			if (field.getModifiers().isConstant() && !field.getModifiers().isPrivate())
 				visibleConstants.add(field);
+		
+		Collections.sort(visibleConstants, new Comparator<Node>() {
+			@Override
+			public int compare(Node node1, Node node2) {				
+				return node1.toString().compareTo(node2.toString());
+			}} );
 	}
 	
 	public void write(Path root) 
