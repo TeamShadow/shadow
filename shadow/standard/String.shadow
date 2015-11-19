@@ -1,10 +1,9 @@
 locked immutable class shadow:standard@
 	String
-implements
-	CanCompare<String>,
-	CanIterate<code>,
-	CanIndex<int,byte>,
-	CanHash	
+is	CanCompare<String>
+and	CanIterate<code>
+and	CanIndex<int,byte>
+and	CanHash	
 {
 	byte[] data;
 	boolean ascii;
@@ -398,7 +397,7 @@ implements
 	}
 	
 
-	public class StringIterator implements Iterator<code>
+	public class StringIterator is Iterator<code>
 	{
 		int index = 0;
 

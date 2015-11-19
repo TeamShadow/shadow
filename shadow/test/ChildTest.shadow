@@ -1,6 +1,7 @@
 import shadow:io@Console;
 
-class shadow:test@ChildTest extends ParentTest
+class shadow:test@
+	ChildTest is ParentTest
 {
 	public create()
 	{

@@ -1,6 +1,6 @@
 class Test
 {
-	public class Inner implements CanCreate
+	public class Inner is CanCreate
 	{
 		int x;
 		

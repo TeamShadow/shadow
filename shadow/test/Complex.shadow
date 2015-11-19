@@ -1,8 +1,9 @@
-immutable class shadow:test@Complex implements
-CanAdd<Complex>,
-CanSubtract<Complex>,
-CanMultiply<Complex>,
-CanEqual<Complex>
+immutable class shadow:test@
+	Complex
+is  CanAdd<Complex>
+and	CanSubtract<Complex>
+and	CanMultiply<Complex>
+and	CanEqual<Complex>
 {
 	get int real;
 	get int imaginary;

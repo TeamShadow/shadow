@@ -1,5 +1,6 @@
-locked immutable class shadow:standard@BigInteger
-implements Number<BigInteger>
+locked immutable class shadow:standard@
+	BigInteger
+is  Number<BigInteger>
 {
 	uint[] data;
 	boolean negative;

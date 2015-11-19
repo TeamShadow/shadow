@@ -1,4 +1,6 @@
-class shadow:test@Cheetah implements CanRun
+class shadow:test@
+	Cheetah
+is CanRun
 {
 	public run() => ()
 	{

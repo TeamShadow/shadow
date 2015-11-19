@@ -1,16 +1,15 @@
 locked immutable class shadow:standard@
 	UByte
-implements
-	Integer<ubyte>,
-	Integer<short>,
-	Integer<ushort>,
-	Integer<int>,
-	Integer<uint>,
-	Integer<long>,
-	Integer<ulong>,
-	Number<float>,
-	Number<double>,
-	CanHash
+is	Integer<ubyte>
+and	Integer<short>
+and	Integer<ushort>
+and	Integer<int>
+and	Integer<uint>
+and	Integer<long>
+and	Integer<ulong>
+and	Number<float>
+and	Number<double>
+and	CanHash
 {
 	public constant ubyte MAX = 255uy;
 	public constant ubyte MIN = 0uy;

@@ -3,10 +3,10 @@ class InnerClass {
 	private class Inner 
 	{}
 	
-	private class Second extends InnerClass:Inner
+	private class Second is InnerClass:Inner
 	{}
 	
-	private class Third extends Inner
+	private class Third is Inner
 	{}
 
 }

@@ -1,4 +1,3 @@
-interface Thing
-{
-	thing() => ();
+exception Thing
+{	
 }

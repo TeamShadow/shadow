@@ -1,5 +1,5 @@
 immutable class shadow:standard@
-	GenericClass extends Class
+	GenericClass is Class
 {	
 	get Object[] parameters; //double the size for class and methods
 	

@@ -1,5 +1,6 @@
-immutable class shadow:standard@Class
-	implements CanHash
+immutable class shadow:standard@
+	Class
+is  CanHash
 {
 	get String name;
 	get nullable Class parent;

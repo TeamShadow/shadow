@@ -17,10 +17,10 @@ class Cast {
 	private class BaseClass
 	{}
 	
-	private class Subclass1 extends Cast:BaseClass
+	private class Subclass1 is Cast:BaseClass
 	{}
 	
-	private class Subclass2 extends BaseClass
+	private class Subclass2 is BaseClass
 	{}
 
 }

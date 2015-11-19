@@ -1,0 +1,7 @@
+class Test is CanSpeak and Thing
+{
+	public speak() => (String)
+	{
+		return "Hello!";
+	}
+}

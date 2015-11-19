@@ -1,4 +1,6 @@
-class shadow:test@Creatable implements CanCreate
+class shadow:test@
+	Creatable
+is  CanCreate
 {
 	get long value;
 	

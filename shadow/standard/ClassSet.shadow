@@ -1,8 +1,9 @@
 import shadow:utility@Set;
 import shadow:utility@IllegalModificationException;
 
-locked class shadow:standard@ClassSet
-	implements Set<Class>	
+locked class shadow:standard@
+	ClassSet
+is  Set<Class>	
 {
 	private constant int DEFAULT_INITIAL_CAPACITY = 16;
 	private constant int MAXIMUM_CAPACITY = 1 << 30;
@@ -222,7 +223,7 @@ locked class shadow:standard@ClassSet
 	}
 	
 	
-	private class ClassSetIterator implements Iterator<Class>
+	private class ClassSetIterator is Iterator<Class>
 	{
 		int index = 0;
 		nullable Node current;

@@ -1,5 +1,8 @@
-abstract locked class shadow:standard@Array<T>
-	implements CanIndex<int[],T>, CanIndexStore<int[],T>, CanIterate<T>
+abstract locked class shadow:standard@
+	Array<T>
+is  CanIndex<int[],T>
+and CanIndexStore<int[],T>
+and CanIterate<T>
 {
 	get immutable int[] lengths;
 	Object data;
@@ -72,7 +75,7 @@ abstract locked class shadow:standard@Array<T>
 		return ArrayIterator:create();
 	} 
 	
-	private class ArrayIterator implements Iterator<T>
+	private class ArrayIterator is Iterator<T>
 	{
 		int position = 0;
 		int limit = size();

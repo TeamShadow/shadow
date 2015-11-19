@@ -1,4 +1,4 @@
-interface Circle extends Circular
+interface Circle is Circular
 {
 
 

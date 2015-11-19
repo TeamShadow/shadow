@@ -158,9 +158,7 @@ TOKEN :
 | < DOUBLE: "double" >
 | < ELSE: "else" >
 | < ENUM: "enum" >
-//| < ERROR: "error" >
 | < EXCEPTION: "exception" >
-| < EXTENDS: "extends" >
 | < FALSE: "false" >
 | < FINALLY: "finally" >
 | < FLOAT: "float" >
@@ -170,10 +168,8 @@ TOKEN :
 | < GET: "get" >
 | < IF: "if" >
 | < IMMUTABLE: "immutable" >
-| < IMPLEMENTS: "implements" >
 | < IMPORT: "import" >
 | < IN: "in" >
-//| < INSTANCE: "instance" >
 | < IS: "is" >
 | < INT: "int" >
 | < INTERFACE: "interface" >
@@ -197,7 +193,6 @@ TOKEN :
 | < SWITCH: "switch" >
 | < THIS: "this" >
 | < THROW: "throw" >
-| < THROWS: "throws" >
 | < TRUE: "true" >
 | < TRY: "try" >
 | < UBYTE: "ubyte" >
@@ -612,14 +607,15 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers, DocumentationBuilder docBu
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   [ Version() ]
-  [ ExtendsList(jjtThis.getKind()) ]
-  [ ImplementsList(jjtThis.getKind()) ]
+  [ IsList() ]
+  //[ ImplementsList(jjtThis.getKind()) ]
   ClassOrInterfaceBody(jjtThis.getKind())
   {
     jjtThis.setLineStart(t.beginLine);
     jjtThis.setColumnStart(t.beginColumn);  }
 }
 
+/*
 void ExtendsList(TypeKind kind):
 {
    boolean extendsMoreThanOne = false;
@@ -646,6 +642,7 @@ void ImplementsList(TypeKind kind):
       	throw new ParseException("An exception cannot implement interfaces",jjtThis);
    }
 }
+*/
 
 void Version():
 { debugPrint("VERSION"); }
@@ -668,7 +665,7 @@ void EnumDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
   "enum"
   [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ]
   t = <IDENTIFIER> { jjtThis.setImage(t.image);  }
-  [ ImplementsList(TypeKind.ENUM) ]
+  [ IsList() ]
   EnumBody()
 }
 
@@ -704,13 +701,13 @@ void TypeParameter():
 	Token t;
 }
 {
-   t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ TypeBound() ]
+   t = <IDENTIFIER>  { jjtThis.setImage(t.image); } [ IsList() ]
    {
      jjtThis.addModifier(Modifiers.TYPE_NAME);   }
 }
 
-void TypeBound():
-{ debugPrint("TYPE BOUND"); }
+void IsList():
+{ debugPrint("IS LIST"); }
 {
    "is" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
 }

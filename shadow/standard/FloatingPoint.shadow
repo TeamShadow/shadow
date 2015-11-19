@@ -1,7 +1,5 @@
 interface shadow:standard@
-	FloatingPoint<T>
-extends
-	Number<T>
+	FloatingPoint<T> is	Number<T>
 {
 	readonly isNaN() => (boolean);
 	readonly isFinite() => (boolean);

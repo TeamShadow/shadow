@@ -1,4 +1,4 @@
-interface shadow:utility@Deque<E> extends CanIterate<E>
+interface shadow:utility@Deque<E> is CanIterate<E>
 {
 	readonly get size() => ( int size );
 	readonly isEmpty() => ( boolean empty );

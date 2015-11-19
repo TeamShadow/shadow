@@ -1,4 +1,4 @@
-class Test extends Thing
+class Test is Thing
 {
 	public shout() => (String)
 	{

@@ -5,8 +5,8 @@ class Create
     public create(int a, int b) {}
     
     
-    public create(code a ) throws BlahException{}   
-    public create(String a, code b) throws BlahException{}
+    public create(code a ) {}   
+    public create(String a, code b) {}
 
     public destroy {}    
 }

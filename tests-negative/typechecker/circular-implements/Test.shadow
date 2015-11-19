@@ -1,4 +1,4 @@
-class Test implements Circle
+class Test is Circle
 {
 
 

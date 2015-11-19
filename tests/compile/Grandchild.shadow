@@ -1,4 +1,4 @@
-class Grandchild extends Child
+class Grandchild is Child
 {   
     public extra(double x) => (double)
     {    

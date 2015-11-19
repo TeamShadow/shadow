@@ -1,6 +1,6 @@
 class shadow:utility@
-ArrayDeque<E>
-implements Deque<E>
+	ArrayDeque<E>
+is  Deque<E>
 {
 	get int size = 0;
 	int start = 0;
@@ -119,7 +119,7 @@ implements Deque<E>
 		return ArrayDequeIterator:create();
 	}
 	
-	private class ArrayDequeIterator implements Iterator<E>
+	private class ArrayDequeIterator is Iterator<E>
 	{
 		int index = 0;
 		int expectedModifications = modifications;

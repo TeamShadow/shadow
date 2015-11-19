@@ -1,5 +1,6 @@
-class shadow:utility@HashSet<V is CanHash and CanEqual<V>>
-	implements Set<V>
+class shadow:utility@
+	HashSet<V is CanHash and CanEqual<V>>
+is  Set<V>
 {
 	HashMap<V,V> map;
 	

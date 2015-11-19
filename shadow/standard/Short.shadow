@@ -1,13 +1,12 @@
 locked immutable class shadow:standard@
 	Short
-implements
-	Integer<short>,
-	Integer<int>,
-	Integer<long>,
-	Number<float>,
-	Number<double>,
-	CanNegate<short>,
-	CanHash
+is Integer<short>
+and	Integer<int>
+and	Integer<long>
+and	Number<float>
+and	Number<double>
+and	CanNegate<short>
+and	CanHash
 {
 	public constant short MAX = 32767s;
 	public constant short MIN = -32768s;	

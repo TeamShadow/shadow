@@ -1,4 +1,8 @@
-class shadow:io@File implements CanRead, CanWrite, CanClose
+class shadow:io@
+	File
+is	CanRead
+and CanWrite
+and CanClose
 {
 	long data = -1l, pos = 0;
 	get Path path;
@@ -24,13 +28,13 @@ class shadow:io@File implements CanRead, CanWrite, CanClose
 		return #path;
 	}
 
-	public native get readonly exists() => ( boolean ) throws IOException;
-	public native set exists( boolean createOrDelete ) => () throws IOException;
-	public native get readonly position() => ( long ) throws IOException;
-	public native set position( long position ) => () throws IOException;
-	public native get readonly size() => ( long ) throws IOException;
-	public native set size( long size ) => () throws IOException;
-	public native readonly read( byte[] buffer ) => ( int ) throws IOException;
-	public native write( readonly byte[] buffer ) => ( int ) throws IOException;
-	public native close() => () throws IOException;
+	public native get readonly exists() => ( boolean );
+	public native set exists( boolean createOrDelete ) => ();
+	public native get readonly position() => ( long );
+	public native set position( long position ) => ();
+	public native get readonly size() => ( long );
+	public native set size( long size ) => ();
+	public native readonly read( byte[] buffer ) => ( int );
+	public native write( readonly byte[] buffer ) => ( int );
+	public native close() => ();
 }

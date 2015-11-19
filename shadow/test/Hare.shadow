@@ -1,6 +1,8 @@
 import shadow:io@Console;
 
-class shadow:test@Hare implements CanRun
+class shadow:test@
+	Hare
+is  CanRun
 {
 	public run() => ()
 	{

@@ -1,10 +1,11 @@
-class Matrix implements
-CanAdd<Matrix>,
-CanSubtract<Matrix>,
-CanMultiply<Matrix>,
-CanNegate<Matrix>,
-CanEqual<Matrix>,
-CanIndex<int, double[]>
+class
+	Matrix
+is  CanAdd<Matrix>
+and CanSubtract<Matrix>
+and CanMultiply<Matrix>
+and CanNegate<Matrix>
+and CanEqual<Matrix>
+and CanIndex<int, double[]>
 {
 	double[][] values;
 	get int rows;

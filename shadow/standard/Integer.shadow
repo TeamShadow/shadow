@@ -1,7 +1,5 @@
 interface shadow:standard@
-	Integer<T>
-extends
-	Number<T>
+	Integer<T> is Number<T>
 {
 	readonly bitComplement() => (T);
 	readonly bitShiftLeft(uint amount) => (T);

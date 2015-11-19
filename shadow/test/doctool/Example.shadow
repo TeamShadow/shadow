@@ -5,7 +5,7 @@ import tier1A@TestInterfaceB;
 
 /** A class to test/demonstrate the documentation tool */
 class Example<T, U is Dummy and TestInterfaceA and TestInterfaceB> 
-        extends Dummy implements TestInterfaceA, TestInterfaceB
+        is Dummy and TestInterfaceA and TestInterfaceB
 {
     /// Documenting public/protected inner classes
     /// should be possible

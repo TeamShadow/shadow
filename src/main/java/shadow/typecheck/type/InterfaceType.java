@@ -134,7 +134,8 @@ public class InterfaceType extends Type
 		addAllMethods( methodName, list );	
 		
 		//get from Object, too
-		list.addAll( Type.OBJECT.getAllMethods(methodName));
+		if( !methodName.equals("create") )
+			list.addAll( Type.OBJECT.getAllMethods(methodName));
 		return list;
 	}
 	
@@ -295,11 +296,11 @@ public class InterfaceType extends Type
 		
 		//extend types		
 		if( getInterfaces().size() > 0 ) {
-			out.print(" extends " );
+			out.print(" is " );
 			boolean first = true;
 			for( InterfaceType _interface : getInterfaces() ) {
 				if(!first)
-					out.print(", ");
+					out.print(" and ");
 				else
 					first = false;
 				out.print(_interface.toString(PACKAGES | TYPE_PARAMETERS));				

@@ -1,4 +1,7 @@
-class Thumper<U is Child, T is Child> implements Thumpable<U>, Constructable<U>
+class
+	Thumper<U is Child, T is Child>
+is  Thumpable<U>
+and Constructable<U>
 {
 	U internal;
 	T other;

@@ -1,5 +1,6 @@
-locked immutable class shadow:standard@Boolean
-implements CanEqual<boolean>
+locked immutable class shadow:standard@
+	Boolean
+is  CanEqual<boolean>
 {
 	public not() => ( boolean )
 	{

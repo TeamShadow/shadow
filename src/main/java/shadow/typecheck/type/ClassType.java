@@ -189,7 +189,7 @@ public class ClassType extends Type {
 	public List<MethodSignature> getAllMethods(String methodName) {
 		List<MethodSignature> list = new ArrayList<MethodSignature>(getMethods(methodName));
 				
-		if( !methodName.equals("create") ) {	
+		if( !methodName.equals("create")  ) {	
 			//first the parents
 			ClassType parent = extendType;
 			while( parent != null ) {
@@ -596,17 +596,23 @@ public class ClassType extends Type {
 		
 		//extend type
 		Type extendType = getExtendType();
-		if( extendType != null && !this.equals(Type.EXCEPTION)  )
-			out.print(" extends " + extendType.toString(PACKAGES | TYPE_PARAMETERS) );
+		boolean isStarted = false;
+		if( extendType != null && !this.equals(Type.EXCEPTION)  ) {
+			out.print(" is " + extendType.toString(PACKAGES | TYPE_PARAMETERS) );
+			isStarted = true;
+		}
 		
 		//interfaces implemented
 		List<InterfaceType> interfaces = getInterfaces();
 		boolean first = true;
 		if( interfaces.size() > 0 ) {
-			out.print(" implements ");
+			if( isStarted )
+				first = false;
+			else
+				out.print(" is ");
 			for( InterfaceType _interface : interfaces ) {
 				if(!first)
-					out.print(", ");
+					out.print(" and ");
 				else
 					first = false;
 				out.print(_interface.toString(PACKAGES | TYPE_PARAMETERS));				

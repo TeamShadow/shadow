@@ -1,5 +1,6 @@
-class shadow:utility@HashMap<K is CanHash and CanEqual<K>, V is CanEqual<V>>
-	implements Map<K,V>
+class shadow:utility@
+	HashMap<K is CanHash and CanEqual<K>, V is CanEqual<V>>
+is  Map<K,V>
 {
 	protected constant int DEFAULT_INITIAL_CAPACITY = 16;
 	protected constant int MAXIMUM_CAPACITY = 1 << 30;
@@ -230,7 +231,7 @@ class shadow:utility@HashMap<K is CanHash and CanEqual<K>, V is CanEqual<V>>
 		return output.toString();
 	}	
 	
-	private class HashMapIterator implements Iterator<V>
+	private class HashMapIterator is Iterator<V>
 	{
 		int index = 0;
 		nullable Node current;

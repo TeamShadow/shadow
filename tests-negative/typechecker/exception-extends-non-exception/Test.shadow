@@ -1,4 +1,4 @@
-exception Test extends Thing
+exception Test is Thing
 {
 
 

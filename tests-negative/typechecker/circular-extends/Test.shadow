@@ -1,4 +1,4 @@
-class Test extends Circle
+class Test is Circle
 {
 
 

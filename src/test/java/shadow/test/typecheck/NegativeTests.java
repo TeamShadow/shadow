@@ -71,7 +71,7 @@ public class NegativeTests {
 	@Test public void testClassExtendsLockedClass() throws Exception
 	{
 		args.add("tests-negative/typechecker/class-extends-locked-class/Test.shadow"); 
-		enforce(Error.INVALID_EXTEND);		
+		enforce(Error.INVALID_PARENT);		
 	}
 	
 	@Test public void testImport() throws Exception
@@ -209,25 +209,25 @@ public class NegativeTests {
 	@Test public void testClassExtendsNonClass() throws Exception
 	{
 		args.add("tests-negative/typechecker/class-extends-non-class/Test.shadow"); 
-		enforce(Error.INVALID_EXTEND);		
+		enforce(Error.INVALID_PARENT);		
 	}
 	
 	@Test public void testExceptionExtendsNonException() throws Exception
 	{
 		args.add("tests-negative/typechecker/exception-extends-non-exception/Test.shadow"); 
-		enforce(Error.INVALID_EXTEND);		
+		enforce(Error.INVALID_PARENT);		
 	}	
 	
 	@Test public void testInterfaceExtendsNonInterface() throws Exception
 	{
 		args.add("tests-negative/typechecker/interface-extends-non-interface/Test.shadow"); 
-		enforce(Error.INVALID_EXTEND);		
+		enforce(Error.INVALID_INTERFACE);		
 	}
 	
-	@Test public void testClassImplementsNonInterface() throws Exception
+	@Test public void testClassImplementsInterfaceBeforeParent() throws Exception
 	{
-		args.add("tests-negative/typechecker/class-implements-non-interface/Test.shadow"); 
-		enforce(Error.INVALID_IMPLEMENT);		
+		args.add("tests-negative/typechecker/class-implements-interface-before-parent/Test.shadow"); 
+		enforce(Error.INVALID_PARENT);		
 	}
 	
 	@Test public void testReadonlyStore() throws Exception
@@ -360,7 +360,7 @@ public class NegativeTests {
 	
 	@Test public void testInnerClassImplementsCreate() throws Exception {
 		args.add("tests-negative/typechecker/inner-class-implements-create/Test.shadow");
-		enforce(Error.INVALID_IMPLEMENT);			
+		enforce(Error.INVALID_INTERFACE);			
 	}
 	
 	@Test public void testInterfaceArrayCreate() throws Exception {

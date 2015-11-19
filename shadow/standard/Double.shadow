@@ -1,9 +1,8 @@
 locked immutable class shadow:standard@
 	Double
-implements
-	Number<double>,
-	CanNegate<double>,	
-	CanHash
+is	Number<double>
+and	CanNegate<double>
+and	CanHash
 {
 	public constant double PI = 3.141592653589793;
 	public constant double E = 2.718281828459045;

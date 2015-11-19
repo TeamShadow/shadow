@@ -1,14 +1,13 @@
 locked immutable class shadow:standard@
 	Byte
-implements
-	Integer<byte>,
-	Integer<short>,
-	Integer<int>,
-	Integer<long>,
-	Number<float>,
-	Number<double>,
-	CanNegate<byte>,
-	CanHash
+is	Integer<byte>
+and	Integer<short>
+and	Integer<int>
+and	Integer<long>
+and	Number<float>
+and	Number<double>
+and	CanNegate<byte>
+and	CanHash
 {
 	public constant byte MAX = 127y;
 	public constant byte MIN = -128y;

@@ -1,4 +1,4 @@
-class Child extends Parent
+class Child is Parent
 {
     public method() => (int) //override
     {  

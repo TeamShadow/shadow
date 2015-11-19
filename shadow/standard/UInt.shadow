@@ -1,12 +1,11 @@
 locked immutable class shadow:standard@
 	UInt
-implements
-	Integer<uint>,
-	Integer<ulong>,
-	Integer<long>,
-	Number<float>,
-	Number<double>,
-	CanHash
+is	Integer<uint>
+and	Integer<ulong>
+and	Integer<long>
+and	Number<float>
+and	Number<double>
+and	CanHash
 {
 	public constant uint MAX =  4294967295u;
 	public constant uint MIN =  0u;

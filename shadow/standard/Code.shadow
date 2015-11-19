@@ -1,8 +1,7 @@
 locked immutable class shadow:standard@
 	Code
-implements
-	Integer<code>,
-	CanHash
+is	Integer<code>
+and CanHash
 {
 	public native bitComplement() => (code);
 	public native bitShiftLeft(uint amount) => (code);

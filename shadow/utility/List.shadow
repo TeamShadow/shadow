@@ -1,4 +1,7 @@
-interface shadow:utility@List<E is CanEqual<E>> extends CanIterate<E>, CanIndex<int, E>, CanIndexStore<int, E>
+interface shadow:utility@
+	List<E is CanEqual<E>>
+is
+	CanIterate<E> and CanIndex<int, E> and CanIndexStore<int, E>
 {
 	readonly get size() => ( int size );
 	readonly indexOf(E element) => ( int index );

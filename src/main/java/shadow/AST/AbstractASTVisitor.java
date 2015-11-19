@@ -103,18 +103,6 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
-
-	@Override
-	public Object visit(ASTExtendsList node, Boolean secondVisit)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTImplementsList node, Boolean secondVisit)
-			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
 	
 	@Override
 	public Object visit(ASTVersion node, Boolean secondVisit)
@@ -148,11 +136,6 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 	@Override
 	public Object visit(ASTTypeParameter node, Boolean secondVisit)
 			throws ShadowException {
-		return WalkType.PRE_CHILDREN;
-	}
-
-	@Override
-	public Object visit(ASTTypeBound node, Boolean secondVisit) throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}
 
@@ -752,6 +735,12 @@ public class AbstractASTVisitor implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTBreakOrContinueStatement node, Boolean data)
+			throws ShadowException {
+		return WalkType.PRE_CHILDREN;
+	}
+
+	@Override
+	public Object visit(ASTIsList node, Boolean data)
 			throws ShadowException {
 		return WalkType.PRE_CHILDREN;
 	}

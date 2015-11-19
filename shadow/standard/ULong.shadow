@@ -1,9 +1,8 @@
 locked immutable class shadow:standard@
 	ULong
-implements
-	Integer<ulong>,
-	Number<double>,
-	CanHash
+is	Integer<ulong>
+and	Number<double>
+and	CanHash
 {
 	public constant ulong MAX = 18446744073709551615ul;
 	public constant ulong MIN = 0ul;

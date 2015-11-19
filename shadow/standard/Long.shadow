@@ -1,10 +1,9 @@
 locked immutable class shadow:standard@
 	Long
-implements
-	Integer<long>,
-	Number<double>,
-	CanNegate<long>,
-	CanHash
+is Integer<long>
+and	Number<double>
+and	CanNegate<long>
+and	CanHash
 {
     public constant long MAX = 9223372036854775807L;
     public constant long MIN = -9223372036854775808L; 

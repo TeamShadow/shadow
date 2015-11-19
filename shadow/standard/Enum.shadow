@@ -1,2 +1,3 @@
-class shadow:standard@Enum extends shadow:standard@Object
+class shadow:standard@
+	Enum is shadow:standard@Object
 {}

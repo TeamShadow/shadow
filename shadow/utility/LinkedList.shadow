@@ -1,4 +1,7 @@
-class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
+class shadow:utility@
+	LinkedList<V is CanEqual<V>>
+is  List<V>
+and Deque<V>
 {
 	get int size = 0;
 	Node header = Node:create();
@@ -210,7 +213,7 @@ class shadow:utility@LinkedList<V is CanEqual<V>> implements List<V>, Deque<V>
 	}
 	
 	
-	private class LinkedListIterator implements Iterator<V>
+	private class LinkedListIterator is Iterator<V>
 	{
 		Node current = header->next;
 		int expectedModifications = modifications;

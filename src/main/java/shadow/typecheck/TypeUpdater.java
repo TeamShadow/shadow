@@ -2,10 +2,8 @@ package shadow.typecheck;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import shadow.AST.ASTWalker;
 import shadow.AST.ASTWalker.WalkType;
@@ -18,12 +16,11 @@ import shadow.parser.javacc.ASTCreateDeclaration;
 import shadow.parser.javacc.ASTCreateDeclarator;
 import shadow.parser.javacc.ASTDestroyDeclaration;
 import shadow.parser.javacc.ASTEnumDeclaration;
-import shadow.parser.javacc.ASTExtendsList;
 import shadow.parser.javacc.ASTFieldDeclaration;
 import shadow.parser.javacc.ASTFormalParameter;
 import shadow.parser.javacc.ASTFormalParameters;
 import shadow.parser.javacc.ASTFunctionType;
-import shadow.parser.javacc.ASTImplementsList;
+import shadow.parser.javacc.ASTIsList;
 import shadow.parser.javacc.ASTLiteral;
 import shadow.parser.javacc.ASTMethodDeclaration;
 import shadow.parser.javacc.ASTMethodDeclarator;
@@ -33,7 +30,6 @@ import shadow.parser.javacc.ASTResultType;
 import shadow.parser.javacc.ASTResultTypes;
 import shadow.parser.javacc.ASTType;
 import shadow.parser.javacc.ASTTypeArguments;
-import shadow.parser.javacc.ASTTypeBound;
 import shadow.parser.javacc.ASTTypeParameter;
 import shadow.parser.javacc.ASTTypeParameters;
 import shadow.parser.javacc.ASTUnqualifiedName;
@@ -499,7 +495,7 @@ public class TypeUpdater extends BaseChecker {
 					}
 					
 					if( classType.hasOuter() && interfaceType.recursivelyContainsMethod("create") )
-						addError(Error.INVALID_IMPLEMENT, "Inner class " + classType + " cannot implement interface " + interfaceType + " because it contains a create method");
+						addError(Error.INVALID_INTERFACE, "Inner class " + classType + " cannot implement interface " + interfaceType + " because it contains a create method");
 				}
 			}
 		}				
@@ -512,30 +508,14 @@ public class TypeUpdater extends BaseChecker {
 			for( ModifiedType modifiedType : type.getTypeParameters() )
 			{						
 				TypeParameter typeParameter = (TypeParameter) modifiedType.getType();
-				Set<Type> bounds = typeParameter.getBounds();						
-				
-				if( !bounds.isEmpty() )
-				{	
-					Set<Type> updatedBounds = new HashSet<Type>();
-					
-					for( Type boundType : bounds )
-					{	
-						if( boundType instanceof UninstantiatedType )
-						{
-							try
-							{
-								boundType = ((UninstantiatedType)boundType).instantiate();
-							}
-							catch( InstantiationException e )
-							{
-								addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-							}								
-						}
-						
-						updatedBounds.add(boundType);
-					}
-					
-					typeParameter.setBounds(updatedBounds);
+			
+				try
+				{
+					typeParameter.updateFieldsAndMethods();
+				}
+				catch( InstantiationException e )
+				{
+					addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 				}
 			}
 		}
@@ -846,34 +826,82 @@ public class TypeUpdater extends BaseChecker {
 	
 	private Object visitDeclaration( Node node, Boolean secondVisit ) throws ShadowException
 	{
-		if( secondVisit )
-		{
-			if( declarationType instanceof ClassType )
-			{
-				ClassType classType = (ClassType) declarationType;
+		if( secondVisit ){
+			ASTIsList list = null;			
+			for( int i = 0; i < node.jjtGetNumChildren() && list == null; ++i )
+				if( node.jjtGetChild(i) instanceof ASTIsList )
+					list = (ASTIsList)(node.jjtGetChild(i));
+						
+			if( declarationType instanceof InterfaceType || declarationType instanceof EnumType ) {
+				String kind;
+				if( declarationType instanceof EnumType ) {							
+					kind = "Enum type ";
+					EnumType enumType = (EnumType) declarationType;
+					enumType.setExtendType(Type.ENUM);
+				}
+				else
+					kind = "Interface type ";
 				
-				if( classType.getExtendType() == null )
-				{					
-					if( declarationType instanceof EnumType )
-						classType.setExtendType(Type.ENUM);
-					else if( declarationType instanceof ExceptionType )
-					{
-						if( declarationType == Type.EXCEPTION )
+				if( list != null )					
+					for( int i = 0; i < list.jjtGetNumChildren(); i++ ) {					
+						Type type = list.jjtGetChild(i).getType();
+						if( type instanceof InterfaceType )
+							declarationType.addInterface((InterfaceType)type);
+						else				
+							addError(Error.INVALID_INTERFACE, kind + declarationType + " cannot implement non-interface type " + type, type);
+					}
+			}	
+			else if( declarationType instanceof ClassType ) { //should only be classes, exceptions					
+				ClassType classType = (ClassType)declarationType;
+				String kind;
+				if( classType.getClass() == ExceptionType.class )
+					kind = "Exception type ";
+				else if( classType.getClass() == SingletonType.class )
+					kind = "Singleton type ";
+				else
+					kind = "Class type ";
+				
+				if( list != null )				
+					for( int i = 0; i < list.jjtGetNumChildren(); ++i ) {
+						Type type = list.jjtGetChild(i).getType();
+						String otherKind;
+						if( type.getClass() == ExceptionType.class )
+							otherKind = "exception type ";
+						else if( type.getClass() == SingletonType.class )
+							otherKind = "singleton type ";
+						else
+							otherKind = "class type ";
+						
+						if( type instanceof ClassType ) {
+							//exceptions are the only things that can extend exceptions
+							if(((declarationType.getClass() == ExceptionType.class) != (type.getClass() == ExceptionType.class)) || 
+								type.getClass() == SingletonType.class ) //nothing can extend a singleton
+								addError(Error.INVALID_PARENT, kind + declarationType + " cannot be child of " + otherKind + type);														
+							else if( type.getModifiers().isLocked() )
+								addError(Error.INVALID_PARENT, kind + declarationType + " cannot be child of locked " + otherKind + type);
+							else if( i != 0 )
+								addError(Error.INVALID_PARENT, kind + declarationType + " can only be child of " + otherKind + type + " if " + type + " is listed first in the is list");
+							else
+								classType.setExtendType((ClassType)type);
+						}
+						else if( type instanceof InterfaceType )
+							classType.addInterface((InterfaceType)type);
+						else				
+							addError(Error.INVALID_TYPE, kind + classType + " cannot extend or implement type " + type, classType, type);
+					}
+				
+				//use defaults if no extend type set
+				if( classType.getExtendType() == null ) {
+					if( classType instanceof ExceptionType ) {
+						if( classType == Type.EXCEPTION ) //special case only for the root of all exceptions
 							classType.setExtendType(Type.OBJECT);
 						else
 							classType.setExtendType(Type.EXCEPTION);
 					}
-					else if( declarationType instanceof ArrayType )													
-						classType.setExtendType(Type.ARRAY);		
-					else if( classType != Type.OBJECT )
+					else if( classType != Type.OBJECT ) //the Object class is the only class with a null parent
 						classType.setExtendType(Type.OBJECT);
 				}
-				else
-				{
-					if ( declarationType == Type.EXCEPTION )
-						classType.setExtendType(Type.OBJECT);
-				}				
-			}
+			}		
 			
 			if( declarationType.getOuter() != null )			
 				declarationType.addTypeParameterDependency(declarationType.getOuter());
@@ -886,8 +914,7 @@ public class TypeUpdater extends BaseChecker {
 			
 			declarationType = declarationType.getOuter();
 		}
-		else
-		{
+		else {
 			declarationType = node.getType();
 			currentPackage = declarationType.getPackage();
 			updateImports( node );
@@ -1057,9 +1084,9 @@ public class TypeUpdater extends BaseChecker {
 			
 			if( node.jjtGetNumChildren() > 0 )
 			{
-				ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
-				for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
-					typeParameter.addBound(bound.jjtGetChild(i).getType());				
+				ASTIsList bounds = (ASTIsList)(node.jjtGetChild(0));				
+				for( int i = 0; i < bounds.jjtGetNumChildren(); i++ )								
+					typeParameter.addBound(bounds.jjtGetChild(i).getType());				
 			}
 		}
 		else
@@ -1201,75 +1228,8 @@ public class TypeUpdater extends BaseChecker {
 		}	
 		
 		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	//add extends list
-	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException
-	{
-		if(secondVisit)
-		{
-			if( declarationType instanceof ClassType ) //includes error, exception, and enum (for now)
-			{		
-				ClassType classType = (ClassType)declarationType;			
-				Node child = node.jjtGetChild(0); //only one thing in extends lists for classes
-				Type extendType = child.getType();
-				
-				if( extendType.getModifiers().isLocked() )
-					addError(Error.INVALID_EXTEND, "Class type " + declarationType + " cannot extend locked type " + extendType);
-				
-				if( declarationType.getClass() == ClassType.class )
-				{						
-					if( extendType.getClass() == ClassType.class )
-						classType.setExtendType((ClassType) extendType);
-					else
-						addError(Error.INVALID_EXTEND, "Class type " + declarationType + " cannot extend non-class type " + extendType);
-				}
-				else if( declarationType.getClass() == ExceptionType.class )
-				{
-					if( extendType.getClass() == ExceptionType.class )
-						classType.setExtendType((ClassType) extendType);
-					else
-						addError(Error.INVALID_EXTEND, "Exception type " + declarationType + " cannot extend non-exception type " + extendType, extendType);
-				}
-			}
-			else if( declarationType instanceof InterfaceType ) 
-			{
-				InterfaceType interfaceType = (InterfaceType)declarationType;
-				for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				{					
-					Type type = node.jjtGetChild(i).getType();
-					if( type instanceof InterfaceType )
-						interfaceType.addInterface((InterfaceType)type);
-					else				
-						addError(Error.INVALID_EXTEND, "Interface type " + interfaceType + " cannot extend non-interface type " + type, type);
-				}					
-			}
-		}
-		
-		return WalkType.POST_CHILDREN;
 	}	
-	
-	//add implements list
-	public Object visit(ASTImplementsList node, Boolean secondVisit) throws ShadowException
-	{
-		if(secondVisit)
-		{
-			ClassType classType = (ClassType)declarationType;
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-			{
-				Type type = node.jjtGetChild(i).getType();
-				if( type instanceof InterfaceType )
-					classType.addInterface((InterfaceType)type);
-				else				
-					addError(Error.INVALID_IMPLEMENT, "Class type " + classType + " cannot implement non-interface type " + type, classType, type);
-			}				
-		}
 		
-		return WalkType.POST_CHILDREN;
-		
-	}
-	
 	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
 	{
 		if( secondVisit )

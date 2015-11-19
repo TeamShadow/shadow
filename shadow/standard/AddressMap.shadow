@@ -2,8 +2,8 @@ import shadow:utility@Map;
 import shadow:utility@IllegalModificationException;
 import shadow:io@Console;
 
-locked class shadow:standard@AddressMap
-	implements Map<ulong, ulong>	
+locked class shadow:standard@
+	AddressMap is Map<ulong, ulong>	
 {
 	private constant int DEFAULT_INITIAL_CAPACITY = 16;
 	private constant int MAXIMUM_CAPACITY = 1 << 30;
@@ -220,7 +220,7 @@ locked class shadow:standard@AddressMap
 	}
 	
 	
-	private class AddressMapIterator implements Iterator<ulong>
+	private class AddressMapIterator is Iterator<ulong>
 	{
 		int index = 0;
 		nullable Node current;

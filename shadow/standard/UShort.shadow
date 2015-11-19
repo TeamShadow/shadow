@@ -1,14 +1,13 @@
 locked immutable class shadow:standard@
 	UShort
-implements
-	Integer<ushort>,
-	Integer<int>,
-	Integer<uint>,
-	Integer<long>,
-	Integer<ulong>,
-	Number<float>,
-	Number<double>,
-	CanHash
+is	Integer<ushort>
+and	Integer<int>
+and	Integer<uint>
+and	Integer<long>
+and	Integer<ulong>
+and	Number<float>
+and	Number<double>
+and	CanHash
 {
 
 	public constant ushort MAX = 65535us;

@@ -1,7 +1,5 @@
 interface shadow:standard@
-	CanCompare<T>
-extends
-	CanEqual<T>
+	CanCompare<T> is CanEqual<T>
 {
 	readonly compare(T other) => (int);
 }

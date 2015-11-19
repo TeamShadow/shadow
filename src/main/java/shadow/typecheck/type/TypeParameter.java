@@ -7,40 +7,32 @@ import java.util.List;
 import java.util.Set;
 
 public class TypeParameter extends Type {
-	private Set<Type> bounds = new HashSet<Type>();	
-	private boolean toStringRecursion = false; //keeps type parameters that have bounds containing themselves from infinitely recursing
-
-	public TypeParameter(String typeName, Type outer)
-	{
+	
+	private ClassType classBound;
+	
+	public TypeParameter(String typeName, Type outer) {
 		super(typeName, new Modifiers(), null, outer);
-		bounds.add(Type.OBJECT);
+		classBound = Type.OBJECT;
 	}
-	
-	public ClassType getClassBound() {
-		for( Type bound : bounds )
-			if( bound instanceof ClassType )
-				return (ClassType)bound;
-				
-		return Type.OBJECT;
-	}
-	
 	
 	public void addBound(Type type) {		
 		//only one class at a time
 		if( type instanceof ClassType )		
-			bounds.remove(getClassBound());		
-		
-		bounds.add(type);
+			classBound = ((ClassType)type);
+		else
+			addInterface((InterfaceType)type);
 		invalidateHashName();
+	}
+	
+	
+	public ClassType getClassBound() {
+		return classBound;
 	}
 	
 	public Set<Type> getBounds() {
+		HashSet<Type> bounds = new HashSet<Type>(getInterfaces());
+		bounds.add(classBound);		
 		return bounds;
-	}
-	
-	public void setBounds(Set<Type> bounds) {
-		this.bounds = bounds;
-		invalidateHashName();
 	}
 	
 	public boolean acceptsSubstitution(Type type) {
@@ -48,16 +40,18 @@ public class TypeParameter extends Type {
 			return true;
 		
 		SequenceType values = new SequenceType(this);	
-		SequenceType replacements = new SequenceType(type);		
-		
-		Set<Type> substitutedBounds = new HashSet<Type>();
+		SequenceType replacements = new SequenceType(type);
+
 		try {
-			for( Type bound : bounds )
-				substitutedBounds.add( bound.replace(values, replacements));
+			for( InterfaceType bound : getInterfaces() ) {
+				bound = bound.replace(values, replacements);
+				if( !type.isSubtype(bound))
+					return false;
+			}
 			
-			for( Type bound : substitutedBounds )
-				if( !type.isSubtype(bound) )
-					return false;	
+			ClassType replacedClass = classBound.replace(values, replacements);
+			if( !type.isSubtype(replacedClass))
+				return false;
 		}
 		catch(InstantiationException e)	{}
 		
@@ -72,8 +66,11 @@ public class TypeParameter extends Type {
 		if( type instanceof TypeParameter )
 			return false;
 		
+		if( classBound.isSubtype(type) )
+			return true;
+		
 		//but it can still stand in for another type, with the correct bounds
-		for( Type bound : bounds )
+		for( InterfaceType bound : getInterfaces() )
 			if( bound.isSubtype(type) )
 				return true;		
 		
@@ -112,79 +109,64 @@ public class TypeParameter extends Type {
 	
 	@Override
 	public void updateFieldsAndMethods() throws InstantiationException {
-		Set<Type> toRemove = new HashSet<Type>();
-		Set<Type> toAdd = new HashSet<Type>();
+		Set<InterfaceType> toRemove = new HashSet<InterfaceType>();
+		Set<InterfaceType> toAdd = new HashSet<InterfaceType>();
+		List<InterfaceType> interfaces = getInterfaces();
 		
-		for( Type type : bounds ) {
-			if( type instanceof UninstantiatedType ) {			
+		for( InterfaceType type : interfaces ) {
+			if( type instanceof UninstantiatedInterfaceType ) {			
 				toRemove.add(type);
-				toAdd.add(((UninstantiatedType)type).instantiate());
+				toAdd.add(((UninstantiatedInterfaceType)type).instantiate());
 			}
 		}
 		
-		bounds.removeAll(toRemove);
-		bounds.addAll(toAdd);
+		interfaces.removeAll(toRemove);
+		interfaces.addAll(toAdd);
+		
+		if( classBound instanceof UninstantiatedClassType )
+			classBound = ((UninstantiatedClassType)classBound).instantiate();
+		
+		invalidateHashName();
 	}
 	
 	@Override
 	public String toString(int options) {
 		StringBuilder builder = new StringBuilder(getTypeName());
-		boolean first = true;
+		boolean first = true;		
+		List<InterfaceType> interfaces = getInterfaces();
 		
-		if(/* !toStringRecursion && */(options & PARAMETER_BOUNDS) != 0 && bounds.size() > 1 ) { //always contains Object			
-			//toStringRecursion = true;			
-			builder.append(" is ");
-			
-			for(Type bound : bounds )				
-				if( bound != Type.OBJECT ) {			
-					if( !first )
-						builder.append(" and ");
-					
-					builder.append(bound.toString(options & ~PARAMETER_BOUNDS));				
-					first = false;
-				}			
-			
-			//toStringRecursion = false;
-		}
-		
-		return builder.toString();
-	}
-	
-	/*
-	public String toStringWithQualifiedParameters(boolean withBounds) {
-		StringBuilder builder = new StringBuilder(getTypeName());
-		boolean first = true;
-		
-		if( withBounds && bounds.size() > 1 ) { //always contains Object			
-						
-			builder.append(" is ");
-			
-			for(Type bound : bounds )				
-				if( bound != Type.OBJECT ) {			
-					if( !first )
-						builder.append(" and ");
-					
-					builder.append(bound.toStringWithQualifiedParameters(false));				
+		if((options & PARAMETER_BOUNDS) != 0 ) {
+			if( classBound != Type.OBJECT || interfaces.size() > 0 ) {			 			
+				builder.append(" is ");
+				
+				if( classBound != Type.OBJECT ) {
+					builder.append(classBound.toString(options & ~PARAMETER_BOUNDS));
 					first = false;
 				}
+			
+				for(InterfaceType bound : interfaces ) {
+					if( first )
+						first = false;
+					else
+						builder.append(" and ");
+					builder.append(bound.toString(options & ~PARAMETER_BOUNDS));
+				}
+			}
 		}
 		
 		return builder.toString();
 	}
-	*/
 	
 	@Override
 	public String getMangledNameWithGenerics(boolean convertArrays) {		
-		return getClassBound().getMangledNameWithGenerics(true);
+		return classBound.getMangledNameWithGenerics(true);
 	}	
 	
 	
 	
 	public String getMangledName() {		
-		return getClassBound().getMangledName(); //often Object, but can be others
-	}
-	
-	
+		return classBound.getMangledName(); //often Object, but can be others
+	}	
 	
 	public List<MethodSignature> getAllMethods(String methodName) {
 		return getMethods(methodName);
@@ -192,8 +174,12 @@ public class TypeParameter extends Type {
 	
 	public List<MethodSignature> getMethods(String methodName) {
 		Set<MethodSignature> signatures = new HashSet<MethodSignature>();
-		for(Type bound : bounds )					
-			signatures.addAll(bound.getMethods(methodName));
+		
+		if( !methodName.equals("create") )
+			signatures.addAll(classBound.getAllMethods(methodName));
+		
+		for(InterfaceType bound : getInterfaces() )					
+			signatures.addAll(bound.getAllMethods(methodName));
 		
 		return new ArrayList<MethodSignature>(signatures);
 	}
@@ -213,22 +199,40 @@ public class TypeParameter extends Type {
 		// should never get called
 		return false;
 	}
-
-	@Override
-	public boolean hasInterface(InterfaceType type) {
-		for(Type bound : bounds)
-			if( bound.hasInterface(type))
-				return true;
-		
-		return false;
-	}	
 	
 	@Override
 	public boolean hasUninstantiatedInterface(InterfaceType type) {
-		for(Type bound : bounds)
-			if( bound.hasUninstantiatedInterface(type))
+		
+		type = type.getTypeWithoutTypeArguments();
+		for( InterfaceType interfaceType : getInterfaces() )			
+			if( interfaceType.hasUninstantiatedInterface(type) )
 				return true;
 		
+		ClassType current = classBound;		
+		while( current != null ) {
+			for( InterfaceType interfaceType : current.getInterfaces() )			
+				if( interfaceType.hasUninstantiatedInterface(type) )
+					return true;
+			
+			current = current.getExtendType();			
+		}
+		return false;
+	}
+	
+	@Override
+	public boolean hasInterface(InterfaceType type) {
+		for( InterfaceType interfaceType : getInterfaces() )			
+			if( interfaceType.hasInterface(type) )
+				return true;
+		
+		ClassType current = classBound;
+		while( current != null ) {
+			for( InterfaceType interfaceType : current.getInterfaces() )			
+				if( interfaceType.hasInterface(type) )
+					return true;
+			
+			current = current.getExtendType();			
+		}
 		return false;
 	}
 }

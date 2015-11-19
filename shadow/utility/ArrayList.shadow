@@ -1,6 +1,6 @@
 class shadow:utility@
-ArrayList<V is CanEqual<V>>
-implements List<V>
+	ArrayList<V is CanEqual<V>>
+is  List<V>
 {
 	get int size = 0;
 	nullable V[] elements = V:null[10];
@@ -121,7 +121,7 @@ implements List<V>
 		return ArrayListIterator:create();
 	}
 	
-	private class ArrayListIterator implements Iterator<V>
+	private class ArrayListIterator is Iterator<V>
 	{
 		int index = 0;
 		int expectedModifications = modifications;

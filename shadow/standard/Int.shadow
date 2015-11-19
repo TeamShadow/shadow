@@ -1,12 +1,11 @@
 locked immutable class shadow:standard@
 	Int
-implements
-	Integer<int>,
-	Integer<long>,
-	Number<float>,
-	Number<double>,
-	CanNegate<int>,
-	CanHash
+is	Integer<int>
+and	Integer<long>
+and	Number<float>
+and	Number<double>
+and	CanNegate<int>
+and	CanHash
 {
 	public constant int MAX =  2147483647;
 	public constant int MIN =  -2147483648;

@@ -1,4 +1,4 @@
-class Interface implements Fooable
+class Interface is Fooable
 {
 
     public blah() => () {

@@ -1,11 +1,11 @@
 interface shadow:standard@
 	Number<T>
-extends
-	CanAdd<T>,
-	CanSubtract<T>,
-	CanMultiply<T>,
-	CanDivide<T>,
-	CanModulus<T>,
+is
+	CanAdd<T> and
+	CanSubtract<T> and
+	CanMultiply<T> and
+	CanDivide<T> and
+	CanModulus<T> and
 	CanCompare<T>
 {
 	readonly toByte() => (byte);

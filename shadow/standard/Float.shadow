@@ -1,10 +1,9 @@
 locked immutable class shadow:standard@
 	Float
-implements
-	Number<float>,
-	Number<double>,
-	CanNegate<float>,
-	CanHash
+is Number<float>
+and	Number<double>
+and	CanNegate<float>
+and	CanHash
 {
 	public constant float PI = 3.1415927f;
 	public constant float E = 2.7182817f;

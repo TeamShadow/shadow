@@ -1411,9 +1411,9 @@ public class StatementChecker extends BaseChecker {
 			if( node.jjtGetNumChildren() > 0 )
 			{
 				TypeParameter typeParameter = (TypeParameter) node.getType();
-				ASTTypeBound bound = (ASTTypeBound)(node.jjtGetChild(0));				
-				for( int i = 0; i < bound.jjtGetNumChildren(); i++ )								
-					typeParameter.addBound(bound.jjtGetChild(i).getType());				
+				ASTIsList bounds = (ASTIsList)(node.jjtGetChild(0));				
+				for( int i = 0; i < bounds.jjtGetNumChildren(); i++ )								
+					typeParameter.addBound(bounds.jjtGetChild(i).getType());				
 			}		
 		}
 		else
@@ -3212,13 +3212,9 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTExtendsList node, Boolean secondVisit) throws ShadowException {
+	public Object visit(ASTIsList node, Boolean secondVisit) throws ShadowException {
 		return WalkType.NO_CHILDREN;
-	}
-	
-	public Object visit(ASTImplementsList node, Boolean secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN;
-	}
+	}	
 	
 	public Object visit(ASTInlineMethodDefinition node, Boolean secondVisit) throws ShadowException 
 	{	

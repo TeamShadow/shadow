@@ -1,4 +1,4 @@
-class Index1 implements CanIndexStore<String, int>
+class Index1 is CanIndexStore<String, int>
 {
 	public index(String key) => (int value)
 	{
