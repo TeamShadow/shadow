@@ -201,7 +201,7 @@ public class Main {
 						LLVMOutput.addGenerics("%arraySet", arrays, out);						
 					}					
 					
-					line = line.replace("_Pshadow_Ptest_CTest", mainClass) + System.lineSeparator();
+					line = line.replace("shadow:test@Test", mainClass) + System.lineSeparator();
 					out.write(line.getBytes());
 					line = main.readLine();
 				}
@@ -287,7 +287,7 @@ public class Main {
 					TACModule module = new TACBuilder().build(node);
 
 					if( path.equals(mainFileName) ) {							
-						mainClass = type.getMangledName();
+						mainClass = type.toString(Type.PACKAGES);
 						SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
 						if( type.getMatchingMethod("main", arguments) != null )
 							mainArguments = true;

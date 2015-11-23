@@ -46,18 +46,6 @@ public class ArrayType extends ClassType
 		return baseType;
 	}
 	
-	@Override
-	public String getMangledName()
-	{
-		return getBaseType().getMangledName() + "_A" + dimensions;
-	}
-	
-	@Override
-	public String getMangledNameWithGenerics(boolean convertArrays)
-	{
-		return getBaseType().getMangledNameWithGenerics(false) + "_A" + dimensions;
-	}
-	
 	public ArrayType(Type baseType) {
 		this(baseType, Collections.singletonList(1), 0, false);
 	}
@@ -99,10 +87,13 @@ public class ArrayType extends ClassType
 		this.nullable = nullable;
 	}
 	
+	@Override
 	public String toString(int options) {
+		if( ((options & MANGLE) != 0) && ((options & CONVERT_ARRAYS) != 0)  )
+			return baseType.toString(options & ~CONVERT_ARRAYS) + brackets;		
+		
 		return baseType.toString(options) + brackets;
 	}
-	
 	
 	@Override
 	public SequenceType getTypeParameters() {

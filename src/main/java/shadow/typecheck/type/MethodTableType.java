@@ -48,7 +48,7 @@ public class MethodTableType extends Type {
 	}
 	
 	@Override
-	public String getMangledName()	{
-		return type.getMangledName() + "_methods";
+	public String toString(int options)	{
+		return type.toString(options) + ":_methods";
 	}
 }

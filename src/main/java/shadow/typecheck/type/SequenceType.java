@@ -103,32 +103,27 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return canAccept(type, substitutionType, null);		
 	}
 	
-	public boolean canAccept( ModifiedType inputType, SubstitutionKind substitutionType, List<TypeCheckException> errors )
-	{	
-		if( substitutionType.equals( SubstitutionKind.BINDING ) )
-		{
+	public boolean canAccept( ModifiedType inputType, SubstitutionKind substitutionType, List<TypeCheckException> errors ) {	
+		if( substitutionType.equals( SubstitutionKind.BINDING ) ) {
 			SequenceType input = new SequenceType();
 			input.add(inputType);		
 			return canAccept(input, substitutionType, errors);
 		}
-		else
-		{			
+		else {			
 			if( inputType.getType() instanceof SequenceType )
 				return canAccept( (SequenceType)inputType.getType(), substitutionType, errors );
 			
 			//for splats
-			for( ModifiedType modifiedType : types )
-			{
+			for( ModifiedType modifiedType : types )			
 				if( !BaseChecker.checkAssignment(modifiedType, inputType, AssignmentType.EQUAL, substitutionType, errors))
 					return false;
-			}
 			
 			return true;
 		}
 	}
 	
-	public String toString(int options)
-	{
+	@Override
+	public String toString(int options) {
 		return toString("(", ")", options);		
 	}
 	
@@ -142,77 +137,33 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return toStringWithQualifiedParameters(withBounds);
 	}
 	*/
-	
-	@Override
-	protected String getMangledNameWithGenerics(boolean convertArrays)
-	{
-		StringBuilder builder = new StringBuilder("_L");		
-		
-		//to distinguish generics that have the same type name, we have to add packages as well
-		for(ModifiedType modifiedType: types)
-		{
-			Type type = modifiedType.getType();
-			if( type instanceof TypeParameter ) //always print _T to avoid problems with CanEqual<T> and CanEqual<V>
-				builder.append("_T");
-			else if( type instanceof ArrayType) //only convert the first layer
-			{
-				if( convertArrays )
-					builder.append(((ArrayType)type).convertToGeneric().getMangledNameWithGenerics(false));
-				else
-					builder.append(type.getMangledNameWithGenerics(true));
-			}
-			else
-				builder.append(type.getMangledNameWithGenerics(true));
-			//Type type = modifiedType.getType();
-			//shadow.typecheck.Package _package = type.getPackage();
-			//builder.append(type.getPackage().getMangledName() + type.getMangledNameWithGenerics());
-		}
-			
-		builder.append("_R");
-		
-		return builder.toString();
-	}
-	
-	/*
-	public String toStringWithQualifiedParameters(String begin,	String end, boolean withBounds) {
-		StringBuilder builder = new StringBuilder(begin);
-		boolean first = true;
-		
-		for(ModifiedType type: types)
-		{			
-			if( first )
-				first = false;
-			else
-				builder.append(",");								
-			
-			if( type != null )
-			{
-				builder.append(type.getModifiers().toString());
-				builder.append(type.getType().toStringWithQualifiedParameters(withBounds));
-			}
-		}
-		
-		builder.append(end);
-		
-		return builder.toString();
-	}
-	*/
-	
+
 	public String toString(String begin, String end, int options ) {
 		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;
-		
+		 
 		for(ModifiedType type: types) {			
 			if( first )
 				first = false;
 			else
 				builder.append(",");								
 			
-			if( type != null ) {
+			if( (options & MANGLE) != 0 ) {
+				if( type.getType() instanceof ArrayType) //only convert the first layer
+				{
+					if( (options & CONVERT_ARRAYS) != 0 )
+						builder.append(((ArrayType)type.getType()).convertToGeneric().toString(options & ~CONVERT_ARRAYS));
+					else
+						builder.append(type.getType().toString(options));
+				}
+				else
+					builder.append(type.getType().toString(options));
+			}
+			else if( type != null ) {
 				builder.append(type.getModifiers().toString());
 				builder.append(type.getType().toString(options));
 			}
-		}
+		}		
 		
 		builder.append(end);
 		

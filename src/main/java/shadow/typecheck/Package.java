@@ -116,23 +116,10 @@ public class Package implements Comparable<Package>
 		return parent.getQualifiedName() + ':' + getName();
 	}
 	
-	public String getPath()
-	{
-		if (parent == null || parent.getName().isEmpty())
-			return getName();
-		
-		return parent.getQualifiedName() + File.separator + getName();
+	public String getPath() {
+		return getQualifiedName().replace(':', File.separatorChar);
 	}
-	
-	public String getMangledName()
-	{
-		StringBuilder sb = new StringBuilder();
-		
-		if (parent != null && !parent.getName().isEmpty())
-			sb.append(parent.getMangledName());
-		return Type.mangle(sb.append("_P"), getName()).toString();
-	}
-	
+
 	public Package getParent()
 	{
 		return parent;

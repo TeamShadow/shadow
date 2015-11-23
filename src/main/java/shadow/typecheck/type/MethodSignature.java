@@ -180,17 +180,29 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return hashString().hashCode();
 	}
 	
+	//Is it only the wrapped ones that correspond to interface methods?
+	//If so, those are the ones that need special generic attention
 	public String getMangledName() {
-		return "_M" + symbol + type.getMangledName();
+		StringBuilder sb = new StringBuilder();
+		
+		if( isWrapper() )		
+			sb.append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS));
+		else
+			sb.append(getOuter().toString(Type.MANGLE));
+		
+		sb.append(".").append(symbol).append(type.toString(Type.MANGLE | Type.PACKAGES | Type.TYPE_PARAMETERS));
+		
+		if (isWrapper())
+			sb.append(":W");
+		
+		return sb.toString();
 	}
 
-	public List<String> getParameterNames()
-	{
+	public List<String> getParameterNames() {
 		return type.getParameterNames();
 	}
 	
-	public SequenceType getParameterTypes()
-	{
+	public SequenceType getParameterTypes() {
 		return type.getParameterTypes();
 	}
 	

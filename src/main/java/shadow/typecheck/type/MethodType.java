@@ -139,10 +139,13 @@ public class MethodType extends ClassType {
 	}
 
 	@Override
-	public String toString(int options)
-	{		
+	public String toString(int options) {	
+		if( (options & MANGLE) != 0 ) {
+			return parameterTypes.toString(options);
+		}			
+			
 		return parameterTypes.toString(options) + " => " + returns.toString(options);
-	}
+	}	
 	
 	public String parametersToString()
 	{
@@ -168,14 +171,7 @@ public class MethodType extends ClassType {
 		return (MethodType)typeWithoutTypeArguments;
 	}
 	
-	@Override
-	public String getMangledName() {
-		StringBuilder sb = new StringBuilder();
-		for (ModifiedType type : parameterTypes)
-			sb.append(type.getType().getMangledName());
-		return sb.toString();
-	}
-	
+
 	
 	@Override
 	public MethodType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException

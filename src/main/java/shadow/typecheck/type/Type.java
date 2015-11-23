@@ -124,7 +124,9 @@ public abstract class Type implements Comparable<Type> {
 	public static final int NO_OPTIONS = 0;
 	public static final int PACKAGES =  1;
 	public static final int TYPE_PARAMETERS =  2;
-	public static final int PARAMETER_BOUNDS =  4;	
+	public static final int PARAMETER_BOUNDS =  4;
+	public static final int CONVERT_ARRAYS =  8;
+	public static final int MANGLE =  16;
 	
 	private static class TypeArgumentCache {
 		public ModifiedType argument;
@@ -278,67 +280,9 @@ public abstract class Type implements Comparable<Type> {
 		return typeName;
 	}
 	
-	final public String getMangledNameWithGenerics() {
-		if( this instanceof ArrayType || 
-			getTypeWithoutTypeArguments().equals(Type.ARRAY) || 
-			getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ||
-			Type.ARRAY.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) ||
-			Type.ARRAY_NULLABLE.recursivelyContainsInnerClass(getTypeWithoutTypeArguments()) )
-			return getMangledNameWithGenerics(false);
-		else
-			return getMangledNameWithGenerics(true);		
-	}
-
-			
-	protected String getMangledNameWithGenerics(boolean convertArrays) {		
-		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
-		StringBuilder builder;
-		
-		if( getOuter() == null )
-		{
-			Package _package = getPackage();			
-			if( _package == null )
-				builder = new StringBuilder("_Pdefault");
-			else
-				builder = new StringBuilder(_package.getMangledName());
-			
-			builder.append("_C").append(className);
-		}
-		else
-			builder = new StringBuilder(getOuter().getMangledNameWithGenerics(convertArrays) + "_I" + className );
-			
-		if( isParameterized() )		
-			builder.append(getTypeParameters().getMangledNameWithGenerics(convertArrays));
-				
-		return builder.toString();
-	}	
-
-	
-
-	public String getMangledName()
-	{
-		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
-		StringBuilder builder;
-		
-		if( getOuter() == null )
-		{
-			Package _package = getPackage();			
-			if( _package == null )
-				builder = new StringBuilder("_Pdefault");
-			else
-				builder = new StringBuilder(_package.getMangledName());
-			
-			builder.append("_C").append(className);
-		}
-		else
-			builder = new StringBuilder(getOuter().getMangledName() + "_I" + className );
-				
-		return builder.toString();	
-	}
-	
 	public final String getHashName() {	
 		if( hashName == null )
-			hashName = toString(); //with packages but without type parameter bounds
+			hashName = toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.MANGLE | Type.CONVERT_ARRAYS);
 		
 		return hashName;
 	}
@@ -389,7 +333,7 @@ public abstract class Type implements Comparable<Type> {
 		StringBuilder builder = new StringBuilder();
 		
 		if( getOuter() == null ) {
-			if( !isPrimitive() && (options & PACKAGES) != 0 ) {
+			if( !isPrimitive() && ((options & PACKAGES) != 0 ||  (options & MANGLE) != 0) ) { //type mangling implies packages
 				if( _package == null || _package.getQualifiedName().isEmpty())
 					builder.append("default@");
 				else

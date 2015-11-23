@@ -131,11 +131,15 @@ public class TypeParameter extends Type {
 	
 	@Override
 	public String toString(int options) {
-		StringBuilder builder = new StringBuilder(getTypeName());
-		boolean first = true;		
-		List<InterfaceType> interfaces = getInterfaces();
+		StringBuilder builder = new StringBuilder();
 		
-		if((options & PARAMETER_BOUNDS) != 0 ) {
+		if((options & MANGLE) != 0 ) {
+			builder.append(classBound.toString(options & ~PARAMETER_BOUNDS)); 
+		}		
+		else if((options & PARAMETER_BOUNDS) != 0 ) {
+			builder.append(getTypeName());
+			boolean first = true;		
+			List<InterfaceType> interfaces = getInterfaces();
 			if( classBound != Type.OBJECT || interfaces.size() > 0 ) {			 			
 				builder.append(" is ");
 				
@@ -155,17 +159,6 @@ public class TypeParameter extends Type {
 		}
 		
 		return builder.toString();
-	}
-	
-	@Override
-	public String getMangledNameWithGenerics(boolean convertArrays) {		
-		return classBound.getMangledNameWithGenerics(true);
-	}	
-	
-	
-	
-	public String getMangledName() {		
-		return classBound.getMangledName(); //often Object, but can be others
 	}	
 	
 	public List<MethodSignature> getAllMethods(String methodName) {

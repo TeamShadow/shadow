@@ -683,4 +683,12 @@ public class ClassType extends Type {
 		return fieldList;
 	}
 	
+	@Override
+	public String toString(int options) {
+		if( ((options & MANGLE) != 0) && ((options & CONVERT_ARRAYS) != 0) &&
+			(Type.ARRAY.encloses(this) || Type.ARRAY_NULLABLE.encloses(this)) )
+			return super.toString(options & ~CONVERT_ARRAYS);
+		
+		return super.toString(options);		
+	}	
 }
