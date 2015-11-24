@@ -64,7 +64,7 @@ public class ArrayType extends ClassType
 	
 	protected static Type getLowestBase(Type type) {
 		if( type instanceof ArrayType )
-			return ((ArrayType)type).getBaseType();
+			return ((ArrayType)type).recursivelyGetBaseType();
 		return type;		
 	}
 	

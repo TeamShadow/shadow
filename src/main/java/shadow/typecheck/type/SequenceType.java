@@ -152,10 +152,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			Modifiers modifiers = modifiedType.getModifiers();
 			
 			if( (options & MANGLE) != 0 ) {
-				if( type instanceof ArrayType) //only convert the first layer
-				{
+				if( type instanceof ArrayType) { //only convert the first layer
 					if( (options & CONVERT_ARRAYS) != 0 )
 						builder.append(((ArrayType)type).convertToGeneric().toString(options & ~CONVERT_ARRAYS));
+					else if( ((ArrayType)type).recursivelyGetBaseType().isPrimitive() )
+						builder.append(type.toString(options & ~MANGLE));
 					else
 						builder.append(type.toString(options));
 				}

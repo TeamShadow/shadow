@@ -567,16 +567,17 @@ public class LLVMOutput extends AbstractOutput {
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, ".allocate()") + '(' +
 						type(Type.CLASS) + ", " + methodTableType(Type.OBJECT) +  "*)");				
+				
 				writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 						raw(Type.CLASS, ".allocate(" +
-						Type.INT.toString(Type.MANGLE) + ")") + '(' + type(Type.CLASS) +
+						Type.INT.toString() + ")") + '(' + type(Type.CLASS) +
 						", " + type(Type.INT) + ')');
 			}
 	
 			if( !moduleType.encloses(Type.ARRAY) )
 				writer.write("declare " + type(Type.ARRAY) + " @" +
 						raw(Type.ARRAY, ".create(" + new ArrayType(Type.INT).
-						toString(Type.MANGLE) + "," + Type.OBJECT.toString(Type.MANGLE) + ")") + '(' +
+						toString() + "," + Type.OBJECT.toString(Type.MANGLE) + ")") + '(' +
 						type(Type.OBJECT) + ", " +
 						type(new ArrayType(Type.INT)) + ", " +
 						type(Type.OBJECT) + ')');
@@ -585,7 +586,7 @@ public class LLVMOutput extends AbstractOutput {
 			if( !moduleType.encloses(Type.ARRAY_NULLABLE) )
 				writer.write("declare " + type(Type.ARRAY_NULLABLE) + " @" +
 						raw(Type.ARRAY_NULLABLE, ".create(" + new ArrayType(Type.INT).
-						toString(Type.MANGLE) + "," + Type.OBJECT.toString(Type.MANGLE) + ")") + '(' +
+						toString() + "," + Type.OBJECT.toString(Type.MANGLE) + ")") + '(' +
 						type(Type.OBJECT) + ", " +
 						type(new ArrayType(Type.INT)) + ", " +
 						type(Type.OBJECT) + ')');
@@ -1053,7 +1054,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(source) + ", 1");				
 			writer.write(nextTemp() + " = call " + type(Type.OBJECT) +
 					" @" + raw(Type.CLASS,
-					".allocate(" + Type.INT.toString(Type.MANGLE) + ")") + "(" +
+					".allocate(" + Type.INT.toString() + ")") + "(" +
 					typeText(Type.CLASS, classOf(Type.INT)) + ", " +
 					typeLiteral(arrayType.getDimensions()) + ')');
 			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT,
@@ -1084,7 +1085,7 @@ public class LLVMOutput extends AbstractOutput {
 			SequenceType arguments = new SequenceType();
 			arguments.add(new SimpleModifiedType(new ArrayType(Type.INT), new Modifiers(Modifiers.IMMUTABLE)));
 			arguments.add(new SimpleModifiedType(Type.OBJECT));
-			MethodSignature arrayCreate = Type.ARRAY.getMatchingMethod("create", arguments);
+			MethodSignature arrayCreate = genericArray.getMatchingMethod("create", arguments);
 						
 			writer.write(nextTemp(node) + " = call " + type(genericArray) + " " +
 					name(arrayCreate) + '(' +
@@ -1276,7 +1277,7 @@ public class LLVMOutput extends AbstractOutput {
 		String allocationClass = typeSymbol(node.getBaseClass());
 		
 		writer.write(nextTemp() + " = call noalias " + type(Type.OBJECT) +
-				" @" + raw(Type.CLASS, ".allocate(" + Type.INT.toString(Type.MANGLE) + ")") +
+				" @" + raw(Type.CLASS, ".allocate(" + Type.INT.toString() + ")") +
 			 	'(' + allocationClass + ", " +
 				typeSymbol(node.getTotalSize()) + ')');
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +

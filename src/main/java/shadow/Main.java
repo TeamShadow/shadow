@@ -172,7 +172,7 @@ public class Main {
 			
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			Process optimize = new ProcessBuilder("opt", "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
-			Process compile = new ProcessBuilder("llc", "-mtriple", config.getTarget(), "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder("llc", "-mtriple", config.getTarget(), "-O3", "--x86-asm-syntax=intel")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
