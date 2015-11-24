@@ -333,7 +333,8 @@ public abstract class Type implements Comparable<Type> {
 		StringBuilder builder = new StringBuilder();
 		
 		if( getOuter() == null ) {
-			if( !isPrimitive() && ((options & PACKAGES) != 0 ||  (options & MANGLE) != 0) ) { //type mangling implies packages
+			//mangled primitives still get package (for wrapper)
+			if( (!isPrimitive() ||  (options & MANGLE) != 0) && ((options & PACKAGES) != 0 ||  (options & MANGLE) != 0) ) { //type mangling implies packages
 				if( _package == null || _package.getQualifiedName().isEmpty())
 					builder.append("default@");
 				else

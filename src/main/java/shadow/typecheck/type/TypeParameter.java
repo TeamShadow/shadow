@@ -133,28 +133,30 @@ public class TypeParameter extends Type {
 	public String toString(int options) {
 		StringBuilder builder = new StringBuilder();
 		
-		if((options & MANGLE) != 0 ) {
-			builder.append(classBound.toString(options & ~PARAMETER_BOUNDS)); 
-		}		
-		else if((options & PARAMETER_BOUNDS) != 0 ) {
-			builder.append(getTypeName());
-			boolean first = true;		
-			List<InterfaceType> interfaces = getInterfaces();
-			if( classBound != Type.OBJECT || interfaces.size() > 0 ) {			 			
-				builder.append(" is ");
+		if((options & MANGLE) != 0 )
+			//builder.append(classBound.toString(options & ~PARAMETER_BOUNDS));
+			builder.append("T"); //always use T to maintain compatibility
+		else {
+			builder.append(getTypeName());			
+			if((options & PARAMETER_BOUNDS) != 0 ) {			
+				boolean first = true;		
+				List<InterfaceType> interfaces = getInterfaces();
 				
 				if( classBound != Type.OBJECT ) {
+					builder.append(" is ");
 					builder.append(classBound.toString(options & ~PARAMETER_BOUNDS));
 					first = false;
 				}
 			
 				for(InterfaceType bound : interfaces ) {
-					if( first )
+					if( first ) {
+						builder.append(" is ");
 						first = false;
+					}
 					else
 						builder.append(" and ");
 					builder.append(bound.toString(options & ~PARAMETER_BOUNDS));
-				}
+				}				
 			}
 		}
 		

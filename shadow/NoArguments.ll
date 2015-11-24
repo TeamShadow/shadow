@@ -34,7 +34,7 @@
 %"shadow:standard@ClassSet:Node" = type { %"shadow:standard@Class"*, %"shadow:standard@ClassSet:Node:_methods"* , %"shadow:standard@ClassSet"*, %"shadow:standard@ClassSet:Node"*, %"shadow:standard@Class"*, %int }
 @"shadow:standard@ClassSet:_methods" = external constant %"shadow:standard@ClassSet:_methods"
 @"shadow:standard@ClassSet:class" = external constant %"shadow:standard@Class"
-declare %boolean @"shadow:standard@ClassSet.addshadow:standard@Class"(%"shadow:standard@ClassSet"*, %"shadow:standard@Class"*)
+declare %boolean @"shadow:standard@ClassSet.add(shadow:standard@Class)"(%"shadow:standard@ClassSet"*, %"shadow:standard@Class"*)
 declare %"shadow:standard@ClassSet"* @"shadow:standard@ClassSet.create(int)"(%"shadow:standard@Object"* returned, %int)
 
 %"shadow:standard@Exception:_methods" = type { %"shadow:standard@Exception"* (%"shadow:standard@Exception"*)*, %"shadow:standard@Exception"* (%"shadow:standard@Exception"*, %"shadow:standard@AddressMap"*)*, %"shadow:standard@Class"* (%"shadow:standard@Object"*)*, %"shadow:standard@String"* (%"shadow:standard@Exception"*)*, %"shadow:standard@String"* (%"shadow:standard@Exception"*)* }

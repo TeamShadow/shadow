@@ -85,19 +85,19 @@ define i8 @"shadow:standard@byte.bitComplement()"(i8) #0 {
 	%2 = xor i8 %0, -1
 	ret i8 %2
 }
-define i8 @"shadow:standard@byte.bitOr(shadow:standard@byte)"(i8, i8) #0 {
+define i8 @"shadow:standard@byte.bitOr(byte)"(i8, i8) #0 {
 	%3 = or i8 %0, %1
 	ret i8 %3
 }
-define i8 @"shadow:standard@byte.bitXor(shadow:standard@byte)"(i8, i8) #0 {
+define i8 @"shadow:standard@byte.bitXor(byte)"(i8, i8) #0 {
 	%3 = xor i8 %0, %1
 	ret i8 %3
 }
-define i8 @"shadow:standard@byte.bitAnd(shadow:standard@byte)"(i8, i8) #0 {
+define i8 @"shadow:standard@byte.bitAnd(byte)"(i8, i8) #0 {
 	%3 = and i8 %0, %1
 	ret i8 %3
 }
-define i8 @"shadow:standard@byte.bitShiftLeft(shadow:standard@uint)"(i8, i32) #0 {
+define i8 @"shadow:standard@byte.bitShiftLeft(uint)"(i8, i32) #0 {
 	%3 = icmp ult i32 %1, 8
 	br i1 %3, label %4, label %7
 	%5 = trunc i32 %1 to i8
@@ -105,7 +105,7 @@ define i8 @"shadow:standard@byte.bitShiftLeft(shadow:standard@uint)"(i8, i32) #0
 	ret i8 %6
 	ret i8 0
 }
-define i8 @"shadow:standard@byte.bitShiftRight(shadow:standard@uint)"(i8, i32) #0 {
+define i8 @"shadow:standard@byte.bitShiftRight(uint)"(i8, i32) #0 {
 	%3 = icmp ult i32 %1, 8
 	br i1 %3, label %4, label %7
 	%5 = trunc i32 %1 to i8
@@ -114,7 +114,7 @@ define i8 @"shadow:standard@byte.bitShiftRight(shadow:standard@uint)"(i8, i32) #
 	%8 = ashr i8 %0, 7
 	ret i8 %8
 }
-define i8 @"shadow:standard@byte.bitRotateLeft(shadow:standard@uint)"(i8, i32) #0 {
+define i8 @"shadow:standard@byte.bitRotateLeft(uint)"(i8, i32) #0 {
 	%3 = and i32 %1, 7
 	%4 = trunc i32 %3 to i8
 	%5 = sub i8 8, %4
@@ -123,7 +123,7 @@ define i8 @"shadow:standard@byte.bitRotateLeft(shadow:standard@uint)"(i8, i32) #
 	%8 = or i8 %6, %7
 	ret i8 %8
 }
-define i8 @"shadow:standard@byte.bitRotateRight(shadow:standard@uint)"(i8, i32) #0 {
+define i8 @"shadow:standard@byte.bitRotateRight(uint)"(i8, i32) #0 {
 	%3 = and i32 %1, 7
 	%4 = trunc i32 %3 to i8
 	%5 = sub i8 8, %4
@@ -133,28 +133,28 @@ define i8 @"shadow:standard@byte.bitRotateRight(shadow:standard@uint)"(i8, i32) 
 	ret i8 %8
 }
 
-define i8 @"shadow:standard@byte.add(shadow:standard@byte)"(i8, i8) #0 {
+define i8 @"shadow:standard@byte.add(byte)"(i8, i8) #0 {
 	%3 = add i8 %0, %1
 	ret i8 %3
 }
-define i8 @"shadow:standard@byte.subtract(shadow:standard@byte)"(i8, i8) #0 {
+define i8 @"shadow:standard@byte.subtract(byte)"(i8, i8) #0 {
 	%3 = sub i8 %0, %1
 	ret i8 %3
 }
-define i8 @"shadow:standard@byte.multiply(shadow:standard@byte)"(i8, i8) #0 {
+define i8 @"shadow:standard@byte.multiply(byte)"(i8, i8) #0 {
 	%3 = mul i8 %0, %1
 	ret i8 %3
 }
-define i8 @"shadow:standard@byte.divide(shadow:standard@byte)"(i8, i8) #0 {
+define i8 @"shadow:standard@byte.divide(byte)"(i8, i8) #0 {
 	%3 = sdiv i8 %0, %1
 	ret i8 %3
 }
-define i8 @"shadow:standard@byte.modulus(shadow:standard@byte)"(i8, i8) #0 {
+define i8 @"shadow:standard@byte.modulus(byte)"(i8, i8) #0 {
 	%3 = srem i8 %0, %1
 	ret i8 %3
 }
 
-define i32 @"shadow:standard@byte.compare(shadow:standard@byte)"(i8, i8) #0 {
+define i32 @"shadow:standard@byte.compare(byte)"(i8, i8) #0 {
 	%3 = icmp ne i8 %0, %1
 	%4 = zext i1 %3 to i32
 	%5 = icmp slt i8 %0, %1
@@ -162,7 +162,7 @@ define i32 @"shadow:standard@byte.compare(shadow:standard@byte)"(i8, i8) #0 {
 	ret i32 %6
 }
 
-define i1 @"shadow:standard@byte.equal(shadow:standard@byte)"(i8, i8) #0 {
+define i1 @"shadow:standard@byte.equal(byte)"(i8, i8) #0 {
 	%3 = icmp eq i8 %0, %1
 	ret i1 %3
 }
@@ -226,12 +226,12 @@ define i8 @"shadow:standard@byte.trailingZeroes()"(i8) #0 {
 
 ; shadow.standard@UByte native methods
 
-@"shadow:standard@ubyte.bitComplement = alias i8 (i8)* @"shadow:standard@byte.bitComplement()"
-@"shadow:standard@ubyte.bitOrshadow:standard@ubyte = alias i8 (i8, i8)* @"shadow:standard@byte.bitOr(shadow:standard@byte)"
-@"shadow:standard@ubyte.bitXorshadow:standard@ubyte = alias i8 (i8, i8)* @"shadow:standard@byte.bitXor(shadow:standard@byte)"
-@"shadow:standard@ubyte.bitAndshadow:standard@ubyte = alias i8 (i8, i8)* @"shadow:standard@byte.bitAnd(shadow:standard@byte)"
-@"shadow:standard@ubyte.bitShiftLeftshadow:standard@uint = alias i8 (i8, i32)* @"shadow:standard@byte.bitShiftLeft(shadow:standard@uint)"
-define i8 @"shadow:standard@ubyte.bitShiftRight(shadow:standard@uint)"(i8, i32) #0 {
+@"shadow:standard@ubyte.bitComplement()" = alias i8 (i8)* @"shadow:standard@byte.bitComplement()"
+@"shadow:standard@ubyte.bitOr(ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.bitOr(byte)"
+@"shadow:standard@ubyte.bitXor(ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.bitXor(byte)"
+@"shadow:standard@ubyte.bitAnd(ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.bitAnd(byte)"
+@"shadow:standard@ubyte.bitShiftLeft(uint)" = alias i8 (i8, i32)* @"shadow:standard@byte.bitShiftLeft(uint)"
+define i8 @"shadow:standard@ubyte.bitShiftRight(uint)"(i8, i32) #0 {
 	%3 = icmp ult i32 %1, 8
 	br i1 %3, label %4, label %7
 	%5 = trunc i32 %1 to i8
@@ -239,22 +239,22 @@ define i8 @"shadow:standard@ubyte.bitShiftRight(shadow:standard@uint)"(i8, i32) 
 	ret i8 %6
 	ret i8 0
 }
-@"shadow:standard@ubyte.bitRotateLeft(shadow:standard@uint)" = alias i8 (i8, i32)* @"shadow:standard@byte.bitRotateLeft(shadow:standard@uint)"
-@"shadow:standard@ubyte.bitRotateRight(shadow:standard@uint)" = alias i8 (i8, i32)* @"shadow:standard@byte.bitRotateRight(shadow:standard@uint)"
+@"shadow:standard@ubyte.bitRotateLeft(uint)" = alias i8 (i8, i32)* @"shadow:standard@byte.bitRotateLeft(uint)"
+@"shadow:standard@ubyte.bitRotateRight(uint)" = alias i8 (i8, i32)* @"shadow:standard@byte.bitRotateRight(uint)"
 
-@"shadow:standard@ubyte.add(shadow:standard@ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.add(shadow:standard@byte)"
-@"shadow:standard@ubyte.subtract(shadow:standard@ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.subtract(shadow:standard@byte)"
-@"shadow:standard@ubyte.multiply(shadow:standard@ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.multiply(shadow:standard@byte)"
-define i8 @"shadow:standard@ubyte.divide(shadow:standard@ubyte)"(i8, i8) #0 {
+@"shadow:standard@ubyte.add(ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.add(byte)"
+@"shadow:standard@ubyte.subtract(ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.subtract(byte)"
+@"shadow:standard@ubyte.multiply(ubyte)" = alias i8 (i8, i8)* @"shadow:standard@byte.multiply(byte)"
+define i8 @"shadow:standard@ubyte.divide(ubyte)"(i8, i8) #0 {
 	%3 = udiv i8 %0, %1
 	ret i8 %3
 }
-define i8 @"shadow:standard@ubyte.modulus(shadow:standard@ubyte)"(i8, i8) #0 {
+define i8 @"shadow:standard@ubyte.modulus(ubyte)"(i8, i8) #0 {
 	%3 = urem i8 %0, %1
 	ret i8 %3
 }
 
-define i32 @"shadow:standard@ubyte.compare(shadow:standard@ubyte)"(i8, i8) #0 {
+define i32 @"shadow:standard@ubyte.compare(ubyte)"(i8, i8) #0 {
 	%3 = icmp ne i8 %0, %1
 	%4 = zext i1 %3 to i32
 	%5 = icmp ult i8 %0, %1
@@ -262,7 +262,7 @@ define i32 @"shadow:standard@ubyte.compare(shadow:standard@ubyte)"(i8, i8) #0 {
 	ret i32 %6
 }
 
-@"shadow:standard@ubyte.equal(shadow:standard@ubyte)" = alias i1 (i8, i8)* @"shadow:standard@byte.equal(shadow:standard@byte)"
+@"shadow:standard@ubyte.equal(ubyte)" = alias i1 (i8, i8)* @"shadow:standard@byte.equal(byte)"
 
 @"shadow:standard@ubyte.toByte()" = alias i8 (i8)* @"shadow:standard@byte.toByte()" 
 @"shadow:standard@ubyte.toUByte()" = alias i8 (i8)* @"shadow:standard@byte.toByte()"
@@ -294,19 +294,19 @@ define i16 @"shadow:standard@short.bitComplement()"(i16) #0 {
 	%2 = xor i16 %0, -1
 	ret i16 %2
 }
-define i16 @"shadow:standard@short.bitOr(shadow:standard@short)"(i16, i16) #0 {
+define i16 @"shadow:standard@short.bitOr(short)"(i16, i16) #0 {
 	%3 = or i16 %0, %1
 	ret i16 %3
 }
-define i16 @"shadow:standard@short.bitXor(shadow:standard@short)"(i16, i16) #0 {
+define i16 @"shadow:standard@short.bitXor(short)"(i16, i16) #0 {
 	%3 = xor i16 %0, %1
 	ret i16 %3
 }
-define i16 @"shadow:standard@short.bitAnd(shadow:standard@short)"(i16, i16) #0 {
+define i16 @"shadow:standard@short.bitAnd(short)"(i16, i16) #0 {
 	%3 = and i16 %0, %1
 	ret i16 %3
 }
-define i16 @"shadow:standard@short.bitShiftLeft(shadow:standard@uint)"(i16, i32) #0 {
+define i16 @"shadow:standard@short.bitShiftLeft(uint)"(i16, i32) #0 {
 	%3 = icmp ult i32 %1, 16
 	br i1 %3, label %4, label %7
 	%5 = trunc i32 %1 to i16
@@ -314,7 +314,7 @@ define i16 @"shadow:standard@short.bitShiftLeft(shadow:standard@uint)"(i16, i32)
 	ret i16 %6
 	ret i16 0
 }
-define i16 @"shadow:standard@short.bitShiftRight(shadow:standard@uint)"(i16, i32) #0 {
+define i16 @"shadow:standard@short.bitShiftRight(uint)"(i16, i32) #0 {
 	%3 = icmp ult i32 %1, 16
 	br i1 %3, label %4, label %7
 	%5 = trunc i32 %1 to i16
@@ -323,7 +323,7 @@ define i16 @"shadow:standard@short.bitShiftRight(shadow:standard@uint)"(i16, i32
 	%8 = ashr i16 %0, 15
 	ret i16 %8
 }
-define i16 @"shadow:standard@short.bitRotateLeft(shadow:standard@uint)"(i16, i32) #0 {
+define i16 @"shadow:standard@short.bitRotateLeft(uint)"(i16, i32) #0 {
 	%3 = and i32 %1, 15
 	%4 = trunc i32 %3 to i16
 	%5 = sub i16 16, %4
@@ -332,7 +332,7 @@ define i16 @"shadow:standard@short.bitRotateLeft(shadow:standard@uint)"(i16, i32
 	%8 = or i16 %6, %7
 	ret i16 %8
 }
-define i16 @"shadow:standard@short.bitRotateRight(shadow:standard@uint)"(i16, i32) #0 {
+define i16 @"shadow:standard@short.bitRotateRight(uint)"(i16, i32) #0 {
 	%3 = and i32 %1, 15
 	%4 = trunc i32 %3 to i16
 	%5 = sub i16 16, %4
@@ -342,28 +342,28 @@ define i16 @"shadow:standard@short.bitRotateRight(shadow:standard@uint)"(i16, i3
 	ret i16 %8
 }
 
-define i16 @"shadow:standard@short.add(shadow:standard@short)"(i16, i16) #0 {
+define i16 @"shadow:standard@short.add(short)"(i16, i16) #0 {
 	%3 = add i16 %0, %1
 	ret i16 %3
 }
-define i16 @"shadow:standard@short.subtract(shadow:standard@short)"(i16, i16) #0 {
+define i16 @"shadow:standard@short.subtract(short)"(i16, i16) #0 {
 	%3 = sub i16 %0, %1
 	ret i16 %3
 }
-define i16 @"shadow:standard@short.multiply(shadow:standard@short)"(i16, i16) #0 {
+define i16 @"shadow:standard@short.multiply(short)"(i16, i16) #0 {
 	%3 = mul i16 %0, %1
 	ret i16 %3
 }
-define i16 @"shadow:standard@short.divide(shadow:standard@short)"(i16, i16) #0 {
+define i16 @"shadow:standard@short.divide(short)"(i16, i16) #0 {
 	%3 = sdiv i16 %0, %1
 	ret i16 %3
 }
-define i16 @"shadow:standard@short.modulus(shadow:standard@short)"(i16, i16) #0 {
+define i16 @"shadow:standard@short.modulus(short)"(i16, i16) #0 {
 	%3 = srem i16 %0, %1
 	ret i16 %3
 }
 
-define i32 @"shadow:standard@short.compare(shadow:standard@short)"(i16, i16) #0 {
+define i32 @"shadow:standard@short.compare(short)"(i16, i16) #0 {
 	%3 = icmp ne i16 %0, %1
 	%4 = zext i1 %3 to i32
 	%5 = icmp slt i16 %0, %1
@@ -371,7 +371,7 @@ define i32 @"shadow:standard@short.compare(shadow:standard@short)"(i16, i16) #0 
 	ret i32 %6
 }
 
-define i1 @"shadow:standard@short.equal(shadow:standard@short)"(i16, i16) #0 {
+define i1 @"shadow:standard@short.equal(short)"(i16, i16) #0 {
 	%3 = icmp eq i16 %0, %1
 	ret i1 %3
 }
@@ -385,11 +385,11 @@ define i8 @"shadow:standard@short.toByte()"(i16) #0 {
 	%2 = trunc i16 %0 to i8
 	ret i8 %2
 }
-@"shadow:standard@short.toUByte = alias i8 (i16)* @"shadow:standard@short.toByte	
+@"shadow:standard@short.toUByte()" = alias i8 (i16)* @"shadow:standard@short.toByte()"	
 define i16 @"shadow:standard@short.toShort()"(i16) #0 {	
 	ret i16 %0
 }
-@"shadow:standard@short.toUShort = alias i16 (i16)* @"shadow:standard@short.toShort 
+@"shadow:standard@short.toUShort()" = alias i16 (i16)* @"shadow:standard@short.toShort()" 
 define i32 @"shadow:standard@short.toInt()"(i16) #0 {	
 	%2 = sext i16 %0 to i32
 	ret i32 %2
@@ -398,7 +398,7 @@ define i32 @"shadow:standard@short.toUInt()"(i16) #0 {
 	%2 = zext i16 %0 to i32
 	ret i32 %2
 }
-@"shadow:standard@short.toCode = alias i32 (i16)* @"shadow:standard@short.toUInt 
+@"shadow:standard@short.toCode()" = alias i32 (i16)* @"shadow:standard@short.toUInt()" 
 define i64 @"shadow:standard@short.toLong()"(i16) #0 {
 	%2 = sext i16 %0 to i64
 	ret i64 %2
@@ -435,17 +435,17 @@ define i16 @"shadow:standard@short.trailingZeroes()"(i16) #0 {
 	ret i16 %2
 }
 	
-define {i16, i1} @"shadow:standard@short.addWithOverflow(shadow:standard@short)"(i16, i16) #0 {
+define {i16, i1} @"shadow:standard@short.addWithOverflow(short)"(i16, i16) #0 {
 	%3 = call {i16, i1} @llvm.sadd.with.overflow.i16(i16 %0, i16 %1)
 	ret {i16, i1} %3
 }
 
-define {i16, i1} @"shadow:standard@short.subtractWithOverflow(shadow:standard@short)"(i16, i16) #0 {
+define {i16, i1} @"shadow:standard@short.subtractWithOverflow(short)"(i16, i16) #0 {
 	%3 = call {i16, i1} @llvm.ssub.with.overflow.i16(i16 %0, i16 %1)
 	ret {i16, i1} %3
 }
 
-define {i16, i1} @"shadow:standard@short.multiplyWithOverflow(shadow:standard@short)"(i16, i16) #0 {
+define {i16, i1} @"shadow:standard@short.multiplyWithOverflow(short)"(i16, i16) #0 {
 	%3 = call {i16, i1} @llvm.smul.with.overflow.i16(i16 %0, i16 %1)
 	ret {i16, i1} %3
 }
@@ -453,11 +453,11 @@ define {i16, i1} @"shadow:standard@short.multiplyWithOverflow(shadow:standard@sh
 ; shadow.standard@UShort native methods
 
 @"shadow:standard@ushort.bitComplement()" = alias i16 (i16)* @"shadow:standard@short.bitComplement()"
-@"shadow:standard@ushort.bitOr(shadow:standard@ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.bitOr(shadow:standard@short)"
-@"shadow:standard@ushort.bitXor(shadow:standard@ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.bitXor(shadow:standard@short)"
-@"shadow:standard@ushort.bitAnd(shadow:standard@ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.bitAnd(shadow:standard@short)"
-@"shadow:standard@ushort.bitShiftLeft(shadow:standard@uint)" = alias i16 (i16, i32)* @"shadow:standard@short.bitShiftLeft(shadow:standard@uint)"
-define i16 @"shadow:standard@ushort.bitShiftRight(shadow:standard@uint)"(i16, i32) #0 {
+@"shadow:standard@ushort.bitOr(ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.bitOr(short)"
+@"shadow:standard@ushort.bitXor(ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.bitXor(short)"
+@"shadow:standard@ushort.bitAnd(ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.bitAnd(short)"
+@"shadow:standard@ushort.bitShiftLeft(uint)" = alias i16 (i16, i32)* @"shadow:standard@short.bitShiftLeft(uint)"
+define i16 @"shadow:standard@ushort.bitShiftRight(uint)"(i16, i32) #0 {
 	%3 = icmp ult i32 %1, 16
 	br i1 %3, label %4, label %7
 	%5 = trunc i32 %1 to i16
@@ -465,22 +465,22 @@ define i16 @"shadow:standard@ushort.bitShiftRight(shadow:standard@uint)"(i16, i3
 	ret i16 %6
 	ret i16 0
 }
-@"shadow:standard@ushort.bitRotateLeft(shadow:standard@uint)" = alias i16 (i16, i32)* @"shadow:standard@short.bitRotateLeft(shadow:standard@uint)"
-@"shadow:standard@ushort.bitRotateRight(shadow:standard@uint)" = alias i16 (i16, i32)* @"shadow:standard@short.bitRotateRight(shadow:standard@uint)"
+@"shadow:standard@ushort.bitRotateLeft(uint)" = alias i16 (i16, i32)* @"shadow:standard@short.bitRotateLeft(uint)"
+@"shadow:standard@ushort.bitRotateRight(uint)" = alias i16 (i16, i32)* @"shadow:standard@short.bitRotateRight(uint)"
 
-@"shadow:standard@ushort.add(shadow:standard@ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.add(shadow:standard@short)"
-@"shadow:standard@ushort.subtract(shadow:standard@ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.subtract(shadow:standard@short)"
-@"shadow:standard@ushort.multiply(shadow:standard@ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.multiply(shadow:standard@short)"
-define i16 @"shadow:standard@ushort.divide(shadow:standard@ushort)"(i16, i16) #0 {
+@"shadow:standard@ushort.add(ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.add(short)"
+@"shadow:standard@ushort.subtract(ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.subtract(short)"
+@"shadow:standard@ushort.multiply(ushort)" = alias i16 (i16, i16)* @"shadow:standard@short.multiply(short)"
+define i16 @"shadow:standard@ushort.divide(ushort)"(i16, i16) #0 {
 	%3 = udiv i16 %0, %1
 	ret i16 %3
 }
-define i16 @"shadow:standard@ushort.modulus(shadow:standard@ushort)"(i16, i16) #0 {
+define i16 @"shadow:standard@ushort.modulus(ushort)"(i16, i16) #0 {
 	%3 = urem i16 %0, %1
 	ret i16 %3
 }
 
-define i32 @"shadow:standard@ushort.compare(shadow:standard@ushort)"(i16, i16) #0 {
+define i32 @"shadow:standard@ushort.compare(ushort)"(i16, i16) #0 {
 	%3 = icmp ne i16 %0, %1
 	%4 = zext i1 %3 to i32
 	%5 = icmp ult i16 %0, %1
@@ -488,7 +488,7 @@ define i32 @"shadow:standard@ushort.compare(shadow:standard@ushort)"(i16, i16) #
 	ret i32 %6
 }
 
-@"shadow:standard@ushort.equal(shadow:standard@ushort)" = alias i1 (i16, i16)* @"shadow:standard@short.equal(shadow:standard@short)"
+@"shadow:standard@ushort.equal(ushort)" = alias i1 (i16, i16)* @"shadow:standard@short.equal(short)"
 
 @"shadow:standard@ushort.toByte()" = alias i8 (i16)* @"shadow:standard@short.toByte()"
 @"shadow:standard@ushort.toUByte()" = alias i8 (i16)* @"shadow:standard@short.toByte()"
@@ -513,17 +513,17 @@ define double @"shadow:standard@ushort.toDouble()"(i16) #0 {
 @"shadow:standard@ushort.leadingZeroes()" = alias i16 (i16)* @"shadow:standard@short.leadingZeroes()"
 @"shadow:standard@ushort.trailingZeroes()" = alias i16 (i16)* @"shadow:standard@short.trailingZeroes()"	
 	
-define {i16, i1} @"shadow:standard@ushort.addWithOverflow(shadow:standard@ushort)"(i16, i16) #0 {
+define {i16, i1} @"shadow:standard@ushort.addWithOverflow(ushort)"(i16, i16) #0 {
 	%3 = call {i16, i1} @llvm.uadd.with.overflow.i16(i16 %0, i16 %1)
 	ret {i16, i1} %3
 }
 
-define {i16, i1} @"shadow:standard@ushort.subtractWithOverflow(shadow:standard@ushort)"(i16, i16) #0 {
+define {i16, i1} @"shadow:standard@ushort.subtractWithOverflow(ushort)"(i16, i16) #0 {
 	%3 = call {i16, i1} @llvm.usub.with.overflow.i16(i16 %0, i16 %1)
 	ret {i16, i1} %3
 }
 
-define {i16, i1} @"shadow:standard@ushort.multiplyWithOverflow(shadow:standard@ushort)"(i16, i16) #0 {
+define {i16, i1} @"shadow:standard@ushort.multiplyWithOverflow(ushort)"(i16, i16) #0 {
 	%3 = call {i16, i1} @llvm.umul.with.overflow.i16(i16 %0, i16 %1)
 	ret {i16, i1} %3
 }
@@ -534,26 +534,26 @@ define i32 @"shadow:standard@int.bitComplement()"(i32) #0 {
 	%2 = xor i32 %0, -1
 	ret i32 %2
 }
-define i32 @"shadow:standard@int.bitOr(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.bitOr(int)"(i32, i32) #0 {
 	%3 = or i32 %0, %1
 	ret i32 %3
 }
-define i32 @"shadow:standard@int.bitXor(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.bitXor(int)"(i32, i32) #0 {
 	%3 = xor i32 %0, %1
 	ret i32 %3
 }
-define i32 @"shadow:standard@int.bitAnd(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.bitAnd(int)"(i32, i32) #0 {
 	%3 = and i32 %0, %1
 	ret i32 %3
 }
-define i32 @"shadow:standard@int.bitShiftLeft(shadow:standard@uint)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.bitShiftLeft(uint)"(i32, i32) #0 {
 	%3 = icmp ult i32 %1, 32
 	br i1 %3, label %4, label %6
 	%5 = shl i32 %0, %1
 	ret i32 %5
 	ret i32 0
 }
-define i32 @"shadow:standard@int.bitShiftRight(shadow:standard@uint)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.bitShiftRight(uint)"(i32, i32) #0 {
 	%3 = icmp ult i32 %1, 32
 	br i1 %3, label %4, label %6
 	%5 = ashr i32 %0, %1
@@ -561,7 +561,7 @@ define i32 @"shadow:standard@int.bitShiftRight(shadow:standard@uint)"(i32, i32) 
 	%7 = ashr i32 %0, 31
 	ret i32 %7
 }
-define i32 @"shadow:standard@int.bitRotateLeft(shadow:standard@uint)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.bitRotateLeft(uint)"(i32, i32) #0 {
 	%3 = and i32 %1, 31
 	%4 = sub i32 32, %3
 	%5 = shl i32 %0, %3
@@ -569,7 +569,7 @@ define i32 @"shadow:standard@int.bitRotateLeft(shadow:standard@uint)"(i32, i32) 
 	%7 = or i32 %5, %6
 	ret i32 %7
 }
-define i32 @"shadow:standard@int.bitRotateRight(shadow:standard@uint)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.bitRotateRight(uint)"(i32, i32) #0 {
 	%3 = and i32 %1, 31
 	%4 = sub i32 32, %3
 	%5 = lshr i32 %0, %3
@@ -578,45 +578,45 @@ define i32 @"shadow:standard@int.bitRotateRight(shadow:standard@uint)"(i32, i32)
 	ret i32 %7
 }
 
-define i32 @"shadow:standard@int.add(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.add(int)"(i32, i32) #0 {
 	%3 = add i32 %0, %1
 	ret i32 %3
 }
 
-define i32 @"shadow:standard@int.subtract(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.subtract(int)"(i32, i32) #0 {
 	%3 = sub i32 %0, %1
 	ret i32 %3
 }
-define i32 @"shadow:standard@int.multiply(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.multiply(int)"(i32, i32) #0 {
 	%3 = mul i32 %0, %1
 	ret i32 %3
 }
-define i32 @"shadow:standard@int.divide(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.divide(int)"(i32, i32) #0 {
 	%3 = sdiv i32 %0, %1
 	ret i32 %3
 }
-define i32 @"shadow:standard@int.modulus(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.modulus(int)"(i32, i32) #0 {
 	%3 = srem i32 %0, %1
 	ret i32 %3
 }
-define i32 @"shadow:standard@int.compare(shadow:standard@int)"(i32, i32) #0 {
+define i32 @"shadow:standard@int.compare(int)"(i32, i32) #0 {
 	%3 = icmp ne i32 %0, %1
 	%4 = zext i1 %3 to i32
 	%5 = icmp slt i32 %0, %1
 	%6 = select i1 %5, i32 -1, i32 %4
 	ret i32 %6
 }
-define i1 @"shadow:standard@int.equal(shadow:standard@int)"(i32, i32) #0 {
+define i1 @"shadow:standard@int.equal(int)"(i32, i32) #0 {
 	%3 = icmp eq i32 %0, %1
 	ret i1 %3
 }
 
-define i32 @"shadow:standard@int.negate"(i32) #0 {	
+define i32 @"shadow:standard@int.negate()"(i32) #0 {	
 	%2 = sub i32 0, %0
 	ret i32 %2
 }
 
-define i8 @"shadow:standard@int.toByte"(i32) #0 {	
+define i8 @"shadow:standard@int.toByte()"(i32) #0 {	
 	%2 = trunc i32 %0 to i8
 	ret i8 %2
 }
@@ -632,53 +632,53 @@ define i32 @"shadow:standard@int.toInt()"(i32) #0 {
 @"shadow:standard@int.toUInt()" = alias i32 (i32)* @"shadow:standard@int.toInt()"
 @"shadow:standard@int.toCode()" = alias i32 (i32)* @"shadow:standard@int.toInt()"
 
-define i64 @"shadow:standard@int.toLong"(i32) #0 {
+define i64 @"shadow:standard@int.toLong()"(i32) #0 {
 	%2 = sext i32 %0 to i64
 	ret i64 %2
 }
-define i64 @"shadow:standard@int.toULong"(i32) #0 {
+define i64 @"shadow:standard@int.toULong()"(i32) #0 {
 	%2 = zext i32 %0 to i64
 	ret i64 %2
 } 
-define float @"shadow:standard@int.toFloat"(i32) #0 {
+define float @"shadow:standard@int.toFloat()"(i32) #0 {
 	%2 = sitofp i32 %0 to float
 	ret float %2
 }
-define double @"shadow:standard@int.toDouble"(i32) #0 {
+define double @"shadow:standard@int.toDouble()"(i32) #0 {
 	%2 = sitofp i32 %0 to double
 	ret double %2
 }
 
-define i32 @"shadow:standard@int.flipEndian"(i32) #0 {
+define i32 @"shadow:standard@int.flipEndian()"(i32) #0 {
 	%2 = call i32 @llvm.bswap.i32(i32 %0)
 	ret i32 %2
 }
 
-define i32 @"shadow:standard@int.ones"(i32) #0 {
+define i32 @"shadow:standard@int.ones()"(i32) #0 {
 	%2 = call i32 @llvm.ctpop.i32(i32 %0)
 	ret i32 %2
 }
 
-define i32 @"shadow:standard@int.leadingZeroes"(i32) #0 {
+define i32 @"shadow:standard@int.leadingZeroes()"(i32) #0 {
 	%2 = call i32  @llvm.ctlz.i32(i32 %0, i1 false)
 	ret i32 %2
 }
-define i32 @"shadow:standard@int.trailingZeroes"(i32) #0 {
+define i32 @"shadow:standard@int.trailingZeroes()"(i32) #0 {
 	%2 = call i32  @llvm.cttz.i32(i32 %0, i1 false)
 	ret i32 %2
 }
 	
-define {i32, i1} @"shadow:standard@int.addWithOverflow(shadow:standard@int)"(i32, i32) #0 {
+define {i32, i1} @"shadow:standard@int.addWithOverflow(int)"(i32, i32) #0 {
 	%3 = call {i32, i1} @llvm.sadd.with.overflow.i32(i32 %0, i32 %1)
 	ret {i32, i1} %3
 }
 
-define {i32, i1} @"shadow:standard@int.subtractWithOverflow(shadow:standard@int)"(i32, i32) #0 {
+define {i32, i1} @"shadow:standard@int.subtractWithOverflow(int)"(i32, i32) #0 {
 	%3 = call {i32, i1} @llvm.ssub.with.overflow.i32(i32 %0, i32 %1)
 	ret {i32, i1} %3
 }
 
-define {i32, i1} @"shadow:standard@int.multiplyWithOverflow(shadow:standard@int)"(i32, i32) #0 {
+define {i32, i1} @"shadow:standard@int.multiplyWithOverflow(int)"(i32, i32) #0 {
 	%3 = call {i32, i1} @llvm.smul.with.overflow.i32(i32 %0, i32 %1)
 	ret {i32, i1} %3
 }
@@ -686,33 +686,33 @@ define {i32, i1} @"shadow:standard@int.multiplyWithOverflow(shadow:standard@int)
 ; shadow.standard@UInt native methods
 
 @"shadow:standard@uint.bitComplement()" = alias i32 (i32)* @"shadow:standard@int.bitComplement()"
-@"shadow:standard@uint.bitOr(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitOr(shadow:standard@int)"
-@"shadow:standard@uint.bitXor(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitXor(shadow:standard@int)"
-@"shadow:standard@uint.bitAnd(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitAnd(shadow:standard@int)"
-@"shadow:standard@uint.bitShiftLeft(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitShiftLeft(shadow:standard@int)"
-define i32 @"shadow:standard@uint.bitShiftRight(shadow:standard@uint)"(i32, i32) #0 {
+@"shadow:standard@uint.bitOr(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitOr(int)"
+@"shadow:standard@uint.bitXor(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitXor(int)"
+@"shadow:standard@uint.bitAnd(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitAnd(int)"
+@"shadow:standard@uint.bitShiftLeft(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitShiftLeft(uint)"
+define i32 @"shadow:standard@uint.bitShiftRight(uint)"(i32, i32) #0 {
 	%3 = icmp ult i32 %1, 32
 	br i1 %3, label %4, label %6
 	%5 = lshr i32 %0, %1
 	ret i32 %5
 	ret i32 0
 }
-@"shadow:standard@uint.bitRotateLeft(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitRotateLeft(shadow:standard@uint)"
-@"shadow:standard@uint.bitRotateRight(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitRotateRight(shadow:standard@uint)"
+@"shadow:standard@uint.bitRotateLeft(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitRotateLeft(uint)"
+@"shadow:standard@uint.bitRotateRight(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitRotateRight(uint)"
 
-@"shadow:standard@uint.add(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.add(shadow:standard@int)"
-@"shadow:standard@uint.subtract(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.subtract(shadow:standard@int)"
-@"shadow:standard@uint.multiply(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.multiply(shadow:standard@int)"
-define i32 @"shadow:standard@uint.divide(shadow:standard@uint)"(i32, i32) #0 {
+@"shadow:standard@uint.add(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.add(int)"
+@"shadow:standard@uint.subtract(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.subtract(int)"
+@"shadow:standard@uint.multiply(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.multiply(int)"
+define i32 @"shadow:standard@uint.divide(uint)"(i32, i32) #0 {
 	%3 = udiv i32 %0, %1
 	ret i32 %3
 }
-define i32 @"shadow:standard@uint.modulus(shadow:standard@uint)"(i32, i32) #0 {
+define i32 @"shadow:standard@uint.modulus(uint)"(i32, i32) #0 {
 	%3 = urem i32 %0, %1
 	ret i32 %3
 }
 
-define i32 @"shadow:standard@uint.compare(shadow:standard@uint)"(i32, i32) #0 {
+define i32 @"shadow:standard@uint.compare(uint)"(i32, i32) #0 {
 	%3 = icmp ne i32 %0, %1
 	%4 = zext i1 %3 to i32
 	%5 = icmp ult i32 %0, %1
@@ -720,7 +720,7 @@ define i32 @"shadow:standard@uint.compare(shadow:standard@uint)"(i32, i32) #0 {
 	ret i32 %6
 }
 
-@"shadow:standard@uint.equal(shadow:standard@uint)" = alias i1 (i32, i32)* @"shadow:standard@int.equal(shadow:standard@int)"
+@"shadow:standard@uint.equal(uint)" = alias i1 (i32, i32)* @"shadow:standard@int.equal(int)"
 
 @"shadow:standard@uint.toByte()" = alias i8 (i32)* @"shadow:standard@int.toByte()" 	
 @"shadow:standard@uint.toUByte()" = alias i8 (i32)* @"shadow:standard@int.toByte()"
@@ -745,17 +745,17 @@ define double @"shadow:standard@uint.toDouble()"(i32) #0 {
 @"shadow:standard@uint.leadingZeroes()" = alias i32 (i32)* @"shadow:standard@int.leadingZeroes()"
 @"shadow:standard@uint.trailingZeroes()" = alias i32 (i32)* @"shadow:standard@int.trailingZeroes()"	
 	
-define {i32, i1} @"shadow:standard@uint.addWithOverflow(shadow:standard@uint)"(i32, i32) #0 {
+define {i32, i1} @"shadow:standard@uint.addWithOverflow(uint)"(i32, i32) #0 {
 	%3 = call {i32, i1} @llvm.uadd.with.overflow.i32(i32 %0, i32 %1)
 	ret {i32, i1} %3
 }
 
-define {i32, i1} @"shadow:standard@uint.subtractWithOverflow(shadow:standard@uint)"(i32, i32) #0 {
+define {i32, i1} @"shadow:standard@uint.subtractWithOverflow(uint)"(i32, i32) #0 {
 	%3 = call {i32, i1} @llvm.usub.with.overflow.i32(i32 %0, i32 %1)
 	ret {i32, i1} %3
 }
 
-define {i32, i1} @"shadow:standard@uint.multiplyWithOverflow(shadow:standard@uint)"(i32, i32) #0 {
+define {i32, i1} @"shadow:standard@uint.multiplyWithOverflow(uint)"(i32, i32) #0 {
 	%3 = call {i32, i1} @llvm.umul.with.overflow.i32(i32 %0, i32 %1)
 	ret {i32, i1} %3
 }
@@ -775,21 +775,21 @@ define {i32, i1} @"shadow:standard@uint.multiplyWithOverflow(shadow:standard@uin
 @"shadow:standard@code.toDouble()" = alias double (i32)* @"shadow:standard@uint.toDouble()"
 
 @"shadow:standard@code.bitComplement()" = alias i32 (i32)* @"shadow:standard@int.bitComplement()"
-@"shadow:standard@code.bitOr(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@int.bitOr(shadow:standard@int)"
-@"shadow:standard@code.bitXor(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@int.bitXor(shadow:standard@int)"
-@"shadow:standard@code.bitAnd(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@int.bitAnd(shadow:standard@int)"
-@"shadow:standard@code.bitShiftLeft(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitShiftLeft(shadow:standard@uint)"
-@"shadow:standard@code.bitShiftRight(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@uint.bitShiftRight(shadow:standard@uint)"
-@"shadow:standard@code.bitRotateLeft(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitRotateLeft(shadow:standard@uint)"
-@"shadow:standard@code.bitRotateRight(shadow:standard@uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitRotateRight(shadow:standard@uint)"
+@"shadow:standard@code.bitOr(code)" = alias i32 (i32, i32)* @"shadow:standard@int.bitOr(int)"
+@"shadow:standard@code.bitXor(code)" = alias i32 (i32, i32)* @"shadow:standard@int.bitXor(int)"
+@"shadow:standard@code.bitAnd(code)" = alias i32 (i32, i32)* @"shadow:standard@int.bitAnd(int)"
+@"shadow:standard@code.bitShiftLeft(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitShiftLeft(uint)"
+@"shadow:standard@code.bitShiftRight(uint)" = alias i32 (i32, i32)* @"shadow:standard@uint.bitShiftRight(uint)"
+@"shadow:standard@code.bitRotateLeft(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitRotateLeft(uint)"
+@"shadow:standard@code.bitRotateRight(uint)" = alias i32 (i32, i32)* @"shadow:standard@int.bitRotateRight(uint)"
 
-@"shadow:standard@code.add(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@int.add(shadow:standard@int)"
-@"shadow:standard@code.subtract(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@int.subtract(shadow:standard@int)"
-@"shadow:standard@code.multiply(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@int.multiply(shadow:standard@int)"
-@"shadow:standard@code.divide(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@uint.divide(shadow:standard@int)"
-@"shadow:standard@code.modulus(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@uint.modulus(shadow:standard@uint)"
-@"shadow:standard@code.compare(shadow:standard@code)" = alias i32 (i32, i32)* @"shadow:standard@uint.compare(shadow:standard@uint)"
-@"shadow:standard@code.equal(shadow:standard@code)" = alias i1 (i32, i32)* @"shadow:standard@int.equal(shadow:standard@int)"
+@"shadow:standard@code.add(code)" = alias i32 (i32, i32)* @"shadow:standard@int.add(int)"
+@"shadow:standard@code.subtract(code)" = alias i32 (i32, i32)* @"shadow:standard@int.subtract(int)"
+@"shadow:standard@code.multiply(code)" = alias i32 (i32, i32)* @"shadow:standard@int.multiply(int)"
+@"shadow:standard@code.divide(code)" = alias i32 (i32, i32)* @"shadow:standard@uint.divide(uint)"
+@"shadow:standard@code.modulus(code)" = alias i32 (i32, i32)* @"shadow:standard@uint.modulus(uint)"
+@"shadow:standard@code.compare(code)" = alias i32 (i32, i32)* @"shadow:standard@uint.compare(uint)"
+@"shadow:standard@code.equal(code)" = alias i1 (i32, i32)* @"shadow:standard@int.equal(int)"
 
 ; shadow.standard@Long native methods
 
@@ -797,19 +797,19 @@ define i64 @"shadow:standard@long.bitComplement()"(i64) #0 {
 	%2 = xor i64 %0, -1
 	ret i64 %2
 }
-define i64 @"shadow:standard@long.bitOr(shadow:standard@long)"(i64, i64) #0 {
+define i64 @"shadow:standard@long.bitOr(long)"(i64, i64) #0 {
 	%3 = or i64 %0, %1
 	ret i64 %3
 }
-define i64 @"shadow:standard@long.bitXor(shadow:standard@long)"(i64, i64) #0 {
+define i64 @"shadow:standard@long.bitXor(long)"(i64, i64) #0 {
 	%3 = xor i64 %0, %1
 	ret i64 %3
 }
-define i64 @"shadow:standard@long.bitAnd(shadow:standard@long)"(i64, i64) #0 {
+define i64 @"shadow:standard@long.bitAnd(long)"(i64, i64) #0 {
 	%3 = and i64 %0, %1
 	ret i64 %3
 }
-define i64 @"shadow:standard@long.bitShiftLeft(shadow:standard@uint)"(i64, i32) #0 {
+define i64 @"shadow:standard@long.bitShiftLeft(uint)"(i64, i32) #0 {
 	%3 = icmp ult i32 %1, 64
 	br i1 %3, label %4, label %7
 	%5 = zext i32 %1 to i64
@@ -817,7 +817,7 @@ define i64 @"shadow:standard@long.bitShiftLeft(shadow:standard@uint)"(i64, i32) 
 	ret i64 %6
 	ret i64 0
 }
-define i64 @"shadow:standard@long.bitShiftRight(shadow:standard@uint)"(i64, i32) #0 {
+define i64 @"shadow:standard@long.bitShiftRight(uint)"(i64, i32) #0 {
 	%3 = icmp ult i32 %1, 64
 	br i1 %3, label %4, label %7
 	%5 = zext i32 %1 to i64
@@ -826,7 +826,7 @@ define i64 @"shadow:standard@long.bitShiftRight(shadow:standard@uint)"(i64, i32)
 	%8 = ashr i64 %0, 63
 	ret i64 %8
 }
-define i64 @"shadow:standard@long.bitRotateLeft(shadow:standard@uint)"(i64, i32) #0 {
+define i64 @"shadow:standard@long.bitRotateLeft(uint)"(i64, i32) #0 {
 	%3 = and i32 %1, 63
 	%4 = zext i32 %3 to i64
 	%5 = sub i64 64, %4
@@ -835,7 +835,7 @@ define i64 @"shadow:standard@long.bitRotateLeft(shadow:standard@uint)"(i64, i32)
 	%8 = or i64 %6, %7
 	ret i64 %8
 }
-define i64 @"shadow:standard@long.bitRotateRight(shadow:standard@uint)"(i64, i32) #0 {
+define i64 @"shadow:standard@long.bitRotateRight(uint)"(i64, i32) #0 {
 	%3 = and i32 %1, 63
 	%4 = zext i32 %3 to i64
 	%5 = sub i64 64, %4
@@ -845,28 +845,28 @@ define i64 @"shadow:standard@long.bitRotateRight(shadow:standard@uint)"(i64, i32
 	ret i64 %8
 }
 
-define i64 @"shadow:standard@long.add(shadow:standard@long)"(i64, i64) #0 {
+define i64 @"shadow:standard@long.add(long)"(i64, i64) #0 {
 	%3 = add i64 %0, %1
 	ret i64 %3
 }
-define i64 @"shadow:standard@long.subtract(shadow:standard@long)"(i64, i64) #0 {
+define i64 @"shadow:standard@long.subtract(long)"(i64, i64) #0 {
 	%3 = sub i64 %0, %1
 	ret i64 %3
 }
-define i64 @"shadow:standard@long.multiply(shadow:standard@long)"(i64, i64) #0 {
+define i64 @"shadow:standard@long.multiply(long)"(i64, i64) #0 {
 	%3 = mul i64 %0, %1
 	ret i64 %3
 }
-define i64 @"shadow:standard@long.divide(shadow:standard@long)"(i64, i64) #0 {
+define i64 @"shadow:standard@long.divide(long)"(i64, i64) #0 {
 	%3 = sdiv i64 %0, %1
 	ret i64 %3
 }
-define i64 @"shadow:standard@long.modulus(shadow:standard@long)"(i64, i64) #0 {
+define i64 @"shadow:standard@long.modulus(long)"(i64, i64) #0 {
 	%3 = srem i64 %0, %1
 	ret i64 %3
 }
 
-define i32 @"shadow:standard@long.compare(shadow:standard@long)"(i64, i64) #0 {
+define i32 @"shadow:standard@long.compare(long)"(i64, i64) #0 {
 	%3 = icmp ne i64 %0, %1
 	%4 = zext i1 %3 to i32
 	%5 = icmp slt i64 %0, %1
@@ -874,7 +874,7 @@ define i32 @"shadow:standard@long.compare(shadow:standard@long)"(i64, i64) #0 {
 	ret i32 %6
 }
 
-define i1 @"shadow:standard@long.equal(shadow:standard@long)"(i64, i64) #0 {
+define i1 @"shadow:standard@long.equal(long)"(i64, i64) #0 {
 	%3 = icmp eq i64 %0, %1
 	ret i1 %3
 }
@@ -932,17 +932,17 @@ define i64 @"shadow:standard@long.trailingZeroes()"(i64) #0 {
 	ret i64 %2
 }
 	
-;define {i64, i1} @"shadow:standard@long.addWithOverflow(shadow:standard@long)"(i64, i64) #0 {
+;define {i64, i1} @"shadow:standard@long.addWithOverflow(long)"(i64, i64) #0 {
 ;	%3 = call {i64, i1} @llvm.sadd.with.overflow.i64(i64 %0, i64 %1)
 ;	ret {i64, i1} %3
 ;}
 
-;define {i64, i1} @"shadow:standard@long.subtractWithOverflow(shadow:standard@long)"(i64, i64) #0 {
+;define {i64, i1} @"shadow:standard@long.subtractWithOverflow(long)"(i64, i64) #0 {
 ;	%3 = call {i64, i1} @llvm.ssub.with.overflow.i64(i64 %0, i64 %1)
 ;	ret {i64, i1} %3
 ;}
 
-;define {i64, i1} @"shadow:standard@long.multiplyWithOverflow(shadow:standard@long)"(i64, i64) #0 {
+;define {i64, i1} @"shadow:standard@long.multiplyWithOverflow(long)"(i64, i64) #0 {
 ;	%3 = call {i64, i1} @llvm.smul.with.overflow.i64(i64 %0, i64 %1)
 ;	ret {i64, i1} %3
 ;}
@@ -951,11 +951,11 @@ define i64 @"shadow:standard@long.trailingZeroes()"(i64) #0 {
 ; shadow.standard@ULong native methods
 
 @"shadow:standard@ulong.bitComplement()" = alias i64 (i64)* @"shadow:standard@long.bitComplement()"
-@"shadow:standard@ulong.bitOr(shadow:standard@ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.bitOr(shadow:standard@long)"
-@"shadow:standard@ulong.bitXor(shadow:standard@ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.bitXor(shadow:standard@long)"
-@"shadow:standard@ulong.bitAnd(shadow:standard@ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.bitAnd(shadow:standard@long)"
-@"shadow:standard@ulong.bitShiftLeft(shadow:standard@uint)" = alias i64 (i64, i32)* @"shadow:standard@long.bitShiftLeft(shadow:standard@uint)"
-define i64 @"shadow:standard@ulong.bitShiftRight(shadow:standard@uint)"(i64, i32) #0 {
+@"shadow:standard@ulong.bitOr(ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.bitOr(long)"
+@"shadow:standard@ulong.bitXor(ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.bitXor(long)"
+@"shadow:standard@ulong.bitAnd(ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.bitAnd(long)"
+@"shadow:standard@ulong.bitShiftLeft(uint)" = alias i64 (i64, i32)* @"shadow:standard@long.bitShiftLeft(uint)"
+define i64 @"shadow:standard@ulong.bitShiftRight(uint)"(i64, i32) #0 {
 	%3 = icmp ult i32 %1, 64
 	br i1 %3, label %4, label %7
 	%5 = zext i32 %1 to i64
@@ -963,22 +963,22 @@ define i64 @"shadow:standard@ulong.bitShiftRight(shadow:standard@uint)"(i64, i32
 	ret i64 %6
 	ret i64 0
 }
-@"shadow:standard@ulong.bitRotateLeft(shadow:standard@uint)" = alias i64 (i64, i32)* @"shadow:standard@long.bitRotateLeft(shadow:standard@uint)"
-@"shadow:standard@ulong.bitRotateRight(shadow:standard@uint)" = alias i64 (i64, i32)* @"shadow:standard@long.bitRotateRight(shadow:standard@uint)"
+@"shadow:standard@ulong.bitRotateLeft(uint)" = alias i64 (i64, i32)* @"shadow:standard@long.bitRotateLeft(uint)"
+@"shadow:standard@ulong.bitRotateRight(uint)" = alias i64 (i64, i32)* @"shadow:standard@long.bitRotateRight(uint)"
 
-@"shadow:standard@ulong.add(shadow:standard@ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.add(shadow:standard@long)"
-@"shadow:standard@ulong.subtract(shadow:standard@ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.subtract(shadow:standard@long)"
-@"shadow:standard@ulong.multiply(shadow:standard@ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.multiply(shadow:standard@long)"
-define i64 @"shadow:standard@ulong.divide(shadow:standard@ulong)"(i64, i64) #0 {
+@"shadow:standard@ulong.add(ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.add(long)"
+@"shadow:standard@ulong.subtract(ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.subtract(long)"
+@"shadow:standard@ulong.multiply(ulong)" = alias i64 (i64, i64)* @"shadow:standard@long.multiply(long)"
+define i64 @"shadow:standard@ulong.divide(ulong)"(i64, i64) #0 {
 	%3 = udiv i64 %0, %1
 	ret i64 %3
 }
-define i64 @"shadow:standard@ulong.modulus(shadow:standard@ulong)"(i64, i64) #0 {
+define i64 @"shadow:standard@ulong.modulus(ulong)"(i64, i64) #0 {
 	%3 = urem i64 %0, %1
 	ret i64 %3
 }
 
-define i32 @"shadow:standard@ulong.compare(shadow:standard@ulong)"(i64, i64) #0 {
+define i32 @"shadow:standard@ulong.compare(ulong)"(i64, i64) #0 {
 	%3 = icmp ne i64 %0, %1
 	%4 = zext i1 %3 to i32
 	%5 = icmp ult i64 %0, %1
@@ -986,7 +986,7 @@ define i32 @"shadow:standard@ulong.compare(shadow:standard@ulong)"(i64, i64) #0 
 	ret i32 %6
 }
 
-@"shadow:standard@ulong.equal(shadow:standard@ulong)" = alias i1 (i64, i64)* @"shadow:standard@long.equal(shadow:standard@long)"
+@"shadow:standard@ulong.equal(ulong)" = alias i1 (i64, i64)* @"shadow:standard@long.equal(long)"
 
 @"shadow:standard@ulong.toByte()" = alias i8 (i64)* @"shadow:standard@long.toByte()" 
 @"shadow:standard@ulong.toUByte()" = alias i8 (i64)* @"shadow:standard@long.toByte()"
@@ -1011,45 +1011,45 @@ define double @"shadow:standard@ulong.toDouble()"(i64) #0 {
 @"shadow:standard@ulong.leadingZeroes()" = alias i64 (i64)* @"shadow:standard@long.leadingZeroes()"
 @"shadow:standard@ulong.trailingZeroes()" = alias i64 (i64)* @"shadow:standard@long.trailingZeroes()"	
 	
-;define {i64, i1} @"shadow:standard@ulong.addWithOverflow(shadow:standard@ulong)"(i64, i64) #0 {
+;define {i64, i1} @"shadow:standard@ulong.addWithOverflow(ulong)"(i64, i64) #0 {
 ;	%3 = call {i64, i1} @llvm.uadd.with.overflow.i64(i64 %0, i64 %1)
 ;	ret {i64, i1} %3
 ;}
 
-;define {i64, i1} @"shadow:standard@ulong.subtractWithOverflow(shadow:standard@ulong)"(i64, i64) #0 {
+;define {i64, i1} @"shadow:standard@ulong.subtractWithOverflow(ulong)"(i64, i64) #0 {
 ;	%3 = call {i64, i1} @llvm.usub.with.overflow.i64(i64 %0, i64 %1)
 ;	ret {i64, i1} %3
 ;}
 
-;define {i64, i1} @"shadow:standard@ulong.multiplyWithOverflow(shadow:standard@ulong)"(i64, i64) #0 {
+;define {i64, i1} @"shadow:standard@ulong.multiplyWithOverflow(ulong)"(i64, i64) #0 {
 ;	%3 = call {i64, i1} @llvm.umul.with.overflow.i64(i64 %0, i64 %1)
 ;	ret {i64, i1} %3
 ;}
 
 ; shadow.standard@Float native methods
 
-define float @"shadow:standard@float.add(shadow:standard@float)"(float, float) #0 {
+define float @"shadow:standard@float.add(float)"(float, float) #0 {
 	%3 = fadd float %0, %1
 	ret float %3
 }
-define float @"shadow:standard@float.subtract(shadow:standard@float)"(float, float) #0 {
+define float @"shadow:standard@float.subtract(float)"(float, float) #0 {
 	%3 = fsub float %0, %1
 	ret float %3
 }
-define float @"shadow:standard@float.multiply(shadow:standard@float)"(float, float) #0 {
+define float @"shadow:standard@float.multiply(float)"(float, float) #0 {
 	%3 = fmul float %0, %1
 	ret float %3
 }
-define float @"shadow:standard@float.divide(shadow:standard@float)"(float, float) #0 {
+define float @"shadow:standard@float.divide(float)"(float, float) #0 {
 	%3 = fdiv float %0, %1
 	ret float %3
 }
-define float @"shadow:standard@float.modulus(shadow:standard@float)"(float, float) #0 {
+define float @"shadow:standard@float.modulus(float)"(float, float) #0 {
 	%3 = frem float %0, %1
 	ret float %3
 }
 
-define i32 @"shadow:standard@float.compare(shadow:standard@float)"(float, float) #0 {
+define i32 @"shadow:standard@float.compare(float)"(float, float) #0 {
 	%3 = fcmp ueq float %0, %1
 	%4 = fcmp olt float %0, %1
 	%5 = select i1 %3, i32 0, i32 1
@@ -1057,7 +1057,7 @@ define i32 @"shadow:standard@float.compare(shadow:standard@float)"(float, float)
 	ret i32 %6
 }
 
-define i1 @"shadow:standard@float.equal(shadow:standard@float)"(float, float) #0 {
+define i1 @"shadow:standard@float.equal(float)"(float, float) #0 {
 	%3 = fcmp ord float %0, %1
 	br i1 %3, label %4, label %6
 	%5 = fcmp ueq float %0, %1
@@ -1137,12 +1137,12 @@ define float @"shadow:standard@float.squareRoot()"(float) #0 {
 	ret float %2
 }	
 
-define float @"shadow:standard@float.power(shadow:standard@int)"(float, i32) #0 {	
+define float @"shadow:standard@float.power(int)"(float, i32) #0 {	
 	%3 = call float @llvm.powi.f32(float %0, i32 %1)
 	ret float %3
 }	
 
-define float @"shadow:standard@float.power(shadow:standard@float)"(float, float) #0 {	
+define float @"shadow:standard@float.power(float)"(float, float) #0 {	
 	%3 = call float @llvm.pow.f32(float %0, float %1)
 	ret float %3
 }
@@ -1172,7 +1172,7 @@ define float @"shadow:standard@float.logBase10()"(float) #0 {
 	ret float %2
 }
 
-define float @"shadow:standard@float.multiplyAddshadow:standard@float(shadow:standard@float)"(float, float, float) #0 {	
+define float @"shadow:standard@float.multiplyAddshadow:standard@float(float)"(float, float, float) #0 {	
 	%4 = call float @llvm.fma.f32(float %0, float %1, float %2)
 	ret float %4
 }	
@@ -1189,28 +1189,28 @@ define float @"shadow:standard@float.ceiling()"(float) #0 {
 
 ; shadow.standard@Double native methods
 
-define double @"shadow:standard@double.add(shadow:standard@double)"(double, double) #0 {
+define double @"shadow:standard@double.add(double)"(double, double) #0 {
 	%3 = fadd double %0, %1
 	ret double %3
 }
-define double @"shadow:standard@double.subtract(shadow:standard@double)"(double, double) #0 {
+define double @"shadow:standard@double.subtract(double)"(double, double) #0 {
 	%3 = fsub double %0, %1
 	ret double %3
 }
-define double @"shadow:standard@double.multiply(shadow:standard@double)"(double, double) #0 {
+define double @"shadow:standard@double.multiply(double)"(double, double) #0 {
 	%3 = fmul double %0, %1
 	ret double %3
 }
-define double @"shadow:standard@double.divide(shadow:standard@double)"(double, double) #0 {
+define double @"shadow:standard@double.divide(double)"(double, double) #0 {
 	%3 = fdiv double %0, %1
 	ret double %3
 }
-define double @"shadow:standard@double.modulus(shadow:standard@double)"(double, double) #0 {
+define double @"shadow:standard@double.modulus(double)"(double, double) #0 {
 	%3 = frem double %0, %1
 	ret double %3
 }
 
-define i32 @"shadow:standard@double.compare(shadow:standard@double)"(double, double) #0 {
+define i32 @"shadow:standard@double.compare(double)"(double, double) #0 {
 	%3 = fcmp ueq double %0, %1
 	%4 = fcmp olt double %0, %1
 	%5 = select i1 %3, i32 0, i32 1
@@ -1218,7 +1218,7 @@ define i32 @"shadow:standard@double.compare(shadow:standard@double)"(double, dou
 	ret i32 %6
 }
 
-define i1 @"shadow:standard@double.equal(shadow:standard@double)"(double, double) #0 {
+define i1 @"shadow:standard@double.equal(double)"(double, double) #0 {
 	%3 = fcmp ord double %0, %1
 	br i1 %3, label %4, label %6
 	%5 = fcmp ueq double %0, %1
@@ -1298,12 +1298,12 @@ define double @"shadow:standard@double.squareRoot()"(double) #0 {
 	ret double %2
 }	
 
-define double @"shadow:standard@double.power(shadow:standard@int)"(double, i32) #0 {	
+define double @"shadow:standard@double.power(int)"(double, i32) #0 {	
 	%3 = call double @llvm.powi.f64(double %0, i32 %1)
 	ret double %3
 }	
 
-define double @"shadow:standard@double.power(shadow:standard@double)"(double, double) #0 {	
+define double @"shadow:standard@double.power(double)"(double, double) #0 {	
 	%3 = call double @llvm.pow.f64(double %0, double %1)
 	ret double %3
 }
@@ -1333,7 +1333,7 @@ define double @"shadow:standard@double.logBase10()"(double) #0 {
 	ret double %2
 }
 
-define double @"shadow:standard@double.multiplyAddshadow:standard@double(shadow:standard@double)"(double, double, double) #0 {	
+define double @"shadow:standard@double.multiplyAddshadow:standard@double(double)"(double, double, double) #0 {	
 	%4 = call double @llvm.fma.f64(double %0, double %1, double %2)
 	ret double %4
 }	

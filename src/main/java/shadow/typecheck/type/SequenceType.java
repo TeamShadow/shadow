@@ -142,26 +142,32 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;
 		 
-		for(ModifiedType type: types) {			
+		for(ModifiedType modifiedType: types) {			
 			if( first )
 				first = false;
 			else
-				builder.append(",");								
+				builder.append(",");
+			
+			Type type = modifiedType.getType();
+			Modifiers modifiers = modifiedType.getModifiers();
 			
 			if( (options & MANGLE) != 0 ) {
-				if( type.getType() instanceof ArrayType) //only convert the first layer
+				if( type instanceof ArrayType) //only convert the first layer
 				{
 					if( (options & CONVERT_ARRAYS) != 0 )
-						builder.append(((ArrayType)type.getType()).convertToGeneric().toString(options & ~CONVERT_ARRAYS));
+						builder.append(((ArrayType)type).convertToGeneric().toString(options & ~CONVERT_ARRAYS));
 					else
-						builder.append(type.getType().toString(options));
+						builder.append(type.toString(options));
 				}
+				//raw primitive types
+				else if( type.isPrimitive() && !modifiers.isNullable()  )
+					builder.append(type.getTypeName());
 				else
-					builder.append(type.getType().toString(options));
+					builder.append(type.toString(options));
 			}
 			else if( type != null ) {
-				builder.append(type.getModifiers().toString());
-				builder.append(type.getType().toString(options));
+				builder.append(modifiers.toString());
+				builder.append(type.toString(options));
 			}
 		}		
 		

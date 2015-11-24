@@ -83,7 +83,9 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodTableType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
@@ -183,20 +185,23 @@ public class LLVMOutput extends AbstractOutput {
 						append(" }").toString());
 				
 				sb.setLength(0);
+								
 				//first thing in every object is the class			
-				sb.append('%').append(raw(type)).append(" = type { ");
+				sb.append('%' + raw(type)).append(" = type { ");
 				
 				sb.append(type(Type.CLASS)).append(", ");
 				
 				//then the method table
 				sb.append(methodTableType(type)).append("* ");
-										
-				if (type.isPrimitive())
+				
+
+				if (type.isPrimitive()) //put wrapped value in for primitives
 					sb.append(", ").append(type(type));
-				else			
-				 for (Entry<String, ? extends ModifiedType> field :
-						((ClassType)type).orderAllFields())
-					sb.append(", ").append(type(field.getValue()));
+				else {			
+					for (Entry<String, ? extends ModifiedType> field :
+							((ClassType)type).orderAllFields())
+						sb.append(", ").append(type(field.getValue()));
+				}
 				writer.write(sb.append(" }").toString());
 			}
 		}	
@@ -363,7 +368,7 @@ public class LLVMOutput extends AbstractOutput {
 					"] [" + typeLiteral(interfaceCount) + "] }, " )	+
 					
 					typeLiteral(flags) + ", " +			//flags
-					typeText(Type.INT, sizeof(type(moduleType))) + //size 
+					typeText(Type.INT, sizeof(type(moduleType, true))) + //size 
 					" }" );
 				
 				//class definition above includes parent Class
@@ -654,7 +659,7 @@ public class LLVMOutput extends AbstractOutput {
 		//because its second parameter has no shadow type
 		if( moduleType.equals(Type.CLASS))
 			writer.write("declare noalias " + type(Type.OBJECT) + " @" +
-					raw(Type.CLASS, ".allocate") + '(' +
+					raw(Type.CLASS, ".allocate()") + '(' +
 					type(Type.CLASS) + ", " + methodTableType(Type.OBJECT) +  "*)");
 		
 		
@@ -898,7 +903,7 @@ public class LLVMOutput extends AbstractOutput {
 				!(node.getOuterType() instanceof SingletonType) &&
 				!node.getType().getModifiers().isPrivate() &&
 				!node.isSuper() ) {	
-			writer.write(nextTemp() + " = getelementptr %" +
+			writer.write(nextTemp() + " = getelementptr inbounds %" +
 					raw(node.getPrefix().getType()) + ", " + 					
 					typeSymbol(node.getPrefix()) + ", i32 0, i32 1");
 			
@@ -907,8 +912,8 @@ public class LLVMOutput extends AbstractOutput {
 			if( !module.getType().encloses(node.getPrefix().getType()) )
 				usedMethodTables.add(node.getPrefix().getType());
 			
-			writer.write(nextTemp() + " = getelementptr %" +
-					methodTableType(node.getPrefix().getType()) + ", %" + 
+			writer.write(nextTemp() + " = getelementptr inbounds " +
+					methodTableType(node.getPrefix().getType()) + ", " + 
 					methodTableType(node.getPrefix().getType()) + "* " +
 					temp(1) + ", i32 0, i32 " + node.getIndex()); //may need to + 1 to the node.getIndex() if a parent method table is added	
 			
@@ -1003,7 +1008,7 @@ public class LLVMOutput extends AbstractOutput {
 		case PRIMITIVE_TO_OBJECT:
 			writer.write(nextTemp() + " = call noalias " +
 					type(Type.OBJECT) + " @" + raw(Type.CLASS,
-					".allocate") + '(' + type(Type.CLASS) +
+					".allocate()") + '(' + type(Type.CLASS) +
 					" " + classOf(srcType) + ", " + 
 					methodTableType(Type.OBJECT) + "* bitcast(" +
 					methodTableType(srcType) + "* " + methodTable(srcType) +
@@ -1048,7 +1053,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(source) + ", 1");				
 			writer.write(nextTemp() + " = call " + type(Type.OBJECT) +
 					" @" + raw(Type.CLASS,
-					".allocate" + Type.INT.toString(Type.MANGLE)) + "(" +
+					".allocate(" + Type.INT.toString(Type.MANGLE) + ")") + "(" +
 					typeText(Type.CLASS, classOf(Type.INT)) + ", " +
 					typeLiteral(arrayType.getDimensions()) + ')');
 			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT,
@@ -1072,13 +1077,17 @@ public class LLVMOutput extends AbstractOutput {
 			
 			writer.write(nextTemp() + " = call noalias " +
 					type(Type.OBJECT) + " @" + raw(Type.CLASS,
-					".allocate") + '(' + typeTemp(Type.CLASS,1) + ", " +
+					".allocate()") + '(' + typeTemp(Type.CLASS,1) + ", " +
 					methodTableType(Type.OBJECT) + "* bitcast(" + methodTableType(genericArray) + "* " +  symbol(arrayClass.getMethodTable()) + " to " + methodTableType(Type.OBJECT) + "*)" + 
 					')');
 							
-			writer.write(nextTemp(node) + " = call " + type(genericArray) + " @" +
-					raw(genericArray, ".create" + new ArrayType(Type.INT).
-					toString(Type.MANGLE) + Type.OBJECT.toString(Type.MANGLE)) + '(' +
+			SequenceType arguments = new SequenceType();
+			arguments.add(new SimpleModifiedType(new ArrayType(Type.INT), new Modifiers(Modifiers.IMMUTABLE)));
+			arguments.add(new SimpleModifiedType(Type.OBJECT));
+			MethodSignature arrayCreate = Type.ARRAY.getMatchingMethod("create", arguments);
+						
+			writer.write(nextTemp(node) + " = call " + type(genericArray) + " " +
+					name(arrayCreate) + '(' +
 					typeTemp(Type.OBJECT, 1) + ", " +						
 					typeTemp(new ArrayType(Type.INT), 5) + ", " +
 					typeTemp(Type.OBJECT, 3) + ')');
@@ -1254,7 +1263,7 @@ public class LLVMOutput extends AbstractOutput {
 		else 
 			writer.write(nextTemp() + " = bitcast " + methodTableType(type.getTypeWithoutTypeArguments()) + "* " +  symbol(methods) +  " to "  + methodTableType(Type.OBJECT) + "*");
 		writer.write(nextTemp(node) + " = call noalias " + type(Type.OBJECT) +
-				" @" + raw(Type.CLASS, ".allocate") + '(' + type(Type.CLASS) +
+				" @" + raw(Type.CLASS, ".allocate()") + '(' + type(Type.CLASS) +
 				" " + symbol(_class) + ", " + methodTableType(Type.OBJECT) + "* " + temp(1) +
 				" )");
 	}
@@ -1264,11 +1273,10 @@ public class LLVMOutput extends AbstractOutput {
 	public void visit(TACNewArray node) throws ShadowException
 	{
 		Type baseType = node.getType().getBaseType();		
-		String allocationClass = typeSymbol(node.getBaseClass());		
-		String allocationMethod = ".allocate";	
+		String allocationClass = typeSymbol(node.getBaseClass());
 		
 		writer.write(nextTemp() + " = call noalias " + type(Type.OBJECT) +
-				" @" + raw(Type.CLASS, allocationMethod + Type.INT.toString(Type.MANGLE)) +
+				" @" + raw(Type.CLASS, ".allocate(" + Type.INT.toString(Type.MANGLE) + ")") +
 			 	'(' + allocationClass + ", " +
 				typeSymbol(node.getTotalSize()) + ')');
 		writer.write(nextTemp() + " = bitcast " + type(Type.OBJECT) + ' ' +
@@ -1753,14 +1761,14 @@ public class LLVMOutput extends AbstractOutput {
 			return '@' + raw(type, ":class");
 	}
 	
-	private static String methodTableType(Type type) {
+	private static String methodTable(Type type) {
 		if( type instanceof InterfaceType && type.isFullyInstantiated())
-			return "%" + withGenerics(type, ":_methods");		
-		return "%" + raw(type, ":_methods");
+			return "@" + withGenerics(type, ":_methods");		
+		return "@" + raw(type, ":_methods");
 	}
 	
-	private static String methodTable(Type type) {
-		return "@" + raw(type, ":_methods");
+	private static String methodTableType(Type type) {
+		return "%" + raw(type, ":_methods");
 	}
 	
 	private static String methodType(TACMethodRef method)
@@ -2353,8 +2361,8 @@ public class LLVMOutput extends AbstractOutput {
 				writer.write( interfaceData(noArguments) +
 						" = external constant [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
 			}
-			
-			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "], [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* @\"_interfaceData" + noArguments.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + "\", i32 0, i32 0), [1 x " +
+
+			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "], [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* " + interfaceData(noArguments) + ", i32 0, i32 0), [1 x " +
 					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) +	"] }, ";
 			interfaces = "{ " + type(Type.CLASS) + "* getelementptr inbounds ([" + generic.getInterfaces().size() + " x " +
 					type(Type.CLASS) + "], [" + generic.getInterfaces().size() + " x " +

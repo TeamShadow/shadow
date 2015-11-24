@@ -686,6 +686,7 @@ public class ClassType extends Type {
 	@Override
 	public String toString(int options) {
 		if( ((options & MANGLE) != 0) && ((options & CONVERT_ARRAYS) != 0) &&
+			Type.ARRAY != null && Type.ARRAY_NULLABLE != null && //not a typical situation, but causes problems when types are still being collected
 			(Type.ARRAY.encloses(this) || Type.ARRAY_NULLABLE.encloses(this)) )
 			return super.toString(options & ~CONVERT_ARRAYS);
 		
