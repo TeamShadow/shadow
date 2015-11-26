@@ -99,7 +99,10 @@ public class Documentation
 		}
 		
 		// Capture any remaining text as a plain-text tag
-		String leftover = text.substring(nextTagStart).trim();
+		// First convert all whitespace to single spaces, then remove any trailing spaces
+		// (a leading space may be part of a sentence, etc. and should be preserved)
+		String leftover = DocumentationBuilder.clean(text.substring(nextTagStart));
+		leftover = leftover.replaceFirst("\\s+$", "");
 		if (!leftover.isEmpty())
 			inlineTags.add(InlineTagType.PLAIN_TEXT.build(leftover));
 	}

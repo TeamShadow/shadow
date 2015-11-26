@@ -106,7 +106,13 @@ public abstract class Page
 			for (InlineTag tag : inlineTags) {
 				switch ((InlineTagType) tag.getType()) {
 					case CODE:
-						out.full("code", tag.getArg(0), new Attribute("class", "inline"));
+						out.full("code", tag.getArg(0));
+						break;
+					case BOLD:
+						out.full("b", tag.getArg(0));
+						break;
+					case ITALICS:
+						out.full("i", tag.getArg(0));
 						break;
 					case LINK_DOC:
 						Path link = master.linkByName(this, tag.getArg(0));
