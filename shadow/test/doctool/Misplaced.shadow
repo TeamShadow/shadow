@@ -1,8 +1,10 @@
 /// A class with some misplaced documentation comments - eventually it should
+// What does this one do?
 /// be no problem.
 /** Another
 comment
 */
+// What does this do?
 class Misplaced
 {
     public main(String[] args) => ()

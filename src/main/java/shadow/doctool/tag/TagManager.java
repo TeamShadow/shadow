@@ -114,6 +114,8 @@ public class TagManager
 		
 		// Regular inline tags
 		CODE("code"),
+		BOLD("bold"),
+		ITALICS("italics"),
 		LINK_URL("linkUrl", new ArgDescriptionParser(1, true)), // TODO: Support mouseover text
 		LINK_DOC("linkDoc", new ArgDescriptionParser(1, true)), // TODO: Support mouseover text
 		

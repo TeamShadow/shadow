@@ -1,0 +1,212 @@
+			       SHADOX REFERENCE
+
+		    shadox - the Shadow documentation tool
+
+			http://www.shadow-language.org
+		   http://www.github.com/TeamShadow/shadow
+
+
+				   USAGE
+
+shadox [ options ] [ source-files ] [ packages ]
+
+
+				 DESCRIPTION
+
+Shadox is a tool used to generate formatted documentation files from comments
+found in Shadow source code. By default, it generates descriptive HTML pages
+corresponding to each class (.shadow source file) and package specified on the
+command line.
+
+Though it is not currently possible, the eventual intent is to have Shadox be
+extensible in such a way as to support any user-specified documentation
+format. For the moment, all documentation is generated via the included
+Standard Documentation Template.
+
+Note that "class" in the context of this documentation refers to any class
+type in Shadow, including interfaces, enums, singletons, and exceptions.
+
+
+				SHADOX OPTIONS
+
+-c, --config	shadowc-configuration-file
+	Specify a compiler configuration file to use during documentation.
+
+-h, --help
+	Causes Shadox usage details to be printed on the command line.
+
+-d, --directory	/root/of/output
+	The directory in which resulting HTML files, stylesheets, and
+	subdirectories will be created. This directory will be created if it
+	does not exist, but it will not be emptied of previous contents.
+
+-o, --output	a="value",b, ...
+	Specifies additional options to be passed to the documentation
+	template (the specific generator/formatter) in use. At present, only
+	the Standard Documentation Template may be used. Options should be
+	listed in a "key=value" format (or simple "key", if arguments are not
+	needed) and separated by commas with no intervening whitespace.
+
+-v, --verbose
+	Allows additional logging info to be printed from both Shadox and the
+	compiler (which Shadox calls internally).
+
+
+		   STANDARD DOCUMENTATION TEMPLATE OPTIONS 
+
+title="<Documentation Title>"
+	Determines the title to be displayed on the site-wide navbar.
+
+help
+	Prints descriptive information about the Standard Documentation
+	Template.
+
+
+				  HTML PAGES
+
+Each visible package, class, and visible inner class receives its own HTML
+page, along with a master "overview" page to facilitate navigation.
+
+Package pages describe their class members, while class pages describe their
+publicly visible data members and methods. Each of these elements can be
+further described with special documentation comments placed directly in the
+source code. Additionally, pages which reference one another will be
+hyperlinked together wherever possible.
+
+
+			    DOCUMENTATION COMMENTS
+
+Only comments specifically formatted as documentation comments will be
+captured by Shadox. There are two legal formats for these comments:
+
+- Groups of single-line comments beginning with ///
+- Block comments beginning with /** and ending with */
+
+Unless separated by non-empty lines, consecutive single-line comments will be
+grouped and processed as a whole. If a block-style comment spans multiple
+lines, these lines may optionally include a leading asterisk. Such asterisks
+will be discarded during processing.
+
+Each documentation comment must be associated with the declaration of either a
+class-type (including singletons, exceptions, interfaces, and enums), a
+method, or a member variable. In order for this association to take place, the
+documentation comment must come directly before a given declaration (including
+its modifiers), separated only by empty lines, other comments, and whitespace.
+
+Comments which do not follow the above rules will simply be ignored.
+
+
+				     TAGS
+
+Shadox supports a number of specialized markup "tags" within documentation
+comments. These tags fall into two major categories, inline tags and block
+tags.
+
+Inline tags allow the main body of text within a documentation comment to be
+augmented with features like special fonts or hyperlinks. An example usage of
+an inline tag can be seen in the statement "{@bold This sentence is in
+bold font!}". Currently, inline tags cannot be nested within one another.
+
+Block tags typically create separate subsections which provide more
+information on a specific aspect of the structure being documented. An example
+usage of a block tag might include "@param index The index of the required
+value" to document a method parameter.
+
+Conceptually, the text of a documentation comments is divided into two major
+sections, the main description section and the block tag section. If present,
+the main description section must occur before the block tag section and
+contain only plain text and inline tags. Similarly, if the block tag section
+exists, it must follow the main description section and contain only block
+tags. Only additional block tags may occur following a block tag, meaning that
+all descriptive text must appear before even the first block tag. Currently,
+the use of inline tags within block tags is not supported.
+
+All tags are specified with the ‘@’ symbol followed immediately by the
+alphanumeric name of the tag in question. Inline tags and their arguments must
+be surrounded by curly braces, appearing as follows: {@tagname content}.
+Although specific inline tags may have their own content rules, the character
+'}' will always signal the end of the tag.
+
+Block tags require no curly braces, but must be the first text to appear at
+the start of a line (not including leading asterisks or whitespace). Block
+tags can span multiple lines, but may have special formatting requirements
+associated with the specific tag in question.
+
+The following is an example of proper tag usage within a comment:
+
+/**
+ * This comment describes {@code Example}, a very important class.
+ * Without this class, life would be very difficult.
+ * @author Bob Smith, 
+ *         Alice Johnson
+ * @param value A critically important value!
+ */
+
+
+				 INLINE TAGS
+
+{@bold [ text ]} 
+	Bolds the text in question (with HTML's <b> tag).
+
+{@code [ text ]}
+	Applies an HTML <code> tag to the text in question.
+
+{@italics [ text ]}
+	Italicizes the text in question (with the <i> tag).
+
+{@linkDoc package-or-class [ link-text ]} 
+	Creates a hyperlink to the specified class or package page. Classes
+	and packages to be linked should be specified as they would be in
+	Shadow source code, i.e. "package:subpackage@Class". If `text` is
+	present, it will appear as the hyperlink. Otherwise, the raw URL will
+	appear.
+
+{@linkUrl url [ link-text ]}
+	Creates a hyperlink to the specified URL. If `text` is present, it
+	will appear as the hyperlink. Otherwise, the raw URL will appear.
+
+
+				  BLOCK TAGS
+
+@author author-name ([, author-name ] ... )
+	Adds the provided names to an "Authors" section below the main text of
+	the documentation comment. Names may contain whitespace and should be
+	separated by commas. @author may be used alongside any type of Shadow
+	declaration.
+
+@param name [ description ]
+	Adds the given parameter name and its (optional) description to a
+	"Parameters" section below the main text of the documentation comment.
+	The `description` text can be as long as desired and is only
+	terminated by the start of another block tag or the end of the
+	comment. @param is only usable alongside method declarations.
+
+@return description
+	Creates a "Return" section below the main text of the documentation
+	comment describing the details of a method's return value. The
+	`description` text can be as long as desired and is only terminated by
+	the start of another block tag or the end of the comment. @return is
+	only usable alongside method declarations.
+
+@seeDoc package-or-class [ link-text ]
+	Creates a hyperlink to the specified package or class page and adds it
+	to the "See Also" section below the main text of the documentation
+	comment. Classes and packages to be linked should be specified as they
+	would be in Shadow source code, i.e. "package:subpackage@Class". If
+	`link-text` is present, it will be displayed as the hyperlink in place
+	of the class or package name.
+
+@seeUrl url [ link-text ]
+	Creates a hyperlink to the specified URL and adds it to the "See Also"
+	section below the main text of the documentation comment. If
+	`link-text` is present, it will be displayed as the hyperlink in place
+	of the URL.
+
+@throws exception [ description ]
+	Adds the given exception name and its (optional) description to a
+	"Throws" section below the main text of the documentation comment.
+	The `description` text can be as long as desired and is only
+	terminated by the start of another block tag or the end of the comment.
+	@throws is only usable alongside method declarations. Currently, no
+	mechanism is in place to verify that the given exception exists or is
+	actually thrown. No hyperlink is created to the exception page.

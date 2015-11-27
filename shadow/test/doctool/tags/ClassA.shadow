@@ -1,6 +1,6 @@
 /// Here is a {@linkDoc pkg1@ClassB link to ClassB}. Here is an {@linkUrl 
 /// http://google.com actual URL!} And of course, here is {@code some code}.
-///
+/// Now we support {@italics italicized} and {@bold bold} text! 
 /// @author Abe, Beth, Claire, Dave
 /// @param test this parameter doesn't actually exist
 /// @return value this value doesn't exist either
