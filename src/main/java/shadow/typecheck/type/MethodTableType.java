@@ -49,6 +49,6 @@ public class MethodTableType extends Type {
 	
 	@Override
 	public String toString(int options)	{
-		return type.toString(options) + ":_methods";
+		return type.toString(options) + "_methods";
 	}
 }

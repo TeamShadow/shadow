@@ -88,8 +88,11 @@ public class Package implements Comparable<Package>
 	}
 	
 	public void addType(Type type ) throws PackageException {	
-		if(!types.containsKey(type.toString(Type.NO_OPTIONS))) { //no package name or type parameters		
-			types.put(type.toString(Type.NO_OPTIONS), type);
+		
+		String name = type.toString(Type.NO_OPTIONS);
+		
+		if(!types.containsKey(name)) { //no package name or type parameters		
+			types.put(name, type);
 			type.setPackage(this);
 		}
 		else
@@ -108,12 +111,19 @@ public class Package implements Comparable<Package>
 		return children;
 	}
 	
-	public String getQualifiedName()
-	{
+	public String getQualifiedName() {
 		if (parent == null || parent.getName().isEmpty())
 			return getName();
 		
 		return parent.getQualifiedName() + ':' + getName();
+	}
+	
+	
+	public String getMangledName() {
+		if (parent == null || parent.getName().isEmpty())
+			return Type.mangle(getName());
+		
+		return parent.getMangledName() + '.' + Type.mangle(getName());
 	}
 	
 	public String getPath() {

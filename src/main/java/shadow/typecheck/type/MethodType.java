@@ -141,7 +141,7 @@ public class MethodType extends ClassType {
 	@Override
 	public String toString(int options) {	
 		if( (options & MANGLE) != 0 ) {
-			return parameterTypes.toString(options);
+			return parameterTypes.toString("", "", options);
 		}			
 			
 		return parameterTypes.toString(options) + " => " + returns.toString(options);

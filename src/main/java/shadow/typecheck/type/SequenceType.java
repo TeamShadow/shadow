@@ -143,8 +143,10 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		boolean first = true;
 		 
 		for(ModifiedType modifiedType: types) {			
-			if( first )
-				first = false;
+			if( (options & MANGLE ) != 0 )
+				builder.append("_");			
+			else if( first )
+				first = false;			 
 			else
 				builder.append(",");
 			
@@ -155,8 +157,6 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 				if( type instanceof ArrayType) { //only convert the first layer
 					if( (options & CONVERT_ARRAYS) != 0 )
 						builder.append(((ArrayType)type).convertToGeneric().toString(options & ~CONVERT_ARRAYS));
-					else if( ((ArrayType)type).recursivelyGetBaseType().isPrimitive() )
-						builder.append(type.toString(options & ~MANGLE));
 					else
 						builder.append(type.toString(options));
 				}

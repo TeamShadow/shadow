@@ -190,10 +190,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		else
 			sb.append(getOuter().toString(Type.MANGLE));
 		
-		sb.append(".").append(symbol).append(type.toString(Type.MANGLE | Type.PACKAGES | Type.TYPE_PARAMETERS));
+		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
 		
 		if (isWrapper())
-			sb.append(":W");
+			sb.append("_W");
 		
 		return sb.toString();
 	}

@@ -172,7 +172,7 @@ public class Main {
 			
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			Process optimize = new ProcessBuilder("opt", "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
-			Process compile = new ProcessBuilder("llc", "-mtriple", config.getTarget(), "-O3", "--x86-asm-syntax=intel")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder("llc", "-mtriple", config.getTarget(), "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
@@ -201,7 +201,7 @@ public class Main {
 						LLVMOutput.addGenerics("%arraySet", arrays, out);						
 					}					
 					
-					line = line.replace("shadow:test@Test", mainClass) + System.lineSeparator();
+					line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
 					out.write(line.getBytes());
 					line = main.readLine();
 				}
@@ -287,7 +287,7 @@ public class Main {
 					TACModule module = new TACBuilder().build(node);
 
 					if( path.equals(mainFileName) ) {							
-						mainClass = type.toString(Type.PACKAGES);
+						mainClass = type.toString(Type.MANGLE);
 						SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
 						if( type.getMatchingMethod("main", arguments) != null )
 							mainArguments = true;
@@ -400,7 +400,7 @@ public class Main {
 	 */
 	private static String typeToFileName(Type type) {
 		
-		String name = type.getTypeName().replace(':', '$');
+		String name = type.getTypeName();
 		if( type.isPrimitive() ) { // hack to produce Int.ll instead of int.ll
 			if( name.startsWith("u") ) //UShort instead of ushort
 				name = name.substring(0,2).toUpperCase() + name.substring(2);

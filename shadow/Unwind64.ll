@@ -14,24 +14,24 @@
 %double = type double
 
 ; standard definitions
-%"shadow:standard@Object:_methods" = type { %"shadow:standard@Object"* (%"shadow:standard@Object"*, %"shadow:standard@AddressMap"*)*, %"shadow:standard@Class"* (%"shadow:standard@Object"*)*, %"shadow:standard@String"* (%"shadow:standard@Object"*)* }
-%"shadow:standard@Object" = type { %"shadow:standard@Class"*, %"shadow:standard@Object:_methods"*  }
-%"shadow:standard@Class:_methods" = type { %"shadow:standard@Class"* (%"shadow:standard@Class"*, %"shadow:standard@AddressMap"*)*, %"shadow:standard@Class"* (%"shadow:standard@Object"*)*, %"shadow:standard@String"* (%"shadow:standard@Class"*)*, { %"shadow:standard@Object"**, [1 x %int] } (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*, %"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)*, %uint (%"shadow:standard@Class"*)*, %"shadow:standard@Object"* (%"shadow:standard@Class"*, %"shadow:standard@Class"*)*, { %"shadow:standard@Class"**, [1 x %int] } (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*, %"shadow:standard@Class"*)*, %"shadow:standard@String"* (%"shadow:standard@Class"*, %"shadow:standard@String"*, { %"shadow:standard@Object"**, [1 x %int] }, %int, %int)*, %"shadow:standard@String"* (%"shadow:standard@Class"*)*, %"shadow:standard@Class"* (%"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)* }
-%"shadow:standard@Class" = type { %"shadow:standard@Class"*, %"shadow:standard@Class:_methods"* , %"shadow:standard@String"*, %"shadow:standard@Class"*, { %"shadow:standard@Object"**, [1 x %int] }, { %"shadow:standard@Class"**, [1 x %int] }, %int, %int }
-%"shadow:standard@GenericClass:_methods" = type { %"shadow:standard@GenericClass"* (%"shadow:standard@GenericClass"*, %"shadow:standard@AddressMap"*)*, %"shadow:standard@Class"* (%"shadow:standard@Object"*)*, %"shadow:standard@String"* (%"shadow:standard@Class"*)*, { %"shadow:standard@Object"**, [1 x %int] } (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*, %"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)*, %uint (%"shadow:standard@Class"*)*, %"shadow:standard@Object"* (%"shadow:standard@Class"*, %"shadow:standard@Class"*)*, { %"shadow:standard@Class"**, [1 x %int] } (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@Class"*)*, %boolean (%"shadow:standard@GenericClass"*, %"shadow:standard@Class"*)*, %"shadow:standard@String"* (%"shadow:standard@Class"*, %"shadow:standard@String"*, { %"shadow:standard@Object"**, [1 x %int] }, %int, %int)*, %"shadow:standard@String"* (%"shadow:standard@Class"*)*, %"shadow:standard@Class"* (%"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)*, %int (%"shadow:standard@Class"*)*, { %"shadow:standard@Object"**, [1 x %int] } (%"shadow:standard@GenericClass"*)* }
-%"shadow:standard@GenericClass" = type { %"shadow:standard@Class"*, %"shadow:standard@GenericClass:_methods"* , %"shadow:standard@String"*, %"shadow:standard@Class"*, { %"shadow:standard@Object"**, [1 x %int] }, { %"shadow:standard@Class"**, [1 x %int] }, %int, %int, { %"shadow:standard@Object"**, [1 x %int] } }
-%"shadow:standard@Iterator:_methods" = type { %boolean (%"shadow:standard@Object"*)*, %"shadow:standard@Object"* (%"shadow:standard@Object"*)* }
-%"shadow:standard@String:_methods" = type { %"shadow:standard@String"* (%"shadow:standard@String"*)*, %"shadow:standard@String"* (%"shadow:standard@String"*, %"shadow:standard@AddressMap"*)*, %"shadow:standard@Class"* (%"shadow:standard@Object"*)*, %"shadow:standard@String"* (%"shadow:standard@String"*)*, { %byte*, [1 x %int] } (%"shadow:standard@String"*)*, %int (%"shadow:standard@String"*, %"shadow:standard@String"*)*, %"shadow:standard@String"* (%"shadow:standard@String"*, %"shadow:standard@String"*)*, %boolean (%"shadow:standard@String"*, %"shadow:standard@String"*)*, %uint (%"shadow:standard@String"*)*, %byte (%"shadow:standard@String"*, %int)*, %boolean (%"shadow:standard@String"*)*, { %"shadow:standard@Iterator:_methods"*, %"shadow:standard@Object"* } (%"shadow:standard@String"*)*, %int (%"shadow:standard@String"*)*, %"shadow:standard@String"* (%"shadow:standard@String"*, %int)*, %"shadow:standard@String"* (%"shadow:standard@String"*, %int, %int)*, %byte (%"shadow:standard@String"*)*, %double (%"shadow:standard@String"*)*, %float (%"shadow:standard@String"*)*, %int (%"shadow:standard@String"*)*, %long (%"shadow:standard@String"*)*, %"shadow:standard@String"* (%"shadow:standard@String"*)*, %short (%"shadow:standard@String"*)*, %ubyte (%"shadow:standard@String"*)*, %uint (%"shadow:standard@String"*)*, %ulong (%"shadow:standard@String"*)*, %ushort (%"shadow:standard@String"*)*, %"shadow:standard@String"* (%"shadow:standard@String"*)* }
-%"shadow:standard@String" = type { %"shadow:standard@Class"*, %"shadow:standard@String:_methods"* , { %byte*, [1 x %int] }, %boolean }
-%"shadow:standard@AddressMap:_methods" = type opaque
-%"shadow:standard@AddressMap" = type opaque
+%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
+%shadow.standard..Object = type { %shadow.standard..Class*, %shadow.standard..Object_methods*  }
+%shadow.standard..Class_methods = type { %shadow.standard..Class* (%shadow.standard..Class*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %uint (%shadow.standard..Class*)*, %shadow.standard..Object* (%shadow.standard..Class*, %shadow.standard..Class*)*, { %shadow.standard..Class**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %shadow.standard..String* (%shadow.standard..Class*, %shadow.standard..String*, { %shadow.standard..Object**, [1 x %int] }, %int, %int)*, %shadow.standard..String* (%shadow.standard..Class*)*, %shadow.standard..Class* (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)* }
+%shadow.standard..Class = type { %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int }
+%shadow.standard..GenericClass_methods = type { %shadow.standard..GenericClass* (%shadow.standard..GenericClass*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %uint (%shadow.standard..Class*)*, %shadow.standard..Object* (%shadow.standard..Class*, %shadow.standard..Class*)*, { %shadow.standard..Class**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..GenericClass*, %shadow.standard..Class*)*, %shadow.standard..String* (%shadow.standard..Class*, %shadow.standard..String*, { %shadow.standard..Object**, [1 x %int] }, %int, %int)*, %shadow.standard..String* (%shadow.standard..Class*)*, %shadow.standard..Class* (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..GenericClass*)* }
+%shadow.standard..GenericClass = type { %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int, { %shadow.standard..Object**, [1 x %int] } }
+%shadow.standard..Iterator_methods = type { %boolean (%shadow.standard..Object*)*, %shadow.standard..Object* (%shadow.standard..Object*)* }
+%shadow.standard..String_methods = type { %shadow.standard..String* (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..String*)*, { %byte*, [1 x %int] } (%shadow.standard..String*)*, %int (%shadow.standard..String*, %shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %shadow.standard..String*)*, %boolean (%shadow.standard..String*, %shadow.standard..String*)*, %uint (%shadow.standard..String*)*, %byte (%shadow.standard..String*, %int)*, %boolean (%shadow.standard..String*)*, { %shadow.standard..Iterator_methods*, %shadow.standard..Object* } (%shadow.standard..String*)*, %int (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %int)*, %shadow.standard..String* (%shadow.standard..String*, %int, %int)*, %byte (%shadow.standard..String*)*, %double (%shadow.standard..String*)*, %float (%shadow.standard..String*)*, %int (%shadow.standard..String*)*, %long (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*)*, %short (%shadow.standard..String*)*, %ubyte (%shadow.standard..String*)*, %uint (%shadow.standard..String*)*, %ulong (%shadow.standard..String*)*, %ushort (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*)* }
+%shadow.standard..String = type { %shadow.standard..Class*, %shadow.standard..String_methods* , { %byte*, [1 x %int] }, %boolean }
+%shadow.standard..AddressMap_methods = type opaque
+%shadow.standard..AddressMap = type opaque
 
-%"shadow:standard@Exception_methods" = type { %"shadow:standard@Exception"* (%"shadow:standard@Exception"*)*, %"shadow:standard@Exception"* (%"shadow:standard@Exception"*, %"shadow:standard@AddressMap"*)*, %"shadow:standard@Class"* (%"shadow:standard@Object"*)*, %"shadow:standard@String"* (%"shadow:standard@Exception"*)*, %"shadow:standard@String"* (%"shadow:standard@Exception"*)* }
-%"shadow:standard@Exception" = type { %"shadow:standard@Class"*, %"shadow:standard@Exception_methods"* , %"shadow:standard@String"* }
-%"shadow:standard@OutOfMemoryException_methods" = type { %"shadow:standard@OutOfMemoryException"* (%"shadow:standard@OutOfMemoryException"*)*, %"shadow:standard@OutOfMemoryException"* (%"shadow:standard@OutOfMemoryException"*, %"shadow:standard@AddressMap"*)*, %"shadow:standard@Class"* (%"shadow:standard@Object"*)*, %"shadow:standard@String"* (%"shadow:standard@Exception"*)*, %"shadow:standard@String"* (%"shadow:standard@Exception"*)* }
-%"shadow:standard@OutOfMemoryException" = type { %"shadow:standard@Class"*, %"shadow:standard@OutOfMemoryException_methods"* , %"shadow:standard@String"* }
+%shadow.standard..Exception_methods = type { %shadow.standard..Exception* (%shadow.standard..Exception*)*, %shadow.standard..Exception* (%shadow.standard..Exception*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Exception*)*, %shadow.standard..String* (%shadow.standard..Exception*)* }
+%shadow.standard..Exception = type { %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
+%shadow.standard..OutOfMemoryException_methods = type { %shadow.standard..OutOfMemoryException* (%shadow.standard..OutOfMemoryException*)*, %shadow.standard..OutOfMemoryException* (%shadow.standard..OutOfMemoryException*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Exception*)*, %shadow.standard..String* (%shadow.standard..Exception*)* }
+%shadow.standard..OutOfMemoryException = type { %shadow.standard..Class*, %shadow.standard..OutOfMemoryException_methods* , %shadow.standard..String* }
 
-declare i1 @"shadow:standard@Class.isSubtype(shadow:standard@Class)"(%"shadow:standard@Class"*, %"shadow:standard@Class"*)
+declare i1 @shadow.standard..Class_MisSubtype_shadow.standard..Class(%shadow.standard..Class*, %shadow.standard..Class*)
 
 ; _URC_NO_REASON = 0
 ; _URC_FOREIGN_EXCEPTION_CAUGHT = 1
@@ -428,13 +428,13 @@ exception.class.check:
 	br i1 %exception.class.matches, label %thrown.class.get, label %find.catch
 thrown.class.get:
 	%thrown.pointer = getelementptr %struct._Unwind_Exception, %struct._Unwind_Exception* %exception.object, i32 1
-	%thrown.pointer.cast = bitcast %struct._Unwind_Exception* %thrown.pointer to %"shadow:standard@Object"**
-	%thrown = load %"shadow:standard@Object"*, %"shadow:standard@Object"** %thrown.pointer.cast
-	%thrown.class.pointer = getelementptr inbounds %"shadow:standard@Object", %"shadow:standard@Object"* %thrown, i32 0, i32 0
-	%thrown.class.value = load %"shadow:standard@Class"*, %"shadow:standard@Class"** %thrown.class.pointer	
+	%thrown.pointer.cast = bitcast %struct._Unwind_Exception* %thrown.pointer to %shadow.standard..Object**
+	%thrown = load %shadow.standard..Object*, %shadow.standard..Object** %thrown.pointer.cast
+	%thrown.class.pointer = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %thrown, i32 0, i32 0
+	%thrown.class.value = load %shadow.standard..Class*, %shadow.standard..Class** %thrown.class.pointer	
 	br label %find.catch
 find.catch:
-	%thrown.class = phi %"shadow:standard@Class"* [ %thrown.class.value, %thrown.class.get ], [ null, %exception.class.check ], [ null, %action_record.valid ], [ %thrown.class, %action_record.next.valid ]
+	%thrown.class = phi %shadow.standard..Class* [ %thrown.class.value, %thrown.class.get ], [ null, %exception.class.check ], [ null, %action_record.valid ], [ %thrown.class, %action_record.next.valid ]
 	%p.13 = phi i8* [ %action_record, %action_record.valid ], [ %action_record, %thrown.class.get ], [ %action_record, %exception.class.check ], [ %p.17, %action_record.next.valid ]
 	%p.14 = call i8* @read_sleb128(i8* %p.13, %_Unwind_Sword* %temp) nounwind
 	%filter.value = load %_Unwind_Sword, %_Unwind_Sword* %temp, align 4
@@ -446,8 +446,8 @@ find.catch.check:
 	%catch.type.pointer = getelementptr i8, i8* %ttype, i32 %catch.type.offset
 	%p.15 = call i8* @read_encoded_value_with_base(i8 %ttype.encoding, %_Unwind_Ptr %ttype_base, i8* %catch.type.pointer, %_Unwind_Ptr* %temp) nounwind
 	%catch.class.pointer = load %_Unwind_Ptr, %_Unwind_Ptr* %temp, align 4
-	%catch.class = bitcast %_Unwind_Ptr %catch.class.pointer to %"shadow:standard@Class"*
-	%thrown.is_subtype = call i1 @"shadow:standard@Class.isSubtype(shadow:standard@Class)"(%"shadow:standard@Class"* %thrown.class, %"shadow:standard@Class"* %catch.class)
+	%catch.class = bitcast %_Unwind_Ptr %catch.class.pointer to %shadow.standard..Class*
+	%thrown.is_subtype = call i1 @shadow.standard..Class_MisSubtype_shadow.standard..Class(%shadow.standard..Class* %thrown.class, %shadow.standard..Class* %catch.class)
 	br i1 %thrown.is_subtype, label %found.catch, label %find.catch.next
 find.catch.next:
 	%p.16 = call i8* @read_sleb128(i8* %p.14, %_Unwind_Sword* %temp) nounwind
@@ -475,7 +475,7 @@ install.context:
 abort: tail call void @abort() noreturn nounwind unreachable
 }
 
-define void @__shadow_throw(%"shadow:standard@Object"*) cold noreturn {
+define void @__shadow_throw(%shadow.standard..Object*) cold noreturn {
 entry:
 	%1 = tail call noalias i8* @malloc(i64 add (i64 ptrtoint (%struct._Unwind_Exception* getelementptr (%struct._Unwind_Exception, %struct._Unwind_Exception* null, i64 1) to i64), i64 ptrtoint (i1** getelementptr (i1*, i1** null, i64 1) to i64))) nounwind
 	%2 = bitcast i8* %1 to %struct._Unwind_Exception*
@@ -485,18 +485,18 @@ entry:
 	%5 = getelementptr %struct._Unwind_Exception, %struct._Unwind_Exception* %2, i64 0, i32 1
 	store %_Unwind_Exception_Cleanup_Fn @shadow.exception.cleanup, %_Unwind_Exception_Cleanup_Fn* %5
 	%6 = getelementptr %struct._Unwind_Exception, %struct._Unwind_Exception* %2, i64 1
-	%7 = bitcast %struct._Unwind_Exception* %6 to %"shadow:standard@Object"**
-	store %"shadow:standard@Object"* %0, %"shadow:standard@Object"** %7
+	%7 = bitcast %struct._Unwind_Exception* %6 to %shadow.standard..Object**
+	store %shadow.standard..Object* %0, %shadow.standard..Object** %7
 	%8 = tail call %_Unwind_Reason_Code @_Unwind_RaiseException(%struct._Unwind_Exception* %2)
 	tail call void @abort() noreturn nounwind unreachable
 }
 
-define %"shadow:standard@Exception"* @__shadow_catch(i8* nocapture) nounwind {
+define %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind {
 entry:
 	%1 = bitcast i8* %0 to %struct._Unwind_Exception*
 	%2 = getelementptr %struct._Unwind_Exception, %struct._Unwind_Exception* %1, i32 1
-	%3 = bitcast %struct._Unwind_Exception* %2 to %"shadow:standard@Exception"**
-	%4 = load %"shadow:standard@Exception"*, %"shadow:standard@Exception"** %3
+	%3 = bitcast %struct._Unwind_Exception* %2 to %shadow.standard..Exception**
+	%4 = load %shadow.standard..Exception*, %shadow.standard..Exception** %3
 	tail call void @free(i8* %0) nounwind
-	ret %"shadow:standard@Exception"* %4
+	ret %shadow.standard..Exception* %4
 }

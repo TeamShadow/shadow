@@ -333,20 +333,40 @@ public abstract class Type implements Comparable<Type> {
 		StringBuilder builder = new StringBuilder();
 		
 		if( getOuter() == null ) {
+			String packageName = null;
 			//mangled primitives still get package (for wrapper)
-			if( (!isPrimitive() ||  (options & MANGLE) != 0) && ((options & PACKAGES) != 0 ||  (options & MANGLE) != 0) ) { //type mangling implies packages
+			if( (options & MANGLE) != 0  ) {
 				if( _package == null || _package.getQualifiedName().isEmpty())
-					builder.append("default@");
+					packageName = "default";
 				else
-					builder.append(_package.getQualifiedName()).append('@');
-			}			
-			builder.append(typeName);
+					packageName = _package.getMangledName() + "..";
+				
+				builder.append(packageName);
+				builder.append(mangle(typeName));
+			}
+			else  if( !isPrimitive() && (options & PACKAGES) != 0 ) {
+				if( _package == null || _package.getQualifiedName().isEmpty())
+					packageName = "default";
+				else
+					packageName = _package.getQualifiedName() + "@";										
+				
+				builder.append(packageName);
+				builder.append(typeName);
+			}
+			else //unmangled primitives
+				builder.append(typeName);
 		}
+		else if( (options & MANGLE) != 0  )
+			builder.append(getOuter().toString(options)).append('.').append(mangle(typeName));
 		else
 			builder.append(getOuter().toString(options)).append(':').append(typeName);
 			
-		if( isParameterized() && (options & TYPE_PARAMETERS) != 0 )		
-			builder.append(getTypeParameters().toString("<",">", options));
+		if( isParameterized() && (options & TYPE_PARAMETERS) != 0 ) {		
+			if( (options & MANGLE) != 0  )
+				builder.append(getTypeParameters().toString("_L","_R", options));
+			else
+				builder.append(getTypeParameters().toString("<",">", options));
+		}
 		
 		return builder.toString();
 	}
@@ -764,48 +784,22 @@ public abstract class Type implements Comparable<Type> {
 		invalidateHashName();
 	}	
 	
-	public static StringBuilder mangle(StringBuilder sb, String name)
-	{
-		for (int i = 0; i < name.length(); i++)
-		{
-			char c = name.charAt(i);
+	public static String mangle(String name) {
+		StringBuilder sb = new StringBuilder();
+		
+		for (char c : name.toCharArray()) {			
 			if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
 				sb.append(c);
 			else if (c == '_')
 				sb.append(c).append(c);
-			else
-			{
+			else {
 				sb.append("_U");
 				for (int shift = 12; shift >= 0; shift -= 4)
 					sb.append(Character.forDigit((c >> shift) & 0xf, 16));
 			}
 		}
-		return sb;
-	}
-	
-	public static String unmangle(String name) //never used?
-	{
-		StringBuilder sb = new StringBuilder(name.length());
-		
-		for (int i = 0; i < name.length(); i++)
-		{
-			char c = name.charAt(i);
-			if (c == '_')
-			{
-				c = name.charAt(++i);
-				if (c == 'U')
-				{
-					c = (char)Integer.parseInt(name.substring(i, i + 4), 16);
-					i += 3;
-				} else if (c == '_')
-					sb.append(c);
-			}
-			sb.append(c);
-		}
-		
 		return sb.toString();
 	}
-	
 	
 	public void setParameterized(boolean value)
 	{

@@ -89,8 +89,12 @@ public class ArrayType extends ClassType
 	
 	@Override
 	public String toString(int options) {
-		if( ((options & MANGLE) != 0) && ((options & CONVERT_ARRAYS) != 0)  )
-			return baseType.toString(options & ~CONVERT_ARRAYS) + brackets;		
+		if( (options & MANGLE) != 0 ) {
+			if( baseType.isPrimitive() )
+				return baseType.getTypeName() + "_A" + dimensions;
+			else
+				return baseType.toString(options & ~CONVERT_ARRAYS) + "_A" + dimensions;
+		}
 		
 		return baseType.toString(options) + brackets;
 	}
