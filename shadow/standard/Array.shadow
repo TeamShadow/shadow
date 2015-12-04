@@ -60,12 +60,12 @@ and CanIterate<T>
 		MutableString string = MutableString:create("[");
 		boolean first = true;
 		foreach( T value in this )
-		{	
+		{
 			if ( first )
 				first = false;
 			else
 				string.append(", ");
-			string.append(value);
+			string.append(#value);
 		}
 		return string.append("]").toString();
 	}

@@ -103,7 +103,8 @@ public class TypeUpdater extends BaseChecker {
 			checkOverrides( nodeList );
 		
 		if( errorList.isEmpty() )
-			updateReferencesInMetaFiles( nodeList );
+			updateTypeReferences( nodeList );			
+			//updateReferencesInMetaFiles( nodeList );
 
 		if( errorList.size() > 0 ) {
 			printErrors();
@@ -116,6 +117,8 @@ public class TypeUpdater extends BaseChecker {
 		return nodeTable;
 	}
 	
+	
+	/*
 	private void updateReferencesInMetaFiles(List<Node> nodeList) {
 		for(Node declarationNode : nodeList ) {			
 			//if meta
@@ -143,6 +146,7 @@ public class TypeUpdater extends BaseChecker {
 			}				
 		}
 	}
+	*/
 	
 	private void updateFieldsAndMethods( List<Node> nodeList ) {
 		//update fields and methods			
@@ -155,6 +159,50 @@ public class TypeUpdater extends BaseChecker {
 				addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 			}
 		}		
+	}
+	
+	private void updateTypeReferences( List<Node> nodeList ) {
+		for(Node declarationNode : nodeList ) {
+			Type type = declarationNode.getType();
+			//the following must be added because they can appear in generated code
+			//without appearing inside the Shadow source at all
+			
+			//address map for deep copies
+			type.addReferencedType(Type.ADDRESS_MAP);
+			
+			//class management
+			type.addReferencedType(Type.CLASS);
+			type.addReferencedType(Type.CLASS_SET);
+			type.addReferencedType(Type.GENERIC_CLASS);
+			
+			//array wrapper classes
+			type.addReferencedType(Type.ARRAY);
+			type.addReferencedType(Type.ARRAY_NULLABLE);
+			
+			//exceptions
+			type.addReferencedType(Type.EXCEPTION);
+			type.addReferencedType(Type.CAST_EXCEPTION);
+			type.addReferencedType(Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
+			type.addReferencedType(Type.INTERFACE_CREATE_EXCEPTION);
+			type.addReferencedType(Type.UNEXPECTED_NULL_EXCEPTION);			
+			
+			//string
+			type.addReferencedType(Type.STRING);
+			
+			//adding the self adds parents and interfaces and methods
+			type.addReferencedType(type); 
+			
+			if( declarationNode.getFile().getPath().endsWith(".meta") ) {				
+				//update imports for meta files, since they won't have statement checking
+				//note that imports in meta files have been optimized to include only the
+				//originally imported classes that are referenced
+				for(Object item : type.getImportedItems())
+					if( item instanceof Type ) {
+						Type importType = (Type) item;
+						type.addReferencedType(importType);
+					}
+			}
+		}
 	}
 	
 	private void addConstructorsAndProperties() {
@@ -180,8 +228,6 @@ public class TypeUpdater extends BaseChecker {
 					copySignature.addReturn(new SimpleModifiedType(classType));					
 					copyNode.setMethodSignature(copySignature);
 					classType.addMethod(copySignature);
-					
-					classType.addReferencedType(Type.ADDRESS_MAP); //so the use of AddressMap is recorded
 					
 					//add default getters and setters
 					for( Map.Entry<String, Node> field : classType.getFields().entrySet() ) {
@@ -377,17 +423,13 @@ public class TypeUpdater extends BaseChecker {
 				if( parent != null && parent instanceof UninstantiatedClassType ) {
 					try {
 						parent = ((UninstantiatedClassType)parent).partiallyInstantiate();
-						classType.setExtendType(parent);
-				
+						classType.setExtendType(parent);										
 					} 
 					catch (InstantiationException e) {
 						addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 					}
 				}
-				
-				if( parent != null )
-					type.addGenericClass(parent);
-				
+
 				//update interfaces
 				ArrayList<InterfaceType> interfaces = classType.getInterfaces();
 				
@@ -396,16 +438,12 @@ public class TypeUpdater extends BaseChecker {
 					if( interfaceType instanceof UninstantiatedInterfaceType  ) {
 						try {
 							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).partiallyInstantiate();
-							interfaces.set(i, interfaceType);
-							
+							interfaces.set(i, interfaceType);	
 						} 
 						catch (InstantiationException e) {
 							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 						}						
 					}
-					
-					//if( interfaceType.isParameterized() )
-					type.addGenericClass(interfaceType);
 				}					
 			}
 			else if( type instanceof InterfaceType ) {	
@@ -418,18 +456,12 @@ public class TypeUpdater extends BaseChecker {
 					if( interfaceType instanceof UninstantiatedInterfaceType  ) {
 						try {
 							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).partiallyInstantiate();
-							interfaces.set(i, interfaceType);
+							interfaces.set(i, interfaceType);							
 						} 
 						catch (InstantiationException e)  {
 							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 						}						
-					}
-					
-					//if( interfaceType.isParameterized() )
-					type.addGenericClass(interfaceType);
-					
-					//if( isMeta )
-						//type.addReferencedType(interfaceType);
+					}					
 				}
 			}			
 		}
@@ -1146,8 +1178,8 @@ public class TypeUpdater extends BaseChecker {
 		}
 		else
 		{			
-			if (currentType instanceof ClassType)
-				((ClassType)currentType).addReferencedType(type);
+			//if (currentType instanceof ClassType)
+			//	((ClassType)currentType).addReferencedType(type);
 		
 			if( !isMeta && !classIsAccessible( type, declarationType  ) )		
 				addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");

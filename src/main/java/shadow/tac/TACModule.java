@@ -23,8 +23,7 @@ import shadow.typecheck.type.Type;
  * Consists of the module's type, references, fields, constants, methods, and subclasses.
  */
 public class TACModule {
-    private final Type type;
-    private final Set<Type> references = new HashSet<Type>(); // references to other types, needed to make legal LLVM files
+    private final Type type;    
     private final Map<String, Type> fields = new LinkedHashMap<String, Type>();
     private final List<TACConstant> constants = new ArrayList<TACConstant>();
     private final List<TACMethod> methods = new ArrayList<TACMethod>();
@@ -37,35 +36,7 @@ public class TACModule {
             for (Entry<String, ? extends ModifiedType> field : ((ClassType) moduleType).orderAllFields())
                 // if we have a class, the set all the field types
                 fields.put(field.getKey(), field.getValue().getType());
-        }
-        
-        if( !moduleType.hasOuter() ) {
-        	add(moduleType);
-	        add(Type.BOOLEAN);
-	        add(Type.UBYTE);
-	        add(Type.BYTE);
-	        add(Type.USHORT);
-	        add(Type.SHORT);
-	        add(Type.UINT);
-	        add(Type.INT);
-	        add(Type.ULONG);
-	        add(Type.LONG);
-	        add(Type.CODE);
-	        add(Type.FLOAT);
-	        add(Type.DOUBLE);
-	        add(Type.ARRAY);
-	        add(Type.ARRAY_NULLABLE);
-	        add(Type.EXCEPTION);
-	        add(Type.CAST_EXCEPTION);
-	        add(Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
-	        add(Type.ASSERT_EXCEPTION);
-	        add(Type.UNEXPECTED_NULL_EXCEPTION);
-	        add(Type.INTERFACE_CREATE_EXCEPTION);
-	        add(Type.GENERIC_CLASS);
-	        add(Type.CLASS_SET);
-	        // add(Type.ARRAY_CLASS);
-	        // add(Type.METHOD_CLASS);
-        }
+        }        
         
         /* //shouldn't be necessary with inner and outer classes now in the same LLVM
         Type outer = moduleType.getOuter();
@@ -77,46 +48,7 @@ public class TACModule {
         }
         */
         
-    }
-
-    /**
-     * Adds a type to the set of references for this module, recursing through all types.
-     * @param type the type to add to the references (Set<Type>) 
-     */
-    private void add(Type type) {
-        boolean newlyAdded;
-
-        /*
-         * if( type instanceof InterfaceType ) newlyAdded =
-         * references.add(type); else {
-         */
-
-        if (type.isFullyInstantiated() || type.isUninstantiated())
-            newlyAdded = references.add(type);
-        else
-            newlyAdded = false;
-
-        if (newlyAdded) {
-            if (type instanceof ClassType) {
-                final ClassType classType = (ClassType) type;
-                
-                if (classType.getExtendType() != null)
-                    add(classType.getExtendType());
-                
-                for (Type innerType : classType.getInnerClasses().values())
-                    add(innerType);
-            }
-            
-            for (InterfaceType interfaceType : type.getInterfaces())
-                add(interfaceType);
-            
-            if (type.getOuter() != null)
-                add(type.getOuter());
-            
-            for (Type referenced : type.getReferencedTypes())
-                add(referenced);
-        }
-    }
+    }    
 
     public Type getType() {
         return type;
@@ -137,10 +69,6 @@ public class TACModule {
 
     public InterfaceType getInterfaceType() {
         return (InterfaceType) type;
-    }
-
-    public Set<Type> getReferences() {
-        return references;
     }
 
     public Set<String> getFieldNames() {

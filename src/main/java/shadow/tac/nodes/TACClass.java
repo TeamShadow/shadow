@@ -158,9 +158,8 @@ public class TACClass extends TACOperand
 			Type outer = signature.getOuter();
 			
 			
-			if( (!type.isParameterizedIncludingOuterClasses() && !(type instanceof ArrayType) ) || 
-				outer.getGenericClasses().contains(type) || 
-				outer.getArrayClasses().contains(type) ||
+			if( (!type.isParameterizedIncludingOuterClasses() && !(type instanceof ArrayType) ) || //non-generics 
+				(outer.getReferencedTypes().contains(type) && type.isFullyInstantiated()) || //fully parameterized generics defined in the file
 				raw ) {
 				
 				classData = new TACClassData(this);

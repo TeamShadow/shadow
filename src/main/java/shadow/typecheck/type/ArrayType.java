@@ -179,12 +179,13 @@ public class ArrayType extends ClassType
 	public boolean isNullable() {
 		return nullable;
 	}
-
+	
 	@Override
 	public boolean isRecursivelyParameterized() {
 		return baseType.isRecursivelyParameterized();
 	}
 	
+
 	@Override
 	public boolean isFullyInstantiated() {
 		return baseType.isFullyInstantiated();

@@ -7,12 +7,15 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 
 import shadow.interpreter.ShadowBoolean;
 import shadow.interpreter.ShadowCode;
@@ -99,10 +102,14 @@ public class LLVMOutput extends AbstractOutput {
 	private int classCounter = 0;
 	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
 	private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
-	private HashSet<Type> usedMethodTables = new HashSet<Type>();
-	private HashSet<Type> usedClasses = new HashSet<Type>();
+	//private HashSet<Type> usedMethodTables = new HashSet<Type>();	
+	
+	private Set<String> genericClasses = new TreeSet<String>();
+	private Set<String> arrayClasses = new TreeSet<String>();
 	
 	private TACModule module;
+	
+	private static final Charset UTF8 = Charset.forName("UTF-8");
 	
 	public LLVMOutput(File file) throws ShadowException {		
 		super(new File(file.getParent(),
@@ -152,8 +159,7 @@ public class LLVMOutput extends AbstractOutput {
 	// Class type flags
 	public static final int INTERFACE = 1, PRIMITIVE = 2, GENERIC = 4, ARRAY = 8, SINGLETON = 16, METHOD = 32;
 	
-	private void writePrimitiveTypes() throws ShadowException
-	{
+	private void writePrimitiveTypes() throws ShadowException {
 		writer.write("%boolean = type i1");
 		writer.write("%byte = type i8");
 		writer.write("%ubyte = type i8");
@@ -165,8 +171,59 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("%long = type i64");
 		writer.write("%ulong = type i64");
 		writer.write("%float = type float");
-		writer.write("%double = type double");
-		writer.write();	
+		writer.write("%double = type double");		
+	}
+	
+	private void writeTypes() throws ShadowException {
+		writePrimitiveTypes();
+		
+		Type moduleType = module.getType();
+		
+		//type references
+		HashSet<Type> definedGenerics = new HashSet<Type>();
+		for (Type type : moduleType.getReferencedTypes()) {			
+			//write type and method table declarations (even for current types!)
+			if(type != null && !(type instanceof ArrayType)  ) {	
+				if( !type.isParameterizedIncludingOuterClasses() ) {
+					writeTypeDeclaration(type);
+					
+					//external stuff for types outside of this file
+					if( !moduleType.encloses(type) ) {					
+						writer.write(classOf(type) +
+								" = external constant %" + raw(Type.CLASS));					
+						if( type instanceof ClassType )				
+							writer.write(methodTable(type) +
+								" = external constant " + methodTableType(type));					
+						if (type instanceof SingletonType) //never parameterized
+							writer.write('@' + raw(type, "_instance") +
+								" = external global " + type(type));
+					}
+				}
+				else {
+					Type unparameterizedType = type.getTypeWithoutTypeArguments();
+					//if unparameterized version has not been declared yet, do it
+					if( definedGenerics.add(unparameterizedType) ) {				
+						writeTypeDeclaration(unparameterizedType);						
+						
+						if( !moduleType.encloses(unparameterizedType) ) {
+							writer.write(classOf(unparameterizedType) +
+									" = external constant %" + raw(Type.CLASS));
+							if(  type instanceof ClassType ) {
+								writer.write( interfaceData(unparameterizedType) +
+										" = external constant [" + type.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
+								writer.write(methodTable(unparameterizedType) +
+										" = external constant " + methodTableType(unparameterizedType));
+							}						
+						}						
+					}
+				
+					if( type.isFullyInstantiated()  )
+						writeGenericClassSupportingMaterial(type); //junk that all generic classes need
+				}
+			}
+		}
+		
+		writer.write();
 	}
 	
 	private void writeTypeDeclaration(Type type) throws ShadowException
@@ -228,9 +285,6 @@ public class LLVMOutput extends AbstractOutput {
 			
 			writer.write();
 		}
-		
-		//fields
-		writeTypeDeclaration(moduleType);
 		
 		//constants
 		for (TACConstant constant : module.getConstants()) {
@@ -370,10 +424,6 @@ public class LLVMOutput extends AbstractOutput {
 					typeLiteral(flags) + ", " +			//flags
 					typeText(Type.INT, sizeof(type(moduleType, true))) + //size 
 					" }" );
-				
-				//class definition above includes parent Class
-				if( parentType != null )
-					usedClasses.add(parentType);
 			//}
 		}
 		else {
@@ -398,23 +448,20 @@ public class LLVMOutput extends AbstractOutput {
 					" }");
 		}
 		
+		
+		/*
 		//all module class definitions need Class class and methods
-		if( !module.getType().encloses(Type.CLASS)) {
-			usedClasses.add(Type.CLASS);
+		if( !module.getType().encloses(Type.CLASS))
 			usedMethodTables.add(Type.CLASS);
-		}
 		
 		//almost all module class definitions need GenericClass class and methods
-		if( !module.getType().encloses(Type.GENERIC_CLASS)) {
-			usedClasses.add(Type.GENERIC_CLASS);
-			usedMethodTables.add(Type.GENERIC_CLASS);
-		}		
+		if( !module.getType().encloses(Type.GENERIC_CLASS))			
+			usedMethodTables.add(Type.GENERIC_CLASS);		
 		
 		//almost all module class definitions need Array class and methods
-		if( !module.getType().encloses(Type.ARRAY)) {
-			usedClasses.add(Type.ARRAY);
-			usedMethodTables.add(Type.ARRAY);
-		}
+		if( !module.getType().encloses(Type.ARRAY))
+			usedMethodTables.add(Type.ARRAY);		
+		*/
 		
 		if (moduleType instanceof SingletonType)
 			writer.write('@' + raw(moduleType, "_instance") + " = global " +
@@ -430,14 +477,89 @@ public class LLVMOutput extends AbstractOutput {
 			writeModuleDefinition(innerClass);
 	}
 	
+	private void writeGenericClasses() throws ShadowException {		
+		for (Type type : module.getType().getReferencedTypes() ) {
+			if( type.isFullyInstantiated() && !(type instanceof ArrayType) )
+				writeGenericClass(type);	
+		}
+		
+		writer.write();
+	}
+	private void writeArrayClasses() throws ShadowException {
+		for (Type type : module.getType().getReferencedTypes() ) {
+			if( type instanceof ArrayType && !((ArrayType)type).containsUnboundTypeParameters()  )
+				writeArrayClass((ArrayType)type);	
+		}
+		
+		writer.write();		
+	}
+	
+	/*
+	private void writeClasses() throws ShadowException {
+		//write classes
+		HashSet<Type> definedGenerics = new HashSet<Type>();
+		for (Type type : module.getType().getReferencedTypes()) {			
+			//write class objects and instances
+			if(type != null && !(type instanceof ArrayType) && !module.getType().encloses(type)  ) {	
+				if( !type.isParameterizedIncludingOuterClasses() ) {					
+					writer.write(classOf(type) +
+							" = external constant %" + raw(Type.CLASS));					
+					if( type instanceof ClassType )				
+						writer.write(methodTable(type) +
+							" = external constant " + methodTableType(type));					
+					if (type instanceof SingletonType) //never parameterized
+						writer.write('@' + raw(type, "_instance") +
+							" = external global " + type(type));
+				}
+				else if( type.isFullyInstantiated() ) {
+					//if unparameterized version has not been declared yet, do it										
+					writeGenericClassSupportingMaterial(type); //junk that generic classes need
+					
+					Type unparameterizedType = type.getTypeWithoutTypeArguments();
+					if( definedGenerics.add(unparameterizedType) &&	!module.getType().encloses(unparameterizedType)) {
+						if( type instanceof ClassType ) {
+							writer.write( interfaceData(unparameterizedType) +
+									" = external constant [" + type.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
+							writer.write(methodTable(unparameterizedType) +
+									" = external constant " + methodTableType(unparameterizedType));
+						}
+					}					
+				}
+			}
+		}
+		writer.write();
+	}
+	*/
+	
+	public static void readGenericAndArrayClasses(File llvmFile, Set<String> generics, Set<String> arrays ) throws IOException {
+		BufferedReader llvm = Files.newBufferedReader(llvmFile.toPath(), UTF8);
+		String line;
+		
+		//first skip all of the type declarations
+		while( !(line = llvm.readLine()).isEmpty() );
+
+		//first read in all the generic classes
+		while( !(line = llvm.readLine()).isEmpty() )
+			generics.add(line.split("\\s+")[0]);
+		
+		//then read in all the array classes
+		while( !(line = llvm.readLine()).isEmpty() )
+			arrays.add(line.split("\\s+")[0]);
+		
+		llvm.close();
+	}
+
 
 	@Override
 	public void startFile(TACModule module) throws ShadowException {		
-		this.module = module;		
-		Type moduleType = module.getType();
-			
-		//boiler plate for all types
-		writePrimitiveTypes();
+		this.module = module;
+		
+		//write all regular types including class objects and method tables
+		writeTypes();		
+				
+		writeGenericClasses();		
+		writeArrayClasses();
+		//writeClasses();
 		
 		// Methods for exception handling
 		writer.write("declare i32 @__shadow_personality_v0(...)");
@@ -449,46 +571,6 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("declare void @__arrayStore(" + type(Type.OBJECT) + "*, %int, " + type(Type.OBJECT) + ", " + type(Type.CLASS) + ")");
 		writer.write("declare " + type(Type.OBJECT) + " @__arrayLoad(" + type(Type.OBJECT) + "*, %int, " + type(Type.CLASS) + ", " +  type(Type.OBJECT) + ", %boolean)");
 		writer.write("declare void @free(i8*) nounwind");
-		writer.write();
-		
-		//type references
-		HashSet<Type> definedGenerics = new HashSet<Type>();
-		for (Type type : module.getReferences()) {			
-			//write type declarations
-			if(type != null && !moduleType.encloses(type) && !(type instanceof ArrayType)  ) {	
-				if( !type.isParameterized() )
-					writeTypeDeclaration(type);	
-				else {
-					//if unparameterized version has not been declared yet, do it
-					Type unparameterizedType = type.getTypeWithoutTypeArguments();
-					if( definedGenerics.add(unparameterizedType) &&		
-						!unparameterizedType.equals(module.getType()))
-						writeTypeDeclaration(unparameterizedType);
-				}
-			}
-			
-			//record generics
-			//if( type instanceof ArrayType )							
-			//	arrays.add((ArrayType)type);
-			//else if( !moduleType.encloses(type) ) {				
-			//	if( type.isFullyInstantiated() ) {//&& recordedTypes.add(type.getMangledNameWithGenerics())) ){ //||  
-					//(type.isUninstantiated() && recordedTypes.add(type.getMangledName()))	)				
-					//writeTypeConstants(type);
-					/*
-					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
-						generics.add(new GenericArray(type));
-					else
-						generics.add(new Generic(type));
-					*/
-					
-					//addInstantiations(type);
-					//generics.add(type);
-				//}
-				
-				//if( type.isParameterizedIncludingOuterClasses() )
-					//unparameterizedGenerics.add(type.getTypeWithoutTypeArguments());
-			//}	
-		}
 		writer.write();
 		
 		//defines class and recursively defines inner classes  
@@ -593,55 +675,20 @@ public class LLVMOutput extends AbstractOutput {
 		}
 		
 		
-		//create the two sets used to keep track of all generic classes and array classes
+		//declare the two sets used to keep track of all generic classes and array classes
 		writer.write();
 		writer.write("@_genericSet = external global " + type(Type.CLASS_SET));
 		writer.write("@_arraySet = external global " + type(Type.CLASS_SET));
 		writer.write();
-		
 
-		Set<Type> rawTypes = new HashSet<Type>();
-		
-		Type arrayOfBytes = null;
-		try {
-			arrayOfBytes = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(Type.BYTE));
-		} catch (InstantiationException e) {
-			// should never happen
-			e.printStackTrace();
-		}
-		//hack for now
-		//we'll always need Array<byte> for some String manipulations
-		moduleType.addGenericClass(arrayOfBytes);		
-		
-		//print the externally visible generic classes that are used (extended types and implemented interfaces)
-		for( Type type : moduleType.getGenericClasses() )
-			writeGenericClass( type, rawTypes );
-		
-		//print the externally visible array classes that are used (extended types and implemented interfaces)
-		for( ArrayType type : moduleType.getArrayClasses() )
-			writeArrayClass( type );
-		
-		
 		//print the method tables that are used		
+		/*
 		for( Type type : usedMethodTables )
 			if( !moduleType.encloses(type) && type instanceof ClassType && type.isUninstantiated() )				
 				writer.write(methodTable(type) +
 					" = external constant " + methodTableType(type));
 		writer.write();
-		
-		//print the class constants that are used		
-		for( Type type : usedClasses ) {
-			if( !moduleType.encloses(type) && !moduleType.getArrayClasses().contains(type) ) {
-				if( /*type.isFullyInstantiated() || */ type.isUninstantiated() )
-					writer.write(classOf(type) +
-							" = external constant %" + raw(Type.CLASS)); //a lie, sometimes it's a GenericClass, but that doesn't matter
-				
-				if (type instanceof SingletonType) //never parameterized
-					writer.write('@' + raw(type, "_instance") +
-							" = external global " + type(type));
-			} 
-		}
-		writer.write();
+		*/
 		
 		//print only the constant fields that are used
 		for( TACConstantRef constant : usedConstants )
@@ -662,22 +709,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write("declare noalias " + type(Type.OBJECT) + " @" +
 					raw(Type.CLASS, "_Mallocate") + '(' +
 					type(Type.CLASS) + ", " + methodTableType(Type.OBJECT) +  "*)");
-		
-		
-		/*
-		//print generic possibilities		
-		Type genericClassArray = new ArrayType(Type.GENERIC_CLASS);
-		for( Type type : unparameterizedGenerics )
-			writer.write("@_generics" + type.getMangledName() +	" = external constant " + type(genericClassArray));			
-		writer.write();
-		*/
-		
-		/* //seem to be covered by usedClasses
-		//print array type possibilities (only those arrays that can show up as generic parameters)
-		for( Array array : arrays )		
-			writer.write("@\"" + array.getMangledName() + "_class\" = external constant %" + raw(Type.CLASS));
-		writer.write();
-		*/
+	
 
 		writeStringLiterals();
 
@@ -910,8 +942,8 @@ public class LLVMOutput extends AbstractOutput {
 			
 			writer.write(nextTemp() + " = load " + methodTableType(node.getPrefix().getType()) + "*, " +
 					methodTableType(node.getPrefix().getType()) + "** " + temp(1));
-			if( !module.getType().encloses(node.getPrefix().getType()) )
-				usedMethodTables.add(node.getPrefix().getType());
+			//if( !module.getType().encloses(node.getPrefix().getType()) )
+			//	usedMethodTables.add(node.getPrefix().getType());
 			
 			writer.write(nextTemp() + " = getelementptr inbounds " +
 					methodTableType(node.getPrefix().getType()) + ", " + 
@@ -956,8 +988,8 @@ public class LLVMOutput extends AbstractOutput {
 			node.setData("null");
 		else {			
 			node.setData(methodTable(type));
-			if( !module.getType().encloses(type))
-				usedMethodTables.add(type);
+			//if( !module.getType().encloses(type))
+				//usedMethodTables.add(type);
 		}
 	}	
 
@@ -1016,8 +1048,8 @@ public class LLVMOutput extends AbstractOutput {
 					" to " + methodTableType(Type.OBJECT) + "*)" +
 					")");
 			
-			if( !module.getType().encloses(srcType) )
-				usedMethodTables.add(srcType);
+			//if( !module.getType().encloses(srcType) )
+			//	usedMethodTables.add(srcType);
 			
 			writer.write(nextTemp(node) + " = bitcast " + typeText(Type.OBJECT,
 					temp(1)) + " to %" + raw(srcType) + "*");		
@@ -1752,9 +1784,6 @@ public class LLVMOutput extends AbstractOutput {
 	private String classOf(Type type) {
 		//module is null when building generics
 		//TODO: Simplify this, since we're no longer building generics
-		if( module != null && !module.getType().encloses(type) && !(type instanceof ArrayType) )
-			usedClasses.add(type);		
-		
 		//may need something for ArrayType, but maybe not
 		if( type.isFullyInstantiated() )
 			return '@' + withGenerics(type, "_class");
@@ -1979,6 +2008,14 @@ public class LLVMOutput extends AbstractOutput {
 		return type.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + extra;
 	}
 	
+	public static String declareGeneric(String class_) {
+			return class_ + " = external constant %" + raw(Type.GENERIC_CLASS) + System.lineSeparator();
+	}
+	
+	public static String declareArray(String class_) {
+		return class_ + " = external constant %" + raw(Type.CLASS) + System.lineSeparator();		
+	}
+	
 	public static String declareGeneric(Type type) {
 		if( type instanceof ArrayType )			
 			return '@' + withGenerics(type, "_class") + " = external constant %" + raw(Type.CLASS) + System.lineSeparator();
@@ -2004,15 +2041,15 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	*/
 	
-	public static void addGenerics(String set, Set<? extends Type> generics, OutputStream out) throws IOException {
+	public static void addGenerics(String set, Set<? extends String> generics, boolean areArrays, OutputStream out) throws IOException {
 		MethodSignature signature = Type.CLASS_SET.getMatchingMethod("add", new SequenceType(Type.CLASS));
 		String prefix = "call " + type(signature.getSingleReturnType()) + " " + name(signature) + "(" + typeText(Type.CLASS_SET, set) + ", "; 
-		for( Type generic : generics ) {
+		for( String generic : generics ) {
 			StringBuilder sb = new StringBuilder("\t" + prefix);
-			if( generic instanceof ArrayType )
-				sb.append(type(Type.CLASS)).append(" @" + withGenerics(generic, "_class")).append(")");
+			if( areArrays )
+				sb.append(type(Type.CLASS)).append(" ").append(generic).append(")");
 			else
-				sb.append(type(Type.CLASS)).append(" bitcast (").append(typeText(Type.GENERIC_CLASS, '@' + withGenerics(generic, "_class"))).append(" to ").append(type(Type.CLASS) + "))");		
+				sb.append(type(Type.CLASS)).append(" bitcast (").append(typeText(Type.GENERIC_CLASS, generic)).append(" to ").append(type(Type.CLASS) + "))");		
 			
 			sb.append(System.lineSeparator());
 			
@@ -2173,10 +2210,8 @@ public class LLVMOutput extends AbstractOutput {
 			stringLiterals.add(value);
 			
 			//module is null when generics are being built
-			if( module != null && !module.getType().encloses(Type.STRING)) {
-				usedClasses.add(Type.STRING);
-				usedMethodTables.add(Type.STRING);
-			}
+			//if( module != null && !module.getType().encloses(Type.STRING))
+			//	usedMethodTables.add(Type.STRING);
 		}
 		return "@_string" + index;
 	}
@@ -2239,6 +2274,8 @@ public class LLVMOutput extends AbstractOutput {
 			baseClass = typeText(Type.CLASS, "(" + type(Type.GENERIC_CLASS) + " " + classOf(baseType) + " to " + type(Type.CLASS) + ")");
 		else
 			baseClass = typeText(Type.CLASS, classOf(baseType));
+		
+		arrayClasses.add("@" + withGenerics(type,  "_class"));
 	
 		writer.write("@" + withGenerics(type,  "_class") + " = linkonce unnamed_addr constant  %" +
 				raw(Type.CLASS) + " { " + 		
@@ -2258,12 +2295,73 @@ public class LLVMOutput extends AbstractOutput {
 				" }");
 	}
 
-	private void writeGenericClass(Type generic, Set<Type> rawTypes) throws ShadowException {				
+	private void writeGenericClass(Type generic) throws ShadowException {				
+		Type noArguments = generic.getTypeWithoutTypeArguments();
+		List<ModifiedType> parameterList = generic.getTypeParametersIncludingOuterClasses(); 
+					
+		String interfaceData;
+		String interfaces;
+		String size;
+		
+		if( generic instanceof InterfaceType ) {
+			interfaceData = interfaces = " zeroinitializer, ";
+			size = typeLiteral(-1) + ", ";
+		}
+		else {
+			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "], [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* " + interfaceData(noArguments) + ", i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) +	"] }, ";
+			interfaces = "{ " + type(Type.CLASS) + "* getelementptr inbounds ([" + generic.getInterfaces().size() + " x " +
+					type(Type.CLASS) + "], [" + generic.getInterfaces().size() + " x " +
+					type(Type.CLASS) + "]* " + genericInterfaces(generic) + ", i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) + "] }, ";
+			size = typeText(Type.INT, sizeof(type(noArguments))) + ", ";
+		}	
+		
+		//get parent class
+		String parentClass;
+		if( generic instanceof ClassType  ) {
+			ClassType parent = ((ClassType) generic).getExtendType();					
+			if( parent.isFullyInstantiated() )
+				parentClass = type(Type.CLASS) + " (" + typeText(Type.GENERIC_CLASS, classOf(parent)) + " to " + type(Type.CLASS) + ")";
+			else
+				parentClass = typeText(Type.CLASS, classOf(parent));			
+		}
+		else				
+			parentClass = type(Type.CLASS) +  " null";				
+		
+		
+		genericClasses.add(classOf(generic));
+		
+		writer.write(classOf(generic) + " = linkonce unnamed_addr constant  %" +
+				raw(Type.GENERIC_CLASS) + " { " + 		
+				
+				typeText(Type.CLASS, classOf(Type.GENERIC_CLASS)) + ", " + //class
+				methodTableType(Type.GENERIC_CLASS) + "* " + methodTable(Type.GENERIC_CLASS) + ", " + //methods
+				
+				typeLiteral(generic.toString()) + ", " + //name 
+				parentClass + ", "  +//parent 					
+				
+				typeText(new ArrayType(Type.OBJECT), interfaceData) + //data
+											
+				typeText(new ArrayType(Type.CLASS), interfaces) + //interfaces
+			
+				typeLiteral(GENERIC) + ", " + //flags							
+				size + //size
+				
+				type(new ArrayType(Type.OBJECT)) + 
+				" { " + type(Type.OBJECT) + "* getelementptr inbounds ([" + parameterList.size()*2 + " x " +
+				type(Type.OBJECT) + "], [" + parameterList.size()*2 + " x " +
+				type(Type.OBJECT) + "]* @_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + ", i32 0, i32 0), [1 x " +
+				type(Type.INT) + "] [" + typeLiteral(parameterList.size()*2) + "] }" + //parameters
+				
+				" }");
+		
+	}
+	
+	private void writeGenericClassSupportingMaterial(Type generic) throws ShadowException {				
 		StringBuilder sb; 
 		boolean first;
-		Type noArguments = generic.getTypeWithoutTypeArguments();
-		
-		if( !(generic instanceof InterfaceType) ) {			
+		if( generic instanceof ClassType ) {			
 			sb = new StringBuilder("[");
 			first = true;
 			
@@ -2292,14 +2390,11 @@ public class LLVMOutput extends AbstractOutput {
 		for( ModifiedType parameter : parameterList ) {	
 			Type parameterType = parameter.getType();
 			Type parameterWithoutArguments = parameterType.getTypeWithoutTypeArguments();
-						
-			
-			
+
 			if( first )
 				first = false;
 			else
-				sb.append(", ");
-			
+				sb.append(", ");			
 			
 			//arrays need special treatment
 			//use an Array<T> type inside of anything except an array
@@ -2307,21 +2402,20 @@ public class LLVMOutput extends AbstractOutput {
 			if( parameterType instanceof ArrayType &&
 				!parameterWithoutArguments.equals(Type.ITERATOR) &&
 				!parameterWithoutArguments.equals(Type.ITERATOR_NULLABLE) &&
-				!(isArray(parameterWithoutArguments)) )
+				!(isArray(generic.getTypeWithoutTypeArguments())) )
 			{
 				parameterType = ((ArrayType)parameterType).convertToGeneric();
 				parameterWithoutArguments = parameterType.getTypeWithoutTypeArguments();
 			}
 			
+			/*
 			if( !module.getType().encloses(parameterType) ) {				
-				if( parameterType instanceof ArrayType ) {
-					usedMethodTables.add(((ArrayType)parameterType).recursivelyGetBaseType());					
-				}
-				else {
-					usedClasses.add(parameterType);
-					usedMethodTables.add(parameterType);
-				}
-			}			
+				if( parameterType instanceof ArrayType )
+					usedMethodTables.add(((ArrayType)parameterType).recursivelyGetBaseType());
+				else					
+					usedMethodTables.add(parameterType);				
+			}
+			*/			
 			
 			//first put in the class
 			sb.append(type(Type.OBJECT)).append(" bitcast (");
@@ -2334,8 +2428,8 @@ public class LLVMOutput extends AbstractOutput {
 			
 			
 			//then the method table
-			if( parameter instanceof ArrayType )
-				sb.append(type(Type.OBJECT)).append(" bitcast (" + methodTableType(((ArrayType)parameter).recursivelyGetBaseType()) + "* " + methodTable(((ArrayType)parameter).recursivelyGetBaseType()) + " to " + type(Type.OBJECT) + ")" );
+			if( parameterType instanceof ArrayType )
+				sb.append(type(Type.OBJECT)).append(" bitcast (" + methodTableType(((ArrayType)parameterType).recursivelyGetBaseType()) + "* " + methodTable(((ArrayType)parameterType).recursivelyGetBaseType()) + " to " + type(Type.OBJECT) + ")" );
 			else if( parameterType instanceof InterfaceType )
 				sb.append(type(Type.OBJECT)).append(" null"); //no method table for interfaces			
 			else
@@ -2346,70 +2440,17 @@ public class LLVMOutput extends AbstractOutput {
 		
 		writer.write("@_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) +
 				" = linkonce unnamed_addr constant [" + parameterList.size()*2 + " x " + type(Type.OBJECT) + "] " + sb.toString());
-							
-		String interfaceData;
-		String interfaces;
-		String size;
-		
-		if( generic instanceof InterfaceType ) {
-			interfaceData = interfaces = " zeroinitializer, ";
-			size = typeLiteral(-1) + ", ";
-		}
-		else {
-			if( !module.getType().encloses(noArguments) && rawTypes.add(noArguments) ) {
-				writer.write( interfaceData(noArguments) +
-						" = external constant [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
-			}
-
-			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "], [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* " + interfaceData(noArguments) + ", i32 0, i32 0), [1 x " +
-					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) +	"] }, ";
-			interfaces = "{ " + type(Type.CLASS) + "* getelementptr inbounds ([" + generic.getInterfaces().size() + " x " +
-					type(Type.CLASS) + "], [" + generic.getInterfaces().size() + " x " +
-					type(Type.CLASS) + "]* " + genericInterfaces(generic) + ", i32 0, i32 0), [1 x " +
-					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) + "] }, ";
-			size = typeText(Type.INT, sizeof(type(noArguments))) + ", ";
-		}	
-		
-		//get parent class
-		String parentClass;
-		if( generic instanceof ClassType  ) {
-			ClassType parent = ((ClassType) generic).getExtendType();					
-			if( parent.isFullyInstantiated() )
-				parentClass = type(Type.CLASS) + " (" + typeText(Type.GENERIC_CLASS, classOf(parent)) + " to " + type(Type.CLASS) + ")";
-			else
-				parentClass = typeText(Type.CLASS, classOf(parent));			
-		}
-		else				
-			parentClass = type(Type.CLASS) +  " null";				
-		
-
-		writer.write(classOf(generic) + " = linkonce unnamed_addr constant  %" +
-				raw(Type.GENERIC_CLASS) + " { " + 		
-				
-				typeText(Type.CLASS, classOf(Type.GENERIC_CLASS)) + ", " + //class
-				methodTableType(Type.GENERIC_CLASS) + "* " + methodTable(Type.GENERIC_CLASS) + ", " + //methods
-				
-				typeLiteral(generic.toString()) + ", " + //name 
-				parentClass + ", "  +//parent 					
-				
-				typeText(new ArrayType(Type.OBJECT), interfaceData) + //data
-											
-				typeText(new ArrayType(Type.CLASS), interfaces) + //interfaces
-			
-				typeLiteral(GENERIC) + ", " + //flags							
-				size + //size
-				
-				type(new ArrayType(Type.OBJECT)) + 
-				" { " + type(Type.OBJECT) + "* getelementptr inbounds ([" + parameterList.size()*2 + " x " +
-				type(Type.OBJECT) + "], [" + parameterList.size()*2 + " x " +
-				type(Type.OBJECT) + "]* @_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + ", i32 0, i32 0), [1 x " +
-				type(Type.INT) + "] [" + typeLiteral(parameterList.size()*2) + "] }" + //parameters
-				
-				" }");
-		
 	}
 	
 	private static boolean isArray(Type type) {
 		return Type.ARRAY.equals(type.getTypeWithoutTypeArguments()) || Type.ARRAY_NULLABLE.equals(type.getTypeWithoutTypeArguments());
+	}
+	
+	public Set<String> getGenericClasses() {
+		return genericClasses;
+	}
+	
+	public Set<String> getArrayClasses() {
+		return arrayClasses;
 	}
 }

@@ -2773,8 +2773,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			new TACBranch(tree, condition, bodyLabel, endLabel);		
 			endLabel.new TACLabel(tree);
 		}
-		else
-		{	
+		else {	
 			TACLabelRef conditionLabel = block.getContinue();
 			MethodSignature signature;
 			

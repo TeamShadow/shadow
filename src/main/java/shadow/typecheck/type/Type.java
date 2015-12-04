@@ -1,9 +1,7 @@
 package shadow.typecheck.type;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -46,13 +44,9 @@ public abstract class Type implements Comparable<Type> {
 	
 	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();	
 	private LinkedList<Object> importedItems = new LinkedList<Object>();
-	
-	private static boolean referenceRecursion = false;	
-	private String hashName = null;
-	
-	private Set<Type> genericClasses = new HashSet<Type>();
-	private Set<ArrayType> arrayClasses = new HashSet<ArrayType>();	
-	
+			
+	private String hashName = null;	
+
 	/*
 	 * Predefined system types needed for Shadow
 	 */
@@ -863,13 +857,13 @@ public abstract class Type implements Comparable<Type> {
 			return getOuter().isParameterizedIncludingOuterClasses();
 		
 		return false;		
-	}
+	}	
 	
 	public boolean isRecursivelyParameterized()
 	{
 		return isParameterized();	
 	}
-	
+
 	public boolean isUninstantiated()
 	{
 		return equals(getTypeWithoutTypeArguments());
@@ -1153,19 +1147,20 @@ public abstract class Type implements Comparable<Type> {
 		
 		return encloses(outer);
 	}
+	
+	public void addReferencedType(Type type) {
+		addReferencedType(type, true);
+	}
 
-	//only used by TypeUpdater for meta files
-	public void addReferencedTypeDirectly(Type type ) {
-		referencedTypes.add( type );
-	}	
-	
-	
-	public void addReferencedType(Type type) {		
-		if( type != null && !(type instanceof UninstantiatedType) ) {
+	public void addReferencedType(Type type, boolean addMembers ) {		
+		if( type == null || type instanceof UninstantiatedType )
+			return;
+		
+		if( !referencedTypes.contains(type) ) {
 			if( type instanceof TypeParameter ) {
 				TypeParameter typeParameter = (TypeParameter) type;
 				for( Type bound : typeParameter.getBounds() )
-					addReferencedType(bound);
+					addReferencedType(bound, addMembers);
 			}			
 			else if( type instanceof ArrayType ) {				
 				ArrayType arrayType = (ArrayType) type;
@@ -1173,65 +1168,72 @@ public abstract class Type implements Comparable<Type> {
 				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
 					referencedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues
 								
-				addReferencedType(arrayType.convertToGeneric());
+				addReferencedType(arrayType.convertToGeneric(), addMembers);
 				//covers Type.ARRAY and all recursive base types
 				//automatically does the right thing for NullableArray
 			}
-			else if( type instanceof MethodType ) {
-				MethodType methodType = (MethodType) type;
+			else if( type instanceof MethodType ) {			
+				MethodType methodType = (MethodType)type;
 				for( ModifiedType parameter : methodType.getParameterTypes() )
-					addReferencedType( parameter.getType() );
+					addReferencedType( parameter.getType(), true );
 				
 				for( ModifiedType _return : methodType.getReturnTypes() )
-					addReferencedType( _return.getType() );	
+					addReferencedType( _return.getType(), true );			
+			}			
+			else if( (type instanceof ClassType) || (type instanceof InterfaceType )) {		
+				referencedTypes.add(type);
 				
-				if( type.isParameterized() && type.isFullyInstantiated() )
-					for( ModifiedType typeParameter : type.getTypeParameters() )						
-						addReferencedType( typeParameter.getType() );
-			}
-			else if (!equals(type) &&  !(type instanceof UnboundMethodType) /*&& !isDescendentOf(type)*/) {		
-				if( type.isParameterizedIncludingOuterClasses() ) {
-					//if( type.isFullyInstantiated() )
-					//{				
-						referencedTypes.add(type);
-						referencedTypes.add(type.typeWithoutTypeArguments);
-						
-						if( !type.isFullyInstantiated() )
-							partiallyInstantiatedGenerics.add(type);
-						
-						if( !referenceRecursion )
-						{
-							referenceRecursion = true; //prevents rabbit hole recursion on type parameters								
-							for( ModifiedType typeParameter : type.getTypeParametersIncludingOuterClasses() )						
-								addReferencedType( typeParameter.getType() );
-							
-							referenceRecursion = false;
-						}						
-					//}
+				if( type.isParameterizedIncludingOuterClasses() ) {				
+					referencedTypes.add(type.typeWithoutTypeArguments);
+					
+					if( !type.isFullyInstantiated() )
+						partiallyInstantiatedGenerics.add(type);
+													
+					for( ModifiedType typeParameter : type.getTypeParametersIncludingOuterClasses() ) {						
+						Type parameterType = typeParameter.getType();
+						addReferencedType( parameterType, addMembers );
+						if( (parameterType instanceof ArrayType) && (parameterType.isFullyInstantiated() || !parameterType.isParameterizedIncludingOuterClasses() ) )
+							referencedTypes.add(typeParameter.getType()); //directly add array type parameter
+					}
 				}
-				else
-					referencedTypes.add(type);
+			
+				//add inner types, since their instantiations must be recorded
+				if( type instanceof ClassType ) {
+					ClassType classType = (ClassType) type;
+					for( ClassType inner : classType.getInnerClasses().values() )
+						addReferencedType( inner, addMembers );				
+				}
+				
+				//add reference to outer types					
+				Type outer = getOuter();
+				while( outer != null ) {
+					outer.addReferencedType(type, addMembers);
+					outer = outer.getOuter();
+				}
+				
+				//add interfaces
+				ArrayList<InterfaceType> interfaces = type.getInterfaces();			
+				for( InterfaceType interfaceType : interfaces )
+					addReferencedType(interfaceType, addMembers);
 			}
 			
-			//add inner types, since their instantiations must be recorded
-			if( type instanceof ClassType ) {
-				ClassType classType = (ClassType) type;
-				for( ClassType inner : classType.getInnerClasses().values() )
-					addReferencedType( inner );				
-			}
+		}		
+		
+		//add methods and fields
+		if( addMembers ) {
+			for( List<MethodSignature> methodList :  type.getMethodMap().values() )
+				for( MethodSignature signature : methodList ) {
+					MethodType methodType = signature.getMethodType();
+					for( ModifiedType parameter : methodType.getParameterTypes() )
+						addReferencedType( parameter.getType(), false );
+					
+					for( ModifiedType _return : methodType.getReturnTypes() )
+						addReferencedType( _return.getType(), false );
+				}
 			
-			//add reference to outer types					
-			Type outer = getOuter();
-			while( outer != null ) {
-				outer.addReferencedType(type);
-				outer = outer.getOuter();
-			}
 			
-			ArrayList<InterfaceType> interfaces = type.getInterfaces();
-			
-			//add interfaces
-			for( InterfaceType interfaceType : interfaces )
-				addReferencedType(interfaceType);
+			for(Node node : type.getFields().values() )
+				addReferencedType( node.getType(), false );				
 		}
 	}
 
@@ -1391,72 +1393,6 @@ public abstract class Type implements Comparable<Type> {
 		}
 		instantiatedTypes.argument = null;
 		instantiatedTypes.instantiatedType = null;
-	}
-	
-	public Set<Type> getGenericClasses() {
-		return genericClasses;
-	}
-	
-	public Set<ArrayType> getArrayClasses() {
-		return arrayClasses;
-	}	
-	
-	public void addGenericClass(Type type) {
-		if( type instanceof TypeParameter ) {
-			TypeParameter parameter = (TypeParameter) type;
-			for( Type bound : parameter.getBounds() )
-				if( bound.isFullyInstantiated() ) {
-					if( bound instanceof ArrayType ) {
-						addArrayClass((ArrayType)bound);
-						addGenericClass(((ArrayType)bound).convertToGeneric());
-					}
-					else
-						addGenericClass(bound);
-				}					
-		}		
-		else if( type.isParameterizedIncludingOuterClasses() )
-			//tricky short-circuit logic only adds type to the set if it is fully instantiated
-			if( !type.isFullyInstantiated() || genericClasses.add(type) ) {					
-				if( type instanceof ClassType ) {
-					ClassType classType = (ClassType) type;
-					if( classType.getExtendType() != null )
-						addGenericClass( classType.getExtendType() );
-				}
-				
-				for( Type interfaceType : type.getInterfaces() )					
-						addGenericClass( interfaceType );
-				
-				for( ModifiedType parameter : type.getTypeParametersIncludingOuterClasses() ) {
-					Type parameterType = parameter.getType();				
-					if( parameterType instanceof ArrayType )
-						addArrayClass((ArrayType)parameterType);
-					else 
-						addGenericClass( parameterType );
-				}
-				
-				if( getOuter() != null )
-					getOuter().addGenericClass(type);			
-			}
-	}
-	
-	public void addArrayClass(ArrayType type) {
-		boolean addBaseClass = true;
-		if( type.isFullyInstantiated() || !type.isParameterizedIncludingOuterClasses() ) 
-			addBaseClass = arrayClasses.add(type); //sets to false if already added 
-		
-		if( addBaseClass ) {
-			addGenericClass(type.convertToGeneric());
-			Type baseType = type.getBaseType();			
-			if( baseType instanceof ArrayType ) {
-				addArrayClass((ArrayType)baseType);
-				addGenericClass(((ArrayType)baseType).convertToGeneric());
-			}
-			else 
-				addGenericClass( baseType );
-			
-			if( getOuter() != null )
-				getOuter().addArrayClass(type);
-		}
 	}
 	
 	public boolean hasDocumentation()

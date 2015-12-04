@@ -4,7 +4,7 @@ is	CanRead
 and CanWrite
 and CanClose
 {
-	long data = -1l, pos = 0;
+	long data = -1L, pos = 0;
 	get Path path;
 	private create( long data )
 	{

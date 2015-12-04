@@ -137,8 +137,8 @@ public class Main {
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
 
-		Set<Type> generics = new HashSet<Type>();
-		Set<ArrayType> arrays = new HashSet<ArrayType>();
+		Set<String> generics = new HashSet<String>();
+		Set<String> arrays = new HashSet<String>();
 		
 		generateLLVM(linkCommand, generics, arrays);
 
@@ -184,10 +184,10 @@ public class Main {
 				while (line != null) {
 					
 					if( line.contains("@main")) { //declare externally defined generics
-						for( Type generic : generics )
+						for( String generic : generics )
 							out.write(LLVMOutput.declareGeneric(generic).getBytes());
-						for( ArrayType array : arrays )
-							out.write(LLVMOutput.declareGeneric(array).getBytes());	
+						for( String array : arrays )
+							out.write(LLVMOutput.declareArray(array).getBytes());	
 						
 						out.write(System.lineSeparator().getBytes());
 					}
@@ -197,8 +197,8 @@ public class Main {
 						line = line.replace("%arraySize", "" + arrays.size()*2);
 					else if( line.trim().startsWith("invoke")) { 
 						//add in all externally declared generics
-						LLVMOutput.addGenerics("%genericSet", generics, out);
-						LLVMOutput.addGenerics("%arraySet", arrays, out);						
+						LLVMOutput.addGenerics("%genericSet", generics, false, out);
+						LLVMOutput.addGenerics("%arraySet", arrays, true, out);						
 					}					
 					
 					line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
@@ -243,7 +243,7 @@ public class Main {
 	 * or building a new one
 	 * @throws CompileException 
 	 */
-	private static void generateLLVM(List<String> linkCommand, Set<Type> generics, Set<ArrayType> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
+	private static void generateLLVM(List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
 		Type.clearTypes();
 		TypeChecker checker = new TypeChecker();
 
@@ -279,7 +279,8 @@ public class Main {
 				//if the LLVM didn't exist, the full .shadow file would have been used				
 				if( file.getPath().endsWith(".meta") ) {
 					logger.info("Using pre-existing LLVM code for " + name);
-					addToLink(node.getType(), file, linkCommand);					
+					addToLink(node.getType(), file, linkCommand);
+					LLVMOutput.readGenericAndArrayClasses( llvmFile, generics, arrays );
 				}
 				else {
 					logger.info("Generating LLVM code for " + name);
@@ -318,12 +319,13 @@ public class Main {
 						throw new ShadowException("Failed to generate " + llvmFile.getPath());
 
 					if( nativeFile.exists() )
-						linkCommand.add(nativeFile.getCanonicalPath());					
+						linkCommand.add(nativeFile.getCanonicalPath());
+					
+					
+					//it's important to add generics after generating the LLVM, since more are made
+					generics.addAll(output.getGenericClasses());						
+					arrays.addAll(output.getArrayClasses());
 				}
-				
-				//it's important to add generics after generating the LLVM, since more are made
-				generics.addAll(type.getGenericClasses());						
-				arrays.addAll(type.getArrayClasses());
 
 			}
 		}

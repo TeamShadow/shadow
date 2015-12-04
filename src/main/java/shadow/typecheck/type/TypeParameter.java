@@ -178,7 +178,7 @@ public class TypeParameter extends Type {
 		
 		return new ArrayList<MethodSignature>(signatures);
 	}
-
+	
 	@Override
 	public boolean isRecursivelyParameterized() {
 		return isParameterized();

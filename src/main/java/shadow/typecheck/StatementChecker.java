@@ -458,20 +458,20 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	private void checkInitializers(Node node)
-	{
+	private void checkInitializers(Node node) {
 		int start = 0;
-		Node declarator = node.jjtGetChild(start);  //could be either VariableDeclarator or SequenceDeclarator
+		Node declarator = node.jjtGetChild(start);
 		if( declarator instanceof ASTType ) //if type, skip to first declarator
 			start++;
 		
-		for( int i = start; i < node.jjtGetNumChildren(); ++i )
-		{
+		for( int i = start; i < node.jjtGetNumChildren(); ++i ) {
 			declarator = node.jjtGetChild(i);
 			if( declarator.jjtGetNumChildren() > 0 ) //has initializer
 				addErrors(declarator, isValidInitialization(declarator, declarator.jjtGetChild(0)));
 			else if( declarator.getModifiers().isConstant() ) //only fields are ever constant
-				addError( declarator, Error.INVALID_MODIFIER, "Field declared with modifier constant must have an initializer");
+				addError( declarator, Error.INVALID_MODIFIER, "Variable declared with modifier constant must have an initializer");
+			
+			currentType.addReferencedType(declarator.getType());
 		}			
 	}
 
@@ -479,9 +479,7 @@ public class StatementChecker extends BaseChecker {
 	{		
 		if(secondVisit)
 			checkInitializers(node); //check all initializers
-		else
-			currentType.addReferencedType(node.getType());
-
+		
 		return WalkType.POST_CHILDREN;
 	}	
 	

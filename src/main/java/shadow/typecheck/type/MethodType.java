@@ -26,7 +26,7 @@ public class MethodType extends ClassType {
 	
 	@Override
 	public Type getOuter() {
-		throw new UnsupportedOperationException();
+		return null;
 	}
 	
 	//used to copy a MethodType with different modifiers
