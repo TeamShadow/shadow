@@ -20,8 +20,6 @@ import shadow.parser.javacc.SimpleNode;
 public class ClassType extends Type {
 	private ClassType extendType;	
 	private HashMap<String, ClassType> innerClasses;
-	//needed to keep the fields in order for walking them in constructors
-	private ArrayList<Node> fieldList = new ArrayList<Node>();
 	
 	public ClassType(String typeName, ClassType parent) {
 		this(typeName, new Modifiers(), null, null);
@@ -671,16 +669,6 @@ public class ClassType extends Type {
 		//if( !hasOuter() )
 			//printGenerics( out, indent );				
 		out.println(linePrefix + "}");	
-	}
-
-	@Override
-	public void addField(String fieldName, Node node) {
-		super.addField(fieldName, node);
-		fieldList.add(node);
-	}
-	
-	public List<Node> getFieldList() {
-		return fieldList;
 	}
 	
 	@Override

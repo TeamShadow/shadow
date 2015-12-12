@@ -1,0 +1,21 @@
+import shadow:io@Console;
+
+class shadow:test@
+	DependentConstantsTest
+{
+	public constant int C = 5;
+	public constant int B = C - 1;
+	public constant int A = B - 1;
+	
+	public constant String NUT = "walnut";
+	public constant String NUTS = NUT # "s"; 
+		
+	public main( String[] args ) => ()
+	{
+		Console.printLine(A);
+		Console.printLine(B);
+		Console.printLine(C);
+		Console.printLine(NUT);
+		Console.printLine(NUTS);
+	}
+}

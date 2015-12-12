@@ -36,6 +36,9 @@ public abstract class Type implements Comparable<Type> {
 	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();	
 		
 	private Map<String, Node> fieldTable = new HashMap<String, Node>();
+	//needed to keep the fields in order for walking them in constructors
+	private ArrayList<Node> fieldList = new ArrayList<Node>();
+
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> referencedTypes = new HashSet<Type>();
 	private Set<Type> partiallyInstantiatedGenerics = new HashSet<Type>();	
@@ -930,6 +933,11 @@ public abstract class Type implements Comparable<Type> {
 	
 	public void addField(String fieldName, Node node) {
 		fieldTable.put(fieldName, node);
+		fieldList.add(node);
+	}
+	
+	public List<Node> getFieldList() {
+		return fieldList;
 	}
 	
 	public Node getField(String fieldName) {

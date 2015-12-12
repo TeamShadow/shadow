@@ -178,7 +178,9 @@ public class TACBuilder implements ShadowParserVisitor {
 		//dummy method and block for constant building 
 		method = new TACMethod( new MethodSignature(new MethodType(), "", type, null));
 		block = new TACBlock(tree, block);
-		for (Node constant : type.getFields().values())
+		
+		
+		for (Node constant : type.getFieldList())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
 						constant.getImage()), constant);

@@ -465,4 +465,13 @@ public class OutputTest {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "Empty: \nNon-empty: Hello!\n");
 	}
+	
+	@Test public void testDependentConstants() throws Exception {
+		args.add("shadow/test/DependentConstantsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "3\n4\n5\nwalnut\nwalnuts\n");
+	}
+	
+	
+	
 }

@@ -844,7 +844,7 @@ void MethodDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
     jjtThis.setModifiers(modifiers);
     jjtThis.setDocumentationBuilder(docBuilder);
   }  
-  MethodDeclarator(false) [ "throws" NameList() ]
+  MethodDeclarator(false)
   ( Block() { jjtThis.setBlock(true); } | ";" )
 }
 
@@ -860,7 +860,7 @@ void CreateDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
     jjtThis.setImage("create");
   }  
   // Modifiers matched in the caller
-  CreateDeclarator() [ "throws" NameList() ]
+  CreateDeclarator()
   ( CreateBlock() { jjtThis.setBlock(true); } | ";" )
 }
 
@@ -1591,19 +1591,6 @@ void LocalDeclaration():
     LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
   | LocalVariableDeclaration(modifiers) ";" )  }
 
-/*
-void InlineMethodDeclaration(Modifiers modifiers):
-{
-  	debugPrint("INLINE METHOD DECLARATION");
-	modifiers.checkLocalMethodModifiers(jjtThis); 
- }
-{
-  { jjtThis.setModifiers(modifiers); }  
-  InlineMethodDeclarator() [ "throws" NameList() ]
-  ";"
-}
-*/
-
 void LocalMethodDeclaration(Modifiers modifiers):
 {
   	debugPrint("LOCAL METHOD DECLARATION");
@@ -1611,7 +1598,7 @@ void LocalMethodDeclaration(Modifiers modifiers):
  }
 {
   { jjtThis.setModifiers(modifiers); }  
-  MethodDeclarator(true) [ "throws" NameList() ]
+  MethodDeclarator(true)
   Block()
 }
 
