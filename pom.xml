@@ -20,6 +20,28 @@
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>
+        <configuration>
+	      <filesets>
+	        <fileset>
+	          <directory>shadow</directory>
+	          <includes>
+	            <include>**/*.meta</include>	            
+	            <include>**/*.ll</include>	            
+	          </includes>
+	          <excludes>	            
+	            <exclude>**/*.native.ll</exclude>
+	            <exclude>Linux.ll</exclude>
+	            <exclude>Mac.ll</exclude>
+	            <exclude>Main.ll</exclude>
+	            <exclude>NoArguments.ll</exclude>
+	            <exclude>Unwind32.ll</exclude>
+	            <exclude>Unwind64.ll</exclude>
+	            <exclude>Windows.ll</exclude>
+	          </excludes>
+	          <followSymlinks>false</followSymlinks>
+	        </fileset>	        
+	      </filesets>
+	    </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
