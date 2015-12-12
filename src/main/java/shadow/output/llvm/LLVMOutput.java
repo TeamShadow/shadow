@@ -10,9 +10,11 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
@@ -286,9 +288,11 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write();
 		}
 		
+		Map<String, ShadowValue> constants = new HashMap<String, ShadowValue>();
+		
 		//constants
 		for (TACConstant constant : module.getConstants()) {
-			ShadowInterpreter interpreter = new ShadowInterpreter();
+			ShadowInterpreter interpreter = new ShadowInterpreter(constants);
 			String name = constant.getName();
 			Node node = module.getType().getField(name);
 			try {
@@ -298,9 +302,9 @@ public class LLVMOutput extends AbstractOutput {
 					throw new ShadowException(
 							BaseChecker.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
 				
+				constants.put(name, (ShadowValue)result);				
 				writer.write(name(constant) + " = constant " +
-						typeLiteral((ShadowValue)result));
-				
+					typeLiteral((ShadowValue)result));
 			}
 			catch(ShadowException e) {
 				String message = BaseChecker.makeMessage(null, "Could not initialize constant " + name + ": " + e.getMessage(), node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );

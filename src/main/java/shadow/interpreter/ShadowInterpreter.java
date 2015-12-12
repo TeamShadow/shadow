@@ -10,6 +10,7 @@ import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACMethodRef;
@@ -22,7 +23,7 @@ import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
 /**
- * Interpreter that walks TAC nodes in order to determine the values for variables marked constant.
+ * Interpreter that walks TAC nodes in order to determine the values for members marked constant.
  * At present, method calls for primitive types and strings are hardcoded, but a future version of the
  * interpreter should actually walk method definitions, failing only if it reaches unsupported native
  * methods.
@@ -31,25 +32,25 @@ import shadow.typecheck.type.Type;
  * @author Jacob Young
  *
  */
-public class ShadowInterpreter extends TACAbstractVisitor
-{
+public class ShadowInterpreter extends TACAbstractVisitor {
+	private Map<String, ShadowValue> constants;
+	private Map<String, ShadowValue> variables = new HashMap<String, ShadowValue>();
 	
-	Map<String, ShadowValue> variables = new HashMap<String, ShadowValue>();
+	public ShadowInterpreter(Map<String, ShadowValue> constants) {
+		this.constants = constants;
+	}
 	
 	@Override
-	public void visit(TACLiteral node) throws ShadowException
-	{
+	public void visit(TACLiteral node) throws ShadowException {
 		node.setData(node.getValue());
 	}
 
 	@Override
-	public void visit(TACUnary node) throws ShadowException
-	{
+	public void visit(TACUnary node) throws ShadowException {
 		ShadowValue data = null;
 		ShadowValue op = value(node.getOperand());
 
-		switch(node.getOperation())
-		{
+		switch(node.getOperation()) {
 		case "-": data = op.negate(); break;
 		case "#": data = new ShadowString(op.toString()); break;
 		case "~": data = op.bitwiseComplement(); break;
@@ -60,15 +61,13 @@ public class ShadowInterpreter extends TACAbstractVisitor
 	}
 
 	@Override
-	public void visit(TACBinary node) throws ShadowException
-	{
+	public void visit(TACBinary node) throws ShadowException {
 		ShadowValue left = value(node.getFirst()),
 				right = value(node.getSecond());
 		
 		ShadowValue data = null;
 		
-		switch( node.getOperation() )
-		{
+		switch( node.getOperation() ) {
 		case "+":
 		case "-":
 		case "*":
@@ -89,8 +88,7 @@ public class ShadowInterpreter extends TACAbstractVisitor
 				right = right.cast(left.getType());
 
 			//sure, a bit ugly
-			switch( node.getOperation() )
-			{
+			switch( node.getOperation() ) {
 			case "+":
 				data = left.add(right); break;
 			case "-":
@@ -142,16 +140,14 @@ public class ShadowInterpreter extends TACAbstractVisitor
 		}
 		
 		node.setData(data);
-	}
+	}	
 	
 	@Override
-	public void visit(TACStore node) throws ShadowException
-	{
+	public void visit(TACStore node) throws ShadowException {
 		TACReference reference = node.getReference();
 		TACOperand data = node.getValue();		
 		
-		if( reference instanceof TACVariableRef )
-		{
+		if( reference instanceof TACVariableRef ) {
 			TACVariable variable = ((TACVariableRef)reference).getVariable();
 			variables.put(variable.getName(), value(data));
 		}
@@ -159,13 +155,16 @@ public class ShadowInterpreter extends TACAbstractVisitor
 			throw new UnsupportedOperationException();
 	}
 	
+	
 	@Override
-	public void visit(TACLoad node) throws ShadowException
-	{		
+	public void visit(TACLoad node) throws ShadowException {		
 		TACReference reference = node.getReference();
 		
-		if( reference instanceof TACVariableRef )
-		{
+		if( reference instanceof TACConstantRef ) {
+			TACConstantRef constant = ((TACConstantRef)reference);
+			node.setData(constants.get(constant.getName()));
+		}
+		else if( reference instanceof TACVariableRef ) {
 			TACVariable variable = ((TACVariableRef)reference).getVariable();
 			node.setData(variables.get(variable.getName()));
 		}
@@ -200,7 +199,7 @@ public class ShadowInterpreter extends TACAbstractVisitor
 				}
 			}
 			else {
-				ShadowValue prefix = value(method.getPrefix());
+				ShadowValue prefix = value(parameters.get(0));
 				ShadowValue[] arguments = new ShadowValue[parameters.size() - 1];
 				for( int i = 1; i < parameters.size(); i++ )			
 					arguments[i - 1] = value(parameters.get(i)); //first argument is always the prefix
@@ -240,16 +239,13 @@ public class ShadowInterpreter extends TACAbstractVisitor
 				break;
 				
 				case "toString":
-					if( arguments.length == 1 && prefix instanceof ShadowInteger )
-					{
+					if( arguments.length == 1 && prefix instanceof ShadowInteger ) {
 						ShadowInteger integer = (ShadowInteger)prefix;
 						ShadowInteger base = (ShadowInteger) arguments[0];
 						data = new ShadowString(integer.toString(base.getValue().intValue()));
 					}
 					else if( arguments.length == 0 )
-					{
-						data = new ShadowString(prefix.toString());					
-					} 
+						data = new ShadowString(prefix.toString());
 					break;
 					
 				//string functions
@@ -259,11 +255,9 @@ public class ShadowInterpreter extends TACAbstractVisitor
 				case "substring":
 				case "toLowerCase":
 				case "toUpperCase":
-					if( prefix instanceof ShadowString )
-					{
+					if( prefix instanceof ShadowString ) {
 						ShadowString string = (ShadowString) prefix;
-						switch( method.getName()  )
-						{
+						switch( method.getName()  ) {
 						case "concatenate":
 							data = new ShadowString(string.getValue() + ((ShadowString)arguments[0]).getValue()); break;
 						case "size":
@@ -275,13 +269,11 @@ public class ShadowInterpreter extends TACAbstractVisitor
 						case "toUpperCase":
 							data = new ShadowString(string.getValue().toUpperCase()); break;
 						case "substring":
-							if( arguments.length == 1 )
-							{
+							if( arguments.length == 1 ) {
 								int start = ((ShadowInteger)arguments[0]).getValue().intValue();
 								data = new ShadowString(string.getValue().substring(start));
 							}
-							else if( arguments.length == 2)
-							{
+							else if( arguments.length == 2) {
 								int start = ((ShadowInteger)arguments[0]).getValue().intValue();
 								int end = ((ShadowInteger)arguments[1]).getValue().intValue();
 								data = new ShadowString(string.getValue().substring(start, end));
@@ -303,8 +295,7 @@ public class ShadowInterpreter extends TACAbstractVisitor
 				case "modulus":
 				case "bitOr":		
 				case "bitAnd":
-				case "bitXor":	
-				{
+				case "bitXor":	{
 					ShadowValue first = prefix;
 					ShadowValue second = arguments[0];
 					
@@ -313,8 +304,7 @@ public class ShadowInterpreter extends TACAbstractVisitor
 					else if( second.isStrictSubtype(first))
 						second = second.cast(first.getType());
 					
-					switch( method.getName()  )
-					{
+					switch( method.getName()  ) {
 					case "add":	data = first.add(second); break;					
 					case "subtract": data = first.subtract(second); break;
 					case "multiply": data = first.multiply(second); break;
@@ -331,8 +321,7 @@ public class ShadowInterpreter extends TACAbstractVisitor
 				case "bitRotateRight": data = prefix.rightRotate(arguments[0]); break;
 				case "bitShiftLeft": data = prefix.leftShift(arguments[0]); break;
 				case "bitShiftRight": data = prefix.rightShift(arguments[0]); break;		
-				
-							
+											
 				case "toUnsigned": 
 				case "abs": data = ((ShadowNumber)prefix).abs(); break;
 				case "cos": data = ((ShadowNumber)prefix).cos(); break;
