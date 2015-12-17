@@ -34,14 +34,26 @@ public class NegativeTests {
 			throw new Exception("Test failed");
 		}
 		catch( CompileException e )
-		{			
+		{	
+			System.err.println(e.getLocalizedMessage());
 		}		
-	}
-	
+	}	
 	
 	@Test public void testConstantInitializationFailure() throws Exception
 	{
 		args.add("tests-negative/compile/constant-initialization-failure/Test.shadow");
 		enforce();		
 	}
+	
+	@Test public void testCircularConstantDependency() throws Exception
+	{
+		args.add("tests-negative/compile/circular-constant-dependency/Test.shadow");
+		enforce();		
+	}
+	
+	@Test public void testInvalidConstantDependency() throws Exception
+	{
+		args.add("tests-negative/compile/invalid-constant-dependency/Test.shadow");
+		enforce();		
+	}	
 }

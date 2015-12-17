@@ -266,7 +266,12 @@ public class LLVMOutput extends AbstractOutput {
 		}	
 	}
 	
-	protected void writeModuleDefinition(TACModule module) throws ShadowException {		
+	protected void writeModuleDefinition(TACModule module) throws ShadowException {
+		Map<String, ShadowValue> constants = new HashMap<String, ShadowValue>();		
+		writeModuleDefinition(module, constants);		
+	}
+	
+	private void writeModuleDefinition(TACModule module, Map<String, ShadowValue> constants) throws ShadowException {		
 		Type moduleType = module.getType();
 		writer.write("; " + moduleType.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS));
 		writer.write();
@@ -288,7 +293,8 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write();
 		}
 		
-		Map<String, ShadowValue> constants = new HashMap<String, ShadowValue>();
+		
+		Set<String> localConstants = new HashSet<String>();		
 		
 		//constants
 		for (TACConstant constant : module.getConstants()) {
@@ -302,7 +308,9 @@ public class LLVMOutput extends AbstractOutput {
 					throw new ShadowException(
 							BaseChecker.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
 				
-				constants.put(name, (ShadowValue)result);				
+				String fullName = constant.getPrefixType().toString() + ":" + name; 
+				constants.put(fullName, (ShadowValue)result);				
+				localConstants.add(fullName);
 				writer.write(name(constant) + " = constant " +
 					typeLiteral((ShadowValue)result));
 			}
@@ -478,7 +486,12 @@ public class LLVMOutput extends AbstractOutput {
 		
 		//recursively do inner classes
 		for( TACModule innerClass : module.getInnerClasses() )
-			writeModuleDefinition(innerClass);
+			writeModuleDefinition(innerClass, constants);		
+		
+		//remove constants defined in current class
+		//inner classes can use outer constants but not the converse
+		for( String name : localConstants )
+			constants.remove(name);
 	}
 	
 	private void writeGenericClasses() throws ShadowException {		

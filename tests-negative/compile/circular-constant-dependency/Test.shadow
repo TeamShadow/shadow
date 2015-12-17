@@ -1,0 +1,10 @@
+class Test
+{
+    private constant int A = B;
+    private constant int B = A;
+
+    public main(String[] args) => ()
+    {
+
+    }
+}

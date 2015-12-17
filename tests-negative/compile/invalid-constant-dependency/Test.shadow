@@ -1,0 +1,16 @@
+class Test
+{
+	public class Inner
+	{
+		public constant int A = 10;	
+	}	
+	
+	//when initializing, outer classes "go first"
+	//meaning that Inner:A has not been determined before B
+    public constant int B = Inner:A + 2;
+
+    public main(String[] args) => ()
+    {
+
+    }
+}

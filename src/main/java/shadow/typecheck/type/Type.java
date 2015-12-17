@@ -343,7 +343,7 @@ public abstract class Type implements Comparable<Type> {
 			}
 			else  if( !isPrimitive() && (options & PACKAGES) != 0 ) {
 				if( _package == null || _package.getQualifiedName().isEmpty())
-					packageName = "default";
+					packageName = "default@";
 				else
 					packageName = _package.getQualifiedName() + "@";										
 				

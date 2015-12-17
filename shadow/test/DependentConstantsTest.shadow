@@ -6,6 +6,7 @@ class shadow:test@
 	public constant int C = 5;
 	public constant int B = C - 1;
 	public constant int A = B - 1;
+	public constant int Z = DependentConstantsTest:A * 3; 
 	
 	public constant String NUT = "walnut";
 	public constant String NUTS = NUT # "s"; 
@@ -15,7 +16,14 @@ class shadow:test@
 		Console.printLine(A);
 		Console.printLine(B);
 		Console.printLine(C);
+		Console.printLine(Z);
 		Console.printLine(NUT);
 		Console.printLine(NUTS);
+		Console.printLine(Inner:A);
 	}
+	
+	public class Inner
+	{
+		public constant int A = DependentConstantsTest:A - 1;
+	}	
 }

@@ -1,14 +1,14 @@
 class Test
 {
-        private constant Test test = Test:create();
+    private constant Test test = Test:create();
 
-        public create()
-        {
+    public create()
+    {
 
-        }
+    }
 
-        public main(String[] args) => ()
-        {
+    public main(String[] args) => ()
+    {
 
-        }
+    }
 }

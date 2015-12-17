@@ -1180,17 +1180,22 @@ public class TACBuilder implements ShadowParserVisitor {
 					if (local != null)
 						prefix = new TACVariableRef(tree, local);
 					else {
-						TACReference thisRef =
-								new TACVariableRef(tree, method.getThis());
-						while (!thisRef.getType().containsField(name))
-							thisRef = new TACFieldRef(tree, thisRef,
-									new SimpleModifiedType(thisRef.getType().
-											getOuter()), "_outer");
-						if (node.getModifiers().isConstant())
-							prefix = new TACConstantRef(tree, thisRef.getType(),
-									name);
-						else
+						if (node.getModifiers().isConstant()) {
+							Type thisType = method.getThis().getType();
+							//figure out type that defines constant							
+							while( !thisType.containsField(name))
+								thisType = thisType.getOuter();
+							prefix = new TACConstantRef(tree, thisType, name);
+						}
+						else {						
+							TACReference thisRef = new TACVariableRef(tree, method.getThis());
+							//make chain of this:_outer references until field is found
+							while (!thisRef.getType().containsField(name))
+								thisRef = new TACFieldRef(tree, thisRef,
+										new SimpleModifiedType(thisRef.getType().
+												getOuter()), "_outer");
 							prefix = new TACFieldRef(tree, thisRef, name);
+						}
 					}
 				}				
 			}
