@@ -172,4 +172,10 @@ public class Documentation
 		else
 			return Collections.unmodifiableList(new ArrayList<List<String>>());
 	}
+	
+	public void clear() {
+		inlineTags.clear();
+		blockTags.clear();
+		summaryTags.clear();
+	}
 }

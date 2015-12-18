@@ -470,8 +470,5 @@ public class OutputTest {
 		args.add("shadow/test/DependentConstantsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "3\n4\n5\n9\nwalnut\nwalnuts\n2\n");
-	}
-	
-	
-	
+	}	
 }

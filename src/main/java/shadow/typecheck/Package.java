@@ -240,4 +240,12 @@ public class Package implements Comparable<Package>
 		else		
 			return getQualifiedName();
 	}
+	
+	public void clear(HashMap<Package, HashMap<String, Type>> otherTypes) {
+		children.clear();		
+		types.clear();
+		if( documentation != null )
+			documentation.clear();
+		otherTypes.put(this, types);
+	}
 }

@@ -274,7 +274,19 @@ public class Main {
 				String path = stripExt(file.getCanonicalPath());
 				File llvmFile = new File(path + ".ll");
 				
-				Type type = node.getType();				
+				Type type = node.getType();
+				
+				//set data for main class
+				if( path.equals(mainFileName) ) {							
+					mainClass = type.toString(Type.MANGLE);
+					SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
+					if( type.getMatchingMethod("main", arguments) != null )
+						mainArguments = true;
+					else if( type.getMatchingMethod("main", new SequenceType()) != null )
+						mainArguments = false;
+					else
+						throw new ShadowException("File " + file.getPath() + " does not contain an appropriate main() method");							
+				}
 			
 				//if the LLVM didn't exist, the full .shadow file would have been used				
 				if( file.getPath().endsWith(".meta") ) {
@@ -286,18 +298,6 @@ public class Main {
 					logger.info("Generating LLVM code for " + name);
 					//gets top level class
 					TACModule module = new TACBuilder().build(node);
-
-					if( path.equals(mainFileName) ) {							
-						mainClass = type.toString(Type.MANGLE);
-						SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
-						if( type.getMatchingMethod("main", arguments) != null )
-							mainArguments = true;
-						else if( type.getMatchingMethod("main", new SequenceType()) != null )
-							mainArguments = false;
-						else
-							throw new ShadowException("File " + file.getPath() + " does not contain an appropriate main() method");							
-					}
-					// Debug prints
 					logger.debug(module.toString());
 
 					// Write to file

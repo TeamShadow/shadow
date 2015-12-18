@@ -54,6 +54,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
 	protected ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();
 	protected HashMap<Package, HashMap<String, Type>> typeTable; /* Holds all of the types we know about */
+	//TODO: Get rid of typeTable?  Doesn't the packageTree hold everything we need?	
 	protected List<String> importList; /* Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
@@ -61,11 +62,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	// Current method is a stack since Shadow allows methods to be defined inside of methods
 	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();
 	protected Type currentType = null;
-	protected Type declarationType = null;	
-	
-	public final HashMap<Package, HashMap<String, Type>> getTypeTable() {
-		return typeTable;
-	}
+	protected Type declarationType = null;
 	
 	public void addType( Type type, Package p  ) throws PackageException {
 		p.addType(type); //automatically adds to typeTable and sets type's package				
@@ -955,5 +952,17 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			currentPackage = packageTree;
 		
 		return WalkType.POST_CHILDREN;
+	}
+	
+	public void clear() {		
+		errorList.clear();
+		warningList.clear();
+		typeTable.clear();
+		importList.clear();		
+		currentPackage = null;
+		currentMethod.clear();
+		currentType = null;
+		declarationType = null;
+		packageTree.clear(typeTable);
 	}
 }
