@@ -52,9 +52,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	protected static String eol = System.getProperty("line.separator", "\n");
 
 	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
-	protected ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();
-	protected HashMap<Package, HashMap<String, Type>> typeTable; /* Holds all of the types we know about */
-	//TODO: Get rid of typeTable?  Doesn't the packageTree hold everything we need?	
+	protected ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();	
 	protected List<String> importList; /* Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
@@ -72,8 +70,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return importList;
 	}
 	
-	public BaseChecker(HashMap<Package, HashMap<String, Type>> hashMap, List<String> importList, Package packageTree  ) {
-		this.typeTable = hashMap;
+	public BaseChecker(List<String> importList, Package packageTree  ) {
 		this.importList = importList;
 		this.packageTree = packageTree;
 	}
@@ -610,11 +607,10 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	//get type from specific package
 	protected final Type lookupType( String name, Package p )
 	{		
-		return typeTable.get(p).get(name);
+		return p.getType(name);
 	}
 	
-	private final Type lookupType( String name, String packageName )
-	{			
+	private final Type lookupType( String name, String packageName ) {			
 		Package p;
 		
 		if( packageName.equals("default") )
@@ -622,14 +618,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		else
 			p = packageTree.getChild(packageName);
 		
-		if( p == null )
-		{
+		if( p == null ) {
 			addError(Error.INVALID_IMPORT, "Package " + packageName + " not defined");
 			return null;
-		}
-		
-		HashMap<String, Type> map = typeTable.get(p); 
-		return map.get(name);
+		}		
+		 
+		return p.getType(name);
 	}
 	
 	public int getErrorCount()
@@ -956,13 +950,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	public void clear() {		
 		errorList.clear();
-		warningList.clear();
-		typeTable.clear();
+		warningList.clear();		
 		importList.clear();		
 		currentPackage = null;
 		currentMethod.clear();
 		currentType = null;
 		declarationType = null;
-		packageTree.clear(typeTable);
+		packageTree.clear();
 	}
 }

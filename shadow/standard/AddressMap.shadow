@@ -1,6 +1,5 @@
 import shadow:utility@Map;
 import shadow:utility@IllegalModificationException;
-import shadow:io@Console;
 
 locked class shadow:standard@
 	AddressMap is Map<ulong, ulong>	

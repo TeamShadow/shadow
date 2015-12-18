@@ -261,12 +261,6 @@ public class Main {
 			throw e;
 		}
 		
-		
-		//after typechecking, only include relevant files
-		//Set<Type> usedTypes = getAllReferencedTypes(checker.)
-		
-		
-
 		if( !currentJob.isCheckOnly() ) {		
 			for( Node node : nodes ) {
 				File file = node.getFile();
@@ -310,6 +304,8 @@ public class Main {
 					}
 					catch(ShadowException e) {
 						logger.error(file + " FAILED TO COMPILE");
+						if( llvmFile.exists() )
+							llvmFile.delete();
 						throw new CompileException(e.getMessage());
 					}				
 

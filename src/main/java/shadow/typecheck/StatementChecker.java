@@ -43,8 +43,8 @@ public class StatementChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, ModifiedType>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
 	
-	public StatementChecker(HashMap<Package, HashMap<String, Type>> typeTable, List<String> importList, Package packageTree ) {
-		super(typeTable, importList, packageTree );		
+	public StatementChecker(List<String> importList, Package packageTree ) {
+		super(importList, packageTree );		
 		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
 		curPrefix = new LinkedList<Node>();			
 		tryBlocks = new LinkedList<ASTTryStatement>();

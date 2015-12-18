@@ -3,6 +3,8 @@ package shadow.typecheck;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
@@ -14,7 +16,7 @@ import shadow.typecheck.type.Type;
  * A representation of a Shadow package, with awareness of both its parent and
  * child packages 
  */
-public class Package implements Comparable<Package>
+public class Package implements Comparable<Package>, Iterable<Type>
 {	
 	@SuppressWarnings("serial")
 	public static class PackageException extends Exception
@@ -36,16 +38,15 @@ public class Package implements Comparable<Package>
 	private final HashMap<String, Type> types = new HashMap<String, Type>();
 	private Documentation documentation;
 	
-	public Package(HashMap<Package, HashMap<String, Type>> otherTypes)
+	public Package()
 	{
-		this("", null, otherTypes );
+		this("", null);
 	}	
 
-	private Package(String name, Package parent,  HashMap<Package, HashMap<String, Type>> otherTypes)
+	private Package(String name, Package parent)
 	{
 		this.name = name;
-		this.parent = parent;
-		otherTypes.put(this, types);
+		this.parent = parent;		
 	}	
 	
 	/**
@@ -54,12 +55,12 @@ public class Package implements Comparable<Package>
 	 * @param folder
 	 * @return
 	 */
-	public Package addPackage( String name, HashMap<Package, HashMap<String, Type>> typeTable )
+	public Package addPackage( String name )
 	{				
 		if( children.containsKey(name) )
 			return children.get(name);
 		
-		Package newPackage = new Package( name, this, typeTable );		
+		Package newPackage = new Package(name, this);		
 		children.put(name, newPackage);		
 		
 		return newPackage;
@@ -70,7 +71,7 @@ public class Package implements Comparable<Package>
 	 * @param path
 	 * @return
 	 */
-	public Package addQualifiedPackage( String path, HashMap<Package, HashMap<String, Type>> typeTable  )
+	public Package addQualifiedPackage( String path )
 	{
 		if( path.length() > 0 && !path.equals("default") )
 		{
@@ -79,7 +80,7 @@ public class Package implements Comparable<Package>
 			Package parent = this;
 			
 			for( int i = 0; i < folders.length; i++ )		
-				parent = parent.addPackage( folders[i], typeTable );
+				parent = parent.addPackage( folders[i] );
 			
 			return parent;
 		}
@@ -87,7 +88,7 @@ public class Package implements Comparable<Package>
 			return this;
 	}
 	
-	public void addType(Type type ) throws PackageException {	
+	public void addType(Type type) throws PackageException {	
 		
 		String name = type.toString(Type.NO_OPTIONS);
 		
@@ -241,11 +242,49 @@ public class Package implements Comparable<Package>
 			return getQualifiedName();
 	}
 	
-	public void clear(HashMap<Package, HashMap<String, Type>> otherTypes) {
+	public void clear() {
 		children.clear();		
 		types.clear();
 		if( documentation != null )
-			documentation.clear();
-		otherTypes.put(this, types);
+			documentation.clear();		
 	}
+
+	@Override
+	public Iterator<Type> iterator() {		
+		return new PackageIterator();
+	}
+	
+	private class PackageIterator implements Iterator<Type> {		
+		private Iterator<Type> typeIterator = types.values().iterator();
+		private Iterator<Package> packageIterator = children.values().iterator();		
+
+		@Override
+		public boolean hasNext() {
+			while( !typeIterator.hasNext() ) {
+				if( packageIterator.hasNext() )
+					typeIterator = packageIterator.next().iterator();
+				else
+					return false;
+			}		
+			
+			return true;
+		}
+
+		@Override
+		public Type next() {
+			while( !typeIterator.hasNext() ) {
+				if( packageIterator.hasNext() )
+					typeIterator = packageIterator.next().iterator();
+				else
+					throw new NoSuchElementException();
+			}
+			
+			return typeIterator.next();
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();			
+		}		
+	}	
 }

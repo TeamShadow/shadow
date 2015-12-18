@@ -60,10 +60,8 @@ public class TypeUpdater extends BaseChecker {
 	
 	private boolean isMeta = false;	
 	
-	public TypeUpdater(
-			HashMap<Package, HashMap<String, Type>> typeTable,			
-			List<String> importList, Package packageTree) {
-		super(typeTable, importList, packageTree);		
+	public TypeUpdater(List<String> importList, Package packageTree) {
+		super(importList, packageTree);		
 	}	
 	
 	//public void updateTypes(Map<String, Node> files) throws ShadowException, TypeCheckException
@@ -205,108 +203,107 @@ public class TypeUpdater extends BaseChecker {
 		}
 	}
 	
-	private void addConstructorsAndProperties() {
-		for( Package p : typeTable.keySet() ) {
-			for( Type type : typeTable.get(p).values() ) {
-				if( type instanceof ClassType ) {
-					ClassType classType = (ClassType)type;
-					if (classType.getMethods("create").isEmpty()) {
-						//if no creates, add the default one
-						ASTCreateDeclaration createNode = new ASTCreateDeclaration(-1);
-						createNode.setModifiers(Modifiers.PUBLIC);
-						MethodSignature createSignature = new MethodSignature(classType, "create", createNode.getModifiers(), createNode.getDocumentation(), createNode);
-						createNode.setMethodSignature(createSignature);
-						classType.addMethod(createSignature);
-						//note that the node is null for the default create, because nothing was made
-					}
+	private void addConstructorsAndProperties() {		
+		for( Type type : packageTree ) { //iterates over all the types in the package tree
+			if( type instanceof ClassType ) {
+				ClassType classType = (ClassType)type;
+				if (classType.getMethods("create").isEmpty()) {
+					//if no creates, add the default one
+					ASTCreateDeclaration createNode = new ASTCreateDeclaration(-1);
+					createNode.setModifiers(Modifiers.PUBLIC);
+					MethodSignature createSignature = new MethodSignature(classType, "create", createNode.getModifiers(), createNode.getDocumentation(), createNode);
+					createNode.setMethodSignature(createSignature);
+					classType.addMethod(createSignature);
+					//note that the node is null for the default create, because nothing was made
+				}
+				
+				//add copy method with a set to hold addresses
+				ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
+				copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);
+				MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode.getDocumentation(), copyNode);
+				copySignature.addParameter("addresses", new SimpleModifiedType(Type.ADDRESS_MAP));
+				copySignature.addReturn(new SimpleModifiedType(classType));					
+				copyNode.setMethodSignature(copySignature);
+				classType.addMethod(copySignature);
+				
+				//add default getters and setters
+				for( Map.Entry<String, Node> field : classType.getFields().entrySet() ) {
+					Node node = field.getValue();
+					Modifiers fieldModifiers = node.getModifiers();
 					
-					//add copy method with a set to hold addresses
-					ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
-					copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);
-					MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode.getDocumentation(), copyNode);
-					copySignature.addParameter("addresses", new SimpleModifiedType(Type.ADDRESS_MAP));
-					copySignature.addReturn(new SimpleModifiedType(classType));					
-					copyNode.setMethodSignature(copySignature);
-					classType.addMethod(copySignature);
-					
-					//add default getters and setters
-					for( Map.Entry<String, Node> field : classType.getFields().entrySet() ) {
-						Node node = field.getValue();
-						Modifiers fieldModifiers = node.getModifiers();
+					if( fieldModifiers.isGet() || fieldModifiers.isSet() )	{	
+						List<MethodSignature> methods = classType.getMethods(field.getKey());
+						int getterCount = 0;
+						int setterCount = 0;
+						int getterCollision = 0;
+						int setterCollision = 0;
 						
-						if( fieldModifiers.isGet() || fieldModifiers.isSet() )	{	
-							List<MethodSignature> methods = classType.getMethods(field.getKey());
-							int getterCount = 0;
-							int setterCount = 0;
-							int getterCollision = 0;
-							int setterCollision = 0;
-							
-							for( MethodSignature signature : methods) {
-								if( signature.getModifiers().isGet() )
-									getterCount++;
-								else if( signature.getModifiers().isSet() )
-									setterCount++;
-								else if( signature.getParameterTypes().isEmpty() )
-									getterCollision++;
-								else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().equals(signature.getParameterTypes().get(0).getType())  )
-									setterCollision++;
-							}
-							
-							if( fieldModifiers.isGet() && getterCount == 0 ) {
-								if( getterCollision > 0 )								
-									addError(node, Error.INVALID_MODIFIER, "Default get property " +  field.getKey() + " cannot replace a non-get method with an indistinguishable signature" );
-								else {
-									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									//default get is readonly
-									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);														
-									methodNode.setImage(field.getKey());
-									methodNode.setType(node.getType());
-									MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
-									Modifiers modifiers = new Modifiers(fieldModifiers);
-									modifiers.removeModifier(Modifiers.GET);
-									modifiers.removeModifier(Modifiers.FIELD);									
-									if( modifiers.isImmutable() )
-										modifiers.addModifier(Modifiers.IMMUTABLE);																		
-									if( modifiers.isSet() )
-										modifiers.removeModifier(Modifiers.SET);
-									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
-									methodType.addReturn(modifiedType);									
-									classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
-								}								
-							}
-							
-							if( fieldModifiers.isSet() && setterCount == 0 )
-							{
-								if( setterCollision > 0 )								
-									addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot replace a non-set method with an indistinguishable signature" );
-								else
-								{
-									ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-									methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
-									methodNode.setImage(field.getKey());
-									methodNode.setType(node.getType());
-									MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
-									Modifiers modifiers = new Modifiers(fieldModifiers);
-									//is it even possible to have an immutable or readonly set?
-									if( modifiers.isImmutable() )
-										addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for an immutable field" );										
+						for( MethodSignature signature : methods) {
+							if( signature.getModifiers().isGet() )
+								getterCount++;
+							else if( signature.getModifiers().isSet() )
+								setterCount++;
+							else if( signature.getParameterTypes().isEmpty() )
+								getterCollision++;
+							else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().equals(signature.getParameterTypes().get(0).getType())  )
+								setterCollision++;
+						}
+						
+						if( fieldModifiers.isGet() && getterCount == 0 ) {
+							if( getterCollision > 0 )								
+								addError(node, Error.INVALID_MODIFIER, "Default get property " +  field.getKey() + " cannot replace a non-get method with an indistinguishable signature" );
+							else {
+								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
+								//default get is readonly
+								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);														
+								methodNode.setImage(field.getKey());
+								methodNode.setType(node.getType());
+								MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
+								Modifiers modifiers = new Modifiers(fieldModifiers);
+								modifiers.removeModifier(Modifiers.GET);
+								modifiers.removeModifier(Modifiers.FIELD);									
+								if( modifiers.isImmutable() )
+									modifiers.addModifier(Modifiers.IMMUTABLE);																		
+								if( modifiers.isSet() )
 									modifiers.removeModifier(Modifiers.SET);
-									modifiers.removeModifier(Modifiers.FIELD);									
-									modifiers.addModifier(Modifiers.ASSIGNABLE);
-									if( modifiers.isGet() )
-										modifiers.removeModifier(Modifiers.GET);
-									if( modifiers.isWeak() )
-										modifiers.removeModifier(Modifiers.WEAK);
-									SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
-									methodType.addParameter("value", modifiedType );									
-									classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
-								}								
-							}
-						}						
-					}
+								SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
+								methodType.addReturn(modifiedType);									
+								classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
+							}								
+						}
+						
+						if( fieldModifiers.isSet() && setterCount == 0 )
+						{
+							if( setterCollision > 0 )								
+								addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot replace a non-set method with an indistinguishable signature" );
+							else
+							{
+								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
+								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
+								methodNode.setImage(field.getKey());
+								methodNode.setType(node.getType());
+								MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
+								Modifiers modifiers = new Modifiers(fieldModifiers);
+								//is it even possible to have an immutable or readonly set?
+								if( modifiers.isImmutable() )
+									addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for an immutable field" );										
+								modifiers.removeModifier(Modifiers.SET);
+								modifiers.removeModifier(Modifiers.FIELD);									
+								modifiers.addModifier(Modifiers.ASSIGNABLE);
+								if( modifiers.isGet() )
+									modifiers.removeModifier(Modifiers.GET);
+								if( modifiers.isWeak() )
+									modifiers.removeModifier(Modifiers.WEAK);
+								SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
+								methodType.addParameter("value", modifiedType );									
+								classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
+							}								
+						}
+					}						
 				}
 			}
 		}
+		
 	}	
 	
 	private Map<Type,Node> instantiateTypeParameters( Map<Type,Node> nodeTable ) {		

@@ -31,13 +31,12 @@ public class TypeChecker {
 	 * @throws ConfigurationException 
 	 */
 	public List<Node> typeCheck(File file, boolean useSourceFiles) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
-	{		
-		HashMap<Package, HashMap<String, Type>> typeTable = new HashMap<Package, HashMap<String, Type>>();
-		Package packageTree = new Package(typeTable);
+	{	
+		Package packageTree = new Package();
 		ArrayList<String> importList = new ArrayList<String>();
 		
 		//collector looks over all files and creates types for everything needed
-		TypeCollector collector = new TypeCollector(typeTable, importList, packageTree, useSourceFiles);
+		TypeCollector collector = new TypeCollector(importList, packageTree, useSourceFiles);
 		//return value is the top node for the class we are compiling		
 		Map<Type, Node> nodeTable = collector.collectTypes( file );
 		Type mainType = collector.getMainType();
@@ -48,11 +47,11 @@ public class TypeChecker {
 		//All types with type parameters (except for declarations) are UninitializedTypes
 		//Extends and implements lists
 				
-		TypeUpdater updater = new TypeUpdater(typeTable, importList, packageTree);
+		TypeUpdater updater = new TypeUpdater(importList, packageTree);
 		nodeTable = updater.update( nodeTable );
 		
 		
-		StatementChecker checker = new StatementChecker(typeTable, importList, packageTree );		
+		StatementChecker checker = new StatementChecker(importList, packageTree);		
 				
 		List<Node> allNodes = new ArrayList<Node>();
 		

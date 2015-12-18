@@ -62,8 +62,8 @@ public class TypeCollector extends BaseChecker {
 	
 	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	public TypeCollector(HashMap< Package, HashMap<String, Type>> typeTable, ArrayList<String> importList, Package p, boolean useSourceFiles) throws ConfigurationException {		
-		super(typeTable, importList, p);
+	public TypeCollector(ArrayList<String> importList, Package p, boolean useSourceFiles) throws ConfigurationException {		
+		super(importList, p);
 		this.useSourceFiles = useSourceFiles;
 		config = Configuration.getConfiguration();
 	}	
@@ -186,28 +186,20 @@ public class TypeCollector extends BaseChecker {
 			String name = stripExtension(file.getCanonicalPath());			
 			uncheckedFiles.add(name);
 			standardDependencies.add(name);
-		}		
+		}
 		
-		/*
-		
-		//add io imports
+		//add io imports (necessary for console programs)		
 		File io = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "io" );
 		if( !io.exists() )
-			throw new ConfigurationException("Invalid path to shadow:io: " + io.getPath());
+			throw new ConfigurationException("Invalid path to shadow:standard: " + io.getCanonicalPath());
 		
-		imports = io.listFiles( filter );
-		for( File file :  imports )			
-			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
-		
-		//add utility imports
-		File utility = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "utility" );
-		if( !utility.exists() )
-			throw new ConfigurationException("Invalid path to shadow:utility: " + utility.getPath());
-		
-		imports = utility.listFiles( filter );
-		for( File file :  imports )			
-			uncheckedFiles.add(stripExtension(file.getCanonicalPath()));
-		*/				
+		imports = standard.listFiles( filter );
+		for( File file :  imports ) {
+			String name = stripExtension(file.getCanonicalPath());			
+			uncheckedFiles.add(name);
+			standardDependencies.add(name);
+		}
+				
 		while(!uncheckedFiles.isEmpty()) {			
 			String canonical = uncheckedFiles.first();
 			uncheckedFiles.remove(canonical);	
@@ -236,9 +228,8 @@ public class TypeCollector extends BaseChecker {
 			ShadowParser parser = new ShadowFileParser(canonicalFile);				
 			currentFile = canonicalFile;
 		    Node node = parser.CompilationUnit();
-		    		    
-		    HashMap<Package, HashMap<String, Type>> otherTypes = new HashMap<Package, HashMap<String, Type>> ();			    
-			TypeCollector collector = new TypeCollector(otherTypes, new ArrayList<String>(), new Package(otherTypes), useSourceFiles);
+		    			    
+			TypeCollector collector = new TypeCollector(new ArrayList<String>(), new Package(), useSourceFiles);
 			collector.currentFile = currentFile; //for now, so that we have a file whose directory we can check
 			walker = new ASTWalker( collector );		
 			walker.walk(node);	
@@ -254,29 +245,22 @@ public class TypeCollector extends BaseChecker {
 			
 			files.put(canonical, node);
 			
-			//copy other types into our package tree				
-			for( Package p : otherTypes.keySet() )
-			{
-				//if package already exists, it won't be recreated
-				Package newPackage = packageTree.addQualifiedPackage(p.getQualifiedName(), typeTable);
-				try {	
-					HashMap<String, Type> types = otherTypes.get(p);
-					newPackage.addTypes( types  );					
-					
-					if( mainType != null && newPackage == packageTree && mainType.getPackage() != packageTree  ) {
+			//copy types from other collector into our package tree	
+			for( Type type : collector.packageTree ) {
+				try {				
+					packageTree.addQualifiedPackage(type.getPackage().toString()).addType(type);					
+					if( mainType != null && type.getPackage() == packageTree && mainType.getPackage() != packageTree  ) {
 						//imported class has default package but the main type doesn't
 						//the only classes without a package that will be imported will be in the same directory as the main type
 						//implication: classes in the same directory have different packages
-						for(Type type : types.values()) {
-							String message = "Type " + type + " belongs to the default package, but types defined in the same directory belong to other packages";
-							addWarning(Error.MISMATCHED_PACKAGE, message);
-						}
+						String message = "Type " + type + " belongs to the default package, but types defined in the same directory belong to other packages";
+						addWarning(Error.MISMATCHED_PACKAGE, message);
 					}											
 				}
 				catch(PackageException e) {
 					addError(Error.INVALID_PACKAGE, e.getMessage() );				
 				}
-			}
+			}			
 			
 			//copy any errors into our error list
 			if( collector.getErrorCount() > 0 )
@@ -360,7 +344,7 @@ public class TypeCollector extends BaseChecker {
 			if( currentType == null )
 			{
 				String name = node.jjtGetChild(0).getImage();									
-				currentPackage = packageTree.addQualifiedPackage(name, typeTable);
+				currentPackage = packageTree.addQualifiedPackage(name);
 			}
 			else
 			{
