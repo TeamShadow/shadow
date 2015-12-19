@@ -25,6 +25,7 @@ public class Arguments {
 	public static final String OUTPUT			= "o";
 	public static final String VERBOSE			= "v";
 	public static final String RECOMPILE		= "f";
+	public static final String INFORMATION		= "i";
 	
 	// Recognized long arguments
 	private static final String CONFIG_LONG 	= "config";
@@ -34,6 +35,7 @@ public class Arguments {
 	private static final String OUTPUT_LONG		= "output";
 	private static final String VERBOSE_LONG	= "verbose";
 	private static final String RECOMPILE_LONG  = "force-recompile";
+	private static final String INFORMATION_LONG	= "information";
 	
 	private CommandLine commandLine;
 	
@@ -54,6 +56,11 @@ public class Arguments {
 			printHelp();
 			return;
 		}
+		
+		if( commandLine.hasOption(INFORMATION)) {
+			printInformation();
+			return;
+		}
 
 		// Ensure exactly one source file is specified (and that it ends in .shadow)
 		if( commandLine.getArgs().length > 1 )
@@ -64,34 +71,29 @@ public class Arguments {
 			throw new ConfigurationException("Source files must end in \".shadow\"");
 	}
 	
-	public boolean hasOption(String option) {
-		
+
+	public boolean hasOption(String option) {		
 		return commandLine.hasOption(option);
 	}
 
-	public String getMainFileArg() {
-		
+	public String getMainFileArg() {		
 		return commandLine.getArgs()[0];
 	}
 	
-	public String getConfigFileArg() {
-		
+	public String getConfigFileArg() {		
 		return commandLine.getOptionValue(CONFIG);
 	}
 	
-	public String getOutputFileArg() {
-		
+	public String getOutputFileArg() {		
 		return commandLine.getOptionValue(OUTPUT);
 	}
 	
-	public static Options getOptions() {
-		
+	public static Options getOptions() {		
 		return compilerOptions;
 	}
 	
 	/** Create an Options object for parsing the command line. */
-	private static Options createOptions()
-	{
+	private static Options createOptions() {
 		Options options = new Options();
 		
 		// Build/add options with arguments
@@ -116,14 +118,21 @@ public class Arguments {
 		options.addOption(new Option(TYPECHECK, TYPECHECK_LONG, false, "Parse and type-check the Shadow files"));
 		options.addOption(new Option(NO_LINK, NO_LINK_LONG, false, "Compile Shadow files but do not link"));
 		options.addOption(new Option(VERBOSE, VERBOSE_LONG, false, "Print detailed information about the compilation process"));
-		options.addOption(new Option(RECOMPILE, RECOMPILE_LONG, false, "Recompiles all source files, even if unnecessary"));
-		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
+		options.addOption(new Option(RECOMPILE, RECOMPILE_LONG, false, "Recompile all source files, even if unnecessary"));
+		options.addOption(new Option(HELP, HELP_LONG, false, "Display command line options and exit"));
+		options.addOption(new Option(INFORMATION, INFORMATION_LONG, false, "Display information about the compiler"));
 		
 		return options;
 	}
 	
-	public static void printHelp() 
-	{
+	public static void printHelp() {
 		new HelpFormatter().printHelp("shadowc <mainSource.shadow> [-o <output>] [-c <config.xml>]", Arguments.getOptions());
+	}
+	
+	public static void printInformation() {
+		System.out.println("Shadow Information:");
+		System.out.println("  shadowc version " + Main.VERSION);
+		System.out.println();
+		System.out.println(Configuration.getLLVMInformation());		
 	}
 }

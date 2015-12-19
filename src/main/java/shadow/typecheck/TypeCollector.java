@@ -527,7 +527,7 @@ public class TypeCollector extends BaseChecker {
 	
 	public boolean addImport( String name )
 	{
-		String separator = File.separator; // Hopefully platform independent
+		String separator = File.separator; // Hopefully platform independent		
 		if( separator.equals("\\"))
 			separator = "\\\\";
 		String path = name.replaceAll(":", separator);
@@ -538,9 +538,9 @@ public class TypeCollector extends BaseChecker {
 		if (path.startsWith("shadow")) {
 			importPaths = new ArrayList<Path>();
 			importPaths.add(config.getSystemImport());
-		} else {
-			importPaths = config.getImports();
 		}
+		else 
+			importPaths = config.getImports();
 		
 		boolean success = false;				
 		

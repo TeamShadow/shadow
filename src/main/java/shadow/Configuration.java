@@ -1,6 +1,7 @@
 package shadow;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -210,23 +211,18 @@ public class Configuration {
 		if( systemPath == null )
 			systemPath = getRunningDirectory();
 		
-		if( importPaths == null) {
+		if( importPaths == null)
 			importPaths = new ArrayList<Path>();
-		}
 		
 		// The import paths list must contain an "empty" path that can later be
 		// resolved against source files
-		importPaths.add(Paths.get("./"));
-		
-		
+		importPaths.add(Paths.get("." + File.separator));
 	}
 	
 	/** Parses a config file and fills the corresponding fields */
 	private void parse(Path configFile) {
 		
 		try {
-			
-			
 			JAXBContext jaxbContext = JAXBContext.newInstance(Shadow.class);
 	 
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -255,25 +251,21 @@ public class Configuration {
 		}
 	}
 	
-	public void setArch(int arch) {
-		
+	public void setArch(int arch) {		
 		if(this.arch == 0)
 			this.arch = arch;
 	}
 	
-	public int getArch() {
-		
+	public int getArch() {		
 		return arch;
 	}
 	
-	public void setOs(String os) {
-		
+	public void setOs(String os) {		
 		if(this.os == null)
 			this.os = os;
 	}
 
-	public String getOs() {
-		
+	public String getOs() {		
 		return os;
 	}
 
@@ -282,8 +274,7 @@ public class Configuration {
 			addImport(path);
 	}
 	
-	public void addImport(String importPath) {
-		
+	public void addImport(String importPath) {		
 		if ( importPaths == null )
 			importPaths = new ArrayList<Path>();
 		
@@ -293,41 +284,35 @@ public class Configuration {
 		importPaths.add(newImportPath);
 	}
 
-	public List<Path> getImports() {
-		
+	public List<Path> getImports() {		
 		return importPaths;
 	}
 
-	public void setSystemImport(String systemImportPath) {
-		
+	public void setSystemImport(String systemImportPath) {		
 		if(systemPath == null) {
 			systemPath = Paths.get(systemImportPath);
 			systemPath = configFile.getParent().resolve(systemPath);
 		}
 	}
 	
-	public Path getSystemImport() {
-		
+	public Path getSystemImport() {		
 		return systemPath;
 	}
 	
-	public void setLinkCommand(String linkCommand) {
-		
+	public void setLinkCommand(String linkCommand) {		
 		if( this.linkCommand == null ) {			
 			this.linkCommand = new ArrayList<String>();
 			this.linkCommand.addAll(Arrays.asList(linkCommand.split("\\s+")));
 		}
 	}
 	
-	public List<String> getLinkCommand(Job currentJob) {
-		
+	public List<String> getLinkCommand(Job currentJob) {		
 		// Merge the output commands with the linker commands
 		linkCommand.addAll(currentJob.getOutputCommand());
 		return linkCommand;
 	}
 	
-	public void setTarget(String target) {
-		
+	public void setTarget(String target) {		
 		if( this.target == null )
 			this.target = target;
 	}
@@ -337,8 +322,7 @@ public class Configuration {
 	}
 	
 	/** Gets the directory within which the compiler is currently running */
-	public static Path getRunningDirectory() throws ConfigurationException {
-		
+	public static Path getRunningDirectory() throws ConfigurationException {		
 		try {
 			URI path = Main.class.getProtectionDomain().getCodeSource().getLocation().toURI();
 			return Paths.get(path).getParent();
@@ -352,32 +336,53 @@ public class Configuration {
 	}
 	
 	/** Returns the target platform to be used by the LLVM compiler */
-	public static String getDefaultTarget() throws ConfigurationException, IOException {
+	public static String getDefaultTarget() throws ConfigurationException {
 		// Some reference available here:
 		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
 		
 		// Calling 'llc --version' for current target information
 		// Note: Most of the LLVM tools also have this option
-		Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-		String versionOutput = "";
-		String line = null;
-		while( (line = reader.readLine()) != null ) {
-		   versionOutput += line + "\n";
+		try {
+			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	
+			String versionOutput = "";
+			String line = null;
+			while( (line = reader.readLine()) != null )
+			   versionOutput += line + System.lineSeparator();			
+			
+			// Create the regular expression required to find the target "triple"
+			Pattern pattern = Pattern.compile("(Default target:\\s)([\\w\\-]+)");
+			Matcher matcher = pattern.matcher(versionOutput);
+			
+			if( matcher.find() )
+				return matcher.group(2);
+			else
+				throw new ConfigurationException(
+						"Unable to find target in 'llc --version' output:" + System.lineSeparator() 
+						+ versionOutput);
 		}
-		
-		// Create the regular expression required to find the target "triple"
-		Pattern pattern = Pattern.compile("(Default target:\\s)([\\w\\-]+)");
-		Matcher matcher = pattern.matcher(versionOutput);
-		
-		if( matcher.find() ) {
-			return matcher.group(2);
+		catch(IOException e) {
+			throw new ConfigurationException("LLVM installation not found!"); 
 		}
-		else {
-			throw new ConfigurationException(
-					"Unable to find target in 'llc --version' output:\n" 
-					+ versionOutput);
+	}
+	
+	public static String getLLVMInformation() {
+		// Calling 'llc -version' for LLVM information
+		// Note: Most of the LLVM tools also have this option
+		try {		
+			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	
+			String information = "";
+			String line = null;
+			while( (line = reader.readLine()) != null && !line.isEmpty() )
+			   information += line + System.lineSeparator();
+			
+			return information;
+		}
+		catch(IOException e) {
+			return "LLVM installation not found!"; 
 		}
 	}
 }

@@ -176,7 +176,7 @@ public class DocumentationArguments
 
 		options.addOption(argsOption);
 		options.addOption(configOption);
-		options.addOption(new Option(HELP, HELP_LONG, false, "Print this help message"));
+		options.addOption(new Option(HELP, HELP_LONG, false, "Display command line options and exit"));
 		options.addOption(outputOption);
 		//options.addOption(templateOption);
 		options.addOption(new Option(VERBOSE, VERBOSE_LONG, false, "Print detailed information about the documentation process"));

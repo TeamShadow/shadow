@@ -39,6 +39,9 @@ import shadow.typecheck.type.Type;
  */
 public class Main {
 	
+	// Version of the Shadow compiler
+	public static final String VERSION 				= "0.6";
+		
 	// These are the error codes returned by the compiler
 	public static final int NO_ERROR				=  0;
 	public static final int FILE_NOT_FOUND_ERROR	= -1;
@@ -111,6 +114,10 @@ public class Main {
 		
 		// Exit if help was requested (Arguments handles printing)
 		if (compilerArgs.hasOption(Arguments.HELP))
+			return;
+		
+		// Exit if information was requested (Arguments handles printing)
+		if (compilerArgs.hasOption(Arguments.INFORMATION))
 			return;
 		
 		// Detect and establish the current settings based on the arguments
@@ -327,22 +334,11 @@ public class Main {
 		}
 	}
 	
-	//private static Set<Type> getAllReferencedTypes()
-
 	private static void addToLink( Type type, File file, List<String> linkCommand ) throws IOException, ShadowException {
 		
 		String name = typeToFileName(type);
 		File llvmFile = new File(file.getParentFile(), name + ".ll");
 		File nativeFile = new File(file.getParentFile(), name + ".native.ll");
-		
-		/*
-		for (Type referenced : type.getReferencedTypes()  ) {
-			if( referenced.isFullyInstantiated() )
-				generics.add(referenced);
-			else if( referenced instanceof ArrayType )
-				arrays.add((ArrayType)referenced);
-		}
-		*/		
 
 		if( llvmFile.exists() )
 			linkCommand.add(llvmFile.getCanonicalPath());
@@ -393,8 +389,8 @@ public class Main {
 	}
 	
 	/** 
-	 * Finds the standard file/class name for a primitive type (e.g. uint to 
-	 * UInt) 
+	 * Finds the standard file/class name for a type, fixing capitalization 
+	 * for primitive types (e.g. uint toUInt). 
 	 */
 	private static String typeToFileName(Type type) {
 		
