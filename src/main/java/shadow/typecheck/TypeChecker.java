@@ -57,11 +57,8 @@ public class TypeChecker {
 		
 		//only add nodes for outer types
 		for( Node node : nodeTable.values())
-			if( !node.getType().hasOuter() ) {
+			if( !node.getType().hasOuter() )
 				allNodes.add(node);
-				//genericClasses.addAll(node.getType().getGenericClasses());
-				//arrayClasses.addAll(node.getType().getArrayClasses());
-			}
 		
 		// do real typechecking, which updates referenced types
 		for(Node node: allNodes) {	

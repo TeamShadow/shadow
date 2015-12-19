@@ -594,18 +594,19 @@ public class TypeCollector extends BaseChecker {
 				{
 					File shadowVersion;
 					File metaVersion;
+					String fixedPath;
 				
 					if( path.startsWith("default"))
 					{
-						path = path.replaceFirst("default@", "");
-						shadowVersion = new File( currentFile.getParent(),  path + ".shadow");
-						metaVersion = new File( currentFile.getParent(),  path + ".meta");
+						fixedPath = path.replaceFirst("default@", "");
+						shadowVersion = new File( currentFile.getParent(),  fixedPath + ".shadow");
+						metaVersion = new File( currentFile.getParent(),  fixedPath + ".meta");
 					}
 					else
 					{
-						path = path.replaceAll("@", separator);
-						shadowVersion = new File( importPath.toFile(), path + ".shadow" );
-						metaVersion = new File( importPath.toFile(), path + ".meta" );
+						fixedPath = path.replaceAll("@", separator);
+						shadowVersion = new File( importPath.toFile(), fixedPath + ".shadow" );
+						metaVersion = new File( importPath.toFile(), fixedPath + ".meta" );
 					}
 					
 					try
