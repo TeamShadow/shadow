@@ -6,3 +6,4 @@
 /ShadowParserTreeConstants.java
 /ShadowParserVisitor.java
 /TokenMgrError.java
+/JavaCharStream.java

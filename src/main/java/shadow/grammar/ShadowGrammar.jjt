@@ -30,14 +30,12 @@ public class ShadowParser {
 		EXCEPTION,
 		INTERFACE,
 		SINGLETON,
-		//VIEW
 	};
 
    private static final Logger logger = Loggers.PARSER;
    	public void debugPrint(String str) {
         logger.trace(str + ": " + token);
     }
-
 
     private void appendDocumentation(DocumentationBuilder docBuilder)    {
       	if (docBuilder != null)
@@ -224,13 +222,10 @@ TOKEN :
   >
 |
   < SHORT_LITERAL:
-  	("-")?
-  	(  	  
         <DECIMAL_LITERAL> ["s","S"]
       | <HEX_LITERAL> ["s","S"]
       | <BINARY_LITERAL> ["s","S"]
-      | <OCTAL_LITERAL> ["s","S"]
-    )
+      | <OCTAL_LITERAL> ["s","S"]    
   >  
 |   
   < USHORT_LITERAL:
@@ -240,8 +235,7 @@ TOKEN :
       | <OCTAL_LITERAL> ["u","U"]["s","S"]
   >  
 |
-  < INT_LITERAL:
-  	  	   
+  < INT_LITERAL:  	  	   
         <DECIMAL_LITERAL> (["i","I"])?
       | <HEX_LITERAL> (["i","I"])?
       | <BINARY_LITERAL> (["i","I"])?
@@ -256,8 +250,7 @@ TOKEN :
       | <OCTAL_LITERAL> ["u","U"](["i","I"])?
   >
 |
-  < LONG_LITERAL:
-  		   
+  < LONG_LITERAL:  		   
         <DECIMAL_LITERAL> ["l","L"]
       | <HEX_LITERAL> ["l","L"]
       | <BINARY_LITERAL> ["l","L"]
@@ -321,7 +314,7 @@ TOKEN :
       "\""
   >
 |
-  < BAD_STRING_LITERAL:
+  < BAD_STRING_LITERAL: //used to detect literals that contain newlines
       "\""
       (   (~["\"","\\"])
         | ("\\"
@@ -480,8 +473,7 @@ ASTCompilationUnit CompilationUnit():
   ( ImportDeclaration() )*  
   modifiers = Modifiers(docBuilder)
   ( ClassOrInterfaceDeclaration(modifiers, docBuilder)
-  | EnumDeclaration(modifiers, docBuilder)  
- // | ViewDeclaration(modifiers)
+  | EnumDeclaration(modifiers, docBuilder)
   )//only one declaration per file
    
   <EOF>
@@ -510,8 +502,7 @@ Modifiers Modifiers(DocumentationBuilder docBuilder):
 {
    Modifiers modifiers = new Modifiers();
    debugPrint("MODIFIERS");   
-   appendDocumentation(docBuilder);
-	    
+   appendDocumentation(docBuilder);	    
 }
 {
  ( 
@@ -530,8 +521,7 @@ Modifiers Modifiers(DocumentationBuilder docBuilder):
   |	"set" { modifiers.checkAndAdd(Modifiers.SET, jjtThis); }
   | "constant" { modifiers.checkAndAdd(Modifiers.CONSTANT, jjtThis); }
   | "locked" { modifiers.checkAndAdd(Modifiers.LOCKED, jjtThis); }
-  )
-	
+  )	
  )*
 
  {
@@ -539,37 +529,6 @@ Modifiers Modifiers(DocumentationBuilder docBuilder):
     return modifiers;
  }
 }
-
-/*
- * Declaration syntax follows.
- */
-/*
-void ViewDeclaration(Modifiers modifiers):
-{
-	debugPrint("VIEW DECLARATION");
-	Token t;
-
-   modifiers.checkViewModifiers(jjtThis);	
-}
-{
-	"view"
-	[ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //can we specify packages for views?
-	t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers);  }
-	"{"        
-        ( ViewBodyDeclaration() )+
-    "}"
-}
-
-void ViewBodyDeclaration():
-{
-	debugPrint("VIEW BODY DECLARATION");
-	Token t;
-}
-{	
-	( LOOKAHEAD(PrimitiveType() "[") StaticArrayType() | PrimitiveType() ) t = <IDENTIFIER> ";"
-	{ jjtThis.setImage(t.image);}
-}
-*/
 
 void ClassOrInterfaceDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 {
@@ -608,41 +567,11 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers, DocumentationBuilder docBu
   [ TypeParameters() ]
   [ Version() ]
   [ IsList() ]
-  //[ ImplementsList(jjtThis.getKind()) ]
   ClassOrInterfaceBody(jjtThis.getKind())
   {
     jjtThis.setLineStart(t.beginLine);
     jjtThis.setColumnStart(t.beginColumn);  }
 }
-
-/*
-void ExtendsList(TypeKind kind):
-{
-   boolean extendsMoreThanOne = false;
-   debugPrint("EXTENDS LIST");
-}
-{ 
-   "extends" ClassOrInterfaceType()
-   ( "," ClassOrInterfaceType() { extendsMoreThanOne = true; } )*
-   {
-      if (extendsMoreThanOne && kind != TypeKind.INTERFACE)
-         throw new ParseException("A class cannot extend more than one other class",jjtThis);
-   }
-}
-
-void ImplementsList(TypeKind kind):
-{ debugPrint("IMPLEMENTS"); }
-{
-   "implements" ClassOrInterfaceType()
-   ( "," ClassOrInterfaceType() )*
-   {
-      if (kind == TypeKind.INTERFACE)
-         throw new ParseException("An interface cannot implement other interfaces",jjtThis);     
-      if( kind == TypeKind.EXCEPTION )
-      	throw new ParseException("An exception cannot implement interfaces",jjtThis);
-   }
-}
-*/
 
 void Version():
 { debugPrint("VERSION"); }
@@ -657,20 +586,22 @@ void EnumDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
 	modifiers.checkEnumModifiers(jjtThis);	
 }
 {
-{
-  jjtThis.setModifiers(modifiers);
-  jjtThis.setDocumentationBuilder(docBuilder);
-}
-
-  "enum"
-  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ]
-  t = <IDENTIFIER> { jjtThis.setImage(t.image);  }
-  [ IsList() ]
-  EnumBody()
+	{
+	  jjtThis.setModifiers(modifiers);
+	  jjtThis.setDocumentationBuilder(docBuilder);
+	}
+	"enum"
+	[ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ]
+	t = <IDENTIFIER> { jjtThis.setImage(t.image);  }
+	[ IsList() ]
+	EnumBody()
 }
 
 void EnumBody():
-{ debugPrint("ENUM BODY"); Token t; }
+{
+  debugPrint("ENUM BODY");
+  Token t;
+}
 {
    "{"
    EnumConstant() ( "," EnumConstant() )*
@@ -690,7 +621,10 @@ void EnumConstant():
 }
 
 void TypeParameters():
-{ debugPrint("TYPE PARAMETERS"); Token t; }
+{
+  debugPrint("TYPE PARAMETERS");
+  Token t;
+}
 {
    "<" TypeParameter() ( "," TypeParameter() )* t = ">" { jjtThis.setEndToken(t); }
 }
@@ -706,14 +640,19 @@ void TypeParameter():
      jjtThis.addModifier(Modifiers.TYPE_NAME);   }
 }
 
-void IsList():
-{ debugPrint("IS LIST"); }
+void IsList(): //used instead of extends or implements in Shadow
+{
+  debugPrint("IS LIST");
+}
 {
    "is" ClassOrInterfaceType() ( "and" ClassOrInterfaceType() )*
 }
 
 void ClassOrInterfaceBody(TypeKind kind):
-{ debugPrint("CLASS OR INTERFACE BODY"); Token t; }
+{
+  debugPrint("CLASS OR INTERFACE BODY");
+  Token t;
+}
 {
   "{" ( ClassOrInterfaceBodyDeclaration(kind) )* t = "}"
   {    jjtThis.setEndToken(t);
@@ -727,7 +666,7 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
   debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {  
-// Just get all the modifiers out of the way. If you want to do
+// Get all the modifiers out of the way. If you want to do
 // more checks, pass the modifiers down to the member
   modifiers = Modifiers(docBuilder)
   (  ClassOrInterfaceDeclaration(modifiers, docBuilder)
@@ -736,7 +675,6 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
     | LOOKAHEAD( "destroy" ) DestroyDeclaration(modifiers, docBuilder)
     | LOOKAHEAD( FieldDeclaration(modifiers, docBuilder) ) FieldDeclaration(modifiers, docBuilder) 
     | MethodDeclaration(modifiers, docBuilder)
-    //| ViewDeclaration(modifiers)
   )
 }
 
@@ -766,7 +704,10 @@ void VariableDeclarator():
 }
 
 void ArrayInitializer():
-{ debugPrint("ARRAY INITIALIZER"); Token t; }
+{
+  debugPrint("ARRAY INITIALIZER");
+  Token t;
+}
 {  	
   LOOKAHEAD(2) "{" ArrayInitializer() ( LOOKAHEAD(2) "," ArrayInitializer() )*  [ "," ] t = "}" { jjtThis.setEndToken(t); }
 | "{" ConditionalExpression() ( LOOKAHEAD(2) "," ConditionalExpression() )*  [ "," ] t = "}" { jjtThis.setEndToken(t); }
@@ -781,18 +722,6 @@ void MethodDeclarator(boolean isLocal):
 	{ jjtThis.setLocal(isLocal); }  
   t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters(isLocal) "=>" ResultTypes()
 }
-
-
-/*
-void InlineMethodDeclarator():
-{
-	debugPrint("INLINE METHOD DECLARATOR");
-	Token t;
-}
-{
-  t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters(true) "=>" InlineResults()
-}
-*/
 	
 void InlineResults():
 {
@@ -808,13 +737,15 @@ void FormalParameters(boolean isLocal):
 {
   debugPrint("FORMAL PARAMETERS");
   Token t;   
- }
+}
 {
-	{ jjtThis.setLocal(isLocal); }
-  "(" [ FormalParameter() ( "," FormalParameter() )* ] t = ")"
-  {
-   jjtThis.setEndToken(t);
-  }
+	{
+		jjtThis.setLocal(isLocal);
+	}
+	"(" [ FormalParameter() ( "," FormalParameter() )* ] t = ")"
+	{
+		jjtThis.setEndToken(t);
+  	}
 }
 
 void FormalParameter():
@@ -896,12 +827,12 @@ void DestroyDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
     jjtThis.setDocumentationBuilder(docBuilder);
   }  
   // Modifiers matched in the caller
-  "destroy" //no (checked) exceptions from destroys!
+  "destroy" 
   ( Block() { jjtThis.setBlock(true); } | ";" )
 }
 
 void ExplicitCreateInvocation():
-{
+{  
   debugPrint("EXPLICIT CREATE INVOCATION");
 Token t;
 }
@@ -925,14 +856,14 @@ void Type(Modifiers modifiers):
     jjtThis.setModifiers(modifiers);
 }
 {
-   LOOKAHEAD(ReferenceType(Modifiers.NO_MODIFIERS)) ReferenceType(modifiers)
- //   |   LOOKAHEAD(PrimitiveType() "[") StaticArrayType()
+   LOOKAHEAD(ReferenceType(Modifiers.NO_MODIFIERS)) ReferenceType(modifiers) 
     |   PrimitiveType()
     |	FunctionType()
 }
 
 void ReferenceType(Modifiers modifiers):
-{ 	debugPrint("REFERENCE TYPE");
+{
+  	debugPrint("REFERENCE TYPE");
 	jjtThis.setModifiers(modifiers);
 	Token t;
 }
@@ -972,7 +903,10 @@ void ClassOrInterfaceTypeSuffix():
 }
 
 void TypeArguments():
-{ debugPrint("TYPE ARGUMENTS"); Token t;}
+{
+  debugPrint("TYPE ARGUMENTS");
+  Token t;
+}
 {
    "<" Type(Modifiers.NO_MODIFIERS) ( "," Type(Modifiers.NO_MODIFIERS) )* t = ">" { jjtThis.setEndToken(t); }
 }
@@ -984,28 +918,28 @@ void PrimitiveType():
 	Token t;
 }
 {
-
-(    
-  t = "boolean"
-| t = "byte"
-| t = "code"
-| t = "double"
-| t = "float"
-| t = "int"
-| t = "long"
-| t = "short"
-| t = "ubyte"
-| t = "uint" 
-| t = "ulong" 
-| t = "ushort" 
-)
-{
-  jjtThis.setImage(t.image);
-  jjtThis.addModifier(Modifiers.TYPE_NAME);}
+	(    
+	  t = "boolean"
+	| t = "byte"
+	| t = "code"
+	| t = "double"
+	| t = "float"
+	| t = "int"
+	| t = "long"
+	| t = "short"
+	| t = "ubyte"
+	| t = "uint" 
+	| t = "ulong" 
+	| t = "ushort" 
+	)
+	{
+	  jjtThis.setImage(t.image);
+	  jjtThis.addModifier(Modifiers.TYPE_NAME);	}
 }
 
 void ResultType():
-{ debugPrint("RESULT TYPE");
+{
+	debugPrint("RESULT TYPE");
 	Modifiers modifiers;
 }
 {
@@ -1051,7 +985,9 @@ void UnqualifiedName():
 }
 
 void NameList():
-{ debugPrint("NAME LIST"); }
+{
+  debugPrint("NAME LIST");
+}
 {
   ClassOrInterfaceType() ( "," ClassOrInterfaceType() )*
 }
@@ -1062,7 +998,9 @@ void NameList():
  */
 
 void AssignmentOperator():
-{ debugPrint("ASSIGNMENT OPERATOR"); }
+{
+  debugPrint("ASSIGNMENT OPERATOR");
+}
 {
     "="    { jjtThis.setImage("="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.EQUAL); }
   | "#="   { jjtThis.setImage("#="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.CAT); }
@@ -1161,7 +1099,7 @@ void ConcatenationExpression():
 }
 
 
-// Since shift & rotate are not single characters (see TAC Symbole2Operator code)
+// Since shift & rotate are not single characters (see TAC Symbol2Operator code)
 // we are using r & l for right & left shift and
 // R & L for right & left rotate
 void ShiftExpression():
@@ -1207,12 +1145,11 @@ void UnaryExpression():
  "#" { jjtThis.setImage("#"); } UnaryExpression()
 | "~" { jjtThis.setImage("~"); } UnaryExpression()
 | "!" { jjtThis.setImage("!"); } UnaryExpression()
-//| LOOKAHEAD(PrimaryExpression()) PrimaryExpression() //covers cases in which literals start with -
 | "-" { jjtThis.setImage("-"); } UnaryExpression()
 | LOOKAHEAD(FormalParameters(true) "=>") InlineMethodDefinition()
 | PrimaryExpression()
-| "++" {throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
-//ironically, -- is allowed, because it's the negation of a negation
+| "++" { throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
+//strangely, -- is allowed, because it's the negation of a negation
 }
 
 void InlineMethodDefinition():
@@ -1480,9 +1417,6 @@ void MethodCall():
     jjtThis.setEndToken(t);  }
 }
 
-
-
-
 void Literal() :
 {
 	debugPrint("LITERAL");
@@ -1510,7 +1444,9 @@ void Literal() :
 }
 
 void BooleanLiteral():
-{ debugPrint("BOOLEAN LITERAL"); }
+{
+  debugPrint("BOOLEAN LITERAL");
+}
 {    
   "true" { jjtThis.setTrue(); jjtThis.setImage("true"); }
 | "false" { jjtThis.setImage("false"); }
@@ -1518,14 +1454,17 @@ void BooleanLiteral():
 }
 
 void NullLiteral():
-{ debugPrint("NULL LITERAL"); }
+{
+  debugPrint("NULL LITERAL");
+}
 {
   "null" { jjtThis.setImage("null"); }
 }
 
 void Arguments():
-{ debugPrint("ARGUMENTS");
-Token t;
+{
+  debugPrint("ARGUMENTS");
+  Token t;
 }
 {
   "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
@@ -1538,7 +1477,9 @@ Token t;
  */
 
 void Statement():
-{ debugPrint("STATEMENT"); }
+{
+  debugPrint("STATEMENT");
+}
 {  
   AssertStatement()
 | EmptyStatement()
@@ -1557,13 +1498,18 @@ void Statement():
 }
 
 void AssertStatement():
-{ debugPrint("ASSERT STATEMENT"); }
+{
+  debugPrint("ASSERT STATEMENT");
+}
 {
   "assert" ConditionalExpression() [ "," ConditionalExpression() ] ";"
 }
 
 void Block():
-{ debugPrint("BLOCK"); Token t; }
+{
+  debugPrint("BLOCK");
+  Token t;
+}
 {
   "{" ( BlockStatement() )* t = "}"
   {
@@ -1586,8 +1532,7 @@ void LocalDeclaration():
   Modifiers modifiers;}
 {
   modifiers = Modifiers(null)    
-  (
-    //LOOKAHEAD(InlineMethodDeclaration(modifiers)) InlineMethodDeclaration(modifiers)
+  ( 
     LOOKAHEAD(LocalMethodDeclaration(modifiers)) LocalMethodDeclaration(modifiers)
   | LocalVariableDeclaration(modifiers) ";" )  }
 
@@ -1641,7 +1586,10 @@ void Expression() :
 }
 
 void SwitchStatement():
-{ debugPrint("SWITCH STATEMENT"); Token t; }
+{
+  debugPrint("SWITCH STATEMENT");
+  Token t;
+}
 {
   "switch" "(" ConditionalExpression() ")" "{"
     ( SwitchLabel() ( Statement() ) )+
@@ -1661,20 +1609,25 @@ void SwitchLabel():
 }
 
 void IfStatement():
-{ debugPrint("IF STATEMENT"); }
+{
+  debugPrint("IF STATEMENT");
+}
 {
   "if" "(" ConditionalExpression() ")" Statement() [ LOOKAHEAD(1) "else" Statement() ]
 }
 
 void WhileStatement():
-{ debugPrint("WHILE STATEMENT"); }
+{
+  debugPrint("WHILE STATEMENT");
+}
 {
   "while" "(" ConditionalExpression() ")" Statement()
 }
 
 void DoStatement():
-{ debugPrint("DO STATEMENT");
-	Token t;
+{
+  debugPrint("DO STATEMENT");
+  Token t;
 }
 {
   "do" Statement() "while" "(" ConditionalExpression() t = ")" ";"
@@ -1684,8 +1637,7 @@ void DoStatement():
 
 void ForeachStatement():
 {
-	debugPrint("FOREACH STATEMENT");
-	Token t;	
+	debugPrint("FOREACH STATEMENT");		
 }
 {
   "foreach" "(" ForeachInit() ")" Statement()
@@ -1705,7 +1657,9 @@ void ForeachInit():
 }
 
 void ForStatement() :
-{ debugPrint("FOR STATEMENT"); }
+{
+  debugPrint("FOR STATEMENT");
+}
 {
   "for" "(" [ ForInit() ] ";" ConditionalExpression() ";" [ ForUpdate() ] ")" Statement()
 }
@@ -1713,7 +1667,6 @@ void ForStatement() :
 void ForInit():
 {
 	debugPrint("FOR INIT");
-	Token t;
 	Modifiers modifiers;	
 }
 {
@@ -1722,17 +1675,22 @@ void ForInit():
 }
 
 void StatementExpressionList():
-{ debugPrint("STATEMENT EXPRESSION LIST"); }
+{
+  debugPrint("STATEMENT EXPRESSION LIST");
+}
 {
   StatementExpression() ( "," StatementExpression() )*
 }
 
 void ForUpdate():
-{ debugPrint("FOR UPDATE"); }
+{
+  debugPrint("FOR UPDATE");
+}
 {
   StatementExpressionList()
 }
 
+//no labeled break in Shadow
 void BreakOrContinueStatement():
 {	
 	debugPrint("BREAK OR CONTINUE STATEMENT");	
@@ -1744,7 +1702,9 @@ void BreakOrContinueStatement():
 }
 
 void ReturnStatement():
-{ debugPrint("RETURN STATEMENT"); }
+{
+  debugPrint("RETURN STATEMENT");
+}
 {
   "return"
   (
@@ -1754,48 +1714,60 @@ void ReturnStatement():
 }
 
 void ThrowStatement():
-{ debugPrint("THROW STATEMENT"); }
+{
+  debugPrint("THROW STATEMENT");
+}
 {
   "throw" ConditionalExpression() ";"
 }
 
 
-
-// for a simpler back end, a finally statement holds
-// the try, the catches, and the recover (even if no finally is used)
+/* For a simpler back end, a finally statement holds
+ * the try, the catches, and the recover (even if no finally is used)
+ */
 void FinallyStatement():
 /*
  * Semantic check required here to make sure that at least one
  * finally/recover/catch is present.
  */
-{ debugPrint("FINALLY STATEMENT"); }
+{
+  debugPrint("FINALLY STATEMENT");
+}
 {
   RecoverStatement()
   [ "finally" Block() ]
 }
 
 void RecoverStatement():
-{ debugPrint("RECOVER STATEMENT"); }
+{
+  debugPrint("RECOVER STATEMENT");
+}
 {
   CatchStatements()
   [ "recover" Block() ]
 }
 
 void CatchStatements():
-{ debugPrint("CATCH STATEMENTS"); }
+{
+  debugPrint("CATCH STATEMENTS");
+}
 {
   TryStatement()
   ( CatchStatement() )*
 }
 
 void CatchStatement():
-{ debugPrint("CATCH STATEMENT"); }
+{
+  debugPrint("CATCH STATEMENT");
+}
 { 
   "catch" "(" FormalParameter() ")" Block()
 }
 
 void TryStatement():
-{ debugPrint("TRY STATEMENT"); }
+{
+  debugPrint("TRY STATEMENT");
+}
 {
   "try" Block()
 }

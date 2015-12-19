@@ -8,7 +8,6 @@ package shadow.parser.javacc;
  */
 
 public
-@SuppressWarnings("all")
 class JavaCharStream
 {
   /** Whether parser is static. */
