@@ -19,7 +19,7 @@ class ASTAssignmentOperator extends SimpleNode {
     return visitor.visit(this, secondVisit);
   }
   
-  public enum AssignmentType {
+  public enum AssignmentKind {
 	  EQUAL("=", ""),
 	  CAT("#", "concatenate"),
 	  PLUS("+", "add"),
@@ -38,7 +38,7 @@ class ASTAssignmentOperator extends SimpleNode {
 	  private String operator;
 	  private String method;
 	  
-	  AssignmentType( String operator, String method )
+	  AssignmentKind( String operator, String method )
 	  {
 		  this.operator = operator;
 		  this.method = method;		  
@@ -55,13 +55,13 @@ class ASTAssignmentOperator extends SimpleNode {
 	  }
   }
   
-  protected AssignmentType assignmentType;
+  protected AssignmentKind assignmentType;
   
-  public void setAssignmentType(AssignmentType type) {
+  public void setAssignmentType(AssignmentKind type) {
 	this.assignmentType = type;  
   }
   
-  public AssignmentType getAssignmentType() {
+  public AssignmentKind getAssignmentType() {
 	  return this.assignmentType;
   }
 }

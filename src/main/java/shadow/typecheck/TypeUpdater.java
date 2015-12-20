@@ -60,8 +60,8 @@ public class TypeUpdater extends BaseChecker {
 	
 	private boolean isMeta = false;	
 	
-	public TypeUpdater(List<String> importList, Package packageTree) {
-		super(importList, packageTree);		
+	public TypeUpdater(Package packageTree) {
+		super(packageTree);		
 	}	
 	
 	//public void updateTypes(Map<String, Node> files) throws ShadowException, TypeCheckException

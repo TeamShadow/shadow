@@ -59,11 +59,11 @@ public class TypeCollector extends BaseChecker {
 	private Set<Type> initialFileTypes = new TreeSet<Type>();
 	private Configuration config;
 	private boolean useSourceFiles;
+	private List<String> importList = new ArrayList<String>(); // Holds all of the imports we know about 
+	private LinkedList<Object> importedItems = new LinkedList<Object>();	
 	
-	protected LinkedList<Object> importedItems = new LinkedList<Object>();	
-	
-	public TypeCollector(ArrayList<String> importList, Package p, boolean useSourceFiles) throws ConfigurationException {		
-		super(importList, p);
+	public TypeCollector(Package p, boolean useSourceFiles) throws ConfigurationException {		
+		super(p);		  
 		this.useSourceFiles = useSourceFiles;
 		config = Configuration.getConfiguration();
 	}	
@@ -229,7 +229,7 @@ public class TypeCollector extends BaseChecker {
 			currentFile = canonicalFile;
 		    Node node = parser.CompilationUnit();
 		    			    
-			TypeCollector collector = new TypeCollector(new ArrayList<String>(), new Package(), useSourceFiles);
+			TypeCollector collector = new TypeCollector(new Package(), useSourceFiles);
 			collector.currentFile = currentFile; //for now, so that we have a file whose directory we can check
 			walker = new ASTWalker( collector );		
 			walker.walk(node);	
@@ -263,11 +263,11 @@ public class TypeCollector extends BaseChecker {
 			}			
 			
 			//copy any errors into our error list
-			if( collector.getErrorCount() > 0 )
+			if( collector.errorList.size() > 0 )
 				errorList.addAll(collector.errorList);
 			
 			//copy any warnings
-			if( collector.getWarningCount() > 0 )
+			if( collector.warningList.size() > 0 )
 				warningList.addAll(collector.warningList);
 			
 			TreeSet<String> dependencySet = null;
@@ -277,7 +277,7 @@ public class TypeCollector extends BaseChecker {
 				dependencies.put(canonical, dependencySet);
 			}
 			
-			for( String _import : collector.getImportList() ) {
+			for( String _import : collector.importList ) {
 				if( !files.containsKey(_import) )
 					uncheckedFiles.add(_import);
 				
@@ -510,7 +510,7 @@ public class TypeCollector extends BaseChecker {
 			
 			try
 			{			
-				addType( type, currentPackage );
+				currentPackage.addType(type);
 			}
 			catch(PackageException e)
 			{
@@ -575,7 +575,7 @@ public class TypeCollector extends BaseChecker {
 						try 
 						{						
 							for( File file : matchingShadow )							
-									importList.add(stripExtension(file.getCanonicalPath()));
+								importList.add(stripExtension(file.getCanonicalPath()));
 															
 							for( File file : matchingMeta )
 							{
@@ -855,6 +855,7 @@ public class TypeCollector extends BaseChecker {
 		mainType = null;
 		initialFileTypes.clear();
 		importedItems.clear();	
+		importList.clear();
 		
 		Type.clearTypes();
 	}

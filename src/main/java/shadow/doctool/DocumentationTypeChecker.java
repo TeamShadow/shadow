@@ -23,12 +23,11 @@ public class DocumentationTypeChecker
 {
 	public static Set<Type> typeCheck(List<File> files) throws ShadowException, TypeCheckException, ParseException, IOException, ConfigurationException
 	{			
-		Package packageTree = new Package();
-		ArrayList<String> importList = new ArrayList<String>();
+		Package packageTree = new Package();		
 		
 		// The collector looks over all files and creates types for everything needed.
 		// It returns the root node for the class being compiled
-		TypeCollector collector = new TypeCollector(importList, packageTree, true);
+		TypeCollector collector = new TypeCollector(packageTree, true);
 		Map<Type, Node> nodeTable = collector.collectTypes(files);
 		
 		//Updates types, adding:
@@ -36,7 +35,7 @@ public class DocumentationTypeChecker
 		//Type parameters (including necessary instantiations)
 		//All types with type parameters (except for declarations) are UninitializedTypes
 		//Extends and implements lists
-		TypeUpdater updater = new TypeUpdater(importList, packageTree);
+		TypeUpdater updater = new TypeUpdater(packageTree);
 		nodeTable = updater.update(nodeTable);
 		
 		return collector.getInitialFileTypes();

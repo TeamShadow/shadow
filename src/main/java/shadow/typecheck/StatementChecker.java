@@ -15,7 +15,8 @@ import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.*;
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
+import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -43,8 +44,8 @@ public class StatementChecker extends BaseChecker {
 	protected LinkedList<HashMap<String, ModifiedType>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
 	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
 	
-	public StatementChecker(List<String> importList, Package packageTree ) {
-		super(importList, packageTree );		
+	public StatementChecker(Package packageTree ) {
+		super(packageTree );		
 		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
 		curPrefix = new LinkedList<Node>();			
 		tryBlocks = new LinkedList<ASTTryStatement>();
@@ -1215,11 +1216,93 @@ public class StatementChecker extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
-	
 
 	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
-		return typeResolution(node, secondVisit);
+		if( node.getType() != null ) // Optimization if type already determined.
+			return WalkType.NO_CHILDREN;		
+		
+		if( !secondVisit )
+			return WalkType.POST_CHILDREN;
+
+		Type type = null;
+	
+		// Type can be complex: package@Container<T, List<String>, String, Thing<K>>:Stuff<U>
+		for( int i = 0; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ ) {
+			Node child = node.jjtGetChild(i);
+			String typeName = child.getImage();
+			if( i == 0 ) { // Special case for first pass, might include package.				
+				if( child instanceof ASTUnqualifiedName ) {
+					i++;
+					child = node.jjtGetChild(i);
+					typeName += "@" + child.getImage();											
+				}					
+				type = lookupType(typeName);
+			}
+			else { // On later passes, get inner class from previous.
+				if( type instanceof ClassType ) 
+					type = ((ClassType)type).getInnerClass(typeName);
+				else
+					type = null;
+			}
+			
+			if(type == null) {
+				addError( Error.UNDEFINED_TYPE, "Type " + typeName +
+						" not defined in this context");			
+				type = Type.UNKNOWN;					
+			}
+			else {
+				if( !classIsAccessible( type, currentType ) )		
+					addError(Error.ILLEGAL_ACCESS, "Type " + type +
+							" not accessible from this context", type);
+				
+				if( child.jjtGetNumChildren() == 1 ) { // Contains type arguments.					
+					SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+					if( type.isParameterized() ) {		
+						SequenceType parameters = type.getTypeParameters();
+						if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER ) ) {
+							try {
+								type = type.replace(parameters, arguments);
+							}
+							catch (InstantiationException e) {
+								addError( Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " +
+										arguments.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) +
+										" do not match type parameters " +
+										parameters.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) );
+								type = Type.UNKNOWN;
+							}
+						}
+						else {						
+							addError( Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " +
+									arguments.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) +
+									" do not match type parameters " +
+									parameters.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) );
+							type = Type.UNKNOWN;
+						}
+					}
+					else {
+						addError( Error.UNNECESSARY_TYPE_ARGUMENTS,
+								"Type arguments supplied for non-parameterized type " + type,
+								type );
+						type = Type.UNKNOWN;
+					}										
+				}
+				else if( type.isParameterized() ) { // Parameterized but no parameters!
+					addError( Error.MISSING_TYPE_ARGUMENTS,
+							"Type arguments are not supplied for parameterized type " +
+							child.getImage());
+					type = Type.UNKNOWN;
+				}
+				
+				// After updating type parameters
+				if( currentType instanceof ClassType )
+					((ClassType)currentType).addReferencedType(type);
+			}
+		}
+
+		// Set the type now that it has been fully initialized.
+		node.setType( type );				
+		
+		return WalkType.POST_CHILDREN;
 	}
 	
 	public Object visit(ASTArguments node, Boolean secondVisit) throws ShadowException
@@ -1288,7 +1371,7 @@ public class StatementChecker extends BaseChecker {
 					addErrors(isValidInitialization(leftElement, rightElement));
 				}
 				else //otherwise simple assignment
-					addErrors(isValidAssignment(leftElement, rightElement, AssignmentType.EQUAL));
+					addErrors(isValidAssignment(leftElement, rightElement, AssignmentKind.EQUAL));
 			}
 		}
 
@@ -1316,7 +1399,7 @@ public class StatementChecker extends BaseChecker {
 				{
 					PropertyType getSetType = (PropertyType) leftType;
 					//here we have a chance to tell the type whether it will only be storing or doing both
-					if( assignment.getAssignmentType() == AssignmentType.EQUAL )
+					if( assignment.getAssignmentType() == AssignmentKind.EQUAL )
 						getSetType.setStoreOnly();
 					else
 						getSetType.setLoadStore();					

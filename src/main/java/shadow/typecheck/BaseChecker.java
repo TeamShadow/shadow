@@ -1,3 +1,20 @@
+/*
+ * Copyright 2015 Team Shadow
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 	
+ * 	    http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
 package shadow.typecheck;
 
 import java.io.BufferedReader;
@@ -6,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,22 +31,18 @@ import org.apache.logging.log4j.Logger;
 import shadow.Loggers;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.AST.AbstractASTVisitor;
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
 import shadow.parser.javacc.ASTClassOrInterfaceBody;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
-import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
-import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.Literal;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.parser.javacc.SimpleNode;
-import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -42,299 +54,374 @@ import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
+/**
+ * The <code>BaseChecker</code> class is an abstract class that other type-checking
+ * classes can inherit from. It stores a tree of all packages containing all types;
+ * references to the current package, the current type, and the current method;
+ * and lists of errors and warnings.
+ * 
+ * @author Barry Wittman
+ * @author William R. Speirs
+ */
+
 public abstract class BaseChecker extends AbstractASTVisitor {
 	
+	/** 
+	 * Kinds of substitution possible.
+	 * Each has its own type-checking rules.
+	 */
 	public enum SubstitutionKind {
-		ASSIGNMENT, BINDING, TYPE_PARAMETER, INITIALIZATION;
+		/** Substitution when assigning a value to a variable. */
+		ASSIGNMENT,
+		/** Substitution when binding an argument to a method parameter. */
+		BINDING,
+		/** Substitution of a type argument to a type parameter. */
+		TYPE_PARAMETER,
+		/**
+		 * Substitution when initializing a variable.
+		 * Similar to assignment but with somewhat relaxed rules. */
+		INITIALIZATION;
 	}
 	
-	private static final Logger logger = Loggers.TYPE_CHECKER;
-	protected static String eol = System.getProperty("line.separator", "\n");
+	private static final Logger LOGGER = Loggers.TYPE_CHECKER;
+	protected static final String EOL = System.getProperty("line.separator", "\n");
 
 	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
 	protected ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();	
-	protected List<String> importList; /* Holds all of the imports we know about */
 	protected Package packageTree;	
 	protected Package currentPackage;
-	
-	// Current method is a stack since Shadow allows methods to be defined inside of methods
-	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();
 	protected Type currentType = null;
-	protected Type declarationType = null;
 	
-	public void addType( Type type, Package p  ) throws PackageException {
-		p.addType(type); //automatically adds to typeTable and sets type's package				
-	}
+	// Declaration type differs from current type in the header (before the type's body is entered).
+	protected Type declarationType = null; 	
 	
-	public final List<String> getImportList() {
-		return importList;
-	}
-	
-	public BaseChecker(List<String> importList, Package packageTree  ) {
-		this.importList = importList;
+	// Current method is a stack since Shadow allows methods to be defined inside of methods.
+	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();
+
+	/**
+	 * Creates a new <code>BaseChecker</code> with the given tree of packages.
+	 * @param packageTree root of all packages
+	 */
+	public BaseChecker( Package packageTree ) {		
 		this.packageTree = packageTree;
 	}
 	
-	/** Causes a node to mirror the type of its first child node */
-	protected Object pushUpType(SimpleNode node, Boolean secondVisit)
-	{
-		return pushUpType(node, secondVisit, 0);
-	}
-	
-	/** Causes this node to mirror the type of its given child node */
-	protected Object pushUpType(SimpleNode node, Boolean secondVisit, int child) 
-	{
-		if(secondVisit)
-		{
-			if( node.jjtGetNumChildren() > child )
-			{			
-				// push the type up the tree
-				Node childNode = node.jjtGetChild(child); 
+	/**
+	 * Clears out the data structures within the checker,
+	 * returning it to a state similar to just after construction.
+	 * Child classes should call this method via <code>super.clear()</code>
+	 * when overriding. 
+	 */
+	public void clear() {		
+		errorList.clear();
+		warningList.clear();
+		currentPackage = null;
+		currentMethod.clear();
+		currentType = null;
+		declarationType = null;
+		packageTree.clear();
+	}	
+
+	/**
+	 * Causes a node to mirror the type and modifiers of its first child node.
+	 * @param node the node being visited 
+	 * @param secondVisit if it is the second visit to the node
+	 * @return walk type for visitor
+	 */
+	protected Object pushUpType( SimpleNode node, Boolean secondVisit ) {
+		if( secondVisit )	{
+			if( node.jjtGetNumChildren() > 0 ) {			
+				// Push the type up the tree
+				Node childNode = node.jjtGetChild(0); 
 				node.setType(childNode.getType());
-				node.setModifiers(childNode.getModifiers()); //copies current and return modifiers
+				// Copies current and return modifiers
+				node.setModifiers(childNode.getModifiers()); 
 			}
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
-	
-	/** 
-	 * Causes a node to mirror the modifiers of its child. This only occurs if
-	 * the node has a single child
+
+	/**
+	 * Causes a node to mirror the modifiers of its child. Only occurs if
+	 * the node has a single child.
+	 * @param node the node being visited
 	 */
-	protected void pushUpModifiers( SimpleNode node )
-	{
-		if( node.jjtGetNumChildren() == 1 )
-		{
+	protected void pushUpModifiers( SimpleNode node ) {
+		if( node.jjtGetNumChildren() == 1 ) {
 			Node child = node.jjtGetChild(0);
-			node.setModifiers(child.getModifiers()); //copies current and return modifiers
+			// Copies current and return modifiers
+			node.setModifiers(child.getModifiers()); 
 		}
-	}
+	}	
 	
-	private static boolean containsUnknown(Type[] types)
-	{
-		for(Type type : types)
+	/**
+	 * Checks to see if the array contains an unknown type. 
+	 * @param types	array of types to be checked
+	 * @return 		if the array contains <code>Type.UNKNOWN</code>
+	 * @see			Type.UNKNOWN
+	 */
+	private static boolean containsUnknown( Type[] types ) {
+		for( Type type : types )
 			if( containsUnknown(type) )
 				return true;
 		
 		return false;
 	}
 	
-	private static boolean containsUnknown(Type type)
-	{
-		if( type == null)
+	/**
+	 * Checks to see if the type is unknown or contains an unknown type.
+	 * Unknown types are generated by the type-checker to avoid 
+	 * null pointer exceptions, but errors involving unknown types are
+	 * suppressed to avoid a cascade of errors from the same source.
+	 * @param type	type to be checked
+	 * @return 		if the type contains <code>Type.UNKNOWN</code>
+	 * @see			Type.UNKNOWN
+	 */
+	private static boolean containsUnknown( Type type ) {
+		if( type == null )
 			return false;
-		if(type == Type.UNKNOWN)
+		if( type == Type.UNKNOWN )
 			return true;
-		if(type instanceof SequenceType)
-		{
+		if( type instanceof SequenceType ) {
 			SequenceType sequenceType = (SequenceType) type;
 			for(ModifiedType modifiedType : sequenceType)
-				if( modifiedType.getType() == Type.UNKNOWN)
+				if( containsUnknown( modifiedType.getType() ) )
 					return true;
 		}
 		else if( type instanceof ArrayType )
-		{
-			ArrayType arrayType = (ArrayType) type;
-			return containsUnknown(arrayType.getBaseType());			
-		}
+			return containsUnknown( ((ArrayType)type).getBaseType() );
 		
 		return false;
 	}
 	
-	/** 
+	/**
 	 * Adds an error to the given error list, unless that error refers to 
 	 * unknown types. Unknown type errors are usually symptoms of other errors
 	 * (like undeclared variables), and are thus unnecessary to report.
+	 * @param errors		list of errors
+	 * @param type			kind of error
+	 * @param reason		message explaining error
+	 * @param errorTypes	types of errors involved, used for suppressing redundant errors
 	 */
-	public static void addError(List<TypeCheckException> errors, Error type, String reason, Type... errorTypes)
-	{
-		// Don't add an error if it has an Unknown Type in it
-		if( containsUnknown(errorTypes) )
-			return; 
-		
+	public static void addError( List<TypeCheckException> errors, Error type,
+			String reason, Type... errorTypes ) {
+		// Don't add an error if it has an Unknown Type in it.
+		if( containsUnknown( errorTypes ) )
+			return; 		
 		if( errors != null )
-			errors.add(new TypeCheckException(type, reason));		
+			errors.add( new TypeCheckException( type, reason ) );		
 	}	
 	
-	// TODO: Break up this method into more manageable pieces
-	/** 
-	 * Determines whether an assignment of a right-hand type to a left-hand
-	 * type is legal 
+	/**
+	 * Determines whether a a right-hand type can be substituted into a left-hand type.
+	 * This method is the central checker for all assignments, bindings, and initializations.
+	 * @param left				type of left-hand side, including modifiers
+	 * @param right				type of right-hand side, including modifiers
+	 * @param assignmentKind	kind of assignment: =, +=, #=, etc.
+	 * @param substitutionKind	kind of substitution: assignment, binding, type parameter, etc.
+	 * @param errors			list of errors to add to if assignment is not legal
+	 * @return					if assignment is legal
 	 */
-	public static boolean checkAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType, SubstitutionKind substitutionType, List<TypeCheckException> errors )
-	{
+	public static boolean checkSubstitution( ModifiedType left, ModifiedType right, AssignmentKind assignmentKind, SubstitutionKind substitutionKind, List<TypeCheckException> errors ) {
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();		
 		
-		// If necessary, first process the property or subscript on right type
-		if( rightType instanceof PropertyType )
-		{					
+		// If necessary, process the property or subscript on right type.
+		if( rightType instanceof PropertyType ) {					
 			PropertyType getSetType = (PropertyType)rightType;					
 			
-			if( getSetType.isGettable() ) // "Get" from the type, if allowed
-			{
+			if( getSetType.isGettable() ) { // "Get" from the type, if allowed			
 				right = getSetType.getGetType();
 				rightType = right.getType();
 			}
-			else { // Fail if a get was attempted. but the type wasn't gettable			
+			else { // Fail otherwise			
 				String kind = (rightType instanceof SubscriptType) ? "Subscript " : "Property ";				
-				addError(errors, Error.INVALID_ASSIGNMENT, kind + getSetType + " cannot be loaded", rightType);
+				addError( errors, Error.INVALID_ASSIGNMENT, kind + getSetType +
+						" cannot be loaded", rightType );
 				return false;				
 			}
 		}
 	
-		// If the left type is a property or subscript, retrieve its setter			
+		// If the left type is a property or subscript, try to apply the right into it.			
 		if( leftType instanceof PropertyType )  {			
 			PropertyType propertyType = (PropertyType)leftType;
-			List<TypeCheckException> errorList = propertyType.applyInput(right);
-			
+			List<TypeCheckException> errorList = propertyType.applyInput( right );
+						
 			if( errorList.isEmpty() )
-				return checkAssignment( propertyType.getSetType(), right, assignmentType, substitutionType, errors );
+				return checkSubstitution( propertyType.getSetType(), right, assignmentKind, substitutionKind, errors );
 			else {
-				errors.addAll(errorList);
+				errors.addAll( errorList );
 				return false;
 			}		
 		}
 
-		//sequence on left
+		// Sequence on left
 		if( leftType instanceof SequenceType ) {
-			SequenceType sequenceLeft = (SequenceType) leftType;			
-			if( !assignmentType.equals(AssignmentType.EQUAL)) {
-				addError(errors, Error.INVALID_ASSIGNMENT, "Sequence type " + sequenceLeft + " cannot be assigned with any operator other than =");
+			SequenceType sequenceLeft = (SequenceType)leftType;	
+			// Compound assignments not allowed for sequences
+			if( !assignmentKind.equals( AssignmentKind.EQUAL ) ) { 
+				addError( errors, Error.INVALID_ASSIGNMENT, "Sequence type " + sequenceLeft +
+						" cannot be assigned with any operator other than =" );
 				return false;
 			}			
 
-			return sequenceLeft.canAccept(right, substitutionType, errors);
+			return sequenceLeft.canAccept( right, substitutionKind, errors );
 		}
 		
 		// Do not allow assignment to singleton references
 		if( leftType instanceof SingletonType ) {
-			addError(errors, Error.INVALID_ASSIGNMENT, "Singleton reference cannot be assigned to");
+			addError( errors, Error.INVALID_ASSIGNMENT,
+					"Singleton reference cannot be assigned to" );
 			return false;
 		}		
 		
-		//type parameter binding follows different rules
-		if( substitutionType.equals(SubstitutionKind.TYPE_PARAMETER)) {			
+		// Type parameter binding follows its own rules
+		if( substitutionKind.equals( SubstitutionKind.TYPE_PARAMETER ) ) {			
 			if( leftType instanceof TypeParameter ) {
 				TypeParameter typeParameter = (TypeParameter) leftType;
 				if( !typeParameter.acceptsSubstitution(rightType) ) {
-					addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type argument " + leftType, rightType);
+					addError(errors, Error.INVALID_TYPE_ARGUMENTS,
+							"Cannot substitute type argument " + rightType +
+							" for type argument " + leftType, rightType);
 					return false;					
 				}					
 			}
-			else
-			{
-				//will this ever happen?
-				addError(errors, Error.INVALID_TYPE_ARGUMENTS, "Cannot substitute type argument " + rightType + " for type " + leftType + " which is not a type parameter", rightType, leftType);
+			else {
+				// Should never happen
+				addError( errors, Error.INVALID_TYPE_ARGUMENTS,
+						"Cannot substitute type argument " + rightType +	" for type " +
+						leftType + " which is not a type parameter", rightType, leftType );
 				return false;				
 			}			
 		}
-		//normal types
-		else if( !leftType.canAccept(rightType, assignmentType, errors )  )
+		// Normal types
+		else if( !leftType.canAccept( rightType, assignmentKind, errors )  )
 			return false;
-
 		
-		//check modifiers after types
+		// Check modifiers after types
 		Modifiers rightModifiers = right.getModifiers();			
-		Modifiers leftModifiers = left.getModifiers();
-	
+		Modifiers leftModifiers = left.getModifiers();	
 		
-		//immutability
-		if( leftModifiers.isImmutable() )
-		{			
-			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() && !leftType.getModifiers().isImmutable() )
-			//never a problem if either type is immutable (though the left could never be if the right isn't)
-			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-immutable value cannot be assigned to immutable left hand side", rightType, leftType);
+		// Immutability
+		if( leftModifiers.isImmutable() ) {			
+			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() &&
+					!leftType.getModifiers().isImmutable() ) {
+				// Never a problem if either type is immutable
+				addError( errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with non-immutable value cannot be assigned to immutable left hand side",
+						rightType, leftType);
 				return false;
 			}
-			
-			if( leftModifiers.isField() )
-			{} //do something!  what about readonly fields?
-			
-			
-			/*
-			if( leftModifiers.isField() || (!currentMethod.isEmpty() && !currentMethod.getFirst().getMethodSignature().isCreate()))   ))
-			
-			addError(errorNode, Error.INVL_TYP, "Cannot assign a value to field marked immutable except in a create");
-			return false;
-			*/
 		}
-		else
-		{
-			if( rightModifiers.isImmutable() && !leftModifiers.isReadonly() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
-			//never a problem if either type is immutable
-			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with immutable value cannot be assigned to non-immutable and non-readonly left hand side", rightType, leftType);
+		else {
+			if( rightModifiers.isImmutable() && !leftModifiers.isReadonly() &&
+					!leftType.getModifiers().isImmutable() &&
+					!rightType.getModifiers().isImmutable() ) {
+				// Never a problem if either type is immutable			
+				addError( errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with immutable value cannot be assigned to non-immutable and non-readonly left hand side",
+						rightType, leftType);
 				return false;
 			}
 			
-			//readonly issues
-			if( !leftModifiers.isReadonly() ) //and of course not immutable			
-			{
-				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() && !rightType.getModifiers().isReadonly() && !leftType.getModifiers().isReadonly() && !leftType.getModifiers().isImmutable() && !rightType.getModifiers().isImmutable() )
-				//never a problem if either type is immutable or readonly
-				{
-					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with readonly value cannot be assigned to non-readonly left hand side", rightType, leftType);
+			// Readonly issues
+			if( !leftModifiers.isReadonly() ) { // and of course not immutable
+				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() &&
+						!rightType.getModifiers().isReadonly() &&
+						!leftType.getModifiers().isReadonly() &&
+						!leftType.getModifiers().isImmutable() &&
+						!rightType.getModifiers().isImmutable() ) {
+				// Never a problem if either type is immutable or readonly				
+					addError(errors, Error.INVALID_ASSIGNMENT,
+							"Right hand side with readonly value cannot be assigned to non-readonly left hand side",
+							rightType, leftType);
 					return false;
 				}				
 			}
 		}
 
-		//nullability
+		// Nullability
 		boolean leftArray = leftType instanceof ArrayType;
 		boolean rightArray = rightType instanceof ArrayType;
 		
-		//arrays (and their object forms) are tricky
-		//TODO: Simplify this!  Probably not necessary.
+		/* 
+		 * Arrays (and their object forms) are tricky.
+		 * For example, a non-nullable array cannot be assigned to a nullable array. 
+		 */
 		if( leftArray && rightArray ) {
 			if( leftModifiers.isNullable() && !rightModifiers.isNullable() )
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);
+				addError(errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with non-nullable array type cannot be assigned to nullable left hand side",
+						rightType, leftType);
 			else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
+				addError(errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
+						rightType, leftType);
 		}
 		else if( leftArray ) {
-			if( leftModifiers.isNullable() &&  !rightType.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);
-			else if( !leftModifiers.isNullable() && rightType.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
+			if( leftModifiers.isNullable() &&
+					!rightType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) )
+				addError(errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with non-nullable array type cannot be assigned to nullable left hand side",
+						rightType, leftType);
+			else if( !leftModifiers.isNullable() &&
+					rightType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) )
+				addError(errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
+						rightType, leftType);
 			else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
-				//weird case:
-				//nullable NullableArray<int> x = method();
-				//nullable int[] array = x;  
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable object value cannot be assigned to nullable array left hand side without a check", rightType, leftType);
+				/* Weird case:
+				 * nullable NullableArray<int> x = method();
+				 * nullable int[] array = x;
+				 */  
+				addError(errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with nullable object value cannot be assigned to nullable array left hand side without a check",
+						rightType, leftType);
 		}
 		else if( rightArray ) {
-			if( leftType.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) && !rightModifiers.isNullable() )
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with non-nullable array type cannot be assigned to nullable left hand side", rightType, leftType);
-			else if( !leftType.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) && rightModifiers.isNullable() )
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);
+			if( leftType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) &&
+					!rightModifiers.isNullable() )
+				addError( errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with non-nullable array type cannot be assigned to nullable left hand side",
+						rightType, leftType);
+			else if( !leftType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) &&
+					rightModifiers.isNullable() )
+				addError( errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
+						rightType, leftType );
 		}
-		else { //no arrays (easy)			
+		else { // No arrays (easy case)			
 			if( !leftModifiers.isNullable() && rightModifiers.isNullable() ) {
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side with nullable value cannot be assigned to non-nullable left hand side", rightType, leftType);			
+				addError(errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
+						rightType, leftType);			
 				return false;
 			}			
 		}				
 
-		if( substitutionType.equals(SubstitutionKind.ASSIGNMENT) ) //only differences between initializations and assignments
-		{
-			
-			if( leftModifiers.isConstant() )
-			{
-				addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to variable marked constant", rightType, leftType);
+		// These cases are the only differences between initializations and assignments.
+		if( substitutionKind.equals( SubstitutionKind.ASSIGNMENT ) ) {			
+			if( leftModifiers.isConstant() ) {
+				addError(errors, Error.INVALID_ASSIGNMENT,
+						"Right hand side cannot be assigned to variable marked constant",
+						rightType, leftType);
 				return false;			
 			}
-			else if( !leftModifiers.isAssignable() )
-			{
-				//might be non-assignable due to immutable or readonly references
+			else if( !leftModifiers.isAssignable() ) {
+				// Might be non-assignable due to immutable or readonly references
 				if( leftModifiers.isImmutable() )
-					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned in immutable context of expression " + left, rightType, leftType);
+					addError(errors, Error.INVALID_ASSIGNMENT,
+							"Right hand side cannot be assigned in immutable context of expression "
+							+ left, rightType, leftType);
 				else if( leftModifiers.isReadonly() )
-					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned in readonly context of expression " + left, rightType, leftType);
+					addError(errors, Error.INVALID_ASSIGNMENT,
+							"Right hand side cannot be assigned in readonly context of expression "
+							+ left, rightType, leftType);
 				else				
-					addError(errors, Error.INVALID_ASSIGNMENT, "Right hand side cannot be assigned to non-assignable expression " + left, rightType, leftType);
+					addError(errors, Error.INVALID_ASSIGNMENT,
+							"Right hand side cannot be assigned to non-assignable expression " +
+							left, rightType, leftType);
 				return false;
 			}
 		}
@@ -342,88 +429,133 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return true;
 	}
 	
-	protected List<TypeCheckException> isValidInitialization( ModifiedType left, ModifiedType right )
-	{		
+	/**
+	 * Determines whether a left-hand type can be initialized with a right-hand type.
+	 * @param left				type of left-hand side, including modifiers
+	 * @param right				type of right-hand side, including modifiers
+	 * @return					list of errors (empty if valid)
+	 */
+	protected final static List<TypeCheckException> isValidInitialization( ModifiedType left,
+			ModifiedType right ) {		
 		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
-		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionKind.INITIALIZATION, errors );
+		checkSubstitution( left, right, AssignmentKind.EQUAL,
+				SubstitutionKind.INITIALIZATION, errors );
 		return errors;
 	}
 	
-	protected List<TypeCheckException> isValidAssignment( ModifiedType left, ModifiedType right, AssignmentType assignmentType)
-	{
+	/**
+	 * Determines whether a left-hand type can be assigned with a right-hand type.
+	 * @param left				type of left-hand side, including modifiers
+	 * @param right				type of right-hand side, including modifiers
+	 * @return					list of errors (empty if valid)
+	 */	
+	protected final static List<TypeCheckException> isValidAssignment( ModifiedType left,
+			ModifiedType right, AssignmentKind assignmentType ) {
 		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
-		checkAssignment( left, right, assignmentType, SubstitutionKind.ASSIGNMENT, errors );
+		checkSubstitution( left, right, assignmentType, SubstitutionKind.ASSIGNMENT, errors );
 		return errors;		
-	}
-	
-	protected List<TypeCheckException> isValidBinding( ModifiedType left, ModifiedType right )
-	{
-		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
-		checkAssignment( left, right, AssignmentType.EQUAL, SubstitutionKind.BINDING, errors );
-		return errors;
 	}
 
 	/**
-	 * Adds an error message to the list of errors we keep until the end.
-	 * @param node The node where the error occurred. This will be printed in the standard format.
-	 * @param msg The message to communicate to the user.
+	 * Adds a temporary list of errors to the main list of errors.
+	 * @param errors			list of errors
 	 */
-	protected void addErrors(List<TypeCheckException> errors)
-	{		
+	protected final void addErrors(List<TypeCheckException> errors) {		
 		if( errors != null )
 			for( TypeCheckException error : errors )
 				addError( error.getError(), error.getMessage() );
 	}
 	
-	protected void addErrors(Node node, List<TypeCheckException> errors )
-	{		
+	/**
+	 * Adds a temporary list of errors associated with a particular 
+	 * node to the main list of errors.
+	 * @param node				node related to errors
+	 * @param errors			list of errors
+	 */	
+	protected final void addErrors(Node node, List<TypeCheckException> errors ) {		
 		if( errors != null )
 			for( TypeCheckException error : errors )
 				addError( node, error.getError(), error.getMessage() );
 	}
 	
-	protected void addError(Node node, Error type, String message, Type... errorTypes) {
+	/**
+	 * Adds an error associated with a node to the main list of errors.
+	 * @param node				node related to error	
+	 * @param error				kind of error
+	 * @param message			message explaining error
+	 * @param errorTypes		types associated with error
+	 */
+	protected final void addError(Node node, Error error, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
-			return; //don't add error if it has an Unknown Type in it
+			return; // Don't add error if it has an unknown type in it.
 		
 		if( node == null )
-			addError(type, message, errorTypes);
+			addError(error, message, errorTypes);
 		else {			
-			String error = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-			errorList.add(new TypeCheckException(type, error));
+			message = makeMessage(error, message, node.getFile(), node.getLineStart(),
+					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+			errorList.add(new TypeCheckException(error, message));
 		}
 	}
 	
 	/**
-	 * Adds an error messages to the list of errors.
-	 * @param node The node where the error occurred. This will be printed in standard format.
-	 * @param type One of the pre-defined types of errors.
-	 * @param msg The message associated with the error.
+	 * Adds an error to the main list of errors.
+	 * @param error				kind of error
+	 * @param message			message explaining error
+	 * @param errorTypes		types associated with error
 	 */
-	protected void addError(Error type, String message, Type... errorTypes) {
+	protected final void addError(Error error, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
-			return; //don't add error if it has an Unknown Type in it
+			return; // Don't add error if it has an unknown type in it.
 				
-		String error = makeMessage(type, message, getFile(), getLineStart(), getLineEnd(), getColumnStart(), getColumnEnd());		
-		errorList.add(new TypeCheckException(type, error));
+		message = makeMessage(error, message, getFile(), getLineStart(), getLineEnd(),
+				getColumnStart(), getColumnEnd());		
+		errorList.add(new TypeCheckException(error, message));
 	}
 	
-	protected void addWarning(Node node, Error type, String message) {
+	/**
+	 * Adds a warning associated with a node to the main list of warnings.
+	 * @param node				node related to warning	
+	 * @param warning			kind of warning
+	 * @param message			message explaining warning
+	 */
+	protected final void addWarning(Node node, Error warning, String message) {
 		if( node == null )
-			addWarning(type, message);
+			addWarning(warning, message);
 		else {		
-			String warning = makeMessage(type, message, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-			warningList.add(new TypeCheckException(type, warning));
+			message = makeMessage(warning, message, node.getFile(), node.getLineStart(),
+					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+			warningList.add(new TypeCheckException(warning, message));
 		}
 	}
 	
-	protected void addWarning(Error type, String message) {
-		String warning = makeMessage(type, message, getFile(), getLineStart(), getLineEnd(), getColumnStart(), getColumnEnd());		
-		warningList.add(new TypeCheckException(type, warning));
+	/**
+	 * Adds a warning to the main list of warnings.	
+	 * @param warning			kind of warning
+	 * @param message			message explaining warning
+	 */
+	protected final void addWarning(Error warning, String message) {
+		message = makeMessage(warning, message, getFile(), getLineStart(), getLineEnd(),
+				getColumnStart(), getColumnEnd());		
+		warningList.add(new TypeCheckException(warning, message));
 	}
 	
-	public static String makeMessage(Error type, String message, File file, int lineStart, int lineEnd, int columnStart, int columnEnd )
-	{
+	/**
+	 * Creates a formatted message for an error or warning, including file name and
+	 * line and column numbers and possibly text from the file itself where the error is.
+	 * File, line, and column values may be special defaults which will cause
+	 * them to be ignored in the return message.
+	 * @param kind				kind or error or warning		
+	 * @param message			message explaining the error or warning
+	 * @param file				file where problem is occurring
+	 * @param lineStart			starting line of problem
+	 * @param lineEnd			ending line of problem
+	 * @param columnStart		starting column of problem
+	 * @param columnEnd			ending column of problem
+	 * @return					formatted message
+	 */
+	public static String makeMessage( Error kind, String message, File file, int lineStart,
+			int lineEnd, int columnStart, int columnEnd ) {
 		StringBuilder error = new StringBuilder();
 		
 		if( file != null )
@@ -434,34 +566,35 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		else
 			error.append(" ");
 		
-		if( type != null )
-			error.append(type.getName() + ": ");		
+		if( kind != null )
+			error.append(kind.getName() + ": ");		
 		
 		error.append(message);
 		
-		if( file != null && lineStart >= 0 && lineEnd >= lineStart && columnStart >= 0 && columnEnd >= 0 ) {
-		BufferedReader reader = null;
-		  try {
-			reader = new BufferedReader(new FileReader(file));
-			String line = "";			
-			for( int i = 1; i <= lineStart; ++i )
-				line = reader.readLine();
-			error.append(eol);
-			error.append(line);
-			if( lineStart == lineEnd ) {
-				error.append(eol);
-				for( int i = 1; i <= columnEnd; ++i )
-					if( i >= columnStart )
-						error.append('^');
-					else
-						error.append(' ');
-			}
-		  } 
-		  catch (FileNotFoundException e) {
-			  //do nothing, can't add additional file data
-		  }
-		  catch (IOException e) {}
-		  finally {
+		// If file is available, find problematic text and include it in the message.	
+		if( file != null && lineStart >= 0 && lineEnd >= lineStart &&
+				columnStart >= 0 && columnEnd >= 0 ) {
+			BufferedReader reader = null;
+			try {
+				reader = new BufferedReader(new FileReader(file));
+				String line = "";			
+				for( int i = 1; i <= lineStart; ++i )
+					line = reader.readLine();
+				error.append(EOL);
+				error.append(line);
+				if( lineStart == lineEnd ) {
+					error.append(EOL);
+					for( int i = 1; i <= columnEnd; ++i )
+						if( i >= columnStart )
+							error.append('^');
+						else
+							error.append(' ');
+				}
+			} 
+			// Do nothing, can't add additional file data
+			catch (FileNotFoundException e) {}
+			catch (IOException e) {}
+			finally {
 			  if( reader != null )
 				try { reader.close(); }
 			  	catch (IOException e) {}
@@ -472,74 +605,69 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	}
 	
 	/**
-	 * Print out the list of errors to the given stream.
-	 * @param stream The stream to print the errors to.
+	 * Prints the list of errors to the appropriate logger.
 	 */
-	public void printErrors() 
-	{
+	public final void printErrors() {
 		for(TypeCheckException exception : errorList)
-			logger.error(exception.getMessage());
+			LOGGER.error(exception.getMessage());
 	}
 	
-	public void printWarnings() 
-	{
+	/**
+	 * Prints the list of warnings to the appropriate logger.
+	 */
+	public final void printWarnings() {
 		for(TypeCheckException exception : warningList)
-			logger.warn(exception.getMessage());
+			LOGGER.warn(exception.getMessage());
 	}	
 	
-	protected final Type lookupTypeFromCurrentMethod( String name )
-	{		
-		for( Node method : currentMethod )
-		{
+	
+	/**
+	 * Tries to find a type defined by the current method.
+	 * Since methods can be defined inside of methods, it checks the stack of current methods.
+	 * @param name		name of the type
+	 * @return			type found or <code>null</code> if not found
+	 */
+	protected final Type lookupTypeFromCurrentMethod( String name ) {		
+		for( Node method : currentMethod ) {
 			MethodType methodType = (MethodType)(method.getType());
-			if( methodType.isParameterized() )
-			{
-				for( ModifiedType modifiedType : methodType.getTypeParameters() )
-				{
+			if( methodType.isParameterized() ) {
+				for( ModifiedType modifiedType : methodType.getTypeParameters() ) {
 					Type type = modifiedType.getType();
-					if( type instanceof TypeParameter )
-					{
-						TypeParameter typeParameter = (TypeParameter) type;
-						
+					if( type instanceof TypeParameter ) {
+						TypeParameter typeParameter = (TypeParameter) type;						
 						if( typeParameter.getTypeName().equals(name))
 							return typeParameter;
 					}
 				}
 			}			
 		}
-		
-		/* if( currentType != null )
-			return lookupTypeStartingAt( name, currentType );
-		else */
 		return lookupTypeStartingAt( name, declarationType );
 	}
 	
-	//outer class is just a guess, not a sure thing
-	//this method is used when starting from a specific point (as in when looking up extends lists), rather than from the current type
-	protected final Type lookupTypeStartingAt( String name, Type outer )
-	{	
-		Type type = null;
+	/**
+	 * Tries to find a type within a particular outer type, but the outer type is just a guess.
+	 * This method is used when starting from a specific point (as in when looking through
+	 * <code>is</code> lists), rather than from the current type.
+	 * @param name		name of the type
+	 * @param outer		outer type
+	 * @return			type found or <code>null</code> if not found
+	 */	
+	protected final Type lookupTypeStartingAt( String name, Type outer ) {	
+		Type type = null;		
 		
-		if( name.contains("@"))
-		{
+		if( name.contains("@")) { // Fully qualified type name
 			int atSign = name.indexOf('@');
 			return lookupType( name.substring(atSign + 1 ), name.substring(0, atSign) );
 		}
-		else if( outer != null ) 		//try starting points
-		{
-			type = null;
-			Type current = outer;
-			
-			while( current != null)
-			{			
-				//check type parameters of outer class
+		else if( outer != null ) { // Start with outer type			
+			Type current = outer;			
+			while( current != null) {			
+				// Check type parameters of outer class
 				if( current.isParameterized() )
-					for( ModifiedType modifiedParameter : current.getTypeParameters() )
-					{
+					for( ModifiedType modifiedParameter : current.getTypeParameters() ) {
 						Type parameter = modifiedParameter.getType();
 						
-						if( parameter instanceof TypeParameter )
-						{
+						if( parameter instanceof TypeParameter ) {
 							TypeParameter typeParameter = (TypeParameter) parameter;
 							if( typeParameter.getTypeName().equals(name) )
 								return typeParameter;
@@ -555,31 +683,26 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				current = current.getOuter();
 			}
 		
-			//walk up packages from there
+			// Walk up the tree of package from the starting point
 			Package p = outer.getPackage();		
-			while( p != null)
-			{
-				type = lookupType( name, p  );
+			while( p != null ) {
+				type = p.getType(name);
 				if( type != null )
-					return type;			
-				
+					return type;
 				p = p.getParent();
 			}			
 		}
 		
-		//still not found, try all the packages and types that the outer class imported
+		// If still not found, try all the packages and types that the outer class imported
 		if( outer != null )
-			for( Object item : outer.getImportedItems() )
-			{
+			for( Object item : outer.getImportedItems() ) {
 				type = null;
 				
-				if( item instanceof Package )
-				{
+				if( item instanceof Package ) {
 					Package importedPackage = (Package) item;
-					type = lookupType( name, importedPackage );	
+					type = importedPackage.getType(name);	
 				}
-				else if( item instanceof Type )
-				{
+				else if( item instanceof Type ) {
 					Type importedType = (Type) item;
 					if( importedType.getTypeWithoutTypeArguments().getTypeName().equals( name ) )
 						type = importedType;				
@@ -592,24 +715,29 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		return null;	
 	}
 	
-	//nothing known, start with current method (looking for type parameters)
+	/**
+	 * Tries to find a type without any other information.
+	 * This method starts by looking in the current method, which will
+	 * eventually look through outer types and then imported types.
+	 * @param name		name of the type
+	 * @return			type found or <code>null</code> if not found
+	 */
 	protected Type lookupType( String name )
 	{
-		if( name.contains("@"))
-		{
+		if( name.contains("@")) {
 			int atSign = name.indexOf('@');
 			return lookupType( name.substring(atSign + 1 ), name.substring(0, atSign) );
 		}
 		else
 			return lookupTypeFromCurrentMethod( name );
-	}		
-
-	//get type from specific package
-	protected final Type lookupType( String name, Package p )
-	{		
-		return p.getType(name);
 	}
 	
+	/**
+	 * Tries to find a type inside a package with a specific name.
+	 * @param name			name of the type
+	 * @param packageName	name of the package
+	 * @return				type found or <code>null</code> if not found
+	 */
 	private final Type lookupType( String name, String packageName ) {			
 		Package p;
 		
@@ -625,26 +753,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		 
 		return p.getType(name);
 	}
+
 	
-	public int getErrorCount()
-	{
-		return errorList.size();
-	}
-	
-	public int getWarningCount()
-	{
-		return warningList.size();
-	}
-	
-	public Package getPackageTree()
-	{
-		return packageTree;
-	}
-	
-	public static ClassType literalToType( Literal literal )
-	{
-		switch( literal )
-		{
+	/**
+	 * Determines the type of a given literal.
+	 * @param literal	kind of literal
+	 * @return			its type
+	 */
+	public static ClassType literalToType( Literal literal ) {
+		switch( literal ) {
 		case BYTE: 		return Type.BYTE;
 		case CODE: 		return Type.CODE;
 		case SHORT: 	return Type.SHORT;
@@ -663,10 +780,13 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		}
 	}
 	
-	public static ClassType nameToPrimitiveType(String name)
-	{
-		switch(name)
-		{
+	/**
+	 * Determines the primitive type associated with a given type name.
+	 * @param 	name	name of the primitive type
+	 * @return			its type
+	 */
+	public static ClassType nameToPrimitiveType(String name) {
+		switch(name) {
 		case "boolean": return Type.BOOLEAN;
 		case "byte":	return Type.BYTE;
 		case "code":	return Type.CODE;				
@@ -681,281 +801,138 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		case "ushort":	return Type.USHORT;
 		default: 		return null;
 		}
-	}	
-
-	public static String stripExtension(String file)
-	{
+	}
+	
+	/**
+	 * Strips the extension off of a string specifying a file name.
+	 * @param file		file name
+	 * @return			name without extension
+	 */
+	public static String stripExtension(String file) {
 		return file.substring(0, file.lastIndexOf("."));
-	}
+	}	
 	
-	protected Object typeResolution(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
-	{	
-		if( node.getType() != null ) //optimization if type already determined
-			return WalkType.NO_CHILDREN;		
-		
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
-		
-		Node child = node.jjtGetChild(0); 
-		String typeName = child.getImage();
-		int start = 1;
-		
-		if( child instanceof ASTUnqualifiedName )
-		{					
-			child = node.jjtGetChild(start);
-			typeName += "@" + child.getImage();
-			start++;					
-		}
-		
-		Type type = lookupType(typeName);				
-		
-		if(type == null)
-		{
-			addError(Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
-			node.setType(Type.UNKNOWN);					
-		}
-		else
-		{	
-			if( !classIsAccessible( type, declarationType  ) )		
-				addError(Error.ILLEGAL_ACCESS, "Class " + type + " not accessible from current context", type);
-			
-			if( child.jjtGetNumChildren() == 1 ) //contains arguments
-			{
-				SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
-				if( type.isParameterized() ) 
-				{		
-					SequenceType parameters = type.getTypeParameters();
-					if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER) )
-					{
-						try
-						{
-							type = type.replace(parameters, arguments);
-						}
-						catch (shadow.typecheck.type.InstantiationException e)
-						{
-							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
-							type = Type.UNKNOWN;
-						}
-					}
-					else
-					{						
-						addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
-						type = Type.UNKNOWN;
-					}
-				}
-				else
-				{
-					addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type, type);
-					type = Type.UNKNOWN;
-				}										
-			}
-			else if( type.isParameterized() ) //parameterized but no parameters!	
-			{
-				addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
-				type = Type.UNKNOWN;
-			}
-			
-			//after updating type parameters
-			if (currentType instanceof ClassType)
-				((ClassType)currentType).addReferencedType(type);
-			
-			
-			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
-			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
-			{
-				Type outer = type;
-				child = node.jjtGetChild(i);
-				type = null;
-				if( outer instanceof ClassType )
-					type = ((ClassType)outer).getInnerClass(child.getImage());
-				
-				if(type == null)
-				{
-					addError(Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in this context");			
-					type = Type.UNKNOWN;					
-				}
-				else
-				{
-					if( !classIsAccessible( type, currentType  ) )		
-						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context", type);
-					
-					if( child.jjtGetNumChildren() == 1 ) //contains arguments
-					{
-						SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
-						if( type.isParameterized() ) 
-						{		
-							SequenceType parameters = type.getTypeParameters();
-							if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER ) )
-							{
-								try {
-									type = type.replace(parameters, arguments);
-								}
-								catch (InstantiationException e) 
-								{
-									addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
-									type = Type.UNKNOWN;
-								}
-							}
-							else
-							{						
-								addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + arguments.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) + " do not match type parameters " + parameters.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS) );
-								type = Type.UNKNOWN;
-							}
-						}
-						else
-						{
-							addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type, type);
-							type = Type.UNKNOWN;
-						}										
-					}
-					else if( type.isParameterized() ) //parameterized but no parameters!	
-					{
-						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments are not supplied for parameterized type " + child.getImage());
-						type = Type.UNKNOWN;
-					}
-					
-					//after updating type parameters
-					if (currentType instanceof ClassType)
-						((ClassType)currentType).addReferencedType(type);
-				}
-			}
-			//set the type now that it has type parameters 
-			node.setType(type);	
-		}	
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	protected static boolean classIsAccessible( Type classType, Type type )
-	{
-		if( classType.getModifiers().isPublic() || classType.getOuter() == null || classType.getOuter().equals(type)  )
+	/**
+	 * Tests to see if one type is accessible from another.
+	 * @param type			type whose accessibility is in question 
+	 * @param currentType	type where code is currently executing
+	 * @return				whether type is accessible
+	 */
+	protected static boolean classIsAccessible( Type type, Type currentType ) {
+		// Public classes and outermost classes are always accessible.
+		// So are direct inner classes.
+		if( type.getModifiers().isPublic() || !type.hasOuter() ||
+				type.getOuter().equals( currentType ) )
 			return true;
 		
-		Type outer = type.getOuter();
-		
-		while( outer != null )
-		{
-			if( outer == classType.getOuter() )
-				return true;
-			
+		// If any outer class of type is also an outer class of typeToAccess, it's visible.
+		Type outer = currentType.getOuter();		
+		while( outer != null ) {
+			if( outer == type.getOuter() )
+				return true;			
 			outer = outer.getOuter();		
-		}
+		}		
 		
-		
-		if( type instanceof ClassType )
-		{
-			ClassType parent = ((ClassType)type).getExtendType();
-			
-			while( parent != null )
-			{
-				if( classType.getOuter() == parent )
-				{
-					if( classType.getModifiers().isPrivate())
+		// Repeat the rigamarole for parent classes.
+		if( currentType instanceof ClassType ) {
+			ClassType parent = ((ClassType)currentType).getExtendType();			
+			while( parent != null ) {
+				if( type.getOuter() == parent ) {
+					if( type.getModifiers().isPrivate())
 						return false;
 					else
 						return true;
 				}
 				
-				outer = parent.getOuter();
-				
-				while( outer != null )
-				{
-					if( outer == classType.getOuter() )
-						return true;
-					
+				outer = parent.getOuter();				
+				while( outer != null ) {
+					if( outer == type.getOuter() )
+						return true;					
 					outer = outer.getOuter();		
 				}
 				
 				parent = parent.getExtendType();
 			}
-		}
-		
+		}		
 		return false;
 	}
 	
-	public static boolean methodIsAccessible( MethodSignature signature, Type type ) {		
-		Node node = signature.getNode();
+	/**
+	 * Tests to see if a method is accessible from the current type.
+	 * @param signature		method signature whose accessibility is in question 
+	 * @param currentType	type where code is currently executing
+	 * @return				whether the method is accessible
+	 */
+	public static boolean methodIsAccessible( MethodSignature signature, Type currentType ) {
 		if( signature.getMethodType().getModifiers().isPublic() ) 
 			return true;
 		
-		if(node == null )
+		Node node = signature.getNode();
+		if( node == null )
 			return false;		
 		
-		Type outer = type;
-		
+		Type outer = currentType;		
 		while( outer != null ) {
-			if( node.getEnclosingType().equals(outer) )
+			if( node.getEnclosingType().equals( outer ) )
 				return true;
 			
 			if( outer instanceof ClassType ) {
 				ClassType parent = ((ClassType)outer).getExtendType();
 				
 				while( parent != null ) {
-					if( node.getEnclosingType().equals(parent) ) {
+					if( node.getEnclosingType().equals( parent ) ) {
 						if( node.getModifiers().isPrivate())
 							return false;
 						else
 							return true;
-					}
-					
+					}					
 					parent = parent.getExtendType();
 				}
 			}			
 			
 			outer = outer.getOuter();
 		}
-
 		return false;
 	}
 	
+	/*
+	 * Visitor methods below this point.
+	 */
+	
 	@Override
-	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit ) //leaving a type
+	public Object visit( ASTClassOrInterfaceBody node, Boolean secondVisit )
+			throws ShadowException {		
+		if( secondVisit ) 	// Leaving a type
 			currentType = currentType.getOuter();
-		else //entering a type
-		{					
+		else {				// Entering a type							
 			currentType = declarationType;
 			currentPackage = currentType.getPackage();				
-		}
-			
+		}			
 		return WalkType.POST_CHILDREN;
 	}
 
+	// Entering declaration, but type has not yet been entered.
 	@Override
-	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException
-	{			
+	public Object visit( ASTClassOrInterfaceDeclaration node, Boolean secondVisit )
+			throws ShadowException {			
 		if( secondVisit )			
 			declarationType = declarationType.getOuter();		
-		else
-		{
+		else {
 			declarationType = node.getType();
 			currentPackage = declarationType.getPackage();
-		}
-			
+		}			
 		return WalkType.POST_CHILDREN;
 	}	
 	
-	// TypeCollector overrides, because it does something different
-	// All other checkers use this
+	/*
+	 * TypeCollector overrides this method, because it does something different.(non-Javadoc)
+	 * All other checkers use this method.
+	 */ 
 	@Override
-	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException 
-	{	
+	public Object visit( ASTCompilationUnit node, Boolean secondVisit ) throws ShadowException {	
 		if( !secondVisit )		
 			currentPackage = packageTree;
 		
 		return WalkType.POST_CHILDREN;
-	}
-	
-	public void clear() {		
-		errorList.clear();
-		warningList.clear();		
-		importList.clear();		
-		currentPackage = null;
-		currentMethod.clear();
-		currentType = null;
-		declarationType = null;
-		packageTree.clear();
 	}
 }

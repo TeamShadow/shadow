@@ -20,11 +20,11 @@ import shadow.typecheck.type.Type;
 
 public class TypeChecker {
 	/**
-	 * Given the main file to compile, checks it
-	 * @param file the file to compile
-	 * @param useSourceFiles Specifies that source files should be recompiled, if possible
+	 * Typechecks a main file and all files that it depends on.
+	 * @param file the main file to compile
+	 * @param useSourceFiles whether the source files should be recompiled
 	 * 
-	 * @return nodes corresponding to all the AST nodes for each class
+	 * @return nodes list of AST nodes for the classes to be compile
 	 * @throws ShadowException
 	 * @throws ParseException 
 	 * @throws IOException 
@@ -32,66 +32,61 @@ public class TypeChecker {
 	 */
 	public List<Node> typeCheck(File file, boolean useSourceFiles) throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException
 	{	
-		Package packageTree = new Package();
-		ArrayList<String> importList = new ArrayList<String>();
+		// root of all packages, storing all types
+		Package packageTree = new Package();		
 		
-		//collector looks over all files and creates types for everything needed
-		TypeCollector collector = new TypeCollector(importList, packageTree, useSourceFiles);
-		//return value is the top node for the class we are compiling		
+		// collector looks over all files and creates types for everything needed
+		TypeCollector collector = new TypeCollector(packageTree, useSourceFiles);
+		// return value is the top node for the class we are compiling		
 		Map<Type, Node> nodeTable = collector.collectTypes( file );
 		Type mainType = collector.getMainType();
 		
-		//Updates types, adding:
-		//Fields and methods
-		//Type parameters (including necessary instantiations)
-		//All types with type parameters (except for declarations) are UninitializedTypes
-		//Extends and implements lists
-				
-		TypeUpdater updater = new TypeUpdater(importList, packageTree);
+		/* Updates types, adding:
+		   Fields and methods
+		   Type parameters (including necessary instantiations)
+		   All types with type parameters (except for declarations) are UninitializedTypes
+		   Extends and implements lists
+		 */				
+		TypeUpdater updater = new TypeUpdater(packageTree);
 		nodeTable = updater.update( nodeTable );
 		
 		
-		StatementChecker checker = new StatementChecker(importList, packageTree);		
-				
+		// collect nodes only for outer types				
 		List<Node> allNodes = new ArrayList<Node>();
-		
-		//only add nodes for outer types
 		for( Node node : nodeTable.values())
 			if( !node.getType().hasOuter() )
 				allNodes.add(node);
 		
 		// do real typechecking, which updates referenced types
+		StatementChecker checker = new StatementChecker(packageTree);
 		for(Node node: allNodes) {	
 			File nodeFile = node.getFile();
 			if( !nodeFile.getPath().endsWith(".meta")) {
-				//The "real" typechecking happens here as each statement is checked for type safety and other features
+				// check all statements for type safety and other features
 				checker.check(node);				
-				//As an optimization, print .meta file for the .shadow file being checked
+				// as an optimization, print .meta file for the .shadow file being checked
 				printMetaFile( node, BaseChecker.stripExtension(nodeFile.getCanonicalPath()));
 			}
 		}
 		
-		//now that all the nodes are typechecked, we know which types are referenced by the main type (even indirectly)
+		// now that all nodes are typechecked, we know which types are referenced by the main type (even indirectly)
 		TreeSet<Type> referencedTypes = new TreeSet<Type>();
 		referencedTypes.add(mainType); // almost everything gets figured out from there
 		addStandardTypes(referencedTypes);
 		
+		// determine which types are needed for the current compilation
 		Set<Type> neededTypes = new HashSet<Type>();
-		
-		
 		while( !referencedTypes.isEmpty() ) {			
 			Type next = referencedTypes.first();
-			Type simplified = next.getTypeWithoutTypeArguments();
-			
+			Type simplified = next.getTypeWithoutTypeArguments();			
 			if( !(simplified instanceof ArrayType) && !simplified.hasOuter() && neededTypes.add(simplified) )				
 				referencedTypes.addAll(simplified.getReferencedTypes());
-					
+			
 			referencedTypes.remove(next);
 		}
 		
 		//return only those nodes corresponding to needed types
-		List<Node> neededNodes = new ArrayList<Node>();
-		
+		List<Node> neededNodes = new ArrayList<Node>();		
 		for( Node node : allNodes )
 			if( neededTypes.contains(node.getType()) )
 				neededNodes.add(node);

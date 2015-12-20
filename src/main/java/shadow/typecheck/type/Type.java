@@ -12,7 +12,7 @@ import java.util.TreeMap;
 
 import shadow.doctool.Documentation;
 import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
@@ -609,12 +609,12 @@ public abstract class Type implements Comparable<Type> {
 	}
 
 	
-	public boolean canAccept( Type rightType, ASTAssignmentOperator.AssignmentType assignmentType, List<TypeCheckException> errors ) 
+	public boolean canAccept( Type rightType, ASTAssignmentOperator.AssignmentKind assignmentType, List<TypeCheckException> errors ) 
 	{
 		boolean accepts = false;
 		
 		//equal and cat are separate because they are not dependent on implementing a specific interface
-		if( assignmentType.equals(AssignmentType.EQUAL) )
+		if( assignmentType.equals(AssignmentKind.EQUAL) )
 		{
 			//type parameters are different because the definition of subtype is weak: dependent only on the bounds
 			//real type parameter assignment requires the same type					
@@ -625,7 +625,7 @@ public abstract class Type implements Comparable<Type> {
 		
 			return accepts;
 		}
-		else if( assignmentType.equals(AssignmentType.CAT) )
+		else if( assignmentType.equals(AssignmentKind.CAT) )
 		{
 			accepts = isString();
 			if( !accepts )

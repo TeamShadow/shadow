@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentType;
+import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
 import shadow.parser.javacc.SimpleNode;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.TypeCheckException;
@@ -75,7 +75,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 				ModifiedType left = types.get(i);
 				ModifiedType right = inputTypes.get(i);
 				
-				if( !BaseChecker.checkAssignment(left, right, AssignmentType.EQUAL, substitutionType, errors ))
+				if( !BaseChecker.checkSubstitution(left, right, AssignmentKind.EQUAL, substitutionType, errors ))
 					return false;
 			}			
 		}
@@ -115,7 +115,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			
 			//for splats
 			for( ModifiedType modifiedType : types )			
-				if( !BaseChecker.checkAssignment(modifiedType, inputType, AssignmentType.EQUAL, substitutionType, errors))
+				if( !BaseChecker.checkSubstitution(modifiedType, inputType, AssignmentKind.EQUAL, substitutionType, errors))
 					return false;
 			
 			return true;
