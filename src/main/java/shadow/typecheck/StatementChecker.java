@@ -1388,7 +1388,7 @@ public class StatementChecker extends BaseChecker {
 			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
 			ASTConditionalExpression right = (ASTConditionalExpression) node.jjtGetChild(2);
 			
-			List<TypeCheckException> errors = isValidAssignment(left, right, assignment.getAssignmentType()); 
+			List<TypeCheckException> errors = isValidAssignment(left, right, assignment.getAssignmentKind()); 
 			
 			if( errors.isEmpty() )
 			{
@@ -1399,7 +1399,7 @@ public class StatementChecker extends BaseChecker {
 				{
 					PropertyType getSetType = (PropertyType) leftType;
 					//here we have a chance to tell the type whether it will only be storing or doing both
-					if( assignment.getAssignmentType() == AssignmentKind.EQUAL )
+					if( assignment.getAssignmentKind() == AssignmentKind.EQUAL )
 						getSetType.setStoreOnly();
 					else
 						getSetType.setLoadStore();					
@@ -1410,7 +1410,7 @@ public class StatementChecker extends BaseChecker {
 				if( rightType instanceof PropertyType )
 					rightType = ((PropertyType)rightType).getGetType().getType();				
 		
-				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentType().getMethod(), new SequenceType(rightType)));
+				node.addOperation(leftType.getMatchingMethod(assignment.getAssignmentKind().getMethod(), new SequenceType(rightType)));
 			}
 			else				
 				addErrors(errors);			

@@ -1,3 +1,20 @@
+/*
+ * Copyright 2015 Team Shadow
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 	
+ * 	    http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
 options {
   CACHE_TOKENS=true;
   JAVA_UNICODE_ESCAPE=true;
@@ -207,14 +224,14 @@ TOKEN :
 
 TOKEN :
 {
-   < BYTE_LITERAL: //can't end with b or B because of hex digits
+   < BYTE_LITERAL: // Can't end with b or B because of hex digits.
 	    <DECIMAL_LITERAL> ["y","Y"]
       | <HEX_LITERAL> ["y","Y"]
       | <BINARY_LITERAL> ["y","Y"]
       | <OCTAL_LITERAL> ["y","Y"]    
   >
 |
-  < UBYTE_LITERAL: //can't end with b or B because of hex digits
+  < UBYTE_LITERAL: // Can't end with b or B because of hex digits.
         <DECIMAL_LITERAL> ["u","U"]["y","Y"]
       | <HEX_LITERAL> ["u","U"]["y","Y"]
       | <BINARY_LITERAL> ["u","U"]["y","Y"]
@@ -474,7 +491,7 @@ ASTCompilationUnit CompilationUnit():
   modifiers = Modifiers(docBuilder)
   ( ClassOrInterfaceDeclaration(modifiers, docBuilder)
   | EnumDeclaration(modifiers, docBuilder)
-  )//only one declaration per file
+  ) // Only one declaration per file
    
   <EOF>
 	{
@@ -562,7 +579,7 @@ void ClassOrInterfaceDeclaration(Modifiers modifiers, DocumentationBuilder docBu
  	   modifiers.checkInterfaceModifiers(jjtThis); 	   
  	 } )
 
-  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] //package specification
+  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] // Package specification
   t = <IDENTIFIER> { jjtThis.setImage(t.image); jjtThis.setModifiers(modifiers); }
   [ TypeParameters() ]
   [ Version() ]
@@ -640,7 +657,7 @@ void TypeParameter():
      jjtThis.addModifier(Modifiers.TYPE_NAME);   }
 }
 
-void IsList(): //used instead of extends or implements in Shadow
+void IsList(): // Used instead of extends or implements in Shadow.
 {
   debugPrint("IS LIST");
 }
@@ -666,8 +683,10 @@ void ClassOrInterfaceBodyDeclaration(TypeKind kind):
   debugPrint("CLASS OR INTERFACE BODY DECLARATION"); 
 }
 {  
-// Get all the modifiers out of the way. If you want to do
-// more checks, pass the modifiers down to the member
+/*
+ * Get all the modifiers out of the way. If you want to do
+ * more checks, pass the modifiers down to the member.
+ */
   modifiers = Modifiers(docBuilder)
   (  ClassOrInterfaceDeclaration(modifiers, docBuilder)
     | EnumDeclaration(modifiers, docBuilder)
@@ -826,7 +845,7 @@ void DestroyDeclaration(Modifiers modifiers, DocumentationBuilder docBuilder):
     jjtThis.setImage("destroy");
     jjtThis.setDocumentationBuilder(docBuilder);
   }  
-  // Modifiers matched in the caller
+  // Modifiers matched in the caller.
   "destroy" 
   ( Block() { jjtThis.setBlock(true); } | ";" )
 }
@@ -847,7 +866,7 @@ Token t;
 }
 
 /*
- * Type, name and expression syntax follows.
+ * Type, name, and expression syntax follows.
  */
 
 void Type(Modifiers modifiers):
@@ -943,7 +962,8 @@ void ResultType():
 	Modifiers modifiers;
 }
 {
-	modifiers = Modifiers(null) Type(modifiers) [ <IDENTIFIER > ] //optional identifier used only for documentation
+  	// Optional identifier for documentation only.
+	modifiers = Modifiers(null) Type(modifiers) [ <IDENTIFIER > ] 
 	{
 	  modifiers.checkParameterAndReturnModifiers(jjtThis);
 	  jjtThis.setModifiers(modifiers);	} 
@@ -968,8 +988,8 @@ void Name():
 	Token t;
 }
 {
-  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) ":" t = <IDENTIFIER> { sb.append(':').append(t.image); } )*
-  { jjtThis.setImage(sb.toString()); }
+	  [ LOOKAHEAD(UnqualifiedName() "@") UnqualifiedName() "@" ] t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) ":" t = <IDENTIFIER> { sb.append(':').append(t.image); } )*
+	  { jjtThis.setImage(sb.toString()); }
 }
 
 void UnqualifiedName():
@@ -979,9 +999,9 @@ void UnqualifiedName():
 	Token t;
 }
 {
-  "default"  { jjtThis.setImage("default");  }
-| t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) ":" t = <IDENTIFIER> { sb.append(':').append(t.image); } )*
-  { jjtThis.setImage(sb.toString()); }
+  	"default"  { jjtThis.setImage("default");  }
+	| t = <IDENTIFIER> { sb.append(t.image); debugPrint(t.image); } ( LOOKAHEAD(2) ":" t = <IDENTIFIER> { sb.append(':').append(t.image); } )*
+  	{ jjtThis.setImage(sb.toString()); }
 }
 
 void NameList():
@@ -1002,20 +1022,20 @@ void AssignmentOperator():
   debugPrint("ASSIGNMENT OPERATOR");
 }
 {
-    "="    { jjtThis.setImage("="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.EQUAL); }
-  | "#="   { jjtThis.setImage("#="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.CAT); }
-  | "*="   { jjtThis.setImage("*="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.STAR); }
-  | "/="   { jjtThis.setImage("/="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.SLASH); }
-  | "%="   { jjtThis.setImage("%="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MOD); }
-  | "+="   { jjtThis.setImage("+="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.PLUS); }
-  | "-="   { jjtThis.setImage("-="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.MINUS); }
-  | "<<="  { jjtThis.setImage("l="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFT_SHIFT); }
-  | ">>="  { jjtThis.setImage("r="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHT_SHIFT); }
-  | ">>>=" { jjtThis.setImage("L="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.RIGHT_ROTATE); }
-  | "<<<=" { jjtThis.setImage("R="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.LEFT_ROTATE); }
-  | "&="   { jjtThis.setImage("&="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.AND); }
-  | "^="   { jjtThis.setImage("^="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.XOR); }
-  | "|="   { jjtThis.setImage("|="); jjtThis.setAssignmentType(ASTAssignmentOperator.AssignmentType.OR); }
+    "="    { jjtThis.setImage("="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.EQUAL); }
+  | "#="   { jjtThis.setImage("#="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.CAT); }
+  | "*="   { jjtThis.setImage("*="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.STAR); }
+  | "/="   { jjtThis.setImage("/="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.SLASH); }
+  | "%="   { jjtThis.setImage("%="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.MOD); }
+  | "+="   { jjtThis.setImage("+="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.PLUS); }
+  | "-="   { jjtThis.setImage("-="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.MINUS); }
+  | "<<="  { jjtThis.setImage("l="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.LEFT_SHIFT); }
+  | ">>="  { jjtThis.setImage("r="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.RIGHT_SHIFT); }
+  | ">>>=" { jjtThis.setImage("L="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.RIGHT_ROTATE); }
+  | "<<<=" { jjtThis.setImage("R="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.LEFT_ROTATE); }
+  | "&="   { jjtThis.setImage("&="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.AND); }
+  | "^="   { jjtThis.setImage("^="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.XOR); }
+  | "|="   { jjtThis.setImage("|="); jjtThis.setAssignmentKind(ASTAssignmentOperator.AssignmentKind.OR); }
 }
 
 void ConditionalExpression():
@@ -1099,9 +1119,11 @@ void ConcatenationExpression():
 }
 
 
-// Since shift & rotate are not single characters (see TAC Symbol2Operator code)
-// we are using r & l for right & left shift and
-// R & L for right & left rotate
+/*
+ * Since shift and rotate are not single characters (see TAC Symbol2Operator code)
+ * we are using r and l for right and left shift and
+ * R and L for right and left rotate.
+ */
 void ShiftExpression():
 { debugPrint("SHIFT EXPRESSION"); }
 {
@@ -1141,21 +1163,21 @@ void MultiplicativeExpression():
 void UnaryExpression():
 {}
 {
-  //removed unary + since it's useless   
- "#" { jjtThis.setImage("#"); } UnaryExpression()
-| "~" { jjtThis.setImage("~"); } UnaryExpression()
-| "!" { jjtThis.setImage("!"); } UnaryExpression()
-| "-" { jjtThis.setImage("-"); } UnaryExpression()
-| LOOKAHEAD(FormalParameters(true) "=>") InlineMethodDefinition()
-| PrimaryExpression()
-| "++" { throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
-//strangely, -- is allowed, because it's the negation of a negation
+	  // Unary + is not in Shadow since it's useless.   
+	 "#" { jjtThis.setImage("#"); } UnaryExpression()
+	| "~" { jjtThis.setImage("~"); } UnaryExpression()
+	| "!" { jjtThis.setImage("!"); } UnaryExpression()
+	| "-" { jjtThis.setImage("-"); } UnaryExpression()
+	| LOOKAHEAD(FormalParameters(true) "=>") InlineMethodDefinition()
+	| PrimaryExpression()
+	| "++" { throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
+	// Strangely, -- is allowed, because it's the negation of a negation.
 }
 
 void InlineMethodDefinition():
 { debugPrint("INLINE METHOD DEFINITION"); }
 {
-  FormalParameters(true) "=>" InlineResults() //inline method definition 
+  FormalParameters(true) "=>" InlineResults() // Inline method definition 
 }
 
 void CastExpression():

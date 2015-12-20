@@ -55,14 +55,14 @@ class ASTAssignmentOperator extends SimpleNode {
 	  }
   }
   
-  protected AssignmentKind assignmentType;
+  protected AssignmentKind kind;
   
-  public void setAssignmentType(AssignmentKind type) {
-	this.assignmentType = type;  
+  public void setAssignmentKind(AssignmentKind kind) {
+	this.kind = kind;  
   }
   
-  public AssignmentKind getAssignmentType() {
-	  return this.assignmentType;
+  public AssignmentKind getAssignmentKind() {
+	  return this.kind;
   }
 }
 /* JavaCC - OriginalChecksum=92708bdf2f854aa06c093a0c5cea3295 (do not edit this line) */
