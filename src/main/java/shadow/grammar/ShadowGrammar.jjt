@@ -739,7 +739,7 @@ void MethodDeclarator(boolean isLocal):
 }
 {
 	{ jjtThis.setLocal(isLocal); }  
-  t = <IDENTIFIER> { jjtThis.setImage(t.image); } [ TypeParameters() ] FormalParameters(isLocal) "=>" ResultTypes()
+  t = <IDENTIFIER> { jjtThis.setImage(t.image); } FormalParameters(isLocal) "=>" ResultTypes()
 }
 	
 void InlineResults():
@@ -1309,10 +1309,10 @@ void PrimarySuffix():
 | LOOKAHEAD(3) Subscript()
 | LOOKAHEAD(2) Destroy()
 | Method()
+| MethodCall()
+| Property()
 | LOOKAHEAD(Allocation()) Allocation()
 | LOOKAHEAD(ScopeSpecifier()) ScopeSpecifier()
-| Property()
-| LOOKAHEAD( [ TypeArguments() ] "(" ) MethodCall()
 | "++" {throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
 | "--" {throw new ParseException("-- is not a legal Shadow operator", jjtThis);  }
 }
@@ -1434,7 +1434,7 @@ void MethodCall():
 	Token t;
 }
 {
-  [ TypeArguments() ] "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
+  "(" [ ConditionalExpression() ( "," ConditionalExpression() )* ] t = ")"
   {
     jjtThis.setEndToken(t);  }
 }
@@ -1514,7 +1514,7 @@ void Statement():
 | BreakOrContinueStatement()
 | ReturnStatement()
 | ThrowStatement()
-| FinallyStatement() //includes try/catch/recover/finally
+| FinallyStatement() // Includes try/catch/recover/finally.
 | LOOKAHEAD(StatementExpression()) StatementExpression() ";"
 | Block()
 }

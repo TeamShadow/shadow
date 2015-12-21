@@ -1,5 +1,21 @@
-package shadow.typecheck;
+/*
+ * Copyright 2015 Team Shadow
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 	
+ * 	    http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
 
+package shadow.typecheck;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -49,67 +65,111 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
+/**
+ * The <code>TypeCollector</code> class is central to the first stage of type-checking.
+ * It is given one or more files to type-check and collects all the types imported by
+ * these files so that there is enough information for full type-checking and compilation.
+ * 
+ * @author Barry Wittman 
+ */
 public class TypeCollector extends BaseChecker {
 	
-	private Map<Type,Node> nodeTable = new HashMap<Type,Node>(); //for errors and also resolving type parameters	
-	private String currentName = "";
-	private Map<String, Node> files = new HashMap<String, Node>();	
+	// Map of types to the AST nodes that define them, useful for error messages.
+	private final Map<Type,Node> typeTable = new HashMap<Type,Node>();
+	// Map of file paths (without extensions) to nodes.
+    private final Map<String,Node> fileTable = new HashMap<String,Node>();		
+	private final boolean useSourceFiles;
+	// Holds all of the imports we know about.
+	private final List<String> importList = new ArrayList<String>(); 
+	private final LinkedList<Object> importedItems = new LinkedList<Object>();
+	private final Configuration config;
+	
 	private File currentFile;
 	private Type mainType = null;
-	private Set<Type> initialFileTypes = new TreeSet<Type>();
-	private Configuration config;
-	private boolean useSourceFiles;
-	private List<String> importList = new ArrayList<String>(); // Holds all of the imports we know about 
-	private LinkedList<Object> importedItems = new LinkedList<Object>();	
+	private String currentName = "";	
 	
-	public TypeCollector(Package p, boolean useSourceFiles) throws ConfigurationException {		
-		super(p);		  
+	/**
+	 * Creates a new <code>TypeCollector</code> with the given tree of packages. 
+	 * @param p					package tree
+	 * @param useSourceFiles	if true, always use <tt>.shadow</tt> instead of <tt>.meta</tt> files
+	 * @throws ConfigurationException
+	 */
+	public TypeCollector( Package p, boolean useSourceFiles ) throws ConfigurationException {		
+		super( p );		  
 		this.useSourceFiles = useSourceFiles;
 		config = Configuration.getConfiguration();
-	}	
+	}			
 	
-	public Map<Type,Node> getNodeTable() {
-		return nodeTable;
-	}				
-	
+	/**
+	 * Gets the main type used when collecting types.
+	 * @return					main type if specified, <code>null</code> otherwise
+	 */
 	public Type getMainType() {
 		return mainType;
 	}
 	
-	/** 
-	 * @return	The set of Types stemming directly from the provided source 
-	 * 			files. Mainly useful for documentation purposes
+	
+	/**
+	 * Gets the table that maps each file path (without extension) to the node of the
+	 * top-level class, enum, interface, or exception declared in that file.  
+	 * @return					map from files to nodes
 	 */
-	public Set<Type> getInitialFileTypes() {
-		return initialFileTypes;
+	public  Map<String,Node> getFileTable() {
+		return fileTable;
 	}
 		
-    /** Proxy for calling collectTypes() with one main file */
-    public Map<Type, Node> collectTypes(File mainFile) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
+    /** 
+     * Calls <code>collectTypes</code> with one main file.
+     * @param mainFile			main file to be type-checked or compiled
+     * @return					map from types to nodes
+     * @throws ParseException
+     * @throws ShadowException
+     * @throws TypeCheckException
+     * @throws IOException
+     * @throws ConfigurationException
+     */
+    public Map<Type,Node> collectTypes( File mainFile )
+    		throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
         List<File> initialFiles = new ArrayList<File>();
-        initialFiles.add(mainFile);
-        return collectTypes(initialFiles, true);
+        initialFiles.add( mainFile );
+        return collectTypes( initialFiles, true );
     }
    
-    /** Proxy for calling collectTypes with multiple, non-main files */
-    public Map<Type, Node> collectTypes(List<File> initialFiles) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
-        return collectTypes(initialFiles, false);
+    /** 
+     * Calls <code>collectTypes</code> with multiple, non-main files.
+     * This proxy method is usually called for documentation or type-checking only.
+     * @param files				files to be type-checked
+     * @return					map from types to nodes
+     * @throws ParseException
+     * @throws ShadowException
+     * @throws TypeCheckException
+     * @throws IOException
+     * @throws ConfigurationException
+     */
+    public Map<Type, Node> collectTypes( List<File> files )
+    		throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
+        return collectTypes( files, false );
     }
    
-    private Map<Type, Node> collectTypes(List<File> initialFiles, boolean hasMain) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
+    /*
+     * Calls the full <code>collectTypes</code> and might call it a second time
+     * if needed to determine what should be recompiled.
+     */
+    private Map<Type, Node> collectTypes( List<File> files, boolean hasMain ) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
         Set<String> mustRecompile = new HashSet<String>();
         Map<String, TreeSet<String>> dependencies = new HashMap<String, TreeSet<String>>();
         
-        //initial type collection
-        collectTypes( initialFiles, hasMain, mustRecompile, dependencies );
+        // Initial type collection
+        collectTypes( files, hasMain, mustRecompile, dependencies );
         
-        //files needing recompilation may trigger other files to get recompiled
-        //figure out which ones and redo the whole type collection process
+        // Files needing recompilation may trigger other files to get recompiled.
+        // Figure out which ones and redo the whole type collection process.
         if( errorList.size() == 0 && !useSourceFiles && mustRecompile.size() > 0 ) {
-        	//we create a new set, otherwise adding new recompilations can trigger unnecessary ones
+        	// Create a new set, otherwise adding new recompilations can trigger unnecessary ones.
         	Set<String> updatedMustRecompile = new HashSet<String>(mustRecompile);
         	
-        	//for all files that do not already need to be recompiled, check to see if their dependencies do
+        	// For all files that do not already need to be recompiled,
+        	// check to see if their dependencies do.
         	for(Map.Entry<String, TreeSet<String>> entry : dependencies.entrySet() )
         		if( !updatedMustRecompile.contains(entry.getKey()) )
 	        		for( String dependency : entry.getValue() )
@@ -120,13 +180,13 @@ public class TypeCollector extends BaseChecker {
         	
         	mustRecompile = updatedMustRecompile;
         	
-        	clear(); //clears out all internal representations and types
+        	clear(); // Clears out all internal representations and types.
         	
-        	//collect types again with updated recompilation requirements
-        	collectTypes( initialFiles, hasMain, mustRecompile, null );
-		}
-        
+        	// Collect types again with updated recompilation requirements.
+        	collectTypes( files, hasMain, mustRecompile, null );
+		}        
 		
+        // Check packages for errors.
 		checkPackageDirectories(packageTree);
 		
 		if( errorList.size() > 0 ) {
@@ -137,35 +197,34 @@ public class TypeCollector extends BaseChecker {
 		
 		printWarnings();
 		
-		//return the node corresponding to the file being compiled
-		return nodeTable;
+		// Return a table of all the types and their corresponding nodes.
+		return typeTable;
 	}
     
-    private void collectTypes(List<File> initialFiles, boolean hasMain, Set<String> mustRecompile, Map<String, TreeSet<String>> dependencies) throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
-        // Keep track of the initial files (as canonical paths) so that their
-        // resulting types may be linked back to them
-        HashSet<String> initialFilesCanonical = new HashSet<String>();
-        
-        // Create and fill the initial set of files to be checked
+    /*
+     * Does actual collection of types based on a list of files. 
+     */
+    private void collectTypes(List<File> files, boolean hasMain,
+    		Set<String> mustRecompile, Map<String,TreeSet<String>> dependencies)
+    		throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
+        // Create and fill the initial set of files to be checked.
         TreeSet<String> uncheckedFiles = new TreeSet<String>();
-        String main = null; // May or may not be null, based on hasMain
-        if (initialFiles.isEmpty()) {
+        
+        String main = null; // May or may not be null, based on hasMain.
+        if (files.isEmpty()) {
             throw new ConfigurationException("No files provided for typechecking");
         }
         else if (hasMain) {
-            // Assume the main file is the first and only file
-            main = stripExtension(initialFiles.get(0).getCanonicalPath());
+            // Assume the main file is the first and only file.
+            main = stripExtension(files.get(0).getCanonicalPath());
             uncheckedFiles.add(main);
         }
         else {
-            for (File file : initialFiles) {
+            for (File file : files) {
             	String path = stripExtension(file.getCanonicalPath());
-            	uncheckedFiles.add(path);
-            	initialFilesCanonical.add(path);
+            	uncheckedFiles.add(path);   
             }
         }
-        
-        ASTWalker walker = new ASTWalker( this );
        
         FilenameFilter filter = 
 	        new FilenameFilter() {
@@ -174,7 +233,7 @@ public class TypeCollector extends BaseChecker {
 	            }
 	        };
 				
-		//add standard imports		
+		/* Add standard imports. */		
 		File standard = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "standard" );
 		if( !standard.exists() )
 			throw new ConfigurationException("Invalid path to shadow:standard: " + standard.getCanonicalPath());
@@ -188,7 +247,7 @@ public class TypeCollector extends BaseChecker {
 			standardDependencies.add(name);
 		}
 		
-		//add io imports (necessary for console programs)		
+		/* Add io imports (necessary for console programs). */		
 		File io = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "io" );
 		if( !io.exists() )
 			throw new ConfigurationException("Invalid path to shadow:standard: " + io.getCanonicalPath());
@@ -199,22 +258,23 @@ public class TypeCollector extends BaseChecker {
 			uncheckedFiles.add(name);
 			standardDependencies.add(name);
 		}
-				
-		while(!uncheckedFiles.isEmpty()) {			
+
+		/* As long as there are unchecked files, remove one and process it. */
+		while( !uncheckedFiles.isEmpty() ) {			
 			String canonical = uncheckedFiles.first();
 			uncheckedFiles.remove(canonical);	
 			
 			File canonicalFile = new File(canonical + ".shadow");
 			
 			// Depending on the circumstances, the compiler may choose to either
-			// compile/recompile source files, or rely on existing binaries/IR
-			if (canonicalFile.exists()) {											
+			// compile/recompile source files, or rely on existing binaries/IR.
+			if( canonicalFile.exists() ) {											
 				File meta = new File(canonical + ".meta");
 				File llvm = new File(canonical + ".ll");
 				
 				// If source compilation was not requested and the binaries exist
-				// that are newer than the source, use those binaries
-				if (!useSourceFiles &&
+				// that are newer than the source, use those binaries.
+				if( !useSourceFiles &&
 					!mustRecompile.contains(canonical) &&
 					meta.exists() && meta.lastModified() >= canonicalFile.lastModified() &&
 					llvm.exists() && llvm.lastModified() >= meta.lastModified())
@@ -228,32 +288,31 @@ public class TypeCollector extends BaseChecker {
 			ShadowParser parser = new ShadowFileParser(canonicalFile);				
 			currentFile = canonicalFile;
 		    Node node = parser.CompilationUnit();
-		    			    
-			TypeCollector collector = new TypeCollector(new Package(), useSourceFiles);
-			collector.currentFile = currentFile; //for now, so that we have a file whose directory we can check
-			walker = new ASTWalker( collector );		
-			walker.walk(node);	
+
+		    // Make another collector to walk the current file. 
+			TypeCollector collector = new TypeCollector( new Package(), useSourceFiles );
+			// Keeping a current files gives us a file whose directory we can check against.
+			collector.currentFile = currentFile; 
+			ASTWalker walker = new ASTWalker( collector );		
+			walker.walk( node );	
 			
 			if( canonical.equals(main) )
 				mainType = node.getType();
+		
+			fileTable.put(canonical, node);
 			
-			// Associate resulting types with the initial files.
-			// A null Type indicates a prior error, but adding it to the list 
-			// will cause its own exception and should not be done
-			if (node.getType() != null && initialFilesCanonical.contains(canonical))
-				initialFileTypes.add(node.getType());
-			
-			files.put(canonical, node);
-			
-			//copy types from other collector into our package tree	
+			/* Copy types from other collector into our package tree. */	
 			for( Type type : collector.packageTree ) {
 				try {				
-					packageTree.addQualifiedPackage(type.getPackage().toString()).addType(type);					
-					if( mainType != null && type.getPackage() == packageTree && mainType.getPackage() != packageTree  ) {
-						//imported class has default package but the main type doesn't
-						//the only classes without a package that will be imported will be in the same directory as the main type
-						//implication: classes in the same directory have different packages
-						String message = "Type " + type + " belongs to the default package, but types defined in the same directory belong to other packages";
+					packageTree.addQualifiedPackage( type.getPackage().toString() ).addType( type );					
+					if( mainType != null && type.getPackage() == packageTree &&
+							mainType.getPackage() != packageTree ) {
+						// Imported class has default package but the main type doesn't.
+						// The only classes without a package that will be imported will be
+						// in the same directory as the main type.
+						// Implication: classes in the same directory have different packages.
+						String message = "Type " + type +
+								" belongs to the default package, but types defined in the same directory belong to other packages";
 						addWarning(Error.MISMATCHED_PACKAGE, message);
 					}											
 				}
@@ -262,92 +321,103 @@ public class TypeCollector extends BaseChecker {
 				}
 			}			
 			
-			//copy any errors into our error list
+			// Copy errors for the other collector into our error list.
 			if( collector.errorList.size() > 0 )
 				errorList.addAll(collector.errorList);
 			
-			//copy any warnings
+			// Copy warnings.
 			if( collector.warningList.size() > 0 )
 				warningList.addAll(collector.warningList);
 			
-			TreeSet<String> dependencySet = null;
-			
+			/* Track the dependencies for this file (if dependencies are being used).
+			 * If any of its dependencies need to be recompiled, this file will need
+			 * to be recompiled.
+			 */
+			TreeSet<String> dependencySet = null;			
 			if( dependencies != null ) {
-				dependencySet = new TreeSet<String>(standardDependencies);
-				dependencies.put(canonical, dependencySet);
+				dependencySet = new TreeSet<String>( standardDependencies );
+				dependencies.put( canonical, dependencySet );
 			}
 			
 			for( String _import : collector.importList ) {
-				if( !files.containsKey(_import) )
+				if( !fileTable.containsKey(_import) )
 					uncheckedFiles.add(_import);
 				
 				if( dependencySet != null )
 					dependencySet.add(_import);
 			}
 			
-			//Add files in directory after imports
+			/* Add files in the directory after imports. */
 			File[] directoryFiles = canonicalFile.getParentFile().listFiles( filter );		
 
 			for( File file :  directoryFiles ) {
 				String name = stripExtension(file.getCanonicalPath()); 
-				if( !files.containsKey(name) )
+				if( !fileTable.containsKey(name) )
 					uncheckedFiles.add(name);
 				
 				if( dependencySet != null )
 					dependencySet.add(name);
 			}
 			
-			//copy tables from other file into our central table
-			Map<Type,Node> otherNodeTable = collector.nodeTable;
+			/* Copy file table from other collector into our table. */
+			Map<Type,Node> otherNodeTable = collector.typeTable;
 			for( Type type : otherNodeTable.keySet() ) {
-				if( !nodeTable.containsKey(type) ) {
+				if( !typeTable.containsKey(type) ) {
 					Node otherNode = otherNodeTable.get(type);					
-					nodeTable.put(type, otherNode);
+					typeTable.put(type, otherNode);
 				}
 			}
 		}
     }
 	
+    /*
+     * Checks to make sure that all types in a package are defined by files in the same directory.
+     */
 	private void checkPackageDirectories(Package _package) {		
 		Collection<Type> types = _package.getTypes();
 		
 		Type firstType = null;
 		File path1 = null;
 		
+		/* Gets the directory of the first type and compares all others to it. */
 		if( types.size() > 1 ) {
 			for( Type type : types ) {
 				if( firstType == null ) {
 					firstType = type;
-					path1 = nodeTable.get(type).getFile().getParentFile();
+					path1 = typeTable.get( type ).getFile().getParentFile();
 				}
 				else {					
-					File path2 = nodeTable.get(type).getFile().getParentFile();					
-					
-					if( !path1.equals(path2))
-						addWarning(Error.MISMATCHED_PACKAGE, "Type " + firstType + " and " + type + " both belong to package " + _package + " but are defined in different directories");
+					File path2 = typeTable.get( type ).getFile().getParentFile();
+					if( !path1.equals( path2 ) )
+						addWarning(Error.MISMATCHED_PACKAGE, "Type " + firstType +
+								" and " + type + " both belong to package " + _package +
+								" but are defined in different directories");
 				}
 			}
 		}
 		
+		// Recursively check child packages.
 		for( Package child : _package.getChildren().values()  )
 			checkPackageDirectories(child);
 	}
 
-	private Object createType(SimpleNode node, Modifiers modifiers, 
-			Documentation documentation, TypeKind kind) throws ShadowException
-	{		 
+	/*
+	 * Creates a new type and puts it in the correct package.
+	 * If the type is a standard type, it will also have a static
+	 * type variable associated with it. 
+	 */
+	private Object createType( SimpleNode node, Modifiers modifiers, 
+			Documentation documentation, TypeKind kind ) throws ShadowException {		 
 		String typeName;
 		
-		if( node.jjtGetNumChildren() > 0 && (node.jjtGetChild(0) instanceof ASTUnqualifiedName) )
-		{
+		if( node.jjtGetNumChildren() > 0 &&
+				(node.jjtGetChild( 0 ) instanceof ASTUnqualifiedName) ) {
 			
-			if( currentType == null )
-			{
+			if( currentType == null ) {
 				String name = node.jjtGetChild(0).getImage();									
 				currentPackage = packageTree.addQualifiedPackage(name);
 			}
-			else
-			{
+			else {
 				addError(Error.INVALID_PACKAGE, "Package can only be defined by outermost classes" );
 				return WalkType.NO_CHILDREN;
 			}
@@ -355,26 +425,26 @@ public class TypeCollector extends BaseChecker {
 		
 		String image = node.getImage();	
 		
-		//for outer types, check that type name matches file name (if using a file)
-		if( currentType == null && node.getFile() != null )
-		{
+		/* For outer types, check that type name matches file name (if defined in a file), 
+		 * and that the package name matches the directory path. */
+		if( currentType == null && node.getFile() != null ) {
 			File file = node.getFile();
-			String fileName = stripExtension(file.getName());
-			if( !fileName.equals(image) )
-			{
-				addError(Error.INVALID_FILE, "Type " + image + " must be declared in a file named " + image + ".shadow or " + image + ".meta" );
+			String fileName = stripExtension( file.getName() );
+			if( !fileName.equals( image ) ) { // Check file name.
+				addError(Error.INVALID_FILE, "Type " + image +
+						" must be declared in a file named " +
+						image + ".shadow or " + image + ".meta" );
 				return WalkType.NO_CHILDREN;
 			}
-			else //check packages
-			{
+			else { // Check package path.			
 				Package _package = currentPackage;
 				File parent = file.getParentFile();
 				
-				while( _package != packageTree && parent != null )
-				{	
-					if( !_package.getName().equals(parent.getName()) )
-					{
-						addError(Error.INVALID_PACKAGE, "Type " + image + " cannot be added to package " + currentPackage.getQualifiedName() + " unless it is defined in directory " + currentPackage.getPath() );
+				while( _package != packageTree && parent != null ) {	
+					if( !_package.getName().equals( parent.getName() ) ) {
+						addError(Error.INVALID_PACKAGE, "Type " + image +
+								" cannot be added to package " + currentPackage.getQualifiedName() +
+								" unless it is defined in directory " + currentPackage.getPath() );
 						return WalkType.NO_CHILDREN;						
 					}
 					
@@ -384,42 +454,35 @@ public class TypeCollector extends BaseChecker {
 			}			
 		}		
 		
+		// Fix type names for primitive types.
+		if( currentPackage.getQualifiedName().equals("shadow:standard") && 		
+			   (image.equals( "Boolean" ) ||
+				image.equals( "Byte" ) ||
+				image.equals( "Code" ) ||
+				image.equals( "Short" ) ||
+				image.equals( "Int" ) ||
+				image.equals( "Long" ) ||
+				image.equals( "Float" ) ||
+				image.equals( "Double" ) ||
+				image.equals( "UByte" ) ||
+				image.equals( "UInt" ) ||
+				image.equals( "ULong" ) ||
+				image.equals( "UShort" )) )			
+			image = image.toLowerCase();				
 		
-		if( currentPackage.getQualifiedName().equals("shadow:standard"))
-		{
-			if( image.equals("Boolean") ||
-				image.equals("Byte") ||
-				image.equals("Code") ||
-				image.equals("Short") ||
-				image.equals("Int") ||
-				image.equals("Long") ||
-				image.equals("Float") ||
-				image.equals("Double") ||
-				image.equals("UByte") ||
-				image.equals("UInt") ||
-				image.equals("ULong") ||
-				image.equals("UShort") )
-			{
-				image = image.toLowerCase();				
-			}
-		}	
-		
+		// Current name contains package or outer class.
 		if( currentType == null )
-			typeName = currentName + image; //package name is separate
+			typeName = currentName + image; 
 		else
 			typeName = currentName + ":" + image;
 		
-		if( lookupType(typeName) != null )
-		{
+		if( lookupType( typeName ) != null ) {
 			addError(Error.MULTIPLY_DEFINED_SYMBOL, "Type " + typeName + " already defined" );
 			return WalkType.NO_CHILDREN;
 		}
-		else
-		{			
-			Type type = null;
-			
-			switch( kind )
-			{			
+		else { // Set kind of type and create it with the appropriate name and outer type.			
+			Type type = null;			
+			switch( kind ) {			
 			case CLASS:
 				type = new ClassType(image, modifiers, documentation, currentType );				
 				break;
@@ -432,28 +495,21 @@ public class TypeCollector extends BaseChecker {
 			case INTERFACE:
 				type = new InterfaceType(image, modifiers, documentation);
 				break;
-
 			case SINGLETON:
 				type = new SingletonType(image, modifiers, documentation, currentType );
 				break;
 			default:
-				throw new ShadowException("Unsupported type!" );
+				throw new ShadowException( "Unsupported type" );
 			}
 			
-			if( currentType != null && 
-				currentType instanceof ClassType &&					
-				( kind == TypeKind.CLASS ||
-				kind == TypeKind.ENUM ||				
-				kind == TypeKind.EXCEPTION) )
-			{					
-					((ClassType)currentType).addInnerClass(image, (ClassType)type); 
-			}
+			// Put new type inside of outer type, if it exists.
+			if( currentType != null && currentType instanceof ClassType &&					
+				(kind == TypeKind.CLASS || kind == TypeKind.ENUM || kind == TypeKind.EXCEPTION) )					
+				((ClassType)currentType).addInnerClass(image, (ClassType)type); 
 			
-			//Special case for system types			
-			if( currentPackage.getQualifiedName().equals("shadow:standard"))
-			{	
-				switch( typeName )
-				{
+			// Special case for standard types needed in the compiler.			
+			if( currentPackage.getQualifiedName().equals("shadow:standard")) {	
+				switch( typeName ) {
 				case "AddressMap":		Type.ADDRESS_MAP = (ClassType) type; break;
 				case "Array":			Type.ARRAY = (ClassType) type; break;
 				case "ArrayNullable":	Type.ARRAY_NULLABLE = (ClassType) type; break;
@@ -491,7 +547,6 @@ public class TypeCollector extends BaseChecker {
 				case "IteratorNullable":	Type.ITERATOR_NULLABLE = (InterfaceType) type; break;
 				case "long":			Type.LONG = (ClassType)type; break;
 				case "Method":			Type.METHOD = (ClassType)type; break;
-				//case "MethodClass":		Type.METHOD_CLASS = (ClassType) type; break;
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;
@@ -503,37 +558,39 @@ public class TypeCollector extends BaseChecker {
 				case "UnexpectedNullException": Type.UNEXPECTED_NULL_EXCEPTION = (ExceptionType)type; break;
 				case "ushort":			Type.USHORT = (ClassType)type; break;
 				}
-			}
-		
+			}		
 			
+			// Let type know what it has imported.
 			type.addImportedItems( importedItems );
 			
-			try
-			{			
-				currentPackage.addType(type);
+			// Put new type in its package.
+			try	{			
+				currentPackage.addType( type );
 			}
-			catch(PackageException e)
-			{
-				addError(Error.INVALID_PACKAGE, e.getMessage() );
+			catch( PackageException e ) {
+				addError( Error.INVALID_PACKAGE, e.getMessage() );
 				return WalkType.NO_CHILDREN;
 			}
 			
-			node.setType(type);	
+			// Update the type of the declaration node and the current declaration type.
+			node.setType( type );	
 			declarationType = type;
 		}
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public boolean addImport( String name )
-	{
-		String separator = File.separator; // Hopefully platform independent		
-		if( separator.equals("\\"))
+	/*
+	 * Adds a type or a whole package to the current list of imports.
+	 */
+	public boolean addImport( String name ) {
+		String separator = File.separator; // Adds some platform independence.		
+		if( separator.equals("\\"))		   // Hack for Windows to deal with backslash escaping.
 			separator = "\\\\";
 		String path = name.replaceAll(":", separator);
 		
-		// Which import paths are used depends on whether the requested package
-		// is in the standard library or not
+		/* Which import paths are used depends on whether the requested package
+		 * is in the standard library or not. */
 		List<Path> importPaths;
 		if (path.startsWith("shadow")) {
 			importPaths = new ArrayList<Path>();
@@ -544,94 +601,83 @@ public class TypeCollector extends BaseChecker {
 		
 		boolean success = false;				
 		
-		if( importPaths != null && importPaths.size() > 0 )
-		{
-			for( Path importPath : importPaths )
-			{	
-				// If an import path is relative, resolve it against the
-				// current source file
+		if( importPaths != null && importPaths.size() > 0 ) {
+			for( Path importPath : importPaths ) {	
+				// If an import path is relative, resolving it against the
+				// current source file will make it absolute.
+				// If it's absolute, no change will happen.
 				importPath = currentFile.toPath().getParent().resolve(importPath);
 				
-				if( !path.contains("@"))  //no @, must be a whole package import
-				{		
+				/* No @, must be a whole package import. 
+				 * Add everything in the directory. */
+				if( !path.contains("@")) {  						
 					File fullPath = new File( importPath.toFile(), path );
-					if( fullPath.isDirectory() )
-					{
-						File[] matchingShadow = fullPath.listFiles( new FilenameFilter(){							
+					if( fullPath.isDirectory() ) {
+						File[] matchingShadow = fullPath.listFiles(
+						new FilenameFilter() {							
 							@Override
-							public boolean accept(File dir, String name)
-							{
+							public boolean accept(File dir, String name) {
 								return name.endsWith(".shadow");
-							}    }   );
+							}
+						} );
 						
 
-						File[] matchingMeta = fullPath.listFiles( new FilenameFilter(){							
+						File[] matchingMeta = fullPath.listFiles(
+						new FilenameFilter() {							
 							@Override
-							public boolean accept(File dir, String name)
-							{
+							public boolean accept(File dir, String name) {
 								return name.endsWith(".meta");
-							}    }   );
+							}    
+						} );
 						
-						try 
-						{						
+						try {						
 							for( File file : matchingShadow )							
 								importList.add(stripExtension(file.getCanonicalPath()));
 															
-							for( File file : matchingMeta )
-							{
+							for( File file : matchingMeta ) {
 								String canonicalPath = stripExtension(file.getCanonicalPath());
-								if( !importList.contains(canonicalPath))
-									importList.add(canonicalPath);
+								if( !importList.contains( canonicalPath ) )
+									importList.add( canonicalPath );
 							}
 							
 							success = true;
 						}
-						catch (IOException e) 
-						{}												
+						catch (IOException e) {}												
 					}
 				}
-				else
-				{
+				/* Single file import. */
+				else {  
 					File shadowVersion;
 					File metaVersion;
 					String fixedPath;
 				
-					if( path.startsWith("default"))
-					{
-						fixedPath = path.replaceFirst("default@", "");
+					if( path.startsWith("default") ) {
+						fixedPath = path.replaceFirst( "default@", "" );
 						shadowVersion = new File( currentFile.getParent(),  fixedPath + ".shadow");
 						metaVersion = new File( currentFile.getParent(),  fixedPath + ".meta");
 					}
-					else
-					{
+					else {
 						fixedPath = path.replaceAll("@", separator);
 						shadowVersion = new File( importPath.toFile(), fixedPath + ".shadow" );
 						metaVersion = new File( importPath.toFile(), fixedPath + ".meta" );
 					}
 					
-					try
-					{						
-						if( shadowVersion.exists() )
-						{							
+					try {						
+						if( shadowVersion.exists() ) {							
 							importList.add(stripExtension(shadowVersion.getCanonicalPath()));							
 							success = true;						
 						}
-						else if( metaVersion.exists() )
-						{
+						else if( metaVersion.exists() ) {
 							importList.add(stripExtension(metaVersion.getCanonicalPath()));							
 							success = true;						
 						}
 					} 
-					catch (IOException e)
-					{						
-					}
-					
+					catch (IOException e) {}					
 				}
 				
 				if( success )
 					return true;
-			}	
-			
+			}
 		}
 		else
 			addError(Error.INVALID_IMPORT, "No import paths specified, cannot import " + name);
@@ -639,10 +685,32 @@ public class TypeCollector extends BaseChecker {
 		return false;
 	}
 	
+	/**
+	 * Clears out the data structures within the collector,
+	 * returning it to a state similar to just after construction.
+	 * Thie method calls its <code>super</code> version to clear out the
+	 * <code>BaseChecker</code> structures as well. 
+	 */
+	@Override
+	public void clear() {
+		super.clear();
+		
+		typeTable.clear();	
+		currentName = "";	
+		currentFile = null;
+		mainType = null;
+		fileTable.clear();
+		importedItems.clear();	
+		importList.clear();
+		
+		Type.clearTypes();
+	}
+	
+	/* AST visitor methods below this point. */
+	
 	@Override
 	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )	
-		{
+		if( !secondVisit ) {
 			currentPackage = packageTree;
 			importedItems.clear();
 			importedItems.add("shadow:standard");			
@@ -650,16 +718,13 @@ public class TypeCollector extends BaseChecker {
 		}
 		
 		return WalkType.PRE_CHILDREN;			
-	}
-	
+	}	
 	
 	@Override
-	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{
+	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit ) {
 			String name = node.getImage();
-			if( node.jjtGetNumChildren() > 0 ) //has @ sign
+			if( node.jjtGetNumChildren() > 0 ) // Has @ sign.
 				name = node.jjtGetChild(0).getImage() + "@" + name;
 			
 			if( addImport( name ) )
@@ -671,15 +736,11 @@ public class TypeCollector extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
-	//Visitors below this point
-	
 	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit )
-		{
+		if( secondVisit ) {
 			Type type = node.getType().getTypeWithoutTypeArguments();
-			nodeTable.put(type, node );
+			typeTable.put(type, node );
 			node.jjtGetParent().setType( type );
 			return WalkType.POST_CHILDREN;
 		}
@@ -690,9 +751,8 @@ public class TypeCollector extends BaseChecker {
 	
 	@Override
 	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit )
-		{
-			nodeTable.put(node.getType().getTypeWithoutTypeArguments(), node );
+		if( secondVisit ) {
+			typeTable.put(node.getType().getTypeWithoutTypeArguments(), node );
 			return WalkType.POST_CHILDREN;
 		}
 		else
@@ -701,18 +761,15 @@ public class TypeCollector extends BaseChecker {
 	}	
 
 	@Override
-	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit ) //leaving a type
-		{
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit ) { // Leaving a type.		
 			currentType = currentType.getOuter();
 			if( currentType == null )
 				currentName = currentPackage.getQualifiedName();
 			else
 				currentName = currentType.getTypeName();
 		}
-		else //entering a type
-		{					
+		else { // Entering a type.							
 			currentType = node.jjtGetParent().getType();
 			currentName = currentType.getTypeName();				
 		}
@@ -721,31 +778,25 @@ public class TypeCollector extends BaseChecker {
 	}
 	
 	@Override
-	public Object visit(ASTTypeParameters node, Boolean secondVisit) throws ShadowException
-	{	
+	public Object visit(ASTTypeParameters node, Boolean secondVisit) throws ShadowException {	
 		if( declarationType != null )
-			declarationType.setParameterized(true);	
+			declarationType.setParameterized( true );	
 		return WalkType.NO_CHILDREN;
 	}
 	
 	@Override
-	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{			
-			if ( node.jjtGetNumChildren() > 0)
-			{
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit ) {			
+			if ( node.jjtGetNumChildren() > 0) {
 				boolean colon = true;
 				Node first = node.jjtGetChild(0);
 				String name = first.getImage();
-				if( first instanceof ASTUnqualifiedName )
-				{
+				if( first instanceof ASTUnqualifiedName ) {
 					name += "@";
 					colon = false;
 				}
 				
-				for( int i = 1; i < node.jjtGetNumChildren(); i++ ) 
-				{	
+				for( int i = 1; i < node.jjtGetNumChildren(); i++ )  {	
 					if( colon )
 						name += ":";
 					else
@@ -756,8 +807,7 @@ public class TypeCollector extends BaseChecker {
 				
 				node.setImage(name);
 				
-				if( first instanceof ASTUnqualifiedName )
-				{
+				if( first instanceof ASTUnqualifiedName ) {
 					String importName = name;					
 					if( importName.contains(":"))
 						importName = importName.substring(0, importName.indexOf(':'));
@@ -769,35 +819,28 @@ public class TypeCollector extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{
-			//triggers an import (adding a file to the compilation process) 
-			//since there's an ASTUnqualifiedName@
-			if( node.jjtGetNumChildren() > 0 ) 
-			{
-				Node child = node.jjtGetChild(0);				
+	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit ) {
+			/* Triggers an import (adding a file to the compilation process) 
+			 * since there's an ASTUnqualifiedName@ */
+			if( node.jjtGetNumChildren() > 0 ) {
+				Node child = node.jjtGetChild( 0 );				
 				
-				if( child instanceof ASTUnqualifiedName )
-				{
+				if( child instanceof ASTUnqualifiedName ) {
 					String name = child.getImage() + "@" +  node.getImage();
 					if( !addImport( name ) )
-						addError(Error.INVALID_IMPORT, "No file found for import " + name);
+						addError( Error.INVALID_IMPORT, "No file found for import " + name );
 				}
 			}
 		}
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
-	{	
-		if( secondVisit )
-		{
+	public Object visit( ASTTypeArguments node, Boolean secondVisit ) throws ShadowException {	
+		if( secondVisit ) {
 			StringBuilder builder = new StringBuilder();
 			builder.append("<");
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) 
-			{
+			for( int i = 0; i < node.jjtGetNumChildren(); i++ ) {
 				Node child = node.jjtGetChild(i);
 				if( i > 0 )
 					builder.append(", ");
@@ -809,23 +852,19 @@ public class TypeCollector extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{
+	public Object visit( ASTReferenceType node, Boolean secondVisit ) throws ShadowException {		
+		if( secondVisit ) {
 			StringBuilder builder = new StringBuilder(node.jjtGetChild(0).getImage());
 			List<Integer> dimensions = node.getArrayDimensions();
 			
-			for( int i = 0; i < dimensions.size(); i++ )
-			{
-				
+			for( int i = 0; i < dimensions.size(); i++ ) {				
 				builder.append("[");
 				
 				for( int j = 1; j < dimensions.get(i); j++ )
 					builder.append(",");				
 				
 				builder.append("[");
-			}					
+			}				
 			
 			node.setImage(builder.toString());
 		}
@@ -834,29 +873,8 @@ public class TypeCollector extends BaseChecker {
 	}
 	
 	@Override
-	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException
-	{		
-		node.setType(nameToPrimitiveType(node.getImage()));		
+	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {		
+		node.setType( nameToPrimitiveType( node.getImage() ) );		
 		return WalkType.NO_CHILDREN;			
-	}
-
-	public void setNodeTable(Map<Type, Node> nodeTable) {
-		this.nodeTable = nodeTable;		
-	}
-	
-	@Override
-	public void clear() {
-		super.clear();
-		
-		nodeTable.clear();	
-		currentName = "";
-		files.clear();	
-		currentFile = null;
-		mainType = null;
-		initialFileTypes.clear();
-		importedItems.clear();	
-		importList.clear();
-		
-		Type.clearTypes();
 	}
 }

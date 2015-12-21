@@ -1,3 +1,20 @@
+/*
+ * Copyright 2015 Team Shadow
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 	
+ * 	    http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
 package shadow.typecheck;
 
 import java.util.ArrayList;
@@ -37,6 +54,7 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
 import shadow.typecheck.TypeCheckException.Error;
+import shadow.typecheck.DirectedGraph.CycleFoundException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
@@ -56,53 +74,79 @@ import shadow.typecheck.type.UninstantiatedClassType;
 import shadow.typecheck.type.UninstantiatedInterfaceType;
 import shadow.typecheck.type.UninstantiatedType;
 
+/**
+ * The <code>TypeUpdater</code> class updates types after they have been collected by
+ * the <code>TypeCollector</code>.  This class adds fields and methods, instantiates type
+ * parameters, adds parent types and interfaces, and checks method overrides.  It fills in
+ * the general shape of all of the types but does not check the actual statements of
+ * executable code.
+ * 
+ * @author Barry Wittman 
+ */
 public class TypeUpdater extends BaseChecker {
 	
 	private boolean isMeta = false;	
 	
-	public TypeUpdater(Package packageTree) {
-		super(packageTree);		
-	}	
+	/**
+	 * Creates a new <code>TypeUpdater</code> with the given tree of packages.
+	 * @param packageTree	root of all packages
+	 */
+	public TypeUpdater( Package packageTree ) {
+		super( packageTree );		
+	}
 	
-	//public void updateTypes(Map<String, Node> files) throws ShadowException, TypeCheckException
-	public Map<Type,Node> update(Map<Type, Node> nodeTable) throws ShadowException, TypeCheckException
-	{	
-		//adds fields and methods
+	
+	/**
+	 * Updates all of the types in the given node table and returns and updated table.
+	 * This central method of the class performs all of its functions.
+	 * @param typeTable			map from types to nodes
+	 * @return
+	 * @throws ShadowException
+	 * @throws TypeCheckException
+	 */
+	public Map<Type,Node> update( Map<Type,Node> typeTable )
+			throws ShadowException, TypeCheckException {
+		
+		/* Add fields and methods. */
 		ASTWalker walker = new ASTWalker( this );
-		for(Node declarationNode : nodeTable.values() ) {
+		for(Node declarationNode : typeTable.values() ) {
 			isMeta = declarationNode.getFile().getPath().endsWith(".meta");
-			if( !declarationNode.getType().hasOuter() ) //only walk outer types, inner ones will get covered automatically
+			// Only walk outer types since inner ones will be walked automatically.
+			if( !declarationNode.getType().hasOuter() )
 				walker.walk(declarationNode);
 		}
 		
+		/* Add default creates and make methods for properties. */
 		if( errorList.isEmpty() )
-			addConstructorsAndProperties();
+			addCreatesAndProperties();
 
-		//go through type parameters and instantiate them where applicable
-		//Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();
+		/* Instantiate type parameters where necessary, returning a new type table
+		 * The old type table can be invalidated when type names change as a result
+		 * of instantiating type parameters. */
 		if( errorList.isEmpty() )
-			nodeTable = instantiateTypeParameters( nodeTable );
+			typeTable = instantiateTypeParameters( typeTable );
 		
-		//topologically sort classes by extends and implements order
-		//includes a check for circular extends and implements
-		List<Node> nodeList = sortOnExtendsAndImplements(nodeTable);		
+		/* Topologically sort classes by their is lists: parent types and interfaces.
+		 * This sorting will also check for circular inheritance or interfaces.
+		 */
+		List<Node> nodeList = sortOnIsLists( typeTable );		
 		
-		//update extends and implements lists based on updated type parameters		
+		/* Update is lists based on updated type parameters. */		
 		if( errorList.isEmpty() )
-			updateExtendsAndImplements( nodeList );
+			updateIsLists( nodeList );
 		
-		//must happen after extends and implements
-		//since generic parameters in the methods could depend on correct extends and implements
+		/* Update fields and methods. Must happen after is lists are updated, since
+		 * generic parameters in the methods could depend on correct parents and interfaces. */
 		if( errorList.isEmpty() )
 			updateFieldsAndMethods( nodeList );		
 		
-		//now that the types are figured out, make sure all the method overrides are legal
+		/* After updating all the types, make sure that method overrides are all legal. */
 		if( errorList.isEmpty() )
 			checkOverrides( nodeList );
 		
+		/* Finally, update which types are referenced by other types. */
 		if( errorList.isEmpty() )
-			updateTypeReferences( nodeList );			
-			//updateReferencesInMetaFiles( nodeList );
+			updateTypeReferences( nodeList );
 
 		if( errorList.size() > 0 ) {
 			printErrors();
@@ -112,40 +156,9 @@ public class TypeUpdater extends BaseChecker {
 		
 		printWarnings();
 		
-		return nodeTable;
-	}
-	
-	
-	/*
-	private void updateReferencesInMetaFiles(List<Node> nodeList) {
-		for(Node declarationNode : nodeList ) {			
-			//if meta
-			if( declarationNode.getFile().getPath().endsWith(".meta") ) {
-				Type type = declarationNode.getType();
-				//update imports for meta files, since they won't have statement checking
-				for(Object item : type.getImportedItems())
-					if( item instanceof Type ) {
-						Type importType = (Type) item;
-						type.addReferencedType(importType);
-					}
-				
-				//add extends
-				if( type instanceof ClassType ) {
-					ClassType parent = ((ClassType) type).getExtendType();
-					while( parent != null ) {
-						type.addReferencedType(parent);
-						parent = parent.getExtendType();
-					}
-				}
-				
-				//add interfaces
-				for( InterfaceType _interface : type.getInterfaces() )
-					type.addReferencedType(_interface);
-			}				
-		}
-	}
-	*/
-	
+		return typeTable;
+	}	
+		
 	private void updateFieldsAndMethods( List<Node> nodeList ) {
 		//update fields and methods			
 		for(Node declarationNode : nodeList ) {	
@@ -159,41 +172,45 @@ public class TypeUpdater extends BaseChecker {
 		}		
 	}
 	
+	/* 
+	 * Add necessary referenced types to all types. 
+	 */
 	private void updateTypeReferences( List<Node> nodeList ) {
 		for(Node declarationNode : nodeList ) {
 			Type type = declarationNode.getType();
-			//the following must be added because they can appear in generated code
-			//without appearing inside the Shadow source at all
 			
-			//address map for deep copies
+			/* The following types must be added because they can appear in generated code
+			 * without appearing inside the Shadow source at all. */
+			
+			// Address map for deep copies
 			type.addReferencedType(Type.ADDRESS_MAP);
 			
-			//class management
+			// Class management
 			type.addReferencedType(Type.CLASS);
 			type.addReferencedType(Type.CLASS_SET);
 			type.addReferencedType(Type.GENERIC_CLASS);
 			
-			//array wrapper classes
+			// Array wrapper classes
 			type.addReferencedType(Type.ARRAY);
 			type.addReferencedType(Type.ARRAY_NULLABLE);
 			
-			//exceptions
+			// Exceptions
 			type.addReferencedType(Type.EXCEPTION);
 			type.addReferencedType(Type.CAST_EXCEPTION);
 			type.addReferencedType(Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			type.addReferencedType(Type.INTERFACE_CREATE_EXCEPTION);
 			type.addReferencedType(Type.UNEXPECTED_NULL_EXCEPTION);			
 			
-			//string
+			// String
 			type.addReferencedType(Type.STRING);
 			
-			//adding the self adds parents and interfaces and methods
+			// Adding the self adds parents and interfaces and methods
 			type.addReferencedType(type); 
 			
-			if( declarationNode.getFile().getPath().endsWith(".meta") ) {				
-				//update imports for meta files, since they won't have statement checking
-				//note that imports in meta files have been optimized to include only the
-				//originally imported classes that are referenced
+			/* Update imports for meta files, since they won't have statement checking.
+			 * Note that imports in meta files have been optimized to include only the
+			 * originally imported classes that are referenced. */
+			if( declarationNode.getFile().getPath().endsWith(".meta") ) {
 				for(Object item : type.getImportedItems())
 					if( item instanceof Type ) {
 						Type importType = (Type) item;
@@ -203,21 +220,22 @@ public class TypeUpdater extends BaseChecker {
 		}
 	}
 	
-	private void addConstructorsAndProperties() {		
-		for( Type type : packageTree ) { //iterates over all the types in the package tree
+	private void addCreatesAndProperties() {		
+		for( Type type : packageTree ) { // Iterate over all the types in the package tree.
 			if( type instanceof ClassType ) {
 				ClassType classType = (ClassType)type;
+				/* If no creates are present, add the default one. */
 				if (classType.getMethods("create").isEmpty()) {
-					//if no creates, add the default one
 					ASTCreateDeclaration createNode = new ASTCreateDeclaration(-1);
 					createNode.setModifiers(Modifiers.PUBLIC);
-					MethodSignature createSignature = new MethodSignature(classType, "create", createNode.getModifiers(), createNode.getDocumentation(), createNode);
+					MethodSignature createSignature = new MethodSignature(classType, "create",
+							createNode.getModifiers(), createNode.getDocumentation(), createNode);
 					createNode.setMethodSignature(createSignature);
 					classType.addMethod(createSignature);
-					//note that the node is null for the default create, because nothing was made
+					// Note: the node is null for the default create, since nothing was made.
 				}
 				
-				//add copy method with a set to hold addresses
+				/* Add copy method with a set to hold addresses. */
 				ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
 				copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);
 				MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode.getDocumentation(), copyNode);
@@ -226,7 +244,7 @@ public class TypeUpdater extends BaseChecker {
 				copyNode.setMethodSignature(copySignature);
 				classType.addMethod(copySignature);
 				
-				//add default getters and setters
+				/* Add default getters and setters. */
 				for( Map.Entry<String, Node> field : classType.getFields().entrySet() ) {
 					Node node = field.getValue();
 					Modifiers fieldModifiers = node.getModifiers();
@@ -251,10 +269,12 @@ public class TypeUpdater extends BaseChecker {
 						
 						if( fieldModifiers.isGet() && getterCount == 0 ) {
 							if( getterCollision > 0 )								
-								addError(node, Error.INVALID_MODIFIER, "Default get property " +  field.getKey() + " cannot replace a non-get method with an indistinguishable signature" );
+								addError(node, Error.INVALID_MODIFIER,
+										"Default get property " + field.getKey() +
+										" cannot replace a non-get method with an indistinguishable signature" );
 							else {
 								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-								//default get is readonly
+								// Default get is readonly.
 								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);														
 								methodNode.setImage(field.getKey());
 								methodNode.setType(node.getType());
@@ -272,12 +292,10 @@ public class TypeUpdater extends BaseChecker {
 							}								
 						}
 						
-						if( fieldModifiers.isSet() && setterCount == 0 )
-						{
+						if( fieldModifiers.isSet() && setterCount == 0 ) {
 							if( setterCollision > 0 )								
 								addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot replace a non-set method with an indistinguishable signature" );
-							else
-							{
+							else {
 								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
 								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
 								methodNode.setImage(field.getKey());
@@ -302,14 +320,12 @@ public class TypeUpdater extends BaseChecker {
 					}						
 				}
 			}
-		}
-		
+		}		
 	}	
 	
 	private Map<Type,Node> instantiateTypeParameters( Map<Type,Node> nodeTable ) {		
-		//first build graph of type parameter dependencies
-		DirectedGraph<Node> graph = new DirectedGraph<Node>();
-		Map<Type, Node> updatedNodeTable = new HashMap<Type,Node>();
+		/* Build graph of type parameter dependencies. */
+		DirectedGraph<Node> graph = new DirectedGraph<Node>();		
 		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();
 		
 		for(Node declarationNode : nodeTable.values() ) {
@@ -320,29 +336,34 @@ public class TypeUpdater extends BaseChecker {
 		
 		for(Node declarationNode : nodeTable.values() )
 			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  ) {
-				Node dependencyNode = uninstantiatedNodes.get(dependency.getTypeWithoutTypeArguments());
+				Node dependencyNode = uninstantiatedNodes.get( dependency.getTypeWithoutTypeArguments() );
 				if( dependencyNode == null )
-					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " + declarationNode.getType() + " is dependent on unavailable type " + dependency, dependency);
+					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " +
+							declarationNode.getType() + " is dependent on unavailable type " +
+							dependency, dependency);
 				else
 					graph.addEdge(dependencyNode, declarationNode);				
 			}
 		
-		//update parameters based on topological sort of type parameter dependencies
+		/* Update parameters based on topological sort of type parameter dependencies. */
+		// Need a new table because types have changed and will hash to different locations.		
+		Map<Type, Node> updatedNodeTable = new HashMap<Type,Node>();
 		try {					
 			List<Node> nodeList = graph.topologicalSort();
-			//update type parameters
+			/* Update type parameters. */
 			for(Node declarationNode : nodeList ) {	
 				Type type = declarationNode.getType();				
 				updateTypeParameters( type, declarationNode );
-				//need a new table because types have changed and will hash to different locations
+
 				
 				Type cleanType = declarationNode.getType().getTypeWithoutTypeArguments();				
 				updatedNodeTable.put(cleanType, declarationNode);
 				
-				//add references to type parameters
-				if( cleanType.isParameterized() )
-					for(ModifiedType parameter : cleanType.getTypeParameters() )
-						cleanType.addReferencedType(parameter.getType());
+				/* Add references to type parameters. */
+				//Necessary?  Updating type references should handle this.
+				//if( cleanType.isParameterized() )
+				//	for( ModifiedType parameter : cleanType.getTypeParameters() )
+				//		cleanType.addReferencedType(parameter.getType());
 			}
 		}
 		catch( CycleFoundException e ) {
@@ -355,23 +376,20 @@ public class TypeUpdater extends BaseChecker {
 	}
 	
 	
-	private List<Node> sortOnExtendsAndImplements(Map<Type,Node> nodeTable) {
+	private List<Node> sortOnIsLists(Map<Type,Node> nodeTable) {
 		//now make dependency graph based on extends and implements
 		DirectedGraph<Node> graph = new DirectedGraph<Node>();
 		
 		for(Node declarationNode : nodeTable.values() )
 			graph.addNode( declarationNode );
 		
-		for(Node declarationNode : nodeTable.values() )
-		{
+		for(Node declarationNode : nodeTable.values() ) {
 			Type type = declarationNode.getType();
 			
-			if( type instanceof ClassType )
-			{
+			if( type instanceof ClassType ) {
 				ClassType classType = (ClassType) type;
 				
-				if( classType.getExtendType() != null )
-				{
+				if( classType.getExtendType() != null ) {
 					Node dependencyNode = nodeTable.get(classType.getExtendType().getTypeWithoutTypeArguments());
 					if( dependencyNode == null )
 						addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
@@ -380,9 +398,7 @@ public class TypeUpdater extends BaseChecker {
 				}
 			}
 				
-			for( Type dependency : type.getInterfaces() )
-			{
-				
+			for( Type dependency : type.getInterfaces() ) {				
 				dependency = dependency.getTypeWithoutTypeArguments();
 				Node dependencyNode = nodeTable.get(dependency);
 				if( dependencyNode == null )
@@ -394,12 +410,10 @@ public class TypeUpdater extends BaseChecker {
 		
 		List<Node> nodeList = null;
 		
-		try
-		{	
+		try {	
 			 nodeList = graph.topologicalSort();
 		}	
-		catch( CycleFoundException e )
-		{
+		catch( CycleFoundException e ) {
 			Node node = (Node) e.getCycleCause();			
 			addError(node, Error.INVALID_HIERARCHY, "Type " + node.getType() + " contains a circular extends or implements definition", node.getType());
 		}
@@ -408,73 +422,52 @@ public class TypeUpdater extends BaseChecker {
 	}
 	
 	
-	private void updateExtendsAndImplements(List<Node> nodeList)
-	{	
+	private void updateIsLists(List<Node> nodeList) {	
 		for(Node declarationNode : nodeList ) {	
 			Type type = declarationNode.getType();
 			if( type instanceof ClassType ) {
 				ClassType classType = (ClassType) type;					
 				ClassType parent = classType.getExtendType();
 
-				//update parent
+				/* Update parent */
 				if( parent != null && parent instanceof UninstantiatedClassType ) {
 					try {
 						parent = ((UninstantiatedClassType)parent).partiallyInstantiate();
-						classType.setExtendType(parent);										
+						classType.setExtendType( parent );										
 					} 
 					catch (InstantiationException e) {
-						addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-					}
-				}
-
-				//update interfaces
-				ArrayList<InterfaceType> interfaces = classType.getInterfaces();
-				
-				for( int i = 0; i < interfaces.size(); i++ ) { 
-					InterfaceType interfaceType = interfaces.get(i);
-					if( interfaceType instanceof UninstantiatedInterfaceType  ) {
-						try {
-							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).partiallyInstantiate();
-							interfaces.set(i, interfaceType);	
-						} 
-						catch (InstantiationException e) {
-							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-						}						
+						addError( declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 					}
 				}					
-			}
-			else if( type instanceof InterfaceType ) {	
-				
-				//update interfaces
-				ArrayList<InterfaceType> interfaces = ((InterfaceType)type).getInterfaces();
-									
-				for( int i = 0; i < interfaces.size(); i++ ) { 
-					InterfaceType interfaceType = interfaces.get(i);
-					if( interfaceType instanceof UninstantiatedInterfaceType  ) {
-						try {
-							interfaceType =  ((UninstantiatedInterfaceType)interfaceType).partiallyInstantiate();
-							interfaces.set(i, interfaceType);							
-						} 
-						catch (InstantiationException e)  {
-							addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
-						}						
-					}					
-				}
 			}			
+			
+			/* Update interfaces */
+			ArrayList<InterfaceType> interfaces = type.getInterfaces();
+								
+			for( int i = 0; i < interfaces.size(); i++ ) { 
+				InterfaceType interfaceType = interfaces.get(i);
+				if( interfaceType instanceof UninstantiatedInterfaceType  ) {
+					try {
+						interfaceType = ((UninstantiatedInterfaceType)interfaceType).partiallyInstantiate();
+						interfaces.set( i, interfaceType );							
+					} 
+					catch (InstantiationException e)  {
+						addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+					}						
+				}					
+			}
 		}
-		
 	}
 		
 	private void checkOverrides(List<Node> nodeList) {	
 		for( Node declarationNode : nodeList ) {	
-			setFile(declarationNode.getFile()); //used for error messages
+			setFile( declarationNode.getFile() ); // Used for error messages.
 			if( declarationNode.getType() instanceof ClassType ) {					
 				ClassType classType = (ClassType)declarationNode.getType();
 				ClassType parent = classType.getExtendType();			
 			
 				if( parent != null) {
-					//enforce immutability
-					//any mutable parent method must be overridden 
+					/* Enforce immutability: any mutable parent method must be overridden. */ 
 					if( classType.getModifiers().isImmutable() ) {
 						List<MethodSignature> list = classType.orderAllMethods();
 						for( MethodSignature signature : list )
@@ -485,11 +478,8 @@ public class TypeUpdater extends BaseChecker {
 					/* Check overridden methods to make sure:
 					 * 1. No locked method has been overridden
 					 * 2. All overrides match exactly  (if it matches everything but return type...ambiguous!)
-					 * 3. No immutable methods have been overridden NOT RIGHT NOW... add "locked" keyword?
-					 * 4. Readonly methods cannot be overridden by mutable methods
-					 * 5. No overridden methods have been narrowed in access
-					 */
-					
+					 * 3. Readonly methods cannot be overridden by mutable methods
+					 * 4. No overridden methods have been narrowed in access. */					
 					for( List<MethodSignature> signatures : classType.getMethodMap().values() )					
 						for( MethodSignature signature : signatures ) {
 							if( parent.recursivelyContainsIndistinguishableMethod(signature) && !signature.isCreate() ) {
@@ -512,7 +502,7 @@ public class TypeUpdater extends BaseChecker {
 						}
 				}
 				
-				//check to see if all interfaces are satisfied				
+				/* Check to see if all interfaces are satisfied. */				
 				for( InterfaceType interfaceType : classType.getInterfaces() )  {	
 					ArrayList<String> reasons = new ArrayList<String>();
 					
@@ -530,71 +520,58 @@ public class TypeUpdater extends BaseChecker {
 		}				
 	}
 	
-	private void updateTypeParameters(Type type, Node declarationNode)
-	{
-		if( type.isParameterized() )
-		{	
-			for( ModifiedType modifiedType : type.getTypeParameters() )
-			{						
+	private void updateTypeParameters( Type type, Node declarationNode ) {
+		if( type.isParameterized() ) {	
+			for( ModifiedType modifiedType : type.getTypeParameters() ) {						
 				TypeParameter typeParameter = (TypeParameter) modifiedType.getType();
 			
-				try
-				{
+				try {
 					typeParameter.updateFieldsAndMethods();
 				}
-				catch( InstantiationException e )
-				{
-					addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+				catch( InstantiationException e ) {
+					addError( declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 				}
 			}
 		}
 	}
 	
 	
+	/**
+	 * Tries to find a type without any other information.
+	 * This method starts by looking in the current method, which will
+	 * eventually look through outer types and then imported types.
+	 * This method overrides the <code>BaseChecker</code> method and
+	 * adds the ability to resolve type parameters.
+	 * @param name		name of the type
+	 * @return			type found or <code>null</code> if not found
+	 */
 	@Override
-	public Type lookupType( String name ) //only addition to base checker is resolving type parameters
-	{		
-		if( declarationType != null &&  currentType != declarationType ) //in declaration header, check type parameters of current class declaration
-		{
-			if( declarationType.isParameterized() )
-			{
-				for( ModifiedType modifiedParameter : declarationType.getTypeParameters() )
-				{
-					
-					Type parameter = modifiedParameter.getType();
-					
-					if( parameter instanceof TypeParameter )
-					{
+	public Type lookupType( String name ) {		
+		// In declaration header, check type parameters of current class declaration.
+		if( declarationType != null &&  currentType != declarationType ) {
+			if( declarationType.isParameterized() ) {
+				for( ModifiedType modifiedParameter : declarationType.getTypeParameters() ) {					
+					Type parameter = modifiedParameter.getType();					
+					if( parameter instanceof TypeParameter ) {
 						TypeParameter typeParameter = (TypeParameter) parameter;
 						if( typeParameter.getTypeName().equals(name) )
 							return typeParameter;
 					}					
 				}				
 			}
-		}		
-		
+		}
 		return super.lookupType(name);
 	}
-	
-	
-	
-	
 		
-	/**
-	 * Checks method and field modifiers to see if they are legal
-	 * 
-	 * @param node
-	 * @param modifiers
-	 * @return
+	/* Checks method and field modifiers to see if they are legal. 
+	 * The kind is "constant" or "method", for error reporting purposes.
 	 */
-
-	public boolean checkModifiers( Node node, String kind )
-	{
+	private boolean checkModifiers( Node node, String kind ) {
 		int visibilityModifiers = 0;
 		Modifiers modifiers = node.getModifiers();
 		boolean success = true;
 		
-		//modifiers are set, but we have to check them
+		/* Count up the visibility modifiers. */ 
 		if( modifiers.isPublic())
 			visibilityModifiers++;
 		if( modifiers.isPrivate())
@@ -602,16 +579,13 @@ public class TypeUpdater extends BaseChecker {
 		if( modifiers.isProtected())
 			visibilityModifiers++;
 		
-		if( visibilityModifiers > 1 )
-		{
+		if( visibilityModifiers > 1 ) {
 			addError(Error.INVALID_MODIFIER, "Only one public, private, or protected modifier can be used at once" );
 			success = false;
 		}
 		
-		if( currentType instanceof InterfaceType )
-		{
-			if( visibilityModifiers > 0 )
-			{			
+		if( currentType instanceof InterfaceType ) {
+			if( visibilityModifiers > 0 ) {			
 				addError(Error.INVALID_MODIFIER, "Interface " + kind + "s cannot be marked public, private, or protected since they are all public by definition" );
 				success = false;
 			}			
@@ -619,29 +593,35 @@ public class TypeUpdater extends BaseChecker {
 			node.addModifier(Modifiers.PUBLIC);
 			node.getType().addModifier(Modifiers.PUBLIC);
 		}
-		else if( visibilityModifiers == 0 )
-		{			
+		else if( visibilityModifiers == 0 ) {			
 			addError(Error.INVALID_MODIFIER, "Every class " + kind + " must be specified as public, private, or protected" );
 			success = false;
 		}
 		
 		return success;
-	}	
+	}
 	
+	/* Visitor methods and their helpers below this point. */	
+	
+	
+	/* Helper method called by several different visitor methods. */
 	private Object visitMethod( String name, SignatureNode node, Boolean secondVisit ) {	
 		MethodSignature signature;
 		
 		if( secondVisit ) {
 			signature = node.getMethodSignature();			
 			
-			// make sure we don't already have an indistinguishable method
+			/* Make sure we don't already have an indistinguishable method. */
 			if( currentType.containsIndistinguishableMethod(signature) ) {				
-				// get the first signature
+				// Get the first indistinguishable signature for error reporting. 
 				MethodSignature method = currentType.getIndistinguishableMethod(signature);				
-				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Indistinguishable method already declared on line " + method.getNode().getLineStart());
+				addError(Error.MULTIPLY_DEFINED_SYMBOL,
+						"Indistinguishable method already declared on line " +
+						method.getNode().getLineStart());
 				return WalkType.NO_CHILDREN;
 			}
-						
+			
+			/* Check to see if the method has a body or not (and if it should). */
 			if( currentType instanceof ClassType ) {			
 				if( isMeta && node.hasBlock() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
@@ -659,14 +639,18 @@ public class TypeUpdater extends BaseChecker {
 					addError(node, Error.INVALID_STRUCTURE, "Interface method " + signature + " must not define a body");
 			}		
 			
-			// add the method to the current type
+			// Add the method to the current type.
 			currentType.addMethod(signature);
+			// Since we're leaving the method, take it off the method stack.
 			currentMethod.removeFirst();
-		} else {
-			signature = new MethodSignature( currentType, name, node.getModifiers(), node.getDocumentation(), node);
+		}
+		else {
+			/* Create the method signature and add this method to the method stack. */
+			signature = new MethodSignature( currentType, name, node.getModifiers(),
+					node.getDocumentation(), node );
 			node.setMethodSignature(signature);
 			MethodType methodType = signature.getMethodType();
-			node.setType(methodType);
+			node.setType( methodType );
 			node.setEnclosingType(currentType);
 			checkModifiers( node, "method" );
 			currentMethod.addFirst(node);
@@ -675,10 +659,8 @@ public class TypeUpdater extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException
-	{
-		if(secondVisit)
-		{	
+	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {	
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				node.addType(node.jjtGetChild(i));
 		}
@@ -686,10 +668,8 @@ public class TypeUpdater extends BaseChecker {
 		return WalkType.POST_CHILDREN;			
 	}
 	
-	public Object visit(ASTCreateDeclarator node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{
+	public Object visit(ASTCreateDeclarator node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
 			ASTCreateDeclaration parent = (ASTCreateDeclaration) node.jjtGetParent();
 			MethodSignature signature = parent.getMethodSignature();
 			visitDeclarator( node, signature  );			
@@ -701,10 +681,8 @@ public class TypeUpdater extends BaseChecker {
 		return WalkType.POST_CHILDREN;	
 	}
 	
-	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{
+	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
 			ASTMethodDeclaration parent = (ASTMethodDeclaration) node.jjtGetParent();
 			visitDeclarator( node, parent.getMethodSignature() );			
 		}		
@@ -713,7 +691,7 @@ public class TypeUpdater extends BaseChecker {
 	}
 	
 	private void visitDeclarator( Node node, MethodSignature signature ) {	
-		//ASTCreateDeclarator will never have type parameters 
+		// ASTCreateDeclarator will never have type parameters. 
 		int index = 0;		
 		if( node.jjtGetChild(index) instanceof ASTTypeParameters ) {
 			Type methodType = signature.getMethodType();
@@ -721,7 +699,7 @@ public class TypeUpdater extends BaseChecker {
 			index++;
 		}
 		
-		// add parameters to the signature
+		/* Add parameters to the signature */
 		ASTFormalParameters parameters = (ASTFormalParameters) node.jjtGetChild(index);
 		List<String> parameterNames = parameters.getParameterNames();
 		SequenceType parameterTypes = parameters.getType();		
@@ -731,18 +709,20 @@ public class TypeUpdater extends BaseChecker {
 		
 		if( signature.getModifiers().isSet() ) {				
 			if( parameterTypes.size() != 1 )
-				addError(Error.INVALID_MODIFIER, "Methods marked with set must have exactly one parameter");
+				addError(Error.INVALID_MODIFIER,
+						"Methods marked with set must have exactly one parameter");
 			else
 				signature.getParameterTypes().get(0).getModifiers().addModifier(Modifiers.ASSIGNABLE);
 		}			
 		else if( signature.getModifiers().isGet() ) {
 			if( parameterTypes.size() != 0 )
-				addError(Error.INVALID_MODIFIER, "Methods marked with get cannot have any parameters");
+				addError(Error.INVALID_MODIFIER,
+						"Methods marked with get cannot have any parameters");
 		}		
 
-		//add return types
+		/* Add return types */
 		index++;
-		if( node.jjtGetNumChildren() > index ) { //creates have no results		
+		if( node.jjtGetNumChildren() > index ) { // Creates have no results.		
 			ASTResultTypes results = (ASTResultTypes) node.jjtGetChild(index);
 					
 			for( ModifiedType modifiedType : results.getType() ) 
@@ -750,44 +730,42 @@ public class TypeUpdater extends BaseChecker {
 		
 			if( signature.getModifiers().isSet() ) {				
 				if( signature.getReturnTypes().size() != 0 )
-					addError(Error.INVALID_MODIFIER, "Methods marked with set cannot have return values");				
+					addError(Error.INVALID_MODIFIER,
+							"Methods marked with set cannot have return values");				
 			}			
 			else if( signature.getModifiers().isGet() ) {
 				if( signature.getReturnTypes().size() != 1 )
-					addError(Error.INVALID_MODIFIER, "Methods marked with get must have exactly one return value");
+					addError(Error.INVALID_MODIFIER,
+							"Methods marked with get must have exactly one return value");
 			}
 		}		
 	}
 	
-	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException
-	{
-		if(secondVisit)
-		{	
-			//child 0 is Modifiers
-			Type type = node.jjtGetChild(1).getType();			
+	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
+			Type type = node.jjtGetChild(1).getType(); // Child 0 is modifiers.			
 			node.setType( type );
 		
 			if( type instanceof SingletonType )
-				addError(Error.INVALID_TYPE, "Parameter cannot be defined with singleton type " + type);
-			
+				addError(Error.INVALID_TYPE, "Parameter cannot be defined with singleton type "
+						+ type);			
 		}		
 	
 		return WalkType.POST_CHILDREN;
 	}	
 	
-	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException
-	{
-		if(secondVisit)
-		{		
-			// go through all the formal parameters
-			for(int i = 0; i < node.jjtGetNumChildren(); ++i) 
-			{
+	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {		
+			/* Iterate through formal parameters. */
+			for( int i = 0; i < node.jjtGetNumChildren(); ++i ) {
 				Node parameter = node.jjtGetChild(i);
 				String parameterName = parameter.getImage();
 				if( node.getParameterNames().contains( parameterName ) )
-					addError(Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + parameterName + " already defined as a parameter name");
+					addError( Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + parameterName +
+							" already defined as a parameter name" );
 				if( parameter.getType() instanceof SingletonType )
-					addError(parameter, Error.INVALID_PARAMETERS, "Cannot define method with singleton parameter");				
+					addError( parameter, Error.INVALID_PARAMETERS,
+							"Cannot define method with singleton parameter" );				
 				node.addParameter(parameterName, parameter);
 			}	
 		}
@@ -797,24 +775,20 @@ public class TypeUpdater extends BaseChecker {
 	
 
 	@Override
-	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException
-	{
+	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )		
 			currentPackage = packageTree;		
 				
 		return WalkType.POST_CHILDREN;			
 	}
 	
-	private void updateImports( Node node )
-	{
-		//changing these items updates the correct imports inside the type
+	private void updateImports( Node node ) {
+		/* Changing these items updates the imports inside the type. */
 		List<Object> importedItems = node.getType().getImportedItems();
-		for( int i = 0; i < importedItems.size(); i++ )
-		{
+		for( int i = 0; i < importedItems.size(); i++ ) {
 			Object thing = importedItems.get(i);
 			String item = (String) thing;
-			if( item.contains("@") ) //specific class
-			{
+			if( item.contains("@") ) { // Single class.			
 				Type type = lookupType(item);				
 				//shouldn't fail
 				if( type == null )
@@ -822,10 +796,8 @@ public class TypeUpdater extends BaseChecker {
 				else 
 					importedItems.set(i, type);
 			}
-			else
-			{
+			else {	// Whole package.			
 				Package p = packageTree.getChild(item);
-				//shouldn't fail
 				if( p == null )
 					addError(Error.INVALID_IMPORT, "Undefined package " + item + " cannot be imported");
 				else
@@ -835,26 +807,22 @@ public class TypeUpdater extends BaseChecker {
 	}
 	
 	@Override
-	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException
-	{							
-		node.setType(literalToType(node.getLiteral()));
+	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {							
+		node.setType( literalToType( node.getLiteral() ) );
 		return WalkType.NO_CHILDREN;			
 	}
-
 	
-	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )			
-		{
-			Node child = node.jjtGetChild(1); //child 0 is modifiers 
+	@Override
+	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
+			Node child = node.jjtGetChild(1); // Child 0 is modifiers. 
 			node.setType(child.getType());			
 		}
 		
 		return WalkType.POST_CHILDREN;	
 	}
-	
-	private Object visitDeclaration( Node node, Boolean secondVisit ) throws ShadowException
-	{
+		
+	private Object visitDeclaration( Node node, Boolean secondVisit ) throws ShadowException {
 		if( secondVisit ){
 			ASTIsList list = null;			
 			for( int i = 0; i < node.jjtGetNumChildren() && list == null; ++i )
@@ -877,10 +845,12 @@ public class TypeUpdater extends BaseChecker {
 						if( type instanceof InterfaceType )
 							declarationType.addInterface((InterfaceType)type);
 						else				
-							addError(Error.INVALID_INTERFACE, kind + declarationType + " cannot implement non-interface type " + type, type);
+							addError(Error.INVALID_INTERFACE, kind + declarationType +
+									" cannot implement non-interface type " + type, type);
 					}
 			}	
-			else if( declarationType instanceof ClassType ) { //should only be classes, exceptions					
+			// Should only be classes, singletons, and exceptions.
+			else if( declarationType instanceof ClassType ) { 					
 				ClassType classType = (ClassType)declarationType;
 				String kind;
 				if( classType.getClass() == ExceptionType.class )
@@ -902,41 +872,49 @@ public class TypeUpdater extends BaseChecker {
 							otherKind = "class type ";
 						
 						if( type instanceof ClassType ) {
-							//exceptions are the only things that can extend exceptions
-							if(((declarationType.getClass() == ExceptionType.class) != (type.getClass() == ExceptionType.class)) || 
-								type.getClass() == SingletonType.class ) //nothing can extend a singleton
-								addError(Error.INVALID_PARENT, kind + declarationType + " cannot be child of " + otherKind + type);														
+							// Exceptions are the only things that can extend exceptions.
+							if(((declarationType.getClass() == ExceptionType.class) !=
+									(type.getClass() == ExceptionType.class)) ||
+									type.getClass() == SingletonType.class )
+								 // Nothing can extend a singleton.
+								addError(Error.INVALID_PARENT, kind + declarationType +
+										" cannot be child of " + otherKind + type);														
 							else if( type.getModifiers().isLocked() )
-								addError(Error.INVALID_PARENT, kind + declarationType + " cannot be child of locked " + otherKind + type);
+								addError(Error.INVALID_PARENT, kind + declarationType +
+										" cannot be child of locked " + otherKind + type);
 							else if( i != 0 )
-								addError(Error.INVALID_PARENT, kind + declarationType + " can only be child of " + otherKind + type + " if " + type + " is listed first in the is list");
+								addError(Error.INVALID_PARENT, kind + declarationType +
+										" can only be child of " + otherKind + type + " if " + type + " is listed first in the is list");
 							else
 								classType.setExtendType((ClassType)type);
 						}
 						else if( type instanceof InterfaceType )
 							classType.addInterface((InterfaceType)type);
 						else				
-							addError(Error.INVALID_TYPE, kind + classType + " cannot extend or implement type " + type, classType, type);
+							addError(Error.INVALID_TYPE, kind + classType +
+									" cannot extend or implement type " + type, classType, type);
 					}
 				
-				//use defaults if no extend type set
+				/* Use defaults if no extend type set. */
 				if( classType.getExtendType() == null ) {
 					if( classType instanceof ExceptionType ) {
-						if( classType == Type.EXCEPTION ) //special case only for the root of all exceptions
-							classType.setExtendType(Type.OBJECT);
+						// Special case only for the root of all exceptions.
+						if( classType == Type.EXCEPTION ) 
+							classType.setExtendType( Type.OBJECT );
 						else
-							classType.setExtendType(Type.EXCEPTION);
+							classType.setExtendType( Type.EXCEPTION );
 					}
-					else if( classType != Type.OBJECT ) //the Object class is the only class with a null parent
-						classType.setExtendType(Type.OBJECT);
+					// The Object class is the only class with a null parent.
+					else if( classType != Type.OBJECT ) 
+						classType.setExtendType( Type.OBJECT );
 				}
 			}		
 			
 			if( declarationType.getOuter() != null )			
-				declarationType.addTypeParameterDependency(declarationType.getOuter());
-			else //outermost type
-			{
-				//set compilation unit type
+				declarationType.addTypeParameterDependency( declarationType.getOuter() );
+			// Outermost type
+			else { 			
+				// Set compilation unit type.
 				Node parent = node.jjtGetParent();
 				parent.setType(declarationType);								
 			}
@@ -952,48 +930,35 @@ public class TypeUpdater extends BaseChecker {
 		return WalkType.POST_CHILDREN;
 	}
 	
-	
-	//But we still need to know what type we're in to sort out type parameters in the extends list
-	//declarationType will differ from current type only before the body (extends list, implements list)
-	//if no extends added, fix those too	
 	@Override
-	public Object visit(ASTClassOrInterfaceDeclaration node, Boolean secondVisit) throws ShadowException
-	{			
+	public Object visit( ASTClassOrInterfaceDeclaration node, Boolean secondVisit )
+			throws ShadowException {				
 		return visitDeclaration( node, secondVisit );
 	}
 	
 	@Override
-	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException
-	{			
+	public Object visit( ASTEnumDeclaration node, Boolean secondVisit ) throws ShadowException {				
 		return visitDeclaration( node, secondVisit );
 	}
 	
 	@Override
-	public Object visit(ASTCreateDeclaration node, Boolean secondVisit) throws ShadowException 
-	{
-		Node methodDeclarator = node.jjtGetChild(0); //probably unnecessary
+	public Object visit( ASTCreateDeclaration node, Boolean secondVisit ) throws ShadowException {
+		Node methodDeclarator = node.jjtGetChild(0);
 		return visitMethod( methodDeclarator.getImage(), node, secondVisit );
 	}
 	
 	@Override
-	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit) throws ShadowException
-	{			
+	public Object visit( ASTDestroyDeclaration node, Boolean secondVisit ) throws ShadowException {			
 		return visitMethod( node.getImage(), node, secondVisit );		
 	}
 
-	
-	/**
-	 * Adds a method to the current type.
-	 */
-	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException 
-	{		
+	@Override
+	public Object visit( ASTMethodDeclaration node, Boolean secondVisit ) throws ShadowException {		
 		Node methodDeclarator = node.jjtGetChild(0);
 		
-		//creates are not marked immutable or readonly since they change fields
-		if( !secondVisit && currentType != null && !node.getImage().equals("create") ) 
-		{
-			if( currentType.getModifiers().isImmutable() )
-			{
+		// Creates are not marked immutable or readonly since they change fields
+		if( !secondVisit && currentType != null && !node.getImage().equals("create") ) {
+			if( currentType.getModifiers().isImmutable() ) {
 				node.addModifier(Modifiers.READONLY);
 				methodDeclarator.addModifier(Modifiers.READONLY);
 			}
@@ -1001,135 +966,138 @@ public class TypeUpdater extends BaseChecker {
 		return visitMethod( methodDeclarator.getImage(), node, secondVisit );
 	}
 	
-	/**
-	 * Add the field declarations.
-	 */
-	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException
-	{
+	@Override
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
 		if(!secondVisit)
 			return WalkType.POST_CHILDREN;
 		
-		// a field declaration has a type followed by an identifier (or a sequence of them)	
+		// A field declaration has a type followed by an identifier (or a sequence of them).	
 		Type type = node.jjtGetChild(0).getType();
 						
 		node.setType(type);
 		node.setEnclosingType(currentType);
-
 		node.addModifier(Modifiers.FIELD);
 		
-		//constants must be public, private, or protected, unlike regular fields which are implicitly private
+		// Constants must be public, private, or protected,
+		// unlike regular fields which are implicitly private.
 		if( node.getModifiers().isConstant() )
-			checkModifiers( node, "constant");
+			checkModifiers( node, "constant" );
 		
 		if( currentType.getModifiers().isImmutable() )
-			node.addModifier(Modifiers.IMMUTABLE);
+			node.addModifier( Modifiers.IMMUTABLE );
 		
+		// All interface fields are implicitly public and constant.
 		if( currentType instanceof InterfaceType ) {
-			node.addModifier(Modifiers.CONSTANT); //all interface fields are implicitly public and constant
-			node.addModifier(Modifiers.PUBLIC);
+			node.addModifier( Modifiers.CONSTANT ); 
+			node.addModifier( Modifiers.PUBLIC );
 		}
 		
 		if( type instanceof UninstantiatedType && node.getModifiers().isConstant() ) {
 			UninstantiatedType uninstantiatedType = (UninstantiatedType) type;
 			for( ModifiedType argument : uninstantiatedType.getTypeArguments() ) {
-				if( argument.getType() instanceof TypeParameter ) {
-					//necessary?
-					addError(Error.INVALID_TYPE_PARAMETERS, "Field marked constant cannot have a type with a type parameter");
+				if( argument.getType() instanceof TypeParameter ) {					
+					addError( Error.INVALID_TYPE_PARAMETERS,
+							"Field marked constant cannot have a type with a type parameter" );
 					break;
 				}				
 			}
 		}	
 						
-		// go through inserting all the identifiers
-		for(int i = 1; i < node.jjtGetNumChildren(); ++i) {
-			Node declarator = node.jjtGetChild(i);			
-						
+		/* Add all the identifiers. */
+		for( int i = 1; i < node.jjtGetNumChildren(); ++i ) {
+			Node declarator = node.jjtGetChild(i);
 			declarator.setType(type);
 			declarator.setModifiers(node.getModifiers());
 			declarator.setDocumentation(node.getDocumentation());
 			declarator.setEnclosingType(currentType);
+			
 			String symbol = declarator.getImage();
 			
-			// make sure we don't already have this symbol
-			// current choice is to allow methods and fields to collide since they can be disambiguated by colon or dot			
-			if(currentType.containsField(symbol) )						
-				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol + " already declared on line " + currentType.getField(symbol).getLineStart());
-			else if(currentType instanceof ClassType && ((ClassType)currentType).containsInnerClass(symbol))
-				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol + " already declared as inner class");
+			/* Make sure we don't already have this symbol.
+			 * Methods and fields can have the same name since they can be
+			 * disambiguated by colon or dot. */			
+			if( currentType.containsField( symbol ) )						
+				addError( Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol +
+						" already declared on line " +
+						currentType.getField(symbol).getLineStart() );
+			else if( currentType instanceof ClassType &&
+					((ClassType)currentType).containsInnerClass( symbol ))
+				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol +
+						" already declared as inner class");
 			else
 				currentType.addField(symbol, declarator);
 			
 			if( type instanceof SingletonType ) {
 				if( node.getModifiers().isGet() )
-					addError(node, Error.INVALID_MODIFIER, "Modifier get cannot be applied to field " + symbol + " with singleton type");
+					addError(node, Error.INVALID_MODIFIER,
+							"Modifier get cannot be applied to field " + symbol +
+							" with singleton type");
 				if( node.getModifiers().isImmutable() )
-					addError(node, Error.INVALID_MODIFIER, "Modifier immutable cannot be applied to field " + symbol + " with singleton type");
+					addError(node, Error.INVALID_MODIFIER,
+							"Modifier immutable cannot be applied to field " + symbol +
+							" with singleton type");
 				if( node.getModifiers().isNullable() )
-					addError(node, Error.INVALID_MODIFIER, "Modifier nullable cannot be applied to field " + symbol + " with singleton type");
+					addError(node, Error.INVALID_MODIFIER,
+							"Modifier nullable cannot be applied to field " + symbol +
+							" with singleton type");
 				if( node.getModifiers().isReadonly() )
-					addError(node, Error.INVALID_MODIFIER, "Modifier readonly cannot be applied to field " + symbol + " with singleton type");
+					addError(node, Error.INVALID_MODIFIER,
+							"Modifier readonly cannot be applied to field " + symbol +
+							" with singleton type");
 				if( node.getModifiers().isSet() )
-					addError(node, Error.INVALID_MODIFIER, "Modifier set cannot be applied to field " + symbol + " with singleton type");
+					addError(node, Error.INVALID_MODIFIER,
+							"Modifier set cannot be applied to field " + symbol +
+							" with singleton type");
 				if( node.getModifiers().isWeak() )
-					addError(node, Error.INVALID_MODIFIER, "Modifier weak cannot be applied to field " + symbol + " with singleton type");				
+					addError(node, Error.INVALID_MODIFIER,
+							"Modifier weak cannot be applied to field " + symbol +
+							" with singleton type");				
 			}			
 		}		
 			
 		return WalkType.POST_CHILDREN;
 	}
 		
-	//type parameters will only be visited here on type declarations and class methods 
+	/* Type parameters will only be visited here on type declarations and class methods. */ 
 	@Override
-	public Object visit(ASTTypeParameters node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{			
+	public Object visit(ASTTypeParameters node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit ) {			
 			SequenceType typeParameters = node.getType();			
-			for( int i = 0; i < node.jjtGetNumChildren(); ++i )
-			{
+			for( int i = 0; i < node.jjtGetNumChildren(); ++i ) {
 				Node typeParameter = node.jjtGetChild(i); 
 				typeParameters.add(typeParameter);
 				TypeParameter newParameter = (TypeParameter) typeParameter.getType();
 				
-				for( int j = 0; j < i; ++j )
-				{
-					TypeParameter existingParameter = (TypeParameter) typeParameters.get(j).getType();
+				for( int j = 0; j < i; ++j ) {
+					TypeParameter existingParameter =
+							(TypeParameter) typeParameters.get(j).getType();
 					if( newParameter.getTypeName().equals(existingParameter.getTypeName()) )
-						addError(Error.MULTIPLY_DEFINED_SYMBOL, "Type parameter " + newParameter.getTypeName() + " has already been defined" );
+						addError(Error.MULTIPLY_DEFINED_SYMBOL, "Type parameter " +
+								newParameter.getTypeName() + " has already been defined" );
 				}
 			}
-		}
-			
+		}	
 		
 		return WalkType.POST_CHILDREN;
 	}
 	
 	@Override
-	public Object visit(ASTTypeParameter node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{	
+	public Object visit(ASTTypeParameter node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit ) {	
 			TypeParameter typeParameter = (TypeParameter) node.getType();
 			
-			if( node.jjtGetNumChildren() > 0 )
-			{
+			if( node.jjtGetNumChildren() > 0 ) {
 				ASTIsList bounds = (ASTIsList)(node.jjtGetChild(0));				
 				for( int i = 0; i < bounds.jjtGetNumChildren(); i++ )								
 					typeParameter.addBound(bounds.jjtGetChild(i).getType());				
 			}
 		}
-		else
-		{	
-			//type parameters are created on the first visit so that bounds dependent on them can look up the right type
+		else {	
+			/* Type parameters are created on the first visit so that bounds dependent
+			 * on them can look up the right type. */
 			String symbol = node.getImage();
-			TypeParameter typeParameter = new TypeParameter(symbol, declarationType);			
-			
-			Type type;
-						
-			if( currentMethod.size() == 1 )						
-				type = currentMethod.getFirst().getMethodSignature().getMethodType();  //add type parameters to method
-			else
-				type = declarationType; //add parameters to current class
+			TypeParameter typeParameter = new TypeParameter(symbol, declarationType);
+			Type type = declarationType; //add parameters to current class
 					
 			if( type instanceof SingletonType )			
 				addError(Error.INVALID_TYPE_PARAMETERS, "Singleton type " + declarationType.getTypeName() + " cannot be parameterized");
@@ -1145,124 +1113,73 @@ public class TypeUpdater extends BaseChecker {
 	
 	
 	@Override
-	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
-	{
-		return deferredTypeResolution(node, secondVisit);	
-	}
-	
-	private Object deferredTypeResolution(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException
-	{	
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {	
 		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
+			return WalkType.POST_CHILDREN;		
 		
-		Node child = node.jjtGetChild(0); 
-		String typeName = child.getImage();
-		int start = 1;
-		
-		if( child instanceof ASTUnqualifiedName )
-		{					
-			child = node.jjtGetChild(start);
-			typeName += "@" + child.getImage();
-			start++;					
-		}
-		
-		Type type = lookupType(typeName);
-				
-		if(type == null)
-		{
-			addError(Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");			
-			node.setType(Type.UNKNOWN);					
-		}
-		else
-		{			
-			//if (currentType instanceof ClassType)
-			//	((ClassType)currentType).addReferencedType(type);
-		
-			if( !isMeta && !classIsAccessible( type, declarationType  ) )		
-				addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from this context");
+		Type type = null;
 			
-			if( child.jjtGetNumChildren() == 1 ) //contains arguments
-			{
-				SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
-				if( type.isParameterized() ) 
-				{					
-					if( type instanceof ClassType )						
-						type = new UninstantiatedClassType( (ClassType)type, arguments);
-					else if( type instanceof InterfaceType )
-						type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments);
-				}
-				else
-				{
-					addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
-					type = Type.UNKNOWN;
-				}										
+		// Type can be complex: package@Container<T, List<String>, String, Thing<K>>:Stuff<U>
+		for( int i = 0; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ ) {	
+			Node child = node.jjtGetChild(i);
+			String typeName = child.getImage();
+			if( i == 0 ) { // Special case for first pass, might include package.				
+				if( child instanceof ASTUnqualifiedName ) {
+					i++;
+					child = node.jjtGetChild(i);
+					typeName += "@" + child.getImage();											
+				}					
+				type = lookupType(typeName);
 			}
-			else if( type.isParameterized() ) //parameterized but no parameters!	
-			{
-				addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
-				type = Type.UNKNOWN;
+			else { // On later passes, get inner class from previous.
+				if( type instanceof UninstantiatedType )
+					type = ((UninstantiatedType)type).getType();
+				
+				if( type instanceof ClassType ) 
+					type = ((ClassType)type).getInnerClass(typeName);
+				else
+					type = null;
 			}			
-			
-			//Container<T, List<String>, String, Thing<K>>:Stuff<U>
-			for( int i = start; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ )
-			{	
-				Type outer = type;
-				if( outer instanceof UninstantiatedType )
-					outer = ((UninstantiatedType)type).getType();
+		
+			if(type == null) {
+				addError(Error.UNDEFINED_TYPE, "Type " + typeName +
+						" not defined in current context");			
+				type = Type.UNKNOWN;					
+			}
+			else {
+				if( !isMeta && !classIsAccessible( type, declarationType  ) )		
+					addError(Error.ILLEGAL_ACCESS, "Type " + type +
+							" not accessible from current context");
 				
-				child = node.jjtGetChild(i);
-				type = null;
-				if( outer instanceof ClassType )
-					type = ((ClassType)outer).getInnerClass(child.getImage());
-				
-				if(type == null)
-				{
-					addError(Error.UNDEFINED_TYPE, "Type " + child.getImage() + " not defined in current context");			
-					type = Type.UNKNOWN;					
-				}
-				else
-				{
-					if (currentType instanceof ClassType)
-						((ClassType)currentType).addReferencedType(type);
-				
-					if( !isMeta && !classIsAccessible( type, currentType  ) )		
-						addError(Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from current context");
-					
-					if( child.jjtGetNumChildren() == 1 ) //contains arguments
-					{
-						SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
-						if( type.isParameterized() ) 
-						{		
-							
-							if( type instanceof ClassType )						
-								type = new UninstantiatedClassType( (ClassType)type, arguments);
-							else if( type instanceof InterfaceType )
-								type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments);
-						}
-						else
-						{
-							addError(Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments supplied for non-parameterized type " + type);
-							type = Type.UNKNOWN;
-						}										
+				if( child.jjtGetNumChildren() == 1 ) { // Contains type arguments.				
+					SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+					if( type.isParameterized() ) {
+						if( type instanceof ClassType )						
+							type = new UninstantiatedClassType( (ClassType)type, arguments );
+						else if( type instanceof InterfaceType )
+							type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments );
 					}
-					else if( type.isParameterized() ) //parameterized but no parameters!	
-					{
-						addError(Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + child.getImage());
+					else {
+						addError(Error.UNNECESSARY_TYPE_ARGUMENTS,
+								"Type arguments supplied for non-parameterized type " + type);
 						type = Type.UNKNOWN;
-					}
+					}										
+				}
+				else if( type.isParameterized() ) { // Parameterized but no type arguments.
+					addError(Error.MISSING_TYPE_ARGUMENTS,
+							"Type arguments not supplied for parameterized type " + typeName);
+					type = Type.UNKNOWN;
 				}
 			}
-			//set the type now that it has type parameters 
-			node.setType(type);	
-		}	
+		}
+		// Set the type now that it has type parameters. 
+		node.setType(type);
 		
 		return WalkType.POST_CHILDREN;
 	}	
 		
-	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{			
+	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {			
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
 				node.addType(node.jjtGetChild(i));
 		}
@@ -1271,16 +1188,13 @@ public class TypeUpdater extends BaseChecker {
 	}
 
 	
-	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException
-	{		
-		if( secondVisit )
-		{
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {		
+		if( secondVisit ) {
 			Node child = node.jjtGetChild(0);
 			Type type = child.getType();
 			node.setModifiers(new Modifiers(child.getModifiers()));
 			
-			List<Integer> dimensions = node.getArrayDimensions();
-			
+			List<Integer> dimensions = node.getArrayDimensions();			
 			if( dimensions.size() == 0 )
 				node.setType(type);
 			else {				
@@ -1294,22 +1208,14 @@ public class TypeUpdater extends BaseChecker {
 	
 
 	@Override
-	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException
-	{
+	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {
 		node.setType(nameToPrimitiveType(node.getImage()));		
 		return WalkType.NO_CHILDREN;			
-	}
+	}	
 	
-	
-	/**
-	 * Given an ASTFunctionType node recursively builds the corresponding MethodType type.
-	 * @param node
-	 * @return
-	 */
-	public Object visit(ASTFunctionType node, Boolean secondVisit) throws ShadowException
-	{
-		if( secondVisit )
-		{		
+	@Override
+	public Object visit(ASTFunctionType node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {		
 			MethodType methodType = new MethodType();		
 			ASTResultTypes parameters = (ASTResultTypes) node.jjtGetChild(0);
 			SequenceType parameterTypes = parameters.getType();
@@ -1347,14 +1253,13 @@ public class TypeUpdater extends BaseChecker {
 		}		
 		
 		return WalkType.POST_CHILDREN;
-	}
-	
+	}	
 	
 	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN; //skip all blocks
+		return WalkType.NO_CHILDREN; // Skip all blocks.
 	}
 	
 	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN; //skip all blocks
+		return WalkType.NO_CHILDREN; // Skip all blocks.
 	}
 }

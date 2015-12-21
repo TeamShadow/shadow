@@ -1,11 +1,35 @@
+/*
+ * Copyright 2015 Team Shadow
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 	
+ * 	    http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
 package shadow.typecheck;
 
-@SuppressWarnings("serial")
-public class TypeCheckException extends Exception
-{	
-	// these are constants for our error messages to keep things consistent
-	public static enum Error
-	{		
+/**
+ * Exception to capture various standard errors than can occur during type-checking.
+ * 
+ * @author Barry Wittman 
+ */
+public class TypeCheckException extends Exception {
+	private static final long serialVersionUID = -2238483523241380406L;
+
+	/**
+	 *  Constants for each kind of supported error, with default error messages.
+	 *  Listing all supported errors increases consistency.
+	 */
+	public static enum Error {		
 		ILLEGAL_ACCESS("Illegal access", "Class, member, method, or property not accessible from this context"),
 		INVALID_ARGUMENTS("Invalid arguments", "Supplied method arguments do not match parameters"),
 		INVALID_ASSIGNMENT("Invalid assignment", "Right hand side cannot be assigned to left hand side"),
@@ -56,33 +80,38 @@ public class TypeCheckException extends Exception
 		private final String name;
 		private final String message;		
 		
-		Error( String name, String message )
-		{
+		Error( String name, String message ) {
 			this.name = name;
 			this.message = message;
 		}
 		
-		public String getName()
-		{
+		public String getName() {
 			return name;
 		}
 		
-		public String getMessage()
-		{
+		public String getMessage() {
 			return message;			
 		}
 	}
 	
 	private Error error;	
 	
-	public TypeCheckException(Error error, String message)
-	{
-		super( message  );
+	
+	/**
+	 * Creates a <code>TypeCheckException</code> with a specified kind of error and a message.
+	 * @param error		kind of error
+	 * @param message	explanatory error message
+	 */
+	public TypeCheckException( Error error, String message ) {
+		super( message );
 		this.error = error;				
 	}
 	
-	public Error getError()
-	{	
+	/**
+	 * Gets kind of error.
+	 * @return			kind of error
+	 */
+	public Error getError() {	
 		return error;
 	}
 }

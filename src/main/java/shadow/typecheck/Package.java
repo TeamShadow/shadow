@@ -1,3 +1,20 @@
+/*
+ * Copyright 2015 Team Shadow
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 	
+ * 	    http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
 package shadow.typecheck;
 
 import java.io.File;
@@ -7,56 +24,66 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import shadow.doctool.Documentation;
-import shadow.doctool.DocumentationBuilder;
-import shadow.doctool.DocumentationException;
-import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.Type;
 
 /** 
  * A representation of a Shadow package, with awareness of both its parent and
- * child packages 
+ * child packages. 
+ * 
+ * @author Barry Wittman
  */
-public class Package implements Comparable<Package>, Iterable<Type>
-{	
-	@SuppressWarnings("serial")
-	public static class PackageException extends Exception
-	{
-		public PackageException()
-		{
+public class Package implements Comparable<Package>, Iterable<Type> {	
+
+	/**
+	 * A PackageException is thrown when there is an attempt to add a type
+	 * to a package that already contains that type.  
+	 */
+	public static class PackageException extends Exception {
+		private static final long serialVersionUID = -2535851392865246026L;
+
+		public PackageException() {
 			super();
 		}		
 
-		public PackageException(String message)
-		{
+		public PackageException(String message) {
 			super(message);
 		}
 	}
 	
+	// Packages inside this package
 	private final HashMap<String, Package> children = new HashMap<String, Package>();
-	private final String name;	
+	private final String name;
 	private final Package parent;
-	private final HashMap<String, Type> types = new HashMap<String, Type>();
-	private Documentation documentation;
 	
-	public Package()
-	{
+	// Types inside the current package
+	private final HashMap<String, Type> types = new HashMap<String, Type>();
+	private Documentation documentation = null;
+	
+	/**
+	 * Creates a default package.
+	 * Should only be used for the package at the root of a package tree.  
+	 */
+	public Package() {
 		this("", null);
 	}	
 
-	private Package(String name, Package parent)
-	{
+	/**
+	 * Creates a package with a given name and parent.
+	 * @param name		name of this package
+	 * @param parent	parent of this package
+	 */
+	private Package(String name, Package parent) {
 		this.name = name;
 		this.parent = parent;		
 	}	
 	
 	/**
-	 * Adds a new folder to a package and returns it
-	 * If the folder with the given name already exists, it returns that instead
-	 * @param folder
-	 * @return
+	 * Adds a new package within this package and returns it.
+	 * If a child package with the given name already exists, it returns that instead.
+	 * @param name	name of the new child package
+	 * @return		child package
 	 */
-	public Package addPackage( String name )
-	{				
+	public Package addPackage( String name ) {				
 		if( children.containsKey(name) )
 			return children.get(name);
 		
@@ -67,20 +94,18 @@ public class Package implements Comparable<Package>, Iterable<Type>
 	}
 	
 	/**
-	 * Adds an entire package path to the package tree and returns the PackageType corresponding to the leaf 
-	 * @param path
-	 * @return
+	 * Adds an entire package path to the package tree and returns the
+	 * the deepest child package specified by the path. 
+	 * @param path	string representation of the package path
+	 * @return		child package specified by the path
 	 */
-	public Package addQualifiedPackage( String path )
-	{
-		if( path.length() > 0 && !path.equals("default") )
-		{
-			String[] folders = path.split(":");
+	public Package addQualifiedPackage( String path ) {
+		if( path.length() > 0 && !path.equals("default") ) {
+			String[] packages = path.split(":");
 			
-			Package parent = this;
-			
-			for( int i = 0; i < folders.length; i++ )		
-				parent = parent.addPackage( folders[i] );
+			Package parent = this;			
+			for( int i = 0; i < packages.length; i++ )		
+				parent = parent.addPackage( packages[i] );
 			
 			return parent;
 		}
@@ -88,30 +113,39 @@ public class Package implements Comparable<Package>, Iterable<Type>
 			return this;
 	}
 	
-	public void addType(Type type) throws PackageException {	
+	/**
+	 * Adds a type to the given package, throwing a <code>PackageException</code>
+	 * if the type is already present.
+	 * @param type
+	 * @throws PackageException
+	 */
+	public void addType( Type type ) throws PackageException {
+		// name doesn't include packages or type parameters
+		String name = type.toString( Type.NO_OPTIONS );
 		
-		String name = type.toString(Type.NO_OPTIONS);
-		
-		if(!types.containsKey(name)) { //no package name or type parameters		
-			types.put(name, type);
-			type.setPackage(this);
+		if( !types.containsKey( name ) ) { 		
+			types.put( name, type );
+			type.setPackage( this ); // Informs type of its package
 		}
 		else
-			throw new PackageException("Package " + this.toString() + " already contains type " + type);
+			throw new PackageException("Package " + this.toString() +
+					" already contains type " + type);
 	}
-	
 
-	public void addTypes(HashMap<String, Type> types) throws PackageException {
-		for( Type type : types.values() )
-			addType( type );
-	}
 	
-	
-	public HashMap<String, Package>  getChildren()
-	{
+	/**
+	 * Gets all child packages within this package.
+	 * @return	map of child packages
+	 */
+	public HashMap<String, Package> getChildren() {
 		return children;
 	}
 	
+	
+	/**
+	 * Gets name of package including all parent packages.
+	 * @return	full package name
+	 */
 	public String getQualifiedName() {
 		if (parent == null || parent.getName().isEmpty())
 			return getName();
@@ -119,7 +153,10 @@ public class Package implements Comparable<Package>, Iterable<Type>
 		return parent.getQualifiedName() + ':' + getName();
 	}
 	
-	
+	/**
+	 * Gets name of package mangled for compiler output.
+	 * @return	mangled package name
+	 */	
 	public String getMangledName() {
 		if (parent == null || parent.getName().isEmpty())
 			return Type.mangle(getName());
@@ -127,46 +164,42 @@ public class Package implements Comparable<Package>, Iterable<Type>
 		return parent.getMangledName() + '.' + Type.mangle(getName());
 	}
 	
+	/**
+	 * Gets relative file system path corresponding to package name.
+	 * @return	string representation of path
+	 */
 	public String getPath() {
 		return getQualifiedName().replace(':', File.separatorChar);
 	}
 
-	public Package getParent()
-	{
+	/**
+	 * Gets parent package.
+	 * @return	parent package
+	 */
+	public Package getParent() {
 		return parent;
-	}
+	}	
+
 	
-	/** The number of parents this package has */
-	public int getDepth()
-	{
-		int depth = 0;
-		Package current = this.parent;
-		while (current != null) {
-			depth++;
-			current = current.getParent();
-		}
-		
-		return depth;
-	}
-	
-	public String getName()
-	{
+	/**
+	 * Get name of package without parent packages.
+	 * @return	package name
+	 */
+	public String getName() {
 		return name;
 	}
-	
-	public boolean hasChild(String name)
-	{
-		return (getChild(name) != null);
-	}
-	
-	public Package getChild(String name)
-	{
-		if( name.contains(":"))
-		{
-			int separator = name.indexOf(":");
-			String child = name.substring(0, separator);
-			if( children.containsKey(child))
-				return children.get(child).getChild(name.substring(separator + 1));
+
+	/**
+	 * Gets child package with a given name, which may be several packages deep.
+	 * @param name	name of child package
+	 * @return		named package or <code>null</code> if not found
+	 */
+	public Package getChild(String name) {
+		if( name.contains( ":" ) ) {
+			int separator = name.indexOf( ":" );
+			String child = name.substring( 0, separator );
+			if( children.containsKey( child ) )
+				return children.get( child ).getChild( name.substring( separator + 1 ) );
 			else
 				return null;
 		}
@@ -174,39 +207,45 @@ public class Package implements Comparable<Package>, Iterable<Type>
 		return children.get(name);
 	}
 	
-	public boolean hasType( String name )
-	{
-		return types.containsKey(name);
-	}
-	
-	public Type getType( String name )
-	{
+	/**
+	 * Gets type with a given name from the package. 
+	 * @param name	name of the type
+	 * @return		specified type or <code>null</code> if not found
+	 */
+	public Type getType( String name ) {
 		return types.get(name);
 	}
 	
+	/**
+	 * Gets a collection of all types stored in the package.
+	 * @return		collection of types
+	 */
 	public Collection<Type> getTypes() {
 		return types.values();
 	}
 
-	public void setDocumentationBuilder(DocumentationBuilder builder)
-			throws ShadowException, DocumentationException
-	{
-		this.documentation = builder.process();
-	}
-	
-	public void setDocumentation(Documentation documentation)
-	{
+	/**
+	 * Adds processed documentation to the package.
+	 * @param documentation	documentation to be added
+	 */
+	public void setDocumentation(Documentation documentation) {
 		this.documentation = documentation;
 	}
 	
-	public Documentation getDocumentation()
-	{
+	/**
+	 * Gets the documentation added to the package.
+	 * @return	documentation
+	 */
+	public Documentation getDocumentation() {
 		return documentation;
 	}
 	
-	public boolean hasDocumentation()
-	{
-		return (documentation != null);
+	/**
+	 * Determines if the package has documentation.
+	 * @return	<code>true</code> if the package has documentation
+	 */
+	public boolean hasDocumentation() {
+		return ( documentation != null );
 	}
 
 	@Override
@@ -217,8 +256,10 @@ public class Package implements Comparable<Package>, Iterable<Type>
 
 	@Override
 	public boolean equals(Object o) {
-		if( o instanceof Package )
-		{
+		if( this == o )
+			return true;		
+		
+		if( o instanceof Package ) {
 			Package p = (Package)o;
 			return getQualifiedName().equals(p.getQualifiedName());
 		}
@@ -226,12 +267,12 @@ public class Package implements Comparable<Package>, Iterable<Type>
 		return false;
 	}
 
-
+	/**
+	 * Compares packages based on lexicographic ordering of full names.
+	 */
 	@Override
-	/** Alphabetically compares qualified names */
-	public int compareTo(Package o) 
-	{
-		return this.getQualifiedName().compareTo(o.getQualifiedName());
+	public int compareTo(Package o) {
+		return getQualifiedName().compareTo( o.getQualifiedName() );
 	}	
 	
 	@Override
@@ -242,6 +283,10 @@ public class Package implements Comparable<Package>, Iterable<Type>
 			return getQualifiedName();
 	}
 	
+	/**
+	 * Clears internal data structures, returning the package to a condition
+	 * like that immediately after construction.
+	 */
 	public void clear() {
 		children.clear();		
 		types.clear();
@@ -254,6 +299,10 @@ public class Package implements Comparable<Package>, Iterable<Type>
 		return new PackageIterator();
 	}
 	
+	/* 
+	 * Iterator allows the package to iterate over all the types inside itself
+	 * and child packages.
+	 */
 	private class PackageIterator implements Iterator<Type> {		
 		private Iterator<Type> typeIterator = types.values().iterator();
 		private Iterator<Package> packageIterator = children.values().iterator();		
@@ -265,8 +314,7 @@ public class Package implements Comparable<Package>, Iterable<Type>
 					typeIterator = packageIterator.next().iterator();
 				else
 					return false;
-			}		
-			
+			}
 			return true;
 		}
 

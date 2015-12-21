@@ -251,8 +251,7 @@ public class Main {
 	 * @throws CompileException 
 	 */
 	private static void generateLLVM(List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
-		Type.clearTypes();
-		TypeChecker checker = new TypeChecker();
+		Type.clearTypes();		
 
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = stripExt(mainFile.toString()); 
@@ -261,7 +260,7 @@ public class Main {
 
 		try
 		{
-			nodes = checker.typeCheck(mainFile.toFile(), currentJob.isForceRecompile());
+			nodes = TypeChecker.typeCheck(mainFile.toFile(), currentJob.isForceRecompile());
 		}
 		catch( TypeCheckException e ) {
 			logger.error(mainFile + " FAILED TO TYPE CHECK");

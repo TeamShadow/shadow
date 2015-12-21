@@ -63,7 +63,6 @@ import shadow.typecheck.type.TypeParameter;
  * @author Barry Wittman
  * @author William R. Speirs
  */
-
 public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	/** 
@@ -86,17 +85,16 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	private static final Logger LOGGER = Loggers.TYPE_CHECKER;
 	protected static final String EOL = System.getProperty("line.separator", "\n");
 
-	protected ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
-	protected ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();	
-	protected Package packageTree;	
-	protected Package currentPackage;
-	protected Type currentType = null;
-	
-	// Declaration type differs from current type in the header (before the type's body is entered).
-	protected Type declarationType = null; 	
-	
+	protected final ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
+	protected final ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();	
+	protected final Package packageTree;
 	// Current method is a stack since Shadow allows methods to be defined inside of methods.
-	protected LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();
+	protected final LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();
+
+	protected Package currentPackage;
+	protected Type currentType = null;	
+	// Declaration type differs from current type in the header (before the type's body is entered).
+	protected Type declarationType = null;
 
 	/**
 	 * Creates a new <code>BaseChecker</code> with the given tree of packages.
@@ -571,7 +569,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		error.append(message);
 		
-		// If file is available, find problematic text and include it in the message.	
+		/* If file is available, find problematic text and include it in the message. */	
 		if( file != null && lineStart >= 0 && lineEnd >= lineStart &&
 				columnStart >= 0 && columnEnd >= 0 ) {
 			BufferedReader reader = null;
@@ -816,7 +814,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * Tests to see if one type is accessible from another.
 	 * @param type			type whose accessibility is in question 
 	 * @param currentType	type where code is currently executing
-	 * @return				whether type is accessible
+	 * @return				<code>true</code> if type is accessible
 	 */
 	protected static boolean classIsAccessible( Type type, Type currentType ) {
 		// Public classes and outermost classes are always accessible.
@@ -861,7 +859,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * Tests to see if a method is accessible from the current type.
 	 * @param signature		method signature whose accessibility is in question 
 	 * @param currentType	type where code is currently executing
-	 * @return				whether the method is accessible
+	 * @return				<code>true</code> if the method is accessible
 	 */
 	public static boolean methodIsAccessible( MethodSignature signature, Type currentType ) {
 		if( signature.getMethodType().getModifiers().isPublic() ) 

@@ -16,7 +16,6 @@ import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.*;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
-import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -38,13 +37,16 @@ import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
 public class StatementChecker extends BaseChecker {
-	protected LinkedList<Node> curPrefix = null; 	/** Stack for current prefix (needed for arbitrarily long chains of expressions) */
-	protected LinkedList<Node> labels = null; 	/** Stack of labels for labeled break statements */
-	protected LinkedList<ASTTryStatement> tryBlocks = null; /** Stack of try blocks currently nested inside */	
-	protected LinkedList<HashMap<String, ModifiedType>> symbolTable; /** List of scopes with a hash of symbols & types for each scope */
-	protected LinkedList<Node> scopeMethods; /** Keeps track of the method associated with each scope (sometimes null) */
+	/* Stack for current prefix (needed for arbitrarily long chains of expressions). */
+	private LinkedList<Node> curPrefix = null; 		
+	/* Stack of try blocks currently nested inside. */
+	private LinkedList<ASTTryStatement> tryBlocks = null; 	
+	/* List of scopes with a hash of symbols & types for each scope. */
+	private LinkedList<HashMap<String, ModifiedType>> symbolTable;
+	/* Keeps track of the method associated with each scope (sometimes null). */
+	private LinkedList<Node> scopeMethods; 
 	
-	public StatementChecker(Package packageTree ) {
+	public StatementChecker( Package packageTree ) {
 		super(packageTree );		
 		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
 		curPrefix = new LinkedList<Node>();			
@@ -227,17 +229,6 @@ public class StatementChecker extends BaseChecker {
 		}		
 		return visitMethod( node, secondVisit );
 	}
-	
-	/*
-	public Object visit(ASTInlineMethodDeclaration node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )
-		{	
-			Node declaration = node.jjtGetChild(0);			
-			addSymbol(declaration.getImage(), node);
-		}		
-		return visitMethod( node, secondVisit );
-	}
-	*/	
 	
 	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException	
 	{
@@ -442,12 +433,8 @@ public class StatementChecker extends BaseChecker {
 				if( node.getModifiers().isNullable() && type instanceof ArrayType  ) {
 					ArrayType arrayType = (ArrayType) type;
 					type = arrayType.convertToNullable();
-				}
-				
-				//we're going to allow nullable primitives
-				//if( node.getModifiers().isNullable() && type.isPrimitive() )
-				//	addError(Error.INVALID_MODIFIER, "Primitive type " + type + " cannot be marked nullable");
-				
+				}				
+	
 				declarator.setType(type);										
 				declarator.setModifiers(node.getModifiers());					
 				addSymbol( declarator.getImage(), declarator ); //add to local scope
@@ -512,13 +499,6 @@ public class StatementChecker extends BaseChecker {
 			if( !currentMethod.isEmpty() )
 				methodModifiers = currentMethod.getFirst().getModifiers();
 			
-			/*//maybe not necessary?  since arrays "extend" Array or NullableArray
-			if( context instanceof NullableArrayType )
-				classType = Type.NULLABLE_ARRAY;
-			else if( context instanceof ArrayType )
-				classType = Type.ARRAY;
-			else
-			*/
 				classType = (ClassType)context;
 					
 			if(classType.recursivelyContainsField(name))
@@ -555,16 +535,6 @@ public class StatementChecker extends BaseChecker {
 					node.addModifier(Modifiers.READONLY);
 				return true;
 			}
-			
-			/*
-			if( classType.recursivelyContainsInnerClass(name))
-			{
-				Type innerClass = classType.recursivelyGetInnerClass(name);
-				node.setType(innerClass);
-				node.setModifiers(Modifiers.TYPE_NAME);
-				return true;
-			}
-			*/
 		}
 
 		return false;
@@ -956,52 +926,6 @@ public class StatementChecker extends BaseChecker {
 		
 		return WalkType.POST_CHILDREN;
 	}
-		
-	/*
-	public Object visit(ASTUnaryExpressionNotPlusMinus node, Boolean secondVisit) throws ShadowException {
-		if(secondVisit)
-		{				
-			Type type = node.jjtGetChild(0).getType();
-			
-			if(node.getImage().startsWith("~") )
-			{
-				if( type.hasInterface(Type.INTEGER) )
-				{	 
-					MethodSignature signature = setMethodType(node, type, "bitComplement", new SequenceType() );
-					if( signature != null )
-					{
-						type = signature.getReturnTypes().getType(0);
-						node.addOperation(signature);
-					}
-					else
-					{
-						addError(Error.INVALID_TYPE, "Cannot apply operator ~ to type " + type + " which does not implement " + Type.INTEGER);
-						type = Type.UNKNOWN;						
-					}
-				}
-				else					
-				{
-					addError(Error.INVALID_TYPE, "Cannot apply operator ~ to type " + type + " which does not implement " + Type.INTEGER);
-					type = Type.UNKNOWN;				
-				}
-			}		
-			else if(node.getImage().startsWith("!") )
-			{
-				if( !type.equals(Type.BOOLEAN)) 
-				{
-					addError(Error.INVALID_TYPE, "Cannot apply operator ! to type " + type + " which is not boolean");
-					type = Type.UNKNOWN;				
-				}
-			}
-			else
-				pushUpModifiers( node ); //can add ASSIGNABLE (if only one child)
-			
-			node.setType(type);
-		}
-		return WalkType.POST_CHILDREN;
-	}
-	*/
-	
 	
 	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException {
 		if( !secondVisit )
@@ -1581,23 +1505,6 @@ public class StatementChecker extends BaseChecker {
 				
 				for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) ) {				
 					MethodType methodType = signature.getMethodType();			
-					//no type arguments for method pointers?
-					/*
-					if( methodType.isParameterized() )
-					{
-						if( hasTypeArguments )
-						{	
-							SequenceType parameters = methodType.getTypeParameters();							
-							if( parameters.canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER))
-							{
-								methodType = methodType.replace(parameters, typeArguments);
-								signature = signature.replace(parameters, typeArguments);
-							}
-							else
-								continue;
-						}
-					}
-					*/				
 					
 					//the list of method signatures starts with the closest (current class) and then adds parents and outer classes
 					//always stick with the current if you can
@@ -1790,9 +1697,7 @@ public class StatementChecker extends BaseChecker {
 				Type elementType = element.getType();				
 				node.setType(elementType);
 				if( node.getModifiers().isNullable() ) {
-					/*if( elementType.isPrimitive() )
-						addError(Error.INVALID_MODIFIER, "Primitive type " + elementType + " cannot be marked nullable");
-					else*/ if( elementType instanceof ArrayType ) {
+					if( elementType instanceof ArrayType ) {
 						ArrayType arrayType = (ArrayType) elementType;
 						if( arrayType.recursivelyGetBaseType().isPrimitive() )
 							addError(Error.INVALID_MODIFIER, "Primitive array type " + elementType + " cannot be marked nullable");
@@ -1936,12 +1841,7 @@ public class StatementChecker extends BaseChecker {
 			child = resolveType( child );
 			Type type = child.getType();
 			
-			/*
-			if( type instanceof ArrayType && type.getModifiers().isNullable() ) {
-				ArrayType arrayType = (ArrayType) type;
-				type = new ArrayType(arrayType.getBaseType(), arrayType.getDimensions());
-			}			
-			else*/ if( child.getModifiers().isNullable() ) {
+			if( child.getModifiers().isNullable() ) {
 				node.setModifiers(child.getModifiers());
 				node.removeModifier(Modifiers.NULLABLE);
 			}
@@ -2649,13 +2549,10 @@ public class StatementChecker extends BaseChecker {
 								addError( Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
 							}
 						}
-					}
-					//allow "raw" classes
-					//else if( prefixType.isParameterized() )
-						//addError( Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + prefixType, prefixType);
+					}					
 				}
 				else
-					addError( Error.NOT_TYPE, "Constant class requires type name for access");
+					addError( Error.NOT_TYPE, "Constant field requires type name for access" );
 				
 				node.setType( Type.CLASS );
 				node.addModifier(Modifiers.IMMUTABLE);	
@@ -3022,25 +2919,7 @@ public class StatementChecker extends BaseChecker {
 				return false;
 			}
 		}
-
-		/*//old code assumes that ultimate type is multidimensional array	
-		ArrayList<Integer> dimensions = new ArrayList<Integer>();
-		Type baseType;		
-		
-		if( result instanceof ArrayType )
-		{
-			ArrayType arrayType = (ArrayType)result;
-			dimensions.add(arrayType.getDimensions() + 1 );
-			baseType = arrayType.getBaseType();
-		}
-		else
-		{
-			dimensions.add(1);
-			baseType = result;
-		}
-		ArrayType arrayType = new ArrayType(baseType, dimensions);
-		*/
-		
+			
 		//new code assumes that result is array of arrays
 		ArrayType arrayType;
 		
