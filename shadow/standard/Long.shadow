@@ -103,7 +103,10 @@ and	CanHash
 	}
 	
 	// implement CanNegate<long>
-	public native negate() => (long);
+	public negate() => (long)
+	{
+		return 0L - this;
+	}
 	
 	public squareRoot() => (double)
 	{
@@ -149,9 +152,6 @@ and	CanHash
 	public native ones() => (long);
 	public native leadingZeroes() => (long);
 	public native trailingZeroes() => (long);
-	//public native addWithOverflow(long value) => (long, boolean);
-	//public native subtractWithOverflow(long value) => (long, boolean);
-	//public native multiplyWithOverflow(long value) => (long, boolean);
 	
 	// implement CanHash
 	public get hash() => (uint)

@@ -22,6 +22,7 @@ import shadow.doctool.tag.ParserManager.TagParser;
 import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
+import shadow.typecheck.type.Type;
 
 public class DocumentationTest 
 {
@@ -57,6 +58,8 @@ public class DocumentationTest
 		try {
 			FileUtils.deleteDirectory(outputDirectory.toFile());
 		} catch(Exception e) {}
+		
+		Type.clearTypes();
 	}
 	
 	/**

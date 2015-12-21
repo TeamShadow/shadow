@@ -5,6 +5,10 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTCreateDeclaration extends SignatureNode {
+	
+	private boolean hasExplicitCreate = false;
+	
+	
   public ASTCreateDeclaration(int id) {
     super(id);
   }
@@ -20,16 +24,12 @@ class ASTCreateDeclaration extends SignatureNode {
   }
   
   
-  private boolean explicitInvocation = false;
-  
-  public void setExplicitInvocation(boolean value)
-  {
-	  explicitInvocation = value;	  
+  public void setExplicitCreate(boolean value) {
+	  hasExplicitCreate = value;	  
   }
   
-  public boolean hasExplicitInvocation()
-  {
-	  return explicitInvocation;
+  public boolean hasExplicitCreate() {
+	  return hasExplicitCreate;
   }  
   
 }

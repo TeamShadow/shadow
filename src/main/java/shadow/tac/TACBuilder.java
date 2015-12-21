@@ -88,7 +88,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	private TACTree tree;	
 	private TACMethod method;
 	private TACOperand prefix;
-	private boolean explicitSuper, implicitCreate;
+	private boolean explicitSuper;
 	private TACVariable identifier;
 	private TACBlock block;
 	private Deque<List<TACOperand>> indexStack;
@@ -98,8 +98,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		tree = new TACTree();				
 		method = null;
 		prefix = null;
-		explicitSuper = false;
-		implicitCreate = false;
+		explicitSuper = false;		
 		identifier = null;
 		block = null;
 		indexStack = new ArrayDeque<List<TACOperand>>();
@@ -421,49 +420,35 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTExplicitCreateInvocation node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
-			implicitCreate = false;
+			throws ShadowException {
+		if (secondVisit) {			
 			boolean isSuper = node.getImage().equals("super");
 			ClassType thisType = (ClassType)method.getMethod().getOuter();
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(new TACVariableRef(tree, method.getThis()));
 			
-			if( (!isSuper && thisType.hasOuter()) || (isSuper && thisType.getExtendType().hasOuter()) )
-			{
-				//Type outerType = thisType.getOuter();
+			if( (!isSuper && thisType.hasOuter()) || (isSuper && thisType.getExtendType().hasOuter()) ) {
 				TACVariable outer = method.getParameter("_outer");
 				params.add(new TACVariableRef(tree, outer));
 			}
 			
-			
-			//TODO: test explicit constructor invocations
-			//shouldn't need any special generic stuff, right?
-			/*
-			if( isSuper )
-			{
-			
-				
-			}
-			else if( thisType.isParameterized()  )
-			{
-				//Collection<TACVariable> parameters = method.getParameters();
-				TACClass _class = new TACClass(tree, thisType, method);
-				params.add(_class.getClassData());
-				params.add(_class.getMethodTable());
-				//params.add(new TACVariableRef(tree, (TACVariable)(parameters.toArray()[1])));
-			}
-			*/
-			for (int i = 0; i < tree.getNumChildren(); i++)
-			{
+			for (int i = 0; i < tree.getNumChildren(); i++) {
 				TACOperand param = tree.appendChild(i); 
 				params.add(param);
-				//type.addParameter(param);
 			}
 			new TACCall(tree, block, new TACMethodRef(tree, node.getMethodSignature()),
-					params);		
+					params);
+			
+			// If a super create, walk the fields.
+			// Walking the fields is unnecessary if there is a this create,
+			// since it will be taken care of by the this create, either explicitly or implicity.
+			if( isSuper ) {
+				// Walk fields in *exactly* the order they were declared since
+				// some fields depend on prior fields.
+				for( Node field : thisType.getFieldList() ) 
+					if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType))
+						walk(field);
+			}
 		}
 		return POST_CHILDREN;
 	}
@@ -2337,11 +2322,12 @@ public class TACBuilder implements ShadowParserVisitor {
 			throws ShadowException {
 		TACTree saveTree = tree;
 		TACMethod method = this.method = new TACMethod(methodSignature);		
-		implicitCreate = false;
+		boolean implicitCreate = false;
 		if (moduleStack.peek().isClass()) {						
 			block = new TACBlock(tree = new TACTree(1));
 			if (!methodSignature.isNative() && methodSignature.isCreate()) {
-				implicitCreate = true;
+				ASTCreateDeclaration declaration = (ASTCreateDeclaration) methodSignature.getNode();
+				implicitCreate = !declaration.hasExplicitCreate();
 				Type type = methodSignature.getOuter();
 				if (type.hasOuter())
 					new TACStore(tree,
@@ -2352,13 +2338,6 @@ public class TACBuilder implements ShadowParserVisitor {
 							new TACVariableRef(tree,
 									method.getParameter("_outer")));
 
-				method.enterScope(); //needed to protect parameters from temporary variables that might be added
-				//We need to visit the fields in *exactly* the order they were declared
-				//some fields depend on prior fields				
-				for( Node field : ((ClassType)type).getFieldList() ) 
-					if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType))
-						walk(field);
-				method.exitScope();
 			}
 			else if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
 				ClassType type = (ClassType) methodSignature.getOuter();	
@@ -2581,19 +2560,29 @@ public class TACBuilder implements ShadowParserVisitor {
 					new TACReturn(tree, toTypes, value);	
 				}
 			}
-			else {
+			else { // Regular method or create
 				method.addParameters();
+				
+				// Call parent create if implicit create.
+				if( implicitCreate ) {
+					ClassType thisType = (ClassType)methodSignature.getOuter(),
+							superType = thisType.getExtendType();
+					if (superType != null)
+						new TACCall(method, block, new TACMethodRef(method,
+								superType.getMatchingMethod("create", new SequenceType())), new TACVariableRef(method,
+								method.getThis()));
+					
+					// Walk fields in *exactly* the order they were declared since
+					// some fields depend on prior fields.
+					for( Node field : ((ClassType)(methodSignature.getOuter())).getFieldList() ) 
+						if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType))
+							walk(field);
+				}				
+				
 				walk(methodSignature.getNode());
 			}
 			
-			if (implicitCreate) {
-				ClassType thisType = (ClassType)methodSignature.getOuter(),
-						superType = thisType.getExtendType();
-				if (superType != null)
-					new TACCall(method, block, new TACMethodRef(method,
-							superType.getMatchingMethod("create", new SequenceType())), new TACVariableRef(method,
-							method.getThis()));
-			}
+			
 			tree.done();
 			method.append(tree);
 		}

@@ -190,7 +190,10 @@ and	CanHash
 	}
 	
 	// implement CanNegate<int>
-	public native negate() => (int);
+	public negate() => (int)
+	{
+		return 0 - this;
+	}
 	
 	public squareRoot() => (double)
 	{

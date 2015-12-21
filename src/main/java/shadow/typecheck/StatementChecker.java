@@ -339,7 +339,7 @@ public class StatementChecker extends BaseChecker {
 				
 				if( parentType != null )
 				{	
-					if( !node.hasExplicitInvocation() && !node.getModifiers().isNative() ) 
+					if( !node.hasExplicitCreate() && !node.getModifiers().isNative() ) 
 						//only worry if there is no explicit invocation
 						//explicit invocations are handled separately
 						//for native creates, we have to trust the author of the native code
@@ -3124,23 +3124,22 @@ public class StatementChecker extends BaseChecker {
 			
 			if( currentType instanceof ClassType )
 			{
+				ASTCreateDeclaration grandparent = (ASTCreateDeclaration) node.jjtGetParent().jjtGetParent();
+				grandparent.setExplicitCreate(true);
+				
 				ClassType type = (ClassType) currentType; //assumes "this" 
-				if( node.getImage().equals("super") )
-				{
+				if( node.getImage().equals("super") ){
 					if( type.getExtendType() != null )
 						type = type.getExtendType();
 					else
 						addError(Error.INVALID_CREATE, "Class type " + type + " cannot invoke a parent create because it does not extend another type", type);
-				}								
+				}				
 								
 				MethodSignature signature = setMethodType(node, type, "create", arguments, null); //type set inside
 				node.setMethodSignature(signature);
 			}	
 			else
 				addError(Error.INVALID_CREATE, "Non-class type " + currentType + " cannot be created", currentType);
-			
-			ASTCreateDeclaration grandparent = (ASTCreateDeclaration) node.jjtGetParent().jjtGetParent();
-			grandparent.setExplicitInvocation(true);
 		}		
 		
 		return WalkType.POST_CHILDREN; 

@@ -5,6 +5,7 @@ package shadow.parser.javacc;
 public
 @SuppressWarnings("all")
 class ASTCreateBlock extends SimpleNode {
+
   public ASTCreateBlock(int id) {
     super(id);
   }
