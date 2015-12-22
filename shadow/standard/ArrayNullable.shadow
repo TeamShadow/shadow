@@ -1,42 +1,58 @@
+/**
+ * Class {@code ArrayNullable<T>} is used as a wrapper for nullable array objects
+ * when they must be treated as objects.
+ *
+ * The object keeps a reference to normal array memory as well as additional
+ * dimension information needed to access the array safely. 
+ *
+ * Most of the use of {@code NullableArray<T>} is handled by the compiler.
+ * Users should avoid using the {@code NullableArray<T>} type explicitly 
+ * unless absolutely necessary. 
+ * 
+ * In this implementation, most methods of {@code NullableArray<T>} are implemented
+ * as aliases to the parallel method in {@code Array<T>}, since the mechanics
+ * differ in only a few cases.
+ * 
+ * @author Barry Wittman 
+ */
+
 abstract locked class shadow:standard@
 	ArrayNullable<T>
 is  CanIndexNullable<int[],T>
 and CanIndexStoreNullable<int[],T>
 and CanIterateNullable<T>
-{
+{	
 	get immutable int[] lengths;
-	Object data;
+	Object data;	
 	
-	
+	/**
+	 * Creates an {@code ArrayNullable<T>} object with the given dimensions and a
+	 * reference to its allocated memory.
+	 * This method is called internally by the compiler and is only {@code protected}
+	 * because it allows other classes to see the method.
+	 */
 	protected create( immutable int[] lengths, Object data )	
 	{		
 		this:lengths = lengths;		
 		this:data = data;		
 	}
 	
+	/**
+	 * Gets the size of the array (total number of elements in all dimensions).
+	 * @return number of all elements
+	 */
 	public readonly get size() => ( int )
 	{
 		int size = lengths[0];
 		for ( int i = 1; i < lengths->size; i += 1 )
 			size *= lengths[i];
 		return size;
-	}	
+	}
 	
-	//All these methods are implemented with the same code as Array<T>
-	//It's essentially simulating inheritance
-	protected native create( immutable int[] lengths );
-	public native readonly get dimensions() => ( int );	
-	public native readonly subarray( int start, int end ) => ( Array<T> );
-	public native readonly index( int[] indices ) => (nullable T);
-	public native index( int[] indices, nullable T value ) => ();
-	
-	//by keeping them protected, they are not accessible to the user
-	//but they still appear in .meta files and are accessible to the compiler
-	protected readonly native index( int index ) => (T);
-	protected native index( int index, nullable T value) => ();
-	
-	public native readonly getBaseClass() => ( Class );
-	
+	/**
+	 * Gets formatted {@code String} representation of the array.   
+	 * @return {@code String} representation
+	 */
 	public readonly toString() => ( String )
 	{
 		if ( this->size == 0 )
@@ -56,7 +72,10 @@ and CanIterateNullable<T>
 		return string.append("]").toString();
 	}
 	
-	
+	/**
+	 * Gets iterator that can iterate over all the elements of the array.   
+	 * @return iterator
+	 */
 	public readonly iterator() => (IteratorNullable<T>)
 	{
 		return ArrayIterator:create();
@@ -82,5 +101,74 @@ and CanIterateNullable<T>
 			
 			return value;  
 		}
-	}
+	}	
+	
+	/* 
+	 * Methods below are implemented with the same code as Array<T>,
+	 * simulating inheritance.
+	 */	 
+	 
+	 /**
+	 * Creates an {@code ArrayNullable<T>} object with the given dimensions.
+	 * This method is called internally by the compiler and is only {@code protected}
+	 * because it allows other classes to see the method.
+	 */	
+	protected native create( immutable int[] lengths );
+	
+	/**
+	 * Gets the number of dimensions in the array.
+	 * @return dimensions
+	 */
+	public native readonly get dimensions() => ( int );
+	
+	/**
+	 * Copy a subarray from the given array, starting at {@code start} and going
+	 * up to but not including index {@code end}.
+	 * The resulting array will always be one-dimensional and requires an explicit
+	 * cast in order to be stored back into a normal array reference.
+	 * @param start	starting index of subarray
+	 * @param end	index after last index in subarray
+	 * @return {@code ArrayNullable<T>} object containing the subarray
+	 */		
+	public native readonly subarray( int start, int end ) => ( ArrayNullable<T> );
+	
+	/**
+	 * Gets element located at the specified indices.
+	 * @param indices	array giving indices into each dimension	 
+	 * @return value at given location
+	 */	
+	public native readonly index( int[] indices ) => (nullable T);
+	
+	/**
+	 * Sets element at the specified indices to the given value.
+	 * @param indices	array giving indices into each dimension	 
+	 * @param value to be stored
+	 */	
+	public native index( int[] indices, nullable T value ) => ();
+	
+	/**
+	 * Gets element located at the specific index within the contiguous 
+	 * memory for all dimensions. This method cannot be accessed by the user
+	 * but is useful for compiler internals.  It is {@code protected}
+	 * to allow other classes to see the method.
+	 * @param index	index into contiguous array memory	 
+	 * @return value at given location
+	 */	
+	protected readonly native index( int index ) => ( nullable T );
+	
+	/**
+	 * Sets element located at the specific index within the contiguous 
+	 * memory to the given value. This method cannot be accessed by the user
+	 * but is useful for compiler internals.  It is {@code protected}
+	 * to allow other classes to see the method.
+	 * @param index	index into contiguous array memory	 
+	 * @param value to be stored
+	 */
+	protected native index( int index, nullable T value) => ();
+	
+	/**
+	 * Gets base class of array, the {@code Class} object for {@code T}.  
+	 * @return class object
+	 */	
+	public native readonly getBaseClass() => ( Class );
 }

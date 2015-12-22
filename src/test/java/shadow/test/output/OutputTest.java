@@ -50,12 +50,10 @@ public class OutputTest {
 	public void cleanup() throws IOException {
 		
 		// Try to remove the unit test executable
-		try
-		{			
+		try {			
 			Files.delete(executable);
 		}
-		catch(Exception e)
-		{}
+		catch(Exception e) {}
 	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {

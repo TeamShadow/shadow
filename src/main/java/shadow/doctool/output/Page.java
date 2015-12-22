@@ -3,6 +3,7 @@ package shadow.doctool.output;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.Logger;
@@ -176,15 +177,17 @@ public abstract class Page
 					documentation.getBlockTags(BlockTagType.SEE_URL), out);
 	}
 	
-	protected static void writeAuthorSection(List<List<String>> authorTags, 
+	protected void writeAuthorSection(List<List<String>> authorTags, 
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (authorTags.size() > 0) {
 			out.fullLine("h5", "Authors");
 			out.openTab("div", new Attribute("class", "blocktagcontent"));
 			for (List<String> tag : authorTags) {
-				for (String author : tag) {
-					out.fullLine("p", author);
+				for (String author : tag) {					
+					List<InlineTag> inlineTags = new ArrayList<InlineTag>();
+					Documentation.parseInlineSection(author, inlineTags);
+					writeInlineTags(inlineTags, out);					
 				}
 			}
 			out.closeUntab();

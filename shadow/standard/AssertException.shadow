@@ -1,6 +1,19 @@
+/**
+ * Exception {@code AssertException} is thrown when an assert fails.
+ * 
+ * @author Barry Wittman 
+ */
 exception shadow:standard@AssertException
 {
+	/**
+	 * Creates an {@code AssertException} with no message.	  
+	 */
 	public create() { }
+	
+	/**
+	 * Creates an {@code AssertException} with a message.
+	 * @param message message explaining what caused the exception 	  
+	 */
 	public create( String message )
 	{
 		super(message);

@@ -118,8 +118,8 @@ the main description section must occur before the block tag section and
 contain only plain text and inline tags. Similarly, if the block tag section
 exists, it must follow the main description section and contain only block
 tags. Only additional block tags may occur following a block tag, meaning that
-all descriptive text must appear before even the first block tag. Currently,
-the use of inline tags within block tags is not supported.
+all descriptive text must appear before even the first block tag. The use of
+inline tags within block tags is supported for some but not all block tags.
 
 All tags are specified with the ‘@’ symbol followed immediately by the
 alphanumeric name of the tag in question. Inline tags and their arguments must

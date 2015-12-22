@@ -63,7 +63,7 @@ public class OverviewPage extends Page
 		out.fullLine("h2", "Overview");
 		
 		out.closeUntab();
-		out.voidLine("hr");
+		//out.voidLine("hr");
 	}
 	
 	private void writeTable(Set<Package> knownPackages, 

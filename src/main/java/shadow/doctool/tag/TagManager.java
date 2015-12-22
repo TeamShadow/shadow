@@ -47,7 +47,7 @@ public class TagManager
 	{
 		AUTHOR("author", new DelimitedParser(',')),
 		PARAM("param", new ArgDescriptionParser(1, true)),
-		RETURN("return", new ArgDescriptionParser(1, true)),
+		RETURN("return", new ArgDescriptionParser(0, true)),
 		SEE_DOC("seeDoc", new ArgDescriptionParser(1, true)),
 		SEE_URL("seeUrl", new ArgDescriptionParser(1, true)),
 		THROWS("throws", new ArgDescriptionParser(1, true)),

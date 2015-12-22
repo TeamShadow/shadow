@@ -262,8 +262,5 @@ and	CanHash
 	}
 	
 	// implement CanNegate<double>
-	public negate() => (double)
-	{
-		return (0.0 - 1.0) * this;
-	}	
+	public native negate() => (double);	
 }

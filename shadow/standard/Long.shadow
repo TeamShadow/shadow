@@ -103,10 +103,7 @@ and	CanHash
 	}
 	
 	// implement CanNegate<long>
-	public negate() => (long)
-	{
-		return 0L - this;
-	}
+	public native negate() => (long);
 	
 	public squareRoot() => (double)
 	{

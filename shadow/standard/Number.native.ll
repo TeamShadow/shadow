@@ -167,6 +167,11 @@ define i1 @shadow.standard..byte_Mequal_byte(i8, i8) #0 {
 	ret i1 %3
 }
 
+define i8 @shadow.standard..byte_Mnegate(i8) #0 {	
+	%2 = sub i8 0, %0
+	ret i8 %2
+}
+
 define i8 @shadow.standard..byte_MtoByte(i8) #0 {	
 	ret i8 %0
 }
@@ -369,6 +374,11 @@ define i32 @shadow.standard..short_Mcompare_short(i16, i16) #0 {
 define i1 @shadow.standard..short_Mequal_short(i16, i16) #0 {
 	%3 = icmp eq i16 %0, %1
 	ret i1 %3
+}
+
+define i16 @shadow.standard..short_Mnegate(i16) #0 {	
+	%2 = sub i16 0, %0
+	ret i16 %2
 }
 
 define i8 @shadow.standard..short_MtoByte(i16) #0 {	
@@ -599,6 +609,11 @@ define i32 @shadow.standard..int_Mcompare_int(i32, i32) #0 {
 define i1 @shadow.standard..int_Mequal_int(i32, i32) #0 {
 	%3 = icmp eq i32 %0, %1
 	ret i1 %3
+}
+
+define i32 @shadow.standard..int_Mnegate(i32) #0 {	
+	%2 = sub i32 0, %0
+	ret i32 %2
 }
 
 define i8 @shadow.standard..int_MtoByte(i32) #0 {	
@@ -864,6 +879,11 @@ define i1 @shadow.standard..long_Mequal_long(i64, i64) #0 {
 	ret i1 %3
 }
 
+define i64 @shadow.standard..long_Mnegate(i64) #0 {	
+	%2 = sub i64 0, %0
+	ret i64 %2
+}
+
 define i8 @shadow.standard..long_MtoByte(i64) #0 {	
 	%2 = trunc i64 %0 to i8
 	ret i8 %2
@@ -990,6 +1010,21 @@ define double @shadow.standard..ulong_MtoDouble(i64) #0 {
 @shadow.standard..ulong_Mones = alias i64 (i64)* @shadow.standard..long_Mones
 @shadow.standard..ulong_MleadingZeroes = alias i64 (i64)* @shadow.standard..long_MleadingZeroes
 @shadow.standard..ulong_MtrailingZeroes = alias i64 (i64)* @shadow.standard..long_MtrailingZeroes	
+	
+;define {i64, i1} @shadow.standard..ulong_MaddWithOverflow_ulong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.uadd.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
+
+;define {i64, i1} @shadow.standard..ulong_MsubtractWithOverflow_ulong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.usub.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
+
+;define {i64, i1} @shadow.standard..ulong_MmultiplyWithOverflow_ulong(i64, i64) #0 {
+;	%3 = call {i64, i1} @llvm.umul.with.overflow.i64(i64 %0, i64 %1)
+;	ret {i64, i1} %3
+;}
 
 ; shadow.standard@Float native methods
 
@@ -1036,6 +1071,11 @@ define i1 @shadow.standard..float_Mequal_float(float, float) #0 {
 define i32 @shadow.standard..float_Mraw(float) #0 {
 	%2 = bitcast float %0 to i32
 	ret i32 %2
+}
+
+define float @shadow.standard..float_Mnegate(float) #0 {	
+	%2 = fsub float -0.0, %0
+	ret float %2
 }
 
 define i8 @shadow.standard..float_MtoByte(float) #0 {	
@@ -1192,6 +1232,11 @@ define i1 @shadow.standard..double_Mequal_double(double, double) #0 {
 define i64 @shadow.standard..double_Mraw(double) #0 {
 	%2 = bitcast double %0 to i64
 	ret i64 %2
+}
+
+define double @shadow.standard..double_Mnegate(double) #0 {	
+	%2 = fsub double -0.0, %0
+	ret double %2
 }
 
 define i8 @shadow.standard..double_MtoByte(double) #0 {	

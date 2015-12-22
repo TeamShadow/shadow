@@ -239,10 +239,7 @@ and	CanHash
 	}
 		
 	// implement CanNegate<short>
-	public negate() => (short)
-	{
-		return 0s - this;
-	}
+	public native negate() => (short);
 	
 	public squareRoot() => (double)
 	{

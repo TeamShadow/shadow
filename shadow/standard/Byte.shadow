@@ -290,10 +290,7 @@ and	CanHash
 	}
 	
 	// implement CanNegate<byte>
-	public negate() => (byte)
-	{
-		return 0y - this;
-	}
+	public native negate() => (byte);	
 	
 	public squareRoot() => (double)
 	{

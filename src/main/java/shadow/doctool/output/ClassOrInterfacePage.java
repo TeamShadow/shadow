@@ -11,16 +11,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.TreeSet;
 
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
@@ -54,10 +55,8 @@ public class ClassOrInterfacePage extends Page
 			Collection<Type> linkableTypes) throws DocumentationException
 	{
 		super(master);
-		
-		if (type instanceof ClassType)
-			typeKind = "Class";
-		else if (type instanceof EnumType)
+		// It's necessary to put ClassType last since it's a base class for several others.
+		if (type instanceof EnumType)
 			typeKind = "Enum";
 		else if (type instanceof ExceptionType)
 			typeKind = "Exception";
@@ -65,6 +64,8 @@ public class ClassOrInterfacePage extends Page
 			typeKind = "Interface";
 		else if (type instanceof SingletonType)
 			typeKind = "Singleton";
+		else if (type instanceof ClassType)
+			typeKind = "Class";		 
 		else
 			throw new DocumentationException("Unexpected type: " + type.toString(Type.PACKAGES | Type.TYPE_PARAMETERS));
 		
@@ -89,9 +90,9 @@ public class ClassOrInterfacePage extends Page
 					if (modifiers.hasModifier(Modifiers.GET) 
 							|| modifiers.hasModifier(Modifiers.SET))
 						properties.add(method);
-					else if (method.getSymbol() == "create")
+					else if (method.getSymbol().equals("create"))
 						constructors.add(method);
-					else if (method.getSymbol() == "destroy")
+					else if (method.getSymbol().equals("destroy"))
 						destructors.add(method);
 					else
 						methods.add(method);
@@ -174,27 +175,30 @@ public class ClassOrInterfacePage extends Page
 		writeInnerClassSection(out);
 		writeInheritanceSection(out);
 		
-		out.voidLine("hr");
+		//out.voidLine("hr");
 		
-		// Full, "in code" declaration
-		out.open("p");
-			out.open("code");
-			out.add(type.getModifiers().toString() + typeKind.toLowerCase()
-					+ " " + type.getTypeName());
-			writeTypeParameters(type, true, out);
-			out.close();
-		out.closeLine();
+		out.openTab("div", new Attribute("class", "detail"));
 		
-		// Documentation text
-		if (type.hasDocumentation()) {
-			writeInlineTags(type.getDocumentation().getInlineTags(), out);
-			writeBlockTags(type.getDocumentation(), out);
-		}
+			// Full, "in code" declaration
+			out.open("p");
+				out.open("code");
+				out.add(type.getModifiers().toString() + typeKind.toLowerCase()
+						+ " " + type.getTypeName());
+				writeTypeParameters(type, true, out);
+				out.close();
+			out.closeLine();
+		
+			// Documentation text
+			if (type.hasDocumentation()) {
+				writeInlineTags(type.getDocumentation().getInlineTags(), out);
+				writeBlockTags(type.getDocumentation(), out);
+			}
+		
+		out.closeUntab();
 		
 		out.closeUntab();
 	}
-	
-	// TODO: Support recursion of type constraints?
+
 	private void writeTypeParameters(Type parent, boolean link, 
 			HtmlWriter out) throws ShadowException, DocumentationException
 	{
@@ -279,8 +283,6 @@ public class ClassOrInterfacePage extends Page
 		interfaceList.addAll(type.getInterfaces());
 		
 		Type extendType = null;
-
-		// TODO: Should getAllInterfaces() be used here?
 		if (type instanceof ClassType)	
 			extendType = ((ClassType)type).getExtendType();
 		
@@ -350,9 +352,9 @@ public class ClassOrInterfacePage extends Page
 			throws ShadowException, DocumentationException
 	{
 		if (!constructors.isEmpty())
-			writeMethodTable("Constructor Summary", constructors, out);
+			writeMethodTable("Create Summary", constructors, out);
 		if (!destructors.isEmpty())
-			writeMethodTable("Destructor Summary", destructors, out);
+			writeMethodTable("Destroy Summary", destructors, out);
 		if (!methods.isEmpty())
 			writeMethodTable("Method Summary", methods, out);
 		if (!properties.isEmpty())
@@ -367,7 +369,7 @@ public class ClassOrInterfacePage extends Page
 		out.fullLine("h3", name);
 		out.openTab("table", new Attribute("class", "summarytable"));
 		
-		writeTableRow(out, true, "Modifiers", "Return Type", 
+		writeTableRow(out, true, "Modifiers", "Return Types", 
 				"Method and Description");
 		boolean shaded = false;
 		for (MethodSignature method : methods) {
@@ -416,7 +418,7 @@ public class ClassOrInterfacePage extends Page
 	private void writeConstantDetail(Node constant, HtmlWriter out)
 			throws ShadowException, DocumentationException
 	{
-		out.openTab("div", new Attribute("class", "methoddetail"));
+		out.openTab("div", new Attribute("class", "detail"));
 		
 		out.fullLine("h4", constant.toString(),
 				new Attribute("id", constant.toString()));
@@ -440,9 +442,9 @@ public class ClassOrInterfacePage extends Page
 			throws ShadowException, DocumentationException 
 	{
 		if (!constructors.isEmpty())
-			writeMethodDetailSection("Constructor Detail", constructors, out);
+			writeMethodDetailSection("Create Detail", constructors, out);
 		if (!destructors.isEmpty())
-			writeMethodDetailSection("Destructor Detail", destructors, out);
+			writeMethodDetailSection("Destroy Detail", destructors, out);
 		if (!methods.isEmpty())
 			writeMethodDetailSection("Method Detail", methods, out);
 		if (!properties.isEmpty())
@@ -465,7 +467,7 @@ public class ClassOrInterfacePage extends Page
 	private void writeMethodDetail(MethodSignature method, 
 			HtmlWriter out) throws ShadowException, DocumentationException
 	{
-		out.openTab("div", new Attribute("class", "methoddetail"));
+		out.openTab("div", new Attribute("class", "detail"));
 		
 		out.fullLine("h4", method.getSymbol(),
 				new Attribute("id", getUniqueID(method)));
@@ -564,11 +566,12 @@ public class ClassOrInterfacePage extends Page
 			out.fullLine("h5", "Parameters");
 			out.openTab("div", new Attribute("class", "blocktagcontent"));
 			for (List<String> tag : paramTags) {
-				out.open("p");
-				out.full("code", tag.get(0), new Attribute("class", "inline"));
+				String text = "{@code " + tag.get(0) + "}";
 				if (tag.size() > 1)
-					out.add(" - " + tag.get(1));
-				out.closeLine();
+					text += " - " + tag.get(1);
+				List<InlineTag> inlineTags = new ArrayList<InlineTag>();
+				Documentation.parseInlineSection(text, inlineTags);
+				writeInlineTags(inlineTags, out);	
 			}
 			out.closeUntab();
 		}
@@ -581,38 +584,41 @@ public class ClassOrInterfacePage extends Page
 			out.fullLine("h5", "Throws");
 			out.openTab("div", new Attribute("class", "blocktagcontent"));
 			for (List<String> tag : throwsTags) {
-				out.open("p");
-				out.full("code", tag.get(0), new Attribute("class", "inline"));
+				String text = "{@code " + tag.get(0) + "}";
 				if (tag.size() > 1)
-					out.add(" - " + tag.get(1));
-				out.closeLine();
+					text += " - " + tag.get(1);
+				List<InlineTag> inlineTags = new ArrayList<InlineTag>();
+				Documentation.parseInlineSection(text, inlineTags);
+				writeInlineTags(inlineTags, out);				
 			}
 			out.closeUntab();
 		}
 	}
 	
-	private void writeReturnSection(List<List<String>> throwsTags,
+	private void writeReturnSection(List<List<String>> returnTags,
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
-		if (throwsTags.size() > 0) {
+		if (returnTags.size() > 0) {
 			out.fullLine("h5", "Returns");
 			out.openTab("div", new Attribute("class", "blocktagcontent"));
-			for (List<String> tag : throwsTags) {
-				out.open("p");
-				out.full("code", tag.get(0), new Attribute("class", "inline"));
-				if (tag.size() > 1)
-					out.add(" - " + tag.get(1));
-				out.closeLine();
+			for (List<String> tag : returnTags) {
+				List<InlineTag> inlineTags = new ArrayList<InlineTag>();
+				Documentation.parseInlineSection(tag.get(0), inlineTags);
+				writeInlineTags(inlineTags, out);
 			}
 			out.closeUntab();
 		}
 	}
 	
 	private void writeCrossLink(Type to, int options, HtmlWriter out) 
-			throws DocumentationException, ShadowException
-	{
+			throws DocumentationException, ShadowException {
 		
-		if( to.isParameterizedIncludingOuterClasses() && linkableTypes.contains(to.getTypeWithoutTypeArguments()) && (options & Type.TYPE_PARAMETERS) != 0) {
+		if( to instanceof ArrayType ) {
+			ArrayType arrayType = (ArrayType) to;
+			writeCrossLink(arrayType.getBaseType(), options, out);
+			out.add(ArrayType.makeBrackets(arrayType.getDimensions()));
+		}
+		else if( to.isParameterizedIncludingOuterClasses() && linkableTypes.contains(to.getTypeWithoutTypeArguments()) && (options & Type.TYPE_PARAMETERS) != 0) {
 			Type current = to;
 			ArrayDeque<Type> types = new ArrayDeque<Type>();
 			types.push(current);

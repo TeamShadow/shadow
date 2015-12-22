@@ -83,7 +83,6 @@ import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 
-
 public class TACBuilder implements ShadowParserVisitor {
 	private TACTree tree;	
 	private TACMethod method;
@@ -115,8 +114,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		return block;
 	}
 	
-	public void walk(Node node) throws ShadowException
-	{
+	public void walk(Node node) throws ShadowException {
 		tree = tree.next(node.jjtGetNumChildren());
 		Object type = visit(node, false);
 		if (type != NO_CHILDREN) {
@@ -165,8 +163,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTClassOrInterfaceDeclaration node,
-			Boolean secondVisit) throws ShadowException
-	{
+			Boolean secondVisit) throws ShadowException {
 		Type type = node.getType();
 		TACModule newModule = new TACModule(type);
 		
@@ -213,78 +210,60 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTVersion node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTVersion node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTEnumDeclaration node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTEnumDeclaration node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTEnumBody node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTEnumBody node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTEnumConstant node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTEnumConstant node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTTypeParameters node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTTypeParameters node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTTypeParameter node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTTypeParameter node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTIsList node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTIsList node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTClassOrInterfaceBody node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
 	public Object visit(ASTClassOrInterfaceBodyDeclaration node,
-			Boolean secondVisit) throws ShadowException
-	{
+			Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTFieldDeclaration node, Boolean secondVisit)
-			throws ShadowException {
+	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTVariableDeclarator node, Boolean secondVisit)
-			throws ShadowException {
-		if (secondVisit && !(node.getType() instanceof SingletonType)) { //no records are needed for Singletons
+	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException {
+		// No records are needed for singletons.
+		if (secondVisit && !(node.getType() instanceof SingletonType)) { 
 			String name = node.getImage();
 			TACReference ref;
 			if (node.isField())
@@ -301,10 +280,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTArrayInitializer node, Boolean secondVisit)
-			throws ShadowException {
-		if( secondVisit ) {
-			
+	public Object visit(ASTArrayInitializer node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {			
 			List<TACOperand> sizes = new ArrayList<TACOperand>();			
 			sizes.add(new TACLiteral(tree, new ShadowInteger(node.jjtGetNumChildren())));
 			ArrayType arrayType = (ArrayType)node.getType();
@@ -343,8 +320,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 	
 	@Override
-	public Object visit(ASTMethodDeclaration node, Boolean secondVisit)
-			throws ShadowException {
+	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit) {		
 			TACNode last = tree.appendAllChildren();
 			if (last instanceof TACLabel &&	last.getPrevious() instanceof TACReturn)
@@ -372,14 +348,12 @@ public class TACBuilder implements ShadowParserVisitor {
 		return POST_CHILDREN;
 	}
 	@Override
-	public Object visit(ASTMethodDeclarator node, Boolean secondVisit)
-			throws ShadowException {
+	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTCreateDeclaration node, Boolean secondVisit)
-			throws ShadowException {
+	public Object visit(ASTCreateDeclaration node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit) {
 			TACNode last = tree.appendAllChildren();
 			if (last instanceof TACLabel &&
@@ -393,17 +367,14 @@ public class TACBuilder implements ShadowParserVisitor {
 			initializeSingletons(node);
 		return POST_CHILDREN;
 	}
+
 	@Override
-	public Object visit(ASTCreateDeclarator node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTCreateDeclarator node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTDestroyDeclaration node, Boolean secondVisit) throws ShadowException	{
 		if (secondVisit) {
 			TACNode last = tree.appendAllChildren();
 			if (last instanceof TACLabel &&
@@ -454,15 +425,12 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTFormalParameters node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException {
 		return NO_CHILDREN;
 	}
+	
 	@Override
-	public Object visit(ASTFormalParameter node, Boolean secondVisit)
-			throws ShadowException
-	{	
+	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException {	
 		//ASTFormalParameters are NOT visited
 		//Parameters for methods are handled separately
 		//The only thing that comes in here are the declarations
@@ -471,100 +439,73 @@ public class TACBuilder implements ShadowParserVisitor {
 			new TACVariableRef(tree,
 					method.addLocal(node, node.getImage()));
 		return POST_CHILDREN;
-		
-		//return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTType node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTType node, Boolean secondVisit)throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTReferenceType node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTFunctionType node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTFunctionType node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
 	public Object visit(ASTClassOrInterfaceTypeSuffix node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTTypeArguments node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTPrimitiveType node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTResultType node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTResultTypes node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTName node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTName node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTUnqualifiedName node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTUnqualifiedName node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTNameList node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTNameList node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
 	public Object visit(ASTExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{	
+			throws ShadowException {
+		if (secondVisit) {	
 			TACMethodRef methodRef;
 			MethodSignature signature;
 			
@@ -572,19 +513,15 @@ public class TACBuilder implements ShadowParserVisitor {
 			TACOperand right = tree.appendChild(2);
 			char operation = node.jjtGetChild(1).getImage().charAt(0);
 			
-			if( node.jjtGetChild(0).getType() instanceof PropertyType )
-			{					
+			if( node.jjtGetChild(0).getType() instanceof PropertyType ) {					
 				PropertyType propertyType = (PropertyType) node.jjtGetChild(0).getType();
 				List<TACOperand> parameters = new ArrayList<TACOperand>();
 				
 				parameters.add( left );
 				if( propertyType instanceof SubscriptType )
-				{					
 					parameters.addAll(indexStack.pop()); //there should only be one index in this list (not needed for properties)
-				}
 				
-				if (operation != '=')
-				{	
+				if (operation != '=') {	
 					signature = propertyType.getGetter();	
 					methodRef = new TACMethodRef(tree,
 							left, //prefix
@@ -598,8 +535,7 @@ public class TACBuilder implements ShadowParserVisitor {
 					
 					if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
 						right = new TACBinary(tree, result, signature, operation, right);
-					else
-					{
+					else {
 						TACVariableRef temp = new TACVariableRef(tree,
 								method.addTempLocal(signature.getReturnTypes().get(0)));
 						methodRef = new TACMethodRef(tree, result, signature);
@@ -620,16 +556,13 @@ public class TACBuilder implements ShadowParserVisitor {
 				parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)
 				new TACCall(tree, block, methodRef, parameters);
 			}			
-			else
-			{	
+			else {	
 				TACReference var = (TACReference)left;	
 				signature = node.getOperations().get(0);
-				if (operation != '=')
-				{	
+				if (operation != '=') {	
 					if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
 						right = new TACBinary(tree, var, signature, operation, right );
-					else
-					{
+					else {
 						TACVariableRef temp = new TACVariableRef(tree,
 								method.addTempLocal(signature.getReturnTypes().get(0)));
 						methodRef = new TACMethodRef(tree, left, signature);
@@ -645,18 +578,13 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTAssignmentOperator node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTAssignmentOperator node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTConditionalExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException {
+		if (secondVisit) {
 			TACLabelRef trueLabel = new TACLabelRef(tree),
 					falseLabel = new TACLabelRef(tree),
 					doneLabel = new TACLabelRef(tree);
@@ -676,11 +604,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTCoalesceExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTCoalesceExpression node, Boolean secondVisit) throws ShadowException	{
+		if (secondVisit) {
 			TACLabelRef nonnullLabel = new TACLabelRef(tree),
 					nullLabel = new TACLabelRef(tree),
 					doneLabel = new TACLabelRef(tree);
@@ -702,10 +627,8 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTConditionalOrExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+			throws ShadowException {
+		if (secondVisit) {
 			TACLabelRef doneLabel = new TACLabelRef(tree);
 			TACReference var = new TACVariableRef(tree,
 					method.addTempLocal(node));
@@ -727,8 +650,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTConditionalExclusiveOrExpression node,
-			Boolean secondVisit) throws ShadowException
-	{
+			Boolean secondVisit) throws ShadowException {
 		if (secondVisit)
 			visitBooleanOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
@@ -736,17 +658,14 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTConditionalAndExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+			throws ShadowException {
+		if (secondVisit) {
 			TACLabelRef doneLabel = new TACLabelRef(tree);
 			TACReference var = new TACVariableRef(tree,
 					method.addTempLocal(node));
 			TACOperand value = tree.appendChild(0);
 			new TACStore(tree, var, value);
-			for (int i = 1; i < tree.getNumChildren(); i++)
-			{
+			for (int i = 1; i < tree.getNumChildren(); i++) {
 				TACLabelRef nextLabel = new TACLabelRef(tree);
 				new TACBranch(tree, value, nextLabel, doneLabel);
 				nextLabel.new TACLabel(tree);
@@ -761,8 +680,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTBitwiseOrExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
@@ -770,8 +688,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTBitwiseExclusiveOrExpression node,
-			Boolean secondVisit) throws ShadowException
-	{
+			Boolean secondVisit) throws ShadowException {
 		if (secondVisit)
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
@@ -779,8 +696,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTBitwiseAndExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
@@ -798,12 +714,7 @@ public class TACBuilder implements ShadowParserVisitor {
 				TACOperand other = tree.appendChild(++index);
 				Type currentType = value.getType();
 				Type nextType = other.getType();
-				/*
-				Node current = node.jjtGetChild(index - 1);
-				Type currentType = current.getType();
-				Node next = node.jjtGetChild(index);
-				Type nextType = next.getType();
-				*/				
+								
 				if (c == '=' || c == '!') { //== or !=									
 					if (currentType.isPrimitive() &&
 						nextType.isPrimitive() /*&&
@@ -892,15 +803,12 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTIsExpression node, Boolean secondVisit)
-			throws ShadowException
-	{		
-		if (secondVisit)
-		{
+			throws ShadowException {		
+		if (secondVisit) {
 			TACOperand value = tree.appendChild(0);						
 			Type comparisonType = node.jjtGetChild(1).getType();
 			
-			if( comparisonType instanceof ArrayType )
-			{
+			if( comparisonType instanceof ArrayType ) {
 				ArrayType arrayType = (ArrayType) comparisonType;
 				comparisonType = arrayType.convertToGeneric();
 			}
@@ -922,22 +830,19 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTRelationalExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 	
 	
-	private TACOperand convertToString( TACOperand operand )
-	{
+	private TACOperand convertToString( TACOperand operand ) {
 		Type type = resolveType(operand.getType());
 		if( type.equals(Type.STRING ) )
 			return operand;
 		
-		if ( operand.getModifiers().isNullable() && !(type instanceof ArrayType) )// || !type.isPrimitive() && !(type instanceof ArrayType))
-		{ // TODO: actually check nullable
+		if ( operand.getModifiers().isNullable() && !(type instanceof ArrayType) ) { // || !type.isPrimitive() && !(type instanceof ArrayType))
 			TACLabelRef nullLabel = new TACLabelRef(tree),
 					nonnullLabel = new TACLabelRef(tree),
 					doneLabel = new TACLabelRef(tree);
@@ -964,8 +869,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			doneLabel.new TACLabel(tree);
 			operand = new TACLoad(tree, var);
 		}
-		else
-		{
+		else {
 			TACMethodRef methodRef = new TACMethodRef(tree, operand,
 					type.getMatchingMethod("toString", new SequenceType())); 
 			operand = new TACCall(tree, block, methodRef,
@@ -977,8 +881,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTConcatenationExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 		{
 			TACOperand last = null;			
@@ -999,8 +902,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTShiftExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
@@ -1008,8 +910,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTRotateExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
@@ -1017,8 +918,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTAdditiveExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
@@ -1026,8 +926,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTMultiplicativeExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			visitBinaryOperation(node);
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
@@ -1035,28 +934,21 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTUnaryExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+			throws ShadowException {
+		if (secondVisit) {
 			TACOperand operand = tree.appendChild(0);
 			String op = node.getImage(); 
 			if( op.equals("#")) //string is special because of nulls
-			{	
-				convertToString( operand );
-			}
-			else
-			{
+				convertToString( operand );			
+			else {
 				Type type = resolveType(operand.getType());					
 				if( op.equals("!") )
 					new TACUnary(tree, "!", operand);
-				else
-				{
+				else {
 					MethodSignature signature = node.getOperations().get(0); 
 					if( type.isPrimitive() && signature.getModifiers().isNative() )
 						new TACUnary(tree, signature, op, operand);				
-					else
-					{
+					else {
 						TACVariableRef var = new TACVariableRef(tree,
 								method.addTempLocal(node));
 						new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, operand, node.getOperations().get(0)), operand));		
@@ -1070,8 +962,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTInlineMethodDefinition node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			throw new UnsupportedOperationException();
 		return node.jjtGetNumChildren() == 1 ? PRE_CHILDREN : POST_CHILDREN;
@@ -1084,8 +975,6 @@ public class TACBuilder implements ShadowParserVisitor {
 			new TACCast(tree, node, tree.appendChild(1), true);
 		return POST_CHILDREN;
 	}
-
-	//ShadowParserVisitor.visit(ASTCheckExpression, Boolean)
 	
 	@Override
 	public Object visit(ASTCheckExpression node, Boolean secondVisit)
@@ -1216,13 +1105,11 @@ public class TACBuilder implements ShadowParserVisitor {
 		}
 		
 		TACMethodRef methodRef = new TACMethodRef(tree,
-				prefix,
-				//methodType.getTypeWithoutTypeArguments(),
+				prefix,				
 				signature);		
 		methodRef.setSuper(explicitSuper);
 		List<TACOperand> params = new ArrayList<TACOperand>();
-				
-		//params.add(prefix);
+
 		params.add(methodRef.getPrefix());
 		for (int i = 0; i < tree.getNumChildren(); i++)
 			if (node.jjtGetChild(i) instanceof ASTTypeArguments)
@@ -1255,21 +1142,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTQualifiedKeyword node, Boolean secondVisit)
 			throws ShadowException {
 		
-		//TODO: fix this?
-		/*
-		if (secondVisit)
-		{
-			if (node.getImage().equals("class"))
-			{	
-				prefix = new TACClass(tree, identifier.getType(), method).getClassData();				
-			}
-			else // TODO: Make this work
-				throw new UnsupportedOperationException();
-		}
-		
-		return POST_CHILDREN;
-		*/
-		
+		//TODO: Fix this!
 		throw new UnsupportedOperationException();
 	}
 
@@ -1288,8 +1161,7 @@ public class TACBuilder implements ShadowParserVisitor {
 					try {
 						type = type.replace(type.getTypeParameters(), arguments.getType());
 					}
-					catch (InstantiationException e) 
-					{}					
+					catch (InstantiationException e) {}					
 				}
 				else if( type.isParameterized() ) //parameterized, but no type arguments given
 					raw = true;					
@@ -1425,20 +1297,8 @@ public class TACBuilder implements ShadowParserVisitor {
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
-	/*
 	@Override
-	public Object visit(ASTArguments node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-			new TACSequence(tree);
-		return node.jjtGetNumChildren() != 0 ? PRE_CHILDREN : POST_CHILDREN;
-	}
-	*/
-
-	@Override
-	public Object visit(ASTArguments node, Boolean secondVisit) //used to be ASTArgumentList
-			throws ShadowException {
+	public Object visit(ASTArguments node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit) {
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			for (int i = 0; i < tree.getNumChildren(); i++) {
@@ -1452,10 +1312,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTArrayCreate node, Boolean secondVisit)
-			throws ShadowException {
-		if (secondVisit)
-		{
+	public Object visit(ASTArrayCreate node, Boolean secondVisit) throws ShadowException {
+		if (secondVisit) {
 			int start = 0;
 			if( node.jjtGetChild(0) instanceof ASTTypeArguments )
 				start++; //skip ahead
@@ -1467,8 +1325,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			List<TACOperand> indices = indexStack.pop();
 			
-			if( node.getMethodSignature() != null )
-			{	
+			if( node.getMethodSignature() != null ) {	
 				MethodSignature create = node.getMethodSignature();
 				List<TACOperand> arguments = new ArrayList<TACOperand>();
 				for( int i = start + 1; i < node.jjtGetNumChildren(); ++i )
@@ -1507,8 +1364,7 @@ public class TACBuilder implements ShadowParserVisitor {
 				 }					 
 				 params.add(1, outer); //after object, before args
 			}
-		}
-		
+		}		
 
 		TACMethodRef methodRef;		
 		if( signature.getOuter() instanceof InterfaceType )
@@ -1526,8 +1382,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	}	
 
 	@Override
-	public Object visit(ASTCreate node, Boolean secondVisit)
-			throws ShadowException {
+	public Object visit(ASTCreate node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit) {
 			int start = 0;
 			List<TACOperand> params = new ArrayList<TACOperand>();
@@ -1553,11 +1408,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTAssertStatement node, Boolean secondVisit)
-			throws ShadowException
-	{		
-		if (secondVisit)
-		{
+	public Object visit(ASTAssertStatement node, Boolean secondVisit) throws ShadowException {		
+		if (secondVisit) {
 			TACLabelRef doneLabel = new TACLabelRef(tree),
 					errorLabel = new TACLabelRef(tree);
 			
@@ -1586,9 +1438,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTBlock node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit)
 			method.exitScope();
 		else
@@ -1597,9 +1447,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTCreateBlock node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit)
 			method.exitScope();
 		else
@@ -1608,58 +1456,42 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTBlockStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTBlockStatement node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTLocalDeclaration node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTLocalDeclaration node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTLocalMethodDeclaration node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTLocalMethodDeclaration node, Boolean secondVisit) throws ShadowException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTLocalVariableDeclaration node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTEmptyStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTEmptyStatement node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTStatementExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTStatementExpression node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTSequenceAssignment node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTSequenceAssignment node, Boolean secondVisit) throws ShadowException {
+		if (secondVisit) {
 			ASTRightSide rightSide = (ASTRightSide) node.jjtGetChild(1);
 			ASTSequenceLeftSide leftSide = (ASTSequenceLeftSide) node.jjtGetChild(0);
 			//create splat
-			if( !(rightSide.getType() instanceof SequenceType)  )
-			{				
+			if( !(rightSide.getType() instanceof SequenceType)  ) {				
 				TACReference temporary = new TACVariableRef(tree,
 						method.addTempLocal(rightSide));	
 				new TACStore(tree, temporary, tree.appendChild(1));  //is that right? child 0 didn't work
@@ -1674,23 +1506,18 @@ public class TACBuilder implements ShadowParserVisitor {
 				new TACStore(tree, new TACSequenceRef(tree,
 						tree.appendChildRemoveSequence(0)), new TACSequence(tree, sequence) );
 			}
-			else
-			{
+			else {
 				new TACStore(tree, new TACSequenceRef(tree,
 						tree.appendChildRemoveSequence(0)), tree.appendChild(1));
 			}
 		}
 		
-		
 		return POST_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTSwitchStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if( secondVisit )
-		{
+	public Object visit(ASTSwitchStatement node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
 			TACOperand value = tree.appendChild(0);
 			Type type = value.getType();
 			TACLabelRef defaultLabel = null;
@@ -1698,23 +1525,19 @@ public class TACBuilder implements ShadowParserVisitor {
 			if( node.hasDefault() )
 				defaultLabel = new TACLabelRef(tree);
 			
-			if( !( value.getType() instanceof EnumType ) )
-			{	
+			if( !( value.getType() instanceof EnumType ) ) {	
 				//first go through and do the conditions
-				for( int i = 1; i < node.jjtGetNumChildren(); i += 2 )
-				{	
+				for( int i = 1; i < node.jjtGetNumChildren(); i += 2 ) {	
 					ASTSwitchLabel label = (ASTSwitchLabel) node.jjtGetChild(i);
 										
 					if( label.isDefault() )											
 						label.setLabel(defaultLabel);
-					else
-					{	
+					else {	
 						tree.appendChild(i); //append label conditions
 						
 						TACLabelRef matchingCase = new TACLabelRef(tree);
 						label.setLabel(matchingCase);
-						for( int j = 0; j < label.getValues().size(); j++ )
-						{
+						for( int j = 0; j < label.getValues().size(); j++ ) {
 							TACOperand operand = label.getValues().get(j);
 							TACOperand comparison;
 							MethodSignature signature = type.getMatchingMethod("equal", new SequenceType(operand));
@@ -1764,32 +1587,23 @@ public class TACBuilder implements ShadowParserVisitor {
 			}
 			else
 				throw new UnsupportedOperationException();		
-		}
-		
+		}		
 		
 		return POST_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTSwitchLabel node, Boolean secondVisit)
-			throws ShadowException
-	{
-		
+	public Object visit(ASTSwitchLabel node, Boolean secondVisit) throws ShadowException {
 		if( secondVisit )
-		{		
 			for( int i = 0; i < node.jjtGetNumChildren(); i++ )		
-				node.addValue(tree.appendChild(i));
-		}
+				node.addValue(tree.appendChild(i));		
 		
 		return POST_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTIfStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTIfStatement node, Boolean secondVisit) throws ShadowException {
+		if (secondVisit) {
 			TACLabelRef trueLabel = new TACLabelRef(tree),
 					falseLabel = new TACLabelRef(tree),
 					endLabel = new TACLabelRef(tree);
@@ -1806,9 +1620,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTWhileStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTWhileStatement node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit)
 			visitLoop(0, 1, 0, false);
 		else
@@ -1818,8 +1630,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTDoStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		if (secondVisit)
 			visitLoop(1, 0, 1, true);
 		else
@@ -1828,9 +1639,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTForeachStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTForeachStatement node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit)
 			visitForeachLoop(node);
 		else
@@ -1839,11 +1648,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTForStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTForStatement node, Boolean secondVisit) throws ShadowException {
+		if (secondVisit) {
 			int condition = 0;
 			if (node.jjtGetChild(condition) instanceof ASTForInit)
 				tree.appendChild(condition++);
@@ -1859,42 +1665,33 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTForInit node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTForInit node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
 	public Object visit(ASTStatementExpressionList node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTForUpdate node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTForUpdate node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
 	public Object visit(ASTBreakOrContinueStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+			throws ShadowException {
+		if (secondVisit) {
 			TACLabelRef unreachableLabel = new TACLabelRef(tree);
 			TACBlock exitBlock;
 			
-			if( node.getImage().equals("break") )
-			{
+			if( node.getImage().equals("break") ) {
 				exitBlock = block.getBreakBlock();
 				visitCleanup(exitBlock, null, exitBlock.getBreak());
 			}
-			else
-			{
+			else {
 				exitBlock = block.getContinueBlock();
 				visitCleanup(exitBlock, null, exitBlock.getContinue());
 			}
@@ -1906,10 +1703,8 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTReturnStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+			throws ShadowException {
+		if (secondVisit) {
 			TACLabelRef unreachableLabel = new TACLabelRef(tree);
 			visitCleanup(null, null);
 			new TACReturn(tree, (SequenceType)node.getType(),
@@ -1921,10 +1716,8 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTThrowStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+			throws ShadowException {
+		if (secondVisit) {
 			TACLabelRef unreachableLabel = new TACLabelRef(tree);
 			new TACThrow(tree, block, tree.appendChild(0));
 			unreachableLabel.new TACLabel(tree);
@@ -1934,13 +1727,10 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTFinallyStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+			throws ShadowException {
+		if (secondVisit) {
 			tree.appendChild(0);
-			if (node.hasFinally())
-			{
+			if (node.hasFinally()) {
 				TACPhi phi = (TACPhi)tree.getLast();
 				tree.appendChild(1);
 				new TACBranch(tree, (TACDestination)phi.getRef());
@@ -1954,20 +1744,15 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTRecoverStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTRecoverStatement node, Boolean secondVisit) throws ShadowException {
 		ASTFinallyStatement parent = (ASTFinallyStatement)node.jjtGetParent();
-		if (secondVisit)
-		{
+		if (secondVisit) {
 			tree.appendChild(0);
-			if (node.hasRecover())
-			{
+			if (node.hasRecover()) {
 				tree.appendChild(1);
 				new TACBranch(tree, block.getDone());
 			}
-			if (parent.hasFinally())
-			{
+			if (parent.hasFinally()) {
 				block.getDone().new TACLabel(tree);
 				method.setHasLandingpad();
 				visitCleanup(block.getParent(), block.getDone(),
@@ -1997,15 +1782,11 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTCatchStatements node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTCatchStatements node, Boolean secondVisit) throws ShadowException {
 		ASTRecoverStatement parent = (ASTRecoverStatement)node.jjtGetParent();
-		if (secondVisit)
-		{
+		if (secondVisit) {
 			TACOperand typeid = tree.appendChild(0);
-			for (int i = 1; i <= node.getCatches(); i++)
-			{
+			for (int i = 1; i <= node.getCatches(); i++) {
 				Type type = node.jjtGetChild(i).jjtGetChild(0).getType();
 				TACLabelRef catchLabel = block.getCatch(i - 1),
 						skip = new TACLabelRef(tree);
@@ -2017,44 +1798,21 @@ public class TACBuilder implements ShadowParserVisitor {
 				tree.appendChild(i);
 				new TACBranch(tree, block.getDone());
 				skip.new TACLabel(tree);
-				if (i == node.getCatches())
-				{
+				if (i == node.getCatches()) {
 					TACLabelRef continueUnwind = block.getUnwind();
 					if (continueUnwind != null)
 						new TACBranch(tree, continueUnwind); //try inside of try					
 					else
-					{	
-						//simply break?
-						new TACResume(tree);
-						//new TACBranch(tree, block.getParent().getDone()); 
-						//System.err.println("Trouble!");
-						//rethrow if necessary!
-						/*
-						TACLabelRef unreachableLabel = new TACLabelRef(tree);
-						new TACThrow(tree, block, typeid);
-						unreachableLabel.new TACLabel(tree);
-						*/						
-					}
-					
+						new TACResume(tree);					
 				}
-			}
-			
-			/*  //old code
-			if (parent.hasRecover())
-			{
-				block.getRecover().new TACLabel(tree);
-				block = block.getParent();
-			}
-			*/
-			
-			//new code
+			}			
+
 			if (parent.hasRecover())			
 				block.getRecover().new TACLabel(tree);
 			
 			block = block.getParent();			
 		}
-		else 
-		{
+		else {
 			block = new TACBlock(tree, block);
 			if (parent.hasRecover())
 				block.addRecover();
@@ -2066,11 +1824,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTCatchStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTCatchStatement node, Boolean secondVisit) throws ShadowException {
+		if (secondVisit) {
 			tree.appendChild(0);
 			new TACStore(tree, new TACVariableRef(tree, method.getLocal(
 					node.jjtGetChild(0).getImage())), new TACCatch(tree,
@@ -2085,15 +1840,12 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTTryStatement node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		ASTCatchStatements parent = (ASTCatchStatements)node.jjtGetParent();
-		if (secondVisit)
-		{
+		if (secondVisit) {
 			tree.appendChild(0);
 			new TACBranch(tree, block.getDone());
-			if (parent.getCatches() > 0 )
-			{
+			if (parent.getCatches() > 0 ) {
 				method.setHasLandingpad();
 				block.getLandingpad().new TACLabel(tree);
 				new TACLandingpad(tree, block);
@@ -2103,33 +1855,28 @@ public class TACBuilder implements ShadowParserVisitor {
 				block = block.getParent();
 			}
 		}
-		else if (parent.getCatches() > 0)
-		{
+		else if (parent.getCatches() > 0) {
 			block = new TACBlock(tree, block).addLandingpad().addUnwind();
 		}
 		return POST_CHILDREN;
 	}
 
 	@SuppressWarnings("unused")
-	private void visitCleanup(TACBlock lastBlock)
-	{
+	private void visitCleanup(TACBlock lastBlock) {
 		visitCleanup(lastBlock, null);
 	}
-	private void visitCleanup(TACBlock lastBlock, TACLabelRef currentLabel)
-	{
+	private void visitCleanup(TACBlock lastBlock, TACLabelRef currentLabel) {
 		if (lastBlock != null)
 			lastBlock = lastBlock.getParent();
 		TACBlock currentBlock = block.getCleanupBlock(lastBlock);
-		if (currentBlock != lastBlock)
-		{
+		if (currentBlock != lastBlock) {
 			TACLabelRef lastLabel = new TACLabelRef(tree);
 			visitCleanup(currentBlock, lastBlock, currentLabel, lastLabel);
 			lastLabel.new TACLabel(tree);
 		}
 	}
 	private void visitCleanup(TACBlock lastBlock, TACLabelRef currentLabel,
-			TACLabelRef lastLabel)
-	{
+			TACLabelRef lastLabel) {
 		if (lastBlock != null)
 			lastBlock = lastBlock.getParent();
 		TACBlock currentBlock = block.getCleanupBlock(lastBlock);
@@ -2138,19 +1885,17 @@ public class TACBuilder implements ShadowParserVisitor {
 		else
 			new TACBranch(tree, lastLabel);
 	}
+	
 	private void visitCleanup(TACBlock currentBlock, TACBlock lastBlock,
-			TACLabelRef currentLabel, TACLabelRef lastLabel)
-	{
-		if (currentLabel == null)
-		{
+			TACLabelRef currentLabel, TACLabelRef lastLabel) {
+		if (currentLabel == null) {
 			currentLabel = new TACLabelRef(tree);
 			new TACBranch(tree, currentLabel);
 			currentLabel.new TACLabel(tree);
 		}
 		TACBlock nextBlock;
 		while ((nextBlock = currentBlock.getNextCleanupBlock(lastBlock)) !=
-				lastBlock)
-		{
+				lastBlock) {
 			TACLabelRef nextLabel = new TACLabelRef(tree);
 			new TACBranch(tree, currentBlock.getCleanup());
 			currentBlock.getCleanupPhi().addEdge(nextLabel, currentLabel);
@@ -2163,8 +1908,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	private void visitConstant(TACConstant constantRef, Node constantNode)
-			throws ShadowException
-	{
+			throws ShadowException {
 		TACTree saveTree = tree;
 		tree = new TACTree(1);
 		walk(constantNode.jjtGetChild(0));
@@ -2193,7 +1937,6 @@ public class TACBuilder implements ShadowParserVisitor {
 			copyMethod = new TACMethodRef(tree, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
 		else
 			copyMethod = new TACMethodRef(tree, baseType.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)) );
-
 	
 		TACVariableRef[] counters = new TACVariableRef[layers];			
 		TACLabelRef[] labels = new TACLabelRef[layers];			
@@ -2204,15 +1947,13 @@ public class TACBuilder implements ShadowParserVisitor {
 		TACOperand oldArray = array;
 		TACVariableRef previousArray = null;
 		
-		for( int i = 0; i < layers; i++ )
-		{
+		for( int i = 0; i < layers; i++ ) {
 			ArrayType arrayType = (ArrayType)type;
 			type = arrayType.getBaseType();
 			TACOperand length = new TACLength(tree, oldArray, 0);
 			TACOperand[] dimensions = new TACOperand[arrayType.getDimensions()];
 			dimensions[0] = length;
-			for (int j = 1; j < arrayType.getDimensions(); j++)
-			{
+			for (int j = 1; j < arrayType.getDimensions(); j++) {
 				dimensions[j] = new TACLength(tree, oldArray, j);
 				length = new TACBinary(tree, length, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', dimensions[j]);
 			}
@@ -2223,8 +1964,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			if( i == 0 )
 				returnValue = copiedArray;
-			else
-			{
+			else {
 				//store current array into its spot in the previous array
 				TACArrayRef location = new TACArrayRef(tree, previousArray, counters[i - 1], false);
 				new TACStore(tree, location, copiedArray);
@@ -2232,23 +1972,20 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			previousArray = copiedArray;
 			
-			if( i == layers - 1 ) //last layer is either objects or primitives, not more arrays
-			{
+			if( i == layers - 1 ) { //last layer is either objects or primitives, not more arrays
 				TACLabelRef terminate;					
 				if( i == 0 )
 					terminate = done;
 				else
 					terminate = labels[i - 1];
 				
-				if( type.isPrimitive() )
-				{
+				if( type.isPrimitive() ) {
 					TACMethodRef width = new TACMethodRef(tree, Type.CLASS.getMatchingMethod("width", new SequenceType()) );
 					TACOperand size = new TACBinary(tree, new TACCall(tree, block, width, class_.getClassData()), Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', length);
 					new TACCopyMemory(tree, copiedArray, oldArray, size);					
 					new TACBranch(tree, terminate);		
 				}
-				else
-				{					
+				else {					
 					counters[i] = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
 					new TACStore(tree, counters[i], new TACLiteral(tree, new ShadowInteger(-1))); //starting at -1 allows update and check to happen on the same label
 					labels[i] = new TACLabelRef(tree);
@@ -2287,8 +2024,7 @@ public class TACBuilder implements ShadowParserVisitor {
 					new TACBranch(tree, labels[i]);					
 				}
 			}
-			else
-			{
+			else {
 				counters[i] = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
 				new TACStore(tree, counters[i], new TACLiteral(tree, new ShadowInteger(-1)));//starting at -1 allows update and check to happen on the same label
 				labels[i] = new TACLabelRef(tree);
@@ -2318,8 +2054,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		return returnValue;
 	}
 
-	private void visitMethod(MethodSignature methodSignature)
-			throws ShadowException {
+	private void visitMethod(MethodSignature methodSignature) throws ShadowException {
 		TACTree saveTree = tree;
 		TACMethod method = this.method = new TACMethod(methodSignature);		
 		boolean implicitCreate = false;
@@ -2531,8 +2266,7 @@ public class TACBuilder implements ShadowParserVisitor {
 						getParameters().iterator();
 				List<TACOperand> toArguments = new ArrayList<TACOperand>(
 						toTypes.size());
-				for (int i = 0; i < toTypes.size(); i++)
-				{
+				for (int i = 0; i < toTypes.size(); i++) {
 					TACOperand argument =
 							new TACVariableRef(tree, fromArguments.next());
 					if (!fromTypes.getType(i).isSubtype(toTypes.getType(i)))
@@ -2545,8 +2279,7 @@ public class TACBuilder implements ShadowParserVisitor {
 				
 				if( methodSignature.getFullReturnTypes().isEmpty() )
 					new TACReturn(tree, methodSignature.getFullReturnTypes(), null);
-				else
-				{
+				else {
 					fromTypes = wrapped.getFullReturnTypes();
 					toTypes = methodSignature.getFullReturnTypes();
 					
@@ -2592,23 +2325,21 @@ public class TACBuilder implements ShadowParserVisitor {
 		tree = saveTree;
 	}
 	
-	private void visitBooleanOperation(Node node)
-	{
+	private void visitBooleanOperation(Node node) {
 		int child = 0;		
 		String image = node.getImage();
 		TACOperand current = null;
-			while( current == null )
-				current = tree.appendChild(child++);
-		for( int index = 0; index < node.getImage().length(); index++ )
-		{
+		while( current == null )
+			current = tree.appendChild(child++);
+		
+		for( int index = 0; index < node.getImage().length(); index++ ) {
 			char op = image.charAt(index);
 			TACOperand next = null;
 			while( next == null )
 				next = tree.appendChild(child++);
 			
 			TACBinary.Boolean connector = null;
-			switch( op )
-			{
+			switch( op ) {
 			case 'a': connector = TACBinary.Boolean.AND; break;
 			case 'o': connector = TACBinary.Boolean.OR; break;
 			case 'x': connector = TACBinary.Boolean.XOR; break;
@@ -2619,15 +2350,14 @@ public class TACBuilder implements ShadowParserVisitor {
 		}	
 	}
 	
-	private void visitBinaryOperation(OperationNode node)
-	{	
+	private void visitBinaryOperation(OperationNode node) {	
 		int child = 0;		
 		String image = node.getImage();
 		TACOperand current = null;
 		while( current == null )
 			current = tree.appendChild(child++);
-		for( int index = 0; index < node.getOperations().size(); index++ )
-		{
+		
+		for( int index = 0; index < node.getOperations().size(); index++ ) {
 			char op = image.charAt(index);
 			TACOperand next = null;
 			while( next == null )
@@ -2927,17 +2657,13 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	@Override
 	public Object visit(ASTDestroy node, Boolean secondVisit)
-			throws ShadowException
-	{
+			throws ShadowException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Object visit(ASTForeachInit node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTForeachInit node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
 			String name = node.getImage();
 			node.setVariable(new TACVariableRef(tree, method.addLocal(node, name)));
 			//append last child (containing the collection)
@@ -2946,18 +2672,13 @@ public class TACBuilder implements ShadowParserVisitor {
 		return POST_CHILDREN;
 	}
 	@Override
-	public Object visit(ASTInlineResults node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTInlineResults node, Boolean secondVisit) throws ShadowException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Object visit(ASTSequenceRightSide node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTSequenceRightSide node, Boolean secondVisit) throws ShadowException {
+		if (secondVisit) {
 			List<TACOperand> sequence =
 					new ArrayList<TACOperand>(node.getType().size());
 			
@@ -2970,11 +2691,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	}	
 	
 	@Override
-	public Object visit(ASTSequenceLeftSide node, Boolean secondVisit)
-			throws ShadowException
-	{
-		if (secondVisit)
-		{
+	public Object visit(ASTSequenceLeftSide node, Boolean secondVisit) throws ShadowException {
+		if (secondVisit) {
 			List<TACOperand> sequence =
 					new ArrayList<TACOperand>(node.getUsedItems().size());
 			int index = 0;
@@ -2992,8 +2710,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		return POST_CHILDREN; 		
 	}
 	@Override
-	public Object visit(ASTSequenceVariable node, Boolean secondVisit)
-			throws ShadowException {
+	public Object visit(ASTSequenceVariable node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit) {
 			String name = node.getImage();
 			new TACVariableRef(tree, method.addLocal(node, name));
@@ -3002,36 +2719,27 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 	
 	@Override
-	public Object visit(ASTRightSide node, Boolean secondVisit)
-			throws ShadowException
-	{
+	public Object visit(ASTRightSide node, Boolean secondVisit) throws ShadowException {
 		return PRE_CHILDREN;
 	}
 
 	@Override
-	public Object visit(ASTCopyExpression node, Boolean secondVisit)
-			throws ShadowException
-	{
-		
-		if( secondVisit )
-		{
+	public Object visit(ASTCopyExpression node, Boolean secondVisit) throws ShadowException {
+		if( secondVisit ) {
 			TACOperand value = tree.appendChild(0);
 			prefix = value;
 			Type type = node.getType();
 			
-			if( !type.getModifiers().isImmutable() ) //if immutable, do nothing, the old one is fine
-			{				
+			if( !type.getModifiers().isImmutable() ) { //if immutable, do nothing, the old one is fine
 				TACNewObject object = new TACNewObject(tree, Type.ADDRESS_MAP );
 				TACMethodRef create = new TACMethodRef(tree, Type.ADDRESS_MAP.getMatchingMethod("create", new SequenceType()) );
 				TACOperand map = new TACCall(tree, block, create, object);
 				
-				if( type instanceof ArrayType )
-				{
+				if( type instanceof ArrayType ) {
 					prefix = copyArray(value, map);					
 					new TACNodeRef(tree, prefix);
 				}
-				else
-				{
+				else {
 					TACMethodRef copyMethod;
 					TACReference result = new TACVariableRef(tree, method.addTempLocal(node));
 					TACOperand data = value;					
@@ -3082,9 +2790,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTArrayDimensions node, Boolean secondVisit)
-			throws ShadowException {
-		
+	public Object visit(ASTArrayDimensions node, Boolean secondVisit) throws ShadowException {
 		if( secondVisit ) {
 			List<TACOperand> list = new LinkedList<TACOperand>();
 			for (int i = 0; i < tree.getNumChildren(); i++)

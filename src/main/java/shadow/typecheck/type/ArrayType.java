@@ -12,7 +12,7 @@ public class ArrayType extends ClassType
 	private final boolean nullable;
 	private final String brackets;
 	
-	private static String makeBrackets(int dimensions ) {
+	public static String makeBrackets(int dimensions ) {
 		StringBuilder brackets = new StringBuilder("[");		
 		for( int i = 1; i < dimensions; i++) //no extra comma for 1 dimension 
 			brackets.append(",");

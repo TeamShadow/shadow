@@ -1,3 +1,11 @@
+/**
+ * {@code BigInteger} objects are immutable representations of arbitrarily
+ * large positive and negative integers.
+ * They support standard arithmetic operations such as addition, subtraction,
+ * multiplication, division, modulus, and comparison.   
+ * 
+ * @author Barry Wittman 
+ */
 locked immutable class shadow:standard@
 	BigInteger
 is  Number<BigInteger>

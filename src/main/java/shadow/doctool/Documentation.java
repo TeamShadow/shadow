@@ -38,8 +38,8 @@ public class Documentation
 		blockTags = new HashMap<BlockTagType, List<List<String>>>();
 		
 		String text = builder.toString();
-		parseInlineSection(text);
-		parseBlockSection(text);
+		parseInlineSection(text, inlineTags);
+		parseBlockSection(text, blockTags);
 		
 		// Build the documentation summary out of inlineTags
 		summaryTags = new ArrayList<InlineTag>();
@@ -48,7 +48,7 @@ public class Documentation
 				String plain = tag.getArg(0);
 				Matcher matcher = sentenceEnd.matcher(plain);
 				if (matcher.find()) {
-					plain = plain.substring(0, matcher.start());
+					plain = plain.substring(0, Math.min(matcher.start() + 1, plain.length())); // to keep the period
 					if (!plain.isEmpty())
 						summaryTags.add(InlineTagType.PLAIN_TEXT.build(plain));
 					break; // Leave the loop once the end of the summary is found
@@ -63,10 +63,10 @@ public class Documentation
 	
 	/** 
 	 * Parses the inline tags and plain text content of a documentation
-	 * comment, automatically adding them to inlineTags. If it exists, the
+	 * comment, adding them to inlineTags. If it exists, the
 	 * block tag section is returned as raw text
 	 */
-	private void parseInlineSection(String text) throws DocumentationException
+	public static void parseInlineSection(String text, List<InlineTag> inlineTags) throws DocumentationException
 	{
 		// Separate the inline/body section from any trailing block tags
 		Matcher blockTagMatcher = blockTagPattern.matcher(text);
@@ -111,7 +111,7 @@ public class Documentation
 	 * Parses and stores all block tags that follow the body of a documentation 
 	 * comment
 	 */
-	private void parseBlockSection(String blockSection) 
+	public static void parseBlockSection(String blockSection, Map<BlockTagType, List<List<String>>> blockTags) 
 			throws DocumentationException
 	{
 		blockSection = blockSection.trim();
@@ -125,7 +125,7 @@ public class Documentation
 			if (previousType != null) {
 				String previousBody = blockSection.substring(previousTagStart, 
 						tagMatcher.start());
-				addBlockTag(previousType, previousType.parse(previousBody));
+				addBlockTag(previousType, previousType.parse(previousBody), blockTags);
 			}
 			// Record the relevant info about the current tag
 			previousType = BlockTagType.getType(tagMatcher.group(3));
@@ -137,12 +137,12 @@ public class Documentation
 		// If necessary, capture the last tag found
 		if (previousType != null) {
 			String previousBody = blockSection.substring(previousTagStart);
-			addBlockTag(previousType, previousType.parse(previousBody));
+			addBlockTag(previousType, previousType.parse(previousBody), blockTags);
 		}
 	}
 	
 	/** Safely handles the addition of block tags to the central map */
-	private void addBlockTag(BlockTagType type, List<String> arguments)
+	public static void addBlockTag(BlockTagType type, List<String> arguments, Map<BlockTagType, List<List<String>>> blockTags)
 	{
 		if (!blockTags.containsKey(type))
 			blockTags.put(type, new ArrayList<List<String>>());

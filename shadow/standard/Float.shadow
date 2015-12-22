@@ -123,10 +123,7 @@ and	CanHash
 	}
 	
 	// implement CanNegate<float>
-	public negate() => (float)
-	{
-		return (0.0f - 1.0f) * this;
-	}
+	public native negate() => (float);
 
 	public native get raw() => (uint);
 	public get bits() => (uint)

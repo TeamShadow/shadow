@@ -125,12 +125,14 @@ public class PackagePage extends Page
 		out.fullLine("h2", "Package " + qualifiedName);
 		
 		out.closeUntab();
-		out.voidLine("hr");
+		//out.voidLine("hr");
 		
 		// Documentation text
 		if (self.hasDocumentation()) {
-			writeInlineTags(self.getDocumentation().getInlineTags(), out);
-			writeUniversalBlockTags(self.getDocumentation(), out);
+			out.openTab("div", new Attribute("class", "detail"));			
+				writeInlineTags(self.getDocumentation().getInlineTags(), out);
+				writeUniversalBlockTags(self.getDocumentation(), out);
+			out.closeUntab();
 		}
 	}
 	

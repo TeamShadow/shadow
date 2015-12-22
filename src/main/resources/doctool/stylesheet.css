@@ -125,7 +125,7 @@ code
     font-size: 125%;
 }
 
-.methoddetail
+.detail
 {
     border: 1px solid white;
     background-color: white;
@@ -133,12 +133,12 @@ code
     margin: 0 0 .5em;
 }
 
-.methoddetail h4
+.detail h4
 {
     margin: .5em 0;    
 }
 
-.methoddetail h5
+.detail h5
 {
     margin: .75em 0 .5em;
 }

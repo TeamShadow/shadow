@@ -1,3 +1,16 @@
+/**
+ * Class {@code Array<T>} is used as a wrapper for array objects when
+ * they must be treated as objects.
+ *
+ * The object keeps a reference to normal array memory as well as additional
+ * dimension information needed to access the array safely. 
+ *
+ * Most of the use of {@code Array<T>} is handled by the compiler.
+ * Users should avoid using the {@code Array<T>} type explicitly 
+ * unless absolutely necessary. 
+ * 
+ * @author Barry Wittman 
+ */
 abstract locked class shadow:standard@
 	Array<T>
 is  CanIndex<int[],T>
@@ -7,14 +20,29 @@ and CanIterate<T>
 	get immutable int[] lengths;
 	Object data;
 	
+	/**
+	 * Creates an {@code Array<T>} object with the given dimensions and a reference
+	 * to its allocated memory.
+	 * This method is called internally by the compiler and is only {@code protected}
+	 * because it allows other classes to see the method.
+	 */
 	protected create( immutable int[] lengths, Object data )	
 	{		
 		this:lengths = lengths;	
 		this:data = data;		
 	}	
 	
+	/**
+	 * Creates an {@code Array<T>} object with the given dimensions.
+	 * This method is called internally by the compiler and is only {@code protected}
+	 * because it allows other classes to see the method.
+	 */
 	protected native create( immutable int[] lengths );
 
+	/**
+	 * Gets the size of the array (total number of elements in all dimensions).
+	 * @return number of all elements
+	 */
 	public readonly get size() => ( int )
 	{
 		int size = lengths[0];
@@ -23,10 +51,14 @@ and CanIterate<T>
 		return size;
 	}
 	
-	public readonly native get dimensions() => ( int );
+	/**
+	 * Gets the number of dimensions in the array.
+	 * @return dimensions
+	 */
+	public readonly native get dimensions() => ( int );	
 	
-	
-	/* //copy implementation based off the following code
+	/* 
+	// Copy implementation based off the following code:
 	private readonly copyProxy(AddressMap addresses) => ( Array<T> )
 	{
 		Array<T> duplicate = Array<T>:create( lengths );
@@ -37,21 +69,61 @@ and CanIterate<T>
 	}
 	*/
 	
-	//only makes sense for 1D arrays?
+	/**
+	 * Copy a subarray from the given array, starting at {@code start} and going
+	 * up to but not including index {@code end}.
+	 * The resulting array will always be one-dimensional and requires an explicit
+	 * cast in order to be stored back into a normal array reference.
+	 * @param start	starting index of subarray
+	 * @param end	index after last index in subarray
+	 * @return {@code Array<T>} object containing the subarray
+	 */	
 	public readonly native subarray( int start, int end ) => ( Array<T> );
 
+	/**
+	 * Gets element located at the specified indices.
+	 * @param indices	array giving indices into each dimension	 
+	 * @return value at given location
+	 */	
 	public readonly native index( int[] indices ) => (T);
+	
+	/**
+	 * Sets element at the specified indices to the given value.
+	 * @param indices	array giving indices into each dimension	 
+	 * @param value to be stored
+	 */	
 	public native index( int[] indices, T value ) => ();
 	
-	//private methods that take the final offset after all the dimensions have been computed
-	//unsafe to give to the user, but useful for internals
-	//by keeping them protected, they are not accessible to the user
-	//but they still appear in .meta files and are accessible to the compiler
+	/**
+	 * Gets element located at the specific index within the contiguous 
+	 * memory for all dimensions. This method cannot be accessed by the user
+	 * but is useful for compiler internals.  It is {@code protected}
+	 * to allow other classes to see the method.
+	 * @param index	index into contiguous array memory	 
+	 * @return value at given location
+	 */	
 	protected readonly native index( int index ) => (T);
-	protected native index( int index, T value) => ();	
+	
+	/**
+	 * Sets element located at the specific index within the contiguous 
+	 * memory to the given value. This method cannot be accessed by the user
+	 * but is useful for compiler internals.  It is {@code protected}
+	 * to allow other classes to see the method.
+	 * @param index	index into contiguous array memory	 
+	 * @param value to be stored
+	 */	
+	protected native index( int index, T value ) => ();	
 
+	/**
+	 * Gets base class of array, the {@code Class} object for {@code T}.  
+	 * @return class object
+	 */
 	public native readonly getBaseClass() => ( Class );
 
+	/**
+	 * Gets formatted {@code String} representation of the array.   
+	 * @return {@code String} representation
+	 */
 	public readonly toString() => ( String )
 	{
 		if ( this->size == 0 )
@@ -70,6 +142,10 @@ and CanIterate<T>
 		return string.append("]").toString();
 	}
 	
+	/**
+	 * Gets iterator that can iterate over all the elements of the array.   
+	 * @return iterator
+	 */
 	public readonly iterator() => (Iterator<T>)
 	{
 		return ArrayIterator:create();

@@ -1,6 +1,17 @@
 import shadow:utility@Map;
 import shadow:utility@IllegalModificationException;
 
+/**
+ * Class {@code AddressMap} maps old object addresses to new object addresses.
+ * It's used when making a deep copy of an object so that an object that has already
+ * been copied won't be copied a second time.
+ *
+ * {@code AddressMap} is essentially a reimplementation of {@code HashMap}, which cannot
+ * be used because generic types create problems for the compiler if used for these
+ * fundamental tasks.   
+ * 
+ * @author Barry Wittman 
+ */
 locked class shadow:standard@
 	AddressMap is Map<ulong, ulong>	
 {
@@ -8,22 +19,38 @@ locked class shadow:standard@
 	private constant int MAXIMUM_CAPACITY = 1 << 30;
 	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
+	/** Gets current number of entries stored in the map. */
 	get int size = 0;
 	nullable Node[] table;
 	float loadFactor;
 	int threshold;
 	int modifications = 0;
 	
+	/**
+	 * Creates an empty {@code AddressMap} with a default capacity of 16
+	 * and load factor of 0.75.  
+	 */	
 	public create()
 	{
 		this(DEFAULT_INITIAL_CAPACITY);
 	}
 	
+	/**
+	 * Creates an empty {@code AddressMap} with the specified capacity and
+	 * default load factor of 0.75. 
+	 * @param initialCapacity initial capacity of the map
+	 */
 	public create(int initialCapacity)
 	{
 		this(initialCapacity, DEFAULT_LOAD_FACTOR);
 	}
 	
+	/**
+	 * Creates an empty {@code AddressMap} with the specified capacity and
+	 * load factor. 
+	 * @param initialCapacity initial capacity of the map
+	 * @param loadFactor maximum load factor before the map is resized
+	 */
 	public create(int initialCapacity, float loadFactor)
 	{
 		int capacity = 1;
@@ -34,6 +61,10 @@ locked class shadow:standard@
 		threshold = cast<int>(capacity * loadFactor);
 	}
 	
+	/**
+	 * Resizes the map so that it can hold the new capacity, which must be a power of 2. 
+	 * @param newCapacity new capacity of the map
+	 */
 	public resize(int newCapacity) => ()
 	{		
 		if(table->size == MAXIMUM_CAPACITY)
@@ -98,11 +129,13 @@ locked class shadow:standard@
 		}
 	}
 
+	/* Finds the hash value and index for a given key. */
 	private readonly hash( ulong key ) => ( int index, int hash )
 	{
 		return findIndex( key, table->size );
 	}
 	
+	/* Finds the hash value and index for a given key based on the provided length. */
 	private readonly findIndex( ulong key, int length ) => ( int index, int hash )
 	{
 		uint temp = key->hash;
@@ -111,7 +144,12 @@ locked class shadow:standard@
 		return ( hash & (length - 1), hash );	
 	}
 	
-
+	/**
+	 * Retrieves the address associated with the key.
+	 * If the key is not present, {@code null} is returned.  
+	 * @param key key to find
+	 * @return address at key location or {@code null} if not found
+	 */
 	public index( ulong key ) => ( nullable ulong value )
 	{
 		(int index, int hash) = this.hash( key );
@@ -131,7 +169,11 @@ locked class shadow:standard@
 		return null;				
 	}
 	
-	
+	/**
+	 * Stores value address in the key address entry.	   
+	 * @param key key corresponding to old address
+	 * @param value value corresponding to new address
+	 */
 	public index( ulong key, ulong value ) => ()
 	{
 		( int index, int hash ) = this.hash(key);
@@ -155,6 +197,11 @@ locked class shadow:standard@
 		}
 	}
 
+	/**
+	 * Removes the value stored in the key value entry.	   
+	 * @param key key corresponding to old address
+	 * @return value being removed or {@code null} if not present
+	 */
 	public remove( ulong key ) => ( nullable ulong value )
 	{	
 		( int index, int hash ) = this.hash(key);
@@ -180,6 +227,12 @@ locked class shadow:standard@
 			return null;
 		}
 	}
+	
+	/**
+	 * Checks to see if the map contains a key.	   
+	 * @param key key to find
+	 * @return {@code true} if present
+	 */
 	public readonly containsKey( ulong key ) => ( boolean found )
 	{		
 		( int index, int hash ) = this.hash(key);
@@ -196,6 +249,11 @@ locked class shadow:standard@
 		}
 	}
 	
+	/**
+	 * Checks to see if the map contains a particular value.	   
+	 * @param value value to find
+	 * @return {@code true} if present
+	 */
 	public readonly containsValue( ulong value ) => ( boolean found )
 	{		
 		foreach( ulong element in this )
@@ -205,11 +263,18 @@ locked class shadow:standard@
 		return false;
 	}
 
+	/**
+	 * Creates an iterator to iterate over all the values in the map.	   
+	 * @return iterator
+	 */
 	public readonly iterator() => ( Iterator<ulong> )
 	{
 		return AddressMapIterator:create();
 	}
 	
+	/**
+	 * Removes all entries from the map and returns the capacity to default.
+	 */
 	public clear() => ()
 	{
 		size = 0;

@@ -144,7 +144,7 @@ public class DocumentationTest
 		List<List<String>> param = documentation.getBlockTags(BlockTagType.PARAM);
 		
 		// Summary
-		assertEquals(4, summary.size());
+		assertEquals(5, summary.size());
 		assertEquals(InlineTagType.PLAIN_TEXT, summary.get(0).getType());
 		assertEquals("This is a documentation comment ", summary.get(0).getArg(0));
 		assertEquals(InlineTagType.CODE, summary.get(1).getType());
@@ -153,6 +153,7 @@ public class DocumentationTest
 		assertEquals(" here is some more content and ", summary.get(2).getArg(0));
 		assertEquals(InlineTagType.CODE, summary.get(3).getType());
 		assertEquals("here is some more", summary.get(3).getArg(0));
+		assertEquals(".", summary.get(4).getArg(0));
 		
 		// Inline
 		assertEquals(5, inline.size());

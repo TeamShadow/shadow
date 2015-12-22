@@ -22,8 +22,7 @@ public class TACTest {
 	private ArrayList<String> args = new ArrayList<String>();
 	
 	@Before
-	public void setup() throws Exception {
-		//args.add("-v");
+	public void setup() throws Exception {		
 		args.add("-o");
 		args.add(executableName);
 		
@@ -43,12 +42,10 @@ public class TACTest {
 	public void cleanup() throws IOException {
 		
 		// To to remove the unit test executable
-		try
-		{
+		try {
 			Files.delete(executable);
 		}
-		catch(Exception e)
-		{}
+		catch(Exception e) {}
 	}
 		
 	@Test public void testArrayList() throws Exception {

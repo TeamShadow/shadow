@@ -83,7 +83,6 @@ import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodTableType;
@@ -104,7 +103,7 @@ public class LLVMOutput extends AbstractOutput {
 	private int classCounter = 0;
 	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
 	private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
-	//private HashSet<Type> usedMethodTables = new HashSet<Type>();	
+
 	
 	private Set<String> genericClasses = new TreeSet<String>();
 	private Set<String> arrayClasses = new TreeSet<String>();
@@ -460,21 +459,6 @@ public class LLVMOutput extends AbstractOutput {
 					" }");
 		}
 		
-		
-		/*
-		//all module class definitions need Class class and methods
-		if( !module.getType().encloses(Type.CLASS))
-			usedMethodTables.add(Type.CLASS);
-		
-		//almost all module class definitions need GenericClass class and methods
-		if( !module.getType().encloses(Type.GENERIC_CLASS))			
-			usedMethodTables.add(Type.GENERIC_CLASS);		
-		
-		//almost all module class definitions need Array class and methods
-		if( !module.getType().encloses(Type.ARRAY))
-			usedMethodTables.add(Type.ARRAY);		
-		*/
-		
 		if (moduleType instanceof SingletonType)
 			writer.write('@' + raw(moduleType, "_instance") + " = global " +
 					type(moduleType) + " null");
@@ -510,43 +494,6 @@ public class LLVMOutput extends AbstractOutput {
 		
 		writer.write();		
 	}
-	
-	/*
-	private void writeClasses() throws ShadowException {
-		//write classes
-		HashSet<Type> definedGenerics = new HashSet<Type>();
-		for (Type type : module.getType().getReferencedTypes()) {			
-			//write class objects and instances
-			if(type != null && !(type instanceof ArrayType) && !module.getType().encloses(type)  ) {	
-				if( !type.isParameterizedIncludingOuterClasses() ) {					
-					writer.write(classOf(type) +
-							" = external constant %" + raw(Type.CLASS));					
-					if( type instanceof ClassType )				
-						writer.write(methodTable(type) +
-							" = external constant " + methodTableType(type));					
-					if (type instanceof SingletonType) //never parameterized
-						writer.write('@' + raw(type, "_instance") +
-							" = external global " + type(type));
-				}
-				else if( type.isFullyInstantiated() ) {
-					//if unparameterized version has not been declared yet, do it										
-					writeGenericClassSupportingMaterial(type); //junk that generic classes need
-					
-					Type unparameterizedType = type.getTypeWithoutTypeArguments();
-					if( definedGenerics.add(unparameterizedType) &&	!module.getType().encloses(unparameterizedType)) {
-						if( type instanceof ClassType ) {
-							writer.write( interfaceData(unparameterizedType) +
-									" = external constant [" + type.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
-							writer.write(methodTable(unparameterizedType) +
-									" = external constant " + methodTableType(unparameterizedType));
-						}
-					}					
-				}
-			}
-		}
-		writer.write();
-	}
-	*/
 	
 	public static void readGenericAndArrayClasses(File llvmFile, Set<String> generics, Set<String> arrays ) throws IOException {
 		BufferedReader llvm = Files.newBufferedReader(llvmFile.toPath(), UTF8);
@@ -597,8 +544,7 @@ public class LLVMOutput extends AbstractOutput {
 	private String methodList(Iterable<MethodSignature> methods, boolean name)
 			throws ShadowException {
 		StringBuilder sb = new StringBuilder();
-		for (MethodSignature method : methods) {
-			//TACMethodRef methodRef = new TACMethodRef(method);
+		for (MethodSignature method : methods) {			
 			sb.append(", ").append(methodType(method));
 			if (name)
 				sb.append(' ').append(name(method));
@@ -697,15 +643,6 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("@_genericSet = external global " + type(Type.CLASS_SET));
 		writer.write("@_arraySet = external global " + type(Type.CLASS_SET));
 		writer.write();
-
-		//print the method tables that are used		
-		/*
-		for( Type type : usedMethodTables )
-			if( !moduleType.encloses(type) && type instanceof ClassType && type.isUninstantiated() )				
-				writer.write(methodTable(type) +
-					" = external constant " + methodTableType(type));
-		writer.write();
-		*/
 		
 		//print only the constant fields that are used
 		for( TACConstantRef constant : usedConstants )
@@ -731,8 +668,7 @@ public class LLVMOutput extends AbstractOutput {
 		writeStringLiterals();
 
 		if (process != null)
-			try
-			{
+			try {
 				String line;
 				BufferedReader reader;
 				process.getOutputStream().close();
@@ -743,12 +679,10 @@ public class LLVMOutput extends AbstractOutput {
 					System.out.println(line);
 				reader.close();
 
-				try
-				{
+				try {
 					Thread.sleep(11); //why is this 11?
-				} catch (InterruptedException ex)
-				{
 				}
+				catch (InterruptedException ex)	{}
 
 				reader = new BufferedReader(new InputStreamReader(
 						process.getErrorStream()));
@@ -763,16 +697,14 @@ public class LLVMOutput extends AbstractOutput {
 				if (exit != 0)
 					System.exit(exit);
 			}
-			catch (IOException ex)
-			{
-				throw new ShadowException(ex.getLocalizedMessage());
+			catch (IOException ex) {
+				throw new ShadowException( ex.getLocalizedMessage() );
 			}
 	}
 
 
 	@Override
-	public void startMethod(TACMethod method, TACModule module) throws ShadowException
-	{
+	public void startMethod(TACMethod method, TACModule module) throws ShadowException {
 		this.method = method;		
 		MethodSignature signature = method.getMethod();
 		if (module.getType() instanceof InterfaceType)
@@ -794,21 +726,17 @@ public class LLVMOutput extends AbstractOutput {
 			boolean primitiveCreate = !signature.getOuter().
 					isSimpleReference() && signature.isCreate(), first = true;
 			int paramIndex = 0;
-			for (TACVariable param : method.getParameters())
-			{
+			for (TACVariable param : method.getParameters()) {
 				String symbol = '%' + Integer.toString(paramIndex++);
-				if (first)
-				{
+				if (first) {
 					first = false;
-					if (signature.isCreate())
-					{
+					if (signature.isCreate()) {
 						writer.write(nextTemp() + " = bitcast " +
 								typeText(Type.OBJECT, symbol) + " to %" +
 								raw(param.getType()) + '*');
 						symbol = temp(0);
 					}
-					if (primitiveCreate)
-					{
+					if (primitiveCreate) {
 						writer.write(nextTemp() +
 								" = getelementptr inbounds %" +
 								raw(param.getType()) + ", %" +
@@ -836,14 +764,12 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACVariableRef node) throws ShadowException
-	{
+	public void visit(TACVariableRef node) throws ShadowException {
 		node.setData( '%' + name(node.getVariable()));
 	}
 
 	@Override
-	public void visit(TACSingletonRef node) throws ShadowException
-	{
+	public void visit(TACSingletonRef node) throws ShadowException {
 		node.setData( '@' + raw(node.getType(), "_instance"));
 	}
 
@@ -873,8 +799,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACFieldRef node) throws ShadowException
-	{		
+	public void visit(TACFieldRef node) throws ShadowException {		
 		writer.write(nextTemp(node) + " = getelementptr inbounds " +
 				"%" + raw(node.getPrefix().getType()) + ", " + 
 				typeSymbol(node.getPrefix()) + ", i32 0, i32 " +
@@ -882,28 +807,24 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACLabelRef node) throws ShadowException
-	{
+	public void visit(TACLabelRef node) throws ShadowException {
 		nextLabel(node);
 	}
 	
 	@Override
-	public void visit(TACLongToPointer node) throws ShadowException
-	{
+	public void visit(TACLongToPointer node) throws ShadowException {
 		writer.write(nextTemp(node) + " = inttoptr " + type(Type.ULONG) + " " +
 				symbol(node.getOperand(0)) + " to " + type(node.getType())); 
 	}
 	
 	@Override
-	public void visit(TACPointerToLong node) throws ShadowException
-	{		
+	public void visit(TACPointerToLong node) throws ShadowException {		
 		writer.write(nextTemp(node) + " = ptrtoint " + typeSymbol(node.getOperand(0)) +
 				" to " + type(Type.ULONG));
 	}
 	
 	@Override
-	public void visit(TACCopyMemory node) throws ShadowException
-	{
+	public void visit(TACCopyMemory node) throws ShadowException {
 		TACOperand destinationNode = node.getDestination();
 		TACOperand sourceNode = node.getSource();
 		TACOperand size = node.getSize();
@@ -911,16 +832,14 @@ public class LLVMOutput extends AbstractOutput {
 		String destination = typeSymbol(destinationNode);
 		String source = typeSymbol(sourceNode);
 		
-		if( destinationNode.getType() instanceof ArrayType )
-		{
+		if( destinationNode.getType() instanceof ArrayType ) {
 			ArrayType arrayType = (ArrayType) destinationNode.getType();
 			writer.write(nextTemp() + " = extractvalue " +
 					destination + ", 0");
 			destination = typeText(arrayType.getBaseType(), temp(0), true);			
 		}
 		
-		if( sourceNode.getType() instanceof ArrayType )
-		{
+		if( sourceNode.getType() instanceof ArrayType ) {
 			ArrayType arrayType = (ArrayType) sourceNode.getType();
 			writer.write(nextTemp() + " = extractvalue " +
 					source + ", 0");
@@ -933,8 +852,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACMethodRef node) throws ShadowException
-	{
+	public void visit(TACMethodRef node) throws ShadowException {
 		if (node.getOuterType() instanceof InterfaceType) {
 			writer.write(nextTemp() + " = extractvalue " +
 					type(node.getOuterType()) + " " + symbol(node.getPrefix()) + ", 0");
@@ -959,8 +877,6 @@ public class LLVMOutput extends AbstractOutput {
 			
 			writer.write(nextTemp() + " = load " + methodTableType(node.getPrefix().getType()) + "*, " +
 					methodTableType(node.getPrefix().getType()) + "** " + temp(1));
-			//if( !module.getType().encloses(node.getPrefix().getType()) )
-			//	usedMethodTables.add(node.getPrefix().getType());
 			
 			writer.write(nextTemp() + " = getelementptr inbounds " +
 					methodTableType(node.getPrefix().getType()) + ", " + 
@@ -979,8 +895,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACLiteral node) throws ShadowException
-	{
+	public void visit(TACLiteral node) throws ShadowException {
 		node.setData(literal(node.getValue()));
 	}
 
@@ -1003,19 +918,14 @@ public class LLVMOutput extends AbstractOutput {
 			
 		if( type instanceof InterfaceType )
 			node.setData("null");
-		else {			
+		else			
 			node.setData(methodTable(type));
-			//if( !module.getType().encloses(type))
-				//usedMethodTables.add(type);
-		}
 	}	
 
 	@Override
-	public void visit(TACSequence node) throws ShadowException
-	{
+	public void visit(TACSequence node) throws ShadowException {
 		String current = "undef";
-		for (int i = 0; i < node.size(); i++)
-		{
+		for (int i = 0; i < node.size(); i++) {
 			writer.write(nextTemp() + " = insertvalue " + typeText(node,
 					current) + ", " + typeSymbol(node.get(i)) + ", " + i);
 			current = temp(0);
@@ -1024,8 +934,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void visit(TACConversion node) throws ShadowException
-	{
+	public void visit(TACConversion node) throws ShadowException {
 		TACOperand source = node.getOperand(0);		
 		Type destType = node.getType();
 		Type srcType = source.getType();
@@ -1034,8 +943,7 @@ public class LLVMOutput extends AbstractOutput {
 		Type genericArray;
 		String baseType;
 		
-		switch( node.getKind()  )
-		{
+		switch( node.getKind()  ) {
 		case INTERFACE_TO_OBJECT:
 			writer.write(nextTemp(node) + " = extractvalue " +
 					typeSymbol(source) + ", 1");			
@@ -1064,9 +972,6 @@ public class LLVMOutput extends AbstractOutput {
 					methodTableType(srcType) + "* " + methodTable(srcType) +
 					" to " + methodTableType(Type.OBJECT) + "*)" +
 					")");
-			
-			//if( !module.getType().encloses(srcType) )
-			//	usedMethodTables.add(srcType);
 			
 			writer.write(nextTemp(node) + " = bitcast " + typeText(Type.OBJECT,
 					temp(1)) + " to %" + raw(srcType) + "*");		
@@ -1156,8 +1061,7 @@ public class LLVMOutput extends AbstractOutput {
 				baseType = type(arrayType.getBaseType()) + '*';
 			}
 			
-			if (!srcType.equals(genericArray))
-			{
+			if (!srcType.equals(genericArray)) {
 				writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to " + type(genericArray));
 				srcType = genericArray;
 				srcName = temp(0);
@@ -1187,8 +1091,7 @@ public class LLVMOutput extends AbstractOutput {
 		case SEQUENCE_TO_SEQUENCE:			
 			String current = "undef";
 			int index = 0;			
-			for (int i = 1; i < node.getNumOperands(); i ++) //first operand is source
-			{	
+			for (int i = 1; i < node.getNumOperands(); i ++) { //first operand is source
 				writer.write(nextTemp() + " = insertvalue " + typeText(node,current) + ", " +
 						typeSymbol(node.getOperand(i)) + ", " + index);
 				current = temp(0);
@@ -1215,24 +1118,20 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void visit(TACSequenceElement node ) throws ShadowException
-	{	
+	public void visit(TACSequenceElement node ) throws ShadowException {	
 		writer.write(nextTemp(node) + " = extractvalue " +
 				typeSymbol(node.getOperand(0)) + ", " + node.getIndex());		
 	}
 	
 	@Override
-	public void visit(TACCast node) throws ShadowException
-	{ 
+	public void visit(TACCast node) throws ShadowException { 
 		Type srcType = node.getOperand().getType(), destType = node.getType();
 		
-		if (destType.equals(srcType) || destType == Type.NULL )
-		{
+		if (destType.equals(srcType) || destType == Type.NULL ) {
 			node.setData(symbol(node.getOperand()));
 			return;
 		}
-		else if( srcType == Type.NULL )
-		{
+		else if( srcType == Type.NULL ) {
 			if( destType instanceof ArrayType || destType instanceof InterfaceType )
 				node.setData("zeroinitializer");  //Shadow arrays are not pointers, they're structs with pointers and lengths
 										//change back to undef?
@@ -1252,10 +1151,8 @@ public class LLVMOutput extends AbstractOutput {
 		String srcTypeName = type(srcType);
 		String destTypeName = type(destType);
 		
-		if( srcType.isPrimitive() && destType.isPrimitive() )
-		{
-			if( srcType.isFloating() )
-			{
+		if( srcType.isPrimitive() && destType.isPrimitive() ) {
+			if( srcType.isFloating() ) {
 				if( destType.isFloating() )
 					instruction = srcWidth > destWidth ? "fptrunc" : (srcWidth < destWidth ? "fpext" : "bitcast");
 				else if( destType.isSigned() )
@@ -1263,8 +1160,7 @@ public class LLVMOutput extends AbstractOutput {
 				else
 					instruction = "fptoui";
 			}
-			else if( srcType.isSigned() )
-			{
+			else if( srcType.isSigned() ) {
 				if( destType.isFloating() )
 					instruction = "sitofp";
 				else if( destType.isSigned() )
@@ -1272,8 +1168,7 @@ public class LLVMOutput extends AbstractOutput {
 				else
 					instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
 			}
-			else if( srcType.isUnsigned() )
-			{
+			else if( srcType.isUnsigned() ) {
 				if( destType.isFloating() )
 					instruction = "uitofp";
 				else
@@ -1282,8 +1177,7 @@ public class LLVMOutput extends AbstractOutput {
 			else
 				instruction = "bitcast"; //should never happen
 		}
-		else
-		{
+		else {
 			instruction = "bitcast";
 			
 			//primitive types are in their object forms
@@ -1299,8 +1193,7 @@ public class LLVMOutput extends AbstractOutput {
 	}	
 
 	@Override
-	public void visit(TACNewObject node) throws ShadowException
-	{				
+	public void visit(TACNewObject node) throws ShadowException {				
 		Type type = node.getClassType();	
 		
 		TACOperand _class = node.getClassData();
@@ -1320,8 +1213,7 @@ public class LLVMOutput extends AbstractOutput {
 	 
 
 	@Override
-	public void visit(TACNewArray node) throws ShadowException
-	{
+	public void visit(TACNewArray node) throws ShadowException {
 		Type baseType = node.getType().getBaseType();		
 		String allocationClass = typeSymbol(node.getBaseClass());
 		
@@ -1340,17 +1232,14 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACLength node) throws ShadowException
-	{
+	public void visit(TACLength node) throws ShadowException {
 		writer.write(nextTemp(node) + " = extractvalue " +
 				typeSymbol(node.getArray()) + ", 1, " + node.getDimension());
 	}
 
 	@Override
-	public void visit(TACUnary node) throws ShadowException
-	{
-		switch (node.getOperation())
-		{
+	public void visit(TACUnary node) throws ShadowException {
+		switch (node.getOperation()) {
 			case "-":
 				if( node.getType().isFloating() )
 					visitUnary(node, "fsub", "-0.0");
@@ -1364,17 +1253,14 @@ public class LLVMOutput extends AbstractOutput {
 		}
 	}
 	private void visitUnary(TACUnary node, String instruction, String first)
-			throws ShadowException
-	{
+			throws ShadowException {
 		writer.write(nextTemp(node) + " = " + instruction + ' ' + typeText(node,
 				first) + ", " + symbol(node.getOperand()));
 	}	
 	
 	@Override
-	public void visit(TACBinary node) throws ShadowException
-	{	
-		switch (node.getOperation().toString())
-		{
+	public void visit(TACBinary node) throws ShadowException {	
+		switch (node.getOperation().toString()) {
 			case "+":
 				visitUnsignedOperation(node, "add");
 				break;
@@ -1441,39 +1327,32 @@ public class LLVMOutput extends AbstractOutput {
 		}		
 	}
 	private void visitUnsignedOperation(TACBinary node, String instruction)
-			throws ShadowException
-	{
+			throws ShadowException {
 		visitOperation(node, "", "", "f", instruction);
 	}
 	private void visitSignedOperation(TACBinary node, String instruction)
-			throws ShadowException
-	{
+			throws ShadowException {
 		visitOperation(node, "s", "u", "f", instruction);
 	}
 	private void visitNormalOperation(TACBinary node, String instruction)
-			throws ShadowException
-	{
+			throws ShadowException {
 		visitOperation(node, "", "", "", instruction);
 	}
 	private void visitShiftOperation(TACBinary node, String instruction)
-			throws ShadowException
-	{
+			throws ShadowException {
 		visitOperation(node, "a", "l", "", instruction);
 	}
 	private void visitEqualityOperation(TACBinary node, String instruction)
-			throws ShadowException
-	{
+			throws ShadowException {
 		visitOperation(node, "icmp ", "icmp ", "fcmp o", instruction);
 	}
 	private void visitRelationalOperation(TACBinary node, String instruction)
-			throws ShadowException
-	{
+			throws ShadowException {
 		visitOperation(node, "icmp s", "icmp u", "fcmp o", instruction);
 	}
 	private void visitOperation(TACBinary node, String signed,
 			String unsigned, String floatingPoint, String instruction)
-			throws ShadowException
-	{
+			throws ShadowException {
 		StringBuilder sb = new StringBuilder(nextTemp(node)).append(" = ");
 		Type type = node.getFirst().getType();
 		if (type.isIntegral() || !type.isPrimitive())
@@ -1487,17 +1366,14 @@ public class LLVMOutput extends AbstractOutput {
 				node.getFirst())).append(", ").append(symbol(node.getSecond())).
 				toString());
 	}
-	private void visitRotateLeft(TACBinary node) throws ShadowException
-	{
+	private void visitRotateLeft(TACBinary node) throws ShadowException {
 		visitRotate(node, "shl", "lshr");
 	}
-	private void visitRotateRight(TACBinary node) throws ShadowException
-	{
+	private void visitRotateRight(TACBinary node) throws ShadowException {
 		visitRotate(node, "lshr", "shl");
 	}
 	private void visitRotate(TACBinary node, String dir, String otherDir)
-			throws ShadowException
-	{
+			throws ShadowException {
 		String type = type(node), _type_ = ' ' + type + ' ',
 				first = symbol(node.getFirst()),
 				second = symbol(node.getSecond());
@@ -1517,21 +1393,16 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void visit(TACNot node) throws ShadowException
-	{
+	public void visit(TACNot node) throws ShadowException {
 		writer.write(nextTemp(node) + " = xor " +
 				typeSymbol(node.getOperand()) + ", true");
 	}
 	
 	@Override
-	public void visit(TACSame node) throws ShadowException
-	{
+	public void visit(TACSame node) throws ShadowException {
 		Type type = node.getOperand(0).getType();
-		//String op = type.isIntegral() || !type.isPrimitive() ?
-		//		"icmp eq " : "fcmp oeq ";
 		
-		if( type instanceof ArrayType )
-		{
+		if( type instanceof ArrayType ) {
 			ArrayType arrayType = (ArrayType)type;
 			writer.write(nextTemp() + " = extractvalue " +
 					typeSymbol(node.getOperand(0)) + ", 0");
@@ -1540,9 +1411,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp(node) + " = icmp eq" + type(arrayType.getBaseType())
 					+ "* " + temp(2) + ", " + temp(1));			
 		}
-		else if( type instanceof InterfaceType )
-		{			
-			
+		else if( type instanceof InterfaceType ) {			
 			writer.write(nextTemp() + " = extractvalue " +
 					typeSymbol(node.getOperand(0)) + ", 1");
 			writer.write(nextTemp() + " = extractvalue " +
@@ -1550,19 +1419,15 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp(node) + " = icmp eq" + type(Type.OBJECT)
 					+ temp(2) + ", " + temp(1));		
 		}
-		else
-		{		
-			String op = type.isFloating() ?
-					"fcmp oeq " : "icmp eq " ;
-	
+		else {		
+			String op = type.isFloating() ? "fcmp oeq " : "icmp eq " ;
 			writer.write(nextTemp(node) + " = " + op + typeSymbol(
 					node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
 		}
 	}
 
 	@Override
-	public void visit(TACLoad node) throws ShadowException
-	{
+	public void visit(TACLoad node) throws ShadowException {
 		TACReference reference = node.getReference();		
 		
 		if( reference instanceof TACGenericArrayRef ) {
@@ -1607,8 +1472,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACPhi node) throws ShadowException
-	{
+	public void visit(TACPhi node) throws ShadowException {
 		TACPhiRef phi = node.getRef();
 		StringBuilder sb = new StringBuilder(nextTemp(phi)).
 				append(" = phi i8*");
@@ -1620,16 +1484,14 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACBranch node) throws ShadowException
-	{
+	public void visit(TACBranch node) throws ShadowException {
 		if (node.isConditional())
 			writer.write("br " + typeSymbol(node.getCondition()) + ", label " +
 					symbol(node.getTrueLabel()) + ", label " +
 					symbol(node.getFalseLabel()));
 		else if (node.isDirect())
 			writer.write("br label " + symbol(node.getLabel()));
-		else if (node.isIndirect())
-		{
+		else if (node.isIndirect()) {
 			StringBuilder sb = new StringBuilder("indirectbr i8* ").
 					append(symbol(node.getOperand())).append(", [ ");
 			TACDestination dest = node.getDestination();
@@ -1642,8 +1504,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACLabel node) throws ShadowException
-	{
+	public void visit(TACLabel node) throws ShadowException {
 		writer.writeLeft(name(node) + ':');
 	}
 
@@ -1676,15 +1537,11 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACReturn node) throws ShadowException
-	{
-		if (method.getMethod().isCreate())
-		{	// FIXME: hack
+	public void visit(TACReturn node) throws ShadowException {
+		if( method.getMethod().isCreate() ) {
 			writer.write(nextTemp() + " = bitcast " + typeText(Type.OBJECT,
-					"%0") + " to %" + raw(node.getReturnValue().getType()) +
-					'*');
-			writer.write("ret %" + raw(node.getReturnValue().getType()) +
-					"* " + temp(0)); // FIXME: hack
+					"%0") + " to %" + raw(node.getReturnValue().getType()) + '*');
+			writer.write("ret %" + raw(node.getReturnValue().getType()) + "* " + temp(0));
 		}
 		else if (node.hasReturnValue())
 			writer.write("ret " + typeSymbol(node.getReturnValue()));
@@ -1693,13 +1550,11 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACThrow node) throws ShadowException
-	{
+	public void visit(TACThrow node) throws ShadowException {
 		writer.write((node.getBlock().hasLandingpad() ?
 				"invoke" : "call") + " void @__shadow_throw(" +
 				typeSymbol(node.getException()) + ") noreturn");
-		if (node.getBlock().hasLandingpad())
-		{
+		if (node.getBlock().hasLandingpad()) {
 			TACLabelRef label = new TACLabelRef();
 			visit(label);
 			writer.indent(2);
@@ -1712,13 +1567,11 @@ public class LLVMOutput extends AbstractOutput {
 	}	
 	
 	@Override
-	public void visit(TACTypeId node) throws ShadowException
-	{
+	public void visit(TACTypeId node) throws ShadowException {
 		if (node.getOperand() instanceof TACUnwind)
 			writer.write(nextTemp(node) + " = extractvalue { i8*, i32 } " +
 					symbol(node.getOperand()) + ", 1");
-		else
-		{
+		else {
 			writer.write(nextTemp() + " = bitcast " +
 					typeSymbol(node.getOperand()) + " to i8*");
 			writer.write(nextTemp(node) + " = tail call i32 " +
@@ -1727,8 +1580,7 @@ public class LLVMOutput extends AbstractOutput {
 	}	
 
 	@Override
-	public void visit(TACLandingpad node) throws ShadowException
-	{
+	public void visit(TACLandingpad node) throws ShadowException {
 		writer.write(nextTemp() + " = landingpad { i8*, i32 }");
 		writer.indent(2);
 		if (node.getBlock().hasCleanup())
@@ -1744,14 +1596,12 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACUnwind node) throws ShadowException
-	{
+	public void visit(TACUnwind node) throws ShadowException {
 		writer.write(nextTemp(node) + " = load { i8*, i32 }, { i8*, i32 }* %_exception");
 		String type = nextTemp();
 		writer.write(type + " = extractvalue { i8*, i32 } " + temp(1) + ", 0");
 		TACLabelRef label = node.getBlock().getLandingpad();
-		for (int i = 0; i < node.getBlock().getNumCatches(); i++)
-		{
+		for (int i = 0; i < node.getBlock().getNumCatches(); i++) {
 			TACCatch catchNode = node.getBlock().getCatchNode(i);
 			writer.write(nextTemp() + " = tail call i32 @llvm.eh.typeid.for(" +
 					"i8* bitcast (" + type(Type.CLASS) + ' ' +
@@ -1768,8 +1618,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACCatch node) throws ShadowException
-	{
+	public void visit(TACCatch node) throws ShadowException {
 		writer.write(nextTemp() + " = getelementptr inbounds { i8*, i32 }, { i8*, i32 }* " +
 				"%_exception, i32 0, i32 0");
 		writer.write(nextTemp() + " = load i8*, i8** " + temp(1));
@@ -1780,8 +1629,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void visit(TACResume node) throws ShadowException
-	{
+	public void visit(TACResume node) throws ShadowException {
 		writer.write(nextTemp() + " = load { i8*, i32 }, { i8*, i32 }* %_exception");
 		writer.write("resume { i8*, i32 } " + temp(0));
 	}
@@ -1799,9 +1647,6 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	private String classOf(Type type) {
-		//module is null when building generics
-		//TODO: Simplify this, since we're no longer building generics
-		//may need something for ArrayType, but maybe not
 		if( type.isFullyInstantiated() )
 			return '@' + withGenerics(type, "_class");
 		else
@@ -1818,28 +1663,24 @@ public class LLVMOutput extends AbstractOutput {
 		return "%" + raw(type, "_methods");
 	}
 	
-	private static String methodType(TACMethodRef method)
-	{
+	private static String methodType(TACMethodRef method) {
 		return methodToString(method, false, true) + '*';
 	}
 	
-	private static String methodType(MethodSignature method)
-	{
+	private static String methodType(MethodSignature method) {
 		return methodToString(method, false, true) + '*';
 	}
 	
-	private static String methodToString(TACMethod method)
-	{
+	private static String methodToString(TACMethod method) {
 		return methodToString(method.getMethod(), true, true);
 	}
 	
-	private static String methodToString(MethodSignature signature)
-	{
+	private static String methodToString(MethodSignature signature) {
 		return methodToString(signature, true, true);
 	}
 	
-	private static String methodToString(MethodSignature signature, boolean name, boolean parameters)
-	{
+	private static String methodToString(MethodSignature signature, boolean name,
+			boolean parameters) {
 		StringBuilder sb = new StringBuilder();
 		if (name && (/*signature.getModifiers().isPrivate() ||*/ signature.isWrapper()))
 			sb.append("private ");
@@ -1851,12 +1692,8 @@ public class LLVMOutput extends AbstractOutput {
 				sb.append(type(Type.OBJECT));
 			else
 				sb.append(type(signature.getOuter(), true)); //the nullable looks odd, but it gets the Object version of the primitive
-		}		
-		/*if (primitiveCreate)
-			sb.append('%').append(raw(signature.getOuter())).append('*');
-		*/
-		else
-		{
+		}
+		else {
 			SequenceType returnTypes = signature.getFullReturnTypes();
 			if( returnTypes.size() == 0 )
 				sb.append("void");
@@ -1868,8 +1705,7 @@ public class LLVMOutput extends AbstractOutput {
 		sb.append(' ');
 		if (name)
 			sb.append(name(signature));
-		if (parameters)
-		{
+		if (parameters) {
 			sb.append('(');
 			boolean first = true;
 			SequenceType parameterTypes = signature.getFullParameterTypes();
@@ -1890,71 +1726,22 @@ public class LLVMOutput extends AbstractOutput {
 		
 	}
 	
-	private static String methodToString(TACMethodRef method, boolean name,
-			boolean parameters) {
+	private static String methodToString( TACMethodRef method, boolean name,
+			boolean parameters ) {
 		
-		return methodToString(method.getSignature(), name, parameters);
-		/*
-		StringBuilder sb = new StringBuilder();
-		if (name && (method.getModifiers().isPrivate() || method.isWrapper()))
-			sb.append("private ");
-		boolean primitiveOrInterfaceCreate = !method.getOuterType().isSimpleReference() &&
-				method.isCreate();
-		if( primitiveOrInterfaceCreate ) {			
-			if( method.getOuterType() instanceof InterfaceType ) //in situations were an interface contains a create
-				sb.append(type(Type.OBJECT));
-			else
-				sb.append(type(method.getOuterType(), true)); //the nullable looks odd, but it gets the Object version of the primitive
-		}
-		else {			
-			if (method.isVoid())
-				sb.append("void");
-			else if (method.isSingle())
-				sb.append(type(method.getSingleReturnType()));
-			else
-				sb.append(type(method.getSequenceReturnTypes()));
-		}
-		sb.append(' ');
-		if (name)
-			sb.append(name(method));
-		if (parameters)
-		{
-			sb.append('(');
-			boolean first = true;
-			for (int i = 0; i < method.getParameterCount(); i++)
-			{
-				if (first)
-				{
-					first = false;
-					if (primitiveOrInterfaceCreate)
-						sb.append('%').append(raw(method.getParameterType(0))).
-								append('*');
-					else
-						sb.append(type(method.getParameterType(i)));
-					if (name && method.isCreate())
-						sb.append(" returned");
-				}
-				else
-					sb.append(", ").append(type(method.getParameterType(i)));
-			}
-			sb.append(')');
-		}
-		return sb.toString();
-		*/
+		return methodToString( method.getSignature(), name, parameters );
 	}
 
-	private static String sizeof(String type)
-	{
+	private static String sizeof( String type ) {
 		return "ptrtoint (" + type + " getelementptr (" + type.substring(0, type.length() - 1) + ", " + type +
 				" null, i32 1) to i32)";
 	}
 
-	private static String type(ModifiedType type)
-	{
+	private static String type( ModifiedType type ) {
 		return type(type.getType(), type.getModifiers().isNullable());
 	}	
 	
-	protected static String type(Type type) {
+	protected static String type( Type type ) {
 		return type(type, false);
 	}
 	
@@ -1975,13 +1762,13 @@ public class LLVMOutput extends AbstractOutput {
 			return type((MethodTableType)type);
 		throw new IllegalArgumentException("Unknown type.");
 	}
-	protected static String type(ArrayType type)
-	{
+	
+	protected static String type(ArrayType type) {
 		return "{ " + type(type.getBaseType()) + "*, [" + type.getDimensions() +
 				" x " + type(Type.INT) + "] }";
 	}
-	private static String type(SequenceType type)
-	{
+	
+	private static String type(SequenceType type) {
 		if (type.isEmpty())
 			return "void";
 		if (type.size() == 1)
@@ -1991,37 +1778,34 @@ public class LLVMOutput extends AbstractOutput {
 			sb.append(type(each)).append(", ");
 		return sb.replace(sb.length() - 2, sb.length(), " }").toString();
 	}
-	private static String type(ClassType type, boolean nullable)
-	{		
+	
+	private static String type(ClassType type, boolean nullable) {		
 		if (type.isPrimitive() && !nullable)
 			return '%' + type.getTypeName();
 		return '%' + type.toString(Type.MANGLE) + '*';
 	}
-	private static String type(InterfaceType type)
-	{
+	
+	private static String type(InterfaceType type) {
 		return "{ " + methodTableType(type) + "*, " + type(Type.OBJECT) + " }";
 	}
-	private static String type(TypeParameter type)
-	{
+	
+	private static String type(TypeParameter type) {
 		return type(type.getClassBound());
 	}
 	
-	private static String type(MethodTableType type)
-	{
+	private static String type(MethodTableType type) {
 		return '%' + type.toString(Type.MANGLE) + '*';
 	}
 	
-	private static String raw(Type type)
-	{
+	private static String raw(Type type) {
 		return raw(type, "");
 	}
-	private static String raw(Type type, String extra)
-	{
+	
+	private static String raw(Type type, String extra) {
 		return type.toString(Type.MANGLE) + extra;
 	}	
 
-	private static String withGenerics(Type type, String extra)
-	{
+	private static String withGenerics(Type type, String extra) {
 		return type.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + extra;
 	}
 	
@@ -2038,25 +1822,7 @@ public class LLVMOutput extends AbstractOutput {
 			return '@' + withGenerics(type, "_class") + " = external constant %" + raw(Type.CLASS) + System.lineSeparator();
 		else
 			return '@' + withGenerics(type, "_class") + " = external constant %" + raw(Type.GENERIC_CLASS) + System.lineSeparator();
-	}
-	
-	/*
-	public static String addGeneric(String set, Type generic) {
-		MethodSignature signature = Type.CLASS_SET.getMatchingMethod("add", new SequenceType(Type.CLASS));		
-		StringBuilder sb = new StringBuilder("call ").
-				append(methodType(signature)).append(' ').
-				append(name(signature)).append('(');		
-		sb.append(set).append(", ");
-		
-		Type type;
-		if( generic instanceof ArrayType )
-			type = Type.ARRAY_CLASS;
-		else
-			type = Type.GENERIC_CLASS;		
-		sb.append(type(Type.CLASS) + " bitcast (" + typeText(type, '@' + withGenerics(type, "_class")) + " to " + type(Type.CLASS) + "))");		
-		return sb.toString();
-	}
-	*/
+	}	
 	
 	public static void addGenerics(String set, Set<? extends String> generics, boolean areArrays, OutputStream out) throws IOException {
 		MethodSignature signature = Type.CLASS_SET.getMatchingMethod("add", new SequenceType(Type.CLASS));
@@ -2074,28 +1840,26 @@ public class LLVMOutput extends AbstractOutput {
 		}		
 	}
 
-
-	private static String name(TACLabel label)
-	{
+	private static String name(TACLabel label) {
 		Object name = label.getRef().getData();
 		if (name instanceof String)
 			return ((String)name).substring(1);
 		throw new NullPointerException();
 	}
-	private static String name(TACVariable var)
-	{
+	
+	private static String name(TACVariable var) {
 		String name = var.getName();
 		if (name == null)
 			throw new NullPointerException();
 		return name;
 	}
-	private static String name(TACConstantRef constant)
-	{
+	
+	private static String name(TACConstantRef constant) {
 		return new StringBuilder("@").
 				append(raw(constant.getPrefixType(), "_C" + constant.getName())).toString();
 	}
-	private static String name(TACConstant constant)
-	{
+	
+	private static String name(TACConstant constant) {
 		return new StringBuilder("@").
 				append(raw(constant.getPrefixType(), "_C" + constant.getName())).toString();
 	}
@@ -2108,80 +1872,47 @@ public class LLVMOutput extends AbstractOutput {
 		return '@' + method.getMangledName();
 	}
 	
-	
-	/*//old
-	 private static String name(TACMethodRef method)
-	{
-		StringBuilder sb = Type.mangle(new StringBuilder("@\"").
-				append(method.getPrefixType().getMangledName()).append("_M"),
-				method.getName());
-		for (ModifiedType paramType : method.getType().getParameterTypes())
-			sb.append(paramType.getType().getMangledName());
-		if (method.isWrapper())
-			sb.append(":W");
-		return sb.append('\"').toString();
-	}
-	*/
-	//with interfaces, generic types are also needed to avoid collisions with
-	//methods implementing a different generic version of the same interface
-	/*
-	private static String interfaceName(TACMethodRef method)
-	{
-		StringBuilder sb = Type.mangle(new StringBuilder("@\"").
-				append(method.getPrefixType().getMangledNameWithGenerics()).append("_M"),
-				method.getName());
-		for (ModifiedType paramType : method.getType().getParameterTypes())
-			sb.append(paramType.getType().getMangledName());
-		if (method.isWrapper())
-			sb.append(":W");
-		return sb.append('\"').toString();
-	}
-	*/
-	private static String name(TACMethod method)
-	{
+	private static String name(TACMethod method) {
 		return name(method.getMethod());
 	}
 
-	private static String typeName(TACVariable variable)
-	{
+	private static String typeName(TACVariable variable) {
 		return typeText(variable, '%' + name(variable), true);
 	}
 
-	private static String symbol(TACOperand node)
-	{
+	private static String symbol(TACOperand node) {
 		Object symbol = node.getData();
 		if (symbol instanceof String)
 			return (String)symbol;
 		throw new NullPointerException();
 	}
-	private static String typeSymbol(TACOperand node)
-	{
+	
+	private static String typeSymbol(TACOperand node) {
 		return typeSymbol(node, node);
 	}
-	private static String typeSymbol(TACOperand node, boolean reference)
-	{
+	
+	private static String typeSymbol(TACOperand node, boolean reference) {
 		return typeSymbol(node, node, reference);
 	}
-	private static String typeSymbol(Type type, TACOperand node)
-	{
+	
+	private static String typeSymbol(Type type, TACOperand node) {
 		return typeSymbol(type, node, false);
 	}
-	private static String typeSymbol(Type type, TACOperand node, boolean reference)
-	{
+	
+	private static String typeSymbol(Type type, TACOperand node, boolean reference) {
 		return typeText(type, symbol(node), reference);
 	}
-	private static String typeSymbol(ModifiedType type, TACOperand node)
-	{
+	
+	private static String typeSymbol(ModifiedType type, TACOperand node) {
 		return typeText(type, symbol(node));
 	}
+	
 	private static String typeSymbol(ModifiedType type, TACOperand node,
-			boolean reference)
-	{
+			boolean reference) {
 		return typeText(type, symbol(node), reference);
 	}
 
-	private String literal(ShadowValue value)
-	{
+	private String literal(ShadowValue value) {
 		if (value == ShadowValue.NULL)
 			return "null";
 		if (value instanceof ShadowBoolean)
@@ -2198,86 +1929,77 @@ public class LLVMOutput extends AbstractOutput {
 			return literal((String)((ShadowString)value).getValue());
 		throw new UnsupportedOperationException(value.getClass().toString());
 	}
-	private static String literal(boolean value)
-	{
+	
+	private static String literal(boolean value) {
 		return Boolean.toString(value);
 	}
-	private static String literal(long value)
-	{
+	
+	private static String literal(long value) {
 		return Long.toString(value);
 	}
 	
-	private static String literal(BigInteger value)
-	{
+	private static String literal(BigInteger value) {
 		return value.toString();
 	}
 	
-	private static String literal(double value)
-	{
+	private static String literal(double value) {
 		long raw = Double.doubleToRawLongBits(value);
 		StringBuilder sb = new StringBuilder("0x");
 		for (int i = 0; i < 16; i++, raw <<= 4)
 			sb.append(Character.forDigit((int)(raw >> 60) & 15, 16));
 		return sb.toString();
 	}
+	
 	private String literal(String value) {
 		int index = stringLiterals.indexOf(value);
 		if (index == -1) {
 			index = stringLiterals.size();
-			stringLiterals.add(value);
-			
-			//module is null when generics are being built
-			//if( module != null && !module.getType().encloses(Type.STRING))
-			//	usedMethodTables.add(Type.STRING);
+			stringLiterals.add(value);			
 		}
 		return "@_string" + index;
 	}
-	private String typeLiteral(boolean value)
-	{
+	
+	private String typeLiteral(boolean value) {
 		return typeText(Type.BOOLEAN, literal(value));
 	}
-	private static String typeLiteral(int value)
-	{
+	
+	private static String typeLiteral(int value) {
 		return typeText(Type.INT, literal(value));
 	}
-	private String typeLiteral(String value)
-	{
+	
+	private String typeLiteral(String value) {
 		return typeText(Type.STRING, literal(value));
 	}
-	private String typeLiteral(ShadowValue value)
-	{
+	
+	private String typeLiteral(ShadowValue value) {
 		return typeText(value, literal(value));
 	}
 
-	private String typeTemp(Type type, int offset)
-	{
+	private String typeTemp(Type type, int offset) {
 		return typeText(type, temp(offset));
 	}
-	private String typeTemp(Type type, int offset, boolean reference)
-	{
+	
+	private String typeTemp(Type type, int offset, boolean reference) {
 		return typeText(type, temp(offset), reference);
 	}
 
-	private static String typeText(Type type, String name)
-	{
+	private static String typeText(Type type, String name) {
 		return combine(type(type), name, false);
 	}
-	private static String typeText(Type type, String name, boolean reference)
-	{
+	
+	private static String typeText(Type type, String name, boolean reference) {
 		return combine(type(type), name, reference);
 	}
-	private static String typeText(ModifiedType type, String name)
-	{
+	
+	private static String typeText(ModifiedType type, String name) {
 		return combine(type(type), name, false);
 	}
-	private static String typeText(ModifiedType type, String name,
-			boolean reference)
-	{
+	
+	private static String typeText(ModifiedType type, String name, boolean reference) {
 		return combine(type(type), name, reference);
 	}
 
-	private static String combine(String type, String name, boolean reference)
-	{
+	private static String combine(String type, String name, boolean reference) {
 		StringBuilder sb = new StringBuilder(type);
 		if (reference)
 			sb.append('*');
@@ -2419,20 +2141,10 @@ public class LLVMOutput extends AbstractOutput {
 			if( parameterType instanceof ArrayType &&
 				!parameterWithoutArguments.equals(Type.ITERATOR) &&
 				!parameterWithoutArguments.equals(Type.ITERATOR_NULLABLE) &&
-				!(isArray(generic.getTypeWithoutTypeArguments())) )
-			{
+				!(isArray(generic.getTypeWithoutTypeArguments())) ) {
 				parameterType = ((ArrayType)parameterType).convertToGeneric();
 				parameterWithoutArguments = parameterType.getTypeWithoutTypeArguments();
-			}
-			
-			/*
-			if( !module.getType().encloses(parameterType) ) {				
-				if( parameterType instanceof ArrayType )
-					usedMethodTables.add(((ArrayType)parameterType).recursivelyGetBaseType());
-				else					
-					usedMethodTables.add(parameterType);				
-			}
-			*/			
+			}		
 			
 			//first put in the class
 			sb.append(type(Type.OBJECT)).append(" bitcast (");
@@ -2442,7 +2154,6 @@ public class LLVMOutput extends AbstractOutput {
 				sb.append(type(Type.CLASS));
 			
 			sb.append(" ").append(classOf(parameterType)).append(" to ").append(type(Type.OBJECT)).append("), ");
-			
 			
 			//then the method table
 			if( parameterType instanceof ArrayType )
