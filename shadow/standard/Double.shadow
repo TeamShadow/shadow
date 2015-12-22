@@ -1,3 +1,5 @@
+import shadow:io@Console;
+
 locked immutable class shadow:standard@
 	Double
 is	Number<double>
@@ -92,10 +94,10 @@ and	CanHash
 	
 	public  toString() => (String)
 	{
-		return toString(1, 16, 7, 3);
+		return toString(17, 7, 3);
 	}	
 	
-	public  toString(int minPrecision, int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
+	public  toString(int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
 	{
 		if( isNaN() )
 			return "NaN";
@@ -148,88 +150,51 @@ and	CanHash
 		}	
 		
 		MutableString output = MutableString:create(#result);
-				
+	
 		int rightZeroes = 0;
 		for( int i = output->size - 1; i >= 0 and output[i] == '0'; i -= 1 )
 			rightZeroes += 1;
 
 		int integerDigits = output->size - base10Shift;
-		int fractionalDigits = (output->size - integerDigits - rightZeroes).max(0);
-		int length = 0;		
-				
-		if( integerDigits > integerThreshold or (integerDigits <= 0 and fractionalDigits > fractionalThreshold))
-		{
-			length = maxPrecision + 1;						 
-			length = length.min(output->size - rightZeroes);
-			length = length.max( minPrecision + 1 );
-			
-			//out.printLine( output );			
-			
-			if( round( output, length ) )
-			{
-				integerDigits += 1;
-				fractionalDigits -= 1;
-			}
-			
+		int length = maxPrecision;						 
+		length = length.min(output->size - rightZeroes);
+		length = length.max(2);
+		
+		if( round( output, length ) )
+			integerDigits += 1;			
+		
+		// Number is too big or too small, use scientific notation		
+		if( integerDigits > integerThreshold or -integerDigits > fractionalThreshold )
+		{	
 		 	output.insert(cast<byte>('.'), 1);
-		 	removeZeroes( output );
-		 	
-		 	if( output->size - 1 + (integerDigits - 1).abs() <=  fractionalThreshold )
-		 	{
-		 		output.delete(1); //remove decimal
-		 	
-		 		if( integerDigits >= 1 )
-		 		{
-		 			while( output->size < integerDigits + 1 )
-		 				output.append(cast<byte>('0'));
-		 				
-		 			output.insert(cast<byte>('.'), integerDigits);
-		 		}
-		 		else
-		 		{
-		 			for( int i = 0; i < -integerDigits; i += 1 )
-		 				output.prepend(cast<byte>('0'));
-		 				
-		 			output.insert(cast<byte>('.'), 1);
-		 			removeZeroes( output );		 						 		
-		 		}
-		 	
-		 	}
-		 	else
-		 	{		 			 	
-			 	output.append(cast<byte>('E'));
-				output.append(#(integerDigits - 1));
-			}		 		 		
-		}
+		 	if( output->size == 2 )
+		 		output.append(cast<byte>('0'));
+		 	removeZeroes( output );			 	
+		 	output.append(cast<byte>('E'));
+			output.append(#(integerDigits - 1));
+		}		
+		// Number is smaller than 1
 		else if( integerDigits <= 0 )
 		{
-			for( int i = 0; i <= -integerDigits; i += 1 )			
+			// Pad with zeroes on the left.
+			for( int i = 0; i < -integerDigits; i += 1 )			
 				output.prepend(cast<byte>('0'));
-				
+							
 			length = maxPrecision + 1;						 
 			length = length.min(output->size - rightZeroes);
-			length = length.max( minPrecision + 1 );
-			
-			//out.printLine( output );	
-				
-			round( output, length );			
-			output.insert(cast<byte>('.'), 1);
+			length = length.max(-integerDigits + 1);
+							
+			round( output, length );						
+			output.prepend(cast<byte>('.'));
+			output.prepend(cast<byte>('0'));
 			removeZeroes( output );	
 		}
+		//Number is larger than 1
 		else
 		{		
-			length = maxPrecision + integerDigits; 		
-			length = length.min(output->size - rightZeroes);
-			length = length.max( minPrecision + integerDigits  );
-			
-			//out.printLine( output );
-			
-			if( round( output, length ) )
-			{
-				integerDigits += 1;
-				fractionalDigits -= 1;
-			}		
-		 	
+			// Pad with zeroes on the right, if necessary.
+			for( int i = output->size; i <= integerDigits; i += 1 )			
+				output.append(cast<byte>('0'));
 		 	output.insert('.', integerDigits);
 		 	removeZeroes( output );
 		}		
@@ -242,7 +207,7 @@ and	CanHash
 	
 	private round(MutableString number, int length) => (boolean)
 	{
-		if( length == number->size )
+		if( length >= number->size )
 			return false;			
 		else if( length > number->size )
 		{
@@ -254,13 +219,14 @@ and	CanHash
 		{
 			if( length < 18 and number[length] >= '5' )
 			{
-				number.index( length - 1, number[length - 1] + 1y );
+				int index = length;
+				number.index( index - 1, number[index - 1] + 1y );				
 			
-				while( number[length] > '9' and length > 0 )
+				while( index > 1 and number[index - 1] > '9' )
 				{
-					number.index( length, cast<byte>('0') );
-					length -= 1;
-					number.index( length, number[length] + 1y);
+					number.index( index - 1, cast<byte>('0') );
+					index -= 1;
+					number.index( index - 1, number[index - 1] + 1y);
 				}
 				
 				if( number[0] > '9' )
@@ -281,10 +247,10 @@ and	CanHash
 	{
 		int index = string->size - 1;
 		while( index > 1 and string[index] == '0' and string[index - 1] != '.' )
-			index -= 1;
-		
+			index -= 1;			
+
 		if( index < string->size - 1 )
-			string.delete( index + 1, string->size ); 
+			string.delete( index + 1, string->size );
 	}
 
 	public native get raw() => (ulong);
@@ -298,6 +264,6 @@ and	CanHash
 	// implement CanNegate<double>
 	public negate() => (double)
 	{
-		return 0.0 - this;
+		return (0.0 - 1.0) * this;
 	}	
 }

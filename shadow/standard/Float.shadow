@@ -125,7 +125,7 @@ and	CanHash
 	// implement CanNegate<float>
 	public negate() => (float)
 	{
-		return 0.0f - this;
+		return (0.0f - 1.0f) * this;
 	}
 
 	public native get raw() => (uint);
@@ -138,11 +138,11 @@ and	CanHash
 	
 	public  toString() => (String)
 	{
-		return toDouble().toString(1, 16, 7, 3);
+		return toDouble().toString(9, 7, 3);
 	}	
 	
-	public  toString(int minPrecision, int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
+	public  toString(int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
 	{
-		return toDouble().toString(minPrecision, maxPrecision, integerThreshold, fractionalThreshold);
+		return toDouble().toString(maxPrecision, integerThreshold, fractionalThreshold);
 	}
 }

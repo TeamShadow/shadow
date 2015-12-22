@@ -163,6 +163,11 @@ public class TACTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
+	@Test public void testFloat() throws Exception {
+		args.add("shadow/test/FloatTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
 	@Test public void testArrayAsObject() throws Exception {
 		args.add("shadow/test/ArrayAsObject.shadow");
 		Main.run(args.toArray(new String[] { }));
