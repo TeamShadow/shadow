@@ -108,7 +108,7 @@ and CanIterateNullable<T>
 	 * simulating inheritance.
 	 */	 
 	 
-	 /**
+	/**
 	 * Creates an {@code ArrayNullable<T>} object with the given dimensions.
 	 * This method is called internally by the compiler and is only {@code protected}
 	 * because it allows other classes to see the method.

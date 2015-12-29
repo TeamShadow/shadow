@@ -9,17 +9,34 @@
 locked immutable class shadow:standard@
 	BigInteger
 is  Number<BigInteger>
+and CanHash
 {
+	/* Internal representation is in base 4294967296 with the array index giving the power.
+	 * Index 0 is the least significant digit. 
+	 */ 
 	uint[] data;
 	boolean negative;
 	
 	private constant ulong BASE = 4294967296uL;
 	
+	/**
+	 * Compares the current object to another {@code BigInteger}, returning {@code true}
+	 * if they represent the same integer.
+	 * @param other object to compare to
+	 * @return {@code true} if identical
+	 */
 	public equal(BigInteger other) => (boolean)
 	{
 		return compare(other) == 0;
 	}
 	
+	/**
+	 * Compares the current object to another {@code BigInteger}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current object is smaller than, equal to, or larger
+	 * than the other object, respectively.
+	 * @param other object to compare to
+	 * @return whether smaller, equal, or larger
+	 */	
 	public compare(BigInteger other) => (int)
 	{
 		if( negative )
@@ -38,6 +55,11 @@ is  Number<BigInteger>
 		}	
 	}
 	
+	/**
+	 * Adds another {@code BigInteger} to the current object and returns the resulting value.	 
+	 * @param other object to add
+	 * @return sum of the two values
+	 */
 	public add(BigInteger other) => (BigInteger)
 	{
 		if( negative == other:negative )
@@ -53,6 +75,12 @@ is  Number<BigInteger>
 			return BigInteger:create( 0 );		
 	}
 	
+	/**
+	 * Subtracts another {@code BigInteger} from the current object and returns the
+	 * resulting value.	 
+	 * @param other object to subtract
+	 * @return difference of the two values
+	 */
 	public subtract(BigInteger other) => (BigInteger)
 	{
 		if( negative != other:negative )
@@ -68,11 +96,18 @@ is  Number<BigInteger>
 			return BigInteger:create( 0 );		
 	}
 	
+	/**
+	 * Multiplies the current object by another {@code BigInteger} and returns the
+	 * resulting value.	
+	 * @param other object to multiply 
+	 * @return product of the two values
+	 */
 	public multiply(BigInteger other) => (BigInteger)
 	{	
 		return BigInteger:create( unsignedMultiply( data, other:data), negative xor other:negative );	
 	}
 	
+	/* Performs real work of unsigned multiplication used as a helper for signed multiplication. */
 	private unsignedMultiply(readonly uint[] first, readonly uint[] second) => (readonly uint[])
 	{
 		uint[] result = uint:create[first->size + second->size];
@@ -99,6 +134,12 @@ is  Number<BigInteger>
 		return removeZeroes(result);
 	}
 	
+	/**
+	 * Divides the current object by another {@code BigInteger} and returns the
+	 * quotient.	
+	 * @param other object to divide by 
+	 * @return quotient of the division
+	 */
 	public divide(BigInteger other) => (BigInteger)
 	{
 		int comparison = unsignedCompare(data, other:data);
@@ -113,6 +154,12 @@ is  Number<BigInteger>
 		return BigInteger:create( quotient, negative xor other:negative );
 	}
 	
+	/**
+	 * Divides the current object by another {@code BigInteger} and returns the
+	 * remainder.
+	 * @param other object to divide by	 
+	 * @return remainder of the division
+	 */
 	public modulus(BigInteger other) => (BigInteger)
 	{
 		int comparison = unsignedCompare(data, other:data);
@@ -130,6 +177,7 @@ is  Number<BigInteger>
 		return BigInteger:create( remainder, negative );
 	}
 	
+	/* Finds the leading zeroes in the binary representation of an unsigned integer. */
 	private leadingZeroes(uint value) => (uint)
 	{		
 		uint zeroes = 0u;
@@ -141,10 +189,16 @@ is  Number<BigInteger>
 		return zeroes;
 	}
 	
+	/* 
+	 * Performs an unsigned left bit shift on the array of {@code uint} values that is
+	 * the underlying representation of a {@code BigInteger}.
+	 * Because of its use in division, removeZeroes() is not called, meaning that the
+	 * result may have padding zeroes.
+	 */
 	private unsignedLeftShift(readonly uint[] data, uint amount) => (readonly uint[])
 	{	
-		int jump = cast<int>(amount/32u);
-		int shift = cast<int>(amount%32u);
+		int jump = cast<int>(amount / 32u);
+		int shift = cast<int>(amount % 32u);
 		uint[] result = uint:create[data->size + jump + 1];
 
 		result[result->size - 1] = data[result->size - 1 - jump - 1] >> (32 - shift);
@@ -154,9 +208,15 @@ is  Number<BigInteger>
 		for( int i = 0; i < jump; i += 1 )
 			result[i] = 0u;
 			
-		return removeZeroes( result );
+		return result;
 	}
 	
+	/* 
+	 * Performs an unsigned right bit shift on the array of {@code uint} values that is
+	 * the underlying representation of a {@code BigInteger}.
+	 * Because of its use in division, removeZeroes() is not called, meaning that the
+	 * result may have padding zeroes.
+	 */
 	private unsignedRightShift(readonly uint[] data, uint amount) => (readonly uint[])
 	{	
 		int jump = cast<int>(amount/32u);
@@ -169,10 +229,13 @@ is  Number<BigInteger>
 		else
 			result[result->size - 1] = 0u;
 			
-		return removeZeroes( result );
+		return result;
 	}
 	
-	//unsignedDivide assumes that first is no smaller than second
+	/* 
+	 * Performs an unsigned divide of the first representation by the second representation.
+	 * Method assumes that {@code first} is no smaller than {@code second}.
+	 */
 	private unsignedDivide(readonly uint[] first, readonly uint[] second) => (readonly uint[] quotient, readonly uint[] remainder)
 	{
 		uint[] quotient = uint:create[first->size - second->size + 1];
@@ -205,10 +268,13 @@ is  Number<BigInteger>
 		ulong remainderEstimate;		
 		long test;
 		long carry;
-		
+	
 		for( int i = first->size - second->size; i >= 0; i -= 1 )
 		{
-			value = normalizedData[i + second->size]*BASE + normalizedData[i + second->size - 1];
+			if( i + second->size >= normalizedData->size )
+				value = normalizedData[i + second->size - 1];
+			else				
+				value = normalizedData[i + second->size]*BASE + normalizedData[i + second->size - 1];
 			quotientEstimate = value/normalizedDivisor[second->size - 1]; 			
 			remainderEstimate = value - quotientEstimate*normalizedDivisor[second->size - 1];
 			
@@ -221,7 +287,7 @@ is  Number<BigInteger>
 				if( remainderEstimate >= BASE )
 					break;			
 			}
-			
+		
 			carry = 0L;
 			for( int j = 0; j < second->size; j += 1 )
 			{
@@ -239,6 +305,7 @@ is  Number<BigInteger>
 			{						
 				quotient[i] -= 1u;
 				carry = 0L;
+				
 				for( int j = 0; j < second->size; j += 1 )
 				{
 					test = carry + normalizedData[i + j] + normalizedDivisor[j];
@@ -248,10 +315,15 @@ is  Number<BigInteger>
 				
 				normalizedData[i + second->size] += cast<uint>(carry);
 			}
-		}
+		}		
+
 		return (removeZeroes(quotient), unsignedRightShift(normalizedData, zeroes));
 	}
 	
+	/**
+	 * Creates a new {@code BigInteger} with the given {@code int} value.
+	 * @param value value of new object 
+	 */
 	public create(int value)
 	{
 		uint[] temp = uint:create[1]; 
@@ -260,25 +332,33 @@ is  Number<BigInteger>
 		negative = value < 0;			
 	}
 	
-	public create(ulong magnitude)
+	/**
+	 * Creates a new {@code BigInteger} with the given {@code ulong} value.
+	 * @param value value of new object 
+	 */
+	public create(ulong value)
 	{	
 		uint[] temp;
 		
-		if( magnitude >= BASE )
+		if( value >= BASE )
 		{
 			temp = uint:create[2];
-			temp[1] = cast<uint>(magnitude / BASE); 
-			temp[0] = cast<uint>(magnitude % BASE);					
+			temp[1] = cast<uint>(value / BASE); 
+			temp[0] = cast<uint>(value % BASE);					
 		}
 		else
 		{
 			temp = uint:create[1];			 
-			temp[0] = cast<uint>(magnitude);		
+			temp[0] = cast<uint>(value);		
 		}		
 		
 		data = freeze(temp);
 	}
 	
+	/**
+	 * Creates a new {@code BigInteger} with the given {@code long} value.
+	 * @param value value of new object 
+	 */
 	public create(long value)
 	{
 		ulong magnitude = value.abs();
@@ -299,12 +379,22 @@ is  Number<BigInteger>
 		negative = value < 0L;		
 	}
 	
+	/**
+	 * Creates a new {@code BigInteger} whose value is represented as text in base 10
+	 * by {@code value}.
+	 * @param value {@code String} representation of new object 
+	 */
 	public create(String value)
 	{
 		this(value, 10u);	
 	}
 	
-	
+	/**
+	 * Creates a new {@code BigInteger} whose value is represented as text in base {@code base}
+	 * by {@code value}. 
+	 * @param value {@code String} representation of new object
+	 * @param base base of representation
+	 */
 	public create(String value, uint base)
 	{	
 		if( base < 2u or base > 36u )
@@ -318,7 +408,7 @@ is  Number<BigInteger>
 			i += 1;
 		}
 		
-		//try to fit into a single "digit"				
+		// Try to fit into a single "digit".				
 		while( i < value->size and initial < BASE )
 		{
 			initial *= base;
@@ -327,7 +417,7 @@ is  Number<BigInteger>
 		}
 		
 		uint[] values;
-		readonly uint[] holder;  //necessary because of readonly issues
+		readonly uint[] holder;  // Necessary because of readonly issues.
 	
 		if( initial < BASE )
 		{
@@ -337,7 +427,7 @@ is  Number<BigInteger>
 		}
 		else
 		{
-			//undo last operation
+			// Undo last operation.
 			i -= 1;
 			initial -= digitValue( value[i], base );
 			initial /= base;
@@ -361,6 +451,7 @@ is  Number<BigInteger>
 		data = freeze(holder);	
 	}
 	
+	/* Finds numerical value of letter in a given base. */
 	private digitValue(byte letter, uint base) => (uint)
 	{
 		uint value = 0u;
@@ -380,6 +471,11 @@ is  Number<BigInteger>
 		return value;
 	}
 	
+	/* 
+	 * Compares an underlying unsigned representation to another unsigned representation,
+	 * returning {@code -1}, {@code 0}, or {@code 1}, if the first representation is smaller
+	 * than, equal to, or larger than the other representation, respectively.
+	 */
 	private unsignedCompare(readonly uint[] data, readonly uint[] other) => (int)
 	{
 		if( data->size < other->size )
@@ -399,6 +495,9 @@ is  Number<BigInteger>
 		return 0;
 	}
 	
+	/* 
+	 * Adds an underlying unsigned representation to another unsigned representation.
+	 */
 	private unsignedAdd(readonly uint[] first, readonly uint[] second) => (readonly uint[])
 	{
 		uint[] result = uint:create[first->size.max(second->size) + 1];
@@ -418,7 +517,10 @@ is  Number<BigInteger>
 		return removeZeroes( result );
 	}
 	
-	//unsigned subtract assumes that second is never larger than first
+	/* 
+	 * Subtracts the second unsigned representation from the first unsigned representation.
+	 * Method assumes that second is never larger than first.
+	 */ 
 	private unsignedSubtract(readonly uint[] first, readonly uint[] second) => (readonly uint[] )
 	{
 		uint[] result = uint:create[first->size];
@@ -444,14 +546,19 @@ is  Number<BigInteger>
 		return removeZeroes( result );
 	}
 	
-	
+	/* 
+	 * Creates a {@code BigInteger} with the given representation and negative sign.
+	 */ 
 	private create( readonly uint[] data, boolean negative )
 	{
 		this:data = freeze(data);
 		this:negative = negative;	
 	}
 	
-	
+	/* 
+	 * Removes padding zeroes from the more significant digits (the "left" side of the number,
+	 * where the zeroes have no meaning). 
+	 */ 
 	private removeZeroes( readonly uint[] values ) => ( readonly uint[] )
 	{
 		int zeroes = 0;
@@ -471,11 +578,20 @@ is  Number<BigInteger>
 		return values;
 	}
 	
+	/** 
+	 * Returns a {@code String} representation of the object, in base 10.
+	 * @return  {@code String} representation
+	 */ 
 	public toString() => (String)
 	{
 		return toString(10u);	
 	}
-		
+	
+	/** 
+	 * Returns a {@code String} representation of the object, in the specified base.
+	 * @param base base of output representation
+	 * @return  {@code String} representation
+	 */ 	
 	public toString(uint base) => (String)
 	{
 		if( base < 2u or base > 36u )
@@ -504,7 +620,7 @@ is  Number<BigInteger>
 		
 			uint digit = remainder[0]; 
 			
-			if( digit >= 10u ) //A through Z
+			if( digit >= 10u ) // A through Z
 				buffer.append(cast<byte>(digit + 'A') - 10y);
 			else
 				buffer.append(cast<byte>(digit + '0'));
@@ -515,46 +631,81 @@ is  Number<BigInteger>
 		return buffer.reverse().toString();
 	}
 	
-	public isZero(readonly uint[] data) => (boolean)
+	/* 
+	 * Determines whether the data represents the integer 0.	 
+	 */
+	private isZero(readonly uint[] data) => (boolean)
 	{
 		return data->size == 1 and data[0] == 0u;
 	}
 	
+	/** 
+	 * Converts the object to a {@code byte} value, possibly overflowing.
+	 * @return {@code byte} value	 
+	 */
 	public toByte() => (byte)
 	{
 		return cast<byte>(toInt());
 	}
 	
+	/** 
+	 * Converts the object to a {@code ubyte} value, possibly overflowing.
+	 * @return {@code ubyte} value	 
+	 */
 	public toUByte() => (ubyte)
 	{
 		return cast<ubyte>(data[0]);
 	}
 	
+	/** 
+	 * Converts the object to a {@code short} value, possibly overflowing.
+	 * @return {@code short} value	 
+	 */
 	public toShort() => (short)
 	{
 		return cast<short>(toInt());
 	}
 	
+	/** 
+	 * Converts the object to a {@code ushort} value, possibly overflowing.
+	 * @return {@code ushort} value	 
+	 */
 	public toUShort() => (ushort)
 	{
 		return cast<ushort>(data[0]);
 	}
 	
+	/** 
+	 * Converts the object to an {@code int} value, possibly overflowing.
+	 * @return {@code int} value	 
+	 */
 	public toInt() => (int)
 	{
 		return (negative ? -1 , 1 ) * cast<int>(data[0]);
 	}
 	
+	/** 
+	 * Converts the object to a {@code uint} value, possibly overflowing.
+	 * @return {@code uint} value	 
+	 */
 	public toUInt() => (uint)
 	{
 		return data[0];
 	}
 	
+	/** 
+	 * Converts the object to a {@code long} value, possibly overflowing.
+	 * @return {@code long} value	 
+	 */
 	public toLong() => (long)
 	{
 		return (negative ? -1L , 1L ) * cast<long>(toULong());
 	}
 	
+	/** 
+	 * Converts the object to a {@code ulong} value, possibly overflowing.
+	 * @return {@code ulong} value	 
+	 */
 	public toULong() => (ulong)
 	{
 		ulong value = data[0];
@@ -563,16 +714,29 @@ is  Number<BigInteger>
 		return value;	
 	}
 	
+	/** 
+	 * Converts the object to a {@code code} value, possibly overflowing.
+	 * @return {@code code} value	 
+	 */
 	public toCode() => (code)
 	{
 		return cast<code>(data[0]);	
 	}	
 	
+	/** 
+	 * Converts the object to a {@code float} value.
+	 * @return {@code float} value	 
+	 */
 	public toFloat() => (float)
 	{
 		return cast<float>( toDouble() );
 	}
-		
+	
+	
+	/** 
+	 * Converts the object to a {@code double} value.
+	 * @return {@code double} value	 
+	 */		
 	public toDouble() => (double)
 	{
 		double total = 0.0;
@@ -586,6 +750,10 @@ is  Number<BigInteger>
 		return negative ? -total , total; 
 	}
 	
+	/** 
+	 * Returns a non-negative version of the object.
+	 * @return non-negative value	 
+	 */
 	public abs() => (BigInteger)
 	{
 		if( negative )
@@ -593,12 +761,21 @@ is  Number<BigInteger>
 			
 		return this;
 	}
-	
+
+	/** 
+	 * Negates the object.
+	 * @return negated value	 
+	 */	
 	public negate() => (BigInteger)
 	{
 		return BigInteger:create(data, !negative);	
 	}
 	
+	/** 
+	 * Finds the minimum of the current object and another {@code BigInteger}.
+	 * @param other object
+	 * @return minimum value	 
+	 */
 	public min(BigInteger other) => (BigInteger)
 	{
 		if( compare(other) < 0 )
@@ -607,6 +784,11 @@ is  Number<BigInteger>
 			return other;	
 	}
 	
+	/** 
+	 * Finds the maximum of the current object and another {@code BigInteger}.
+	 * @param other object
+	 * @return maximum value	 
+	 */
 	public max(BigInteger other) => (BigInteger)
 	{
 		if( compare(other) > 0 )
@@ -615,45 +797,66 @@ is  Number<BigInteger>
 			return other;	
 	}
 	
+	/** 
+	 * Finds the result of left-shifting the bits of the integer value that is represented.
+	 * @param amount bits to shift
+	 * @return shifted value	 
+	 */
 	public bitShiftLeft(int amount) => (BigInteger)
 	{
 		uint abs = amount.abs();
 		if( amount > 0 )
-			return BigInteger:create( unsignedLeftShift(data, abs), negative );
+			return BigInteger:create( removeZeroes(unsignedLeftShift(data, abs)), negative );
 		else if( amount < 0 )
-			return BigInteger:create( unsignedRightShift(data, abs), negative );
+			return BigInteger:create( removeZeroes(unsignedRightShift(data, abs)), negative );
 		else
 			return this;			
 	}
 	
+	/** 
+	 * Finds the result of right-shifting the bits of the integer value that is represented.
+	 * @param amount bits to shift
+	 * @return shifted value	 
+	 */
 	public bitShiftRight(int amount) => (BigInteger)
 	{
 		uint abs = amount.abs();
 		if( amount > 0 )
-			return BigInteger:create( unsignedRightShift(data, abs), negative );
+			return BigInteger:create( removeZeroes(unsignedRightShift(data, abs)), negative );
 		else if( amount < 0 )
-			return BigInteger:create( unsignedLeftShift(data, abs), negative );
+			return BigInteger:create( removeZeroes(unsignedLeftShift(data, abs)), negative );
 		else
 			return this;			
 	}
 	
-	public hash() => (int)
+	/** 
+	 * Finds a hash value for the current object.	 
+	 * @return hash value	 
+	 */
+	public hash() => (uint)
 	{
-		int value = 0;
+		uint value = 0u;
 		
 		for( int i = 0; i < data->size; i += 1 )
-			value = 31*value + cast<int>(data[i]);
+			value = 31u*value + data[i];
 			
-		return negative ? -value, value;	
+		return negative ? ~value, value;	
 	}
 	
+	/** 
+	 * Raise the current object to the power of another {@code BigInteger}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public power(BigInteger exponent) => (BigInteger)
 	{
 		if( exponent:negative )
 			throw IllegalArgumentException:create("Negative exponent: " # exponent);
 		
+		// Even 0 raised to 0 is given as 1 here, like in Java.
 		if( isZero( exponent:data ) )
 			return BigInteger:create(1);
+		
 			
 		if( exponent:data->size == 1 and exponent:data[0] == 1u )
 			return this;
@@ -668,31 +871,38 @@ is  Number<BigInteger>
 		return fullPower; 
 	}
 	
-	public modulusPower(BigInteger exponent, BigInteger m) => (BigInteger)
+	/** 
+	 * Raise the current object to the power of another {@code BigInteger} then finds
+	 * its value modulus a divisor.
+	 * @param exponent power to raise by	 
+	 * @param divisor value to modulo by
+	 * @return number after exponentiation and modulus
+	 */
+	public modulusPower(BigInteger exponent, BigInteger divisor) => (BigInteger)
 	{
-		if( m:negative or isZero(m:data) )
-			throw IllegalArgumentException:create("Negative modulus: " # m);
+		if( divisor:negative or isZero(divisor:data) )
+			throw IllegalArgumentException:create("Negative modulus: " # divisor);
 			
 		if( exponent:negative )		
-			exponent = m.subtract( exponent );
+			exponent = divisor.subtract( exponent );
 			
-		if( exponent.compare( m ) >= 0 )
-			exponent = exponent.modulus(m);
+		if( exponent.compare( divisor ) >= 0 )
+			exponent = exponent.modulus(divisor);
 		
 		if( isZero( exponent:data ) )
 			return BigInteger:create(1);
 			
 		if( exponent:data->size == 1 and exponent:data[0] == 1u )
-			return this.modulus(m);
+			return this.modulus(divisor);
 		
 		BigInteger halfExponent = exponent.bitShiftRight(1);	
-		BigInteger halfPower = modulusPower( halfExponent, m );
+		BigInteger halfPower = modulusPower( halfExponent, divisor );
 		BigInteger fullPower = halfPower.multiply(halfPower);
 		
 		if( exponent:data[0] % 2u == 1u )
 		  	fullPower = fullPower.multiply( this );
 		  	
-		return fullPower.modulus(m); 
+		return fullPower.modulus(divisor); 
 	}
 	
 	

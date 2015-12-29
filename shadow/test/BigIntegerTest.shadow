@@ -30,8 +30,8 @@ class shadow:test@BigIntegerTest
 		c = a * b;
 		
 		out.printLine("a * b: " # c.toString() );
-		
-		c = a / b;
+				
+		c = a / b;		
 		
 		out.printLine("a / b: " # c.toString() );
 		
