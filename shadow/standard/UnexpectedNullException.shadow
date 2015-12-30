@@ -1,9 +1,8 @@
 /**
  * Exception {@code UnexpectedNullException} is thrown when a {@code nullable} value
  * is checked, found to be {@code null}, and is not within a {@code try} block with a 
- * matching {@code recover} block.
- * 
- * @author Barry Wittman 
+ * matching {@code recover} block. 
  */
 exception shadow:standard@UnexpectedNullException
-{}
+{
+}

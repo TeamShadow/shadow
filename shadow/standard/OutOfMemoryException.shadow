@@ -2,8 +2,6 @@
  * Exception {@code OutOfMemoryException} is thrown when the run time system
  * attempts to allocate memory on the heap and fails because the heap space
  * allotted to the program is exhausted.
- * 
- * @author Barry Wittman 
  */
 exception shadow:standard@OutOfMemoryException
 {		

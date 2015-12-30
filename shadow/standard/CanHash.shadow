@@ -1,4 +1,25 @@
+/**
+ * Interface {@code CanHash} specifies that a class can produce a hash code 
+ * of type {@code uint} whose value is determined by all data specific to 
+ * a given object. For classes which also implement {@code CanEqual<T>}, objects
+ * which are considered identical should have the same hash codes.
+ *
+ * This interface is required for any classes that will be used as a key in a
+ * hash table, such as {@code HashMap<K,V>}.
+ *
+ * @seeDoc shadow:standard@CanEqual
+ * @seeDoc shadow:utility@HashMap 
+ */
 interface shadow:standard@CanHash
 {
+	/**
+	 * Property read from to retrieve the hash code. Hash codes should be fast
+	 * to compute and also change whenever any internal state of the object
+	 * changes.  Identical objects should always produce the same hash code.
+	 * Because only 32 bits are used to store the code, some objects which
+	 * are not identical will have the same hash codes, but every effort should
+	 * be made to reduce this likelihood.
+	 * @return hash code	 
+	 */
 	get hash() => ( uint );
 }

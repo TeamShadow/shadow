@@ -1,9 +1,7 @@
 import shadow:io@Console;
 
 /**
- * {@code Exception} is the parent type of all exceptions. 
- * 
- * @author Barry Wittman 
+ * {@code Exception} is the parent type of all exceptions.
  */
 exception shadow:standard@Exception
 {

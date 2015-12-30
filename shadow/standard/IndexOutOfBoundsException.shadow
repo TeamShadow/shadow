@@ -4,8 +4,6 @@
  * also thrown for similar out-of-bounds accesses on {@code String}, 
  * {@code ArrayList}, and {@code LinkedList} and should be used for other
  * similar index-based containers with set {@code int} bounds.
- * 
- * @author Barry Wittman 
  */
 exception shadow:standard@IndexOutOfBoundsException
 {

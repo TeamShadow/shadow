@@ -1,8 +1,6 @@
 /**
  * Class {@code byte} contains the methods that can be called on {@code byte}  
- * values.  
- * 
- * @author Barry Wittman 
+ * values.
  */
 locked immutable class shadow:standard@
 	Byte

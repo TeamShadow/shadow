@@ -1,5 +1,16 @@
+/**
+ * Interface {@code CanDivide<T>} specifies that a class can be divided by
+ * an object of type {@code T}, producing a {@code T}.  This interface
+ * allows overloading of the {@code /} operator.  If the {@code /} operator   
+ * is applied, the matching {@code divide(T)} method will be called.
+ */
 interface shadow:standard@
 	CanDivide<T>
 {
+	/**
+	 * Method called when the {@code /} operator is overloaded.
+	 * @param other object to divide by
+	 * @return quotient of the division
+	 */
 	readonly divide(T other) => (T);
 }

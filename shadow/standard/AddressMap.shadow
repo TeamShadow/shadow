@@ -8,9 +8,7 @@ import shadow:utility@IllegalModificationException;
  *
  * {@code AddressMap} is essentially a reimplementation of {@code HashMap}, which cannot
  * be used because generic types create problems for the compiler if used for these
- * fundamental tasks.   
- * 
- * @author Barry Wittman 
+ * fundamental tasks.
  */
 locked class shadow:standard@
 	AddressMap is Map<ulong, ulong>	

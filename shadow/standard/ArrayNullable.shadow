@@ -11,9 +11,7 @@
  * 
  * In this implementation, most methods of {@code NullableArray<T>} are implemented
  * as aliases to the parallel method in {@code Array<T>}, since the mechanics
- * differ in only a few cases.
- * 
- * @author Barry Wittman 
+ * differ in only a few cases. 
  */
 
 abstract locked class shadow:standard@

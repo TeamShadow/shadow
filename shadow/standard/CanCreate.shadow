@@ -1,5 +1,18 @@
+/**
+ * Interface {@code CanCreate} specifies that a class has a default
+ * {@code create()} method, one with no arguments.
+ *
+ * Classes that implement this interface can be created even if they
+ * are only represented as a type parameter.  Interfaces specifying
+ * arbitrarily complex {@code create} methods are legal, but this
+ * interface is so universally valuable that it is included in the
+ * standard library.     
+ */
 interface shadow:standard@
 	CanCreate
 {
+	/**
+	 * Default {@code create()} method.
+	 */
 	create();
 }

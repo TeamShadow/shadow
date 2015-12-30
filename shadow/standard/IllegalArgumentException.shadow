@@ -1,8 +1,6 @@
 /**
  * Exception {@code IllegalArgumentException} should be thrown when
  * an argument with an illegal type or value is supplied to a method.
- * 
- * @author Barry Wittman 
  */
 exception shadow:standard@IllegalArgumentException
 {

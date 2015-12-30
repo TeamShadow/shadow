@@ -1,8 +1,6 @@
 /**
  * Class {@code boolean} contains the methods that can be called on {@code boolean}  
- * values.  
- * 
- * @author Barry Wittman 
+ * values.
  */
 locked immutable class shadow:standard@
 	Boolean

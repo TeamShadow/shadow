@@ -1,8 +1,6 @@
 /**
  * Exception {@code CastException} is thrown when one type is cast to another
  * incompatible type.
- * 
- * @author Barry Wittman 
  */
 exception shadow:standard@CastException
 {

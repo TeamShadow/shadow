@@ -203,11 +203,14 @@ public abstract class Page
 			out.openTab("div", new Attribute("class", "blocktagcontent"));
 			for (List<String> tag : seeDocTags) {
 				out.open("p");
-				// TODO: Move the linking code into a method?
 				Path link = master.linkByName(this, tag.get(0));
 				if (link != null) {
-					out.full("a", tag.get(1), new Attribute("href", 
+					if( tag.size() > 1 )
+						out.full("a", tag.get(1), new Attribute("href", 
 							link.toString()));
+					else
+						out.full("a", tag.get(0), new Attribute("href", 
+								link.toString()));						
 				} else {
 					logger.warn("On page " + getRelativePath() + " - "
 							+ "Could not link to type or package " +

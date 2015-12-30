@@ -1,7 +1,5 @@
 /**
  * Exception {@code AssertException} is thrown when an assert fails.
- * 
- * @author Barry Wittman 
  */
 exception shadow:standard@AssertException
 {

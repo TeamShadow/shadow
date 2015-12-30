@@ -7,9 +7,7 @@
  *
  * Most of the use of {@code Array<T>} is handled by the compiler.
  * Users should avoid using the {@code Array<T>} type explicitly 
- * unless absolutely necessary. 
- * 
- * @author Barry Wittman 
+ * unless absolutely necessary.
  */
 abstract locked class shadow:standard@
 	Array<T>

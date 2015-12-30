@@ -1,5 +1,24 @@
+/**
+ * Interface {@code CanCompare<T>} specifies that a class can be compared to 
+ * an object of type {@code T}, producing a signed comparison {@code int}.
+ * This interface allows overloading of the {@code <}, {@code >}, {@code <=},
+ * and {@code >=} operators.  If any of these operators is applied, the
+ * matching {@code compare(T)} method will be called and tested.
+ *
+ * This interface also supports the {@code ==} operator through
+ * {@code CanEqual<T>}.   
+ */
 interface shadow:standard@
 	CanCompare<T> is CanEqual<T>
 {
+	/**
+	 * Method called when the {@code <}, {@code >}, {@code <=}, or {@code >=}
+	 * operator is applied. Should return {@code -1}, {@code 0}, or {@code 1},
+	 * if the current object is smaller than, equal to, or larger than the
+	 * other object, respectively. The relation defined by this method should
+	 * be transitive.
+	 * @param other object to compare to
+	 * @return whether smaller, equal, or larger	 
+	 */
 	readonly compare(T other) => (int);
 }

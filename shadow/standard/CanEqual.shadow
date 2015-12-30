@@ -1,5 +1,20 @@
+/**
+ * Interface {@code CanEqual<T>} specifies that a class can be tested for 
+ * equality with an object of type {@code T}, producing a {@code boolean}
+ * which is {@code true} if the objects are identical.
+ * This interface allows overloading of the {@code ==} operator.  If this
+ * operator is applied, the matching {@code equal(T)} method will be called. 
+ */
 interface shadow:standard@
 	CanEqual<T>
 {
+	/**
+	 * Method called when the {@code ==} operator is applied. Should return
+	 * {@code true} if the current object is identical to the other object.
+	 * The relation defined by this method should be reflexive, symmetric,
+	 * and transitive.
+	 * @param other object to compare to
+	 * @return {@code true} if identical	 
+	 */
 	readonly equal(T other) => (boolean);
 }
