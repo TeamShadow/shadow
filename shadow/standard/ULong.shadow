@@ -143,10 +143,7 @@ and	CanHash
 	public native flipEndian() => (ulong);
 	public native ones() => (ulong);
 	public native leadingZeroes() => (ulong);
-	public native trailingZeroes() => (ulong);
-	//public native addWithOverflow(ulong value) => (ulong, boolean);
-	//public native subtractWithOverflow(ulong value) => (ulong, boolean);
-	//public native multiplyWithOverflow(ulong value) => (ulong, boolean);	
+	public native trailingZeroes() => (ulong);	
 	
 
 	// implement CanHash

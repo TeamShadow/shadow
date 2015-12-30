@@ -1,3 +1,5 @@
+
+
 interface shadow:standard@
 	CanAdd<T>
 {

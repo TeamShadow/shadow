@@ -175,19 +175,7 @@ and CanHash
 			return BigInteger:create( 0 );
 		
 		return BigInteger:create( remainder, negative );
-	}
-	
-	/* Finds the leading zeroes in the binary representation of an unsigned integer. */
-	private leadingZeroes(uint value) => (uint)
-	{		
-		uint zeroes = 0u;
-		if (value <= 0x0000FFFF) {zeroes += 16u; value = value << 16;}
-		if (value <= 0x00FFFFFF) {zeroes += 8u; value = value << 8;}
-		if (value <= 0x0FFFFFFF) {zeroes += 4u; value = value << 4;}
-		if (value <= 0x3FFFFFFF) {zeroes += 2u; value = value << 2;}
-		if (value <= 0x7FFFFFFF) {zeroes += 1u;}	   
-		return zeroes;
-	}
+	}	
 	
 	/* 
 	 * Performs an unsigned left bit shift on the array of {@code uint} values that is
@@ -261,7 +249,7 @@ and CanHash
 			return (removeZeroes(quotient), remainder );		
 		}
 		
-		uint zeroes = leadingZeroes(second[second->size - 1]);
+		uint zeroes = second[second->size - 1].leadingZeroes();
 		readonly uint[] normalizedDivisor = 	unsignedLeftShift( second, zeroes );
 		readonly uint[] normalizedData = 	unsignedLeftShift( first, zeroes );
 		ulong quotientEstimate; 
@@ -844,7 +832,7 @@ and CanHash
 	}
 	
 	/** 
-	 * Raise the current object to the power of another {@code BigInteger}.
+	 * Raises the current object to the power of another {@code BigInteger}.
 	 * @param exponent power to raise by	 
 	 * @return number after exponentiation
 	 */
@@ -872,7 +860,7 @@ and CanHash
 	}
 	
 	/** 
-	 * Raise the current object to the power of another {@code BigInteger} then finds
+	 * Raises the current object to the power of another {@code BigInteger} then finds
 	 * its value modulus a divisor.
 	 * @param exponent power to raise by	 
 	 * @param divisor value to modulo by
@@ -904,7 +892,4 @@ and CanHash
 		  	
 		return fullPower.modulus(divisor); 
 	}
-	
-	
-	
 }

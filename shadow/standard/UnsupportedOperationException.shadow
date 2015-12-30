@@ -1,2 +1,25 @@
+/**
+ * Exception {@code UnsupportedOperationException} should be thrown when a method
+ * is called that is never intended to be called.  This situation usually arises
+ * when a method is required for an interface, but the underlying class has no
+ * meaningful implementation for the method.
+ * 
+ * @author Barry Wittman 
+ */
 exception shadow:standard@UnsupportedOperationException
-{}
+{
+	/**
+	 * Creates an {@code UnsupportedOperationException} with no message.	  
+	 */
+	public create()	{ }
+	
+	/**
+	 * Creates an {@code UnsupportedOperationException} with a message explaining
+	 * why the operation is unsupported.	  
+	 * @param message message explaining why the operation is unsupported
+	 */
+	public create( String message )
+	{
+		super(message);
+	}
+}

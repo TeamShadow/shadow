@@ -4,7 +4,6 @@
  * 
  * @author Barry Wittman 
  */
-
 locked immutable class shadow:standard@
 	Boolean
 is  CanEqual<boolean>

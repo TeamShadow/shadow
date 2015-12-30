@@ -1,9 +1,21 @@
+/**
+ * Exception {@code NumberFormatException} is thrown when parsing a {@code String}
+ * or other representation of a number and illegal characters are encountered.
+ * 
+ * @author Barry Wittman 
+ */
 exception shadow:standard@NumberFormatException
 {
-	public create()
-	{
-		super();
-	}
+	/**
+	 * Creates a {@code NumberFormatException} with no message.	  
+	 */
+	public create()	{ }
+	
+	/**
+	 * Creates a {@code NumberFormatException} with a message specifying
+	 * the cause of the badly formatted number representation.	  
+	 * @param message message explaining the formatting problem
+	 */
 	public create( String message )
 	{
 		super(message);

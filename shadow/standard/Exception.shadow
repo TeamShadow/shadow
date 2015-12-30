@@ -1,17 +1,36 @@
 import shadow:io@Console;
 
+/**
+ * {@code Exception} is the parent type of all exceptions. 
+ * 
+ * @author Barry Wittman 
+ */
 exception shadow:standard@Exception
 {
 	immutable get String message;
+	
+	/**
+	 * Creates an {@code Exception} with no message.	  
+	 */
 	public create()
 	{
 		message = "";
 	}
+	
+	/**
+	 * Creates an {@code Exception} with an explanatory message.
+	 * @param message message explaining the exception	  
+	 */
 	public create( String message )
 	{
 		this:message = message;
 	}
 
+	/*
+	 * Displays an error message on {@code stderr} based on the type of exception.
+	 * This method is called by the run time system if the exception is uncaught
+	 * and crashes the program. 
+	 */
 	private terminate() => ( int )
 	{
 		Console.printError(getClass());
@@ -21,6 +40,11 @@ exception shadow:standard@Exception
 		return 1;
 	}
 
+	/**
+	 * Returns a {@code String} representation of the exception, incorporating
+	 * the exception's message if present. 
+	 * @return {@code String} representation of the exception
+	 */
 	public readonly toString() => ( String )
 	{
 		if( message.isEmpty() )

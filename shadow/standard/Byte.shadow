@@ -1,3 +1,9 @@
+/**
+ * Class {@code byte} contains the methods that can be called on {@code byte}  
+ * values.  
+ * 
+ * @author Barry Wittman 
+ */
 locked immutable class shadow:standard@
 	Byte
 is	Integer<byte>
@@ -9,361 +15,918 @@ and	Number<double>
 and	CanNegate<byte>
 and	CanHash
 {
+	/// Largest value a {@code byte} can have, 127.
 	public constant byte MAX = 127y;
+	/// Smallest value a {@code byte} can have, -128.
 	public constant byte MIN = -128y;
 
-	// implement Bitwise<byte>
+	// Methods for Bitwise<byte>
+	
+	/**
+	 * Returns the bitwise complement of the {@code byte} value.
+	 * @return bitwise complement 
+	 */ 
 	public native bitComplement() => (byte);
+	
+	/** 
+	 * Finds the result of left-shifting the bits of the {@code byte} value
+	 * by an unsigned amount.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
 	public native bitShiftLeft(uint amount) => (byte);
+	
+	/** 
+	 * Finds the result of right-shifting the bits of the {@code byte} value
+	 * by an unsigned amount.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
 	public native bitShiftRight(uint amount) => (byte);
+	
+	/** 
+	 * Finds the result of left-rotating the bits of the {@code byte} value
+	 * by an unsigned amount.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
 	public native bitRotateLeft(uint amount) => (byte);
+	
+	/** 
+	 * Finds the result of right-rotating the bits of the {@code byte} value
+	 * by an unsigned amount.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
 	public native bitRotateRight(uint amount) => (byte);
+	
+	/** 
+	 * Finds the result of left-shifting the bits of the {@code byte} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
 	public bitShiftLeft(int amount) => (byte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
 	}
+	
+	/** 
+	 * Finds the result of right-shifting the bits of the {@code byte} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
 	public bitShiftRight(int amount) => (byte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
 	}
+	
+	/** 
+	 * Finds the result of left-rotating the bits of the {@code byte} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
 	public bitRotateLeft(int amount) => (byte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
 	}
+	
+	/** 
+	 * Finds the result of right-rotating the bits of the {@code byte} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
 	public bitRotateRight(int amount) => (byte)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);
 	}
-	// implement Number
+	
+	
+	// Methods for Number
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code byte}, which involves
+	 * no change.	 
+	 * @return {@code byte} value 
+	 */
 	public native toByte() => (byte);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code ubyte}, which will underflow
+	 * in the case of a negative value.	 
+	 * @return {@code ubyte} value 
+	 */
 	public native toUByte() => (ubyte);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code short}.	 
+	 * @return {@code short} value 
+	 */
 	public native toShort() => (short);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code ushort}, which will underflow
+	 * in the case of a negative value.	 
+	 * @return {@code ushort} value 
+	 */
 	public native toUShort() => (ushort);
+	
+	/** 
+	 * Converts the {@code byte} value to an {@code int}.	 
+	 * @return {@code int} value 
+	 */
 	public native toInt() => (int);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code uint}, which will underflow
+	 * in the case of a negative value.	 
+	 * @return {@code uint} value 
+	 */
 	public native toUInt() => (uint);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code long}.	 
+	 * @return {@code long} value 
+	 */
 	public native toLong() => (long);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code ulong}, which will underflow
+	 * in the case of a negative value.	 
+	 * @return {@code ulong} value 
+	 */
 	public native toULong() => (ulong);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code code}, which will underflow
+	 * in the case of a negative value.	 
+	 * @return {@code code} value 
+	 */
 	public native toCode() => (code);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code float}.	 
+	 * @return {@code float} value 
+	 */
 	public native toFloat() => (float);
+	
+	/** 
+	 * Converts the {@code byte} value to a {@code double}.	 
+	 * @return {@code double} value 
+	 */
 	public native toDouble() => (double);
 
-	// implement Integer<byte>
+	// Methods for Integer<byte>
+	
+	/** 
+	 * Computes the bitwise OR of the value and another {@code byte} value.
+	 * @param other value to bitwise OR with
+	 * @return result of bitwise OR 
+	 */
 	public native bitOr(byte other) => (byte);
+	
+	/** 
+	 * Computes the bitwise XOR of the value and another {@code byte} value.
+	 * @param other value to bitwise XOR with
+	 * @return result of bitwise XOR 
+	 */
 	public native bitXor(byte other) => (byte);
+	
+	/** 
+	 * Computes the bitwise AND of the value and another {@code byte} value.
+	 * @param other value to bitwise AND with
+	 * @return result of bitwise AND
+	 */
 	public native bitAnd(byte other) => (byte);
-	// implement CanAdd<byte>
+	
+	// Method for CanAdd<byte>
+	
+	/**
+	 * Adds another {@code byte} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public native add(byte other) => (byte);
-	// implement CanSubtract<byte>
+	
+	// Method for CanSubtract<byte>
+	
+	/**
+	 * Subtracts another {@code byte} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public native subtract(byte other) => (byte);
-	// implement CanMultiply<byte>
+	
+	// Method for CanMultiply<byte>
+	/**
+	 * Multiplies the current value by another {@code byte} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public native multiply(byte other) => (byte);
-	// implement CanDivide<byte>
+	
+	// Method for CanDivide<byte>	
+	/**
+	 * Divides the current value by another {@code byte} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public native divide(byte other) => (byte);
-	// implement CanModulus<byte>
+	
+	// Method for CanModulus<byte>
+	/**
+	 * Divides the current value by another {@code byte} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public native modulus(byte other) => (byte);
-	// implement CanCompare<byte>
+	
+	// Method for CanCompare<byte>
+	/**
+	 * Compares the current value to another {@code byte}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */	
 	public native compare(byte other) => (int);
-	// implement CanEqual<byte>
+	
+	// Method for CanEqual<byte>
+	/**
+	 * Compares the current value to another {@code byte}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public native equal(byte other) => (boolean);
 
-	// implement Integer<short>
+	// Methods for Integer<short>
+	
+	/** 
+	 * Computes the bitwise OR of the value and a {@code short} value.
+	 * @param other value to bitwise OR with
+	 * @return result of bitwise OR 
+	 */
 	public bitOr(short other) => (short)
 	{
 		return cast<short>(this) | other;
 	}
+	
+	/** 
+	 * Computes the bitwise XOR of the value and a {@code short} value.
+	 * @param other value to bitwise XOR with
+	 * @return result of bitwise XOR 
+	 */
 	public bitXor(short other) => (short)
 	{
 		return cast<short>(this) ^ other;
 	}
+	
+	/** 
+	 * Computes the bitwise AND of the value and a {@code short} value.
+	 * @param other value to bitwise AND with
+	 * @return result of bitwise AND 
+	 */
 	public bitAnd(short other) => (short)
 	{
 		return cast<short>(this) & other;
 	}
-	// implement CanAdd<short>
+	
+	// Method for CanAdd<short>	
+	/**
+	 * Adds a {@code short} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public add(short other) => (short)
 	{
 		return cast<short>(this) + other;
 	}
-	// implement CanSubtract<short>
+	
+	// Method for CanSubtract<short>
+	/**
+	 * Subtracts a {@code short} to the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */	
 	public subtract(short other) => (short)
 	{
 		return cast<short>(this) - other;
 	}
-	// implement CanMultiply<short>
+	
+	// Method for CanMultiply<short>
+	/**
+	 * Multiplies the current value by a {@code short} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */	
 	public multiply(short other) => (short)
 	{
 		return cast<short>(this) * other;
 	}
-	// implement CanDivide<short>
+	
+	// Method for CanDivide<short>
+	/**
+	 * Divides the current value by a {@code short} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public divide(short other) => (short)
 	{
 		return cast<short>(this) / other;
 	}
-	// implement CanModulus<short>
+	
+	// Method for CanModulus<short>
+	/**
+	 * Divides the current value by a {@code short} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public modulus(short other) => (short)
 	{
 		return cast<short>(this) % other;
 	}
-	// implement CanCompare<short>
+	
+	// Method for CanCompare<short>
+	/**
+	 * Compares the current value to a {@code short}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */	
 	public compare(short other) => (int)
 	{
 		return cast<short>(this).compare(other);
 	}
-	// implement CanEqual<short>
+	
+	// Method for CanEqual<short>
+	/**
+	 * Compares the current value to a {@code short}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public equal(short other) => (boolean)
 	{
 		return cast<short>(this) == other;
 	}
 
-	// implement Integer<int>
+	// Methods for Integer<int>
+	
+	/** 
+	 * Computes the bitwise OR of the value and an {@code int} value.
+	 * @param other value to bitwise OR with
+	 * @return result of bitwise OR 
+	 */
 	public bitOr(int other) => (int)
 	{
 		return cast<int>(this) | other;
 	}
+	
+	/** 
+	 * Computes the bitwise XOR of the value and an {@code int} value.
+	 * @param other value to bitwise XOR with
+	 * @return result of bitwise XOR 
+	 */
 	public bitXor(int other) => (int)
 	{
 		return cast<int>(this) ^ other;
 	}
+	
+	/** 
+	 * Computes the bitwise AND of the value and an {@code int} value.
+	 * @param other value to bitwise AND with
+	 * @return result of bitwise AND 
+	 */
 	public bitAnd(int other) => (int)
 	{
 		return cast<int>(this) & other;
 	}
-	// implement CanAdd<int>
+	
+	// Method for CanAdd<int>
+	/**
+	 * Adds an {@code int} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public add(int other) => (int)
 	{
 		return cast<int>(this) + other;
 	}
-	// implement CanSubtract<int>
+	
+	// Method for CanSubtract<int>
+	/**
+	 * Subtracts an {@code int} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public subtract(int other) => (int)
 	{
 		return cast<int>(this) - other;
 	}
-	// implement CanMultiply<int>
+	
+	// Method for CanMultiply<int>
+	/**
+	 * Multiplies the current value by an {@code int} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public multiply(int other) => (int)
 	{
 		return cast<int>(this) * other;
 	}
-	// implement CanDivide<int>
+	
+	// Method for CanDivide<int>
+	/**
+	 * Divides the current value by an {@code int} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */	
 	public divide(int other) => (int)
 	{
 		return cast<int>(this) / other;
 	}
-	// implement CanModulus<int>
+	
+	// Method for CanModulus<int>
+	/**
+	 * Divides the current value by an {@code int} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public modulus(int other) => (int)
 	{
 		return cast<int>(this) % other;
 	}
-	// implement CanCompare<int>
+	
+	// Method for CanCompare<int>
+	/**
+	 * Compares the current value to an {@code int}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */
 	public compare(int other) => (int)
 	{
 		return cast<int>(this).compare(other);
 	}
-	// implement CanEqual<int>
+	
+	// Method for CanEqual<int>
+	/**
+	 * Compares the current value to an {@code int}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public equal(int other) => (boolean)
 	{
 		return cast<int>(this) == other;
 	}
 
-	// implement Integer<long>
+	// Methods for Integer<long>
+	
+	/** 
+	 * Computes the bitwise OR of the value and a {@code long} value.
+	 * @param other value to bitwise OR with
+	 * @return result of bitwise OR 
+	 */
 	public bitOr(long other) => (long)
 	{
 		return cast<long>(this) | other;
 	}
+	
+	/** 
+	 * Computes the bitwise XOR of the value and a {@code long} value.
+	 * @param other value to bitwise XOR with
+	 * @return result of bitwise XOR 
+	 */
 	public bitXor(long other) => (long)
 	{
 		return cast<long>(this) ^ other;
 	}
+	
+	/** 
+	 * Computes the bitwise AND of the value and a {@code long} value.
+	 * @param other value to bitwise AND with
+	 * @return result of bitwise AND 
+	 */
 	public bitAnd(long other) => (long)
 	{
 		return cast<long>(this) & other;
 	}
-	// implement CanAdd<long>
+	
+	// Method for CanAdd<long>
+	/**
+	 * Adds a {@code long} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public add(long other) => (long)
 	{
 		return cast<long>(this) + other;
 	}
-	// implement CanSubtract<long>
+	
+	// Method for CanSubtract<long>
+	/**
+	 * Subtracts a {@code long} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public subtract(long other) => (long)
 	{
 		return cast<long>(this) - other;
 	}
-	// implement CanMultiply<long>
+	
+	// Method for CanMultiply<long>
+	/**
+	 * Multiplies the current value by a {@code long} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public multiply(long other) => (long)
 	{
 		return cast<long>(this) * other;
 	}
-	// implement CanDivide<long>
+	
+	// Method for CanDivide<long>
+	/**
+	 * Divides the current value by a {@code long} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public divide(long other) => (long)
 	{
 		return cast<long>(this) / other;
 	}
-	// implement CanModulus<long>
+	
+	// Method for CanModulus<long>
+	/**
+	 * Divides the current value by a {@code long} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public modulus(long other) => (long)
 	{
 		return cast<long>(this) % other;
 	}
-	// implement CanCompare<long>
+	
+	// Method for CanCompare<long>
+	/**
+	 * Compares the current value to a {@code long}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */
 	public compare(long other) => (int)
 	{
 		return cast<long>(this).compare(other);
 	}
-	// implement CanEqual<long>
+		
+	// Method for CanEqual<long>
+	/**
+	 * Compares the current value to a {@code long}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public equal(long other) => (boolean)
 	{
 		return cast<long>(this) == other;
 	}
 
-	// implement CanAdd<float>
+	// Method for CanAdd<float>
+	/**
+	 * Adds a {@code float} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public add(float other) => (float)
 	{
 		return cast<float>(this) + other;
 	}
-	// implement CanSubtract<float>
+	
+	// Method for CanSubtract<float>
+	/**
+	 * Subtracts a {@code float} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public subtract(float other) => (float)
 	{
 		return cast<float>(this) - other;
 	}
-	// implement CanMultiply<float>
+	
+	// Method for CanMultiply<float>
+	/**
+	 * Multiplies the current value by a {@code float} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public multiply(float other) => (float)
 	{
 		return cast<float>(this) * other;
 	}
-	// implement CanDivide<float>
+	
+	// Method for CanDivide<float>
+	/**
+	 * Divides the current value by a {@code float} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public divide(float other) => (float)
 	{
 		return cast<float>(this) / other;
 	}
-	// implement CanModulus<float>
+	
+	// Method for CanModulus<float>
+	/**
+	 * Divides the current value by a {@code float} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public modulus(float other) => (float)
 	{
 		return cast<float>(this) % other;
 	}
-	// implement CanCompare<float>
+	
+	// Method for CanCompare<float>	
+	/**
+	 * Compares the current value to a {@code float}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */
 	public compare(float other) => (int)
 	{
 		return cast<float>(this).compare(other);
 	}
-	// implement CanEqual<float>
+	
+	// Method for CanEqual<float>
+	/**
+	 * Compares the current value to a {@code float}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public equal(float other) => (boolean)
 	{
 		return cast<float>(this) == other;
 	}
 
-	// implement CanAdd<double>
+	// Method for CanAdd<double>
+	/**
+	 * Adds a {@code double} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public add(double other) => (double)
 	{
 		return cast<double>(this) + other;
 	}
-	// implement CanSubtract<double>
+	
+	// Method for CanSubtract<double>
+	/**
+	 * Subtracts a {@code double} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public subtract(double other) => (double)
 	{
 		return cast<double>(this) - other;
 	}
-	// implement CanMultiply<double>
+	
+	// Method for CanMultiply<double>
+	/**
+	 * Multiplies the current value by a {@code double} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public multiply(double other) => (double)
 	{
 		return cast<double>(this) * other;
 	}
-	// implement CanDivide<double>
+	
+	// Method for CanDivide<double>
+	/**
+	 * Divides the current value by a {@code double} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public divide(double other) => (double)
 	{
 		return cast<double>(this) / other;
 	}
-	// implement CanModulus<double>
+	
+	// Method for CanModulus<double>
+	/**
+	 * Divides the current value by a {@code double} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public modulus(double other) => (double)
 	{
 		return cast<double>(this) % other;
 	}
-	// implement CanCompare<double>
+	
+	// Method for CanCompare<double>
+	/**
+	 * Compares the current value to a {@code double}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */
 	public compare(double other) => (int)
 	{
 		return cast<double>(this).compare(other);
 	}
-	// implement CanEqual<double>
+	
+	// Method for CanEqual<double>
+	/**
+	 * Compares the current value to a {@code double}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}
 	
-	// implement CanNegate<byte>
+	// Method for CanNegate<byte>
+	/** 
+	 * Negates the value.
+	 * @return negated value	 
+	 */
 	public native negate() => (byte);	
 	
+	/** 
+	 * Finds the square root of the value.
+	 * @return square root	 
+	 */
 	public squareRoot() => (double)
 	{
 		return toDouble().squareRoot();
 	}
 	
+	/** 
+	 * Raises the current value to the power of an {@code int}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public power(int value) => (double)
 	{
 		return toDouble().power(value);
 	}
 	
+	/** 
+	 * Raises the current value to the power of a {@code double}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public power(double value) => (double)
 	{
 		return toDouble().power(value);
 	}
 	
+	/** 
+	 * Finds the sine of the current value.	 	 
+	 * @return sine of the value
+	 */
 	public sin() => (double)
 	{
 		return toDouble().sin();
 	}
 	
+	/** 
+	 * Finds the cosine of the current value.	 	 
+	 * @return cosine of the value
+	 */
 	public cos() => (double)	
 	{
 		return toDouble().cos();
 	}
 	
+	/** 
+	 * Finds the natural logarithm of the current value.	 	 
+	 * @return natural logarithm of the value
+	 */
 	public logBaseE() => (double)	
 	{
 		return toDouble().logBaseE();
 	}
 	
+	/** 
+	 * Finds the logarithm base 2 of the current value.	 	 
+	 * @return logarithm base 2 of the value
+	 */
 	public logBase2() => (double)	
 	{
 		return toDouble().logBase2();
 	}
 	
+	/** 
+	 * Finds the logarithm base 10 of the current value.	 	 
+	 * @return logarithm base 10 of the value
+	 */
 	public logBase10() => (double)	
 	{
 		return toDouble().logBase10();
 	}
-		
+	
+	/** 
+	 * Counts the number of 1 bits in the binary representation of the number.	 	 
+	 * @return total 1 bits
+	 */	 
 	public native ones() => (short);
+	
+	/** 
+	 * Counts the number of 0 bits before a non-zero bit, starting with the
+	 * most significant bits. 	 
+	 * @return leading 0 bits
+	 */
 	public native leadingZeroes() => (short);
+	
+	/** 
+	 * Counts the number of 0 bits after a non-zero bit, starting with the
+	 * least significant bits. 	 
+	 * @return trailing 0 bits
+	 */
 	public native trailingZeroes() => (short);	
 		
 
-	// implement CanHash
+	// Method for CanHash
+	/** 
+	 * Finds a hash value for the current value.	 
+	 * @return hash value	 
+	 */
 	public get hash() => (uint)
 	{
 		return cast<uint>(this);
 	}
 
+	/**
+	 * Returns a non-negative version of the current value.
+	 * @return non-negative value	  
+	 */
 	public abs() => (ubyte)
 	{
 		return cast<ubyte>(this < 0y ? -this, this);
 	}
+	
+	/** 
+	 * Finds the minimum of the current value and another {@code byte}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
 	public min(byte other) => (byte)
 	{
 		return this < other ? this, other;
 	}
+	
+	/** 
+	 * Finds the maximum of the current value and another {@code byte}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
 	public max(byte other) => (byte)
 	{
 		return this > other ? this, other;
 	}
 
+	/**
+	 * Returns an unsigned version of the current value, underflowing if negative.
+	 * @return unsigned value	  
+	 */
 	public toUnsigned() => (ubyte)
 	{
 		return toUByte();
 	}
+	
+	/** 
+	 * Returns a {@code String} representation of the value, in base 10.
+	 * @return  {@code String} representation
+	 */ 
 	public toString() => (String)
 	{
 		return toString(10uy);
 	}
+	
+	/** 
+	 * Returns a {@code String} representation of the value, in the specified base.
+	 * @param base base of output representation
+	 * @return  {@code String} representation
+	 */ 
 	public toString(ubyte base) => (String)
 	{
 		String string = abs().toString(base);

@@ -1,5 +1,19 @@
+/**
+ * Exception {@code IndexOutOfBoundsException} is thrown when an attempt is made
+ * to create an interface at run time.  Creating an interface cannot be done
+ * directly, but it is possible to create a generic object with {@code CanCreate}
+ * as its type parameter.  Such an generic object could internally call {@code create}
+ * on its type parameter while still passing type-checking.
+ * 
+ * @author Barry Wittman 
+ */
 exception shadow:standard@InterfaceCreateException
 {
+	/**
+	 * Creates an {@code InterfaceCreateException} with a message specifying
+	 * the name of the interface that is attempting to be created.
+	 * @param name of the interface	  
+	 */
 	public create( String interfaceName )
 	{
 		super("Cannot create interface " # interfaceName);

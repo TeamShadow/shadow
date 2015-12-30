@@ -1,11 +1,34 @@
+/**
+ * Exception {@code IndexOutOfBoundsException} is thrown when an access
+ * to an out-of-bounds array element is attempted.  This exception is
+ * also thrown for similar out-of-bounds accesses on {@code String}, 
+ * {@code ArrayList}, and {@code LinkedList} and should be used for other
+ * similar index-based containers with set {@code int} bounds.
+ * 
+ * @author Barry Wittman 
+ */
 exception shadow:standard@IndexOutOfBoundsException
 {
+	/**
+	 * Creates an {@code IndexOutOfBoundsException} with no message.	  
+	 */
 	public create() { }
+	
+	/**
+	 * Creates an {@code IndexOutOfBoundsException} with a message specifying
+	 * a particular out-of-bounds index.
+	 * @param index out-of-bounds index	  
+	 */
 	public create( int index )
 	{
 		super("Index " # index);
 	}
 	
+	/**
+	 * Creates an {@code IndexOutOfBoundsException} with a message specifying
+	 * an array of out-of-bounds indices.	  
+	 * @param indices out-of-bounds indices
+	 */
 	public create( int[] indices )
 	{
 		super("Indices " # indices);

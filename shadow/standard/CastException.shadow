@@ -1,12 +1,32 @@
+/**
+ * Exception {@code CastException} is thrown when one type is cast to another
+ * incompatible type.
+ * 
+ * @author Barry Wittman 
+ */
 exception shadow:standard@CastException
 {
+	/**
+	 * Creates a {@code CastException} with no message.	  
+	 */
 	public create() { }
 	
+	/**
+	 * Creates a {@code CastException} stating the the source class is not a
+	 * subtype of the destination class.
+	 * @param source source class
+	 * @param destination destination class	  
+	 */
 	public create( Class source, Class destination )
 	{
 		this( "Type " # source # " is not a subtype of " # destination ); 
 	}
 	
+	/**
+	 * Creates a {@code CastException} with a message explaining
+	 * why the cast is incompatible.	  
+	 * @param message message explaining why the cast is incompatible
+	 */
 	public create( String message )
 	{
 		super(message);
