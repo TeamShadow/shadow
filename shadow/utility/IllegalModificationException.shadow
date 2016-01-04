@@ -1,2 +1,22 @@
+/**
+ * Exception {@code IllegalModificationException} should be thrown when an operation
+ * modifies the state of an object when it is illegal to do so. This exception is
+ * commonly thrown when an iterator is iterating over a collection and the contents
+ * of the collection are modified.   
+ */
 exception shadow:utility@IllegalModificationException
-{}
+{
+	/**
+	 * Creates an {@code IllegalModificationException} with no message.	  
+	 */
+	public create() { }
+	
+	/**
+	 * Creates an {@code IllegalModificationException} with a message.
+	 * @param message message explaining what caused the exception 	  
+	 */
+	public create( String message )
+	{
+		super(message);
+	}
+}

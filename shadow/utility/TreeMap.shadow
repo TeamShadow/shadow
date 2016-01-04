@@ -1,0 +1,801 @@
+import shadow:utility@ArrayDeque;
+
+/**
+ * The {@code TreeMap<K, V>} class implements an ordered map of key-value pairs
+ * with entries mapping keys of type {@code K} to values of type {@code V}. 
+ * Key type {@code K} must have the {@code CanCompare<K>} interface, and value
+ * type {@code V} must have the {@code CanEqual<V>} interface.
+ * The underlying implementation of the ordered map is a left-leaning red-black
+ * binary search tree based on a Shadow port of Sedgewick and Wayne's Java
+ * implementation of a left-leaning red-black binary search tree.
+ * @seeDoc shadow:standard@CanCompare
+ * @seeDoc shadow:standard@CanEqual
+ * @seeUrl http://algs4.cs.princeton.edu/33balanced/RedBlackBST.java.html
+ */
+ 
+class shadow:utility@
+	TreeMap<K is CanCompare<K>, V is CanEqual<V>>
+is  OrderedMap<K,V>
+{
+    nullable Node root = null;  // root of the BST
+    get int size = 0;			//number of key-value pairs in the map
+    int modifications = 0;		//modifications to BST, used for fail-fast iterators
+
+    // BST node data type
+    private locked class Node
+    {
+        get set K key;           	// key
+        get set V value;         	// associated value
+        get set nullable Node left;	// left subtree
+        get set nullable Node right;// right subtree
+        get set boolean red;     	// color of parent link        
+
+		// Create a node with the given key and value
+		// key and value should ideally not be settable, but
+		// the delete algorithm swaps node contents
+        public create(K key, V value, boolean color) 
+        {
+            this:key = key;
+            this:value = value;
+            this:red = color;
+            this:left = null;
+            this:right = null;            
+        }
+        
+        public readonly toString() => (String)
+        {
+        	return key # "=" # value;
+        }
+    }
+   
+    /*
+     * Returns {@code true} if node is red.  Null nodes are considered black.
+     */
+    private readonly isRed(nullable Node node) => (boolean)
+    {
+        try
+        {
+        	return check(node)->red;
+        }
+        recover
+        {
+        	return false;
+        }        
+    }
+    
+    /**
+     * Clears the contents of the map so that it contains no key-value pairs.     
+     */
+    public clear() => ()
+    {
+    	root = null;
+    	size = 0;
+    	modifications += 1;
+    }
+
+    /**
+     * Returns {@code true} if the map is empty.
+     * @return {@code true} if empty
+     */
+    public readonly isEmpty() => (boolean)
+    {
+        return root === null;
+    }
+
+    /* BST search */
+
+    /**
+     * Returns the value associated with the given key or {@code null} if the
+     * key is not present in the map.
+     * @param key key to find
+     * @return value associated with given key if or {@code null} if the key is not in the map     
+     */
+    public readonly index(K key) => (nullable V)
+    {       
+        return find(root, key);
+    }
+
+    /*
+     * Helper method to find key in the tree.
+     * Iterative rather than recursive.
+     */ 
+    private readonly find(nullable Node node, K key) => (nullable V) 
+    {
+    	try
+    	{
+	        while( true )
+	        {
+	        	Node notNull = check(node); // If node is ever null, jump out.	        	
+	            int compare = key.compare(notNull->key);
+	            if( compare < 0 )
+	            	node = notNull->left;
+	            else if( compare > 0 )
+	            	node = notNull->right;
+	            else
+	            	return notNull->value;
+	      	}
+	     }
+	     recover {}
+	     
+        return null;
+    }
+
+    /**
+     * Returns {@code true} if the map contains the given key.
+     * @param key key to find
+     * @return {@code true} if the map contains the key
+     */
+    public readonly containsKey(K key) => (boolean)  
+    {
+        return index(key) !== null;
+    }
+    
+    /**
+     * Returns {@code true} if the map contains the given value.
+     * Because the map is not organized by value, this method takes
+     * time linear in the size of the map, in the worst case.
+     * @param value value to find
+     * @return {@code true} if the map contains the value
+     */
+    public readonly containsValue(V value) => (boolean)
+    {
+    	return containsValue(root, value);
+    }
+    
+    /*
+     * Helper method to find a value by doing a recursive, preorder traversal
+     * of the tree. Would a BFS be a better idea?
+     */
+    private readonly containsValue(nullable Node node, V value) => (boolean)
+    {
+    	try
+    	{
+    		Node notNull = check(node);
+    		if( notNull->value == value )
+    			return true;
+    		if( containsValue(notNull->left, value) )
+    			return true;
+    		if( containsValue(notNull->right, value) )
+    			return true;
+    	}
+    	recover {}   
+    	
+    	return false; 
+    }
+
+    /* Tree insertion, with red-black balancing */
+
+    /**
+     * Inserts the specified key-value pair into the map, overwriting the old 
+     * value with the new value if the map already contains the specified key.
+     * @param key key to insert
+     * @param value value to insert
+     */
+    public index(K key, V value) => ()
+    {                
+        root = insert(root, key, value);
+        check(root)->red = false; // Never null after insert.         
+        modifications += 1;
+    }
+
+    /*
+     * Helper method for insertion, doing regular, recursive BST insertion
+     * with red-black rotations and recolors afterwards, if needed.      
+     */
+    private insert(nullable Node node, K key, V value) => (Node) 
+    {
+		try
+		{
+			Node notNull = check(node);
+	        int compare = key.compare(notNull->key);
+	        if( compare < 0 )
+	        	notNull->left  = insert(notNull->left,  key, value); 
+	        else if ( compare > 0 )
+	        	notNull->right = insert(notNull->right, key, value); 
+	        else
+	        	notNull->value   = value;
+	
+	        // Fix any right-leaning links.
+	        if (isRed(notNull->right) and !isRed(notNull->left))
+	        	notNull = rotateLeft(notNull);
+	        if (isRed(notNull->left)  and  isRed(check(notNull->left)->left))
+	        	notNull = rotateRight(notNull);
+	        if (isRed(notNull->left)  and  isRed(notNull->right))
+	        	flipColors(notNull);        
+        	return notNull;
+        }
+        recover
+        {
+        	// Null case, create new node.
+        	size += 1;
+        	return Node:create(key, value, true);
+        }
+    }
+
+    /* Tree deletion, with red-black balancing */
+
+    /**
+     * Removes the smallest key and associated value from the map.    
+     */
+    public deleteMin() => ()
+    {
+		try
+		{
+			Node notNull = check(root);
+	        // If both children of root are black, set root to red.
+	        if (!isRed(notNull->left) and !isRed(notNull->right))
+	            notNull->red = true;
+
+        	root = deleteMin(notNull);
+        	try
+        	{
+        		check(root)->red = false;
+        	}
+        	recover {}
+        	
+        	size -= 1;	
+        	modifications += 1;
+        }
+        recover
+        {
+        	throw NoSuchElementException:create("Cannot call deleteMin() on empty map");
+        }
+    }
+
+    /*
+     * Helper method for deleteMin(), using recursive delete with red-black
+     * balancing.    
+     */
+    private deleteMin( Node node ) => ( nullable Node )
+    { 
+    	try
+    	{
+    		Node leftNode = check(node->left);
+        	if (!isRed(leftNode) and !isRed(leftNode->left))
+            	node = moveRedLeft(node);
+        	node->left = deleteMin(check(node->left));
+        	return balance(node);
+        }
+        recover
+        {
+        	return null;
+        }
+    }
+
+
+    /**
+     * Removes the largest key and associated value from the map.   
+     */
+    public deleteMax() => () 
+    {    
+    	try
+    	{
+    		Node notNull = check(root);
+	        // If both children of root are black, set root to red.
+	        if (!isRed(notNull->left) and !isRed(notNull->right))
+	            notNull->red = true;
+	
+	        root = deleteMax(notNull);
+	        try
+	        {
+        		check(root)->red = false;
+        	}
+        	recover {}	        
+	        modifications += 1;
+	        size -= 1;	       
+        }
+        recover
+        {
+        	throw NoSuchElementException:create("Cannot call deleteMax() on an empty map");
+        }
+       
+    }
+
+    /*
+     * Helper method for deleteMax(), using recursive delete with red-black
+     * balancing.    
+     */
+    private deleteMax(Node node) => (nullable Node) 
+    { 
+        if (isRed(node->left))
+            node = rotateRight(node);
+            
+        try
+        {
+        	Node rightNode = check(node->right);
+        	if (!isRed(rightNode) and !isRed(rightNode->left))
+            	node = moveRedRight(node);
+        	node->right = deleteMax(check(node->right));
+        	return balance(node);
+        }
+        recover
+        {
+        	return null;
+        }
+    }
+
+    /**
+     * Removes the specified key and its associated value from the map,
+     * returning the associated value if the key was in the map and
+     * {@code null} otherwise.
+     * @param  key key to remove
+     * @return value being removed or {@code null} if not present
+     */
+    public remove(K key) => (nullable V)
+    {
+        if( !containsKey(key) )
+        	return null;
+        	
+       	Node notNull = check(root); // Can't be null if contains key.
+
+        // If both children of root are black, set root to red.
+        if (!isRed(notNull->left) and !isRed(notNull->right))        
+        	notNull->red = true;        
+
+        (root, V value) = remove(notNull, key);
+        try
+        {
+    		check(root)->red = false;
+    	}
+    	recover {}
+    	modifications += 1; 
+    	size -= 1;   	
+    	return value;
+    }
+
+    /*
+     * Helper method for remove(K), using recursive delete with red-black
+     * balancing.    
+     */
+    private remove(Node node, K key) => (nullable Node, V value)
+    {
+    	V value;
+        if (key.compare(node->key) < 0) 
+        {        	
+        	Node leftNode = check(node->left);
+            if (!isRed(leftNode) and !isRed(leftNode->left))
+                node = moveRedLeft(node);
+            (node->left, value) = remove(check(node->left), key);            
+        }
+        else
+        {        	
+            if( isRed(node->left) )
+                node = rotateRight(node);
+            if( key.equal(node->key) and (node->right === null) )
+            {            	
+                return (null, node->value);
+            }
+            if( !isRed(node->right) and !isRed(check(node->right)->left ) )
+                node = moveRedRight(node);
+                
+            Node rightNode = check(node->right); // Impossible to be null.
+            if( key.equal(node->key) )
+            {
+            	value = node->value;            	 
+                Node x = min(rightNode);
+                node->key = x->key;
+                node->value = x->value;
+                node->right = deleteMin(rightNode);                                
+            }
+            else                        
+            	(node->right, value) = remove(rightNode, key);            
+        }        
+        node = balance(node);
+        return (node, value);
+    }
+
+    /* Red-black tree helper functions */
+
+    /*
+     * Leans a left-leaning link to the right.
+     */
+    private rotateRight(Node node) => (Node)
+    {     	      
+        Node x = check(node->left);
+        node->left = x->right;
+        x->right = node;
+        x->red = node->red;
+        node->red = true;     
+        return x;
+    }
+
+    /*
+     * Leans a right-leaning link to the left.
+     */
+    private rotateLeft(Node node) => (Node)
+    {       	    
+        Node x = check(node->right);
+        node->right = x->left;
+        x->left = node;
+        x->red = node->red;
+        node->red = true;
+        return x;
+    }
+
+    /*
+     * Flips the colors of a node and its two children.
+     */
+    private flipColors(Node node) => ()
+    {
+        node->red = !node->red;
+        Node leftNode = check(node->left);
+        Node rightNode = check(node->right);
+        leftNode->red = !leftNode->red;
+        rightNode->red = !rightNode->red;
+    }
+
+    /*
+     * Assuming that node is red and both node->left and node->left->left
+     * are black, makes node->left or one of its children red.
+     */
+    private moveRedLeft(Node node) => (Node)
+    {
+        flipColors(node);
+        Node rightNode = check(node->right);
+        if( isRed(rightNode->left) )
+        { 
+            node->right = rotateRight(rightNode);
+            node = rotateLeft(node);
+            flipColors(node);
+        }
+        return node;
+    }
+
+    /*
+     * Assuming that node is red and both node->right and node->right->left
+     * are black, makes node->right or one of its children red.
+     */
+    private moveRedRight(Node node) => (Node)
+    {
+        flipColors(node);
+        if (isRed(check(node->left)->left)) 
+        { 
+            node = rotateRight(node);
+            flipColors(node);
+        }
+        return node;
+    }
+
+    /*
+     * Restores red-black tree invariant.
+     */
+    private balance(Node node) => (Node)
+    {
+        if( isRed(node->right) )
+        	node = rotateLeft(node);
+        if( isRed(node->left) and isRed(check(node->left)->left) )
+        	node = rotateRight(node);
+        if( isRed(node->left) and isRed(node->right) )
+        	flipColors(node);        
+        return node;
+    }
+
+   /* Ordered map methods */
+
+    /**
+     * Returns the smallest key in the map.
+     * @return smallest key in the map
+     */
+    public readonly  min() => (K)
+    {
+    	try
+    	{
+    		Node notNull = check(root);
+    		return min(notNull)->key;
+    	}
+    	recover
+    	{
+            throw NoSuchElementException:create("Cannot call min() on empty map");
+        }        
+    } 
+
+    /*
+     * Helper method for min(), iterative.
+     */ 
+    private readonly min(Node node) => (Node)
+    {    
+    	try
+    	{
+    		while( true )    		
+    			node = check(node->left);
+    	}
+    	recover
+    	{    		
+        	return node;
+        } 
+    } 
+
+    /**
+     * Returns the largest key in the map.
+     * @return largest key in the map
+     */
+    public readonly max() => (K)
+    {
+        try
+    	{
+    		Node notNull = check(root);
+    		return max(notNull)->key;
+    	}
+    	recover
+    	{
+            throw NoSuchElementException:create("Cannot call max() on empty map");
+        } 
+    } 
+
+    /*
+     * Helper method for max(), iterative.
+     */ 
+    private readonly max(Node node) => (Node)
+    {
+        try
+    	{
+    		while( true )
+    			node = check(node->right);    		
+    	}
+    	recover
+    	{    		
+        	return node;
+        }
+    } 
+
+
+    /**
+     * Returns the largest key in the map less than or equal to the given key.
+     * @param key key to compare against
+     * @return largest key in the map less than or equal to {@code key}     
+     */
+    public readonly floor(K key) => (nullable K)
+    {           
+        try
+        {
+        	nullable Node lowest = floor(root, key);
+        	return check(lowest)->key;        
+        }
+        recover
+        {
+        	return null;
+        }
+    }    
+
+    /*
+     * Helper method for floor(), recursive.
+     */
+    private readonly floor(nullable Node node, K key) => (nullable Node)
+    {
+    	try
+    	{
+    		Node notNull = check(node);
+    		int compare = key.compare(notNull->key);
+	        if( compare == 0 )
+	        	return node;
+	        if (compare < 0) 
+	        	return floor(notNull->left, key);
+	        
+	        nullable Node lowest = floor(notNull->right, key);
+	        if (lowest !== null)
+	        	return lowest; 
+	        else
+	        	return node;
+    	}
+    	recover
+    	{
+    		return null;
+    	}
+    }
+
+    /**
+     * Returns the smallest key in the map greater than or equal to the given key.
+     * @param key key to compare against
+     * @return smallest key in the map less than or equal to {@code key}     
+     */
+    public readonly ceiling(K key) => (nullable K)
+    {   
+    	try
+    	{
+        	nullable Node highest = ceiling(root, key);
+        	return check(highest)->key;
+       	}
+        recover
+        {
+        	return null;
+        }  
+    }
+
+    /*
+     * Helper method for ceiling(), recursive.
+     */
+    private readonly ceiling(nullable Node node, K key) => (nullable Node)
+    {  
+    	try
+    	{
+    		Node notNull = check(node);
+    		int compare = key.compare(notNull->key);
+	        if( compare == 0 )
+	        	return node;
+	        if( compare > 0 )
+	        	return ceiling(notNull->right, key);
+	        	
+	        nullable Node highest = ceiling(notNull->left, key);
+	        if( highest !== null )
+	        	return highest; 
+	        else
+	        	return node;    		
+    	}
+    	recover
+    	{
+    		return null;
+    	}    
+    }  
+
+    /**
+     * Returns all keys in the map as a {@code CanIterate<K>}, which can be
+     * the target of a {@code foreach} loop to iterate over keys.     
+     * @return all keys in the map
+     */
+    public readonly keys() => (CanIterate<K>) 
+    {
+        if( isEmpty() )
+        	return ArrayDeque<K>:create();
+        return keys(min(), max());
+    }
+
+    /**
+     * Returns all keys in the map in the given range as a
+     * {@code CanIterate<K>}, which can be the target of a 
+     * @code foreach} loop to iterate over those keys.
+     * @param low lowest possible key in the range
+     * @param high key higher than the highest possible in the range
+     * @return all keys in the map between {@code low} (inclusive)
+     * and {@code high} (inclusive)     
+     */
+    public readonly keys(K low, K high) => (CanIterate<K>)
+    {
+    	ArrayDeque<K> queue = ArrayDeque<K>:create();        
+        keys(root, queue, low, high);
+        return queue;
+    } 
+
+    /* 
+     * Helper method for keys(K, K) that recursively adds the keys between
+     * low and high in the subtree rooted at node to the queue.
+     */ 
+    private readonly keys(nullable Node node, ArrayDeque<K> queue, K low, K high) => ()
+    { 
+        try
+        { 
+        	Node notNull = check(node);
+	        int compareLow = low.compare(notNull->key); 
+	        int compareHigh = high.compare(notNull->key); 
+	        if (compareLow < 0)
+	        	keys(notNull->left, queue, low, high); 
+	        if (compareLow <= 0 and compareHigh >= 0)
+	        	queue.addLast(notNull->key); 
+	        if( compareHigh > 0 )
+	        	keys(notNull->right, queue, low, high); 
+	    }
+	    recover
+	    {}
+    }
+    
+    /**
+	 * Gets formatted {@code String} representation of the map.   
+	 * @return {@code String} representation
+	 */
+    public readonly toString() => (String)
+	{
+		if( size == 0 )
+			return "{}";	
+	
+		var output = MutableString:create("{");
+		addStrings(root, output);
+		output.delete(output->size - 2, output->size); //removes last ", "				
+		output.append("}");
+		return output.toString();
+	}
+	
+	/* 
+	 * Helper method for toString() which adds key-value pairs to a
+	 * MutableString using a recursive, in order traversal.
+	 */
+	private readonly addStrings(nullable Node node, MutableString output) => ()
+	{
+		try
+		{
+			Node notNull = check(node);
+			
+			addStrings(notNull->left, output);			
+			output.append(notNull);
+			output.append(", ");
+			addStrings(notNull->right, output);
+		}
+		recover {}
+	}
+    
+    /**
+	 * Gets iterator that can iterate over all the values in map.   
+	 * @return iterator
+	 */
+    public iterator() => (Iterator<V>)
+    {
+    	return TreeMapIterator:create();
+    }
+    
+    // Iterator class for TreeMap
+    private class TreeMapIterator is Iterator<V>
+	{
+		// Current stack of Nodes, since this tree doesn't have parent references.
+		ArrayDeque<Node> stack = ArrayDeque<Node>:create();
+		int state;		 		
+		int expectedModifications = modifications;
+		
+		// Go all the way to left when creating iterator.
+		public create()
+		{			
+			try
+			{
+				Node current = check(root);				
+				while( true )
+				{					
+					stack.addLast(current);
+					current = check(current->left);
+				}
+			}
+			recover
+			{} 
+		}
+
+		private readonly checkForModifications() => ()
+		{
+			if ( modifications != expectedModifications )
+				throw IllegalModificationException:create();
+		}
+
+		public readonly hasNext() => ( boolean )
+		{
+			checkForModifications();
+			return stack->size != 0;
+		}
+
+		// Determines next value through successor relationship
+		public next() => ( V value )
+		{
+			checkForModifications();
+			
+			if( stack->size == 0 )
+				throw NoSuchElementException:create();
+			
+			// Get node from the stack and its value.	
+			Node current = stack.getLast();
+			V value = current->value;
+			
+			// Add leftmost node of right subtree, if present
+			if( current->right !== null )
+			{
+				try
+				{
+					current = check(current->right);				
+					while( true )
+					{						
+						stack.addLast(current);
+						current = check(current->left);
+					}
+				}
+				recover
+				{}
+			}
+			// If no right subtree, we're done with the node.
+			// Remove it and its parents, as long as they
+			// are all right children.			
+			else
+			{				
+				do
+				{
+					current = stack.removeLast();
+				}
+				while( stack->size > 0 and current === stack.getLast()->right );
+			}			
+			
+			return value;
+		}
+	}
+}

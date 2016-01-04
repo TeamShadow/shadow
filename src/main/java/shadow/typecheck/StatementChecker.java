@@ -1296,6 +1296,12 @@ public class StatementChecker extends BaseChecker {
 				}
 				else //otherwise simple assignment
 					addErrors(isValidAssignment(leftElement, rightElement, AssignmentKind.EQUAL));
+				
+				if( leftElement.getType() instanceof PropertyType ) {
+					PropertyType getSetType = (PropertyType) leftElement.getType();					
+					getSetType.setStoreOnly();
+				}
+				
 			}
 		}
 
@@ -1884,7 +1890,7 @@ public class StatementChecker extends BaseChecker {
 			Node last = node.jjtGetChild(node.jjtGetNumChildren() - 1);
 			node.setSuffix(last);
 						
-			if(node.jjtGetParent() instanceof ASTExpression ) //this primary expression is the left side of an assignment
+			if(node.jjtGetParent() instanceof ASTExpression || node.jjtGetParent() instanceof ASTSequenceLeftSide ) //this primary expression is the left side of an assignment
 			{
 				Type type = last.getType(); //if PropertyType, preserve that
 				node.setModifiers(last.getModifiers());

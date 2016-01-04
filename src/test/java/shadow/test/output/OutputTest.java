@@ -452,6 +452,45 @@ public class OutputTest {
 				"Passed 10\n");
 	}
 	
+	@Test public void testTreeMap() throws Exception {
+		args.add("shadow/test/TreeMapTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Passed 1\n" + 
+				"Passed 2\n" +
+				"Passed 3\n" +
+				"Bozo\n" +
+				"{Clothes=58, Sandwich=20}\n" +
+				"Deal\n" +
+				"Passed 4\n" +
+				"Passed 5\n" +
+				"Passed 6\n" +
+				"Passed 7\n" +
+				"Passed 8\n" +
+				"Passed 9\n" +
+				"Passed 10\n" +
+				"0 1 4 16 25 36 49 64 81 100 121 144 169 196 225 256 289 324 361 \n" +
+				"0\n" + 
+				"1\n" +
+				"2\n" +				
+				"4\n" +
+				"5\n" +
+				"6\n" +
+				"7\n" +
+				"8\n" +
+				"9\n" +
+				"10\n" +
+				"11\n" +
+				"12\n" +
+				"13\n" +
+				"14\n" +
+				"15\n" +
+				"16\n" +
+				"17\n" +
+				"18\n" + 
+				"19\n");
+	}
+	
 	@Test public void testSimple() throws Exception {
 		args.add("shadow/test/SimpleTest.shadow");
 		Main.run(args.toArray(new String[] { }));

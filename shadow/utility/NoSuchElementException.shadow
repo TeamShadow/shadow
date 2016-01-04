@@ -1,2 +1,22 @@
+/**
+ * Exception {@code NoSuchElementException} should be thrown when an operation
+ * that requires a particular element to exist is attempted yet no such element
+ * exists.  This exception is commonly thrown when a collection is empty and a
+ * method attempts to manipulate its elements.   
+ */
 exception shadow:utility@NoSuchElementException
-{}
+{
+	/**
+	 * Creates a {@code NoSuchElementException} with no message.	  
+	 */
+	public create() { }
+	
+	/**
+	 * Creates a {@code NoSuchElementException} with a message.
+	 * @param message message explaining what caused the exception 	  
+	 */
+	public create( String message )
+	{
+		super(message);
+	}
+}

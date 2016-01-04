@@ -72,7 +72,6 @@ import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
-import shadow.tac.nodes.TACSequenceRef;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
@@ -1446,7 +1445,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACStore node) throws ShadowException {
 		TACReference reference = node.getReference();
-		
+		/*
 		if (reference instanceof TACSequenceRef) {
 			//TODO: What about a sequence filled with TACGenericArrayRefs?
 			TACSequenceRef seq = (TACSequenceRef)reference;
@@ -1458,7 +1457,9 @@ public class LLVMOutput extends AbstractOutput {
 						", " + typeSymbol(seq.get(i), true));
 			}
 		}
-		else if( reference instanceof TACGenericArrayRef ) {
+		else 
+		*/	
+		if( reference instanceof TACGenericArrayRef ) {
 			TACGenericArrayRef genericRef = (TACGenericArrayRef) reference;			
 						
 			writer.write("call void @__arrayStore(" + typeSymbol(Type.OBJECT, genericRef, true) + ", " + 

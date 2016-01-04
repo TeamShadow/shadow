@@ -57,7 +57,11 @@ public class ParseException extends Exception
   public ParseException() {
     super();
   }
-
+  
+  /** Constructor with message, currently used only for documentation errors. */
+  public ParseException(String message) {
+    super(message);    
+  }
   
   /** Constructor with message and node. */
   public ParseException(String message, Node node) {

@@ -1,7 +1,9 @@
 package shadow.doctool;
 
+import shadow.parser.javacc.ParseException;
+
 @SuppressWarnings("serial")
-public class DocumentationException extends Exception
+public class DocumentationException extends ParseException
 {
 	public DocumentationException(String message)
 	{

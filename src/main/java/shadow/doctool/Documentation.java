@@ -83,10 +83,14 @@ public class Documentation
 				// Find the end of the tag
 				int tagEnd = text.indexOf('}', tagMatcher.end());
 				if (tagEnd < 0)
-					throw new DocumentationException("No closing bracket for tag \""
+					throw new DocumentationException("No closing brace for tag \""
 							+ tagMatcher.group(1) + "\"");
 				// Capture everything before that tag as a plain-text tag
-				String plain = DocumentationBuilder.clean(text.substring(nextTagStart, tagMatcher.start()));
+				int tagMatcherStart = tagMatcher.start();
+				if( tagMatcherStart < nextTagStart )
+					throw new DocumentationException("No closing brace for tag \""
+							+ tagMatcher.group(1) + "\"");
+				String plain = DocumentationBuilder.clean(text.substring(nextTagStart, tagMatcherStart));
 				if (!plain.isEmpty())
 					inlineTags.add(InlineTagType.PLAIN_TEXT.build(plain));
 				// Capture the discovered tag
@@ -94,7 +98,7 @@ public class Documentation
 						text.substring(tagMatcher.end(), tagEnd).trim())));
 				nextTagStart = tagEnd + 1;
 			} else {
-				logger.warn("Invalid inline tag\"" + tagMatcher.group(1) + "\", ignoring");
+				logger.warn("Invalid inline tag \"" + tagMatcher.group(1) + "\", ignoring");
 			}
 		}
 		
@@ -131,7 +135,7 @@ public class Documentation
 			previousType = BlockTagType.getType(tagMatcher.group(3));
 			previousTagStart = tagMatcher.end();
 			if (previousType == null)
-				logger.warn("Invalid block tag\"" + tagMatcher.group(3) + "\", ignoring");
+				logger.warn("Invalid block tag \"" + tagMatcher.group(3) + "\", ignoring");
 		}
 		
 		// If necessary, capture the last tag found

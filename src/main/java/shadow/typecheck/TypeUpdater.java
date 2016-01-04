@@ -28,6 +28,7 @@ import shadow.parser.javacc.ASTBlock;
 import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
 import shadow.parser.javacc.ASTClassOrInterfaceType;
 import shadow.parser.javacc.ASTCompilationUnit;
+import shadow.parser.javacc.ASTConditionalExpression;
 import shadow.parser.javacc.ASTCreateBlock;
 import shadow.parser.javacc.ASTCreateDeclaration;
 import shadow.parser.javacc.ASTCreateDeclarator;
@@ -53,8 +54,8 @@ import shadow.parser.javacc.ASTUnqualifiedName;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.parser.javacc.SignatureNode;
-import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.DirectedGraph.CycleFoundException;
+import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
@@ -1261,5 +1262,9 @@ public class TypeUpdater extends BaseChecker {
 	
 	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException {
 		return WalkType.NO_CHILDREN; // Skip all blocks.
+	}
+	
+	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException {
+		return WalkType.NO_CHILDREN; // Skip all field initializations.
 	}
 }

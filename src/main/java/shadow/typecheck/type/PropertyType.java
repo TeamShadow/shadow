@@ -37,7 +37,7 @@ public class PropertyType extends Type
 		MethodSignature signature = outer.getMatchingMethod(name, arguments);
 		
 		if( signature == null )
-			BaseChecker.addError(errors, Error.INVALID_PROPERTY, "Property " + name + " cannot accept input of type " + input.getType(), input.getType());
+			BaseChecker.addError(errors, Error.INVALID_PROPERTY, "Property " + name + " cannot accept input of type " + input.getType());
 		else {			
 			setSetter(signature);			
 			if( !BaseChecker.methodIsAccessible(signature, context) )

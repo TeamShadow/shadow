@@ -8,7 +8,16 @@ import shadow.tac.nodes.TACOperand;
 
 public class DimensionNode extends SimpleNode {	
     private List<Integer> arrayDimensions = new ArrayList<Integer>();
-    private int currentDimensions = 1;	
+    private int currentDimensions = 1;
+    private List<TACOperand> list;
+	
+	public void setIndexes(List<TACOperand> list) {
+		this.list = list;
+	}
+	
+	public List<TACOperand> getIndexes() {
+		return list;
+	}
 	
 	public DimensionNode(int id) {
     	super(id);

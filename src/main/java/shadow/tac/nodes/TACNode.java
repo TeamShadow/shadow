@@ -109,8 +109,7 @@ public abstract class TACNode {
      */
     public void remove() {
         connect(prev, next);
-
-        // clear(); // ??? this seems more clear, thoughts?
+        
         this.prev = this.next = null;
     }
 

@@ -47,7 +47,11 @@ public class DocumentationTool
 			document(args);
 		} catch(FileNotFoundException e) {
 			System.err.println("FILE NOT FOUND: " + e.getLocalizedMessage());
-			System.exit(Main.FILE_NOT_FOUND_ERROR);
+			System.exit(Main.FILE_NOT_FOUND_ERROR);			
+		} catch (DocumentationException e) {
+			System.err.println("DOCUMENTATION ERROR: " + e.getLocalizedMessage());
+			e.printStackTrace();
+			System.exit(-1);
 		} catch(ParseException e) {
 			System.err.println("PARSE ERROR: " + e.getLocalizedMessage());
 			System.exit(Main.PARSE_ERROR);
@@ -70,10 +74,6 @@ public class DocumentationTool
 		} catch (TypeCheckException e) {
 			System.err.println("TYPE CHECK ERROR: " + e.getLocalizedMessage());
 			System.exit(Main.TYPE_CHECK_ERROR);
-		} catch (DocumentationException e) {
-			System.err.println("DOCUMENTATION ERROR: " + e.getLocalizedMessage());
-			e.printStackTrace();
-			System.exit(-1);
 		} catch (HelpRequestedException e) {
 			return;
 		}

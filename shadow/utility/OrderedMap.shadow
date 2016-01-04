@@ -1,0 +1,12 @@
+interface shadow:utility@
+	OrderedMap<K is CanCompare<K>, V is CanEqual<V>>
+is
+	Map<K,V>
+{
+	min() => (K);
+    max() => (K);     
+    floor(K key) => (nullable K);
+    ceiling(K key) => (nullable K);
+    keys() => (CanIterate<K>);
+    keys(K low, K high) => (CanIterate<K>);
+}
