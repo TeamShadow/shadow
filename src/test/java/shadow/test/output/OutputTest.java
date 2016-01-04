@@ -51,7 +51,7 @@ public class OutputTest {
 		
 		// Try to remove the unit test executable
 		try {			
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -507,6 +507,12 @@ public class OutputTest {
 		args.add("shadow/test/DependentConstantsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "3\n4\n5\n9\nwalnut\nwalnuts\n2\n");
+	}	
+	
+	@Test public void testAssignment() throws Exception {
+		args.add("shadow/test/AssignmentTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "");
 	}	
 
 	@Test public void testBigInteger() throws Exception {

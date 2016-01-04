@@ -1,0 +1,40 @@
+import shadow:io@Console;
+import shadow:utility@HashMap;
+
+class shadow:test@AssignmentTest
+{
+	private class Incrementer
+	{
+		int value = 0;
+		
+		public increment() => (int)
+		{
+			value += 1;
+			return value;
+		}	
+	}
+
+	public main( String[] args ) => ()
+	{
+		int x = 0;
+		var trouble = HashMap<int,int>:create();
+		int[] array = int:create[10];
+		array[0] = 1;
+		
+		( x, array[x], trouble[array[x]] ) = (1, 2, 3);
+		
+		Console.printLine("x: " # x);
+		Console.printLine("array: " # array);
+		Console.printLine("trouble: " # trouble);	
+		
+		
+		 array = int:create[10]; //reinitialize
+		 
+		 var i = Incrementer:create();
+		 i.increment();
+		 i.increment(); //now has value 2
+		 		 
+		 array[i.increment()] = i.increment();
+		 Console.printLine("array: " # array);
+	}
+}

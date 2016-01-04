@@ -10,7 +10,7 @@ import shadow:utility@ArrayDeque;
  * implementation of a left-leaning red-black binary search tree.
  * @seeDoc shadow:standard@CanCompare
  * @seeDoc shadow:standard@CanEqual
- * @seeUrl http://algs4.cs.princeton.edu/33balanced/RedBlackBST.java.html
+ * @seeUrl http://algs4.cs.princeton.edu/33balanced/RedBlackBST.java.html Sedgewick and Wayne's implementation
  */
  
 class shadow:utility@
@@ -642,7 +642,7 @@ is  OrderedMap<K,V>
     /**
      * Returns all keys in the map in the given range as a
      * {@code CanIterate<K>}, which can be the target of a 
-     * @code foreach} loop to iterate over those keys.
+     * {@code foreach} loop to iterate over those keys.
      * @param low lowest possible key in the range
      * @param high key higher than the highest possible in the range
      * @return all keys in the map between {@code low} (inclusive)

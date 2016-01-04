@@ -221,7 +221,10 @@ public abstract class Page
 			}
 			for (List<String> tag : seeUrlTags) {
 				out.open("p");
-				out.full("a", tag.get(1), new Attribute("href", tag.get(0)));
+				if( tag.size() > 1 )
+					out.full("a", tag.get(1), new Attribute("href", tag.get(0)));
+				else
+					out.full("a", tag.get(0), new Attribute("href", tag.get(0)));
 				out.closeLine();
 			}
 			out.closeUntab();

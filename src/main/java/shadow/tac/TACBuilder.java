@@ -591,8 +591,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTExpression node, Boolean secondVisit)
 			throws ShadowException {
 		if (secondVisit) {
-			TACOperand right = tree.appendChild(2);
 			TACOperand left = tree.appendChild(0);
+			TACOperand right = tree.appendChild(2);			
 			char operation = node.jjtGetChild(1).getImage().charAt(0);
 			ASTPrimaryExpression expression = (ASTPrimaryExpression) node.jjtGetChild(0);
 			doAssignment(left, expression, right, operation, node);
