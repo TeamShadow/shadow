@@ -210,7 +210,7 @@ public class LLVMOutput extends AbstractOutput {
 									" = external constant %" + raw(Type.CLASS));
 							if(  type instanceof ClassType ) {
 								writer.write( interfaceData(unparameterizedType) +
-										" = external constant [" + type.getInterfaces().size() + " x " + type(Type.OBJECT) + "]");
+										" = external constant [" + type.getAllInterfaces().size() + " x " + type(Type.OBJECT) + "]");
 								writer.write(methodTable(unparameterizedType) +
 										" = external constant " + methodTableType(unparameterizedType));
 							}						
@@ -2048,12 +2048,13 @@ public class LLVMOutput extends AbstractOutput {
 			size = typeLiteral(-1) + ", ";
 		}
 		else {
-			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "], [" + generic.getInterfaces().size() + " x " + type(Type.OBJECT) + "]* " + interfaceData(noArguments) + ", i32 0, i32 0), [1 x " +
-					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) +	"] }, ";
-			interfaces = "{ " + type(Type.CLASS) + "* getelementptr inbounds ([" + generic.getInterfaces().size() + " x " +
-					type(Type.CLASS) + "], [" + generic.getInterfaces().size() + " x " +
+			ArrayList<InterfaceType> interfaceList = generic.getAllInterfaces();
+			interfaceData = "{ " + type(Type.OBJECT) + "* getelementptr ([" + interfaceList.size() + " x " + type(Type.OBJECT) + "], [" + interfaceList.size() + " x " + type(Type.OBJECT) + "]* " + interfaceData(noArguments) + ", i32 0, i32 0), [1 x " +
+					type(Type.INT) + "] [" + typeLiteral(interfaceList.size()) +	"] }, ";
+			interfaces = "{ " + type(Type.CLASS) + "* getelementptr inbounds ([" + interfaceList.size() + " x " +
+					type(Type.CLASS) + "], [" + interfaceList.size() + " x " +
 					type(Type.CLASS) + "]* " + genericInterfaces(generic) + ", i32 0, i32 0), [1 x " +
-					type(Type.INT) + "] [" + typeLiteral(generic.getInterfaces().size()) + "] }, ";
+					type(Type.INT) + "] [" + typeLiteral(interfaceList.size()) + "] }, ";
 			size = typeText(Type.INT, sizeof(type(noArguments))) + ", ";
 		}	
 		
@@ -2105,7 +2106,7 @@ public class LLVMOutput extends AbstractOutput {
 			sb = new StringBuilder("[");
 			first = true;
 			
-			for(InterfaceType _interface : generic.getInterfaces() ) {		
+			for(InterfaceType _interface : generic.getAllInterfaces() ) {		
 				if( first )
 					first = false;
 				else
@@ -2119,7 +2120,7 @@ public class LLVMOutput extends AbstractOutput {
 			sb.append("]");					
 			
 			writer.write(genericInterfaces(generic) +
-					" = linkonce unnamed_addr constant [" + generic.getInterfaces().size() + " x " + type(Type.CLASS) + "] " + sb.toString());
+					" = linkonce unnamed_addr constant [" + generic.getAllInterfaces().size() + " x " + type(Type.CLASS) + "] " + sb.toString());
 		}				
 		
 		//write definitions of type parameters

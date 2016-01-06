@@ -44,7 +44,7 @@ is  List<V>
 	}
 
 	public add(V value) => ( ArrayList<V> )
-	{
+	{		
 		if( size >= elements->size )
 			grow();
 		elements[size] = value;
@@ -100,19 +100,18 @@ is  List<V>
 	}
 	
 	public readonly toString() => (String)
-	{
+	{		
 		MutableString string = MutableString:create("[");
 		boolean first = true;
 		for( int i = 0; i < size; i += 1 )
-		{			
+		{					
 			if( first )
 				first = false;
 			else
 				string.append(", ");
 			
-			string.append(#index(i));
+			string.append(#index(i));			
 		}
-		
 		return string.append("]").toString();
 	}
 

@@ -51,7 +51,7 @@ public class OutputTest {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -187,11 +187,18 @@ public class OutputTest {
 				"shadow:standard@AssertException\n");
 	}
 	
-	
-	
-	
-	
 
+	@Test public void testBasic() throws Exception {
+		args.add("shadow/test/BasicTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Count it off!\n" + 
+				"I say 1\n" +
+				"I say 2\n" +
+				"I say 3\n" +
+				"[Help me]\n" +
+				"125\n");
+	}
 	
 	@Test public void testChild() throws Exception {
 		args.add("shadow/test/ChildTest.shadow");
@@ -506,7 +513,26 @@ public class OutputTest {
 				"Passed 7\n" +
 				"Passed 8\n" +
 				"Passed 9\n" +
-				"Passed 10\n");
+				"Passed 10\n" + 
+				"#1: 0\n" + 
+				"#2: 1\n" + 
+				"#3: 4\n" + 
+				"#4: 16\n" + 
+				"#5: 25\n" + 
+				"#6: 36\n" + 
+				"#7: 49\n" + 
+				"#8: 64\n" + 
+				"#9: 81\n" + 
+				"#10: 100\n" + 
+				"#11: 121\n" + 
+				"#12: 144\n" + 
+				"#13: 169\n" + 
+				"#14: 196\n" + 
+				"#15: 225\n" + 
+				"#16: 289\n" + 
+				"#17: 256\n" + 
+				"#18: 361\n" + 
+				"#19: 324\n");
 	}
 	
 	@Test public void testTreeMap() throws Exception {
