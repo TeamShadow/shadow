@@ -505,6 +505,13 @@ public class TACBuilder implements ShadowParserVisitor {
 		MethodSignature signature;
 		Type leftType = leftAST.getType();
 		List<TACOperand> indexes = getIndexes(leftAST);
+				
+		/*
+		if( indexes != null ) {
+			for( int i = 0; i < indexes.size(); ++i )
+				tree.append(indexes.get(i));
+		}
+		*/		
 		
 		if( leftType instanceof PropertyType ) {					
 			PropertyType propertyType = (PropertyType) leftType;
@@ -591,8 +598,9 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTExpression node, Boolean secondVisit)
 			throws ShadowException {
 		if (secondVisit) {
-			TACOperand left = tree.appendChild(0);
-			TACOperand right = tree.appendChild(2);			
+			// Shadow standard is to evaluate the LHS of an assignment first
+			TACOperand left = tree.appendChild(0);		
+			TACOperand right = tree.appendChild(2);							
 			char operation = node.jjtGetChild(1).getImage().charAt(0);
 			ASTPrimaryExpression expression = (ASTPrimaryExpression) node.jjtGetChild(0);
 			doAssignment(left, expression, right, operation, node);
@@ -1280,8 +1288,12 @@ public class TACBuilder implements ShadowParserVisitor {
 	@Override
 	public Object visit(ASTSubscript node, Boolean secondVisit)
 			throws ShadowException {
-		//subscripts index into arrays or subscriptable types
+		//subscripts index into arrays or subscriptable types		
 		if (secondVisit) {
+			//last suffix and on the LHS			
+			ASTPrimarySuffix suffix = (ASTPrimarySuffix) node.jjtGetParent();
+			ASTPrimaryExpression expression = (ASTPrimaryExpression)suffix.jjtGetParent(); 
+			boolean isStore = expression.isLHS() && suffix == expression.getSuffix();
 			Type prefixType = resolveType(prefix.getType());
 			
 			if( prefixType instanceof ArrayType ) {
@@ -1306,16 +1318,22 @@ public class TACBuilder implements ShadowParserVisitor {
 				SubscriptType subscriptType = (SubscriptType) node.getType();
 				//only do the straight loads
 				//stores (and +='s) are handled in ASTExpression
-				if( subscriptType.isLoad() && !subscriptType.isStore() ) {
+				if( !isStore ) {
 					MethodSignature signature = subscriptType.getGetter();
 					methodCall(signature, node);					
 				}
 				else {					
 					List<TACOperand> list = new ArrayList<TACOperand>();
 					//TODO: Put this in the right places, since it shouldn't be called until the left hand side goes
-					list.add(tree.appendChild(0)); //maybe delete child?
-					node.setIndexes(list);
-					//indexStack.push(list);					
+					
+					TACOperand op = tree.appendChild(0);
+					//important that the load happens now, rather than in the assignment
+					if( op instanceof TACReference ) {
+						TACReference reference = (TACReference) op;
+						op = new TACLoad(tree, reference);
+					}					
+					list.add(op);
+					node.setIndexes(list);					
 					tree.append(prefix); //append the prefix as well
 				}
 			}		
@@ -1329,6 +1347,10 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTProperty node, Boolean secondVisit)
 			throws ShadowException {
 		if (secondVisit) {
+			//last suffix and on the LHS
+			ASTPrimarySuffix suffix = (ASTPrimarySuffix) node.jjtGetParent();
+			ASTPrimaryExpression expression = (ASTPrimaryExpression)suffix.jjtGetParent(); 
+			boolean isStore = expression.isLHS() && suffix == expression.getSuffix();
 			//prefix should never be null			
 			Type prefixType = resolveType(prefix.getType());
 			
@@ -1344,7 +1366,7 @@ public class TACBuilder implements ShadowParserVisitor {
 				PropertyType propertyType = (PropertyType) node.getType();
 				//only do the straight loads
 				//stores (and +='s) are handled in ASTExpression
-				if( propertyType.isLoad() && !propertyType.isStore() ) {
+				if( !isStore ) {
 					MethodSignature signature = propertyType.getGetter();
 					methodCall(signature, node);					
 				}
@@ -1585,8 +1607,12 @@ public class TACBuilder implements ShadowParserVisitor {
 		if (secondVisit) {
 			ASTRightSide rightSide = (ASTRightSide) node.jjtGetChild(1);
 			ASTSequenceLeftSide leftSide = (ASTSequenceLeftSide) node.jjtGetChild(0);			
-			TACSequence left = tree.appendChildRemoveSequence(0);			
-						
+			
+			TACSequence left = tree.appendChildRemoveSequence(0);
+			//for( int i = 0; i < left.size(); ++i )
+			//	tree.append(left.get(i));
+			//TACSequence left = (TACSequence) tree.appendChild(0);
+									
 			//create splat
 			if( !(rightSide.getType() instanceof SequenceType)  ) {				
 				TACOperand right = tree.appendChild(1);
@@ -1607,8 +1633,7 @@ public class TACBuilder implements ShadowParserVisitor {
 				
 				int index = 0;
 				for( boolean used : leftSide.getUsedItems() )
-					if( used ) {
-						tree.append(left.get(index));
+					if( used ) {						
 						doAssignment(left.get(index), leftSide.jjtGetChild(index), new TACLoad(tree, temporary), '=', null);
 						index++;
 					}				
@@ -1616,6 +1641,8 @@ public class TACBuilder implements ShadowParserVisitor {
 			else if( rightSide.jjtGetChild(0) instanceof ASTSequenceRightSide ){ //sequence on the right
 				//compute all right side values before assigning to left
 				TACSequence right = tree.appendChildRemoveSequence(1);
+				
+				/*
 				List<TACReference> rightValues = new ArrayList<TACReference>(right.size());
 				for( int i = 0; i < right.size(); ++i  ) {
 					TACReference temporary = new TACVariableRef(tree,
@@ -1623,12 +1650,12 @@ public class TACBuilder implements ShadowParserVisitor {
 					rightValues.add(temporary);
 					new TACStore(tree, temporary, right.get(i));
 				}
+				*/				
 				
 				int index = 0;
 				for( int i = 0; i < leftSide.getUsedItems().size(); ++i )
-					if( leftSide.getUsedItems().get(i) ) {
-						tree.append(left.get(index));
-						doAssignment(left.get(index), leftSide.jjtGetChild(index), new TACLoad(tree, rightValues.get(i)), '=', null);
+					if( leftSide.getUsedItems().get(i) ) {						
+						doAssignment(left.get(index), leftSide.jjtGetChild(index), right.get(i), '=', null);
 						index++;
 					}
 				
@@ -1638,16 +1665,18 @@ public class TACBuilder implements ShadowParserVisitor {
 					//	left), tree.appendChild(1));
 			}
 			else { //method call on the right whose output must be broken into parts
-				TACOperand right = tree.appendChild(1);				
+				TACOperand right = tree.appendChild(1);	
+				
+				/*
 				TACReference temporary = new TACVariableRef(tree,
 						method.addTempLocal(rightSide));
 				new TACStore(tree, temporary, right);
+				*/				
 				
 				int index = 0;
 				for( int i = 0; i < leftSide.getUsedItems().size(); ++i )
-					if( leftSide.getUsedItems().get(i) ) {
-						tree.append(left.get(index));
-						doAssignment(left.get(index), leftSide.jjtGetChild(index), new TACSequenceElement(tree, new TACLoad(tree, temporary), i), '=', null);
+					if( leftSide.getUsedItems().get(i) ) {						
+						doAssignment(left.get(index), leftSide.jjtGetChild(index), new TACSequenceElement(tree, right, i), '=', null);
 						index++;
 					}		
 			}
@@ -2822,8 +2851,14 @@ public class TACBuilder implements ShadowParserVisitor {
 		if (secondVisit) {
 			List<TACOperand> sequence =
 					new ArrayList<TACOperand>(node.getType().size());			
-			for (int index = 0; index < node.getType().size(); index++ )				
-					sequence.add(tree.appendChild(index));			
+			for (int index = 0; index < node.getType().size(); index++ ) {
+					TACOperand op = tree.appendChild(index);
+					if( op instanceof TACReference ) {
+						TACReference reference = (TACReference) op;
+						op = new TACLoad(tree, reference);
+					}			
+					sequence.add(op);			
+			}
 			new TACSequence(tree, sequence);	
 		}
 			

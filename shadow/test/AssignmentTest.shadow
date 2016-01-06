@@ -19,7 +19,7 @@ class shadow:test@AssignmentTest
 		int x = 0;
 		var trouble = HashMap<int,int>:create();
 		int[] array = int:create[10];
-		array[0] = 1;
+		array[0] = 9;
 		
 		( x, array[x], trouble[array[x]] ) = (1, 2, 3);
 		
@@ -36,5 +36,12 @@ class shadow:test@AssignmentTest
 		 		 
 		 array[i.increment()] = i.increment();
 		 Console.printLine("array: " # array);
+		 
+		 array = int:create[10]; //reinitialize
+		 array[0] = 6;
+		 array[1] = 8;
+		 
+		 (array[0], array[1]) = (array[1], array[0]);
+		 Console.printLine("array: " # array);		 
 	}
 }

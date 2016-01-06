@@ -91,5 +91,13 @@ class shadow:test@HashMapTest
 			out.printLine("Passed 10");
 		else 
 			out.printLine("Failed 10");
+			
+	
+		int count = 1;
+		foreach(int item in map5)
+		{
+			out.printLine("#" # count # ": " # item);
+			count += 1;
+		}
 	}
 }

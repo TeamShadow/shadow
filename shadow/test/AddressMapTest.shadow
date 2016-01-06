@@ -4,13 +4,12 @@ class shadow:test@AddressMapTest
 {
 	public main( String[] args ) => ()
 	{
-		Console out;
-		out.printLine("Count it off!");
+		Console out;		
 		AddressMap map = AddressMap:create();
 		
 		ulong value = 0uL;
-		ulong key = 0uL;
-		
+		ulong key = 0uL;		
+	
 		do
 		{
 			map[key] = value;
@@ -35,12 +34,15 @@ class shadow:test@AddressMapTest
 		out.printLine("Value at 43 is: " # map[43uL]);		
 		out.printLine("Value at 17 is: " # map[17uL]);
 		out.printLine("Value at 100 is: " # map[100uL]);
-				
-		ulong count = 1uL;
+		
+		
+		map[3uL] = 5uL;
+			
+		int count = 1;
 		foreach(ulong item in map)
-		{
+		{			
 			out.printLine("#" # count # ": " # item);
-			count += 1uL;
-		}		
+			count += 1;
+		}				
 	}
 }

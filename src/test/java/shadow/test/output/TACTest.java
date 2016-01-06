@@ -43,16 +43,10 @@ public class TACTest {
 		
 		// To to remove the unit test executable
 		try {
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
-	}
-	
-	@Test public void testArrayDeque() throws Exception {
-		args.add("shadow/test/ArrayDequeTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
+	}	
 	
 	@Test public void testLinkedList() throws Exception {
 		args.add("shadow/test/LinkedListTest.shadow");
@@ -99,18 +93,8 @@ public class TACTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
-	@Test public void testArrayAsObject() throws Exception {
-		args.add("shadow/test/ArrayAsObject.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
 	@Test public void testGeneric() throws Exception {
 		args.add("shadow/test/GenericTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testSubscript() throws Exception {
-		args.add("shadow/test/SubscriptTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 	
@@ -140,15 +124,6 @@ public class TACTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
-	@Test public void testAddressMap() throws Exception {
-		args.add("shadow/test/AddressMapTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testArrayOutOfBounds() throws Exception {
-		args.add("shadow/test/ArrayOutOfBoundsTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
 	
 	@Test public void testIs() throws Exception {
 		args.add("shadow/test/IsTest.shadow");
@@ -158,17 +133,6 @@ public class TACTest {
 	
 	@Test public void testCastException() throws Exception {
 		args.add("shadow/test/CastExceptionTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testAssert() throws Exception {
-		args.add("shadow/test/AssertTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-
-	@Test public void testArrayInitializer() throws Exception {
-		args.add("shadow/test/ArrayInitializerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 	

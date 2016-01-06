@@ -14,8 +14,6 @@ public class PropertyType extends Type
 	private UnboundMethodType method;
 	private ModifiedType prefix;
 	private Type context;
-	private boolean isLoad = true;
-	private boolean isStore = false;
 		
 	public List<TypeCheckException> applyInput(ModifiedType input) {
 		
@@ -113,34 +111,7 @@ public class PropertyType extends Type
 	public boolean isSettable()
 	{
 		return setter != null;
-	}
-	
-	public void setLoadOnly()
-	{
-		isLoad = true;
-		isStore = false;
-	}
-	
-	public void setStoreOnly()
-	{
-		isLoad = false;
-		isStore = true;
-	}
-	
-	public void setLoadStore()
-	{
-		isLoad = isStore = true;
-	}
-	
-	public boolean isLoad()
-	{
-		return isLoad;
-	}
-	
-	public boolean isStore()
-	{
-		return isStore;
-	}
+	}	
 	
 	@Override
 	//probably never gets used

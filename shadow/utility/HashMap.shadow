@@ -242,8 +242,11 @@ is  Map<K,V>
 		}
 		private next( nullable Node position ) => ( nullable Node )
 		{		
-			if( position !== null )
+			try
+			{				
 				position = check(position)->next;
+			}
+			recover{}
 		
 			while( position === null and index < table->size )
 			{				
@@ -268,9 +271,16 @@ is  Map<K,V>
 
 		public next() => ( V value )
 		{
-			checkForModifications();			 
-			(V value, current) = ( check(current)->value, next(current) );
-			return value;
+			checkForModifications();
+			try
+			{				 
+				(V value, current) = ( check(current)->value, next(current) );
+				return value;
+			}
+			recover
+			{
+				throw NoSuchElementException:create();
+			}			
 		}
 	}
 }

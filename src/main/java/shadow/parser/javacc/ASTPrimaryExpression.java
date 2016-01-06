@@ -7,8 +7,17 @@ public
 class ASTPrimaryExpression extends SimpleNode {
 	
 	private boolean action = false;
+	private boolean LHS = false;
 	//private Kind kind;
-	private Node suffix;
+	private Node suffix;	
+	
+	public boolean isLHS() {
+		return LHS;
+	}
+	
+	public void setLHS(boolean value) {
+		LHS = true;
+	}
 	
 	public void setSuffix(Node node)
 	{

@@ -1,5 +1,6 @@
 import shadow:utility@Map;
 import shadow:utility@IllegalModificationException;
+import shadow:utility@NoSuchElementException;
 
 /**
  * Class {@code AddressMap} maps old object addresses to new object addresses.
@@ -101,7 +102,7 @@ locked class shadow:standard@
 		immutable get int hash;
 		get ulong key;
 		get set ulong value;
-		get set nullable Node next;
+		get set nullable Node next = null;
 		
 		public readonly get value() => (ulong)
 		{
@@ -288,23 +289,23 @@ locked class shadow:standard@
 		nullable Node current;
 		int expectedModifications = modifications;
 		public create()
-		{
+		{			
 			current = next(null);
 		}
 		public next( nullable Node position ) => ( nullable Node )
 		{	
 			try
-			{				
-				if( position !== null )
-					position = check(position)->next;
+			{
+				position = check(position)->next;
 			}
 			recover{}
 		
 			while( position === null and index < table->size )
-			{				
+			{			
 				position = table[index];				
 				index += 1;					
 			}
+			
 			return position; //returns null if nothing left			
 		}
 
@@ -321,7 +322,7 @@ locked class shadow:standard@
 		}
 
 		public next() => ( ulong value )
-		{
+		{		
 			checkForModifications();
 			try
 			{				 
@@ -329,8 +330,8 @@ locked class shadow:standard@
 				return value;
 			}
 			recover
-			{
-				throw IndexOutOfBoundsException:create();
+			{				
+				throw NoSuchElementException:create();
 			}
 		}
 	}

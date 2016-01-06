@@ -1294,14 +1294,11 @@ public class StatementChecker extends BaseChecker {
 					
 					addErrors(isValidInitialization(leftElement, rightElement));
 				}
-				else //otherwise simple assignment
+				else { //otherwise simple assignment
+					ASTPrimaryExpression expression = (ASTPrimaryExpression) leftElement;
+					expression.setLHS(true);
 					addErrors(isValidAssignment(leftElement, rightElement, AssignmentKind.EQUAL));
-				
-				if( leftElement.getType() instanceof PropertyType ) {
-					PropertyType getSetType = (PropertyType) leftElement.getType();					
-					getSetType.setStoreOnly();
 				}
-				
 			}
 		}
 
@@ -1314,26 +1311,19 @@ public class StatementChecker extends BaseChecker {
 		
 		if( node.jjtGetNumChildren() == 3 ) //if there is assignment
 		{
-			ASTPrimaryExpression left = (ASTPrimaryExpression) node.jjtGetChild(0);			
+			ASTPrimaryExpression left = (ASTPrimaryExpression) node.jjtGetChild(0);
+			left.setLHS(true);
 			ASTAssignmentOperator assignment = (ASTAssignmentOperator) node.jjtGetChild(1);			
 			ASTConditionalExpression right = (ASTConditionalExpression) node.jjtGetChild(2);
 			
 			List<TypeCheckException> errors = isValidAssignment(left, right, assignment.getAssignmentKind()); 
 			
-			if( errors.isEmpty() )
-			{
+			if( errors.isEmpty() ) {
 				Type leftType = left.getType();
-				Type rightType = right.getType();
+				Type rightType = right.getType();				
 				
-				if( leftType instanceof PropertyType )
-				{
+				if( leftType instanceof PropertyType ) {
 					PropertyType getSetType = (PropertyType) leftType;
-					//here we have a chance to tell the type whether it will only be storing or doing both
-					if( assignment.getAssignmentKind() == AssignmentKind.EQUAL )
-						getSetType.setStoreOnly();
-					else
-						getSetType.setLoadStore();					
-					
 					leftType = getSetType.getSetType().getType();
 				}
 				
@@ -1348,8 +1338,7 @@ public class StatementChecker extends BaseChecker {
 			//will issue appropriate errors
 			//since this is an Expression (with nothing to the left), there is no type to set
 		}
-		else //did something actually happen?
-		{
+		else { //did something actually happen?		
 			ASTPrimaryExpression child = (ASTPrimaryExpression) node.jjtGetChild(0);
 			if( !child.isAction() )
 				addError(Error.NO_ACTION, "Statement does not perform an action");

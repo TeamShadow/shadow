@@ -76,20 +76,7 @@ public class TACTree extends TACNodeList
 	 * @return
 	 */
 	
-	public TACOperand appendChild(int i)
-	{
-		if (i >= index)
-			return null;
-		TACNodeList child = children[++i];
-		if (child == null)
-			return null;
-		TACOperand last = null;
-		if (child.getLast() instanceof TACOperand)
-			last = (TACOperand)child.getLast();
-		append(child);
-		children[i] = null;
-		return last;
-	}
+	
 	public TACSequence appendChildRemoveSequence(int i)
 	{
 		TACOperand last = appendChild(i);
@@ -112,6 +99,20 @@ public class TACTree extends TACNodeList
 			}
 		}
 		index = 0;
+		return last;
+	}
+	public TACOperand appendChild(int i)
+	{
+		if (i >= index)
+			return null;
+		TACNodeList child = children[++i];
+		if (child == null)
+			return null;
+		TACOperand last = null;
+		if (child.getLast() instanceof TACOperand)
+			last = (TACOperand)child.getLast();
+		append(child);
+		children[i] = null;
 		return last;
 	}
 	public TACOperand deleteChild(int i)

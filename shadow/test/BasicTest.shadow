@@ -8,7 +8,7 @@ class shadow:test@BasicTest
 	{
 		
 		Console out;		
-		/*
+		
 		out.printLine("Count it off!");
 		
 		for( int i = 0; i < 3; i += 1 )
@@ -19,8 +19,6 @@ class shadow:test@BasicTest
 		list.add("Help me");		
 		
 		out.printLine( #list );
-		*/
-		
 		
 		out.printLine(125);
 	}

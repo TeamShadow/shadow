@@ -1086,7 +1086,7 @@ public abstract class Type implements Comparable<Type> {
 										
 					//adding wrapping for returns as well
 					SequenceType originalReturns = originalMethod.getReturnTypes(),
-						rawReturns = originalMethod.getMethodType().getTypeWithoutTypeArguments().getReturnTypes();
+						rawReturns = originalMethod.getSignatureWithoutTypeArguments().getMethodType().getReturnTypes();
 					for ( int j = 0; replace && j < returns.size(); j++ )
 					{
 						ModifiedType returnValue = returns.get(j),

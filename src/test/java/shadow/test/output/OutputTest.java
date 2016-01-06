@@ -134,7 +134,64 @@ public class OutputTest {
 				"[0, 2, four, 88, shadow:standard@Object]\n" + 
 				"[0, 1, 2, 3, 4]\n" + 
 				"[zero, one, two]\n");			
-	}	
+	}
+	
+	@Test public void testArrayAsObject() throws Exception {
+		args.add("shadow/test/ArrayAsObject.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Size: 135\n");	
+	}
+	
+	@Test public void testArrayDeque() throws Exception {
+		args.add("shadow/test/ArrayDequeTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Deserves\n" + 
+				"Good\n" + 
+				"Every\n" + 
+				"Boy\n" + 
+				"Fudge\n");
+	}
+	
+	@Test public void testArrayInitializer() throws Exception {
+		args.add("shadow/test/ArrayInitializerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"[1, 4, 9, 16, 25]\n" + 
+				"[donut, explanation, story, book, 25]\n" +
+				"[[9, 8, 7], [12, 5, 4], [3, 2, 1]]\n" +
+				"[a, e, i, o, y]\n" +
+				"[[snap, crackle, pop], [tip, top], [taste, the, rainbow]]\n" +
+				"[[snap, crackle, pop], [cranberry, jamboplexy, in, place], [taste, the, rainbow]]\n");
+	}
+	
+	@Test public void testArrayOutOfBounds() throws Exception {
+		args.add("shadow/test/ArrayOutOfBoundsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"shadow:standard@IndexOutOfBoundsException: Index 16\n" + 
+				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +
+				"shadow:standard@IndexOutOfBoundsException: Indices [2, 9]\n" +
+				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
+				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
+				"shadow:standard@IndexOutOfBoundsException: Index 28\n");
+	}
+	
+
+	@Test public void testAssert() throws Exception {
+		args.add("shadow/test/AssertTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"shadow:standard@AssertException: Too small!\n" + 
+				"shadow:standard@AssertException\n");
+	}
+	
+	
+	
+	
+	
+
 	
 	@Test public void testChild() throws Exception {
 		args.add("shadow/test/ChildTest.shadow");
@@ -512,7 +569,12 @@ public class OutputTest {
 	@Test public void testAssignment() throws Exception {
 		args.add("shadow/test/AssignmentTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "");
+		run(new String[0],
+				"x: 1\n" + 
+				"array: [2, 0, 0, 0, 0, 0, 0, 0, 0, 0]\n" +
+				"trouble: {9=3}\n" +
+				"array: [0, 0, 0, 4, 0, 0, 0, 0, 0, 0]\n" + 
+				"array: [8, 6, 0, 0, 0, 0, 0, 0, 0, 0]\n");
 	}	
 
 	@Test public void testBigInteger() throws Exception {
@@ -637,4 +699,135 @@ public class OutputTest {
 				"C: 1112956698262836806664794820794473961145010180577601125590707755951029843006749551702925760533038042622692901510299809647917425905134514887570764862158562662534883462854826818855263583936781681828017953722260950237915404296241216983813592369263412058474774469738265051177236933818586309402181524305722641225977290699659457953607880969651822747591468484978977768458753917979021465084394384421346410164\n" + 
 				"Decrypted M: 123456789101112131415161718\n");
 	}
+	
+	@Test public void testSubscript() throws Exception {
+		args.add("shadow/test/SubscriptTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"my\n" + 
+				"17\n" +
+				"off\n" +
+				"Words: [Visit, me, with, my, wombats]\n" +
+				"Other words: [Help, me, off, my, boat]\n" +
+				"Numbers: [1, 2, 3, 409, 5, 6, 7, 8, 9, 10, 41, 12, 13, 14, 15, 16, 17, 18, 19, 20]\n");
+	}
+	
+	@Test public void testAddressMap() throws Exception {
+		args.add("shadow/test/AddressMapTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],	
+				"Added key: 47 Value: 1\n" + 
+				"Added key: 41 Value: 2\n" + 
+				"Added key: 35 Value: 3\n" + 
+				"Added key: 29 Value: 4\n" + 
+				"Added key: 23 Value: 5\n" + 
+				"Added key: 17 Value: 6\n" + 
+				"Added key: 11 Value: 7\n" + 
+				"Added key: 5 Value: 8\n" + 
+				"Added key: 52 Value: 9\n" + 
+				"Added key: 46 Value: 10\n" + 
+				"Added key: 40 Value: 11\n" + 
+				"Added key: 34 Value: 12\n" + 
+				"Added key: 28 Value: 13\n" + 
+				"Added key: 22 Value: 14\n" + 
+				"Added key: 16 Value: 15\n" + 
+				"Added key: 10 Value: 16\n" + 
+				"Added key: 4 Value: 17\n" + 
+				"Added key: 51 Value: 18\n" + 
+				"Added key: 45 Value: 19\n" + 
+				"Added key: 39 Value: 20\n" + 
+				"Added key: 33 Value: 21\n" + 
+				"Added key: 27 Value: 22\n" + 
+				"Added key: 21 Value: 23\n" + 
+				"Added key: 15 Value: 24\n" + 
+				"Added key: 9 Value: 25\n" + 
+				"Added key: 3 Value: 26\n" + 
+				"Added key: 50 Value: 27\n" + 
+				"Added key: 44 Value: 28\n" + 
+				"Added key: 38 Value: 29\n" + 
+				"Added key: 32 Value: 30\n" + 
+				"Added key: 26 Value: 31\n" + 
+				"Added key: 20 Value: 32\n" + 
+				"Added key: 14 Value: 33\n" + 
+				"Added key: 8 Value: 34\n" + 
+				"Added key: 2 Value: 35\n" + 
+				"Added key: 49 Value: 36\n" + 
+				"Added key: 43 Value: 37\n" + 
+				"Added key: 37 Value: 38\n" + 
+				"Added key: 31 Value: 39\n" + 
+				"Added key: 25 Value: 40\n" + 
+				"Added key: 19 Value: 41\n" + 
+				"Added key: 13 Value: 42\n" + 
+				"Added key: 7 Value: 43\n" + 
+				"Added key: 1 Value: 44\n" + 
+				"Added key: 48 Value: 45\n" + 
+				"Added key: 42 Value: 46\n" + 
+				"Added key: 36 Value: 47\n" + 
+				"Added key: 30 Value: 48\n" + 
+				"Added key: 24 Value: 49\n" + 
+				"Added key: 18 Value: 50\n" + 
+				"Added key: 12 Value: 51\n" + 
+				"Added key: 6 Value: 52\n" + 
+				"Added key: 0 Value: 53\n" + 
+				"Contains key 43!\n" + 
+				"Does not contain 89!\n" + 
+				"Value at 43 is: 37\n" + 
+				"Value at 17 is: 6\n" + 
+				"Value at 100 is: null\n" + 
+				"#1: 0\n" + 
+				"#2: 44\n" + 
+				"#3: 35\n" + 
+				"#4: 5\n" + 
+				"#5: 17\n" + 
+				"#6: 8\n" + 
+				"#7: 52\n" + 
+				"#8: 43\n" + 
+				"#9: 34\n" + 
+				"#10: 25\n" + 
+				"#11: 16\n" + 
+				"#12: 7\n" + 
+				"#13: 51\n" + 
+				"#14: 42\n" + 
+				"#15: 33\n" + 
+				"#16: 24\n" + 
+				"#17: 6\n" + 
+				"#18: 15\n" + 
+				"#19: 41\n" + 
+				"#20: 50\n" + 
+				"#21: 23\n" + 
+				"#22: 32\n" + 
+				"#23: 5\n" + 
+				"#24: 14\n" + 
+				"#25: 40\n" + 
+				"#26: 49\n" + 
+				"#27: 22\n" + 
+				"#28: 31\n" + 
+				"#29: 4\n" + 
+				"#30: 13\n" + 
+				"#31: 39\n" + 
+				"#32: 48\n" + 
+				"#33: 12\n" + 
+				"#34: 3\n" + 
+				"#35: 30\n" + 
+				"#36: 21\n" + 
+				"#37: 29\n" + 
+				"#38: 20\n" + 
+				"#39: 47\n" + 
+				"#40: 38\n" + 
+				"#41: 46\n" + 
+				"#42: 37\n" + 
+				"#43: 11\n" + 
+				"#44: 2\n" + 
+				"#45: 10\n" + 
+				"#46: 1\n" + 
+				"#47: 28\n" + 
+				"#48: 19\n" + 
+				"#49: 18\n" + 
+				"#50: 27\n" + 
+				"#51: 36\n" + 
+				"#52: 45\n" + 
+				"#53: 9\n");
+	}
+	
+	
 }
