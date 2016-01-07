@@ -81,12 +81,12 @@ public class StatementChecker extends BaseChecker {
 			currentType = node.jjtGetParent().getType(); //get type from declaration
 			
 			for( InterfaceType interfaceType : currentType.getInterfaces() )
-				currentType.addReferencedType(interfaceType);
+				currentType.addUsedType(interfaceType);
 						
 			if( currentType instanceof ClassType )
 			{
 				ClassType classType = (ClassType) currentType;
-				currentType.addReferencedType(classType.getExtendType());
+				currentType.addUsedType(classType.getExtendType());
 			}
 		}
 			
@@ -119,10 +119,10 @@ public class StatementChecker extends BaseChecker {
 				signature = node.getMethodSignature();
 			
 			for( ModifiedType modifiedType : signature.getParameterTypes() )
-				currentType.addReferencedType(modifiedType.getType());
+				currentType.addUsedType(modifiedType.getType());
 			
 			for( ModifiedType modifiedType : signature.getReturnTypes() )
-				currentType.addReferencedType(modifiedType.getType());			
+				currentType.addUsedType(modifiedType.getType());			
 			
 			currentMethod.addFirst(node);
 		}
@@ -386,7 +386,7 @@ public class StatementChecker extends BaseChecker {
 			else
 			{
 				ArrayType arrayType = new ArrayType(type, dimensions, node.getModifiers().isNullable());
-				((ClassType)currentType).addReferencedType(arrayType);
+				((ClassType)currentType).addUsedType(arrayType);
 				node.setType(arrayType);
 			}
 			
@@ -459,7 +459,7 @@ public class StatementChecker extends BaseChecker {
 			else if( declarator.getModifiers().isConstant() ) //only fields are ever constant
 				addError( declarator, Error.INVALID_MODIFIER, "Variable declared with modifier constant must have an initializer");
 			
-			currentType.addReferencedType(declarator.getType());
+			currentType.addUsedType(declarator.getType());
 		}			
 	}
 
@@ -579,7 +579,7 @@ public class StatementChecker extends BaseChecker {
 				
 		if(type != null)
 		{
-			currentType.addReferencedType(type);			
+			currentType.addUsedType(type);			
 			node.setType(type);
 			node.addModifier(Modifiers.TYPE_NAME);
 			return true;
@@ -1219,7 +1219,7 @@ public class StatementChecker extends BaseChecker {
 				
 				// After updating type parameters
 				if( currentType instanceof ClassType )
-					((ClassType)currentType).addReferencedType(type);
+					((ClassType)currentType).addUsedType(type);
 			}
 		}
 
@@ -2478,8 +2478,11 @@ public class StatementChecker extends BaseChecker {
 							node.setMethodSignature(signature);
 							parent.setType(prefixType);
 							
-							//occasionally this type is only seen here and must be added to the referenced types
-							currentType.addReferencedType(prefixType);
+							//occasionally this type is only seen here with all paramters 
+							//and must be added to the referenced types
+							//the raw type has already been added
+							
+							currentType.addUsedType(prefixType);
 						}
 						catch (InstantiationException e) {
 							addError(Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());					
@@ -2492,7 +2495,8 @@ public class StatementChecker extends BaseChecker {
 					if( !prefixType.isParameterized() ) {
 						signature = setCreateType( node, prefixType, arguments);
 						node.setMethodSignature(signature);
-						parent.setType(prefixType);
+						parent.setType(prefixType);						
+					
 						//TODO: see if something similar can be done for ASTMethodCall
 					}
 					else
@@ -2537,7 +2541,7 @@ public class StatementChecker extends BaseChecker {
 						{
 							try
 							{
-								((ClassType)currentType).addReferencedType(prefixType.replace(parameterTypes, argumentTypes));
+								((ClassType)currentType).addUsedType(prefixType.replace(parameterTypes, argumentTypes));
 							}
 							catch(InstantiationException e)
 							{
@@ -2927,7 +2931,7 @@ public class StatementChecker extends BaseChecker {
 			arrayType = new ArrayType(result, 1, nullable);
 		
 		node.setType(arrayType);
-		((ClassType)currentType).addReferencedType(arrayType);
+		((ClassType)currentType).addUsedType(arrayType);
 		
 		return true;		
 	}
@@ -2971,7 +2975,7 @@ public class StatementChecker extends BaseChecker {
 		Type type = literalToType(node.getLiteral());
 		node.setType(type);
 		if( type != Type.NULL )
-			currentType.addReferencedType(type);
+			currentType.addUsedType(type);
 		
 		//ugly but needed to find negation		
 		Node greatGrandparent = node.jjtGetParent().jjtGetParent().jjtGetParent();
@@ -3035,7 +3039,7 @@ public class StatementChecker extends BaseChecker {
 	@Override
 	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {		
 		node.setType(nameToPrimitiveType(node.getImage()));
-		currentType.addReferencedType(node.getType());
+		currentType.addUsedType(node.getType());
 		node.addModifier(Modifiers.TYPE_NAME);
 		return WalkType.NO_CHILDREN;			
 	}	
@@ -3273,7 +3277,7 @@ public class StatementChecker extends BaseChecker {
 		for( ModifiedType modifiedType : results.getType() ) 
 			signature.addReturn(new SimpleModifiedType(modifiedType.getType()));
 		
-		currentType.addReferencedType(methodType);
+		currentType.addUsedType(methodType);
 	}
 	
 	

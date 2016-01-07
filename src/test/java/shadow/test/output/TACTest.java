@@ -46,124 +46,71 @@ public class TACTest {
 			Files.delete(executable);
 		}
 		catch(Exception e) {}
-	}	
-	
-	@Test public void testLinkedList() throws Exception {
-		args.add("shadow/test/LinkedListTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testCommandLine() throws Exception {
-		args.add("shadow/test/CommandLine.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}	
-
-	@Test public void testSort() throws Exception {
-		args.add("shadow/test/SortMain.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}	
-
-	@Test public void testMethodOperations() throws Exception {
-		args.add("shadow/test/MethodOperations.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testMatrix() throws Exception {
-		args.add("shadow/test/MatrixTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testComplex() throws Exception {
-		args.add("shadow/test/ComplexTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testEcho() throws Exception {
-		args.add("shadow/test/Echo.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}	
-	
-	@Test public void testDouble() throws Exception {
-		args.add("shadow/test/DoubleTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testFloat() throws Exception {
-		args.add("shadow/test/FloatTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testGeneric() throws Exception {
-		args.add("shadow/test/GenericTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testProperty() throws Exception {
-		args.add("shadow/test/PropertyTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testForeach() throws Exception {
-		args.add("shadow/test/ForeachTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-
-	@Test public void testMath() throws Exception {
-		args.add("shadow/test/MathTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	
-	@Test public void testString() throws Exception {
-		args.add("shadow/test/StringTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	
-	@Test public void testIs() throws Exception {
-		args.add("shadow/test/IsTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	
-	@Test public void testCastException() throws Exception {
-		args.add("shadow/test/CastExceptionTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testRandom() throws Exception {
-		args.add("shadow/test/RandomTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testNullablePrimitive() throws Exception {
-		args.add("shadow/test/NullablePrimitiveTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testNullableArray() throws Exception {
-		args.add("shadow/test/NullableArrayTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
-	@Test public void testGenericArray() throws Exception {
-		args.add("shadow/test/GenericArrayTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}	
-	
-	@Test public void testMutableString() throws Exception {
-		args.add("shadow/test/MutableStringTest.shadow");
-		Main.run(args.toArray(new String[] { }));
 	}
 
 	@Test public void testCanCreate() throws Exception {
 		args.add("shadow/test/CanCreateTest.shadow");
 		Main.run(args.toArray(new String[] { }));
+		// can't test output because of timing dependence		
+	}
+	
+	@Test public void testCommandLine() throws Exception {
+		args.add("shadow/test/CommandLine.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test because I/O is needed
+	}
+	
+	@Test public void testConsole() throws Exception {
+		args.add("shadow/test/ConsoleTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		// can't test because I/O is needed
+	}
+	
+	@Test public void testFile() throws Exception {
+		args.add("shadow/test/FileTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test this without a file
 	}
 
-	@Test public void testHashSet() throws Exception {
-		args.add("shadow/test/HashSetTest.shadow");
-		Main.run(args.toArray(new String[] { }));		
+	@Test public void testSort() throws Exception {
+		args.add("shadow/test/SortMain.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test because output is connected to timing
 	}
+	
+	@Test public void testEcho() throws Exception {
+		args.add("shadow/test/Echo.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test because I/O is needed
+	}	
+	
+	@Test public void testDouble() throws Exception {
+		args.add("shadow/test/DoubleTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test without more predictable floating point output
+	}
+	
+	@Test public void testFloat() throws Exception {
+		args.add("shadow/test/FloatTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test without more predictable floating point output
+	}
+	
+	@Test public void testMath() throws Exception {
+		args.add("shadow/test/MathTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test without more predictable floating point output
+	}
+	
+	@Test public void testRandom() throws Exception {
+		args.add("shadow/test/RandomTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test without more predictable floating point output
+	}
+	
+	@Test public void testString() throws Exception {
+		args.add("shadow/test/StringTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// can't test without more predictable floating point output
+	}	
 }

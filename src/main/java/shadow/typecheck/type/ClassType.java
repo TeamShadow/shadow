@@ -480,7 +480,7 @@ public class ClassType extends Type {
 	}
 	
 	public Set<Type> getAllReferencedTypes() {
-		Set<Type> types = new HashSet<Type>(getReferencedTypes());
+		Set<Type> types = new HashSet<Type>(getUsedTypes());
 		ClassType current = getExtendType();
 		while (current != null){
 			types.add(current);

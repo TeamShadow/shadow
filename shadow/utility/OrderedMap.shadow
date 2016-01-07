@@ -3,10 +3,10 @@ interface shadow:utility@
 is
 	Map<K,V>
 {
-	min() => (K);
-    max() => (K);     
-    floor(K key) => (nullable K);
-    ceiling(K key) => (nullable K);
-    keys() => (CanIterate<K>);
-    keys(K low, K high) => (CanIterate<K>);
+	readonly min() => (K);
+    readonly max() => (K);     
+    readonly floor(K key) => (nullable K);
+    readonly ceiling(K key) => (nullable K);
+    readonly keys() => (CanIterate<K>);
+    readonly keys(K low, K high) => (CanIterate<K>);
 }

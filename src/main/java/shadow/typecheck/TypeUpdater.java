@@ -184,29 +184,33 @@ public class TypeUpdater extends BaseChecker {
 			 * without appearing inside the Shadow source at all. */
 			
 			// Address map for deep copies
-			type.addReferencedType(Type.ADDRESS_MAP);
+			type.addUsedType(Type.ADDRESS_MAP);
 			
 			// Class management
-			type.addReferencedType(Type.CLASS);
-			type.addReferencedType(Type.CLASS_SET);
-			type.addReferencedType(Type.GENERIC_CLASS);
+			type.addUsedType(Type.CLASS);
+			type.addUsedType(Type.CLASS_SET);
+			type.addUsedType(Type.GENERIC_CLASS);
 			
 			// Array wrapper classes
-			type.addReferencedType(Type.ARRAY);
-			type.addReferencedType(Type.ARRAY_NULLABLE);
+			type.addUsedType(Type.ARRAY);
+			type.addUsedType(Type.ARRAY_NULLABLE);
+			
+			// Iterators for foreach loops
+			type.addUsedType(Type.ITERATOR);
+			type.addUsedType(Type.ITERATOR_NULLABLE);
 			
 			// Exceptions
-			type.addReferencedType(Type.EXCEPTION);
-			type.addReferencedType(Type.CAST_EXCEPTION);
-			type.addReferencedType(Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
-			type.addReferencedType(Type.INTERFACE_CREATE_EXCEPTION);
-			type.addReferencedType(Type.UNEXPECTED_NULL_EXCEPTION);			
+			type.addUsedType(Type.EXCEPTION);
+			type.addUsedType(Type.CAST_EXCEPTION);
+			type.addUsedType(Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
+			type.addUsedType(Type.INTERFACE_CREATE_EXCEPTION);
+			type.addUsedType(Type.UNEXPECTED_NULL_EXCEPTION);			
 			
 			// String
-			type.addReferencedType(Type.STRING);
+			type.addUsedType(Type.STRING);
 			
 			// Adding the self adds parents and interfaces and methods
-			type.addReferencedType(type); 
+			type.addUsedType(type); 
 			
 			/* Update imports for meta files, since they won't have statement checking.
 			 * Note that imports in meta files have been optimized to include only the
@@ -215,7 +219,7 @@ public class TypeUpdater extends BaseChecker {
 				for(Object item : type.getImportedItems())
 					if( item instanceof Type ) {
 						Type importType = (Type) item;
-						type.addReferencedType(importType);
+						type.addUsedType(importType);
 					}
 			}
 		}

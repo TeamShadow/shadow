@@ -1,14 +1,14 @@
-import shadow:utility@HashSet;
+import shadow:utility@TreeSet;
 import shadow:io@Console;
 
-class shadow:test@HashSetTest
+class shadow:test@TreeSetTest
 {
 	public main() => ()
 	{
 		Console out;
 	
-		var set1 = HashSet<int>:create();
-		var set2 = HashSet<String>:create();		
+		var set1 = TreeSet<int>:create();
+		var set2 = TreeSet<String>:create();		
 		
 		set1[4] = true;
 		set1[13] = true;
@@ -48,7 +48,7 @@ class shadow:test@HashSetTest
 			out.printLine("Failed 5");		
 		
 		//resize test
-		var set3 = HashSet<int>:create();
+		var set3 = TreeSet<int>:create();
 		for( int i = 0; i < 20; i += 1 )
 			set3[i*i] = true;
 			
@@ -65,5 +65,11 @@ class shadow:test@HashSetTest
 			out.printLine("Failed 7");
 			
 		out.printLine(set3);
+		
+		out.printLine("Min: " # set3.min());
+		out.printLine("Max: " # set3.max());
+		out.printLine("Floor (5): " # set3.floor(5));
+		out.printLine("Ceiling (5): " # set3.ceiling(5));
+		out.printLine("Elements (10-100): " # set3.values(10,100));
 	}
 }

@@ -1,0 +1,11 @@
+interface shadow:utility@
+	OrderedSet<E is CanCompare<E>>
+is
+	Set<E>
+{	
+	readonly min() => (E);
+    readonly max() => (E);     
+    readonly floor(E element) => (nullable E);
+    readonly ceiling(E element) => (nullable E);    
+    readonly values(E low, E high) => (CanIterate<E>);
+}

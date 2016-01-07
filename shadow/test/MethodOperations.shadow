@@ -5,7 +5,7 @@ class shadow:test@MethodOperations
 	public main(String[] args) => ()
 	{
 		Console console;
-	
+			
 		int x = 6;
 		int y = 6;
 		int z = 7;
@@ -13,8 +13,7 @@ class shadow:test@MethodOperations
 		String s1 = "trouble";
 		String s2 = "trouble";
 	
-		String s3 = "rubble";
-		//CanEqual<int> xWrapper = x;
+		String s3 = "rubble";		
 	
 		if( x == y )
 			console.printLine("x == y");
@@ -35,12 +34,5 @@ class shadow:test@MethodOperations
 			console.printLine("s1 != s3");
 		else
 			console.printLine("s1 == s3");
-		
-		/*	
-		if( xWrapper == y)
-			console.printLine("xWrapper == y");
-		else
-			console.printLine("xWrapper != y");
-		*/
 	}
 }

@@ -51,7 +51,7 @@ public class OutputTest {
 		
 		// Try to remove the unit test executable
 		try {			
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -102,30 +102,124 @@ public class OutputTest {
 		program.waitFor(); //keeps program from being deleted while running
 	}
 	
-	@Test public void testTest() throws Exception {
-		args.add("shadow/test/Test.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"true\n" + 
-				"true\n" + 
-				"false\n" + 
-				"false\n" + 
-				"true\n");
-	}	
+
 	
-	@Test public void testArrayList() throws Exception {
-		args.add("shadow/test/ArrayListTest.shadow");
+	@Test public void testAddressMap() throws Exception {
+		args.add("shadow/test/AddressMapTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[] {"all", "good", "men", "shall", "perish"},
-			"true\n" +
-			"true\n" +
-			"false\n" +
-			"all\n" +
-			"men\n" +
-			"shall\n" +
-			"[all, men, shall]\n" + 
-			"[4, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225]\n");
-	}	
+		run(new String[0],	
+				"Added key: 47 Value: 1\n" + 
+				"Added key: 41 Value: 2\n" + 
+				"Added key: 35 Value: 3\n" + 
+				"Added key: 29 Value: 4\n" + 
+				"Added key: 23 Value: 5\n" + 
+				"Added key: 17 Value: 6\n" + 
+				"Added key: 11 Value: 7\n" + 
+				"Added key: 5 Value: 8\n" + 
+				"Added key: 52 Value: 9\n" + 
+				"Added key: 46 Value: 10\n" + 
+				"Added key: 40 Value: 11\n" + 
+				"Added key: 34 Value: 12\n" + 
+				"Added key: 28 Value: 13\n" + 
+				"Added key: 22 Value: 14\n" + 
+				"Added key: 16 Value: 15\n" + 
+				"Added key: 10 Value: 16\n" + 
+				"Added key: 4 Value: 17\n" + 
+				"Added key: 51 Value: 18\n" + 
+				"Added key: 45 Value: 19\n" + 
+				"Added key: 39 Value: 20\n" + 
+				"Added key: 33 Value: 21\n" + 
+				"Added key: 27 Value: 22\n" + 
+				"Added key: 21 Value: 23\n" + 
+				"Added key: 15 Value: 24\n" + 
+				"Added key: 9 Value: 25\n" + 
+				"Added key: 3 Value: 26\n" + 
+				"Added key: 50 Value: 27\n" + 
+				"Added key: 44 Value: 28\n" + 
+				"Added key: 38 Value: 29\n" + 
+				"Added key: 32 Value: 30\n" + 
+				"Added key: 26 Value: 31\n" + 
+				"Added key: 20 Value: 32\n" + 
+				"Added key: 14 Value: 33\n" + 
+				"Added key: 8 Value: 34\n" + 
+				"Added key: 2 Value: 35\n" + 
+				"Added key: 49 Value: 36\n" + 
+				"Added key: 43 Value: 37\n" + 
+				"Added key: 37 Value: 38\n" + 
+				"Added key: 31 Value: 39\n" + 
+				"Added key: 25 Value: 40\n" + 
+				"Added key: 19 Value: 41\n" + 
+				"Added key: 13 Value: 42\n" + 
+				"Added key: 7 Value: 43\n" + 
+				"Added key: 1 Value: 44\n" + 
+				"Added key: 48 Value: 45\n" + 
+				"Added key: 42 Value: 46\n" + 
+				"Added key: 36 Value: 47\n" + 
+				"Added key: 30 Value: 48\n" + 
+				"Added key: 24 Value: 49\n" + 
+				"Added key: 18 Value: 50\n" + 
+				"Added key: 12 Value: 51\n" + 
+				"Added key: 6 Value: 52\n" + 
+				"Added key: 0 Value: 53\n" + 
+				"Contains key 43!\n" + 
+				"Does not contain 89!\n" + 
+				"Value at 43 is: 37\n" + 
+				"Value at 17 is: 6\n" + 
+				"Value at 100 is: null\n" + 
+				"#1: 0\n" + 
+				"#2: 44\n" + 
+				"#3: 35\n" + 
+				"#4: 5\n" + 
+				"#5: 17\n" + 
+				"#6: 8\n" + 
+				"#7: 52\n" + 
+				"#8: 43\n" + 
+				"#9: 34\n" + 
+				"#10: 25\n" + 
+				"#11: 16\n" + 
+				"#12: 7\n" + 
+				"#13: 51\n" + 
+				"#14: 42\n" + 
+				"#15: 33\n" + 
+				"#16: 24\n" + 
+				"#17: 6\n" + 
+				"#18: 15\n" + 
+				"#19: 41\n" + 
+				"#20: 50\n" + 
+				"#21: 23\n" + 
+				"#22: 32\n" + 
+				"#23: 5\n" + 
+				"#24: 14\n" + 
+				"#25: 40\n" + 
+				"#26: 49\n" + 
+				"#27: 22\n" + 
+				"#28: 31\n" + 
+				"#29: 4\n" + 
+				"#30: 13\n" + 
+				"#31: 39\n" + 
+				"#32: 48\n" + 
+				"#33: 12\n" + 
+				"#34: 3\n" + 
+				"#35: 30\n" + 
+				"#36: 21\n" + 
+				"#37: 29\n" + 
+				"#38: 20\n" + 
+				"#39: 47\n" + 
+				"#40: 38\n" + 
+				"#41: 46\n" + 
+				"#42: 37\n" + 
+				"#43: 11\n" + 
+				"#44: 2\n" + 
+				"#45: 10\n" + 
+				"#46: 1\n" + 
+				"#47: 28\n" + 
+				"#48: 19\n" + 
+				"#49: 18\n" + 
+				"#50: 27\n" + 
+				"#51: 36\n" + 
+				"#52: 45\n" + 
+				"#53: 9\n");
+	}
 	
 	@Test public void testArray() throws Exception {
 		args.add("shadow/test/ArrayTest.shadow");
@@ -142,226 +236,7 @@ public class OutputTest {
 		run(new String[0],
 				"Size: 135\n");	
 	}
-	
-	@Test public void testArrayDeque() throws Exception {
-		args.add("shadow/test/ArrayDequeTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"Deserves\n" + 
-				"Good\n" + 
-				"Every\n" + 
-				"Boy\n" + 
-				"Fudge\n");
-	}
-	
-	@Test public void testArrayInitializer() throws Exception {
-		args.add("shadow/test/ArrayInitializerTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"[1, 4, 9, 16, 25]\n" + 
-				"[donut, explanation, story, book, 25]\n" +
-				"[[9, 8, 7], [12, 5, 4], [3, 2, 1]]\n" +
-				"[a, e, i, o, y]\n" +
-				"[[snap, crackle, pop], [tip, top], [taste, the, rainbow]]\n" +
-				"[[snap, crackle, pop], [cranberry, jamboplexy, in, place], [taste, the, rainbow]]\n");
-	}
-	
-	@Test public void testArrayOutOfBounds() throws Exception {
-		args.add("shadow/test/ArrayOutOfBoundsTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"shadow:standard@IndexOutOfBoundsException: Index 16\n" + 
-				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +
-				"shadow:standard@IndexOutOfBoundsException: Indices [2, 9]\n" +
-				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
-				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
-				"shadow:standard@IndexOutOfBoundsException: Index 28\n");
-	}
-	
-
-	@Test public void testAssert() throws Exception {
-		args.add("shadow/test/AssertTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"shadow:standard@AssertException: Too small!\n" + 
-				"shadow:standard@AssertException\n");
-	}
-	
-
-	@Test public void testBasic() throws Exception {
-		args.add("shadow/test/BasicTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"Count it off!\n" + 
-				"I say 1\n" +
-				"I say 2\n" +
-				"I say 3\n" +
-				"[Help me]\n" +
-				"125\n");
-	}
-	
-	@Test public void testChild() throws Exception {
-		args.add("shadow/test/ChildTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"shadow:test@ParentTest:create(\"Hello World!\")\n" + 
-				"shadow:test@ChildTest:main([])\n");
-	}
-	
-	@Test public void testConsole() throws Exception {
-		args.add("shadow/test/ConsoleTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		//can't test this one because it requires user input
-	}
-	
-	@Test public void testException() throws Exception {
-		args.add("shadow/test/ExceptionTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"test2 caught ExceptionB\n", 
-				"shadow:standard@Exception\n");
-	}
-	
-	@Test public void testFile() throws Exception {
-		args.add("shadow/test/FileTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		//can't test this without a file
-	}
-	
-	@Test public void testInterface() throws Exception {
-		args.add("shadow/test/InterfaceTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],		
-			"shadow:test@Cheetah runs at 75 mph.\n" + 
-			"shadow:test@Hare runs at 40 mph.\n" +
-			"shadow:test@Tortoise runs slow and steady.\n" +
-			"shadow:test@Tortoise runs slow and steady.\n" +
-			"shadow:test@Cheetah runs at 75 mph.\n" +
-			"shadow:test@Hare runs at 40 mph.\n");
-	}
-	
-	@Test public void testLoop() throws Exception {
-		args.add("shadow/test/LoopTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],	
-			"before outer\n" +
-			"try before outer\n" +
-			"loop before skip\n" +
-			"try before skip\n" +
-			"try after skip\n" +
-			"finally skip\n" +
-			"loop after skip\n" +
-			"loop before skip\n" +
-			"try before skip\n" +
-			"try after skip\n" +
-			"finally skip\n" +
-			"loop after skip\n" +
-			"loop before continue\n" +
-			"try before continue\n" +
-			"finally continue\n" +
-			"loop before continue\n" +
-			"try before continue\n" +
-			"finally continue\n" +
-			"loop before break\n" +
-			"try before break\n" +
-			"finally break\n" +
-			"try after outer\n" +
-			"before return first\n" +
-			"finally outer\n" +
-			"before return second\n" +
-			"after return second\n" +
-			"return first\n");
-	}
-	
-	@Test public void testSort() throws Exception {
-		args.add("shadow/test/SortMain.shadow");
-		Main.run(args.toArray(new String[] { }));
-		//can't put test in because of timing data
-	}
-	
-	@Test public void testTry() throws Exception {
-		args.add("shadow/test/TryTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"before throw\n" + 
-				"catch (shadow:standard@Exception: message)\n" +
-				"finally\n"
-				);
-	}
-	
-	@Test public void testToughTry() throws Exception {
-		args.add("shadow/test/ToughTry.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-			"test 1\n" + 
-			"16\n" +
-			"finally\n" +
-			"test 2\n" +
-			"catch (shadow:standard@Exception)\n" +
-			"finally\n" +
-			"test 3\n" +
-			"finally\n" +
-			"Result: 3\n");
-	}
-	
-	@Test public void testPrimitive() throws Exception {
-		args.add("shadow/test/PrimitiveTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"5\n" + 
-				"5\n" + 
-				"5\n" + 
-				"5\n" + 
-				"5\n" +
-				"8\n");
-	}
-	
-	@Test public void testCheck() throws Exception {
-		args.add("shadow/test/PrimitiveTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"5\n" + 
-				"5\n" + 
-				"5\n" + 
-				"5\n" + 
-				"5\n" +
-				"8\n");
-	}
-	
-	@Test public void testNullableWithCheck() throws Exception {
-		args.add("shadow/test/NullableWithCheckTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"Recovered!\n");
-	}
-	
-	@Test public void testNullableWithoutCheck() throws Exception {
-		args.add("shadow/test/NullableWithoutCheckTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "",
-				"shadow:standard@UnexpectedNullException\n");
-	}
-	
-	@Test public void testSwitch() throws Exception {
-		args.add("shadow/test/SwitchTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[] {"bedula", "sesame"}, 
-				"Default!\n" +
-				"Default!\n" +
-				"Three!\n" +
-				"Four!\n" +
-				"Five\n" +
-				"Default!\n" +
-				"Others!\n" +
-				"Others!\n" +
-				"Others!\n" +
-				"Ten!\n" +
-				"Welcome, bedula\n" +
-				"That's the magic word!\n" +
-				"separate scopes\n");
-	}
-	
-
+		
 	@Test public void testArrayCreate() throws Exception {
 		args.add("shadow/test/ArrayCreateTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -438,6 +313,17 @@ public class OutputTest {
 						"f[2,4]: 15\n");
 	}
 	
+
+	
+	@Test public void testArrayCastException() throws Exception {
+		args.add("shadow/test/ArrayCastExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 				
+				"Passed\n" + 
+				"Passed: shadow:standard@CastException: Array dimensions do not match\n" +
+				"Passed: shadow:standard@CastException: Array dimensions do not match\n");
+	}
+	
 	@Test public void testArrayDefault() throws Exception {
 		args.add("shadow/test/ArrayDefaultTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -454,143 +340,65 @@ public class OutputTest {
 						"b[4]: 42\n");
 	}
 	
-	@Test public void testArrayCastException() throws Exception {
-		args.add("shadow/test/ArrayCastExceptionTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 				
-				"Passed\n" + 
-				"Passed: shadow:standard@CastException: Array dimensions do not match\n" +
-				"Passed: shadow:standard@CastException: Array dimensions do not match\n");
-	}
+
 	
-	@Test public void testCopy() throws Exception {
-		args.add("shadow/test/CopyTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 				
-				"s1: Walnuts\n" + 
-				"s2: Walnuts\n" +
-				"o1: (13,StuffStuff)\n" +
-				"o2: (14,Stuff)\n" +
-				"integer1: 3\n" +
-				"integer2: 3\n" +
-				"array1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n" +
-				"array2: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]\n" +
-				"array3: [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]\n" +
-				"array4: [[2, 3, 4, 5, 6], [7, 8, 9, 10, 11], [12, 13, 14, 15, 16], [17, 18, 19, 20, 21]]\n" +
-				"array5: [[0, 3, 6, 9, 12], [150, 153, 156, 159, 162], [300, 303, 306, 309, 312], [450, 453, 456, 459, 462]]\n" +
-				"array6: [[0, 1, 2, 3, 4], [50, 51, 52, 53, 54], [100, 101, 102, 103, 104], [150, 151, 152, 153, 154]]\n" +
-				"array7: [[[0, 2, 4], [6, 8, 10]]]\n" +
-				"array8: [[[0, 1, 2], [3, 4, 5]]]\n" +
-				"array9: [[0, 2, 4], [6, 8, 10, 12]]\n" +
-				"array10: [[0, 1, 2], [3, 4, 5, 6]]\n" +
-				"matrix1: [3.0, 2.0, 0.0]\n" +
-				"[0.0, 0.0, 7.0]\n" +
-				"\n" +
-				"matrix2: [0.0, 2.0, 0.0]\n" +
-				"[0.0, 0.0, 5.0]\n\n");
-	}
-	
-	@Test public void testInterfaceCreate() throws Exception {
-		args.add("shadow/test/InterfaceCreateTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 	"", 			
-				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n");
-	}
-	
-	@Test public void testHashMap() throws Exception {
-		args.add("shadow/test/HashMapTest.shadow");
+	@Test public void testArrayDeque() throws Exception {
+		args.add("shadow/test/ArrayDequeTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"Passed 1\n" + 
-				"Passed 2\n" +
-				"Passed 3\n" +
-				"Bozo\n" +
-				"{Sandwich=20, Clothes=58}\n" +
-				"Deal\n" +
-				"Passed 4\n" +
-				"Passed 5\n" +
-				"Passed 6\n" +
-				"Passed 7\n" +
-				"Passed 8\n" +
-				"Passed 9\n" +
-				"Passed 10\n" + 
-				"#1: 0\n" + 
-				"#2: 1\n" + 
-				"#3: 4\n" + 
-				"#4: 16\n" + 
-				"#5: 25\n" + 
-				"#6: 36\n" + 
-				"#7: 49\n" + 
-				"#8: 64\n" + 
-				"#9: 81\n" + 
-				"#10: 100\n" + 
-				"#11: 121\n" + 
-				"#12: 144\n" + 
-				"#13: 169\n" + 
-				"#14: 196\n" + 
-				"#15: 225\n" + 
-				"#16: 289\n" + 
-				"#17: 256\n" + 
-				"#18: 361\n" + 
-				"#19: 324\n");
+				"Deserves\n" + 
+				"Good\n" + 
+				"Every\n" + 
+				"Boy\n" + 
+				"Fudge\n");
 	}
 	
-	@Test public void testTreeMap() throws Exception {
-		args.add("shadow/test/TreeMapTest.shadow");
+	@Test public void testArrayInitializer() throws Exception {
+		args.add("shadow/test/ArrayInitializerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"Passed 1\n" + 
-				"Passed 2\n" +
-				"Passed 3\n" +
-				"Bozo\n" +
-				"{Clothes=58, Sandwich=20}\n" +
-				"Deal\n" +
-				"Passed 4\n" +
-				"Passed 5\n" +
-				"Passed 6\n" +
-				"Passed 7\n" +
-				"Passed 8\n" +
-				"Passed 9\n" +
-				"Passed 10\n" +
-				"0 1 4 16 25 36 49 64 81 100 121 144 169 196 225 256 289 324 361 \n" +
-				"0\n" + 
-				"1\n" +
-				"2\n" +				
-				"4\n" +
-				"5\n" +
-				"6\n" +
-				"7\n" +
-				"8\n" +
-				"9\n" +
-				"10\n" +
-				"11\n" +
-				"12\n" +
-				"13\n" +
-				"14\n" +
-				"15\n" +
-				"16\n" +
-				"17\n" +
-				"18\n" + 
-				"19\n");
+				"[1, 4, 9, 16, 25]\n" + 
+				"[donut, explanation, story, book, 25]\n" +
+				"[[9, 8, 7], [12, 5, 4], [3, 2, 1]]\n" +
+				"[a, e, i, o, y]\n" +
+				"[[snap, crackle, pop], [tip, top], [taste, the, rainbow]]\n" +
+				"[[snap, crackle, pop], [cranberry, jamboplexy, in, place], [taste, the, rainbow]]\n");
 	}
 	
-	@Test public void testSimple() throws Exception {
-		args.add("shadow/test/SimpleTest.shadow");
+	@Test public void testArrayList() throws Exception {
+		args.add("shadow/test/ArrayListTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "Hello, world!\n");
+		run(new String[] {"all", "good", "men", "shall", "perish"},
+			"true\n" +
+			"true\n" +
+			"false\n" +
+			"all\n" +
+			"men\n" +
+			"shall\n" +
+			"[all, men, shall]\n" + 
+			"[4, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225]\n");
 	}
 	
-	@Test public void testCreateStringInConstant() throws Exception {
-		args.add("shadow/test/CreateStringInConstantTest.shadow");
+	@Test public void testArrayOutOfBounds() throws Exception {
+		args.add("shadow/test/ArrayOutOfBoundsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "Empty: \nNon-empty: Hello!\n");
+		run(new String[0],
+				"shadow:standard@IndexOutOfBoundsException: Index 16\n" + 
+				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +
+				"shadow:standard@IndexOutOfBoundsException: Indices [2, 9]\n" +
+				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
+				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
+				"shadow:standard@IndexOutOfBoundsException: Index 28\n");
 	}
 	
-	@Test public void testDependentConstants() throws Exception {
-		args.add("shadow/test/DependentConstantsTest.shadow");
+
+	@Test public void testAssert() throws Exception {
+		args.add("shadow/test/AssertTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "3\n4\n5\n9\nwalnut\nwalnuts\n2\n");
-	}	
+		run(new String[0],
+				"shadow:standard@AssertException: Too small!\n" + 
+				"shadow:standard@AssertException\n");
+	}
 	
 	@Test public void testAssignment() throws Exception {
 		args.add("shadow/test/AssignmentTest.shadow");
@@ -601,8 +409,20 @@ public class OutputTest {
 				"trouble: {9=3}\n" +
 				"array: [0, 0, 0, 4, 0, 0, 0, 0, 0, 0]\n" + 
 				"array: [8, 6, 0, 0, 0, 0, 0, 0, 0, 0]\n");
-	}	
+	}
 
+	@Test public void testBasic() throws Exception {
+		args.add("shadow/test/BasicTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Count it off!\n" + 
+				"I say 1\n" +
+				"I say 2\n" +
+				"I say 3\n" +
+				"[Help me]\n" +
+				"125\n");
+	}
+	
 	@Test public void testBigInteger() throws Exception {
 		args.add("shadow/test/BigIntegerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -725,6 +545,449 @@ public class OutputTest {
 				"C: 1112956698262836806664794820794473961145010180577601125590707755951029843006749551702925760533038042622692901510299809647917425905134514887570764862158562662534883462854826818855263583936781681828017953722260950237915404296241216983813592369263412058474774469738265051177236933818586309402181524305722641225977290699659457953607880969651822747591468484978977768458753917979021465084394384421346410164\n" + 
 				"Decrypted M: 123456789101112131415161718\n");
 	}
+
+	@Test public void testCastException() throws Exception {
+		args.add("shadow/test/CastExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Cast from String to String\n" + 
+				"shadow:standard@CastException: Type shadow:standard@Object is not a subtype of shadow:standard@String\n" +
+				"Cast from String to CanIterate<code>\n" +
+				"Cast from String to CanEqual<String>\n" +
+				"shadow:standard@CastException: Class shadow:standard@Object does not implement interface shadow:standard@CanIterate<code>\n");
+	}
+	
+	@Test public void testCheck() throws Exception {
+		args.add("shadow/test/PrimitiveTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"5\n" + 
+				"5\n" + 
+				"5\n" + 
+				"5\n" + 
+				"5\n" +
+				"8\n");
+	}
+	
+	@Test public void testChild() throws Exception {
+		args.add("shadow/test/ChildTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"shadow:test@ParentTest:create(\"Hello World!\")\n" + 
+				"shadow:test@ChildTest:main([])\n");
+	}
+	
+	@Test public void testComplex() throws Exception {
+		args.add("shadow/test/ComplexTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"a: 2 - i\n" + 
+				"b: 3 + 5i\n" +
+				"c: 5 + 4i\n" +
+				"d: -1 - 6i\n" +
+				"e: 11 + 7i\n");
+	}
+	
+	@Test public void testCopy() throws Exception {
+		args.add("shadow/test/CopyTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 				
+				"s1: Walnuts\n" + 
+				"s2: Walnuts\n" +
+				"o1: (13,StuffStuff)\n" +
+				"o2: (14,Stuff)\n" +
+				"integer1: 3\n" +
+				"integer2: 3\n" +
+				"array1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n" +
+				"array2: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]\n" +
+				"array3: [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]\n" +
+				"array4: [[2, 3, 4, 5, 6], [7, 8, 9, 10, 11], [12, 13, 14, 15, 16], [17, 18, 19, 20, 21]]\n" +
+				"array5: [[0, 3, 6, 9, 12], [150, 153, 156, 159, 162], [300, 303, 306, 309, 312], [450, 453, 456, 459, 462]]\n" +
+				"array6: [[0, 1, 2, 3, 4], [50, 51, 52, 53, 54], [100, 101, 102, 103, 104], [150, 151, 152, 153, 154]]\n" +
+				"array7: [[[0, 2, 4], [6, 8, 10]]]\n" +
+				"array8: [[[0, 1, 2], [3, 4, 5]]]\n" +
+				"array9: [[0, 2, 4], [6, 8, 10, 12]]\n" +
+				"array10: [[0, 1, 2], [3, 4, 5, 6]]\n" +
+				"matrix1: [3.0, 2.0, 0.0]\n" +
+				"[0.0, 0.0, 7.0]\n" +
+				"\n" +
+				"matrix2: [0.0, 2.0, 0.0]\n" +
+				"[0.0, 0.0, 5.0]\n\n");
+	}
+	
+	@Test public void testCreateStringInConstant() throws Exception {
+		args.add("shadow/test/CreateStringInConstantTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "Empty: \nNon-empty: Hello!\n");
+	}
+	
+	@Test public void testDependentConstants() throws Exception {
+		args.add("shadow/test/DependentConstantsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "3\n4\n5\n9\nwalnut\nwalnuts\n2\n");
+	}	
+	
+	@Test public void testException() throws Exception {
+		args.add("shadow/test/ExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"test2 caught ExceptionB\n", 
+				"shadow:standard@Exception\n");
+	}
+	
+	@Test public void testForeach() throws Exception {
+		args.add("shadow/test/ForeachTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],		
+				"20\n" + 
+				"19\n" + 
+				"18\n" + 
+				"17\n" + 
+				"16\n" + 
+				"15\n" + 
+				"14\n" + 
+				"13\n" + 
+				"12\n" + 
+				"11\n" + 
+				"10\n" + 
+				"9\n" + 
+				"8\n" + 
+				"7\n" + 
+				"6\n" + 
+				"5\n" + 
+				"4\n" + 
+				"3\n" + 
+				"2\n" + 
+				"1\n" + 
+				"My\n" + 
+				"dog\n" + 
+				"has\n" + 
+				"fleas\n" + 
+				"0\n" + 
+				"1\n" + 
+				"2\n" + 
+				"3\n" + 
+				"4\n" + 
+				"5\n" + 
+				"6\n" + 
+				"7\n" + 
+				"8\n" + 
+				"9\n" + 
+				"10\n" + 
+				"11\n" + 
+				"12\n" + 
+				"13\n" + 
+				"14\n" + 
+				"15\n" + 
+				"16\n" + 
+				"17\n" + 
+				"18\n" + 
+				"19\n" + 
+				"20\n" + 
+				"21\n" + 
+				"22\n" + 
+				"23\n" + 
+				"0\n" + 
+				"1\n" + 
+				"2\n" + 
+				"3\n" + 
+				"4\n" + 
+				"5\n" + 
+				"6\n" + 
+				"7\n" + 
+				"8\n" + 
+				"9\n" + 
+				"10\n" + 
+				"11\n" + 
+				"12\n" + 
+				"13\n" + 
+				"14\n" + 
+				"15\n" + 
+				"16\n" + 
+				"17\n" + 
+				"18\n" + 
+				"19\n" + 
+				"20\n" + 
+				"21\n" + 
+				"22\n" + 
+				"23\n");
+	}	
+	
+	@Test public void testGeneric() throws Exception {
+		args.add("shadow/test/GenericTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+			"Class: shadow:test@Container<shadow:standard@String>\n" + 
+			"Contents: blub\n" + 
+			"Class: shadow:test@Container<int>\n" + 
+			"Contents: 17\n");
+	}
+	
+	
+	@Test public void testGenericArray() throws Exception {
+		args.add("shadow/test/GenericArrayTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+			"0 0 0 4 0 0 0 0 0 10 \n" + 
+			"[0, 0, 0, 4, 0, 0, 0, 0, 0, 10]\n" +
+			"[one, two, three, four, five]\n" +
+			"[0, 0, 0, 4, 0, 0, 0, 0, 0, 10]\n" +
+			"[null, Hey, null, null, Ho]\n");
+	}
+	
+	@Test public void testHashMap() throws Exception {
+		args.add("shadow/test/HashMapTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Passed 1\n" + 
+				"Passed 2\n" +
+				"Passed 3\n" +
+				"Bozo\n" +
+				"{Sandwich=20, Clothes=58}\n" +
+				"Deal\n" +
+				"Passed 4\n" +
+				"Passed 5\n" +
+				"Passed 6\n" +
+				"Passed 7\n" +
+				"Passed 8\n" +
+				"Passed 9\n" +
+				"Passed 10\n" + 
+				"#1: 0\n" + 
+				"#2: 1\n" + 
+				"#3: 4\n" + 
+				"#4: 16\n" + 
+				"#5: 25\n" + 
+				"#6: 36\n" + 
+				"#7: 49\n" + 
+				"#8: 64\n" + 
+				"#9: 81\n" + 
+				"#10: 100\n" + 
+				"#11: 121\n" + 
+				"#12: 144\n" + 
+				"#13: 169\n" + 
+				"#14: 196\n" + 
+				"#15: 225\n" + 
+				"#16: 289\n" + 
+				"#17: 256\n" + 
+				"#18: 361\n" + 
+				"#19: 324\n");
+	}
+	
+	@Test public void testHashSet() throws Exception {
+		args.add("shadow/test/HashSetTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		run(new String[0],
+			"Passed 1\n" + 
+			"Passed 2\n" + 
+			"Passed 3\n" + 
+			"Passed 4\n" + 
+			"true\n" + 
+			"{Bozo, Clown, the}\n" + 
+			"Passed 5\n" + 
+			"Passed 6\n" + 
+			"Passed 7\n" + 
+			"{0, 1, 169, 100, 64, 36, 196, 9, 225, 289, 16, 324, 256, 49, 81, 25, 144, 361, 121}\n");
+	}
+	
+	@Test public void testInterface() throws Exception {
+		args.add("shadow/test/InterfaceTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],		
+			"shadow:test@Cheetah runs at 75 mph.\n" + 
+			"shadow:test@Hare runs at 40 mph.\n" +
+			"shadow:test@Tortoise runs slow and steady.\n" +
+			"shadow:test@Tortoise runs slow and steady.\n" +
+			"shadow:test@Cheetah runs at 75 mph.\n" +
+			"shadow:test@Hare runs at 40 mph.\n");
+	}
+	
+	@Test public void testInterfaceCreate() throws Exception {
+		args.add("shadow/test/InterfaceCreateTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 	"", 			
+				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n");
+	}
+		
+	
+	@Test public void testIs() throws Exception {
+		args.add("shadow/test/IsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],	
+			"shadow:test@ParentTest:create(\"Hello World!\")\n" + 
+			"shadow:test@ParentTest:create()\n" +
+			"String is String\n" +
+			"String is Object\n" +
+			"Object is Object\n" +
+			"Object is not String\n" +
+			"Tortoise is Tortoise\n" +
+			"Tortoise is CanRun\n" +
+			"ChildTest is ParentTest\n" +
+			"ChildTest is Object\n");
+	}
+	
+	@Test public void testLinkedList() throws Exception {
+		args.add("shadow/test/LinkedListTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"[Fox, Socks, Box, Knox, Knox in box, Fox in socks, Knox on fox in socks in box]\n" + 
+			"[Socks, Box, Knox in box, Fox in socks, Knox on fox in socks in box]\n" + 
+			"Fox\n" + 
+			"1\n" + 
+			"[Socks, Box, Fox in socks, Knox on fox in socks in box]\n" + 
+			"[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99]\n" + 
+			"15\n" + 
+			"[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]\n");
+	}
+	
+	
+	@Test public void testLoop() throws Exception {
+		args.add("shadow/test/LoopTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],	
+			"before outer\n" +
+			"try before outer\n" +
+			"loop before skip\n" +
+			"try before skip\n" +
+			"try after skip\n" +
+			"finally skip\n" +
+			"loop after skip\n" +
+			"loop before skip\n" +
+			"try before skip\n" +
+			"try after skip\n" +
+			"finally skip\n" +
+			"loop after skip\n" +
+			"loop before continue\n" +
+			"try before continue\n" +
+			"finally continue\n" +
+			"loop before continue\n" +
+			"try before continue\n" +
+			"finally continue\n" +
+			"loop before break\n" +
+			"try before break\n" +
+			"finally break\n" +
+			"try after outer\n" +
+			"before return first\n" +
+			"finally outer\n" +
+			"before return second\n" +
+			"after return second\n" +
+			"return first\n");
+	}
+	
+	@Test public void testMatrix() throws Exception {
+		args.add("shadow/test/MatrixTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"a:\n" + 
+			"[1.0, 0.0, 0.0]\n" + 
+			"[0.0, 1.0, 4.0]\n" + 
+			"[0.0, 0.0, 1.0]\n" + 
+			"\n" + 
+			"b:\n" + 
+			"[1.0, 0.0, 0.0]\n" + 
+			"[0.0, 1.0, 0.0]\n" + 
+			"[3.0, 0.0, 1.0]\n" + 
+			"\n" + 
+			"c:\n" + 
+			"[2.0, 0.0, 0.0]\n" + 
+			"[0.0, 2.0, 4.0]\n" + 
+			"[3.0, 0.0, 2.0]\n" + 
+			"\n" + 
+			"d:\n" + 
+			"[0.0, 0.0, 0.0]\n" + 
+			"[0.0, 0.0, 4.0]\n" + 
+			"[-3.0, 0.0, 0.0]\n" + 
+			"\n" + 
+			"e:\n" + 
+			"[1.0, 0.0, 0.0]\n" + 
+			"[12.0, 1.0, 4.0]\n" + 
+			"[3.0, 0.0, 1.0]\n\n");
+	}
+	
+	@Test public void testMethodOperations() throws Exception {
+		args.add("shadow/test/MethodOperations.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"x == y\n" + 
+			"x != z\n" +
+			"s1 == s2\n" +
+			"s1 != s3\n");
+	}
+	
+	@Test public void testMutableString() throws Exception {
+		args.add("shadow/test/MutableStringTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"peach\n" +
+			"p\n" +
+			"e\n" +
+			"a\n" +
+			"c\n" +
+			"h\n" + 
+			"hcaep\n");
+	}
+	
+	@Test public void testNullableArray() throws Exception {
+		args.add("shadow/test/NullableArrayTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Hello\n" + 
+				"[null, Hello, null, Goodbye, null]\n");
+	}	
+	
+	@Test public void testNullablePrimitive() throws Exception {
+		args.add("shadow/test/NullablePrimitiveTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"Not equal!\n" + 
+			"Equal!\n" +
+			"Equal!\n" +
+			"Not equal!\n" +
+			"null\n");
+	}
+	
+	@Test public void testNullableWithCheck() throws Exception {
+		args.add("shadow/test/NullableWithCheckTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Recovered!\n");
+	}
+	
+	@Test public void testNullableWithoutCheck() throws Exception {
+		args.add("shadow/test/NullableWithoutCheckTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "",
+				"shadow:standard@UnexpectedNullException\n");
+	}
+	
+	@Test public void testPrimitive() throws Exception {
+		args.add("shadow/test/PrimitiveTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"5\n" + 
+				"5\n" + 
+				"5\n" + 
+				"5\n" + 
+				"5\n" +
+				"8\n");
+	}	
+
+	@Test public void testProperty() throws Exception {
+		args.add("shadow/test/PropertyTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"17\n" +
+			"24\n" +
+			"5.0\n" +
+			"Jams!\n" +
+			"53\n" +
+			"182\n");
+	}
+	
+	@Test public void testSimple() throws Exception {
+		args.add("shadow/test/SimpleTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "Hello, world!\n");
+	}
 	
 	@Test public void testSubscript() throws Exception {
 		args.add("shadow/test/SubscriptTest.shadow");
@@ -738,122 +1001,119 @@ public class OutputTest {
 				"Numbers: [1, 2, 3, 409, 5, 6, 7, 8, 9, 10, 41, 12, 13, 14, 15, 16, 17, 18, 19, 20]\n");
 	}
 	
-	@Test public void testAddressMap() throws Exception {
-		args.add("shadow/test/AddressMapTest.shadow");
+	@Test public void testSwitch() throws Exception {
+		args.add("shadow/test/SwitchTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0],	
-				"Added key: 47 Value: 1\n" + 
-				"Added key: 41 Value: 2\n" + 
-				"Added key: 35 Value: 3\n" + 
-				"Added key: 29 Value: 4\n" + 
-				"Added key: 23 Value: 5\n" + 
-				"Added key: 17 Value: 6\n" + 
-				"Added key: 11 Value: 7\n" + 
-				"Added key: 5 Value: 8\n" + 
-				"Added key: 52 Value: 9\n" + 
-				"Added key: 46 Value: 10\n" + 
-				"Added key: 40 Value: 11\n" + 
-				"Added key: 34 Value: 12\n" + 
-				"Added key: 28 Value: 13\n" + 
-				"Added key: 22 Value: 14\n" + 
-				"Added key: 16 Value: 15\n" + 
-				"Added key: 10 Value: 16\n" + 
-				"Added key: 4 Value: 17\n" + 
-				"Added key: 51 Value: 18\n" + 
-				"Added key: 45 Value: 19\n" + 
-				"Added key: 39 Value: 20\n" + 
-				"Added key: 33 Value: 21\n" + 
-				"Added key: 27 Value: 22\n" + 
-				"Added key: 21 Value: 23\n" + 
-				"Added key: 15 Value: 24\n" + 
-				"Added key: 9 Value: 25\n" + 
-				"Added key: 3 Value: 26\n" + 
-				"Added key: 50 Value: 27\n" + 
-				"Added key: 44 Value: 28\n" + 
-				"Added key: 38 Value: 29\n" + 
-				"Added key: 32 Value: 30\n" + 
-				"Added key: 26 Value: 31\n" + 
-				"Added key: 20 Value: 32\n" + 
-				"Added key: 14 Value: 33\n" + 
-				"Added key: 8 Value: 34\n" + 
-				"Added key: 2 Value: 35\n" + 
-				"Added key: 49 Value: 36\n" + 
-				"Added key: 43 Value: 37\n" + 
-				"Added key: 37 Value: 38\n" + 
-				"Added key: 31 Value: 39\n" + 
-				"Added key: 25 Value: 40\n" + 
-				"Added key: 19 Value: 41\n" + 
-				"Added key: 13 Value: 42\n" + 
-				"Added key: 7 Value: 43\n" + 
-				"Added key: 1 Value: 44\n" + 
-				"Added key: 48 Value: 45\n" + 
-				"Added key: 42 Value: 46\n" + 
-				"Added key: 36 Value: 47\n" + 
-				"Added key: 30 Value: 48\n" + 
-				"Added key: 24 Value: 49\n" + 
-				"Added key: 18 Value: 50\n" + 
-				"Added key: 12 Value: 51\n" + 
-				"Added key: 6 Value: 52\n" + 
-				"Added key: 0 Value: 53\n" + 
-				"Contains key 43!\n" + 
-				"Does not contain 89!\n" + 
-				"Value at 43 is: 37\n" + 
-				"Value at 17 is: 6\n" + 
-				"Value at 100 is: null\n" + 
-				"#1: 0\n" + 
-				"#2: 44\n" + 
-				"#3: 35\n" + 
-				"#4: 5\n" + 
-				"#5: 17\n" + 
-				"#6: 8\n" + 
-				"#7: 52\n" + 
-				"#8: 43\n" + 
-				"#9: 34\n" + 
-				"#10: 25\n" + 
-				"#11: 16\n" + 
-				"#12: 7\n" + 
-				"#13: 51\n" + 
-				"#14: 42\n" + 
-				"#15: 33\n" + 
-				"#16: 24\n" + 
-				"#17: 6\n" + 
-				"#18: 15\n" + 
-				"#19: 41\n" + 
-				"#20: 50\n" + 
-				"#21: 23\n" + 
-				"#22: 32\n" + 
-				"#23: 5\n" + 
-				"#24: 14\n" + 
-				"#25: 40\n" + 
-				"#26: 49\n" + 
-				"#27: 22\n" + 
-				"#28: 31\n" + 
-				"#29: 4\n" + 
-				"#30: 13\n" + 
-				"#31: 39\n" + 
-				"#32: 48\n" + 
-				"#33: 12\n" + 
-				"#34: 3\n" + 
-				"#35: 30\n" + 
-				"#36: 21\n" + 
-				"#37: 29\n" + 
-				"#38: 20\n" + 
-				"#39: 47\n" + 
-				"#40: 38\n" + 
-				"#41: 46\n" + 
-				"#42: 37\n" + 
-				"#43: 11\n" + 
-				"#44: 2\n" + 
-				"#45: 10\n" + 
-				"#46: 1\n" + 
-				"#47: 28\n" + 
-				"#48: 19\n" + 
-				"#49: 18\n" + 
-				"#50: 27\n" + 
-				"#51: 36\n" + 
-				"#52: 45\n" + 
-				"#53: 9\n");
+		run(new String[] {"bedula", "sesame"}, 
+				"Default!\n" +
+				"Default!\n" +
+				"Three!\n" +
+				"Four!\n" +
+				"Five\n" +
+				"Default!\n" +
+				"Others!\n" +
+				"Others!\n" +
+				"Others!\n" +
+				"Ten!\n" +
+				"Welcome, bedula\n" +
+				"That's the magic word!\n" +
+				"separate scopes\n");
 	}
 	
+	@Test public void testTest() throws Exception {
+		args.add("shadow/test/Test.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"true\n" + 
+				"true\n" + 
+				"false\n" + 
+				"false\n" + 
+				"true\n");
+	}
 	
+	@Test public void testToughTry() throws Exception {
+		args.add("shadow/test/ToughTry.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"test 1\n" + 
+			"16\n" +
+			"finally\n" +
+			"test 2\n" +
+			"catch (shadow:standard@Exception)\n" +
+			"finally\n" +
+			"test 3\n" +
+			"finally\n" +
+			"Result: 3\n");
+	}
+	
+	@Test public void testTry() throws Exception {
+		args.add("shadow/test/TryTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"before throw\n" + 
+				"catch (shadow:standard@Exception: message)\n" +
+				"finally\n"
+				);
+	}	
+	
+	
+	@Test public void testTreeMap() throws Exception {
+		args.add("shadow/test/TreeMapTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Passed 1\n" + 
+				"Passed 2\n" +
+				"Passed 3\n" +
+				"Bozo\n" +
+				"{Clothes=58, Sandwich=20}\n" +
+				"Deal\n" +
+				"Passed 4\n" +
+				"Passed 5\n" +
+				"Passed 6\n" +
+				"Passed 7\n" +
+				"Passed 8\n" +
+				"Passed 9\n" +
+				"Passed 10\n" +
+				"0 1 4 16 25 36 49 64 81 100 121 144 169 196 225 256 289 324 361 \n" +
+				"0\n" + 
+				"1\n" +
+				"2\n" +				
+				"4\n" +
+				"5\n" +
+				"6\n" +
+				"7\n" +
+				"8\n" +
+				"9\n" +
+				"10\n" +
+				"11\n" +
+				"12\n" +
+				"13\n" +
+				"14\n" +
+				"15\n" +
+				"16\n" +
+				"17\n" +
+				"18\n" + 
+				"19\n");
+	}
+	
+	@Test public void testTreeSet() throws Exception {
+		args.add("shadow/test/TreeSetTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		run(new String[0],
+				"Passed 1\n" + 
+				"Passed 2\n" + 
+				"Passed 3\n" + 
+				"Passed 4\n" + 
+				"true\n" + 
+				"{Bozo, Clown, the}\n" + 
+				"Passed 5\n" + 
+				"Passed 6\n" + 
+				"Passed 7\n" + 
+				"{0, 1, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 361}\n" + 
+				"Min: 0\n" + 
+				"Max: 361\n" + 
+				"Floor (5): 1\n" + 
+				"Ceiling (5): 9\n" + 
+				"Elements (10-100): [16, 25, 36, 49, 64, 81, 100]\n");		
+	}
 }

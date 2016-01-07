@@ -40,7 +40,8 @@ public abstract class Type implements Comparable<Type> {
 	private ArrayList<Node> fieldList = new ArrayList<Node>();
 
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
-	private Set<Type> referencedTypes = new HashSet<Type>();
+	private Set<Type> usedTypes = new HashSet<Type>();
+	private Set<Type> mentionedTypes = new HashSet<Type>();
 	private Set<Type> partiallyInstantiatedGenerics = new HashSet<Type>();	
 	private List<Type> typeParameterDependencies = new ArrayList<Type>();
 	
@@ -1156,98 +1157,136 @@ public abstract class Type implements Comparable<Type> {
 		return encloses(outer);
 	}
 	
-	public void addReferencedType(Type type) {
-		addReferencedType(type, true);
+	public boolean canSee(Type type) {
+		Type currentRawType = this.getTypeWithoutTypeArguments();		
+		boolean visible = BaseChecker.classIsAccessible(type.getTypeWithoutTypeArguments(), currentRawType);
+		
+		if( type.isParameterized() ) {		
+			List<ModifiedType> parameters = type.getTypeParameters();							
+			for( int i = 0; i < parameters.size() && visible; ++i )
+				visible = currentRawType.canSee(parameters.get(i).getType());
+		}
+		
+		return visible;
+	}	
+	
+	public void addMentionedType(Type type) {
+		if( type == null || type instanceof UninstantiatedType || type instanceof TypeParameter )
+			return;
+		
+		if( type instanceof ArrayType ) {
+			ArrayType arrayType = (ArrayType) type;
+			Type baseType = arrayType.getBaseType();		
+			addMentionedType(baseType);
+		}
+		else if( type instanceof MethodType ) {			
+			MethodType methodType = (MethodType)type;
+			for( ModifiedType parameter : methodType.getParameterTypes() )
+				addMentionedType( parameter.getType() );
+			
+			for( ModifiedType _return : methodType.getReturnTypes() )
+				addMentionedType( _return.getType() );			
+		}			
+		else if( (type instanceof ClassType) || (type instanceof InterfaceType ))
+			mentionedTypes.add(type);
 	}
-
-	public void addReferencedType(Type type, boolean addMembers ) {		
+	
+	
+	public void addUsedType(Type type ) {		
 		if( type == null || type instanceof UninstantiatedType )
 			return;
 		
-		if( !referencedTypes.contains(type) ) {
+		if( !usedTypes.contains(type) ) {
 			if( type instanceof TypeParameter ) {
 				TypeParameter typeParameter = (TypeParameter) type;
 				for( Type bound : typeParameter.getBounds() )
-					addReferencedType(bound, addMembers);
+					addUsedType(bound);
 			}			
 			else if( type instanceof ArrayType ) {				
 				ArrayType arrayType = (ArrayType) type;
 				Type baseType = arrayType.getBaseType();
 				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
-					referencedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues
+					usedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues
 								
-				addReferencedType(arrayType.convertToGeneric(), addMembers);
+				addUsedType(arrayType.convertToGeneric());
 				//covers Type.ARRAY and all recursive base types
 				//automatically does the right thing for NullableArray
 			}
 			else if( type instanceof MethodType ) {			
 				MethodType methodType = (MethodType)type;
 				for( ModifiedType parameter : methodType.getParameterTypes() )
-					addReferencedType( parameter.getType(), true );
+					addUsedType( parameter.getType() );
 				
 				for( ModifiedType _return : methodType.getReturnTypes() )
-					addReferencedType( _return.getType(), true );			
+					addUsedType( _return.getType() );			
 			}			
 			else if( (type instanceof ClassType) || (type instanceof InterfaceType )) {		
-				referencedTypes.add(type);
+				usedTypes.add(type);
 				
 				if( type.isParameterizedIncludingOuterClasses() ) {				
-					referencedTypes.add(type.typeWithoutTypeArguments);
+					usedTypes.add(type.typeWithoutTypeArguments);
 					
 					if( !type.isFullyInstantiated() )
 						partiallyInstantiatedGenerics.add(type);
 													
 					for( ModifiedType typeParameter : type.getTypeParametersIncludingOuterClasses() ) {						
 						Type parameterType = typeParameter.getType();
-						addReferencedType( parameterType, addMembers );
+						addUsedType( parameterType );
 						if( (parameterType instanceof ArrayType) && (parameterType.isFullyInstantiated() || !parameterType.isParameterizedIncludingOuterClasses() ) )
-							referencedTypes.add(typeParameter.getType()); //directly add array type parameter
+							usedTypes.add(typeParameter.getType()); //directly add array type parameter
 					}
 				}
 			
 				//add inner types, since their instantiations must be recorded
+				/*
 				if( type instanceof ClassType ) {
 					ClassType classType = (ClassType) type;
 					for( ClassType inner : classType.getInnerClasses().values() )
 						addReferencedType( inner, addMembers );				
 				}
+				*/
 				
 				//add reference to outer types					
 				Type outer = getOuter();
 				while( outer != null ) {
-					outer.addReferencedType(type, addMembers);
+					outer.addUsedType(type);
 					outer = outer.getOuter();
 				}
 				
 				//add interfaces
 				ArrayList<InterfaceType> interfaces = type.getInterfaces();			
 				for( InterfaceType interfaceType : interfaces )
-					addReferencedType(interfaceType, addMembers);
+					addUsedType(interfaceType);
 			}
 			
 		}		
+
+		/* Add methods and fields to mentioned types
+		 * These do not need to be filled out later unless they are also used types. 
+		 */
 		
-		//add methods and fields
-		if( addMembers ) {
 			for( List<MethodSignature> methodList :  type.getMethodMap().values() )
 				for( MethodSignature signature : methodList ) {
 					MethodType methodType = signature.getMethodType();
 					for( ModifiedType parameter : methodType.getParameterTypes() )
-						addReferencedType( parameter.getType(), false );
+						addMentionedType( parameter.getType());
 					
 					for( ModifiedType _return : methodType.getReturnTypes() )
-						addReferencedType( _return.getType(), false );
+						addMentionedType( _return.getType() );
 				}
 			
 			
 			for(Node node : type.getFields().values() )
-				addReferencedType( node.getType(), false );				
-		}
+				addMentionedType( node.getType() );
 	}
 
-	public Set<Type> getReferencedTypes() {
-		return referencedTypes;
+	public Set<Type> getUsedTypes() {
+		return usedTypes;
 	}
+	
+	public Set<Type> getMentionedTypes() {
+		return mentionedTypes;
+	}	
 	
 	public Set<Type> getPartiallyInstantiatedGenerics() {
 		return partiallyInstantiatedGenerics;
@@ -1348,7 +1387,7 @@ public abstract class Type implements Comparable<Type> {
 			for( Object importItem : getImportedItems() ) {
 				if( importItem instanceof Type ) {
 					Type importType = (Type)importItem;
-					if( !importType.hasOuter() && getReferencedTypes().contains(importType) && !importType.getPackage().toString().equals("shadow:standard"))
+					if( !importType.hasOuter() && getUsedTypes().contains(importType) && !importType.getPackage().toString().equals("shadow:standard"))
 						imports.add(importType.toString(PACKAGES));
 						
 				}
@@ -1356,7 +1395,7 @@ public abstract class Type implements Comparable<Type> {
 				{
 					Package importPackage = (Package)importItem;
 					if( !importPackage.toString().equals("shadow:standard"))
-						for( Type referencedType : getReferencedTypes() )
+						for( Type referencedType : getUsedTypes() )
 							if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
 								imports.add(referencedType.toString(PACKAGES));					
 				}
@@ -1365,7 +1404,7 @@ public abstract class Type implements Comparable<Type> {
 			//also classes from the same package
 			if( !getPackage().toString().equals("shadow:standard") )
 				for( Type packageType : getPackage().getTypes() )
-					if( packageType != this && !packageType.hasOuter() && getReferencedTypes().contains(packageType) && !packageType.isPrimitive())
+					if( packageType != this && !packageType.hasOuter() && getUsedTypes().contains(packageType) && !packageType.isPrimitive())
 						imports.add(packageType.toString(PACKAGES));			
 			
 			for( String importType : imports )			

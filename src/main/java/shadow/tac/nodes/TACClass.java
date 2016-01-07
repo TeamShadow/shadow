@@ -159,7 +159,7 @@ public class TACClass extends TACOperand
 			
 			
 			if( (!type.isParameterizedIncludingOuterClasses() && !(type instanceof ArrayType) ) || //non-generics 
-				(outer.getReferencedTypes().contains(type) && type.isFullyInstantiated()) || //fully parameterized generics defined in the file
+				(outer.getUsedTypes().contains(type) && type.isFullyInstantiated()) || //fully parameterized generics defined in the file
 				raw ) {
 				
 				classData = new TACClassData(this);

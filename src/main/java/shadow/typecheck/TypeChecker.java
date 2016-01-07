@@ -102,7 +102,7 @@ public class TypeChecker {
 			Type next = referencedTypes.first();
 			Type simplified = next.getTypeWithoutTypeArguments();			
 			if( !(simplified instanceof ArrayType) && !simplified.hasOuter() && neededTypes.add( simplified ) )				
-				referencedTypes.addAll( simplified.getReferencedTypes() );
+				referencedTypes.addAll( simplified.getUsedTypes() );
 			
 			referencedTypes.remove(next);
 		}

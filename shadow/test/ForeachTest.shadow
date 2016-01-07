@@ -7,7 +7,7 @@ class shadow:test@ForeachTest
 	{	
 		Console out;
 		int[] array = int:create[20];		
-		double[,,] values = double:create[2,4,3];
+		int[,,] values = int:create[2,4,3];
 	
 		var list = LinkedList<String>:create();
 		
@@ -19,13 +19,13 @@ class shadow:test@ForeachTest
 		for( int i = 0; i < array->size; i += 1 )
 			array[i] = array->size - i;
 			
-		double counter = 0.0;
+		int counter = 0;
 		for( int i = 0; i < 2; i += 1 )
 			for( int j = 0; j < 4; j += 1 )
 				for( int k = 0; k < 3; k += 1 )
 				{
 					values[i,j,k] = counter;
-					counter += 1.0;
+					counter += 1;
 				}		
 		
 		foreach( int value in array )
@@ -34,14 +34,12 @@ class shadow:test@ForeachTest
 		foreach( String word in list )
 			out.printLine( word );
 			
-		foreach( double value in values )
+		foreach( int value in values )
 			out.printLine( value );
 			
-		CanIterate<double> iterable = values;
+		CanIterate<int> iterable = values;
 		
-		foreach( double value in iterable )
-			out.printLine( value );			
-			
-		out.printLine( values );		
+		foreach( int value in iterable )
+			out.printLine( value );
 	}
 }

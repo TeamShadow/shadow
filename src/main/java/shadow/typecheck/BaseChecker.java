@@ -816,11 +816,11 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param currentType	type where code is currently executing
 	 * @return				<code>true</code> if type is accessible
 	 */
-	protected static boolean classIsAccessible( Type type, Type currentType ) {
+	public static boolean classIsAccessible( Type type, Type currentType ) {
 		// Public classes and outermost classes are always accessible.
 		// So are direct inner classes.
 		if( type.getModifiers().isPublic() || !type.hasOuter() ||
-				type.getOuter().equals( currentType ) )
+				type.getOuter().equals( currentType ) || type instanceof TypeParameter )
 			return true;
 		
 		// If any outer class of type is also an outer class of typeToAccess, it's visible.

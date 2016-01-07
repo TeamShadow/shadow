@@ -26,6 +26,13 @@ class shadow:test@NullablePrimitiveTest
 			out.printLine("Not equal!");
 		
 		x = null;		
+		
+		if( x === y )
+			out.printLine("Equal!");
+		else
+			out.printLine("Not equal!");
+		
+		
 		out.printLine(x); //should be null
 	}
 }

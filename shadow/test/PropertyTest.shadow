@@ -12,7 +12,7 @@ class shadow:test@PropertyTest
 		property->x += 7;
 		out.printLine(property->x); //24
 		
-		out.printLine(property->y); //5	
+		out.printLine(property->y); //5.0	
 
 		property->z = "Jams!";
 		

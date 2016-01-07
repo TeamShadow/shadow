@@ -173,7 +173,6 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("%float = type float");
 		writer.write("%double = type double");		
 	}
-	
 	private void writeTypes() throws ShadowException {
 		writePrimitiveTypes();
 		
@@ -181,11 +180,11 @@ public class LLVMOutput extends AbstractOutput {
 		
 		//type references
 		HashSet<Type> definedGenerics = new HashSet<Type>();
-		for (Type type : moduleType.getReferencedTypes()) {			
+		for (Type type : moduleType.getUsedTypes()) {			
 			//write type and method table declarations (even for current types!)
 			if(type != null && !(type instanceof ArrayType)  ) {	
 				if( !type.isParameterizedIncludingOuterClasses() ) {
-					writeTypeDeclaration(type);
+					writeTypeDefinition(type);
 					
 					//external stuff for types outside of this file
 					if( !moduleType.encloses(type) ) {					
@@ -203,7 +202,7 @@ public class LLVMOutput extends AbstractOutput {
 					Type unparameterizedType = type.getTypeWithoutTypeArguments();
 					//if unparameterized version has not been declared yet, do it
 					if( definedGenerics.add(unparameterizedType) ) {				
-						writeTypeDeclaration(unparameterizedType);						
+						writeTypeDefinition(unparameterizedType);						
 						
 						if( !moduleType.encloses(unparameterizedType) ) {
 							writer.write(classOf(unparameterizedType) +
@@ -223,11 +222,49 @@ public class LLVMOutput extends AbstractOutput {
 			}
 		}
 		
+		for (Type type : moduleType.getMentionedTypes()) {
+			if(type != null && !(type instanceof ArrayType) && !moduleType.getUsedTypes().contains(type)  ) {	
+				if( !type.isParameterizedIncludingOuterClasses() ) {
+					writeTypeDeclaration(type);
+					
+					//external stuff for types outside of this file
+					if( !moduleType.encloses(type) )
+						writer.write(classOf(type) +
+								" = external constant %" + raw(Type.CLASS));					
+				}
+				else {
+					Type unparameterizedType = type.getTypeWithoutTypeArguments();
+					//if unparameterized version has not been declared yet, do it
+					if( definedGenerics.add(unparameterizedType) ) {				
+						writeTypeDeclaration(unparameterizedType);						
+						
+						if( !moduleType.encloses(unparameterizedType) ) {
+							writer.write(classOf(unparameterizedType) +
+									" = external constant %" + raw(Type.CLASS));											
+						}						
+					}				
+				}
+			}
+		}
+		
 		writer.write();
 	}
 	
-	private void writeTypeDeclaration(Type type) throws ShadowException
-	{
+	private void writeTypeDeclaration(Type type) throws ShadowException {
+		StringBuilder sb = new StringBuilder();		
+		if( type instanceof InterfaceType ) {
+			sb.append(methodTableType(type)).append(" = type opaque");			
+			writer.write(sb.toString());
+		}
+		else if (type instanceof ClassType) {	
+			if( type.isUninstantiated() ) {
+				sb.append('%' + raw(type)).append(" = type opaque");
+				writer.write(sb.toString());
+			}
+		}	
+	}
+	
+	private void writeTypeDefinition(Type type) throws ShadowException {
 		StringBuilder sb = new StringBuilder();
 		
 		if( type instanceof InterfaceType ) {
@@ -256,8 +293,8 @@ public class LLVMOutput extends AbstractOutput {
 					sb.append(", ").append(type(type));
 				else {			
 					for (Entry<String, ? extends ModifiedType> field :
-							((ClassType)type).orderAllFields())
-						sb.append(", ").append(type(field.getValue()));
+							((ClassType)type).orderAllFields())					
+							sb.append(", ").append(type(field.getValue()));					
 				}
 				writer.write(sb.append(" }").toString());
 			}
@@ -478,7 +515,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	private void writeGenericClasses() throws ShadowException {		
-		for (Type type : module.getType().getReferencedTypes() ) {
+		for (Type type : module.getType().getUsedTypes() ) {
 			if( type.isFullyInstantiated() && !(type instanceof ArrayType) )
 				writeGenericClass(type);	
 		}
@@ -486,7 +523,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write();
 	}
 	private void writeArrayClasses() throws ShadowException {
-		for (Type type : module.getType().getReferencedTypes() ) {
+		for (Type type : module.getType().getUsedTypes() ) {
 			if( type instanceof ArrayType && !((ArrayType)type).containsUnboundTypeParameters()  )
 				writeArrayClass((ArrayType)type);	
 		}
@@ -1740,11 +1777,39 @@ public class LLVMOutput extends AbstractOutput {
 
 	private static String type( ModifiedType type ) {
 		return type(type.getType(), type.getModifiers().isNullable());
-	}	
+	}
+	
+	protected static String simplifiedType( ModifiedType type ) {
+		return simplifiedType(type.getType(), type.getModifiers().isNullable());
+	}
 	
 	protected static String type( Type type ) {
 		return type(type, false);
 	}
+	
+	protected static String simplifiedType( Type type ) {
+		return simplifiedType(type, false);
+	}
+	
+	protected static String simplifiedType(Type type, boolean nullable) {
+		if (type == null)
+			throw new NullPointerException();
+		if (type instanceof ArrayType)
+			return simplifiedType((ArrayType)type);
+		if( type.isPrimitive() )
+			if( nullable )
+				return type(Type.OBJECT);
+			else
+				return type(type, false);		
+		if (type instanceof ClassType)
+			return type(Type.OBJECT);
+		if (type instanceof InterfaceType)
+			return simplifiedType((InterfaceType)type);
+		if (type instanceof TypeParameter)
+			return type(Type.OBJECT);		
+		throw new IllegalArgumentException("Unknown type.");
+	}
+	
 	
 	protected static String type(Type type, boolean nullable) {
 		if (type == null)
@@ -1769,6 +1834,11 @@ public class LLVMOutput extends AbstractOutput {
 				" x " + type(Type.INT) + "] }";
 	}
 	
+	protected static String simplifiedType(ArrayType type) {
+		return "{ " + simplifiedType(type.getBaseType()) + "*, [" + type.getDimensions() +
+				" x " + type(Type.INT) + "] }";
+	}
+	
 	private static String type(SequenceType type) {
 		if (type.isEmpty())
 			return "void";
@@ -1788,6 +1858,10 @@ public class LLVMOutput extends AbstractOutput {
 	
 	private static String type(InterfaceType type) {
 		return "{ " + methodTableType(type) + "*, " + type(Type.OBJECT) + " }";
+	}
+	
+	private static String simplifiedType(InterfaceType type) {
+		return "{ " + methodTableType(Type.OBJECT) + "*, " + type(Type.OBJECT) + " }";
 	}
 	
 	private static String type(TypeParameter type) {

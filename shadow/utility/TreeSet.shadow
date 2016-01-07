@@ -1,0 +1,101 @@
+class shadow:utility@
+	TreeSet<V is CanCompare<V>>
+is  OrderedSet<V>
+{
+	TreeMap<V,V> map;	
+
+	public create()
+	{
+		map = TreeMap<V,V>:create();
+	}	
+	
+	public index( V value ) => ( boolean found )
+	{
+		return map.containsKey(value);
+	}
+	
+	public index( V value, boolean add ) => ()
+	{
+		if ( add )
+			map[value] = value;
+		else
+			map.remove(value);
+	}
+
+	public add( V value ) => ( boolean added )
+	{		
+		//returns true if item newly added (no old item)
+		return map.add( value, value ) === null;
+	}
+	
+	public remove( V value ) => ( boolean removed )
+	{	
+		//returns true if item was present in the set (some existing item)
+		return map.remove(value) !== null;
+	}
+	
+	public readonly contains( V value ) => ( boolean found )
+	{		
+		return map.containsKey(value);
+	}
+
+	public readonly iterator() => ( Iterator<V> )
+	{
+		return map.iterator();
+	}
+	
+	public clear() => ()
+	{
+		map.clear();
+	}
+	
+	public readonly get size() => (int)
+	{
+		return map.size();	
+	}
+	
+	public readonly toString() => (String)
+	{
+		var output = MutableString:create("{");
+		boolean first = true;
+		foreach(V value in map)
+		{			
+			if( first )
+				first = false;
+			else
+				output.append(", ");
+			output.append(value);
+		}		
+		output.append("}");
+		return output.toString();
+	}	
+	
+	public readonly min() => (V)
+	{
+		if( map.isEmpty() )
+			throw NoSuchElementException:create("Cannot call min() on empty set");			
+		return map.min();
+	}
+	
+    public readonly max() => (V)
+    {
+		if( map.isEmpty() )
+			throw NoSuchElementException:create("Cannot call max() on empty set");			
+		return map.max();    
+    }    
+       
+    public readonly floor(V element) => (nullable V)
+    {
+    	return map.floor(element);
+    }
+    
+    public readonly ceiling(V element) => (nullable V)
+    {
+    	return map.ceiling(element);
+    }    
+    
+    public readonly values(V low, V high) => (CanIterate<V>)
+    {
+    	return map.keys(low, high);
+    }
+}
