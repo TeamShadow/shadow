@@ -29,15 +29,20 @@ public class MethodType extends ClassType {
 		return null;
 	}
 	
-	//used to copy a MethodType with different modifiers
-	public MethodType copy(Modifiers modifiers)
+	public MethodType copy(Type outer, Modifiers modifiers)
 	{
-		MethodType copiedType = new MethodType(super.getOuter(), modifiers, getDocumentation());
+		MethodType copiedType = new MethodType(outer, modifiers, getDocumentation());
 		copiedType.parameterNames.addAll(parameterNames);
 		copiedType.parameterTypes.addAll(parameterTypes);
 		copiedType.returns.addAll(returns);
 		copiedType.typeWithoutTypeArguments = typeWithoutTypeArguments;
 		return copiedType;
+	}
+	
+	//used to copy a MethodType with different modifiers
+	public MethodType copy(Modifiers modifiers)
+	{
+		return copy(super.getOuter(), modifiers);
 	}	
 	
 	//this method is used to see if particular return values inside the method can be given back as return values

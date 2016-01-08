@@ -1,0 +1,44 @@
+import shadow:io@Console;
+
+class shadow:test@CollidingWrapperTest is CanIndex<int, int>
+{
+	private class Inner is CanIndex<int, int>
+	{
+		int value = 5;
+	
+		public index( int a ) => ( int )
+		{
+			return a + value;		
+		}
+	
+	}
+	
+	int thing = 10;
+	
+	public index( int a ) => ( int )
+	{
+		return a + thing;		
+	}
+
+	public main( String[] args ) => ()
+	{	
+		Console out;
+		
+		CollidingWrapperTest object = CollidingWrapperTest:create();
+		Inner inner = Inner:create();
+		
+		
+		out.printLine( object[3] ); //13
+		out.printLine( inner[3] ); //8
+		
+		
+		
+		CanIndex<int,int> indexer = object;
+		
+		out.printLine( indexer[3] ); //13
+		
+		indexer = inner;
+		
+		out.printLine( indexer[3] ); //8		
+	}	
+}

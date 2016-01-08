@@ -577,6 +577,16 @@ public class OutputTest {
 				"shadow:test@ChildTest:main([])\n");
 	}
 	
+	@Test public void testCollidingWrapper() throws Exception {
+		args.add("shadow/test/CollidingWrapperTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"13\n" + 
+				"8\n" + 
+				"13\n" + 
+				"8\n");
+	}
+	
 	@Test public void testComplex() throws Exception {
 		args.add("shadow/test/ComplexTest.shadow");
 		Main.run(args.toArray(new String[] { }));

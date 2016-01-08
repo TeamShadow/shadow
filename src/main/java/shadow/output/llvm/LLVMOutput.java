@@ -35,6 +35,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
+import shadow.tac.TACNodeList;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
@@ -52,6 +53,7 @@ import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACGlobal;
 import shadow.tac.nodes.TACLabelRef;
+import shadow.tac.nodes.TACSimpleNode;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
@@ -102,18 +104,20 @@ public class LLVMOutput extends AbstractOutput {
 	private int classCounter = 0;
 	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
 	private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
-
+	
 	
 	private Set<String> genericClasses = new TreeSet<String>();
 	private Set<String> arrayClasses = new TreeSet<String>();
 	
 	private TACModule module;
+	private boolean skipMethod = false;
 	
 	private static final Charset UTF8 = Charset.forName("UTF-8");
 	
-	public LLVMOutput(File file) throws ShadowException {		
-		super(new File(file.getParent(),
-				file.getName().replace(".shadow", ".ll")));
+	public LLVMOutput(File file) throws ShadowException {
+		super(file);
+		//super(new File(file.getParent(),
+			//	file.getName().replace(".shadow", ".ll")));
 	}
 	
 	//used to do an LLVM check pass for debugging
@@ -743,16 +747,20 @@ public class LLVMOutput extends AbstractOutput {
 	public void startMethod(TACMethod method, TACModule module) throws ShadowException {
 		this.method = method;		
 		MethodSignature signature = method.getMethod();
-		if (module.getType() instanceof InterfaceType)
-			return;
-		SequenceType parameters = signature.getFullParameterTypes();
-		tempCounter = parameters.size() + 1;
-		if (signature.isNative()) {
+		if (module.getType() instanceof InterfaceType ) {
+			skipMethod = true;			
+		}		
+		else if (signature.isNative()) {
 			writer.write("declare " + methodToString(method));
-			writer.indent();
+			writer.write();
+			skipMethod = true;
 		}
 		else {
-			writer.write("define " + methodToString(method) + (method.hasLandingpad() ? " personality i32 (...)* @__shadow_personality_v0 {" : " {"  ));
+			SequenceType parameters = signature.getFullParameterTypes();
+			tempCounter = parameters.size() + 1;
+			writer.write("define " + methodToString(method) +
+					(signature.isWrapper() ? " unnamed_addr" : "" ) +
+					(method.hasLandingpad() ? " personality i32 (...)* @__shadow_personality_v0 {" : " {"  ));
 			writer.indent();
 			for (TACVariable local : method.getLocals())
 				writer.write('%' + name(local) + " = alloca " + type(local));
@@ -788,14 +796,22 @@ public class LLVMOutput extends AbstractOutput {
 			}
 		}
 	}
+	
+	@Override
+	public void walk(TACNodeList nodes) throws ShadowException {
+		if( !skipMethod )
+			super.walk(nodes);
+	}
 
 	@Override
 	public void endMethod(TACMethod method, TACModule module) throws ShadowException {
-		writer.outdent();
-		MethodSignature signature = method.getMethod();
-		if (!signature.isNative() && !(module.getType() instanceof InterfaceType))
+				
+		if( !skipMethod ) {
+			writer.outdent();
 			writer.write('}');
-		writer.write();
+			writer.write();
+		}
+		skipMethod = false;
 		method = null;
 	}
 
@@ -2256,5 +2272,9 @@ public class LLVMOutput extends AbstractOutput {
 	
 	public Set<String> getArrayClasses() {
 		return arrayClasses;
+	}
+	
+	public void close() throws IOException {
+		writer.close();
 	}
 }

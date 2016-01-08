@@ -206,4 +206,12 @@ public class TabbedLineWriter
 			throw new ShadowException(ex.getLocalizedMessage());
 		}
 	}
+	
+	public void close() throws IOException
+	{
+		if( out != null ) {
+			out.flush();
+			out.close();
+		}
+	}
 }

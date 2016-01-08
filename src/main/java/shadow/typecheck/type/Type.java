@@ -952,24 +952,7 @@ public abstract class Type implements Comparable<Type> {
 	public boolean containsMethod(String symbol)
 	{
 		return methodTable.get(symbol) != null;		
-	}	
-	
-	public boolean containsMethod(MethodSignature signature)
-	{
-		return containsMethod( signature, Modifiers.NO_MODIFIERS );		
 	}
-	
-	
-	public boolean containsMethod(MethodSignature signature, Modifiers modifiers ) { //must have certain modifiers (usually public)
-		List<MethodSignature> list = methodTable.get(signature.getSymbol());
-		
-		if( list != null )
-			for(MethodSignature existing : list )
-				if( existing.equals(signature) && (existing.getMethodType().getModifiers().hasModifier(modifiers) )) 
-					return true;
-		
-		return false;
-	}	
 	
 	public boolean containsIndistinguishableMethod(MethodSignature signature) { //not identical, but indistinguishable at call time
 		List<MethodSignature> list = methodTable.get(signature.getSymbol());

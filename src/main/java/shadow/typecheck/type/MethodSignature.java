@@ -73,8 +73,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	{
 		if( o != null && o instanceof MethodSignature )
 		{
-			MethodSignature ms = (MethodSignature)o;			
-			return ms.symbol.equals(symbol) && ms.type.equals(type) && ms.outer.equals(outer);
+			MethodSignature ms = (MethodSignature)o;
+			//Is it pretty? No. Should it work?  Probably!  
+			return ms.getMangledName().equals(getMangledName());
+			//return ms.symbol.equals(symbol) && ms.type.equals(type) && ms.outer.equals(outer) && ms.isWrapper() == isWrapper();
 		}
 		else
 			return false;
@@ -140,24 +142,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			
 		return paramTypes;
 	}
-	
-	//like toString() but includes outer type to differentiate
-	public String hashString() {
-		//StringBuilder sb = new StringBuilder(getModifiers().toString());
-		//sb.append(" ").append("" + outer).append(":").append(symbol);
-		StringBuilder sb = new StringBuilder("" + outer).append(":").append(symbol);
-		
-		//nothing more for destroy
-		if( !symbol.equals("destroy") ) {			
-			sb.append(type.parametersToString());
-			
-			//no return types for create
-			if( !symbol.equals("create") )
-				sb.append(" => ").append(type.getReturnTypes());
-		}
-		
-		return sb.toString();
-	}
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getModifiers().toString());
@@ -177,7 +161,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	@Override
 	public int hashCode() {
-		return hashString().hashCode();
+		return getMangledName().hashCode();
 	}
 	
 	//Is it only the wrapped ones that correspond to interface methods?
@@ -186,14 +170,14 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		StringBuilder sb = new StringBuilder();
 		
 		if( isWrapper() )		
-			sb.append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS));
+			sb.append(getWrapped().getOuter().toString(Type.MANGLE));			
 		else
 			sb.append(getOuter().toString(Type.MANGLE));
 		
 		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
 		
 		if (isWrapper())
-			sb.append("_W");
+			sb.append("_W_").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS));
 		
 		return sb.toString();
 	}
@@ -252,7 +236,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	@Override
 	public int compareTo(MethodSignature o) {
-		return hashString().compareTo(o.hashString());
+		return getMangledName().compareTo(o.getMangledName());
 	}
 
 	public boolean isCreate() {		
@@ -319,10 +303,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		Modifiers modifiers = new Modifiers(wrapped.getModifiers().getModifiers());
 		modifiers.removeModifier(Modifiers.NATIVE);		
 		MethodType methodType;
-		/*if( outer instanceof InterfaceType )		
-			methodType = signatureWithoutTypeArguments.type.copy(modifiers);
-		else*/
-			methodType = type.copy(modifiers);
+		//if( outer instanceof InterfaceType )
+		//	methodType = type.copy(wrapped.getOuter(), modifiers);
+			//methodType = signatureWithoutTypeArguments.type.copy(modifiers);
+		//else
+		methodType = type.copy(modifiers);
 		MethodSignature wrapper = new MethodSignature(methodType, symbol, outer, node, wrapped);
 		wrapper.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
 		return wrapper;

@@ -310,6 +310,7 @@ public class Main {
 					}
 					catch(ShadowException e) {
 						logger.error(file + " FAILED TO COMPILE");
+						output.close();
 						if( llvmFile.exists() )
 							llvmFile.delete();
 						throw new CompileException(e.getMessage());

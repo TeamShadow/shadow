@@ -14,6 +14,7 @@ import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
