@@ -2230,20 +2230,10 @@ public class TACBuilder implements ShadowParserVisitor {
 		boolean implicitCreate = false;
 		if (moduleStack.peek().isClass()) {						
 			block = new TACBlock(tree = new TACTree(1));
-			if (!methodSignature.isNative() && methodSignature.isCreate()) {
-				ASTCreateDeclaration declaration = (ASTCreateDeclaration) methodSignature.getNode();
-				implicitCreate = !declaration.hasExplicitCreate();
-				Type type = methodSignature.getOuter();
-				if (type.hasOuter())
-					new TACStore(tree,
-							new TACFieldRef(tree, new TACVariableRef(tree,
-									method.getThis()),
-									new SimpleModifiedType(type.getOuter()),
-									"_outer"),
-							new TACVariableRef(tree,
-									method.getParameter("_outer")));
-
-			}
+			if (methodSignature.isNative()) {
+				method.addParameters();
+				walk(methodSignature.getNode().jjtGetChild(0).jjtGetChild(0));
+			}		
 			else if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
 				ClassType type = (ClassType) methodSignature.getOuter();	
 				
@@ -2406,8 +2396,8 @@ public class TACBuilder implements ShadowParserVisitor {
 					new TACReturn(tree, methodSignature.getFullReturnTypes(), existingObject);					
 				}
 			}
-			
-			if (methodSignature.getNode() == null) { //for gets and sets			
+			//Gets and sets that were created by default (that's why they have a node with a bogus ID)
+			else if( methodSignature.getNode().getID() == -1 && (methodSignature.isGet() || methodSignature.isSet() )) { 			
 				method.addParameters();
 				TACFieldRef field = new TACFieldRef(tree, new TACVariableRef(
 						tree, method.getThis()), methodSignature.getSymbol());
@@ -2423,11 +2413,7 @@ public class TACBuilder implements ShadowParserVisitor {
 				}
 				else
 					new TACReturn(tree, methodSignature.getFullReturnTypes());
-			}	
-			else if (methodSignature.isNative()) {
-				method.addParameters();
-				walk(methodSignature.getNode().jjtGetChild(0).jjtGetChild(0));
-			}				
+			}		
 			else if (methodSignature.isWrapper()) {
 				MethodSignature wrapped = methodSignature.getWrapped();
 				SequenceType fromTypes = methodSignature.getFullParameterTypes(),
@@ -2463,7 +2449,22 @@ public class TACBuilder implements ShadowParserVisitor {
 					new TACReturn(tree, toTypes, value);	
 				}
 			}
-			else { // Regular method or create
+			else { // Regular method or create				
+				
+				if( methodSignature.isCreate()) {
+					ASTCreateDeclaration declaration = (ASTCreateDeclaration) methodSignature.getNode();
+					implicitCreate = !declaration.hasExplicitCreate();
+					Type type = methodSignature.getOuter();
+					if (type.hasOuter())
+						new TACStore(tree,
+								new TACFieldRef(tree, new TACVariableRef(tree,
+										method.getThis()),
+										new SimpleModifiedType(type.getOuter()),
+										"_outer"),
+								new TACVariableRef(tree,
+										method.getParameter("_outer")));
+				}
+				
 				method.addParameters();
 				
 				// Call parent create if implicit create.

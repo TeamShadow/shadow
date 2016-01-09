@@ -315,4 +315,9 @@ public class SimpleNode implements Node {
 		lineEnd = t.endLine;
 		columnEnd = t.endColumn;
 	}
+	
+	@Override
+	public int getID() {
+		return id;
+	}
 }

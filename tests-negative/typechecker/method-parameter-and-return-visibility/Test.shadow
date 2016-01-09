@@ -46,4 +46,10 @@ class Test
 	{
 		return InnerThree:create();
 	}
+	
+	// Should fail
+	protected methodG(Inner inner) => ()
+	{
+		String string = #inner;
+	}
 }

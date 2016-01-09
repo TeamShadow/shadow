@@ -314,9 +314,9 @@ public class NegativeTests {
 		enforce(Error.INVALID_OVERRIDE);		
 	}
 	
-	@Test public void testMethodReturnVisibility() throws Exception
+	@Test public void testMethodParameterAndReturnVisibility() throws Exception
 	{
-		args.add("tests-negative/typechecker/method-return-visibility/Test.shadow");
+		args.add("tests-negative/typechecker/method-parameter-and-return-visibility/Test.shadow");
 		enforce(Error.ILLEGAL_ACCESS);
 	}
 	

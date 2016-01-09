@@ -88,6 +88,8 @@ interface Node extends ModifiedType {
 	public boolean hasDocumentation();
 	
 	public boolean isField();
+	
+	public int getID();
 
   /** Accept the visitor. **/
   public Object jjtAccept(ShadowParserVisitor visitor, Boolean secondVisit) throws ShadowException;

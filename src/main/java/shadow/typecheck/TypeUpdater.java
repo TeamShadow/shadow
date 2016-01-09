@@ -145,10 +145,6 @@ public class TypeUpdater extends BaseChecker {
 		if( errorList.isEmpty() )
 			checkOverrides( nodeList );
 		
-		/* Ensure that methods only return types that their callers could know about */
-		if (errorList.isEmpty())
-			checkReturnVisibility(nodeList);
-		
 		/* Finally, update which types are referenced by other types. */
 		if( errorList.isEmpty() )
 			updateTypeReferences( nodeList );
@@ -285,9 +281,9 @@ public class TypeUpdater extends BaseChecker {
 								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
 								// Default get is readonly.
 								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);														
-								methodNode.setImage(field.getKey());
-								methodNode.setType(node.getType());
+								methodNode.setImage(field.getKey());								
 								MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
+								methodNode.setType(methodType);
 								Modifiers modifiers = new Modifiers(fieldModifiers);
 								modifiers.removeModifier(Modifiers.GET);
 								modifiers.removeModifier(Modifiers.FIELD);									
@@ -296,8 +292,10 @@ public class TypeUpdater extends BaseChecker {
 								if( modifiers.isSet() )
 									modifiers.removeModifier(Modifiers.SET);
 								SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
-								methodType.addReturn(modifiedType);									
-								classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
+								methodType.addReturn(modifiedType);
+								MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);								
+								checkParameterAndReturnVisibility(signature, classType); // Make sure field type is visible
+								classType.addMethod(signature);
 							}								
 						}
 						
@@ -307,9 +305,9 @@ public class TypeUpdater extends BaseChecker {
 							else {
 								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
 								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
-								methodNode.setImage(field.getKey());
-								methodNode.setType(node.getType());
+								methodNode.setImage(field.getKey());								
 								MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
+								methodNode.setType(methodType);
 								Modifiers modifiers = new Modifiers(fieldModifiers);
 								//is it even possible to have an immutable or readonly set?
 								if( modifiers.isImmutable() )
@@ -323,7 +321,9 @@ public class TypeUpdater extends BaseChecker {
 									modifiers.removeModifier(Modifiers.WEAK);
 								SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
 								methodType.addParameter("value", modifiedType );									
-								classType.addMethod(new MethodSignature(methodType, field.getKey(), classType, null));
+								MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);
+								checkParameterAndReturnVisibility(signature, classType); // Make sure field type is visible
+								classType.addMethod(signature);
 							}								
 						}
 					}						
@@ -363,16 +363,9 @@ public class TypeUpdater extends BaseChecker {
 			for(Node declarationNode : nodeList ) {	
 				Type type = declarationNode.getType();				
 				updateTypeParameters( type, declarationNode );
-
 				
 				Type cleanType = declarationNode.getType().getTypeWithoutTypeArguments();				
 				updatedNodeTable.put(cleanType, declarationNode);
-				
-				/* Add references to type parameters. */
-				//Necessary?  Updating type references should handle this.
-				//if( cleanType.isParameterized() )
-				//	for( ModifiedType parameter : cleanType.getTypeParameters() )
-				//		cleanType.addReferencedType(parameter.getType());
 			}
 		}
 		catch( CycleFoundException e ) {
@@ -527,27 +520,11 @@ public class TypeUpdater extends BaseChecker {
 				}
 			}
 		}				
-	}
-	
-	/** Ensure all methods only return types of greater or equal visibility -
-	 * i.e. no public method should have a private inner class in its return
-	 * type
-	 */
-	private void checkReturnVisibility(List<Node> nodeList) {
-		for (Node declarationNode : nodeList) {
-			if (declarationNode.getType() instanceof ClassType) {
-				setFile(declarationNode.getFile()); // For helpful error reporting
-				ClassType classType = (ClassType) declarationNode.getType();
-				
-				for (List<MethodSignature> signatures : classType.getMethodMap().values())
-					for (MethodSignature method : signatures)
-						visibleReturnTypes(method, classType);
-			}
-		}
-	}
-	
-	/** Ensure a method's return types are equally or more visible than the method */
-	private void visibleReturnTypes(MethodSignature method, ClassType parent) {
+	}	
+
+	/* Ensure a method's parameters and return types are equally or more
+	 * visible than the method */
+	private void checkParameterAndReturnVisibility(MethodSignature method, ClassType parent) {
 		// The return types of private methods will never be less visible
 		if (method.getModifiers().hasModifier(Modifiers.PRIVATE))
 			return;
@@ -556,7 +533,7 @@ public class TypeUpdater extends BaseChecker {
 		boolean isPublic = method.getModifiers().hasModifier(Modifiers.PUBLIC);
 		
 		// Test each of its return types (within the sequence type)
-		for (ModifiedType modifiedType : method.getFullReturnTypes() /* vs .getReturnTypes()? */) {
+		for (ModifiedType modifiedType : method.getReturnTypes()) {
 			Type type = modifiedType.getType();
 			
 			// Only bother to test inner classes (relative to the method's containing class)
@@ -568,7 +545,29 @@ public class TypeUpdater extends BaseChecker {
 					// If (PRIVATE || (!isPublic && PROTECTED)
 					if (outer.getModifiers().hasModifier(Modifiers.PRIVATE)
 							|| (isPublic && outer.getModifiers().hasModifier(Modifiers.PROTECTED))) {
-						addError(Error.ILLEGAL_ACCESS, "Method \"" + method + "\" is more visible than return type " + type);
+						addError(method.getNode(), Error.ILLEGAL_ACCESS, "Method " + method + " is more visible than return type " + type);
+						break; // No need to keep climbing
+					}
+						
+					outer = outer.getOuter();
+				}
+			}
+		}
+		
+		// Test each of its parameter types (within the sequence type)
+		for (ModifiedType modifiedType : method.getParameterTypes()) {
+			Type type = modifiedType.getType();
+			
+			// Only bother to test inner classes (relative to the method's containing class)
+			if (parent.recursivelyContainsInnerClass(type)) {
+				Type outer = type;
+				
+				// Climb through nested inner types looking for any lesser visibility
+				while (outer != parent) {
+					// If (PRIVATE || (!isPublic && PROTECTED)
+					if (outer.getModifiers().hasModifier(Modifiers.PRIVATE)
+							|| (isPublic && outer.getModifiers().hasModifier(Modifiers.PROTECTED))) {
+						addError(method.getNode(), Error.ILLEGAL_ACCESS, "Method " + method + " is more visible than parameter type " + type);
 						break; // No need to keep climbing
 					}
 						
@@ -690,12 +689,18 @@ public class TypeUpdater extends BaseChecker {
 					
 					if( node.hasBlock() && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
 						addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
+					
+					/* Check to see if the method's parameters and return types are the
+					 * correct level of visibility, e.g., a public method shouldn't
+					 * return a private inner class.
+					 */
+					checkParameterAndReturnVisibility(signature, (ClassType)currentType);
 				}
 			}
 			else if( currentType instanceof InterfaceType ) {
 				if( node.hasBlock() )
 					addError(node, Error.INVALID_STRUCTURE, "Interface method " + signature + " must not define a body");
-			}		
+			}
 			
 			// Add the method to the current type.
 			currentType.addMethod(signature);
