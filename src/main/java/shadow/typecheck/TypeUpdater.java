@@ -145,6 +145,10 @@ public class TypeUpdater extends BaseChecker {
 		if( errorList.isEmpty() )
 			checkOverrides( nodeList );
 		
+		/* Ensure that methods only return types that their callers could know about */
+		if (errorList.isEmpty())
+			checkReturnVisibility(nodeList);
+		
 		/* Finally, update which types are referenced by other types. */
 		if( errorList.isEmpty() )
 			updateTypeReferences( nodeList );
@@ -523,6 +527,55 @@ public class TypeUpdater extends BaseChecker {
 				}
 			}
 		}				
+	}
+	
+	/** Ensure all methods only return types of greater or equal visibility -
+	 * i.e. no public method should have a private inner class in its return
+	 * type
+	 */
+	private void checkReturnVisibility(List<Node> nodeList) {
+		for (Node declarationNode : nodeList) {
+			if (declarationNode.getType() instanceof ClassType) {
+				setFile(declarationNode.getFile()); // For helpful error reporting
+				ClassType classType = (ClassType) declarationNode.getType();
+				
+				for (List<MethodSignature> signatures : classType.getMethodMap().values())
+					for (MethodSignature method : signatures)
+						visibleReturnTypes(method, classType);
+			}
+		}
+	}
+	
+	/** Ensure a method's return types are equally or more visible than the method */
+	private void visibleReturnTypes(MethodSignature method, ClassType parent) {
+		// The return types of private methods will never be less visible
+		if (method.getModifiers().hasModifier(Modifiers.PRIVATE))
+			return;
+		
+		// If this is false, the method must be protected
+		boolean isPublic = method.getModifiers().hasModifier(Modifiers.PUBLIC);
+		
+		// Test each of its return types (within the sequence type)
+		for (ModifiedType modifiedType : method.getFullReturnTypes() /* vs .getReturnTypes()? */) {
+			Type type = modifiedType.getType();
+			
+			// Only bother to test inner classes (relative to the method's containing class)
+			if (parent.recursivelyContainsInnerClass(type)) {
+				Type outer = type;
+				
+				// Climb through nested inner types looking for any lesser visibility
+				while (outer != parent) {
+					// If (PRIVATE || (!isPublic && PROTECTED)
+					if (outer.getModifiers().hasModifier(Modifiers.PRIVATE)
+							|| (isPublic && outer.getModifiers().hasModifier(Modifiers.PROTECTED))) {
+						addError(Error.ILLEGAL_ACCESS, "Method \"" + method + "\" is more visible than return type " + type);
+						break; // No need to keep climbing
+					}
+						
+					outer = outer.getOuter();
+				}
+			}
+		}
 	}
 	
 	private void updateTypeParameters( Type type, Node declarationNode ) {

@@ -1,0 +1,49 @@
+class Test
+{
+	private class Inner
+	{
+		public class InnerTwo
+		{
+
+		}
+	}
+
+	protected class InnerThree
+	{
+
+	}
+
+	// Should fail
+	public methodA() => (Inner)
+	{
+		return Inner:create();
+	}
+
+	// Should fail
+	protected methodB() => (Inner)
+	{
+		return Inner:create();
+	}
+
+	private methodC() => (Inner)
+	{
+		return Inner:create();
+	}
+
+	// Should fail
+	public methodD() => (Inner:InnerTwo)
+	{
+		return Inner:InnerTwo:create();
+	}
+
+	// Should fail
+	public methodE() => (InnerThree)
+	{
+		return InnerThree:create();
+	}
+
+	protected methodF() => (InnerThree)
+	{
+		return InnerThree:create();
+	}
+}
