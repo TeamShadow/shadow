@@ -314,6 +314,12 @@ public class NegativeTests {
 		enforce(Error.INVALID_OVERRIDE);		
 	}
 	
+	@Test public void testMethodReturnVisibility() throws Exception
+	{
+		args.add("tests-negative/typechecker/method-return-visibility/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);
+	}
+	
 	@Test public void testNoDefaultCreateForArray() throws Exception
 	{
 		args.add("tests-negative/typechecker/no-default-create-for-array/Test.shadow"); 
