@@ -1,4 +1,25 @@
+/**
+ * Interface {@code CanIndexStore<K,V>} specifies that a class can store a
+ * value in a location associated with a particular key. This interface
+ * allows the overloading of the {@code []} operator used to store values.
+ * If this operator is applied, the appropriate {@code index(K,V)}
+ * method will be called, storing the value in a location associated with the
+ * key. This interface provides store indexing functionality for arrays,
+ * maps, and other symbol tables. It differs from the
+ * {@code CanIndexStoreNullable<K,V>} interface in that its {@code index(K,V)}
+ * method cannot store a {@code null} value.
+ *
+ * Interface {@code CanIndex<K,V>} provides related index load functionality.
+ *
+ * @seeDoc shadow:standard@CanIndexStoreNullable
+ * @seeDoc shadow:standard@CanIndex 
+ */
 interface shadow:standard@CanIndexStore<K,V>
 {
+	/**
+	 * Method called to store a value in a location associated with the key.
+	 * @param key key value
+	 * @param value value to be stored in a location associated with the key	  	 
+	 */
 	index(K key, V value) => ();
 }

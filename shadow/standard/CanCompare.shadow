@@ -3,7 +3,7 @@
  * an object of type {@code T}, producing a signed comparison {@code int}.
  * This interface allows overloading of the {@code <}, {@code >}, {@code <=},
  * and {@code >=} operators.  If any of these operators is applied, the
- * matching {@code compare(T)} method will be called and tested.
+ * appropriate {@code compare(T)} method will be called and tested.
  *
  * This interface also supports the {@code ==} operator through
  * {@code CanEqual<T>}.   

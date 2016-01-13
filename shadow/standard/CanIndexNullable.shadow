@@ -1,3 +1,20 @@
+/**
+ * Interface {@code CanIndexNullable<K,V>} specifies that a class can return a
+ * value associated with a particular key. 
+ * This interface allows overloading of the {@code []} operator used to load
+ * values.  If this operator is applied, the appropriate {@code index(K)} method
+ * will be called, returning a matching value or returning {@code null} if the 
+ * key cannot be found. This interface provides load indexing functionality
+ * for nullable arrays, maps, and other symbol tables.  It differs from the
+ * {@code CanIndex<K,V>} interface in that its {@code index(K)} method can
+ * return {@code null}.
+ *
+ * Interface {@code CanIndexStoreNullable<K,V>} provides related index store
+ * functionality.  
+ *
+ * @seeDoc shadow:standard@CanIndex
+ * @seeDoc shadow:standard@CanIndexStoreNullable
+ */
 interface shadow:standard@CanIndexNullable<K,V>
 {
 	readonly index(K key) => (nullable V value);	

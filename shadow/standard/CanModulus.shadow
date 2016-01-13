@@ -1,5 +1,21 @@
+/**
+ * Interface {@code CanModulus<T>} specifies that a class can be divided by
+ * an object of type {@code T}, producing a remainder of {@code T}.  This
+ * interface allows overloading of the {@code %} operator.  If the {@code %}
+ * operator is applied, the appropriate {@code modulus(T)} method will be
+ * called.
+ *
+ * Although this interface allows the {@code %} operator to be overloaded with
+ * arbitrary functionality for any class, it is intended to make operations
+ * between numerical classes more readable.
+ */
 interface shadow:standard@
 	CanModulus<T>
 {
+	/**
+	 * Method called when the {@code %} operator is overloaded.
+	 * @param other object to divide by
+	 * @return remainder of the division
+	 */
 	readonly modulus(T other) => (T);
 }

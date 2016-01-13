@@ -3,7 +3,7 @@
  * equality with an object of type {@code T}, producing a {@code boolean}
  * which is {@code true} if the objects are identical.
  * This interface allows overloading of the {@code ==} operator.  If this
- * operator is applied, the matching {@code equal(T)} method will be called. 
+ * operator is applied, the appropriate {@code equal(T)} method will be called. 
  */
 interface shadow:standard@
 	CanEqual<T>

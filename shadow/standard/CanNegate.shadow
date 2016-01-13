@@ -1,5 +1,19 @@
+/**
+ * Interface {@code CanNegate<T>} specifies that a class can be negated,
+ * producing an object of type {@code T}.  This interface allows overloading
+ * of the unary {@code -} operator.  If the unary {@code -} operator   
+ * is applied, the appropriate {@code negate()} method will be called.
+ *
+ * Although this interface allows the unary {@code -} operator to be
+ * overloaded with arbitrary functionality for any class, it is intended to
+ * make operations on numerical classes more readable.
+ */
 interface shadow:standard@
 	CanNegate<T>
 {
+	/**
+	 * Method called when the unary {@code -} operator is overloaded.	 
+	 * @return negated version of object
+	 */
 	readonly negate() => (T);
 }

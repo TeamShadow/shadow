@@ -1,4 +1,22 @@
+/**
+ * Interface {@code CanIterate<T>} specifies that a class can produce an
+ * {@code Iterator<T>} which can iterate over objects of type {@code T}.
+ * This interface allows an object of the class to be the target of a 
+ * {@code foreach} loop or any other context where iteration over values is
+ * required.  It is expected that most container classes will implement this
+ * interface. This interface differs from {@code CanIterateNullable<T>} in
+ * that it produces an {@code Iterator<T>}, whose iterated values are
+ * guaranteed never to be {@code null}.
+ *
+ * @seeDoc shadow:standard@Iterator 
+ * @seeDoc shadow:standard@CanIterateNullable
+ */
 interface shadow:standard@CanIterate<T>
 {
+	/**
+	 * Method called to produce a new iterator, presumably to the first item
+	 * in a collection, if items are ordered.
+	 * @return iterator to objects of type {@code T}  	 
+	 */
 	readonly iterator() => (Iterator<T>);
 }

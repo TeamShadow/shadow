@@ -1,5 +1,21 @@
+/**
+ * Interface {@code CanSubtract<T>} specifies that a class can be subtracted by
+ * an object of type {@code T}, producing a {@code T}.  This interface
+ * allows overloading of the binary {@code -} operator.  If the binary
+ * {@code -} operator is applied, the appropriate {@code subtract(T)} method
+ * will be called.
+ *
+ * Although this interface allows the binary {@code -} operator to be
+ * overloaded with arbitrary functionality for any class, it is intended to
+ * make operations between numerical classes more readable.
+ */
 interface shadow:standard@
 	CanSubtract<T>
 {
+	/**
+	 * Method called when the binary {@code -} operator is overloaded.
+	 * @param other object to subtract by
+	 * @return result of the subtraction
+	 */
 	readonly subtract(T other) => (T);
 }

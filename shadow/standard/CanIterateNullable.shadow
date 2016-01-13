@@ -1,4 +1,21 @@
+/**
+ * Interface {@code CanIterateNullable<T>} specifies that a class can produce
+ * an {@code IteratorNullable<T>} which can iterate over objects of type
+ * {@code T}. This interface allows an object of the class to be the target of
+ * a {@code foreach} loop or another context where iteration over values is
+ * required.  This interface differs from {@code CanIterate<T>} in that it
+ * produces an {@code IteratorNullable<T>}, some of whose iterated values
+ * could be {@code null}.
+ *
+ * @seeDoc shadow:standard@IteratorNullable
+ * @seeDoc shadow:standard@CanIterate 
+ */
 interface shadow:standard@CanIterateNullable<T>
 {
+	/**
+	 * Method called to produce a new iterator, presumably to the first item
+	 * in a collection, if items are ordered.
+	 * @return iterator to objects of type {@code nullable T}  	 
+	 */
 	readonly iterator() => (IteratorNullable<T>);
 }

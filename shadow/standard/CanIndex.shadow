@@ -1,4 +1,26 @@
+/**
+ * Interface {@code CanIndex<K,V>} specifies that a class can return a value
+ * associated with a particular key. 
+ * This interface allows overloading of the {@code []} operator used to load
+ * values.  If this operator is applied, the appropriate {@code index(K)} method
+ * will be called, returning a matching value or throwing an exception if the
+ * key cannot be found. This interface provides load indexing functionality
+ * for arrays and symbol tables. It differs from the
+ * {@code CanIndexNullable<K,V>} interface in that its {@code index(K)} method
+ * will never return {@code null}.
+ * 
+ * Interface {@code CanIndexStore<K,V>} provides related index store
+ * functionality.
+ *
+ * @seeDoc shadow:standard@CanIndexNullable
+ * @seeDoc shadow:standard@CanIndexStore  
+ */
 interface shadow:standard@CanIndex<K,V>
 {
+	/**
+	 * Method called to retrieve the value associated with the key.
+	 * @param key key to look up
+	 * @return value associated with the key 	 
+	 */
 	readonly index(K key) => (V value);	
 }
