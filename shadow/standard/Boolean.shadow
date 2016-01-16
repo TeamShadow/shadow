@@ -27,8 +27,7 @@ is  CanEqual<boolean>
 	
 	/**
 	 * Compares the current value to another {@code boolean}, returning {@code true}
-	 * if they are the same.
-	 * if they represent the same integer.
+	 * if they are the same.	 
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */

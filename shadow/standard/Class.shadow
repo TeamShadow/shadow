@@ -1,3 +1,8 @@
+/**
+ * {@code Class} objects are used to hold the type information in all Shadow
+ * objects.  Methods on {@code Class}  objects are used for internal
+ * functionality such as checking type-casts and performing allocations.
+ */
 immutable class shadow:standard@
 	Class
 is  CanHash
@@ -9,48 +14,90 @@ is  CanHash
 	get int flags;
 	get int size;
 	
+	/// Flag used specify that a type is an interface type, 1.
 	public constant int INTERFACE 	= 0b1;
+	/// Flag used to specify that a type is a primitive type, 2.
 	public constant int PRIMITIVE 	= 0b10;  
+	/// Flag used to specify that a type is a generic type, 4
 	public constant int GENERIC		= 0b100;
+	/// Flag used to specify that a type is an array type, 8
 	public constant int ARRAY 		= 0b1000;
+	/// Flag used to specify that a type is a singleton type, 16.
 	public constant int SINGLETON 	= 0b10000;
+	/// Flag used to specify that a type is a method type, 32.
 	public constant int METHOD		= 0b100000;	
 	
-	//array allocation methods
+	// Array allocation method.
 	private locked native allocate( int size ) => ( Object );
 	
-	public locked isInterface() => ( boolean )
+	/**
+	 * Checks whether or not the class is an interface type.
+	 * @return {@code true} if the class is an interface type	  
+	 */
+	public locked readonly isInterface() => ( boolean )
 	{
 		return (flags & INTERFACE) != 0;
 	}
-	public locked isPrimitive() => ( boolean )
+	
+	/**
+	 * Checks whether or not the class is a primitive type.
+	 * @return {@code true} if the class is a primitive type	  
+	 */
+	public locked readonly isPrimitive() => ( boolean )
 	{
 		return (flags & PRIMITIVE) != 0;
 	}
-	public locked isNormal() => ( boolean )
-	{
-		return !isGeneric() and !isArray() and !isMethod();
-	}
-	public locked isGeneric() => ( boolean )
+	
+	/**
+	 * Checks whether or not the class is a generic type.
+	 * @return {@code true} if the class is a generic type	  
+	 */
+	public locked readonly isGeneric() => ( boolean )
 	{
 		return (flags & GENERIC) != 0;
 	}
-	public locked isArray() => ( boolean )
+	
+	/**
+	 * Checks whether or not the class is an array type.
+	 * @return {@code true} if the class is an array type	  
+	 */
+	public locked readonly isArray() => ( boolean )
 	{
 		return (flags & ARRAY) != 0;
 	}
 	
-	public locked isSingleton() => ( boolean )
+	/**
+	 * Checks whether or not the class is a singleton type.
+	 * @return {@code true} if the class is a singleton type	  
+	 */
+	public locked readonly isSingleton() => ( boolean )
 	{
 		return (flags & SINGLETON) != 0;
 	}
 	
-	public locked isMethod() => ( boolean )
+	/**
+	 * Checks whether or not the class is a method type.
+	 * @return {@code true} if the class is a method type	  
+	 */
+	public locked readonly isMethod() => ( boolean )
 	{
 		return (flags & METHOD) != 0;
 	}
 
-	//only called for array and generic classes
+	/**
+	 * Creates a new {@code Class} object with the given name, flags, size,
+	 * parent, interfaces, and interface method tables.  This method should
+	 * only be called by {@code GenericClass} and {@code ClassSet}.  It is
+	 * left {@code public} to avoid complication in {@code ClassSet}.
+	 * @param name name of the class
+	 * @param flags flags specifying the kind of type
+	 * @param size size required for an object whose type is given by this class
+	 * @param parent parent class
+	 * @param interfaces interface classes supported by this class
+	 * @param data method tables associated with each interface
+	 *
+	 * @seeDoc shadow:standard@ClassSet	 	  
+	 */
 	public create(String name, int flags, int size, immutable nullable Class parent, immutable Class[] interfaces, immutable Object[] data) 
 	{	
 		this:parent = parent;
@@ -59,7 +106,7 @@ is  CanHash
 		this:interfaces = interfaces;
 		this:data = data;
 		
-		if( isMethod() ) //not yet used
+		if( isMethod() ) // Not yet used
 		{
 			MutableString methodType = MutableString:create("(");
 			for( int i = 0; i < size; i += 1 )
@@ -78,22 +125,17 @@ is  CanHash
 			methodType.append(")");
 			this:name = methodType.toString();		
 		}
-		/*		
-		else if( isArray() )
-		{
-			MutableString arrayType = MutableString:create(name);
-			arrayType.append("[");
-			for( int i = 1; i < size; i += 1 )
-				arrayType.append(",");
-			arrayType.append("]");
-			this:name = arrayType.toString();		
-		}
-		*/
 		else		
 			this:name = name;
 	}
 	
-	protected locked interfaceData( Class interfaceClass ) => ( immutable Object )
+	/**
+	 * Retrieves method table associated with the given interface.	 
+	 * @param interfaceClass interface to look up inside this class
+	 * @return method table associated with the interface
+	 * @throws CastException if interface cannot be found	 	  
+	 */
+	protected locked readonly interfaceData( Class interfaceClass ) => ( immutable Object )
 	{		
 		for ( int i = 0; i < interfaces->size; i += 1 )			
 			if ( interfaces[i] === interfaceClass )
@@ -102,7 +144,13 @@ is  CanHash
 		throw CastException:create("Class " # this # " does not implement interface " # interfaceClass);
 	}
 	
-	public equal( Class other ) => ( boolean )
+	/**
+	 * Compares the current class to another {@code Class}, returning {@code true}
+	 * if they are the same.	 
+	 * @param other object to compare to
+	 * @return {@code true} if identical
+	 */
+	public readonly equal( Class other ) => ( boolean )
 	{
 		if( this === other )
 			return true;
@@ -139,7 +187,13 @@ is  CanHash
 		return false;	
 	}
 
-	public isSubtype( Class other ) => ( boolean )
+	/**
+	 * Checks to see if the current {@code Class} object is the subtype of
+	 * another {@code Class} object, returning {@code true} if it is.	 	 
+	 * @param other object to compare to
+	 * @return {@code true} if the current class is its subtype
+	 */
+	public readonly isSubtype( Class other ) => ( boolean )
 	{		
 		if ( this === other )
 			return true;
@@ -190,25 +244,49 @@ is  CanHash
 			}
 		}
 		recover
-		{
-		}
+		{}
 		
 		return false;
 	}
 
-	public locked toString() => ( String )
+	/**
+	 * Returns the name of the current class.	 
+	 * @return name of the class
+	 */
+	public locked readonly toString() => ( String )
 	{
 		return name;
 	}
 	
-	public locked native pointerSize() => ( int );	
+	/**
+	 * Returns the size of a pointer in bytes in the current run-time
+	 * system. The expected values are 4 for 32-bit systems or 8 for
+	 * 64-bit systems.	 
+	 * @return size of a pointer
+	 */
+	public locked native readonly pointerSize() => ( int );	
 
-	public locked get size() => ( int )
+	/**
+	 * For normal types, returns the size required for an object whose type
+	 * is given by this class.  For array types, it gives the number of
+	 * dimensions. For primitive types, it gives the size of the wrapper
+	 * object, not the raw primitive type.
+	 * @return size of an object
+	 */
+	public locked get readonly size() => ( int )
 	{
 		return size;				
 	}
 	
-	public locked get width() => ( int )
+	/**
+	 * Returns the width needed to store an object whose type is given by this
+	 * class in an array.  For normal objects, this width is the pointer size.
+	 * For primitive types, it is the size of the raw primitive type. For
+	 * interface type, the size is twice the pointer size, accounting for
+	 * the interface class and the method table.
+	 * @return width of an object
+	 */
+	public locked get readonly width() => ( int )
 	{		
 		if( isArray() ) //actual size member is # of dimensions		
 			return pointerSize() + 4 * size;		
@@ -237,12 +315,26 @@ is  CanHash
 			return pointerSize();		
 	}
 	
-	public locked get hash() => ( uint )
+	/** 
+	 * Finds a hash value for the current class, based on its name.	 
+	 * @return hash value	 
+	 */	
+	public locked get readonly hash() => ( uint )
 	{
 		return toString().hash();
 	}
 	
-	public locked makeName(String baseName, readonly Object[] parameters, int start, int end) => (String)
+	/** 
+	 * Constructs a name for a class given the base name, a (possibly empty)
+	 * list of type parameters and method tables, and starting and ending
+	 * indexes in the list.  This method should only be called by
+	 * {@code ClassSet} or in compiler generated code and is left
+	 * {@code public} to avoid complication.   
+	 * @return name	
+	 *
+	 * @seeDoc shadow:standard@ClassSet
+	 */	
+	public locked readonly makeName(String baseName, readonly Object[] parameters, int start, int end) => (String)
 	{		
 		if( start < end )
 		{					

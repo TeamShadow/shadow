@@ -547,16 +547,21 @@ public class ClassOrInterfacePage extends Page
 	{
 		if (documentation.hasBlockTags(BlockTagType.AUTHOR))
 			writeAuthorSection(documentation.getBlockTags(BlockTagType.AUTHOR), out);
+		
 		if (documentation.hasBlockTags(BlockTagType.PARAM))
 			writeParamSection(documentation.getBlockTags(BlockTagType.PARAM), out);
+
+		if (documentation.hasBlockTags(BlockTagType.RETURN))
+			writeReturnSection(documentation.getBlockTags(BlockTagType.RETURN), out);
+		
+		if (documentation.hasBlockTags(BlockTagType.THROWS))			
+			writeThrowsSection(documentation.getBlockTags(BlockTagType.THROWS), out);
+		
+		// See also tags should be last
 		if (documentation.hasBlockTags(BlockTagType.SEE_DOC) 
 				|| documentation.hasBlockTags(BlockTagType.SEE_URL))
 			writeSeeSection(documentation.getBlockTags(BlockTagType.SEE_DOC),
 					documentation.getBlockTags(BlockTagType.SEE_URL), out);
-		if (documentation.hasBlockTags(BlockTagType.THROWS))
-			writeThrowsSection(documentation.getBlockTags(BlockTagType.THROWS), out);
-		if (documentation.hasBlockTags(BlockTagType.RETURN))
-			writeReturnSection(documentation.getBlockTags(BlockTagType.RETURN), out);
 	}
 	
 	private void writeParamSection(List<List<String>> paramTags,
