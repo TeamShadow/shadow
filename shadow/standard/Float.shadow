@@ -1,8 +1,7 @@
 locked immutable class shadow:standard@
 	Float
-is Number<float>
+is  FloatingPoint<float>
 and	Number<double>
-and	CanNegate<float>
 and	CanHash
 {
 	public constant float PI = 3.1415927f;

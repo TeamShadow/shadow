@@ -4,12 +4,12 @@ import shadow:utility@NoSuchElementException;
 
 /**
  * Class {@code AddressMap} maps old object addresses to new object addresses.
- * It's used when making a deep copy of an object so that an object that has already
- * been copied won't be copied a second time.
+ * It's used when making a deep copy of an object so that an object that has
+ * already been copied won't be copied a second time.
  *
- * {@code AddressMap} is essentially a reimplementation of {@code HashMap}, which cannot
- * be used because generic types create problems for the compiler if used for these
- * fundamental tasks.
+ * {@code AddressMap} is essentially a reimplementation of {@code HashMap},
+ * which cannot be used because generic types create problems for the compiler
+ * if used for these fundamental tasks.
  */
 locked class shadow:standard@
 	AddressMap is Map<ulong, ulong>	
@@ -27,7 +27,7 @@ locked class shadow:standard@
 	
 	/**
 	 * Creates an empty {@code AddressMap} with a default capacity of 16
-	 * and load factor of 0.75.  
+	 * and maximum load factor of 0.75.  
 	 */	
 	public create()
 	{
@@ -36,7 +36,7 @@ locked class shadow:standard@
 	
 	/**
 	 * Creates an empty {@code AddressMap} with the specified capacity and
-	 * default load factor of 0.75. 
+	 * maximum load factor of 0.75. 
 	 * @param initialCapacity initial capacity of the map
 	 */
 	public create(int initialCapacity)
@@ -46,7 +46,7 @@ locked class shadow:standard@
 	
 	/**
 	 * Creates an empty {@code AddressMap} with the specified capacity and
-	 * load factor. 
+	 * maximum load factor. 
 	 * @param initialCapacity initial capacity of the map
 	 * @param loadFactor maximum load factor before the map is resized
 	 */
@@ -60,11 +60,12 @@ locked class shadow:standard@
 		threshold = cast<int>(capacity * loadFactor);
 	}
 	
-	/**
-	 * Resizes the map so that it can hold the new capacity, which must be a power of 2. 
+	/*
+	 * Resizes the map so that it can hold the new capacity, which must be a
+	 * power of 2. 
 	 * @param newCapacity new capacity of the map
 	 */
-	public resize(int newCapacity) => ()
+	private resize(int newCapacity) => ()
 	{		
 		if(table->size == MAXIMUM_CAPACITY)
 		{
@@ -128,19 +129,16 @@ locked class shadow:standard@
 		}
 	}
 
-	/* Finds the hash value and index for a given key. */
-	private readonly hash( ulong key ) => ( int index, int hash )
-	{
-		return findIndex( key, table->size );
-	}
-	
-	/* Finds the hash value and index for a given key based on the provided length. */
+	/*
+	 * Finds the hash value and index for a given key based on the provided
+	 * length.
+	 */
 	private readonly findIndex( ulong key, int length ) => ( int index, int hash )
 	{
 		uint temp = key->hash;
 		temp ^= (temp >> 20) ^ (temp >> 12);
 		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
-		return ( hash & (length - 1), hash );	
+		return ( hash & (table->size - 1), hash );	
 	}
 	
 	/**
@@ -151,7 +149,7 @@ locked class shadow:standard@
 	 */
 	public index( ulong key ) => ( nullable ulong value )
 	{
-		(int index, int hash) = this.hash( key );
+		(int index, int hash) = findIndex( key, table->size );
 		try
 		{
 			Node current = check(table[index]);
@@ -175,7 +173,7 @@ locked class shadow:standard@
 	 */
 	public index( ulong key, ulong value ) => ()
 	{
-		( int index, int hash ) = this.hash(key);
+		( int index, int hash ) = findIndex( key, table->size );
 		try
 		{
 			Node current = check(table[index]);
@@ -203,7 +201,7 @@ locked class shadow:standard@
 	 */
 	public remove( ulong key ) => ( nullable ulong value )
 	{	
-		( int index, int hash ) = this.hash(key);
+		( int index, int hash ) = findIndex( key, table->size );
 		try
 		{
 			nullable Node last = null;
@@ -234,7 +232,7 @@ locked class shadow:standard@
 	 */
 	public readonly containsKey( ulong key ) => ( boolean found )
 	{		
-		( int index, int hash ) = this.hash(key);
+		( int index, int hash ) = findIndex( key, table->size );
 		try
 		{
 			Node current = check(table[index]);			
@@ -272,7 +270,7 @@ locked class shadow:standard@
 	}
 	
 	/**
-	 * Removes all entries from the map and returns the capacity to default.
+	 * Removes all entries from the map and resets the capacity to default.
 	 */
 	public clear() => ()
 	{

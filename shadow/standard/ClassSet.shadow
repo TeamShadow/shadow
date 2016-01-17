@@ -1,12 +1,28 @@
 import shadow:utility@Set;
 import shadow:utility@IllegalModificationException;
 
+/**
+ * Class {@code ClassSet} is used to hold a collection of class objects.
+ * The run-time system uses {@code ClassSet} containers to hold all generic
+ * classes and all array classes.  Under circumstances when a new generic or
+ * array class might be created, the appropriate {@code ClassSet} objects are
+ * checked to be sure that the class does not already exist.
+ * This class is designed for use with the run-time system. Application
+ * programmers who need to store a set of  {@code Class} objects are
+ * encouraged to use the {@code HashSet<Class>} container. {@code ClassSet} is
+ * essentially a reimplementation of {@code HashMap}, which cannot be used
+ * because generic types create problems for the compiler if used for these
+ * fundamental tasks.
+ */
 locked class shadow:standard@
 	ClassSet
 is  Set<Class>	
 {
+	// Default size of hash table, 16.
 	private constant int DEFAULT_INITIAL_CAPACITY = 16;
+	// Maximum capacity of hash table, 1073741824 buckets.
 	private constant int MAXIMUM_CAPACITY = 1 << 30;
+	// Default maximum load factor before re-size, 0.75.
 	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	get int size = 0;
@@ -15,27 +31,47 @@ is  Set<Class>
 	int threshold;
 	int modifications = 0;
 	
+	/**
+	 * Creates an empty {@code ClassSet} with a default capacity of 16
+	 * and maximum load factor of 0.75.  
+	 */	
 	public create()
 	{
 		this(DEFAULT_INITIAL_CAPACITY);
 	}
 	
+	/**
+	 * Creates an empty {@code ClassSet} with the specified capacity and
+	 * maximum load factor of 0.75. 
+	 * @param initialCapacity initial capacity of the set
+	 */
 	public create(int initialCapacity)
 	{
 		this(initialCapacity, DEFAULT_LOAD_FACTOR);
 	}
 	
+	/**
+	 * Creates an empty {@code ClassSet} with the specified capacity and
+	 * maximum load factor. 
+	 * @param initialCapacity initial capacity of the map
+	 * @param loadFactor maximum load factor before the map is resized
+	 */
 	public create(int initialCapacity, float loadFactor)
 	{
 		int capacity = 1;
-		while( capacity < initialCapacity ) //powers of 2
+		while( capacity < initialCapacity ) // Makes capacity a power of 2.
 			capacity <<= 1;		
 		table = Node:null[capacity];
 		this:loadFactor = loadFactor;
 		threshold = cast<int>(capacity * loadFactor);
 	}
 	
-	public resize(int newCapacity) => ()
+	/*
+	 * Resizes the set so that it can hold the new capacity, which must be a
+	 * power of 2. 
+	 * @param newCapacity new capacity of the set
+	 */
+	private resize(int newCapacity) => ()
 	{		
 		if(table->size == MAXIMUM_CAPACITY)
 		{
@@ -102,12 +138,11 @@ is  Set<Class>
 			next = after;
 		}
 	}
-
-	private readonly hash( Class value ) => ( int index, int hash )
-	{
-		return findIndex( #value, table->size );
-	}
 	
+	/*
+	 * Finds the hash value and index for a given key based on the provided
+	 * length.
+	 */
 	private readonly findIndex( String value, int length ) => ( int index, int hash )
 	{
 		uint temp = value->hash;			
@@ -116,26 +151,35 @@ is  Set<Class>
 		return ( hash & (length - 1), hash );	
 	}	
 
+	/**
+	 * Checks to see if the specified {@code Class} object is in
+	 * the set, returns {@code true} if it is.	   
+	 * @param value object to look for
+	 * @return {@code true} if present
+	 */
 	public index( Class value ) => ( boolean )
 	{
-		(int index, int hash) = this.hash( value );
+		(int index, int hash) = findIndex( #value, table->size );
 		try
 		{
 			Node current = check(table[index]);
 			while ( current->hash != hash and current->value !== value )
 				current = check(current->next);
 			
-			//found correct node
+			// Found correct node.
 			return true; 
 		}
-		recover //hit null before finding existing value
-		{			
-		}
+		recover // Hit null before finding existing value.
+		{}
 		
 		return false;				
 	}
 	
-	
+	/**
+	 * Adds or removes an object to or from the set. 	   
+	 * @param value object to be added or removed
+	 * @param add add object if {@code true}, remove if {@code false}
+	 */
 	public index( Class value, boolean add ) => ()
 	{
 		if( add )
@@ -144,18 +188,24 @@ is  Set<Class>
 			remove( value );	
 	}
 	
+	/**
+	 * Adds an object to the set. 	   
+	 * @param value object to be added
+	 * @return {@code true} if added to the set, {@code false} if already
+	 * present
+	 */
 	public add( Class value ) => (boolean success)
 	{
-		( int index, int hash ) = this.hash(value);
+		( int index, int hash ) = findIndex(#value, table->size);
 		try
 		{
 			Node current = check(table[index]);
 			while ( current->hash != hash and current->value !== value )
 				current = check(current->next);
-			//node already present
+			// Node already present.
 			return false; 
 		}
-		recover //hit null before finding existing value
+		recover // Hits null before finding existing value.
 		{
 			table[index] = Node:create(hash, value, table[index]);
 			modifications += 1;
@@ -168,9 +218,15 @@ is  Set<Class>
 		}
 	}
 
+	/**
+	 * Removes an object from the set. 	   
+	 * @param value object to be removed
+	 * @return {@code true} if successfully removed, {@code false} if not
+	 * present
+	 */
 	public remove( Class value ) => ( boolean success )
 	{	
-		( int index, int hash ) = this.hash(value);
+		( int index, int hash ) = findIndex(#value, table->size);
 		try
 		{
 			nullable Node last = null;
@@ -193,9 +249,15 @@ is  Set<Class>
 			return false;
 		}
 	}
+	
+	/**
+	 * Checks to see if the set contains the specified object. 	   
+	 * @param value object to look for
+	 * @return {@code true} if object is present	 
+	 */
 	public readonly contains( Class value ) => ( boolean found )
 	{		
-		( int index, int hash ) = this.hash(value);
+		( int index, int hash ) = findIndex(#value, table->size);
 		try
 		{
 			Node current = check(table[index]);			
@@ -209,11 +271,19 @@ is  Set<Class>
 		}
 	}	
 
+	/**
+	 * Creates an iterator to iterate over all the values in the set.	   
+	 * @return iterator
+	 */
 	public readonly iterator() => ( Iterator<Class> )
 	{
 		return ClassSetIterator:create();
 	}
 	
+		
+	/**
+	 * Removes all entries from the set and resets the capacity to default.
+	 */
 	public clear() => ()
 	{
 		size = 0;
@@ -246,7 +316,7 @@ is  Set<Class>
 				position = table[index];				
 				index += 1;					
 			}
-			return position; //returns null if nothing left			
+			return position; // Returns null if nothing left.			
 		}
 
 		private readonly checkForModifications() => ()
@@ -276,8 +346,16 @@ is  Set<Class>
 		}
 	}
 	
-	//this method assumes that it will only ever be run on a set containing all generic classes  
-	locked public findGeneric(String name, immutable Object[] parameters) => (nullable GenericClass)
+	
+	/**
+	 * Finds a generic class with the given name and type parameters. This
+	 * method assumes that it will only ever be called on a set containing
+	 * all generic classes.
+	 * @param name name of class to find
+	 * @param parameters array of type parameters and associated method tables
+	 * @return matching generic class if found, {@code null} otherwise
+	 */	  
+	public locked readonly findGeneric(String name, immutable Object[] parameters) => (nullable GenericClass)
 	{
 		(int index, int hash) = findIndex( name, table->size );
 		try
@@ -301,12 +379,21 @@ is  Set<Class>
 			}			
 		}
 		recover
-		{ }		
+		{}		
 		return null;		
 	}
 	
-	//this method assumes that it will only ever be run on a set containing all array classes
-	locked public findArray(String name, Class base, int dimensions) => (nullable Class)
+	
+	/**
+	 * Finds an array class with the given name, base class, and number of
+	 * dimensions.  This method assumes that it will only ever be called on
+	 * a set containing all array classes.
+	 * @param name name of class to find
+	 * @param base class of array base type
+	 * @param dimensions number of dimensions that the array has
+	 * @return matching array class if found, {@code null} otherwise
+	 */
+	public locked readonly findArray(String name, Class base, int dimensions) => (nullable Class)
 	{
 		(int index, int hash) = findIndex( name, table->size );
 		try
@@ -324,13 +411,25 @@ is  Set<Class>
 			}			
 		}
 		recover
-		{ }
+		{}
 
 		return null;		
 	}
 	
-	//assumes class already not found
-	locked public addGeneric(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters) => (GenericClass)
+	/**
+	 * Creates and adds a new generic class with the given raw type, name,
+	 * parent, interfaces, and type parameters. This method assumes that 
+	 * {@code findGeneric} has already been called and failed to find the
+	 * matching class.  Likewise, it is assumed that this method will only
+	 * ever be called on a set containing all generic classes.
+	 * @param base raw (unparameterized) version of the class
+	 * @param name name of class to add
+	 * @param parent parent of the class
+	 * @param interfaces array of interfaces supported by the new class
+	 * @param parameters array of type parameters and associated method tables
+	 * @return newly created generic class
+	 */
+	public locked addGeneric(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters) => (GenericClass)
 	{
 		GenericClass newGeneric = GenericClass:create(base, name, parent, interfaces, parameters);
 		(int index, int hash) = findIndex( name, table->size );		
@@ -343,14 +442,30 @@ is  Set<Class>
 
 		return newGeneric;			
 	}
-			
+	
+	/*
+	 * Utility methods for creating generic and array classes, implemented
+	 * natively for efficiency and to avoid complexities in the type-checker.
+	 */		
 	private native getIntArrayClass() => (Class);
 	private native getEmptyObjectArray() => (immutable Object[]);
 	private native makeObjectArray(nullable readonly Object object0, nullable readonly Object object1, nullable readonly Object object2, nullable readonly Object object3) => (immutable Object[]);
 	private native getEmptyClassArray() => (immutable Class[]);
 	private native makeClassArray(nullable Class class0, nullable Class class1, nullable Class class2) => (immutable Class[]);
 	
-	locked public getGenericArray(String name, immutable Object[] parameters, boolean isNull) => (GenericClass)
+	/**
+	 * Method that looks for a generic array class with the given name,
+	 * type parameters, and nullable status.  If nullable, the raw type
+	 * will be {@code ArrayNullable}.  Otherwise, it will be {@code Array}.
+	 * If the class is found, it returns it. If the class is not found, it 
+	 * creates it. 
+	 * @param name name of class to find	 
+	 * @param parameters array of type parameters and associated method tables
+	 * @param isNull {@code true} if the array type is nullable, {@code false}
+	 * otherwise
+	 * @return matching generic class, either pre-existing or newly created
+	 */
+	public locked getGenericArray(String name, immutable Object[] parameters, boolean isNull) => (GenericClass)
 	{		
 		try
 		{	
@@ -408,7 +523,17 @@ is  Set<Class>
 		}	
 	}	
 
-	//assumes array already not found
+	/**
+	 * Creates and adds a new array class with the name, base class, and
+	 * number of dimensions. This method assumes that 
+	 * {@code findArray} has already been called and failed to find the
+	 * matching class.  Likewise, it is assumed that this method will only
+	 * ever be called on a set containing all array classes.
+	 * @param name name of class to add
+	 * @param base class of array base type
+	 * @param dimensions number of dimensions that the array has	 
+	 * @return newly created array class
+	 */
 	locked public addArray(String name, Class base, int dimensions) => (Class)
 	{
 		immutable Class[] interfaces = getEmptyClassArray();

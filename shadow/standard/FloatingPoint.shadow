@@ -1,5 +1,7 @@
 interface shadow:standard@
-	FloatingPoint<T> is	Number<T>
+	FloatingPoint<T>
+is	Number<T>
+and CanNegate<T>
 {
 	readonly isNaN() => (boolean);
 	readonly isFinite() => (boolean);
