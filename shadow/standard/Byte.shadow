@@ -18,7 +18,7 @@ and	CanHash
 	/// Smallest value a {@code byte} can have, -128.
 	public constant byte MIN = -128y;
 
-	// Methods for Bitwise<byte>
+	// Methods for Integer<byte>
 	
 	/**
 	 * Returns the bitwise complement of the {@code byte} value.
@@ -204,8 +204,7 @@ and	CanHash
 	 */
 	public native bitAnd(byte other) => (byte);
 	
-	// Method for CanAdd<byte>
-	
+	// Method for CanAdd<byte>	
 	/**
 	 * Adds another {@code byte} to the current value and returns the resulting value.	 
 	 * @param other value to add
@@ -213,8 +212,7 @@ and	CanHash
 	 */
 	public native add(byte other) => (byte);
 	
-	// Method for CanSubtract<byte>
-	
+	// Method for CanSubtract<byte>	
 	/**
 	 * Subtracts another {@code byte} from the current value and returns the resulting value.	 
 	 * @param other value to subtract
@@ -249,8 +247,8 @@ and	CanHash
 	// Method for CanCompare<byte>
 	/**
 	 * Compares the current value to another {@code byte}, returning {@code -1},
-	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
-	 * than the other value, respectively.
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to,
+	 * or larger than the other value, respectively.
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */	
@@ -310,7 +308,7 @@ and	CanHash
 	
 	// Method for CanSubtract<short>
 	/**
-	 * Subtracts a {@code short} to the current value and returns the resulting value.	 
+	 * Subtracts a {@code short} from the current value and returns the resulting value.	 
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */	
@@ -917,7 +915,7 @@ and	CanHash
 	 */ 
 	public toString() => (String)
 	{
-		return toString(10uy);
+		return toString(10u);
 	}
 	
 	/** 
@@ -925,9 +923,8 @@ and	CanHash
 	 * @param base base of output representation
 	 * @return  {@code String} representation
 	 */ 
-	public toString(ubyte base) => (String)
-	{
-		String string = abs().toString(base);
-		return this >= 0 ? string, '-' # string;
+	public toString(uint base) => (String)
+	{		
+		return toInt().toString(base);
 	}	
 }

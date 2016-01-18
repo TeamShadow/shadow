@@ -409,24 +409,10 @@ and	CanHash
 	}
 	public toString() => (String)
 	{
-		return toString(10us);
+		return toString(10u);
 	}
-	public toString(ushort base) => (String)
+	public toString(uint base) => (String)
 	{
-		MutableString string = MutableString:create();
-		ushort value = this;
-		do
-		{
-			string.append(digit(value % base));
-			value /= base;
-		}
-		while (value != 0us);
-		return string.reverse().toString();
-	}
-	private digit(ushort digit) => (code)
-	{
-		if (digit < 10us)
-			return cast<code>(cast<int>(digit) + '0');
-		return cast<code>(cast<int>(digit) - 10us + 'a');
-	}	
+		return toUInt().toString(base);
+	}		
 }

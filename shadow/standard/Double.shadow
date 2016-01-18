@@ -54,7 +54,8 @@ and	CanHash
 	
 	/** 
 	 * Converts the {@code double} value to a {@code ubyte}, which will overflow
-	 * if the value is too large to be contained in a {@code ubyte}. 	 
+	 * if the value is too large to be contained in a {@code ubyte} and
+	 * underflow if the value is negative. 	 
 	 * @return {@code ubyte} value 
 	 */
 	public native toUByte() => (ubyte);
@@ -68,7 +69,8 @@ and	CanHash
 	
 	/** 
 	 * Converts the {@code double} value to a {@code ushort}, which will overflow
-	 * if the value is too large to be contained in a {@code ushort}. 	 
+	 * if the value is too large to be contained in a {@code ushort} and
+	 * underflow if the value is negative. 	 
 	 * @return {@code ushort} value 
 	 */
 	public native toUShort() => (ushort);
@@ -82,7 +84,8 @@ and	CanHash
 	
 	/** 
 	 * Converts the {@code double} value to a {@code uint}, which will overflow
-	 * if the value is too large to be contained in a {@code uint}. 	 
+	 * if the value is too large to be contained in a {@code uint} and
+	 * underflow if the value is negative.	 
 	 * @return {@code uint} value 
 	 */
 	public native toUInt() => (uint);
@@ -96,7 +99,8 @@ and	CanHash
 	
 	/** 
 	 * Converts the {@code double} value to a {@code ulong}, which will overflow
-	 * if the value is too large to be contained in a {@code ulong}. 	 
+	 * if the value is too large to be contained in a {@code ulong} and
+	 * underflow if the value is negative.	 
 	 * @return {@code ulong} value 
 	 */
 	public native toULong() => (ulong);

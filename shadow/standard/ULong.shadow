@@ -167,24 +167,25 @@ and	CanHash
 	}
 	public toString() => (String)
 	{
-		return toString(10ul);
+		return toString(10u);
 	}
-	public toString(ulong base) => (String)
+	public toString(uint base) => (String)
 	{
 		MutableString string = MutableString:create();
+		ulong longBase = base; // casts to ulong a single time
 		ulong value = this;
 		do
 		{
-			string.append(digit(value % base));
-			value /= base;
+			string.append(digit(value % longBase));
+			value /= longBase;
 		}
-		while (value != 0ul);
+		while (value != 0uL);
 		return string.reverse().toString();
 	}
 	private digit(ulong digit) => (code)
 	{
-		if (digit < 10ul)
+		if (digit < 10uL)
 			return cast<code>(digit + '0');
-		return cast<code>(digit - 10ul + 'a');
+		return cast<code>(digit - 10uL + 'a');
 	}	
 }

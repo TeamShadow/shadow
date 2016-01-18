@@ -100,10 +100,24 @@ public class ClassOrInterfacePage extends Page
 			}
 		}
 		
-		Collections.sort(constructors);
-		Collections.sort(destructors);
-		Collections.sort(methods);
-		Collections.sort(properties);
+		Comparator<MethodSignature> comparator = new Comparator<MethodSignature>() {
+
+			@Override
+			public int compare(MethodSignature method1, MethodSignature method2) {
+				// Sort first by names
+				int value = method1.getSymbol().compareTo(method2.getSymbol());				
+				// Tie-break by parameters
+				if( value == 0 )
+					value = method1.getParameterTypes().toString().compareTo(method2.getParameterTypes().toString());
+				return value;
+			}
+			
+		};
+		
+		Collections.sort(constructors, comparator);
+		Collections.sort(destructors, comparator);
+		Collections.sort(methods, comparator);
+		Collections.sort(properties, comparator);
 	}
 	
 	private void getVisibleConstants()
