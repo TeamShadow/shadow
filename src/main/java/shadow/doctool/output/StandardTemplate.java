@@ -142,7 +142,7 @@ public class StandardTemplate extends DocumentationTemplate
 	public Path linkByName(Page from, String toName)
 	{
 		Page to = null;
-		if (toName.contains("@"))
+		if (toName.contains("@") || isPrimitive(toName))
 			to = getTypePage(toName);
 		else
 			to = getPackagePage(toName);
@@ -151,6 +151,28 @@ public class StandardTemplate extends DocumentationTemplate
 			return linkToPage(from, to);
 		else
 			return null;
+	}
+	
+	private static boolean isPrimitive(String name)
+	{
+		switch(name)
+		{
+		case "boolean":
+		case "byte":
+		case "code":
+		case "double":
+		case "float":
+		case "int":
+		case "long":
+		case "short":
+		case "ubyte":
+		case "uint":
+		case "ulong":
+		case "ushort":				
+			return true;
+		default:
+			return false;
+		}		
 	}
 	
 	/** Creates a relative link to the master stylesheet */

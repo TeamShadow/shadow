@@ -1,5 +1,29 @@
+/**
+ * Interface {@code Iterator<T>} allows each item in a collection to be
+ * visited. It is expected that most container classes will have an inner
+ * class with this interface. This interface differs from
+ * {@code IteratorNullable<T>} in that the values it retrieves are guaranteed
+ * never to be {@code null}.
+ *
+ * @seeDoc shadow:standard@CanIterate 
+ * @seeDoc shadow:standard@IteratorNullable
+ */
 interface shadow:standard@Iterator<T>
 {
+	/**
+	 * Method to check if there is another value that the iterator has not
+	 * yet visited in the collection.	 
+	 * @return {@code true} if there is another value to visit  	 
+	 */
 	readonly hasNext() => (boolean);
+	
+	/**
+	 * Method to move the iterator forward and retrieve the next value in the
+	 * collection.  Implementations are expected to throw a
+	 * {@code NoSuchElementException} if there are no more values.
+	 * @return next value
+	 *
+	 * @seeDoc shadow:utility@NoSuchElementException 	 
+	 */
 	next() => (T);
 }

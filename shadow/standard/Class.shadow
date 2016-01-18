@@ -193,7 +193,7 @@ is  CanHash
 	 * @param other object to compare to
 	 * @return {@code true} if the current class is its subtype
 	 */
-	public readonly isSubtype( Class other ) => ( boolean )
+	public locked readonly isSubtype( Class other ) => ( boolean )
 	{		
 		if ( this === other )
 			return true;

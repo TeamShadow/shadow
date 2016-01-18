@@ -8,6 +8,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,7 +63,12 @@ public class PackagePage extends Page
 	{
 		Collection<Type> types = self.getTypes();		
 		ArrayList<Type> sortedTypes = new ArrayList<Type>(types);
-		Collections.sort(sortedTypes);
+		Collections.sort(sortedTypes, new Comparator<Type>() {
+			@Override
+			public int compare(Type type1, Type type2) {
+				return type1.toString(Type.NO_OPTIONS).compareTo(type2.toString(Type.NO_OPTIONS));				
+			}			
+		});
 		
 		for (Type type : sortedTypes) {			
 			if( !type.getModifiers().isPrivate() && !type.hasOuter() ) {			

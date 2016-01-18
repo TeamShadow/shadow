@@ -60,9 +60,7 @@ public abstract class Type implements Comparable<Type> {
 	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables
 	public static ClassType ARRAY = null;  // object representation of all array types
 	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types	
-	public static ClassType METHOD = null;  // object representation for references with function type
-	public static ClassType UNBOUND_METHOD = null; //object representation for unbound methods (method name, but no parameters to bind it to a particular implementation)	
-
+	
 	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
 	public static ExceptionType EXCEPTION = null;
 	public static ExceptionType CAST_EXCEPTION = null;
@@ -196,9 +194,7 @@ public abstract class Type implements Comparable<Type> {
 		ASSERT_EXCEPTION = null;
 		CLASS = null;		
 		ARRAY = null;
-		ARRAY_NULLABLE = null;
-		METHOD = null;				
-		UNBOUND_METHOD = null;
+		ARRAY_NULLABLE = null;		
 		ENUM = null;
 		EXCEPTION = null;		
 		GENERIC_CLASS = null;		
@@ -288,40 +284,6 @@ public abstract class Type implements Comparable<Type> {
 	protected final void invalidateHashName() {
 		hashName = null;
 	}
-	
-	/*
-	public String getQualifiedName() 
-	{		
-		return getQualifiedName(false);			
-	}
-	
-	protected String toStringWithQualifiedParameters(boolean withBounds) {				
-		String className = typeName.substring(typeName.lastIndexOf(':') + 1);		
-		StringBuilder builder;
-		
-		if( getOuter() == null )		
-			builder = new StringBuilder(className);
-		else
-			builder = new StringBuilder(getOuter().toStringWithQualifiedParameters(withBounds) + ":" + className );
-			
-		if( isParameterized() )		
-			builder.append(getTypeParameters().toStringWithQualifiedParameters("<",">", withBounds));
-		
-		return builder.toString();		
-	}
-	*/
-
-	/*
-	public String getQualifiedName(boolean withBounds) 
-	{		
-		if( isPrimitive() )
-			return toString(withBounds);		
-		else if( _package == null || _package.getQualifiedName().isEmpty())
-			return "default@" + toStringWithQualifiedParameters(withBounds);
-		else
-			return _package.getQualifiedName() + '@' + toStringWithQualifiedParameters(withBounds);			
-	}
-	*/
 	
 	final public String toString() {
 		return toString(PACKAGES | TYPE_PARAMETERS); //no bounds

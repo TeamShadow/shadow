@@ -545,16 +545,14 @@ public class TypeCollector extends BaseChecker {
 				case "InterfaceCreateException": Type.INTERFACE_CREATE_EXCEPTION = (ExceptionType) type; break;
 				case "Iterator":		Type.ITERATOR = (InterfaceType) type; break;
 				case "IteratorNullable":	Type.ITERATOR_NULLABLE = (InterfaceType) type; break;
-				case "long":			Type.LONG = (ClassType)type; break;
-				case "Method":			Type.METHOD = (ClassType)type; break;
+				case "long":			Type.LONG = (ClassType)type; break;				
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;
 				case "String":			Type.STRING = (ClassType) type; break;
 				case "ubyte":			Type.UBYTE = (ClassType)type; break;
 				case "uint":			Type.UINT = (ClassType)type; break;
-				case "ulong":			Type.ULONG = (ClassType)type; break;
-				case "UnboundMethod":	Type.UNBOUND_METHOD = (ClassType)type; break;
+				case "ulong":			Type.ULONG = (ClassType)type; break;				
 				case "UnexpectedNullException": Type.UNEXPECTED_NULL_EXCEPTION = (ExceptionType)type; break;
 				case "ushort":			Type.USHORT = (ClassType)type; break;
 				}

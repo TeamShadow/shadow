@@ -1,3 +1,7 @@
+/**
+ * {@code Enum} is the parent type of all enums.
+ * Note that that enums are not implemented yet.
+ */
 class shadow:standard@
 	Enum is shadow:standard@Object
 {}

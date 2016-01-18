@@ -422,16 +422,16 @@ is  Set<Class>
 	 * {@code findGeneric} has already been called and failed to find the
 	 * matching class.  Likewise, it is assumed that this method will only
 	 * ever be called on a set containing all generic classes.
-	 * @param base raw (unparameterized) version of the class
+	 * @param raw raw (unparameterized) version of the class
 	 * @param name name of class to add
 	 * @param parent parent of the class
 	 * @param interfaces array of interfaces supported by the new class
 	 * @param parameters array of type parameters and associated method tables
 	 * @return newly created generic class
 	 */
-	public locked addGeneric(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters) => (GenericClass)
+	public locked addGeneric(Class raw, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters) => (GenericClass)
 	{
-		GenericClass newGeneric = GenericClass:create(base, name, parent, interfaces, parameters);
+		GenericClass newGeneric = GenericClass:create(raw, name, parent, interfaces, parameters);
 		(int index, int hash) = findIndex( name, table->size );		
 		table[index] = Node:create(hash, newGeneric, table[index]);
 		modifications += 1;

@@ -1,16 +1,121 @@
+/**
+ * Interface {@code Integer<T>} specifies methods that any fixed-size 
+ * integer representation of a number should have.
+ *
+ * This interface allows overloading of the {@code &}, {@code |}, and
+ * {@code ^} binary operators as well as the {@code ~} unary operator. If the
+ * {@code &} operator is applied, the appropriate {@code bitAnd(T)} method
+ * will be called. If the {@code |} operator is applied, the appropriate
+ * {@code bitOr(T)} method will be called. If the {@code ^} operator is
+ * applied, the appropriate {@code bitXor(T)} method will be called. If the
+ * {@code ~} operator is applied, the appropriate {@code bitComplement(T)}
+ * method will be called.       
+ *
+ * The {@code byte}, {@code code}, {@code int}, {@code long}, {@code short},
+ * {@code ubyte}, {@code uint}, {@code ulong}, and {@code ushort} types have
+ * this interface.
+ *
+ * @seeDoc byte
+ * @seeDoc code
+ * @seeDoc int
+ * @seeDoc long
+ * @seeDoc short
+ * @seeDoc ubyte
+ * @seeDoc uint
+ * @seeDoc ulong
+ * @seeDoc ushort  
+ */
 interface shadow:standard@
 	Integer<T> is Number<T>
 {
+
+	/**
+	 * Method to find the bitwise complement of the value.
+	 * @return bitwise complement	 
+	 */
 	readonly bitComplement() => (T);
+	
+	/**
+	 * Method to find the the result of left-shifting the bit representation.
+	 * @param amount bits to shift
+	 * @return shifted value	 
+	 */
 	readonly bitShiftLeft(uint amount) => (T);
+	
+	/**
+	 * Method to find the the result of right-shifting the bit representation.
+	 * @param amount bits to shift
+	 * @return shifted value	 
+	 */
 	readonly bitShiftRight(uint amount) => (T);
+	
+	/**
+	 * Method to find the the result of left-rotating the bit representation.
+	 * @param amount bits to rotate
+	 * @return rotated value	 
+	 */
 	readonly bitRotateLeft(uint amount) => (T);
+	
+	/**
+	 * Method to find the the result of right-rotating the bit representation.
+	 * @param amount bits to rotate
+	 * @return rotated value	 
+	 */	
 	readonly bitRotateRight(uint amount) => (T);
+	
+	/**
+	 * Method to find the the result of left-shifting the bit representation
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to shift
+	 * @return shifted value	 
+	 */
 	readonly bitShiftLeft(int amount) => (T);
+	
+	/**
+	 * Method to find the the result of right-shifting the bit representation
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to shift
+	 * @return shifted value	 
+	 */
 	readonly bitShiftRight(int amount) => (T);
+	
+	/**
+	 * Method to find the the result of left-rotating the bit representation
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to rotate
+	 * @return rotated value	 
+	 */
 	readonly bitRotateLeft(int amount) => (T);
+	
+	/**
+	 * Method to find the the result of right-rotating the bit representation
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to rotate
+	 * @return rotated value	 
+	 */
 	readonly bitRotateRight(int amount) => (T);
+	
+	/**
+	 * Method to compute the bitwise OR of the value and another {@code T}
+	 * value.
+	 * @param other value to bitwise OR with
+	 * @return result of bitwise OR 
+	 */
 	readonly bitOr(T other) => (T);
+	
+	/**
+	 * Method to compute the bitwise XOR of the value and another {@code T}
+	 * value.
+	 * @param other value to bitwise XOR with
+	 * @return result of bitwise XOR 
+	 */
 	readonly bitXor(T other) => (T);
+	
+	/**
+	 * Method to compute the bitwise AND of the value and another {@code T}
+	 * value.
+	 * @param other value to bitwise AND with
+	 * @return result of bitwise AND 
+	 */
 	readonly bitAnd(T other) => (T);	
 }

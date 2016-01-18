@@ -1,3 +1,12 @@
+/**
+ * Class {@code String} holds arbitrary-length sequences of UTF-8 code points
+ * stored in a fixed-size array of {@code byte} values.
+ * {@code String} objects are the most common way to represent text in Shadow.
+ * {@code String} objects differ from {@code MutableString} objects in that
+ * their contents cannot be changed.
+ *
+ * @seeDoc shadow:standard@MutableString
+ */
 locked immutable class shadow:standard@
 	String
 is	CanCompare<String>
@@ -7,11 +16,23 @@ and	CanHash
 {
 	byte[] data;
 	boolean ascii;
+	
+	/**
+	 * Creates a new empty {@code String} object of length zero.	 	 
+	 */
 	public create()
 	{
 		this:data = freeze(byte:create[0]);
 		this:ascii = true;
 	}
+	
+	/**
+	 * Creates a new {@code String} object whose contents are the {@code byte}
+	 * values contained in the given array.
+	 * @param data array specifying the contents of the array
+	 * @throws IllegalArgumentException if the {@code byte} values do not
+	 * specify legal UTF-8 code points 
+	 */
 	public create( byte[] data )
 	{
 		byte ascii = 0y;
@@ -20,6 +41,14 @@ and	CanHash
 		this:ascii = ascii >= 0y; //will be negative if the MSB is set
 		this:data = freeze(data);
 	}
+	
+	/**
+	 * Creates a new {@code String} object whose contents are the {@code code}
+	 * values contained in the given array.
+	 * @param data array specifying the contents of the array
+	 * @throws IllegalArgumentException if the {@code code} values do not
+	 * specify legal UTF-8 code points 
+	 */
 	public create( code[] data )
 	{
 		int size = data->size;
@@ -89,26 +118,51 @@ and	CanHash
 		
 		this:data = freeze(temp);
 	}
+	
+	/**
+	 * Creates a new {@code String} which is a copy of the given
+	 * {@code String}.
+	 * @param other {@code String} to copy	 
+	 */
 	public create( String other )
 	{
 		this:data = other:data;
 		this:ascii = other:ascii;
 	}
+	
+	// Creates a String that is a copy of data known to be valid code points.
 	private create( byte[] data, boolean ascii )
 	{
 		this:data = freeze(data);
 		this:ascii = ascii;
 	}
 
+	/**
+	 * Retrieves the {@code byte} value at the given offset inside the object.
+	 * @param index offset inside the object	   
+	 * @return {@code byte} value
+	 * @throws IndexOutOfBoundsException if the offset is illegal
+	 */
 	public index( int location ) => ( byte )
 	{		
 		return data[location];
 	}
+	
+	/**
+	 * Retrieves an immutable copy of the {@code byte} array inside the
+	 * object.
+	 * @return {@code byte} array	 
+	 */
 	public get chars() => ( immutable byte[] )
 	{		
 		return data;
 	}
 	
+	/**
+	 * Produces an array of {@code code} values corresponding to the UTF-8
+	 * code points stored in the object.
+	 * @return {@code code} array	 
+	 */
 	public get codes() => ( code[] )
 	{
 		code[] codes = code:create[data->size];
@@ -130,23 +184,54 @@ and	CanHash
 		return codes;
 	}
 	
+	/**
+	 * Gets the number of {@code byte} values stored in the object.	 
+	 * @return number of bytes	 
+	 */
 	public get size() => ( int )
 	{
 		return data->size;
 	}
+	
+	/**
+	 * Returns {@code true} if the {@code String} has length zero.	 
+	 * @return {@code true} if the length is zero	 
+	 */
 	public isEmpty() => ( boolean )
 	{
 		return this->size == 0;
 	}
 
+	/**
+	 * Produces a substring of this string representation, from the starting
+	 * byte offset up to the end.
+	 * @param start starting offset	 	
+	 * @return substring
+	 */
 	public substring( int start ) => ( String )
 	{
 		return substring(start, this->size);
 	}
+	
+	/**
+	 * Produces a substring of this string representation, from the starting
+	 * byte offset up to but not including the ending byte offset.
+	 * @param start starting offset
+	 * @param end ending offset	
+	 * @return substring
+	 */
 	public substring( int start, int end ) => ( String )
 	{
 		return String:create(cast<byte[]>(data.subarray(start, end)), ascii);
 	}
+	
+	/**
+	 * Produces a new {@code String} object whose contents are made up of the
+	 * code points contained in the current object followed by those in the
+	 * other object.	 
+	 * @param other {@code String} object to concatenate with this object	 	
+	 * @return concatenated {@code String}
+	 */
 	public concatenate( String other ) => ( String )
 	{
 		byte[] data = byte:create[this->size + other->size];
@@ -157,23 +242,42 @@ and	CanHash
 		return String:create(data, this:ascii and other:ascii);
 	}
 	
+	/**
+	 * Produces a new {@code String} object whose contents are made up of the
+	 * code points contained in the current object followed by those in the
+	 * {@code String} representation of the other object.	 
+	 * @param other object convert to {@code String} and then concatenate
+	 * with this object	 	
+	 * @return concatenated {@code String}
+	 */
 	public concatenate( nullable Object other ) => ( String )
 	{
 		return concatenate( #other );
 	}
-
+	
+	/** 
+	 * Returns a lower-case version of this {@code String}. Code points that
+	 * are upper-case Latin letters are converted to lower-case versions in
+	 * the returned {@code String}, and other code points are unaffected.  	 
+	 * @return lower-case version	 
+	 */
 	public toLowerCase() => ( String )
-	{
-		// Iterator<code> iterator = iterator();
+	{	
 		StringIterator iterator = StringIterator:create(); 
 		MutableString string = MutableString:create();
 		while ( iterator.hasNext() )
 			string.append(iterator.next().toLowerCase());
 		return string.toString();
 	}
+	
+	/** 
+	 * Returns an upper-case version of this {@code String}. Code points that
+	 * are lower-case Latin letters are converted to upper-case versions in
+	 * the returned {@code String}, and other code points are unaffected.  	 
+	 * @return upper-case version	 
+	 */
 	public toUpperCase() => ( String )
-	{
-		// Iterator<code> iterator = iterator();
+	{		
 		StringIterator iterator = StringIterator:create();
 		MutableString string = MutableString:create();
 		while ( iterator.hasNext() )
@@ -181,28 +285,57 @@ and	CanHash
 		return string.toString();
 	}
 
+	/**
+	 * Compares the current object to another {@code String},
+	 * returning {@code true} if they are identical.
+	 * @param other object to compare to
+	 * @return {@code true} if identical
+	 */
 	public equal( String other ) => ( boolean )
 	{
 		return this->size == other->size and compare(other) == 0;
 	}
+	
+	/**
+	 * Compares the current object to another {@code String}, returning
+	 * {@code -1}, {@code 0}, or {@code 1}, if the current object comes
+	 * earlier, at exactly the same point, or later in a lexicographic
+	 * ordering than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether earlier, identical, or later
+	 */
 	public compare( String other ) => ( int )
 	{
 		for ( int i = 0; i < this->size and i < other->size; i += 1 )
-			if ( index(i) != other.index(i) )
-				return index(i) - other.index(i);
-		return this->size - other->size;
+			if ( data[i] != other:data[i] )
+				return data[i].compare(other:data[i]);
+		return this->size.compare(other->size);
 	}
 
+	/** 
+	 * Returns a {@code String} representation of this object, which is the
+	 * object itself.
+	 * @return  {@code String} representation
+	 */
 	public toString() => ( String )
 	{
 		return this;
 	}
 	
+	/**
+	 * Gets iterator that can iterate over each code point in the
+	 * {@code String}.   
+	 * @return iterator
+	 */
 	public iterator() => ( Iterator<code> )
 	{
 		return StringIterator:create();
 	}
 	
+	/** 
+	 * Finds a hash value for the current object.	 
+	 * @return hash value	 
+	 */
 	public get hash() => ( uint )
 	{		
 		uint value = 0u;
@@ -215,6 +348,12 @@ and	CanHash
 		return value;
 	}
 	
+	/** 
+	 * Parses the {@code String} object as a {@code byte}.	 
+	 * @return {@code byte} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code byte}
+	 */
 	public toByte() => (byte)
 	{
 		ulong min = cast<ulong>(-cast<long>(byte:MIN));
@@ -228,12 +367,24 @@ and	CanHash
 			return cast<byte>(value);					
 	}	
 	
+	/** 
+	 * Parses the {@code String} object as a {@code ubyte}.	 
+	 * @return {@code ubyte} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code ubyte}
+	 */
 	public toUByte() => (ubyte)
 	{
 		(ulong value, ) = parseInteger(ubyte:MIN, ubyte:MAX);
 		return cast<ubyte>(value);
 	}
 	
+	/** 
+	 * Parses the {@code String} object as a {@code short}.	 
+	 * @return {@code short} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code short}
+	 */
 	public toShort() => (short)
 	{
 		ulong min = cast<ulong>(-cast<long>(short:MIN));
@@ -246,12 +397,25 @@ and	CanHash
 		else		
 			return cast<short>(value);
 	}
+	
+	/** 
+	 * Parses the {@code String} object as a {@code ushort}.	 
+	 * @return {@code ushort} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code ushort}
+	 */
 	public toUShort() => (ushort)
 	{
 		(ulong value, ) = parseInteger(ushort:MIN, ushort:MAX);
 		return cast<ushort>(value);
 	}
 	
+	/** 
+	 * Parses the {@code String} object as an {@code int}.	 
+	 * @return {@code int} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code int}
+	 */
 	public toInt() => (int)
 	{
 		ulong min = cast<ulong>(-cast<long>(int:MIN));
@@ -265,12 +429,24 @@ and	CanHash
 			return cast<int>(value);	
 	}
 	
+	/** 
+	 * Parses the {@code String} object as a {@code uint}.	 
+	 * @return {@code uint} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code uint}
+	 */
 	public toUInt() => (uint)
 	{
 		(ulong value, ) = parseInteger(uint:MIN, uint:MAX);
 		return cast<uint>(value);	
 	}
-		
+	
+	/** 
+	 * Parses the {@code String} object as a {@code long}.	 
+	 * @return {@code long} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code long}
+	 */
 	public toLong() => (long)
 	{
 		ulong min = cast<ulong>(cast<ulong>(long:MAX) + 1uL);
@@ -284,18 +460,35 @@ and	CanHash
 			return cast<long>(value);	
 	}
 	
-	
+	/** 
+	 * Parses the {@code String} object as a {@code ulong}.	 
+	 * @return {@code ulong} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code ulong}
+	 */
 	public toULong() => (ulong)
 	{
 		(ulong value, ) = parseInteger(ulong:MIN, ulong:MAX);
 		return value;
 	}	
 	
+	/** 
+	 * Parses the {@code String} object as a {@code float}.	 
+	 * @return {@code float} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code float}
+	 */
 	public toFloat() => (float)
 	{
 		return cast<float>(toDouble());
 	}
 	
+	/** 
+	 * Parses the {@code String} object as a {@code double}.	 
+	 * @return {@code double} value 
+	 * @throws NumberFormatException if the {@code String} representation is
+	 * not a legal {@code double}
+	 */
 	public toDouble() => (double)
 	{			
 		boolean negative = false;
@@ -361,6 +554,7 @@ and	CanHash
 		return value * (10.0).power(exponent);
 	}
 	
+	// Helper method to parse all integer types.
 	private parseInteger(ulong min, ulong max) => (ulong value, boolean negative)
 	{
 		boolean signed = min != 0uL;	
@@ -397,7 +591,7 @@ and	CanHash
 	}
 	
 
-	public class StringIterator is Iterator<code>
+	private class StringIterator is Iterator<code>
 	{
 		int index = 0;
 

@@ -135,7 +135,8 @@ and CanIterate<T>
 				first = false;
 			else
 				string.append(", ");
-			string.append(#value);
+				
+			string.append( #value );
 		}
 		return string.append("]").toString();
 	}

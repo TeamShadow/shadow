@@ -1,25 +1,69 @@
+/**
+ * Class {@code MutableString} holds arbitrary-length
+ * sequences of UTF-8 code points stored in a dynamic array of {@code byte}
+ * values. {@code MutableString} objects differ from {@code String} objects
+ * in that their contents can be changed.
+ *
+ * @seeDoc shadow:standard@String 
+ */
 class shadow:standard@
 	MutableString
-is CanIndex<int, byte>
+is  CanIndex<int, byte>
+and CanIndexStore<int, byte>
+and CanCompare<MutableString>
+and CanHash
 {
+	/// Number of {@code byte} values stored as part of the string. 
 	get int size = 0;
-	byte[] data = byte:create[10];
+	byte[] data;
+	
+	/**
+	 * Creates a new {@code MutableString} with no code points and the
+	 * capacity to hold 10 bytes worth of code points. 
+	 */
 	public create()
 	{
+		this(10);
 	}
-	public create( int initialSize )
+	
+	/**
+	 * Creates a new {@code MutableString} with no code points and the
+	 * capacity to hold the specified number of bytes worth of code points.
+	 * @param capacity initial storage capacity in bytes  
+	 */
+	public create( int capacity )
 	{
-		data = byte:create[initialSize];
+		data = byte:create[capacity];
 	}
+	
+	/**
+	 * Creates a new {@code MutableString} containing the string
+	 * representation of an object.
+	 * @param initialValue object whose string representation will fill the
+	 * new {@code MutableString} 
+	 */
 	public create( nullable Object initialValue )
 	{
-		append(initialValue);
+		String value = #initialValue;
+		data = byte:create[value->size];	
+		append(value);
 	}
-
+	
+	/**
+	 * Guarantees that there is enough space in the {@code MutableString} to
+	 * hold the specified number of bytes.  If there is insufficient space,
+	 * this method will take the larger of the requested size and twice the
+	 * current capacity, to avoid repeated resizes for a series of single byte
+	 * additions.	 	 
+	 * @param size minimize number of bytes the {@code MutableString} must be
+	 * able to hold  
+	 * @return current {@code MutableString} object, possibly resized 
+	 */
 	public ensureCapacity( int size ) => ( MutableString )
 	{
 		if ( this->capacity < size )
 		{
+			size = size.max( this->capacity * 2 );
 			byte[] data = byte:create[size];
 			for ( int i = 0; i < this->size; i += 1 )
 				data[i] = this:data[i];
@@ -27,25 +71,47 @@ is CanIndex<int, byte>
 		}
 		return this;
 	}
+	
+	/**
+	 * Retrieves the current capacity of the {@code MutableString} in bytes.	   
+	 * @return current capacity in bytes 
+	 */
 	public readonly get capacity() => ( int )
 	{
 		return data->size;
 	}
 
+	/**
+	 * Retrieves the {@code byte} value at the given offset inside the object.
+	 * @param index offset inside the object	   
+	 * @return {@code byte} value
+	 * @throws IndexOutOfBoundsException if the offset is illegal
+	 */
 	public readonly index( int index ) => ( byte value )
 	{
-		if ( index < 0 or index >= size )
-			throw IndexOutOfBoundsException:create();
 		return data[index];
 	}
+	
+	/**
+	 * Stores the given {@code byte} value at the given offset inside the
+	 * object.
+	 * @param index offset inside the object	   
+	 * @param value value to store	 
+	 * @throws IndexOutOfBoundsException if the offset is illegal
+	 */
 	public index( int index, byte value ) => ()
 	{
-		if ( index < 0 or index >= size )
-			throw IndexOutOfBoundsException:create();
 		data[index] = value;
 	}
 	
-	public insert( byte value, int index ) => (MutableString)
+	/**
+	 * Inserts the given {@code byte} value at the given offset inside the
+	 * object, moving over any values coming after the offset
+	 * @param index offset inside the object
+	 * @param value value to store	 
+	 * @throws IndexOutOfBoundsException if the offset is illegal
+	 */
+	public insert( int index, byte value ) => (MutableString)
 	{
 		ensureCapacity( size + 1 );
 		for( int i = size; i >= index + 1; i -= 1 )
@@ -55,7 +121,16 @@ is CanIndex<int, byte>
 		return this;			
 	}
 	
-	public insert( nullable Object value, int index ) => (MutableString)
+	/**
+	 * Inserts a {@code String} representation of the given value at the given
+	 * offset inside the object, moving over any values coming after the
+	 * offset
+	 * @param index offset inside the object
+	 * @param value value to store
+	 * @return {@code MutableString} object after insertion	 
+	 * @throws IndexOutOfBoundsException if the offset is illegal
+	 */
+	public insert( int index, nullable Object value ) => (MutableString)
 	{
 		String string = #value;
 		ensureCapacity( size + string->size );
@@ -67,17 +142,40 @@ is CanIndex<int, byte>
 		return this;			
 	}
 	
+	/**
+	 * Deletes the byte value at the given offset, shortening the string
+	 * representation by one byte.
+	 * @param index offset inside the object	
+	 * @return {@code MutableString} object after deletion 	 
+	 * @throws IndexOutOfBoundsException if the offset is illegal
+	 */
 	public delete(int index) => (MutableString)
 	{
-		return delete(index, index + 1);
+		try
+		{
+			return delete(index, index + 1);
+		}
+		catch(IllegalArgumentException e)
+		{
+			throw IndexOutOfBoundsException:create(index);
+		}
 	}
 	
+	/**
+	 * Deletes all the byte values from the starting offset up to but not
+	 * including the ending offset, shortening the string representation by
+	 * {@code end - start} bytes.
+	 * @param start starting offset
+	 * @param end ending offset	
+	 * @return {@code MutableString} object after deletion 	 
+	 * @throws IllegalArgumentException if either of the offsets is illegal
+	 */
 	public delete(int start, int end) => (MutableString)
 	{
 		if ( start < 0 or start >= size )
 			throw IllegalArgumentException:create("Invalid start index");
 			
-		if( end <= start or end > size )
+		if( end < start or end > size )
 			throw IllegalArgumentException:create("Invalid end index");
 			
 		for( int i = start; i < size - (end - start); i += 1 )
@@ -88,6 +186,12 @@ is CanIndex<int, byte>
 		return this;
 	}
 	
+	/**
+	 * Appends a single {@code byte} value to the end of the string
+	 * representation.	 
+	 * @param value value to append	 
+	 * @return {@code MutableString} object after append
+	 */	
 	public append( byte value ) => ( MutableString )
 	{		
 		ensureCapacity( size + 1 );		
@@ -96,11 +200,38 @@ is CanIndex<int, byte>
 		return this;
 	}
 	
-	public prepend( byte value ) => ( MutableString )
-	{		
-		return insert( value, 0 );
+	/**
+	 * Appends a {@code String} representation of the given value to the end
+	 * of the string representation.	 
+	 * @param value value to append	 
+	 * @return {@code MutableString} object after append
+	 */
+	public append( nullable Object value ) => ( MutableString )
+	{
+		String string = #value;		
+		ensureCapacity( size + string->size );
+		for ( int i = 0; i < string->size; i += 1, size += 1 )
+			data[size] = string.index(i);
+		return this;
 	}
 	
+	/**
+	 * Prepends a single {@code byte} value to the beginning of the string
+	 * representation, moving all other values down.	 
+	 * @param value value to prepend	 
+	 * @return {@code MutableString} object after prepend
+	 */
+	public prepend( byte value ) => ( MutableString )
+	{		
+		return insert( 0, value );
+	}
+	
+	/**
+	 * Prepends a {@code String} representation of the given value to the
+	 * beginning of the string representation, moving all other values down.	 
+	 * @param value value to append	 
+	 * @return {@code MutableString} object after append
+	 */
 	public prepend( nullable Object value ) => ( MutableString )
 	{
 		String string = #value;
@@ -112,15 +243,13 @@ is CanIndex<int, byte>
 		size += string->size;
 		return this;
 	}
-
-	public append( nullable Object value ) => ( MutableString )
-	{
-		String string = #value;		
-		ensureCapacity( size + string->size );
-		for ( int i = 0; i < string->size; i += 1, size += 1 )
-			data[size] = string.index(i);
-		return this;
-	}
+	
+	/**
+	 * Reverses the order of the {@code byte} values stored in this
+	 * string representation.  Note that this method may not correctly reverse
+	 * representations containing mult-byte code points.
+	 * @return reversed {@code MutableString} object
+	 */	
 	public reverse() => ( MutableString )
 	{
 		for ( int left = 0, right = size - 1; left < right;
@@ -129,17 +258,30 @@ is CanIndex<int, byte>
 		return this;
 	}
 	
+	/**
+	 * Produces a substring of this string representation, from the starting
+	 * byte offset up to but not including the ending byte offset.
+	 * @param start starting offset
+	 * @param end ending offset	
+	 * @return substring 	 
+	 * @throws IllegalArgumentException if either of the offsets is illegal	 
+	 */	
 	public readonly substring(int start, int end) => (String)
 	{
 		if ( start < 0 or start >= size )
 			throw IllegalArgumentException:create("Invalid start index");
 			
-		if( end <= start or end > size )
+		if( end < start or end > size )
 			throw IllegalArgumentException:create("Invalid end index");
 	
 		return String:create(cast<byte[]>(data.subarray(start, end)));	
 	}
 
+	/**
+	 * Produces an immutable {@code String} version of this string
+	 * representation.	
+	 * @return immutable {@code String} version
+	 */
 	public readonly toString() => ( String )
 	{	
 		byte[] bytes = data;
@@ -147,5 +289,41 @@ is CanIndex<int, byte>
 			bytes = cast<byte[]>(data.subarray(0, size));
 				
 		return String:create(bytes);
+	}
+	
+	/**
+	 * Compares the current object to another {@code MutableString},
+	 * returning {@code true} if they are identical.
+	 * @param other object to compare to
+	 * @return {@code true} if identical
+	 */
+	public equal( MutableString other ) => ( boolean )
+	{
+		return this->size == other->size and compare(other) == 0;
+	}
+	
+	/**
+	 * Compares the current object to another {@code MutableString}, returning
+	 * {@code -1}, {@code 0}, or {@code 1}, if the current object comes
+	 * earlier, at exactly the same point, or later in a lexicographic
+	 * ordering than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether earlier, identical, or later
+	 */
+	public compare( MutableString other ) => ( int )
+	{
+		for ( int i = 0; i < this->size and i < other->size; i += 1 )
+			if ( data[i] != other:data[i] )
+				return data[i].compare(other:data[i]);
+		return this->size.compare(other->size);
+	}
+	
+	/** 
+	 * Finds a hash value for the current object.	 
+	 * @return hash value	 
+	 */
+	public get hash() => ( uint )
+	{
+		return (#this)->hash;
 	}
 }
