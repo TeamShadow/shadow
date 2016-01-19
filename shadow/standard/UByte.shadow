@@ -113,7 +113,7 @@ and	CanHash
 	
 	/** 
 	 * Converts the {@code ubyte} value to a {@code byte}, which will overflow
-	 * if the value is too large.	 
+	 * if the value is too large to be contained in a {@code byte}. 	 
 	 * @return {@code byte} value 
 	 */
 	public native toByte() => (byte);

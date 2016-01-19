@@ -250,7 +250,7 @@ public class TypeCollector extends BaseChecker {
 		/* Add io imports (necessary for console programs). */		
 		File io = new File( config.getSystemImport().toFile(), "shadow" + File.separator + "io" );
 		if( !io.exists() )
-			throw new ConfigurationException("Invalid path to shadow:standard: " + io.getCanonicalPath());
+			throw new ConfigurationException("Invalid path to shadow:io: " + io.getCanonicalPath());
 		
 		imports = standard.listFiles( filter );
 		for( File file :  imports ) {
