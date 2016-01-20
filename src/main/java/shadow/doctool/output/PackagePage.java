@@ -130,7 +130,7 @@ public class PackagePage extends Page
 		
 		out.fullLine("h2", "Package " + qualifiedName);
 		
-		out.closeUntab();
+		
 		//out.voidLine("hr");
 		
 		// Documentation text
@@ -140,6 +140,8 @@ public class PackagePage extends Page
 				writeUniversalBlockTags(self.getDocumentation(), out);
 			out.closeUntab();
 		}
+		
+		out.closeUntab();
 	}
 	
 	private void writeAllSummaries(HtmlWriter out) 

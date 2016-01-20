@@ -1,174 +1,501 @@
+/**
+ * Class {@code ulong} contains the methods that can be called on {@code ulong}  
+ * values.
+ */
 locked immutable class shadow:standard@
 	ULong
 is	Integer<ulong>
 and	Number<double>
 and	CanHash
 {
-	public constant ulong MAX = 18446744073709551615ul;
-	public constant ulong MIN = 0ul;
-	// implement Bitwise
+	/// Largest value a {@code ulong} can have, 18446744073709551615.
+	public constant ulong MAX = 18446744073709551615uL;
+	/// Smallest value a {@code ulong} can have, 0.
+	public constant ulong MIN = 0uL;
+	
+	// Methods for Integer<ulong>
+	
+	/**
+	 * Returns the bitwise complement of the {@code ulong} value.
+	 * @return bitwise complement 
+	 */ 
 	public native bitComplement() => (ulong);
+	
+	/** 
+	 * Finds the result of left-shifting the bits of the {@code ulong} value
+	 * by an unsigned amount.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
 	public native bitShiftLeft(uint amount) => (ulong);
+	
+	/** 
+	 * Finds the result of right-shifting the bits of the {@code ulong} value
+	 * by an unsigned amount.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
 	public native bitShiftRight(uint amount) => (ulong);
+	
+	/** 
+	 * Finds the result of left-rotating the bits of the {@code ulong} value
+	 * by an unsigned amount.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
 	public native bitRotateLeft(uint amount) => (ulong);
+	
+	/** 
+	 * Finds the result of right-rotating the bits of the {@code ulong} value
+	 * by an unsigned amount.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
 	public native bitRotateRight(uint amount) => (ulong);
+	
+	/** 
+	 * Finds the result of left-shifting the bits of the {@code ulong} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
 	public bitShiftLeft(int amount) => (ulong)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
 	}
+	
+	/** 
+	 * Finds the result of right-shifting the bits of the {@code ulong} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
 	public bitShiftRight(int amount) => (ulong)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
 	}
+	
+	/** 
+	 * Finds the result of left-rotating the bits of the {@code ulong} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
 	public bitRotateLeft(int amount) => (ulong)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
 	}
+	
+	/** 
+	 * Finds the result of right-rotating the bits of the {@code ulong} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
 	public bitRotateRight(int amount) => (ulong)
 	{
 		uint abs = amount.abs();
 		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);
 	}
-	// implement Number
+	
+	// Methods for Number
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code byte}, which will overflow
+	 * if the value is too large to be contained in a {@code byte}.	 
+	 * @return {@code byte} value 
+	 */
 	public native toByte() => (byte);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code ubyte}, which will overflow
+	 * if the value is too large to be contained in a {@code ubyte}.	 
+	 * @return {@code ubyte} value 
+	 */
 	public native toUByte() => (ubyte);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code short}, which will overflow
+	 * if the value is too large to be contained in a {@code short}.
+	 * @return {@code short} value 
+	 */
 	public native toShort() => (short);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code ushort}, which will overflow
+	 * if the value is too large to be contained in a {@code ushort}.
+	 * @return {@code ushort} value 
+	 */
 	public native toUShort() => (ushort);
+	
+	/** 
+	 * Converts the {@code ulong} value to an {@code int}, which will overflow
+	 * if the value is too large to be contained in an {@code int}.
+	 * @return {@code int} value 
+	 */
 	public native toInt() => (int);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code uint}, which will overflow
+	 * if the value is too large to be contained in a {@code uint}.
+	 * @return {@code uint} value 
+	 */
 	public native toUInt() => (uint);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code long}, which will overflow
+	 * if the value is too large to be contained in a {@code long}.
+	 * @return {@code uint} value 
+	 */
 	public native toLong() => (long);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code ulong}, which involves
+	 * no change.
+	 * @return {@code ulong} value 
+	 */
 	public native toULong() => (ulong);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code code}, which will overflow
+	 * if the value is too large to be contained in a {@code code}.
+	 * @return {@code code} value 
+	 */
 	public native toCode() => (code);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code float}.
+	 * @return {@code float} value 
+	 */
 	public native toFloat() => (float);
+	
+	/** 
+	 * Converts the {@code ulong} value to a {@code double}.
+	 * @return {@code double} value 
+	 */
 	public native toDouble() => (double);
 
-	// implement Integer<ulong>
+	// Methods for Integer<ulong>
+	
+	/** 
+	 * Computes the bitwise OR of the value and another {@code ulong} value.
+	 * @param other value to bitwise OR with
+	 * @return result of bitwise OR 
+	 */
 	public native bitOr(ulong other) => (ulong);
+	
+	/** 
+	 * Computes the bitwise XOR of the value and another {@code ulong} value.
+	 * @param other value to bitwise XOR with
+	 * @return result of bitwise XOR 
+	 */
 	public native bitXor(ulong other) => (ulong);
+	
+	/** 
+	 * Computes the bitwise AND of the value and another {@code ulong} value.
+	 * @param other value to bitwise AND with
+	 * @return result of bitwise AND
+	 */
 	public native bitAnd(ulong other) => (ulong);
-	// implement CanAdd<ulong>
+	
+	
+	// Method for CanAdd<ulong>
+	/**
+	 * Adds another {@code ulong} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public native add(ulong other) => (ulong);
-	// implement CanSubtract<ulong>
+	
+	// Method for CanSubtract<ulong>
+	/**
+	 * Subtracts another {@code ulong} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public native subtract(ulong other) => (ulong);
-	// implement CanMultiply<ulong>
+	
+	// Method for CanMultiply<ulong>
+	/**
+	 * Multiplies the current value by another {@code ulong} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public native multiply(ulong other) => (ulong);
-	// implement CanDivide<ulong>
+	
+	// Method for CanDivide<ulong>
+	/**
+	 * Divides the current value by another {@code ulong} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public native divide(ulong other) => (ulong);
-	// implement CanModulus<ulong>
+	
+	// Method for CanModulus<ulong>
+	/**
+	 * Divides the current value by another {@code ulong} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public native modulus(ulong other) => (ulong);
-	// implement CanCompare<ulong>
+	
+	// Method for CanCompare<ulong>
+	/**
+	 * Compares the current value to another {@code ulong}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to,
+	 * or larger than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */	
 	public native compare(ulong other) => (int);
-	// implement CanEqual<ulong>
+	
+	// Method for CanEqual<ulong>
+	/**
+	 * Compares the current value to another {@code ulong}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public native equal(ulong other) => (boolean);
 
-	// implement CanAdd<double>
+	// Method for CanAdd<double>
+	/**
+	 * Adds a {@code double} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public add(double other) => (double)
 	{
 		return cast<double>(this) + other;
 	}
-	// implement CanSubtract<double>
+	
+	// Method for CanSubtract<double>
+	/**
+	 * Subtracts a {@code double} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public subtract(double other) => (double)
 	{
 		return cast<double>(this) - other;
 	}
-	// implement CanMultiply<double>
+	
+	// Method for CanMultiply<double>
+	/**
+	 * Multiplies the current value by a {@code double} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public multiply(double other) => (double)
 	{
 		return cast<double>(this) * other;
 	}
-	// implement CanDivide<double>
+	
+	// Method for CanDivide<double>
+	/**
+	 * Divides the current value by a {@code double} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public divide(double other) => (double)
 	{
 		return cast<double>(this) / other;
 	}
-	// implement CanModulus<double>
+	
+	// Method for CanModulus<double>
+	/**
+	 * Divides the current value by a {@code double} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public modulus(double other) => (double)
 	{
 		return cast<double>(this) % other;
 	}
-	// implement CanCompare<double>
+	
+	// Method for CanCompare<double>
+	/**
+	 * Compares the current value to a {@code double}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */
 	public compare(double other) => (int)
 	{
 		return cast<double>(this).compare(other);
 	}
-	// implement CanEqual<double>
+	
+	// Method for CanEqual<double>
+	/**
+	 * Compares the current value to a {@code double}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}
 	
+	/** 
+	 * Finds the square root of the value.
+	 * @return square root	 
+	 */
 	public squareRoot() => (double)
 	{
 		return toDouble().squareRoot();
 	}
 	
+	/** 
+	 * Raises the current value to the power of an {@code int}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public power(int value) => (double)
 	{
 		return toDouble().power(value);
 	}
 	
+	/** 
+	 * Raises the current value to the power of a {@code double}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public power(double value) => (double)
 	{
 		return toDouble().power(value);
 	}
 	
+	/** 
+	 * Finds the sine of the current value.	 	 
+	 * @return sine of the value
+	 */
 	public sin() => (double)
 	{
 		return toDouble().sin();
 	}
 	
+	/** 
+	 * Finds the cosine of the current value.	 	 
+	 * @return cosine of the value
+	 */
 	public cos() => (double)	
 	{
 		return toDouble().cos();
 	}
 	
+	/** 
+	 * Finds the natural logarithm of the current value.	 	 
+	 * @return natural logarithm of the value
+	 */
 	public logBaseE() => (double)	
 	{
 		return toDouble().logBaseE();
 	}
 	
+	/** 
+	 * Finds the logarithm base 2 of the current value.	 	 
+	 * @return logarithm base 2 of the value
+	 */
 	public logBase2() => (double)	
 	{
 		return toDouble().logBase2();
 	}
 	
+	/** 
+	 * Finds the logarithm base 10 of the current value.	 	 
+	 * @return logarithm base 10 of the value
+	 */
 	public logBase10() => (double)	
 	{
 		return toDouble().logBase10();
 	}
 	
+	/** 
+	 * Produces a version of the value with endianness reversed. In other
+	 * words, the order of the 8 bytes has been reversed.	 	 
+	 * @return value with opposite endianness
+	 */
 	public native flipEndian() => (ulong);
+	
+	/** 
+	 * Counts the number of 1 bits in the binary representation of the number.	 	 
+	 * @return total 1 bits
+	 */	
 	public native ones() => (ulong);
+	
+	/** 
+	 * Counts the number of 0 bits before a non-zero bit, starting with the
+	 * most significant bits. 	 
+	 * @return leading 0 bits
+	 */
 	public native leadingZeroes() => (ulong);
+	
+	/** 
+	 * Counts the number of 0 bits after a non-zero bit, starting with the
+	 * least significant bits. 	 
+	 * @return trailing 0 bits
+	 */
 	public native trailingZeroes() => (ulong);	
 	
 
-	// implement CanHash
+	// Method for CanHash
+	/** 
+	 * Finds a hash value for the current value.	 
+	 * @return hash value	 
+	 */
 	public get hash() => (uint)
 	{
 		return cast<uint>(this) ^ cast<uint>(this >> 32);
 	}
 
+	/** 
+	 * Finds the minimum of the current value and another {@code ulong}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
 	public min(ulong other) => (ulong)
 	{
 		return this < other ? this, other;
 	}
+	
+	/** 
+	 * Finds the maximum of the current value and another {@code ulong}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
 	public max(ulong other) => (ulong)
 	{
 		return this > other ? this, other;
 	}
 
+	/**
+	 * Returns a signed version of the current value, overflowing if too large.
+	 * @return signed value	  
+	 */
 	public toSigned() => (long)
 	{
 		return toLong();
 	}
+	
+	/** 
+	 * Returns a {@code String} representation of the value, in base 10.
+	 * @return  {@code String} representation
+	 */
 	public toString() => (String)
 	{
 		return toString(10u);
 	}
+	
+	/** 
+	 * Returns a {@code String} representation of the value, in the specified base.
+	 * @param base base of output representation
+	 * @return  {@code String} representation
+	 */
 	public toString(uint base) => (String)
 	{
 		MutableString string = MutableString:create();
@@ -182,6 +509,8 @@ and	CanHash
 		while (value != 0uL);
 		return string.reverse().toString();
 	}
+	
+	// Converts a digit to its byte value, assuming digits between 0 and 35.
 	private digit(ulong digit) => (code)
 	{
 		if (digit < 10uL)
