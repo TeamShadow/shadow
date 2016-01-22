@@ -283,22 +283,21 @@ and	CanHash
 		return cast<ushort>(this) ^ other;
 	}
 	
-	// Method for CanAdd<ushort>	
-	/**
-	 * Adds a {@code ushort} to the current value and returns the resulting value.	 
-	 * @param other value to add
-	 * @return sum of the two values
+	/** 
+	 * Computes the bitwise AND of the value and a {@code ushort} value.
+	 * @param other value to bitwise XOR with
+	 * @return result of bitwise XOR 
 	 */
 	public bitAnd(ushort other) => (ushort)
 	{
 		return cast<ushort>(this) & other;
 	}
 	
-	// Method for CanSubtract<ushort>
+	// Method for CanAdd<ushort>	
 	/**
-	 * Subtracts a {@code ushort} from the current value and returns the resulting value.	 
-	 * @param other value to subtract
-	 * @return difference of the two values
+	 * Adds a {@code ushort} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
 	 */
 	public add(ushort other) => (ushort)
 	{
