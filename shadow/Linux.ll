@@ -41,7 +41,7 @@
 @shadow.io..IOException_methods = external constant %shadow.io..IOException_methods
 
 %shadow.io..File_methods = type { %shadow.io..File* (%shadow.io..File*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..File*)*, void (%shadow.io..File*)*, void (%shadow.io..File*)*, %boolean (%shadow.io..File*)*, void (%shadow.io..File*, %boolean)*, %shadow.io..Path* (%shadow.io..File*)*, %long (%shadow.io..File*)*, void (%shadow.io..File*, %long)*, %int (%shadow.io..File*, { %byte*, [1 x %int] })*, %long (%shadow.io..File*)*, void (%shadow.io..File*, %long)*, %int (%shadow.io..File*, { %byte*, [1 x %int] })* }
-%shadow.io..File = type { %shadow.standard..Class*, %shadow.io..File_methods* , %long, %long, %shadow.io..Path* }
+%shadow.io..File = type { %shadow.standard..Class*, %shadow.io..File_methods* , %long, %shadow.io..Path* }
 %shadow.io..Path_methods = type { %shadow.io..Path* (%shadow.io..Path*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..Path*)*, %code (%shadow.io..Path*)* }
 %shadow.io..Path = type { %shadow.standard..Class*, %shadow.io..Path_methods* , { %shadow.standard..String**, [1 x %int] } }
 %shadow.standard..System = type opaque
@@ -152,7 +152,7 @@ define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {
 }
 
 define private i8* @filepath(%shadow.io..File*) {
-	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 4
+	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%3 = load %shadow.io..Path*, %shadow.io..Path** %2
 	%4 = getelementptr %shadow.io..Path, %shadow.io..Path* %3, i32 0, i32 1
 	%5 = load %shadow.io..Path_methods*, %shadow.io..Path_methods** %4

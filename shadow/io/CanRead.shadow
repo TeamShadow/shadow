@@ -1,4 +1,14 @@
+/**
+ * Interface {@code CanRead} specifies that a class can read data into an
+ * array of {@code byte} values.  This operation is usually applied to
+ * files, streams, network connections, and similar I/O abstractions. 
+ */
 interface shadow:io@CanRead
 {
+	/**
+	 * Method called to read data.
+	 * @param buffer array of {@code byte} values to read data into
+	 * @return number of {@code byte} values successfully read 
+	 */
 	read( byte[] buffer ) => ( int );
 }

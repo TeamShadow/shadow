@@ -1,5 +1,17 @@
+/**
+ * Exception {@code IOException} should be thrown when
+ * an input or output operation fails in an unexpected way.
+ */
 exception shadow:io@IOException
 {
+	/**
+	 * Creates an {@code IOException} with no message.	  
+	 */
 	public create() { }
+	
+	/**
+	 * Creates an {@code IOException} with a message.
+	 * @param message message describing the I/O problem 	  
+	 */
 	public create(String message) { super(message); }
 }

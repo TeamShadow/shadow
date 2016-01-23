@@ -1,4 +1,12 @@
+/**
+ * Interface {@code CanClose} specifies that a class can be closed.  This
+ * operation is usually applied to files, streams, network connections, and
+ * similar I/O abstractions. 
+ */
 interface shadow:io@CanClose
 {
+	/**
+	 * Method called to close the I/O stream. 
+	 */
 	close() => ();
 }

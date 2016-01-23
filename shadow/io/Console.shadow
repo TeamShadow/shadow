@@ -1,12 +1,30 @@
+/**
+ * Singleton {@code Console} provides methods for reading text data from
+ * {@code stdin} and writing text data to {@code stdout} and {@code stderr}.
+ * Unlike other singletons, {@code Console} is automatically created at the
+ * beginning of a Shadow console program, since its functionality is used for
+ * reporting uncaught exceptions. Some {@code Console} behavior is platform
+ * specific.
+ */
 singleton shadow:io@Console
 {
 	boolean wasLF = false;
+	
+	/**
+	 * Creates a new {@code Console}.
+	 */
 	public create()
 	{
 		init();
 	}
 	private native init() => ();
 
+	/**
+	 * Reads the next line of text from {@code stdin}, stopping when a new line
+	 * or line feed character is reached.
+	 * @return line as a {@code String}
+	 * @return {@code true} if the end of the file was reached 
+	 */
 	public readLine() => ( String, boolean eof )
 	{
 		var string = MutableString:create();
@@ -22,6 +40,12 @@ singleton shadow:io@Console
 		return ( #string, eof );
 	}
 	
+	/**
+	 * Reads the next white-spaced delimited text from {@code stdin}, stopping
+	 * when a space, a tab, a new line, or a line feed character is reached.	 
+	 * @return text as a {@code String}
+	 * @return {@code true} if the end of the file was reached 
+	 */
 	public readString() => ( String, boolean eof )
 	{
 		var string = MutableString:create();
@@ -37,6 +61,11 @@ singleton shadow:io@Console
 		return ( #string, eof );
 	}
 	
+	/**
+	 * Reads the next UTF-8 code point from {@code stdin}.	 	 
+	 * @return character as a {@code code}
+	 * @return {@code true} if the end of the file was reached 
+	 */
 	public readCode() => ( code, boolean eof )
 	{
 		int value;
@@ -63,73 +92,79 @@ singleton shadow:io@Console
 		}
 		return ( cast<code>(value), eof );
 	}
+	
+	/**
+	 * Reads the next byte from {@code stdin}.	 	 
+	 * @return next byte
+	 * @return {@code true} if the end of the file was reached 
+	 */
 	public native readByte() => ( byte, boolean eof );
 
+	/**
+	 * Prints an object's {@code String} representation to {@code stdout}.	 	 
+	 * @param value object to print
+	 * @return {@code Console} object 
+	 */
 	public print( nullable Object value ) => ( Console )
 	{
 		return print(#value);
 	}
+	
+	/**
+	 * Prints an object's {@code String} representation to {@code stdout},
+	 * followed by a new line character.	 	 
+	 * @param value object to print
+	 * @return {@code Console} object 
+	 */
 	public printLine( nullable Object value ) => ( Console )
 	{
 		return print(value).printLine();
 	}
 	
-	public debugPrint(int value) => ()
-	{	
-		if( value < 0 )
-		{
-			print("-");
-			value = -value;
-		}	
-		
-		int power = 10;
-		while( power < value )
-			power *= 10;			
-		power /= 10;		
-		
-		int digit = 0;
-		
-		while( power > 0 )
-		{
-			digit = value / power;
-			value = value % power;
-			power /= 10;
-			if( digit == 0 )
-				print("0");
-			else if( digit == 1)
-				print("1");
-			else if( digit == 2)
-				print("2");
-			else if( digit == 3)
-				print("3");
-			else if( digit == 4)
-				print("4");
-			else if( digit == 5)
-				print("5");
-			else if( digit == 6)
-				print("6");
-			else if( digit == 7)
-				print("7");
-			else if( digit == 8)
-				print("8");
-			else if( digit == 9)
-				print("9");
-		}
-				
-		printLine();							
-	}
-	
+	/**
+	 * Prints a {@code String} value to {@code stdout}.	 	 
+	 * @param value {@code String} to print
+	 * @return {@code Console} object 
+	 */
 	public native print( String value ) => ( Console );
+	
+	/**
+	 * Prints a new line character to {@code stdout}.
+	 * @return {@code Console} object 
+	 */
 	public native printLine() => ( Console );
-
+	
+	/**
+	 * Prints an object's {@code String} representation to {@code stderr}.	 	 
+	 * @param value object to print
+	 * @return {@code Console} object 
+	 */
 	public printError( nullable Object value ) => ( Console )
 	{
 		return printError(#value);
 	}
+	
+	/**
+	 * Prints an object's {@code String} representation to {@code stderr},
+	 * followed by a new line character.	 	 
+	 * @param value object to print
+	 * @return {@code Console} object 
+	 */
 	public printErrorLine( nullable Object value ) => ( Console )
 	{
 		return printError(value).printErrorLine();
 	}
+	
+	/**
+	 * Prints a {@code String} value to {@code stderr}.	 	 
+	 * @param value {@code String} to print
+	 * @return {@code Console} object 
+	 */
 	public native printError( String value ) => ( Console );
+	
+	/**
+	 * Prints a new line character to {@code stdout}.
+	 * @return {@code Console} object 
+	 */
 	public native printErrorLine() => ( Console );
 }
