@@ -1,4 +1,4 @@
 Package {@code shadow:utility} contains basic data structures and utility
-classes that are useful in many different kinds of applications.
+classes that are useful in many different kinds of programs.
 
 package shadow:utility;

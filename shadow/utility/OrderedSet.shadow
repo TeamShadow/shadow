@@ -1,11 +1,58 @@
+/**
+ * Interface {@code OrderedSet<E>} defines the operations that a class must
+ * implement to be an ordered set. An ordered set is used to store elements 
+ * of type {@code E}. It should be possible to find elements quickly, allowing
+ * for efficient addition and retrieval.
+ * {@code OrderedSet<E>} differs from {@code Set<E>} in that elements must
+ * have some ordering defined by the {@code CanCompare<E>} interface.
+ * Because of this ordering, {@code OrderedSet<E>} is also able to define
+ * methods that manipulate ranges of element values. 
+ * 
+ * @seeDoc shadow:standard@CanCompare
+ */
 interface shadow:utility@
 	OrderedSet<E is CanCompare<E>>
-is
-	Set<E>
-{	
+is	Set<E>
+{
+	/**
+	 * Method should return the lowest-valued element in the ordered set or
+	 * throw an exception if the ordered set is empty.
+	 * @return lowest element	 
+	 */
 	readonly min() => (E);
-    readonly max() => (E);     
+	
+	/**
+	 * Method should return the highest-valued element in the ordered set or
+	 * throw an exception if the ordered set is empty.
+	 * @return highest element	 
+	 */
+    readonly max() => (E);
+    
+    /**
+	 * Method should return the highest-valued element whose value is less
+	 * than or equal to the given element.
+	 * @param element element to find the floor of	 
+	 * @return floor of given element, or {@code null} if no such element
+	 * exists	 
+	 */     
     readonly floor(E element) => (nullable E);
-    readonly ceiling(E element) => (nullable E);    
+    
+    /**
+	 * Method should return the lowest-valued element whose value is greater
+	 * than or equal to the given element.
+	 * @param element element to find the floor of	 
+	 * @return ceiling of given element, or {@code null} if no such element
+	 * exists	 
+	 */
+    readonly ceiling(E element) => (nullable E);
+    
+    /**
+	 * Method should return an iterable collection of all the elements in the
+	 * ordered set whose values are in the inclusive range from the low
+	 * element to the high element given.
+	 * @param low lowest element to include in the range
+	 * @param high highest element to include in the range
+	 * @return iterable collection of elements in the range	 
+	 */    
     readonly values(E low, E high) => (CanIterate<E>);
 }

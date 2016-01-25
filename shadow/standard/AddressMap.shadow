@@ -4,12 +4,14 @@ import shadow:utility@NoSuchElementException;
 
 /**
  * Class {@code AddressMap} maps old object addresses to new object addresses.
- * It's used when making a deep copy of an object so that an object that has
+ * It is used when making a deep copy of an object so that an object that has
  * already been copied won't be copied a second time.
  *
- * {@code AddressMap} is essentially a reimplementation of {@code HashMap},
- * which cannot be used because generic types create problems for the compiler
- * if used for these fundamental tasks.
+ * {@code AddressMap} is essentially a reimplementation of
+ * {@code HashMap<K,V>}, which cannot be used because generic types create
+ * problems for the compiler if used for these fundamental tasks.
+ * 
+ * @seeDoc shadow:utility@HashMap
  */
 locked class shadow:standard@
 	AddressMap is Map<ulong, ulong>	
@@ -128,6 +130,15 @@ locked class shadow:standard@
 			next = after;
 		}
 	}
+	
+	/**
+     * Checks whether or not the address map is empty.
+     * @return {@code true} if the address map is empty
+     */
+    public readonly isEmpty() => (boolean empty)
+    {
+        return size == 0;
+    }	
 
 	/*
 	 * Finds the hash value and index for a given key based on the provided
@@ -271,13 +282,15 @@ locked class shadow:standard@
 	
 	/**
 	 * Removes all entries from the map and resets the capacity to default.
+	 * @return map after being cleared
 	 */
-	public clear() => ()
+	public clear() => ( AddressMap )
 	{
 		size = 0;
 		table = Node:null[DEFAULT_INITIAL_CAPACITY];
 		threshold = cast<int>(table->size * loadFactor);
 		modifications += 1;
+		return this;
 	}
 	
 	

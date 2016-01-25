@@ -31,5 +31,18 @@ class shadow:test@RandomTest
             if (j%5==4)
             	out.printLine();
         }
+        
+        r = Random:create(); //uses system time to seed
+        out.printLine("Random byte: " # r.nextByte());
+        out.printLine("Random ubyte: " # r.nextUByte());
+        out.printLine("Random short: " # r.nextShort());
+        out.printLine("Random ushort: " # r.nextUShort());        
+        out.printLine("Random int: " # r.nextInt());
+        out.printLine("Random uint: " # r.nextUInt());        
+        out.printLine("Random long: " # r.nextLong());    
+        out.printLine("Random ulong: " # r.nextULong());
+        out.printLine("Random double: " # r.nextDouble());
+        out.printLine("Random float: " # r.nextFloat());
+        out.printLine("Random gaussian: " # r.nextGaussian());
 	}
 }

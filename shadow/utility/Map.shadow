@@ -1,11 +1,62 @@
+/**
+ * Interface {@code Map<K,V>} defines the operations that a class must
+ * implement to be a map, also known as a symbol table. A map is used to
+ * store key-value pairs with key type {@code K} and value type {@code V}.
+ * It should be possible to find keys quickly, allowing for efficient
+ * insertion and retrieval of associated values. {@code Map<K,V>} differs
+ * from {@code OrderedMap<K,V>} in that an ordering of key values is not
+ * required.
+ * 
+ * @seeDoc shadow:utility@OrderedMap
+ */
 interface shadow:utility@
 	Map<K is CanEqual<K>, V is CanEqual<V>>
-is
-	CanIterate<V> and CanIndexNullable<K,V> and CanIndexStore<K, V>
+is  CanIterate<V>
+and CanIndexNullable<K,V>
+and CanIndexStore<K, V>
 {
+	/**
+	 * Property should get the number of key-value pairs stored in the map.
+	 * @return size of the map
+	 */
 	readonly get size() => ( int size );
+	
+	/**
+	 * Method should check whether or not the map is empty.
+	 * @return {@code true} if the map is empty
+	 */
+	readonly isEmpty() => ( boolean empty );	
+	
+	/**
+	 * Method should check whether the map contains a matching value. Note
+	 * that maps are not usually organized by values, so this operation may
+	 * require a linear search of the entire map.
+	 * @param value value to search for
+	 * @return {@code true} if value is found
+	 */
 	readonly containsValue( V value ) => ( boolean found );
+	
+	/**
+	 * Method should check whether the map contains a matching key. Since
+	 * maps are usually organized by values, this operation should be 
+	 * efficient, running in either constant or logarithmic time, depending
+	 * on the implementation.
+	 * @param key key to search for
+	 * @return {@code true} if key is found
+	 */
 	readonly containsKey( K key ) => ( boolean found );
+	
+	/**
+	 * Method should remove the given key and its associated value.
+	 * @param key key to search for
+	 * @return associated value if key is present, {@code null} otherwise
+	 */
 	remove( K key ) => ( nullable V value );
-	clear() => ();
+	
+	/**
+	 * Removes all key-value pairs from the map. This operation should run in
+	 * constant time.	 
+	 * @return map after being cleared	 	   
+	 */	
+	clear() => ( Map<K,V> );
 }

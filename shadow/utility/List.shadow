@@ -1,14 +1,66 @@
+/**
+ * Interface {@code List<E>} defines the operations that a container class
+ * must implement to be an ordered list. A list supports general operations
+ * for storing and retrieving elements at indexes.
+ */
 interface shadow:utility@
 	List<E is CanEqual<E>>
-is
-	CanIterate<E> and CanIndex<int, E> and CanIndexStore<int, E>
+is	CanIterate<E>
+and CanIndex<int, E>
+and CanIndexStore<int, E>
 {
+	/**
+	 * Property should get the number of elements in the list.
+	 * @return size of the list
+	 */
 	readonly get size() => ( int size );
+	
+	/**
+	 * Method should return the index of the first matching element or -1 if
+	 * no element matches.
+	 * @param element element to search for
+	 * @return index of element
+	 */
 	readonly indexOf(E element) => ( int index );
+	
+	/**
+	 * Method should check whether the list contains a matching element.
+	 * @param element element to search for
+	 * @return {@code true} if element is found
+	 */
 	readonly contains(E element) => ( boolean found );
+	
+	/**
+	 * Method should check whether or not the list is empty.
+	 * @return {@code true} if the list is empty
+	 */
 	readonly isEmpty() => ( boolean empty );
+	
+	/**
+	 * Method should add the element to the end of the list.
+	 * @param element element to add
+	 * @return list after element is added
+	 */
 	add(E element) => ( List<E> );
+	
+	/**
+	 * Method should delete the element at the specified index.
+	 * @param index location of element to delete
+	 * @return deleted element
+	 */
 	delete(int index) => ( E element );
+	
+	/**
+	 * Method should remove the first element that matches the given element.
+	 * @param element element to remove
+	 * @return {@code true} if element was found and removed
+	 */
 	remove(E element) => ( boolean success );
+	
+	/**
+	 * Removes all elements from the list. This operation should run in
+	 * constant time.	 
+	 * @return list after being cleared	 	   
+	 */	
 	clear() => ( List<E> );
 }

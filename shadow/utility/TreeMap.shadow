@@ -1,23 +1,26 @@
-import shadow:utility@ArrayDeque;
-
 /**
- * The {@code TreeMap<K, V>} class implements an ordered map of key-value pairs
- * with entries mapping keys of type {@code K} to values of type {@code V}. 
- * Key type {@code K} must have the {@code CanCompare<K>} interface, and value
- * type {@code V} must have the {@code CanEqual<V>} interface.
- * The underlying implementation of the ordered map is a left-leaning red-black
- * binary search tree based on a Shadow port of Sedgewick and Wayne's Java
- * implementation of a left-leaning red-black binary search tree.
+ * Class {@code TreeMap<K,V>} stores an ordered map, also known as an ordered
+ * symbol table, of key-value pairs with entries mapping keys of type {@code K}
+ * to values of type {@code V}.  This ordered map is implemented with a
+ * left-leaning red-black binary search tree based on a Shadow port of
+ * Sedgewick and Wayne's Java implementation of a left-leaning red-black
+ * binary search tree, allowing keys to be added, found, and deleted in
+ * logarithmic time. {@code TreeMap<K,V>} requires that type {@code K} has the
+ * {@code CanCompare<K>} interface, imposing an ordering on the keys.  If
+ * ordering of keys is not required, the {@code HashMap<K,V>} class may
+ * provide a faster implementation of a map.  
+ *
  * @seeDoc shadow:standard@CanCompare
- * @seeDoc shadow:standard@CanEqual
- * @seeUrl http://algs4.cs.princeton.edu/33balanced/RedBlackBST.java.html Sedgewick and Wayne's implementation
- */
- 
+ * @seeDoc shadow:utility@HashMap
+ * @seeUrl http://algs4.cs.princeton.edu/33balanced/RedBlackBST.java.html
+ * Sedgewick and Wayne's Left-Leaning Red-Black BST Implementation
+ */ 
 class shadow:utility@
 	TreeMap<K is CanCompare<K>, V is CanEqual<V>>
 is  OrderedMap<K,V>
 {
     nullable Node root = null;  // root of the BST
+    /// Gets the number of key-value pairs in the ordered map.
     get int size = 0;			//number of key-value pairs in the map
     int modifications = 0;		//modifications to BST, used for fail-fast iterators
 
@@ -64,18 +67,20 @@ is  OrderedMap<K,V>
     }
     
     /**
-     * Clears the contents of the map so that it contains no key-value pairs.     
-     */
-    public clear() => ()
+	 * Removes all entries from the ordered map.
+	 * @return ordered map after being cleared
+	 */
+    public clear() => ( TreeMap<K,V> )
     {
     	root = null;
     	size = 0;
     	modifications += 1;
+    	return this;
     }
 
     /**
-     * Returns {@code true} if the map is empty.
-     * @return {@code true} if empty
+     * Checks whether or not the ordered map is empty.
+     * @return {@code true} if the ordered map is empty
      */
     public readonly isEmpty() => (boolean)
     {
@@ -85,11 +90,12 @@ is  OrderedMap<K,V>
     /* BST search */
 
     /**
-     * Returns the value associated with the given key or {@code null} if the
-     * key is not present in the map.
-     * @param key key to find
-     * @return value associated with given key if or {@code null} if the key is not in the map     
-     */
+	 * Retrieves the value associated with the key.
+	 * If the key is not present, {@code null} is returned. This operation
+	 * runs in logarithmic time.  
+	 * @param key key to find
+	 * @return value at key location or {@code null} if not found
+	 */
     public readonly index(K key) => (nullable V)
     {       
         return find(root, key);
@@ -121,22 +127,22 @@ is  OrderedMap<K,V>
     }
 
     /**
-     * Returns {@code true} if the map contains the given key.
-     * @param key key to find
-     * @return {@code true} if the map contains the key
-     */
+	 * Checks to see if the ordered map contains a key. This operation runs in
+	 * logarithmic time.	   
+	 * @param key key to find
+	 * @return {@code true} if present
+	 */
     public readonly containsKey(K key) => (boolean)  
     {
         return index(key) !== null;
     }
     
     /**
-     * Returns {@code true} if the map contains the given value.
-     * Because the map is not organized by value, this method takes
-     * time linear in the size of the map, in the worst case.
-     * @param value value to find
-     * @return {@code true} if the map contains the value
-     */
+	 * Checks to see if the ordered map contains a particular value.  This
+	 * operation runs in time linear in the size of the tree.	   
+	 * @param value value to find
+	 * @return {@code true} if present
+	 */
     public readonly containsValue(V value) => (boolean)
     {
     	return containsValue(root, value);
@@ -165,12 +171,12 @@ is  OrderedMap<K,V>
 
     /* Tree insertion, with red-black balancing */
 
-    /**
-     * Inserts the specified key-value pair into the map, overwriting the old 
-     * value with the new value if the map already contains the specified key.
-     * @param key key to insert
-     * @param value value to insert
-     */
+   /**
+	 * Stores value object in the location associated with the key. This
+	 * operation runs in logarithmic time.
+	 * @param key key location
+	 * @param value value to store
+	 */ 
     public index(K key, V value) => ()
     {                
         (root, ) = insert(root, key, value);
@@ -178,16 +184,16 @@ is  OrderedMap<K,V>
         modifications += 1;
     }
     
-    /**
-     * Adds specified key-value pair into the map, overwriting the old 
-     * value with the new value if the map already contains the specified key.
-     * This method also returns the previous value associated with the given
-     * key if there was one.
-     * @param key key to insert
-     * @param value value to insert
-     * @return previous value associated with the key or {@code null} if the key wasn't present before
-     */
-    public add(K key, V value) => (nullable V)
+   /**
+	 * Stores value object in the location associated with the key and returns
+	 * the old value if there was one at that location. This operation runs
+	 * in logarithmic time.  
+	 * @param key key location
+	 * @param value value to store
+	 * @return old value at location or {@code null} if key was not already
+	 * present
+	 */
+    public add(K key, V value) => (nullable V existing)
     {
     	(root, nullable V oldValue) = insert(root, key, value);
     	check(root)->red = false; // Never null after insert.         
@@ -233,9 +239,11 @@ is  OrderedMap<K,V>
     /* Tree deletion, with red-black balancing */
 
     /**
-     * Removes the smallest key and associated value from the map.    
+     * Removes the smallest key and associated value from the ordered map.
+     * @return ordered map after deletion
+     * @throws NoSuchElementException if ordered map is empty          
      */
-    public deleteMin() => ()
+    public deleteMin() => ( TreeMap<K,V> )
     {
 		try
 		{
@@ -258,6 +266,8 @@ is  OrderedMap<K,V>
         {
         	throw NoSuchElementException:create("Cannot call deleteMin() on empty map");
         }
+        
+        return this;
     }
 
     /*
@@ -279,12 +289,13 @@ is  OrderedMap<K,V>
         	return null;
         }
     }
-
-
+        
     /**
-     * Removes the largest key and associated value from the map.   
+     * Removes the largest key and associated value from the map.
+     * @return ordered map after deletion
+     * @throws NoSuchElementException if ordered map is empty          
      */
-    public deleteMax() => () 
+    public deleteMax() => ( TreeMap<K,V> ) 
     {    
     	try
     	{
@@ -306,7 +317,8 @@ is  OrderedMap<K,V>
         {
         	throw NoSuchElementException:create("Cannot call deleteMax() on an empty map");
         }
-       
+        
+        return this;       
     }
 
     /*
@@ -333,12 +345,11 @@ is  OrderedMap<K,V>
     }
 
     /**
-     * Removes the specified key and its associated value from the map,
-     * returning the associated value if the key was in the map and
-     * {@code null} otherwise.
-     * @param  key key to remove
-     * @return value being removed or {@code null} if not present
-     */
+	 * Removes the key-value pair associated with the key location. This
+	 * operation runs in logarithmic time.	   
+	 * @param key key to remove
+	 * @return value being removed or {@code null} if not present
+	 */
     public remove(K key) => (nullable V)
     {
         if( !containsKey(key) )
@@ -491,8 +502,9 @@ is  OrderedMap<K,V>
    /* Ordered map methods */
 
     /**
-     * Returns the smallest key in the map.
-     * @return smallest key in the map
+     * Returns the smallest key in the ordered map.
+     * @return smallest key
+     * @throws NoSuchElementException if the ordered map is empty
      */
     public readonly  min() => (K)
     {
@@ -524,8 +536,9 @@ is  OrderedMap<K,V>
     } 
 
     /**
-     * Returns the largest key in the map.
-     * @return largest key in the map
+     * Returns the largest key in the ordered map.
+     * @return largest key
+     * @throws NoSuchElementException if the ordered map is empty
      */
     public readonly max() => (K)
     {
@@ -558,9 +571,10 @@ is  OrderedMap<K,V>
 
 
     /**
-     * Returns the largest key in the map less than or equal to the given key.
+     * Returns the largest key in the ordered map less than or equal to the
+     * given key.
      * @param key key to compare against
-     * @return largest key in the map less than or equal to {@code key}     
+     * @return largest key in the ordered map less than or equal to {@code key}     
      */
     public readonly floor(K key) => (nullable K)
     {           
@@ -602,9 +616,11 @@ is  OrderedMap<K,V>
     }
 
     /**
-     * Returns the smallest key in the map greater than or equal to the given key.
+     * Returns the smallest key in the ordered map greater than or equal to
+     * the given key.
      * @param key key to compare against
-     * @return smallest key in the map less than or equal to {@code key}     
+     * @return smallest key in the ordered map less than or equal to
+     * {@code key}     
      */
     public readonly ceiling(K key) => (nullable K)
     {   
@@ -646,11 +662,10 @@ is  OrderedMap<K,V>
     }  
 
     /**
-     * Returns all keys in the map as a {@code CanIterate<K>}, which can be
-     * the target of a {@code foreach} loop to iterate over keys.     
-     * @return all keys in the map
+     * Returns a deque of all the keys in the ordered map.     
+     * @return iterable collection of all keys	 
      */
-    public readonly keys() => (CanIterate<K>) 
+    public readonly keys() => (ArrayDeque<K>) 
     {
         if( isEmpty() )
         	return ArrayDeque<K>:create();
@@ -658,15 +673,14 @@ is  OrderedMap<K,V>
     }
 
     /**
-     * Returns all keys in the map in the given range as a
-     * {@code CanIterate<K>}, which can be the target of a 
-     * {@code foreach} loop to iterate over those keys.
+     * Returns a deque containing all the keys in the ordered map
+     * in the given range.
      * @param low lowest possible key in the range
-     * @param high key higher than the highest possible in the range
-     * @return all keys in the map between {@code low} (inclusive)
+     * @param high highest possible key in the range
+     * @return deque containing all keys between {@code low} (inclusive)
      * and {@code high} (inclusive)     
      */
-    public readonly keys(K low, K high) => (CanIterate<K>)
+    public readonly keys(K low, K high) => (ArrayDeque<K>)
     {
     	ArrayDeque<K> queue = ArrayDeque<K>:create();        
         keys(root, queue, low, high);
@@ -696,8 +710,9 @@ is  OrderedMap<K,V>
     }
     
     /**
-	 * Gets formatted {@code String} representation of the map.   
-	 * @return {@code String} representation
+	 * Produces a {@code String} representation of the ordered map, listing
+	 * all key-value pairs in an unspecified order.
+	 * @return {@code String} representation 
 	 */
     public readonly toString() => (String)
 	{
@@ -730,7 +745,7 @@ is  OrderedMap<K,V>
 	}
     
     /**
-	 * Gets iterator that can iterate over all the values in map.   
+	 * Creates an iterator to iterate over all the values in the ordered map.	   
 	 * @return iterator
 	 */
     public readonly iterator() => (Iterator<V>)

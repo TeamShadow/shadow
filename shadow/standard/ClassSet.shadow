@@ -25,6 +25,7 @@ is  Set<Class>
 	// Default maximum load factor before re-size, 0.75.
 	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
+	/// Gets the number of values in the set.
 	get int size = 0;
 	nullable Node[] table;
 	float loadFactor;
@@ -137,7 +138,16 @@ is  Set<Class>
 			this:value = value;
 			next = after;
 		}
-	}
+	}	
+	
+	/**
+     * Checks whether or not the class set is empty.
+     * @return {@code true} if the class set is empty
+     */
+    public readonly isEmpty() => (boolean empty)
+    {
+        return size == 0;
+    }
 	
 	/*
 	 * Finds the hash value and index for a given key based on the provided
@@ -153,7 +163,7 @@ is  Set<Class>
 
 	/**
 	 * Checks to see if the specified {@code Class} object is in
-	 * the set, returns {@code true} if it is.	   
+	 * the set.	   
 	 * @param value object to look for
 	 * @return {@code true} if present
 	 */
@@ -282,14 +292,16 @@ is  Set<Class>
 	
 		
 	/**
-	 * Removes all entries from the set and resets the capacity to default.
+	 * Removes all values from the set and resets the capacity to default.
+	 * @return set after being cleared
 	 */
-	public clear() => ()
+	public clear() => ( ClassSet )
 	{
 		size = 0;
 		table = Node:null[DEFAULT_INITIAL_CAPACITY];
 		threshold = cast<int>(table->size * loadFactor);
 		modifications += 1;
+		return this;
 	}
 	
 	

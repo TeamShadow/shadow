@@ -1,27 +1,64 @@
+/**
+ * Class {@code HashMap<K,V>} stores a map, also known as a symbol table,
+ * of key-value pairs with entries mapping keys of type {@code K} to values
+ * of type {@code V}. This map is implemented with a hash table that
+ * employs the chaining strategy for collision resolution, allowing keys to
+ * be added, found, and deleted in constant or near-constant time.
+ * {@code HashMap<K,V>} requires that type {@code K} has the {@code CanHash}
+ * interface but imposes no ordering requirement on keys.  The
+ * {@code TreeMap<K,V>} class should be considered if key ordering is a
+ * requirement.
+ *
+ * @seeDoc shadow:standard@CanHash
+ * @seeDoc shadow:utility@TreeMap
+ */
 class shadow:utility@
 	HashMap<K is CanHash and CanEqual<K>, V is CanEqual<V>>
 is  Map<K,V>
 {
+	/// Default number of rows a hash table starts with, 16.	
 	protected constant int DEFAULT_INITIAL_CAPACITY = 16;
+	/// Maximum rows the hash table can have, 1073741824.
 	protected constant int MAXIMUM_CAPACITY = 1 << 30;
+	/// Default load factor before the hash table is resized, 0.75.
 	protected constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
+	/// Gets the number of key-value pairs in the map.
 	get int size = 0;
 	nullable Node[] table;
 	float loadFactor;
 	int threshold;
 	int modifications = 0;
 	
+	/**
+	 * Creates an empty {@code HashMap} with a default capacity of 16
+	 * and maximum load factor of 0.75.  
+	 */	
 	public create()
 	{
 		this(DEFAULT_INITIAL_CAPACITY);
 	}
 	
+	/**
+	 * Creates an empty {@code HashMap} with the specified capacity and
+	 * maximum load factor. 
+	 * @param initialCapacity initial capacity of the map
+	 * @param loadFactor maximum load factor before the map is resized
+	 */
 	public create(int initialCapacity)
 	{
 		this(initialCapacity, DEFAULT_LOAD_FACTOR);
 	}
 	
+	/**
+	 * Creates a {@code HashMap} with the specified initial capacity of 
+	 * buckets and the specified maximum load factor before all the
+	 * key-value pairs are re-hashed.  Note that the capacity will always
+	 * be increased to the next power of 2 if it is not a power of 2.
+	 * @param initialCapacity initial number of buckets in the hash table
+	 * @param loadFactor maximum load factor (buckets / keys) before all
+	 * key-value pairs are re-hashed
+	 */
 	public create(int initialCapacity, float loadFactor)
 	{
 		int capacity = 1;
@@ -32,6 +69,11 @@ is  Map<K,V>
 		threshold = cast<int>(capacity * loadFactor);
 	}
 	
+	/*
+	 * Resizes the map so that it can hold the new capacity, which must be a
+	 * power of 2. 
+	 * @param newCapacity new capacity of the map
+	 */
 	protected resize(int newCapacity) => ()
 	{		
 		if(table->size == MAXIMUM_CAPACITY)
@@ -63,7 +105,7 @@ is  Map<K,V>
 		threshold = cast<int>(newCapacity * loadFactor);		
 	}
 	
-
+	// Node for the linked-lists in each bucket.	
 	private class Node
 	{
 		immutable get int hash;
@@ -90,14 +132,34 @@ is  Map<K,V>
 		}
 	}
 	
+	/*
+	 * Finds the hash value and index for a given key based on the provided
+	 * length.
+	 */
 	private readonly findIndex( K key, int length ) => ( int index, int hash )
 	{
 		uint temp = key->hash;
 		temp ^= (temp >> 20) ^ (temp >> 12);
 		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
 		return ( hash & (length - 1), hash );	
-	}	
+	}
+	
+	/**
+     * Checks whether or not the map is empty.
+     * @return {@code true} if the map is empty
+     */
+    public readonly isEmpty() => (boolean empty)
+    {
+        return size == 0;
+    }	
 
+	/**
+	 * Retrieves the value associated with the key.
+	 * If the key is not present, {@code null} is returned. This operation
+	 * runs in constant or near-constant time.  
+	 * @param key key to find
+	 * @return value at key location or {@code null} if not found
+	 */
 	public index( K key ) => ( nullable V value )
 	{		
 		try
@@ -111,11 +173,28 @@ is  Map<K,V>
 		}
 	}
 	
+	/**
+	 * Stores value object in the location associated with the key. This
+	 * operation runs in constant time in the best case and linear (but
+	 * amortized constant) time if adding triggers a table resize.
+	 * @param key key location
+	 * @param value value to store
+	 */ 
 	public index( K key, V value ) => ()
 	{
 		add(key, value);
 	}
 
+	/**
+	 * Stores value object in the location associated with the key and returns
+	 * the old value if there was one at that location. This operation runs
+	 * in constant time in the best case and linear (but amortized constant)
+	 * time if adding triggers a table resize.  
+	 * @param key key location
+	 * @param value value to store
+	 * @return old value at location or {@code null} if key was not already
+	 * present
+	 */ 
 	public add( K key, V value ) => ( nullable V existing )
 	{	
 		( int index, int hash ) = findIndex(key, table->size);
@@ -139,6 +218,9 @@ is  Map<K,V>
 		}
 	}
 	
+	/*
+	 * Finds Node associated with a key or null if not found.	 
+	 */ 
 	private readonly findKey( K key ) => ( nullable Node )
 	{
 		( int index, int hash ) = findIndex(key, table->size);
@@ -155,6 +237,12 @@ is  Map<K,V>
 		}
 	}
 	
+	/**
+	 * Removes the key-value pair associated with the key location. This
+	 * operation runs in constant time or near-constant time.	   
+	 * @param key key to remove
+	 * @return value being removed or {@code null} if not present
+	 */
 	public remove( K key ) => ( nullable V removed )
 	{	
 		( int index, int hash ) = findIndex(key, table->size);
@@ -181,11 +269,24 @@ is  Map<K,V>
 			return null;
 		}
 	}
+	
+	/**
+	 * Checks to see if the map contains a key. This operation runs in
+	 * constant time or near-constant time.	   
+	 * @param key key to find
+	 * @return {@code true} if present
+	 */
 	public readonly containsKey( K key ) => ( boolean found )
 	{		
 		return findKey(key) !== null;
 	}
 	
+	/**
+	 * Checks to see if the map contains a particular value.  This operation
+	 * runs in time linear in the capacity of the hash table.	   
+	 * @param value value to find
+	 * @return {@code true} if present
+	 */
 	public readonly containsValue( V value ) => ( boolean found )
 	{		
 		foreach(V element in this)
@@ -196,19 +297,33 @@ is  Map<K,V>
 		return false;
 	}
 
+	/**
+	 * Creates an iterator to iterate over all the values in the map.	   
+	 * @return iterator
+	 */
 	public readonly iterator() => ( Iterator<V> )
 	{
 		return HashMapIterator:create();
 	}
 	
-	public clear() => ()
+	/**
+	 * Removes all entries from the map and resets the capacity to default.
+	 * @return map after being cleared
+	 */
+	public clear() => ( HashMap<K,V> )
 	{
 		size = 0;
 		table = Node:null[DEFAULT_INITIAL_CAPACITY];
 		threshold = cast<int>(table->size * loadFactor);
 		modifications += 1;
+		return this;
 	}
 	
+	/**
+	 * Produces a {@code String} representation of the map, listing all
+	 * key-value pairs in an unspecified order.
+	 * @return {@code String} representation 
+	 */
 	public readonly toString() => (String)
 	{
 		var output = MutableString:create("{");
@@ -231,6 +346,10 @@ is  Map<K,V>
 		return output.toString();
 	}	
 	
+	/*
+	 * Iterator that walks over the hash table and through the linked list at
+	 * each index.
+	 */
 	private class HashMapIterator is Iterator<V>
 	{
 		int index = 0;
