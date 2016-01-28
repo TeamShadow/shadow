@@ -42,6 +42,9 @@ public class Configuration {
 	private String os;
 	private String target;
 	private Path systemPath;
+	private String llc;
+	private String llvmLink;
+	private String opt;
 	private List<Path> importPaths;
 	private List<String> linkCommand;
 	
@@ -207,6 +210,15 @@ public class Configuration {
 				}
 			}
 		}
+		
+		if( llc == null )
+			llc = "llc";
+		
+		if( opt == null )
+			opt = "opt";
+		
+		if( llvmLink == null )
+			llvmLink = "llvm-link";
 
 		if( systemPath == null )
 			systemPath = getRunningDirectory();
@@ -239,7 +251,10 @@ public class Configuration {
 				setLinkCommand(linkCommand);
 			
 			os = configuration.getOs();			
-			target = configuration.getTarget();			
+			target = configuration.getTarget();
+			llc = configuration.getLlc();
+			opt = configuration.getOpt();
+			llvmLink = configuration.getLlvmLink();
 			
 			String systemPath = configuration.getSystem();
 			if( systemPath != null )
@@ -335,12 +350,24 @@ public class Configuration {
 		}
 	}
 	
+	public String getOpt() {
+		return opt;
+	}
+	
+	public String getLlc() {
+		return llc;
+	}
+	
+	public String getLlvmLink() {
+		return llvmLink;
+	}
+	
 	/** Returns the target platform to be used by the LLVM compiler */
 	public static String getDefaultTarget() throws ConfigurationException {
 		// Some reference available here:
 		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
 		
-		// Calling 'llc --version' for current target information
+		// Calling 'llc -version' for current target information
 		// Note: Most of the LLVM tools also have this option
 		try {
 			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
@@ -359,12 +386,35 @@ public class Configuration {
 				return matcher.group(2);
 			else
 				throw new ConfigurationException(
-						"Unable to find target in 'llc --version' output:" + System.lineSeparator() 
+						"Unable to find target in 'llc -version' output:" + System.lineSeparator() 
 						+ versionOutput);
 		}
 		catch(IOException e) {
 			throw new ConfigurationException("LLVM installation not found!"); 
 		}
+	}
+	
+	public static String getLLVMVersion() {
+		try {
+			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	
+			String versionOutput = "";
+			String line = null;
+			while( (line = reader.readLine()) != null )
+			   versionOutput += line + System.lineSeparator();			
+			
+			// Create the regular expression required to find the version
+			Pattern pattern = Pattern.compile("(LLVM version\\s)(\\d+(\\.\\d+)*)");
+			Matcher matcher = pattern.matcher(versionOutput);
+			
+			if( matcher.find() )
+				return matcher.group(2);
+		}
+		catch(IOException e) {			 
+		}
+		
+		return "";
 	}
 	
 	public static String getLLVMInformation() {

@@ -39,7 +39,8 @@ import shadow.typecheck.type.Type;
 public class Main {
 	
 	// Version of the Shadow compiler
-	public static final String VERSION 				= "0.6";
+	public static final String VERSION 				= "0.6";	
+	public static final String MINIMUM_LLVM_VERSION  = "3.6";
 		
 	// These are the error codes returned by the compiler
 	public static final int NO_ERROR				=  0;
@@ -135,7 +136,7 @@ public class Main {
 		OsFile = system.resolve(OsFile);
 
 		List<String> linkCommand = new ArrayList<String>();
-		linkCommand.add("llvm-link");
+		linkCommand.add(config.getLlvmLink()); //usually llvm-link
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
 		linkCommand.add(OsFile.toString());
@@ -148,7 +149,19 @@ public class Main {
 		
 		generateLLVM(linkCommand, generics, arrays);
 
-		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {
+		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {			
+			// Check LLVM version using lexical comparison
+			String LLVMVersion = Configuration.getLLVMVersion(); 
+			if( LLVMVersion.compareTo(MINIMUM_LLVM_VERSION) < 0 ) {
+				String error = "LLVM version " + MINIMUM_LLVM_VERSION + " or higher is required for Shadow " + VERSION + ", but ";
+				if( LLVMVersion.isEmpty() )
+					error += "no LLVM installation found.";
+				else
+					error += "version " + LLVMVersion + " found.";				
+				logger.error(error);
+				return;
+			}
+			
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.println();
 			System.out.flush();
@@ -177,8 +190,10 @@ public class Main {
 			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
 			
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-			Process optimize = new ProcessBuilder("opt", "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
-			Process compile = new ProcessBuilder("llc", "-mtriple", config.getTarget(), "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+			//usually opt
+			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
+			//usually llc
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
