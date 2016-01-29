@@ -84,7 +84,7 @@ public class Configuration {
 	}
 
 	/**
-	 * Attempts to find a specfied (or unspecified) config file. There are
+	 * Attempts to find a specified (or unspecified) config file. There are
 	 * three places to look for a config file. In priority order:
 	 * 
 	 * 1. If the file specified on the command line
@@ -184,6 +184,16 @@ public class Configuration {
 			}
 		}
 		
+		// Make sure that llc is specified early, since it's used to get the default target
+		if( llc == null )
+			llc = "llc";
+		
+		if( opt == null )
+			opt = "opt";
+		
+		if( llvmLink == null )
+			llvmLink = "llvm-link";
+		
 		if( target == null )
 			target = getDefaultTarget();
 		
@@ -211,14 +221,7 @@ public class Configuration {
 			}
 		}
 		
-		if( llc == null )
-			llc = "llc";
-		
-		if( opt == null )
-			opt = "opt";
-		
-		if( llvmLink == null )
-			llvmLink = "llvm-link";
+	
 
 		if( systemPath == null )
 			systemPath = getRunningDirectory();
@@ -370,7 +373,7 @@ public class Configuration {
 		// Calling 'llc -version' for current target information
 		// Note: Most of the LLVM tools also have this option
 		try {
-			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -396,7 +399,7 @@ public class Configuration {
 	
 	public static String getLLVMVersion() {
 		try {
-			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -413,6 +416,8 @@ public class Configuration {
 		}
 		catch(IOException e) {			 
 		}
+		catch (ConfigurationException e) {		
+		}
 		
 		return "";
 	}
@@ -421,7 +426,7 @@ public class Configuration {
 		// Calling 'llc -version' for LLVM information
 		// Note: Most of the LLVM tools also have this option
 		try {		
-			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String information = "";
@@ -431,7 +436,7 @@ public class Configuration {
 			
 			return information;
 		}
-		catch(IOException e) {
+		catch(IOException | ConfigurationException e) {
 			return "LLVM installation not found!"; 
 		}
 	}
