@@ -99,13 +99,13 @@ public class Configuration {
 	private Path locateConfig(String mainFilePath, String configFilePath) throws FileNotFoundException, ConfigurationException {
 		
 		// Get the various search directories
-		Path sourceDir = Paths.get(mainFilePath).toAbsolutePath().getParent().toAbsolutePath();
+		Path sourceDir = mainFilePath == null ? null : Paths.get(mainFilePath).toAbsolutePath().getParent().toAbsolutePath();
 		Path workingDir = Paths.get("").toAbsolutePath();
 		Path runningDir = getRunningDirectory().toAbsolutePath();
 		
 		Path defaultFile = Paths.get(DEFAULT_CONFIG_NAME);
 
-		/// 1: Config file specified on the command line
+		// 1: Config file specified on the command line
 		
 		if( configFilePath != null ) {
 			
@@ -120,7 +120,7 @@ public class Configuration {
 				return configFile;
 			}
 			// If not, first look in the source directory
-			else if( Files.exists(sourceDir.resolve(configFile)) ) {
+			else if( sourceDir != null && Files.exists(sourceDir.resolve(configFile)) ) {
 				return sourceDir.resolve(configFile);
 			}
 			// Look in the working directory
@@ -143,7 +143,7 @@ public class Configuration {
 			}
 		}
 		/// 2: Default config file, local to the main source file
-		else if( Files.exists(sourceDir.resolve(defaultFile)) ) {
+		else if( sourceDir != null && Files.exists(sourceDir.resolve(defaultFile)) ) {
 				return sourceDir.resolve(defaultFile);
 		}
 		/// 3: Default config file, local to the running directory

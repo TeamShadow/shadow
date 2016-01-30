@@ -112,19 +112,24 @@ public class Main {
 		// Detect and establish the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
 		
-		// Exit if help was requested (Arguments handles printing)
-		if (compilerArgs.hasOption(Arguments.HELP))
-			return;
-		
-		// Exit if information was requested (Arguments handles printing)
-		if (compilerArgs.hasOption(Arguments.INFORMATION))
-			return;
-		
 		// Detect and establish the current settings based on the arguments
 		config = Configuration.buildConfiguration(compilerArgs.getMainFileArg(),
 				compilerArgs.getConfigFileArg(), false);
-		currentJob = new Job(compilerArgs);
-
+		currentJob = new Job(compilerArgs);		
+		
+		// Print help and exit
+		if (compilerArgs.hasOption(Arguments.HELP)) {
+			Arguments.printHelp();
+			return;
+		}
+			
+		// Print information and exit
+		// Must come after building configuration, since configuration helps
+		// us find the correct LLVM installation
+		if (compilerArgs.hasOption(Arguments.INFORMATION)) {
+			Arguments.printInformation();
+			return;
+		}
 
 		Path system = config.getSystemImport();
 
