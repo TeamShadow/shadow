@@ -168,7 +168,6 @@ public class Main {
 			}
 			
 			// any output after this point is important, avoid getting it mixed in with previous output
-			System.out.println();
 			System.out.flush();
 			try { Thread.sleep(500); }
 			catch (InterruptedException ex) { }
