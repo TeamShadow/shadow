@@ -1,12 +1,64 @@
+/**
+ * Interface {@code OrderedMap<K,V>} defines the operations that a class must
+ * implement to be an ordered map, also known as an ordered symbol table.
+ * An ordered map is used to store key-value pairs with key type {@code K} and
+ * value type {@code V}. It should be possible to find keys quickly, allowing
+ * for efficient insertion and retrieval of associated values.
+ * {@code OrderedMap<K,V>} differs from {@code Map<K,V>} in that key values
+ * must have some ordering defined by the {@code CanCompare<K>} interface.
+ * Because of this ordering, {@code OrderedMap<K,V>} is also able to define
+ * methods that manipulate ranges of key values. 
+ * 
+ * @seeDoc shadow:standard@CanCompare
+ */
 interface shadow:utility@
 	OrderedMap<K is CanCompare<K>, V is CanEqual<V>>
-is
-	Map<K,V>
+is	Map<K,V>
 {
+	/**
+	 * Method should return the lowest-valued key in the ordered map or throw
+	 * an exception if the ordered map is empty.
+	 * @return lowest key	 
+	 */
 	readonly min() => (K);
-    readonly max() => (K);     
+	
+	/**
+	 * Method should return the highest-valued key in the ordered map or throw
+	 * an exception if the ordered map is empty.
+	 * @return highest key	 
+	 */
+    readonly max() => (K);
+    
+    /**
+	 * Method should return the highest-valued key whose value is less than or
+	 * equal to the given key.
+	 * @param key key to find the floor of	 
+	 * @return floor of given key, or {@code null} if no such key exists	 
+	 */
     readonly floor(K key) => (nullable K);
+    
+    /**
+	 * Method should return the lowest-valued key whose value is greater than
+	 * or equal to the given key.
+	 * @param key key to find the ceiling of	 
+	 * @return ceiling of given key, or {@code null} if no such key exists	 
+	 */
     readonly ceiling(K key) => (nullable K);
+    
+    /**
+	 * Method should return an iterable collection of all the keys in the
+	 * ordered map.
+	 * @return iterable collection of all keys	 
+	 */
     readonly keys() => (CanIterate<K>);
+    
+    /**
+	 * Method should return an iterable collection of all the keys in the
+	 * ordered map whose values are in the inclusive range from the low key
+	 * to the high key given.
+     * @param low lowest possible key in the range
+     * @param high highest possible key in the range
+	 * @return iterable collection of keys in the range	 
+	 */
     readonly keys(K low, K high) => (CanIterate<K>);
 }

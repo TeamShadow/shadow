@@ -51,16 +51,9 @@ public class Arguments {
 		if( hasOption(VERBOSE) )
 			Loggers.setAllToLevel(Level.ALL);
 		
-		// Don't throw argument exceptions if help was requested
-		if (commandLine.hasOption(HELP)) {
-			printHelp();
-			return;
-		}
-		
-		if( commandLine.hasOption(INFORMATION)) {
-			printInformation();
-			return;
-		}
+		// Don't throw argument exceptions if help or information was requested
+		if (commandLine.hasOption(HELP) || commandLine.hasOption(INFORMATION))
+			return;		
 
 		// Ensure exactly one source file is specified (and that it ends in .shadow)
 		if( commandLine.getArgs().length > 1 )
@@ -76,8 +69,11 @@ public class Arguments {
 		return commandLine.hasOption(option);
 	}
 
-	public String getMainFileArg() {		
-		return commandLine.getArgs()[0];
+	public String getMainFileArg() {
+		if( commandLine.getArgs().length > 0)
+			return commandLine.getArgs()[0];
+		else
+			return null;
 	}
 	
 	public String getConfigFileArg() {		
@@ -120,7 +116,7 @@ public class Arguments {
 		options.addOption(new Option(VERBOSE, VERBOSE_LONG, false, "Print detailed information about the compilation process"));
 		options.addOption(new Option(RECOMPILE, RECOMPILE_LONG, false, "Recompile all source files, even if unnecessary"));
 		options.addOption(new Option(HELP, HELP_LONG, false, "Display command line options and exit"));
-		options.addOption(new Option(INFORMATION, INFORMATION_LONG, false, "Display information about the compiler"));
+		options.addOption(new Option(INFORMATION, INFORMATION_LONG, false, "Display information about the compiler and exit"));
 		
 		return options;
 	}

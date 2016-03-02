@@ -93,13 +93,12 @@ and	CanIndex<int, double[]>
 	
 	public readonly toString() => (String)
 	{
-		var string = MutableString:create();
+		var string = MutableString:create();		
 		foreach( double[] row in values )
-		{
-			string.append( #row );
+		{					
+			string.append( #row );			
 			string.append( "\n" );		
-		}
-		
+		}		
 		return #string;
 	}
 }

@@ -1,39 +1,46 @@
+/**
+ * {@code GenericClass} objects are used to hold the type information for all
+ * Shadow objects that have a parameterized type. Thic class adds the extra
+ * functionality to {@code Class} objects needed to handle type-casts and
+ * allocations for objects with paramterized types.
+ */
 immutable class shadow:standard@
 	GenericClass is Class
 {	
-	get Object[] parameters; //double the size for class and methods
+	get Object[] parameters; // Twice the size to hold both classes and method tables
 	
-	public create(Class base, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters )
+	/**
+	 * Creates a new {@code GenericClass} object with the given raw
+	 * (unparameterized) type, name, parent, interfaces, and type parameters.
+	 * This method should only be called by {@code ClassSet}.  It is
+	 * left {@code public} to avoid complication in {@code ClassSet}.
+	 * @param raw raw (unparameterized) version of the class
+	 * @param name name of the class
+	 * @param parent parent class
+	 * @param interfaces interface classes supported by this class
+	 * @param parameters array of type parameters and associated method tables
+	 *
+	 * @seeDoc shadow:standard@ClassSet	 	  
+	 */
+	public create(Class raw, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters )
 	{
-		this(name, base->flags | Class:GENERIC, base->size, parent, interfaces, base->data, parameters);		
+		this(name, raw->flags | Class:GENERIC, raw->size, parent, interfaces, raw->data, parameters);		
 	}
 	
+	/**
+	 * Creates a new {@code GenericClass} object with the given name, flags,
+	 * size, parent, interfaces, interface method tables, and type parameters.	 
+	 * @param name name of the class
+	 * @param flags flags specifying the kind of type
+	 * @param size size required for an object whose type is given by this class
+	 * @param parent parent class
+	 * @param interfaces interface classes supported by this class
+	 * @param data method tables associated with each interface
+	 * @param parameters array of type parameters and associated method tables	 	  
+	 */
 	protected create(String name, int flags, int size, nullable Class parent, immutable Class[] interfaces, immutable Object[] data, immutable Object[] parameters )
 	{
 		super(name, flags, size, parent, interfaces, data);
 		this:parameters = parameters;	
-	}
-
-	public isSubtype( Class other ) => ( boolean )
-	{
-		if( other.isArray() or other.isMethod() )
-			return false;
-	
-		if ( this === other )
-			return true;
-		
-		if ( !other.isInterface() )							
-			return check(this->parent).isSubtype(other); //run up parental chain
-		else
-		{
-			readonly Class[] interfaces = this->interfaces;
-		 	for ( int i = 0; i < interfaces->size; i += 1 )
-			{					 
-				if( interfaces[i] === other )
-					return true;			
-			}
-		}		
-		
-		return false;
 	}
 }

@@ -1,9 +1,15 @@
+/**
+ * Class {@code Path} provides utilities for managing a path to a file in
+ * the operating system.
+ */
 immutable class shadow:io@Path
 {
 	String[] components;
-	public create()
-	{
-	}
+	/**
+	 * Creates a {@code Path} object corresponding to the path specified by
+	 * the given {@code String}.
+	 * @param path path to file 
+	 */
 	public create( String path )
 	{
 		int index = 0, count = 1, start = 0;
@@ -33,7 +39,19 @@ immutable class shadow:io@Path
 		if ( index != count )		
 			components[index] = path.substring(start);
 	}
+	
+	/**
+	 * Gets the operating system-specific UTF-8 code point corresponding to
+	 * the path separator, {@code \} in Windows and {@code /} in Linux and
+	 * Mac OS X.
+	 * @return separator character 
+	 */
 	public native get separator() => ( code );
+	
+	/**
+	 * Returns a {@code String} representation of the path.
+	 * @return path as a {@code String}
+	 */
 	public readonly toString() => ( String )
 	{
 		if ( components->size == 0 )

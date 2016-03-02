@@ -1,63 +1,270 @@
-import shadow:io@Console;
-
+/**
+ * Class {@code double} contains the methods that can be called on
+ * {@code double} values.
+ */
 locked immutable class shadow:standard@
 	Double
-is	Number<double>
-and	CanNegate<double>
+is	FloatingPoint<double>
 and	CanHash
 {
+	/**
+	 * Closest {@code double} to the mathematical constant pi, the ratio of a
+	 * circle's circumference to its diameter, approximately 3.141592653589793.
+	 */ 
 	public constant double PI = 3.141592653589793;
+	
+	/**
+	 * Closest {@code double} to the mathematical constant e, the base of the 
+	 * natural logarithm, approximately 2.718281828459045.
+	 */
 	public constant double E = 2.718281828459045;
 
+	/**
+	 * Constant representing one of the 64-bit not-a-number values supported
+	 * by the IEEE 754 standard.
+	 */
 	public constant double NaN = 0d / 0d;
+	
+	/**
+	 * Constant representing positive infinity with 64 bits in the IEEE 754
+	 * standard.
+	 */
 	public constant double INFINITY = 1d / 0d;
+	
+	/**
+	 * Constant representing negative infinity with 64 bits in the IEEE 754
+	 * standard.
+	 */
 	public constant double NEGATIVE_INFINITY = -1d / 0d;
 
+	/* Constants used to manipulate the raw bit form of the double value. */
+	
 	private constant ulong SIGN_MASK = 0x8000000000000000uL;
 	private constant ulong EXPONENT_MASK = 0x7ff0000000000000uL;
 	private constant ulong SIGNIFICAND_MASK = 0xfffffffffffffuL;
 
-	// implement Number
+	// Methods for Number
+	
+	/** 
+	 * Converts the {@code double} value to a {@code byte}, which will overflow
+	 * if the value is too large to be contained in a {@code byte}. 	 
+	 * @return {@code byte} value 
+	 */
 	public native toByte() => (byte);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code ubyte}, which will overflow
+	 * if the value is too large to be contained in a {@code ubyte} and
+	 * underflow if the value is negative. 	 
+	 * @return {@code ubyte} value 
+	 */
 	public native toUByte() => (ubyte);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code short}, which will overflow
+	 * if the value is too large to be contained in a {@code short}. 	 
+	 * @return {@code short} value 
+	 */
 	public native toShort() => (short);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code ushort}, which will overflow
+	 * if the value is too large to be contained in a {@code ushort} and
+	 * underflow if the value is negative. 	 
+	 * @return {@code ushort} value 
+	 */
 	public native toUShort() => (ushort);
+	
+	/** 
+	 * Converts the {@code double} value to an {@code int}, which will overflow
+	 * if the value is too large to be contained in an {@code int}. 	 
+	 * @return {@code int} value 
+	 */
 	public native toInt() => (int);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code uint}, which will overflow
+	 * if the value is too large to be contained in a {@code uint} and
+	 * underflow if the value is negative.	 
+	 * @return {@code uint} value 
+	 */
 	public native toUInt() => (uint);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code long}, which will overflow
+	 * if the value is too large to be contained in a {@code long}. 	 
+	 * @return {@code long} value 
+	 */
 	public native toLong() => (long);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code ulong}, which will overflow
+	 * if the value is too large to be contained in a {@code ulong} and
+	 * underflow if the value is negative.	 
+	 * @return {@code ulong} value 
+	 */
 	public native toULong() => (ulong);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code code}, which will overflow
+	 * if the value is too large to be contained in a {@code code}. 	 
+	 * @return {@code code} value 
+	 */
 	public native toCode() => (code);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code float}, which may lose
+	 * precision. 	 
+	 * @return {@code float} value 
+	 */
 	public native toFloat() => (float);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code double}, which involves
+	 * no change. 	 
+	 * @return {@code double} value 
+	 */
 	public native toDouble() => (double);
 
-	// implement CanAdd<double>
+	// Method for CanAdd<double>
+	/**
+	 * Adds another {@code double} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public native add(double other) => (double);
-	// implement CanSubtract<double>
+	
+	// Method for CanSubtract<double>
+	/**
+	 * Subtracts another {@code double} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public native subtract(double other) => (double);
-	// implement CanMultiply<double>
+	
+	// Method for CanMultiply<double>
+	/**
+	 * Multiplies the current value by another {@code double} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public native multiply(double other) => (double);
-	// implement CanDivide<double>
+	
+	// Method for CanDivide<double>
+	/**
+	 * Divides the current value by another {@code double} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public native divide(double other) => (double);
-	// implement CanModulus<double>
+	
+	// Method for CanModulus<double>
+	/**
+	 * Divides the current value by another {@code double} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public native modulus(double other) => (double);
-	// implement CanCompare<double>
+	
+	// Method for CanCompare<double>
+	/**
+	 * Compares the current value to another {@code double}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */	
 	public native compare(double other) => (int);
-	// implement CanEqual<double>
+	
+	// Method for CanEqual<double>
+	/**
+	 * Compares the current value to another {@code double}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public native equal(double other) => (boolean);
 	
-	//other math operations
+	// Other math operations
+	
+	/** 
+	 * Finds the square root of the value.
+	 * @return square root	 
+	 */
 	public native squareRoot() => (double);
+	
+	/** 
+	 * Raises the current value to the power of an {@code int}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public native power(int value) => (double);
+	
+	/** 
+	 * Raises the current value to the power of a {@code double}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public native power(double value) => (double);
+	
+	/** 
+	 * Finds the sine of the current value.	 	 
+	 * @return sine of the value
+	 */
 	public native sin() => (double);
+	
+	/** 
+	 * Finds the cosine of the current value.	 	 
+	 * @return cosine of the value
+	 */
 	public native cos() => (double);
+	
+	/** 
+	 * Finds the natural logarithm of the current value.	 	 
+	 * @return natural logarithm of the value
+	 */
 	public native logBaseE() => (double);
+	
+	/** 
+	 * Finds the logarithm base 2 of the current value.	 	 
+	 * @return logarithm base 2 of the value
+	 */
 	public native logBase2() => (double);
+	
+	/** 
+	 * Finds the logarithm base 10 of the current value.	 	 
+	 * @return logarithm base 10 of the value
+	 */
 	public native logBase10() => (double);
+	
+	/** 
+	 * Multiplies the current value by another {@code double} and adds a third
+	 * {@code double} in a high-precision register if supported and returns
+	 * the resulting value.	
+	 * @param multiplicand value to multiply by
+	 * @param addend value to add 	 
+	 * @return result
+	 */
 	public native multiplyAdd(double multiplicand, double addend) => (double);
+	
+	/** 
+	 * Finds the largest {@code double} value with no fractional part that is
+	 * less than or equal to the current value.	 	
+	 * @return floor of the current value
+	 */
 	public native floor() => (double);
+	
+	/** 
+	 * Finds the smallest {@code double} value with no fractional part that is
+	 * greater than or equal to the current value.	 	
+	 * @return ceiling of the current value
+	 */
 	public native ceiling() => (double);
 	
+	/** 
+	 * Rounds the current {@code double} value to the nearest integer.	 	 	
+	 * @return current value rounded to the nearest integer
+	 */
 	public round() => (double)
 	{
 		if( this < 0.0 )
@@ -66,37 +273,74 @@ and	CanHash
 			return (this + 0.5).floor();	
 	}
 
-	// implement CanHash
+	// Method for CanHash
+	/** 
+	 * Finds a hash value for the current value.	 
+	 * @return hash value	 
+	 */
 	public get hash() => (uint)
 	{
 		return this->bits->hash;
 	}
-
+	
+	/** 
+	 * Checks to see if the current value represents an IEEE 754 not-a-number
+	 * value. 	 
+	 * @return {@code true} if the current value is not a number	 
+	 */
 	public isNaN() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) == EXPONENT_MASK and
-				(this->raw & SIGNIFICAND_MASK) != 0l;
+				(this->raw & SIGNIFICAND_MASK) != 0uL;
 	}
+	
+	/** 
+	 * Checks to see if the current value represents an IEEE 754 value for
+	 * positive or negative infinity.
+	 * @return {@code true} if the current value is infinite	 
+	 */
 	public isInfinite() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) == EXPONENT_MASK and
-				(this->raw & SIGNIFICAND_MASK) == 0l;
+				(this->raw & SIGNIFICAND_MASK) == 0uL;
 	}
+	
+	/** 
+	 * Checks to see if the current value represents an IEEE 754 value for
+	 * a finite number.
+	 * @return {@code true} if the current value is finite	 
+	 */
 	public isFinite() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) != EXPONENT_MASK;
+	}
+	
+	
+	/** 
+	 * Returns a {@code String} representation of the value, in base 10, with
+	 * a maximum precision of 17 decimal digits, a threshold of 7 integer
+	 * digits before scientific notation is used, and a threshold of 3
+	 * fractional digits without integer digits before scientific notation is
+	 * used.
+	 * @return  {@code String} representation
+	 */ 
+	public  toString() => (String)
+	{
+		return toString(16, 7, 3);
 	}
 	
 	/*	
 	Fix this with something not as hacky 
 	Consider: Printing Floating-Point Numbers Quickly and Accurately with Integers by Florian Loitsch
 	*/
-	
-	public  toString() => (String)
-	{
-		return toString(17, 7, 3);
-	}	
-	
+	/** 
+	 * Returns a {@code String} representation of the value, in base 10, with
+	 * the specificed maximum precision of decimal digits, the specified
+	 * threshold of integer digits before scientific notation is used, and the
+	 * specified threshold of fractional digits without integer digits before
+	 * scientific notation is used.
+	 * @return  {@code String} representation
+	 */ 	
 	public  toString(int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
 	{
 		if( isNaN() )
@@ -130,18 +374,18 @@ and	CanHash
 			exponent -= (1023 + 52);
 		}
 				
-		//There are faster ways to do double output, but this is a hack for now
+		// There are faster ways to do double output, but this is a hack for now.
 		BigInteger result = BigInteger:create(significand);						
 		int base10Shift = 0;
 		
 		if( exponent < 0 )
 		{				
-			base10Shift = cast<int>(-exponent * 0.3010299956639812) + 1;  //ceiling of log_10(2) times exponent
+			base10Shift = cast<int>(-exponent * 0.3010299956639812) + 1;  // ceiling of log_10(2) times exponent
 			//left shift
 			BigInteger ten = BigInteger:create(10);
 			BigInteger tenPower = ten.power(BigInteger:create(base10Shift));			
 			result = result * tenPower;
-			result = result.bitShiftLeft(exponent); //shifts right because exponent is negative
+			result = result.bitShiftLeft(exponent); // shifts right because exponent is negative
 		}		 
 		else
 		{
@@ -166,7 +410,7 @@ and	CanHash
 		// Number is too big or too small, use scientific notation		
 		if( integerDigits > integerThreshold or -integerDigits > fractionalThreshold )
 		{	
-		 	output.insert(cast<byte>('.'), 1);
+		 	output.insert(1, cast<byte>('.'));
 		 	if( output->size == 2 )
 		 		output.append(cast<byte>('0'));
 		 	removeZeroes( output );			 	
@@ -184,7 +428,7 @@ and	CanHash
 			length = length.min(output->size - rightZeroes);
 			length = length.max(-integerDigits + 1);
 							
-			round( output, length );						
+			round( output, length );	
 			output.prepend(cast<byte>('.'));
 			output.prepend(cast<byte>('0'));
 			removeZeroes( output );	
@@ -195,20 +439,21 @@ and	CanHash
 			// Pad with zeroes on the right, if necessary.
 			for( int i = output->size; i <= integerDigits; i += 1 )			
 				output.append(cast<byte>('0'));
-		 	output.insert('.', integerDigits);
+		 	output.insert(integerDigits, cast<byte>('.'));
 		 	removeZeroes( output );
 		}		
 			
 		if( negative )	
-			return output.prepend(cast<byte>('-')).toString();
+			return #(output.prepend(cast<byte>('-')));
 		else
-			return output.toString();
+			return #output;
 	}
 	
+	// Shortens representation to given length, rounding values as needed.
 	private round(MutableString number, int length) => (boolean)
 	{
 		if( length >= number->size )
-			return false;			
+			return false;
 		else if( length > number->size )
 		{
 			while( length > number->size )
@@ -217,21 +462,21 @@ and	CanHash
 		}
 		else
 		{
-			if( length < 18 and number[length] >= '5' )
+			if( length < 17 and number[length] >= '5' )
 			{
 				int index = length;
-				number.index( index - 1, number[index - 1] + 1y );				
+				number[index - 1] += 1y;				
 			
 				while( index > 1 and number[index - 1] > '9' )
 				{
-					number.index( index - 1, cast<byte>('0') );
+					number[index - 1] = cast<byte>('0');
 					index -= 1;
-					number.index( index - 1, number[index - 1] + 1y);
+					number[index - 1] += 1y;
 				}
 				
 				if( number[0] > '9' )
 				{				
-					number.index( 0, cast<byte>('0'));				
+					number[0] = cast<byte>('0');				
 					number.prepend(cast<byte>('1'));
 					number.delete(length, number->size);
 					return true;	
@@ -243,6 +488,7 @@ and	CanHash
 		}	
 	} 
 	
+	// Removes useless padding zeroes from representation of double.
 	private removeZeroes( MutableString string ) => ()
 	{
 		int index = string->size - 1;
@@ -253,14 +499,30 @@ and	CanHash
 			string.delete( index + 1, string->size );
 	}
 
+	/** 
+	 * Retrieves the raw representation of 64-bits that makes up the current
+	 * {@code double} value, as a {@code ulong}.
+	 * @return  bit representation of {@code double} value
+	 */ 
 	public native get raw() => (ulong);
+	
+	/** 
+	 * Retrieves the representation of 64-bits that makes up the current
+	 * {@code double} value, as a {@code ulong}, except that all NaN values
+	 * are treated as the same value.
+	 * @return  bit representation of {@code double} value
+	 */
 	public get bits() => (ulong)
 	{
-		if (isNaN())
+		if( isNaN() )
 			return NaN->raw;
 		return this->raw;
 	}
 	
-	// implement CanNegate<double>
+	// Method for CanNegate<double>
+	/** 
+	 * Negates the value.
+	 * @return negated value	 
+	 */
 	public native negate() => (double);	
 }

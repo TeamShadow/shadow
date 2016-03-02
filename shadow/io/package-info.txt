@@ -1,0 +1,4 @@
+Package {@code shadow:io} contains fundamental types used for input and
+output, both for the console and for file and path manipulation.
+
+package shadow:io;

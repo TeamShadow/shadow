@@ -15,7 +15,7 @@ public class UnboundMethodType extends ClassType
 			Documentation documentation)
 	{
 		super(typeName, modifiers, documentation, outer);
-		setExtendType(Type.UNBOUND_METHOD); // added
+		setExtendType(Type.OBJECT); // change to UnboundMethod if reinstated?
 	}
 	
 	public boolean isSubtype(Type t)

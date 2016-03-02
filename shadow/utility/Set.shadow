@@ -1,11 +1,66 @@
+/**
+ * Interface {@code Set<E>} defines the operations that a class must
+ * implement to be a set, a collection of elements. A set is used to
+ * store elements of type {@code E}. It should be possible to find elements
+ * quickly, allowing for efficient addition and retrieval. {@code Set<E>}
+ * differs from {@code OrderedSet<E>} in that an ordering of elements is not
+ * required.
+ * 
+ * @seeDoc shadow:utility@OrderedSet
+ */
 interface shadow:utility@
 	Set<E>
-is
-	CanIterate<E> and CanIndex<E, boolean> and CanIndexStore<E, boolean>
+is  CanIterate<E>
+and CanIndex<E, boolean>
+and CanIndexStore<E, boolean>
 {
+	/**
+	 * Property should get the number of elements stored in the set.
+	 * @return size of the set
+	 */
 	readonly get size() => ( int size );
+	
+	/**
+	 * Method should check whether or not the set map is empty.
+	 * @return {@code true} if the set is empty
+	 */
+	readonly isEmpty() => ( boolean empty );
+	
+	/**
+	 * Method should check whether the set contains a matching element. Since
+	 * sets are usually organized by elements, this operation should be 
+	 * efficient, running in either constant or logarithmic time, depending
+	 * on the implementation.
+	 * @param element element to search for
+	 * @return {@code true} if element is found
+	 */
 	readonly contains( E element ) => ( boolean found );
+	
+	/**
+	 * Method should add an element to the set. Since sets are usually
+	 * organized by elements, this operation should be efficient, running
+	 * in either constant or logarithmic time, depending on the
+	 * implementation.
+	 * @param element element to add
+	 * @return {@code true} if element was not already present in the set
+	 */
 	add( E element ) => ( boolean success );
+	
+	/**
+	 * Method should remove an element from the set. Since sets are usually
+	 * organized by elements, this operation should be efficient, running
+	 * in either constant or logarithmic time, depending on the
+	 * implementation.
+	 * @param element element to remove
+	 * @return {@code true} if element was present in the set and has been
+	 * successfully removed
+	 */
 	remove( E element ) => ( boolean success );
-	clear() => ();
+	
+	/**
+	 * Removes all elements from the set. This operation should run in
+	 * constant time.	 
+	 * @return set after being cleared	 	   
+	 */	
+	clear() => ( Set<E> );
 }

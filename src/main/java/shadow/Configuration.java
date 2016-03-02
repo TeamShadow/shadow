@@ -42,6 +42,9 @@ public class Configuration {
 	private String os;
 	private String target;
 	private Path systemPath;
+	private String llc;
+	private String llvmLink;
+	private String opt;
 	private List<Path> importPaths;
 	private List<String> linkCommand;
 	
@@ -81,7 +84,7 @@ public class Configuration {
 	}
 
 	/**
-	 * Attempts to find a specfied (or unspecified) config file. There are
+	 * Attempts to find a specified (or unspecified) config file. There are
 	 * three places to look for a config file. In priority order:
 	 * 
 	 * 1. If the file specified on the command line
@@ -96,13 +99,13 @@ public class Configuration {
 	private Path locateConfig(String mainFilePath, String configFilePath) throws FileNotFoundException, ConfigurationException {
 		
 		// Get the various search directories
-		Path sourceDir = Paths.get(mainFilePath).toAbsolutePath().getParent().toAbsolutePath();
+		Path sourceDir = mainFilePath == null ? null : Paths.get(mainFilePath).toAbsolutePath().getParent().toAbsolutePath();
 		Path workingDir = Paths.get("").toAbsolutePath();
 		Path runningDir = getRunningDirectory().toAbsolutePath();
 		
 		Path defaultFile = Paths.get(DEFAULT_CONFIG_NAME);
 
-		/// 1: Config file specified on the command line
+		// 1: Config file specified on the command line
 		
 		if( configFilePath != null ) {
 			
@@ -117,7 +120,7 @@ public class Configuration {
 				return configFile;
 			}
 			// If not, first look in the source directory
-			else if( Files.exists(sourceDir.resolve(configFile)) ) {
+			else if( sourceDir != null && Files.exists(sourceDir.resolve(configFile)) ) {
 				return sourceDir.resolve(configFile);
 			}
 			// Look in the working directory
@@ -140,7 +143,7 @@ public class Configuration {
 			}
 		}
 		/// 2: Default config file, local to the main source file
-		else if( Files.exists(sourceDir.resolve(defaultFile)) ) {
+		else if( sourceDir != null && Files.exists(sourceDir.resolve(defaultFile)) ) {
 				return sourceDir.resolve(defaultFile);
 		}
 		/// 3: Default config file, local to the running directory
@@ -181,6 +184,16 @@ public class Configuration {
 			}
 		}
 		
+		// Make sure that llc is specified early, since it's used to get the default target
+		if( llc == null )
+			llc = "llc";
+		
+		if( opt == null )
+			opt = "opt";
+		
+		if( llvmLink == null )
+			llvmLink = "llvm-link";
+		
 		if( target == null )
 			target = getDefaultTarget();
 		
@@ -207,6 +220,8 @@ public class Configuration {
 				}
 			}
 		}
+		
+	
 
 		if( systemPath == null )
 			systemPath = getRunningDirectory();
@@ -239,7 +254,10 @@ public class Configuration {
 				setLinkCommand(linkCommand);
 			
 			os = configuration.getOs();			
-			target = configuration.getTarget();			
+			target = configuration.getTarget();
+			llc = configuration.getLlc();
+			opt = configuration.getOpt();
+			llvmLink = configuration.getLlvmLink();
 			
 			String systemPath = configuration.getSystem();
 			if( systemPath != null )
@@ -335,15 +353,27 @@ public class Configuration {
 		}
 	}
 	
+	public String getOpt() {
+		return opt;
+	}
+	
+	public String getLlc() {
+		return llc;
+	}
+	
+	public String getLlvmLink() {
+		return llvmLink;
+	}
+	
 	/** Returns the target platform to be used by the LLVM compiler */
 	public static String getDefaultTarget() throws ConfigurationException {
 		// Some reference available here:
 		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
 		
-		// Calling 'llc --version' for current target information
+		// Calling 'llc -version' for current target information
 		// Note: Most of the LLVM tools also have this option
 		try {
-			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -359,7 +389,7 @@ public class Configuration {
 				return matcher.group(2);
 			else
 				throw new ConfigurationException(
-						"Unable to find target in 'llc --version' output:" + System.lineSeparator() 
+						"Unable to find target in 'llc -version' output:" + System.lineSeparator() 
 						+ versionOutput);
 		}
 		catch(IOException e) {
@@ -367,11 +397,36 @@ public class Configuration {
 		}
 	}
 	
+	public static String getLLVMVersion() {
+		try {
+			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	
+			String versionOutput = "";
+			String line = null;
+			while( (line = reader.readLine()) != null )
+			   versionOutput += line + System.lineSeparator();			
+			
+			// Create the regular expression required to find the version
+			Pattern pattern = Pattern.compile("(LLVM version\\s)(\\d+(\\.\\d+)*)");
+			Matcher matcher = pattern.matcher(versionOutput);
+			
+			if( matcher.find() )
+				return matcher.group(2);
+		}
+		catch(IOException e) {			 
+		}
+		catch (ConfigurationException e) {		
+		}
+		
+		return "";
+	}
+	
 	public static String getLLVMInformation() {
 		// Calling 'llc -version' for LLVM information
 		// Note: Most of the LLVM tools also have this option
 		try {		
-			Process process = new ProcessBuilder("llc", "-version").redirectErrorStream(true).start();
+			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String information = "";
@@ -381,7 +436,7 @@ public class Configuration {
 			
 			return information;
 		}
-		catch(IOException e) {
+		catch(IOException | ConfigurationException e) {
 			return "LLVM installation not found!"; 
 		}
 	}

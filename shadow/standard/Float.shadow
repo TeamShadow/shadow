@@ -1,99 +1,331 @@
+/**
+ * Class {@code float} contains the methods that can be called on
+ * {@code float} values.
+ */
 locked immutable class shadow:standard@
 	Float
-is Number<float>
+is  FloatingPoint<float>
 and	Number<double>
-and	CanNegate<float>
 and	CanHash
 {
+	/**
+	 * Closest {@code float} to the mathematical constant pi, the ratio of a
+	 * circle's circumference to its diameter, approximately 3.1415927.
+	 */
 	public constant float PI = 3.1415927f;
+	
+	/**
+	 * Closest {@code float} to the mathematical constant e, the base of the 
+	 * natural logarithm, approximately 2.7182817.
+	 */
 	public constant float E = 2.7182817f;
 
+	/**
+	 * Constant representing one of the 32-bit not-a-number values supported
+	 * by the IEEE 754 standard.
+	 */
 	public constant float NaN = 0f / 0f;
+	
+	/**
+	 * Constant representing positive infinity with 32 bits in the IEEE 754
+	 * standard.
+	 */
 	public constant float INFINITY = 1f / 0f;
+	
+	/**
+	 * Constant representing negative infinity with 32 bits in the IEEE 754
+	 * standard.
+	 */
 	public constant float NEGATIVE_INFINITY = -1f / 0f;
 
+	/* Constants used to manipulate the raw bit form of the float value. */
+	
 	private constant uint SIGN_MASK = 0x80000000u;
 	private constant uint EXPONENT_MASK = 0x78000000u;
 	private constant uint SIGNIFICAND_MASK = 0x7ffffffu;
 
-	// implement Number
+	// Methods for Number
+	
+	/** 
+	 * Converts the {@code float} value to a {@code byte}, which will overflow
+	 * if the value is too large to be contained in a {@code byte}. 	 
+	 * @return {@code byte} value 
+	 */
 	public native toByte() => (byte);
+	
+	/** 
+	 * Converts the {@code float} value to a {@code ubyte}, which will overflow
+	 * if the value is too large to be contained in a {@code ubyte}. 	 
+	 * @return {@code ubyte} value 
+	 */
 	public native toUByte() => (ubyte);
+	
+	/** 
+	 * Converts the {@code float} value to a {@code short}, which will overflow
+	 * if the value is too large to be contained in a {@code short}. 	 
+	 * @return {@code short} value 
+	 */
 	public native toShort() => (short);
+	
+	/** 
+	 * Converts the {@code double} value to a {@code ushort}, which will overflow
+	 * if the value is too large to be contained in a {@code ushort}. 	 
+	 * @return {@code ushort} value 
+	 */
 	public native toUShort() => (ushort);
+	
+	/** 
+	 * Converts the {@code float} value to an {@code int}, which will overflow
+	 * if the value is too large to be contained in an {@code int}. 	 
+	 * @return {@code int} value 
+	 */
 	public native toInt() => (int);
+	
+	/** 
+	 * Converts the {@code float} value to a {@code uint}, which will overflow
+	 * if the value is too large to be contained in a {@code uint}. 	 
+	 * @return {@code uint} value 
+	 */
 	public native toUInt() => (uint);
+	
+	/** 
+	 * Converts the {@code float} value to a {@code long}, which will overflow
+	 * if the value is too large to be contained in a {@code long}. 	 
+	 * @return {@code long} value 
+	 */
 	public native toLong() => (long);
+	
+	/** 
+	 * Converts the {@code float} value to a {@code ulong}, which will overflow
+	 * if the value is too large to be contained in a {@code ulong}. 	 
+	 * @return {@code ulong} value 
+	 */
 	public native toULong() => (ulong);
+	
+	/** 
+	 * Converts the {@code float} value to a {@code code}, which will overflow
+	 * if the value is too large to be contained in a {@code code}. 	 
+	 * @return {@code code} value 
+	 */
 	public native toCode() => (code);
+	
+	/** 
+	 * Converts the {@code float} value to a {@code float}, which involves
+	 * no change. 	 
+	 * @return {@code float} value 
+	 */
 	public native toFloat() => (float);
+	
+	/** 
+	 * Converts the {@code float} value to a {@code double}. 	 
+	 * @return {@code double} value 
+	 */
 	public native toDouble() => (double);
 
-	// implement CanAdd<float>
+	// Method for CanAdd<float>
+	/**
+	 * Adds another {@code float} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public native add(float other) => (float);
-	// implement CanSubtract<float>
+	
+	// Method for CanSubtract<float>
+	/**
+	 * Subtracts another {@code float} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public native subtract(float other) => (float);
-	// implement CanMultiply<float>
+	
+	// Method for CanMultiply<float>
+	/**
+	 * Multiplies the current value by another {@code float} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public native multiply(float other) => (float);
-	// implement CanDivide<float>
+	
+	// Method for CanDivide<float>
+	/**
+	 * Divides the current value by another {@code float} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public native divide(float other) => (float);
-	// implement CanModulus<float>
+	
+	// Method for CanModulus<float>
+	/**
+	 * Divides the current value by another {@code float} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public native modulus(float other) => (float);
-	// implement CanCompare<float>
+	
+	// Method for CanCompare<float>
+	/**
+	 * Compares the current value to another {@code float}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */	
 	public native compare(float other) => (int);
-	// implement CanEqual<float>
+	
+	// Method for CanEqual<float>
+	/**
+	 * Compares the current value to another {@code float}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
 	public native equal(float other) => (boolean);
 
-	// implement CanAdd<double>
+	// Method for CanAdd<double>
+	/**
+	 * Adds a {@code double} to the current value and returns the resulting {@code double}.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
 	public add(double other) => (double)
 	{
 		return cast<double>(this) + other;
 	}
-	// implement CanSubtract<double>
+	
+	// Method for CanSubtract<double>
+	/**
+	 * Subtracts a {@code double} from the current value and returns the resulting {@code double}.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
 	public subtract(double other) => (double)
 	{
 		return cast<double>(this) - other;
 	}
-	// implement CanMultiply<double>
+	
+	// Method for CanMultiply<double>
+	/**
+	 * Multiplies the current value by a {@code double} and returns the resulting {@code double}.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
 	public multiply(double other) => (double)
 	{
 		return cast<double>(this) * other;
 	}
-	// implement CanDivide<double>
+	// Method for CanDivide<double>
+	/**
+	 * Divides the current value by a {@code double} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
 	public divide(double other) => (double)
 	{
 		return cast<double>(this) / other;
 	}
-	// implement CanModulus<double>
+	
+	// Method for CanModulus<double>
+	/**
+	 * Divides the current value by a {@code double} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
 	public modulus(double other) => (double)
 	{
 		return cast<double>(this) % other;
 	}
-	// implement CanCompare<double>
+	// Method for CanCompare<double>
 	public compare(double other) => (int)
 	{
 		return cast<double>(this).compare(other);
 	}
-	// implement CanEqual<double>
+	// Method for CanEqual<double>
 	public equal(double other) => (boolean)
 	{
 		return cast<double>(this) == other;
 	}
 	
-	//other math operations
+	// Other math operations
+	
+	/** 
+	 * Finds the square root of the value.
+	 * @return square root	 
+	 */
 	public native squareRoot() => (float);
+	
+	/** 
+	 * Raises the current value to the power of an {@code int}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public native power(int value) => (float);
+	
+	/** 
+	 * Raises the current value to the power of another {@code float}.
+	 * @param exponent power to raise by	 
+	 * @return number after exponentiation
+	 */
 	public native power(float value) => (float);
+	
+	/** 
+	 * Finds the sine of the current value.	 	 
+	 * @return sine of the value
+	 */
 	public native sin() => (float);
+	
+	/** 
+	 * Finds the cosine of the current value.	 	 
+	 * @return cosine of the value
+	 */
 	public native cos() => (float);
+	
+	/** 
+	 * Finds the natural logarithm of the current value.	 	 
+	 * @return natural logarithm of the value
+	 */
 	public native logBaseE() => (float);
+	
+	/** 
+	 * Finds the logarithm base 2 of the current value.	 	 
+	 * @return logarithm base 2 of the value
+	 */
 	public native logBase2() => (float);
+	
+	/** 
+	 * Finds the logarithm base 10 of the current value.	 	 
+	 * @return logarithm base 10 of the value
+	 */
 	public native logBase10() => (float);
+	
+	/** 
+	 * Multiplies the current value by another {@code float} and adds a third
+	 * {@code float} in a high-precision register if supported and returns
+	 * the resulting value.	
+	 * @param multiplicand value to multiply by
+	 * @param addend value to add 	 
+	 * @return result
+	 */
 	public native multiplyAdd(float multiplicand, float addend) => (float);
+	
+	/** 
+	 * Finds the largest {@code float} value with no fractional part that is
+	 * less than or equal to the current value.	 	
+	 * @return floor of the current value
+	 */
 	public native floor() => (float);
+	
+	/** 
+	 * Finds the smallest {@code float} value with no fractional part that is
+	 * greater than or equal to the current value.	 	
+	 * @return ceiling of the current value
+	 */
 	public native ceiling() => (float);
 	
-	public round() => (double)
+	/** 
+	 * Rounds the current {@code float} value to the nearest integer.	 	 	
+	 * @return current value rounded to the nearest integer
+	 */
+	public round() => (float)
 	{
 		if( this < 0.0f )
 			return (this - 0.5f).ceiling();
@@ -101,43 +333,96 @@ and	CanHash
 			return (this + 0.5f).floor();	
 	}	
 
-	// implement CanHash
+	// Method for CanHash
+	/** 
+	 * Finds a hash value for the current value.	 
+	 * @return hash value	 
+	 */
 	public get hash() => (uint)
 	{
 		return this->bits->hash;
 	}
 
+	/** 
+	 * Checks to see if the current value represents an IEEE 754 not-a-number
+	 * value. 	 
+	 * @return {@code true} if the current value is not a number	 
+	 */
 	public isNaN() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) == EXPONENT_MASK and
 				(this->raw & SIGNIFICAND_MASK) != 0u;
 	}
+	
+	/** 
+	 * Checks to see if the current value represents an IEEE 754 value for
+	 * positive or negative infinity.
+	 * @return {@code true} if the current value is infinite	 
+	 */
 	public isInfinite() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) == EXPONENT_MASK and
 				(this->raw & SIGNIFICAND_MASK) == 0u;
 	}
+	
+	/** 
+	 * Checks to see if the current value represents an IEEE 754 value for
+	 * a finite number.
+	 * @return {@code true} if the current value is finite	 
+	 */
 	public isFinite() => (boolean)
 	{
 		return (this->raw & EXPONENT_MASK) != EXPONENT_MASK;
 	}
 	
-	// implement CanNegate<float>
+	// Method for CanNegate<float>
+	/** 
+	 * Negates the value.
+	 * @return negated value	 
+	 */
 	public native negate() => (float);
-
+	
+	/** 
+	 * Retrieves the raw representation of 32 bits that makes up the current
+	 * {@code float} value, as a {@code uint}.
+	 * @return  bit representation of {@code float} value
+	 */ 
 	public native get raw() => (uint);
+	
+	/** 
+	 * Retrieves the representation of 32 bits that makes up the current
+	 * {@code float} value, as a {@code uint}, except that all NaN values
+	 * are treated as the same value.
+	 * @return  bit representation of {@code float} value
+	 */
 	public get bits() => (uint)
 	{
-		if (isNaN())
+		if( isNaN() )
 			return NaN->raw;
 		return this->raw;	
 	}
 	
+	/** 
+	 * Returns a {@code String} representation of the value, in base 10, with
+	 * a maximum precision of 9 decimal digits, a threshold of 7 integer
+	 * digits before scientific notation is used, and a threshold of 3
+	 * fractional digits without integer digits before scientific notation is
+	 * used.
+	 * @return  {@code String} representation
+	 */ 
 	public  toString() => (String)
 	{
 		return toDouble().toString(9, 7, 3);
 	}	
 	
+	/** 
+	 * Returns a {@code String} representation of the value, in base 10, with
+	 * the specificed maximum precision of decimal digits, the specified
+	 * threshold of integer digits before scientific notation is used, and the
+	 * specified threshold of fractional digits without integer digits before
+	 * scientific notation is used.
+	 * @return  {@code String} representation
+	 */ 
 	public  toString(int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
 	{
 		return toDouble().toString(maxPrecision, integerThreshold, fractionalThreshold);

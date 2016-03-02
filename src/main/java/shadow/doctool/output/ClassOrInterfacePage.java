@@ -100,10 +100,24 @@ public class ClassOrInterfacePage extends Page
 			}
 		}
 		
-		Collections.sort(constructors);
-		Collections.sort(destructors);
-		Collections.sort(methods);
-		Collections.sort(properties);
+		Comparator<MethodSignature> comparator = new Comparator<MethodSignature>() {
+
+			@Override
+			public int compare(MethodSignature method1, MethodSignature method2) {
+				// Sort first by names
+				int value = method1.getSymbol().compareTo(method2.getSymbol());				
+				// Tie-break by parameters
+				if( value == 0 )
+					value = method1.getParameterTypes().toString().compareTo(method2.getParameterTypes().toString());
+				return value;
+			}
+			
+		};
+		
+		Collections.sort(constructors, comparator);
+		Collections.sort(destructors, comparator);
+		Collections.sort(methods, comparator);
+		Collections.sort(properties, comparator);
 	}
 	
 	private void getVisibleConstants()
@@ -547,16 +561,21 @@ public class ClassOrInterfacePage extends Page
 	{
 		if (documentation.hasBlockTags(BlockTagType.AUTHOR))
 			writeAuthorSection(documentation.getBlockTags(BlockTagType.AUTHOR), out);
+		
 		if (documentation.hasBlockTags(BlockTagType.PARAM))
 			writeParamSection(documentation.getBlockTags(BlockTagType.PARAM), out);
+
+		if (documentation.hasBlockTags(BlockTagType.RETURN))
+			writeReturnSection(documentation.getBlockTags(BlockTagType.RETURN), out);
+		
+		if (documentation.hasBlockTags(BlockTagType.THROWS))			
+			writeThrowsSection(documentation.getBlockTags(BlockTagType.THROWS), out);
+		
+		// See also tags should be last
 		if (documentation.hasBlockTags(BlockTagType.SEE_DOC) 
 				|| documentation.hasBlockTags(BlockTagType.SEE_URL))
 			writeSeeSection(documentation.getBlockTags(BlockTagType.SEE_DOC),
 					documentation.getBlockTags(BlockTagType.SEE_URL), out);
-		if (documentation.hasBlockTags(BlockTagType.THROWS))
-			writeThrowsSection(documentation.getBlockTags(BlockTagType.THROWS), out);
-		if (documentation.hasBlockTags(BlockTagType.RETURN))
-			writeReturnSection(documentation.getBlockTags(BlockTagType.RETURN), out);
 	}
 	
 	private void writeParamSection(List<List<String>> paramTags,

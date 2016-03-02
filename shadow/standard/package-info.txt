@@ -1,0 +1,6 @@
+Package {@code shadow:standard} contains essential classes, interfaces,
+singletons, and exceptions needed for any Shadow program. These types do
+not need to be explicitly imported because the compiler will do so
+automatically.
+
+package shadow:standard;

@@ -1,3 +1,14 @@
+/**
+ * Interface {@code Number<T>} specifies methods that any numerical
+ * representation should have.
+ *
+ * Both the {@code Integer<T>} and {@code FloatingPoint<T>} interfaces have
+ * this interface.
+ *
+ * @seeDoc shadow:standard@Integer
+ * @seeDoc shadow:standard@FloatingPoint
+ */
+
 interface shadow:standard@
 	Number<T>
 is
@@ -8,15 +19,69 @@ is
 	CanModulus<T> and
 	CanCompare<T>
 {
+	/** 
+	 * Method to convert the current type to a {@code byte}.
+	 * @return {@code byte} value 
+	 */
 	readonly toByte() => (byte);
+	
+	/** 
+	 * Method to convert the current type to a {@code ubyte}.
+	 * @return {@code ubyte} value 
+	 */
 	readonly toUByte() => (ubyte);
+	
+	/** 
+	 * Method to convert the current type to a {@code short}.
+	 * @return {@code short} value 
+	 */
 	readonly toShort() => (short);
+	
+	/** 
+	 * Method to convert the current type to a {@code ushort}.
+	 * @return {@code ushort} value 
+	 */
 	readonly toUShort() => (ushort);
+	
+	/** 
+	 * Method to convert the current type to an {@code int}.
+	 * @return {@code int} value 
+	 */
 	readonly toInt() => (int);
+	
+	/** 
+	 * Method to convert the current type to a {@code uint}.
+	 * @return {@code uint} value 
+	 */
 	readonly toUInt() => (uint);
+	
+	/** 
+	 * Method to convert the current type to a {@code long}.
+	 * @return {@code long} value 
+	 */
 	readonly toLong() => (long);
+	
+	/** 
+	 * Method to convert the current type to a {@code ulong}.
+	 * @return {@code ulong} value 
+	 */
 	readonly toULong() => (ulong);
+	
+	/** 
+	 * Method to convert the current type to a {@code code}.
+	 * @return {@code code} value 
+	 */
 	readonly toCode() => (code);
+	
+	/** 
+	 * Method to convert the current type to a {@code float}.
+	 * @return {@code float} value 
+	 */
 	readonly toFloat() => (float);
+	
+	/** 
+	 * Method to convert the current type to a {@code double}.
+	 * @return {@code double} value 
+	 */
 	readonly toDouble() => (double);
 }

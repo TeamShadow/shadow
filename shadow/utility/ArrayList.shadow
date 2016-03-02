@@ -1,17 +1,35 @@
+/**
+ * Class {@code ArrayList<V>} stores a list of
+ * elements of type {@code V}, implemented with a dynamic array as internal
+ * storage.
+ */
 class shadow:utility@
 	ArrayList<V is CanEqual<V>>
 is  List<V>
 {
+	/// Gets size of the list.
 	get int size = 0;
 	nullable V[] elements = V:null[10];
 	int modifications = 0;
 	
+	/**
+	 * Checks whether or not the list is empty.
+	 * @return {@code true} if the list is empty
+	 */
 	public isEmpty() => ( boolean )
 	{
 		return size == 0;
 	}	
 	
-	public readonly index(int index) => (V value)
+	/**
+	 * Retrieves the element at the given index. Legal indexes are from 0
+	 * to one less than the size of the list. This operation is constant
+	 * time.   
+	 * @param index location of element
+	 * @return element
+	 * @throws IndexOutOfBoundsException if an illegal index is specified
+	 */
+	public readonly index(int index) => (V element)
 	{
 		if( index < 0 or index >= size )
 			throw IndexOutOfBoundsException:create();
@@ -19,7 +37,15 @@ is  List<V>
 		return check(elements[index]);		
 	}
 	
-	
+	/**
+	 * Stores an element into the given index. Legal indexes are from 0
+	 * to the size of the list.  If an element is stored into the index
+	 * corresponding to the size of the list, the list's size will increase
+	 * by one. This operation is linear time in the worst case.	  	   
+	 * @param index location of element
+	 * @param value value of element	 
+	 * @throws IndexOutOfBoundsException if an illegal index is specified
+	 */
 	public index(int index, V value) => ()
 	{
 		if( index < 0 or index > size )
@@ -35,6 +61,7 @@ is  List<V>
 		modifications += 1;	
 	}
 	
+	// Doubles the size of the backing array.
 	private grow() => ()
 	{
 		nullable V[] temp = V:null[elements->size * 2];
@@ -43,16 +70,25 @@ is  List<V>
 		elements = temp;	
 	}
 
+	/**
+	 * Adds an element to the end of the list. This operation is constant
+	 * time in the best case and amortized constant time in the worst case,
+	 * which occurs when list storage is full and a linear-time array resize
+	 * must be performed.	 
+	 * @param value value of element
+	 * @return list after the add
+	 */
 	public add(V value) => ( ArrayList<V> )
 	{		
-		if( size >= elements->size )
-			grow();
-		elements[size] = value;
-		size += 1;
-		modifications += 1;		
+		index( size, value );	
 		return this;			
 	}
-		
+	
+	/**
+	 * Removes all elements from the list. This operation is
+	 * constant time.	 
+	 * @return list after being cleared	 	   
+	 */		
 	public clear() => ( ArrayList<V> )
 	{
 		size = 0;
@@ -60,11 +96,22 @@ is  List<V>
 		return this;
 	}
 	
+	/**
+	 * Checks to see if the list contains a particular element.	   
+	 * @param value element to search for
+	 * @return {@code true} if present
+	 */
 	public readonly contains(V value) => (boolean found)
 	{				
 		return indexOf(value) != -1;	
 	}
 	
+	/**
+	 * Finds the first index where a particular element is present. If the
+	 * element is not present, -1 will be returned. 	   
+	 * @param value element to search for
+	 * @return index of element or -1 if not found
+	 */
 	public readonly indexOf(CanEqual<V> value) => (int index)
 	{	
 		for( int i = 0; i < size; i += 1 )
@@ -76,6 +123,13 @@ is  List<V>
 		return -1;
 	}
 	
+	/**
+	 * Removes the element at the given index. This operation is linear time
+	 * in the worst case.
+	 * @param index index of element to remove
+	 * @return element being removed
+	 * @throws IndexOutOfBoundsException if an illegal index is specified
+	 */	
 	public delete(int index) => ( V value )
 	{
 		if( index < 0 or index >= size )
@@ -89,6 +143,12 @@ is  List<V>
 		return temp;
 	}	
 	
+	/**
+	 * Removes the first occurrence of an element. This operation is linear
+	 * time in the worst case.
+	 * @param value value of element to remoe
+	 * @return {@code true} if the element was found and removed	 
+	 */	
 	public remove( V value ) => (boolean success)
 	{
 		int index = indexOf(value);
@@ -99,27 +159,40 @@ is  List<V>
 		return true;	
 	}
 	
+	/**
+	 * Produces a {@code String} representation of the list, listing all
+	 * elements in order.
+	 * @return {@code String} representation 
+	 */
 	public readonly toString() => (String)
 	{		
 		MutableString string = MutableString:create("[");
 		boolean first = true;
-		for( int i = 0; i < size; i += 1 )
+		foreach( V value in this )
 		{					
 			if( first )
 				first = false;
 			else
 				string.append(", ");
 			
-			string.append(#index(i));			
+			string.append(#value);			
 		}
 		return string.append("]").toString();
 	}
 
+	/**
+	 * Creates an iterator to iterate over all the values in the list.	   
+	 * @return iterator
+	 */
 	public readonly iterator() => (Iterator<V>)
 	{
 		return ArrayListIterator:create();
 	}
 	
+	/*
+	 * Simple iterator class uses a single index to keep track of the current
+	 * location in the list.
+	 */
 	private class ArrayListIterator is Iterator<V>
 	{
 		int index = 0;

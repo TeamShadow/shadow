@@ -1,12 +1,75 @@
+/**
+ * Interface {@code Deque<E>} defines the operations that a container class
+ * must implement to be a double-ended queue (deque). A deque can be used in
+ * place of a stack or queue. A deque should be optimized for adding and
+ * removing from both the front and the back but does not necessarily provide
+ * arbitrary access to elements like classes that have the {@code List<E>}
+ * interface.
+ * 
+ * @seeDoc shadow:utility@List
+ */ 
 interface shadow:utility@Deque<E> is CanIterate<E>
 {
+	/**
+	 * Property should get the number of elements in the deque.
+	 * @return size of the deque
+	 */
 	readonly get size() => ( int size );
+	
+	/**
+	 * Method should check whether or not the deque is empty.
+	 * @return {@code true} if the deque is empty
+	 */
 	readonly isEmpty() => ( boolean empty );
+	
+	/**
+	 * Method should add an element to the beginning of the deque.  Ideally, this
+	 * operation should run in constant or amortized constant time. 
+	 * @param element element to add
+	 * @return deque after the add
+	 */
 	addFirst( E element ) => ( Deque<E> );
+	
+	/**
+	 * Method should add an element to the end of the deque.  Ideally, this
+	 * operation should run in constant or amortized constant time. 
+	 * @param element element to add
+	 * @return deque after the add
+	 */
 	addLast( E element ) => ( Deque<E>  );
-	getFirst() => (E element);
-	getLast() => (E element);
+	
+	/**
+	 * Method should retrieve the element at the beginning of the deque. This
+	 * operation should run in constant time.
+	 * @return first element in the deque
+	 */
+	readonly getFirst() => (E element);
+	
+	/**
+	 * Method should retrieve the element at the end of the deque. This
+	 * operation should run in constant time.
+	 * @return last element in the deque
+	 */
+	readonly getLast() => (E element);
+	
+	/**
+	 * Method should remove the element at the beginning of the deque. This
+	 * operation should run in constant time.
+	 * @return element being removed
+	 */
 	removeFirst() => (E element);
+	
+	/**
+	 * Method should remove the element at the end of the deque. This
+	 * operation should run in constant time.
+	 * @return element being removed
+	 */
 	removeLast() => ( E element);	
+	
+	/**
+	 * Removes all elements from the deque. This operation should run in
+	 * constant time.	 
+	 * @return deque after being cleared	 	   
+	 */	
 	clear() => ( Deque<E> );
 }

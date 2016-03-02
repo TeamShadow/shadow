@@ -1,8 +1,13 @@
+/**
+ * Class {@code LinkedList<V>} stores a list of elements of type {@code V},
+ * implemented with a circular, doubly linked list as internal storage.
+ */
 class shadow:utility@
 	LinkedList<V is CanEqual<V>>
 is  List<V>
 and Deque<V>
 {
+	/// Gets size of the list.
 	get int size = 0;
 	Node header = Node:create();
 	int modifications = 0;
@@ -38,10 +43,15 @@ and Deque<V>
 			modifications += 1;
 		}
 	}
-	private findIndex( int index ) => ( Node node )
+	
+	/*
+	 * Finds the Node at location index, starting from the beginning or end,
+	 * depending on which is quicker.
+	 */
+	private readonly findIndex( int index ) => ( Node node )
 	{
 		if ( cast<uint>(index) >= cast<uint>(size) )
-			throw IndexOutOfBoundsException:create();
+			throw IndexOutOfBoundsException:create(index);
 		Node current = header;
 		if ( index < size / 2 )
 		{
@@ -61,44 +71,56 @@ and Deque<V>
 		}
 		return current;
 	}
+	
+	
+	// Finds a Node storing the given value and returns it and its index.
 	private readonly findNode( CanEqual<V> value ) => ( int index, nullable Node node )
 	{
 		int index = 0;
 		Node current = header;		
-		try
+
+		while (true)
 		{
-			while (true)
-			{
-				current = current->next;
-				if ( current === header )
-					return ( -1, null );
-				if ( value == check(current->value) )
-					return ( index, current );
-				index += 1;
-			}
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
+			current = current->next;
+			if ( current === header )
+				return ( -1, null );
+			if ( value == check(current->value) )
+				return ( index, current );
+			index += 1;
 		}
 	}
 	
-	public isEmpty() => ( boolean )
+	/**
+	 * Checks whether or not the list is empty.
+	 * @return {@code true} if the list is empty
+	 */
+	public readonly isEmpty() => ( boolean )
 	{
 		return size == 0;
 	}
 
-	public index( int index ) => ( V value )
+	/**
+	 * Retrieves the element at the given index. Legal indexes are from 0
+	 * to one less than the size of the list. This operation takes linear
+	 * time in the worst case.   
+	 * @param index location of element
+	 * @return element
+	 * @throws IndexOutOfBoundsException if an illegal index is specified
+	 */	
+	public readonly index( int index ) => ( V element )
 	{
-		try
-		{
-			return check(findIndex(index)->value);
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
-		}
+		return check(findIndex(index)->value);
 	}
+	
+	/**
+	 * Stores an element into the given index. Legal indexes are from 0
+	 * to the size of the list.  If an element is stored into the index
+	 * corresponding to the size of the list, the list's size will increase
+	 * by one. This operation is linear time in the worst case.	  	   
+	 * @param index location of element
+	 * @param value value of element	 
+	 * @throws IndexOutOfBoundsException if an illegal index is specified
+	 */
 	public index( int index, V value ) => ()
 	{
 		if ( index == size )
@@ -107,11 +129,24 @@ and Deque<V>
 			findIndex(index)->value = value;
 	}
 
+	/**
+	 * Adds an element to the end of the list. This operation is constant
+	 * time.	 
+	 * @param value value of element
+	 * @return list after the add
+	 */
 	public add( V value ) => ( LinkedList<V> )
 	{
 		Node:create(value, header);
 		return this;
 	}
+	
+	/**
+	 * Removes the first occurrence of an element. This operation is linear
+	 * time in the worst case.
+	 * @param value value of element to remoe
+	 * @return {@code true} if the element was found and removed	 
+	 */	
 	public remove( V value ) => ( boolean removed )
 	{
 		try
@@ -126,41 +161,71 @@ and Deque<V>
 			return false;
 		}
 	}
+	
+	/**
+	 * Removes the element at the given index. This operation is linear time
+	 * in the worst case.
+	 * @param index index of element to remove
+	 * @return element being removed
+	 * @throws IndexOutOfBoundsException if an illegal index is specified
+	 */	
 	public delete( int index ) => ( V value )
 	{
 		Node node = findIndex(index);
-		try
-		{
-			V value = check(node->value);
-			node.delete();
-			return value;
-		}
-		recover
-		{
-			throw UnexpectedNullException:create();
-		}
+		V value = check(node->value);
+		node.delete();
+		return value;
 	}
+	
+	/**
+	 * Finds the first index where a particular element is present. If the
+	 * element is not present, -1 will be returned. 	   
+	 * @param value element to search for
+	 * @return index of element or -1 if not found
+	 */
 	public readonly indexOf( V value ) => ( int index )
-	{
-		int index;
-		(index, ) = findNode(value);
+	{		
+		(int index, ) = findNode(value);
 		return index;
 	}
+	
+	
+	/**
+	 * Checks to see if the list contains a particular element.	   
+	 * @param value element to search for
+	 * @return {@code true} if present
+	 */
 	public readonly contains( V value ) => ( boolean found )
 	{		 
 		return indexOf(value) != -1;
 	}
+	
+	/**
+	 * Removes all elements from the list. This operation is
+	 * constant time.	 
+	 * @return list after being cleared	 	   
+	 */	
 	public clear() => ( LinkedList<V> )
 	{
 		header.clear();
 		return this;
 	}
 
+	/**
+	 * Creates an iterator to iterate over all the values in the list.	   
+	 * @return iterator
+	 */
 	public readonly iterator() => ( Iterator<V> )
 	{
 		return LinkedListIterator:create();
 	}
 	
+	/**
+	 * Adds an element to the beginning of the list. This operation is
+	 * constant time.
+	 * @param element element to be added
+	 * @return list after the element is added	   
+	 */
 	public addFirst( V element ) => ( LinkedList<V> )
 	{
 		Node node = findIndex( 0 );
@@ -168,51 +233,93 @@ and Deque<V>
 		return this;
 	}
 	
+	/**
+	 * Adds an element to the end of the list. This operation is
+	 * constant time.
+	 * @param element element to be added
+	 * @return list after the element is added	   
+	 */
 	public addLast( V element ) => ( LinkedList<V> )
 	{
 		return add( element );
 	}
 	
-	public getFirst() => (V element )
+	/**
+	 * Gets the element at the beginning of the list. This operation is
+	 * constant time.
+	 * @return first element in the list
+	 * @throws NoSuchElementException if the list is empty  
+	 */
+	public readonly getFirst() => (V element )
 	{
+		if( size == 0 )
+			throw NoSuchElementException:create(); 
 		return index(0);
 	}
 	
-	public getLast() => (V element )
+	/**
+	 * Gets the element at the end of the list. This operation is constant
+	 * time.
+	 * @return last element in the list
+	 * @throws NoSuchElementException if the list is empty  
+	 */
+	public readonly getLast() => (V element )
 	{
 		return index(size - 1);
 	}
 	
+	/**
+	 * Removes the element at the beginning of the list. This operation is
+	 * constant time.	 
+	 * @return element being removed
+	 * @throws NoSuchElementException if the list is empty	   
+	 */
 	public removeFirst() => (V element )
 	{
+		if( size == 0 )
+			throw NoSuchElementException:create();
 		return delete(0);
 	}
 	
+	/**
+	 * Removes the element from the end of the list. This operation is
+	 * constant time.	 
+	 * @return element being removed
+	 * @throws NoSuchElementException if the list is empty	   
+	 */
 	public removeLast() => ( V element )
 	{
+		if( size == 0 )
+			throw NoSuchElementException:create();
 		return delete(size - 1);
 	}	
 	
+	/**
+	 * Produces a {@code String} representation of the list, listing all
+	 * elements in order.
+	 * @return {@code String} representation 
+	 */
 	public readonly toString() => ( String )
 	{	
 		var string = MutableString:create("[");
-		var i = iterator();				
-		
 		boolean first = true;
-		while( i.hasNext() )
+		
+		foreach( V value in this )
 		{
 			if( first )
 				first = false;
 			else
 				string.append(", ");
-			
-			string.append(#i.next());			
+			string.append(#value);
 		}
 		
-		return string.append("]").toString();
+		return #string.append("]");
 	}
 	
-	
+	/*
+	 * Simple iterator class uses a Node reference index to keep track of the
+	 * current location in the list.
+	 */
 	private class LinkedListIterator is Iterator<V>
 	{
 		Node current = header->next;
@@ -223,26 +330,22 @@ and Deque<V>
 			if ( modifications != expectedModifications )
 				throw IllegalModificationException:create();
 		}
+		
 		public readonly hasNext() => ( boolean )
 		{
 			checkForModifications();
 			return current !== header;
 		}
+		
 		public next() => ( V value )
 		{
 			checkForModifications();
 			if ( !hasNext() )
 				throw IndexOutOfBoundsException:create();
-			try
-			{				
-				V value = check(current->value);			
-				current = current->next;			
-				return value;
-			}
-			recover
-			{
-				throw UnexpectedNullException:create();
-			}
+						
+			V value = check(current->value);			
+			current = current->next;			
+			return value;			
 		}
 	}
 }

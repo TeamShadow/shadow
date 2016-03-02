@@ -1,40 +1,112 @@
+/**
+ * Class {@code File} provides utilities for interacting with a file in the
+ * operating system, such as creating a new file, deleting an existing file,
+ * reading from a file, and writing to a file.
+ */
 class shadow:io@
 	File
 is	CanRead
 and CanWrite
 and CanClose
 {
-	long data = -1L, pos = 0;
+	// data contains OS-specific file handle information 
+	long data = -1L;
 	get Path path;
-	private create( long data )
-	{
-		this:data = data;
-		this:path = Path:create();
-	}
+
+	/**
+	 * Creates a {@code File} object associated with the file on the given
+	 * path.
+	 * @param path of the file
+	 */
 	public create( String path )
 	{
 		this:path = Path:create(path);
 	}
+	
+	/**
+	 * Creates a {@code File} object associated with the file specified by the
+	 * given {@code Path} object.
+	 * @param path of the file
+	 */
 	public create( Path path )
 	{
 		this:path = path;
 	}
+	
+	/**
+	 * Closes the {@code File} on destroy.
+	 */
 	public destroy
 	{
 		close();
 	}
+	
+	/**
+	 * Returns a {@code String} representation of the path of this file.
+	 */
 	public readonly toString() => ( String )
 	{
 		return #path;
 	}
 
-	public native get readonly exists() => ( boolean );
+	/**
+	 * Determines a file in the operating system matches the
+	 * path in this {@code File} object.
+	 * @return {@code true} if the file exists
+	 */	
+	public native get readonly exists() => ( boolean );	
+	
+	/**
+	 * Creates or deletes a file in the operating system with the path of 
+	 * this {@code File} object.
+	 * @param createOrDelete {@code true} if the file should be created,
+	 * {@code false} if it should be deleted
+	 */	
 	public native set exists( boolean createOrDelete ) => ();
+	
+	/**
+	 * Gets the current position of the read/write pointer inside the file. 
+	 * @return position in file
+	 */	
 	public native get readonly position() => ( long );
+	
+	/**
+	 * Sets the current position of the read/write pointer inside the file. 
+	 * @param position in file
+	 */
 	public native set position( long position ) => ();
+	
+	/**
+	 * Gets the size of the file in bytes. 
+	 * @return file size
+	 */
 	public native get readonly size() => ( long );
+	
+	/**
+	 * Sets the size of the file in bytes, extending or truncating it. 
+	 * @param new file size
+	 */
 	public native set size( long size ) => ();
+	
+	/**
+	 * Reads data from the file into the buffer and updates the read pointer
+	 * location.	     
+	 * @param buffer array of {@code byte} values to hold file data
+	 * @return number of {@code byte} values successfully read, always less
+	 * than or equal the length of the buffer
+	 */
 	public native readonly read( byte[] buffer ) => ( int );
+	
+	/**
+	 * Writes data from the buffer into the file and updates the write pointer
+	 * location.	     
+	 * @param buffer array of {@code byte} values to be written
+	 * @return number of {@code byte} values successfully written
+	 */
 	public native write( readonly byte[] buffer ) => ( int );
+	
+	/**
+	 * Closes the file.
+	 */
 	public native close() => ();
 }

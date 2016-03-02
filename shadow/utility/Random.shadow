@@ -1,9 +1,12 @@
 /**
- * Based on Sean Luke's Java implementation of 
- * version MT199937(99/10/29)
- * of the Mersenne Twister algorithm found at the link below with the initialization improved using the new 2002/1/26 initialization algorithm. 
- * @seeUrl http://www.math.keio.ac.jp/matumoto/emt.html The Mersenne Twister Home Page
- *  
+ * Class {@code Random} allows the generation of pseudorandom numbers using
+ * the Mersenne Twister algorithm.  This implementation is based on Sean
+ * Luke's Java implementation of version MT199937(99/10/29) of the Mersenne
+ * Twister algorithm with the initialization improved using the new 2002/1/26
+ * initialization algorithm.
+ * 
+ * @seeUrl https://cs.gmu.edu/~sean/research/mersenne/MersenneTwister.java Sean Luke's Java implementation
+ * @seeUrl http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html The Mersenne Twister Home Page   
  */
  
  /* 
@@ -38,20 +41,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * 
  */
-
 class shadow:utility@
 	Random
 is  CanEqual<Random>
 {
+
+	/**
+	 * Creates a {@code Random} object using the nanoseconds since the Unix
+	 * Epoch as a seed.
+	 */
 	public create()	
 	{
-		this(System.nanoTime() / 1000000); //seeds with milliseconds to avoid all zeroes
+		this(System.nanoTime());
 	}
+	
+	/**
+	 * Creates a {@code Random} object using the given value as a seed.
+	 * @param seed seed for pseudorandom number generation	 
+	 */
 	public create( long seed )
 	{
 		this->seed = seed;
 	}
 	
+	/**
+	 * Creates a {@code Random} object using an array of values as a seed.
+	 * @param array seed for pseudorandom number generation	 
+	 */	
 	public create( uint[] array )
 	{		
 		this->seed = array;
@@ -60,40 +76,49 @@ is  CanEqual<Random>
      // Period parameters
     private constant int N = 624;
     private constant int M = 397;
-    private constant uint MATRIX_A = 0x9908b0dfu;   //    private static final * constant vector a
-    private constant uint UPPER_MASK = 0x80000000u; // most significant w-r bits
-    private constant uint LOWER_MASK = 0x7fffffffu; // least significant r bits
+    private constant uint MATRIX_A = 0x9908b0dfu;   
+    private constant uint UPPER_MASK = 0x80000000u;
+    private constant uint LOWER_MASK = 0x7fffffffu;
 
     // Tempering parameters
     private constant uint TEMPERING_MASK_B = 0x9d2c5680u;
     private constant uint TEMPERING_MASK_C = 0xefc60000u;
     
-    uint[] mt; // the array for the state vector
-    int mti; // mti==N+1 means mt[N] is not initialized
+    uint[] mt; 		// the array for the state vector
+    int mti; 		// mti == N+1 means mt[N] is not initialized
     uint[] mag01;
 
     double nextNextGaussian = 0.0;
     boolean haveNextNextGaussian = false;
    
+   	/**
+	 * Checks if the current {@code Random} object has the same state as
+	 * another {@code Random} object.
+	 * @param other object to compare to	 
+	 * @return {@code true} if the two objects have the same state
+	 */
     public equal(Random other) => (boolean)
 	{
         if (other === this)
         	return true;        
-        if (mti != other:mti) return false;
+        if (mti != other:mti)
+        	return false;
         for(int x=0;x < mag01->size; x+=1)
-            if (mag01[x] != other:mag01[x]) return false;
+            if (mag01[x] != other:mag01[x])
+            	return false;
         for(int x=0;x<mt->size;x+=1)
-            if (mt[x] != other:mt[x]) return false;
+            if (mt[x] != other:mt[x])
+            	return false;
         return true;
 	}
 
    
     /**
-     * Initalize the pseudo random number generator.  Don't
-     * pass in a long that's bigger than an int (Mersenne Twister
-     * only uses the first 32 bits for its seed).   
+     * Initalizes the pseudorandom number generator with the given seed value.
+     * The algorithm is only intended to use a 32-bit seed, so the two halves
+     * of the 64-bit seed value are XORed together to capture bits from both.        
+     * @param seed seed for pseudorandom number generation
      */
-
     public set seed(long seed) => ()
      {     
         haveNextNextGaussian = false;
@@ -104,7 +129,7 @@ is  CanEqual<Random>
         mag01[0] = 0x0u;
         mag01[1] = MATRIX_A;
        
-        mt[0] = cast<uint>(seed);
+        mt[0] = cast<uint>(seed ^ (seed >> 32));
         for (mti=1; mti<N; mti+= 1) 
         {           
             mt[mti] = 1812433253u * (mt[mti - 1] ^ (mt[mti - 1] >> 30)) + cast<uint>(mti);
@@ -117,14 +142,13 @@ is  CanEqual<Random>
 		}
 	}
 
-
-    /**
-     * Sets the seed using an array of integers.
-     * Your array must have a non-zero length.  Only the first 624 integers
-     * in the array are used; if the array is shorter than this then
-     * integers are repeatedly used in a wrap-around fashion.
+	/**
+     * Initalizes the pseudorandom number generator with the given array of
+     * values.  The array must have a non-zero length. Only the first 624
+     * values in the array are used. If the array has a shorter length, its
+     * values are used repeatedly in a wrap-around fashion.             
+     * @param array seed for pseudorandom number generation
      */
-
     public set seed(uint[] array) => ()
 	{		
         if (array->size == 0)
@@ -156,7 +180,10 @@ is  CanEqual<Random>
 	}
 
     /**
-     * Returns an integer with <i>bits</i> bits filled with a random number.
+     * Produces an integer with the given number of bits filled with
+     * pseudorandom values.
+     * @param bits number of random bits to generate
+     * @return pseudorandom {@code int} value
      */
     protected next(int bits) => (int)
     {
@@ -187,42 +214,30 @@ is  CanEqual<Random>
   		
         y = mt[mti];
         mti += 1;
-        y ^= y >> 11;                          // TEMPERING_SHIFT_U(y)
+        y ^= y >> 11;                          	// TEMPERING_SHIFT_U(y)
         y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
         y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= (y >> 18);                        // TEMPERING_SHIFT_L(y)
+        y ^= (y >> 18);                        	// TEMPERING_SHIFT_L(y)
 
-        return cast<int>(y >> (32 - bits));    // hope that's right!
+        return cast<int>(y >> (32 - bits));
     }
     
-    
-
-    /** This method is missing from jdk 1.0.x and below.  JDK 1.1
-        includes this for us, but what the heck.*/
+    /**
+     * Produces a pseudorandom {@code boolean} value with even chances of
+     * {@code true} and {@code false}.
+     * @return pseudorandom {@code boolean} value
+     */
     public nextBoolean() => (boolean)
     {
     	return next(1) != 0;
     }
 
-    /** This generates a coin flip with a probability <tt>probability</tt>
-        of returning true, else returning false. <tt>probability</tt> must
-        be between 0.0 and 1.0, inclusive.  Not as precise a random real
-        event as nextBoolean(double), but twice as fast. To explicitly
-        use this, remember you may need to cast to float first. */
-
-    public nextBoolean (float probability) => (boolean)
-    {
-        if (probability < 0.0f or probability > 1.0f)
-            throw IllegalArgumentException:create ("Probability must be between 0.0 and 1.0 inclusive.");
-        if (probability == 0.0f) return false;            // fix half-open issues
-        else if (probability == 1.0f) return true;        // fix half-open issues
-        return nextFloat() < probability; 
-	}
-
-    /** This generates a coin flip with a probability <tt>probability</tt>
-        of returning true, else returning false. <tt>probability</tt> must
-        be between 0.0 and 1.0, inclusive. */
-
+    /**
+     * Produces a pseudorandom {@code boolean} value with the specified probability
+     * of it being {@code true}.
+     * @param probability chance that the random value is {@code true}
+     * @return pseudorandom {@code boolean} value
+     */
     public nextBoolean (double probability) => (boolean)
 	{
         if (probability < 0.0 or probability > 1.0)
@@ -232,13 +247,16 @@ is  CanEqual<Random>
         return nextDouble() < probability; 
     }
         
-    /** This method is missing from JDK 1.1 and below.  JDK 1.2
-        includes this for us, but what the heck. */
-
+    /**
+     * Produces a pseudorandom {@code int} value between 0 (inclusive) and the
+     * specified value (exclusive).
+     * @param n one more than the maximum random value
+     * @return pseudorandom {@code int} value      
+     */
     public nextInt(int n) => (int) 
     {
         if (n <= 0)
-            throw IllegalArgumentException:create("n must be positive, got: " # n);
+            throw IllegalArgumentException:create("Non-positive maximum value for random number: " # n);
         
         if ((n & -n) == n) //is that for 1 only?
             return cast<int>((cast<long>(n) * cast<long>(next(31))) >> 31);
@@ -253,13 +271,21 @@ is  CanEqual<Random>
         return val;
 	}
 	
-	
-	
+	/**
+     * Produces a pseudorandom {@code int} uniformly distributed across all
+     * possible {@code int} values.     
+     * @return pseudorandom {@code int} value      
+     */	
 	public nextInt() => (int)
 	{
         return cast<int>(nextUInt());
 	}
 	
+	/**
+     * Produces a pseudorandom {@code uint} uniformly distributed across all
+     * possible {@code uint} values.     
+     * @return pseudorandom {@code uint} value      
+     */
 	public nextUInt() => (uint)
 	{
 		uint y;
@@ -288,14 +314,19 @@ is  CanEqual<Random>
   		
         y = mt[mti];
         mti += 1;
-        y ^= y >> 11;                          // TEMPERING_SHIFT_U(y)
+        y ^= y >> 11;                          	// TEMPERING_SHIFT_U(y)
         y ^= (y << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
         y ^= (y << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= (y >> 18);                        // TEMPERING_SHIFT_L(y)
+        y ^= (y >> 18);                        	// TEMPERING_SHIFT_L(y)
 
         return y;
 	}
 	
+	/**
+     * Produces a pseudorandom {@code long} uniformly distributed across all
+     * possible {@code long} values.     
+     * @return pseudorandom {@code long} value      
+     */
 	public nextLong() => (long)
 	{
         uint y;
@@ -354,23 +385,30 @@ is  CanEqual<Random>
                 
         z = mt[mti];
         mti += 1;
-        z ^= z >> 11;                          // TEMPERING_SHIFT_U(z)
+        z ^= z >> 11;                          	// TEMPERING_SHIFT_U(z)
         z ^= (z << 7) & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
         z ^= (z << 15) & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
-        z ^= (z >> 18);                        // TEMPERING_SHIFT_L(z)
+        z ^= (z >> 18);                        	// TEMPERING_SHIFT_L(z)
         
         return (cast<long>(y) << 32) + cast<long>(z);
 	}
 	
+	public nextULong() => (ulong)
+	{
+		return cast<ulong>(nextLong());
+	}
+	
 
-    /** This method is for completness' sake. 
-        Returns a long drawn uniformly from 0 to n-1.  Suffice it to say,
-        n must be > 0, or an IllegalArgumentException is raised. */
-    
+    /**
+     * Produces a pseudorandom {@code long} value between 0 (inclusive) and the
+     * specified value (exclusive).
+     * @param n one more than the maximum random value
+     * @return pseudorandom {@code long} value      
+     */
     public nextLong(long n) => (long) 
 	{
         if(n <= 0)
-            throw IllegalArgumentException:create("n must be positive, got: " # n);
+            throw IllegalArgumentException:create("Non-positive maximum value for random number: " # n);
         
         long bits, val;
         do 
@@ -382,27 +420,25 @@ is  CanEqual<Random>
         return val;
 	}
 
-
-    /** A bug fix for versions of JDK 1.1 and below.  JDK 1.2 fixes
-        this for us, but what the heck. */
+    /**
+     * Produces a pseudorandom {@code double} value uniformly distributed between
+     * 0.0 (inclusive) and 1.0 (exclusive).     
+     * @return pseudorandom {@code double} value      
+     */
     public nextDouble() => (double)
-        {
+	{
         return ((cast<long>(next(26)) << 27) + next(27))
             / cast<double>(1L << 53);
-        }
-
-    /** Returns a double in the range from 0.0 to 1.0, possibly inclusive of 0.0 and 1.0 themselves.  Thus:
-
-        <p><table border=0>
-        <th><td>Expression<td>Interval
-        <tr><td>nextDouble(false, false)<td>(0.0, 1.0)
-        <tr><td>nextDouble(true, false)<td>[0.0, 1.0)
-        <tr><td>nextDouble(false, true)<td>(0.0, 1.0]
-        <tr><td>nextDouble(true, true)<td>[0.0, 1.0]
-        </table>
-        
-        <p>This version preserves all possible random values in the double range.
-    */
+	}
+ 
+    /**
+     * Produces a pseudorandom {@code double} value uniformly distributed between
+     * 0.0 and 1.0 where the parameters determine if 0.0 and 1.0 are included
+     * in the range or not.     
+     * @param includeZero if {@code true}, include 0.0 as a possible output
+     * @param includeOne if {@code true}, include 1.0 as a possible output
+     * @return pseudorandom {@code double} value      
+     */
     public nextDouble(boolean includeZero, boolean includeOne) => (double)
 	{
         double d = 0.0;
@@ -416,26 +452,24 @@ is  CanEqual<Random>
         return d;
     }
 
-    /** A bug fix for versions of JDK 1.1 and below.  JDK 1.2 fixes
-        this for us, but what the heck. */
-
+    /**
+     * Produces a pseudorandom {@code float} value uniformly distributed between
+     * 0.0 (inclusive) and 1.0 (exclusive).     
+     * @return pseudorandom {@code float} value      
+     */
     public  nextFloat() => (float)
 	{
         return next(24) / cast<float>(1 << 24);
     }
 
-    /** Returns a float in the range from 0.0f to 1.0f, possibly inclusive of 0.0f and 1.0f themselves.  Thus:
-
-        <p><table border=0>
-        <th><td>Expression<td>Interval
-        <tr><td>nextFloat(false, false)<td>(0.0f, 1.0f)
-        <tr><td>nextFloat(true, false)<td>[0.0f, 1.0f)
-        <tr><td>nextFloat(false, true)<td>(0.0f, 1.0f]
-        <tr><td>nextFloat(true, true)<td>[0.0f, 1.0f]
-        </table>
-        
-        <p>This version preserves all possible random values in the float range.
-    */
+    /**
+     * Produces a pseudorandom {@code float} value uniformly distributed between
+     * 0.0 and 1.0 where the parameters determine if 0.0 and 1.0 are included
+     * in the range or not.     
+     * @param includeZero if {@code true}, include 0.0 as a possible output
+     * @param includeOne if {@code true}, include 1.0 as a possible output
+     * @return pseudorandom {@code float} value      
+     */
     public nextFloat(boolean includeZero, boolean includeOne) => (float)
     {
         float d = 0.0f;
@@ -449,40 +483,61 @@ is  CanEqual<Random>
         return d;
 	}
 
-    /** A bug fix for all versions of the JDK.  The JDK appears to
-        use all four bytes in an integer as independent byte values!
-        Totally wrong. I've submitted a bug report. */
-
+    /**
+     * Fills an array of {@code byte} values with pseudorandom numbers.          
+     * @param bytes array to fill           
+     */
     public nextBytes(byte[] bytes) => ()    
     {
         for (int x=0; x < bytes->size; x+=1)
         	bytes[x] = nextByte();
     }
 
-    /** For completeness' sake, though it's not in java.util.Random. */
-    
+    /**
+     * Produces a pseudorandom {@code short} uniformly distributed across all
+     * possible {@code short} values.     
+     * @return pseudorandom {@code short} value      
+     */    
     public nextShort() => (short)
     {
         return cast<short>(next(16));
     }
     
+    /**
+     * Produces a pseudorandom {@code ushort} uniformly distributed across all
+     * possible {@code ushort} values.     
+     * @return pseudorandom {@code ushort} value      
+     */
     public nextUShort() => (ushort)
     {
         return cast<ushort>(next(16));
     }
 
-    /** For completeness' sake, though it's not in java.util.Random.  */
-
+    /**
+     * Produces a pseudorandom {@code byte} uniformly distributed across all
+     * possible {@code byte} values.     
+     * @return pseudorandom {@code byte} value      
+     */  
     public nextByte() => (byte)
     {
         return cast<byte>(next(8));
     }
     
-     public nextUByte() => (ubyte)
+    /**
+     * Produces a pseudorandom {@code ubyte} uniformly distributed across all
+     * possible {@code ubyte} values.     
+     * @return pseudorandom {@code ubyte} value      
+     */
+    public nextUByte() => (ubyte)
     {
         return cast<ubyte>(next(8));
     }
 
+	/**
+     * Produces a pseudorandom {@code double} value with a Gaussian distribution
+     * whose mean is 0.0 and standard deviation is 1.0.     
+     * @return pseudorandom {@code double} value      
+     */
     public nextGaussian() => (double) 
     {
         if (haveNextNextGaussian) 

@@ -133,11 +133,6 @@ public class StandardLibraryTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 
-	@Test public void testMethod() throws Exception {
-		args.add("shadow/standard/Method.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-
 	@Test public void testMutableString() throws Exception {
 		args.add("shadow/standard/MutableString.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -153,11 +148,6 @@ public class StandardLibraryTest {
 		Main.run(args.toArray(new String[] { }));
 	}
 
-	@Test public void testReference() throws Exception {
-		args.add("shadow/standard/Reference.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-	
 	@Test public void testShort() throws Exception {
 		args.add("shadow/standard/Short.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -191,11 +181,6 @@ public class StandardLibraryTest {
 
 	@Test public void testBigInteger() throws Exception {
 		args.add("shadow/standard/BigInteger.shadow");
-		Main.run(args.toArray(new String[] { }));
-	}
-
-	@Test public void testUnboundMethod() throws Exception {
-		args.add("shadow/standard/UnboundMethod.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 

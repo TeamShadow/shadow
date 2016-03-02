@@ -1,31 +1,78 @@
+/**
+ * Class {@code HashSet<V>} stores a set, a collection of objects of type
+ * {@code V} with no repetitions. Internally, this set is implemented with
+ * a hash table mapping objects of type {@code V} to themselves. This
+ * implementation allows objects to be added, found, and deleted in constant
+ * or near-constant time. {@code HashSet<V>} requires that type {@code V} has
+ * the {@code CanHash} interface but imposes no ordering requirement on
+ * objects.  The {@code TreeSet<V>} class should be considered if object
+ * ordering is a requirement.
+ *
+ * @seeDoc shadow:standard@CanHash
+ * @seeDoc shadow:utility@TreeSet
+ */
 class shadow:utility@
 	HashSet<V is CanHash and CanEqual<V>>
 is  Set<V>
 {
 	HashMap<V,V> map;
 	
-	protected constant int DEFAULT_INITIAL_CAPACITY = 16;	
+	/// Default number of rows internal hash table starts with, 16.
+	protected constant int DEFAULT_INITIAL_CAPACITY = 16;
+	/// Default load factor before internal hash table is resized, 0.75.	
 	protected constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
+	/**
+	 * Creates an empty {@code HashSet} with a default capacity of 16
+	 * and maximum load factor of 0.75.  
+	 */	
 	public create()
 	{
 		this(DEFAULT_INITIAL_CAPACITY);
 	}
 	
+	/**
+	 * Creates an empty {@code HashSet} with the specified capacity and
+	 * maximum load factor. 
+	 * @param initialCapacity initial capacity of the set
+	 * @param loadFactor maximum load factor before the set is resized
+	 */
 	public create(int initialCapacity)
 	{
 		this(initialCapacity, DEFAULT_LOAD_FACTOR);
 	}
-	
+	 
+	/**
+	 * Creates a {@code HashSet} with the specified initial capacity of 
+	 * buckets and the specified maximum load factor before all the
+	 * values are re-hashed.  Note that the capacity will always
+	 * be increased to the next power of 2 if it is not a power of 2.
+	 * @param initialCapacity initial number of buckets in the hash table
+	 * @param loadFactor maximum load factor (buckets / objects) before all
+	 * values are re-hashed
+	 */
 	public create(int initialCapacity, float loadFactor)
 	{
 		map = HashMap<V,V>:create(initialCapacity, loadFactor);		
-	}	
+	}
 
-	public index( V value ) => ( boolean found )
+	/**
+	 * Checks to see if the object is present in the set. This operation runs
+	 * in constant or near-constant time.	   
+	 * @param value object to search for
+	 * @return {@code true} if the object is present
+	 */
+	public readonly index( V value ) => ( boolean found )
 	{
 		return map.containsKey(value);
 	}
+	
+	/**
+	 * Adds or removes an object to or from the set.  This operation runs
+	 * in constant or near-constant time.	   	   
+	 * @param value object to be added or removed
+	 * @param add add object if {@code true}, remove if {@code false}
+	 */
 	public index( V value, boolean add ) => ()
 	{
 		if ( add )
@@ -34,38 +81,83 @@ is  Set<V>
 			map.remove(value);
 	}
 
+	/**
+	 * Adds an object to the set. This operation runs in constant or
+	 * near-constant time.	   
+	 * @param value object to be added
+	 * @return {@code true} if added to the set, {@code false} if already
+	 * present
+	 */
 	public add( V value ) => ( boolean added )
-	{		
-		//returns true if item newly added (no old item)
+	{	
 		return map.add( value, value ) === null;
 	}
 	
+	/**
+	 * Removes an object from the set. This operation runs in constant or
+	 * near-constant time.	    	   
+	 * @param value object to be removed
+	 * @return {@code true} if successfully removed, {@code false} if not
+	 * present
+	 */
 	public remove( V value ) => ( boolean removed )
-	{	
-		//returns true if item was present in the set (some existing item)
+	{
 		return map.remove(value) !== null;
 	}
 	
+	/**
+	 * Checks to see if the set contains the specified object. This operation
+	 * runs in constant or near-constant time.	  	   
+	 * @param value object to look for
+	 * @return {@code true} if object is present	 
+	 */
 	public readonly contains( V value ) => ( boolean found )
 	{		
 		return map.containsKey(value);
 	}
 
+	/**
+	 * Creates an iterator to iterate over all the objects in the set.	   
+	 * @return iterator
+	 */
 	public readonly iterator() => ( Iterator<V> )
 	{
 		return map.iterator();
 	}
 	
-	public clear() => ()
+	/**
+	 * Removes all objects from the set and resets the capacity to default.
+	 * @return set after being cleared
+	 */
+	public clear() => ( HashSet<V> )
 	{
 		map.clear();
+		return this;
 	}
 	
+	/**
+	 * Gets the number of objects in the set.
+	 * @return size of set
+	 */
 	public readonly get size() => (int)
 	{
 		return map.size();	
 	}
 	
+	/**
+     * Checks whether or not the set is empty.
+     * @return {@code true} if the set is empty
+     */
+	public readonly isEmpty() => (boolean empty)
+	{
+		return map.size() == 0;
+	}
+	
+	/**
+	 * Produces a {@code String} representation of the set, listing all
+	 * the objects in an unspecified order.
+	 * @return {@code String} representation 
+	 */
 	public readonly toString() => (String)
 	{
 		var output = MutableString:create("{");

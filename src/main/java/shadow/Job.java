@@ -33,31 +33,34 @@ public class Job {
 		verbose = compilerArgs.hasOption(Arguments.VERBOSE);
 		forceRecompile = compilerArgs.hasOption(Arguments.RECOMPILE);
 		
-		// Locate main source file
-		mainFile = Paths.get(compilerArgs.getMainFileArg()).toAbsolutePath();
-		
-		// Ensure that the main source file exists
-		if( !Files.exists(mainFile) )
-			throw new FileNotFoundException("Source file at " + mainFile.toAbsolutePath() + " not found");
-		
-		Path outputFile;
-		
-		// See if an output file was specified
-		if( compilerArgs.hasOption(Arguments.OUTPUT) ) {
-			outputFile = Paths.get(compilerArgs.getOutputFileArg());
+		// Locate main source file if not help or information only
+		if( !compilerArgs.hasOption(Arguments.INFORMATION) && !compilerArgs.hasOption(Arguments.HELP)) {
+			if( compilerArgs.getMainFileArg() != null )
+				mainFile = Paths.get(compilerArgs.getMainFileArg()).toAbsolutePath();
 			
-			// Resolve it if necessary
-			outputFile = mainFile.getParent().resolve(outputFile);
-		}
-		else {
-			// Determine a path to the default output file
-			String outputName = Main.stripExt(mainFile.getFileName().toString());
-			outputFile = mainFile.getParent().resolve(properExecutableName(outputName));
-		}
+			// Ensure that the main source file exists
+			if( mainFile == null || !Files.exists(mainFile) )
+				throw new FileNotFoundException("Source file at " + mainFile.toAbsolutePath() + " not found");
 		
-		// Create linker output command
-		outputCommand.add("-o");
-		outputCommand.add(outputFile.toAbsolutePath().toString());
+			Path outputFile;
+			
+			// See if an output file was specified
+			if( compilerArgs.hasOption(Arguments.OUTPUT) ) {
+				outputFile = Paths.get(compilerArgs.getOutputFileArg());
+				
+				// Resolve it if necessary
+				outputFile = mainFile.getParent().resolve(outputFile);
+			}
+			else {
+				// Determine a path to the default output file
+				String outputName = Main.stripExt(mainFile.getFileName().toString());
+				outputFile = mainFile.getParent().resolve(properExecutableName(outputName));
+			}
+			
+			// Create linker output command
+			outputCommand.add("-o");
+			outputCommand.add(outputFile.toAbsolutePath().toString());
+		}
 	}
 
 	public boolean isCheckOnly() {

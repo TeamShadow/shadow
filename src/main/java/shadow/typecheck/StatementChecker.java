@@ -373,20 +373,19 @@ public class StatementChecker extends BaseChecker {
 		return visitMethod( node, secondVisit );
 	}
 	
-	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException
-	{
-		if(secondVisit)			
-		{
+	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {
+		if(secondVisit) {
 			Node child =  node.jjtGetChild(0);			
 			Type type = child.getType();			
 			List<Integer> dimensions = node.getArrayDimensions();
 			
-			if( dimensions.size() == 0 )
+			if( dimensions.size() == 0 ) {
 				node.setType(type);
-			else
-			{
+				currentType.addUsedType(type);
+			}
+			else {
 				ArrayType arrayType = new ArrayType(type, dimensions, node.getModifiers().isNullable());
-				((ClassType)currentType).addUsedType(arrayType);
+				currentType.addUsedType(arrayType);
 				node.setType(arrayType);
 			}
 			
@@ -459,7 +458,7 @@ public class StatementChecker extends BaseChecker {
 			else if( declarator.getModifiers().isConstant() ) //only fields are ever constant
 				addError( declarator, Error.INVALID_MODIFIER, "Variable declared with modifier constant must have an initializer");
 			
-			currentType.addUsedType(declarator.getType());
+			//currentType.addUsedType(declarator.getType());
 		}			
 	}
 
@@ -1219,7 +1218,7 @@ public class StatementChecker extends BaseChecker {
 				
 				// After updating type parameters
 				if( currentType instanceof ClassType )
-					((ClassType)currentType).addUsedType(type);
+					currentType.addUsedType(type);
 			}
 		}
 
@@ -2478,7 +2477,7 @@ public class StatementChecker extends BaseChecker {
 							node.setMethodSignature(signature);
 							parent.setType(prefixType);
 							
-							//occasionally this type is only seen here with all paramters 
+							//occasionally this type is only seen here with all parameters 
 							//and must be added to the referenced types
 							//the raw type has already been added
 							
@@ -2541,7 +2540,7 @@ public class StatementChecker extends BaseChecker {
 						{
 							try
 							{
-								((ClassType)currentType).addUsedType(prefixType.replace(parameterTypes, argumentTypes));
+								currentType.addUsedType(prefixType.replace(parameterTypes, argumentTypes));
 							}
 							catch(InstantiationException e)
 							{
@@ -2779,6 +2778,10 @@ public class StatementChecker extends BaseChecker {
 				MethodSignature signature = setMethodType(node, outer, unboundMethod.getTypeName(), arguments, typeArguments); //type set inside
 				node.setMethodSignature(signature);
 				
+				if( signature != null )
+					for( ModifiedType modifiedType : signature.getReturnTypes() )
+						currentType.addUsedType(modifiedType.getType());
+				
 				if( signature != null &&  prefixNode.getModifiers().isImmutable() && signature.getModifiers().isMutable()  )
 					addError(Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from an immutable reference");
 				
@@ -2931,7 +2934,7 @@ public class StatementChecker extends BaseChecker {
 			arrayType = new ArrayType(result, 1, nullable);
 		
 		node.setType(arrayType);
-		((ClassType)currentType).addUsedType(arrayType);
+		currentType.addUsedType(arrayType);
 		
 		return true;		
 	}
@@ -3236,49 +3239,43 @@ public class StatementChecker extends BaseChecker {
 	{ 
 		if( node.isLocal() ) 
 		{
-			if( secondVisit )			
-				visitDeclarator( node );			
+			if( secondVisit ) {				
+				SignatureNode parent = (SignatureNode) node.jjtGetParent();
+				MethodSignature signature = parent.getMethodSignature();
+				int index = 0;
+				MethodType methodType = signature.getMethodType();
+				
+				//add type parameters
+				if( node.jjtGetChild(index) instanceof ASTTypeParameters )
+				{			
+					ASTTypeParameters typeParameters = (ASTTypeParameters) node.jjtGetChild(index);
+					for( ModifiedType modifiedType : typeParameters.getType() )
+						methodType.addTypeParameter(modifiedType);
+					
+					index++;
+				}
+				
+				//add parameters			
+				ASTFormalParameters parameters = (ASTFormalParameters) node.jjtGetChild(index);
+				List<String> parameterNames = parameters.getParameterNames();
+				SequenceType parameterTypes = parameters.getType();		
+				
+				for( int i = 0; i < parameterNames.size(); ++i )				
+					signature.addParameter(parameterNames.get(i), parameterTypes.get(i));
+				
+				//add return types
+				index++;
+				SequenceNode results = (SequenceNode) node.jjtGetChild(index);
+							
+				for( ModifiedType modifiedType : results.getType() ) 
+					signature.addReturn(new SimpleModifiedType(modifiedType.getType()));
+				
+				//currentType.addUsedType(methodType); //covered by PrimitiveType and ReferenceType				
+			}
 			
 			return WalkType.POST_CHILDREN;
 		}							
 		else //non-local already handled
 			return WalkType.NO_CHILDREN;					
 	}
-	
-	private void visitDeclarator( Node node )
-	{
-		SignatureNode parent = (SignatureNode) node.jjtGetParent();
-		MethodSignature signature = parent.getMethodSignature();
-		int index = 0;
-		MethodType methodType = signature.getMethodType();
-		
-		//add type parameters
-		if( node.jjtGetChild(index) instanceof ASTTypeParameters )
-		{			
-			ASTTypeParameters typeParameters = (ASTTypeParameters) node.jjtGetChild(index);
-			for( ModifiedType modifiedType : typeParameters.getType() )
-				methodType.addTypeParameter(modifiedType);
-			
-			index++;
-		}
-		
-		//add parameters			
-		ASTFormalParameters parameters = (ASTFormalParameters) node.jjtGetChild(index);
-		List<String> parameterNames = parameters.getParameterNames();
-		SequenceType parameterTypes = parameters.getType();		
-		
-		for( int i = 0; i < parameterNames.size(); ++i )				
-			signature.addParameter(parameterNames.get(i), parameterTypes.get(i));
-		
-		//add return types
-		index++;
-		SequenceNode results = (SequenceNode) node.jjtGetChild(index);
-					
-		for( ModifiedType modifiedType : results.getType() ) 
-			signature.addReturn(new SimpleModifiedType(modifiedType.getType()));
-		
-		currentType.addUsedType(methodType);
-	}
-	
-	
 }

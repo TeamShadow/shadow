@@ -21,7 +21,7 @@ public class MethodType extends ClassType {
 		parameterTypes = new SequenceType();
 		returns = new SequenceType();
 		typeWithoutTypeArguments = this;
-		setExtendType(Type.METHOD); // added
+		setExtendType(Type.OBJECT); // change to Method if reinstated?
 	}
 	
 	@Override

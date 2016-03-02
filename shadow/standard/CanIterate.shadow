@@ -14,8 +14,8 @@
 interface shadow:standard@CanIterate<T>
 {
 	/**
-	 * Method called to produce a new iterator, presumably to the first item
-	 * in a collection, if items are ordered.
+	 * Method to produce a new iterator, presumably to the first item in a
+	 * collection, if items are ordered.
 	 * @return iterator to objects of type {@code T}  	 
 	 */
 	readonly iterator() => (Iterator<T>);

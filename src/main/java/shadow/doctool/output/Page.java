@@ -215,7 +215,8 @@ public abstract class Page
 					logger.warn("On page " + getRelativePath() + " - "
 							+ "Could not link to type or package " +
 							tag.get(0));
-					out.add(tag.get(1));
+					if( tag.size() > 1 )
+						out.add(tag.get(1));
 				}
 				out.closeLine();
 			}
