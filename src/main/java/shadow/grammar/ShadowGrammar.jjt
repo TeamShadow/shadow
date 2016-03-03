@@ -51,7 +51,7 @@ public class ShadowParser {
 
    private static final Logger logger = Loggers.PARSER;
    	public void debugPrint(String str) {
-        logger.trace(str + ": " + token);
+        //logger.trace(str + ": " + token);
     }
 
     private void appendDocumentation(DocumentationBuilder docBuilder)    {
