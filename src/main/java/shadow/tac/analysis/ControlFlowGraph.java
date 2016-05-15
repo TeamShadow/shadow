@@ -18,25 +18,27 @@ import shadow.tac.nodes.TACReturn;
 /**
  * Represents the various paths which code execution can take within a method.
  * Useful for determining whether or not a method returns in all (reasonably
- * predictable) cases.
+ * predictable) cases. Probably does not handle try/catch correctly.
  * 
  * @author Brian Stottler
  */
 public class ControlFlowGraph
 {
 	private final Block root;
-	private final String printable;
+	private final String cachedString; // Saves toString() from re-walking the graph
 	
 	public ControlFlowGraph(TACMethod method)
 	{
-		Map<TACNode, Block> association = new HashMap<TACNode, Block>();
+		Map<TACNode, Block> nodeBlocks = new HashMap<TACNode, Block>();
+		
+		// Reset block numbers (for ID purposes) and build a new graph
 		
 		Block.resetCount();
 		root = new Block();
 				
-		buildGraph(method, method.getNext(), root, association);
+		buildGraph(method, method.getNext(), root, nodeBlocks);
 		
-		printable = generateString();
+		cachedString = generateString();
 	}
 	
 	/** 
@@ -50,26 +52,24 @@ public class ControlFlowGraph
 		return returns(root, visited);
 	}
 	
-	private boolean returns(Block current, Set<Block> visited)
+	private boolean returns(Block block, Set<Block> visited)
 	{
-		if (visited.contains(current))
+		if (visited.contains(block))
 			return true;
 		
-		visited.add(current);
+		visited.add(block);
 		
 		// A block should either branch or return
-		if (current.branches() > 0) {
+		if (block.branches() > 0) {
 			// Ensure everything we can branch to returns
-			boolean returns = true;
-			
-			for (Block child : current)
+			for (Block child : block)
 				if (!returns(child, visited))
-					returns = false;
+					return false;
 			
-			return returns;
+			return true;
 		} else {
-			// If we don't branch, returning is dependent on us
-			return current.returnsDirectly();
+			// If we don't branch, this block should return directly
+			return block.returnsDirectly();
 		}
 	}
 	
@@ -80,7 +80,7 @@ public class ControlFlowGraph
 		
 		generateString(root, visited, strings);
 		
-		// Order and combine the strings for each block
+		// Order the strings for each block and combine them
 		Collections.sort(strings);
 		StringBuilder builder = new StringBuilder();
 		for (IndexedString string : strings)
@@ -90,9 +90,9 @@ public class ControlFlowGraph
 	}
 	
 	/** 
-	 * Traverses the graph to build a nice print-out of it. Very useful for
+	 * Traverses the graph to build a readable print-out of it. Very useful for
 	 * debugging
-	 * */
+	 */
 	private void generateString(Block current, Set<Block> visited, 
 			List<IndexedString> strings)
 	{
@@ -107,8 +107,10 @@ public class ControlFlowGraph
 			generateString(child, visited, strings);
 		}
 		
+		// Lead with the current block's ID
 		String output = Integer.toString(current.getID()) + ": ";
 		
+		// List the blocks it can branch to
 		Collections.sort(children);
 		for (int i = 0; i < children.size(); ++i) {
 			if (i != 0)
@@ -116,6 +118,7 @@ public class ControlFlowGraph
 			output += Integer.toString(children.get(i)) + " ";
 		}
 		
+		// Indicate whether or not it returns directly
 		if (current.returnsDirectly())
 			output += "(RETURNS)";
 			
@@ -125,76 +128,80 @@ public class ControlFlowGraph
 	
 	/** Generates a control flow graph for the given method.
 	 * 
-	 * @param first			The TACMethod itself, used to detect the end of
-	 * 						the method.
-	 * @param currentNode	The current node within the method's TAC sequence.
-	 * 						Should begin as the TACNode after "first".
-	 * @param currentBlock	Represents a linear sequence of instructions in the
-	 * 						TAC sequence. Should begin as a childless Block
-	 * 						which is also kept as the root of the graph.
-	 * @param association	A map linking TAC instructions to their
+	 * @param first			The TACMethod itself (used to detect the end of
+	 * 						the method on wrap-around).
+	 * @param node			The current node within the method's TAC sequence.
+	 * 						Should initially be the TACNode after "first".
+	 * @param block			Represents a linear sequence of instructions (no
+	 * 						branches) in the TAC sequence. Should initially be
+	 * 						a childless Block - this will be the root of the
+	 * 						graph on completion.
+	 * @param nodeBlocks	A map linking TAC instructions to their
 	 * 						corresponding Blocks. Used to detect loops and
 	 * 						to subsequently branches to the proper Blocks.
 	 */
-	private void buildGraph(TACNode first, TACNode currentNode,
-			Block currentBlock, Map<TACNode, Block> association)
+	private void buildGraph(TACNode first, TACNode node, Block block,
+			Map<TACNode, Block> nodeBlocks)
 	{
-		// If we reach the first node, we've looped around the end of the
+		// If we reach the first node, we've gone past the end of the
 		// method. Note that we should never arrive here by branching.
-		if (currentNode == first)
+		if (node == first)
 			return;
 		
 		// If this node is already within another block, we must have branched
-		// to get there
-		if (association.containsKey(currentNode)) {
-			currentBlock.addBranch(association.get(currentNode));
+		// to get there. We want to
+		// 		- Make note that our current block branches to that block
+		//		- Stop traversing this branch
+		if (nodeBlocks.containsKey(node)) {
+			block.addBranch(nodeBlocks.get(node));
 			return;
 		}
 	
 		// "Add" the current node into the current block
-		association.put(currentNode, currentBlock);
+		nodeBlocks.put(node, block);
 		
-		// If this is a return statement, we should flag it and return
-		if (currentNode instanceof TACReturn) {
-			currentBlock.flagReturns();
+		// If this is a return statement, we should flag it as such
+		if (node instanceof TACReturn) {
+			block.flagReturns();
 			return;
 		}
 		
-		if (currentNode instanceof TACBranch) {
-			TACBranch branch = (TACBranch) currentNode;
+		// Deal with the different branch circumstances
+		if (node instanceof TACBranch) {
+			TACBranch branch = (TACBranch) node;
 			
 			if (branch.isConditional()) {
-				// For a conditional, follow the two possible labels and start
-				// new blocks as branches from the current one
+				// For a conditional, follow the two possible labels and create
+				// corresponding blocks (branching from the current one)
 				buildGraph(first, branch.getTrueLabel().getLabel(),
-						new Block(currentBlock), association);
+						new Block(block), nodeBlocks);
 				buildGraph(first, branch.getFalseLabel().getLabel(),
-						new Block(currentBlock), association);
+						new Block(block), nodeBlocks);
 			} else if (branch.isDirect()) {
 				// Same as conditional, except only one branch
 				buildGraph(first, branch.getTrueLabel().getLabel(),
-						new Block(currentBlock), association);
+						new Block(block), nodeBlocks);
 			} else if (branch.isIndirect()) {
 				// Branch to every possible destination
 				TACDestination destination = branch.getDestination();
 				for (int i = 0; i < destination.getNumPossibilities(); ++i) {
 					buildGraph(first, destination.getPossibility(i).getLabel(),
-							new Block(currentBlock), association);
+							new Block(block), nodeBlocks);
 				}
-			} else {
+			} else { // Unfortunately this is possible, although it should never happen
 				throw new UnsupportedOperationException("Encountered a TACBranch that was neither conditional, direct, or indirect. What?");
 			}
 		} else {
 			// If we don't branch, keep writing to the current block, starting
 			// with the next node in the TAC sequence
-			buildGraph(first, currentNode.getNext(), currentBlock, association);
+			buildGraph(first, node.getNext(), block, nodeBlocks);
 		}
 	}
 	
 	@Override
 	public String toString()
 	{
-		return printable;
+		return cachedString;
 	}
 	
 	/**
@@ -203,6 +210,7 @@ public class ControlFlowGraph
 	 */
 	private static class Block implements Iterable<Block>
 	{
+		/** Provides a helpful way of IDing Blocks. Useful for debugging */
 		private static int count = 0;
 		private final int uniqueID;
 		
@@ -227,6 +235,7 @@ public class ControlFlowGraph
 			branches.add(target);
 		}
 		
+		/** Indicate that this block returns directly */
 		public void flagReturns()
 		{
 			returns = true;
@@ -259,7 +268,7 @@ public class ControlFlowGraph
 		}
 	}
 
-	/** Allows strings to be sorted based on their IDs */
+	/** Allows strings to be sorted based on given indexes */
 	private static class IndexedString implements Comparable<IndexedString>
 	{
 		private final String string;
