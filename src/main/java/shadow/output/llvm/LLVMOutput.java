@@ -53,7 +53,6 @@ import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACGlobal;
 import shadow.tac.nodes.TACLabelRef;
-import shadow.tac.nodes.TACSimpleNode;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
@@ -1981,11 +1980,7 @@ public class LLVMOutput extends AbstractOutput {
 	private static String typeSymbol(TACOperand node) {
 		return typeSymbol(node, node);
 	}
-	
-	private static String typeSymbol(TACOperand node, boolean reference) {
-		return typeSymbol(node, node, reference);
-	}
-	
+
 	private static String typeSymbol(Type type, TACOperand node) {
 		return typeSymbol(type, node, false);
 	}

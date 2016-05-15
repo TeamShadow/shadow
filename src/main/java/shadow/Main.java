@@ -23,6 +23,8 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACBuilder;
+import shadow.tac.TACCastConverter;
+import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
@@ -39,7 +41,7 @@ import shadow.typecheck.type.Type;
 public class Main {
 	
 	// Version of the Shadow compiler
-	public static final String VERSION 				= "0.6";	
+	public static final String VERSION 				= "0.7a";	
 	public static final String MINIMUM_LLVM_VERSION  = "3.6";
 		
 	// These are the error codes returned by the compiler
@@ -316,6 +318,9 @@ public class Main {
 					logger.info("Generating LLVM code for " + name);
 					//gets top level class
 					TACModule module = new TACBuilder().build(node);
+					
+					module = optimizeTAC( module );
+					
 					logger.debug(module.toString());
 
 					// Write to file
@@ -352,6 +357,19 @@ public class Main {
 		}
 	}
 	
+	// This method contains all the Shadow-specific TAC optimization,
+	// including constant propagation, control flow analysis,
+	// data flow analysis, and cast optimization
+	private static TACModule optimizeTAC(TACModule module) throws ShadowException {
+
+		//Convert high-level casts to low-level casts		
+		TACCastConverter converter = new TACCastConverter();
+		for (TACMethod method : module.getMethods())
+			converter.walk(method);
+		
+		return module;
+	}
+
 	private static void addToLink( Type type, File file, List<String> linkCommand ) throws IOException, ShadowException {
 		
 		String name = typeToFileName(type);
