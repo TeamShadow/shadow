@@ -1,0 +1,13 @@
+class Test
+{
+	public main() => ()
+	{
+		int value = thing();
+	}	
+	
+	public thing() => (int)
+	{
+		return 6;
+		return 7;
+	}
+}

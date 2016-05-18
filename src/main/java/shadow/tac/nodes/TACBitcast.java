@@ -1,17 +1,9 @@
 package shadow.tac.nodes;
 
-import shadow.interpreter.ShadowInteger;
-import shadow.interpreter.ShadowString;
-import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.tac.nodes.TACConversion.Kind;
-import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 

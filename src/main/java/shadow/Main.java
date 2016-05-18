@@ -371,6 +371,7 @@ public class Main {
 			//don't bother with unimplemented methods (abstract or interface methods)
 			if( !signature.isVoid() && signature.getNode().hasBlock() ) {				
 				ControlFlowGraph graph = new ControlFlowGraph(method);
+				graph.removeDeadCode();
 				if( !graph.returns() )
 					reporter.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.toString() + " may not return on all paths");
 			}

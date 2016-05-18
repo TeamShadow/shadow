@@ -12,8 +12,10 @@ import java.util.Set;
 import shadow.tac.TACMethod;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACDestination;
+import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACReturn;
+import shadow.tac.nodes.TACThrow;
 
 /**
  * Represents the various paths which code execution can take within a method.
@@ -27,18 +29,111 @@ public class ControlFlowGraph
 	private final Block root;
 	/** Provides a helpful way of IDing Blocks. Useful for debugging */
 	private int count = 0;
-	private final String cachedString; // Saves toString() from re-walking the graph
+	private String cachedString; // Saves toString() from re-walking the graph
+	private Map<TACNode, Block> nodeBlocks = new HashMap<TACNode, Block>(); 
 	
 	public ControlFlowGraph(TACMethod method)
-	{
-		Map<TACNode, Block> nodeBlocks = new HashMap<TACNode, Block>();
-		root = new Block();
+	{		
+		root = new Block();		
+		createBlocks(method);
+		addEdges();
 				
-		buildGraph(method, method.getNext(), root, nodeBlocks);
+		//buildGraph(method, method.getNext(), root, nodeBlocks);
 		
-		cachedString = generateString();
+		//cachedString = generateString();
 	}
 	
+	private void addEdges() {
+		addEdges(root);
+		
+		for( Block block : nodeBlocks.values() )
+			addEdges(block);
+	}
+
+	private void addEdges(Block block) {
+		TACNode node = block.getFirst();
+		boolean done = false;
+		
+		while( !done )
+		{
+			if( node instanceof TACBranch )
+			{			
+				TACBranch branch = (TACBranch) node;			
+				if (branch.isConditional()) {
+					block.addBranch(nodeBlocks.get(branch.getTrueLabel()));
+					block.addBranch(nodeBlocks.get(branch.getFalseLabel()));
+				}
+				else if (branch.isDirect())
+					block.addBranch(nodeBlocks.get(branch.getLabel()));				
+				else if (branch.isIndirect()) {
+					// Branch to every possible destination
+					TACDestination destination = branch.getDestination();
+					for (int i = 0; i < destination.getNumPossibilities(); ++i)
+						block.addBranch(nodeBlocks.get(destination.getPossibility(i).getLabel()));					
+				}
+			}			
+			
+			if( node == block.getLast() )
+				done = true;
+			else
+				node = node.getNext();
+		}
+	}
+
+	private void createBlocks(TACNode first)
+	{		
+		TACNode node = first.getNext();
+		Block block = root;
+		
+		// Loop through circular linked-list
+		while( node != first ) {
+			if( node instanceof TACLabel ) {
+				block = new Block();
+				nodeBlocks.put(node, block);
+			}
+			else if( node instanceof TACReturn )
+				block.flagReturns();
+			else if( node instanceof TACThrow )
+				block.flagUnwinds();
+			
+			block.addNode(node);
+			
+			node = node.getNext();
+		}
+	}
+	
+	public void removeDeadCode()
+	{
+		Set<Block> reachable = new HashSet<Block>();
+		findReachable(root, reachable);
+		
+		Set<Block> unreachable = new HashSet<Block>(nodeBlocks.values());
+		unreachable.removeAll(reachable);
+		
+		for( Block block : unreachable )
+			block.deleteTACNodes();		
+		
+		Set<TACNode> keysToRemove = new HashSet<TACNode>();
+		for( Map.Entry<TACNode, Block> entry : nodeBlocks.entrySet() )
+			if( unreachable.contains(entry.getValue()) )
+				keysToRemove.add(entry.getKey());
+		
+		for(TACNode node : keysToRemove )
+			nodeBlocks.remove(node);		
+		
+		cachedString = null; //reset cachedString
+	}
+	
+	private static void findReachable(Block block, Set<Block> visited)
+	{
+		if( !visited.contains(block) ) {
+			visited.add(block);
+			for( Block branch : block.branches )
+				findReachable(branch, visited);
+		}
+	}
+	
+
 	/** 
 	 * Traverses the graph to determine if the corresponding method returns in
 	 * all cases.
@@ -50,7 +145,7 @@ public class ControlFlowGraph
 		return returns(root, visited);
 	}
 	
-	private boolean returns(Block block, Set<Block> visited)
+	private static boolean returns(Block block, Set<Block> visited)
 	{
 		if (visited.contains(block))
 			return true;
@@ -119,9 +214,10 @@ public class ControlFlowGraph
 		// Indicate whether or not it returns directly
 		if (current.returnsDirectly())
 			output += "(RETURNS)";
+		else if( current.unwinds() )
+			output += "(UNWINDS)";
 			
-		strings.add(new IndexedString(current.getID(), output));
-			
+		strings.add(new IndexedString(current.getID(), output));			
 	}
 	
 	/** Generates a control flow graph for the given method.
@@ -138,6 +234,8 @@ public class ControlFlowGraph
 	 * 						corresponding Blocks. Used to detect loops and
 	 * 						to subsequently branches to the proper Blocks.
 	 */
+	
+	/*
 	private void buildGraph(TACNode first, TACNode node, Block block,
 			Map<TACNode, Block> nodeBlocks)
 	{
@@ -157,6 +255,7 @@ public class ControlFlowGraph
 	
 		// "Add" the current node into the current block
 		nodeBlocks.put(node, block);
+		block.addNode(node);
 		
 		// If this is a return statement, we should flag it as such
 		if (node instanceof TACReturn) {
@@ -194,11 +293,15 @@ public class ControlFlowGraph
 			// with the next node in the TAC sequence
 			buildGraph(first, node.getNext(), block, nodeBlocks);
 		}
-	}
+	}	
+	*/
 	
 	@Override
 	public String toString()
 	{
+		if( cachedString == null )
+			cachedString = generateString();
+		
 		return cachedString;
 	}
 	
@@ -213,6 +316,9 @@ public class ControlFlowGraph
 		private final Set<Block> branches = new HashSet<Block>();
 		private boolean returns = false;
 		private boolean unwinds = false;
+	
+		private TACNode firstNode = null; //first TAC node in this block
+		private TACNode lastNode = null;  //last TAC node in this block
 
 		public Block()
 		{
@@ -220,16 +326,44 @@ public class ControlFlowGraph
 			count++;
 		}
 		
-		public Block(Block parent)
+		public void deleteTACNodes() {
+			if( firstNode != null && lastNode != null ) {				
+				while( firstNode != lastNode ) {
+					TACNode temp = firstNode.getNext();
+					firstNode.remove();
+					firstNode = temp;
+				}
+				//Now firstNode == lastNode, but it still needs to be removed
+				lastNode.remove();
+				firstNode = lastNode = null;				
+			}
+		}
+
+		public TACNode getFirst()
 		{
-			this();
-			
-			parent.addBranch(this);
+			return firstNode;
+		}
+		
+		public TACNode getLast()
+		{
+			return lastNode;			
 		}
 		
 		public void addBranch(Block target)
 		{
 			branches.add(target);
+		}
+		
+		
+		public void addNode(TACNode node)
+		{
+			if( firstNode == null )
+				firstNode = node;
+			
+			if( lastNode != null && lastNode.getNext() != node )
+				throw new IllegalArgumentException("Cannot add TAC nodes out of order");
+			
+			lastNode = node;
 		}
 		
 		/** Indicate that this block returns directly */
