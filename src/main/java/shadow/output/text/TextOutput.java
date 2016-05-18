@@ -13,13 +13,11 @@ import shadow.tac.TACNodeList;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
-import shadow.tac.nodes.TACDestinationPhiRef;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
@@ -198,31 +196,33 @@ public class TextOutput extends AbstractOutput
 		return (String)symbol;
 	}
 
+
 	@Override
 	public void visit(TACLabel node) throws ShadowException
 	{
 		startBlock(node.getRef());
 		writer.writeLeft(symbol(node.getRef()) + ':');
 	}
-
-	@Override
-	public void visit(TACLabelRef node) throws ShadowException
+	
+	private int otherCounter = 0;
+	
+	protected String nextLabel()
 	{
-		endBlock(false);
-		writer.write("// label " + symbol(node, false) + ';');
+		return "%_mabel" + otherCounter++;
 	}
-
-	@Override
-	public void visit(TACPhiRef node) throws ShadowException
-	{
-		writer.write("// " + node.getType() + ' ' + symbol(node, false) + ';');
+	
+	protected String symbol(TACLabelRef label) {
+		String value = label.getName();
+		
+		if( value == null)
+		{
+			value = nextLabel();
+			label.setName(value);
+		}		
+		
+		return value;
 	}
-
-	@Override
-	public void visit(TACDestinationPhiRef node) throws ShadowException
-	{
-		writer.write("// label " + symbol(node, false) + ';');
-	}
+	
 
 	@Override
 	public void visit(TACStore node) throws ShadowException
@@ -249,8 +249,9 @@ public class TextOutput extends AbstractOutput
 			TACLabel label = node.getLabel().getLabel();
 			if (label != null && label.getNext() instanceof TACPhi)
 			{
-				TACPhiRef phi = ((TACPhi)label.getNext()).getRef();
-				writer.write(symbol(phi) + " = " + phi.getValue(blockRef) +
+				TACPhi phi = (TACPhi)label.getNext();
+				TACPhiRef phiRef = phi.getRef();
+				writer.write(symbol(phi) + " = " + phiRef.getValue(blockRef) +
 						';');
 			}
 			if (label == node.getNext())
@@ -286,16 +287,6 @@ public class TextOutput extends AbstractOutput
 		endBlock(true);
 		writer.write(inline.visit(new StringBuilder("throw "),
 				node.getException()).append(';').toString());
-	}
-
-	@Override
-	public void visit(TACBlock node) throws ShadowException
-	{
-		endBlock(false);
-		writer.write("// block " + symbol(node, false) + '(' +
-				symbol(node.getParent()) + ");");
-//		writer.write('{');
-//		writer.indent();
 	}
 
 	@Override

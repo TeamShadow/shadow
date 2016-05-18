@@ -8,24 +8,24 @@ class Method {
     public d(code a) => () {  }   // built-in to void
     public e(float a) => () {  }   // built-in to void
 
-    public f() => (int) {  }   // void to built-in
-    public g() => (code) {  }   // void to built-in
-    public h() => (float) {  }   // void to built-in
+    public f() => (int) { return 5; }   // void to built-in
+    public g() => (code) { return '?'; }   // void to built-in
+    public h() => (float) { return 1.0f; }   // void to built-in
     
-    public i(int a) => (int) {  }   // built-in to built-in
-    public j(float a) => (int) {  }   // built-in to built-in
-    public k(int a) => (float) {  }   // built-in to built-in
+    public i(int a) => (int) { return a; }   // built-in to built-in
+    public j(float a) => (int) { return 5;  }   // built-in to built-in
+    public k(int a) => (float) { return 1.0f; }   // built-in to built-in
     
     public l(int a, int b) => () {  }
-    public m(int a, int b) => (int) {  }
-    public n(int a, int b) => (int, int) {  }
+    public m(int a, int b) => (int) { return 5;  }
+    public n(int a, int b) => (int, int) { return (5, 7); }
     
     // arrays
     public o(int[] a) => () {  }
     public p(int[] a, float[] b) => () {  }
-    public q() => (int[]) { }
-    public r() => (int[], float[]) {  }
-    public s() => (int[], int[]) {  }
+    public q() => (int[]) { return int:create[10]; }
+    public r() => (int[], float[]) { return (int:create[10], float:create[5]);  }
+    public s() => (int[], int[]) { return (int:create[10], int:create[5]); }
 
     // functions
     public t(() => () f) => () {  }
@@ -38,6 +38,11 @@ class Method {
     public aa(int a, (int) => (int) f) => () { }
     public bb((int) => (int) f, int a) => () { }
     public cc(int a, (int) => (int) f, int b) => () { }
+    
+    /*
+    // All the following have method references in return types.
+    // The raw type-checker supports these, but the TAC builder does not.
+    // They're commented out until there is TAC support.
     
     public dd() => (() => ()) { }
     public ee() => (int, () => ()) { }
@@ -76,7 +81,7 @@ class Method {
     public ccc(((int)=>(int)) => () f) => () { }
     public ddd(((int)=>(int)) => ((int)=>(int)) f) => () { }
     public eee(((int)=>(int)) => ((int)=>(int)) f) => ((int)=>(int)) { }
-
+	*/
 }
 
 

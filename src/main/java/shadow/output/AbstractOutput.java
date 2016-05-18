@@ -7,6 +7,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
+import shadow.tac.nodes.TACLabelRef;
 
 public abstract class AbstractOutput extends TACAbstractVisitor
 		implements Output
@@ -58,4 +59,23 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 	public void startMethod(TACMethod method, TACModule module) throws ShadowException { }
 	@Override
 	public void endMethod(TACMethod method, TACModule module) throws ShadowException { }
+	
+	protected String nextLabel()
+	{
+		return "%_label" + labelCounter++;
+	}
+	
+	protected String symbol(TACLabelRef label) {
+		String value = label.getName();
+		
+		if( value == null)
+		{
+			value = nextLabel();
+			label.setName(value);
+		}		
+		
+		return value;
+	}
+	
+	private int labelCounter = 0;	
 }

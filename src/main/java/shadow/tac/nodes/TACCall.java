@@ -73,15 +73,13 @@ public class TACCall extends TACOperand
 	
 	@Override
 	public int getNumOperands() {
-		return 2 + parameters.size();
+		return 1 + parameters.size();
 	}
 	@Override
 	public TACOperand getOperand(int num) {
-		if (num == 0)
-			return blockRef;
-		if (num == 1)
+		if (num == 0)			
 			return methodRef;
-		return parameters.get(num - 2);
+		return parameters.get(num - 1);
 	}
 
 	@Override

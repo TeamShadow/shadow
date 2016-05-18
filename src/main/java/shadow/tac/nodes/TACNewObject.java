@@ -42,8 +42,8 @@ public class TACNewObject extends TACOperand
 			MethodSignature signature = Type.INT.getMatchingMethod("equal", new SequenceType(value));
 			TACOperand test = new TACBinary(this, value, signature, '=', new TACLiteral(this, new ShadowInteger(0)));
 			
-			TACLabelRef throwLabel = new TACLabelRef(this);
-			TACLabelRef doneLabel = new TACLabelRef(this);			
+			TACLabelRef throwLabel = new TACLabelRef();
+			TACLabelRef doneLabel = new TACLabelRef();			
 			new TACBranch(this, test, doneLabel, throwLabel);			
 			
 			throwLabel.new TACLabel(this);					

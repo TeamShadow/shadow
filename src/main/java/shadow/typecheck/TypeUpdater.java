@@ -417,7 +417,7 @@ public class TypeUpdater extends BaseChecker {
 		}	
 		catch( CycleFoundException e ) {
 			Node node = (Node) e.getCycleCause();			
-			addError(node, Error.INVALID_HIERARCHY, "Type " + node.getType() + " contains a circular extends or implements definition", node.getType());
+			addError(node, Error.INVALID_HIERARCHY, "Type " + node.getType() + " contains a circular is definition", node.getType());
 		}
 		
 		return nodeList;
@@ -440,7 +440,10 @@ public class TypeUpdater extends BaseChecker {
 					catch (InstantiationException e) {
 						addError( declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 					}
-				}					
+				}
+				
+				if( parent != null && parent.hasOuter() && (!type.hasOuter() || !type.getOuter().isSubtype(parent.getOuter() ) ) )
+					addError( declarationNode, Error.INVALID_PARENT, "Type " + type + " cannot have type " + parent + " as a parent since they have incompatible outer classes" );				
 			}			
 			
 			/* Update interfaces */
@@ -457,7 +460,7 @@ public class TypeUpdater extends BaseChecker {
 						addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 					}						
 				}					
-			}
+			}			
 		}
 	}
 		

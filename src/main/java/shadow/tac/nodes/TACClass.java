@@ -239,9 +239,9 @@ public class TACClass extends TACOperand
 		
 		TACCall class_ = new TACCall(this, block, findArray, classSet, name, base, dimensions);
 		TACOperand isNull = new TACSame(this, class_, new TACLiteral(this, ShadowValue.NULL));
-		TACLabelRef nullCase = new TACLabelRef(this);
-		TACLabelRef notNullCase = new TACLabelRef(this);
-		TACLabelRef done = new TACLabelRef(this);
+		TACLabelRef nullCase = new TACLabelRef();
+		TACLabelRef notNullCase = new TACLabelRef();
+		TACLabelRef done = new TACLabelRef();
 		new TACBranch(this, isNull, nullCase, notNullCase);
 		nullCase.new TACLabel(this);
 		TACMethodRef addArray = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("addArray", arguments));
@@ -374,9 +374,9 @@ public class TACClass extends TACOperand
 		
 		TACCall class_ = new TACCall(this, block, findGeneric, classSet, name, parameterArray);
 		TACOperand isNull = new TACSame(this, class_, new TACLiteral(this, ShadowValue.NULL));
-		TACLabelRef nullCase = new TACLabelRef(this);
-		TACLabelRef notNullCase = new TACLabelRef(this);
-		TACLabelRef done = new TACLabelRef(this);
+		TACLabelRef nullCase = new TACLabelRef();
+		TACLabelRef notNullCase = new TACLabelRef();
+		TACLabelRef done = new TACLabelRef();
 		new TACBranch(this, isNull, nullCase, notNullCase);
 		nullCase.new TACLabel(this);
 		

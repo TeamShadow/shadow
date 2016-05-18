@@ -28,14 +28,12 @@ public class TACLandingpad extends TACOperand
 	@Override
 	public int getNumOperands()
 	{
-		return 1;
+		return 0;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		if (num == 0)
-			return getBlock();
-		throw new IndexOutOfBoundsException();
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

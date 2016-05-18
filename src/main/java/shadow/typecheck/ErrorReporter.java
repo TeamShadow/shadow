@@ -17,7 +17,7 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
-public abstract class ErrorReporter {
+public class ErrorReporter {
 	protected final ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
 	protected final ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();	
 	
@@ -33,13 +33,21 @@ public abstract class ErrorReporter {
 		warningList.clear();
 	}
 	
+	public List<TypeCheckException> getErrorList() {
+		return errorList;
+	}
+	
+	public List<TypeCheckException> getWarningList() {
+		return warningList;
+	}
+	
 	/**
 	 * Adds a temporary list of errors associated with a particular 
 	 * node to the main list of errors.
 	 * @param node				node related to errors
 	 * @param errors			list of errors
 	 */	
-	protected final void addErrors(Node node, List<TypeCheckException> errors ) {		
+	public final void addErrors(Node node, List<TypeCheckException> errors ) {		
 		if( errors != null )
 			for( TypeCheckException error : errors )
 				addError( node, error.getError(), error.getMessage() );
@@ -52,7 +60,7 @@ public abstract class ErrorReporter {
 	 * @param message			message explaining error
 	 * @param errorTypes		types associated with error
 	 */
-	protected void addError(Node node, Error error, String message, Type... errorTypes) {
+	public void addError(Node node, Error error, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
 			return; // Don't add error if it has an unknown type in it.
 		
@@ -71,7 +79,7 @@ public abstract class ErrorReporter {
 	 * @param warning			kind of warning
 	 * @param message			message explaining warning
 	 */
-	protected void addWarning(Node node, Error warning, String message) {
+	public void addWarning(Node node, Error warning, String message) {
 		if( node != null ) {		
 			message = makeMessage(warning, message, node.getFile(), node.getLineStart(),
 					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );

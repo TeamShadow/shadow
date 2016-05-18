@@ -71,6 +71,7 @@ public class TypeCheckException extends Exception {
 		NO_ACTION("No action", "Statement does not perform an action"),
 		NOT_OBJECT("Not object", "Object reference must be used"),
 		NOT_TYPE("Not type", "Type name must be used"),
+		NOT_ALL_PATHS_RETURN("Not all paths return", "Every path in a value-returning method must return"),
 		UNDEFINED_PACKAGE("Undefined package", "Package not defined in this context"),
 		UNDEFINED_SYMBOL("Undefined symbol", "Symbol has not been defined in this context"),
 		UNDEFINED_TYPE("Undefined type", "Type not defined in this context"),

@@ -1,0 +1,12 @@
+class Outer
+{
+	public method() => (int)
+	{	
+		return 2;
+	}
+	
+	public class Inner1
+	{
+	
+	}
+}

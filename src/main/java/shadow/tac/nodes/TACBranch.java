@@ -1,7 +1,6 @@
 package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
@@ -9,92 +8,103 @@ import shadow.typecheck.type.Type;
 public class TACBranch extends TACSimpleNode
 {
 	private TACLabelRef trueLabel, falseLabel;
+	private TACDestination destination;
 	private TACOperand operand;
+	private Kind kind;
+	
+	public enum Kind { DIRECT, INDIRECT, CONDITIONAL };
 
-	public TACBranch(TACNode node, TACDestination dest)
+	public TACBranch(TACNode node, TACOperand op, TACDestination dest)
 	{
-		this(node, (TACOperand)dest, null, null);
+		super(node);
+		kind = Kind.INDIRECT;
+		operand = op;
+		destination = dest;
 	}
 	public TACBranch(TACNode node, TACLabelRef labelRef)
 	{
-		this(node, null, labelRef, labelRef);
+		super(node);
+		kind = Kind.DIRECT;
+		trueLabel = falseLabel = labelRef;
+		labelRef.addIncoming(this);
 	}
 	public TACBranch(TACNode node, TACOperand cond, TACLabelRef trueRef,
 			TACLabelRef falseRef)
 	{
 		super(node);
+		kind = Kind.CONDITIONAL;
 		trueLabel = trueRef;
 		falseLabel = falseRef;
-		if (isConditional())
-			operand = check(cond, new SimpleModifiedType(Type.BOOLEAN));
-		else if (isDirect())
-			if (cond == null)
-				operand = cond;
-			else
-				throw new IllegalArgumentException("not null");
-		else if (isIndirect())
-			if (cond != null && cond instanceof TACDestination)
-				operand = cond;
-			else
-				throw new IllegalArgumentException("null");
+		operand = check(cond, new SimpleModifiedType(Type.BOOLEAN));
+		trueRef.addIncoming(this);
+		falseRef.addIncoming(this);		
 	}
 
 	public boolean isConditional()
 	{
-		return trueLabel != falseLabel;
+		return kind == Kind.CONDITIONAL;
 	}
 	public boolean isDirect()
 	{
-		return trueLabel == falseLabel && trueLabel != null;
+		return kind == Kind.DIRECT;
 	}
 	public boolean isIndirect()
 	{
-		return trueLabel == null && falseLabel == null;
+		return kind == Kind.INDIRECT;
 	}
 	public TACOperand getCondition()
 	{
+		if (!isConditional())
+			throw new IllegalStateException();
 		return operand;
 	}
-	public TACOperand getOperand()
+	public TACOperand getOperand()	
 	{
+		if (!isIndirect())
+			throw new IllegalStateException();
 		return operand;
 	}
 	public TACDestination getDestination()
 	{
-		return (TACDestination)operand;
+		if (!isIndirect())
+			throw new IllegalStateException();
+		return destination;
 	}
 	public TACLabelRef getLabel()
 	{
-		if (isConditional())
+		if (!isDirect())
 			throw new IllegalStateException();
 		return trueLabel;
 	}
 	public TACLabelRef getTrueLabel()
 	{
+		if (!isConditional())
+			throw new IllegalStateException();
 		return trueLabel;
 	}
 	public TACLabelRef getFalseLabel()
 	{
+		if (!isConditional())
+			throw new IllegalStateException();
 		return falseLabel;
 	}
 
 	@Override
 	public int getNumOperands()
 	{
-		return isConditional() ? 3 : 1;
+		return isDirect() ? 0 : 1;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		if (num == 0)
-			return isDirect() ? getLabel() : getCondition();
-		if (!isConditional())
-			throw new IndexOutOfBoundsException("num");
-		if (num == 1)
-			return getTrueLabel();
-		if (num == 2)
-			return getFalseLabel();
-		throw new IndexOutOfBoundsException("num");
+		if( num == 0 )
+		{
+			if( isIndirect() )
+				return getOperand();
+			else if( isConditional() )
+				return getCondition();
+		}
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

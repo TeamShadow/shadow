@@ -96,7 +96,7 @@ import shadow.typecheck.type.TypeParameter;
 
 public class LLVMOutput extends AbstractOutput {
 	private Process process = null;
-	private int tempCounter = 0, labelCounter = 0;
+	private int tempCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();	
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();	
 	private TACMethod method;
@@ -144,17 +144,6 @@ public class LLVMOutput extends AbstractOutput {
 	private String nextTemp(TACOperand node)
 	{
 		String name = nextTemp();
-		node.setData(name);
-		return name;
-	}
-
-	private String nextLabel()
-	{
-		return "%_label" + labelCounter++;
-	}
-	private String nextLabel(TACOperand node)
-	{
-		String name = nextLabel();
 		node.setData(name);
 		return name;
 	}
@@ -857,10 +846,12 @@ public class LLVMOutput extends AbstractOutput {
 				(node.getIndex())); 
 	}
 
+	/*
 	@Override
 	public void visit(TACLabelRef node) throws ShadowException {
 		nextLabel(node);
 	}
+	*/
 	
 	@Override
 	public void visit(TACLongToPointer node) throws ShadowException {
@@ -1527,7 +1518,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACPhi node) throws ShadowException {
 		TACPhiRef phi = node.getRef();
-		StringBuilder sb = new StringBuilder(nextTemp(phi)).
+		StringBuilder sb = new StringBuilder(nextTemp(node)).
 				append(" = phi i8*");
 		for (int i = 0; i < phi.getSize(); i++)
 			sb.append(" [ blockaddress(").append(name(method)).append(", ").
@@ -1579,8 +1570,7 @@ public class LLVMOutput extends AbstractOutput {
 			sb.insert(0, nextTemp(node) + " = ");
 		writer.write(sb.append(')').toString());
 		if (node.getBlock().hasLandingpad()) {
-			TACLabelRef label = new TACLabelRef();
-			visit(label);
+			TACLabelRef label = new TACLabelRef();			
 			writer.indent(2);
 			writer.write(" to label " + symbol(label) + " unwind label " +
 					symbol(node.getBlock().getLandingpad()));
@@ -1608,8 +1598,7 @@ public class LLVMOutput extends AbstractOutput {
 				"invoke" : "call") + " void @__shadow_throw(" +
 				typeSymbol(node.getException()) + ") noreturn");
 		if (node.getBlock().hasLandingpad()) {
-			TACLabelRef label = new TACLabelRef();
-			visit(label);
+			TACLabelRef label = new TACLabelRef();			
 			writer.indent(2);
 			writer.write(" to label " + symbol(label) + " unwind label " +
 					symbol(node.getBlock().getLandingpad()));
@@ -1661,8 +1650,7 @@ public class LLVMOutput extends AbstractOutput {
 					classOf(catchNode.getType()) + " to i8*)) nounwind");
 			writer.write(nextTemp() + " = icmp ne i32 " + type + ", " +
 					temp(1));
-			label = new TACLabelRef();
-			visit(label);
+			label = new TACLabelRef();			
 			writer.write("br i1 " + temp(0) + ", label " + symbol(label) +
 					", label " + symbol(node.getBlock().getCatch(i)));
 			visit(label.new TACLabel());
@@ -1930,11 +1918,8 @@ public class LLVMOutput extends AbstractOutput {
 		}		
 	}
 
-	private static String name(TACLabel label) {
-		Object name = label.getRef().getData();
-		if (name instanceof String)
-			return ((String)name).substring(1);
-		throw new NullPointerException();
+	private String name(TACLabel label) {
+		return symbol(label.getRef()).substring(1);
 	}
 	
 	private static String name(TACVariable var) {

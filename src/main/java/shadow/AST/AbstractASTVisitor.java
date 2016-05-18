@@ -787,7 +787,7 @@ public class AbstractASTVisitor extends ErrorReporter implements ShadowParserVis
 	 * @param errorTypes		types associated with error
 	 */
 	@Override
-	protected final void addError(Node node, Error error, String message, Type... errorTypes) {
+	public final void addError(Node node, Error error, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
 			return; // Don't add error if it has an unknown type in it.
 		
@@ -819,7 +819,7 @@ public class AbstractASTVisitor extends ErrorReporter implements ShadowParserVis
 	 * @param message			message explaining warning
 	 */
 	@Override
-	protected final void addWarning(Node node, Error warning, String message) {
+	public final void addWarning(Node node, Error warning, String message) {
 		if( node == null )
 			addWarning(warning, message);
 		else {		

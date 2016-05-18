@@ -1,0 +1,7 @@
+class Test
+{
+	public class Inner2 is Outer:Inner1
+	{
+	
+	}	
+}

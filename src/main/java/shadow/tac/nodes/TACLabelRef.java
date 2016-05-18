@@ -1,40 +1,54 @@
 package shadow.tac.nodes;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 
-public class TACLabelRef extends TACOperand implements TACDestination
+public class TACLabelRef
 {
 	private TACLabel label;
+	private String name;
+	private Set<TACBranch> incoming = new HashSet<TACBranch>();
+	
 	public TACLabelRef()
 	{
-		this(null);
-	}
-	public TACLabelRef(TACNode node)
-	{
-		super(node);
 		label = null;
+		name = null;
+	}	
+	
+	public String getName()
+	{
+		return name;
 	}
 
-	@Override
-	public int getNumPossibilities()
+	public void addIncoming(TACBranch branch)
 	{
-		return 1;
+		incoming.add(branch);
 	}
-	@Override
-	public TACLabelRef getPossibility(int num)
+	
+	public void removeIncoming(TACBranch branch)
 	{
-		if (num == 0)
-			return this;
-		throw new IndexOutOfBoundsException("num");
+		incoming.remove(branch);
 	}
+	
+	public boolean hasIncoming(TACBranch branch)
+	{
+		return incoming.contains(branch);
+	}
+	
+	public int incomingCount()
+	{
+		return incoming.size();
+	}	
 
 	public TACLabel getLabel()
 	{
 		return label;
 	}
-	public class TACLabel extends TACSimpleNode
+	public class TACLabel extends TACOperand
 	{
 		public TACLabel()
 		{
@@ -62,7 +76,15 @@ public class TACLabelRef extends TACOperand implements TACDestination
 		@Override
 		public TACOperand getOperand(int num)
 		{
-			throw new IndexOutOfBoundsException("num");
+			throw new IndexOutOfBoundsException("" + num);
+		}
+		
+		@Override
+		public void setData(Object data) {
+			super.setData(data);
+			//clear out label ref during cleanup 
+			if( data == null )
+				name = null;			
 		}
 
 		@Override
@@ -76,33 +98,22 @@ public class TACLabelRef extends TACOperand implements TACDestination
 		{
 			return TACLabelRef.this.toString();
 		}
-	}
-
-	@Override
-	public Type getType()
-	{
-		return null;
-	}
-	@Override
-	public int getNumOperands()
-	{
-		return 0;
-	}
-	@Override
-	public TACOperand getOperand(int num)
-	{
-		throw new IndexOutOfBoundsException("num");
-	}
-
-	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
-	{
-		visitor.visit(this);
+		@Override
+		public Type getType() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 	}
 
 	@Override
 	public String toString()
 	{
-		return getData().toString();
+		if( name == null )
+			return "label unknown";
+		return name;
+	}
+
+	public void setName(String value) {
+		name = value;
 	}
 }

@@ -25,15 +25,13 @@ import shadow.tac.nodes.TACReturn;
 public class ControlFlowGraph
 {
 	private final Block root;
+	/** Provides a helpful way of IDing Blocks. Useful for debugging */
+	private int count = 0;
 	private final String cachedString; // Saves toString() from re-walking the graph
 	
 	public ControlFlowGraph(TACMethod method)
 	{
 		Map<TACNode, Block> nodeBlocks = new HashMap<TACNode, Block>();
-		
-		// Reset block numbers (for ID purposes) and build a new graph
-		
-		Block.resetCount();
 		root = new Block();
 				
 		buildGraph(method, method.getNext(), root, nodeBlocks);
@@ -68,8 +66,8 @@ public class ControlFlowGraph
 			
 			return true;
 		} else {
-			// If we don't branch, this block should return directly
-			return block.returnsDirectly();
+			// If we don't branch, this block should return directly or unwind by throwing an uncaught exception
+			return block.returnsDirectly() || block.unwinds();
 		}
 	}
 	
@@ -179,7 +177,7 @@ public class ControlFlowGraph
 						new Block(block), nodeBlocks);
 			} else if (branch.isDirect()) {
 				// Same as conditional, except only one branch
-				buildGraph(first, branch.getTrueLabel().getLabel(),
+				buildGraph(first, branch.getLabel().getLabel(),
 						new Block(block), nodeBlocks);
 			} else if (branch.isIndirect()) {
 				// Branch to every possible destination
@@ -208,14 +206,13 @@ public class ControlFlowGraph
 	 * Represents a contiguous sequence of TAC instructions, unbroken by branch
 	 * statements.
 	 */
-	private static class Block implements Iterable<Block>
-	{
-		/** Provides a helpful way of IDing Blocks. Useful for debugging */
-		private static int count = 0;
+	private class Block implements Iterable<Block>
+	{		
 		private final int uniqueID;
 		
 		private final Set<Block> branches = new HashSet<Block>();
 		private boolean returns = false;
+		private boolean unwinds = false;
 
 		public Block()
 		{
@@ -241,10 +238,23 @@ public class ControlFlowGraph
 			returns = true;
 		}
 		
+		/** Indicate that this block unwinds the stack by throwing an uncaught exception */
+		public void flagUnwinds()
+		{
+			unwinds = true;
+		}
+		
 		public boolean returnsDirectly()
 		{
 			return returns;
 		}
+		
+		public boolean unwinds()
+		{
+			return unwinds;
+		}
+
+		
 		
 		@Override
 		public Iterator<Block> iterator()
@@ -260,11 +270,6 @@ public class ControlFlowGraph
 		public int getID()
 		{
 			return uniqueID;
-		}
-		
-		public static void resetCount()
-		{
-			count = 0;
 		}
 	}
 

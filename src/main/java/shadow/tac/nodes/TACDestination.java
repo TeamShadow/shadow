@@ -2,6 +2,10 @@ package shadow.tac.nodes;
 
 public interface TACDestination
 {
-	public abstract int getNumPossibilities();
-	public abstract TACLabelRef getPossibility(int num);
+	public int getNumPossibilities();
+	public TACLabelRef getPossibility(int num);
+	public void addIncoming(TACBranch branch);
+	public void removeIncoming(TACBranch branch);	
+	public boolean hasIncoming(TACBranch branch);
+	public int incomingCount();	
 }

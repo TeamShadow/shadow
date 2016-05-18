@@ -154,11 +154,15 @@ and CanHash
 		try
 		{
 			return delete(index, index + 1);
+			
+			//goto end
 		}
 		catch(IllegalArgumentException e)
 		{
 			throw IndexOutOfBoundsException:create(index);
 		}
+		
+		//label end
 	}
 	
 	/**

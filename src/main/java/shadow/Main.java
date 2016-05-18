@@ -26,9 +26,14 @@ import shadow.tac.TACBuilder;
 import shadow.tac.TACCastConverter;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
+import shadow.tac.analysis.ControlFlowGraph;
+import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.TypeChecker;
 import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -276,92 +281,113 @@ public class Main {
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = stripExt(mainFile.toString()); 
 
-		List<Node> nodes;
-
-		try
-		{
-			nodes = TypeChecker.typeCheck(mainFile.toFile(), currentJob.isForceRecompile());
+		try {
+			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation
+			for( Node node : TypeChecker.typeCheck(mainFile.toFile(), currentJob.isForceRecompile()) ) {				
+				File file = node.getFile();
+				
+				if( currentJob.isCheckOnly() ) {				
+					//performs checks to make sure all paths return, there is no dead code, etc.
+					//no need to check interfaces or .meta files (no code in either case)
+					if( !(node.getType() instanceof InterfaceType) && !file.getPath().endsWith(".meta")  )
+						checkTAC( new TACBuilder().build(node) );
+				}
+				else {
+					
+					String name = stripExt(file.getName());
+					String path = stripExt(file.getCanonicalPath());
+					File llvmFile = new File(path + ".ll");
+					
+					Type type = node.getType();
+					
+					//set data for main class
+					if( path.equals(mainFileName) ) {							
+						mainClass = type.toString(Type.MANGLE);
+						SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
+						if( type.getMatchingMethod("main", arguments) != null )
+							mainArguments = true;
+						else if( type.getMatchingMethod("main", new SequenceType()) != null )
+							mainArguments = false;
+						else
+							throw new ShadowException("File " + file.getPath() + " does not contain an appropriate main() method");							
+					}
+				
+					//if the LLVM didn't exist, the full .shadow file would have been used				
+					if( file.getPath().endsWith(".meta") ) {
+						logger.info("Using pre-existing LLVM code for " + name);
+						addToLink(node.getType(), file, linkCommand);
+						LLVMOutput.readGenericAndArrayClasses( llvmFile, generics, arrays );
+					}
+					else {
+						logger.info("Generating LLVM code for " + name);
+						//gets top level class
+						TACModule module = optimizeTAC( new TACBuilder().build(node) );	
+						logger.debug(module.toString());
+	
+						// Write to file
+						String className = typeToFileName(type);
+						llvmFile = new File(file.getParentFile(), className + ".ll");
+						File nativeFile = new File(file.getParentFile(), className + ".native.ll");
+						LLVMOutput output = new LLVMOutput(llvmFile);
+						try {					
+							output.build(module);
+						}
+						catch(ShadowException e) {
+							logger.error(file + " FAILED TO COMPILE");
+							output.close();
+							if( llvmFile.exists() )
+								llvmFile.delete();
+							throw new CompileException(e.getMessage());
+						}				
+	
+						if( llvmFile.exists() )
+							linkCommand.add(llvmFile.getCanonicalPath());
+						else
+							throw new ShadowException("Failed to generate " + llvmFile.getPath());
+	
+						if( nativeFile.exists() )
+							linkCommand.add(nativeFile.getCanonicalPath());
+						
+						
+						//it's important to add generics after generating the LLVM, since more are made
+						generics.addAll(output.getGenericClasses());						
+						arrays.addAll(output.getArrayClasses());
+					}
+				}
+			}
 		}
 		catch( TypeCheckException e ) {
 			logger.error(mainFile + " FAILED TO TYPE CHECK");
 			throw e;
-		}
-		
-		if( !currentJob.isCheckOnly() ) {		
-			for( Node node : nodes ) {
-				File file = node.getFile();
-				String name = stripExt(file.getName());
-				String path = stripExt(file.getCanonicalPath());
-				File llvmFile = new File(path + ".ll");
-				
-				Type type = node.getType();
-				
-				//set data for main class
-				if( path.equals(mainFileName) ) {							
-					mainClass = type.toString(Type.MANGLE);
-					SequenceType arguments = new SequenceType(new ArrayType(Type.STRING));							
-					if( type.getMatchingMethod("main", arguments) != null )
-						mainArguments = true;
-					else if( type.getMatchingMethod("main", new SequenceType()) != null )
-						mainArguments = false;
-					else
-						throw new ShadowException("File " + file.getPath() + " does not contain an appropriate main() method");							
-				}
-			
-				//if the LLVM didn't exist, the full .shadow file would have been used				
-				if( file.getPath().endsWith(".meta") ) {
-					logger.info("Using pre-existing LLVM code for " + name);
-					addToLink(node.getType(), file, linkCommand);
-					LLVMOutput.readGenericAndArrayClasses( llvmFile, generics, arrays );
-				}
-				else {
-					logger.info("Generating LLVM code for " + name);
-					//gets top level class
-					TACModule module = new TACBuilder().build(node);
-					
-					module = optimizeTAC( module );
-					
-					logger.debug(module.toString());
-
-					// Write to file
-					String className = typeToFileName(type);
-					llvmFile = new File(file.getParentFile(), className + ".ll");
-					File nativeFile = new File(file.getParentFile(), className + ".native.ll");
-					LLVMOutput output = new LLVMOutput(llvmFile);
-					try {					
-						output.build(module);
-					}
-					catch(ShadowException e) {
-						logger.error(file + " FAILED TO COMPILE");
-						output.close();
-						if( llvmFile.exists() )
-							llvmFile.delete();
-						throw new CompileException(e.getMessage());
-					}				
-
-					if( llvmFile.exists() )
-						linkCommand.add(llvmFile.getCanonicalPath());
-					else
-						throw new ShadowException("Failed to generate " + llvmFile.getPath());
-
-					if( nativeFile.exists() )
-						linkCommand.add(nativeFile.getCanonicalPath());
-					
-					
-					//it's important to add generics after generating the LLVM, since more are made
-					generics.addAll(output.getGenericClasses());						
-					arrays.addAll(output.getArrayClasses());
-				}
-
-			}
-		}
+		}	
 	}
+	
+	
+	private static void checkTAC(TACModule module) throws TypeCheckException {
+		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+		for( TACMethod method : module.getMethods() ) {
+			MethodSignature signature = method.getMethod();
+			//don't bother with methods with no returns
+			//don't bother with unimplemented methods (abstract or interface methods)
+			if( !signature.isVoid() && signature.getNode().hasBlock() ) {				
+				ControlFlowGraph graph = new ControlFlowGraph(method);
+				if( !graph.returns() )
+					reporter.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.toString() + " may not return on all paths");
+			}
+		}		
+		reporter.printWarnings();
+		reporter.printErrors();		
+		//if( reporter.getErrorList().size() > 0 )
+			//throw reporter.getErrorList().get(0);	
+	}	
+	
 	
 	// This method contains all the Shadow-specific TAC optimization,
 	// including constant propagation, control flow analysis,
 	// data flow analysis, and cast optimization
-	private static TACModule optimizeTAC(TACModule module) throws ShadowException {
-
+	private static TACModule optimizeTAC(TACModule module) throws ShadowException, TypeCheckException {		
+		checkTAC( module );
+		
 		//Convert high-level casts to low-level casts		
 		TACCastConverter converter = new TACCastConverter();
 		for (TACMethod method : module.getMethods())

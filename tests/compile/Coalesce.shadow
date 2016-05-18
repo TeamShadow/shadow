@@ -20,5 +20,7 @@ class Coalesce {
 		//Object e = o1;		
 		//nullable Foo foo = Foo:create();
 		//Object f = (foo ?? "pigs");
+		
+		return 5;
 	}
 }

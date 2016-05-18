@@ -3,28 +3,29 @@ package shadow.tac.nodes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 
-public class TACPhiRef extends TACOperand
+public class TACPhiRef implements TACDestination
 {
 	private TACPhi phi;
 	private List<TACLabelRef> labels;
-	private Map<TACLabelRef, TACOperand> values;
+	private Map<TACLabelRef, TACLabelRef> values;
 
-	public TACPhiRef(TACNode node)
+	public TACPhiRef()
 	{
-		super(node);
 		phi = null;
 		labels = new ArrayList<TACLabelRef>();
-		values = new HashMap<TACLabelRef, TACOperand>();
+		values = new HashMap<TACLabelRef, TACLabelRef>();
 	}
 
-	public void addEdge(TACOperand value, TACLabelRef label)
+	public void addEdge(TACLabelRef value, TACLabelRef label)
 	{
 		if (value == null || label == null)
 			throw new IllegalArgumentException("null");
@@ -35,7 +36,7 @@ public class TACPhiRef extends TACOperand
 	{
 		return labels.size();
 	}
-	public TACOperand getValue(TACLabelRef label)
+	public TACLabelRef getValue(TACLabelRef label)
 	{
 		return values.get(label);
 	}
@@ -43,7 +44,7 @@ public class TACPhiRef extends TACOperand
 	{
 		return labels.get(num);
 	}
-	public TACOperand getValue(int num)
+	public TACLabelRef getValue(int num)
 	{
 		return getValue(getLabel(num));
 	}
@@ -51,7 +52,7 @@ public class TACPhiRef extends TACOperand
 	{
 		return labels;
 	}
-	public Collection<TACOperand> getValues()
+	public Collection<TACLabelRef> getValues()
 	{
 		return values.values();
 	}
@@ -60,7 +61,7 @@ public class TACPhiRef extends TACOperand
 	{
 		return phi;
 	}
-	public class TACPhi extends TACSimpleNode
+	public class TACPhi extends TACOperand
 	{
 		public TACPhi()
 		{
@@ -92,31 +93,43 @@ public class TACPhiRef extends TACOperand
 		{
 			visitor.visit(this);
 		}
+		@Override
+		public Type getType() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 	}
 
-	@Override
-	public Type getType()
-	{
-		return null;
-	}
-	@Override
-	public int getNumOperands()
-	{
-		return getSize() * 2;
-	}
-	@Override
-	public TACOperand getOperand(int num)
-	{
-		if (num < getSize())
-			return getValue(num);
-		if ((num -= getSize()) < getSize())
-			return getLabel(num);
-		throw new IndexOutOfBoundsException("num");
-	}
+	private Set<TACBranch> incoming = new HashSet<TACBranch>();
 
 	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
+	public int getNumPossibilities()
 	{
-		visitor.visit(this);
+		return getSize();
+	}
+	@Override
+	public TACLabelRef getPossibility(int num)
+	{
+		return (TACLabelRef)getValue(num);
+	}
+
+	public void addIncoming(TACBranch branch)
+	{
+		incoming.add(branch);
+	}
+	
+	public void removeIncoming(TACBranch branch)
+	{
+		incoming.remove(branch);
+	}
+	
+	public boolean hasIncoming(TACBranch branch)
+	{
+		return incoming.contains(branch);
+	}
+	
+	public int incomingCount()
+	{
+		return incoming.size();
 	}
 }

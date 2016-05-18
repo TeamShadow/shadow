@@ -54,7 +54,7 @@ public class TACArrayRef extends TACReference
 		
 		if( check )
 		{	
-			TACLabelRef throwLabel = new TACLabelRef(this);
+			TACLabelRef throwLabel = new TACLabelRef();
 			
 			for( int i = 0; i < ops.size(); i++ )
 			{				
@@ -67,7 +67,7 @@ public class TACArrayRef extends TACReference
 				TACOperand unsignedBound = new TACCast(this, new SimpleModifiedType(Type.UINT), bound); 
 				TACOperand condition = new TACBinary(this, unsignedLength, Type.UINT.getMatchingMethod("compare", new SequenceType(Type.UINT)), '<', unsignedBound, true);
 				
-				TACLabelRef computeOffset = new TACLabelRef(this);
+				TACLabelRef computeOffset = new TACLabelRef();
 				new TACBranch(this, condition, computeOffset, throwLabel);
 				computeOffset.new TACLabel(this);				
 				
@@ -80,7 +80,7 @@ public class TACArrayRef extends TACReference
 					total = length;					
 			}
 			
-			TACLabelRef done = new TACLabelRef(this);			
+			TACLabelRef done = new TACLabelRef();			
 			new TACBranch(this, done);
 			
 			throwLabel.new TACLabel(this);
