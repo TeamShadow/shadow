@@ -3,12 +3,14 @@ class Assertion
     public blah() => () 
     {
     	int x = 5;
+    	boolean value1 = true;
+    	boolean value2 = false;
     
-    	assert false;
-    	assert true;
+    	assert value2;
+    	assert value1;
     	
-    	assert ( x == 4 );
-    	assert true , "Sandwich";
+	   	assert ( x == 4 );
+    	assert value1, "Sandwich";
     	//assert true , blah(); //uncomment to see error
     	//assert true , Assertion;//uncomment to see error      
     }

@@ -1,10 +1,5 @@
 package shadow.typecheck;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,14 +16,13 @@ public class ErrorReporter {
 	protected final ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
 	protected final ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();	
 	
-	private final Logger LOGGER;	
-	protected static final String EOL = System.getProperty("line.separator", "\n");
+	private final Logger LOGGER;
 	
 	public ErrorReporter(Logger logger) {
 		LOGGER = logger;
 	}	
 	
-	public void clear() {
+	public void clearErrors() {
 		errorList.clear();
 		warningList.clear();
 	}
@@ -64,11 +58,9 @@ public class ErrorReporter {
 		if( containsUnknown(errorTypes) )
 			return; // Don't add error if it has an unknown type in it.
 		
-		if( node != null ) {			
-			message = makeMessage(error, message, node.getFile(), node.getLineStart(),
-					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-			errorList.add(new TypeCheckException(error, message));
-		}
+		if( node != null ) 
+			errorList.add(new TypeCheckException(error, message, node.getFile(), node.getLineStart(),
+					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));	
 	}
 	
 
@@ -80,75 +72,9 @@ public class ErrorReporter {
 	 * @param message			message explaining warning
 	 */
 	public void addWarning(Node node, Error warning, String message) {
-		if( node != null ) {		
-			message = makeMessage(warning, message, node.getFile(), node.getLineStart(),
-					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-			warningList.add(new TypeCheckException(warning, message));
-		}
-	}		
-	
-	/**
-	 * Creates a formatted message for an error or warning, including file name and
-	 * line and column numbers and possibly text from the file itself where the error is.
-	 * File, line, and column values may be special defaults which will cause
-	 * them to be ignored in the return message.
-	 * @param kind				kind or error or warning		
-	 * @param message			message explaining the error or warning
-	 * @param file				file where problem is occurring
-	 * @param lineStart			starting line of problem
-	 * @param lineEnd			ending line of problem
-	 * @param columnStart		starting column of problem
-	 * @param columnEnd			ending column of problem
-	 * @return					formatted message
-	 */
-	public static String makeMessage( Error kind, String message, File file, int lineStart,
-			int lineEnd, int columnStart, int columnEnd ) {
-		StringBuilder error = new StringBuilder();
-		
-		if( file != null )
-			error.append("(" + file.getName() + ")");
-		
-		if( lineStart != -1 && columnStart != -1 )
-			error.append("[" + lineStart + ":" + columnStart + "] ");
-		else
-			error.append(" ");
-		
-		if( kind != null )
-			error.append(kind.getName() + ": ");		
-		
-		error.append(message);
-		
-		/* If file is available, find problematic text and include it in the message. */	
-		if( file != null && lineStart >= 0 && lineEnd >= lineStart &&
-				columnStart >= 0 && columnEnd >= 0 ) {
-			BufferedReader reader = null;
-			try {
-				reader = new BufferedReader(new FileReader(file));
-				String line = "";			
-				for( int i = 1; i <= lineStart; ++i )
-					line = reader.readLine();
-				error.append(EOL);
-				error.append(line);
-				if( lineStart == lineEnd ) {
-					error.append(EOL);
-					for( int i = 1; i <= columnEnd; ++i )
-						if( i >= columnStart )
-							error.append('^');
-						else
-							error.append(' ');
-				}
-			} 
-			// Do nothing, can't add additional file data
-			catch (FileNotFoundException e) {}
-			catch (IOException e) {}
-			finally {
-			  if( reader != null )
-				try { reader.close(); }
-			  	catch (IOException e) {}
-		  }
-		}
-		
-		return error.toString();
+		if( node != null )
+			warningList.add(new TypeCheckException(warning, message, node.getFile(), node.getLineStart(),
+					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));	
 	}
 	
 	/**
@@ -224,6 +150,36 @@ public class ErrorReporter {
 			return; 		
 		if( errors != null )
 			errors.add( new TypeCheckException( type, reason ) );		
+	}
+
+	public void addAll(ErrorReporter other)
+	{
+		errorList.addAll(other.errorList);
+		warningList.addAll(other.warningList);
 	}	
+	
+	public void removeRedundantErrors()
+	{		
+		removeRedundantErrors(errorList);
+		removeRedundantErrors(warningList);		
+	}	
+	
+	private static void removeRedundantErrors(List<TypeCheckException> list)
+	{
+		for( int i = 0; i < list.size();  ) {
+			boolean redundant = false;
+			TypeCheckException item = list.get(i);
+			for( int j = 0; j < list.size() && !redundant; ++j ) {
+				TypeCheckException other = list.get(j);
+				if( i != j && item.getError() == other.getError() && item.isInside(other) )
+					redundant = true;
+			}
+			
+			if( redundant )
+				list.remove(i);
+			else
+				++i;
+		}
+	}
 
 }

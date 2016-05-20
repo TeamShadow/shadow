@@ -98,7 +98,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * when overriding. 
 	 */
 	public void clear() {		
-		super.clear();
+		clearErrors();
 		currentPackage = null;
 		currentMethod.clear();
 		currentType = null;

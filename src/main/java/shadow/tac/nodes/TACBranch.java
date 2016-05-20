@@ -8,13 +8,13 @@ import shadow.typecheck.type.Type;
 public class TACBranch extends TACSimpleNode
 {
 	private TACLabelRef trueLabel, falseLabel;
-	private TACDestination destination;
+	private TACPhiRef destination;
 	private TACOperand operand;
 	private Kind kind;
 	
 	public enum Kind { DIRECT, INDIRECT, CONDITIONAL };
 
-	public TACBranch(TACNode node, TACOperand op, TACDestination dest)
+	public TACBranch(TACNode node, TACOperand op, TACPhiRef dest)
 	{
 		super(node);
 		kind = Kind.INDIRECT;
@@ -25,8 +25,7 @@ public class TACBranch extends TACSimpleNode
 	{
 		super(node);
 		kind = Kind.DIRECT;
-		trueLabel = falseLabel = labelRef;
-		labelRef.addIncoming(this);
+		trueLabel = falseLabel = labelRef;		
 	}
 	public TACBranch(TACNode node, TACOperand cond, TACLabelRef trueRef,
 			TACLabelRef falseRef)
@@ -35,9 +34,15 @@ public class TACBranch extends TACSimpleNode
 		kind = Kind.CONDITIONAL;
 		trueLabel = trueRef;
 		falseLabel = falseRef;
-		operand = check(cond, new SimpleModifiedType(Type.BOOLEAN));
-		trueRef.addIncoming(this);
-		falseRef.addIncoming(this);		
+		operand = check(cond, new SimpleModifiedType(Type.BOOLEAN));	
+	}
+	
+	public void convertToDirect( TACLabelRef labelRef )
+	{
+		kind = Kind.DIRECT;
+		destination = null;
+		trueLabel = falseLabel = labelRef;
+		
 	}
 
 	public boolean isConditional()
@@ -64,7 +69,7 @@ public class TACBranch extends TACSimpleNode
 			throw new IllegalStateException();
 		return operand;
 	}
-	public TACDestination getDestination()
+	public TACPhiRef getDestination()
 	{
 		if (!isIndirect())
 			throw new IllegalStateException();

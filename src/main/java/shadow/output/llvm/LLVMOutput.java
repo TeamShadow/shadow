@@ -48,7 +48,6 @@ import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACConversion;
 import shadow.tac.nodes.TACCopyMemory;
-import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACGlobal;
@@ -80,7 +79,7 @@ import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACVariableRef;
-import shadow.typecheck.BaseChecker;
+import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
@@ -333,7 +332,7 @@ public class LLVMOutput extends AbstractOutput {
 				Object result = constant.getValue().getData();
 				if (!(result instanceof ShadowValue))
 					throw new ShadowException(
-							BaseChecker.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
+							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
 				
 				String fullName = constant.getPrefixType().toString() + ":" + name; 
 				constants.put(fullName, (ShadowValue)result);				
@@ -342,7 +341,7 @@ public class LLVMOutput extends AbstractOutput {
 					typeLiteral((ShadowValue)result));
 			}
 			catch(ShadowException e) {
-				String message = BaseChecker.makeMessage(null, "Could not initialize constant " + name + ": " + e.getMessage(), node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
+				String message = TypeCheckException.makeMessage(null, "Could not initialize constant " + name + ": " + e.getMessage(), node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
 				throw new ShadowException(message);
 			}
 			
@@ -1538,9 +1537,9 @@ public class LLVMOutput extends AbstractOutput {
 		else if (node.isIndirect()) {
 			StringBuilder sb = new StringBuilder("indirectbr i8* ").
 					append(symbol(node.getOperand())).append(", [ ");
-			TACDestination dest = node.getDestination();
-			for (int i = 0; i < dest.getNumPossibilities(); i++)
-				sb.append("label ").append(symbol(dest.getPossibility(i))).
+			TACPhiRef dest = node.getDestination();
+			for (int i = 0; i < dest.getSize(); i++)
+				sb.append("label ").append(symbol(dest.getValue(i))).
 						append(", ");
 			writer.write(sb.delete(sb.length() - 2, sb.length()).append(" ]").
 					toString());

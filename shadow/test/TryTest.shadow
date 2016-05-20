@@ -5,19 +5,18 @@ immutable class shadow:test@TryTest
 	public main( String[] args ) => ()
 	{
 		Console console;
+		int value = 3;
+		
 		try
 		{
 			console.printLine("before throw");
-			throw Exception:create("message");
-			console.printLine("after throw");
+			if( value > 1 )			
+				throw Exception:create("message");
+			console.printLine("after throw");			
 		}
 		catch (Exception ex)
 		{
 			console.printLine("catch (" # ex # ")");
-		}
-		recover
-		{
-			console.printLine("recover");
 		}
 		finally
 		{

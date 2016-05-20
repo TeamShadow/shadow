@@ -392,6 +392,11 @@ public class NegativeTests {
 	@Test public void testMethodDoesNotReturn() throws Exception {
 		args.add("tests-negative/typechecker/method-does-not-return/Test.shadow");
 		enforce(Error.NOT_ALL_PATHS_RETURN);			
+	}
+	
+	@Test public void testUnreachableCode() throws Exception {
+		args.add("tests-negative/typechecker/unreachable-code/Test.shadow");
+		enforce(Error.UNREACHABLE_CODE);			
 	}	
 	
 	/*//compiler can't handle this one yet

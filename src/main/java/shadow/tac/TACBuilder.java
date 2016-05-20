@@ -32,7 +32,6 @@ import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACCopyMemory;
-import shadow.tac.nodes.TACDestination;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACLabelRef;
@@ -125,12 +124,14 @@ public class TACBuilder implements ShadowParserVisitor {
 	}
 
 	public Object visit(Node node, Boolean secondVisit) throws ShadowException {
+		tree.setASTNode(node);
 		return node.jjtAccept(this, secondVisit);
 	}
 	
 	@Override
 	public Object visit(SimpleNode node, Boolean secondVisit)
 			throws ShadowException {
+		tree.setASTNode(node);
 		return node.jjtAccept(this, secondVisit);
 	}
 
@@ -171,8 +172,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		
 		//dummy method and block for constant building 
 		method = new TACMethod( new MethodSignature(new MethodType(), "", type, null));
-		block = new TACBlock(tree, block);
-		
+		block = new TACBlock(tree, block);		
 		
 		for (Node constant : type.getFieldList())
 			if (constant.getModifiers().isConstant())
@@ -317,10 +317,26 @@ public class TACBuilder implements ShadowParserVisitor {
 		}
 	}
 	
+	private boolean isTerminator(TACNode node)
+	{
+		return( node instanceof TACBranch ||
+				node instanceof TACResume ||
+				node instanceof TACReturn ||
+				node instanceof TACThrow );
+	}
+	
 	@Override
 	public Object visit(ASTMethodDeclaration node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit) {		
 			TACNode last = tree.appendAllChildren();
+			
+			//A non-void method should always have explicit TACReturns
+			//A void one might need one inserted at the end			
+			if( method.getMethod().isVoid() && !isTerminator(last) ) {
+				TACReturn explicitReturn = new TACReturn(tree, new SequenceType() );
+				//prevents an error from being recorded if this return is later removed as dead code
+				explicitReturn.setASTNode(null); 
+			}
 			
 			/*
 			if (last instanceof TACLabel ) {
@@ -336,6 +352,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			*/
 			
 			//Junk added to guarantee a return, but that should be done by control flow graph checking!
+			/*
 			if (last instanceof TACLabel &&	last.getPrevious() instanceof TACReturn)
 				last.remove();
 			else {
@@ -354,6 +371,7 @@ public class TACBuilder implements ShadowParserVisitor {
 							new TACSequence(tree, seq));
 				}
 			}
+			*/
 		}
 		else //first visit					
 			initializeSingletons(node);
@@ -1923,7 +1941,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			if (node.hasFinally()) {
 				TACPhi phi = (TACPhi)tree.getLast();
 				tree.appendChild(1);
-				new TACBranch(tree, phi, (TACDestination)phi.getRef());				
+				new TACBranch(tree, phi, phi.getRef());				
 			}
 			block.getDone().new TACLabel(tree);
 			block = block.getParent();

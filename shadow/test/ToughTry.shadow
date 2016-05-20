@@ -15,8 +15,8 @@ class shadow:test@ToughTry
 		console.printLine("test 3");
 		int result = test3();
 		console.printLine("Result: " # result);
-	}
-	
+	}	
+		
 	public test1() => ()
 	{		
 		try
@@ -54,7 +54,7 @@ class shadow:test@ToughTry
 	public test3() => (int)
 	{		
 		try
-		{
+		{		
 			return 3;
 		}
 		finally

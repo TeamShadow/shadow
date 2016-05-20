@@ -3,16 +3,14 @@ package shadow.tac.nodes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 
-public class TACPhiRef implements TACDestination
+public class TACPhiRef
 {
 	private TACPhi phi;
 	private List<TACLabelRef> labels;
@@ -32,6 +30,13 @@ public class TACPhiRef implements TACDestination
 		labels.add(label);
 		values.put(label, value);
 	}
+	
+	public void removeLabel(TACLabelRef label)
+	{
+		labels.remove(label);
+		values.remove(label);
+	}
+	
 	public int getSize()
 	{
 		return labels.size();
@@ -63,10 +68,6 @@ public class TACPhiRef implements TACDestination
 	}
 	public class TACPhi extends TACOperand
 	{
-		public TACPhi()
-		{
-			this(null);
-		}
 		public TACPhi(TACNode node)
 		{
 			super(node);
@@ -98,38 +99,5 @@ public class TACPhiRef implements TACDestination
 			// TODO Auto-generated method stub
 			return null;
 		}
-	}
-
-	private Set<TACBranch> incoming = new HashSet<TACBranch>();
-
-	@Override
-	public int getNumPossibilities()
-	{
-		return getSize();
-	}
-	@Override
-	public TACLabelRef getPossibility(int num)
-	{
-		return (TACLabelRef)getValue(num);
-	}
-
-	public void addIncoming(TACBranch branch)
-	{
-		incoming.add(branch);
-	}
-	
-	public void removeIncoming(TACBranch branch)
-	{
-		incoming.remove(branch);
-	}
-	
-	public boolean hasIncoming(TACBranch branch)
-	{
-		return incoming.contains(branch);
-	}
-	
-	public int incomingCount()
-	{
-		return incoming.size();
 	}
 }

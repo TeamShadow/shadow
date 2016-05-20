@@ -367,19 +367,23 @@ public class Main {
 		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 		for( TACMethod method : module.getMethods() ) {
 			MethodSignature signature = method.getMethod();
-			//don't bother with methods with no returns
+
 			//don't bother with unimplemented methods (abstract or interface methods)
-			if( !signature.isVoid() && signature.getNode().hasBlock() ) {				
+			if( signature.getNode().hasBlock() ) {			
 				ControlFlowGraph graph = new ControlFlowGraph(method);
-				graph.removeDeadCode();
-				if( !graph.returns() )
-					reporter.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.toString() + " may not return on all paths");
+				graph.removeUnreachableCode();
+				graph.removeRedundantErrors(); //some unreachable code errors are redundant
+			
+				if( !signature.isVoid() && !graph.returns() )
+					graph.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.toString() + " may not return on all paths");
+				
+				reporter.addAll(graph); //adds errors (if any) to main reporter
 			}
 		}		
 		reporter.printWarnings();
 		reporter.printErrors();		
-		//if( reporter.getErrorList().size() > 0 )
-			//throw reporter.getErrorList().get(0);	
+		if( reporter.getErrorList().size() > 0 )
+			throw reporter.getErrorList().get(0);	
 	}	
 	
 	
@@ -389,10 +393,12 @@ public class Main {
 	private static TACModule optimizeTAC(TACModule module) throws ShadowException, TypeCheckException {		
 		checkTAC( module );
 		
-		//Convert high-level casts to low-level casts		
+		//Convert high-level casts to low-level casts
+		/*
 		TACCastConverter converter = new TACCastConverter();
 		for (TACMethod method : module.getMethods())
 			converter.walk(method);
+		*/
 		
 		return module;
 	}

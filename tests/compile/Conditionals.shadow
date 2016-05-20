@@ -4,11 +4,14 @@ class Conditionals {
         int a;
         int b = 1;
         int c = 2;
+        
+        boolean value1 = true;
+        boolean value2 = false;
 
-        // literals
+        // booleans
         if(true) { a = 0; }
-        if(true and false) { a = 0; }
-        if(true or false) { a = 0; }
+        if(value1 and value2) { a = 0; }
+        if(value1 or value2) { a = 0; }
         
         // basic relations
         if(a == 0) { a = 0; }
@@ -38,13 +41,13 @@ class Conditionals {
         if( (2 == a or b > 1 or c < 2) or (2 == a or b > 1 or c < 2) ) { a = 0; }
         
         // simple in-line conditionals
-        a = true ? a , b;
+        a = value1 ? a , b;
         a = b < 1 ? a , b;
         a = a > 1 ? a , b;
         a = a + b == b + a ? a , b;
         
         // more complex in-line conditionals
-        a = true or false ? a + b , b + a;
+        a = value1 or value2 ? a + b , b + a;
         a = b < 1 and a > 1 ? (a + 1) * (b + 2) , b * a;
         a = a > 1 or b < 1 ? a * b , a * b * a;
         a = (a + b == b + a) and (a + b != b + a) ? (a + b) * (a + b) , (b + a) * (b + a);

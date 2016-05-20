@@ -762,11 +762,10 @@ public class AbstractASTVisitor extends ErrorReporter implements ShadowParserVis
 	 */
 	protected final void addError(Error error, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
-			return; // Don't add error if it has an unknown type in it.
-				
-		message = makeMessage(error, message, getFile(), getLineStart(), getLineEnd(),
-				getColumnStart(), getColumnEnd());		
-		errorList.add(new TypeCheckException(error, message));
+			return; // Don't add error if it has an unknown type in it.				
+		
+		errorList.add(new TypeCheckException(error, message, getFile(), getLineStart(), getLineEnd(),
+				getColumnStart(), getColumnEnd()));
 	}
 	
 	/**
@@ -793,11 +792,9 @@ public class AbstractASTVisitor extends ErrorReporter implements ShadowParserVis
 		
 		if( node == null )
 			addError(error, message, errorTypes);
-		else {			
-			message = makeMessage(error, message, node.getFile(), node.getLineStart(),
-					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-			errorList.add(new TypeCheckException(error, message));
-		}
+		else
+			errorList.add(new TypeCheckException(error, message, node.getFile(), node.getLineStart(),
+					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));		
 	}
 	
 	/**
@@ -805,10 +802,9 @@ public class AbstractASTVisitor extends ErrorReporter implements ShadowParserVis
 	 * @param warning			kind of warning
 	 * @param message			message explaining warning
 	 */
-	protected final void addWarning(Error warning, String message) {
-		message = makeMessage(warning, message, getFile(), getLineStart(), getLineEnd(),
-				getColumnStart(), getColumnEnd());		
-		warningList.add(new TypeCheckException(warning, message));
+	protected final void addWarning(Error warning, String message) {	
+		warningList.add(new TypeCheckException(warning, message, getFile(), getLineStart(), getLineEnd(),
+				getColumnStart(), getColumnEnd()));
 	}
 	
 	
@@ -822,10 +818,8 @@ public class AbstractASTVisitor extends ErrorReporter implements ShadowParserVis
 	public final void addWarning(Node node, Error warning, String message) {
 		if( node == null )
 			addWarning(warning, message);
-		else {		
-			message = makeMessage(warning, message, node.getFile(), node.getLineStart(),
-					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-			warningList.add(new TypeCheckException(warning, message));
-		}
+		else 
+			warningList.add(new TypeCheckException(warning, message, node.getFile(), node.getLineStart(),
+					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));		
 	}
 }

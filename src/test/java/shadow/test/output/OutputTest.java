@@ -877,9 +877,7 @@ public class OutputTest {
 			"finally break\n" +
 			"try after outer\n" +
 			"before return first\n" +
-			"finally outer\n" +
-			"before return second\n" +
-			"after return second\n" +
+			"finally outer\n" +			
 			"return first\n");
 	}
 	

@@ -35,44 +35,35 @@ class shadow:test@LoopTest
 				try
 				{
 					console.printLine("try " # "before " # "continue");
-					continue;
-					console.printLine("try " # "after " # "continue");
+					continue;					
 				}
 				finally
 				{
 					console.printLine("finally " # "continue");
-				}
-				console.printLine("loop " # "after " # "continue");
+				}				
 			}
-			for ( int i = 0; i < 2; i += 1 )
+			for ( int i = 0; i < 2;  )
 			{
+				i += 1;
 				console.printLine("loop " # "before " # "break");
 				try
 				{
 					console.printLine("try " # "before " # "break");
-					break;
-					console.printLine("try " # "after " # "break");
+					break;					
 				}
 				finally
 				{
 					console.printLine("finally " # "break");
-				}
-				console.printLine("loop " # "after " # "break");
+				}				
 			}
 			console.printLine("try " # "after " # "outer");
 
 			console.printLine("before " # "return " # "first");
-			return "first";
-			console.printLine("after " # "return " # "first");
+			return "first";			
 		}
 		finally
 		{
-			console.printLine("finally " # "outer");
-			console.printLine("before " # "return " # "second");
-			//return "second";
-			console.printLine("after " # "return " # "second");
+			console.printLine("finally " # "outer");			
 		}
-		console.printLine("after " # "outer");
-		return "last";
 	}
 }

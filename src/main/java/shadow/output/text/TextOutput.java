@@ -208,7 +208,7 @@ public class TextOutput extends AbstractOutput
 	
 	protected String nextLabel()
 	{
-		return "%_mabel" + otherCounter++;
+		return "%_label" + otherCounter++;
 	}
 	
 	protected String symbol(TACLabelRef label) {

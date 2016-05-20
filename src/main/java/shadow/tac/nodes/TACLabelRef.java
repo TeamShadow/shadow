@@ -1,8 +1,5 @@
 package shadow.tac.nodes;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
@@ -10,8 +7,7 @@ import shadow.typecheck.type.Type;
 public class TACLabelRef
 {
 	private TACLabel label;
-	private String name;
-	private Set<TACBranch> incoming = new HashSet<TACBranch>();
+	private String name;	
 	
 	public TACLabelRef()
 	{
@@ -23,26 +19,6 @@ public class TACLabelRef
 	{
 		return name;
 	}
-
-	public void addIncoming(TACBranch branch)
-	{
-		incoming.add(branch);
-	}
-	
-	public void removeIncoming(TACBranch branch)
-	{
-		incoming.remove(branch);
-	}
-	
-	public boolean hasIncoming(TACBranch branch)
-	{
-		return incoming.contains(branch);
-	}
-	
-	public int incomingCount()
-	{
-		return incoming.size();
-	}	
 
 	public TACLabel getLabel()
 	{
