@@ -393,13 +393,6 @@ public class Main {
 	private static TACModule optimizeTAC(TACModule module) throws ShadowException, TypeCheckException {		
 		checkTAC( module );
 		
-		//Convert high-level casts to low-level casts
-		/*
-		TACCastConverter converter = new TACCastConverter();
-		for (TACMethod method : module.getMethods())
-			converter.walk(method);
-		*/
-		
 		return module;
 	}
 
