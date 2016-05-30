@@ -51,9 +51,8 @@ import shadow.typecheck.type.Type;
 
 public class TextOutput extends AbstractOutput
 {
-	private Inline inline = new Inline();
-	private static TACLabelRef defaultBlock = new TACLabelRef();
-	private TACLabelRef block = defaultBlock;
+	private Inline inline = new Inline();	
+	private TACLabelRef block = null;
 	private int tempCounter = 0;
 	public TextOutput(Writer out) throws ShadowException
 	{
@@ -168,7 +167,7 @@ public class TextOutput extends AbstractOutput
 	@Override
 	public void endMethod(TACMethod method, TACModule module) throws ShadowException
 	{
-		startBlock(defaultBlock);
+		//startBlock(defaultBlock);
 		if (!method.getMethod().isNative())
 		{
 			writer.outdent();
@@ -204,23 +203,9 @@ public class TextOutput extends AbstractOutput
 		writer.writeLeft(symbol(node.getRef()) + ':');
 	}
 	
-	private int otherCounter = 0;
-	
-	protected String nextLabel()
+	protected String symbol(TACLabelRef label) 
 	{
-		return "%_label" + otherCounter++;
-	}
-	
-	protected String symbol(TACLabelRef label) {
-		String value = label.getName();
-		
-		if( value == null)
-		{
-			value = nextLabel();
-			label.setName(value);
-		}		
-		
-		return value;
+		return label.getName();
 	}
 	
 

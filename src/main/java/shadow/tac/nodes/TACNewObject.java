@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import shadow.interpreter.ShadowInteger;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
@@ -42,8 +43,9 @@ public class TACNewObject extends TACOperand
 			MethodSignature signature = Type.INT.getMatchingMethod("equal", new SequenceType(value));
 			TACOperand test = new TACBinary(this, value, signature, '=', new TACLiteral(this, new ShadowInteger(0)));
 			
-			TACLabelRef throwLabel = new TACLabelRef();
-			TACLabelRef doneLabel = new TACLabelRef();			
+			TACMethod method = getBuilder().getMethod();
+			TACLabelRef throwLabel = new TACLabelRef(method);
+			TACLabelRef doneLabel = new TACLabelRef(method);			
 			new TACBranch(this, test, doneLabel, throwLabel);			
 			
 			throwLabel.new TACLabel(this);					

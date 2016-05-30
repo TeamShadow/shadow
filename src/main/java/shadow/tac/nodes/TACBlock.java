@@ -3,9 +3,7 @@ package shadow.tac.nodes;
 import java.util.ArrayList;
 import java.util.List;
 
-import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACVisitor;
-import shadow.typecheck.type.Type;
+import shadow.tac.TACMethod;
 
 public class TACBlock
 {
@@ -15,12 +13,13 @@ public class TACBlock
 	private List<TACLabelRef> catchLabels;
 	private TACLabelRef recoverLabel, doneLabel, cleanupLabel;
 	private TACPhiRef cleanupPhi;
+	private TACMethod method;
 
-	public TACBlock(TACNode node)
+	public TACBlock(TACNode node, TACMethod method)
 	{
-		this(node, null);
+		this(node, null, method);
 	}
-	public TACBlock(TACNode node, TACBlock parentBlock)
+	public TACBlock(TACNode node, TACBlock parentBlock, TACMethod method)
 	{
 		parent = parentBlock;
 		breakLabel = null;
@@ -30,6 +29,7 @@ public class TACBlock
 		catchLabels = null;
 		recoverLabel = null;
 		cleanupLabel = null;
+		this.method = method;
 	}
 
 
@@ -72,7 +72,7 @@ public class TACBlock
 	{
 		if (breakLabel != null)
 			throw new IllegalStateException("Break label already added.");
-		breakLabel = new TACLabelRef();
+		breakLabel = new TACLabelRef(method);
 		return this;
 	}
 
@@ -110,7 +110,7 @@ public class TACBlock
 	{
 		if (continueLabel != null)
 			throw new IllegalStateException("Continue label already added.");
-		continueLabel = new TACLabelRef();
+		continueLabel = new TACLabelRef(method);
 		return this;
 	}
 
@@ -136,7 +136,7 @@ public class TACBlock
 	{
 		if (landingpadLabel != null)
 			throw new IllegalStateException("Landingpad label already added.");
-		landingpadLabel = new TACLabelRef();
+		landingpadLabel = new TACLabelRef(method);
 		return this;
 	}
 
@@ -161,7 +161,7 @@ public class TACBlock
 	{
 		if (unwindLabel != null)
 			throw new IllegalStateException("Unwind label already added.");
-		unwindLabel = new TACLabelRef();
+		unwindLabel = new TACLabelRef(method);
 		return this;
 	}
 
@@ -193,7 +193,7 @@ public class TACBlock
 		{
 			catchLabels = new ArrayList<TACLabelRef>(num);
 			for (int i = 0; i < num; i++)
-				catchLabels.add(new TACLabelRef());
+				catchLabels.add(new TACLabelRef(method));
 		}
 		return this;
 	}
@@ -208,7 +208,7 @@ public class TACBlock
 	{
 		if (recoverLabel != null)
 			throw new IllegalStateException("Recover label already added.");
-		recoverLabel = new TACLabelRef();
+		recoverLabel = new TACLabelRef(method);
 		return this;
 	}
 
@@ -222,7 +222,7 @@ public class TACBlock
 	{
 		if (doneLabel != null)
 			throw new IllegalStateException("Done label already added.");
-		doneLabel = new TACLabelRef();
+		doneLabel = new TACLabelRef(method);
 		return this;
 	}
 
@@ -268,7 +268,7 @@ public class TACBlock
 	{
 		if (cleanupLabel != null)
 			throw new IllegalStateException("Cleanup label already added.");
-		cleanupLabel = new TACLabelRef();
+		cleanupLabel = new TACLabelRef(method);
 		cleanupPhi = new TACPhiRef();
 		return this;
 	}

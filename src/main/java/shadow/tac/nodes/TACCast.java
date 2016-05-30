@@ -4,12 +4,12 @@ import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.tac.nodes.TACConversion.Kind;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
@@ -39,6 +39,7 @@ public class TACCast extends TACOperand
 		
 		type = destination.getType();
 		modifiers = new Modifiers(destination.getModifiers());
+		TACMethod method = getBuilder().getMethod();
 		
 		if( type instanceof SequenceType || op.getType() instanceof SequenceType )
 		{
@@ -100,12 +101,12 @@ public class TACCast extends TACOperand
 				{
 					if( !op.getType().equals(type) ) //can't just cast objects if they're different types
 					{
-						TACLabelRef doneLabel = new TACLabelRef();
-						TACLabelRef nullLabel = new TACLabelRef();
-						TACLabelRef convertLabel = new TACLabelRef();
+						TACLabelRef doneLabel = new TACLabelRef(method);
+						TACLabelRef nullLabel = new TACLabelRef(method);
+						TACLabelRef convertLabel = new TACLabelRef(method);
 						
 						TACReference var = new TACVariableRef(this,
-								getBuilder().getMethod().addTempLocal(destination));
+								method.addTempLocal(destination));
 						
 						TACLiteral nullLiteral = new TACLiteral(this, ShadowValue.NULL);
 						TACOperand compare = new TACSame(this, op, nullLiteral);
@@ -158,8 +159,8 @@ public class TACCast extends TACOperand
 						
 						TACOperand condition = new TACBinary(this, dimensions, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '=', new TACLiteral(this, new ShadowInteger(arrayType.getDimensions())), true);
 						
-						TACLabelRef throwLabel = new TACLabelRef();
-						TACLabelRef doneLabel = new TACLabelRef();
+						TACLabelRef throwLabel = new TACLabelRef(method);
+						TACLabelRef doneLabel = new TACLabelRef(method);
 						
 						new TACBranch(this, condition, doneLabel, throwLabel);
 						
@@ -205,8 +206,8 @@ public class TACCast extends TACOperand
 			
 			
 			TACOperand result = new TACCall(this, block, methodRef, methodRef.getPrefix(), destinationClass);
-			TACLabelRef throwLabel = new TACLabelRef();
-			TACLabelRef doneLabel = new TACLabelRef();
+			TACLabelRef throwLabel = new TACLabelRef(method);
+			TACLabelRef doneLabel = new TACLabelRef(method);
 			
 			new TACBranch(this, result, doneLabel, throwLabel);
 			

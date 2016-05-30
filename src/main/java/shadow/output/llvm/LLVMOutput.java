@@ -1569,7 +1569,7 @@ public class LLVMOutput extends AbstractOutput {
 			sb.insert(0, nextTemp(node) + " = ");
 		writer.write(sb.append(')').toString());
 		if (node.getBlock().hasLandingpad()) {
-			TACLabelRef label = new TACLabelRef();			
+			TACLabelRef label = new TACLabelRef(this.method);			
 			writer.indent(2);
 			writer.write(" to label " + symbol(label) + " unwind label " +
 					symbol(node.getBlock().getLandingpad()));
@@ -1597,7 +1597,7 @@ public class LLVMOutput extends AbstractOutput {
 				"invoke" : "call") + " void @__shadow_throw(" +
 				typeSymbol(node.getException()) + ") noreturn");
 		if (node.getBlock().hasLandingpad()) {
-			TACLabelRef label = new TACLabelRef();			
+			TACLabelRef label = new TACLabelRef(method);			
 			writer.indent(2);
 			writer.write(" to label " + symbol(label) + " unwind label " +
 					symbol(node.getBlock().getLandingpad()));
@@ -1649,7 +1649,7 @@ public class LLVMOutput extends AbstractOutput {
 					classOf(catchNode.getType()) + " to i8*)) nounwind");
 			writer.write(nextTemp() + " = icmp ne i32 " + type + ", " +
 					temp(1));
-			label = new TACLabelRef();			
+			label = new TACLabelRef(method);			
 			writer.write("br i1 " + temp(0) + ", label " + symbol(label) +
 					", label " + symbol(node.getBlock().getCatch(i)));
 			visit(label.new TACLabel());

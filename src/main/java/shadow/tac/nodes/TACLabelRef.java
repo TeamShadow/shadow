@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 
@@ -9,10 +10,10 @@ public class TACLabelRef
 	private TACLabel label;
 	private String name;	
 	
-	public TACLabelRef()
+	public TACLabelRef(TACMethod method)
 	{
 		label = null;
-		name = null;
+		name = "%_label" + method.incrementLabelCounter();
 	}	
 	
 	public String getName()
@@ -57,10 +58,7 @@ public class TACLabelRef
 		
 		@Override
 		public void setData(Object data) {
-			super.setData(data);
-			//clear out label ref during cleanup 
-			if( data == null )
-				name = null;			
+			super.setData(data);						
 		}
 
 		@Override
@@ -84,12 +82,6 @@ public class TACLabelRef
 	@Override
 	public String toString()
 	{
-		if( name == null )
-			return "label unknown";
 		return name;
-	}
-
-	public void setName(String value) {
-		name = value;
 	}
 }

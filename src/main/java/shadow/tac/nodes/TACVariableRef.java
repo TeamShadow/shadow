@@ -8,7 +8,8 @@ import shadow.typecheck.type.Type;
 
 public class TACVariableRef extends TACReference
 {
-	private TACVariable variable;
+	private TACVariable variable;	
+	
 	public TACVariableRef(TACVariable var)
 	{
 		this(null, var);
@@ -66,5 +67,5 @@ public class TACVariableRef extends TACReference
 	public String toString()
 	{
 		return variable.getName();
-	}
+	}	
 }

@@ -23,7 +23,6 @@ import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACBuilder;
-import shadow.tac.TACCastConverter;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
 import shadow.tac.analysis.ControlFlowGraph;

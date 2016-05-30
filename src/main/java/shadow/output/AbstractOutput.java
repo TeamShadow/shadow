@@ -60,22 +60,7 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 	@Override
 	public void endMethod(TACMethod method, TACModule module) throws ShadowException { }
 	
-	protected String nextLabel()
-	{
-		return "%_label" + labelCounter++;
-	}
-	
 	protected String symbol(TACLabelRef label) {
-		String value = label.getName();
-		
-		if( value == null)
-		{
-			value = nextLabel();
-			label.setName(value);
-		}		
-		
-		return value;
+		return label.getName();
 	}
-	
-	private int labelCounter = 0;	
 }

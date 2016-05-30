@@ -8,6 +8,7 @@ import java.util.List;
 
 import shadow.interpreter.ShadowInteger;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.MethodSignature;
@@ -53,8 +54,8 @@ public class TACArrayRef extends TACReference
 		indices = new ArrayList<TACOperand>(ops.size());
 		
 		if( check )
-		{	
-			TACLabelRef throwLabel = new TACLabelRef();
+		{	TACMethod method = getBuilder().getMethod();
+			TACLabelRef throwLabel = new TACLabelRef(method);
 			
 			for( int i = 0; i < ops.size(); i++ )
 			{				
@@ -67,7 +68,7 @@ public class TACArrayRef extends TACReference
 				TACOperand unsignedBound = new TACCast(this, new SimpleModifiedType(Type.UINT), bound); 
 				TACOperand condition = new TACBinary(this, unsignedLength, Type.UINT.getMatchingMethod("compare", new SequenceType(Type.UINT)), '<', unsignedBound, true);
 				
-				TACLabelRef computeOffset = new TACLabelRef();
+				TACLabelRef computeOffset = new TACLabelRef(method);
 				new TACBranch(this, condition, computeOffset, throwLabel);
 				computeOffset.new TACLabel(this);				
 				
@@ -80,7 +81,7 @@ public class TACArrayRef extends TACReference
 					total = length;					
 			}
 			
-			TACLabelRef done = new TACLabelRef();			
+			TACLabelRef done = new TACLabelRef(method);			
 			new TACBranch(this, done);
 			
 			throwLabel.new TACLabel(this);

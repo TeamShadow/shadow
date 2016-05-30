@@ -130,7 +130,9 @@ public class TACModule {
         final StringWriter writer = new StringWriter();
         
         try {
-            new TextOutput(writer).build(this);
+        	TextOutput output = new TextOutput(writer); 
+        	
+            output.build(this);
         } catch (ShadowException ex) {
             return "Error";
         }

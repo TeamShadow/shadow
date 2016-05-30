@@ -26,6 +26,9 @@ public class TACMethod extends TACNodeList
 	private Map<String, TACVariable> locals;
 	private Deque<Map<String, TACVariable>> scopes;
 	private boolean landingpad;
+	private int labelCounter = 0;		//counter to keep label numbering unique
+	private int variableCounter = 0;	//counter to keep variable number unique
+	
 	public TACMethod(MethodSignature methodSignature)
 	{	
 		method = methodSignature;
@@ -190,6 +193,16 @@ public class TACMethod extends TACNodeList
 			return "Error";
 		}
 		return writer.toString();
+	}
+	
+	public int incrementLabelCounter()
+	{
+		return ++labelCounter;
+	}
+	
+	public int incrementVariableCounter()
+	{
+		return ++variableCounter;
 	}
 
 //	@Override
