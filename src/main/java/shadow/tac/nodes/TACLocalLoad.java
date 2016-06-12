@@ -1,55 +1,98 @@
 package shadow.tac.nodes;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
 
+import shadow.interpreter.ShadowUndefined;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class TACLocalLoad extends TACOperand {
+public class TACLocalLoad extends TACOperand implements TACUpdate {
 
-	private TACVariableRef reference;
-	private Map<TACLabel, TACLocalStore> previousStores = new HashMap<TACLabel, TACLocalStore>();
+	private final TACVariable variable;
+	private TACOperand previousStore;
+	private boolean undefined = false;
 
-	public TACLocalLoad(TACNode node, TACVariableRef ref)
+	public TACLocalLoad(TACNode node, TACVariable var)
 	{
 		super(node);
-		reference = ref;
+		variable = var;
+	}
+	
+	public boolean isUndefined() {
+		return undefined;
 	}
 
-	public TACVariableRef getReference()
+	public TACVariable getVariable()
 	{
-		return reference;
+		return variable;
+	}
+	
+	public boolean update(Set<TACUpdate> currentlyUpdating) {
+		if( currentlyUpdating.contains(this) )
+			return false;		
+		boolean changed = false;
+		currentlyUpdating.add(this);
+		
+		undefined = false;
+		TACOperand temp = previousStore;
+		
+		if( temp instanceof TACUpdate ) {
+			TACUpdate update = (TACUpdate) temp;
+			if( update.update(currentlyUpdating) )
+				changed = true;
+			
+			TACOperand op = update.getValue();
+			//if( op != temp && (op instanceof TACLiteral || op instanceof TACParameter || op instanceof TACLocalStore || op instanceof TACPhiStore ) ) {
+			if( op != temp && op.canPropagate()  ) {
+				changed = true;
+				temp = op;
+			}
+		}
+		
+		if( temp instanceof TACLiteral ) {
+			TACLiteral literal = (TACLiteral) temp;
+			if( literal.getValue() instanceof ShadowUndefined )
+				undefined = true;
+		}
+		else if( temp instanceof TACPhiStore ) {
+			TACPhiStore phiStore = (TACPhiStore) temp;
+			if( phiStore.isUndefined() )
+				undefined = true;
+		}
+		
+		if( changed )
+			previousStore = temp;
+		
+		currentlyUpdating.remove(this);
+		return changed;
 	}
 
 	@Override
 	public Modifiers getModifiers()
 	{
-		return reference.getGetType().getModifiers();
+		return variable.getModifiers();
 	}
 	@Override
 	public Type getType()
 	{
-		return reference.getGetType().getType();
+		return variable.getType();
 	}
 	@Override
 	public void setType(Type newType)
 	{
-		reference.getSetType().setType(newType);
+		variable.setType(newType);
 	}
 	@Override
 	public int getNumOperands()
 	{
-		return 1;
+		return 0;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		if (num == 0)
-			return reference;
 		throw new IndexOutOfBoundsException("" + num);
 	}
 
@@ -62,16 +105,35 @@ public class TACLocalLoad extends TACOperand {
 	@Override
 	public String toString()
 	{
-		return reference.toString();
+		return variable.toString();
+	}
+
+	public void setPreviousStore(TACOperand store)
+	{
+		if( store instanceof TACLiteral ) {
+			TACLiteral literal = (TACLiteral) store;
+			if( literal.getValue() instanceof ShadowUndefined )
+				undefined = true;
+		}
+		
+		previousStore = store;
 	}
 	
-	public void addPreviousStore(TACLabel label, TACLocalStore store)
+	public TACOperand getPreviousStore()
 	{
-		previousStores.put(label, store);
+		return previousStore;		
+	}
+
+	@Override
+	public TACOperand getValue() {
+		if( previousStore != null )
+			return previousStore;
+		else
+			return this;
 	}
 	
-	public Map<TACLabel, TACLocalStore> getPreviousStores()
-	{
-		return previousStores;		
-	}
+	@Override
+	public boolean canPropagate() {
+		return true;
+	}	
 }

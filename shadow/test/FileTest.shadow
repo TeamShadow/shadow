@@ -14,12 +14,11 @@ class shadow:test@FileTest
 		
 		if( args->size == 0 )
 			throw Exception:create("No file specified!");
-		
-		File file;	
+			
 		try
 		{
 			
-			file = File:create(args[0]);
+			File file = File:create(args[0]);
 			 			
 			try
 			{	
@@ -36,15 +35,12 @@ class shadow:test@FileTest
 			file->size = file->position;
 			byte[] buffer = byte:create[chars->size];
 			file.read(buffer);
-			console.printLine(String:create(buffer));			
+			console.printLine(String:create(buffer));
+			file.close();		
 		}
 		catch ( IOException ex )
 		{
 			console.printLine(ex);
-		}		
-		finally
-		{
-			file.close();
 		}
 	}
 }

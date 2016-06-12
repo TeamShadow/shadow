@@ -9,7 +9,34 @@ import shadow.typecheck.type.TypeParameter;
 public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 {
 	private Object data;
+	private TACLocalStore store = null;
+	private TACStore memoryStore = null;
 	
+	public boolean hasLocalStore() {
+		return store != null;
+	}
+	
+	public boolean hasMemoryStore() {
+		return memoryStore != null;
+	}
+	
+	public void setLocalStore(TACLocalStore store) {
+		this.store = store;
+	}
+	
+
+	public void setMemoryStore(TACStore store) {
+		this.memoryStore = store;
+	}
+	
+	public TACStore getMemoryStore() {
+		return memoryStore;
+	}	
+	
+	
+	public TACLocalStore getLocalStore() {
+		return store;
+	}	
 	
 	public Object getData()
 	{
@@ -46,24 +73,34 @@ public abstract class TACOperand extends TACSimpleNode implements ModifiedType
 		//Type thing2 = type.getType();		
 		
 		if( getType().isSubtype(type.getType()) && (getType().isPrimitive() || type.getType().isPrimitive()) && getModifiers().isNullable() != type.getModifiers().isNullable() )
-			return new TACCast(node, type, this);
+			return TACCast.cast(node, type, this);
 				
 		if (getType().isStrictSubtype(type.getType()))
-			return new TACCast(node, type, this);		
+			return TACCast.cast(node, type, this);		
 		
 		/* allows cast from Object[] to Array<Object>  */		 
 		if(( (type.getType() instanceof ArrayType) && getType().equals(type.getType())  && !(getType() instanceof ArrayType) ))
-			return new TACCast(node, type, this);		
+			return TACCast.cast(node, type, this);		
 		
 		if( type.getType().isParameterized() && getType().getTypeWithoutTypeArguments().isStrictSubtype(type.getType()))
-			return new TACCast(node, type, this);
+			return TACCast.cast(node, type, this);
 		
 		//if it got past the typechecker, we need to cast this type parameter into a real thing
 		if( (getType() instanceof TypeParameter) && !(type.getType() instanceof TypeParameter)  )
-			return new TACCast(node, type, this);
+			return TACCast.cast(node, type, this);
 		
 		return this;
 	}
+	
+	/*
+	 * Whether or not a value can propagate forward when doing constant and value propagation.
+	 * By default, TACOperands cannot.
+	 * A guideline: Anything whose result is stored in a temporary variable cannot.
+	 */	
+	public boolean canPropagate() {
+		return false;
+	}
+	
 	/*
 	protected TACOperand checkVirtual(ModifiedType type, TACNode node, boolean allowDowncast)
 	{

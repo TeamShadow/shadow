@@ -89,8 +89,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
-	public static final VarType VAR = new VarType(); //VAR type used for placeholder for variables declared with var, until type is known
-	
+	public static final VarType VAR = new VarType(); //VAR type used for placeholder for variables declared with var, until type is known	
 	
 	/*
 	 * Predefined interfaces needed for Shadow
@@ -1395,5 +1394,12 @@ public abstract class Type implements Comparable<Type> {
 	public Documentation getDocumentation()
 	{
 		return documentation;
+	}
+
+	public static SequenceType getExceptionType() {
+		SequenceType type = new SequenceType();
+		type.add(new SimpleModifiedType(new PointerType()));
+		type.add(new SimpleModifiedType(Type.INT));
+		return type;
 	}
 }

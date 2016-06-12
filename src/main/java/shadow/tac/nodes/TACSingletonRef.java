@@ -1,16 +1,16 @@
 package shadow.tac.nodes;
 
-import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACVisitor;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SingletonType;
+import shadow.typecheck.type.Type;
 
 public class TACSingletonRef extends TACReference
 {
 	private SingletonType type;
 
-	public TACSingletonRef(TACNode node, SingletonType instanceType)
+	public TACSingletonRef(SingletonType instanceType)
 	{
-		super(node);
+		//super(node);
 		type = instanceType;
 	}
 
@@ -19,6 +19,7 @@ public class TACSingletonRef extends TACReference
 	{
 		return type;
 	}
+	/*
 	@Override
 	public int getNumOperands()
 	{
@@ -35,10 +36,22 @@ public class TACSingletonRef extends TACReference
 	{
 		visitor.visit(this);
 	}
+	*/
 
 	@Override
 	public String toString()
 	{
 		return type + ":instance";
+	}
+
+	@Override
+	public void setType(Type type) {
+		throw new UnsupportedOperationException();
+		
+	}
+
+	@Override
+	public Modifiers getModifiers() {
+		return new Modifiers();
 	}
 }

@@ -1,7 +1,6 @@
 package shadow.tac.nodes;
 
-import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACVisitor;
+import shadow.interpreter.ShadowValue;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -10,9 +9,10 @@ public class TACConstantRef extends TACReference {
 	private Type prefix;
 	private ModifiedType type;
 	private String name;
+	private ShadowValue value;
 	
-	public TACConstantRef(TACNode node, Type prefixType, String constantName) {
-		super(node);
+	public TACConstantRef(Type prefixType, String constantName) {
+		//super(node);
 		ModifiedType constantType = prefixType.getField(constantName);
 		if (constantType == null)
 			throw new IllegalArgumentException("Field does not exist");
@@ -21,6 +21,14 @@ public class TACConstantRef extends TACReference {
 		prefix = prefixType;
 		type = constantType;
 		name = constantName;
+	}
+	
+	public ShadowValue getValue() {
+		return value;
+	}
+	
+	public void setValue(ShadowValue value) {
+		this.value = value;
 	}
 	
 	@Override
@@ -69,6 +77,7 @@ public class TACConstantRef extends TACReference {
 		type.setType(newType);
 	}
 
+	/*
 	@Override
 	public int getNumOperands() {
 		return 0;
@@ -83,4 +92,5 @@ public class TACConstantRef extends TACReference {
 	public void accept(TACVisitor visitor) throws ShadowException {
 		visitor.visit(this);
 	}
+	*/
 }

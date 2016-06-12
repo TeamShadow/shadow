@@ -13,13 +13,14 @@ import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLocalLoad;
+import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACUnary;
-import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
 /**
@@ -60,6 +61,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 		node.setData(data);
 	}
 	
+	/*
 	@Override
 	public void visit(TACConstantRef node) throws ShadowException {
 		String name = node.getPrefixType().toString() + ":" + node.getName();
@@ -68,6 +70,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 			throw new ShadowException("Initialization dependencies prevent the value of constant " + name + " from being used here");
 		node.setData(data);
 	}
+	*/
 
 	@Override
 	public void visit(TACBinary node) throws ShadowException {
@@ -149,18 +152,29 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 		}
 		
 		node.setData(data);
-	}	
+	}
+	
+	
+	@Override
+	public void visit(TACLocalStore node) throws ShadowException {
+		TACVariable variable = node.getVariable();
+		TACOperand data = node.getValue();		
+		variables.put(variable.getName(), value(data));				
+	}
+	
 	
 	@Override
 	public void visit(TACStore node) throws ShadowException {
+		/*
 		TACReference reference = node.getReference();
 		TACOperand data = node.getValue();		
-		
+	
 		if( reference instanceof TACVariableRef ) {
 			TACVariable variable = ((TACVariableRef)reference).getVariable();
 			variables.put(variable.getName(), value(data));
 		}
 		else
+		*/
 			throw new UnsupportedOperationException();
 	}
 	
@@ -170,21 +184,34 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 		TACReference reference = node.getReference();
 		
 		if( reference instanceof TACConstantRef ) {
-			TACConstantRef constant = ((TACConstantRef)reference);
-			node.setData(constant.getData());
+			TACConstantRef constant = ((TACConstantRef)reference);	
+			String name = constant.getPrefixType().toString() + ":" + constant.getName();
+			ShadowValue data = constants.get(name);
+			if( data == null )
+				throw new ShadowException("Initialization dependencies prevent the value of constant " + name + " from being used here");
+			node.setData(data);
 		}
+		//should never happen
+		/*
 		else if( reference instanceof TACVariableRef ) {
 			TACVariable variable = ((TACVariableRef)reference).getVariable();
 			node.setData(variables.get(variable.getName()));
 		}
+		*/
 		else
 			throw new UnsupportedOperationException();
 	}
 	
 	@Override
+	public void visit(TACLocalLoad node) throws ShadowException {		
+		TACVariable variable = node.getVariable();
+		node.setData(variables.get(variable.getName()));		
+	}
+	
+	@Override
 	public void visit(TACCall node) throws ShadowException
 	{
-			TACMethodRef method = node.getMethod();
+			TACMethodRef method = node.getMethodRef();
 			MethodSignature signature = method.getSignature();
 			List<TACOperand> parameters = node.getParameters();
 			

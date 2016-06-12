@@ -12,8 +12,8 @@ import shadow.interpreter.ShadowCode;
 import shadow.interpreter.ShadowDouble;
 import shadow.interpreter.ShadowFloat;
 import shadow.interpreter.ShadowInteger;
+import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowString;
-import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.*;
 import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
 import shadow.typecheck.TypeCheckException.Error;
@@ -2550,7 +2550,7 @@ public class StatementChecker extends BaseChecker {
 					}					
 				}
 				else
-					addError( Error.NOT_TYPE, "Constant field requires type name for access" );
+					addError( Error.NOT_TYPE, "class specifier requires type name for access" );
 				
 				node.setType( Type.CLASS );
 				node.addModifier(Modifiers.IMMUTABLE);	
@@ -2997,7 +2997,7 @@ public class StatementChecker extends BaseChecker {
 		try
 		{		
 			if (literal.equals("null"))
-				node.setValue(ShadowValue.NULL);
+				node.setValue(new ShadowNull(Type.NULL));
 			else if (literal.startsWith("\'") && literal.endsWith("\'"))				
 				node.setValue(ShadowCode.parseCode(literal));			
 			else if (literal.startsWith("\"") && literal.endsWith("\""))

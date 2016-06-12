@@ -69,7 +69,7 @@ public class TACBinary extends TACOperand
 		//LLVM insists that you rotate a byte with a byte
 		//so we have to throw in explicit casts
 		if( (op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>")) && !firstType.getType().equals(secondType.getType()))		
-			second = new TACCast(this, firstType, secondOperand);
+			second = TACCast.cast(this, firstType, secondOperand);
 		else
 			second = check(secondOperand, secondType);
 		result = resultType;

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,20 +13,26 @@ import java.util.Set;
 import shadow.Loggers;
 import shadow.interpreter.ShadowBoolean;
 import shadow.tac.TACMethod;
+import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
+import shadow.tac.nodes.TACLocalLoad;
+import shadow.tac.nodes.TACLocalStorage;
+import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
+import shadow.tac.nodes.TACPhiStore;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACUnwind;
+import shadow.tac.nodes.TACUpdate;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
 
@@ -38,7 +45,7 @@ import shadow.typecheck.TypeCheckException.Error;
  */
 public class ControlFlowGraph extends ErrorReporter
 {
-	private final Block root;
+	private Block root;
 	/** Provides a helpful way of IDing Blocks. Useful for debugging */
 	private int count = 0;
 	private String cachedString; // Saves toString() from re-walking the graph
@@ -46,23 +53,21 @@ public class ControlFlowGraph extends ErrorReporter
 	
 	public ControlFlowGraph(TACMethod method)
 	{		
-		super(Loggers.TYPE_CHECKER);
-		root = new Block(null);	//only the root has no label	
+		super(Loggers.TYPE_CHECKER);			
 		createBlocks(method);
 		addEdges();
 	}
 	
 	private void addEdges()
-	{
-		addEdges(root);		
+	{		
 		for( Block block : nodeBlocks.values() )
 			addEdges(block);
 	}
 
 	private void addEdges(Block block)
 	{
-		TACNode node = block.getFirst();
-		boolean done = false;
+		TACNode node = block.getLabel();
+		boolean done = false;		
 		
 		while( !done ) {
 			if( node instanceof TACBranch ) {			
@@ -104,8 +109,15 @@ public class ControlFlowGraph extends ErrorReporter
 			//handles cases where a method call can cause a catchable exception
 			else if( node instanceof TACCall ) {
 				TACCall call = (TACCall) node;
-				if( call.getBlock().hasLandingpad() )
-					block.addBranch(nodeBlocks.get(call.getBlock().getLandingpad().getLabel()));
+				if( call.getBlock().hasLandingpad() ) {
+					block.addBranch(nodeBlocks.get(call.getBlock().getLandingpad().getLabel()));					
+					block.addBranch(nodeBlocks.get(call.getNoExceptionLabel().getLabel()));
+				}
+			}
+			else if( node instanceof TACThrow ) {
+				TACThrow throw_ = (TACThrow)node;
+				if( throw_.getBlock().hasLandingpad() )
+					block.addBranch(nodeBlocks.get(throw_.getBlock().getLandingpad().getLabel()));
 			}
 			
 			if( node == block.getLast() )
@@ -118,13 +130,18 @@ public class ControlFlowGraph extends ErrorReporter
 	private void createBlocks(TACNode first)
 	{		
 		TACNode node = first.getNext();
-		Block block = root;
+		boolean starting = true;
+		Block block = null;
 		
 		// Loop through circular linked-list
 		while( node != first ) {
 			if( node instanceof TACLabel ) {
 				TACLabel label = (TACLabel)node;
 				block = new Block(label);
+				if( starting == true ) {
+					root = block;
+					starting = false;
+				}				
 				nodeBlocks.put(label, block);
 			}
 			else if( node instanceof TACReturn )
@@ -155,6 +172,7 @@ public class ControlFlowGraph extends ErrorReporter
 				if( block.deleteTACNodes() )
 					edgesUpdated = true;
 				nodeBlocks.remove(block.getLabel());
+				block.removeEdges();
 			}
 			
 		} while( edgesUpdated );
@@ -166,7 +184,7 @@ public class ControlFlowGraph extends ErrorReporter
 	{
 		if( !visited.contains(block) ) {
 			visited.add(block);
-			for( Block branch : block.getBranches() )
+			for( Block branch : block.getOutgoing() )
 				findReachable(branch, visited);
 		}
 	}
@@ -224,7 +242,7 @@ public class ControlFlowGraph extends ErrorReporter
 	 * Traverses the graph to build a readable print-out of it. Very useful for
 	 * debugging
 	 */
-	private void generateString(Block current, Set<Block> visited, 
+	private static void generateString(Block current, Set<Block> visited, 
 			List<IndexedString> strings)
 	{
 		if (visited.contains(current))
@@ -257,6 +275,45 @@ public class ControlFlowGraph extends ErrorReporter
 			
 		strings.add(new IndexedString(current.getID(), output));			
 	}
+	
+	
+	/** 
+	 * Updates TACLocalLoad nodes to have correct phi information.
+	 * This method *must* be called in order for TACLocalLoad to be
+	 * translated into appropriate phi nodes. 
+	 */
+	public void updatePhiNodes() {
+		Map<Block,Map<TACVariable,TACLocalStorage>> lastDefinitions = new HashMap<Block,Map<TACVariable, TACLocalStorage>>();
+		
+		Set<Block> blocks = new LinkedHashSet<Block>(nodeBlocks.values());				
+		
+		//find the last definition of every variable in every block
+		for( Block block : blocks )
+			lastDefinitions.put(block, block.getLastDefinitions());		
+		
+		//use those definitions when constructing phi nodes
+		for( Block block : blocks )
+			block.updatePhiNodes(lastDefinitions);
+		
+		//propagate constants and other values (not optional if we want to produce legal IR)
+		boolean changed = true;
+		Set<TACLocalLoad> undefinedLoads = new HashSet<TACLocalLoad>();
+		while( changed ) {
+			changed = false;
+			undefinedLoads.clear();
+			for( Block block : blocks )
+				if( block.propagateValues(undefinedLoads) )
+					changed = true;
+		}
+		
+		for( TACLocalLoad undefined : undefinedLoads )
+			//_exception is a special variable used only for exception handling
+			//indirect breaks for finally make its value tricky, but it's guaranteed to never *really* be undefined
+			if( !undefined.getVariable().getOriginalName().equals("_exception") )
+				addError(undefined.getASTNode(), Error.UNDEFINED_VARIABLE, "Variable " + undefined.getVariable().getOriginalName() + " may not have been defined before use");
+		
+	}
+
 
 	@Override
 	public String toString()
@@ -275,13 +332,50 @@ public class ControlFlowGraph extends ErrorReporter
 	{		
 		private final int uniqueID;
 		
-		private Set<Block> branches = new HashSet<Block>();
+		private Set<Block> outgoing = new HashSet<Block>();
+		private Set<Block> incoming = new HashSet<Block>();
 		private final TACLabel label;
 		private boolean returns = false;
 		private boolean unwinds = false;
-	
-		private TACNode firstNode = null; //first TAC node in this block
 		private TACNode lastNode = null;  //last TAC node in this block
+		
+		@Override
+		public String toString() {
+			return "Block " + uniqueID;
+		}
+
+		public boolean propagateValues(Set<TACLocalLoad> undefinedLoads) {
+			boolean changed = false;
+			
+			TACNode node = label.getNext();
+			boolean done = false;
+			Set<TACUpdate> currentlyUpdating = new HashSet<TACUpdate>();
+			while( !done ) {				
+				if( node instanceof TACUpdate )
+					if( ((TACUpdate)node).update(currentlyUpdating) )
+						changed = true;
+				
+				if( node instanceof TACLocalLoad ) {
+					TACLocalLoad load = (TACLocalLoad)node;
+					if( load.isUndefined() )
+						undefinedLoads.add(load);
+				}
+				
+				if( node == lastNode )
+					done = true;
+				else
+					node = node.getNext();
+			}
+			
+			return changed;
+		}
+
+		public void removeEdges() {
+			for( Block block : incoming )
+				block.outgoing.remove(this);
+			for( Block block : outgoing )
+				block.incoming.remove(this);
+		}
 
 		public Block(TACLabel label)
 		{
@@ -290,43 +384,176 @@ public class ControlFlowGraph extends ErrorReporter
 			this.label = label;
 		}
 		
-		public Set<Block> getBranches()
-		{
-			return branches;
+		public Map<TACVariable, TACLocalStorage> getLastDefinitions() {
+			Map<TACVariable,TACLocalStorage> definitions = new HashMap<TACVariable, TACLocalStorage>();
+			TACNode node = label.getNext();
+			boolean done = false;
+			while( !done ) {				
+				if( node instanceof TACLocalStorage ) {
+					TACLocalStorage store = (TACLocalStorage)node;
+					definitions.put(store.getVariable(), store);					 
+				}
+				
+				if( node == lastNode )
+					done = true;
+				else
+					node = node.getNext();
+			}	
+			
+			return definitions;
 		}
 		
+		/*
+		private void addPreviousStore(TACLocalLoad load, Block block, Map<Block, Map<TACVariable, TACLocalStore>> lastDefinitions, Set<Block> visited) {
+			if( !visited.contains(block) ) {
+				visited.add(block);
+				 Map<TACVariable, TACLocalStore> definitions = lastDefinitions.get(block);
+				 TACLocalStore store = definitions.get(load.getVariable());
+				 //defined by block
+				if( store != null )
+					load.addPreviousStore(block.getLabel(), store);				
+				else //otherwise check parents
+					for( Block parent : block.incoming )
+						addPreviousStore(load, parent, lastDefinitions, visited);								
+			}
+		}
+		*/
+		
+		
+		
+		private TACLocalStorage getPreviousStore(TACVariable variable, Map<Block, Map<TACVariable, TACLocalStorage>> lastDefinitions ) {
+			Map<TACVariable, TACLocalStorage> definitions = lastDefinitions.get(this);
+			TACLocalStorage store = definitions.get(variable);
+			 //defined by block
+			if( store != null )
+				return store;
+
+			//else insert phi node after label
+			TACPhiStore phi = new TACPhiStore(label.getNext(), variable);
+			definitions.put(variable, phi);
+			for( Block block : incoming )
+				phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastDefinitions));
+			return phi;
+		}
+		
+		
+/*
+		//Only for indirect branching nodes
+		//not all of their incoming edges are relevant
+		private TACOperand getPreviousStore(TACVariable variable,
+				Map<Block, Map<TACVariable, TACLocalStorage>> lastDefinitions, TACLabel label) {
+			Map<TACVariable, TACLocalStorage> definitions = lastDefinitions.get(this);
+			TACLocalStorage store = definitions.get(variable);
+			 //defined by block
+			if( store != null )
+				return store;			
+						
+			TACPhiStore phi = new TACPhiStore(label.getNext(), variable);
+			definitions.put(variable, phi);
+			
+			if( branchesIndirectly() ) {
+				TACBranch branch = (TACBranch) lastNode;
+				TACPhiRef phiRef = branch.getDestination();
+				//how many branches go indirectly to the label in question			
+				for( int i = 0; i < phiRef.getSize(); ++i )
+					if( phiRef.getValue(i).getLabel().equals(label)) {
+						TACLabel priorLabel = phiRef.getLabel(i).getLabel(); 
+						phi.addPreviousStore(priorLabel, nodeBlocks.get(priorLabel).getPreviousStore(variable, lastDefinitions, getLabel()) );
+					}
+			}
+			else
+				for( Block block : incoming )
+					phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastDefinitions, getLabel()));
+				
+			
+			return phi;
+		}
+*/
+
+		public void updatePhiNodes(Map<Block, Map<TACVariable, TACLocalStorage>> lastDefinitions) {
+			Map<TACVariable,TACLocalStorage> predecessors = new HashMap<TACVariable, TACLocalStorage>();
+			Map<TACVariable, TACLocalStorage> definitions = lastDefinitions.get(this);
+			
+			TACNode node = label.getNext();
+			boolean done = false;
+			while( !done ) {				
+				if( node instanceof TACLocalStore ) {
+					TACLocalStore store = (TACLocalStore)node;
+					predecessors.put(store.getVariable(), store);	
+				}
+				else if( node instanceof TACLocalLoad ) {
+					TACLocalLoad load = (TACLocalLoad)node;					
+					TACVariable variable = load.getVariable();
+					TACOperand store = predecessors.get(variable); 
+					if( store == null ) {
+						//add phi
+						TACPhiStore phi = new TACPhiStore(label.getNext(), variable);
+						for( Block block : incoming )
+							phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastDefinitions));						
+						
+						predecessors.put(variable, phi);	
+						if( !definitions.containsKey(variable) )
+							definitions.put(variable, phi);
+						load.setPreviousStore(phi);
+					}
+					else
+						load.setPreviousStore(store);
+				}
+				
+				if( node == lastNode )
+					done = true;
+				else
+					node = node.getNext();
+			}			
+		}
+
+		/*
+		private boolean branchesIndirectly() {
+			return lastNode != null && lastNode instanceof TACBranch && ((TACBranch)lastNode).isIndirect();
+		}
+		*/
+
+		public Set<Block> getOutgoing()
+		{
+			return outgoing;
+		}
+
 		public boolean deleteTACNodes()
 		{
 			boolean edgesUpdated = false;
 			
-			for( Block block : branches )
+			for( Block block : outgoing )
 				if( block.removePhiInput(this) )
 					edgesUpdated = true;
 			
-			if( firstNode != null && lastNode != null ) {
-				while( firstNode != lastNode ) {
-					TACNode temp = firstNode.getNext();
-					removeNode(firstNode);
-					firstNode = temp;
+			TACNode node = label;
+			
+			if( node != null && lastNode != null ) {
+				while( node != lastNode ) {
+					TACNode temp = node.getNext();
+					removeNode(node);
+					node = temp;
 				}
 				//Now firstNode == lastNode, but it still needs to be removed
-				removeNode(lastNode);
-				firstNode = lastNode = null;				
+				removeNode(lastNode);				
+				lastNode = null;				
 			}
 			
 			return edgesUpdated;
 		}
 		
 		private boolean removePhiInput(Block block)
-		{
-			TACLabel label = block.getLabel();
-			
-			TACNode node = firstNode;
+		{	
+			TACNode node = label;
 			boolean done = false;
 			while( !done ) {				
 				if( node instanceof TACPhi ) {
 					TACPhiRef phiRef = ((TACPhi)node).getRef();
-					phiRef.removeLabel(label.getRef());
+					phiRef.removeLabel(block.getLabel().getRef());
+				}
+				else if( node instanceof TACPhiStore ) {
+					TACPhiStore store = (TACPhiStore)node;
+					store.removePreviousStore(block.getLabel());					
 				}
 				
 				if( node == lastNode )
@@ -336,12 +563,12 @@ public class ControlFlowGraph extends ErrorReporter
 			}
 
 			//after updating phi input, update branches			
-			Set<Block> oldBranches = branches;
-			branches = new HashSet<Block>();
+			Set<Block> oldBranches = outgoing;
+			outgoing = new HashSet<Block>();
 			addEdges(this);
 			
 			//if updated branches is smaller, we're going to have to continue
-			return branches.size() < oldBranches.size();
+			return outgoing.size() < oldBranches.size();
 		}
 
 		private TACLabel getLabel() {
@@ -360,18 +587,18 @@ public class ControlFlowGraph extends ErrorReporter
 		
 		private boolean isControlFlow(TACNode node)
 		{
+			if( node instanceof TACLocalStore ) {
+				return isControlFlow(((TACLocalStore)node).getValue());
+			}			
+			
 			return node instanceof TACLabel ||
 				node instanceof TACBranch ||
 				node instanceof TACLandingpad ||
 				node instanceof TACUnwind ||
-				node instanceof TACResume;			
+				node instanceof TACResume ||
+				node instanceof TACLocalLoad; //a load doesn't *do* anything unless the value is used			
 		}
 
-		public TACNode getFirst()
-		{
-			return firstNode;
-		}
-		
 		public TACNode getLast()
 		{
 			return lastNode;			
@@ -379,16 +606,15 @@ public class ControlFlowGraph extends ErrorReporter
 		
 		public void addBranch(Block target)
 		{
-			if( target != null )
-				branches.add(target);
+			if( target != null ) {
+				outgoing.add(target);
+				target.incoming.add(this);
+			}
 		}
 		
 		
 		public void addNode(TACNode node)
-		{
-			if( firstNode == null )
-				firstNode = node;
-			
+		{	
 			if( lastNode != null && lastNode.getNext() != node )
 				throw new IllegalArgumentException("Cannot add TAC nodes out of order");
 			
@@ -420,12 +646,12 @@ public class ControlFlowGraph extends ErrorReporter
 		@Override
 		public Iterator<Block> iterator()
 		{
-			return branches.iterator();
+			return outgoing.iterator();
 		}
 		
 		public int branches()
 		{
-			return branches.size();
+			return outgoing.size();
 		}
 		
 		public int getID()

@@ -2,13 +2,13 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
-import shadow.tac.nodes.TACVariableRef;
+import shadow.tac.TACVariable;
 import shadow.typecheck.type.Type;
 
 public
 class ASTForeachInit extends SimpleNode {
 
-	private TACVariableRef variable;
+	private TACVariable variable;
 	private Type collectionType;
 	
 	public void setCollectionType(Type type)
@@ -21,12 +21,12 @@ class ASTForeachInit extends SimpleNode {
 		return collectionType;
 	}
 	
-	public void setVariable(TACVariableRef variable)
+	public void setVariable(TACVariable variable)
 	{
 		this.variable = variable;
 	}
 	
-	public TACVariableRef getVariable()
+	public TACVariable getVariable()
 	{
 		return variable;		
 	}

@@ -3,18 +3,10 @@ package shadow.tac.nodes;
 import java.util.ArrayList;
 import java.util.List;
 
-import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACVisitor;
-import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeParameter;
 
-public class TACConversion extends TACOperand
+public class TACConversion //extends TACOperand
 {	
 	Type type;
 	Modifiers modifiers;
@@ -43,12 +35,12 @@ public class TACConversion extends TACOperand
 	
 	public TACConversion(TACNode node, TACOperand source, Type destination, Kind kind, boolean check)
 	{
-		super(node);
+		//super(node);
 		type = destination;	
 		modifiers = new Modifiers(source.getModifiers());
 		operands.add(source);
 		this.kind = kind;
-		
+/*		
 		if( kind.equals(Kind.OBJECT_TO_INTERFACE) )
 		{			
 			TACOperand srcClass;			
@@ -111,13 +103,15 @@ public class TACConversion extends TACOperand
 		{
 			modifiers.removeModifier(Modifiers.NULLABLE);
 		}
+		
+		*/
 	}
 	
 	public Kind getKind()
 	{
 		return kind;
 	}
-	
+	/*
 	@Override
 	public Modifiers getModifiers()
 	{
@@ -143,5 +137,5 @@ public class TACConversion extends TACOperand
 	public void accept(TACVisitor visitor) throws ShadowException {
 		visitor.visit(this);
 	}
-
+*/
 }

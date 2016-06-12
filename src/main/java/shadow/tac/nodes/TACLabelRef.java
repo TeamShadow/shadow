@@ -13,7 +13,7 @@ public class TACLabelRef
 	public TACLabelRef(TACMethod method)
 	{
 		label = null;
-		name = "%_label" + method.incrementLabelCounter();
+		name = "_label" + method.incrementLabelCounter();
 	}	
 	
 	public String getName()
@@ -57,8 +57,8 @@ public class TACLabelRef
 		}
 		
 		@Override
-		public void setData(Object data) {
-			super.setData(data);						
+		public Object getData() {
+			return name;						
 		}
 
 		@Override

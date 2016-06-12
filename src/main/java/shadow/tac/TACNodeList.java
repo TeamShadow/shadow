@@ -11,6 +11,10 @@ import shadow.tac.nodes.TACSimpleNode;
 
 public class TACNodeList extends TACNode implements Iterable<TACSimpleNode>
 {
+	protected TACNodeList() {
+		super(null);		
+	}
+
 	/**
 	 * Inserts parameter node before current list
 	 */

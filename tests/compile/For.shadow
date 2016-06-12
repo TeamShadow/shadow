@@ -1,7 +1,7 @@
 class For {
     public test() => () {
-    	int i;
-    	int x;
+    	int i = 0;
+    	int x = 5;
     	
     	boolean value1 = true;
     	boolean value2 = false;

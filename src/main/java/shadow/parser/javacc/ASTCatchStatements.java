@@ -2,26 +2,39 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=true,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package shadow.parser.javacc;
 
+import shadow.tac.TACVariable;
+
 public
 @SuppressWarnings("all")
 class ASTCatchStatements extends SimpleNode {
-  public ASTCatchStatements(int id) {
-    super(id);
-  }
 
-  public ASTCatchStatements(ShadowParser p, int id) {
-    super(p, id);
-  }
+	private TACVariable exception;
+
+	public void setException(TACVariable variable) {
+		exception = variable;
+	}
+
+	public TACVariable getException() {
+		return exception;
+	}	
+
+	public ASTCatchStatements(int id) {
+		super(id);
+	}
+
+	public ASTCatchStatements(ShadowParser p, int id) {
+		super(p, id);
+	}
 
 
-  public int getCatches() {
-    return jjtGetNumChildren() - 1;
-  }
+	public int getCatches() {
+		return jjtGetNumChildren() - 1;
+	}
 
 
-  /** Accept the visitor. **/
-  public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
-    return visitor.visit(this, data);
-  }
+	/** Accept the visitor. **/
+	public Object jjtAccept(ShadowParserVisitor visitor, Boolean data) throws ShadowException {
+		return visitor.visit(this, data);
+	}
 }
 /* JavaCC - OriginalChecksum=1199c74151122c8b2295eca6fa842d4c (do not edit this line) */

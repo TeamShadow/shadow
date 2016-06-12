@@ -2,13 +2,9 @@ package shadow.tac.nodes;
 
 import shadow.typecheck.type.ModifiedType;
 
-public abstract class TACReference extends TACOperand
+public abstract class TACReference implements ModifiedType
 {
-	public TACReference(TACNode node)
-	{
-		super(node);
-	}
-
+	/*
 	public ModifiedType getGetType()
 	{
 		return this;
@@ -25,4 +21,5 @@ public abstract class TACReference extends TACOperand
 			type = ((TACReference)type).getGetType();
 		return new TACLoad(node, this).checkVirtual(type, node);
 	}
+	*/
 }

@@ -1,7 +1,7 @@
 class Operations {
     public blah() => () {		
-		int a;
-		int b;
+		int a = 1;
+		int b = 2;
 		
 		a = a + b;
 		a += b;		

@@ -7,9 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import shadow.interpreter.ShadowInteger;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACMethod;
-import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Modifiers;
@@ -48,45 +46,46 @@ public class TACArrayRef extends TACReference
 	public TACArrayRef(TACNode node, TACOperand reference,
 			Collection<TACOperand> ops, boolean check)
 	{
-		super(node);
-		array = check(reference, reference);
+		
+		//array = check(reference, reference);
+		array = reference;
 		Iterator<TACOperand> iter = ops.iterator();
 		indices = new ArrayList<TACOperand>(ops.size());
 		
 		if( check )
-		{	TACMethod method = getBuilder().getMethod();
+		{	TACMethod method = node.getMethod();
 			TACLabelRef throwLabel = new TACLabelRef(method);
 			
 			for( int i = 0; i < ops.size(); i++ )
 			{				
-				TACOperand length = check(iter.next(), new SimpleModifiedType(Type.INT));
+				//TACOperand length = check(iter.next(), new SimpleModifiedType(Type.INT));
+				TACOperand length = iter.next();
 				//by casting to uint (essentially free in LLVM), we don't need to do a negative check
-				TACOperand unsignedLength = new TACCast(this, new SimpleModifiedType(Type.UINT), length);
+				TACOperand unsignedLength = TACCast.cast(node, new SimpleModifiedType(Type.UINT), length);
 				indices.add(length);
 							
-				TACOperand bound = new TACLength(this, array, i);
-				TACOperand unsignedBound = new TACCast(this, new SimpleModifiedType(Type.UINT), bound); 
-				TACOperand condition = new TACBinary(this, unsignedLength, Type.UINT.getMatchingMethod("compare", new SequenceType(Type.UINT)), '<', unsignedBound, true);
+				TACOperand bound = new TACLength(node, array, i);
+				TACOperand unsignedBound = TACCast.cast(node, new SimpleModifiedType(Type.UINT), bound); 
+				TACOperand condition = new TACBinary(node, unsignedLength, Type.UINT.getMatchingMethod("compare", new SequenceType(Type.UINT)), '<', unsignedBound, true);
 				
 				TACLabelRef computeOffset = new TACLabelRef(method);
-				new TACBranch(this, condition, computeOffset, throwLabel);
-				computeOffset.new TACLabel(this);				
+				new TACBranch(node, condition, computeOffset, throwLabel);
+				computeOffset.new TACLabel(node);				
 				
-				if( i > 0 )
-				{	
-					total = new TACBinary(this, total, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', bound);
-					total = new TACBinary(this, total, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', length);
+				if( i > 0 ) {	
+					total = new TACBinary(node, total, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', bound);
+					total = new TACBinary(node, total, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', length);
 				}
 				else									
 					total = length;					
 			}
 			
 			TACLabelRef done = new TACLabelRef(method);			
-			new TACBranch(this, done);
+			new TACBranch(node, done);
 			
-			throwLabel.new TACLabel(this);
+			throwLabel.new TACLabel(node);
 			
-			TACOperand object = new TACNewObject(this, Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
+			TACOperand object = new TACNewObject(node, Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			List<TACOperand> params = new ArrayList<TACOperand>();
 			params.add(object);			
 			MethodSignature signature;			
@@ -95,14 +94,15 @@ public class TACArrayRef extends TACReference
 			if( ops.size() > 1 )
 			{			
 				ArrayType intArray = new ArrayType(Type.INT);
-				TACClass intClass = new TACClass(this, Type.INT);
-				TACOperand bounds  = new TACNewArray(this, intArray, intClass.getClassData(), new TACLiteral(this, new ShadowInteger(ops.size())));				iter = ops.iterator();
+				TACClass intClass = new TACClass(node, Type.INT);
+				TACOperand bounds  = new TACNewArray(node, intArray, intClass.getClassData(), new TACLiteral(node, new ShadowInteger(ops.size())));
+				iter = ops.iterator();
 				
 				//fill the array with the bad indices
 				for( int i = 0; i < ops.size(); i++ )
 				{
-					TACArrayRef arrayRef = new TACArrayRef(this, bounds, new TACLiteral(this, new ShadowInteger(i)), false);
-					new TACStore(this, arrayRef, iter.next());
+					TACArrayRef arrayRef = new TACArrayRef(node, bounds, new TACLiteral(node, new ShadowInteger(i)), false);
+					new TACStore(node, arrayRef, iter.next());
 				}
 				
 				signature = Type.INDEX_OUT_OF_BOUNDS_EXCEPTION.getMatchingMethod("create", new SequenceType(intArray));
@@ -114,27 +114,29 @@ public class TACArrayRef extends TACReference
 				params.add(ops.iterator().next());				
 			}						
 			
-			TACBlock block = getBuilder().getBlock();
-			TACCall exception = new TACCall(this, block, new TACMethodRef(this, signature), params);						
-			new TACThrow(this, block, exception);						
+			TACBlock block = TACNode.getBuilder().getBlock();
+			TACCall exception = new TACCall(node, block, new TACMethodRef(node, signature), params);						
+			new TACThrow(node, block, exception);						
 			
-			done.new TACLabel(this);	//done label	
-			new TACNodeRef(this, total);
+			done.new TACLabel(node);	//done label	
+			new TACNodeRef(node, total);
 		}
 		else
 		{		
-			total = check(iter.next(),
-					new SimpleModifiedType(Type.INT));		
+			//total = check(iter.next(),
+			//		new SimpleModifiedType(Type.INT));
+			total = iter.next();
 			indices.add(total);
 			
 			while (iter.hasNext())
 			{
-				total = new TACBinary(this, total, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(this,
+				total = new TACBinary(node, total, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(node,
 						array, indices.size()));
-				TACOperand next = check(iter.next(),
-						new SimpleModifiedType(Type.INT));
+				//TACOperand next = check(iter.next(),
+					//	new SimpleModifiedType(Type.INT));
+				TACOperand next = iter.next();
 				indices.add(next);
-				total = new TACBinary(this, total, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', next);
+				total = new TACBinary(node, total, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', next);
 			}
 		}
 	}
@@ -161,7 +163,7 @@ public class TACArrayRef extends TACReference
 	public Modifiers getModifiers() {
 		if( ((ArrayType)array.getType()).isNullable() )
 			return new Modifiers(Modifiers.NULLABLE);
-		return super.getModifiers();
+		return new Modifiers();
 	}
 
 	@Override
@@ -169,6 +171,7 @@ public class TACArrayRef extends TACReference
 	{
 		return ((ArrayType)array.getType()).getBaseType();
 	}
+	/*
 	@Override
 	public int getNumOperands()
 	{
@@ -189,7 +192,7 @@ public class TACArrayRef extends TACReference
 	{
 		visitor.visit(this);
 	}
-
+*/
 	@Override
 	public String toString()
 	{
@@ -197,5 +200,10 @@ public class TACArrayRef extends TACReference
 		for (TACOperand node : indices)
 			sb.append(node).append(", ");
 		return sb.delete(sb.length() - 2, sb.length()).append(']').toString();
+	}
+
+	@Override
+	public void setType(Type type) {
+		throw new UnsupportedOperationException();		
 	}
 }

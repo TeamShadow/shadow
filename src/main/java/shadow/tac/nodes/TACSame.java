@@ -32,9 +32,9 @@ public class TACSame extends TACOperand
 		else if( firstType.isPrimitive() && secondType.isPrimitive() ) {
 			
 			if( firstType.getWidth() >= secondType.getWidth() )
-				secondOperand = new TACCast(this, firstOperand, secondOperand);
+				secondOperand = TACCast.cast(this, firstOperand, secondOperand);
 			else
-				firstOperand = new TACCast(this, secondOperand, firstOperand);			
+				firstOperand = TACCast.cast(this, secondOperand, firstOperand);			
 		}
 		else
 			throw new UnsupportedOperationException();

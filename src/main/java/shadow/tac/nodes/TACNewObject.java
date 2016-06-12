@@ -32,25 +32,25 @@ public class TACNewObject extends TACOperand
 		TACClass _class = new TACClass(this, type);
 		classData = _class.getClassData();
 		if( !classData.getType().equals(Type.CLASS) )
-			classData = new TACCast(this, new SimpleModifiedType(Type.CLASS), classData);
+			classData = TACCast.cast(this, new SimpleModifiedType(Type.CLASS), classData);
 		methodTable = _class.getMethodTable();
 		
 		//there's a chance that it could be an interface, which isn't allowed
 		if( type instanceof TypeParameter ) {
-			TACFieldRef flags = new TACFieldRef(this, classData, "flags" );
+			TACOperand flags = new TACLoad(this, new TACFieldRef(classData, Type.CLASS.getField("flags"), "flags" ));
 			TACLiteral interfaceFlag = new TACLiteral(this, new ShadowInteger(LLVMOutput.INTERFACE) );			
 			TACOperand value = new TACBinary(this, flags, Type.INT.getMatchingMethod("bitAnd", new SequenceType(interfaceFlag)), '&', interfaceFlag);
 			MethodSignature signature = Type.INT.getMatchingMethod("equal", new SequenceType(value));
 			TACOperand test = new TACBinary(this, value, signature, '=', new TACLiteral(this, new ShadowInteger(0)));
 			
-			TACMethod method = getBuilder().getMethod();
+			TACMethod method = getMethod();
 			TACLabelRef throwLabel = new TACLabelRef(method);
 			TACLabelRef doneLabel = new TACLabelRef(method);			
 			new TACBranch(this, test, doneLabel, throwLabel);			
 			
 			throwLabel.new TACLabel(this);					
 			TACOperand object = new TACNewObject(this, Type.INTERFACE_CREATE_EXCEPTION);
-			TACFieldRef name = new TACFieldRef(this, classData, "name");
+			TACOperand name = new TACLoad(this, new TACFieldRef(classData, Type.CLASS.getField("name"), "name"));
 			signature = Type.INTERFACE_CREATE_EXCEPTION.getMatchingMethod("create", new SequenceType(name));
 			TACBlock block = getBuilder().getBlock();
 			TACCall exception = new TACCall(this, block, new TACMethodRef(this, signature), object, name);

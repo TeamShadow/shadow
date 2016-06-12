@@ -19,7 +19,7 @@ class MethodCalls {
     public test() => () {
 
 		int x;
-		int y;
+		int y = 9;
 		
 		x = method( 3 );
 		x = method( 3, 4 );

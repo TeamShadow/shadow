@@ -144,7 +144,7 @@ and Deque<V>
 	/**
 	 * Removes the first occurrence of an element. This operation is linear
 	 * time in the worst case.
-	 * @param value value of element to remoe
+	 * @param value value of element to remove
 	 * @return {@code true} if the element was found and removed	 
 	 */	
 	public remove( V value ) => ( boolean removed )

@@ -2,11 +2,10 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 /**
- * Instruction to perform a memcopy from source memory to destination memory.
+ * Instruction to perform a memcpy from source memory to destination memory.
  * 
  * @author Barry Wittman
  */

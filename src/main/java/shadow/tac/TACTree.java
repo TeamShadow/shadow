@@ -16,20 +16,19 @@ import shadow.tac.nodes.TACSimpleNode;
  * @author Jacob Young
  *
  */
-
 public class TACTree extends TACNodeList
 {
 	private int index = 0;
 	private TACTree[] children;
-	protected TACTree()
+	protected TACTree(TACMethod method)
 	{
-		this(null, 0);
+		this(null, 0, method);
 	}
-	protected TACTree(int numChildren)
+	protected TACTree(int numChildren, TACMethod method)
 	{
-		this(null, numChildren);
+		this(null, numChildren, method);
 	}
-	public TACTree(TACTree parent, int numChildren)
+	public TACTree(TACTree parent, int numChildren, TACMethod method)
 	{
 		if (numChildren < 0)
 			throw new IllegalArgumentException("numChildren < 0");
@@ -37,6 +36,7 @@ public class TACTree extends TACNodeList
 			numChildren = 10;
 		children = new TACTree[numChildren + 1];
 		children[0] = parent;
+		setMethod(method);
 	}
 	public TACTree getParent()
 	{
@@ -58,7 +58,7 @@ public class TACTree extends TACNodeList
 	{
 		if (++index == children.length)
 			children = Arrays.copyOf(children, children.length + 10);
-		return children[index] = new TACTree(this, numChildren);
+		return children[index] = new TACTree(this, numChildren, getMethod());
 	}
 	public int getNumChildren()
 	{

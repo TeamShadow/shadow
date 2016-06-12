@@ -19,8 +19,9 @@ import shadow.interpreter.ShadowCode;
 import shadow.interpreter.ShadowDouble;
 import shadow.interpreter.ShadowFloat;
 import shadow.interpreter.ShadowInteger;
+import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowString;
-import shadow.interpreter.ShadowValue;
+import shadow.interpreter.ShadowUndefined;
 import shadow.parser.javacc.*;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
@@ -40,6 +41,8 @@ import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLocalLoad;
+import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
@@ -61,8 +64,6 @@ import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
-import shadow.tac.nodes.TACUnwind;
-import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;
@@ -87,26 +88,23 @@ public class TACBuilder implements ShadowParserVisitor {
 	private TACMethod method;
 	private TACOperand prefix;
 	private boolean explicitSuper;
-	private TACVariable identifier;
+	//private TACVariable identifier; //Why does identifier matter?  It's only used to get the type for a ScopeSpecifier, and then only for Object:class
 	private TACBlock block;	
 	private Deque<TACModule> moduleStack = new ArrayDeque<TACModule>();
 	
 	public TACModule build(Node node) throws ShadowException {		
-		tree = new TACTree();				
+		tree = new TACTree(null); //no method				
 		method = null;
 		prefix = null;
 		explicitSuper = false;		
-		identifier = null;
+		//identifier = null;
 		block = null;		
 		TACNode.setBuilder(this);  //ugly, non-threadsafe approach
 		walk(node);
 		return moduleStack.pop();
 	}
 	
-	public TACMethod getMethod() {
-		return method;
-	}
-	
+	//TODO: get rid of this
 	public TACBlock getBlock() {
 		return block;
 	}
@@ -172,12 +170,12 @@ public class TACBuilder implements ShadowParserVisitor {
 		
 		//dummy method and block for constant building 
 		method = new TACMethod( new MethodSignature(new MethodType(), "", type, null));
-		block = new TACBlock(tree, block, method);		
+		block = new TACBlock(tree, block);		
 		
 		for (Node constant : type.getFieldList())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
-						constant.getImage()), constant);
+						constant.getImage(), method), constant);
 		block = block.getParent();
 		
 		for (List<MethodSignature> methods : type.getMethodMap().values())
@@ -262,17 +260,24 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTVariableDeclarator node, Boolean secondVisit) throws ShadowException {
 		// No records are needed for singletons.
 		if (secondVisit && !(node.getType() instanceof SingletonType)) { 
-			String name = node.getImage();
-			TACReference ref;
-			if (node.isField())
-				ref = new TACFieldRef(tree,
-						new TACVariableRef(tree, method.getThis()), name);
-			else
-				ref = new TACVariableRef(tree, method.addLocal(node, name));
-			if (node.jjtGetNumChildren() == 0)
-				new TACStore(tree, ref, getDefaultValue(node));
-			else
-				new TACStore(tree, ref, tree.appendChild(0));
+			String name = node.getImage();			
+			if (node.isField()) {
+				TACReference ref = new TACFieldRef(new TACLocalLoad(tree, method.getThis()), name);
+				
+				if (node.jjtGetNumChildren() != 0)
+					new TACStore(tree, ref, tree.appendChild(0));
+				//Note that default values are now removed for regular types
+				else if( node.getModifiers().isNullable() || node.getType() instanceof ArrayType )
+					new TACStore(tree, ref, getDefaultValue(node));
+			}
+			else {
+				TACVariable var = method.addLocal(node, name);
+				if (node.jjtGetNumChildren() != 0)
+					new TACLocalStore(tree, var, tree.appendChild(0));
+				else
+					new TACLocalStore(tree, var, new TACLiteral(tree, new ShadowUndefined(node.getType())));
+			}
+			
 		}
 		return POST_CHILDREN;
 	}
@@ -304,14 +309,15 @@ public class TACBuilder implements ShadowParserVisitor {
 		for( SingletonType type :  node.getSingletons() ) {		
 			TACLabelRef initLabel = new TACLabelRef(method),
 					doneLabel = new TACLabelRef(method);
-			TACReference instance = new TACSingletonRef(tree, type);
-			new TACBranch(tree, new TACSame(tree, instance, new TACLiteral(tree, ShadowValue.NULL)), initLabel, doneLabel);
+			TACSingletonRef reference = new TACSingletonRef(type);
+			TACOperand instance = new TACLoad(tree, reference);
+			new TACBranch(tree, new TACSame(tree, instance, new TACLiteral(tree, new ShadowNull(instance.getType()))), initLabel, doneLabel);
 			initLabel.new TACLabel(tree);
 			
 			TACMethodRef methodRef = new TACMethodRef(tree, type.getMethods("create").get(0));
 			TACOperand object = new TACNewObject(tree, type);
 			TACCall call = new TACCall(tree, block, methodRef, object );			
-			new TACStore(tree, instance, call ); 				
+			new TACStore(tree, reference, call ); 				
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
 		}
@@ -332,7 +338,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			//A non-void method should always have explicit TACReturns
 			//A void one might need one inserted at the end			
-			if( method.getMethod().isVoid() && !isTerminator(last) ) {
+			if( method.getSignature().isVoid() && !isTerminator(last) ) {
 				TACReturn explicitReturn = new TACReturn(tree, new SequenceType() );
 				//prevents an error from being recorded if this return is later removed as dead code
 				explicitReturn.setASTNode(null); 
@@ -391,8 +397,8 @@ public class TACBuilder implements ShadowParserVisitor {
 					last.getPrevious() instanceof TACReturn)
 				last.remove();
 			else
-				new TACReturn(tree, method.getMethod().getFullReturnTypes(),
-						new TACVariableRef(tree, method.getThis()));
+				new TACReturn(tree, method.getSignature().getFullReturnTypes(),
+						new TACLocalLoad(tree, method.getThis()));
 		}
 		else
 			initializeSingletons(node);
@@ -412,7 +418,7 @@ public class TACBuilder implements ShadowParserVisitor {
 					last.getPrevious() instanceof TACReturn)
 				last.remove();
 			else
-				new TACReturn(tree, method.getMethod().getFullReturnTypes());
+				new TACReturn(tree, method.getSignature().getFullReturnTypes());
 		}
 		else
 			initializeSingletons(node);
@@ -425,13 +431,13 @@ public class TACBuilder implements ShadowParserVisitor {
 			throws ShadowException {
 		if (secondVisit) {			
 			boolean isSuper = node.getImage().equals("super");
-			ClassType thisType = (ClassType)method.getMethod().getOuter();
+			ClassType thisType = (ClassType)method.getSignature().getOuter();
 			List<TACOperand> params = new ArrayList<TACOperand>();
-			params.add(new TACVariableRef(tree, method.getThis()));
+			params.add(new TACLocalLoad(tree, method.getThis()));
 			
 			if( (!isSuper && thisType.hasOuter()) || (isSuper && thisType.getExtendType().hasOuter()) ) {
 				TACVariable outer = method.getParameter("_outer");
-				params.add(new TACVariableRef(tree, outer));
+				params.add(new TACLocalLoad(tree, outer));
 			}
 			
 			for (int i = 0; i < tree.getNumChildren(); i++) {
@@ -467,8 +473,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		//The only thing that comes in here are the declarations
 		//in catch blocks
 		if (secondVisit)
-			new TACVariableRef(tree,
-					method.addLocal(node, node.getImage()));
+			method.addLocal(node, node.getImage());
 		return POST_CHILDREN;
 	}
 
@@ -569,11 +574,10 @@ public class TACBuilder implements ShadowParserVisitor {
 				if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
 					right = new TACBinary(tree, result, signature, operation, right);
 				else {
-					TACVariableRef temp = new TACVariableRef(tree,
-							method.addTempLocal(signature.getReturnTypes().get(0)));
+					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
 					methodRef = new TACMethodRef(tree, result, signature);
-					new TACStore(tree, temp, new TACCall(tree, block, methodRef, methodRef.getPrefix(), right));		
-					right = new TACLoad(tree, temp);						
+					new TACLocalStore(tree, temp, new TACCall(tree, block, methodRef, methodRef.getPrefix(), right));		
+					right = new TACLocalLoad(tree, temp);						
 				}		
 				
 				parameters = new ArrayList<TACOperand>( parameters );					
@@ -589,22 +593,51 @@ public class TACBuilder implements ShadowParserVisitor {
 			parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)
 			new TACCall(tree, block, methodRef, parameters);
 		}			
-		else {	
-			TACReference var = (TACReference)left;
+		else if( left instanceof TACLoad ){ //memory operation: field, array, etc.	
+			TACReference var = ((TACLoad)left).getReference();
 			if (operation != '=') {	
 				signature = node.getOperations().get(0);
 				if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
-					right = new TACBinary(tree, var, signature, operation, right );
+					right = new TACBinary(tree, left, signature, operation, right );
 				else {
-					TACVariableRef temp = new TACVariableRef(tree,
-							method.addTempLocal(signature.getReturnTypes().get(0)));
+					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
 					methodRef = new TACMethodRef(tree, left, signature);
-					new TACStore(tree, temp, new TACCall(tree, block, methodRef, methodRef.getPrefix(), right));		
-					right = new TACLoad(tree, temp);						
+					new TACLocalStore(tree, temp, new TACCall(tree, block, methodRef, methodRef.getPrefix(), right));		
+					right = new TACLocalLoad(tree, temp);						
 				}
 			}
+			else {
+				//in straight assignment, loading the left is unnecessary because we're just going to store there
+				//we had to build in the load so that we had something to get, but now we don't need it
+				left.remove();
+			}
+			
 			new TACStore(tree, var, right);				
 		}
+		else if( left instanceof TACLocalLoad || left instanceof TACLocalStore ) { //local variable operation			
+			TACVariable var;
+			if( left instanceof TACLocalLoad )
+				var = ((TACLocalLoad)left).getVariable();
+			else
+				var = ((TACLocalStore)left).getVariable();
+			if (operation != '=') {	
+				signature = node.getOperations().get(0);
+				if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
+					right = new TACBinary(tree, left, signature, operation, right );
+				else {
+					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
+					methodRef = new TACMethodRef(tree, left, signature);
+					new TACLocalStore(tree, temp, new TACCall(tree, block, methodRef, methodRef.getPrefix(), right));		
+					right = new TACLocalLoad(tree, temp);						
+				}
+			}
+			else if( left instanceof TACLocalLoad )
+				left.remove(); //once we know the var, we can remove the local load
+			
+			new TACLocalStore(tree, var, right);	
+		}
+		else
+			throw new UnsupportedOperationException();
 	}
 	
 	// Primary expressions can have indexes which are needed in the assignment process
@@ -720,17 +753,16 @@ public class TACBuilder implements ShadowParserVisitor {
 			TACLabelRef trueLabel = new TACLabelRef(method),
 					falseLabel = new TACLabelRef(method),
 					doneLabel = new TACLabelRef(method);
-			TACReference var = new TACVariableRef(tree,
-					method.addTempLocal(node));
+			TACVariable var = method.addTempLocal(node);
 			new TACBranch(tree, tree.appendChild(0), trueLabel, falseLabel);
 			trueLabel.new TACLabel(tree);
-			new TACStore(tree, var, tree.appendChild(1));
+			new TACLocalStore(tree, var, tree.appendChild(1));
 			new TACBranch(tree, doneLabel);
 			falseLabel.new TACLabel(tree);
-			new TACStore(tree, var, tree.appendChild(2));
+			new TACLocalStore(tree, var, tree.appendChild(2));
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
-			new TACLoad(tree, var);
+			new TACLocalLoad(tree, var);
 		}
 		return node.jjtGetNumChildren() == 1 ? PRE_CHILDREN : POST_CHILDREN;
 	}
@@ -741,18 +773,17 @@ public class TACBuilder implements ShadowParserVisitor {
 			TACLabelRef nonnullLabel = new TACLabelRef(method),
 					nullLabel = new TACLabelRef(method),
 					doneLabel = new TACLabelRef(method);
-			TACReference var = new TACVariableRef(tree,
-					method.addTempLocal(node));
+			TACVariable var = method.addTempLocal(node);
 			TACOperand value = tree.appendChild(0);
-			new TACBranch(tree, new TACSame(tree, value, new TACLiteral(tree, ShadowValue.NULL)), nullLabel, nonnullLabel);
+			new TACBranch(tree, new TACSame(tree, value, new TACLiteral(tree, new ShadowNull(value.getType()))), nullLabel, nonnullLabel);
 			nonnullLabel.new TACLabel(tree);
-			new TACStore(tree, var, value);
+			new TACLocalStore(tree, var, value);
 			new TACBranch(tree, doneLabel);
 			nullLabel.new TACLabel(tree);
-			new TACStore(tree, var, tree.appendChild(1));
+			new TACLocalStore(tree, var, tree.appendChild(1));
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
-			new TACLoad(tree, var);
+			new TACLocalLoad(tree, var);
 		}
 		return node.jjtGetNumChildren() == 1 ? PRE_CHILDREN : POST_CHILDREN;
 	}
@@ -762,20 +793,19 @@ public class TACBuilder implements ShadowParserVisitor {
 			throws ShadowException {
 		if (secondVisit) {
 			TACLabelRef doneLabel = new TACLabelRef(method);
-			TACReference var = new TACVariableRef(tree,
-					method.addTempLocal(node));
+			TACVariable var = method.addTempLocal(node);
 			TACOperand value = tree.appendChild(0);
-			new TACStore(tree, var, value);
+			new TACLocalStore(tree, var, value);
 			for (int i = 1; i < tree.getNumChildren(); i++)
 			{
 				TACLabelRef nextLabel = new TACLabelRef(method);
 				new TACBranch(tree, value, doneLabel, nextLabel);
 				nextLabel.new TACLabel(tree);
-				new TACStore(tree, var, value = tree.appendChild(i));
+				new TACLocalStore(tree, var, value = tree.appendChild(i));
 			}
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
-			new TACLoad(tree, var);
+			new TACLocalLoad(tree, var);
 		}
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
@@ -793,19 +823,18 @@ public class TACBuilder implements ShadowParserVisitor {
 			throws ShadowException {
 		if (secondVisit) {
 			TACLabelRef doneLabel = new TACLabelRef(method);
-			TACReference var = new TACVariableRef(tree,
-					method.addTempLocal(node));
+			TACVariable var = method.addTempLocal(node);
 			TACOperand value = tree.appendChild(0);
-			new TACStore(tree, var, value);
+			new TACLocalStore(tree, var, value);
 			for (int i = 1; i < tree.getNumChildren(); i++) {
 				TACLabelRef nextLabel = new TACLabelRef(method);
 				new TACBranch(tree, value, nextLabel, doneLabel);
 				nextLabel.new TACLabel(tree);
-				new TACStore(tree, var, value = tree.appendChild(i));
+				new TACLocalStore(tree, var, value = tree.appendChild(i));
 			}
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
-			new TACLoad(tree, var);
+			new TACLocalLoad(tree, var);
 		}
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
@@ -854,74 +883,73 @@ public class TACBuilder implements ShadowParserVisitor {
 						value = new TACSame(tree, value, other);					
 					else {	
 						//no nullables allowed
-						TACVariableRef var = new TACVariableRef(tree,
-								method.addTempLocal(node));
+						TACVariable var = method.addTempLocal(node);
 						Type valueType = resolveType(value.getType());
 						MethodSignature signature = valueType.getMatchingMethod("equal", new SequenceType(other));												
-						new TACStore(tree, var, new TACCall(tree, block,
+						new TACLocalStore(tree, var, new TACCall(tree, block,
 								new TACMethodRef(tree, value, signature),
 								value, other));
-						value = new TACLoad(tree, var);
+						value = new TACLocalLoad(tree, var);
 					}						
 				}
 				else { //=== or !==				
 					boolean valueNullable = value.getModifiers().isNullable();
 					boolean otherNullable = other.getModifiers().isNullable();
 					if( currentType.isPrimitive() && nextType.isPrimitive() && ( valueNullable || otherNullable )) {
-						TACReference var = new TACVariableRef(tree,	method.addTempLocal(new SimpleModifiedType(Type.BOOLEAN)));
+						TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.BOOLEAN));
 						TACLabelRef done = new TACLabelRef(method);
 						
 						if( valueNullable && otherNullable ) {							
-							TACOperand valueNull = new TACSame(tree, value, new TACLiteral(tree, ShadowValue.NULL));
-							TACOperand otherNull = new TACSame(tree, other, new TACLiteral(tree, ShadowValue.NULL));							
+							TACOperand valueNull = new TACSame(tree, value, new TACLiteral(tree, new ShadowNull(value.getType())));
+							TACOperand otherNull = new TACSame(tree, other, new TACLiteral(tree, new ShadowNull(other.getType())));							
 							TACOperand bothNull = new TACBinary(tree, valueNull, TACBinary.Boolean.AND, otherNull );
 							TACOperand eitherNull = new TACBinary(tree, valueNull, TACBinary.Boolean.OR, otherNull );							
 							TACLabelRef notBothNull = new TACLabelRef(method);												
 							TACLabelRef noNull = new TACLabelRef(method);
 							
-							new TACStore(tree, var, bothNull);
+							new TACLocalStore(tree, var, bothNull);
 							new TACBranch(tree, bothNull, done, notBothNull); //var will be true (both null)
 							
 							notBothNull.new TACLabel(tree);
 							new TACBranch(tree, eitherNull, done, noNull); //var will be false (one but not both null)
 														
 							noNull.new TACLabel(tree);
-							new TACStore(tree, var, new TACSame(tree,
-									new TACCast(tree, new SimpleModifiedType(value.getType()), value),
-									new TACCast(tree, new SimpleModifiedType(other.getType()), other)));
+							new TACLocalStore(tree, var, new TACSame(tree,
+									TACCast.cast(tree, new SimpleModifiedType(value.getType()), value),
+									TACCast.cast(tree, new SimpleModifiedType(other.getType()), other)));
 							new TACBranch(tree, done);
 						}
 						else if( valueNullable ) { //only value nullable							
-							TACOperand valueNull = new TACSame(tree, value, new TACLiteral(tree, ShadowValue.NULL));							
+							TACOperand valueNull = new TACSame(tree, value, new TACLiteral(tree, new ShadowNull(value.getType())));							
 							TACLabelRef oneNull = new TACLabelRef(method);												
 							TACLabelRef noNull = new TACLabelRef(method);														
 							new TACBranch(tree, valueNull, oneNull, noNull);
 							oneNull.new TACLabel(tree);
-							new TACStore(tree, var, new TACLiteral(tree, new ShadowBoolean(false)));		
+							new TACLocalStore(tree, var, new TACLiteral(tree, new ShadowBoolean(false)));		
 							new TACBranch(tree, done);														
 							noNull.new TACLabel(tree);
-							new TACStore(tree, var, new TACSame(tree,
-									new TACCast(tree, new SimpleModifiedType(value.getType()), value),
+							new TACLocalStore(tree, var, new TACSame(tree,
+									TACCast.cast(tree, new SimpleModifiedType(value.getType()), value),
 									other));
 							new TACBranch(tree, done);							
 						}
 						else { //only other nullable 
-							TACOperand otherNull = new TACSame(tree, other, new TACLiteral(tree, ShadowValue.NULL));							
+							TACOperand otherNull = new TACSame(tree, other, new TACLiteral(tree, new ShadowNull(other.getType())));							
 							TACLabelRef oneNull = new TACLabelRef(method);												
 							TACLabelRef noNull = new TACLabelRef(method);														
 							new TACBranch(tree, otherNull, oneNull, noNull);
 							oneNull.new TACLabel(tree);
-							new TACStore(tree, var, new TACLiteral(tree, new ShadowBoolean(false)));									
+							new TACLocalStore(tree, var, new TACLiteral(tree, new ShadowBoolean(false)));									
 							new TACBranch(tree, done);														
 							noNull.new TACLabel(tree);
-							new TACStore(tree, var, new TACSame(tree,
+							new TACLocalStore(tree, var, new TACSame(tree,
 									value,
-									new TACCast(tree, new SimpleModifiedType(other.getType()), other)));
+									TACCast.cast(tree, new SimpleModifiedType(other.getType()), other)));
 							new TACBranch(tree, done);
 						}
 						
 						done.new TACLabel(tree);
-						value = new TACLoad(tree, var);
+						value = new TACLocalLoad(tree, var);
 					}
 					else //both non-nullable primitives or both references, no problem		
 						value = new TACSame(tree, value, other);
@@ -978,28 +1006,27 @@ public class TACBuilder implements ShadowParserVisitor {
 			TACLabelRef nullLabel = new TACLabelRef(method),
 					nonnullLabel = new TACLabelRef(method),
 					doneLabel = new TACLabelRef(method);
-			TACReference var = new TACVariableRef(tree,
-					method.addTempLocal(new SimpleModifiedType(Type.STRING)));
+			TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.STRING));
 			new TACBranch(tree, new TACSame(tree, operand,
-					new TACLiteral(tree, ShadowValue.NULL)), nullLabel,
+					new TACLiteral(tree, new ShadowNull(operand.getType()))), nullLabel,
 					nonnullLabel);
 			nullLabel.new TACLabel(tree);
-			new TACStore(tree, var, new TACLiteral(tree, new ShadowString("null")));
+			new TACLocalStore(tree, var, new TACLiteral(tree, new ShadowString("null")));
 			new TACBranch(tree, doneLabel);
 			nonnullLabel.new TACLabel(tree);
 			
 			if( type.isPrimitive() ) //convert non null primitive wrapper to real primitive			
-				operand = new TACCast(tree, new SimpleModifiedType(type), operand);
+				operand = TACCast.cast(tree, new SimpleModifiedType(type), operand);
 			
 			TACMethodRef methodRef = new TACMethodRef(tree, operand,
 					type.getMatchingMethod("toString", new SequenceType())); 
 			
-			new TACStore(tree, var, new TACCall(tree, block,
+			new TACLocalStore(tree, var, new TACCall(tree, block,
 					methodRef,
 					Collections.singletonList(methodRef.getPrefix())));
 			new TACBranch(tree, doneLabel);
 			doneLabel.new TACLabel(tree);
-			operand = new TACLoad(tree, var);
+			operand = new TACLocalLoad(tree, var);
 		}
 		else {
 			TACMethodRef methodRef = new TACMethodRef(tree, operand,
@@ -1081,10 +1108,9 @@ public class TACBuilder implements ShadowParserVisitor {
 					if( type.isPrimitive() && signature.getModifiers().isNative() )
 						new TACUnary(tree, signature, op, operand);				
 					else {
-						TACVariableRef var = new TACVariableRef(tree,
-								method.addTempLocal(node));
-						new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, operand, node.getOperations().get(0)), operand));		
-						new TACLoad(tree, var);
+						TACVariable var = method.addTempLocal(node);
+						new TACLocalStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, operand, node.getOperations().get(0)), operand));		
+						new TACLocalLoad(tree, var);
 					}
 				}
 			}
@@ -1109,7 +1135,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			throw new UnsupportedOperationException();
 		
 		if (secondVisit)
-			new TACCast(tree, node, tree.appendChild(1), true);
+			TACCast.cast(tree, node, tree.appendChild(1), true);
 		return POST_CHILDREN;
 	}
 	
@@ -1129,7 +1155,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			//if there's a recover, things will be handled there if null			
 			new TACBranch(tree, new TACSame(tree, operand, new TACLiteral(tree,
-					ShadowValue.NULL)), recover, continueLabel);
+					new ShadowNull(operand.getType()))), recover, continueLabel);
 			
 			//otherwise, we throw an exception here
 			if( !node.hasRecover() ) {
@@ -1145,7 +1171,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			prefix = new TACNodeRef(tree, operand, new SimpleModifiedType(operand.getType(), new Modifiers(operand.getModifiers().getModifiers() & ~Modifiers.NULLABLE)));
 			
 			if( node.getType().isPrimitive() ) //convert from object to primitive form
-				prefix = new TACCast(tree, new SimpleModifiedType(node.getType()), prefix );
+				prefix = TACCast.cast(tree, new SimpleModifiedType(node.getType()), prefix );
 		}
 		return POST_CHILDREN;
 	}
@@ -1154,9 +1180,9 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTPrimaryExpression node, Boolean secondVisit)
 			throws ShadowException {
 		TACOperand savePrefix = prefix;
-		TACVariable saveIdentifier = identifier;
+		//TACVariable saveIdentifier = identifier;
 		prefix = null;
-		identifier = null;
+		//identifier = null;
 
 		tree = tree.next(node.jjtGetNumChildren());
 		for (int i = 0; i < node.jjtGetNumChildren(); i++)
@@ -1164,7 +1190,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		tree = tree.done();
 
 		prefix = savePrefix;
-		identifier = saveIdentifier;
+		//identifier = saveIdentifier;
 		return NO_CHILDREN;
 	}
 
@@ -1172,11 +1198,11 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTPrimaryPrefix node, Boolean secondVisit)
 			throws ShadowException {
 		if (secondVisit) {
-			identifier = new TACVariable(node, node.getImage());
+			//identifier = new TACVariable(node, node.getImage());
 			if (node.isImageNull())
 				prefix = tree.appendChild(0);
 			else if( node.getType() instanceof SingletonType )
-				prefix = new TACSingletonRef(tree, (SingletonType)node.getType());			
+				prefix = new TACLoad(tree, new TACSingletonRef((SingletonType)node.getType()));			
 			else {
 				String name = node.getImage();
 				explicitSuper = name.equals("super");
@@ -1189,23 +1215,25 @@ public class TACBuilder implements ShadowParserVisitor {
 					else
 						local = method.getLocal(name);
 					if (local != null)
-						prefix = new TACVariableRef(tree, local);
+						prefix = new TACLocalLoad(tree, local); //TODO: this might not work
 					else {
-						if (node.getModifiers().isConstant()) {
-							Type thisType = method.getThis().getType();
+						if (node.getModifiers().isConstant()) { //constant
+							Type thisType = method.getSignature().getOuter();
 							//figure out type that defines constant							
 							while( !thisType.containsField(name))
 								thisType = thisType.getOuter();
-							prefix = new TACConstantRef(tree, thisType, name);
+							prefix = new TACLoad(tree, new TACConstantRef(thisType, name));
 						}
-						else {						
-							TACReference thisRef = new TACVariableRef(tree, method.getThis());
+						else { //field					
+							ModifiedType thisRef = method.getThis();
+							TACOperand op = new TACLocalLoad(tree, (TACVariable)thisRef);
 							//make chain of this:_outer references until field is found
-							while (!thisRef.getType().containsField(name))
-								thisRef = new TACFieldRef(tree, thisRef,
-										new SimpleModifiedType(thisRef.getType().
-												getOuter()), "_outer");
-							prefix = new TACFieldRef(tree, thisRef, name);
+							while (!op.getType().containsField(name)) {								
+								op = new TACLoad(tree, new TACFieldRef(op,
+										new SimpleModifiedType(op.getType().
+												getOuter()), "_outer"));
+							}							
+							prefix = new TACLoad(tree, new TACFieldRef(op, name));
 						}
 					}
 				}				
@@ -1228,15 +1256,15 @@ public class TACBuilder implements ShadowParserVisitor {
 	
 	private void methodCall(MethodSignature signature, Node node) {
 		if (prefix == null) {			
-			prefix = new TACVariableRef(tree, method.getThis());
+			prefix = new TACLocalLoad(tree, method.getThis());
 			
 			//for outer class method calls
 			Type prefixType = prefix.getType().getTypeWithoutTypeArguments();
 			Type methodOuter = signature.getOuter().getTypeWithoutTypeArguments();
 			
 			while( !prefixType.isSubtype(methodOuter) ) {			
-				prefix = new TACFieldRef(tree, prefix, new SimpleModifiedType(prefixType.getOuter()),
-					"_outer");
+				prefix = new TACLoad(tree, new TACFieldRef(prefix, new SimpleModifiedType(prefixType.getOuter()),
+					"_outer"));
 				prefixType = prefixType.getOuter();				
 			}
 		}
@@ -1267,9 +1295,9 @@ public class TACBuilder implements ShadowParserVisitor {
 		
 		if( !methodReturnTypes.matches(requiredReturnTypes) ) {
 			if( requiredReturnTypes.size() == 1 )			
-				prefix = new TACCast(tree, requiredReturnTypes.get(0), prefix);
+				prefix = TACCast.cast(tree, requiredReturnTypes.get(0), prefix);
 			else
-				prefix = new TACCast(tree, new SimpleModifiedType(requiredReturnTypes), prefix);
+				prefix = TACCast.cast(tree, new SimpleModifiedType(requiredReturnTypes), prefix);
 		}
 		
 		explicitSuper = false;		
@@ -1288,7 +1316,8 @@ public class TACBuilder implements ShadowParserVisitor {
 			throws ShadowException {
 		if (secondVisit) {			
 			if( node.getImage().equals("class")) {
-				Type type = identifier.getType();
+				//Type type = identifier.getType();
+				Type type = node.getPrefixType();
 				
 				boolean raw = false;
 				
@@ -1306,11 +1335,11 @@ public class TACBuilder implements ShadowParserVisitor {
 				prefix = new TACClass(tree, type, raw).getClassData();
 			}
 			else if( node.getModifiers().isConstant() )
-				prefix = new TACConstantRef(tree, node.getPrefixType(), node.getImage());
+				prefix = new TACLoad(tree, new TACConstantRef(node.getPrefixType(), node.getImage()));
 			else if( node.getType() instanceof SingletonType)
-				prefix = new TACSingletonRef(tree, (SingletonType)node.getType());
+				prefix = new TACLoad(tree, new TACSingletonRef((SingletonType)node.getType()));
 			else if( !node.getModifiers().isTypeName() )  //doesn't do anything at this stage if it's just a type name				
-				prefix = new TACFieldRef(tree, prefix, node.getImage());
+				prefix = new TACLoad(tree, new TACFieldRef(prefix, node.getImage()));
 		}
 		return POST_CHILDREN;
 	}
@@ -1318,8 +1347,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	@Override
 	public Object visit(ASTMethod node, Boolean secondVisit)
 			throws ShadowException {
-		if (secondVisit)
-			identifier = new TACVariable(node, node.getImage());
+		//if (secondVisit)
+			//identifier = new TACVariable(node, node.getImage());
 		return POST_CHILDREN;
 	}
 	
@@ -1343,14 +1372,14 @@ public class TACBuilder implements ShadowParserVisitor {
 					//however, ints are required
 					Type indexType = index.getType();
 					if( indexType.isIntegral() && !indexType.isSubtype(Type.INT))
-						index = new TACCast(tree, new SimpleModifiedType(Type.INT, index.getModifiers()), index);
+						index = TACCast.cast(tree, new SimpleModifiedType(Type.INT, index.getModifiers()), index);
 					list.add(index);
 				}
 				
 				if( arrayType.getBaseType() instanceof TypeParameter )
-					prefix = new TACGenericArrayRef(tree, prefix, list);
+					prefix = new TACLoad(tree, new TACGenericArrayRef(tree, prefix, list));
 				else
-					prefix = new TACArrayRef(tree, prefix, list);
+					prefix = new TACLoad(tree, new TACArrayRef(tree, prefix, list));
 			}				
 			else if( node.getType() instanceof SubscriptType ) {					
 				SubscriptType subscriptType = (SubscriptType) node.getType();
@@ -1366,10 +1395,12 @@ public class TACBuilder implements ShadowParserVisitor {
 					
 					TACOperand op = tree.appendChild(0);
 					//important that the load happens now, rather than in the assignment
+					/*
 					if( op instanceof TACReference ) {
 						TACReference reference = (TACReference) op;
 						op = new TACLoad(tree, reference);
-					}					
+					}
+					*/					
 					list.add(op);
 					node.setIndexes(list);					
 					tree.append(prefix); //append the prefix as well
@@ -1446,7 +1477,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTNullLiteral node, Boolean secondVisit)
 			throws ShadowException {
 		if (secondVisit)
-			prefix = new TACLiteral(tree, ShadowValue.NULL);
+			prefix = new TACLiteral(tree, new ShadowNull(Type.NULL));
 		return node.isImageNull() ? PRE_CHILDREN : POST_CHILDREN;
 	}
 
@@ -1508,11 +1539,11 @@ public class TACBuilder implements ShadowParserVisitor {
 			if( prefix != null && prefix.getType().isSubtype(methodOuter) )
 				params.add(1, prefix); //after object, before args
 			else {					
-				 TACReference outer = new TACVariableRef(tree, method.getThis());
+				 TACOperand outer = new TACLocalLoad(tree, method.getThis());
 				 Type outerType = outer.getType().getTypeWithoutTypeArguments();					 
 				 while( !outerType.isSubtype(methodOuter) ) {
-					outer = new TACFieldRef(tree, outer, new SimpleModifiedType(outerType.getOuter()),
-							"_outer");						
+					outer = new TACLoad(tree, new TACFieldRef(outer, new SimpleModifiedType(outerType.getOuter()),
+							"_outer"));						
 					outerType = outerType.getOuter();				
 				 }					 
 				 params.add(1, outer); //after object, before args
@@ -1521,7 +1552,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 		TACMethodRef methodRef;		
 		if( signature.getOuter() instanceof InterfaceType )
-			methodRef = new TACMethodRef(tree, new TACCast(tree, new SimpleModifiedType(signature.getOuter()), object), signature);
+			methodRef = new TACMethodRef(tree, TACCast.cast(tree, new SimpleModifiedType(signature.getOuter()), object), signature);
 		else
 			methodRef = new TACMethodRef(tree, signature);
 				
@@ -1529,7 +1560,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		
 		//sometimes a cast is needed when dealing with generic types
 		if( !prefix.getType().equals(prefixType) )
-			prefix = new TACCast(tree, new SimpleModifiedType(prefixType), prefix);
+			prefix = TACCast.cast(tree, new SimpleModifiedType(prefixType), prefix);
 		
 		return prefix;
 	}	
@@ -1654,9 +1685,8 @@ public class TACBuilder implements ShadowParserVisitor {
 			//create splat
 			if( !(rightSide.getType() instanceof SequenceType)  ) {				
 				TACOperand right = tree.appendChild(1);
-				TACReference temporary = new TACVariableRef(tree,
-						method.addTempLocal(rightSide));	
-				new TACStore(tree, temporary, right);
+				TACVariable temporary = method.addTempLocal(rightSide);	
+				new TACLocalStore(tree, temporary, right);
 				
 
 				//fix this!
@@ -1672,7 +1702,7 @@ public class TACBuilder implements ShadowParserVisitor {
 				int index = 0;
 				for( boolean used : leftSide.getUsedItems() )
 					if( used ) {						
-						doAssignment(left.get(index), leftSide.jjtGetChild(index), new TACLoad(tree, temporary), '=', null);
+						doAssignment(left.get(index), leftSide.jjtGetChild(index), new TACLocalLoad(tree, temporary), '=', null);
 						index++;
 					}				
 			}
@@ -1947,7 +1977,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			block = block.getParent();
 		}
 		else
-			block = new TACBlock(tree, block, method).addDone();
+			block = new TACBlock(tree, block).addDone();
 		return POST_CHILDREN;
 	}
 
@@ -1966,17 +1996,18 @@ public class TACBuilder implements ShadowParserVisitor {
 				visitCleanup(block.getParent(), block.getDone(),
 						block.getParent().getDone());
 				block.getLandingpad().new TACLabel(tree);
-				new TACLandingpad(tree, block);
+				TACVariable exception = method.getLocal("_exception");
+				new TACLocalStore(tree, exception, new TACLandingpad(tree, block));
 				new TACBranch(tree, block.getUnwind());
 				block.getUnwind().new TACLabel(tree);
-				new TACUnwind(tree, block);
+				//new TACUnwind(tree, block, new TACLocalLoad(tree, exception));
 				TACLabelRef continueUnwind = block.getParent().getUnwind();
 				if (continueUnwind != null)
 					visitCleanup(block, block.getUnwind(), continueUnwind);
 				else
 				{
 					visitCleanup(block, block.getUnwind());
-					new TACResume(tree);
+					new TACResume(tree, new TACLocalLoad(tree, exception));
 				}
 				block.getCleanup().new TACLabel(tree);
 				block.getCleanupPhi().new TACPhi(tree);
@@ -1984,7 +2015,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			}
 		}
 		else if (parent.hasFinally())
-			block = new TACBlock(tree, block, method).addLandingpad().addUnwind().
+			block = new TACBlock(tree, block).addLandingpad().addUnwind().
 					addCleanup().addDone();
 		return POST_CHILDREN;
 	}
@@ -1993,26 +2024,33 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTCatchStatements node, Boolean secondVisit) throws ShadowException {
 		ASTRecoverStatement parent = (ASTRecoverStatement)node.jjtGetParent();
 		if (secondVisit) {
-			TACOperand typeid = tree.appendChild(0);
-			for (int i = 1; i <= node.getCatches(); i++) {
-				Type type = node.jjtGetChild(i).jjtGetChild(0).getType();
-				TACLabelRef catchLabel = block.getCatch(i - 1),
-						skip = new TACLabelRef(method);
-				new TACBranch(tree, new TACCall(tree, block, new TACMethodRef(
-						tree, Type.INT.getMatchingMethod("equal", new SequenceType(Type.INT))), typeid,
-						new TACTypeId(tree, new TACClass(tree, type).getClassData())),
-						catchLabel, skip);
-				catchLabel.new TACLabel(tree);
-				tree.appendChild(i);
-				new TACBranch(tree, block.getDone());
-				skip.new TACLabel(tree);
-				if (i == node.getCatches()) {
-					TACLabelRef continueUnwind = block.getUnwind();
-					if (continueUnwind != null)
-						new TACBranch(tree, continueUnwind); //try inside of try					
-					else
-						new TACResume(tree);					
+			tree.appendChild(0); //appends try block			
+			if( node.getCatches() > 0 ) {			
+				TACOperand typeid = new TACSequenceElement(tree, new TACLocalLoad(tree, node.getException()), 1 );
+				for (int i = 1; i <= node.getCatches(); i++) {
+					Type type = node.jjtGetChild(i).jjtGetChild(0).getType();
+					TACLabelRef catchLabel = block.getCatch(i - 1),
+							skip = new TACLabelRef(method);
+					/*
+					new TACBranch(tree, new TACCall(tree, block, new TACMethodRef(
+							tree, Type.INT.getMatchingMethod("equal", new SequenceType(Type.INT))), typeid,
+							new TACTypeId(tree, new TACClass(tree, type).getClassData())),
+							catchLabel, skip);*/
+					
+					new TACBranch(tree, new TACSame(tree, typeid, new TACTypeId(tree, new TACClass(tree, type).getClassData())),
+							catchLabel, skip);
+							
+					catchLabel.new TACLabel(tree);
+					tree.appendChild(i); //append catch i
+					new TACBranch(tree, block.getDone());
+					skip.new TACLabel(tree);
 				}
+				
+				TACLabelRef continueUnwind = block.getUnwind();
+				if (continueUnwind != null)
+					new TACBranch(tree, continueUnwind); //try inside of try					
+				else
+					new TACResume(tree, new TACLocalLoad(tree, node.getException()));
 			}			
 
 			if (parent.hasRecover())			
@@ -2021,7 +2059,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			block = block.getParent();			
 		}
 		else {
-			block = new TACBlock(tree, block, method);
+			block = new TACBlock(tree, block);
 			if (parent.hasRecover())
 				block.addRecover();
 			
@@ -2035,9 +2073,11 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTCatchStatement node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit) {
 			tree.appendChild(0);
-			new TACStore(tree, new TACVariableRef(tree, method.getLocal(
-					node.jjtGetChild(0).getImage())), new TACCatch(tree,
-					(ExceptionType)node.jjtGetChild(0).getType()));
+			
+			ASTCatchStatements parent = (ASTCatchStatements) node.jjtGetParent();			
+			new TACLocalStore(tree, method.getLocal(
+					node.jjtGetChild(0).getImage()), new TACCatch(tree,
+					(ExceptionType)node.jjtGetChild(0).getType(), new TACLocalLoad(tree, parent.getException())));
 			tree.appendChild(1);
 			method.exitScope();
 		}
@@ -2056,15 +2096,17 @@ public class TACBuilder implements ShadowParserVisitor {
 			if (parent.getCatches() > 0 ) {
 				method.setHasLandingpad();
 				block.getLandingpad().new TACLabel(tree);
-				new TACLandingpad(tree, block);
+				TACVariable exception = method.getLocal("_exception");
+				parent.setException(exception);
+				new TACLocalStore(tree, exception, new TACLandingpad(tree, block));
 				new TACBranch(tree, block.getUnwind());
 				block.getUnwind().new TACLabel(tree);
-				new TACTypeId(tree, new TACUnwind(tree, block));
+				//new TACTypeId(tree, exception);
 				block = block.getParent();
 			}
 		}
 		else if (parent.getCatches() > 0) {
-			block = new TACBlock(tree, block, method).addLandingpad().addUnwind();
+			block = new TACBlock(tree, block).addLandingpad().addUnwind();
 		}
 		return POST_CHILDREN;
 	}
@@ -2118,7 +2160,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	private void visitConstant(TACConstant constantRef, Node constantNode)
 			throws ShadowException {
 		TACTree saveTree = tree;
-		tree = new TACTree(1);
+		tree = new TACTree(1, constantRef.getMethod());		
 		walk(constantNode.jjtGetChild(0));
 		tree.done();
 		constantRef.append(tree);
@@ -2146,14 +2188,14 @@ public class TACBuilder implements ShadowParserVisitor {
 		else
 			copyMethod = new TACMethodRef(tree, baseType.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)) );
 	
-		TACVariableRef[] counters = new TACVariableRef[layers];			
+		TACVariable[] counters = new TACVariable[layers];			
 		TACLabelRef[] labels = new TACLabelRef[layers];			
 		TACLabelRef done = new TACLabelRef(method);
 		TACOperand returnValue = null;
 		
 		type = array.getType();		
 		TACOperand oldArray = array;
-		TACVariableRef previousArray = null;
+		TACVariable previousArray = null;
 		
 		for( int i = 0; i < layers; i++ ) {
 			ArrayType arrayType = (ArrayType)type;
@@ -2167,15 +2209,15 @@ public class TACBuilder implements ShadowParserVisitor {
 			}
 			
 			TACClass class_ = new TACClass(tree, type);
-			TACVariableRef copiedArray = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(arrayType)));
-			new TACStore(tree, copiedArray, new TACNewArray(tree, arrayType, class_.getClassData(), dimensions));
+			TACVariable copiedArray = method.addTempLocal(new SimpleModifiedType(arrayType));
+			new TACLocalStore(tree, copiedArray, new TACNewArray(tree, arrayType, class_.getClassData(), dimensions));
 			
 			if( i == 0 )
-				returnValue = copiedArray;
+				returnValue = new TACLocalLoad(tree, copiedArray);
 			else {
 				//store current array into its spot in the previous array
-				TACArrayRef location = new TACArrayRef(tree, previousArray, counters[i - 1], false);
-				new TACStore(tree, location, copiedArray);
+				TACArrayRef location = new TACArrayRef(tree, new TACLocalLoad(tree, previousArray), new TACLocalLoad(tree, counters[i - 1]), false);
+				new TACStore(tree, location, new TACLocalLoad(tree, copiedArray));
 			}
 			
 			previousArray = copiedArray;
@@ -2190,12 +2232,12 @@ public class TACBuilder implements ShadowParserVisitor {
 				if( type.isPrimitive() ) {
 					TACMethodRef width = new TACMethodRef(tree, Type.CLASS.getMatchingMethod("width", new SequenceType()) );
 					TACOperand size = new TACBinary(tree, new TACCall(tree, block, width, class_.getClassData()), Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', length);
-					new TACCopyMemory(tree, copiedArray, oldArray, size);					
+					new TACCopyMemory(tree, new TACLocalLoad(tree, copiedArray), oldArray, size);					
 					new TACBranch(tree, terminate);		
 				}
 				else {					
-					counters[i] = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
-					new TACStore(tree, counters[i], new TACLiteral(tree, new ShadowInteger(-1))); //starting at -1 allows update and check to happen on the same label
+					counters[i] = method.addTempLocal(new SimpleModifiedType(Type.INT));
+					new TACLocalStore(tree, counters[i], new TACLiteral(tree, new ShadowInteger(-1))); //starting at -1 allows update and check to happen on the same label
 					labels[i] = new TACLabelRef(method);
 					
 					new TACBranch(tree, labels[i]);
@@ -2203,19 +2245,19 @@ public class TACBuilder implements ShadowParserVisitor {
 					TACLabelRef body = new TACLabelRef(method);					
 
 					//increment counters[i] by 1
-					new TACStore(tree, counters[i], new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1))));
-					TACOperand condition = new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true);
+					new TACLocalStore(tree, counters[i], new TACBinary(tree, new TACLocalLoad(tree, counters[i]), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1))));
+					TACOperand condition = new TACBinary(tree, new TACLocalLoad(tree, counters[i]), Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true);
 					new TACBranch(tree, condition, body, terminate);					
 					body.new TACLabel(tree);
 					
 					//copy old value into new location
-					TACOperand element = new TACArrayRef(tree, oldArray, counters[i], false); //get value at location
+					TACOperand element = new TACLoad(tree, new TACArrayRef(tree, oldArray, new TACLocalLoad(tree, counters[i]), false)); //get value at location
 					
 					if( baseType instanceof InterfaceType )
-						element = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), element);
+						element = TACCast.cast(tree, new SimpleModifiedType(Type.OBJECT), element);
 										
 					TACLabelRef copyLabel = new TACLabelRef(method);
-					TACOperand nullCondition = new TACSame(tree, element, new TACLiteral(tree, ShadowValue.NULL));
+					TACOperand nullCondition = new TACSame(tree, element, new TACLiteral(tree, new ShadowNull(element.getType())));
 					new TACBranch(tree, nullCondition, labels[i], copyLabel); //if null, skip entirely, since arrays are calloc'ed
 					
 					copyLabel.new TACLabel(tree);
@@ -2223,9 +2265,9 @@ public class TACBuilder implements ShadowParserVisitor {
 					TACOperand copiedElement = new TACCall(tree, block, copyMethod, element, map);
 					
 					if( baseType instanceof InterfaceType )
-						copiedElement = new TACCast(tree, new SimpleModifiedType(baseType), copiedElement);
+						copiedElement = TACCast.cast(tree, new SimpleModifiedType(baseType), copiedElement);
 					
-					TACArrayRef newElement = new TACArrayRef(tree, copiedArray, counters[i], false);
+					TACArrayRef newElement = new TACArrayRef(tree, new TACLocalLoad(tree, copiedArray), new TACLocalLoad(tree, counters[i]), false);
 					new TACStore(tree, newElement, copiedElement);
 
 					//go back to update and check condition
@@ -2233,8 +2275,8 @@ public class TACBuilder implements ShadowParserVisitor {
 				}
 			}
 			else {
-				counters[i] = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
-				new TACStore(tree, counters[i], new TACLiteral(tree, new ShadowInteger(-1)));//starting at -1 allows update and check to happen on the same label
+				counters[i] = method.addTempLocal(new SimpleModifiedType(Type.INT));
+				new TACLocalStore(tree, counters[i], new TACLiteral(tree, new ShadowInteger(-1)));//starting at -1 allows update and check to happen on the same label
 				labels[i] = new TACLabelRef(method);
 				
 				new TACBranch(tree, labels[i]);
@@ -2248,13 +2290,13 @@ public class TACBuilder implements ShadowParserVisitor {
 					terminate = labels[i - 1];
 
 				//increment counters[i] by 1
-				new TACStore(tree, counters[i], new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1))));
-				TACOperand condition = new TACBinary(tree, counters[i], Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true);
+				new TACLocalStore(tree, counters[i], new TACBinary(tree, new TACLocalLoad(tree, counters[i]), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1))));
+				TACOperand condition = new TACBinary(tree, new TACLocalLoad(tree, counters[i]), Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true);
 				new TACBranch(tree, condition, body, terminate);					
 				body.new TACLabel(tree);
 				
 				//set up next round
-				oldArray = new TACArrayRef(tree, oldArray, counters[i], false); //get value at location
+				oldArray = new TACLoad(tree, new TACArrayRef(tree, oldArray, new TACLocalLoad(tree, counters[i]), false)); //get value at location
 			}
 		}
 		
@@ -2264,28 +2306,29 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	private void visitMethod(MethodSignature methodSignature) throws ShadowException {
 		TACTree saveTree = tree;
-		TACMethod method = this.method = new TACMethod(methodSignature);		
+		TACMethod method = this.method = new TACMethod(methodSignature);
 		boolean implicitCreate = false;
-		if (moduleStack.peek().isClass()) {						
-			block = new TACBlock(tree = new TACTree(1), method);
+		if (moduleStack.peek().isClass()) {
+			tree = new TACTree(1, method);			
+			block = new TACBlock(tree);
 			if (methodSignature.isNative()) {
-				method.addParameters();
+				method.addParameters(tree);
 				walk(methodSignature.getNode().jjtGetChild(0).jjtGetChild(0));
 			}		
 			else if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
-				ClassType type = (ClassType) methodSignature.getOuter();	
+				ClassType type = (ClassType) methodSignature.getOuter();
+				method.addParameters(tree); //address map called "addresses"				
 				
 				if( type.getModifiers().isImmutable() ) {				
 					//for now, just return this
-					new TACReturn(tree, methodSignature.getFullReturnTypes(), new TACVariableRef(
+					new TACReturn(tree, methodSignature.getFullReturnTypes(), new TACLocalLoad(
 							tree, method.getThis()));
 				}			
-				else {
-					method.addParameters(); //address map called "addresses"
-					TACOperand this_ = new TACLoad(tree, new TACVariableRef(tree, method.getThis()));
+				else {					
+					TACOperand this_ = new TACLocalLoad(tree, method.getThis());
 					TACOperand address = new TACPointerToLong(tree, this_);					
 					
-					TACVariableRef map = new TACVariableRef(tree, method.getParameter("addresses"));
+					TACOperand map = new TACLocalLoad(tree, method.getParameter("addresses"));
 					TACMethodRef indexMethod = new TACMethodRef(tree, Type.ADDRESS_MAP.getMatchingMethod("containsKey", new SequenceType(Type.ULONG)) );
 					TACOperand test = new TACCall(tree, block, indexMethod, map, address );
 					
@@ -2312,7 +2355,7 @@ public class TACBuilder implements ShadowParserVisitor {
 						
 						//call private create to allocate space
 						TACMethodRef create = new TACMethodRef(tree, genericArray.getMatchingMethod("create", new SequenceType(new SimpleModifiedType( new ArrayType(Type.INT), new Modifiers(Modifiers.IMMUTABLE)))));
-						TACFieldRef lengths = new TACFieldRef(tree, this_, "lengths" );
+						TACOperand lengths = new TACLoad(tree, new TACFieldRef(this_, "lengths" ));
 						duplicate = new TACCall(tree, block, create, object, lengths); //performs cast to Array as well
 						
 						//get size (product of all dimension lengths)
@@ -2322,14 +2365,14 @@ public class TACBuilder implements ShadowParserVisitor {
 						TACLabelRef body = new TACLabelRef(method);
 						TACLabelRef condition = new TACLabelRef(method);
 						
-						TACVariableRef i = new TACVariableRef(tree, method.addTempLocal(new SimpleModifiedType(Type.INT)));
-						new TACStore(tree, i, new TACLiteral(tree, new ShadowInteger(0)));
+						TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.INT));
+						new TACLocalStore(tree, i, new TACLiteral(tree, new ShadowInteger(0)));
 						new TACBranch(tree, condition);
 						
 						//start loop
 						condition.new TACLabel(tree);
 						
-						TACOperand loop = new TACBinary(tree, i, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', size, true );
+						TACOperand loop = new TACBinary(tree, new TACLocalLoad(tree, i), Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', size, true );
 						new TACBranch(tree, loop, body, done);
 						body.new TACLabel(tree);
 						
@@ -2340,11 +2383,11 @@ public class TACBuilder implements ShadowParserVisitor {
 						TACMethodRef indexStore = new TACMethodRef(tree, genericArray.getMatchingMethod("index", indexArguments));
 						
 						
-						TACOperand value = new TACCall(tree, block, indexLoad, this_, i);
+						TACOperand value = new TACCall(tree, block, indexLoad, this_, new TACLocalLoad(tree, i));
 						
 						TACLabelRef skipLabel = new TACLabelRef(method);
 						TACLabelRef makeCopyLabel = new TACLabelRef(method);
-						TACOperand isNull = new TACSame(tree, value, new TACLiteral(tree, ShadowValue.NULL));
+						TACOperand isNull = new TACSame(tree, value, new TACLiteral(tree, new ShadowNull(value.getType())));
 						new TACBranch(tree, isNull, skipLabel, makeCopyLabel);
 						
 						makeCopyLabel.new TACLabel(tree);
@@ -2352,25 +2395,25 @@ public class TACBuilder implements ShadowParserVisitor {
 						TACMethodRef copy = new TACMethodRef(tree, value, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
 						
 						value = new TACCall(tree, block, copy, copy.getPrefix(), map);
-						new TACCall(tree, block, indexStore, duplicate, i, value);						
+						new TACCall(tree, block, indexStore, duplicate, new TACLocalLoad(tree, i), value);						
 						new TACBranch(tree, skipLabel);
 						
 						skipLabel.new TACLabel(tree);						
 						
-						new TACStore(tree, i, new TACBinary(tree, i, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1)), false ));
+						new TACLocalStore(tree, i, new TACBinary(tree, new TACLocalLoad(tree, i), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1)), false ));
 						new TACBranch(tree, condition);					
 						
 						done.new TACLabel(tree);
 					}
 					else {
 						//perform a memcopy to sweep up all the primitives and immutable data (and nulls)
-						TACOperand size = new TACLoad(tree, new TACFieldRef(tree, object.getClassData(), "size"));
+						TACOperand size = new TACLoad(tree, new TACFieldRef(object.getClassData(), "size"));
 						new TACCopyMemory(tree, object, this_, size);
 						
 						if( type.equals(Type.OBJECT))
 							duplicate = object;
 						else
-							duplicate = new TACCast(tree, new SimpleModifiedType(type), object); //casts object to type
+							duplicate = TACCast.cast(tree, new SimpleModifiedType(type), object); //casts object to type
 						
 						//copy other fields in using their copy methods
 						//arrays need special attention
@@ -2386,8 +2429,8 @@ public class TACBuilder implements ShadowParserVisitor {
 								!entryType.getType().isPrimitive() &&
 								!(entryType.getType() instanceof SingletonType)) {							
 								//get field references
-								field = new TACFieldRef(tree, this_, entryType, entry.getKey());
-								newField = new TACFieldRef(tree, duplicate, entryType, entry.getKey());
+								field = new TACLoad(tree, new TACFieldRef(this_, entryType, entry.getKey()));
+								newField = new TACFieldRef(duplicate, entryType, entry.getKey());
 								
 								TACLabelRef copyField = new TACLabelRef(method);
 								TACLabelRef skipField = new TACLabelRef(method);
@@ -2398,13 +2441,13 @@ public class TACBuilder implements ShadowParserVisitor {
 								else {	
 									if( entryType.getType() instanceof InterfaceType ) {
 										//cast converts from interface to object
-										field = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), field);
+										field = TACCast.cast(tree, new SimpleModifiedType(Type.OBJECT), field);
 										copyMethod = new TACMethodRef(tree, field, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
 									}
 									else //normal object
 										copyMethod = new TACMethodRef(tree, field, entryType.getType().getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
 									
-									TACOperand nullCondition = new TACSame(tree, field, new TACLiteral(tree, ShadowValue.NULL));
+									TACOperand nullCondition = new TACSame(tree, field, new TACLiteral(tree, new ShadowNull(field.getType())));
 									new TACBranch(tree, nullCondition, skipField, copyField); //if null, skip
 
 									copyField.new TACLabel(tree);
@@ -2412,7 +2455,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 									if( entryType.getType() instanceof InterfaceType )
 										//and then cast back to interface
-										copiedField = new TACCast(tree, newField, copiedField);																
+										copiedField = TACCast.cast(tree, newField, copiedField);																
 								}
 								
 								//store copied value
@@ -2436,8 +2479,8 @@ public class TACBuilder implements ShadowParserVisitor {
 			}
 			//Gets and sets that were created by default (that's why they have a node with a bogus ID)
 			else if( methodSignature.getNode().getID() == -1 && (methodSignature.isGet() || methodSignature.isSet() )) { 			
-				method.addParameters();
-				TACFieldRef field = new TACFieldRef(tree, new TACVariableRef(
+				method.addParameters(tree);
+				TACFieldRef field = new TACFieldRef(new TACLocalLoad(
 						tree, method.getThis()), methodSignature.getSymbol());
 				if (methodSignature.isGet())
 					new TACReturn(tree, methodSignature.getFullReturnTypes(),
@@ -2446,7 +2489,7 @@ public class TACBuilder implements ShadowParserVisitor {
 					TACVariable value = null;
 					for (TACVariable parameter : method.getParameters())
 						value = parameter;
-					new TACStore(tree, field, new TACVariableRef(tree, value));
+					new TACStore(tree, field, new TACLocalLoad(tree, value));
 					new TACReturn(tree, methodSignature.getFullReturnTypes());
 				}
 				else
@@ -2456,15 +2499,15 @@ public class TACBuilder implements ShadowParserVisitor {
 				MethodSignature wrapped = methodSignature.getWrapped();
 				SequenceType fromTypes = methodSignature.getFullParameterTypes(),
 						toTypes = wrapped.getFullParameterTypes();
-				Iterator<TACVariable> fromArguments = method.addParameters(true).
+				Iterator<TACVariable> fromArguments = method.addParameters(tree, true).
 						getParameters().iterator();
 				List<TACOperand> toArguments = new ArrayList<TACOperand>(
 						toTypes.size());
 				for (int i = 0; i < toTypes.size(); i++) {
 					TACOperand argument =
-							new TACVariableRef(tree, fromArguments.next());
+							new TACLocalLoad(tree, fromArguments.next());
 					if (!fromTypes.getType(i).isSubtype(toTypes.getType(i)))
-						argument = new TACCast(tree, toTypes.get(i), argument);
+						argument = TACCast.cast(tree, toTypes.get(i), argument);
 					toArguments.add(argument);				
 				}
 				
@@ -2478,16 +2521,17 @@ public class TACBuilder implements ShadowParserVisitor {
 					toTypes = methodSignature.getFullReturnTypes();
 					
 					if( value.getType() instanceof SequenceType )						
-						value = new TACCast(tree, new SimpleModifiedType(toTypes), value);					
+						value = TACCast.cast(tree, new SimpleModifiedType(toTypes), value);					
 					else {
 						if( !fromTypes.getType(0).isSubtype(toTypes.getType(0)) )
-							value = new TACCast(tree, toTypes.get(0), value);
+							value = TACCast.cast(tree, toTypes.get(0), value);
 					}					
 					
 					new TACReturn(tree, toTypes, value);	
 				}
 			}
-			else { // Regular method or create				
+			else { // Regular method or create
+				method.addParameters(tree);
 				
 				if( methodSignature.isCreate()) {
 					ASTCreateDeclaration declaration = (ASTCreateDeclaration) methodSignature.getNode();
@@ -2495,15 +2539,13 @@ public class TACBuilder implements ShadowParserVisitor {
 					Type type = methodSignature.getOuter();
 					if (type.hasOuter())
 						new TACStore(tree,
-								new TACFieldRef(tree, new TACVariableRef(tree,
+								new TACFieldRef(new TACLocalLoad(tree,
 										method.getThis()),
 										new SimpleModifiedType(type.getOuter()),
 										"_outer"),
-								new TACVariableRef(tree,
+								new TACLocalLoad(tree,
 										method.getParameter("_outer")));
 				}
-				
-				method.addParameters();
 				
 				// Call parent create if implicit create.
 				if( implicitCreate ) {
@@ -2511,12 +2553,12 @@ public class TACBuilder implements ShadowParserVisitor {
 							superType = thisType.getExtendType();
 					if (superType != null) {
 						if( superType.hasOuter() )
-							new TACCall(method, block, new TACMethodRef(method,
-									superType.getMatchingMethod("create", new SequenceType())), new TACVariableRef(method,
-									method.getThis()), new TACVariableRef(tree, method.getParameter("_outer")));
+							new TACCall(tree, block, new TACMethodRef(tree,
+									superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(tree,
+									method.getThis()), new TACLocalLoad(tree, method.getParameter("_outer")));
 						else
-							new TACCall(method, block, new TACMethodRef(method,
-									superType.getMatchingMethod("create", new SequenceType())), new TACVariableRef(method,
+							new TACCall(tree, block, new TACMethodRef(tree,
+									superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(tree,
 									method.getThis()));
 					}
 					
@@ -2589,18 +2631,16 @@ public class TACBuilder implements ShadowParserVisitor {
 				//must be compared to 0 with regular int comparison to work
 				if( isCompare )
 				{
-					TACVariableRef var = new TACVariableRef(tree,
-							method.addTempLocal(new SimpleModifiedType(Type.INT)));
-					new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, current, signature), current, next));		
-					current = new TACLoad(tree, var);					
+					TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.INT));
+					new TACLocalStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, current, signature), current, next));		
+					current = new TACLocalLoad(tree, var);					
 					current = new TACBinary(tree, current, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), op, new TACLiteral(tree, new ShadowInteger(0)), true );
 				}
 				else
 				{
-					TACVariableRef var = new TACVariableRef(tree,
-							method.addTempLocal(node));
-					new TACStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, current, signature), current, next));		
-					current = new TACLoad(tree, var);
+					TACVariable var = method.addTempLocal(node);
+					new TACLocalStore(tree, var, new TACCall(tree, block, new TACMethodRef(tree, current, signature), current, next));		
+					current = new TACLocalLoad(tree, var);
 				}
 			}			
 		}
@@ -2608,7 +2648,7 @@ public class TACBuilder implements ShadowParserVisitor {
 
 	private void visitLoop()
 	{
-		block = new TACBlock(tree, block, method).addBreak().addContinue();
+		block = new TACBlock(tree, block).addBreak().addContinue();
 	}
 	
 	private void initializeArray(TACOperand array, MethodSignature create, List<TACOperand> params, TACOperand defaultValue)
@@ -2625,8 +2665,8 @@ public class TACBuilder implements ShadowParserVisitor {
 					endLabel = new TACLabelRef(method);
 		
 		//make iterator (int index)
-		TACVariableRef iterator = new TACVariableRef(tree,	method.addTempLocal(new SimpleModifiedType(Type.INT)));
-		new TACStore(tree, iterator, new TACLiteral(tree, new ShadowInteger(0)));
+		TACVariable iterator = method.addTempLocal(new SimpleModifiedType(Type.INT));
+		new TACLocalStore(tree, iterator, new TACLiteral(tree, new ShadowInteger(0)));
 		TACOperand length = new TACLength(tree, array, 0);			
 		for (int i = 1; i < arrayType.getDimensions(); i++)
 			length = new TACBinary(tree, length, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(tree, array, i));			
@@ -2636,7 +2676,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		bodyLabel.new TACLabel(tree);
 		
 		//put initialization before main body
-		TACArrayRef location = new TACArrayRef(tree, array, new TACLoad(tree, iterator), false);		
+		TACArrayRef location = new TACArrayRef(tree, array, new TACLocalLoad(tree, iterator), false);		
 				
 		if( create != null)
 			new TACStore(tree, location, callCreate( create, params, create.getOuter()));
@@ -2647,14 +2687,14 @@ public class TACBuilder implements ShadowParserVisitor {
 		updateLabel.new TACLabel(tree);			
 		
 		//increment iterator							
-		TACOperand value = new TACBinary(tree, new TACLoad(tree, iterator), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1)));
-		new TACStore(tree, iterator, value);	
+		TACOperand value = new TACBinary(tree, new TACLocalLoad(tree, iterator), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1)));
+		new TACLocalStore(tree, iterator, value);	
 		
 		new TACBranch(tree, conditionLabel);
 		conditionLabel.new TACLabel(tree);
 		
 		//check if iterator < array length
-		value = new TACLoad(tree, iterator);			
+		value = new TACLocalLoad(tree, iterator);			
 		TACOperand condition = new TACBinary(tree, value, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true );
 		
 		new TACBranch(tree, condition, bodyLabel, endLabel);		
@@ -2666,8 +2706,8 @@ public class TACBuilder implements ShadowParserVisitor {
 		ASTForeachInit init = (ASTForeachInit) node.jjtGetChild(0);		
 		Type type = init.getCollectionType(); 		
 		TACOperand collection = tree.appendChild(0); //last thing from init
-		TACVariableRef variable = init.getVariable();
-		TACVariableRef iterator;
+		TACVariable variable = init.getVariable();
+		TACVariable iterator;
 		TACOperand condition;
 		TACOperand value;
 		TACLabelRef bodyLabel = new TACLabelRef(method),				
@@ -2680,8 +2720,8 @@ public class TACBuilder implements ShadowParserVisitor {
 						conditionLabel = new TACLabelRef(method);
 
 			//make iterator (int index)
-			iterator = new TACVariableRef(tree,	method.addTempLocal(new SimpleModifiedType(Type.INT)));
-			new TACStore(tree, iterator, new TACLiteral(tree, new ShadowInteger(0)));
+			iterator = method.addTempLocal(new SimpleModifiedType(Type.INT));
+			new TACLocalStore(tree, iterator, new TACLiteral(tree, new ShadowInteger(0)));
 			TACOperand length = new TACLength(tree, collection, 0);			
 			for (int i = 1; i < arrayType.getDimensions(); i++)
 				length = new TACBinary(tree, length, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', new TACLength(tree, collection, i), false);			
@@ -2691,8 +2731,8 @@ public class TACBuilder implements ShadowParserVisitor {
 			bodyLabel.new TACLabel(tree);
 			
 			//put variable update before main body
-			value = new TACArrayRef(tree, collection, new TACLoad(tree, iterator), false);
-			new TACStore(tree, variable, value);
+			value = new TACLoad(tree, new TACArrayRef(tree, collection, new TACLocalLoad(tree, iterator), false));
+			new TACLocalStore(tree, variable, value);
 			
 			tree.appendChild(1); //body
 			
@@ -2700,15 +2740,15 @@ public class TACBuilder implements ShadowParserVisitor {
 			updateLabel.new TACLabel(tree);			
 			
 			//increment iterator
-			value = new TACLoad(tree, iterator);					
+			value = new TACLocalLoad(tree, iterator);					
 			value = new TACBinary(tree, value, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+', new TACLiteral(tree, new ShadowInteger(1)), false );
-			new TACStore(tree, iterator, value);	
+			new TACLocalStore(tree, iterator, value);	
 			
 			new TACBranch(tree, conditionLabel);
 			conditionLabel.new TACLabel(tree);
 			
 			//check if iterator < array length
-			value = new TACLoad(tree, iterator);			
+			value = new TACLocalLoad(tree, iterator);			
 			condition = new TACBinary(tree, value, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '<', length, true );
 			
 			new TACBranch(tree, condition, bodyLabel, endLabel);		
@@ -2721,9 +2761,9 @@ public class TACBuilder implements ShadowParserVisitor {
 			//get iterator
 			signature = type.getMatchingMethod("iterator", new SequenceType());
 			ModifiedType iteratorType = signature.getReturnTypes().get(0);
-			iterator = new TACVariableRef(tree, method.addTempLocal(iteratorType));
+			iterator = method.addTempLocal(iteratorType);
 			TACMethodRef getIterator = new TACMethodRef(tree, collection, signature);
-			new TACStore(tree, iterator, new TACCall(tree, block, getIterator, getIterator.getPrefix()) );
+			new TACLocalStore(tree, iterator, new TACCall(tree, block, getIterator, getIterator.getPrefix()));
 			
 			new TACBranch(tree, conditionLabel);  //init is done, jump to condition
 						
@@ -2731,8 +2771,8 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			//put variable update before main body
 			signature = iteratorType.getType().getMatchingMethod("next", new SequenceType());
-			TACMethodRef next = new TACMethodRef(tree, iterator, signature);
-			new TACStore(tree, variable, new TACCall(tree, block, next, iterator) ); //internally updates iterator
+			TACMethodRef next = new TACMethodRef(tree, new TACLocalLoad(tree, iterator), signature);
+			new TACLocalStore(tree, variable, new TACCall(tree, block, next, new TACLocalLoad(tree, iterator))); //internally updates iterator
 			
 			tree.appendChild(1); //body
 						
@@ -2741,8 +2781,8 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			//check if iterator has next
 			signature = iteratorType.getType().getMatchingMethod("hasNext", new SequenceType());
-			TACMethodRef hasNext = new TACMethodRef(tree, iterator, signature);
-			condition = new TACCall(tree, block, hasNext, iterator);
+			TACMethodRef hasNext = new TACMethodRef(tree, new TACLocalLoad(tree, iterator), signature);
+			condition = new TACCall(tree, block, hasNext, new TACLocalLoad(tree, iterator));
 			
 			new TACBranch(tree, condition, bodyLabel, endLabel);		
 			endLabel.new TACLabel(tree);
@@ -2805,21 +2845,20 @@ public class TACBuilder implements ShadowParserVisitor {
 		sizes = sizes.subList(start, end);
 		if (!sizes.isEmpty())
 		{
-			TACReference index = new TACVariableRef(tree,
-					method.addTempLocal(new SimpleModifiedType(Type.INT)));
-			new TACStore(tree, index, new TACLiteral(tree, new ShadowInteger(0)));
+			TACVariable index = method.addTempLocal(new SimpleModifiedType(Type.INT));
+			new TACLocalStore(tree, index, new TACLiteral(tree, new ShadowInteger(0)));
 			TACLabelRef bodyLabel = new TACLabelRef(method),
 					condLabel = new TACLabelRef(method),
 					endLabel = new TACLabelRef(method);
 			new TACBranch(tree, condLabel);
 			bodyLabel.new TACLabel(tree);
-			new TACStore(tree, new TACArrayRef(tree, alloc, index, false),
+			new TACStore(tree, new TACArrayRef(tree, alloc, new TACLocalLoad(tree, index), false),
 					visitArrayAllocation((ArrayType)type.getBaseType(), new TACClass(tree, (ArrayType)type.getBaseType()), sizes, create, params, defaultValue));
-			new TACStore(tree, index, new TACBinary(tree, index, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+',
+			new TACLocalStore(tree, index, new TACBinary(tree, new TACLocalLoad(tree, index), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), '+',
 					new TACLiteral(tree, new ShadowInteger(1))));
 			new TACBranch(tree, condLabel);
 			condLabel.new TACLabel(tree);
-			new TACBranch(tree, new TACSame(tree, index, alloc.getTotalSize()),
+			new TACBranch(tree, new TACSame(tree, new TACLocalLoad(tree, index), alloc.getTotalSize()),
 					endLabel, bodyLabel);
 			endLabel.new TACLabel(tree);
 		}
@@ -2859,7 +2898,10 @@ public class TACBuilder implements ShadowParserVisitor {
 			return new TACLiteral(tree, ShadowFloat.parseFloat("0.0f"));		
 //		if (!type.getModifiers().isNullable())
 //			throw new IllegalArgumentException();
-		return new TACCast(tree, type, new TACLiteral(tree, ShadowValue.NULL));
+		if( type instanceof ClassType )
+			return new TACLiteral(tree, new ShadowNull(type.getType()));
+		
+		return TACCast.cast(tree, type, new TACLiteral(tree, new ShadowNull(Type.NULL)));
 	}
 
 	@Override
@@ -2880,7 +2922,7 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTForeachInit node, Boolean secondVisit) throws ShadowException {
 		if( secondVisit ) {
 			String name = node.getImage();
-			node.setVariable(new TACVariableRef(tree, method.addLocal(node, name)));
+			node.setVariable(method.addLocal(node, name));
 			//append last child (containing the collection)
 			tree.appendChild(node.jjtGetNumChildren() - 1);
 		}
@@ -2896,14 +2938,9 @@ public class TACBuilder implements ShadowParserVisitor {
 		if (secondVisit) {
 			List<TACOperand> sequence =
 					new ArrayList<TACOperand>(node.getType().size());			
-			for (int index = 0; index < node.getType().size(); index++ ) {
-					TACOperand op = tree.appendChild(index);
-					if( op instanceof TACReference ) {
-						TACReference reference = (TACReference) op;
-						op = new TACLoad(tree, reference);
-					}			
-					sequence.add(op);			
-			}
+			for (int index = 0; index < node.getType().size(); index++ )
+				sequence.add(tree.appendChild(index));
+			
 			new TACSequence(tree, sequence);	
 		}
 			
@@ -2939,7 +2976,8 @@ public class TACBuilder implements ShadowParserVisitor {
 	public Object visit(ASTSequenceVariable node, Boolean secondVisit) throws ShadowException {
 		if (secondVisit) {
 			String name = node.getImage();
-			new TACVariableRef(tree, method.addLocal(node, name));
+			TACVariable var = method.addLocal(node, name);
+			new TACLocalStore(tree, var, new TACLiteral(tree, new ShadowUndefined(node.getType())));
 		}
 		return POST_CHILDREN;
 	}
@@ -2967,7 +3005,7 @@ public class TACBuilder implements ShadowParserVisitor {
 				}
 				else {
 					TACMethodRef copyMethod;
-					TACReference result = new TACVariableRef(tree, method.addTempLocal(node));
+					TACVariable result = method.addTempLocal(node);
 					TACOperand data = value;					
 					
 					TACLabelRef nullLabel = new TACLabelRef(method);
@@ -2977,15 +3015,15 @@ public class TACBuilder implements ShadowParserVisitor {
 					if( type instanceof InterfaceType )				
 					{	
 						//cast converts from interface to object
-						data = new TACCast(tree, new SimpleModifiedType(Type.OBJECT), data);
-						TACOperand nullCondition = new TACSame(tree, data, new TACLiteral(tree, ShadowValue.NULL));
+						data = TACCast.cast(tree, new SimpleModifiedType(Type.OBJECT), data);
+						TACOperand nullCondition = new TACSame(tree, data, new TACLiteral(tree, new ShadowNull(data.getType())));
 						new TACBranch(tree, nullCondition, nullLabel, copyLabel);
 						copyLabel.new TACLabel(tree);
 						copyMethod = new TACMethodRef(tree, data, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));						
 					}
 					else
 					{
-						TACOperand nullCondition = new TACSame(tree, data, new TACLiteral(tree, ShadowValue.NULL));						
+						TACOperand nullCondition = new TACSame(tree, data, new TACLiteral(tree, new ShadowNull(data.getType())));						
 						new TACBranch(tree, nullCondition, nullLabel, copyLabel);
 						copyLabel.new TACLabel(tree);
 						copyMethod  = new TACMethodRef(tree, data, type.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));						
@@ -2995,18 +3033,18 @@ public class TACBuilder implements ShadowParserVisitor {
 
 					if( type instanceof InterfaceType )
 						//and then a cast back to interface
-						copy = new TACCast(tree, node, copy);
+						copy = TACCast.cast(tree, node, copy);
 					
-					new TACStore(tree, result, copy);					
+					new TACLocalStore(tree, result, copy);					
 					new TACBranch(tree, doneLabel);	
 					
 					nullLabel.new TACLabel(tree);
 					
-					new TACStore(tree, result, value);
+					new TACLocalStore(tree, result, value);
 					new TACBranch(tree, doneLabel);
 					
 					doneLabel.new TACLabel(tree);
-					prefix = new TACLoad(tree, result);
+					prefix = new TACLocalLoad(tree, result);
 				}
 			}			
 		}	

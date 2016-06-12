@@ -365,16 +365,19 @@ public class Main {
 	private static void checkTAC(TACModule module) throws TypeCheckException {
 		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 		for( TACMethod method : module.getMethods() ) {
-			MethodSignature signature = method.getMethod();
+			MethodSignature signature = method.getSignature();
 
-			//don't bother with unimplemented methods (abstract or interface methods)
-			if( signature.getNode().hasBlock() ) {			
+			//don't bother with unimplemented methods
+			if( !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() ) {			
 				ControlFlowGraph graph = new ControlFlowGraph(method);
 				graph.removeUnreachableCode();
 				graph.removeRedundantErrors(); //some unreachable code errors are redundant
 			
 				if( !signature.isVoid() && !graph.returns() )
 					graph.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.toString() + " may not return on all paths");
+				
+				graph.updatePhiNodes();
+				
 				
 				reporter.addAll(graph); //adds errors (if any) to main reporter
 			}
@@ -390,7 +393,8 @@ public class Main {
 	// including constant propagation, control flow analysis,
 	// data flow analysis, and cast optimization
 	private static TACModule optimizeTAC(TACModule module) throws ShadowException, TypeCheckException {		
-		checkTAC( module );
+		if( !(module.getType() instanceof InterfaceType) )
+			checkTAC( module );
 		
 		return module;
 	}

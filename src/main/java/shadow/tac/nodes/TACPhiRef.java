@@ -86,7 +86,7 @@ public class TACPhiRef
 		@Override
 		public TACOperand getOperand(int num)
 		{
-			throw new IndexOutOfBoundsException("num");
+			throw new IndexOutOfBoundsException("" + num);
 		}
 
 		@Override

@@ -397,6 +397,11 @@ public class NegativeTests {
 	@Test public void testUnreachableCode() throws Exception {
 		args.add("tests-negative/typechecker/unreachable-code/Test.shadow");
 		enforce(Error.UNREACHABLE_CODE);			
+	}
+	
+	@Test public void testUndefinedVariable() throws Exception {
+		args.add("tests-negative/typechecker/undefined-variable/Test.shadow");
+		enforce(Error.UNDEFINED_VARIABLE);			
 	}	
 	
 	/*//compiler can't handle this one yet

@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACBuilder;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 
 /**
@@ -15,6 +16,7 @@ import shadow.tac.TACVisitor;
 public abstract class TACNode {
     private TACNode prev, next; // the next and prev nodes in our circular linked list
     private Node ASTNode; // associated AST node, used for error messages
+    private TACMethod method; //which method is the node in
 
     // ??? why do we need a reference to the builder here?
     // shouldn't we just make the builder a Singleton?
@@ -28,10 +30,6 @@ public abstract class TACNode {
         TACNode.builder = builder;
     }
 
-    protected TACNode() {
-        this(null);
-    }
-
     /**
      * Constructor adds current node *before* parameter node
      *
@@ -40,11 +38,22 @@ public abstract class TACNode {
     protected TACNode(TACNode node) {
         clear();
         insertBefore(node);
-        if( node != null )
+        if( node != null ) {
         	ASTNode = node.getASTNode();
+        	method = node.getMethod();
+        }
     }
 
-    public final TACNode getPrevious() {
+    public TACMethod getMethod() {		
+		return method;
+	}
+    
+    public void setMethod(TACMethod method) {		
+		this.method = method;
+	}
+
+
+	public final TACNode getPrevious() {
         return prev;
     }
 

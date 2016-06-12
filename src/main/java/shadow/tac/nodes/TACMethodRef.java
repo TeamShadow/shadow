@@ -44,7 +44,7 @@ public class TACMethodRef extends TACOperand
 				while(  prefixNode.getType() instanceof ClassType &&
 						!prefixNode.getType().isSubtype(sig.getOuter()) && 
 						 prefixNode.getType().hasOuter()	) //not here, look in outer classes					
-					prefixNode = new TACFieldRef(this, prefixNode, new SimpleModifiedType(prefixNode.getType().getOuter()), "_outer");
+					prefixNode = new TACLoad(this, new TACFieldRef(prefixNode, new SimpleModifiedType(prefixNode.getType().getOuter()), "_outer"));
 								
 				prefix = check(prefixNode,
 						new SimpleModifiedType(sig.getOuter()));

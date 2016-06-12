@@ -38,4 +38,9 @@ public class TACGlobal extends TACOperand {
 	public String getName() {
 		return name;
 	}
+	
+	@Override
+	public boolean canPropagate() {
+		return true;
+	}
 }

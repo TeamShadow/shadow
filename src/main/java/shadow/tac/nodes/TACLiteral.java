@@ -8,10 +8,8 @@ import shadow.typecheck.type.Type;
 
 public class TACLiteral extends TACOperand
 {
-	private ShadowValue value;	
+	private ShadowValue value;
 
-	//negated lets us know that this literal is negated
-	//allows us to be more precise about allowing -128y but not 128y
 	public TACLiteral(TACNode node, ShadowValue value)
 	{
 		super(node);
@@ -58,5 +56,27 @@ public class TACLiteral extends TACOperand
 	public String toString()
 	{
 		return value.toString();
+	}
+	
+	@Override
+	public boolean equals(Object object) {
+		if( object == null || !(object instanceof TACLiteral))
+			return false;
+		
+		if( object == this )
+			return true;
+		
+		TACLiteral literal = (TACLiteral) object;
+		try{
+			return value.equals(literal.value);
+		}
+		catch(ShadowException e) {
+			return false;
+		}		
+	}
+	
+	@Override
+	public boolean canPropagate() {
+		return true;
 	}
 }

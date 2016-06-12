@@ -14,23 +14,6 @@ import shadow.typecheck.type.Type;
 public abstract class ShadowValue implements ModifiedType {
     private Modifiers modifiers;
 
-    public static final ShadowValue NULL = new ShadowValue(Modifiers.NULLABLE) {
-        @Override
-        public Type getType() {
-            return Type.NULL;
-        }
-
-        @Override
-        protected ShadowValue cast(Type type) throws ShadowException {
-            return this;
-        }
-
-        @Override
-        public ShadowValue copy() throws ShadowException {
-            return this;
-        }
-    };
-
     protected ShadowValue() {
         this.modifiers = new Modifiers();
     }
@@ -200,7 +183,7 @@ public abstract class ShadowValue implements ModifiedType {
      */
     public static ShadowValue getDefault(ModifiedType type) throws ShadowException {
         if (type.getModifiers().isNullable())
-            return NULL;
+            return new ShadowNull(type.getType());
         
         if (type instanceof ArrayType) {
             final ArrayType arrayType = (ArrayType) type;
@@ -228,6 +211,9 @@ public abstract class ShadowValue implements ModifiedType {
             first = first.cast(second.getType());
         else if (second.isStrictSubtype(first))
             second = second.cast(first.getType());
+        
+        if( (first instanceof ShadowUndefined) != (second instanceof ShadowUndefined))
+        	return false;        
 
         if (first.getType().equals(second.getType())) {
             if (first instanceof ShadowInteger) {
@@ -246,7 +232,8 @@ public abstract class ShadowValue implements ModifiedType {
                 String value1 = ((ShadowString) first).getValue();
                 String value2 = ((ShadowString) second).getValue();
                 return value1.equals(value2);
-            }
+            } else if ( first instanceof ShadowUndefined )
+            	return second instanceof ShadowUndefined;
         }
 
         return false;

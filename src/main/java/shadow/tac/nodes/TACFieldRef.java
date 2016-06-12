@@ -1,7 +1,5 @@
 package shadow.tac.nodes;
 
-import shadow.parser.javacc.ShadowException;
-import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -14,15 +12,15 @@ public class TACFieldRef extends TACReference
 	private ModifiedType type;
 	private String name;
 
-	public TACFieldRef(TACNode node, TACOperand fieldPrefix, String fieldName)
+	public TACFieldRef(TACOperand fieldPrefix, String fieldName)
 	{
-		this(node, fieldPrefix, fieldPrefix.getType().getField(fieldName),
+		this(fieldPrefix, fieldPrefix.getType().getField(fieldName),
 				fieldName);
 	}
-	public TACFieldRef(TACNode node, TACOperand fieldPrefix,
+	public TACFieldRef(TACOperand fieldPrefix,
 			ModifiedType fieldType, String fieldName)
 	{
-		super(node);
+		//super(node);
 		if (fieldType == null)
 			throw new NullPointerException();		
 //		while (prefixType != null && !prefixType.containsField(fieldName))
@@ -42,7 +40,7 @@ public class TACFieldRef extends TACReference
 			// _outer is a member for inner classes, but it is made available through normal field lookup
 			index = prefixType.getFieldIndex(fieldName) + 2;
 		}
-		prefix = check(fieldPrefix, fieldPrefix);
+		prefix = fieldPrefix;//check(fieldPrefix, fieldPrefix);
 		type = fieldType;
 		name = fieldName;
 	}
@@ -79,6 +77,7 @@ public class TACFieldRef extends TACReference
 	{
 		type.setType(newType);
 	}
+	/*
 	@Override
 	public int getNumOperands()
 	{
@@ -97,7 +96,7 @@ public class TACFieldRef extends TACReference
 	{
 		visitor.visit(this);
 	}
-
+	*/
 	@Override
 	public String toString()
 	{

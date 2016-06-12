@@ -9,24 +9,29 @@ public class TACVariable implements ModifiedType
 	private ModifiedType type;
 	private String name;
 	private int suffix;
+	
+	/*
 	public TACVariable(ModifiedType varType)
 	{
 		type = varType;
 		name = null;
 		suffix = 0;
 	}
+	*/
 	public TACVariable(ModifiedType varType, String varName)
 	{
 		type = varType;
 		name = varName;
 		suffix = 0;
 	}
+	/*
 	public TACVariable(ModifiedType varType, String varName, int varSuffix)
 	{
 		type = varType;
 		name = varName;
 		suffix = varSuffix;
 	}
+	*/
 	public boolean hasType()
 	{
 		return type != null;
@@ -67,5 +72,18 @@ public class TACVariable implements ModifiedType
 		if (!hasType())
 			return getName();
 		return getType().toString() + ' ' + getName();
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if( other == null || !(other instanceof TACVariable) )
+			return false;
+		
+		if( other == this )
+			return true;
+		
+		TACVariable var = (TACVariable) other;
+		
+		return name.equals(var.name) && suffix == var.suffix;
 	}
 }

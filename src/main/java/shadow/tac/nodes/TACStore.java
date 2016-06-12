@@ -4,7 +4,8 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 
 /** 
- * TAC representation of assignment
+ * TAC representation of a memory assignment to a field or an array cell.
+ * Local variable assignment is represented by TACLocalStore. 
  * Example: x = y
  * @author Jacob Young
  */
@@ -13,15 +14,13 @@ public class TACStore extends TACSimpleNode
 {
 	private TACReference reference;
 	private TACOperand value;
-	public TACStore(TACReference ref, TACOperand op)
-	{
-		this(null, ref, op);
-	}
+
 	public TACStore(TACNode node, TACReference ref, TACOperand op)
 	{
 		super(node);
 		reference = ref;
-		value = check(op, ref.getSetType());		
+		value = check(op, ref);		
+		op.setMemoryStore(this);
 		new TACNodeRef(node, value);
 	}
 
@@ -37,14 +36,12 @@ public class TACStore extends TACSimpleNode
 	@Override
 	public int getNumOperands()
 	{
-		return 2;
+		return 1;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		if (num == 0)
-			return reference;
-		if (num == 1)
+		if (num == 0)		
 			return value;
 		throw new IndexOutOfBoundsException("" + num);
 	}

@@ -3,9 +3,9 @@ class Scope {
 	int a;
 
     public blah(int a) => () {
-        int a;
+        int a = 1;
         int b = 7;
-        int c, d;
+        int c = 3, d = 4;
         int x;
         
         //int a; //uncomment to see multiply defined symbol

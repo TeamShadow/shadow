@@ -2,13 +2,13 @@ class Switch {
 
    public nothing() => ()
    {
-	   	String s = "";
-	   	long a;
+	   	String s = "bar";
+	   	long a = 2;
 	   	int b;
 		int c;	
 		switch(a) 
 		{
-			case( 1l )
+			case( 1L )
 			{
 				b=1;
 			} 		

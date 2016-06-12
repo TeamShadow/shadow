@@ -1,0 +1,30 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		int a;
+		int value = 100;
+	
+	
+		if( value <= 7 )
+		{
+			a = 1;	
+		}
+		else if( value <= 90 )
+		{		
+			a = 2;
+		}
+		else if( value <= 200 )
+		{
+			value = 3;
+		}
+		else
+		{
+			a = 4;
+		}				
+		
+		Console.printLine(a);
+	}
+}

@@ -7,11 +7,17 @@ import shadow.typecheck.type.ExceptionType;
 public class TACCatch extends TACOperand
 {
 	private ExceptionType type;
+	private TACOperand exception;
 
-	public TACCatch(TACNode node, ExceptionType catchType)
+	public TACCatch(TACNode node, ExceptionType catchType, TACOperand exception)
 	{
 		super(node);
 		type = catchType;
+		this.exception = exception;
+	}
+	
+	public TACOperand getException() {
+		return exception;
 	}
 
 	@Override
@@ -23,12 +29,14 @@ public class TACCatch extends TACOperand
 	@Override
 	public int getNumOperands()
 	{
-		return 0;
+		return 1;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		throw new IndexOutOfBoundsException();
+		if( num == 0 )
+			return exception;		
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

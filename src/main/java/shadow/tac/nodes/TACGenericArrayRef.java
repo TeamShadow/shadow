@@ -1,18 +1,8 @@
 package shadow.tac.nodes;
 
-import java.util.Arrays;
 import java.util.Collection;
 
-import shadow.interpreter.ShadowBoolean;
-import shadow.interpreter.ShadowInteger;
-import shadow.interpreter.ShadowString;
-import shadow.interpreter.ShadowValue;
-import shadow.output.llvm.LLVMOutput;
-import shadow.tac.TACMethod;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACGenericArrayRef extends TACArrayRef {
@@ -37,7 +27,7 @@ public class TACGenericArrayRef extends TACArrayRef {
 		
 		ArrayType arrayType = (ArrayType) reference.getType();
 		Type baseType = arrayType.getBaseType();
-		genericParameter = new TACClass(this, baseType);		
+		genericParameter = new TACClass(node, baseType);		
 		isNullable =  reference.getModifiers().isNullable(); 
 		
 		/*

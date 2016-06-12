@@ -83,6 +83,7 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 		UNDEFINED_PACKAGE("Undefined package", "Package not defined in this context"),
 		UNDEFINED_SYMBOL("Undefined symbol", "Symbol has not been defined in this context"),
 		UNDEFINED_TYPE("Undefined type", "Type not defined in this context"),
+		UNDEFINED_VARIABLE("Undefined variable", "This variable may not have been defined before use"),
 		UNNECESSARY_TYPE_ARGUMENTS("Unnecessary type arguments", "Type arguments supplied for non-parameterized type"),
 		UNREACHABLE_CODE("Unreachable code", "Code cannot be reached");
 		

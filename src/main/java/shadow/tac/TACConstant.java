@@ -2,11 +2,7 @@ package shadow.tac;
 
 import java.io.StringWriter;
 
-import shadow.output.text.TextOutput;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACOperand;
-import shadow.tac.nodes.TACStore;
-import shadow.tac.nodes.TACVariableRef;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -16,7 +12,7 @@ public class TACConstant extends TACNodeList implements ModifiedType
 	private Type prefix;
 	private ModifiedType type;
 	private String name;
-	public TACConstant(Type prefixType, String constantName)
+	public TACConstant(Type prefixType, String constantName, TACMethod method)
 	{
 		ModifiedType constantType = prefixType.getField(constantName);
 		if (!constantType.getModifiers().isConstant())
@@ -24,6 +20,7 @@ public class TACConstant extends TACNodeList implements ModifiedType
 		prefix = prefixType;
 		type = constantType;
 		name = constantName;
+		setMethod(method);
 	}
 
 	public Type getPrefixType()
@@ -61,16 +58,9 @@ public class TACConstant extends TACNodeList implements ModifiedType
 		writer.write(getModifiers().toString());
 		writer.write(getType().toString(Type.TYPE_PARAMETERS));
 		writer.write(' ');
-		try
-		{
-			new TextOutput(writer).walk(new TACStore(
-					new TACVariableRef(new TACVariable(this, getName())),
-					getValue()));
-			return writer.toString();
-		}
-		catch (ShadowException ex)
-		{
-			return "Error";
-		}
+		writer.write(getName());
+		writer.write(" = ");
+		writer.write(getValue().toString());
+		return writer.toString();		
 	}
 }

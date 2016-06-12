@@ -24,12 +24,12 @@ public class ShadowInteger extends ShadowNumber {
 
 		if( signed )
 		{
-			max = new BigInteger("2").pow(size * 8 - 1);
+			max = BigInteger.valueOf(2).pow(size * 8 - 1);
 			min = max.negate();
 		}
 		else
 		{
-			max = new BigInteger("2").pow(size * 8);
+			max = BigInteger.valueOf(2).pow(size * 8);
 			min = BigInteger.ZERO;
 		}
 

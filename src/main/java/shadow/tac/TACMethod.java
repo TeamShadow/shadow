@@ -11,69 +11,108 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACLabelRef;
+import shadow.tac.nodes.TACLiteral;
+import shadow.tac.nodes.TACLocalStore;
+import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACParameter;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACMethod extends TACNodeList
 {
-	private MethodSignature method;
-	private Map<String, TACVariable> locals;
-	private Deque<Map<String, TACVariable>> scopes;
+	private final MethodSignature signature;
+	private final Map<String, TACVariable> locals;
+	private final Deque<Map<String, TACVariable>> scopes;
 	private boolean landingpad;
 	private int labelCounter = 0;		//counter to keep label numbering unique
 	private int variableCounter = 0;	//counter to keep variable number unique
 	
 	public TACMethod(MethodSignature methodSignature)
 	{	
-		method = methodSignature;
+		setMethod(this);
+		signature = methodSignature;
 		locals = new LinkedHashMap<String, TACVariable>();
 		scopes = new LinkedList<Map<String, TACVariable>>();
 		landingpad = false;
-		enterScope();
-		Type prefixType = methodSignature.getOuter();		
+		enterScope();		
+	}	
+
+	public TACMethod addParameters(TACNode node, boolean isWrapped)
+	{		
+		//method starts with a label, always
+		new TACLabelRef(this).new TACLabel(node);
+		
+		Type prefixType = signature.getOuter();		
+		int parameter = 0;		
+		
 		if( prefixType instanceof InterfaceType )
 			prefixType = Type.OBJECT;
 		
-		addLocal(new SimpleModifiedType(prefixType), "this");		
-		if (methodSignature.isCreate() )
-		{	
-			if( prefixType.hasOuter())
-				addLocal(new SimpleModifiedType(prefixType.getOuter()), "_outer");
-		}
+		ModifiedType modifiedType = new SimpleModifiedType(prefixType);
+		//we mark the primitive "this" as nullable, to show that it's the object version of the primitive
+		if( prefixType.isPrimitive() && (signature.isCreate() || isWrapped ) )
+			modifiedType.getModifiers().addModifier(Modifiers.NULLABLE);
 		
-		MethodType methodType = methodSignature.getMethodType();
+		if (signature.isCreate() ) {
+			new TACLocalStore(node, addLocal(modifiedType, "this"), TACCast.cast(node, modifiedType, new TACParameter(node, new SimpleModifiedType(Type.OBJECT), parameter++)));
+			if( prefixType.hasOuter()) {
+				modifiedType = new SimpleModifiedType(prefixType.getOuter());
+				if( prefixType.getOuter().isPrimitive() && (signature.isCreate() || isWrapped ) )
+					modifiedType.getModifiers().addModifier(Modifiers.NULLABLE);
+				
+				new TACLocalStore(node, addLocal(modifiedType, "_outer"), new TACParameter(node, modifiedType, parameter++));				
+			}
+		}
+		else
+			new TACLocalStore(node, addLocal(modifiedType, "this"), new TACParameter(node, modifiedType, parameter++));
+		
+		//methods are no longer parameterized in Shadow
+		/*
+		MethodType methodType = method.getMethodType();
 		if (methodType.isParameterized())
 			for (ModifiedType typeParam : methodType.getTypeParameters())
 				addLocal(new SimpleModifiedType(Type.CLASS),
 						typeParam.getType().getTypeName());
-	}
-	
-	public TACMethod addParameters(boolean isWrapped)
-	{
-		MethodType type = method.getMethodType();		
-		if( isWrapped )
-			type = method.getSignatureWithoutTypeArguments().getMethodType();
+		*/
 		
-		for (String name : type.getParameterNames())
-			addLocal(type.getParameterType(name), name);
+		MethodType type = signature.getMethodType();		
+		if( isWrapped )
+			type = signature.getSignatureWithoutTypeArguments().getMethodType();
+		
+		for (String name : type.getParameterNames()) {
+			ModifiedType parameterType = type.getParameterType(name);
+			new TACLocalStore(node, addLocal(parameterType, name), new TACParameter(node, parameterType, parameter++));
+		}
+		
+		//It's critical that these things happen before this next enterScope(),
+		//since parameters are all expected to be in the first scope.
 		enterScope();
+		
+		//variable to hold low level exception data
+		//note that variables cannot start with underscore (_) in Shadow, so no collision is possible
+		new TACLocalStore(node, addLocal(new SimpleModifiedType(Type.getExceptionType()), "_exception"), new TACLiteral(node, new ShadowUndefined(Type.getExceptionType())));
+		
 		return this;
 	}
 	
-	public TACMethod addParameters()
+	public TACMethod addParameters(TACNode node)
 	{
-		return addParameters(false);
+		return addParameters(node, false);
 	}
 
-	public MethodSignature getMethod()
+	public MethodSignature getSignature()
 	{
-		return method;
+		return signature;
 	}
 
 	public Collection<TACVariable> getLocals()
@@ -197,12 +236,12 @@ public class TACMethod extends TACNodeList
 	
 	public int incrementLabelCounter()
 	{
-		return ++labelCounter;
+		return labelCounter++;
 	}
 	
 	public int incrementVariableCounter()
 	{
-		return ++variableCounter;
+		return variableCounter++;
 	}
 
 //	@Override

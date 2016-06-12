@@ -195,7 +195,7 @@ public class ShadowFloat extends ShadowNumber
 	@Override
 	public String toString()
 	{
-		return Float.toString(getValue());
+		return Float.toString(getValue()) + 'f';
 	}
 
 	@Override

@@ -53,9 +53,6 @@ public abstract class TACSimpleNode extends TACNode implements Iterable<TACOpera
      * return check(operand, type, false); }
      */
     protected final TACOperand check(TACOperand operand, ModifiedType type) {
-        if (type instanceof TACReference)
-            type = ((TACReference) type).getGetType();
-        
         if (type.getType() instanceof TypeParameter && !(operand.getType() instanceof TypeParameter)  && !operand.getType().equals(Type.NULL))
             type = new SimpleModifiedType(Type.OBJECT);
 

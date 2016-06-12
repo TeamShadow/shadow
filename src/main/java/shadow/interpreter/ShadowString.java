@@ -87,7 +87,7 @@ public class ShadowString extends ShadowValue
 	@Override
 	public String toString()
 	{
-		return getValue();
+		return "\"" + getValue() + "\"";
 	}
 	
 	public static ShadowString parseString(String string)

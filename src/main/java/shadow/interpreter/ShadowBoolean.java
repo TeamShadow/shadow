@@ -37,4 +37,9 @@ public class ShadowBoolean extends ShadowValue
 	{
 		return new ShadowBoolean(value);
 	}
+	
+	@Override
+	public String toString() {
+		return "" + value;
+	}
 }

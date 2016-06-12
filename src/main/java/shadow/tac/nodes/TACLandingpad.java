@@ -2,16 +2,20 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.PointerType;
+import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACLandingpad extends TACOperand
 {
-	private TACBlock block;
-
+	private TACBlock block;	
+	
 	public TACLandingpad(TACNode node, TACBlock blockRef)
 	{
 		super(node);
 		block = blockRef;
+		
 	}
 
 	public TACBlock getBlock()
@@ -20,9 +24,9 @@ public class TACLandingpad extends TACOperand
 	}
 
 	@Override
-	public Type getType()
+	public SequenceType getType()
 	{
-		throw new UnsupportedOperationException();
+		return Type.getExceptionType();
 	}
 
 	@Override

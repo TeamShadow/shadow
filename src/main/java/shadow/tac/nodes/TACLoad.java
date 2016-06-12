@@ -7,7 +7,7 @@ import shadow.typecheck.type.Type;
 
 public class TACLoad extends TACOperand
 {
-	private TACReference reference;
+	private TACReference reference;	
 
 	public TACLoad(TACNode node, TACReference ref)
 	{
@@ -23,28 +23,26 @@ public class TACLoad extends TACOperand
 	@Override
 	public Modifiers getModifiers()
 	{
-		return reference.getGetType().getModifiers();
+		return reference.getModifiers();
 	}
 	@Override
 	public Type getType()
 	{
-		return reference.getGetType().getType();
+		return reference.getType();
 	}
 	@Override
 	public void setType(Type newType)
 	{
-		reference.getSetType().setType(newType);
+		reference.setType(newType);
 	}
 	@Override
 	public int getNumOperands()
 	{
-		return 1;
+		return 0;
 	}
 	@Override
 	public TACOperand getOperand(int num)
 	{
-		if (num == 0)
-			return reference;
 		throw new IndexOutOfBoundsException("" + num);
 	}
 

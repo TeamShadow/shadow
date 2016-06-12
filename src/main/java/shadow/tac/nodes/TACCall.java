@@ -18,6 +18,11 @@ public class TACCall extends TACOperand
 	private TACBlock blockRef;
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
+	private TACLabelRef noExceptionLabel;	
+
+	public TACLabelRef getNoExceptionLabel() {
+		return noExceptionLabel;
+	}
 
 	public TACCall(TACNode node, TACBlock block, TACMethodRef methodRef, TACOperand... params) {
 		this(node, block, methodRef, Arrays.asList(params));
@@ -36,12 +41,18 @@ public class TACCall extends TACOperand
 		parameters = new ArrayList<TACOperand>(params.size());
 		while (paramIter.hasNext())
 			parameters.add(check(paramIter.next(), typeIter.next()));
+		
+		if( block.hasLandingpad() ) {
+			noExceptionLabel = new TACLabelRef(getMethod());
+			noExceptionLabel.new TACLabel(node); //before the node but after the call
+			new TACNodeRef(node, this);
+		}
 	}
 
 	public TACBlock getBlock() {
 		return blockRef;
 	}
-	public TACMethodRef getMethod() {
+	public TACMethodRef getMethodRef() {
 		return methodRef;
 	}
 	public TACOperand getPrefix() {
@@ -90,7 +101,7 @@ public class TACCall extends TACOperand
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		TACMethodRef method = getMethod();
+		TACMethodRef method = getMethodRef();
 		sb.append(method.getOuterType()).append('.').append(method.getName()).
 				append('(');
 		for (TACOperand parameter : getParameters())
