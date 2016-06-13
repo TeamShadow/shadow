@@ -5,30 +5,32 @@ import java.util.Arrays;
 
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSimpleNode;
 
 /**
- * TACTree contains a dynamic array of TACTrees
- * Element 0 is always the parent TACTree 
+ * TACTree contains a dynamic array of TACTrees.
+ * It provides a useful way to convert a tree of TAC nodes into a linear list.
+ * Element 0 is always the parent TACTree.
  * @author Jacob Young
- *
+ * @author Barry Wittman
  */
 public class TACTree extends TACNodeList
 {
 	private int index = 0;
 	private TACTree[] children;
-	protected TACTree(TACMethod method)
+	public TACTree()
 	{
-		this(null, 0, method);
+		this(null, 0, null);
 	}
-	protected TACTree(int numChildren, TACMethod method)
+	public TACTree(int numChildren, TACBlock block)
 	{
-		this(null, numChildren, method);
+		this(null, numChildren, block);
 	}
-	public TACTree(TACTree parent, int numChildren, TACMethod method)
+	private TACTree(TACTree parent, int numChildren, TACBlock block)
 	{
 		if (numChildren < 0)
 			throw new IllegalArgumentException("numChildren < 0");
@@ -36,7 +38,7 @@ public class TACTree extends TACNodeList
 			numChildren = 10;
 		children = new TACTree[numChildren + 1];
 		children[0] = parent;
-		setMethod(method);
+		setBlock(block);
 	}
 	public TACTree getParent()
 	{
@@ -58,7 +60,7 @@ public class TACTree extends TACNodeList
 	{
 		if (++index == children.length)
 			children = Arrays.copyOf(children, children.length + 10);
-		return children[index] = new TACTree(this, numChildren, getMethod());
+		return children[index] = new TACTree(this, numChildren, getBlock());
 	}
 	public int getNumChildren()
 	{

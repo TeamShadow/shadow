@@ -2,6 +2,7 @@ package shadow.tac;
 
 import java.io.StringWriter;
 
+import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACOperand;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -12,7 +13,7 @@ public class TACConstant extends TACNodeList implements ModifiedType
 	private Type prefix;
 	private ModifiedType type;
 	private String name;
-	public TACConstant(Type prefixType, String constantName, TACMethod method)
+	public TACConstant(Type prefixType, String constantName, TACBlock block)
 	{
 		ModifiedType constantType = prefixType.getField(constantName);
 		if (!constantType.getModifiers().isConstant())
@@ -20,7 +21,7 @@ public class TACConstant extends TACNodeList implements ModifiedType
 		prefix = prefixType;
 		type = constantType;
 		name = constantName;
-		setMethod(method);
+		setBlock(block);
 	}
 
 	public Type getPrefixType()

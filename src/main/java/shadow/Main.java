@@ -238,12 +238,8 @@ public class Main {
 				}
 
 				try {
-					main.close();
-				} catch (IOException ex) { }
-				try {
-					link.getOutputStream().flush();
-				} catch (IOException ex) { }
-				try {
+					main.close();				
+					link.getOutputStream().flush();				
 					link.getOutputStream().close();
 				} catch (IOException ex) { }
 				if (link.waitFor() != 0)
@@ -269,10 +265,9 @@ public class Main {
 
 	/**
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
-	 * containing class/file.This involves either finding an existing .ll file
-	 * (which has been updated more recently than the corresponding source file
+	 * containing class/file. This involves either finding an existing .ll file
+	 * (which has been updated more recently than the corresponding source file)
 	 * or building a new one
-	 * @throws CompileException 
 	 */
 	private static void generateLLVM(List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
 		Type.clearTypes();		
@@ -288,8 +283,8 @@ public class Main {
 				if( currentJob.isCheckOnly() ) {				
 					//performs checks to make sure all paths return, there is no dead code, etc.
 					//no need to check interfaces or .meta files (no code in either case)
-					if( !(node.getType() instanceof InterfaceType) && !file.getPath().endsWith(".meta")  )
-						checkTAC( new TACBuilder().build(node) );
+					if( !file.getPath().endsWith(".meta")  )
+						optimizeTAC( new TACBuilder().build(node), true );
 				}
 				else {
 					
@@ -320,8 +315,8 @@ public class Main {
 					else {
 						logger.info("Generating LLVM code for " + name);
 						//gets top level class
-						TACModule module = optimizeTAC( new TACBuilder().build(node) );	
-						logger.debug(module.toString());
+						TACModule module = optimizeTAC( new TACBuilder().build(node), false );	
+						//logger.debug(module.toString());
 	
 						// Write to file
 						String className = typeToFileName(type);
@@ -348,7 +343,7 @@ public class Main {
 							linkCommand.add(nativeFile.getCanonicalPath());
 						
 						
-						//it's important to add generics after generating the LLVM, since more are made
+						//it's important to add generics after generating the LLVM, since more are found
 						generics.addAll(output.getGenericClasses());						
 						arrays.addAll(output.getArrayClasses());
 					}
@@ -360,41 +355,40 @@ public class Main {
 			throw e;
 		}	
 	}
-	
-	
-	private static void checkTAC(TACModule module) throws TypeCheckException {
-		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
-		for( TACMethod method : module.getMethods() ) {
-			MethodSignature signature = method.getSignature();
 
-			//don't bother with unimplemented methods
-			if( !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() ) {			
-				ControlFlowGraph graph = new ControlFlowGraph(method);
-				graph.removeUnreachableCode();
-				graph.removeRedundantErrors(); //some unreachable code errors are redundant
-			
-				if( !signature.isVoid() && !graph.returns() )
-					graph.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.toString() + " may not return on all paths");
-				
-				graph.updatePhiNodes();
-				
-				
-				reporter.addAll(graph); //adds errors (if any) to main reporter
-			}
-		}		
-		reporter.printWarnings();
-		reporter.printErrors();		
-		if( reporter.getErrorList().size() > 0 )
-			throw reporter.getErrorList().get(0);	
-	}	
 	
-	
-	// This method contains all the Shadow-specific TAC optimization,
-	// including constant propagation, control flow analysis,
-	// data flow analysis, and cast optimization
-	private static TACModule optimizeTAC(TACModule module) throws ShadowException, TypeCheckException {		
-		if( !(module.getType() instanceof InterfaceType) )
-			checkTAC( module );
+	/* 
+	 * This method contains all the Shadow-specific TAC optimization,
+	 * including constant propagation, control flow analysis, and
+	 * data flow analysis.
+	 */ 
+	private static TACModule optimizeTAC(TACModule module, boolean checkOnly) throws ShadowException, TypeCheckException {		
+		//check TAC
+		if( !(module.getType() instanceof InterfaceType) ) {
+			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+			for( TACMethod method : module.getMethods() ) {
+				MethodSignature signature = method.getSignature();
+
+				//don't bother with unimplemented methods
+				if( !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() ) {			
+					ControlFlowGraph graph = new ControlFlowGraph(method);
+					graph.removeUnreachableCode();
+					graph.removeRedundantErrors(); //some unreachable code errors are redundant
+				
+					if( !signature.isVoid() && !graph.returns() )
+						graph.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.toString() + " may not return on all paths");
+					
+					graph.addPhiNodes();
+					graph.propagateConstants();				
+					
+					reporter.addAll(graph); //adds errors (if any) to main reporter
+				}
+			}		
+			reporter.printWarnings();
+			reporter.printErrors();		
+			if( reporter.getErrorList().size() > 0 )
+				throw reporter.getErrorList().get(0);
+		}			
 		
 		return module;
 	}

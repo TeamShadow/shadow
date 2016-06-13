@@ -216,18 +216,16 @@ public class TACClass extends TACOperand
 		if( type.isFullyInstantiated() )
 			name = new TACLiteral(this, new ShadowString(type.toString()));
 		else {
-			TACMethodRef getName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("toString", new SequenceType()));						
-				TACBlock block = getBuilder().getBlock();
-				TACOperand baseName = new TACCall(this, block, getName, base);
+			TACMethodRef getName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("toString", new SequenceType()));					
+				TACOperand baseName = new TACCall(this, getName, base);
 				StringBuilder builder = new StringBuilder("[");
 				for( int i = 1; i < type.getDimensions(); ++i )
 					builder.append(",");
 				builder.append("]");
 				TACOperand brackets = new TACLiteral(this, new ShadowString(builder.toString()));
-				name = new TACCall(this, block,	new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), baseName, brackets);
+				name = new TACCall(this, new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), baseName, brackets);
 		}
-		
-		TACBlock block = getBuilder().getBlock();
+
 		TACMethod method = getMethod();
 		TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.CLASS));		
 		
@@ -240,7 +238,7 @@ public class TACClass extends TACOperand
 		
 		TACMethodRef findArray = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("findArray", arguments));
 		
-		TACCall class_ = new TACCall(this, block, findArray, classSet, name, base, dimensions);
+		TACCall class_ = new TACCall(this, findArray, classSet, name, base, dimensions);
 		TACOperand isNull = new TACSame(this, class_, new TACLiteral(this, new ShadowNull(class_.getType())));
 		TACLabelRef nullCase = new TACLabelRef(method);
 		TACLabelRef notNullCase = new TACLabelRef(method);
@@ -248,7 +246,7 @@ public class TACClass extends TACOperand
 		new TACBranch(this, isNull, nullCase, notNullCase);
 		nullCase.new TACLabel(this);
 		TACMethodRef addArray = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("addArray", arguments));
-		TACCall addedClass = new TACCall(this, block, addArray, classSet, name, base, dimensions);
+		TACCall addedClass = new TACCall(this, addArray, classSet, name, base, dimensions);
 		new TACLocalStore(this, var, addedClass);
 		new TACBranch(this, done);
 		notNullCase.new TACLabel(this);
@@ -260,8 +258,7 @@ public class TACClass extends TACOperand
 	}
 	
 	private TACOperand makeGenericName(Type type, TACNewArray parameterArray) {
-		TACOperand name;
-		TACBlock block = getBuilder().getBlock();		
+		TACOperand name;			
 		
 		if( type.isFullyInstantiated() )
 			name = new TACLiteral(this, new ShadowString(type.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)));
@@ -295,7 +292,7 @@ public class TACClass extends TACOperand
 				parameters.add(startValue);
 				parameters.add(endValue);
 				makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
-				name = new TACCall(this, block, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray, startValue, endValue);
+				name = new TACCall(this, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray, startValue, endValue);
 			}		
 			
 			while( !types.isEmpty() ) {
@@ -313,11 +310,11 @@ public class TACClass extends TACOperand
 					parameters.add(startValue);
 					parameters.add(endValue);
 					makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
-					name = new TACCall(this, block,	new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), name, new TACCall(this, block, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray, startValue, endValue));
+					name = new TACCall(this, new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), name, new TACCall(this, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray, startValue, endValue));
 				}
 				else {
 					end = start;
-					name = new TACCall(this, block,	new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), name, baseName);
+					name = new TACCall(this, new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), name, baseName);
 				}
 				start = end;
 			}	
@@ -327,8 +324,7 @@ public class TACClass extends TACOperand
 	}
 	
 	private TACOperand buildGenericClass(Type type) {
-		TACMethod method = getMethod();
-		TACBlock block = getBuilder().getBlock();
+		TACMethod method = getMethod();		
 		
 		TACNewArray parameterArray = new TACNewArray(this, new ArrayType(Type.OBJECT), new TACClass(this, Type.OBJECT), new TACLiteral(this, new ShadowInteger(type.getTypeParametersIncludingOuterClasses().size()*2)));
 		
@@ -374,7 +370,7 @@ public class TACClass extends TACOperand
 		
 		TACMethodRef findGeneric = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("findGeneric", arguments));
 		
-		TACCall class_ = new TACCall(this, block, findGeneric, classSet, name, parameterArray);
+		TACCall class_ = new TACCall(this, findGeneric, classSet, name, parameterArray);
 		TACOperand isNull = new TACSame(this, class_, new TACLiteral(this, new ShadowNull(class_.getType())));
 		TACLabelRef nullCase = new TACLabelRef(method);
 		TACLabelRef notNullCase = new TACLabelRef(method);
@@ -412,7 +408,7 @@ public class TACClass extends TACOperand
 		arguments.add(new SimpleModifiedType(parameterArray.getType(), new Modifiers(Modifiers.IMMUTABLE)));
 
 		TACMethodRef addGeneric = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("addGeneric", arguments));
-		TACCall addedClass = new TACCall(this, block, addGeneric, classSet, base, name, parent, interfaceArray, parameterArray);
+		TACCall addedClass = new TACCall(this, addGeneric, classSet, base, name, parent, interfaceArray, parameterArray);
 		new TACLocalStore(this, var, addedClass);
 		new TACBranch(this, done);
 		notNullCase.new TACLabel(this);
@@ -442,9 +438,8 @@ public class TACClass extends TACOperand
 			methodTable = new TACLiteral(this, new ShadowNull(Type.NULL));
 		new TACStore(this, new TACArrayRef(this, parameterArray, new TACLiteral(this, new ShadowInteger(1)), false), methodTable);
 		
-		TACBlock block = getBuilder().getBlock();
+		
 		TACGlobal classSet = new TACGlobal(this, Type.CLASS_SET, "@_genericSet");
-				
 		TACOperand name = makeGenericName(type, parameterArray);
 		
 		TACOperand isNull;
@@ -460,7 +455,7 @@ public class TACClass extends TACOperand
 		
 		TACMethodRef getGenericArray = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("getGenericArray", arguments));
 		
-		return new TACCall(this, block, getGenericArray, classSet, name, parameterArray, isNull);
+		return new TACCall(this, getGenericArray, classSet, name, parameterArray, isNull);
 	}
 
 	public TACOperand getClassData()

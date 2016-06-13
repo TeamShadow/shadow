@@ -14,8 +14,7 @@ import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public class TACCall extends TACOperand
-{
-	private TACBlock blockRef;
+{	
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
 	private TACLabelRef noExceptionLabel;	
@@ -24,14 +23,13 @@ public class TACCall extends TACOperand
 		return noExceptionLabel;
 	}
 
-	public TACCall(TACNode node, TACBlock block, TACMethodRef methodRef, TACOperand... params) {
-		this(node, block, methodRef, Arrays.asList(params));
+	public TACCall(TACNode node, TACMethodRef methodRef, TACOperand... params) {
+		this(node, methodRef, Arrays.asList(params));
 	}
 	
-	public TACCall(TACNode node, TACBlock block, TACMethodRef methodRef,
+	public TACCall(TACNode node, TACMethodRef methodRef,
 			Collection<? extends TACOperand> params) {
-		super(node);
-		blockRef = block;
+		super(node);		
 		this.methodRef = methodRef;
 		SequenceType types = methodRef.getParameterTypes();
 		if (params.size() != types.size())
@@ -42,15 +40,11 @@ public class TACCall extends TACOperand
 		while (paramIter.hasNext())
 			parameters.add(check(paramIter.next(), typeIter.next()));
 		
-		if( block.hasLandingpad() ) {
+		if( getBlock().hasLandingpad() ) {
 			noExceptionLabel = new TACLabelRef(getMethod());
 			noExceptionLabel.new TACLabel(node); //before the node but after the call
 			new TACNodeRef(node, this);
 		}
-	}
-
-	public TACBlock getBlock() {
-		return blockRef;
 	}
 	public TACMethodRef getMethodRef() {
 		return methodRef;

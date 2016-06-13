@@ -52,9 +52,9 @@ public class TACNewObject extends TACOperand
 			TACOperand object = new TACNewObject(this, Type.INTERFACE_CREATE_EXCEPTION);
 			TACOperand name = new TACLoad(this, new TACFieldRef(classData, Type.CLASS.getField("name"), "name"));
 			signature = Type.INTERFACE_CREATE_EXCEPTION.getMatchingMethod("create", new SequenceType(name));
-			TACBlock block = getBuilder().getBlock();
-			TACCall exception = new TACCall(this, block, new TACMethodRef(this, signature), object, name);
-			new TACThrow(this, block, exception);
+			
+			TACCall exception = new TACCall(this, new TACMethodRef(this, signature), object, name);
+			new TACThrow(this, exception);
 			
 			doneLabel.new TACLabel(this);
 		}		

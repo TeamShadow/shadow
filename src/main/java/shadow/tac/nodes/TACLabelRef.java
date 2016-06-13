@@ -8,17 +8,24 @@ import shadow.typecheck.type.Type;
 public class TACLabelRef
 {
 	private TACLabel label;
-	private String name;	
+	private final String name;
+	private final int number;
 	
 	public TACLabelRef(TACMethod method)
 	{
 		label = null;
-		name = "_label" + method.incrementLabelCounter();
+		number = method.incrementLabelCounter();
+		name = "_label" + number;
 	}	
 	
 	public String getName()
 	{
 		return name;
+	}
+	
+	public int getNumber()
+	{
+		return number;
 	}
 
 	public TACLabel getLabel()

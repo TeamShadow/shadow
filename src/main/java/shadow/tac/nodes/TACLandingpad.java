@@ -2,9 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 public class TACLandingpad extends TACOperand
@@ -15,7 +13,6 @@ public class TACLandingpad extends TACOperand
 	{
 		super(node);
 		block = blockRef;
-		
 	}
 
 	public TACBlock getBlock()

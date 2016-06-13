@@ -284,7 +284,7 @@ public class TACCast extends TACOperand
 			TACMethodRef getClass = new TACMethodRef(this, source,
 					classType.getMatchingMethod("getClass", new SequenceType()));
 			
-			srcClass = new TACCall(this, getBuilder().getBlock(), getClass, getClass.getPrefix());
+			srcClass = new TACCall(this, getClass, getClass.getPrefix());
 		}
 		else if( sourceType instanceof TypeParameter )		
 			srcClass = new TACClass(this, sourceType).getClassData();
@@ -294,7 +294,7 @@ public class TACCast extends TACOperand
 		TACMethodRef methodRef = new TACMethodRef(this, srcClass,
 				Type.CLASS.getMethods("interfaceData").get(0));
 		TACOperand destClass = new TACClass(this, destination).getClassData();					
-		return new TACCall(this, getBuilder().getBlock(), methodRef, methodRef.getPrefix(), destClass);
+		return new TACCall(this, methodRef, methodRef.getPrefix(), destClass);
 	}
 	
 	private static boolean needsCast(ModifiedType modifiedType1, ModifiedType modifiedType2 ) {
@@ -523,20 +523,18 @@ public class TACCast extends TACOperand
 	*/
 	
 	private void objectToObjectCheck(TACOperand op) {
-		TACBlock block = getBuilder().getBlock();
-		
 		//get class from object
 		TACMethodRef methodRef = new TACMethodRef(this, op,
 				Type.OBJECT.getMatchingMethod("getClass", new SequenceType()));						
 		
-		TACOperand operandClass = new TACCall(this, block, methodRef, methodRef.getPrefix());
+		TACOperand operandClass = new TACCall(this, methodRef, methodRef.getPrefix());
 		TACOperand destinationClass = new TACClass(this, type).getClassData();
 		
 		methodRef = new TACMethodRef(this, operandClass,
 				Type.CLASS.getMatchingMethod("isSubtype", new SequenceType(Type.CLASS)));
 		
 		
-		TACOperand result = new TACCall(this, block, methodRef, methodRef.getPrefix(), destinationClass);
+		TACOperand result = new TACCall(this, methodRef, methodRef.getPrefix(), destinationClass);
 		TACLabelRef throwLabel = new TACLabelRef(getMethod());
 		TACLabelRef doneLabel = new TACLabelRef(getMethod());
 		
@@ -553,9 +551,9 @@ public class TACCast extends TACOperand
 		signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
 					
 		methodRef = new TACMethodRef(this, signature);			
-		TACCall exception = new TACCall(this, block, methodRef, object, operandClass, destinationClass);
+		TACCall exception = new TACCall(this, methodRef, object, operandClass, destinationClass);
 					
-		new TACThrow(this, block, exception);						
+		new TACThrow(this, exception);						
 		
 		doneLabel.new TACLabel(this);	//done label	
 		//new TACNodeRef(this, op);
@@ -563,14 +561,13 @@ public class TACCast extends TACOperand
 	
 	
 	private void objectToArrayCheck(TACOperand op) {
-		ArrayType arrayType = (ArrayType) type;		
-		TACBlock block = getBuilder().getBlock();
+		ArrayType arrayType = (ArrayType) type;
 		
 		//get dimensions from object
 		TACMethodRef methodRef = new TACMethodRef(this, op,
 				op.getType().getMatchingMethod("dimensions", new SequenceType()));						
 		
-		TACOperand dimensions = new TACCall(this, block, methodRef, methodRef.getPrefix());
+		TACOperand dimensions = new TACCall(this, methodRef, methodRef.getPrefix());
 		
 		TACOperand condition = new TACBinary(this, dimensions, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '=', new TACLiteral(this, new ShadowInteger(arrayType.getDimensions())), true);
 		
@@ -587,9 +584,9 @@ public class TACCast extends TACOperand
 		params.add(message);
 								
 		MethodSignature signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
-		TACCall exception = new TACCall(this, block, new TACMethodRef(this, signature), object, message);
+		TACCall exception = new TACCall(this, new TACMethodRef(this, signature), object, message);
 					
-		new TACThrow(this, block, exception);
+		new TACThrow(this, exception);
 		doneLabel.new TACLabel(this);	//done label
 	}
 

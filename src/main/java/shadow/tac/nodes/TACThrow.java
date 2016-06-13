@@ -2,7 +2,6 @@ package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -13,27 +12,15 @@ import shadow.typecheck.type.Type;
  */
 
 public class TACThrow extends TACSimpleNode
-{
-	private TACBlock block;
+{	
 	private TACOperand exception;
 
-	public TACThrow(TACNode node, TACBlock blockRef, TACOperand op)
+	public TACThrow(TACNode node, TACOperand op)
 	{
 		super(node);
-		block = blockRef;
 		exception = check(op, new SimpleModifiedType(Type.OBJECT));
-		/*
-		if( block.hasLandingpad() ) {
-			noExceptionLabel = new TACLabelRef(getMethod());
-			noExceptionLabel.new TACLabel(node); //before the node but after the throw
-		}
-		*/
 	}
-
-	public TACBlock getBlock()
-	{
-		return block;
-	}
+	
 	public TACOperand getException()
 	{
 		return exception;
@@ -49,7 +36,7 @@ public class TACThrow extends TACSimpleNode
 	{
 		if (num == 0)
 			return getException();
-		throw new IndexOutOfBoundsException("num");
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

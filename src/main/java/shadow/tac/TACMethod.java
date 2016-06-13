@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACLabelRef;
 import shadow.tac.nodes.TACLiteral;
@@ -38,13 +39,19 @@ public class TACMethod extends TACNodeList
 	private int variableCounter = 0;	//counter to keep variable number unique
 	
 	public TACMethod(MethodSignature methodSignature)
-	{	
-		setMethod(this);
+	{
 		signature = methodSignature;
 		locals = new LinkedHashMap<String, TACVariable>();
 		scopes = new LinkedList<Map<String, TACVariable>>();
 		landingpad = false;
+		new TACBlock(this);		
 		enterScope();		
+	}
+	
+	@Override
+	public TACMethod getMethod()
+	{
+		return this;
 	}	
 
 	public TACMethod addParameters(TACNode node, boolean isWrapped)

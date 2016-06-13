@@ -5,6 +5,18 @@ import shadow.tac.TACVisitor;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
+/**
+ * TAC representation of a branch, used to implement if statements,
+ * switch statements, breaks, continues, and most other control flow.
+ * A TACBranch can be direct, meaning that it branches to one location,
+ * conditional, meaning that it branches to one of two locations depending
+ * on a boolean value, or indirect, meaning that it branches to a label
+ * stored in a variable.  Indirect branches only arise in the context of
+ * a finally block, which may have many entry points and may need to branch
+ * back to an appropriate location depending on which entry point.  
+ * @author Jacob Young
+ * @author Barry Wittman
+ */
 public class TACBranch extends TACSimpleNode
 {
 	private TACLabelRef trueLabel, falseLabel;
@@ -42,7 +54,6 @@ public class TACBranch extends TACSimpleNode
 		kind = Kind.DIRECT;
 		destination = null;
 		trueLabel = falseLabel = labelRef;
-		
 	}
 
 	public boolean isConditional()

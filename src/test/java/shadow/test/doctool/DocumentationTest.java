@@ -32,6 +32,8 @@ public class DocumentationTest
 	@Before
 	public void setup() throws Exception 
 	{
+		Type.clearTypes();
+		
 		try {
 			FileUtils.deleteDirectory(outputDirectory.toFile());
 		} catch(Exception e) {}
@@ -58,8 +60,6 @@ public class DocumentationTest
 		try {
 			FileUtils.deleteDirectory(outputDirectory.toFile());
 		} catch(Exception e) {}
-		
-		Type.clearTypes();
 	}
 	
 	/**

@@ -4,7 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import shadow.tac.TACMethod;
+import shadow.tac.TACNodeList;
 
+/**
+ * Represents blocks of Shadow code, usually surrounded by braces.
+ * Blocks critically contain references to the many labels that they
+ * may branch to.
+ * @author Jacob Young
+ * @author Barry Wittman 
+ */
 public class TACBlock
 {
 	private TACBlock parent;
@@ -15,11 +23,12 @@ public class TACBlock
 	private TACPhiRef cleanupPhi;
 	private TACMethod method;
 
-	public TACBlock(TACNode node)
+	public TACBlock(TACNodeList node)
 	{
 		this(node, null);
 	}
-	public TACBlock(TACNode node, TACBlock parentBlock)
+	
+	public TACBlock(TACNodeList node, TACBlock parentBlock)
 	{
 		parent = parentBlock;
 		breakLabel = null;
@@ -30,8 +39,13 @@ public class TACBlock
 		recoverLabel = null;
 		cleanupLabel = null;
 		method = node.getMethod();
+		node.setBlock(this);
 	}
-
+	
+	public TACMethod getMethod()
+	{
+		return method;
+	}
 
 	public TACBlock getParent()
 	{
@@ -75,7 +89,6 @@ public class TACBlock
 		breakLabel = new TACLabelRef(method);
 		return this;
 	}
-
 	public boolean hasContinue()
 	{
 		return continueLabel != null;

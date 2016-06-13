@@ -16,6 +16,7 @@ import shadow.typecheck.type.Type;
  * @author Barry Wittman
  */
 
+//TODO: Update to be TACUpdate, so that constants can be propagated through
 public class TACBinary extends TACOperand
 {	
 	private String operation;
