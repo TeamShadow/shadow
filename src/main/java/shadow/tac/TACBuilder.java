@@ -25,6 +25,7 @@ import shadow.interpreter.ShadowUndefined;
 import shadow.parser.javacc.*;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
+import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
@@ -163,12 +164,12 @@ public class TACBuilder implements ShadowParserVisitor {
 		
 		//dummy method and block for constant building
 		method = new TACMethod( new MethodSignature(new MethodType(), "", type, null));
-		block = new TACBlock(method);
+		block = method.getBlock();
 		
 		for (Node constant : type.getFieldList())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
-						constant.getImage()), constant);
+						constant.getImage(), block), constant);
 		block = oldBlock;
 		
 		for (List<MethodSignature> methods : type.getMethodMap().values())
@@ -2151,10 +2152,10 @@ public class TACBuilder implements ShadowParserVisitor {
 	private void visitConstant(TACConstant constantRef, Node constantNode)
 			throws ShadowException {
 		TACTree saveTree = tree;
-		tree = new TACTree(1, block);		
+		tree = new TACTree(1, constantRef.getBlock());		
 		walk(constantNode.jjtGetChild(0));
 		tree.done();
-		constantRef.setNode(tree.collapseTree());
+		constantRef.append(tree);
 		moduleStack.peek().addConstant(constantRef);
 		tree = saveTree;
 	}
@@ -2300,7 +2301,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		TACMethod method = this.method = new TACMethod(methodSignature);
 		boolean implicitCreate = false;
 		if (moduleStack.peek().isClass()) {
-			block = new TACBlock(method);
+			block = method.getBlock();
 			tree = new TACTree(1, block);		
 			
 			if (methodSignature.isNative()) {
@@ -2562,10 +2563,11 @@ public class TACBuilder implements ShadowParserVisitor {
 				}				
 				
 				walk(methodSignature.getNode());
-			}			
+			}
+			
 			
 			tree.done();
-			method.setNode(tree.collapseTree());			
+			method.append(tree);
 		}
 		moduleStack.peek().addMethod(method);
 		block = null;

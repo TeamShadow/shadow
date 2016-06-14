@@ -1,14 +1,10 @@
-package shadow.tac;
+package shadow.tac.nodes;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import shadow.tac.nodes.TACCatch;
-import shadow.tac.nodes.TACLabelRef;
-import shadow.tac.nodes.TACLandingpad;
-import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACPhiRef;
-import shadow.tac.nodes.TACUnwind;
+import shadow.tac.TACMethod;
+import shadow.tac.TACNodeList;
 
 /**
  * Represents blocks of Shadow code, usually surrounded by braces.
@@ -27,20 +23,14 @@ public class TACBlock
 	private TACPhiRef cleanupPhi;
 	private TACMethod method;
 
-	public TACBlock(TACMethod method)
+	public TACBlock(TACNodeList node)
 	{
-		this(method, null);
+		this(node, null);
 	}
 	
-	public TACBlock(TACTree node, TACBlock parent)
+	public TACBlock(TACNodeList node, TACBlock parentBlock)
 	{
-		this(node.getMethod(), parent);
-		node.setBlock(this);
-	}
-	
-	private TACBlock(TACMethod method, TACBlock parent)
-	{
-		this.parent = parent;
+		parent = parentBlock;
 		breakLabel = null;
 		continueLabel = null;
 		landingpadLabel = null;
@@ -48,7 +38,8 @@ public class TACBlock
 		catchLabels = null;
 		recoverLabel = null;
 		cleanupLabel = null;
-		this.method = method;
+		method = node.getMethod();
+		node.setBlock(this);
 	}
 	
 	public TACMethod getMethod()
