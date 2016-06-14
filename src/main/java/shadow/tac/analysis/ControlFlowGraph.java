@@ -137,14 +137,16 @@ public class ControlFlowGraph extends ErrorReporter
 	/*
 	 * Divides the code in a method into blocks.
 	 */
-	private void createBlocks(TACMethod first)
-	{		
-		TACNode node = first.getNext();
+	private void createBlocks(TACMethod method)
+	{			
+		TACNode node = method.getNode();
+		TACNode last = node.getPrevious();
+		boolean done = false;
 		boolean starting = true;
 		Block block = null;
 		
 		// Loop through circular linked-list
-		while( node != first ) {
+		while( !done ) {
 			if( node instanceof TACLabel ) {
 				TACLabel label = (TACLabel)node;
 				block = new Block(label);
@@ -161,7 +163,10 @@ public class ControlFlowGraph extends ErrorReporter
 			
 			block.addNode(node);
 			
-			node = node.getNext();
+			if( node == last )
+				done = true;
+			else
+				node = node.getNext();
 		}
 	}
 	

@@ -2,7 +2,6 @@ package shadow.tac;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;

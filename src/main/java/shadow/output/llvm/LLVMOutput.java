@@ -34,13 +34,12 @@ import shadow.output.Cleanup;
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACBlock;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
-import shadow.tac.TACNodeList;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
@@ -63,6 +62,7 @@ import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
+import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef;
@@ -347,8 +347,8 @@ public class LLVMOutput extends AbstractOutput {
 			String name = constant.getName();
 			Node node = module.getType().getField(name);
 			try {
-				interpreter.walk(constant);
-				Object result = constant.getValue().getData();
+				interpreter.walk(constant.getNode());
+				Object result = constant.getNode().getData();
 				if (!(result instanceof ShadowValue))
 					throw new ShadowException(
 							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
@@ -364,7 +364,7 @@ public class LLVMOutput extends AbstractOutput {
 				throw new ShadowException(message);
 			}
 			
-			Cleanup.getInstance().walk(constant);
+			Cleanup.getInstance().walk(constant.getNode());
 		}
 		
 		//interfaces implemented (because a special object is used to map the methods correctly)
@@ -806,9 +806,9 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void walk(TACNodeList nodes) throws ShadowException {
+	public void walk(TACNode node) throws ShadowException {
 		if( !skipMethod )
-			super.walk(nodes);
+			super.walk(node);
 	}
 
 	@Override
@@ -2353,7 +2353,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	private String symbol(TACLabel node) {
-		return '%' + symbol((TACOperand)node);
+		return '%' + node.getRef().getName();
 	}
 
 	private String symbol(TACOperand node) {

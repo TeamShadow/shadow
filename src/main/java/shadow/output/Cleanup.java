@@ -1,6 +1,7 @@
 package shadow.output;
 
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACSimpleNode;
 
@@ -19,11 +20,12 @@ public class Cleanup extends AbstractOutput
 	}
 
 	@Override
-	protected void visit(TACSimpleNode node) throws ShadowException
+	protected void visit(TACNode node) throws ShadowException
 	{
 		if (node instanceof TACOperand)
 			((TACOperand)node).setData(null);
-		for (TACOperand operand : node)
-			operand.setData(null);
+		if( node instanceof TACSimpleNode )		
+			for (TACOperand operand : (TACSimpleNode)node)
+				operand.setData(null);
 	}
 }

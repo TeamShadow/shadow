@@ -2,26 +2,26 @@ package shadow.tac;
 
 import java.io.StringWriter;
 
-import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACOperand;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class TACConstant extends TACNodeList implements ModifiedType
+public class TACConstant implements ModifiedType
 {
 	private Type prefix;
 	private ModifiedType type;
 	private String name;
-	public TACConstant(Type prefixType, String constantName, TACBlock block)
+	private TACOperand node;	
+	
+	public TACConstant(Type prefixType, String constantName)
 	{
 		ModifiedType constantType = prefixType.getField(constantName);
 		if (!constantType.getModifiers().isConstant())
-			throw new IllegalArgumentException("constantType is not constant");
+			throw new IllegalArgumentException(constantType + " is not constant");
 		prefix = prefixType;
 		type = constantType;
-		name = constantName;
-		setBlock(block);
+		name = constantName;		
 	}
 
 	public Type getPrefixType()
@@ -32,9 +32,14 @@ public class TACConstant extends TACNodeList implements ModifiedType
 	{
 		return name;
 	}
-	public TACOperand getValue()
+	public TACOperand getNode()
 	{
-		return (TACOperand)getLast();
+		return node;
+	}
+	
+	public void setNode(TACOperand value) 
+	{
+		this.node = value;		
 	}
 
 	@Override
@@ -61,7 +66,7 @@ public class TACConstant extends TACNodeList implements ModifiedType
 		writer.write(' ');
 		writer.write(getName());
 		writer.write(" = ");
-		writer.write(getValue().toString());
+		writer.write(getNode().toString());
 		return writer.toString();		
 	}
 }

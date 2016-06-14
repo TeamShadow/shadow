@@ -2,7 +2,6 @@ package shadow.tac;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
@@ -46,18 +45,36 @@ import shadow.tac.nodes.TACUnwind;
 public abstract class TACAbstractVisitor implements TACVisitor {	
 	public void walk(TACNode node) throws ShadowException
 	{
+		/*
 		if (node instanceof TACSimpleNode)
 			walk((TACSimpleNode)node);
-		else if (node instanceof TACNodeList)
-			walk((TACNodeList)node);
 		else
-			throw new Error("Unknown subclass of TACNode: " + node.getClass());
+		
+		if (node instanceof TACNodeList)
+			walk((TACNodeList)node);
+		else {
+		*/	
+			TACNode temp = node;
+			do {
+				if( temp instanceof TACSimpleNode )
+					visit((TACSimpleNode)temp);
+				
+				temp = temp.getNext(); 
+			}
+			while (temp != node);
+			
+		//}
+			//throw new Error("Unknown subclass of TACNode: " + node.getClass());
 	}
+	
+	/*
 	public void walk(TACNodeList nodes) throws ShadowException
 	{
 		for (TACSimpleNode node : nodes)
 			visit(node);
 	}
+	
+	
 	public void walk(TACSimpleNode nodes) throws ShadowException
 	{
 		TACNode temp = nodes;
@@ -66,13 +83,13 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 				visit((TACSimpleNode)temp);
 		while (temp != nodes);
 	}
-	protected void visit(TACSimpleNode node) throws ShadowException
+	*/
+	
+	protected void visit(TACNode node) throws ShadowException
 	{
 		node.accept(this);
 	}
 
-//	@Override
-//	public void visit(TACArrayRef node) throws ShadowException { }	
 	@Override
 	public void visit(TACBinary node) throws ShadowException { }	
 	@Override
@@ -89,14 +106,8 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	public void visit(TACClass node) throws ShadowException { }
 	@Override
 	public void visit(TACClassData node) throws ShadowException { }
-//	@Override
-//	public void visit(TACConstantRef node) throws ShadowException { }	
 	@Override
 	public void visit(TACCopyMemory node) throws ShadowException { }	
-//	@Override
-//	public void visit(TACFieldRef node) throws ShadowException { }
-//	@Override
-//	public void visit(TACGenericArrayRef node) throws ShadowException { }
 	@Override
 	public void visit(TACLabel node) throws ShadowException { }	
 	@Override
@@ -135,8 +146,6 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	public void visit(TACPointerToLong node) throws ShadowException { }	
 	@Override
 	public void visit(TACSequenceElement node) throws ShadowException { }	
-//	@Override
-//	public void visit(TACReference node) throws ShadowException { }
 	@Override
 	public void visit(TACResume node) throws ShadowException { }
 	@Override
@@ -145,8 +154,6 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	public void visit(TACSame node) throws ShadowException { }
 	@Override
 	public void visit(TACSequence node) throws ShadowException { }
-//	@Override
-//	public void visit(TACSingletonRef node) throws ShadowException { }
 	@Override
 	public void visit(TACStore node) throws ShadowException { }
 	@Override
