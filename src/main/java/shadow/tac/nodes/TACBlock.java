@@ -23,12 +23,18 @@ public class TACBlock
 	private TACPhiRef cleanupPhi;
 	private TACMethod method;
 
-	public TACBlock(TACNodeList node)
+	public TACBlock(TACMethod method)
 	{
-		this(node, null);
+		this(method, null);	
 	}
 	
 	public TACBlock(TACNodeList node, TACBlock parentBlock)
+	{
+		this(node.getMethod(), parentBlock);
+		node.setBlock(this);
+	}
+	
+	private TACBlock(TACMethod method, TACBlock parentBlock)
 	{
 		parent = parentBlock;
 		breakLabel = null;
@@ -38,8 +44,7 @@ public class TACBlock
 		catchLabels = null;
 		recoverLabel = null;
 		cleanupLabel = null;
-		method = node.getMethod();
-		node.setBlock(this);
+		this.method = method;		
 	}
 	
 	public TACMethod getMethod()

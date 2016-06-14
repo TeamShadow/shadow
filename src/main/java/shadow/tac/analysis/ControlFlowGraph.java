@@ -137,8 +137,9 @@ public class ControlFlowGraph extends ErrorReporter
 	/*
 	 * Divides the code in a method into blocks.
 	 */
-	private void createBlocks(TACMethod first)
+	private void createBlocks(TACMethod method)
 	{		
+		TACNode first = method.getNode(); //junk tree thing?
 		TACNode node = first.getNext();
 		boolean starting = true;
 		Block block = null;

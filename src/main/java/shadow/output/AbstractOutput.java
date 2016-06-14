@@ -47,7 +47,7 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 	public void build(TACMethod method, TACModule module) throws ShadowException
 	{
 		startMethod(method, module);
-		walk(method);
+		walk(method.getNode());
 		endMethod(method, module);
 	}
 

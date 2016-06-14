@@ -37,7 +37,6 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
-import shadow.tac.TACNodeList;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBlock;
@@ -63,6 +62,7 @@ import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
+import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef;
@@ -806,7 +806,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void walk(TACNodeList nodes) throws ShadowException {
+	public void walk(TACNode nodes) throws ShadowException {
 		if( !skipMethod )
 			super.walk(nodes);
 	}

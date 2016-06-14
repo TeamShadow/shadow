@@ -164,7 +164,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		
 		//dummy method and block for constant building
 		method = new TACMethod( new MethodSignature(new MethodType(), "", type, null));
-		block = method.getBlock();
+		block = new TACBlock(method);
 		
 		for (Node constant : type.getFieldList())
 			if (constant.getModifiers().isConstant())
@@ -2301,7 +2301,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		TACMethod method = this.method = new TACMethod(methodSignature);
 		boolean implicitCreate = false;
 		if (moduleStack.peek().isClass()) {
-			block = method.getBlock();
+			block = new TACBlock(method);
 			tree = new TACTree(1, block);		
 			
 			if (methodSignature.isNative()) {
@@ -2567,7 +2567,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			
 			tree.done();
-			method.append(tree);
+			method.setNode(tree);
 		}
 		moduleStack.peek().addMethod(method);
 		block = null;
