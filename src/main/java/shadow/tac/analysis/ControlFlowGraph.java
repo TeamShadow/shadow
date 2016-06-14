@@ -387,6 +387,25 @@ public class ControlFlowGraph extends ErrorReporter
 			return "Block " + label.getRef().getNumber();
 		}
 		
+		@Override
+		public boolean equals(Object other)
+		{
+			if( other == null || !(other instanceof Block) )
+				return false;
+			
+			if( this == other )
+				return true;
+			
+			Block block = (Block) other;
+			return toString().equals(block.toString());
+		}
+		
+		@Override
+		public int hashCode()
+		{
+			return toString().hashCode();			
+		}
+		
 		/*
 		 * Gets the number of the label the block starts with.
 		 */
@@ -485,14 +504,15 @@ public class ControlFlowGraph extends ErrorReporter
 		 * definitions of variables in other blocks.
 		 */
 		public void addPhiNodes(Map<Block, Map<TACVariable, TACLocalStorage>> lastStores) {
-			Map<TACVariable,TACLocalStorage> predecessors = new HashMap<TACVariable, TACLocalStorage>();
 			Map<TACVariable, TACLocalStorage> stores = lastStores.get(this);
+			Map<TACVariable,TACLocalStorage> predecessors = new HashMap<TACVariable, TACLocalStorage>();
+			
 			
 			TACNode node = label.getNext();
 			boolean done = false;
 			while( !done ) {				
-				if( node instanceof TACLocalStore ) {
-					TACLocalStore store = (TACLocalStore)node;
+				if( node instanceof TACLocalStorage ) {  //both TACLocalStore and TACPhiStore
+					TACLocalStorage store = (TACLocalStorage)node;
 					predecessors.put(store.getVariable(), store);	
 				}
 				else if( node instanceof TACLocalLoad ) {
@@ -502,12 +522,11 @@ public class ControlFlowGraph extends ErrorReporter
 					if( store == null ) {
 						//add phi
 						TACPhiStore phi = new TACPhiStore(label.getNext(), variable);
-						for( Block block : incoming )
-							phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastStores));						
-						
-						predecessors.put(variable, phi);	
 						if( !stores.containsKey(variable) )
 							stores.put(variable, phi);
+						predecessors.put(variable, phi);
+						for( Block block : incoming )
+							phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastStores));							
 						load.setPreviousStore(phi);
 					}
 					else

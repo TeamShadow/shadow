@@ -75,6 +75,11 @@ public class TACVariable implements ModifiedType
 	}
 	
 	@Override
+	public int hashCode() {
+		return getName().hashCode();
+	}
+	
+	@Override
 	public boolean equals(Object other) {
 		if( other == null || !(other instanceof TACVariable) )
 			return false;
@@ -84,6 +89,6 @@ public class TACVariable implements ModifiedType
 		
 		TACVariable var = (TACVariable) other;
 		
-		return name.equals(var.name) && suffix == var.suffix;
+		return getName().equals(var.getName());
 	}
 }
