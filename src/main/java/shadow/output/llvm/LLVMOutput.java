@@ -34,12 +34,12 @@ import shadow.output.Cleanup;
 import shadow.output.TabbedLineWriter;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACBlock;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
@@ -50,7 +50,7 @@ import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACGlobal;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
+import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
@@ -1902,7 +1902,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	private String name(TACLabel label) {
-		return symbol(label.getRef()).substring(1);
+		return label.toString();
 	}		
 	
 	private static String name(TACLocalStorage store) {		
@@ -1932,7 +1932,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	private String symbol(TACLabel node) {
-		return '%' + symbol((TACOperand)node);
+		return '%' + node.toString();
 	}
 
 	private String symbol(TACOperand node) {

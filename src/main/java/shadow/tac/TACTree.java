@@ -5,7 +5,6 @@ import java.util.Arrays;
 
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
-import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACSequence;

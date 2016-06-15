@@ -19,8 +19,7 @@ import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACFieldRef;
-import shadow.tac.nodes.TACLabelRef;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
+import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
@@ -59,7 +58,7 @@ import shadow.typecheck.type.Type;
 public class TextOutput extends AbstractOutput
 {
 	private Inline inline = new Inline();	
-	private TACLabelRef block = null;	
+	private TACLabel block = null;	
 	public TextOutput(Writer out) throws ShadowException
 	{
 		super(out);
@@ -82,7 +81,7 @@ public class TextOutput extends AbstractOutput
 		}
 	}
 
-	private void startBlock(TACLabelRef label) throws ShadowException
+	private void startBlock(TACLabel label) throws ShadowException
 	{
 		if (block != null)
 			writer.writeLeft("// Missing terminator!!!");
@@ -170,13 +169,13 @@ public class TextOutput extends AbstractOutput
 	@Override
 	public void visit(TACLabel node) throws ShadowException
 	{
-		startBlock(node.getRef());
-		writer.writeLeft(symbol(node.getRef()) + ':');
+		startBlock(node);
+		writer.writeLeft(symbol(node) + ':');
 	}
 	
-	protected String symbol(TACLabelRef label) 
+	protected String symbol(TACLabel label) 
 	{
-		return label.getName();
+		return label.toString();
 	}
 	
 	@Override
@@ -187,7 +186,7 @@ public class TextOutput extends AbstractOutput
 					 append(" = phi ");			 
 			 for( Map.Entry<TACLabel, TACOperand> entry : values.entrySet() ) {
 				 inline.visit(sb.append("[ "), entry.getValue());
-				 sb.append(", ").append(entry.getKey().getRef()).append(" ],");
+				 sb.append(", ").append(entry.getKey()).append(" ],");
 			 }
 			 writer.write(sb.deleteCharAt(sb.length() - 1).toString());					  
 		 }

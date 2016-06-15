@@ -237,19 +237,19 @@ public class TACClass extends TACOperand
 		
 		TACCall class_ = new TACCall(this, findArray, classSet, name, base, dimensions);
 		TACOperand isNull = new TACSame(this, class_, new TACLiteral(this, new ShadowNull(class_.getType())));
-		TACLabelRef nullCase = new TACLabelRef(method);
-		TACLabelRef notNullCase = new TACLabelRef(method);
-		TACLabelRef done = new TACLabelRef(method);
+		TACLabel nullCase = new TACLabel(method);
+		TACLabel notNullCase = new TACLabel(method);
+		TACLabel done = new TACLabel(method);
 		new TACBranch(this, isNull, nullCase, notNullCase);
-		nullCase.new TACLabel(this);
+		nullCase.insertBefore(this);
 		TACMethodRef addArray = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("addArray", arguments));
 		TACCall addedClass = new TACCall(this, addArray, classSet, name, base, dimensions);
 		new TACLocalStore(this, var, addedClass);
 		new TACBranch(this, done);
-		notNullCase.new TACLabel(this);
+		notNullCase.insertBefore(this);
 		new TACLocalStore(this, var, class_);
 		new TACBranch(this, done);
-		done.new TACLabel(this);		 	
+		done.insertBefore(this);		 	
 		
 		return new TACLocalLoad(this, var);
 	}
@@ -369,11 +369,11 @@ public class TACClass extends TACOperand
 		
 		TACCall class_ = new TACCall(this, findGeneric, classSet, name, parameterArray);
 		TACOperand isNull = new TACSame(this, class_, new TACLiteral(this, new ShadowNull(class_.getType())));
-		TACLabelRef nullCase = new TACLabelRef(method);
-		TACLabelRef notNullCase = new TACLabelRef(method);
-		TACLabelRef done = new TACLabelRef(method);
+		TACLabel nullCase = new TACLabel(method);
+		TACLabel notNullCase = new TACLabel(method);
+		TACLabel done = new TACLabel(method);
 		new TACBranch(this, isNull, nullCase, notNullCase);
-		nullCase.new TACLabel(this);
+		nullCase.insertBefore(this);
 		
 		TACClass base = new TACClass(this, type.getTypeWithoutTypeArguments(), true);
 		
@@ -408,10 +408,10 @@ public class TACClass extends TACOperand
 		TACCall addedClass = new TACCall(this, addGeneric, classSet, base, name, parent, interfaceArray, parameterArray);
 		new TACLocalStore(this, var, addedClass);
 		new TACBranch(this, done);
-		notNullCase.new TACLabel(this);
+		notNullCase.insertBefore(this);
 		new TACLocalStore(this, var, class_);
 		new TACBranch(this, done);
-		done.new TACLabel(this);
+		done.insertBefore(this);
 		
 		return new TACLocalLoad(this, var);
 	}

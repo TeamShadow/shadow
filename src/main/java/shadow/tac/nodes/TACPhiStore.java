@@ -9,7 +9,6 @@ import shadow.interpreter.ShadowUndefined;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
 
 public class TACPhiStore extends TACLocalStorage {		
 	private Map<TACLabel, TACOperand> previousStores = new HashMap<TACLabel, TACOperand>();	

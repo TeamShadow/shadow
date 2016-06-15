@@ -19,7 +19,7 @@ import shadow.typecheck.type.Type;
  */
 public class TACBranch extends TACNode
 {
-	private TACLabelRef trueLabel, falseLabel;
+	private TACLabel trueLabel, falseLabel;
 	private TACPhiRef destination;
 	private TACOperand operand;
 	private Kind kind;
@@ -33,14 +33,14 @@ public class TACBranch extends TACNode
 		operand = op;
 		destination = dest;
 	}
-	public TACBranch(TACNode node, TACLabelRef labelRef)
+	public TACBranch(TACNode node, TACLabel label)
 	{
 		super(node);
 		kind = Kind.DIRECT;
-		trueLabel = falseLabel = labelRef;		
+		trueLabel = falseLabel = label;		
 	}
-	public TACBranch(TACNode node, TACOperand cond, TACLabelRef trueRef,
-			TACLabelRef falseRef)
+	public TACBranch(TACNode node, TACOperand cond, TACLabel trueRef,
+			TACLabel falseRef)
 	{
 		super(node);
 		kind = Kind.CONDITIONAL;
@@ -49,11 +49,11 @@ public class TACBranch extends TACNode
 		operand = check(cond, new SimpleModifiedType(Type.BOOLEAN));	
 	}
 	
-	public void convertToDirect( TACLabelRef labelRef )
+	public void convertToDirect( TACLabel label )
 	{
 		kind = Kind.DIRECT;
 		destination = null;
-		trueLabel = falseLabel = labelRef;
+		trueLabel = falseLabel = label;
 	}
 
 	public boolean isConditional()
@@ -86,19 +86,19 @@ public class TACBranch extends TACNode
 			throw new IllegalStateException();
 		return destination;
 	}
-	public TACLabelRef getLabel()
+	public TACLabel getLabel()
 	{
 		if (!isDirect())
 			throw new IllegalStateException();
 		return trueLabel;
 	}
-	public TACLabelRef getTrueLabel()
+	public TACLabel getTrueLabel()
 	{
 		if (!isConditional())
 			throw new IllegalStateException();
 		return trueLabel;
 	}
-	public TACLabelRef getFalseLabel()
+	public TACLabel getFalseLabel()
 	{
 		if (!isConditional())
 			throw new IllegalStateException();

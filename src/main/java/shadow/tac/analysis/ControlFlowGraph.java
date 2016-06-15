@@ -16,8 +16,7 @@ import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
-import shadow.tac.nodes.TACLabelRef;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
+import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLocalLoad;
@@ -84,46 +83,46 @@ public class ControlFlowGraph extends ErrorReporter
 					if( condition instanceof TACLiteral && ((TACLiteral)condition).getValue() instanceof ShadowBoolean ) {
 						ShadowBoolean value = (ShadowBoolean) ((TACLiteral)condition).getValue();
 						if( value.getValue() ) {
-							block.addBranch(nodeBlocks.get(branch.getTrueLabel().getLabel()));
+							block.addBranch(nodeBlocks.get(branch.getTrueLabel()));
 							branch.convertToDirect(branch.getTrueLabel());
 						}
 						else {
-							block.addBranch(nodeBlocks.get(branch.getFalseLabel().getLabel()));
+							block.addBranch(nodeBlocks.get(branch.getFalseLabel()));
 							branch.convertToDirect(branch.getFalseLabel());
 						}
 					}
 					else {					
-						block.addBranch(nodeBlocks.get(branch.getTrueLabel().getLabel()));
-						block.addBranch(nodeBlocks.get(branch.getFalseLabel().getLabel()));
+						block.addBranch(nodeBlocks.get(branch.getTrueLabel()));
+						block.addBranch(nodeBlocks.get(branch.getFalseLabel()));
 					}
 				}
 				else if (branch.isDirect())
-					block.addBranch(nodeBlocks.get(branch.getLabel().getLabel()));				
+					block.addBranch(nodeBlocks.get(branch.getLabel()));				
 				else if (branch.isIndirect()) {
 					// Branch to every possible destination
 					TACPhiRef destination = branch.getDestination();
 					if( destination.getSize() == 1 ) {						
-						TACLabelRef labelRef = destination.getValue(0);
-						branch.convertToDirect(labelRef);
-						block.addBranch(nodeBlocks.get(labelRef.getLabel()));
+						TACLabel label = destination.getValue(0);
+						branch.convertToDirect(label);
+						block.addBranch(nodeBlocks.get(label));
 					}
 					else
 						for (int i = 0; i < destination.getSize(); ++i)
-							block.addBranch(nodeBlocks.get(destination.getValue(i).getLabel()));					
+							block.addBranch(nodeBlocks.get(destination.getValue(i)));					
 				}
 			}
 			//handles cases where a method call can cause a catchable exception
 			else if( node instanceof TACCall ) {
 				TACCall call = (TACCall) node;
 				if( call.getBlock().hasLandingpad() ) {
-					block.addBranch(nodeBlocks.get(call.getBlock().getLandingpad().getLabel()));					
-					block.addBranch(nodeBlocks.get(call.getNoExceptionLabel().getLabel()));
+					block.addBranch(nodeBlocks.get(call.getBlock().getLandingpad()));					
+					block.addBranch(nodeBlocks.get(call.getNoExceptionLabel()));
 				}
 			}
 			else if( node instanceof TACThrow ) {
 				TACThrow throw_ = (TACThrow)node;
 				if( throw_.getBlock().hasLandingpad() )
-					block.addBranch(nodeBlocks.get(throw_.getBlock().getLandingpad().getLabel()));
+					block.addBranch(nodeBlocks.get(throw_.getBlock().getLandingpad()));
 			}
 			
 			if( node == block.getLast() )
@@ -386,7 +385,7 @@ public class ControlFlowGraph extends ErrorReporter
 		@Override
 		public String toString()
 		{
-			return "Block " + label.getRef().getNumber();
+			return "Block " + label.getNumber();
 		}
 		
 		@Override
@@ -413,7 +412,7 @@ public class ControlFlowGraph extends ErrorReporter
 		 */
 		public int getNumber()
 		{
-			return label.getRef().getNumber();
+			return label.getNumber();
 		}
 
 		/*
@@ -586,7 +585,7 @@ public class ControlFlowGraph extends ErrorReporter
 			while( !done ) {				
 				if( node instanceof TACPhi ) {
 					TACPhiRef phiRef = ((TACPhi)node).getRef();
-					phiRef.removeLabel(block.getLabel().getRef());
+					phiRef.removeLabel(block.getLabel());
 				}
 				else if( node instanceof TACPhiStore ) {
 					TACPhiStore store = (TACPhiStore)node;

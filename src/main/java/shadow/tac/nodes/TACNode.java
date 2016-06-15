@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACBlock;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;

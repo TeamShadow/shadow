@@ -17,9 +17,9 @@ public class TACCall extends TACOperand
 {	
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
-	private TACLabelRef noExceptionLabel;	
+	private TACLabel noExceptionLabel;	
 
-	public TACLabelRef getNoExceptionLabel() {
+	public TACLabel getNoExceptionLabel() {
 		return noExceptionLabel;
 	}
 
@@ -41,8 +41,8 @@ public class TACCall extends TACOperand
 			parameters.add(check(paramIter.next(), typeIter.next()));
 		
 		if( getBlock().hasLandingpad() ) {
-			noExceptionLabel = new TACLabelRef(getMethod());
-			noExceptionLabel.new TACLabel(node); //before the node but after the call
+			noExceptionLabel = new TACLabel(getMethod());
+			noExceptionLabel.insertBefore(node); //before the node but after the call
 			new TACNodeRef(node, this);
 		}
 	}

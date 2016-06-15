@@ -13,17 +13,17 @@ import shadow.typecheck.type.Type;
 public class TACPhiRef
 {
 	private TACPhi phi;
-	private List<TACLabelRef> labels;
-	private Map<TACLabelRef, TACLabelRef> values;
+	private List<TACLabel> labels;
+	private Map<TACLabel, TACLabel> values;
 
 	public TACPhiRef()
 	{
 		phi = null;
-		labels = new ArrayList<TACLabelRef>();
-		values = new HashMap<TACLabelRef, TACLabelRef>();
+		labels = new ArrayList<TACLabel>();
+		values = new HashMap<TACLabel, TACLabel>();
 	}
 
-	public void addEdge(TACLabelRef value, TACLabelRef label)
+	public void addEdge(TACLabel value, TACLabel label)
 	{
 		if (value == null || label == null)
 			throw new IllegalArgumentException("null");
@@ -31,7 +31,7 @@ public class TACPhiRef
 		values.put(label, value);
 	}
 	
-	public void removeLabel(TACLabelRef label)
+	public void removeLabel(TACLabel label)
 	{
 		labels.remove(label);
 		values.remove(label);
@@ -41,23 +41,23 @@ public class TACPhiRef
 	{
 		return labels.size();
 	}
-	public TACLabelRef getValue(TACLabelRef label)
+	public TACLabel getValue(TACLabel label)
 	{
 		return values.get(label);
 	}
-	public TACLabelRef getLabel(int num)
+	public TACLabel getLabel(int num)
 	{
 		return labels.get(num);
 	}
-	public TACLabelRef getValue(int num)
+	public TACLabel getValue(int num)
 	{
 		return getValue(getLabel(num));
 	}
-	public Collection<TACLabelRef> getLabels()
+	public Collection<TACLabel> getLabels()
 	{
 		return labels;
 	}
-	public Collection<TACLabelRef> getValues()
+	public Collection<TACLabel> getValues()
 	{
 		return values.values();
 	}

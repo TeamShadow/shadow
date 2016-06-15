@@ -5,7 +5,7 @@ package shadow.parser.javacc;
 import java.util.ArrayList;
 import java.util.List;
 
-import shadow.tac.nodes.TACLabelRef;
+import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACOperand;
 
 public
@@ -13,14 +13,14 @@ public
 class ASTSwitchLabel extends SimpleNode {
 	
 	private List<TACOperand> values = new ArrayList<TACOperand>();
-	private TACLabelRef label;
+	private TACLabel label;
 	
-	public TACLabelRef getLabel()
+	public TACLabel getLabel()
 	{
 		return label;
 	}
 	
-	public void setLabel(TACLabelRef label)
+	public void setLabel(TACLabel label)
 	{
 		this.label = label;
 	}

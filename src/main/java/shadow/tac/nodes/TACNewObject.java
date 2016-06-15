@@ -44,11 +44,11 @@ public class TACNewObject extends TACOperand
 			TACOperand test = new TACBinary(this, value, signature, '=', new TACLiteral(this, new ShadowInteger(0)));
 			
 			TACMethod method = getMethod();
-			TACLabelRef throwLabel = new TACLabelRef(method);
-			TACLabelRef doneLabel = new TACLabelRef(method);			
+			TACLabel throwLabel = new TACLabel(method);
+			TACLabel doneLabel = new TACLabel(method);			
 			new TACBranch(this, test, doneLabel, throwLabel);			
 			
-			throwLabel.new TACLabel(this);					
+			throwLabel.insertBefore(this);					
 			TACOperand object = new TACNewObject(this, Type.INTERFACE_CREATE_EXCEPTION);
 			TACOperand name = new TACLoad(this, new TACFieldRef(classData, Type.CLASS.getField("name"), "name"));
 			signature = Type.INTERFACE_CREATE_EXCEPTION.getMatchingMethod("create", new SequenceType(name));
@@ -56,7 +56,7 @@ public class TACNewObject extends TACOperand
 			TACCall exception = new TACCall(this, new TACMethodRef(this, signature), object, name);
 			new TACThrow(this, exception);
 			
-			doneLabel.new TACLabel(this);
+			doneLabel.insertBefore(this);
 		}		
 	}
 	

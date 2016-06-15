@@ -317,12 +317,12 @@ public class TACCast extends TACOperand
 		
 		
 		TACOperand result = new TACCall(this, methodRef, methodRef.getPrefix(), destinationClass);
-		TACLabelRef throwLabel = new TACLabelRef(getMethod());
-		TACLabelRef doneLabel = new TACLabelRef(getMethod());
+		TACLabel throwLabel = new TACLabel(getMethod());
+		TACLabel doneLabel = new TACLabel(getMethod());
 		
 		new TACBranch(this, result, doneLabel, throwLabel);
 		
-		throwLabel.new TACLabel(this);
+		throwLabel.insertBefore(this);
 		
 		TACOperand object = new TACNewObject(this, Type.CAST_EXCEPTION);
 		SequenceType params = new SequenceType();			
@@ -337,7 +337,7 @@ public class TACCast extends TACOperand
 					
 		new TACThrow(this, exception);						
 		
-		doneLabel.new TACLabel(this);	//done label
+		doneLabel.insertBefore(this);	//done label
 	}
 	
 	
@@ -352,12 +352,12 @@ public class TACCast extends TACOperand
 		
 		TACOperand condition = new TACBinary(this, dimensions, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '=', new TACLiteral(this, new ShadowInteger(arrayType.getDimensions())), true);
 		
-		TACLabelRef throwLabel = new TACLabelRef(getMethod());
-		TACLabelRef doneLabel = new TACLabelRef(getMethod());
+		TACLabel throwLabel = new TACLabel(getMethod());
+		TACLabel doneLabel = new TACLabel(getMethod());
 		
 		new TACBranch(this, condition, doneLabel, throwLabel);
 		
-		throwLabel.new TACLabel(this);
+		throwLabel.insertBefore(this);
 		
 		TACOperand object = new TACNewObject(this, Type.CAST_EXCEPTION);
 		SequenceType params = new SequenceType();
@@ -368,7 +368,7 @@ public class TACCast extends TACOperand
 		TACCall exception = new TACCall(this, new TACMethodRef(this, signature), object, message);
 					
 		new TACThrow(this, exception);
-		doneLabel.new TACLabel(this);	//done label
+		doneLabel.insertBefore(this);	//done label
 	}
 
 	@Override

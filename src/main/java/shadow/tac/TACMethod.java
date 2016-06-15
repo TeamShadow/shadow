@@ -15,7 +15,7 @@ import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACLabelRef;
+import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACNode;
@@ -60,7 +60,7 @@ public class TACMethod
 	public TACMethod addParameters(TACNode node, boolean isWrapped)
 	{		
 		//method starts with a label, always
-		new TACLabelRef(this).new TACLabel(node);
+		new TACLabel(this).insertBefore(node);
 		
 		Type prefixType = signature.getOuter();		
 		int parameter = 0;		

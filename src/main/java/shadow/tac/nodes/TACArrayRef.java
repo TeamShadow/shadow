@@ -52,7 +52,7 @@ public class TACArrayRef implements TACReference
 		
 		if( check ) {
 			TACMethod method = node.getMethod();
-			TACLabelRef throwLabel = new TACLabelRef(method);
+			TACLabel throwLabel = new TACLabel(method);
 			
 			for( int i = 0; i < ops.size(); i++ ) {
 				TACOperand length = iter.next();
@@ -64,9 +64,9 @@ public class TACArrayRef implements TACReference
 				TACOperand unsignedBound = TACCast.cast(node, new SimpleModifiedType(Type.UINT), bound); 
 				TACOperand condition = new TACBinary(node, unsignedLength, Type.UINT.getMatchingMethod("compare", new SequenceType(Type.UINT)), '<', unsignedBound, true);
 				
-				TACLabelRef computeOffset = new TACLabelRef(method);
+				TACLabel computeOffset = new TACLabel(method);
 				new TACBranch(node, condition, computeOffset, throwLabel);
-				computeOffset.new TACLabel(node);				
+				computeOffset.insertBefore(node);				
 				
 				if( i > 0 ) {	
 					total = new TACBinary(node, total, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', bound);
@@ -76,10 +76,10 @@ public class TACArrayRef implements TACReference
 					total = length;					
 			}
 			
-			TACLabelRef done = new TACLabelRef(method);			
+			TACLabel done = new TACLabel(method);			
 			new TACBranch(node, done);
 			
-			throwLabel.new TACLabel(node);
+			throwLabel.insertBefore(node);
 			
 			TACOperand object = new TACNewObject(node, Type.INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			List<TACOperand> params = new ArrayList<TACOperand>();
@@ -111,7 +111,7 @@ public class TACArrayRef implements TACReference
 			TACCall exception = new TACCall(node, new TACMethodRef(node, signature), params);						
 			new TACThrow(node, exception);						
 			
-			done.new TACLabel(node);	//done label	
+			done.insertBefore(node);	//done label	
 			new TACNodeRef(node, total);
 		}
 		else {		

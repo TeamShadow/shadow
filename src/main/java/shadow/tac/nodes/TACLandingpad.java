@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACBlock;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;

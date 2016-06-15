@@ -2,7 +2,6 @@ package shadow.tac;
 
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
@@ -12,7 +11,7 @@ import shadow.tac.nodes.TACClass.TACClassData;
 import shadow.tac.nodes.TACClass.TACMethodTable;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACGlobal;
-import shadow.tac.nodes.TACLabelRef.TACLabel;
+import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
