@@ -6,7 +6,7 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
-public abstract class TACOperand extends TACSimpleNode implements ModifiedType
+public abstract class TACOperand extends TACNode implements ModifiedType
 {
 	private Object data;
 	private TACLocalStore store = null;

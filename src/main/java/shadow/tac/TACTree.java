@@ -2,8 +2,6 @@ package shadow.tac;
 
 import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
@@ -11,7 +9,6 @@ import shadow.tac.nodes.TACBlock;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACSequence;
-import shadow.tac.nodes.TACSimpleNode;
 
 /**
  * TACTree contains a dynamic array of TACTrees.
@@ -20,7 +17,7 @@ import shadow.tac.nodes.TACSimpleNode;
  * @author Jacob Young
  * @author Barry Wittman
  */
-public class TACTree extends TACNode implements Iterable<TACSimpleNode>
+public class TACTree extends TACNode
 {
 	private int index = 0;
 	private TACTree[] children;
@@ -44,6 +41,16 @@ public class TACTree extends TACNode implements Iterable<TACSimpleNode>
 		children[0] = parent;
 		setBlock(block);
 	}
+	
+	//A list will look like a long sequence of operations to perform
+	//Useful for turning trees into instructions
+	public TACNode collapse()
+	{
+		TACNode node = getNext();
+		remove();
+		return node;
+	}
+	
 	public TACTree getParent()
 	{
 		return children[0];
@@ -91,9 +98,9 @@ public class TACTree extends TACNode implements Iterable<TACSimpleNode>
 		last.remove();
 		return (TACSequence)last;
 	}
-	public TACSimpleNode appendAllChildren()
+	public TACNode appendAllChildren()
 	{
-		TACSimpleNode last = null;
+		TACNode last = null;
 		for (int i = 1; i <= index; i++)
 		{
 			TACTree child = children[i];
@@ -148,9 +155,9 @@ public class TACTree extends TACNode implements Iterable<TACSimpleNode>
 		children[i] = null;
 		return last;
 	}
-	public TACSimpleNode prependAllChildren()
+	public TACNode prependAllChildren()
 	{
-		TACSimpleNode last = null;
+		TACNode last = null;
 		while (index > 0)
 		{
 			TACTree child = children[index];
@@ -267,103 +274,30 @@ public class TACTree extends TACNode implements Iterable<TACSimpleNode>
 	}
 	*/
 
-	public TACSimpleNode getFirst()
+	public TACNode getFirst()
 	{
-		TACNode first = getNext();
-		if (first instanceof TACSimpleNode)
-			return (TACSimpleNode)first;
-		return null;
+		return getNext();
 	}
-	public TACSimpleNode getLast()
+	public TACNode getLast()
 	{
-		TACNode last = getPrevious();
-		if (last instanceof TACSimpleNode)
-			return (TACSimpleNode)last;
-		return null;
+		return getPrevious();
 	}
 	public boolean isEmpty()
 	{
-		return !(getNext() instanceof TACSimpleNode);
+		return (getNext() instanceof TACTree);
 	}
 	
 	@Override
 	public void accept(TACVisitor visitor)
 	{
 		throw new UnsupportedOperationException("Cannot visit TACTree");
-	}	
-	
-	public Iterator<TACSimpleNode> iterator()
-	{
-		return new ForwardIterator(getNext());
 	}
-	private static class ForwardIterator extends NodeIterator
-	{
-		public ForwardIterator(TACNode start)
-		{
-			super(start);
-		}
-
-		@Override
-		protected TACNode iterate(TACNode current)
-		{
-			return current.getNext();
-		}
+	@Override
+	public int getNumOperands() {
+		return 0;
 	}
-
-	public Iterator<TACSimpleNode> reverseIterator()
-	{
-		return new ReverseIterator(getPrevious());
-	}
-	private static class ReverseIterator extends NodeIterator
-	{
-		public ReverseIterator(TACNode end)
-		{
-			super(end);
-		}
-
-		@Override
-		protected TACNode iterate(TACNode current)
-		{
-			return current.getPrevious();
-		}
-	}
-
-	private abstract static class NodeIterator
-			implements Iterator<TACSimpleNode>
-	{
-		private TACSimpleNode current;
-		private TACNode next;
-		public NodeIterator(TACNode begin)
-		{
-			current = null;
-			next = begin;
-		}
-
-		@Override
-		public boolean hasNext()
-		{
-			return next instanceof TACSimpleNode;
-		}
-
-		@Override
-		public TACSimpleNode next()
-		{
-			if (!(next instanceof TACSimpleNode))
-				throw new NoSuchElementException();
-			current = (TACSimpleNode)next;
-			next = iterate(current);
-			return current;
-		}
-
-		@Override
-		public void remove()
-		{
-			if (current == null)
-				throw new IllegalStateException();
-			current.remove();
-			current = null;
-		}
-
-		protected abstract TACNode iterate(TACNode current);
+	@Override
+	public TACOperand getOperand(int num) {
+		throw new IndexOutOfBoundsException("" + num);
 	}
 }

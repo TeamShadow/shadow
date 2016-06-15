@@ -11,7 +11,7 @@ import shadow.typecheck.type.SimpleModifiedType;
  * @author Jacob Young
  */
 
-public class TACReturn extends TACSimpleNode
+public class TACReturn extends TACNode
 {
 	private TACOperand returnValue;
 

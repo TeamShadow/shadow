@@ -10,7 +10,6 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
-import shadow.tac.TACTree;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
@@ -45,7 +44,6 @@ import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
-import shadow.tac.nodes.TACSimpleNode;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
@@ -72,19 +70,7 @@ public class TextOutput extends AbstractOutput
 	}
 
 	@Override
-	public void walk(TACTree nodes) throws ShadowException
-	{
-		try
-		{
-			super.walk(nodes);
-		}
-		finally
-		{
-			Cleanup.getInstance().walk(nodes);
-		}
-	}
-	@Override
-	public void walk(TACSimpleNode nodes) throws ShadowException
+	public void walk(TACNode nodes) throws ShadowException
 	{
 		try
 		{

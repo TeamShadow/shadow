@@ -11,7 +11,7 @@ import shadow.typecheck.type.Type;
  * @author Jacob Young
  */
 
-public class TACThrow extends TACSimpleNode
+public class TACThrow extends TACNode
 {	
 	private TACOperand exception;
 

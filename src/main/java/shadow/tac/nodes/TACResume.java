@@ -3,7 +3,7 @@ package shadow.tac.nodes;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 
-public class TACResume extends TACSimpleNode
+public class TACResume extends TACNode
 {	
 	private TACOperand exception;
 	

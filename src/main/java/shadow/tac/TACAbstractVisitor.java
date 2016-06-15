@@ -36,7 +36,6 @@ import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
-import shadow.tac.nodes.TACSimpleNode;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACTypeId;
@@ -44,20 +43,26 @@ import shadow.tac.nodes.TACUnary;
 import shadow.tac.nodes.TACUnwind;
 
 public abstract class TACAbstractVisitor implements TACVisitor {	
+	/*
 	public void walk(TACNode node) throws ShadowException
 	{
 		if (node instanceof TACSimpleNode)
 			walk((TACSimpleNode)node);
 		else if (node instanceof TACTree)
-			walk((TACTree)node);
+			throw new Error("Should not be walking TACTree: " + node.getClass());
+			//walk((TACTree)node);
 		else
 			throw new Error("Unknown subclass of TACNode: " + node.getClass());
 	}
+	
+	
 	public void walk(TACTree nodes) throws ShadowException
 	{
 		for (TACSimpleNode node : nodes)
 			visit(node);
 	}
+	
+	
 	public void walk(TACSimpleNode nodes) throws ShadowException
 	{
 		TACNode temp = nodes;
@@ -66,7 +71,20 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 				visit((TACSimpleNode)temp);
 		while (temp != nodes);
 	}
-	protected void visit(TACSimpleNode node) throws ShadowException
+	*/
+	
+	public void walk(TACNode nodes) throws ShadowException
+	{
+		TACNode temp = nodes;
+		do
+		{
+			visit(temp);
+			temp = temp.getNext();
+		}
+		while (temp != nodes);
+	}
+	
+	protected void visit(TACNode node) throws ShadowException
 	{
 		node.accept(this);
 	}

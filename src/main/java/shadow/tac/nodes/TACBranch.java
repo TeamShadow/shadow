@@ -17,7 +17,7 @@ import shadow.typecheck.type.Type;
  * @author Jacob Young
  * @author Barry Wittman
  */
-public class TACBranch extends TACSimpleNode
+public class TACBranch extends TACNode
 {
 	private TACLabelRef trueLabel, falseLabel;
 	private TACPhiRef destination;

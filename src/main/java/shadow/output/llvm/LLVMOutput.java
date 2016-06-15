@@ -348,7 +348,7 @@ public class LLVMOutput extends AbstractOutput {
 			Node node = module.getType().getField(name);
 			try {
 				interpreter.walk(constant.getNode());
-				TACNode constantNode = constant.getNode();
+				TACNode constantNode = constant.getNode().getPrevious(); //gets last node (value node)
 				if( !(constantNode instanceof TACOperand ))
 					throw new ShadowException(
 							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));

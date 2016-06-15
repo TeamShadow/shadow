@@ -10,7 +10,7 @@ import shadow.tac.TACVisitor;
  * @author Jacob Young
  */
 
-public class TACStore extends TACSimpleNode
+public class TACStore extends TACNode
 {
 	private TACReference reference;
 	private TACOperand value;

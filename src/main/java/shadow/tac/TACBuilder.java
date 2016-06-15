@@ -2155,8 +2155,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		tree = new TACTree(1, block);		
 		walk(constantNode.jjtGetChild(0));
 		tree.done();
-		constantRef.setNode(tree.getPrevious());
-		tree.remove();
+		constantRef.setNode(tree.collapse());		
 		moduleStack.peek().addConstant(constantRef);
 		tree = saveTree;
 	}
@@ -2568,7 +2567,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			
 			
 			tree.done();
-			method.setNode(tree);
+			method.setNode(tree.collapse());
 		}
 		moduleStack.peek().addMethod(method);
 		block = null;
