@@ -3,7 +3,6 @@ package shadow.tac;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +13,6 @@ import shadow.output.text.TextOutput;
 import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 
@@ -38,17 +36,6 @@ public class TACModule {
                 // if we have a class, the set all the field types
                 fields.put(field.getKey(), field.getValue().getType());
         }        
-        
-        /* //shouldn't be necessary with inner and outer classes now in the same LLVM
-        Type outer = moduleType.getOuter();
-        
-        while( outer != null )
-        {
-        	add(outer);
-        	outer = outer.getOuter();        	
-        }
-        */
-        
     }    
 
     public Type getType() {
@@ -60,8 +47,10 @@ public class TACModule {
     }
 
     public ClassType getClassType() {
-        // ??? would it be wise to call isClass() first and throw some type of exception?
-        return (ClassType) type;
+    	if( isClass() )
+    		return (ClassType) type;
+    	
+    	throw new IllegalStateException();
     }
 
     public boolean isInterface() {

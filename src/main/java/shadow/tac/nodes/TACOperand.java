@@ -68,17 +68,14 @@ public abstract class TACOperand extends TACNode implements ModifiedType
 	
 
 	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
-	{	
-		//Type thing1 = getType();
-		//Type thing2 = type.getType();		
-		
+	{
 		if( getType().isSubtype(type.getType()) && (getType().isPrimitive() || type.getType().isPrimitive()) && getModifiers().isNullable() != type.getModifiers().isNullable() )
 			return TACCast.cast(node, type, this);
 				
 		if (getType().isStrictSubtype(type.getType()))
 			return TACCast.cast(node, type, this);		
 		
-		/* allows cast from Object[] to Array<Object>  */		 
+		// allows cast from Object[] to Array<Object>	 
 		if(( (type.getType() instanceof ArrayType) && getType().equals(type.getType())  && !(getType() instanceof ArrayType) ))
 			return TACCast.cast(node, type, this);		
 		
@@ -100,21 +97,4 @@ public abstract class TACOperand extends TACNode implements ModifiedType
 	public boolean canPropagate() {
 		return false;
 	}
-	
-	/*
-	protected TACOperand checkVirtual(ModifiedType type, TACNode node, boolean allowDowncast)
-	{
-		if (getType().isStrictSubtype(type.getType()))
-			return new TACCast(node, type, this);
-		if( allowDowncast && type.getType().isStrictSubtype(getType()))
-			return new TACCast(node, type, this);
-		return this;
-	}
-
-	//does this sometimes need a toString thrown in?
-	protected TACOperand checkVirtual(ModifiedType type, TACNode node)
-	{
-		return checkVirtual(type, node, false);
-	}
-	*/	
 }

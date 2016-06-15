@@ -39,7 +39,6 @@ import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
-import shadow.tac.nodes.TACUnwind;
 
 public interface TACVisitor
 {	
@@ -79,7 +78,6 @@ public interface TACVisitor
 	public abstract void visit(TACThrow node) throws ShadowException;
 	public abstract void visit(TACTypeId node) throws ShadowException;
 	public abstract void visit(TACUnary node) throws ShadowException;
-	public abstract void visit(TACUnwind node) throws ShadowException;
 	public abstract void visit(TACGlobal node) throws ShadowException;
 	public abstract void visit(TACParameter node) throws ShadowException;
 }

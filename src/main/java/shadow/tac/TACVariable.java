@@ -7,31 +7,16 @@ import shadow.typecheck.type.Type;
 public class TACVariable implements ModifiedType
 {
 	private ModifiedType type;
-	private String name;
+	private final String name;
 	private int suffix;
-	
-	/*
-	public TACVariable(ModifiedType varType)
-	{
-		type = varType;
-		name = null;
-		suffix = 0;
-	}
-	*/
+
 	public TACVariable(ModifiedType varType, String varName)
 	{
 		type = varType;
 		name = varName;
 		suffix = 0;
 	}
-	/*
-	public TACVariable(ModifiedType varType, String varName, int varSuffix)
-	{
-		type = varType;
-		name = varName;
-		suffix = varSuffix;
-	}
-	*/
+
 	public boolean hasType()
 	{
 		return type != null;

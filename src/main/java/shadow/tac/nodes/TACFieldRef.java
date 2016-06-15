@@ -5,7 +5,7 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class TACFieldRef extends TACReference
+public class TACFieldRef implements TACReference
 {
 	private int index;
 	private TACOperand prefix;
@@ -20,13 +20,9 @@ public class TACFieldRef extends TACReference
 	public TACFieldRef(TACOperand fieldPrefix,
 			ModifiedType fieldType, String fieldName)
 	{
-		//super(node);
+
 		if (fieldType == null)
 			throw new NullPointerException();		
-//		while (prefixType != null && !prefixType.containsField(fieldName))
-//			prefixType = prefixType.getExtendType();
-//		if (prefixType == null)
-//			throw new IllegalArgumentException("field fieldName not found");
 		if( fieldName.equals("class"))
 			index = 0;
 		else if( fieldName.equals("_methods"))
@@ -77,26 +73,6 @@ public class TACFieldRef extends TACReference
 	{
 		type.setType(newType);
 	}
-	/*
-	@Override
-	public int getNumOperands()
-	{
-		return 1;
-	}
-	@Override
-	public TACOperand getOperand(int num)
-	{
-		if (num == 0)
-			return prefix;
-		throw new IndexOutOfBoundsException("num");
-	}
-
-	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
-	{
-		visitor.visit(this);
-	}
-	*/
 	@Override
 	public String toString()
 	{

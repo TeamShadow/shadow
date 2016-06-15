@@ -60,17 +60,6 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 		  
 		node.setData(data);
 	}
-	
-	/*
-	@Override
-	public void visit(TACConstantRef node) throws ShadowException {
-		String name = node.getPrefixType().toString() + ":" + node.getName();
-		ShadowValue data = constants.get(name);
-		if( data == null )
-			throw new ShadowException("Initialization dependencies prevent the value of constant " + name + " from being used here");
-		node.setData(data);
-	}
-	*/
 
 	@Override
 	public void visit(TACBinary node) throws ShadowException {

@@ -5,14 +5,13 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class TACConstantRef extends TACReference {
+public class TACConstantRef implements TACReference {
 	private Type prefix;
 	private ModifiedType type;
 	private String name;
 	private ShadowValue value;
 	
 	public TACConstantRef(Type prefixType, String constantName) {
-		//super(node);
 		ModifiedType constantType = prefixType.getField(constantName);
 		if (constantType == null)
 			throw new IllegalArgumentException("Field does not exist");
@@ -76,21 +75,4 @@ public class TACConstantRef extends TACReference {
 	public void setType(Type newType) {
 		type.setType(newType);
 	}
-
-	/*
-	@Override
-	public int getNumOperands() {
-		return 0;
-	}
-
-	@Override
-	public TACOperand getOperand(int num) {
-		throw new IndexOutOfBoundsException("" + num);
-	}
-
-	@Override
-	public void accept(TACVisitor visitor) throws ShadowException {
-		visitor.visit(this);
-	}
-	*/
 }

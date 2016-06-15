@@ -168,13 +168,6 @@ public class TACBlock
 			return unwindLabel;
 		return parent == null ? null : parent.getUnwind();
 	}
-	public TACUnwind getUnwindNode()
-	{
-		TACNode node = getLandingpad().getLabel();
-		while (!(node instanceof TACUnwind))
-			node = node.getNext();
-		return (TACUnwind)node;
-	}
 	public TACBlock addUnwind()
 	{
 		if (unwindLabel != null)

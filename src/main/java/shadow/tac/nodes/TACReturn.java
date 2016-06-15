@@ -53,7 +53,7 @@ public class TACReturn extends TACNode
 	{
 		if (num == 0 && hasReturnValue())
 			return getReturnValue();
-		throw new IndexOutOfBoundsException("num");
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override

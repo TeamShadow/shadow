@@ -96,7 +96,6 @@ public class TACPhiRef
 		}
 		@Override
 		public Type getType() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 	}

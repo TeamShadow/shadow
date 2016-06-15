@@ -31,7 +31,6 @@ import shadow.tac.nodes.TACPhiStore;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACThrow;
-import shadow.tac.nodes.TACUnwind;
 import shadow.tac.nodes.TACUpdate;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
@@ -656,7 +655,6 @@ public class ControlFlowGraph extends ErrorReporter
 			return node instanceof TACLabel ||
 				node instanceof TACBranch ||
 				node instanceof TACLandingpad ||
-				node instanceof TACUnwind ||
 				node instanceof TACResume ||
 				//a load doesn't do anything unless the value is used
 				node instanceof TACLocalLoad; 			

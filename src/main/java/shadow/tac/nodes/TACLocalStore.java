@@ -14,7 +14,6 @@ public class TACLocalStore extends TACLocalStorage {
 		super(node, variable);		
 		value = check(op, variable);
 		value.setLocalStore(this);
-		//new TACNodeRef(node, value);
 	}
 
 	@Override
@@ -33,53 +32,14 @@ public class TACLocalStore extends TACLocalStorage {
 			
 			temp = update.getValue();
 			if( temp != getUpdatedValue() && temp.canPropagate() ) {
-				//if(temp instanceof TACLiteral || temp instanceof TACParameter || temp instanceof TACLocalStore || temp instanceof TACPhiStore  )  
-				//{
-					setUpdatedValue(temp);
-					changed = true;
-				//}
+				setUpdatedValue(temp);
+				changed = true;
 			}				
 		}	
 		
 		currentlyUpdating.remove(this);
-		return changed;
-		/*
-		
-		while( !done ) {
-			if( temp instanceof TACLocalStore && temp != updatedValue ) {
-				updatedValue = temp;
-				changed = true;
-				temp = ((TACLocalStore) temp).getValue();				
-			}
-			else if( temp instanceof TACLocalLoad ) {
-				TACLocalLoad load = (TACLocalLoad) temp;
-				Map<TACLabel, TACOperand> stores = load.getPreviousStores();
-				if( stores.size() == 1 ) {
-					TACOperand op = stores.values().iterator().next();
-					if( updatedValue != op ) {
-						updatedValue = op;
-						temp = op;
-						changed = true;
-					}
-					else
-						done = true;
-				}
-				else
-					done = true;
-			}
-			else if( (temp instanceof TACLiteral || temp instanceof TACParameter) && temp != updatedValue ) {
-				updatedValue = temp;
-				changed = true;
-				done = true;				
-			}
-			else
-				done = true;
-		}
-		
-		return changed;
-		*/
+		return changed;		
 	}
-
 	
 	public TACOperand getValue()
 	{

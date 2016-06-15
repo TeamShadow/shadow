@@ -99,48 +99,12 @@ public class TACMethodRef extends TACOperand
 		return wrapped;
 	}
 
-	public SequenceType getParameterTypes() {
-		
+	public SequenceType getParameterTypes() {		
 		return signature.getFullParameterTypes();
-		/*
-		SequenceType paramTypes = new SequenceType();
-		Type outerType = getOuterType().getTypeWithoutTypeArguments();
-		if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
-			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
-		else
-			paramTypes.add(new SimpleModifiedType(outerType)); // this		
-		
-		//creates don't need class and methods because they are already inited	
-		if( isCreate() && getOuterType().hasOuter() )
-				paramTypes.add(new SimpleModifiedType(getOuterType().getOuter()));			
-			
-		//type parameters no longer passed to method for generic objects, only for purely parameterized methods		
-		Type parameterizedType = getType();
-		if (parameterizedType.isParameterized())
-			for (int i = parameterizedType.getTypeParameters().size(); i > 0; i--)
-				paramTypes.add(new SimpleModifiedType(Type.CLASS));
-		//TODO: add twice as many?  class type + method table?
-		
-		MethodType methodType = getType().getTypeWithoutTypeArguments();
-				
-		for (ModifiedType parameterType : methodType.getParameterTypes())
-			paramTypes.add(parameterType);	
-			
-		return paramTypes;
-		*/
 	}
 
-	public SequenceType getReturnTypes() {
-		
+	public SequenceType getReturnTypes() {		
 		return signature.getFullReturnTypes();
-		
-		/*
-		if (isCreate())
-			return new SequenceType(Collections.<ModifiedType>singletonList(
-					new SimpleModifiedType(getOuterType().getTypeWithoutTypeArguments())));
-			
-		return getType().getTypeWithoutTypeArguments().getReturnTypes();
-		*/
 	}
 	public int getReturnCount() {
 		return getReturnTypes().size();

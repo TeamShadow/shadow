@@ -23,7 +23,6 @@ public class TACCast extends TACOperand
 {
 	private Type type;
 	private Modifiers modifiers;
-	//private TACOperand operand;
 	private final Kind kind;
 	private List<TACOperand> operands = new ArrayList<TACOperand>();
 	
@@ -57,9 +56,7 @@ public class TACCast extends TACOperand
 	public static TACCast cast(TACNode node, ModifiedType destination, TACOperand op) {
 		return cast(node, destination, op, false);
 	}
-	
-	//TACCast(TACNode node, ModifiedType destination, TACOperand op, Kind kind, boolean check )
-	
+
 	@SuppressWarnings("incomplete-switch")
 	public static TACCast cast(TACNode node, ModifiedType destination, TACOperand op, boolean check)
 	{
@@ -307,221 +304,6 @@ public class TACCast extends TACOperand
 		return !type1.isSubtype(type2) || !type2.isSubtype(type1);
 	}
 	
-/*
-	public TACCast(TACNode node, ModifiedType destination, TACOperand op, boolean check)
-	{
-		super(node);
-		
-		
-		
-		
-		
-		
-		type = destination.getType();
-		modifiers = new Modifiers(destination.getModifiers());
-		kind = Kind.NONE;
-		TACMethod method = getMethod();
-		
-		if( type instanceof SequenceType || op.getType() instanceof SequenceType ) {
-			if( type instanceof SequenceType && op.getType() instanceof SequenceType )	{						
-				kind =  Kind.SEQUENCE_TO_SEQUENCE;				
-				SequenceType destinationSequence = (SequenceType)type;
-				int index = 0;
-				for (ModifiedType destType : destinationSequence) {
-					TACOperand element = new TACSequenceElement(this, op, index);				
-					operands.add(new TACCast(this, destType, element, check));			
-					index++;
-				}
-			}
-			else if( type instanceof SequenceType ) {			
-				kind = Kind.OBJECT_TO_SEQUENCE;
-				SequenceType destinationSequence = (SequenceType)type;			
-				operands.add(new TACCast(this, destinationSequence.get(0), op, check));
-			}
-			else {
-				kind = Kind.SEQUENCE_TO_OBJECT;
-				//method returning a sequence with a single thing in it
-				TACSequenceElement element = new TACSequenceElement(this, op, 0);
-				operands.add(new TACCast(this, new SimpleModifiedType(type), element, check));
-			}
-		}	
-		else if( op.getType().equals(Type.NULL) ) {					
-			if( type instanceof ArrayType )			
-				kind = Kind.NULL_TO_ARRAY;
-			else if( type instanceof InterfaceType )
-				kind = Kind.NULL_TO_INTERFACE;
-			else
-				kind = Kind.NONE;			
-			operands.add(op);
-		}
-		else {
-			//can't do anything with an interface before turning it into something else
-			if( op.getType() instanceof InterfaceType )
-				op = new TACCast(this, new SimpleModifiedType(Type.OBJECT), op, Kind.INTERFACE_TO_OBJECT);
-						
-			if( type instanceof InterfaceType ) {				
-				if( op.getType().isPrimitive() && !op.getModifiers().isNullable() )				
-					op = new TACCast(this, new SimpleModifiedType(op.getType(), new Modifiers(op.getModifiers().getModifiers() | Modifiers.NULLABLE)), op, Kind.PRIMITIVE_TO_OBJECT);
-				else if( op.getType() instanceof ArrayType )
-					op = new TACCast(this, new SimpleModifiedType(((ArrayType)op.getType()).convertToGeneric()), op, Kind.ARRAY_TO_OBJECT);
-								
-				operands.add(op);
-				kind = Kind.OBJECT_TO_INTERFACE;
-				return;
-			}			
-			
-			if( op.getType().isPrimitive() != type.isPrimitive()) {
-				if( op.getType().isPrimitive() ) {
-					//nullable primitives are already objects
-					if( !op.getModifiers().isNullable() )
-						op = new TACCast(this, new SimpleModifiedType(op.getType(), new Modifiers(op.getModifiers().getModifiers() | Modifiers.NULLABLE)), op, Kind.PRIMITIVE_TO_OBJECT);
-				}
-				else {
-					if( !modifiers.isNullable() )
-						operands.add(new TACCast(this, new SimpleModifiedType(type), op, Kind.OBJECT_TO_PRIMITIVE));
-					else
-						operands.add(op);
-					kind = Kind.NONE;
-					return;
-				}				
-			}
-			
-			if( op.getType().isPrimitive() && type.isPrimitive() && (op.getModifiers().isNullable() || modifiers.isNullable()) )
-			{
-				if( op.getModifiers().isNullable() && modifiers.isNullable() )
-				{
-					if( !op.getType().equals(type) ) //can't just cast objects if they're different types
-					{
-						TACLabelRef doneLabel = new TACLabelRef(method);
-						TACLabelRef nullLabel = new TACLabelRef(method);
-						TACLabelRef convertLabel = new TACLabelRef(method);
-						
-						TACVariable var = method.addTempLocal(destination);
-						
-						TACLiteral nullLiteral = new TACLiteral(this, ShadowValue.NULL);
-						TACOperand compare = new TACSame(this, op, nullLiteral);
-						new TACBranch(this, compare, nullLabel, convertLabel);
-						
-						nullLabel.new TACLabel(this);						
-						new TACLocalStore(this, var, nullLiteral);
-						new TACBranch(this, doneLabel);
-						
-						convertLabel.new TACLabel(this);
-						
-						TACOperand converted = new TACCast(this, new SimpleModifiedType(op.getType(), new Modifiers(op.getModifiers().getModifiers() & ~Modifiers.NULLABLE)), op, Kind.OBJECT_TO_PRIMITIVE);
-						converted = new TACCast(this, destination, converted, check);						
-						new TACLocalStore(this, var, converted);
-						new TACBranch(this, doneLabel);
-						
-						doneLabel.new TACLabel(this);
-						operands.add(new TACLocalLoad(this, var));
-					}
-				}				
-				else if( modifiers.isNullable() ) {				
-					operands.add(op);
-					kind = Kind.PRIMITIVE_TO_OBJECT;
-				}
-				else {				
-					operands.add(op);
-					kind = Kind.OBJECT_TO_PRIMITIVE;
-				}				
-				return;
-			}
-			
-			if( (op.getType() instanceof ArrayType) != (type instanceof ArrayType) ) {
-				if( op.getType() instanceof ArrayType ) {
-					ArrayType arrayType = (ArrayType) op.getType();
-					op = new TACCast(this, new SimpleModifiedType(arrayType.convertToGeneric()), op, Kind.ARRAY_TO_OBJECT);					
-				}						
-				else
-				{ 
-					if( check ) {
-						
-						ArrayType arrayType = (ArrayType) type;
-						
-						TACBlock block = getBuilder().getBlock();
-						
-						//get dimensions from object
-						TACMethodRef methodRef = new TACMethodRef(this, op,
-								op.getType().getMatchingMethod("dimensions", new SequenceType()));						
-						
-						TACOperand dimensions = new TACCall(this, block, methodRef, methodRef.getPrefix());
-						
-						TACOperand condition = new TACBinary(this, dimensions, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '=', new TACLiteral(this, new ShadowInteger(arrayType.getDimensions())), true);
-						
-						TACLabelRef throwLabel = new TACLabelRef(method);
-						TACLabelRef doneLabel = new TACLabelRef(method);
-						
-						new TACBranch(this, condition, doneLabel, throwLabel);
-						
-						throwLabel.new TACLabel(this);
-						
-						TACOperand object = new TACNewObject(this, Type.CAST_EXCEPTION);
-						SequenceType params = new SequenceType();
-						TACOperand message = new TACLiteral(this, new ShadowString("Array dimensions do not match")); 
-						params.add(message);
-												
-						MethodSignature signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
-						TACCall exception = new TACCall(this, block, new TACMethodRef(this, signature), object, message);
-									
-						new TACThrow(this, block, exception);
-						doneLabel.new TACLabel(this);	//done label						
-					}
-					
-					
-					operand = new TACConversion(this, op, type, Kind.OBJECT_TO_ARRAY, check); 
-					return;					
-				}
-			}
-			
-			operand = op;
-		}
-		
-		
-		if( check && !operand.getType().isSubtype(type) && !(operand.getType().isPrimitive() && type.isPrimitive()) )
-			//subtypes should be safe
-			//primitive types are freely convertible (except for booleans?)
-		{			
-			TACBlock block = getBuilder().getBlock();
-			
-			//get class from object
-			TACMethodRef methodRef = new TACMethodRef(this, operand,
-					Type.OBJECT.getMatchingMethod("getClass", new SequenceType()));						
-			
-			TACOperand operandClass = new TACCall(this, block, methodRef, methodRef.getPrefix());
-			TACOperand destinationClass = new TACClass(this, type).getClassData();
-			
-			methodRef = new TACMethodRef(this, operandClass,
-					Type.CLASS.getMatchingMethod("isSubtype", new SequenceType(Type.CLASS)));
-			
-			
-			TACOperand result = new TACCall(this, block, methodRef, methodRef.getPrefix(), destinationClass);
-			TACLabelRef throwLabel = new TACLabelRef(method);
-			TACLabelRef doneLabel = new TACLabelRef(method);
-			
-			new TACBranch(this, result, doneLabel, throwLabel);
-			
-			throwLabel.new TACLabel(this);
-			
-			TACOperand object = new TACNewObject(this, Type.CAST_EXCEPTION);
-			SequenceType params = new SequenceType();			
-			params.add(operandClass);
-			params.add(destinationClass);
-			
-			MethodSignature signature;
-			signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
-						
-			methodRef = new TACMethodRef(this, signature);			
-			TACCall exception = new TACCall(this, block, methodRef, object, operandClass, destinationClass);
-						
-			new TACThrow(this, block, exception);						
-			
-			doneLabel.new TACLabel(this);	//done label	
-			new TACNodeRef(this, operand);
-		}
-	}
-	*/
-	
 	private void objectToObjectCheck(TACOperand op) {
 		//get class from object
 		TACMethodRef methodRef = new TACMethodRef(this, op,
@@ -555,8 +337,7 @@ public class TACCast extends TACOperand
 					
 		new TACThrow(this, exception);						
 		
-		doneLabel.new TACLabel(this);	//done label	
-		//new TACNodeRef(this, op);
+		doneLabel.new TACLabel(this);	//done label
 	}
 	
 	

@@ -4,13 +4,12 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
-public class TACSingletonRef extends TACReference
+public class TACSingletonRef implements TACReference
 {
 	private SingletonType type;
 
 	public TACSingletonRef(SingletonType instanceType)
 	{
-		//super(node);
 		type = instanceType;
 	}
 
@@ -19,24 +18,6 @@ public class TACSingletonRef extends TACReference
 	{
 		return type;
 	}
-	/*
-	@Override
-	public int getNumOperands()
-	{
-		return 0;
-	}
-	@Override
-	public TACOperand getOperand(int num)
-	{
-		throw new IndexOutOfBoundsException();
-	}
-
-	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
-	{
-		visitor.visit(this);
-	}
-	*/
 
 	@Override
 	public String toString()

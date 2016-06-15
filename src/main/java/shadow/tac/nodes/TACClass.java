@@ -200,10 +200,7 @@ public class TACClass extends TACOperand
 	private static boolean isGenericArray(Type type) {
 		if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) )
 			return true;
-		
-		//if( type.hasOuter() )
-		//	return isGenericArray(type.getOuter());
-		
+
 		return false;	
 	}
 	

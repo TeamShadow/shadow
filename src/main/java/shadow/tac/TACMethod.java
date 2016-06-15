@@ -86,15 +86,6 @@ public class TACMethod
 		else
 			new TACLocalStore(node, addLocal(modifiedType, "this"), new TACParameter(node, modifiedType, parameter++));
 		
-		//methods are no longer parameterized in Shadow
-		/*
-		MethodType methodType = method.getMethodType();
-		if (methodType.isParameterized())
-			for (ModifiedType typeParam : methodType.getTypeParameters())
-				addLocal(new SimpleModifiedType(Type.CLASS),
-						typeParam.getType().getTypeName());
-		*/
-		
 		MethodType type = signature.getMethodType();		
 		if( isWrapped )
 			type = signature.getSignatureWithoutTypeArguments().getMethodType();
@@ -253,28 +244,4 @@ public class TACMethod
 	{
 		return variableCounter++;
 	}
-
-//	@Override
-//	public String toString()
-//	{
-//		final String newline = System.getProperty("line.separator");
-//		StringBuilder sb = new StringBuilder();
-//		sb.append(type.getModifiers()).append(getName()).append('(');
-//		for (TACVariable param : getParameters())
-//			sb.append(param).append(", ");
-//		if (getParameterCount() > 0)
-//			sb.delete(sb.length() - 2, sb.length());
-//		sb.append(") => (");
-//		for (ModifiedType retType : getReturnTypes())
-//			sb.append(retType.getType()).append(", ");
-//		if (getReturnCount() > 0)
-//			sb.delete(sb.length() - 2, sb.length());
-//		sb.append(") {").append(newline);
-//		++indent;
-//		for (TACVariable local : locals.values())
-//			indent(sb).append(local).append(';').append(newline);
-//		sb.append(super.toString());
-//		--indent;
-//		return sb.append('}').append(newline).toString();
-//	}
 }

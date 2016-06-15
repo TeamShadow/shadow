@@ -38,7 +38,7 @@ public class TACPhiStore extends TACLocalStorage {
 					changed = true;
 				
 				TACOperand op = update.getValue();
-				if( op != temp && op.canPropagate() /*&& (op instanceof TACLiteral || op instanceof TACParameter || op instanceof TACLocalStore || op instanceof TACPhiStore)*/ ) {
+				if( op != temp && op.canPropagate() ) {
 					changed = true;
 					temp = op;
 				}

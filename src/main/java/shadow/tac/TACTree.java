@@ -50,23 +50,7 @@ public class TACTree extends TACNode
 		remove();
 		return node;
 	}
-	
-	public TACTree getParent()
-	{
-		return children[0];
-	}
-	public TACTree getChild(int index)
-	{
-		return children[index + 1];
-	}
-	public TACTree current()
-	{
-		return children[index];
-	}
-	public TACTree next()
-	{
-		return next(0);
-	}
+
 	public TACTree next(int numChildren)
 	{
 		if (++index == children.length)
@@ -88,7 +72,6 @@ public class TACTree extends TACNode
 	 * @param i
 	 * @return
 	 */
-	
 	
 	public TACSequence appendChildRemoveSequence(int i)
 	{
@@ -128,68 +111,11 @@ public class TACTree extends TACNode
 		children[i] = null;
 		return last;
 	}
-	public TACOperand deleteChild(int i)
-	{
-		if (i >= index)
-			return null;
-		TACTree child = children[++i];
-		if (child == null)
-			return null;
-		TACOperand last = null;
-		if (child.getLast() instanceof TACOperand)
-			last = (TACOperand)child.getLast();
-		children[i] = null;
-		return last;
-	}
-	public TACOperand prependChild(int i)
-	{
-		if (i >= index)
-			return null;
-		TACTree child = children[++i];
-		if (child == null)
-			return null;
-		TACOperand last = null;
-		if (child.getLast() instanceof TACOperand)
-			last = (TACOperand)child.getLast();
-		prepend(child);
-		children[i] = null;
-		return last;
-	}
-	public TACNode prependAllChildren()
-	{
-		TACNode last = null;
-		while (index > 0)
-		{
-			TACTree child = children[index];
-			if (child != null)
-			{
-				if (last == null)
-					last = child.getLast();
-				prepend(child);
-				children[index] = null;
-			}
-			index--;
-		}
-		return last;
-	}
+	
 	public TACTree done()
 	{
 		appendAllChildren();
 		return children[0];
-	}
-	public void appendChildTo(int index, TACNode node)
-	{
-		node.append(children[index + 1]);
-		children[index + 1] = null;
-	}
-	public void appendChildrenTo(TACNode node)
-	{
-		for (int i = 1; i <= index; i++)
-		{
-			node.append(children[i]);
-			children[i] = null;
-		}
-		index = 0;
 	}
 
 	@Override
@@ -222,35 +148,7 @@ public class TACTree extends TACNode
 	{
 		node.insertAfter(getPrevious());
 	}
-	
-	/**
-	 * Inserts parameter node after current list
-	 */
-	public void prepend(TACNode node)
-	{
-		node.insertBefore(getNext());
-	}
 
-	/**
-	 * Inserts parameter nodes before current list 
-	 * and inserts whatever is after nodes after what used to be 
-	 * before the list
-	 * 
-	 * How does this make sense?
-	 */
-	//neither of these are used, maybe they are wrong
-	/*
-	public void appendAll(TACNode nodes)
-	{
-		connect(getPrevious(), nodes.getNext(), nodes, this);
-	}
-	public void prependAll(TACNode nodes)
-	{
-		connect(this, nodes.getNext(), nodes, getNext());
-	}
-	*/
-
-	
 	public void insertAfter(TACNode node)
 	{
 		if (node == null || node == this || isEmpty())
@@ -266,18 +164,7 @@ public class TACTree extends TACNode
 		clear();
 	}
 
-	/*
-	@Override
-	public void remove()
-	{
-		throw new IllegalStateException();
-	}
-	*/
 
-	public TACNode getFirst()
-	{
-		return getNext();
-	}
 	public TACNode getLast()
 	{
 		return getPrevious();
