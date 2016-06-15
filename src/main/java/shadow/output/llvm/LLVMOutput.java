@@ -347,8 +347,13 @@ public class LLVMOutput extends AbstractOutput {
 			String name = constant.getName();
 			Node node = module.getType().getField(name);
 			try {
-				interpreter.walk(constant);
-				Object result = constant.getValue().getData();
+				interpreter.walk(constant.getNode());
+				TACNode constantNode = constant.getNode();
+				if( !(constantNode instanceof TACOperand ))
+					throw new ShadowException(
+							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
+
+				Object result = ((TACOperand)constantNode).getData();
 				if (!(result instanceof ShadowValue))
 					throw new ShadowException(
 							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
@@ -364,7 +369,7 @@ public class LLVMOutput extends AbstractOutput {
 				throw new ShadowException(message);
 			}
 			
-			Cleanup.getInstance().walk(constant);
+			Cleanup.getInstance().walk(constant.getNode());
 		}
 		
 		//interfaces implemented (because a special object is used to map the methods correctly)

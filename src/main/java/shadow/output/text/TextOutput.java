@@ -10,7 +10,7 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
-import shadow.tac.TACNodeList;
+import shadow.tac.TACTree;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
@@ -72,7 +72,7 @@ public class TextOutput extends AbstractOutput
 	}
 
 	@Override
-	public void walk(TACNodeList nodes) throws ShadowException
+	public void walk(TACTree nodes) throws ShadowException
 	{
 		try
 		{

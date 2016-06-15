@@ -48,12 +48,12 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	{
 		if (node instanceof TACSimpleNode)
 			walk((TACSimpleNode)node);
-		else if (node instanceof TACNodeList)
-			walk((TACNodeList)node);
+		else if (node instanceof TACTree)
+			walk((TACTree)node);
 		else
 			throw new Error("Unknown subclass of TACNode: " + node.getClass());
 	}
-	public void walk(TACNodeList nodes) throws ShadowException
+	public void walk(TACTree nodes) throws ShadowException
 	{
 		for (TACSimpleNode node : nodes)
 			visit(node);

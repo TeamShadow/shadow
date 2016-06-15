@@ -169,7 +169,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		for (Node constant : type.getFieldList())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
-						constant.getImage(), block), constant);
+						constant.getImage()), constant);
 		block = oldBlock;
 		
 		for (List<MethodSignature> methods : type.getMethodMap().values())
@@ -2152,10 +2152,11 @@ public class TACBuilder implements ShadowParserVisitor {
 	private void visitConstant(TACConstant constantRef, Node constantNode)
 			throws ShadowException {
 		TACTree saveTree = tree;
-		tree = new TACTree(1, constantRef.getBlock());		
+		tree = new TACTree(1, block);		
 		walk(constantNode.jjtGetChild(0));
 		tree.done();
-		constantRef.append(tree);
+		constantRef.setNode(tree.getPrevious());
+		tree.remove();
 		moduleStack.peek().addConstant(constantRef);
 		tree = saveTree;
 	}

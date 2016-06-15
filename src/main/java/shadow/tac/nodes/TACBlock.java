@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import shadow.tac.TACMethod;
-import shadow.tac.TACNodeList;
+import shadow.tac.TACTree;
 
 /**
  * Represents blocks of Shadow code, usually surrounded by braces.
@@ -28,7 +28,7 @@ public class TACBlock
 		this(method, null);	
 	}
 	
-	public TACBlock(TACNodeList node, TACBlock parentBlock)
+	public TACBlock(TACTree node, TACBlock parentBlock)
 	{
 		this(node.getMethod(), parentBlock);
 		node.setBlock(this);

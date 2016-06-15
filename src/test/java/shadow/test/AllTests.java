@@ -1,3 +1,4 @@
+package shadow.test;
 import java.io.File;
 import java.io.IOException;
 
@@ -23,7 +24,7 @@ import shadow.test.typecheck.StandardLibraryTest;
 import shadow.test.typecheck.TypeCheckerTest;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({DocumentationTest.class, OutputTest.class, shadow.test.output.NegativeTests.class, OutputTest.class, TACTest.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, ShadowUtilityTest.class, StandardLibraryTest.class, TypeCheckerTest.class })
+@Suite.SuiteClasses({DocumentationTest.class, shadow.test.output.NegativeTests.class, OutputTest.class, TACTest.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, ShadowUtilityTest.class, StandardLibraryTest.class, TypeCheckerTest.class })
 public class AllTests extends TestCase {
 
 	@AfterClass
@@ -33,7 +34,6 @@ public class AllTests extends TestCase {
 		try {
 			playClip( file );
 		} catch (IOException | UnsupportedAudioFileException | LineUnavailableException | InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
