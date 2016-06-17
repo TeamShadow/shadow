@@ -1487,24 +1487,6 @@ public class LLVMOutput extends AbstractOutput {
 		}
 	}
 	
-	@Override
-	public void visit(TACPhiStore node) throws ShadowException {
-		 Map<TACLabel, TACOperand> values = node.getPreviousStores();
-		 if( values.size() > 1 ) {
-			 StringBuilder sb = new StringBuilder(name(node)).
-					 append(" = phi "). append(type(node)).append(" ");			 
-			 for( Map.Entry<TACLabel, TACOperand> entry : values.entrySet() )
-				 sb.append("[ ").append(symbol(entry.getValue())).append(", ").
-				 append(symbol(entry.getKey())).append(" ],");
-			 writer.write(sb.deleteCharAt(sb.length() - 1).toString());					  
-		 }
-		 else if( values.size() == 1 )
-			 node.setData(values.values().iterator().next().getData());
-		 else
-			 throw new IllegalArgumentException("No nodes stored in phi");			 
-	}
-	
-	
 	
 	@Override
 	public void visit(TACLocalLoad node) throws ShadowException {		 
@@ -1526,6 +1508,24 @@ public class LLVMOutput extends AbstractOutput {
 					append(symbol(phi.getLabel(i))).append(" ],");
 		writer.write(sb.deleteCharAt(sb.length() - 1).toString());
 	}
+	
+	@Override
+	public void visit(TACPhiStore node) throws ShadowException {
+		 Map<TACLabel, TACOperand> values = node.getPreviousStores();
+		 if( values.size() > 1 ) {
+			 StringBuilder sb = new StringBuilder(name(node)).
+					 append(" = phi "). append(type(node)).append(" ");			 
+			 for( Map.Entry<TACLabel, TACOperand> entry : values.entrySet() )
+				 sb.append("[ ").append(symbol(entry.getValue())).append(", ").
+				 append(symbol(entry.getKey())).append(" ],");
+			 writer.write(sb.deleteCharAt(sb.length() - 1).toString());					  
+		 }
+		 else if( values.size() == 1 )
+			 node.setData(values.values().iterator().next().getData());
+		 else
+			 throw new IllegalArgumentException("No nodes stored in phi");			 
+	}
+	
 
 	@Override
 	public void visit(TACBranch node) throws ShadowException {

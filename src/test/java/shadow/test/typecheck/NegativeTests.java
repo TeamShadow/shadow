@@ -402,7 +402,13 @@ public class NegativeTests {
 	@Test public void testUndefinedVariable() throws Exception {
 		args.add("tests-negative/typechecker/undefined-variable/Test.shadow");
 		enforce(Error.UNDEFINED_VARIABLE);			
-	}	
+	}
+	
+	@Test public void testCircularCreates() throws Exception {
+		args.add("tests-negative/typechecker/circular-creates/Test.shadow");
+		enforce(Error.CIRCULAR_CREATE);			
+	}
+	
 	
 	/*//compiler can't handle this one yet
 	@Test public void testFieldReferencesItself() throws Exception {

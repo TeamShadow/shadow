@@ -1,0 +1,15 @@
+class Test
+{
+	int number;
+
+	public create(int value)
+	{
+		this();
+		number = value;
+	}
+	
+	public create()
+	{
+		this(5);
+	}
+}

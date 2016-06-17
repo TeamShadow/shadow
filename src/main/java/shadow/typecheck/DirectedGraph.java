@@ -35,16 +35,11 @@ import java.util.Set;
  * 
  * @author Barry Wittman
  */
-/**
- * @author Barry Wittman
- *
- * @param <T>
- */
 public class DirectedGraph<T> implements Iterable<T> {	
 	/*
 	 * Node class for the graph, which tracks incoming and outgoing edges.
 	 */
-	private class GraphNode {
+	protected class GraphNode {
 		public final T value;		
 		public final Set<GraphNode> incoming = new HashSet<GraphNode>();
 		public final Set<GraphNode> outgoing = new HashSet<GraphNode>();
@@ -85,7 +80,7 @@ public class DirectedGraph<T> implements Iterable<T> {
 	}
 	
 	// Graph internals are managed by a map from values to nodes.
-	private Map<T, GraphNode> nodes = new HashMap<T, GraphNode>();	
+	protected Map<T, GraphNode> nodes = new HashMap<T, GraphNode>();	
 	
 	
 	/**

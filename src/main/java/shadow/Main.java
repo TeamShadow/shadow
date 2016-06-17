@@ -12,13 +12,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
+import shadow.parser.javacc.ASTCreateBlock;
+import shadow.parser.javacc.ASTCreateDeclaration;
+import shadow.parser.javacc.ASTExplicitCreateInvocation;
 import shadow.parser.javacc.Node;
 import shadow.parser.javacc.ParseException;
 import shadow.parser.javacc.ShadowException;
@@ -26,6 +31,8 @@ import shadow.tac.TACBuilder;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
 import shadow.tac.analysis.ControlFlowGraph;
+import shadow.tac.analysis.CreateGraph;
+import shadow.typecheck.DirectedGraph.CycleFoundException;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeCheckException.Error;
@@ -355,6 +362,24 @@ public class Main {
 			throw e;
 		}	
 	}
+	
+	private static void addCreateEdges(CreateGraph graph, Map<MethodSignature, TACMethod> creates)
+	{
+		for(TACMethod method : graph) {			
+			ASTCreateDeclaration declaration = (ASTCreateDeclaration) method.getSignature().getNode();
+			if( declaration.hasBlock() ) {
+				ASTCreateBlock block = (ASTCreateBlock) declaration.jjtGetChild(1);
+				if( block.jjtGetNumChildren() > 0 && block.jjtGetChild(0) instanceof ASTExplicitCreateInvocation) {
+					ASTExplicitCreateInvocation explicitCreate = (ASTExplicitCreateInvocation) block.jjtGetChild(0);				
+					if( explicitCreate.getImage().equals("this") ) {//calling this rather than super
+						MethodSignature signature = explicitCreate.getMethodSignature();
+						TACMethod other = creates.get(signature);
+						graph.addEdge(other, method); //method depends on other
+					}
+				}
+			}
+		}
+	}
 
 	
 	/* 
@@ -363,8 +388,12 @@ public class Main {
 	 * data flow analysis.
 	 */ 
 	private static TACModule optimizeTAC(TACModule module, boolean checkOnly) throws ShadowException, TypeCheckException {		
-		//check TAC
+		
 		if( !(module.getType() instanceof InterfaceType) ) {
+			
+			CreateGraph createGraph = new CreateGraph();
+			Map<MethodSignature, TACMethod> creates = new HashMap<MethodSignature, TACMethod>();
+			
 			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 			for( TACMethod method : module.getMethods() ) {
 				MethodSignature signature = method.getSignature();
@@ -382,8 +411,17 @@ public class Main {
 					graph.propagateConstants();				
 					
 					reporter.addAll(graph); //adds errors (if any) to main reporter
+					
+					if( signature.isCreate() ) {
+						createGraph.addNode(method, graph);
+						creates.put(signature, method);
+					}
 				}
-			}		
+			}
+			
+			addCreateEdges(createGraph, creates);
+			checkMemberInitialization(createGraph, reporter);
+			
 			reporter.printWarnings();
 			reporter.printErrors();		
 			if( reporter.getErrorList().size() > 0 )
@@ -391,6 +429,15 @@ public class Main {
 		}			
 		
 		return module;
+	}
+
+	private static void checkMemberInitialization(CreateGraph createGraph, ErrorReporter reporter) {
+		try {			
+			List<TACMethod> creates = createGraph.topologicalSort();
+		}
+		catch(CycleFoundException e) {
+			reporter.addError(((TACMethod)e.getCycleCause()).getSignature().getNode(), Error.CIRCULAR_CREATE, "Create calls are circular");
+		}		
 	}
 
 	private static void addToLink( Type type, File file, List<String> linkCommand ) throws IOException, ShadowException {

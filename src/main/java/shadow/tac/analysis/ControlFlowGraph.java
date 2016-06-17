@@ -8,17 +8,21 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import shadow.Loggers;
 import shadow.interpreter.ShadowBoolean;
+import shadow.parser.javacc.Node;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
+import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStorage;
 import shadow.tac.nodes.TACLocalStore;
@@ -29,10 +33,13 @@ import shadow.tac.nodes.TACPhiRef.TACPhi;
 import shadow.tac.nodes.TACPhiStore;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
+import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACUpdate;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
+import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.Type;
 
 /**
  * Represents the various paths which code execution can take within a method.
@@ -41,18 +48,20 @@ import shadow.typecheck.TypeCheckException.Error;
  * @author Brian Stottler
  * @author Barry Wittman
  */
-public class ControlFlowGraph extends ErrorReporter
+public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlFlowGraph.Block>
 {
 	private Block root;	
 	private String cachedString; // Saves toString() from re-walking the graph
-	private Map<TACLabel, Block> nodeBlocks = new HashMap<TACLabel, Block>(); 
+	private Map<TACLabel, Block> nodeBlocks = new HashMap<TACLabel, Block>();
+	private TACMethod method;
 	
 	/**
 	 * Create a control flow graph for a method.
 	 */
 	public ControlFlowGraph(TACMethod method)
 	{		
-		super(Loggers.TYPE_CHECKER);			
+		super(Loggers.TYPE_CHECKER);
+		this.method = method;
 		createBlocks(method);
 		addEdges();
 	}
@@ -64,6 +73,11 @@ public class ControlFlowGraph extends ErrorReporter
 	{		
 		for( Block block : nodeBlocks.values() )
 			addEdges(block);
+	}	
+
+	@Override
+	public Iterator<ControlFlowGraph.Block> iterator() {
+		return nodeBlocks.values().iterator();
 	}
 
 	/*
@@ -237,7 +251,7 @@ public class ControlFlowGraph extends ErrorReporter
 		// A block should either branch or return
 		if (block.branches() > 0) {
 			// Ensure everything we can branch to returns
-			for (Block child : block)
+			for (Block child : block.getOutgoing())
 				if (!returns(child, visited))
 					return false;
 			
@@ -280,7 +294,7 @@ public class ControlFlowGraph extends ErrorReporter
 		visited.add(current);
 		
 		List<Integer> children = new ArrayList<Integer>();
-		for (Block child : current) {
+		for (Block child : current.getOutgoing()) {
 			children.add(child.getNumber());
 			generateString(child, visited, strings);
 		}
@@ -335,7 +349,8 @@ public class ControlFlowGraph extends ErrorReporter
 	 * 
 	 * @return true if constants propagated more deeply than before 
 	 */	
-	public boolean propagateConstants() {		
+	public boolean propagateConstants()
+	{		
 		Collection<Block> blocks = nodeBlocks.values();
 		
 		boolean done = false;
@@ -369,11 +384,41 @@ public class ControlFlowGraph extends ErrorReporter
 		return cachedString;
 	}
 	
+	
+	public void checkFieldUses()
+	{
+		Type outer = method.getSignature().getOuter();
+		if( outer instanceof ClassType ) {
+			ClassType classType = (ClassType) outer;
+			Map<String,Node> fieldsToCheck = new HashMap<String,Node>();
+			for(Map.Entry<String, Node> entry : classType.getFields().entrySet() ) {
+				Node field = entry.getValue();
+				//we don't care about constants, primitives, or nullable types
+				//constants will be taken care of, primitives and nullables have reasonable default values
+				if( !field.getModifiers().isConstant() && !field.getType().isPrimitive() && !field.getModifiers().isNullable() )
+					fieldsToCheck.put(entry.getKey(), field);
+			}
+			
+			Map<Block,Set<String>> allLoadsBeforeStores = new HashMap<Block,Set<String>>();
+			Map<Block,Set<String>> allStores = new HashMap<Block,Set<String>>();
+			
+			for(Block block : nodeBlocks.values() ) {
+				Set<String> loadsBeforeStores = new HashSet<String>();
+				Set<String> stores = new HashSet<String>();
+				
+				block.recordLoadsAndStores(loadsBeforeStores, stores);
+				
+				allLoadsBeforeStores.put(block, loadsBeforeStores);
+				allStores.put(block, stores);
+			}
+		}
+	}
+	
 	/*
 	 * Represents a contiguous sequence of TAC nodes, unbroken by branch
 	 * statements.
 	 */
-	private class Block implements Iterable<Block>
+	public class Block implements Iterable<TACNode>
 	{		
 		private Set<Block> outgoing = new HashSet<Block>();
 		private Set<Block> incoming = new HashSet<Block>();
@@ -388,6 +433,27 @@ public class ControlFlowGraph extends ErrorReporter
 			return "Block " + label.getNumber();
 		}
 		
+		public void recordLoadsAndStores(Set<String> loadsBeforeStores, Set<String> stores)
+		{	
+			for( TACNode node : this ) {				
+				if( node instanceof TACStore ) {
+					TACStore store = (TACStore) node;
+					if( store.getReference() instanceof TACFieldRef ) {
+						TACFieldRef field = (TACFieldRef) store.getReference();
+						stores.add(field.getName());
+					}						
+				}									
+				else if( node instanceof TACLoad ) {
+					TACLoad load = (TACLoad)node;
+					if( load.getReference() instanceof TACFieldRef ) {
+						TACFieldRef field = (TACFieldRef) load.getReference();
+						if( !stores.contains(field.getName()) )
+							loadsBeforeStores.add(field.getName());
+					}
+				}
+			}			
+		}
+
 		@Override
 		public boolean equals(Object other)
 		{
@@ -422,12 +488,9 @@ public class ControlFlowGraph extends ErrorReporter
 		 */
 		public boolean propagateValues(Set<TACLocalLoad> undefinedLoads)
 		{
-			boolean changed = false;
-			
-			TACNode node = label.getNext();
-			boolean done = false;
+			boolean changed = false;			
 			Set<TACUpdate> currentlyUpdating = new HashSet<TACUpdate>();
-			while( !done ) {				
+			for( TACNode node : this ) {				
 				if( node instanceof TACUpdate )
 					if( ((TACUpdate)node).update(currentlyUpdating) )
 						changed = true;
@@ -437,11 +500,6 @@ public class ControlFlowGraph extends ErrorReporter
 					if( load.isUndefined() )
 						undefinedLoads.add(load);
 				}
-				
-				if( node == lastNode )
-					done = true;
-				else
-					node = node.getNext();
 			}
 			
 			return changed;
@@ -464,20 +522,12 @@ public class ControlFlowGraph extends ErrorReporter
 		 */
 		public Map<TACVariable, TACLocalStorage> getLastStores() {
 			Map<TACVariable,TACLocalStorage> stores = new HashMap<TACVariable, TACLocalStorage>();
-			TACNode node = label.getNext();
-			boolean done = false;
-			while( !done ) {				
+			for( TACNode node : this ) {				
 				if( node instanceof TACLocalStorage ) {
 					TACLocalStorage store = (TACLocalStorage)node;
 					stores.put(store.getVariable(), store);					 
-				}
-				
-				if( node == lastNode )
-					done = true;
-				else
-					node = node.getNext();
-			}	
-			
+				}				
+			}
 			return stores;
 		}	
 		
@@ -508,10 +558,7 @@ public class ControlFlowGraph extends ErrorReporter
 			Map<TACVariable, TACLocalStorage> stores = lastStores.get(this);
 			Map<TACVariable,TACLocalStorage> predecessors = new HashMap<TACVariable, TACLocalStorage>();
 			
-			
-			TACNode node = label.getNext();
-			boolean done = false;
-			while( !done ) {				
+			for( TACNode node : this )	{		
 				if( node instanceof TACLocalStorage ) {  //both TACLocalStore and TACPhiStore
 					TACLocalStorage store = (TACLocalStorage)node;
 					predecessors.put(store.getVariable(), store);	
@@ -533,12 +580,7 @@ public class ControlFlowGraph extends ErrorReporter
 					else
 						load.setPreviousStore(store);
 				}
-				
-				if( node == lastNode )
-					done = true;
-				else
-					node = node.getNext();
-			}			
+			}					
 		}
 
 		public Set<Block> getOutgoing()
@@ -560,6 +602,7 @@ public class ControlFlowGraph extends ErrorReporter
 			
 			TACNode node = label;
 			
+			//might be wise not to use iterator here since removal is involved
 			if( node != null && lastNode != null ) {
 				while( node != lastNode ) {
 					TACNode temp = node.getNext();
@@ -580,9 +623,7 @@ public class ControlFlowGraph extends ErrorReporter
 		 */
 		private boolean removePhiInput(Block block)
 		{	
-			TACNode node = label;
-			boolean done = false;
-			while( !done ) {				
+			for( TACNode node : this ) {
 				if( node instanceof TACPhi ) {
 					TACPhiRef phiRef = ((TACPhi)node).getRef();
 					phiRef.removeLabel(block.getLabel());
@@ -591,11 +632,6 @@ public class ControlFlowGraph extends ErrorReporter
 					TACPhiStore store = (TACPhiStore)node;
 					store.removePreviousStore(block.getLabel());					
 				}
-				
-				if( node == lastNode )
-					done = true;
-				else
-					node = node.getNext();
 			}
 
 			//after updating phi input, update branches			
@@ -711,17 +747,57 @@ public class ControlFlowGraph extends ErrorReporter
 		public boolean unwinds()
 		{
 			return unwinds;
-		}		
-		
-		@Override
-		public Iterator<Block> iterator()
-		{
-			return outgoing.iterator();
-		}
+		}	
 		
 		public int branches()
 		{
 			return outgoing.size();
+		}
+		
+		private class NodeIterator implements Iterator<TACNode>
+		{
+			private boolean done = false;
+			private TACNode current = label;
+
+			@Override
+			public boolean hasNext() {
+				return !done;
+			}
+
+			@Override
+			public TACNode next() {
+				if( done )
+					throw new NoSuchElementException();
+				
+				TACNode node = current;
+				if( current == lastNode )
+					done = true;
+				else
+					current = current.getNext();
+				return node;				
+			}
+
+			@Override
+			public void remove() {
+				if( done )
+					throw new NoSuchElementException();
+				
+				TACNode node = current;
+				
+				if( current == lastNode ) {
+					lastNode = current.getPrevious();
+					done = true;
+				}
+				else
+					current = current.getNext();
+				
+				node.remove();
+			}
+		}
+		
+		@Override
+		public Iterator<TACNode> iterator() {
+			return new NodeIterator();
 		}
 	}
 
@@ -751,5 +827,4 @@ public class ControlFlowGraph extends ErrorReporter
 			return string;
 		}
 	}
-
 }
