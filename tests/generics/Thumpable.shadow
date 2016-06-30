@@ -1,4 +1,0 @@
-interface Thumpable<T is Parent>
-{
-	thump() => (T);
-}

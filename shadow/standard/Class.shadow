@@ -106,7 +106,7 @@ is  CanHash
 		this:interfaces = interfaces;
 		this:data = data;
 		
-		if( isMethod() ) // Not yet used
+		if( (flags & METHOD) != 0 ) // Not yet used
 		{
 			MutableString methodType = MutableString:create("(");
 			for( int i = 0; i < size; i += 1 )

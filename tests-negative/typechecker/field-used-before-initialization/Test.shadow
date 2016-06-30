@@ -1,0 +1,10 @@
+class Test
+{
+	String x;
+	String y = x # "Hey";
+
+    public main(String[] args) => ()
+    {
+
+    }
+}

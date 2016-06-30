@@ -452,7 +452,12 @@ public class TypeCollector extends BaseChecker {
 					_package = _package.getParent();
 				}
 			}			
-		}		
+		}
+		else { //inner type
+			//if the outer type is locked, then make this inner type locked too
+			if( currentType.getModifiers().isLocked() )
+				modifiers.addModifier(Modifiers.LOCKED);
+		}
 		
 		// Fix type names for primitive types.
 		if( currentPackage.getQualifiedName().equals("shadow:standard") && 		
@@ -744,7 +749,7 @@ public class TypeCollector extends BaseChecker {
 		}
 		else
 			return createType(node, node.getModifiers(), 
-					node.getDocumentation(), node.getKind());
+					node.getDocumentation(), node.getKind());		
 	}
 	
 	@Override

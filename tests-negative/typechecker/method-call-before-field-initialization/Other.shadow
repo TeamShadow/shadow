@@ -1,0 +1,7 @@
+class Other
+{	
+	public messUp(Test test) => ()
+	{
+		test.change("Hip hop");
+	}
+}

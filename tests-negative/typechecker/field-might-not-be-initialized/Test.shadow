@@ -1,0 +1,28 @@
+import shadow:io@Console;
+
+class Test
+{
+	String x;
+	String y;
+
+	public create()
+	{
+		Console reader;
+		
+		(String s, ) = reader.readString();
+		
+		int value = s.toInt();
+		
+		//x will always get a value, but it's hard for data flow analysis to be sure
+		if( value > 10 )
+		{
+			x = "Hey";
+		}
+		else if( value < 100 )
+		{
+			x = "Yo";
+		}
+		
+		y = "Panic";
+	}
+}

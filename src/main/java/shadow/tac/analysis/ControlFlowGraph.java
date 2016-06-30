@@ -8,8 +8,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.TreeSet;
 
 import shadow.Loggers;
 import shadow.interpreter.ShadowBoolean;
@@ -18,6 +20,7 @@ import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
@@ -28,6 +31,7 @@ import shadow.tac.nodes.TACLocalStorage;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
+import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
 import shadow.tac.nodes.TACPhiStore;
@@ -38,7 +42,11 @@ import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACUpdate;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
-import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.ArrayType;
+import shadow.typecheck.type.MethodSignature;
+import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
 /**
@@ -64,6 +72,16 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		this.method = method;
 		createBlocks(method);
 		addEdges();
+	}
+
+	/**
+	 * Get the method associated with this graph.
+	 * 
+	 * @return method
+	 */
+	public TACMethod getMethod()
+	{
+		return method;
 	}
 	
 	/*
@@ -384,34 +402,171 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		return cachedString;
 	}
 	
+	public List<Block> depthFirstOrdering() {
+		List<Block> list = new ArrayList<Block>(nodeBlocks.size());
+		Set<Block> visited = new HashSet<Block>(nodeBlocks.size() * 2);		
+		depthFirstOrdering(root, list, visited);		
+		return list;
+	}
 	
-	public void checkFieldUses()
-	{
-		Type outer = method.getSignature().getOuter();
-		if( outer instanceof ClassType ) {
-			ClassType classType = (ClassType) outer;
-			Map<String,Node> fieldsToCheck = new HashMap<String,Node>();
-			for(Map.Entry<String, Node> entry : classType.getFields().entrySet() ) {
-				Node field = entry.getValue();
-				//we don't care about constants, primitives, or nullable types
-				//constants will be taken care of, primitives and nullables have reasonable default values
-				if( !field.getModifiers().isConstant() && !field.getType().isPrimitive() && !field.getModifiers().isNullable() )
-					fieldsToCheck.put(entry.getKey(), field);
+	private static void depthFirstOrdering(Block block, List<Block> list, Set<Block> visited) {
+		if( !visited.contains(block) ) {
+			list.add(block);
+			visited.add(block);
+			
+			for( Block child : block.outgoing )
+				depthFirstOrdering(child, list, visited);
+		}
+	}
+	
+	
+	public Set<String> getInitializedFields(Set<String> alreadyInitialized, Set<String> thisStores, Map<MethodSignature, StorageData> methodData, Set<String> fieldsNeedingInitialization)
+	{	
+		Map<Block,Set<String>> initialLoadsBeforeStores = new HashMap<Block,Set<String>>();
+		Map<Block,Set<String>> initialStores = new HashMap<Block,Set<String>>();
+		Map<Block,Set<String>> allLoadsBeforeStores = new HashMap<Block,Set<String>>();
+		Map<Block,Set<String>> allStores = new HashMap<Block,Set<String>>();
+		
+		Set<String> loads = new TreeSet<String>();
+		List<Block> blocks = depthFirstOrdering(); //converges faster since many blocks will be visited only after their predecessors
+		
+		for(Block block : blocks ) {
+			Set<String> loadsBeforeStores = new TreeSet<String>();			
+			Set<String> stores = new TreeSet<String>();			
+				
+			block.recordLoadsAndStoresInCreates(method.getThis().getType(), loadsBeforeStores, stores, loads, thisStores, methodData);			
+			
+			initialLoadsBeforeStores.put(block, loadsBeforeStores);
+			initialStores.put(block, stores);			
+			
+			if( block == root ) {
+				Set<String> set = new TreeSet<String>(loadsBeforeStores);
+				set.removeAll(alreadyInitialized);				
+				allLoadsBeforeStores.put(block, set);
+				
+				set = new TreeSet<String>(stores);
+				set.addAll(alreadyInitialized);				
+				allStores.put(block, set);
 			}
+			else {
+				allLoadsBeforeStores.put(block, new TreeSet<String>());
+				allStores.put(block, new TreeSet<String>(fieldsNeedingInitialization)); //for data flow equations, assume everything is stored initially 
+			}
+		}		
+		
+		boolean changed = true;		
+		Map<Block, Set<String>> allPreviousStores = new HashMap<Block, Set<String>>();
+		
+		//keep going as long as changes to the stores are being detected
+		while( changed ) {
+			changed = false;
 			
-			Map<Block,Set<String>> allLoadsBeforeStores = new HashMap<Block,Set<String>>();
-			Map<Block,Set<String>> allStores = new HashMap<Block,Set<String>>();
-			
-			for(Block block : nodeBlocks.values() ) {
-				Set<String> loadsBeforeStores = new HashSet<String>();
-				Set<String> stores = new HashSet<String>();
-				
-				block.recordLoadsAndStores(loadsBeforeStores, stores);
-				
-				allLoadsBeforeStores.put(block, loadsBeforeStores);
-				allStores.put(block, stores);
+			for(Block block : blocks ) {
+				if( block != root ) {					
+					//find previous stores, the intersection of the stores of previous blocks
+					Set<String> previousStores = null;				
+					
+					for( Block parent : block.incoming ) {	
+						if( previousStores == null )
+							previousStores = allStores.get(parent);
+						else
+							previousStores = intersect( previousStores, allStores.get(parent));
+					}
+					allPreviousStores.put(block, previousStores); //keep record for later error reporting					
+					
+					//get current state of stores and loads before stores
+					Set<String> stores = allStores.get(block);
+					Set<String> loadsBeforeStores = allLoadsBeforeStores.get(block);
+					
+					//record size, to detect changes
+					int storesSize = stores.size();
+					int loadsBeforeSize = loadsBeforeStores.size();						
+										
+					//update stores
+					stores.clear();
+					stores.addAll(initialStores.get(block));
+					stores.addAll(previousStores);					
+					
+					//update loads before stores
+					loadsBeforeStores.addAll(initialLoadsBeforeStores.get(block));
+					loadsBeforeStores.removeAll(previousStores);									
+					
+					if( storesSize != stores.size() || loadsBeforeSize != loadsBeforeStores.size() )
+						changed = true;
+				}
 			}
 		}
+		
+		//root has no previous stores
+		allPreviousStores.put(root, new TreeSet<String>());		
+		
+		//find blocks that return and record errors for fields that are used before they are initialized
+		List<Block> returningBlocks = new ArrayList<Block>();
+		for(Block block : nodeBlocks.values() ) {
+			if( block.returnsDirectly() )
+				returningBlocks.add(block);
+			Set<String> loadsBeforeStores = allLoadsBeforeStores.get(block);
+			if( loadsBeforeStores.size() > 0 )
+				block.addErrorsForUninitializedFields(allPreviousStores.get(block), methodData);
+		}
+		
+		//check all loads of fields that might contain a "this"		
+		for( String field : thisStores ) {
+			//field might contain "this" and is therefore illegal to load
+			if( loads.contains(field) )
+				addError(method.getSignature().getNode(), Error.READ_OF_THIS_IN_CREATE, "Field " + field + " that might contain a reference to \"this\" cannot be read in a create or methods called by a create" );
+		}
+		
+		//intersect all of the fields initialized by the time any returning block is reached
+		Set<String> initializedFields = null;
+		for( Block block : returningBlocks )
+			if( initializedFields == null )
+				initializedFields = allStores.get(block);
+			else
+				initializedFields = intersect(initializedFields, allStores.get(block));	
+		
+		return initializedFields;		
+	}
+	
+	public StorageData getLoadsBeforeStoresInMethods(Type type, CallGraph callGraph) {
+		StorageData data = new StorageData();
+		for(Block block : nodeBlocks.values() )
+			block.recordLoadsBeforeStoresInMethods(type, data, callGraph);
+		
+		return data;
+	}
+	
+	private Set<String> intersect(Set<String> a, Set<String> b) {
+		Set<String> result = new TreeSet<String>();
+	
+		//always iterate over smaller set
+		if( b.size() < a.size() ) {
+			Set<String> temp = a;
+			a = b;
+			b = temp;
+		}
+		
+		for( String string : a )
+			if( b.contains(string) )
+				result.add(string);
+		
+		return result;
+	}
+	
+	//constants are already taken care of
+	//nullable fields are initialized to null
+	//primitive types are initialized to reasonable defaults
+	//arrays (surprisingly) are value types, initialized with lengths of zero
+	public static boolean needsInitialization(ModifiedType modifiedType) {
+		Modifiers modifiers = modifiedType.getModifiers();
+		Type type = modifiedType.getType();
+		
+		return !modifiers.isConstant() && !modifiers.isNullable() && !type.isPrimitive() && !(type instanceof ArrayType)  && !(type instanceof SingletonType);
+	}
+	
+	public void addCallEdges(CallGraph calls, Type type) {
+		for(Block block : this)
+			block.addCallEdges(calls, type);		
 	}
 	
 	/*
@@ -431,28 +586,232 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		public String toString()
 		{
 			return "Block " + label.getNumber();
-		}
+		}		
 		
-		public void recordLoadsAndStores(Set<String> loadsBeforeStores, Set<String> stores)
-		{	
+		public void addErrorsForUninitializedFields(Set<String> previousStores, Map<MethodSignature, StorageData> methodData)
+		{
+			Set<String> stores = new HashSet<String>(previousStores);
+			Type type = method.getThis().getType();			
+			
 			for( TACNode node : this ) {				
 				if( node instanceof TACStore ) {
 					TACStore store = (TACStore) node;
 					if( store.getReference() instanceof TACFieldRef ) {
 						TACFieldRef field = (TACFieldRef) store.getReference();
-						stores.add(field.getName());
-					}						
+						//we don't care about nullables or primitives
+						if( operandIsThis(field.getPrefix(), type) && needsInitialization(field) )							
+							stores.add(field.getName());
+						else if( operandIsThis(store.getValue(), type) )						
+							for( Entry<String, Node> entry : type.getFields().entrySet()  )
+								if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
+									addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Current object cannot be stored in a field or array before field " + entry.getKey() + " is initialized" );
+					}					
+					else if( operandIsThis(store.getValue(), type) ) { //store of "this" somewhere
+						for( Entry<String, Node> entry : type.getFields().entrySet()  )
+							if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
+								addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Current object cannot be stored in a field or array before field " + entry.getKey() + " is initialized" );
+					}
 				}									
 				else if( node instanceof TACLoad ) {
 					TACLoad load = (TACLoad)node;
 					if( load.getReference() instanceof TACFieldRef ) {
 						TACFieldRef field = (TACFieldRef) load.getReference();
-						if( !stores.contains(field.getName()) )
-							loadsBeforeStores.add(field.getName());
+						//we don't care about nullables or primitives
+						//class and _outer are special cases, guaranteed to be initialized
+						if( operandIsThis(field.getPrefix(), type) && !stores.contains(field.getName()) && !field.getName().equals("class") && !field.getName().equals("_outer") && needsInitialization(field)  )
+							addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Field " + field.getName() + " may have been used without being initialized" );
 					}
 				}
+				else if( node instanceof TACCall ) {
+					TACCall call = (TACCall)node;
+					MethodSignature signature = call.getMethodRef().getSignature();
+					if( operandIsThis( call.getPrefix(), type ) ) {						 
+						//see if it's in the list of methods whose field usage we track
+						//otherwise, it would have already caused an error
+						if( methodData.containsKey(signature) ) {
+							Set<String> fields = methodData.get(signature).getLoadsBeforeStores();							
+							for( String field : fields  )
+								if( !stores.contains(field) )
+									addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Method call is not permitted before field " + field + " is initialized");
+						}
+					}
+				}					
+			}
+		}
+		
+		public void recordLoadsBeforeStoresInMethods(Type type, StorageData data, CallGraph callGraph)
+		{	
+			Set<String> stores = new HashSet<String>();
+			
+			for( TACNode node : this ) {				
+				if( node instanceof TACCall ) {
+					TACCall call = (TACCall)node;
+					//freak out if we're calling a method that takes "this"
+					//as a parameter and it's not one of the methods we're tracking
+					//all possible fields could be affected
+					if( !callGraph.contains(call.getMethod().getSignature()) ) { 
+						for( int i = 0; i < call.getNumParameters(); ++i )
+							if( operandIsThis(call.getParameter(i), type) ) { 
+								for( Entry<String, Node> entry : type.getFields().entrySet()  )
+									if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
+										data.getLoadsBeforeStores().add(entry.getKey());
+								break;
+							}
+					}
+				}
+				else
+					recordLoadsAndStores(node, type, data.getLoadsBeforeStores(), stores, data.getLoads(), data.getThisStores());
+			}			
+		}	
+		
+		public void recordLoadsAndStoresInCreates(Type type, Set<String> loadsBeforeStores, Set<String> stores, Set<String> loads, Set<String> thisStores, Map<MethodSignature, StorageData> methodData )
+		{	
+			for( TACNode node : this ) {				
+				if( node instanceof TACCall ) {
+					TACCall call = (TACCall)node;
+					MethodSignature signature = call.getMethodRef().getSignature();
+					if( operandIsThis( call.getPrefix(), type ) ) {
+						//creates are handled separately, and we have to assume that native code works
+						if( !signature.isCreate() && !signature.isNative() ) {							
+							//if we've recorded the fields a method uses, add those to the loads before stores
+							if( methodData.containsKey(signature) ) {							
+								loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
+								loads.addAll(methodData.get(signature).getLoads());
+								thisStores.addAll(methodData.get(signature).getThisStores());
+							}
+							//otherwise, it's not a legal method to call, probably because it's unlocked
+							else
+								addError(node.getASTNode(), Error.ILLEGAL_ACCESS, "Cannot call unlocked method from a create" );
+						}
+					}
+					//an inner class call, perhaps even a create
+					else if( methodData.containsKey(signature) ) {
+						loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
+						loads.addAll(methodData.get(signature).getLoads());
+						thisStores.addAll(methodData.get(signature).getThisStores());
+					}
+					//not a call inside the current file
+					else {						
+						for( int i = 1; i < call.getNumParameters(); ++i ) //always an extra parameter for "this"
+							if( operandIsThis(call.getParameter(i), type)  ) {
+								addError(node.getASTNode(), Error.ILLEGAL_ACCESS, "Current object cannot be passed as a parameter inside of its create" );
+								break;
+							}						
+					}
+				}
+				else
+					recordLoadsAndStores(node, type, loadsBeforeStores, stores, loads, thisStores);
 			}			
 		}
+		
+		private void recordLoadsAndStores(TACNode node, Type type, Set<String> loadsBeforeStores, Set<String> stores, Set<String> loads, Set<String> thisStores) 
+		{
+			if( node instanceof TACStore ) {
+				TACStore store = (TACStore) node;
+				if( store.getReference() instanceof TACFieldRef ) {
+					TACFieldRef field = (TACFieldRef) store.getReference();					
+					if( operandIsThis(field.getPrefix(), type) && needsInitialization(field)    ) {							
+						stores.add(field.getName());
+						if( operandIsThis(store.getValue(), type) ) //store of "this" inside current object
+							thisStores.add(field.getName());							
+					}
+					else if( operandIsThis(store.getValue(), type) )
+						//might leak all data						
+						for( Entry<String, Node> entry : type.getFields().entrySet()  )
+							if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
+								loadsBeforeStores.add(entry.getKey());
+				}					
+				else if( operandIsThis(store.getValue(), type) ) { //store of "this", but not in a field in the current object
+					//might leak all data						
+					for( Entry<String, Node> entry : type.getFields().entrySet()  )
+						if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
+							loadsBeforeStores.add(entry.getKey());
+				}
+			}									
+			else if( node instanceof TACLoad ) {
+				TACLoad load = (TACLoad)node;
+				if( load.getReference() instanceof TACFieldRef ) {
+					TACFieldRef field = (TACFieldRef) load.getReference();				
+					//class and _outer are special cases, guaranteed to be initialized
+					if( operandIsThis(field.getPrefix(), type) && !field.getName().equals("class") && !field.getName().equals("_outer") ) {
+						if( needsInitialization(field) ) {
+							if( !stores.contains(field.getName()) )							
+								loadsBeforeStores.add(field.getName());							
+							loads.add(field.getName());
+						}
+					}
+				}
+			}
+		}
+		
+		
+		private TACOperand getValue(TACOperand op) {			
+			TACOperand start;
+			do {
+				start = op;
+				while( op instanceof TACCast ) {
+					TACCast cast = (TACCast)op;
+					op = cast.getOperand(0);				
+				}			
+				if( op instanceof TACUpdate )
+					op = ((TACUpdate)op).getValue();				
+			} while( start != op );
+			
+			return op;
+		}
+		
+		private boolean operandIsThis(TACOperand op, Type type) {
+			Set<TACPhiStore> visitedPhis = new HashSet<TACPhiStore>();
+			return operandIsThis(op, type, visitedPhis);
+		}
+		
+		//as long as the data flow analysis has already happened, it should be hard to sneak
+		//in a variable that stores "this" without us detecting it
+		private boolean operandIsThis(TACOperand op, Type type, Set<TACPhiStore> visitedPhis) {
+			op = getValue(op);
+			
+			//current type
+			if( method.getThis().getType().equals(type) ) {
+				if( op instanceof TACParameter ) {
+					TACParameter parameter = (TACParameter)op;
+					return parameter.getNumber() == 0; //first parameter is always "this"
+				}			
+				else if( op instanceof TACLocalLoad ) {
+					TACLocalLoad load = (TACLocalLoad) op;
+					if( load.getVariable().equals(method.getThis()))
+						return true;				
+				}
+				else if( op instanceof TACLocalStore ) {
+					TACLocalStore store = (TACLocalStore)op;
+					if( store.getVariable().equals(method.getThis()))
+						return true;
+				}			
+				else if( op instanceof TACPhiStore ) {
+					TACPhiStore phi = (TACPhiStore)op;
+					if( visitedPhis.contains(phi) )
+						return false;
+					
+					visitedPhis.add(phi);				
+					for( TACOperand value : phi.getPreviousStores().values() ) {					
+						if( operandIsThis(value, type, visitedPhis) )
+							return true;
+					}
+				}
+			}
+			else { //an outer type				
+				if( op instanceof TACLoad ) {
+					TACLoad load = (TACLoad) op;
+					if( load.getReference() instanceof TACFieldRef ) {
+						TACFieldRef field = (TACFieldRef) load.getReference();
+						return field.getName().equals("_outer") && field.getType().equals(type);
+					}
+				}				
+			}
+			
+			return false;
+		}
+		
+		
 
 		@Override
 		public boolean equals(Object other)
@@ -799,6 +1158,21 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		public Iterator<TACNode> iterator() {
 			return new NodeIterator();
 		}
+
+
+		public void addCallEdges(CallGraph calls, Type type)
+		{
+			for( TACNode node : this ) {
+				if( node instanceof TACCall ) {
+					TACCall call = (TACCall)node;
+					MethodSignature signature = call.getMethodRef().getSignature();
+					//if the call is one present in the graph, add an edge
+					//edges are from callee -> caller
+					if( calls.contains(signature) )
+						calls.addEdge(signature, method.getSignature());
+				}				
+			}		
+		}
 	}
 
 	/* Allows strings to be sorted based on given indexes */
@@ -826,5 +1200,46 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{
 			return string;
 		}
+	}	
+	
+	public static class StorageData {
+		@SuppressWarnings("unchecked")
+		private Set<String>[] sets = new Set[3];
+		
+		public StorageData() {
+			for( int i = 0; i < sets.length; ++i )
+				sets[i] = new HashSet<String>();
+		}		
+		
+		public Set<String> getLoadsBeforeStores() 
+		{
+			return sets[0];		
+		}
+		
+		public Set<String> getLoads() 
+		{
+			return sets[1];
+		}
+		
+		public Set<String> getThisStores() 
+		{			
+			return sets[2];				
+		}
+		
+		public boolean addAll(StorageData other) {
+			boolean changed = false;
+			int size;
+			
+			for( int i = 0; i < sets.length; ++i ) {
+				size = sets[i].size();
+				sets[i].addAll(other.sets[i]);
+				
+				if( size != sets[i].size() )
+					changed = true;
+			}
+			
+			return changed;
+		}
+		
 	}
 }

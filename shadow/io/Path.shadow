@@ -46,7 +46,7 @@ immutable class shadow:io@Path
 	 * Mac OS X.
 	 * @return separator character 
 	 */
-	public native get separator() => ( code );
+	public native locked get separator() => ( code );
 	
 	/**
 	 * Returns a {@code String} representation of the path.

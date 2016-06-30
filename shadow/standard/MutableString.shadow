@@ -6,7 +6,7 @@
  *
  * @seeDoc shadow:standard@String 
  */
-class shadow:standard@
+locked class shadow:standard@
 	MutableString
 is  CanIndex<int, byte>
 and CanIndexStore<int, byte>

@@ -1,5 +1,0 @@
-interface Comparable<T>
-{
-	// Assumption: Shadow allows static methods to be specified in interfaces	 
-	compare( T other ) => (int);
-}

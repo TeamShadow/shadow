@@ -80,7 +80,18 @@ public class DirectedGraph<T> implements Iterable<T> {
 	}
 	
 	// Graph internals are managed by a map from values to nodes.
-	protected Map<T, GraphNode> nodes = new HashMap<T, GraphNode>();	
+	protected Map<T, GraphNode> nodes = new HashMap<T, GraphNode>();
+	
+	
+
+	/**
+	 * Checks to see if the graph contains a particular value.
+	 * @param value		the value to check
+	 * @return			<code>true</code> if the value is present
+	 */	
+	public boolean contains(T value) {
+		return nodes.containsKey(value);
+	}
 	
 	
 	/**
@@ -179,5 +190,29 @@ public class DirectedGraph<T> implements Iterable<T> {
 	@Override
 	public Iterator<T> iterator() {		
 		return nodes.keySet().iterator();
+	}
+	
+	public Set<T> getIncoming(T value) {
+		Set<T> incoming = new HashSet<T>();
+		GraphNode node = nodes.get(value);
+		
+		if( node != null ) {
+			for( GraphNode incomingNode : node.incoming )
+				incoming.add(incomingNode.value);
+		}	
+		
+		return incoming;
+	}
+	
+	public Set<T> getOutgoing(T value) {
+		Set<T> outgoing = new HashSet<T>();
+		GraphNode node = nodes.get(value);
+		
+		if( node != null ) {
+			for( GraphNode outgoingNode : node.outgoing )
+				outgoing.add(outgoingNode.value);
+		}	
+		
+		return outgoing;
 	}	
 }

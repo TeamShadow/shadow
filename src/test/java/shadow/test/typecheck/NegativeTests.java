@@ -409,11 +409,49 @@ public class NegativeTests {
 		enforce(Error.CIRCULAR_CREATE);			
 	}
 	
-	
-	/*//compiler can't handle this one yet
 	@Test public void testFieldReferencesItself() throws Exception {
 		args.add("tests-negative/typechecker/field-references-itself/Test.shadow");
-		enforce(Error.UNDEFINED_SYMBOL);			
+		enforce(Error.UNINITIALIZED_FIELD);			
 	}
-	*/
+	
+	@Test public void testFieldUsedBeforeInitialization() throws Exception {
+		args.add("tests-negative/typechecker/field-used-before-initialization/Test.shadow");
+		enforce(Error.UNINITIALIZED_FIELD);			
+	}	
+	
+	@Test public void testFieldMightNotBeInitialized() throws Exception {
+		args.add("tests-negative/typechecker/field-might-not-be-initialized/Test.shadow");
+		enforce(Error.UNINITIALIZED_FIELD);			
+	}
+	
+	@Test public void testCallOnSequence() throws Exception {
+		args.add("tests-negative/typechecker/call-on-sequence/Test.shadow");
+		enforce(Error.INVALID_TYPE);			
+	}
+	
+	@Test public void testThisStoredBeforeInitialization() throws Exception {
+		args.add("tests-negative/typechecker/this-stored-before-initialization/Test.shadow");
+		enforce(Error.READ_OF_THIS_IN_CREATE);			
+	}	
+	
+	@Test public void testMethodCallBeforeFieldInitialization() throws Exception {
+		args.add("tests-negative/typechecker/method-call-before-field-initialization/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);			
+	}
+	
+	@Test public void testUnlockedCallOnThisInCreate() throws Exception {
+		args.add("tests-negative/typechecker/unlocked-call-on-this-in-create/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);			
+	}
+	
+	@Test public void testCallOnThisBeforeFieldInitialization() throws Exception {
+		args.add("tests-negative/typechecker/call-on-this-before-field-initialization/Test.shadow");
+		enforce(Error.UNINITIALIZED_FIELD);			
+	}
+	
+	@Test public void testChainOfCallsBeforeFieldInitialization() throws Exception {
+		args.add("tests-negative/typechecker/chain-of-calls-before-field-initialization/Test.shadow");
+		enforce(Error.UNINITIALIZED_FIELD);			
+	}
+	
 }

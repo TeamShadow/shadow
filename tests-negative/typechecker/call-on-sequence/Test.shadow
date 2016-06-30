@@ -1,0 +1,11 @@
+import shadow:io@Console;
+
+class Test
+{	
+	public create()
+	{
+		Console reader;
+		
+		int value = reader.readLine().toInt();
+	}
+}

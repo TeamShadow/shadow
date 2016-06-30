@@ -350,7 +350,7 @@ is  Map<K,V>
 	 * Iterator that walks over the hash table and through the linked list at
 	 * each index.
 	 */
-	private class HashMapIterator is Iterator<V>
+	private locked class HashMapIterator is Iterator<V>
 	{
 		int index = 0;
 		nullable Node current;

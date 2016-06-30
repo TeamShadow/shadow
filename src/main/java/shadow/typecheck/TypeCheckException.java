@@ -81,11 +81,13 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 		NOT_OBJECT("Not object", "Object reference must be used"),
 		NOT_TYPE("Not type", "Type name must be used"),
 		NOT_ALL_PATHS_RETURN("Not all paths return", "Every path in a value-returning method must return"),
+		READ_OF_THIS_IN_CREATE("Read of this in create", "Field that might contain a reference to \"this\" cannot be read in a create or methods called by a create"),
 		UNDEFINED_PACKAGE("Undefined package", "Package not defined in this context"),
 		UNDEFINED_SYMBOL("Undefined symbol", "Symbol has not been defined in this context"),
 		UNDEFINED_TYPE("Undefined type", "Type not defined in this context"),
 		UNDEFINED_VARIABLE("Undefined variable", "This variable may not have been defined before use"),
 		UNNECESSARY_TYPE_ARGUMENTS("Unnecessary type arguments", "Type arguments supplied for non-parameterized type"),
+		UNINITIALIZED_FIELD("Uninitialized field", "Non-nullable field may not be initialized by a create"),
 		UNREACHABLE_CODE("Unreachable code", "Code cannot be reached");
 		
 		private final String name;

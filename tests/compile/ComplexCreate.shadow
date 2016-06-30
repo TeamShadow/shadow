@@ -1,0 +1,28 @@
+class ComplexCreate
+{
+	String string;
+	Object thing1;
+	Object thing2;
+		
+    public create(String a)
+    {
+    	this(a, Object:create());    	 
+    }
+    
+    public create(String a, Object b)
+    {
+    	this();
+    	string = a;
+    	thing1 = b;    
+    }
+    
+    public create(Object o)
+    {
+    	this("Yelp", o);    
+    }
+       
+    private create() 
+    {
+    	thing2 = Object:create();    
+    }        
+}

@@ -258,6 +258,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return ( type.getModifiers().isSet() && type.getReturnTypes().isEmpty() && type.getParameterTypes().size() == 1 );	
 	}
 	
+	public boolean isLocked()
+	{		
+		return type.getModifiers().isLocked();
+	}
+	
 	public boolean isNative()
 	{
 		return type.getModifiers().isNative();

@@ -1,0 +1,21 @@
+import shadow:io@Console;
+
+class Test
+{	
+	String things;
+	
+	public create()
+	{
+		things = "yes";
+		speak();		
+	}
+	
+	//illegal because speak might be updated in the future
+	//to use potentially uninitialized fields
+	public speak() => ()
+	{
+		Console.printLine("Damn!");	
+	}
+
+
+}

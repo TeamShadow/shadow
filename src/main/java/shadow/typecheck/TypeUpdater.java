@@ -280,17 +280,18 @@ public class TypeUpdater extends BaseChecker {
 							else {
 								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
 								// Default get is readonly.
-								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);														
+								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);
+								if( classType.getModifiers().isLocked() )
+									methodNode.addModifier(Modifiers.LOCKED);								
 								methodNode.setImage(field.getKey());								
 								MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
 								methodNode.setType(methodType);
 								Modifiers modifiers = new Modifiers(fieldModifiers);
 								modifiers.removeModifier(Modifiers.GET);
-								modifiers.removeModifier(Modifiers.FIELD);									
-								if( modifiers.isImmutable() )
-									modifiers.addModifier(Modifiers.IMMUTABLE);																		
+								modifiers.removeModifier(Modifiers.FIELD);
 								if( modifiers.isSet() )
 									modifiers.removeModifier(Modifiers.SET);
+																
 								SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
 								methodType.addReturn(modifiedType);
 								MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);								
@@ -305,6 +306,8 @@ public class TypeUpdater extends BaseChecker {
 							else {
 								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
 								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
+								if( classType.getModifiers().isLocked() )
+									methodNode.addModifier(Modifiers.LOCKED);
 								methodNode.setImage(field.getKey());								
 								MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
 								methodNode.setType(methodType);
@@ -312,13 +315,15 @@ public class TypeUpdater extends BaseChecker {
 								//is it even possible to have an immutable or readonly set?
 								if( modifiers.isImmutable() )
 									addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for an immutable field" );										
+								if( modifiers.isReadonly() )
+									addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for a readonly field" );
 								modifiers.removeModifier(Modifiers.SET);
 								modifiers.removeModifier(Modifiers.FIELD);									
 								modifiers.addModifier(Modifiers.ASSIGNABLE);
 								if( modifiers.isGet() )
 									modifiers.removeModifier(Modifiers.GET);
 								if( modifiers.isWeak() )
-									modifiers.removeModifier(Modifiers.WEAK);
+									modifiers.removeModifier(Modifiers.WEAK);								
 								SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
 								methodType.addParameter("value", modifiedType );									
 								MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);
@@ -1023,10 +1028,16 @@ public class TypeUpdater extends BaseChecker {
 		Node methodDeclarator = node.jjtGetChild(0);
 		
 		// Creates are not marked immutable or readonly since they change fields
+		// They are also not marked locked, since that would cause problems
 		if( !secondVisit && currentType != null && !node.getImage().equals("create") ) {
 			if( currentType.getModifiers().isImmutable() ) {
 				node.addModifier(Modifiers.READONLY);
 				methodDeclarator.addModifier(Modifiers.READONLY);
+			}
+			
+			if( currentType.getModifiers().isLocked() || (currentType instanceof SingletonType) ) {
+				node.addModifier(Modifiers.LOCKED);
+				methodDeclarator.addModifier(Modifiers.LOCKED);
 			}
 		}
 		return visitMethod( methodDeclarator.getImage(), node, secondVisit );

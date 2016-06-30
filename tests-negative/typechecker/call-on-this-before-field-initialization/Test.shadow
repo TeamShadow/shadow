@@ -1,0 +1,19 @@
+import shadow:io@Console;
+
+class Test
+{	
+	String things;
+	
+	public create()
+	{
+		speak();
+		things = "yes";
+	}
+
+	public locked speak() => ()
+	{
+		Console.printLine(things);	
+	}
+
+
+}

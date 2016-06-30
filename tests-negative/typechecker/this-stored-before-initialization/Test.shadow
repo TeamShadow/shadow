@@ -1,0 +1,19 @@
+import shadow:io@Console;
+
+class Test
+{
+	Object object;
+	String thing;
+
+	public create()
+	{		
+		object = this;
+		
+		thing = object.toString();
+	}
+	
+	public readonly toString() => (String)
+	{
+		return thing;
+	}
+}

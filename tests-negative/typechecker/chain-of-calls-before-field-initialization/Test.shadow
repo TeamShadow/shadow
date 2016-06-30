@@ -1,0 +1,33 @@
+import shadow:io@Console;
+
+class Test
+{	
+	String thing1;
+	String thing2;
+	String thing3;
+	
+	public create()
+	{	
+		thing1 = "yes";
+		thing2 = "no";		
+		method1();
+		thing3 = "maybe";
+	}
+
+	public locked method1() => ()
+	{
+		Console.printLine(thing1);
+		method2();	
+	}
+	
+	public locked method2() => ()
+	{
+		Console.printLine(thing2);
+		method3();	
+	}
+	
+	public locked method3() => ()
+	{
+		Console.printLine(thing3);	
+	}
+}

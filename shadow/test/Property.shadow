@@ -9,7 +9,8 @@ class shadow:test@Property
 	
 	public create()
 	{
-		y = 5;	
+		y = 5;
+		z = "Eggplant";	
 	}
 	
 	public magic() => (String)

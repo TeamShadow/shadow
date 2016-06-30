@@ -90,8 +90,14 @@ public class TypeCheckerTest {
 		args.add("tests/compile/ComplexAccess.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+		
+	@Test public void testComplexCreate() throws Exception {
+		args.add("tests/compile/ComplexCreate.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 
-		@Test public void testConditionals() throws Exception {
+
+	@Test public void testConditionals() throws Exception {
 		args.add("tests/compile/Conditionals.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}

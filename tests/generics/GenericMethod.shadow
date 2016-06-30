@@ -1,7 +1,0 @@
-class GenericMethod
-{
-	public method<T> (Object o) => (T)
-	{
-		return cast<T>(o);
-	}
-}

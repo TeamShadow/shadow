@@ -2389,9 +2389,11 @@ public class StatementChecker extends BaseChecker {
 			Type prefixType = prefixNode.getType();
 			String methodName = node.getImage();
 			
-			if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof SingletonType) )
-			{
+			if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof SingletonType) ) {
 				addError(Error.NOT_OBJECT, "Type name cannot be used to call method");				
+			}
+			else if( prefixType instanceof SequenceType ) {
+				addError(Error.INVALID_TYPE, "Method cannot be called on a sequence result");
 			}
 			else
 			{				

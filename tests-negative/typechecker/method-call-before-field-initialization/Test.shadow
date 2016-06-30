@@ -1,0 +1,20 @@
+import shadow:io@Console;
+
+class Test
+{	
+	String thing;
+
+	public create()
+	{		
+		Other other = Other:create();
+		other.messUp(this);		
+		
+		thing = "Seven";
+	}
+
+	
+	public change(String value) => ()
+	{
+		thing = thing # value;	
+	}	
+}

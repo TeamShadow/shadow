@@ -8,7 +8,7 @@ class Property
 		return 5;
 	}
 	
-	String data;	
+	String data = "";	
 	
 	//multiple sets
 	public set value(code letter) => () {
