@@ -1,0 +1,24 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		Console.printLine(other());
+	}
+	
+	private method() => (int)
+	{
+		return 15;
+	}
+	
+	public other() => (int)
+	{
+		return 10;
+	}
+	
+	protected dude() => (int)
+	{
+		return 20;
+	}
+}

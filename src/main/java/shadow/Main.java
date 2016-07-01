@@ -30,10 +30,11 @@ import shadow.tac.TACModule;
 import shadow.tac.analysis.ControlFlowGraph;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
-import shadow.typecheck.TypeChecker;
 import shadow.typecheck.TypeCheckException.Error;
+import shadow.typecheck.TypeChecker;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
@@ -375,8 +376,9 @@ public class Main {
 			
 			List<ControlFlowGraph> graphs = module.optimizeTAC(reporter, checkOnly);
 			
-			//get all used fields
+			//get all used fields and all used private methods
 			Map<Type, Set<String>> allUsedFields = new HashMap<Type, Set<String>>();
+			Set<MethodSignature> allUsedPrivateMethods = new HashSet<MethodSignature>();
 			for( ControlFlowGraph graph : graphs ) {
 				Map<Type, Set<String>> usedFields = graph.getUsedFields();
 				for( Entry<Type, Set<String>> entry : usedFields.entrySet() ) {
@@ -386,18 +388,28 @@ public class Main {
 						allUsedFields.put(entry.getKey(), fields);
 					}					
 					fields.addAll(entry.getValue());
-				}				
+				}
+				
+				allUsedPrivateMethods.addAll(graph.getUsedPrivateMethods());
 			}
-			
-			//check field initialization and give warnings if fields are never used
+
 			for( TACModule class_ : modules ) {
+				//check field initialization
 				class_.checkFieldInitialization(reporter, graphs);
+				
+				//give warnings if fields are never used
 				Type type = class_.getType();
 				Set<String> usedFields = allUsedFields.get(type);
 				for( Entry<String, Node> entry  : type.getFields().entrySet() ) {
 					if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
 						reporter.addWarning(entry.getValue(), Error.FIELD_NOT_USED, "Field " + entry.getKey() + " is never used");
 				}
+				
+				//give warnings if private methods are never used
+				for( List<MethodSignature> signatures : type.getMethodMap().values() )
+					for( MethodSignature signature : signatures )
+						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) )
+							reporter.addWarning(signature.getNode(), Error.METHOD_NOT_USED, "Private method " + signature + " is never used");
 			}					
 			
 			reporter.printWarnings();

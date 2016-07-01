@@ -75,8 +75,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		{
 			MethodSignature ms = (MethodSignature)o;
 			//Is it pretty? No. Should it work?  Probably!  
-			return ms.getMangledName().equals(getMangledName());
-			//return ms.symbol.equals(symbol) && ms.type.equals(type) && ms.outer.equals(outer) && ms.isWrapper() == isWrapper();
+			return ms.getMangledName().equals(getMangledName());			
 		}
 		else
 			return false;

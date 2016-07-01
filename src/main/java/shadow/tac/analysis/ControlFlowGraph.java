@@ -29,6 +29,7 @@ import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStorage;
 import shadow.tac.nodes.TACLocalStore;
+import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
@@ -63,7 +64,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	private String cachedString; // Saves toString() from re-walking the graph
 	private Map<TACLabel, Block> nodeBlocks = new HashMap<TACLabel, Block>();
 	private TACMethod method;
+	//field names can be repeated in inner classes
 	private Map<Type, Set<String>> usedFields = new HashMap<Type, Set<String>>();
+	//Method signatures include information that identifies class
+	private Set<MethodSignature> usedPrivateMethods = new HashSet<MethodSignature>();
 	
 	/**
 	 * Create a control flow graph for a method.
@@ -110,6 +114,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	
 	public Map<Type, Set<String>>  getUsedFields() {
 		return usedFields;
+	}
+	
+	public Set<MethodSignature>  getUsedPrivateMethods() {
+		return usedPrivateMethods;
 	}
 
 	/*
@@ -213,6 +221,14 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					if( fields != null )
 						fields.add(field.getName());
 				}
+			}
+			//record private method usage, for warnings
+			else if( node instanceof TACCall ) {
+				TACCall call = (TACCall) node;
+				TACMethodRef methodRef = call.getMethodRef();
+				MethodSignature signature = methodRef.getSignature().getSignatureWithoutTypeArguments();
+				if( signature.getModifiers().isPrivate() && signature.getOuter().encloses(method.getThis().getType()) )
+					usedPrivateMethods.add(signature);
 			}
 			
 			block.addNode(node);

@@ -59,4 +59,10 @@ public class WarningTests {
 		args.add("tests-negative/warnings/field-not-used/Test.shadow");
 		enforce(Error.FIELD_NOT_USED);		
 	}
+	
+	@Test public void testPrivateMethodNotUsed() throws Exception
+	{
+		args.add("tests-negative/warnings/private-method-not-used/Test.shadow");
+		enforce(Error.METHOD_NOT_USED);		
+	}
 }

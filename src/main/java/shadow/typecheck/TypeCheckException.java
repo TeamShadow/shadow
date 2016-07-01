@@ -72,6 +72,7 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 		INVALID_TYPE("Invalid type", "Supplied type cannot be used with this language construct"),
 		INVALID_TYPE_ARGUMENTS("Invalid type arguments", "Supplied type arguments do not match type parameters"),
 		INVALID_TYPE_PARAMETERS("Invalid type parameters", "Type cannot be parameterized"),
+		METHOD_NOT_USED("Method not used", "Method is never used"),
 		MISMATCHED_TYPE("Mismatched type", "Supplied type does not match another type supplied to this language construct"),
 		MISMATCHED_PACKAGE("Mismatched package", "Package for type does not match type directory"),
 		MISSING_CREATE("Missing create invocation", "Explicit create invocation is missing, and parent class does not implement the default create"),
