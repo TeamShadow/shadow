@@ -164,7 +164,7 @@ public class TACBuilder implements ShadowParserVisitor {
 		method = new TACMethod( new MethodSignature(new MethodType(), "", type, null));
 		block = new TACBlock(method);
 		
-		for (Node constant : type.getFieldList())
+		for (Node constant : type.getFields().values())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
 						constant.getImage()), constant);
@@ -445,7 +445,8 @@ public class TACBuilder implements ShadowParserVisitor {
 			if( isSuper ) {
 				// Walk fields in *exactly* the order they were declared since
 				// some fields depend on prior fields.
-				for( Node field : thisType.getFieldList() ) 
+				// This is accomplished by using a LinkedHashMap.
+				for( Node field : thisType.getFields().values() ) 
 					if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType))
 						walk(field);
 			}
@@ -2427,7 +2428,8 @@ public class TACBuilder implements ShadowParserVisitor {
 					
 					// Walk fields in *exactly* the order they were declared since
 					// some fields depend on prior fields.
-					for( Node field : ((ClassType)(methodSignature.getOuter())).getFieldList() ) 
+					// This is accomplished by using a LinkedHashMap.
+					for( Node field : ((ClassType)(methodSignature.getOuter())).getFields().values() ) 
 						if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType))
 							walk(field);
 				}				

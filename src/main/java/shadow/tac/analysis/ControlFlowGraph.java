@@ -35,6 +35,7 @@ import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
 import shadow.tac.nodes.TACPhiStore;
+import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACStore;
@@ -62,6 +63,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	private String cachedString; // Saves toString() from re-walking the graph
 	private Map<TACLabel, Block> nodeBlocks = new HashMap<TACLabel, Block>();
 	private TACMethod method;
+	private Map<Type, Set<String>> usedFields = new HashMap<Type, Set<String>>();
 	
 	/**
 	 * Create a control flow graph for a method.
@@ -70,6 +72,14 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{		
 		super(Loggers.TYPE_CHECKER);
 		this.method = method;
+		
+		//a method can only directly use fields in its class and outer classes
+		Type type = method.getSignature().getOuter();
+		while( type != null ) {
+			usedFields.put(type, new HashSet<String>());
+			type = type.getOuter();
+		}
+		
 		createBlocks(method);
 		addEdges();
 	}
@@ -96,6 +106,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	@Override
 	public Iterator<ControlFlowGraph.Block> iterator() {
 		return nodeBlocks.values().iterator();
+	}
+	
+	public Map<Type, Set<String>>  getUsedFields() {
+		return usedFields;
 	}
 
 	/*
@@ -189,6 +203,17 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				block.flagReturns();
 			else if( node instanceof TACThrow || node instanceof TACResume )
 				block.flagUnwinds();
+			//record field usage, for warnings
+			else if( node instanceof TACLoad ) {
+				TACLoad load = (TACLoad) node;
+				TACReference ref = load.getReference();
+				if( ref instanceof TACFieldRef ) {
+					TACFieldRef field = (TACFieldRef) ref;
+					Set<String> fields = usedFields.get(field.getPrefixType());
+					if( fields != null )
+						fields.add(field.getName());
+				}
+			}
 			
 			block.addNode(node);
 						

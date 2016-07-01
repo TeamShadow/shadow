@@ -39,6 +39,7 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 	 */
 	public static enum Error {		
 		CIRCULAR_CREATE("Circular create", "Create calls are circular"),
+		FIELD_NOT_USED("Field not used", "Field is never used"),
 		ILLEGAL_ACCESS("Illegal access", "Class, member, method, or property not accessible from this context"),
 		INVALID_ARGUMENTS("Invalid arguments", "Supplied method arguments do not match parameters"),
 		INVALID_ASSIGNMENT("Invalid assignment", "Right hand side cannot be assigned to left hand side"),

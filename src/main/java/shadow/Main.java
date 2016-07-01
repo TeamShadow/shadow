@@ -12,8 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
@@ -28,6 +31,7 @@ import shadow.tac.analysis.ControlFlowGraph;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
+import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.SequenceType;
@@ -371,9 +375,30 @@ public class Main {
 			
 			List<ControlFlowGraph> graphs = module.optimizeTAC(reporter, checkOnly);
 			
-			for( TACModule class_ : modules )
+			//get all used fields
+			Map<Type, Set<String>> allUsedFields = new HashMap<Type, Set<String>>();
+			for( ControlFlowGraph graph : graphs ) {
+				Map<Type, Set<String>> usedFields = graph.getUsedFields();
+				for( Entry<Type, Set<String>> entry : usedFields.entrySet() ) {
+					Set<String> fields = allUsedFields.get(entry.getKey());
+					if( fields == null ) {
+						fields = new HashSet<String>();
+						allUsedFields.put(entry.getKey(), fields);
+					}					
+					fields.addAll(entry.getValue());
+				}				
+			}
+			
+			//check field initialization and give warnings if fields are never used
+			for( TACModule class_ : modules ) {
 				class_.checkFieldInitialization(reporter, graphs);
-					
+				Type type = class_.getType();
+				Set<String> usedFields = allUsedFields.get(type);
+				for( Entry<String, Node> entry  : type.getFields().entrySet() ) {
+					if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
+						reporter.addWarning(entry.getValue(), Error.FIELD_NOT_USED, "Field " + entry.getKey() + " is never used");
+				}
+			}					
 			
 			reporter.printWarnings();
 			reporter.printErrors();		

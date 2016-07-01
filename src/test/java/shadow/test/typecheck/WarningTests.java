@@ -52,4 +52,11 @@ public class WarningTests {
 		args.add("tests-negative/warnings/package/Test1.shadow");
 		enforce(Error.MISMATCHED_PACKAGE);		
 	}
+	
+	
+	@Test public void testFieldNotUsed() throws Exception
+	{
+		args.add("tests-negative/warnings/field-not-used/Test.shadow");
+		enforce(Error.FIELD_NOT_USED);		
+	}
 }

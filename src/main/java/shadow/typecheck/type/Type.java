@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +35,11 @@ public abstract class Type implements Comparable<Type> {
 	private Documentation documentation = null;
 	
 	private ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();	
-		
-	private Map<String, Node> fieldTable = new HashMap<String, Node>();
-	//needed to keep the fields in order for walking them in constructors
-	private ArrayList<Node> fieldList = new ArrayList<Node>();
-
+	
+	//a linked hash maps iterates over the elements in the order they were added
+	//this feature is needed to for walking the fields in order in constructors
+	private LinkedHashMap<String, Node> fieldTable = new LinkedHashMap<String, Node>();
+	
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> usedTypes = new HashSet<Type>();
 	private Set<Type> mentionedTypes = new HashSet<Type>();
@@ -894,19 +895,15 @@ public abstract class Type implements Comparable<Type> {
 	}	
 	
 	public void addField(String fieldName, Node node) {
-		fieldTable.put(fieldName, node);
-		fieldList.add(node);
+		fieldTable.put(fieldName, node);		
 	}
 	
-	public List<Node> getFieldList() {
-		return fieldList;
-	}
 	
 	public Node getField(String fieldName) {
 		return fieldTable.get(fieldName);
 	}
 		
-	public Map<String, Node> getFields() {
+	public LinkedHashMap<String, Node> getFields() {
 		return fieldTable;
 	}	
 	
