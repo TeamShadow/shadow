@@ -402,20 +402,30 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		return cachedString;
 	}
 	
-	public List<Block> depthFirstOrdering() {
+	/**
+	 * Returns a list giving the graph in reverse postorder.
+	 * Reverse postorder is considered to be an easy ordering
+	 * of a rooted, directed graph that reduces the number of
+	 * children visited before their parents are visited. Cycles
+	 * in the graph, of course, make the notion of children and parents
+	 * somewhat fuzzy.  This ordering reduces the running time for
+	 * the data flow equations to reach equilibrium.
+	 * @return list of blocks in reverse postorder with respect to the root 
+	 */
+	public List<Block> getReversePostorder() {
 		List<Block> list = new ArrayList<Block>(nodeBlocks.size());
 		Set<Block> visited = new HashSet<Block>(nodeBlocks.size() * 2);		
-		depthFirstOrdering(root, list, visited);		
+		postorder(root, list, visited);
+		Collections.reverse(list); //reverse list
 		return list;
 	}
 	
-	private static void depthFirstOrdering(Block block, List<Block> list, Set<Block> visited) {
-		if( !visited.contains(block) ) {
-			list.add(block);
-			visited.add(block);
-			
+	private static void postorder(Block block, List<Block> list, Set<Block> visited) {
+		if( !visited.contains(block) ) {			
+			visited.add(block);			
 			for( Block child : block.outgoing )
-				depthFirstOrdering(child, list, visited);
+				postorder(child, list, visited);			
+			list.add(block);
 		}
 	}
 	
@@ -428,7 +438,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		Map<Block,Set<String>> allStores = new HashMap<Block,Set<String>>();
 		
 		Set<String> loads = new TreeSet<String>();
-		List<Block> blocks = depthFirstOrdering(); //converges faster since many blocks will be visited only after their predecessors
+		List<Block> blocks = getReversePostorder(); //converges faster since many blocks will be visited only after their predecessors
 		
 		for(Block block : blocks ) {
 			Set<String> loadsBeforeStores = new TreeSet<String>();			
