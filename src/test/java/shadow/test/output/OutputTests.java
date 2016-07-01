@@ -20,7 +20,7 @@ import shadow.ConfigurationException;
 import shadow.Job;
 import shadow.Main;
 
-public class OutputTest {
+public class OutputTests {
 	// To simplify removal, every unit test executable will have the same name
 	private static final String executableName = Job.properExecutableName("OutputTest");
 	private static final Path executable = Paths.get("shadow", "test", executableName);

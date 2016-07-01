@@ -13,7 +13,7 @@ import org.junit.Test;
 import shadow.Job;
 import shadow.Main;
 
-public class TACTest {
+public class TACTests {
 	
 	// To simplify removal, every unit test executable will have the same name
 	private static final String executableName = Job.properExecutableName("TACTest");

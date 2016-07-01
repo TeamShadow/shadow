@@ -24,7 +24,7 @@ import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
 import shadow.typecheck.type.Type;
 
-public class DocumentationTest 
+public class DocumentationTests 
 {
 	private static final Path outputDirectory = Paths.get("shadow", "test", "doctool", "docs");
 	private ArrayList<String> args = new ArrayList<String>();

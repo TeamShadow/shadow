@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import shadow.Main;
 
-public class ShadowUtilityTest {
+public class UtilityTests {
 	
 	private ArrayList<String> args = new ArrayList<String>();
 

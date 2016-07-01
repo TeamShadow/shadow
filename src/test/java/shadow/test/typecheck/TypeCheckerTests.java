@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import shadow.Main;
 
-public class TypeCheckerTest {
+public class TypeCheckerTests {
 	
 	private ArrayList<String> args = new ArrayList<String>();
 

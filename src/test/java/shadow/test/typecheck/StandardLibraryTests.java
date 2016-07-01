@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import shadow.Main;
 
-public class StandardLibraryTest {
+public class StandardLibraryTests {
 	
 	private ArrayList<String> args = new ArrayList<String>();
 	
