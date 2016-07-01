@@ -24,6 +24,7 @@ public class Job {
 	private boolean noLink = false;	// Compile the given file, but do not link
 	private boolean verbose = false; // Print extra compilation info
 	private boolean forceRecompile = false; // Recompile all source files, even if unneeded
+	private boolean warningsAsErrors = false; //Treat warnings as errors
 	
 	public Job(Arguments compilerArgs) throws FileNotFoundException {
 		
@@ -60,6 +61,15 @@ public class Job {
 			// Create linker output command
 			outputCommand.add("-o");
 			outputCommand.add(outputFile.toAbsolutePath().toString());
+			
+			//deal with warning flags
+			if( compilerArgs.hasOption(Arguments.WARNING) ) {
+				String flag = compilerArgs.getWarningFlag();
+				if( flag.equals("error") )
+					warningsAsErrors = true;
+				else
+					System.err.println("Unknown warning flag: " + flag);
+			}
 		}
 	}
 
@@ -86,6 +96,10 @@ public class Job {
 	public Path getMainFile() {
 		
 		return mainFile;
+	}
+	
+	public boolean treatWarningsAsErrors() {
+		return warningsAsErrors;
 	}
 	
 	public List<String> getOutputCommand() {

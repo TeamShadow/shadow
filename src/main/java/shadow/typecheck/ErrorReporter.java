@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.Logger;
 
+import shadow.Main;
 import shadow.parser.javacc.Node;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
@@ -72,7 +73,9 @@ public class ErrorReporter {
 	 * @param message			message explaining warning
 	 */
 	public void addWarning(Node node, Error warning, String message) {
-		if( node != null )
+		if( Main.getJob().treatWarningsAsErrors() )
+			addError(node, warning, message);
+		else if( node != null )
 			warningList.add(new TypeCheckException(warning, message, node.getFile(), node.getLineStart(),
 					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));	
 	}

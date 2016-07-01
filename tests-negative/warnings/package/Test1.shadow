@@ -1,0 +1,9 @@
+import shadow:io@Console;
+
+class package@Test1
+{	
+	public main() => ()
+	{
+		Console.printLine("Test 1");
+	}
+}

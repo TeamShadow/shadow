@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import shadow.Loggers;
+import shadow.Main;
 import shadow.AST.ASTWalker.WalkType;
 import shadow.parser.javacc.*;
 import shadow.typecheck.ErrorReporter;
@@ -802,9 +803,12 @@ public class AbstractASTVisitor extends ErrorReporter implements ShadowParserVis
 	 * @param warning			kind of warning
 	 * @param message			message explaining warning
 	 */
-	protected final void addWarning(Error warning, String message) {	
-		warningList.add(new TypeCheckException(warning, message, getFile(), getLineStart(), getLineEnd(),
-				getColumnStart(), getColumnEnd()));
+	protected final void addWarning(Error warning, String message) {
+		if( Main.getJob().treatWarningsAsErrors() )
+			addError(warning, message);
+		else		
+			warningList.add(new TypeCheckException(warning, message, getFile(), getLineStart(), getLineEnd(),
+					getColumnStart(), getColumnEnd()));
 	}
 	
 	
@@ -816,7 +820,9 @@ public class AbstractASTVisitor extends ErrorReporter implements ShadowParserVis
 	 */
 	@Override
 	public final void addWarning(Node node, Error warning, String message) {
-		if( node == null )
+		if( Main.getJob().treatWarningsAsErrors() )
+			addError( node, warning, message );		
+		else if( node == null )
 			addWarning(warning, message);
 		else 
 			warningList.add(new TypeCheckException(warning, message, node.getFile(), node.getLineStart(),

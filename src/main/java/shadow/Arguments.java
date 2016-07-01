@@ -26,6 +26,7 @@ public class Arguments {
 	public static final String VERBOSE			= "v";
 	public static final String RECOMPILE		= "f";
 	public static final String INFORMATION		= "i";
+	public static final String WARNING			= "w";
 	
 	// Recognized long arguments
 	private static final String CONFIG_LONG 	= "config";
@@ -36,6 +37,7 @@ public class Arguments {
 	private static final String VERBOSE_LONG	= "verbose";
 	private static final String RECOMPILE_LONG  = "force-recompile";
 	private static final String INFORMATION_LONG	= "information";
+	private static final String WARNING_LONG	= "warning";
 	
 	private CommandLine commandLine;
 	
@@ -84,6 +86,10 @@ public class Arguments {
 		return commandLine.getOptionValue(OUTPUT);
 	}
 	
+	public String getWarningFlag() {
+		return commandLine.getOptionValue(WARNING);
+	}
+	
 	public static Options getOptions() {		
 		return compilerOptions;
 	}
@@ -106,9 +112,18 @@ public class Arguments {
 											.withArgName("file")
 										    .withDescription("Place output into <file>")										    
 										    .create(OUTPUT);
+		
+		
+		@SuppressWarnings("static-access")
+		Option warningOption = OptionBuilder.withLongOpt(WARNING_LONG)
+											.hasArg()
+											.withArgName("flag")
+										    .withDescription("Specify warning flags")										    
+										    .create(WARNING);
 
 		options.addOption(configOption);
 		options.addOption(outputOption);
+		options.addOption(warningOption);
 
 		// Build/add simple options
 		options.addOption(new Option(TYPECHECK, TYPECHECK_LONG, false, "Parse and type-check the Shadow files"));

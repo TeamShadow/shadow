@@ -453,4 +453,8 @@ public class Main {
 		}
 		return name;
 	}
+	
+	public static Job getJob() {
+		return currentJob;
+	}
 }
