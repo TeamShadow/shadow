@@ -57,12 +57,18 @@ public class WarningTests {
 	@Test public void testFieldNotUsed() throws Exception
 	{
 		args.add("tests-negative/warnings/field-not-used/Test.shadow");
-		enforce(Error.FIELD_NOT_USED);		
+		enforce(Error.UNUSED_FIELD);		
 	}
 	
 	@Test public void testPrivateMethodNotUsed() throws Exception
 	{
 		args.add("tests-negative/warnings/private-method-not-used/Test.shadow");
-		enforce(Error.METHOD_NOT_USED);		
+		enforce(Error.UNUSED_METHOD);		
 	}
+	
+	@Test public void testVariableNotUsed() throws Exception
+	{
+		args.add("tests-negative/warnings/variable-not-used/Test.shadow");
+		enforce(Error.UNUSED_VARIABLE);		
+	}	
 }

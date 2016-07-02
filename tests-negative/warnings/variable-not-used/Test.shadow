@@ -1,0 +1,12 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		int x = 5;
+		int y = 3;
+		
+		Console.printLine(y);
+	}
+}

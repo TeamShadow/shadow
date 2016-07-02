@@ -159,7 +159,7 @@ public class TACModule {
 				graph.removeRedundantErrors(); //some unreachable code errors are redundant
 			
 				if( !signature.isVoid() && !graph.returns() )
-					graph.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.toString() + " may not return on all paths");
+					graph.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.getSymbol() + signature.getMethodType() + " may not return on all paths");
 				
 				graph.addPhiNodes();
 				graph.propagateConstants();				

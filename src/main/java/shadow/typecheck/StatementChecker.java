@@ -2741,7 +2741,7 @@ public class StatementChecker extends BaseChecker {
 		else
 		{
 			if( !methodIsAccessible( signature, currentType  ))					
-				addError(Error.ILLEGAL_ACCESS, signature + " is not accessible from this context");						
+				addError(Error.ILLEGAL_ACCESS, signature.getSymbol() + signature.getMethodType() + " is not accessible from this context");						
 		
 			node.setType(signature.getMethodType());		
 		}		

@@ -39,7 +39,6 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 	 */
 	public static enum Error {		
 		CIRCULAR_CREATE("Circular create", "Create calls are circular"),
-		FIELD_NOT_USED("Field not used", "Field is never used"),
 		ILLEGAL_ACCESS("Illegal access", "Class, member, method, or property not accessible from this context"),
 		INVALID_ARGUMENTS("Invalid arguments", "Supplied method arguments do not match parameters"),
 		INVALID_ASSIGNMENT("Invalid assignment", "Right hand side cannot be assigned to left hand side"),
@@ -72,7 +71,6 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 		INVALID_TYPE("Invalid type", "Supplied type cannot be used with this language construct"),
 		INVALID_TYPE_ARGUMENTS("Invalid type arguments", "Supplied type arguments do not match type parameters"),
 		INVALID_TYPE_PARAMETERS("Invalid type parameters", "Type cannot be parameterized"),
-		METHOD_NOT_USED("Method not used", "Method is never used"),
 		MISMATCHED_TYPE("Mismatched type", "Supplied type does not match another type supplied to this language construct"),
 		MISMATCHED_PACKAGE("Mismatched package", "Package for type does not match type directory"),
 		MISSING_CREATE("Missing create invocation", "Explicit create invocation is missing, and parent class does not implement the default create"),
@@ -90,7 +88,10 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 		UNDEFINED_VARIABLE("Undefined variable", "This variable may not have been defined before use"),
 		UNNECESSARY_TYPE_ARGUMENTS("Unnecessary type arguments", "Type arguments supplied for non-parameterized type"),
 		UNINITIALIZED_FIELD("Uninitialized field", "Non-nullable field may not be initialized by a create"),
-		UNREACHABLE_CODE("Unreachable code", "Code cannot be reached");
+		UNREACHABLE_CODE("Unreachable code", "Code cannot be reached"),
+		UNUSED_FIELD("Unused field", "Field is never used"),		
+		UNUSED_METHOD("Unused method", "Method is never used"),
+		UNUSED_VARIABLE("Unused variable", "Local variable is never used");
 		
 		private final String name;
 		private final String message;		

@@ -36,6 +36,11 @@ public class TACVariable implements ModifiedType
 	{
 		type.setType(newType);
 	}
+		
+	public ModifiedType getModifiedType() {
+		return type;
+	}
+	
 	public String getOriginalName()
 	{
 		return name;

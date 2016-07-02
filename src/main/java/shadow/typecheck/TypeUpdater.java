@@ -482,7 +482,7 @@ public class TypeUpdater extends BaseChecker {
 						List<MethodSignature> list = classType.orderAllMethods();
 						for( MethodSignature signature : list )
 							if( !signature.isCreate() && !signature.getModifiers().isReadonly() )
-								addError(signature.getNode(), Error.INVALID_METHOD, "Mutable parent method " + signature + " must be overridden by readonly method" );
+								addError(signature.getNode(), Error.INVALID_METHOD, "Mutable parent method " + signature.getSymbol() + signature.getMethodType() + " must be overridden by readonly method" );
 					}
 					
 					/* Check overridden methods to make sure:
@@ -553,7 +553,7 @@ public class TypeUpdater extends BaseChecker {
 					// If (PRIVATE || (!isPublic && PROTECTED)
 					if (outer.getModifiers().hasModifier(Modifiers.PRIVATE)
 							|| (isPublic && outer.getModifiers().hasModifier(Modifiers.PROTECTED))) {
-						addError(method.getNode(), Error.ILLEGAL_ACCESS, "Method " + method + " is more visible than return type " + type);
+						addError(method.getNode(), Error.ILLEGAL_ACCESS, "Method " + method.getSymbol() + method.getMethodType() + " is more visible than return type " + type);
 						break; // No need to keep climbing
 					}
 						

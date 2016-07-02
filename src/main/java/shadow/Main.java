@@ -402,14 +402,14 @@ public class Main {
 				Set<String> usedFields = allUsedFields.get(type);
 				for( Entry<String, Node> entry  : type.getFields().entrySet() ) {
 					if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
-						reporter.addWarning(entry.getValue(), Error.FIELD_NOT_USED, "Field " + entry.getKey() + " is never used");
+						reporter.addWarning(entry.getValue(), Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
 				}
 				
 				//give warnings if private methods are never used
 				for( List<MethodSignature> signatures : type.getMethodMap().values() )
 					for( MethodSignature signature : signatures )
 						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) )
-							reporter.addWarning(signature.getNode(), Error.METHOD_NOT_USED, "Private method " + signature + " is never used");
+							reporter.addWarning(signature.getNode(), Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
 			}					
 			
 			reporter.printWarnings();

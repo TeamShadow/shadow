@@ -196,6 +196,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		boolean done = false;
 		Block block = null;
 		
+		Set<TACVariable> usedLocalVariables = new HashSet<TACVariable>();
+		
 		// Loop through circular linked-list
 		while( !done ) {
 			if( node instanceof TACLabel ) {
@@ -230,6 +232,11 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( signature.getModifiers().isPrivate() && signature.getOuter().encloses(method.getThis().getType()) )
 					usedPrivateMethods.add(signature);
 			}
+			//record local variable usage, for warnings
+			else if( node instanceof TACLocalLoad ) {
+				TACLocalLoad load = (TACLocalLoad) node;
+				usedLocalVariables.add(load.getVariable());
+			}
 			
 			block.addNode(node);
 						
@@ -237,6 +244,26 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			if( node == method.getNode() )
 				done = true;
 		}
+		
+		//give warnings for unused local variables
+		for( TACVariable variable : method.getLocals() ) {
+			String name = variable.getName(); 
+			//special compiler-created variables (_temp, _exception, etc.) start with _
+			//no need to check on "this"
+			if( !name.startsWith("_") && !name.equals("this") ) { 
+				if( !usedLocalVariables.contains(variable) ) {
+					ModifiedType type = variable.getModifiedType();					
+					//kind of a hack to get the declaration
+					if( type instanceof Node ) {
+						Node declaration = (Node) type;
+						addWarning( declaration, Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
+					}
+					else
+						addWarning( method.getSignature().getNode(), Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
+				}
+			}
+		}
+		
 	}
 	
 	/**
@@ -732,7 +759,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 							}
 							//otherwise, it's not a legal method to call, probably because it's unlocked
 							else
-								addError(node.getASTNode(), Error.ILLEGAL_ACCESS, "Cannot call unlocked method from a create" );
+								addError(node.getASTNode(), Error.ILLEGAL_ACCESS, "Cannot call unlocked method " + signature.getSymbol() + signature.getMethodType() + " from a create" );
 						}
 					}
 					//an inner class call, perhaps even a create
